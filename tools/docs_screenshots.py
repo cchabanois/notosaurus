@@ -92,6 +92,59 @@ CORRECTION_TYPED = {
     "en": "You forgot: el libro = the book",
     "fr": "Tu as oublié : el libro = le livre",
 }
+# A 12-page PDF for the screenshot of its page picker (more pages than a lesson holds)
+BOOKLET = {
+    "en": (
+        "Revision booklet",
+        [
+            "Spanish: at school",
+            "Spanish: the family",
+            "Spanish: colours",
+            "Verbs",
+            "The water cycle",
+            "Parts of a plant",
+            "The solar system",
+            "Fractions",
+            "Geometry: triangles",
+            "Geometry: the circle",
+            "History: the Romans",
+            "Geography: rivers",
+        ],
+    ),
+    "fr": (
+        "Cahier de révisions",
+        [
+            "Espagnol : l'école",
+            "Espagnol : la famille",
+            "Espagnol : les couleurs",
+            "Les verbes",
+            "Le cycle de l'eau",
+            "Les parties d'une plante",
+            "Le système solaire",
+            "Les fractions",
+            "Géométrie : les triangles",
+            "Géométrie : le cercle",
+            "Histoire : les Romains",
+            "Géographie : les fleuves",
+        ],
+    ),
+}
+
+
+def booklet_pdf(b, lang: str, path: Path) -> None:
+    title, topics = BOOKLET[lang]
+    pages = "".join(
+        f"<section><h1>{title}</h1><h2>{n}. {topic}</h2>" + "<p></p>" * 12 + "</section>"
+        for n, topic in enumerate(topics, start=1)
+    )
+    page = b.new_page()
+    page.set_content(
+        "<style>section { page-break-after: always; font-family: sans-serif; padding: 40px; }"
+        " h1 { color: #0e6377; } h2 { font-size: 40px; } p { border-bottom: 2px solid #a9c4e6; height: 40px; }"
+        f"</style>{pages}"
+    )
+    page.pdf(path=path, format="A4")
+    page.close()
 
 
 # --- A fake Anki: two profiles, every write accepted ---------------------------------
@@ -338,6 +391,15 @@ def shoot(lang: str) -> None:
         shot("prompt-editor")
         page.evaluate(f"{APP}.editor.open = false")
         page.evaluate(f"{APP}.clearPhotos()")
+
+        booklet = Path(tmp) / f"{BOOKLET[lang][0]}.pdf"
+        booklet_pdf(b, lang, booklet)
+        page.locator("input[type=file][accept*=pdf]").set_input_files(booklet)
+        wait_for(page, f"{APP}.pdf.open", timeout=60)  # pdf.js draws the pages
+        page.evaluate(f"{APP}.pdf.pages.forEach((p, i) => {{ p.chosen = [0, 1, 4].includes(i); }})")
+        time.sleep(1.5)
+        shot("pdf-pages")
+        page.evaluate(f"{APP}.donePdfPicker(false)")
 
         page.evaluate(f"{APP}.lessonsOpen = true")
         time.sleep(0.8)

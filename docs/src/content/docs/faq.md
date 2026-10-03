@@ -49,8 +49,17 @@ Notosaurus → Settings**.
 | “The model didn't return valid cards” | Try again; if it keeps happening, choose another model. |
 | The model “doesn't seem to see the image” (Test) | The model doesn't read images: choose a vision model. |
 
-**The cards are wrong or missing.** Check the photo (see [Taking good photos](../photos/)), be
+**The cards are wrong or missing.** Check the photo (see [Photos and PDFs](../photos/)), be
 more precise in the instructions, or correct them with the AI. Claude reads handwriting best.
+
+## A PDF can't be added
+
+- **“Already 10 pages: remove some before adding a PDF.”** A lesson holds 10 pages: remove photos
+  you don't need (**×**), or make two lessons.
+- **“… is password-protected”**: open the PDF, save it without its password (or print it to a new
+  PDF), then add it again.
+- **Words misread in a PDF**: a scanned PDF is only pictures, read like photos. A PDF made on a
+  computer gives the AI its exact text.
 
 ## The cards don't reach Anki
 
