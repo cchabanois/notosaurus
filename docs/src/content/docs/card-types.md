@@ -80,4 +80,15 @@ make such cards, and so do **Automatic** and the formula instructions when it he
 The **Words in pictures** instructions put a picture of each word on the front, drawn by an
 image model: from less than a cent to a few cents per picture. Pictures are drawn by the AI
 service of the cards when it can draw (Gemini, OpenAI, OpenRouter), otherwise by another one
-chosen in **Settings → Pictures on cards** (Claude and local models can't draw).
+chosen in **Settings → Pictures on cards** (Claude and local models can't draw). That section
+also chooses the image model, or **No pictures**.
+
+![Cards with pictures](../../assets/screenshots/en/pictures.png)
+
+The **🖼️** button of a card opens its **Picture** panel:
+
+- **What to draw (in English)**: change the description, then **🎨 Draw again** (about 3 to 7
+  US cents a drawing);
+- **📷 My photo**: put your own photo instead, for free;
+- **✕ No picture**: remove it;
+- **On the back (with the answer)**: when the picture gives the answer away.

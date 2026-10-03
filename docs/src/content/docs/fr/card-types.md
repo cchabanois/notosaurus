@@ -85,4 +85,14 @@ La consigne **Mots en images** met au recto une image de chaque mot, dessinée p
 d'images : de moins d'un centime à quelques centimes par image. Les images sont dessinées par
 le service d'IA des cartes quand il sait dessiner (Gemini, OpenAI, OpenRouter), sinon par un
 autre choisi dans **Réglages → Images des cartes** (Claude et les modèles locaux ne dessinent
-pas).
+pas). Cette section choisit aussi le modèle d'images, ou **Pas d'images**.
+
+![Des cartes avec des images](../../../assets/screenshots/fr/pictures.png)
+
+Le bouton **🖼️** d'une carte ouvre son panneau **Image** :
+
+- **Ce qu'il faut dessiner (en anglais)** : change la description, puis **🎨 Refaire**
+  (environ 3 à 7 centimes de dollar par dessin) ;
+- **📷 Ma photo** : mets ta propre photo à la place, gratuitement ;
+- **✕ Pas d'image** : retire-la ;
+- **Au verso (avec la réponse)** : quand l'image donne la réponse.
