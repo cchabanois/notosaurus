@@ -168,7 +168,9 @@ def test_settings_show_what_the_service_needs(page):
         "ne dessine pas, et aucun autre service n'a de clé"
     )
     # In the order things are set: the service, its access, then the model
-    titles = [" ".join(t.split()) for t in page.locator("section.panel h2:visible").all_inner_texts()]
+    # (without the "?" linking some titles to the documentation)
+    shown = page.locator("section.panel h2:visible").all_inner_texts()
+    titles = [" ".join(t.split()).removesuffix(" ?") for t in shown]
     assert titles[:4] == ["1 Service d'IA", "2 Accès", "3 Modèle", "4 Images des cartes"]
     # The settings save themselves a moment later: done before the next test's data
     page.wait_for_function("Alpine.$data(document.querySelector('[x-data]')).saveState === 'saved'")

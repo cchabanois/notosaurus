@@ -13,6 +13,13 @@ export default defineConfig({
 			logo: { src: './src/assets/logo-mark.webp' },
 			favicon: '/favicon.png',
 			customCss: ['./src/styles/notosaurus.css'],
+			// The picture shown when the site's address is shared (from docs/demo/og-image.html)
+			head: [
+				{ tag: 'meta', attrs: { property: 'og:image', content: 'https://cchabanois.github.io/notosaurus/og.jpg' } },
+				{ tag: 'meta', attrs: { property: 'og:image:width', content: '1200' } },
+				{ tag: 'meta', attrs: { property: 'og:image:height', content: '630' } },
+				{ tag: 'meta', attrs: { name: 'twitter:card', content: 'summary_large_image' } },
+			],
 			social: [{ icon: 'github', label: 'GitHub', href: 'https://github.com/cchabanois/notosaurus' }],
 			editLink: { baseUrl: 'https://github.com/cchabanois/notosaurus/edit/main/docs/' },
 			// English at the root (/notosaurus/), the other languages under their code.
