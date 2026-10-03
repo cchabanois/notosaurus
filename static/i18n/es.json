@@ -48,6 +48,18 @@
       "gallery": "Galería",
       "unreadable": "No se puede leer «{name}»."
     },
+    "pdf": {
+      "button": "PDF",
+      "reading": "Leyendo…",
+      "title": "Páginas que añadir",
+      "hint": "«{name}» tiene {count} páginas: elige {free} como máximo (una lección tiene 10 páginas; cada página enviada cuesta como una foto).",
+      "add": {
+        "one": "Añadir {count} página",
+        "other": "Añadir {count} páginas"
+      },
+      "full": "Ya hay {max} páginas: quita alguna antes de añadir un PDF.",
+      "protected": "«{name}» está protegido con contraseña: guárdalo sin contraseña y vuelve a añadirlo."
+    },
     "prompt": {
       "title": "Instrucciones",
       "free": "✏️ Libre",

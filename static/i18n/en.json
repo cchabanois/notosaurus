@@ -48,6 +48,18 @@
       "gallery": "Gallery",
       "unreadable": "Can't read “{name}”."
     },
+    "pdf": {
+      "button": "PDF",
+      "reading": "Reading…",
+      "title": "Pages to add",
+      "hint": "“{name}” has {count} pages: choose up to {free} (a lesson holds 10 pages; each page sent costs like a photo).",
+      "add": {
+        "one": "Add {count} page",
+        "other": "Add {count} pages"
+      },
+      "full": "Already {max} pages: remove some before adding a PDF.",
+      "protected": "“{name}” is password-protected: save it without a password, then add it again."
+    },
     "prompt": {
       "title": "Instructions",
       "free": "✏️ Free",

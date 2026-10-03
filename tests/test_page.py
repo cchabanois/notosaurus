@@ -189,7 +189,7 @@ def png(color: str) -> bytes:
 
 def test_photos_and_pictures_seen_in_full(page):
     page.goto("/")
-    page.locator("input[type=file][multiple]").set_input_files(
+    page.locator('input[type=file][accept="image/*"][multiple]').set_input_files(
         [{"name": f"page-{n}.png", "mimeType": "image/png", "buffer": png(c)} for n, c in ((1, "red"), (2, "blue"))]
     )
     page.locator(".thumb img").first.click()
@@ -397,3 +397,43 @@ def test_prompts_follow_the_language(page):
     page.locator(".lang-select select").select_option("it")
     sync_api.expect(page.get_by_role("radio", name="✏️ Libere")).to_be_checked()
     sync_api.expect(text).to_have_value("Lo mío")
+
+
+def pdf(pages: int) -> bytes:
+    """A PDF of `pages` A4 pages, each of its own colour."""
+    import io
+
+    from PIL import Image
+
+    images = [Image.new("RGB", (595, 842), (40 * n % 255, 90, 160)) for n in range(pages)]
+    out = io.BytesIO()
+    images[0].save(out, "PDF", save_all=True, append_images=images[1:])
+    return out.getvalue()
+
+
+def test_pdf_pages_become_photos(page):
+    page.goto("/")
+    pdf_input = page.locator("input[type=file][accept*=pdf]")
+    pdf_input.set_input_files({"name": "cours.pdf", "mimeType": "application/pdf", "buffer": pdf(3)})
+    sync_api.expect(page.locator(".thumb img")).to_have_count(3)  # every page, no question
+    assert page.evaluate("img => img.naturalHeight", page.locator(".thumb img").first.element_handle()) == 1600
+
+    # More pages than places left (10 − 3): the user picks them
+    pdf_input.set_input_files({"name": "manuel.pdf", "mimeType": "application/pdf", "buffer": pdf(12)})
+    sheet = page.locator(".sheet", has=page.locator(".pdf-pages"))
+    sync_api.expect(sheet).to_be_visible()
+    sync_api.expect(sheet).to_contain_text("« manuel.pdf » a 12 pages : choisis-en 7 au plus")
+    sync_api.expect(sheet.locator(".pdf-page img").first).to_be_visible()  # thumbnails drawn
+    for n in range(1, 8):
+        sheet.get_by_role("button", name=f"Page {n}", exact=True).click()
+    sync_api.expect(sheet.get_by_role("button", name="Page 8", exact=True)).to_be_disabled()
+    sheet.get_by_role("button", name="Page 7", exact=True).click()  # one less
+    sheet.get_by_role("button", name="Page 12", exact=True).click()
+    sheet.get_by_role("button", name="Ajouter 7 pages").click()
+    sync_api.expect(page.locator(".thumb img")).to_have_count(10)
+    sync_api.expect(sheet).to_be_hidden()
+
+    # Full: said, not added
+    pdf_input.set_input_files({"name": "encore.pdf", "mimeType": "application/pdf", "buffer": pdf(1)})
+    sync_api.expect(page.get_by_text("Déjà 10 pages")).to_be_visible()
+    sync_api.expect(page.locator(".thumb img")).to_have_count(10)
