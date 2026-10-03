@@ -53,8 +53,8 @@ est perdu ou prêté : **Réglages → Téléphones → Déconnecter tous les t�
 
 ## 4. Ta première leçon
 
-1. Dans **Photos de la leçon**, prends la page en photo (ou plusieurs pages) : voir
-   [Bien prendre la photo](../photos/).
+1. Dans **Photos de la leçon**, prends la page en photo (ou plusieurs pages), ou ajoute un PDF :
+   voir [Photos et PDF](../photos/).
 2. Dans **Consigne**, choisis ce qu'il faut faire : vocabulaire, questions, texte à trous,
    schéma à compléter… **Automatique** choisit d'après la leçon. Voir [Les consignes](../instructions/).
 

@@ -9,6 +9,7 @@ Each pull request adds a line under **Unreleased**. See [Releasing](CONTRIBUTING
 
 ### Added
 
+- Documentation: PDFs get their own section (with a screenshot of the page picker, from a 12-page demo booklet made by `tools/docs_screenshots.py`), the photos page becomes “Photos and PDFs”, the home page and *Getting started* mention them, and the FAQ explains the PDF messages.
 - A “?” at the end of some section titles (photos, instructions, review; in the settings: AI service, instructions, phones, sending to Anki) opens the matching page of the documentation, in the page's language. The documentation site has a picture for when its address is shared, and the AnkiWeb description of the add-on is kept in `docs/ankiweb.md`.
 - Documentation: “Troubleshooting and FAQ” (Notosaurus doesn't start, the phone can't connect, the AI fails, the cards don't reach Anki, uninstalling) and “Advanced installation” (standalone, Docker, environment variables), in English and French, in a new Help section.
 - Documentation: “AI services and costs” (which service, getting a key step by step for Gemini, Claude, OpenAI and OpenRouter, the model, local models, the cost of a lesson) and “Privacy and security” (what leaves the computer, where the data is, who can use Notosaurus, the Wi-Fi), in English and French, with two more screenshots per language (the API key and the model, the costs). The photos page explains the text of digital PDFs.

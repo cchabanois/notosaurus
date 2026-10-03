@@ -1,6 +1,6 @@
 ---
-title: Taking good photos
-description: "How to photograph a lesson so that the AI reads it well, with several pages, and what Notosaurus does with the photos."
+title: "Photos and PDFs"
+description: "How to photograph a lesson so that the AI reads it well, several pages, PDFs, and what Notosaurus does with them."
 ---
 
 The AI reads what it sees: a clear photo gives better cards, and fewer corrections.
@@ -24,14 +24,6 @@ good and cheaper choice.
 A lesson can have **up to 10 pages**. After the first photo, **Next page** adds another one;
 **Gallery** picks photos already taken (JPEG, PNG, WebP or GIF).
 
-**📄 PDF** adds the pages of a PDF, for instance a worksheet sent by the teacher: each page
-becomes a photo. With more pages than the lesson has room for, Notosaurus shows them all and
-you choose which ones to add. Each page sent costs like a photo. A password-protected PDF must
-first be saved without its password.
-
-A PDF made on a computer (not a scan) also holds its exact text: Notosaurus sends it to the AI
-with the page, so no word, accent, date or number is misread.
-
 On each photo:
 
 - **↻** turns it a quarter turn;
@@ -42,6 +34,21 @@ On each photo:
 
 You don't need to turn sideways photos yourself: Notosaurus finds how each page is turned
 when it reads it, and saves it upright.
+
+## PDFs
+
+**📄 PDF**, next to the camera and the gallery, adds the pages of a PDF: a worksheet sent by the
+teacher, a page of a digital textbook, a booklet… Each page becomes a photo of the lesson, so
+everything works as with photos: diagrams, corrections, every AI service.
+
+- **A PDF made on a computer** (not a scan) also holds its exact text: Notosaurus sends it to the
+  AI with its page, so no word, accent, date or number is misread.
+- **More pages than the lesson has room for** (10 pages in all): Notosaurus shows them all, and
+  you tap the ones to add.
+- **Each page sent costs like a photo**: choose only the pages of the lesson.
+- **A password-protected PDF** must first be saved without its password.
+
+![Choosing the pages of a PDF](../../assets/screenshots/en/pdf-pages.png)
 
 ## What happens to the photos
 

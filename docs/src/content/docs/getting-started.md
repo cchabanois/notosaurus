@@ -51,8 +51,8 @@ Only devices that scanned this QR code can use Notosaurus. If a phone is lost or
 
 ## 4. Your first lesson
 
-1. Under **Lesson photos**, take a photo of the page (or several pages): see
-   [Taking good photos](../photos/).
+1. Under **Lesson photos**, take a photo of the page (or several pages), or add a PDF: see
+   [Photos and PDFs](../photos/).
 2. Under **Instructions**, pick what to make: vocabulary, questions, fill in the blanks, a
    diagram to complete… **Automatic** chooses from the lesson. See [Instructions](../instructions/).
 
