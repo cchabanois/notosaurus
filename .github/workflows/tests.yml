@@ -49,7 +49,7 @@ jobs:
         run: for f in static/*.js; do node --check "$f"; done
       - name: Unit-test the page scripts
         if: matrix.os == 'ubuntu-latest' && matrix.python == '3.13'
-        run: node --test tests/frontend/
+        run: node --test tests/frontend/*.test.mjs  # files, not the folder: older Node can't take one
 
   real-anki:
     # The add-on's bridge and the .apkg import against Anki's real engine (the

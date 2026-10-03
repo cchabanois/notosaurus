@@ -226,16 +226,17 @@ test("read-only when the lesson belongs to another profile", () => {
   assert.equal(list.canDelete({ owner: "" }), true);  // nobody's: everyone's
 });
 
-test("the most recently used prompts, never-used ones in a stable order", () => {
+test("the most recently used prompts, never-used ones in the server's order", () => {
   const page = app.component();
+  // As the server lists them: Notosaurus's in their chosen order (not alphabetical), then the user's
   page.prompts = [
-    { id: 3, name: "C" }, { id: 1, name: "A" }, { id: "notosaurus:x", name: "X" }, { id: 2, name: "B" },
+    { id: "notosaurus:auto" }, { id: "notosaurus:vocabulary" }, { id: "notosaurus:cloze" }, { id: 1 }, { id: 2 },
   ];
   page.selectedId = 2;
-  assert.deepEqual(plain(page.recentPrompts().map((p) => p.id)), [1, 2, 3, "notosaurus:x"]);  // 1 < 2 < 3 < "notosaurus:x"
+  assert.deepEqual(plain(page.recentPrompts().map((p) => p.id)), ["notosaurus:auto", "notosaurus:vocabulary", "notosaurus:cloze", 2]);
 
-  page.prompts[3].used_at = "2026-10-03T10:00:00Z";  // used last: first, still selected
-  assert.deepEqual(plain(page.recentPrompts().map((p) => p.id)).slice(0, 2), [2, 1]);
+  page.prompts[4].used_at = "2026-10-03T10:00:00Z";  // used last: first, still selected
+  assert.deepEqual(plain(page.recentPrompts().map((p) => p.id)).slice(0, 2), [2, "notosaurus:auto"]);
 
   const many = app.component();  // more prompts than chips: the selected one is always shown
   many.prompts = Array.from({ length: 6 }, (_, i) => ({ id: i + 1 }));

@@ -287,7 +287,7 @@ def test_multiple_choice_and_true_false(client, tmp_path):
     assert not anki.is_choice(Card(front="en {{c1::1789}}", back="", choices=["x"]))
 
 
-def test_fun_facts_only_when_asked(client, tmp_path):
+def test_fun_facts_in_anki(client, tmp_path):
     # In Anki: under the info, on the back; escaped like the other fields
     cards = [{"front": "la mère", "back": "la madre", "info": "f.", "fun_fact": "Vient du latin <mater>."}]
     package = apkg.export(client, {"deck": "D", "cards": cards}, tmp_path)

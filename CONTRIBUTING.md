@@ -33,7 +33,7 @@ To build the add-on file: `python3 tools/build_addon.py` → `dist/notosaurus-<v
 
 ```sh
 .venv/bin/pytest
-node --test tests/frontend/                                 # the page scripts' unit tests (no dependency)
+node --test tests/frontend/*.test.mjs                       # the page scripts' unit tests (no dependency)
 .venv/bin/ruff check . && .venv/bin/ruff format --check .   # lint and formatting (pyproject.toml)
 ```
 
