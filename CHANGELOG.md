@@ -103,6 +103,7 @@ Each pull request adds a line under **Unreleased**. See [Releasing](CONTRIBUTING
 
 ### Fixed
 
+- The phones' pairing token is no longer written in clear in the server's log (shown from Anki's menu, pasted in bug reports): masked as `?k=•••`. The pages also tell browsers never to send their address to other sites (fonts, CDN, links).
 - Many lessons no longer slow Notosaurus down: the list asked Anki once per lesson (1.7 s for 300 lessons, 16 s for 3,000; now 12 ms and 68 ms), and every listing, generation and settings page read every card of every lesson (now each lesson is read again only when its file changes). Deleting a lesson only reads the lessons whose decks meet its own.
 - Changing the language now changes Notosaurus's prompts too (their names and the text shown), unless the text was changed for this time.
 - On a narrow phone (360 px), the info field's placeholder and the AnkiConnect key's were cut: shortened.
