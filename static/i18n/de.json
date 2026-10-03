@@ -186,7 +186,8 @@
         "one": "{count} davon auf die neuen Optionen umgestellt (Verlauf bleibt erhalten)",
         "other": "{count} davon auf die neuen Optionen umgestellt (Verlauf bleibt erhalten)"
       },
-      "oldAnkiConnect": "AnkiConnect ist zu alt, um die Optionen bereits gesendeter Karten zu ändern: Sie bleiben neben den neuen (aktualisiere AnkiConnect oder nutze die Notosaurus-Erweiterung)"
+      "oldAnkiConnect": "AnkiConnect ist zu alt, um die Optionen bereits gesendeter Karten zu ändern: Sie bleiben neben den neuen (aktualisiere AnkiConnect oder nutze die Notosaurus-Erweiterung)",
+      "restructured": "Notosaurus hat seine Notiztypen ({names}) um ein Feld oder eine Karte ergänzt: Bei der nächsten Synchronisierung verlangt Anki eine vollständige Synchronisierung (diesmal nicht automatisch gestartet)"
     },
     "export": {
       "noSound": "Stapel exportiert, aber {count} Karte(n) ohne Ton (Sprachausgabe nicht verfügbar).",

@@ -104,6 +104,7 @@ Each pull request adds a line under **Unreleased**. See [Releasing](CONTRIBUTING
 
 ### Fixed
 
+- Notosaurus's note types already in Anki are brought up to date: each carries a signature at the end of its CSS, and at the next send one made by an older Notosaurus gets today's card templates and CSS, plus the fields or cards it lacks (nothing removed). Adding a field or a card makes Anki ask for a full sync: said so, and the automatic sync is left to the user that time. A newer .apkg updates its note types too (Anki's "update note types if newer").
 - Many lessons no longer slow Notosaurus down: the list asked Anki once per lesson (1.7 s for 300 lessons, 16 s for 3,000; now 12 ms and 68 ms), and every listing, generation and settings page read every card of every lesson (now each lesson is read again only when its file changes). Deleting a lesson only reads the lessons whose decks meet its own.
 - Changing the language now changes Notosaurus's prompts too (their names and the text shown), unless the text was changed for this time.
 - On a narrow phone (360 px), the info field's placeholder and the AnkiConnect key's were cut: shortened.

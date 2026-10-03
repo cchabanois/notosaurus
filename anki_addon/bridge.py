@@ -94,6 +94,60 @@ def _create_model(p: dict) -> int:
     return mm.add(model).id
 
 
+# Bringing a note type made by an older Notosaurus up to date (AnkiConnect's actions)
+
+
+def _model(name: str) -> dict:
+    model = _col().models.by_name(name)
+    if model is None:
+        raise ValueError(f"model was not found: {name}")
+    return model
+
+
+def _save_model(model: dict) -> None:
+    _col().models.update_dict(model)
+
+
+def _model_styling(p: dict) -> dict:
+    return {"css": _model(p["modelName"])["css"]}
+
+
+def _model_field_names(p: dict) -> list[str]:
+    return [f["name"] for f in _model(p["modelName"])["flds"]]
+
+
+def _model_templates(p: dict) -> dict:
+    return {t["name"]: {"Front": t["qfmt"], "Back": t["afmt"]} for t in _model(p["modelName"])["tmpls"]}
+
+
+def _model_field_add(p: dict) -> None:
+    mm, model = _col().models, _model(p["modelName"])
+    mm.add_field(model, mm.new_field(p["fieldName"]))
+    _save_model(model)
+
+
+def _model_template_add(p: dict) -> None:
+    mm, model = _col().models, _model(p["modelName"])
+    template = mm.new_template(p["template"]["Name"])
+    template["qfmt"], template["afmt"] = p["template"]["Front"], p["template"]["Back"]
+    mm.add_template(model, template)
+    _save_model(model)
+
+
+def _update_model_templates(p: dict) -> None:
+    model = _model(p["model"]["name"])
+    for template in model["tmpls"]:
+        if new := p["model"]["templates"].get(template["name"]):
+            template["qfmt"], template["afmt"] = new["Front"], new["Back"]
+    _save_model(model)
+
+
+def _update_model_styling(p: dict) -> None:
+    model = _model(p["model"]["name"])
+    model["css"] = p["model"]["css"]
+    _save_model(model)
+
+
 def _deck_names(p: dict) -> list[str]:
     return [d.name for d in _col().decks.all_names_and_ids()]
 
@@ -227,6 +281,13 @@ ACTIONS: dict[str, Callable[[dict], Any]] = {
     "isSyncConfigured": _sync_configured,
     "modelNames": _model_names,
     "createModel": _create_model,
+    "modelStyling": _model_styling,
+    "modelFieldNames": _model_field_names,
+    "modelTemplates": _model_templates,
+    "modelFieldAdd": _model_field_add,
+    "modelTemplateAdd": _model_template_add,
+    "updateModelTemplates": _update_model_templates,
+    "updateModelStyling": _update_model_styling,
     "deckNames": _deck_names,
     "createDeck": _create_deck,
     "storeMediaFile": _store_media_file,

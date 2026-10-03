@@ -446,3 +446,53 @@ def test_multiple_choice_lesson_on_a_real_collection(bridged, col, tmp_path):
         assert other.card_count() == 4
     finally:
         other.close()
+
+
+def test_note_types_brought_up_to_date_on_a_real_collection(bridged, col, tmp_path):
+    """A note type an older Notosaurus made: its templates and CSS replaced, the field
+    it lacked added, its notes kept, at the next send (the add-on's bridge)."""
+    client, _ = bridged
+    lesson = extract(client)
+    body = {"deck": lesson["deck"], "cards": lesson["cards"], "voice": VOICE, "lesson_id": lesson["id"]}
+    client.post("/api/anki/send", json=body)
+    (note_type,) = [m for m in col.models.all_names_and_ids() if m.name.startswith("Notosaurus")]
+    # As an older Notosaurus left it: other CSS, another answer, no "Info" field
+    model = col.models.get(note_type.id)
+    model["css"] = ".card { font-size: 20px; }"
+    model["tmpls"][0]["afmt"] = "{{FrontSide}}<hr id=answer>{{Back}}"
+    col.models.remove_field(model, next(f for f in model["flds"] if f["name"] == "Info"))
+    col.models.update_dict(model)
+    count = len(col.find_notes(f'"note:{note_type.name}"'))
+
+    res = client.post("/api/anki/send", json=body).json()
+    assert (res["note_types_updated"], res["restructured"]) == (1, [note_type.name])
+    model = col.models.get(note_type.id)
+    assert "Notosaurus note type, version" in model["css"] and "{{Info}}" in model["tmpls"][0]["afmt"]
+    assert [f["name"] for f in model["flds"]] == ["Front", "Back", "Audio", "Info"]  # added at the end
+    assert len(col.find_notes(f'"note:{note_type.name}"')) == count  # the notes kept, none added
+    assert client.post("/api/anki/send", json=body).json()["note_types_updated"] == 0  # up to date now
+
+    # With .apkg files alone, the next package brings an older note type up to date
+    # (Anki's "update note types if newer"; the package's note type has a fixed id)
+    path = tmp_path / "lesson.apkg"
+    path.write_bytes(client.post("/api/export", json=body).content)
+    other = anki_collection.Collection(str(tmp_path / "anki" / "apkg-only.anki2"))
+    try:
+
+        def import_package():
+            options = anki_collection.ImportAnkiPackageOptions(
+                with_scheduling=False, merge_notetypes=True, update_notes=IF_NEWER, update_notetypes=IF_NEWER
+            )
+            other.import_anki_package(anki_collection.ImportAnkiPackageRequest(package_path=str(path), options=options))
+
+        import_package()
+        (imported,) = [m for m in other.models.all_names_and_ids() if m.name.startswith("Notosaurus")]
+        older = other.models.get(imported.id)
+        older["css"] = ".card { font-size: 20px; }"  # as an older Notosaurus made it
+        other.models.update_dict(older)
+        time.sleep(1.1)  # the next package made later, to the second
+        path.write_bytes(client.post("/api/export", json=body).content)
+        import_package()
+        assert "Notosaurus note type, version" in other.models.get(imported.id)["css"]
+    finally:
+        other.close()
