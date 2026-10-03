@@ -118,6 +118,7 @@ def create(
     frames: list[Frame] = (),
     ai_calls: list[AiCall] = (),
     choice: str = "",
+    page_texts: list[str] = (),
 ) -> Lesson:
     with storage.lock:
         path = _new_folder(lesson.deck)
@@ -138,6 +139,7 @@ def create(
                     },
                     ai_calls=list(ai_calls),
                     choice=choice,
+                    page_texts=list(page_texts),
                     id=path.name,
                     prompt=prompt,
                     photo_count=len(photos),
@@ -192,7 +194,14 @@ def update(id: str, changes: LessonIn, exported: bool = False, share: bool | Non
 
 
 def regenerated(
-    id: str, content: LessonIn, prompt: str, photos: list[bytes], frames: list[Frame], calls: list[AiCall], choice: str
+    id: str,
+    content: LessonIn,
+    prompt: str,
+    photos: list[bytes],
+    frames: list[Frame],
+    calls: list[AiCall],
+    choice: str,
+    page_texts: list[str] = (),
 ) -> Lesson | None:
     """A new generation in place of the lesson's content: its cards, photos, frames and
     prompt replaced; its owner, sharing, dates and AI calls kept (the new ones added)."""
@@ -213,6 +222,7 @@ def regenerated(
                 "id": id,
                 "prompt": prompt,
                 "choice": choice,
+                "page_texts": list(page_texts),
                 "frames": list(frames),
                 "photo_count": len(photos),
                 "ai_calls": [*old.ai_calls, *calls],

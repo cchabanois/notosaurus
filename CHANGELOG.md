@@ -9,6 +9,7 @@ Each pull request adds a line under **Unreleased**. See [Releasing](CONTRIBUTING
 
 ### Added
 
+- A digital PDF's text goes to the AI with each page, as the PDF holds it: the exact words, spelling and numbers, the page's picture still giving the layout and the diagrams. Kept with the lesson, so it goes again when the lesson is generated again; a scanned PDF (no text) works as before.
 - PDFs: a 📄 PDF tile next to the camera and the gallery. Each page becomes a photo, drawn in the browser by pdf.js (loaded the first time a PDF is chosen), so diagrams, masks and every AI service work as with photos. With more pages than the lesson has room for, a picker shows them all to choose from; a password-protected PDF is said so.
 - Documentation: “Taking good photos”, “Instructions” and “Reviewing the cards”, in English and French, with four new screenshots per language (the photo full screen, all the instructions, the instructions editor, the card options).
 - A 75-second demo video on YouTube (https://www.youtube.com/shorts/Q7bUTMEj6Kk), linked from the README (with the animated demo) and the documentation's home page.
