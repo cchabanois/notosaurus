@@ -47,7 +47,13 @@ export default defineConfig({
 						it: 'Usare Notosaurus',
 						'pt-BR': 'Usar o Notosaurus',
 					},
-					items: [{ slug: 'photos' }, { slug: 'instructions' }, { slug: 'review' }],
+					items: [
+						{ slug: 'photos' },
+						{ slug: 'instructions' },
+						{ slug: 'review' },
+						{ slug: 'card-types' },
+						{ slug: 'send-to-anki' },
+					],
 				},
 				{
 					label: 'Guides',

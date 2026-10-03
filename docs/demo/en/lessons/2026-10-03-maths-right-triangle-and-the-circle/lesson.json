@@ -1,0 +1,319 @@
+{
+ "format": 1,
+ "deck": "Maths::Geometry",
+ "cards": [
+  {
+   "front": "In a right triangle, what is the name of the side opposite the right angle?",
+   "back": "the hypotenuse",
+   "choices": [],
+   "info": "It is always the longest side of a right triangle.",
+   "subdeck": "Vocabulary",
+   "tags": [
+    "geometry"
+   ],
+   "mask": null,
+   "picture_prompt": "",
+   "figure": "A right triangle with vertices A, B and C. The right angle is at C, marked with a small square at the vertex. The side opposite A is labeled a, the side opposite B is labeled b, the side opposite C is labeled c.",
+   "fun_fact": "",
+   "picture_on_back": false,
+   "picture": "picture-951ac604e1b6-c8d0d39a.svg",
+   "id": "951ac604e1b6"
+  },
+  {
+   "front": "What are the two sides that form the right angle in a right triangle called?",
+   "back": "the legs (also called catheti)",
+   "choices": [],
+   "info": "",
+   "subdeck": "Vocabulary",
+   "tags": [
+    "geometry"
+   ],
+   "mask": null,
+   "picture_prompt": "",
+   "figure": "A right triangle with vertices A, B and C. The right angle is at C, marked with a small square at the vertex. The side opposite A is labeled a, the side opposite B is labeled b, the side opposite C is labeled c.",
+   "fun_fact": "",
+   "picture_on_back": false,
+   "picture": "picture-ca6a5128788c-079df635.svg",
+   "id": "ca6a5128788c"
+  },
+  {
+   "front": "What is the Pythagorean theorem for a right triangle with legs a and b and hypotenuse c?",
+   "back": "\\(a^2 + b^2 = c^2\\)",
+   "choices": [],
+   "info": "Only true for a right triangle, with c the hypotenuse.",
+   "subdeck": "Properties",
+   "tags": [
+    "geometry"
+   ],
+   "mask": null,
+   "picture_prompt": "",
+   "figure": "A right triangle with vertices A, B and C. The right angle is at C, marked with a small square at the vertex. The leg opposite A is labeled a, the leg opposite B is labeled b, and the hypotenuse opposite C is labeled c.",
+   "fun_fact": "",
+   "picture_on_back": true,
+   "picture": "picture-281ae347efc3-e60fc065.svg",
+   "id": "281ae347efc3"
+  },
+  {
+   "front": "If a triangle's sides a, b, c satisfy \\(a^2+b^2=c^2\\), what can we conclude about the triangle?",
+   "back": "It is a right triangle, with the right angle opposite side c.",
+   "choices": [],
+   "info": "This is the converse of the Pythagorean theorem.",
+   "subdeck": "Properties",
+   "tags": [
+    "geometry"
+   ],
+   "mask": null,
+   "picture_prompt": "",
+   "figure": "",
+   "fun_fact": "",
+   "picture_on_back": false,
+   "picture": "",
+   "id": "3f4d939582c5"
+  },
+  {
+   "front": "True or false: in a right triangle with legs 3 cm and 4 cm, the hypotenuse measures 5 cm.",
+   "back": "True",
+   "choices": [
+    "False"
+   ],
+   "info": "\\(3^2+4^2=9+16=25=5^2\\)",
+   "subdeck": "Quiz",
+   "tags": [
+    "geometry"
+   ],
+   "mask": null,
+   "picture_prompt": "",
+   "figure": "",
+   "fun_fact": "",
+   "picture_on_back": false,
+   "picture": "",
+   "id": "2ff4f22e68f2"
+  },
+  {
+   "front": "True or false: in a right triangle with legs 6 cm and 8 cm, the hypotenuse measures 12 cm.",
+   "back": "False",
+   "choices": [
+    "True"
+   ],
+   "info": "The correct hypotenuse is 10 cm, since \\(6^2+8^2=36+64=100=10^2\\).",
+   "subdeck": "Quiz",
+   "tags": [
+    "geometry"
+   ],
+   "mask": null,
+   "picture_prompt": "",
+   "figure": "",
+   "fun_fact": "",
+   "picture_on_back": false,
+   "picture": "",
+   "id": "c0f625cd0b57"
+  },
+  {
+   "front": "What is the radius of a circle?",
+   "back": "The distance from the center to any point on the circle.",
+   "choices": [],
+   "info": "",
+   "subdeck": "Vocabulary",
+   "tags": [
+    "geometry"
+   ],
+   "mask": null,
+   "picture_prompt": "",
+   "figure": "A circle with center O. A segment is drawn from O to a point A on the circle, labeled r.",
+   "fun_fact": "",
+   "picture_on_back": true,
+   "picture": "picture-228a797dcb26-b0821869.svg",
+   "id": "228a797dcb26"
+  },
+  {
+   "front": "What is the diameter of a circle?",
+   "back": "A segment passing through the center with both endpoints on the circle; its length is twice the radius.",
+   "choices": [],
+   "info": "",
+   "subdeck": "Vocabulary",
+   "tags": [
+    "geometry"
+   ],
+   "mask": null,
+   "picture_prompt": "",
+   "figure": "A circle with center O. A segment AB passes through O, with A and B on the circle, labeled d.",
+   "fun_fact": "",
+   "picture_on_back": true,
+   "picture": "picture-64e0122a43ca-3b7c5f7b.svg",
+   "id": "64e0122a43ca"
+  },
+  {
+   "front": "For a circle of radius \\(r\\), the diameter is {{c1::d = 2r}}.",
+   "back": "",
+   "choices": [],
+   "info": "",
+   "subdeck": "Vocabulary",
+   "tags": [
+    "geometry"
+   ],
+   "mask": null,
+   "picture_prompt": "",
+   "figure": "",
+   "fun_fact": "",
+   "picture_on_back": false,
+   "picture": "",
+   "id": "93a32f3c2b07"
+  },
+  {
+   "front": "True or false: the diameter is the longest chord of a circle.",
+   "back": "True",
+   "choices": [
+    "False"
+   ],
+   "info": "",
+   "subdeck": "Quiz",
+   "tags": [
+    "geometry"
+   ],
+   "mask": null,
+   "picture_prompt": "",
+   "figure": "",
+   "fun_fact": "",
+   "picture_on_back": false,
+   "picture": "",
+   "id": "8facbc9866a4"
+  },
+  {
+   "front": "True or false: the radius of a circle is twice its diameter.",
+   "back": "False",
+   "choices": [
+    "True"
+   ],
+   "info": "It is actually the diameter that is twice the radius.",
+   "subdeck": "Quiz",
+   "tags": [
+    "geometry"
+   ],
+   "mask": null,
+   "picture_prompt": "",
+   "figure": "",
+   "fun_fact": "",
+   "picture_on_back": false,
+   "picture": "",
+   "id": "ab7a316731d5"
+  },
+  {
+   "front": "What is the perpendicular bisector of a segment?",
+   "back": "The line perpendicular to the segment that passes through its midpoint.",
+   "choices": [],
+   "info": "Every point on it is equidistant from the segment's two endpoints.",
+   "subdeck": "Vocabulary",
+   "tags": [
+    "geometry"
+   ],
+   "mask": null,
+   "picture_prompt": "",
+   "figure": "A segment AB with its midpoint M marked. A line through M is drawn perpendicular to AB, with a small square at M showing the right angle.",
+   "fun_fact": "",
+   "picture_on_back": true,
+   "picture": "picture-91b2eae25126-016a558d.svg",
+   "id": "91b2eae25126"
+  },
+  {
+   "front": "How is a right angle usually marked in a geometric figure?",
+   "back": "With a small square drawn at the vertex of the angle.",
+   "choices": [],
+   "info": "",
+   "subdeck": "Vocabulary",
+   "tags": [
+    "geometry"
+   ],
+   "mask": null,
+   "picture_prompt": "",
+   "figure": "",
+   "fun_fact": "",
+   "picture_on_back": false,
+   "picture": "",
+   "id": "8dc92d972d6b"
+  }
+ ],
+ "voice": "",
+ "reverse": false,
+ "typing": false,
+ "dictation": false,
+ "shared": false,
+ "frames": [],
+ "prompt": "Create cards to review the geometry of the lesson (or of the topic below): figures, properties, vocabulary (hypotenuse, radius, perpendicular bisector…). Add an exact figure when it helps to answer, never with the answer written on it.\r\nTopic: the right triangle and Pythagoras, the circle (radius, diameter).",
+ "choice": "",
+ "owner": "Léa",
+ "ai_calls": [
+  {
+   "at": "2026-10-03T21:22:26",
+   "kind": "extract",
+   "provider": "anthropic",
+   "model": "claude-sonnet-5",
+   "input_tokens": 5084,
+   "output_tokens": 4500,
+   "cost": 0.055168,
+   "exact": false
+  },
+  {
+   "at": "2026-10-03T21:22:30",
+   "kind": "picture",
+   "provider": "anthropic",
+   "model": "claude-sonnet-5",
+   "input_tokens": 613,
+   "output_tokens": 436,
+   "cost": 0.005586,
+   "exact": false
+  },
+  {
+   "at": "2026-10-03T21:22:31",
+   "kind": "picture",
+   "provider": "anthropic",
+   "model": "claude-sonnet-5",
+   "input_tokens": 654,
+   "output_tokens": 595,
+   "cost": 0.007258,
+   "exact": false
+  },
+  {
+   "at": "2026-10-03T21:22:32",
+   "kind": "picture",
+   "provider": "anthropic",
+   "model": "claude-sonnet-5",
+   "input_tokens": 662,
+   "output_tokens": 626,
+   "cost": 0.007584,
+   "exact": false
+  },
+  {
+   "at": "2026-10-03T21:22:32",
+   "kind": "picture",
+   "provider": "anthropic",
+   "model": "claude-sonnet-5",
+   "input_tokens": 654,
+   "output_tokens": 646,
+   "cost": 0.007768,
+   "exact": false
+  },
+  {
+   "at": "2026-10-03T21:22:34",
+   "kind": "picture",
+   "provider": "anthropic",
+   "model": "claude-sonnet-5",
+   "input_tokens": 614,
+   "output_tokens": 522,
+   "cost": 0.006448,
+   "exact": false
+  },
+  {
+   "at": "2026-10-03T21:22:36",
+   "kind": "picture",
+   "provider": "anthropic",
+   "model": "claude-sonnet-5",
+   "input_tokens": 628,
+   "output_tokens": 556,
+   "cost": 0.006816,
+   "exact": false
+  }
+ ],
+ "created_at": "2026-10-03T21:22:26",
+ "updated_at": "2026-10-03T21:22:36",
+ "exported_at": null
+}

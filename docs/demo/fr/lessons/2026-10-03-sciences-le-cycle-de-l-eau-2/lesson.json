@@ -1,0 +1,144 @@
+{
+ "format": 1,
+ "deck": "Sciences::Le cycle de l'eau - QCM",
+ "cards": [
+  {
+   "front": "Qu'est-ce que l'évaporation ?",
+   "back": "Le Soleil chauffe l'eau des mers et des lacs, qui se transforme en vapeur d'eau.",
+   "choices": [
+    "La vapeur d'eau se refroidit et forme des gouttelettes dans les nuages.",
+    "Les gouttelettes grossissent et tombent en pluie ou en neige.",
+    "L'eau s'infiltre dans le sol et rejoint la mer."
+   ],
+   "info": "C'est la première étape du cycle, provoquée par la chaleur du Soleil.",
+   "subdeck": "",
+   "tags": [],
+   "mask": null,
+   "picture_prompt": "",
+   "figure": "",
+   "fun_fact": "",
+   "picture_on_back": false,
+   "picture": "",
+   "id": "d3e1d48afe5d"
+  },
+  {
+   "front": "Qu'est-ce que la condensation ?",
+   "back": "La vapeur d'eau se refroidit en altitude et forme de fines gouttelettes : les nuages.",
+   "choices": [
+    "Le Soleil transforme l'eau des mers en vapeur.",
+    "Les gouttelettes tombent en pluie, en neige ou en grêle.",
+    "L'eau ruisselle vers les rivières puis la mer."
+   ],
+   "info": "C'est la deuxième étape : la vapeur devient des nuages.",
+   "subdeck": "",
+   "tags": [],
+   "mask": null,
+   "picture_prompt": "",
+   "figure": "",
+   "fun_fact": "",
+   "picture_on_back": false,
+   "picture": "",
+   "id": "5bdef4a32772"
+  },
+  {
+   "front": "Que désigne-t-on par « précipitations » ?",
+   "back": "Les gouttelettes grossissent et tombent en pluie, en neige ou en grêle.",
+   "choices": [
+    "La vapeur d'eau se condense pour former des nuages.",
+    "L'eau s'évapore sous l'effet du Soleil.",
+    "L'eau s'infiltre dans le sol et rejoint la mer."
+   ],
+   "info": "C'est la troisième étape du cycle de l'eau.",
+   "subdeck": "",
+   "tags": [],
+   "mask": null,
+   "picture_prompt": "",
+   "figure": "",
+   "fun_fact": "",
+   "picture_on_back": false,
+   "picture": "",
+   "id": "f73e9417202b"
+  },
+  {
+   "front": "Qu'est-ce que le ruissellement ?",
+   "back": "L'eau rejoint les rivières, s'infiltre dans le sol et retourne à la mer.",
+   "choices": [
+    "L'eau se transforme en vapeur sous l'effet du Soleil.",
+    "La vapeur d'eau se condense en gouttelettes dans les nuages.",
+    "Les gouttelettes tombent sous forme de pluie ou de neige."
+   ],
+   "info": "C'est la dernière étape, qui referme le cycle de l'eau.",
+   "subdeck": "",
+   "tags": [],
+   "mask": null,
+   "picture_prompt": "",
+   "figure": "",
+   "fun_fact": "",
+   "picture_on_back": false,
+   "picture": "",
+   "id": "fd2c03292894"
+  },
+  {
+   "front": "Quelle énergie fait fonctionner le cycle de l'eau ?",
+   "back": "L'énergie du Soleil",
+   "choices": [
+    "L'énergie du vent",
+    "L'énergie de la Lune",
+    "L'énergie de la Terre"
+   ],
+   "info": "C'est la chaleur du Soleil qui provoque l'évaporation, moteur du cycle.",
+   "subdeck": "",
+   "tags": [],
+   "mask": null,
+   "picture_prompt": "",
+   "figure": "",
+   "fun_fact": "",
+   "picture_on_back": false,
+   "picture": "",
+   "id": "7faf4226e323"
+  },
+  {
+   "front": "Entre quels éléments l'eau circule-t-elle sans cesse ?",
+   "back": "La mer, l'air et la terre",
+   "choices": [
+    "La mer, le ciel et les montagnes",
+    "La terre, le feu et l'air",
+    "Les rivières, les océans et les nuages"
+   ],
+   "info": "Le cycle de l'eau relie ces trois milieux naturels.",
+   "subdeck": "",
+   "tags": [],
+   "mask": null,
+   "picture_prompt": "",
+   "figure": "",
+   "fun_fact": "",
+   "picture_on_back": false,
+   "picture": "",
+   "id": "6688288b94c3"
+  }
+ ],
+ "voice": "",
+ "reverse": false,
+ "typing": false,
+ "dictation": false,
+ "shared": false,
+ "frames": [],
+ "prompt": "Crée un QCM pour réviser la leçon : une question par notion importante (dates, définitions, notions clés), avec la bonne réponse et trois mauvaises réponses plausibles. Questions courtes, en français. Info : une courte explication de la bonne réponse, si elle aide.",
+ "choice": "QCM sur le cycle de l'eau : une question par notion clé avec trois mauvaises réponses plausibles.",
+ "owner": "Léa",
+ "ai_calls": [
+  {
+   "at": "2026-10-03T21:23:15",
+   "kind": "extract",
+   "provider": "anthropic",
+   "model": "claude-sonnet-5",
+   "input_tokens": 7469,
+   "output_tokens": 2454,
+   "cost": 0.039478,
+   "exact": false
+  }
+ ],
+ "created_at": "2026-10-03T21:23:15",
+ "updated_at": "2026-10-03T21:23:15",
+ "exported_at": null
+}

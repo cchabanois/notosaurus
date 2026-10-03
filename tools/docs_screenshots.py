@@ -40,26 +40,42 @@ SHOTS = ROOT / "docs" / "src" / "assets" / "screenshots"
 PROFILES = ["Léa", "Paul"]
 APP = "document.querySelector('[x-data]')._x_dataStack[0]"
 
-# The lessons made by "generate": input page, Notosaurus prompt, deck name, correction
+# The lessons made by "generate": the page photographed (docs/demo/inputs/<input>.<lang>.html,
+# None: no photo), the Notosaurus prompt, a topic added to it, the deck name, and a correction
+# applied afterwards. The deck name finds the lesson again in "shoot".
 LESSONS = {
-    "en": [
-        (
-            "vocab",
-            "notosaurus:vocabulary",
-            "Spanish::Unit 3 - At school",
-            "Add the plural on the back, like: la regla / las reglas",
-        ),
-        ("plant", "notosaurus:diagram", "Science::Parts of a plant", None),
-    ],
-    "fr": [
-        (
-            "vocab",
-            "notosaurus:vocabulary",
-            "Espagnol::Unité 3 - À l'école",
-            "Ajoute le pluriel au verso, comme : la regla / las reglas",
-        ),
-        ("plant", "notosaurus:diagram", "Sciences::Les parties d'une plante", None),
-    ],
+    "en": {
+        "vocab": {
+            "input": "vocab",
+            "prompt": "notosaurus:vocabulary",
+            "deck": "Spanish::Unit 3 - At school",
+            "correction": "Add the plural on the back, like: la regla / las reglas",
+        },
+        "plant": {"input": "plant", "prompt": "notosaurus:diagram", "deck": "Science::Parts of a plant"},
+        "cloze": {"input": "water", "prompt": "notosaurus:cloze", "deck": "Science::The water cycle - Gaps"},
+        "quiz": {"input": "water", "prompt": "notosaurus:quiz", "deck": "Science::The water cycle - Quiz"},
+        "geometry": {
+            "prompt": "notosaurus:geometry",
+            "topic": "Topic: the right triangle and Pythagoras, the circle (radius, diameter).",
+            "deck": "Maths::Geometry",
+        },
+    },
+    "fr": {
+        "vocab": {
+            "input": "vocab",
+            "prompt": "notosaurus:vocabulary",
+            "deck": "Espagnol::Unité 3 - À l'école",
+            "correction": "Ajoute le pluriel au verso, comme : la regla / las reglas",
+        },
+        "plant": {"input": "plant", "prompt": "notosaurus:diagram", "deck": "Sciences::Les parties d'une plante"},
+        "cloze": {"input": "water", "prompt": "notosaurus:cloze", "deck": "Sciences::Le cycle de l'eau - Trous"},
+        "quiz": {"input": "water", "prompt": "notosaurus:quiz", "deck": "Sciences::Le cycle de l'eau - QCM"},
+        "geometry": {
+            "prompt": "notosaurus:geometry",
+            "topic": "Sujet : le triangle rectangle et Pythagore, le cercle (rayon, diamètre).",
+            "deck": "Maths::Géométrie",
+        },
+    },
 }
 # Shown in the settings screenshots
 INSTRUCTIONS = {
@@ -196,15 +212,17 @@ def wait_for(page, condition: str, timeout: float = 420):
 # --- generate ------------------------------------------------------------------------
 
 
-def generate(lang: str, settings_file: Path) -> None:
+def generate(lang: str, settings_file: Path, only: list[str] | None = None) -> None:
+    """Make the demo lessons `only` (default: all) of a language, replacing those with the same deck."""
     out = DEMO / lang / "lessons"
+    lessons = {k: v for k, v in LESSONS[lang].items() if not only or k in only}
     with tempfile.TemporaryDirectory() as tmp, browser() as b:
         tmp = Path(tmp)
         data = tmp / "data"
         data.mkdir()
         shutil.copy(settings_file, data / "settings.json")  # real keys, temporary folder only
         page = b.new_page(viewport={"width": 1200, "height": 1600})
-        for name, *_ in LESSONS[lang]:  # the "photos"
+        for name in {lesson["input"] for lesson in lessons.values() if lesson.get("input")}:  # the "photos"
             page.goto((DEMO / "inputs" / f"{name}.{lang}.html").as_uri())
             page.wait_for_load_state("networkidle")
             page.evaluate("document.fonts.ready")
@@ -213,27 +231,37 @@ def generate(lang: str, settings_file: Path) -> None:
             page = phone(b, lang)
             page.goto(url)
             page.wait_for_load_state("networkidle")
-            for name, prompt, deck, correction in LESSONS[lang]:
+            for key, lesson in lessons.items():
                 page.evaluate(f"{APP}.newLesson()")
-                page.locator("input[type=file][multiple]").first.set_input_files(tmp / f"{name}.jpg")
-                wait_for(page, f"{APP}.photos.length === 1", timeout=30)  # read and resized by the page
-                page.evaluate(f"{APP}.choose({json.dumps(prompt)})")
+                photos = 1 if lesson.get("input") else 0
+                if photos:
+                    page.locator("input[type=file][multiple]").first.set_input_files(tmp / f"{lesson['input']}.jpg")
+                    wait_for(page, f"{APP}.photos.length === 1", timeout=30)  # read and resized by the page
+                page.evaluate(f"{APP}.choose({json.dumps(lesson['prompt'])})")
+                if lesson.get("topic"):
+                    page.evaluate(f"t => {{ {APP}.form.text += '\\n' + t; }}", lesson["topic"])
                 page.evaluate(f"{APP}.extract()")
                 wait_for(page, f"!{APP}.loading && {APP}.cards.length > 0")
-                if page.evaluate(f"{APP}.photos.length") != 1:
-                    raise RuntimeError(f"{lang}/{name}: the lesson has no photo")
-                page.evaluate(f"d => {{ {APP}.deck = d; }}", deck)
+                wait_for(page, f"{APP}.cards.every(c => !(c.figure || c.picture_prompt) || c.picture)")
+                if page.evaluate(f"{APP}.photos.length") != photos:
+                    raise RuntimeError(f"{lang}/{key}: the photo wasn't sent")
+                page.evaluate(f"d => {{ {APP}.deck = d; }}", lesson["deck"])
                 page.evaluate(f"{APP}.saveNow()")
-                if correction:
-                    page.evaluate(f"t => {{ {APP}.revision.text = t; {APP}.revise(); }}", correction)
+                if lesson.get("correction"):
+                    page.evaluate(f"t => {{ {APP}.revision.text = t; {APP}.revise(); }}", lesson["correction"])
                     wait_for(page, f"!{APP}.revision.busy && !!{APP}.revision.summary")
                 page.evaluate(f"{APP}.saveNow()")
                 time.sleep(1)
-                print(f"{lang}: {name} → {page.evaluate(f'{APP}.cards.length')} cards", flush=True)
-        if out.exists():
-            shutil.rmtree(out)
-        shutil.copytree(data / "lessons", out, ignore=shutil.ignore_patterns("audio"))
-        for lesson in out.glob("*/lesson.json"):  # the demo profile, whoever ran it
+                print(f"{lang}: {key} → {page.evaluate(f'{APP}.cards.length')} cards", flush=True)
+        out.mkdir(parents=True, exist_ok=True)
+        decks = {lesson["deck"] for lesson in lessons.values()}
+        for old in out.glob("*/lesson.json"):  # the lessons made again
+            if json.loads(old.read_text(encoding="utf-8"))["deck"] in decks:
+                shutil.rmtree(old.parent)
+        for folder in (data / "lessons").iterdir():
+            target = out / folder.name
+            shutil.copytree(folder, target, ignore=shutil.ignore_patterns("audio"))
+            lesson = target / "lesson.json"  # the demo profile, whoever ran it
             content = json.loads(lesson.read_text(encoding="utf-8"))
             content["owner"] = PROFILES[0]
             lesson.write_text(json.dumps(content, ensure_ascii=False, indent=1), encoding="utf-8")
@@ -270,7 +298,7 @@ def lesson_id(page, prefix: str) -> str:
 def shoot(lang: str) -> None:
     out = SHOTS / lang
     out.mkdir(parents=True, exist_ok=True)
-    vocab_deck, plant_deck = (d for _, _, d, _ in LESSONS[lang])
+    vocab_deck, plant_deck = LESSONS[lang]["vocab"]["deck"], LESSONS[lang]["plant"]["deck"]
     with tempfile.TemporaryDirectory() as tmp, browser() as b, notosaurus(demo_data(lang, Path(tmp))) as url:
         page = phone(b, lang)
 
@@ -333,6 +361,20 @@ def shoot(lang: str) -> None:
         page.evaluate("window.scrollBy(0, 300)")
         shot("diagram")
 
+        for key, name in (("cloze", "cloze"), ("quiz", "quiz"), ("geometry", "figures")):
+            page.evaluate(f"id => {APP}.openLesson(id)", lesson_id(page, LESSONS[lang][key]["deck"]))
+            page.wait_for_load_state("networkidle")
+            scroll_to(page, "section.review", 10)
+            page.evaluate("window.scrollBy(0, 230)")
+            shot(name)
+
+        page.evaluate(f"id => {APP}.openLesson(id)", lesson_id(page, vocab_deck))
+        page.wait_for_load_state("networkidle")
+        scroll_to(page, "section.review", 10)
+        page.evaluate(f"{APP}.sendToAnki()")  # to the fake Anki
+        wait_for(page, f"!{APP}.sending", timeout=60)
+        shot("sent")
+
         page.goto(url + "admin.html")
         page.wait_for_load_state("networkidle")
         time.sleep(1)
@@ -351,6 +393,7 @@ def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument("step", choices=("generate", "shoot"))
     parser.add_argument("--lang", action="append", help="language code (several allowed); default: all")
+    parser.add_argument("--only", action="append", help="for generate: only these lessons (vocab, plant…)")
     parser.add_argument(
         "--settings",
         type=Path,
@@ -359,7 +402,7 @@ def main() -> None:
     )
     args = parser.parse_args()
     for lang in args.lang or list(LESSONS):
-        generate(lang, args.settings) if args.step == "generate" else shoot(lang)
+        generate(lang, args.settings, args.only) if args.step == "generate" else shoot(lang)
 
 
 if __name__ == "__main__":
