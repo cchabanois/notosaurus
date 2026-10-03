@@ -1,0 +1,144 @@
+{
+ "format": 1,
+ "deck": "Science::The water cycle - Quiz",
+ "cards": [
+  {
+   "front": "What is the process called when the Sun heats water from seas and lakes, turning it into water vapour?",
+   "back": "Evaporation",
+   "choices": [
+    "Condensation",
+    "Precipitation",
+    "Collection"
+   ],
+   "info": "The Sun's heat turns liquid water into water vapour, which rises into the air.",
+   "subdeck": "Quiz",
+   "tags": [],
+   "mask": null,
+   "picture_prompt": "",
+   "figure": "",
+   "fun_fact": "",
+   "picture_on_back": false,
+   "picture": "",
+   "id": "91ffd850359a"
+  },
+  {
+   "front": "What happens during condensation in the water cycle?",
+   "back": "The vapour cools down and forms tiny droplets, making clouds",
+   "choices": [
+    "Water soaks into the ground",
+    "Water falls as rain or snow",
+    "Water runs into rivers"
+   ],
+   "info": "High up in the sky, water vapour cools and turns back into tiny liquid droplets that form clouds.",
+   "subdeck": "Quiz",
+   "tags": [],
+   "mask": null,
+   "picture_prompt": "",
+   "figure": "",
+   "fun_fact": "",
+   "picture_on_back": false,
+   "picture": "",
+   "id": "20b4e1b27619"
+  },
+  {
+   "front": "What is precipitation?",
+   "back": "Droplets getting bigger and falling as rain, snow or hail",
+   "choices": [
+    "Water vapour rising into the air",
+    "Water soaking into the ground",
+    "Clouds forming in the sky"
+   ],
+   "info": "When cloud droplets become heavy enough, they fall to the ground as rain, snow or hail.",
+   "subdeck": "Quiz",
+   "tags": [],
+   "mask": null,
+   "picture_prompt": "",
+   "figure": "",
+   "fun_fact": "",
+   "picture_on_back": false,
+   "picture": "",
+   "id": "17faac253e12"
+  },
+  {
+   "front": "What happens during the collection stage of the water cycle?",
+   "back": "Water runs into rivers, soaks into the ground and goes back to the sea",
+   "choices": [
+    "Water vapour forms clouds",
+    "The Sun heats the sea water",
+    "Droplets fall as rain or hail"
+   ],
+   "info": "Collection is the final stage, where water returns to the sea through rivers and the ground.",
+   "subdeck": "Quiz",
+   "tags": [],
+   "mask": null,
+   "picture_prompt": "",
+   "figure": "",
+   "fun_fact": "",
+   "picture_on_back": false,
+   "picture": "",
+   "id": "59ab188a18f2"
+  },
+  {
+   "front": "What provides the energy that drives the water cycle?",
+   "back": "The Sun",
+   "choices": [
+    "The wind",
+    "The Moon",
+    "The ocean currents"
+   ],
+   "info": "The Sun's heat causes evaporation, which keeps the whole water cycle moving.",
+   "subdeck": "Quiz",
+   "tags": [],
+   "mask": null,
+   "picture_prompt": "",
+   "figure": "",
+   "fun_fact": "",
+   "picture_on_back": false,
+   "picture": "",
+   "id": "d79d49706c6d"
+  },
+  {
+   "front": "Between which three places does water move in the water cycle?",
+   "back": "The sea, the air and the land",
+   "choices": [
+    "The sea, the mountains and the clouds",
+    "The rivers, the air and the Sun",
+    "The land, the Moon and the sea"
+   ],
+   "info": "Water constantly moves between these three places, forming a continuous cycle.",
+   "subdeck": "Quiz",
+   "tags": [],
+   "mask": null,
+   "picture_prompt": "",
+   "figure": "",
+   "fun_fact": "",
+   "picture_on_back": false,
+   "picture": "",
+   "id": "a877e0c55b77"
+  }
+ ],
+ "voice": "",
+ "reverse": false,
+ "typing": false,
+ "dictation": false,
+ "shared": false,
+ "frames": [],
+ "prompt": "Create a multiple-choice quiz to review the lesson: one question per important point (dates, definitions, key ideas), with the right answer and three plausible wrong ones. Short questions, in English. Info: a short explanation of the right answer, when it helps.",
+ "choice": "Multiple-choice quiz reviewing the water cycle lesson",
+ "owner": "Léa",
+ "ai_calls": [
+  {
+   "at": "2026-10-03T21:21:48",
+   "kind": "extract",
+   "provider": "anthropic",
+   "model": "claude-sonnet-5",
+   "input_tokens": 7443,
+   "output_tokens": 1271,
+   "cost": 0.027596,
+   "exact": false
+  }
+ ],
+ "created_at": "2026-10-03T21:21:48",
+ "updated_at": "2026-10-03T21:21:48",
+ "exported_at": null
+}

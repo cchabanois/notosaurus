@@ -24,6 +24,11 @@ good and cheaper choice.
 A lesson can have **up to 10 pages**. After the first photo, **Next page** adds another one;
 **Gallery** picks photos already taken (JPEG, PNG, WebP or GIF).
 
+**📄 PDF** adds the pages of a PDF, for instance a worksheet sent by the teacher: each page
+becomes a photo. With more pages than the lesson has room for, Notosaurus shows them all and
+you choose which ones to add. Each page sent costs like a photo. A password-protected PDF must
+first be saved without its password.
+
 On each photo:
 
 - **↻** turns it a quarter turn;
