@@ -27,6 +27,11 @@ Gemini est un bon choix, moins cher.
 Une leçon peut avoir **jusqu'à 10 pages**. Après la première photo, **Page suivante** en
 ajoute une autre ; **Galerie** choisit des photos déjà prises (JPEG, PNG, WebP ou GIF).
 
+**📄 PDF** ajoute les pages d'un PDF, par exemple une fiche envoyée par l'enseignant : chaque
+page devient une photo. S'il y a plus de pages que la leçon n'a de place, Notosaurus les
+affiche toutes et tu choisis lesquelles ajouter. Chaque page envoyée coûte comme une photo. Un
+PDF protégé par un mot de passe doit d'abord être enregistré sans son mot de passe.
+
 Sur chaque photo :
 
 - **↻** la tourne d'un quart de tour ;
