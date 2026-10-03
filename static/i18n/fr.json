@@ -48,6 +48,18 @@
       "gallery": "Galerie",
       "unreadable": "Impossible de lire « {name} »."
     },
+    "pdf": {
+      "button": "PDF",
+      "reading": "Lecture…",
+      "title": "Pages à ajouter",
+      "hint": "« {name} » a {count} pages : choisis-en {free} au plus (une leçon tient en 10 pages ; chaque page envoyée coûte comme une photo).",
+      "add": {
+        "one": "Ajouter {count} page",
+        "other": "Ajouter {count} pages"
+      },
+      "full": "Déjà {max} pages : retires-en avant d'ajouter un PDF.",
+      "protected": "« {name} » est protégé par un mot de passe : enregistre-le sans mot de passe, puis ajoute-le à nouveau."
+    },
     "prompt": {
       "title": "Consigne",
       "free": "✏️ Libre",

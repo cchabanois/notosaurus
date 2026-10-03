@@ -9,6 +9,7 @@ Each pull request adds a line under **Unreleased**. See [Releasing](CONTRIBUTING
 
 ### Added
 
+- PDFs: a 📄 PDF tile next to the camera and the gallery. Each page becomes a photo, drawn in the browser by pdf.js (loaded the first time a PDF is chosen), so diagrams, masks and every AI service work as with photos. With more pages than the lesson has room for, a picker shows them all to choose from; a password-protected PDF is said so.
 - Documentation: “Taking good photos”, “Instructions” and “Reviewing the cards”, in English and French, with four new screenshots per language (the photo full screen, all the instructions, the instructions editor, the card options).
 - A 75-second demo video on YouTube (https://www.youtube.com/shorts/Q7bUTMEj6Kk), linked from the README (with the animated demo) and the documentation's home page.
 - A user documentation website (Astro Starlight, published on GitHub Pages), in English and French to start with, with screenshots of each language taken by `tools/docs_screenshots.py` from demo lessons (no personal data, no AI call); the other languages show the English pages until they are translated.

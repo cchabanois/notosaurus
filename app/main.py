@@ -413,7 +413,7 @@ def config() -> dict:
     s = settings.current()
     # Claude places diagram masks less precisely (too tight on handwriting): say so in the review.
     loose_boxes = s.llm == "anthropic" or "claude" in s.model_for_provider().lower()
-    return {"version": VERSION, "diagram_warning": loose_boxes}
+    return {"version": VERSION, "diagram_warning": loose_boxes, "max_photos": MAX_IMAGES}
 
 
 @app.get("/api/lessons")

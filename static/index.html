@@ -99,6 +99,12 @@
             <span x-text="$t('app.photos.gallery')"></span>
             <input type="file" accept="image/*" multiple hidden @change="addPhotos($event)">
           </label>
+          <!-- Its own picker: the gallery keeps the phone's photo picker -->
+          <label class="add-tile" :class="{ busy: pdfBusy }">
+            <span class="add-icon">📄</span>
+            <span x-text="pdfBusy ? $t('app.pdf.reading') : $t('app.pdf.button')"></span>
+            <input type="file" accept="application/pdf,.pdf" multiple hidden :disabled="pdfBusy" @change="addPhotos($event)">
+          </label>
         </div>
       </div>
     </section>
@@ -439,6 +445,31 @@
         </section>
       </template>
     </div>
+  </aside>
+
+  <!-- PDF page picker: more pages than places left -->
+  <div class="sheet-backdrop" x-cloak x-show="pdf.open" x-transition.opacity @click="donePdfPicker(false)"></div>
+  <aside class="sheet" x-cloak x-show="pdf.open" x-transition:enter="sheet-anim" x-transition:enter-start="sheet-down"
+         x-transition:leave="sheet-anim" x-transition:leave-end="sheet-down"
+         @keydown.escape.window="pdf.open && donePdfPicker(false)" :aria-label="$t('app.pdf.title')">
+    <div class="sheet-handle"></div>
+    <div class="sheet-head">
+      <h2 x-text="$t('app.pdf.title')"></h2>
+      <button class="icon-btn" @click="donePdfPicker(false)" :aria-label="$t('common.close')">✕</button>
+    </div>
+    <p class="hint" x-text="$t('app.pdf.hint', { name: pdf.name, count: pdf.pages.length, free: pdf.free })"></p>
+    <div class="pdf-pages">
+      <template x-for="p in pdf.pages" :key="p.n">
+        <button type="button" class="pdf-page" :class="{ chosen: p.chosen }" :aria-pressed="String(p.chosen)"
+                :disabled="!p.chosen && pdfChosen().length >= pdf.free" @click="p.chosen = !p.chosen"
+                :aria-label="$t('app.photos.page', { n: p.n })">
+          <img x-show="p.url" :src="p.url" alt="">
+          <span class="pdf-page-n" x-text="p.n"></span>
+        </button>
+      </template>
+    </div>
+    <button class="btn primary wide" :disabled="!pdfChosen().length" @click="donePdfPicker(true)"
+            x-text="$t('app.pdf.add', { count: pdfChosen().length, free: pdf.free })"></button>
   </aside>
 
   <!-- Prompt picker sheet -->

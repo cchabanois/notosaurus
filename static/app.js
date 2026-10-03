@@ -31,6 +31,39 @@ async function rotateBlob(blob) {
   return new Promise((resolve) => canvas.toBlob(resolve, "image/jpeg", JPEG_QUALITY));
 }
 
+// PDFs: each page drawn as a photo (pdf.js, loaded the first time a PDF is chosen),
+// so masks, frames, thumbnails and every AI service work the same as with photos.
+const PDFJS = "https://cdn.jsdelivr.net/npm/pdfjs-dist@6.4.299/build/";
+const PDF_THUMB = 240;  // px: the page picker's thumbnails
+let pdfjs = null;
+let pdfTask = null;  // loading it (destroyed when done: frees the worker's memory)
+let openPdf = null;  // the PDF being picked from (pdf.js objects stay out of Alpine's proxies)
+let pdfPicked = null;  // resolves when its pages are picked (or not)
+
+const isPdf = (file) => file.type === "application/pdf" || /\.pdf$/i.test(file.name);
+
+async function loadPdf(file) {
+  if (!pdfjs) {
+    pdfjs = await import(`${PDFJS}pdf.min.mjs`);
+    pdfjs.GlobalWorkerOptions.workerSrc = `${PDFJS}pdf.worker.min.mjs`;
+  }
+  pdfTask = pdfjs.getDocument({ data: new Uint8Array(await file.arrayBuffer()) });
+  return pdfTask.promise;
+}
+
+// A page as a JPEG at most `side` px, on white (a PDF page may be transparent).
+async function renderPdfPage(doc, n, side = MAX_SIDE) {
+  const page = await doc.getPage(n);
+  const base = page.getViewport({ scale: 1 });
+  const viewport = page.getViewport({ scale: side / Math.max(base.width, base.height) });
+  const canvas = document.createElement("canvas");
+  canvas.width = Math.round(viewport.width);
+  canvas.height = Math.round(viewport.height);
+  await page.render({ canvas, viewport, background: "white" }).promise;
+  page.cleanup();
+  return new Promise((resolve) => canvas.toBlob(resolve, "image/jpeg", JPEG_QUALITY));
+}
+
 async function api(path, options = {}) {
   // The server uses the page's language for default prompts and AI summaries.
   const headers = { "X-Notosaurus-Lang": I18N.lang, ...options.headers };
@@ -108,6 +141,9 @@ document.addEventListener("alpine:init", () => {
     loading: false,
     exporting: false,
     lessonsOpen: false,
+    maxPhotos: 10,       // pages per lesson (the server's limit, from /api/config)
+    pdfBusy: false,      // a PDF's pages being drawn
+    pdf: { open: false, name: "", free: 0, pages: [] },  // its page picker
     lessonQuery: "",
     openSubjects: (() => { try { return JSON.parse(storage("get", undefined, OPEN_SUBJECTS)) ?? {}; } catch { return {}; } })(),
     picker: { open: false, query: "" },
@@ -164,6 +200,7 @@ document.addEventListener("alpine:init", () => {
         this.settingsHere = (await (await fetch("/api/admin")).json()).allowed;
         const config = await (await api("/api/config")).json();
         this.diagramWarning = config.diagram_warning;
+        this.maxPhotos = config.max_photos ?? this.maxPhotos;
       } catch {}
       this.$watch("funFacts", (on) => storage("set", on ? "1" : "0", FUN_FACTS));
       await Promise.all([this.loadPrompts(storage("get")), this.loadLessons()]);
@@ -183,6 +220,10 @@ document.addEventListener("alpine:init", () => {
     async addPhotos(event) {
       this.error = "";
       for (const file of event.target.files) {
+        if (isPdf(file)) {
+          await this.addPdf(file);
+          continue;
+        }
         try {
           const blob = await resize(file);
           this.photos.push({ blob, url: URL.createObjectURL(blob) });
@@ -192,6 +233,67 @@ document.addEventListener("alpine:init", () => {
         }
       }
       event.target.value = "";  // allows picking the same photo again
+    },
+
+    // A PDF: its pages as photos. More pages than places left: the user picks them
+    // (never cut silently).
+    async addPdf(file) {
+      const free = this.maxPhotos - this.photos.length;
+      if (free <= 0) {
+        this.error = t("app.pdf.full", { max: this.maxPhotos });
+        return;
+      }
+      this.pdfBusy = true;
+      try {
+        openPdf = await loadPdf(file);
+        const count = openPdf.numPages;
+        let chosen = Array.from({ length: count }, (_, i) => i + 1);
+        if (count > free) chosen = await this.pickPdfPages(file.name, count, free);
+        for (const n of chosen) {
+          const blob = await renderPdfPage(openPdf, n);
+          this.photos.push({ blob, url: URL.createObjectURL(blob) });
+          this.photosEdited = Boolean(this.lessonId);
+        }
+      } catch (e) {
+        this.error = t(e?.name === "PasswordException" ? "app.pdf.protected" : "app.photos.unreadable", { name: file.name });
+      } finally {
+        this.pdfBusy = false;
+        this.closePdfPicker();
+        await pdfTask?.destroy();
+        pdfTask = openPdf = null;
+      }
+    },
+
+    // The page picker: every page's thumbnail, drawn one after the other; at most `free`.
+    pickPdfPages(name, count, free) {
+      this.pdf = { open: true, name, free, pages: Array.from({ length: count }, (_, i) => ({ n: i + 1, url: "", chosen: false })) };
+      (async () => {
+        for (const page of this.pdf.pages) {
+          if (!this.pdf.open || !openPdf) return;
+          try {
+            page.url = URL.createObjectURL(await renderPdfPage(openPdf, page.n, PDF_THUMB));
+          } catch {
+            return;  // closed meanwhile
+          }
+        }
+      })();
+      return new Promise((resolve) => { pdfPicked = resolve; });
+    },
+
+    pdfChosen() {
+      return this.pdf.pages.filter((p) => p.chosen).map((p) => p.n);
+    },
+
+    // "Add" (the pages chosen) or closed (none)
+    donePdfPicker(add) {
+      pdfPicked?.(add ? this.pdfChosen() : []);
+      pdfPicked = null;
+      this.closePdfPicker();
+    },
+
+    closePdfPicker() {
+      this.pdf.pages.forEach((p) => p.url && URL.revokeObjectURL(p.url));
+      this.pdf = { open: false, name: "", free: 0, pages: [] };
     },
 
     // A quarter turn clockwise, when a photo (or the AI's guess) is sideways. In a saved

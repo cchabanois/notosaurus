@@ -298,6 +298,27 @@ h2 {
   text-align: center;
   cursor: pointer;
 }
+.add-tile.busy { opacity: .6; pointer-events: none; }
+.pdf-pages {
+  display: grid; grid-template-columns: repeat(auto-fill, minmax(5.5rem, 1fr)); gap: .5rem;
+  grid-auto-rows: max-content; align-content: start;  /* rows of whole pages, the list scrolling */
+  flex: 1 1 auto; min-height: 0; overflow-y: auto; margin: .5rem 0 .8rem; padding: .2rem;
+}
+.pdf-page {
+  position: relative; aspect-ratio: 3 / 4; padding: 0;
+  border: 2px solid var(--border); border-radius: var(--radius-sm); background: var(--surface-2);
+}
+.pdf-page img {
+  display: block; width: 100%; height: 100%; object-fit: contain; background: #fff;
+  border-radius: calc(var(--radius-sm) - 2px);
+}
+.pdf-page.chosen { border-color: var(--primary); box-shadow: 0 0 0 2px var(--primary); }
+.pdf-page:disabled { opacity: .45; }
+.pdf-page-n {
+  position: absolute; left: .3rem; bottom: .3rem; min-width: 1.4rem; padding: 0 .3rem; border-radius: 999px;
+  background: var(--surface); font-size: .75rem; font-weight: 700;
+}
+.pdf-page.chosen .pdf-page-n { background: var(--primary); color: var(--on-primary); }
 .add-tile.primary {
   border-color: color-mix(in srgb, var(--primary) 45%, transparent);
   color: var(--primary);
