@@ -58,7 +58,7 @@ export default defineConfig({
 				{
 					label: 'Guides',
 					translations: { fr: 'Guides', es: 'Guías', de: 'Anleitungen', it: 'Guide', 'pt-BR': 'Guias' },
-					items: [{ slug: 'several-children' }],
+					items: [{ slug: 'several-children' }, { slug: 'ai-services' }, { slug: 'privacy' }],
 				},
 			],
 		}),

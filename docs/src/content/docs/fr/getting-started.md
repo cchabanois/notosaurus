@@ -32,7 +32,8 @@ quelques euros durent longtemps.
 ## 2. Ajouter ta clé d'IA
 
 Dans Anki, ouvre **Outils → Notosaurus → Réglages**, choisis le **service d'IA**, colle ta
-clé et clique sur **Tester**. Les réglages ne s'ouvrent que sur l'ordinateur : les enfants
+clé et clique sur **Tester** (voir [Services d'IA et coûts](../ai-services/) pour obtenir une
+clé). Les réglages ne s'ouvrent que sur l'ordinateur : les enfants
 ne peuvent pas les changer depuis un téléphone.
 
 ![Réglages : le choix du service d'IA](../../../assets/screenshots/fr/settings-ai.png)

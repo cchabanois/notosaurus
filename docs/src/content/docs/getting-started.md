@@ -31,7 +31,8 @@ children's notebooks, prefer a paid key: a few euros last a long time.
 ## 2. Add your AI key
 
 In Anki, open **Tools → Notosaurus → Settings**, choose the **AI service**, paste your key
-and click **Test**. Settings only open on the computer: children can't change them from a
+and click **Test** (see [AI services and costs](../ai-services/) to get a key). Settings only
+open on the computer: children can't change them from a
 phone.
 
 ![Settings: choosing the AI service](../../assets/screenshots/en/settings-ai.png)

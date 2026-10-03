@@ -32,6 +32,9 @@ page devient une photo. S'il y a plus de pages que la leçon n'a de place, Notos
 affiche toutes et tu choisis lesquelles ajouter. Chaque page envoyée coûte comme une photo. Un
 PDF protégé par un mot de passe doit d'abord être enregistré sans son mot de passe.
 
+Un PDF fait sur ordinateur (pas un scan) contient aussi son texte exact : Notosaurus l'envoie à
+l'IA avec la page, et aucun mot, accent, date ni nombre n'est mal lu.
+
 Sur chaque photo :
 
 - **↻** la tourne d'un quart de tour ;
