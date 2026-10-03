@@ -16,6 +16,7 @@ from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 
 import pytest
+from conftest import fake_synthesize
 
 anki_collection = pytest.importorskip("anki.collection")
 from anki.import_export_pb2 import ImportAnkiPackageUpdateCondition  # noqa: E402
@@ -31,10 +32,6 @@ PNG = bytes.fromhex(
 VOICE = "es-ES-ElviraNeural"
 # Anki's default when importing: update a note if the imported one is newer
 IF_NEWER = ImportAnkiPackageUpdateCondition.IMPORT_ANKI_PACKAGE_UPDATE_CONDITION_IF_NEWER
-
-
-async def fake_synthesize(text, voice, path):
-    path.write_bytes(b"ID3 fake mp3 " + text.encode())
 
 
 class FakeMainWindow:
@@ -140,7 +137,7 @@ def test_bridge_on_a_real_collection(bridged, col):
     mother = next(n for n in note_ids if fields(col, n)["Front"] == "la mère")
     audio = fields(col, mother)["Audio"]
     assert audio == f"[sound:{tts.filename('la madre', VOICE)}]"
-    assert (Path(col.media.dir()) / tts.filename("la madre", VOICE)).read_bytes() == b"ID3 fake mp3 la madre"
+    assert (Path(col.media.dir()) / tts.filename("la madre", VOICE)).read_bytes() == b"ID3fake mp3 la madre"
 
     # Sent again, corrected: the note is updated, not duplicated
     corrected = [{**c, "back": "la mamá"} if c["front"] == "la mère" else c for c in lesson["cards"]]

@@ -14,6 +14,7 @@ import threading
 import time
 
 import pytest
+from conftest import fake_synthesize
 
 sync_api = pytest.importorskip("playwright.sync_api")
 import uvicorn  # noqa: E402
@@ -24,10 +25,6 @@ from app.main import app  # noqa: E402
 FRONT_PROMPT = "Une carte par mot de la famille"  # demo mode: Spanish family words
 CLOZE_PROMPT = "Texte à trous sur la Révolution"  # demo mode: sentences with gaps
 SAVED = re.compile(r"\bsaved\b")  # the save pill once the server has the lesson
-
-
-async def fake_synthesize(text, voice, path):
-    path.write_bytes(b"ID3 fake mp3")
 
 
 @pytest.fixture(scope="session")

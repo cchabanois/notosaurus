@@ -389,8 +389,11 @@ document.addEventListener("alpine:init", () => {
     // Most recently used prompts first (never used: oldest first), always
     // including the selected one.
     recentPrompts() {
+      // Never used: in the server's order (Notosaurus's prompts as it lists them, then
+      // the user's, oldest first). Not by id: ids are numbers or "notosaurus:…" strings.
+      const order = new Map(this.prompts.map((c, i) => [c, i]));
       const byUse = [...this.prompts].sort(
-        (a, b) => (b.used_at ?? "").localeCompare(a.used_at ?? "") || a.id - b.id);
+        (a, b) => (b.used_at ?? "").localeCompare(a.used_at ?? "") || order.get(a) - order.get(b));
       const recent = byUse.slice(0, RECENT_PROMPTS);
       const selected = this.current();
       if (selected && !recent.includes(selected)) recent.splice(RECENT_PROMPTS - 1, 1, selected);

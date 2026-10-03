@@ -1,11 +1,8 @@
 """Pictures on cards ("front: the picture of the word"), drawn by an image model."""
 
-import html
 import io
-import json
-import sqlite3
-import zipfile
 
+import apkg
 import pytest
 from PIL import Image
 
@@ -78,36 +75,27 @@ def test_picture_cards_in_anki(client, drawn, tmp_path):
     lesson = lesson_with_pictures(client)
     cards = client.post(f"/api/lessons/{lesson['id']}/pictures").json()["lesson"]["cards"]
 
-    def export(cards):
-        body = {"deck": "D", "cards": cards, "lesson_id": lesson["id"]}
-        with zipfile.ZipFile(io.BytesIO(client.post("/api/export", json=body).content)) as z:
-            media = sorted(json.loads(z.read("media")).values())
-            (tmp_path / "c.anki2").write_bytes(z.read("collection.anki2"))
-        con = sqlite3.connect(tmp_path / "c.anki2")
-        notes = con.execute("select guid, mid, flds from notes order by id").fetchall()
-        models = json.loads(con.execute("select models from col").fetchone()[0])
-        con.close()
-        return notes, models, media
+    def package(cards):
+        return apkg.export(client, {"deck": "D", "cards": cards, "lesson_id": lesson["id"]}, tmp_path)
 
-    notes, models, media = export(cards)
-    names = {int(i): m["name"] for i, m in models.items()}
-    assert sorted(names[mid] for _, mid, _ in notes) == [
+    first = package(cards)
+    names = first.models
+    assert sorted(names[mid]["name"] for _, mid, _ in first.notes) == [
         "Notosaurus image (audio)",
         "Notosaurus image (audio)",
         "Notosaurus recto/verso (audio)",  # the umbrella without its picture: a text card
         "Notosaurus recto/verso (audio)",  # "tomorrow"
     ]
     picture_fields = [
-        html.unescape(f).split("\x1f") for _, mid, f in notes if names[mid].startswith("Notosaurus image")
+        first.fields(note) for note in first.notes if names[note[1]]["name"].startswith("Notosaurus image")
     ]
     assert picture_fields[0][0] == "Comment dit-on en anglais ?"
     assert picture_fields[0][-2] == f'<img src="{cards[0]["picture"]}">' and picture_fields[0][-1] == cards[0]["id"]
-    assert media == sorted([cards[0]["picture"], cards[1]["picture"]])
+    assert first.media == sorted([cards[0]["picture"], cards[1]["picture"]])
 
     # Same front on every picture card, then a new picture: the same notes (GUID from the id)
     cards[0]["picture"], cards[1]["front"] = cards[1]["picture"], ""
-    notes2, _, _ = export(cards)
-    assert [g for g, _, _ in notes2] == [g for g, _, _ in notes]
+    assert package(cards).guids == first.guids
 
 
 def test_only_the_owner_draws(client, drawn, monkeypatch):

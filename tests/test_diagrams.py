@@ -1,11 +1,8 @@
 """Diagram labels hidden on the photo: boxes from the AI, card images, Anki notes."""
 
-import html
 import io
-import json
-import sqlite3
-import zipfile
 
+import apkg
 import pytest
 from PIL import Image
 
@@ -112,37 +109,25 @@ def test_diagram_lesson_exported(client, tmp_path):
     cards = lesson["cards"]
     assert [c["mask"]["n"] for c in cards] == [1, 2, 3]  # the fake provider's three labels
 
-    def export(cards):
-        body = {"deck": lesson["deck"], "cards": cards, "lesson_id": lesson["id"]}
-        content = client.post("/api/export", json=body).content
-        with zipfile.ZipFile(io.BytesIO(content)) as z:
-            media = json.loads(z.read("media"))
-            db = z.read("collection.anki2")
-        path = tmp_path / "collection.anki2"
-        path.write_bytes(db)
-        con = sqlite3.connect(path)
-        notes = con.execute("select guid, flds from notes order by id").fetchall()
-        models = json.loads(con.execute("select models from col").fetchone()[0])
-        con.close()
-        return notes, models, sorted(media.values())
+    def package(cards):
+        return apkg.export(client, {"deck": lesson["deck"], "cards": cards, "lesson_id": lesson["id"]}, tmp_path)
 
-    notes, models, media = export(cards)
-    (model,) = models.values()
+    first = package(cards)
+    (model,) = first.models.values()
     assert model["name"] == "Notosaurus légendes (audio)"
-    names = [f["name"] for f in model["flds"]]
-    fields = dict(zip(names, (html.unescape(f) for f in notes[0][1].split("\x1f")), strict=True))
+    fields = first.fields_by_name(first.notes[0])
     assert (fields["Front"], fields["Back"]) == ("Qu'est-ce que (1) ?", "la bouche")
     assert fields["Id"] == f"{lesson['id']}:1:1"  # lesson, photo, label number
     assert fields["Masks"].count("notosaurus-mask") == 3 and 'class="notosaurus-mask target"' in fields["Masks"]
-    assert len(media) == 1 and fields["Image"] == f'<img src="{media[0]}">'  # one image for the whole diagram
+    assert len(first.media) == 1 and fields["Image"] == f'<img src="{first.media[0]}">'  # one image per diagram
 
     # Mask moved and answer corrected: same notes (GUID from the Id), same image, new masks
     cards[0]["mask"]["box"] = [0.12, 0.1, 0.37, 0.2]
     cards[0]["back"] = "la langue"
-    notes2, _, media2 = export(cards)
-    assert [g for g, _ in notes2] == [g for g, _ in notes]
-    assert media2 == media
-    assert notes2[0][1] != notes[0][1]
+    second = package(cards)
+    assert second.guids == first.guids
+    assert second.media == first.media
+    assert second.notes[0][2] != first.notes[0][2]
 
 
 @pytest.mark.parametrize("degrees", [90, 180, 270])
@@ -254,7 +239,7 @@ def test_crop_holds_the_frame_and_every_mask():
     assert diagrams.crop(once, masks) == pytest.approx(once)
 
 
-def test_frame_set_by_hand(client):
+def test_frame_set_by_hand(client, tmp_path):
     files = [("images", ("p.jpg", photo(1000, 500), "image/jpeg"))]
     lesson = client.post("/api/extract", files=files, data={"prompt": "Le schéma"}).json()
     assert lesson["frames"] == []  # the fake provider gives none: the whole photo
@@ -267,9 +252,9 @@ def test_frame_set_by_hand(client):
 
     def exported_size(**extra):
         body = {"deck": "D", "cards": lesson["cards"], "lesson_id": lesson["id"], **extra}
-        with zipfile.ZipFile(io.BytesIO(client.post("/api/export", json=body).content)) as z:
-            (index,) = json.loads(z.read("media")).keys()
-            return Image.open(io.BytesIO(z.read(index))).size
+        package = apkg.export(client, body, tmp_path)
+        (name,) = package.media
+        return Image.open(io.BytesIO(package.media_bytes(name))).size
 
     assert exported_size() == (850, 425)  # the saved frame
     assert exported_size(frames=[]) == (1000, 500)  # the page's current frames win: none, the whole photo
@@ -285,7 +270,7 @@ def test_cropped_image_and_masks(tmp_path):
     assert 'style="left:25.0%;top:25.0%;width:25.0%;height:25.0%"' in html  # relative to the crop
 
 
-def test_turning_a_photo_by_hand_turns_its_frame(client, monkeypatch):
+def test_turning_a_photo_by_hand_turns_its_frame(client, tmp_path, monkeypatch):
     from app import main
     from app.models import Deck
 
@@ -302,10 +287,9 @@ def test_turning_a_photo_by_hand_turns_its_frame(client, monkeypatch):
 
     # The exported image is cropped to the frame and its masks
     body = {"deck": "D", "cards": turned["cards"], "lesson_id": lesson["id"]}
-    with zipfile.ZipFile(io.BytesIO(client.post("/api/export", json=body).content)) as z:
-        (name,) = json.loads(z.read("media")).values()
-        (index,) = json.loads(z.read("media")).keys()
-        size = Image.open(io.BytesIO(z.read(index))).size
+    package = apkg.export(client, body, tmp_path)
+    (name,) = package.media
+    size = Image.open(io.BytesIO(package.media_bytes(name))).size
     assert name.startswith("diagram-page-1-") and size[0] < 500 and size[1] < 1000
 
 
