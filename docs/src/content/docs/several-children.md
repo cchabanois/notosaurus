@@ -1,6 +1,6 @@
 ---
 title: Several children
-description: One Anki profile and one AnkiWeb account per child, each with their own lessons and cards.
+description: "One Anki profile and one AnkiWeb account per child, each with their own lessons and cards."
 ---
 
 Each child gets their own **Anki profile**: their own cards, their own progress. Notosaurus

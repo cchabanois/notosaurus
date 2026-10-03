@@ -294,6 +294,21 @@ def shoot(lang: str) -> None:
         page.evaluate(f"{APP}.choose('notosaurus:vocabulary')")
         scroll_to(page, "section.panel:has(input[type=file])", 70)
         shot("instructions")
+
+        page.evaluate(f"{APP}.openViewer({APP}.photos.map(p => p.url), 0)")
+        time.sleep(0.8)
+        shot("photo-viewer")
+        page.evaluate(f"{APP}.viewer.open = false")
+
+        page.evaluate(f"{APP}.openPicker()")
+        time.sleep(0.8)
+        shot("prompt-picker")
+        page.evaluate(f"{APP}.picker.open = false")
+
+        page.evaluate(f"{APP}.openEditor('edit')")  # a Notosaurus prompt: read-only, with "Duplicate"
+        time.sleep(0.8)
+        shot("prompt-editor")
+        page.evaluate(f"{APP}.editor.open = false")
         page.evaluate(f"{APP}.clearPhotos()")
 
         page.evaluate(f"{APP}.lessonsOpen = true")
@@ -308,6 +323,9 @@ def shoot(lang: str) -> None:
         page.locator("form.revise textarea").fill(CORRECTION_TYPED[lang])
         scroll_to(page, "form.revise", 120)
         shot("correction")
+        page.locator("form.revise textarea").fill("")
+        scroll_to(page, ".export-options", 420)
+        shot("review-options")
 
         page.evaluate(f"id => {APP}.openLesson(id)", lesson_id(page, plant_deck))
         page.wait_for_load_state("networkidle")

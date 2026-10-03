@@ -1,6 +1,6 @@
 ---
 title: Getting started
-description: Install Notosaurus in Anki, connect your phone and make your first deck from a photo.
+description: "Install Notosaurus in Anki, connect your phone and make your first deck from a photo."
 ---
 
 Notosaurus is an add-on for Anki desktop. It runs on your computer, and you use it from
@@ -50,14 +50,16 @@ Only devices that scanned this QR code can use Notosaurus. If a phone is lost or
 
 ## 4. Your first lesson
 
-1. Under **Lesson photos**, take a photo of the page (or several pages).
+1. Under **Lesson photos**, take a photo of the page (or several pages): see
+   [Taking good photos](../photos/).
 2. Under **Instructions**, pick what to make: vocabulary, questions, fill in the blanks, a
-   diagram to complete… **Automatic** chooses from the lesson.
+   diagram to complete… **Automatic** chooses from the lesson. See [Instructions](../instructions/).
 
    ![A photo of the lesson and the instructions](../../assets/screenshots/en/instructions.png)
 
 3. Tap **Generate cards** and wait a few seconds.
-4. Check the cards. Edit them, delete some, or ask the AI to fix them in plain words.
+4. Check the cards. Edit them, delete some, or ask the AI to fix them in plain words: see
+   [Reviewing the cards](../review/).
 
    ![The cards, ready to review](../../assets/screenshots/en/review.png)
 

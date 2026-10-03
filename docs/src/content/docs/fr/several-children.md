@@ -1,6 +1,6 @@
 ---
 title: Plusieurs enfants
-description: Un profil Anki et un compte AnkiWeb par enfant, chacun avec ses leçons et ses cartes.
+description: "Un profil Anki et un compte AnkiWeb par enfant, chacun avec ses leçons et ses cartes."
 ---
 
 Chaque enfant a son propre **profil Anki** : ses cartes, sa progression. Notosaurus suit le
