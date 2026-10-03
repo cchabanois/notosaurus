@@ -1,6 +1,6 @@
 ---
 title: Pour commencer
-description: Installer Notosaurus dans Anki, connecter ton téléphone et faire ton premier paquet à partir d'une photo.
+description: "Installer Notosaurus dans Anki, connecter ton téléphone et faire ton premier paquet à partir d'une photo."
 ---
 
 Notosaurus est un greffon pour Anki sur ordinateur. Il tourne sur ton ordinateur, et tu
@@ -52,15 +52,16 @@ est perdu ou prêté : **Réglages → Téléphones → Déconnecter tous les t�
 
 ## 4. Ta première leçon
 
-1. Dans **Photos de la leçon**, prends la page en photo (ou plusieurs pages).
+1. Dans **Photos de la leçon**, prends la page en photo (ou plusieurs pages) : voir
+   [Bien prendre la photo](../photos/).
 2. Dans **Consigne**, choisis ce qu'il faut faire : vocabulaire, questions, texte à trous,
-   schéma à compléter… **Automatique** choisit d'après la leçon.
+   schéma à compléter… **Automatique** choisit d'après la leçon. Voir [Les consignes](../instructions/).
 
    ![La photo de la leçon et la consigne](../../../assets/screenshots/fr/instructions.png)
 
 3. Touche **Générer les cartes** et attends quelques secondes.
 4. Vérifie les cartes. Modifie-les, supprimes-en, ou demande à l'IA de les corriger avec
-   tes mots.
+   tes mots : voir [Relire les cartes](../review/).
 
    ![Les cartes, prêtes à être relues](../../../assets/screenshots/fr/review.png)
 

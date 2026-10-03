@@ -39,6 +39,17 @@ export default defineConfig({
 					items: [{ slug: 'getting-started' }],
 				},
 				{
+					label: 'Using Notosaurus',
+					translations: {
+						fr: 'Utiliser Notosaurus',
+						es: 'Usar Notosaurus',
+						de: 'Notosaurus verwenden',
+						it: 'Usare Notosaurus',
+						'pt-BR': 'Usar o Notosaurus',
+					},
+					items: [{ slug: 'photos' }, { slug: 'instructions' }, { slug: 'review' }],
+				},
+				{
 					label: 'Guides',
 					translations: { fr: 'Guides', es: 'Guías', de: 'Anleitungen', it: 'Guide', 'pt-BR': 'Guias' },
 					items: [{ slug: 'several-children' }],
