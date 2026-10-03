@@ -5,6 +5,7 @@
   },
   "common": {
     "close": "Schließen",
+    "helpOn": "Hilfe: {topic}",
     "cancel": "Abbrechen",
     "save": "Speichern",
     "delete": "Löschen",

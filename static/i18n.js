@@ -9,6 +9,10 @@
 // $t('app.photos.page', { n: 2 }), plurals with { count }: $t('common.count.cards', { count }).
 
 const LANG_KEY = "notosaurus.lang";  // language picked on the page ("" = automatic)
+// User documentation: English at the root, the other languages under their code
+// (Portuguese is Brazil's). A page not translated yet shows the English one.
+const DOCS = "https://cchabanois.github.io/notosaurus/";
+const DOCS_LANGS = { en: "", pt: "pt-br/" };
 
 const I18N = {
   lang: "en",        // language in use
@@ -23,6 +27,12 @@ const I18N = {
 
 function lookup(source, key) {
   return key.split(".").reduce((value, part) => (value && typeof value === "object" ? value[part] : undefined), source);
+}
+
+/** Address of a documentation page ("photos", "faq"…; "" for the home page) in the page's language. */
+function docsUrl(page = "") {
+  const lang = DOCS_LANGS[I18N.lang] ?? `${I18N.lang}/`;
+  return DOCS + lang + (page ? `${page}/` : "");
 }
 
 function t(key, params = {}) {
@@ -133,6 +143,7 @@ document.addEventListener("alpine:init", () => {
   const track = () => Alpine.store("i18n").version;
   Alpine.magic("t", () => (key, params) => (track(), t(key, params)));
   Alpine.magic("th", () => (key, params) => (track(), tHtml(key, params)));
+  Alpine.magic("docs", () => (page) => (track(), docsUrl(page)));
   i18nReady.then(() => {
     const { lang, choice, auto, available, names } = I18N;
     Object.assign(Alpine.store("i18n"), { ready: true, lang, choice, auto, available, names });

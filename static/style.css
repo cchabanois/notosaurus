@@ -150,6 +150,23 @@ h2 {
   font-size: 1.12rem;
   font-weight: 800;
 }
+/* "?" at the end of a section title: the matching page of the user documentation */
+.help-link {
+  display: inline-grid;
+  place-items: center;
+  flex: none;
+  margin-left: auto;
+  width: 1.5rem;
+  height: 1.5rem;
+  border-radius: 50%;
+  border: 1.5px solid var(--border);
+  color: var(--muted);
+  font-size: .85rem;
+  font-weight: 800;
+  text-decoration: none;
+}
+.help-link:hover, .help-link:focus-visible { color: var(--primary); border-color: var(--primary); }
+
 .step {
   display: inline-grid;
   place-items: center;

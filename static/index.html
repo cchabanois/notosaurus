@@ -77,7 +77,7 @@
 
     <!-- 1. Photos -->
     <section class="panel">
-      <h2><span class="step">1</span> <span x-text="$t('app.photos.title')"></span></h2>
+      <h2><span class="step">1</span> <span x-text="$t('app.photos.title')"></span> <a class="help-link" :href="$docs('photos')" target="_blank" rel="noopener" :aria-label="$t('common.helpOn', { topic: $t('app.photos.title') })" :title="$t('common.helpOn', { topic: $t('app.photos.title') })">?</a></h2>
       <div class="strip">
         <template x-for="(p, i) in photos" :key="p.url">
           <figure class="thumb">
@@ -111,7 +111,7 @@
 
     <!-- 2. Prompt -->
     <section class="panel">
-      <h2><span class="step">2</span> <span x-text="$t('app.prompt.title')"></span></h2>
+      <h2><span class="step">2</span> <span x-text="$t('app.prompt.title')"></span> <a class="help-link" :href="$docs('instructions')" target="_blank" rel="noopener" :aria-label="$t('common.helpOn', { topic: $t('app.prompt.title') })" :title="$t('common.helpOn', { topic: $t('app.prompt.title') })">?</a></h2>
       <div class="chips" role="radiogroup" :aria-label="$t('app.prompt.title')">
         <!-- A prompt written for this time only, never saved -->
         <button class="chip" role="radio" :aria-checked="selectedId === null" :class="{ active: selectedId === null }"
@@ -161,7 +161,7 @@
     <!-- 3. Review -->
     <section class="panel review" x-cloak x-show="cards.length" x-ref="review">
       <div class="review-head">
-        <h2><span class="step">3</span> <span x-text="$t('app.review.title')"></span></h2>
+        <h2><span class="step">3</span> <span x-text="$t('app.review.title')"></span> <a class="help-link" :href="$docs('review')" target="_blank" rel="noopener" :aria-label="$t('common.helpOn', { topic: $t('app.review.title') })" :title="$t('common.helpOn', { topic: $t('app.review.title') })">?</a></h2>
         <span class="save-pill" :class="saveState">
           <span x-show="saveState === 'saved'" x-text="$t('app.review.saved')"></span>
           <span x-show="saveState === 'pending' || saveState === 'saving'" x-text="$t('app.review.saving')"></span>

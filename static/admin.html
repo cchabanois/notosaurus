@@ -77,7 +77,7 @@
       <div>
         <!-- 1. Which AI service -->
         <section class="panel">
-          <h2><span class="step">1</span> <span x-text="$t('admin.provider.title')"></span></h2>
+          <h2><span class="step">1</span> <span x-text="$t('admin.provider.title')"></span> <a class="help-link" :href="$docs('ai-services')" target="_blank" rel="noopener" :aria-label="$t('common.helpOn', { topic: $t('admin.provider.title') })" :title="$t('common.helpOn', { topic: $t('admin.provider.title') })">?</a></h2>
           <div class="options">
             <template x-for="p in shownProviders()" :key="p.id">
               <label class="option" :class="{ active: form.llm === p.id }">
@@ -209,7 +209,7 @@
 
         <!-- Standing instructions for the AI: added to its fixed rules, for everyone and per profile -->
         <section class="panel">
-          <h2 x-text="$t('admin.instructions.title')"></h2>
+          <h2><span x-text="$t('admin.instructions.title')"></span> <a class="help-link" :href="$docs('several-children')" target="_blank" rel="noopener" :aria-label="$t('common.helpOn', { topic: $t('admin.instructions.title') })" :title="$t('common.helpOn', { topic: $t('admin.instructions.title') })">?</a></h2>
           <p class="hint" x-text="$t('admin.instructions.hint')"></p>
           <label class="field">
             <span x-text="$t('admin.instructions.general')"></span>
@@ -230,7 +230,7 @@
 
         <!-- Phones: the QR code lets one in; unpairing them all changes the token -->
         <section class="panel phones" x-show="phone">
-          <h2 x-text="$t('admin.phones.title')"></h2>
+          <h2><span x-text="$t('admin.phones.title')"></span> <a class="help-link" :href="$docs('privacy')" target="_blank" rel="noopener" :aria-label="$t('common.helpOn', { topic: $t('admin.phones.title') })" :title="$t('common.helpOn', { topic: $t('admin.phones.title') })">?</a></h2>
           <p class="hint" x-text="$t('admin.phones.hint')"></p>
           <img class="qr" :src="phone && '/api/qr?' + new URLSearchParams({ text: phone.url })" :alt="$t('admin.phones.qr')" width="200" height="200">
           <p class="hint"><a :href="phone?.url" x-text="$t('admin.phones.thisDevice')"></a></p>
@@ -240,7 +240,7 @@
 
         <!-- Anki -->
         <section class="panel">
-          <h2 x-text="$t('admin.anki.title')"></h2>
+          <h2><span x-text="$t('admin.anki.title')"></span> <a class="help-link" :href="$docs('send-to-anki')" target="_blank" rel="noopener" :aria-label="$t('common.helpOn', { topic: $t('admin.anki.title') })" :title="$t('common.helpOn', { topic: $t('admin.anki.title') })">?</a></h2>
           <p class="hint" x-show="saved.embedded" x-html="$t('admin.anki.embedded')"></p>
           <div x-show="!saved.embedded">
             <p class="hint" x-html="$t('admin.anki.howTo')"></p>

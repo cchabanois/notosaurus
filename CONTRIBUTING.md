@@ -141,6 +141,10 @@ npm run build    # what the workflow publishes, in docs/dist
   the same file names. A page not translated yet shows the English one, with a notice.
 - The sidebar, the languages and the site's settings are in `docs/astro.config.mjs`.
 - Use the interface's own words, in each language (`static/i18n/<lang>.json`), and Anki's.
+- The app links to pages of the site with `$docs('page')` (the "?" at the end of some section
+  titles), in the page's language: keep those page names when renaming a page.
+- The image shown when the site's address is shared, `docs/public/og.jpg`, is made from
+  `docs/demo/og-image.html`.
 
 ### Screenshots
 
@@ -205,5 +209,7 @@ built from `main`, and the **Unreleased** section of [CHANGELOG.md](CHANGELOG.md
    merged, the draft shows these notes.
 3. Review the draft on GitHub (*Releases*) and click *Publish release*: GitHub creates
    the tag `vX.Y.Z` on that commit.
-4. In the next pull request, set the next version in `pyproject.toml` (until then, the
+4. Upload the add-on to AnkiWeb, with the description kept in [docs/ankiweb.md](docs/ankiweb.md)
+   (check that it still matches what Notosaurus does).
+5. In the next pull request, set the next version in `pyproject.toml` (until then, the
    draft isn't updated).

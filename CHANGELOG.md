@@ -9,6 +9,7 @@ Each pull request adds a line under **Unreleased**. See [Releasing](CONTRIBUTING
 
 ### Added
 
+- A “?” at the end of some section titles (photos, instructions, review; in the settings: AI service, instructions, phones, sending to Anki) opens the matching page of the documentation, in the page's language. The documentation site has a picture for when its address is shared, and the AnkiWeb description of the add-on is kept in `docs/ankiweb.md`.
 - Documentation: “Troubleshooting and FAQ” (Notosaurus doesn't start, the phone can't connect, the AI fails, the cards don't reach Anki, uninstalling) and “Advanced installation” (standalone, Docker, environment variables), in English and French, in a new Help section.
 - Documentation: “AI services and costs” (which service, getting a key step by step for Gemini, Claude, OpenAI and OpenRouter, the model, local models, the cost of a lesson) and “Privacy and security” (what leaves the computer, where the data is, who can use Notosaurus, the Wi-Fi), in English and French, with two more screenshots per language (the API key and the model, the costs). The photos page explains the text of digital PDFs.
 - Documentation: “Card types” (question and answer, fill in the blanks, multiple choice, true or false, diagrams, formulas, figures, pictures) and “Sending to Anki” (direct send, sending again without duplicates, the .apkg file, getting the cards to the phone), in English and French, with screenshots made from new demo lessons. `tools/docs_screenshots.py generate --only` makes some demo lessons without redoing the others.
