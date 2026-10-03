@@ -42,6 +42,23 @@ from .version import VERSION
 
 log = logging.getLogger("notosaurus")
 
+# The pairing token, in the QR code's address (…/?k=<token>), would otherwise be written
+# in clear in the server's log by each request: the log is shown from Anki's menu and
+# pasted in bug reports. Masked in uvicorn's access lines.
+TOKEN_IN_URL = re.compile(r"([?&]k=)[^&\s#]*")
+
+
+class HideDeviceToken(logging.Filter):
+    def filter(self, record: logging.LogRecord) -> bool:
+        if isinstance(record.args, tuple):
+            record.args = tuple(TOKEN_IN_URL.sub(r"\1•••", a) if isinstance(a, str) else a for a in record.args)
+        if isinstance(record.msg, str):
+            record.msg = TOKEN_IN_URL.sub(r"\1•••", record.msg)
+        return True
+
+
+logging.getLogger("uvicorn.access").addFilter(HideDeviceToken())
+
 STATIC_DIR = Path(__file__).parent.parent / "static"
 IMAGE_TYPES = {"image/jpeg", "image/png", "image/webp", "image/gif"}
 MAX_IMAGES = 10

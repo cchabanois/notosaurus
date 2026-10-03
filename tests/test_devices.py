@@ -63,3 +63,28 @@ def test_qr_code(client):
     res = client.get("/api/qr", params={"text": "http://192.168.1.20:8000/"})
     assert res.status_code == 200 and res.headers["content-type"] == "image/png"
     assert res.content.startswith(b"\x89PNG")
+
+
+def test_the_token_never_written_in_the_server_log():
+    """uvicorn writes each request's address: the QR code's token is masked in it."""
+    import logging
+
+    from app.main import HideDeviceToken
+
+    assert any(isinstance(f, HideDeviceToken) for f in logging.getLogger("uvicorn.access").filters)
+    # A line as uvicorn's access logger makes it
+    record = logging.LogRecord(
+        "uvicorn.access", logging.INFO, "", 0, '%s - "%s %s HTTP/%s" %d',
+        ("192.168.1.20:5000", "GET", "/?k=Zx81-secret_token&lang=fr", "1.1", 200), None,
+    )  # fmt: skip
+    HideDeviceToken().filter(record)
+    assert record.getMessage() == '192.168.1.20:5000 - "GET /?k=•••&lang=fr HTTP/1.1" 200'
+    record = logging.LogRecord("uvicorn.access", logging.INFO, "", 0, "GET /api/lessons?x=1&k=abc", None, None)
+    HideDeviceToken().filter(record)
+    assert record.getMessage() == "GET /api/lessons?x=1&k=•••"
+
+
+def test_other_sites_never_get_the_page_address(client):
+    """The page's address may hold the token: fonts, CDN and links get none of it."""
+    for page in ("/", "/admin.html"):
+        assert '<meta name="referrer" content="same-origin">' in client.get(page).text
