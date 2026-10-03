@@ -60,6 +60,11 @@ export default defineConfig({
 					translations: { fr: 'Guides', es: 'Guías', de: 'Anleitungen', it: 'Guide', 'pt-BR': 'Guias' },
 					items: [{ slug: 'several-children' }, { slug: 'ai-services' }, { slug: 'privacy' }],
 				},
+				{
+					label: 'Help',
+					translations: { fr: 'Aide', es: 'Ayuda', de: 'Hilfe', it: 'Aiuto', 'pt-BR': 'Ajuda' },
+					items: [{ slug: 'faq' }, { slug: 'install' }],
+				},
 			],
 		}),
 	],
