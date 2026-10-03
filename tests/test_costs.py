@@ -5,8 +5,15 @@ import json
 import types
 
 import pytest
+from conftest import ADMIN, PRICES
 
 from app import llm, prices
+
+
+def usd(model, input_tokens, output_tokens):
+    """The expected price of a call, from the list conftest serves (per token)."""
+    input_price, output_price = (float(v) for v in PRICES[model])
+    return input_tokens * input_price + output_tokens * output_price
 
 
 def test_fake_calls_kept_with_the_lesson(client):
@@ -26,10 +33,10 @@ def test_fake_calls_kept_with_the_lesson(client):
 @pytest.mark.parametrize(
     ("provider", "model", "cost"),
     [
-        ("openai", "gpt-6.1-sol", 1000 * 0.000002 + 100 * 0.00001),
-        ("gemini", "gemini-3.8-flash", 1000 * 0.00000075 + 100 * 0.00000375),
-        ("anthropic", "claude-sonnet-4-6", 1000 * 0.000003 + 100 * 0.000015),  # listed as claude-sonnet-4.6
-        ("openai", "google/gemini-3.8-flash", 1000 * 0.00000075 + 100 * 0.00000375),  # an OpenRouter id
+        ("openai", "gpt-6.1-sol", usd("openai/gpt-6.1-sol", 1000, 100)),
+        ("gemini", "gemini-3.8-flash", usd("google/gemini-3.8-flash", 1000, 100)),
+        ("anthropic", "claude-sonnet-4-6", usd("anthropic/claude-sonnet-4.6", 1000, 100)),  # as OpenRouter lists it
+        ("openai", "google/gemini-3.8-flash", usd("google/gemini-3.8-flash", 1000, 100)),  # an OpenRouter id
         ("anthropic", "claude-unknown", None),
     ],
 )
@@ -41,7 +48,9 @@ def test_estimated_cost(client, provider, model, cost):
 def test_prices_fetched_once_a_day(client, monkeypatch):
     asyncio.run(prices.estimate("openai", "gpt-6.1-sol", 1, 1))
     monkeypatch.setattr(prices, "_transport", None)  # the network would now be used: the cache must answer
-    assert asyncio.run(prices.estimate("openai", "gpt-6.1-sol", 1000, 0)) == pytest.approx(0.002)
+    assert asyncio.run(prices.estimate("openai", "gpt-6.1-sol", 1000, 0)) == pytest.approx(
+        usd("openai/gpt-6.1-sol", 1000, 0)
+    )
 
 
 def fake_completion(cost=None, model="google/gemini-3.8-flash", content=None):
@@ -89,7 +98,6 @@ def test_other_services_get_an_estimate(client, monkeypatch):
 
 
 def test_deleting_a_lesson_keeps_what_was_spent(admin, monkeypatch, tmp_path):
-    from conftest import ADMIN
 
     monkeypatch.setenv("NOTOSAURUS_LLM", "openrouter")
     monkeypatch.setenv("NOTOSAURUS_MODEL", "google/gemini-3.8-flash")

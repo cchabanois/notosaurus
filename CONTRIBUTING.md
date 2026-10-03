@@ -33,8 +33,14 @@ To build the add-on file: `python3 tools/build_addon.py` → `dist/notosaurus-<v
 
 ```sh
 .venv/bin/pytest
+node --test tests/frontend/                                 # the page scripts' unit tests (no dependency)
 .venv/bin/ruff check . && .venv/bin/ruff format --check .   # lint and formatting (pyproject.toml)
 ```
+
+`tests/frontend/` unit-tests `static/i18n.js`, `app.js` and `admin.js` as they
+ship: the scripts run in a Node `vm` context with the browser globals stubbed and
+the real translation files, so the fallback chain, the card preview's escaping,
+the settings page's diffing and the like are checked without a browser.
 
 `tests/test_page.py` drives the pages in a real browser (Playwright, headless
 Chromium): the page saving as it goes, generating again and undoing, deleting a

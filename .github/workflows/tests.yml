@@ -47,6 +47,9 @@ jobs:
       - name: Check the page scripts parse
         shell: bash
         run: for f in static/*.js; do node --check "$f"; done
+      - name: Unit-test the page scripts
+        if: matrix.os == 'ubuntu-latest' && matrix.python == '3.13'
+        run: node --test tests/frontend/
 
   real-anki:
     # The add-on's bridge and the .apkg import against Anki's real engine (the

@@ -374,8 +374,10 @@ document.addEventListener("alpine:init", () => {
     // Most recently used prompts first (never used: oldest first), always
     // including the selected one.
     recentPrompts() {
-      const byUse = [...this.prompts].sort(
-        (a, b) => (b.used_at ?? "").localeCompare(a.used_at ?? "") || a.id - b.id);
+      // Ids are numbers (the user's prompts) or "notosaurus:…" strings: a subtraction
+      // would be NaN on the strings and leave the order undefined.
+      const byId = (a, b) => (a.id > b.id ? 1 : a.id < b.id ? -1 : 0);
+      const byUse = [...this.prompts].sort((a, b) => (b.used_at ?? "").localeCompare(a.used_at ?? "") || byId(a, b));
       const recent = byUse.slice(0, RECENT_PROMPTS);
       const selected = this.current();
       if (selected && !recent.includes(selected)) recent.splice(RECENT_PROMPTS - 1, 1, selected);
