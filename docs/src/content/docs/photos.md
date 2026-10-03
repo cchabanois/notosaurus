@@ -29,6 +29,9 @@ becomes a photo. With more pages than the lesson has room for, Notosaurus shows 
 you choose which ones to add. Each page sent costs like a photo. A password-protected PDF must
 first be saved without its password.
 
+A PDF made on a computer (not a scan) also holds its exact text: Notosaurus sends it to the AI
+with the page, so no word, accent, date or number is misread.
+
 On each photo:
 
 - **↻** turns it a quarter turn;

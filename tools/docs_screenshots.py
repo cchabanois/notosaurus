@@ -379,6 +379,11 @@ def shoot(lang: str) -> None:
         page.wait_for_load_state("networkidle")
         time.sleep(1)
         shot("settings-ai")
+        scroll_to(page, "section.panel:has(input[x-model*='keys'])", 80)  # the API keys
+        shot("settings-key")
+        page.evaluate("document.querySelectorAll('section.admin-lessons details').forEach(d => d.open = true)")
+        scroll_to(page, "section.admin-lessons", 80)
+        shot("settings-costs")
         scroll_to(page, "section.phones", 80)
         shot("settings-phones")
         page.evaluate("""() => {
