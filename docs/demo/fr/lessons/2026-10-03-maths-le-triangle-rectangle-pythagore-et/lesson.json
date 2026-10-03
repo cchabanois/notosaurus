@@ -1,0 +1,313 @@
+{
+ "format": 1,
+ "deck": "Maths::Géométrie",
+ "cards": [
+  {
+   "front": "Dans un triangle rectangle, comment appelle-t-on le côté opposé à l'angle droit ?",
+   "back": "L'hypoténuse",
+   "choices": [],
+   "info": "C'est toujours le plus long côté du triangle rectangle.",
+   "subdeck": "Triangle rectangle",
+   "tags": [
+    "vocabulaire",
+    "triangle"
+   ],
+   "mask": null,
+   "picture_prompt": "",
+   "figure": "Triangle ABC avec un angle droit en A, marqué par un petit carré au sommet A. Les sommets A, B et C sont indiqués ; aucun nom de côté n'est écrit.",
+   "fun_fact": "",
+   "picture_on_back": false,
+   "picture": "picture-3149943bb188-6b1b6369.svg",
+   "id": "3149943bb188"
+  },
+  {
+   "front": "Énonce le théorème de Pythagore pour un triangle ABC rectangle en A.",
+   "back": "\\(BC^2 = AB^2 + AC^2\\)",
+   "choices": [],
+   "info": "BC est l'hypoténuse, le côté opposé à l'angle droit en A.",
+   "subdeck": "Triangle rectangle",
+   "tags": [
+    "théorème",
+    "triangle"
+   ],
+   "mask": null,
+   "picture_prompt": "",
+   "figure": "Triangle ABC rectangle en A (angle droit marqué par un petit carré au sommet A). Les trois côtés sont nommés : AB, AC (les deux côtés de l'angle droit) et BC (le côté opposé à l'angle droit, en face de A).",
+   "fun_fact": "",
+   "picture_on_back": false,
+   "picture": "picture-0ac99df972b1-97276dce.svg",
+   "id": "0ac99df972b1"
+  },
+  {
+   "front": "Dans un triangle ABC, on constate que \\(BC^2 = AB^2 + AC^2\\). Que peut-on en déduire sur ce triangle ?",
+   "back": "Le triangle ABC est rectangle en A (réciproque du théorème de Pythagore).",
+   "choices": [],
+   "info": "La réciproque permet de prouver qu'un angle est droit à partir des longueurs des côtés.",
+   "subdeck": "Triangle rectangle",
+   "tags": [
+    "réciproque",
+    "théorème"
+   ],
+   "mask": null,
+   "picture_prompt": "",
+   "figure": "",
+   "fun_fact": "",
+   "picture_on_back": false,
+   "picture": "",
+   "id": "2cb9f7125700"
+  },
+  {
+   "front": "Un triangle ABC est rectangle en A, avec AB = 3 cm et AC = 4 cm. Calcule la longueur BC.",
+   "back": "BC = 5 cm",
+   "choices": [],
+   "info": "\\(BC^2 = AB^2+AC^2 = 3^2+4^2 = 9+16 = 25\\), donc \\(BC=\\sqrt{25}=5\\) cm.",
+   "subdeck": "Triangle rectangle",
+   "tags": [
+    "calcul",
+    "pythagore"
+   ],
+   "mask": null,
+   "picture_prompt": "",
+   "figure": "",
+   "fun_fact": "",
+   "picture_on_back": false,
+   "picture": "",
+   "id": "1981eb47d5c5"
+  },
+  {
+   "front": "Dans un triangle rectangle ABC, rectangle en A, quelle formule traduit le théorème de Pythagore ?",
+   "back": "\\(BC^2=AB^2+AC^2\\)",
+   "choices": [
+    "\\(AB^2=BC^2+AC^2\\)",
+    "\\(AC^2=AB^2+BC^2\\)",
+    "\\(BC^2=AB^2 \\times AC^2\\)"
+   ],
+   "info": "",
+   "subdeck": "Triangle rectangle",
+   "tags": [
+    "qcm",
+    "pythagore"
+   ],
+   "mask": null,
+   "picture_prompt": "",
+   "figure": "",
+   "fun_fact": "",
+   "picture_on_back": false,
+   "picture": "",
+   "id": "f8feb99c1473"
+  },
+  {
+   "front": "Dans un triangle rectangle, l'hypoténuse est toujours le plus petit côté.",
+   "back": "Faux",
+   "choices": [
+    "Vrai"
+   ],
+   "info": "L'hypoténuse est toujours le plus grand côté, car elle est opposée à l'angle droit.",
+   "subdeck": "Triangle rectangle",
+   "tags": [
+    "vrai_faux"
+   ],
+   "mask": null,
+   "picture_prompt": "",
+   "figure": "",
+   "fun_fact": "",
+   "picture_on_back": false,
+   "picture": "",
+   "id": "56b5dbeebb12"
+  },
+  {
+   "front": "Comment appelle-t-on le segment qui relie le centre d'un cercle à un point de ce cercle ?",
+   "back": "Le rayon",
+   "choices": [],
+   "info": "",
+   "subdeck": "Cercle",
+   "tags": [
+    "vocabulaire",
+    "cercle"
+   ],
+   "mask": null,
+   "picture_prompt": "",
+   "figure": "Cercle de centre O. Un point M est placé sur le cercle, et le segment reliant O à M est tracé. Seuls les points O et M sont indiqués, sans nom écrit sur le segment.",
+   "fun_fact": "",
+   "picture_on_back": false,
+   "picture": "picture-b7ce0e50112c-a7fb097e.svg",
+   "id": "b7ce0e50112c"
+  },
+  {
+   "front": "Comment appelle-t-on un segment qui relie deux points d'un cercle en passant par son centre ?",
+   "back": "Le diamètre",
+   "choices": [],
+   "info": "Le diamètre mesure deux fois le rayon.",
+   "subdeck": "Cercle",
+   "tags": [
+    "vocabulaire",
+    "cercle"
+   ],
+   "mask": null,
+   "picture_prompt": "",
+   "figure": "Cercle de centre O. Deux points A et B sont sur le cercle, alignés avec O, de sorte que le segment [AB] passe par O. Seuls les points O, A et B sont indiqués, sans nom écrit sur le segment.",
+   "fun_fact": "",
+   "picture_on_back": false,
+   "picture": "picture-80a182e77544-a2b8f41d.svg",
+   "id": "80a182e77544"
+  },
+  {
+   "front": "Quelle est la relation entre le diamètre d et le rayon r d'un cercle ?",
+   "back": "\\(d = 2r\\)",
+   "choices": [],
+   "info": "",
+   "subdeck": "Cercle",
+   "tags": [
+    "formule",
+    "cercle"
+   ],
+   "mask": null,
+   "picture_prompt": "",
+   "figure": "",
+   "fun_fact": "",
+   "picture_on_back": false,
+   "picture": "",
+   "id": "cad4ecbc293d"
+  },
+  {
+   "front": "Le diamètre d'un cercle mesure deux fois son rayon.",
+   "back": "Vrai",
+   "choices": [
+    "Faux"
+   ],
+   "info": "",
+   "subdeck": "Cercle",
+   "tags": [
+    "vrai_faux",
+    "cercle"
+   ],
+   "mask": null,
+   "picture_prompt": "",
+   "figure": "",
+   "fun_fact": "",
+   "picture_on_back": false,
+   "picture": "",
+   "id": "d02d6ea43b2e"
+  },
+  {
+   "front": "Comment appelle-t-on la droite perpendiculaire à un segment [AB] passant par son milieu ?",
+   "back": "La médiatrice de [AB]",
+   "choices": [],
+   "info": "",
+   "subdeck": "Vocabulaire",
+   "tags": [
+    "vocabulaire",
+    "médiatrice"
+   ],
+   "mask": null,
+   "picture_prompt": "",
+   "figure": "Segment [AB] horizontal avec son milieu I marqué. Une droite verticale passant par I, perpendiculaire à [AB] (angle droit marqué par un petit carré), est tracée. Aucun nom n'est écrit sur cette droite.",
+   "fun_fact": "",
+   "picture_on_back": false,
+   "picture": "picture-959fa18d96e9-ce58ff7e.svg",
+   "id": "959fa18d96e9"
+  },
+  {
+   "front": "Que peut-on dire de tout point situé sur la médiatrice d'un segment [AB] ?",
+   "back": "Il est équidistant de A et de B, c'est-à-dire que PA = PB.",
+   "choices": [],
+   "info": "",
+   "subdeck": "Vocabulaire",
+   "tags": [
+    "propriété",
+    "médiatrice"
+   ],
+   "mask": null,
+   "picture_prompt": "",
+   "figure": "Segment [AB] avec son milieu I marqué, et la médiatrice tracée perpendiculairement à [AB] en passant par I. Un point P est placé sur la médiatrice, avec les segments PA et PB tracés et étiquetés PA et PB.",
+   "fun_fact": "",
+   "picture_on_back": true,
+   "picture": "picture-24a7d980e588-1f98949f.svg",
+   "id": "24a7d980e588"
+  }
+ ],
+ "voice": "",
+ "reverse": false,
+ "typing": false,
+ "dictation": false,
+ "shared": false,
+ "frames": [],
+ "prompt": "Crée des cartes pour réviser la géométrie de la leçon (ou du thème ci-dessous) : figures, propriétés, vocabulaire (hypoténuse, rayon, médiatrice…). Mets une figure exacte quand elle aide à répondre, sans jamais y écrire la réponse.\r\nSujet : le triangle rectangle et Pythagore, le cercle (rayon, diamètre).",
+ "choice": "",
+ "owner": "Léa",
+ "ai_calls": [
+  {
+   "at": "2026-10-03T21:24:04",
+   "kind": "extract",
+   "provider": "anthropic",
+   "model": "claude-sonnet-5",
+   "input_tokens": 5131,
+   "output_tokens": 5626,
+   "cost": 0.066522,
+   "exact": false
+  },
+  {
+   "at": "2026-10-03T21:24:07",
+   "kind": "picture",
+   "provider": "anthropic",
+   "model": "claude-sonnet-5",
+   "input_tokens": 648,
+   "output_tokens": 359,
+   "cost": 0.004886,
+   "exact": false
+  },
+  {
+   "at": "2026-10-03T21:24:08",
+   "kind": "picture",
+   "provider": "anthropic",
+   "model": "claude-sonnet-5",
+   "input_tokens": 663,
+   "output_tokens": 467,
+   "cost": 0.005996,
+   "exact": false
+  },
+  {
+   "at": "2026-10-03T21:24:08",
+   "kind": "picture",
+   "provider": "anthropic",
+   "model": "claude-sonnet-5",
+   "input_tokens": 650,
+   "output_tokens": 486,
+   "cost": 0.00616,
+   "exact": false
+  },
+  {
+   "at": "2026-10-03T21:24:09",
+   "kind": "picture",
+   "provider": "anthropic",
+   "model": "claude-sonnet-5",
+   "input_tokens": 672,
+   "output_tokens": 534,
+   "cost": 0.006684,
+   "exact": false
+  },
+  {
+   "at": "2026-10-03T21:24:13",
+   "kind": "picture",
+   "provider": "anthropic",
+   "model": "claude-sonnet-5",
+   "input_tokens": 668,
+   "output_tokens": 687,
+   "cost": 0.008206,
+   "exact": false
+  },
+  {
+   "at": "2026-10-03T21:24:15",
+   "kind": "picture",
+   "provider": "anthropic",
+   "model": "claude-sonnet-5",
+   "input_tokens": 670,
+   "output_tokens": 936,
+   "cost": 0.0107,
+   "exact": false
+  }
+ ],
+ "created_at": "2026-10-03T21:24:04",
+ "updated_at": "2026-10-03T21:24:15",
+ "exported_at": null
+}

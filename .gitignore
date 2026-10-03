@@ -7,3 +7,6 @@ data/
 anki_addon/user_files/
 dist/
 anki_addon/meta.json
+
+# Claude Code sessions working on their own git worktree
+.claude/worktrees/

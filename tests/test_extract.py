@@ -1,5 +1,7 @@
 """Generating a lesson: from photos or from the prompt alone, again in place, the
-decks the AI is told about, the fun facts, the AI correction of the cards."""
+decks the AI is told about, the PDF pages' text, the fun facts, the AI correction."""
+
+import json
 
 from conftest import extract_lesson
 
@@ -74,7 +76,7 @@ def test_existing_decks_given_to_the_ai(anki, client, monkeypatch):
 
     seen = {}
 
-    async def extract_cards(images, prompt, deck="", profile=None, decks=(), fun_facts=False):
+    async def extract_cards(images, prompt, deck="", profile=None, decks=(), fun_facts=False, page_texts=()):
         seen["decks"] = decks
         return await llm.extract_cards(images, prompt, deck, profile, decks)
 
@@ -198,3 +200,36 @@ def test_revision_errors(client, monkeypatch):
     assert client.post(f"/api/lessons/{lesson['id']}/revise", json={**body, "instruction": ""}).status_code == 422
     monkeypatch.setenv("NOTOSAURUS_LLM", "inconnu")
     assert client.post(f"/api/lessons/{lesson['id']}/revise", json=body).status_code == 502
+
+
+def test_pdf_page_texts_go_to_the_ai_and_stay_with_the_lesson(client, monkeypatch):
+    from app import main
+
+    page = "La Révolution française commence en 1789 avec la prise de la Bastille."
+    # Only the PDF pages with text: a photo ("") and a scan (a few stray characters) have none
+    text = llm._user_text("Q/R", "", photos=3, texts=[page, "", " i . "])
+    assert (
+        f"Text of photo 1, from its PDF:\n<<<\n{page}\n>>>" in text and "photo 2" not in text and "photo 3" not in text
+    )
+    assert "Text of photo" not in llm._user_text("Q/R", "", photos=1)
+    assert len(llm._user_text("Q/R", "", photos=1, texts=["x" * 20_000])) < 9_000  # a page at most PAGE_TEXT_MAX
+
+    seen = []
+
+    async def extract_cards(images, prompt, deck="", profile=None, decks=(), fun_facts=False, page_texts=()):
+        seen.append(list(page_texts))
+        return await llm.extract_cards(images, prompt, deck, profile, decks)
+
+    monkeypatch.setattr(main, "extract_cards", extract_cards)
+    files = [("images", (f"p{n}.png", b"img", "image/png")) for n in (1, 2)]
+    texts = json.dumps([page, ""])
+    lesson = client.post("/api/extract", files=files, data={"prompt": "FR → ES", "page_texts": texts}).json()
+    assert seen[-1] == [page, ""] and lesson["page_texts"] == [page, ""]
+    assert "page_texts" not in client.get("/api/lessons").json()[0]  # not in the lists
+    again = client.post(
+        f"/api/lessons/{lesson['id']}/regenerate", files=files, data={"prompt": "FR → ES", "page_texts": texts}
+    ).json()
+    assert again["page_texts"] == [page, ""]
+    # One text per photo, or none: the AI never gets a text on the wrong photo
+    client.post("/api/extract", files=files, data={"prompt": "FR → ES", "page_texts": json.dumps([page])})
+    assert seen[-1] == []

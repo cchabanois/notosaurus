@@ -212,6 +212,7 @@ def _user_text(
     fmt: str = "",
     decks: list[str] = (),
     fun_facts: bool = False,
+    texts: list[str] = (),
 ) -> str:
     text = f"Instructions: {prompt.strip()}"
     if fun_facts:
@@ -227,7 +228,28 @@ def _user_text(
         if fmt == "pixels":
             known = [f"photo {i}: {size[0]}x{size[1]}" for i, size in enumerate(sizes, 1) if size]
             text += "\nPhoto sizes: " + ", ".join(known) + "."
-    return text
+    return text + _pdf_texts(texts)
+
+
+PAGE_TEXT_MAX = 8000  # characters per page: a dense page holds 3 to 5,000
+
+
+def _pdf_texts(texts: list[str]) -> str:
+    """The text of the photos that are PDF pages, as the PDF holds it: the exact words
+    (no misreading), the photo keeping the layout and the diagrams. A scanned PDF has
+    no text (or a few stray characters): nothing then."""
+    pages = [
+        f"Text of photo {n}, from its PDF:\n<<<\n{t.strip()[:PAGE_TEXT_MAX]}\n>>>"
+        for n, t in enumerate(texts, 1)
+        if len("".join(t.split())) >= 20
+    ]
+    if not pages:
+        return ""
+    return (
+        "\nSome photos are pages of a PDF; their text follows, as the PDF holds it. Trust it for the "
+        "exact words, spelling and numbers; trust the photo for the layout, the order, what goes "
+        "together, the diagrams and anything the text misses.\n" + "\n".join(pages)
+    )
 
 
 def _prepare(images: list[Image]) -> tuple[list[Image], list[tuple[int, int] | None]]:
@@ -256,6 +278,7 @@ async def extract_cards(
     profile: str | None = None,
     decks: list[str] = (),
     fun_facts: bool = False,
+    page_texts: list[str] = (),
 ) -> Extracted:
     """`profile`: the open Anki profile, for its standing instructions; `decks`: the
     decks that already exist, to reuse their names."""
@@ -269,7 +292,9 @@ async def extract_cards(
         return Extracted(found, [0] * len(images), [], "es-ES", choice)
     fmt = diagrams.box_format(s.model_for_provider())
     images, sizes = _prepare(images)
-    text = standing_instructions(s, profile) + _user_text(prompt, deck, len(images), sizes, fmt, decks, fun_facts)
+    text = standing_instructions(s, profile) + _user_text(
+        prompt, deck, len(images), sizes, fmt, decks, fun_facts, page_texts
+    )
     result = await _generate(s, images, text, Extraction)
     diagrams.normalize(result.cards, sizes, fmt)
     return Extracted(

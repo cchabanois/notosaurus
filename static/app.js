@@ -64,6 +64,20 @@ async function renderPdfPage(doc, n, side = MAX_SIDE) {
   return new Promise((resolve) => canvas.toBlob(resolve, "image/jpeg", JPEG_QUALITY));
 }
 
+// A page's text, as the PDF holds it (none in a scan): sent to the AI with the page,
+// for the exact words. Lines kept; spaces trimmed.
+async function pdfPageText(doc, n) {
+  const page = await doc.getPage(n);
+  const content = await page.getTextContent();
+  page.cleanup();
+  return content.items
+    .map((item) => (item.str ?? "") + (item.hasEOL ? "\n" : ""))
+    .join("")
+    .replace(/[ \t]+/g, " ")
+    .replace(/ *\n */g, "\n")
+    .trim();
+}
+
 async function api(path, options = {}) {
   // The server uses the page's language for default prompts and AI summaries.
   const headers = { "X-Notosaurus-Lang": I18N.lang, ...options.headers };
@@ -251,7 +265,8 @@ document.addEventListener("alpine:init", () => {
         if (count > free) chosen = await this.pickPdfPages(file.name, count, free);
         for (const n of chosen) {
           const blob = await renderPdfPage(openPdf, n);
-          this.photos.push({ blob, url: URL.createObjectURL(blob) });
+          const text = await pdfPageText(openPdf, n).catch(() => "");
+          this.photos.push({ blob, url: URL.createObjectURL(blob), text });
           this.photosEdited = Boolean(this.lessonId);
         }
       } catch (e) {
@@ -304,7 +319,7 @@ document.addEventListener("alpine:init", () => {
         if (!this.lessonId) {
           const blob = await rotateBlob(this.photos[i].blob);
           URL.revokeObjectURL(this.photos[i].url);
-          this.photos.splice(i, 1, { blob, url: URL.createObjectURL(blob) });
+          this.photos.splice(i, 1, { ...this.photos[i], blob, url: URL.createObjectURL(blob) });  // its text kept
           return;
         }
         if (this.saveTimer) await this.saveNow();
@@ -529,6 +544,8 @@ document.addEventListener("alpine:init", () => {
       body.append("prompt", this.form.text);
       body.append("deck", this.form.deck);
       body.append("voice", this.form.voice);
+      // The PDF pages' text, one per photo ("" for a photo): the exact words for the AI
+      if (this.photos.some((p) => p.text)) body.append("page_texts", JSON.stringify(this.photos.map((p) => p.text ?? "")));
       // Generated again: the options set in the review stay, the prompt's are added
       body.append("typing", Boolean(this.form.typing || (inPlace && this.typing)));
       body.append("dictation", Boolean(this.form.dictation || (inPlace && this.dictation)));
@@ -694,7 +711,7 @@ document.addEventListener("alpine:init", () => {
       const photos = [];
       for (let n = 1; n <= lesson.photo_count; n++) {
         const blob = await (await api(`/api/lessons/${lesson.id}/photos/${n}`)).blob();
-        photos.push({ blob, url: URL.createObjectURL(blob) });
+        photos.push({ blob, url: URL.createObjectURL(blob), text: lesson.page_texts?.[n - 1] ?? "" });
       }
       this.clearPhotos();
       this.photos = photos;

@@ -149,6 +149,9 @@ class Lesson(LessonIn):
     frames: list[Frame] = []  # fractions of the photos: from the AI, then as the user set them
     ai_calls: list[AiCall] = []  # generation, then corrections
     choice: str = ""  # what the AI chose to make, when the prompt let it choose
+    # One per photo: the text of a PDF page, as the PDF holds it ("" for a photo). Sent
+    # to the AI with the pages; not in the lists (LessonSummary)
+    page_texts: list[str] = []
     created_at: str
     updated_at: str
     exported_at: str | None = None

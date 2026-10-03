@@ -434,3 +434,40 @@ def test_pdf_pages_become_photos(page):
     pdf_input.set_input_files({"name": "encore.pdf", "mimeType": "application/pdf", "buffer": pdf(1)})
     sync_api.expect(page.get_by_text("Déjà 10 pages")).to_be_visible()
     sync_api.expect(page.locator(".thumb img")).to_have_count(10)
+
+
+def text_pdf(browser) -> bytes:
+    """A real text PDF (a lesson printed by the browser), not a picture of one."""
+    context = browser.new_context()
+    try:
+        page = context.new_page()
+        page.set_content("<h1>La Révolution française</h1><p>En 1789, le peuple de Paris prend la Bastille.</p>")
+        return page.pdf()
+    finally:
+        context.close()
+
+
+def test_pdf_text_kept_with_its_page(page, browser):
+    page.goto("/")
+    page.locator("input[type=file][accept*=pdf]").set_input_files(
+        {"name": "cours.pdf", "mimeType": "application/pdf", "buffer": text_pdf(browser)}
+    )
+    sync_api.expect(page.locator(".thumb img")).to_have_count(1)
+    page.locator(".chip").first.click()  # the free prompt
+    page.locator("textarea[x-ref=promptText]").fill("Une carte par date")
+    page.get_by_role("button", name="✨ Générer les cartes").click()
+    page.locator(".flash").first.wait_for()
+    (summary,) = lessons(page)
+    (text,) = lesson(page, summary["id"])["page_texts"]
+    assert text == "La Révolution française\nEn 1789, le peuple de Paris prend la Bastille."
+
+    # Reopened, then generated again: the text goes with its page again
+    page.reload()
+    page.locator(".chip-btn").first.click()
+    page.locator(".lesson").first.click()
+    sync_api.expect(page.locator(".thumb img")).to_have_count(1)
+    page.locator("textarea[x-ref=promptText]").fill("Une carte par lieu")
+    page.get_by_role("button", name="✨ Régénérer").click()
+    sync_api.expect(page.get_by_text("Cartes régénérées")).to_be_visible()
+    assert lesson(page, summary["id"])["prompt"] == "Une carte par lieu"
+    assert lesson(page, summary["id"])["page_texts"] == [text]

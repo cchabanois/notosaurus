@@ -23,7 +23,7 @@ Notosaurus was built for learning languages (French → Spanish vocabulary and s
 - **Figures**: geometry and labelled figures (a right triangle with its hypotenuse, a circle and its radius, a measured rectangle…) are drawn as SVG by the cards' own AI, exact and with clean text, instead of an image model. They are cleaned (shapes and text only) and go to Anki like the pictures.
 - **Audio**: the back of each card is read aloud with [edge-tts](https://github.com/rany2/edge-tts) and embedded in the deck, so it plays everywhere, even offline.
 - **Straight into Anki**, or as a `.apkg`. Sending a corrected lesson again updates its cards instead of duplicating them.
-- **PDFs too**: each page becomes a photo, drawn in the browser (pdf.js); past the 10 pages a lesson holds, you pick the pages.
+- **PDFs too**: each page becomes a photo, drawn in the browser (pdf.js); past the 10 pages a lesson holds, you pick the pages. A digital PDF's text goes to the AI with its page: the exact words, no misreading.
 - **Lessons are saved** (photos + cards), so you can reopen, fix and re-send them later.
 - **One lesson list per Anki profile**, handy when each child has their own profile. The profile that creates a lesson owns it and can share it with the other profiles.
 - **Choice of AI**: Gemini, Claude, or any OpenAI-compatible service (OpenAI, OpenRouter, Mistral, Ollama…).

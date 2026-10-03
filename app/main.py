@@ -168,6 +168,18 @@ class Generated:
     found: llm.Extracted
     calls: list[AiCall]
     profile: str
+    page_texts: list[str]  # one per photo: a PDF page's text, "" for a photo
+
+
+def _page_texts(raw: str, count: int) -> list[str]:
+    """The pages' texts sent by the page (JSON, one per photo); anything else: none."""
+    try:
+        texts = json.loads(raw) if raw.strip() else []
+    except ValueError:
+        return []
+    if not isinstance(texts, list) or len(texts) != count or not all(isinstance(t, str) for t in texts):
+        return []
+    return texts
 
 
 async def _generate(
@@ -180,6 +192,7 @@ async def _generate(
     dictation: bool,
     lesson_id: str | None = None,
     fun_facts: bool = False,
+    page_texts: str = "",
 ) -> Generated:
     """Read the photos (or, without photos, work from the prompt alone): the lesson's
     new content, not saved yet."""
@@ -192,10 +205,12 @@ async def _generate(
             raise AppError("extract.bad_format", format=img.content_type)
 
     data = [Image(await img.read(), img.content_type) for img in images]
+    texts = _page_texts(page_texts, len(data))
     profile = await ankiconnect.active_profile() or ""  # the lesson belongs to this Anki profile
     with llm.recording("extract") as calls:  # model, tokens and cost, kept with the lesson
         try:
-            found = await extract_cards(data, prompt, deck, profile, await decks.known(profile), fun_facts=fun_facts)
+            known = await decks.known(profile)
+            found = await extract_cards(data, prompt, deck, profile, known, fun_facts=fun_facts, page_texts=texts)
         except Exception:
             usage.add(calls, lesson_id=None)  # answered but unusable: paid for, no lesson saved
             raise
@@ -208,7 +223,7 @@ async def _generate(
     content = LessonIn(**found.deck.model_dump(), voice=voice, typing=typing, dictation=dictation)
     # Its own deck: never one that exists already (another lesson's, or the user's in Anki)
     content.deck = await decks.new_name(content.deck, profile or None, but=lesson_id)
-    return Generated(content, photos, found, calls, profile)
+    return Generated(content, photos, found, calls, profile, texts)
 
 
 @app.post("/api/extract", status_code=201)
@@ -221,10 +236,15 @@ async def extract(
     typing: bool = Form(False),
     dictation: bool = Form(False),
     fun_facts: bool = Form(False),
+    page_texts: str = Form(""),
 ) -> Lesson:
     """A new lesson (photos + cards), saved so it can be reopened."""
-    g = await _generate(images, prompt, deck, voice, prompt_id, typing, dictation, fun_facts=fun_facts)
-    created = lessons.create(g.content, prompt, g.photos, g.profile, g.found.frames, g.calls, g.found.choice)
+    g = await _generate(
+        images, prompt, deck, voice, prompt_id, typing, dictation, fun_facts=fun_facts, page_texts=page_texts
+    )
+    created = lessons.create(
+        g.content, prompt, g.photos, g.profile, g.found.frames, g.calls, g.found.choice, page_texts=g.page_texts
+    )
     usage.add(g.calls, created.id, created.deck)
     return created
 
@@ -240,16 +260,30 @@ async def regenerate(
     typing: bool = Form(False),
     dictation: bool = Form(False),
     fun_facts: bool = Form(False),
+    page_texts: str = Form(""),
 ) -> Lesson:
     """Generate the lesson again (other prompt, other photos) in its place, instead of
     a second lesson. Only its owner's profile may."""
     old = await _editable(id)
-    g = await _generate(images, prompt, deck, voice, prompt_id, typing, dictation, lesson_id=id, fun_facts=fun_facts)
+    g = await _generate(
+        images,
+        prompt,
+        deck,
+        voice,
+        prompt_id,
+        typing,
+        dictation,
+        lesson_id=id,
+        fun_facts=fun_facts,
+        page_texts=page_texts,
+    )
     # The options set in the review stay (the prompt's are added): only the cards change
     g.content.reverse = old.reverse
     g.content.typing = g.content.typing or old.typing
     g.content.dictation = g.content.dictation or old.dictation
-    lesson = lessons.regenerated(id, g.content, prompt, g.photos, g.found.frames, g.calls, g.found.choice)
+    lesson = lessons.regenerated(
+        id, g.content, prompt, g.photos, g.found.frames, g.calls, g.found.choice, page_texts=g.page_texts
+    )
     if lesson is None:  # deleted meanwhile
         raise AppError("lesson.not_found", 404)
     usage.add(g.calls, id, lesson.deck)
