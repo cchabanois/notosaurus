@@ -89,6 +89,7 @@ Each pull request adds a line under **Unreleased**. See [Releasing](CONTRIBUTING
 
 ### Changed
 
+- Documentation: no more Tailscale / HTTPS recipe (never tested): Notosaurus is documented for home use, on the Wi-Fi, with the security warning kept (protected Wi-Fi, never on the Internet).
 - The README shows the Notosaurus logo.
 - Documentation: the README is for people installing and using Notosaurus; setting up, tests, architecture, adding a language and releasing moved to [CONTRIBUTING.md](CONTRIBUTING.md).
 - A light pastel blue background (it was beige), with borders and fields to match: the water of the Notosaurus logo. Dark mode unchanged.

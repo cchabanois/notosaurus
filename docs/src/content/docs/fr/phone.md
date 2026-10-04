@@ -41,8 +41,6 @@ Dans **Chrome** :
 
    ![L'icône Notosaurus sur l'écran d'accueil](../../../assets/screenshots/fr/android-home.png)
 
-Avec le HTTPS (voir plus bas), Chrome propose **Installer l'application** au lieu d'un raccourci.
-
 Dans les autres navigateurs :
 
 - **Samsung Internet** : le menu **≡** → **Ajouter la page à** → **Écran d'accueil**.
@@ -57,12 +55,8 @@ après avoir scanné le QR code qu'elle est autorisée.
 ## Bon à savoir
 
 - **Le téléphone doit être sur le même Wi-Fi** que l'ordinateur, et Anki doit être ouvert sur
-  l'ordinateur (avec le greffon). Loin de la maison, voir [Tailscale](../privacy/#le-wi-fi).
+  l'ordinateur (avec le greffon) : Notosaurus fonctionne à la maison, pas à l'extérieur.
 - **Si tous les téléphones ont été déconnectés** (Réglages → Téléphones) ou si l'adresse de
   l'ordinateur a changé (après un redémarrage de la box), l'icône n'ouvre plus Notosaurus : scanne à
   nouveau le QR code, puis ajoute de nouveau la page à l'écran d'accueil (et supprime l'ancienne
   icône).
-- Sur Android, en HTTP simple sur le réseau local, l'icône ouvre la page dans le navigateur. Avec le
-  HTTPS (Tailscale), Chrome peut **installer** Notosaurus : il s'ouvre alors en plein écran, comme
-  une appli.
-- Les photos marchent dans tous les cas : **Prendre une photo** ouvre l'appareil photo du téléphone.

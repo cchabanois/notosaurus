@@ -57,7 +57,5 @@ Notosaurus talks to the phones in plain HTTP, on your local network. Pairing kee
 curious and other websites, but not someone spying on the Wi-Fi traffic: keep your Wi-Fi
 protected (WPA2 or WPA3).
 
-- **Never expose Notosaurus** (or AnkiConnect) **to the Internet.**
-- For HTTPS, and to use Notosaurus away from home, [Tailscale](https://tailscale.com) works:
-  `tailscale serve 8000` on the computer, the Tailscale app on the phone, and set
-  `NOTOSAURUS_PUBLIC_URL` to the `https://….ts.net` address.
+Notosaurus is made for home: the phones use it on the same Wi-Fi as the computer. **Never
+expose Notosaurus** (or AnkiConnect) **to the Internet.**

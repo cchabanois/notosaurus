@@ -56,9 +56,4 @@ enregistré dans la page des réglages l'emporte.
 | `NOTOSAURUS_COMPATIBLE_BASE_URL`, `NOTOSAURUS_COMPATIBLE_API_KEY` | un autre service compatible OpenAI (Ollama : `http://localhost:11434/v1`) |
 | `NOTOSAURUS_DATA` | le dossier de données (par défaut : `data`) |
 | `NOTOSAURUS_ANKICONNECT_URL`, `NOTOSAURUS_ANKICONNECT_KEY` | AnkiConnect (par défaut : `http://localhost:8765`) |
-| `NOTOSAURUS_PUBLIC_URL` | l'adresse du QR code des téléphones, quand Notosaurus ne la voit pas (Docker, un proxy) |
-
-## HTTPS et hors de la maison
-
-Voir [Confidentialité et sécurité](../privacy/#le-wi-fi) : Tailscale donne à Notosaurus une
-adresse HTTPS accessible depuis tes appareils partout, sans l'exposer sur Internet.
+| `NOTOSAURUS_PUBLIC_URL` | l'adresse du QR code des téléphones, quand Notosaurus ne la voit pas (Docker) |
