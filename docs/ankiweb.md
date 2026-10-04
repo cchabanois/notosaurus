@@ -59,6 +59,7 @@ Microsoft's text-to-speech for the audio. No statistics, no tracking.
 <a href="https://cchabanois.github.io/notosaurus/privacy/">Privacy</a></li>
 <li>Free and open source (AGPL-3.0):
 <a href="https://github.com/cchabanois/notosaurus">github.com/cchabanois/notosaurus</a>.</li>
+<li>Like it? ☕ <a href="https://ko-fi.com/notosaurus">Support Notosaurus on Ko-fi</a>.</li>
 </ul>
 
 <p><b>En français</b> : prends une leçon en photo, Notosaurus en fait des cartes Anki.
