@@ -127,6 +127,22 @@ def test_auto_voice_follows_the_language_of_the_backs(client):
     assert voices["notosaurus:questions"] == ""
 
 
+def test_no_auto_voice_in_the_pupils_own_language(client):
+    """A lesson in the pupil's own language ("Français" for a French pupil) is no language
+    being learned: no voice, whatever the AI said, unless the cards are a dictation."""
+    spanish_page = {"X-Notosaurus-Lang": "es"}  # the demo AI says the backs are es-ES
+    lesson = client.post("/api/extract", data={"prompt": "Literatura", "voice": "auto"}, headers=spanish_page).json()
+    assert lesson["voice"] == ""
+    data = {"prompt": "Dictado", "voice": "auto", "typing": "true", "dictation": "true"}
+    assert client.post("/api/extract", data=data, headers=spanish_page).json()["voice"] == "es-ES-ElviraNeural"
+    url = f"/api/lessons/{lesson['id']}/regenerate"  # the same rule when generating again
+    assert client.post(url, data={"prompt": "Literatura", "voice": "auto"}, headers=spanish_page).json()["voice"] == ""
+    french_page = {"X-Notosaurus-Lang": "fr"}  # Spanish for a French pupil: a language being learned
+    assert client.post("/api/extract", data={"prompt": "FR → ES", "voice": "auto"}, headers=french_page).json()[
+        "voice"
+    ] == ("es-ES-ElviraNeural")
+
+
 def test_automatic_prompt_says_what_the_ai_chose(client):
     (auto,) = [p for p in client.get("/api/prompts").json() if p["id"] == "notosaurus:auto"]
     lesson = client.post("/api/extract", data={"prompt": auto["text"], "voice": "auto"}).json()
