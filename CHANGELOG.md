@@ -1,7 +1,7 @@
 # Changelog
 
 All notable changes to Notosaurus. The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/)
-and versions follow [Semantic Versioning](https://semver.org/) (while in 0.x, anything may still change).
+and versions follow [Semantic Versioning](https://semver.org/).
 
 Each pull request adds a line under **Unreleased**. See [Releasing](CONTRIBUTING.md#releasing) for how a version is published.
 
@@ -9,6 +9,16 @@ Each pull request adds a line under **Unreleased**. See [Releasing](CONTRIBUTING
 
 ### Added
 
+- Photos of a lesson → Anki cards drafted by a vision AI: Gemini, Claude or any OpenAI-compatible service (OpenAI and OpenRouter presets, one key per service, model list and image + JSON test).
+- Saved prompts, with recent ones as chips and a search.
+- Review screen: edit, add or delete cards, or ask the AI to fix them in plain words (with undo).
+- Audio of the card backs with edge-tts, embedded in the deck.
+- Export as `.apkg` (stable GUIDs: re-importing updates cards), or direct send to Anki (updates instead of duplicates, then sync).
+- Lessons saved as folders (photos, cards, audio), reopened from "My lessons".
+- Anki add-on: runs the server with Anki, AnkiConnect-compatible bridge, QR code for the phone, settings only on the computer.
+- Lessons per Anki profile: the creating profile owns a lesson and may share it; the page follows profile switches.
+- English and French interface; a language is one JSON file.
+- Admin page (standalone mode: password protected).
 - Documentation brought up to date (English and French): *Getting started* goes through the setup assistant (with screenshots of its steps, taken by `tools/docs_screenshots.py`); *AI services and costs* explains the recommended models and the new defaults; *Card types* the recommended image models, the service's full list and the giraffe test; *Notosaurus in Anki* the Getting started and Support entries (Anki screenshots retaken); the FAQ how to support Notosaurus. Every app screenshot retaken.
 - Settings: the recommended models, from the model benchmark, for every service, in order (the best value first, then better or safer at a higher price), as buttons under the model field, with what a lesson or a picture costs; the first is the default. For the cards and for the card pictures. They are pinned versions, never "~…-latest" aliases: what was tested is what runs, at the price it was tested at. The field still takes any model the service lists. It is the only list of models written in Notosaurus (`app/recommended.py`).
 - Settings → Card pictures: the image model field suggests every model the drawing service offers (Gemini, OpenAI or OpenRouter list their own, for free), new ones included, instead of two or three written in Notosaurus. The suggestions shown before the list arrives are brought up to date (OpenAI's gpt-image-2 and 2.5, OpenRouter's gpt-5.4-image-2).
@@ -98,6 +108,7 @@ Each pull request adds a line under **Unreleased**. See [Releasing](CONTRIBUTING
 
 ### Changed
 
+- The first public version is 1.0.0 (0.1.0 was never published). The AnkiWeb description says what Notosaurus does now: the setup assistant, pictures and dictations, helps on the back, the recommended models, and what a free AI key means for children's notebooks.
 - 💬 Helps on the back follow their instructions better (5.1 → 6.8/10 in the benchmark, four models): the "info" field no longer takes explanations and anecdotes, which put helps on almost every card; an explanation says why this card's answer is the answer (not the context), never on a date, a name or a place, on about a third of the cards; one more fact is no longer passed off as a way to remember; no false simplification; "tu" in every help, without a stock opener.
 - Default models, from the model benchmark: GPT `gpt-6.1-sol` instead of `gpt-6-luna` (7.8/10, 5/10 on a handwritten page), Claude `claude-sonnet-5-5` instead of `claude-opus-5` (as good on photos, half the price, the fastest), OpenRouter `google/gemini-3.8-flash` instead of the `~google/gemini-flash-latest` alias, OpenAI pictures `gpt-image-2` instead of `gpt-image-1-mini` (much better for 0.6 US¢). OpenRouter's short list of aliases is gone: the recommended models replace it.
 - Documentation: no more Tailscale / HTTPS recipe (never tested): Notosaurus is documented for home use, on the Wi-Fi, with the security warning kept (protected Wi-Fi, never on the Internet).
@@ -153,22 +164,4 @@ Each pull request adds a line under **Unreleased**. See [Releasing](CONTRIBUTING
 
 - Anki add-on on Anki 26.08 and later (and on 25.02 and earlier), which don't provide uv: the add-on now downloads a pinned uv release from GitHub, checked against its SHA-256, after asking the user. Python 3.13 is installed inside the add-on's folder, never shared with the system's Python.
 
-## [0.1.0]
-
-First version.
-
-### Added
-
-- Photos of a lesson → Anki cards drafted by a vision AI: Gemini, Claude or any OpenAI-compatible service (OpenAI and OpenRouter presets, one key per service, model list and image + JSON test).
-- Saved prompts, with recent ones as chips and a search.
-- Review screen: edit, add or delete cards, or ask the AI to fix them in plain words (with undo).
-- Audio of the card backs with edge-tts, embedded in the deck.
-- Export as `.apkg` (stable GUIDs: re-importing updates cards), or direct send to Anki (updates instead of duplicates, then sync).
-- Lessons saved as folders (photos, cards, audio), reopened from "My lessons".
-- Anki add-on: runs the server with Anki, AnkiConnect-compatible bridge, QR code for the phone, settings only on the computer.
-- Lessons per Anki profile: the creating profile owns a lesson and may share it; the page follows profile switches.
-- English and French interface; a language is one JSON file.
-- Admin page (standalone mode: password protected).
-
-[Unreleased]: https://github.com/cchabanois/notosaurus/compare/v0.1.0...HEAD
-[0.1.0]: https://github.com/cchabanois/notosaurus/releases/tag/v0.1.0
+[Unreleased]: https://github.com/cchabanois/notosaurus/commits/main
