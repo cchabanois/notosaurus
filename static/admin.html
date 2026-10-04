@@ -228,6 +228,12 @@
             </label>
           </template>
           <p class="hint" x-show="!instructionProfiles().length" x-text="$t('admin.instructions.noProfiles')"></p>
+          <!-- The page's "helps on the back" switch: on or off at first (each device may change it) -->
+          <label class="switch field">
+            <input type="checkbox" x-model="form.card_helps">
+            <span class="track"><span class="knob"></span></span>
+            <span><span x-text="$t('admin.instructions.helps')"></span> <small x-text="$t('admin.instructions.helpsHint')"></small></span>
+          </label>
         </section>
 
         <!-- Phones: the QR code lets one in; unpairing them all changes the token -->

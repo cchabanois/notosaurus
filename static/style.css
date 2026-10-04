@@ -474,6 +474,12 @@ h2 {
 .flash .fun-fact { display: flex; gap: .3rem; align-items: center; font-size: .85rem; }
 .flash .fun-fact input { flex: 1; min-width: 0; font-style: italic; color: var(--muted); }
 .switch.fun-facts { margin: .5rem 0 .25rem; }
+.switch.helps { margin: .25rem 0; }
+.flash .card-help { display: flex; gap: .3rem; align-items: flex-start; margin-top: .25rem; font-size: .85rem; }
+.flash .card-help textarea {
+  flex: 1; min-width: 0; min-height: 0; padding: .2rem .35rem; resize: vertical;
+  color: var(--muted); font: inherit; line-height: 1.35; field-sizing: content;
+}
 .flash .subdeck {
   width: auto;
   flex: 0 1 auto;

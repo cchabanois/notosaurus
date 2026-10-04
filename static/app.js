@@ -98,6 +98,7 @@ function storage(action, value, key = LAST_PROMPT) {
     localStorage.setItem(key, value);
   } catch {}
 }
+const HELPS = "notosaurus.helps";  // the "helps on the back" switch, once changed on this device
 const FUN_FACTS = "notosaurus.funFacts";  // the "did you know" switch, kept on this device
 const OPEN_SUBJECTS = "notosaurus.openSubjects";  // subjects opened or closed in the lessons, on this device
 const MANY_LESSONS = 8;  // beyond: a search, the recent lessons first, the subjects folded
@@ -124,7 +125,7 @@ const escapeHtml = (text) => text.replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<"
 
 let nextKey = 0;
 const withKey = (card) =>
-  ({ info: "", fun_fact: "", choices: [], subdeck: "", tags: [], picture: "", picture_prompt: "", figure: "", picture_on_back: false, ...card, key: nextKey++ });
+  ({ info: "", fun_fact: "", explanation: "", mnemonic: "", choices: [], subdeck: "", tags: [], picture: "", picture_prompt: "", figure: "", picture_on_back: false, ...card, key: nextKey++ });
 
 // A card's stable id (crypto.randomUUID needs HTTPS; getRandomValues doesn't)
 const newId = () => [...crypto.getRandomValues(new Uint8Array(6))].map((b) => b.toString(16).padStart(2, "0")).join("");
@@ -147,6 +148,7 @@ document.addEventListener("alpine:init", () => {
     typing: false,               // the answer is typed in Anki
     dictation: false,            // a dictation card: hear the back, type it
     funFacts: storage("get", undefined, FUN_FACTS) === "1",  // ask for "did you know" facts (off by default)
+    helps: false,  // ask for helps on the back: as changed on this device, else the settings' default
     lessons: [],         // saved lesson summaries
     lessonId: null,       // open lesson (null = new lesson, not generated yet)
     saveState: "",       // "", "pending", "saving", "saved", "error"
@@ -215,6 +217,8 @@ document.addEventListener("alpine:init", () => {
         const config = await (await api("/api/config")).json();
         this.diagramWarning = config.diagram_warning;
         this.maxPhotos = config.max_photos ?? this.maxPhotos;
+        const helps = storage("get", undefined, HELPS);
+        this.helps = helps === null ? Boolean(config.card_helps) : helps === "1";
       } catch {}
       this.$watch("funFacts", (on) => storage("set", on ? "1" : "0", FUN_FACTS));
       await Promise.all([this.loadPrompts(storage("get")), this.loadLessons()]);
@@ -551,6 +555,7 @@ document.addEventListener("alpine:init", () => {
       body.append("typing", Boolean(this.form.typing || (inPlace && this.typing)));
       body.append("dictation", Boolean(this.form.dictation || (inPlace && this.dictation)));
       if (this.funFacts) body.append("fun_facts", "true");
+      if (this.helps) body.append("helps", "true");
       if (this.selectedId) body.append("prompt_id", this.selectedId);
       try {
         const url = inPlace ? `/api/lessons/${this.lessonId}/regenerate` : "/api/extract";
@@ -1274,6 +1279,11 @@ document.addEventListener("alpine:init", () => {
       } finally {
         this.sending = false;
       }
+    },
+
+    // Changed here: kept on this device, whatever the settings' default
+    rememberHelps() {
+      storage("set", this.helps ? "1" : "0", HELPS);
     },
 
     // --- Explaining a card (💬) ------------------------------------------

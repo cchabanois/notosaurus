@@ -68,6 +68,7 @@
       "freePlaceholder": "Schreib, was die KI mit der Lektion machen soll, z. B. „eine Karte pro Datum, vorne das Ereignis, hinten das Datum“.",
       "freeNote": "Freie Anweisungen: Sie bleiben bei der Lektion, werden aber nicht zu deinen Anweisungen hinzugefügt.",
       "funFacts": "💡 „Wusstest du schon?“ hinzufügen",
+      "helps": "💬 Hilfen auf der Rückseite (Erklärung, Merkhilfe)",
       "all": "Alle",
       "new": "💾 Neu",
       "newHint": "Gespeicherte Anweisungen anlegen, um sie wiederzuverwenden",
@@ -98,6 +99,8 @@
       "info": "+ Info",
       "infoLabel": "Info",
       "funFact": "Wusstest du schon?",
+      "explanation": "Erklärung",
+      "mnemonic": "Merkhilfe",
       "rightChoice": "Richtige Antwort",
       "wrongChoice": "Falsche Antwort",
       "addChoice": "+ falsche Antwort",
@@ -482,7 +485,9 @@
       "profile": "Für {profile}",
       "missingProfile": "Für {profile} (nicht mehr in Anki)",
       "profilePlaceholder": "z. B. in der 8. Klasse; kurze Antworten",
-      "noProfiles": "Öffne Anki, um Anweisungen für jedes seiner Benutzerprofile festzulegen."
+      "noProfiles": "Öffne Anki, um Anweisungen für jedes seiner Benutzerprofile festzulegen.",
+      "helps": "Hilfen auf der Rückseite der Karten, standardmäßig an",
+      "helpsHint": "(eine Erklärung, eine Merkhilfe, wo sie helfen; jedes Gerät kann es ändern, ≈ +1 bis 3 US-Cent pro Lektion)"
     },
     "notSaved": "Nicht gespeichert",
     "pictures": {

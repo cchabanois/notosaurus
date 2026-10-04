@@ -90,7 +90,9 @@ def test_picture_cards_in_anki(client, drawn, tmp_path):
         first.fields(note) for note in first.notes if names[note[1]]["name"].startswith("Notosaurus image")
     ]
     assert picture_fields[0][0] == "Comment dit-on en anglais ?"
-    assert picture_fields[0][-2] == f'<img src="{cards[0]["picture"]}">' and picture_fields[0][-1] == cards[0]["id"]
+    assert (
+        picture_fields[0][-4] == f'<img src="{cards[0]["picture"]}">' and picture_fields[0][-3] == cards[0]["id"]
+    )  # then the helps
     assert first.media == sorted([cards[0]["picture"], cards[1]["picture"]])
 
     # Same front on every picture card, then a new picture: the same notes (GUID from the id)

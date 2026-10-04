@@ -9,6 +9,7 @@ Each pull request adds a line under **Unreleased**. See [Releasing](CONTRIBUTING
 
 ### Added
 
+- 💬 Helps on the back: a switch under the instructions (its default set in the settings, each device keeping its own choice) asks the AI for an explanation and a way to remember, only on the cards where they truly help (no explanation for a plain word, never a made-up mnemonic or spelling rule). Two new fields in every note type, "Explanation" and "Mnemonic", shown on the back under the info, editable in the review.
 - 💬 Explain a card, in the review: the AI says what it means and why its answer is the answer, at a pupil's level, in the page's language. It then offers only the follow-ups that would help with that card: an example, a way to remember it, why it's right (why the other options are wrong, for a multiple choice). Kept in the card's info with a tap; each explanation is a short AI call, counted with the lesson.
 - Documentation: “On the phone”, in English and French: opening Notosaurus with the QR code, and adding it to the home screen in Chrome, Samsung Internet, Firefox and Safari (with screenshots of each step in Chrome, taken in an Android emulator), right after scanning the QR code (the icon keeps the phone's authorisation), and again after the phones were disconnected.
 - Documentation: “Your lessons” (the list, search, subjects, deleting), “Voices and audio” (choosing and listening to a voice, speech rate, dictation, cards without sound) and “What's new” (releases, changelog, updating the add-on); the card types page shows pictures and their 🖼️ panel. English and French, with screenshots of pictures and of the speech rate (a new “Words in pictures” demo lesson).
@@ -108,6 +109,7 @@ Each pull request adds a line under **Unreleased**. See [Releasing](CONTRIBUTING
 
 ### Fixed
 
+- The AI only sees the card fields it fills (never the picture's file or the card's id, the fun facts and helps only when asked): one more field had made Claude refuse every generation ("Schema is too complex").
 - With Gemini's default model (gemini-3.8-flash), the light AI calls (figures) failed: it refuses the "minimal" thinking level. They now ask for "low" from a model that refuses "minimal", learnt at its first refusal.
 - A lesson sent directly then imported as a .apkg (or into a profile synced with it) no longer has each card twice, nor a second note type ("…(audio)+"): through the add-on, a direct send now gives the note types and notes the .apkg's ids. With AnkiConnect, which can't take them, the documentation says to use one way per profile.
 - Notosaurus's note types already in Anki are brought up to date: each carries a signature at the end of its CSS, and at the next send one made by an older Notosaurus gets today's card templates and CSS, plus the fields or cards it lacks (nothing removed). Adding a field or a card makes Anki ask for a full sync: said so, and the automatic sync is left to the user that time. A newer .apkg updates its note types too (Anki's "update note types if newer").

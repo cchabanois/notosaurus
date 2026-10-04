@@ -72,6 +72,7 @@ class Settings(BaseModel):
     ankiconnect_url: str = "http://localhost:8765"  # Anki desktop with the AnkiConnect add-on
     ankiconnect_key: str = ""  # AnkiConnect "apiKey", if one is configured
     anki_sync: bool = True  # sync with AnkiWeb after sending, so phones get the cards
+    card_helps: bool = False  # the review's "helps on the back" switch, on at first (a device may change it)
     # Added to the AI's fixed rules (never replacing them): for everyone, and per Anki
     # profile, e.g. "Bastien is in year 8", "short answers, with the article".
     instructions: str = ""

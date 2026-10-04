@@ -140,6 +140,12 @@
         <span class="track"><span class="knob"></span></span>
         <span x-text="$t('app.prompt.funFacts')"></span>
       </label>
+      <!-- Its default in the settings; changed here, kept on this device -->
+      <label class="switch helps">
+        <input type="checkbox" x-model="helps" @change="rememberHelps()">
+        <span class="track"><span class="knob"></span></span>
+        <span x-text="$t('app.prompt.helps')"></span>
+      </label>
 
       <div class="prompt-actions">
         <button class="link-btn" x-show="selectedId" @click="openEditor('edit')" x-text="$t('app.prompt.edit')"></button>
@@ -291,6 +297,15 @@
               <div class="fun-fact" x-show="card.fun_fact">
                 <span aria-hidden="true">💡</span>
                 <input x-model="card.fun_fact" :readonly="readOnly()" :aria-label="$t('app.review.funFact')">
+              </div>
+              <!-- The helps written at generation: on the back in Anki; cleared, they're gone -->
+              <div class="card-help" x-show="card.explanation">
+                <span aria-hidden="true">💬</span>
+                <textarea rows="2" x-model="card.explanation" :readonly="readOnly()" :aria-label="$t('app.review.explanation')"></textarea>
+              </div>
+              <div class="card-help" x-show="card.mnemonic">
+                <span aria-hidden="true">🧠</span>
+                <textarea rows="2" x-model="card.mnemonic" :readonly="readOnly()" :aria-label="$t('app.review.mnemonic')"></textarea>
               </div>
             </div>
             <div class="flash-actions">

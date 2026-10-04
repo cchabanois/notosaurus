@@ -68,6 +68,7 @@
       "freePlaceholder": "Escribe lo que la IA debe hacer con la lección, p. ej.: «una tarjeta por fecha, delante el acontecimiento, detrás la fecha».",
       "freeNote": "Instrucciones libres: se quedan con la lección, pero no se añaden a tus instrucciones.",
       "funFacts": "💡 Añadir «¿Sabías que…?»",
+      "helps": "💬 Ayudas en el reverso (explicación, truco para recordar)",
       "all": "Todas",
       "new": "💾 Nuevas",
       "newHint": "Crear instrucciones guardadas, para volver a usarlas",
@@ -98,6 +99,8 @@
       "info": "+ info",
       "infoLabel": "Info",
       "funFact": "¿Sabías que…?",
+      "explanation": "Explicación",
+      "mnemonic": "Truco para recordarlo",
       "rightChoice": "Respuesta correcta",
       "wrongChoice": "Respuesta incorrecta",
       "addChoice": "+ respuesta incorrecta",
@@ -482,7 +485,9 @@
       "profile": "Para {profile}",
       "missingProfile": "Para {profile} (ya no está en Anki)",
       "profilePlaceholder": "p. ej.: en 2.º de ESO; respuestas cortas",
-      "noProfiles": "Abre Anki para definir instrucciones para cada uno de sus perfiles."
+      "noProfiles": "Abre Anki para definir instrucciones para cada uno de sus perfiles.",
+      "helps": "Ayudas en el reverso de las tarjetas, activadas por defecto",
+      "helpsHint": "(una explicación, un truco para recordar, donde ayudan; cada dispositivo puede cambiarlo, ≈ +1 a 3 ¢ de dólar por lección)"
     },
     "notSaved": "Sin guardar",
     "pictures": {

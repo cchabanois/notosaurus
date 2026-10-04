@@ -68,6 +68,7 @@
       "freePlaceholder": "Write what the AI should do with the lesson, e.g. “one card per date, front the event, back the date”.",
       "freeNote": "Free prompt: it stays with the lesson but isn't added to your prompts.",
       "funFacts": "💡 Add “Did you know?” facts",
+      "helps": "💬 Helps on the back (explanation, a way to remember)",
       "all": "All",
       "new": "💾 New",
       "newHint": "Create a saved prompt, to use again",
@@ -98,6 +99,8 @@
       "info": "+ info",
       "infoLabel": "Info",
       "funFact": "Did you know?",
+      "explanation": "Explanation",
+      "mnemonic": "A way to remember it",
       "rightChoice": "Right answer",
       "wrongChoice": "Wrong answer",
       "addChoice": "+ wrong answer",
@@ -482,7 +485,9 @@
       "profile": "For {profile}",
       "missingProfile": "For {profile} (not in Anki any more)",
       "profilePlaceholder": "e.g. in year 8; short answers",
-      "noProfiles": "Open Anki to set instructions for each of its profiles."
+      "noProfiles": "Open Anki to set instructions for each of its profiles.",
+      "helps": "Helps on the back of the cards, on by default",
+      "helpsHint": "(an explanation, a way to remember it, where they help; each device can change it, ≈ +1 to 3 US¢ per lesson)"
     },
     "notSaved": "Not saved",
     "pictures": {

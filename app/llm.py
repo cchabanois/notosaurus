@@ -21,8 +21,9 @@ from collections.abc import Iterator
 from contextlib import contextmanager
 from contextvars import ContextVar
 from dataclasses import dataclass
+from functools import cache
 
-from pydantic import BaseModel
+from pydantic import BaseModel, Field, create_model
 
 from . import diagrams, i18n, prices, settings, storage
 from .errors import AppError
@@ -131,6 +132,47 @@ work…). Only well-known, established facts: no invented details, no precise fi
 you aren't sure of, no legend told as true. When unsure, leave it empty."""
 
 
+# Helps on the back, asked for with a switch (its default set in the settings): only
+# where they truly help, as the follow-ups of an explanation (see EXPLAIN_RULES).
+HELPS = """\
+Helps are asked for, on the back of the cards where they truly help, in the language \
+of the instructions, at the pupil's level (no tool they haven't learnt: an intuitive \
+reason instead), only well-established facts; when unsure, leave them empty:
+- "explanation": one or two short sentences saying why the answer is the answer, \
+when understanding it is what makes it stick (an event's cause, a rule, a formula); \
+never for a plain word, a name or a bare date, nor when the question already says it; \
+no example and no memory trick in it; on half the cards at most, often far fewer;
+- "mnemonic": a genuine way to remember the answer, when one exists: the word's real \
+origin or family, a simple striking image, a mnemonic schools really use, written \
+exactly; never one you'd have to make up (a rhyme, a sentence, a pun, "the digits \
+follow each other").
+Spelling: only a real rule taught at school (e.g. "ueil" after c and g) or the word's \
+actual origin; many spellings follow no rule: then nothing. Never a made-up rule, \
+never one word's spelling stretched into a rule ("all words with…").
+Speak to the pupil directly and informally (in French "tu"), straight to the point.
+Most cards get one of them or none: one card in three at most has a mnemonic."""
+
+
+# What the AI sees of a card: what it fills, and only that. Anthropic refuses a response
+# schema with too many optional fields ("Schema is too complex"): the fields Notosaurus
+# sets itself are left out, and the ones only some requests ask for (fun facts, helps)
+# are there only then.
+SET_BY_NOTOSAURUS = {"picture", "id"}
+
+
+@cache
+def ai_schema[T: BaseModel](base: type[T], fun_facts: bool = False, helps: bool = False) -> type[T]:
+    """`base` (Extraction, Revision) as the AI fills it; turned back into it with
+    `base.model_validate(answer.model_dump())`."""
+    left_out = set(SET_BY_NOTOSAURUS)
+    left_out |= set() if fun_facts else {"fun_fact"}
+    left_out |= set() if helps else {"explanation", "mnemonic"}
+    card_fields = {k: (f.annotation, f) for k, f in Card.model_fields.items() if k not in left_out}
+    card = create_model("Card", __doc__=Card.__doc__, **card_fields)
+    fields = {k: (f.annotation, f) for k, f in base.model_fields.items() if k != "cards"}
+    return create_model(base.__name__, __doc__=base.__doc__, cards=(list[card], Field()), **fields)
+
+
 # The AI calls of the request being handled (kind, list), set by `recording`.
 _recording: ContextVar[tuple[str, list[AiCall]] | None] = ContextVar("notosaurus_ai_calls", default=None)
 
@@ -213,10 +255,13 @@ def _user_text(
     decks: list[str] = (),
     fun_facts: bool = False,
     texts: list[str] = (),
+    helps: bool = False,
 ) -> str:
     text = f"Instructions: {prompt.strip()}"
     if fun_facts:
         text += "\n" + FUN_FACTS
+    if helps:
+        text += "\n" + HELPS
     if deck.strip():
         text += f"\nDeck name template: {deck.strip()}"
     if decks:
@@ -279,6 +324,7 @@ async def extract_cards(
     decks: list[str] = (),
     fun_facts: bool = False,
     page_texts: list[str] = (),
+    helps: bool = False,
 ) -> Extracted:
     """`profile`: the open Anki profile, for its standing instructions; `decks`: the
     decks that already exist, to reuse their names."""
@@ -289,13 +335,17 @@ async def extract_cards(
         found = _fake(images, prompt, deck)
         if fun_facts:  # the demo's "did you know" on its first card
             found.cards[0].fun_fact = "Le savais-tu ? Ce mot vient du latin."
+        if helps:  # the demo's helps: an explanation on the first card, a mnemonic on the second
+            found.cards[0].explanation = "(démo) Pourquoi c'est la réponse."
+            found.cards[-1].mnemonic = "(démo) Une astuce pour retenir."
         return Extracted(found, [0] * len(images), [], "es-ES", choice)
     fmt = diagrams.box_format(s.model_for_provider())
     images, sizes = _prepare(images)
     text = standing_instructions(s, profile) + _user_text(
-        prompt, deck, len(images), sizes, fmt, decks, fun_facts, page_texts
+        prompt, deck, len(images), sizes, fmt, decks, fun_facts, page_texts, helps
     )
-    result = await _generate(s, images, text, Extraction)
+    answer = await _generate(s, images, text, ai_schema(Extraction, fun_facts, helps))
+    result = Extraction.model_validate(answer.model_dump())
     diagrams.normalize(result.cards, sizes, fmt)
     return Extracted(
         Deck(deck=result.deck, cards=result.cards),
@@ -321,13 +371,15 @@ async def draw_figure(s: Settings, description: str) -> str:
 
 EXPLAIN_RULES = """\
 You help a pupil understand one flashcard of their lesson. Answer in the requested \
-language, at the pupil's level, in plain text (no Markdown, no HTML; formulas in \
+language, speaking to the pupil directly and informally (in French "tu", in German \
+"du"…), at the pupil's level, starting with the answer itself (never a sentence \
+about the card: "This card…"), in plain text (no Markdown, no HTML; formulas in \
 MathJax as in the card, e.g. \\( x^2 \\)). Short: two to four sentences unless told \
-otherwise. Only well-established facts, in line with the lesson (its instructions and \
-text are given); when unsure, say so in a few words rather than invent anything. Stay \
-at the pupil's level: no tool they haven't learnt yet (no calculus for a middle-school \
-formula): an intuitive reason instead. A front with "{{c1::…}}" is a sentence with \
-gaps (Anki's cloze syntax): the gaps are the answers.
+otherwise. Only well-established facts, in line with the lesson (its instructions \
+and text are given); when unsure, say so in a few words rather than invent anything. \
+Stay at the pupil's level: no tool they haven't learnt yet (no calculus for a \
+middle-school formula): an intuitive reason instead. A front with "{{c1::…}}" is a \
+sentence with gaps (Anki's cloze syntax): the gaps are the answers.
 
 In "more", list the follow-ups that would truly add something, among "example", \
 "mnemonic" and "why": never one just given, never what your answer already says; most \
@@ -335,8 +387,10 @@ cards need one or none:
 - "example": an example would make it clearer (a sentence using a word, a worked \
 calculation with a formula, a case where a rule applies); not for a date, a name or a \
 plain fact;
-- "mnemonic": a natural way to remember it exists (an image, a phrase, a family of \
-words, the word's origin); not a forced one;
+- "mnemonic": only when you can name where it comes from: the word's real origin or \
+family, a mnemonic schools really teach; never one you'd make up (a rhyme, a \
+sentence, a pun), never for a number or a year ("1789: the digits follow each other" \
+is not one);
 - "why": for a multiple choice (not a true/false), to say why the other options are \
 wrong; otherwise almost never: only when the reason the answer is right truly needs \
 more than your explanation gave (a reasoning, a proof at the pupil's level), never \
@@ -348,8 +402,8 @@ EXPLAIN_ASKS = {
     "options here: those are follow-ups.",
     "example": "Give one or two examples that make this card clearer (a sentence using the word, "
     "a worked calculation with the formula…).",
-    "mnemonic": "Give one memorable way to remember the answer (an image, a short phrase, a family "
-    "of words…): only one, natural, easy to recall.",
+    "mnemonic": "Give one genuine way to remember the answer: the word's real origin or family, a "
+    "simple image, a mnemonic schools really use. Never a rhyme, sentence or pun of your own.",
     "why": "Explain why the answer is right. For a multiple choice or a true/false card, also say "
     "why each other option is wrong, one short line each.",
 }
@@ -462,7 +516,9 @@ async def revise_cards(
     text = standing_instructions(s, profile) + _revision_text(
         prompt, plain, instruction, lang, len(images), sizes, fmt, labels
     )
-    revision = await _generate(s, images, text, Revision)
+    # The fun facts and helps already there are kept: the AI sees them
+    answer = await _generate(s, images, text, ai_schema(Revision, fun_facts=True, helps=True))
+    revision = Revision.model_validate(answer.model_dump())
     _keep_masks(revision.cards, deck.cards, sizes, fmt)
     return revision
 

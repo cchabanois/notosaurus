@@ -76,7 +76,9 @@ def test_existing_decks_given_to_the_ai(anki, client, monkeypatch):
 
     seen = {}
 
-    async def extract_cards(images, prompt, deck="", profile=None, decks=(), fun_facts=False, page_texts=()):
+    async def extract_cards(
+        images, prompt, deck="", profile=None, decks=(), fun_facts=False, page_texts=(), helps=False
+    ):
         seen["decks"] = decks
         return await llm.extract_cards(images, prompt, deck, profile, decks)
 
@@ -216,7 +218,9 @@ def test_pdf_page_texts_go_to_the_ai_and_stay_with_the_lesson(client, monkeypatc
 
     seen = []
 
-    async def extract_cards(images, prompt, deck="", profile=None, decks=(), fun_facts=False, page_texts=()):
+    async def extract_cards(
+        images, prompt, deck="", profile=None, decks=(), fun_facts=False, page_texts=(), helps=False
+    ):
         seen.append(list(page_texts))
         return await llm.extract_cards(images, prompt, deck, profile, decks)
 

@@ -20,7 +20,21 @@ CSS = """\
 .info { font-size: 18px; color: #777; margin-top: 12px; }
 .card img { max-width: 100%; height: auto; }
 .dictation { font-size: 40px; }
+.notosaurus-help {
+  max-width: 32em; margin: 10px auto 0; padding: 4px 10px; border-left: 3px solid #8bb8c4;
+  font-size: 18px; color: #555; text-align: left;
+}
+.nightMode .notosaurus-help { color: #bbb; }
 """
+
+# On the back, under the info: the helps asked for at generation (why the answer is the
+# answer, a way to remember it), each only when the AI wrote one
+BACK_INFO = (
+    '{{#Info}}<div class="info">{{Info}}</div>{{/Info}}'
+    '{{#Explanation}}<div class="notosaurus-help">💬 {{Explanation}}</div>{{/Explanation}}'
+    '{{#Mnemonic}}<div class="notosaurus-help">🧠 {{Mnemonic}}</div>{{/Mnemonic}}'
+)
+HELP_FIELDS = ("Explanation", "Mnemonic")
 
 # Diagram cards: the masks are HTML over the image, placed in % of its size.
 DIAGRAM_CSS = """\
@@ -178,7 +192,7 @@ def note_type(voice: str, reverse: bool, typing: bool = False, dictation: bool =
     # never overwrite a note type the user already has.
     anki_tts = tts.is_anki_locale(voice)
     sound = f"{{{{tts {voice}:Back}}}}" if anki_tts else "{{Audio}}"
-    info = '{{#Info}}<div class="info">{{Info}}</div>{{/Info}}'
+    info = BACK_INFO
     templates = [
         {
             "name": "Recto → Verso",
@@ -207,6 +221,7 @@ def note_type(voice: str, reverse: bool, typing: bool = False, dictation: bool =
     else:
         fields.append("Audio")
         kind = "audio"
+    fields += HELP_FIELDS
     name, variant = _variant("Notosaurus recto/verso" + (" + inverse" if reverse else ""), typing, dictation)
     return NoteType(f"{name} ({kind})", kind, tuple(fields), tuple(templates), variant=variant, reverse=reverse)
 
@@ -218,7 +233,7 @@ def diagram_note_type(voice: str, typing: bool = False) -> NoteType:
     tells which note an update is for, as the question alone ("What is (1)?") repeats."""
     anki_tts = tts.is_anki_locale(voice)
     sound = f"{{{{tts {voice}:Back}}}}" if anki_tts else "{{Audio}}"
-    info = '{{#Info}}<div class="info">{{Info}}</div>{{/Info}}'
+    info = BACK_INFO
     templates = (
         {
             "name": "Schéma",
@@ -230,6 +245,7 @@ def diagram_note_type(voice: str, typing: bool = False) -> NoteType:
     if typing:
         templates = (_typed(templates[0], "Back"),)
     fields = ["Front", "Back", "Info"] + ([] if anki_tts else ["Audio"]) + ["Image", "Masks", "AnswerMasks", "Id"]
+    fields += HELP_FIELDS
     kind = f"labels TTS Anki {voice}" if anki_tts else "labels audio"
     name, variant = _variant("Notosaurus légendes", typing, False)
     name = f"{name} ({kind.removeprefix('labels ')})"
@@ -244,7 +260,7 @@ def picture_note_type(voice: str, typing: bool = False, on_back: bool = False) -
     moves from one to the other keeping its history."""
     anki_tts = tts.is_anki_locale(voice)
     sound = f"{{{{tts {voice}:Back}}}}" if anki_tts else "{{Audio}}"
-    info = '{{#Info}}<div class="info">{{Info}}</div>{{/Info}}'
+    info = BACK_INFO
     picture = '<div class="notosaurus-picture">{{Picture}}</div>'
     if on_back:
         question, answer = "{{Front}}", f'{{{{FrontSide}}}}<hr id="answer">{{{{Back}}}}{sound}{picture}{info}'
@@ -254,7 +270,7 @@ def picture_note_type(voice: str, typing: bool = False, on_back: bool = False) -
     templates = ({"name": "Image", "qfmt": question, "afmt": answer},)
     if typing:
         templates = (_typed(templates[0], "Back"),)
-    fields = ["Front", "Back", "Info"] + ([] if anki_tts else ["Audio"]) + ["Picture", "Id"]
+    fields = ["Front", "Back", "Info"] + ([] if anki_tts else ["Audio"]) + ["Picture", "Id", *HELP_FIELDS]
     kind = f"picture TTS Anki {voice}" if anki_tts else "picture audio"
     name, variant = _variant("Notosaurus image au verso" if on_back else "Notosaurus image", typing, False)
     variant = "+".join(filter(None, ["back" if on_back else "", variant]))
@@ -267,7 +283,7 @@ def cloze_note_type() -> NoteType:
     others shown. "Extra" (the card's back, often empty) shows with the answer. Not
     read aloud. "Id" (the card's own id) tells which note an update is for: the text
     is what gets corrected."""
-    info = '{{#Info}}<div class="info">{{Info}}</div>{{/Info}}'
+    info = BACK_INFO
     templates = (
         {
             "name": "Texte à trous",
@@ -275,7 +291,7 @@ def cloze_note_type() -> NoteType:
             "afmt": '{{cloze:Text}}{{#Extra}}<div class="extra">{{Extra}}</div>{{/Extra}}' + info,
         },
     )
-    fields = ("Text", "Extra", "Info", "Id")
+    fields = ("Text", "Extra", "Info", "Id", *HELP_FIELDS)
     return NoteType("Notosaurus texte à trous", "cloze", fields, templates, css=CSS + CLOZE_CSS, key="Id", cloze=True)
 
 
@@ -285,7 +301,7 @@ def choice_note_type() -> NoteType:
     Anki. The options' order is fixed per card ("Choices", "AnswerChoices"). Its picture
     or figure, if any, goes on the question ("Picture") or with the answer
     ("BackPicture"). "Id" (the card's own id) tells which note an update is for."""
-    info = '{{#Info}}<div class="info">{{Info}}</div>{{/Info}}'
+    info = BACK_INFO
     picture = '{{#Picture}}<div class="notosaurus-picture">{{Picture}}</div>{{/Picture}}'
     back_picture = '{{#BackPicture}}<div class="notosaurus-picture">{{BackPicture}}</div>{{/BackPicture}}'
     question = f"{picture}<div>{{{{Question}}}}</div>"
@@ -296,7 +312,7 @@ def choice_note_type() -> NoteType:
             "afmt": f'{question}<hr id="answer">{{{{AnswerChoices}}}}{back_picture}{info}',
         },
     )
-    fields = ("Question", "Answer", "Choices", "AnswerChoices", "Picture", "BackPicture", "Info", "Id")
+    fields = ("Question", "Answer", "Choices", "AnswerChoices", "Picture", "BackPicture", "Info", "Id", *HELP_FIELDS)
     css = CSS + PICTURE_CSS + CHOICE_CSS
     return NoteType("Notosaurus QCM", "choice", fields, templates, css=css, key="Id")
 
@@ -344,6 +360,7 @@ def notes(
                         "Extra": _html(back),
                         "Info": _info(card),
                         "Id": card.id or f"{req.lesson_id or ''}:{i}",
+                        **_helps(card),
                     },
                     tags=[_tag(t) for t in card.tags if t.strip()] + own_tags,
                     media=[],
@@ -365,6 +382,7 @@ def notes(
                         "BackPicture": picture if card.picture_on_back else "",
                         "Info": _info(card),
                         "Id": card.id or f"{req.lesson_id or ''}:{i}",
+                        **_helps(card),
                     },
                     tags=[_tag(t) for t in card.tags if t.strip()] + own_tags,
                     media=[pictures[i]] if i in pictures else [],
@@ -377,7 +395,7 @@ def notes(
         nt = diagram_nt if i in images else (answer_picture_nt if on_back else picture_nt) if i in pictures else text_nt
         if typing and tts.has_math(back) and nt is text_nt:
             nt = math_nt
-        values = {"Front": _html(front), "Back": _html(back), "Info": _info(card)}
+        values = {"Front": _html(front), "Back": _html(back), "Info": _info(card), **_helps(card)}
         media = []
         if "Audio" in nt.fields:
             mp3 = audio.get(back)
@@ -437,6 +455,10 @@ def _info(card) -> str:
         return info
     style = "margin-top:8px;font-style:italic"
     return f'{info}<div style="{style}">💡 {_html(fact)}</div>'
+
+
+def _helps(card) -> dict[str, str]:
+    return {"Explanation": _html(card.explanation.strip()), "Mnemonic": _html(card.mnemonic.strip())}
 
 
 def _html(text: str) -> str:

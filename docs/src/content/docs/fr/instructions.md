@@ -69,6 +69,26 @@ L'interrupteur **💡 Ajouter des « Le savais-tu ? »**, sous la consigne, dema
 d'ajouter une anecdote courte et connue à certaines cartes. Elle s'affiche au verso dans
 Anki. Il est désactivé par défaut et mémorisé sur chaque appareil.
 
+## Les aides au verso
+
+L'interrupteur **💬 Aides au verso (explication, astuce pour retenir)**, sous la consigne,
+demande à l'IA d'ajouter, **seulement sur les cartes où elles aident vraiment** :
+
+- **une explication** : pourquoi la réponse est la bonne, quand comprendre aide à retenir
+  (une cause en histoire, une règle, une formule) ; jamais pour un simple mot ou une date
+  seule ;
+- **une astuce pour retenir** : l'origine ou la famille du mot (*hippopotame* : « le cheval du
+  fleuve »), une image simple, un procédé d'école connu, une vraie règle d'orthographe.
+  Jamais une astuce inventée.
+
+Une leçon d'histoire reçoit donc surtout des explications, une leçon de vocabulaire quelques
+astuces et aucune explication. Elles s'affichent au verso dans Anki, sous l'info (💬 et 🧠),
+et se modifient ou s'effacent dans la relecture. Elles ajoutent environ 1 à 3 centimes de
+dollar par leçon avec Claude Sonnet.
+
+Désactivé au départ ; on peut l'activer par défaut dans les réglages (⚙️ → Instructions pour
+l'IA). Changé sur un appareil, l'interrupteur y reste tel que tu l'as mis.
+
 ## Les instructions permanentes
 
 Certaines instructions valent pour toutes les leçons : « espagnol d'Espagne », « en 5ᵉ ;
