@@ -94,7 +94,7 @@
 
         <!-- 2. Access: its key (and address); then its models can be listed -->
         <section class="panel" x-show="form.llm !== 'fake'">
-          <h2><span class="step">2</span> <span x-text="$t('admin.access.title')"></span></h2>
+          <h2><span class="step">2</span> <span x-text="$t('admin.access.title')"></span> <a class="help-link" :href="$docs('ai-services')" target="_blank" rel="noopener" :aria-label="$t('common.helpOn', { topic: $t('admin.access.title') })" :title="$t('common.helpOn', { topic: $t('admin.access.title') })">?</a></h2>
           <!-- Another OpenAI-compatible service: its address -->
           <label class="field" x-show="form.llm === 'compatible'">
             <span x-text="$t('admin.access.apiAddress')"></span>
@@ -122,7 +122,7 @@
 
         <!-- 3. The model, and the test that it reads a photo and answers in JSON -->
         <section class="panel" x-show="form.llm !== 'fake'">
-          <h2><span class="step">3</span> <span x-text="$t('admin.model.title')"></span></h2>
+          <h2><span class="step">3</span> <span x-text="$t('admin.model.title')"></span> <a class="help-link" :href="$docs('ai-services')" target="_blank" rel="noopener" :aria-label="$t('common.helpOn', { topic: $t('admin.model.title') })" :title="$t('common.helpOn', { topic: $t('admin.model.title') })">?</a></h2>
           <label class="field">
             <span x-text="$t('admin.provider.model')"></span>
             <input x-model="form.model" list="model-suggestions"
@@ -165,7 +165,7 @@
 
         <!-- 4. Pictures on cards: an image model of its own (Claude can't draw) -->
         <section class="panel">
-          <h2><span class="step" x-text="form.llm === 'fake' ? 2 : 4"></span> <span x-text="$t('admin.pictures.title')"></span></h2>
+          <h2><span class="step" x-text="form.llm === 'fake' ? 2 : 4"></span> <span x-text="$t('admin.pictures.title')"></span> <a class="help-link" :href="$docs('card-types')" target="_blank" rel="noopener" :aria-label="$t('common.helpOn', { topic: $t('admin.pictures.title') })" :title="$t('common.helpOn', { topic: $t('admin.pictures.title') })">?</a></h2>
           <!-- Who draws: said plainly; by default the cards' own service -->
           <p class="picture-summary" x-text="pictureSummary()"></p>
           <div class="field">
@@ -197,7 +197,7 @@
 
         <!-- Voice -->
         <section class="panel">
-          <h2><span class="step" x-text="form.llm === 'fake' ? 3 : 5"></span> <span x-text="$t('admin.voice.title')"></span></h2>
+          <h2><span class="step" x-text="form.llm === 'fake' ? 3 : 5"></span> <span x-text="$t('admin.voice.title')"></span> <a class="help-link" :href="$docs('voices')" target="_blank" rel="noopener" :aria-label="$t('common.helpOn', { topic: $t('admin.voice.title') })" :title="$t('common.helpOn', { topic: $t('admin.voice.title') })">?</a></h2>
           <label class="field">
             <span x-text="$t('admin.voice.rate')"></span>
             <select x-model="form.tts_rate">
@@ -287,7 +287,7 @@
 
         <!-- Lessons: who they belong to (changes apply right away, not with "Save") -->
         <section class="panel admin-lessons" x-show="lessons">
-          <h2 x-text="$t('admin.lessons.title')"></h2>
+          <h2><span x-text="$t('admin.lessons.title')"></span> <a class="help-link" :href="$docs('several-children')" target="_blank" rel="noopener" :aria-label="$t('common.helpOn', { topic: $t('admin.lessons.title') })" :title="$t('common.helpOn', { topic: $t('admin.lessons.title') })">?</a></h2>
           <p class="hint" x-text="$t('admin.lessons.hint')"></p>
           <p class="hint warn" x-show="lessons && !lessons.profiles" x-text="$t('admin.lessons.ankiClosed')"></p>
           <p class="hint" x-show="lessons && !lessons.lessons.length" x-text="$t('admin.lessons.none')"></p>
@@ -368,7 +368,7 @@
 
         <!-- Password -->
         <section class="panel" x-show="status.password_needed">
-          <h2 x-text="$t('admin.passwordSection.title')"></h2>
+          <h2><span x-text="$t('admin.passwordSection.title')"></span> <a class="help-link" :href="$docs('privacy')" target="_blank" rel="noopener" :aria-label="$t('common.helpOn', { topic: $t('admin.passwordSection.title') })" :title="$t('common.helpOn', { topic: $t('admin.passwordSection.title') })">?</a></h2>
           <form @submit.prevent="changePassword()">
             <label class="field"><span x-text="$t('admin.passwordSection.new')"></span>
               <input type="password" x-model="pw.new" autocomplete="new-password" minlength="4"></label>
@@ -382,6 +382,7 @@
 
     <!-- Language: automatic (Anki's or the browser's) or picked here, for this device -->
     <footer class="page-footer">
+      <a class="docs-link" :href="$docs('')" target="_blank" rel="noopener">📖 <span x-text="$t('common.help')"></span></a>
       <label class="lang-select">
         <span aria-hidden="true">🌐</span>
         <select :aria-label="$t('common.language')" :value="$store.i18n.choice"

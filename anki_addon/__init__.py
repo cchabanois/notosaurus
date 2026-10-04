@@ -38,6 +38,21 @@ def anki_lang() -> str:
     return anki.lang.current_lang or "en"
 
 
+# The documentation, in Anki's language when it has a translation (as the pages' $docs
+# in static/i18n.js): English at the root, Portuguese under pt-br/
+DOCS = "https://cchabanois.github.io/notosaurus/"
+DOCS_LANGS = {"fr": "fr/", "es": "es/", "de": "de/", "it": "it/", "pt": "pt-br/"}
+
+
+def docs_url(page: str = "") -> str:
+    lang = DOCS_LANGS.get(anki_lang().replace("-", "_").split("_")[0].lower(), "")
+    return DOCS + lang + (f"{page}/" if page else "")
+
+
+def open_help() -> None:
+    webbrowser.open(docs_url("in-anki"))
+
+
 def t(key: str, **params) -> str:
     """Translated text from the server's language files (static/i18n), English as fallback."""
     lang = anki_lang().replace("_", "-").lower()
@@ -196,6 +211,10 @@ def show_phone() -> None:
     steps = QLabel(t("addon.phoneSteps"))
     steps.setWordWrap(True)
     layout_.addWidget(steps)
+    url = docs_url("phone")
+    help_link = QLabel(t("addon.phoneHelp", url=f'<a href="{url}">{url}</a>'))
+    help_link.setOpenExternalLinks(True)
+    layout_.addWidget(help_link)
     if str(config().get("host", "0.0.0.0")).startswith("127."):
         warning = QLabel(t("addon.localOnly"))
         warning.setWordWrap(True)
@@ -243,6 +262,7 @@ def setup_menu() -> None:
         ("addon.menuAddress", show_address),
         ("addon.menuRestart", restart),
         ("addon.menuLog", show_log),
+        ("addon.menuHelp", open_help),
     ]:
         action = QAction(t(key), mw)
         action.triggered.connect(handler)
