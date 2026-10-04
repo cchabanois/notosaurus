@@ -1,0 +1,131 @@
+{
+ "format": 1,
+ "deck": "Espagnol::Images",
+ "cards": [
+  {
+   "front": "Comment dit-on ?",
+   "back": "la manzana",
+   "choices": [],
+   "info": "la pomme",
+   "subdeck": "",
+   "tags": [],
+   "mask": null,
+   "picture_prompt": "a red apple",
+   "figure": "",
+   "fun_fact": "",
+   "picture_on_back": false,
+   "picture": "picture-05f666b553c7-9313ee3b.jpg",
+   "id": "05f666b553c7"
+  },
+  {
+   "front": "Comment dit-on ?",
+   "back": "el gato",
+   "choices": [],
+   "info": "le chat",
+   "subdeck": "",
+   "tags": [],
+   "mask": null,
+   "picture_prompt": "a cat sitting",
+   "figure": "",
+   "fun_fact": "",
+   "picture_on_back": false,
+   "picture": "picture-8226398f25bc-dc483e53.jpg",
+   "id": "8226398f25bc"
+  },
+  {
+   "front": "Comment dit-on ?",
+   "back": "la casa",
+   "choices": [],
+   "info": "la maison",
+   "subdeck": "",
+   "tags": [],
+   "mask": null,
+   "picture_prompt": "a small house",
+   "figure": "",
+   "fun_fact": "",
+   "picture_on_back": false,
+   "picture": "picture-f5a0c80ddca3-bd82fae3.jpg",
+   "id": "f5a0c80ddca3"
+  },
+  {
+   "front": "Comment dit-on ?",
+   "back": "el sol",
+   "choices": [],
+   "info": "le soleil",
+   "subdeck": "",
+   "tags": [],
+   "mask": null,
+   "picture_prompt": "a bright sun in the sky",
+   "figure": "",
+   "fun_fact": "",
+   "picture_on_back": false,
+   "picture": "picture-617f80fb4240-dcb91b42.jpg",
+   "id": "617f80fb4240"
+  }
+ ],
+ "voice": "es-ES-ElviraNeural",
+ "reverse": false,
+ "typing": false,
+ "dictation": false,
+ "shared": false,
+ "frames": [],
+ "prompt": "Crée des cartes avec les mots de la leçon (sans photo : 10 mots courants du thème que j'ajoute ici). Recto : l'image du mot, avec la question « Comment dit-on ? ». Verso : le mot dans la langue étudiée, avec l'article. Info : le mot en français.\r\nSujet : 4 mots en espagnol : la pomme, le chat, la maison, le soleil.",
+ "choice": "Vocabulaire espagnol illustré : image → mot avec article",
+ "owner": "Léa",
+ "ai_calls": [
+  {
+   "at": "2026-10-04T00:03:18",
+   "kind": "extract",
+   "provider": "anthropic",
+   "model": "claude-sonnet-5",
+   "input_tokens": 5073,
+   "output_tokens": 805,
+   "cost": 0.018196,
+   "exact": false
+  },
+  {
+   "at": "2026-10-04T00:03:22",
+   "kind": "picture",
+   "provider": "openrouter.ai",
+   "model": "google/gemini-3.1-flash-lite-image",
+   "input_tokens": 46,
+   "output_tokens": 1120,
+   "cost": 0.0336115,
+   "exact": true
+  },
+  {
+   "at": "2026-10-04T00:03:22",
+   "kind": "picture",
+   "provider": "openrouter.ai",
+   "model": "google/gemini-3.1-flash-lite-image",
+   "input_tokens": 49,
+   "output_tokens": 1120,
+   "cost": 0.03361225,
+   "exact": true
+  },
+  {
+   "at": "2026-10-04T00:03:22",
+   "kind": "picture",
+   "provider": "openrouter.ai",
+   "model": "google/gemini-3.1-flash-lite-image",
+   "input_tokens": 46,
+   "output_tokens": 1120,
+   "cost": 0.0336115,
+   "exact": true
+  },
+  {
+   "at": "2026-10-04T00:03:22",
+   "kind": "picture",
+   "provider": "openrouter.ai",
+   "model": "google/gemini-3.1-flash-lite-image",
+   "input_tokens": 46,
+   "output_tokens": 1120,
+   "cost": 0.0336115,
+   "exact": true
+  }
+ ],
+ "page_texts": [],
+ "created_at": "2026-10-04T00:03:18",
+ "updated_at": "2026-10-04T00:03:22",
+ "exported_at": null
+}

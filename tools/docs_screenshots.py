@@ -59,6 +59,11 @@ LESSONS = {
             "topic": "Topic: the right triangle and Pythagoras, the circle (radius, diameter).",
             "deck": "Maths::Geometry",
         },
+        "pictures": {
+            "prompt": "notosaurus:pictures",
+            "topic": "Topic: 4 Spanish words: the apple, the cat, the house, the sun.",
+            "deck": "Spanish::Pictures",
+        },
     },
     "fr": {
         "vocab": {
@@ -74,6 +79,11 @@ LESSONS = {
             "prompt": "notosaurus:geometry",
             "topic": "Sujet : le triangle rectangle et Pythagore, le cercle (rayon, diamètre).",
             "deck": "Maths::Géométrie",
+        },
+        "pictures": {
+            "prompt": "notosaurus:pictures",
+            "topic": "Sujet : 4 mots en espagnol : la pomme, le chat, la maison, le soleil.",
+            "deck": "Espagnol::Images",
         },
     },
 }
@@ -423,7 +433,7 @@ def shoot(lang: str) -> None:
         page.evaluate("window.scrollBy(0, 300)")
         shot("diagram")
 
-        for key, name in (("cloze", "cloze"), ("quiz", "quiz"), ("geometry", "figures")):
+        for key, name in (("cloze", "cloze"), ("quiz", "quiz"), ("geometry", "figures"), ("pictures", "pictures")):
             page.evaluate(f"id => {APP}.openLesson(id)", lesson_id(page, LESSONS[lang][key]["deck"]))
             page.wait_for_load_state("networkidle")
             scroll_to(page, "section.review", 10)
@@ -446,6 +456,12 @@ def shoot(lang: str) -> None:
         page.evaluate("document.querySelectorAll('section.admin-lessons details').forEach(d => d.open = true)")
         scroll_to(page, "section.admin-lessons", 80)
         shot("settings-costs")
+        page.evaluate("""() => {
+            const h = [...document.querySelectorAll('section.panel h2')].find(e => e.textContent.includes('5'));
+            window.scrollTo(0, h.getBoundingClientRect().top + scrollY - 90);
+        }""")
+        time.sleep(0.4)
+        shot("settings-voice")
         scroll_to(page, "section.phones", 80)
         shot("settings-phones")
         page.evaluate("""() => {

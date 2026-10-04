@@ -92,6 +92,9 @@ Yes, with one Anki profile each: see [Several children](../several-children/).
 Notosaurus is free. The AI service costs from a fraction of a cent to a few cents per lesson:
 see [AI services and costs](../ai-services/).
 
+**How is it updated?**
+See [What's new](../whats-new/#updating-notosaurus).
+
 **How do I uninstall it?**
 In Anki, **Tools → Add-ons**, select Notosaurus, **Delete**. Its components and **its data
 folder (lessons, photos, settings) are deleted too**: copy the data folder first if you want to

@@ -9,6 +9,7 @@ Each pull request adds a line under **Unreleased**. See [Releasing](CONTRIBUTING
 
 ### Added
 
+- Documentation: “Your lessons” (the list, search, subjects, deleting), “Voices and audio” (choosing and listening to a voice, speech rate, dictation, cards without sound) and “What's new” (releases, changelog, updating the add-on); the card types page shows pictures and their 🖼️ panel. English and French, with screenshots of pictures and of the speech rate (a new “Words in pictures” demo lesson).
 - Documentation: PDFs get their own section (with a screenshot of the page picker, from a 12-page demo booklet made by `tools/docs_screenshots.py`), the photos page becomes “Photos and PDFs”, the home page and *Getting started* mention them, and the FAQ explains the PDF messages.
 - A “?” at the end of some section titles (photos, instructions, review; in the settings: AI service, instructions, phones, sending to Anki) opens the matching page of the documentation, in the page's language. The documentation site has a picture for when its address is shared, and the AnkiWeb description of the add-on is kept in `docs/ankiweb.md`.
 - Documentation: “Troubleshooting and FAQ” (Notosaurus doesn't start, the phone can't connect, the AI fails, the cards don't reach Anki, uninstalling) and “Advanced installation” (standalone, Docker, environment variables), in English and French, in a new Help section.

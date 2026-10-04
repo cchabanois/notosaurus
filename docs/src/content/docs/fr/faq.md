@@ -95,6 +95,9 @@ Oui, avec un profil Anki chacun : voir [Plusieurs enfants](../several-children/)
 Notosaurus est gratuit. Le service d'IA coûte d'une fraction de centime à quelques centimes par
 leçon : voir [Services d'IA et coûts](../ai-services/).
 
+**Comment le mettre à jour ?**
+Voir [Nouveautés](../whats-new/#mettre-à-jour-notosaurus).
+
 **Comment le désinstaller ?**
 Dans Anki, **Outils → Greffons**, sélectionne Notosaurus, **Supprimer**. Ses composants **et son
 dossier de données (leçons, photos, réglages) sont supprimés aussi** : copie d'abord le dossier
