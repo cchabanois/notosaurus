@@ -9,6 +9,8 @@ Each pull request adds a line under **Unreleased**. See [Releasing](CONTRIBUTING
 
 ### Added
 
+- Documentation: “Your lessons” (the list, search, subjects, deleting), “Voices and audio” (choosing and listening to a voice, speech rate, dictation, cards without sound) and “What's new” (releases, changelog, updating the add-on); the card types page shows pictures and their 🖼️ panel. English and French, with screenshots of pictures and of the speech rate (a new “Words in pictures” demo lesson).
+- Documentation: PDFs get their own section (with a screenshot of the page picker, from a 12-page demo booklet made by `tools/docs_screenshots.py`), the photos page becomes “Photos and PDFs”, the home page and *Getting started* mention them, and the FAQ explains the PDF messages.
 - A “?” at the end of some section titles (photos, instructions, review; in the settings: AI service, instructions, phones, sending to Anki) opens the matching page of the documentation, in the page's language. The documentation site has a picture for when its address is shared, and the AnkiWeb description of the add-on is kept in `docs/ankiweb.md`.
 - Documentation: “Troubleshooting and FAQ” (Notosaurus doesn't start, the phone can't connect, the AI fails, the cards don't reach Anki, uninstalling) and “Advanced installation” (standalone, Docker, environment variables), in English and French, in a new Help section.
 - Documentation: “AI services and costs” (which service, getting a key step by step for Gemini, Claude, OpenAI and OpenRouter, the model, local models, the cost of a lesson) and “Privacy and security” (what leaves the computer, where the data is, who can use Notosaurus, the Wi-Fi), in English and French, with two more screenshots per language (the API key and the model, the costs). The photos page explains the text of digital PDFs.
@@ -105,6 +107,7 @@ Each pull request adds a line under **Unreleased**. See [Releasing](CONTRIBUTING
 ### Fixed
 
 - Notosaurus's note types already in Anki are brought up to date: each carries a signature at the end of its CSS, and at the next send one made by an older Notosaurus gets today's card templates and CSS, plus the fields or cards it lacks (nothing removed). Adding a field or a card makes Anki ask for a full sync: said so, and the automatic sync is left to the user that time. A newer .apkg updates its note types too (Anki's "update note types if newer").
+- The phones' pairing token is no longer written in clear in the server's log (shown from Anki's menu, pasted in bug reports): masked as `?k=•••`. The pages also tell browsers never to send their address to other sites (fonts, CDN, links).
 - Many lessons no longer slow Notosaurus down: the list asked Anki once per lesson (1.7 s for 300 lessons, 16 s for 3,000; now 12 ms and 68 ms), and every listing, generation and settings page read every card of every lesson (now each lesson is read again only when its file changes). Deleting a lesson only reads the lessons whose decks meet its own.
 - Changing the language now changes Notosaurus's prompts too (their names and the text shown), unless the text was changed for this time.
 - On a narrow phone (360 px), the info field's placeholder and the AnkiConnect key's were cut: shortened.

@@ -58,6 +58,8 @@ export default defineConfig({
 						{ slug: 'photos' },
 						{ slug: 'instructions' },
 						{ slug: 'review' },
+						{ slug: 'lessons' },
+						{ slug: 'voices' },
 						{ slug: 'card-types' },
 						{ slug: 'send-to-anki' },
 					],
@@ -70,7 +72,7 @@ export default defineConfig({
 				{
 					label: 'Help',
 					translations: { fr: 'Aide', es: 'Ayuda', de: 'Hilfe', it: 'Aiuto', 'pt-BR': 'Ajuda' },
-					items: [{ slug: 'faq' }, { slug: 'install' }],
+					items: [{ slug: 'faq' }, { slug: 'install' }, { slug: 'whats-new' }],
 				},
 			],
 		}),

@@ -59,6 +59,11 @@ LESSONS = {
             "topic": "Topic: the right triangle and Pythagoras, the circle (radius, diameter).",
             "deck": "Maths::Geometry",
         },
+        "pictures": {
+            "prompt": "notosaurus:pictures",
+            "topic": "Topic: 4 Spanish words: the apple, the cat, the house, the sun.",
+            "deck": "Spanish::Pictures",
+        },
     },
     "fr": {
         "vocab": {
@@ -74,6 +79,11 @@ LESSONS = {
             "prompt": "notosaurus:geometry",
             "topic": "Sujet : le triangle rectangle et Pythagore, le cercle (rayon, diamètre).",
             "deck": "Maths::Géométrie",
+        },
+        "pictures": {
+            "prompt": "notosaurus:pictures",
+            "topic": "Sujet : 4 mots en espagnol : la pomme, le chat, la maison, le soleil.",
+            "deck": "Espagnol::Images",
         },
     },
 }
@@ -92,6 +102,59 @@ CORRECTION_TYPED = {
     "en": "You forgot: el libro = the book",
     "fr": "Tu as oublié : el libro = le livre",
 }
+# A 12-page PDF for the screenshot of its page picker (more pages than a lesson holds)
+BOOKLET = {
+    "en": (
+        "Revision booklet",
+        [
+            "Spanish: at school",
+            "Spanish: the family",
+            "Spanish: colours",
+            "Verbs",
+            "The water cycle",
+            "Parts of a plant",
+            "The solar system",
+            "Fractions",
+            "Geometry: triangles",
+            "Geometry: the circle",
+            "History: the Romans",
+            "Geography: rivers",
+        ],
+    ),
+    "fr": (
+        "Cahier de révisions",
+        [
+            "Espagnol : l'école",
+            "Espagnol : la famille",
+            "Espagnol : les couleurs",
+            "Les verbes",
+            "Le cycle de l'eau",
+            "Les parties d'une plante",
+            "Le système solaire",
+            "Les fractions",
+            "Géométrie : les triangles",
+            "Géométrie : le cercle",
+            "Histoire : les Romains",
+            "Géographie : les fleuves",
+        ],
+    ),
+}
+
+
+def booklet_pdf(b, lang: str, path: Path) -> None:
+    title, topics = BOOKLET[lang]
+    pages = "".join(
+        f"<section><h1>{title}</h1><h2>{n}. {topic}</h2>" + "<p></p>" * 12 + "</section>"
+        for n, topic in enumerate(topics, start=1)
+    )
+    page = b.new_page()
+    page.set_content(
+        "<style>section { page-break-after: always; font-family: sans-serif; padding: 40px; }"
+        " h1 { color: #0e6377; } h2 { font-size: 40px; } p { border-bottom: 2px solid #a9c4e6; height: 40px; }"
+        f"</style>{pages}"
+    )
+    page.pdf(path=path, format="A4")
+    page.close()
 
 
 # --- A fake Anki: two profiles, every write accepted ---------------------------------
@@ -339,6 +402,15 @@ def shoot(lang: str) -> None:
         page.evaluate(f"{APP}.editor.open = false")
         page.evaluate(f"{APP}.clearPhotos()")
 
+        booklet = Path(tmp) / f"{BOOKLET[lang][0]}.pdf"
+        booklet_pdf(b, lang, booklet)
+        page.locator("input[type=file][accept*=pdf]").set_input_files(booklet)
+        wait_for(page, f"{APP}.pdf.open", timeout=60)  # pdf.js draws the pages
+        page.evaluate(f"{APP}.pdf.pages.forEach((p, i) => {{ p.chosen = [0, 1, 4].includes(i); }})")
+        time.sleep(1.5)
+        shot("pdf-pages")
+        page.evaluate(f"{APP}.donePdfPicker(false)")
+
         page.evaluate(f"{APP}.lessonsOpen = true")
         time.sleep(0.8)
         shot("lessons")
@@ -361,7 +433,7 @@ def shoot(lang: str) -> None:
         page.evaluate("window.scrollBy(0, 300)")
         shot("diagram")
 
-        for key, name in (("cloze", "cloze"), ("quiz", "quiz"), ("geometry", "figures")):
+        for key, name in (("cloze", "cloze"), ("quiz", "quiz"), ("geometry", "figures"), ("pictures", "pictures")):
             page.evaluate(f"id => {APP}.openLesson(id)", lesson_id(page, LESSONS[lang][key]["deck"]))
             page.wait_for_load_state("networkidle")
             scroll_to(page, "section.review", 10)
@@ -384,6 +456,12 @@ def shoot(lang: str) -> None:
         page.evaluate("document.querySelectorAll('section.admin-lessons details').forEach(d => d.open = true)")
         scroll_to(page, "section.admin-lessons", 80)
         shot("settings-costs")
+        page.evaluate("""() => {
+            const h = [...document.querySelectorAll('section.panel h2')].find(e => e.textContent.includes('5'));
+            window.scrollTo(0, h.getBoundingClientRect().top + scrollY - 90);
+        }""")
+        time.sleep(0.4)
+        shot("settings-voice")
         scroll_to(page, "section.phones", 80)
         shot("settings-phones")
         page.evaluate("""() => {

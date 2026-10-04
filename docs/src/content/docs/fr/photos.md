@@ -1,6 +1,6 @@
 ---
-title: Bien prendre la photo
-description: "Comment photographier une leçon pour que l'IA la lise bien, avec plusieurs pages, et ce que Notosaurus fait des photos."
+title: "Photos et PDF"
+description: "Comment photographier une leçon pour que l'IA la lise bien, plusieurs pages, les PDF, et ce que Notosaurus en fait."
 ---
 
 L'IA lit ce qu'elle voit : une photo nette donne de meilleures cartes, et moins de
@@ -27,14 +27,6 @@ Gemini est un bon choix, moins cher.
 Une leçon peut avoir **jusqu'à 10 pages**. Après la première photo, **Page suivante** en
 ajoute une autre ; **Galerie** choisit des photos déjà prises (JPEG, PNG, WebP ou GIF).
 
-**📄 PDF** ajoute les pages d'un PDF, par exemple une fiche envoyée par l'enseignant : chaque
-page devient une photo. S'il y a plus de pages que la leçon n'a de place, Notosaurus les
-affiche toutes et tu choisis lesquelles ajouter. Chaque page envoyée coûte comme une photo. Un
-PDF protégé par un mot de passe doit d'abord être enregistré sans son mot de passe.
-
-Un PDF fait sur ordinateur (pas un scan) contient aussi son texte exact : Notosaurus l'envoie à
-l'IA avec la page, et aucun mot, accent, date ni nombre n'est mal lu.
-
 Sur chaque photo :
 
 - **↻** la tourne d'un quart de tour ;
@@ -46,6 +38,21 @@ Sur chaque photo :
 
 Pas besoin de redresser toi-même une photo prise de travers : Notosaurus trouve le sens de
 chaque page en la lisant, et l'enregistre à l'endroit.
+
+## Les PDF
+
+**📄 PDF**, à côté de l'appareil photo et de la galerie, ajoute les pages d'un PDF : une fiche
+envoyée par l'enseignant, une page de manuel numérique, un livret… Chaque page devient une photo
+de la leçon : tout marche comme avec des photos, schémas, corrections et tous les services d'IA.
+
+- **Un PDF fait sur ordinateur** (pas un scan) contient aussi son texte exact : Notosaurus
+  l'envoie à l'IA avec sa page, et aucun mot, accent, date ni nombre n'est mal lu.
+- **Plus de pages que la leçon n'a de place** (10 pages en tout) : Notosaurus les affiche toutes,
+  et tu touches celles à ajouter.
+- **Chaque page envoyée coûte comme une photo** : choisis seulement les pages de la leçon.
+- **Un PDF protégé par un mot de passe** doit d'abord être enregistré sans son mot de passe.
+
+![Choisir les pages d'un PDF](../../../assets/screenshots/fr/pdf-pages.png)
 
 ## Que deviennent les photos ?
 

@@ -52,8 +52,17 @@ réglages (et les clés d'API) ne sont accessibles que sur l'ordinateur lui-mêm
 | Le modèle « ne semble pas voir l'image » (Tester) | Le modèle ne lit pas les images : choisis un modèle « vision ». |
 
 **Les cartes sont fausses ou il en manque.** Vérifie la photo (voir
-[Bien prendre la photo](../photos/)), précise la consigne, ou fais-les corriger par l'IA. Claude
+[Photos et PDF](../photos/)), précise la consigne, ou fais-les corriger par l'IA. Claude
 lit le mieux l'écriture manuscrite.
+
+## Un PDF ne s'ajoute pas
+
+- **« Déjà 10 pages : retires-en avant d'ajouter un PDF. »** Une leçon tient en 10 pages : retire
+  les photos inutiles (**×**), ou fais deux leçons.
+- **« … est protégé par un mot de passe »** : ouvre le PDF, enregistre-le sans mot de passe (ou
+  imprime-le dans un nouveau PDF), puis ajoute-le à nouveau.
+- **Des mots mal lus dans un PDF** : un PDF scanné ne contient que des images, lues comme des
+  photos. Un PDF fait sur ordinateur donne à l'IA son texte exact.
 
 ## Les cartes n'arrivent pas dans Anki
 
@@ -85,6 +94,9 @@ Oui, avec un profil Anki chacun : voir [Plusieurs enfants](../several-children/)
 **Combien ça coûte ?**
 Notosaurus est gratuit. Le service d'IA coûte d'une fraction de centime à quelques centimes par
 leçon : voir [Services d'IA et coûts](../ai-services/).
+
+**Comment le mettre à jour ?**
+Voir [Nouveautés](../whats-new/#mettre-à-jour-notosaurus).
 
 **Comment le désinstaller ?**
 Dans Anki, **Outils → Greffons**, sélectionne Notosaurus, **Supprimer**. Ses composants **et son
