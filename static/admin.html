@@ -187,11 +187,13 @@
             <input x-model="form.picture_model" list="picture-models"
                    :placeholder="$t('admin.provider.default', { model: saved.pictures.default_models[drawingService()] ?? '' })">
             <datalist id="picture-models">
-              <template x-for="m in PICTURE_MODELS[drawingService()] ?? []" :key="m">
+              <template x-for="m in pictureSuggestions()" :key="m">
                 <option :value="m"></option>
               </template>
             </datalist>
             <small x-text="$t('admin.pictures.hint')"></small>
+            <small x-show="pictureModels[drawingService()]"
+                   x-text="$t('admin.pictures.listed', { count: pictureModels[drawingService()]?.length ?? 0 })"></small>
           </label>
           <button type="button" class="btn soft wide" x-show="drawingService()" @click="testPicture()" :disabled="testingPicture">
             <span x-text="testingPicture ? $t('admin.testing') : $t('admin.pictures.test')"></span>

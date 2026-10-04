@@ -502,6 +502,7 @@
     "pictures": {
       "model": "Modelo de imagem",
       "hint": "Para instruções como “frente: a imagem da palavra”. De menos de um centavo a alguns centavos de dólar por imagem, conforme o modelo.",
+      "listed": "{count} modelos de imagem oferecidos pelo serviço: digite para filtrá-los.",
       "test": "🖼️ Testar: desenhar uma girafa (alguns centavos)",
       "testOk": "✓ {model} desenhou isto em {seconds} s ({cost}).",
       "testAlt": "A imagem de teste: uma girafa",

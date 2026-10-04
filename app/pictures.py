@@ -154,6 +154,59 @@ async def _openai(s: Settings, name: str, prompt: str) -> bytes:
     return base64.b64decode(response.data[0].b64_json)
 
 
+# --- The models that can draw, as each service lists them (listing is free) -----------
+
+
+async def image_models(s: Settings) -> list[str]:
+    """Every model of the drawing service that draws as Notosaurus asks it to (Gemini
+    and OpenRouter: an image in the answer; OpenAI: its images API)."""
+    drawing = service(s)
+    if not drawing:
+        raise PictureError("picture.no_model")
+    try:
+        found = await _fetch_models(s, drawing)
+    except PictureError:
+        raise
+    except Exception as e:  # the service's own error (key refused, unreachable…)
+        raise PictureError("picture.failed", detail=str(e)[:200]) from e
+    return sorted(set(_drawing_models(drawing, found)))
+
+
+async def _fetch_models(s: Settings, drawing: str) -> list[dict]:
+    """The service's models: {"id", "outputs": modalities or None, "actions": or None}."""
+    key = _key(s, drawing)
+    if drawing == "gemini":
+        from google import genai
+
+        client = genai.Client(api_key=key)
+        return [
+            {"id": m.name.removeprefix("models/"), "actions": m.supported_actions or []}
+            async for m in await client.aio.models.list()
+        ]
+    import openai
+
+    client = openai.AsyncOpenAI(api_key=key, **({"base_url": OPENROUTER} if drawing == "openrouter" else {}))
+    return [
+        {"id": m.id, "outputs": ((m.model_extra or {}).get("architecture") or {}).get("output_modalities")}
+        async for m in client.models.list()
+    ]
+
+
+def _drawing_models(drawing: str, models: list[dict]) -> list[str]:
+    if drawing == "gemini":  # gemini-…-image: they answer with an image (not Imagen, another API)
+        return [m["id"] for m in models if "image" in m["id"] and "generateContent" in (m.get("actions") or [])]
+    if drawing == "openrouter":  # an image among its outputs; not its routers nor the slow ":batch"
+        return [
+            m["id"]
+            for m in models
+            if "image" in (m.get("outputs") or [])
+            and not m["id"].startswith("openrouter/")
+            and not m["id"].endswith(":batch")
+        ]
+    # OpenAI's images API: the gpt-image models (DALL·E doesn't take the "low" quality asked)
+    return [m["id"] for m in models if m["id"].startswith(("gpt-image", "chatgpt-image"))]
+
+
 def card_size(data: bytes) -> bytes:
     """A picture (from a model, or a photo) as a card shows it: upright, light JPEG."""
     image = ImageOps.exif_transpose(PILImage.open(io.BytesIO(data))).convert("RGB")

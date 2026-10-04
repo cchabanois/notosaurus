@@ -102,6 +102,17 @@ test("who draws the card pictures: the same rule as the server", () => {
   assert.equal(admin.pictureSummary(), "GPT (OpenAI) has no key: add it, or choose another service.");
 });
 
+test("image models: a few suggested, then every one the drawing service lists", () => {
+  const admin = page.component();
+  settings(admin);  // Gemini draws
+  assert.deepEqual(plain(admin.pictureSuggestions()), ["gemini-3.1-flash-lite-image", "gemini-3.1-flash-image", "gemini-3-pro-image"]);
+  admin.pictureModels = { gemini: ["gemini-2.5-flash-image", "gemini-3.1-flash-lite-image"] };
+  assert.deepEqual(plain(admin.pictureSuggestions()), ["gemini-2.5-flash-image", "gemini-3.1-flash-lite-image"]);
+
+  settings(admin, { picture_service: "none" });  // nobody draws: nothing to suggest
+  assert.deepEqual(plain(admin.pictureSuggestions()), []);
+});
+
 test("the lessons by owner: Anki's profiles in order, the gone ones, then nobody's", () => {
   const admin = page.component();
   admin.lessons = {

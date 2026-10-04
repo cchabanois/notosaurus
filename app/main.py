@@ -873,6 +873,12 @@ async def admin_test() -> dict:
     return {"llm": s.llm, "model": s.model_for_provider(), "seconds": round(time.monotonic() - start, 1), **result}
 
 
+@app.post("/api/admin/pictures/models", dependencies=[Depends(require_admin)])
+async def admin_picture_models() -> dict:
+    """The drawing service's image models, listed by the service (free)."""
+    return {"service": pictures.service(settings.current()), "models": await pictures.image_models(settings.current())}
+
+
 @app.post("/api/admin/pictures/test", dependencies=[Depends(require_admin)])
 async def admin_picture_test() -> dict:
     """Draw one picture with the saved service and model (a few cents): shown with its cost."""

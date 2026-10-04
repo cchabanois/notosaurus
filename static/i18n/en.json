@@ -502,6 +502,7 @@
     "pictures": {
       "model": "Image model",
       "hint": "For prompts like “front: the picture of the word”. From under a cent to a few US cents per picture, depending on the model.",
+      "listed": "{count} image models offered by the service: type to filter them.",
       "test": "🖼️ Test: draw a giraffe (a few cents)",
       "testOk": "✓ {model} drew this in {seconds} s ({cost}).",
       "testAlt": "The test picture: a giraffe",
