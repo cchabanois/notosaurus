@@ -442,3 +442,17 @@ def test_openrouter_short_list(admin, monkeypatch):
     assert res["recommended"] == "~google/gemini-flash-latest"
     assert res["names"]["~google/gemini-flash-latest"] == "Google: Gemini Flash Latest"
     assert "google/gemini-3.8-flash" in res["models"] and "~deepseek/deepseek-pro-latest" not in res["models"]
+
+
+def test_configured_once_the_service_has_its_key(admin, monkeypatch):
+    """Until the cards' AI has its key (or address), the setup assistant is offered."""
+    monkeypatch.delenv("GEMINI_API_KEY", raising=False)
+    assert admin.get("/api/config").json()["configured"] is True  # the demo AI needs nothing
+    admin.put("/api/admin/settings", headers=ADMIN, json={"llm": "gemini"})
+    assert admin.get("/api/config").json()["configured"] is False
+    admin.put("/api/admin/settings", headers=ADMIN, json={"gemini_api_key": "AIza-test"})
+    assert admin.get("/api/config").json()["configured"] is True
+    admin.put("/api/admin/settings", headers=ADMIN, json={"llm": "compatible"})
+    assert admin.get("/api/config").json()["configured"] is False  # its address first
+    admin.put("/api/admin/settings", headers=ADMIN, json={"compatible_base_url": "http://localhost:11434/v1"})
+    assert admin.get("/api/config").json()["configured"] is True

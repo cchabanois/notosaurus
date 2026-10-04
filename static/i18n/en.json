@@ -308,6 +308,12 @@
       "label": "Photo in full",
       "previous": "Previous photo",
       "next": "Next photo"
+    },
+    "setup": {
+      "title": "One step left",
+      "hint": "Notosaurus needs an AI service to read the lessons: a few minutes to set it up, with a free key.",
+      "button": "Set up Notosaurus",
+      "onComputer": "On the computer, in Anki: Tools → Notosaurus → Getting started."
     }
   },
   "admin": {
@@ -522,6 +528,45 @@
       "title": "Model"
     }
   },
+  "setup": {
+    "title": "Getting started",
+    "computerOnly": "The assistant opens on the computer, in Anki: Tools → Notosaurus → Getting started.",
+    "steps": {
+      "ai": "The AI",
+      "phone": "The phone",
+      "done": "Ready"
+    },
+    "ai": {
+      "title": "Which AI reads the lessons?",
+      "hint": "It reads the photos and drafts the cards. You can change it later in the settings.",
+      "recommended": "⭐ Recommended: a free tier, and the best value in our tests",
+      "geminiTitle": "Get a Gemini key (2 minutes)",
+      "gemini1": "Open <a href=\"https://aistudio.google.com/apikey\" target=\"_blank\" rel=\"noopener\">aistudio.google.com/apikey</a> and sign in with a Google account.",
+      "gemini2": "Click <b>Create API key</b>, then copy the key.",
+      "gemini3": "Paste it below, then check it.",
+      "freeTier": "The free tier is enough to try, but Google may use what you send to improve its products. For your children's notebooks, turn on billing for the key's project in Google AI Studio: a fraction of a cent per lesson, and your data isn't used.",
+      "otherHelp": "How to get a key for this service",
+      "check": "🔌 Check the key"
+    },
+    "next": "Next →",
+    "back": "← Back",
+    "phone": {
+      "title": "Open Notosaurus on the phone",
+      "hint": "Scan this QR code with the phone's camera, then open the link.",
+      "waiting": "Waiting for the phone…",
+      "paired": "✓ The phone is connected.",
+      "sameWifi": "The phone must be on the same Wi-Fi as this computer.",
+      "later": "Later"
+    },
+    "done": {
+      "title": "Notosaurus is ready!",
+      "onPhone": "On the phone: take a photo of a lesson, and Notosaurus makes the cards.",
+      "here": "Take a photo of a lesson, and Notosaurus makes the cards. The phone can come later: the QR code is in the settings.",
+      "more": "Card pictures, voices, instructions per child: everything else is in the settings.",
+      "settings": "All the settings",
+      "open": "Open Notosaurus"
+    }
+  },
   "errors": {
     "unknown": "Unexpected error ({code}).",
     "invalid": "Invalid value.",
@@ -629,6 +674,7 @@
     "emptyLog": "(empty log)",
     "logTitle": "Notosaurus — log",
     "menuPhone": "Open on the phone…",
+    "menuSetup": "Getting started",
     "menuSettings": "Settings",
     "phoneTitle": "Open Notosaurus on the phone",
     "phoneSteps": "1. Connect the phone to the same Wi-Fi as this computer.\n2. Scan this QR code with the phone's camera.\n3. In the browser: menu → “Add to Home screen”, to use it like an app.\n\nSettings (AI keys…) open here, on the computer: Tools → Notosaurus → Settings.",
@@ -636,7 +682,9 @@
     "localOnly": "⚠ The server only listens on this computer (“host” set to 127.0.0.1): set “0.0.0.0” in the add-on config to reach it from the phone.",
     "notRunningYet": "Notosaurus is starting: try again in a few seconds.",
     "installConfirm": "Before it can start, Notosaurus must install its components:\n\n• uv (from GitHub), Python 3.13 and its Python libraries (from PyPI): about 300 MB on disk;\n• only in Anki's folder (Anki2/notosaurus-runtime): nothing changes on the rest of the computer, and removing the add-on removes them.\n\nThis takes a minute or two, the first time and after some updates. Install now?",
-    "installDeclined": "Notosaurus isn't started. To install it later: Tools → Notosaurus → Open Notosaurus."
+    "installDeclined": "Notosaurus isn't started. To install it later: Tools → Notosaurus → Open Notosaurus.",
+    "setupConfirm": "Notosaurus is installed. Set it up now? Two steps, a few minutes: an AI to read the lessons (with its key), then your phone.\n\nThe assistant opens in your browser.",
+    "setupLater": "Later: Tools → Notosaurus → Getting started."
   },
   "builtinPrompts": {
     "auto": {

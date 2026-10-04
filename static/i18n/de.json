@@ -308,6 +308,12 @@
       "label": "Foto in groß",
       "previous": "Vorheriges Foto",
       "next": "Nächstes Foto"
+    },
+    "setup": {
+      "title": "Noch ein Schritt",
+      "hint": "Notosaurus braucht einen KI-Dienst, um die Lektionen zu lesen: ein paar Minuten zum Einrichten, mit einem kostenlosen Schlüssel.",
+      "button": "Notosaurus einrichten",
+      "onComputer": "Am Computer, in Anki: Extras → Notosaurus → Einrichtungsassistent."
     }
   },
   "admin": {
@@ -522,6 +528,45 @@
       "title": "Modell"
     }
   },
+  "setup": {
+    "title": "Einrichtung",
+    "computerOnly": "Der Assistent öffnet sich am Computer, in Anki: Extras → Notosaurus → Einrichtungsassistent.",
+    "steps": {
+      "ai": "Die KI",
+      "phone": "Das Handy",
+      "done": "Fertig"
+    },
+    "ai": {
+      "title": "Welche KI liest die Lektionen?",
+      "hint": "Sie liest die Fotos und entwirft die Karten. Du kannst sie später in den Einstellungen ändern.",
+      "recommended": "⭐ Empfohlen: kostenloses Kontingent und das beste Preis-Leistungs-Verhältnis in unseren Tests",
+      "geminiTitle": "Einen Gemini-Schlüssel holen (2 Minuten)",
+      "gemini1": "Öffne <a href=\"https://aistudio.google.com/apikey\" target=\"_blank\" rel=\"noopener\">aistudio.google.com/apikey</a> und melde dich mit einem Google-Konto an.",
+      "gemini2": "Klicke auf <b>Create API key</b> (Schlüssel erstellen) und kopiere den Schlüssel.",
+      "gemini3": "Füge ihn unten ein und prüfe ihn.",
+      "freeTier": "Das kostenlose Kontingent reicht zum Ausprobieren, aber Google darf das Gesendete zur Verbesserung seiner Produkte nutzen. Für die Hefte deiner Kinder aktiviere die Abrechnung für das Projekt des Schlüssels in Google AI Studio: ein Bruchteil eines Cents pro Lektion, und deine Daten werden nicht genutzt.",
+      "otherHelp": "So bekommst du einen Schlüssel für diesen Dienst",
+      "check": "🔌 Schlüssel prüfen"
+    },
+    "next": "Weiter →",
+    "back": "← Zurück",
+    "phone": {
+      "title": "Notosaurus auf dem Handy öffnen",
+      "hint": "Scanne diesen QR-Code mit der Kamera des Handys und öffne den Link.",
+      "waiting": "Warte auf das Handy…",
+      "paired": "✓ Das Handy ist verbunden.",
+      "sameWifi": "Das Handy muss im selben WLAN sein wie dieser Computer.",
+      "later": "Später"
+    },
+    "done": {
+      "title": "Notosaurus ist bereit!",
+      "onPhone": "Auf dem Handy: Fotografiere eine Lektion, Notosaurus macht die Karten daraus.",
+      "here": "Fotografiere eine Lektion, Notosaurus macht die Karten daraus. Das Handy kann warten: Der QR-Code ist in den Einstellungen.",
+      "more": "Bilder auf den Karten, Stimmen, Anweisungen pro Kind: Alles Weitere steht in den Einstellungen.",
+      "settings": "Alle Einstellungen",
+      "open": "Notosaurus öffnen"
+    }
+  },
   "errors": {
     "unknown": "Unerwarteter Fehler ({code}).",
     "invalid": "Ungültiger Wert.",
@@ -629,6 +674,7 @@
     "emptyLog": "(leeres Protokoll)",
     "logTitle": "Notosaurus — Protokoll",
     "menuPhone": "Auf dem Handy öffnen …",
+    "menuSetup": "Einrichtungsassistent",
     "menuSettings": "Einstellungen",
     "phoneTitle": "Notosaurus auf dem Handy öffnen",
     "phoneSteps": "1. Verbinde das Handy mit demselben WLAN wie diesen Computer.\n2. Scanne diesen QR-Code mit der Kamera des Handys.\n3. Im Browser: Menü → „Zum Startbildschirm hinzufügen“, um es wie eine App zu nutzen.\n\nDie Einstellungen (KI-Schlüssel …) öffnest du hier, auf dem Computer: Extras → Notosaurus → Einstellungen.",
@@ -636,7 +682,9 @@
     "localOnly": "⚠ Der Server hört nur auf diesem Computer („host“ auf 127.0.0.1): Setze „0.0.0.0“ in der Konfiguration der Erweiterung, um ihn vom Handy aus zu erreichen.",
     "notRunningYet": "Notosaurus startet: Versuch es in ein paar Sekunden noch einmal.",
     "installConfirm": "Bevor Notosaurus starten kann, muss es seine Komponenten installieren:\n\n• uv (von GitHub), Python 3.13 und seine Python-Bibliotheken (von PyPI): etwa 300 MB auf der Festplatte;\n• nur im Anki-Ordner (Anki2/notosaurus-runtime): Am restlichen Computer ändert sich nichts, und mit der Erweiterung werden sie wieder entfernt.\n\nDas dauert ein bis zwei Minuten, beim ersten Mal und nach manchen Updates. Jetzt installieren?",
-    "installDeclined": "Notosaurus ist nicht gestartet. Zum späteren Installieren: Extras → Notosaurus → Notosaurus öffnen."
+    "installDeclined": "Notosaurus ist nicht gestartet. Zum späteren Installieren: Extras → Notosaurus → Notosaurus öffnen.",
+    "setupConfirm": "Notosaurus ist installiert. Jetzt einrichten? Zwei Schritte, ein paar Minuten: eine KI, die die Lektionen liest (mit ihrem Schlüssel), dann dein Handy.\n\nDer Assistent öffnet sich in deinem Browser.",
+    "setupLater": "Später: Extras → Notosaurus → Einrichtungsassistent."
   },
   "builtinPrompts": {
     "auto": {

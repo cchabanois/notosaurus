@@ -158,6 +158,7 @@ document.addEventListener("alpine:init", () => {
     exporting: false,
     lessonsOpen: false,
     maxPhotos: 10,       // pages per lesson (the server's limit, from /api/config)
+    configured: true,    // an AI service with its key: until then, the setup assistant is offered
     pdfBusy: false,      // a PDF's pages being drawn
     pdf: { open: false, name: "", free: 0, pages: [] },  // its page picker
     lessonQuery: "",
@@ -217,6 +218,7 @@ document.addEventListener("alpine:init", () => {
         const config = await (await api("/api/config")).json();
         this.diagramWarning = config.diagram_warning;
         this.maxPhotos = config.max_photos ?? this.maxPhotos;
+        this.configured = config.configured ?? true;
         const helps = storage("get", undefined, HELPS);
         this.helps = helps === null ? Boolean(config.card_helps) : helps === "1";
       } catch {}

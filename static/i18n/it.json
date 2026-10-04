@@ -308,6 +308,12 @@
       "label": "Foto ingrandita",
       "previous": "Foto precedente",
       "next": "Foto successiva"
+    },
+    "setup": {
+      "title": "Manca un passaggio",
+      "hint": "Notosaurus ha bisogno di un servizio di IA per leggere le lezioni: pochi minuti per configurarlo, con una chiave gratuita.",
+      "button": "Configura Notosaurus",
+      "onComputer": "Sul computer, in Anki: Strumenti → Notosaurus → Configurazione guidata."
     }
   },
   "admin": {
@@ -522,6 +528,45 @@
       "title": "Modello"
     }
   },
+  "setup": {
+    "title": "Primi passi",
+    "computerOnly": "La procedura si apre sul computer, in Anki: Strumenti → Notosaurus → Configurazione guidata.",
+    "steps": {
+      "ai": "L'IA",
+      "phone": "Il telefono",
+      "done": "Pronto"
+    },
+    "ai": {
+      "title": "Quale IA legge le lezioni?",
+      "hint": "Legge le foto e prepara le schede. Potrai cambiarla più tardi nelle impostazioni.",
+      "recommended": "⭐ Consigliato: piano gratuito e il miglior rapporto qualità/prezzo nei nostri test",
+      "geminiTitle": "Ottenere una chiave Gemini (2 minuti)",
+      "gemini1": "Apri <a href=\"https://aistudio.google.com/apikey\" target=\"_blank\" rel=\"noopener\">aistudio.google.com/apikey</a> e accedi con un account Google.",
+      "gemini2": "Clicca su <b>Create API key</b> (crea chiave), poi copia la chiave.",
+      "gemini3": "Incollala qui sotto, poi verificala.",
+      "freeTier": "Il piano gratuito basta per provare, ma Google può usare ciò che invii per migliorare i suoi prodotti. Per i quaderni dei tuoi figli, attiva la fatturazione del progetto della chiave in Google AI Studio: una frazione di centesimo per lezione, e i tuoi dati non vengono usati.",
+      "otherHelp": "Come ottenere una chiave per questo servizio",
+      "check": "🔌 Verifica la chiave"
+    },
+    "next": "Avanti →",
+    "back": "← Indietro",
+    "phone": {
+      "title": "Aprire Notosaurus sul telefono",
+      "hint": "Inquadra questo codice QR con la fotocamera del telefono, poi apri il link.",
+      "waiting": "In attesa del telefono…",
+      "paired": "✓ Il telefono è connesso.",
+      "sameWifi": "Il telefono deve essere sulla stessa rete Wi-Fi di questo computer.",
+      "later": "Più tardi"
+    },
+    "done": {
+      "title": "Notosaurus è pronto!",
+      "onPhone": "Sul telefono: fotografa una lezione e Notosaurus crea le schede.",
+      "here": "Fotografa una lezione e Notosaurus crea le schede. Il telefono può aspettare: il codice QR è nelle impostazioni.",
+      "more": "Immagini sulle schede, voci, istruzioni per ogni figlio: tutto il resto è nelle impostazioni.",
+      "settings": "Tutte le impostazioni",
+      "open": "Apri Notosaurus"
+    }
+  },
   "errors": {
     "unknown": "Errore imprevisto ({code}).",
     "invalid": "Valore non valido.",
@@ -629,6 +674,7 @@
     "emptyLog": "(registro vuoto)",
     "logTitle": "Notosaurus — registro",
     "menuPhone": "Apri sul telefono…",
+    "menuSetup": "Configurazione guidata",
     "menuSettings": "Impostazioni",
     "phoneTitle": "Apri Notosaurus sul telefono",
     "phoneSteps": "1. Collega il telefono allo stesso Wi-Fi di questo computer.\n2. Scansiona questo codice QR con la fotocamera del telefono.\n3. Nel browser: menu → “Aggiungi a schermata Home”, per usarlo come un'app.\n\nLe impostazioni (chiavi dell'IA…) si aprono qui, sul computer: Strumenti → Notosaurus → Impostazioni.",
@@ -636,7 +682,9 @@
     "localOnly": "⚠ Il server ascolta solo su questo computer (“host” su 127.0.0.1): imposta “0.0.0.0” nella configurazione dell'add-on per raggiungerlo dal telefono.",
     "notRunningYet": "Notosaurus si sta avviando: riprova tra qualche secondo.",
     "installConfirm": "Prima di avviarsi, Notosaurus deve installare i suoi componenti:\n\n• uv (da GitHub), Python 3.13 e le sue librerie Python (da PyPI): circa 300 MB su disco;\n• solo nella cartella di Anki (Anki2/notosaurus-runtime): nel resto del computer non cambia nulla, e togliendo l'add-on vengono eliminati.\n\nCi vogliono uno o due minuti, la prima volta e dopo alcuni aggiornamenti. Installare ora?",
-    "installDeclined": "Notosaurus non è avviato. Per installarlo più tardi: Strumenti → Notosaurus → Apri Notosaurus."
+    "installDeclined": "Notosaurus non è avviato. Per installarlo più tardi: Strumenti → Notosaurus → Apri Notosaurus.",
+    "setupConfirm": "Notosaurus è installato. Configurarlo ora? Due passaggi, pochi minuti: un'IA che legge le lezioni (con la sua chiave), poi il tuo telefono.\n\nLa procedura si apre nel browser.",
+    "setupLater": "Più tardi: Strumenti → Notosaurus → Configurazione guidata."
   },
   "builtinPrompts": {
     "auto": {

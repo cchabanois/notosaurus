@@ -376,6 +376,11 @@ def test_every_language_fits_a_narrow_phone(page, browser, server, lang):
         other.locator("section.panel h2").nth(3).wait_for()
         assert other.evaluate(CUT) == []
         other.wait_for_function("Alpine.$data(document.querySelector('[x-data]')).saveState !== 'pending'")
+        # The setup assistant, with its longest step: Gemini's key, explained
+        other.request.put("/api/admin/settings", headers={"X-Admin-Password": "secret"}, data={"llm": "gemini"})
+        other.goto("/setup.html")
+        other.locator(".setup-guide").wait_for()
+        assert other.evaluate(CUT) == []
     finally:
         context.close()
 
@@ -530,3 +535,48 @@ def test_help_links_in_the_page_language(page):
     sync_api.expect(page.get_by_role("link", name="Aide : Mes leçons")).to_have_attribute("href", docs + "fr/lessons/")
     page.locator(".lang-select select").select_option("pt")
     sync_api.expect(page.locator(".docs-link")).to_have_attribute("href", docs + "pt-br/")
+
+
+def test_the_setup_assistant(page, monkeypatch):
+    """No AI yet: the page offers the assistant; the key checked, the phone seen pairing, ready."""
+    from app import main
+
+    monkeypatch.setenv("NOTOSAURUS_LLM", "gemini")  # the default, without its key
+    monkeypatch.setattr(main, "last_paired", None)
+
+    async def check(s):  # the key's test, without calling Google
+        assert s.gemini_api_key == "AIza-test"
+        return {"vision": True, "json": True, "answer": "red"}
+
+    monkeypatch.setattr(main, "check", check)
+    page.goto("/")
+    page.get_by_role("link", name="Configurer Notosaurus").click()
+    page.locator("input[autocomplete=new-password]").first.fill("secret")
+    page.locator("input[autocomplete=new-password]").nth(1).fill("secret")
+    page.get_by_role("button", name="Créer et continuer").click()
+
+    sync_api.expect(page.get_by_role("heading", name="Quelle IA lit les leçons ?")).to_be_visible()
+    sync_api.expect(page.get_by_text("Obtenir une clé Gemini (2 minutes)")).to_be_visible()
+    sync_api.expect(page.get_by_role("link", name="aistudio.google.com/apikey")).to_have_attribute(
+        "href", "https://aistudio.google.com/apikey"
+    )
+    next_ = page.get_by_role("button", name="Suivant →")
+    sync_api.expect(next_).to_be_disabled()  # not before the key works
+    assert page.evaluate(CUT) == []
+    page.get_by_label("Clé API Gemini").fill("AIza-test")
+    page.get_by_role("button", name="🔌 Vérifier la clé").click()  # saves the key, then tests it
+    sync_api.expect(page.get_by_text("✓ gemini-3.8-flash lit les images")).to_be_visible()
+    next_.click()
+
+    sync_api.expect(page.get_by_role("heading", name="Ouvrir Notosaurus sur le téléphone")).to_be_visible()
+    sync_api.expect(page.get_by_text("En attente du téléphone…")).to_be_visible()
+    # The phone scans the QR code (on the Wi-Fi: not this computer)
+    page.wait_for_function("Alpine.$data(document.querySelector('[x-data]')).pollTimer")  # the QR code shown
+    page.request.get(f"/?k={settings.device_token()}", headers={"X-Forwarded-For": "192.168.1.20"})
+    sync_api.expect(page.get_by_text("✓ Le téléphone est connecté.")).to_be_visible()
+    page.get_by_role("button", name="Suivant →").click()
+
+    sync_api.expect(page.get_by_role("heading", name="Notosaurus est prêt !")).to_be_visible()
+    page.get_by_role("link", name="Ouvrir Notosaurus").click()
+    sync_api.expect(page.get_by_role("heading", name="Photos de la leçon")).to_be_visible()
+    sync_api.expect(page.locator(".setup-banner")).to_be_hidden()  # configured now

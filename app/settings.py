@@ -98,6 +98,16 @@ class Settings(BaseModel):
         }.get(self.llm, "")
 
 
+def configured(s: Settings) -> bool:
+    """Whether the cards' AI service can be called: its key (or, for a compatible
+    service, its address) is set. The setup assistant is offered until it is."""
+    if s.llm == "fake":
+        return True
+    if s.llm == "compatible":
+        return bool(s.compatible_base_url.strip())
+    return bool(getattr(s, f"{s.llm}_api_key", "").strip())
+
+
 def _path():
     return storage.data_dir() / "settings.json"
 
