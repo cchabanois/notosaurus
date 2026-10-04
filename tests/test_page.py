@@ -522,7 +522,9 @@ def test_help_links_in_the_page_language(page):
     docs = "https://cchabanois.github.io/notosaurus/"
     page.goto("/")
     sync_api.expect(page.locator(".docs-link")).to_have_attribute("href", docs + "fr/")  # the footer
-    sync_api.expect(page.get_by_role("link", name="☕ Soutenir Notosaurus")).to_have_attribute("href", "https://ko-fi.com/notosaurus")
+    sync_api.expect(page.get_by_role("link", name="☕ Soutenir Notosaurus")).to_have_attribute(
+        "href", "https://ko-fi.com/notosaurus"
+    )
     generate_free(page, FRONT_PROMPT)
     page.locator(".chip-btn").first.click()  # the lessons sheet: its own page
     sync_api.expect(page.get_by_role("link", name="Aide : Mes leçons")).to_have_attribute("href", docs + "fr/lessons/")
