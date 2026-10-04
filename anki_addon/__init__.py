@@ -41,6 +41,7 @@ def anki_lang() -> str:
 # The documentation, in Anki's language when it has a translation (as the pages' $docs
 # in static/i18n.js): English at the root, Portuguese under pt-br/
 DOCS = "https://cchabanois.github.io/notosaurus/"
+SUPPORT_URL = "https://ko-fi.com/notosaurus"
 DOCS_LANGS = {"fr": "fr/", "es": "es/", "de": "de/", "it": "it/", "pt": "pt-br/"}
 
 
@@ -51,6 +52,10 @@ def docs_url(page: str = "") -> str:
 
 def open_help() -> None:
     webbrowser.open(docs_url("in-anki"))
+
+
+def open_support() -> None:
+    webbrowser.open(SUPPORT_URL)
 
 
 def t(key: str, **params) -> str:
@@ -263,6 +268,7 @@ def setup_menu() -> None:
         ("addon.menuRestart", restart),
         ("addon.menuLog", show_log),
         ("addon.menuHelp", open_help),
+        ("addon.menuSupport", open_support),
     ]:
         action = QAction(t(key), mw)
         action.triggered.connect(handler)

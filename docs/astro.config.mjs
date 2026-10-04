@@ -20,7 +20,10 @@ export default defineConfig({
 				{ tag: 'meta', attrs: { property: 'og:image:height', content: '630' } },
 				{ tag: 'meta', attrs: { name: 'twitter:card', content: 'summary_large_image' } },
 			],
-			social: [{ icon: 'github', label: 'GitHub', href: 'https://github.com/cchabanois/notosaurus' }],
+			social: [
+				{ icon: 'github', label: 'GitHub', href: 'https://github.com/cchabanois/notosaurus' },
+				{ icon: 'heart', label: 'Ko-fi', href: 'https://ko-fi.com/notosaurus' },
+			],
 			editLink: { baseUrl: 'https://github.com/cchabanois/notosaurus/edit/main/docs/' },
 			// English at the root (/notosaurus/), the other languages under their code.
 			// A page not translated yet shows the English one, with a notice.

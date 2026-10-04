@@ -9,6 +9,7 @@ Each pull request adds a line under **Unreleased**. See [Releasing](CONTRIBUTING
 
 ### Added
 
+- ☕ A discreet link to support Notosaurus on Ko-fi: at the bottom of the page and the settings, in Anki's Tools → Notosaurus menu, in the documentation's header, the README and the AnkiWeb page; GitHub shows its “Sponsor” button.
 - Documentation: “Several children” explains children sharing one tablet (AnkiDroid has no profiles): a single Anki profile with one deck per child, the child's name in the suggested deck name of their instructions, and what is lost compared with one profile per child.
 - Documentation: “Which model?” in *AI services and costs*, English and French: twelve models graded on eleven tests (seven on real photos of a pupil's notebook), with grade, cost and time per lesson, our advice (Gemini Flash), the good alternatives, and the models to avoid.
 - More ways to the documentation: Tools → Notosaurus → Help in Anki (in Anki's language), a help link in the "Open on the phone" window, "📖 Help" at the bottom of the app and the settings, and a **?** on the lessons, the instructions picker and editor, the PDF pages, the device-not-allowed page and the remaining settings sections (access, model, pictures, voices, lessons, password).

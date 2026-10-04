@@ -5,7 +5,7 @@
 > From school bag to flashcards: snap a lesson, get an Anki deck.
 
 <p align="center"><a href="https://www.youtube.com/shorts/Q7bUTMEj6Kk"><img src="docs/src/assets/demo.gif" alt="Notosaurus on a phone: a notebook page becomes Anki cards. Click to watch the full demo on YouTube." width="280"></a><br>
-▶ <a href="https://www.youtube.com/shorts/Q7bUTMEj6Kk">Watch the full demo</a> (75 s) · 📖 <a href="https://cchabanois.github.io/notosaurus/">Documentation</a></p>
+▶ <a href="https://www.youtube.com/shorts/Q7bUTMEj6Kk">Watch the full demo</a> (75 s) · 📖 <a href="https://cchabanois.github.io/notosaurus/">Documentation</a> · ☕ <a href="https://ko-fi.com/notosaurus">Support on Ko-fi</a></p>
 
 Take photos of a lesson with your phone. A vision AI reads the pages and drafts Anki cards. You review and fix them, then send them straight into Anki or download a `.apkg`.
 
@@ -131,6 +131,10 @@ To add a language, see [CONTRIBUTING.md](CONTRIBUTING.md#adding-a-language): it 
 - **Plain HTTP on the local network.** The camera works over plain HTTP, and the page can be added to the home screen as a shortcut. Pairing stops the curious and other websites, not someone spying on the Wi-Fi traffic: keep your Wi-Fi protected (WPA2/WPA3).
 - **Never expose AnkiConnect or Notosaurus to the Internet.** Keep them on your local network.
 - **edge-tts is unofficial.** Microsoft could shut it down.
+
+## Support
+
+Notosaurus is free, with no ads and no tracking. If it helps your family, you can [buy me a coffee on Ko-fi](https://ko-fi.com/notosaurus) ☕.
 
 ## Contributing
 
