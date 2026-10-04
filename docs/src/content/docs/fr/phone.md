@@ -23,8 +23,28 @@ l'autorisation du téléphone.
 
 ### Android
 
-- **Chrome** : le menu **⋮** (en haut à droite) → **Ajouter à l'écran d'accueil** (ou **Installer
-  l'application**) → **Ajouter**.
+Dans **Chrome** :
+
+1. Le menu **⋮**, en haut à droite → **Ajouter à l'écran d'accueil**.
+
+   ![Le menu de Chrome : Ajouter à l'écran d'accueil](../../../assets/screenshots/fr/android-menu.png)
+
+2. **Créer un raccourci** : garde le nom **Notosaurus**, puis **Ajouter**.
+
+   ![Créer un raccourci](../../../assets/screenshots/fr/android-shortcut.png)
+
+3. **Ajouter à l'écran d'accueil** (ou appuie longuement sur l'icône pour la placer toi-même).
+
+   ![Ajouter à l'écran d'accueil](../../../assets/screenshots/fr/android-place.png)
+
+4. L'icône **Notosaurus** est sur l'écran d'accueil, parfois sur la page suivante.
+
+   ![L'icône Notosaurus sur l'écran d'accueil](../../../assets/screenshots/fr/android-home.png)
+
+Avec le HTTPS (voir plus bas), Chrome propose **Installer l'application** au lieu d'un raccourci.
+
+Dans les autres navigateurs :
+
 - **Samsung Internet** : le menu **≡** → **Ajouter la page à** → **Écran d'accueil**.
 - **Firefox** : le menu **⋮** → **Ajouter à l'écran d'accueil** (ou **Installer**).
 
@@ -33,8 +53,6 @@ l'autorisation du téléphone.
 Dans **Safari** : le bouton **Partager** (le carré avec une flèche) → **Sur l'écran d'accueil** →
 **Ajouter**. Sur un iPhone, l'icône ne partage pas la mémoire de Safari : c'est en l'ajoutant juste
 après avoir scanné le QR code qu'elle est autorisée.
-
-L'icône **Notosaurus**, avec son dinosaure, apparaît alors parmi les applis.
 
 ## Bon à savoir
 

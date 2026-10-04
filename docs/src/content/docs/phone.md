@@ -21,7 +21,28 @@ authorisation.
 
 ### Android
 
-- **Chrome**: the **⋮** menu (top right) → **Add to Home screen** (or **Install app**) → **Add**.
+In **Chrome**:
+
+1. The **⋮** menu, top right → **Add to Home screen**.
+
+   ![Chrome's menu: Add to Home screen](../../assets/screenshots/en/android-menu.png)
+
+2. **Create shortcut**: keep the name **Notosaurus**, then **Add**.
+
+   ![Create shortcut](../../assets/screenshots/en/android-shortcut.png)
+
+3. **Add to home screen** (or touch and hold the icon to place it yourself).
+
+   ![Add to home screen](../../assets/screenshots/en/android-place.png)
+
+4. The **Notosaurus** icon is on the home screen, sometimes on the next page.
+
+   ![The Notosaurus icon on the home screen](../../assets/screenshots/en/android-home.png)
+
+With HTTPS (see below), Chrome offers **Install app** instead of a shortcut.
+
+In other browsers:
+
 - **Samsung Internet**: the **≡** menu → **Add page to** → **Home screen**.
 - **Firefox**: the **⋮** menu → **Add to Home screen** (or **Install**).
 
@@ -30,8 +51,6 @@ authorisation.
 In **Safari**: the **Share** button (the square with an arrow) → **Add to Home Screen** → **Add**.
 On an iPhone, the icon doesn't share Safari's memory: adding it right after scanning the QR code is
 what lets it in.
-
-The **Notosaurus** icon, with its dinosaur, then appears among the apps.
 
 ## Good to know
 
