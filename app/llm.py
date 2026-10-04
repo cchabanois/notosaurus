@@ -878,6 +878,34 @@ async def list_models(s: Settings) -> dict:
     }
 
 
+def _strict(schema: dict) -> dict:
+    """The response schema as OpenAI's models require it ("strict"): every object closed
+    (additionalProperties false) and every property required, the optional ones filled
+    with their empty value by the model. Without it, GPT refuses the request: "Invalid
+    schema for response_format… 'additionalProperties' is required to be supplied and to
+    be false"."""
+
+    def walk(node):
+        if isinstance(node, dict):
+            if "properties" in node:
+                node["additionalProperties"] = False
+                node["required"] = list(node["properties"])
+            for value in node.values():
+                walk(value)
+        elif isinstance(node, list):
+            for value in node:
+                walk(value)
+        return node
+
+    return walk(json.loads(json.dumps(schema)))
+
+
+def _openai_model(s: Settings) -> bool:
+    """A model by OpenAI: with an OpenAI key, or through OpenRouter ("openai/…",
+    "~openai/…-latest")."""
+    return s.llm == "openai" or s.model_for_provider().lstrip("~").startswith("openai/")
+
+
 async def _openai[T: BaseModel](
     s: Settings, images: list[Image], text: str, schema: type[T], system: str = SYSTEM_PROMPT, light: bool = False
 ) -> T:
@@ -904,7 +932,9 @@ async def _openai[T: BaseModel](
             ],
             response_format={
                 "type": "json_schema",
-                "json_schema": {"name": schema.__name__.lower(), "schema": schema.model_json_schema()},
+                "json_schema": {"name": schema.__name__.lower(), "schema": schema.model_json_schema()}
+                if not _openai_model(s)
+                else {"name": schema.__name__.lower(), "schema": _strict(schema.model_json_schema()), "strict": True},
             },
             # OpenRouter tells the exact cost of the call when asked
             # OpenRouter: the exact cost of the call; and, for a light task, as little
