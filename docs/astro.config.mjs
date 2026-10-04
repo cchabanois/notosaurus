@@ -43,7 +43,7 @@ export default defineConfig({
 						it: 'Per iniziare',
 						'pt-BR': 'Para começar',
 					},
-					items: [{ slug: 'getting-started' }],
+					items: [{ slug: 'getting-started' }, { slug: 'phone' }],
 				},
 				{
 					label: 'Using Notosaurus',

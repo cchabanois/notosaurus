@@ -22,6 +22,8 @@ config (**Tools → Add-ons → Notosaurus → Config**, `port`), then restart A
 
 ## The phone can't open Notosaurus
 
+See also [On the phone](../phone/).
+
 - The phone and the computer must be on the **same Wi-Fi**. A “guest” network often keeps its
   devices apart: use the main one.
 - On Windows, allow Anki (or Python) when the **firewall** asks, the first time.
