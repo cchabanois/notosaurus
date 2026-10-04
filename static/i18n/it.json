@@ -502,6 +502,7 @@
     "pictures": {
       "model": "Modello di immagini",
       "hint": "Per istruzioni come “fronte: l'immagine della parola”. Da meno di un centesimo a qualche centesimo di dollaro per immagine, secondo il modello.",
+      "listed": "{count} modelli di immagini offerti dal servizio: scrivi per filtrarli.",
       "test": "🖼️ Prova: disegna una giraffa (pochi centesimi)",
       "testOk": "✓ {model} ha disegnato questo in {seconds} s ({cost}).",
       "testAlt": "L'immagine di prova: una giraffa",

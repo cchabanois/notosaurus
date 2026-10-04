@@ -21,12 +21,13 @@ const KEYS = {
   compatible: [{ field: "compatible_api_key", label: "admin.access.compatibleKey" }],
 };
 
-// Card pictures: the services that draw, the models suggested in each
+// Card pictures: the services that draw, the models suggested in each until the service
+// lists all of its own (see loadPictureModels)
 const PICTURE_SERVICES = ["gemini", "openai", "openrouter"];
 const PICTURE_MODELS = {
-  gemini: ["gemini-3.1-flash-lite-image", "gemini-3.1-flash-image"],
-  openai: ["gpt-image-1-mini", "gpt-image-1"],
-  openrouter: ["google/gemini-3.1-flash-lite-image", "google/gemini-3.1-flash-image", "openai/gpt-5-image-mini"],
+  gemini: ["gemini-3.1-flash-lite-image", "gemini-3.1-flash-image", "gemini-3-pro-image"],
+  openai: ["gpt-image-1-mini", "gpt-image-2", "gpt-image-2.5-flare", "gpt-image-2.5-sunburst"],
+  openrouter: ["google/gemini-3.1-flash-lite-image", "google/gemini-3.1-flash-image", "openai/gpt-5.4-image-2"],
 };
 const PICTURE_KEYS = { gemini: "gemini_api_key", openai: "openai_api_key", openrouter: "openrouter_api_key" };
 
@@ -49,7 +50,6 @@ function adminComponent() {
   return {
     providers: PROVIDERS,
     pictureServices: PICTURE_SERVICES,
-    PICTURE_MODELS,
     loadedModels: [],    // models listed by the OpenAI-like service
     modelAliases: [],    // OpenRouter: "~…-latest", the latest model of each main family (the short list)
     modelNames: {},      // id → name given by the service ("Google: Gemini Flash Latest")
@@ -66,6 +66,8 @@ function adminComponent() {
     saving: false,
     testing: false,
     testResult: null,
+    pictureModels: {},    // service → every image model it lists (loaded once its key is saved)
+    loadingPictureModels: false,
     testingPicture: false,
     pictureResult: null,  // the picture test: { ok, text, image }
     testingAnki: false,
@@ -148,6 +150,7 @@ function adminComponent() {
         this.loadAnkiStatus();
         this.loadPhone();
         this.autoLoadModels();
+        this.autoLoadPictureModels();
       } catch (e) {
         this.error = e.message;
       }
@@ -238,6 +241,28 @@ function adminComponent() {
       if (chosen) return this.hasKey(chosen) ? chosen : "";
       if (PICTURE_SERVICES.includes(this.form.llm)) return this.hasKey(this.form.llm) ? this.form.llm : "";
       return ["openrouter", "gemini", "openai"].find((s) => this.hasKey(s)) ?? "";
+    },
+
+    // The service's own list, once per service: what it lists is what can be chosen
+    pictureSuggestions() {
+      const drawing = this.drawingService();
+      return this.pictureModels[drawing] ?? PICTURE_MODELS[drawing] ?? [];
+    },
+
+    autoLoadPictureModels() {
+      const drawing = this.drawingService();
+      if (drawing && !this.pictureModels[drawing] && !this.loadingPictureModels && !this.dirty()) this.loadPictureModels();
+    },
+
+    async loadPictureModels() {
+      this.loadingPictureModels = true;
+      try {
+        const { service, models } = await this.request("/api/admin/pictures/models", { method: "POST" });
+        if (models.length) this.pictureModels = { ...this.pictureModels, [service]: models };
+      } catch {}  // the suggestions stay; the test says what is wrong with the service
+      finally {
+        this.loadingPictureModels = false;
+      }
     },
 
     setPictureService(service) {
@@ -340,6 +365,7 @@ function adminComponent() {
         }
         this.saveState = this.dirty({ keys: false }) ? "pending" : "saved";
         this.autoLoadModels();  // a key or an address just saved
+        this.autoLoadPictureModels();  // or the drawing service changed
         return true;
       } catch (e) {
         this.error = e.message;  // e.g. an address without http://: not saved, said here

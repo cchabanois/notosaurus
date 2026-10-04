@@ -9,6 +9,7 @@ Each pull request adds a line under **Unreleased**. See [Releasing](CONTRIBUTING
 
 ### Added
 
+- Settings → Card pictures: the image model field suggests every model the drawing service offers (Gemini, OpenAI or OpenRouter list their own, for free), new ones included, instead of two or three written in Notosaurus. The suggestions shown before the list arrives are brought up to date (OpenAI's gpt-image-2 and 2.5, OpenRouter's gpt-5.4-image-2).
 - Settings → Card pictures: a 🖼️ Test button draws one picture (a giraffe) with the chosen service and model, and shows it with its time and cost, as the cards' service has its test.
 - 🦕 A setup assistant, in two steps: the AI that reads the lessons (Gemini suggested, with how to get its key, step by step, and why to turn on its billing for children's notebooks), its key checked; then the phone, whose QR code the page sees scanned. The rest keeps its defaults. In Anki, it is offered at the first start when there is no AI yet, and stays in Tools → Notosaurus → Getting started; until an AI is set up, the main page offers it too.
 - ☕ A discreet link to support Notosaurus on Ko-fi: at the bottom of the page and the settings, in Anki's Tools → Notosaurus menu, in the documentation's header, the README and the AnkiWeb page; GitHub shows its “Sponsor” button.

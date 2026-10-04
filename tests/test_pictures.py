@@ -244,3 +244,42 @@ def test_the_settings_picture_test(admin, drawn, monkeypatch):
     assert found["image"].startswith("data:image/jpeg;base64,")
     image = Image.open(io.BytesIO(base64.b64decode(found["image"].split(",", 1)[1])))
     assert image.size == (pictures.SIDE, pictures.SIDE)  # as on a card
+
+
+def test_every_image_model_of_the_service(admin, monkeypatch):
+    """The settings suggest every model the drawing service lists that draws as asked."""
+    from conftest import ADMIN
+
+    listed = {
+        "gemini": [
+            {"id": "gemini-3.1-flash-lite-image", "actions": ["generateContent", "countTokens"]},
+            {"id": "gemini-3.8-flash", "actions": ["generateContent"]},  # writes, doesn't draw
+            {"id": "imagen-5.0-generate", "actions": ["predict"]},  # another API
+        ],
+        "openai": [{"id": "gpt-image-2.5-flare"}, {"id": "gpt-image-1-mini"}, {"id": "dall-e-3"}, {"id": "gpt-6-luna"}],
+        "openrouter": [
+            {"id": "openai/gpt-5.4-image-2", "outputs": ["image", "text"]},
+            {"id": "google/gemini-3.1-flash-image:batch", "outputs": ["image", "text"]},  # answered hours later
+            {"id": "openrouter/auto", "outputs": ["text", "image"]},  # a router, not a model
+            {"id": "google/gemini-3.8-flash", "outputs": ["text"]},
+        ],
+    }
+
+    async def fetch(s, drawing):
+        return listed[drawing]
+
+    monkeypatch.setattr(pictures, "_fetch_models", fetch)
+    for service, key, expected in (
+        ("gemini", "GEMINI_API_KEY", ["gemini-3.1-flash-lite-image"]),
+        ("openai", "OPENAI_API_KEY", ["gpt-image-1-mini", "gpt-image-2.5-flare"]),
+        ("openrouter", "OPENROUTER_API_KEY", ["openai/gpt-5.4-image-2"]),
+    ):
+        monkeypatch.setenv(key, "k")
+        admin.put("/api/admin/settings", headers=ADMIN, json={"picture_service": service})
+        assert admin.post("/api/admin/pictures/models", headers=ADMIN).json() == {
+            "service": service,
+            "models": expected,
+        }
+
+    admin.put("/api/admin/settings", headers=ADMIN, json={"picture_service": "none"})
+    assert admin.post("/api/admin/pictures/models", headers=ADMIN).json()["detail"]["code"] == "picture.no_model"
