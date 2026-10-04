@@ -1265,6 +1265,8 @@ document.addEventListener("alpine:init", () => {
         if (r.sync_error) warnings.push(t("app.send.noSync", { reason: errorMessage(r.sync_error) }));
         if (r.audio_failures) warnings.push(t("app.send.noSound", { count: r.audio_failures }));
         if (r.conversion_unsupported) warnings.push(t("app.send.oldAnkiConnect"));
+        // A note type gained a field or a card: Anki asks which side to keep at the next sync
+        if (r.restructured?.length) warnings.push(t("app.send.restructured", { names: r.restructured.join(", ") }));
         if (warnings.length) this.error = t("app.send.butWarning", { warnings: warnings.join(" ; ") });
       } catch (e) {
         this.error = e.message;

@@ -5,7 +5,7 @@ what happens to a lesson's Anki notes when it is deleted."""
 import json
 
 import httpx
-from conftest import ADMIN, CLOZE, SEND, FakeAnki, extract_lesson
+from conftest import ADMIN, CLOZE, MODEL_ACTIONS, SEND, FakeAnki, extract_lesson
 
 from app import ankiconnect, settings, tts
 from app.main import app
@@ -35,6 +35,8 @@ def test_direct_send_to_anki(anki, client):
         "sync_skipped": False,
         "converted": 0,
         "conversion_unsupported": False,
+        "note_types_updated": 0,
+        "restructured": [],
         "audio_failures": 0,
     }
 
@@ -212,3 +214,51 @@ def test_options_changed_with_an_old_ankiconnect(client, monkeypatch):
     client.post("/api/anki/send", json=body)
     res = client.post("/api/anki/send", json={**body, "typing": True}).json()
     assert (res["added"], res["converted"], res["conversion_unsupported"]) == (6, 0, True)  # as before, and said
+
+
+def _made_by_an_older_notosaurus(anki, client):
+    """A first send, then the note type as an older Notosaurus left it: other CSS
+    (no signature), another answer template."""
+    client.post("/api/anki/send", json=SEND)
+    (model,) = anki.models.values()
+    model["css"] = ".card { font-size: 20px; }"
+    model["cardTemplates"][0]["Back"] = "{{FrontSide}}<hr id=answer>{{Back}}"
+    return model
+
+
+def test_note_types_brought_up_to_date(anki, client):
+    from app import anki as notes
+
+    model = _made_by_an_older_notosaurus(anki, client)
+    anki.calls.clear()
+    r = client.post("/api/anki/send", json=SEND).json()
+    assert (r["note_types_updated"], r["restructured"], r["synced"]) == (1, [], True)  # no structure change: synced
+    nt = notes.note_type(SEND["voice"], False)
+    assert model["css"] == nt.full_css and nt.signature in model["css"]
+    assert model["cardTemplates"][0]["Back"] == nt.templates[0]["afmt"]
+    assert "modelFieldAdd" not in anki.calls and "modelTemplateAdd" not in anki.calls
+
+    # Up to date: one question per note type, nothing changed
+    anki.calls.clear()
+    assert client.post("/api/anki/send", json=SEND).json()["note_types_updated"] == 0
+    assert anki.calls.count("modelStyling") == 1
+    assert not [c for c in anki.calls if c in MODEL_ACTIONS - {"modelStyling"}]
+
+
+def test_a_field_added_says_a_full_sync_is_coming(anki, client):
+    model = _made_by_an_older_notosaurus(anki, client)
+    model["inOrderFields"].remove("Info")  # made before the field existed
+    anki.calls.clear()
+    r = client.post("/api/anki/send", json=SEND).json()
+    (name,) = anki.models
+    assert r["restructured"] == [name] and model["inOrderFields"][-1] == "Info"  # added, nothing removed
+    assert "sync" not in anki.calls and not r["synced"]  # Anki will ask which side to keep: not started
+
+
+def test_an_old_ankiconnect_leaves_note_types_as_they_are(client, monkeypatch):
+    old = FakeAnki(note_model=False)
+    monkeypatch.setattr(ankiconnect, "_transport", httpx.MockTransport(old.handle))
+    model = _made_by_an_older_notosaurus(old, client)
+    r = client.post("/api/anki/send", json=SEND)
+    assert r.status_code == 200 and r.json()["note_types_updated"] == 0
+    assert model["css"] == ".card { font-size: 20px; }"

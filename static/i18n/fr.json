@@ -186,7 +186,8 @@
         "one": "dont {count} passée aux nouvelles options (historique gardé)",
         "other": "dont {count} passées aux nouvelles options (historique gardé)"
       },
-      "oldAnkiConnect": "AnkiConnect est trop ancien pour changer les options des cartes déjà envoyées : elles restent à côté des nouvelles (mets à jour AnkiConnect, ou utilise le greffon Notosaurus)"
+      "oldAnkiConnect": "AnkiConnect est trop ancien pour changer les options des cartes déjà envoyées : elles restent à côté des nouvelles (mets à jour AnkiConnect, ou utilise le greffon Notosaurus)",
+      "restructured": "Notosaurus a mis à jour ses types de note ({names}) avec un nouveau champ ou une nouvelle carte : à la prochaine synchronisation, Anki demandera une synchronisation complète (pas lancée automatiquement cette fois)"
     },
     "export": {
       "noSound": "Paquet exporté, mais {count} carte(s) sans son (synthèse vocale indisponible).",

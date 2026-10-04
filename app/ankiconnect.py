@@ -6,7 +6,7 @@ of duplicated; notes deleted in Notosaurus are left untouched in Anki.
 """
 
 import base64
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 
 import httpx
 
@@ -38,6 +38,8 @@ class SendResult:
     sync_skipped: bool = False  # the profile isn't logged in to AnkiWeb: not tried
     converted: int = 0  # of the updated notes, those moved to another note type (options changed)
     conversion_unsupported: bool = False  # AnkiConnect too old to change a note's type: added instead
+    note_types_updated: int = 0  # made by an older Notosaurus: brought up to date
+    restructured: list[str] = field(default_factory=list)  # a field or card added: Anki asks for a full sync
 
 
 async def _invoke(client: httpx.AsyncClient, action: str, **params):
@@ -117,10 +119,11 @@ async def send(notes: list[Note]) -> SendResult:
                     "createModel",
                     modelName=nt.name,
                     inOrderFields=list(nt.fields),
-                    css=nt.css,
+                    css=nt.full_css,
                     isCloze=nt.cloze,
                     cardTemplates=[{"Name": t["name"], "Front": t["qfmt"], "Back": t["afmt"]} for t in nt.templates],
                 )
+        updated_types, restructured = await _bring_up_to_date(client, [nt for nt in note_types if nt.name in known])
         for path in dict.fromkeys(p for n in notes for p in n.media):
             await _invoke(
                 client, "storeMediaFile", filename=path.name, data=base64.b64encode(path.read_bytes()).decode()
@@ -167,7 +170,7 @@ async def send(notes: list[Note]) -> SendResult:
                         converted += 1
                         continue
                     except AnkiConnectError as e:
-                        if "unsupported action" not in str(e.params.get("detail", "")):
+                        if not _unsupported(e):
                             raise
                         unsupported = True  # an old AnkiConnect: added next to it, as before
                 await _invoke(
@@ -186,9 +189,58 @@ async def send(notes: list[Note]) -> SendResult:
         for tag, ids in retag.items():
             await _invoke(client, "addTags", notes=ids, tags=tag)
 
-        result = SendResult(added, updated, synced=False, converted=converted, conversion_unsupported=unsupported)
-        await _sync(client, result)
+        result = SendResult(
+            added,
+            updated,
+            synced=False,
+            converted=converted,
+            conversion_unsupported=unsupported,
+            note_types_updated=updated_types,
+            restructured=restructured,
+        )
+        if not restructured:  # else Anki asks which side to keep: the user's choice, in Anki
+            await _sync(client, result)
         return result
+
+
+def _unsupported(e: "AnkiConnectError") -> bool:
+    return "unsupported action" in str(e.params.get("detail", ""))
+
+
+async def _bring_up_to_date(client: httpx.AsyncClient, note_types: list) -> tuple[int, list[str]]:
+    """The note types made by an older Notosaurus (their CSS without today's signature):
+    their card templates and CSS replaced, the fields and card templates they lack
+    added; nothing removed. Returns how many changed, and those whose structure changed
+    (a field or a card template added: Anki then asks for a full sync). An AnkiConnect
+    too old for these actions: left as they are."""
+    changed, restructured = 0, []
+    for nt in note_types:
+        try:
+            if nt.signature in (await _invoke(client, "modelStyling", modelName=nt.name))["css"]:
+                continue
+            fields = await _invoke(client, "modelFieldNames", modelName=nt.name)
+            templates = await _invoke(client, "modelTemplates", modelName=nt.name)
+        except AnkiConnectError as e:
+            if _unsupported(e):
+                return changed, restructured
+            raise
+        added = False
+        for name in (f for f in nt.fields if f not in fields):
+            await _invoke(client, "modelFieldAdd", modelName=nt.name, fieldName=name, index=len(fields))
+            fields.append(name)
+            added = True
+        for t in (t for t in nt.templates if t["name"] not in templates):
+            card = {"Name": t["name"], "Front": t["qfmt"], "Back": t["afmt"]}
+            await _invoke(client, "modelTemplateAdd", modelName=nt.name, template=card)
+            added = True
+        present = {t["name"]: {"Front": t["qfmt"], "Back": t["afmt"]} for t in nt.templates if t["name"] in templates}
+        if present:
+            await _invoke(client, "updateModelTemplates", model={"name": nt.name, "templates": present})
+        await _invoke(client, "updateModelStyling", model={"name": nt.name, "css": nt.full_css})
+        changed += 1
+        if added:
+            restructured.append(nt.name)
+    return changed, restructured
 
 
 async def _other_notosaurus_notes(client: httpx.AsyncClient, deck: str) -> dict[tuple, list[dict]]:

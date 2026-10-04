@@ -120,6 +120,20 @@ class NoteType:
     def family(self) -> str:
         return family(self.name)
 
+    @property
+    def signature(self) -> str:
+        """What the note type is made of (fields, card templates, CSS), in 12 characters."""
+        templates = [f"{t['name']}\x1e{t['qfmt']}\x1e{t['afmt']}" for t in self.templates]
+        parts = [self.name, str(self.cloze), *self.fields, *templates, self.css]
+        return hashlib.sha256("\x1f".join(parts).encode()).hexdigest()[:12]
+
+    @property
+    def full_css(self) -> str:
+        """Its CSS, signed: a note type in Anki without today's signature was made by an
+        older Notosaurus (or before signatures) and is brought up to date at the next
+        send. Changed by hand in Anki, it is replaced then too: copy it to change it."""
+        return f"{self.css}\n/* Notosaurus note type, version {self.signature}: updated by Notosaurus */\n"
+
     def __hash__(self) -> int:
         return hash(self.name)
 
@@ -438,7 +452,7 @@ def _model(nt: NoteType) -> genanki.Model:
         nt.name,
         fields=[{"name": f} for f in nt.fields],
         templates=list(nt.templates),
-        css=nt.css,
+        css=nt.full_css,
         model_type=genanki.Model.CLOZE if nt.cloze else genanki.Model.FRONT_BACK,
     )
 

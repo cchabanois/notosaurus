@@ -94,6 +94,11 @@ CLOZE = {
 }
 
 
+# Bringing a note type up to date: AnkiConnect's actions, missing from an old one
+MODEL_ACTIONS = {"modelStyling", "modelFieldNames", "modelTemplates", "modelFieldAdd", "modelTemplateAdd",
+                 "updateModelTemplates", "updateModelStyling"}  # fmt: skip
+
+
 class FakeAnki:
     """In-memory AnkiConnect, enough for Notosaurus's calls."""
 
@@ -119,6 +124,26 @@ class FakeAnki:
             result = list(self.models)
         elif action == "createModel":
             self.models[p["modelName"]] = p
+        elif action in MODEL_ACTIONS and not self.note_model:
+            error = "unsupported action"  # an old AnkiConnect
+        elif action == "modelStyling":
+            result = {"css": self.models[p["modelName"]]["css"]}
+        elif action == "modelFieldNames":
+            result = list(self.models[p["modelName"]]["inOrderFields"])
+        elif action == "modelTemplates":
+            result = {
+                t["Name"]: {"Front": t["Front"], "Back": t["Back"]}
+                for t in self.models[p["modelName"]]["cardTemplates"]
+            }
+        elif action == "modelFieldAdd":
+            self.models[p["modelName"]]["inOrderFields"].append(p["fieldName"])
+        elif action == "modelTemplateAdd":
+            self.models[p["modelName"]]["cardTemplates"].append(p["template"])
+        elif action == "updateModelTemplates":
+            for t in self.models[p["model"]["name"]]["cardTemplates"]:
+                t.update(p["model"]["templates"].get(t["Name"], {}))
+        elif action == "updateModelStyling":
+            self.models[p["model"]["name"]]["css"] = p["model"]["css"]
         elif action == "deckNames":
             result = ["Default", *self.decks]
         elif action == "createDeck":

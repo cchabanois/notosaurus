@@ -186,7 +186,8 @@
         "one": "{count} deles passou para as novas opções (histórico mantido)",
         "other": "{count} deles passaram para as novas opções (histórico mantido)"
       },
-      "oldAnkiConnect": "O AnkiConnect é antigo demais para mudar as opções dos cartões já enviados: eles ficam ao lado dos novos (atualize o AnkiConnect ou use a extensão Notosaurus)"
+      "oldAnkiConnect": "O AnkiConnect é antigo demais para mudar as opções dos cartões já enviados: eles ficam ao lado dos novos (atualize o AnkiConnect ou use a extensão Notosaurus)",
+      "restructured": "O Notosaurus atualizou seus tipos de nota ({names}) com um novo campo ou cartão: na próxima sincronização, o Anki vai pedir uma sincronização completa (desta vez ela não foi iniciada automaticamente)"
     },
     "export": {
       "noSound": "Baralho exportado, mas {count} cartão(ões) sem som (síntese de voz indisponível).",

@@ -186,7 +186,8 @@
         "one": "{count} de ellas ha pasado a las nuevas opciones (historial conservado)",
         "other": "{count} de ellas han pasado a las nuevas opciones (historial conservado)"
       },
-      "oldAnkiConnect": "AnkiConnect es demasiado antiguo para cambiar las opciones de las tarjetas ya enviadas: se quedan junto a las nuevas (actualiza AnkiConnect o usa el complemento Notosaurus)"
+      "oldAnkiConnect": "AnkiConnect es demasiado antiguo para cambiar las opciones de las tarjetas ya enviadas: se quedan junto a las nuevas (actualiza AnkiConnect o usa el complemento Notosaurus)",
+      "restructured": "Notosaurus ha actualizado sus tipos de nota ({names}) con un campo o una tarjeta nuevos: en la próxima sincronización, Anki pedirá una sincronización completa (esta vez no se ha iniciado automáticamente)"
     },
     "export": {
       "noSound": "Mazo exportado, pero {count} tarjeta(s) sin sonido (síntesis de voz no disponible).",
