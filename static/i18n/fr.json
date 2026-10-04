@@ -364,7 +364,6 @@
       },
       "model": "Modèle",
       "default": "{model} (par défaut)",
-      "modelHint": "Laisse vide pour le modèle par défaut.",
       "fallbacks": "Modèles de secours",
       "fallbacksHint": "Essayés dans l'ordre si le modèle principal est surchargé ou sans quota (une clé gratuite n'a pas le dernier modèle). Séparés par des virgules."
     },
@@ -450,9 +449,7 @@
         "one": "{count} modèle proposé : le service ne dit pas s'il accepte les images, vérifie avec « Tester ».",
         "other": "{count} modèles proposés : le service ne dit pas lesquels acceptent les images, vérifie avec « Tester »."
       },
-      "noVisionModels": "Aucun modèle de ce service n'accepte les images : il en faut un pour lire les photos des leçons.",
-      "aliases": "Modèles conseillés",
-      "aliasesHint": "Toujours la dernière version de chaque modèle (⭐ : recommandé, le plus précis sur les schémas). Ou tape le nom d'un des {count} modèles dans le champ ci-dessus."
+      "noVisionModels": "Aucun modèle de ce service n'accepte les images : il en faut un pour lire les photos des leçons."
     },
     "costs": {
       "total": "💰 IA : {cost} au total",
@@ -502,7 +499,7 @@
     "pictures": {
       "model": "Modèle d'images",
       "hint": "Pour les consignes du type « recto : image du mot ». De moins d'un centime à quelques centimes US par image selon le modèle.",
-      "listed": "{count} modèles d'image proposés par le service : tape pour les filtrer.",
+      "listed": "Du meilleur rapport qualité/prix au plus cher, avec le coût d'une image ; ⭐ : le défaut. Ou tape dans le champ le nom d'un des {count} modèles d'image du service.",
       "test": "🖼️ Tester : dessiner une girafe (quelques centimes)",
       "testOk": "✓ {model} a dessiné ceci en {seconds} s ({cost}).",
       "testAlt": "L'image de test : une girafe",
@@ -531,6 +528,17 @@
     },
     "model": {
       "title": "Modèle"
+    },
+    "recommended": {
+      "title": "Conseillés, d'après nos essais",
+      "cardsHint": "Du meilleur rapport qualité/prix au plus cher, avec le coût d'une leçon ; ⭐ : le défaut. Ou tape le nom d'un autre modèle dans le champ.",
+      "picturesHint": "Du meilleur rapport qualité/prix au plus cher, avec le coût d'une image ; ⭐ : le défaut. Ou tape le nom d'un autre modèle dans le champ.",
+      "notes": {
+        "freeKey": "celui d'une clé gratuite",
+        "photos": "le meilleur sur les photos",
+        "best": "la meilleure moyenne",
+        "slower": "plus lent"
+      }
     }
   },
   "setup": {

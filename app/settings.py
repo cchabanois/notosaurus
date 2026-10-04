@@ -12,7 +12,7 @@ import secrets
 
 from pydantic import BaseModel
 
-from . import storage
+from . import recommended, storage
 
 PROVIDERS = ("gemini", "anthropic", "openai", "openrouter", "compatible", "fake")
 
@@ -23,14 +23,9 @@ OPENAI_URL = "https://api.openai.com/v1"
 OPENROUTER_URL = "https://openrouter.ai/api/v1"
 OPENAI_LIKE = ("openai", "openrouter", "compatible")
 
-DEFAULT_MODELS = {
-    "gemini": "gemini-3.8-flash",
-    "anthropic": "claude-opus-5",
-    "openai": "gpt-6-luna",
-    "openrouter": "~google/gemini-flash-latest",  # always the latest Gemini Flash
-    "compatible": "",  # depends on the service: chosen in the admin page
-    "fake": "",
-}
+# Each service's first recommended model (app/recommended.py); a compatible service's
+# depends on it: chosen in the admin page
+DEFAULT_MODELS = {provider: recommended.default(recommended.CARDS, provider) for provider in PROVIDERS}
 
 SECRET_FIELDS = (
     "gemini_api_key",

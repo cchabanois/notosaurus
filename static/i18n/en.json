@@ -364,7 +364,6 @@
       },
       "model": "Model",
       "default": "{model} (default)",
-      "modelHint": "Leave empty for the default model.",
       "fallbacks": "Fallback models",
       "fallbacksHint": "Tried in order when the main model is overloaded or has no quota (a free key doesn't get the latest model). Comma-separated."
     },
@@ -450,9 +449,7 @@
         "one": "{count} model suggested: the service doesn't say whether it accepts images, check with “Test”.",
         "other": "{count} models suggested: the service doesn't say which accept images, check with “Test”."
       },
-      "noVisionModels": "None of this service's models accepts images: one is needed to read the lesson photos.",
-      "aliases": "Suggested models",
-      "aliasesHint": "Always the latest version of each model (⭐: recommended, the most precise on diagrams). Or type the name of one of the {count} models in the field above."
+      "noVisionModels": "None of this service's models accepts images: one is needed to read the lesson photos."
     },
     "costs": {
       "total": "💰 AI: {cost} in total",
@@ -502,7 +499,7 @@
     "pictures": {
       "model": "Image model",
       "hint": "For prompts like “front: the picture of the word”. From under a cent to a few US cents per picture, depending on the model.",
-      "listed": "{count} image models offered by the service: type to filter them.",
+      "listed": "From the best value to the most expensive, with what a picture costs; ⭐: the default. Or type the name of any of the service's {count} image models in the field.",
       "test": "🖼️ Test: draw a giraffe (a few cents)",
       "testOk": "✓ {model} drew this in {seconds} s ({cost}).",
       "testAlt": "The test picture: a giraffe",
@@ -531,6 +528,17 @@
     },
     "model": {
       "title": "Model"
+    },
+    "recommended": {
+      "title": "Recommended, from our tests",
+      "cardsHint": "From the best value to the most expensive, with what a lesson costs; ⭐: the default. Or type another model's name in the field.",
+      "picturesHint": "From the best value to the most expensive, with what a picture costs; ⭐: the default. Or type another model's name in the field.",
+      "notes": {
+        "freeKey": "a free key's model",
+        "photos": "the best on photos",
+        "best": "the best average",
+        "slower": "slower"
+      }
     }
   },
   "setup": {

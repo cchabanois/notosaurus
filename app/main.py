@@ -20,7 +20,21 @@ from fastapi import BackgroundTasks, Depends, FastAPI, File, Form, Header, Query
 from fastapi.responses import FileResponse, JSONResponse, Response
 from fastapi.staticfiles import StaticFiles
 
-from . import anki, ankiconnect, decks, diagrams, i18n, lessons, llm, pictures, prompts, settings, tts, usage
+from . import (
+    anki,
+    ankiconnect,
+    decks,
+    diagrams,
+    i18n,
+    lessons,
+    llm,
+    pictures,
+    prompts,
+    recommended,
+    settings,
+    tts,
+    usage,
+)
 from .anki import build_apkg, notes
 from .errors import AppError
 from .llm import Image, check, extract_cards, list_models, revise_cards
@@ -814,6 +828,7 @@ def _settings_view() -> dict:
         **s,
         "providers": settings.PROVIDERS,
         "default_models": settings.DEFAULT_MODELS,
+        "recommended": recommended.view(),  # per service, in order: the first is the default
         "embedded": settings.embedded(),
         # The image model used when none is set: from the saved keys
         # Who draws the pictures now, and what "same as the cards" means here

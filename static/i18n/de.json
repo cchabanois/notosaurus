@@ -364,7 +364,6 @@
       },
       "model": "Modell",
       "default": "{model} (Standard)",
-      "modelHint": "Leer lassen für das Standardmodell.",
       "fallbacks": "Ersatzmodelle",
       "fallbacksHint": "Der Reihe nach versucht, wenn das Hauptmodell überlastet ist oder kein Kontingent hat (ein kostenloser Schlüssel bekommt das neueste Modell nicht). Durch Kommas getrennt."
     },
@@ -450,9 +449,7 @@
         "one": "{count} Modell vorgeschlagen: Der Dienst sagt nicht, ob es Bilder annimmt, prüfe es mit „Testen“.",
         "other": "{count} Modelle vorgeschlagen: Der Dienst sagt nicht, welche Bilder annehmen, prüfe es mit „Testen“."
       },
-      "noVisionModels": "Keines der Modelle dieses Dienstes nimmt Bilder an: Eines wird gebraucht, um die Fotos der Lektionen zu lesen.",
-      "aliases": "Vorgeschlagene Modelle",
-      "aliasesHint": "Immer die neueste Version jedes Modells (⭐: empfohlen, am genauesten bei Abbildungen). Oder tippe oben den Namen eines der {count} Modelle ein."
+      "noVisionModels": "Keines der Modelle dieses Dienstes nimmt Bilder an: Eines wird gebraucht, um die Fotos der Lektionen zu lesen."
     },
     "costs": {
       "total": "💰 KI: {cost} insgesamt",
@@ -502,7 +499,7 @@
     "pictures": {
       "model": "Bildmodell",
       "hint": "Für Anweisungen wie „Vorderseite: das Bild des Wortes“. Von unter einem Cent bis zu ein paar US-Cent pro Bild, je nach Modell.",
-      "listed": "{count} Bildmodelle bietet der Dienst an: Tippe, um sie zu filtern.",
+      "listed": "Vom besten Preis-Leistungs-Verhältnis zum teuersten, mit den Kosten eines Bildes; ⭐: der Standard. Oder tippe den Namen eines der {count} Bildmodelle des Dienstes ins Feld.",
       "test": "🖼️ Testen: eine Giraffe zeichnen (ein paar Cent)",
       "testOk": "✓ {model} hat das in {seconds} s gezeichnet ({cost}).",
       "testAlt": "Das Testbild: eine Giraffe",
@@ -531,6 +528,17 @@
     },
     "model": {
       "title": "Modell"
+    },
+    "recommended": {
+      "title": "Empfohlen, nach unseren Tests",
+      "cardsHint": "Vom besten Preis-Leistungs-Verhältnis zum teuersten, mit den Kosten einer Lektion; ⭐: der Standard. Oder tippe den Namen eines anderen Modells ins Feld.",
+      "picturesHint": "Vom besten Preis-Leistungs-Verhältnis zum teuersten, mit den Kosten eines Bildes; ⭐: der Standard. Oder tippe den Namen eines anderen Modells ins Feld.",
+      "notes": {
+        "freeKey": "das eines kostenlosen Schlüssels",
+        "photos": "das beste bei Fotos",
+        "best": "der beste Durchschnitt",
+        "slower": "langsamer"
+      }
     }
   },
   "setup": {

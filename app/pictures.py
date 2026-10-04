@@ -17,7 +17,7 @@ from pathlib import Path
 from PIL import Image as PILImage
 from PIL import ImageOps
 
-from . import figures, llm, settings, storage
+from . import figures, llm, recommended, settings, storage
 from .errors import AppError
 from .models import Card
 from .settings import Settings
@@ -42,11 +42,7 @@ class PictureError(AppError):
 
 # The services that can draw, and the model each uses by default (Gemini Flash Lite
 # Image: fast and the cheapest; OpenAI's smaller image model).
-DEFAULT_MODELS = {
-    "gemini": "gemini-3.1-flash-lite-image",
-    "openai": "gpt-image-1-mini",
-    "openrouter": "google/gemini-3.1-flash-lite-image",
-}
+DEFAULT_MODELS = {service: recommended.default(recommended.PICTURES, service) for service in recommended.PICTURES}
 # When the cards' service can't draw (Claude, a local model…): the first with a key
 FALLBACK = ("openrouter", "gemini", "openai")
 

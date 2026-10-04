@@ -12,7 +12,7 @@ import time
 
 import httpx
 
-from . import storage
+from . import recommended, storage
 
 log = logging.getLogger("notosaurus")
 
@@ -64,8 +64,11 @@ def _candidates(provider: str, model: str) -> list[str]:
 async def estimate(provider: str, model: str, input_tokens: int, output_tokens: int) -> float | None:
     """Estimated cost of a call in US dollars; None if the model's price is unknown."""
     prices = await _prices()
-    for model_id in _candidates(provider, model):
-        if model_id in prices:
-            price_in, price_out = prices[model_id]
+    known = [prices.get(model_id) for model_id in _candidates(provider, model)]
+    # Not in OpenRouter's list (OpenAI's image models): the prices written in Notosaurus
+    known.append(recommended.PRICES.get(re.sub(r"-\d{4}-\d{2}-\d{2}$", "", model.strip())))
+    for price in known:
+        if price:
+            price_in, price_out = price
             return round(input_tokens * price_in + output_tokens * price_out, 6)
     return None

@@ -368,6 +368,8 @@ h2 {
 .chip.active { background: var(--primary); border-color: var(--primary); color: var(--on-primary); }
 .chip.add { border-style: dashed; color: var(--primary); background: transparent; }
 .chip.more { display: inline-flex; align-items: center; gap: .35rem; }
+/* A recommended model says why: its whole label, on two lines if need be */
+.chip.recommended { white-space: normal; text-align: left; border-radius: 1.2rem; }
 
 .prompt-actions { display: flex; flex-wrap: wrap; column-gap: 1.2rem; }
 .link-btn.strong { color: var(--primary); }

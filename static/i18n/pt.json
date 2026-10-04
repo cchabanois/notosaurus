@@ -364,7 +364,6 @@
       },
       "model": "Modelo",
       "default": "{model} (padrão)",
-      "modelHint": "Deixe vazio para o modelo padrão.",
       "fallbacks": "Modelos reserva",
       "fallbacksHint": "Tentados em ordem se o modelo principal estiver sobrecarregado ou sem cota (uma chave gratuita não tem o modelo mais recente). Separados por vírgulas."
     },
@@ -450,9 +449,7 @@
         "one": "{count} modelo sugerido: o serviço não diz se ele aceita imagens, confira com “Testar”.",
         "other": "{count} modelos sugeridos: o serviço não diz quais aceitam imagens, confira com “Testar”."
       },
-      "noVisionModels": "Nenhum dos modelos deste serviço aceita imagens: é preciso um para ler as fotos das lições.",
-      "aliases": "Modelos sugeridos",
-      "aliasesHint": "Sempre a versão mais recente de cada modelo (⭐: recomendado, o mais preciso nos esquemas). Ou digite no campo acima o nome de um dos {count} modelos."
+      "noVisionModels": "Nenhum dos modelos deste serviço aceita imagens: é preciso um para ler as fotos das lições."
     },
     "costs": {
       "total": "💰 IA: {cost} no total",
@@ -502,7 +499,7 @@
     "pictures": {
       "model": "Modelo de imagem",
       "hint": "Para instruções como “frente: a imagem da palavra”. De menos de um centavo a alguns centavos de dólar por imagem, conforme o modelo.",
-      "listed": "{count} modelos de imagem oferecidos pelo serviço: digite para filtrá-los.",
+      "listed": "Do melhor custo-benefício ao mais caro, com o custo de uma imagem; ⭐: o padrão. Ou digite no campo o nome de um dos {count} modelos de imagem do serviço.",
       "test": "🖼️ Testar: desenhar uma girafa (alguns centavos)",
       "testOk": "✓ {model} desenhou isto em {seconds} s ({cost}).",
       "testAlt": "A imagem de teste: uma girafa",
@@ -531,6 +528,17 @@
     },
     "model": {
       "title": "Modelo"
+    },
+    "recommended": {
+      "title": "Recomendados, segundo nossos testes",
+      "cardsHint": "Do melhor custo-benefício ao mais caro, com o custo de uma lição; ⭐: o padrão. Ou digite o nome de outro modelo no campo.",
+      "picturesHint": "Do melhor custo-benefício ao mais caro, com o custo de uma imagem; ⭐: o padrão. Ou digite o nome de outro modelo no campo.",
+      "notes": {
+        "freeKey": "o de uma chave gratuita",
+        "photos": "o melhor em fotos",
+        "best": "a melhor média",
+        "slower": "mais lento"
+      }
     }
   },
   "setup": {

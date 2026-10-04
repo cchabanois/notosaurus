@@ -142,7 +142,7 @@ def test_pictures_drawn_by_the_cards_service():
     assert drawing() == ("", "")  # no key
     # The cards' own service, when it draws
     assert drawing(llm="gemini", gemini_api_key="k") == ("gemini", "gemini-3.1-flash-lite-image")
-    assert drawing(llm="openai", openai_api_key="k", openrouter_api_key="r") == ("openai", "gpt-image-1-mini")
+    assert drawing(llm="openai", openai_api_key="k", openrouter_api_key="r") == ("openai", "gpt-image-2")
     assert drawing(llm="openrouter", openrouter_api_key="k", gemini_api_key="free") == (
         "openrouter",
         "google/gemini-3.1-flash-lite-image",

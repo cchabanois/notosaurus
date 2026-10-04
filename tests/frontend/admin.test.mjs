@@ -40,14 +40,6 @@ test("a key being cleared is always part of the changes (a deliberate action)", 
   assert.deepEqual(plain(admin.changes({ keys: false })), { gemini_api_key: "" });
 });
 
-test("model names: the service's own name, cleaned", () => {
-  const admin = page.component();
-  admin.modelNames = { "~google/gemini-flash-latest": "Google: Gemini Flash Latest" };
-  assert.equal(admin.modelLabel("~google/gemini-flash-latest"), "Gemini Flash");
-  assert.equal(admin.modelLabel("~openai/gpt-latest"), "gpt");  // an id when the service names none
-  assert.equal(admin.modelLabel("mistral-medium-3-5"), "mistral-medium-3-5");
-});
-
 test("the demo provider is only listed when it is the saved choice", () => {
   const admin = page.component();
   settings(admin);
@@ -67,15 +59,33 @@ test("switching provider takes the saved model coming back to it, empty going el
   assert.equal(admin.form.model, "gemini-3.8-flash");
 });
 
-test("model suggestions: the provider's own, plus what the service lists", () => {
-  const admin = page.component();
-  settings(admin);
-  assert.deepEqual(plain(admin.modelSuggestions()), ["gemini-3.8-flash", "gemini-3.5-flash", "gemini-3.5-flash-lite", "gemini-3.1-pro-preview"]);
+// What the server sends: Notosaurus's recommended models, per service, in order
+const RECOMMENDED = {
+  cards: {
+    gemini: [{ id: "gemini-3.8-flash", name: "Gemini 3.8 Flash", cents: 1.3, note: "" },
+             { id: "gemini-3.5-flash", name: "Gemini 3.5 Flash", cents: 3.8, note: "freeKey" }],
+    openrouter: [{ id: "google/gemini-3.8-flash", name: "Gemini 3.8 Flash", cents: 1.3, note: "" }],
+  },
+  pictures: {
+    gemini: [{ id: "gemini-3.1-flash-lite-image", name: "Gemini 3.1 Flash-Lite Image", cents: 3.4, note: "" }],
+  },
+};
 
-  settings(admin, { llm: "openrouter" });
-  admin.loadedModels = ["a", "b"];
-  admin.modelAliases = ["~x-latest", "a"];  // a duplicate of the listed ones
-  assert.deepEqual(plain(admin.modelSuggestions()), ["~x-latest", "a", "b"]);
+test("model suggestions: the recommended ones first, then what the service lists", () => {
+  const admin = page.component();
+  settings(admin, {}, {}, { recommended: RECOMMENDED });
+  assert.deepEqual(plain(admin.modelSuggestions()), ["gemini-3.8-flash", "gemini-3.5-flash"]);
+  assert.equal(admin.recommendedLabel(admin.recommendedCards()[0], 0), "⭐ Gemini 3.8 Flash · 1.3 US¢");
+  assert.equal(admin.recommendedLabel(admin.recommendedCards()[1], 1), "Gemini 3.5 Flash · 3.8 US¢ · a free key's model");
+
+  settings(admin, { llm: "openrouter" }, {}, { recommended: RECOMMENDED });
+  admin.loadedModels = ["a", "google/gemini-3.8-flash"];  // a duplicate of a recommended one
+  assert.deepEqual(plain(admin.modelSuggestions()), ["google/gemini-3.8-flash", "a"]);
+
+  settings(admin, { llm: "compatible" }, {}, { recommended: RECOMMENDED });  // none recommended: examples
+  admin.clearModels();  // as switching provider does
+  assert.deepEqual(plain(admin.recommendedCards()), []);
+  assert.deepEqual(plain(admin.modelSuggestions()), ["qwen2.5vl", "gemma3"]);
 });
 
 test("who draws the card pictures: the same rule as the server", () => {
@@ -102,14 +112,14 @@ test("who draws the card pictures: the same rule as the server", () => {
   assert.equal(admin.pictureSummary(), "GPT (OpenAI) has no key: add it, or choose another service.");
 });
 
-test("image models: a few suggested, then every one the drawing service lists", () => {
+test("image models: the recommended ones first, then every one the drawing service lists", () => {
   const admin = page.component();
-  settings(admin);  // Gemini draws
-  assert.deepEqual(plain(admin.pictureSuggestions()), ["gemini-3.1-flash-lite-image", "gemini-3.1-flash-image", "gemini-3-pro-image"]);
+  settings(admin, {}, {}, { recommended: RECOMMENDED });  // Gemini draws
+  assert.deepEqual(plain(admin.pictureSuggestions()), ["gemini-3.1-flash-lite-image"]);
   admin.pictureModels = { gemini: ["gemini-2.5-flash-image", "gemini-3.1-flash-lite-image"] };
-  assert.deepEqual(plain(admin.pictureSuggestions()), ["gemini-2.5-flash-image", "gemini-3.1-flash-lite-image"]);
+  assert.deepEqual(plain(admin.pictureSuggestions()), ["gemini-3.1-flash-lite-image", "gemini-2.5-flash-image"]);
 
-  settings(admin, { picture_service: "none" });  // nobody draws: nothing to suggest
+  settings(admin, { picture_service: "none" }, {}, { recommended: RECOMMENDED });  // nobody draws: nothing to suggest
   assert.deepEqual(plain(admin.pictureSuggestions()), []);
 });
 
