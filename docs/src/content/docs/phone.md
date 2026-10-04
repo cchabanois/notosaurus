@@ -39,8 +39,6 @@ In **Chrome**:
 
    ![The Notosaurus icon on the home screen](../../assets/screenshots/en/android-home.png)
 
-With HTTPS (see below), Chrome offers **Install app** instead of a shortcut.
-
 In other browsers:
 
 - **Samsung Internet**: the **≡** menu → **Add page to** → **Home screen**.
@@ -55,10 +53,7 @@ what lets it in.
 ## Good to know
 
 - **The phone must be on the same Wi-Fi** as the computer, and Anki must be open on the computer
-  (with the add-on). Away from home, see [Tailscale](../privacy/#the-wi-fi).
+  (with the add-on): Notosaurus works at home, not away from it.
 - **If every phone was disconnected** (Settings → Phones) or the computer's address changed (after
   restarting the router), the icon no longer opens Notosaurus: scan the QR code again, then add the
   page to the home screen again (and remove the old icon).
-- On Android, over the plain HTTP of the local network, the icon opens the page in the browser.
-  With HTTPS (Tailscale), Chrome can **install** Notosaurus: it then opens full screen, like an app.
-- Photos work either way: **Take a photo** opens the phone's camera.

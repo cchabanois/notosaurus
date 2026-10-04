@@ -128,7 +128,7 @@ To add a language, see [CONTRIBUTING.md](CONTRIBUTING.md#adding-a-language): it 
 - **Always review the cards.** Even good models misread a word now and then.
 - **Children's schoolwork is private data.** Photos go to the AI provider you choose. A local model keeps them at home, at the cost of accuracy.
 - **Only paired devices.** On the Wi-Fi, only the computer itself and the devices that scanned Notosaurus's QR code (Tools → Notosaurus → Open on the phone, or ⚙️ → Phones) can use it: the others can't spend your AI credits or delete lessons. "Disconnect every phone" in ⚙️ → Phones unpairs them all (a phone lost or lent).
-- **Plain HTTP on the local network.** The camera works over plain HTTP, and the page can be added to the home screen as a shortcut. Pairing stops the curious and other websites, not someone spying on the Wi-Fi traffic: keep your Wi-Fi protected (WPA2/WPA3). For HTTPS, and to use Notosaurus away from home, [Tailscale](https://tailscale.com) works: `tailscale serve 8000` on the computer, the Tailscale app on the phone, and set `NOTOSAURUS_PUBLIC_URL` to the `https://….ts.net` address.
+- **Plain HTTP on the local network.** The camera works over plain HTTP, and the page can be added to the home screen as a shortcut. Pairing stops the curious and other websites, not someone spying on the Wi-Fi traffic: keep your Wi-Fi protected (WPA2/WPA3).
 - **Never expose AnkiConnect or Notosaurus to the Internet.** Keep them on your local network.
 - **edge-tts is unofficial.** Microsoft could shut it down.
 
