@@ -212,6 +212,7 @@ async def _generate(
     lesson_id: str | None = None,
     fun_facts: bool = False,
     page_texts: str = "",
+    helps: bool = False,
 ) -> Generated:
     """Read the photos (or, without photos, work from the prompt alone): the lesson's
     new content, not saved yet."""
@@ -229,7 +230,9 @@ async def _generate(
     with llm.recording("extract") as calls:  # model, tokens and cost, kept with the lesson
         try:
             known = await decks.known(profile)
-            found = await extract_cards(data, prompt, deck, profile, known, fun_facts=fun_facts, page_texts=texts)
+            found = await extract_cards(
+                data, prompt, deck, profile, known, fun_facts=fun_facts, page_texts=texts, helps=helps
+            )
         except Exception:
             usage.add(calls, lesson_id=None)  # answered but unusable: paid for, no lesson saved
             raise
@@ -256,10 +259,20 @@ async def extract(
     dictation: bool = Form(False),
     fun_facts: bool = Form(False),
     page_texts: str = Form(""),
+    helps: bool = Form(False),
 ) -> Lesson:
     """A new lesson (photos + cards), saved so it can be reopened."""
     g = await _generate(
-        images, prompt, deck, voice, prompt_id, typing, dictation, fun_facts=fun_facts, page_texts=page_texts
+        images,
+        prompt,
+        deck,
+        voice,
+        prompt_id,
+        typing,
+        dictation,
+        fun_facts=fun_facts,
+        page_texts=page_texts,
+        helps=helps,
     )
     created = lessons.create(
         g.content, prompt, g.photos, g.profile, g.found.frames, g.calls, g.found.choice, page_texts=g.page_texts
@@ -280,6 +293,7 @@ async def regenerate(
     dictation: bool = Form(False),
     fun_facts: bool = Form(False),
     page_texts: str = Form(""),
+    helps: bool = Form(False),
 ) -> Lesson:
     """Generate the lesson again (other prompt, other photos) in its place, instead of
     a second lesson. Only its owner's profile may."""
@@ -295,6 +309,7 @@ async def regenerate(
         lesson_id=id,
         fun_facts=fun_facts,
         page_texts=page_texts,
+        helps=helps,
     )
     # The options set in the review stay (the prompt's are added): only the cards change
     g.content.reverse = old.reverse
@@ -466,7 +481,7 @@ def config() -> dict:
     s = settings.current()
     # Claude places diagram masks less precisely (too tight on handwriting): say so in the review.
     loose_boxes = s.llm == "anthropic" or "claude" in s.model_for_provider().lower()
-    return {"version": VERSION, "diagram_warning": loose_boxes, "max_photos": MAX_IMAGES}
+    return {"version": VERSION, "diagram_warning": loose_boxes, "max_photos": MAX_IMAGES, "card_helps": s.card_helps}
 
 
 @app.get("/api/lessons")

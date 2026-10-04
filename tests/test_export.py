@@ -74,7 +74,7 @@ def test_export_audio_edge_tts(client, tmp_path):
 
     package = apkg.Apkg(res.content, tmp_path)
     (model,) = package.models.values()
-    assert [f["name"] for f in model["flds"]] == ["Front", "Back", "Info", "Audio"]
+    assert [f["name"] for f in model["flds"]] == ["Front", "Back", "Info", "Audio", "Explanation", "Mnemonic"]
     assert "{{Audio}}" in model["tmpls"][0]["afmt"]
     sounds = [note[2].split("\x1f")[3] for note in package.notes]
     assert sounds.count(f"[sound:{tts.filename('la madre', 'es-ES-ElviraNeural')}]") == 2
@@ -168,11 +168,11 @@ def test_cloze_cards_one_anki_card_per_gap(client, tmp_path):
 
     (cloze,) = [m for m in package.models.values() if m["type"] == 1]  # Anki's cloze note type
     assert cloze["name"] == "Notosaurus texte à trous"
-    assert [f["name"] for f in cloze["flds"]] == ["Text", "Extra", "Info", "Id"]
+    assert [f["name"] for f in cloze["flds"]] == ["Text", "Extra", "Info", "Id", "Explanation", "Mnemonic"]
     assert "{{cloze:Text}}" in cloze["tmpls"][0]["qfmt"]
     texts = {note[2].split("\x1f")[0]: note[2].split("\x1f") for note in package.notes}
     bastille = texts[CLOZE["cards"][0]["front"]]
-    assert bastille[1:] == ["", "", "rev1"]  # no back needed; the card's id tells the note
+    assert bastille[1:] == ["", "", "rev1", "", ""]  # no back needed; the card's id tells the note; no helps
     assert package.cards == 2 + 1 + 1  # one Anki card per gap number
 
 

@@ -68,6 +68,7 @@
       "freePlaceholder": "Escreva o que a IA deve fazer com a lição, por ex. “um cartão por data, na frente o acontecimento, no verso a data”.",
       "freeNote": "Instruções livres: ficam com a lição, mas não são adicionadas às suas instruções.",
       "funFacts": "💡 Adicionar “Você sabia?”",
+      "helps": "💬 Ajudas no verso (explicação, truque para lembrar)",
       "all": "Todas",
       "new": "💾 Novas",
       "newHint": "Criar instruções salvas, para usar de novo",
@@ -98,6 +99,8 @@
       "info": "+ info",
       "infoLabel": "Info",
       "funFact": "Você sabia?",
+      "explanation": "Explicação",
+      "mnemonic": "Truque para lembrar",
       "rightChoice": "Resposta certa",
       "wrongChoice": "Resposta errada",
       "addChoice": "+ resposta errada",
@@ -482,7 +485,9 @@
       "profile": "Para {profile}",
       "missingProfile": "Para {profile} (não está mais no Anki)",
       "profilePlaceholder": "por ex. no 8º ano; respostas curtas",
-      "noProfiles": "Abra o Anki para definir instruções para cada um dos perfis dele."
+      "noProfiles": "Abra o Anki para definir instruções para cada um dos perfis dele.",
+      "helps": "Ajudas no verso dos cartões, ativadas por padrão",
+      "helpsHint": "(uma explicação, um truque para lembrar, onde ajudam; cada aparelho pode mudar, ≈ +1 a 3 ¢ de dólar por lição)"
     },
     "notSaved": "Não salvo",
     "pictures": {

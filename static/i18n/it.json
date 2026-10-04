@@ -68,6 +68,7 @@
       "freePlaceholder": "Scrivi cosa deve fare l'IA con la lezione, per es. “una carta per data, davanti l'evento, dietro la data”.",
       "freeNote": "Istruzioni libere: restano con la lezione, ma non vengono aggiunte alle tue istruzioni.",
       "funFacts": "💡 Aggiungi dei “Lo sapevi?”",
+      "helps": "💬 Aiuti sul retro (spiegazione, trucco per ricordare)",
       "all": "Tutte",
       "new": "💾 Nuove",
       "newHint": "Crea istruzioni salvate, da riutilizzare",
@@ -98,6 +99,8 @@
       "info": "+ info",
       "infoLabel": "Info",
       "funFact": "Lo sapevi?",
+      "explanation": "Spiegazione",
+      "mnemonic": "Trucco per ricordarlo",
       "rightChoice": "Risposta giusta",
       "wrongChoice": "Risposta sbagliata",
       "addChoice": "+ risposta sbagliata",
@@ -482,7 +485,9 @@
       "profile": "Per {profile}",
       "missingProfile": "Per {profile} (non è più in Anki)",
       "profilePlaceholder": "per es. in seconda media; risposte brevi",
-      "noProfiles": "Apri Anki per impostare istruzioni per ciascuno dei suoi profili."
+      "noProfiles": "Apri Anki per impostare istruzioni per ciascuno dei suoi profili.",
+      "helps": "Aiuti sul retro delle carte, attivi per impostazione predefinita",
+      "helpsHint": "(una spiegazione, un trucco per ricordare, dove aiutano; ogni dispositivo può cambiarlo, ≈ +1-3 centesimi di dollaro per lezione)"
     },
     "notSaved": "Non salvato",
     "pictures": {

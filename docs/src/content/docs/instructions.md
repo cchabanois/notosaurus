@@ -64,6 +64,23 @@ The **💡 Add “Did you know?” facts** switch, under the instructions, asks 
 short, well-known fact to some cards. It shows on the back in Anki. It is off by default and
 remembered on each device.
 
+## Helps on the back
+
+The **💬 Helps on the back (explanation, a way to remember)** switch, under the instructions,
+asks the AI to add, **only on the cards where they truly help**:
+
+- **an explanation**: why the answer is the answer, when understanding helps remember it (a
+  cause in history, a rule, a formula); never for a plain word or a bare date;
+- **a way to remember it**: the word's origin or family (*hippopotame*: "the river horse"),
+  a simple image, a well-known school mnemonic, a real spelling rule. Never a made-up one.
+
+So a history lesson gets mostly explanations, a vocabulary lesson a few memory tricks and
+no explanation. They show on the back in Anki, under the info (💬 and 🧠), and can be edited
+or cleared in the review. They add about 1 to 3 US cents to a lesson with Claude Sonnet.
+
+Off at first; turn it on by default in the settings (⚙️ → Instructions for the AI). Changed
+on a device, the switch stays as you set it there.
+
 ## Standing instructions
 
 Some instructions apply to every lesson: “Spanish from Spain”, “in year 8; short answers”.

@@ -19,7 +19,7 @@ from conftest import fake_synthesize
 sync_api = pytest.importorskip("playwright.sync_api")
 import uvicorn  # noqa: E402
 
-from app import storage, tts  # noqa: E402
+from app import settings, storage, tts  # noqa: E402
 from app.main import app  # noqa: E402
 
 FRONT_PROMPT = "Une carte par mot de la famille"  # demo mode: Spanish family words
@@ -498,3 +498,21 @@ def test_a_card_explained_then_its_follow_ups(page):
     card.get_by_role("button", name="Expliquer cette carte").click()  # again: folded, nothing asked
     sync_api.expect(bubble).to_be_hidden()
     assert [c["kind"] for c in lesson(page, summary["id"])["ai_calls"]].count("explain") == 2
+
+
+def test_helps_switch_default_from_the_settings(page):
+    page.goto("/")
+    switch = page.locator(".switch.helps input")
+    sync_api.expect(switch).not_to_be_checked()  # off by default
+    settings.save({"card_helps": True})  # turned on in the settings: on at first on every device
+    page.reload()
+    sync_api.expect(switch).to_be_checked()
+
+    generate_free(page, FRONT_PROMPT)
+    sync_api.expect(page.locator(".card-help textarea").first).to_have_value("(démo) Pourquoi c'est la réponse.")
+    sync_api.expect(page.locator(".card-help:visible")).to_have_count(2)  # an explanation, a mnemonic: the others none
+
+    page.goto("/")
+    page.locator(".switch.helps").click()  # changed on this device: kept, whatever the default
+    page.reload()
+    sync_api.expect(switch).not_to_be_checked()

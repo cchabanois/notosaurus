@@ -46,6 +46,16 @@ class Card(BaseModel):
         description='Only when fun facts are asked for (see the request): one short "did you know" sentence. '
         "Empty otherwise.",
     )
+    explanation: str = Field(
+        default="",
+        description="Only when helps are asked for (see the request): why the answer is the answer, "
+        "when understanding helps remember it. Empty otherwise.",
+    )
+    mnemonic: str = Field(
+        default="",
+        description="Only when helps are asked for (see the request): a natural way to remember the "
+        "answer. Empty otherwise.",
+    )
     picture_on_back: bool = Field(
         default=False,
         description="True when the picture or figure belongs to the answer (see the rules); false when it is "
@@ -212,6 +222,7 @@ class SettingsUpdate(BaseModel):
     ankiconnect_url: str | None = Field(default=None, pattern=r"^https?://")
     ankiconnect_key: str | None = None
     anki_sync: bool | None = None
+    card_helps: bool | None = None
     instructions: str | None = Field(default=None, max_length=4000)
     profile_instructions: dict[str, str] | None = None  # replaces them all ("" removes one)
     picture_service: Literal["", "gemini", "openai", "openrouter", "none"] | None = None

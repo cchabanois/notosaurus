@@ -41,7 +41,7 @@ def test_direct_send_to_anki(anki, client):
     }
 
     (model,) = anki.models.values()
-    assert model["inOrderFields"] == ["Front", "Back", "Info", "Audio"]
+    assert model["inOrderFields"] == ["Front", "Back", "Info", "Audio", "Explanation", "Mnemonic"]
     assert set(anki.decks) == {"Espagnol::Leçon 5::Vocabulaire", "Espagnol::Leçon 5"}
     mother = anki.notes[1]
     assert mother["fields"]["Audio"] == f"[sound:{tts.filename('la madre', 'es-ES-ElviraNeural')}]"
@@ -132,7 +132,14 @@ def test_cloze_sent_to_anki(anki, client):
     res = client.post("/api/anki/send", json=CLOZE).json()
     assert (res["added"], res["updated"]) == (3, 0)
     cloze_model = anki.models["Notosaurus texte à trous"]
-    assert cloze_model["isCloze"] is True and cloze_model["inOrderFields"] == ["Text", "Extra", "Info", "Id"]
+    assert cloze_model["isCloze"] is True and cloze_model["inOrderFields"] == [
+        "Text",
+        "Extra",
+        "Info",
+        "Id",
+        "Explanation",
+        "Mnemonic",
+    ]
     assert anki.models[next(m for m in anki.models if m.startswith("Notosaurus recto"))]["isCloze"] is False
     assert anki.notes[2]["fields"]["Extra"] == "place de la Révolution"
 

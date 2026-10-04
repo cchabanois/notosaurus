@@ -68,6 +68,7 @@
       "freePlaceholder": "Écris ce que l'IA doit faire de la leçon, par exemple : « une carte par date, recto l'événement, verso la date ».",
       "freeNote": "Consigne libre : elle reste avec la leçon mais n'est pas ajoutée à tes consignes.",
       "funFacts": "💡 Ajouter des « Le savais-tu ? »",
+      "helps": "💬 Aides au verso (explication, astuce pour retenir)",
       "all": "Toutes",
       "new": "💾 Nouvelle",
       "newHint": "Créer une consigne enregistrée, à réutiliser",
@@ -98,6 +99,8 @@
       "info": "+ info",
       "infoLabel": "Info",
       "funFact": "Le savais-tu ?",
+      "explanation": "Explication",
+      "mnemonic": "Astuce pour retenir",
       "rightChoice": "Bonne réponse",
       "wrongChoice": "Mauvaise réponse",
       "addChoice": "+ mauvaise réponse",
@@ -482,7 +485,9 @@
       "profile": "Pour {profile}",
       "missingProfile": "Pour {profile} (n'existe plus dans Anki)",
       "profilePlaceholder": "ex. : en 5ᵉ ; réponses courtes",
-      "noProfiles": "Ouvre Anki pour régler des instructions pour chacun de ses profils."
+      "noProfiles": "Ouvre Anki pour régler des instructions pour chacun de ses profils.",
+      "helps": "Aides au verso des cartes, activées par défaut",
+      "helpsHint": "(une explication, une astuce pour retenir, là où elles aident ; chaque appareil peut le changer, ≈ +1 à 3 ¢ US par leçon)"
     },
     "notSaved": "Non enregistré",
     "pictures": {

@@ -21,8 +21,9 @@ from collections.abc import Iterator
 from contextlib import contextmanager
 from contextvars import ContextVar
 from dataclasses import dataclass
+from functools import cache
 
-from pydantic import BaseModel
+from pydantic import BaseModel, Field, create_model
 
 from . import diagrams, i18n, prices, settings, storage
 from .errors import AppError
@@ -131,6 +132,45 @@ work…). Only well-known, established facts: no invented details, no precise fi
 you aren't sure of, no legend told as true. When unsure, leave it empty."""
 
 
+# Helps on the back, asked for with a switch (its default set in the settings): only
+# where they truly help, as the follow-ups of an explanation (see EXPLAIN_RULES).
+HELPS = """\
+Helps are asked for, on the back of the cards where they truly help, in the language \
+of the instructions, at the pupil's level (no tool they haven't learnt: an intuitive \
+reason instead), only well-established facts; when unsure, leave them empty:
+- "explanation": one to three short sentences saying why the answer is the answer, \
+when understanding helps remember it (a notion, an event's cause, a rule, a formula); \
+never for a plain word, a name or a bare date; no example and no memory trick in it;
+- "mnemonic": a natural way to remember the answer, when one exists: the word's \
+origin or family, a simple striking image, a well-known school mnemonic written \
+exactly (only a truly common one), a spelling trap's reason; never a made-up phrase \
+harder to remember than the answer.
+Spelling: only a real rule taught at school (e.g. "ueil" after c and g) or the word's \
+actual origin; many spellings follow no rule: then nothing, never a made-up rule or \
+comparison.
+Most cards get one of them or none: one card in three at most has a mnemonic."""
+
+
+# What the AI sees of a card: what it fills, and only that. Anthropic refuses a response
+# schema with too many optional fields ("Schema is too complex"): the fields Notosaurus
+# sets itself are left out, and the ones only some requests ask for (fun facts, helps)
+# are there only then.
+SET_BY_NOTOSAURUS = {"picture", "id"}
+
+
+@cache
+def ai_schema[T: BaseModel](base: type[T], fun_facts: bool = False, helps: bool = False) -> type[T]:
+    """`base` (Extraction, Revision) as the AI fills it; turned back into it with
+    `base.model_validate(answer.model_dump())`."""
+    left_out = set(SET_BY_NOTOSAURUS)
+    left_out |= set() if fun_facts else {"fun_fact"}
+    left_out |= set() if helps else {"explanation", "mnemonic"}
+    card_fields = {k: (f.annotation, f) for k, f in Card.model_fields.items() if k not in left_out}
+    card = create_model("Card", __doc__=Card.__doc__, **card_fields)
+    fields = {k: (f.annotation, f) for k, f in base.model_fields.items() if k != "cards"}
+    return create_model(base.__name__, __doc__=base.__doc__, cards=(list[card], Field()), **fields)
+
+
 # The AI calls of the request being handled (kind, list), set by `recording`.
 _recording: ContextVar[tuple[str, list[AiCall]] | None] = ContextVar("notosaurus_ai_calls", default=None)
 
@@ -213,10 +253,13 @@ def _user_text(
     decks: list[str] = (),
     fun_facts: bool = False,
     texts: list[str] = (),
+    helps: bool = False,
 ) -> str:
     text = f"Instructions: {prompt.strip()}"
     if fun_facts:
         text += "\n" + FUN_FACTS
+    if helps:
+        text += "\n" + HELPS
     if deck.strip():
         text += f"\nDeck name template: {deck.strip()}"
     if decks:
@@ -279,6 +322,7 @@ async def extract_cards(
     decks: list[str] = (),
     fun_facts: bool = False,
     page_texts: list[str] = (),
+    helps: bool = False,
 ) -> Extracted:
     """`profile`: the open Anki profile, for its standing instructions; `decks`: the
     decks that already exist, to reuse their names."""
@@ -289,13 +333,17 @@ async def extract_cards(
         found = _fake(images, prompt, deck)
         if fun_facts:  # the demo's "did you know" on its first card
             found.cards[0].fun_fact = "Le savais-tu ? Ce mot vient du latin."
+        if helps:  # the demo's helps: an explanation on the first card, a mnemonic on the second
+            found.cards[0].explanation = "(démo) Pourquoi c'est la réponse."
+            found.cards[-1].mnemonic = "(démo) Une astuce pour retenir."
         return Extracted(found, [0] * len(images), [], "es-ES", choice)
     fmt = diagrams.box_format(s.model_for_provider())
     images, sizes = _prepare(images)
     text = standing_instructions(s, profile) + _user_text(
-        prompt, deck, len(images), sizes, fmt, decks, fun_facts, page_texts
+        prompt, deck, len(images), sizes, fmt, decks, fun_facts, page_texts, helps
     )
-    result = await _generate(s, images, text, Extraction)
+    answer = await _generate(s, images, text, ai_schema(Extraction, fun_facts, helps))
+    result = Extraction.model_validate(answer.model_dump())
     diagrams.normalize(result.cards, sizes, fmt)
     return Extracted(
         Deck(deck=result.deck, cards=result.cards),
@@ -462,7 +510,9 @@ async def revise_cards(
     text = standing_instructions(s, profile) + _revision_text(
         prompt, plain, instruction, lang, len(images), sizes, fmt, labels
     )
-    revision = await _generate(s, images, text, Revision)
+    # The fun facts and helps already there are kept: the AI sees them
+    answer = await _generate(s, images, text, ai_schema(Revision, fun_facts=True, helps=True))
+    revision = Revision.model_validate(answer.model_dump())
     _keep_masks(revision.cards, deck.cards, sizes, fmt)
     return revision
 
