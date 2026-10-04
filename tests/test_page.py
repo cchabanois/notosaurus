@@ -473,3 +473,28 @@ def test_pdf_text_kept_with_its_page(page, browser):
     sync_api.expect(page.get_by_text("Cartes régénérées")).to_be_visible()
     assert lesson(page, summary["id"])["prompt"] == "Une carte par lieu"
     assert lesson(page, summary["id"])["page_texts"] == [text]
+
+
+def test_a_card_explained_then_its_follow_ups(page):
+    generate_free(page, "QCM sur la Révolution")
+    card = page.locator(".flash").first
+    card.get_by_role("button", name="Expliquer cette carte").click()
+    bubble = card.locator(".explain")
+    sync_api.expect(bubble).to_contain_text("(démo, explain) En quelle année")
+    assert bubble.bounding_box()["width"] > 0.8 * card.bounding_box()["width"]  # under the card, not beside it
+    # Only the follow-ups the AI offered (the demo: an example, a way to remember, and why: a QCM)
+    sync_api.expect(bubble.locator(".chip")).to_have_text(
+        ["Un exemple", "Une astuce pour retenir", "Pourquoi c'est juste ?"]
+    )
+    bubble.get_by_role("button", name="Pourquoi c'est juste ?").click()
+    sync_api.expect(bubble.locator(".explain-block").nth(1)).to_contain_text("Pourquoi : (démo, why)")
+    sync_api.expect(bubble.locator(".chip")).to_have_text(["Un exemple", "Une astuce pour retenir"])  # asked: gone
+
+    bubble.get_by_role("button", name="Garder dans « Info »").click()  # on the back in Anki
+    sync_api.expect(page.locator(".save-pill")).to_have_class(SAVED)
+    (summary,) = lessons(page)
+    info = lesson(page, summary["id"])["cards"][0]["info"]
+    assert "(démo, explain)" in info and "(démo, why)" in info
+    card.get_by_role("button", name="Expliquer cette carte").click()  # again: folded, nothing asked
+    sync_api.expect(bubble).to_be_hidden()
+    assert [c["kind"] for c in lesson(page, summary["id"])["ai_calls"]].count("explain") == 2

@@ -35,6 +35,23 @@ Tap **Correct**. The AI sees the photos again and changes only what you asked: c
 are marked **changed**, new ones **new**, and a sentence sums up what it did. **↩ Undo** brings
 the cards back as they were.
 
+## Explaining a card
+
+**💬** on a card asks the AI to explain it: what it means, and why its answer is the answer, in
+two to four sentences, at a pupil's level, in the page's language. Handy for a subject you've
+forgotten, or a card the pupil doesn't understand.
+
+Under the explanation, the AI offers only what would help with **that** card:
+
+- **An example**: a sentence using the word, a worked calculation with the formula;
+- **A way to remember it**: when a natural one exists;
+- **Why is it right?**: when it isn't obvious, and for a multiple choice or a true/false card
+  (why the other options are wrong too).
+
+**Keep in “Info”** adds what was explained to the card's info: you'll find it on the back in
+Anki. Each explanation is a short AI call (a fraction of a cent with Gemini Flash, about a cent
+with Claude Sonnet), counted with the lesson's costs.
+
 ## Generating again
 
 **✨ Generate again**, under the instructions, makes the cards of the open lesson again, for

@@ -26,7 +26,7 @@ from pydantic import BaseModel
 
 from . import diagrams, i18n, prices, settings, storage
 from .errors import AppError
-from .models import AiCall, Card, Deck, Extraction, Frame, Mask, Revision
+from .models import AiCall, Card, Deck, Explanation, Extraction, Frame, Mask, Revision
 from .settings import Settings
 
 log = logging.getLogger("notosaurus")
@@ -317,6 +317,78 @@ async def draw_figure(s: Settings, description: str) -> str:
         s, [], f"Figure to draw: {description.strip()}", figures.Drawing, figures.RULES, light=True
     )
     return drawing.svg
+
+
+EXPLAIN_RULES = """\
+You help a pupil understand one flashcard of their lesson. Answer in the requested \
+language, at the pupil's level, in plain text (no Markdown, no HTML; formulas in \
+MathJax as in the card, e.g. \\( x^2 \\)). Short: two to four sentences unless told \
+otherwise. Only well-established facts, in line with the lesson (its instructions and \
+text are given); when unsure, say so in a few words rather than invent anything. Stay \
+at the pupil's level: no tool they haven't learnt yet (no calculus for a middle-school \
+formula): an intuitive reason instead. A front with "{{c1::…}}" is a sentence with \
+gaps (Anki's cloze syntax): the gaps are the answers.
+
+In "more", list the follow-ups that would truly add something, among "example", \
+"mnemonic" and "why": never one just given, never what your answer already says; most \
+cards need one or none:
+- "example": an example would make it clearer (a sentence using a word, a worked \
+calculation with a formula, a case where a rule applies); not for a date, a name or a \
+plain fact;
+- "mnemonic": a natural way to remember it exists (an image, a phrase, a family of \
+words, the word's origin); not a forced one;
+- "why": for a multiple choice (not a true/false), to say why the other options are \
+wrong; otherwise almost never: only when the reason the answer is right truly needs \
+more than your explanation gave (a reasoning, a proof at the pupil's level), never \
+for a date, a name, a word or a plain fact."""
+
+EXPLAIN_ASKS = {
+    "explain": "Explain this card: what it means, the context that helps understand it, and why its answer "
+    "is the answer. No example, no memory trick and, for a multiple choice, nothing about the other "
+    "options here: those are follow-ups.",
+    "example": "Give one or two examples that make this card clearer (a sentence using the word, "
+    "a worked calculation with the formula…).",
+    "mnemonic": "Give one memorable way to remember the answer (an image, a short phrase, a family "
+    "of words…): only one, natural, easy to recall.",
+    "why": "Explain why the answer is right. For a multiple choice or a true/false card, also say "
+    "why each other option is wrong, one short line each.",
+}
+
+
+def _explain_text(card: Card, kind: str, prompt: str, deck: str, lang: str, page_texts: list[str]) -> str:
+    shown = {"front": card.front, "back": card.back, "info": card.info}
+    if card.choices:
+        shown["wrong_options"] = card.choices
+    text = (
+        f"Lesson instructions: {prompt.strip()}\nDeck: {deck}\n"
+        f"The card (JSON): {json.dumps(shown, ensure_ascii=False)}\n"
+        f"Request: {EXPLAIN_ASKS[kind]}\nAnswer in {i18n.language_name(lang)}."
+    )
+    lesson_text = "\n".join(t.strip() for t in page_texts if t.strip())[:4000]
+    if lesson_text:
+        text += f"\nThe lesson's text (from its PDF):\n<<<\n{lesson_text}\n>>>"
+    return text
+
+
+async def explain_card(
+    card: Card,
+    kind: str,
+    prompt: str,
+    deck: str,
+    lang: str = i18n.DEFAULT,
+    profile: str | None = None,
+    page_texts: list[str] = (),
+) -> Explanation:
+    """A short explanation of a card for the pupil (or an example, a way to remember it,
+    why the answer is right), and the follow-ups worth offering. A light call: no photo."""
+    s = settings.current()
+    if s.llm == "fake":
+        await record(s, "fake", "fake", 0, 0, cost=0.0)
+        return _fake_explanation(card, kind)
+    text = standing_instructions(s, profile) + _explain_text(card, kind, prompt, deck, lang, page_texts)
+    found = await _generate(s, [], text, Explanation, EXPLAIN_RULES, light=True)
+    found.more = list(dict.fromkeys(k for k in found.more if k != kind))
+    return found
 
 
 def _revision_text(
@@ -924,6 +996,13 @@ def _fake_choices() -> Deck:
             Card(front="Napoléon est sacré empereur en 1789.", back="Faux", choices=["Vrai"], info="En 1804."),
         ],
     )
+
+
+def _fake_explanation(card: Card, kind: str) -> Explanation:
+    """Demo mode: a canned explanation; "why" offered for a multiple choice only."""
+    text = f"(démo, {kind}) {card.front.strip()} → {card.back.strip()}."
+    more = [k for k in ("example", "mnemonic") if k != kind] + (["why"] if card.choices and kind != "why" else [])
+    return Explanation(text=text, more=more)
 
 
 def _fake_diagram() -> Deck:

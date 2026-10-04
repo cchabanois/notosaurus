@@ -129,6 +129,21 @@
       "cropFrame": "Ce qu'Anki montre de la photo",
       "readOnly": "🔒 Lecture seule : seul le profil de {owner} peut la modifier. Tu peux quand même l'ajouter à ton Anki."
     },
+    "explain": {
+      "button": "Expliquer cette carte",
+      "thinking": "💬 Réflexion…",
+      "keep": "Garder dans « Info »",
+      "kinds": {
+        "example": "Exemple :",
+        "mnemonic": "Pour retenir :",
+        "why": "Pourquoi :"
+      },
+      "ask": {
+        "example": "Un exemple",
+        "mnemonic": "Une astuce pour retenir",
+        "why": "Pourquoi c'est juste ?"
+      }
+    },
     "revise": {
       "label": "Corriger les cartes avec l'IA",
       "placeholder": "✨ Corriger avec l'IA : « supprime la carte sur le père », « tu as oublié les couleurs »…",
@@ -444,7 +459,8 @@
       "kind": {
         "extract": "génération",
         "revise": "correction",
-        "picture": "image"
+        "picture": "image",
+        "explain": "explication"
       },
       "deleted": "dont {cost} pour des leçons supprimées depuis",
       "failed": "dont {cost} pour des générations échouées (sans leçon)",

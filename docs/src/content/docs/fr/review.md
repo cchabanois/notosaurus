@@ -39,6 +39,23 @@ Touche **Corriger**. L'IA revoit les photos et ne change que ce que tu as demand
 cartes changées sont marquées **modifiée**, les nouvelles **nouvelle**, et une phrase
 résume ce qu'elle a fait. **↩ Annuler** remet les cartes comme avant.
 
+## Expliquer une carte
+
+**💬** sur une carte demande à l'IA de l'expliquer : ce qu'elle veut dire, et pourquoi sa réponse
+est la réponse, en deux à quatre phrases, au niveau d'un élève, dans la langue de la page.
+Pratique pour une matière qu'on a oubliée, ou une carte que l'élève ne comprend pas.
+
+Sous l'explication, l'IA ne propose que ce qui aide pour **cette** carte :
+
+- **Un exemple** : une phrase avec le mot, un calcul fait avec la formule ;
+- **Une astuce pour retenir** : quand il en existe une naturelle ;
+- **Pourquoi c'est juste ?** : quand ce n'est pas évident, et pour un QCM ou un vrai/faux
+  (pourquoi les autres réponses sont fausses aussi).
+
+**Garder dans « Info »** ajoute ce qui a été expliqué à l'info de la carte : on le retrouve au
+verso dans Anki. Chaque explication est un appel court à l'IA (une fraction de centime avec
+Gemini Flash, environ un centime avec Claude Sonnet), compté dans les coûts de la leçon.
+
 ## Régénérer
 
 **✨ Régénérer**, sous la consigne, refait les cartes de la leçon ouverte, par exemple avec
