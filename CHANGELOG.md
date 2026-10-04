@@ -108,6 +108,7 @@ Each pull request adds a line under **Unreleased**. See [Releasing](CONTRIBUTING
 
 ### Fixed
 
+- With Gemini's default model (gemini-3.8-flash), the light AI calls (figures) failed: it refuses the "minimal" thinking level. They now ask for "low" from a model that refuses "minimal", learnt at its first refusal.
 - A lesson sent directly then imported as a .apkg (or into a profile synced with it) no longer has each card twice, nor a second note type ("…(audio)+"): through the add-on, a direct send now gives the note types and notes the .apkg's ids. With AnkiConnect, which can't take them, the documentation says to use one way per profile.
 - Notosaurus's note types already in Anki are brought up to date: each carries a signature at the end of its CSS, and at the next send one made by an older Notosaurus gets today's card templates and CSS, plus the fields or cards it lacks (nothing removed). Adding a field or a card makes Anki ask for a full sync: said so, and the automatic sync is left to the user that time. A newer .apkg updates its note types too (Anki's "update note types if newer").
 - The phones' pairing token is no longer written in clear in the server's log (shown from Anki's menu, pasted in bug reports): masked as `?k=•••`. The pages also tell browsers never to send their address to other sites (fonts, CDN, links).
