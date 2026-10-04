@@ -121,6 +121,7 @@ Each pull request adds a line under **Unreleased**. See [Releasing](CONTRIBUTING
 
 ### Fixed
 
+- A lesson in the pupil's own language (a French lesson for a French pupil) got a voice on the back with the "Automatic" prompt: the AI sometimes took the school subject for a language being learned. Notosaurus no longer gives an automatic voice in the page's language, unless the cards are a dictation; the AI is also told so.
 - The cost of OpenAI's pictures was unknown ("cost unknown"): its image models aren't in OpenRouter's price list. Their prices are now in Notosaurus.
 - A free Gemini key failed with "quota reached, try again in a moment": it has no quota (or a tiny daily one) for the latest model, and trying again changes nothing. When the quota is exceeded, the fallback model now answers, and Gemini's fallback is gemini-3.5-flash (8.2/10 in our tests) instead of gemini-3.5-flash-lite (6.6/10: names misread, cards that mean nothing without their context, wrong figures). The key's test says which model answered and that billing gives the latest one; with no quota left at all, the message says to turn on billing.
 - GPT models (with an OpenAI key or through OpenRouter) refused every request: their response schema must be "strict" (every object closed, every field required). They now get it; the other models keep theirs.

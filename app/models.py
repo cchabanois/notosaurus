@@ -103,7 +103,9 @@ class Extraction(Deck):
     back_language: str = Field(
         default="",
         description="Language of the card backs as a BCP 47 code, in the variety the lesson teaches "
-        '(e.g. "es-ES", "en-GB", "de-DE"); empty when the backs aren\'t in a language being learned.',
+        '(e.g. "es-ES", "en-GB", "de-DE"); empty when the backs aren\'t in a language being learned. '
+        "The pupil's own language is not one being learned: a literature, grammar or history lesson "
+        "in it gets empty.",
     )
     choice: str = Field(
         default="",

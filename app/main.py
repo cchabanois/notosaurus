@@ -154,6 +154,11 @@ def page_lang(x_notosaurus_lang: str | None = Header(None)) -> str:
     return i18n.resolve(x_notosaurus_lang) or i18n.DEFAULT
 
 
+def pupil_lang(x_notosaurus_lang: str | None = Header(None)) -> str:
+    """The pupil's language when the page says it ("" otherwise: no guess)."""
+    return i18n.resolve(x_notosaurus_lang) or ""
+
+
 @app.get("/api/lang")
 def lang() -> dict:
     """In the Anki add-on: Anki's language (English if we don't have it).
@@ -236,6 +241,7 @@ async def _generate(
     fun_facts: bool = False,
     page_texts: str = "",
     helps: bool = False,
+    lang: str = "",
 ) -> Generated:
     """Read the photos (or, without photos, work from the prompt alone): the lesson's
     new content, not saved yet."""
@@ -264,11 +270,21 @@ async def _generate(
     # Photos taken sideways are saved upright (masks and diagram frames turn with them)
     photos = diagrams.straighten([i.data for i in data], found.deck.cards, found.turns, found.frames)
     if voice.strip().lower() == "auto":  # the voice of the language the backs are in
-        voice = await tts.voice_for(found.back_language)
+        voice = await tts.voice_for(_learned(found.back_language, lang, typing or dictation))
     content = LessonIn(**found.deck.model_dump(), voice=voice, typing=typing, dictation=dictation)
     # Its own deck: never one that exists already (another lesson's, or the user's in Anki)
     content.deck = await decks.new_name(content.deck, profile or None, but=lesson_id)
     return Generated(content, photos, found, calls, profile, texts)
+
+
+def _learned(back_language: str, lang: str, spelling: bool) -> str:
+    """The backs' language when it is one being learned: not the pupil's own (the page's)
+    for a lesson in their language ("Français" is no foreign language to a French pupil),
+    unless the cards are for writing what is heard (a dictation)."""
+    own = lang.split("-")[0].lower()
+    if own and back_language.strip().lower().split("-")[0] == own and not spelling:
+        return ""
+    return back_language
 
 
 @app.post("/api/extract", status_code=201)
@@ -283,6 +299,7 @@ async def extract(
     fun_facts: bool = Form(False),
     page_texts: str = Form(""),
     helps: bool = Form(False),
+    lang: str = Depends(pupil_lang),
 ) -> Lesson:
     """A new lesson (photos + cards), saved so it can be reopened."""
     g = await _generate(
@@ -296,6 +313,7 @@ async def extract(
         fun_facts=fun_facts,
         page_texts=page_texts,
         helps=helps,
+        lang=lang,
     )
     created = lessons.create(
         g.content, prompt, g.photos, g.profile, g.found.frames, g.calls, g.found.choice, page_texts=g.page_texts
@@ -317,6 +335,7 @@ async def regenerate(
     fun_facts: bool = Form(False),
     page_texts: str = Form(""),
     helps: bool = Form(False),
+    lang: str = Depends(pupil_lang),
 ) -> Lesson:
     """Generate the lesson again (other prompt, other photos) in its place, instead of
     a second lesson. Only its owner's profile may."""
@@ -333,6 +352,7 @@ async def regenerate(
         fun_facts=fun_facts,
         page_texts=page_texts,
         helps=helps,
+        lang=lang,
     )
     # The options set in the review stay (the prompt's are added): only the cards change
     g.content.reverse = old.reverse
