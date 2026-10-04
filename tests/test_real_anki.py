@@ -468,7 +468,14 @@ def test_note_types_brought_up_to_date_on_a_real_collection(bridged, col, tmp_pa
     assert (res["note_types_updated"], res["restructured"]) == (1, [note_type.name])
     model = col.models.get(note_type.id)
     assert "Notosaurus note type, version" in model["css"] and "{{Info}}" in model["tmpls"][0]["afmt"]
-    assert [f["name"] for f in model["flds"]] == ["Front", "Back", "Audio", "Explanation", "Mnemonic", "Info"]  # added at the end
+    assert [f["name"] for f in model["flds"]] == [
+        "Front",
+        "Back",
+        "Audio",
+        "Explanation",
+        "Mnemonic",
+        "Info",
+    ]  # added at the end
     assert len(col.find_notes(f'"note:{note_type.name}"')) == count  # the notes kept, none added
     assert client.post("/api/anki/send", json=body).json()["note_types_updated"] == 0  # up to date now
 
