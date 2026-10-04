@@ -355,9 +355,10 @@ function adminComponent() {
       try {
         const r = await this.request("/api/admin/test", { method: "POST" });
         // Notosaurus needs both: reading the lesson photo and answering in JSON.
+        // r.quota: Gemini's chosen model has no quota for this key (free), a fallback answered
         const key = r.refused ? "admin.access.testRefused"
           : !r.json ? "admin.access.testNoJson"
-          : !r.vision ? "admin.access.testNoVision" : "admin.access.testOk";
+          : !r.vision ? "admin.access.testNoVision" : r.quota ? "admin.access.testOkQuota" : "admin.access.testOk";
         this.testResult = { ok: Boolean(r.json && r.vision), text: t(key, r) };
       } catch (e) {
         this.testResult = { ok: false, text: `✗ ${e.message}` };

@@ -647,7 +647,12 @@ async def _gemini[T: BaseModel](
             if e.code in (401, 403) or "API key" in str(e):
                 raise ExtractionError("llm.invalid_key", provider="Gemini") from e
             if e.code == 429:
-                raise ExtractionError("llm.quota", provider="Gemini") from e
+                # A free key has no quota for the latest models, and a quota of its own
+                # for each model: the next one may still answer
+                if model != models[-1]:
+                    log.warning("Quota exceeded: falling back to the next model")
+                    continue
+                raise ExtractionError("llm.gemini_quota") from e
             raise ExtractionError("llm.api_error", provider="Gemini", status=e.code, detail=e.message) from e
         except errors.APIError as e:
             log.warning("Gemini %s : %s %s", model, e.code, e.message)
@@ -1137,11 +1142,30 @@ async def check(s: Settings) -> dict:
     """Check what Notosaurus needs from the model: reading an image and answering
     in the requested JSON format. Sends a tiny red image (a fraction of a cent).
 
-    Returns {"vision": bool, "json": bool, "answer": str}; raises ExtractionError
+    Returns {"vision": bool, "json": bool, "answer": str}, with "model" and "quota" (the
+    chosen model) when a Gemini fallback answered instead; raises ExtractionError
     when the service itself fails (key, address, model name…)."""
     if s.llm == "fake":
         return {"vision": True, "json": True, "answer": "red"}
-    only_main_model = s.model_copy(update={"fallback_models": ""})  # test the chosen model, not a fallback
+    try:
+        return await _check_model(s.model_copy(update={"fallback_models": ""}))  # the chosen model, not a fallback
+    except ExtractionError as e:
+        if e.code != "llm.gemini_quota":
+            raise
+        # Gemini without quota for the chosen model (a free key and the latest model): the
+        # cards will come from a fallback, if one answers. Said with the model that did.
+        for fallback in [m.strip() for m in s.fallback_models.split(",") if m.strip()]:
+            try:
+                found = await _check_model(s.model_copy(update={"model": fallback, "fallback_models": ""}))
+            except ExtractionError as again:
+                if again.code != "llm.gemini_quota":
+                    raise
+                continue
+            return {**found, "model": fallback, "quota": s.model_for_provider()}
+        raise
+
+
+async def _check_model(only_main_model: Settings) -> dict:
     prompt = "What is the main colour of this image? Answer with one lowercase English word."
     try:
         answer = await _generate(only_main_model, [Image(_test_image(), "image/png")], prompt, _CheckAnswer)

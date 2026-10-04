@@ -311,7 +311,7 @@
     },
     "setup": {
       "title": "One step left",
-      "hint": "Notosaurus needs an AI service to read the lessons: a few minutes to set it up, with a free key.",
+      "hint": "Notosaurus needs an AI service to read the lessons: a few minutes to set it up.",
       "button": "Set up Notosaurus",
       "onComputer": "On the computer, in Anki: Tools → Notosaurus → Getting started."
     }
@@ -339,7 +339,7 @@
       "title": "AI service",
       "gemini": {
         "name": "Gemini (Google)",
-        "description": "Fast and cheap. A free tier exists, but it is sometimes overloaded."
+        "description": "Fast and cheap (≈ 1 US¢ per lesson). A free key works too, with an older model and low limits."
       },
       "anthropic": {
         "name": "Claude (Anthropic)",
@@ -366,7 +366,7 @@
       "default": "{model} (default)",
       "modelHint": "Leave empty for the default model.",
       "fallbacks": "Fallback models",
-      "fallbacksHint": "Tried in order when the main model is overloaded (comma-separated)."
+      "fallbacksHint": "Tried in order when the main model is overloaded or has no quota (a free key doesn't get the latest model). Comma-separated."
     },
     "access": {
       "title": "Access",
@@ -386,6 +386,7 @@
       "ollamaHint": "OpenAI-compatible service: its address usually ends with <code>/v1</code> (local Ollama: <code>http://localhost:11434/v1</code>).",
       "test": "🔌 Test (reading an image + JSON)",
       "testOk": "✓ {model} reads images and answers in the right format ({seconds} s).",
+      "testOkQuota": "✓ Your key works with {model} ({seconds} s): {quota} isn't included in its plan (free?). Turn on billing for the key in Google AI Studio to get it (≈ 1 US¢ per lesson).",
       "testNoVision": "⚠ {model} answers, but doesn't seem to see the image (it said “{answer}” for a red square). Pick a model that accepts images.",
       "testNoJson": "⚠ {model} doesn't answer in the requested JSON format: pick another model.",
       "testRefused": "⚠ {model} doesn't accept images (“{refused}”). Pick a vision model."
@@ -539,12 +540,12 @@
     "ai": {
       "title": "Which AI reads the lessons?",
       "hint": "It reads the photos and drafts the cards. You can change it later in the settings.",
-      "recommended": "⭐ Recommended: a free tier, and the best value in our tests",
+      "recommended": "⭐ Recommended: the best value in our tests (≈ 1 US¢ per lesson)",
       "geminiTitle": "Get a Gemini key (2 minutes)",
       "gemini1": "Open <a href=\"https://aistudio.google.com/apikey\" target=\"_blank\" rel=\"noopener\">aistudio.google.com/apikey</a> and sign in with a Google account.",
       "gemini2": "Click <b>Create API key</b>, then copy the key.",
       "gemini3": "Paste it below, then check it.",
-      "freeTier": "The free tier is enough to try, but Google may use what you send to improve its products. For your children's notebooks, turn on billing for the key's project in Google AI Studio: a fraction of a cent per lesson, and your data isn't used.",
+      "billing": "Without billing, the key is free but limited: Notosaurus then uses gemini-3.5-flash (the latest model isn't included), the limits are low, and Google may use what you send. For your children's notebooks, turn on billing for the key's project in Google AI Studio: ≈ 1 US¢ per lesson, the latest model, and your data isn't used.",
       "otherHelp": "How to get a key for this service",
       "check": "🔌 Check the key"
     },
@@ -596,6 +597,7 @@
       "missing_key": "No {provider} key: add it in the settings (⚙️).",
       "invalid_key": "Invalid {provider} key: check it in the settings (⚙️).",
       "quota": "{provider} quota reached, try again in a moment.",
+      "gemini_quota": "Gemini quota exceeded, the fallback model's too. A free key has low limits: turn on billing for the key in Google AI Studio (≈ 1 US¢ per lesson), or try again later.",
       "overloaded": "{provider} is overloaded right now ({status}), try again in a minute.",
       "api_error": "{provider} API error ({status}): {detail}",
       "unreachable": "Can't reach the {provider} API.",

@@ -311,7 +311,7 @@
     },
     "setup": {
       "title": "Falta un paso",
-      "hint": "Notosaurus necesita un servicio de IA para leer las lecciones: unos minutos para configurarlo, con una clave gratuita.",
+      "hint": "Notosaurus necesita un servicio de IA para leer las lecciones: unos minutos para configurarlo.",
       "button": "Configurar Notosaurus",
       "onComputer": "En el ordenador, en Anki: Herramientas → Notosaurus → Asistente de inicio."
     }
@@ -339,7 +339,7 @@
       "title": "Servicio de IA",
       "gemini": {
         "name": "Gemini (Google)",
-        "description": "Rápido y barato. Existe un nivel gratuito, pero a veces está saturado."
+        "description": "Rápido y barato (≈ 1 ¢ de dólar por lección). Una clave gratuita también funciona, con un modelo más antiguo y límites bajos."
       },
       "anthropic": {
         "name": "Claude (Anthropic)",
@@ -366,7 +366,7 @@
       "default": "{model} (predeterminado)",
       "modelHint": "Déjalo vacío para usar el modelo predeterminado.",
       "fallbacks": "Modelos de reserva",
-      "fallbacksHint": "Se prueban por orden cuando el modelo principal está saturado (separados por comas)."
+      "fallbacksHint": "Se prueban en orden si el modelo principal está saturado o sin cuota (una clave gratuita no tiene el último modelo). Separados por comas."
     },
     "access": {
       "title": "Acceso",
@@ -386,6 +386,7 @@
       "ollamaHint": "Servicio compatible con OpenAI: su dirección suele terminar en <code>/v1</code> (Ollama local: <code>http://localhost:11434/v1</code>).",
       "test": "🔌 Probar (lectura de una imagen + JSON)",
       "testOk": "✓ {model} lee las imágenes y responde en el formato correcto ({seconds} s).",
+      "testOkQuota": "✓ Tu clave funciona con {model} ({seconds} s): {quota} no está incluido en su plan (¿gratuito?). Activa la facturación de la clave en Google AI Studio para tenerlo (≈ 1 ¢ de dólar por lección).",
       "testNoVision": "⚠ {model} responde, pero no parece ver la imagen (ha dicho «{answer}» para un cuadrado rojo). Elige un modelo que acepte imágenes.",
       "testNoJson": "⚠ {model} no responde en el formato JSON pedido: elige otro modelo.",
       "testRefused": "⚠ {model} no acepta imágenes («{refused}»). Elige un modelo con visión."
@@ -539,12 +540,12 @@
     "ai": {
       "title": "¿Qué IA lee las lecciones?",
       "hint": "Lee las fotos y prepara las tarjetas. Podrás cambiarla más tarde en los ajustes.",
-      "recommended": "⭐ Recomendado: nivel gratuito y la mejor relación calidad-precio en nuestras pruebas",
+      "recommended": "⭐ Recomendado: la mejor relación calidad-precio en nuestras pruebas (≈ 1 ¢ de dólar por lección)",
       "geminiTitle": "Conseguir una clave de Gemini (2 minutos)",
       "gemini1": "Abre <a href=\"https://aistudio.google.com/apikey\" target=\"_blank\" rel=\"noopener\">aistudio.google.com/apikey</a> e inicia sesión con una cuenta de Google.",
       "gemini2": "Haz clic en <b>Create API key</b> (crear clave) y copia la clave.",
       "gemini3": "Pégala abajo y compruébala.",
-      "freeTier": "El nivel gratuito basta para probar, pero Google puede usar lo que envías para mejorar sus productos. Para los cuadernos de tus hijos, activa la facturación del proyecto de la clave en Google AI Studio: una fracción de céntimo por lección, y tus datos no se usan.",
+      "billing": "Sin facturación, la clave es gratuita pero limitada: Notosaurus usa entonces gemini-3.5-flash (el último modelo no está incluido), los límites son bajos y Google puede usar lo que envías. Para los cuadernos de tus hijos, activa la facturación del proyecto de la clave en Google AI Studio: ≈ 1 ¢ de dólar por lección, el último modelo, y tus datos no se usan.",
       "otherHelp": "Cómo conseguir una clave para este servicio",
       "check": "🔌 Comprobar la clave"
     },
@@ -596,6 +597,7 @@
       "missing_key": "No hay clave de {provider}: añádela en los ajustes (⚙️).",
       "invalid_key": "Clave de {provider} no válida: revísala en los ajustes (⚙️).",
       "quota": "Cuota de {provider} alcanzada, vuelve a intentarlo dentro de un momento.",
+      "gemini_quota": "Cuota de Gemini superada, también la del modelo de respaldo. Una clave gratuita tiene límites bajos: activa la facturación de la clave en Google AI Studio (≈ 1 ¢ de dólar por lección) o vuelve a intentarlo más tarde.",
       "overloaded": "{provider} está saturado en este momento ({status}), vuelve a intentarlo dentro de un minuto.",
       "api_error": "Error de la API de {provider} ({status}): {detail}",
       "unreachable": "No se puede contactar con la API de {provider}.",

@@ -311,7 +311,7 @@
     },
     "setup": {
       "title": "Noch ein Schritt",
-      "hint": "Notosaurus braucht einen KI-Dienst, um die Lektionen zu lesen: ein paar Minuten zum Einrichten, mit einem kostenlosen Schlüssel.",
+      "hint": "Notosaurus braucht einen KI-Dienst, um die Lektionen zu lesen: ein paar Minuten zum Einrichten.",
       "button": "Notosaurus einrichten",
       "onComputer": "Am Computer, in Anki: Extras → Notosaurus → Einrichtungsassistent."
     }
@@ -339,7 +339,7 @@
       "title": "KI-Dienst",
       "gemini": {
         "name": "Gemini (Google)",
-        "description": "Schnell und günstig. Es gibt eine kostenlose Stufe, die aber manchmal überlastet ist."
+        "description": "Schnell und günstig (≈ 1 US-Cent pro Lektion). Ein kostenloser Schlüssel geht auch, mit einem älteren Modell und niedrigen Limits."
       },
       "anthropic": {
         "name": "Claude (Anthropic)",
@@ -366,7 +366,7 @@
       "default": "{model} (Standard)",
       "modelHint": "Leer lassen für das Standardmodell.",
       "fallbacks": "Ersatzmodelle",
-      "fallbacksHint": "Werden der Reihe nach versucht, wenn das Hauptmodell überlastet ist (durch Kommas getrennt)."
+      "fallbacksHint": "Der Reihe nach versucht, wenn das Hauptmodell überlastet ist oder kein Kontingent hat (ein kostenloser Schlüssel bekommt das neueste Modell nicht). Durch Kommas getrennt."
     },
     "access": {
       "title": "Zugang",
@@ -386,6 +386,7 @@
       "ollamaHint": "OpenAI-kompatibler Dienst: Seine Adresse endet meist auf <code>/v1</code> (lokales Ollama: <code>http://localhost:11434/v1</code>).",
       "test": "🔌 Testen (ein Bild lesen + JSON)",
       "testOk": "✓ {model} liest Bilder und antwortet im richtigen Format ({seconds} s).",
+      "testOkQuota": "✓ Dein Schlüssel funktioniert mit {model} ({seconds} s): {quota} ist in seinem Tarif nicht enthalten (kostenlos?). Aktiviere die Abrechnung für den Schlüssel in Google AI Studio, um es zu bekommen (≈ 1 US-Cent pro Lektion).",
       "testNoVision": "⚠ {model} antwortet, scheint das Bild aber nicht zu sehen (es sagte „{answer}“ für ein rotes Quadrat). Wähle ein Modell, das Bilder annimmt.",
       "testNoJson": "⚠ {model} antwortet nicht im verlangten JSON-Format: Wähle ein anderes Modell.",
       "testRefused": "⚠ {model} nimmt keine Bilder an („{refused}“). Wähle ein Modell mit Bilderkennung."
@@ -539,12 +540,12 @@
     "ai": {
       "title": "Welche KI liest die Lektionen?",
       "hint": "Sie liest die Fotos und entwirft die Karten. Du kannst sie später in den Einstellungen ändern.",
-      "recommended": "⭐ Empfohlen: kostenloses Kontingent und das beste Preis-Leistungs-Verhältnis in unseren Tests",
+      "recommended": "⭐ Empfohlen: das beste Preis-Leistungs-Verhältnis in unseren Tests (≈ 1 US-Cent pro Lektion)",
       "geminiTitle": "Einen Gemini-Schlüssel holen (2 Minuten)",
       "gemini1": "Öffne <a href=\"https://aistudio.google.com/apikey\" target=\"_blank\" rel=\"noopener\">aistudio.google.com/apikey</a> und melde dich mit einem Google-Konto an.",
       "gemini2": "Klicke auf <b>Create API key</b> (Schlüssel erstellen) und kopiere den Schlüssel.",
       "gemini3": "Füge ihn unten ein und prüfe ihn.",
-      "freeTier": "Das kostenlose Kontingent reicht zum Ausprobieren, aber Google darf das Gesendete zur Verbesserung seiner Produkte nutzen. Für die Hefte deiner Kinder aktiviere die Abrechnung für das Projekt des Schlüssels in Google AI Studio: ein Bruchteil eines Cents pro Lektion, und deine Daten werden nicht genutzt.",
+      "billing": "Ohne Abrechnung ist der Schlüssel kostenlos, aber begrenzt: Notosaurus nimmt dann gemini-3.5-flash (das neueste Modell ist nicht enthalten), die Limits sind niedrig, und Google darf das Gesendete nutzen. Für die Hefte deiner Kinder aktiviere die Abrechnung für das Projekt des Schlüssels in Google AI Studio: ≈ 1 US-Cent pro Lektion, das neueste Modell, und deine Daten werden nicht genutzt.",
       "otherHelp": "So bekommst du einen Schlüssel für diesen Dienst",
       "check": "🔌 Schlüssel prüfen"
     },
@@ -596,6 +597,7 @@
       "missing_key": "Kein {provider}-Schlüssel: Füge ihn in den Einstellungen hinzu (⚙️).",
       "invalid_key": "Ungültiger {provider}-Schlüssel: Prüfe ihn in den Einstellungen (⚙️).",
       "quota": "{provider}-Kontingent erreicht, versuch es gleich noch einmal.",
+      "gemini_quota": "Gemini-Kontingent überschritten, auch für das Ersatzmodell. Ein kostenloser Schlüssel hat niedrige Limits: Aktiviere die Abrechnung für den Schlüssel in Google AI Studio (≈ 1 US-Cent pro Lektion) oder versuch es später noch einmal.",
       "overloaded": "{provider} ist gerade überlastet ({status}), versuch es in einer Minute noch einmal.",
       "api_error": "{provider}-API-Fehler ({status}): {detail}",
       "unreachable": "Die {provider}-API ist nicht erreichbar.",

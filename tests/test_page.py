@@ -546,7 +546,8 @@ def test_the_setup_assistant(page, monkeypatch):
 
     async def check(s):  # the key's test, without calling Google
         assert s.gemini_api_key == "AIza-test"
-        return {"vision": True, "json": True, "answer": "red"}
+        # A free key: no quota for the latest model, the fallback answered
+        return {"vision": True, "json": True, "answer": "red", "model": "gemini-3.5-flash", "quota": "gemini-3.8-flash"}
 
     monkeypatch.setattr(main, "check", check)
     page.goto("/")
@@ -565,7 +566,9 @@ def test_the_setup_assistant(page, monkeypatch):
     assert page.evaluate(CUT) == []
     page.get_by_label("Clé API Gemini").fill("AIza-test")
     page.get_by_role("button", name="🔌 Vérifier la clé").click()  # saves the key, then tests it
-    sync_api.expect(page.get_by_text("✓ gemini-3.8-flash lit les images")).to_be_visible()
+    sync_api.expect(page.get_by_text("✓ Ta clé fonctionne avec gemini-3.5-flash")).to_contain_text(
+        "gemini-3.8-flash n'est pas inclus"
+    )
     next_.click()
 
     sync_api.expect(page.get_by_role("heading", name="Ouvrir Notosaurus sur le téléphone")).to_be_visible()

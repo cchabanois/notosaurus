@@ -61,7 +61,9 @@ ENV = {
 class Settings(BaseModel):
     llm: str = "gemini"
     model: str = ""  # empty = the provider's default model
-    fallback_models: str = "gemini-3.5-flash-lite"  # Gemini only, comma-separated
+    # Gemini only, comma-separated: when the model is overloaded or has no quota left (a
+    # free key has none for the latest models). Not flash-lite: it reads lessons badly.
+    fallback_models: str = "gemini-3.5-flash"
     gemini_api_key: str = ""
     anthropic_api_key: str = ""
     openai_api_key: str = ""  # OpenAI itself
