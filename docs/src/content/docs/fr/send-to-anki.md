@@ -47,6 +47,12 @@ qu'Anki ait besoin d'être ouvert :
 Importer un `.apkg` plus récent de la même leçon met aussi ses cartes à jour au lieu de les
 dupliquer.
 
+Avec le **greffon Notosaurus**, une leçon envoyée par **📥 Ajouter à Anki** et son `.apkg`
+donnent les mêmes cartes : tu peux mélanger les deux, sur l'ordinateur et sur le téléphone. Avec
+**AnkiConnect**, choisis une seule méthode par profil Anki : un `.apkg` importé là où la leçon a
+déjà été envoyée directement (ou dans un profil synchronisé avec lui) ajouterait chaque carte une
+deuxième fois.
+
 ## Faire arriver les cartes sur le téléphone
 
 Après **Ajouter à Anki**, Notosaurus **synchronise le profil avec AnkiWeb** (l'option

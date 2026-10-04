@@ -496,3 +496,35 @@ def test_note_types_brought_up_to_date_on_a_real_collection(bridged, col, tmp_pa
         assert "Notosaurus note type, version" in other.models.get(imported.id)["css"]
     finally:
         other.close()
+
+
+@pytest.mark.parametrize("first", ["send", "apkg"])
+def test_a_direct_send_and_a_package_make_the_same_notes(bridged, col, tmp_path, monkeypatch, first):
+    """Sent directly, then imported as a .apkg (or the other way round): the same note
+    type and the same notes, updated, never twice (the bridge takes the package's ids)."""
+    monkeypatch.setenv("NOTOSAURUS_EMBEDDED", "1")  # as the add-on starts the server
+    client, _ = bridged
+    lesson = extract(client)
+    body = {"deck": lesson["deck"], "cards": lesson["cards"], "voice": VOICE, "lesson_id": lesson["id"]}
+    corrected = {**body, "cards": [{**c, "back": c["back"] + " !"} for c in lesson["cards"]]}
+    path = tmp_path / "lesson.apkg"
+
+    def send(b):
+        assert client.post("/api/anki/send", json=b).status_code == 200
+
+    def import_package(b):
+        time.sleep(1.1)  # the package newer than what's in the collection, to the second
+        path.write_bytes(client.post("/api/export", json=b).content)
+        options = anki_collection.ImportAnkiPackageOptions(
+            with_scheduling=False, merge_notetypes=True, update_notes=IF_NEWER, update_notetypes=IF_NEWER
+        )
+        col.import_anki_package(anki_collection.ImportAnkiPackageRequest(package_path=str(path), options=options))
+
+    (send if first == "send" else import_package)(body)
+    count = col.note_count()
+    (import_package if first == "send" else send)(corrected)
+    assert col.note_count() == count  # nothing twice
+    types = [m.name for m in col.models.all_names_and_ids() if m.name.startswith("Notosaurus")]
+    assert len(types) == 1, types
+    backs = {fields(col, n)["Back"] for n in col.find_notes("deck:*")}
+    assert all(b.endswith(" !") for b in backs if b)  # the second one updated them

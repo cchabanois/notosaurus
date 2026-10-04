@@ -11,7 +11,7 @@ from dataclasses import dataclass, field
 import httpx
 
 from . import settings
-from .anki import TAG_PREFIX, Note, family
+from .anki import TAG_PREFIX, Note, family, guids, model_id
 from .errors import AppError
 
 TIMEOUT = 30.0
@@ -108,7 +108,16 @@ async def version() -> int:
         return await _invoke(client, "version")
 
 
+def same_as_packages(extra: dict) -> dict:
+    """The note type's id and the notes' GUIDs of the .apkg, for the add-on's bridge: a
+    package imported after a direct send (or the other way round) then updates the same
+    note types and notes instead of adding them twice. AnkiConnect can't take them (an
+    unknown parameter is an error): with it, use one way per profile."""
+    return extra if settings.embedded() else {}
+
+
 async def send(notes: list[Note]) -> SendResult:
+    guid_of = {id(n): g for n, g in zip(notes, guids(notes), strict=True)}
     async with _client() as client:
         note_types = list(dict.fromkeys(n.nt for n in notes))
         known = await _invoke(client, "modelNames")
@@ -122,6 +131,7 @@ async def send(notes: list[Note]) -> SendResult:
                     css=nt.full_css,
                     isCloze=nt.cloze,
                     cardTemplates=[{"Name": t["name"], "Front": t["qfmt"], "Back": t["afmt"]} for t in nt.templates],
+                    **same_as_packages({"id": model_id(nt)}),
                 )
         updated_types, restructured = await _bring_up_to_date(client, [nt for nt in note_types if nt.name in known])
         for path in dict.fromkeys(p for n in notes for p in n.media):
@@ -182,6 +192,7 @@ async def send(notes: list[Note]) -> SendResult:
                         "fields": note.fields,
                         "tags": note.tags,
                         "options": {"allowDuplicate": True},  # same front in another deck is fine
+                        **same_as_packages({"guid": guid_of[id(note)]}),
                     },
                 )
                 added += 1

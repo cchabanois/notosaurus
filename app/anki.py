@@ -444,11 +444,31 @@ def _html(text: str) -> str:
     return html.escape(text).replace("\n", "<br>")
 
 
+def model_id(nt: NoteType) -> int:
+    """The note type's id, the same in every package and in a direct send (through the
+    add-on): Anki tells note types apart by id, so they never come twice. Reverse card
+    or not, then the options: unique per note type. (Before the dictation card, "two
+    templates" meant the reverse card: same ids as then.)"""
+    return _stable_id("model", nt.kind, str(nt.reverse), *([nt.variant] if nt.variant else []))
+
+
+def guids(notes: list[Note]) -> list[str]:
+    """Each note's GUID, the same in every package and in a direct send (through the
+    add-on): Anki tells notes apart by GUID, so re-importing a corrected lesson, or a
+    package after a direct send, updates the notes instead of duplicating them (as long
+    as the front, or a label's place, and the deck stay the same). The same key twice in
+    a deck ("le vol": vuelo, robo): numbered."""
+    seen: dict[tuple[str, str], int] = {}
+    result = []
+    for note in notes:
+        n = seen[(note.deck, note.key)] = seen.get((note.deck, note.key), -1) + 1
+        result.append(genanki.guid_for(note.deck, note.key, *([n] if n else [])))
+    return result
+
+
 def _model(nt: NoteType) -> genanki.Model:
     return genanki.Model(
-        # Reverse card or not, then the options: unique per note type. (Before the
-        # dictation card, "two templates" meant the reverse card: same ids as then.)
-        _stable_id("model", nt.kind, str(nt.reverse), *([nt.variant] if nt.variant else [])),
+        model_id(nt),
         nt.name,
         fields=[{"name": f} for f in nt.fields],
         templates=list(nt.templates),
@@ -480,19 +500,14 @@ def build_apkg(
     decks: dict[str, genanki.Deck] = {}
     models: dict[NoteType, genanki.Model] = {}
     all_notes = notes(req, audio, images, pictures)
-    seen: dict[tuple[str, str], int] = {}  # the same key twice in a deck ("le vol": vuelo, robo)
-    for note in all_notes:
-        n = seen[(note.deck, note.key)] = seen.get((note.deck, note.key), -1) + 1
+    for note, guid in zip(all_notes, guids(all_notes), strict=True):
         deck = decks.setdefault(note.deck, genanki.Deck(_stable_id("deck", note.deck), note.deck))
         deck.add_note(
             genanki.Note(
                 model=models.setdefault(note.nt, _model(note.nt)),
                 fields=[note.fields[f] for f in note.nt.fields],
                 tags=note.tags,
-                # Stable GUID: re-importing a corrected lesson updates the notes instead
-                # of duplicating them (as long as the front, or a label's place, and the
-                # deck stay the same).
-                guid=genanki.guid_for(note.deck, note.key, *([n] if n else [])),
+                guid=guid,
             )
         )
     media = sorted({str(path) for n in all_notes for path in n.media})

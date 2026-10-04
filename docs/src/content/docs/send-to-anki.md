@@ -46,6 +46,11 @@ be open:
 Importing a newer `.apkg` of the same lesson also updates its cards instead of duplicating
 them.
 
+With the **Notosaurus add-on**, a lesson sent with **📥 Add to Anki** and its `.apkg` make the
+same cards: you can mix both, on the computer and on the phone. With **AnkiConnect**, choose one
+way per Anki profile: a `.apkg` imported where the lesson was already sent directly (or into a
+profile synced with it) would add each card a second time.
+
 ## Getting the cards to the phone
 
 After **Add to Anki**, Notosaurus **syncs the profile with AnkiWeb** (the option **Sync with

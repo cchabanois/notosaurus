@@ -91,7 +91,22 @@ def _create_model(p: dict) -> int:
         template["qfmt"], template["afmt"] = t["Front"], t["Back"]
         mm.add_template(model, template)
     model["css"] = p.get("css", model["css"])
-    return mm.add(model).id
+    created = mm.add(model).id
+    if p.get("id") and mm.get(p["id"]) is None:
+        created = _give_id(created, p["id"])
+    return created
+
+
+def _give_id(current: int, wanted: int) -> int:
+    """The note type just created takes the id Notosaurus's packages give it, so a .apkg
+    imported later updates it instead of adding a second one. Anki only lets new note
+    types get an id of its choosing: changed in its tables, while it has no note yet."""
+    col = _col()
+    for table, column in (("notetypes", "id"), ("fields", "ntid"), ("templates", "ntid")):
+        col.db.execute(f"update {table} set {column} = ? where {column} = ?", wanted, current)
+    if hasattr(col.models, "_clear_cache"):
+        col.models._clear_cache()
+    return wanted
 
 
 # Bringing a note type made by an older Notosaurus up to date (AnkiConnect's actions)
@@ -221,6 +236,8 @@ def _add_note(p: dict) -> int:
     if model is None:
         raise BridgeError(f"unknown note type: {spec['modelName']}")
     note = col.new_note(model)
+    if spec.get("guid"):  # the .apkg's: a package imported later updates this note
+        note.guid = spec["guid"]
     for name, value in spec["fields"].items():
         if name in note:
             note[name] = value
