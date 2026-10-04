@@ -473,6 +473,12 @@ def _gemini_client(s: Settings):
     )
 
 
+# Light tasks think as little as the model allows: "minimal", or "low" for the models
+# that refuse it (gemini-3.8-flash: "Thinking level MINIMAL is not supported"), learnt
+# at their first refusal.
+_NO_MINIMAL_THINKING: set[str] = set()
+
+
 async def _gemini[T: BaseModel](
     s: Settings, images: list[Image], text: str, schema: type[T], system: str = SYSTEM_PROMPT, light: bool = False
 ) -> T:
@@ -487,14 +493,26 @@ async def _gemini[T: BaseModel](
         response_json_schema=schema.model_json_schema(),
         automatic_function_calling=types.AutomaticFunctionCallingConfig(disable=True),
     )
-    if light and s.model_for_provider().startswith("gemini-3"):  # older models set thinking otherwise
-        config.thinking_config = types.ThinkingConfig(thinking_level=types.ThinkingLevel.MINIMAL)
     models = [s.model_for_provider()]
     models += [m.strip() for m in s.fallback_models.split(",") if m.strip()]
 
+    def thinking(model: str):
+        if not (light and model.startswith("gemini-3")):  # older models set thinking otherwise
+            return None
+        level = types.ThinkingLevel.LOW if model in _NO_MINIMAL_THINKING else types.ThinkingLevel.MINIMAL
+        return types.ThinkingConfig(thinking_level=level)
+
     for model in models:
         try:
-            response = await client.aio.models.generate_content(model=model, contents=contents, config=config)
+            config.thinking_config = thinking(model)
+            try:
+                response = await client.aio.models.generate_content(model=model, contents=contents, config=config)
+            except errors.ClientError as e:
+                if not (config.thinking_config and e.code == 400 and "Thinking level" in str(e.message)):
+                    raise
+                _NO_MINIMAL_THINKING.add(model)  # this model thinks a little at least: "low" from now on
+                config.thinking_config = thinking(model)
+                response = await client.aio.models.generate_content(model=model, contents=contents, config=config)
             break
         except errors.ClientError as e:
             log.warning("Gemini %s : %s %s", model, e.code, e.message)
