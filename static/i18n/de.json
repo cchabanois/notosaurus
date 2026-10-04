@@ -339,7 +339,7 @@
         "description": "Liest sehr gut, auch Handschrift. Kostenpflichtig, ein paar Cent pro Lektion."
       },
       "openai": {
-        "name": "OpenAI (GPT)",
+        "name": "GPT (OpenAI)",
         "description": "GPT-Modelle, mit einem OpenAI-Schlüssel. Kostenpflichtig, ein paar Cent pro Lektion."
       },
       "openrouter": {

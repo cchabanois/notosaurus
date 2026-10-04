@@ -9,6 +9,7 @@ Each pull request adds a line under **Unreleased**. See [Releasing](CONTRIBUTING
 
 ### Added
 
+- Documentation: “Several children” explains children sharing one tablet (AnkiDroid has no profiles): a single Anki profile with one deck per child, the child's name in the suggested deck name of their instructions, and what is lost compared with one profile per child.
 - More ways to the documentation: Tools → Notosaurus → Help in Anki (in Anki's language), a help link in the "Open on the phone" window, "📖 Help" at the bottom of the app and the settings, and a **?** on the lessons, the instructions picker and editor, the PDF pages, the device-not-allowed page and the remaining settings sections (access, model, pictures, voices, lessons, password).
 - 💬 Helps on the back: a switch under the instructions (its default set in the settings, each device keeping its own choice) asks the AI for an explanation and a way to remember, only on the cards where they truly help (no explanation for a plain word, never a made-up mnemonic or spelling rule). Two new fields in every note type, "Explanation" and "Mnemonic", shown on the back under the info, editable in the review.
 - 💬 Explain a card, in the review: the AI says what it means and why its answer is the answer, at a pupil's level, in the page's language. It then offers only the follow-ups that would help with that card: an example, a way to remember it, why it's right (why the other options are wrong, for a multiple choice). Kept in the card's info with a tap; each explanation is a short AI call, counted with the lesson.
@@ -113,6 +114,7 @@ Each pull request adds a line under **Unreleased**. See [Releasing](CONTRIBUTING
 ### Fixed
 
 - GPT models (with an OpenAI key or through OpenRouter) refused every request: their response schema must be "strict" (every object closed, every field required). They now get it; the other models keep theirs.
+- Settings: the OpenAI service is named "GPT (OpenAI)", like "Gemini (Google)" and "Claude (Anthropic)".
 - The AI only sees the card fields it fills (never the picture's file or the card's id, the fun facts and helps only when asked): one more field had made Claude refuse every generation ("Schema is too complex").
 - With Gemini's default model (gemini-3.8-flash), the light AI calls (figures) failed: it refuses the "minimal" thinking level. They now ask for "low" from a model that refuses "minimal", learnt at its first refusal.
 - A lesson sent directly then imported as a .apkg (or into a profile synced with it) no longer has each card twice, nor a second note type ("…(audio)+"): through the add-on, a direct send now gives the note types and notes the .apkg's ids. With AnkiConnect, which can't take them, the documentation says to use one way per profile.
