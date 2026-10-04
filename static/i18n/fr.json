@@ -339,7 +339,7 @@
         "description": "Très bonne lecture, y compris manuscrite. Payant, quelques centimes par leçon."
       },
       "openai": {
-        "name": "OpenAI (GPT)",
+        "name": "GPT (OpenAI)",
         "description": "Les modèles GPT, avec une clé OpenAI. Payant, quelques centimes par leçon."
       },
       "openrouter": {
