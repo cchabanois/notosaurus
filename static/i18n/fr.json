@@ -308,6 +308,12 @@
       "label": "Photo en grand",
       "previous": "Photo précédente",
       "next": "Photo suivante"
+    },
+    "setup": {
+      "title": "Encore une étape",
+      "hint": "Notosaurus a besoin d'un service d'IA pour lire les leçons : quelques minutes pour le configurer.",
+      "button": "Configurer Notosaurus",
+      "onComputer": "Sur l'ordinateur, dans Anki : Outils → Notosaurus → Assistant de démarrage."
     }
   },
   "admin": {
@@ -333,7 +339,7 @@
       "title": "Service d'IA",
       "gemini": {
         "name": "Gemini (Google)",
-        "description": "Rapide et peu cher. Offre gratuite possible, mais parfois surchargée."
+        "description": "Rapide et peu cher (≈ 1 ¢ US par leçon). Une clé gratuite marche aussi, avec un modèle plus ancien et des limites basses."
       },
       "anthropic": {
         "name": "Claude (Anthropic)",
@@ -360,7 +366,7 @@
       "default": "{model} (par défaut)",
       "modelHint": "Laisse vide pour le modèle par défaut.",
       "fallbacks": "Modèles de secours",
-      "fallbacksHint": "Essayés dans l'ordre si le modèle principal est surchargé (séparés par des virgules)."
+      "fallbacksHint": "Essayés dans l'ordre si le modèle principal est surchargé ou sans quota (une clé gratuite n'a pas le dernier modèle). Séparés par des virgules."
     },
     "access": {
       "title": "Accès",
@@ -380,6 +386,7 @@
       "ollamaHint": "Service compatible OpenAI : son adresse se termine en général par <code>/v1</code> (Ollama en local : <code>http://localhost:11434/v1</code>).",
       "test": "🔌 Tester (lecture d'image + JSON)",
       "testOk": "✓ {model} lit les images et répond au bon format ({seconds} s).",
+      "testOkQuota": "✓ Ta clé fonctionne avec {model} ({seconds} s) : {quota} n'est pas inclus dans son offre (gratuite ?). Active la facturation de la clé dans Google AI Studio pour l'avoir (≈ 1 ¢ US par leçon).",
       "testNoVision": "⚠ {model} répond, mais ne semble pas voir l'image (il a répondu « {answer} » pour un carré rouge). Choisis un modèle qui accepte les images.",
       "testNoJson": "⚠ {model} ne répond pas au format JSON demandé : choisis un autre modèle.",
       "testRefused": "⚠ {model} n'accepte pas les images (« {refused} »). Choisis un modèle vision."
@@ -522,6 +529,45 @@
       "title": "Modèle"
     }
   },
+  "setup": {
+    "title": "Démarrage",
+    "computerOnly": "L'assistant s'ouvre sur l'ordinateur, dans Anki : Outils → Notosaurus → Assistant de démarrage.",
+    "steps": {
+      "ai": "L'IA",
+      "phone": "Le téléphone",
+      "done": "C'est prêt"
+    },
+    "ai": {
+      "title": "Quelle IA lit les leçons ?",
+      "hint": "Elle lit les photos et prépare les cartes. Tu pourras la changer plus tard dans les réglages.",
+      "recommended": "⭐ Conseillé : le meilleur rapport qualité/prix à nos essais (≈ 1 ¢ US par leçon)",
+      "geminiTitle": "Obtenir une clé Gemini (2 minutes)",
+      "gemini1": "Ouvre <a href=\"https://aistudio.google.com/apikey\" target=\"_blank\" rel=\"noopener\">aistudio.google.com/apikey</a> et connecte-toi avec un compte Google.",
+      "gemini2": "Clique sur <b>Create API key</b> (créer une clé), puis copie la clé.",
+      "gemini3": "Colle-la ci-dessous, puis vérifie-la.",
+      "billing": "Sans facturation, la clé est gratuite mais limitée : Notosaurus prend alors gemini-3.5-flash (le dernier modèle n'est pas inclus), les limites sont basses, et Google peut utiliser ce que tu envoies. Pour les cahiers de tes enfants, active la facturation du projet de la clé dans Google AI Studio : ≈ 1 ¢ US par leçon, le dernier modèle, et tes données ne servent pas.",
+      "otherHelp": "Comment obtenir une clé pour ce service",
+      "check": "🔌 Vérifier la clé"
+    },
+    "next": "Suivant →",
+    "back": "← Retour",
+    "phone": {
+      "title": "Ouvrir Notosaurus sur le téléphone",
+      "hint": "Scanne ce QR code avec l'appareil photo du téléphone, puis ouvre le lien.",
+      "waiting": "En attente du téléphone…",
+      "paired": "✓ Le téléphone est connecté.",
+      "sameWifi": "Le téléphone doit être sur le même Wi-Fi que cet ordinateur.",
+      "later": "Plus tard"
+    },
+    "done": {
+      "title": "Notosaurus est prêt !",
+      "onPhone": "Sur le téléphone : prends une leçon en photo, Notosaurus en fait les cartes.",
+      "here": "Prends une leçon en photo, Notosaurus en fait les cartes. Le téléphone peut attendre : le QR code est dans les réglages.",
+      "more": "Images sur les cartes, voix, consignes par enfant : tout le reste est dans les réglages.",
+      "settings": "Tous les réglages",
+      "open": "Ouvrir Notosaurus"
+    }
+  },
   "errors": {
     "unknown": "Erreur inattendue ({code}).",
     "invalid": "Valeur invalide.",
@@ -551,6 +597,7 @@
       "missing_key": "Aucune clé {provider} : ajoute-la dans les réglages (⚙️).",
       "invalid_key": "Clé {provider} invalide : vérifie-la dans les réglages (⚙️).",
       "quota": "Quota {provider} atteint, réessaie dans un instant.",
+      "gemini_quota": "Quota Gemini dépassé, y compris pour le modèle de secours. Une clé gratuite a des limites basses : active la facturation de la clé dans Google AI Studio (≈ 1 ¢ US par leçon), ou réessaie plus tard.",
       "overloaded": "{provider} est surchargé en ce moment ({status}), réessaie dans une minute.",
       "api_error": "Erreur de l'API {provider} ({status}) : {detail}",
       "unreachable": "Impossible de joindre l'API {provider}.",
@@ -629,6 +676,7 @@
     "emptyLog": "(journal vide)",
     "logTitle": "Notosaurus — journal",
     "menuPhone": "Ouvrir sur le téléphone…",
+    "menuSetup": "Assistant de démarrage",
     "menuSettings": "Réglages",
     "phoneTitle": "Ouvrir Notosaurus sur le téléphone",
     "phoneSteps": "1. Connecte le téléphone au même Wi-Fi que cet ordinateur.\n2. Scanne ce QR code avec l'appareil photo du téléphone.\n3. Dans le navigateur : menu → « Ajouter à l'écran d'accueil », pour l'avoir comme une appli.\n\nLes réglages (clés d'IA…) s'ouvrent ici, sur l'ordinateur : Outils → Notosaurus → Réglages.",
@@ -636,7 +684,9 @@
     "localOnly": "⚠ Le serveur n'écoute que sur cet ordinateur (réglage « host » à 127.0.0.1) : mets « 0.0.0.0 » dans la config du greffon pour y accéder depuis le téléphone.",
     "notRunningYet": "Notosaurus démarre : réessaie dans quelques secondes.",
     "installConfirm": "Avant de démarrer, Notosaurus doit installer ses composants :\n\n• uv (depuis GitHub), Python 3.13 et ses bibliothèques Python (depuis PyPI) : environ 300 Mo sur le disque ;\n• uniquement dans le dossier d'Anki (Anki2/notosaurus-runtime) : rien ne change sur le reste de l'ordinateur, et désinstaller le greffon les supprime.\n\nCela prend une ou deux minutes, la première fois et après certaines mises à jour. Installer maintenant ?",
-    "installDeclined": "Notosaurus n'est pas démarré. Pour l'installer plus tard : Outils → Notosaurus → Ouvrir Notosaurus."
+    "installDeclined": "Notosaurus n'est pas démarré. Pour l'installer plus tard : Outils → Notosaurus → Ouvrir Notosaurus.",
+    "setupConfirm": "Notosaurus est installé. Le configurer maintenant ? Deux étapes, quelques minutes : une IA pour lire les leçons (avec sa clé), puis ton téléphone.\n\nL'assistant s'ouvre dans ton navigateur.",
+    "setupLater": "Plus tard : Outils → Notosaurus → Assistant de démarrage."
   },
   "builtinPrompts": {
     "auto": {

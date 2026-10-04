@@ -76,3 +76,44 @@ def test_other_refusals_are_still_errors(client, monkeypatch):
         assert e.code == "llm.api_error" and fake.levels == ["gemini-3.8-flash"]  # no second try
     else:
         raise AssertionError("an error was expected")
+
+
+class NoQuota(FakeGemini):
+    """A free key: no quota for the given models (gemini-3.8-flash has none on the free tier)."""
+
+    def __init__(self, without_quota):
+        super().__init__()
+        self.without_quota = set(without_quota)
+
+    async def generate(self, model, contents, config):
+        if model in self.without_quota:
+            self.levels.append((model, "429"))
+            message = "You exceeded your current quota, please check your plan and billing details."
+            raise errors.ClientError(429, {"error": {"code": 429, "message": message, "status": "RESOURCE_EXHAUSTED"}})
+        return await super().generate(model, contents, config)
+
+
+def test_no_quota_left_the_fallback_answers(client, monkeypatch):
+    monkeypatch.setenv("NOTOSAURUS_LLM", "gemini")
+    monkeypatch.setenv("NOTOSAURUS_MODEL", "gemini-3.8-flash")
+    monkeypatch.delenv("NOTOSAURUS_FALLBACK_MODEL", raising=False)
+    s = settings.current()
+    assert s.fallback_models == "gemini-3.5-flash"  # by default: not flash-lite, which reads lessons badly
+    fake = NoQuota({"gemini-3.8-flash"})
+    monkeypatch.setattr(llm, "_gemini_client", lambda s: fake)
+    assert asyncio.run(llm._generate(s, [], "cards", Drawing, "rules")).svg == "<svg/>"
+    assert [m for m, _ in fake.levels] == ["gemini-3.8-flash", "gemini-3.5-flash"]
+
+    # The key check says which model answered, and which one the key can't use
+    found = asyncio.run(llm.check(s))
+    assert (found["model"], found["quota"]) == ("gemini-3.5-flash", "gemini-3.8-flash")
+
+    # No quota anywhere: said, with what to do (not "try again in a moment")
+    fake.without_quota.add("gemini-3.5-flash")
+    for call in (lambda: llm._generate(s, [], "cards", Drawing, "rules"), lambda: llm.check(s)):
+        try:
+            asyncio.run(call())
+        except llm.ExtractionError as e:
+            assert e.code == "llm.gemini_quota"
+        else:
+            raise AssertionError("an error was expected")

@@ -125,12 +125,29 @@ def start() -> None:
     mw.taskman.run_in_background(lambda: server.start(config(), url, key, lang), on_done, uses_collection=False)
 
 
+def configured() -> bool | None:
+    """Whether Notosaurus has an AI service with its key (None: the server didn't say)."""
+    port = config().get("port", 8000)
+    try:
+        with urllib.request.urlopen(f"http://127.0.0.1:{port}/api/config", timeout=5) as response:
+            return bool(json.loads(response.read())["configured"])
+    except (OSError, ValueError, KeyError):
+        return None
+
+
 def check_started() -> None:
     if server.running():
         if not config().get("phone_help_shown"):
-            # First start: show how to open Notosaurus on the phone, once.
+            # First start, once: the setup assistant (the AI, then the phone) when there is
+            # no AI yet, else how to open Notosaurus on the phone.
             mw.addonManager.writeConfig(__name__, {**config(), "phone_help_shown": True})
-            show_phone()
+            if configured() is False:
+                if askUser(t("addon.setupConfirm"), title="Notosaurus"):
+                    open_setup()
+                else:
+                    tooltip(t("addon.setupLater"), period=8000)
+            else:
+                show_phone()
         else:
             tooltip(t("addon.ready", url=urls()[1]), period=5000)
     else:
@@ -230,6 +247,13 @@ def show_phone() -> None:
     dialog.exec()
 
 
+def open_setup() -> None:
+    """The setup assistant: the AI and its key, then the phone (on the computer, as the settings)."""
+    if not server.running():
+        start()
+    webbrowser.open(urls()[0] + "/setup.html")
+
+
 def open_settings() -> None:
     """Settings open here, on the computer: in the add-on they are refused from phones."""
     if not server.running():
@@ -263,6 +287,7 @@ def setup_menu() -> None:
     for key, handler in [
         ("addon.menuOpen", open_in_browser),
         ("addon.menuPhone", show_phone),
+        ("addon.menuSetup", open_setup),
         ("addon.menuSettings", open_settings),
         ("addon.menuAddress", show_address),
         ("addon.menuRestart", restart),

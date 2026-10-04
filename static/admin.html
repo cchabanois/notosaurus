@@ -154,7 +154,7 @@
           </div>
           <label class="field" x-show="form.llm === 'gemini'">
             <span x-text="$t('admin.provider.fallbacks')"></span>
-            <input x-model="form.fallback_models" placeholder="gemini-3.5-flash-lite">
+            <input x-model="form.fallback_models" placeholder="gemini-3.5-flash">
             <small x-text="$t('admin.provider.fallbacksHint')"></small>
           </label>
           <button type="button" class="btn soft wide" @click="test()" :disabled="testing">

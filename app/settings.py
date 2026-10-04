@@ -61,7 +61,9 @@ ENV = {
 class Settings(BaseModel):
     llm: str = "gemini"
     model: str = ""  # empty = the provider's default model
-    fallback_models: str = "gemini-3.5-flash-lite"  # Gemini only, comma-separated
+    # Gemini only, comma-separated: when the model is overloaded or has no quota left (a
+    # free key has none for the latest models). Not flash-lite: it reads lessons badly.
+    fallback_models: str = "gemini-3.5-flash"
     gemini_api_key: str = ""
     anthropic_api_key: str = ""
     openai_api_key: str = ""  # OpenAI itself
@@ -96,6 +98,16 @@ class Settings(BaseModel):
             "openrouter": self.openrouter_api_key,
             "compatible": self.compatible_api_key,
         }.get(self.llm, "")
+
+
+def configured(s: Settings) -> bool:
+    """Whether the cards' AI service can be called: its key (or, for a compatible
+    service, its address) is set. The setup assistant is offered until it is."""
+    if s.llm == "fake":
+        return True
+    if s.llm == "compatible":
+        return bool(s.compatible_base_url.strip())
+    return bool(getattr(s, f"{s.llm}_api_key", "").strip())
 
 
 def _path():

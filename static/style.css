@@ -883,3 +883,26 @@ h2 {
 .viewer-nav.prev { left: .4rem; }
 .viewer-nav.next { right: .4rem; }
 .viewer-count { position: absolute; bottom: calc(.8rem + env(safe-area-inset-bottom)); left: 50%; transform: translateX(-50%); color: #fff; font-weight: 700; }
+
+/* --- Setup assistant (setup.html) ------------------------------------------- */
+.setup-progress { display: flex; justify-content: center; gap: .4rem 1rem; flex-wrap: wrap; list-style: none; padding: 0; margin: 0 0 1rem; }
+.setup-progress li { display: inline-flex; align-items: center; gap: .4rem; color: var(--muted); font-weight: 700; font-size: .9rem; }
+.setup-progress li .step { background: var(--surface-2); color: var(--muted); }
+.setup-progress li.active { color: var(--primary); }
+.setup-progress li.active .step { background: var(--primary); color: var(--surface); }
+.setup-progress li.done .step { background: var(--ok); color: var(--surface); }
+.setup-step h2:focus { outline: none; }
+.option .recommended { color: var(--ok); font-weight: 700; }
+.setup-guide { margin: 1rem 0; padding: .75rem 1rem; border-radius: var(--radius-sm); background: var(--surface-2); }
+.setup-guide h3 { margin: 0 0 .25rem; font-size: 1rem; }
+.setup-guide ol { margin: 0; padding-left: 1.25rem; display: grid; gap: .3rem; }
+.setup-nav { display: flex; gap: .6rem; justify-content: flex-end; flex-wrap: wrap; margin-top: 1rem; }
+.setup-nav .btn.wide { flex: 1; }
+.setup-waiting { display: flex; align-items: center; justify-content: center; gap: .5rem; color: var(--muted); font-weight: 700; }
+.setup-done { text-align: center; }
+.setup-done img { display: block; margin: 0 auto .5rem; }
+.setup-done .setup-nav { justify-content: center; }
+.setup-banner { display: grid; gap: .5rem; border-color: var(--primary); }
+.setup-banner p { margin: 0; }
+.setup-waiting .spinner { width: 1.2rem; height: 1.2rem; margin: 0; border-width: 3px; }
+a.btn { text-decoration: none; }

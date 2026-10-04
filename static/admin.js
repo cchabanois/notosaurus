@@ -44,8 +44,9 @@ function session(action, value) {
   return null;
 }
 
-document.addEventListener("alpine:init", () => {
-  Alpine.data("admin", () => ({
+// The settings page's component; the setup assistant (setup.html) builds on it
+function adminComponent() {
+  return {
     providers: PROVIDERS,
     pictureServices: PICTURE_SERVICES,
     PICTURE_MODELS,
@@ -354,9 +355,10 @@ document.addEventListener("alpine:init", () => {
       try {
         const r = await this.request("/api/admin/test", { method: "POST" });
         // Notosaurus needs both: reading the lesson photo and answering in JSON.
+        // r.quota: Gemini's chosen model has no quota for this key (free), a fallback answered
         const key = r.refused ? "admin.access.testRefused"
           : !r.json ? "admin.access.testNoJson"
-          : !r.vision ? "admin.access.testNoVision" : "admin.access.testOk";
+          : !r.vision ? "admin.access.testNoVision" : r.quota ? "admin.access.testOkQuota" : "admin.access.testOk";
         this.testResult = { ok: Boolean(r.json && r.vision), text: t(key, r) };
       } catch (e) {
         this.testResult = { ok: false, text: `✗ ${e.message}` };
@@ -562,5 +564,68 @@ document.addEventListener("alpine:init", () => {
       session("set", password);
       this.notice = t("admin.changed");
     },
-  }));
+  };
+}
+
+// The setup assistant: the AI and its key (checked), then the phone (its pairing seen
+// as it happens), then ready. Everything else keeps its default (the settings page).
+const SETUP_STEPS = ["ai", "phone", "done"];
+const PAIRING_POLL_MS = 2000;
+
+function setupComponent() {
+  const admin = adminComponent();
+  return {
+    ...admin,
+    steps: SETUP_STEPS,
+    step: "ai",
+    pairedAt: undefined,  // when a phone last paired, as the step began (undefined: not asked yet)
+    phonePaired: false,
+    pollTimer: null,
+
+    async init() {
+      await admin.init.call(this);
+      document.title = `Notosaurus · ${t("setup.title")}`;
+    },
+
+    // The service the assistant suggests first: a free tier, and the best value in our tests
+    recommended(id) {
+      return id === "gemini";
+    },
+
+    // "Next" once the test says the model reads a photo and answers in JSON
+    aiReady() {
+      return Boolean(this.testResult?.ok);
+    },
+
+    go(step) {
+      this.step = step;
+      clearInterval(this.pollTimer);
+      this.pollTimer = null;
+      if (step === "phone") this.watchPairing();
+      this.$nextTick(() => document.querySelector(".setup-step h2")?.focus());
+    },
+
+    // The QR code, then wait for a phone to open it: the server notes when one pairs
+    async watchPairing() {
+      await this.loadPhone();
+      if (!this.phone) return;
+      this.pairedAt = this.phone.paired_at;
+      this.phonePaired = false;
+      this.pollTimer = setInterval(async () => {
+        try {
+          const { paired_at } = await this.request("/api/admin/phone");
+          if (paired_at && paired_at !== this.pairedAt) {
+            this.phonePaired = true;
+            clearInterval(this.pollTimer);
+            this.pollTimer = null;
+          }
+        } catch {}  // the server restarting: try again at the next tick
+      }, PAIRING_POLL_MS);
+    },
+  };
+}
+
+document.addEventListener("alpine:init", () => {
+  Alpine.data("admin", adminComponent);
+  Alpine.data("setup", setupComponent);
 });

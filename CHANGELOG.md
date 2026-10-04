@@ -9,6 +9,7 @@ Each pull request adds a line under **Unreleased**. See [Releasing](CONTRIBUTING
 
 ### Added
 
+- 🦕 A setup assistant, in two steps: the AI that reads the lessons (Gemini suggested, with how to get its key, step by step, and why to turn on its billing for children's notebooks), its key checked; then the phone, whose QR code the page sees scanned. The rest keeps its defaults. In Anki, it is offered at the first start when there is no AI yet, and stays in Tools → Notosaurus → Getting started; until an AI is set up, the main page offers it too.
 - ☕ A discreet link to support Notosaurus on Ko-fi: at the bottom of the page and the settings, in Anki's Tools → Notosaurus menu, in the documentation's header, the README and the AnkiWeb page; GitHub shows its “Sponsor” button.
 - Documentation: “Several children” explains children sharing one tablet (AnkiDroid has no profiles): a single Anki profile with one deck per child, the child's name in the suggested deck name of their instructions, and what is lost compared with one profile per child.
 - Documentation: “Which model?” in *AI services and costs*, English and French: twelve models graded on eleven tests (seven on real photos of a pupil's notebook), with grade, cost and time per lesson, our advice (Gemini Flash), the good alternatives, and the models to avoid.
@@ -115,6 +116,7 @@ Each pull request adds a line under **Unreleased**. See [Releasing](CONTRIBUTING
 
 ### Fixed
 
+- A free Gemini key failed with "quota reached, try again in a moment": it has no quota (or a tiny daily one) for the latest model, and trying again changes nothing. When the quota is exceeded, the fallback model now answers, and Gemini's fallback is gemini-3.5-flash (8.2/10 in our tests) instead of gemini-3.5-flash-lite (6.6/10: names misread, cards that mean nothing without their context, wrong figures). The key's test says which model answered and that billing gives the latest one; with no quota left at all, the message says to turn on billing.
 - GPT models (with an OpenAI key or through OpenRouter) refused every request: their response schema must be "strict" (every object closed, every field required). They now get it; the other models keep theirs.
 - Settings: the OpenAI service is named "GPT (OpenAI)", like "Gemini (Google)" and "Claude (Anthropic)".
 - The AI only sees the card fields it fills (never the picture's file or the card's id, the fun facts and helps only when asked): one more field had made Claude refuse every generation ("Schema is too complex").

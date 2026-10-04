@@ -88,6 +88,10 @@ UNPAIRED_ALLOWED = {"/api/lang", "/api/qr"}  # the page telling how to pair, the
 UNPAIRED_PREFIXES = ("/api/admin",)
 
 
+# When a phone last scanned the QR code (this run only): the setup assistant sees it come
+last_paired: float | None = None
+
+
 def _paired(request: Request) -> bool:
     return (
         is_local(request)
@@ -109,6 +113,9 @@ async def paired_devices_only(request: Request, call_next):
     response = await call_next(request)
     given = request.query_params.get("k")
     if given and paired and request.cookies.get(DEVICE_COOKIE) != given and settings.is_device_token(given):
+        if not is_local(request):
+            global last_paired  # the setup assistant waits for the phone
+            last_paired = time.time()
         response.set_cookie(
             DEVICE_COOKIE,
             given,
@@ -481,7 +488,13 @@ def config() -> dict:
     s = settings.current()
     # Claude places diagram masks less precisely (too tight on handwriting): say so in the review.
     loose_boxes = s.llm == "anthropic" or "claude" in s.model_for_provider().lower()
-    return {"version": VERSION, "diagram_warning": loose_boxes, "max_photos": MAX_IMAGES, "card_helps": s.card_helps}
+    return {
+        "version": VERSION,
+        "diagram_warning": loose_boxes,
+        "max_photos": MAX_IMAGES,
+        "card_helps": s.card_helps,
+        "configured": settings.configured(s),
+    }
 
 
 @app.get("/api/lessons")
@@ -912,7 +925,7 @@ def admin_phone(request: Request) -> dict:
         port = request.url.port or (443 if request.url.scheme == "https" else 80)
         host = lan_address() if is_local(request) else request.url.hostname
         base = f"{request.url.scheme}://{host}:{port}"
-    return {"url": f"{base}/?k={settings.device_token()}"}
+    return {"url": f"{base}/?k={settings.device_token()}", "paired_at": last_paired}
 
 
 @app.post("/api/admin/phone/unpair", dependencies=[Depends(require_admin)])

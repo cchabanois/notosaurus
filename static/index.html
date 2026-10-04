@@ -77,6 +77,14 @@
     <img class="hero-logo" x-show="!lessonId && !photos.length" src="logo.webp" alt="Notosaurus" width="511" height="465">
     <p class="tagline" x-show="!lessonId && !photos.length" x-text="$t('app.tagline')"></p>
 
+    <!-- No AI service yet: the setup assistant (on the computer when it's the Anki add-on) -->
+    <section class="panel setup-banner" x-cloak x-show="!configured">
+      <h2>🦕 <span x-text="$t('app.setup.title')"></span></h2>
+      <p x-text="$t('app.setup.hint')"></p>
+      <a class="btn primary" href="setup.html" x-show="settingsHere" x-text="$t('app.setup.button')"></a>
+      <p class="hint" x-show="!settingsHere" x-text="$t('app.setup.onComputer')"></p>
+    </section>
+
     <!-- 1. Photos -->
     <section class="panel">
       <h2><span class="step">1</span> <span x-text="$t('app.photos.title')"></span> <a class="help-link" :href="$docs('photos')" target="_blank" rel="noopener" :aria-label="$t('common.helpOn', { topic: $t('app.photos.title') })" :title="$t('common.helpOn', { topic: $t('app.photos.title') })">?</a></h2>

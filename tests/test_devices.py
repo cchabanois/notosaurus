@@ -88,3 +88,19 @@ def test_other_sites_never_get_the_page_address(client):
     """The page's address may hold the token: fonts, CDN and links get none of it."""
     for page in ("/", "/admin.html"):
         assert '<meta name="referrer" content="same-origin">' in client.get(page).text
+
+
+def test_the_setup_assistant_sees_the_phone_pair(admin, monkeypatch):
+    from app import main
+
+    monkeypatch.setattr(main, "last_paired", None)
+    token = settings.device_token()
+    with TestClient(app, client=("127.0.0.1", 50000)) as local:
+        assert local.get("/api/admin/phone", headers=ADMIN).json()["paired_at"] is None
+        local.get(f"/?k={token}")  # the computer opening its own link: not a phone
+        assert local.get("/api/admin/phone", headers=ADMIN).json()["paired_at"] is None
+    admin.cookies.clear()
+    admin.get("/?k=wrong")
+    assert admin.get("/api/admin/phone", headers=ADMIN).json()["paired_at"] is None
+    admin.get(f"/?k={token}")  # the phone scanning the QR code
+    assert admin.get("/api/admin/phone", headers=ADMIN).json()["paired_at"] is not None
