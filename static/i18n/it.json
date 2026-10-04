@@ -129,6 +129,21 @@
       "cropFrame": "Ciò che Anki mostra della foto",
       "readOnly": "🔒 Sola lettura: solo il profilo di {owner} può modificarla. Puoi comunque aggiungerla al tuo Anki."
     },
+    "explain": {
+      "button": "Spiega questa carta",
+      "thinking": "💬 Sto pensando…",
+      "keep": "Tieni in “Info”",
+      "kinds": {
+        "example": "Esempio:",
+        "mnemonic": "Per ricordarlo:",
+        "why": "Perché:"
+      },
+      "ask": {
+        "example": "Un esempio",
+        "mnemonic": "Un trucco per ricordarlo",
+        "why": "Perché è giusta?"
+      }
+    },
     "revise": {
       "label": "Correggi le carte con l'IA",
       "placeholder": "✨ Correggi con l'IA: “togli la carta sul padre”, “hai dimenticato i colori”…",
@@ -444,7 +459,8 @@
       "kind": {
         "extract": "generazione",
         "revise": "correzione",
-        "picture": "immagine"
+        "picture": "immagine",
+        "explain": "spiegazione"
       },
       "deleted": "di cui {cost} per lezioni eliminate nel frattempo",
       "failed": "di cui {cost} per generazioni non riuscite (nessuna lezione)",

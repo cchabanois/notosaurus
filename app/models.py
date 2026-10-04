@@ -131,7 +131,7 @@ class AiCall(BaseModel):
     """One request to the AI for a lesson: what it used and cost."""
 
     at: str
-    kind: Literal["extract", "revise", "picture"]
+    kind: Literal["extract", "revise", "picture", "explain"]
     provider: str  # gemini, anthropic; the service's host for the OpenAI-like ones ("openrouter.ai")
     model: str  # the model that answered (a fallback, if the main one was overloaded)
     input_tokens: int | None = None
@@ -236,3 +236,22 @@ class LessonAccess(BaseModel):
 class AdminPassword(BaseModel):
     current: str | None = None
     new: str = Field(min_length=4)
+
+
+# What can be asked about a card in the review ("💬"): an explanation, then, when the AI
+# says they'd help, an example, a way to remember it, why the answer is right.
+FollowUp = Literal["example", "mnemonic", "why"]
+
+
+class ExplainRequest(BaseModel):
+    card: Card  # as shown (possibly edited, not saved yet)
+    kind: Literal["explain"] | FollowUp = "explain"
+
+
+class Explanation(BaseModel):
+    text: str = Field(description="The answer to the request, as asked: plain text, short.")
+    more: list[FollowUp] = Field(
+        default_factory=list,
+        description="The follow-ups that would truly help with this card, among "
+        '"example", "mnemonic" and "why", not the one just given. Often one or none.',
+    )

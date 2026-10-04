@@ -129,6 +129,21 @@
       "cropFrame": "What Anki shows of the photo",
       "readOnly": "🔒 Read only: only {owner}'s profile can change it. You can still add it to your Anki."
     },
+    "explain": {
+      "button": "Explain this card",
+      "thinking": "💬 Thinking…",
+      "keep": "Keep in “Info”",
+      "kinds": {
+        "example": "Example:",
+        "mnemonic": "To remember it:",
+        "why": "Why:"
+      },
+      "ask": {
+        "example": "An example",
+        "mnemonic": "A way to remember it",
+        "why": "Why is it right?"
+      }
+    },
     "revise": {
       "label": "Correct the cards with AI",
       "placeholder": "✨ Correct with AI: “remove the card about father”, “you forgot the colours”…",
@@ -444,7 +459,8 @@
       "kind": {
         "extract": "generation",
         "revise": "correction",
-        "picture": "picture"
+        "picture": "picture",
+        "explain": "explanation"
       },
       "deleted": "of which {cost} for lessons deleted since",
       "failed": "of which {cost} for generations that failed (no lesson)",

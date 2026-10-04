@@ -1276,6 +1276,42 @@ document.addEventListener("alpine:init", () => {
       }
     },
 
+    // --- Explaining a card (💬) ------------------------------------------
+    // The explanation first; then the follow-ups (an example, a way to remember it, why
+    // the answer is right) the AI said would help with this card, one after the other.
+    // A second 💬 just hides or shows what was already explained.
+    async explain(card, kind = "explain") {
+      card._explain ??= { open: false, blocks: [], more: [], loading: "", error: "", kept: false };
+      const ex = card._explain;
+      if (kind === "explain" && ex.blocks.length) {
+        ex.open = !ex.open;
+        return;
+      }
+      Object.assign(ex, { open: true, loading: kind, error: "" });
+      const shown = Object.fromEntries(Object.entries(card).filter(([k]) => k !== "key" && !k.startsWith("_")));
+      try {
+        const r = await (await api(`/api/lessons/${this.lessonId}/explain`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ card: shown, kind }),
+        })).json();
+        ex.blocks.push({ kind, text: r.text });
+        ex.kept = false;
+        ex.more = kind === "explain" ? r.more : ex.more.filter((k) => k !== kind);
+      } catch (e) {
+        ex.error = e.message;
+      } finally {
+        ex.loading = "";
+      }
+    },
+
+    // Kept in the card's info: on its back in Anki (saved as any edit)
+    keepExplanation(card) {
+      const text = card._explain.blocks.map((b) => b.text.trim()).join(" ");
+      card.info = [card.info.trim(), text].filter(Boolean).join(" — ");
+      card._explain.kept = true;
+    },
+
     // --- Export ---------------------------------------------------------
     async exportApkg() {
       this.error = "";

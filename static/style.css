@@ -463,6 +463,14 @@ h2 {
 .flash .choice input { flex: 1; min-width: 0; }
 .flash .choice .icon-btn { width: 32px; height: 32px; font-size: .8rem; }
 .flash .choices .link-btn { font-size: .8rem; }
+.flash.has-explain { flex-wrap: wrap; }  /* the explanation under the card, full width */
+.flash .explain {
+  flex: 1 0 100%; margin-top: .5rem; padding: .6rem .75rem; border-radius: var(--radius-sm);
+  background: var(--primary-soft); font-size: .92rem;
+}
+.flash .explain-block { margin: 0 0 .4rem; }
+.flash .explain-actions { display: flex; flex-wrap: wrap; align-items: center; gap: .4rem; }
+.flash .explain-actions .icon-btn { margin-left: auto; width: 2rem; height: 2rem; }
 .flash .fun-fact { display: flex; gap: .3rem; align-items: center; font-size: .85rem; }
 .flash .fun-fact input { flex: 1; min-width: 0; font-style: italic; color: var(--muted); }
 .switch.fun-facts { margin: .5rem 0 .25rem; }

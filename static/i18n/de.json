@@ -129,6 +129,21 @@
       "cropFrame": "Was Anki vom Foto zeigt",
       "readOnly": "🔒 Schreibgeschützt: Nur das Benutzerprofil von {owner} kann sie ändern. Du kannst sie trotzdem zu deinem Anki hinzufügen."
     },
+    "explain": {
+      "button": "Diese Karte erklären",
+      "thinking": "💬 Denkt nach …",
+      "keep": "In „Info“ behalten",
+      "kinds": {
+        "example": "Beispiel:",
+        "mnemonic": "Zum Merken:",
+        "why": "Warum:"
+      },
+      "ask": {
+        "example": "Ein Beispiel",
+        "mnemonic": "Eine Merkhilfe",
+        "why": "Warum ist das richtig?"
+      }
+    },
     "revise": {
       "label": "Karten mit KI korrigieren",
       "placeholder": "✨ Mit KI korrigieren: „lösch die Karte zum Vater“, „du hast die Farben vergessen“ …",
@@ -444,7 +459,8 @@
       "kind": {
         "extract": "Erzeugung",
         "revise": "Korrektur",
-        "picture": "Bild"
+        "picture": "Bild",
+        "explain": "Erklärung"
       },
       "deleted": "davon {cost} für inzwischen gelöschte Lektionen",
       "failed": "davon {cost} für fehlgeschlagene Erzeugungen (keine Lektion)",

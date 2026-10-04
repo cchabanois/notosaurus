@@ -129,6 +129,21 @@
       "cropFrame": "O que o Anki mostra da foto",
       "readOnly": "🔒 Somente leitura: só o perfil de {owner} pode alterá-la. Mesmo assim, você pode adicioná-la ao seu Anki."
     },
+    "explain": {
+      "button": "Explicar este cartão",
+      "thinking": "💬 Pensando…",
+      "keep": "Guardar em “Info”",
+      "kinds": {
+        "example": "Exemplo:",
+        "mnemonic": "Para lembrar:",
+        "why": "Por quê:"
+      },
+      "ask": {
+        "example": "Um exemplo",
+        "mnemonic": "Um truque para lembrar",
+        "why": "Por que está certo?"
+      }
+    },
     "revise": {
       "label": "Corrigir os cartões com a IA",
       "placeholder": "✨ Corrigir com a IA: “tire o cartão sobre o pai”, “você esqueceu as cores”…",
@@ -444,7 +459,8 @@
       "kind": {
         "extract": "geração",
         "revise": "correção",
-        "picture": "imagem"
+        "picture": "imagem",
+        "explain": "explicação"
       },
       "deleted": "dos quais {cost} por lições excluídas desde então",
       "failed": "dos quais {cost} por gerações que falharam (sem lição)",

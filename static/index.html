@@ -225,7 +225,7 @@
 
       <div class="cards">
         <template x-for="card in cards" :key="card.key">
-          <article class="flash" :class="{ changed: card._state, 'has-diagram': card.mask, 'has-picture': card.picture || card.picture_prompt || card.figure || card._panel }">
+          <article class="flash" :class="{ changed: card._state, 'has-explain': card._explain?.open, 'has-diagram': card.mask, 'has-picture': card.picture || card.picture_prompt || card.figure || card._panel }">
             <!-- Diagram label: the photo with every label hidden, this card's mask highlighted and movable -->
             <template x-if="card.mask && photoFor(card)">
               <div class="diagram">
@@ -294,10 +294,33 @@
               </div>
             </div>
             <div class="flash-actions">
+              <button class="icon-btn" x-show="lessonId && card.front.trim() && (card.back.trim() || isCloze(card.front))"
+                      @click="explain(card)" :class="{ active: card._explain?.open }" :aria-label="$t('app.explain.button')"
+                      :title="$t('app.explain.button')">💬</button>
               <button class="icon-btn" x-show="hasAudio() && !hasMath(card.back) && !isCloze(card.front) && !card.choices.length" @click="play(card.back)" :aria-label="$t('app.review.listen')">🔊</button>
               <button class="icon-btn" x-show="!readOnly() && !card.mask && !isCloze(card.front) && lessonId" @click="togglePicturePanel(card)"
                       :class="{ active: card._panel }" :aria-label="$t('app.pictures.panel')">🖼️</button>
               <button class="icon-btn muted" x-show="!readOnly()" @click="removeCard(card)" :aria-label="$t('app.review.removeCard')">✕</button>
+            </div>
+            <!-- 💬 The card explained, on demand; then only the follow-ups the AI says would help -->
+            <div class="explain" x-show="card._explain?.open">
+              <template x-for="(block, b) in card._explain?.blocks ?? []" :key="b">
+                <p class="explain-block">
+                  <strong x-show="block.kind !== 'explain'" x-text="$t('app.explain.kinds.' + block.kind)"></strong>
+                  <span x-text="block.text"></span>
+                </p>
+              </template>
+              <p class="hint" x-show="card._explain?.loading" x-text="$t('app.explain.thinking')"></p>
+              <p class="error-text" x-show="card._explain?.error" x-text="card._explain?.error"></p>
+              <div class="explain-actions">
+                <template x-for="k in card._explain?.more ?? []" :key="k">
+                  <button class="chip" @click="explain(card, k)" :disabled="Boolean(card._explain?.loading)"
+                          x-text="$t('app.explain.ask.' + k)"></button>
+                </template>
+                <button class="link-btn" x-show="!readOnly() && card._explain?.blocks.length && !card._explain?.kept"
+                        @click="keepExplanation(card)" x-text="$t('app.explain.keep')"></button>
+                <button class="icon-btn muted" @click="card._explain.open = false" :aria-label="$t('common.close')">✕</button>
+              </div>
             </div>
             <!-- The card's picture: what to draw, redraw, own photo, none -->
             <div class="picture-panel" x-show="card._panel">

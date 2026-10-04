@@ -27,6 +27,8 @@ from .models import (
     AdminPassword,
     AiCall,
     Deck,
+    ExplainRequest,
+    Explanation,
     ExportRequest,
     Lesson,
     LessonAccess,
@@ -585,6 +587,22 @@ async def revise_lesson(id: str, req: RevisionRequest, lang: str = Depends(page_
         ),
     )
     return {"lesson": updated, "summary": revision.summary}
+
+
+@app.post("/api/lessons/{id}/explain")
+async def explain(id: str, req: ExplainRequest, lang: str = Depends(page_lang)) -> Explanation:
+    """A card explained to the pupil (or an example, a way to remember it, why the answer
+    is right), in the page's language. Also for a lesson only read here: nothing in it
+    changes but its record of AI calls."""
+    lesson = await _lesson(id)  # not found, or another profile's private one: 404
+    with llm.recording("explain") as calls:
+        try:
+            return await llm.explain_card(
+                req.card, req.kind, lesson.prompt, lesson.deck, lang, lesson.owner, lesson.page_texts
+            )
+        finally:
+            lessons.add_ai_calls(id, calls)  # paid for, kept with the lesson
+            usage.add(calls, id, lesson.deck)
 
 
 @app.post("/api/lessons/{id}/photos/{n}/rotate")
