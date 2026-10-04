@@ -24,6 +24,8 @@ Anki.
 
 ## Le téléphone n'arrive pas à ouvrir Notosaurus
 
+Voir aussi [Sur le téléphone](../phone/).
+
 - Le téléphone et l'ordinateur doivent être sur le **même Wi-Fi**. Un réseau « invité » isole
   souvent ses appareils : utilise le réseau principal.
 - Sous Windows, autorise Anki (ou Python) quand le **pare-feu** le demande, la première fois.

@@ -40,7 +40,8 @@ phone.
 ## 3. Open Notosaurus on the phone
 
 In Anki, choose **Tools → Notosaurus → Open on the phone…** and scan the QR code with the
-phone's camera. Then add the page to the home screen: it opens like an app.
+phone's camera. Then add the page to the home screen: it opens like an app (see
+[On the phone](../phone/) for each browser).
 
 ![Settings: the QR code to open Notosaurus on the phone](../../assets/screenshots/en/settings-phones.png)
 
