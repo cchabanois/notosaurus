@@ -193,6 +193,11 @@
             </datalist>
             <small x-text="$t('admin.pictures.hint')"></small>
           </label>
+          <button type="button" class="btn soft wide" x-show="drawingService()" @click="testPicture()" :disabled="testingPicture">
+            <span x-text="testingPicture ? $t('admin.testing') : $t('admin.pictures.test')"></span>
+          </button>
+          <p class="test-result" x-show="pictureResult" :class="pictureResult?.ok ? 'ok' : 'ko'" x-text="pictureResult?.text"></p>
+          <img class="picture-test" x-show="pictureResult?.image" :src="pictureResult?.image" :alt="$t('admin.pictures.testAlt')" width="200" height="200">
         </section>
 
         <!-- Voice -->

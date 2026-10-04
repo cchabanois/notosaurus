@@ -1,3 +1,4 @@
+import base64
 import json
 import logging
 import os
@@ -64,6 +65,7 @@ logging.getLogger("uvicorn.access").addFilter(HideDeviceToken())
 STATIC_DIR = Path(__file__).parent.parent / "static"
 IMAGE_TYPES = {"image/jpeg", "image/png", "image/webp", "image/gif"}
 MAX_IMAGES = 10
+TEST_PICTURE = "a giraffe"  # the settings' picture test: a familiar animal, drawn as on a card
 
 
 @asynccontextmanager
@@ -869,6 +871,23 @@ async def admin_test() -> dict:
     start = time.monotonic()
     result = await check(s)
     return {"llm": s.llm, "model": s.model_for_provider(), "seconds": round(time.monotonic() - start, 1), **result}
+
+
+@app.post("/api/admin/pictures/test", dependencies=[Depends(require_admin)])
+async def admin_picture_test() -> dict:
+    """Draw one picture with the saved service and model (a few cents): shown with its cost."""
+    s = settings.current()
+    start = time.monotonic()
+    with llm.recording("picture") as calls:
+        jpeg = pictures.card_size(await pictures.draw(s, TEST_PICTURE))
+    known = [c.cost for c in calls if c.cost is not None]
+    return {
+        "service": pictures.service(s),
+        "model": pictures.model(s),
+        "seconds": round(time.monotonic() - start, 1),
+        "cost": sum(known) if known else None,
+        "image": "data:image/jpeg;base64," + base64.b64encode(jpeg).decode(),
+    }
 
 
 @app.get("/api/admin/lessons", dependencies=[Depends(require_admin)])

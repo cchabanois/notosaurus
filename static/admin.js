@@ -66,6 +66,8 @@ function adminComponent() {
     saving: false,
     testing: false,
     testResult: null,
+    testingPicture: false,
+    pictureResult: null,  // the picture test: { ok, text, image }
     testingAnki: false,
     ankiResult: null,
     lessons: null,   // { lessons, profiles } from /api/admin/lessons (profiles: null = Anki closed)
@@ -364,6 +366,22 @@ function adminComponent() {
         this.testResult = { ok: false, text: `✗ ${e.message}` };
       } finally {
         this.testing = false;
+      }
+    },
+
+    // One real picture with the chosen service and model (a few cents): seen, with its cost
+    async testPicture() {
+      this.pictureResult = null;
+      if (!(await this.flush())) return;
+      this.testingPicture = true;
+      try {
+        const r = await this.request("/api/admin/pictures/test", { method: "POST" });
+        const cost = r.cost === null ? t("admin.costs.unknown") : this.formatCost(r.cost);
+        this.pictureResult = { ok: true, image: r.image, text: t("admin.pictures.testOk", { model: r.model, seconds: r.seconds, cost }) };
+      } catch (e) {
+        this.pictureResult = { ok: false, text: `✗ ${e.message}` };
+      } finally {
+        this.testingPicture = false;
       }
     },
 

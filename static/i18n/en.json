@@ -502,6 +502,9 @@
     "pictures": {
       "model": "Image model",
       "hint": "For prompts like “front: the picture of the word”. From under a cent to a few US cents per picture, depending on the model.",
+      "test": "🖼️ Test: draw a giraffe (a few cents)",
+      "testOk": "✓ {model} drew this in {seconds} s ({cost}).",
+      "testAlt": "The test picture: a giraffe",
       "title": "Pictures on cards",
       "service": "Service drawing them",
       "sameAsCards": "Same as the cards",
