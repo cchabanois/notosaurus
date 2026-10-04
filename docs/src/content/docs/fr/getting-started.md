@@ -42,7 +42,7 @@ ne peuvent pas les changer depuis un téléphone.
 
 Dans Anki, choisis **Outils → Notosaurus → Ouvrir sur le téléphone…** et scanne le QR code
 avec l'appareil photo du téléphone. Ajoute ensuite la page à l'écran d'accueil : elle
-s'ouvre comme une appli.
+s'ouvre comme une appli (voir [Sur le téléphone](../phone/) pour chaque navigateur).
 
 ![Réglages : le QR code pour ouvrir Notosaurus sur le téléphone](../../../assets/screenshots/fr/settings-phones.png)
 
