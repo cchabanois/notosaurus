@@ -502,6 +502,9 @@
     "pictures": {
       "model": "Bildmodell",
       "hint": "Für Anweisungen wie „Vorderseite: das Bild des Wortes“. Von unter einem Cent bis zu ein paar US-Cent pro Bild, je nach Modell.",
+      "test": "🖼️ Testen: eine Giraffe zeichnen (ein paar Cent)",
+      "testOk": "✓ {model} hat das in {seconds} s gezeichnet ({cost}).",
+      "testAlt": "Das Testbild: eine Giraffe",
       "title": "Bilder auf den Karten",
       "service": "Dienst, der sie zeichnet",
       "sameAsCards": "Derselbe wie für die Karten",

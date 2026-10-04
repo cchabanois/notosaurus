@@ -502,6 +502,9 @@
     "pictures": {
       "model": "Modèle d'images",
       "hint": "Pour les consignes du type « recto : image du mot ». De moins d'un centime à quelques centimes US par image selon le modèle.",
+      "test": "🖼️ Tester : dessiner une girafe (quelques centimes)",
+      "testOk": "✓ {model} a dessiné ceci en {seconds} s ({cost}).",
+      "testAlt": "L'image de test : une girafe",
       "title": "Images des cartes",
       "service": "Service qui dessine",
       "sameAsCards": "Comme les cartes",

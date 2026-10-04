@@ -1,5 +1,6 @@
 """Pictures on cards ("front: the picture of the word"), drawn by an image model."""
 
+import base64
 import io
 
 import apkg
@@ -225,3 +226,21 @@ def test_own_photo_then_no_picture(client, drawn, tmp_path):
     res = client.delete(url).json()
     assert (res["card"]["picture"], res["card"]["picture_prompt"]) == ("", "")  # a text card now
     assert not any(folder.glob(f"picture-{dog['id']}-*"))
+
+
+def test_the_settings_picture_test(admin, drawn, monkeypatch):
+    """The settings draw one picture with the chosen service and model, shown with its cost."""
+    from conftest import ADMIN
+
+    assert admin.post("/api/admin/pictures/test").status_code == 401  # the settings' password
+    monkeypatch.setenv("OPENROUTER_API_KEY", "sk-or-test")
+    found = admin.post("/api/admin/pictures/test", headers=ADMIN).json()
+    assert drawn == ["a giraffe"]
+    assert (found["service"], found["model"], found["cost"]) == (
+        "openrouter",
+        "google/gemini-3.1-flash-lite-image",
+        0.03,
+    )
+    assert found["image"].startswith("data:image/jpeg;base64,")
+    image = Image.open(io.BytesIO(base64.b64decode(found["image"].split(",", 1)[1])))
+    assert image.size == (pictures.SIDE, pictures.SIDE)  # as on a card

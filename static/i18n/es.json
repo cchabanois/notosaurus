@@ -502,6 +502,9 @@
     "pictures": {
       "model": "Modelo de imagen",
       "hint": "Para instrucciones como «anverso: la imagen de la palabra». Desde menos de un céntimo hasta unos céntimos de dólar por imagen, según el modelo.",
+      "test": "🖼️ Probar: dibujar una jirafa (unos céntimos)",
+      "testOk": "✓ {model} ha dibujado esto en {seconds} s ({cost}).",
+      "testAlt": "La imagen de prueba: una jirafa",
       "title": "Imágenes de las tarjetas",
       "service": "Servicio que las dibuja",
       "sameAsCards": "El mismo que las tarjetas",
