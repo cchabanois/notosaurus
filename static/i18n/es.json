@@ -364,7 +364,6 @@
       },
       "model": "Modelo",
       "default": "{model} (predeterminado)",
-      "modelHint": "Déjalo vacío para usar el modelo predeterminado.",
       "fallbacks": "Modelos de reserva",
       "fallbacksHint": "Se prueban en orden si el modelo principal está saturado o sin cuota (una clave gratuita no tiene el último modelo). Separados por comas."
     },
@@ -450,9 +449,7 @@
         "one": "{count} modelo propuesto: el servicio no indica si acepta imágenes, compruébalo con «Probar».",
         "other": "{count} modelos propuestos: el servicio no indica cuáles aceptan imágenes, compruébalo con «Probar»."
       },
-      "noVisionModels": "Ninguno de los modelos de este servicio acepta imágenes: hace falta uno para leer las fotos de las lecciones.",
-      "aliases": "Modelos propuestos",
-      "aliasesHint": "Siempre la última versión de cada modelo (⭐: recomendado, el más preciso con los esquemas). O escribe en el campo de arriba el nombre de uno de los {count} modelos."
+      "noVisionModels": "Ninguno de los modelos de este servicio acepta imágenes: hace falta uno para leer las fotos de las lecciones."
     },
     "costs": {
       "total": "💰 IA: {cost} en total",
@@ -502,7 +499,7 @@
     "pictures": {
       "model": "Modelo de imagen",
       "hint": "Para instrucciones como «anverso: la imagen de la palabra». Desde menos de un céntimo hasta unos céntimos de dólar por imagen, según el modelo.",
-      "listed": "{count} modelos de imagen que ofrece el servicio: escribe para filtrarlos.",
+      "listed": "De la mejor relación calidad-precio al más caro, con lo que cuesta una imagen; ⭐: el predeterminado. O escribe en el campo el nombre de uno de los {count} modelos de imagen del servicio.",
       "test": "🖼️ Probar: dibujar una jirafa (unos céntimos)",
       "testOk": "✓ {model} ha dibujado esto en {seconds} s ({cost}).",
       "testAlt": "La imagen de prueba: una jirafa",
@@ -531,6 +528,17 @@
     },
     "model": {
       "title": "Modelo"
+    },
+    "recommended": {
+      "title": "Recomendados, según nuestras pruebas",
+      "cardsHint": "De la mejor relación calidad-precio al más caro, con lo que cuesta una lección; ⭐: el predeterminado. O escribe el nombre de otro modelo en el campo.",
+      "picturesHint": "De la mejor relación calidad-precio al más caro, con lo que cuesta una imagen; ⭐: el predeterminado. O escribe el nombre de otro modelo en el campo.",
+      "notes": {
+        "freeKey": "el de una clave gratuita",
+        "photos": "el mejor con fotos",
+        "best": "la mejor media",
+        "slower": "más lento"
+      }
     }
   },
   "setup": {

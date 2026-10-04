@@ -302,7 +302,7 @@ def test_openai_openrouter_and_compatible_are_separate(admin):
     assert (settings.current().base_url(), settings.current().api_key()) == ("http://localhost:11434/v1", "loc")
     assert admin.put("/api/admin/settings", headers=ADMIN, json={"compatible_base_url": "localhost"}).status_code == 422
     # Their default models
-    assert view["default_models"]["openrouter"] == "~google/gemini-flash-latest"
+    assert view["default_models"]["openrouter"] == "google/gemini-3.8-flash"  # pinned, not "~…-latest"
     put({"llm": "openai", "openai_api_key": ""})  # cleared
     assert settings.current().api_key() == ""
 
@@ -424,24 +424,26 @@ def test_model_without_vision_refuses_image(admin, monkeypatch):
     assert llm._error_message(nested) == "no vision here"
 
 
-def test_openrouter_short_list(admin, monkeypatch):
-    """OpenRouter's aliases (always the latest model of a family) come as a short list."""
-    import openai
+def test_recommended_models_first_is_the_default(admin):
+    """The recommended models (app/recommended.py), in order, for every service that
+    has some: the first one is its default, for the cards and for the pictures."""
+    from app import pictures, recommended
 
-    admin.put("/api/admin/settings", headers=ADMIN, json={"llm": "openrouter"})
-    vision = (["image", "text"], ["structured_outputs"])
-    models = [
-        FakeModel("~google/gemini-flash-latest", *vision, name="Google: Gemini Flash Latest"),
-        FakeModel("~anthropic/claude-sonnet-latest", *vision, name="Anthropic: Claude Sonnet Latest"),
-        FakeModel("~deepseek/deepseek-pro-latest", ["text"], ["structured_outputs"]),  # no images
-        FakeModel("google/gemini-3.8-flash", *vision, name="Google: Gemini 3.8 Flash"),
-    ]
-    monkeypatch.setattr(openai, "AsyncOpenAI", fake_openai(models, {}))
-    res = admin.post("/api/admin/models", headers=ADMIN).json()
-    assert res["aliases"] == ["~google/gemini-flash-latest", "~anthropic/claude-sonnet-latest"]  # recommended first
-    assert res["recommended"] == "~google/gemini-flash-latest"
-    assert res["names"]["~google/gemini-flash-latest"] == "Google: Gemini Flash Latest"
-    assert "google/gemini-3.8-flash" in res["models"] and "~deepseek/deepseek-pro-latest" not in res["models"]
+    view = admin.get("/api/admin/settings", headers=ADMIN).json()
+    for provider in ("gemini", "anthropic", "openai", "openrouter"):
+        listed = [m["id"] for m in view["recommended"]["cards"][provider]]
+        assert listed[0] == view["default_models"][provider] == settings.DEFAULT_MODELS[provider]
+        assert not any(m.startswith("~") for m in listed)  # pinned versions: what was tested runs
+    for service in ("gemini", "openai", "openrouter"):
+        assert view["recommended"]["pictures"][service][0]["id"] == pictures.DEFAULT_MODELS[service]
+    assert view["recommended"]["cards"]["gemini"][1] == {
+        "id": "gemini-3.5-flash",
+        "name": "Gemini 3.5 Flash",
+        "cents": 3.8,
+        "note": "freeKey",
+    }
+    assert "compatible" not in view["recommended"]["cards"]  # a local service: its own models
+    assert recommended.default(recommended.CARDS, "compatible") == ""
 
 
 def test_configured_once_the_service_has_its_key(admin, monkeypatch):

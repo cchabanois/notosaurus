@@ -132,20 +132,18 @@
                 <option :value="m"></option>
               </template>
             </datalist>
-            <small x-show="!openaiLike()" x-text="$t('admin.provider.modelHint')"></small>
-            <small x-show="openaiLike() && !modelAliases.length" x-text="$t('admin.service.vision')"></small>
+            <small x-show="!recommendedCards().length" x-text="$t('admin.service.vision')"></small>
           </label>
-          <!-- OpenRouter: the latest model of each main family, the others on demand -->
-          <div class="field" x-show="openaiLike() && modelAliases.length">
-            <span x-text="$t('admin.service.aliases')"></span>
+          <!-- Notosaurus's recommended models, in order (the first is the default); the field takes any other -->
+          <div class="field" x-show="recommendedCards().length">
+            <span x-text="$t('admin.recommended.title')"></span>
             <div class="chips">
-              <template x-for="id in modelAliases" :key="id">
-                <button type="button" class="chip" :class="{ active: (form.model || saved.default_models[form.llm]) === id }"
-                        @click="form.model = id"
-                        :title="id" x-text="(id === recommendedModel ? '⭐ ' : '') + modelLabel(id)"></button>
+              <template x-for="(m, i) in recommendedCards()" :key="m.id">
+                <button type="button" class="chip recommended" :class="{ active: (form.model || saved.default_models[form.llm]) === m.id }"
+                        @click="form.model = m.id" :title="m.id" x-text="recommendedLabel(m, i)"></button>
               </template>
             </div>
-            <small x-text="$t('admin.service.aliasesHint', { count: loadedModels.length })"></small>
+            <small x-text="$t('admin.recommended.cardsHint')"></small>
           </div>
           <div class="field" x-show="openaiLike()">
             <button type="button" class="btn soft" @click="loadModels()" :disabled="loadingModels" x-show="!loadedModels.length"
@@ -192,9 +190,17 @@
               </template>
             </datalist>
             <small x-text="$t('admin.pictures.hint')"></small>
-            <small x-show="pictureModels[drawingService()]"
-                   x-text="$t('admin.pictures.listed', { count: pictureModels[drawingService()]?.length ?? 0 })"></small>
           </label>
+          <div class="field" x-show="recommendedPictures().length">
+            <span x-text="$t('admin.recommended.title')"></span>
+            <div class="chips">
+              <template x-for="(m, i) in recommendedPictures()" :key="m.id">
+                <button type="button" class="chip recommended" :class="{ active: (form.picture_model || saved.pictures.default_models[drawingService()]) === m.id }"
+                        @click="form.picture_model = m.id" :title="m.id" x-text="recommendedLabel(m, i)"></button>
+              </template>
+            </div>
+            <small x-text="pictureModels[drawingService()] ? $t('admin.pictures.listed', { count: pictureModels[drawingService()].length }) : $t('admin.recommended.picturesHint')"></small>
+          </div>
           <button type="button" class="btn soft wide" x-show="drawingService()" @click="testPicture()" :disabled="testingPicture">
             <span x-text="testingPicture ? $t('admin.testing') : $t('admin.pictures.test')"></span>
           </button>

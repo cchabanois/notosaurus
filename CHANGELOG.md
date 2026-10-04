@@ -9,6 +9,7 @@ Each pull request adds a line under **Unreleased**. See [Releasing](CONTRIBUTING
 
 ### Added
 
+- Settings: the recommended models, from the model benchmark, for every service, in order (the best value first, then better or safer at a higher price), as buttons under the model field, with what a lesson or a picture costs; the first is the default. For the cards and for the card pictures. They are pinned versions, never "~…-latest" aliases: what was tested is what runs, at the price it was tested at. The field still takes any model the service lists. It is the only list of models written in Notosaurus (`app/recommended.py`).
 - Settings → Card pictures: the image model field suggests every model the drawing service offers (Gemini, OpenAI or OpenRouter list their own, for free), new ones included, instead of two or three written in Notosaurus. The suggestions shown before the list arrives are brought up to date (OpenAI's gpt-image-2 and 2.5, OpenRouter's gpt-5.4-image-2).
 - Settings → Card pictures: a 🖼️ Test button draws one picture (a giraffe) with the chosen service and model, and shows it with its time and cost, as the cards' service has its test.
 - 🦕 A setup assistant, in two steps: the AI that reads the lessons (Gemini suggested, with how to get its key, step by step, and why to turn on its billing for children's notebooks), its key checked; then the phone, whose QR code the page sees scanned. The rest keeps its defaults. In Anki, it is offered at the first start when there is no AI yet, and stays in Tools → Notosaurus → Getting started; until an AI is set up, the main page offers it too.
@@ -96,6 +97,7 @@ Each pull request adds a line under **Unreleased**. See [Releasing](CONTRIBUTING
 
 ### Changed
 
+- Default models, from the model benchmark: GPT `gpt-6.1-sol` instead of `gpt-6-luna` (7.8/10, 5/10 on a handwritten page), Claude `claude-sonnet-5-5` instead of `claude-opus-5` (as good on photos, half the price, the fastest), OpenRouter `google/gemini-3.8-flash` instead of the `~google/gemini-flash-latest` alias, OpenAI pictures `gpt-image-2` instead of `gpt-image-1-mini` (much better for 0.6 US¢). OpenRouter's short list of aliases is gone: the recommended models replace it.
 - Documentation: no more Tailscale / HTTPS recipe (never tested): Notosaurus is documented for home use, on the Wi-Fi, with the security warning kept (protected Wi-Fi, never on the Internet).
 - The README shows the Notosaurus logo.
 - Documentation: the README is for people installing and using Notosaurus; setting up, tests, architecture, adding a language and releasing moved to [CONTRIBUTING.md](CONTRIBUTING.md).
@@ -118,6 +120,7 @@ Each pull request adds a line under **Unreleased**. See [Releasing](CONTRIBUTING
 
 ### Fixed
 
+- The cost of OpenAI's pictures was unknown ("cost unknown"): its image models aren't in OpenRouter's price list. Their prices are now in Notosaurus.
 - A free Gemini key failed with "quota reached, try again in a moment": it has no quota (or a tiny daily one) for the latest model, and trying again changes nothing. When the quota is exceeded, the fallback model now answers, and Gemini's fallback is gemini-3.5-flash (8.2/10 in our tests) instead of gemini-3.5-flash-lite (6.6/10: names misread, cards that mean nothing without their context, wrong figures). The key's test says which model answered and that billing gives the latest one; with no quota left at all, the message says to turn on billing.
 - GPT models (with an OpenAI key or through OpenRouter) refused every request: their response schema must be "strict" (every object closed, every field required). They now get it; the other models keep theirs.
 - Settings: the OpenAI service is named "GPT (OpenAI)", like "Gemini (Google)" and "Claude (Anthropic)".

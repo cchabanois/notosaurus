@@ -364,7 +364,6 @@
       },
       "model": "Modello",
       "default": "{model} (predefinito)",
-      "modelHint": "Lascia vuoto per il modello predefinito.",
       "fallbacks": "Modelli di riserva",
       "fallbacksHint": "Provati in ordine se il modello principale è sovraccarico o senza quota (una chiave gratuita non ha l'ultimo modello). Separati da virgole."
     },
@@ -450,9 +449,7 @@
         "one": "{count} modello proposto: il servizio non dice se accetta immagini, verificalo con “Prova”.",
         "other": "{count} modelli proposti: il servizio non dice quali accettano immagini, verificalo con “Prova”."
       },
-      "noVisionModels": "Nessuno dei modelli di questo servizio accetta immagini: ne serve uno per leggere le foto delle lezioni.",
-      "aliases": "Modelli proposti",
-      "aliasesHint": "Sempre l'ultima versione di ogni modello (⭐: consigliato, il più preciso sugli schemi). Oppure scrivi nel campo sopra il nome di uno dei {count} modelli."
+      "noVisionModels": "Nessuno dei modelli di questo servizio accetta immagini: ne serve uno per leggere le foto delle lezioni."
     },
     "costs": {
       "total": "💰 IA: {cost} in totale",
@@ -502,7 +499,7 @@
     "pictures": {
       "model": "Modello di immagini",
       "hint": "Per istruzioni come “fronte: l'immagine della parola”. Da meno di un centesimo a qualche centesimo di dollaro per immagine, secondo il modello.",
-      "listed": "{count} modelli di immagini offerti dal servizio: scrivi per filtrarli.",
+      "listed": "Dal miglior rapporto qualità/prezzo al più caro, con il costo di un'immagine; ⭐: il predefinito. Oppure scrivi nel campo il nome di uno dei {count} modelli di immagini del servizio.",
       "test": "🖼️ Prova: disegna una giraffa (pochi centesimi)",
       "testOk": "✓ {model} ha disegnato questo in {seconds} s ({cost}).",
       "testAlt": "L'immagine di prova: una giraffa",
@@ -531,6 +528,17 @@
     },
     "model": {
       "title": "Modello"
+    },
+    "recommended": {
+      "title": "Consigliati, secondo i nostri test",
+      "cardsHint": "Dal miglior rapporto qualità/prezzo al più caro, con il costo di una lezione; ⭐: il predefinito. Oppure scrivi il nome di un altro modello nel campo.",
+      "picturesHint": "Dal miglior rapporto qualità/prezzo al più caro, con il costo di un'immagine; ⭐: il predefinito. Oppure scrivi il nome di un altro modello nel campo.",
+      "notes": {
+        "freeKey": "quello di una chiave gratuita",
+        "photos": "il migliore sulle foto",
+        "best": "la media migliore",
+        "slower": "più lento"
+      }
     }
   },
   "setup": {

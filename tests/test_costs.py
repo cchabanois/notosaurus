@@ -38,6 +38,9 @@ def test_fake_calls_kept_with_the_lesson(client):
         ("anthropic", "claude-sonnet-4-6", usd("anthropic/claude-sonnet-4.6", 1000, 100)),  # as OpenRouter lists it
         ("openai", "google/gemini-3.8-flash", usd("google/gemini-3.8-flash", 1000, 100)),  # an OpenRouter id
         ("anthropic", "claude-unknown", None),
+        # OpenAI's image models aren't in OpenRouter's list: Notosaurus's own prices
+        ("openai", "gpt-image-2", 1000 * 8e-6 + 100 * 30e-6),
+        ("openai", "gpt-image-2-2026-04-21", 1000 * 8e-6 + 100 * 30e-6),  # a dated version: its model's
     ],
 )
 def test_estimated_cost(client, provider, model, cost):

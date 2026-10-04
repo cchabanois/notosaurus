@@ -1,13 +1,15 @@
 const PASSWORD_KEY = "notosaurus.admin";  // kept for the browser session only
 
-// Names and descriptions: admin.provider.<id>.* in static/i18n/<lang>.json
+// Names and descriptions: admin.provider.<id>.* in static/i18n/<lang>.json. The models
+// suggested come from the server: Notosaurus's recommended ones (app/recommended.py),
+// then every one the service lists.
 const PROVIDERS = [
-  { id: "gemini", models: ["gemini-3.8-flash", "gemini-3.5-flash", "gemini-3.5-flash-lite", "gemini-3.1-pro-preview"] },
-  { id: "anthropic", models: ["claude-opus-5", "claude-sonnet-5", "claude-haiku-4-5"] },
-  { id: "openai", models: ["gpt-6-luna", "gpt-6-sol", "gpt-6-astra"] },
-  { id: "openrouter", models: [] },  // its short list, loaded from OpenRouter
-  { id: "compatible", models: ["qwen2.5vl", "gemma3"] },
-  { id: "fake", models: [] },
+  { id: "gemini" },
+  { id: "anthropic" },
+  { id: "openai" },
+  { id: "openrouter" },
+  { id: "compatible", models: ["qwen2.5vl", "gemma3"] },  // examples of local vision models
+  { id: "fake" },
 ];
 // Speak OpenAI's API: their models can be listed from the service
 const OPENAI_LIKE = ["openai", "openrouter", "compatible"];
@@ -21,14 +23,9 @@ const KEYS = {
   compatible: [{ field: "compatible_api_key", label: "admin.access.compatibleKey" }],
 };
 
-// Card pictures: the services that draw, the models suggested in each until the service
-// lists all of its own (see loadPictureModels)
+// Card pictures: the services that draw (their models: the recommended ones, then every
+// one the service lists, see loadPictureModels)
 const PICTURE_SERVICES = ["gemini", "openai", "openrouter"];
-const PICTURE_MODELS = {
-  gemini: ["gemini-3.1-flash-lite-image", "gemini-3.1-flash-image", "gemini-3-pro-image"],
-  openai: ["gpt-image-1-mini", "gpt-image-2", "gpt-image-2.5-flare", "gpt-image-2.5-sunburst"],
-  openrouter: ["google/gemini-3.1-flash-lite-image", "google/gemini-3.1-flash-image", "openai/gpt-5.4-image-2"],
-};
 const PICTURE_KEYS = { gemini: "gemini_api_key", openai: "openai_api_key", openrouter: "openrouter_api_key" };
 
 const EDITABLE = ["llm", "model", "fallback_models", "compatible_base_url", "picture_service", "tts_rate", "ankiconnect_url", "anki_sync", "card_helps",
@@ -51,9 +48,6 @@ function adminComponent() {
     providers: PROVIDERS,
     pictureServices: PICTURE_SERVICES,
     loadedModels: [],    // models listed by the OpenAI-like service
-    modelAliases: [],    // OpenRouter: "~…-latest", the latest model of each main family (the short list)
-    modelNames: {},      // id → name given by the service ("Google: Gemini Flash Latest")
-    recommendedModel: null,
     modelsInfo: "",
     loadingModels: false,
     status: null,
@@ -213,21 +207,31 @@ function adminComponent() {
     },
 
     clearModels() {
-      Object.assign(this, { loadedModels: [], modelAliases: [], modelNames: {}, recommendedModel: null });
+      this.loadedModels = [];
       this.modelsInfo = "";
     },
 
-    // Every model the service lists: the field filters them as one types (OpenRouter's
-    // suggested ones are the buttons below it)
+    // The recommended ones (the buttons below the field), then every model the service
+    // lists: the field filters them as one types
     modelSuggestions() {
-      if (!this.openaiLike()) return this.provider().models;
-      return [...new Set([...this.provider().models, ...this.modelAliases, ...this.loadedModels])];
+      const own = this.recommendedCards().map((m) => m.id);
+      return [...new Set([...own, ...(this.provider().models ?? []), ...this.loadedModels])];
     },
 
-    // "Google: Gemini Flash Latest" → "Gemini Flash"
-    modelLabel(id) {
-      const name = this.modelNames[id] ?? id.replace(/^~[^/]+\//, "");
-      return name.replace(/^[^:]+:\s*/, "").replace(/\s+latest$/i, "").replace(/-latest$/, "");
+    // Notosaurus's recommended models, in order (the first is the default)
+    recommendedCards() {
+      return this.saved?.recommended?.cards[this.form?.llm] ?? [];
+    },
+
+    recommendedPictures() {
+      return this.saved?.recommended?.pictures[this.drawingService()] ?? [];
+    },
+
+    // "⭐ Gemini 3.8 Flash · 1.3 ¢ · a free key's model"
+    recommendedLabel(m, i) {
+      const parts = [(i === 0 ? "⭐ " : "") + m.name, this.formatCost(m.cents / 100)];
+      if (m.note) parts.push(t(`admin.recommended.notes.${m.note}`));
+      return parts.join(" · ");
     },
 
     // --- Card pictures: who draws them (same rule as pictures.service on the server)
@@ -246,7 +250,8 @@ function adminComponent() {
     // The service's own list, once per service: what it lists is what can be chosen
     pictureSuggestions() {
       const drawing = this.drawingService();
-      return this.pictureModels[drawing] ?? PICTURE_MODELS[drawing] ?? [];
+      const own = this.recommendedPictures().map((m) => m.id);
+      return [...new Set([...own, ...(this.pictureModels[drawing] ?? [])])];
     },
 
     autoLoadPictureModels() {
@@ -291,9 +296,8 @@ function adminComponent() {
       if (!(await this.flush())) return;  // the server lists with the saved address and key
       this.loadingModels = true;
       try {
-        const { models, vision_only, aliases = [], names = {}, recommended = null } =
-          await this.request("/api/admin/models", { method: "POST" });
-        Object.assign(this, { loadedModels: models, modelAliases: aliases, modelNames: names, recommendedModel: recommended });
+        const { models, vision_only } = await this.request("/api/admin/models", { method: "POST" });
+        this.loadedModels = models;
         // vision_only: the service says which models accept images; otherwise the test tells.
         const key = vision_only ? "admin.service.modelsVision" : "admin.service.modelsAll";
         this.modelsInfo = models.length ? t(key, { count: models.length })
