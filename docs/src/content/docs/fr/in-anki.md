@@ -12,8 +12,10 @@ avec lui, et écrit les cartes directement dans le profil ouvert.
 
 - **Ouvrir Notosaurus** ouvre Notosaurus dans le navigateur de l'ordinateur.
 - **Ouvrir sur le téléphone…** affiche un QR code pour ouvrir Notosaurus sur le téléphone, et
-  les trois étapes pour y arriver (voir [Sur le téléphone](../phone/)). Il s'affiche tout seul
-  une fois, la première fois.
+  les trois étapes pour y arriver (voir [Sur le téléphone](../phone/)).
+- **Assistant de démarrage** ouvre l'assistant : l'IA et sa clé, puis le téléphone (voir
+  [Pour commencer](../getting-started/#2-lassistant-de-démarrage)). La première fois, Anki le
+  propose tout seul tant qu'aucune IA n'est configurée.
 - **Réglages** ouvre les réglages (service d'IA et clé, voix, enfants…) dans le navigateur de
   l'ordinateur. Ils ne s'ouvrent que sur l'ordinateur : le téléphone ne peut pas les changer.
 - **État du serveur…** dit si Notosaurus est en marche, ses adresses (sur le téléphone et sur
@@ -23,6 +25,8 @@ avec lui, et écrit les cartes directement dans le profil ouvert.
 - **Journal du serveur** montre ce que Notosaurus a fait dernièrement. C'est la première chose à
   regarder quand quelque chose ne va pas (voir la [FAQ](../faq/)).
 - **Aide** ouvre cette documentation, dans la langue d'Anki.
+- **Soutenir Notosaurus…** ouvre sa page [Ko-fi](https://ko-fi.com/notosaurus), pour faire un
+  don si tu l'apprécies. Notosaurus reste gratuit.
 
 ![Le QR code pour ouvrir Notosaurus sur le téléphone](../../../assets/screenshots/fr/anki-phone.png)
 

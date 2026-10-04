@@ -85,14 +85,23 @@ La consigne **Mots en images** met au recto une image de chaque mot, dessinée p
 d'images : de moins d'un centime à quelques centimes par image. Les images sont dessinées par
 le service d'IA des cartes quand il sait dessiner (Gemini, OpenAI, OpenRouter), sinon par un
 autre choisi dans **Réglages → Images des cartes** (Claude et les modèles locaux ne dessinent
-pas). Cette section choisit aussi le modèle d'images, ou **Pas d'images**.
+pas). Cette section choisit aussi le modèle d'images, ou **Pas d'images** :
+
+- **Conseillés, d'après nos essais** liste les modèles d'images que nous conseillons pour le
+  service, avec le coût d'une image ; celui qui a une ⭐ est le défaut. Nous avons comparé
+  leurs dessins à l'œil : avec OpenAI, GPT Image 2 (environ 0,6 centime de dollar par image) ;
+  avec Gemini ou OpenRouter, Gemini 3.1 Flash-Lite Image (environ 3 centimes).
+- Le champ propose aussi **tous les modèles d'images du service**, nouveaux compris : tape
+  pour les filtrer.
+- **🖼️ Tester : dessiner une girafe** dessine une vraie image avec le service et le modèle
+  choisis, et la montre comme sur une carte, avec la durée et le coût.
 
 ![Des cartes avec des images](../../../assets/screenshots/fr/pictures.png)
 
 Le bouton **🖼️** d'une carte ouvre son panneau **Image** :
 
 - **Ce qu'il faut dessiner (en anglais)** : change la description, puis **🎨 Refaire**
-  (environ 3 à 7 centimes de dollar par dessin) ;
+  (de moins d'un centime à quelques centimes de dollar par dessin, selon le modèle) ;
 - **📷 Ma photo** : mets ta propre photo à la place, gratuitement ;
 - **✕ Pas d'image** : retire-la ;
 - **Au verso (avec la réponse)** : quand l'image donne la réponse.

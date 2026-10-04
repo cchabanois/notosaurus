@@ -94,6 +94,11 @@ Yes, with one Anki profile each: see [Several children](../several-children/).
 Notosaurus is free. The AI service costs from a fraction of a cent to a few cents per lesson:
 see [AI services and costs](../ai-services/).
 
+**How can I support Notosaurus?**
+If Notosaurus helps you, you can make a donation on [Ko-fi](https://ko-fi.com/notosaurus):
+**☕ Support Notosaurus** at the bottom of the page and of the settings, or **Tools →
+Notosaurus → Support Notosaurus…** in Anki. Notosaurus stays free, with no ads.
+
 **How is it updated?**
 See [What's new](../whats-new/#updating-notosaurus).
 

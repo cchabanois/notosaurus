@@ -81,14 +81,23 @@ The **Words in pictures** instructions put a picture of each word on the front, 
 image model: from less than a cent to a few cents per picture. Pictures are drawn by the AI
 service of the cards when it can draw (Gemini, OpenAI, OpenRouter), otherwise by another one
 chosen in **Settings → Pictures on cards** (Claude and local models can't draw). That section
-also chooses the image model, or **No pictures**.
+also chooses the image model, or **No pictures**:
+
+- **Recommended, from our tests** lists the image models we advise for the service, with what
+  a picture costs; the ⭐ one is the default. We compared their drawings by eye: with OpenAI,
+  GPT Image 2 (about 0.6 US cent a picture); with Gemini or OpenRouter, Gemini 3.1 Flash-Lite
+  Image (about 3 US cents).
+- The field also offers **every image model the service has**, new ones included: type to
+  filter them.
+- **🖼️ Test: draw a giraffe** draws one real picture with the chosen service and model, and
+  shows it as a card would, with the time and the cost.
 
 ![Cards with pictures](../../assets/screenshots/en/pictures.png)
 
 The **🖼️** button of a card opens its **Picture** panel:
 
-- **What to draw (in English)**: change the description, then **🎨 Draw again** (about 3 to 7
-  US cents a drawing);
+- **What to draw (in English)**: change the description, then **🎨 Draw again** (from under a
+  cent to a few US cents a drawing, depending on the model);
 - **📷 My photo**: put your own photo instead, for free;
 - **✕ No picture**: remove it;
 - **On the back (with the answer)**: when the picture gives the answer away.
