@@ -62,6 +62,7 @@ export default defineConfig({
 						{ slug: 'voices' },
 						{ slug: 'card-types' },
 						{ slug: 'send-to-anki' },
+						{ slug: 'in-anki' },
 					],
 				},
 				{
