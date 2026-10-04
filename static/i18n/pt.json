@@ -338,7 +338,7 @@
         "description": "Ótima leitura, inclusive de letra manuscrita. Pago, alguns centavos por lição."
       },
       "openai": {
-        "name": "OpenAI (GPT)",
+        "name": "GPT (OpenAI)",
         "description": "Modelos GPT, com uma chave da OpenAI. Pago, alguns centavos por lição."
       },
       "openrouter": {

@@ -111,6 +111,7 @@ Each pull request adds a line under **Unreleased**. See [Releasing](CONTRIBUTING
 
 ### Fixed
 
+- Settings: the OpenAI service is named "GPT (OpenAI)", like "Gemini (Google)" and "Claude (Anthropic)".
 - The AI only sees the card fields it fills (never the picture's file or the card's id, the fun facts and helps only when asked): one more field had made Claude refuse every generation ("Schema is too complex").
 - With Gemini's default model (gemini-3.8-flash), the light AI calls (figures) failed: it refuses the "minimal" thinking level. They now ask for "low" from a model that refuses "minimal", learnt at its first refusal.
 - A lesson sent directly then imported as a .apkg (or into a profile synced with it) no longer has each card twice, nor a second note type ("…(audio)+"): through the add-on, a direct send now gives the note types and notes the .apkg's ids. With AnkiConnect, which can't take them, the documentation says to use one way per profile.

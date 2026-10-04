@@ -338,7 +338,7 @@
         "description": "Very good reading, handwriting included. Paid, a few cents per lesson."
       },
       "openai": {
-        "name": "OpenAI (GPT)",
+        "name": "GPT (OpenAI)",
         "description": "GPT models, with an OpenAI key. Paid, a few cents per lesson."
       },
       "openrouter": {

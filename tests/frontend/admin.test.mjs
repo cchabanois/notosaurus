@@ -99,7 +99,7 @@ test("who draws the card pictures: the same rule as the server", () => {
 
   settings(admin, { picture_service: "openai" });  // chosen on purpose, but its key is missing
   assert.equal(admin.drawingService(), "");
-  assert.equal(admin.pictureSummary(), "OpenAI (GPT) has no key: add it, or choose another service.");
+  assert.equal(admin.pictureSummary(), "GPT (OpenAI) has no key: add it, or choose another service.");
 });
 
 test("the lessons by owner: Anki's profiles in order, the gone ones, then nobody's", () => {
