@@ -97,6 +97,7 @@ Each pull request adds a line under **Unreleased**. See [Releasing](CONTRIBUTING
 
 ### Changed
 
+- 💬 Helps on the back follow their instructions better (5.1 → 6.8/10 in the benchmark, four models): the "info" field no longer takes explanations and anecdotes, which put helps on almost every card; an explanation says why this card's answer is the answer (not the context), never on a date, a name or a place, on about a third of the cards; one more fact is no longer passed off as a way to remember; no false simplification; "tu" in every help, without a stock opener.
 - Default models, from the model benchmark: GPT `gpt-6.1-sol` instead of `gpt-6-luna` (7.8/10, 5/10 on a handwritten page), Claude `claude-sonnet-5-5` instead of `claude-opus-5` (as good on photos, half the price, the fastest), OpenRouter `google/gemini-3.8-flash` instead of the `~google/gemini-flash-latest` alias, OpenAI pictures `gpt-image-2` instead of `gpt-image-1-mini` (much better for 0.6 US¢). OpenRouter's short list of aliases is gone: the recommended models replace it.
 - Documentation: no more Tailscale / HTTPS recipe (never tested): Notosaurus is documented for home use, on the Wi-Fi, with the security warning kept (protected Wi-Fi, never on the Internet).
 - The README shows the Notosaurus logo.

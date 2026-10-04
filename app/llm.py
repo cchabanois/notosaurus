@@ -138,19 +138,28 @@ HELPS = """\
 Helps are asked for, on the back of the cards where they truly help, in the language \
 of the instructions, at the pupil's level (no tool they haven't learnt: an intuitive \
 reason instead), only well-established facts; when unsure, leave them empty:
-- "explanation": one or two short sentences saying why the answer is the answer, \
-when understanding it is what makes it stick (an event's cause, a rule, a formula); \
-never for a plain word, a name or a bare date, nor when the question already says it; \
-no example and no memory trick in it; on half the cards at most, often far fewer;
+- "explanation": one or two short sentences saying why this card's answer is the \
+answer (an event's cause, a rule, a formula), when understanding it is what makes it \
+stick: not the context around it, not what follows. Look at what the question asks: \
+a date, a name, a place, a number or a plain word gets none, nor a card whose question \
+or answer already says why; no example and no memory trick in it. Count them before \
+answering: about a third of the cards, never more than half;
 - "mnemonic": a genuine way to remember the answer, when one exists: the word's real \
 origin or family, a simple striking image, a mnemonic schools really use, written \
 exactly; never one you'd have to make up (a rhyme, a sentence, a pun, "the digits \
-follow each other").
+follow each other", a look-alike word that isn't its origin). One more fact about \
+the answer is not a way to remember it: then nothing. One card in three at most.
+"info" keeps only what the instructions ask for in it (a gender, a plural, an \
+example of use): never an explanation, a context or an anecdote. Those go in \
+"explanation" when they meet its rule, else nowhere. Many cards get no help at all.
 Spelling: only a real rule taught at school (e.g. "ueil" after c and g) or the word's \
 actual origin; many spellings follow no rule: then nothing. Never a made-up rule, \
 never one word's spelling stretched into a rule ("all words with…").
-Speak to the pupil directly and informally (in French "tu"), straight to the point.
-Most cards get one of them or none: one card in three at most has a mnemonic."""
+Never simplify into something false (who alone did what, who did what to whom): \
+a careful sentence rather than a striking wrong one.
+Speak to the pupil: in French, address them as "tu" (tu, ton, te) in every help, \
+never an impersonal textbook sentence; each help in its own words, straight to the \
+point, no stock opener repeated from card to card."""
 
 
 # What the AI sees of a card: what it fills, and only that. Anthropic refuses a response
