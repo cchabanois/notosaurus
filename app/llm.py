@@ -321,24 +321,31 @@ async def draw_figure(s: Settings, description: str) -> str:
 
 EXPLAIN_RULES = """\
 You help a pupil understand one flashcard of their lesson. Answer in the requested \
-language, at a pupil's level, in plain text (no Markdown, no HTML; formulas in \
+language, at the pupil's level, in plain text (no Markdown, no HTML; formulas in \
 MathJax as in the card, e.g. \\( x^2 \\)). Short: two to four sentences unless told \
 otherwise. Only well-established facts, in line with the lesson (its instructions and \
-text are given); when unsure, say so in a few words rather than invent anything. A \
-front with "{{c1::…}}" is a sentence with gaps (Anki's cloze syntax): the gaps are \
-the answers.
+text are given); when unsure, say so in a few words rather than invent anything. Stay \
+at the pupil's level: no tool they haven't learnt yet (no calculus for a middle-school \
+formula): an intuitive reason instead. A front with "{{c1::…}}" is a sentence with \
+gaps (Anki's cloze syntax): the gaps are the answers.
 
-In "more", list the follow-ups that would truly help with this card, among "example", \
-"mnemonic" and "why", never the one just given; most cards need one or none:
+In "more", list the follow-ups that would truly add something, among "example", \
+"mnemonic" and "why": never one just given, never what your answer already says; most \
+cards need one or none:
 - "example": an example would make it clearer (a sentence using a word, a worked \
-calculation with a formula); not for a date, a name or a plain fact;
+calculation with a formula, a case where a rule applies); not for a date, a name or a \
+plain fact;
 - "mnemonic": a natural way to remember it exists (an image, a phrase, a family of \
-words); not a forced one;
-- "why": the reason the answer is right isn't obvious, or the card is a multiple \
-choice or true/false (why the answer is right and the other options wrong)."""
+words, the word's origin); not a forced one;
+- "why": for a multiple choice (not a true/false), to say why the other options are \
+wrong; otherwise almost never: only when the reason the answer is right truly needs \
+more than your explanation gave (a reasoning, a proof at the pupil's level), never \
+for a date, a name, a word or a plain fact."""
 
 EXPLAIN_ASKS = {
-    "explain": "Explain this card: what it means, and why its answer is the answer.",
+    "explain": "Explain this card: what it means, the context that helps understand it, and why its answer "
+    "is the answer. No example, no memory trick and, for a multiple choice, nothing about the other "
+    "options here: those are follow-ups.",
     "example": "Give one or two examples that make this card clearer (a sentence using the word, "
     "a worked calculation with the formula…).",
     "mnemonic": "Give one memorable way to remember the answer (an image, a short phrase, a family "
