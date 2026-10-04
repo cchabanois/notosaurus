@@ -97,6 +97,12 @@ Oui, avec un profil Anki chacun : voir [Plusieurs enfants](../several-children/)
 Notosaurus est gratuit. Le service d'IA coûte d'une fraction de centime à quelques centimes par
 leçon : voir [Services d'IA et coûts](../ai-services/).
 
+**Comment soutenir Notosaurus ?**
+Si Notosaurus te rend service, tu peux faire un don sur
+[Ko-fi](https://ko-fi.com/notosaurus) : **☕ Soutenir Notosaurus** en bas de la page et des
+réglages, ou **Outils → Notosaurus → Soutenir Notosaurus…** dans Anki. Notosaurus reste gratuit,
+sans publicité.
+
 **Comment le mettre à jour ?**
 Voir [Nouveautés](../whats-new/#mettre-à-jour-notosaurus).
 

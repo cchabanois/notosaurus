@@ -447,6 +447,24 @@ def shoot(lang: str) -> None:
         wait_for(page, f"!{APP}.sending", timeout=60)
         shot("sent")
 
+        # The setup assistant: the key "checked" without calling the AI, the phone left waiting
+        page.goto(url + "setup.html")
+        page.wait_for_load_state("networkidle")
+        time.sleep(1)
+        shot("setup-start")
+        page.evaluate(f"""() => {{ {APP}.testResult = {{ ok: true,
+            text: t('admin.access.testOk', {{ model: 'gemini-3.8-flash', seconds: 1.4 }}) }}; }}""")
+        scroll_to(page, ".setup-guide", 140)
+        shot("setup-ai")
+        page.evaluate(f"{APP}.go('phone')")
+        time.sleep(1.5)
+        page.evaluate("window.scrollTo(0, 0)")
+        shot("setup-phone")
+        page.evaluate(f"{APP}.go('done')")
+        time.sleep(0.8)
+        page.evaluate("window.scrollTo(0, 0)")
+        shot("setup-done")
+
         page.goto(url + "admin.html")
         page.wait_for_load_state("networkidle")
         time.sleep(1)

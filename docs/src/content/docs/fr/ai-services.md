@@ -25,6 +25,8 @@ faites restent comme elles sont.
 
 Crée la clé sur le site du service, colle-la dans **Réglages → Accès** et touche
 **🔌 Tester** : Notosaurus vérifie que le modèle lit une image et répond au bon format.
+La première fois, l'[assistant de démarrage](../getting-started/#2-lassistant-de-démarrage)
+fait la même chose en deux étapes.
 
 ![Réglages : la clé d'API et le modèle](../../../assets/screenshots/fr/settings-key.png)
 
@@ -59,14 +61,18 @@ Crée la clé sur le site du service, colle-la dans **Réglages → Accès** et 
 3. Dans **Keys**, crée une clé, puis copie-la.
 
 Une seule clé OpenRouter donne accès à Gemini, Claude, GPT et bien d'autres : pratique pour les
-comparer. Par défaut, Notosaurus utilise le dernier Gemini Flash via OpenRouter.
+comparer. Par défaut, Notosaurus utilise Gemini 3.8 Flash via OpenRouter.
 
 ## Le modèle
 
-Dans **Modèle**, laisse le champ vide pour utiliser le choix de Notosaurus pour ce service, ou
-tape un autre modèle. Avec OpenAI, OpenRouter et les autres services, **📋 Charger les modèles
-du service** ne liste que les modèles qui acceptent les images. Gemini a aussi des **modèles de
-secours**, essayés dans l'ordre quand le modèle principal est surchargé.
+Sous **Modèle**, **Conseillés, d'après nos essais** liste les modèles que nous conseillons pour
+ce service, du meilleur rapport qualité/prix au plus cher, avec le coût d'une leçon. Celui qui a
+une ⭐ est le défaut, utilisé quand le champ est vide. Touche-en un pour le choisir, ou tape
+n'importe quel autre modèle du service : le champ les propose. Avec les services compatibles
+OpenAI, **📋 Charger les modèles du service** ne liste que les modèles qui acceptent les images.
+Gemini a aussi des **modèles de secours**, essayés dans l'ordre quand le modèle principal est
+surchargé ou pas inclus dans l'offre de la clé (une clé gratuite n'a pas le dernier modèle :
+elle prend alors Gemini 3.5 Flash).
 
 ## Quel modèle ?
 
@@ -78,9 +84,9 @@ main ; chaque modèle est passé deux fois. Les coûts sont en centimes de dolla
 
 | Modèle | Note | Sur photos | Par leçon | Durée | En bref |
 |---|---|---|---|---|---|
-| **Gemini Flash** | 8,5 | 8,7 | 1,3 ¢ | 18 s | **Notre conseil** : presque au niveau des meilleurs pour une fraction du prix, et le plus régulier d'un passage à l'autre. Le choix par défaut de Notosaurus. |
-| **Claude Sonnet** | 8,4 | 8,8 | 3,2 ¢ | 14 s | Parmi les meilleurs sur les photos, et le plus rapide. |
-| **GPT Sol** | 8,4 | 8,5 | 2,1 ¢ | 27 s | Une bonne affaire du côté d'OpenAI. |
+| **Gemini Flash** | 8,5 | 8,7 | 1,3 ¢ | 18 s | **Notre conseil** : presque au niveau des meilleurs pour une fraction du prix, et le plus régulier d'un passage à l'autre. Le défaut avec Gemini et OpenRouter. |
+| **Claude Sonnet** | 8,4 | 8,8 | 3,2 ¢ | 14 s | Parmi les meilleurs sur les photos, et le plus rapide. Le défaut avec Claude. |
+| **GPT Sol** | 8,4 | 8,5 | 2,1 ¢ | 27 s | Une bonne affaire du côté d'OpenAI. Le défaut avec GPT. |
 | **Claude Opus** | 8,5 | 8,8 | 6,5 ¢ | 18 s | Aussi bon que Sonnet sur les photos, pour deux fois le prix. |
 | **GPT Astra** | 8,7 | 8,8 | 10,3 ¢ | 28 s | La meilleure moyenne, mais huit fois le prix de Gemini Flash. |
 | **Gemini Pro** | 8,0 | 8,3 | 5,3 ¢ | 27 s | Derrière Gemini Flash, pour quatre fois le prix. |
@@ -97,14 +103,14 @@ Quel que soit le modèle, vérifie les cartes dans la relecture avant de les env
 meilleurs font quelques erreurs, surtout sur une écriture difficile à lire. Les aides au verso
 (explications et astuces pour retenir) ont été l'épreuve la plus faible pour tous les modèles.
 
-Avec **OpenRouter**, tape le modèle dans **Modèle**, par exemple `~google/gemini-flash-latest`,
-`~anthropic/claude-sonnet-latest` ou `~openai/gpt-sol-latest` (`latest` prend toujours la
-version la plus récente). Avec Claude ou OpenAI directement, le champ **Modèle** les propose :
-`claude-sonnet-5`, `claude-opus-5`, `gpt-6-sol`, `gpt-6-astra`…
+Ce sont les modèles de **Conseillés, d'après nos essais** dans les réglages, dans leurs
+versions exactes testées (par exemple `gemini-3.8-flash`, `claude-sonnet-5-5`, `gpt-6.1-sol` ;
+sur OpenRouter `google/gemini-3.8-flash`…). Notosaurus ne conseille pas les alias `~…-latest` :
+une nouvelle version peut lire autrement ou coûter plus cher, elle est donc testée avant d'en
+remplacer une.
 
 :::note[Les limites]
-Un seul élève et une seule classe. Les modèles changent souvent (les `latest` encore plus) : ce
-classement donne une tendance, pas un verdict définitif.
+Un seul élève et une seule classe. Les modèles changent souvent : ce classement donne une tendance, pas un verdict définitif.
 :::
 
 ## Un modèle chez toi
