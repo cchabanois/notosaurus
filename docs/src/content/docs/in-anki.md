@@ -21,6 +21,7 @@ writes the cards straight into the profile that is open.
   configuration, or when something is stuck.
 - **Server log** shows what Notosaurus did lately. It is the first thing to look at when
   something goes wrong (see the [FAQ](../faq/)).
+- **Help** opens this documentation, in Anki's language.
 
 ![The QR code to open Notosaurus on the phone](../../assets/screenshots/en/anki-phone.png)
 

@@ -166,6 +166,8 @@ h2 {
   text-decoration: none;
 }
 .help-link:hover, .help-link:focus-visible { color: var(--primary); border-color: var(--primary); }
+.docs-link { color: var(--muted); font-size: .9rem; text-decoration: none; }
+.docs-link:hover, .docs-link:focus-visible { color: var(--primary); text-decoration: underline; }
 
 .step {
   display: inline-grid;

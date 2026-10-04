@@ -6,6 +6,7 @@
   "common": {
     "close": "Schließen",
     "helpOn": "Hilfe: {topic}",
+    "help": "Hilfe",
     "cancel": "Abbrechen",
     "save": "Speichern",
     "delete": "Löschen",
@@ -613,6 +614,7 @@
     "menuAddress": "Serverstatus …",
     "menuRestart": "Server neu starten",
     "menuLog": "Serverprotokoll",
+    "menuHelp": "Hilfe",
     "startFailed": "Notosaurus konnte nicht starten:",
     "stoppedAtStart": "Der Notosaurus-Server hat beim Starten angehalten.",
     "ready": "Notosaurus ist bereit: {url}",
@@ -628,6 +630,7 @@
     "menuSettings": "Einstellungen",
     "phoneTitle": "Notosaurus auf dem Handy öffnen",
     "phoneSteps": "1. Verbinde das Handy mit demselben WLAN wie diesen Computer.\n2. Scanne diesen QR-Code mit der Kamera des Handys.\n3. Im Browser: Menü → „Zum Startbildschirm hinzufügen“, um es wie eine App zu nutzen.\n\nDie Einstellungen (KI-Schlüssel …) öffnest du hier, auf dem Computer: Extras → Notosaurus → Einstellungen.",
+    "phoneHelp": "Hilfe: {url}",
     "localOnly": "⚠ Der Server hört nur auf diesem Computer („host“ auf 127.0.0.1): Setze „0.0.0.0“ in der Konfiguration der Erweiterung, um ihn vom Handy aus zu erreichen.",
     "notRunningYet": "Notosaurus startet: Versuch es in ein paar Sekunden noch einmal.",
     "installConfirm": "Bevor Notosaurus starten kann, muss es seine Komponenten installieren:\n\n• uv (von GitHub), Python 3.13 und seine Python-Bibliotheken (von PyPI): etwa 300 MB auf der Festplatte;\n• nur im Anki-Ordner (Anki2/notosaurus-runtime): Am restlichen Computer ändert sich nichts, und mit der Erweiterung werden sie wieder entfernt.\n\nDas dauert ein bis zwei Minuten, beim ersten Mal und nach manchen Updates. Jetzt installieren?",

@@ -79,3 +79,29 @@ def test_revision_summary_in_page_language(client):
     body = {"deck": "D", "cards": [{"front": "a", "back": "b"}], "instruction": "remove the last card"}
     res = client.post(f"/api/lessons/{lesson['id']}/revise", json=body, headers={"X-Notosaurus-Lang": "fr"})
     assert res.json()["summary"] == "Dernière carte supprimée (démo)."
+
+
+def test_help_links_go_to_pages_that_exist():
+    """The add-on and the pages link to the documentation in the same language folders,
+    and those folders are the documentation site's own locales."""
+    import json
+    import re
+    from pathlib import Path
+
+    addon = Path("anki_addon/__init__.py").read_text(encoding="utf-8")
+    page = Path("static/i18n.js").read_text(encoding="utf-8")
+    site = Path("docs/astro.config.mjs").read_text(encoding="utf-8")
+    docs = re.search(r'DOCS = "([^"]+)"', addon)[1]
+    assert f'const DOCS = "{docs}";' in page
+    folders = set(re.findall(r"^\t{4}'?([\w-]+)'?: \{ label", site, re.M)) - {"root"}
+    addon_langs = json.loads(re.search(r"DOCS_LANGS = (\{[^}]+\})", addon)[1])
+    assert {f.strip("/") for f in addon_langs.values()} == folders  # every translation reached
+    page_langs = dict(re.findall(r"(\w+): \"([\w-]*/?)\"", re.search(r"const DOCS_LANGS = \{([^}]+)\}", page)[1]))
+    assert page_langs == {"en": "", "pt": "pt-br/"}  # the others: their own code, as the add-on
+    assert all(addon_langs.get(code, f"{code}/") == folder for code, folder in page_langs.items() if code != "en")
+    # Every page linked from the app exists in the documentation
+    linked = set(re.findall(r"\$docs\('([\w-]*)'\)", Path("static/index.html").read_text(encoding="utf-8")))
+    linked |= set(re.findall(r"\$docs\('([\w-]*)'\)", Path("static/admin.html").read_text(encoding="utf-8")))
+    linked |= set(re.findall(r'docs_url\("([\w-]+)"\)', addon))
+    pages = {p.stem for p in Path("docs/src/content/docs").glob("*.md*")}
+    assert linked - {""} <= pages, linked - pages

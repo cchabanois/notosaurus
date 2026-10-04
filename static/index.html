@@ -67,7 +67,7 @@
   <!-- A device that never scanned the QR code: how to get in -->
   <main x-cloak x-show="unpaired">
     <section class="panel pairing">
-      <h2>📱 <span x-text="$t('app.pairing.title')"></span></h2>
+      <h2>📱 <span x-text="$t('app.pairing.title')"></span> <a class="help-link" :href="$docs('phone')" target="_blank" rel="noopener" :aria-label="$t('common.helpOn', { topic: $t('app.pairing.title') })" :title="$t('common.helpOn', { topic: $t('app.pairing.title') })">?</a></h2>
       <p x-text="$t('errors.device.not_paired')"></p>
     </section>
   </main>
@@ -396,6 +396,7 @@
 
     <!-- Language: automatic (Anki's or the browser's) or picked here, for this device -->
     <footer class="page-footer">
+      <a class="docs-link" :href="$docs('')" target="_blank" rel="noopener">📖 <span x-text="$t('common.help')"></span></a>
       <label class="lang-select">
         <span aria-hidden="true">🌐</span>
         <select :aria-label="$t('common.language')" :value="$store.i18n.choice"
@@ -443,7 +444,7 @@
          @keydown.escape.window="lessonsOpen = false" :aria-label="$t('app.lessons.title')">
     <div class="sheet-handle"></div>
     <div class="sheet-head">
-      <h2 x-text="$t('app.lessons.title')"></h2>
+      <h2><span x-text="$t('app.lessons.title')"></span> <a class="help-link" :href="$docs('lessons')" target="_blank" rel="noopener" :aria-label="$t('common.helpOn', { topic: $t('app.lessons.title') })" :title="$t('common.helpOn', { topic: $t('app.lessons.title') })">?</a></h2>
       <button class="icon-btn" @click="lessonsOpen = false" :aria-label="$t('common.close')">✕</button>
     </div>
     <div class="profile-filter" x-show="anki.profile">
@@ -494,7 +495,7 @@
          @keydown.escape.window="pdf.open && donePdfPicker(false)" :aria-label="$t('app.pdf.title')">
     <div class="sheet-handle"></div>
     <div class="sheet-head">
-      <h2 x-text="$t('app.pdf.title')"></h2>
+      <h2><span x-text="$t('app.pdf.title')"></span> <a class="help-link" :href="$docs('photos')" target="_blank" rel="noopener" :aria-label="$t('common.helpOn', { topic: $t('app.pdf.title') })" :title="$t('common.helpOn', { topic: $t('app.pdf.title') })">?</a></h2>
       <button class="icon-btn" @click="donePdfPicker(false)" :aria-label="$t('common.close')">✕</button>
     </div>
     <p class="hint" x-text="$t('app.pdf.hint', { name: pdf.name, count: pdf.pages.length, free: pdf.free })"></p>
@@ -520,7 +521,7 @@
          @keydown.escape.window="picker.open = false" :aria-label="$t('app.picker.label')">
     <div class="sheet-handle"></div>
     <div class="sheet-head">
-      <h2><span x-text="$t('app.picker.title')"></span> <small class="muted" x-text="'(' + prompts.length + ')'"></small></h2>
+      <h2><span x-text="$t('app.picker.title')"></span> <small class="muted" x-text="'(' + prompts.length + ')'"></small> <a class="help-link" :href="$docs('instructions')" target="_blank" rel="noopener" :aria-label="$t('common.helpOn', { topic: $t('app.picker.title') })" :title="$t('common.helpOn', { topic: $t('app.picker.title') })">?</a></h2>
       <button class="icon-btn" @click="picker.open = false" :aria-label="$t('common.close')">✕</button>
     </div>
     <div class="picker-tools">
@@ -551,7 +552,7 @@
          @keydown.escape.window="editor.open = false" :aria-label="$t('app.prompt.title')">
     <div class="sheet-handle"></div>
     <div class="sheet-head">
-      <h2 x-text="editor.builtin ? $t('app.editor.builtin') : editor.id ? $t('app.editor.edit') : $t('app.editor.new')"></h2>
+      <h2><span x-text="editor.builtin ? $t('app.editor.builtin') : editor.id ? $t('app.editor.edit') : $t('app.editor.new')"></span> <a class="help-link" :href="$docs('instructions')" target="_blank" rel="noopener" :aria-label="$t('common.helpOn', { topic: $t('app.picker.title') })" :title="$t('common.helpOn', { topic: $t('app.picker.title') })">?</a></h2>
       <button class="icon-btn" @click="editor.open = false" :aria-label="$t('common.close')">✕</button>
     </div>
     <form class="sheet-body" @submit.prevent="editor.builtin ? duplicatePrompt(editor) : saveEditor()">

@@ -516,3 +516,14 @@ def test_helps_switch_default_from_the_settings(page):
     page.locator(".switch.helps").click()  # changed on this device: kept, whatever the default
     page.reload()
     sync_api.expect(switch).not_to_be_checked()
+
+
+def test_help_links_in_the_page_language(page):
+    docs = "https://cchabanois.github.io/notosaurus/"
+    page.goto("/")
+    sync_api.expect(page.locator(".docs-link")).to_have_attribute("href", docs + "fr/")  # the footer
+    generate_free(page, FRONT_PROMPT)
+    page.locator(".chip-btn").first.click()  # the lessons sheet: its own page
+    sync_api.expect(page.get_by_role("link", name="Aide : Mes leçons")).to_have_attribute("href", docs + "fr/lessons/")
+    page.locator(".lang-select select").select_option("pt")
+    sync_api.expect(page.locator(".docs-link")).to_have_attribute("href", docs + "pt-br/")

@@ -6,6 +6,7 @@
   "common": {
     "close": "Chiudi",
     "helpOn": "Aiuto: {topic}",
+    "help": "Aiuto",
     "cancel": "Annulla",
     "save": "Salva",
     "delete": "Elimina",
@@ -613,6 +614,7 @@
     "menuAddress": "Stato del server…",
     "menuRestart": "Riavvia il server",
     "menuLog": "Registro del server",
+    "menuHelp": "Aiuto",
     "startFailed": "Notosaurus non è riuscito ad avviarsi:",
     "stoppedAtStart": "Il server Notosaurus si è fermato durante l'avvio.",
     "ready": "Notosaurus è pronto: {url}",
@@ -628,6 +630,7 @@
     "menuSettings": "Impostazioni",
     "phoneTitle": "Apri Notosaurus sul telefono",
     "phoneSteps": "1. Collega il telefono allo stesso Wi-Fi di questo computer.\n2. Scansiona questo codice QR con la fotocamera del telefono.\n3. Nel browser: menu → “Aggiungi a schermata Home”, per usarlo come un'app.\n\nLe impostazioni (chiavi dell'IA…) si aprono qui, sul computer: Strumenti → Notosaurus → Impostazioni.",
+    "phoneHelp": "Aiuto: {url}",
     "localOnly": "⚠ Il server ascolta solo su questo computer (“host” su 127.0.0.1): imposta “0.0.0.0” nella configurazione dell'add-on per raggiungerlo dal telefono.",
     "notRunningYet": "Notosaurus si sta avviando: riprova tra qualche secondo.",
     "installConfirm": "Prima di avviarsi, Notosaurus deve installare i suoi componenti:\n\n• uv (da GitHub), Python 3.13 e le sue librerie Python (da PyPI): circa 300 MB su disco;\n• solo nella cartella di Anki (Anki2/notosaurus-runtime): nel resto del computer non cambia nulla, e togliendo l'add-on vengono eliminati.\n\nCi vogliono uno o due minuti, la prima volta e dopo alcuni aggiornamenti. Installare ora?",

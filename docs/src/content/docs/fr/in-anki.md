@@ -22,6 +22,7 @@ avec lui, et écrit les cartes directement dans le profil ouvert.
   du greffon, ou quand quelque chose est bloqué.
 - **Journal du serveur** montre ce que Notosaurus a fait dernièrement. C'est la première chose à
   regarder quand quelque chose ne va pas (voir la [FAQ](../faq/)).
+- **Aide** ouvre cette documentation, dans la langue d'Anki.
 
 ![Le QR code pour ouvrir Notosaurus sur le téléphone](../../../assets/screenshots/fr/anki-phone.png)
 

@@ -9,6 +9,7 @@ Each pull request adds a line under **Unreleased**. See [Releasing](CONTRIBUTING
 
 ### Added
 
+- More ways to the documentation: Tools → Notosaurus → Help in Anki (in Anki's language), a help link in the "Open on the phone" window, "📖 Help" at the bottom of the app and the settings, and a **?** on the lessons, the instructions picker and editor, the PDF pages, the device-not-allowed page and the remaining settings sections (access, model, pictures, voices, lessons, password).
 - 💬 Helps on the back: a switch under the instructions (its default set in the settings, each device keeping its own choice) asks the AI for an explanation and a way to remember, only on the cards where they truly help (no explanation for a plain word, never a made-up mnemonic or spelling rule). Two new fields in every note type, "Explanation" and "Mnemonic", shown on the back under the info, editable in the review.
 - 💬 Explain a card, in the review: the AI says what it means and why its answer is the answer, at a pupil's level, in the page's language. It then offers only the follow-ups that would help with that card: an example, a way to remember it, why it's right (why the other options are wrong, for a multiple choice). Kept in the card's info with a tap; each explanation is a short AI call, counted with the lesson.
 - Documentation: “Notosaurus in Anki”, in English and French: the Tools → Notosaurus menu, the add-on's configuration, the decks, and what each card type looks like when reviewed in Anki (screenshots taken in a throwaway Anki on a virtual display).
