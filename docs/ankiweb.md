@@ -29,7 +29,11 @@ alt="Notosaurus demo" width="280"></a><br>
 true or false, formulas.</li>
 <li>🌱 <b>Diagrams</b>: labels hidden automatically, one card per label.</li>
 <li>📐 <b>Exact figures</b> for geometry, formulas in MathJax.</li>
-<li>💬 <b>Fix the cards in plain words</b>: “add the plural on the back”, “you forgot the
+<li>🖼️ <b>Pictures on the cards</b> (“front: the picture of the word”), and spelling
+dictations: hear the word, type it.</li>
+<li>💡 <b>Helps on the back</b> where they help: why the answer is right, a genuine way to
+remember it. And 💬 ask for an explanation of any card while reviewing.</li>
+<li>✏️ <b>Fix the cards in plain words</b>: “add the plural on the back”, “you forgot the
 colours”.</li>
 <li>🔊 <b>Natural audio</b> in the deck, plays everywhere, even offline.</li>
 <li>👨‍👩‍👧 <b>Made for families</b>: one Anki profile per child, each with their own lessons.</li>
@@ -41,11 +45,11 @@ AnkiMobile.</li>
 <ol>
 <li>Install the add-on and restart Anki. On first start, Notosaurus asks before downloading its
 components (about 300 MB, once).</li>
-<li><i>Tools → Notosaurus → Settings</i>: choose an AI service and paste its key (Gemini has a
-free tier; Claude reads handwriting best). A lesson costs from a fraction of a cent to a few
-cents.</li>
-<li><i>Tools → Notosaurus → Open on the phone…</i>: scan the QR code with the phone, on the same
-Wi-Fi.</li>
+<li>The setup assistant opens in your browser (later: <i>Tools → Notosaurus → Getting
+started</i>): choose an AI service and paste its key. Recommended: Gemini, about 1 US¢ per
+lesson; Claude and GPT read notebooks well too, for a few cents. The recommended models come
+from our tests on real notebook pages.</li>
+<li>Scan the QR code with the phone, on the same Wi-Fi, and take a photo of a lesson.</li>
 </ol>
 <p><a href="https://cchabanois.github.io/notosaurus/getting-started/">Full guide</a> ·
 <a href="https://cchabanois.github.io/notosaurus/fr/">Documentation en français</a></p>
@@ -57,6 +61,8 @@ devices that scanned its QR code. Never expose it to the Internet.</li>
 <li>The photos are sent to the AI service you choose, and to no one else. The card backs go to
 Microsoft's text-to-speech for the audio. No statistics, no tracking.
 <a href="https://cchabanois.github.io/notosaurus/privacy/">Privacy</a></li>
+<li>A free AI key works for trying (an older model, low limits), but its service may use what
+you send to improve its products: for your children's notebooks, turn on its billing.</li>
 <li>Free and open source (AGPL-3.0):
 <a href="https://github.com/cchabanois/notosaurus">github.com/cchabanois/notosaurus</a>.</li>
 <li>Like it? ☕ <a href="https://ko-fi.com/notosaurus">Support Notosaurus on Ko-fi</a>.</li>
