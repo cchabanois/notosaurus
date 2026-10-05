@@ -9,7 +9,12 @@ this repository.
 
 **Support page**: `https://github.com/cchabanois/notosaurus/issues`
 
-**Description** (between the lines):
+**Tags** (80 characters at most): `ai photo pdf flashcards vocabulary language school kids gemini gpt claude cloze`
+
+**Supported Anki versions** (one branch): min `25.02` (the oldest the CI tests), max the latest tested,
+without a `-` (a `-` would block newer Ankis from downloading it).
+
+**Description**: copy only the lines *between* ```` ```html ```` and ```` ``` ````.
 
 ---
 
