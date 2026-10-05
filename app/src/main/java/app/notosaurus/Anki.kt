@@ -8,6 +8,14 @@ import com.ichi2.anki.api.AddContentApi
 /** What was done with the cards: added, already in AnkiDroid, left out by the prototype. */
 data class Sent(val added: Int, val duplicates: Int, val skipped: Int, val deck: String)
 
+/** Where the cards go (AnkiDroid; a fake in the tests). */
+interface AnkiTarget {
+    fun installed(): Boolean
+    fun permitted(): Boolean
+    fun deckNames(): List<String>
+    fun send(deck: Deck): Sent
+}
+
 /**
  * Cards into AnkiDroid, through its API (the "Instant-Add" content provider): our
  * note type, the lesson's deck and sub-decks, the notes. Needs AnkiDroid installed
@@ -16,18 +24,18 @@ data class Sent(val added: Int, val duplicates: Int, val skipped: Int, val deck:
  * Prototype: text cards only (no diagram masks, pictures or gaps: they need the
  * Notosaurus note types of the PC app).
  */
-class Anki(private val context: Context) {
+class Anki(private val context: Context) : AnkiTarget {
     private val api = AddContentApi(context)
 
-    fun installed(): Boolean = AddContentApi.getAnkiDroidPackageName(context) != null
+    override fun installed(): Boolean = AddContentApi.getAnkiDroidPackageName(context) != null
 
-    fun permitted(): Boolean =
+    override fun permitted(): Boolean =
         ContextCompat.checkSelfPermission(context, PERMISSION) == PackageManager.PERMISSION_GRANTED
 
     /** The decks in AnkiDroid ("" when it can't tell). */
-    fun deckNames(): List<String> = if (installed() && permitted()) api.deckList?.values?.toList().orEmpty() else emptyList()
+    override fun deckNames(): List<String> = if (installed() && permitted()) api.deckList?.values?.toList().orEmpty() else emptyList()
 
-    fun send(deck: Deck): Sent {
+    override fun send(deck: Deck): Sent {
         val model = model() ?: error("AnkiDroid refused the note type")
         val cards = deck.cards.filter { it.front.isNotBlank() && !it.unsupported() }
         // Already there: same front in our note type (the API's duplicate check: first field)
