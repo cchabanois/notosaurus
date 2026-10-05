@@ -1,205 +1,117 @@
 package app.notosaurus
 
+import android.annotation.SuppressLint
+import android.app.Activity
 import android.content.Context
-import android.graphics.Bitmap
-import android.graphics.BitmapFactory
+import android.content.Intent
 import android.net.Uri
 import android.os.Bundle
+import android.provider.MediaStore
+import android.webkit.CookieManager
+import android.webkit.ValueCallback
+import android.webkit.WebChromeClient
+import android.webkit.WebView
+import android.widget.FrameLayout
 import androidx.activity.ComponentActivity
-import androidx.activity.compose.rememberLauncherForActivityResult
-import androidx.activity.compose.setContent
+import androidx.activity.OnBackPressedCallback
 import androidx.activity.enableEdgeToEdge
-import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.compose.foundation.Image
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.safeDrawingPadding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.Button
-import androidx.compose.material3.Card
-import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.HorizontalDivider
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
-import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateListOf
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.runtime.setValue
-import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.asImageBitmap
-import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.unit.dp
 import androidx.core.content.FileProvider
-import androidx.core.content.edit
+import androidx.core.view.ViewCompat
+import androidx.core.view.WindowInsetsCompat
+import androidx.core.view.updatePadding
+import androidx.lifecycle.lifecycleScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.io.File
 
+/**
+ * Notosaurus's page (the same as on the computer) in a WebView, its /api answered
+ * by LocalServer on the phone.
+ */
 class MainActivity : ComponentActivity() {
+    private lateinit var web: WebView
+    private var chosen: ValueCallback<Array<Uri>>? = null
+    private var photo: Uri? = null
+
+    // The page's <input type="file">: the camera ("capture"), or photos and PDFs
+    private val chooser = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
+        val data = result.data
+        val uris = when {
+            result.resultCode != Activity.RESULT_OK -> null
+            data?.clipData != null -> Array(data.clipData!!.itemCount) { data.clipData!!.getItemAt(it).uri }
+            data?.data != null -> arrayOf(data.data!!)
+            else -> photo?.let { arrayOf(it) } // the camera wrote to our file
+        }
+        chosen?.onReceiveValue(uris)
+        chosen = null
+    }
+
+    private val ankiPermission = registerForActivityResult(ActivityResultContracts.RequestPermission()) {}
+
+    @SuppressLint("SetJavaScriptEnabled")
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
-        setContent { MaterialTheme { Prototype() } }
-    }
-}
+        WebView.setWebContentsDebuggingEnabled(true) // prototype: chrome://inspect
+        web = WebView(this).apply {
+            settings.javaScriptEnabled = true
+            settings.domStorageEnabled = true // the page keeps a few choices in localStorage
+            webChromeClient = Chooser()
+        }
+        // The page below the status bar, above the navigation bar and the keyboard (a
+        // WebView ignores its own padding: its frame takes it)
+        val frame = FrameLayout(this).apply { addView(web) }
+        ViewCompat.setOnApplyWindowInsetsListener(frame) { view, insets ->
+            val bars = insets.getInsets(WindowInsetsCompat.Type.systemBars() or WindowInsetsCompat.Type.ime())
+            view.updatePadding(top = bars.top, bottom = bars.bottom)
+            WindowInsetsCompat.CONSUMED
+        }
+        setContentView(frame)
+        onBackPressedDispatcher.addCallback(this, object : OnBackPressedCallback(true) {
+            override fun handleOnBackPressed() = if (web.canGoBack()) web.goBack() else finish()
+        })
 
-private class Photo(val jpeg: ByteArray, val thumbnail: Bitmap)
+        val anki = Anki(this)
+        if (anki.installed() && !anki.permitted()) ankiPermission.launch(Anki.PERMISSION)
 
-/**
- * The prototype's one screen: the relay and the licence, the photos, the prompt,
- * the cards, then AnkiDroid.
- */
-@Composable
-private fun Prototype() {
-    val context = LocalContext.current
-    val prefs = remember { context.getSharedPreferences("settings", Context.MODE_PRIVATE) }
-    val scope = rememberCoroutineScope()
-    val anki = remember { Anki(context) }
-
-    var relayUrl by remember { mutableStateOf(prefs.getString("relay", "http://192.168.1.10:8080")!!) }
-    var key by remember { mutableStateOf(prefs.getString("key", "nts_dev")!!) }
-    var prompt by remember { mutableStateOf(context.getString(R.string.default_prompt)) }
-    val photos = remember { mutableStateListOf<Photo>() }
-    var busy by remember { mutableStateOf(false) }
-    var status by remember { mutableStateOf("") }
-    var result by remember { mutableStateOf<ExtractResponse?>(null) }
-
-    fun relay(): Relay {
-        prefs.edit { putString("relay", relayUrl.trim()).putString("key", key.trim()) }
-        return Relay(relayUrl.trim(), key.trim())
-    }
-
-    fun work(block: suspend () -> String) {
-        busy = true
-        status = ""
-        scope.launch {
-            status = try {
-                block()
-            } catch (e: RelayException) {
-                context.getString(R.string.relay_error, e.message)
-            } catch (e: Exception) {
-                context.getString(R.string.error, e.toString())
-            }
-            busy = false
+        val prefs = getSharedPreferences("settings", Context.MODE_PRIVATE)
+        val server = LocalServer(applicationContext) {
+            Relay(prefs.getString("relay", DEFAULT_RELAY)!!, prefs.getString("key", DEFAULT_KEY)!!)
+        }
+        lifecycleScope.launch {
+            val port = withContext(Dispatchers.IO) { server.start() }
+            val origin = "http://127.0.0.1:$port"
+            CookieManager.getInstance().setCookie(origin, "${LocalServer.COOKIE}=${server.token}; path=/")
+            web.loadUrl("$origin/")
         }
     }
 
-    fun addPhoto(uri: Uri) = work {
-        val jpeg = withContext(Dispatchers.Default) { Photos.prepare(context, uri) }
-        val options = BitmapFactory.Options().apply { inSampleSize = 8 }
-        photos += Photo(jpeg, BitmapFactory.decodeByteArray(jpeg, 0, jpeg.size, options))
-        context.getString(R.string.photo_added, jpeg.size / 1024)
-    }
-
-    var pending by remember { mutableStateOf<Uri?>(null) }
-    val camera = rememberLauncherForActivityResult(ActivityResultContracts.TakePicture()) { taken ->
-        pending?.let { if (taken) addPhoto(it) }
-    }
-    val picker = rememberLauncherForActivityResult(ActivityResultContracts.PickMultipleVisualMedia(10)) { uris ->
-        uris.forEach { addPhoto(it) }
-    }
-
-    fun send() = work {
-        val sent = withContext(Dispatchers.IO) { anki.send(result!!.deck) }
-        context.getString(R.string.sent, sent.added, sent.deck, sent.duplicates, sent.skipped)
-    }
-
-    val permission = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { granted ->
-        if (granted) send() else status = context.getString(R.string.anki_permission_refused)
-    }
-
-    Column(
-        Modifier.fillMaxSize().safeDrawingPadding().verticalScroll(rememberScrollState()).padding(16.dp),
-        verticalArrangement = Arrangement.spacedBy(12.dp),
-    ) {
-        Text(stringResource(R.string.app_name), style = MaterialTheme.typography.headlineMedium)
-
-        OutlinedTextField(
-            relayUrl, { relayUrl = it }, Modifier.fillMaxWidth(), label = { Text(stringResource(R.string.relay)) },
-        )
-        OutlinedTextField(
-            key, { key = it }, Modifier.fillMaxWidth(), label = { Text(stringResource(R.string.licence)) },
-        )
-        OutlinedButton(enabled = !busy, onClick = {
-            work {
-                val account = relay().account()
-                context.getString(R.string.account, account.plan, account.creditsLeft, account.dailyLeft)
+    private inner class Chooser : WebChromeClient() {
+        override fun onShowFileChooser(
+            view: WebView,
+            callback: ValueCallback<Array<Uri>>,
+            params: FileChooserParams,
+        ): Boolean {
+            chosen?.onReceiveValue(null)
+            chosen = callback
+            photo = null
+            val intent = if (params.isCaptureEnabled) {
+                val file = File(cacheDir, "photos/photo-${System.currentTimeMillis()}.jpg").apply { parentFile!!.mkdirs() }
+                photo = FileProvider.getUriForFile(this@MainActivity, "$packageName.photos", file)
+                Intent(MediaStore.ACTION_IMAGE_CAPTURE).putExtra(MediaStore.EXTRA_OUTPUT, photo)
+            } else {
+                params.createIntent().putExtra(Intent.EXTRA_ALLOW_MULTIPLE, params.mode == FileChooserParams.MODE_OPEN_MULTIPLE)
             }
-        }) { Text(stringResource(R.string.test)) }
-
-        HorizontalDivider()
-
-        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            Button(enabled = !busy && photos.size < 10, onClick = {
-                val file = File(context.cacheDir, "photos/photo-${System.currentTimeMillis()}.jpg")
-                file.parentFile!!.mkdirs()
-                val uri = FileProvider.getUriForFile(context, "${context.packageName}.photos", file)
-                pending = uri
-                camera.launch(uri)
-            }) { Text(stringResource(R.string.take_photo)) }
-            OutlinedButton(enabled = !busy, onClick = {
-                picker.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly))
-            }) { Text(stringResource(R.string.choose_photos)) }
+            chooser.launch(intent)
+            return true
         }
-        if (photos.isNotEmpty()) {
-            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                photos.forEach { Image(it.thumbnail.asImageBitmap(), null, Modifier.size(72.dp)) }
-            }
-            OutlinedButton(enabled = !busy, onClick = {
-                photos.clear()
-                result = null
-            }) { Text(stringResource(R.string.clear_photos)) }
-        }
+    }
 
-        OutlinedTextField(
-            prompt, { prompt = it }, Modifier.fillMaxWidth(), label = { Text(stringResource(R.string.prompt)) },
-        )
-        Button(enabled = !busy && prompt.isNotBlank(), onClick = {
-            work {
-                val answer = relay().extract(ExtractRequest(prompt = prompt), photos.map { it.jpeg })
-                result = answer
-                context.getString(
-                    R.string.extracted, answer.deck.cards.size, answer.usage.credits, answer.usage.creditsLeft,
-                )
-            }
-        }) { Text(stringResource(R.string.make_cards)) }
-
-        if (busy) CircularProgressIndicator()
-        if (status.isNotEmpty()) Text(status)
-
-        result?.let { answer ->
-            HorizontalDivider()
-            Text(answer.deck.deck, style = MaterialTheme.typography.titleMedium)
-            answer.deck.cards.forEach { card ->
-                Card(Modifier.fillMaxWidth()) {
-                    Column(Modifier.padding(12.dp)) {
-                        Text(card.front, style = MaterialTheme.typography.bodyLarge)
-                        Text(card.back, style = MaterialTheme.typography.bodyMedium)
-                        if (card.info.isNotBlank()) Text(card.info, style = MaterialTheme.typography.bodySmall)
-                    }
-                }
-            }
-            Button(enabled = !busy, onClick = {
-                when {
-                    !anki.installed() -> status = context.getString(R.string.anki_missing)
-                    anki.permitted() -> send()
-                    else -> permission.launch(Anki.PERMISSION)
-                }
-            }) { Text(stringResource(R.string.send_to_anki)) }
-        }
+    companion object {
+        // Prototype: the relay on the computer, seen from the emulator; the dev licence
+        const val DEFAULT_RELAY = "http://10.0.2.2:8080"
+        const val DEFAULT_KEY = "nts_dev"
     }
 }
