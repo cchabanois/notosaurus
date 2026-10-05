@@ -27,3 +27,9 @@ def test_core_never_uses_the_app(tmp_path):
     ).stdout
     loaded = {name.split(".")[0] for name in json.loads(out)}
     assert not loaded & {"app", "fastapi", "starlette", "uvicorn", "genanki", "segno", "dotenv"}
+
+
+def test_server_runs_from_the_repository():
+    """The README's "Standalone": uvicorn app.main:app from the repository, nothing set."""
+    env = {k: v for k, v in os.environ.items() if k != "PYTHONPATH"}
+    subprocess.run([sys.executable, "-c", "import app.main"], cwd=CORE.parent, env=env, check=True)

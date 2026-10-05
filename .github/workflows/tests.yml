@@ -51,6 +51,33 @@ jobs:
         if: matrix.os == 'ubuntu-latest' && matrix.python == '3.13'
         run: node --test tests/frontend/*.test.mjs  # files, not the folder: older Node can't take one
 
+  docker:
+    # The Docker image (README, "Or with Docker"): it builds, starts, and makes a
+    # lesson with the demo AI, called from inside (a local call: no pairing).
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v7
+      - run: docker build -t notosaurus .
+      - run: docker run -d --name notosaurus -e NOTOSAURUS_LLM=fake notosaurus
+      - name: Make a lesson
+        run: |
+          docker exec notosaurus python -c "
+          import time, httpx
+          for _ in range(30):
+              try:
+                  httpx.get('http://localhost:8000/api/lang')
+                  break
+              except httpx.TransportError:
+                  time.sleep(1)
+          r = httpx.post('http://localhost:8000/api/extract', data={'prompt': 'FR → ES'}, timeout=30)
+          r.raise_for_status()
+          assert r.json()['cards'], r.text
+          print(len(r.json()['cards']), 'cards')
+          "
+      - if: failure()
+        run: docker logs notosaurus
+
   real-anki:
     # The add-on's bridge and the .apkg import against Anki's real engine (the
     # `anki` package, no window), with the oldest and the newest supported Anki.
