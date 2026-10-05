@@ -35,6 +35,9 @@ def main() -> None:
         for folder in ("app", "static"):
             for path in files(ROOT / folder):
                 z.write(path, Path("server") / path.relative_to(ROOT))
+        # notosaurus_core next to app/: importable from the server folder (uvicorn --app-dir)
+        for path in files(ROOT / "core" / "notosaurus_core"):
+            z.write(path, Path("server") / path.relative_to(ROOT / "core"))
         for name in ("requirements.txt", "pyproject.toml"):  # pyproject.toml: the version
             z.write(ROOT / name, f"server/{name}")
     print(f"{OUT} ({OUT.stat().st_size // 1024} KB)")

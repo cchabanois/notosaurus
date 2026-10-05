@@ -1,0 +1,25 @@
+[project]
+name = "notosaurus-core"
+description = "Notosaurus's brain: lesson photos to flashcards, corrections, explanations, pictures, audio"
+license = "AGPL-3.0-only"
+requires-python = ">=3.13"
+# The oldest versions it works with (../requirements.in has the same; the app pins them all)
+dependencies = [
+  "pydantic>=2",
+  "httpx>=0.28.1",
+  "pillow>=12.0",
+  "google-genai>=2.25",
+  "anthropic>=1.9",
+  "openai>=3.20",
+  "edge-tts>=7.2.8",
+]
+dynamic = ["version"]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+# The app's version (../pyproject.toml, the only place to change it)
+[tool.hatch.version]
+path = "../pyproject.toml"
+pattern = '(?m)^version = "(?P<version>[^"]+)"'

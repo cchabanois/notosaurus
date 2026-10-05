@@ -5,6 +5,7 @@ COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 COPY pyproject.toml .
 COPY app app
+COPY core/notosaurus_core notosaurus_core
 COPY static static
 
 ENV NOTOSAURUS_DATA=/data
