@@ -24,6 +24,9 @@ class Anki(private val context: Context) {
     fun permitted(): Boolean =
         ContextCompat.checkSelfPermission(context, PERMISSION) == PackageManager.PERMISSION_GRANTED
 
+    /** The decks in AnkiDroid ("" when it can't tell). */
+    fun deckNames(): List<String> = if (installed() && permitted()) api.deckList?.values?.toList().orEmpty() else emptyList()
+
     fun send(deck: Deck): Sent {
         val model = model() ?: error("AnkiDroid refused the note type")
         val cards = deck.cards.filter { it.front.isNotBlank() && !it.unsupported() }
