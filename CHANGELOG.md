@@ -10,6 +10,7 @@ Each pull request adds a line under **Unreleased**. See [Releasing](CONTRIBUTING
 ### Changed
 
 - For developers: the AI and card logic is a package of its own, `notosaurus-core` (in `core/`), which other programs can use without the app. Nothing changes for users.
+- For developers: the API of the coming Notosaurus relay (no API key needed, with a subscription): `relay_api.py` and its OpenAPI description, `core/relay-api-v1.json`.
 
 ## [1.0.0] - 2026-10-04
 

@@ -88,6 +88,7 @@ come in as parameters), so that other programs can use it. A test keeps it that 
 | `core/notosaurus_core/recommended.py`, `prices.py` | recommended models, estimated costs |
 | `core/notosaurus_core/errors.py` | errors as translatable codes |
 | `core/notosaurus_core/files.py` | where the caches go, small file helpers |
+| `core/notosaurus_core/relay_api.py`, `core/relay-api-v1.json` | the Notosaurus relay's API (version 1): requests, answers, errors, and its OpenAPI description |
 | `app/main.py` | FastAPI routes and static files |
 | `app/lessons.py` | saved lessons, one folder each |
 | `app/anki.py` | `.apkg` builder (genanki, audio, reverse cards) |
@@ -99,6 +100,7 @@ come in as parameters), so that other programs can use it. A test keeps it that 
 | `static/` | the phone page and the settings page |
 | `anki_addon/` | the Anki add-on: server launcher and an AnkiConnect-compatible bridge |
 | `tools/build_addon.py` | builds `dist/notosaurus-<version>.ankiaddon` |
+| `tools/relay_openapi.py` | writes `core/relay-api-v1.json` from `relay_api.py` (run it after changing them; a test checks) |
 | `tools/changelog_section.py` | release notes of a version, from `CHANGELOG.md` |
 | `tools/make_icons.py` | the logo images and the icons (home screen, browser), from `assets/notosaurus-logo.png` |
 

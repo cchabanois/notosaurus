@@ -1,0 +1,1306 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "Notosaurus relay",
+    "summary": "notosaurus_core behind a licence key",
+    "description": "The Notosaurus relay's API, version 1: what its client (the Notosaurus app with a\nlicence, later the Android app) and the relay itself both import, so that they\ncan't drift apart.\n\nThe relay is notosaurus_core behind a licence key: each route is the remote form\nof a core function (/v1/extract → llm.extract_cards…), takes what that function\ntakes but the AI configuration (the relay's own), and keeps nothing.\n\n- Authentication: \"Authorization: Bearer <licence key>\".\n- The client says its version in CLIENT_HEADER (\"1.1.0\"); a client too old for\n  the relay gets \"relay.client_outdated\".\n- The routes with photos (extract, revise) take multipart/form-data: a \"request\"\n  part holding the JSON request and one \"images\" part per photo (binary, as\n  diagrams.prepare makes them: JPEG, at most 1568 px). The other routes take JSON.\n- Errors: HTTP status of ERRORS, body {\"code\", \"params\"} (errors.AppError), the\n  AI's own errors (\"llm.*\") passed on as they are.\n- Each answer says the credits it used and those left (Usage; for /v1/picture, the\n  CREDITS_HEADER and CREDITS_LEFT_HEADER headers). A credit is a share of the\n  call's real AI cost, at least 1 per call: the relay counts them, not the client.\n\nThe OpenAPI description (core/relay-api-v1.json) is generated from these models\nby tools/relay_openapi.py.\n",
+    "version": "1"
+  },
+  "paths": {
+    "/v1/extract": {
+      "post": {
+        "summary": "Extract",
+        "description": "Cards from the photos of a lesson (llm.extract_cards).",
+        "operationId": "extract_v1_extract_post",
+        "parameters": [
+          {
+            "name": "X-Notosaurus-Version",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "The client's version (\"1.1.0\").",
+              "title": "X-Notosaurus-Version"
+            },
+            "description": "The client's version (\"1.1.0\")."
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ExtractResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Codes: `relay.invalid_key`",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "402": {
+            "description": "Codes: `relay.no_credits`",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "413": {
+            "description": "Codes: `relay.too_large`",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "415": {
+            "description": "Codes: `relay.bad_image`",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Codes: `relay.invalid_request`",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "426": {
+            "description": "Codes: `relay.client_outdated`",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Codes: `relay.daily_limit`",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Codes: `relay.unavailable`",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "request"
+                ],
+                "properties": {
+                  "request": {
+                    "$ref": "#/components/schemas/ExtractRequest"
+                  },
+                  "images": {
+                    "type": "array",
+                    "maxItems": 10,
+                    "items": {
+                      "type": "string",
+                      "format": "binary"
+                    },
+                    "description": "The photos, in order: image/jpeg, image/png, image/webp, image/gif, at most 4 MB each."
+                  }
+                }
+              },
+              "encoding": {
+                "request": {
+                  "contentType": "application/json"
+                },
+                "images": {
+                  "contentType": "image/jpeg, image/png, image/webp, image/gif"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/revise": {
+      "post": {
+        "summary": "Revise",
+        "description": "A natural-language correction of the cards (llm.revise_cards).",
+        "operationId": "revise_v1_revise_post",
+        "parameters": [
+          {
+            "name": "X-Notosaurus-Version",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "The client's version (\"1.1.0\").",
+              "title": "X-Notosaurus-Version"
+            },
+            "description": "The client's version (\"1.1.0\")."
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ReviseResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Codes: `relay.invalid_key`",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "402": {
+            "description": "Codes: `relay.no_credits`",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "413": {
+            "description": "Codes: `relay.too_large`",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "415": {
+            "description": "Codes: `relay.bad_image`",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Codes: `relay.invalid_request`",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "426": {
+            "description": "Codes: `relay.client_outdated`",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Codes: `relay.daily_limit`",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Codes: `relay.unavailable`",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "request"
+                ],
+                "properties": {
+                  "request": {
+                    "$ref": "#/components/schemas/ReviseRequest"
+                  },
+                  "images": {
+                    "type": "array",
+                    "maxItems": 10,
+                    "items": {
+                      "type": "string",
+                      "format": "binary"
+                    },
+                    "description": "The photos, in order: image/jpeg, image/png, image/webp, image/gif, at most 4 MB each."
+                  }
+                }
+              },
+              "encoding": {
+                "request": {
+                  "contentType": "application/json"
+                },
+                "images": {
+                  "contentType": "image/jpeg, image/png, image/webp, image/gif"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/explain": {
+      "post": {
+        "summary": "Explain",
+        "description": "A card explained to the pupil (llm.explain_card).",
+        "operationId": "explain_v1_explain_post",
+        "parameters": [
+          {
+            "name": "X-Notosaurus-Version",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "The client's version (\"1.1.0\").",
+              "title": "X-Notosaurus-Version"
+            },
+            "description": "The client's version (\"1.1.0\")."
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ExplainRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ExplainResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Codes: `relay.invalid_key`",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "402": {
+            "description": "Codes: `relay.no_credits`",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Codes: `relay.invalid_request`",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "426": {
+            "description": "Codes: `relay.client_outdated`",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Codes: `relay.daily_limit`",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Codes: `relay.unavailable`",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/figure": {
+      "post": {
+        "summary": "Figure",
+        "description": "An exact figure as SVG (llm.draw_figure).",
+        "operationId": "figure_v1_figure_post",
+        "parameters": [
+          {
+            "name": "X-Notosaurus-Version",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "The client's version (\"1.1.0\").",
+              "title": "X-Notosaurus-Version"
+            },
+            "description": "The client's version (\"1.1.0\")."
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/FigureRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FigureResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Codes: `relay.invalid_key`",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "402": {
+            "description": "Codes: `relay.no_credits`",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Codes: `relay.invalid_request`",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "426": {
+            "description": "Codes: `relay.client_outdated`",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Codes: `relay.daily_limit`",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Codes: `relay.unavailable`",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/picture": {
+      "post": {
+        "summary": "Picture",
+        "description": "A picture for a card (pictures.picture).",
+        "operationId": "picture_v1_picture_post",
+        "parameters": [
+          {
+            "name": "X-Notosaurus-Version",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "The client's version (\"1.1.0\").",
+              "title": "X-Notosaurus-Version"
+            },
+            "description": "The client's version (\"1.1.0\")."
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PictureRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "The picture, card size.",
+            "content": {
+              "image/jpeg": {
+                "schema": {
+                  "type": "string",
+                  "format": "binary"
+                }
+              }
+            },
+            "headers": {
+              "X-Notosaurus-Credits": {
+                "description": "Credits this call used.",
+                "schema": {
+                  "type": "integer"
+                }
+              },
+              "X-Notosaurus-Credits-Left": {
+                "description": "Credits left in this period.",
+                "schema": {
+                  "type": "integer"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Codes: `relay.invalid_key`",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "402": {
+            "description": "Codes: `relay.no_credits`",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Codes: `relay.invalid_request`",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "426": {
+            "description": "Codes: `relay.client_outdated`",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Codes: `relay.daily_limit`",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Codes: `relay.unavailable`",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/account": {
+      "get": {
+        "summary": "Account",
+        "description": "What the licence gives; also the connection test.",
+        "operationId": "account_v1_account_get",
+        "parameters": [
+          {
+            "name": "X-Notosaurus-Version",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "The client's version (\"1.1.0\").",
+              "title": "X-Notosaurus-Version"
+            },
+            "description": "The client's version (\"1.1.0\")."
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Account"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Codes: `relay.invalid_key`",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "426": {
+            "description": "Codes: `relay.client_outdated`",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Codes: `relay.unavailable`",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Codes: `relay.invalid_request`",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "Account": {
+        "properties": {
+          "plan": {
+            "type": "string",
+            "title": "Plan",
+            "description": "The subscription (\"monthly\", \"yearly\"…)."
+          },
+          "credits_left": {
+            "type": "integer",
+            "minimum": 0.0,
+            "title": "Credits Left",
+            "description": "Credits left in this period."
+          },
+          "daily_left": {
+            "type": "integer",
+            "minimum": 0.0,
+            "title": "Daily Left",
+            "description": "Credits that can still be used today."
+          },
+          "renews_at": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Renews At",
+            "description": "When the credits are renewed (ISO 8601)."
+          }
+        },
+        "type": "object",
+        "required": [
+          "plan",
+          "credits_left",
+          "daily_left"
+        ],
+        "title": "Account",
+        "description": "GET /v1/account: what the licence gives; also the client's connection test."
+      },
+      "Card": {
+        "properties": {
+          "front": {
+            "type": "string",
+            "title": "Front",
+            "description": "Front: what is shown first (e.g. the word in the pupil's language), or the text with its gaps for a cloze card (see the rules)."
+          },
+          "back": {
+            "type": "string",
+            "title": "Back",
+            "description": "Back: the answer (e.g. the translation in the language being learned)."
+          },
+          "choices": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Choices",
+            "description": "Only for a multiple-choice or true/false card (see the rules): the wrong options. Empty otherwise."
+          },
+          "info": {
+            "type": "string",
+            "title": "Info",
+            "description": "Useful extra info: gender, plural, example… Empty if none.",
+            "default": ""
+          },
+          "subdeck": {
+            "type": "string",
+            "title": "Subdeck",
+            "description": "Sub-deck (e.g. \"Vocabulary\", \"Conjugation\"). Empty for a single deck.",
+            "default": ""
+          },
+          "tags": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Tags"
+          },
+          "mask": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Mask"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Only for a diagram label (see the rules); otherwise null."
+          },
+          "picture_prompt": {
+            "type": "string",
+            "title": "Picture Prompt",
+            "description": "Only when the instructions ask for a picture on the card (see the rules): what to draw, in English. Empty otherwise.",
+            "default": ""
+          },
+          "figure": {
+            "type": "string",
+            "title": "Figure",
+            "description": "Only when the card needs an exact figure (see the rules): what to draw, every label with its exact text. Empty otherwise.",
+            "default": ""
+          },
+          "fun_fact": {
+            "type": "string",
+            "title": "Fun Fact",
+            "description": "Only when fun facts are asked for (see the request): one short \"did you know\" sentence. Empty otherwise.",
+            "default": ""
+          },
+          "explanation": {
+            "type": "string",
+            "title": "Explanation",
+            "description": "Only when helps are asked for (see the request): why the answer is the answer, when understanding helps remember it. Empty otherwise.",
+            "default": ""
+          },
+          "mnemonic": {
+            "type": "string",
+            "title": "Mnemonic",
+            "description": "Only when helps are asked for (see the request): a natural way to remember the answer. Empty otherwise.",
+            "default": ""
+          },
+          "picture_on_back": {
+            "type": "boolean",
+            "title": "Picture On Back",
+            "description": "True when the picture or figure belongs to the answer (see the rules); false when it is needed to answer.",
+            "default": false
+          },
+          "picture": {
+            "type": "string",
+            "title": "Picture",
+            "description": "Leave empty.",
+            "default": ""
+          },
+          "id": {
+            "type": "string",
+            "title": "Id",
+            "description": "Leave empty.",
+            "default": ""
+          }
+        },
+        "type": "object",
+        "required": [
+          "front",
+          "back"
+        ],
+        "title": "Card"
+      },
+      "Deck": {
+        "properties": {
+          "deck": {
+            "type": "string",
+            "title": "Deck",
+            "description": "Anki deck name, with :: for hierarchy (e.g. \"Spanish::Lesson 5 - Family\")."
+          },
+          "cards": {
+            "items": {
+              "$ref": "#/components/schemas/Card"
+            },
+            "type": "array",
+            "title": "Cards"
+          }
+        },
+        "type": "object",
+        "required": [
+          "deck",
+          "cards"
+        ],
+        "title": "Deck"
+      },
+      "Error": {
+        "properties": {
+          "code": {
+            "type": "string",
+            "title": "Code"
+          },
+          "params": {
+            "additionalProperties": true,
+            "type": "object",
+            "title": "Params"
+          }
+        },
+        "type": "object",
+        "required": [
+          "code"
+        ],
+        "title": "Error",
+        "description": "Body of every error: a code the client translates, and its parameters."
+      },
+      "ExplainRequest": {
+        "properties": {
+          "card": {
+            "$ref": "#/components/schemas/Card"
+          },
+          "kind": {
+            "anyOf": [
+              {
+                "type": "string",
+                "const": "explain"
+              },
+              {
+                "type": "string",
+                "enum": [
+                  "example",
+                  "mnemonic",
+                  "why"
+                ]
+              }
+            ],
+            "title": "Kind",
+            "default": "explain"
+          },
+          "prompt": {
+            "type": "string",
+            "maxLength": 8000,
+            "title": "Prompt"
+          },
+          "deck": {
+            "type": "string",
+            "maxLength": 300,
+            "title": "Deck"
+          },
+          "language": {
+            "type": "string",
+            "maxLength": 50,
+            "title": "Language",
+            "description": "English name of the language to answer in (\"French\").",
+            "default": "English"
+          },
+          "instructions": {
+            "type": "string",
+            "maxLength": 10000,
+            "title": "Instructions",
+            "description": "The user's standing instructions, put before the request (never replacing the rules).",
+            "default": ""
+          },
+          "page_texts": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "maxItems": 10,
+            "title": "Page Texts",
+            "description": "One per photo: the text of a PDF page, as the PDF holds it (\"\" for a photo)."
+          }
+        },
+        "type": "object",
+        "required": [
+          "card",
+          "prompt",
+          "deck"
+        ],
+        "title": "ExplainRequest",
+        "description": "A card explained to the pupil (or an example, a way to remember it, why the\nanswer is right). JSON."
+      },
+      "ExplainResponse": {
+        "properties": {
+          "text": {
+            "type": "string",
+            "title": "Text",
+            "description": "The answer to the request, as asked: plain text, short."
+          },
+          "more": {
+            "items": {
+              "type": "string",
+              "enum": [
+                "example",
+                "mnemonic",
+                "why"
+              ]
+            },
+            "type": "array",
+            "title": "More",
+            "description": "The follow-ups that would truly help with this card, among \"example\", \"mnemonic\" and \"why\", not the one just given. Often one or none."
+          },
+          "usage": {
+            "$ref": "#/components/schemas/Usage"
+          }
+        },
+        "type": "object",
+        "required": [
+          "text",
+          "usage"
+        ],
+        "title": "ExplainResponse"
+      },
+      "ExtractRequest": {
+        "description": "Cards from the photos (the \"images\" parts, in order), or from the prompt alone.",
+        "properties": {
+          "prompt": {
+            "description": "What to make of the lesson.",
+            "maxLength": 8000,
+            "minLength": 1,
+            "title": "Prompt",
+            "type": "string"
+          },
+          "deck": {
+            "default": "",
+            "description": "Deck name template.",
+            "maxLength": 300,
+            "title": "Deck",
+            "type": "string"
+          },
+          "decks": {
+            "description": "Decks that exist already, to reuse their names.",
+            "items": {
+              "type": "string"
+            },
+            "maxItems": 1000,
+            "title": "Decks",
+            "type": "array"
+          },
+          "fun_facts": {
+            "default": false,
+            "title": "Fun Facts",
+            "type": "boolean"
+          },
+          "helps": {
+            "default": false,
+            "title": "Helps",
+            "type": "boolean"
+          },
+          "page_texts": {
+            "description": "One per photo: the text of a PDF page, as the PDF holds it (\"\" for a photo).",
+            "items": {
+              "type": "string"
+            },
+            "maxItems": 10,
+            "title": "Page Texts",
+            "type": "array"
+          },
+          "instructions": {
+            "default": "",
+            "description": "The user's standing instructions, put before the request (never replacing the rules).",
+            "maxLength": 10000,
+            "title": "Instructions",
+            "type": "string"
+          }
+        },
+        "required": [
+          "prompt"
+        ],
+        "title": "ExtractRequest",
+        "type": "object"
+      },
+      "ExtractResponse": {
+        "properties": {
+          "deck": {
+            "$ref": "#/components/schemas/Deck"
+          },
+          "turns": {
+            "items": {
+              "type": "integer"
+            },
+            "type": "array",
+            "title": "Turns"
+          },
+          "frames": {
+            "items": {
+              "$ref": "#/components/schemas/Frame"
+            },
+            "type": "array",
+            "title": "Frames"
+          },
+          "back_language": {
+            "type": "string",
+            "title": "Back Language",
+            "default": ""
+          },
+          "choice": {
+            "type": "string",
+            "title": "Choice",
+            "default": ""
+          },
+          "usage": {
+            "$ref": "#/components/schemas/Usage"
+          }
+        },
+        "type": "object",
+        "required": [
+          "deck",
+          "turns",
+          "frames",
+          "usage"
+        ],
+        "title": "ExtractResponse"
+      },
+      "FigureRequest": {
+        "properties": {
+          "description": {
+            "type": "string",
+            "maxLength": 1000,
+            "minLength": 1,
+            "title": "Description",
+            "description": "What to draw, every label exact."
+          }
+        },
+        "type": "object",
+        "required": [
+          "description"
+        ],
+        "title": "FigureRequest",
+        "description": "An exact figure (geometry, a labelled drawing), drawn as SVG. JSON."
+      },
+      "FigureResponse": {
+        "properties": {
+          "svg": {
+            "type": "string",
+            "title": "Svg",
+            "description": "The figure, cleaned: shapes and text only (figures.clean)."
+          },
+          "usage": {
+            "$ref": "#/components/schemas/Usage"
+          }
+        },
+        "type": "object",
+        "required": [
+          "svg",
+          "usage"
+        ],
+        "title": "FigureResponse"
+      },
+      "Frame": {
+        "properties": {
+          "page": {
+            "type": "integer",
+            "title": "Page",
+            "description": "Number of the photo (1 = first photo)."
+          },
+          "box": {
+            "items": {
+              "type": "number"
+            },
+            "type": "array",
+            "title": "Box",
+            "description": "Box of the whole diagram (its drawing and all its labels), in the format of the instructions."
+          }
+        },
+        "type": "object",
+        "required": [
+          "page",
+          "box"
+        ],
+        "title": "Frame",
+        "description": "Where a diagram is on a photo: the image Anki gets is cropped to it."
+      },
+      "Mask": {
+        "properties": {
+          "page": {
+            "type": "integer",
+            "title": "Page",
+            "description": "Number of the photo showing the label (1 = first photo)."
+          },
+          "n": {
+            "type": "integer",
+            "title": "N",
+            "description": "Number drawn in place of the label: 1, 2, 3… on each photo."
+          },
+          "box": {
+            "items": {
+              "type": "number"
+            },
+            "type": "array",
+            "title": "Box",
+            "description": "Bounding box of the label's text, in the format of the instructions."
+          }
+        },
+        "type": "object",
+        "required": [
+          "page",
+          "n",
+          "box"
+        ],
+        "title": "Mask",
+        "description": "Where a diagram label is, to hide it on the photo (image occlusion).\n\nFrom the AI, `box` is in the format its instructions give (depends on the model);\nonce saved, it is [x_min, y_min, x_max, y_max] as fractions of the photo's size."
+      },
+      "PictureRequest": {
+        "properties": {
+          "subject": {
+            "type": "string",
+            "maxLength": 1000,
+            "minLength": 1,
+            "title": "Subject",
+            "description": "What to draw, in English."
+          },
+          "fresh": {
+            "type": "boolean",
+            "title": "Fresh",
+            "description": "Draw it again rather than reuse the last drawing.",
+            "default": false
+          }
+        },
+        "type": "object",
+        "required": [
+          "subject"
+        ],
+        "title": "PictureRequest",
+        "description": "A picture for a card, drawn by an image model. JSON; the answer is the JPEG itself."
+      },
+      "ReviseRequest": {
+        "description": "A natural-language correction of the cards, with the lesson's photos (the\n\"images\" parts, possibly none).",
+        "properties": {
+          "prompt": {
+            "description": "What the cards were made with.",
+            "maxLength": 8000,
+            "title": "Prompt",
+            "type": "string"
+          },
+          "deck": {
+            "$ref": "#/components/schemas/Deck"
+          },
+          "instruction": {
+            "maxLength": 2000,
+            "minLength": 1,
+            "title": "Instruction",
+            "type": "string"
+          },
+          "language": {
+            "default": "English",
+            "description": "English name of the language to answer in (\"French\").",
+            "maxLength": 50,
+            "title": "Language",
+            "type": "string"
+          },
+          "instructions": {
+            "default": "",
+            "description": "The user's standing instructions, put before the request (never replacing the rules).",
+            "maxLength": 10000,
+            "title": "Instructions",
+            "type": "string"
+          }
+        },
+        "required": [
+          "prompt",
+          "deck",
+          "instruction"
+        ],
+        "title": "ReviseRequest",
+        "type": "object"
+      },
+      "ReviseResponse": {
+        "properties": {
+          "deck": {
+            "type": "string",
+            "title": "Deck",
+            "description": "Anki deck name, with :: for hierarchy (e.g. \"Spanish::Lesson 5 - Family\")."
+          },
+          "cards": {
+            "items": {
+              "$ref": "#/components/schemas/Card"
+            },
+            "type": "array",
+            "title": "Cards"
+          },
+          "summary": {
+            "type": "string",
+            "title": "Summary",
+            "description": "One short sentence describing what changed, in the requested language."
+          },
+          "usage": {
+            "$ref": "#/components/schemas/Usage"
+          }
+        },
+        "type": "object",
+        "required": [
+          "deck",
+          "cards",
+          "summary",
+          "usage"
+        ],
+        "title": "ReviseResponse"
+      },
+      "Usage": {
+        "properties": {
+          "credits": {
+            "type": "integer",
+            "minimum": 0.0,
+            "title": "Credits",
+            "description": "Credits this call used."
+          },
+          "credits_left": {
+            "type": "integer",
+            "minimum": 0.0,
+            "title": "Credits Left",
+            "description": "Credits left in this period."
+          }
+        },
+        "type": "object",
+        "required": [
+          "credits",
+          "credits_left"
+        ],
+        "title": "Usage"
+      }
+    },
+    "securitySchemes": {
+      "licence": {
+        "type": "http",
+        "scheme": "bearer"
+      }
+    }
+  },
+  "security": [
+    {
+      "licence": []
+    }
+  ]
+}

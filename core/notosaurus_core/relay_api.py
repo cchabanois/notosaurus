@@ -1,0 +1,166 @@
+"""The Notosaurus relay's API, version 1: what its client (the Notosaurus app with a
+licence, later the Android app) and the relay itself both import, so that they
+can't drift apart.
+
+The relay is notosaurus_core behind a licence key: each route is the remote form
+of a core function (/v1/extract → llm.extract_cards…), takes what that function
+takes but the AI configuration (the relay's own), and keeps nothing.
+
+- Authentication: "Authorization: Bearer <licence key>".
+- The client says its version in CLIENT_HEADER ("1.1.0"); a client too old for
+  the relay gets "relay.client_outdated".
+- The routes with photos (extract, revise) take multipart/form-data: a "request"
+  part holding the JSON request and one "images" part per photo (binary, as
+  diagrams.prepare makes them: JPEG, at most 1568 px). The other routes take JSON.
+- Errors: HTTP status of ERRORS, body {"code", "params"} (errors.AppError), the
+  AI's own errors ("llm.*") passed on as they are.
+- Each answer says the credits it used and those left (Usage; for /v1/picture, the
+  CREDITS_HEADER and CREDITS_LEFT_HEADER headers). A credit is a share of the
+  call's real AI cost, at least 1 per call: the relay counts them, not the client.
+
+The OpenAPI description (core/relay-api-v1.json) is generated from these models
+by tools/relay_openapi.py.
+"""
+
+from typing import Literal
+
+from pydantic import BaseModel, Field
+
+from .llm import Extracted
+from .models import Card, Deck, Explanation, FollowUp, Revision
+
+PREFIX = "/v1"
+CLIENT_HEADER = "X-Notosaurus-Version"
+CREDITS_HEADER = "X-Notosaurus-Credits"
+CREDITS_LEFT_HEADER = "X-Notosaurus-Credits-Left"
+
+MAX_IMAGES = 10
+MAX_IMAGE_BYTES = 4 * 1024 * 1024  # a prepared photo weighs a few hundred KB
+MAX_PROMPT = 8000  # Notosaurus's own prompts are under 1,000 characters
+MAX_INSTRUCTIONS = 10_000  # standing instructions, for everyone and for the pupil
+MAX_PAGE_TEXT = 20_000  # per photo; the AI gets the first llm.PAGE_TEXT_MAX
+MAX_NAME = 300  # a deck name
+MAX_DECKS = 1000
+MAX_INSTRUCTION = 2000  # a correction
+MAX_SUBJECT = 1000  # a picture's subject, a figure's description
+
+# Error code → HTTP status, besides the AI's own errors ("llm.*", passed on)
+ERRORS = {
+    "relay.invalid_key": 401,  # no licence key, unknown, or ended
+    "relay.no_credits": 402,  # this period's credits are used up
+    "relay.daily_limit": 429,  # too many credits used today: tomorrow, or wait
+    "relay.too_large": 413,  # too many photos, or one too heavy
+    "relay.bad_image": 415,  # a photo that isn't JPEG, PNG, WebP or GIF
+    "relay.invalid_request": 422,  # a request that isn't the API's (params: "detail")
+    "relay.client_outdated": 426,  # update Notosaurus
+    "relay.unavailable": 503,  # the relay itself is down or overloaded
+}
+
+IMAGE_TYPES = ("image/jpeg", "image/png", "image/webp", "image/gif")
+
+Language = Field(default="English", max_length=50, description='English name of the language to answer in ("French").')
+Instructions = Field(
+    default="",
+    max_length=MAX_INSTRUCTIONS,
+    description="The user's standing instructions, put before the request (never replacing the rules).",
+)
+PageTexts = Field(
+    default_factory=list,
+    max_length=MAX_IMAGES,
+    description='One per photo: the text of a PDF page, as the PDF holds it ("" for a photo).',
+)
+
+
+class Error(BaseModel):
+    """Body of every error: a code the client translates, and its parameters."""
+
+    code: str
+    params: dict = Field(default_factory=dict)
+
+
+class Usage(BaseModel):
+    credits: int = Field(ge=0, description="Credits this call used.")
+    credits_left: int = Field(ge=0, description="Credits left in this period.")
+
+
+# --- Requests -----------------------------------------------------------------
+
+
+class ExtractRequest(BaseModel):
+    """Cards from the photos (the "images" parts, in order), or from the prompt alone."""
+
+    prompt: str = Field(min_length=1, max_length=MAX_PROMPT, description="What to make of the lesson.")
+    deck: str = Field(default="", max_length=MAX_NAME, description="Deck name template.")
+    decks: list[str] = Field(
+        default_factory=list, max_length=MAX_DECKS, description="Decks that exist already, to reuse their names."
+    )
+    fun_facts: bool = False
+    helps: bool = False
+    page_texts: list[str] = PageTexts
+    instructions: str = Instructions
+
+
+class ReviseRequest(BaseModel):
+    """A natural-language correction of the cards, with the lesson's photos (the
+    "images" parts, possibly none)."""
+
+    prompt: str = Field(max_length=MAX_PROMPT, description="What the cards were made with.")
+    deck: Deck
+    instruction: str = Field(min_length=1, max_length=MAX_INSTRUCTION)
+    language: str = Language
+    instructions: str = Instructions
+
+
+class ExplainRequest(BaseModel):
+    """A card explained to the pupil (or an example, a way to remember it, why the
+    answer is right). JSON."""
+
+    card: Card
+    kind: Literal["explain"] | FollowUp = "explain"
+    prompt: str = Field(max_length=MAX_PROMPT)
+    deck: str = Field(max_length=MAX_NAME)
+    language: str = Language
+    instructions: str = Instructions
+    page_texts: list[str] = PageTexts
+
+
+class FigureRequest(BaseModel):
+    """An exact figure (geometry, a labelled drawing), drawn as SVG. JSON."""
+
+    description: str = Field(min_length=1, max_length=MAX_SUBJECT, description="What to draw, every label exact.")
+
+
+class PictureRequest(BaseModel):
+    """A picture for a card, drawn by an image model. JSON; the answer is the JPEG itself."""
+
+    subject: str = Field(min_length=1, max_length=MAX_SUBJECT, description="What to draw, in English.")
+    fresh: bool = Field(default=False, description="Draw it again rather than reuse the last drawing.")
+
+
+# --- Answers ------------------------------------------------------------------
+
+
+class ExtractResponse(Extracted):
+    usage: Usage
+
+
+class ReviseResponse(Revision):
+    usage: Usage
+
+
+class ExplainResponse(Explanation):
+    usage: Usage
+
+
+class FigureResponse(BaseModel):
+    svg: str = Field(description="The figure, cleaned: shapes and text only (figures.clean).")
+    usage: Usage
+
+
+class Account(BaseModel):
+    """GET /v1/account: what the licence gives; also the client's connection test."""
+
+    plan: str = Field(description='The subscription ("monthly", "yearly"…).')
+    credits_left: int = Field(ge=0, description="Credits left in this period.")
+    daily_left: int = Field(ge=0, description="Credits that can still be used today.")
+    renews_at: str | None = Field(default=None, description="When the credits are renewed (ISO 8601).")
