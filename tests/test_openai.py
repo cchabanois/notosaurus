@@ -2,9 +2,9 @@
 
 from test_costs import fake_completion
 
-from app import llm
-from app.llm import ai_schema
-from app.models import Extraction
+from notosaurus_core import llm
+from notosaurus_core.llm import ai_schema
+from notosaurus_core.models import Extraction
 
 
 def test_openai_models_get_a_strict_schema():

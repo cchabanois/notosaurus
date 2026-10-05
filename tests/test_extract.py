@@ -5,8 +5,8 @@ import json
 
 from conftest import extract_lesson
 
-from app import llm
 from app.models import LessonIn
+from notosaurus_core import llm
 
 
 def test_extract_fake(client):
@@ -50,7 +50,7 @@ def test_lesson_from_the_prompt_alone(client):
 
 
 def test_prompt_only_tells_the_ai_there_is_no_photo():
-    from app.models import Deck
+    from notosaurus_core.models import Deck
 
     assert "no photo" in llm._user_text("Cards with: le chat", "", photos=0)
     assert "no photo" not in llm._user_text("Vocabulary", "", photos=2)
@@ -76,11 +76,9 @@ def test_existing_decks_given_to_the_ai(anki, client, monkeypatch):
 
     seen = {}
 
-    async def extract_cards(
-        images, prompt, deck="", profile=None, decks=(), fun_facts=False, page_texts=(), helps=False
-    ):
+    async def extract_cards(s, images, prompt, deck="", decks=(), **options):
         seen["decks"] = decks
-        return await llm.extract_cards(images, prompt, deck, profile, decks)
+        return await llm.extract_cards(s, images, prompt, deck, decks)
 
     monkeypatch.setattr(main, "extract_cards", extract_cards)
     assert client.post("/api/extract", data={"prompt": "Les fractions"}).status_code == 201
@@ -218,11 +216,9 @@ def test_pdf_page_texts_go_to_the_ai_and_stay_with_the_lesson(client, monkeypatc
 
     seen = []
 
-    async def extract_cards(
-        images, prompt, deck="", profile=None, decks=(), fun_facts=False, page_texts=(), helps=False
-    ):
+    async def extract_cards(s, images, prompt, deck="", decks=(), page_texts=(), **options):
         seen.append(list(page_texts))
-        return await llm.extract_cards(images, prompt, deck, profile, decks)
+        return await llm.extract_cards(s, images, prompt, deck, decks)
 
     monkeypatch.setattr(main, "extract_cards", extract_cards)
     files = [("images", (f"p{n}.png", b"img", "image/png")) for n in (1, 2)]

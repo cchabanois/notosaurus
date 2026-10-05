@@ -19,8 +19,9 @@ from conftest import fake_synthesize
 sync_api = pytest.importorskip("playwright.sync_api")
 import uvicorn  # noqa: E402
 
-from app import settings, storage, tts  # noqa: E402
+from app import settings, storage  # noqa: E402
 from app.main import app  # noqa: E402
+from notosaurus_core import tts  # noqa: E402
 
 FRONT_PROMPT = "Une carte par mot de la famille"  # demo mode: Spanish family words
 CLOZE_PROMPT = "Texte à trous sur la Révolution"  # demo mode: sentences with gaps

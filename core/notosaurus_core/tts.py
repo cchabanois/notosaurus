@@ -2,7 +2,9 @@
 
 Each mp3 is named after the text plus a hash of (voice, rate, text), e.g.
 "la-madre-3f2a1c9e.mp3". Card audio lives in the lesson's audio/ folder;
-previews go to data/cache/tts/ and are reused when the lesson is exported.
+previews go to the cache (files.py, tts/) and are reused when the lesson is exported.
+
+`rate`: the speed, e.g. "-10%" (slightly slower, for learners).
 """
 
 import asyncio
@@ -14,7 +16,9 @@ from pathlib import Path
 
 import edge_tts
 
-from . import settings, storage
+from . import files
+from .cards import is_choice, is_cloze
+from .models import Card
 
 log = logging.getLogger("notosaurus")
 
@@ -27,7 +31,7 @@ _voices: list[dict] | None = None
 
 
 def cache_dir() -> Path:
-    path = storage.data_dir() / "cache" / "tts"
+    path = files.cache_dir("tts")
     path.mkdir(parents=True, exist_ok=True)
     return path
 
@@ -40,30 +44,40 @@ def has_math(text: str) -> bool:
     return bool(MATH.search(text))
 
 
+def spoken_backs(cards: list[Card]) -> list[str]:
+    """The backs read aloud. Not: a back with a formula (the voice would read the MathJax
+    code), a text with gaps (its back is only an extra), a multiple choice (the options
+    are read)."""
+    return [
+        c.back.strip()
+        for c in cards
+        if c.front.strip() and c.back.strip() and not has_math(c.back) and not is_cloze(c.front) and not is_choice(c)
+    ]
+
+
 def is_anki_locale(voice: str) -> bool:
     return bool(ANKI_LOCALE.match(voice))
 
 
-def rate() -> str:
-    return settings.current().tts_rate  # e.g. "-10%": slightly slower, for learners
+RATE = "-10%"
 
 
-def filename(text: str, voice: str) -> str:
+def filename(text: str, voice: str, rate: str = RATE) -> str:
     # Anki keeps all media in one folder: the hash keeps names unique across
     # voices, rates and lessons, the slug keeps them readable.
-    digest = hashlib.sha1(f"{voice}|{rate()}|{text}".encode()).hexdigest()[:8]
-    return f"{storage.slugify(text, 30) or 'audio'}-{digest}.mp3"
+    digest = hashlib.sha1(f"{voice}|{rate}|{text}".encode()).hexdigest()[:8]
+    return f"{files.slugify(text, 30) or 'audio'}-{digest}.mp3"
 
 
-async def _synthesize(text: str, voice: str, path: Path) -> None:
+async def _synthesize(text: str, voice: str, path: Path, rate: str) -> None:
     tmp = path.with_suffix(".part")
-    await edge_tts.Communicate(text, voice, rate=rate()).save(str(tmp))
+    await edge_tts.Communicate(text, voice, rate=rate).save(str(tmp))
     tmp.rename(path)  # never leave a half-written mp3 behind
 
 
-async def tts(text: str, voice: str, directory: Path | None = None) -> Path:
+async def tts(text: str, voice: str, directory: Path | None = None, rate: str = RATE) -> Path:
     """mp3 of `text` in `directory` (default: preview cache), synthesized if missing."""
-    name = filename(text, voice)
+    name = filename(text, voice, rate)
     path = (directory or cache_dir()) / name
     if not path.exists():
         path.parent.mkdir(parents=True, exist_ok=True)
@@ -71,18 +85,18 @@ async def tts(text: str, voice: str, directory: Path | None = None) -> Path:
         if directory and cached.exists():
             shutil.copyfile(cached, path)
         else:
-            await _synthesize(text, voice, path)
+            await _synthesize(text, voice, path, rate)
     return path
 
 
-async def tts_many(texts: list[str], voice: str, directory: Path) -> tuple[dict[str, Path], int]:
+async def tts_many(texts: list[str], voice: str, directory: Path, rate: str = RATE) -> tuple[dict[str, Path], int]:
     """Audio for every text in `directory`. Returns {text: mp3} and the number of failures."""
     sem = asyncio.Semaphore(MAX_PARALLEL)
 
     async def one(text: str) -> tuple[str, Path | None]:
         async with sem:
             try:
-                return text, await tts(text, voice, directory)
+                return text, await tts(text, voice, directory, rate)
             except Exception as e:  # network, unknown voice…: the card goes out without sound
                 log.warning("TTS %s %r: %s", voice, text, e)
                 return text, None

@@ -22,8 +22,9 @@ anki_collection = pytest.importorskip("anki.collection")
 from anki.import_export_pb2 import ImportAnkiPackageUpdateCondition  # noqa: E402
 from fastapi.testclient import TestClient  # noqa: E402
 
-from app import settings, tts  # noqa: E402
+from app import settings  # noqa: E402
 from app.main import DEVICE_COOKIE, app  # noqa: E402
+from notosaurus_core import tts  # noqa: E402
 
 PNG = bytes.fromhex(
     "89504e470d0a1a0a0000000d4948445200000001000000010806000000"
@@ -235,7 +236,7 @@ def test_picture_lesson_on_a_real_collection(bridged, col, monkeypatch):
 
     from PIL import Image
 
-    from app import pictures
+    from notosaurus_core import pictures
 
     async def draw(s, subject):
         out = io.BytesIO()

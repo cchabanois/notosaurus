@@ -1,8 +1,8 @@
 """Errors shown to the user, as a code + parameters: the page translates them.
 
 The server never builds user-facing sentences; `code` is looked up under
-"errors" in static/i18n/<lang>.json (e.g. "gemini.overloaded"), with
-`params` filling the {placeholders}.
+"errors" in the app's translations (static/i18n/<lang>.json, e.g.
+"gemini.overloaded"), with `params` filling the {placeholders}.
 """
 
 

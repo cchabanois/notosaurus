@@ -2,8 +2,9 @@
 
 from conftest import extract_lesson
 
-from app import llm
-from app.models import Card, Explanation
+from notosaurus_core import llm
+from notosaurus_core.config import AIConfig
+from notosaurus_core.models import Card, Explanation
 
 
 def test_a_card_explained_then_its_follow_ups(client):
@@ -35,11 +36,11 @@ def test_explaining_needs_a_lesson_one_may_see(anki, client):
 
 def test_what_the_ai_is_asked(monkeypatch):
     card = Card(front="la Bastille est prise le…", back="14 juillet 1789", choices=["4 août 1789"])
-    text = llm._explain_text(card, "why", "Questions sur la Révolution", "Histoire", "fr", ["Le 14 juillet 1789…"])
+    text = llm._explain_text(card, "why", "Questions sur la Révolution", "Histoire", "French", ["Le 14 juillet 1789…"])
     assert '"front": "la Bastille est prise le…"' in text and '"wrong_options": ["4 août 1789"]' in text
     assert llm.EXPLAIN_ASKS["why"] in text and "Answer in French." in text
     assert "The lesson's text (from its PDF):\n<<<\nLe 14 juillet 1789…\n>>>" in text
-    assert "PDF" not in llm._explain_text(card, "explain", "p", "d", "en", ["", "  "])
+    assert "PDF" not in llm._explain_text(card, "explain", "p", "d", "English", ["", "  "])
 
     # The AI's follow-ups: never the one just given, each once
     async def answer(s, images, text, schema, system, light=False):
@@ -48,7 +49,6 @@ def test_what_the_ai_is_asked(monkeypatch):
 
     import asyncio
 
-    monkeypatch.setenv("NOTOSAURUS_LLM", "gemini")
     monkeypatch.setattr(llm, "_generate", answer)
-    found = asyncio.run(llm.explain_card(card, "why", "p", "d", "fr"))
+    found = asyncio.run(llm.explain_card(AIConfig(llm="gemini"), card, "why", "p", "d", "French"))
     assert found.more == ["example", "mnemonic"]

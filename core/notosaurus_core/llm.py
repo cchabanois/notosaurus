@@ -1,7 +1,7 @@
 """Card extraction with a vision model.
 
-A single interface, `extract_cards`, and a provider chosen in the settings
-(admin page, or .env defaults — see settings.py):
+A single interface, `extract_cards`, and a provider chosen in the AI configuration
+(config.AIConfig, passed to every call):
 
 - "gemini" (default): Gemini, through the official google-genai SDK.
 - "anthropic": Claude, through the official SDK.
@@ -21,14 +21,15 @@ from collections.abc import Iterator
 from contextlib import contextmanager
 from contextvars import ContextVar
 from dataclasses import dataclass
+from datetime import datetime
 from functools import cache
 
 from pydantic import BaseModel, Field, create_model
 
-from . import diagrams, i18n, prices, settings, storage
+from . import config, diagrams, prices
+from .config import AIConfig
 from .errors import AppError
 from .models import AiCall, Card, Deck, Explanation, Extraction, Frame, Mask, Revision
-from .settings import Settings
 
 log = logging.getLogger("notosaurus")
 
@@ -200,7 +201,7 @@ def recording(kind: str) -> Iterator[list[AiCall]]:
 
 
 async def record(
-    s: Settings,
+    s: AIConfig,
     provider: str,
     model: str,
     input_tokens: int | None,
@@ -217,7 +218,7 @@ async def record(
         cost = await prices.estimate(s.llm, model, input_tokens, output_tokens or 0)
     calls.append(
         AiCall(
-            at=storage.now(),
+            at=datetime.now().isoformat(timespec="seconds"),
             kind=kind,
             provider=provider,
             model=model,
@@ -239,20 +240,6 @@ class ExtractionError(AppError):
     """The AI provider failed; `code` is translated by the page (errors.* keys)."""
 
     status = 502
-
-
-def standing_instructions(s: Settings, profile: str | None) -> str:
-    """What the parent set in the settings, for everyone and for this Anki profile:
-    added before the request, never replacing the fixed rules."""
-    parts = []
-    if s.instructions.strip():
-        parts.append(f"Standing instructions, for every lesson:\n{s.instructions.strip()}")
-    own = s.profile_instructions.get(profile or "", "").strip()
-    if own:
-        parts.append(f"Standing instructions for this pupil ({profile}):\n{own}")
-    if not parts:
-        return ""
-    return "\n\n".join(parts) + "\n(The request below wins if it says otherwise.)\n\n"
 
 
 def _user_text(
@@ -316,8 +303,7 @@ def _prepare(images: list[Image]) -> tuple[list[Image], list[tuple[int, int] | N
     return prepared, sizes
 
 
-@dataclass
-class Extracted:
+class Extracted(BaseModel):
     deck: Deck
     turns: list[int]  # clockwise turn that puts each photo upright
     frames: list[Frame]  # diagram frames, as fractions of the photos (not turned yet)
@@ -326,18 +312,18 @@ class Extracted:
 
 
 async def extract_cards(
+    s: AIConfig,
     images: list[Image],
     prompt: str,
     deck: str = "",
-    profile: str | None = None,
     decks: list[str] = (),
     fun_facts: bool = False,
     page_texts: list[str] = (),
     helps: bool = False,
+    instructions: str = "",
 ) -> Extracted:
-    """`profile`: the open Anki profile, for its standing instructions; `decks`: the
-    decks that already exist, to reuse their names."""
-    s = settings.current()
+    """`decks`: the decks that already exist, to reuse their names; `instructions`: the
+    user's standing instructions, put before the request (never replacing the rules)."""
     if s.llm == "fake":
         await record(s, "fake", "fake", 0, 0, cost=0.0)
         choice = "Vocabulaire d'espagnol : français → espagnol" if _lets_choose(prompt) else ""
@@ -347,25 +333,23 @@ async def extract_cards(
         if helps:  # the demo's helps: an explanation on the first card, a mnemonic on the second
             found.cards[0].explanation = "(démo) Pourquoi c'est la réponse."
             found.cards[-1].mnemonic = "(démo) Une astuce pour retenir."
-        return Extracted(found, [0] * len(images), [], "es-ES", choice)
+        return Extracted(deck=found, turns=[0] * len(images), frames=[], back_language="es-ES", choice=choice)
     fmt = diagrams.box_format(s.model_for_provider())
     images, sizes = _prepare(images)
-    text = standing_instructions(s, profile) + _user_text(
-        prompt, deck, len(images), sizes, fmt, decks, fun_facts, page_texts, helps
-    )
+    text = instructions + _user_text(prompt, deck, len(images), sizes, fmt, decks, fun_facts, page_texts, helps)
     answer = await _generate(s, images, text, ai_schema(Extraction, fun_facts, helps))
     result = Extraction.model_validate(answer.model_dump())
     diagrams.normalize(result.cards, sizes, fmt)
     return Extracted(
-        Deck(deck=result.deck, cards=result.cards),
-        diagrams.turns(result.text_lines, sizes, fmt),
-        diagrams.frames(result.frames, sizes, fmt),
-        result.back_language.strip(),
-        result.choice.strip(),
+        deck=Deck(deck=result.deck, cards=result.cards),
+        turns=diagrams.turns(result.text_lines, sizes, fmt),
+        frames=diagrams.frames(result.frames, sizes, fmt),
+        back_language=result.back_language.strip(),
+        choice=result.choice.strip(),
     )
 
 
-async def draw_figure(s: Settings, description: str) -> str:
+async def draw_figure(s: AIConfig, description: str) -> str:
     """The SVG of a figure, drawn by the cards' AI with the drawing rules (figures.py)."""
     from . import figures
 
@@ -418,14 +402,14 @@ EXPLAIN_ASKS = {
 }
 
 
-def _explain_text(card: Card, kind: str, prompt: str, deck: str, lang: str, page_texts: list[str]) -> str:
+def _explain_text(card: Card, kind: str, prompt: str, deck: str, language: str, page_texts: list[str]) -> str:
     shown = {"front": card.front, "back": card.back, "info": card.info}
     if card.choices:
         shown["wrong_options"] = card.choices
     text = (
         f"Lesson instructions: {prompt.strip()}\nDeck: {deck}\n"
         f"The card (JSON): {json.dumps(shown, ensure_ascii=False)}\n"
-        f"Request: {EXPLAIN_ASKS[kind]}\nAnswer in {i18n.language_name(lang)}."
+        f"Request: {EXPLAIN_ASKS[kind]}\nAnswer in {language}."
     )
     lesson_text = "\n".join(t.strip() for t in page_texts if t.strip())[:4000]
     if lesson_text:
@@ -434,21 +418,23 @@ def _explain_text(card: Card, kind: str, prompt: str, deck: str, lang: str, page
 
 
 async def explain_card(
+    s: AIConfig,
     card: Card,
     kind: str,
     prompt: str,
     deck: str,
-    lang: str = i18n.DEFAULT,
-    profile: str | None = None,
+    language: str = "English",
+    instructions: str = "",
     page_texts: list[str] = (),
 ) -> Explanation:
     """A short explanation of a card for the pupil (or an example, a way to remember it,
-    why the answer is right), and the follow-ups worth offering. A light call: no photo."""
-    s = settings.current()
+    why the answer is right), and the follow-ups worth offering. A light call: no photo.
+
+    `language`: its English name ("French"); `instructions`: see extract_cards."""
     if s.llm == "fake":
         await record(s, "fake", "fake", 0, 0, cost=0.0)
         return _fake_explanation(card, kind)
-    text = standing_instructions(s, profile) + _explain_text(card, kind, prompt, deck, lang, page_texts)
+    text = instructions + _explain_text(card, kind, prompt, deck, language, page_texts)
     found = await _generate(s, [], text, Explanation, EXPLAIN_RULES, light=True)
     found.more = list(dict.fromkeys(k for k in found.more if k != kind))
     return found
@@ -458,7 +444,7 @@ def _revision_text(
     prompt: str,
     deck: Deck,
     instruction: str,
-    lang: str,
+    language: str,
     photos: int,
     sizes: list[tuple[int, int] | None] = (),
     fmt: str = "",
@@ -492,24 +478,27 @@ Requested correction: {instruction.strip()}
 Apply this request and return the complete deck (every card, not only the ones that \
 change). Only change what the request is about; keep the other cards exactly as they \
 are, in the same order. {add} In "summary", describe in one short sentence, in \
-{i18n.language_name(lang)}, what you changed."""
+{language}, what you changed."""
 
 
 async def revise_cards(
+    s: AIConfig,
     images: list[Image],
     prompt: str,
     deck: Deck,
     instruction: str,
-    lang: str = i18n.DEFAULT,
-    profile: str | None = None,
+    language: str = "English",
+    instructions: str = "",
+    demo: dict[str, str] | None = None,
 ) -> Revision:
     """Apply a natural-language correction ("remove…", "you forgot…") to the cards.
 
-    `lang`: language of the page, for the one-line summary."""
-    s = settings.current()
+    `language`: English name of the page's language ("French"), for the one-line
+    summary; `instructions`: see extract_cards; `demo`: the demo provider's texts in
+    that language ("removed", "added", "addedFront"; English by default)."""
     if s.llm == "fake":
         await record(s, "fake", "fake", 0, 0, cost=0.0)
-        return _fake_revision(deck, instruction, lang)
+        return _fake_revision(deck, instruction, {**DEMO, **(demo or {})})
     # The existing masks stay out of the conversation (their boxes are in our own
     # format): the revised cards get back the mask of the card they were. New cards
     # about a diagram label come with a mask in the model's format.
@@ -522,9 +511,7 @@ async def revise_cards(
     plain = Deck(
         deck=deck.deck, cards=[c.model_copy(update={"mask": None, "picture": "", "id": ""}) for c in deck.cards]
     )
-    text = standing_instructions(s, profile) + _revision_text(
-        prompt, plain, instruction, lang, len(images), sizes, fmt, labels
-    )
+    text = instructions + _revision_text(prompt, plain, instruction, language, len(images), sizes, fmt, labels)
     # The fun facts and helps already there are kept: the AI sees them
     answer = await _generate(s, images, text, ai_schema(Revision, fun_facts=True, helps=True))
     revision = Revision.model_validate(answer.model_dump())
@@ -579,7 +566,7 @@ def _keep_masks(
 
 
 async def _generate[T: BaseModel](
-    s: Settings, images: list[Image], text: str, schema: type[T], system: str = SYSTEM_PROMPT, light: bool = False
+    s: AIConfig, images: list[Image], text: str, schema: type[T], system: str = SYSTEM_PROMPT, light: bool = False
 ) -> T:
     """Send photos + text to the configured provider and parse the answer as `schema`.
     `system`: the fixed rules (the cards' by default). `light`: a task that needs little
@@ -589,12 +576,12 @@ async def _generate[T: BaseModel](
         return await _gemini(s, images, text, schema, system, light)
     if s.llm == "anthropic":
         return await _anthropic(s, images, text, schema, system)  # Claude only thinks when asked to
-    if s.llm in settings.OPENAI_LIKE:
+    if s.llm in config.OPENAI_LIKE:
         return await _openai(s, images, text, schema, system, light)
     raise ExtractionError("llm.unknown_provider", provider=s.llm)
 
 
-def _gemini_client(s: Settings):
+def _gemini_client(s: AIConfig):
     from google import genai
     from google.genai import types
 
@@ -617,7 +604,7 @@ _NO_MINIMAL_THINKING: set[str] = set()
 
 
 async def _gemini[T: BaseModel](
-    s: Settings, images: list[Image], text: str, schema: type[T], system: str = SYSTEM_PROMPT, light: bool = False
+    s: AIConfig, images: list[Image], text: str, schema: type[T], system: str = SYSTEM_PROMPT, light: bool = False
 ) -> T:
     from google.genai import errors, types
 
@@ -684,7 +671,7 @@ async def _gemini[T: BaseModel](
         raise ExtractionError("llm.invalid_answer") from e
 
 
-def _anthropic_client(s: Settings):
+def _anthropic_client(s: AIConfig):
     import anthropic
 
     if not s.anthropic_api_key:
@@ -693,7 +680,7 @@ def _anthropic_client(s: Settings):
 
 
 async def _anthropic[T: BaseModel](
-    s: Settings, images: list[Image], text: str, schema: type[T], system: str = SYSTEM_PROMPT
+    s: AIConfig, images: list[Image], text: str, schema: type[T], system: str = SYSTEM_PROMPT
 ) -> T:
     import anthropic
 
@@ -742,14 +729,14 @@ async def _anthropic[T: BaseModel](
     return response.parsed_output
 
 
-def _openai_service(s: Settings) -> str:
+def _openai_service(s: AIConfig) -> str:
     """Short name of the OpenAI-like service for messages and costs: its host."""
     from urllib.parse import urlparse
 
     return urlparse(s.base_url()).netloc or s.base_url()
 
 
-def _openai_base(s: Settings):
+def _openai_base(s: AIConfig):
     import openai
 
     if not s.base_url():
@@ -758,7 +745,7 @@ def _openai_base(s: Settings):
     return openai.AsyncOpenAI(base_url=s.base_url(), api_key=s.api_key() or "none")
 
 
-def _openai_client(s: Settings):
+def _openai_client(s: AIConfig):
     if not s.model_for_provider():
         raise ExtractionError("llm.missing_model")
     if s.llm in ("openai", "openrouter") and not s.api_key():  # a compatible local server needs none
@@ -782,7 +769,7 @@ def _error_message(body) -> str | None:
     return None
 
 
-def _openai_error(e: Exception, s: Settings) -> ExtractionError:
+def _openai_error(e: Exception, s: AIConfig) -> ExtractionError:
     """Readable error for an OpenAI-compatible service failure."""
     import openai
 
@@ -814,7 +801,7 @@ def _usable(m) -> bool | None:
     return None if vision is None else bool(vision)
 
 
-async def _local_vision_models(s: Settings) -> list[str] | None:
+async def _local_vision_models(s: AIConfig) -> list[str] | None:
     """LM Studio and Ollama only describe their models in their own API, next to
     the OpenAI-compatible one: the vision models there, or None if not such a server."""
     from urllib.parse import urlparse
@@ -843,14 +830,14 @@ async def _local_vision_models(s: Settings) -> list[str] | None:
             return None
 
 
-async def list_models(s: Settings) -> dict:
+async def list_models(s: AIConfig) -> dict:
     """Models of the OpenAI-compatible service, keeping those accepting images
     when the service tells (OpenRouter, Mistral, LM Studio, Ollama) — and
     structured output when it tells that too (OpenRouter).
 
     Returns {"models": [...], "vision_only": bool, "names": {id: name}}; vision_only is
     False when the service doesn't say (OpenAI): the admin test then tells for sure.
-    The recommended ones are Notosaurus's own (app/recommended.py)."""
+    The recommended ones are Notosaurus's own (recommended.py)."""
     import openai
 
     client = _openai_base(s)
@@ -898,14 +885,14 @@ def _strict(schema: dict) -> dict:
     return walk(json.loads(json.dumps(schema)))
 
 
-def _openai_model(s: Settings) -> bool:
+def _openai_model(s: AIConfig) -> bool:
     """A model by OpenAI: with an OpenAI key, or through OpenRouter ("openai/…",
     "~openai/…-latest")."""
     return s.llm == "openai" or s.model_for_provider().lstrip("~").startswith("openai/")
 
 
 async def _openai[T: BaseModel](
-    s: Settings, images: list[Image], text: str, schema: type[T], system: str = SYSTEM_PROMPT, light: bool = False
+    s: AIConfig, images: list[Image], text: str, schema: type[T], system: str = SYSTEM_PROMPT, light: bool = False
 ) -> T:
     """OpenAI-compatible providers: Ollama (qwen2.5vl, gemma3…), etc."""
     import openai
@@ -1105,12 +1092,15 @@ def _fake_diagram() -> Deck:
     )
 
 
-def _fake_revision(deck: Deck, instruction: str, lang: str) -> Revision:
+DEMO = {"removed": "Last card removed (demo).", "added": "One card added (demo).", "addedFront": "(demo addition)"}
+
+
+def _fake_revision(deck: Deck, instruction: str, texts: dict[str, str]) -> Revision:
     """Demo mode: a request mentioning removal drops the last card, anything else adds one."""
     if any(w in instruction.lower() for w in ("supprime", "remove", "delete")) and deck.cards:
-        return Revision(deck=deck.deck, cards=deck.cards[:-1], summary=i18n.get(lang, "demo.removed"))
-    added = Card(front=i18n.get(lang, "demo.addedFront"), back=instruction[:60], subdeck="Demo")
-    return Revision(deck=deck.deck, cards=[*deck.cards, added], summary=i18n.get(lang, "demo.added"))
+        return Revision(deck=deck.deck, cards=deck.cards[:-1], summary=texts["removed"])
+    added = Card(front=texts["addedFront"], back=instruction[:60], subdeck="Demo")
+    return Revision(deck=deck.deck, cards=[*deck.cards, added], summary=texts["added"])
 
 
 def _test_image() -> bytes:
@@ -1131,7 +1121,7 @@ class _CheckAnswer(BaseModel):
     color: str
 
 
-async def check(s: Settings) -> dict:
+async def check(s: AIConfig) -> dict:
     """Check what Notosaurus needs from the model: reading an image and answering
     in the requested JSON format. Sends a tiny red image (a fraction of a cent).
 
@@ -1158,7 +1148,7 @@ async def check(s: Settings) -> dict:
         raise
 
 
-async def _check_model(only_main_model: Settings) -> dict:
+async def _check_model(only_main_model: AIConfig) -> dict:
     prompt = "What is the main colour of this image? Answer with one lowercase English word."
     try:
         answer = await _generate(only_main_model, [Image(_test_image(), "image/png")], prompt, _CheckAnswer)

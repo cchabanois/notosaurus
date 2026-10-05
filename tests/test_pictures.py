@@ -7,9 +7,9 @@ import apkg
 import pytest
 from PIL import Image
 
-from app import llm, pictures
-from app.models import Card
 from app.settings import Settings
+from notosaurus_core import llm, pictures
+from notosaurus_core.models import Card
 
 
 def png(color="red") -> bytes:

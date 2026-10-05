@@ -5,7 +5,8 @@ import types
 
 from conftest import ADMIN
 
-from app import ankiconnect, llm
+from app import ankiconnect, settings
+from notosaurus_core import llm
 
 
 def test_saved_in_the_settings(admin):
@@ -57,7 +58,7 @@ def test_sent_with_the_request_for_the_profile(admin, monkeypatch):
 
 
 def test_nothing_added_without_instructions():
-    s = llm.settings.Settings()
-    assert llm.standing_instructions(s, "Léa") == ""
-    s = llm.settings.Settings(profile_instructions={"Paul": "year 6"})
-    assert llm.standing_instructions(s, "Léa") == "" and llm.standing_instructions(s, None) == ""
+    s = settings.Settings()
+    assert settings.standing_instructions(s, "Léa") == ""
+    s = settings.Settings(profile_instructions={"Paul": "year 6"})
+    assert settings.standing_instructions(s, "Léa") == "" and settings.standing_instructions(s, None) == ""

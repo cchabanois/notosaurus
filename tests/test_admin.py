@@ -372,7 +372,7 @@ def test_ollama_models(admin, monkeypatch):
 
 def test_test_image_and_json(admin, monkeypatch):
     """The admin test tells whether the model reads the image and answers in JSON."""
-    from app import llm
+    from notosaurus_core import llm
 
     admin.put("/api/admin/settings", headers=ADMIN, json={"llm": "gemini", "gemini_api_key": "k"})
 
@@ -403,7 +403,7 @@ def test_test_image_and_json(admin, monkeypatch):
 
 def test_model_without_vision_refuses_image(admin, monkeypatch):
     """Ollama refuses an image for a text-only model with a 400: the test says so plainly."""
-    from app import llm
+    from notosaurus_core import llm
 
     admin.put("/api/admin/settings", headers=ADMIN, json={"llm": "gemini", "gemini_api_key": "k"})
 
@@ -427,7 +427,7 @@ def test_model_without_vision_refuses_image(admin, monkeypatch):
 def test_recommended_models_first_is_the_default(admin):
     """The recommended models (app/recommended.py), in order, for every service that
     has some: the first one is its default, for the cards and for the pictures."""
-    from app import pictures, recommended
+    from notosaurus_core import pictures, recommended
 
     view = admin.get("/api/admin/settings", headers=ADMIN).json()
     for provider in ("gemini", "anthropic", "openai", "openrouter"):
