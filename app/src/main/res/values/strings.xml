@@ -1,0 +1,21 @@
+<resources>
+    <string name="app_name">Notosaurus</string>
+    <string name="relay">Relay address</string>
+    <string name="licence">Licence key</string>
+    <string name="test">Test the connection</string>
+    <string name="account">Plan %1$s: %2$d credits left, %3$d today.</string>
+    <string name="take_photo">Take a photo</string>
+    <string name="choose_photos">Choose photos</string>
+    <string name="clear_photos">Remove the photos</string>
+    <string name="photo_added">Photo added (%1$d KB).</string>
+    <string name="prompt">What to make of the lesson</string>
+    <string name="default_prompt">Vocabulary: one word per card, French on the front, Spanish on the back, gender and plural in the notes.</string>
+    <string name="make_cards">Make the cards</string>
+    <string name="extracted">%1$d cards (%2$d credits used, %3$d left).</string>
+    <string name="send_to_anki">Add to AnkiDroid</string>
+    <string name="sent">%1$d cards added to %2$s (%3$d already there, %4$d left out: not supported yet).</string>
+    <string name="anki_missing">AnkiDroid isn\'t installed.</string>
+    <string name="anki_permission_refused">AnkiDroid\'s permission was refused: the cards can\'t be added.</string>
+    <string name="relay_error">The relay said: %1$s</string>
+    <string name="error">Error: %1$s</string>
+</resources>

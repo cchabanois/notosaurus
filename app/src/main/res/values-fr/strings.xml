@@ -1,0 +1,20 @@
+<resources>
+    <string name="relay">Adresse du relais</string>
+    <string name="licence">Clé de licence</string>
+    <string name="test">Tester la connexion</string>
+    <string name="account">Formule %1$s : %2$d crédits restants, %3$d aujourd\'hui.</string>
+    <string name="take_photo">Prendre une photo</string>
+    <string name="choose_photos">Choisir des photos</string>
+    <string name="clear_photos">Retirer les photos</string>
+    <string name="photo_added">Photo ajoutée (%1$d Ko).</string>
+    <string name="prompt">Que faire de la leçon</string>
+    <string name="default_prompt">Vocabulaire : un mot par carte, en français au recto, en espagnol au verso, genre et pluriel dans les notes.</string>
+    <string name="make_cards">Faire les cartes</string>
+    <string name="extracted">%1$d cartes (%2$d crédits utilisés, %3$d restants).</string>
+    <string name="send_to_anki">Ajouter à AnkiDroid</string>
+    <string name="sent">%1$d cartes ajoutées à %2$s (%3$d déjà présentes, %4$d laissées de côté : pas encore gérées).</string>
+    <string name="anki_missing">AnkiDroid n\'est pas installé.</string>
+    <string name="anki_permission_refused">La permission d\'AnkiDroid a été refusée : impossible d\'ajouter les cartes.</string>
+    <string name="relay_error">Le relais a répondu : %1$s</string>
+    <string name="error">Erreur : %1$s</string>
+</resources>
