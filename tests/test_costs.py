@@ -7,7 +7,7 @@ import types
 import pytest
 from conftest import ADMIN, PRICES
 
-from app import llm, prices
+from notosaurus_core import llm, prices
 
 
 def usd(model, input_tokens, output_tokens):

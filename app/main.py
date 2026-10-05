@@ -20,24 +20,12 @@ from fastapi import BackgroundTasks, Depends, FastAPI, File, Form, Header, Query
 from fastapi.responses import FileResponse, JSONResponse, Response
 from fastapi.staticfiles import StaticFiles
 
-from . import (
-    anki,
-    ankiconnect,
-    decks,
-    diagrams,
-    i18n,
-    lessons,
-    llm,
-    pictures,
-    prompts,
-    recommended,
-    settings,
-    tts,
-    usage,
-)
+from notosaurus_core import diagrams, llm, pictures, recommended, tts
+from notosaurus_core.llm import Image, check, extract_cards, list_models, revise_cards
+
+from . import anki, ankiconnect, decks, i18n, lessons, prompts, settings, usage
 from .anki import build_apkg, notes
 from .errors import AppError
-from .llm import Image, check, extract_cards, list_models, revise_cards
 from .models import (
     AdminPassword,
     AiCall,
@@ -259,8 +247,17 @@ async def _generate(
     with llm.recording("extract") as calls:  # model, tokens and cost, kept with the lesson
         try:
             known = await decks.known(profile)
+            s = settings.current()
             found = await extract_cards(
-                data, prompt, deck, profile, known, fun_facts=fun_facts, page_texts=texts, helps=helps
+                s,
+                data,
+                prompt,
+                deck,
+                known,
+                fun_facts=fun_facts,
+                page_texts=texts,
+                helps=helps,
+                instructions=settings.standing_instructions(s, profile),
             )
         except Exception:
             usage.add(calls, lesson_id=None)  # answered but unusable: paid for, no lesson saved
@@ -384,18 +381,7 @@ async def _card_audio(req: ExportRequest, background: BackgroundTasks) -> tuple[
     if directory is None:
         directory = Path(tempfile.mkdtemp(prefix="notosaurus-audio-"))
         background.add_task(shutil.rmtree, directory, ignore_errors=True)
-    # Not read aloud: a back with a formula (the voice would read the MathJax code),
-    # a text with gaps (its back is only an extra), a multiple choice (the options are read)
-    backs = [
-        c.back.strip()
-        for c in req.cards
-        if c.front.strip()
-        and c.back.strip()
-        and not tts.has_math(c.back)
-        and not anki.is_cloze(c.front)
-        and not anki.is_choice(c)
-    ]
-    audio, failures = await tts.tts_many(backs, req.voice, directory)
+    audio, failures = await tts.tts_many(tts.spoken_backs(req.cards), req.voice, directory, settings.current().tts_rate)
     tts.prune(directory, set(audio.values()))
     return audio, failures
 
@@ -633,8 +619,16 @@ async def revise_lesson(id: str, req: RevisionRequest, lang: str = Depends(page_
     photos = [Image(lessons.photo_path(id, n).read_bytes(), "image/jpeg") for n in range(1, lesson.photo_count + 1)]
     with llm.recording("revise") as calls:
         try:
+            s = settings.current()
             revision = await revise_cards(
-                photos, lesson.prompt, Deck(deck=req.deck, cards=req.cards), req.instruction, lang, lesson.owner
+                s,
+                photos,
+                lesson.prompt,
+                Deck(deck=req.deck, cards=req.cards),
+                req.instruction,
+                i18n.language_name(lang),
+                settings.standing_instructions(s, lesson.owner),
+                demo=i18n.get(lang, "demo"),
             )
         finally:
             lessons.add_ai_calls(id, calls)  # an answer that couldn't be used is paid for too
@@ -661,8 +655,16 @@ async def explain(id: str, req: ExplainRequest, lang: str = Depends(page_lang)) 
     lesson = await _lesson(id)  # not found, or another profile's private one: 404
     with llm.recording("explain") as calls:
         try:
+            s = settings.current()
             return await llm.explain_card(
-                req.card, req.kind, lesson.prompt, lesson.deck, lang, lesson.owner, lesson.page_texts
+                s,
+                req.card,
+                req.kind,
+                lesson.prompt,
+                lesson.deck,
+                i18n.language_name(lang),
+                settings.standing_instructions(s, lesson.owner),
+                lesson.page_texts,
             )
         finally:
             lessons.add_ai_calls(id, calls)  # paid for, kept with the lesson
@@ -693,7 +695,7 @@ async def draw_pictures(id: str) -> dict:
     folder = lessons.folder(id) / "images"
     with llm.recording("picture") as calls:
         try:
-            failures, error = await pictures.draw_all(folder, cards)
+            failures, error = await pictures.draw_all(settings.current(), folder, cards)
         finally:
             lessons.add_ai_calls(id, calls)
             usage.add(calls, id, lesson.deck)
@@ -811,7 +813,7 @@ async def preview(text: str, voice: str, lesson: str | None = None) -> FileRespo
         raise AppError("tts.no_preview_for_anki_locale")
     directory = lessons.audio_dir(lesson) if lesson else None
     try:
-        path = await tts.tts(text[:200], voice, directory)
+        path = await tts.tts(text[:200], voice, directory, settings.current().tts_rate)
     except Exception as e:
         raise AppError("tts.failed", 502, detail=str(e)) from e
     return FileResponse(path, media_type="audio/mpeg")

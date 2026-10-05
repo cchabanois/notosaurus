@@ -7,8 +7,9 @@ import json
 import httpx
 from conftest import ADMIN, CLOZE, MODEL_ACTIONS, SEND, FakeAnki, extract_lesson
 
-from app import ankiconnect, settings, tts
+from app import ankiconnect, settings
 from app.main import app
+from notosaurus_core import tts
 
 
 def test_anki_unavailable(client, monkeypatch):

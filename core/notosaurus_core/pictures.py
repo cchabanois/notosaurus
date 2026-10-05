@@ -17,14 +17,14 @@ from pathlib import Path
 from PIL import Image as PILImage
 from PIL import ImageOps
 
-from . import figures, llm, recommended, settings, storage
+from . import config, figures, files, llm, recommended
+from .config import AIConfig
 from .errors import AppError
 from .models import Card
-from .settings import Settings
 
 log = logging.getLogger("notosaurus")
 
-OPENROUTER = settings.OPENROUTER_URL
+OPENROUTER = config.OPENROUTER_URL
 NAME = re.compile(r"^picture-[a-z0-9]+-[a-f0-9]{8}\.(jpg|svg)$")  # files we write; blocks "../"
 SIDE = 512  # on a card: clear enough, light to sync
 QUALITY = 80
@@ -47,11 +47,11 @@ DEFAULT_MODELS = {service: recommended.default(recommended.PICTURES, service) fo
 FALLBACK = ("openrouter", "gemini", "openai")
 
 
-def _key(s: Settings, service: str) -> str:
+def _key(s: AIConfig, service: str) -> str:
     return {"gemini": s.gemini_api_key, "openai": s.openai_api_key, "openrouter": s.openrouter_api_key}[service]
 
 
-def service(s: Settings) -> str:
+def service(s: AIConfig) -> str:
     """The service drawing the pictures: the one chosen, else the cards' own when it can
     draw, else the first with a key. "" when none can (no key, or "no pictures")."""
     chosen = s.picture_service.strip()
@@ -64,14 +64,14 @@ def service(s: Settings) -> str:
     return next((name for name in FALLBACK if _key(s, name)), "")
 
 
-def model(s: Settings) -> str:
+def model(s: AIConfig) -> str:
     """The image model, in the drawing service: the one set, else its default ("" when
     there is no service to draw)."""
     drawing = service(s)
     return (s.picture_model.strip() or DEFAULT_MODELS[drawing]) if drawing else ""
 
 
-async def draw(s: Settings, subject: str) -> bytes:
+async def draw(s: AIConfig, subject: str) -> bytes:
     """One picture (PNG/JPEG bytes from the model), its cost recorded."""
     drawing, name = service(s), model(s)
     if not drawing:
@@ -84,7 +84,7 @@ async def draw(s: Settings, subject: str) -> bytes:
     return await _openai(s, name, prompt)
 
 
-async def _openrouter(s: Settings, name: str, prompt: str) -> bytes:
+async def _openrouter(s: AIConfig, name: str, prompt: str) -> bytes:
     import openai
 
     key = s.openrouter_api_key
@@ -110,7 +110,7 @@ async def _openrouter(s: Settings, name: str, prompt: str) -> bytes:
     return base64.b64decode(images[0]["image_url"]["url"].split(",", 1)[1])
 
 
-async def _gemini(s: Settings, name: str, prompt: str) -> bytes:
+async def _gemini(s: AIConfig, name: str, prompt: str) -> bytes:
     from google import genai
     from google.genai import errors, types
 
@@ -134,7 +134,7 @@ async def _gemini(s: Settings, name: str, prompt: str) -> bytes:
     raise PictureError("picture.empty")
 
 
-async def _openai(s: Settings, name: str, prompt: str) -> bytes:
+async def _openai(s: AIConfig, name: str, prompt: str) -> bytes:
     import openai
 
     key = s.openai_api_key
@@ -153,7 +153,7 @@ async def _openai(s: Settings, name: str, prompt: str) -> bytes:
 # --- The models that can draw, as each service lists them (listing is free) -----------
 
 
-async def image_models(s: Settings) -> list[str]:
+async def image_models(s: AIConfig) -> list[str]:
     """Every model of the drawing service that draws as Notosaurus asks it to (Gemini
     and OpenRouter: an image in the answer; OpenAI: its images API)."""
     drawing = service(s)
@@ -168,7 +168,7 @@ async def image_models(s: Settings) -> list[str]:
     return sorted(set(_drawing_models(drawing, found)))
 
 
-async def _fetch_models(s: Settings, drawing: str) -> list[dict]:
+async def _fetch_models(s: AIConfig, drawing: str) -> list[dict]:
     """The service's models: {"id", "outputs": modalities or None, "actions": or None}."""
     key = _key(s, drawing)
     if drawing == "gemini":
@@ -224,12 +224,12 @@ def save(folder: Path, card: Card, data: bytes) -> str:
 # --- Cache: a subject drawn once is reused by the next lessons, for free ----------
 
 
-def _cache_path(s: Settings, subject: str) -> Path:
+def _cache_path(s: AIConfig, subject: str) -> Path:
     key = hashlib.sha1(f"{model(s)}|{STYLE}|{subject.strip().lower()}".encode()).hexdigest()
-    return storage.data_dir() / "cache" / "pictures" / f"{key}.jpg"
+    return files.cache_dir("pictures", f"{key}.jpg")
 
 
-async def picture(s: Settings, subject: str, fresh: bool = False) -> bytes:
+async def picture(s: AIConfig, subject: str, fresh: bool = False) -> bytes:
     """The card-size picture of a subject: from the cache, or drawn (then cached).
     `fresh`: draw it again (the user didn't like it); the new one replaces it in the cache."""
     path = _cache_path(s, subject)
@@ -241,7 +241,7 @@ async def picture(s: Settings, subject: str, fresh: bool = False) -> bytes:
     return jpeg
 
 
-async def figure_or_picture(s: Settings, folder: Path, card: Card, fresh: bool = False) -> str:
+async def figure_or_picture(s: AIConfig, folder: Path, card: Card, fresh: bool = False) -> str:
     """The card's figure (SVG, drawn by the cards' AI) or picture (image model, from the
     cache unless `fresh`), saved in the lesson; returns its file name."""
     if card.figure.strip():
@@ -249,11 +249,10 @@ async def figure_or_picture(s: Settings, folder: Path, card: Card, fresh: bool =
     return save(folder, card, await picture(s, card.picture_prompt, fresh=fresh))
 
 
-async def draw_all(folder: Path, cards: list[Card]) -> tuple[int, dict | None]:
+async def draw_all(s: AIConfig, folder: Path, cards: list[Card]) -> tuple[int, dict | None]:
     """Draw the missing pictures (cards with a picture_prompt or a figure, and no picture),
     a few at a time. Returns how many failed and why the first did (an error's detail, for
     the page): a card without its picture is still a card."""
-    s = settings.current()
     todo = [c for c in cards if (c.picture_prompt.strip() or c.figure.strip()) and not c.picture]
     sem = asyncio.Semaphore(CONCURRENCY)
     failures: list[dict] = []

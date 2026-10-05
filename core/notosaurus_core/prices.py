@@ -3,7 +3,7 @@
 The providers' APIs say how many tokens a call used, not its price (OpenRouter
 excepted: it gives the exact cost). The estimate uses OpenRouter's public model
 list, which has the prices of Google, Anthropic and OpenAI models: no table to
-keep up to date by hand. Fetched at most once a day, kept in data/cache/.
+keep up to date by hand. Fetched at most once a day, kept in the cache (files.py).
 """
 
 import logging
@@ -12,7 +12,7 @@ import time
 
 import httpx
 
-from . import recommended, storage
+from . import files, recommended
 
 log = logging.getLogger("notosaurus")
 
@@ -25,13 +25,13 @@ PREFIXES = {"gemini": "google/", "anthropic": "anthropic/", "openai": "openai/"}
 
 
 def _cache_path():
-    return storage.data_dir() / "cache" / "model-prices.json"
+    return files.cache_dir("model-prices.json")
 
 
 async def _prices() -> dict[str, tuple[float, float]]:
     """Model id → (price of an input token, of an output token), in US dollars."""
     path = _cache_path()
-    cached = storage.read_json(path)
+    cached = files.read_json(path)
     if cached and time.time() - cached.get("at", 0) < MAX_AGE:
         return {k: tuple(v) for k, v in cached["prices"].items()}
     try:
@@ -47,7 +47,7 @@ async def _prices() -> dict[str, tuple[float, float]]:
     except (httpx.HTTPError, ValueError, KeyError, TypeError) as e:
         log.warning("Model prices unavailable: %s", e)
         return {k: tuple(v) for k, v in (cached or {}).get("prices", {}).items()}  # older prices, or none
-    storage.write_json(path, {"at": time.time(), "prices": prices})
+    files.write_json(path, {"at": time.time(), "prices": prices})
     return prices
 
 

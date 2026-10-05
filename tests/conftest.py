@@ -9,13 +9,14 @@ import httpx
 import pytest
 from fastapi.testclient import TestClient
 
-from app import ankiconnect, prices, settings, tts
+from app import ankiconnect, settings
 from app.main import DEVICE_COOKIE, app
+from notosaurus_core import prices, tts
 
 synthesized = []
 
 
-async def fake_synthesize(text, voice, path):
+async def fake_synthesize(text, voice, path, rate):
     if "ÉCHEC" in text:
         raise RuntimeError("network down")
     synthesized.append(text)

@@ -3,7 +3,8 @@
 import apkg
 import pytest
 
-from app import figures, lessons
+from app import lessons
+from notosaurus_core import figures
 
 TRAPPED = """<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 300" width="9999" onload="alert(1)">
 <script>alert(1)</script><rect width="400" height="300" fill="white"/>

@@ -4,7 +4,9 @@ their switch's default in the settings."""
 import apkg
 from conftest import ADMIN
 
-from app import anki, llm
+from app import anki
+from notosaurus_core import llm
+from notosaurus_core.config import AIConfig
 
 
 def test_helps_only_when_asked(client):
@@ -50,7 +52,7 @@ def test_what_the_ai_fills(monkeypatch):
     helps only when asked (Anthropic refuses too complex a response schema)."""
     import asyncio
 
-    from app.models import Extraction
+    from notosaurus_core.models import Extraction
 
     def card_fields(schema):
         return set(schema.model_fields["cards"].annotation.__args__[0].model_fields)
@@ -63,10 +65,9 @@ def test_what_the_ai_fills(monkeypatch):
     async def answer(s, images, text, schema, system=None, light=False):
         return schema(deck="D", cards=[{"front": "a", "back": "b", "explanation": "c"}])
 
-    monkeypatch.setenv("NOTOSAURUS_LLM", "gemini")
     monkeypatch.setattr(llm, "_generate", answer)
-    found = asyncio.run(llm.extract_cards([], "p", helps=True))
+    found = asyncio.run(llm.extract_cards(AIConfig(llm="gemini"), [], "p", helps=True))
     card = found.deck.cards[0]
-    from app.models import Card
+    from notosaurus_core.models import Card
 
     assert isinstance(card, Card) and (card.explanation, card.id, card.picture) == ("c", "", "")  # Notosaurus's own

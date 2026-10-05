@@ -11,7 +11,9 @@ from pathlib import Path
 
 import genanki
 
-from . import diagrams, tts
+from notosaurus_core import diagrams, tts
+from notosaurus_core.cards import is_choice, is_cloze
+
 from .errors import AppError
 from .models import ExportRequest
 
@@ -54,15 +56,6 @@ CLOZE_CSS = """\
 .extra { margin-top: 12px; }
 """
 
-# A gap in a text: {{c1::1789}}, {{c2::la Bastille::lieu}} (Anki's cloze syntax)
-CLOZE = re.compile(r"\{\{c\d+::")
-
-
-def is_cloze(text: str) -> bool:
-    """A text with gaps: a cloze card, one Anki card per gap number."""
-    return bool(CLOZE.search(text))
-
-
 # Multiple choice: the options in a list (A, B, C…), the right one marked on the answer
 CHOICE_CSS = """\
 .notosaurus-choices {
@@ -73,18 +66,6 @@ CHOICE_CSS = """\
 .notosaurus-choices li.right::after { content: " ✔"; }
 .notosaurus-choices li.wrong { opacity: .5; }
 """
-
-
-def is_choice(card) -> bool:
-    """A multiple-choice or true/false card: a right answer (its back) and wrong ones.
-    A text with gaps or a diagram label stays what it is."""
-    return bool(
-        card.front.strip()
-        and card.back.strip()
-        and any(c.strip() for c in card.choices)
-        and not card.mask
-        and not is_cloze(card.front)
-    )
 
 
 def choice_order(card) -> list[str]:

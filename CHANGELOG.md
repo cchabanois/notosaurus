@@ -7,6 +7,10 @@ Each pull request adds a line under **Unreleased**. See [Releasing](CONTRIBUTING
 
 ## [Unreleased]
 
+### Changed
+
+- For developers: the AI and card logic is a package of its own, `notosaurus-core` (in `core/`), which other programs can use without the app. Nothing changes for users.
+
 ## [1.0.0] - 2026-10-04
 
 The first version.

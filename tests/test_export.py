@@ -5,8 +5,9 @@ package, unzipped, its SQLite collection read (tests/apkg.py)."""
 import apkg
 from conftest import CLOZE, extract_lesson, synthesized
 
-from app import anki, tts
-from app.models import Card
+from app import anki
+from notosaurus_core import tts
+from notosaurus_core.models import Card
 
 EXPORT = {
     "deck": "Espagnol::Leçon 5",
@@ -119,7 +120,7 @@ def test_voice_preview(client):
 def test_voice_for_a_language(monkeypatch):
     import asyncio
 
-    from app import tts
+    from notosaurus_core import tts
 
     available = [
         {"voice": "es-MX-JorgeNeural", "locale": "es-MX", "gender": "Male"},

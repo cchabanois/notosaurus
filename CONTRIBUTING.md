@@ -73,21 +73,29 @@ Stack:
 - decks: [genanki](https://github.com/kerrickstaley/genanki), with stable GUIDs so re-importing updates cards;
 - QR codes: [segno](https://github.com/heuer/segno).
 
+The AI and card logic is a package of its own, `core/notosaurus_core`: it never reads
+the app's settings, lessons or data folder (the AI configuration and everything else
+come in as parameters), so that other programs can use it. A test keeps it that way.
+
 | Path | Content |
 |---|---|
+| `core/notosaurus_core/llm.py` | card extraction, AI correction and explanations (Gemini, Claude, OpenAI-compatible, fake) |
+| `core/notosaurus_core/config.py` | the AI configuration: service, model, keys, picture service |
+| `core/notosaurus_core/models.py` | cards, decks, diagram masks and frames, AI calls |
+| `core/notosaurus_core/tts.py` | edge-tts audio |
+| `core/notosaurus_core/pictures.py`, `figures.py` | pictures on cards, drawn by an image model; figures drawn as SVG |
+| `core/notosaurus_core/diagrams.py` | diagram labels: boxes from the AI, card images with the labels hidden |
+| `core/notosaurus_core/recommended.py`, `prices.py` | recommended models, estimated costs |
+| `core/notosaurus_core/errors.py` | errors as translatable codes |
+| `core/notosaurus_core/files.py` | where the caches go, small file helpers |
 | `app/main.py` | FastAPI routes and static files |
-| `app/llm.py` | card extraction and AI correction (Gemini, Claude, OpenAI-compatible, fake) |
 | `app/lessons.py` | saved lessons, one folder each |
 | `app/anki.py` | `.apkg` builder (genanki, audio, reverse cards) |
 | `app/ankiconnect.py` | direct send through AnkiConnect or the add-on's bridge |
-| `app/tts.py` | edge-tts audio |
-| `app/pictures.py` | pictures on cards, drawn by an image model |
-| `app/diagrams.py` | diagram labels: boxes from the AI, card images with the labels hidden |
 | `app/prompts.py` | saved prompts |
-| `app/settings.py` | settings, API keys, admin password |
+| `app/settings.py` | settings (the AI configuration and the app's own), API keys, admin password |
 | `app/i18n.py`, `static/i18n.js`, `static/i18n/` | languages |
-| `app/errors.py` | errors as translatable codes |
-| `app/storage.py` | data folder, atomic JSON writes, readable file names |
+| `app/storage.py` | data folder, atomic JSON writes |
 | `static/` | the phone page and the settings page |
 | `anki_addon/` | the Anki add-on: server launcher and an AnkiConnect-compatible bridge |
 | `tools/build_addon.py` | builds `dist/notosaurus-<version>.ankiaddon` |

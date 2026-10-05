@@ -7,11 +7,12 @@ requires-python = ">=3.13"
 # Dependencies: requirements.txt (the Anki add-on installs them with uv)
 
 [tool.pytest.ini_options]
-pythonpath = ["."]
+pythonpath = [".", "core"]
 testpaths = ["tests"]
 
 [tool.ruff]
 line-length = 120
+src = [".", "core"]
 
 [tool.ruff.lint]
 select = [
@@ -33,3 +34,6 @@ extend-immutable-calls = ["fastapi.File", "fastapi.Form"]  # FastAPI's way of de
 
 [tool.ruff.lint.per-file-ignores]
 "app/main.py" = ["E402"]  # .env is loaded before the app modules read it
+# Pydantic models built on notosaurus_core's: ruff can't tell, mutable defaults are fine there
+"app/models.py" = ["RUF012"]
+"app/settings.py" = ["RUF012"]

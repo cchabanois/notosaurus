@@ -5,8 +5,9 @@ import types as py_types
 
 from google.genai import errors, types
 
-from app import llm, settings
-from app.figures import Drawing
+from app import settings
+from notosaurus_core import llm
+from notosaurus_core.figures import Drawing
 
 SVG = '{"svg": "<svg/>"}'
 

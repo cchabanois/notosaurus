@@ -1,7 +1,7 @@
 const PASSWORD_KEY = "notosaurus.admin";  // kept for the browser session only
 
 // Names and descriptions: admin.provider.<id>.* in static/i18n/<lang>.json. The models
-// suggested come from the server: Notosaurus's recommended ones (app/recommended.py),
+// suggested come from the server: Notosaurus's recommended ones (core/notosaurus_core/recommended.py),
 // then every one the service lists.
 const PROVIDERS = [
   { id: "gemini" },

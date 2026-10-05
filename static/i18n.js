@@ -51,7 +51,7 @@ function tHtml(key, params = {}) {
   return t(key, Object.fromEntries(Object.entries(params).map(([k, v]) => [k, escape(v)])));
 }
 
-// Server errors come as { code, params } (see app/errors.py).
+// Server errors come as { code, params } (see core/notosaurus_core/errors.py).
 function errorMessage(detail) {
   if (typeof detail === "string") return detail;
   if (detail && detail.code) {

@@ -6,8 +6,8 @@ import apkg
 import pytest
 from PIL import Image
 
-from app import diagrams, llm
-from app.models import Card, Frame, Mask
+from notosaurus_core import diagrams, llm
+from notosaurus_core.models import Card, Frame, Mask
 
 
 def photo(width=1000, height=500) -> bytes:
@@ -161,12 +161,12 @@ def test_rotation_ignored_when_unknown_or_unreadable():
 
 def test_sideways_photo_saved_upright(client, monkeypatch):
     from app import main
-    from app.models import Deck
+    from notosaurus_core.models import Deck
 
-    async def sideways(images, prompt, deck="", profile=None, decks=(), fun_facts=False, page_texts=(), helps=False):
+    async def sideways(s, images, prompt, deck="", decks=(), **options):
         mask = Mask(page=1, n=1, box=[0.1, 0.2, 0.3, 0.4])
         deck = Deck(deck="D", cards=[Card(front="What is (1)?", back="x", mask=mask)])
-        return llm.Extracted(deck, [90], [Frame(page=1, box=[0.05, 0.1, 0.5, 0.6])])
+        return llm.Extracted(deck=deck, turns=[90], frames=[Frame(page=1, box=[0.05, 0.1, 0.5, 0.6])])
 
     monkeypatch.setattr(main, "extract_cards", sideways)
     files = [("images", ("p.jpg", photo(1000, 500), "image/jpeg"))]
@@ -187,14 +187,14 @@ def test_sideways_photo_saved_upright(client, monkeypatch):
     ],
 )
 def test_turn_from_the_reading_direction(first, last, turn):
-    from app.models import TextLine
+    from notosaurus_core.models import TextLine
 
     line = TextLine(page=1, first_word=first, last_word=last)  # gemini boxes: y, x, y, x on 0-1000
     assert diagrams.turns([line], [(1000, 800)], "gemini") == [turn]
 
 
 def test_turn_unknown_without_a_usable_line():
-    from app.models import TextLine
+    from notosaurus_core.models import TextLine
 
     lines = [
         TextLine(page=2, first_word=[1, 2, 3, 4], last_word=[5, 6, 7, 8]),
@@ -272,12 +272,12 @@ def test_cropped_image_and_masks(tmp_path):
 
 def test_turning_a_photo_by_hand_turns_its_frame(client, tmp_path, monkeypatch):
     from app import main
-    from app.models import Deck
+    from notosaurus_core.models import Deck
 
-    async def framed(images, prompt, deck="", profile=None, decks=(), fun_facts=False, page_texts=(), helps=False):
+    async def framed(s, images, prompt, deck="", decks=(), **options):
         mask = Mask(page=1, n=1, box=[0.1, 0.2, 0.3, 0.4])
         deck = Deck(deck="D", cards=[Card(front="What is (1)?", back="x", mask=mask)])
-        return llm.Extracted(deck, [0], [Frame(page=1, box=[0.05, 0.1, 0.5, 0.6])])
+        return llm.Extracted(deck=deck, turns=[0], frames=[Frame(page=1, box=[0.05, 0.1, 0.5, 0.6])])
 
     monkeypatch.setattr(main, "extract_cards", framed)
     files = [("images", ("p.jpg", photo(1000, 500), "image/jpeg"))]
@@ -311,7 +311,7 @@ def test_correction_adds_a_masked_label():
 
 
 def test_correction_tells_the_model_how_to_place_a_label():
-    from app.models import Deck
+    from notosaurus_core.models import Deck
 
     empty = Deck(deck="D", cards=[])
     text = llm._revision_text("p", empty, "add the title", "en", 1, [(800, 600)], "pixels", {1: [1, 2]})

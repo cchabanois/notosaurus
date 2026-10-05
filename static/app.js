@@ -116,8 +116,8 @@ const formatDate = (iso) =>
 
 // Formulas: MathJax syntax, \( … \) within text, \[ … \] on their own (as in Anki)
 const MATH = /\\\((.+?)\\\)|\\\[(.+?)\\\]/gs;
-const HAS_MATH = /\\\(|\\\[/;  // as app/tts.py: no read-aloud for these
-const CLOZE = /\{\{c\d+::/;  // a gap, as app/anki.py: {{c1::1789}}
+const HAS_MATH = /\\\(|\\\[/;  // as core/notosaurus_core/tts.py: no read-aloud for these
+const CLOZE = /\{\{c\d+::/;  // a gap, as core/notosaurus_core/cards.py: {{c1::1789}}
 // Outside formulas: a gap's start ({{c2::) and its end, with an optional hint (::lieu}})
 const GAP_START = /\{\{c(\d+)::/g;
 const GAP_END = /(?:::[^{}]*?)?\}\}/g;
