@@ -7,6 +7,8 @@ Each pull request adds a line under **Unreleased**. See [Releasing](CONTRIBUTING
 
 ## [Unreleased]
 
+## [1.0.0] - 2026-10-04
+
 The first version.
 
 ### Added
@@ -36,4 +38,5 @@ The first version.
 - Recommended models for each service, from our tests on real notebook pages, with what a lesson or a picture costs; a test for the AI and for the pictures. A free Gemini key works, with an older model.
 - The app, its instructions and the add-on in English, French, Spanish, German, Italian and Portuguese (Brazil); the documentation in English and French (https://cchabanois.github.io/notosaurus/).
 
-[Unreleased]: https://github.com/cchabanois/notosaurus/commits/main
+[Unreleased]: https://github.com/cchabanois/notosaurus/compare/v1.0.0...HEAD
+[1.0.0]: https://github.com/cchabanois/notosaurus/releases/tag/v1.0.0
