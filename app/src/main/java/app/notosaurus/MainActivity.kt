@@ -77,7 +77,7 @@ class MainActivity : ComponentActivity() {
         if (anki.installed() && !anki.permitted()) ankiPermission.launch(Anki.PERMISSION)
 
         val prefs = getSharedPreferences("settings", Context.MODE_PRIVATE)
-        val server = LocalServer(applicationContext) {
+        val server = LocalServer.forApp(applicationContext) {
             Relay(prefs.getString("relay", DEFAULT_RELAY)!!, prefs.getString("key", DEFAULT_KEY)!!)
         }
         lifecycleScope.launch {

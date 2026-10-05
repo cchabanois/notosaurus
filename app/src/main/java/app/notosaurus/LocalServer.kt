@@ -49,21 +49,26 @@ import java.util.UUID
  * Listens on 127.0.0.1 only, and answers /api only with the cookie the app's WebView
  * has: another app on the phone can't use it.
  */
-class LocalServer(private val context: Context, private val relay: () -> Relay) {
-    val token: String = UUID.randomUUID().toString()
-    private val lessons = Lessons(File(context.filesDir, "lessons").apply { mkdirs() })
-    private val prompts = File(context.filesDir, "prompts.json")
-    private val anki = Anki(context)
+class LocalServer(
+    dataDir: File,
+    private val web: (String) -> ByteArray?, // a file of the page, by its path ("index.html", "i18n/fr.json")
+    private val languages: () -> List<String>, // the page's languages ("en", "fr"…)
+    private val anki: AnkiTarget,
+    private val relay: () -> Relay,
+    val token: String = UUID.randomUUID().toString(),
+) {
+    private val lessons = Lessons(File(dataDir, "lessons").apply { mkdirs() })
+    private val prompts = File(dataDir, "prompts.json")
     private lateinit var server: EmbeddedServer<*, *>
 
     /** Starts it; returns its port. */
     fun start(): Int {
-        server = embeddedServer(CIO, port = 0, host = "127.0.0.1") { routes() }
+        server = embeddedServer(CIO, port = 0, host = "127.0.0.1") { module() }
         server.start(wait = false)
         return runBlocking { server.engine.resolvedConnectors().first().port }
     }
 
-    private fun Application.routes() = routing {
+    fun Application.module() = routing {
         api("GET", "/api/admin") { buildJsonObject { put("allowed", false) } } // settings: the app's own screen
         api("GET", "/api/config") {
             buildJsonObject {
@@ -89,7 +94,7 @@ class LocalServer(private val context: Context, private val relay: () -> Relay) 
         api("POST", "/api/prompts") { savePrompt(null, body()) }
         api("PUT", "/api/prompts/{id}") { savePrompt(param("id").toInt(), body()) }
         api("DELETE", "/api/prompts/{id}") {
-            writePrompts(userPrompts().filter { it.jsonObject.string("id") != param("id") && it.jsonObject["id"].toString() != param("id") })
+            writePrompts(userPrompts().filter { it.jsonObject["id"]!!.toPlain() != param("id") })
             JsonNull
         }
         api("POST", "/api/prompts/{id}/duplicate") {
@@ -216,7 +221,7 @@ class LocalServer(private val context: Context, private val relay: () -> Relay) 
         // --- The page
         get("/{path...}") {
             val path = call.parameters.getAll("path").orEmpty().joinToString("/").ifEmpty { "index.html" }
-            val bytes = path.takeUnless { ".." in it }?.let { asset("web/$it") }
+            val bytes = path.takeUnless { ".." in it }?.let(web)
             if (bytes == null) call.respondText("", status = HttpStatusCode.NotFound)
             else call.respondBytes(bytes, ContentType.defaultForFilePath(path))
         }
@@ -267,13 +272,10 @@ class LocalServer(private val context: Context, private val relay: () -> Relay) 
 
     // --- The page's files and languages
 
-    private fun asset(path: String): ByteArray? = runCatching { context.assets.open(path).use { it.readBytes() } }.getOrNull()
-
-    private fun i18nCodes(): List<String> = context.assets.list("web/i18n").orEmpty()
-        .filter { it.endsWith(".json") }.map { it.removeSuffix(".json") }.sorted()
+    private fun i18nCodes(): List<String> = languages().sorted()
 
     private fun i18nFile(lang: String): JsonObject =
-        asset("web/i18n/$lang.json")?.let { json.parseToJsonElement(it.decodeToString()).jsonObject } ?: JsonObject(emptyMap())
+        web("i18n/$lang.json")?.let { json.parseToJsonElement(it.decodeToString()).jsonObject } ?: JsonObject(emptyMap())
 
     private fun i18n(lang: String, vararg keys: String): String? {
         var value: JsonElement? = i18nFile(lang)
@@ -311,6 +313,17 @@ class LocalServer(private val context: Context, private val relay: () -> Relay) 
 
     companion object {
         const val COOKIE = "notosaurus_app"
+
+        /** The app's: the page from its assets (web/), data in its own files, AnkiDroid. */
+        fun forApp(context: Context, relay: () -> Relay) = LocalServer(
+            dataDir = context.filesDir,
+            web = { path -> runCatching { context.assets.open("web/$path").use { it.readBytes() } }.getOrNull() },
+            languages = {
+                context.assets.list("web/i18n").orEmpty().filter { it.endsWith(".json") }.map { it.removeSuffix(".json") }
+            },
+            anki = Anki(context),
+            relay = relay,
+        )
 
         // Notosaurus's prompts, in order (app/prompts.py, BUILTIN)
         private val BUILTIN = listOf(

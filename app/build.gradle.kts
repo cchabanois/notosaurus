@@ -39,6 +39,12 @@ android {
         versionCode = 1
         versionName = "0.1.0"
     }
+    testOptions {
+        unitTests.all {
+            // The page's files for LocalServer's tests (the same as in the app's assets)
+            it.systemProperty("notosaurus.web", layout.projectDirectory.dir(webPage).get().asFile.absolutePath)
+        }
+    }
     packaging {
         resources.excludes += setOf("META-INF/INDEX.LIST", "META-INF/io.netty.versions.properties")
     }
@@ -63,4 +69,7 @@ dependencies {
     implementation(libs.ankidroid.api)
     implementation(libs.ktor.server.core)
     implementation(libs.ktor.server.cio)
+    testImplementation(libs.junit)
+    testImplementation(libs.ktor.server.test.host)
+    testImplementation(libs.mockwebserver)
 }

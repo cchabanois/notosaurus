@@ -47,8 +47,14 @@ The page also needs small changes for the phone: no Anki profile badge ("none"),
 Android SDK with platform 37 (`sdkmanager "platforms;android-37.0"`), JDK 17+.
 
 ```sh
-./gradlew assembleDebug    # app/build/outputs/apk/debug/app-debug.apk
+./gradlew testDebugUnitTest   # the tests (JVM: no phone needed)
+./gradlew assembleDebug       # app/build/outputs/apk/debug/app-debug.apk
 ```
+
+The tests call LocalServer's routes as the page does, with a fake relay
+(MockWebServer) and a fake AnkiDroid (`LocalServerTest`), and check the relay's
+client (`RelayTest`) and the lessons' storage (`LessonsTest`). AnkiDroid's API
+itself is only tried on a device.
 
 A relay on the computer (in `notosaurus-cloud`), reachable from the phone on the same Wi-Fi:
 
