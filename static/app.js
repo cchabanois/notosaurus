@@ -174,6 +174,7 @@ document.addEventListener("alpine:init", () => {
     success: "",
     anki: { available: false },  // Anki reachable → direct send; `profile`: open Anki profile
     settingsHere: true,          // false on a phone when Notosaurus runs in the Anki add-on
+    inAndroidApp: /\bNotosaurusApp\//.test(navigator.userAgent),  // the Notosaurus Android app (its WebView says so)
     profileToApply: null,        // Anki profile switch waiting for the current task to finish
     diagramWarning: false,       // the AI model places diagram masks loosely: say so
     lessonOwner: "",              // Anki profile that created the open lesson ("" = nobody: shared)

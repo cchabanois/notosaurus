@@ -573,7 +573,9 @@
       "connect": "Verbinden",
       "saved": "Computer: {address}",
       "use": "Verwenden",
-      "rescan": "Erneut scannen"
+      "rescan": "Erneut scannen",
+      "using": "Dieses Handy nutzt Notosaurus auf deinem Computer: {address}.",
+      "back": "Zurück zur Seite des Computers"
     },
     "data": {
       "title": "🗂️ Lektionen auf diesem Handy",

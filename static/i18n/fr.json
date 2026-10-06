@@ -573,7 +573,9 @@
       "connect": "Se connecter",
       "saved": "Ordinateur : {address}",
       "use": "L'utiliser",
-      "rescan": "Scanner à nouveau"
+      "rescan": "Scanner à nouveau",
+      "using": "Ce téléphone utilise Notosaurus sur ton ordinateur : {address}.",
+      "back": "Revenir à la page de l'ordinateur"
     },
     "data": {
       "title": "🗂️ Leçons sur ce téléphone",

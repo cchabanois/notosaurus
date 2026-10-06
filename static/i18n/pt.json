@@ -573,7 +573,9 @@
       "connect": "Conectar",
       "saved": "Computador: {address}",
       "use": "Usar",
-      "rescan": "Escanear de novo"
+      "rescan": "Escanear de novo",
+      "using": "Este celular usa o Notosaurus no seu computador: {address}.",
+      "back": "Voltar à página do computador"
     },
     "data": {
       "title": "🗂️ Lições neste celular",

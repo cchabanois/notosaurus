@@ -49,6 +49,9 @@
               :aria-label="$t('app.newLesson')" :title="$t('app.newLessonHint')" x-text="$t('app.newLessonShort')"></button>
       <a class="chip-btn icon-only" href="admin.html" x-show="settingsHere"
          :aria-label="$t('app.settings')" :title="$t('app.settings')">⚙️</a>
+      <!-- In the Android app, on the computer's page (whose settings stay on the computer): the app's own -->
+      <a class="chip-btn icon-only" href="notosaurus-app:settings" x-cloak x-show="!settingsHere && inAndroidApp"
+         :aria-label="$t('app.settings')" :title="$t('app.settings')">⚙️</a>
     </div>
   </header>
 
