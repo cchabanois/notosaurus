@@ -176,7 +176,8 @@ document.addEventListener("alpine:init", () => {
     success: "",
     anki: { available: false },  // Anki reachable → direct send; `profile`: open Anki profile
     settingsHere: true,          // false on a phone when Notosaurus runs in the Anki add-on
-    inAndroidApp: /\bNotosaurusApp\//.test(navigator.userAgent),  // the Notosaurus Android app (its WebView says so)
+    inAndroidApp: /\bNotosaurusApp\//.test(navigator.userAgent),
+    donations: true,             // "Support Notosaurus": not where it's paid for (the app's subscription)  // the Notosaurus Android app (its WebView says so)
     profileToApply: null,        // Anki profile switch waiting for the current task to finish
     diagramWarning: false,       // the AI model places diagram masks loosely: say so
     lessonOwner: "",              // Anki profile that created the open lesson ("" = nobody: shared)
@@ -222,6 +223,7 @@ document.addEventListener("alpine:init", () => {
         this.diagramWarning = config.diagram_warning;
         this.maxPhotos = config.max_photos ?? this.maxPhotos;
         this.configured = config.configured ?? true;
+        this.donations = config.donations ?? true;
         const helps = storage("get", undefined, HELPS);
         this.helps = helps === null ? Boolean(config.card_helps) : helps === "1";
       } catch {}

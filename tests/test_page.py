@@ -548,6 +548,21 @@ def test_helps_switch_default_from_the_settings(page):
     sync_api.expect(switch).not_to_be_checked()
 
 
+def test_no_support_link_where_notosaurus_is_paid_for(page):
+    """The Android app's own page (its subscription) says donations: false."""
+    page.goto("/")
+    sync_api.expect(page.locator(".support-link")).to_be_visible()
+
+    def paid(route):
+        config = route.fetch().json()
+        route.fulfill(json={**config, "donations": False})
+
+    page.route("**/api/config", paid)
+    page.reload()
+    page.wait_for_function("document.documentElement.classList.contains('i18n-ready')")
+    sync_api.expect(page.locator(".support-link")).to_be_hidden()
+
+
 def test_help_links_in_the_page_language(page):
     docs = "https://cchabanois.github.io/notosaurus/"
     page.goto("/")

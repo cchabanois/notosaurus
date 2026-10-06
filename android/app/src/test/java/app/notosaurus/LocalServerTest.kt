@@ -381,7 +381,9 @@ class LocalServerTest {
         assertEquals("nts_…_key", saved.string("key"))
         assertEquals("nts_new_licence_key", prefs[LocalServer.KEY])
         assertEquals("http://192.168.1.10:8080", prefs[LocalServer.RELAY])
-        assertEquals("true", client.get("/api/config") { page() }.json().jsonObject["card_helps"]!!.jsonPrimitive.content)
+        val config = client.get("/api/config") { page() }.json().jsonObject
+        assertEquals("true", config["card_helps"]!!.jsonPrimitive.content)
+        assertEquals("false", config["donations"]!!.jsonPrimitive.content) // paid for: no Ko-fi link
 
         // Only what's given changes
         client.put("/api/admin/settings") { page(); contentType(ContentType.Application.Json); setBody("""{"card_helps": false}""") }
