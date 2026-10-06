@@ -111,6 +111,8 @@ const RECENT_PROMPTS = 4;  // chips shown before "All"
 const SAVE_DELAY = 800;  // ms: save shortly after the last edit
 const PROFILE_POLL = 3000;  // ms: follow Anki profile switches (local request, only while visible)
 
+let sounding = null;  // the sound playing (play): stopped when another starts
+
 const formatDate = (iso) =>
   new Date(iso).toLocaleString(I18N.locale, { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" });
 
@@ -1200,6 +1202,9 @@ document.addEventListener("alpine:init", () => {
       const params = new URLSearchParams({ text, voice });
       if (this.lessonId) params.set("lesson", this.lessonId);  // kept in the lesson, reused on export
       const audio = new Audio(`/api/tts?${params}`);
+      // One voice at a time: listening again, or to another card, stops the one playing
+      sounding?.pause();
+      sounding = audio;
       // Only a load failure means the sound is really missing. play() may also
       // reject when playback start is interrupted (e.g. AbortError) while the
       // sound still plays, so its rejection alone is not an error for the user.

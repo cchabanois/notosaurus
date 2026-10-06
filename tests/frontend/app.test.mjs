@@ -292,6 +292,22 @@ test("voices: an edge-tts one is told apart from an Anki locale or \"auto\"", ()
   assert.equal(page.hasAudio(), false);
 });
 
+test("one voice at a time: listening again stops the sound playing", () => {
+  app.run(`globalThis.Audio = class {
+    constructor(src) { this.src = src; this.paused = true; (globalThis.sounds ??= []).push(this); }
+    addEventListener() {}
+    play() { this.paused = false; return Promise.resolve(); }
+    pause() { this.paused = true; }
+  }`);
+  const page = app.component();
+  page.voice = "es-ES-ElviraNeural";
+  page.play("la madre");
+  page.play("la madre");  // tapped again
+  page.play("el padre");  // another card
+  const sounds = app.run("sounds.map((s) => s.paused)");
+  assert.deepEqual(plain(sounds), [true, true, false]);  // only the last one plays
+});
+
 test("a sample sentence in the voice's language", () => {
   const page = app.component();
   assert.equal(page.sampleText("es-ES-X"), "Hola, ¿cómo estás?");
