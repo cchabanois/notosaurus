@@ -152,7 +152,9 @@ class LocalServerTest {
         val res = client.get("/api/config")
         assertEquals(HttpStatusCode.Unauthorized, res.status)
         assertEquals("device.not_paired", res.json().jsonObject["detail"]!!.jsonObject.string("code"))
-        assertEquals(HttpStatusCode.OK, client.get("/api/config") { page() }.status)
+        val config = client.get("/api/config") { page() }
+        assertEquals(HttpStatusCode.OK, config.status)
+        assertEquals("false", config.json().jsonObject["profiles"]!!.jsonPrimitive.content) // no Anki profile badge
     }
 
     @Test
