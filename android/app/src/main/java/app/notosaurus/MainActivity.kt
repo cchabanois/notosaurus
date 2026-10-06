@@ -105,6 +105,8 @@ class MainActivity : ComponentActivity() {
         })
 
         val version = packageManager.getPackageInfo(packageName, 0).versionName.orEmpty()
+        // Said to the pages: the computer's then links to the app's settings (its own stay on the computer)
+        web.settings.userAgentString += " NotosaurusApp/$version"
         server = LocalServer.forApp(
             applicationContext,
             version,
@@ -153,12 +155,17 @@ class MainActivity : ComponentActivity() {
 
     companion object {
         const val ANKIDROID = "com.ichi2.anki"
+        const val APP_LINKS = "notosaurus-app" // links the pages make to the app itself
     }
 
     /** The page's links: ours and the computer's stay in the app; others (help, Play Store)
      * go to the browser or the app they're for. The computer not answering: our page saying so. */
     private inner class Links : WebViewClient() {
         override fun shouldOverrideUrlLoading(view: WebView, request: WebResourceRequest): Boolean {
+            if (request.url.scheme == APP_LINKS) { // from the computer's page: "notosaurus-app:settings"
+                if (request.url.schemeSpecificPart == "settings") view.loadUrl("$origin/admin.html")
+                return true
+            }
             if (request.url.host == "127.0.0.1" || request.url.host == computerHost()) return false
             runCatching { startActivity(Intent(Intent.ACTION_VIEW, request.url)) }
             return true

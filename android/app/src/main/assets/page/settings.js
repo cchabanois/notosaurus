@@ -137,6 +137,11 @@ document.addEventListener("alpine:init", () => {
       }
     },
 
+    // The page these settings came from: the computer's in that mode, else the phone's
+    back() {
+      location.href = this.form?.mode === "computer" ? this.form.computer : "./";
+    },
+
     async usePhone() {
       try {
         location.href = (await api("/api/admin/mode", json("POST", { mode: "phone" }))).url;

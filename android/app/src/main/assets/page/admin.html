@@ -21,7 +21,7 @@
 <div class="app" x-data="settings">
 
   <header class="appbar">
-    <a class="brand" href="./">
+    <a class="brand" href="./" @click.prevent="back()">
       <span class="back">←</span>
       <img class="brand-logo" src="logo-mark.webp" alt="" width="44" height="44">
       <span x-text="$t('admin.title')"></span>
@@ -89,7 +89,15 @@
     <!-- With my computer: the Anki add-on's Notosaurus, from this app (free) -->
     <section class="panel" id="computer">
       <h2 x-text="$t('android.computer.title')"></h2>
-      <template x-if="form?.computer">
+      <!-- Opened from the computer's page (its ⚙️): the way back to the phone's -->
+      <template x-if="form?.mode === 'computer'">
+        <div>
+          <p x-text="$t('android.computer.using', { address: form.computer_address })"></p>
+          <button class="btn primary" @click="usePhone()" x-text="$t('android.unreachable.phone')"></button>
+          <button class="btn soft" @click="useComputer()" x-text="$t('android.computer.back')"></button>
+        </div>
+      </template>
+      <template x-if="form?.computer && form.mode !== 'computer'">
         <div>
           <p x-text="$t('android.computer.saved', { address: form.computer_address })"></p>
           <button class="btn primary" @click="useComputer()" x-text="$t('android.computer.use')"></button>
