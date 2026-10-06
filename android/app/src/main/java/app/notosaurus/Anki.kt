@@ -33,9 +33,22 @@ class Anki(private val context: Context) : AnkiTarget {
         ContextCompat.checkSelfPermission(context, PERMISSION) == PackageManager.PERMISSION_GRANTED
 
     /** The decks in AnkiDroid ("" when it can't tell). */
-    override fun deckNames(): List<String> = if (installed() && permitted()) api.deckList?.values?.toList().orEmpty() else emptyList()
+    override fun deckNames(): List<String> =
+        if (installed() && permitted()) firstUse { api.deckList?.values?.toList().orEmpty() } else emptyList()
 
-    override fun send(deck: Deck): Sent {
+    override fun send(deck: Deck): Sent = firstUse { add(deck) }
+
+    /** AnkiDroid installed but never opened: its first request fails ("storage is not
+     * configured") and sets it up; the next ones work. So: once more. */
+    private fun <T> firstUse(request: () -> T): T = try {
+        request()
+    } catch (e: IllegalStateException) {
+        if ("storage is not configured" !in e.message.orEmpty()) throw e
+        Thread.sleep(1000)
+        request()
+    }
+
+    private fun add(deck: Deck): Sent {
         val model = model() ?: error("AnkiDroid refused the note type")
         val cards = deck.cards.filter { it.front.isNotBlank() && !it.unsupported() }
         // Already there: same front in our note type (the API's duplicate check: first field)
