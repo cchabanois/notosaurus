@@ -97,6 +97,7 @@ class LocalServer(
                 put("max_photos", 10)
                 put("card_helps", prefs[CARD_HELPS] == "true")
                 put("configured", true)
+                put("donations", false) // paid for by the subscription: no "Support Notosaurus" (Ko-fi)
             }
         }
 
