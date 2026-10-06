@@ -1,0 +1,171 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="referrer" content="same-origin">
+  <meta name="theme-color" content="#eaf3fa" media="(prefers-color-scheme: light)">
+  <meta name="theme-color" content="#16181d" media="(prefers-color-scheme: dark)">
+  <title>Notosaurus</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&display=swap">
+  <!-- The web page's style and languages (the repository's static/): texts under "android" -->
+  <link rel="stylesheet" href="style.css">
+  <script defer src="i18n.js"></script>
+  <script defer src="settings.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.14.9/dist/cdn.min.js"></script>
+</head>
+<body>
+<!-- The Android app's settings: at the address of the computer's (the page's ⚙️ leads here) -->
+<div class="app" x-data="settings">
+
+  <header class="appbar">
+    <a class="brand" href="./">
+      <span class="back">←</span>
+      <img class="brand-logo" src="logo-mark.webp" alt="" width="44" height="44">
+      <span x-text="$t('admin.title')"></span>
+    </a>
+    <span class="save-pill" x-cloak x-show="form" :class="saveState">
+      <span x-show="saveState === 'saved'" x-text="$t('admin.savedButton')"></span>
+      <span x-show="saveState === 'pending' || saveState === 'saving'" x-text="$t('admin.saving')"></span>
+      <span x-show="saveState === 'error'" x-text="$t('admin.notSaved')"></span>
+    </span>
+  </header>
+
+  <div class="toast" x-cloak x-show="error" x-transition.opacity role="alert">
+    <span x-text="error"></span>
+    <button @click="error = ''" :aria-label="$t('common.close')">✕</button>
+  </div>
+  <div class="toast ok" x-cloak x-show="notice" x-transition.opacity role="status">
+    <span x-text="notice"></span>
+    <button @click="notice = ''" :aria-label="$t('common.close')">✕</button>
+  </div>
+
+  <main x-cloak x-show="form">
+    <!-- The licence: the relay's account -->
+    <section class="panel">
+      <h2 x-text="$t('android.licence.title')"></h2>
+      <p class="hint" x-show="form && !form.has_key" x-text="$t('android.licence.none')"></p>
+      <!-- Free with the add-on: said where the question comes up -->
+      <p class="hint" x-show="form && !form.has_key"><a href="#computer" x-text="$t('android.licence.free')"></a></p>
+      <p x-show="form?.has_key" x-text="$t('android.licence.keySet', { key: form?.key })"></p>
+      <template x-if="account">
+        <div>
+          <p x-text="$t('android.licence.plan', { plan: account.plan })"></p>
+          <p x-text="$t('android.licence.credits', { credits: account.credits_left, today: account.daily_left })"></p>
+          <p class="hint" x-show="account.renews_at"
+             x-text="$t('android.licence.renews', { date: formatDate(account.renews_at) })"></p>
+        </div>
+      </template>
+      <form @submit.prevent="saveKey()">
+        <label class="field"><span x-text="$t('android.licence.key')"></span>
+          <input type="password" x-model="newKey" autocomplete="off" :placeholder="$t('android.licence.keyPlaceholder')">
+        </label>
+        <button class="btn primary" :disabled="checking" x-text="$t('android.licence.check')"></button>
+      </form>
+    </section>
+
+    <!-- AnkiDroid: installed, allowed -->
+    <section class="panel">
+      <h2 x-text="$t('android.anki.title')"></h2>
+      <template x-if="anki">
+        <div>
+          <p x-show="anki.installed && anki.permitted" x-text="$t('android.anki.ready')"></p>
+          <div x-show="!anki.installed">
+            <p x-text="$t('android.anki.missing')"></p>
+            <a class="btn primary" href="https://play.google.com/store/apps/details?id=com.ichi2.anki"
+               x-text="$t('android.anki.install')"></a>
+            <p class="hint" x-text="$t('android.anki.openOnce')"></p>
+          </div>
+          <div x-show="anki.installed && !anki.permitted">
+            <p x-text="$t('android.anki.notAllowed')"></p>
+            <button class="btn primary" @click="allowAnki()" x-text="$t('android.anki.allow')"></button>
+          </div>
+        </div>
+      </template>
+    </section>
+
+    <!-- With my computer: the Anki add-on's Notosaurus, from this app (free) -->
+    <section class="panel" id="computer">
+      <h2 x-text="$t('android.computer.title')"></h2>
+      <template x-if="form?.computer">
+        <div>
+          <p x-text="$t('android.computer.saved', { address: form.computer_address })"></p>
+          <button class="btn primary" @click="useComputer()" x-text="$t('android.computer.use')"></button>
+          <button class="btn soft" :disabled="connecting" @click="scanComputer()" x-text="$t('android.computer.rescan')"></button>
+        </div>
+      </template>
+      <template x-if="form && !form.computer">
+        <div>
+          <p x-text="$t('android.computer.intro')"></p>
+          <button class="btn primary" :disabled="connecting" @click="scanComputer()" x-text="$t('android.computer.scan')"></button>
+          <p class="hint" x-text="$t('android.computer.scanHint')"></p>
+          <form @submit.prevent="connectComputer()">
+            <label class="field"><span x-text="$t('android.computer.address')"></span>
+              <!-- Text, not "url": "192.168.1.10:8000" (no http://) is fine, the app completes it -->
+              <input type="text" inputmode="url" autocapitalize="off" spellcheck="false" x-model="computerAddress"
+                     autocomplete="off" :placeholder="$t('android.computer.addressPlaceholder')">
+            </label>
+            <button class="btn soft" :disabled="connecting || !computerAddress.trim()" x-text="$t('android.computer.connect')"></button>
+          </form>
+        </div>
+      </template>
+    </section>
+
+    <!-- Standing instructions for the AI, as on the computer (no Anki profiles here) -->
+    <section class="panel">
+      <h2 x-text="$t('admin.instructions.title')"></h2>
+      <p class="hint" x-text="$t('admin.instructions.hint')"></p>
+      <label class="field">
+        <textarea x-model="form.instructions" @input="scheduleSave()" rows="3" maxlength="4000"
+                  :placeholder="$t('admin.instructions.generalPlaceholder')"></textarea>
+      </label>
+      <label class="switch field">
+        <input type="checkbox" x-model="form.card_helps" @change="scheduleSave()">
+        <span class="track"><span class="knob"></span></span>
+        <span><span x-text="$t('admin.instructions.helps')"></span></span>
+      </label>
+    </section>
+
+    <!-- Lessons kept on the phone -->
+    <section class="panel">
+      <h2 x-text="$t('android.data.title')"></h2>
+      <p x-show="data" x-text="data && $t('android.data.size', {
+           lessons: $t('common.count.lessons', { count: data.lessons }),
+           size: (data.bytes / 1e6).toLocaleString($store.i18n.lang, { maximumFractionDigits: 1 }) })"></p>
+      <button class="btn danger-soft" x-show="data?.lessons" @click="deleteLessons()"
+              x-text="$t('android.data.deleteAll')"></button>
+    </section>
+
+    <section class="panel">
+      <h2 x-text="$t('android.about.title')"></h2>
+      <p x-text="$t('android.about.version', { version: form?.version })"></p>
+      <details>
+        <summary x-text="$t('android.advanced.title')"></summary>
+        <label class="field"><span x-text="$t('android.advanced.relay')"></span>
+          <input type="url" x-model="form.relay" @change="saveNow()" autocomplete="off">
+        </label>
+        <p class="hint" x-text="$t('android.advanced.relayHint')"></p>
+      </details>
+    </section>
+
+    <footer class="page-footer">
+      <a class="docs-link" :href="$docs('')">📖 <span x-text="$t('common.help')"></span></a>
+      <label class="lang-select">
+        <span aria-hidden="true">🌐</span>
+        <select :aria-label="$t('common.language')" :value="$store.i18n.choice"
+                @change="setLanguage($event.target.value)">
+          <option value="" :selected="!$store.i18n.choice"
+                  x-text="$t('common.languageAuto', { name: $store.i18n.names[$store.i18n.auto] || $store.i18n.auto })"></option>
+          <template x-for="code in $store.i18n.available" :key="code">
+            <option :value="code" :selected="$store.i18n.choice === code" x-text="$store.i18n.names[code] || code"></option>
+          </template>
+        </select>
+      </label>
+    </footer>
+  </main>
+
+</div>
+</body>
+</html>

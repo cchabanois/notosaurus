@@ -16,6 +16,7 @@ Each pull request adds a line under **Unreleased**. See [Releasing](CONTRIBUTING
 - The texts of the coming Android app's “With my computer” mode (the Anki add-on used from the app), in every language.
 - The coming Android app's messages when AnkiDroid is missing or not allowed yet, in every language.
 - In the coming Android app, the computer's page shows a ⚙️ that opens the app's settings (to use it without the computer again).
+- For developers: the Android app (not published yet) now lives in this repository, in `android/`, built and tested with the same revision of the web page.
 
 ## [1.0.0] - 2026-10-04
 
