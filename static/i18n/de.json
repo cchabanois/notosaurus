@@ -541,6 +541,44 @@
       }
     }
   },
+  "android": {
+    "licence": {
+      "title": "🔑 Abo",
+      "key": "Lizenzschlüssel",
+      "keyPlaceholder": "nts_…",
+      "keySet": "Schlüssel: {key}",
+      "check": "Prüfen",
+      "plan": "Tarif: {plan}",
+      "credits": "Noch {credits} Credits diesen Monat, {today} heute",
+      "renews": "Erneuert am {date}",
+      "none": "Noch kein Lizenzschlüssel: Er kommt mit dem Abo."
+    },
+    "anki": {
+      "title": "📥 AnkiDroid",
+      "ready": "✓ AnkiDroid ist installiert und Notosaurus darf Karten hinzufügen.",
+      "missing": "AnkiDroid ist nicht installiert: Die Karten kommen in AnkiDroid, die kostenlose Anki-App für Android.",
+      "install": "AnkiDroid installieren",
+      "notAllowed": "Notosaurus darf AnkiDroid noch keine Karten hinzufügen.",
+      "allow": "Erlauben",
+      "openOnce": "Öffne AnkiDroid nach der Installation einmal, damit es seine Sammlung anlegt."
+    },
+    "data": {
+      "title": "🗂️ Lektionen auf diesem Handy",
+      "size": "{lessons} · {size} MB",
+      "deleteAll": "Alle Lektionen löschen",
+      "confirm": "Alle Lektionen auf diesem Handy löschen? Die Karten in AnkiDroid bleiben.",
+      "deleted": "Lektionen gelöscht."
+    },
+    "about": {
+      "title": "ℹ️ Über",
+      "version": "Version {version}"
+    },
+    "advanced": {
+      "title": "Erweitert",
+      "relay": "Adresse des Relays",
+      "relayHint": "Nur für Tests: der Notosaurus-Dienst, mit dem die App spricht."
+    }
+  },
   "setup": {
     "title": "Einrichtung",
     "computerOnly": "Der Assistent öffnet sich am Computer, in Anki: Extras → Notosaurus → Einrichtungsassistent.",
@@ -662,6 +700,17 @@
     },
     "data": {
       "too_new": "Diese Daten ({what}) stammen aus einer neueren Version von Notosaurus: Aktualisiere Notosaurus, um sie zu nutzen."
+    },
+    "relay": {
+      "invalid_key": "Unbekannter oder abgelaufener Lizenzschlüssel: Prüfe ihn in den Einstellungen.",
+      "no_credits": "Diesen Monat keine Credits mehr: Sie kommen mit der nächsten Erneuerung zurück.",
+      "daily_limit": "Das Tageslimit ist erreicht: Versuche es morgen wieder.",
+      "too_large": "Zu viele Fotos, oder eines ist zu groß.",
+      "bad_image": "Diese Datei ist kein Foto, das Notosaurus lesen kann.",
+      "invalid_request": "Der Notosaurus-Dienst hat die Anfrage abgelehnt: Aktualisiere Notosaurus.",
+      "client_outdated": "Diese Version von Notosaurus ist zu alt: Aktualisiere sie.",
+      "unavailable": "Der Notosaurus-Dienst ist gerade nicht verfügbar: Versuche es gleich noch einmal.",
+      "unreachable": "Der Notosaurus-Dienst ist nicht erreichbar: Prüfe die Internetverbindung."
     }
   },
   "demo": {
