@@ -551,7 +551,8 @@
       "plan": "Tarif: {plan}",
       "credits": "Noch {credits} Credits diesen Monat, {today} heute",
       "renews": "Erneuert am {date}",
-      "none": "Noch kein Lizenzschlüssel: Er kommt mit dem Abo."
+      "none": "Noch kein Lizenzschlüssel: Er kommt mit dem Abo.",
+      "free": "Kein Abo? Mit dem Anki-Add-on auf deinem Computer ist die App kostenlos: siehe „Mit meinem Computer“."
     },
     "anki": {
       "title": "📥 AnkiDroid",
@@ -561,6 +562,18 @@
       "notAllowed": "Notosaurus darf AnkiDroid noch keine Karten hinzufügen.",
       "allow": "Erlauben",
       "openOnce": "Öffne AnkiDroid nach der Installation einmal, damit es seine Sammlung anlegt."
+    },
+    "computer": {
+      "title": "💻 Mit meinem Computer",
+      "intro": "Du nutzt Notosaurus schon auf deinem Computer (Anki-Add-on)? Nutze es von diesem Handy aus: Lektionen, KI und Karten bleiben auf dem Computer.",
+      "scan": "QR-Code scannen",
+      "scanHint": "Auf dem Computer: Anki → Extras → Notosaurus → Auf dem Handy öffnen.",
+      "address": "Oder seine Adresse",
+      "addressPlaceholder": "http://192.168.1.10:8000/?k=…",
+      "connect": "Verbinden",
+      "saved": "Computer: {address}",
+      "use": "Verwenden",
+      "rescan": "Erneut scannen"
     },
     "data": {
       "title": "🗂️ Lektionen auf diesem Handy",
@@ -577,6 +590,17 @@
       "title": "Erweitert",
       "relay": "Adresse des Relays",
       "relayHint": "Nur für Tests: der Notosaurus-Dienst, mit dem die App spricht."
+    },
+    "unreachable": {
+      "title": "💻 Dein Computer antwortet nicht",
+      "hint": "Notosaurus muss dort laufen (Anki mit dem Add-on geöffnet), und dieses Handy im selben WLAN sein.",
+      "retry": "Erneut versuchen",
+      "rescan": "QR-Code erneut scannen",
+      "phone": "Ohne Computer verwenden"
+    },
+    "shortcuts": {
+      "phone": "Ohne Computer",
+      "computer": "Mit meinem Computer"
     }
   },
   "setup": {
@@ -711,6 +735,10 @@
       "client_outdated": "Diese Version von Notosaurus ist zu alt: Aktualisiere sie.",
       "unavailable": "Der Notosaurus-Dienst ist gerade nicht verfügbar: Versuche es gleich noch einmal.",
       "unreachable": "Der Notosaurus-Dienst ist nicht erreichbar: Prüfe die Internetverbindung."
+    },
+    "computer": {
+      "not_found": "Unter dieser Adresse antwortet kein Notosaurus: Ist Anki mit dem Add-on geöffnet und dieses Handy im selben WLAN?",
+      "not_a_qr": "Das ist nicht der QR-Code von Notosaurus: Scanne den, den Anki zeigt (Extras → Notosaurus → Auf dem Handy öffnen)."
     }
   },
   "demo": {
