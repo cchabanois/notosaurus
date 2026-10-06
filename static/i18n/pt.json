@@ -686,7 +686,10 @@
       "bad_response": "Resposta inesperada: o AnkiConnect está mesmo neste endereço?",
       "error": "Anki ({action}): {detail}",
       "no_profile": "Nenhum perfil aberto no Anki: abra um perfil e tente de novo.",
-      "sync_not_logged_in": "O Anki não está conectado ao AnkiWeb: clique uma vez em “Sincronizar” no Anki para entrar"
+      "sync_not_logged_in": "O Anki não está conectado ao AnkiWeb: clique uma vez em “Sincronizar” no Anki para entrar",
+      "android_missing": "Os cartões vão para o AnkiDroid: o Google Play abre na página dele. Instale-o, abra-o uma vez e adicione os cartões de novo.",
+      "android_refused": "O Notosaurus não tem permissão para adicionar cartões ao AnkiDroid: permita e adicione os cartões de novo.",
+      "android_failed": "O AnkiDroid não aceitou os cartões ({detail}): abra o AnkiDroid uma vez e tente de novo."
     },
     "tts": {
       "voices_unavailable": "Lista de vozes indisponível: {detail}",

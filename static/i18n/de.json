@@ -686,7 +686,10 @@
       "bad_response": "Unerwartete Antwort: Ist AnkiConnect wirklich unter dieser Adresse?",
       "error": "Anki ({action}): {detail}",
       "no_profile": "Kein Benutzerprofil in Anki geöffnet: Öffne eins und versuch es noch einmal.",
-      "sync_not_logged_in": "Anki ist nicht bei AnkiWeb angemeldet: Klick einmal in Anki auf „Synchronisieren“, um dich anzumelden"
+      "sync_not_logged_in": "Anki ist nicht bei AnkiWeb angemeldet: Klick einmal in Anki auf „Synchronisieren“, um dich anzumelden",
+      "android_missing": "Die Karten kommen in AnkiDroid: Google Play öffnet sich dafür. Installiere es, öffne es einmal und füge die Karten dann erneut hinzu.",
+      "android_refused": "Notosaurus darf AnkiDroid keine Karten hinzufügen: Erlaube es und füge die Karten dann erneut hinzu.",
+      "android_failed": "AnkiDroid hat die Karten nicht übernommen ({detail}): Öffne AnkiDroid einmal und versuche es dann erneut."
     },
     "tts": {
       "voices_unavailable": "Stimmenliste nicht verfügbar: {detail}",

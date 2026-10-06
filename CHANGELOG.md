@@ -14,6 +14,7 @@ Each pull request adds a line under **Unreleased**. See [Releasing](CONTRIBUTING
 - For developers: the tests build the Docker image and make a lesson with it.
 - The texts of the coming Android app's settings and of the Notosaurus service's errors, in every language.
 - The texts of the coming Android app's “With my computer” mode (the Anki add-on used from the app), in every language.
+- The coming Android app's messages when AnkiDroid is missing or not allowed yet, in every language.
 
 ## [1.0.0] - 2026-10-04
 
