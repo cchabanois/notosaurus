@@ -20,6 +20,10 @@ Each pull request adds a line under **Unreleased**. See [Releasing](CONTRIBUTING
 - For developers: the Android app's tests on an emulator (real AnkiDroid, the whole app, its two modes), run on demand.
 - The coming Android app's settings: a clear choice of where Notosaurus works (on the phone, or on the computer with the add-on, shown by its name).
 
+### Fixed
+
+- 🔊 Listening to a card again, or to another one, no longer plays two voices at once: the sound playing stops.
+
 ## [1.0.0] - 2026-10-04
 
 The first version.
