@@ -573,7 +573,9 @@
       "connect": "Connect",
       "saved": "Computer: {address}",
       "use": "Use it",
-      "rescan": "Scan again"
+      "rescan": "Scan again",
+      "using": "This phone uses Notosaurus on your computer: {address}.",
+      "back": "Back to the computer's page"
     },
     "data": {
       "title": "🗂️ Lessons on this phone",

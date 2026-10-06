@@ -573,7 +573,9 @@
       "connect": "Collegati",
       "saved": "Computer: {address}",
       "use": "Usalo",
-      "rescan": "Scansiona di nuovo"
+      "rescan": "Scansiona di nuovo",
+      "using": "Questo telefono usa Notosaurus sul tuo computer: {address}.",
+      "back": "Torna alla pagina del computer"
     },
     "data": {
       "title": "🗂️ Lezioni su questo telefono",
