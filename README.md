@@ -34,7 +34,7 @@ card: the others were already there); the lesson kept after a restart.
 | `Preferences.kt` | the settings, kept on the phone |
 | `Lessons.kt` | lessons on the phone, as the computer keeps them (lesson.json, page-N.jpg) |
 | `Relay.kt`, `Api.kt` | the relay's client (`/v1`), its errors |
-| `Anki.kt` | AnkiDroid's API: note type, decks and sub-decks, notes, duplicates |
+| `Anki.kt` | AnkiDroid's API: note type, decks and sub-decks, notes, duplicates. Asked for at the first "Add to Anki": its Play Store page when it's missing, its permission dialog when it isn't allowed yet |
 
 The page is copied at build time from the public repository checked out next to this
 one (`../notosaurus/static`, or `-Pnotosaurus.web=<path>`). The app's own files
@@ -113,4 +113,8 @@ The app uses `http://10.0.2.2:8080` (the computer, from the emulator) and the ke
   and a CLA; keep the CLA for any outside contribution to `static/`.
 - Licence through Google Play billing; Play Store listing (an app **for parents**,
   not "for children", see the Families policy); a "my own key" mode.
+- **Android 17's local network permission**: targeting SDK 37, `ACCESS_LOCAL_NETWORK`
+  (group "Nearby devices") will be needed for "With my computer" (LAN; WebView traffic
+  too). Ask for it when a computer is connected, after a sentence of ours; check that
+  LocalServer (127.0.0.1) doesn't need it.
 - The final application id: `app.notosaurus` here, unchangeable once published.

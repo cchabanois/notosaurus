@@ -50,7 +50,9 @@ class LocalServerTest {
     private val relay = MockWebServer()
     private val anki = FakeAnki()
     private val prefs = MemoryPreferences()
-    private var permissionAsked = false
+    private var permissionAsked = 0
+    private var grantPermission = true // the user's answer to AnkiDroid's dialog
+    private var storeOpened = 0
     private val computer = MockWebServer() // the add-on's Notosaurus, on the computer
     private var scanned: String? = null // what the fake QR scanner reads
     private var scannerMissing = false
@@ -58,12 +60,15 @@ class LocalServerTest {
     private lateinit var local: LocalServer
 
     private class FakeAnki : AnkiTarget {
-        var available = true
+        var installed = true
+        var permitted = true
+        var broken = false // e.g. never opened: no collection yet
         val sent = mutableListOf<Deck>()
-        override fun installed() = available
-        override fun permitted() = available
+        override fun installed() = installed
+        override fun permitted() = installed && permitted
         override fun deckNames() = listOf("Default", "Histoire")
         override fun send(deck: Deck): Sent {
+            if (broken) error("no collection")
             sent += deck
             return Sent(added = deck.cards.size, duplicates = 0, skipped = 0, deck = deck.deck)
         }
@@ -83,7 +88,12 @@ class LocalServerTest {
             anki = anki,
             prefs = prefs,
             version = "0.1.0",
-            requestAnkiPermission = { permissionAsked = true },
+            requestAnkiPermission = {
+                permissionAsked++
+                anki.permitted = grantPermission
+                grantPermission
+            },
+            installAnki = { storeOpened++ },
             scan = { if (scannerMissing) error("module not downloaded") else scanned },
             modeChanged = { modeChanges++ },
         )
@@ -282,8 +292,47 @@ class LocalServerTest {
         // Sending saves the lesson, marked as exported
         assertTrue(client.get("/api/lessons/${lesson.string("id")}") { page() }.json().jsonObject.string("exported_at").isNotEmpty())
 
-        anki.available = false
-        assertEquals("false", client.get("/api/anki/status") { page() }.json().jsonObject["available"]!!.jsonPrimitive.content)
+        assertEquals(0, permissionAsked) // allowed already: not asked
+    }
+
+    private suspend fun HttpClient.send(lesson: JsonObject) = post("/api/anki/send") {
+        page(); contentType(ContentType.Application.Json)
+        setBody("""{"deck": "Espagnol::Leçon 5", "cards": ${lesson["cards"]}, "voice": "", "lesson_id": "${lesson.string("id")}"}""")
+    }
+
+    @Test
+    fun ankiDroidAskedForAtTheFirstSend() = app { client ->
+        val lesson = client.extract()
+        // Not allowed yet: AnkiDroid's dialog, then the cards go in
+        anki.permitted = false
+        assertEquals(2, client.send(lesson).json().jsonObject["added"]!!.jsonPrimitive.int)
+        assertEquals(1, permissionAsked)
+
+        // Refused: said, nothing sent
+        anki.permitted = false
+        grantPermission = false
+        val refused = client.send(lesson)
+        assertEquals("anki.android_refused", refused.json().jsonObject["detail"]!!.jsonObject.string("code"))
+        assertEquals(1, anki.sent.size)
+    }
+
+    @Test
+    fun ankiDroidMissingOrNotReady() = app { client ->
+        // "Add to Anki" stays offered without AnkiDroid: it's asked for when used
+        anki.installed = false
+        assertEquals("true", client.get("/api/anki/status") { page() }.json().jsonObject["available"]!!.jsonPrimitive.content)
+        val lesson = client.extract()
+        val missing = client.send(lesson)
+        assertEquals("anki.android_missing", missing.json().jsonObject["detail"]!!.jsonObject.string("code"))
+        assertEquals(1, storeOpened) // its Play Store page
+        assertEquals(0, permissionAsked)
+
+        // Installed, never opened: AnkiDroid's error, said
+        anki.installed = true
+        anki.broken = true
+        val failed = client.send(lesson).json().jsonObject["detail"]!!.jsonObject
+        assertEquals("anki.android_failed", failed.string("code"))
+        assertEquals("no collection", failed["params"]!!.jsonObject.string("detail"))
     }
 
     @Test
@@ -367,9 +416,11 @@ class LocalServerTest {
     @Test
     fun ankiDroidAndItsPermission() = app { client ->
         assertEquals("true", client.get("/api/admin/anki") { page() }.json().jsonObject["permitted"]!!.jsonPrimitive.content)
-        client.post("/api/admin/anki/permission") { page() }
-        assertTrue(permissionAsked)
-        anki.available = false
+        anki.permitted = false
+        val asked = client.post("/api/admin/anki/permission") { page() }.json().jsonObject
+        assertEquals("true", asked["permitted"]!!.jsonPrimitive.content)
+        assertEquals(1, permissionAsked)
+        anki.installed = false
         val status = client.get("/api/admin/anki") { page() }.json().jsonObject
         assertEquals("false", status["installed"]!!.jsonPrimitive.content)
     }
