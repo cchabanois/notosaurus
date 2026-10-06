@@ -1,0 +1,42 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Notosaurus</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&display=swap">
+  <link rel="stylesheet" href="style.css">
+  <script defer src="i18n.js"></script>
+  <script defer src="settings.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.14.9/dist/cdn.min.js"></script>
+</head>
+<body>
+<!-- "With my computer", the computer not answering: try again, scan its QR code again, or the app's own Notosaurus -->
+<div class="app" x-data="settings(false)">
+  <header class="appbar">
+    <span class="brand">
+      <img class="brand-logo" src="logo-mark.webp" alt="" width="44" height="44">
+      <span>Notosaurus</span>
+    </span>
+  </header>
+
+  <div class="toast" x-cloak x-show="error" x-transition.opacity role="alert">
+    <span x-text="error"></span>
+    <button @click="error = ''" :aria-label="$t('common.close')">✕</button>
+  </div>
+
+  <main x-cloak x-show="form">
+    <section class="panel">
+      <h2 x-text="$t('android.unreachable.title')"></h2>
+      <p x-show="form?.computer_address" x-text="$t('android.computer.saved', { address: form?.computer_address })"></p>
+      <p class="hint" x-text="$t('android.unreachable.hint')"></p>
+      <button class="btn primary" @click="useComputer()" x-text="$t('android.unreachable.retry')"></button>
+      <button class="btn soft" :disabled="connecting" @click="scanComputer()" x-text="$t('android.unreachable.rescan')"></button>
+      <button class="btn soft" @click="usePhone()" x-text="$t('android.unreachable.phone')"></button>
+    </section>
+  </main>
+</div>
+</body>
+</html>
