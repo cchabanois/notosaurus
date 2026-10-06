@@ -447,7 +447,7 @@ h2 {
 .flash-body { flex: 1; min-width: 0; }
 .flash-actions { display: flex; flex-direction: column; }
 
-.flash input, .flash textarea.front, .flash textarea.back, .flash textarea.info {
+.flash input, .flash textarea.front, .flash textarea.back, .flash textarea.info, .flash textarea.grow {
   border: none;
   border-radius: 6px;
   padding: .15rem .25rem;
@@ -455,11 +455,12 @@ h2 {
   background: transparent;
   box-shadow: none;
 }
-.flash input:focus, .flash textarea.front:focus, .flash textarea.back:focus, .flash textarea.info:focus {
+.flash input:focus, .flash textarea.front:focus, .flash textarea.back:focus, .flash textarea.info:focus,
+.flash textarea.grow:focus {
   background: var(--surface-2); box-shadow: none;
 }
-/* Front, back, info: as tall as their text (a long answer, a long note), never cut */
-.flash textarea.front, .flash textarea.back, .flash textarea.info {
+/* Front, back, info, wrong options, "did you know": as tall as their text, never cut */
+.flash textarea.front, .flash textarea.back, .flash textarea.info, .flash textarea.grow {
   display: block; width: 100%; min-height: 0; resize: none; overflow: hidden; line-height: 1.3; field-sizing: content;
 }
 .flash .front { font-weight: 800; font-size: 1.08rem; }
@@ -469,7 +470,7 @@ h2 {
 .flash .choices { margin-top: .2rem; }
 .flash .choice { display: flex; gap: .3rem; align-items: center; color: var(--muted); }
 .flash .choice .wrong { color: var(--danger); font-weight: 800; }
-.flash .choice input { flex: 1; min-width: 0; }
+.flash .choice textarea { flex: 1; min-width: 0; }
 .flash .choice .icon-btn { width: 32px; height: 32px; font-size: .8rem; }
 .flash .choices .link-btn { font-size: .8rem; }
 .flash.has-explain { flex-wrap: wrap; }  /* the explanation under the card, full width */
@@ -480,8 +481,8 @@ h2 {
 .flash .explain-block { margin: 0 0 .4rem; }
 .flash .explain-actions { display: flex; flex-wrap: wrap; align-items: center; gap: .4rem; }
 .flash .explain-actions .icon-btn { margin-left: auto; width: 2rem; height: 2rem; }
-.flash .fun-fact { display: flex; gap: .3rem; align-items: center; font-size: .85rem; }
-.flash .fun-fact input { flex: 1; min-width: 0; font-style: italic; color: var(--muted); }
+.flash .fun-fact { display: flex; gap: .3rem; align-items: baseline; font-size: .85rem; }
+.flash .fun-fact textarea { flex: 1; min-width: 0; font-style: italic; color: var(--muted); }
 .switch.fun-facts { margin: .5rem 0 .25rem; }
 .switch.helps { margin: .25rem 0; }
 .flash .card-help { display: flex; gap: .3rem; align-items: flex-start; margin-top: .25rem; font-size: .85rem; }
