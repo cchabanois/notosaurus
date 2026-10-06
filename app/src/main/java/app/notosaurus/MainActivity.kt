@@ -2,7 +2,6 @@ package app.notosaurus
 
 import android.annotation.SuppressLint
 import android.app.Activity
-import android.content.Context
 import android.content.Intent
 import android.net.Uri
 import android.os.Bundle
@@ -10,7 +9,9 @@ import android.provider.MediaStore
 import android.webkit.CookieManager
 import android.webkit.ValueCallback
 import android.webkit.WebChromeClient
+import android.webkit.WebResourceRequest
 import android.webkit.WebView
+import android.webkit.WebViewClient
 import android.widget.FrameLayout
 import androidx.activity.ComponentActivity
 import androidx.activity.OnBackPressedCallback
@@ -59,6 +60,7 @@ class MainActivity : ComponentActivity() {
             settings.javaScriptEnabled = true
             settings.domStorageEnabled = true // the page keeps a few choices in localStorage
             webChromeClient = Chooser()
+            webViewClient = Links()
         }
         // The page below the status bar, above the navigation bar and the keyboard (a
         // WebView ignores its own padding: its frame takes it)
@@ -76,15 +78,24 @@ class MainActivity : ComponentActivity() {
         val anki = Anki(this)
         if (anki.installed() && !anki.permitted()) ankiPermission.launch(Anki.PERMISSION)
 
-        val prefs = getSharedPreferences("settings", Context.MODE_PRIVATE)
-        val server = LocalServer.forApp(applicationContext) {
-            Relay(prefs.getString("relay", DEFAULT_RELAY)!!, prefs.getString("key", DEFAULT_KEY)!!)
+        val version = packageManager.getPackageInfo(packageName, 0).versionName.orEmpty()
+        val server = LocalServer.forApp(applicationContext, version) {
+            runOnUiThread { ankiPermission.launch(Anki.PERMISSION) } // the settings' "Allow"
         }
         lifecycleScope.launch {
             val port = withContext(Dispatchers.IO) { server.start() }
             val origin = "http://127.0.0.1:$port"
             CookieManager.getInstance().setCookie(origin, "${LocalServer.COOKIE}=${server.token}; path=/")
             web.loadUrl("$origin/")
+        }
+    }
+
+    /** Links out of the app (help, Play Store): in the browser or the app they're for. */
+    private inner class Links : WebViewClient() {
+        override fun shouldOverrideUrlLoading(view: WebView, request: WebResourceRequest): Boolean {
+            if (request.url.host == "127.0.0.1") return false
+            runCatching { startActivity(Intent(Intent.ACTION_VIEW, request.url)) }
+            return true
         }
     }
 
@@ -107,11 +118,5 @@ class MainActivity : ComponentActivity() {
             chooser.launch(intent)
             return true
         }
-    }
-
-    companion object {
-        // Prototype: the relay on the computer, seen from the emulator; the dev licence
-        const val DEFAULT_RELAY = "http://10.0.2.2:8080"
-        const val DEFAULT_KEY = "nts_dev"
     }
 }

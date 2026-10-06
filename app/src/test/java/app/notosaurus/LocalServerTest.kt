@@ -49,6 +49,8 @@ class LocalServerTest {
     @get:Rule val folder = TemporaryFolder()
     private val relay = MockWebServer()
     private val anki = FakeAnki()
+    private val prefs = MemoryPreferences()
+    private var permissionAsked = false
     private lateinit var local: LocalServer
 
     private class FakeAnki : AnkiTarget {
@@ -67,12 +69,17 @@ class LocalServerTest {
     fun setUp() {
         relay.start()
         val web = File(System.getProperty("notosaurus.web") ?: "../../notosaurus/static")
+        val page = File("src/main/assets/page") // the app's own files, first (as forApp)
+        prefs[LocalServer.RELAY] = relay.url("/").toString()
+        prefs[LocalServer.KEY] = "nts_key"
         local = LocalServer(
             dataDir = folder.root,
-            web = { path -> web.resolve(path).takeIf { it.isFile }?.readBytes() },
+            web = { path -> listOf(page, web).map { it.resolve(path) }.firstOrNull { it.isFile }?.readBytes() },
             languages = { web.resolve("i18n").list().orEmpty().filter { it.endsWith(".json") }.map { it.removeSuffix(".json") } },
             anki = anki,
-            relay = { Relay(relay.url("/").toString(), "nts_key") },
+            prefs = prefs,
+            version = "0.1.0",
+            requestAnkiPermission = { permissionAsked = true },
         )
     }
 
@@ -276,5 +283,91 @@ class LocalServerTest {
         assertEquals(HttpStatusCode.NotFound, res.status)
         assertEquals("lesson.not_found", res.json().jsonObject["detail"]!!.jsonObject.string("code"))
         assertEquals(HttpStatusCode.NotFound, client.get("/api/lessons/$id/photos/1") { page() }.status)
+    }
+
+    // --- The settings page (assets/page/admin.html)
+
+    @Test
+    fun theAppsOwnSettingsPage() = app { client ->
+        val page = client.get("/admin.html").bodyAsText()
+        assertTrue("settings.js" in page) // the app's, not the computer's admin.js
+        assertTrue("android.licence.title" in page)
+        assertEquals("true", client.get("/api/admin") { page() }.json().jsonObject["allowed"]!!.jsonPrimitive.content)
+        // The texts it uses are in every language of the web page
+        val names = Regex("""\${'$'}t\('(android\.[a-zA-Z.]+)'""").findAll(page).map { it.groupValues[1] }.toSet()
+        val web = File(System.getProperty("notosaurus.web") ?: "../../notosaurus/static")
+        for (lang in web.resolve("i18n").listFiles()!!) {
+            val messages = json.parseToJsonElement(lang.readText()).jsonObject
+            for (name in names) {
+                val found = name.split(".").fold<String, kotlinx.serialization.json.JsonElement?>(messages) { at, part -> (at as? JsonObject)?.get(part) }
+                assertTrue("${lang.name}: $name", found != null)
+            }
+        }
+    }
+
+    @Test
+    fun settingsSavedAndTheKeyNeverGivenBack() = app { client ->
+        val shown = client.get("/api/admin/settings") { page() }.json().jsonObject
+        assertEquals("•••••••", shown.string("key")) // a short key: all hidden
+        assertEquals("0.1.0", shown.string("version"))
+
+        val saved = client.put("/api/admin/settings") {
+            page(); contentType(ContentType.Application.Json)
+            setBody("""{"key": " nts_new_licence_key ", "instructions": "Léa est en 5e", "card_helps": true, "relay": "http://192.168.1.10:8080/"}""")
+        }.json().jsonObject
+        assertEquals("nts_…_key", saved.string("key"))
+        assertEquals("nts_new_licence_key", prefs[LocalServer.KEY])
+        assertEquals("http://192.168.1.10:8080", prefs[LocalServer.RELAY])
+        assertEquals("true", client.get("/api/config") { page() }.json().jsonObject["card_helps"]!!.jsonPrimitive.content)
+
+        // Only what's given changes
+        client.put("/api/admin/settings") { page(); contentType(ContentType.Application.Json); setBody("""{"card_helps": false}""") }
+        assertEquals("Léa est en 5e", prefs[LocalServer.INSTRUCTIONS])
+        assertEquals("nts_new_licence_key", prefs[LocalServer.KEY])
+    }
+
+    @Test
+    fun standingInstructionsGoToTheAi() = app { client ->
+        prefs[LocalServer.INSTRUCTIONS] = "Léa est en 5e"
+        client.extract()
+        val instructions = relay.takeRequest().multipartRequest().string("instructions")
+        assertTrue(instructions.startsWith("Standing instructions, for every lesson:\nLéa est en 5e"))
+
+        prefs[LocalServer.INSTRUCTIONS] = ""
+        client.extract()
+        assertEquals("", relay.takeRequest().multipartRequest().string("instructions"))
+    }
+
+    @Test
+    fun theLicencesAccount() = app { client ->
+        relayAnswers("""{"plan": "monthly", "credits_left": 1200, "daily_left": 300, "renews_at": "2026-11-06T10:00:00+00:00"}""")
+        val account = client.get("/api/admin/account") { page() }.json().jsonObject
+        assertEquals(1200, account["credits_left"]!!.jsonPrimitive.int)
+        assertEquals("Bearer nts_key", relay.takeRequest().headers["Authorization"])
+
+        relayAnswers("""{"code": "relay.invalid_key", "params": {}}""", code = 401)
+        val res = client.get("/api/admin/account") { page() }
+        assertEquals("relay.invalid_key", res.json().jsonObject["detail"]!!.jsonObject.string("code"))
+    }
+
+    @Test
+    fun ankiDroidAndItsPermission() = app { client ->
+        assertEquals("true", client.get("/api/admin/anki") { page() }.json().jsonObject["permitted"]!!.jsonPrimitive.content)
+        client.post("/api/admin/anki/permission") { page() }
+        assertTrue(permissionAsked)
+        anki.available = false
+        val status = client.get("/api/admin/anki") { page() }.json().jsonObject
+        assertEquals("false", status["installed"]!!.jsonPrimitive.content)
+    }
+
+    @Test
+    fun theLessonsOnThePhone() = app { client ->
+        client.extract()
+        client.extract()
+        val data = client.get("/api/admin/data") { page() }.json().jsonObject
+        assertEquals(2, data["lessons"]!!.jsonPrimitive.int)
+        assertTrue(data["bytes"]!!.jsonPrimitive.content.toLong() > 0)
+        assertEquals(2, client.delete("/api/admin/lessons") { page() }.json().jsonObject["deleted"]!!.jsonPrimitive.int)
+        assertEquals(JsonArray(emptyList()), client.get("/api/lessons") { page() }.json())
     }
 }

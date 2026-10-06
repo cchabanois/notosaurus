@@ -45,6 +45,8 @@ import java.util.UUID
  * - The AI: the relay (`relay()`, with the licence).
  * - The lessons: on the phone (Lessons).
  * - Anki: AnkiDroid (Anki).
+ * - The settings: the app's own page (assets/page/admin.html, at the address of the
+ *   computer's), its /api/admin/… here.
  *
  * Listens on 127.0.0.1 only, and answers /api only with the cookie the app's WebView
  * has: another app on the phone can't use it.
@@ -54,7 +56,9 @@ class LocalServer(
     private val web: (String) -> ByteArray?, // a file of the page, by its path ("index.html", "i18n/fr.json")
     private val languages: () -> List<String>, // the page's languages ("en", "fr"…)
     private val anki: AnkiTarget,
-    private val relay: () -> Relay,
+    private val prefs: Preferences,
+    private val version: String = "",
+    private val requestAnkiPermission: () -> Unit = {}, // AnkiDroid's permission dialog (the app's activity)
     val token: String = UUID.randomUUID().toString(),
 ) {
     private val lessons = Lessons(File(dataDir, "lessons").apply { mkdirs() })
@@ -68,17 +72,57 @@ class LocalServer(
         return runBlocking { server.engine.resolvedConnectors().first().port }
     }
 
+    /** The relay, with the licence key of the settings. */
+    private fun relay() = Relay(prefs[RELAY] ?: DEFAULT_RELAY, prefs[KEY].orEmpty())
+
+    /** The settings' standing instructions, put before every request to the AI
+     * (app/settings.py, standing_instructions). */
+    private fun instructions(): String {
+        val text = prefs[INSTRUCTIONS].orEmpty().trim()
+        if (text.isEmpty()) return ""
+        return "Standing instructions, for every lesson:\n$text\n(The request below wins if it says otherwise.)\n\n"
+    }
+
     fun Application.module() = routing {
-        api("GET", "/api/admin") { buildJsonObject { put("allowed", false) } } // settings: the app's own screen
         api("GET", "/api/config") {
             buildJsonObject {
-                put("version", "android-prototype")
+                put("version", version)
                 put("diagram_warning", false)
                 put("max_photos", 10)
-                put("card_helps", false)
+                put("card_helps", prefs[CARD_HELPS] == "true")
                 put("configured", true)
             }
         }
+
+        // --- The settings (assets/page/admin.html)
+        api("GET", "/api/admin") { buildJsonObject { put("allowed", true) } }
+        api("GET", "/api/admin/settings") { settings() }
+        api("PUT", "/api/admin/settings") {
+            val changes = body()
+            changes.string(RELAY).trim().takeIf { it.isNotEmpty() }?.let { prefs[RELAY] = it.trimEnd('/') }
+            (changes[KEY] as? JsonPrimitive)?.let { prefs[KEY] = it.content.trim() }
+            (changes[INSTRUCTIONS] as? JsonPrimitive)?.let { prefs[INSTRUCTIONS] = it.content.take(4000) }
+            (changes[CARD_HELPS] as? JsonPrimitive)?.let { prefs[CARD_HELPS] = it.content }
+            settings()
+        }
+        api("GET", "/api/admin/account") { json.encodeToJsonElement(Account.serializer(), relay().account()) }
+        api("GET", "/api/admin/anki") {
+            buildJsonObject {
+                put("installed", anki.installed())
+                put("permitted", anki.installed() && anki.permitted())
+            }
+        }
+        api("POST", "/api/admin/anki/permission") {
+            requestAnkiPermission()
+            JsonObject(emptyMap())
+        }
+        api("GET", "/api/admin/data") {
+            buildJsonObject {
+                put("lessons", lessons.list().size)
+                put("bytes", lessons.bytes())
+            }
+        }
+        api("DELETE", "/api/admin/lessons") { buildJsonObject { put("deleted", lessons.deleteAll()) } }
         api("GET", "/api/lang") {
             val codes = i18nCodes()
             buildJsonObject {
@@ -141,6 +185,7 @@ class LocalServer(
                 put("fun_facts", fields["fun_facts"] == "true")
                 put("helps", fields["helps"] == "true")
                 put("page_texts", texts)
+                put("instructions", instructions())
             }
             val found = relay().withPhotos("extract", request, images)
             val voice = fields["voice"].orEmpty().takeUnless { it.equals("auto", ignoreCase = true) } ?: ""
@@ -166,6 +211,7 @@ class LocalServer(
                 put("deck", buildJsonObject { put("deck", req["deck"]!!); put("cards", req["cards"]!!) })
                 put("instruction", req["instruction"]!!)
                 put("language", languageName())
+                put("instructions", instructions())
             }
             val revised = relay().withPhotos("revise", request, lessons.photos(lesson.string("id")))
             val changes = JsonObject(req + mapOf("deck" to revised["deck"]!!, "cards" to revised["cards"]!!))
@@ -184,6 +230,7 @@ class LocalServer(
                 put("deck", lesson.string("deck"))
                 put("language", languageName())
                 put("page_texts", lesson["page_texts"] ?: JsonArray(emptyList()))
+                put("instructions", instructions())
             }
             JsonObject(relay().post("explain", request) - "usage")
         }
@@ -260,6 +307,17 @@ class LocalServer(
         return false
     }
 
+    private fun settings() = buildJsonObject {
+        put(RELAY, prefs[RELAY] ?: DEFAULT_RELAY)
+        put(KEY, masked(prefs[KEY].orEmpty())) // shown, not given back whole
+        put("has_key", prefs[KEY].orEmpty().isNotEmpty())
+        put(INSTRUCTIONS, prefs[INSTRUCTIONS].orEmpty())
+        put(CARD_HELPS, prefs[CARD_HELPS] == "true")
+        put("version", version)
+    }
+
+    private fun masked(key: String) = if (key.length <= 8) "•".repeat(key.length) else "${key.take(4)}…${key.takeLast(4)}"
+
     private fun error(code: String, params: JsonObject) = buildJsonObject {
         put("detail", buildJsonObject { put("code", code); put("params", params) })
     }
@@ -314,16 +372,31 @@ class LocalServer(
     companion object {
         const val COOKIE = "notosaurus_app"
 
-        /** The app's: the page from its assets (web/), data in its own files, AnkiDroid. */
-        fun forApp(context: Context, relay: () -> Relay) = LocalServer(
+        // The settings
+        const val RELAY = "relay"
+        const val KEY = "key"
+        const val INSTRUCTIONS = "instructions"
+        const val CARD_HELPS = "card_helps"
+
+        // Prototype: the relay on the computer, seen from the emulator (changed in the settings, "Advanced")
+        const val DEFAULT_RELAY = "http://10.0.2.2:8080"
+
+        /** The app's: the page from its assets (its own files in page/ first, then the
+         * public repository's in web/), data in its own files, AnkiDroid. */
+        fun forApp(context: Context, version: String, requestAnkiPermission: () -> Unit) = LocalServer(
             dataDir = context.filesDir,
-            web = { path -> runCatching { context.assets.open("web/$path").use { it.readBytes() } }.getOrNull() },
+            web = { path -> asset(context, "page/$path") ?: asset(context, "web/$path") },
             languages = {
                 context.assets.list("web/i18n").orEmpty().filter { it.endsWith(".json") }.map { it.removeSuffix(".json") }
             },
             anki = Anki(context),
-            relay = relay,
+            prefs = SharedPreferencesStore(context),
+            version = version,
+            requestAnkiPermission = requestAnkiPermission,
         )
+
+        private fun asset(context: Context, path: String) =
+            runCatching { context.assets.open(path).use { it.readBytes() } }.getOrNull()
 
         // Notosaurus's prompts, in order (app/prompts.py, BUILTIN)
         private val BUILTIN = listOf(
