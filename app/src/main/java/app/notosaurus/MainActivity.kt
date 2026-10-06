@@ -27,6 +27,7 @@ import com.google.mlkit.vision.barcode.common.Barcode
 import com.google.mlkit.vision.codescanner.GmsBarcodeScannerOptions
 import com.google.mlkit.vision.codescanner.GmsBarcodeScanning
 import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
@@ -59,7 +60,25 @@ class MainActivity : ComponentActivity() {
         chosen = null
     }
 
-    private val ankiPermission = registerForActivityResult(ActivityResultContracts.RequestPermission()) {}
+    // AnkiDroid's permission, asked when the cards are first added (or from the settings)
+    private var ankiAnswer: CompletableDeferred<Boolean>? = null
+    private val ankiPermission = registerForActivityResult(ActivityResultContracts.RequestPermission()) { granted ->
+        ankiAnswer?.complete(granted)
+    }
+
+    private suspend fun askAnkiPermission(): Boolean = withContext(Dispatchers.Main) {
+        val answer = CompletableDeferred<Boolean>().also { ankiAnswer = it }
+        ankiPermission.launch(Anki.PERMISSION)
+        answer.await()
+    }
+
+    /** AnkiDroid's page in Google Play (or in the browser, without Google Play). */
+    private fun openAnkiDroidPage() = runOnUiThread {
+        val store = Intent(Intent.ACTION_VIEW, Uri.parse("market://details?id=$ANKIDROID"))
+        runCatching { startActivity(store) }.onFailure {
+            runCatching { startActivity(Intent(Intent.ACTION_VIEW, Uri.parse("https://play.google.com/store/apps/details?id=$ANKIDROID"))) }
+        }
+    }
 
     @SuppressLint("SetJavaScriptEnabled")
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -85,14 +104,12 @@ class MainActivity : ComponentActivity() {
             override fun handleOnBackPressed() = if (web.canGoBack()) web.goBack() else finish()
         })
 
-        val anki = Anki(this)
-        if (anki.installed() && !anki.permitted()) ankiPermission.launch(Anki.PERMISSION)
-
         val version = packageManager.getPackageInfo(packageName, 0).versionName.orEmpty()
         server = LocalServer.forApp(
             applicationContext,
             version,
-            requestAnkiPermission = { runOnUiThread { ankiPermission.launch(Anki.PERMISSION) } }, // the settings' "Allow"
+            requestAnkiPermission = ::askAnkiPermission,
+            installAnki = ::openAnkiDroidPage,
             scan = ::scanQrCode,
             modeChanged = { runOnUiThread { Shortcuts.update(this, server) } },
         )
@@ -133,6 +150,10 @@ class MainActivity : ComponentActivity() {
     }
 
     private fun computerHost(): String? = prefs[LocalServer.COMPUTER]?.let { Uri.parse(it).host }
+
+    companion object {
+        const val ANKIDROID = "com.ichi2.anki"
+    }
 
     /** The page's links: ours and the computer's stay in the app; others (help, Play Store)
      * go to the browser or the app they're for. The computer not answering: our page saying so. */

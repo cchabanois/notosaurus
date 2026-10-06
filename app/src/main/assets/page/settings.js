@@ -146,7 +146,12 @@ document.addEventListener("alpine:init", () => {
     },
 
     async allowAnki() {
-      try { await api("/api/admin/anki/permission", { method: "POST" }); } catch (e) { this.error = e.message; }
+      try {
+        await api("/api/admin/anki/permission", { method: "POST" });
+        this.loadAnki();
+      } catch (e) {
+        this.error = e.message;
+      }
     },
 
     async deleteLessons() {

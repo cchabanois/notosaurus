@@ -61,7 +61,8 @@ class LocalServer(
     private val anki: AnkiTarget,
     private val prefs: Preferences,
     private val version: String = "",
-    private val requestAnkiPermission: () -> Unit = {}, // AnkiDroid's permission dialog (the app's activity)
+    private val requestAnkiPermission: suspend () -> Boolean = { false }, // AnkiDroid's permission dialog: granted?
+    private val installAnki: () -> Unit = {}, // AnkiDroid's Play Store page
     private val scan: suspend () -> String? = { null }, // a QR code read by the camera (null: cancelled)
     private val modeChanged: () -> Unit = {}, // the app's shortcuts follow
     val token: String = UUID.randomUUID().toString(),
@@ -117,10 +118,7 @@ class LocalServer(
                 put("permitted", anki.installed() && anki.permitted())
             }
         }
-        api("POST", "/api/admin/anki/permission") {
-            requestAnkiPermission()
-            JsonObject(emptyMap())
-        }
+        api("POST", "/api/admin/anki/permission") { buildJsonObject { put("permitted", requestAnkiPermission()) } }
         api("GET", "/api/admin/data") {
             buildJsonObject {
                 put("lessons", lessons.list().size)
@@ -267,7 +265,8 @@ class LocalServer(
         // --- AnkiDroid
         api("GET", "/api/anki/status") {
             buildJsonObject {
-                put("available", anki.installed() && anki.permitted())
+                // Always: "Add to Anki" asks for AnkiDroid (installed, allowed) when it's used
+                put("available", true)
                 put("version", 6)
                 put("profile", JsonNull)
                 put("sync", JsonNull)
@@ -280,7 +279,12 @@ class LocalServer(
                 put("deck", req["deck"]!!)
                 put("cards", req["cards"]!!)
             })
-            val sent = withContext(Dispatchers.IO) { anki.send(deck) }
+            readyAnki()
+            val sent = try {
+                withContext(Dispatchers.IO) { anki.send(deck) }
+            } catch (e: Exception) { // e.g. AnkiDroid never opened: no collection yet
+                throw BadRequest("anki.android_failed", buildJsonObject { put("detail", e.message ?: e.javaClass.simpleName) })
+            }
             buildJsonObject {
                 put("added", sent.added)
                 put("updated", 0) // to do: update the notes sent before (stable ids)
@@ -301,7 +305,17 @@ class LocalServer(
 
     private class NotFound : Exception()
 
-    private class BadRequest(val code: String) : Exception(code)
+    private class BadRequest(val code: String, val params: JsonObject = JsonObject(emptyMap())) : Exception(code)
+
+    /** AnkiDroid installed and allowed, asked for when the cards are first added: its Play
+     * Store page when it's missing, its permission dialog when it isn't allowed yet. */
+    private suspend fun readyAnki() {
+        if (!anki.installed()) {
+            installAnki()
+            throw BadRequest("anki.android_missing")
+        }
+        if (!anki.permitted() && !requestAnkiPermission()) throw BadRequest("anki.android_refused")
+    }
 
     private fun notFound(): Nothing = throw NotFound()
 
@@ -315,7 +329,7 @@ class LocalServer(
                 } catch (e: RelayException) {
                     HttpStatusCode.BadGateway to error(e.code, e.params)
                 } catch (e: BadRequest) {
-                    HttpStatusCode.BadRequest to error(e.code, JsonObject(emptyMap()))
+                    HttpStatusCode.BadRequest to error(e.code, e.params)
                 }
                 call.respondText(answer.toString(), ContentType.Application.Json, status)
             }
@@ -459,7 +473,8 @@ class LocalServer(
         fun forApp(
             context: Context,
             version: String,
-            requestAnkiPermission: () -> Unit,
+            requestAnkiPermission: suspend () -> Boolean,
+            installAnki: () -> Unit,
             scan: suspend () -> String?,
             modeChanged: () -> Unit,
         ) = LocalServer(
@@ -472,6 +487,7 @@ class LocalServer(
             prefs = SharedPreferencesStore(context),
             version = version,
             requestAnkiPermission = requestAnkiPermission,
+            installAnki = installAnki,
             scan = scan,
             modeChanged = modeChanged,
         )
