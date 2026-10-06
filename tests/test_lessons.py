@@ -140,6 +140,7 @@ def test_version_from_pyproject(client):
 
     version = tomllib.loads(Path("pyproject.toml").read_text(encoding="utf-8"))["project"]["version"]
     assert client.get("/api/config").json()["version"] == version
+    assert client.get("/api/config").json()["computer_name"]  # the Android app shows it
 
 
 def test_release_notes(tmp_path, monkeypatch):

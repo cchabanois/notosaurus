@@ -43,12 +43,15 @@
   </div>
 
   <main x-cloak x-show="form">
+    <!-- On this phone (the default) or on the computer (the Anki add-on): what's below
+         is for the phone's mode only; the computer's mode has its settings on the computer -->
+
     <!-- The licence: the relay's account -->
-    <section class="panel">
+    <section class="panel" x-show="onPhone()">
       <h2 x-text="$t('android.licence.title')"></h2>
       <p class="hint" x-show="form && !form.has_key" x-text="$t('android.licence.none')"></p>
       <!-- Free with the add-on: said where the question comes up -->
-      <p class="hint" x-show="form && !form.has_key"><a href="#computer" x-text="$t('android.licence.free')"></a></p>
+      <p class="hint" x-show="form && !form.has_key"><a href="#where" x-text="$t('android.licence.free')"></a></p>
       <p x-show="form?.has_key" x-text="$t('android.licence.keySet', { key: form?.key })"></p>
       <template x-if="account">
         <div>
@@ -67,7 +70,7 @@
     </section>
 
     <!-- AnkiDroid: installed, allowed -->
-    <section class="panel">
+    <section class="panel" x-show="onPhone()">
       <h2 x-text="$t('android.anki.title')"></h2>
       <template x-if="anki">
         <div>
@@ -86,43 +89,50 @@
       </template>
     </section>
 
-    <!-- With my computer: the Anki add-on's Notosaurus, from this app (free) -->
-    <section class="panel" id="computer">
-      <h2 x-text="$t('android.computer.title')"></h2>
-      <!-- Opened from the computer's page (its ⚙️): the way back to the phone's -->
-      <template x-if="form?.mode === 'computer'">
-        <div>
-          <p x-text="$t('android.computer.using', { address: form.computer_address })"></p>
-          <button class="btn primary" @click="usePhone()" x-text="$t('android.unreachable.phone')"></button>
-          <button class="btn soft" @click="useComputer()" x-text="$t('android.computer.back')"></button>
-        </div>
-      </template>
-      <template x-if="form?.computer && form.mode !== 'computer'">
-        <div>
-          <p x-text="$t('android.computer.saved', { address: form.computer_address })"></p>
-          <button class="btn primary" @click="useComputer()" x-text="$t('android.computer.use')"></button>
-          <button class="btn soft" :disabled="connecting" @click="scanComputer()" x-text="$t('android.computer.rescan')"></button>
-        </div>
-      </template>
-      <template x-if="form && !form.computer">
-        <div>
-          <p x-text="$t('android.computer.intro')"></p>
-          <button class="btn primary" :disabled="connecting" @click="scanComputer()" x-text="$t('android.computer.scan')"></button>
-          <p class="hint" x-text="$t('android.computer.scanHint')"></p>
-          <form @submit.prevent="connectComputer()">
-            <label class="field"><span x-text="$t('android.computer.address')"></span>
-              <!-- Text, not "url": "192.168.1.10:8000" (no http://) is fine, the app completes it -->
-              <input type="text" inputmode="url" autocapitalize="off" spellcheck="false" x-model="computerAddress"
-                     autocomplete="off" :placeholder="$t('android.computer.addressPlaceholder')">
-            </label>
-            <button class="btn soft" :disabled="connecting || !computerAddress.trim()" x-text="$t('android.computer.connect')"></button>
-          </form>
-        </div>
-      </template>
+    <!-- Where Notosaurus works: on this phone, or on the computer (first, in that mode:
+         the others are hidden) -->
+    <section class="panel" id="where">
+      <h2 x-text="$t('android.where.title')"></h2>
+      <div class="options">
+        <label class="option" :class="{ active: onPhone() && !pairing }">
+          <input type="radio" name="where" :checked="onPhone()" @change="choosePhone()">
+          <strong x-text="$t('android.where.phone')"></strong>
+          <small x-text="$t('android.where.phoneHint')"></small>
+        </label>
+        <label class="option" :class="{ active: !onPhone() || pairing }">
+          <input type="radio" name="where" :checked="!onPhone()" @change="chooseComputer()">
+          <strong x-text="$t('android.where.computer')"></strong>
+          <small x-text="$t('android.where.computerHint')"></small>
+        </label>
+      </div>
+
+      <!-- The computer in use (or known): its name, and changing it -->
+      <p x-show="form?.computer && !pairing">
+        <strong x-text="form?.computer_name || $t('android.where.someComputer')"></strong> ·
+        <a href="#" @click.prevent="pairing = true" x-text="$t('android.where.change')"></a>
+      </p>
+      <p class="hint" x-show="!onPhone()" x-text="$t('android.where.computerSettings')"></p>
+
+      <!-- Connecting one: its QR code, or (rarely) its address -->
+      <div x-show="pairing">
+        <button class="btn primary" :disabled="connecting" @click="scanComputer()" x-text="$t('android.computer.scan')"></button>
+        <p class="hint" x-text="$t('android.computer.scanHint')"></p>
+        <p class="hint" x-show="!typing">
+          <a href="#" @click.prevent="typing = true" x-text="$t('android.where.typeAddress')"></a>
+        </p>
+        <form x-show="typing" @submit.prevent="connectComputer()">
+          <label class="field"><span x-text="$t('android.computer.address')"></span>
+            <!-- Text, not "url": "192.168.1.10:8000" (no http://) is fine, the app completes it -->
+            <input type="text" inputmode="url" autocapitalize="off" spellcheck="false" x-model="computerAddress"
+                   autocomplete="off" :placeholder="$t('android.computer.addressPlaceholder')">
+          </label>
+          <button class="btn soft" :disabled="connecting || !computerAddress.trim()" x-text="$t('android.computer.connect')"></button>
+        </form>
+      </div>
     </section>
 
     <!-- Standing instructions for the AI, as on the computer (no Anki profiles here) -->
-    <section class="panel">
+    <section class="panel" x-show="onPhone()">
       <h2 x-text="$t('admin.instructions.title')"></h2>
       <p class="hint" x-text="$t('admin.instructions.hint')"></p>
       <label class="field">
@@ -137,7 +147,7 @@
     </section>
 
     <!-- Lessons kept on the phone -->
-    <section class="panel">
+    <section class="panel" x-show="onPhone()">
       <h2 x-text="$t('android.data.title')"></h2>
       <p x-show="data" x-text="data && $t('android.data.size', {
            lessons: $t('common.count.lessons', { count: data.lessons }),
@@ -149,7 +159,7 @@
     <section class="panel">
       <h2 x-text="$t('android.about.title')"></h2>
       <p x-text="$t('android.about.version', { version: form?.version })"></p>
-      <details>
+      <details x-show="onPhone()">
         <summary x-text="$t('android.advanced.title')"></summary>
         <label class="field"><span x-text="$t('android.advanced.relay')"></span>
           <input type="url" x-model="form.relay" @change="saveNow()" autocomplete="off">

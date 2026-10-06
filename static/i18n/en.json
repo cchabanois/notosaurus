@@ -552,7 +552,7 @@
       "credits": "{credits} credits left this month, {today} today",
       "renews": "Renewed on {date}",
       "none": "No licence key yet: it comes with the subscription.",
-      "free": "No subscription? With the Anki add-on on your computer, the app is free: see “With my computer”."
+      "free": "No subscription? With the Anki add-on on your computer, the app is free: see “Where does Notosaurus work?”."
     },
     "anki": {
       "title": "📥 AnkiDroid",
@@ -563,19 +563,24 @@
       "allow": "Allow",
       "openOnce": "After installing AnkiDroid, open it once so that it creates its collection."
     },
+    "where": {
+      "title": "📍 Where does Notosaurus work?",
+      "phone": "📱 On this phone",
+      "phoneHint": "Lessons on the phone, cards into AnkiDroid. With the subscription.",
+      "computer": "💻 On my computer",
+      "computerHint": "With the Anki add-on: lessons and cards on the computer. Free.",
+      "someComputer": "your computer",
+      "change": "Change computer",
+      "typeAddress": "Type its address instead",
+      "computerSettings": "The AI's instructions and the other settings of this mode are on the computer: Anki → Tools → Notosaurus → Settings."
+    },
     "computer": {
-      "title": "💻 With my computer",
-      "intro": "Already using Notosaurus on your computer (Anki add-on)? Use it from this phone: the lessons, the AI and the cards stay on the computer.",
       "scan": "Scan the QR code",
       "scanHint": "On the computer: Anki → Tools → Notosaurus → Open on the phone.",
       "address": "Or its address",
       "addressPlaceholder": "http://192.168.1.10:8000/?k=…",
       "connect": "Connect",
-      "saved": "Computer: {address}",
-      "use": "Use it",
-      "rescan": "Scan again",
-      "using": "This phone uses Notosaurus on your computer: {address}.",
-      "back": "Back to the computer's page"
+      "saved": "Computer: {address}"
     },
     "data": {
       "title": "🗂️ Lessons on this phone",

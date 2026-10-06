@@ -30,7 +30,7 @@
   <main x-cloak x-show="form">
     <section class="panel">
       <h2 x-text="$t('android.unreachable.title')"></h2>
-      <p x-show="form?.computer_address" x-text="$t('android.computer.saved', { address: form?.computer_address })"></p>
+      <p x-show="form?.computer_address" x-text="$t('android.computer.saved', { address: form?.computer_name || form?.computer_address })"></p>
       <p class="hint" x-text="$t('android.unreachable.hint')"></p>
       <button class="btn primary" @click="useComputer()" x-text="$t('android.unreachable.retry')"></button>
       <button class="btn soft" :disabled="connecting" @click="scanComputer()" x-text="$t('android.unreachable.rescan')"></button>

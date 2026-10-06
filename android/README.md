@@ -52,8 +52,8 @@ The page also needs small changes for the phone: no Anki profile badge ("none"),
 
 - **Without computer** (the default): the app's own page, the AI through the relay
   (subscription), the cards into AnkiDroid.
-- **With my computer** (free, for the Anki add-on's users): in the settings, "💻 With
-  my computer": scan the QR code of *Anki → Tools → Notosaurus → Open on the phone*
+- **On my computer** (free, for the Anki add-on's users): in the settings, "📍 Where
+  does Notosaurus work?" → "💻 On my computer": scan the QR code of *Anki → Tools → Notosaurus → Open on the phone*
   (Google's code scanner: no camera permission; Google Play services download it at
   first use), or type the address. Checked (the computer's `/api/lang`), kept, and
   the app shows the computer's page instead of its own: lessons, AI and cards stay
@@ -61,7 +61,9 @@ The page also needs small changes for the phone: no Anki profile badge ("none"),
   that page, or the icon's shortcuts. Each mode keeps its own lessons.
 
 The settings point to it where it matters: the subscription section, without a
-licence, says the app is free with the add-on.
+licence, says the app is free with the add-on. In the computer's mode the settings
+show only that choice (with the computer's name, from its `/api/config`), the
+language and "About": the AI's instructions and the rest are the computer's own.
 
 ## Build and try
 

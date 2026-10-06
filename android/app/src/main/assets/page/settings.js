@@ -27,6 +27,8 @@ document.addEventListener("alpine:init", () => {
     checking: false,
     computerAddress: "",
     connecting: false,
+    pairing: false,   // connecting a computer: its QR code (or address) asked for
+    typing: false,    // its address typed rather than scanned
     saveState: "saved",
     saveTimer: null,
     error: "",
@@ -135,6 +137,22 @@ document.addEventListener("alpine:init", () => {
       } catch (e) {
         this.error = e.message;
       }
+    },
+
+    onPhone() {
+      return this.form?.mode !== "computer";
+    },
+
+    // "On this phone": back to it, or no computer to connect after all
+    choosePhone() {
+      if (this.onPhone()) this.pairing = this.typing = false;
+      else this.usePhone();
+    },
+
+    // "On my computer": the known one, or connecting one
+    chooseComputer() {
+      if (this.form?.computer) this.useComputer();
+      else this.pairing = true;
     },
 
     // The page these settings came from: the computer's in that mode, else the phone's

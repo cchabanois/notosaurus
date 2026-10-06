@@ -552,7 +552,7 @@
       "credits": "Noch {credits} Credits diesen Monat, {today} heute",
       "renews": "Erneuert am {date}",
       "none": "Noch kein Lizenzschlüssel: Er kommt mit dem Abo.",
-      "free": "Kein Abo? Mit dem Anki-Add-on auf deinem Computer ist die App kostenlos: siehe „Mit meinem Computer“."
+      "free": "Kein Abo? Mit dem Anki-Add-on auf deinem Computer ist die App kostenlos: siehe „Wo arbeitet Notosaurus?“."
     },
     "anki": {
       "title": "📥 AnkiDroid",
@@ -563,19 +563,24 @@
       "allow": "Erlauben",
       "openOnce": "Öffne AnkiDroid nach der Installation einmal, damit es seine Sammlung anlegt."
     },
+    "where": {
+      "title": "📍 Wo arbeitet Notosaurus?",
+      "phone": "📱 Auf diesem Handy",
+      "phoneHint": "Lektionen auf dem Handy, Karten in AnkiDroid. Mit dem Abo.",
+      "computer": "💻 Auf meinem Computer",
+      "computerHint": "Mit dem Anki-Add-on: Lektionen und Karten auf dem Computer. Kostenlos.",
+      "someComputer": "deinem Computer",
+      "change": "Computer wechseln",
+      "typeAddress": "Stattdessen die Adresse eingeben",
+      "computerSettings": "Die Anweisungen für die KI und die übrigen Einstellungen dieses Modus sind auf dem Computer: Anki → Extras → Notosaurus → Einstellungen."
+    },
     "computer": {
-      "title": "💻 Mit meinem Computer",
-      "intro": "Du nutzt Notosaurus schon auf deinem Computer (Anki-Add-on)? Nutze es von diesem Handy aus: Lektionen, KI und Karten bleiben auf dem Computer.",
       "scan": "QR-Code scannen",
       "scanHint": "Auf dem Computer: Anki → Extras → Notosaurus → Auf dem Handy öffnen.",
       "address": "Oder seine Adresse",
       "addressPlaceholder": "http://192.168.1.10:8000/?k=…",
       "connect": "Verbinden",
-      "saved": "Computer: {address}",
-      "use": "Verwenden",
-      "rescan": "Erneut scannen",
-      "using": "Dieses Handy nutzt Notosaurus auf deinem Computer: {address}.",
-      "back": "Zurück zur Seite des Computers"
+      "saved": "Computer: {address}"
     },
     "data": {
       "title": "🗂️ Lektionen auf diesem Handy",
