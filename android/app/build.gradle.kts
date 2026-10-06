@@ -26,7 +26,9 @@ abstract class CopyWebPage : DefaultTask() {
 // to change it), e.g. 1.1.0 → versionName "1.1.0", versionCode 10100 (Google Play's
 // number, which must grow: major × 10000 + minor × 100 + patch)
 val notosaurusVersion: String = Regex("""(?m)^version\s*=\s*"([^"]+)"""")
-    .find(rootProject.file("../pyproject.toml").readText())!!.groupValues[1]
+    // read through Gradle, so that a change is always seen (configuration cache included)
+    .find(providers.fileContents(rootProject.layout.projectDirectory.file("../pyproject.toml")).asText.get())!!
+    .groupValues[1]
 val notosaurusVersionCode: Int = Regex("""^(\d+)\.(\d+)\.(\d+)""").find(notosaurusVersion)!!.destructured
     .let { (major, minor, patch) -> major.toInt() * 10000 + minor.toInt() * 100 + patch.toInt() }
 
