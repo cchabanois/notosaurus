@@ -9,6 +9,7 @@ import android.provider.MediaStore
 import android.webkit.CookieManager
 import android.webkit.ValueCallback
 import android.webkit.WebChromeClient
+import android.webkit.WebResourceError
 import android.webkit.WebResourceRequest
 import android.webkit.WebView
 import android.webkit.WebViewClient
@@ -22,17 +23,26 @@ import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.updatePadding
 import androidx.lifecycle.lifecycleScope
+import com.google.mlkit.vision.barcode.common.Barcode
+import com.google.mlkit.vision.codescanner.GmsBarcodeScannerOptions
+import com.google.mlkit.vision.codescanner.GmsBarcodeScanning
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.tasks.await
 import kotlinx.coroutines.withContext
 import java.io.File
 
 /**
  * Notosaurus's page (the same as on the computer) in a WebView, its /api answered
- * by LocalServer on the phone.
+ * by LocalServer on the phone; or, "With my computer", the Anki add-on's page itself
+ * (the computer's address, from its QR code).
  */
 class MainActivity : ComponentActivity() {
     private lateinit var web: WebView
+    private lateinit var server: LocalServer
+    private val prefs by lazy { SharedPreferencesStore(this) }
+    private var origin: String? = null // LocalServer's, once started
     private var chosen: ValueCallback<Array<Uri>>? = null
     private var photo: Uri? = null
 
@@ -79,23 +89,62 @@ class MainActivity : ComponentActivity() {
         if (anki.installed() && !anki.permitted()) ankiPermission.launch(Anki.PERMISSION)
 
         val version = packageManager.getPackageInfo(packageName, 0).versionName.orEmpty()
-        val server = LocalServer.forApp(applicationContext, version) {
-            runOnUiThread { ankiPermission.launch(Anki.PERMISSION) } // the settings' "Allow"
-        }
+        server = LocalServer.forApp(
+            applicationContext,
+            version,
+            requestAnkiPermission = { runOnUiThread { ankiPermission.launch(Anki.PERMISSION) } }, // the settings' "Allow"
+            scan = ::scanQrCode,
+            modeChanged = { runOnUiThread { Shortcuts.update(this, server) } },
+        )
         lifecycleScope.launch {
             val port = withContext(Dispatchers.IO) { server.start() }
-            val origin = "http://127.0.0.1:$port"
+            origin = "http://127.0.0.1:$port"
             CookieManager.getInstance().setCookie(origin, "${LocalServer.COOKIE}=${server.token}; path=/")
-            web.loadUrl("$origin/")
+            useMode(intent)
+            Shortcuts.update(this@MainActivity, server)
         }
     }
 
-    /** Links out of the app (help, Play Store): in the browser or the app they're for. */
+    // A shortcut of the app's icon, the app already open
+    override fun onNewIntent(intent: Intent) {
+        super.onNewIntent(intent)
+        if (origin != null) useMode(intent)
+    }
+
+    /** The mode a shortcut asks for, else the last one: the page of the phone or of the computer. */
+    private fun useMode(intent: Intent?) {
+        when (intent?.action) {
+            Shortcuts.PHONE -> prefs[LocalServer.MODE] = LocalServer.PHONE_MODE
+            Shortcuts.COMPUTER -> if (prefs[LocalServer.COMPUTER] != null) prefs[LocalServer.MODE] = LocalServer.COMPUTER_MODE
+        }
+        val computer = prefs[LocalServer.COMPUTER]
+        web.loadUrl(if (prefs[LocalServer.MODE] == LocalServer.COMPUTER_MODE && computer != null) computer else "$origin/")
+    }
+
+    /** A QR code read by Google's scanner (no camera permission for the app); null: cancelled.
+     * Fails when the scanner isn't there (Google Play services download it at first use). */
+    private suspend fun scanQrCode(): String? = withContext(Dispatchers.Main) {
+        val options = GmsBarcodeScannerOptions.Builder().setBarcodeFormats(Barcode.FORMAT_QR_CODE).build()
+        try {
+            GmsBarcodeScanning.getClient(this@MainActivity, options).startScan().await().rawValue
+        } catch (e: CancellationException) {
+            null // the user went back
+        }
+    }
+
+    private fun computerHost(): String? = prefs[LocalServer.COMPUTER]?.let { Uri.parse(it).host }
+
+    /** The page's links: ours and the computer's stay in the app; others (help, Play Store)
+     * go to the browser or the app they're for. The computer not answering: our page saying so. */
     private inner class Links : WebViewClient() {
         override fun shouldOverrideUrlLoading(view: WebView, request: WebResourceRequest): Boolean {
-            if (request.url.host == "127.0.0.1") return false
+            if (request.url.host == "127.0.0.1" || request.url.host == computerHost()) return false
             runCatching { startActivity(Intent(Intent.ACTION_VIEW, request.url)) }
             return true
+        }
+
+        override fun onReceivedError(view: WebView, request: WebResourceRequest, error: WebResourceError) {
+            if (request.isForMainFrame && request.url.host == computerHost()) view.loadUrl("$origin/unreachable.html")
         }
     }
 

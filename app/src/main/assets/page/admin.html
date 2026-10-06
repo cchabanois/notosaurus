@@ -47,6 +47,8 @@
     <section class="panel">
       <h2 x-text="$t('android.licence.title')"></h2>
       <p class="hint" x-show="form && !form.has_key" x-text="$t('android.licence.none')"></p>
+      <!-- Free with the add-on: said where the question comes up -->
+      <p class="hint" x-show="form && !form.has_key"><a href="#computer" x-text="$t('android.licence.free')"></a></p>
       <p x-show="form?.has_key" x-text="$t('android.licence.keySet', { key: form?.key })"></p>
       <template x-if="account">
         <div>
@@ -80,6 +82,33 @@
             <p x-text="$t('android.anki.notAllowed')"></p>
             <button class="btn primary" @click="allowAnki()" x-text="$t('android.anki.allow')"></button>
           </div>
+        </div>
+      </template>
+    </section>
+
+    <!-- With my computer: the Anki add-on's Notosaurus, from this app (free) -->
+    <section class="panel" id="computer">
+      <h2 x-text="$t('android.computer.title')"></h2>
+      <template x-if="form?.computer">
+        <div>
+          <p x-text="$t('android.computer.saved', { address: form.computer_address })"></p>
+          <button class="btn primary" @click="useComputer()" x-text="$t('android.computer.use')"></button>
+          <button class="btn soft" :disabled="connecting" @click="scanComputer()" x-text="$t('android.computer.rescan')"></button>
+        </div>
+      </template>
+      <template x-if="form && !form.computer">
+        <div>
+          <p x-text="$t('android.computer.intro')"></p>
+          <button class="btn primary" :disabled="connecting" @click="scanComputer()" x-text="$t('android.computer.scan')"></button>
+          <p class="hint" x-text="$t('android.computer.scanHint')"></p>
+          <form @submit.prevent="connectComputer()">
+            <label class="field"><span x-text="$t('android.computer.address')"></span>
+              <!-- Text, not "url": "192.168.1.10:8000" (no http://) is fine, the app completes it -->
+              <input type="text" inputmode="url" autocapitalize="off" spellcheck="false" x-model="computerAddress"
+                     autocomplete="off" :placeholder="$t('android.computer.addressPlaceholder')">
+            </label>
+            <button class="btn soft" :disabled="connecting || !computerAddress.trim()" x-text="$t('android.computer.connect')"></button>
+          </form>
         </div>
       </template>
     </section>

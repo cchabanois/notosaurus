@@ -51,6 +51,10 @@ class LocalServerTest {
     private val anki = FakeAnki()
     private val prefs = MemoryPreferences()
     private var permissionAsked = false
+    private val computer = MockWebServer() // the add-on's Notosaurus, on the computer
+    private var scanned: String? = null // what the fake QR scanner reads
+    private var scannerMissing = false
+    private var modeChanges = 0
     private lateinit var local: LocalServer
 
     private class FakeAnki : AnkiTarget {
@@ -80,10 +84,17 @@ class LocalServerTest {
             prefs = prefs,
             version = "0.1.0",
             requestAnkiPermission = { permissionAsked = true },
+            scan = { if (scannerMissing) error("module not downloaded") else scanned },
+            modeChanged = { modeChanges++ },
         )
+        computer.start()
     }
 
-    @After fun tearDown() = relay.close()
+    @After
+    fun tearDown() {
+        relay.close()
+        computer.close()
+    }
 
     private fun app(test: suspend ApplicationTestBuilder.(HttpClient) -> Unit) = testApplication {
         application { with(local) { module() } }
@@ -293,8 +304,11 @@ class LocalServerTest {
         assertTrue("settings.js" in page) // the app's, not the computer's admin.js
         assertTrue("android.licence.title" in page)
         assertEquals("true", client.get("/api/admin") { page() }.json().jsonObject["allowed"]!!.jsonPrimitive.content)
-        // The texts it uses are in every language of the web page
-        val names = Regex("""\${'$'}t\('(android\.[a-zA-Z.]+)'""").findAll(page).map { it.groupValues[1] }.toSet()
+        // The texts the app's pages use are in every language of the web page
+        var own = ""
+        for (file in listOf("admin.html", "unreachable.html", "settings.js")) own += client.get("/$file").bodyAsText()
+        val names = Regex("""t\(["'](android\.[a-zA-Z.]+)["']""").findAll(own).map { it.groupValues[1] }.toSet()
+        assertTrue(names.size > 30)
         val web = File(System.getProperty("notosaurus.web") ?: "../../notosaurus/static")
         for (lang in web.resolve("i18n").listFiles()!!) {
             val messages = json.parseToJsonElement(lang.readText()).jsonObject
@@ -369,5 +383,82 @@ class LocalServerTest {
         assertTrue(data["bytes"]!!.jsonPrimitive.content.toLong() > 0)
         assertEquals(2, client.delete("/api/admin/lessons") { page() }.json().jsonObject["deleted"]!!.jsonPrimitive.int)
         assertEquals(JsonArray(emptyList()), client.get("/api/lessons") { page() }.json())
+    }
+
+    // --- With my computer
+
+    private fun computerAnswers() = computer.enqueue(MockResponse.Builder().body("""{"lang": null, "available": ["en", "fr"]}""").build())
+
+    private suspend fun HttpClient.connect(address: String) = put("/api/admin/computer") {
+        page(); contentType(ContentType.Application.Json); setBody("""{"address": "$address"}""")
+    }
+
+    @Test
+    fun aComputerFromItsQrCode() = app { client ->
+        val qr = "http://127.0.0.1:${computer.port}/?k=token123"
+        scanned = qr
+        computerAnswers()
+        val answer = client.post("/api/admin/computer/scan") { page() }.json().jsonObject
+        assertEquals(qr, answer.string("url")) // where the page goes: the computer's page, paired by its token
+        assertEquals("/api/lang", computer.takeRequest().url.encodedPath) // checked: a Notosaurus answers
+        assertEquals(LocalServer.COMPUTER_MODE, prefs[LocalServer.MODE])
+        assertEquals(qr, prefs[LocalServer.COMPUTER])
+        assertEquals(1, modeChanges) // the app's shortcuts follow
+
+        val settings = client.get("/api/admin/settings") { page() }.json().jsonObject
+        assertEquals("computer", settings.string("mode"))
+        assertEquals("http://127.0.0.1:${computer.port}", settings.string("computer_address")) // without its token
+
+        scanned = null // cancelled: nothing changes
+        assertEquals("true", client.post("/api/admin/computer/scan") { page() }.json().jsonObject["cancelled"]!!.jsonPrimitive.content)
+
+        scannerMissing = true // not downloaded yet: said, so the address can be typed instead
+        val missing = client.post("/api/admin/computer/scan") { page() }
+        assertEquals("computer.scan_unavailable", missing.json().jsonObject["detail"]!!.jsonObject.string("code"))
+    }
+
+    @Test
+    fun aComputerByItsAddress() = app { client ->
+        computerAnswers()
+        val answer = client.connect("127.0.0.1:${computer.port}").json().jsonObject
+        assertEquals("http://127.0.0.1:${computer.port}/", answer.string("url"))
+    }
+
+    @Test
+    fun notAComputer() = app { client ->
+        val notAUrl = client.connect("Bonjour !")
+        assertEquals(HttpStatusCode.BadRequest, notAUrl.status)
+        assertEquals("computer.not_a_qr", notAUrl.json().jsonObject["detail"]!!.jsonObject.string("code"))
+
+        computer.enqueue(MockResponse.Builder().code(404).body("<html>a router</html>").build())
+        val notNotosaurus = client.connect("http://127.0.0.1:${computer.port}/")
+        assertEquals("computer.not_found", notNotosaurus.json().jsonObject["detail"]!!.jsonObject.string("code"))
+        assertEquals(null, prefs[LocalServer.COMPUTER]) // nothing kept
+        assertEquals(null, prefs[LocalServer.MODE])
+    }
+
+    @Test
+    fun backToThePhone() = app { client ->
+        val noComputer = client.post("/api/admin/mode") { page(); contentType(ContentType.Application.Json); setBody("""{"mode": "computer"}""") }
+        assertEquals(HttpStatusCode.BadRequest, noComputer.status)
+
+        computerAnswers()
+        client.connect("127.0.0.1:${computer.port}")
+        val phone = client.post("/api/admin/mode") { page(); contentType(ContentType.Application.Json); setBody("""{"mode": "phone"}""") }.json().jsonObject
+        assertEquals("/", phone.string("url"))
+        assertEquals(LocalServer.PHONE_MODE, prefs[LocalServer.MODE])
+        assertTrue(prefs[LocalServer.COMPUTER] != null) // kept, to come back to
+        val again = client.post("/api/admin/mode") { page(); contentType(ContentType.Application.Json); setBody("""{"mode": "computer"}""") }.json().jsonObject
+        assertEquals("http://127.0.0.1:${computer.port}/", again.string("url"))
+    }
+
+    @Test
+    fun computerAddresses() {
+        assertEquals("http://192.168.1.10:8000/?k=abc", LocalServer.computerUrl("192.168.1.10:8000/?k=abc").toString())
+        assertEquals("http://192.168.1.10:8000/", LocalServer.computerUrl(" http://192.168.1.10:8000 ").toString())
+        assertEquals("https://pc.tailnet.ts.net/", LocalServer.computerUrl("https://pc.tailnet.ts.net").toString())
+        assertEquals(null, LocalServer.computerUrl("ftp://pc/"))
+        assertEquals(null, LocalServer.computerUrl("bonjour !"))
+        assertEquals("http://192.168.1.10:8000", LocalServer.origin(LocalServer.computerUrl("192.168.1.10:8000/?k=abc")!!))
     }
 }

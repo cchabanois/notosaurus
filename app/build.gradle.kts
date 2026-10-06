@@ -69,6 +69,8 @@ dependencies {
     implementation(libs.ankidroid.api)
     implementation(libs.ktor.server.core)
     implementation(libs.ktor.server.cio)
+    implementation(libs.code.scanner)
+    implementation(libs.kotlinx.coroutines.play.services)
     testImplementation(libs.junit)
     testImplementation(libs.ktor.server.test.host)
     testImplementation(libs.mockwebserver)
