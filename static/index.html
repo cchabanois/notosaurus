@@ -275,17 +275,21 @@
               <textarea class="front" rows="1" x-model="card.front" :readonly="readOnly()" :placeholder="$t('app.review.front')" :aria-label="$t('app.review.front')"
                         x-init="watchHeight($el)" x-effect="card.front; fitHeight($el)"></textarea>
               <div class="math-preview" x-show="hasMath(card.front) || isCloze(card.front)" x-html="previewHtml(card.front)"></div>
-              <input class="back" x-model="card.back" :readonly="readOnly()"
-                     :placeholder="isCloze(card.front) ? $t('app.review.extra') : card.choices.length ? $t('app.review.rightChoice') : $t('app.review.back')"
-                     :aria-label="card.choices.length ? $t('app.review.rightChoice') : $t('app.review.back')">
+              <!-- The back, the info, the wrong options and the "did you know" grow with their text,
+                   as the front: a long answer is seen whole -->
+              <textarea class="back" rows="1" x-model="card.back" :readonly="readOnly()" @keydown.enter.prevent
+                        :placeholder="isCloze(card.front) ? $t('app.review.extra') : card.choices.length ? $t('app.review.rightChoice') : $t('app.review.back')"
+                        :aria-label="card.choices.length ? $t('app.review.rightChoice') : $t('app.review.back')"
+                        x-init="watchHeight($el)" x-effect="card.back; fitHeight($el)"></textarea>
               <div class="math-preview back" x-show="hasMath(card.back)" x-html="previewHtml(card.back)"></div>
               <!-- Multiple choice, true/false: the back is the right answer, these the wrong ones -->
               <div class="choices" x-show="card.choices.length">
                 <template x-for="(choice, n) in card.choices" :key="n">
                   <div class="choice">
                     <span class="wrong" aria-hidden="true">✗</span>
-                    <input x-model="card.choices[n]" :readonly="readOnly()" :placeholder="$t('app.review.wrongChoice')"
-                           :aria-label="$t('app.review.wrongChoice')">
+                    <textarea class="grow" rows="1" x-model="card.choices[n]" :readonly="readOnly()" @keydown.enter.prevent
+                              :placeholder="$t('app.review.wrongChoice')" :aria-label="$t('app.review.wrongChoice')"
+                              x-init="watchHeight($el)" x-effect="card.choices[n]; fitHeight($el)"></textarea>
                     <button class="icon-btn muted" x-show="!readOnly() && card.choices.length > 1" @click="card.choices.splice(n, 1)"
                             :aria-label="$t('app.review.removeChoice')">✕</button>
                   </div>
@@ -299,7 +303,9 @@
                 <span class="drawing" x-show="!card.picture || card._drawing" x-text="$t('app.pictures.drawing')"></span>
               </div>
               <div class="meta">
-                <input class="info" x-model="card.info" :readonly="readOnly()" :placeholder="$t('app.review.info')" :aria-label="$t('app.review.infoLabel')">
+                <textarea class="info" rows="1" x-model="card.info" :readonly="readOnly()" @keydown.enter.prevent
+                          :placeholder="$t('app.review.info')" :aria-label="$t('app.review.infoLabel')"
+                          x-init="watchHeight($el)" x-effect="card.info; fitHeight($el)"></textarea>
                 <input class="subdeck" x-model="card.subdeck" :readonly="readOnly()" :placeholder="$t('app.review.subdeck')"
                        :aria-label="$t('app.review.subdeckLabel')"
                        list="subdecks" :size="Math.max(card.subdeck.length, 10)">
@@ -307,7 +313,9 @@
               <!-- Shown under the info on the back, in Anki; cleared, it's gone -->
               <div class="fun-fact" x-show="card.fun_fact">
                 <span aria-hidden="true">💡</span>
-                <input x-model="card.fun_fact" :readonly="readOnly()" :aria-label="$t('app.review.funFact')">
+                <textarea class="grow" rows="1" x-model="card.fun_fact" :readonly="readOnly()" @keydown.enter.prevent
+                          :aria-label="$t('app.review.funFact')"
+                          x-init="watchHeight($el)" x-effect="card.fun_fact; fitHeight($el)"></textarea>
               </div>
               <!-- The helps written at generation: on the back in Anki; cleared, they're gone -->
               <div class="card-help" x-show="card.explanation">
