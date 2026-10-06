@@ -97,9 +97,25 @@ def test_generate_then_edit_saves_by_itself(page):
     assert lesson(page, summary["id"])["prompt"] == FRONT_PROMPT  # kept with the lesson…
     assert not [p for p in page.request.get("/api/prompts").json() if not p["builtin"]]  # …not saved as a prompt
 
-    page.locator(".flash input.back").first.fill("la mamá")
+    page.locator(".flash textarea.back").first.fill("la mamá")
     sync_api.expect(page.locator(".save-pill")).to_have_class(SAVED)
     assert lesson(page, summary["id"])["cards"][0]["back"] == "la mamá"
+
+
+def test_long_back_and_info_seen_whole(page):
+    """A long answer or note grows its field, as the front: nothing cut on a phone."""
+    page.set_viewport_size({"width": 360, "height": 780})
+    generate_free(page, FRONT_PROMPT)
+    card = page.locator(".flash").first
+    long = "une réponse longue, avec une précision qui ne tient pas sur une seule ligne d'un téléphone"
+    for field in ("textarea.back", "textarea.info"):
+        box = card.locator(field)
+        one_line = box.bounding_box()["height"]
+        box.fill(long)
+        assert box.bounding_box()["height"] > 1.5 * one_line, field  # several lines
+        assert box.evaluate("el => el.scrollHeight <= el.clientHeight + 1"), field  # all of it shown
+        box.press("Enter")  # one line of text in Anki: Enter adds no line break
+        assert box.input_value() == long
 
 
 def test_generate_again_in_place_then_undo(page):
@@ -231,7 +247,7 @@ def test_multiple_choice_wrong_answers_edited(page):
     generate_free(page, "QCM sur la Révolution")
     first = page.locator(".flash").first
     sync_api.expect(first.locator(".choice input")).to_have_count(3)
-    assert first.locator("input.back").get_attribute("placeholder") == "Bonne réponse"
+    assert first.locator("textarea.back").get_attribute("placeholder") == "Bonne réponse"
     first.get_by_role("button", name="+ mauvaise réponse").click()
     first.locator(".choice input").nth(3).fill("1830")
     first.get_by_role("button", name="Retirer cette réponse").first.click()  # 1715 goes

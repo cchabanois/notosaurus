@@ -23,6 +23,7 @@ Each pull request adds a line under **Unreleased**. See [Releasing](CONTRIBUTING
 ### Fixed
 
 - 🔊 Listening to a card again, or to another one, no longer plays two voices at once: the sound playing stops.
+- A long back or info is seen whole in the review, on as many lines as it needs (only the front grew before): nothing cut on a phone.
 
 ## [1.0.0] - 2026-10-04
 

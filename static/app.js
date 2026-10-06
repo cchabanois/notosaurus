@@ -1071,7 +1071,7 @@ document.addEventListener("alpine:init", () => {
       return HAS_MATH.test(text ?? "");
     },
 
-    // A front grows with its text (a sentence with gaps is long). CSS does it where
+    // A front, a back, an info grow with their text (a sentence with gaps is long). CSS does it where
     // `field-sizing` is known; elsewhere, its height follows the text it holds, and
     // is measured again when it shows or its width changes.
     watchHeight(el) {

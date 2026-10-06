@@ -447,7 +447,7 @@ h2 {
 .flash-body { flex: 1; min-width: 0; }
 .flash-actions { display: flex; flex-direction: column; }
 
-.flash input, .flash textarea.front {
+.flash input, .flash textarea.front, .flash textarea.back, .flash textarea.info {
   border: none;
   border-radius: 6px;
   padding: .15rem .25rem;
@@ -455,8 +455,13 @@ h2 {
   background: transparent;
   box-shadow: none;
 }
-.flash input:focus, .flash textarea.front:focus { background: var(--surface-2); box-shadow: none; }
-.flash textarea.front { display: block; width: 100%; min-height: 0; resize: none; overflow: hidden; line-height: 1.3; field-sizing: content; }
+.flash input:focus, .flash textarea.front:focus, .flash textarea.back:focus, .flash textarea.info:focus {
+  background: var(--surface-2); box-shadow: none;
+}
+/* Front, back, info: as tall as their text (a long answer, a long note), never cut */
+.flash textarea.front, .flash textarea.back, .flash textarea.info {
+  display: block; width: 100%; min-height: 0; resize: none; overflow: hidden; line-height: 1.3; field-sizing: content;
+}
 .flash .front { font-weight: 800; font-size: 1.08rem; }
 .flash .back { font-weight: 700; color: var(--accent); }
 .flash .meta { display: flex; gap: .4rem; align-items: center; margin-top: .15rem; }
