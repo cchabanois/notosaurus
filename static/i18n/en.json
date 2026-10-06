@@ -541,6 +541,44 @@
       }
     }
   },
+  "android": {
+    "licence": {
+      "title": "🔑 Subscription",
+      "key": "Licence key",
+      "keyPlaceholder": "nts_…",
+      "keySet": "Key: {key}",
+      "check": "Check",
+      "plan": "Plan: {plan}",
+      "credits": "{credits} credits left this month, {today} today",
+      "renews": "Renewed on {date}",
+      "none": "No licence key yet: it comes with the subscription."
+    },
+    "anki": {
+      "title": "📥 AnkiDroid",
+      "ready": "✓ AnkiDroid is installed and Notosaurus may add cards to it.",
+      "missing": "AnkiDroid isn't installed: the cards go into AnkiDroid, the free Anki app for Android.",
+      "install": "Install AnkiDroid",
+      "notAllowed": "Notosaurus isn't allowed to add cards to AnkiDroid yet.",
+      "allow": "Allow",
+      "openOnce": "After installing AnkiDroid, open it once so that it creates its collection."
+    },
+    "data": {
+      "title": "🗂️ Lessons on this phone",
+      "size": "{lessons} · {size} MB",
+      "deleteAll": "Delete all the lessons",
+      "confirm": "Delete all the lessons on this phone? The cards already in AnkiDroid stay.",
+      "deleted": "Lessons deleted."
+    },
+    "about": {
+      "title": "ℹ️ About",
+      "version": "Version {version}"
+    },
+    "advanced": {
+      "title": "Advanced",
+      "relay": "Relay address",
+      "relayHint": "For tests only: the Notosaurus service the app talks to."
+    }
+  },
   "setup": {
     "title": "Getting started",
     "computerOnly": "The assistant opens on the computer, in Anki: Tools → Notosaurus → Getting started.",
@@ -662,6 +700,17 @@
     },
     "data": {
       "too_new": "This data ({what}) comes from a newer version of Notosaurus: update Notosaurus to use it."
+    },
+    "relay": {
+      "invalid_key": "Unknown or ended licence key: check it in the settings.",
+      "no_credits": "No credits left this month: they come back with the next renewal.",
+      "daily_limit": "Today's limit is reached: try again tomorrow.",
+      "too_large": "Too many photos, or one too heavy.",
+      "bad_image": "This file isn't a photo Notosaurus can read.",
+      "invalid_request": "The Notosaurus service refused the request: update Notosaurus.",
+      "client_outdated": "This version of Notosaurus is too old: update it.",
+      "unavailable": "The Notosaurus service is unavailable for now: try again in a moment.",
+      "unreachable": "Can't reach the Notosaurus service: check the internet connection."
     }
   },
   "demo": {

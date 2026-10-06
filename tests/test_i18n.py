@@ -8,6 +8,7 @@ from pathlib import Path
 from conftest import extract_lesson
 
 from app import ankiconnect, i18n, prompts
+from notosaurus_core import relay_api
 
 
 def _keys(d, prefix=""):
@@ -31,7 +32,7 @@ def test_all_languages_have_the_same_keys():
 def test_all_error_codes_translated():
     """Every AppError code raised in the code has a message in English."""
     codes = set()
-    for path in Path("app").glob("*.py"):
+    for path in [*Path("app").glob("*.py"), *Path("core/notosaurus_core").glob("*.py")]:
         codes |= set(
             re.findall(
                 r'(?:AppError|ExtractionError|AnkiConnectError|PictureError)\(\s*"([a-z_]+\.[a-z_]+)"',
@@ -39,6 +40,7 @@ def test_all_error_codes_translated():
             )
         )
     codes |= set(ankiconnect.KNOWN_ERRORS.values())
+    codes |= set(relay_api.ERRORS) | {"relay.unreachable"}  # the relay's, and its client's when it can't reach it
     assert codes, "no error code found"
     missing = [c for c in sorted(codes) if i18n.get("en", f"errors.{c}") is None]
     assert missing == []

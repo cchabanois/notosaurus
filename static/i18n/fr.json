@@ -541,6 +541,44 @@
       }
     }
   },
+  "android": {
+    "licence": {
+      "title": "🔑 Abonnement",
+      "key": "Clé de licence",
+      "keyPlaceholder": "nts_…",
+      "keySet": "Clé : {key}",
+      "check": "Vérifier",
+      "plan": "Formule : {plan}",
+      "credits": "{credits} crédits restants ce mois-ci, {today} aujourd'hui",
+      "renews": "Renouvelés le {date}",
+      "none": "Pas encore de clé de licence : elle vient avec l'abonnement."
+    },
+    "anki": {
+      "title": "📥 AnkiDroid",
+      "ready": "✓ AnkiDroid est installé et Notosaurus peut y ajouter des cartes.",
+      "missing": "AnkiDroid n'est pas installé : les cartes vont dans AnkiDroid, l'application Anki gratuite pour Android.",
+      "install": "Installer AnkiDroid",
+      "notAllowed": "Notosaurus n'a pas encore le droit d'ajouter des cartes à AnkiDroid.",
+      "allow": "Autoriser",
+      "openOnce": "Après avoir installé AnkiDroid, ouvre-le une fois pour qu'il crée sa collection."
+    },
+    "data": {
+      "title": "🗂️ Leçons sur ce téléphone",
+      "size": "{lessons} · {size} Mo",
+      "deleteAll": "Supprimer toutes les leçons",
+      "confirm": "Supprimer toutes les leçons de ce téléphone ? Les cartes déjà dans AnkiDroid restent.",
+      "deleted": "Leçons supprimées."
+    },
+    "about": {
+      "title": "ℹ️ À propos",
+      "version": "Version {version}"
+    },
+    "advanced": {
+      "title": "Avancé",
+      "relay": "Adresse du relais",
+      "relayHint": "Pour les tests seulement : le service Notosaurus auquel l'application parle."
+    }
+  },
   "setup": {
     "title": "Démarrage",
     "computerOnly": "L'assistant s'ouvre sur l'ordinateur, dans Anki : Outils → Notosaurus → Assistant de démarrage.",
@@ -662,6 +700,17 @@
     },
     "data": {
       "too_new": "Ces données ({what}) viennent d'une version plus récente de Notosaurus : mets Notosaurus à jour pour les utiliser."
+    },
+    "relay": {
+      "invalid_key": "Clé de licence inconnue ou expirée : vérifie-la dans les réglages.",
+      "no_credits": "Plus de crédits ce mois-ci : ils reviennent au prochain renouvellement.",
+      "daily_limit": "Limite du jour atteinte : réessaie demain.",
+      "too_large": "Trop de photos, ou une photo trop lourde.",
+      "bad_image": "Ce fichier n'est pas une photo que Notosaurus sait lire.",
+      "invalid_request": "Le service Notosaurus a refusé la demande : mets Notosaurus à jour.",
+      "client_outdated": "Cette version de Notosaurus est trop ancienne : mets-la à jour.",
+      "unavailable": "Le service Notosaurus est indisponible pour l'instant : réessaie dans un moment.",
+      "unreachable": "Impossible de joindre le service Notosaurus : vérifie la connexion internet."
     }
   },
   "demo": {
