@@ -38,6 +38,8 @@ android {
         targetSdk = 36
         versionCode = 1
         versionName = "0.1.0"
+        // On a device (androidTest): AnkiDroid's real API, the whole app (see README, "Tests on a device")
+        testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
     testOptions {
         unitTests.all {
@@ -74,4 +76,9 @@ dependencies {
     testImplementation(libs.junit)
     testImplementation(libs.ktor.server.test.host)
     testImplementation(libs.mockwebserver)
+    androidTestImplementation(libs.androidx.test.runner)
+    androidTestImplementation(libs.androidx.test.rules)
+    androidTestImplementation(libs.androidx.test.core)
+    androidTestImplementation(libs.androidx.test.junit)
+    androidTestImplementation(libs.mockwebserver)
 }

@@ -74,8 +74,27 @@ Android SDK with platform 37 (`sdkmanager "platforms;android-37.0"`), JDK 17+.
 
 The tests call LocalServer's routes as the page does, with a fake relay
 (MockWebServer) and a fake AnkiDroid (`LocalServerTest`), and check the relay's
-client (`RelayTest`) and the lessons' storage (`LessonsTest`). AnkiDroid's API
-itself is only tried on a device.
+client (`RelayTest`) and the lessons' storage (`LessonsTest`). They run on every pull
+request that touches `android/` or `static/`.
+
+### Tests on a device
+
+What only a device shows (`app/src/androidTest`): `AnkiDroidTest` (AnkiDroid's real
+API: note type, decks and sub-decks, duplicates), `AppTest` (the activity, its
+WebView and the page, a lesson made with a fake relay and sent to AnkiDroid),
+`ModesTest` (a fake computer's page, the page when it stops answering, back to the
+phone). With an emulator (or a phone) connected and AnkiDroid installed (the
+`dev-AnkiDroid-<version>-play-universal.apk` of its releases; never opened is fine):
+
+```sh
+./gradlew connectedDebugAndroidTest
+```
+
+⚠️ Gradle installs the app for the tests and **uninstalls it afterwards**: its lessons
+and settings on that device are gone. Use an emulator, not your own phone.
+
+On GitHub, on demand: Actions → "Android on a device" → Run workflow (an emulator,
+AnkiDroid 2.25.0; a few minutes). Without AnkiDroid the tests are skipped.
 
 Without a computer, the app needs a relay implementing the `/v1` API. Notosaurus's own
 isn't public; run on the computer for development (demo AI, a test licence), reachable
