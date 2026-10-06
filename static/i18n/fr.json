@@ -552,7 +552,7 @@
       "credits": "{credits} crédits restants ce mois-ci, {today} aujourd'hui",
       "renews": "Renouvelés le {date}",
       "none": "Pas encore de clé de licence : elle vient avec l'abonnement.",
-      "free": "Pas d'abonnement ? Avec l'add-on Anki sur ton ordinateur, l'application est gratuite : voir « Avec mon ordinateur »."
+      "free": "Pas d'abonnement ? Avec l'add-on Anki sur ton ordinateur, l'application est gratuite : voir « Où travaille Notosaurus ? »."
     },
     "anki": {
       "title": "📥 AnkiDroid",
@@ -563,19 +563,24 @@
       "allow": "Autoriser",
       "openOnce": "Après avoir installé AnkiDroid, ouvre-le une fois pour qu'il crée sa collection."
     },
+    "where": {
+      "title": "📍 Où travaille Notosaurus ?",
+      "phone": "📱 Sur ce téléphone",
+      "phoneHint": "Leçons sur le téléphone, cartes dans AnkiDroid. Avec l'abonnement.",
+      "computer": "💻 Sur mon ordinateur",
+      "computerHint": "Avec l'add-on Anki : leçons et cartes sur l'ordinateur. Gratuit.",
+      "someComputer": "ton ordinateur",
+      "change": "Changer d'ordinateur",
+      "typeAddress": "Saisir l'adresse à la place",
+      "computerSettings": "Les instructions pour l'IA et les autres réglages de ce mode sont sur l'ordinateur : Anki → Outils → Notosaurus → Réglages."
+    },
     "computer": {
-      "title": "💻 Avec mon ordinateur",
-      "intro": "Tu utilises déjà Notosaurus sur ton ordinateur (add-on Anki) ? Utilise-le depuis ce téléphone : les leçons, l'IA et les cartes restent sur l'ordinateur.",
       "scan": "Scanner le QR code",
       "scanHint": "Sur l'ordinateur : Anki → Outils → Notosaurus → Ouvrir sur le téléphone.",
       "address": "Ou son adresse",
       "addressPlaceholder": "http://192.168.1.10:8000/?k=…",
       "connect": "Se connecter",
-      "saved": "Ordinateur : {address}",
-      "use": "L'utiliser",
-      "rescan": "Scanner à nouveau",
-      "using": "Ce téléphone utilise Notosaurus sur ton ordinateur : {address}.",
-      "back": "Revenir à la page de l'ordinateur"
+      "saved": "Ordinateur : {address}"
     },
     "data": {
       "title": "🗂️ Leçons sur ce téléphone",

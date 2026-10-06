@@ -18,6 +18,7 @@ Each pull request adds a line under **Unreleased**. See [Releasing](CONTRIBUTING
 - In the coming Android app, the computer's page shows a ⚙️ that opens the app's settings (to use it without the computer again).
 - For developers: the Android app (not published yet) now lives in this repository, in `android/`, built and tested with the same revision of the web page.
 - For developers: the Android app's tests on an emulator (real AnkiDroid, the whole app, its two modes), run on demand.
+- The coming Android app's settings: a clear choice of where Notosaurus works (on the phone, or on the computer with the add-on, shown by its name).
 
 ## [1.0.0] - 2026-10-04
 

@@ -552,7 +552,7 @@
       "credits": "{credits} créditos restantes este mês, {today} hoje",
       "renews": "Renovados em {date}",
       "none": "Ainda sem chave de licença: ela vem com a assinatura.",
-      "free": "Sem assinatura? Com o complemento do Anki no seu computador, o app é gratuito: veja “Com meu computador”."
+      "free": "Sem assinatura? Com o complemento do Anki no seu computador, o app é gratuito: veja “Onde o Notosaurus trabalha?”."
     },
     "anki": {
       "title": "📥 AnkiDroid",
@@ -563,19 +563,24 @@
       "allow": "Permitir",
       "openOnce": "Depois de instalar o AnkiDroid, abra-o uma vez para que ele crie sua coleção."
     },
+    "where": {
+      "title": "📍 Onde o Notosaurus trabalha?",
+      "phone": "📱 Neste celular",
+      "phoneHint": "Lições no celular, cartões no AnkiDroid. Com a assinatura.",
+      "computer": "💻 No meu computador",
+      "computerHint": "Com o complemento do Anki: lições e cartões no computador. Grátis.",
+      "someComputer": "seu computador",
+      "change": "Trocar de computador",
+      "typeAddress": "Digitar o endereço",
+      "computerSettings": "As instruções para a IA e as outras configurações deste modo ficam no computador: Anki → Ferramentas → Notosaurus → Configurações."
+    },
     "computer": {
-      "title": "💻 Com meu computador",
-      "intro": "Já usa o Notosaurus no seu computador (complemento do Anki)? Use-o a partir deste celular: as lições, a IA e os cartões ficam no computador.",
       "scan": "Escanear o QR code",
       "scanHint": "No computador: Anki → Ferramentas → Notosaurus → Abrir no celular.",
       "address": "Ou o endereço dele",
       "addressPlaceholder": "http://192.168.1.10:8000/?k=…",
       "connect": "Conectar",
-      "saved": "Computador: {address}",
-      "use": "Usar",
-      "rescan": "Escanear de novo",
-      "using": "Este celular usa o Notosaurus no seu computador: {address}.",
-      "back": "Voltar à página do computador"
+      "saved": "Computador: {address}"
     },
     "data": {
       "title": "🗂️ Lições neste celular",

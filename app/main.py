@@ -4,6 +4,7 @@ import logging
 import os
 import re
 import shutil
+import socket
 import tempfile
 import time
 from contextlib import asynccontextmanager
@@ -516,6 +517,7 @@ def config() -> dict:
         "max_photos": MAX_IMAGES,
         "card_helps": s.card_helps,
         "configured": settings.configured(s),
+        "computer_name": socket.gethostname(),  # the Android app names the computer it uses
     }
 
 

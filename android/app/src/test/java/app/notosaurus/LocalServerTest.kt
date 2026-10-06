@@ -438,7 +438,12 @@ class LocalServerTest {
 
     // --- With my computer
 
-    private fun computerAnswers() = computer.enqueue(MockResponse.Builder().body("""{"lang": null, "available": ["en", "fr"]}""").build())
+    /** A Notosaurus answering: its /api/lang, then its /api/config (its name, when it gives it). */
+    private fun computerAnswers(name: String? = "salon-pc") {
+        computer.enqueue(MockResponse.Builder().body("""{"lang": null, "available": ["en", "fr"]}""").build())
+        val named = if (name == null) "" else ""","computer_name": "$name""""
+        computer.enqueue(MockResponse.Builder().body("""{"version": "1.1.0"$named}""").build())
+    }
 
     private suspend fun HttpClient.connect(address: String) = put("/api/admin/computer") {
         page(); contentType(ContentType.Application.Json); setBody("""{"address": "$address"}""")
@@ -452,6 +457,9 @@ class LocalServerTest {
         val answer = client.post("/api/admin/computer/scan") { page() }.json().jsonObject
         assertEquals(qr, answer.string("url")) // where the page goes: the computer's page, paired by its token
         assertEquals("/api/lang", computer.takeRequest().url.encodedPath) // checked: a Notosaurus answers
+        val config = computer.takeRequest() // its name, asked as a paired phone (the QR code's token)
+        assertEquals("/api/config", config.url.encodedPath)
+        assertEquals("token123", config.url.queryParameter("k"))
         assertEquals(LocalServer.COMPUTER_MODE, prefs[LocalServer.MODE])
         assertEquals(qr, prefs[LocalServer.COMPUTER])
         assertEquals(1, modeChanges) // the app's shortcuts follow
@@ -459,6 +467,7 @@ class LocalServerTest {
         val settings = client.get("/api/admin/settings") { page() }.json().jsonObject
         assertEquals("computer", settings.string("mode"))
         assertEquals("http://127.0.0.1:${computer.port}", settings.string("computer_address")) // without its token
+        assertEquals("salon-pc", settings.string("computer_name"))
 
         scanned = null // cancelled: nothing changes
         assertEquals("true", client.post("/api/admin/computer/scan") { page() }.json().jsonObject["cancelled"]!!.jsonPrimitive.content)
@@ -511,5 +520,12 @@ class LocalServerTest {
         assertEquals(null, LocalServer.computerUrl("ftp://pc/"))
         assertEquals(null, LocalServer.computerUrl("bonjour !"))
         assertEquals("http://192.168.1.10:8000", LocalServer.origin(LocalServer.computerUrl("192.168.1.10:8000/?k=abc")!!))
+    }
+
+    @Test
+    fun aComputerThatDoesntSayItsName() = app { client ->
+        computerAnswers(name = null) // an add-on older than computer_name
+        client.connect("127.0.0.1:${computer.port}/?k=t")
+        assertEquals("", client.get("/api/admin/settings") { page() }.json().jsonObject.string("computer_name"))
     }
 }

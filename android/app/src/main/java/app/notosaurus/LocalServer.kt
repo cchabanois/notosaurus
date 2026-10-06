@@ -354,9 +354,21 @@ class LocalServer(
         val url = computerUrl(raw) ?: throw BadRequest("computer.not_a_qr")
         if (!isNotosaurus(url)) throw BadRequest("computer.not_found")
         prefs[COMPUTER] = url.toString()
+        prefs[COMPUTER_NAME] = computerName(url).orEmpty()
         prefs[MODE] = COMPUTER_MODE
         modeChanged()
         return buildJsonObject { put("url", url.toString()) }
+    }
+
+    /** The computer's name, which its /api/config gives a paired phone (the QR code's
+     * token pairs it); null from an add-on older than that, or without a token. */
+    private suspend fun computerName(url: URI): String? = withContext(Dispatchers.IO) {
+        val request = okhttp3.Request.Builder().url("${origin(url)}/api/config?${url.rawQuery.orEmpty()}").build()
+        runCatching {
+            computerClient.newCall(request).execute().use {
+                if (it.isSuccessful) json.parseToJsonElement(it.body.string()).jsonObject.string("computer_name") else null
+            }
+        }.getOrNull()?.takeIf { it.isNotBlank() }
     }
 
     /** Notosaurus answers there: its /api/lang, which a phone not paired yet may read. */
@@ -375,7 +387,11 @@ class LocalServer(
         put(CARD_HELPS, prefs[CARD_HELPS] == "true")
         put("version", version)
         put(MODE, prefs[MODE] ?: PHONE_MODE)
-        prefs[COMPUTER]?.let { put(COMPUTER, it); put("computer_address", origin(URI(it))) } // the address, without its token
+        prefs[COMPUTER]?.let {
+            put(COMPUTER, it)
+            put("computer_address", origin(URI(it))) // without its token
+            put("computer_name", prefs[COMPUTER_NAME].orEmpty())
+        }
     }
 
     private fun masked(key: String) = if (key.length <= 8) "•".repeat(key.length) else "${key.take(4)}…${key.takeLast(4)}"
@@ -451,6 +467,7 @@ class LocalServer(
         const val PHONE_MODE = "phone"
         const val COMPUTER_MODE = "computer"
         const val COMPUTER = "computer" // the computer's address, as its QR code gives it (with its token)
+        const val COMPUTER_NAME = "computer_name" // its name, shown in the settings ("" when it didn't say)
 
         private val computerClient = okhttp3.OkHttpClient.Builder()
             .connectTimeout(3, java.util.concurrent.TimeUnit.SECONDS)

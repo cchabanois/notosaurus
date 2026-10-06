@@ -552,7 +552,7 @@
       "credits": "{credits} créditos restantes este mes, {today} hoy",
       "renews": "Se renuevan el {date}",
       "none": "Todavía no hay clave de licencia: llega con la suscripción.",
-      "free": "¿Sin suscripción? Con el complemento de Anki en tu ordenador, la aplicación es gratuita: mira «Con mi ordenador»."
+      "free": "¿Sin suscripción? Con el complemento de Anki en tu ordenador, la aplicación es gratuita: mira «¿Dónde trabaja Notosaurus?»."
     },
     "anki": {
       "title": "📥 AnkiDroid",
@@ -563,19 +563,24 @@
       "allow": "Permitir",
       "openOnce": "Después de instalar AnkiDroid, ábrelo una vez para que cree su colección."
     },
+    "where": {
+      "title": "📍 ¿Dónde trabaja Notosaurus?",
+      "phone": "📱 En este teléfono",
+      "phoneHint": "Lecciones en el teléfono, tarjetas en AnkiDroid. Con la suscripción.",
+      "computer": "💻 En mi ordenador",
+      "computerHint": "Con el complemento de Anki: lecciones y tarjetas en el ordenador. Gratis.",
+      "someComputer": "tu ordenador",
+      "change": "Cambiar de ordenador",
+      "typeAddress": "Escribir su dirección",
+      "computerSettings": "Las instrucciones para la IA y los demás ajustes de este modo están en el ordenador: Anki → Herramientas → Notosaurus → Ajustes."
+    },
     "computer": {
-      "title": "💻 Con mi ordenador",
-      "intro": "¿Ya usas Notosaurus en tu ordenador (complemento de Anki)? Úsalo desde este teléfono: las lecciones, la IA y las tarjetas se quedan en el ordenador.",
       "scan": "Escanear el código QR",
       "scanHint": "En el ordenador: Anki → Herramientas → Notosaurus → Abrir en el móvil.",
       "address": "O su dirección",
       "addressPlaceholder": "http://192.168.1.10:8000/?k=…",
       "connect": "Conectar",
-      "saved": "Ordenador: {address}",
-      "use": "Usarlo",
-      "rescan": "Escanear de nuevo",
-      "using": "Este teléfono usa Notosaurus en tu ordenador: {address}.",
-      "back": "Volver a la página del ordenador"
+      "saved": "Ordenador: {address}"
     },
     "data": {
       "title": "🗂️ Lecciones en este teléfono",
