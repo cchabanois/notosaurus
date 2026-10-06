@@ -35,6 +35,7 @@ import kotlinx.serialization.json.jsonArray
 import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.put
 import java.io.File
+import java.net.URI
 import java.util.UUID
 
 /**
@@ -47,6 +48,8 @@ import java.util.UUID
  * - Anki: AnkiDroid (Anki).
  * - The settings: the app's own page (assets/page/admin.html, at the address of the
  *   computer's), its /api/admin/… here.
+ * - "With my computer": the app shows the add-on's page instead (MainActivity); here,
+ *   connecting to it (its QR code, its address) and switching between the two.
  *
  * Listens on 127.0.0.1 only, and answers /api only with the cookie the app's WebView
  * has: another app on the phone can't use it.
@@ -59,6 +62,8 @@ class LocalServer(
     private val prefs: Preferences,
     private val version: String = "",
     private val requestAnkiPermission: () -> Unit = {}, // AnkiDroid's permission dialog (the app's activity)
+    private val scan: suspend () -> String? = { null }, // a QR code read by the camera (null: cancelled)
+    private val modeChanged: () -> Unit = {}, // the app's shortcuts follow
     val token: String = UUID.randomUUID().toString(),
 ) {
     private val lessons = Lessons(File(dataDir, "lessons").apply { mkdirs() })
@@ -123,6 +128,24 @@ class LocalServer(
             }
         }
         api("DELETE", "/api/admin/lessons") { buildJsonObject { put("deleted", lessons.deleteAll()) } }
+
+        // --- With my computer (the Anki add-on's Notosaurus)
+        api("POST", "/api/admin/computer/scan") {
+            val read = try {
+                scan()
+            } catch (e: Exception) {
+                throw BadRequest("computer.scan_unavailable")
+            } ?: return@api buildJsonObject { put("cancelled", true) }
+            connect(read)
+        }
+        api("PUT", "/api/admin/computer") { connect(body().string("address")) }
+        api("POST", "/api/admin/mode") {
+            val mode = body().string("mode")
+            if (mode == COMPUTER_MODE && prefs[COMPUTER].isNullOrEmpty()) throw BadRequest("computer.not_found")
+            prefs[MODE] = if (mode == COMPUTER_MODE) COMPUTER_MODE else PHONE_MODE
+            modeChanged()
+            buildJsonObject { put("url", if (mode == COMPUTER_MODE) prefs[COMPUTER]!! else "/") }
+        }
         api("GET", "/api/lang") {
             val codes = i18nCodes()
             buildJsonObject {
@@ -278,6 +301,8 @@ class LocalServer(
 
     private class NotFound : Exception()
 
+    private class BadRequest(val code: String) : Exception(code)
+
     private fun notFound(): Nothing = throw NotFound()
 
     private fun Route.api(method: String, path: String, handler: suspend RoutingContext.() -> JsonElement) {
@@ -289,6 +314,8 @@ class LocalServer(
                     HttpStatusCode.NotFound to error("lesson.not_found", JsonObject(emptyMap()))
                 } catch (e: RelayException) {
                     HttpStatusCode.BadGateway to error(e.code, e.params)
+                } catch (e: BadRequest) {
+                    HttpStatusCode.BadRequest to error(e.code, JsonObject(emptyMap()))
                 }
                 call.respondText(answer.toString(), ContentType.Application.Json, status)
             }
@@ -307,6 +334,25 @@ class LocalServer(
         return false
     }
 
+    /** Connect to the computer's Notosaurus: its QR code's address (or one typed), checked,
+     * kept, and the app switched to it. Returns where to go. */
+    private suspend fun connect(raw: String): JsonObject {
+        val url = computerUrl(raw) ?: throw BadRequest("computer.not_a_qr")
+        if (!isNotosaurus(url)) throw BadRequest("computer.not_found")
+        prefs[COMPUTER] = url.toString()
+        prefs[MODE] = COMPUTER_MODE
+        modeChanged()
+        return buildJsonObject { put("url", url.toString()) }
+    }
+
+    /** Notosaurus answers there: its /api/lang, which a phone not paired yet may read. */
+    private suspend fun isNotosaurus(url: URI): Boolean = withContext(Dispatchers.IO) {
+        val request = okhttp3.Request.Builder().url("${origin(url)}/api/lang").build()
+        runCatching {
+            computerClient.newCall(request).execute().use { it.isSuccessful && "\"available\"" in it.body.string() }
+        }.getOrDefault(false)
+    }
+
     private fun settings() = buildJsonObject {
         put(RELAY, prefs[RELAY] ?: DEFAULT_RELAY)
         put(KEY, masked(prefs[KEY].orEmpty())) // shown, not given back whole
@@ -314,6 +360,8 @@ class LocalServer(
         put(INSTRUCTIONS, prefs[INSTRUCTIONS].orEmpty())
         put(CARD_HELPS, prefs[CARD_HELPS] == "true")
         put("version", version)
+        put(MODE, prefs[MODE] ?: PHONE_MODE)
+        prefs[COMPUTER]?.let { put(COMPUTER, it); put("computer_address", origin(URI(it))) } // the address, without its token
     }
 
     private fun masked(key: String) = if (key.length <= 8) "•".repeat(key.length) else "${key.take(4)}…${key.takeLast(4)}"
@@ -334,6 +382,9 @@ class LocalServer(
 
     private fun i18nFile(lang: String): JsonObject =
         web("i18n/$lang.json")?.let { json.parseToJsonElement(it.decodeToString()).jsonObject } ?: JsonObject(emptyMap())
+
+    /** A text of the page's languages (the app's shortcuts), English when missing. */
+    fun text(lang: String, vararg keys: String): String? = i18n(lang, *keys) ?: i18n("en", *keys)
 
     private fun i18n(lang: String, vararg keys: String): String? {
         var value: JsonElement? = i18nFile(lang)
@@ -381,9 +432,37 @@ class LocalServer(
         // Prototype: the relay on the computer, seen from the emulator (changed in the settings, "Advanced")
         const val DEFAULT_RELAY = "http://10.0.2.2:8080"
 
+        // Which Notosaurus the app shows: its own (phone) or the computer's (the add-on's)
+        const val MODE = "mode"
+        const val PHONE_MODE = "phone"
+        const val COMPUTER_MODE = "computer"
+        const val COMPUTER = "computer" // the computer's address, as its QR code gives it (with its token)
+
+        private val computerClient = okhttp3.OkHttpClient.Builder()
+            .connectTimeout(3, java.util.concurrent.TimeUnit.SECONDS)
+            .readTimeout(5, java.util.concurrent.TimeUnit.SECONDS)
+            .build()
+
+        /** The computer's Notosaurus address, from its QR code or as typed ("192.168.1.10:8000"):
+         * http(s), a host; null when it isn't one. */
+        fun computerUrl(raw: String): URI? {
+            val text = raw.trim().let { if ("://" in it) it else "http://$it" }
+            val url = runCatching { URI(text) }.getOrNull() ?: return null
+            if (url.scheme !in setOf("http", "https") || url.host.isNullOrEmpty()) return null
+            return if (url.path.isNullOrEmpty()) URI(url.scheme, url.userInfo, url.host, url.port, "/", url.query, null) else url
+        }
+
+        fun origin(url: URI) = "${url.scheme}://${url.host}${if (url.port > 0) ":${url.port}" else ""}"
+
         /** The app's: the page from its assets (its own files in page/ first, then the
          * public repository's in web/), data in its own files, AnkiDroid. */
-        fun forApp(context: Context, version: String, requestAnkiPermission: () -> Unit) = LocalServer(
+        fun forApp(
+            context: Context,
+            version: String,
+            requestAnkiPermission: () -> Unit,
+            scan: suspend () -> String?,
+            modeChanged: () -> Unit,
+        ) = LocalServer(
             dataDir = context.filesDir,
             web = { path -> asset(context, "page/$path") ?: asset(context, "web/$path") },
             languages = {
@@ -393,6 +472,8 @@ class LocalServer(
             prefs = SharedPreferencesStore(context),
             version = version,
             requestAnkiPermission = requestAnkiPermission,
+            scan = scan,
+            modeChanged = modeChanged,
         )
 
         private fun asset(context: Context, path: String) =

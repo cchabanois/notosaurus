@@ -29,6 +29,8 @@ card: the others were already there); the lesson kept after a restart.
 | `MainActivity.kt` | the WebView: the page's file inputs (camera, gallery, PDF), back button, AnkiDroid's permission |
 | `LocalServer.kt` | the page's `/api` routes, and its files (assets/web/) |
 | `assets/page/admin.html`, `settings.js` | the app's settings page (the page's ⚙️): licence and its credits, AnkiDroid, standing instructions, lessons on the phone, relay address (advanced); texts under `android` in the web page's i18n files |
+| `assets/page/unreachable.html` | "With my computer", the computer not answering: try again, scan again, use without computer |
+| `Shortcuts.kt` | the icon's shortcuts ("Without computer", "With my computer"), once a computer is connected |
 | `Preferences.kt` | the settings, kept on the phone |
 | `Lessons.kt` | lessons on the phone, as the computer keeps them (lesson.json, page-N.jpg) |
 | `Relay.kt`, `Api.kt` | the relay's client (`/v1`), its errors |
@@ -45,6 +47,21 @@ figures, regenerating a lesson, rotating a photo, `.apkg` export, sharing lesson
 updating notes sent before; photos aren't turned upright (the relay's `turns`).
 The page also needs small changes for the phone: no Anki profile badge ("none"), no
 `.apkg` button, Alpine.js and KaTeX bundled instead of a CDN (offline use).
+
+## Two modes
+
+- **Without computer** (the default): the app's own page, the AI through the relay
+  (subscription), the cards into AnkiDroid.
+- **With my computer** (free, for the Anki add-on's users): in the settings, "💻 With
+  my computer": scan the QR code of *Anki → Tools → Notosaurus → Open on the phone*
+  (Google's code scanner: no camera permission; Google Play services download it at
+  first use), or type the address. Checked (the computer's `/api/lang`), kept, and
+  the app shows the computer's page instead of its own: lessons, AI and cards stay
+  on the computer. The computer not answering: `unreachable.html`. Back to the phone:
+  that page, or the icon's shortcuts. Each mode keeps its own lessons.
+
+The settings point to it where it matters: the subscription section, without a
+licence, says the app is free with the add-on.
 
 ## Build and try
 

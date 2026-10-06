@@ -17,13 +17,16 @@ async function api(path, options = {}) {
 const json = (method, body) => ({ method, headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) });
 
 document.addEventListener("alpine:init", () => {
-  Alpine.data("settings", () => ({
+  // whole: the settings page; false: only the settings themselves (unreachable.html)
+  Alpine.data("settings", (whole = true) => ({
     form: null,       // the settings (the key masked)
     account: null,    // the relay's answer for the key
     anki: null,       // { installed, permitted }
     data: null,       // { lessons, bytes }
     newKey: "",
     checking: false,
+    computerAddress: "",
+    connecting: false,
     saveState: "saved",
     saveTimer: null,
     error: "",
@@ -37,6 +40,7 @@ document.addEventListener("alpine:init", () => {
         this.error = e.message;
         return;
       }
+      if (!whole) return;
       this.loadAnki();
       this.loadData();
       if (this.form.has_key) this.loadAccount();
@@ -99,6 +103,44 @@ document.addEventListener("alpine:init", () => {
         this.saveState = "saved";
       } catch (e) {
         this.saveState = "error";
+        this.error = e.message;
+      }
+    },
+
+    // The add-on's Notosaurus: its QR code (or address) checked, then its page instead of ours
+    async scanComputer() {
+      await this.connect(() => api("/api/admin/computer/scan", { method: "POST" }));
+    },
+
+    async connectComputer() {
+      await this.connect(() => api("/api/admin/computer", json("PUT", { address: this.computerAddress })));
+    },
+
+    async connect(request) {
+      this.connecting = true;
+      this.error = "";
+      try {
+        const answer = await request();
+        if (answer.url) location.href = answer.url;
+      } catch (e) {
+        this.error = e.message;
+      } finally {
+        this.connecting = false;
+      }
+    },
+
+    async useComputer() {
+      try {
+        location.href = (await api("/api/admin/mode", json("POST", { mode: "computer" }))).url;
+      } catch (e) {
+        this.error = e.message;
+      }
+    },
+
+    async usePhone() {
+      try {
+        location.href = (await api("/api/admin/mode", json("POST", { mode: "phone" }))).url;
+      } catch (e) {
         this.error = e.message;
       }
     },
