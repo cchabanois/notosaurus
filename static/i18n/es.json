@@ -738,7 +738,8 @@
     },
     "computer": {
       "not_found": "Ningún Notosaurus responde en esta dirección: ¿está Anki abierto con el complemento, y este teléfono en la misma wifi?",
-      "not_a_qr": "Este código QR no es el de Notosaurus: escanea el que muestra Anki (Herramientas → Notosaurus → Abrir en el móvil)."
+      "not_a_qr": "Este código QR no es el de Notosaurus: escanea el que muestra Anki (Herramientas → Notosaurus → Abrir en el móvil).",
+      "scan_unavailable": "El lector de códigos QR todavía no está en este teléfono (lo instalan los servicios de Google Play, con acceso a internet): escribe mejor la dirección del ordenador."
     }
   },
   "demo": {
