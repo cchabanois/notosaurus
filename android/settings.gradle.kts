@@ -13,5 +13,5 @@ dependencyResolutionManagement {
         maven("https://jitpack.io") { content { includeGroup("com.github.ankidroid") } } // AnkiDroid's API
     }
 }
-rootProject.name = "notosaurus-android"
+rootProject.name = "notosaurus"
 include(":app")

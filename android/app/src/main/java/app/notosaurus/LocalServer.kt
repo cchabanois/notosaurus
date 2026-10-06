@@ -40,7 +40,7 @@ import java.util.UUID
 
 /**
  * The computer's server, as the page sees it: the same /api routes (app/main.py),
- * answered on the phone. The page itself (assets/web/, the public repository's
+ * answered on the phone. The page itself (assets/web/, the repository's
  * static/) is served from here too, so it runs unchanged.
  *
  * - The AI: the relay (`relay()`, with the licence).
@@ -469,7 +469,7 @@ class LocalServer(
         fun origin(url: URI) = "${url.scheme}://${url.host}${if (url.port > 0) ":${url.port}" else ""}"
 
         /** The app's: the page from its assets (its own files in page/ first, then the
-         * public repository's in web/), data in its own files, AnkiDroid. */
+         * repository's static/, in web/), data in its own files, AnkiDroid. */
         fun forApp(
             context: Context,
             version: String,

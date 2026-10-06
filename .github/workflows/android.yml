@@ -1,0 +1,40 @@
+name: Android
+
+# The Android app (android/): its tests and its build, with this revision's web page
+# (static/, which it shows). Only when they change.
+on:
+  pull_request:
+    paths: ["android/**", "static/**", ".github/workflows/android.yml"]
+  push:
+    branches: [main]
+    paths: ["android/**", "static/**", ".github/workflows/android.yml"]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: android-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  app:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    defaults:
+      run:
+        working-directory: android
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-java@v6
+        with:
+          distribution: temurin
+          java-version: "21"
+          cache: gradle
+          cache-dependency-path: android/**/*.gradle*
+      - name: Unit tests, then the app
+        run: ./gradlew testDebugUnitTest assembleDebug
+      - if: failure()
+        uses: actions/upload-artifact@v7
+        with:
+          name: test-reports
+          path: android/app/build/reports/tests/

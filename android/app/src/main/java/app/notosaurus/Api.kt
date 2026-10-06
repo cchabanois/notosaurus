@@ -5,7 +5,7 @@ import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonObject
 
-// The relay's API, version 1 (notosaurus_core.relay_api in the public repository,
+// The relay's API, version 1 (notosaurus_core.relay_api in core/,
 // described by core/relay-api-v1.json): the part this app uses.
 
 val json = Json {

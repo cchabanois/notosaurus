@@ -1,13 +1,12 @@
-# notosaurus-android
+# Notosaurus for Android
 
-Private. Notosaurus for Android: photos of a lesson become cards in AnkiDroid,
-through the Notosaurus relay (`/v1`, see the public repository's
-`core/notosaurus_core/relay_api.py` and `core/relay-api-v1.json`). No computer,
-no API key.
+Photos of a lesson become cards in AnkiDroid, through the Notosaurus relay (`/v1`,
+see `core/notosaurus_core/relay_api.py` and `core/relay-api-v1.json`). No computer,
+no API key. Not published yet.
 
 ## Status: prototype 2, the web page in the app
 
-The app shows **Notosaurus's own page** (the public repository's `static/`: the same
+The app shows **Notosaurus's own page** (the repository's `static/`: the same
 screens, prompts and languages as on the computer) in a WebView. What the computer's
 server does for it (`/api/...`, app/main.py) is done on the phone by `LocalServer`:
 the AI through the relay, the lessons on the phone, the cards into AnkiDroid.
@@ -36,8 +35,9 @@ card: the others were already there); the lesson kept after a restart.
 | `Relay.kt`, `Api.kt` | the relay's client (`/v1`), its errors |
 | `Anki.kt` | AnkiDroid's API: note type, decks and sub-decks, notes, duplicates. Asked for at the first "Add to Anki": its Play Store page when it's missing, its permission dialog when it isn't allowed yet |
 
-The page is copied at build time from the public repository checked out next to this
-one (`../notosaurus/static`, or `-Pnotosaurus.web=<path>`). The app's own files
+The page is copied at build time from this revision's `static/` (another with
+`-Pnotosaurus.web=<path>`): a change to the page and the app goes in one pull request,
+and a build always ships the page it was tested with. The app's own files
 (`assets/page/`) are served first, then the web page's: its `admin.html` replaces the
 computer's. The relay's address is the emulator's by default (`LocalServer.DEFAULT_RELAY`),
 changed in the settings ("Advanced"); the licence key is entered there too.
@@ -77,7 +77,9 @@ The tests call LocalServer's routes as the page does, with a fake relay
 client (`RelayTest`) and the lessons' storage (`LessonsTest`). AnkiDroid's API
 itself is only tried on a device.
 
-A relay on the computer (in `notosaurus-cloud`), reachable from the phone on the same Wi-Fi:
+Without a computer, the app needs a relay implementing the `/v1` API. Notosaurus's own
+isn't public; run on the computer for development (demo AI, a test licence), reachable
+from the phone on the same Wi-Fi:
 
 ```sh
 RELAY_STORE=memory RELAY_LLM=fake RELAY_DEV_KEY=nts_dev .venv/bin/uvicorn --factory relay.main:create_app --host 0.0.0.0 --port 8080
@@ -109,8 +111,6 @@ The app uses `http://10.0.2.2:8080` (the computer, from the emulator) and the ke
 - **Diagrams**: cropped images and masks (`diagrams.py` on the PC): a relay route,
   or done in the app.
 - Updating notes sent before (stable ids), pictures (`/v1/picture`).
-- The page's AGPL code in a closed app: fine because Notosaurus has a single author
-  and a CLA; keep the CLA for any outside contribution to `static/`.
 - Licence through Google Play billing; Play Store listing (an app **for parents**,
   not "for children", see the Families policy); a "my own key" mode.
 - **Android 17's local network permission**: targeting SDK 37, `ACCESS_LOCAL_NETWORK`

@@ -1,11 +1,11 @@
-"""Make the app's launcher icon from the Notosaurus logo (the public repository's
+"""Make the app's launcher icon from the Notosaurus logo (the repository's
 assets/notosaurus-logo.png): the head, as on the web page's icons (its
 tools/make_icons.py, HEAD), on a white background.
 
 An adaptive icon (Android 8+): a 108 dp foreground the phone crops to its own shape
 (circle, rounded square…), keeping at least the middle 66 dp: the head stays in it.
 
-Usage: <python with Pillow> tools/make_icon.py [path/to/notosaurus-logo.png]
+Usage (from android/): ../.venv/bin/python tools/make_icon.py [path/to/notosaurus-logo.png]
 """
 
 import sys
@@ -14,7 +14,7 @@ from pathlib import Path
 from PIL import Image
 
 ROOT = Path(__file__).resolve().parent.parent
-SOURCE = Path(sys.argv[1]) if len(sys.argv) > 1 else ROOT.parent / "notosaurus" / "assets" / "notosaurus-logo.png"
+SOURCE = Path(sys.argv[1]) if len(sys.argv) > 1 else ROOT.parent / "assets" / "notosaurus-logo.png"
 RES = ROOT / "app" / "src" / "main" / "res"
 HEAD = (590, 85, 750, 245)  # the head and the top of the neck (as the web page's icons)
 FILL = 0.6  # of the 108 dp: inside the 66 dp every shape keeps

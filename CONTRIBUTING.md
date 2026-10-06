@@ -98,6 +98,7 @@ come in as parameters), so that other programs can use it. A test keeps it that 
 | `app/i18n.py`, `static/i18n.js`, `static/i18n/` | languages |
 | `app/storage.py` | data folder, atomic JSON writes |
 | `static/` | the phone page and the settings page |
+| `android/` | the Android app (Kotlin): the same page in a WebView, its `/api` answered on the phone (lessons, AnkiDroid, the Notosaurus relay); see [android/README.md](android/README.md) |
 | `anki_addon/` | the Anki add-on: server launcher and an AnkiConnect-compatible bridge |
 | `tools/build_addon.py` | builds `dist/notosaurus-<version>.ankiaddon` |
 | `tools/relay_openapi.py` | writes `core/relay-api-v1.json` from `relay_api.py` (run it after changing them; a test checks) |

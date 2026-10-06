@@ -6,7 +6,7 @@ plugins {
     alias(libs.plugins.kotlin.serialization)
 }
 
-/** The Notosaurus web page (the public repository's static/), shipped in the app's
+/** The Notosaurus web page (the repository's static/), shipped in the app's
  * assets under web/: the app shows the same page as the computer. */
 abstract class CopyWebPage : DefaultTask() {
     @get:InputDirectory abstract val source: DirectoryProperty
@@ -22,8 +22,8 @@ abstract class CopyWebPage : DefaultTask() {
     }
 }
 
-// The public repository checked out next to this one (prototype; later: a pinned version)
-val webPage = providers.gradleProperty("notosaurus.web").orElse("../../notosaurus/static")
+// The same revision's: android/app → ../../static (another with -Pnotosaurus.web=<path>)
+val webPage = providers.gradleProperty("notosaurus.web").orElse("../../static")
 val copyWebPage = tasks.register<CopyWebPage>("copyWebPage") {
     source.set(layout.projectDirectory.dir(webPage))
 }

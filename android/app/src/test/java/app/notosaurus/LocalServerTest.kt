@@ -43,7 +43,7 @@ import java.io.File
 /**
  * The page's /api, answered on the phone: called as the page calls them (app.js),
  * with a fake relay (MockWebServer) and a fake AnkiDroid. The page's files are the
- * public repository's static/ (the notosaurus.web system property, set by Gradle).
+ * repository's static/ (the notosaurus.web system property, set by Gradle).
  */
 class LocalServerTest {
     @get:Rule val folder = TemporaryFolder()
@@ -77,7 +77,7 @@ class LocalServerTest {
     @Before
     fun setUp() {
         relay.start()
-        val web = File(System.getProperty("notosaurus.web") ?: "../../notosaurus/static")
+        val web = File(System.getProperty("notosaurus.web") ?: "../../static")
         val page = File("src/main/assets/page") // the app's own files, first (as forApp)
         prefs[LocalServer.RELAY] = relay.url("/").toString()
         prefs[LocalServer.KEY] = "nts_key"
@@ -178,7 +178,7 @@ class LocalServerTest {
         assertEquals(13, prompts.size)
         assertEquals("notosaurus:auto", prompts[0].string("id"))
         assertTrue(prompts.all { it["builtin"]!!.jsonPrimitive.content == "true" })
-        val french = json.parseToJsonElement(File(System.getProperty("notosaurus.web") ?: "../../notosaurus/static", "i18n/fr.json").readText())
+        val french = json.parseToJsonElement(File(System.getProperty("notosaurus.web") ?: "../../static", "i18n/fr.json").readText())
         assertEquals(french.jsonObject["builtinPrompts"]!!.jsonObject["vocabulary"]!!.jsonObject.string("name"), prompts[1].string("name"))
 
         // The user's: added, changed, copied, deleted
@@ -358,7 +358,7 @@ class LocalServerTest {
         for (file in listOf("admin.html", "unreachable.html", "settings.js")) own += client.get("/$file").bodyAsText()
         val names = Regex("""t\(["'](android\.[a-zA-Z.]+)["']""").findAll(own).map { it.groupValues[1] }.toSet()
         assertTrue(names.size > 30)
-        val web = File(System.getProperty("notosaurus.web") ?: "../../notosaurus/static")
+        val web = File(System.getProperty("notosaurus.web") ?: "../../static")
         for (lang in web.resolve("i18n").listFiles()!!) {
             val messages = json.parseToJsonElement(lang.readText()).jsonObject
             for (name in names) {
