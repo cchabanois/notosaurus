@@ -551,7 +551,8 @@
       "plan": "Piano: {plan}",
       "credits": "{credits} crediti rimasti questo mese, {today} oggi",
       "renews": "Rinnovati il {date}",
-      "none": "Ancora nessuna chiave di licenza: arriva con l'abbonamento."
+      "none": "Ancora nessuna chiave di licenza: arriva con l'abbonamento.",
+      "free": "Nessun abbonamento? Con l'add-on di Anki sul tuo computer, l'app è gratuita: vedi «Con il mio computer»."
     },
     "anki": {
       "title": "📥 AnkiDroid",
@@ -561,6 +562,18 @@
       "notAllowed": "Notosaurus non ha ancora il permesso di aggiungere carte ad AnkiDroid.",
       "allow": "Consenti",
       "openOnce": "Dopo aver installato AnkiDroid, aprilo una volta perché crei la sua raccolta."
+    },
+    "computer": {
+      "title": "💻 Con il mio computer",
+      "intro": "Usi già Notosaurus sul tuo computer (add-on di Anki)? Usalo da questo telefono: le lezioni, l'IA e le carte restano sul computer.",
+      "scan": "Scansiona il codice QR",
+      "scanHint": "Sul computer: Anki → Strumenti → Notosaurus → Apri sul telefono.",
+      "address": "Oppure il suo indirizzo",
+      "addressPlaceholder": "http://192.168.1.10:8000/?k=…",
+      "connect": "Collegati",
+      "saved": "Computer: {address}",
+      "use": "Usalo",
+      "rescan": "Scansiona di nuovo"
     },
     "data": {
       "title": "🗂️ Lezioni su questo telefono",
@@ -577,6 +590,17 @@
       "title": "Avanzate",
       "relay": "Indirizzo del relay",
       "relayHint": "Solo per i test: il servizio Notosaurus con cui parla l'app."
+    },
+    "unreachable": {
+      "title": "💻 Il tuo computer non risponde",
+      "hint": "Notosaurus deve essere in funzione (Anki aperto con l'add-on), e questo telefono sulla stessa rete Wi-Fi.",
+      "retry": "Riprova",
+      "rescan": "Scansiona di nuovo il codice QR",
+      "phone": "Usa senza computer"
+    },
+    "shortcuts": {
+      "phone": "Senza computer",
+      "computer": "Con il mio computer"
     }
   },
   "setup": {
@@ -711,6 +735,11 @@
       "client_outdated": "Questa versione di Notosaurus è troppo vecchia: aggiornala.",
       "unavailable": "Il servizio Notosaurus non è disponibile per ora: riprova tra un momento.",
       "unreachable": "Impossibile raggiungere il servizio Notosaurus: controlla la connessione a internet."
+    },
+    "computer": {
+      "not_found": "Nessun Notosaurus risponde a questo indirizzo: Anki è aperto con l'add-on, e questo telefono sulla stessa rete Wi-Fi?",
+      "not_a_qr": "Questo codice QR non è quello di Notosaurus: scansiona quello mostrato da Anki (Strumenti → Notosaurus → Apri sul telefono).",
+      "scan_unavailable": "Il lettore di codici QR non è ancora su questo telefono (lo installano i servizi Google Play, con accesso a internet): inserisci invece l'indirizzo del computer."
     }
   },
   "demo": {
