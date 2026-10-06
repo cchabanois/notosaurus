@@ -73,6 +73,12 @@ class Lessons(private val root: File) {
 
     fun delete(id: String): Boolean = folder(id)?.deleteRecursively() ?: false
 
+    /** Every lesson deleted; returns how many there were. */
+    fun deleteAll(): Int = list().count { delete(it.string("id")) }
+
+    /** What the lessons take on the phone (photos mostly). */
+    fun bytes(): Long = root.walkTopDown().filter { it.isFile }.sumOf { it.length() }
+
     /** For the lessons list: everything but the cards, and how many there are. */
     fun summary(lesson: JsonObject): JsonObject = JsonObject(
         lesson.filterKeys { it != "cards" } + ("card_count" to JsonPrimitive(lesson["cards"]?.jsonArray?.size ?: 0)),

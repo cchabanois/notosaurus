@@ -28,13 +28,17 @@ card: the others were already there); the lesson kept after a restart.
 |---|---|
 | `MainActivity.kt` | the WebView: the page's file inputs (camera, gallery, PDF), back button, AnkiDroid's permission |
 | `LocalServer.kt` | the page's `/api` routes, and its files (assets/web/) |
+| `assets/page/admin.html`, `settings.js` | the app's settings page (the page's ⚙️): licence and its credits, AnkiDroid, standing instructions, lessons on the phone, relay address (advanced); texts under `android` in the web page's i18n files |
+| `Preferences.kt` | the settings, kept on the phone |
 | `Lessons.kt` | lessons on the phone, as the computer keeps them (lesson.json, page-N.jpg) |
 | `Relay.kt`, `Api.kt` | the relay's client (`/v1`), its errors |
 | `Anki.kt` | AnkiDroid's API: note type, decks and sub-decks, notes, duplicates |
 
 The page is copied at build time from the public repository checked out next to this
-one (`../notosaurus/static`, or `-Pnotosaurus.web=<path>`). The relay's address and
-key are the emulator's defaults (`MainActivity`, `DEFAULT_RELAY`, `DEFAULT_KEY`).
+one (`../notosaurus/static`, or `-Pnotosaurus.web=<path>`). The app's own files
+(`assets/page/`) are served first, then the web page's: its `admin.html` replaces the
+computer's. The relay's address is the emulator's by default (`LocalServer.DEFAULT_RELAY`),
+changed in the settings ("Advanced"); the licence key is entered there too.
 
 Not done yet (answered as "nothing" for now): voices and audio previews, pictures and
 figures, regenerating a lesson, rotating a photo, `.apkg` export, sharing lessons,
