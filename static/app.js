@@ -92,6 +92,36 @@ async function api(path, options = {}) {
   return res;
 }
 
+// A lesson made as the AI writes it (application/x-ndjson, one JSON per line): each
+// card told to `onCard` as it comes (null: start again), then the lesson. A server
+// that answers all at once (the Android app's): its lesson.
+async function lessonAsItComes(res, onCard) {
+  if (!(res.headers.get("Content-Type") ?? "").includes("ndjson")) return res.json();
+  const reader = res.body.getReader();
+  const decoder = new TextDecoder();
+  let buffer = "";
+  for (;;) {
+    const { value, done } = await reader.read();
+    buffer += decoder.decode(value ?? new Uint8Array(), { stream: !done });
+    let end;
+    while ((end = buffer.indexOf("\n")) >= 0) {
+      const line = buffer.slice(0, end).trim();
+      buffer = buffer.slice(end + 1);
+      if (!line) continue;
+      const item = JSON.parse(line);
+      if (item.lesson) return item.lesson;
+      if (item.error) throw Object.assign(new Error(errorMessage(item.error)), { detail: item.error });
+      onCard(item.card ?? null);
+    }
+    if (done) throw new Error(t("errors.unreachable"));
+  }
+}
+
+// A card's text as it shows while it is being made: the gaps' words, not their syntax
+function plainCardText(text) {
+  return (text ?? "").replace(/\{\{c\d+::(.*?)(::[^}]*)?\}\}/g, "[$1]");
+}
+
 function storage(action, value, key = LAST_PROMPT) {
   try {
     if (action === "get") return localStorage.getItem(key);
@@ -154,6 +184,7 @@ document.addEventListener("alpine:init", () => {
     // Quick by default: the AI thinks little, 2 to 4 times faster; "Careful" for a rich lesson
     quick: storage("get", undefined, CAREFUL) !== "1",
     madeQuick: false,  // the open lesson was just made quick: "Careful, again" offered
+    coming: [],  // the cards being made, as the AI writes them: shown while waiting
     loadingQuick: false,
     helps: false,  // ask for helps on the back: as changed on this device, else the settings' default
     lessons: [],         // saved lesson summaries
@@ -558,6 +589,7 @@ document.addEventListener("alpine:init", () => {
       this.error = "";
       this.loading = true;
       this.loadingQuick = quick;
+      this.coming = [];
       if (this.saveTimer) await this.saveNow();
       const inPlace = this.regeneratesInPlace();
       // What "Undo" brings back; not when the photos changed (the old ones are gone)
@@ -578,7 +610,11 @@ document.addEventListener("alpine:init", () => {
       if (this.selectedId) body.append("prompt_id", this.selectedId);
       try {
         const url = inPlace ? `/api/lessons/${this.lessonId}/regenerate` : "/api/extract";
-        const lesson = await (await api(url, { method: "POST", body })).json();
+        const res = await api(url, { method: "POST", body, headers: { Accept: "application/x-ndjson" } });
+        const lesson = await lessonAsItComes(res, (card) => {
+          if (card) this.coming.push({ front: plainCardText(card.front), back: plainCardText(card.back) });
+          else this.coming = [];
+        });
         const used = this.current();
         if (used) used.used_at = new Date().toISOString();  // moves it to the front of the chips
         await this.loadPhotos(lesson);  // as saved: the server turns sideways photos upright

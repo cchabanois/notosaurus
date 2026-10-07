@@ -39,7 +39,7 @@ def parameters(function, *but: str) -> set[str]:
 @pytest.mark.parametrize(
     ("request_model", "function", "not_sent"),
     [
-        (api.ExtractRequest, llm.extract_cards, ("images",)),  # the photos: the multipart's "images"
+        (api.ExtractRequest, llm.extract_cards, ("images", "on_card")),  # the multipart's "images"; on_card: not sent
         (api.ReviseRequest, llm.revise_cards, ("images", "demo")),  # demo: the relay never runs the demo AI
         (api.ExplainRequest, llm.explain_card, ()),
         (api.FigureRequest, llm.draw_figure, ()),
