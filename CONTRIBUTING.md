@@ -207,8 +207,9 @@ remain free to use it however you like.
 ## Releasing
 
 The version lives in one place, `pyproject.toml` ([semantic versioning](https://semver.org/)).
-The server reads it (shown at the bottom of ⚙️), and the add-on build writes it into
-Anki's add-on list.
+The server reads it (shown at the bottom of ⚙️), the add-on build writes it into
+Anki's add-on list, and the Android app takes it as its own (`versionName`, and a
+`versionCode` made from it).
 
 `pyproject.toml` holds the version being prepared. After every merge on `main`, the
 *Draft release* workflow keeps a draft GitHub release `vX.Y.Z` up to date: the add-on

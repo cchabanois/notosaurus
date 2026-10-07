@@ -63,9 +63,9 @@ class Relay(baseUrl: String, private val key: String) {
     companion object {
         const val CLIENT_HEADER = "X-Notosaurus-Version"
 
-        // The relay's oldest client is a Notosaurus (PC) version for now: the app says
-        // the one its API matches. To do: a version of its own (see README).
-        const val CLIENT_VERSION = "1.1.0"
+        // Notosaurus's version (the root pyproject.toml's, as the app's): the relay may
+        // refuse one too old for its API
+        val CLIENT_VERSION: String = BuildConfig.VERSION_NAME
 
         private val JSON = "application/json".toMediaType()
         private val JPEG = "image/jpeg".toMediaType()

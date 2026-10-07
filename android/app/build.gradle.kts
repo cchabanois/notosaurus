@@ -22,6 +22,16 @@ abstract class CopyWebPage : DefaultTask() {
     }
 }
 
+// Notosaurus's version, the same everywhere: the root pyproject.toml's (the only place
+// to change it), e.g. 1.1.0 → versionName "1.1.0", versionCode 10100 (Google Play's
+// number, which must grow: major × 10000 + minor × 100 + patch)
+val notosaurusVersion: String = Regex("""(?m)^version\s*=\s*"([^"]+)"""")
+    // read through Gradle, so that a change is always seen (configuration cache included)
+    .find(providers.fileContents(rootProject.layout.projectDirectory.file("../pyproject.toml")).asText.get())!!
+    .groupValues[1]
+val notosaurusVersionCode: Int = Regex("""^(\d+)\.(\d+)\.(\d+)""").find(notosaurusVersion)!!.destructured
+    .let { (major, minor, patch) -> major.toInt() * 10000 + minor.toInt() * 100 + patch.toInt() }
+
 // The same revision's: android/app → ../../static (another with -Pnotosaurus.web=<path>)
 val webPage = providers.gradleProperty("notosaurus.web").orElse("../../static")
 val copyWebPage = tasks.register<CopyWebPage>("copyWebPage") {
@@ -36,8 +46,8 @@ android {
         applicationId = "app.notosaurus"
         minSdk = 28 // ImageDecoder: photos upright and resized in one step
         targetSdk = 36
-        versionCode = 1
-        versionName = "0.1.0"
+        versionCode = notosaurusVersionCode
+        versionName = notosaurusVersion
         // On a device (androidTest): AnkiDroid's real API, the whole app (see README, "Tests on a device")
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
@@ -50,6 +60,7 @@ android {
     packaging {
         resources.excludes += setOf("META-INF/INDEX.LIST", "META-INF/io.netty.versions.properties")
     }
+    buildFeatures { buildConfig = true } // BuildConfig.VERSION_NAME, for the relay
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_17
         targetCompatibility = JavaVersion.VERSION_17
