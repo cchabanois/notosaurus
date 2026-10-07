@@ -190,7 +190,8 @@
       "writing": "Creating the cards…",
       "revising": "Correcting the cards…",
       "duration": "This usually takes 10 to 30 seconds.",
-      "durationQuick": "It usually takes under 10 seconds."
+      "durationQuick": "It usually takes under 10 seconds.",
+      "cancelling": "Cancelling…"
     },
     "send": {
       "added": {
@@ -675,7 +676,8 @@
     "extract": {
       "no_input": "Add a photo, or write a prompt.",
       "too_many": "{max} photos at most.",
-      "bad_format": "Unsupported format: {format}"
+      "bad_format": "Unsupported format: {format}",
+      "cancelled": "Making the lesson was cancelled."
     },
     "export": {
       "no_cards": "No complete card to export."

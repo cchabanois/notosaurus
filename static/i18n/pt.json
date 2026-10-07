@@ -190,7 +190,8 @@
       "writing": "Criando os cartões…",
       "revising": "Corrigindo os cartões…",
       "duration": "Costuma levar de 10 a 30 segundos.",
-      "durationQuick": "Normalmente leva menos de 10 segundos."
+      "durationQuick": "Normalmente leva menos de 10 segundos.",
+      "cancelling": "Cancelando…"
     },
     "send": {
       "added": {
@@ -675,7 +676,8 @@
     "extract": {
       "no_input": "Adicione uma foto ou escreva instruções.",
       "too_many": "No máximo {max} fotos.",
-      "bad_format": "Formato não suportado: {format}"
+      "bad_format": "Formato não suportado: {format}",
+      "cancelled": "A criação da lição foi cancelada."
     },
     "export": {
       "no_cards": "Nenhum cartão completo para exportar."

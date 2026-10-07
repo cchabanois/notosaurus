@@ -93,8 +93,8 @@ async function api(path, options = {}) {
 }
 
 // A lesson made as the AI writes it (application/x-ndjson, one JSON per line): each
-// card told to `onCard` as it comes (null: start again), then the lesson. A server
-// that answers all at once (the Android app's): its lesson.
+// card told to `onCard` as it comes (null: start again), then the lesson; null when
+// it was cancelled. A server that answers all at once (the Android app's): its lesson.
 async function lessonAsItComes(res, onCard) {
   if (!(res.headers.get("Content-Type") ?? "").includes("ndjson")) return res.json();
   const reader = res.body.getReader();
@@ -110,6 +110,7 @@ async function lessonAsItComes(res, onCard) {
       if (!line) continue;
       const item = JSON.parse(line);
       if (item.lesson) return item.lesson;
+      if (item.cancelled) return null;
       if (item.error) throw Object.assign(new Error(errorMessage(item.error)), { detail: item.error });
       onCard(item.card ?? null);
     }
@@ -185,6 +186,8 @@ document.addEventListener("alpine:init", () => {
     quick: storage("get", undefined, CAREFUL) !== "1",
     madeQuick: false,  // the open lesson was just made quick: "Careful, again" offered
     coming: [],  // the cards being made, as the AI writes them: shown while waiting
+    generating: "",  // the id of the lesson being made: what "Cancel" stops
+    cancelling: false,
     loadingQuick: false,
     helps: false,  // ask for helps on the back: as changed on this device, else the settings' default
     lessons: [],         // saved lesson summaries
@@ -590,6 +593,10 @@ document.addEventListener("alpine:init", () => {
       this.loading = true;
       this.loadingQuick = quick;
       this.coming = [];
+      // Its id, for "Cancel" (not crypto.randomUUID: a phone opens the page over plain http)
+      const job = Math.random().toString(36).slice(2) + Date.now().toString(36);
+      this.generating = job;
+      this.cancelling = false;
       if (this.saveTimer) await this.saveNow();
       const inPlace = this.regeneratesInPlace();
       // What "Undo" brings back; not when the photos changed (the old ones are gone)
@@ -607,6 +614,7 @@ document.addEventListener("alpine:init", () => {
       if (this.funFacts) body.append("fun_facts", "true");
       if (this.helps) body.append("helps", "true");
       if (quick) body.append("quick", "true");
+      body.append("job", job);
       if (this.selectedId) body.append("prompt_id", this.selectedId);
       try {
         const url = inPlace ? `/api/lessons/${this.lessonId}/regenerate` : "/api/extract";
@@ -615,6 +623,7 @@ document.addEventListener("alpine:init", () => {
           if (card) this.coming.push({ front: plainCardText(card.front), back: plainCardText(card.back) });
           else this.coming = [];
         });
+        if (!lesson) return;  // cancelled: the page as it was (the photos, the prompt)
         const used = this.current();
         if (used) used.used_at = new Date().toISOString();  // moves it to the front of the chips
         await this.loadPhotos(lesson);  // as saved: the server turns sideways photos upright
@@ -627,10 +636,21 @@ document.addEventListener("alpine:init", () => {
         if (!this.cards.length) this.error = t("app.review.noCards");
         this.drawPictures();  // the cards show now, their pictures when drawn
       } catch (e) {
-        this.error = e.message;
+        if (!this.cancelling) this.error = e.message;  // cancelled: no error to show
       } finally {
         this.loading = false;
+        this.generating = "";
+        this.cancelling = false;
       }
+    },
+
+    // "Cancel" while waiting: the AI stops, no lesson is saved (generated again: the old one stays)
+    async cancelGeneration() {
+      if (!this.generating || this.cancelling) return;
+      this.cancelling = true;
+      try {
+        await api(`/api/generations/${encodeURIComponent(this.generating)}/cancel`, { method: "POST" });
+      } catch {}  // gone already: its answer comes anyway
     },
 
     // Decks that already exist (Anki's, the lessons'), offered when the deck is edited

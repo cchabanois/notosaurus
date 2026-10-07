@@ -112,3 +112,31 @@ def test_the_page_gets_the_cards_then_the_lesson(client):
 def test_an_error_is_the_last_line(client):
     (item,) = lines(client.post("/api/extract", data={"prompt": " "}, headers=NDJSON))
     assert item == {"error": {"code": "extract.no_input", "params": {}}}
+
+
+def test_cancelled_while_the_ai_writes(client):
+    """ "Cancel": the generation stops where it is (the AI's call cancelled), the page
+    told so; nothing is saved (saving comes last)."""
+    from app import main
+
+    stopped, saved = [], []
+
+    async def work(on_card):
+        await on_card({"front": "la mère", "back": "la madre"})
+        try:
+            await asyncio.sleep(30)  # the AI writing the rest
+        except asyncio.CancelledError:
+            stopped.append(True)
+            raise
+        saved.append(True)
+
+    async def cancelled() -> list[dict]:
+        lines = main._streamed(work, "j1").body_iterator
+        first = json.loads(await anext(lines))
+        assert await main.cancel_generation("j1") == {"cancelled": True}
+        return [first, *[json.loads(line) async for line in lines]]
+
+    assert run(cancelled()) == [{"card": {"front": "la mère", "back": "la madre"}}, {"cancelled": True}]
+    assert stopped == [True] and saved == []
+    # Gone (or never there): nothing to cancel
+    assert client.post("/api/generations/j1/cancel").json() == {"cancelled": False}

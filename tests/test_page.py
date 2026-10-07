@@ -278,6 +278,36 @@ def test_quick_by_default_then_again_carefully(page):
     sync_api.expect(page.get_by_role("radio", name="🎯 Soigné")).to_have_attribute("aria-checked", "true")
 
 
+def test_cancel_while_the_cards_are_being_made(page):
+    """ "Cancel" in the waiting card: the server is asked to stop this generation, the
+    page comes back as it was, no error, no lesson."""
+    held, cancelled = [], []
+
+    def cancel_asked(route):
+        cancelled.append(route.request.url)
+        route.fulfill(json={"cancelled": True})
+
+    page.route("**/api/extract", lambda route: held.append(route))  # the AI still writing
+    page.route("**/api/generations/*/cancel", cancel_asked)
+    page.goto("/")
+    page.get_by_role("radio", name="✏️ Libre").click()
+    page.locator("textarea[x-ref=promptText]").fill(FRONT_PROMPT)
+    page.get_by_role("button", name="✨ Générer à partir de la consigne seule").click()
+    cancel = page.locator(".loading-card .btn")
+    sync_api.expect(cancel).to_have_text("Annuler")
+    cancel.click()
+    sync_api.expect(cancel).to_have_text("Annulation…")
+    (route,) = held
+    job = re.search(r'name="job"\r\n\r\n(\w+)', route.request.post_data).group(1)
+    assert cancelled == [f"{page.url.rstrip('/')}/api/generations/{job}/cancel"]
+    lines = '{"card": {"front": "a", "back": "b"}}\n{"cancelled": true}\n'
+    route.fulfill(content_type="application/x-ndjson", body=lines)
+    sync_api.expect(page.locator(".loading-card")).to_be_hidden()
+    sync_api.expect(page.locator(".flash")).to_have_count(0)
+    sync_api.expect(page.locator(".error")).to_be_hidden()
+    assert page.locator("textarea[x-ref=promptText]").input_value() == FRONT_PROMPT
+
+
 def test_multiple_choice_wrong_answers_edited(page):
     generate_free(page, "QCM sur la Révolution")
     first = page.locator(".flash").first

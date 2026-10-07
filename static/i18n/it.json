@@ -190,7 +190,8 @@
       "writing": "Creazione delle carte…",
       "revising": "Correzione delle carte…",
       "duration": "Di solito ci vogliono da 10 a 30 secondi.",
-      "durationQuick": "Di solito ci vogliono meno di 10 secondi."
+      "durationQuick": "Di solito ci vogliono meno di 10 secondi.",
+      "cancelling": "Annullamento…"
     },
     "send": {
       "added": {
@@ -675,7 +676,8 @@
     "extract": {
       "no_input": "Aggiungi una foto o scrivi delle istruzioni.",
       "too_many": "Al massimo {max} foto.",
-      "bad_format": "Formato non supportato: {format}"
+      "bad_format": "Formato non supportato: {format}",
+      "cancelled": "Creazione della lezione annullata."
     },
     "export": {
       "no_cards": "Nessuna carta completa da esportare."

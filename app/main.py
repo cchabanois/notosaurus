@@ -308,13 +308,15 @@ def _learned(back_language: str, lang: str, spelling: bool) -> str:
 
 NDJSON = "application/x-ndjson"
 _streaming: set[asyncio.Task] = set()  # generations under way, kept until done
+_generating: dict[str, asyncio.Task] = {}  # by the page's id for each one: what "Cancel" stops
 
 
-def _streamed(work) -> StreamingResponse:
+def _streamed(work, job: str = "") -> StreamingResponse:
     """The cards sent to the page as soon as the AI writes them, one JSON per line:
     {"card": …} (or {"restart": true}: the ones sent so far are dropped), then
-    {"lesson": …} or {"error": {"code", "params"}} as the page translates it. The
-    lesson is made and saved even if the page goes away meanwhile."""
+    {"lesson": …}, {"error": {"code", "params"}} as the page translates it, or
+    {"cancelled": true}. The lesson is made and saved even if the page goes away
+    meanwhile: only "Cancel" (`job`, see cancel_generation) stops it."""
     queue: asyncio.Queue = asyncio.Queue()
 
     async def card(found: dict | None) -> None:
@@ -325,6 +327,8 @@ def _streamed(work) -> StreamingResponse:
             await queue.put({"lesson": jsonable_encoder(await work(card))})
         except AppError as e:
             await queue.put({"error": e.detail()})
+        except asyncio.CancelledError:  # "Cancel": stopped here, nothing saved
+            await queue.put({"cancelled": True})
         except Exception:
             log.exception("Generating failed")
             await queue.put({"error": {"code": "internal", "params": {}}})
@@ -334,12 +338,26 @@ def _streamed(work) -> StreamingResponse:
     task = asyncio.create_task(run())
     _streaming.add(task)
     task.add_done_callback(_streaming.discard)
+    if job:
+        _generating[job] = task
+        task.add_done_callback(lambda _: _generating.pop(job, None))
 
     async def lines():
         while (item := await queue.get()) is not None:
             yield json.dumps(item, ensure_ascii=False) + "\n"
 
     return StreamingResponse(lines(), media_type=NDJSON)
+
+
+@app.post("/api/generations/{job}/cancel")
+async def cancel_generation(job: str) -> dict:
+    """Stop a lesson being made ("Cancel" while waiting): the AI stops writing, no
+    lesson is saved (generated again: the old one stays as it was). What the AI wrote
+    already is paid for."""
+    task = _generating.get(job)
+    if task:
+        task.cancel()
+    return {"cancelled": task is not None}
 
 
 def _wants_stream(accept: str | None) -> bool:
@@ -359,6 +377,7 @@ async def extract(
     page_texts: str = Form(""),
     helps: bool = Form(False),
     quick: bool = Form(False),
+    job: str = Form(""),
     lang: str = Depends(pupil_lang),
     accept: str | None = Header(None),
 ):
@@ -389,7 +408,7 @@ async def extract(
         return created
 
     if _wants_stream(accept):
-        return _streamed(work)
+        return _streamed(work, job)
     return JSONResponse(jsonable_encoder(await work()), status_code=201)
 
 
@@ -407,6 +426,7 @@ async def regenerate(
     page_texts: str = Form(""),
     helps: bool = Form(False),
     quick: bool = Form(False),
+    job: str = Form(""),
     lang: str = Depends(pupil_lang),
     accept: str | None = Header(None),
 ):
@@ -445,7 +465,7 @@ async def regenerate(
         return lesson
 
     if _wants_stream(accept):
-        return _streamed(work)
+        return _streamed(work, job)
     return await work()
 
 

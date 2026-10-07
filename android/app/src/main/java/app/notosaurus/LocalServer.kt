@@ -22,7 +22,12 @@ import io.ktor.server.routing.post
 import io.ktor.server.routing.put
 import io.ktor.server.routing.routing
 import io.ktor.utils.io.toByteArray
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.async
+import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.isActive
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.json.JsonArray
@@ -37,6 +42,7 @@ import kotlinx.serialization.json.put
 import java.io.File
 import java.net.URI
 import java.util.UUID
+import java.util.concurrent.ConcurrentHashMap
 
 /**
  * The computer's server, as the page sees it: the same /api routes (app/main.py),
@@ -83,6 +89,22 @@ class LocalServer(
 
     /** The settings' standing instructions, put before every request to the AI
      * (app/settings.py, standing_instructions). */
+    /** The lessons being made, by the page's id for each: what "Cancel" stops. */
+    private val generating = ConcurrentHashMap<String, Job>()
+
+    /** `work`, stopped by "Cancel" (`job`: the page's id for it): Cancelled then. */
+    private suspend fun <T> cancellable(job: String?, work: suspend () -> T): T = coroutineScope {
+        val running = async { work() }
+        if (!job.isNullOrBlank()) generating[job] = running
+        try {
+            running.await()
+        } catch (e: CancellationException) {
+            if (running.isCancelled && isActive) throw Cancelled() else throw e
+        } finally {
+            if (!job.isNullOrBlank()) generating.remove(job, running)
+        }
+    }
+
     /** What generating sends: the lesson's new content and its photos. */
     private class Made(val content: Map<String, JsonElement>, val photos: List<ByteArray>)
 
@@ -109,7 +131,7 @@ class LocalServer(
             put("instructions", instructions())
             put("quick", fields["quick"] == "true")
         }
-        val found = relay().withPhotos("extract", request, images)
+        val found = cancellable(fields["job"]) { relay().withPhotos("extract", request, images) }
         val voice = fields["voice"].orEmpty().takeUnless { it.equals("auto", ignoreCase = true) } ?: ""
         val content = mapOf(
             "deck" to found["deck"]!!.jsonObject["deck"]!!,
@@ -234,6 +256,10 @@ class LocalServer(
             val made = generate()
             lessons.create(made.content, made.photos)
         }
+        // "Cancel" while waiting: the relay call stops, no lesson is saved
+        api("POST", "/api/generations/{job}/cancel") {
+            buildJsonObject { put("cancelled", generating[param("job")]?.also { it.cancel() } != null) }
+        }
         // Generated again in its place (another prompt, photos, or carefully this time)
         api("POST", "/api/lessons/{id}/regenerate") {
             val old = lesson()
@@ -321,6 +347,9 @@ class LocalServer(
 
     private class NotFound : Exception()
 
+    /** "Cancel" stopped the lesson being made. */
+    private class Cancelled : Exception()
+
     private class BadRequest(val code: String, val params: JsonObject = JsonObject(emptyMap())) : Exception(code)
 
     /** AnkiDroid installed and allowed, asked for when the cards are first added: its Play
@@ -346,6 +375,8 @@ class LocalServer(
                     HttpStatusCode.BadGateway to error(e.code, e.params)
                 } catch (e: BadRequest) {
                     HttpStatusCode.BadRequest to error(e.code, e.params)
+                } catch (e: Cancelled) {
+                    HttpStatusCode.Conflict to error("extract.cancelled", JsonObject(emptyMap()))
                 }
                 call.respondText(answer.toString(), ContentType.Application.Json, status)
             }

@@ -1,11 +1,12 @@
 package app.notosaurus
 
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.withContext
+import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.put
+import okhttp3.Call
+import okhttp3.Callback
 import okhttp3.Headers.Companion.headersOf
 import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.MultipartBody
@@ -13,8 +14,11 @@ import okhttp3.OkHttpClient
 import okhttp3.Request
 import okhttp3.RequestBody
 import okhttp3.RequestBody.Companion.toRequestBody
+import okhttp3.Response
 import java.io.IOException
 import java.util.concurrent.TimeUnit
+import kotlin.coroutines.resume
+import kotlin.coroutines.resumeWithException
 
 /**
  * The relay's client: `baseUrl` (e.g. "http://192.168.1.10:8080", a relay run on
@@ -39,18 +43,18 @@ class Relay(baseUrl: String, private val key: String) {
     /** A JSON route (explain, figure). */
     suspend fun post(route: String, request: JsonObject): JsonObject = call(route, request.toString().toRequestBody(JSON))
 
-    private suspend fun call(route: String, body: RequestBody?): JsonObject = withContext(Dispatchers.IO) {
+    private suspend fun call(route: String, body: RequestBody?): JsonObject {
         val request = Request.Builder().url("$base/v1/$route")
             .header("Authorization", "Bearer ${key.trim()}")
             .header(CLIENT_HEADER, CLIENT_VERSION)
             .apply { if (body != null) post(body) }
             .build()
         val response = try {
-            client.newCall(request).execute()
+            client.newCall(request).await()
         } catch (e: IOException) {
             throw RelayException("relay.unreachable", buildJsonObject { put("detail", e.message ?: "") })
         }
-        response.use {
+        return response.use {
             val text = it.body.string()
             if (!it.isSuccessful) {
                 val error = runCatching { json.decodeFromString<ApiError>(text) }.getOrNull()
@@ -58,6 +62,17 @@ class Relay(baseUrl: String, private val key: String) {
             }
             json.parseToJsonElement(text).jsonObject
         }
+    }
+
+    /** The call's answer; cancelled with the coroutine ("Cancel" on the page): the
+     * request stops, the relay stops the AI. */
+    private suspend fun Call.await(): Response = suspendCancellableCoroutine { waiting ->
+        waiting.invokeOnCancellation { cancel() }
+        enqueue(object : Callback {
+            override fun onFailure(call: Call, e: IOException) = waiting.resumeWithException(e)
+            override fun onResponse(call: Call, response: Response) =
+                waiting.resume(response) { _, _, _ -> response.close() }
+        })
     }
 
     companion object {

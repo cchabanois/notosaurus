@@ -478,6 +478,8 @@
           <li><strong x-text="card.front"></strong> <span x-text="card.back"></span></li>
         </template>
       </ul>
+      <button class="btn soft" x-show="loading && generating" @click="cancelGeneration()" :disabled="cancelling"
+              x-text="cancelling ? $t('app.loading.cancelling') : $t('common.cancel')"></button>
     </div>
   </div>
 
