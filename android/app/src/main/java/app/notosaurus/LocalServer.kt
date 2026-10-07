@@ -83,6 +83,47 @@ class LocalServer(
 
     /** The settings' standing instructions, put before every request to the AI
      * (app/settings.py, standing_instructions). */
+    /** What generating sends: the lesson's new content and its photos. */
+    private class Made(val content: Map<String, JsonElement>, val photos: List<ByteArray>)
+
+    /** The page's form (photos, prompt, options) made into cards by the relay. */
+    private suspend fun RoutingContext.generate(): Made {
+        val fields = mutableMapOf<String, String>()
+        val images = mutableListOf<ByteArray>()
+        call.receiveMultipart(formFieldLimit = 20L * 1024 * 1024).forEachPart { part ->
+            when (part) {
+                is PartData.FormItem -> fields[part.name!!] = part.value
+                is PartData.FileItem -> images += part.provider().toByteArray()
+                else -> {}
+            }
+            part.dispose()
+        }
+        val texts = fields["page_texts"]?.let { json.parseToJsonElement(it) } ?: JsonArray(emptyList())
+        val request = buildJsonObject {
+            put("prompt", fields["prompt"] ?: "")
+            put("deck", fields["deck"] ?: "")
+            put("decks", JsonArray(lessons.list().map { JsonPrimitive(it.string("deck")) }.distinct()))
+            put("fun_facts", fields["fun_facts"] == "true")
+            put("helps", fields["helps"] == "true")
+            put("page_texts", texts)
+            put("instructions", instructions())
+            put("quick", fields["quick"] == "true")
+        }
+        val found = relay().withPhotos("extract", request, images)
+        val voice = fields["voice"].orEmpty().takeUnless { it.equals("auto", ignoreCase = true) } ?: ""
+        val content = mapOf(
+            "deck" to found["deck"]!!.jsonObject["deck"]!!,
+            "cards" to found["deck"]!!.jsonObject["cards"]!!,
+            "prompt" to JsonPrimitive(fields["prompt"] ?: ""),
+            "voice" to JsonPrimitive(voice),
+            "typing" to JsonPrimitive(fields["typing"] == "true"),
+            "dictation" to JsonPrimitive(fields["dictation"] == "true"),
+            "choice" to (found["choice"] ?: JsonPrimitive("")),
+            "page_texts" to texts,
+        )
+        return Made(content, images) // to do: turned upright (found["turns"]), as the computer does
+    }
+
     private fun instructions(): String {
         val text = prefs[INSTRUCTIONS].orEmpty().trim()
         if (text.isEmpty()) return ""
@@ -190,41 +231,14 @@ class LocalServer(
 
         // --- The AI, through the relay
         api("POST", "/api/extract") {
-            val fields = mutableMapOf<String, String>()
-            val images = mutableListOf<ByteArray>()
-            call.receiveMultipart(formFieldLimit = 20L * 1024 * 1024).forEachPart { part ->
-                when (part) {
-                    is PartData.FormItem -> fields[part.name!!] = part.value
-                    is PartData.FileItem -> images += part.provider().toByteArray()
-                    else -> {}
-                }
-                part.dispose()
-            }
-            val texts = fields["page_texts"]?.let { json.parseToJsonElement(it) } ?: JsonArray(emptyList())
-            val request = buildJsonObject {
-                put("prompt", fields["prompt"] ?: "")
-                put("deck", fields["deck"] ?: "")
-                put("decks", JsonArray(lessons.list().map { JsonPrimitive(it.string("deck")) }.distinct()))
-                put("fun_facts", fields["fun_facts"] == "true")
-                put("helps", fields["helps"] == "true")
-                put("page_texts", texts)
-                put("instructions", instructions())
-            }
-            val found = relay().withPhotos("extract", request, images)
-            val voice = fields["voice"].orEmpty().takeUnless { it.equals("auto", ignoreCase = true) } ?: ""
-            lessons.create(
-                mapOf(
-                    "deck" to found["deck"]!!.jsonObject["deck"]!!,
-                    "cards" to found["deck"]!!.jsonObject["cards"]!!,
-                    "prompt" to JsonPrimitive(fields["prompt"] ?: ""),
-                    "voice" to JsonPrimitive(voice),
-                    "typing" to JsonPrimitive(fields["typing"] == "true"),
-                    "dictation" to JsonPrimitive(fields["dictation"] == "true"),
-                    "choice" to (found["choice"] ?: JsonPrimitive("")),
-                    "page_texts" to texts,
-                ),
-                images, // to do: turned upright (found["turns"]), as the computer does
-            )
+            val made = generate()
+            lessons.create(made.content, made.photos)
+        }
+        // Generated again in its place (another prompt, photos, or carefully this time)
+        api("POST", "/api/lessons/{id}/regenerate") {
+            val old = lesson()
+            val made = generate()
+            lessons.regenerated(old.string("id"), made.content, made.photos) ?: notFound()
         }
         api("POST", "/api/lessons/{id}/revise") {
             val lesson = lesson()

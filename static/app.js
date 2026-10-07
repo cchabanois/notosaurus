@@ -100,6 +100,7 @@ function storage(action, value, key = LAST_PROMPT) {
 }
 const HELPS = "notosaurus.helps";  // the "helps on the back" switch, once changed on this device
 const FUN_FACTS = "notosaurus.funFacts";  // the "did you know" switch, kept on this device
+const CAREFUL = "notosaurus.careful";  // "Careful" chosen over "Quick" (the default), kept on this device
 const OPEN_SUBJECTS = "notosaurus.openSubjects";  // subjects opened or closed in the lessons, on this device
 const MANY_LESSONS = 8;  // beyond: a search, the recent lessons first, the subjects folded
 const RECENT_LESSONS = 3;
@@ -150,6 +151,10 @@ document.addEventListener("alpine:init", () => {
     typing: false,               // the answer is typed in Anki
     dictation: false,            // a dictation card: hear the back, type it
     funFacts: storage("get", undefined, FUN_FACTS) === "1",  // ask for "did you know" facts (off by default)
+    // Quick by default: the AI thinks little, 2 to 4 times faster; "Careful" for a rich lesson
+    quick: storage("get", undefined, CAREFUL) !== "1",
+    madeQuick: false,  // the open lesson was just made quick: "Careful, again" offered
+    loadingQuick: false,
     helps: false,  // ask for helps on the back: as changed on this device, else the settings' default
     lessons: [],         // saved lesson summaries
     lessonId: null,       // open lesson (null = new lesson, not generated yet)
@@ -230,6 +235,7 @@ document.addEventListener("alpine:init", () => {
         this.helps = helps === null ? Boolean(config.card_helps) : helps === "1";
       } catch {}
       this.$watch("funFacts", (on) => storage("set", on ? "1" : "0", FUN_FACTS));
+      this.$watch("quick", (on) => storage("set", on ? "0" : "1", CAREFUL));
       await Promise.all([this.loadPrompts(storage("get")), this.loadLessons()]);
       this.checkAnki();
       // Anki may be started later: check again when coming back to the app.
@@ -546,9 +552,12 @@ document.addEventListener("alpine:init", () => {
       return Boolean(this.lessonId) && !this.readOnly();
     },
 
-    async extract() {
+    // `careful`: made again carefully ("Careful, again"), whatever the choice above
+    async extract({ careful = false } = {}) {
+      const quick = this.quick && !careful;
       this.error = "";
       this.loading = true;
+      this.loadingQuick = quick;
       if (this.saveTimer) await this.saveNow();
       const inPlace = this.regeneratesInPlace();
       // What "Undo" brings back; not when the photos changed (the old ones are gone)
@@ -565,6 +574,7 @@ document.addEventListener("alpine:init", () => {
       body.append("dictation", Boolean(this.form.dictation || (inPlace && this.dictation)));
       if (this.funFacts) body.append("fun_facts", "true");
       if (this.helps) body.append("helps", "true");
+      if (quick) body.append("quick", "true");
       if (this.selectedId) body.append("prompt_id", this.selectedId);
       try {
         const url = inPlace ? `/api/lessons/${this.lessonId}/regenerate` : "/api/extract";
@@ -573,6 +583,7 @@ document.addEventListener("alpine:init", () => {
         if (used) used.used_at = new Date().toISOString();  // moves it to the front of the chips
         await this.loadPhotos(lesson);  // as saved: the server turns sideways photos upright
         this.show(lesson);
+        this.madeQuick = quick;
         if (inPlace) {
           this.revision = { text: "", busy: false, summary: t("app.prompt.regenerated"), stats: "", undo: before };
         }
@@ -675,6 +686,7 @@ document.addEventListener("alpine:init", () => {
 
     // Shows a lesson coming from the server (fresh generation or reopened).
     show(lesson) {
+      this.madeQuick = false;
       clearTimeout(this.saveTimer);
       this.saveTimer = null;
       this.lessonId = lesson.id;

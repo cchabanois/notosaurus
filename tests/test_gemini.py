@@ -7,6 +7,7 @@ from google.genai import errors, types
 
 from app import settings
 from notosaurus_core import llm
+from notosaurus_core.config import AIConfig
 from notosaurus_core.figures import Drawing
 
 SVG = '{"svg": "<svg/>"}'
@@ -138,3 +139,13 @@ def test_gemini_through_vertex_ai(monkeypatch):
     monkeypatch.setattr(genai, "Client", lambda **options: made.append(options))
     llm._gemini_client(vertex.model_copy(update={"gemini_vertex_location": "europe-west1"}))
     assert made[0]["vertexai"] and made[0]["location"] == "europe-west1" and "api_key" not in made[0]
+
+
+def test_quick_lessons_think_little(monkeypatch):
+    """A lesson made quick (the page's "Quick"): Gemini 3 thinks "low"; carefully, as it likes."""
+    fake = FakeGemini()
+    monkeypatch.setattr(llm, "_gemini_client", lambda s: fake)
+    s = AIConfig(gemini_api_key="k", model="gemini-3.8-flash")
+    asyncio.run(llm._generate(s, [], "cards", Drawing, "rules", quick=True))
+    asyncio.run(llm._generate(s, [], "cards", Drawing, "rules"))
+    assert fake.levels == [("gemini-3.8-flash", types.ThinkingLevel.LOW), ("gemini-3.8-flash", None)]

@@ -86,7 +86,12 @@
       "builtin": "Notosaurus's prompt: read-only, improved with the app",
       "regenerateNewHint": "(new lesson)",
       "regenerateExported": "Already sent to Anki: the cards sent stay there, the new ones are added at the next send.",
-      "regenerated": "✨ Cards generated again."
+      "regenerated": "✨ Cards generated again.",
+      "speed": "How the cards are made",
+      "quick": "⚡ Quick",
+      "careful": "🎯 Careful",
+      "quickHint": "A few seconds. Right for vocabulary or a simple lesson.",
+      "carefulHint": "Longer (up to 30 s), more thought through: for a rich lesson (a diagram, maths)."
     },
     "review": {
       "title": "Review",
@@ -132,7 +137,9 @@
       "diagramHint": "Diagram: drag a red mask to move it, its round corner to resize it, so it hides the whole label. The dashed frame is what Anki shows of the photo: drag its blue corners to crop it.",
       "diagramWarning": "With this AI model (Claude), masks are sometimes too small on handwriting: check that they hide the whole label.",
       "cropFrame": "What Anki shows of the photo",
-      "readOnly": "🔒 Read only: only {owner}'s profile can change it. You can still add it to your Anki."
+      "readOnly": "🔒 Read only: only {owner}'s profile can change it. You can still add it to your Anki.",
+      "madeQuick": "Made in quick mode.",
+      "carefulAgain": "🎯 Make again, carefully"
     },
     "explain": {
       "button": "Explain this card",
@@ -182,7 +189,8 @@
       "reading": "Reading the lesson…",
       "writing": "Creating the cards…",
       "revising": "Correcting the cards…",
-      "duration": "This usually takes 10 to 30 seconds."
+      "duration": "This usually takes 10 to 30 seconds.",
+      "durationQuick": "It usually takes under 10 seconds."
     },
     "send": {
       "added": {

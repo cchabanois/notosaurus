@@ -86,7 +86,12 @@
       "builtin": "Instrucciones de Notosaurus: solo lectura, mejoradas con la aplicación",
       "regenerateNewHint": "(nueva lección)",
       "regenerateExported": "Ya enviada a Anki: las tarjetas enviadas se quedan allí; las nuevas se añadirán en el próximo envío.",
-      "regenerated": "✨ Tarjetas generadas de nuevo."
+      "regenerated": "✨ Tarjetas generadas de nuevo.",
+      "speed": "Creación de las tarjetas",
+      "quick": "⚡ Rápido",
+      "careful": "🎯 Cuidado",
+      "quickHint": "Unos segundos. Ideal para vocabulario o una lección sencilla.",
+      "carefulHint": "Más largo (hasta 30 s), más pensado: para una lección completa (un esquema, matemáticas)."
     },
     "review": {
       "title": "Revisión",
@@ -132,7 +137,9 @@
       "diagramHint": "Esquema: arrastra una máscara roja para moverla y su esquina redonda para cambiar su tamaño, de modo que oculte todo el rótulo. El marco discontinuo es lo que Anki muestra de la foto: arrastra sus esquinas azules para recortarla.",
       "diagramWarning": "Con este modelo de IA (Claude), las máscaras a veces son demasiado pequeñas sobre la letra manuscrita: comprueba que ocultan todo el rótulo.",
       "cropFrame": "Lo que Anki muestra de la foto",
-      "readOnly": "🔒 Solo lectura: solo el perfil de {owner} puede cambiarla. Aun así puedes añadirla a tu Anki."
+      "readOnly": "🔒 Solo lectura: solo el perfil de {owner} puede cambiarla. Aun así puedes añadirla a tu Anki.",
+      "madeQuick": "Creadas en modo rápido.",
+      "carefulAgain": "🎯 Rehacer en modo cuidado"
     },
     "explain": {
       "button": "Explicar esta tarjeta",
@@ -182,7 +189,8 @@
       "reading": "Leyendo la lección…",
       "writing": "Creando las tarjetas…",
       "revising": "Corrigiendo las tarjetas…",
-      "duration": "Suele tardar entre 10 y 30 segundos."
+      "duration": "Suele tardar entre 10 y 30 segundos.",
+      "durationQuick": "Suele tardar menos de 10 segundos."
     },
     "send": {
       "added": {

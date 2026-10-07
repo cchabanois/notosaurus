@@ -349,9 +349,11 @@ async def extract_cards(
     page_texts: list[str] = (),
     helps: bool = False,
     instructions: str = "",
+    quick: bool = False,
 ) -> Extracted:
     """`decks`: the decks that already exist, to reuse their names; `instructions`: the
-    user's standing instructions, put before the request (never replacing the rules)."""
+    user's standing instructions, put before the request (never replacing the rules);
+    `quick`: made fast, the model thinking little (see _generate)."""
     if s.llm == "fake":
         await record(s, "fake", "fake", 0, 0, cost=0.0)
         choice = "Vocabulaire d'espagnol : français → espagnol" if _lets_choose(prompt) else ""
@@ -365,7 +367,7 @@ async def extract_cards(
     fmt = diagrams.box_format(s.model_for_provider())
     images, sizes = _prepare(images)
     text = instructions + _user_text(prompt, deck, len(images), sizes, fmt, decks, fun_facts, page_texts, helps)
-    answer = await _generate(s, images, text, ai_schema(Extraction, fun_facts, helps))
+    answer = await _generate(s, images, text, ai_schema(Extraction, fun_facts, helps), quick=quick)
     result = Extraction.model_validate(_accepted(answer).model_dump())
     diagrams.normalize(result.cards, sizes, fmt)
     return Extracted(
@@ -596,18 +598,26 @@ def _keep_masks(
 
 
 async def _generate[T: BaseModel](
-    s: AIConfig, images: list[Image], text: str, schema: type[T], system: str = SYSTEM_PROMPT, light: bool = False
+    s: AIConfig,
+    images: list[Image],
+    text: str,
+    schema: type[T],
+    system: str = SYSTEM_PROMPT,
+    light: bool = False,
+    quick: bool = False,
 ) -> T:
     """Send photos + text to the configured provider and parse the answer as `schema`.
     `system`: the fixed rules (the cards' by default). `light`: a task that needs little
     thinking (drawing a figure described precisely): the model thinks as little as it
-    can, where the service lets us say so — cheaper and faster."""
+    can, where the service lets us say so — cheaper and faster. `quick`: a lesson made
+    fast (the page's "Quick"): the model thinks little ("low"), 2 to 4 times faster,
+    a little less careful on rich lessons (a figure, maths)."""
     if s.llm == "gemini":
-        return await _gemini(s, images, text, schema, system, light)
+        return await _gemini(s, images, text, schema, system, light, quick)
     if s.llm == "anthropic":
         return await _anthropic(s, images, text, schema, system)  # Claude only thinks when asked to
     if s.llm in config.OPENAI_LIKE:
-        return await _openai(s, images, text, schema, system, light)
+        return await _openai(s, images, text, schema, system, light, quick)
     raise ExtractionError("llm.unknown_provider", provider=s.llm)
 
 
@@ -654,7 +664,13 @@ _NO_MINIMAL_THINKING: set[str] = set()
 
 
 async def _gemini[T: BaseModel](
-    s: AIConfig, images: list[Image], text: str, schema: type[T], system: str = SYSTEM_PROMPT, light: bool = False
+    s: AIConfig,
+    images: list[Image],
+    text: str,
+    schema: type[T],
+    system: str = SYSTEM_PROMPT,
+    light: bool = False,
+    quick: bool = False,
 ) -> T:
     from google.genai import errors, types
 
@@ -672,8 +688,10 @@ async def _gemini[T: BaseModel](
     models += [m.strip() for m in s.fallback_models.split(",") if m.strip()]
 
     def thinking(model: str):
-        if not (light and model.startswith("gemini-3")):  # older models set thinking otherwise
+        if not ((light or quick) and model.startswith("gemini-3")):  # older models set thinking otherwise
             return None
+        if quick:
+            return types.ThinkingConfig(thinking_level=types.ThinkingLevel.LOW)
         level = types.ThinkingLevel.LOW if model in _NO_MINIMAL_THINKING else types.ThinkingLevel.MINIMAL
         return types.ThinkingConfig(thinking_level=level)
 
@@ -947,7 +965,13 @@ def _openai_model(s: AIConfig) -> bool:
 
 
 async def _openai[T: BaseModel](
-    s: AIConfig, images: list[Image], text: str, schema: type[T], system: str = SYSTEM_PROMPT, light: bool = False
+    s: AIConfig,
+    images: list[Image],
+    text: str,
+    schema: type[T],
+    system: str = SYSTEM_PROMPT,
+    light: bool = False,
+    quick: bool = False,
 ) -> T:
     """OpenAI-compatible providers: Ollama (qwen2.5vl, gemma3…), etc."""
     import openai
@@ -980,7 +1004,7 @@ async def _openai[T: BaseModel](
             # OpenRouter: the exact cost of the call; and, for a light task, as little
             # thinking as the model allows (a model that doesn't think ignores it)
             extra_body=(
-                {"usage": {"include": True}, **({"reasoning": {"effort": "minimal"}} if light else {})}
+                {"usage": {"include": True}, **({"reasoning": {"effort": EFFORT[light]}} if light or quick else {})}
                 if s.llm == "openrouter"
                 else None
             ),
@@ -999,6 +1023,10 @@ async def _openai[T: BaseModel](
         raise _openai_error(e, s) from e
     except ValueError as e:  # invalid JSON, or JSON not matching the schema
         raise ExtractionError("llm.invalid_answer") from e
+
+
+# OpenRouter's reasoning effort: a light task (True) as little as possible; a quick lesson, low
+EFFORT = {True: "minimal", False: "low"}
 
 
 def _lets_choose(prompt: str) -> bool:

@@ -231,6 +231,7 @@ async def _generate(
     page_texts: str = "",
     helps: bool = False,
     lang: str = "",
+    quick: bool = False,
 ) -> Generated:
     """Read the photos (or, without photos, work from the prompt alone): the lesson's
     new content, not saved yet."""
@@ -259,6 +260,7 @@ async def _generate(
                 page_texts=texts,
                 helps=helps,
                 instructions=settings.standing_instructions(s, profile),
+                quick=quick,
             )
         except Exception:
             usage.add(calls, lesson_id=None)  # answered but unusable: paid for, no lesson saved
@@ -297,6 +299,7 @@ async def extract(
     fun_facts: bool = Form(False),
     page_texts: str = Form(""),
     helps: bool = Form(False),
+    quick: bool = Form(False),
     lang: str = Depends(pupil_lang),
 ) -> Lesson:
     """A new lesson (photos + cards), saved so it can be reopened."""
@@ -312,6 +315,7 @@ async def extract(
         page_texts=page_texts,
         helps=helps,
         lang=lang,
+        quick=quick,
     )
     created = lessons.create(
         g.content, prompt, g.photos, g.profile, g.found.frames, g.calls, g.found.choice, page_texts=g.page_texts
@@ -333,6 +337,7 @@ async def regenerate(
     fun_facts: bool = Form(False),
     page_texts: str = Form(""),
     helps: bool = Form(False),
+    quick: bool = Form(False),
     lang: str = Depends(pupil_lang),
 ) -> Lesson:
     """Generate the lesson again (other prompt, other photos) in its place, instead of
@@ -351,6 +356,7 @@ async def regenerate(
         page_texts=page_texts,
         helps=helps,
         lang=lang,
+        quick=quick,
     )
     # The options set in the review stay (the prompt's are added): only the cards change
     g.content.reverse = old.reverse

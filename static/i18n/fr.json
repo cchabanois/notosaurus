@@ -86,7 +86,12 @@
       "builtin": "Consigne Notosaurus : en lecture seule, améliorée avec l'appli",
       "regenerateNewHint": "(nouvelle leçon)",
       "regenerateExported": "Déjà envoyée à Anki : les cartes envoyées y restent, les nouvelles s'y ajouteront au prochain envoi.",
-      "regenerated": "✨ Cartes régénérées."
+      "regenerated": "✨ Cartes régénérées.",
+      "speed": "Création des cartes",
+      "quick": "⚡ Rapide",
+      "careful": "🎯 Soigné",
+      "quickHint": "Quelques secondes. Idéal pour du vocabulaire ou une leçon simple.",
+      "carefulHint": "Plus long (jusqu'à 30 s), plus réfléchi : pour une leçon riche (schéma, maths)."
     },
     "review": {
       "title": "Relecture",
@@ -132,7 +137,9 @@
       "diagramHint": "Schéma : fais glisser un masque rouge pour le déplacer, et son coin rond pour l'agrandir, afin qu'il cache tout le nom. Le cadre en pointillés est ce qu'Anki montrera de la photo : fais glisser ses coins bleus pour le recadrer.",
       "diagramWarning": "Avec ce modèle d'IA (Claude), les masques sont parfois trop petits sur l'écriture manuscrite : vérifie qu'ils cachent bien tout le nom.",
       "cropFrame": "Ce qu'Anki montre de la photo",
-      "readOnly": "🔒 Lecture seule : seul le profil de {owner} peut la modifier. Tu peux quand même l'ajouter à ton Anki."
+      "readOnly": "🔒 Lecture seule : seul le profil de {owner} peut la modifier. Tu peux quand même l'ajouter à ton Anki.",
+      "madeQuick": "Créées en mode rapide.",
+      "carefulAgain": "🎯 Refaire en mode soigné"
     },
     "explain": {
       "button": "Expliquer cette carte",
@@ -182,7 +189,8 @@
       "reading": "Lecture de la leçon…",
       "writing": "Création des cartes…",
       "revising": "Correction des cartes…",
-      "duration": "Ça prend en général 10 à 30 secondes."
+      "duration": "Ça prend en général 10 à 30 secondes.",
+      "durationQuick": "Ça prend en général moins de 10 secondes."
     },
     "send": {
       "added": {

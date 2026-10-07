@@ -62,7 +62,7 @@ def test_what_the_ai_fills(monkeypatch):
     assert {"explanation", "mnemonic"} <= card_fields(llm.ai_schema(Extraction, helps=True))
     assert "fun_fact" in card_fields(llm.ai_schema(Extraction, fun_facts=True))
 
-    async def answer(s, images, text, schema, system=None, light=False):
+    async def answer(s, images, text, schema, system=None, light=False, quick=False):
         return schema(deck="D", cards=[{"front": "a", "back": "b", "explanation": "c"}])
 
     monkeypatch.setattr(llm, "_generate", answer)
