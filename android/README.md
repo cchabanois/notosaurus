@@ -69,6 +69,10 @@ language and "About": the AI's instructions and the rest are the computer's own.
 
 Android SDK with platform 37 (`sdkmanager "platforms;android-37.0"`), JDK 17+.
 
+The app's version is Notosaurus's, the root `pyproject.toml`'s (the only place to
+change it): `versionName` "1.1.0", `versionCode` 10100 (major × 10000 + minor × 100 +
+patch, always growing as Google Play wants), and the version the relay is told.
+
 ```sh
 ./gradlew testDebugUnitTest   # the tests (JVM: no phone needed)
 ./gradlew assembleDebug       # app/build/outputs/apk/debug/app-debug.apk
@@ -122,9 +126,6 @@ The app uses `http://10.0.2.2:8080` (the computer, from the emulator) and the ke
 
 ## Before a real app
 
-- **Client version**: the relay checks `X-Notosaurus-Version` against the PC app's
-  versions (minimum 1.1.0); the app sends "1.1.0" for now. The contract needs a
-  client kind (e.g. "android/0.1.0") with its own minimum.
 - Notosaurus's **note types** (cloze, multiple choice, typing, diagram masks,
   pictures) instead of the prototype's front/back: their templates and CSS, from
   the PC app's `anki.py` (exposed by the relay, or copied by a script).
