@@ -118,3 +118,23 @@ def test_no_quota_left_the_fallback_answers(client, monkeypatch):
             assert e.code == "llm.gemini_quota"
         else:
             raise AssertionError("an error was expected")
+
+
+def test_gemini_through_vertex_ai(monkeypatch):
+    """A Vertex AI project instead of a key (the relay on Google Cloud): Gemini is ready,
+    its clients made for Vertex AI, the pictures drawn by it too."""
+    from google import genai
+
+    from notosaurus_core import config, pictures
+    from notosaurus_core.config import AIConfig
+
+    vertex = AIConfig(llm="gemini", gemini_vertex_project="p")
+    assert config.configured(vertex) and not config.configured(AIConfig(llm="gemini"))
+    assert vertex.gemini_options() == {"vertexai": True, "project": "p", "location": "global"}
+    assert AIConfig(gemini_api_key="k").gemini_options() == {"api_key": "k"}
+    assert pictures.service(vertex) == "gemini"
+
+    made = []
+    monkeypatch.setattr(genai, "Client", lambda **options: made.append(options))
+    llm._gemini_client(vertex.model_copy(update={"gemini_vertex_location": "europe-west1"}))
+    assert made[0]["vertexai"] and made[0]["location"] == "europe-west1" and "api_key" not in made[0]

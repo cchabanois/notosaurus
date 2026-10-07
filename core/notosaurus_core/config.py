@@ -27,6 +27,11 @@ class AIConfig(BaseModel):
     # free key has none for the latest models). Not flash-lite: it reads lessons badly.
     fallback_models: str = "gemini-3.5-flash"
     gemini_api_key: str = ""
+    # Gemini through Google Cloud's Vertex AI instead of a key: the project, its region
+    # ("global": any), the credentials from the environment (a service account on
+    # Google Cloud, `gcloud auth application-default login` elsewhere)
+    gemini_vertex_project: str = ""
+    gemini_vertex_location: str = "global"
     anthropic_api_key: str = ""
     openai_api_key: str = ""  # OpenAI itself
     openrouter_api_key: str = ""
@@ -44,6 +49,17 @@ class AIConfig(BaseModel):
         """Address of the OpenAI-like provider in use."""
         return {"openai": OPENAI_URL, "openrouter": OPENROUTER_URL}.get(self.llm, self.compatible_base_url.strip())
 
+    def gemini_ready(self) -> bool:
+        """Whether Gemini can be called: a key, or a Vertex AI project."""
+        return bool(self.gemini_api_key.strip() or self.gemini_vertex_project.strip())
+
+    def gemini_options(self) -> dict:
+        """google-genai's Client options: Vertex AI when a project is set, else the key."""
+        if self.gemini_vertex_project.strip():
+            project, location = self.gemini_vertex_project.strip(), self.gemini_vertex_location.strip() or "global"
+            return {"vertexai": True, "project": project, "location": location}
+        return {"api_key": self.gemini_api_key}
+
     def api_key(self) -> str:
         """Key of the OpenAI-like provider in use."""
         return {
@@ -55,9 +71,11 @@ class AIConfig(BaseModel):
 
 def configured(s: AIConfig) -> bool:
     """Whether the cards' AI service can be called: its key (or, for a compatible
-    service, its address) is set."""
+    service, its address; for Gemini, a Vertex AI project) is set."""
     if s.llm == "fake":
         return True
     if s.llm == "compatible":
         return bool(s.compatible_base_url.strip())
+    if s.llm == "gemini":
+        return s.gemini_ready()
     return bool(getattr(s, f"{s.llm}_api_key", "").strip())
