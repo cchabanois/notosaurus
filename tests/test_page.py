@@ -313,6 +313,33 @@ def test_lessons_grouped_by_subject(page, clock):
     assert groups.first.locator(".lesson strong").all_inner_texts() == ["Leçon 2 › Phrases", "Leçon 1"]
 
 
+def test_the_page_stays_still_under_an_open_sheet(page, clock):
+    """Scrolling the lessons with a finger (here the wheel), even past their end, never
+    moves the lesson behind; the page scrolls again once the sheet is closed."""
+    page.goto("/")
+    for n in range(12):
+        made = page.request.post("/api/extract", multipart={"prompt": FRONT_PROMPT}).json()
+        page.request.put(f"/api/lessons/{made['id']}", data={"deck": f"Maths::Leçon {n}", "cards": made["cards"]})
+    generate_free(page, FRONT_PROMPT)  # a lesson open behind: a page long enough to scroll
+    page.get_by_role("button", name="Leçons").click()
+    sync_api.expect(page.locator("html")).to_have_class(re.compile("sheet-open"))
+    page.evaluate("scrollTo(0, 400)")  # the lesson behind, scrolled down a little
+    before = page.evaluate("scrollY")
+    listed = page.locator(".lesson-list")
+    sync_api.expect(listed.locator(".lesson").first).to_be_visible()
+    box = listed.bounding_box()
+    page.mouse.move(box["x"] + box["width"] / 2, box["y"] + box["height"] / 2)
+    for _ in range(10):
+        page.mouse.wheel(0, 800)
+    page.wait_for_timeout(300)
+    assert page.evaluate("scrollY") == before
+
+    page.keyboard.press("Escape")
+    sync_api.expect(page.locator("html")).not_to_have_class(re.compile("sheet-open"))
+    page.mouse.wheel(0, 400)
+    page.wait_for_function(f"scrollY !== {before}")
+
+
 def test_many_lessons_recent_folded_and_searched(page, clock):
     page.goto("/")
     decks = [f"Espagnol::Leçon {n}" for n in range(1, 7)] + ["Maths::Fractions", "Maths::Pythagore", "Anglais::Unit 1"]
