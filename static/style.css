@@ -636,7 +636,11 @@ h2 {
 .sheet-handle { width: 2.5rem; height: .3rem; margin: 0 auto .5rem; border-radius: 999px; background: var(--border); }
 .sheet-head { display: flex; align-items: center; justify-content: space-between; }
 .sheet-head h2 { margin: 0; }
-.sheet-body { overflow-y: auto; padding-top: .75rem; }
+.sheet-body { overflow-y: auto; overscroll-behavior: contain; padding-top: .75rem; }
+/* A sheet open: the page behind stays still, whether the finger is on the sheet or beside it */
+html.sheet-open { overflow: hidden; overscroll-behavior: none; }
+.sheet-backdrop { touch-action: none; }
+.lesson-list, .picker-list, .pdf-pages { overscroll-behavior: contain; }
 
 .picker-tools { display: flex; gap: .5rem; padding-top: .75rem; }
 .picker-tools .btn { flex: 0 0 auto; min-height: 0; }

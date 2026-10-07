@@ -992,6 +992,10 @@ document.addEventListener("alpine:init", () => {
 
     // --- Review ---------------------------------------------------------
     // Photos + prompt, or the prompt alone (see "Generate from the prompt alone")
+    sheetOpen() {
+      return this.lessonsOpen || this.pdf.open || this.picker.open || this.editor.open || this.removal.open;
+    },
+
     canGenerate() {
       return this.form.text.trim() !== "" && !this.loading;
     },

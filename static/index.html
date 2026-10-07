@@ -25,7 +25,9 @@
   <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.14.9/dist/cdn.min.js"></script>
 </head>
 <body>
-<div class="app" x-data="notosaurus" :class="{ 'has-bar': bottomBar() }">
+<!-- A sheet open: the page behind doesn't scroll (a finger on the list would move it) -->
+<div class="app" x-data="notosaurus" :class="{ 'has-bar': bottomBar() }"
+     x-effect="document.documentElement.classList.toggle('sheet-open', sheetOpen())">
 
   <!-- App bar -->
   <header class="appbar">
