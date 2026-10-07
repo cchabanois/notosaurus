@@ -635,12 +635,12 @@ def _gemini_client(s: AIConfig):
     from google import genai
     from google.genai import types
 
-    if not s.gemini_api_key:
+    if not s.gemini_ready():
         raise ExtractionError("llm.missing_key", provider="Gemini")
     # 5xx errors (mostly 503 "model overloaded") are frequent and short-lived:
     # the SDK retries with exponential backoff before giving up.
     return genai.Client(
-        api_key=s.gemini_api_key,
+        **s.gemini_options(),
         http_options=types.HttpOptions(
             retry_options=types.HttpRetryOptions(attempts=3, initial_delay=2, http_status_codes=[500, 502, 503, 504])
         ),

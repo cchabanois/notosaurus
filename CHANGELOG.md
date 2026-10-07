@@ -9,6 +9,7 @@ Each pull request adds a line under **Unreleased**. See [Releasing](CONTRIBUTING
 
 ### Changed
 
+- For developers: `notosaurus-core` can call Gemini through Google Cloud's Vertex AI instead of a key (`gemini_vertex_project`, `gemini_vertex_location`), for the coming relay.
 - The AI only makes learning material suited to pupils: other requests (sexual content, violence, dangerous instructions, anything that isn't a lesson) are refused with a clear message, and Gemini's own filters are stricter. Lessons on hard topics (history, biology, health) still work.
 - The coming Android app, where Notosaurus is paid for by its subscription, doesn't show “Support Notosaurus”.
 - The coming Android app has Notosaurus's version (`pyproject.toml`), like the server and the add-on.

@@ -47,8 +47,11 @@ DEFAULT_MODELS = {service: recommended.default(recommended.PICTURES, service) fo
 FALLBACK = ("openrouter", "gemini", "openai")
 
 
-def _key(s: AIConfig, service: str) -> str:
-    return {"gemini": s.gemini_api_key, "openai": s.openai_api_key, "openrouter": s.openrouter_api_key}[service]
+def _ready(s: AIConfig, service: str) -> bool:
+    """Whether the service can be called: its key (Gemini: or a Vertex AI project)."""
+    if service == "gemini":
+        return s.gemini_ready()
+    return bool({"openai": s.openai_api_key, "openrouter": s.openrouter_api_key}[service])
 
 
 def service(s: AIConfig) -> str:
@@ -58,10 +61,10 @@ def service(s: AIConfig) -> str:
     if chosen == "none":
         return ""
     if chosen:
-        return chosen if _key(s, chosen) else ""
+        return chosen if _ready(s, chosen) else ""
     if s.llm in DEFAULT_MODELS:
-        return s.llm if _key(s, s.llm) else ""
-    return next((name for name in FALLBACK if _key(s, name)), "")
+        return s.llm if _ready(s, s.llm) else ""
+    return next((name for name in FALLBACK if _ready(s, name)), "")
 
 
 def model(s: AIConfig) -> str:
@@ -114,9 +117,9 @@ async def _gemini(s: AIConfig, name: str, prompt: str) -> bytes:
     from google import genai
     from google.genai import errors, types
 
-    if not s.gemini_api_key:
+    if not s.gemini_ready():
         raise PictureError("picture.missing_key", service="Gemini")
-    client = genai.Client(api_key=s.gemini_api_key)
+    client = genai.Client(**s.gemini_options())
     try:
         response = await client.aio.models.generate_content(
             model=name,
@@ -174,17 +177,20 @@ async def image_models(s: AIConfig) -> list[str]:
 
 async def _fetch_models(s: AIConfig, drawing: str) -> list[dict]:
     """The service's models: {"id", "outputs": modalities or None, "actions": or None}."""
-    key = _key(s, drawing)
     if drawing == "gemini":
         from google import genai
 
-        client = genai.Client(api_key=key)
+        options = s.gemini_options()
+        client = genai.Client(**options)
+        # Vertex AI names them "publishers/google/models/…" and doesn't say their actions
+        vertex = ["generateContent"] if options.get("vertexai") else []
         return [
-            {"id": m.name.removeprefix("models/"), "actions": m.supported_actions or []}
+            {"id": m.name.rsplit("/", 1)[-1], "actions": m.supported_actions or vertex}
             async for m in await client.aio.models.list()
         ]
     import openai
 
+    key = {"openai": s.openai_api_key, "openrouter": s.openrouter_api_key}[drawing]
     client = openai.AsyncOpenAI(api_key=key, **({"base_url": OPENROUTER} if drawing == "openrouter" else {}))
     return [
         {"id": m.id, "outputs": ((m.model_extra or {}).get("architecture") or {}).get("output_modalities")}
