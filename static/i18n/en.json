@@ -685,7 +685,7 @@
       "empty_answer": "{provider} returned nothing (images refused or unreadable?).",
       "invalid_answer": "The model didn't return valid cards, try again.",
       "truncated": "Answer cut off: too many cards at once, try with fewer pages.",
-      "refused": "The model refused to process these images.",
+      "refused": "Request refused: Notosaurus only makes learning material suited to pupils.",
       "missing_url": "Enter the service address in the settings (⚙️)."
     },
     "anki": {

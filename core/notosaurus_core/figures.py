@@ -37,7 +37,9 @@ proportions and measures as described;
 description's language, written exactly as given;
 - only shapes, text and arrow markers: no script, no image, no link, no external \
 reference, no animation.
-Answer in "svg" with the SVG document only."""
+Answer in "svg" with the SVG document only.
+A figure is for a pupil's lesson: for anything else (or anything unsuited to a \
+child), answer an empty figure, the white background alone."""
 
 
 class Drawing(BaseModel):

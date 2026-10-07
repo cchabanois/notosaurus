@@ -685,7 +685,7 @@
       "empty_answer": "{provider} hat nichts zurückgegeben (Bilder abgelehnt oder unlesbar?).",
       "invalid_answer": "Das Modell hat keine gültigen Karten geliefert, versuch es noch einmal.",
       "truncated": "Antwort abgeschnitten: zu viele Karten auf einmal, versuch es mit weniger Seiten.",
-      "refused": "Das Modell hat sich geweigert, diese Bilder zu verarbeiten.",
+      "refused": "Anfrage abgelehnt: Notosaurus erstellt nur Lernmaterial, das für Schüler geeignet ist.",
       "missing_url": "Gib die Adresse des Dienstes in den Einstellungen an (⚙️)."
     },
     "anki": {

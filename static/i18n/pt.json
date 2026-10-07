@@ -685,7 +685,7 @@
       "empty_answer": "{provider} não retornou nada (imagens recusadas ou ilegíveis?).",
       "invalid_answer": "O modelo não retornou cartões válidos, tente de novo.",
       "truncated": "Resposta cortada: cartões demais de uma vez, tente com menos páginas.",
-      "refused": "O modelo se recusou a processar estas imagens.",
+      "refused": "Pedido recusado: o Notosaurus só cria material de estudo adequado para alunos.",
       "missing_url": "Informe o endereço do serviço nas configurações (⚙️)."
     },
     "anki": {

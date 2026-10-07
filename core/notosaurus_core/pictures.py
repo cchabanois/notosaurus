@@ -122,7 +122,11 @@ async def _gemini(s: AIConfig, name: str, prompt: str) -> bytes:
     client = genai.Client(**s.gemini_options())
     try:
         response = await client.aio.models.generate_content(
-            model=name, contents=prompt, config=types.GenerateContentConfig(response_modalities=["IMAGE", "TEXT"])
+            model=name,
+            contents=prompt,
+            config=types.GenerateContentConfig(
+                response_modalities=["IMAGE", "TEXT"], safety_settings=llm.gemini_safety()
+            ),
         )
     except errors.APIError as e:
         if e.code == 429:
