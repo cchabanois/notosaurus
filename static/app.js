@@ -175,6 +175,7 @@ document.addEventListener("alpine:init", () => {
     error: "",
     success: "",
     anki: { available: false },  // Anki reachable → direct send; `profile`: open Anki profile
+    profiles: true,              // Anki profiles shown (not in the Android app: AnkiDroid doesn't say them)
     settingsHere: true,          // false on a phone when Notosaurus runs in the Anki add-on
     inAndroidApp: /\bNotosaurusApp\//.test(navigator.userAgent),
     donations: true,             // "Support Notosaurus": not where it's paid for (the app's subscription)  // the Notosaurus Android app (its WebView says so)
@@ -221,6 +222,7 @@ document.addEventListener("alpine:init", () => {
         this.settingsHere = (await (await fetch("/api/admin")).json()).allowed;
         const config = await (await api("/api/config")).json();
         this.diagramWarning = config.diagram_warning;
+        this.profiles = config.profiles ?? true;
         this.maxPhotos = config.max_photos ?? this.maxPhotos;
         this.configured = config.configured ?? true;
         this.donations = config.donations ?? true;

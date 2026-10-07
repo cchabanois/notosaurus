@@ -34,7 +34,7 @@
       <span class="brand-text">
         <span class="brand-name">Notosaurus</span>
         <!-- Anki profile the lessons and cards go to -->
-        <small class="brand-profile" x-cloak x-show="anki.available"
+        <small class="brand-profile" x-cloak x-show="anki.available && profiles"
                :title="anki.profile ? $t('app.profile.open') : $t('app.profile.none')"
                x-text="'👤 ' + (anki.profile || $t('app.profile.noneShort'))"
                :class="{ none: !anki.profile }"></small>

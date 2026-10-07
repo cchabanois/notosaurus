@@ -69,6 +69,9 @@ def page(browser, server, tmp_path, monkeypatch):
     errors = []
     page.on("pageerror", lambda e: errors.append(str(e)))
     yield page
+    # A route handler still at work (route.fetch) when the context closes fails the
+    # next test's new_context: "Response has been disposed"
+    page.unroute_all(behavior="ignoreErrors")
     context.close()
     assert not errors, errors
 
@@ -561,6 +564,21 @@ def test_no_support_link_where_notosaurus_is_paid_for(page):
     page.reload()
     page.wait_for_function("document.documentElement.classList.contains('i18n-ready')")
     sync_api.expect(page.locator(".support-link")).to_be_hidden()
+
+
+def test_no_profile_badge_where_there_are_no_profiles(page):
+    """The Android app (AnkiDroid doesn't say its profile) says profiles: false."""
+    page.route("**/api/anki/status", lambda route: route.fulfill(json={"available": True, "profile": None}))
+    page.goto("/")
+    sync_api.expect(page.locator(".brand-profile")).to_be_visible()  # "none": no profile open in Anki
+
+    def phone(route):
+        route.fulfill(json={**route.fetch().json(), "profiles": False})
+
+    page.route("**/api/config", phone)
+    page.reload()
+    page.wait_for_function("document.documentElement.classList.contains('i18n-ready')")
+    sync_api.expect(page.locator(".brand-profile")).to_be_hidden()
 
 
 def test_help_links_in_the_page_language(page):

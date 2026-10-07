@@ -95,6 +95,7 @@ class LocalServer(
                 put("version", version)
                 put("diagram_warning", false)
                 put("max_photos", 10)
+                put("profiles", false) // AnkiDroid doesn't say its profile: no Anki profile badge
                 put("card_helps", prefs[CARD_HELPS] == "true")
                 put("configured", true)
                 put("donations", false) // paid for by the subscription: no "Support Notosaurus" (Ko-fi)
