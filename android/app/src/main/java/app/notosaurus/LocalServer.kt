@@ -2,6 +2,7 @@ package app.notosaurus
 
 import android.content.Context
 import io.ktor.http.ContentType
+import io.ktor.http.HttpHeaders
 import io.ktor.http.HttpStatusCode
 import io.ktor.http.content.PartData
 import io.ktor.http.content.forEachPart
@@ -14,6 +15,7 @@ import io.ktor.server.request.receiveMultipart
 import io.ktor.server.request.receiveText
 import io.ktor.server.response.respondBytes
 import io.ktor.server.response.respondText
+import io.ktor.server.response.respondTextWriter
 import io.ktor.server.routing.Route
 import io.ktor.server.routing.RoutingContext
 import io.ktor.server.routing.delete
@@ -108,8 +110,10 @@ class LocalServer(
     /** What generating sends: the lesson's new content and its photos. */
     private class Made(val content: Map<String, JsonElement>, val photos: List<ByteArray>)
 
-    /** The page's form (photos, prompt, options) made into cards by the relay. */
-    private suspend fun RoutingContext.generate(): Made {
+    /** The page's form for making a lesson: its fields and its photos. */
+    private class Form(val fields: Map<String, String>, val images: List<ByteArray>)
+
+    private suspend fun RoutingContext.form(): Form {
         val fields = mutableMapOf<String, String>()
         val images = mutableListOf<ByteArray>()
         call.receiveMultipart(formFieldLimit = 20L * 1024 * 1024).forEachPart { part ->
@@ -120,6 +124,13 @@ class LocalServer(
             }
             part.dispose()
         }
+        return Form(fields, images)
+    }
+
+    /** The page's form (photos, prompt, options) made into cards by the relay, each
+     * card told to `onCard` as it is written. */
+    private suspend fun generate(form: Form, onCard: OnCard): Made {
+        val (fields, images) = form.fields to form.images
         val texts = fields["page_texts"]?.let { json.parseToJsonElement(it) } ?: JsonArray(emptyList())
         val request = buildJsonObject {
             put("prompt", fields["prompt"] ?: "")
@@ -131,7 +142,7 @@ class LocalServer(
             put("instructions", instructions())
             put("quick", fields["quick"] == "true")
         }
-        val found = cancellable(fields["job"]) { relay().withPhotos("extract", request, images) }
+        val found = cancellable(fields["job"]) { relay().extract(request, images, onCard) }
         val voice = fields["voice"].orEmpty().takeUnless { it.equals("auto", ignoreCase = true) } ?: ""
         val content = mapOf(
             "deck" to found["deck"]!!.jsonObject["deck"]!!,
@@ -252,8 +263,8 @@ class LocalServer(
         }
 
         // --- The AI, through the relay
-        api("POST", "/api/extract") {
-            val made = generate()
+        making("/api/extract") { form, onCard ->
+            val made = generate(form, onCard)
             lessons.create(made.content, made.photos)
         }
         // "Cancel" while waiting: the relay call stops, no lesson is saved
@@ -261,9 +272,9 @@ class LocalServer(
             buildJsonObject { put("cancelled", generating[param("job")]?.also { it.cancel() } != null) }
         }
         // Generated again in its place (another prompt, photos, or carefully this time)
-        api("POST", "/api/lessons/{id}/regenerate") {
+        making("/api/lessons/{id}/regenerate") { form, onCard ->
             val old = lesson()
-            val made = generate()
+            val made = generate(form, onCard)
             lessons.regenerated(old.string("id"), made.content, made.photos) ?: notFound()
         }
         api("POST", "/api/lessons/{id}/revise") {
@@ -369,14 +380,8 @@ class LocalServer(
             if (allowed()) {
                 val (status, answer) = try {
                     HttpStatusCode.OK to handler()
-                } catch (e: NotFound) {
-                    HttpStatusCode.NotFound to error("lesson.not_found", JsonObject(emptyMap()))
-                } catch (e: RelayException) {
-                    HttpStatusCode.BadGateway to error(e.code, e.params)
-                } catch (e: BadRequest) {
-                    HttpStatusCode.BadRequest to error(e.code, e.params)
-                } catch (e: Cancelled) {
-                    HttpStatusCode.Conflict to error("extract.cancelled", JsonObject(emptyMap()))
+                } catch (e: Exception) {
+                    failure(e) ?: throw e
                 }
                 call.respondText(answer.toString(), ContentType.Application.Json, status)
             }
@@ -442,6 +447,57 @@ class LocalServer(
     }
 
     private fun masked(key: String) = if (key.length <= 8) "•".repeat(key.length) else "${key.take(4)}…${key.takeLast(4)}"
+
+    /** The answer to an error the page translates; null: not one of ours. */
+    private fun failure(e: Exception): Pair<HttpStatusCode, JsonObject>? = when (e) {
+        is NotFound -> HttpStatusCode.NotFound to error("lesson.not_found", JsonObject(emptyMap()))
+        is RelayException -> HttpStatusCode.BadGateway to error(e.code, e.params)
+        is BadRequest -> HttpStatusCode.BadRequest to error(e.code, e.params)
+        is Cancelled -> HttpStatusCode.Conflict to error("extract.cancelled", JsonObject(emptyMap()))
+        else -> null
+    }
+
+    /**
+     * A lesson made (a new one, or again in its place): as JSON, or as the AI writes
+     * it when the page asks Relay.STREAM_TYPE, as the computer answers (app/main.py,
+     * _streamed): {"card"} (or {"restart"}) lines, then {"lesson"}, {"error"} or
+     * {"cancelled"}. The form is read first: the answer then outlives the request.
+     */
+    private fun Route.making(path: String, make: suspend RoutingContext.(Form, OnCard) -> JsonObject) {
+        post(path) {
+            if (!allowed()) return@post
+            val form = form()
+            if (call.request.headers[HttpHeaders.Accept]?.contains(Relay.STREAM_TYPE) != true) {
+                val (status, answer) = try {
+                    HttpStatusCode.OK to make(form) {}
+                } catch (e: Exception) {
+                    failure(e) ?: throw e
+                }
+                call.respondText(answer.toString(), ContentType.Application.Json, status)
+                return@post
+            }
+            val routing = this
+            call.respondTextWriter(ContentType.parse(Relay.STREAM_TYPE)) {
+                val writer = this
+                suspend fun line(item: JsonObject) = withContext(Dispatchers.IO) {
+                    writer.write("$item\n")
+                    writer.flush()
+                }
+                val last = try {
+                    val lesson = routing.make(form) { card ->
+                        line(if (card != null) buildJsonObject { put("card", card) } else buildJsonObject { put("restart", true) })
+                    }
+                    buildJsonObject { put("lesson", lesson) }
+                } catch (e: Cancelled) {
+                    buildJsonObject { put("cancelled", true) }
+                } catch (e: Exception) {
+                    val (_, answer) = failure(e) ?: throw e
+                    buildJsonObject { put("error", answer["detail"]!!) }
+                }
+                line(last)
+            }
+        }
+    }
 
     private fun error(code: String, params: JsonObject) = buildJsonObject {
         put("detail", buildJsonObject { put("code", code); put("params", params) })
