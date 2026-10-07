@@ -98,6 +98,9 @@ class ExtractRequest(BaseModel):
     helps: bool = False
     page_texts: list[str] = PageTexts
     instructions: str = Instructions
+    quick: bool = Field(
+        default=False, description="Made fast: the AI thinks little (2 to 4 times faster, a little less careful)."
+    )
 
 
 class ReviseRequest(BaseModel):

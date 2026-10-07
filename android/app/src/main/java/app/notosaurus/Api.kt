@@ -23,6 +23,7 @@ data class ExtractRequest(
     val helps: Boolean = false,
     @SerialName("page_texts") val pageTexts: List<String> = emptyList(),
     val instructions: String = "",
+    val quick: Boolean = false,
 )
 
 @Serializable

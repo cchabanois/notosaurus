@@ -5,6 +5,7 @@ import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.JsonNull
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
+import kotlinx.serialization.json.booleanOrNull
 import kotlinx.serialization.json.int
 import kotlinx.serialization.json.jsonArray
 import kotlinx.serialization.json.jsonObject
@@ -56,6 +57,29 @@ class Lessons(private val root: File) {
         return lesson
     }
 
+    /** Generated again in its place: new cards and photos; the options set in the review
+     * stay (reverse), the prompt's are added (typing, dictation), as app/main.py does. */
+    fun regenerated(id: String, content: Map<String, JsonElement>, photos: List<ByteArray>): JsonObject? {
+        val lesson = get(id) ?: return null
+        val dir = folder(id) ?: return null
+        dir.listFiles { f -> f.name.matches(PHOTO) }?.forEach { it.delete() }
+        photos.forEachIndexed { i, data -> dir.resolve("page-${i + 1}.jpg").writeBytes(data) }
+        fun either(key: String) = JsonPrimitive(
+            content[key]?.jsonPrimitive?.booleanOrNull == true || lesson[key]?.jsonPrimitive?.booleanOrNull == true,
+        )
+        val updated = JsonObject(
+            lesson + content + mapOf(
+                "cards" to withIds(content["cards"]),
+                "typing" to either("typing"),
+                "dictation" to either("dictation"),
+                "photo_count" to JsonPrimitive(photos.size),
+                "updated_at" to JsonPrimitive(now()),
+            ),
+        )
+        write(updated)
+        return updated
+    }
+
     /** The page's changes (LessonIn): null fields leave the lesson's as they are. */
     fun update(id: String, changes: JsonObject, exported: Boolean = false): JsonObject? {
         val lesson = get(id) ?: return null
@@ -95,6 +119,7 @@ class Lessons(private val root: File) {
 
     companion object {
         private val NAME = Regex("^[a-z0-9][a-z0-9-]*$") // our folder names only: no "../"
+        private val PHOTO = Regex("^page-\\d+\\.jpg$")
         private val EDITABLE = setOf(
             "deck", "cards", "voice", "reverse", "typing", "dictation", "shared", "frames", "prompt", "choice",
         )

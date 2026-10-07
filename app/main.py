@@ -1,3 +1,4 @@
+import asyncio
 import base64
 import json
 import logging
@@ -18,7 +19,8 @@ load_dotenv()  # before the app imports, some of which read variables at import 
 import io
 
 from fastapi import BackgroundTasks, Depends, FastAPI, File, Form, Header, Query, Request, UploadFile
-from fastapi.responses import FileResponse, JSONResponse, Response
+from fastapi.encoders import jsonable_encoder
+from fastapi.responses import FileResponse, JSONResponse, Response, StreamingResponse
 from fastapi.staticfiles import StaticFiles
 
 from notosaurus_core import diagrams, llm, pictures, recommended, tts
@@ -198,6 +200,21 @@ def duplicate_prompt(id: str, lang: str = Depends(page_lang)) -> Prompt:
 
 
 @dataclass
+class Photo:
+    """An uploaded photo, read at once: a streamed answer outlives the request's files."""
+
+    data: bytes
+    content_type: str | None
+
+    async def read(self) -> bytes:
+        return self.data
+
+
+async def _photos(images: list[UploadFile]) -> list[Photo]:
+    return [Photo(await img.read(), img.content_type) for img in images]
+
+
+@dataclass
 class Generated:
     content: LessonIn
     photos: list[bytes]  # upright
@@ -219,7 +236,7 @@ def _page_texts(raw: str, count: int) -> list[str]:
 
 
 async def _generate(
-    images: list[UploadFile],
+    images: list[Photo],
     prompt: str,
     deck: str,
     voice: str,
@@ -231,6 +248,8 @@ async def _generate(
     page_texts: str = "",
     helps: bool = False,
     lang: str = "",
+    quick: bool = False,
+    on_card: llm.OnCard | None = None,
 ) -> Generated:
     """Read the photos (or, without photos, work from the prompt alone): the lesson's
     new content, not saved yet."""
@@ -259,6 +278,8 @@ async def _generate(
                 page_texts=texts,
                 helps=helps,
                 instructions=settings.standing_instructions(s, profile),
+                quick=quick,
+                on_card=on_card,
             )
         except Exception:
             usage.add(calls, lesson_id=None)  # answered but unusable: paid for, no lesson saved
@@ -285,6 +306,46 @@ def _learned(back_language: str, lang: str, spelling: bool) -> str:
     return back_language
 
 
+NDJSON = "application/x-ndjson"
+_streaming: set[asyncio.Task] = set()  # generations under way, kept until done
+
+
+def _streamed(work) -> StreamingResponse:
+    """The cards sent to the page as soon as the AI writes them, one JSON per line:
+    {"card": …} (or {"restart": true}: the ones sent so far are dropped), then
+    {"lesson": …} or {"error": {"code", "params"}} as the page translates it. The
+    lesson is made and saved even if the page goes away meanwhile."""
+    queue: asyncio.Queue = asyncio.Queue()
+
+    async def card(found: dict | None) -> None:
+        await queue.put({"card": found} if found is not None else {"restart": True})
+
+    async def run() -> None:
+        try:
+            await queue.put({"lesson": jsonable_encoder(await work(card))})
+        except AppError as e:
+            await queue.put({"error": e.detail()})
+        except Exception:
+            log.exception("Generating failed")
+            await queue.put({"error": {"code": "internal", "params": {}}})
+        finally:
+            await queue.put(None)
+
+    task = asyncio.create_task(run())
+    _streaming.add(task)
+    task.add_done_callback(_streaming.discard)
+
+    async def lines():
+        while (item := await queue.get()) is not None:
+            yield json.dumps(item, ensure_ascii=False) + "\n"
+
+    return StreamingResponse(lines(), media_type=NDJSON)
+
+
+def _wants_stream(accept: str | None) -> bool:
+    return NDJSON in (accept or "")
+
+
 @app.post("/api/extract", status_code=201)
 async def extract(
     images: list[UploadFile] = File([]),
@@ -297,27 +358,39 @@ async def extract(
     fun_facts: bool = Form(False),
     page_texts: str = Form(""),
     helps: bool = Form(False),
+    quick: bool = Form(False),
     lang: str = Depends(pupil_lang),
-) -> Lesson:
-    """A new lesson (photos + cards), saved so it can be reopened."""
-    g = await _generate(
-        images,
-        prompt,
-        deck,
-        voice,
-        prompt_id,
-        typing,
-        dictation,
-        fun_facts=fun_facts,
-        page_texts=page_texts,
-        helps=helps,
-        lang=lang,
-    )
-    created = lessons.create(
-        g.content, prompt, g.photos, g.profile, g.found.frames, g.calls, g.found.choice, page_texts=g.page_texts
-    )
-    usage.add(g.calls, created.id, created.deck)
-    return created
+    accept: str | None = Header(None),
+):
+    """A new lesson (photos + cards), saved so it can be reopened. Asked for as
+    application/x-ndjson: the cards as they come, then the lesson (see _streamed)."""
+    photos = await _photos(images)
+
+    async def work(on_card=None) -> Lesson:
+        g = await _generate(
+            photos,
+            prompt,
+            deck,
+            voice,
+            prompt_id,
+            typing,
+            dictation,
+            fun_facts=fun_facts,
+            page_texts=page_texts,
+            helps=helps,
+            lang=lang,
+            quick=quick,
+            on_card=on_card,
+        )
+        created = lessons.create(
+            g.content, prompt, g.photos, g.profile, g.found.frames, g.calls, g.found.choice, page_texts=g.page_texts
+        )
+        usage.add(g.calls, created.id, created.deck)
+        return created
+
+    if _wants_stream(accept):
+        return _streamed(work)
+    return JSONResponse(jsonable_encoder(await work()), status_code=201)
 
 
 @app.post("/api/lessons/{id}/regenerate")
@@ -333,36 +406,47 @@ async def regenerate(
     fun_facts: bool = Form(False),
     page_texts: str = Form(""),
     helps: bool = Form(False),
+    quick: bool = Form(False),
     lang: str = Depends(pupil_lang),
-) -> Lesson:
+    accept: str | None = Header(None),
+):
     """Generate the lesson again (other prompt, other photos) in its place, instead of
-    a second lesson. Only its owner's profile may."""
+    a second lesson. Only its owner's profile may. Streamed as /api/extract."""
     old = await _editable(id)
-    g = await _generate(
-        images,
-        prompt,
-        deck,
-        voice,
-        prompt_id,
-        typing,
-        dictation,
-        lesson_id=id,
-        fun_facts=fun_facts,
-        page_texts=page_texts,
-        helps=helps,
-        lang=lang,
-    )
-    # The options set in the review stay (the prompt's are added): only the cards change
-    g.content.reverse = old.reverse
-    g.content.typing = g.content.typing or old.typing
-    g.content.dictation = g.content.dictation or old.dictation
-    lesson = lessons.regenerated(
-        id, g.content, prompt, g.photos, g.found.frames, g.calls, g.found.choice, page_texts=g.page_texts
-    )
-    if lesson is None:  # deleted meanwhile
-        raise AppError("lesson.not_found", 404)
-    usage.add(g.calls, id, lesson.deck)
-    return lesson
+    photos = await _photos(images)
+
+    async def work(on_card=None) -> Lesson:
+        g = await _generate(
+            photos,
+            prompt,
+            deck,
+            voice,
+            prompt_id,
+            typing,
+            dictation,
+            lesson_id=id,
+            fun_facts=fun_facts,
+            page_texts=page_texts,
+            helps=helps,
+            lang=lang,
+            quick=quick,
+            on_card=on_card,
+        )
+        # The options set in the review stay (the prompt's are added): only the cards change
+        g.content.reverse = old.reverse
+        g.content.typing = g.content.typing or old.typing
+        g.content.dictation = g.content.dictation or old.dictation
+        lesson = lessons.regenerated(
+            id, g.content, prompt, g.photos, g.found.frames, g.calls, g.found.choice, page_texts=g.page_texts
+        )
+        if lesson is None:  # deleted meanwhile
+            raise AppError("lesson.not_found", 404)
+        usage.add(g.calls, id, lesson.deck)
+        return lesson
+
+    if _wants_stream(accept):
+        return _streamed(work)
+    return await work()
 
 
 APKG_TYPE = "application/apkg"  # the type AnkiDroid opens (not a generic download)

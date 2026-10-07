@@ -1033,6 +1033,12 @@
             "maxLength": 10000,
             "title": "Instructions",
             "type": "string"
+          },
+          "quick": {
+            "default": false,
+            "description": "Made fast: the AI thinks little (2 to 4 times faster, a little less careful).",
+            "title": "Quick",
+            "type": "boolean"
           }
         },
         "required": [

@@ -7,6 +7,12 @@ Each pull request adds a line under **Unreleased**. See [Releasing](CONTRIBUTING
 
 ## [Unreleased]
 
+### Added
+
+- ⚡ Quick or 🎯 Careful, on the page that makes the cards: quick by default, 2 to 4 times faster (a few seconds) and cheaper; careful thinks longer, for a rich lesson (a diagram, maths). After a quick lesson, “Make again, carefully” redoes it in its place.
+- The cards show while they are being made: each one as soon as the AI has written it (the first after a few seconds).
+- The Android app can generate a lesson again in its place (“Regenerate”, “Make again, carefully”).
+
 ### Changed
 
 - For developers: `notosaurus-core` can call Gemini through Google Cloud's Vertex AI instead of a key (`gemini_vertex_project`, `gemini_vertex_location`), for the coming relay.

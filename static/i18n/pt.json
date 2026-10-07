@@ -86,7 +86,12 @@
       "builtin": "Instruções do Notosaurus: somente leitura, melhoradas junto com o app",
       "regenerateNewHint": "(nova lição)",
       "regenerateExported": "Já enviada ao Anki: os cartões enviados ficam lá; os novos serão adicionados no próximo envio.",
-      "regenerated": "✨ Cartões gerados de novo."
+      "regenerated": "✨ Cartões gerados de novo.",
+      "speed": "Criação dos cartões",
+      "quick": "⚡ Rápido",
+      "careful": "🎯 Caprichado",
+      "quickHint": "Alguns segundos. Ideal para vocabulário ou uma lição simples.",
+      "carefulHint": "Mais demorado (até 30 s), mais pensado: para uma lição rica (um esquema, matemática)."
     },
     "review": {
       "title": "Revisão",
@@ -132,7 +137,9 @@
       "diagramHint": "Esquema: arraste uma máscara vermelha para movê-la e o canto redondo dela para mudar o tamanho, de modo que esconda toda a legenda. O quadro tracejado é o que o Anki mostra da foto: arraste os cantos azuis dele para recortá-la.",
       "diagramWarning": "Com este modelo de IA (Claude), as máscaras às vezes ficam pequenas demais sobre letra manuscrita: confira se escondem toda a legenda.",
       "cropFrame": "O que o Anki mostra da foto",
-      "readOnly": "🔒 Somente leitura: só o perfil de {owner} pode alterá-la. Mesmo assim, você pode adicioná-la ao seu Anki."
+      "readOnly": "🔒 Somente leitura: só o perfil de {owner} pode alterá-la. Mesmo assim, você pode adicioná-la ao seu Anki.",
+      "madeQuick": "Criados no modo rápido.",
+      "carefulAgain": "🎯 Refazer no modo caprichado"
     },
     "explain": {
       "button": "Explicar este cartão",
@@ -182,7 +189,8 @@
       "reading": "Lendo a lição…",
       "writing": "Criando os cartões…",
       "revising": "Corrigindo os cartões…",
-      "duration": "Costuma levar de 10 a 30 segundos."
+      "duration": "Costuma levar de 10 a 30 segundos.",
+      "durationQuick": "Normalmente leva menos de 10 segundos."
     },
     "send": {
       "added": {

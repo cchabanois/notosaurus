@@ -128,12 +128,18 @@ class LocalServerTest {
         return json.parseToJsonElement(text.substring(start, text.indexOf("\r\n--", start))).jsonObject
     }
 
-    private suspend fun HttpClient.extract(prompt: String = "FR → ES", voice: String = "auto"): JsonObject {
+    private suspend fun HttpClient.extract(
+        prompt: String = "FR → ES",
+        voice: String = "auto",
+        path: String = "/api/extract",
+        photos: List<String> = listOf("photo 1", "photo 2"),
+        quick: Boolean = false,
+    ): JsonObject {
         relayAnswers("""{"deck": {"deck": "Espagnol::Leçon 5", "cards": [{"front": "la mère", "back": "la madre"}, {"front": "le père", "back": "el padre"}]}, "turns": [0, 0], "choice": "Vocabulaire", "usage": {"credits": 3, "credits_left": 97}}""")
         return submitFormWithBinaryData(
-            "/api/extract",
+            path,
             formData {
-                listOf("photo 1", "photo 2").forEachIndexed { i, photo ->
+                photos.forEachIndexed { i, photo ->
                     append("images", photo.toByteArray(), Headers.build {
                         append(HttpHeaders.ContentType, "image/jpeg")
                         append(HttpHeaders.ContentDisposition, "filename=\"page-${i + 1}.jpg\"")
@@ -143,6 +149,7 @@ class LocalServerTest {
                 append("deck", "")
                 append("voice", voice)
                 append("fun_facts", "true")
+                if (quick) append("quick", "true")
             },
         ) { page() }.json().jsonObject
     }
@@ -195,6 +202,28 @@ class LocalServerTest {
         val mine = client.get("/api/prompts") { page() }.json().jsonArray.drop(13).map { it.jsonObject }
         assertEquals(listOf(2), mine.map { it["id"]!!.jsonPrimitive.int })
         assertFalse(mine[0]["builtin"]!!.jsonPrimitive.content.toBoolean())
+    }
+
+    @Test
+    fun aLessonMadeQuickThenAgainCarefullyInItsPlace() = app { client ->
+        val lesson = client.extract(quick = true)
+        assertEquals("true", relay.takeRequest().multipartRequest()["quick"]!!.jsonPrimitive.content)
+        val id = lesson.string("id")
+        client.put("/api/lessons/$id") {
+            page()
+            contentType(ContentType.Application.Json)
+            setBody("""{"reverse": true}""")
+        }
+
+        // "Make again, carefully": the same lesson, new cards and photos, its options kept
+        val again = client.extract(path = "/api/lessons/$id/regenerate", photos = listOf("photo 3"))
+        assertEquals("false", relay.takeRequest().multipartRequest()["quick"]!!.jsonPrimitive.content)
+        assertEquals(id, again.string("id"))
+        assertEquals(1, again["photo_count"]!!.jsonPrimitive.int)
+        assertTrue(again["reverse"]!!.jsonPrimitive.content.toBoolean())
+        assertArrayEquals("photo 3".toByteArray(), client.get("/api/lessons/$id/photos/1") { page() }.bodyAsBytes())
+        assertEquals(HttpStatusCode.NotFound, client.get("/api/lessons/$id/photos/2") { page() }.status)
+        assertEquals(1, client.get("/api/lessons") { page() }.json().jsonArray.size)
     }
 
     @Test

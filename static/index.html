@@ -157,6 +157,14 @@
         <span class="track"><span class="knob"></span></span>
         <span x-text="$t('app.prompt.helps')"></span>
       </label>
+      <!-- Quick by default (a few seconds); careful for a rich lesson. Kept on this device -->
+      <div class="speed" role="radiogroup" :aria-label="$t('app.prompt.speed')">
+        <button type="button" class="chip" role="radio" :aria-checked="quick" :class="{ active: quick }"
+                @click="quick = true" x-text="$t('app.prompt.quick')"></button>
+        <button type="button" class="chip" role="radio" :aria-checked="!quick" :class="{ active: !quick }"
+                @click="quick = false" x-text="$t('app.prompt.careful')"></button>
+        <small class="hint" x-text="quick ? $t('app.prompt.quickHint') : $t('app.prompt.carefulHint')"></small>
+      </div>
 
       <div class="prompt-actions">
         <button class="link-btn" x-show="selectedId" @click="openEditor('edit')" x-text="$t('app.prompt.edit')"></button>
@@ -231,6 +239,13 @@
         </div>
         <button class="btn soft" x-show="revision.undo" @click="undoRevision()" x-text="$t('app.revise.undo')"></button>
         <button class="icon-btn muted" @click="clearRevision()" :aria-label="$t('common.close')">✕</button>
+      </div>
+
+      <!-- Just made quick: once more, carefully (a rich lesson: a figure, maths) -->
+      <div class="careful-again" x-show="madeQuick && regeneratesInPlace()">
+        <small class="hint" x-text="$t('app.review.madeQuick')"></small>
+        <button class="btn soft" @click="extract({ careful: true })" :disabled="!canGenerate()"
+                x-text="$t('app.review.carefulAgain')"></button>
       </div>
 
       <div class="diagram-hints" x-show="hasMasks()">
@@ -454,7 +469,13 @@
     <div class="loading-card">
       <div class="spinner"></div>
       <strong x-text="revision.busy ? $t('app.loading.revising') : photos.length ? $t('app.loading.reading') : $t('app.loading.writing')"></strong>
-      <small x-text="$t('app.loading.duration')"></small>
+      <small x-text="!revision.busy && loadingQuick ? $t('app.loading.durationQuick') : $t('app.loading.duration')"></small>
+      <!-- The cards as the AI writes them: the last ones, while the others come -->
+      <ul class="coming" x-show="loading && coming.length">
+        <template x-for="(card, i) in coming.slice(-5)" :key="coming.length - 5 + i">
+          <li><strong x-text="card.front"></strong> <span x-text="card.back"></span></li>
+        </template>
+      </ul>
     </div>
   </div>
 

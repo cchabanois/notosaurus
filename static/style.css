@@ -485,6 +485,13 @@ h2 {
 .flash .fun-fact textarea { flex: 1; min-width: 0; font-style: italic; color: var(--muted); }
 .switch.fun-facts { margin: .5rem 0 .25rem; }
 .switch.helps { margin: .25rem 0; }
+.speed { display: flex; flex-wrap: wrap; align-items: center; gap: .4rem; margin: .5rem 0 .25rem; }
+.speed .hint { flex-basis: 100%; margin: 0; }
+.loading-card .coming { margin: .5rem 0 0; padding: 0; list-style: none; text-align: left; max-width: 18rem; }
+.loading-card .coming li { margin: .2rem 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; animation: arrive .3s ease-out; }
+.loading-card .coming span { color: var(--accent); }
+@keyframes arrive { from { opacity: 0; transform: translateY(.3rem); } }
+.careful-again { display: flex; flex-wrap: wrap; align-items: center; gap: .5rem; margin: .5rem 0; }
 .flash .card-help { display: flex; gap: .3rem; align-items: flex-start; margin-top: .25rem; font-size: .85rem; }
 .flash .card-help textarea {
   flex: 1; min-width: 0; min-height: 0; padding: .2rem .35rem; resize: vertical;

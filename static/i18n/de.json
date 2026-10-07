@@ -86,7 +86,12 @@
       "builtin": "Anweisungen von Notosaurus: schreibgeschützt, werden mit der App verbessert",
       "regenerateNewHint": "(neue Lektion)",
       "regenerateExported": "Schon an Anki gesendet: Die gesendeten Karten bleiben dort, die neuen kommen beim nächsten Senden dazu.",
-      "regenerated": "✨ Karten neu erzeugt."
+      "regenerated": "✨ Karten neu erzeugt.",
+      "speed": "Erstellung der Karten",
+      "quick": "⚡ Schnell",
+      "careful": "🎯 Sorgfältig",
+      "quickHint": "Ein paar Sekunden. Ideal für Vokabeln oder eine einfache Lektion.",
+      "carefulHint": "Länger (bis zu 30 s), durchdachter: für eine umfangreiche Lektion (ein Schema, Mathe)."
     },
     "review": {
       "title": "Durchsicht",
@@ -132,7 +137,9 @@
       "diagramHint": "Abbildung: Zieh eine rote Maske, um sie zu verschieben, und ihre runde Ecke, um ihre Größe zu ändern, sodass sie die ganze Beschriftung verdeckt. Der gestrichelte Rahmen ist das, was Anki vom Foto zeigt: Zieh an seinen blauen Ecken, um es zuzuschneiden.",
       "diagramWarning": "Mit diesem KI-Modell (Claude) sind die Masken auf Handschrift manchmal zu klein: Prüfe, ob sie die ganze Beschriftung verdecken.",
       "cropFrame": "Was Anki vom Foto zeigt",
-      "readOnly": "🔒 Schreibgeschützt: Nur das Benutzerprofil von {owner} kann sie ändern. Du kannst sie trotzdem zu deinem Anki hinzufügen."
+      "readOnly": "🔒 Schreibgeschützt: Nur das Benutzerprofil von {owner} kann sie ändern. Du kannst sie trotzdem zu deinem Anki hinzufügen.",
+      "madeQuick": "Im Schnellmodus erstellt.",
+      "carefulAgain": "🎯 Sorgfältig neu erstellen"
     },
     "explain": {
       "button": "Diese Karte erklären",
@@ -182,7 +189,8 @@
       "reading": "Lektion wird gelesen …",
       "writing": "Karten werden erstellt …",
       "revising": "Karten werden korrigiert …",
-      "duration": "Das dauert meist 10 bis 30 Sekunden."
+      "duration": "Das dauert meist 10 bis 30 Sekunden.",
+      "durationQuick": "Das dauert meist weniger als 10 Sekunden."
     },
     "send": {
       "added": {

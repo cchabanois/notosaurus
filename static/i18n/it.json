@@ -86,7 +86,12 @@
       "builtin": "Istruzioni di Notosaurus: sola lettura, migliorate insieme all'app",
       "regenerateNewHint": "(nuova lezione)",
       "regenerateExported": "Già inviata ad Anki: le carte inviate restano lì, le nuove verranno aggiunte al prossimo invio.",
-      "regenerated": "✨ Carte generate di nuovo."
+      "regenerated": "✨ Carte generate di nuovo.",
+      "speed": "Creazione delle carte",
+      "quick": "⚡ Veloce",
+      "careful": "🎯 Accurato",
+      "quickHint": "Pochi secondi. Ideale per il vocabolario o una lezione semplice.",
+      "carefulHint": "Più lungo (fino a 30 s), più ragionato: per una lezione ricca (uno schema, matematica)."
     },
     "review": {
       "title": "Revisione",
@@ -132,7 +137,9 @@
       "diagramHint": "Schema: trascina una maschera rossa per spostarla e il suo angolo tondo per ridimensionarla, in modo che nasconda tutto il nome. La cornice tratteggiata è ciò che Anki mostra della foto: trascina i suoi angoli blu per ritagliarla.",
       "diagramWarning": "Con questo modello di IA (Claude), sulla scrittura a mano le maschere a volte sono troppo piccole: controlla che nascondano tutto il nome.",
       "cropFrame": "Ciò che Anki mostra della foto",
-      "readOnly": "🔒 Sola lettura: solo il profilo di {owner} può modificarla. Puoi comunque aggiungerla al tuo Anki."
+      "readOnly": "🔒 Sola lettura: solo il profilo di {owner} può modificarla. Puoi comunque aggiungerla al tuo Anki.",
+      "madeQuick": "Create in modalità veloce.",
+      "carefulAgain": "🎯 Rifai in modalità accurata"
     },
     "explain": {
       "button": "Spiega questa carta",
@@ -182,7 +189,8 @@
       "reading": "Lettura della lezione…",
       "writing": "Creazione delle carte…",
       "revising": "Correzione delle carte…",
-      "duration": "Di solito ci vogliono da 10 a 30 secondi."
+      "duration": "Di solito ci vogliono da 10 a 30 secondi.",
+      "durationQuick": "Di solito ci vogliono meno di 10 secondi."
     },
     "send": {
       "added": {

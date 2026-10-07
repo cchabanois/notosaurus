@@ -251,6 +251,33 @@ def test_fun_facts_switch(page):
     assert fact.evaluate("el => el.scrollHeight <= el.clientHeight + 1")
 
 
+def test_quick_by_default_then_again_carefully(page):
+    """Quick by default (the AI thinks little); "Make again, carefully" redoes the lesson
+    in its place; "Careful" chosen is kept on the device."""
+    sent = []
+    page.on("request", lambda r: sent.append((r.url, r.post_data or "")) if r.method == "POST" else None)
+    page.goto("/")
+    quick = page.get_by_role("radio", name="⚡ Rapide")
+    sync_api.expect(quick).to_have_attribute("aria-checked", "true")
+    generate_free(page, FRONT_PROMPT)
+    body = next(b for u, b in sent if u.endswith("/api/extract"))
+    assert 'name="quick"' in body
+    again = page.get_by_role("button", name="🎯 Refaire en mode soigné")
+    sync_api.expect(again).to_be_visible()
+
+    sent.clear()
+    again.click()
+    sync_api.expect(again).to_be_hidden()  # made carefully this time
+    body = next(b for u, b in sent if "/regenerate" in u)
+    assert 'name="quick"' not in body
+    assert len(lessons(page)) == 1  # in its place
+    sync_api.expect(quick).to_have_attribute("aria-checked", "true")  # the choice above stays
+
+    page.get_by_role("radio", name="🎯 Soigné").click()
+    page.reload()  # kept on the device
+    sync_api.expect(page.get_by_role("radio", name="🎯 Soigné")).to_have_attribute("aria-checked", "true")
+
+
 def test_multiple_choice_wrong_answers_edited(page):
     generate_free(page, "QCM sur la Révolution")
     first = page.locator(".flash").first
