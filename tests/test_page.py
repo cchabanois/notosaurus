@@ -69,6 +69,9 @@ def page(browser, server, tmp_path, monkeypatch):
     errors = []
     page.on("pageerror", lambda e: errors.append(str(e)))
     yield page
+    # A route handler still at work (route.fetch) when the context closes fails the
+    # next test's new_context: "Response has been disposed"
+    page.unroute_all(behavior="ignoreErrors")
     context.close()
     assert not errors, errors
 
