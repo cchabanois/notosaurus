@@ -685,7 +685,7 @@
       "empty_answer": "{provider} non ha restituito nulla (immagini rifiutate o illeggibili?).",
       "invalid_answer": "Il modello non ha restituito carte valide, riprova.",
       "truncated": "Risposta interrotta: troppe carte in una volta, prova con meno pagine.",
-      "refused": "Il modello si è rifiutato di elaborare queste immagini.",
+      "refused": "Richiesta rifiutata: Notosaurus crea solo materiale di studio adatto agli alunni.",
       "missing_url": "Inserisci l'indirizzo del servizio nelle impostazioni (⚙️)."
     },
     "anki": {

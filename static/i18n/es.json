@@ -685,7 +685,7 @@
       "empty_answer": "{provider} no ha devuelto nada (¿imágenes rechazadas o ilegibles?).",
       "invalid_answer": "El modelo no ha devuelto tarjetas válidas, vuelve a intentarlo.",
       "truncated": "Respuesta cortada: demasiadas tarjetas a la vez, prueba con menos páginas.",
-      "refused": "El modelo se ha negado a procesar estas imágenes.",
+      "refused": "Solicitud rechazada: Notosaurus solo crea material de estudio adecuado para alumnos.",
       "missing_url": "Indica la dirección del servicio en los ajustes (⚙️)."
     },
     "anki": {

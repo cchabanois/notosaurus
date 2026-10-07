@@ -685,7 +685,7 @@
       "empty_answer": "{provider} n'a rien renvoyé (images refusées ou illisibles ?).",
       "invalid_answer": "Le modèle n'a pas renvoyé de cartes valides, réessaie.",
       "truncated": "Réponse tronquée : trop de cartes d'un coup, essaie avec moins de pages.",
-      "refused": "Le modèle a refusé de traiter ces images.",
+      "refused": "Demande refusée : Notosaurus ne fait que des cartes pour apprendre, adaptées à des élèves.",
       "missing_url": "Indique l'adresse du service dans les réglages (⚙️)."
     },
     "anki": {
