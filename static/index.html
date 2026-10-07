@@ -470,6 +470,12 @@
       <div class="spinner"></div>
       <strong x-text="revision.busy ? $t('app.loading.revising') : photos.length ? $t('app.loading.reading') : $t('app.loading.writing')"></strong>
       <small x-text="!revision.busy && loadingQuick ? $t('app.loading.durationQuick') : $t('app.loading.duration')"></small>
+      <!-- The cards as the AI writes them: the last ones, while the others come -->
+      <ul class="coming" x-show="loading && coming.length">
+        <template x-for="(card, i) in coming.slice(-5)" :key="coming.length - 5 + i">
+          <li><strong x-text="card.front"></strong> <span x-text="card.back"></span></li>
+        </template>
+      </ul>
     </div>
   </div>
 

@@ -17,12 +17,14 @@ overloaded after a few retries.
 import base64
 import json
 import logging
-from collections.abc import Iterator
-from contextlib import contextmanager
+import re
+from collections.abc import Awaitable, Callable, Iterator
+from contextlib import contextmanager, suppress
 from contextvars import ContextVar
 from dataclasses import dataclass
 from datetime import datetime
 from functools import cache
+from types import SimpleNamespace
 
 from pydantic import BaseModel, Field, create_model
 
@@ -264,6 +266,11 @@ class Image:
     media_type: str  # image/jpeg, image/png, image/webp or image/gif
 
 
+# Told each card as soon as the AI has written it ({"front", "back"…} as the AI fills
+# them), or None: the cards told so far are dropped (another model starts again)
+OnCard = Callable[[dict | None], Awaitable[None]]
+
+
 class ExtractionError(AppError):
     """The AI provider failed; `code` is translated by the page (errors.* keys)."""
 
@@ -350,10 +357,12 @@ async def extract_cards(
     helps: bool = False,
     instructions: str = "",
     quick: bool = False,
+    on_card: OnCard | None = None,
 ) -> Extracted:
     """`decks`: the decks that already exist, to reuse their names; `instructions`: the
     user's standing instructions, put before the request (never replacing the rules);
-    `quick`: made fast, the model thinking little (see _generate)."""
+    `quick`: made fast, the model thinking little; `on_card`: each card as soon as it is
+    written (see _generate)."""
     if s.llm == "fake":
         await record(s, "fake", "fake", 0, 0, cost=0.0)
         choice = "Vocabulaire d'espagnol : français → espagnol" if _lets_choose(prompt) else ""
@@ -363,11 +372,14 @@ async def extract_cards(
         if helps:  # the demo's helps: an explanation on the first card, a mnemonic on the second
             found.cards[0].explanation = "(démo) Pourquoi c'est la réponse."
             found.cards[-1].mnemonic = "(démo) Une astuce pour retenir."
+        for card in found.cards if on_card else ():  # one by one, as a real AI writes them
+            await on_card(card.model_dump(exclude_defaults=True))
         return Extracted(deck=found, turns=[0] * len(images), frames=[], back_language="es-ES", choice=choice)
     fmt = diagrams.box_format(s.model_for_provider())
     images, sizes = _prepare(images)
     text = instructions + _user_text(prompt, deck, len(images), sizes, fmt, decks, fun_facts, page_texts, helps)
-    answer = await _generate(s, images, text, ai_schema(Extraction, fun_facts, helps), quick=quick)
+    schema = ai_schema(Extraction, fun_facts, helps)
+    answer = await _generate(s, images, text, schema, quick=quick, on_card=on_card)
     result = Extraction.model_validate(_accepted(answer).model_dump())
     diagrams.normalize(result.cards, sizes, fmt)
     return Extracted(
@@ -597,6 +609,58 @@ def _keep_masks(
         used.add((card.mask.page, card.mask.n))
 
 
+class CardStream:
+    """The cards of a JSON answer being written ({"cards": [{…}, {…}…], …}): fed the
+    text as it comes, it gives each card once it is complete."""
+
+    def __init__(self) -> None:
+        self.text = ""
+        self.at: int | None = None  # where the next card may start, once "cards": [ is read
+
+    def feed(self, more: str) -> list[dict]:
+        self.text += more
+        if self.at is None:
+            found = re.search(r'"cards"\s*:\s*\[', self.text)
+            if not found:
+                return []
+            self.at = found.end()
+        cards = []
+        while (end := self._object_end()) is not None:
+            start = self.text.index("{", self.at)
+            with suppress(ValueError):  # not a card after all: skipped
+                cards.append(json.loads(self.text[start : end + 1]))
+            self.at = end + 1
+        return cards
+
+    def _object_end(self) -> int | None:
+        """Where the next card's object closes; None when it isn't complete yet (or the
+        list is over)."""
+        i = self.at
+        while i < len(self.text) and self.text[i] in " \t\r\n,":
+            i += 1
+        if i >= len(self.text) or self.text[i] != "{":
+            return None
+        depth, quoted, escaped = 0, False, False
+        for j in range(i, len(self.text)):
+            c = self.text[j]
+            if quoted:
+                if escaped:
+                    escaped = False
+                elif c == "\\":
+                    escaped = True
+                elif c == '"':
+                    quoted = False
+            elif c == '"':
+                quoted = True
+            elif c == "{":
+                depth += 1
+            elif c == "}":
+                depth -= 1
+                if depth == 0:
+                    return j
+        return None
+
+
 async def _generate[T: BaseModel](
     s: AIConfig,
     images: list[Image],
@@ -605,15 +669,17 @@ async def _generate[T: BaseModel](
     system: str = SYSTEM_PROMPT,
     light: bool = False,
     quick: bool = False,
+    on_card: OnCard | None = None,
 ) -> T:
     """Send photos + text to the configured provider and parse the answer as `schema`.
     `system`: the fixed rules (the cards' by default). `light`: a task that needs little
     thinking (drawing a figure described precisely): the model thinks as little as it
     can, where the service lets us say so — cheaper and faster. `quick`: a lesson made
     fast (the page's "Quick"): the model thinks little ("low"), 2 to 4 times faster,
-    a little less careful on rich lessons (a figure, maths)."""
+    a little less careful on rich lessons (a figure, maths). `on_card`: each card as soon
+    as it is written (Gemini; the other services answer all at once)."""
     if s.llm == "gemini":
-        return await _gemini(s, images, text, schema, system, light, quick)
+        return await _gemini(s, images, text, schema, system, light, quick, on_card)
     if s.llm == "anthropic":
         return await _anthropic(s, images, text, schema, system)  # Claude only thinks when asked to
     if s.llm in config.OPENAI_LIKE:
@@ -671,10 +737,31 @@ async def _gemini[T: BaseModel](
     system: str = SYSTEM_PROMPT,
     light: bool = False,
     quick: bool = False,
+    on_card: OnCard | None = None,
 ) -> T:
     from google.genai import errors, types
 
     client = _gemini_client(s)
+    told = 0  # cards told to on_card
+
+    async def generate(model: str):
+        """The model's answer; written as it comes when the cards are wanted at once."""
+        nonlocal told
+        if on_card is None:
+            return await client.aio.models.generate_content(model=model, contents=contents, config=config)
+        if told:  # another model starts again
+            await on_card(None)
+            told = 0
+        chunks, cards = [], CardStream()
+        async for chunk in await client.aio.models.generate_content_stream(
+            model=model, contents=contents, config=config
+        ):
+            chunks.append(chunk)
+            for card in cards.feed(chunk.text or ""):
+                await on_card(card)
+                told += 1
+        return _joined(chunks)
+
     contents = [types.Part.from_bytes(data=img.data, mime_type=img.media_type) for img in images]
     contents.append(text)
     config = types.GenerateContentConfig(
@@ -699,13 +786,13 @@ async def _gemini[T: BaseModel](
         try:
             config.thinking_config = thinking(model)
             try:
-                response = await client.aio.models.generate_content(model=model, contents=contents, config=config)
+                response = await generate(model)
             except errors.ClientError as e:
                 if not (config.thinking_config and e.code == 400 and "Thinking level" in str(e.message)):
                     raise
                 _NO_MINIMAL_THINKING.add(model)  # this model thinks a little at least: "low" from now on
                 config.thinking_config = thinking(model)
-                response = await client.aio.models.generate_content(model=model, contents=contents, config=config)
+                response = await generate(model)
             break
         except errors.ClientError as e:
             log.warning("Gemini %s : %s %s", model, e.code, e.message)
@@ -742,6 +829,17 @@ async def _gemini[T: BaseModel](
         return schema.model_validate_json(response.text)
     except ValueError as e:
         raise ExtractionError("llm.invalid_answer") from e
+
+
+def _joined(chunks: list):
+    """A streamed answer as one: its whole text, the last usage and candidate (where the
+    finish reason is), the first prompt feedback (where a block is said)."""
+    return SimpleNamespace(
+        text="".join(c.text or "" for c in chunks),
+        usage_metadata=next((c.usage_metadata for c in reversed(chunks) if c.usage_metadata), None),
+        candidates=next((c.candidates for c in reversed(chunks) if c.candidates), None),
+        prompt_feedback=next((c.prompt_feedback for c in chunks if c.prompt_feedback), None),
+    )
 
 
 def _anthropic_client(s: AIConfig):
