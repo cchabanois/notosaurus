@@ -190,7 +190,8 @@
       "writing": "Karten werden erstellt …",
       "revising": "Karten werden korrigiert …",
       "duration": "Das dauert meist 10 bis 30 Sekunden.",
-      "durationQuick": "Das dauert meist weniger als 10 Sekunden."
+      "durationQuick": "Das dauert meist weniger als 10 Sekunden.",
+      "cancelling": "Wird abgebrochen…"
     },
     "send": {
       "added": {
@@ -675,7 +676,8 @@
     "extract": {
       "no_input": "Füge ein Foto hinzu oder schreib Anweisungen.",
       "too_many": "Höchstens {max} Fotos.",
-      "bad_format": "Format nicht unterstützt: {format}"
+      "bad_format": "Format nicht unterstützt: {format}",
+      "cancelled": "Die Erstellung der Lektion wurde abgebrochen."
     },
     "export": {
       "no_cards": "Keine vollständige Karte zum Exportieren."

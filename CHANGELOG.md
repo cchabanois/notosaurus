@@ -11,6 +11,7 @@ Each pull request adds a line under **Unreleased**. See [Releasing](CONTRIBUTING
 
 - ⚡ Quick or 🎯 Careful, on the page that makes the cards: quick by default, 2 to 4 times faster (a few seconds) and cheaper; careful thinks longer, for a rich lesson (a diagram, maths). After a quick lesson, “Make again, carefully” redoes it in its place.
 - The cards show while they are being made: each one as soon as the AI has written it (the first after a few seconds).
+- “Cancel” while the cards are being made: the AI stops, no lesson is saved, the page comes back as it was (generated again: the old lesson stays).
 - The Android app can generate a lesson again in its place (“Regenerate”, “Make again, carefully”).
 
 ### Changed

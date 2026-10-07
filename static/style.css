@@ -490,6 +490,7 @@ h2 {
 .loading-card .coming { margin: .5rem 0 0; padding: 0; list-style: none; text-align: left; max-width: 18rem; }
 .loading-card .coming li { margin: .2rem 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; animation: arrive .3s ease-out; }
 .loading-card .coming span { color: var(--accent); }
+.loading-card > .btn { margin-top: .75rem; }
 @keyframes arrive { from { opacity: 0; transform: translateY(.3rem); } }
 .careful-again { display: flex; flex-wrap: wrap; align-items: center; gap: .5rem; margin: .5rem 0; }
 .flash .card-help { display: flex; gap: .3rem; align-items: flex-start; margin-top: .25rem; font-size: .85rem; }

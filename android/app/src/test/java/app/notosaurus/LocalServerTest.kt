@@ -20,6 +20,11 @@ import io.ktor.http.HttpStatusCode
 import io.ktor.http.contentType
 import io.ktor.server.testing.ApplicationTestBuilder
 import io.ktor.server.testing.testApplication
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.async
+import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.withContext
 import kotlinx.serialization.json.JsonArray
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.int
@@ -33,12 +38,14 @@ import org.junit.After
 import org.junit.Assert.assertArrayEquals
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
+import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.TemporaryFolder
 import java.io.File
+import java.util.concurrent.TimeUnit
 
 /**
  * The page's /api, answered on the phone: called as the page calls them (app.js),
@@ -224,6 +231,35 @@ class LocalServerTest {
         assertArrayEquals("photo 3".toByteArray(), client.get("/api/lessons/$id/photos/1") { page() }.bodyAsBytes())
         assertEquals(HttpStatusCode.NotFound, client.get("/api/lessons/$id/photos/2") { page() }.status)
         assertEquals(1, client.get("/api/lessons") { page() }.json().jsonArray.size)
+    }
+
+    @Test
+    fun cancelledWhileTheRelayWorks() = app { client ->
+        coroutineScope { cancelled(client) }
+    }
+
+    private suspend fun CoroutineScope.cancelled(client: HttpClient) {
+        relay.enqueue(MockResponse.Builder().headersDelay(10, TimeUnit.SECONDS).body("{}").build())
+        val made = async {
+            client.submitFormWithBinaryData(
+                "/api/extract",
+                formData {
+                    append("prompt", "FR → ES")
+                    append("job", "j1")
+                },
+            ) { page() }
+        }
+        // The relay at work (waited for elsewhere: this thread runs the app's server)
+        assertNotNull(withContext(Dispatchers.IO) { relay.takeRequest(5, TimeUnit.SECONDS) })
+        val cancel = client.post("/api/generations/j1/cancel") { page() }.json().jsonObject
+        assertTrue(cancel["cancelled"]!!.jsonPrimitive.content.toBoolean())
+
+        val answer = made.await()
+        assertEquals(HttpStatusCode.Conflict, answer.status)
+        assertEquals("extract.cancelled", answer.json().jsonObject["detail"]!!.jsonObject.string("code"))
+        assertEquals(0, client.get("/api/lessons") { page() }.json().jsonArray.size) // nothing saved
+        // Gone: nothing to cancel
+        assertFalse(client.post("/api/generations/j1/cancel") { page() }.json().jsonObject["cancelled"]!!.jsonPrimitive.content.toBoolean())
     }
 
     @Test
