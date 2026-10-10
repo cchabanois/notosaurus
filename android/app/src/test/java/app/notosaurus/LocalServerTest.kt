@@ -78,10 +78,16 @@ class LocalServerTest {
         override fun permitted() = installed && permitted
         override fun deckNames() = listOf("Default", "Histoire")
         var media = Media()
-        override fun send(deck: Deck, media: Media): Sent {
+        var options = Options()
+        val notes = mutableMapOf<String, MutableList<Long>>() // a lesson's notes in AnkiDroid
+        val deleted = mutableListOf<Long>()
+        override fun lessonNotes(lesson: String) = if (broken) null else notes[lesson].orEmpty()
+        override fun delete(notes: List<Long>) = notes.size.also { deleted += notes }
+        override fun send(deck: Deck, media: Media, options: Options): Sent {
             if (broken) error("no collection")
             sent += deck
             this.media = media
+            this.options = options
             sounds = media.audio
             pictures = media.pictures
             return Sent(added = deck.cards.size, duplicates = 0, skipped = 0, deck = deck.deck)
@@ -575,6 +581,32 @@ class LocalServerTest {
         relay.enqueue(MockResponse.Builder().setHeader("Content-Type", "audio/mpeg").body("mp3").build())
         client.get("/api/tts?text=hola&voice=es-ES-Chirp3-HD-Aoede") { page() }
         assertEquals("0.75", json.parseToJsonElement(relay.takeRequest().body!!.utf8()).jsonObject["rate"]!!.jsonPrimitive.content)
+    }
+
+    @Test
+    fun theLessonsOptionsSentAndItsNotesDeletedWithIt() = app { client ->
+        val lesson = client.extract()
+        val id = lesson.string("id")
+        client.post("/api/anki/send") {
+            page(); contentType(ContentType.Application.Json)
+            setBody("""{"deck": "D", "cards": ${lesson["cards"]}, "voice": "", "reverse": true, "typing": false, "dictation": true, "lesson_id": "$id"}""")
+        }
+        assertEquals(Options(reverse = true, dictation = true), anki.options)
+
+        // Its notes counted before deleting it; kept, then deleted with it
+        anki.notes[id] = mutableListOf(11L, 12L)
+        val found = client.get("/api/lessons/$id/anki-notes") { page() }.json().jsonObject
+        assertEquals(listOf("true", "2"), listOf("available", "count").map { found[it]!!.jsonPrimitive.content })
+        val gone = client.delete("/api/lessons/$id?anki=true") { page() }.json().jsonObject
+        assertEquals(2, gone["anki_deleted"]!!.jsonPrimitive.int)
+        assertEquals(listOf(11L, 12L), anki.deleted)
+        assertEquals(JsonArray(emptyList()), client.get("/api/lessons") { page() }.json())
+
+        // Without ?anki=true: the lesson alone
+        val other = client.extract().string("id")
+        anki.notes[other] = mutableListOf(13L)
+        assertEquals(0, client.delete("/api/lessons/$other") { page() }.json().jsonObject["anki_deleted"]!!.jsonPrimitive.int)
+        assertEquals(listOf(11L, 12L), anki.deleted)
     }
 
     @Test
