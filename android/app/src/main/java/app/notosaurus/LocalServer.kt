@@ -362,9 +362,29 @@ class LocalServer(
         api("GET", "/api/lessons") { JsonArray(lessons.list().map(lessons::summary)) }
         api("GET", "/api/lessons/{id}") { lesson() }
         api("PUT", "/api/lessons/{id}") { lessons.update(param("id"), body()) ?: notFound() }
+        // Deleting a lesson: its notes in AnkiDroid counted first; deleted too when asked (?anki=true)
+        api("GET", "/api/lessons/{id}/anki-notes") {
+            val found = withContext(Dispatchers.IO) { runCatching { anki.lessonNotes(lesson().string("id")) }.getOrNull() }
+            buildJsonObject {
+                put("available", found != null)
+                put("count", found?.size ?: 0)
+            }
+        }
         api("DELETE", "/api/lessons/{id}") {
-            lessons.delete(param("id"))
-            buildJsonObject { put("deleted", true) }
+            val id = lesson().string("id")
+            var inAnki = 0
+            if (call.request.queryParameters["anki"] == "true") {
+                inAnki = withContext(Dispatchers.IO) {
+                    val notes = runCatching { anki.lessonNotes(id) }.getOrNull() ?: throw BadRequest("anki.android_failed")
+                    anki.delete(notes)
+                }
+            }
+            lessons.delete(id)
+            buildJsonObject {
+                put("deleted", true)
+                put("anki_deleted", inAnki)
+                put("synced", false)
+            }
         }
         get("/api/lessons/{id}/photos/{n}") {
             if (!allowed()) return@get
@@ -548,14 +568,16 @@ class LocalServer(
                 ?.jsonArray?.associate { it.jsonObject["page"]!!.jsonPrimitive.content.toInt() to it.jsonObject["box"]!!.jsonArray.map { v -> v.jsonPrimitive.content.toDouble() } }
                 .orEmpty()
             val media = Media(sounds, pictures, photos, lessonId, frames)
+            fun on(option: String) = req[option]?.jsonPrimitive?.content == "true"
+            val options = Options(reverse = on("reverse"), typing = on("typing"), dictation = on("dictation"))
             val sent = try {
-                withContext(Dispatchers.IO) { anki.send(deck, media) }
+                withContext(Dispatchers.IO) { anki.send(deck, media, options) }
             } catch (e: Exception) { // e.g. AnkiDroid never opened: no collection yet
                 throw BadRequest("anki.android_failed", buildJsonObject { put("detail", e.message ?: e.javaClass.simpleName) })
             }
             buildJsonObject {
                 put("added", sent.added)
-                put("updated", 0) // to do: update the notes sent before (stable ids)
+                put("updated", sent.updated) // the lesson's notes sent before, changed since
                 put("synced", false)
                 if (failures > 0) put("audio_failures", failures) // the page says some have no sound
             }
