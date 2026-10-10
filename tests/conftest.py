@@ -44,6 +44,10 @@ def anki_unreachable(request):
 def client(tmp_path, monkeypatch):
     monkeypatch.setenv("NOTOSAURUS_DATA", str(tmp_path / "data"))
     monkeypatch.setenv("NOTOSAURUS_LLM", "fake")
+    # No real AI service, whatever the computer's .env holds: a test that would reach one
+    # fails here as on the CI, instead of passing (and paying) on a developer's computer
+    for key in ("GEMINI_API_KEY", "ANTHROPIC_API_KEY", "OPENAI_API_KEY", "OPENROUTER_API_KEY"):
+        monkeypatch.delenv(key, raising=False)
     monkeypatch.setattr(tts, "_synthesize", fake_synthesize)
     # Never reach a real Anki from the tests: AnkiConnect is "unreachable" unless a test fakes it.
     monkeypatch.setattr(ankiconnect, "_transport", httpx.MockTransport(anki_unreachable))

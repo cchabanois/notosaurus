@@ -4,7 +4,7 @@ import apkg
 import pytest
 
 from app import lessons
-from notosaurus_core import figures
+from notosaurus_core import figures, pictures
 
 TRAPPED = """<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 300" width="9999" onload="alert(1)">
 <script>alert(1)</script><rect width="400" height="300" fill="white"/>
@@ -136,7 +136,17 @@ def test_draw_decides_a_figure_or_a_picture(client, monkeypatch):
             return PicturePlan(kind="figure", description="Deux ensembles A et B, leur réunion hachurée")
         return PicturePlan(kind="picture", description="a red apple", search="red apple")
 
+    async def draw(s, subject):  # the image model: never a real one here (no key on the CI, a cost elsewhere)
+        import io
+
+        from PIL import Image
+
+        out = io.BytesIO()
+        Image.new("RGB", (64, 64), "red").save(out, "PNG")
+        return out.getvalue()
+
     monkeypatch.setattr(llm, "plan_picture", plan)
+    monkeypatch.setattr(pictures, "draw", draw)
     lesson = client.post("/api/extract", data={"prompt": "FR → ES"}).json()
     cards = [{**lesson["cards"][0], "front": "La réunion de A et B ?", "back": r"\(A \cup B\)"}, lesson["cards"][1]]
     client.put(f"/api/lessons/{lesson['id']}", json={**lesson, "cards": cards})
