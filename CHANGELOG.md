@@ -65,6 +65,7 @@ Each pull request adds a line under **Unreleased**. See [Releasing](CONTRIBUTING
 
 ### Fixed
 
+- A PDF said “unreadable” where the CDN serving pdf.js was blocked (an ad blocker, a privacy setting): pdf.js now comes with Notosaurus, and PDFs open offline too.
 - 🎤 vanished as soon as a lesson was shown, and a lesson's saving could fail until one was: the 🎤's state and the lesson's dictation option had the same name.
 - The message after adding to Anki keeps its width on a phone: its buttons go under it (it was squeezed into a narrow column).
 - Without AnkiDroid, the coming Android app no longer opens Google Play by surprise: its message says why, with an “Install AnkiDroid” button.

@@ -219,6 +219,10 @@ class LocalServerTest {
         assertEquals(HttpStatusCode.OK, client.get("/i18n/fr.json").status)
         assertEquals(HttpStatusCode.NotFound, client.get("/../build.gradle.kts").status)
         assertEquals(HttpStatusCode.NotFound, client.get("/nope.js").status)
+        // pdf.js, shipped with the page: a module, so served as JavaScript (or the WebView refuses it)
+        val pdfjs = client.get("/vendor/pdfjs/pdf.min.mjs")
+        assertEquals(HttpStatusCode.OK, pdfjs.status)
+        assertTrue(pdfjs.headers[HttpHeaders.ContentType]!!, "javascript" in pdfjs.headers[HttpHeaders.ContentType]!!)
     }
 
     @Test
