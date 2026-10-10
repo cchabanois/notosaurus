@@ -262,11 +262,11 @@ const cardsPart = {
     return `/api/lessons/${this.lessonId}/pictures/${card.picture}`;
   },
 
-  // A card's picture panel: what to draw (the AI's subject, else the answer), redraw,
-  // the user's own photo, or no picture.
+  // A card's picture panel: what it should show (its own description; empty when it has
+  // none: the AI then decides from the card), draw, find, the user's own photo, or none.
   togglePicturePanel(card) {
     card._panel = !card._panel;
-    if (card._panel) card._subject = card.figure || card.picture_prompt || card.back;
+    if (card._panel) card._subject = card.figure || card.picture_prompt || "";
   },
 
   async pictureAction(card, request) {
@@ -279,6 +279,7 @@ const cardsPart = {
       card.picture = res.card.picture;
       card.picture_source = res.card.picture_source ?? null;
       card.picture_prompt = res.card.picture_prompt;
+      card.picture_search = res.card.picture_search ?? "";
       card.figure = res.card.figure;
       if (!card.picture) card._panel = false;
     } catch (e) {
@@ -289,13 +290,16 @@ const cardsPart = {
     }
   },
 
-  redrawPicture(card) {
-    return this.pictureAction(card, {
+  // "🎨 Draw": what was written (any language), or the card itself when nothing was; the
+  // field then shows the description the AI wrote (a figure's, or the picture's)
+  async redrawPicture(card) {
+    await this.pictureAction(card, {
       path: "/draw",
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ subject: card._subject ?? null }),
     });
+    if (card.picture) card._subject = card.figure || card.picture_prompt;
   },
 
   async uploadPicture(card, event) {
@@ -309,8 +313,9 @@ const cardsPart = {
 
   // "🔎 Find a picture": free pictures of the subject to choose from (previews come as data)
   async searchPictures(card) {
-    const subject = card._subject?.trim();
-    if (!subject || card._searching) return;
+    if (card._searching) return;
+    const context = `${(card.front ?? "").trim()} → ${(card.back ?? "").trim()}`;
+    const subject = (card._subject?.trim() || context).slice(0, 200);  // nothing written: the card itself
     card._searching = true;
     card._found = null;
     this.error = "";
@@ -318,7 +323,7 @@ const cardsPart = {
       const res = await api("/api/pictures/search", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ subject }),
+        body: JSON.stringify({ subject, context }),
       });
       card._found = (await res.json()).results;
     } catch (e) {

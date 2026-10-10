@@ -13,7 +13,7 @@ from .models import AiCall
 
 
 class Entry(AiCall):
-    lesson_id: str | None = None  # None: a generation that failed (no lesson), or instructions tidied up
+    lesson_id: str | None = None  # None: a generation that failed (no lesson), or a call for no lesson
     deck: str = ""  # the lesson's name at the time
 
 
@@ -75,7 +75,7 @@ def totals() -> Totals:
     return Totals(
         total=round(sum(e.cost for e in known), 6),
         deleted=round(sum(e.cost for e in known if e.lesson_id and e.lesson_id not in existing), 6),
-        failed=round(sum(e.cost for e in known if e.lesson_id is None and e.kind != "rephrase"), 6),
+        failed=round(sum(e.cost for e in known if e.lesson_id is None and e.kind == "extract"), 6),
         estimated=any(not e.exact and e.cost for e in known),
         unknown=sum(1 for e in entries if e.cost is None),
     )

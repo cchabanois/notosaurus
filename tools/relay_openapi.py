@@ -190,6 +190,10 @@ def build() -> dict:
     def picture(request: api.PictureRequest, x_notosaurus_version: str = client):
         """A picture for a card (pictures.picture)."""
 
+    @app.post(f"{api.PREFIX}/plan-picture", response_model=api.PlanPictureResponse, responses=errors(*COMMON))
+    def plan_picture(request: api.PlanPictureRequest, x_notosaurus_version: str = client):
+        """What a card's picture should be: a figure or a picture, described (llm.plan_picture)."""
+
     @app.post(f"{api.PREFIX}/pictures/search", response_model=api.PictureSearchResponse, responses=errors(*COMMON))
     def search_pictures(request: api.PictureSearchRequest, x_notosaurus_version: str = client):
         """Free pictures of a subject to choose from (stock.search). Free."""

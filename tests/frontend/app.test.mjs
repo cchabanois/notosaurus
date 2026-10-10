@@ -418,7 +418,7 @@ test("find a picture: the choices, their sources, the one chosen", async () => {
   });
   const c = page.component();
   c.lessonId = "L1";
-  const card = { id: "c1", _subject: " a castle " };
+  const card = { id: "c1", front: "Un château ?", back: "el castillo", _subject: " un château fort " };
   await c.searchPictures(card);
   assert.equal(card._found.length, 3);
   assert.equal(c.foundSources(card), "Wikimedia Commons, Pixabay");
@@ -426,7 +426,7 @@ test("find a picture: the choices, their sources, the one chosen", async () => {
   assert.equal(card.picture, "picture-x.jpg");
   assert.equal(card._found, null);
   assert.deepEqual(sent, [
-    ["/api/pictures/search", '{"subject":"a castle"}'],
+    ["/api/pictures/search", '{"subject":"un château fort","context":"Un château ? → el castillo"}'],
     ["/api/lessons/L1/cards/c1/picture/found", '{"source":"pixabay","id":"42"}'],
   ]);
 });

@@ -301,8 +301,8 @@
         "other": "Não foi possível desenhar {count} imagens: esses cartões ficam sem."
       },
       "panel": "Imagem",
-      "subject": "O que buscar ou desenhar (em inglês)",
-      "subjectPlaceholder": "por ex. a red apple",
+      "subject": "O que a imagem deve mostrar",
+      "subjectPlaceholder": "Deixe vazio: a IA decide pelo cartão. Ex.: dois conjuntos que se cruzam",
       "draw": "🎨 Desenhar",
       "redraw": "🎨 Desenhar de novo",
       "photo": "📷 Minha foto",

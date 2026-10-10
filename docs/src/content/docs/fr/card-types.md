@@ -103,8 +103,11 @@ pas). Cette section choisit aussi le modèle d'images, ou **Pas d'images** :
 
 Le bouton **🖼️** d'une carte ouvre son panneau **Image** :
 
-- **Ce qu'il faut dessiner (en anglais)** : change la description, puis **🎨 Refaire**
-  (de moins d'un centime à quelques centimes de dollar par dessin, selon le modèle) ;
+- **Ce que l'image doit montrer**, dans ta langue : laisse vide et **🎨 Dessiner** laisse l'IA
+  choisir d'après la carte une figure exacte (un schéma, de la géométrie) ou une image dessinée ;
+  ou écris ce que tu veux (« deux ensembles qui se chevauchent, leur réunion hachurée », « une
+  pomme rouge »). Un dessin coûte de moins d'un centime à quelques centimes de dollar, selon le
+  modèle ;
 - **📷 Ma photo** : mets ta propre photo à la place, gratuitement ;
 - **✕ Pas d'image** : retire-la ;
 - **Au verso (avec la réponse)** : quand l'image donne la réponse.

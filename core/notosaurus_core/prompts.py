@@ -377,3 +377,33 @@ empty figure when none truly helps the card (it is then drawn without one)."""
 def _figures_text(cards: list[str]) -> str:
     listed = "\n".join(f"{n}. {card}" for n, card in enumerate(cards))
     return f"The cards (front → back), by number:\n{listed}"
+
+
+PLAN_RULES = """\
+A pupil's flashcard needs a picture or a figure. From the card and what the user wrote \
+for it (in any language; when empty, from the card alone), decide what it should be \
+and describe it. A "figure" for something exact that a clean drawing shows (geometry, \
+a diagram, sets, a graph of a function, a table, a labelled drawing): its description \
+in the cards' language, the shapes, the shaded areas, every label with its exact text. \
+A "picture" for a thing, an animal, a place, a person or a scene: what to draw, in \
+English, one concrete subject a child recognises at once; and, for a real, specific \
+thing photos or paintings show, a short English search for a free picture of it. \
+Formulas in LaTeX (\\( … \\)) stand for the maths they write. Follow what the user \
+wrote; only describe, never answer or comment. For a request that isn't for a pupil's \
+lesson, an empty description."""
+
+SEARCH_WORDS_RULES = """\
+Turn what a user wants a picture of (in any language, maybe with formulas in LaTeX) into \
+a few English words to search free pictures (photos, paintings, diagrams) of it, the \
+way a picture library is searched: the thing itself, no sentence. Only words, never an \
+answer or a comment."""
+
+
+def _plan_text(front: str, back: str, asked: str, language: str) -> str:
+    wrote = asked.strip() or "(nothing: decide from the card)"
+    return f"The card, in {language}: {front.strip()} → {back.strip()}\nWhat the user wrote for its picture: {wrote}"
+
+
+def _search_words_text(asked: str, context: str) -> str:
+    card = f"\nThe card it is for: {context.strip()}" if context.strip() else ""
+    return f"What to find a picture of: {asked.strip()}{card}"

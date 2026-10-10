@@ -301,8 +301,8 @@
         "other": "Non è stato possibile disegnare {count} immagini: quelle carte non ne hanno."
       },
       "panel": "Immagine",
-      "subject": "Cosa cercare o disegnare (in inglese)",
-      "subjectPlaceholder": "per es. a red apple",
+      "subject": "Cosa deve mostrare l'immagine",
+      "subjectPlaceholder": "Lascia vuoto: l'IA decide in base alla carta. Es.: due insiemi che si intersecano",
       "draw": "🎨 Disegna",
       "redraw": "🎨 Ridisegna",
       "photo": "📷 La mia foto",

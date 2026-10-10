@@ -415,7 +415,8 @@
                 <button class="icon-btn muted" @click="card._explain.open = false" :aria-label="$t('common.close')">✕</button>
               </div>
             </div>
-            <!-- The card's picture: what to draw, redraw, own photo, none -->
+            <!-- The card's picture: what to draw, redraw, own photo, none. (:disabled always
+                 a boolean: Alpine leaves a button disabled when its value is undefined) -->
             <div class="picture-panel" x-show="card._panel">
               <!-- Where the picture comes from (a free one: its page, to check it) -->
               <p class="picture-source" x-show="card.picture && pictureSourceText(card)">
@@ -435,25 +436,24 @@
               </label>
               <div class="picture-actions">
                 <button type="button" class="btn soft" x-show="!card.figure" @click="searchPictures(card)"
-                        :disabled="card._drawing || card._searching || !card._subject?.trim()"
+                        :disabled="Boolean(card._drawing || card._searching)"
                         x-text="card._searching ? $t('app.pictures.searching') : $t('app.pictures.search')"></button>
-                <button type="button" class="btn soft" @click="redrawPicture(card)" :disabled="card._drawing || !card._subject?.trim()"
+                <button type="button" class="btn soft" @click="redrawPicture(card)" :disabled="Boolean(card._drawing)"
                         x-text="card.picture ? $t('app.pictures.redraw') : $t('app.pictures.draw')"></button>
                 <label class="btn soft" :class="{ disabled: card._drawing }">
                   <span x-text="$t('app.pictures.photo')"></span>
-                  <input type="file" accept="image/*" hidden :disabled="card._drawing" @change="uploadPicture(card, $event)">
+                  <input type="file" accept="image/*" hidden :disabled="Boolean(card._drawing)" @change="uploadPicture(card, $event)">
                 </label>
                 <button type="button" class="btn danger-soft" x-show="card.picture" @click="removePicture(card)"
-                        :disabled="card._drawing" x-text="$t('app.pictures.remove')"></button>
+                        :disabled="Boolean(card._drawing)" x-text="$t('app.pictures.remove')"></button>
               </div>
               <!-- The pictures found: tap one, it becomes the card's -->
               <template x-if="card._found">
                 <div class="found">
                   <p class="hint" x-show="!card._found.length" x-text="$t('app.pictures.none')"></p>
-                  <!-- (=== true: an undefined _drawing, in this loop, left the buttons disabled) -->
                   <div class="found-grid" x-show="card._found.length">
                     <template x-for="f in card._found" :key="f.source + f.id">
-                      <button type="button" class="found-pick" @click="chooseFound(card, f)" :disabled="card._drawing === true"
+                      <button type="button" class="found-pick" @click="chooseFound(card, f)" :disabled="Boolean(card._drawing)"
                               :title="f.title + ' · ' + f.licence" :aria-label="f.title + ' · ' + f.licence">
                         <img :src="f.preview" alt="">
                       </button>
