@@ -77,11 +77,13 @@ class LocalServerTest {
         override fun installed() = installed
         override fun permitted() = installed && permitted
         override fun deckNames() = listOf("Default", "Histoire")
-        override fun send(deck: Deck, audio: Map<String, File>, pictures: Map<String, File>): Sent {
+        var media = Media()
+        override fun send(deck: Deck, media: Media): Sent {
             if (broken) error("no collection")
             sent += deck
-            sounds = audio
-            this.pictures = pictures
+            this.media = media
+            sounds = media.audio
+            pictures = media.pictures
             return Sent(added = deck.cards.size, duplicates = 0, skipped = 0, deck = deck.deck)
         }
     }
@@ -488,6 +490,25 @@ class LocalServerTest {
         val none = client.delete("/api/lessons/$id/cards/$apple/picture") { page() }.json().jsonObject["card"]!!.jsonObject
         assertEquals(listOf("", "", ""), listOf("picture", "picture_prompt", "figure").map { none.string(it) })
         assertEquals(HttpStatusCode.NotFound, client.get("/api/lessons/$id/pictures/${own.string("picture")}") { page() }.status)
+    }
+
+    @Test
+    fun diagramsAndGapsIntoAnkiDroid() = app { client ->
+        val lesson = client.extract() // two photos
+        val id = lesson.string("id")
+        val cards = """[
+            {"front": "Qu'est-ce que (1) ?", "back": "la bouche", "mask": {"page": 2, "n": 1, "box": [0.1, 0.1, 0.2, 0.15]}},
+            {"front": "Qu'est-ce que (2) ?", "back": "l'estomac", "mask": {"page": 2, "n": 2, "box": [0.5, 0.5, 0.6, 0.55]}},
+            {"front": "La Révolution commence en {{c1::1789}}.", "back": ""}]"""
+        client.post("/api/anki/send") {
+            page(); contentType(ContentType.Application.Json)
+            setBody("""{"deck": "SVT", "cards": $cards, "voice": "", "lesson_id": "$id"}""")
+        }
+        // Every card sent, with the photo the labels are on
+        assertEquals(3, anki.sent.single().cards.size)
+        assertEquals(setOf(2), anki.media.photos.keys)
+        assertArrayEquals("photo 2".toByteArray(), anki.media.photos[2]!!.readBytes())
+        assertEquals(id, anki.media.lesson)
     }
 
     @Test

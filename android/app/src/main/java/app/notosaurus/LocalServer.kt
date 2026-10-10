@@ -537,10 +537,14 @@ class LocalServer(
             })
             readyAnki()
             val (sounds, failures) = sounds(deck, req.string("voice"))
-            val folder = lessons.images(req.string("lesson_id"))
+            val lessonId = req.string("lesson_id")
+            val folder = lessons.images(lessonId)
             val pictures = deck.cards.mapNotNull { c -> folder?.resolve(c.picture)?.takeIf { c.picture.isNotEmpty() && it.isFile }?.let { c.picture to it } }.toMap()
+            // The diagrams: the photos their labels are on
+            val photos = deck.cards.mapNotNull { it.mask?.page }.distinct().mapNotNull { n -> lessons.photo(lessonId, n)?.let { n to it } }.toMap()
+            val media = Media(sounds, pictures, photos, lessonId)
             val sent = try {
-                withContext(Dispatchers.IO) { anki.send(deck, sounds, pictures) }
+                withContext(Dispatchers.IO) { anki.send(deck, media) }
             } catch (e: Exception) { // e.g. AnkiDroid never opened: no collection yet
                 throw BadRequest("anki.android_failed", buildJsonObject { put("detail", e.message ?: e.javaClass.simpleName) })
             }
