@@ -31,6 +31,9 @@ class Lessons(private val root: File) {
     fun get(id: String): JsonObject? =
         folder(id)?.resolve("lesson.json")?.takeIf { it.isFile }?.let { json.parseToJsonElement(it.readText()).jsonObject }
 
+    /** The lesson's pictures (drawn, or the user's photos), as the computer: images/. */
+    fun images(id: String): File? = folder(id)?.resolve("images")
+
     fun photo(id: String, n: Int): File? = folder(id)?.resolve("page-$n.jpg")?.takeIf { it.isFile }
 
     fun photos(id: String): List<ByteArray> = (1..(get(id)?.get("photo_count")?.jsonPrimitive?.int ?: 0))

@@ -16,6 +16,7 @@ Each pull request adds a line under **Unreleased**. See [Releasing](CONTRIBUTING
 - For developers: the relay's `/v1/extract` can answer as the AI writes (`application/x-ndjson`, `relay_api.ExtractLine`).
 - The coming Android app reads the backs aloud with natural voices (Google Chirp 3 HD, through the relay): 🔊 in the review, and the sound on the cards sent to AnkiDroid. A lesson in a language being learned gets its voice by itself.
 - For developers: the relay's `/v1/speak` and `/v1/voices`.
+- The coming Android app draws the cards' pictures and figures (through the relay), takes your own photo or none, and sends the pictures to AnkiDroid (“Draw” said “Not Found”).
 - The Android app can generate a lesson again in its place (“Regenerate”, “Make again, carefully”).
 
 ### Changed
