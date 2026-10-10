@@ -8,6 +8,18 @@ import org.junit.Test
 /** What doesn't need AnkiDroid: the diagrams' masks, as the computer writes them. */
 class AnkiTest {
     @Test
+    fun theFieldsAsTheComputersFields() {
+        assertEquals("a &lt; b &amp; c<br>d", Anki.html(" a < b & c\nd "))
+        assertEquals("nom féminin", Anki.info(Card("q", "r", info = "nom féminin")))
+        assertEquals(
+            """nom<div style="margin-top:8px;font-style:italic">💡 Vient du latin &quot;mater&quot;.</div>""",
+            Anki.info(Card("q", "r", info = "nom", funFact = "Vient du latin \"mater\".")),
+        )
+        assertEquals(" à taper + dictée (Android)", Anki.variant(typing = true, dictation = true))
+        assertEquals("notosaurus::2026-10-10-espagnol", Anki.lessonTag("2026-10-10-espagnol"))
+    }
+
+    @Test
     fun multipleChoicesInAFixedOrder() {
         val card = Card("La Révolution commence en ?", "1789", choices = listOf("1715", "1799", "1804"))
         with(Anki) { assertTrue(card.isChoice()) }
