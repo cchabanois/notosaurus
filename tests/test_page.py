@@ -896,3 +896,43 @@ def test_find_a_free_picture(page):
         first.screenshot(path=f"{shots}/found.png")
     picks.nth(1).click()
     sync_api.expect(picks).to_have_count(0)  # chosen: the grid goes
+
+
+def drop(page, target, files: list[tuple[str, str, bytes]]) -> None:
+    """Files dragged from the computer and let go on `target` (a locator), as a browser does it."""
+    payload = [{"name": n, "type": t, "data": base64.b64encode(b).decode()} for n, t, b in files]
+    target.evaluate(
+        """(el, files) => {
+            const data = new DataTransfer();
+            for (const f of files) {
+                const bytes = Uint8Array.from(atob(f.data), (c) => c.charCodeAt(0));
+                data.items.add(new File([bytes], f.name, { type: f.type }));
+            }
+            for (const type of ["dragenter", "dragover", "drop"]) {
+                el.dispatchEvent(new DragEvent(type, { dataTransfer: data, bubbles: true, cancelable: true }));
+            }
+        }""",
+        payload,
+    )
+
+
+def test_photos_and_pdfs_dropped_on_their_tiles(page):
+    """The computer: an image let go on “Gallery”, a PDF on “PDF”: added as if picked."""
+    page.goto("/")
+    gallery = page.locator(".add-tile", has_text="Galerie")
+    drop(page, gallery, [("page-1.png", "image/png", png("red")), ("page-2.png", "image/png", png("blue"))])
+    sync_api.expect(page.locator(".thumb img")).to_have_count(2)
+    drop(page, page.locator(".add-tile", has_text="PDF"), [("cours.pdf", "application/pdf", pdf(2))])
+    sync_api.expect(page.locator(".thumb img")).to_have_count(4)  # its two pages
+
+    # Let go anywhere else: nothing added, and the page stays (not opened by the browser)
+    prevented = page.locator("textarea[x-ref=promptText]").evaluate(
+        """(el) => {
+            const data = new DataTransfer();
+            data.items.add(new File(["x"], "x.png", { type: "image/png" }));
+            const event = new DragEvent("drop", { dataTransfer: data, bubbles: true, cancelable: true });
+            el.dispatchEvent(event);
+            return event.defaultPrevented;
+        }"""
+    )
+    assert prevented and page.locator(".thumb img").count() == 4

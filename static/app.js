@@ -129,6 +129,7 @@ document.addEventListener("alpine:init", () => {
     maxPhotos: 10,       // pages per lesson (the server's limit, from /api/config)
     configured: true,    // an AI service with its key: until then, the setup assistant is offered
     pdfBusy: false,      // a PDF's pages being drawn
+    dropTile: "",        // "gallery" or "pdf": a file dragged over it (the computer)
     pdf: { open: false, name: "", free: 0, pages: [] },  // its page picker
     lessonQuery: "",
     // "✨ Tidy up" the instructions: the text before kept for "↩", while the tidied one is unchanged

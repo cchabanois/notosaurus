@@ -25,7 +25,8 @@ Gemini est un bon choix, moins cher.
 ## Plusieurs pages
 
 Une leçon peut avoir **jusqu'à 10 pages**. Après la première photo, **Page suivante** en
-ajoute une autre ; **Galerie** choisit des photos déjà prises (JPEG, PNG, WebP ou GIF).
+ajoute une autre ; **Galerie** choisit des photos déjà prises (JPEG, PNG, WebP ou GIF). Sur un ordinateur, tu peux
+aussi glisser des photos ou des PDF depuis un dossier et les déposer sur **Galerie** ou **PDF**.
 
 Sur chaque photo :
 
