@@ -792,3 +792,33 @@ def test_the_setup_assistant(page, monkeypatch):
     page.get_by_role("link", name="Ouvrir Notosaurus").click()
     sync_api.expect(page.get_by_role("heading", name="Photos de la leçon")).to_be_visible()
     sync_api.expect(page.locator(".setup-banner")).to_be_hidden()  # configured now
+
+
+def test_dictation_in_the_app(page):
+    """The Android app's page (dictation): 🎤 in the instructions' corner; once to listen,
+    again to stop, the text said then in the field. On the computer: no 🎤."""
+    page.goto("/")
+    mic = page.get_by_role("button", name="Dicter").first
+    sync_api.expect(page.get_by_role("textbox", name="Texte de la consigne")).to_be_visible()
+    sync_api.expect(mic).to_be_hidden()
+
+    stopped = []
+    page.route("**/api/config", lambda route: route.fulfill(json={**route.fetch().json(), "dictation": True}))
+    page.route("**/api/dictation/start", lambda route: route.fulfill(json={"listening": True}))
+    page.route(
+        "**/api/dictation/stop",
+        lambda route: (
+            stopped.append(route.request.post_data_json),
+            route.fulfill(json={"text": "Douze cartes sur el abuelo et la abuela."}),
+        ),
+    )
+    page.goto("/")
+    page.get_by_role("button", name="Dicter").first.click()
+    sync_api.expect(page.get_by_text("J'écoute… appuie sur ⏹ quand tu as fini.").first).to_be_visible()
+    if shots := os.environ.get("NOTOSAURUS_SHOTS"):  # to look at it: a folder for the screenshot
+        page.screenshot(path=f"{shots}/dictation.png")
+    page.get_by_role("button", name="Arrêter et écrire le texte").click()
+    field = page.get_by_role("textbox", name="Texte de la consigne")
+    sync_api.expect(field).to_have_value(re.compile("Douze cartes sur el abuelo et la abuela.$"))
+    assert stopped == [{"kind": "prompt"}]
+    sync_api.expect(page.get_by_role("button", name="Dicter").first).to_be_enabled()

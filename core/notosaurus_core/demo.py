@@ -164,3 +164,8 @@ def _fake_revision(deck: Deck, instruction: str, texts: dict[str, str]) -> Revis
         return Revision(deck=deck.deck, cards=deck.cards[:-1], summary=texts["removed"])
     added = Card(front=texts["addedFront"], back=instruction[:60], subdeck="Demo")
     return Revision(deck=deck.deck, cards=[*deck.cards, added], summary=texts["added"])
+
+
+def _fake_dictation(kind: str) -> str:
+    """Demo mode: a canned dictation."""
+    return f"(démo, {kind}) Fais dix cartes sur el abuelo et la abuela."

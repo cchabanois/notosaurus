@@ -2,6 +2,8 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
 
     <uses-permission android:name="android.permission.INTERNET" />
+    <!-- The 🎤 of the instructions and the correction: asked the first time it's used -->
+    <uses-permission android:name="android.permission.RECORD_AUDIO" />
 
     <!-- AnkiDroid: its content provider, visible to us (Android 11+) -->
     <queries>

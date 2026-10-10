@@ -44,6 +44,7 @@ def parameters(function, *but: str) -> set[str]:
         (api.ExplainRequest, llm.explain_card, ()),
         (api.FigureRequest, llm.draw_figure, ()),
         (api.PictureRequest, pictures.picture, ()),
+        (api.TranscribeRequest, llm.transcribe, ("audio",)),  # the multipart's "audio"
     ],
 )
 def test_each_request_is_its_core_function(request_model, function, not_sent):
@@ -78,10 +79,10 @@ def test_limits():
 
 def test_openapi_description():
     spec = json.loads((ROOT / "core" / "relay-api-v1.json").read_text(encoding="utf-8"))
-    assert set(spec["paths"]) == {
-        f"/v1/{route}" for route in ("extract", "revise", "explain", "figure", "picture", "speak", "voices", "account")
-    }
-    for route, request in (("extract", "ExtractRequest"), ("revise", "ReviseRequest")):
+    routes = ("extract", "revise", "explain", "figure", "picture", "speak", "transcribe", "voices", "account")
+    assert set(spec["paths"]) == {f"/v1/{route}" for route in routes}
+    multipart = {"extract": "ExtractRequest", "revise": "ReviseRequest", "transcribe": "TranscribeRequest"}
+    for route, request in multipart.items():
         body = spec["paths"][f"/v1/{route}"]["post"]["requestBody"]["content"]["multipart/form-data"]
         assert body["schema"]["properties"]["request"]["$ref"] == f"#/components/schemas/{request}"
         assert body["encoding"]["request"]["contentType"] == "application/json"

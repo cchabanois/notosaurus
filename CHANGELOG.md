@@ -24,6 +24,8 @@ Each pull request adds a line under **Unreleased**. See [Releasing](CONTRIBUTING
 - The coming Android app sends multiple-choice and true/false cards to AnkiDroid with their options (the right one marked on the answer): only the question and answer went.
 - The coming Android app's cards in AnkiDroid are the computer's: the helps on the back and the “Did you know?”, reversed cards, typed answers and dictation; a lesson sent again updates its notes; deleting a lesson can delete its notes in AnkiDroid too.
 - The Android app can generate a lesson again in its place (“Regenerate”, “Make again, carefully”).
+- 🎤 The coming Android app takes the instructions and the AI correction by voice: what you say is written down as you meant it (hesitations out, “ten, no, twelve” → twelve, a lesson's foreign words spelled right), then you read it over.
+- For developers: the relay's `/v1/transcribe`.
 
 ### Changed
 

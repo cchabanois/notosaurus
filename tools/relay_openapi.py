@@ -44,6 +44,7 @@ COMMON = (
     "relay.unavailable",
 )
 PHOTOS = (*COMMON, "relay.too_large", "relay.bad_image")
+AUDIO = (*COMMON, "relay.too_large", "relay.bad_audio")
 
 
 def multipart(request: type) -> dict:
@@ -70,6 +71,36 @@ def multipart(request: type) -> dict:
                     "encoding": {
                         "request": {"contentType": "application/json"},
                         "images": {"contentType": ", ".join(api.IMAGE_TYPES)},
+                    },
+                }
+            },
+        }
+    }
+
+
+def audio(request: type) -> dict:
+    """The body of /v1/transcribe: the JSON request, then the recording."""
+    return {
+        "requestBody": {
+            "required": True,
+            "content": {
+                "multipart/form-data": {
+                    "schema": {
+                        "type": "object",
+                        "required": ["request", "audio"],
+                        "properties": {
+                            "request": {"$ref": REF.format(model=request.__name__)},
+                            "audio": {
+                                "type": "string",
+                                "format": "binary",
+                                "description": f"The recording: {', '.join(api.AUDIO_TYPES)}, "
+                                f"at most {api.MAX_AUDIO_BYTES // (1024 * 1024)} MB.",
+                            },
+                        },
+                    },
+                    "encoding": {
+                        "request": {"contentType": "application/json"},
+                        "audio": {"contentType": ", ".join(api.AUDIO_TYPES)},
                     },
                 }
             },
@@ -119,6 +150,15 @@ def build() -> dict:
     @app.post(f"{api.PREFIX}/figure", response_model=api.FigureResponse, responses=errors(*COMMON))
     def figure(request: api.FigureRequest, x_notosaurus_version: str = client):
         """An exact figure as SVG (llm.draw_figure)."""
+
+    @app.post(
+        f"{api.PREFIX}/transcribe",
+        response_model=api.TranscribeResponse,
+        responses=errors(*AUDIO),
+        openapi_extra=audio(api.TranscribeRequest),
+    )
+    def transcribe(x_notosaurus_version: str = client):
+        """A dictation as the text its speaker meant to type (llm.transcribe)."""
 
     credit_headers = {
         api.CREDITS_HEADER: {"description": "Credits this call used.", "schema": {"type": "integer"}},
@@ -183,7 +223,12 @@ def build() -> dict:
         schema["components"]["schemas"].pop(name, None)
     # The multipart requests, which FastAPI doesn't see (they are in openapi_extra)
     _, found = models_json_schema(
-        [(api.ExtractRequest, "validation"), (api.ReviseRequest, "validation"), (api.ExtractLine, "serialization")],
+        [
+            (api.ExtractRequest, "validation"),
+            (api.ReviseRequest, "validation"),
+            (api.TranscribeRequest, "validation"),
+            (api.ExtractLine, "serialization"),
+        ],
         ref_template=REF,
     )
     for name, model in found["$defs"].items():

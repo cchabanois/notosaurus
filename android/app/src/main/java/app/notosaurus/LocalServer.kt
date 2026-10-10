@@ -65,6 +65,8 @@ class LocalServer(
     private val scan: suspend () -> String? = { null }, // a QR code read by the camera (null: cancelled)
     private val modeChanged: () -> Unit = {}, // the app's shortcuts follow
     private val turnPhoto: (ByteArray, Int) -> ByteArray = { data, _ -> data }, // a JPEG turned clockwise (Photos.turn)
+    recorder: Recorder? = null, // the microphone, for the page's 🎤 (none: no 🎤)
+    private val requestMicPermission: suspend () -> Boolean = { false }, // the microphone's permission dialog: granted?
     val token: String = UUID.randomUUID().toString(),
 ) {
     private val lessons = Lessons(File(dataDir, "lessons").apply { mkdirs() })
@@ -74,6 +76,7 @@ class LocalServer(
     private val pictures = Pictures(lessons, ::relay)
     private val generation = Generation(lessons, prefs, ::relay, speech, turnPhoto)
     private val computer = Computer(prefs, modeChanged)
+    private val dictation = recorder?.let { Dictation(File(dataDir, "dictation").apply { mkdirs() }, it, ::relay) }
     private lateinit var server: EmbeddedServer<*, *>
 
     /** Starts it; returns its port. */
@@ -101,6 +104,7 @@ class LocalServer(
                 put("donations", false) // paid for by the subscription: no "Support Notosaurus" (Ko-fi)
                 put("apkg", false) // the cards go to AnkiDroid: no .apkg to download
                 put("review_in_anki", true) // a lesson sent: reviewed in AnkiDroid from here
+                put("dictation", dictation != null) // the 🎤 of the instructions and the correction
             }
         }
 
@@ -282,6 +286,18 @@ class LocalServer(
                 put("instructions", generation.instructions())
             }
             JsonObject(relay().post("explain", request) - "usage")
+        }
+        // --- Dictation (🎤): recorded here, written by the relay's AI as the user meant to type it
+        api("POST", "/api/dictation/start") {
+            val dictation = dictation ?: notFound()
+            if (!requestMicPermission()) throw BadRequest("dictation.refused")
+            dictation.start()
+            buildJsonObject { put("listening", true) }
+        }
+        api("POST", "/api/dictation/stop") {
+            val dictation = dictation ?: notFound()
+            val kind = body().string("kind").takeIf { it in Dictation.KINDS } ?: "prompt"
+            buildJsonObject { put("text", dictation.stop(kind, languageName())) }
         }
         // --- Pictures, through the relay (as app/main.py): drawn, the user's own, none
         api("POST", "/api/lessons/{id}/pictures") { pictures.drawMissing(lesson()) }
@@ -550,6 +566,7 @@ class LocalServer(
             installAnki: () -> Unit,
             scan: suspend () -> String?,
             modeChanged: () -> Unit,
+            requestMicPermission: suspend () -> Boolean,
         ) = LocalServer(
             dataDir = context.filesDir,
             web = { path -> asset(context, "page/$path") ?: asset(context, "web/$path") },
@@ -564,6 +581,8 @@ class LocalServer(
             scan = scan,
             modeChanged = modeChanged,
             turnPhoto = Photos::turn,
+            recorder = MicRecorder(context),
+            requestMicPermission = requestMicPermission,
         )
 
         private fun asset(context: Context, path: String) =

@@ -26,6 +26,7 @@
   <script defer src="app-lessons.js"></script>
   <script defer src="app-cards.js"></script>
   <script defer src="app-anki.js"></script>
+  <script defer src="app-dictation.js"></script>
   <script defer src="app.js"></script>
   <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.14.9/dist/cdn.min.js"></script>
 </head>
@@ -155,8 +156,16 @@
         </button>
         <button class="chip add" @click="openEditor('new')" x-text="$t('app.prompt.new')" :title="$t('app.prompt.newHint')"></button>
       </div>
-      <textarea x-model="form.text" rows="4" x-ref="promptText" :aria-label="$t('app.prompt.text')"
-                :placeholder="selectedId === null ? $t('app.prompt.freePlaceholder') : ''"></textarea>
+      <div class="dictated" :class="{ 'with-mic': dictation.available }">
+        <textarea x-model="form.text" rows="4" x-ref="promptText" :aria-label="$t('app.prompt.text')"
+                  :placeholder="selectedId === null ? $t('app.prompt.freePlaceholder') : ''"></textarea>
+        <button type="button" class="mic" x-show="dictation.available" x-cloak
+                :class="{ listening: dictation.listening === 'prompt', busy: dictation.busy === 'prompt' }"
+                :disabled="dictation.busy !== '' || (dictation.listening !== '' && dictation.listening !== 'prompt')"
+                @click="dictate('prompt')" :aria-label="$t(micKey('prompt'))" :title="$t(micKey('prompt'))"
+                x-text="dictation.listening === 'prompt' ? '⏹' : dictation.busy === 'prompt' ? '…' : '🎤'"></button>
+      </div>
+      <p class="hint" x-cloak x-show="dictation.listening === 'prompt'" x-text="$t('app.dictation.listening')"></p>
       <p class="hint" x-show="isModified()" x-text="$t('app.prompt.modified')"></p>
       <p class="hint" x-show="selectedId === null" x-text="$t('app.prompt.freeNote')"></p>
 
@@ -242,11 +251,19 @@
       <p class="count-line" x-text="$t('common.count.cards', { count: cards.length })"></p>
 
       <form class="revise" x-show="!readOnly()" @submit.prevent="revise()">
-        <textarea x-model="revision.text" rows="2" :aria-label="$t('app.revise.label')"
-                  :placeholder="$t('app.revise.placeholder')"
-                  @keydown.ctrl.enter.prevent="revise()" @keydown.meta.enter.prevent="revise()"></textarea>
+        <div class="dictated" :class="{ 'with-mic': dictation.available }">
+          <textarea x-model="revision.text" rows="2" :aria-label="$t('app.revise.label')"
+                    :placeholder="$t('app.revise.placeholder')"
+                    @keydown.ctrl.enter.prevent="revise()" @keydown.meta.enter.prevent="revise()"></textarea>
+          <button type="button" class="mic" x-show="dictation.available" x-cloak
+                :class="{ listening: dictation.listening === 'correction', busy: dictation.busy === 'correction' }"
+                :disabled="dictation.busy !== '' || (dictation.listening !== '' && dictation.listening !== 'correction')"
+                @click="dictate('correction')" :aria-label="$t(micKey('correction'))" :title="$t(micKey('correction'))"
+                x-text="dictation.listening === 'correction' ? '⏹' : dictation.busy === 'correction' ? '…' : '🎤'"></button>
+        </div>
         <button class="btn primary" :disabled="!revision.text.trim() || revision.busy" x-text="$t('app.revise.button')"></button>
       </form>
+      <p class="hint listening-hint" x-cloak x-show="dictation.listening === 'correction'" x-text="$t('app.dictation.listening')"></p>
       <div class="revision-result" x-cloak x-show="revision.summary" x-transition.opacity>
         <div>
           <strong x-text="revision.summary"></strong>

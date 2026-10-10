@@ -79,6 +79,20 @@ class Relay(baseUrl: String, private val key: String) {
         return body.build()
     }
 
+    /** A dictation (/v1/transcribe) as the text its speaker meant to type: `audio` is AAC
+     * (ADTS); `kind` "prompt" or "correction"; `language` the page's, its English name. */
+    suspend fun transcribe(kind: String, language: String, audio: ByteArray): String {
+        val request = buildJsonObject {
+            put("kind", kind)
+            put("language", language)
+        }
+        val body = MultipartBody.Builder().setType(MultipartBody.FORM)
+            .addPart(headersOf("Content-Disposition", "form-data; name=\"request\""), request.toString().toRequestBody(JSON))
+            .addFormDataPart("audio", "dictation.aac", audio.toRequestBody(AAC))
+            .build()
+        return call("transcribe", body).string("text")
+    }
+
     /** The voices /v1/speak reads with: {"voice", "locale", "gender"}, as the page lists them. */
     suspend fun voices(): JsonArray = open("voices", null).use { json.parseToJsonElement(it.body.string()).jsonArray }
 
@@ -154,6 +168,7 @@ class Relay(baseUrl: String, private val key: String) {
 
         private val JSON = "application/json".toMediaType()
         private val JPEG = "image/jpeg".toMediaType()
+        private val AAC = "audio/aac".toMediaType()
 
         // An extraction takes up to a minute or two: the AI reads every page
         private val client = OkHttpClient.Builder()

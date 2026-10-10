@@ -403,6 +403,32 @@ h2 {
 .cards { display: flex; flex-direction: column; gap: .6rem; }
 
 .revise { display: flex; gap: .5rem; align-items: flex-end; margin-bottom: .75rem; }
+.listening-hint { margin: -.4rem 0 .75rem; }
+
+/* A field the user can dictate into (the app): its 🎤 in the corner */
+.dictated { position: relative; flex: 1 1 auto; }
+.dictated textarea { display: block; }
+.dictated.with-mic textarea { padding-right: 3.3rem; }
+.mic {
+  position: absolute;
+  right: .4rem;
+  bottom: .4rem;
+  display: grid;
+  place-items: center;
+  width: 2.6rem;
+  height: 2.6rem;
+  border: 0;
+  border-radius: 50%;
+  background: var(--primary-soft);
+  color: var(--primary);
+  font-size: 1.15rem;
+  cursor: pointer;
+}
+.mic.listening { background: var(--danger); color: #fff; animation: listening 1.2s ease-in-out infinite; }
+.mic.busy { cursor: progress; }
+.mic:disabled:not(.busy) { opacity: .4; }
+@keyframes listening { 50% { box-shadow: 0 0 0 .4rem var(--danger-soft); } }
+@media (prefers-reduced-motion: reduce) { .mic.listening { animation: none; } }
 .revise textarea { min-height: 3.2rem; font-size: .92rem; }
 .revise .btn { flex: 0 0 auto; min-height: 2.8rem; }
 

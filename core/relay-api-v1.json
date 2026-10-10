@@ -3,7 +3,7 @@
   "info": {
     "title": "Notosaurus relay",
     "summary": "notosaurus_core behind a licence key",
-    "description": "The Notosaurus relay's API, version 1: what its client (the Notosaurus app with a\nlicence, later the Android app) and the relay itself both import, so that they\ncan't drift apart.\n\nThe relay is notosaurus_core behind a licence key: each route is the remote form\nof a core function (/v1/extract → llm.extract_cards…), takes what that function\ntakes but the AI configuration (the relay's own), and keeps nothing.\n\n- Authentication: \"Authorization: Bearer <licence key>\".\n- The client says its version in CLIENT_HEADER (\"1.1.0\"); a client too old for\n  the relay gets \"relay.client_outdated\".\n- The routes with photos (extract, revise) take multipart/form-data: a \"request\"\n  part holding the JSON request and one \"images\" part per photo (binary, as\n  diagrams.prepare makes them: JPEG, at most 1568 px). The other routes take JSON.\n- Errors: HTTP status of ERRORS, body {\"code\", \"params\"} (errors.AppError), the\n  AI's own errors (\"llm.*\") passed on as they are.\n- /v1/extract asked with \"Accept: application/x-ndjson\" (STREAM_TYPE) answers as the\n  AI writes: one JSON object per line, each card as it comes, then the answer or\n  the error (ExtractLine). A client going away stops the AI.\n- /v1/speak reads a card's back aloud with one of /v1/voices (natural voices, the\n  same on every device): an mp3, for the app that has no voices of its own.\n- Each answer says the credits it used and those left (Usage; for /v1/picture and\n  /v1/speak, the CREDITS_HEADER and CREDITS_LEFT_HEADER headers). A credit is a share of the\n  call's real AI cost, at least 1 per call: the relay counts them, not the client.\n\nThe OpenAPI description (core/relay-api-v1.json) is generated from these models\nby tools/relay_openapi.py. Apps already released keep calling the relay: within /v1 the\nAPI only grows (new routes, optional request fields, answer fields more), checked against\nthe API each released app speaks (core/relay-api-releases/, tools/relay_compat.py).\n",
+    "description": "The Notosaurus relay's API, version 1: what its client (the Notosaurus app with a\nlicence, later the Android app) and the relay itself both import, so that they\ncan't drift apart.\n\nThe relay is notosaurus_core behind a licence key: each route is the remote form\nof a core function (/v1/extract → llm.extract_cards…), takes what that function\ntakes but the AI configuration (the relay's own), and keeps nothing.\n\n- Authentication: \"Authorization: Bearer <licence key>\".\n- The client says its version in CLIENT_HEADER (\"1.1.0\"); a client too old for\n  the relay gets \"relay.client_outdated\".\n- The routes with photos (extract, revise) take multipart/form-data: a \"request\"\n  part holding the JSON request and one \"images\" part per photo (binary, as\n  diagrams.prepare makes them: JPEG, at most 1568 px). The other routes take JSON.\n- Errors: HTTP status of ERRORS, body {\"code\", \"params\"} (errors.AppError), the\n  AI's own errors (\"llm.*\") passed on as they are.\n- /v1/extract asked with \"Accept: application/x-ndjson\" (STREAM_TYPE) answers as the\n  AI writes: one JSON object per line, each card as it comes, then the answer or\n  the error (ExtractLine). A client going away stops the AI.\n- /v1/transcribe turns a dictation (the app's 🎤) into the text its speaker meant to\n  type: multipart/form-data, a \"request\" part (TranscribeRequest) and an \"audio\" part\n  (AUDIO_TYPES, at most MAX_AUDIO_BYTES).\n- /v1/speak reads a card's back aloud with one of /v1/voices (natural voices, the\n  same on every device): an mp3, for the app that has no voices of its own.\n- Each answer says the credits it used and those left (Usage; for /v1/picture and\n  /v1/speak, the CREDITS_HEADER and CREDITS_LEFT_HEADER headers). A credit is a share of the\n  call's real AI cost, at least 1 per call: the relay counts them, not the client.\n\nThe OpenAPI description (core/relay-api-v1.json) is generated from these models\nby tools/relay_openapi.py. Apps already released keep calling the relay: within /v1 the\nAPI only grows (new routes, optional request fields, answer fields more), checked against\nthe API each released app speaks (core/relay-api-releases/, tools/relay_compat.py).\n",
     "version": "1"
   },
   "paths": {
@@ -503,6 +503,150 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/transcribe": {
+      "post": {
+        "summary": "Transcribe",
+        "description": "A dictation as the text its speaker meant to type (llm.transcribe).",
+        "operationId": "transcribe_v1_transcribe_post",
+        "parameters": [
+          {
+            "name": "X-Notosaurus-Version",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "The client's version (\"1.1.0\").",
+              "title": "X-Notosaurus-Version"
+            },
+            "description": "The client's version (\"1.1.0\")."
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TranscribeResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Codes: `relay.invalid_key`",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "402": {
+            "description": "Codes: `relay.no_credits`",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "413": {
+            "description": "Codes: `relay.too_large`",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "415": {
+            "description": "Codes: `relay.bad_audio`",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Codes: `relay.invalid_request`",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "426": {
+            "description": "Codes: `relay.client_outdated`",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Codes: `relay.daily_limit`",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Codes: `relay.unavailable`",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "request",
+                  "audio"
+                ],
+                "properties": {
+                  "request": {
+                    "$ref": "#/components/schemas/TranscribeRequest"
+                  },
+                  "audio": {
+                    "type": "string",
+                    "format": "binary",
+                    "description": "The recording: audio/aac, audio/ogg, audio/mpeg, audio/wav, audio/flac, at most 3 MB."
+                  }
+                }
+              },
+              "encoding": {
+                "request": {
+                  "contentType": "application/json"
+                },
+                "audio": {
+                  "contentType": "audio/aac, audio/ogg, audio/mpeg, audio/wav, audio/flac"
                 }
               }
             }
@@ -1557,6 +1701,50 @@
         ],
         "title": "SpeakRequest",
         "description": "POST /v1/speak: a text read aloud. Answer: the mp3 (audio/mpeg), its credits in\nCREDITS_HEADER and CREDITS_LEFT_HEADER (a share of the characters' real cost, at\nleast 1)."
+      },
+      "TranscribeRequest": {
+        "description": "A dictation (the \"audio\" part) as the text its speaker meant to type: their words,\nhesitations out, their own corrections applied, a lesson's foreign words spelled right.",
+        "properties": {
+          "kind": {
+            "description": "What it is for: a lesson's instructions, or a correction of its cards.",
+            "enum": [
+              "prompt",
+              "correction"
+            ],
+            "title": "Kind",
+            "type": "string"
+          },
+          "language": {
+            "default": "English",
+            "description": "English name of the language to answer in (\"French\").",
+            "maxLength": 50,
+            "title": "Language",
+            "type": "string"
+          }
+        },
+        "required": [
+          "kind"
+        ],
+        "title": "TranscribeRequest",
+        "type": "object"
+      },
+      "TranscribeResponse": {
+        "properties": {
+          "text": {
+            "type": "string",
+            "title": "Text",
+            "description": "What was said, as written text (\"\" when nothing was understood)."
+          },
+          "usage": {
+            "$ref": "#/components/schemas/Usage"
+          }
+        },
+        "type": "object",
+        "required": [
+          "text",
+          "usage"
+        ],
+        "title": "TranscribeResponse"
       },
       "Usage": {
         "properties": {
