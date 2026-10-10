@@ -826,6 +826,16 @@ def test_dictation_in_the_app(page):
     sync_api.expect(field).to_have_value(re.compile("Douze cartes sur el abuelo et la abuela.$"))
     assert stopped == [{"kind": "prompt"}]
     sync_api.expect(field).to_be_enabled()
+
+    # A lesson shown: the 🎤 still there, on the instructions and on the correction (the
+    # lesson's own "dictation" option once replaced it)
+    page.get_by_role("radio", name="✏️ Libre").click()
+    page.locator("textarea[x-ref=promptText]").fill(FRONT_PROMPT)
+    page.get_by_role("button", name="✨ Générer à partir de la consigne seule").click()
+    page.locator(".flash").first.wait_for()
+    sync_api.expect(page.get_by_role("button", name="Dicter")).to_have_count(2)
+    sync_api.expect(page.locator(".revise").get_by_role("button", name="Dicter")).to_be_visible()
+    sync_api.expect(page.locator(".save-pill")).not_to_have_class(re.compile(r"\berror\b"))
     sync_api.expect(page.get_by_role("button", name="Dicter").first).to_be_enabled()
 
 

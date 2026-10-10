@@ -340,19 +340,19 @@ test("dictation: listen, then the text said comes after what was written", async
   const c = page.component();
   c.form.text = "Vocabulaire de la famille  ";
   await c.dictate("prompt");
-  assert.equal(c.dictation.listening, "prompt");
+  assert.equal(c.mic.listening, "prompt");
   assert.equal(c.dictating("prompt"), true);  // the field waits for its text
   assert.equal(c.canGenerate(), false);
   assert.equal(c.dictationStep("prompt"), "app.dictation.listening");
   assert.equal(c.dictating("correction"), false);
   assert.equal(c.micKey("prompt"), "app.dictation.stop");
   await c.dictate("correction");  // the other field waits
-  assert.equal(c.dictation.listening, "prompt");
+  assert.equal(c.mic.listening, "prompt");
   await c.dictate("prompt");
   assert.equal(c.form.text, "Vocabulaire de la famille\nAjoute el tío.");
   assert.deepEqual(calls, [["/api/dictation/start", null], ["/api/dictation/stop", '{"kind":"prompt"}']]);
-  assert.equal(c.dictation.listening, "");
-  assert.equal(c.dictation.busy, "");
+  assert.equal(c.mic.listening, "");
+  assert.equal(c.mic.busy, "");
   assert.equal(c.dictating("prompt"), false);
   assert.equal(c.dictationStep("prompt"), "");
   assert.equal(c.canGenerate(), true);
@@ -370,7 +370,7 @@ test("dictation: refused microphone, the field doesn't listen", async () => {
   });
   const c = page.component();
   await c.dictate("prompt");
-  assert.equal(c.dictation.listening, "");
+  assert.equal(c.mic.listening, "");
   assert.match(c.error, /can't use the microphone/);
 });
 
@@ -447,4 +447,16 @@ test("a picture's source: said in its panel, kept when the pictures come", async
   assert.equal(c.pictureSourceText({ picture_source: { source: "drawn", model: "gpt-image-2" } }), "Drawn by the AI (gpt-image-2)");
   assert.equal(c.pictureSourceText({ picture_source: { source: "photo" } }), "Your photo");
   assert.equal(c.pictureSourceText({}), "");
+});
+
+test("the 🎤 stays when a lesson is shown, and the lesson's dictation option stays a yes/no", async () => {
+  // Both were called "dictation": showing a lesson replaced the 🎤's state by its option
+  const page = await loadScripts("app.js", { routes: () => new Response({}) });
+  const c = page.component();
+  c.mic.available = true;
+  c.show({ id: "L1", deck: "D", cards: [], prompt: "p", dictation: false, voice: "" });
+  assert.equal(c.mic.available, true);
+  assert.equal(c.payload().dictation, false);
+  c.newLesson?.();
+  assert.equal(c.mic.available, true);
 });

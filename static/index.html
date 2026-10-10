@@ -156,17 +156,17 @@
         </button>
         <button class="chip add" @click="openEditor('new')" x-text="$t('app.prompt.new')" :title="$t('app.prompt.newHint')"></button>
       </div>
-      <div class="dictated" :class="{ 'with-mic': dictation.available }">
+      <div class="dictated" :class="{ 'with-mic': mic.available }">
         <textarea x-model="form.text" rows="4" x-ref="promptText" :aria-label="$t('app.prompt.text')"
                   :disabled="dictating('prompt') || tidy.busy"
                   :placeholder="selectedId === null ? $t('app.prompt.freePlaceholder') : ''"></textarea>
-        <button type="button" class="mic" x-show="dictation.available" x-cloak
-                :class="{ listening: dictation.listening === 'prompt', busy: dictation.busy === 'prompt' }"
-                :disabled="dictation.busy !== '' || (dictation.listening !== '' && dictation.listening !== 'prompt')"
+        <button type="button" class="mic" x-show="mic.available" x-cloak
+                :class="{ listening: mic.listening === 'prompt', busy: mic.busy === 'prompt' }"
+                :disabled="mic.busy !== '' || (mic.listening !== '' && mic.listening !== 'prompt')"
                 @click="dictate('prompt')" :aria-label="$t(micKey('prompt'))" :title="$t(micKey('prompt'))"
-                x-text="dictation.listening === 'prompt' ? '⏹' : dictation.busy === 'prompt' ? '…' : '🎤'"></button>
+                x-text="mic.listening === 'prompt' ? '⏹' : mic.busy === 'prompt' ? '…' : '🎤'"></button>
       </div>
-      <p class="hint" x-cloak x-show="dictationStep('prompt')" x-text="$t(dictationStep('prompt') || 'app.dictation.busy')"></p>
+      <p class="hint" x-cloak x-show="dictationStep('prompt')" x-text="$t(dictationStep('prompt') || 'app.mic.busy')"></p>
       <div class="prompt-actions tidy" x-show="form.text.trim()">
         <button type="button" class="link-btn strong" :disabled="tidy.busy" @click="tidyPrompt()"
                 x-text="tidy.busy ? $t('app.prompt.tidyBusy') : $t('app.prompt.tidy')"></button>
@@ -258,21 +258,21 @@
       <p class="count-line" x-text="$t('common.count.cards', { count: cards.length })"></p>
 
       <form class="revise" x-show="!readOnly()" @submit.prevent="revise()">
-        <div class="dictated" :class="{ 'with-mic': dictation.available }">
+        <div class="dictated" :class="{ 'with-mic': mic.available }">
           <textarea x-model="revision.text" rows="2" :aria-label="$t('app.revise.label')" :disabled="dictating('correction')"
                     :placeholder="$t('app.revise.placeholder')"
                     @keydown.ctrl.enter.prevent="revise()" @keydown.meta.enter.prevent="revise()"></textarea>
-          <button type="button" class="mic" x-show="dictation.available" x-cloak
-                :class="{ listening: dictation.listening === 'correction', busy: dictation.busy === 'correction' }"
-                :disabled="dictation.busy !== '' || (dictation.listening !== '' && dictation.listening !== 'correction')"
+          <button type="button" class="mic" x-show="mic.available" x-cloak
+                :class="{ listening: mic.listening === 'correction', busy: mic.busy === 'correction' }"
+                :disabled="mic.busy !== '' || (mic.listening !== '' && mic.listening !== 'correction')"
                 @click="dictate('correction')" :aria-label="$t(micKey('correction'))" :title="$t(micKey('correction'))"
-                x-text="dictation.listening === 'correction' ? '⏹' : dictation.busy === 'correction' ? '…' : '🎤'"></button>
+                x-text="mic.listening === 'correction' ? '⏹' : mic.busy === 'correction' ? '…' : '🎤'"></button>
         </div>
         <button class="btn primary" :disabled="!revision.text.trim() || revision.busy || dictating('correction')"
                 x-text="$t('app.revise.button')"></button>
       </form>
       <p class="hint listening-hint" x-cloak x-show="dictationStep('correction')"
-         x-text="$t(dictationStep('correction') || 'app.dictation.busy')"></p>
+         x-text="$t(dictationStep('correction') || 'app.mic.busy')"></p>
       <div class="revision-result" x-cloak x-show="revision.summary" x-transition.opacity>
         <div>
           <strong x-text="revision.summary"></strong>
