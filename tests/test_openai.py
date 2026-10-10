@@ -2,15 +2,15 @@
 
 from test_costs import fake_completion
 
-from notosaurus_core import llm
 from notosaurus_core.llm import ai_schema
 from notosaurus_core.models import Extraction
+from notosaurus_core.providers import openai_like
 
 
 def test_openai_models_get_a_strict_schema():
     """GPT refuses a response schema that isn't strict: every object closed, every
     property required."""
-    strict = llm._strict(ai_schema(Extraction).model_json_schema())
+    strict = openai_like._strict(ai_schema(Extraction).model_json_schema())
 
     def objects(node):
         if isinstance(node, dict):
@@ -38,13 +38,13 @@ def test_only_openai_models_are_sent_it(client, monkeypatch):
         monkeypatch.setenv("NOTOSAURUS_LLM", "openrouter")
         monkeypatch.setenv("NOTOSAURUS_MODEL", model)
         fake, completions = fake_completion(model=model)
-        monkeypatch.setattr(llm, "_openai_client", lambda s, fake=fake: fake)
+        monkeypatch.setattr(openai_like, "_openai_client", lambda s, fake=fake: fake)
         assert client.post("/api/extract", data={"prompt": "words: le chat"}).status_code == 201
         sent[model] = completions.kwargs["response_format"]["json_schema"].get("strict", False)
         assert sent[model] is strict, model
     monkeypatch.setenv("NOTOSAURUS_LLM", "openai")  # an OpenAI key: strict too
     monkeypatch.setenv("NOTOSAURUS_MODEL", "gpt-6.1-sol")
     fake, completions = fake_completion(model="gpt-6.1-sol")
-    monkeypatch.setattr(llm, "_openai_client", lambda s: fake)
+    monkeypatch.setattr(openai_like, "_openai_client", lambda s: fake)
     client.post("/api/extract", data={"prompt": "words: le chat"})
     assert completions.kwargs["response_format"]["json_schema"]["strict"] is True

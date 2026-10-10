@@ -21,6 +21,7 @@ from . import config, figures, files, llm, recommended
 from .config import AIConfig
 from .errors import AppError
 from .models import Card
+from .providers import gemini
 
 log = logging.getLogger("notosaurus")
 
@@ -125,7 +126,7 @@ async def _gemini(s: AIConfig, name: str, prompt: str) -> bytes:
             model=name,
             contents=prompt,
             config=types.GenerateContentConfig(
-                response_modalities=["IMAGE", "TEXT"], safety_settings=llm.gemini_safety()
+                response_modalities=["IMAGE", "TEXT"], safety_settings=gemini.gemini_safety()
             ),
         )
     except errors.APIError as e:

@@ -6,7 +6,7 @@ import json
 from conftest import extract_lesson
 
 from app.models import LessonIn
-from notosaurus_core import llm
+from notosaurus_core import llm, prompts
 
 
 def test_extract_fake(client):
@@ -52,9 +52,9 @@ def test_lesson_from_the_prompt_alone(client):
 def test_prompt_only_tells_the_ai_there_is_no_photo():
     from notosaurus_core.models import Deck
 
-    assert "no photo" in llm._user_text("Cards with: le chat", "", photos=0)
-    assert "no photo" not in llm._user_text("Vocabulary", "", photos=2)
-    assert "these instructions (no photo)" in llm._revision_text("p", Deck(deck="D", cards=[]), "x", "en", photos=0)
+    assert "no photo" in prompts._user_text("Cards with: le chat", "", photos=0)
+    assert "no photo" not in prompts._user_text("Vocabulary", "", photos=2)
+    assert "these instructions (no photo)" in prompts._revision_text("p", Deck(deck="D", cards=[]), "x", "en", photos=0)
 
 
 def test_extract_fake_cloze(client):
@@ -83,7 +83,7 @@ def test_existing_decks_given_to_the_ai(anki, client, monkeypatch):
     monkeypatch.setattr(main, "extract_cards", extract_cards)
     assert client.post("/api/extract", data={"prompt": "Les fractions"}).status_code == 201
     assert seen["decks"] == expected
-    text = llm._user_text("Les fractions", "{matière}::{leçon}", 1, decks=expected)
+    text = prompts._user_text("Les fractions", "{matière}::{leçon}", 1, decks=expected)
     assert "Existing decks: Espagnol; Histoire; Histoire::La Révolution; Maths; Maths::Fractions" in text
 
 
@@ -96,8 +96,8 @@ def test_existing_decks_without_anki(client):
 
 def test_fun_facts_only_when_asked(client):
     # Off by default: the AI isn't told about them
-    assert llm.FUN_FACTS not in llm._user_text("Vocabulary", "", photos=1)
-    assert llm.FUN_FACTS in llm._user_text("Vocabulary", "", photos=1, fun_facts=True)
+    assert prompts.FUN_FACTS not in prompts._user_text("Vocabulary", "", photos=1)
+    assert prompts.FUN_FACTS in prompts._user_text("Vocabulary", "", photos=1, fun_facts=True)
     files = [("images", ("p.png", b"img", "image/png"))]
     plain = client.post("/api/extract", files=files, data={"prompt": "FR → ES"}).json()
     assert not any(c["fun_fact"] for c in plain["cards"])
@@ -207,12 +207,12 @@ def test_pdf_page_texts_go_to_the_ai_and_stay_with_the_lesson(client, monkeypatc
 
     page = "La Révolution française commence en 1789 avec la prise de la Bastille."
     # Only the PDF pages with text: a photo ("") and a scan (a few stray characters) have none
-    text = llm._user_text("Q/R", "", photos=3, texts=[page, "", " i . "])
+    text = prompts._user_text("Q/R", "", photos=3, texts=[page, "", " i . "])
     assert (
         f"Text of photo 1, from its PDF:\n<<<\n{page}\n>>>" in text and "photo 2" not in text and "photo 3" not in text
     )
-    assert "Text of photo" not in llm._user_text("Q/R", "", photos=1)
-    assert len(llm._user_text("Q/R", "", photos=1, texts=["x" * 20_000])) < 9_000  # a page at most PAGE_TEXT_MAX
+    assert "Text of photo" not in prompts._user_text("Q/R", "", photos=1)
+    assert len(prompts._user_text("Q/R", "", photos=1, texts=["x" * 20_000])) < 9_000  # a page at most PAGE_TEXT_MAX
 
     seen = []
 

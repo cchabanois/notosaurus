@@ -6,7 +6,7 @@ import types
 from conftest import ADMIN
 
 from app import ankiconnect, settings
-from notosaurus_core import llm
+from notosaurus_core.providers import openai_like
 
 
 def test_saved_in_the_settings(admin):
@@ -39,9 +39,8 @@ def test_sent_with_the_request_for_the_profile(admin, monkeypatch):
             message = types.SimpleNamespace(content=content)
             return types.SimpleNamespace(usage=None, model="m", choices=[types.SimpleNamespace(message=message)])
 
-    monkeypatch.setattr(
-        llm, "_openai_client", lambda s: types.SimpleNamespace(chat=types.SimpleNamespace(completions=Completions()))
-    )
+    client = types.SimpleNamespace(chat=types.SimpleNamespace(completions=Completions()))
+    monkeypatch.setattr(openai_like, "_openai_client", lambda s: client)
 
     async def lea():
         return "Léa"

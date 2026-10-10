@@ -12,6 +12,7 @@ from fastapi.testclient import TestClient
 
 from app import settings
 from app.main import DEVICE_COOKIE, app
+from notosaurus_core.providers import openai_like
 
 
 def test_admin_password_protected(admin):
@@ -421,7 +422,7 @@ def test_model_without_vision_refuses_image(admin, monkeypatch):
     assert "multimodal" in r["refused"]
 
     nested = {"message": '{"error":{"code":400,"message":"no vision here","type":"x"}}'}
-    assert llm._error_message(nested) == "no vision here"
+    assert openai_like._error_message(nested) == "no vision here"
 
 
 def test_recommended_models_first_is_the_default(admin):

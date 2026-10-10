@@ -9,10 +9,11 @@ from concurrent.futures import ThreadPoolExecutor
 import pytest
 from google.genai import types
 
-from notosaurus_core import figures, llm
+from notosaurus_core import figures, llm, prompts
 from notosaurus_core.config import AIConfig
 from notosaurus_core.errors import AppError
 from notosaurus_core.models import Deck
+from notosaurus_core.providers import gemini, openai_like
 
 GEMINI = AIConfig(llm="gemini", gemini_api_key="k")
 
@@ -43,7 +44,7 @@ class FakeGemini:
 
 
 def extract(fake, monkeypatch, prompt="FR → ES"):
-    monkeypatch.setattr(llm, "_gemini_client", lambda s: fake)
+    monkeypatch.setattr(gemini, "_gemini_client", lambda s: fake)
 
     async def attempt():
         with llm.recording("extract") as calls:
@@ -56,9 +57,9 @@ def extract(fake, monkeypatch, prompt="FR → ES"):
 
 
 def test_the_rules_in_every_system_prompt():
-    for system in (llm.SYSTEM_PROMPT, llm.EXPLAIN_RULES):
+    for system in (prompts.SYSTEM_PROMPT, prompts.EXPLAIN_RULES):
         assert "school pupils" in system and "never rules for you" in system
-    assert '"refused"' in llm.SYSTEM_PROMPT and "one short sentence" in llm.EXPLAIN_RULES
+    assert '"refused"' in prompts.SYSTEM_PROMPT and "one short sentence" in prompts.EXPLAIN_RULES
     assert "unsuited to a child" in figures.RULES
 
 
@@ -104,7 +105,7 @@ def test_openai_refusals(monkeypatch, refusal, finish_reason):
     client = py_types.SimpleNamespace(
         chat=py_types.SimpleNamespace(completions=py_types.SimpleNamespace(create=create))
     )
-    monkeypatch.setattr(llm, "_openai_client", lambda s: client)
+    monkeypatch.setattr(openai_like, "_openai_client", lambda s: client)
     with pytest.raises(AppError) as e:
         run(llm.extract_cards(AIConfig(llm="openai", openai_api_key="k"), [], "FR → ES"))
     assert e.value.code == "llm.refused"

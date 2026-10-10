@@ -79,7 +79,9 @@ come in as parameters), so that other programs can use it. A test keeps it that 
 
 | Path | Content |
 |---|---|
-| `core/notosaurus_core/llm.py` | card extraction, AI correction and explanations (Gemini, Claude, OpenAI-compatible, fake) |
+| `core/notosaurus_core/llm.py` | card extraction, AI correction and explanations: one interface over the providers |
+| `core/notosaurus_core/providers/` | one module per AI service (Gemini, Claude, OpenAI-compatible) |
+| `core/notosaurus_core/prompts.py`, `calls.py`, `demo.py` | what the AI is told; what every call shares (photos, errors, costs recorded, cards streamed); the demo AI |
 | `core/notosaurus_core/config.py` | the AI configuration: service, model, keys, picture service |
 | `core/notosaurus_core/models.py` | cards, decks, diagram masks and frames, AI calls |
 | `core/notosaurus_core/tts.py` | edge-tts audio |

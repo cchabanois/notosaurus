@@ -5,13 +5,13 @@ import apkg
 from conftest import ADMIN
 
 from app import anki
-from notosaurus_core import llm
+from notosaurus_core import llm, prompts
 from notosaurus_core.config import AIConfig
 
 
 def test_helps_only_when_asked(client):
-    assert llm.HELPS not in llm._user_text("Vocabulary", "", photos=1)
-    assert llm.HELPS in llm._user_text("Vocabulary", "", photos=1, helps=True)
+    assert prompts.HELPS not in prompts._user_text("Vocabulary", "", photos=1)
+    assert prompts.HELPS in prompts._user_text("Vocabulary", "", photos=1, helps=True)
     plain = client.post("/api/extract", data={"prompt": "FR → ES"}).json()
     assert not any(c["explanation"] or c["mnemonic"] for c in plain["cards"])
     asked = client.post("/api/extract", data={"prompt": "FR → ES", "helps": "true"}).json()

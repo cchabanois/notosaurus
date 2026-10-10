@@ -7,7 +7,8 @@ import types
 import pytest
 from conftest import ADMIN, PRICES
 
-from notosaurus_core import llm, prices
+from notosaurus_core import prices
+from notosaurus_core.providers import openai_like
 
 
 def usd(model, input_tokens, output_tokens):
@@ -74,7 +75,7 @@ def test_openrouter_gives_the_exact_cost(client, monkeypatch):
     monkeypatch.setenv("NOTOSAURUS_LLM", "openrouter")
     monkeypatch.setenv("NOTOSAURUS_MODEL", "google/gemini-3.8-flash")
     fake, completions = fake_completion(cost=0.0123)
-    monkeypatch.setattr(llm, "_openai_client", lambda s: fake)
+    monkeypatch.setattr(openai_like, "_openai_client", lambda s: fake)
     lesson = client.post("/api/extract", data={"prompt": "words: le chat"}).json()
     (call,) = lesson["ai_calls"]
     assert call | {"at": None} == {
@@ -94,7 +95,7 @@ def test_other_services_get_an_estimate(client, monkeypatch):
     monkeypatch.setenv("NOTOSAURUS_LLM", "openai")
     monkeypatch.setenv("NOTOSAURUS_MODEL", "gpt-6.1-sol")
     fake, completions = fake_completion(model="gpt-6.1-sol")
-    monkeypatch.setattr(llm, "_openai_client", lambda s: fake)
+    monkeypatch.setattr(openai_like, "_openai_client", lambda s: fake)
     (call,) = client.post("/api/extract", data={"prompt": "words: le chat"}).json()["ai_calls"]
     assert (call["cost"], call["exact"]) == (pytest.approx(2000 * 0.000002 + 300 * 0.00001), False)
     assert completions.kwargs["extra_body"] is None
@@ -105,7 +106,7 @@ def test_deleting_a_lesson_keeps_what_was_spent(admin, monkeypatch, tmp_path):
     monkeypatch.setenv("NOTOSAURUS_LLM", "openrouter")
     monkeypatch.setenv("NOTOSAURUS_MODEL", "google/gemini-3.8-flash")
     fake, _ = fake_completion(cost=0.01)
-    monkeypatch.setattr(llm, "_openai_client", lambda s: fake)
+    monkeypatch.setattr(openai_like, "_openai_client", lambda s: fake)
     first = admin.post("/api/extract", data={"prompt": "words: le chat"}).json()
     admin.post("/api/extract", data={"prompt": "words: le chien"})
 
@@ -118,7 +119,7 @@ def test_deleting_a_lesson_keeps_what_was_spent(admin, monkeypatch, tmp_path):
 
     # Answered, but unusable: paid for, no lesson
     broken, _ = fake_completion(cost=0.005, content="not json")
-    monkeypatch.setattr(llm, "_openai_client", lambda s: broken)
+    monkeypatch.setattr(openai_like, "_openai_client", lambda s: broken)
     assert admin.post("/api/extract", data={"prompt": "words"}).status_code == 502
     assert (costs()["total"], costs()["failed"]) == (0.025, 0.005)
     journal = json.loads((tmp_path / "data" / "ai-calls.json").read_text(encoding="utf-8"))["calls"]

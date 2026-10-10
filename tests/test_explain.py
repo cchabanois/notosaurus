@@ -2,7 +2,7 @@
 
 from conftest import extract_lesson
 
-from notosaurus_core import llm
+from notosaurus_core import llm, prompts
 from notosaurus_core.config import AIConfig
 from notosaurus_core.models import Card, Explanation
 
@@ -36,15 +36,17 @@ def test_explaining_needs_a_lesson_one_may_see(anki, client):
 
 def test_what_the_ai_is_asked(monkeypatch):
     card = Card(front="la Bastille est prise le…", back="14 juillet 1789", choices=["4 août 1789"])
-    text = llm._explain_text(card, "why", "Questions sur la Révolution", "Histoire", "French", ["Le 14 juillet 1789…"])
+    text = prompts._explain_text(
+        card, "why", "Questions sur la Révolution", "Histoire", "French", ["Le 14 juillet 1789…"]
+    )
     assert '"front": "la Bastille est prise le…"' in text and '"wrong_options": ["4 août 1789"]' in text
-    assert llm.EXPLAIN_ASKS["why"] in text and "Answer in French." in text
+    assert prompts.EXPLAIN_ASKS["why"] in text and "Answer in French." in text
     assert "The lesson's text (from its PDF):\n<<<\nLe 14 juillet 1789…\n>>>" in text
-    assert "PDF" not in llm._explain_text(card, "explain", "p", "d", "English", ["", "  "])
+    assert "PDF" not in prompts._explain_text(card, "explain", "p", "d", "English", ["", "  "])
 
     # The AI's follow-ups: never the one just given, each once
     async def answer(s, images, text, schema, system, light=False):
-        assert system == llm.EXPLAIN_RULES and light and images == []
+        assert system == prompts.EXPLAIN_RULES and light and images == []
         return Explanation(text="…", more=["why", "example", "why", "mnemonic"])
 
     import asyncio
