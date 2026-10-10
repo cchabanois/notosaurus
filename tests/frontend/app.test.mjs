@@ -480,3 +480,18 @@ test("tidy up: not offered for Notosaurus's instructions as they are", async () 
   c.form.text = "";
   assert.equal(c.canTidy(), false);  // nothing to tidy
 });
+
+test("instructions written before the prompts come stay (the first load came after them)", async () => {
+  const builtin = [{ id: "notosaurus:auto", builtin: true, name: "Automatique", text: "Regarde la leçon…" }];
+  const page = await loadScripts("app.js", { routes: () => new Response(builtin) });
+  const c = page.component();
+  c.$refs.promptText = { focus() {} };  // the field "Free" puts the cursor in
+  c.chooseFree();
+  c.form.text = "Une carte par mot de la famille";
+  await c.loadPrompts("notosaurus:auto", true);
+  assert.equal(c.selectedId, null);
+  assert.equal(c.form.text, "Une carte par mot de la famille");
+  const fresh = page.component();
+  await fresh.loadPrompts("notosaurus:auto", true);  // nothing chosen yet: the last prompt used
+  assert.equal(fresh.form.text, "Regarde la leçon…");
+});

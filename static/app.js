@@ -96,6 +96,7 @@ document.addEventListener("alpine:init", () => {
     photos: [],          // { blob, url }
     prompts: [],
     selectedId: null,
+    promptChosen: false,         // a prompt picked (or "Free") by the user: the first load keeps it
     form: { name: "", text: "", deck: "", voice: "", typing: false, dictation: false },
     voices: [],          // edge-tts voices: { voice, locale, gender }
     deck: "",
@@ -208,7 +209,7 @@ document.addEventListener("alpine:init", () => {
       } catch {}
       this.$watch("funFacts", (on) => storage("set", on ? "1" : "0", FUN_FACTS));
       this.$watch("quick", (on) => storage("set", on ? "0" : "1", CAREFUL));
-      await Promise.all([this.loadPrompts(storage("get")), this.loadLessons()]);
+      await Promise.all([this.loadPrompts(storage("get"), true), this.loadLessons()]);
       this.checkAnki();
       // Anki may be started later: check again when coming back to the app.
       document.addEventListener("visibilitychange", () => {
