@@ -24,15 +24,7 @@ import io.ktor.server.routing.post
 import io.ktor.server.routing.put
 import io.ktor.server.routing.routing
 import io.ktor.utils.io.toByteArray
-import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.Job
-import kotlinx.coroutines.async
-import kotlinx.coroutines.awaitAll
-import kotlinx.coroutines.sync.Semaphore
-import kotlinx.coroutines.sync.withPermit
-import kotlinx.coroutines.coroutineScope
-import kotlinx.coroutines.isActive
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.json.JsonArray
@@ -46,25 +38,17 @@ import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
 import kotlinx.serialization.json.put
 import java.io.File
-import java.math.BigDecimal
-import java.math.RoundingMode
 import java.net.URI
-import java.security.MessageDigest
 import java.util.UUID
-import java.util.concurrent.ConcurrentHashMap
 
 /**
  * The computer's server, as the page sees it: the same /api routes (app/main.py),
  * answered on the phone. The page itself (assets/web/, the repository's
  * static/) is served from here too, so it runs unchanged.
  *
- * - The AI: the relay (`relay()`, with the licence).
- * - The lessons: on the phone (Lessons).
- * - Anki: AnkiDroid (Anki).
- * - The settings: the app's own page (assets/page/admin.html, at the address of the
- *   computer's), its /api/admin/… here.
- * - "With my computer": the app shows the add-on's page instead (MainActivity); here,
- *   connecting to it (its QR code, its address) and switching between the two.
+ * The routes only; the work in: Generation (a lesson made by the relay), Pictures,
+ * Speech (the voices), Prompts, Computer ("With my computer"), Lessons (on the phone),
+ * Anki (AnkiDroid), PageTexts (the page's languages).
  *
  * Listens on 127.0.0.1 only, and answers /api only with the cookie the app's WebView
  * has: another app on the phone can't use it.
@@ -84,8 +68,12 @@ class LocalServer(
     val token: String = UUID.randomUUID().toString(),
 ) {
     private val lessons = Lessons(File(dataDir, "lessons").apply { mkdirs() })
-    private val audio = File(dataDir, "audio").apply { mkdirs() } // the backs read aloud, kept
-    private val prompts = File(dataDir, "prompts.json")
+    private val texts = PageTexts(web, languages)
+    private val prompts = Prompts(File(dataDir, "prompts.json"), texts)
+    private val speech = Speech(File(dataDir, "audio").apply { mkdirs() }, prefs, ::relay) // the backs read aloud, kept
+    private val pictures = Pictures(lessons, ::relay)
+    private val generation = Generation(lessons, prefs, ::relay, speech, turnPhoto)
+    private val computer = Computer(prefs, modeChanged)
     private lateinit var server: EmbeddedServer<*, *>
 
     /** Starts it; returns its port. */
@@ -98,197 +86,8 @@ class LocalServer(
     /** The relay, with the licence key of the settings. */
     private fun relay() = Relay(prefs[RELAY] ?: DEFAULT_RELAY, prefs[KEY].orEmpty())
 
-    /** The settings' standing instructions, put before every request to the AI
-     * (app/settings.py, standing_instructions). */
-    /** The lessons being made, by the page's id for each: what "Cancel" stops. */
-    private val generating = ConcurrentHashMap<String, Job>()
-
-    /** `work`, stopped by "Cancel" (`job`: the page's id for it): Cancelled then. */
-    private suspend fun <T> cancellable(job: String?, work: suspend () -> T): T = coroutineScope {
-        val running = async { work() }
-        if (!job.isNullOrBlank()) generating[job] = running
-        try {
-            running.await()
-        } catch (e: CancellationException) {
-            if (running.isCancelled && isActive) throw Cancelled() else throw e
-        } finally {
-            if (!job.isNullOrBlank()) generating.remove(job, running)
-        }
-    }
-
-    /** What generating sends: the lesson's new content and its photos. */
-    private class Made(val content: Map<String, JsonElement>, val photos: List<ByteArray>)
-
-    /** The page's form for making a lesson: its fields and its photos. */
-    private class Form(val fields: Map<String, String>, val images: List<ByteArray>, val lang: String)
-
-    private suspend fun RoutingContext.form(): Form {
-        val fields = mutableMapOf<String, String>()
-        val images = mutableListOf<ByteArray>()
-        call.receiveMultipart(formFieldLimit = 20L * 1024 * 1024).forEachPart { part ->
-            when (part) {
-                is PartData.FormItem -> fields[part.name!!] = part.value
-                is PartData.FileItem -> images += part.provider().toByteArray()
-                else -> {}
-            }
-            part.dispose()
-        }
-        return Form(fields, images, lang())
-    }
-
-    /** The page's form (photos, prompt, options) made into cards by the relay, each
-     * card told to `onCard` as it is written. */
-    private suspend fun generate(form: Form, onCard: OnCard): Made {
-        val (fields, images) = form.fields to form.images
-        val texts = fields["page_texts"]?.let { json.parseToJsonElement(it) } ?: JsonArray(emptyList())
-        val request = buildJsonObject {
-            put("prompt", fields["prompt"] ?: "")
-            put("deck", fields["deck"] ?: "")
-            put("decks", JsonArray(lessons.list().map { JsonPrimitive(it.string("deck")) }.distinct()))
-            put("fun_facts", fields["fun_facts"] == "true")
-            put("helps", fields["helps"] == "true")
-            put("page_texts", texts)
-            put("instructions", instructions())
-            put("quick", fields["quick"] == "true")
-        }
-        val found = cancellable(fields["job"]) { relay().extract(request, images, onCard) }
-        val spelling = fields["typing"] == "true" || fields["dictation"] == "true"
-        val voice = fields["voice"].orEmpty().let {
-            if (!it.equals("auto", ignoreCase = true)) it
-            else voiceFor(learned(found.string("back_language"), form.lang, spelling)) // the language learned
-        }
-        // Photos taken sideways saved upright, as the computer: their masks and frames turn with them
-        val turns = found["turns"]?.jsonArray?.map { it.jsonPrimitive.content.toInt() }.orEmpty()
-        var cards = found["deck"]!!.jsonObject["cards"]!!.jsonArray.map { it.jsonObject }
-        var frames = (found["frames"] as? JsonArray)?.map { it.jsonObject }.orEmpty()
-        val photos = images.mapIndexed { i, data ->
-            val degrees = turns.getOrElse(i) { 0 }
-            if (degrees == 0) return@mapIndexed data
-            cards = cards.map { turnedMask(it, i + 1, degrees) }
-            frames = frames.map { turnedFrame(it, i + 1, degrees) }
-            turnPhoto(data, degrees)
-        }
-        val content = mapOf(
-            "deck" to found["deck"]!!.jsonObject["deck"]!!,
-            "cards" to JsonArray(cards),
-            "prompt" to JsonPrimitive(fields["prompt"] ?: ""),
-            "voice" to JsonPrimitive(voice),
-            "typing" to JsonPrimitive(fields["typing"] == "true"),
-            "dictation" to JsonPrimitive(fields["dictation"] == "true"),
-            "choice" to (found["choice"] ?: JsonPrimitive("")),
-            "page_texts" to texts,
-            "frames" to JsonArray(frames), // each diagram's frame: what AnkiDroid shows
-        )
-        return Made(content, photos)
-    }
-
-    /** A card's figure (SVG, /v1/figure) or picture (JPEG, /v1/picture), saved in the
-     * lesson; its file name. */
-    private suspend fun drawn(lessonId: String, card: JsonObject, fresh: Boolean): String {
-        val figure = card.string("figure").trim()
-        return if (figure.isNotEmpty()) {
-            val svg = relay().post("figure", buildJsonObject { put("description", figure) }).string("svg")
-            savePicture(lessonId, card.string("id"), svg.toByteArray(), "svg")
-        } else {
-            savePicture(lessonId, card.string("id"), relay().picture(card.string("picture_prompt"), fresh), "jpg")
-        }
-    }
-
-    /** A picture in the lesson's images/, named as the computer names them. */
-    private fun savePicture(lessonId: String, cardId: String, data: ByteArray, extension: String): String {
-        val folder = lessons.images(lessonId) ?: throw NotFound()
-        folder.mkdirs()
-        val digest = MessageDigest.getInstance("SHA-1").digest(data).joinToString("") { "%02x".format(it) }
-        val name = "picture-$cardId-${digest.take(8)}.$extension"
-        File(folder, name).writeBytes(data)
-        return name
-    }
-
-    /** The lesson with these cards, its pictures no card uses any more removed. */
-    private fun savedCards(lessonId: String, cards: List<JsonObject>): JsonObject {
-        val saved = lessons.update(lessonId, buildJsonObject { put("cards", JsonArray(cards)) }) ?: throw NotFound()
-        val used = cards.map { it.string("picture") }.toSet()
-        lessons.images(lessonId)?.listFiles { f -> PICTURE.matches(f.name) && f.name !in used }?.forEach { it.delete() }
-        return saved
-    }
-
-    private fun RoutingContext.cardIndex(cards: List<JsonObject>): Int =
-        cards.indexOfFirst { it.string("id") == param("card") }.takeIf { it >= 0 } ?: throw BadRequest("card.not_found")
-
-    /** A card with its mask turned, if it is on photo `page`. */
-    private fun turnedMask(card: JsonObject, page: Int, degrees: Int): JsonObject {
-        val mask = card["mask"] as? JsonObject ?: return card
-        if (mask["page"]?.jsonPrimitive?.content?.toIntOrNull() != page) return card
-        return JsonObject(card + ("mask" to turnedBox(mask, degrees)))
-    }
-
-    private fun turnedFrame(frame: JsonObject, page: Int, degrees: Int): JsonObject =
-        if (frame["page"]?.jsonPrimitive?.content?.toIntOrNull() == page) turnedBox(frame, degrees) else frame
-
-    private fun turnedBox(item: JsonObject, degrees: Int): JsonObject {
-        val box = item["box"]!!.jsonArray.map { it.jsonPrimitive.content.toDouble() }
-        return JsonObject(item + ("box" to JsonArray(rotateBox(box, degrees).map(::JsonPrimitive))))
-    }
-
-    /** The relay's voices, asked once. */
-    private var voiceList: JsonArray? = null
-
-    private suspend fun voices(): JsonArray = voiceList ?: relay().voices().also { voiceList = it }
-
-    /** A text read aloud by the relay's voice, kept on the phone: the same text and
-     * voice aren't paid for twice (the 🔊 preview, then the cards). */
-    private suspend fun speech(text: String, voice: String): File {
-        val said = text.trim().take(200) // as the computer: a back's first 200 characters
-        val rate = RATES[prefs[TTS_RATE]] ?: Relay.SPEECH_RATE
-        val digest = MessageDigest.getInstance("SHA-1").digest("$voice|$rate|$said".toByteArray())
-        val mp3 = File(audio, digest.joinToString("") { "%02x".format(it) }.take(16) + ".mp3")
-        if (!mp3.isFile) {
-            val bytes = relay().speak(said, voice, rate)
-            withContext(Dispatchers.IO) {
-                val tmp = File(audio, mp3.name + ".tmp")
-                tmp.writeBytes(bytes)
-                tmp.renameTo(mp3)
-            }
-        }
-        return mp3
-    }
-
-    /** The backs' sound for AnkiDroid, with `voice` (none: no sound), and how many
-     * couldn't be made. */
-    private suspend fun sounds(deck: Deck, voice: String): Pair<Map<String, File>, Int> {
-        if (!VOICE.matches(voice)) return emptyMap<String, File>() to 0
-        val backs = deck.cards.map { it.back.trim() }.filter { it.isNotEmpty() }.distinct()
-        val made = backs.associateWith { runCatching { speech(it, voice) }.getOrNull() }
-        return made.filterValues { it != null }.mapValues { it.value!! } to made.count { it.value == null }
-    }
-
-    /** The voice for the backs' language ("es-ES", "en"…): the relay's DEFAULT_VOICE in
-     * that variety, else in another of the language; "" when none (or no relay). */
-    private suspend fun voiceFor(language: String): String {
-        val tag = language.trim().replace('_', '-').lowercase()
-        if (tag.isEmpty()) return ""
-        val all = runCatching { voices() }.getOrNull()?.map { it.jsonObject } ?: return ""
-        val base = tag.substringBefore('-')
-        val ranked = all.filter { it.string("locale").lowercase().substringBefore('-') == base }.sortedWith(
-            compareBy(
-                { it.string("locale").lowercase() != tag }, // the variety asked for
-                { it.string("locale").lowercase() != "$base-$base" }, // else the language's own (es-ES, fr-FR)
-                { !it.string("voice").endsWith("-$DEFAULT_VOICE") },
-            ),
-        )
-        return ranked.firstOrNull()?.string("voice") ?: ""
-    }
-
-    /** The backs' language when it is one being learned: not the pupil's own (the page's)
-     * unless the cards are for writing what is heard, as the computer (app/main.py). */
-    private fun learned(language: String, pupil: String, spelling: Boolean): String =
-        if (!spelling && language.lowercase().substringBefore('-') == pupil.substringBefore('-')) "" else language
-
-    private fun instructions(): String {
-        val text = prefs[INSTRUCTIONS].orEmpty().trim()
-        if (text.isEmpty()) return ""
-        return "Standing instructions, for every lesson:\n$text\n(The request below wins if it says otherwise.)\n\n"
-    }
+    /** A text of the page's languages (the app's shortcuts), English when missing. */
+    fun text(lang: String, vararg keys: String): String? = texts.get(lang, *keys) ?: texts.get("en", *keys)
 
     fun Application.module() = routing {
         api("GET", "/api/config") {
@@ -314,7 +113,7 @@ class LocalServer(
             (changes[KEY] as? JsonPrimitive)?.let { prefs[KEY] = it.content.trim() }
             (changes[INSTRUCTIONS] as? JsonPrimitive)?.let { prefs[INSTRUCTIONS] = it.content.take(4000) }
             (changes[CARD_HELPS] as? JsonPrimitive)?.let { prefs[CARD_HELPS] = it.content }
-            (changes[TTS_RATE] as? JsonPrimitive)?.content?.takeIf { it in RATES }?.let { prefs[TTS_RATE] = it }
+            (changes[TTS_RATE] as? JsonPrimitive)?.content?.takeIf { it in Speech.RATES }?.let { prefs[TTS_RATE] = it }
             settings()
         }
         api("GET", "/api/admin/account") { json.encodeToJsonElement(Account.serializer(), relay().account()) }
@@ -328,11 +127,11 @@ class LocalServer(
         api("GET", "/api/admin/data") {
             buildJsonObject {
                 put("lessons", lessons.list().size)
-                put("bytes", lessons.bytes() + audio.walkTopDown().filter { it.isFile }.sumOf { it.length() }) // with their sound
+                put("bytes", lessons.bytes() + speech.bytes()) // with their sound
             }
         }
         api("DELETE", "/api/admin/lessons") {
-            audio.listFiles()?.forEach { it.delete() } // their sound too (AnkiDroid keeps its own copy)
+            speech.deleteAll() // their sound too (AnkiDroid keeps its own copy)
             buildJsonObject { put("deleted", lessons.deleteAll()) }
         }
 
@@ -343,9 +142,9 @@ class LocalServer(
             } catch (e: Exception) {
                 throw BadRequest("computer.scan_unavailable")
             } ?: return@api buildJsonObject { put("cancelled", true) }
-            connect(read)
+            computer.connect(read)
         }
-        api("PUT", "/api/admin/computer") { connect(body().string("address")) }
+        api("PUT", "/api/admin/computer") { computer.connect(body().string("address")) }
         api("POST", "/api/admin/mode") {
             val mode = body().string("mode")
             if (mode == COMPUTER_MODE && prefs[COMPUTER].isNullOrEmpty()) throw BadRequest("computer.not_found")
@@ -354,16 +153,16 @@ class LocalServer(
             buildJsonObject { put("url", if (mode == COMPUTER_MODE) prefs[COMPUTER]!! else "/") }
         }
         api("GET", "/api/lang") {
-            val codes = i18nCodes()
+            val codes = texts.codes()
             buildJsonObject {
                 put("lang", JsonNull) // the page uses the phone's language
                 put("available", JsonArray(codes.map(::JsonPrimitive)))
-                put("names", JsonObject(codes.associateWith { JsonPrimitive(i18n(it, "meta", "name") ?: it) }))
+                put("names", JsonObject(codes.associateWith { JsonPrimitive(texts.get(it, "meta", "name") ?: it) }))
             }
         }
         api("GET", "/api/voices") {
             try {
-                voices()
+                speech.voices()
             } catch (e: RelayException) {
                 throw BadRequest("tts.voices_unavailable", buildJsonObject { put("detail", e.code) })
             }
@@ -373,23 +172,20 @@ class LocalServer(
             if (!allowed()) return@get
             val text = call.request.queryParameters["text"].orEmpty()
             val voice = call.request.queryParameters["voice"].orEmpty()
-            val mp3 = runCatching { speech(text, voice) }.getOrNull()
+            val mp3 = runCatching { speech.read(text, voice) }.getOrNull()
             if (mp3 == null) call.respondText("", status = HttpStatusCode.BadGateway)
             else call.respondBytes(mp3.readBytes(), ContentType.Audio.MPEG)
         }
 
         // --- Prompts: Notosaurus's (from the page's languages), then the user's
-        api("GET", "/api/prompts") { JsonArray(builtinPrompts(lang()) + userPrompts()) }
-        api("POST", "/api/prompts") { savePrompt(null, body()) }
-        api("PUT", "/api/prompts/{id}") { savePrompt(param("id").toInt(), body()) }
+        api("GET", "/api/prompts") { JsonArray(prompts.all(lang())) }
+        api("POST", "/api/prompts") { prompts.save(null, body()) }
+        api("PUT", "/api/prompts/{id}") { prompts.save(param("id").toInt(), body()) }
         api("DELETE", "/api/prompts/{id}") {
-            writePrompts(userPrompts().filter { it.jsonObject["id"]!!.toPlain() != param("id") })
+            prompts.delete(param("id"))
             JsonNull
         }
-        api("POST", "/api/prompts/{id}/duplicate") {
-            val source = (builtinPrompts(lang()) + userPrompts()).first { it.jsonObject["id"]!!.toPlain() == param("id") }
-            savePrompt(null, source.jsonObject)
-        }
+        api("POST", "/api/prompts/{id}/duplicate") { prompts.duplicate(lang(), param("id")) }
 
         // --- Lessons
         api("GET", "/api/lessons") { JsonArray(lessons.list().map(lessons::summary)) }
@@ -426,8 +222,8 @@ class LocalServer(
             val n = param("n").toIntOrNull() ?: notFound()
             val photo = lessons.photo(id, n) ?: notFound()
             photo.writeBytes(turnPhoto(photo.readBytes(), 90))
-            val cards = lesson["cards"]!!.jsonArray.map { turnedMask(it.jsonObject, n, 90) }
-            val frames = (lesson["frames"] as? JsonArray)?.map { turnedFrame(it.jsonObject, n, 90) }.orEmpty()
+            val cards = lesson.cards().map { Diagrams.turnedMask(it, n, 90) }
+            val frames = (lesson["frames"] as? JsonArray)?.map { Diagrams.turnedFrame(it.jsonObject, n, 90) }.orEmpty()
             lessons.update(id, buildJsonObject { put("cards", JsonArray(cards)); put("frames", JsonArray(frames)) }) ?: notFound()
         }
         get("/api/lessons/{id}/photos/{n}") {
@@ -443,17 +239,17 @@ class LocalServer(
 
         // --- The AI, through the relay
         making("/api/extract") { form, onCard ->
-            val made = generate(form, onCard)
+            val made = generation.make(form, onCard)
             lessons.create(made.content, made.photos)
         }
         // "Cancel" while waiting: the relay call stops, no lesson is saved
         api("POST", "/api/generations/{job}/cancel") {
-            buildJsonObject { put("cancelled", generating[param("job")]?.also { it.cancel() } != null) }
+            buildJsonObject { put("cancelled", generation.cancel(param("job"))) }
         }
         // Generated again in its place (another prompt, photos, or carefully this time)
         making("/api/lessons/{id}/regenerate") { form, onCard ->
             val old = lesson()
-            val made = generate(form, onCard)
+            val made = generation.make(form, onCard)
             lessons.regenerated(old.string("id"), made.content, made.photos) ?: notFound()
         }
         api("POST", "/api/lessons/{id}/revise") {
@@ -464,7 +260,7 @@ class LocalServer(
                 put("deck", buildJsonObject { put("deck", req["deck"]!!); put("cards", req["cards"]!!) })
                 put("instruction", req["instruction"]!!)
                 put("language", languageName())
-                put("instructions", instructions())
+                put("instructions", generation.instructions())
             }
             val revised = relay().withPhotos("revise", request, lessons.photos(lesson.string("id")))
             val changes = JsonObject(req + mapOf("deck" to revised["deck"]!!, "cards" to revised["cards"]!!))
@@ -483,74 +279,30 @@ class LocalServer(
                 put("deck", lesson.string("deck"))
                 put("language", languageName())
                 put("page_texts", lesson["page_texts"] ?: JsonArray(emptyList()))
-                put("instructions", instructions())
+                put("instructions", generation.instructions())
             }
             JsonObject(relay().post("explain", request) - "usage")
         }
         // --- Pictures, through the relay (as app/main.py): drawn, the user's own, none
-        api("POST", "/api/lessons/{id}/pictures") {
-            val lesson = lesson()
-            val id = lesson.string("id")
-            val cards = lesson["cards"]!!.jsonArray.map { it.jsonObject }.toMutableList()
-            val failures = mutableListOf<JsonObject>()
-            val todo = cards.indices.filter { i ->
-                cards[i].string("picture").isEmpty() && (cards[i].string("picture_prompt").isNotBlank() || cards[i].string("figure").isNotBlank())
-            }
-            val few = Semaphore(PICTURES_AT_ONCE)
-            coroutineScope {
-                todo.map { i ->
-                    async {
-                        few.withPermit {
-                            try {
-                                cards[i] = JsonObject(cards[i] + ("picture" to JsonPrimitive(drawn(id, cards[i], fresh = false))))
-                            } catch (e: RelayException) { // a card without its picture is still a card
-                                failures += buildJsonObject { put("code", e.code); put("params", e.params) }
-                            }
-                        }
-                    }
-                }.awaitAll()
-            }
-            buildJsonObject {
-                put("lesson", savedCards(id, cards))
-                put("failures", failures.size)
-                put("error", failures.firstOrNull() ?: JsonNull)
-            }
-        }
+        api("POST", "/api/lessons/{id}/pictures") { pictures.drawMissing(lesson()) }
         // A card's picture drawn again: its subject (or figure), or the one the user wrote
         api("POST", "/api/lessons/{id}/cards/{card}/picture/draw") {
             val lesson = lesson()
-            val cards = lesson["cards"]!!.jsonArray.map { it.jsonObject }.toMutableList()
-            val i = cardIndex(cards)
-            val card = cards[i]
-            val figure = card.string("figure").isNotBlank()
-            val given = body()["subject"]?.takeIf { it !is JsonNull }?.jsonPrimitive?.content
-            val subject = (given ?: card.string(if (figure) "figure" else "picture_prompt")).trim()
-            if (subject.isEmpty()) throw BadRequest("picture.no_subject")
-            val asked = JsonObject(card + ((if (figure) "figure" else "picture_prompt") to JsonPrimitive(subject)))
-            cards[i] = JsonObject(asked + ("picture" to JsonPrimitive(drawn(lesson.string("id"), asked, fresh = true))))
-            buildJsonObject {
-                put("card", cards[i])
-                put("lesson", savedCards(lesson.string("id"), cards))
-            }
+            val subject = body()["subject"]?.takeIf { it !is JsonNull }?.jsonPrimitive?.content
+            pictures.redraw(lesson, cardIndex(lesson), subject)
         }
         // The user's own photo as the card's picture (the page made it card size)
         post("/api/lessons/{id}/cards/{card}/picture") {
             if (!allowed()) return@post
             val (status, answer) = try {
                 val lesson = lesson()
-                val cards = lesson["cards"]!!.jsonArray.map { it.jsonObject }.toMutableList()
-                val i = cardIndex(cards)
+                val i = cardIndex(lesson)
                 var photo: ByteArray? = null
                 call.receiveMultipart(formFieldLimit = 20L * 1024 * 1024).forEachPart { part ->
                     if (part is PartData.FileItem && part.name == "photo") photo = part.provider().toByteArray()
                     part.dispose()
                 }
-                val name = savePicture(lesson.string("id"), cards[i].string("id"), photo ?: throw BadRequest("extract.no_input"), "jpg")
-                cards[i] = JsonObject(cards[i] + ("picture" to JsonPrimitive(name)))
-                HttpStatusCode.Created to buildJsonObject {
-                    put("card", cards[i])
-                    put("lesson", savedCards(lesson.string("id"), cards))
-                }
+                HttpStatusCode.Created to pictures.own(lesson, i, photo ?: throw BadRequest("extract.no_input"))
             } catch (e: Exception) {
                 failure(e) ?: throw e
             }
@@ -559,18 +311,12 @@ class LocalServer(
         // No picture on the card any more: a text card
         api("DELETE", "/api/lessons/{id}/cards/{card}/picture") {
             val lesson = lesson()
-            val cards = lesson["cards"]!!.jsonArray.map { it.jsonObject }.toMutableList()
-            val i = cardIndex(cards)
-            cards[i] = JsonObject(cards[i] + listOf("picture", "picture_prompt", "figure").associateWith { JsonPrimitive("") })
-            buildJsonObject {
-                put("card", cards[i])
-                put("lesson", savedCards(lesson.string("id"), cards))
-            }
+            pictures.remove(lesson, cardIndex(lesson))
         }
         get("/api/lessons/{id}/pictures/{name}") {
             if (!allowed()) return@get
             val name = param("name")
-            val file = lessons.images(param("id"))?.resolve(name)?.takeIf { PICTURE.matches(name) && it.isFile }
+            val file = pictures.file(param("id"), name)
             when {
                 file == null -> call.respondText("", status = HttpStatusCode.NotFound)
                 name.endsWith(".svg") -> {
@@ -601,7 +347,7 @@ class LocalServer(
                 put("cards", req["cards"]!!)
             })
             readyAnki()
-            val (sounds, failures) = sounds(deck, req.string("voice"))
+            val (sounds, failures) = speech.sounds(deck, req.string("voice"))
             val lessonId = req.string("lesson_id")
             val folder = lessons.images(lessonId)
             val pictures = deck.cards.mapNotNull { c -> folder?.resolve(c.picture)?.takeIf { c.picture.isNotEmpty() && it.isFile }?.let { c.picture to it } }.toMap()
@@ -649,14 +395,7 @@ class LocalServer(
         }
     }
 
-    // --- Routes: the token checked, errors as the page expects them ({"detail": {code, params}})
-
-    private class NotFound : Exception()
-
-    /** "Cancel" stopped the lesson being made. */
-    private class Cancelled : Exception()
-
-    private class BadRequest(val code: String, val params: JsonObject = JsonObject(emptyMap())) : Exception(code)
+    // --- Routes: the token checked, errors as the page expects them (Errors.kt)
 
     /** AnkiDroid installed and allowed, asked for when the cards are first added: its Play
      * Store page when it's missing, its permission dialog when it isn't allowed yet. */
@@ -665,8 +404,6 @@ class LocalServer(
         if (!anki.installed()) throw BadRequest("anki.android_missing")
         if (!anki.permitted() && !requestAnkiPermission()) throw BadRequest("anki.android_refused")
     }
-
-    private fun notFound(): Nothing = throw NotFound()
 
     private fun Route.api(method: String, path: String, handler: suspend RoutingContext.() -> JsonElement) {
         val body: suspend RoutingContext.() -> Unit = {
@@ -693,37 +430,6 @@ class LocalServer(
         return false
     }
 
-    /** Connect to the computer's Notosaurus: its QR code's address (or one typed), checked,
-     * kept, and the app switched to it. Returns where to go. */
-    private suspend fun connect(raw: String): JsonObject {
-        val url = computerUrl(raw) ?: throw BadRequest("computer.not_a_qr")
-        if (!isNotosaurus(url)) throw BadRequest("computer.not_found")
-        prefs[COMPUTER] = url.toString()
-        prefs[COMPUTER_NAME] = computerName(url).orEmpty()
-        prefs[MODE] = COMPUTER_MODE
-        modeChanged()
-        return buildJsonObject { put("url", url.toString()) }
-    }
-
-    /** The computer's name, which its /api/config gives a paired phone (the QR code's
-     * token pairs it); null from an add-on older than that, or without a token. */
-    private suspend fun computerName(url: URI): String? = withContext(Dispatchers.IO) {
-        val request = okhttp3.Request.Builder().url("${origin(url)}/api/config?${url.rawQuery.orEmpty()}").build()
-        runCatching {
-            computerClient.newCall(request).execute().use {
-                if (it.isSuccessful) json.parseToJsonElement(it.body.string()).jsonObject.string("computer_name") else null
-            }
-        }.getOrNull()?.takeIf { it.isNotBlank() }
-    }
-
-    /** Notosaurus answers there: its /api/lang, which a phone not paired yet may read. */
-    private suspend fun isNotosaurus(url: URI): Boolean = withContext(Dispatchers.IO) {
-        val request = okhttp3.Request.Builder().url("${origin(url)}/api/lang").build()
-        runCatching {
-            computerClient.newCall(request).execute().use { it.isSuccessful && "\"available\"" in it.body.string() }
-        }.getOrDefault(false)
-    }
-
     private fun settings() = buildJsonObject {
         put(RELAY, prefs[RELAY] ?: DEFAULT_RELAY)
         put(KEY, masked(prefs[KEY].orEmpty())) // shown, not given back whole
@@ -735,21 +441,12 @@ class LocalServer(
         put(MODE, prefs[MODE] ?: PHONE_MODE)
         prefs[COMPUTER]?.let {
             put(COMPUTER, it)
-            put("computer_address", origin(URI(it))) // without its token
+            put("computer_address", Computer.origin(URI(it))) // without its token
             put("computer_name", prefs[COMPUTER_NAME].orEmpty())
         }
     }
 
     private fun masked(key: String) = if (key.length <= 8) "•".repeat(key.length) else "${key.take(4)}…${key.takeLast(4)}"
-
-    /** The answer to an error the page translates; null: not one of ours. */
-    private fun failure(e: Exception): Pair<HttpStatusCode, JsonObject>? = when (e) {
-        is NotFound -> HttpStatusCode.NotFound to error("lesson.not_found", JsonObject(emptyMap()))
-        is RelayException -> HttpStatusCode.BadGateway to error(e.code, e.params)
-        is BadRequest -> HttpStatusCode.BadRequest to error(e.code, e.params)
-        is Cancelled -> HttpStatusCode.Conflict to error("extract.cancelled", JsonObject(emptyMap()))
-        else -> null
-    }
 
     /**
      * A lesson made (a new one, or again in its place): as JSON, or as the AI writes
@@ -757,7 +454,7 @@ class LocalServer(
      * _streamed): {"card"} (or {"restart"}) lines, then {"lesson"}, {"error"} or
      * {"cancelled"}. The form is read first: the answer then outlives the request.
      */
-    private fun Route.making(path: String, make: suspend RoutingContext.(Form, OnCard) -> JsonObject) {
+    private fun Route.making(path: String, make: suspend RoutingContext.(GenerationForm, OnCard) -> JsonObject) {
         post(path) {
             if (!allowed()) return@post
             val form = form()
@@ -793,59 +490,29 @@ class LocalServer(
         }
     }
 
-    private fun error(code: String, params: JsonObject) = buildJsonObject {
-        put("detail", buildJsonObject { put("code", code); put("params", params) })
-    }
-
     private fun RoutingContext.param(name: String) = call.parameters[name]!!
     private suspend fun RoutingContext.body() = json.parseToJsonElement(call.receiveText()).jsonObject
     private fun RoutingContext.lesson() = lessons.get(param("id")) ?: notFound()
     private fun RoutingContext.lang() = call.request.headers["X-Notosaurus-Lang"]?.lowercase() ?: "en"
-    private fun RoutingContext.languageName() = i18n(lang(), "meta", "englishName") ?: "English"
+    private fun RoutingContext.languageName() = texts.get(lang(), "meta", "englishName") ?: "English"
 
-    // --- The page's files and languages
+    private fun RoutingContext.cardIndex(lesson: JsonObject): Int =
+        lesson.cards().indexOfFirst { it.string("id") == param("card") }.takeIf { it >= 0 } ?: throw BadRequest("card.not_found")
 
-    private fun i18nCodes(): List<String> = languages().sorted()
-
-    private fun i18nFile(lang: String): JsonObject =
-        web("i18n/$lang.json")?.let { json.parseToJsonElement(it.decodeToString()).jsonObject } ?: JsonObject(emptyMap())
-
-    /** A text of the page's languages (the app's shortcuts), English when missing. */
-    fun text(lang: String, vararg keys: String): String? = i18n(lang, *keys) ?: i18n("en", *keys)
-
-    private fun i18n(lang: String, vararg keys: String): String? {
-        var value: JsonElement? = i18nFile(lang)
-        for (key in keys) value = (value as? JsonObject)?.get(key)
-        return (value as? JsonPrimitive)?.content
-    }
-
-    // --- Prompts (app/prompts.py)
-
-    private fun builtinPrompts(lang: String): List<JsonElement> {
-        val texts = i18nFile(lang)["builtinPrompts"] as? JsonObject ?: JsonObject(emptyMap())
-        val english = i18nFile("en")["builtinPrompts"] as? JsonObject ?: JsonObject(emptyMap())
-        return BUILTIN.mapNotNull { key ->
-            val prompt = (texts[key] ?: english[key])?.jsonObject ?: return@mapNotNull null
-            JsonObject(PROMPT_DEFAULTS + prompt + mapOf("id" to JsonPrimitive("notosaurus:$key"), "builtin" to JsonPrimitive(true)))
+    /** The page's form for making a lesson, read whole first (the answer may outlive the request). */
+    private suspend fun RoutingContext.form(): GenerationForm {
+        val fields = mutableMapOf<String, String>()
+        val images = mutableListOf<ByteArray>()
+        call.receiveMultipart(formFieldLimit = 20L * 1024 * 1024).forEachPart { part ->
+            when (part) {
+                is PartData.FormItem -> fields[part.name!!] = part.value
+                is PartData.FileItem -> images += part.provider().toByteArray()
+                else -> {}
+            }
+            part.dispose()
         }
+        return GenerationForm(fields, images, lang())
     }
-
-    private fun userPrompts(): List<JsonElement> =
-        if (prompts.isFile) json.parseToJsonElement(prompts.readText()).jsonArray else emptyList()
-
-    private fun writePrompts(list: List<JsonElement>) = prompts.writeText(JsonArray(list).toString())
-
-    private fun savePrompt(id: Int?, prompt: JsonObject): JsonObject {
-        val list = userPrompts().toMutableList()
-        val newId = id ?: ((list.maxOfOrNull { it.jsonObject["id"]!!.toPlain().toIntOrNull() ?: 0 } ?: 0) + 1)
-        val saved = JsonObject(PROMPT_DEFAULTS + prompt.filterKeys { it in PROMPT_FIELDS } + mapOf("id" to JsonPrimitive(newId), "builtin" to JsonPrimitive(false)))
-        val at = list.indexOfFirst { it.jsonObject["id"]!!.toPlain() == newId.toString() }
-        if (at >= 0) list[at] = saved else list += saved
-        writePrompts(list)
-        return saved
-    }
-
-    private fun JsonElement.toPlain() = (this as? JsonPrimitive)?.content ?: toString()
 
     companion object {
         const val COOKIE = "notosaurus_app"
@@ -856,27 +523,7 @@ class LocalServer(
         const val INSTRUCTIONS = "instructions"
         const val CARD_HELPS = "card_helps"
 
-        // The voice chosen for a lesson whose voice is "auto" (Google Chirp 3 HD: the same
-        // name in every language); a voice's name, as the page tells them from Anki locales
-        const val DEFAULT_VOICE = "Aoede"
-        const val TTS_RATE = "tts_rate" // the voice's speed, as the computer's: "-25%", "-10%", "+0%"
-        private val RATES = mapOf("-25%" to 0.75, "-10%" to Relay.SPEECH_RATE, "+0%" to 1.0)
-
-        /** A box (fractions of the photo) once the photo is turned `degrees` clockwise, as
-         * the computer's (diagrams.rotate_box). */
-        fun rotateBox(box: List<Double>, degrees: Int): List<Double> {
-            val (x0, y0, x1, y1) = box
-            val turned = when (degrees) {
-                90 -> listOf(1 - y1, x0, 1 - y0, x1)
-                180 -> listOf(1 - x1, 1 - y1, 1 - x0, 1 - y0)
-                270 -> listOf(y0, 1 - x1, y1, 1 - x0)
-                else -> return box
-            }
-            return turned.map { BigDecimal(it.coerceIn(0.0, 1.0)).setScale(4, RoundingMode.HALF_EVEN).toDouble() }
-        }
-        private const val PICTURES_AT_ONCE = 4
-        private val PICTURE = Regex("""^picture-[a-z0-9]+-[a-f0-9]{8}\.(jpg|svg)$""") // ours only: no "../"
-        private val VOICE = Regex("""^[a-z]{2,3}-[A-Z]{2}-[\w-]+$""")
+        const val TTS_RATE = Speech.TTS_RATE
 
         // Prototype: the relay on the computer, seen from the emulator (changed in the settings, "Advanced")
         const val DEFAULT_RELAY = "http://10.0.2.2:8080"
@@ -888,21 +535,10 @@ class LocalServer(
         const val COMPUTER = "computer" // the computer's address, as its QR code gives it (with its token)
         const val COMPUTER_NAME = "computer_name" // its name, shown in the settings ("" when it didn't say)
 
-        private val computerClient = okhttp3.OkHttpClient.Builder()
-            .connectTimeout(3, java.util.concurrent.TimeUnit.SECONDS)
-            .readTimeout(5, java.util.concurrent.TimeUnit.SECONDS)
-            .build()
+        /** The computer's Notosaurus address, from its QR code or as typed (Computer.url). */
+        fun computerUrl(raw: String): URI? = Computer.url(raw)
 
-        /** The computer's Notosaurus address, from its QR code or as typed ("192.168.1.10:8000"):
-         * http(s), a host; null when it isn't one. */
-        fun computerUrl(raw: String): URI? {
-            val text = raw.trim().let { if ("://" in it) it else "http://$it" }
-            val url = runCatching { URI(text) }.getOrNull() ?: return null
-            if (url.scheme !in setOf("http", "https") || url.host.isNullOrEmpty()) return null
-            return if (url.path.isNullOrEmpty()) URI(url.scheme, url.userInfo, url.host, url.port, "/", url.query, null) else url
-        }
-
-        fun origin(url: URI) = "${url.scheme}://${url.host}${if (url.port > 0) ":${url.port}" else ""}"
+        fun origin(url: URI) = Computer.origin(url)
 
         /** The app's: the page from its assets (its own files in page/ first, then the
          * repository's static/, in web/), data in its own files, AnkiDroid. */
@@ -931,16 +567,5 @@ class LocalServer(
 
         private fun asset(context: Context, path: String) =
             runCatching { context.assets.open(path).use { it.readBytes() } }.getOrNull()
-
-        // Notosaurus's prompts, in order (app/prompts.py, BUILTIN)
-        private val BUILTIN = listOf(
-            "auto", "vocabulary", "sentences", "questions", "cloze", "quiz", "true_false", "formulas",
-            "school_formulas", "geometry", "diagram", "pictures", "wordlist",
-        )
-        private val PROMPT_FIELDS = setOf("name", "text", "deck", "voice", "typing", "dictation")
-        private val PROMPT_DEFAULTS = mapOf(
-            "deck" to JsonPrimitive(""), "voice" to JsonPrimitive(""), "typing" to JsonPrimitive(false),
-            "dictation" to JsonPrimitive(false), "used_at" to JsonNull,
-        )
     }
 }
