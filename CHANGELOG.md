@@ -19,6 +19,7 @@ Each pull request adds a line under **Unreleased**. See [Releasing](CONTRIBUTING
 - The coming Android app draws the cards' pictures and figures (through the relay), takes your own photo or none, and sends the pictures to AnkiDroid (“Draw” said “Not Found”).
 - The coming Android app sends diagram labels (the photo, its labels hidden, one asked) and texts with gaps (Anki's own cloze, a card per gap) to AnkiDroid: they were left out.
 - The coming Android app sends a diagram cropped to it (its frame, holding every label), as the computer: easier to read, lighter to sync.
+- The coming Android app saves photos taken sideways upright (their diagram labels with them), turns a saved photo with ↻ (it said “Not Found”), has the voice's speed in its settings, and no longer shows the “.apkg” button (the cards go straight to AnkiDroid).
 - The coming Android app sends multiple-choice and true/false cards to AnkiDroid with their options (the right one marked on the answer): only the question and answer went.
 - The coming Android app's cards in AnkiDroid are the computer's: the helps on the back and the “Did you know?”, reversed cards, typed answers and dictation; a lesson sent again updates its notes; deleting a lesson can delete its notes in AnkiDroid too.
 - The Android app can generate a lesson again in its place (“Regenerate”, “Make again, carefully”).

@@ -455,7 +455,7 @@
             x-text="photos.length ? $t('app.actions.generate') : $t('app.actions.startWithPhoto')"></button>
     <div class="bar-row" x-show="cards.length">
       <!-- Anki reachable: send directly, keep the file as a secondary option -->
-      <button class="btn soft" x-show="anki.available" @click="exportApkg()" :disabled="exporting || sending"
+      <button class="btn soft" x-show="anki.available && apkg" @click="exportApkg()" :disabled="exporting || sending"
               :aria-label="$t('app.actions.downloadApkg')">⬇️ .apkg</button>
       <button class="btn primary wide" x-show="anki.available" @click="sendToAnki()" :disabled="sending || exporting">
         <span x-text="sending ? $t('app.actions.sending') : $t('app.actions.addToAnki')"></span>

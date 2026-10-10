@@ -146,6 +146,20 @@
       </label>
     </section>
 
+    <!-- The voice reading the backs (the relay's), as on the computer -->
+    <section class="panel" x-show="onPhone()">
+      <h2 x-text="$t('admin.voice.title')"></h2>
+      <label class="field">
+        <span x-text="$t('admin.voice.rate')"></span>
+        <select x-model="form.tts_rate" @change="scheduleSave()">
+          <option value="-25%" x-text="$t('admin.voice.slow')"></option>
+          <option value="-10%" x-text="$t('admin.voice.slower')"></option>
+          <option value="+0%" x-text="$t('admin.voice.normal')"></option>
+        </select>
+        <small x-text="$t('admin.voice.hint')"></small>
+      </label>
+    </section>
+
     <!-- Lessons kept on the phone -->
     <section class="panel" x-show="onPhone()">
       <h2 x-text="$t('android.data.title')"></h2>

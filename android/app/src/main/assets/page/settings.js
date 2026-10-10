@@ -98,9 +98,9 @@ document.addEventListener("alpine:init", () => {
     async saveNow() {
       clearTimeout(this.saveTimer);
       this.saveState = "saving";
-      const { relay, instructions, card_helps } = this.form;
+      const { relay, instructions, card_helps, tts_rate } = this.form;
       try {
-        const saved = await api("/api/admin/settings", json("PUT", { relay, instructions, card_helps }));
+        const saved = await api("/api/admin/settings", json("PUT", { relay, instructions, card_helps, tts_rate }));
         this.form.relay = saved.relay;
         this.saveState = "saved";
       } catch (e) {
