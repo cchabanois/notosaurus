@@ -879,6 +879,108 @@
         }
       }
     },
+    "/v1/card-picture": {
+      "post": {
+        "summary": "Card Picture",
+        "description": "A card's figure or picture, the AI deciding which when needed (pictures.card_picture).",
+        "operationId": "card_picture_v1_card_picture_post",
+        "parameters": [
+          {
+            "name": "X-Notosaurus-Version",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "The client's version (\"1.1.0\").",
+              "title": "X-Notosaurus-Version"
+            },
+            "description": "The client's version (\"1.1.0\")."
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CardPictureRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CardPictureResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Codes: `relay.invalid_key`",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "402": {
+            "description": "Codes: `relay.no_credits`",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Codes: `relay.invalid_request`",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "426": {
+            "description": "Codes: `relay.client_outdated`",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Codes: `relay.daily_limit`",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Codes: `relay.unavailable`",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/v1/plan-picture": {
       "post": {
         "summary": "Plan Picture",
@@ -1625,6 +1727,83 @@
           "back"
         ],
         "title": "Card"
+      },
+      "CardPictureRequest": {
+        "properties": {
+          "card": {
+            "$ref": "#/components/schemas/Card"
+          },
+          "asked": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 1000
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Asked",
+            "description": "What the user wrote; null: none."
+          },
+          "language": {
+            "type": "string",
+            "maxLength": 50,
+            "title": "Language",
+            "description": "English name of the language to answer in (\"French\").",
+            "default": "English"
+          },
+          "fresh": {
+            "type": "boolean",
+            "title": "Fresh",
+            "description": "Draw it again rather than take it from the cache.",
+            "default": false
+          },
+          "find": {
+            "type": "boolean",
+            "title": "Find",
+            "description": "A free picture looked for first, for a real thing.",
+            "default": true
+          }
+        },
+        "type": "object",
+        "required": [
+          "card"
+        ],
+        "title": "CardPictureRequest",
+        "description": "A card's figure or picture (pictures.card_picture): its own, drawn as it is; or\nwhat was written for it (any language), the AI deciding a figure or a picture. JSON."
+      },
+      "CardPictureResponse": {
+        "properties": {
+          "card": {
+            "$ref": "#/components/schemas/Card",
+            "description": "The card, its picture's fields as decided (figure, picture_prompt…, picture_source)."
+          },
+          "data": {
+            "type": "string",
+            "title": "Data",
+            "description": "The figure's SVG or the picture's JPEG, base64."
+          },
+          "media_type": {
+            "type": "string",
+            "enum": [
+              "image/svg+xml",
+              "image/jpeg"
+            ],
+            "title": "Media Type"
+          },
+          "usage": {
+            "$ref": "#/components/schemas/Usage"
+          }
+        },
+        "type": "object",
+        "required": [
+          "card",
+          "data",
+          "media_type",
+          "usage"
+        ],
+        "title": "CardPictureResponse"
       },
       "Deck": {
         "properties": {

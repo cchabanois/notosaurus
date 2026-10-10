@@ -28,6 +28,7 @@ import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.json.JsonArray
 import kotlinx.serialization.json.JsonObject
+import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.put
 import kotlinx.serialization.json.int
@@ -48,6 +49,7 @@ import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.TemporaryFolder
 import java.io.File
+import java.util.Base64
 import java.util.concurrent.TimeUnit
 
 /**
@@ -167,6 +169,21 @@ class LocalServerTest {
 
     private fun relayAnswers(body: String, code: Int = 200) =
         relay.enqueue(MockResponse.Builder().code(code).body(body).build())
+
+    /** The relay's /v1/card-picture, as the core: the card's picture decided (`decide`, from the
+     * request), then a figure (an SVG) or a picture (a "JPEG" holding the request). */
+    private fun cardPicture(request: RecordedRequest, decide: (JsonObject) -> Map<String, String> = { emptyMap() }): MockResponse {
+        val asked = json.parseToJsonElement(request.body!!.utf8()).jsonObject
+        val card = JsonObject(asked["card"]!!.jsonObject + decide(asked).mapValues { JsonPrimitive(it.value) })
+        val figure = card.string("figure").isNotBlank()
+        val data = if (figure) "<svg/>" else "jpeg $asked"
+        return MockResponse.Builder().body(buildJsonObject {
+            put("card", card)
+            put("data", Base64.getEncoder().encodeToString(data.toByteArray()))
+            put("media_type", if (figure) "image/svg+xml" else "image/jpeg")
+            put("usage", buildJsonObject { put("credits", 1); put("credits_left", 97) })
+        }.toString()).build()
+    }
 
     private fun RecordedRequest.multipartRequest(): JsonObject {
         val text = body!!.utf8()
@@ -484,17 +501,14 @@ class LocalServerTest {
         val id = lesson.string("id")
         val (apple, triangle) = lesson["cards"]!!.jsonArray.map { it.jsonObject.string("id") }
 
-        // The missing ones drawn: a picture (/v1/picture) and a figure (/v1/figure)
+        // The missing ones drawn by the relay (/v1/card-picture): a picture and a figure. Another
+        // subject written for a picture: the relay's AI plans it (a picture, as written)
         relay.dispatcher = object : mockwebserver3.Dispatcher() {
             override fun dispatch(request: RecordedRequest) = when (request.url.encodedPath) {
-                "/v1/picture" -> MockResponse.Builder().setHeader("Content-Type", "image/jpeg").body("jpeg " + request.body!!.utf8()).build()
-                // Another subject written for a picture: the relay's AI plans it (a picture, as written)
-                "/v1/plan-picture" -> MockResponse.Builder().body(buildJsonObject {
-                    put("kind", "picture")
-                    put("description", json.parseToJsonElement(request.body!!.utf8()).jsonObject.string("asked"))
-                    put("usage", buildJsonObject { put("credits", 1); put("credits_left", 96) })
-                }.toString()).build()
-                else -> MockResponse.Builder().body("""{"svg": "<svg/>", "usage": {"credits": 1, "credits_left": 97}}""").build()
+                "/v1/card-picture" -> cardPicture(request) { asked ->
+                    asked.string("asked").let { if (it.isEmpty()) emptyMap() else mapOf("picture_prompt" to it) }
+                }
+                else -> MockResponse.Builder().code(404).build()
             }
         }
         val drawn = client.post("/api/lessons/$id/pictures") { page() }.json().jsonObject
@@ -1067,20 +1081,28 @@ class LocalServerTest {
         val lesson = client.submitFormWithBinaryData("/api/extract", formData { append("prompt", "p") }) { page() }.json().jsonObject
         relay.takeRequest(5, TimeUnit.SECONDS) // the extraction
         val asked = mutableListOf<JsonObject>()
+        val found = json.parseToJsonElement(
+            """{"source": "commons", "licence": "CC0", "page": "https://commons.wikimedia.org/wiki/File:Dog.jpg"}""",
+        )
         relay.dispatcher = object : mockwebserver3.Dispatcher() {
             override fun dispatch(request: RecordedRequest): MockResponse {
-                asked += json.parseToJsonElement(request.body!!.utf8()).jsonObject
-                return MockResponse.Builder().setHeader("Content-Type", "image/jpeg")
-                    .setHeader(Relay.PICTURE_SOURCE_HEADER, """{"source": "commons", "licence": "CC0", "page": "https://commons.wikimedia.org/wiki/File:Dog.jpg"}""")
-                    .body("jpeg").build()
+                val body = json.parseToJsonElement(request.body!!.utf8()).jsonObject
+                asked += body
+                val card = JsonObject(body["card"]!!.jsonObject + ("picture_source" to found))
+                return MockResponse.Builder().body(buildJsonObject {
+                    put("card", card)
+                    put("data", Base64.getEncoder().encodeToString("jpeg".toByteArray()))
+                    put("media_type", "image/jpeg")
+                    put("usage", buildJsonObject { put("credits", 1); put("credits_left", 98) })
+                }.toString()).build()
             }
         }
         val id = lesson.string("id")
         val drawn = client.post("/api/lessons/$id/pictures") { page() }.json().jsonObject
         val source = drawn["lesson"]!!.jsonObject["cards"]!!.jsonArray[0].jsonObject["picture_source"]!!.jsonObject
         assertEquals("https://commons.wikimedia.org/wiki/File:Dog.jpg", source.string("page")) // kept with the card
-        assertEquals("dog", asked[0].string("search"))
-        assertEquals("Comment dit-on ? → el perro", asked[0].string("context"))
+        assertEquals("dog", asked[0]["card"]!!.jsonObject.string("picture_search")) // the relay looks for it
+        assertEquals("true", asked[0]["find"]!!.jsonPrimitive.content)
 
         // Always drawn: in the settings
         client.put("/api/admin/settings") { page(); contentType(ContentType.Application.Json); setBody("""{"picture_find": false}""") }
@@ -1093,7 +1115,7 @@ class LocalServerTest {
         }
         assertEquals(HttpStatusCode.OK, again.status)
         client.post("/api/lessons/$id/pictures") { page() }
-        assertFalse("search" in asked.last())
+        assertEquals("false", asked.last()["find"]!!.jsonPrimitive.content)
     }
 
     @Test
@@ -1107,10 +1129,8 @@ class LocalServerTest {
             override fun dispatch(request: RecordedRequest): MockResponse {
                 asked += request.url.encodedPath to request.body!!.utf8()
                 return when (request.url.encodedPath) {
-                    "/v1/plan-picture" -> MockResponse.Builder().body(
-                        """{"kind": "figure", "description": "Deux ensembles, leur réunion hachurée", "search": "", "usage": {"credits": 1, "credits_left": 98}}""",
-                    ).build()
-                    "/v1/figure" -> MockResponse.Builder().body("""{"svg": "<svg/>", "usage": {"credits": 1, "credits_left": 97}}""").build()
+                    // The relay's AI decides: a figure
+                    "/v1/card-picture" -> cardPicture(request) { mapOf("figure" to "Deux ensembles, leur réunion hachurée") }
                     else -> MockResponse.Builder().body("""{"results": [], "words": "union Venn diagram"}""").build()
                 }
             }
@@ -1122,10 +1142,11 @@ class LocalServerTest {
         }.json().jsonObject["card"]!!.jsonObject
         assertEquals("Deux ensembles, leur réunion hachurée", drawn.string("figure"))
         assertTrue(drawn.string("picture").endsWith(".svg"))
-        val plan = json.parseToJsonElement(asked[0].second).jsonObject
-        assertEquals("/v1/plan-picture", asked[0].first)
-        assertEquals("French", plan.string("language"))
-        assertEquals("/v1/figure", asked[1].first)
+        val made = json.parseToJsonElement(asked.single().second).jsonObject
+        assertEquals("/v1/card-picture", asked.single().first) // one call: decided and drawn
+        assertEquals("French", made.string("language"))
+        assertEquals("", made.string("asked"))
+        assertEquals("true", made["fresh"]!!.jsonPrimitive.content)
 
         client.post("/api/pictures/search") {
             page(); contentType(ContentType.Application.Json); setBody("""{"subject": "la réunion", "context": "La réunion ? → A ∪ B"}""")

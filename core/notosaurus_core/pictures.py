@@ -13,6 +13,7 @@ import io
 import logging
 import re
 from pathlib import Path
+from typing import NamedTuple
 
 from PIL import Image as PILImage
 from PIL import ImageOps
@@ -277,16 +278,63 @@ async def sourced_picture(
     return jpeg, drawn
 
 
-async def figure_or_picture(s: AIConfig, folder: Path, card: Card, fresh: bool = False) -> str:
-    """The card's figure (SVG, drawn by the cards' AI) or picture (a free one found, or the
-    image model's; from the cache unless `fresh`: then drawn), saved in the lesson with
-    where it comes from (card.picture_source); returns its file name."""
+class CardPicture(NamedTuple):
+    card: Card  # its picture's fields as decided: figure or picture_prompt / picture_search, picture_source
+    data: bytes  # the figure's SVG (cleaned), or the picture's JPEG, card size
+    extension: str  # "svg" or "jpg"
+
+
+async def card_picture(
+    s: AIConfig,
+    card: Card,
+    asked: str | None = None,
+    language: str = "English",
+    fresh: bool = False,
+    find: bool = True,
+    pixabay_key: str = "",
+) -> CardPicture:
+    """A card's figure or picture: the one rule for the computer and the relay (the app).
+
+    Its own description, unchanged (`asked` None or the same): drawn as it is. A figure's
+    changed: that figure redrawn. Otherwise (nothing yet, or a picture's text changed, in
+    any language): the cards' AI decides an exact figure or an image model's picture and
+    describes it (llm.plan_picture). A figure is drawn by the cards' AI; a picture is a
+    free one found first for a real thing (s.picture_find and `find`), else the image
+    model's; from the cache unless `fresh` (then drawn again). `language`: the cards', its
+    English name."""
+    card = card.model_copy()
+    current = (card.figure or card.picture_prompt).strip()
+    written = (asked or "").strip()
+    if card.figure.strip() and written:
+        card.figure = written  # a figure stays one: drawn from what was written
+    elif not current or (asked is not None and written != current):
+        plan = await llm.plan_picture(s, card.front, card.back, written, language)
+        if not plan.description:
+            raise AppError("picture.no_subject")  # (a 400, as before: nothing to draw)
+        figure = plan.kind == "figure"
+        card.figure = plan.description if figure else ""
+        card.picture_prompt, card.picture_search = ("", "") if figure else (plan.description, plan.search)
     if card.figure.strip():
+        svg = figures.clean(await llm.draw_figure(s, card.figure))
         card.picture_source = PictureSource(source="drawn", model=s.model_for_provider())
-        return figures.save(folder, card, await llm.draw_figure(s, card.figure))
+        return CardPicture(card, svg.encode(), "svg")
     context = f"{card.front.strip()} → {card.back.strip()}"
-    jpeg, card.picture_source = await sourced_picture(s, card.picture_prompt, fresh, card.picture_search, context)
-    return save(folder, card, jpeg)
+    search = card.picture_search if find else ""
+    jpeg, card.picture_source = await sourced_picture(s, card.picture_prompt, fresh, search, context, pixabay_key)
+    return CardPicture(card, jpeg, "jpg")
+
+
+async def figure_or_picture(
+    s: AIConfig, folder: Path, card: Card, fresh: bool = False, asked: str | None = None, language: str = "English"
+) -> str:
+    """The card's figure or picture (card_picture), saved in the lesson, the card's picture
+    fields updated in place (what it shows, where it comes from); returns its file name."""
+    made = await card_picture(s, card, asked, language, fresh)
+    for field in ("figure", "picture_prompt", "picture_search", "picture_source"):
+        setattr(card, field, getattr(made.card, field))
+    if made.extension == "svg":
+        return figures.save(folder, card, made.data.decode())
+    return save(folder, card, made.data)
 
 
 async def draw_all(s: AIConfig, folder: Path, cards: list[Card]) -> tuple[int, dict | None]:
