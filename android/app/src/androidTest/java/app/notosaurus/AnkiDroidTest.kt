@@ -43,6 +43,21 @@ class AnkiDroidTest {
     }
 
     @Test
+    fun multipleChoices() {
+        val anki = Anki(Device.context)
+        val question = "La Révolution commence en ? $run"
+        val deck = Deck("Notosaurus test $run", listOf(Card(question, "1789", choices = listOf("1715", "1799"), id = "c$run")))
+        assertEquals(1, anki.send(deck).added)
+        val api = AddContentApi(Device.context)
+        val model = api.modelList!!.entries.first { it.value == Anki.CHOICE_MODEL }.key
+        val note = api.findDuplicateNotes(model, "c$run").single() // "Id" first: told apart by the card's own id
+        assertEquals(question, note.fields[1])
+        assertTrue(note.fields[3], note.fields[3].startsWith("<ol class=\"notosaurus-choices\">"))
+        assertTrue(note.fields[4].contains("<li class=\"right\">1789</li>"))
+        assertEquals(0, anki.send(deck).added) // not twice
+    }
+
+    @Test
     fun diagramLabelsAndGaps() {
         val anki = Anki(Device.context)
         // A photo where the lessons are kept (AnkiDroid reads it through our FileProvider)
