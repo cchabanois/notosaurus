@@ -163,6 +163,7 @@ class LocalServer(
             "dictation" to JsonPrimitive(fields["dictation"] == "true"),
             "choice" to (found["choice"] ?: JsonPrimitive("")),
             "page_texts" to texts,
+            "frames" to (found["frames"] ?: JsonArray(emptyList())), // each diagram's frame: what AnkiDroid shows
         )
         return Made(content, images) // to do: turned upright (found["turns"]), as the computer does
     }
@@ -542,7 +543,11 @@ class LocalServer(
             val pictures = deck.cards.mapNotNull { c -> folder?.resolve(c.picture)?.takeIf { c.picture.isNotEmpty() && it.isFile }?.let { c.picture to it } }.toMap()
             // The diagrams: the photos their labels are on
             val photos = deck.cards.mapNotNull { it.mask?.page }.distinct().mapNotNull { n -> lessons.photo(lessonId, n)?.let { n to it } }.toMap()
-            val media = Media(sounds, pictures, photos, lessonId)
+            // The diagram frames as the page has them (the user may have moved one), else the lesson's
+            val frames = (req["frames"]?.takeIf { it is JsonArray } ?: lessons.get(lessonId)?.get("frames"))
+                ?.jsonArray?.associate { it.jsonObject["page"]!!.jsonPrimitive.content.toInt() to it.jsonObject["box"]!!.jsonArray.map { v -> v.jsonPrimitive.content.toDouble() } }
+                .orEmpty()
+            val media = Media(sounds, pictures, photos, lessonId, frames)
             val sent = try {
                 withContext(Dispatchers.IO) { anki.send(deck, media) }
             } catch (e: Exception) { // e.g. AnkiDroid never opened: no collection yet

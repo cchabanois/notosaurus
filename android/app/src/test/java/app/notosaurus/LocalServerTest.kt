@@ -509,6 +509,26 @@ class LocalServerTest {
         assertEquals(setOf(2), anki.media.photos.keys)
         assertArrayEquals("photo 2".toByteArray(), anki.media.photos[2]!!.readBytes())
         assertEquals(id, anki.media.lesson)
+        assertEquals(emptyMap<Int, List<Double>>(), anki.media.frames) // none in this lesson
+    }
+
+    @Test
+    fun theDiagramFramesKeptAndSent() = app { client ->
+        relayAnswers("""{"deck": {"deck": "SVT", "cards": [{"front": "(1) ?", "back": "la bouche", "mask": {"page": 1, "n": 1, "box": [0.1, 0.1, 0.2, 0.15]}}]},
+            "turns": [0], "frames": [{"page": 1, "box": [0.05, 0.05, 0.6, 0.7]}], "usage": {"credits": 1, "credits_left": 99}}""")
+        val lesson = client.submitFormWithBinaryData("/api/extract", formData {
+            append("prompt", "p")
+            append("images", "photo 1".toByteArray(), Headers.build {
+                append(HttpHeaders.ContentType, "image/jpeg")
+                append(HttpHeaders.ContentDisposition, "filename=\"page-1.jpg\"")
+            })
+        }) { page() }.json().jsonObject
+        assertEquals("""[{"page":1,"box":[0.05,0.05,0.6,0.7]}]""", lesson["frames"].toString())
+        client.post("/api/anki/send") {
+            page(); contentType(ContentType.Application.Json)
+            setBody("""{"deck": "SVT", "cards": ${lesson["cards"]}, "voice": "", "lesson_id": "${lesson.string("id")}"}""")
+        }
+        assertEquals(mapOf(1 to listOf(0.05, 0.05, 0.6, 0.7)), anki.media.frames)
     }
 
     @Test
