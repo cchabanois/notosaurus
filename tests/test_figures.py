@@ -2,6 +2,7 @@
 
 import apkg
 import pytest
+from helpers import plain_image
 
 from app import lessons
 from notosaurus_core import figures, pictures
@@ -137,13 +138,7 @@ def test_draw_decides_a_figure_or_a_picture(client, monkeypatch):
         return PicturePlan(kind="picture", description="a red apple", search="red apple")
 
     async def draw(s, subject):  # the image model: never a real one here (no key on the CI, a cost elsewhere)
-        import io
-
-        from PIL import Image
-
-        out = io.BytesIO()
-        Image.new("RGB", (64, 64), "red").save(out, "PNG")
-        return out.getvalue()
+        return plain_image(64, 64, "red", "PNG")
 
     monkeypatch.setattr(llm, "plan_picture", plan)
     monkeypatch.setattr(pictures, "draw", draw)

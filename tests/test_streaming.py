@@ -4,10 +4,10 @@ JSON per line, then the lesson (or the error)."""
 import asyncio
 import json
 import types as py_types
-from concurrent.futures import ThreadPoolExecutor
 
 import pytest
 from google.genai import errors, types
+from helpers import run
 
 from notosaurus_core import llm
 from notosaurus_core.config import AIConfig
@@ -15,12 +15,6 @@ from notosaurus_core.llm import CardStream
 from notosaurus_core.providers import gemini
 
 NDJSON = {"Accept": "application/x-ndjson"}
-
-
-def run(coroutine):
-    """asyncio.run, in a thread of its own (after the page tests, Playwright's loop runs here)."""
-    with ThreadPoolExecutor(1) as pool:
-        return pool.submit(asyncio.run, coroutine).result()
 
 
 def test_cards_read_as_they_come():

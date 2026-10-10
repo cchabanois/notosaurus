@@ -1,29 +1,15 @@
 """A dictation (the app's 🎤) as the text its speaker meant to type: llm.transcribe."""
 
 import asyncio
-import types as py_types
 
 import pytest
-from google.genai import types
+from helpers import HearingGemini
 
 from notosaurus_core import llm
 from notosaurus_core.config import AIConfig
 from notosaurus_core.providers import gemini
 
 RECORDING = llm.Image(b"\xff\xf1 adts frames", "audio/aac")
-
-
-class HearingGemini:
-    """A Gemini that hears the recording: what it was sent, and its text."""
-
-    def __init__(self, text):
-        self.text, self.calls = text, []
-        self.aio = py_types.SimpleNamespace(models=py_types.SimpleNamespace(generate_content=self.generate))
-
-    async def generate(self, model, contents, config):
-        self.calls.append((contents, config))
-        candidate = py_types.SimpleNamespace(finish_reason=types.FinishReason.STOP)
-        return py_types.SimpleNamespace(usage_metadata=None, candidates=[candidate], text=self.text)
 
 
 def test_gemini_hears_the_recording(monkeypatch):

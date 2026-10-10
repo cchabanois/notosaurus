@@ -4,6 +4,7 @@ import io
 
 import apkg
 import pytest
+from helpers import plain_image
 from PIL import Image
 
 from notosaurus_core import diagrams, llm, prompts
@@ -11,9 +12,7 @@ from notosaurus_core.models import Card, Frame, Mask
 
 
 def photo(width=1000, height=500) -> bytes:
-    out = io.BytesIO()
-    Image.new("RGB", (width, height), "white").save(out, "JPEG")
-    return out.getvalue()
+    return plain_image(width, height)
 
 
 @pytest.mark.parametrize(
@@ -63,13 +62,13 @@ def test_masks_that_cant_be_placed_are_dropped():
 
 def test_one_light_image_per_diagram(tmp_path):
     page = tmp_path / "page-1.jpg"
-    Image.new("RGB", (3000, 2000), "white").save(page, "JPEG")
+    page.write_bytes(photo(3000, 2000))
     image = diagrams.page_image(tmp_path / "images", page)
     assert max(Image.open(image).size) == diagrams.CARD_SIDE
     assert diagrams.page_image(tmp_path / "images", page) == image  # same photo: same file, not redone
 
     # Another photo content: a new file; the old one is pruned once unused
-    Image.new("RGB", (3000, 2000), "black").save(page, "JPEG")
+    page.write_bytes(plain_image(3000, 2000, "black"))
     other = diagrams.page_image(tmp_path / "images", page)
     assert other != image
     diagrams.prune(tmp_path / "images", {other})
@@ -262,7 +261,7 @@ def test_frame_set_by_hand(client, tmp_path):
 
 def test_cropped_image_and_masks(tmp_path):
     page = tmp_path / "page-1.jpg"
-    Image.new("RGB", (1000, 500), "white").save(page, "JPEG")
+    page.write_bytes(photo())
     box = [0.2, 0.2, 0.6, 1.0]
     assert Image.open(diagrams.page_image(tmp_path / "images", page, box)).size == (400, 400)
     assert diagrams.page_image(tmp_path / "images", page, box) != diagrams.page_image(tmp_path / "images", page)
