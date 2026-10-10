@@ -836,26 +836,38 @@
   "builtinPrompts": {
     "auto": {
       "name": "Automatisch (nach der Lektion)",
-      "text": "Sieh dir die Lektion an und wähle die nützlichsten Karten, um sie zu lernen:\n- Vokabeln einer Sprache: eine Karte pro Wort oder Ausdruck, vorne auf Deutsch, hinten in der gelernten Sprache;\n- Lernstoff eines Fachs (Geschichte, Naturwissenschaften, Erdkunde …): kurze Fragen / Antworten oder Lückentexte für die Sätze, die man sich merken muss;\n- Formeln: eine Karte pro Formel (vorne: was sie berechnet, hinten: die Formel);\n- ein Begriff, den eine Figur verständlich macht (Geometrie oder jede Figur der Lektion): Karten mit einer genauen Figur, wenn sie hilft;\n- Abbildung mit Beschriftungen: Abbildung zum Beschriften, eine Karte pro Beschriftung;\n- ein Bild nur, wenn es wirklich beim Merken hilft (eine Person, ein Ort, ein Bauwerk, ein Kunstwerk, ein Tier), nie für einen abstrakten Begriff und nicht auf jeder Karte: hinten, wenn es die Antwort zeigt (das Porträt des Präsidenten, nach dessen Namen gefragt wird), vorne nur, wenn sich die Frage auf das Bild bezieht („Wer ist das?“).\nMisch sie, wenn die Seite mehreres davon enthält.\nSag in einem Satz, was du gewählt hast.",
+      "text": "Sieh dir die Lektion an und wähle die nützlichsten Karten, um sie zu lernen:\n- Vokabeln einer Sprache: eine Karte pro Wort oder Ausdruck, vorne in meiner Sprache, hinten in der gelernten Sprache;\n- Lernstoff eines Fachs (Geschichte, Naturwissenschaften, Erdkunde …): kurze Fragen / Antworten oder Lückentexte für die Sätze, die man sich merken muss;\n- Formeln: eine Karte pro Formel (vorne: was sie berechnet, hinten: die Formel);\n- ein Begriff, den eine Figur verständlich macht (Geometrie oder jede Figur der Lektion): Karten mit einer genauen Figur, wenn sie hilft;\n- Abbildung mit Beschriftungen: Abbildung zum Beschriften, eine Karte pro Beschriftung;\n- ein Bild nur, wenn es wirklich beim Merken hilft (eine Person, ein Ort, ein Bauwerk, ein Kunstwerk, ein Tier), nie für einen abstrakten Begriff und nicht auf jeder Karte: hinten, wenn es die Antwort zeigt (das Porträt des Präsidenten, nach dessen Namen gefragt wird), vorne nur, wenn sich die Frage auf das Bild bezieht („Wer ist das?“).\nMisch sie, wenn die Seite mehreres davon enthält.\nSag in einem Satz, was du gewählt hast.",
       "deck": "{Fach}::{Titel der Lektion}",
       "voice": "auto"
     },
     "vocabulary": {
-      "name": "Vokabeln einer Sprache",
-      "text": "Erstelle Anki-Karten mit den Vokabeln der Sprachlektion. Ein Wort oder Ausdruck pro Karte. Vorne in meiner Sprache, hinten in der gelernten Sprache, bei Nomen mit Artikel. Gib unter „Info“ das Genus an, den Plural, wenn er unregelmäßig ist, und ein kurzes Beispiel, wenn die Lektion eins enthält.",
+      "name": "Sprache: Vokabeln",
+      "text": "Erstelle Anki-Karten mit den Vokabeln der Sprachlektion. Ein Wort oder Ausdruck pro Karte. Vorne in meiner Sprache, hinten in der gelernten Sprache, bei Nomen mit Artikel. Gib unter „Info“ das Genus an, den Plural, wenn er unregelmäßig ist, und ein kurzes Beispiel, wenn die Lektion eins enthält.\nOhne Foto: nach dem, was ich hier schreibe (eine Wortliste oder ein Thema).",
       "deck": "{Sprache}::Lektion {n}",
       "voice": "auto"
     },
     "sentences": {
-      "name": "Sätze einer Sprache",
+      "name": "Sprache: Sätze",
       "text": "Erstelle Anki-Karten mit den vollständigen Sätzen der Sprachlektion. Vorderseite: der Satz in meiner Sprache. Rückseite: der Satz in der gelernten Sprache.",
       "deck": "{Sprache}::Lektion {n}::Sätze",
       "voice": "auto"
     },
+    "conjugation": {
+      "name": "Sprache: Konjugation",
+      "deck": "{Sprache}::Konjugation",
+      "voice": "auto",
+      "text": "Erstelle Konjugationskarten mit den Verben der Sprachlektion: ein Verb, eine Zeit und eine Person pro Karte. Vorderseite: das Verb im Infinitiv in der gelernten Sprache, die Zeit und die Person (z. B. „être — Präsens — wir“). Rückseite: die konjugierte Form in der gelernten Sprache, mit ihrem Pronomen. Info: die Regel oder Unregelmäßigkeit, die man sich merken muss, sonst leer.\nOhne Foto: nach dem, was ich hier schreibe (Verben, Zeiten)."
+    },
     "questions": {
       "name": "Fragen / Antworten",
-      "text": "Erstelle Karten Frage → Antwort, um den Inhalt der Lektion zu lernen (Daten, Definitionen, Schlüsselbegriffe). Kurze, genaue Fragen und knappe Antworten, auf Deutsch.",
+      "text": "Erstelle Karten Frage → Antwort, um den Inhalt der Lektion zu lernen (Daten, Definitionen, Schlüsselbegriffe). Kurze, genaue Fragen und knappe Antworten, in der Sprache der Lektion.",
       "deck": "{Fach}::{Titel der Lektion}"
+    },
+    "definitions": {
+      "name": "Definitionen",
+      "deck": "{Fach}::{Titel der Lektion}",
+      "voice": "",
+      "text": "Erstelle eine Karte pro Schlüsselbegriff der Lektion, die Begriffe, die man definieren können muss. Vorderseite: der Begriff. Rückseite: seine Definition, kurz, so wie die Lektion sie gibt. Info: ein kurzes Beispiel, wenn die Lektion eins gibt.\nOhne Foto: nach dem, was ich hier schreibe."
     },
     "cloze": {
       "name": "Lückentext",
@@ -865,7 +877,7 @@
     },
     "quiz": {
       "name": "Multiple Choice",
-      "text": "Erstelle einen Multiple-Choice-Test, um die Lektion zu lernen: eine Frage pro wichtigem Punkt (Daten, Definitionen, Schlüsselbegriffe), mit der richtigen Antwort und drei plausiblen falschen. Kurze Fragen, auf Deutsch. Info: eine kurze Erklärung der richtigen Antwort, wenn sie hilft.",
+      "text": "Erstelle einen Multiple-Choice-Test, um die Lektion zu lernen: eine Frage pro wichtigem Punkt (Daten, Definitionen, Schlüsselbegriffe), mit der richtigen Antwort und drei plausiblen falschen. Kurze Fragen, in der Sprache der Lektion. Info: eine kurze Erklärung der richtigen Antwort, wenn sie hilft.",
       "deck": "{Fach}::{Titel der Lektion}",
       "voice": ""
     },
@@ -875,6 +887,12 @@
       "deck": "{Fach}::{Titel der Lektion}",
       "voice": ""
     },
+    "methods": {
+      "name": "Methoden (Schritte)",
+      "deck": "{Fach}::Methoden",
+      "voice": "",
+      "text": "Erstelle eine Karte pro Methode oder Fertigkeit der Lektion (eine Gleichung lösen, das Komma setzen, einen Schluss schreiben …). Vorderseite: „Wie …?“. Rückseite: die Schritte, nummeriert und kurz. Info: ein kurzes Beispiel, wenn die Lektion eins gibt.\nOhne Foto: nach dem, was ich hier schreibe."
+    },
     "formulas": {
       "name": "Formeln (Mathe, Physik …)",
       "text": "Erstelle eine Karte pro Formel der Lektion. Vorderseite: was die Formel berechnet (oder ihr Name). Rückseite: die Formel. Info: wofür jeder Buchstabe steht. Wenn es in der Formel um eine Figur geht (Kreisfläche, Pythagoras …), füge diese Figur mit ihren Buchstaben hinzu.",
@@ -883,31 +901,25 @@
     },
     "geometry": {
       "name": "Geometrie (mit Figuren)",
-      "text": "Erstelle Karten, um die Geometrie der Lektion (oder des Themas unten) zu lernen: Figuren, Eigenschaften, Fachbegriffe (Hypotenuse, Radius, Mittelsenkrechte …). Füge eine genaue Figur hinzu, wenn sie beim Antworten hilft, ohne je die Antwort darauf zu schreiben.",
+      "text": "Erstelle Karten, um die Geometrie der Lektion zu lernen: Figuren, Eigenschaften, Fachbegriffe (Hypotenuse, Radius, Mittelsenkrechte …). Füge eine genaue Figur hinzu, wenn sie beim Antworten hilft, ohne je die Antwort darauf zu schreiben.\nOhne Foto: nach dem Thema, das ich hier schreibe.",
       "deck": "Mathe::{Titel der Lektion}",
       "voice": ""
     },
     "diagram": {
-      "name": "Abbildung beschriften",
-      "text": "Das Foto zeigt eine Abbildung mit Beschriftungen (Namen, die durch einen Pfeil oder eine Linie mit der Zeichnung verbunden sind). Verdecke den Text jeder Beschriftung hinter einer Nummer und erstelle eine Karte pro Beschriftung. Vorderseite: die Abbildung mit der Frage „Was ist (n)?“. Rückseite: der Text der Beschriftung.",
+      "name": "Abbildung oder Karte beschriften",
+      "text": "Das Foto zeigt eine Abbildung oder eine Karte mit Beschriftungen (Namen, die durch einen Pfeil oder eine Linie mit der Zeichnung verbunden sind). Verdecke den Text jeder Beschriftung hinter einer Nummer und erstelle eine Karte pro Beschriftung. Vorderseite: die Abbildung mit der Frage „Was ist (n)?“. Rückseite: der Text der Beschriftung.",
       "deck": "{Fach}::{Titel der Abbildung}"
     },
     "pictures": {
-      "name": "Vokabeln in Bildern (Sprachen)",
-      "text": "Erstelle Karten mit den Vokabeln der Sprachlektion (ohne Foto: 10 häufige Wörter zu dem Thema, das ich hier ergänze), nur Wörter, die ein Bild eindeutig zeigt (Gegenstände, Tiere, Lebensmittel, Orte, sichtbare Handlungen). Vorderseite: das Bild des Wortes mit der Frage „Wie sagt man das?“. Rückseite: das Wort in der gelernten Sprache, mit Artikel. Info: das Wort auf Deutsch.",
+      "name": "Sprache: Vokabeln in Bildern",
+      "text": "Erstelle Karten mit den Vokabeln der Sprachlektion, nur Wörter, die ein Bild eindeutig zeigt (Gegenstände, Tiere, Lebensmittel, Orte, sichtbare Handlungen). Vorderseite: das Bild des Wortes mit der Frage „Wie sagt man das?“. Rückseite: das Wort in der gelernten Sprache, mit Artikel. Info: das Wort in meiner Sprache.\nOhne Foto: 10 häufige Wörter zu dem Thema, das ich hier schreibe.",
       "deck": "{Sprache}::Bilder",
-      "voice": "auto"
-    },
-    "wordlist": {
-      "name": "Wortliste (ohne Foto)",
-      "text": "Erstelle eine Karte pro Wort der Liste unten. Vorderseite: das Wort auf Deutsch. Rückseite: seine Übersetzung in die gelernte Sprache, mit Artikel.\nListe: ",
-      "deck": "{Sprache}::Wörter",
       "voice": "auto"
     },
     "dictation": {
       "name": "Wörterdiktat",
-      "text": "Erstelle eine Karte pro Wort, das man richtig schreiben können muss, aus der Lektion oder aus der Liste unten. Vorderseite: ein kurzer Satz mit dem Wort, in dem das Wort durch „…“ ersetzt ist (seine Bedeutung, wenn der Satz nicht reicht, um es zu erraten). Rückseite: das Wort allein, genau so geschrieben wie im Satz. Info: ein nützlicher Rechtschreibtipp (Groß- und Kleinschreibung, ss/ß, Dehnungs-h, Wortfamilie …), sonst leer.",
-      "deck": "Deutsch::Rechtschreibung",
+      "text": "Erstelle eine Karte pro Wort, das man richtig schreiben können muss, aus der Lektion. Vorderseite: ein kurzer Satz mit dem Wort, in dem das Wort durch „…“ ersetzt ist (seine Bedeutung, wenn der Satz nicht reicht, um es zu erraten). Rückseite: das Wort allein, genau so geschrieben wie im Satz. Info: ein nützlicher Rechtschreibtipp (Groß- und Kleinschreibung, ss/ß, Dehnungs-h, Wortfamilie …), sonst leer.\nOhne Foto: nach dem, was ich hier schreibe (eine Wortliste oder ein Thema).",
+      "deck": "{Fach}::Rechtschreibung",
       "voice": "auto",
       "typing": true,
       "dictation": true

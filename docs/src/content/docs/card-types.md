@@ -41,7 +41,7 @@ marks the right one. It's plain HTML: it looks the same on every Anki app.
 
 ## Diagrams
 
-With the **Diagram to complete** instructions, the AI finds each label of a diagram and hides
+With the **Diagram or map to complete** instructions, the AI finds each label of a diagram and hides
 it behind a number. Each card asks “What is (2)?” and shows the answer on the diagram.
 
 ![A diagram with its labels hidden](../../assets/screenshots/en/diagram.png)
@@ -79,7 +79,7 @@ make such cards, and so do **Automatic** and the formula instructions when it he
 
 ## Pictures
 
-The **Vocabulary in pictures (languages)** instructions put a picture of each word on the front, drawn by an
+The **Language: vocabulary in pictures** instructions put a picture of each word on the front, drawn by an
 image model: from less than a cent to a few cents per picture. Pictures are drawn by the AI
 service of the cards when it can draw (Gemini, OpenAI, OpenRouter), otherwise by another one
 chosen in **Settings → Pictures on cards** (Claude and local models can't draw). That section

@@ -836,26 +836,38 @@
   "builtinPrompts": {
     "auto": {
       "name": "Automatique (d'après la leçon)",
-      "text": "Regarde la leçon et choisis les cartes les plus utiles pour la réviser :\n- vocabulaire d'une langue : une carte par mot ou expression, recto en français, verso dans la langue étudiée ;\n- leçon de cours (histoire, sciences, géographie…) : questions / réponses courtes, ou texte à trous pour les phrases à retenir ;\n- formules : une carte par formule (recto : ce qu'elle calcule, verso : la formule) ;\n- une notion qu'une figure fait comprendre (géométrie, ou toute figure de la leçon) : des cartes avec une figure exacte quand elle aide ;\n- schéma avec des légendes : schéma à compléter, une carte par légende ;\n- une image seulement quand elle aide vraiment à retenir (un personnage, un lieu, un monument, une œuvre, un animal), jamais pour une notion abstraite ni sur chaque carte : au verso quand elle montre la réponse (le portrait du président dont on demande le nom), au recto seulement quand la question porte sur l'image (« Qui est-ce ? »).\nMélange si la page contient plusieurs de ces choses.\nDis en une phrase ce que tu as choisi.",
+      "text": "Regarde la leçon et choisis les cartes les plus utiles pour la réviser :\n- vocabulaire d'une langue : une carte par mot ou expression, recto dans ma langue, verso dans la langue étudiée ;\n- leçon de cours (histoire, sciences, géographie…) : questions / réponses courtes, ou texte à trous pour les phrases à retenir ;\n- formules : une carte par formule (recto : ce qu'elle calcule, verso : la formule) ;\n- une notion qu'une figure fait comprendre (géométrie, ou toute figure de la leçon) : des cartes avec une figure exacte quand elle aide ;\n- schéma avec des légendes : schéma à compléter, une carte par légende ;\n- une image seulement quand elle aide vraiment à retenir (un personnage, un lieu, un monument, une œuvre, un animal), jamais pour une notion abstraite ni sur chaque carte : au verso quand elle montre la réponse (le portrait du président dont on demande le nom), au recto seulement quand la question porte sur l'image (« Qui est-ce ? »).\nMélange si la page contient plusieurs de ces choses.\nDis en une phrase ce que tu as choisi.",
       "deck": "{matière}::{titre de la leçon}",
       "voice": "auto"
     },
     "vocabulary": {
-      "name": "Vocabulaire d'une langue",
-      "text": "Crée des cartes Anki avec le vocabulaire de la leçon de langue. Un mot ou une expression par carte. Recto dans ma langue, verso dans la langue étudiée, avec l'article pour les noms. Dans « info », indique le genre, le pluriel s'il est irrégulier, et un court exemple si la leçon en donne un.",
+      "name": "Langue : vocabulaire",
+      "text": "Crée des cartes Anki avec le vocabulaire de la leçon de langue. Un mot ou une expression par carte. Recto dans ma langue, verso dans la langue étudiée, avec l'article pour les noms. Dans « info », indique le genre, le pluriel s'il est irrégulier, et un court exemple si la leçon en donne un.\nSans photo : à partir de ce que j'écris ici (une liste de mots, ou un thème).",
       "deck": "{langue}::Leçon {n}",
       "voice": "auto"
     },
     "sentences": {
-      "name": "Phrases d'une langue",
+      "name": "Langue : phrases",
       "text": "Crée des cartes Anki avec les phrases complètes de la leçon de langue. Recto : la phrase dans ma langue. Verso : la phrase dans la langue étudiée.",
       "deck": "{langue}::Leçon {n}::Phrases",
       "voice": "auto"
     },
+    "conjugation": {
+      "name": "Langue : conjugaison",
+      "deck": "{langue}::Conjugaison",
+      "voice": "auto",
+      "text": "Crée des cartes de conjugaison avec les verbes de la leçon de langue : un verbe, un temps et une personne par carte. Recto : le verbe à l'infinitif dans la langue étudiée, le temps et la personne (ex. « sein — présent — nous »). Verso : la forme conjuguée dans la langue étudiée, avec son pronom. Info : la règle ou l'irrégularité à retenir, sinon vide.\nSans photo : à partir de ce que j'écris ici (des verbes, des temps)."
+    },
     "questions": {
       "name": "Questions / réponses",
-      "text": "Crée des cartes question → réponse pour réviser le contenu de la leçon (dates, définitions, notions clés). Questions courtes et précises, réponses brèves, en français.",
+      "text": "Crée des cartes question → réponse pour réviser le contenu de la leçon (dates, définitions, notions clés). Questions courtes et précises, réponses brèves, dans la langue de la leçon.",
       "deck": "{matière}::{titre de la leçon}"
+    },
+    "definitions": {
+      "name": "Définitions",
+      "deck": "{matière}::{titre de la leçon}",
+      "voice": "",
+      "text": "Crée une carte par mot-clé de la leçon, les termes qu'il faut savoir définir. Recto : le mot-clé. Verso : sa définition, courte, telle que la leçon la donne. Info : un exemple court, si la leçon en donne un.\nSans photo : à partir de ce que j'écris ici."
     },
     "cloze": {
       "name": "Texte à trous",
@@ -865,7 +877,7 @@
     },
     "quiz": {
       "name": "QCM",
-      "text": "Crée un QCM pour réviser la leçon : une question par notion importante (dates, définitions, notions clés), avec la bonne réponse et trois mauvaises réponses plausibles. Questions courtes, en français. Info : une courte explication de la bonne réponse, si elle aide.",
+      "text": "Crée un QCM pour réviser la leçon : une question par notion importante (dates, définitions, notions clés), avec la bonne réponse et trois mauvaises réponses plausibles. Questions courtes, dans la langue de la leçon. Info : une courte explication de la bonne réponse, si elle aide.",
       "deck": "{matière}::{titre de la leçon}",
       "voice": ""
     },
@@ -875,6 +887,12 @@
       "deck": "{matière}::{titre de la leçon}",
       "voice": ""
     },
+    "methods": {
+      "name": "Méthodes (étapes)",
+      "deck": "{matière}::Méthodes",
+      "voice": "",
+      "text": "Crée une carte par méthode ou savoir-faire de la leçon (résoudre une équation, accorder un participe passé, rédiger une conclusion…). Recto : « Comment … ? ». Verso : les étapes, numérotées et courtes. Info : un exemple court, si la leçon en donne un.\nSans photo : à partir de ce que j'écris ici."
+    },
     "formulas": {
       "name": "Formules (maths, physique…)",
       "text": "Crée une carte par formule de la leçon. Recto : ce que la formule permet de calculer (ou son nom). Verso : la formule. Info : ce que représente chaque lettre. Quand la formule porte sur une figure (aire du disque, Pythagore…), mets cette figure, avec ses lettres.",
@@ -883,31 +901,25 @@
     },
     "geometry": {
       "name": "Géométrie (avec figures)",
-      "text": "Crée des cartes pour réviser la géométrie de la leçon (ou du thème ci-dessous) : figures, propriétés, vocabulaire (hypoténuse, rayon, médiatrice…). Mets une figure exacte quand elle aide à répondre, sans jamais y écrire la réponse.",
+      "text": "Crée des cartes pour réviser la géométrie de la leçon : figures, propriétés, vocabulaire (hypoténuse, rayon, médiatrice…). Mets une figure exacte quand elle aide à répondre, sans jamais y écrire la réponse.\nSans photo : à partir du thème que j'écris ici.",
       "deck": "Maths::{titre de la leçon}",
       "voice": ""
     },
     "diagram": {
-      "name": "Schéma à compléter",
-      "text": "La photo montre un schéma avec des légendes (des noms reliés au dessin par une flèche ou un trait). Cache le texte de chaque légende derrière un numéro et crée une carte par légende. Recto : le schéma, avec la question « Qu'est-ce que (n) ? ». Verso : le texte de la légende.",
+      "name": "Schéma ou carte à compléter",
+      "text": "La photo montre un schéma ou une carte avec des légendes (des noms reliés au dessin par une flèche ou un trait). Cache le texte de chaque légende derrière un numéro et crée une carte par légende. Recto : le schéma, avec la question « Qu'est-ce que (n) ? ». Verso : le texte de la légende.",
       "deck": "{matière}::{titre du schéma}"
     },
     "pictures": {
-      "name": "Vocabulaire en images (langues)",
-      "text": "Crée des cartes avec le vocabulaire de la leçon de langue (sans photo : 10 mots courants du thème que j'ajoute ici), seulement des mots qu'une image montre clairement (objets, animaux, aliments, lieux, actions visibles). Recto : l'image du mot, avec la question « Comment dit-on ? ». Verso : le mot dans la langue étudiée, avec l'article. Info : le mot en français.",
+      "name": "Langue : vocabulaire en images",
+      "text": "Crée des cartes avec le vocabulaire de la leçon de langue, seulement des mots qu'une image montre clairement (objets, animaux, aliments, lieux, actions visibles). Recto : l'image du mot, avec la question « Comment dit-on ? ». Verso : le mot dans la langue étudiée, avec l'article. Info : le mot dans ma langue.\nSans photo : 10 mots courants du thème que j'écris ici.",
       "deck": "{langue}::Images",
-      "voice": "auto"
-    },
-    "wordlist": {
-      "name": "Liste de mots (sans photo)",
-      "text": "Crée une carte par mot de la liste ci-dessous. Recto : le mot en français. Verso : sa traduction dans la langue étudiée, avec l'article.\nListe : ",
-      "deck": "{langue}::Mots",
       "voice": "auto"
     },
     "dictation": {
       "name": "Dictée de mots",
-      "text": "Crée une carte par mot à savoir écrire, pris dans la leçon ou dans la liste ci-dessous. Recto : une courte phrase qui utilise le mot, où le mot est remplacé par « … » (la définition si la phrase ne suffit pas à le deviner). Verso : le mot seul, écrit exactement comme dans la phrase. Info : une astuce d'orthographe utile (accord, lettre muette, famille du mot), sinon vide.",
-      "deck": "Français::Dictée",
+      "text": "Crée une carte par mot à savoir écrire, pris dans la leçon. Recto : une courte phrase qui utilise le mot, où le mot est remplacé par « … » (la définition si la phrase ne suffit pas à le deviner). Verso : le mot seul, écrit exactement comme dans la phrase. Info : une astuce d'orthographe utile (accord, lettre muette, famille du mot), sinon vide.\nSans photo : à partir de ce que j'écris ici (une liste de mots, ou un thème).",
+      "deck": "{matière}::Dictée",
       "voice": "auto",
       "typing": true,
       "dictation": true

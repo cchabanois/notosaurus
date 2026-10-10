@@ -234,7 +234,7 @@ class LocalServerTest {
 
         // Notosaurus's prompts in the page's language, "Automatic" first
         val prompts = client.get("/api/prompts") { page("fr") }.json().jsonArray.map { it.jsonObject }
-        assertEquals(13, prompts.size)
+        assertEquals(15, prompts.size) // app/prompts.py BUILTIN
         assertEquals("notosaurus:auto", prompts[0].string("id"))
         assertTrue(prompts.all { it["builtin"]!!.jsonPrimitive.content == "true" })
         val french = json.parseToJsonElement(File(System.getProperty("notosaurus.web") ?: "../../static", "i18n/fr.json").readText())
@@ -249,7 +249,8 @@ class LocalServerTest {
         val copy = client.post("/api/prompts/notosaurus:cloze/duplicate") { page("fr") }.json().jsonObject
         assertEquals(2, copy["id"]!!.jsonPrimitive.int)
         client.delete("/api/prompts/1") { page() }
-        val mine = client.get("/api/prompts") { page() }.json().jsonArray.drop(13).map { it.jsonObject }
+        val all = client.get("/api/prompts") { page() }.json().jsonArray.map { it.jsonObject }
+        val mine = all.filter { it["builtin"]!!.jsonPrimitive.content != "true" } // after Notosaurus's, however many
         assertEquals(listOf(2), mine.map { it["id"]!!.jsonPrimitive.int })
         assertFalse(mine[0]["builtin"]!!.jsonPrimitive.content.toBoolean())
     }

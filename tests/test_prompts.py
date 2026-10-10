@@ -12,15 +12,15 @@ def test_notosaurus_prompts(client):
     fr = client.get("/api/prompts", headers={"X-Notosaurus-Lang": "fr-FR"}).json()
     assert [p["id"] for p in fr] == [f"notosaurus:{k}" for k in prompts.BUILTIN]
     names = {p["id"]: p["name"] for p in fr}
-    assert all(p["builtin"] for p in fr) and names["notosaurus:diagram"] == "Schéma à compléter"
+    assert all(p["builtin"] for p in fr) and names["notosaurus:diagram"] == "Schéma ou carte à compléter"
     # First, so picked when nothing was picked before: the AI chooses from the lesson
     assert fr[0]["name"] == "Automatique (d'après la leçon)" and fr[0]["voice"] == "auto"
     en = client.get("/api/prompts", headers={"X-Notosaurus-Lang": "en"}).json()
-    assert en[1]["name"] == "Vocabulary of a language"  # the same prompts, in English
+    assert en[1]["name"] == "Language: vocabulary"  # the same prompts, in English
     de = client.get("/api/prompts", headers={"X-Notosaurus-Lang": "de-AT"}).json()
-    assert de[1]["name"] == "Vokabeln einer Sprache"
+    assert de[1]["name"] == "Sprache: Vokabeln"
     ja = client.get("/api/prompts", headers={"X-Notosaurus-Lang": "ja"}).json()
-    assert ja[1]["name"] == "Vocabulary of a language"  # no Japanese file: English
+    assert ja[1]["name"] == "Language: vocabulary"  # no Japanese file: English
 
     for method in ("PUT", "DELETE"):
         r = client.request(method, "/api/prompts/notosaurus:questions", json={"name": "x", "text": "y"})
@@ -29,21 +29,21 @@ def test_notosaurus_prompts(client):
 
 def test_duplicate_a_prompt_to_adapt_it(client):
     copy = client.post("/api/prompts/notosaurus:vocabulary/duplicate", headers={"X-Notosaurus-Lang": "fr"}).json()
-    assert (copy["name"], copy["builtin"]) == ("Vocabulaire d'une langue (copie)", False)
+    assert (copy["name"], copy["builtin"]) == ("Langue : vocabulaire (copie)", False)
     changed = client.put(f"/api/prompts/{copy['id']}", json={**copy, "text": "FR → ES", "voice": "es-ES-ElviraNeural"})
     assert changed.json()["voice"] == "es-ES-ElviraNeural"
     again = client.post(f"/api/prompts/{copy['id']}/duplicate", headers={"X-Notosaurus-Lang": "fr"}).json()
-    assert (again["name"], again["text"]) == ("Vocabulaire d'une langue (copie) (copie)", "FR → ES")
+    assert (again["name"], again["text"]) == ("Langue : vocabulaire (copie) (copie)", "FR → ES")
     assert client.post("/api/prompts/notosaurus:nope/duplicate").status_code == 404
     names = [p["name"] for p in client.get("/api/prompts", headers={"X-Notosaurus-Lang": "fr"}).json()]
-    assert names[-2:] == ["Vocabulaire d'une langue (copie)", "Vocabulaire d'une langue (copie) (copie)"]
+    assert names[-2:] == ["Langue : vocabulaire (copie)", "Langue : vocabulaire (copie) (copie)"]
 
 
 def test_notosaurus_prompt_used(client):
-    data = {"prompt": "words: le chat", "prompt_id": "notosaurus:wordlist"}
+    data = {"prompt": "words: le chat", "prompt_id": "notosaurus:dictation"}
     client.post("/api/extract", data=data)
-    wordlist = next(p for p in client.get("/api/prompts").json() if p["id"] == "notosaurus:wordlist")
-    assert wordlist["used_at"] is not None
+    dictation = next(p for p in client.get("/api/prompts").json() if p["id"] == "notosaurus:dictation")
+    assert dictation["used_at"] is not None
 
 
 def test_old_prompts_file_converted(client, tmp_path):

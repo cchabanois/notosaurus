@@ -44,7 +44,7 @@ marque le bon. C'est du HTML simple : le rendu est le même sur toutes les appli
 
 ## Schémas
 
-Avec la consigne **Schéma à compléter**, l'IA trouve chaque légende d'un schéma et la cache
+Avec la consigne **Schéma ou carte à compléter**, l'IA trouve chaque légende d'un schéma et la cache
 derrière un numéro. Chaque carte demande « Qu'est-ce que (2) ? » et montre la réponse sur le
 schéma.
 
@@ -84,7 +84,7 @@ quand c'est utile.
 
 ## Images
 
-La consigne **Vocabulaire en images (langues)** met au recto une image de chaque mot, dessinée par un modèle
+La consigne **Langue : vocabulaire en images** met au recto une image de chaque mot, dessinée par un modèle
 d'images : de moins d'un centime à quelques centimes par image. Les images sont dessinées par
 le service d'IA des cartes quand il sait dessiner (Gemini, OpenAI, OpenRouter), sinon par un
 autre choisi dans **Réglages → Images des cartes** (Claude et les modèles locaux ne dessinent

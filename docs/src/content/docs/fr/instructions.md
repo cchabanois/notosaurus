@@ -26,17 +26,19 @@ Elles ne se modifient pas, mais se **dupliquent** pour en faire ta propre versio
 | Consigne | Ce qu'elle fait |
 |---|---|
 | Automatique (d'après la leçon) | L'IA regarde la leçon et choisit les cartes les plus utiles. |
-| Vocabulaire d'une langue | Une carte par mot ou expression, avec l'article, le genre et le pluriel dans l'info. |
-| Phrases d'une langue | Une carte par phrase, dans ta langue et dans la langue étudiée. |
+| Langue : vocabulaire | Une carte par mot ou expression, avec l'article, le genre et le pluriel dans l'info ; sans photo, à partir d'une liste ou d'un thème. |
+| Langue : phrases | Une carte par phrase, dans ta langue et dans la langue étudiée. |
+| Langue : conjugaison | Un verbe, un temps et une personne par carte ; la forme conjuguée au verso. |
 | Questions / réponses | Des questions courtes sur le contenu : dates, définitions, idées clés. |
+| Définitions | Une carte par mot-clé à savoir définir, sa définition au verso. |
 | Texte à trous | Des phrases à trous : une carte par numéro de trou. |
 | QCM | Une question, la bonne réponse et trois mauvaises plausibles. |
 | Vrai / faux | Des affirmations, dont la moitié fausses avec une seule erreur précise. |
+| Méthodes (étapes) | Une carte par savoir-faire : « Comment … ? », les étapes au verso. |
 | Formules (maths, physique…) | Une carte par formule, avec ce que représente chaque lettre. |
 | Géométrie (avec figures) | Figures, propriétés et vocabulaire, avec une figure exacte dessinée sur les cartes. |
-| Schéma à compléter | Les légendes d'un schéma cachées derrière des numéros : une carte par légende. |
-| Vocabulaire en images (langues) | L'image de chaque mot au recto, dessinée par un modèle d'images ; le mot dans la langue étudiée au verso. |
-| Liste de mots (sans photo) | Une carte par mot de la liste ajoutée à la fin de la consigne (français → espagnol : duplique-la pour une autre langue). |
+| Schéma ou carte à compléter | Les légendes d'un schéma ou d'une carte cachées derrière des numéros : une carte par légende. |
+| Langue : vocabulaire en images | L'image de chaque mot au recto (trouvée ou dessinée) ; le mot dans la langue étudiée au verso. |
 | Dictée de mots | Une carte par mot à savoir écrire : une phrase où il manque le mot au recto, le mot au verso, une astuce d'orthographe. |
 
 ## Tes propres consignes

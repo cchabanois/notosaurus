@@ -507,10 +507,10 @@ def test_prompts_follow_the_language(page):
     sync_api.expect(text).to_have_value(re.compile(r"^Regarde la leçon"))  # "Automatique", in French
     page.locator(".lang-select select").select_option("de")
     sync_api.expect(text).to_have_value(re.compile(r"^Sieh dir die Lektion an"))  # the same prompt, in German
-    sync_api.expect(page.get_by_role("radio", name="⭐ Vokabeln einer Sprache")).to_be_visible()
+    sync_api.expect(page.get_by_role("radio", name="⭐ Sprache: Vokabeln")).to_be_visible()
     text.fill("Meine eigene Anweisung")  # changed for this time: kept
     page.locator(".lang-select select").select_option("es")
-    sync_api.expect(page.get_by_role("radio", name="⭐ Vocabulario de un idioma")).to_be_visible()
+    sync_api.expect(page.get_by_role("radio", name="⭐ Idioma: vocabulario")).to_be_visible()
     sync_api.expect(text).to_have_value("Meine eigene Anweisung")
     page.get_by_role("radio", name="✏️ Libre").click()  # the free prompt stays free
     text.fill("Lo mío")

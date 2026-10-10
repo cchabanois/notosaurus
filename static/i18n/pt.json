@@ -836,26 +836,38 @@
   "builtinPrompts": {
     "auto": {
       "name": "Automático (conforme a lição)",
-      "text": "Olhe a lição e escolha os cartões mais úteis para revisá-la:\n- vocabulário de um idioma: um cartão por palavra ou expressão, frente em português, verso no idioma estudado;\n- lição de uma matéria (história, ciências, geografia…): perguntas / respostas curtas, ou lacunas para as frases que é preciso lembrar;\n- fórmulas: um cartão por fórmula (frente: o que ela calcula, verso: a fórmula);\n- uma noção que uma figura faz entender (geometria, ou qualquer figura da lição): cartões com uma figura exata quando ajudar;\n- esquema com legendas: esquema para completar, um cartão por legenda;\n- uma imagem só quando ela ajuda de verdade a lembrar (uma pessoa, um lugar, um monumento, uma obra, um animal), nunca para uma noção abstrata nem em todos os cartões: no verso quando mostra a resposta (o retrato do presidente cujo nome se pergunta), na frente só quando a pergunta é sobre a imagem (“Quem é?”).\nMisture se a página tiver várias dessas coisas.\nDiga em uma frase o que você escolheu.",
+      "text": "Olhe a lição e escolha os cartões mais úteis para revisá-la:\n- vocabulário de um idioma: um cartão por palavra ou expressão, frente no meu idioma, verso no idioma estudado;\n- lição de uma matéria (história, ciências, geografia…): perguntas / respostas curtas, ou lacunas para as frases que é preciso lembrar;\n- fórmulas: um cartão por fórmula (frente: o que ela calcula, verso: a fórmula);\n- uma noção que uma figura faz entender (geometria, ou qualquer figura da lição): cartões com uma figura exata quando ajudar;\n- esquema com legendas: esquema para completar, um cartão por legenda;\n- uma imagem só quando ela ajuda de verdade a lembrar (uma pessoa, um lugar, um monumento, uma obra, um animal), nunca para uma noção abstrata nem em todos os cartões: no verso quando mostra a resposta (o retrato do presidente cujo nome se pergunta), na frente só quando a pergunta é sobre a imagem (“Quem é?”).\nMisture se a página tiver várias dessas coisas.\nDiga em uma frase o que você escolheu.",
       "deck": "{matéria}::{título da lição}",
       "voice": "auto"
     },
     "vocabulary": {
-      "name": "Vocabulário de um idioma",
-      "text": "Crie cartões do Anki com o vocabulário da lição de idioma. Uma palavra ou expressão por cartão. Frente no meu idioma, verso no idioma estudado, com o artigo para os substantivos. Em “info”, indique o gênero, o plural se for irregular e um exemplo curto se a lição tiver um.",
+      "name": "Idioma: vocabulário",
+      "text": "Crie cartões do Anki com o vocabulário da lição de idioma. Uma palavra ou expressão por cartão. Frente no meu idioma, verso no idioma estudado, com o artigo para os substantivos. Em “info”, indique o gênero, o plural se for irregular e um exemplo curto se a lição tiver um.\nSem foto: a partir do que eu escrevo aqui (uma lista de palavras ou um tema).",
       "deck": "{idioma}::Lição {n}",
       "voice": "auto"
     },
     "sentences": {
-      "name": "Frases de um idioma",
+      "name": "Idioma: frases",
       "text": "Crie cartões do Anki com as frases completas da lição de idioma. Frente: a frase no meu idioma. Verso: a frase no idioma estudado.",
       "deck": "{idioma}::Lição {n}::Frases",
       "voice": "auto"
     },
+    "conjugation": {
+      "name": "Idioma: conjugação",
+      "deck": "{idioma}::Conjugação",
+      "voice": "auto",
+      "text": "Crie cartões de conjugação com os verbos da lição de idioma: um verbo, um tempo e uma pessoa por cartão. Frente: o verbo no infinitivo no idioma estudado, o tempo e a pessoa (ex.: «to be — presente — nós»). Verso: a forma conjugada no idioma estudado, com o seu pronome. Info: a regra ou a irregularidade a lembrar, senão vazio.\nSem foto: a partir do que eu escrevo aqui (verbos, tempos)."
+    },
     "questions": {
       "name": "Perguntas / respostas",
-      "text": "Crie cartões pergunta → resposta para revisar o conteúdo da lição (datas, definições, conceitos-chave). Perguntas curtas e precisas, respostas breves, em português.",
+      "text": "Crie cartões pergunta → resposta para revisar o conteúdo da lição (datas, definições, conceitos-chave). Perguntas curtas e precisas, respostas breves, no idioma da lição.",
       "deck": "{matéria}::{título da lição}"
+    },
+    "definitions": {
+      "name": "Definições",
+      "deck": "{matéria}::{título da lição}",
+      "voice": "",
+      "text": "Crie um cartão para cada palavra-chave da lição, os termos que é preciso saber definir. Frente: a palavra-chave. Verso: a definição, curta, como a lição a dá. Info: um exemplo curto, se a lição der um.\nSem foto: a partir do que eu escrevo aqui."
     },
     "cloze": {
       "name": "Complete as lacunas",
@@ -865,7 +877,7 @@
     },
     "quiz": {
       "name": "Múltipla escolha",
-      "text": "Crie um teste de múltipla escolha para revisar a lição: uma pergunta para cada ponto importante (datas, definições, conceitos-chave), com a resposta certa e três respostas erradas plausíveis. Perguntas curtas, em português. Info: uma breve explicação da resposta certa, se ajudar.",
+      "text": "Crie um teste de múltipla escolha para revisar a lição: uma pergunta para cada ponto importante (datas, definições, conceitos-chave), com a resposta certa e três respostas erradas plausíveis. Perguntas curtas, no idioma da lição. Info: uma breve explicação da resposta certa, se ajudar.",
       "deck": "{matéria}::{título da lição}",
       "voice": ""
     },
@@ -875,6 +887,12 @@
       "deck": "{matéria}::{título da lição}",
       "voice": ""
     },
+    "methods": {
+      "name": "Métodos (etapas)",
+      "deck": "{matéria}::Métodos",
+      "voice": "",
+      "text": "Crie um cartão para cada método ou procedimento da lição (resolver uma equação, acentuar uma palavra, escrever uma conclusão…). Frente: «Como …?». Verso: as etapas, numeradas e curtas. Info: um exemplo curto, se a lição der um.\nSem foto: a partir do que eu escrevo aqui."
+    },
     "formulas": {
       "name": "Fórmulas (matemática, física…)",
       "text": "Crie um cartão para cada fórmula da lição. Frente: o que a fórmula permite calcular (ou o nome dela). Verso: a fórmula. Info: o que cada letra representa. Quando a fórmula tratar de uma figura (área do círculo, Pitágoras…), coloque essa figura, com as letras dela.",
@@ -883,31 +901,25 @@
     },
     "geometry": {
       "name": "Geometria (com figuras)",
-      "text": "Crie cartões para revisar a geometria da lição (ou do tema abaixo): figuras, propriedades, vocabulário (hipotenusa, raio, mediatriz…). Coloque uma figura exata quando ajudar a responder, sem nunca escrever a resposta nela.",
+      "text": "Crie cartões para revisar a geometria da lição: figuras, propriedades, vocabulário (hipotenusa, raio, mediatriz…). Coloque uma figura exata quando ajudar a responder, sem nunca escrever a resposta nela.\nSem foto: a partir do tema que eu escrevo aqui.",
       "deck": "Matemática::{título da lição}",
       "voice": ""
     },
     "diagram": {
-      "name": "Esquema para completar",
-      "text": "A foto mostra um esquema com legendas (nomes ligados ao desenho por uma seta ou um traço). Esconda o texto de cada legenda atrás de um número e crie um cartão por legenda. Frente: o esquema, com a pergunta “O que é (n)?”. Verso: o texto da legenda.",
+      "name": "Esquema ou mapa para completar",
+      "text": "A foto mostra um esquema ou um mapa com legendas (nomes ligados ao desenho por uma seta ou um traço). Esconda o texto de cada legenda atrás de um número e crie um cartão por legenda. Frente: o esquema, com a pergunta “O que é (n)?”. Verso: o texto da legenda.",
       "deck": "{matéria}::{título do esquema}"
     },
     "pictures": {
-      "name": "Vocabulário em imagens (idiomas)",
-      "text": "Crie cartões com o vocabulário da lição de idioma (sem foto: 10 palavras comuns do tema que eu adiciono aqui), só palavras que uma imagem mostra com clareza (objetos, animais, alimentos, lugares, ações visíveis). Frente: a imagem da palavra, com a pergunta “Como se diz?”. Verso: a palavra no idioma estudado, com o artigo. Info: a palavra em português.",
+      "name": "Idioma: vocabulário em imagens",
+      "text": "Crie cartões com o vocabulário da lição de idioma, só palavras que uma imagem mostra com clareza (objetos, animais, alimentos, lugares, ações visíveis). Frente: a imagem da palavra, com a pergunta “Como se diz?”. Verso: a palavra no idioma estudado, com o artigo. Info: a palavra no meu idioma.\nSem foto: 10 palavras comuns do tema que eu escrevo aqui.",
       "deck": "{idioma}::Imagens",
-      "voice": "auto"
-    },
-    "wordlist": {
-      "name": "Lista de palavras (sem foto)",
-      "text": "Crie um cartão para cada palavra da lista abaixo. Frente: a palavra em português. Verso: a tradução dela para o idioma estudado, com o artigo.\nLista: ",
-      "deck": "{idioma}::Palavras",
       "voice": "auto"
     },
     "dictation": {
       "name": "Ditado de palavras",
-      "text": "Crie um cartão para cada palavra que é preciso saber escrever, tirada da lição ou da lista abaixo. Frente: uma frase curta que usa a palavra, com a palavra substituída por “…” (a definição dela se a frase não bastar para adivinhá-la). Verso: a palavra sozinha, escrita exatamente como na frase. Info: uma dica de ortografia útil (acento, s/ss/ç, x/ch, família de palavras…), senão vazio.",
-      "deck": "Português::Ortografia",
+      "text": "Crie um cartão para cada palavra que é preciso saber escrever, tirada da lição. Frente: uma frase curta que usa a palavra, com a palavra substituída por “…” (a definição dela se a frase não bastar para adivinhá-la). Verso: a palavra sozinha, escrita exatamente como na frase. Info: uma dica de ortografia útil (acento, s/ss/ç, x/ch, família de palavras…), senão vazio.\nSem foto: a partir do que eu escrevo aqui (uma lista de palavras ou um tema).",
+      "deck": "{matéria}::Ortografia",
       "voice": "auto",
       "typing": true,
       "dictation": true
