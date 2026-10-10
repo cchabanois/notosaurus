@@ -1,4 +1,4 @@
-// Loads the page scripts (static/i18n.js, static/app.js, static/admin.js) in a Node
+// Loads the page scripts (static/i18n.js, static/app*.js, static/admin.js) in a Node
 // vm context with the browser globals they use stubbed, so their functions can be
 // unit-tested as they ship — no bundler, no dependency, `node --test` only.
 //
@@ -102,7 +102,17 @@ export class CustomEvent {
   constructor(type, init = {}) { this.type = type; this.detail = init.detail; }
 }
 
-// The i18n.js + app.js (or admin.js) pair, booted like the page does: i18n.js loads,
+// The page's own scripts, in its order: those its HTML loads with the given one
+// (app.js: index.html's i18n.js, app-*.js, app.js), the CDN's left out.
+async function pageScripts(script) {
+  const page = script === "admin.js" ? "admin.html" : "index.html";
+  const html = await readFile(path.join(ROOT, "static", page), "utf8");
+  const scripts = [...html.matchAll(/<script[^>]*\ssrc="([^"]+)"/g)].map((m) => m[1]).filter((src) => !/^https?:/.test(src));
+  if (!scripts.includes(script)) throw new Error(`${page} doesn't load ${script}`);
+  return scripts;
+}
+
+// The i18n.js + app.js (or admin.js) scripts, booted like the page does: i18n.js loads,
 // the other script registers on alpine:init, then Alpine starts and everything runs.
 //
 //   const page = await loadScripts("app.js");
@@ -144,7 +154,7 @@ export async function loadScripts(
   };
   const context = vm.createContext(sandbox);
   const run = (code) => vm.runInContext(code, context);
-  for (const file of ["i18n.js", script]) {
+  for (const file of await pageScripts(script)) {
     run(await readFile(path.join(ROOT, "static", file), "utf8"));
   }
   await run("i18nReady");  // the language is loaded: t() answers
