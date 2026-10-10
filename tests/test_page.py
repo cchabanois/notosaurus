@@ -7,6 +7,8 @@ Skipped unless Playwright is installed: `pip install -r requirements-page.txt`, 
 to use the system's). The pages load Alpine.js and KaTeX from a CDN: network needed.
 """
 
+import base64
+import io
 import os
 import re
 import socket
@@ -15,6 +17,7 @@ import time
 
 import pytest
 from conftest import fake_synthesize
+from PIL import Image as PILImage
 
 sync_api = pytest.importorskip("playwright.sync_api")
 import uvicorn  # noqa: E402
@@ -840,3 +843,46 @@ def test_tidy_up_the_instructions(page):
         page.screenshot(path=f"{shots}/tidy.png")
     page.locator(".prompt-actions.tidy").get_by_role("button", name="↩ Annuler").click()
     sync_api.expect(field).to_have_value("la famille en espagnol, dix non douze")
+
+
+def test_find_a_free_picture(page):
+    """🖼️ → “🔎 Find a picture”: the free pictures found, one tapped becomes the card's."""
+    previews = []
+    for colour in ("#c0392b", "#2e86de", "#27ae60", "#f39c12", "#8e44ad", "#16a085"):
+        out = io.BytesIO()
+        PILImage.new("RGB", (120, 90), colour).save(out, "JPEG")
+        previews.append("data:image/jpeg;base64," + base64.b64encode(out.getvalue()).decode())
+    results = [
+        {"source": source, "id": f"{source}-{n}", "title": f"Picture {n}", "preview": preview, "licence": "CC0"}
+        for n, (source, preview) in enumerate(zip(["commons", "openverse"] * 3, previews, strict=True))
+    ]
+    asked = []
+    page.route(
+        "**/api/pictures/search",
+        lambda route: (asked.append(route.request.post_data_json), route.fulfill(json={"results": results})),
+    )
+
+    def found(route):
+        out = io.BytesIO()
+        PILImage.new("RGB", (300, 300), "#2e86de").save(out, "JPEG")
+        lesson_id, card_id = route.request.url.split("/api/lessons/")[1].split("/cards/")
+        card_id = card_id.split("/")[0]
+        page_lesson = page.request.get(f"/api/lessons/{lesson_id}").json()
+        card = next(c for c in page_lesson["cards"] if c["id"] == card_id)
+        route.fulfill(json={"card": {**card, "picture": "picture-x.jpg"}, "lesson": page_lesson})
+
+    page.route("**/picture/found", found)
+    generate_free(page, FRONT_PROMPT)
+    first = page.locator(".flash").first
+    first.get_by_role("button", name="Image").click()
+    first.get_by_role("button", name="🔎 Chercher une image").click()
+    picks = first.locator(".found-pick")
+    sync_api.expect(picks).to_have_count(6)
+    sync_api.expect(
+        first.get_by_text("Images libres de droits (Wikimedia Commons, Openverse) : touche celle qui va.")
+    ).to_be_visible()
+    assert asked[0]["subject"]
+    if shots := os.environ.get("NOTOSAURUS_SHOTS"):
+        first.screenshot(path=f"{shots}/found.png")
+    picks.nth(1).click()
+    sync_api.expect(picks).to_have_count(0)  # chosen: the grid goes

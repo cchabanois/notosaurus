@@ -30,6 +30,9 @@ Each pull request adds a line under **Unreleased**. See [Releasing](CONTRIBUTING
 - For developers: the relay's `/v1/rephrase`.
 - While 🎤 listens and its text is being written (or the instructions tidied up), the field is greyed out and says so (“Listening…”, then “Writing down what you said…”); “Generate” waits.
 
+- 🔎 “Find a picture” in a card's picture panel: free pictures of its subject to choose from (Wikimedia Commons, Openverse; in the coming Android app, Pixabay too), only public domain, CC0 or Pixabay's licence (no credit to give), filtered for pupils. Free, instantly, and exact for real things (a painting, a place, a species); “Draw” is still there.
+- For developers: the relay's `/v1/pictures/search` and `/v1/pictures/found`.
+
 ### Changed
 
 - Gemini's answer stopping halfway (seen once: nothing for minutes) is given up on after 45 s of silence (90 s before its first part): the next model starts again, and if none answers, “Gemini didn't answer in time: try again” instead of waiting forever.

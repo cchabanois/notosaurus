@@ -301,17 +301,21 @@
         "other": "Non è stato possibile disegnare {count} immagini: quelle carte non ne hanno."
       },
       "panel": "Immagine",
-      "subject": "Cosa disegnare (in inglese)",
+      "subject": "Cosa cercare o disegnare (in inglese)",
       "subjectPlaceholder": "per es. a red apple",
       "draw": "🎨 Disegna",
       "redraw": "🎨 Ridisegna",
       "photo": "📷 La mia foto",
       "remove": "✕ Nessuna immagine",
-      "cost": "Un disegno costa circa 3-7 centesimi di dollaro; la tua foto è gratis.",
+      "cost": "Un'immagine trovata o la tua foto è gratuita; un disegno costa circa 3-7 centesimi di dollaro.",
       "figure": "La figura da disegnare (nomi compresi)",
       "figurePlaceholder": "per es. un triangolo rettangolo in C, con l'ipotenusa chiamata “c”",
       "figureCost": "La figura la disegna l'IA delle carte, per meno di un centesimo di dollaro; la tua foto è gratis.",
-      "onBack": "Sul retro (con la risposta)"
+      "onBack": "Sul retro (con la risposta)",
+      "search": "🔎 Cerca un'immagine",
+      "searching": "Ricerca…",
+      "found": "Immagini libere ({sources}): tocca quella giusta.",
+      "none": "Nessuna immagine libera trovata: prova con altre parole (in inglese) o falla disegnare."
     },
     "pairing": {
       "title": "Dispositivo non autorizzato"
@@ -748,7 +752,9 @@
       "failed": "Impossibile disegnare l'immagine: {detail}",
       "empty": "Il modello di immagini non ha dato alcuna immagine.",
       "quota": "{service} rifiuta: quota superata per il modello di immagini (una chiave gratuita non può disegnare). Scegli nelle impostazioni un modello di immagini di un altro servizio.",
-      "no_subject": "Scrivi prima cosa disegnare."
+      "no_subject": "Scrivi prima cosa disegnare.",
+      "search_failed": "La ricerca di immagini non è riuscita: riprova tra un momento.",
+      "not_found": "Questa immagine non è più disponibile: scegline un'altra."
     },
     "card": {
       "not_found": "Questa carta non esiste più: ricarica la lezione."

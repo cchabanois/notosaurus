@@ -301,17 +301,21 @@
         "other": "{count} images n'ont pas pu être dessinées : ces cartes n'en ont pas."
       },
       "panel": "Image",
-      "subject": "Ce qu'il faut dessiner (en anglais)",
+      "subject": "Ce qu'il faut chercher ou dessiner (en anglais)",
       "subjectPlaceholder": "ex. : a red apple",
       "draw": "🎨 Dessiner",
       "redraw": "🎨 Refaire",
       "photo": "📷 Ma photo",
       "remove": "✕ Pas d'image",
-      "cost": "Un dessin coûte environ 3 à 7 ¢ US ; ta propre photo est gratuite.",
+      "cost": "Une image trouvée ou ta propre photo est gratuite ; un dessin coûte environ 3 à 7 ¢ US.",
       "figure": "La figure à dessiner (étiquettes comprises)",
       "figurePlaceholder": "ex. : un triangle rectangle en C, l'hypoténuse étiquetée « c »",
       "figureCost": "Une figure est dessinée par l'IA des cartes, pour moins d'un centime US ; ta propre photo est gratuite.",
-      "onBack": "Au verso (avec la réponse)"
+      "onBack": "Au verso (avec la réponse)",
+      "search": "🔎 Chercher une image",
+      "searching": "Recherche…",
+      "found": "Images libres de droits ({sources}) : touche celle qui va.",
+      "none": "Aucune image libre trouvée : essaie d'autres mots (en anglais), ou dessine-la."
     },
     "pairing": {
       "title": "Appareil non autorisé"
@@ -748,7 +752,9 @@
       "failed": "L'image n'a pas pu être dessinée : {detail}",
       "empty": "Le modèle d'images n'a renvoyé aucune image.",
       "quota": "{service} refuse : quota dépassé pour le modèle d'images (une clé gratuite ne permet pas les images). Choisis un modèle d'images d'un autre service dans les réglages.",
-      "no_subject": "Écris d'abord ce qu'il faut dessiner."
+      "no_subject": "Écris d'abord ce qu'il faut dessiner.",
+      "search_failed": "La recherche d'images n'a pas abouti : réessaie dans un moment.",
+      "not_found": "Cette image n'est plus disponible : choisis-en une autre."
     },
     "card": {
       "not_found": "Cette carte n'existe plus : recharge la leçon."

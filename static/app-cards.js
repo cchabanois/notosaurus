@@ -306,6 +306,43 @@ const cardsPart = {
     return this.pictureAction(card, { method: "POST", body });
   },
 
+  // "🔎 Find a picture": free pictures of the subject to choose from (previews come as data)
+  async searchPictures(card) {
+    const subject = card._subject?.trim();
+    if (!subject || card._searching) return;
+    card._searching = true;
+    card._found = null;
+    this.error = "";
+    try {
+      const res = await api("/api/pictures/search", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ subject }),
+      });
+      card._found = (await res.json()).results;
+    } catch (e) {
+      this.error = e.message;
+    } finally {
+      card._searching = false;
+    }
+  },
+
+  // The sources of the pictures found, as their credit line says them
+  foundSources(card) {
+    const names = { commons: "Wikimedia Commons", openverse: "Openverse", pixabay: "Pixabay" };
+    return [...new Set((card._found ?? []).map((f) => names[f.source]))].join(", ");
+  },
+
+  async chooseFound(card, found) {
+    await this.pictureAction(card, {
+      path: "/found",
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ source: found.source, id: found.id }),
+    });
+    if (card.picture) card._found = null;
+  },
+
   removePicture(card) {
     return this.pictureAction(card, { method: "DELETE" });
   },

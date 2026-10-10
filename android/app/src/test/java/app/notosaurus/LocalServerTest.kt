@@ -1012,4 +1012,28 @@ class LocalServerTest {
         assertEquals("euh la famille en espagnol, dix cartes non douze", sent.string("text"))
         assertEquals("French", sent.string("language"))
     }
+
+    @Test
+    fun picturesFoundThroughTheRelay() = app { client ->
+        relayAnswers("""{"results": [{"source": "pixabay", "id": "42", "title": "fortress", "preview": "data:,", "licence": "Pixabay"}]}""")
+        val found = client.post("/api/pictures/search") {
+            page(); contentType(ContentType.Application.Json); setBody("""{"subject": "a castle"}""")
+        }.json().jsonObject
+        assertEquals("42", found["results"]!!.jsonArray[0].jsonObject.string("id"))
+        assertEquals("/v1/pictures/search", relay.takeRequest(5, TimeUnit.SECONDS)!!.url.encodedPath)
+
+        val lesson = client.extract()
+        relay.takeRequest(5, TimeUnit.SECONDS) // the extraction
+        val card = lesson["cards"]!!.jsonArray[0].jsonObject.string("id")
+        relay.enqueue(MockResponse.Builder().setHeader("Content-Type", "image/jpeg").body("jpeg of 42").build())
+        val res = client.post("/api/lessons/${lesson.string("id")}/cards/$card/picture/found") {
+            page(); contentType(ContentType.Application.Json); setBody("""{"source": "pixabay", "id": "42"}""")
+        }.json().jsonObject
+        val picture = res["card"]!!.jsonObject.string("picture")
+        assertTrue(picture.isNotEmpty())
+        val asked = relay.takeRequest(5, TimeUnit.SECONDS)!!
+        assertEquals("/v1/pictures/found", asked.url.encodedPath)
+        assertEquals("""{"source":"pixabay","id":"42"}""", asked.body!!.utf8())
+        assertArrayEquals("jpeg of 42".toByteArray(), client.get("/api/lessons/${lesson.string("id")}/pictures/$picture") { page() }.bodyAsBytes())
+    }
 }

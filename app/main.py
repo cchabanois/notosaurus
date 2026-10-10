@@ -24,7 +24,7 @@ from fastapi.encoders import jsonable_encoder
 from fastapi.responses import FileResponse, JSONResponse, Response, StreamingResponse
 from fastapi.staticfiles import StaticFiles
 
-from notosaurus_core import diagrams, llm, pictures, recommended, tts
+from notosaurus_core import diagrams, llm, pictures, recommended, stock, tts
 from notosaurus_core.llm import Image, check, extract_cards, list_models, revise_cards
 
 from . import anki, ankiconnect, decks, i18n, lessons, prompts, settings, usage
@@ -37,11 +37,13 @@ from .models import (
     ExplainRequest,
     Explanation,
     ExportRequest,
+    FoundPicture,
     Lesson,
     LessonAccess,
     LessonIn,
     LessonSummary,
     PictureRequest,
+    PictureSearch,
     Prompt,
     PromptIn,
     RephraseRequest,
@@ -841,6 +843,23 @@ async def upload_picture(id: str, card_id: str, photo: UploadFile) -> dict:
         card.picture = pictures.save(lessons.folder(id) / "images", card, await photo.read())
     except (OSError, ValueError) as e:
         raise AppError("extract.bad_format", format=photo.content_type) from e
+    return {"card": card, "lesson": _save_card(lesson, cards)}
+
+
+@app.post("/api/pictures/search")
+async def search_pictures(req: PictureSearch) -> dict:
+    """Free pictures of a subject, to choose from (Commons, Openverse: no Pixabay on the
+    computer, its key is the relay's). Free: no AI."""
+    return {"results": await stock.search(req.subject)}
+
+
+@app.post("/api/lessons/{id}/cards/{card_id}/picture/found", status_code=201)
+async def found_picture(id: str, card_id: str, req: FoundPicture) -> dict:
+    """One of the pictures found as the card's (fetched again by its source and id)."""
+    lesson = await _editable(id)
+    cards = [card.model_copy(deep=True) for card in lesson.cards]
+    card = cards[_card(lesson, card_id)]
+    card.picture = pictures.save(lessons.folder(id) / "images", card, await stock.fetch(req.source, req.id))
     return {"card": card, "lesson": _save_card(lesson, cards)}
 
 

@@ -346,6 +346,17 @@ class LocalServer(
             }
             call.respondText(answer.toString(), ContentType.Application.Json, status)
         }
+        // Free pictures of a subject to choose from (the relay: Commons, Openverse, Pixabay), then the one chosen
+        api("POST", "/api/pictures/search") {
+            val subject = body().string("subject").trim().takeIf { it.isNotEmpty() } ?: throw BadRequest("picture.no_subject")
+            relay().searchPictures(subject)
+        }
+        api("POST", "/api/lessons/{id}/cards/{card}/picture/found") {
+            val lesson = lesson()
+            val i = cardIndex(lesson)
+            val req = body()
+            pictures.own(lesson, i, relay().foundPicture(req.string("source"), req.string("id")))
+        }
         // No picture on the card any more: a text card
         api("DELETE", "/api/lessons/{id}/cards/{card}/picture") {
             val lesson = lesson()

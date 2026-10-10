@@ -20,6 +20,9 @@ takes but the AI configuration (the relay's own), and keeps nothing.
 - /v1/transcribe turns a dictation (the app's 🎤) into the text its speaker meant to
   type: multipart/form-data, a "request" part (TranscribeRequest) and an "audio" part
   (AUDIO_TYPES, at most MAX_AUDIO_BYTES).
+- /v1/pictures/search finds free pictures of a subject to choose from (stock.search: public
+  domain, CC0, Pixabay), their previews as data; /v1/pictures/found gives the one chosen,
+  card size (JPEG), looked up again by its source and id. Both free: no AI.
 - /v1/speak reads a card's back aloud with one of /v1/voices (natural voices, the
   same on every device): an mp3, for the app that has no voices of its own.
 - Each answer says the credits it used and those left (Usage; for /v1/picture and
@@ -38,6 +41,7 @@ from pydantic import BaseModel, Field
 
 from .llm import Extracted
 from .models import Card, Deck, Dictated, Explanation, FollowUp, Revision
+from .stock import Found, Source
 
 PREFIX = "/v1"
 CLIENT_HEADER = "X-Notosaurus-Version"
@@ -173,6 +177,20 @@ class RephraseRequest(BaseModel):
     language: str = Language
 
 
+class PictureSearchRequest(BaseModel):
+    """Free pictures of a subject to choose from. JSON."""
+
+    subject: str = Field(min_length=1, max_length=200, description="What to find, in English.")
+
+
+class FoundPictureRequest(BaseModel):
+    """POST /v1/pictures/found: one of the pictures found, as the card's. Answer: the JPEG
+    itself, card size."""
+
+    source: Source
+    id: str = Field(min_length=1, max_length=300, description="Found.id, as /v1/pictures/search gave it.")
+
+
 class PictureRequest(BaseModel):
     """A picture for a card, drawn by an image model. JSON; the answer is the JPEG itself."""
 
@@ -216,6 +234,10 @@ class TranscribeResponse(BaseModel):
 class RephraseResponse(BaseModel):
     text: str = Field(description="The instructions, tidied up.")
     usage: Usage
+
+
+class PictureSearchResponse(BaseModel):
+    results: list[Found] = Field(description="The pictures found, at most 8, the sources taking turns.")
 
 
 class FigureResponse(BaseModel):
