@@ -47,6 +47,7 @@ def parameters(function, *but: str) -> set[str]:
         (api.TranscribeRequest, llm.transcribe, ("audio",)),  # the multipart's "audio"
         (api.RephraseRequest, llm.rephrase, ()),
         (api.PlanPictureRequest, llm.plan_picture, ()),
+        (api.CardPictureRequest, pictures.card_picture, ("pixabay_key",)),  # the relay's own
     ],
 )
 def test_each_request_is_its_core_function(request_model, function, not_sent):
@@ -91,6 +92,7 @@ def test_openapi_description():
         "speak",
         "transcribe",
         "plan-picture",
+        "card-picture",
         "pictures/search",
         "pictures/found",
         "voices",

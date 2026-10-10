@@ -255,6 +255,26 @@ class PictureSearchResponse(BaseModel):
     words: str = Field(default="", description="What was searched for (the translation, when asked).")
 
 
+class CardPictureRequest(BaseModel):
+    """A card's figure or picture (pictures.card_picture): its own, drawn as it is; or
+    what was written for it (any language), the AI deciding a figure or a picture. JSON."""
+
+    card: Card
+    asked: str | None = Field(default=None, max_length=MAX_SUBJECT, description="What the user wrote; null: none.")
+    language: str = Language
+    fresh: bool = Field(default=False, description="Draw it again rather than take it from the cache.")
+    find: bool = Field(default=True, description="A free picture looked for first, for a real thing.")
+
+
+class CardPictureResponse(BaseModel):
+    card: Card = Field(
+        description="The card, its picture's fields as decided (figure, picture_prompt…, picture_source)."
+    )
+    data: str = Field(description="The figure's SVG or the picture's JPEG, base64.")
+    media_type: Literal["image/svg+xml", "image/jpeg"]
+    usage: Usage
+
+
 class PlanPictureRequest(BaseModel):
     """What a card's picture should be ("🎨 Draw"): an exact figure or an image model's
     picture, described from the card and what the user wrote. JSON."""

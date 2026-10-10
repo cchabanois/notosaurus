@@ -109,20 +109,6 @@ class Relay(baseUrl: String, private val key: String) {
         return open("speak", request.toString().toRequestBody(JSON)).use { it.body.bytes() }
     }
 
-    /** A card's picture (/v1/picture): the JPEG, card size. `fresh`: drawn again. `search`
-     * (Card.picture_search): a free picture found first, chosen with `context` ("front → back"). */
-    suspend fun picture(subject: String, fresh: Boolean, search: String = "", context: String = ""): Picture {
-        val request = buildJsonObject {
-            put("subject", subject)
-            put("fresh", fresh)
-            if (search.isNotEmpty()) {
-                put("search", search)
-                put("context", context.take(MAX_CONTEXT))
-            }
-        }
-        return open("picture", request.toString().toRequestBody(JSON)).use(::picture)
-    }
-
     /** A picture answer: the JPEG, and where it comes from (PICTURE_SOURCE_HEADER; null from an older relay). */
     private fun picture(response: Response): Picture {
         val source = response.header(PICTURE_SOURCE_HEADER)?.let { runCatching { json.parseToJsonElement(it).jsonObject }.getOrNull() }

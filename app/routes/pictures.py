@@ -45,29 +45,18 @@ def _save_card(lesson: Lesson, cards: list) -> dict:
 
 @router.post("/api/lessons/{id}/cards/{card_id}/picture/draw")
 async def redraw_picture(id: str, card_id: str, req: PictureRequest, lang: str = Depends(page_lang)) -> dict:
-    """Draw a card's picture (again). Its own description unchanged: drawn again as it is;
-    a figure's changed: that figure redrawn. Otherwise (nothing yet, or a picture's text
-    changed, in any language): the cards' AI decides an exact figure or an image model's
-    picture and describes it (llm.plan_picture). Never from the cache: this is asked when
-    the picture didn't suit."""
+    """Draw a card's picture (again), from what was written for it (pictures.card_picture:
+    a figure or a picture, decided by the AI when needed). Never from the cache: this is
+    asked when the picture didn't suit."""
     lesson = await _editable(id)
     cards = [card.model_copy(deep=True) for card in lesson.cards]
     card = cards[_card(lesson, card_id)]
-    current = (card.figure or card.picture_prompt).strip()
-    asked = (req.subject or "").strip()
     s = settings.current()
     with llm.recording("picture") as calls:  # figures count as pictures in the costs
         try:
-            if card.figure and asked:
-                card.figure = asked  # a figure stays one: drawn from what was written
-            elif not current or (req.subject is not None and asked != current):
-                plan = await llm.plan_picture(s, card.front, card.back, asked, i18n.language_name(lang))
-                if not plan.description:
-                    raise AppError("picture.no_subject")
-                figure = plan.kind == "figure"
-                card.figure = plan.description if figure else ""
-                card.picture_prompt, card.picture_search = ("", "") if figure else (plan.description, plan.search)
-            card.picture = await pictures.figure_or_picture(s, lessons.folder(id) / "images", card, fresh=True)
+            card.picture = await pictures.figure_or_picture(
+                s, lessons.folder(id) / "images", card, fresh=True, asked=req.subject, language=i18n.language_name(lang)
+            )
         finally:
             lessons.add_ai_calls(id, calls)
             usage.add(calls, id, lesson.deck)
