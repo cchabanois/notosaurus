@@ -705,7 +705,7 @@
       "error": "Anki ({action}): {detail}",
       "no_profile": "Ningún perfil abierto en Anki: abre un perfil y vuelve a intentarlo.",
       "sync_not_logged_in": "Anki no tiene la sesión iniciada en AnkiWeb: pulsa una vez «Sincronizar» en Anki para iniciar sesión",
-      "android_missing": "Las tarjetas van a AnkiDroid: Google Play se abre en su ficha. Instálalo, ábrelo una vez y vuelve a añadir las tarjetas.",
+      "android_missing": "Las tarjetas van a AnkiDroid, la aplicación gratuita de Anki para Android: no está instalada. Instálala, ábrela una vez y vuelve a añadir las tarjetas.",
       "android_refused": "Notosaurus no tiene permiso para añadir tarjetas a AnkiDroid: permítelo y vuelve a añadir las tarjetas.",
       "android_failed": "AnkiDroid no aceptó las tarjetas ({detail}): abre AnkiDroid una vez y vuelve a intentarlo.",
       "android_no_deck": "AnkiDroid no tiene el mazo «{deck}»: añade primero la lección a Anki."

@@ -705,7 +705,7 @@
       "error": "Anki ({action}): {detail}",
       "no_profile": "Kein Benutzerprofil in Anki geöffnet: Öffne eins und versuch es noch einmal.",
       "sync_not_logged_in": "Anki ist nicht bei AnkiWeb angemeldet: Klick einmal in Anki auf „Synchronisieren“, um dich anzumelden",
-      "android_missing": "Die Karten kommen in AnkiDroid: Google Play öffnet sich dafür. Installiere es, öffne es einmal und füge die Karten dann erneut hinzu.",
+      "android_missing": "Die Karten kommen in AnkiDroid, die kostenlose Anki-App für Android: Sie ist nicht installiert. Installiere sie, öffne sie einmal und füge die Karten dann erneut hinzu.",
       "android_refused": "Notosaurus darf AnkiDroid keine Karten hinzufügen: Erlaube es und füge die Karten dann erneut hinzu.",
       "android_failed": "AnkiDroid hat die Karten nicht übernommen ({detail}): Öffne AnkiDroid einmal und versuche es dann erneut.",
       "android_no_deck": "AnkiDroid hat keinen Stapel „{deck}“: füge die Lektion zuerst zu Anki hinzu."
