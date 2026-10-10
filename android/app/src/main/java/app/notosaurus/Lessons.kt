@@ -150,3 +150,12 @@ class Lessons(private val root: File) {
 }
 
 fun JsonObject.string(key: String): String = (this[key] as? JsonPrimitive)?.takeIf { it.isString }?.content ?: ""
+
+/** The object with these fields changed (or added). */
+fun JsonObject.with(vararg changes: Pair<String, JsonElement>): JsonObject = JsonObject(this + changes)
+
+/** A lesson's cards, to change. */
+fun JsonObject.cards(): MutableList<JsonObject> = (this["cards"] as? JsonArray)?.map { it.jsonObject }.orEmpty().toMutableList()
+
+/** A value as text: a string's content, else its JSON (an id may be either). */
+fun JsonElement.plain(): String = (this as? JsonPrimitive)?.content ?: toString()
