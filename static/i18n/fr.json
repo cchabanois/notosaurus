@@ -46,10 +46,20 @@
       "page": "Page {n}",
       "remove": "Retirer cette page",
       "rotate": "Tourner la photo d'un quart de tour",
+      "hide": "Cacher une partie de la page (un nom…)",
       "takePhoto": "Prendre une photo",
       "nextPage": "Page suivante",
       "gallery": "Galerie",
       "unreadable": "Impossible de lire « {name} »."
+    },
+    "hide": {
+      "title": "Cacher ce que l'IA ne doit pas voir",
+      "hint": "Avec le doigt, noircis un nom, une école, tout ce qui est personnel. Seule la photo noircie est gardée et envoyée.",
+      "pdf": "Sur une page de PDF, son texte n'est alors pas envoyé : l'IA lit la page comme une image.",
+      "paint": "Noircir",
+      "erase": "Dénoircir",
+      "clear": "Tout dénoircir",
+      "done": "Terminé"
     },
     "pdf": {
       "button": "PDF",

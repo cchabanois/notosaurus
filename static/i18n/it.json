@@ -46,10 +46,20 @@
       "page": "Pagina {n}",
       "remove": "Togli questa pagina",
       "rotate": "Ruota la foto di un quarto di giro",
+      "hide": "Nascondi una parte della pagina (un nome…)",
       "takePhoto": "Scatta una foto",
       "nextPage": "Pagina successiva",
       "gallery": "Galleria",
       "unreadable": "Impossibile leggere “{name}”."
+    },
+    "hide": {
+      "title": "Nascondi ciò che l'IA non deve vedere",
+      "hint": "Con il dito, annerisci un nome, una scuola, tutto ciò che è personale. Viene conservata e inviata solo la foto annerita.",
+      "pdf": "In una pagina PDF, il suo testo allora non viene inviato: l'IA legge la pagina come un'immagine.",
+      "paint": "Annerisci",
+      "erase": "Scopri",
+      "clear": "Scopri tutto",
+      "done": "Fatto"
     },
     "pdf": {
       "button": "PDF",

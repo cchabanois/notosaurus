@@ -46,10 +46,20 @@
       "page": "Seite {n}",
       "remove": "Diese Seite entfernen",
       "rotate": "Foto um eine Vierteldrehung drehen",
+      "hide": "Einen Teil der Seite verdecken (einen Namen…)",
       "takePhoto": "Foto aufnehmen",
       "nextPage": "Nächste Seite",
       "gallery": "Galerie",
       "unreadable": "„{name}“ kann nicht gelesen werden."
+    },
+    "hide": {
+      "title": "Verdecken, was die KI nicht sehen soll",
+      "hint": "Schwärze mit dem Finger einen Namen, eine Schule, alles Persönliche. Nur das geschwärzte Foto wird gespeichert und gesendet.",
+      "pdf": "Bei einer PDF-Seite wird ihr Text dann nicht gesendet: Die KI liest die Seite als Bild.",
+      "paint": "Schwärzen",
+      "erase": "Aufdecken",
+      "clear": "Alles aufdecken",
+      "done": "Fertig"
     },
     "pdf": {
       "button": "PDF",

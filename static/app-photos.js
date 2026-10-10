@@ -1,4 +1,4 @@
-// The photos of a lesson: added (a PDF's pages picked), turned, removed, seen in full.
+// The photos of a lesson: added (a PDF's pages picked), turned, partly hidden, removed, seen in full.
 // Methods of the page's Alpine component (app.js), as `this`.
 
 // Shrinks a phone photo (3–5 MB) to ~1600 px JPEG before upload.
@@ -13,8 +13,8 @@ async function resize(file) {
   return new Promise((resolve) => canvas.toBlob(resolve, "image/jpeg", JPEG_QUALITY));
 }
 
-// A photo turned a quarter turn clockwise (JPEG).
-async function rotateBlob(blob) {
+// A photo turned a quarter turn clockwise (JPEG; a hidden areas' mask: PNG).
+async function rotateBlob(blob, type = "image/jpeg") {
   const bitmap = await createImageBitmap(blob);
   const canvas = document.createElement("canvas");
   canvas.width = bitmap.height;
@@ -24,7 +24,27 @@ async function rotateBlob(blob) {
   ctx.rotate(Math.PI / 2);
   ctx.drawImage(bitmap, 0, 0);
   bitmap.close();
-  return new Promise((resolve) => canvas.toBlob(resolve, "image/jpeg", JPEG_QUALITY));
+  return new Promise((resolve) => canvas.toBlob(resolve, type, JPEG_QUALITY));
+}
+
+// Hiding part of a photo before it is sent (a name, a school…): blacked out with a finger,
+// un-blacked the same way. The photo keeps its original and the mask of what is hidden, so
+// it can be changed until it is sent; only the blacked-out photo goes to the server.
+const HIDE_BRUSH = 0.035;  // the brush's width, of the photo's longer side
+let hideEdit = null;  // { bitmap, mask, canvas, last }: the editor's canvases (out of Alpine's proxies)
+
+// The mask made sharp (a stroke's soft edges, an un-blacked one's faint outline: black or
+// nothing); whether anything is hidden.
+function hardenMask(mask) {
+  const ctx = mask.getContext("2d");
+  const image = ctx.getImageData(0, 0, mask.width, mask.height);
+  let used = false;
+  for (let i = 3; i < image.data.length; i += 4) {
+    image.data[i] = image.data[i] >= 128 ? 255 : 0;
+    used ||= image.data[i] > 0;
+  }
+  ctx.putImageData(image, 0, 0);
+  return used;
 }
 
 // PDFs: each page drawn as a photo (pdf.js, loaded the first time a PDF is chosen),
@@ -191,9 +211,14 @@ const photosPart = {
     this.error = "";
     try {
       if (!this.lessonId) {
-        const blob = await rotateBlob(this.photos[i].blob);
-        URL.revokeObjectURL(this.photos[i].url);
-        this.photos.splice(i, 1, { ...this.photos[i], blob, url: URL.createObjectURL(blob) });  // its text kept
+        const photo = this.photos[i];
+        const turned = { ...photo, blob: await rotateBlob(photo.blob) };  // its text kept
+        if (photo.original) {  // what it hides turns with it
+          turned.original = await rotateBlob(photo.original);
+          turned.mask = await rotateBlob(photo.mask, "image/png");
+        }
+        URL.revokeObjectURL(photo.url);
+        this.photos.splice(i, 1, { ...turned, url: URL.createObjectURL(turned.blob) });
         return;
       }
       if (this.saveTimer) await this.saveNow();
@@ -204,6 +229,96 @@ const photosPart = {
       this.lastSaved = this.snapshot();  // already saved by the server
     } catch (e) {
       this.error = e.message;
+    }
+  },
+
+  // --- Hiding part of a photo, before it is sent -------------------------
+  async openHide(i) {
+    const photo = this.photos[i];
+    const bitmap = await createImageBitmap(photo.original ?? photo.blob);
+    const mask = document.createElement("canvas");
+    mask.width = bitmap.width;
+    mask.height = bitmap.height;
+    if (photo.mask) {
+      const hidden = await createImageBitmap(photo.mask);
+      mask.getContext("2d").drawImage(hidden, 0, 0);
+      hidden.close();
+    }
+    this.hiding = { open: true, index: i, erase: false, pdf: Boolean(photo.pdfText ?? photo.text) };
+    await this.$nextTick();
+    const canvas = this.$refs.hideCanvas;
+    canvas.width = bitmap.width;
+    canvas.height = bitmap.height;
+    hideEdit = { bitmap, mask, canvas, last: null };
+    this.drawHidden();
+  },
+
+  drawHidden() {
+    const { bitmap, mask, canvas } = hideEdit;
+    const ctx = canvas.getContext("2d");
+    ctx.drawImage(bitmap, 0, 0);
+    ctx.drawImage(mask, 0, 0);
+  },
+
+  // The finger (or the mouse) down, moved, up: a stroke on the mask
+  hideStroke(event) {
+    if (!hideEdit) return;
+    if (event.type === "pointerdown") {
+      event.target.setPointerCapture(event.pointerId);
+      hideEdit.last = null;
+    } else if (event.type === "pointermove") {
+      if (!hideEdit.last) return;  // not pressed
+    } else {
+      hideEdit.last = null;  // up, or cancelled
+      return;
+    }
+    const { canvas, mask } = hideEdit;
+    const box = canvas.getBoundingClientRect();
+    const point = [(event.clientX - box.left) * (canvas.width / box.width), (event.clientY - box.top) * (canvas.height / box.height)];
+    const from = hideEdit.last ?? point;
+    const ctx = mask.getContext("2d");
+    ctx.globalCompositeOperation = this.hiding.erase ? "destination-out" : "source-over";
+    ctx.strokeStyle = "#000";
+    ctx.lineCap = ctx.lineJoin = "round";
+    ctx.lineWidth = Math.max(mask.width, mask.height) * HIDE_BRUSH * (this.hiding.erase ? 1.25 : 1);  // un-blacked: no outline left
+    ctx.beginPath();
+    ctx.moveTo(...from);
+    ctx.lineTo(point[0] + 0.01, point[1]);  // a tap leaves a dot
+    ctx.stroke();
+    hideEdit.last = point;
+    this.drawHidden();
+  },
+
+  clearHidden() {
+    const { mask } = hideEdit;
+    mask.getContext("2d").clearRect(0, 0, mask.width, mask.height);
+    this.drawHidden();
+  },
+
+  // "Done": the photo as it will be sent (its original and mask kept, to change it again);
+  // nothing hidden: the original back. A PDF page's text holds what is hidden too: not sent then.
+  async doneHide(keep) {
+    const { bitmap, mask, canvas } = hideEdit;
+    const i = this.hiding.index;
+    const photo = this.photos[i];
+    try {
+      if (keep) {
+        const toBlob = (from, type) => new Promise((resolve) => from.toBlob(resolve, type, JPEG_QUALITY));
+        const original = photo.original ?? photo.blob;
+        const pdfText = photo.pdfText ?? photo.text;
+        const used = hardenMask(mask);
+        this.drawHidden();
+        const changed = used
+          ? { blob: await toBlob(canvas, "image/jpeg"), original, mask: await toBlob(mask, "image/png"), text: "", pdfText }
+          : { blob: original, text: pdfText };
+        URL.revokeObjectURL(photo.url);
+        this.photos.splice(i, 1, { ...changed, url: URL.createObjectURL(changed.blob) });
+        this.photosEdited = Boolean(this.lessonId);
+      }
+    } finally {
+      bitmap.close();
+      hideEdit = null;
+      this.hiding = { open: false, index: -1, erase: false, pdf: false };
     }
   },
 

@@ -591,6 +591,45 @@ def test_pdf_text_kept_with_its_page(page, browser):
     assert lesson(page, summary["id"])["page_texts"] == [text]
 
 
+def test_a_name_hidden_before_the_photo_is_sent(page):
+    """Blacked out with a finger, un-blacked the same way; only the blacked-out photo is sent."""
+    page.goto("/")
+    page.locator('input[type=file][accept="image/*"][multiple]').set_input_files(
+        {"name": "page.png", "mimeType": "image/png", "buffer": png("white")}
+    )
+    page.get_by_role("button", name="Cacher une partie de la page (un nom…)").click()
+    editor = page.locator(".hide-editor")
+    sync_api.expect(editor).to_be_visible()
+    canvas = editor.locator("canvas")
+    box = canvas.bounding_box()
+
+    def stroke(y: float) -> None:  # across the photo, a tenth of the way down `y`
+        page.mouse.move(box["x"] + box["width"] * 0.1, box["y"] + box["height"] * y)
+        page.mouse.down()
+        page.mouse.move(box["x"] + box["width"] * 0.9, box["y"] + box["height"] * y, steps=8)
+        page.mouse.up()
+
+    stroke(0.1)  # the name
+    stroke(0.5)  # a mistake…
+    editor.get_by_role("button", name="Dénoircir", exact=True).click()
+    stroke(0.5)  # …un-blacked
+    editor.get_by_role("button", name="Terminé").click()
+    sync_api.expect(editor).to_be_hidden()
+    sync_api.expect(page.locator(".thumb-hide.used")).to_have_count(1)
+
+    page.locator(".chip").first.click()  # the free prompt
+    page.locator("textarea[x-ref=promptText]").fill("Une carte par mot")
+    page.get_by_role("button", name="✨ Générer les cartes").click()
+    page.locator(".flash").first.wait_for()
+    (summary,) = lessons(page)
+    sent = PILImage.open(io.BytesIO(page.request.get(f"/api/lessons/{summary['id']}/photos/1").body())).convert("L")
+    width, height = sent.size
+    assert sent.getpixel((width // 2, height // 10)) < 40  # black: the name
+    assert sent.getpixel((width // 2, height // 2)) > 215  # white: un-blacked
+    assert sent.getpixel((width // 2, height * 8 // 10)) > 215  # never touched
+    sync_api.expect(page.locator(".thumb-hide")).to_be_hidden()  # sent: nothing left to hide
+
+
 def test_a_card_explained_then_its_follow_ups(page):
     generate_free(page, "QCM sur la Révolution")
     card = page.locator(".flash").first

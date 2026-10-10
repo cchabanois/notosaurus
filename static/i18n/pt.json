@@ -46,10 +46,20 @@
       "page": "Página {n}",
       "remove": "Remover esta página",
       "rotate": "Girar a foto um quarto de volta",
+      "hide": "Ocultar parte da página (um nome…)",
       "takePhoto": "Tirar uma foto",
       "nextPage": "Próxima página",
       "gallery": "Galeria",
       "unreadable": "Não foi possível ler “{name}”."
+    },
+    "hide": {
+      "title": "Ocultar o que a IA não deve ver",
+      "hint": "Com o dedo, pinta de preto um nome, uma escola, tudo o que é pessoal. Só a foto tapada é guardada e enviada.",
+      "pdf": "Numa página de PDF, o texto dela não é enviado então: a IA lê a página como uma imagem.",
+      "paint": "Tapar",
+      "erase": "Destapar",
+      "clear": "Destapar tudo",
+      "done": "Concluído"
     },
     "pdf": {
       "button": "PDF",

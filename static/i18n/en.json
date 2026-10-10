@@ -46,10 +46,20 @@
       "page": "Page {n}",
       "remove": "Remove this page",
       "rotate": "Turn the photo a quarter turn",
+      "hide": "Hide part of this page (a name…)",
       "takePhoto": "Take a photo",
       "nextPage": "Next page",
       "gallery": "Gallery",
       "unreadable": "Can't read “{name}”."
+    },
+    "hide": {
+      "title": "Hide what the AI shouldn't see",
+      "hint": "With your finger, black out a name, a school, anything personal. Only the blacked-out photo is kept and sent.",
+      "pdf": "On a PDF page, its text isn't sent then: the AI reads the page as a picture.",
+      "paint": "Black out",
+      "erase": "Un-black",
+      "clear": "Un-black all",
+      "done": "Done"
     },
     "pdf": {
       "button": "PDF",
