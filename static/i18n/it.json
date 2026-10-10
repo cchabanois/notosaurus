@@ -711,7 +711,8 @@
       "truncated": "Risposta interrotta: troppe carte in una volta, prova con meno pagine.",
       "refused": "Richiesta rifiutata: Notosaurus crea solo materiale di studio adatto agli alunni.",
       "missing_url": "Inserisci l'indirizzo del servizio nelle impostazioni (⚙️).",
-      "no_audio": "La dettatura passa da Gemini: {provider} non sente le registrazioni."
+      "no_audio": "La dettatura passa da Gemini: {provider} non sente le registrazioni.",
+      "timeout": "{provider} non ha risposto in tempo: riprova."
     },
     "anki": {
       "unreachable": "Anki non è raggiungibile: avvia Anki sul computer.",

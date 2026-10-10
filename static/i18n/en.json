@@ -711,7 +711,8 @@
       "truncated": "Answer cut off: too many cards at once, try with fewer pages.",
       "refused": "Request refused: Notosaurus only makes learning material suited to pupils.",
       "missing_url": "Enter the service address in the settings (⚙️).",
-      "no_audio": "Dictation goes through Gemini: {provider} can't hear recordings."
+      "no_audio": "Dictation goes through Gemini: {provider} can't hear recordings.",
+      "timeout": "{provider} didn't answer in time: try again."
     },
     "anki": {
       "unreachable": "Anki can't be reached: start Anki on the computer.",

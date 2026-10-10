@@ -711,7 +711,8 @@
       "truncated": "Antwort abgeschnitten: zu viele Karten auf einmal, versuch es mit weniger Seiten.",
       "refused": "Anfrage abgelehnt: Notosaurus erstellt nur Lernmaterial, das für Schüler geeignet ist.",
       "missing_url": "Gib die Adresse des Dienstes in den Einstellungen an (⚙️).",
-      "no_audio": "Das Diktat läuft über Gemini: {provider} kann keine Aufnahmen hören."
+      "no_audio": "Das Diktat läuft über Gemini: {provider} kann keine Aufnahmen hören.",
+      "timeout": "{provider} hat nicht rechtzeitig geantwortet: versuch es noch einmal."
     },
     "anki": {
       "unreachable": "Anki ist nicht erreichbar: Starte Anki auf dem Computer.",

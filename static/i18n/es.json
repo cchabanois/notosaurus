@@ -711,7 +711,8 @@
       "truncated": "Respuesta cortada: demasiadas tarjetas a la vez, prueba con menos páginas.",
       "refused": "Solicitud rechazada: Notosaurus solo crea material de estudio adecuado para alumnos.",
       "missing_url": "Indica la dirección del servicio en los ajustes (⚙️).",
-      "no_audio": "El dictado pasa por Gemini: {provider} no oye las grabaciones."
+      "no_audio": "El dictado pasa por Gemini: {provider} no oye las grabaciones.",
+      "timeout": "{provider} no ha respondido a tiempo: inténtalo de nuevo."
     },
     "anki": {
       "unreachable": "No se puede contactar con Anki: abre Anki en el ordenador.",

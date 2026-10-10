@@ -1,8 +1,10 @@
 """Gemini, through the official google-genai SDK (a key, or Vertex AI): stricter safety
-filters, the fallback models when one is overloaded or has no quota, "light" and
+filters, the fallback models when one is overloaded, has no quota or stops answering, "light" and
 "quick" thinking, the answer streamed card by card when asked."""
 
+import asyncio
 import logging
+from contextlib import suppress
 from types import SimpleNamespace
 
 from pydantic import BaseModel
@@ -55,6 +57,18 @@ def _gemini_client(s: AIConfig):
 # at their first refusal.
 _NO_MINIMAL_THINKING: set[str] = set()
 
+# An answer that stops coming (seen: a stream left with nothing for minutes) is given up
+# on and the next model tried, rather than waited for forever. Its first part comes once
+# the model has thought (a rich lesson, carefully: up to a minute), then a card about
+# every second; an answer asked whole comes at once.
+FIRST_PART_S = 90
+NEXT_PART_S = 45
+WHOLE_ANSWER_S = 180
+
+
+class _Stalled(Exception):
+    """The model stopped answering."""
+
 
 async def _gemini[T: BaseModel](
     s: AIConfig,
@@ -71,22 +85,41 @@ async def _gemini[T: BaseModel](
     client = _gemini_client(s)
     told = 0  # cards told to on_card
 
+    async def within(seconds: float, awaitable):
+        try:
+            return await asyncio.wait_for(awaitable, seconds)
+        except TimeoutError:
+            raise _Stalled from None
+
     async def generate(model: str):
         """The model's answer; written as it comes when the cards are wanted at once."""
         nonlocal told
         if on_card is None:
-            return await client.aio.models.generate_content(model=model, contents=contents, config=config)
+            return await within(
+                WHOLE_ANSWER_S, client.aio.models.generate_content(model=model, contents=contents, config=config)
+            )
         if told:  # another model starts again
             await on_card(None)
             told = 0
         chunks, cards = [], CardStream()
-        async for chunk in await client.aio.models.generate_content_stream(
-            model=model, contents=contents, config=config
-        ):
-            chunks.append(chunk)
-            for card in cards.feed(chunk.text or ""):
-                await on_card(card)
-                told += 1
+        stream = await within(
+            FIRST_PART_S, client.aio.models.generate_content_stream(model=model, contents=contents, config=config)
+        )
+        parts, wait = aiter(stream), FIRST_PART_S
+        try:
+            while True:
+                try:
+                    chunk = await within(wait, anext(parts))
+                except StopAsyncIteration:
+                    break
+                wait = NEXT_PART_S
+                chunks.append(chunk)
+                for card in cards.feed(chunk.text or ""):
+                    await on_card(card)
+                    told += 1
+        finally:
+            with suppress(Exception):  # given up on: the connection goes too
+                await stream.aclose()
         return _joined(chunks)
 
     contents = [types.Part.from_bytes(data=img.data, mime_type=img.media_type) for img in images]
@@ -137,6 +170,11 @@ async def _gemini[T: BaseModel](
             log.warning("Gemini %s : %s %s", model, e.code, e.message)
             if model == models[-1]:
                 raise ExtractionError("llm.overloaded", provider="Gemini", status=e.code) from e
+            log.warning("Falling back to the next model")
+        except _Stalled:
+            log.warning("Gemini %s stopped answering", model)
+            if model == models[-1]:
+                raise ExtractionError("llm.timeout", provider="Gemini") from None
             log.warning("Falling back to the next model")
 
     usage = response.usage_metadata
