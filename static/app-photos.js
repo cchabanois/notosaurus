@@ -29,7 +29,8 @@ async function rotateBlob(blob) {
 
 // PDFs: each page drawn as a photo (pdf.js, loaded the first time a PDF is chosen),
 // so masks, frames, thumbnails and every AI service work the same as with photos.
-const PDFJS = "https://cdn.jsdelivr.net/npm/pdfjs-dist@6.4.299/build/";
+// pdf.js 6.4.299, shipped with the page (vendor/pdfjs/README.md): a blocked CDN made PDFs unreadable
+const PDFJS = "vendor/pdfjs/";  // next to the page
 const PDF_THUMB = 240;  // px: the page picker's thumbnails
 let pdfjs = null;
 let pdfTask = null;  // loading it (destroyed when done: frees the worker's memory)
@@ -40,8 +41,9 @@ const isPdf = (file) => file.type === "application/pdf" || /\.pdf$/i.test(file.n
 
 async function loadPdf(file) {
   if (!pdfjs) {
-    pdfjs = await import(`${PDFJS}pdf.min.mjs`);
-    pdfjs.GlobalWorkerOptions.workerSrc = `${PDFJS}pdf.worker.min.mjs`;
+    const base = new URL(PDFJS, document.baseURI).href;
+    pdfjs = await import(`${base}pdf.min.mjs`);
+    pdfjs.GlobalWorkerOptions.workerSrc = `${base}pdf.worker.min.mjs`;
   }
   pdfTask = pdfjs.getDocument({ data: new Uint8Array(await file.arrayBuffer()) });
   return pdfTask.promise;
