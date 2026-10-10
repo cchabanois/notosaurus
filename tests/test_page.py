@@ -381,6 +381,7 @@ def test_many_lessons_recent_folded_and_searched(page, clock):
     sheet = page.locator(".lesson-list")
     heads = sheet.locator(".group-head")
     sync_api.expect(heads).to_have_count(4)  # the recent ones, then the subjects
+    sync_api.expect(heads.first.locator(".fold")).to_be_hidden()  # "Recent" doesn't fold (once Alpine has said so)
     assert [" ".join(h.split()).casefold() for h in heads.all_inner_texts()] == [
         "récentes",
         "▸ anglais 2",
