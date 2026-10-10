@@ -408,6 +408,108 @@
         }
       }
     },
+    "/v1/rephrase": {
+      "post": {
+        "summary": "Rephrase",
+        "description": "A lesson's instructions tidied up (llm.rephrase).",
+        "operationId": "rephrase_v1_rephrase_post",
+        "parameters": [
+          {
+            "name": "X-Notosaurus-Version",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "The client's version (\"1.1.0\").",
+              "title": "X-Notosaurus-Version"
+            },
+            "description": "The client's version (\"1.1.0\")."
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RephraseRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RephraseResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Codes: `relay.invalid_key`",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "402": {
+            "description": "Codes: `relay.no_credits`",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Codes: `relay.invalid_request`",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "426": {
+            "description": "Codes: `relay.client_outdated`",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Codes: `relay.daily_limit`",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Codes: `relay.unavailable`",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/v1/figure": {
       "post": {
         "summary": "Figure",
@@ -1597,6 +1699,48 @@
         ],
         "title": "PictureRequest",
         "description": "A picture for a card, drawn by an image model. JSON; the answer is the JPEG itself."
+      },
+      "RephraseRequest": {
+        "properties": {
+          "text": {
+            "type": "string",
+            "maxLength": 8000,
+            "minLength": 1,
+            "title": "Text",
+            "description": "The instructions as written (or dictated)."
+          },
+          "language": {
+            "type": "string",
+            "maxLength": 50,
+            "title": "Language",
+            "description": "English name of the language to answer in (\"French\").",
+            "default": "English"
+          }
+        },
+        "type": "object",
+        "required": [
+          "text"
+        ],
+        "title": "RephraseRequest",
+        "description": "A lesson's instructions tidied up: clear and short, every intention kept, none added. JSON."
+      },
+      "RephraseResponse": {
+        "properties": {
+          "text": {
+            "type": "string",
+            "title": "Text",
+            "description": "The instructions, tidied up."
+          },
+          "usage": {
+            "$ref": "#/components/schemas/Usage"
+          }
+        },
+        "type": "object",
+        "required": [
+          "text",
+          "usage"
+        ],
+        "title": "RephraseResponse"
       },
       "ReviseRequest": {
         "description": "A natural-language correction of the cards, with the lesson's photos (the\n\"images\" parts, possibly none).",

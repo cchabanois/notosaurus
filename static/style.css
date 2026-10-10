@@ -372,6 +372,7 @@ h2 {
 .chip.recommended { white-space: normal; text-align: left; border-radius: 1.2rem; }
 
 .prompt-actions { display: flex; flex-wrap: wrap; column-gap: 1.2rem; }
+.prompt-actions.tidy .link-btn { margin-top: .35rem; }
 .link-btn.strong { color: var(--primary); }
 
 

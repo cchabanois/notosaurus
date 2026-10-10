@@ -91,7 +91,10 @@
       "quick": "⚡ Veloce",
       "careful": "🎯 Accurato",
       "quickHint": "Pochi secondi. Ideale per il vocabolario o una lezione semplice.",
-      "carefulHint": "Più lungo (fino a 30 s), più ragionato: per una lezione ricca (uno schema, matematica)."
+      "carefulHint": "Più lungo (fino a 30 s), più ragionato: per una lezione ricca (uno schema, matematica).",
+      "tidy": "✨ Metti in ordine",
+      "tidyBusy": "Metto in ordine…",
+      "tidyUndo": "↩ Annulla"
     },
     "review": {
       "title": "Revisione",
@@ -486,7 +489,8 @@
         "extract": "generazione",
         "revise": "correzione",
         "picture": "immagine",
-        "explain": "spiegazione"
+        "explain": "spiegazione",
+        "rephrase": "messa in ordine"
       },
       "deleted": "di cui {cost} per lezioni eliminate nel frattempo",
       "failed": "di cui {cost} per generazioni non riuscite (nessuna lezione)",

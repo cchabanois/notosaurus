@@ -91,7 +91,10 @@
       "quick": "⚡ Rápido",
       "careful": "🎯 Caprichado",
       "quickHint": "Alguns segundos. Ideal para vocabulário ou uma lição simples.",
-      "carefulHint": "Mais demorado (até 30 s), mais pensado: para uma lição rica (um esquema, matemática)."
+      "carefulHint": "Mais demorado (até 30 s), mais pensado: para uma lição rica (um esquema, matemática).",
+      "tidy": "✨ Passar a limpo",
+      "tidyBusy": "Passando a limpo…",
+      "tidyUndo": "↩ Desfazer"
     },
     "review": {
       "title": "Revisão",
@@ -486,7 +489,8 @@
         "extract": "geração",
         "revise": "correção",
         "picture": "imagem",
-        "explain": "explicação"
+        "explain": "explicação",
+        "rephrase": "passar a limpo"
       },
       "deleted": "dos quais {cost} por lições excluídas desde então",
       "failed": "dos quais {cost} por gerações que falharam (sem lição)",

@@ -45,6 +45,7 @@ def parameters(function, *but: str) -> set[str]:
         (api.FigureRequest, llm.draw_figure, ()),
         (api.PictureRequest, pictures.picture, ()),
         (api.TranscribeRequest, llm.transcribe, ("audio",)),  # the multipart's "audio"
+        (api.RephraseRequest, llm.rephrase, ()),
     ],
 )
 def test_each_request_is_its_core_function(request_model, function, not_sent):
@@ -79,7 +80,18 @@ def test_limits():
 
 def test_openapi_description():
     spec = json.loads((ROOT / "core" / "relay-api-v1.json").read_text(encoding="utf-8"))
-    routes = ("extract", "revise", "explain", "figure", "picture", "speak", "transcribe", "voices", "account")
+    routes = (
+        "extract",
+        "revise",
+        "explain",
+        "rephrase",
+        "figure",
+        "picture",
+        "speak",
+        "transcribe",
+        "voices",
+        "account",
+    )
     assert set(spec["paths"]) == {f"/v1/{route}" for route in routes}
     multipart = {"extract": "ExtractRequest", "revise": "ReviseRequest", "transcribe": "TranscribeRequest"}
     for route, request in multipart.items():

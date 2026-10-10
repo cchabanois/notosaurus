@@ -822,3 +822,19 @@ def test_dictation_in_the_app(page):
     sync_api.expect(field).to_have_value(re.compile("Douze cartes sur el abuelo et la abuela.$"))
     assert stopped == [{"kind": "prompt"}]
     sync_api.expect(page.get_by_role("button", name="Dicter").first).to_be_enabled()
+
+
+def test_tidy_up_the_instructions(page):
+    """“✨ Tidy up” under the instructions (the demo AI marks them), “↩” brings them back."""
+    page.goto("/")
+    page.get_by_role("radio", name="✏️ Libre").click()
+    field = page.get_by_role("textbox", name="Texte de la consigne")
+    tidy = page.get_by_role("button", name="✨ Mettre au propre")
+    sync_api.expect(tidy).to_be_hidden()  # nothing to tidy up
+    field.fill("la famille en espagnol, dix non douze")
+    tidy.click()
+    sync_api.expect(field).to_have_value("(démo) la famille en espagnol, dix non douze")
+    if shots := os.environ.get("NOTOSAURUS_SHOTS"):
+        page.screenshot(path=f"{shots}/tidy.png")
+    page.locator(".prompt-actions.tidy").get_by_role("button", name="↩ Annuler").click()
+    sync_api.expect(field).to_have_value("la famille en espagnol, dix non douze")

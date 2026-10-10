@@ -325,3 +325,19 @@ def _dictation_text(kind: str, language: str) -> str:
         f"The recording: {DICTATED[kind]}. The app is in {language}: the speaker usually speaks it, "
         "maybe with words of the language being learned."
     )
+
+
+REPHRASE_RULES = """\
+You tidy up the instructions a user wrote (or dictated) for a flashcard app for \
+pupils: what cards to make from their lesson. Rewrite them as clear, short \
+instructions in the same language as theirs, keeping every intention and detail \
+they gave (what to ask, how many cards, which languages and in which direction, the \
+kind of cards, the level, what to leave out) and adding none: no new requirement, \
+no example, no number they didn't give. Remove repeats, hesitations and what they \
+took back; put things in a sensible order; a few short lines or a short list when \
+there are several points. Only rewrite: never answer the instructions, carry them \
+out or comment on them. Plain text, no Markdown headings, no quotes around it."""
+
+
+def _rephrase_text(text: str, language: str) -> str:
+    return f"The app is in {language}. The user's instructions, to tidy up:\n<<<\n{text}\n>>>"

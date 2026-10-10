@@ -965,4 +965,18 @@ class LocalServerTest {
         }
         assertEquals("dictation.failed", notStarted.json().jsonObject["detail"]!!.jsonObject.string("code"))
     }
+
+    @Test
+    fun instructionsTidiedUpByTheRelay() = app { client ->
+        relayAnswers("""{"text": "Douze cartes : la famille en espagnol.", "usage": {"credits": 1, "credits_left": 99}}""")
+        val res = client.post("/api/prompt/rephrase") {
+            page("fr")
+            contentType(ContentType.Application.Json)
+            setBody("""{"text": "euh la famille en espagnol, dix cartes non douze"}""")
+        }
+        assertEquals("""{"text":"Douze cartes : la famille en espagnol."}""", res.bodyAsText())
+        val sent = json.parseToJsonElement(relay.takeRequest(5, TimeUnit.SECONDS)!!.body!!.utf8()).jsonObject
+        assertEquals("euh la famille en espagnol, dix cartes non douze", sent.string("text"))
+        assertEquals("French", sent.string("language"))
+    }
 }

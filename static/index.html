@@ -166,6 +166,12 @@
                 x-text="dictation.listening === 'prompt' ? '⏹' : dictation.busy === 'prompt' ? '…' : '🎤'"></button>
       </div>
       <p class="hint" x-cloak x-show="dictation.listening === 'prompt'" x-text="$t('app.dictation.listening')"></p>
+      <div class="prompt-actions tidy" x-show="form.text.trim()">
+        <button type="button" class="link-btn strong" :disabled="tidy.busy" @click="tidyPrompt()"
+                x-text="tidy.busy ? $t('app.prompt.tidyBusy') : $t('app.prompt.tidy')"></button>
+        <button type="button" class="link-btn" x-cloak x-show="canUntidy()" @click="untidyPrompt()"
+                x-text="$t('app.prompt.tidyUndo')"></button>
+      </div>
       <p class="hint" x-show="isModified()" x-text="$t('app.prompt.modified')"></p>
       <p class="hint" x-show="selectedId === null" x-text="$t('app.prompt.freeNote')"></p>
 

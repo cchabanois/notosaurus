@@ -91,7 +91,10 @@
       "quick": "⚡ Schnell",
       "careful": "🎯 Sorgfältig",
       "quickHint": "Ein paar Sekunden. Ideal für Vokabeln oder eine einfache Lektion.",
-      "carefulHint": "Länger (bis zu 30 s), durchdachter: für eine umfangreiche Lektion (ein Schema, Mathe)."
+      "carefulHint": "Länger (bis zu 30 s), durchdachter: für eine umfangreiche Lektion (ein Schema, Mathe).",
+      "tidy": "✨ Aufräumen",
+      "tidyBusy": "Ich räume auf…",
+      "tidyUndo": "↩ Rückgängig"
     },
     "review": {
       "title": "Durchsicht",
@@ -486,7 +489,8 @@
         "extract": "Erzeugung",
         "revise": "Korrektur",
         "picture": "Bild",
-        "explain": "Erklärung"
+        "explain": "Erklärung",
+        "rephrase": "Aufräumen"
       },
       "deleted": "davon {cost} für inzwischen gelöschte Lektionen",
       "failed": "davon {cost} für fehlgeschlagene Erzeugungen (keine Lektion)",

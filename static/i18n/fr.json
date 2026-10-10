@@ -91,7 +91,10 @@
       "quick": "⚡ Rapide",
       "careful": "🎯 Soigné",
       "quickHint": "Quelques secondes. Idéal pour du vocabulaire ou une leçon simple.",
-      "carefulHint": "Plus long (jusqu'à 30 s), plus réfléchi : pour une leçon riche (schéma, maths)."
+      "carefulHint": "Plus long (jusqu'à 30 s), plus réfléchi : pour une leçon riche (schéma, maths).",
+      "tidy": "✨ Mettre au propre",
+      "tidyBusy": "Je mets au propre…",
+      "tidyUndo": "↩ Annuler"
     },
     "review": {
       "title": "Relecture",
@@ -486,7 +489,8 @@
         "extract": "génération",
         "revise": "correction",
         "picture": "image",
-        "explain": "explication"
+        "explain": "explication",
+        "rephrase": "mise au propre"
       },
       "deleted": "dont {cost} pour des leçons supprimées depuis",
       "failed": "dont {cost} pour des générations échouées (sans leçon)",

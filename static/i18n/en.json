@@ -91,7 +91,10 @@
       "quick": "⚡ Quick",
       "careful": "🎯 Careful",
       "quickHint": "A few seconds. Right for vocabulary or a simple lesson.",
-      "carefulHint": "Longer (up to 30 s), more thought through: for a rich lesson (a diagram, maths)."
+      "carefulHint": "Longer (up to 30 s), more thought through: for a rich lesson (a diagram, maths).",
+      "tidy": "✨ Tidy up",
+      "tidyBusy": "Tidying up…",
+      "tidyUndo": "↩ Undo"
     },
     "review": {
       "title": "Review",
@@ -486,7 +489,8 @@
         "extract": "generation",
         "revise": "correction",
         "picture": "picture",
-        "explain": "explanation"
+        "explain": "explanation",
+        "rephrase": "tidying up"
       },
       "deleted": "of which {cost} for lessons deleted since",
       "failed": "of which {cost} for generations that failed (no lesson)",

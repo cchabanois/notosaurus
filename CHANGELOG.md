@@ -26,6 +26,8 @@ Each pull request adds a line under **Unreleased**. See [Releasing](CONTRIBUTING
 - The Android app can generate a lesson again in its place (“Regenerate”, “Make again, carefully”).
 - 🎤 The coming Android app takes the instructions and the AI correction by voice: what you say is written down as you meant it (hesitations out, “ten, no, twelve” → twelve, a lesson's foreign words spelled right), then you read it over.
 - For developers: the relay's `/v1/transcribe`.
+- ✨ “Tidy up” under the instructions: the AI rewrites them clear and short, every intention kept and nothing added (typed in a hurry or dictated); “↩ Undo” brings them back. On the computer (your AI) and in the coming Android app (the relay's).
+- For developers: the relay's `/v1/rephrase`.
 
 ### Changed
 

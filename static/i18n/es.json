@@ -91,7 +91,10 @@
       "quick": "⚡ Rápido",
       "careful": "🎯 Cuidado",
       "quickHint": "Unos segundos. Ideal para vocabulario o una lección sencilla.",
-      "carefulHint": "Más largo (hasta 30 s), más pensado: para una lección completa (un esquema, matemáticas)."
+      "carefulHint": "Más largo (hasta 30 s), más pensado: para una lección completa (un esquema, matemáticas).",
+      "tidy": "✨ Poner en limpio",
+      "tidyBusy": "Poniendo en limpio…",
+      "tidyUndo": "↩ Deshacer"
     },
     "review": {
       "title": "Revisión",
@@ -486,7 +489,8 @@
         "extract": "generación",
         "revise": "corrección",
         "picture": "imagen",
-        "explain": "explicación"
+        "explain": "explicación",
+        "rephrase": "puesta en limpio"
       },
       "deleted": "de ellos {cost} por lecciones eliminadas desde entonces",
       "failed": "de ellos {cost} por generaciones fallidas (sin lección)",

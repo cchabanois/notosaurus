@@ -172,4 +172,37 @@ const promptsPart = {
       else this.error = message;
     }
   },
+
+  // "✨ Tidy up": the instructions rewritten clear and short by the AI, every intention
+  // kept and none added (typed in a hurry, or dictated); "↩" brings back the text
+  // before, as long as the tidied one isn't changed.
+  async tidyPrompt() {
+    const before = this.form.text;
+    if (!before.trim() || this.tidy.busy) return;
+    this.tidy.busy = true;
+    this.error = "";
+    try {
+      const res = await api("/api/prompt/rephrase", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ text: before }),
+      });
+      const { text } = await res.json();
+      this.form.text = text;
+      Object.assign(this.tidy, { before, after: text });
+    } catch (e) {
+      this.error = e.message;
+    } finally {
+      this.tidy.busy = false;
+    }
+  },
+
+  canUntidy() {
+    return this.tidy.before !== null && this.form.text === this.tidy.after;
+  },
+
+  untidyPrompt() {
+    this.form.text = this.tidy.before;
+    this.tidy.before = null;
+  },
 };

@@ -87,6 +87,10 @@ class PromptIn(BaseModel):
     dictation: bool = False
 
 
+class RephraseRequest(BaseModel):
+    text: str = Field(min_length=1, max_length=8000)  # the instructions as written (or dictated)
+
+
 class Prompt(PromptIn):
     id: int | str  # the user's: a number; Notosaurus's: "notosaurus:<key>"
     builtin: bool = False  # Notosaurus's own: read-only, can be duplicated

@@ -131,6 +131,8 @@ document.addEventListener("alpine:init", () => {
     pdfBusy: false,      // a PDF's pages being drawn
     pdf: { open: false, name: "", free: 0, pages: [] },  // its page picker
     lessonQuery: "",
+    // "✨ Tidy up" the instructions: the text before kept for "↩", while the tidied one is unchanged
+    tidy: { busy: false, before: null, after: "" },
     // The 🎤 of the instructions and the correction (the app): the field listening, or being written
     dictation: { available: false, listening: "", busy: "", timer: null },
     openSubjects: (() => { try { return JSON.parse(storage("get", undefined, OPEN_SUBJECTS)) ?? {}; } catch { return {}; } })(),
