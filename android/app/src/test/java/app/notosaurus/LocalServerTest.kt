@@ -110,6 +110,7 @@ class LocalServerTest {
             installAnki = { storeOpened++ },
             scan = { if (scannerMissing) error("module not downloaded") else scanned },
             modeChanged = { modeChanges++ },
+            turnPhoto = { data, degrees -> "turned $degrees:".toByteArray() + data }, // (Photos.turn needs Android)
         )
         computer.start()
     }
@@ -529,6 +530,51 @@ class LocalServerTest {
             setBody("""{"deck": "SVT", "cards": ${lesson["cards"]}, "voice": "", "lesson_id": "${lesson.string("id")}"}""")
         }
         assertEquals(mapOf(1 to listOf(0.05, 0.05, 0.6, 0.7)), anki.media.frames)
+    }
+
+    @Test
+    fun boxesTurnedAsOnTheComputer() {
+        // diagrams.rotate_box([0.1, 0.2, 0.3, 0.5], degrees) on the computer
+        assertEquals(listOf(0.5, 0.1, 0.8, 0.3), LocalServer.rotateBox(listOf(0.1, 0.2, 0.3, 0.5), 90))
+        assertEquals(listOf(0.7, 0.5, 0.9, 0.8), LocalServer.rotateBox(listOf(0.1, 0.2, 0.3, 0.5), 180))
+        assertEquals(listOf(0.2, 0.7, 0.5, 0.9), LocalServer.rotateBox(listOf(0.1, 0.2, 0.3, 0.5), 270))
+    }
+
+    @Test
+    fun sidewaysPhotosSavedUprightThenTurnedByHand() = app { client ->
+        relayAnswers("""{"deck": {"deck": "SVT", "cards": [{"front": "(1) ?", "back": "la bouche", "mask": {"page": 1, "n": 1, "box": [0.1, 0.2, 0.3, 0.5]}}]},
+            "turns": [90], "frames": [{"page": 1, "box": [0.1, 0.2, 0.3, 0.5]}], "usage": {"credits": 1, "credits_left": 99}}""")
+        val lesson = client.submitFormWithBinaryData("/api/extract", formData {
+            append("prompt", "p")
+            append("images", "photo 1".toByteArray(), Headers.build {
+                append(HttpHeaders.ContentType, "image/jpeg")
+                append(HttpHeaders.ContentDisposition, "filename=\"page-1.jpg\"")
+            })
+        }) { page() }.json().jsonObject
+        val id = lesson.string("id")
+        // The AI found it turned a quarter: saved upright, its mask and frame with it
+        assertEquals("turned 90:photo 1", client.get("/api/lessons/$id/photos/1") { page() }.bodyAsText())
+        fun box(of: JsonObject?) = of!!["box"]!!.jsonArray.map { it.jsonPrimitive.content.toDouble() }
+        assertEquals(listOf(0.5, 0.1, 0.8, 0.3), box(lesson["cards"]!!.jsonArray[0].jsonObject["mask"]?.jsonObject))
+        assertEquals(listOf(0.5, 0.1, 0.8, 0.3), box(lesson["frames"]!!.jsonArray[0].jsonObject))
+
+        // ↻ in the review: a quarter more, by hand
+        val turned = client.post("/api/lessons/$id/photos/1/rotate") { page() }.json().jsonObject
+        assertEquals("turned 90:turned 90:photo 1", client.get("/api/lessons/$id/photos/1") { page() }.bodyAsText())
+        assertEquals(LocalServer.rotateBox(listOf(0.5, 0.1, 0.8, 0.3), 90), box(turned["cards"]!!.jsonArray[0].jsonObject["mask"]?.jsonObject))
+        assertEquals(HttpStatusCode.NotFound, client.post("/api/lessons/$id/photos/9/rotate") { page() }.status)
+    }
+
+    @Test
+    fun theVoicesSpeedAndNoApkg() = app { client ->
+        assertEquals("false", client.get("/api/config") { page() }.json().jsonObject["apkg"]!!.jsonPrimitive.content)
+        assertEquals("-10%", client.get("/api/admin/settings") { page() }.json().jsonObject.string("tts_rate"))
+        client.put("/api/admin/settings") { page(); contentType(ContentType.Application.Json); setBody("""{"tts_rate": "-25%"}""") }
+        client.put("/api/admin/settings") { page(); contentType(ContentType.Application.Json); setBody("""{"tts_rate": "+90%"}""") } // not one: ignored
+        assertEquals("-25%", client.get("/api/admin/settings") { page() }.json().jsonObject.string("tts_rate"))
+        relay.enqueue(MockResponse.Builder().setHeader("Content-Type", "audio/mpeg").body("mp3").build())
+        client.get("/api/tts?text=hola&voice=es-ES-Chirp3-HD-Aoede") { page() }
+        assertEquals("0.75", json.parseToJsonElement(relay.takeRequest().body!!.utf8()).jsonObject["rate"]!!.jsonPrimitive.content)
     }
 
     @Test

@@ -217,6 +217,7 @@ document.addEventListener("alpine:init", () => {
     profiles: true,              // Anki profiles shown (not in the Android app: AnkiDroid doesn't say them)
     settingsHere: true,          // false on a phone when Notosaurus runs in the Anki add-on
     inAndroidApp: /\bNotosaurusApp\//.test(navigator.userAgent),
+    apkg: true,                  // a .apkg to download: not where the cards go straight to AnkiDroid (the app)
     donations: true,             // "Support Notosaurus": not where it's paid for (the app's subscription)  // the Notosaurus Android app (its WebView says so)
     profileToApply: null,        // Anki profile switch waiting for the current task to finish
     diagramWarning: false,       // the AI model places diagram masks loosely: say so
@@ -265,6 +266,7 @@ document.addEventListener("alpine:init", () => {
         this.maxPhotos = config.max_photos ?? this.maxPhotos;
         this.configured = config.configured ?? true;
         this.donations = config.donations ?? true;
+        this.apkg = config.apkg ?? true;
         const helps = storage("get", undefined, HELPS);
         this.helps = helps === null ? Boolean(config.card_helps) : helps === "1";
       } catch {}

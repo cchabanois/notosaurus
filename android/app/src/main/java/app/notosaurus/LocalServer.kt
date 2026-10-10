@@ -46,6 +46,8 @@ import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
 import kotlinx.serialization.json.put
 import java.io.File
+import java.math.BigDecimal
+import java.math.RoundingMode
 import java.net.URI
 import java.security.MessageDigest
 import java.util.UUID
@@ -78,6 +80,7 @@ class LocalServer(
     private val installAnki: () -> Unit = {}, // AnkiDroid's Play Store page
     private val scan: suspend () -> String? = { null }, // a QR code read by the camera (null: cancelled)
     private val modeChanged: () -> Unit = {}, // the app's shortcuts follow
+    private val turnPhoto: (ByteArray, Int) -> ByteArray = { data, _ -> data }, // a JPEG turned clockwise (Photos.turn)
     val token: String = UUID.randomUUID().toString(),
 ) {
     private val lessons = Lessons(File(dataDir, "lessons").apply { mkdirs() })
@@ -154,18 +157,29 @@ class LocalServer(
             if (!it.equals("auto", ignoreCase = true)) it
             else voiceFor(learned(found.string("back_language"), form.lang, spelling)) // the language learned
         }
+        // Photos taken sideways saved upright, as the computer: their masks and frames turn with them
+        val turns = found["turns"]?.jsonArray?.map { it.jsonPrimitive.content.toInt() }.orEmpty()
+        var cards = found["deck"]!!.jsonObject["cards"]!!.jsonArray.map { it.jsonObject }
+        var frames = (found["frames"] as? JsonArray)?.map { it.jsonObject }.orEmpty()
+        val photos = images.mapIndexed { i, data ->
+            val degrees = turns.getOrElse(i) { 0 }
+            if (degrees == 0) return@mapIndexed data
+            cards = cards.map { turnedMask(it, i + 1, degrees) }
+            frames = frames.map { turnedFrame(it, i + 1, degrees) }
+            turnPhoto(data, degrees)
+        }
         val content = mapOf(
             "deck" to found["deck"]!!.jsonObject["deck"]!!,
-            "cards" to found["deck"]!!.jsonObject["cards"]!!,
+            "cards" to JsonArray(cards),
             "prompt" to JsonPrimitive(fields["prompt"] ?: ""),
             "voice" to JsonPrimitive(voice),
             "typing" to JsonPrimitive(fields["typing"] == "true"),
             "dictation" to JsonPrimitive(fields["dictation"] == "true"),
             "choice" to (found["choice"] ?: JsonPrimitive("")),
             "page_texts" to texts,
-            "frames" to (found["frames"] ?: JsonArray(emptyList())), // each diagram's frame: what AnkiDroid shows
+            "frames" to JsonArray(frames), // each diagram's frame: what AnkiDroid shows
         )
-        return Made(content, images) // to do: turned upright (found["turns"]), as the computer does
+        return Made(content, photos)
     }
 
     /** A card's figure (SVG, /v1/figure) or picture (JPEG, /v1/picture), saved in the
@@ -201,6 +215,21 @@ class LocalServer(
     private fun RoutingContext.cardIndex(cards: List<JsonObject>): Int =
         cards.indexOfFirst { it.string("id") == param("card") }.takeIf { it >= 0 } ?: throw BadRequest("card.not_found")
 
+    /** A card with its mask turned, if it is on photo `page`. */
+    private fun turnedMask(card: JsonObject, page: Int, degrees: Int): JsonObject {
+        val mask = card["mask"] as? JsonObject ?: return card
+        if (mask["page"]?.jsonPrimitive?.content?.toIntOrNull() != page) return card
+        return JsonObject(card + ("mask" to turnedBox(mask, degrees)))
+    }
+
+    private fun turnedFrame(frame: JsonObject, page: Int, degrees: Int): JsonObject =
+        if (frame["page"]?.jsonPrimitive?.content?.toIntOrNull() == page) turnedBox(frame, degrees) else frame
+
+    private fun turnedBox(item: JsonObject, degrees: Int): JsonObject {
+        val box = item["box"]!!.jsonArray.map { it.jsonPrimitive.content.toDouble() }
+        return JsonObject(item + ("box" to JsonArray(rotateBox(box, degrees).map(::JsonPrimitive))))
+    }
+
     /** The relay's voices, asked once. */
     private var voiceList: JsonArray? = null
 
@@ -210,10 +239,11 @@ class LocalServer(
      * voice aren't paid for twice (the 🔊 preview, then the cards). */
     private suspend fun speech(text: String, voice: String): File {
         val said = text.trim().take(200) // as the computer: a back's first 200 characters
-        val digest = MessageDigest.getInstance("SHA-1").digest("$voice|${Relay.SPEECH_RATE}|$said".toByteArray())
+        val rate = RATES[prefs[TTS_RATE]] ?: Relay.SPEECH_RATE
+        val digest = MessageDigest.getInstance("SHA-1").digest("$voice|$rate|$said".toByteArray())
         val mp3 = File(audio, digest.joinToString("") { "%02x".format(it) }.take(16) + ".mp3")
         if (!mp3.isFile) {
-            val bytes = relay().speak(said, voice)
+            val bytes = relay().speak(said, voice, rate)
             withContext(Dispatchers.IO) {
                 val tmp = File(audio, mp3.name + ".tmp")
                 tmp.writeBytes(bytes)
@@ -270,6 +300,7 @@ class LocalServer(
                 put("card_helps", prefs[CARD_HELPS] == "true")
                 put("configured", true)
                 put("donations", false) // paid for by the subscription: no "Support Notosaurus" (Ko-fi)
+                put("apkg", false) // the cards go to AnkiDroid: no .apkg to download
             }
         }
 
@@ -282,6 +313,7 @@ class LocalServer(
             (changes[KEY] as? JsonPrimitive)?.let { prefs[KEY] = it.content.trim() }
             (changes[INSTRUCTIONS] as? JsonPrimitive)?.let { prefs[INSTRUCTIONS] = it.content.take(4000) }
             (changes[CARD_HELPS] as? JsonPrimitive)?.let { prefs[CARD_HELPS] = it.content }
+            (changes[TTS_RATE] as? JsonPrimitive)?.content?.takeIf { it in RATES }?.let { prefs[TTS_RATE] = it }
             settings()
         }
         api("GET", "/api/admin/account") { json.encodeToJsonElement(Account.serializer(), relay().account()) }
@@ -365,6 +397,17 @@ class LocalServer(
         api("DELETE", "/api/lessons/{id}") {
             lessons.delete(param("id"))
             buildJsonObject { put("deleted", true) }
+        }
+        // A photo turned a quarter turn clockwise (it came out sideways), its masks and frame with it
+        api("POST", "/api/lessons/{id}/photos/{n}/rotate") {
+            val lesson = lesson()
+            val id = lesson.string("id")
+            val n = param("n").toIntOrNull() ?: notFound()
+            val photo = lessons.photo(id, n) ?: notFound()
+            photo.writeBytes(turnPhoto(photo.readBytes(), 90))
+            val cards = lesson["cards"]!!.jsonArray.map { turnedMask(it.jsonObject, n, 90) }
+            val frames = (lesson["frames"] as? JsonArray)?.map { turnedFrame(it.jsonObject, n, 90) }.orEmpty()
+            lessons.update(id, buildJsonObject { put("cards", JsonArray(cards)); put("frames", JsonArray(frames)) }) ?: notFound()
         }
         get("/api/lessons/{id}/photos/{n}") {
             if (!allowed()) return@get
@@ -653,6 +696,7 @@ class LocalServer(
         put("has_key", prefs[KEY].orEmpty().isNotEmpty())
         put(INSTRUCTIONS, prefs[INSTRUCTIONS].orEmpty())
         put(CARD_HELPS, prefs[CARD_HELPS] == "true")
+        put(TTS_RATE, prefs[TTS_RATE] ?: "-10%")
         put("version", version)
         put(MODE, prefs[MODE] ?: PHONE_MODE)
         prefs[COMPUTER]?.let {
@@ -781,6 +825,21 @@ class LocalServer(
         // The voice chosen for a lesson whose voice is "auto" (Google Chirp 3 HD: the same
         // name in every language); a voice's name, as the page tells them from Anki locales
         const val DEFAULT_VOICE = "Aoede"
+        const val TTS_RATE = "tts_rate" // the voice's speed, as the computer's: "-25%", "-10%", "+0%"
+        private val RATES = mapOf("-25%" to 0.75, "-10%" to Relay.SPEECH_RATE, "+0%" to 1.0)
+
+        /** A box (fractions of the photo) once the photo is turned `degrees` clockwise, as
+         * the computer's (diagrams.rotate_box). */
+        fun rotateBox(box: List<Double>, degrees: Int): List<Double> {
+            val (x0, y0, x1, y1) = box
+            val turned = when (degrees) {
+                90 -> listOf(1 - y1, x0, 1 - y0, x1)
+                180 -> listOf(1 - x1, 1 - y1, 1 - x0, 1 - y0)
+                270 -> listOf(y0, 1 - x1, y1, 1 - x0)
+                else -> return box
+            }
+            return turned.map { BigDecimal(it.coerceIn(0.0, 1.0)).setScale(4, RoundingMode.HALF_EVEN).toDouble() }
+        }
         private const val PICTURES_AT_ONCE = 4
         private val PICTURE = Regex("""^picture-[a-z0-9]+-[a-f0-9]{8}\.(jpg|svg)$""") // ours only: no "../"
         private val VOICE = Regex("""^[a-z]{2,3}-[A-Z]{2}-[\w-]+$""")
@@ -833,6 +892,7 @@ class LocalServer(
             installAnki = installAnki,
             scan = scan,
             modeChanged = modeChanged,
+            turnPhoto = Photos::turn,
         )
 
         private fun asset(context: Context, path: String) =
