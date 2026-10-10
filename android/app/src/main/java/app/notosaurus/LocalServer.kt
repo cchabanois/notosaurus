@@ -203,6 +203,15 @@ class LocalServer(
             JsonNull
         }
         api("POST", "/api/prompts/{id}/duplicate") { prompts.duplicate(lang(), param("id")) }
+        // "✨ Tidy up" the instructions being written, by the relay's AI
+        api("POST", "/api/prompt/rephrase") {
+            val text = body().string("text").trim().takeIf { it.isNotEmpty() } ?: throw BadRequest("extract.no_input")
+            val request = buildJsonObject {
+                put("text", text)
+                put("language", languageName())
+            }
+            buildJsonObject { put("text", relay().post("rephrase", request).string("text")) }
+        }
 
         // --- Lessons
         api("GET", "/api/lessons") { JsonArray(lessons.list().map(lessons::summary)) }

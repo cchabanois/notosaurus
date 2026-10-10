@@ -22,14 +22,25 @@ from pydantic import BaseModel, Field, create_model
 from . import config, diagrams
 from .calls import CardStream, ExtractionError, Image, OnCard, record, recording  # noqa: F401 (llm's API)
 from .config import AIConfig
-from .demo import DEMO, _fake, _fake_dictation, _fake_explanation, _fake_figure, _fake_revision, _lets_choose
-from .models import Card, Deck, Dictation, Explanation, Extraction, Frame, Revision
+from .demo import (
+    DEMO,
+    _fake,
+    _fake_dictation,
+    _fake_explanation,
+    _fake_figure,
+    _fake_rephrased,
+    _fake_revision,
+    _lets_choose,
+)
+from .models import Card, Deck, Dictation, Explanation, Extraction, Frame, Rephrased, Revision
 from .prompts import (
     DICTATION_RULES,
     EXPLAIN_RULES,
+    REPHRASE_RULES,
     SYSTEM_PROMPT,
     _dictation_text,
     _explain_text,
+    _rephrase_text,
     _revision_text,
     _user_text,
 )
@@ -177,6 +188,18 @@ async def transcribe(s: AIConfig, audio: Image, kind: str, language: str = "Engl
     if s.llm != "gemini":
         raise ExtractionError("llm.no_audio", provider=s.llm)
     found = await _generate(s, [audio], _dictation_text(kind, language), Dictation, DICTATION_RULES, light=True)
+    return found.text.strip()
+
+
+async def rephrase(s: AIConfig, text: str, language: str = "English") -> str:
+    """A lesson's instructions tidied up ("✨ Tidy up"): clear and short, in their own
+    language, every intention kept and none added. A light call, text only.
+
+    `language`: the app's, its English name ("French")."""
+    if s.llm == "fake":
+        await record(s, "fake", "fake", 0, 0, cost=0.0)
+        return _fake_rephrased(text)
+    found = await _generate(s, [], _rephrase_text(text, language), Rephrased, REPHRASE_RULES, light=True)
     return found.text.strip()
 
 

@@ -44,6 +44,7 @@ from .models import (
     PictureRequest,
     Prompt,
     PromptIn,
+    RephraseRequest,
     RevisionRequest,
     SettingsUpdate,
 )
@@ -195,6 +196,17 @@ def duplicate_prompt(id: str, lang: str = Depends(page_lang)) -> Prompt:
     if copy := prompts.duplicate(id, lang):
         return copy
     raise AppError("prompt.not_found", 404)
+
+
+@app.post("/api/prompt/rephrase")
+async def rephrase_prompt(req: RephraseRequest, lang: str = Depends(page_lang)) -> dict:
+    """The instructions being written, tidied up ("✨ Tidy up"): every intention kept, none added."""
+    with llm.recording("rephrase") as calls:
+        try:
+            text = await llm.rephrase(settings.current(), req.text, i18n.language_name(lang))
+        finally:
+            usage.add(calls, None)  # in the costs, with no lesson
+    return {"text": text}
 
 
 # --- Extraction & export ---------------------------------------------------

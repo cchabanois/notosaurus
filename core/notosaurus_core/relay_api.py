@@ -166,6 +166,13 @@ class TranscribeRequest(BaseModel):
     language: str = Language
 
 
+class RephraseRequest(BaseModel):
+    """A lesson's instructions tidied up: clear and short, every intention kept, none added. JSON."""
+
+    text: str = Field(min_length=1, max_length=MAX_PROMPT, description="The instructions as written (or dictated).")
+    language: str = Language
+
+
 class PictureRequest(BaseModel):
     """A picture for a card, drawn by an image model. JSON; the answer is the JPEG itself."""
 
@@ -203,6 +210,11 @@ class ExplainResponse(Explanation):
 
 class TranscribeResponse(BaseModel):
     text: str = Field(description='What was said, as written text ("" when nothing was understood).')
+    usage: Usage
+
+
+class RephraseResponse(BaseModel):
+    text: str = Field(description="The instructions, tidied up.")
     usage: Usage
 
 

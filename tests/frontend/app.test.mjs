@@ -366,3 +366,28 @@ test("dictation: refused microphone, the field doesn't listen", async () => {
   assert.equal(c.dictation.listening, "");
   assert.match(c.error, /can't use the microphone/);
 });
+
+// --- “✨ Tidy up” the instructions ---------------------------------------------
+
+test("tidy up: the text rewritten, “↩” brings it back until it's changed", async () => {
+  const sent = [];
+  const page = await loadScripts("app.js", {
+    routes: (url, options) => {
+      sent.push([url, options?.body]);
+      return new Response({ text: "Douze cartes : la famille en espagnol." });
+    },
+  });
+  const c = page.component();
+  c.form.text = "euh la famille en espagnol, dix non douze";
+  await c.tidyPrompt();
+  assert.equal(c.form.text, "Douze cartes : la famille en espagnol.");
+  assert.deepEqual(sent, [["/api/prompt/rephrase", '{"text":"euh la famille en espagnol, dix non douze"}']]);
+  assert.equal(c.canUntidy(), true);
+  c.untidyPrompt();
+  assert.equal(c.form.text, "euh la famille en espagnol, dix non douze");
+  assert.equal(c.canUntidy(), false);
+
+  await c.tidyPrompt();
+  c.form.text += " Avec des images.";  // changed since: “↩” would lose it
+  assert.equal(c.canUntidy(), false);
+});

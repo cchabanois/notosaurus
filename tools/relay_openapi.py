@@ -147,6 +147,10 @@ def build() -> dict:
     def explain(request: api.ExplainRequest, x_notosaurus_version: str = client):
         """A card explained to the pupil (llm.explain_card)."""
 
+    @app.post(f"{api.PREFIX}/rephrase", response_model=api.RephraseResponse, responses=errors(*COMMON))
+    def rephrase(request: api.RephraseRequest, x_notosaurus_version: str = client):
+        """A lesson's instructions tidied up (llm.rephrase)."""
+
     @app.post(f"{api.PREFIX}/figure", response_model=api.FigureResponse, responses=errors(*COMMON))
     def figure(request: api.FigureRequest, x_notosaurus_version: str = client):
         """An exact figure as SVG (llm.draw_figure)."""

@@ -128,7 +128,7 @@ class AiCall(BaseModel):
     """One request to the AI for a lesson: what it used and cost."""
 
     at: str
-    kind: Literal["extract", "revise", "picture", "explain", "transcribe"]  # transcribe: the relay only
+    kind: Literal["extract", "revise", "picture", "explain", "transcribe", "rephrase"]  # transcribe: the relay only
     provider: str  # gemini, anthropic; the service's host for the OpenAI-like ones ("openrouter.ai")
     model: str  # the model that answered (a fallback, if the main one was overloaded)
     input_tokens: int | None = None
@@ -156,3 +156,7 @@ class Explanation(BaseModel):
 
 class Dictation(BaseModel):
     text: str = Field(description='What the user meant to type, as written text ("" when nothing was said).')
+
+
+class Rephrased(BaseModel):
+    text: str = Field(description="The instructions, rewritten: clear, every intention kept, nothing added.")

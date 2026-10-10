@@ -169,3 +169,8 @@ def _fake_revision(deck: Deck, instruction: str, texts: dict[str, str]) -> Revis
 def _fake_dictation(kind: str) -> str:
     """Demo mode: a canned dictation."""
     return f"(démo, {kind}) Fais dix cartes sur el abuelo et la abuela."
+
+
+def _fake_rephrased(text: str) -> str:
+    """Demo mode: the instructions as they were, marked."""
+    return f"(démo) {text.strip()}"
