@@ -34,7 +34,7 @@ class Pictures(
                 async {
                     few.withPermit {
                         try {
-                            cards[i] = cards[i].with("picture" to JsonPrimitive(drawn(id, cards[i], fresh = false)))
+                            cards[i] = drawn(id, cards[i], fresh = false)
                         } catch (e: RelayException) {
                             failures += buildJsonObject { put("code", e.code); put("params", e.params) }
                         }
@@ -56,22 +56,25 @@ class Pictures(
         val field = if (cards[i].string("figure").isNotBlank()) "figure" else "picture_prompt"
         val asked = (subject ?: cards[i].string(field)).trim()
         if (asked.isEmpty()) throw BadRequest("picture.no_subject")
-        val card = cards[i].with(field to JsonPrimitive(asked))
-        cards[i] = card.with("picture" to JsonPrimitive(drawn(lesson.string("id"), card, fresh = true)))
+        cards[i] = drawn(lesson.string("id"), cards[i].with(field to JsonPrimitive(asked)), fresh = true)
         return answer(lesson, cards, i)
     }
 
     /** The user's own photo as card `i`'s picture (the page made it card size). */
-    fun own(lesson: JsonObject, i: Int, photo: ByteArray): JsonObject {
+    fun own(lesson: JsonObject, i: Int, photo: ByteArray, source: JsonObject? = PHOTO): JsonObject {
         val cards = lesson.cards()
-        cards[i] = cards[i].with("picture" to JsonPrimitive(save(lesson.string("id"), cards[i].string("id"), photo, "jpg")))
+        val name = save(lesson.string("id"), cards[i].string("id"), photo, "jpg")
+        cards[i] = cards[i].with("picture" to JsonPrimitive(name), "picture_source" to (source ?: JsonNull))
         return answer(lesson, cards, i)
     }
 
     /** No picture on card `i` any more: a text card. */
     fun remove(lesson: JsonObject, i: Int): JsonObject {
         val cards = lesson.cards()
-        cards[i] = cards[i].with("picture" to JsonPrimitive(""), "picture_prompt" to JsonPrimitive(""), "figure" to JsonPrimitive(""))
+        cards[i] = cards[i].with(
+            "picture" to JsonPrimitive(""), "picture_prompt" to JsonPrimitive(""), "figure" to JsonPrimitive(""),
+            "picture_source" to JsonNull,
+        )
         return answer(lesson, cards, i)
     }
 
@@ -79,18 +82,21 @@ class Pictures(
     fun file(lessonId: String, name: String): File? =
         lessons.images(lessonId)?.resolve(name)?.takeIf { NAME.matches(name) && it.isFile }
 
-    /** A card's figure (SVG) or picture (JPEG), drawn by the relay and saved; its file name. */
-    private suspend fun drawn(lessonId: String, card: JsonObject, fresh: Boolean): String {
+    /** The card with its figure (SVG) or picture (JPEG), found or drawn by the relay and saved, and
+     * where it comes from. */
+    private suspend fun drawn(lessonId: String, card: JsonObject, fresh: Boolean): JsonObject {
         val figure = card.string("figure").trim()
-        return if (figure.isNotEmpty()) {
+        if (figure.isNotEmpty()) {
             val svg = relay().post("figure", buildJsonObject { put("description", figure) }).string("svg")
-            save(lessonId, card.string("id"), svg.toByteArray(), "svg")
-        } else {
-            // A real thing (Card.picture_search): the relay finds a free picture first, unless always drawn
-            val search = if (find() && !fresh) card.string("picture_search").trim() else ""
-            val context = "${card.string("front").trim()} → ${card.string("back").trim()}"
-            save(lessonId, card.string("id"), relay().picture(card.string("picture_prompt"), fresh, search, context), "jpg")
+            val name = save(lessonId, card.string("id"), svg.toByteArray(), "svg")
+            return card.with("picture" to JsonPrimitive(name), "picture_source" to DRAWN)
         }
+        // A real thing (Card.picture_search): the relay finds a free picture first, unless always drawn
+        val search = if (find() && !fresh) card.string("picture_search").trim() else ""
+        val context = "${card.string("front").trim()} → ${card.string("back").trim()}"
+        val picture = relay().picture(card.string("picture_prompt"), fresh, search, context)
+        val name = save(lessonId, card.string("id"), picture.jpeg, "jpg")
+        return card.with("picture" to JsonPrimitive(name), "picture_source" to (picture.source ?: JsonNull))
     }
 
     private fun save(lessonId: String, cardId: String, data: ByteArray, extension: String): String {
@@ -122,6 +128,8 @@ class Pictures(
 
     companion object {
         private const val AT_ONCE = 4
+        private val PHOTO = buildJsonObject { put("source", "photo") }
+        private val DRAWN = buildJsonObject { put("source", "drawn") }
         private val CLOZE = Regex("""\{\{c\d+::""") // a gap, as core/notosaurus_core/cards.py
         private val NAME = Regex("""^picture-[a-z0-9]+-[a-f0-9]{8}\.(jpg|svg)$""") // the files we write
     }

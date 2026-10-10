@@ -164,6 +164,12 @@ def build() -> dict:
     def transcribe(x_notosaurus_version: str = client):
         """A dictation as the text its speaker meant to type (llm.transcribe)."""
 
+    source_header = {
+        api.PICTURE_SOURCE_HEADER: {
+            "description": "Where the picture comes from: a PictureSource, as JSON.",
+            "schema": {"type": "string"},
+        }
+    }
     credit_headers = {
         api.CREDITS_HEADER: {"description": "Credits this call used.", "schema": {"type": "integer"}},
         api.CREDITS_LEFT_HEADER: {"description": "Credits left in this period.", "schema": {"type": "integer"}},
@@ -176,7 +182,7 @@ def build() -> dict:
             200: {
                 "description": "The picture, card size.",
                 "content": {"image/jpeg": {"schema": {"type": "string", "format": "binary"}}},
-                "headers": credit_headers,
+                "headers": {**credit_headers, **source_header},
             },
             **errors(*COMMON),
         },
@@ -195,6 +201,7 @@ def build() -> dict:
             200: {
                 "description": "The picture chosen, card size.",
                 "content": {"image/jpeg": {"schema": {"type": "string", "format": "binary"}}},
+                "headers": source_header,
             },
             **errors(*COMMON),
         },

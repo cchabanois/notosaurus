@@ -53,7 +53,7 @@ from .providers.openai_like import list_models  # noqa: F401 (llm's API)
 # schema with too many optional fields ("Schema is too complex"): the fields Notosaurus
 # sets itself are left out, and the ones only some requests ask for (fun facts, helps)
 # are there only then.
-SET_BY_NOTOSAURUS = {"picture", "id"}
+SET_BY_NOTOSAURUS = {"picture", "picture_source", "id"}
 
 
 @cache

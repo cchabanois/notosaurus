@@ -315,7 +315,12 @@
       "search": "🔎 Buscar uma imagem",
       "searching": "Buscando…",
       "found": "Imagens livres ({sources}): toque na que servir.",
-      "none": "Nenhuma imagem livre encontrada: tente outras palavras (em inglês) ou desenhe-a."
+      "none": "Nenhuma imagem livre encontrada: tente outras palavras (em inglês) ou desenhe-a.",
+      "sourceFound": "Fonte: {source} · {licence}",
+      "sourceDrawn": "Desenhada pela IA",
+      "sourceDrawnBy": "Desenhada pela IA ({model})",
+      "sourcePhoto": "Sua foto",
+      "sourcePage": "ver a página"
     },
     "pairing": {
       "title": "Aparelho não autorizado"

@@ -17,6 +17,18 @@ class Mask(BaseModel):
     box: list[float] = Field(description="Bounding box of the label's text, in the format of the instructions.")
 
 
+class PictureSource(BaseModel):
+    """Where a card's picture comes from, kept with the card (and, on the computer, in its
+    Anki note's hidden Source field): to check a free picture's page later, or find the
+    cards using one that must go."""
+
+    source: Literal["commons", "openverse", "pixabay", "drawn", "photo"]
+    licence: str = ""  # a free picture's: "Public domain", "CC0", "Pixabay"
+    page: str = ""  # its page at its source
+    title: str = ""
+    model: str = ""  # a drawing's: the model that drew it
+
+
 class Card(BaseModel):
     front: str = Field(
         description="Front: what is shown first (e.g. the word in the pupil's language), "
@@ -73,6 +85,7 @@ class Card(BaseModel):
     )
     # Set by Notosaurus, not by the AI:
     picture: str = Field(default="", description="Leave empty.")  # file in the lesson's images/ folder
+    picture_source: PictureSource | None = Field(default=None, description="Leave empty.")
     id: str = Field(default="", description="Leave empty.")  # stable: tells Anki which note a card is
 
 

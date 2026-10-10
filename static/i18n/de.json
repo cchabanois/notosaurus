@@ -315,7 +315,12 @@
       "search": "🔎 Bild suchen",
       "searching": "Suche…",
       "found": "Freie Bilder ({sources}): tippe auf das passende.",
-      "none": "Kein freies Bild gefunden: versuch andere Wörter (auf Englisch) oder lass es zeichnen."
+      "none": "Kein freies Bild gefunden: versuch andere Wörter (auf Englisch) oder lass es zeichnen.",
+      "sourceFound": "Quelle: {source} · {licence}",
+      "sourceDrawn": "Von der KI gezeichnet",
+      "sourceDrawnBy": "Von der KI gezeichnet ({model})",
+      "sourcePhoto": "Dein Foto",
+      "sourcePage": "Seite ansehen"
     },
     "pairing": {
       "title": "Gerät nicht zugelassen"

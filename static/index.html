@@ -414,6 +414,12 @@
             </div>
             <!-- The card's picture: what to draw, redraw, own photo, none -->
             <div class="picture-panel" x-show="card._panel">
+              <!-- Where the picture comes from (a free one: its page, to check it) -->
+              <p class="picture-source" x-show="card.picture && pictureSourceText(card)">
+                <span x-text="pictureSourceText(card)"></span>
+                <a x-show="card.picture_source?.page" :href="card.picture_source?.page" target="_blank" rel="noopener"
+                   x-text="$t('app.pictures.sourcePage')"></a>
+              </p>
               <label class="field">
                 <span x-text="card.figure ? $t('app.pictures.figure') : $t('app.pictures.subject')"></span>
                 <input x-model="card._subject" :placeholder="card.figure ? $t('app.pictures.figurePlaceholder') : $t('app.pictures.subjectPlaceholder')"

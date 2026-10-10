@@ -277,6 +277,7 @@ const cardsPart = {
     try {
       const res = await (await api(`/api/lessons/${this.lessonId}/cards/${card.id}/picture${request.path ?? ""}`, request)).json();
       card.picture = res.card.picture;
+      card.picture_source = res.card.picture_source ?? null;
       card.picture_prompt = res.card.picture_prompt;
       card.figure = res.card.figure;
       if (!card.picture) card._panel = false;
@@ -327,6 +328,16 @@ const cardsPart = {
     }
   },
 
+  // Where the card's picture comes from, said in its panel ("" when it isn't known)
+  pictureSourceText(card) {
+    const origin = card.picture_source;
+    if (!origin) return "";
+    if (origin.source === "photo") return t("app.pictures.sourcePhoto");
+    if (origin.source === "drawn") return origin.model ? t("app.pictures.sourceDrawnBy", { model: origin.model }) : t("app.pictures.sourceDrawn");
+    const names = { commons: "Wikimedia Commons", openverse: "Openverse", pixabay: "Pixabay" };
+    return t("app.pictures.sourceFound", { source: names[origin.source] ?? origin.source, licence: origin.licence });
+  },
+
   // The sources of the pictures found, as their credit line says them
   foundSources(card) {
     const names = { commons: "Wikimedia Commons", openverse: "Openverse", pixabay: "Pixabay" };
@@ -355,8 +366,12 @@ const cardsPart = {
     try {
       const res = await (await api(`/api/lessons/${lessonId}/pictures`, { method: "POST" })).json();
       if (this.lessonId !== lessonId) return;  // another lesson opened meanwhile
-      const drawn = new Map(res.lesson.cards.map((c) => [c.id, c.picture]));
-      this.cards.forEach((c) => { if (!c.picture && drawn.get(c.id)) c.picture = drawn.get(c.id); });
+      // With where each comes from: the next save would drop it otherwise
+      const drawn = new Map(res.lesson.cards.map((c) => [c.id, c]));
+      this.cards.forEach((c) => {
+        const made = drawn.get(c.id);
+        if (!c.picture && made?.picture) Object.assign(c, { picture: made.picture, picture_source: made.picture_source ?? null });
+      });
       if (res.failures) {
         this.error = t("app.pictures.failed", { count: res.failures }) + (res.error ? ` ${errorMessage(res.error)}` : "");
       }

@@ -21,7 +21,7 @@ from . import config, figures, files, llm, recommended, stock
 from .cards import is_cloze
 from .config import AIConfig
 from .errors import AppError
-from .models import Card
+from .models import Card, PictureSource
 from .providers import gemini
 
 log = logging.getLogger("notosaurus")
@@ -244,38 +244,49 @@ def _cache_path(s: AIConfig, subject: str) -> Path:
 async def picture(
     s: AIConfig, subject: str, fresh: bool = False, search: str = "", context: str = "", pixabay_key: str = ""
 ) -> bytes:
-    """The card-size picture of a subject: from the cache, or found or drawn (then cached).
-    `search`: what a free picture would show (Card.picture_search): one is looked for first
-    (s.picture_find), the cards' AI choosing it (`context`: the card, "front → back");
-    drawn when none fits. `fresh`: draw it again (the user didn't like it); the new one
-    replaces it in the cache."""
+    """The card-size picture of a subject (see sourced_picture, which also says where it
+    comes from)."""
+    return (await sourced_picture(s, subject, fresh, search, context, pixabay_key))[0]
+
+
+async def sourced_picture(
+    s: AIConfig, subject: str, fresh: bool = False, search: str = "", context: str = "", pixabay_key: str = ""
+) -> tuple[bytes, PictureSource]:
+    """The card-size picture of a subject, and where it comes from: from the cache, or
+    found or drawn (then cached). `search`: what a free picture would show
+    (Card.picture_search): one is looked for first (s.picture_find), the cards' AI
+    choosing it (`context`: the card, "front → back"); drawn when none fits. `fresh`: draw
+    it again (the user didn't like it); the new one replaces it in the cache."""
     if search.strip() and s.picture_find and not fresh:
-        found_path = files.cache_dir(
-            "pictures", hashlib.sha1(f"found|{search.strip().lower()}".encode()).hexdigest() + ".jpg"
-        )
-        if found_path.is_file():
-            return found_path.read_bytes()
+        key = hashlib.sha1(f"found|{search.strip().lower()}".encode()).hexdigest()
+        found_path, origin_path = (files.cache_dir("pictures", f"{key}.{ext}") for ext in ("jpg", "json"))
+        if found_path.is_file() and origin_path.is_file():
+            return found_path.read_bytes(), PictureSource.model_validate_json(origin_path.read_text())
         if found := await stock.find(s, search, context, pixabay_key):
             found_path.parent.mkdir(parents=True, exist_ok=True)
-            found_path.write_bytes(found)
+            found_path.write_bytes(found[0])
+            origin_path.write_text(found[1].model_dump_json())
             return found
+    drawn = PictureSource(source="drawn", model=model(s))
     path = _cache_path(s, subject)
     if not fresh and path.is_file():
-        return path.read_bytes()
+        return path.read_bytes(), drawn
     jpeg = card_size(await draw(s, subject))
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_bytes(jpeg)
-    return jpeg
+    return jpeg, drawn
 
 
 async def figure_or_picture(s: AIConfig, folder: Path, card: Card, fresh: bool = False) -> str:
     """The card's figure (SVG, drawn by the cards' AI) or picture (a free one found, or the
-    image model's; from the cache unless `fresh`: then drawn), saved in the lesson;
-    returns its file name."""
+    image model's; from the cache unless `fresh`: then drawn), saved in the lesson with
+    where it comes from (card.picture_source); returns its file name."""
     if card.figure.strip():
+        card.picture_source = PictureSource(source="drawn", model=s.model_for_provider())
         return figures.save(folder, card, await llm.draw_figure(s, card.figure))
     context = f"{card.front.strip()} → {card.back.strip()}"
-    return save(folder, card, await picture(s, card.picture_prompt, fresh, card.picture_search, context))
+    jpeg, card.picture_source = await sourced_picture(s, card.picture_prompt, fresh, card.picture_search, context)
+    return save(folder, card, jpeg)
 
 
 async def draw_all(s: AIConfig, folder: Path, cards: list[Card]) -> tuple[int, dict | None]:

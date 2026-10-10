@@ -1027,12 +1027,17 @@ class LocalServerTest {
         val lesson = client.extract()
         relay.takeRequest(5, TimeUnit.SECONDS) // the extraction
         val card = lesson["cards"]!!.jsonArray[0].jsonObject.string("id")
-        relay.enqueue(MockResponse.Builder().setHeader("Content-Type", "image/jpeg").body("jpeg of 42").build())
+        relay.enqueue(
+            MockResponse.Builder().setHeader("Content-Type", "image/jpeg")
+                .setHeader(Relay.PICTURE_SOURCE_HEADER, """{"source": "pixabay", "licence": "Pixabay", "page": "https://pixabay.com/photos/42/"}""")
+                .body("jpeg of 42").build(),
+        )
         val res = client.post("/api/lessons/${lesson.string("id")}/cards/$card/picture/found") {
             page(); contentType(ContentType.Application.Json); setBody("""{"source": "pixabay", "id": "42"}""")
         }.json().jsonObject
         val picture = res["card"]!!.jsonObject.string("picture")
         assertTrue(picture.isNotEmpty())
+        assertEquals("https://pixabay.com/photos/42/", res["card"]!!.jsonObject["picture_source"]!!.jsonObject.string("page"))
         val asked = relay.takeRequest(5, TimeUnit.SECONDS)!!
         assertEquals("/v1/pictures/found", asked.url.encodedPath)
         assertEquals("""{"source":"pixabay","id":"42"}""", asked.body!!.utf8())
@@ -1050,11 +1055,15 @@ class LocalServerTest {
         relay.dispatcher = object : mockwebserver3.Dispatcher() {
             override fun dispatch(request: RecordedRequest): MockResponse {
                 asked += json.parseToJsonElement(request.body!!.utf8()).jsonObject
-                return MockResponse.Builder().setHeader("Content-Type", "image/jpeg").body("jpeg").build()
+                return MockResponse.Builder().setHeader("Content-Type", "image/jpeg")
+                    .setHeader(Relay.PICTURE_SOURCE_HEADER, """{"source": "commons", "licence": "CC0", "page": "https://commons.wikimedia.org/wiki/File:Dog.jpg"}""")
+                    .body("jpeg").build()
             }
         }
         val id = lesson.string("id")
-        client.post("/api/lessons/$id/pictures") { page() }
+        val drawn = client.post("/api/lessons/$id/pictures") { page() }.json().jsonObject
+        val source = drawn["lesson"]!!.jsonObject["cards"]!!.jsonArray[0].jsonObject["picture_source"]!!.jsonObject
+        assertEquals("https://commons.wikimedia.org/wiki/File:Dog.jpg", source.string("page")) // kept with the card
         assertEquals("dog", asked[0].string("search"))
         assertEquals("Comment dit-on ? → el perro", asked[0].string("context"))
 

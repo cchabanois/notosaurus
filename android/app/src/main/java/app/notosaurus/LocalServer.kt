@@ -356,7 +356,8 @@ class LocalServer(
             val lesson = lesson()
             val i = cardIndex(lesson)
             val req = body()
-            pictures.own(lesson, i, relay().foundPicture(req.string("source"), req.string("id")))
+            val found = relay().foundPicture(req.string("source"), req.string("id"))
+            pictures.own(lesson, i, found.jpeg, found.source)
         }
         // No picture on the card any more: a text card
         api("DELETE", "/api/lessons/{id}/cards/{card}/picture") {

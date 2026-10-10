@@ -33,6 +33,7 @@ Each pull request adds a line under **Unreleased**. See [Releasing](CONTRIBUTING
 - 🔎 “Find a picture” in a card's picture panel: free pictures of its subject to choose from (Wikimedia Commons, Openverse; in the coming Android app, Pixabay too), only public domain, CC0 or Pixabay's licence (no credit to give), filtered for pupils. Free, instantly, and exact for real things (a painting, a place, a species); “Draw” is still there.
 - For developers: the relay's `/v1/pictures/search` and `/v1/pictures/found`.
 - A card's picture showing a real thing (a person, a place, a work, an animal) is now found before it is drawn: the AI writes what to search for, looks at the free pictures found and keeps the one that fits (drawn when none does). Free (the choice costs well under a cent), and exact. **Settings → Pictures on cards → Look for a free picture first** turns it off.
+- Each card keeps where its picture comes from (a free picture's source, licence and page; drawn by the AI; your photo), said in its picture panel with a link to the page; on the computer, its Anki note keeps it too, in a hidden **Source** field (on no card; the Android app's notes don't have it: AnkiDroid can't add a field to its note types).
 - A picture that shows the answer (the portrait of the person asked about) goes on the back; a sentence with gaps gets no picture (Anki shows none on it: it was paid for nothing).
 
 ### Changed

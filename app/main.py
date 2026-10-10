@@ -26,6 +26,7 @@ from fastapi.staticfiles import StaticFiles
 
 from notosaurus_core import diagrams, llm, pictures, recommended, stock, tts
 from notosaurus_core.llm import Image, check, extract_cards, list_models, revise_cards
+from notosaurus_core.models import PictureSource
 
 from . import anki, ankiconnect, decks, i18n, lessons, prompts, settings, usage
 from .anki import build_apkg, notes
@@ -841,6 +842,7 @@ async def upload_picture(id: str, card_id: str, photo: UploadFile) -> dict:
     card = cards[_card(lesson, card_id)]
     try:
         card.picture = pictures.save(lessons.folder(id) / "images", card, await photo.read())
+        card.picture_source = PictureSource(source="photo")
     except (OSError, ValueError) as e:
         raise AppError("extract.bad_format", format=photo.content_type) from e
     return {"card": card, "lesson": _save_card(lesson, cards)}
@@ -859,7 +861,8 @@ async def found_picture(id: str, card_id: str, req: FoundPicture) -> dict:
     lesson = await _editable(id)
     cards = [card.model_copy(deep=True) for card in lesson.cards]
     card = cards[_card(lesson, card_id)]
-    card.picture = pictures.save(lessons.folder(id) / "images", card, await stock.fetch(req.source, req.id))
+    jpeg, card.picture_source = await stock.fetch(req.source, req.id)
+    card.picture = pictures.save(lessons.folder(id) / "images", card, jpeg)
     return {"card": card, "lesson": _save_card(lesson, cards)}
 
 
@@ -870,6 +873,7 @@ async def remove_picture(id: str, card_id: str) -> dict:
     cards = [card.model_copy(deep=True) for card in lesson.cards]
     card = cards[_card(lesson, card_id)]
     card.picture = card.picture_prompt = card.figure = ""
+    card.picture_source = None
     return {"card": card, "lesson": _save_card(lesson, cards)}
 
 

@@ -37,6 +37,11 @@ BACK_INFO = (
     '{{#Mnemonic}}<div class="notosaurus-help">🧠 {{Mnemonic}}</div>{{/Mnemonic}}'
 )
 HELP_FIELDS = ("Explanation", "Mnemonic")
+# Where a card's picture comes from (models.PictureSource): kept with the note, never shown
+# (no card template uses it). The computer's only: AnkiDroid can't add a field to a note
+# type it already has (tools/note_types.py leaves it out of the app's)
+SOURCE_FIELD = "Source"
+SOURCE_NAMES = {"commons": "Wikimedia Commons", "openverse": "Openverse", "pixabay": "Pixabay"}
 
 # Diagram cards: the masks are HTML over the image, placed in % of its size.
 DIAGRAM_CSS = """\
@@ -251,7 +256,7 @@ def picture_note_type(voice: str, typing: bool = False, on_back: bool = False) -
     templates = ({"name": "Image", "qfmt": question, "afmt": answer},)
     if typing:
         templates = (_typed(templates[0], "Back"),)
-    fields = ["Front", "Back", "Info"] + ([] if anki_tts else ["Audio"]) + ["Picture", "Id", *HELP_FIELDS]
+    fields = ["Front", "Back", "Info"] + ([] if anki_tts else ["Audio"]) + ["Picture", "Id", *HELP_FIELDS, SOURCE_FIELD]
     kind = f"picture TTS Anki {voice}" if anki_tts else "picture audio"
     name, variant = _variant("Notosaurus image au verso" if on_back else "Notosaurus image", typing, False)
     variant = "+".join(filter(None, ["back" if on_back else "", variant]))
@@ -293,7 +298,18 @@ def choice_note_type() -> NoteType:
             "afmt": f'{question}<hr id="answer">{{{{AnswerChoices}}}}{back_picture}{info}',
         },
     )
-    fields = ("Question", "Answer", "Choices", "AnswerChoices", "Picture", "BackPicture", "Info", "Id", *HELP_FIELDS)
+    fields = (
+        "Question",
+        "Answer",
+        "Choices",
+        "AnswerChoices",
+        "Picture",
+        "BackPicture",
+        "Info",
+        "Id",
+        *HELP_FIELDS,
+        SOURCE_FIELD,
+    )
     css = CSS + PICTURE_CSS + CHOICE_CSS
     return NoteType("Notosaurus QCM", "choice", fields, templates, css=css, key="Id")
 
@@ -392,6 +408,7 @@ def _choice_note(export: _Export, i: int, card) -> Note:
         "Choices": _choices_html(card, reveal=False),
         "AnswerChoices": _choices_html(card, reveal=True),
         "Picture": "" if card.picture_on_back else picture,
+        SOURCE_FIELD: _source(card) if i in pictures else "",
         "BackPicture": picture if card.picture_on_back else "",
         "Info": _info(card),
         "Id": export.card_id(i, card),
@@ -430,6 +447,7 @@ def _two_sided_note(export: _Export, i: int, card) -> Note | None:
         media.append(image)
     elif i in pictures:
         values["Picture"] = f'<img src="{pictures[i].name}">'
+        values[SOURCE_FIELD] = _source(card)
         values["Id"] = export.card_id(i, card)
         media.append(pictures[i])
     return export.note(card, nt, values, media)
@@ -463,6 +481,23 @@ def _info(card) -> str:
         return info
     style = "margin-top:8px;font-style:italic"
     return f'{info}<div style="{style}">💡 {_html(fact)}</div>'
+
+
+def _source(card) -> str:
+    """Where the card's picture comes from, as its note's hidden Source field: "Wikimedia
+    Commons · Public domain · Prise de la Bastille · <its page>", "Drawn by <model>", "Own photo"."""
+    origin = card.picture_source
+    if origin is None:
+        return ""
+    if origin.source == "drawn":
+        return _html(f"Drawn by {origin.model}" if origin.model else "Drawn")
+    if origin.source == "photo":
+        return "Own photo"
+    parts = [_html(p) for p in (SOURCE_NAMES.get(origin.source, origin.source), origin.licence, origin.title) if p]
+    if origin.page:
+        page = html.escape(origin.page, quote=True)
+        parts.append(f'<a href="{page}">{page}</a>')
+    return " · ".join(parts)
 
 
 def _helps(card) -> dict[str, str]:

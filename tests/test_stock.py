@@ -12,6 +12,7 @@ from PIL import Image as PILImage
 from notosaurus_core import files, llm, pictures, stock
 from notosaurus_core.config import AIConfig
 from notosaurus_core.errors import AppError
+from notosaurus_core.models import PictureSource
 from notosaurus_core.providers import gemini
 
 
@@ -26,7 +27,14 @@ def commons_page(index, title, licence="pd", categories="Paintings", host="uploa
     return {
         "index": index,
         "title": title,
-        "imageinfo": [{"mime": mime, "thumburl": f"https://{host}/thumb/{index}.jpg", "extmetadata": meta}],
+        "imageinfo": [
+            {
+                "mime": mime,
+                "thumburl": f"https://{host}/thumb/{index}.jpg",
+                "descriptionurl": f"https://commons.wikimedia.org/wiki/{title}",
+                "extmetadata": meta,
+            }
+        ],
     }
 
 
@@ -50,6 +58,7 @@ OPENVERSE = {
             "license": "pdm",
             "mature": False,
             "thumbnail": "https://api.openverse.org/v1/images/d32a3ea6-bbb6-4987-affb-e6a1198d07ac/thumb/",
+            "foreign_landing_url": "https://www.flickr.com/photos/x/1",
         },
         {
             "id": "93cbbfc8-a7d7-4a4d-b7af-ada48bb57f66",
@@ -67,6 +76,7 @@ PIXABAY = {
             "tags": "fortress, paris, fortress",
             "previewURL": "https://cdn.pixabay.com/p/42.jpg",
             "webformatURL": "https://pixabay.com/get/42.jpg",
+            "pageURL": "https://pixabay.com/photos/fortress-42/",
         }
     ]
 }
@@ -85,6 +95,9 @@ class Services:
             return httpx.Response(200, json=COMMONS)
         if host == "api.openverse.org" and request.url.path == "/v1/images/":
             return httpx.Response(200, json=OPENVERSE)
+        if host == "api.openverse.org" and request.url.path.count("/") == 4:  # /v1/images/<id>/: its details
+            found = next(r for r in OPENVERSE["results"] if r["id"] in request.url.path)
+            return httpx.Response(200, json=found)
         if host == "pixabay.com" and request.url.path == "/api/":
             return httpx.Response(200, json=PIXABAY)
         return httpx.Response(200, content=jpeg())  # a picture
@@ -142,16 +155,24 @@ def test_answers_kept_a_day(services):
 
 
 def test_the_one_chosen_fetched_again_by_its_id(services):
-    picture = run(stock.fetch("commons", "File:Storming.jpg"))
+    picture, origin = run(stock.fetch("commons", "File:Storming.jpg"))
     assert PILImage.open(io.BytesIO(picture)).size == (300, 300)  # card size (≤ 512)
+    assert origin == PictureSource(
+        source="commons", licence="CC0", page="https://commons.wikimedia.org/wiki/File:Storming.jpg", title="Storming"
+    )
     lookup = services.asked[0]
     assert lookup.url.params["titles"] == "File:Storming.jpg" and lookup.url.params["iiurlwidth"] == "1024"
     assert services.asked[-1].url.host == "upload.wikimedia.org"
 
-    run(stock.fetch("openverse", "d32a3ea6-bbb6-4987-affb-e6a1198d07ac"))
+    _, origin = run(stock.fetch("openverse", "d32a3ea6-bbb6-4987-affb-e6a1198d07ac"))
     assert str(services.asked[-1].url).startswith("https://api.openverse.org/v1/images/d32a3ea6")
-    run(stock.fetch("pixabay", "42", pixabay_key="k"))
+    assert (origin.licence, origin.page) == ("Public domain", "https://www.flickr.com/photos/x/1")
+    _, origin = run(stock.fetch("pixabay", "42", pixabay_key="k"))
     assert services.asked[-1].url.host == "pixabay.com"
+    assert (origin.licence, origin.title) == ("Pixabay", "fortress, paris")
+    assert origin.page == "https://pixabay.com/photos/fortress-42/"
+    with pytest.raises(AppError):  # mature on Openverse: never fetched
+        run(stock.fetch("openverse", "93cbbfc8-a7d7-4a4d-b7af-ada48bb57f66"))
 
 
 @pytest.mark.parametrize(
@@ -179,7 +200,9 @@ def test_found_on_the_computer(client, monkeypatch):
 
     async def fetch(source, id_, pixabay_key=""):
         assert (source, id_) == ("commons", "File:A.jpg")
-        return jpeg()
+        return jpeg(), PictureSource(
+            source="commons", licence="CC0", page="https://commons.wikimedia.org/wiki/File:A.jpg"
+        )
 
     monkeypatch.setattr(stock, "search", search)
     monkeypatch.setattr(stock, "fetch", fetch)
@@ -196,6 +219,19 @@ def test_found_on_the_computer(client, monkeypatch):
     assert res.status_code == 201
     picture = res.json()["card"]["picture"]
     assert picture and client.get(f"/api/lessons/{lesson['id']}/pictures/{picture}").status_code == 200
+    assert res.json()["card"]["picture_source"]["page"] == "https://commons.wikimedia.org/wiki/File:A.jpg"
+    photo = client.post(
+        f"/api/lessons/{lesson['id']}/cards/{card['id']}/picture", files={"photo": ("p.jpg", jpeg(), "image/jpeg")}
+    )
+    assert photo.json()["card"]["picture_source"] == {
+        "source": "photo",
+        "licence": "",
+        "page": "",
+        "title": "",
+        "model": "",
+    }
+    gone = client.delete(f"/api/lessons/{lesson['id']}/cards/{card['id']}/picture")
+    assert gone.json()["card"]["picture_source"] is None
     bad = client.post(f"/api/lessons/{lesson['id']}/cards/{card['id']}/picture/found", json={"source": "x", "id": "1"})
     assert bad.status_code == 422
 
@@ -212,7 +248,8 @@ def test_the_ai_picks_among_the_pictures_found(services, monkeypatch):
 
     monkeypatch.setattr(llm, "pick_picture", pick)
     card = "14 juillet 1789 → prise de la Bastille"
-    picture = run(stock.find(AIConfig(llm="gemini"), "storming of the Bastille", card))
+    picture, origin = run(stock.find(AIConfig(llm="gemini"), "storming of the Bastille", card))
+    assert origin.source == "commons" and origin.licence == "CC0"
     assert PILImage.open(io.BytesIO(picture)).size == (300, 300)
     assert seen == [(3, "storming of the Bastille", card)]
     assert services.asked[-1].url.host == "upload.wikimedia.org"  # the second one found: Commons' CC0 one
@@ -233,7 +270,7 @@ def test_found_first_drawn_otherwise(monkeypatch, tmp_path):
 
     async def find(s, query, context, pixabay_key=""):
         finds.append((query, context, pixabay_key))
-        return None if query == "nothing" else jpeg(100)
+        return None if query == "nothing" else (jpeg(100), PictureSource(source="commons", licence="CC0"))
 
     async def draw(s, subject):
         draws.append(subject)
@@ -245,14 +282,16 @@ def test_found_first_drawn_otherwise(monkeypatch, tmp_path):
     found = run(pictures.picture(s, "a dog sitting", search="dog", context="le chien → el perro", pixabay_key="k"))
     assert PILImage.open(io.BytesIO(found)).size == (100, 100) and draws == []
     assert finds == [("dog", "le chien → el perro", "k")]
-    run(pictures.picture(s, "a dog sitting", search="dog"))
-    assert len(finds) == 1  # kept: found once for every lesson
+    _, origin = run(pictures.sourced_picture(s, "a dog sitting", search="dog"))
+    assert len(finds) == 1 and origin.source == "commons"  # kept, with where it came from: found once for every lesson
+    _, origin = run(pictures.sourced_picture(s, "a cow"))
+    assert origin.source == "drawn"  # by the image model (none set here)
 
     run(pictures.picture(s, "a cat", search="nothing"))  # none fits: drawn
     run(pictures.picture(s, "a dog sitting", fresh=True, search="dog"))  # "Draw" asked: drawn
     run(pictures.picture(s.model_copy(update={"picture_find": False}), "a bird", search="bird"))  # always drawn
     run(pictures.picture(s, "a happy face"))  # nothing to search for
-    assert draws == ["a cat", "a dog sitting", "a bird", "a happy face"]
+    assert draws == ["a cow", "a cat", "a dog sitting", "a bird", "a happy face"]
 
 
 def test_the_cards_say_what_to_search_for(client, monkeypatch):
@@ -261,7 +300,7 @@ def test_the_cards_say_what_to_search_for(client, monkeypatch):
 
     async def find(s, query, context, pixabay_key=""):
         asked.append((query, context, pixabay_key))
-        return jpeg()
+        return jpeg(), PictureSource(source="pixabay", licence="Pixabay", page="https://pixabay.com/photos/dog-1/")
 
     monkeypatch.setattr(stock, "find", find)
     lesson = client.post("/api/extract", data={"prompt": "Mots en images"}).json()
@@ -269,6 +308,7 @@ def test_the_cards_say_what_to_search_for(client, monkeypatch):
     client.put(f"/api/lessons/{lesson['id']}", json={**lesson, "cards": cards})
     res = client.post(f"/api/lessons/{lesson['id']}/pictures").json()
     assert res["failures"] == 0 and res["lesson"]["cards"][0]["picture"]
+    assert res["lesson"]["cards"][0]["picture_source"]["page"] == "https://pixabay.com/photos/dog-1/"
     card = cards[0]
     assert asked == [("dog", f"{card['front']} → {card['back']}", "")]  # no Pixabay on the computer
 
