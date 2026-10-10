@@ -69,6 +69,7 @@ interface AnkiTarget {
  */
 class Anki(private val context: Context) : AnkiTarget {
     private val api = AddContentApi(context)
+    private val noteTypes by lazy { NoteTypes.parse(context.assets.open("web/note-types.json").use { it.readBytes().decodeToString() }) }
 
     override fun installed(): Boolean = AddContentApi.getAnkiDroidPackageName(context) != null
 
@@ -133,27 +134,24 @@ class Anki(private val context: Context) : AnkiTarget {
             val name = deckName(deck.deck, card.subdeck)
             val tags = (card.tags.map { it.trim().replace(' ', '_') }.filter { it.isNotEmpty() } + "notosaurus" + own).toSet()
             val sound = media.audio[card.back.trim()]?.let { file(it, "audio") } ?: ""
-            val helps = arrayOf(html(card.explanation), html(card.mnemonic))
+            val common = mapOf("Info" to info(card), "Explanation" to html(card.explanation), "Mnemonic" to html(card.mnemonic))
             // Which note it is, sent again: the card's own id; else its place in the lesson; else its text
             val key = card.id.ifBlank { if (media.lesson.isNotEmpty()) "${media.lesson}:$i" else html(card.front) }
+            fun note(variant: String, fields: Map<String, String>): Note {
+                val type = noteTypes[variant]
+                return Note(model(type) ?: error("AnkiDroid refused the note type ${type.androidName}"), name, type.values(common + fields), tags)
+            }
+            val picture = media.pictures[card.picture]?.let { file(it, "image") }.orEmpty()
             when {
-                card.isChoice() -> {
-                    // Not heard: the options are read. Its picture on the question, or with the answer
-                    val picture = media.pictures[card.picture]?.let { file(it, "image") } ?: ""
-                    Note(
-                        choiceModel() ?: error("AnkiDroid refused the multiple-choice note type"), name,
-                        arrayOf(
-                            key, html(card.front), html(card.back),
-                            choicesHtml(card, reveal = false), choicesHtml(card, reveal = true),
-                            if (card.pictureOnBack) "" else picture, if (card.pictureOnBack) picture else "", info(card), *helps,
-                        ),
-                        tags,
-                    )
-                }
-                GAP.containsMatchIn(card.front) -> Note(
-                    clozeModel() ?: error("AnkiDroid refused the cloze note type"), name,
-                    arrayOf(key, html(card.front), html(card.back), info(card), *helps), tags,
+                card.isChoice() -> note( // not heard: the options are read
+                    "choice",
+                    mapOf(
+                        "Id" to key, "Question" to html(card.front), "Answer" to html(card.back),
+                        "Choices" to choicesHtml(card, reveal = false), "AnswerChoices" to choicesHtml(card, reveal = true),
+                        (if (card.pictureOnBack) "BackPicture" else "Picture") to picture,
+                    ),
                 )
+                GAP.containsMatchIn(card.front) -> note("cloze", mapOf("Id" to key, "Text" to html(card.front), "Extra" to html(card.back)))
                 card.mask != null -> {
                     if (card.back.isBlank()) return@mapNotNull null
                     val photo = media.photos[card.mask.page] ?: return@mapNotNull null
@@ -161,25 +159,25 @@ class Anki(private val context: Context) : AnkiTarget {
                     // The diagram only (its frame, holding every label), light: shared by its cards
                     val box = crop(media.frames[card.mask.page], page)
                     val image = diagrams.getOrPut(card.mask.page) { diagramImage(photo, box) }
-                    Note(
-                        diagramModel(options.typing) ?: error("AnkiDroid refused the diagram note type"), name,
-                        arrayOf(
-                            "${media.lesson}:${card.mask.page}:${card.mask.n}", html(card.front), html(card.back), info(card), sound,
-                            file(image, "image"), masksHtml(page, card.mask.n, reveal = false, box), masksHtml(page, card.mask.n, reveal = true, box),
-                            *helps,
+                    note(
+                        "diagram" + if (options.typing) "+typing" else "",
+                        mapOf(
+                            "Id" to "${media.lesson}:${card.mask.page}:${card.mask.n}", "Front" to html(card.front), "Back" to html(card.back),
+                            "Audio" to sound, "Image" to file(image, "image"),
+                            "Masks" to masksHtml(page, card.mask.n, reveal = false, box), "AnswerMasks" to masksHtml(page, card.mask.n, reveal = true, box),
                         ),
-                        tags,
                     )
                 }
+                card.back.isBlank() -> null
+                // A picture card: the picture on the question, or with the answer; not reversed nor heard
+                picture.isNotEmpty() -> note(
+                    "picture" + (if (card.pictureOnBack) "+back" else "") + (if (options.typing) "+typing" else ""),
+                    mapOf("Id" to key, "Front" to html(card.front), "Back" to html(card.back), "Audio" to sound, "Picture" to picture),
+                )
                 else -> {
-                    if (card.back.isBlank()) return@mapNotNull null
-                    // The picture on the side it belongs to: the question's, or the answer's. A
-                    // picture card isn't reversed nor heard (as the computer's)
-                    val picture = media.pictures[card.picture]?.let { "${file(it, "image")}<br>" } ?: ""
-                    val front = if (card.pictureOnBack || picture.isEmpty()) html(card.front) else picture + html(card.front)
-                    val back = if (card.pictureOnBack) picture + html(card.back) else html(card.back)
-                    val model = if (picture.isNotEmpty()) textModel(Options(typing = options.typing)) else textModel(options, sound.isNotEmpty())
-                    Note(model ?: error("AnkiDroid refused the note type"), name, arrayOf(front, back, info(card), sound, *helps), tags)
+                    val heard = options.dictation && sound.isNotEmpty() // nothing to hear without a voice
+                    val variant = listOf("text") + listOfNotNull("reverse".takeIf { options.reverse }, "typing".takeIf { options.typing }, "dictation".takeIf { heard })
+                    note(variant.joinToString("+"), mapOf("Front" to html(card.front), "Back" to html(card.back), "Audio" to sound))
                 }
             }
         }
@@ -247,85 +245,35 @@ class Anki(private val context: Context) : AnkiTarget {
         return api.addMediaFromUri(uri, file.nameWithoutExtension, kind)
     }
 
-    /** A note type, made the first time (AnkiDroid tells note types apart by name). */
-    private fun model(name: String, make: () -> Long?): Long? =
-        api.modelList?.entries?.firstOrNull { it.value == name }?.key ?: make()
-
-    /** Text cards, as the computer's "Notosaurus recto/verso": front → back, and with the
-     * lesson's options, back → front, the answer typed, the back heard then written (with
-     * a voice). Each combination its own note type. */
-    private fun textModel(options: Options, heard: Boolean = false): Long? {
-        val dictation = options.dictation && heard // nothing to hear without a voice
-        val name = "Notosaurus recto/verso" + (if (options.reverse) " + inverse" else "") + variant(options.typing, dictation)
-        return model(name) {
-            val templates = mutableListOf(Triple("Recto → Verso", "{{Front}}", "{{FrontSide}}<hr id=answer>{{Back}}{{Audio}}$BACK_INFO"))
-            if (options.reverse) templates += Triple("Verso → Recto", "{{Back}}{{Audio}}", "{{FrontSide}}<hr id=answer>{{Front}}$BACK_INFO")
-            if (options.typing) templates.replaceAll { (n, q, a) -> typed(n, q, a, if (n == "Recto → Verso") "Back" else "Front") }
-            if (dictation) {
-                val heardCard = "<div class=dictation>🎧</div>{{Audio}}{{type:Back}}"
-                templates += Triple("Dictée", heardCard, "$heardCard<hr id=answer>{{Front}}$BACK_INFO")
-            }
-            api.addNewCustomModel(
-                name, arrayOf("Front", "Back", "Info", "Audio", *HELP_FIELDS), templates.map { it.first }.toTypedArray(),
-                templates.map { it.second }.toTypedArray(), templates.map { it.third }.toTypedArray(), CSS + PICTURE_CSS, null, null,
+    /** The note type in AnkiDroid, made the first time (AnkiDroid tells note types apart by
+     * name). A cloze note type through AnkiDroid's provider, as its API makes the others,
+     * with its type: the API makes standard ones only. */
+    private fun model(type: NoteType): Long? {
+        api.modelList?.entries?.firstOrNull { it.value == type.androidName }?.key?.let { return it }
+        val cards = type.cards
+        if (!type.cloze) {
+            return api.addNewCustomModel(
+                type.androidName, type.androidFields.toTypedArray(), cards.map { it.name }.toTypedArray(),
+                cards.map { it.front }.toTypedArray(), cards.map { it.back }.toTypedArray(), type.css, null, type.sortField,
             )
         }
-    }
-
-    /** Diagram labels: the photo with every label hidden and the question, then the answer
-     * with that label shown again. "Id" first: the questions ("What is (1)?") repeat. */
-    private fun diagramModel(typing: Boolean): Long? {
-        val name = "Notosaurus légendes" + variant(typing, false)
-        return model(name) {
-            var card = Triple(
-                "Schéma",
-                """<div class="notosaurus-diagram">{{Image}}{{Masks}}</div><div>{{Front}}</div>""",
-                """<div class="notosaurus-diagram">{{Image}}{{AnswerMasks}}</div><div>{{Front}}</div><hr id=answer>{{Back}}{{Audio}}$BACK_INFO""",
-            )
-            if (typing) card = typed(card.first, card.second, card.third, "Back")
-            api.addNewCustomModel(
-                name, arrayOf("Id", "Front", "Back", "Info", "Audio", "Image", "Masks", "AnswerMasks", *HELP_FIELDS),
-                arrayOf(card.first), arrayOf(card.second), arrayOf(card.third), CSS + DIAGRAM_CSS, null, 1, // sorted by the question
-            )
-        }
-    }
-
-    /** Multiple choice or true/false: the question and its options, then the options again
-     * with the right one marked. Plain HTML, no script: the same on every Anki. "Id"
-     * first: the card's own (questions may repeat). */
-    private fun choiceModel(): Long? = model(CHOICE_MODEL) {
-        val picture = "{{#Picture}}<div class=notosaurus-picture>{{Picture}}</div>{{/Picture}}"
-        val backPicture = "{{#BackPicture}}<div class=notosaurus-picture>{{BackPicture}}</div>{{/BackPicture}}"
-        val question = "$picture<div>{{Question}}</div>"
-        api.addNewCustomModel(
-            CHOICE_MODEL,
-            arrayOf("Id", "Question", "Answer", "Choices", "AnswerChoices", "Picture", "BackPicture", "Info", *HELP_FIELDS),
-            arrayOf("QCM"), arrayOf("$question{{Choices}}"), arrayOf("$question<hr id=answer>{{AnswerChoices}}$backPicture$BACK_INFO"),
-            CSS + PICTURE_CSS + CHOICE_CSS, null, 1, // sorted by the question
-        )
-    }
-
-    /** A text with gaps: Anki's own cloze note type (a card per gap number). The API
-     * makes standard note types only: this one through AnkiDroid's provider, as the API
-     * does, with its type. "Id" first: the text is what gets corrected. */
-    private fun clozeModel(): Long? = model(CLOZE_MODEL) {
         val values = ContentValues().apply {
-            put(FlashCardsContract.Model.NAME, CLOZE_MODEL)
-            put(FlashCardsContract.Model.FIELD_NAMES, listOf("Id", "Text", "Extra", "Info", *HELP_FIELDS).joinToString("\u001f"))
+            put(FlashCardsContract.Model.NAME, type.androidName)
+            put(FlashCardsContract.Model.FIELD_NAMES, type.androidFields.joinToString("\u001f"))
             put(FlashCardsContract.Model.NUM_CARDS, 1)
-            put(FlashCardsContract.Model.CSS, CSS + CLOZE_CSS)
-            put(FlashCardsContract.Model.SORT_FIELD_INDEX, 1) // sorted by the text
+            put(FlashCardsContract.Model.CSS, type.css)
+            put(FlashCardsContract.Model.SORT_FIELD_INDEX, type.sortField)
             put(FlashCardsContract.Model.TYPE, 1) // cloze
         }
         val resolver = context.contentResolver
-        val made = resolver.insert(FlashCardsContract.Model.CONTENT_URI, values) ?: return@model null
+        val made = resolver.insert(FlashCardsContract.Model.CONTENT_URI, values) ?: return null
         val template = ContentValues().apply {
-            put(FlashCardsContract.CardTemplate.NAME, "Texte à trous")
-            put(FlashCardsContract.CardTemplate.QUESTION_FORMAT, "{{cloze:Text}}")
-            put(FlashCardsContract.CardTemplate.ANSWER_FORMAT, "{{cloze:Text}}{{#Extra}}<div class=extra>{{Extra}}</div>{{/Extra}}$BACK_INFO")
+            put(FlashCardsContract.CardTemplate.NAME, cards[0].name)
+            put(FlashCardsContract.CardTemplate.QUESTION_FORMAT, cards[0].front)
+            put(FlashCardsContract.CardTemplate.ANSWER_FORMAT, cards[0].back)
         }
         resolver.update(Uri.withAppendedPath(Uri.withAppendedPath(made, "templates"), "0"), template, null, null)
-        made.lastPathSegment?.toLong()
+        return made.lastPathSegment?.toLong()
     }
 
     private fun deckId(name: String): Long? =
@@ -336,29 +284,9 @@ class Anki(private val context: Context) : AnkiTarget {
 
     companion object {
         const val PERMISSION = AddContentApi.READ_WRITE_PERMISSION
-        // The note types' names, as the computer's with " (Android)" (their fields differ:
-        // never one of the computer's synced from Anki). Before, "… (app)" and "(prototype)".
-        private const val ANDROID = " (Android)"
-        val CLOZE_MODEL = "Notosaurus texte à trous$ANDROID"
-        val CHOICE_MODEL = "Notosaurus QCM$ANDROID"
-        fun variant(typing: Boolean, dictation: Boolean) =
-            (if (typing) " à taper" else "") + (if (dictation) " + dictée" else "") + ANDROID
-
         // The tag of every note sent for a lesson (as the computer's): its notes found again
         const val TAG_PREFIX = "notosaurus::"
         fun lessonTag(lesson: String) = "$TAG_PREFIX$lesson"
-
-        // On the back, under the info: the helps asked for at generation, each when written
-        private val HELP_FIELDS = arrayOf("Explanation", "Mnemonic")
-        private const val BACK_INFO = "{{#Info}}<div class=info>{{Info}}</div>{{/Info}}" +
-            "{{#Explanation}}<div class=notosaurus-help>💬 {{Explanation}}</div>{{/Explanation}}" +
-            "{{#Mnemonic}}<div class=notosaurus-help>🧠 {{Mnemonic}}</div>{{/Mnemonic}}"
-
-        /** The card asking to type `field`: a box on the question, AnkiDroid's letter by letter
-         * comparison in its place on the answer (which repeats the question: not {{FrontSide}},
-         * the box twice). */
-        private fun typed(name: String, question: String, answer: String, field: String) =
-            Triple(name, "$question{{type:$field}}", answer.replace("{{FrontSide}}", question).replaceFirst("{{$field}}", "{{type:$field}}"))
 
         /** A card's text as an AnkiDroid field: escaped, its line breaks kept. */
         fun html(text: String) = escape(text.trim())
@@ -369,40 +297,6 @@ class Anki(private val context: Context) : AnkiTarget {
             return html(card.info) + if (fact.isEmpty()) "" else """<div style="margin-top:8px;font-style:italic">💡 ${html(fact)}</div>"""
         }
         private val GAP = Regex("""\{\{c\d+::""")
-        private const val CSS = """.card { font-family: sans-serif; font-size: 24px; text-align: center; }
-.info { margin-top: 12px; font-size: 18px; color: #666; }
-.card img { max-width: 100%; height: auto; }
-.dictation { font-size: 40px; }
-.notosaurus-help {
-  max-width: 32em; margin: 10px auto 0; padding: 4px 10px; border-left: 3px solid #8bb8c4;
-  font-size: 18px; color: #555; text-align: left;
-}
-.nightMode .notosaurus-help { color: #bbb; }"""
-
-        // As the computer's (app/anki.py)
-        private const val DIAGRAM_CSS = """
-.notosaurus-diagram { position: relative; display: inline-block; max-width: 100%; line-height: 0; }
-.notosaurus-diagram img { display: block; }
-.notosaurus-mask {
-  position: absolute; box-sizing: border-box; display: flex; align-items: center; justify-content: center;
-  overflow: hidden; line-height: 1; font-size: 13px; font-weight: 700;
-  background: #ffe08a; border: 2px solid #c77700; border-radius: 3px; color: #3d2b00;
-}
-.notosaurus-mask.target { background: #ff7a59; border-color: #b3261e; color: #fff; }
-.notosaurus-mask.revealed { background: transparent; border: 3px solid #1b873f; }"""
-        private const val PICTURE_CSS = """
-.notosaurus-picture img { max-width: min(100%, 320px); max-height: 50vh; border-radius: 12px; }"""
-        private const val CHOICE_CSS = """
-.notosaurus-choices {
-  display: inline-block; margin: 12px auto 0; padding-left: 1.8em; text-align: left; list-style: upper-alpha;
-}
-.notosaurus-choices li { margin: 6px 0; }
-.notosaurus-choices li.right { color: #1b873f; font-weight: 700; }
-.notosaurus-choices li.right::after { content: " ✔"; }"""
-        private const val CLOZE_CSS = """
-.cloze { font-weight: 700; color: #0b5cad; }
-.extra { margin-top: 12px; }"""
-
         /** A multiple-choice or true/false card, as the computer's (cards.is_choice): a
          * right answer (its back) and wrong ones; a gap text or a diagram label stays one. */
         fun Card.isChoice() = front.isNotBlank() && back.isNotBlank() && choices.any { it.isNotBlank() } &&

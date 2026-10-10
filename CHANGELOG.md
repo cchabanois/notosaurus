@@ -27,6 +27,7 @@ Each pull request adds a line under **Unreleased**. See [Releasing](CONTRIBUTING
 
 ### Changed
 
+- For developers: the Android app makes its AnkiDroid note types from `static/note-types.json`, written from `app/anki.py` (`tools/note_types.py`): one definition for both. Picture cards get the computer's picture note type on Android too.
 - For developers: `notosaurus-core` can call Gemini through Google Cloud's Vertex AI instead of a key (`gemini_vertex_project`, `gemini_vertex_location`), for the coming relay.
 - The AI only makes learning material suited to pupils: other requests (sexual content, violence, dangerous instructions, anything that isn't a lesson) are refused with a clear message, and Gemini's own filters are stricter. Lessons on hard topics (history, biology, health) still work.
 - The coming Android app, where Notosaurus is paid for by its subscription, doesn't show “Support Notosaurus”.

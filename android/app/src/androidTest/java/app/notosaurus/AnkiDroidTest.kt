@@ -18,6 +18,7 @@ import java.io.File
 @RunWith(AndroidJUnit4::class)
 class AnkiDroidTest {
     private val run = System.currentTimeMillis() // AnkiDroid keeps the cards: each run its own
+    private val types = NoteTypes.parse(Device.context.assets.open("web/note-types.json").use { it.readBytes().decodeToString() })
 
     @Before fun ready() = Device.ankiDroidReady()
 
@@ -57,7 +58,7 @@ class AnkiDroidTest {
 
         // Its note type: front → back and back → front, each typed; its helps and "did you know"
         val api = AddContentApi(Device.context)
-        val name = "Notosaurus recto/verso + inverse" + Anki.variant(typing = true, dictation = false)
+        val name = types["text+reverse+typing"].androidName
         val model = api.modelList!!.entries.first { it.value == name }.key
         val note = api.findDuplicateNotes(model, card.front).single()
         assertEquals(listOf("Mère se dit madre.", "maternelle"), note.fields.takeLast(2))
@@ -104,7 +105,7 @@ class AnkiDroidTest {
         val deck = Deck("Notosaurus test $run", listOf(Card(question, "1789", choices = listOf("1715", "1799"), id = "c$run")))
         assertEquals(1, anki.send(deck).added)
         val api = AddContentApi(Device.context)
-        val model = api.modelList!!.entries.first { it.value == Anki.CHOICE_MODEL }.key
+        val model = api.modelList!!.entries.first { it.value == types["choice"].androidName }.key
         val note = api.findDuplicateNotes(model, "c$run").single() // "Id" first: told apart by the card's own id
         assertEquals(question, note.fields[1])
         assertTrue(note.fields[3], note.fields[3].startsWith("<ol class=\"notosaurus-choices\">"))
@@ -136,7 +137,7 @@ class AnkiDroidTest {
 
         // The gaps: Anki's own cloze, a card per gap number
         val api = AddContentApi(Device.context)
-        val cloze = api.modelList!!.entries.first { it.value == Anki.CLOZE_MODEL }.key
+        val cloze = api.modelList!!.entries.first { it.value == types["cloze"].androidName }.key
         val note = api.findDuplicateNotes(cloze, "test-$run:2").single() // "Id" first: the lesson and the card's place
         val cards = Device.context.contentResolver.query(
             Uri.withAppendedPath(Uri.withAppendedPath(FlashCardsContract.Note.CONTENT_URI, note.id.toString()), "cards"),
@@ -145,7 +146,7 @@ class AnkiDroidTest {
         assertEquals(2, cards)
 
         // The diagram's questions repeat ("What is (1)?"): told apart by lesson, photo and label
-        val diagram = api.modelList!!.entries.first { it.value == "Notosaurus légendes" + Anki.variant(false, false) }.key
+        val diagram = api.modelList!!.entries.first { it.value == types["diagram"].androidName }.key
         val label = api.findDuplicateNotes(diagram, "test-$run:1:1").single()
         assertTrue(label.fields[5], label.fields[5].startsWith("<img"))
         assertTrue(label.fields[6].contains("notosaurus-mask target"))
