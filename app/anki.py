@@ -311,6 +311,40 @@ class Note:
         return self.fields[self.nt.key]
 
 
+@dataclass
+class _Export:
+    """What every note of an export shares: the request, its media, its note types."""
+
+    req: ExportRequest
+    audio: dict[str, Path]
+    images: dict[int, tuple[Path, list[float] | None]]
+    pictures: dict[int, Path]
+
+    def __post_init__(self):
+        req = self.req
+        self.own_tags = [lesson_tag(req.lesson_id)] if req.lesson_id else []  # to find the lesson's notes again
+        self.typing = req.typing or req.dictation
+        self.text_nt = note_type(req.voice, req.reverse, req.typing, req.dictation)
+        self.diagram_nt = diagram_note_type(req.voice, req.typing)
+        self.picture_nt = picture_note_type(req.voice, req.typing)
+        self.answer_picture_nt = picture_note_type(req.voice, req.typing, on_back=True)
+        # A formula isn't typed (its code would be) nor heard
+        self.math_nt = note_type(req.voice, req.reverse)
+        self.cloze_nt, self.choice_nt = cloze_note_type(), choice_note_type()
+
+    def note(self, card, nt: NoteType, fields: dict[str, str], media: list[Path]) -> Note:
+        return Note(
+            nt=nt,
+            deck=_deck_name(self.req.deck, card.subdeck),
+            fields=fields,
+            tags=[_tag(t) for t in card.tags if t.strip()] + self.own_tags,
+            media=media,
+        )
+
+    def card_id(self, i: int, card) -> str:
+        return card.id or f"{self.req.lesson_id or ''}:{i}"
+
+
 def notes(
     req: ExportRequest,
     audio: dict[str, Path] | None = None,
@@ -320,92 +354,85 @@ def notes(
     """The notes to send, in both output formats. `audio` maps a card back to its mp3;
     `images` maps the index of a diagram card to its diagram's image and crop;
     `pictures`, the index of a picture card to its picture."""
-    audio, images, pictures = audio or {}, images or {}, pictures or {}
-    own_tags = [lesson_tag(req.lesson_id)] if req.lesson_id else []  # to find the lesson's notes again
-    typing = req.typing or req.dictation
-    text_nt = note_type(req.voice, req.reverse, req.typing, req.dictation)
-    diagram_nt, picture_nt = diagram_note_type(req.voice, req.typing), picture_note_type(req.voice, req.typing)
-    answer_picture_nt = picture_note_type(req.voice, req.typing, on_back=True)
-    # A formula isn't typed (its code would be) nor heard
-    math_nt, cloze_nt, choice_nt = note_type(req.voice, req.reverse), cloze_note_type(), choice_note_type()
+    export = _Export(req, audio or {}, images or {}, pictures or {})
     result = []
     for i, card in enumerate(req.cards):
-        front, back = card.front.strip(), card.back.strip()
-        if is_cloze(front):  # the gaps are the answers: the back is optional
-            result.append(
-                Note(
-                    nt=cloze_nt,
-                    deck=_deck_name(req.deck, card.subdeck),
-                    fields={
-                        "Text": _html(front),
-                        "Extra": _html(back),
-                        "Info": _info(card),
-                        "Id": card.id or f"{req.lesson_id or ''}:{i}",
-                        **_helps(card),
-                    },
-                    tags=[_tag(t) for t in card.tags if t.strip()] + own_tags,
-                    media=[],
-                )
-            )
-            continue
-        if is_choice(card):  # not typed nor heard: the options are read
-            picture = f'<img src="{pictures[i].name}">' if i in pictures else ""
-            result.append(
-                Note(
-                    nt=choice_nt,
-                    deck=_deck_name(req.deck, card.subdeck),
-                    fields={
-                        "Question": _html(front),
-                        "Answer": _html(back),
-                        "Choices": _choices_html(card, reveal=False),
-                        "AnswerChoices": _choices_html(card, reveal=True),
-                        "Picture": "" if card.picture_on_back else picture,
-                        "BackPicture": picture if card.picture_on_back else "",
-                        "Info": _info(card),
-                        "Id": card.id or f"{req.lesson_id or ''}:{i}",
-                        **_helps(card),
-                    },
-                    tags=[_tag(t) for t in card.tags if t.strip()] + own_tags,
-                    media=[pictures[i]] if i in pictures else [],
-                )
-            )
-            continue
-        on_back = i in pictures and card.picture_on_back
-        if not back or not (front or (i in pictures and not on_back)):  # a picture card may have no front text
-            continue
-        nt = diagram_nt if i in images else (answer_picture_nt if on_back else picture_nt) if i in pictures else text_nt
-        if typing and tts.has_math(back) and nt is text_nt:
-            nt = math_nt
-        values = {"Front": _html(front), "Back": _html(back), "Info": _info(card), **_helps(card)}
-        media = []
-        if "Audio" in nt.fields:
-            mp3 = audio.get(back)
-            values["Audio"] = f"[sound:{mp3.name}]" if mp3 else ""
-            media += [mp3] if mp3 else []
-        if i in images:
-            page = [c.mask for c in req.cards if c.mask and c.mask.page == card.mask.page]
-            image, box = images[i]
-            values["Image"] = f'<img src="{image.name}">'
-            values["Masks"] = diagrams.masks_html(page, card.mask.n, reveal=False, box=box)
-            values["AnswerMasks"] = diagrams.masks_html(page, card.mask.n, reveal=True, box=box)
-            values["Id"] = f"{req.lesson_id or ''}:{card.mask.page}:{card.mask.n}"
-            media.append(image)
-        elif i in pictures:
-            values["Picture"] = f'<img src="{pictures[i].name}">'
-            values["Id"] = card.id or f"{req.lesson_id or ''}:{i}"
-            media.append(pictures[i])
-        result.append(
-            Note(
-                nt=nt,
-                deck=_deck_name(req.deck, card.subdeck),
-                fields=values,
-                tags=[_tag(t) for t in card.tags if t.strip()] + own_tags,
-                media=media,
-            )
-        )
+        if is_cloze(card.front.strip()):
+            note = _cloze_note(export, i, card)
+        elif is_choice(card):
+            note = _choice_note(export, i, card)
+        else:
+            note = _two_sided_note(export, i, card)
+        if note:
+            result.append(note)
     if not result:
         raise AppError("export.no_cards")
     return result
+
+
+def _cloze_note(export: _Export, i: int, card) -> Note:
+    """The gaps are the answers: the back is optional."""
+    fields = {
+        "Text": _html(card.front.strip()),
+        "Extra": _html(card.back.strip()),
+        "Info": _info(card),
+        "Id": export.card_id(i, card),
+        **_helps(card),
+    }
+    return export.note(card, export.cloze_nt, fields, [])
+
+
+def _choice_note(export: _Export, i: int, card) -> Note:
+    """Not typed nor heard: the options are read."""
+    pictures = export.pictures
+    picture = f'<img src="{pictures[i].name}">' if i in pictures else ""
+    fields = {
+        "Question": _html(card.front.strip()),
+        "Answer": _html(card.back.strip()),
+        "Choices": _choices_html(card, reveal=False),
+        "AnswerChoices": _choices_html(card, reveal=True),
+        "Picture": "" if card.picture_on_back else picture,
+        "BackPicture": picture if card.picture_on_back else "",
+        "Info": _info(card),
+        "Id": export.card_id(i, card),
+        **_helps(card),
+    }
+    return export.note(card, export.choice_nt, fields, [pictures[i]] if i in pictures else [])
+
+
+def _two_sided_note(export: _Export, i: int, card) -> Note | None:
+    """A front and a back: text, a diagram's label, or a picture (on the front or the
+    back). None for a card with nothing to ask or to answer."""
+    req, images, pictures = export.req, export.images, export.pictures
+    front, back = card.front.strip(), card.back.strip()
+    on_back = i in pictures and card.picture_on_back
+    if not back or not (front or (i in pictures and not on_back)):  # a picture card may have no front text
+        return None
+    if i in images:
+        nt = export.diagram_nt
+    elif i in pictures:
+        nt = export.answer_picture_nt if on_back else export.picture_nt
+    else:
+        nt = export.math_nt if export.typing and tts.has_math(back) else export.text_nt
+    values = {"Front": _html(front), "Back": _html(back), "Info": _info(card), **_helps(card)}
+    media = []
+    if "Audio" in nt.fields:
+        mp3 = export.audio.get(back)
+        values["Audio"] = f"[sound:{mp3.name}]" if mp3 else ""
+        media += [mp3] if mp3 else []
+    if i in images:
+        page = [c.mask for c in req.cards if c.mask and c.mask.page == card.mask.page]
+        image, box = images[i]
+        values["Image"] = f'<img src="{image.name}">'
+        values["Masks"] = diagrams.masks_html(page, card.mask.n, reveal=False, box=box)
+        values["AnswerMasks"] = diagrams.masks_html(page, card.mask.n, reveal=True, box=box)
+        values["Id"] = f"{req.lesson_id or ''}:{card.mask.page}:{card.mask.n}"
+        media.append(image)
+    elif i in pictures:
+        values["Picture"] = f'<img src="{pictures[i].name}">'
+        values["Id"] = export.card_id(i, card)
+        media.append(pictures[i])
+    return export.note(card, nt, values, media)
 
 
 TAG_PREFIX = "notosaurus::"

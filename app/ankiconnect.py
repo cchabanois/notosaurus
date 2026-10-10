@@ -117,101 +117,131 @@ def same_as_packages(extra: dict) -> dict:
 
 
 async def send(notes: list[Note]) -> SendResult:
-    guid_of = {id(n): g for n, g in zip(notes, guids(notes), strict=True)}
     async with _client() as client:
         note_types = list(dict.fromkeys(n.nt for n in notes))
         known = await _invoke(client, "modelNames")
-        for nt in note_types:
-            if nt.name not in known:
-                await _invoke(
-                    client,
-                    "createModel",
-                    modelName=nt.name,
-                    inOrderFields=list(nt.fields),
-                    css=nt.full_css,
-                    isCloze=nt.cloze,
-                    cardTemplates=[{"Name": t["name"], "Front": t["qfmt"], "Back": t["afmt"]} for t in nt.templates],
-                    **same_as_packages({"id": model_id(nt)}),
-                )
+        await _create_note_types(client, [nt for nt in note_types if nt.name not in known])
         updated_types, restructured = await _bring_up_to_date(client, [nt for nt in note_types if nt.name in known])
-        for path in dict.fromkeys(p for n in notes for p in n.media):
-            await _invoke(
-                client, "storeMediaFile", filename=path.name, data=base64.b64encode(path.read_bytes()).decode()
-            )
+        await _store_media(client, notes)
 
-        added = updated = converted = 0
-        unsupported = False
-        retag: dict[str, list[int]] = {}  # notes sent before they had the lesson's tag
-        others: dict[str, dict] = {}  # per deck: its notes of the other Notosaurus note types
+        sending = _Sending(client, dict(zip(map(id, notes), guids(notes), strict=True)))
         for deck, nt in dict.fromkeys((n.deck, n.nt) for n in notes):
-            # createDeck returns the id of the deck, existing or new. Searching by id
-            # and comparing keys here avoids escaping names in Anki's search syntax.
-            deck_id = await _invoke(client, "createDeck", deck=deck)
-            ids = await _invoke(client, "findNotes", query=f'"note:{nt.name}" did:{deck_id}')
-            infos = await _invoke(client, "notesInfo", notes=ids) if ids else []
-            # By key; two cards with the same front ("le vol": vuelo, robo) have a note each
-            existing: dict[str, list[int]] = {}
-            for info in infos:
-                if nt.key in info["fields"]:
-                    existing.setdefault(info["fields"][nt.key]["value"], []).append(info["noteId"])
-            for note in (n for n in notes if (n.deck, n.nt) == (deck, nt)):
-                if existing.get(note.key):
-                    note_id = existing[note.key].pop(0)
-                    await _invoke(client, "updateNoteFields", note={"id": note_id, "fields": note.fields})
-                    for tag in (t for t in note.tags if t.startswith(TAG_PREFIX)):
-                        retag.setdefault(tag, []).append(note_id)
-                    updated += 1
-                    continue
-                if deck not in others:
-                    others[deck] = await _other_notosaurus_notes(client, deck)
-                # Sent before with other options (voice, reverse, typing, dictation): the same
-                # note moves to the new note type, keeping its review history
-                candidates = [
-                    i for i in others[deck].get((nt.family, nt.key, note.key), []) if i["modelName"] != nt.name
-                ]
-                old = candidates[0] if candidates else None
-                if old and not unsupported:
-                    try:
-                        tags = sorted({*old["tags"], *note.tags})
-                        changed = {"id": old["noteId"], "modelName": nt.name, "fields": note.fields, "tags": tags}
-                        await _invoke(client, "updateNoteModel", note=changed)
-                        others[deck][(nt.family, nt.key, note.key)].remove(old)
-                        updated += 1
-                        converted += 1
-                        continue
-                    except AnkiConnectError as e:
-                        if not _unsupported(e):
-                            raise
-                        unsupported = True  # an old AnkiConnect: added next to it, as before
-                await _invoke(
-                    client,
-                    "addNote",
-                    note={
-                        "deckName": deck,
-                        "modelName": nt.name,
-                        "fields": note.fields,
-                        "tags": note.tags,
-                        "options": {"allowDuplicate": True},  # same front in another deck is fine
-                        **same_as_packages({"guid": guid_of[id(note)]}),
-                    },
-                )
-                added += 1
-
-        for tag, ids in retag.items():
+            await sending.send(deck, nt, [n for n in notes if (n.deck, n.nt) == (deck, nt)])
+        for tag, ids in sending.retag.items():
             await _invoke(client, "addTags", notes=ids, tags=tag)
 
         result = SendResult(
-            added,
-            updated,
+            sending.added,
+            sending.updated,
             synced=False,
-            converted=converted,
-            conversion_unsupported=unsupported,
+            converted=sending.converted,
+            conversion_unsupported=sending.unsupported,
             note_types_updated=updated_types,
             restructured=restructured,
         )
         if not restructured:  # else Anki asks which side to keep: the user's choice, in Anki
             await _sync(client, result)
         return result
+
+
+async def _create_note_types(client: httpx.AsyncClient, note_types: list) -> None:
+    for nt in note_types:
+        await _invoke(
+            client,
+            "createModel",
+            modelName=nt.name,
+            inOrderFields=list(nt.fields),
+            css=nt.full_css,
+            isCloze=nt.cloze,
+            cardTemplates=[{"Name": t["name"], "Front": t["qfmt"], "Back": t["afmt"]} for t in nt.templates],
+            **same_as_packages({"id": model_id(nt)}),
+        )
+
+
+async def _store_media(client: httpx.AsyncClient, notes: list[Note]) -> None:
+    for path in dict.fromkeys(p for n in notes for p in n.media):
+        await _invoke(client, "storeMediaFile", filename=path.name, data=base64.b64encode(path.read_bytes()).decode())
+
+
+@dataclass
+class _Sending:
+    """The notes sent, one deck and note type at a time: each updates the note with its
+    key, else takes over a note sent with other options, else is added."""
+
+    client: httpx.AsyncClient
+    guid_of: dict[int, str]  # id(note) → its GUID
+    added: int = 0
+    updated: int = 0
+    converted: int = 0
+    unsupported: bool = False
+    retag: dict[str, list[int]] = field(default_factory=dict)  # notes sent before they had the lesson's tag
+    others: dict[str, dict] = field(default_factory=dict)  # per deck: its notes of the other Notosaurus note types
+
+    async def send(self, deck: str, nt, notes: list[Note]) -> None:
+        existing = await self._existing(deck, nt)
+        for note in notes:
+            if existing.get(note.key):
+                await self._update(existing[note.key].pop(0), note)
+            elif not await self._convert(deck, nt, note):
+                await self._add(deck, nt, note)
+
+    async def _existing(self, deck: str, nt) -> dict[str, list[int]]:
+        """The deck's notes of this note type, by key; two cards with the same front
+        ("le vol": vuelo, robo) have a note each."""
+        # createDeck returns the id of the deck, existing or new. Searching by id
+        # and comparing keys here avoids escaping names in Anki's search syntax.
+        deck_id = await _invoke(self.client, "createDeck", deck=deck)
+        ids = await _invoke(self.client, "findNotes", query=f'"note:{nt.name}" did:{deck_id}')
+        infos = await _invoke(self.client, "notesInfo", notes=ids) if ids else []
+        existing: dict[str, list[int]] = {}
+        for info in infos:
+            if nt.key in info["fields"]:
+                existing.setdefault(info["fields"][nt.key]["value"], []).append(info["noteId"])
+        return existing
+
+    async def _update(self, note_id: int, note: Note) -> None:
+        await _invoke(self.client, "updateNoteFields", note={"id": note_id, "fields": note.fields})
+        for tag in (t for t in note.tags if t.startswith(TAG_PREFIX)):
+            self.retag.setdefault(tag, []).append(note_id)
+        self.updated += 1
+
+    async def _convert(self, deck: str, nt, note: Note) -> bool:
+        """Sent before with other options (voice, reverse, typing, dictation): the same
+        note moves to the new note type, keeping its review history."""
+        if deck not in self.others:
+            self.others[deck] = await _other_notosaurus_notes(self.client, deck)
+        candidates = [i for i in self.others[deck].get((nt.family, nt.key, note.key), []) if i["modelName"] != nt.name]
+        old = candidates[0] if candidates else None
+        if not old or self.unsupported:
+            return False
+        try:
+            tags = sorted({*old["tags"], *note.tags})
+            changed = {"id": old["noteId"], "modelName": nt.name, "fields": note.fields, "tags": tags}
+            await _invoke(self.client, "updateNoteModel", note=changed)
+        except AnkiConnectError as e:
+            if not _unsupported(e):
+                raise
+            self.unsupported = True  # an old AnkiConnect: added next to it, as before
+            return False
+        self.others[deck][(nt.family, nt.key, note.key)].remove(old)
+        self.updated += 1
+        self.converted += 1
+        return True
+
+    async def _add(self, deck: str, nt, note: Note) -> None:
+        await _invoke(
+            self.client,
+            "addNote",
+            note={
+                "deckName": deck,
+                "modelName": nt.name,
+                "fields": note.fields,
+                "tags": note.tags,
+                "options": {"allowDuplicate": True},  # same front in another deck is fine
+                **same_as_packages({"guid": self.guid_of[id(note)]}),
+            },
+        )
+        self.added += 1
 
 
 def _unsupported(e: "AnkiConnectError") -> bool:
