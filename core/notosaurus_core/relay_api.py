@@ -14,6 +14,9 @@ takes but the AI configuration (the relay's own), and keeps nothing.
   diagrams.prepare makes them: JPEG, at most 1568 px). The other routes take JSON.
 - Errors: HTTP status of ERRORS, body {"code", "params"} (errors.AppError), the
   AI's own errors ("llm.*") passed on as they are.
+- /v1/extract asked with "Accept: application/x-ndjson" (STREAM_TYPE) answers as the
+  AI writes: one JSON object per line, each card as it comes, then the answer or
+  the error (ExtractLine). A client going away stops the AI.
 - Each answer says the credits it used and those left (Usage; for /v1/picture, the
   CREDITS_HEADER and CREDITS_LEFT_HEADER headers). A credit is a share of the
   call's real AI cost, at least 1 per call: the relay counts them, not the client.
@@ -33,6 +36,7 @@ PREFIX = "/v1"
 CLIENT_HEADER = "X-Notosaurus-Version"
 CREDITS_HEADER = "X-Notosaurus-Credits"
 CREDITS_LEFT_HEADER = "X-Notosaurus-Credits-Left"
+STREAM_TYPE = "application/x-ndjson"
 
 MAX_IMAGES = 10
 MAX_IMAGE_BYTES = 4 * 1024 * 1024  # a prepared photo weighs a few hundred KB
@@ -145,6 +149,19 @@ class PictureRequest(BaseModel):
 
 class ExtractResponse(Extracted):
     usage: Usage
+
+
+class ExtractLine(BaseModel):
+    """A line of /v1/extract's answer as the AI writes it (STREAM_TYPE), one of:
+    {"card"} as soon as a card is written; {"restart": true}: the cards sent so far
+    are dropped (another model starts again); last, {"result"} or {"error"} (the
+    HTTP status is 200 once a line is sent: an error comes as the last line). A
+    client going away stops the AI: what it used is charged, at least 1 credit."""
+
+    card: dict | None = Field(default=None, description="A card as the AI wrote it (Card's fields, some missing).")
+    restart: bool | None = None
+    result: ExtractResponse | None = None
+    error: Error | None = None
 
 
 class ReviseResponse(Revision):

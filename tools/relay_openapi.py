@@ -90,7 +90,14 @@ def build() -> dict:
     @app.post(
         f"{api.PREFIX}/extract",
         response_model=api.ExtractResponse,
-        responses=errors(*PHOTOS),
+        responses={
+            200: {
+                "description": f'The cards; asked with "Accept: {api.STREAM_TYPE}": as the AI writes them, '
+                "one ExtractLine per line.",
+                "content": {api.STREAM_TYPE: {"schema": {"$ref": REF.format(model="ExtractLine")}}},
+            },
+            **errors(*PHOTOS),
+        },
         openapi_extra=multipart(api.ExtractRequest),
     )
     def extract(x_notosaurus_version: str = client):
@@ -153,7 +160,8 @@ def build() -> dict:
         schema["components"]["schemas"].pop(name, None)
     # The multipart requests, which FastAPI doesn't see (they are in openapi_extra)
     _, found = models_json_schema(
-        [(api.ExtractRequest, "validation"), (api.ReviseRequest, "validation")], ref_template=REF
+        [(api.ExtractRequest, "validation"), (api.ReviseRequest, "validation"), (api.ExtractLine, "serialization")],
+        ref_template=REF,
     )
     for name, model in found["$defs"].items():
         schema["components"]["schemas"].setdefault(name, model)

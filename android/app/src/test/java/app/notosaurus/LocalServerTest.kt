@@ -263,6 +263,33 @@ class LocalServerTest {
     }
 
     @Test
+    fun theCardsAsTheyComeThenTheLesson() = app { client ->
+        val lines = listOf(
+            """{"card": {"front": "la mère", "back": "la madre"}}""",
+            """{"result": {"deck": {"deck": "Espagnol", "cards": [{"front": "la mère", "back": "la madre"}]}, "turns": [], "usage": {"credits": 1, "credits_left": 99}}}""",
+        )
+        relay.enqueue(MockResponse.Builder().setHeader("Content-Type", Relay.STREAM_TYPE).body(lines.joinToString("\n", postfix = "\n")).build())
+        val res = client.submitFormWithBinaryData("/api/extract", formData { append("prompt", "FR → ES") }) {
+            page()
+            header(HttpHeaders.Accept, Relay.STREAM_TYPE)
+        }
+        assertTrue(res.headers[HttpHeaders.ContentType]!!.startsWith(Relay.STREAM_TYPE))
+        val items = res.bodyAsText().lines().filter { it.isNotBlank() }.map { json.parseToJsonElement(it).jsonObject }
+        assertEquals("la madre", items[0]["card"]!!.jsonObject.string("back"))
+        val lesson = items[1]["lesson"]!!.jsonObject
+        assertEquals("Espagnol", lesson.string("deck"))
+        assertEquals(lesson, client.get("/api/lessons/${lesson.string("id")}") { page() }.json()) // saved
+
+        // An error: the last line, as the page translates it
+        relay.enqueue(MockResponse.Builder().code(402).body("""{"code": "relay.no_credits", "params": {}}""").build())
+        val failed = client.submitFormWithBinaryData("/api/extract", formData { append("prompt", "p") }) {
+            page()
+            header(HttpHeaders.Accept, Relay.STREAM_TYPE)
+        }.bodyAsText().trim()
+        assertEquals("relay.no_credits", json.parseToJsonElement(failed).jsonObject["error"]!!.jsonObject.string("code"))
+    }
+
+    @Test
     fun aLessonFromPhotos() = app { client ->
         val lesson = client.extract(voice = "auto")
         val sent = relay.takeRequest()

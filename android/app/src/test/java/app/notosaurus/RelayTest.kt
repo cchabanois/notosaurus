@@ -2,6 +2,7 @@ package app.notosaurus
 
 import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.json.buildJsonObject
+import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
 import kotlinx.serialization.json.put
 import mockwebserver3.MockResponse
@@ -39,6 +40,35 @@ class RelayTest {
         assertTrue(body.indexOf("""name="images"; filename="page-1.jpg"""") in 0 until body.indexOf("photo 1"))
         assertTrue(body.indexOf("photo 1") < body.indexOf("photo 2"))
         assertTrue("Content-Type: image/jpeg" in body)
+    }
+
+    @Test
+    fun theCardsAsTheAiWritesThem() = runBlocking {
+        val lines = listOf(
+            """{"card": {"front": "a", "back": "x"}}""",
+            """{"restart": true}""",
+            """{"card": {"front": "b", "back": "y"}}""",
+            """{"result": {"deck": {"deck": "D", "cards": []}, "turns": [], "usage": {"credits": 2, "credits_left": 98}}}""",
+        )
+        server.enqueue(MockResponse.Builder().setHeader("Content-Type", Relay.STREAM_TYPE).body(lines.joinToString("\n", postfix = "\n")).build())
+        val told = mutableListOf<String?>()
+        val answer = relay().extract(buildJsonObject { put("prompt", "p") }, emptyList()) { told += it?.string("front") }
+        assertEquals(listOf("a", null, "b"), told)
+        assertEquals("D", answer["deck"]!!.jsonObject.string("deck"))
+        assertEquals(Relay.STREAM_TYPE, server.takeRequest().headers["Accept"])
+
+        // An error once the cards came: the last line
+        server.enqueue(MockResponse.Builder().setHeader("Content-Type", Relay.STREAM_TYPE).body("""{"card": {"front": "a"}}""" + "\n" + """{"error": {"code": "llm.refused", "params": {}}}""" + "\n").build())
+        try {
+            relay().extract(buildJsonObject { }, emptyList()) {}
+            fail()
+        } catch (e: RelayException) {
+            assertEquals("llm.refused", e.code)
+        }
+
+        // A relay that answers all at once (an older one): its answer
+        server.enqueue(MockResponse.Builder().body("""{"deck": {"deck": "E", "cards": []}, "turns": []}""").build())
+        assertEquals("E", relay().extract(buildJsonObject { }, emptyList()) { fail() }["deck"]!!.jsonObject.string("deck"))
     }
 
     @Test
