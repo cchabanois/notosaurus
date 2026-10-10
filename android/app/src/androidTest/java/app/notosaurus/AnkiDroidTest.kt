@@ -1,6 +1,7 @@
 package app.notosaurus
 
 import android.graphics.Bitmap
+import android.graphics.BitmapFactory
 import android.net.Uri
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.ichi2.anki.FlashCardsContract
@@ -74,7 +75,7 @@ class AnkiDroidTest {
                 Card(gaps, ""),
             ),
         )
-        val sent = anki.send(deck, Media(photos = mapOf(1 to photo), lesson = "test-$run"))
+        val sent = anki.send(deck, Media(photos = mapOf(1 to photo), lesson = "test-$run", frames = mapOf(1 to listOf(0.0, 0.0, 0.5, 0.5))))
         assertEquals(3, sent.added)
         assertEquals(0, sent.skipped)
 
@@ -93,6 +94,10 @@ class AnkiDroidTest {
         val label = api.findDuplicateNotes(diagram, "test-$run:1:1").single()
         assertTrue(label.fields[5], label.fields[5].startsWith("<img"))
         assertTrue(label.fields[6].contains("notosaurus-mask target"))
-        assertEquals(0, anki.send(deck, Media(photos = mapOf(1 to photo), lesson = "test-$run")).added) // not twice
+        // Cropped to the diagram's frame (stretched to hold the labels): smaller than the photo
+        val cropped = File(photo.parentFile, "images").listFiles()!!.single { it.name.startsWith("diagram-page-1-") }
+        val size = BitmapFactory.decodeFile(cropped.path)
+        assertTrue("${size.width}×${size.height}", size.width < 40 && size.height < 30)
+        assertEquals(0, anki.send(deck, Media(photos = mapOf(1 to photo), lesson = "test-$run", frames = mapOf(1 to listOf(0.0, 0.0, 0.5, 0.5)))).added) // not twice
     }
 }

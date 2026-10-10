@@ -2,8 +2,10 @@ package app.notosaurus
 
 import androidx.test.core.app.ActivityScenario
 import androidx.test.ext.junit.runners.AndroidJUnit4
+import mockwebserver3.Dispatcher
 import mockwebserver3.MockResponse
 import mockwebserver3.MockWebServer
+import mockwebserver3.RecordedRequest
 import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
@@ -39,13 +41,18 @@ class AppTest {
 
     @Test
     fun aLessonFromThePageIntoAnkiDroid() {
-        relay.enqueue(
-            MockResponse.Builder().body(
-                """{"deck": {"deck": "Notosaurus app test $run", "cards": [
-                    {"front": "la mère $run", "back": "la madre"}, {"front": "le père $run", "back": "el padre"}]},
-                    "turns": [], "usage": {"credits": 1, "credits_left": 99}}""",
-            ).build(),
-        )
+        // The relay answers by route: the page also asks for its voices when it opens
+        val lesson = """{"deck": {"deck": "Notosaurus app test $run", "cards": [
+            {"front": "la mère $run", "back": "la madre"}, {"front": "le père $run", "back": "el padre"}]},
+            "turns": [], "usage": {"credits": 1, "credits_left": 99}}"""
+        val extracts = mutableListOf<RecordedRequest>()
+        relay.dispatcher = object : Dispatcher() {
+            override fun dispatch(request: RecordedRequest) = when (request.url.encodedPath) {
+                "/v1/extract" -> MockResponse.Builder().body(lesson).build().also { extracts += request }
+                "/v1/voices" -> MockResponse.Builder().body("[]").build()
+                else -> MockResponse.Builder().code(404).body("""{"code": "relay.invalid_request", "params": {}}""").build()
+            }
+        }
         ActivityScenario.launch(MainActivity::class.java).use { app ->
             // The page, from the app's assets, with Notosaurus's prompts from its server
             Device.waitFor(app, "typeof api === 'function' && document.querySelectorAll('.chip').length > 3", "the page and its prompts")
@@ -63,8 +70,7 @@ class AppTest {
             )
             assertTrue(sent, "\"added\":2" in sent)
         }
-        val request = relay.takeRequest()
-        assertEquals("/v1/extract", request.url.encodedPath)
+        val request = extracts.single()
         assertEquals("Bearer nts_test", request.headers["Authorization"])
         assertTrue(Anki(Device.context).deckNames().contains("Notosaurus app test $run"))
     }
