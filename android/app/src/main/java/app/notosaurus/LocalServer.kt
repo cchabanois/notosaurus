@@ -301,6 +301,7 @@ class LocalServer(
                 put("configured", true)
                 put("donations", false) // paid for by the subscription: no "Support Notosaurus" (Ko-fi)
                 put("apkg", false) // the cards go to AnkiDroid: no .apkg to download
+                put("review_in_anki", true) // a lesson sent: reviewed in AnkiDroid from here
             }
         }
 
@@ -624,6 +625,14 @@ class LocalServer(
                 put("synced", false)
                 if (failures > 0) put("audio_failures", failures) // the page says some have no sound
             }
+        }
+
+        // A lesson's deck reviewed in AnkiDroid ("Review" after sending it)
+        api("POST", "/api/anki/review") {
+            val deck = body().string("deck")
+            val opened = withContext(Dispatchers.IO) { runCatching { anki.review(deck) }.getOrDefault(false) }
+            if (!opened) throw BadRequest("anki.android_no_deck", buildJsonObject { put("deck", deck) })
+            buildJsonObject { put("opened", true) }
         }
 
         // --- The page

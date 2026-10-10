@@ -323,7 +323,8 @@
       "hint": "Notosaurus braucht einen KI-Dienst, um die Lektionen zu lesen: ein paar Minuten zum Einrichten.",
       "button": "Notosaurus einrichten",
       "onComputer": "Am Computer, in Anki: Extras → Notosaurus → Einrichtungsassistent."
-    }
+    },
+    "reviewInAnki": "📚 Lernen"
   },
   "admin": {
     "title": "Einstellungen",
@@ -706,7 +707,8 @@
       "sync_not_logged_in": "Anki ist nicht bei AnkiWeb angemeldet: Klick einmal in Anki auf „Synchronisieren“, um dich anzumelden",
       "android_missing": "Die Karten kommen in AnkiDroid: Google Play öffnet sich dafür. Installiere es, öffne es einmal und füge die Karten dann erneut hinzu.",
       "android_refused": "Notosaurus darf AnkiDroid keine Karten hinzufügen: Erlaube es und füge die Karten dann erneut hinzu.",
-      "android_failed": "AnkiDroid hat die Karten nicht übernommen ({detail}): Öffne AnkiDroid einmal und versuche es dann erneut."
+      "android_failed": "AnkiDroid hat die Karten nicht übernommen ({detail}): Öffne AnkiDroid einmal und versuche es dann erneut.",
+      "android_no_deck": "AnkiDroid hat keinen Stapel „{deck}“: füge die Lektion zuerst zu Anki hinzu."
     },
     "tts": {
       "voices_unavailable": "Stimmenliste nicht verfügbar: {detail}",

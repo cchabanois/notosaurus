@@ -83,6 +83,8 @@ class LocalServerTest {
         val deleted = mutableListOf<Long>()
         override fun lessonNotes(lesson: String) = if (broken) null else notes[lesson].orEmpty()
         override fun delete(notes: List<Long>) = notes.size.also { deleted += notes }
+        val reviewed = mutableListOf<String>()
+        override fun review(deck: String) = (deck in deckNames() || sent.any { it.deck == deck }).also { if (it) reviewed += deck }
         override fun send(deck: Deck, media: Media, options: Options): Sent {
             if (broken) error("no collection")
             sent += deck
@@ -607,6 +609,18 @@ class LocalServerTest {
         anki.notes[other] = mutableListOf(13L)
         assertEquals(0, client.delete("/api/lessons/$other") { page() }.json().jsonObject["anki_deleted"]!!.jsonPrimitive.int)
         assertEquals(listOf(11L, 12L), anki.deleted)
+    }
+
+    @Test
+    fun aSentLessonReviewedInAnkiDroid() = app { client ->
+        assertEquals("true", client.get("/api/config") { page() }.json().jsonObject["review_in_anki"]!!.jsonPrimitive.content)
+        val lesson = client.extract()
+        client.send(lesson)
+        val res = client.post("/api/anki/review") { page(); contentType(ContentType.Application.Json); setBody("""{"deck": "Espagnol::Leçon 5"}""") }
+        assertEquals(HttpStatusCode.OK, res.status)
+        assertEquals(listOf("Espagnol::Leçon 5"), anki.reviewed)
+        val missing = client.post("/api/anki/review") { page(); contentType(ContentType.Application.Json); setBody("""{"deck": "Nope"}""") }
+        assertEquals("anki.android_no_deck", missing.json().jsonObject["detail"]!!.jsonObject.string("code"))
     }
 
     @Test

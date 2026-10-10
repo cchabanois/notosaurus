@@ -53,6 +53,9 @@ interface AnkiTarget {
 
     /** These notes deleted (their review history with them); how many were. */
     fun delete(notes: List<Long>): Int = 0
+
+    /** AnkiDroid opened to review the deck (and its sub-decks); false when it has no such deck. */
+    fun review(deck: String): Boolean = false
 }
 
 /**
@@ -83,6 +86,24 @@ class Anki(private val context: Context) : AnkiTarget {
             FlashCardsContract.Note.CONTENT_URI, arrayOf(FlashCardsContract.Note._ID), "tag:${lessonTag(lesson)}", null, null,
         )?.use { cursor -> buildList { while (cursor.moveToNext()) add(cursor.getLong(0)) } }
             ?: emptyList() // AnkiDroid answers no cursor when the search finds nothing
+    }
+
+    /** The deck selected (the API's own way), then AnkiDroid's reviewer on it, as its deck
+     * shortcuts open it; AnkiDroid's home on that deck if the reviewer won't open. */
+    override fun review(deck: String): Boolean {
+        val package_ = AddContentApi.getAnkiDroidPackageName(context) ?: return false
+        val did = firstUse { api.deckList?.entries?.firstOrNull { it.value == deck.ifBlank { "Notosaurus" } }?.key } ?: return false
+        runCatching {
+            context.contentResolver.update(
+                FlashCardsContract.Deck.CONTENT_SELECTED_URI, ContentValues().apply { put(FlashCardsContract.Deck.DECK_ID, did) }, null, null,
+            )
+        }
+        val reviewer = Intent(Intent.ACTION_VIEW).setClassName(package_, "com.ichi2.anki.Reviewer").putExtra("deckId", did)
+        val home = context.packageManager.getLaunchIntentForPackage(package_) ?: return false
+        for (intent in listOf(reviewer, home)) {
+            if (runCatching { context.startActivity(intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)) }.isSuccess) return true
+        }
+        return false
     }
 
     override fun delete(notes: List<Long>): Int = notes.count { id ->
