@@ -18,6 +18,9 @@ souvent l'écriture d'un enfant, parfois son nom : voici où elle va.
   Bastille painting ») vont à Wikimedia Commons et Openverse, pour trouver des images libres ;
   jamais les photos.
 
+Les pages elles-mêmes ne chargent rien d'ailleurs : leurs scripts et leurs polices viennent avec
+Notosaurus (ni Google Fonts, ni CDN).
+
 Rien d'autre : ni statistiques, ni pistage. Avec un modèle chez toi (voir
 [Services d'IA](../ai-services/#un-modèle-chez-toi)), les photos ne sortent pas non plus de la
 maison.

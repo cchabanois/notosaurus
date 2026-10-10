@@ -17,6 +17,9 @@ shows a child's handwriting, sometimes their name: here is where it goes.
 - **The words of a picture search** (a few English words: "dog", "Storming of the Bastille
   painting") go to Wikimedia Commons and Openverse, to find free pictures; never the photos.
 
+The pages themselves load nothing from elsewhere: their scripts and fonts come with Notosaurus
+(no Google Fonts, no CDN).
+
 Nothing else: no statistics, no tracking. With a model at home (see
 [AI services](../ai-services/#a-model-at-home)), the photos don't leave the house either.
 
