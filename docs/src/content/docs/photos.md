@@ -29,6 +29,7 @@ On each photo:
 
 - **↻** turns it a quarter turn;
 - **×** removes it;
+- **🖍️** hides part of the page before it is sent (see below);
 - a tap shows it full screen: swipe between pages, tap again to see it at its real size.
 
 ![The lesson's photo, full screen](../../assets/screenshots/en/photo-viewer.png)
@@ -50,6 +51,16 @@ everything works as with photos: diagrams, corrections, every AI service.
 - **A password-protected PDF** must first be saved without its password.
 
 ![Choosing the pages of a PDF](../../assets/screenshots/en/pdf-pages.png)
+
+## Hiding a name or a school
+
+A notebook page often shows the child's name, class, school. **🖍️**, on a photo not sent yet,
+opens it in full: with your finger, **Black out** covers what the AI shouldn't see, **Un-black**
+brings it back. **Done** keeps the blacked-out photo: it alone is sent and saved. Until the photo
+is sent, you can come back to it and change what is hidden.
+
+On a PDF page with a hidden part, its text isn't sent (it holds what is hidden too): the AI
+reads the page as a picture.
 
 ## What happens to the photos
 

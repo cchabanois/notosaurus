@@ -93,7 +93,7 @@ const newId = () => [...crypto.getRandomValues(new Uint8Array(6))].map((b) => b.
 
 document.addEventListener("alpine:init", () => {
   Alpine.data("notosaurus", () => ({
-    photos: [],          // { blob, url }
+    photos: [],          // { blob, url, text, sent; when partly hidden: original, mask, pdfText }
     prompts: [],
     selectedId: null,
     promptChosen: false,         // a prompt picked (or "Free") by the user: the first load keeps it
@@ -143,6 +143,7 @@ document.addEventListener("alpine:init", () => {
     revision: { text: "", busy: false, summary: "", stats: "", undo: null },
     successNext: false,          // the success toast offers to start a new lesson
     viewer: { open: false, list: [], index: 0, zoomed: false, touchX: 0 },  // a photo in full
+    hiding: { open: false, index: -1, erase: false, pdf: false },  // part of a photo hidden before it is sent
     removal: { open: false, lesson: null, checking: false, available: false, count: 0, anki: false, busy: false },
     editor: { open: false, id: null, name: "", text: "", deck: "", voice: "", error: "" },
     error: "",

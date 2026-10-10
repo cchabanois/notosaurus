@@ -32,6 +32,7 @@ Sur chaque photo :
 
 - **↻** la tourne d'un quart de tour ;
 - **×** la retire ;
+- **🖍️** cache une partie de la page avant l'envoi (voir plus bas) ;
 - un toucher l'affiche en plein écran : glisse pour passer d'une page à l'autre, touche à
   nouveau pour la voir en taille réelle.
 
@@ -54,6 +55,17 @@ de la leçon : tout marche comme avec des photos, schémas, corrections et tous 
 - **Un PDF protégé par un mot de passe** doit d'abord être enregistré sans son mot de passe.
 
 ![Choisir les pages d'un PDF](../../../assets/screenshots/fr/pdf-pages.png)
+
+## Cacher un nom ou une école
+
+Une page de cahier porte souvent le nom de l'enfant, sa classe, son école. **🖍️**, sur une
+photo pas encore envoyée, l'ouvre en grand : avec le doigt, **Noircir** passe en noir ce que
+l'IA ne doit pas voir, **Dénoircir** le fait réapparaître. **Terminé** garde la photo noircie :
+c'est elle seule qui est envoyée et enregistrée. Tant que la photo n'est pas envoyée, tu peux
+y revenir et changer ce qui est caché.
+
+Sur une page de PDF dont tu caches une partie, son texte n'est pas envoyé (il contient aussi ce
+qui est caché) : l'IA lit la page comme une image.
 
 ## Que deviennent les photos ?
 

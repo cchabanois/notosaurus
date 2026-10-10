@@ -114,6 +114,9 @@
             <button class="thumb-remove" @click="removePhoto(i)" :aria-label="$t('app.photos.remove')">✕</button>
             <button class="thumb-rotate" x-show="!readOnly()" @click="rotatePhoto(i)" :disabled="loading"
                     :aria-label="$t('app.photos.rotate')">↻</button>
+            <!-- Before it is sent: a name blacked out (sent photos: already read by the AI) -->
+            <button class="thumb-hide" :class="{ used: p.mask }" x-show="!readOnly() && !p.sent" @click="openHide(i)"
+                    :disabled="loading" :aria-label="$t('app.photos.hide')" :title="$t('app.photos.hide')">🖍️</button>
           </figure>
         </template>
         <div class="add-stack">
@@ -733,6 +736,31 @@
       </div>
     </form>
   </aside>
+
+  <!-- Part of a photo hidden before it is sent: blacked out with a finger, un-blacked the same way -->
+  <div class="hide-editor" x-cloak x-show="hiding.open" role="dialog" :aria-label="$t('app.hide.title')"
+       @keydown.escape.window="hiding.open && doneHide(false)">
+    <p class="hide-hint">
+      <strong x-text="$t('app.hide.title')"></strong>
+      <span x-text="$t('app.hide.hint')"></span>
+      <span x-show="hiding.pdf" x-text="$t('app.hide.pdf')"></span>
+    </p>
+    <div class="hide-frame">
+      <canvas x-ref="hideCanvas" @pointerdown="hideStroke($event)" @pointermove="hideStroke($event)"
+              @pointerup="hideStroke($event)" @pointercancel="hideStroke($event)"></canvas>
+    </div>
+    <div class="hide-tools">
+      <div class="hide-modes" role="group">
+        <button type="button" class="btn soft" :class="{ chosen: !hiding.erase }" :aria-pressed="String(!hiding.erase)"
+                @click="hiding.erase = false"><span aria-hidden="true">⬛</span> <span x-text="$t('app.hide.paint')"></span></button>
+        <button type="button" class="btn soft" :class="{ chosen: hiding.erase }" :aria-pressed="String(hiding.erase)"
+                @click="hiding.erase = true"><span aria-hidden="true">◻️</span> <span x-text="$t('app.hide.erase')"></span></button>
+      </div>
+      <button type="button" class="btn soft" @click="clearHidden()" x-text="$t('app.hide.clear')"></button>
+      <button type="button" class="btn soft" @click="doneHide(false)" x-text="$t('common.cancel')"></button>
+      <button type="button" class="btn primary" @click="doneHide(true)" x-text="$t('app.hide.done')"></button>
+    </div>
+  </div>
 
   <!-- A photo (or a card's picture) in full: ‹ › or a swipe between pages, a tap on it for its real size -->
   <div class="viewer" x-cloak x-show="viewer.open" x-transition.opacity role="dialog" :aria-label="$t('app.viewer.label')"
