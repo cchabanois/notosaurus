@@ -90,7 +90,7 @@ est perdu ou prêté : **Réglages → Téléphones → Déconnecter tous les t�
 La leçon est enregistrée : tu peux la rouvrir plus tard depuis la liste des leçons, la
 corriger et la renvoyer. Ses cartes sont mises à jour dans Anki, pas dupliquées.
 
-Avec la consigne **Schéma à compléter**, les légendes d'un schéma sont cachées derrière des
+Avec la consigne **Schéma ou carte à compléter**, les légendes d'un schéma sont cachées derrière des
 numéros : chaque carte en demande une.
 
 ![Un schéma avec ses légendes masquées](../../../assets/screenshots/fr/diagram.png)

@@ -12,7 +12,7 @@ shows a child's handwriting, sometimes their name: here is where it goes.
   and correct the cards. The text of a digital PDF goes with its page.
 - **The backs of the cards** go to Microsoft's text-to-speech service, to make the audio, when a
   voice is chosen.
-- **The description of a picture** goes to the service that draws it, for “Vocabulary in pictures”.
+- **The description of a picture** goes to the service that draws it, for “Language: vocabulary in pictures”.
 
 - **The words of a picture search** (a few English words: "dog", "Storming of the Bastille
   painting") go to Wikimedia Commons and Openverse, to find free pictures; never the photos.

@@ -25,17 +25,19 @@ be changed, but they can be **duplicated** to make your own version.
 | Instructions | What they make |
 |---|---|
 | Automatic (from the lesson) | The AI looks at the lesson and chooses the most useful cards. |
-| Vocabulary of a language | One card per word or expression, with the article, gender and plural in the info. |
-| Sentences of a language | One card per sentence, in your language and the language being learnt. |
+| Language: vocabulary | One card per word or expression, with the article, gender and plural in the info; without a photo, from a list or a topic. |
+| Language: sentences | One card per sentence, in your language and the language being learnt. |
+| Language: conjugation | One verb, tense and person per card; the conjugated form on the back. |
 | Questions / answers | Short questions on the content: dates, definitions, key ideas. |
+| Definitions | One card per key word to define, its definition on the back. |
 | Fill in the blanks | Sentences with gaps (cloze): one card per gap number. |
 | Multiple choice | A question, the right answer and three plausible wrong ones. |
 | True / false | Statements, half of them false with one precise mistake. |
+| Methods (steps) | One card per skill: "How do you …?", the steps on the back. |
 | Formulas (maths, physics…) | One card per formula, with what each letter stands for. |
 | Geometry (with figures) | Figures, properties and vocabulary, with an exact figure drawn on the cards. |
-| Diagram to complete | The labels of a diagram hidden behind numbers: one card per label. |
-| Vocabulary in pictures (languages) | The picture of each word on the front, drawn by an image model; the word in the language being learned on the back. |
-| Word list (no photo) | One card per word of the list you add at the end of the instructions (English → Spanish: duplicate it for another language). |
+| Diagram or map to complete | The labels of a diagram or a map hidden behind numbers: one card per label. |
+| Language: vocabulary in pictures | The picture of each word on the front (found or drawn); the word in the language being learned on the back. |
 | Spelling dictation | One card per word to spell: a sentence with the word missing on the front, the word on the back, a spelling tip. |
 
 ## Your own instructions
