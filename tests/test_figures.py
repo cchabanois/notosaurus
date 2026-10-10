@@ -103,3 +103,20 @@ def test_a_figure_with_the_answer_goes_on_the_back(client, tmp_path):
     (template,) = on_back["tmpls"]
     assert "{{Picture}}" not in template["qfmt"] and "{{Picture}}" in template["afmt"]
     assert template["name"] == "Image"  # as on the front: a note moves between them keeping its card
+
+
+def test_shaded_and_shared_areas_kept_inside_the_figure():
+    """A hatched intersection: its pattern and clip path kept, referring to the figure only."""
+    svg = figures.clean(
+        '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 300"><defs>'
+        '<pattern id="hatch" width="8" height="8" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"'
+        ' href="https://evil.example/p.svg"><line x1="0" y1="0" x2="0" y2="8" stroke="black"/></pattern>'
+        '<clipPath id="inA"><circle cx="150" cy="150" r="80"/></clipPath>'
+        '<linearGradient id="g"><stop offset="0" stop-color="#ddd"/></linearGradient></defs>'
+        '<circle cx="230" cy="150" r="80" fill="url(#hatch)" clip-path="url(#inA)"/>'
+        '<rect width="10" height="10" fill="url(https://evil.example/x.svg#a)" clip-path="url(http://evil.example/#c)"/>'
+        '<rect width="5" height="5" mask="url(#m) translate" stroke="url(#g)"/></svg>'
+    )
+    assert "<pattern" in svg and "<clipPath" in svg and "<stop" in svg and 'patternTransform="rotate(45)"' in svg
+    assert 'fill="url(#hatch)"' in svg and 'clip-path="url(#inA)"' in svg and 'stroke="url(#g)"' in svg
+    assert "evil" not in svg and 'translate"' not in svg  # elsewhere, or not a plain reference: gone

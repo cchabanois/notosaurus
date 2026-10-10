@@ -67,7 +67,9 @@ text.
 For geometry and simple labelled figures (a right triangle with its hypotenuse, a circle with
 its radius, a rectangle with its measures), the AI **draws an exact figure** on the card,
 instead of an image model that would draw text and measures badly. The figure never shows the
-answer.
+answer. In any subject, a notion a figure makes clearer gets one too, in particular when the
+lesson's page shows a figure for it (sets with their intersection hatched, a number line, a
+graph…): redrawn clean on the card.
 
 ![Geometry cards with their figures](../../assets/screenshots/en/figures.png)
 

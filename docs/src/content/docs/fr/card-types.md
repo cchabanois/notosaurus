@@ -70,7 +70,10 @@ La relecture les affiche dessinées sous le texte. Les calculs simples restent e
 Pour la géométrie et les figures simples avec des légendes (un triangle rectangle et son
 hypoténuse, un cercle et son rayon, un rectangle et ses mesures), l'IA **dessine une figure
 exacte** sur la carte, au lieu d'un modèle d'images qui dessinerait mal le texte et les
-mesures. La figure ne montre jamais la réponse.
+mesures. La figure ne montre jamais la réponse. Dans toute matière, une notion qu'une figure
+fait mieux comprendre en a une aussi, en particulier quand la page de la leçon en montre une
+(des ensembles avec leur intersection hachurée, une droite graduée, un graphique…) : redessinée
+proprement sur la carte.
 
 ![Des cartes de géométrie avec leurs figures](../../../assets/screenshots/fr/figures.png)
 

@@ -836,7 +836,7 @@
   "builtinPrompts": {
     "auto": {
       "name": "Automatisch (nach der Lektion)",
-      "text": "Sieh dir die Lektion an und wähle die nützlichsten Karten, um sie zu lernen:\n- Vokabeln einer Sprache: eine Karte pro Wort oder Ausdruck, vorne auf Deutsch, hinten in der gelernten Sprache;\n- Lernstoff eines Fachs (Geschichte, Naturwissenschaften, Erdkunde …): kurze Fragen / Antworten oder Lückentexte für die Sätze, die man sich merken muss;\n- Formeln: eine Karte pro Formel (vorne: was sie berechnet, hinten: die Formel);\n- Geometrie: Karten mit einer genauen Figur, wenn sie hilft;\n- Abbildung mit Beschriftungen: Abbildung zum Beschriften, eine Karte pro Beschriftung;\n- ein Bild nur, wenn es wirklich beim Merken hilft (eine Person, ein Ort, ein Bauwerk, ein Kunstwerk, ein Tier), nie für einen abstrakten Begriff und nicht auf jeder Karte: hinten, wenn es die Antwort zeigt (das Porträt des Präsidenten, nach dessen Namen gefragt wird), vorne nur, wenn sich die Frage auf das Bild bezieht („Wer ist das?“).\nMisch sie, wenn die Seite mehreres davon enthält.\nSag in einem Satz, was du gewählt hast.",
+      "text": "Sieh dir die Lektion an und wähle die nützlichsten Karten, um sie zu lernen:\n- Vokabeln einer Sprache: eine Karte pro Wort oder Ausdruck, vorne auf Deutsch, hinten in der gelernten Sprache;\n- Lernstoff eines Fachs (Geschichte, Naturwissenschaften, Erdkunde …): kurze Fragen / Antworten oder Lückentexte für die Sätze, die man sich merken muss;\n- Formeln: eine Karte pro Formel (vorne: was sie berechnet, hinten: die Formel);\n- ein Begriff, den eine Figur verständlich macht (Geometrie oder jede Figur der Lektion): Karten mit einer genauen Figur, wenn sie hilft;\n- Abbildung mit Beschriftungen: Abbildung zum Beschriften, eine Karte pro Beschriftung;\n- ein Bild nur, wenn es wirklich beim Merken hilft (eine Person, ein Ort, ein Bauwerk, ein Kunstwerk, ein Tier), nie für einen abstrakten Begriff und nicht auf jeder Karte: hinten, wenn es die Antwort zeigt (das Porträt des Präsidenten, nach dessen Namen gefragt wird), vorne nur, wenn sich die Frage auf das Bild bezieht („Wer ist das?“).\nMisch sie, wenn die Seite mehreres davon enthält.\nSag in einem Satz, was du gewählt hast.",
       "deck": "{Fach}::{Titel der Lektion}",
       "voice": "auto"
     },
@@ -900,7 +900,7 @@
     },
     "wordlist": {
       "name": "Wortliste (ohne Foto)",
-      "text": "Erstelle eine Karte pro Wort der Liste unten. Vorderseite: das Wort auf Deutsch. Rückseite: seine Übersetzung ins Englische.\nListe: ",
+      "text": "Erstelle eine Karte pro Wort der Liste unten. Vorderseite: das Wort auf Deutsch. Rückseite: seine Übersetzung in die gelernte Sprache, mit Artikel.\nListe: ",
       "deck": "{Sprache}::Wörter",
       "voice": "auto"
     },

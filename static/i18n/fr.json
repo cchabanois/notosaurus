@@ -836,7 +836,7 @@
   "builtinPrompts": {
     "auto": {
       "name": "Automatique (d'après la leçon)",
-      "text": "Regarde la leçon et choisis les cartes les plus utiles pour la réviser :\n- vocabulaire d'une langue : une carte par mot ou expression, recto en français, verso dans la langue étudiée ;\n- leçon de cours (histoire, sciences, géographie…) : questions / réponses courtes, ou texte à trous pour les phrases à retenir ;\n- formules : une carte par formule (recto : ce qu'elle calcule, verso : la formule) ;\n- géométrie : des cartes avec une figure exacte quand elle aide ;\n- schéma avec des légendes : schéma à compléter, une carte par légende ;\n- une image seulement quand elle aide vraiment à retenir (un personnage, un lieu, un monument, une œuvre, un animal), jamais pour une notion abstraite ni sur chaque carte : au verso quand elle montre la réponse (le portrait du président dont on demande le nom), au recto seulement quand la question porte sur l'image (« Qui est-ce ? »).\nMélange si la page contient plusieurs de ces choses.\nDis en une phrase ce que tu as choisi.",
+      "text": "Regarde la leçon et choisis les cartes les plus utiles pour la réviser :\n- vocabulaire d'une langue : une carte par mot ou expression, recto en français, verso dans la langue étudiée ;\n- leçon de cours (histoire, sciences, géographie…) : questions / réponses courtes, ou texte à trous pour les phrases à retenir ;\n- formules : une carte par formule (recto : ce qu'elle calcule, verso : la formule) ;\n- une notion qu'une figure fait comprendre (géométrie, ou toute figure de la leçon) : des cartes avec une figure exacte quand elle aide ;\n- schéma avec des légendes : schéma à compléter, une carte par légende ;\n- une image seulement quand elle aide vraiment à retenir (un personnage, un lieu, un monument, une œuvre, un animal), jamais pour une notion abstraite ni sur chaque carte : au verso quand elle montre la réponse (le portrait du président dont on demande le nom), au recto seulement quand la question porte sur l'image (« Qui est-ce ? »).\nMélange si la page contient plusieurs de ces choses.\nDis en une phrase ce que tu as choisi.",
       "deck": "{matière}::{titre de la leçon}",
       "voice": "auto"
     },
@@ -900,7 +900,7 @@
     },
     "wordlist": {
       "name": "Liste de mots (sans photo)",
-      "text": "Crée une carte par mot de la liste ci-dessous. Recto : le mot en français. Verso : sa traduction en espagnol, avec l'article.\nListe : ",
+      "text": "Crée une carte par mot de la liste ci-dessous. Recto : le mot en français. Verso : sa traduction dans la langue étudiée, avec l'article.\nListe : ",
       "deck": "{langue}::Mots",
       "voice": "auto"
     },

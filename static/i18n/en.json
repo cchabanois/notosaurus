@@ -836,7 +836,7 @@
   "builtinPrompts": {
     "auto": {
       "name": "Automatic (from the lesson)",
-      "text": "Look at the lesson and choose the most useful cards to review it:\n- vocabulary of a language: one card per word or phrase, front in English, back in the language being learned;\n- a lesson (history, science, geography…): short questions / answers, or fill in the blanks for the sentences to remember;\n- formulas: one card per formula (front: what it calculates, back: the formula);\n- geometry: cards with an exact figure when it helps;\n- a diagram with labels: a diagram to complete, one card per label;\n- a picture only when it truly helps to remember (a person, a place, a monument, a work of art, an animal), never for an abstract notion nor on every card: on the back when it shows the answer (the portrait of the president whose name is asked), on the front only when the question is about the picture (\"Who is this?\").\nMix them if the page holds several of these.\nSay in one sentence what you chose.",
+      "text": "Look at the lesson and choose the most useful cards to review it:\n- vocabulary of a language: one card per word or phrase, front in English, back in the language being learned;\n- a lesson (history, science, geography…): short questions / answers, or fill in the blanks for the sentences to remember;\n- formulas: one card per formula (front: what it calculates, back: the formula);\n- a notion a figure makes clear (geometry, or any figure of the lesson): cards with an exact figure when it helps;\n- a diagram with labels: a diagram to complete, one card per label;\n- a picture only when it truly helps to remember (a person, a place, a monument, a work of art, an animal), never for an abstract notion nor on every card: on the back when it shows the answer (the portrait of the president whose name is asked), on the front only when the question is about the picture (\"Who is this?\").\nMix them if the page holds several of these.\nSay in one sentence what you chose.",
       "deck": "{subject}::{lesson title}",
       "voice": "auto"
     },
@@ -900,7 +900,7 @@
     },
     "wordlist": {
       "name": "Word list (no photo)",
-      "text": "Create one card per word of the list below. Front: the word in English. Back: its translation into Spanish, with the article.\nList: ",
+      "text": "Create one card per word of the list below. Front: the word in English. Back: its translation into the language being learned, with the article.\nList: ",
       "deck": "{language}::Words",
       "voice": "auto"
     },
