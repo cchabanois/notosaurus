@@ -460,3 +460,23 @@ test("the 🎤 stays when a lesson is shown, and the lesson's dictation option s
   c.newLesson?.();
   assert.equal(c.mic.available, true);
 });
+
+test("tidy up: not offered for Notosaurus's instructions as they are", async () => {
+  const page = await loadScripts("app.js", { routes: () => new Response({}) });
+  const c = page.component();
+  c.prompts = [
+    { id: "notosaurus:auto", builtin: true, name: "Automatique", text: "Regarde la leçon…" },
+    { id: 3, builtin: false, name: "Mes mots", text: "les mots, euh, en espagnol" },
+  ];
+  c.selectedId = "notosaurus:auto";
+  c.form.text = "Regarde la leçon…";
+  assert.equal(c.canTidy(), false);  // tidy already
+  c.form.text += " Dix cartes, non, douze.";  // changed (or dictated): offered
+  assert.equal(c.canTidy(), true);
+  c.selectedId = 3;
+  c.form.text = "les mots, euh, en espagnol";
+  assert.equal(c.canTidy(), true);  // one's own
+  c.selectedId = null;
+  c.form.text = "";
+  assert.equal(c.canTidy(), false);  // nothing to tidy
+});

@@ -197,6 +197,13 @@ const promptsPart = {
     }
   },
 
+  // Offered for instructions someone wrote (free, one's own, or Notosaurus's once changed):
+  // Notosaurus's own, as they are, are tidy already
+  canTidy() {
+    if (!this.form.text.trim()) return false;
+    return !(this.current()?.builtin && !this.isModified());
+  },
+
   canUntidy() {
     return this.tidy.before !== null && this.form.text === this.tidy.after;
   },

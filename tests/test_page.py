@@ -842,9 +842,12 @@ def test_dictation_in_the_app(page):
 def test_tidy_up_the_instructions(page):
     """“✨ Tidy up” under the instructions (the demo AI marks them), “↩” brings them back."""
     page.goto("/")
+    tidy = page.get_by_role("button", name="✨ Mettre au propre")
+    page.get_by_role("radio", name="⭐ Automatique (d'après la leçon)").click()
+    sync_api.expect(page.get_by_role("textbox", name="Texte de la consigne")).not_to_have_value("")
+    sync_api.expect(tidy).to_be_hidden()  # Notosaurus's own, as they are: tidy already
     page.get_by_role("radio", name="✏️ Libre").click()
     field = page.get_by_role("textbox", name="Texte de la consigne")
-    tidy = page.get_by_role("button", name="✨ Mettre au propre")
     sync_api.expect(tidy).to_be_hidden()  # nothing to tidy up
     field.fill("la famille en espagnol, dix non douze")
     tidy.click()
