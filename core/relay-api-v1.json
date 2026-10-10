@@ -1443,6 +1443,12 @@
             "description": "Only when the instructions ask for a picture on the card (see the rules): what to draw, in English. Empty otherwise.",
             "default": ""
           },
+          "picture_search": {
+            "type": "string",
+            "title": "Picture Search",
+            "description": "Only with a picture_prompt, when the picture shows a real, specific thing that photos or paintings show (a person, a place, a monument, a work of art, an animal, an object, a food): a short search, in English, for a free picture of it (\"Storming of the Bastille painting\", \"dog\"). Empty when it must be drawn (an abstract word, an action, a scene made up for the card).",
+            "default": ""
+          },
           "figure": {
             "type": "string",
             "title": "Figure",
@@ -1961,6 +1967,20 @@
             "title": "Fresh",
             "description": "Draw it again rather than reuse the last drawing.",
             "default": false
+          },
+          "search": {
+            "type": "string",
+            "maxLength": 1000,
+            "title": "Search",
+            "description": "Card.picture_search: a free picture looked for first.",
+            "default": ""
+          },
+          "context": {
+            "type": "string",
+            "maxLength": 8000,
+            "title": "Context",
+            "description": "The card, \"front → back\": to choose the picture found.",
+            "default": ""
           }
         },
         "type": "object",
@@ -1968,7 +1988,7 @@
           "subject"
         ],
         "title": "PictureRequest",
-        "description": "A picture for a card, drawn by an image model. JSON; the answer is the JPEG itself."
+        "description": "A picture for a card: a free one found when `search` is given and one fits (chosen\nby the AI), else drawn by an image model. JSON; the answer is the JPEG itself."
       },
       "PictureSearchRequest": {
         "properties": {

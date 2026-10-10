@@ -192,10 +192,17 @@ class FoundPictureRequest(BaseModel):
 
 
 class PictureRequest(BaseModel):
-    """A picture for a card, drawn by an image model. JSON; the answer is the JPEG itself."""
+    """A picture for a card: a free one found when `search` is given and one fits (chosen
+    by the AI), else drawn by an image model. JSON; the answer is the JPEG itself."""
 
     subject: str = Field(min_length=1, max_length=MAX_SUBJECT, description="What to draw, in English.")
     fresh: bool = Field(default=False, description="Draw it again rather than reuse the last drawing.")
+    search: str = Field(
+        default="", max_length=MAX_SUBJECT, description="Card.picture_search: a free picture looked for first."
+    )
+    context: str = Field(
+        default="", max_length=MAX_PROMPT, description='The card, "front → back": to choose the picture found.'
+    )
 
 
 # --- Answers ------------------------------------------------------------------

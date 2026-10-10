@@ -29,7 +29,7 @@ const PICTURE_SERVICES = ["gemini", "openai", "openrouter"];
 const PICTURE_KEYS = { gemini: "gemini_api_key", openai: "openai_api_key", openrouter: "openrouter_api_key" };
 
 const EDITABLE = ["llm", "model", "fallback_models", "compatible_base_url", "picture_service", "tts_rate", "ankiconnect_url", "anki_sync", "card_helps",
-                  "instructions", "profile_instructions", "picture_model"];
+                  "instructions", "profile_instructions", "picture_model", "picture_find"];
 
 const deckParts = (deck) => deck.split("::").map((part) => part.trim()).filter(Boolean);
 

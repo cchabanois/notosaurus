@@ -539,7 +539,9 @@
       "nobody": "{cards} não sabe desenhar e nenhum outro serviço tem chave: adicione uma chave do Gemini, da OpenAI ou do OpenRouter para ter imagens.",
       "missingKey": "{service} não tem chave: adicione-a ou escolha outro serviço.",
       "noneChosen": "Sem imagens nos cartões.",
-      "auto": "Automático"
+      "auto": "Automático",
+      "find": "Buscar primeiro uma imagem livre",
+      "findHint": "Para algo real (uma pessoa, um lugar, uma obra, um animal): uma foto ou pintura livre de direitos, escolhida pela IA; desenhada se nenhuma servir. Grátis, e exata."
     },
     "phones": {
       "title": "📱 Celulares",

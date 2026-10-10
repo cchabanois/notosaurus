@@ -101,3 +101,19 @@ The **🖼️** button of a card opens its **Picture** panel:
 - **📷 My photo**: put your own photo instead, for free;
 - **✕ No picture**: remove it;
 - **On the back (with the answer)**: when the picture gives the answer away.
+- **🔎 Find a picture**: free pictures of the subject to choose from (see below), for free.
+
+### Free pictures, found rather than drawn
+
+For a real thing (a person, a place, a monument, a work of art, an animal, a food), the AI
+writes, with the card, a few English words to search for it ("Storming of the Bastille
+painting", "dog"). Notosaurus then looks for a **free picture** before drawing one: a photo or a
+painting in the public domain or under CC0 (**Wikimedia Commons**, **Openverse**; in the
+Android app, **Pixabay** too), so there is nothing to credit on the cards. The cards' AI looks at
+the pictures found and keeps the one that fits; when none does, the picture is drawn. It is
+free (only the AI's choice costs: well under a cent) and exact: the real painting of the
+storming of the Bastille, the real portrait of a president.
+
+**Settings → Pictures on cards → Look for a free picture first** turns it off (always drawn).
+In a card's panel, **🔎 Find a picture** shows the pictures found, to choose yourself: they come
+filtered for pupils (no mature content), and you always see them before they go on a card.

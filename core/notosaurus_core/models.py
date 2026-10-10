@@ -39,6 +39,13 @@ class Card(BaseModel):
         description="Only when the instructions ask for a picture on the card (see the rules): what to draw, "
         "in English. Empty otherwise.",
     )
+    picture_search: str = Field(
+        default="",
+        description="Only with a picture_prompt, when the picture shows a real, specific thing that photos or "
+        "paintings show (a person, a place, a monument, a work of art, an animal, an object, a food): a short "
+        'search, in English, for a free picture of it ("Storming of the Bastille painting", "dog"). Empty '
+        "when it must be drawn (an abstract word, an action, a scene made up for the card).",
+    )
     figure: str = Field(
         default="",
         description="Only when the card needs an exact figure (see the rules): what to draw, every label "
@@ -160,3 +167,7 @@ class Dictation(BaseModel):
 
 class Rephrased(BaseModel):
     text: str = Field(description="The instructions, rewritten: clear, every intention kept, nothing added.")
+
+
+class Picked(BaseModel):
+    choice: int = Field(description="The number of the picture that fits, -1 when none does.")

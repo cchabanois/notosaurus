@@ -539,7 +539,9 @@
       "nobody": "{cards} kann nicht zeichnen, und kein anderer Dienst hat einen Schlüssel: Füge einen Gemini-, OpenAI- oder OpenRouter-Schlüssel hinzu, um Bilder zu bekommen.",
       "missingKey": "{service} hat keinen Schlüssel: Füge ihn hinzu oder wähle einen anderen Dienst.",
       "noneChosen": "Keine Bilder auf den Karten.",
-      "auto": "Automatisch"
+      "auto": "Automatisch",
+      "find": "Zuerst ein freies Bild suchen",
+      "findHint": "Für etwas Reales (eine Person, einen Ort, ein Kunstwerk, ein Tier): ein freies Foto oder Gemälde, von der KI ausgewählt; gezeichnet, wenn keines passt. Kostenlos und genau."
     },
     "phones": {
       "title": "📱 Handys",

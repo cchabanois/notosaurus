@@ -539,7 +539,9 @@
       "nobody": "{cards} ne dessine pas, et aucun autre service n'a de clé : ajoute une clé Gemini, OpenAI ou OpenRouter pour avoir des images.",
       "missingKey": "{service} n'a pas de clé : ajoute-la, ou choisis un autre service.",
       "noneChosen": "Pas d'images sur les cartes.",
-      "auto": "Automatique"
+      "auto": "Automatique",
+      "find": "Chercher d'abord une image libre",
+      "findHint": "Pour une chose réelle (un personnage, un lieu, une œuvre, un animal) : une photo ou un tableau libre de droits, choisi par l'IA ; dessinée si rien ne convient. Gratuit, et exact."
     },
     "phones": {
       "title": "📱 Téléphones",

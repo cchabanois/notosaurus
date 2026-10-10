@@ -106,11 +106,16 @@ class Relay(baseUrl: String, private val key: String) {
         return open("speak", request.toString().toRequestBody(JSON)).use { it.body.bytes() }
     }
 
-    /** A card's picture (/v1/picture): the JPEG, card size. `fresh`: drawn again. */
-    suspend fun picture(subject: String, fresh: Boolean): ByteArray {
+    /** A card's picture (/v1/picture): the JPEG, card size. `fresh`: drawn again. `search`
+     * (Card.picture_search): a free picture found first, chosen with `context` ("front → back"). */
+    suspend fun picture(subject: String, fresh: Boolean, search: String = "", context: String = ""): ByteArray {
         val request = buildJsonObject {
             put("subject", subject)
             put("fresh", fresh)
+            if (search.isNotEmpty()) {
+                put("search", search)
+                put("context", context.take(MAX_CONTEXT))
+            }
         }
         return open("picture", request.toString().toRequestBody(JSON)).use { it.body.bytes() }
     }
@@ -181,6 +186,7 @@ class Relay(baseUrl: String, private val key: String) {
         private val JSON = "application/json".toMediaType()
         private val JPEG = "image/jpeg".toMediaType()
         private val AAC = "audio/aac".toMediaType()
+        private const val MAX_CONTEXT = 8000 // relay_api.MAX_PROMPT
 
         // An extraction takes up to a minute or two: the AI reads every page. Silent at most
         // 3 minutes (a model stalled, then the next one: core's gemini.FIRST_PART_S twice)

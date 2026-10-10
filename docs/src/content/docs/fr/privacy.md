@@ -14,6 +14,10 @@ souvent l'écriture d'un enfant, parfois son nom : voici où elle va.
   quand une voix est choisie.
 - **La description d'une image** va au service qui la dessine, pour « Vocabulaire en images ».
 
+- **Les mots d'une recherche d'image** (quelques mots en anglais : « dog », « Storming of the
+  Bastille painting ») vont à Wikimedia Commons et Openverse, pour trouver des images libres ;
+  jamais les photos.
+
 Rien d'autre : ni statistiques, ni pistage. Avec un modèle chez toi (voir
 [Services d'IA](../ai-services/#un-modèle-chez-toi)), les photos ne sortent pas non plus de la
 maison.

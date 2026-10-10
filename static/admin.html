@@ -164,6 +164,12 @@
         <!-- 4. Pictures on cards: an image model of its own (Claude can't draw) -->
         <section class="panel">
           <h2><span class="step" x-text="form.llm === 'fake' ? 2 : 4"></span> <span x-text="$t('admin.pictures.title')"></span> <a class="help-link" :href="$docs('card-types')" target="_blank" rel="noopener" :aria-label="$t('common.helpOn', { topic: $t('admin.pictures.title') })" :title="$t('common.helpOn', { topic: $t('admin.pictures.title') })">?</a></h2>
+          <!-- A real thing (a painting, a place, an animal): a free picture found first, chosen by the cards' AI -->
+          <label class="switch field">
+            <input type="checkbox" x-model="form.picture_find">
+            <span class="track"><span class="knob"></span></span>
+            <span><span x-text="$t('admin.pictures.find')"></span> <small x-text="$t('admin.pictures.findHint')"></small></span>
+          </label>
           <!-- Who draws: said plainly; by default the cards' own service -->
           <p class="picture-summary" x-text="pictureSummary()"></p>
           <div class="field">

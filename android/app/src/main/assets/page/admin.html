@@ -155,6 +155,16 @@
       </label>
     </section>
 
+    <!-- Pictures: a free one found first for a real thing (the relay chooses it), as on the computer -->
+    <section class="panel" x-show="onPhone()">
+      <h2 x-text="$t('admin.pictures.title')"></h2>
+      <label class="switch field">
+        <input type="checkbox" x-model="form.picture_find" @change="scheduleSave()">
+        <span class="track"><span class="knob"></span></span>
+        <span><span x-text="$t('admin.pictures.find')"></span> <small x-text="$t('admin.pictures.findHint')"></small></span>
+      </label>
+    </section>
+
     <!-- The voice reading the backs (the relay's), as on the computer -->
     <section class="panel" x-show="onPhone()">
       <h2 x-text="$t('admin.voice.title')"></h2>

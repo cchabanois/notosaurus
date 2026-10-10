@@ -14,10 +14,14 @@ import kotlinx.serialization.json.put
 import java.io.File
 import java.security.MessageDigest
 
-/** The cards' pictures, as the computer's (app/main.py, pictures.py): drawn through the
- * relay (/v1/picture, or /v1/figure for a figure), the user's own photo, or none; kept in
+/** The cards' pictures, as the computer's (app/main.py, pictures.py): found or drawn through
+ * the relay (/v1/picture, or /v1/figure for a figure), the user's own photo, or none; kept in
  * the lesson's images/, named as the computer names them, unused ones removed. */
-class Pictures(private val lessons: Lessons, private val relay: () -> Relay) {
+class Pictures(
+    private val lessons: Lessons,
+    private val relay: () -> Relay,
+    private val find: () -> Boolean = { true }, // a free picture found first for a real thing (the settings)
+) {
     /** The missing pictures drawn, a few at a time: {"lesson", "failures", "error"}. A
      * card without its picture is still a card: counted, not fatal. */
     suspend fun drawMissing(lesson: JsonObject): JsonObject {
@@ -82,7 +86,10 @@ class Pictures(private val lessons: Lessons, private val relay: () -> Relay) {
             val svg = relay().post("figure", buildJsonObject { put("description", figure) }).string("svg")
             save(lessonId, card.string("id"), svg.toByteArray(), "svg")
         } else {
-            save(lessonId, card.string("id"), relay().picture(card.string("picture_prompt"), fresh), "jpg")
+            // A real thing (Card.picture_search): the relay finds a free picture first, unless always drawn
+            val search = if (find() && !fresh) card.string("picture_search").trim() else ""
+            val context = "${card.string("front").trim()} → ${card.string("back").trim()}"
+            save(lessonId, card.string("id"), relay().picture(card.string("picture_prompt"), fresh, search, context), "jpg")
         }
     }
 
@@ -108,11 +115,14 @@ class Pictures(private val lessons: Lessons, private val relay: () -> Relay) {
         return lesson
     }
 
+    // Not on a sentence with gaps: AnkiDroid shows no picture on it (not paid for, then)
     private fun JsonObject.missingPicture() =
-        string("picture").isEmpty() && (string("picture_prompt").isNotBlank() || string("figure").isNotBlank())
+        string("picture").isEmpty() && (string("picture_prompt").isNotBlank() || string("figure").isNotBlank()) &&
+            !CLOZE.containsMatchIn(string("front"))
 
     companion object {
         private const val AT_ONCE = 4
+        private val CLOZE = Regex("""\{\{c\d+::""") // a gap, as core/notosaurus_core/cards.py
         private val NAME = Regex("""^picture-[a-z0-9]+-[a-f0-9]{8}\.(jpg|svg)$""") // the files we write
     }
 }

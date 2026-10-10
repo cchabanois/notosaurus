@@ -41,6 +41,9 @@ class AIConfig(BaseModel):
     # pictures.service; "none" = no pictures) and its model ("" = that service's default)
     picture_service: str = ""
     picture_model: str = ""
+    # A card's picture showing a real thing (Card.picture_search): a free one found first
+    # (stock.find, chosen by the cards' AI), drawn when none fits. False: always drawn
+    picture_find: bool = True
 
     def model_for_provider(self) -> str:
         return self.model.strip() or DEFAULT_MODELS.get(self.llm, "")
