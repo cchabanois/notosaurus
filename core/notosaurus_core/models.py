@@ -60,8 +60,8 @@ class Card(BaseModel):
     )
     figure: str = Field(
         default="",
-        description="Only when the card needs an exact figure (see the rules): what to draw, every label "
-        "with its exact text. Empty otherwise.",
+        description="When an exact figure makes the card clearer (see the rules: geometry, or a notion the "
+        "lesson's page shows a figure for): what to draw, every label with its exact text. Empty otherwise.",
     )
     fun_fact: str = Field(
         default="",
@@ -184,3 +184,12 @@ class Rephrased(BaseModel):
 
 class Picked(BaseModel):
     choice: int = Field(description="The number of the picture that fits, -1 when none does.")
+
+
+class CardFigure(BaseModel):
+    card: int = Field(description="The card's number, as listed.")
+    figure: str = Field(description="What to draw, every label with its exact text; empty when no figure truly helps.")
+
+
+class Figures(BaseModel):
+    figures: list[CardFigure] = Field(default_factory=list)

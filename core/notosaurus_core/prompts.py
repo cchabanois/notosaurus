@@ -363,3 +363,17 @@ unclear, a text or a logo rather than a picture, unsuitable for pupils)."""
 
 def _pick_text(search: str, context: str, count: int) -> str:
     return f"The card: {context}\nThe picture searched for: {search}\nCandidates 0 to {count - 1}, in that order."
+
+
+FIGURES_RULES = """\
+A pupil's flashcards were made from a lesson; the cards listed were meant to show a \
+figure on their back, with the answer, but it wasn't described. For each, describe the \
+exact figure to draw, in the cards' language: the shapes, their proportions, the shaded \
+area, every label with its exact text, the letters those of the card; when the lesson's \
+page shows a figure for the notion, follow it. On the back it may show the answer. An \
+empty figure when none truly helps the card (it is then drawn without one)."""
+
+
+def _figures_text(cards: list[str]) -> str:
+    listed = "\n".join(f"{n}. {card}" for n, card in enumerate(cards))
+    return f"The cards (front → back), by number:\n{listed}"

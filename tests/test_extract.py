@@ -233,3 +233,38 @@ def test_pdf_page_texts_go_to_the_ai_and_stay_with_the_lesson(client, monkeypatc
     # One text per photo, or none: the AI never gets a text on the wrong photo
     client.post("/api/extract", files=files, data={"prompt": "FR → ES", "page_texts": json.dumps([page])})
     assert seen[-1] == []
+
+
+def test_a_figure_meant_but_left_undescribed_is_described(monkeypatch):
+    """The model set a card's picture on the back but described no figure (now and then,
+    thinking little): one light call, seeing the page, describes it. Other cards: no call."""
+    import asyncio
+    from concurrent.futures import ThreadPoolExecutor
+
+    from notosaurus_core.config import AIConfig
+    from notosaurus_core.models import CardFigure, Figures
+
+    calls = []
+
+    async def generate(s, images, text, schema, system=None, **options):
+        calls.append((schema.__name__, text, len(images)))
+        if schema is Figures:
+            return Figures(figures=[CardFigure(card=0, figure="Deux ensembles A et B, leur partie commune hachurée")])
+        cards = [
+            {"front": "L'intersection de A et B ?", "back": "Les éléments communs", "picture_on_back": True},
+            {"front": "Notation ?", "back": "A ∩ B"},
+            {"front": "Le produit cartésien ?", "back": "Les couples", "picture_on_back": True, "figure": "Un tableau"},
+        ]
+        return schema.model_validate({"deck": "Maths", "cards": cards})
+
+    monkeypatch.setattr(llm, "_generate", generate)
+    s = AIConfig(llm="gemini", gemini_api_key="k")
+    with ThreadPoolExecutor(1) as pool:
+        found = pool.submit(asyncio.run, llm.extract_cards(s, [], "Automatique")).result()
+    assert [c.figure for c in found.deck.cards] == [
+        "Deux ensembles A et B, leur partie commune hachurée",
+        "",
+        "Un tableau",
+    ]
+    assert [name for name, _, _ in calls][1] == "Figures" and len(calls) == 2
+    assert "0. L'intersection de A et B ? → Les éléments communs" in calls[1][1]  # only the card left undescribed

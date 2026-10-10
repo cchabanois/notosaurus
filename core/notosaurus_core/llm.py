@@ -15,6 +15,7 @@ What the AI is told is in prompts.py; what every call shares (photos, errors, th
 calls recorded, the cards streamed) in calls.py.
 """
 
+import logging
 from functools import cache
 
 from pydantic import BaseModel, Field, create_model
@@ -32,15 +33,17 @@ from .demo import (
     _fake_revision,
     _lets_choose,
 )
-from .models import Card, Deck, Dictation, Explanation, Extraction, Frame, Picked, Rephrased, Revision
+from .models import Card, Deck, Dictation, Explanation, Extraction, Figures, Frame, Picked, Rephrased, Revision
 from .prompts import (
     DICTATION_RULES,
     EXPLAIN_RULES,
+    FIGURES_RULES,
     PICK_RULES,
     REPHRASE_RULES,
     SYSTEM_PROMPT,
     _dictation_text,
     _explain_text,
+    _figures_text,
     _pick_text,
     _rephrase_text,
     _revision_text,
@@ -48,6 +51,8 @@ from .prompts import (
 )
 from .providers import anthropic, gemini, openai_like
 from .providers.openai_like import list_models  # noqa: F401 (llm's API)
+
+log = logging.getLogger("notosaurus")
 
 # What the AI sees of a card: what it fills, and only that. Anthropic refuses a response
 # schema with too many optional fields ("Schema is too complex"): the fields Notosaurus
@@ -131,6 +136,7 @@ async def extract_cards(
     answer = await _generate(s, images, text, schema, quick=quick, on_card=on_card)
     result = Extraction.model_validate(_accepted(answer).model_dump())
     diagrams.normalize(result.cards, sizes, fmt)
+    await _complete_figures(s, images, result.cards)
     return Extracted(
         deck=Deck(deck=result.deck, cards=result.cards),
         turns=diagrams.turns(result.text_lines, sizes, fmt),
@@ -138,6 +144,25 @@ async def extract_cards(
         back_language=result.back_language.strip(),
         choice=result.choice.strip(),
     )
+
+
+async def _complete_figures(s: AIConfig, images: list[Image], cards: list[Card]) -> None:
+    """Cards whose picture goes on the back but that have neither picture nor figure: the
+    model decided on a figure but left it undescribed (it happens now and then, more when
+    it thinks little). One light call, seeing the lesson's pages, describes them; a card
+    still without one stands as it is."""
+    todo = [c for c in cards if c.picture_on_back and not (c.figure.strip() or c.picture_prompt.strip() or c.mask)]
+    if not todo:
+        return
+    text = _figures_text([f"{c.front.strip()} → {c.back.strip()}" for c in todo])
+    try:
+        found = await _generate(s, images, text, Figures, FIGURES_RULES, light=True)
+    except ExtractionError as e:
+        log.warning("Figures left undescribed: %s", e)
+        return
+    for item in found.figures:
+        if 0 <= item.card < len(todo) and item.figure.strip():
+            todo[item.card].figure = item.figure.strip()
 
 
 async def draw_figure(s: AIConfig, description: str) -> str:
