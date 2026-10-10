@@ -711,7 +711,8 @@
       "truncated": "Réponse tronquée : trop de cartes d'un coup, essaie avec moins de pages.",
       "refused": "Demande refusée : Notosaurus ne fait que des cartes pour apprendre, adaptées à des élèves.",
       "missing_url": "Indique l'adresse du service dans les réglages (⚙️).",
-      "no_audio": "La dictée passe par Gemini : {provider} n'entend pas les enregistrements."
+      "no_audio": "La dictée passe par Gemini : {provider} n'entend pas les enregistrements.",
+      "timeout": "{provider} n'a pas répondu à temps : réessaie."
     },
     "anki": {
       "unreachable": "Anki est injoignable : lance Anki sur l'ordinateur.",

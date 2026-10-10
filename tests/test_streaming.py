@@ -6,6 +6,7 @@ import json
 import types as py_types
 from concurrent.futures import ThreadPoolExecutor
 
+import pytest
 from google.genai import errors, types
 
 from notosaurus_core import llm
@@ -84,6 +85,58 @@ def test_gemini_tells_each_card_and_starts_again_with_the_next_model(monkeypatch
     assert fake.models == ["gemini-x", "gemini-y"]
     assert told == [told[0], None, {"front": "la mère", "back": "la madre"}, {"front": "le père", "back": "el padre"}]
     assert [c.back for c in found.deck.cards] == ["la madre", "el padre"]
+
+
+class StallingGemini(StreamingGemini):
+    """A Gemini whose first models stop answering halfway (`stalls`: how many)."""
+
+    def __init__(self, answer, stalls=1):
+        super().__init__(answer)
+        self.stalls, self.closed = stalls, 0
+
+    async def stream(self, model, contents, config):
+        self.models.append(model)
+        stalling = len(self.models) <= self.stalls
+        pieces = [self.answer[i : i + 20] for i in range(0, len(self.answer), 20)]
+
+        async def chunks():
+            try:
+                for n, text in enumerate(pieces):
+                    if stalling and n == 3:
+                        await asyncio.sleep(3600)  # nothing more, ever
+                    last = n == len(pieces) - 1
+                    candidate = py_types.SimpleNamespace(finish_reason=types.FinishReason.STOP if last else None)
+                    yield py_types.SimpleNamespace(
+                        text=text, candidates=[candidate], usage_metadata=None, prompt_feedback=None
+                    )
+            finally:
+                self.closed += 1
+
+        return chunks()
+
+
+def test_an_answer_that_stops_coming_is_given_up_on(monkeypatch):
+    """Seen on the relay: a stream with nothing more for minutes. The next model is tried;
+    none answering: said, rather than waited for forever."""
+    answer = json.dumps({"cards": [{"front": "la mère", "back": "la madre"}], "deck": "D"})
+    monkeypatch.setattr(gemini, "NEXT_PART_S", 0.05)
+    fake = StallingGemini(answer)
+    monkeypatch.setattr(gemini, "_gemini_client", lambda s: fake)
+    told = []
+
+    async def on_card(card):
+        told.append(card)
+
+    s = AIConfig(gemini_api_key="k", model="gemini-x", fallback_models="gemini-y")
+    found = run(llm.extract_cards(s, [], "FR → ES", on_card=on_card))
+    assert fake.models == ["gemini-x", "gemini-y"] and fake.closed == 2  # the stalled stream closed too
+    assert [c.back for c in found.deck.cards] == ["la madre"]
+
+    stalling = StallingGemini(answer, stalls=2)
+    monkeypatch.setattr(gemini, "_gemini_client", lambda s: stalling)
+    with pytest.raises(llm.ExtractionError) as e:
+        run(llm.extract_cards(s, [], "FR → ES", on_card=on_card))
+    assert (e.value.code, e.value.params) == ("llm.timeout", {"provider": "Gemini"})
 
 
 def lines(res) -> list[dict]:

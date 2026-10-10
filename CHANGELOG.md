@@ -31,6 +31,7 @@ Each pull request adds a line under **Unreleased**. See [Releasing](CONTRIBUTING
 
 ### Changed
 
+- Gemini's answer stopping halfway (seen once: nothing for minutes) is given up on after 45 s of silence (90 s before its first part): the next model starts again, and if none answers, “Gemini didn't answer in time: try again” instead of waiting forever.
 - For developers: a fresh install of the Android app calls the test relay in a debug build, the real one in a release (never the test one); the release build passes Android's checks.
 - For developers: the relay's API each released app speaks is frozen (`core/relay-api-releases/`), and a test (`tools/relay_compat.py`) refuses a change that would break an app already released.
 - For developers: the Android app makes its AnkiDroid note types from `static/note-types.json`, written from `app/anki.py` (`tools/note_types.py`): one definition for both. Picture cards get the computer's picture note type on Android too.

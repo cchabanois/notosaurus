@@ -170,10 +170,12 @@ class Relay(baseUrl: String, private val key: String) {
         private val JPEG = "image/jpeg".toMediaType()
         private val AAC = "audio/aac".toMediaType()
 
-        // An extraction takes up to a minute or two: the AI reads every page
+        // An extraction takes up to a minute or two: the AI reads every page. Silent at most
+        // 3 minutes (a model stalled, then the next one: core's gemini.FIRST_PART_S twice)
+        // before the relay says so: waited for a little longer, under Cloud Run's 5 minutes
         private val client = OkHttpClient.Builder()
             .connectTimeout(10, TimeUnit.SECONDS)
-            .readTimeout(180, TimeUnit.SECONDS)
+            .readTimeout(240, TimeUnit.SECONDS)
             .writeTimeout(60, TimeUnit.SECONDS)
             .build()
     }
