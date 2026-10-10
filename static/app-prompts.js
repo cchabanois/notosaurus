@@ -3,13 +3,16 @@
 
 const promptsPart = {
   // --- Prompts ---------------------------------------------------------
-  async loadPrompts(selectId) {
+  // `initial`: the page's first load, which comes after the settings: a prompt chosen or
+  // text written meanwhile stays (it was replaced by the last prompt used)
+  async loadPrompts(selectId, initial = false) {
     try {
       this.prompts = await (await api("/api/prompts")).json();
     } catch (e) {
       this.error = t("app.prompt.unavailable", { message: e.message });
       return;
     }
+    if (initial && (this.promptChosen || this.form.text.trim())) return;
     // Ids: the user's are numbers, Notosaurus's "notosaurus:…" (stored as text in the browser)
     const found = this.prompts.find((c) => String(c.id) === String(selectId)) ?? this.prompts[0];
     this.selectedId = found?.id ?? null;
@@ -62,6 +65,7 @@ const promptsPart = {
   // "✏️ Free": a prompt for this time only (kept with the lesson, not in the list).
   // Voice "auto": a voice only when the backs are in a language being learned.
   chooseFree() {
+    this.promptChosen = true;
     if (this.selectedId !== null) {
       this.selectedId = null;
       this.form = { name: "", text: "", deck: "", voice: "auto", typing: false, dictation: false };
@@ -70,6 +74,7 @@ const promptsPart = {
   },
 
   choose(id) {
+    this.promptChosen = true;
     this.selectedId = id;
     this.selectPrompt();
     this.picker.open = false;
