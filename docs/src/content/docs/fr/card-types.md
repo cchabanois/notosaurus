@@ -81,7 +81,7 @@ quand c'est utile.
 
 ## Images
 
-La consigne **Mots en images** met au recto une image de chaque mot, dessinée par un modèle
+La consigne **Vocabulaire en images (langues)** met au recto une image de chaque mot, dessinée par un modèle
 d'images : de moins d'un centime à quelques centimes par image. Les images sont dessinées par
 le service d'IA des cartes quand il sait dessiner (Gemini, OpenAI, OpenRouter), sinon par un
 autre choisi dans **Réglages → Images des cartes** (Claude et les modèles locaux ne dessinent

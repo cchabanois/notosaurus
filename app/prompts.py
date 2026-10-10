@@ -25,7 +25,6 @@ BUILTIN = (
     "quiz",
     "true_false",
     "formulas",
-    "school_formulas",
     "geometry",
     "diagram",
     "pictures",

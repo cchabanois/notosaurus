@@ -32,10 +32,9 @@ be changed, but they can be **duplicated** to make your own version.
 | Multiple choice | A question, the right answer and three plausible wrong ones. |
 | True / false | Statements, half of them false with one precise mistake. |
 | Formulas (maths, physics…) | One card per formula, with what each letter stands for. |
-| Middle school maths formulas | The main formulas of middle school, without a photo. |
 | Geometry (with figures) | Figures, properties and vocabulary, with an exact figure drawn on the cards. |
 | Diagram to complete | The labels of a diagram hidden behind numbers: one card per label. |
-| Words in pictures | The picture of each word on the front, drawn by an image model; the word on the back. |
+| Vocabulary in pictures (languages) | The picture of each word on the front, drawn by an image model; the word in the language being learned on the back. |
 | Word list (no photo) | One card per word of the list you add at the end of the instructions (English → Spanish: duplicate it for another language). |
 | Spelling dictation | One card per word to spell: a sentence with the word missing on the front, the word on the back, a spelling tip. |
 

@@ -77,7 +77,7 @@ make such cards, and so do **Automatic** and the formula instructions when it he
 
 ## Pictures
 
-The **Words in pictures** instructions put a picture of each word on the front, drawn by an
+The **Vocabulary in pictures (languages)** instructions put a picture of each word on the front, drawn by an
 image model: from less than a cent to a few cents per picture. Pictures are drawn by the AI
 service of the cards when it can draw (Gemini, OpenAI, OpenRouter), otherwise by another one
 chosen in **Settings → Pictures on cards** (Claude and local models can't draw). That section

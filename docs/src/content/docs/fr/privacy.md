@@ -12,7 +12,7 @@ souvent l'écriture d'un enfant, parfois son nom : voici où elle va.
   corriger les cartes. Le texte d'un PDF numérique part avec sa page.
 - **Les versos des cartes** vont au service de synthèse vocale de Microsoft, pour faire l'audio,
   quand une voix est choisie.
-- **La description d'une image** va au service qui la dessine, pour « Mots en images ».
+- **La description d'une image** va au service qui la dessine, pour « Vocabulaire en images ».
 
 Rien d'autre : ni statistiques, ni pistage. Avec un modèle chez toi (voir
 [Services d'IA](../ai-services/#un-modèle-chez-toi)), les photos ne sortent pas non plus de la

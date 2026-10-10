@@ -1,6 +1,8 @@
 """The prompts: Notosaurus's (in the page's language, read-only) and the user's."""
 
 import json
+import re
+from pathlib import Path
 
 from app import prompts
 
@@ -151,3 +153,10 @@ def test_automatic_prompt_says_what_the_ai_chose(client):
     saved = client.put(f"/api/lessons/{lesson['id']}", json={"deck": "Autre", "cards": lesson["cards"]}).json()
     assert saved["choice"] == lesson["choice"]  # not lost when the lesson is edited
     assert client.post("/api/extract", data={"prompt": "FR → ES"}).json()["choice"] == ""
+
+
+def test_the_android_app_has_the_same_prompts():
+    """The app lists Notosaurus's prompts too (Prompts.kt): the same, in the same order."""
+    kotlin = Path("android/app/src/main/java/app/notosaurus/Prompts.kt").read_text(encoding="utf-8")
+    listed = re.search(r"BUILTIN = listOf\(([^)]*)\)", kotlin).group(1)
+    assert tuple(re.findall(r'"(\w+)"', listed)) == prompts.BUILTIN
