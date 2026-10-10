@@ -193,3 +193,25 @@ class CardFigure(BaseModel):
 
 class Figures(BaseModel):
     figures: list[CardFigure] = Field(default_factory=list)
+
+
+class PicturePlan(BaseModel):
+    """What a card's picture should be, from the card and what the user asked for it."""
+
+    kind: Literal["figure", "picture"] = Field(
+        description='"figure": something exact a clean drawing shows (geometry, a diagram, sets, a graph, a '
+        'table, labels); "picture": a thing, an animal, a place, a person, a scene.'
+    )
+    description: str = Field(
+        description="A figure: what to draw, in the cards' language, every label with its exact text. A "
+        "picture: what to draw, in English, one concrete subject a child recognises at once."
+    )
+    search: str = Field(
+        default="",
+        description="A picture of a real, specific thing: a short English search for a free picture of it. "
+        "Empty otherwise.",
+    )
+
+
+class SearchWords(BaseModel):
+    words: str = Field(description="A few English words to search free pictures of it.")

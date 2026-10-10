@@ -479,6 +479,12 @@ class LocalServerTest {
         relay.dispatcher = object : mockwebserver3.Dispatcher() {
             override fun dispatch(request: RecordedRequest) = when (request.url.encodedPath) {
                 "/v1/picture" -> MockResponse.Builder().setHeader("Content-Type", "image/jpeg").body("jpeg " + request.body!!.utf8()).build()
+                // Another subject written for a picture: the relay's AI plans it (a picture, as written)
+                "/v1/plan-picture" -> MockResponse.Builder().body(buildJsonObject {
+                    put("kind", "picture")
+                    put("description", json.parseToJsonElement(request.body!!.utf8()).jsonObject.string("asked"))
+                    put("usage", buildJsonObject { put("credits", 1); put("credits_left", 96) })
+                }.toString()).build()
                 else -> MockResponse.Builder().body("""{"svg": "<svg/>", "usage": {"credits": 1, "credits_left": 97}}""").build()
             }
         }
@@ -1079,5 +1085,44 @@ class LocalServerTest {
         assertEquals(HttpStatusCode.OK, again.status)
         client.post("/api/lessons/$id/pictures") { page() }
         assertFalse("search" in asked.last())
+    }
+
+    @Test
+    fun drawDecidesAFigureOrAPicture() = app { client ->
+        relayAnswers("""{"deck": {"deck": "Maths", "cards": [{"front": "La réunion de A et B ?", "back": "\\\\(A \\\\cup B\\\\)"}]},
+            "turns": [], "usage": {"credits": 1, "credits_left": 99}}""")
+        val lesson = client.submitFormWithBinaryData("/api/extract", formData { append("prompt", "p") }) { page() }.json().jsonObject
+        relay.takeRequest(5, TimeUnit.SECONDS) // the extraction
+        val asked = mutableListOf<Pair<String, String>>()
+        relay.dispatcher = object : mockwebserver3.Dispatcher() {
+            override fun dispatch(request: RecordedRequest): MockResponse {
+                asked += request.url.encodedPath to request.body!!.utf8()
+                return when (request.url.encodedPath) {
+                    "/v1/plan-picture" -> MockResponse.Builder().body(
+                        """{"kind": "figure", "description": "Deux ensembles, leur réunion hachurée", "search": "", "usage": {"credits": 1, "credits_left": 98}}""",
+                    ).build()
+                    "/v1/figure" -> MockResponse.Builder().body("""{"svg": "<svg/>", "usage": {"credits": 1, "credits_left": 97}}""").build()
+                    else -> MockResponse.Builder().body("""{"results": [], "words": "union Venn diagram"}""").build()
+                }
+            }
+        }
+        val id = lesson.string("id")
+        val card = lesson["cards"]!!.jsonArray[0].jsonObject.string("id")
+        val drawn = client.post("/api/lessons/$id/cards/$card/picture/draw") {
+            page("fr"); contentType(ContentType.Application.Json); setBody("""{"subject": ""}""")
+        }.json().jsonObject["card"]!!.jsonObject
+        assertEquals("Deux ensembles, leur réunion hachurée", drawn.string("figure"))
+        assertTrue(drawn.string("picture").endsWith(".svg"))
+        val plan = json.parseToJsonElement(asked[0].second).jsonObject
+        assertEquals("/v1/plan-picture", asked[0].first)
+        assertEquals("French", plan.string("language"))
+        assertEquals("/v1/figure", asked[1].first)
+
+        client.post("/api/pictures/search") {
+            page(); contentType(ContentType.Application.Json); setBody("""{"subject": "la réunion", "context": "La réunion ? → A ∪ B"}""")
+        }
+        val search = json.parseToJsonElement(asked.last().second).jsonObject
+        assertEquals("true", search["translate"]!!.jsonPrimitive.content) // written in any language
+        assertEquals("La réunion ? → A ∪ B", search.string("context"))
     }
 }

@@ -98,8 +98,10 @@ also chooses the image model, or **No pictures**:
 
 The **🖼️** button of a card opens its **Picture** panel:
 
-- **What to draw (in English)**: change the description, then **🎨 Draw again** (from under a
-  cent to a few US cents a drawing, depending on the model);
+- **What the picture should show**, in your own language: leave it empty and **🎨 Draw** lets the
+  AI decide from the card an exact figure (a diagram, geometry) or a drawn picture; or write
+  what you want ("two overlapping sets, their union hatched", "a red apple"). A drawing costs from
+  under a cent to a few US cents, depending on the model;
 - **📷 My photo**: put your own photo instead, for free;
 - **✕ No picture**: remove it;
 - **On the back (with the answer)**: when the picture gives the answer away.

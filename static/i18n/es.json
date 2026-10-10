@@ -301,8 +301,8 @@
         "other": "No se han podido dibujar {count} imágenes: esas tarjetas no tienen."
       },
       "panel": "Imagen",
-      "subject": "Qué buscar o dibujar (en inglés)",
-      "subjectPlaceholder": "p. ej.: a red apple",
+      "subject": "Lo que debe mostrar la imagen",
+      "subjectPlaceholder": "Déjalo vacío: la IA decide según la tarjeta. Ej.: dos conjuntos que se cruzan",
       "draw": "🎨 Dibujar",
       "redraw": "🎨 Volver a dibujar",
       "photo": "📷 Mi foto",

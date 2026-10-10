@@ -328,7 +328,7 @@ class LocalServer(
         api("POST", "/api/lessons/{id}/cards/{card}/picture/draw") {
             val lesson = lesson()
             val subject = body()["subject"]?.takeIf { it !is JsonNull }?.jsonPrimitive?.content
-            pictures.redraw(lesson, cardIndex(lesson), subject)
+            pictures.redraw(lesson, cardIndex(lesson), subject, languageName())
         }
         // The user's own photo as the card's picture (the page made it card size)
         post("/api/lessons/{id}/cards/{card}/picture") {
@@ -349,8 +349,9 @@ class LocalServer(
         }
         // Free pictures of a subject to choose from (the relay: Commons, Openverse, Pixabay), then the one chosen
         api("POST", "/api/pictures/search") {
-            val subject = body().string("subject").trim().takeIf { it.isNotEmpty() } ?: throw BadRequest("picture.no_subject")
-            relay().searchPictures(subject)
+            val req = body()
+            val subject = req.string("subject").trim().takeIf { it.isNotEmpty() } ?: throw BadRequest("picture.no_subject")
+            relay().searchPictures(subject, req.string("context")) // written in any language: translated first
         }
         api("POST", "/api/lessons/{id}/cards/{card}/picture/found") {
             val lesson = lesson()

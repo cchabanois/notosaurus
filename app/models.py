@@ -122,9 +122,10 @@ class SettingsUpdate(BaseModel):
 
 
 class PictureSearch(BaseModel):
-    """Free pictures of a subject (English): stock.search."""
+    """Free pictures of what the user wrote (any language): stock.search."""
 
     subject: str = Field(min_length=1, max_length=200)
+    context: str = Field(default="", max_length=2000)  # the card, "front → back"
 
 
 class FoundPicture(BaseModel):

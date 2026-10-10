@@ -130,7 +130,11 @@ class Relay(baseUrl: String, private val key: String) {
     }
 
     /** Free pictures of a subject to choose from (/v1/pictures/search): {"results": [stock.Found…]}. */
-    suspend fun searchPictures(subject: String): JsonObject = post("pictures/search", buildJsonObject { put("subject", subject) })
+    suspend fun searchPictures(subject: String, context: String = ""): JsonObject = post("pictures/search", buildJsonObject {
+        put("subject", subject)
+        put("context", context.take(8000))
+        put("translate", true) // what the user wrote, any language
+    })
 
     /** One of the pictures found (/v1/pictures/found): the JPEG, card size, and where it comes from. */
     suspend fun foundPicture(source: String, id: String): Picture {

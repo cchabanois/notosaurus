@@ -120,3 +120,56 @@ def test_shaded_and_shared_areas_kept_inside_the_figure():
     assert "<pattern" in svg and "<clipPath" in svg and "<stop" in svg and 'patternTransform="rotate(45)"' in svg
     assert 'fill="url(#hatch)"' in svg and 'clip-path="url(#inA)"' in svg and 'stroke="url(#g)"' in svg
     assert "evil" not in svg and 'translate"' not in svg  # elsewhere, or not a plain reference: gone
+
+
+def test_draw_decides_a_figure_or_a_picture(client, monkeypatch):
+    """“🎨 Draw” on a card with nothing: the AI decides from the card (and what was written,
+    any language) a figure or a picture, and describes it."""
+    from notosaurus_core import llm
+    from notosaurus_core.models import PicturePlan
+
+    asked = []
+
+    async def plan(s, front, back, written="", language="English"):
+        asked.append((front, back, written, language))
+        if "\\cup" in back:
+            return PicturePlan(kind="figure", description="Deux ensembles A et B, leur réunion hachurée")
+        return PicturePlan(kind="picture", description="a red apple", search="red apple")
+
+    monkeypatch.setattr(llm, "plan_picture", plan)
+    lesson = client.post("/api/extract", data={"prompt": "FR → ES"}).json()
+    cards = [{**lesson["cards"][0], "front": "La réunion de A et B ?", "back": r"\(A \cup B\)"}, lesson["cards"][1]]
+    client.put(f"/api/lessons/{lesson['id']}", json={**lesson, "cards": cards})
+    url = f"/api/lessons/{lesson['id']}/cards/{{}}/picture/draw"
+    french = {"X-Notosaurus-Lang": "fr"}
+
+    union = client.post(url.format(cards[0]["id"]), json={"subject": ""}, headers=french).json()["card"]
+    assert union["figure"] == "Deux ensembles A et B, leur réunion hachurée" and union["picture"].endswith(".svg")
+    assert union["picture_prompt"] == "" and asked[-1] == ("La réunion de A et B ?", r"\(A \cup B\)", "", "French")
+
+    apple = client.post(url.format(cards[1]["id"]), json={"subject": "une pomme rouge"}, headers=french).json()["card"]
+    assert (apple["picture_prompt"], apple["picture_search"], apple["figure"]) == ("a red apple", "red apple", "")
+    assert asked[-1][2] == "une pomme rouge"
+
+    # A figure's own description changed: that figure redrawn, nothing decided again
+    count = len(asked)
+    again = client.post(url.format(cards[0]["id"]), json={"subject": "Deux ensembles, rien de hachuré"}).json()["card"]
+    assert again["figure"] == "Deux ensembles, rien de hachuré" and len(asked) == count
+
+
+def test_search_written_in_any_language(client, monkeypatch):
+    from notosaurus_core import llm, stock
+
+    async def words(s, written, context=""):
+        assert context == "La réunion ? → A ∪ B"
+        return "union Venn diagram"
+
+    async def search(subject, pixabay_key=""):
+        return []
+
+    monkeypatch.setattr(llm, "search_words", words)
+    monkeypatch.setattr(stock, "search", search)
+    res = client.post(
+        "/api/pictures/search", json={"subject": r"\(A \cup B\)", "context": "La réunion ? → A ∪ B"}
+    ).json()
+    assert res == {"results": [], "words": "union Venn diagram"}

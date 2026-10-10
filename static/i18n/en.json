@@ -301,8 +301,8 @@
         "other": "{count} pictures couldn't be drawn: those cards have none."
       },
       "panel": "Picture",
-      "subject": "What to find or draw (in English)",
-      "subjectPlaceholder": "e.g. a red apple",
+      "subject": "What the picture should show",
+      "subjectPlaceholder": "Leave it empty: the AI decides from the card. E.g. two overlapping sets",
       "draw": "🎨 Draw",
       "redraw": "🎨 Draw again",
       "photo": "📷 My photo",

@@ -51,12 +51,31 @@ class Pictures(
 
     /** Card `i`'s picture drawn again: from its subject (or figure), or `subject` written by
      * the user. {"card", "lesson"}. */
-    suspend fun redraw(lesson: JsonObject, i: Int, subject: String?): JsonObject {
+    suspend fun redraw(lesson: JsonObject, i: Int, subject: String?, language: String = "English"): JsonObject {
         val cards = lesson.cards()
-        val field = if (cards[i].string("figure").isNotBlank()) "figure" else "picture_prompt"
-        val asked = (subject ?: cards[i].string(field)).trim()
-        if (asked.isEmpty()) throw BadRequest("picture.no_subject")
-        cards[i] = drawn(lesson.string("id"), cards[i].with(field to JsonPrimitive(asked)), fresh = true)
+        var card = cards[i]
+        val current = card.string("figure").ifBlank { card.string("picture_prompt") }.trim()
+        val asked = subject?.trim().orEmpty()
+        // Its own description unchanged: drawn again as it is. Otherwise (none yet, or something
+        // else written, any language): the relay's AI decides a figure or a picture and describes it
+        if (card.string("figure").isNotBlank() && asked.isNotEmpty()) {
+            card = card.with("figure" to JsonPrimitive(asked)) // a figure stays one: drawn from what was written
+        } else if (current.isEmpty() || (subject != null && asked != current)) {
+            val plan = relay().post("plan-picture", buildJsonObject {
+                put("front", card.string("front"))
+                put("back", card.string("back"))
+                put("asked", asked)
+                put("language", language)
+            })
+            val description = plan.string("description").trim().ifEmpty { throw BadRequest("picture.no_subject") }
+            val figure = plan.string("kind") == "figure"
+            card = card.with(
+                "figure" to JsonPrimitive(if (figure) description else ""),
+                "picture_prompt" to JsonPrimitive(if (figure) "" else description),
+                "picture_search" to JsonPrimitive(if (figure) "" else plan.string("search")),
+            )
+        }
+        cards[i] = drawn(lesson.string("id"), card, fresh = true)
         return answer(lesson, cards, i)
     }
 

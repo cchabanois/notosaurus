@@ -41,7 +41,7 @@ from typing import Literal
 from pydantic import BaseModel, Field
 
 from .llm import Extracted
-from .models import Card, Deck, Dictated, Explanation, FollowUp, Revision
+from .models import Card, Deck, Dictated, Explanation, FollowUp, PicturePlan, Revision
 from .stock import Found, Source
 
 PREFIX = "/v1"
@@ -183,7 +183,11 @@ class RephraseRequest(BaseModel):
 class PictureSearchRequest(BaseModel):
     """Free pictures of a subject to choose from. JSON."""
 
-    subject: str = Field(min_length=1, max_length=200, description="What to find, in English.")
+    subject: str = Field(min_length=1, max_length=200, description="What to find (English, unless `translate`).")
+    context: str = Field(default="", max_length=MAX_PROMPT, description='The card, "front → back".')
+    translate: bool = Field(
+        default=False, description="Written in any language: turned into English search words by the AI first."
+    )
 
 
 class FoundPictureRequest(BaseModel):
@@ -248,6 +252,21 @@ class RephraseResponse(BaseModel):
 
 class PictureSearchResponse(BaseModel):
     results: list[Found] = Field(description="The pictures found, at most 8, the sources taking turns.")
+    words: str = Field(default="", description="What was searched for (the translation, when asked).")
+
+
+class PlanPictureRequest(BaseModel):
+    """What a card's picture should be ("🎨 Draw"): an exact figure or an image model's
+    picture, described from the card and what the user wrote. JSON."""
+
+    front: str = Field(max_length=MAX_PROMPT)
+    back: str = Field(max_length=MAX_PROMPT)
+    asked: str = Field(default="", max_length=MAX_SUBJECT, description="What the user wrote, any language.")
+    language: str = Language
+
+
+class PlanPictureResponse(PicturePlan):
+    usage: Usage
 
 
 class FigureResponse(BaseModel):

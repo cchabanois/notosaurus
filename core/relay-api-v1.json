@@ -879,6 +879,108 @@
         }
       }
     },
+    "/v1/plan-picture": {
+      "post": {
+        "summary": "Plan Picture",
+        "description": "What a card's picture should be: a figure or a picture, described (llm.plan_picture).",
+        "operationId": "plan_picture_v1_plan_picture_post",
+        "parameters": [
+          {
+            "name": "X-Notosaurus-Version",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "The client's version (\"1.1.0\").",
+              "title": "X-Notosaurus-Version"
+            },
+            "description": "The client's version (\"1.1.0\")."
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PlanPictureRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PlanPictureResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Codes: `relay.invalid_key`",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "402": {
+            "description": "Codes: `relay.no_credits`",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Codes: `relay.invalid_request`",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "426": {
+            "description": "Codes: `relay.client_outdated`",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Codes: `relay.daily_limit`",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Codes: `relay.unavailable`",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/v1/pictures/search": {
       "post": {
         "summary": "Search Pictures",
@@ -2027,7 +2129,20 @@
             "maxLength": 200,
             "minLength": 1,
             "title": "Subject",
-            "description": "What to find, in English."
+            "description": "What to find (English, unless `translate`)."
+          },
+          "context": {
+            "type": "string",
+            "maxLength": 8000,
+            "title": "Context",
+            "description": "The card, \"front → back\".",
+            "default": ""
+          },
+          "translate": {
+            "type": "boolean",
+            "title": "Translate",
+            "description": "Written in any language: turned into English search words by the AI first.",
+            "default": false
           }
         },
         "type": "object",
@@ -2046,6 +2161,12 @@
             "type": "array",
             "title": "Results",
             "description": "The pictures found, at most 8, the sources taking turns."
+          },
+          "words": {
+            "type": "string",
+            "title": "Words",
+            "description": "What was searched for (the translation, when asked).",
+            "default": ""
           }
         },
         "type": "object",
@@ -2094,6 +2215,75 @@
         ],
         "title": "PictureSource",
         "description": "Where a card's picture comes from, kept with the card (and, on the computer, in its\nAnki note's hidden Source field): to check a free picture's page later, or find the\ncards using one that must go."
+      },
+      "PlanPictureRequest": {
+        "properties": {
+          "front": {
+            "type": "string",
+            "maxLength": 8000,
+            "title": "Front"
+          },
+          "back": {
+            "type": "string",
+            "maxLength": 8000,
+            "title": "Back"
+          },
+          "asked": {
+            "type": "string",
+            "maxLength": 1000,
+            "title": "Asked",
+            "description": "What the user wrote, any language.",
+            "default": ""
+          },
+          "language": {
+            "type": "string",
+            "maxLength": 50,
+            "title": "Language",
+            "description": "English name of the language to answer in (\"French\").",
+            "default": "English"
+          }
+        },
+        "type": "object",
+        "required": [
+          "front",
+          "back"
+        ],
+        "title": "PlanPictureRequest",
+        "description": "What a card's picture should be (\"🎨 Draw\"): an exact figure or an image model's\npicture, described from the card and what the user wrote. JSON."
+      },
+      "PlanPictureResponse": {
+        "properties": {
+          "kind": {
+            "type": "string",
+            "enum": [
+              "figure",
+              "picture"
+            ],
+            "title": "Kind",
+            "description": "\"figure\": something exact a clean drawing shows (geometry, a diagram, sets, a graph, a table, labels); \"picture\": a thing, an animal, a place, a person, a scene."
+          },
+          "description": {
+            "type": "string",
+            "title": "Description",
+            "description": "A figure: what to draw, in the cards' language, every label with its exact text. A picture: what to draw, in English, one concrete subject a child recognises at once."
+          },
+          "search": {
+            "type": "string",
+            "title": "Search",
+            "description": "A picture of a real, specific thing: a short English search for a free picture of it. Empty otherwise.",
+            "default": ""
+          },
+          "usage": {
+            "$ref": "#/components/schemas/Usage"
+          }
+        },
+        "type": "object",
+        "required": [
+          "kind",
+          "description",
+          "usage"
+        ],
+        "title": "PlanPictureResponse"
       },
       "RephraseRequest": {
         "properties": {

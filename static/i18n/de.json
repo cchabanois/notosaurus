@@ -301,8 +301,8 @@
         "other": "{count} Bilder konnten nicht gezeichnet werden: Diese Karten haben keins."
       },
       "panel": "Bild",
-      "subject": "Was gesucht oder gezeichnet werden soll (auf Englisch)",
-      "subjectPlaceholder": "z. B. a red apple",
+      "subject": "Was das Bild zeigen soll",
+      "subjectPlaceholder": "Leer lassen: die KI entscheidet nach der Karte. Z. B. zwei sich überschneidende Mengen",
       "draw": "🎨 Zeichnen",
       "redraw": "🎨 Neu zeichnen",
       "photo": "📷 Mein Foto",

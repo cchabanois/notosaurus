@@ -198,14 +198,15 @@ def test_redraw_with_another_subject(client, drawn):
     assert res["card"]["picture_prompt"] == "a green apple"
     saved = client.get(f"/api/lessons/{lesson['id']}").json()
     assert saved["cards"][0]["picture"] == res["card"]["picture"]
-    assert [c["kind"] for c in saved["ai_calls"]].count("picture") == 4  # 2 at first + 2 redrawn
+    # 2 at first + 1 drawn again + the new subject planned (figure or picture) and drawn
+    assert [c["kind"] for c in saved["ai_calls"]].count("picture") == 5
 
-    # A card without a picture gets one ("tomorrow"), with a subject written by the user
+    # A card without a picture gets one ("tomorrow"): nothing written, the AI plans it from the card
     tomorrow = cards[3]
-    res = client.post(f"/api/lessons/{lesson['id']}/cards/{tomorrow['id']}/picture/draw", json={"subject": " "})
-    assert res.json()["detail"]["code"] == "picture.no_subject"
     url = f"/api/lessons/{lesson['id']}/cards/{tomorrow['id']}/picture/draw"
-    assert client.post(url, json={"subject": "a calendar"}).json()["card"]["picture"]
+    res = client.post(url, json={"subject": " "}).json()["card"]
+    assert res["picture"] and res["picture_prompt"] == tomorrow["back"]  # the demo AI: the back
+    assert client.post(url, json={"subject": "un calendrier"}).json()["card"]["picture_prompt"] == "un calendrier"
     assert client.post(f"/api/lessons/{lesson['id']}/cards/nope/picture/draw", json={}).status_code == 404
 
 

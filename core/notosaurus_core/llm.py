@@ -33,20 +33,37 @@ from .demo import (
     _fake_revision,
     _lets_choose,
 )
-from .models import Card, Deck, Dictation, Explanation, Extraction, Figures, Frame, Picked, Rephrased, Revision
+from .models import (
+    Card,
+    Deck,
+    Dictation,
+    Explanation,
+    Extraction,
+    Figures,
+    Frame,
+    Picked,
+    PicturePlan,
+    Rephrased,
+    Revision,
+    SearchWords,
+)
 from .prompts import (
     DICTATION_RULES,
     EXPLAIN_RULES,
     FIGURES_RULES,
     PICK_RULES,
+    PLAN_RULES,
     REPHRASE_RULES,
+    SEARCH_WORDS_RULES,
     SYSTEM_PROMPT,
     _dictation_text,
     _explain_text,
     _figures_text,
     _pick_text,
+    _plan_text,
     _rephrase_text,
     _revision_text,
+    _search_words_text,
     _user_text,
 )
 from .providers import anthropic, gemini, openai_like
@@ -238,6 +255,28 @@ async def pick_picture(s: AIConfig, candidates: list[Image], search: str, contex
         return 0 if candidates else None
     found = await _generate(s, candidates, _pick_text(search, context, len(candidates)), Picked, PICK_RULES, light=True)
     return found.choice if 0 <= found.choice < len(candidates) else None
+
+
+async def plan_picture(s: AIConfig, front: str, back: str, asked: str = "", language: str = "English") -> PicturePlan:
+    """What a card's picture should be ("🎨 Draw" in its panel): an exact figure or an image
+    model's picture, described from the card and what the user wrote (any language; empty:
+    the card alone). `language`: the cards', its English name."""
+    if s.llm == "fake":
+        await record(s, "fake", "fake", 0, 0, cost=0.0)
+        return PicturePlan(kind="picture", description=asked.strip() or back.strip(), search=asked.strip())
+    plan = await _generate(s, [], _plan_text(front, back, asked, language), PicturePlan, PLAN_RULES, light=True)
+    plan.description, plan.search = plan.description.strip(), plan.search.strip()
+    return plan
+
+
+async def search_words(s: AIConfig, asked: str, context: str = "") -> str:
+    """A few English words to search free pictures of what the user wrote (any language,
+    maybe LaTeX); `context`: the card, "front → back"."""
+    if s.llm == "fake":
+        await record(s, "fake", "fake", 0, 0, cost=0.0)
+        return asked.strip()
+    found = await _generate(s, [], _search_words_text(asked, context), SearchWords, SEARCH_WORDS_RULES, light=True)
+    return found.words.strip() or asked.strip()
 
 
 async def revise_cards(

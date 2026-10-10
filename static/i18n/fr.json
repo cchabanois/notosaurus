@@ -301,8 +301,8 @@
         "other": "{count} images n'ont pas pu être dessinées : ces cartes n'en ont pas."
       },
       "panel": "Image",
-      "subject": "Ce qu'il faut chercher ou dessiner (en anglais)",
-      "subjectPlaceholder": "ex. : a red apple",
+      "subject": "Ce que l'image doit montrer",
+      "subjectPlaceholder": "Laisse vide : l'IA choisit d'après la carte. Ex. : deux ensembles qui se chevauchent",
       "draw": "🎨 Dessiner",
       "redraw": "🎨 Refaire",
       "photo": "📷 Ma photo",
