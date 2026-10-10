@@ -6,7 +6,7 @@ import apkg
 import pytest
 from PIL import Image
 
-from notosaurus_core import diagrams, llm
+from notosaurus_core import diagrams, llm, prompts
 from notosaurus_core.models import Card, Frame, Mask
 
 
@@ -314,6 +314,6 @@ def test_correction_tells_the_model_how_to_place_a_label():
     from notosaurus_core.models import Deck
 
     empty = Deck(deck="D", cards=[])
-    text = llm._revision_text("p", empty, "add the title", "en", 1, [(800, 600)], "pixels", {1: [1, 2]})
+    text = prompts._revision_text("p", empty, "add the title", "en", 1, [(800, 600)], "pixels", {1: [1, 2]})
     assert "photo 1: [1, 2]" in text and "photo 1: 800x600" in text and diagrams.FORMATS["pixels"] in text
-    assert "mask" not in llm._revision_text("p", empty, "x", "en", 0)  # no photo, no diagram
+    assert "mask" not in prompts._revision_text("p", empty, "x", "en", 0)  # no photo, no diagram

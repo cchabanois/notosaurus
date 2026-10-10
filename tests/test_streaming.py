@@ -11,6 +11,7 @@ from google.genai import errors, types
 from notosaurus_core import llm
 from notosaurus_core.config import AIConfig
 from notosaurus_core.llm import CardStream
+from notosaurus_core.providers import gemini
 
 NDJSON = {"Accept": "application/x-ndjson"}
 
@@ -72,7 +73,7 @@ def test_gemini_tells_each_card_and_starts_again_with_the_next_model(monkeypatch
         {"cards": [{"front": "la mère", "back": "la madre"}, {"front": "le père", "back": "el padre"}], "deck": "D"}
     )
     fake = StreamingGemini(answer, fail_first=True)
-    monkeypatch.setattr(llm, "_gemini_client", lambda s: fake)
+    monkeypatch.setattr(gemini, "_gemini_client", lambda s: fake)
     told = []
 
     async def on_card(card):
