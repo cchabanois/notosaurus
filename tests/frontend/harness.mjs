@@ -103,11 +103,13 @@ export class CustomEvent {
 }
 
 // The page's own scripts, in its order: those its HTML loads with the given one
-// (app.js: index.html's i18n.js, app-*.js, app.js), the CDN's left out.
+// (app.js: index.html's i18n.js, app-*.js, app.js), the third-party ones left out.
 async function pageScripts(script) {
   const page = script === "admin.js" ? "admin.html" : "index.html";
   const html = await readFile(path.join(ROOT, "static", page), "utf8");
-  const scripts = [...html.matchAll(/<script[^>]*\ssrc="([^"]+)"/g)].map((m) => m[1]).filter((src) => !/^https?:/.test(src));
+  // Notosaurus's own: the third-party ones (static/vendor: Alpine, KaTeX) are the stubs below
+  const scripts = [...html.matchAll(/<script[^>]*\ssrc="([^"]+)"/g)].map((m) => m[1])
+    .filter((src) => !/^https?:/.test(src) && !src.startsWith("vendor/"));
   if (!scripts.includes(script)) throw new Error(`${page} doesn't load ${script}`);
   return scripts;
 }

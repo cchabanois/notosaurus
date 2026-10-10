@@ -39,6 +39,7 @@ Each pull request adds a line under **Unreleased**. See [Releasing](CONTRIBUTING
 
 ### Changed
 
+- The pages load nothing from elsewhere any more: Alpine.js, KaTeX and the Nunito font come with Notosaurus, as pdf.js does (no CDN, no Google Fonts). A blocked CDN can't break the page, it works offline (the add-on, the Android app), and no third party sees its visits. A test checks it stays so.
 - “✨ Tidy up” is no longer offered for Notosaurus's own instructions (⭐) as they are: only for instructions someone wrote, or a ⭐ one once changed.
 - A card's picture panel: “What the picture should show”, in your own language (no more “in English”), empty when the card has none (it showed the back, LaTeX included). **🎨 Draw** lets the AI decide from the card and what you wrote an exact figure (a diagram, sets, geometry) or a drawn picture, and describes it; a figure's description changed redraws that figure. **🔎 Find a picture** turns what you wrote into English search words first. Buttons of the panel no longer stay greyed on a card never touched.
 - A figure the AI meant to put on a card's back but left undescribed (now and then, more in Quick mode with the helps on) is described by one light call that sees the lesson's page: the set theory page went from about 1 lesson in 8 without its figures to 1 in 16 in Quick, none in Careful. No call when the cards are consistent.

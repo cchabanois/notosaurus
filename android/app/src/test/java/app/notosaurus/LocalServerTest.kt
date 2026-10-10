@@ -223,6 +223,10 @@ class LocalServerTest {
         val pdfjs = client.get("/vendor/pdfjs/pdf.min.mjs")
         assertEquals(HttpStatusCode.OK, pdfjs.status)
         assertTrue(pdfjs.headers[HttpHeaders.ContentType]!!, "javascript" in pdfjs.headers[HttpHeaders.ContentType]!!)
+        // Alpine, KaTeX and the font, shipped too (static/vendor): nothing from elsewhere
+        assertEquals(HttpStatusCode.OK, client.get("/vendor/alpinejs/cdn.min.js").status)
+        assertEquals(HttpStatusCode.OK, client.get("/vendor/katex/katex.min.css").status)
+        assertEquals(HttpStatusCode.OK, client.get("/vendor/nunito/nunito-latin-wght-normal.woff2").status)
     }
 
     @Test
