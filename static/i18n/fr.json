@@ -595,7 +595,7 @@
       "title": "🗂️ Leçons sur ce téléphone",
       "size": "{lessons} · {size} Mo",
       "deleteAll": "Supprimer toutes les leçons",
-      "confirm": "Supprimer toutes les leçons de ce téléphone ? Les cartes déjà dans AnkiDroid restent.",
+      "confirm": "Supprimer toutes les leçons de ce téléphone, et leur son ? Les cartes déjà dans AnkiDroid restent, avec leur son.",
       "deleted": "Leçons supprimées."
     },
     "about": {

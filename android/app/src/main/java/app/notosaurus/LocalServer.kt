@@ -257,10 +257,13 @@ class LocalServer(
         api("GET", "/api/admin/data") {
             buildJsonObject {
                 put("lessons", lessons.list().size)
-                put("bytes", lessons.bytes())
+                put("bytes", lessons.bytes() + audio.walkTopDown().filter { it.isFile }.sumOf { it.length() }) // with their sound
             }
         }
-        api("DELETE", "/api/admin/lessons") { buildJsonObject { put("deleted", lessons.deleteAll()) } }
+        api("DELETE", "/api/admin/lessons") {
+            audio.listFiles()?.forEach { it.delete() } // their sound too (AnkiDroid keeps its own copy)
+            buildJsonObject { put("deleted", lessons.deleteAll()) }
+        }
 
         // --- With my computer (the Anki add-on's Notosaurus)
         api("POST", "/api/admin/computer/scan") {

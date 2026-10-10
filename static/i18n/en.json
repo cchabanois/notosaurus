@@ -595,7 +595,7 @@
       "title": "🗂️ Lessons on this phone",
       "size": "{lessons} · {size} MB",
       "deleteAll": "Delete all the lessons",
-      "confirm": "Delete all the lessons on this phone? The cards already in AnkiDroid stay.",
+      "confirm": "Delete all the lessons on this phone, and their sound? The cards already in AnkiDroid stay, with their sound.",
       "deleted": "Lessons deleted."
     },
     "about": {

@@ -595,7 +595,7 @@
       "title": "🗂️ Lições neste celular",
       "size": "{lessons} · {size} MB",
       "deleteAll": "Apagar todas as lições",
-      "confirm": "Apagar todas as lições deste celular? Os cartões que já estão no AnkiDroid ficam.",
+      "confirm": "Apagar todas as lições deste celular, e o som delas? Os cartões que já estão no AnkiDroid ficam, com o som.",
       "deleted": "Lições apagadas."
     },
     "about": {

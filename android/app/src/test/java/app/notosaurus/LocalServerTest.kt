@@ -24,6 +24,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
 import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.json.JsonArray
 import kotlinx.serialization.json.JsonObject
@@ -583,11 +584,21 @@ class LocalServerTest {
     fun theLessonsOnThePhone() = app { client ->
         client.extract()
         client.extract()
+        fun bytes() = runBlocking { client.get("/api/admin/data") { page() }.json().jsonObject["bytes"]!!.jsonPrimitive.content.toLong() }
         val data = client.get("/api/admin/data") { page() }.json().jsonObject
         assertEquals(2, data["lessons"]!!.jsonPrimitive.int)
-        assertTrue(data["bytes"]!!.jsonPrimitive.content.toLong() > 0)
+        val lessonsOnly = bytes()
+        assertTrue(lessonsOnly > 0)
+
+        // A back read aloud (🔊): its sound counted with the lessons
+        relay.enqueue(MockResponse.Builder().setHeader("Content-Type", "audio/mpeg").body("x".repeat(1000)).build())
+        client.get("/api/tts?text=la%20madre&voice=es-ES-Chirp3-HD-Aoede") { page() }
+        assertEquals(lessonsOnly + 1000, bytes())
+
+        // Deleted with them
         assertEquals(2, client.delete("/api/admin/lessons") { page() }.json().jsonObject["deleted"]!!.jsonPrimitive.int)
         assertEquals(JsonArray(emptyList()), client.get("/api/lessons") { page() }.json())
+        assertEquals(0L, bytes())
     }
 
     // --- With my computer
