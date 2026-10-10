@@ -4,9 +4,32 @@ import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Test
+import java.io.File
 
 /** What doesn't need AnkiDroid: the diagrams' masks, as the computer writes them. */
 class AnkiTest {
+    @Test
+    fun theComputersNoteTypes() {
+        // static/note-types.json, as the app's assets have it
+        val web = File(System.getProperty("notosaurus.web") ?: "../../static")
+        val types = NoteTypes.parse(web.resolve("note-types.json").readText())
+        val text = types["text+reverse+typing+dictation"]
+        assertEquals("Notosaurus recto/verso + inverse à taper + dictée (Android)", text.androidName) // the names before
+        assertEquals(listOf("Front", "Back", "Info", "Audio", "Explanation", "Mnemonic"), text.androidFields)
+        assertEquals(3, text.cards.size)
+        assertTrue(text.cards[0].front.contains("{{type:Back}}"))
+
+        // The key first (AnkiDroid's duplicate check), sorted by the question
+        val diagram = types["diagram"]
+        assertEquals("Notosaurus légendes (Android)", diagram.androidName)
+        assertEquals(listOf("Id", "Front", "Back", "Info", "Audio", "Image", "Masks", "AnswerMasks", "Explanation", "Mnemonic"), diagram.androidFields)
+        assertEquals(1, diagram.sortField)
+        assertEquals("Notosaurus texte à trous (Android)", types["cloze"].androidName)
+        assertTrue(types["cloze"].cloze)
+        assertEquals(listOf("k", "", "r", ""), types["cloze"].values(mapOf("Id" to "k", "Extra" to "r")).take(4)) // Id, Text, Extra, Info
+        assertEquals("Notosaurus image au verso à taper (Android)", types["picture+back+typing"].androidName)
+    }
+
     @Test
     fun theFieldsAsTheComputersFields() {
         assertEquals("a &lt; b &amp; c<br>d", Anki.html(" a < b & c\nd "))
@@ -15,7 +38,6 @@ class AnkiTest {
             """nom<div style="margin-top:8px;font-style:italic">💡 Vient du latin &quot;mater&quot;.</div>""",
             Anki.info(Card("q", "r", info = "nom", funFact = "Vient du latin \"mater\".")),
         )
-        assertEquals(" à taper + dictée (Android)", Anki.variant(typing = true, dictation = true))
         assertEquals("notosaurus::2026-10-10-espagnol", Anki.lessonTag("2026-10-10-espagnol"))
     }
 

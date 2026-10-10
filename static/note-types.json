@@ -1,0 +1,416 @@
+{
+ "note_types": {
+  "text": {
+   "name": "Notosaurus recto/verso (audio)",
+   "family": "text",
+   "fields": [
+    "Front",
+    "Back",
+    "Info",
+    "Audio",
+    "Explanation",
+    "Mnemonic"
+   ],
+   "key": "Front",
+   "cloze": false,
+   "cards": [
+    {
+     "name": "Recto → Verso",
+     "front": "{{Front}}",
+     "back": "{{FrontSide}}<hr id=\"answer\">{{Back}}{{Audio}}{{#Info}}<div class=\"info\">{{Info}}</div>{{/Info}}{{#Explanation}}<div class=\"notosaurus-help\">💬 {{Explanation}}</div>{{/Explanation}}{{#Mnemonic}}<div class=\"notosaurus-help\">🧠 {{Mnemonic}}</div>{{/Mnemonic}}"
+    }
+   ],
+   "css": ".card { font-family: system-ui, sans-serif; font-size: 26px; text-align: center; }\n.info { font-size: 18px; color: #777; margin-top: 12px; }\n.card img { max-width: 100%; height: auto; }\n.dictation { font-size: 40px; }\n.notosaurus-help {\n  max-width: 32em; margin: 10px auto 0; padding: 4px 10px; border-left: 3px solid #8bb8c4;\n  font-size: 18px; color: #555; text-align: left;\n}\n.nightMode .notosaurus-help { color: #bbb; }\n"
+  },
+  "text+dictation": {
+   "name": "Notosaurus recto/verso + dictée (audio)",
+   "family": "text",
+   "fields": [
+    "Front",
+    "Back",
+    "Info",
+    "Audio",
+    "Explanation",
+    "Mnemonic"
+   ],
+   "key": "Front",
+   "cloze": false,
+   "cards": [
+    {
+     "name": "Recto → Verso",
+     "front": "{{Front}}",
+     "back": "{{FrontSide}}<hr id=\"answer\">{{Back}}{{Audio}}{{#Info}}<div class=\"info\">{{Info}}</div>{{/Info}}{{#Explanation}}<div class=\"notosaurus-help\">💬 {{Explanation}}</div>{{/Explanation}}{{#Mnemonic}}<div class=\"notosaurus-help\">🧠 {{Mnemonic}}</div>{{/Mnemonic}}"
+    },
+    {
+     "name": "Dictée",
+     "front": "<div class=\"dictation\">🎧</div>{{Audio}}{{type:Back}}",
+     "back": "<div class=\"dictation\">🎧</div>{{Audio}}{{type:Back}}<hr id=\"answer\">{{Front}}{{#Info}}<div class=\"info\">{{Info}}</div>{{/Info}}{{#Explanation}}<div class=\"notosaurus-help\">💬 {{Explanation}}</div>{{/Explanation}}{{#Mnemonic}}<div class=\"notosaurus-help\">🧠 {{Mnemonic}}</div>{{/Mnemonic}}"
+    }
+   ],
+   "css": ".card { font-family: system-ui, sans-serif; font-size: 26px; text-align: center; }\n.info { font-size: 18px; color: #777; margin-top: 12px; }\n.card img { max-width: 100%; height: auto; }\n.dictation { font-size: 40px; }\n.notosaurus-help {\n  max-width: 32em; margin: 10px auto 0; padding: 4px 10px; border-left: 3px solid #8bb8c4;\n  font-size: 18px; color: #555; text-align: left;\n}\n.nightMode .notosaurus-help { color: #bbb; }\n"
+  },
+  "text+typing": {
+   "name": "Notosaurus recto/verso à taper (audio)",
+   "family": "text",
+   "fields": [
+    "Front",
+    "Back",
+    "Info",
+    "Audio",
+    "Explanation",
+    "Mnemonic"
+   ],
+   "key": "Front",
+   "cloze": false,
+   "cards": [
+    {
+     "name": "Recto → Verso",
+     "front": "{{Front}}{{type:Back}}",
+     "back": "{{Front}}<hr id=\"answer\">{{type:Back}}{{Audio}}{{#Info}}<div class=\"info\">{{Info}}</div>{{/Info}}{{#Explanation}}<div class=\"notosaurus-help\">💬 {{Explanation}}</div>{{/Explanation}}{{#Mnemonic}}<div class=\"notosaurus-help\">🧠 {{Mnemonic}}</div>{{/Mnemonic}}"
+    }
+   ],
+   "css": ".card { font-family: system-ui, sans-serif; font-size: 26px; text-align: center; }\n.info { font-size: 18px; color: #777; margin-top: 12px; }\n.card img { max-width: 100%; height: auto; }\n.dictation { font-size: 40px; }\n.notosaurus-help {\n  max-width: 32em; margin: 10px auto 0; padding: 4px 10px; border-left: 3px solid #8bb8c4;\n  font-size: 18px; color: #555; text-align: left;\n}\n.nightMode .notosaurus-help { color: #bbb; }\n"
+  },
+  "text+typing+dictation": {
+   "name": "Notosaurus recto/verso à taper + dictée (audio)",
+   "family": "text",
+   "fields": [
+    "Front",
+    "Back",
+    "Info",
+    "Audio",
+    "Explanation",
+    "Mnemonic"
+   ],
+   "key": "Front",
+   "cloze": false,
+   "cards": [
+    {
+     "name": "Recto → Verso",
+     "front": "{{Front}}{{type:Back}}",
+     "back": "{{Front}}<hr id=\"answer\">{{type:Back}}{{Audio}}{{#Info}}<div class=\"info\">{{Info}}</div>{{/Info}}{{#Explanation}}<div class=\"notosaurus-help\">💬 {{Explanation}}</div>{{/Explanation}}{{#Mnemonic}}<div class=\"notosaurus-help\">🧠 {{Mnemonic}}</div>{{/Mnemonic}}"
+    },
+    {
+     "name": "Dictée",
+     "front": "<div class=\"dictation\">🎧</div>{{Audio}}{{type:Back}}",
+     "back": "<div class=\"dictation\">🎧</div>{{Audio}}{{type:Back}}<hr id=\"answer\">{{Front}}{{#Info}}<div class=\"info\">{{Info}}</div>{{/Info}}{{#Explanation}}<div class=\"notosaurus-help\">💬 {{Explanation}}</div>{{/Explanation}}{{#Mnemonic}}<div class=\"notosaurus-help\">🧠 {{Mnemonic}}</div>{{/Mnemonic}}"
+    }
+   ],
+   "css": ".card { font-family: system-ui, sans-serif; font-size: 26px; text-align: center; }\n.info { font-size: 18px; color: #777; margin-top: 12px; }\n.card img { max-width: 100%; height: auto; }\n.dictation { font-size: 40px; }\n.notosaurus-help {\n  max-width: 32em; margin: 10px auto 0; padding: 4px 10px; border-left: 3px solid #8bb8c4;\n  font-size: 18px; color: #555; text-align: left;\n}\n.nightMode .notosaurus-help { color: #bbb; }\n"
+  },
+  "text+reverse": {
+   "name": "Notosaurus recto/verso + inverse (audio)",
+   "family": "text",
+   "fields": [
+    "Front",
+    "Back",
+    "Info",
+    "Audio",
+    "Explanation",
+    "Mnemonic"
+   ],
+   "key": "Front",
+   "cloze": false,
+   "cards": [
+    {
+     "name": "Recto → Verso",
+     "front": "{{Front}}",
+     "back": "{{FrontSide}}<hr id=\"answer\">{{Back}}{{Audio}}{{#Info}}<div class=\"info\">{{Info}}</div>{{/Info}}{{#Explanation}}<div class=\"notosaurus-help\">💬 {{Explanation}}</div>{{/Explanation}}{{#Mnemonic}}<div class=\"notosaurus-help\">🧠 {{Mnemonic}}</div>{{/Mnemonic}}"
+    },
+    {
+     "name": "Verso → Recto",
+     "front": "{{Back}}{{Audio}}",
+     "back": "{{FrontSide}}<hr id=\"answer\">{{Front}}{{#Info}}<div class=\"info\">{{Info}}</div>{{/Info}}{{#Explanation}}<div class=\"notosaurus-help\">💬 {{Explanation}}</div>{{/Explanation}}{{#Mnemonic}}<div class=\"notosaurus-help\">🧠 {{Mnemonic}}</div>{{/Mnemonic}}"
+    }
+   ],
+   "css": ".card { font-family: system-ui, sans-serif; font-size: 26px; text-align: center; }\n.info { font-size: 18px; color: #777; margin-top: 12px; }\n.card img { max-width: 100%; height: auto; }\n.dictation { font-size: 40px; }\n.notosaurus-help {\n  max-width: 32em; margin: 10px auto 0; padding: 4px 10px; border-left: 3px solid #8bb8c4;\n  font-size: 18px; color: #555; text-align: left;\n}\n.nightMode .notosaurus-help { color: #bbb; }\n"
+  },
+  "text+reverse+dictation": {
+   "name": "Notosaurus recto/verso + inverse + dictée (audio)",
+   "family": "text",
+   "fields": [
+    "Front",
+    "Back",
+    "Info",
+    "Audio",
+    "Explanation",
+    "Mnemonic"
+   ],
+   "key": "Front",
+   "cloze": false,
+   "cards": [
+    {
+     "name": "Recto → Verso",
+     "front": "{{Front}}",
+     "back": "{{FrontSide}}<hr id=\"answer\">{{Back}}{{Audio}}{{#Info}}<div class=\"info\">{{Info}}</div>{{/Info}}{{#Explanation}}<div class=\"notosaurus-help\">💬 {{Explanation}}</div>{{/Explanation}}{{#Mnemonic}}<div class=\"notosaurus-help\">🧠 {{Mnemonic}}</div>{{/Mnemonic}}"
+    },
+    {
+     "name": "Verso → Recto",
+     "front": "{{Back}}{{Audio}}",
+     "back": "{{FrontSide}}<hr id=\"answer\">{{Front}}{{#Info}}<div class=\"info\">{{Info}}</div>{{/Info}}{{#Explanation}}<div class=\"notosaurus-help\">💬 {{Explanation}}</div>{{/Explanation}}{{#Mnemonic}}<div class=\"notosaurus-help\">🧠 {{Mnemonic}}</div>{{/Mnemonic}}"
+    },
+    {
+     "name": "Dictée",
+     "front": "<div class=\"dictation\">🎧</div>{{Audio}}{{type:Back}}",
+     "back": "<div class=\"dictation\">🎧</div>{{Audio}}{{type:Back}}<hr id=\"answer\">{{Front}}{{#Info}}<div class=\"info\">{{Info}}</div>{{/Info}}{{#Explanation}}<div class=\"notosaurus-help\">💬 {{Explanation}}</div>{{/Explanation}}{{#Mnemonic}}<div class=\"notosaurus-help\">🧠 {{Mnemonic}}</div>{{/Mnemonic}}"
+    }
+   ],
+   "css": ".card { font-family: system-ui, sans-serif; font-size: 26px; text-align: center; }\n.info { font-size: 18px; color: #777; margin-top: 12px; }\n.card img { max-width: 100%; height: auto; }\n.dictation { font-size: 40px; }\n.notosaurus-help {\n  max-width: 32em; margin: 10px auto 0; padding: 4px 10px; border-left: 3px solid #8bb8c4;\n  font-size: 18px; color: #555; text-align: left;\n}\n.nightMode .notosaurus-help { color: #bbb; }\n"
+  },
+  "text+reverse+typing": {
+   "name": "Notosaurus recto/verso + inverse à taper (audio)",
+   "family": "text",
+   "fields": [
+    "Front",
+    "Back",
+    "Info",
+    "Audio",
+    "Explanation",
+    "Mnemonic"
+   ],
+   "key": "Front",
+   "cloze": false,
+   "cards": [
+    {
+     "name": "Recto → Verso",
+     "front": "{{Front}}{{type:Back}}",
+     "back": "{{Front}}<hr id=\"answer\">{{type:Back}}{{Audio}}{{#Info}}<div class=\"info\">{{Info}}</div>{{/Info}}{{#Explanation}}<div class=\"notosaurus-help\">💬 {{Explanation}}</div>{{/Explanation}}{{#Mnemonic}}<div class=\"notosaurus-help\">🧠 {{Mnemonic}}</div>{{/Mnemonic}}"
+    },
+    {
+     "name": "Verso → Recto",
+     "front": "{{Back}}{{Audio}}{{type:Front}}",
+     "back": "{{Back}}{{Audio}}<hr id=\"answer\">{{type:Front}}{{#Info}}<div class=\"info\">{{Info}}</div>{{/Info}}{{#Explanation}}<div class=\"notosaurus-help\">💬 {{Explanation}}</div>{{/Explanation}}{{#Mnemonic}}<div class=\"notosaurus-help\">🧠 {{Mnemonic}}</div>{{/Mnemonic}}"
+    }
+   ],
+   "css": ".card { font-family: system-ui, sans-serif; font-size: 26px; text-align: center; }\n.info { font-size: 18px; color: #777; margin-top: 12px; }\n.card img { max-width: 100%; height: auto; }\n.dictation { font-size: 40px; }\n.notosaurus-help {\n  max-width: 32em; margin: 10px auto 0; padding: 4px 10px; border-left: 3px solid #8bb8c4;\n  font-size: 18px; color: #555; text-align: left;\n}\n.nightMode .notosaurus-help { color: #bbb; }\n"
+  },
+  "text+reverse+typing+dictation": {
+   "name": "Notosaurus recto/verso + inverse à taper + dictée (audio)",
+   "family": "text",
+   "fields": [
+    "Front",
+    "Back",
+    "Info",
+    "Audio",
+    "Explanation",
+    "Mnemonic"
+   ],
+   "key": "Front",
+   "cloze": false,
+   "cards": [
+    {
+     "name": "Recto → Verso",
+     "front": "{{Front}}{{type:Back}}",
+     "back": "{{Front}}<hr id=\"answer\">{{type:Back}}{{Audio}}{{#Info}}<div class=\"info\">{{Info}}</div>{{/Info}}{{#Explanation}}<div class=\"notosaurus-help\">💬 {{Explanation}}</div>{{/Explanation}}{{#Mnemonic}}<div class=\"notosaurus-help\">🧠 {{Mnemonic}}</div>{{/Mnemonic}}"
+    },
+    {
+     "name": "Verso → Recto",
+     "front": "{{Back}}{{Audio}}{{type:Front}}",
+     "back": "{{Back}}{{Audio}}<hr id=\"answer\">{{type:Front}}{{#Info}}<div class=\"info\">{{Info}}</div>{{/Info}}{{#Explanation}}<div class=\"notosaurus-help\">💬 {{Explanation}}</div>{{/Explanation}}{{#Mnemonic}}<div class=\"notosaurus-help\">🧠 {{Mnemonic}}</div>{{/Mnemonic}}"
+    },
+    {
+     "name": "Dictée",
+     "front": "<div class=\"dictation\">🎧</div>{{Audio}}{{type:Back}}",
+     "back": "<div class=\"dictation\">🎧</div>{{Audio}}{{type:Back}}<hr id=\"answer\">{{Front}}{{#Info}}<div class=\"info\">{{Info}}</div>{{/Info}}{{#Explanation}}<div class=\"notosaurus-help\">💬 {{Explanation}}</div>{{/Explanation}}{{#Mnemonic}}<div class=\"notosaurus-help\">🧠 {{Mnemonic}}</div>{{/Mnemonic}}"
+    }
+   ],
+   "css": ".card { font-family: system-ui, sans-serif; font-size: 26px; text-align: center; }\n.info { font-size: 18px; color: #777; margin-top: 12px; }\n.card img { max-width: 100%; height: auto; }\n.dictation { font-size: 40px; }\n.notosaurus-help {\n  max-width: 32em; margin: 10px auto 0; padding: 4px 10px; border-left: 3px solid #8bb8c4;\n  font-size: 18px; color: #555; text-align: left;\n}\n.nightMode .notosaurus-help { color: #bbb; }\n"
+  },
+  "diagram": {
+   "name": "Notosaurus légendes (audio)",
+   "family": "diagram",
+   "fields": [
+    "Front",
+    "Back",
+    "Info",
+    "Audio",
+    "Image",
+    "Masks",
+    "AnswerMasks",
+    "Id",
+    "Explanation",
+    "Mnemonic"
+   ],
+   "key": "Id",
+   "cloze": false,
+   "cards": [
+    {
+     "name": "Schéma",
+     "front": "<div class=\"notosaurus-diagram\">{{Image}}{{Masks}}</div><div>{{Front}}</div>",
+     "back": "<div class=\"notosaurus-diagram\">{{Image}}{{AnswerMasks}}</div><div>{{Front}}</div><hr id=\"answer\">{{Back}}{{Audio}}{{#Info}}<div class=\"info\">{{Info}}</div>{{/Info}}{{#Explanation}}<div class=\"notosaurus-help\">💬 {{Explanation}}</div>{{/Explanation}}{{#Mnemonic}}<div class=\"notosaurus-help\">🧠 {{Mnemonic}}</div>{{/Mnemonic}}"
+    }
+   ],
+   "css": ".card { font-family: system-ui, sans-serif; font-size: 26px; text-align: center; }\n.info { font-size: 18px; color: #777; margin-top: 12px; }\n.card img { max-width: 100%; height: auto; }\n.dictation { font-size: 40px; }\n.notosaurus-help {\n  max-width: 32em; margin: 10px auto 0; padding: 4px 10px; border-left: 3px solid #8bb8c4;\n  font-size: 18px; color: #555; text-align: left;\n}\n.nightMode .notosaurus-help { color: #bbb; }\n.notosaurus-diagram { position: relative; display: inline-block; max-width: 100%; line-height: 0; }\n.notosaurus-diagram img { display: block; }\n.notosaurus-mask {\n  position: absolute; box-sizing: border-box; display: flex; align-items: center; justify-content: center;\n  overflow: hidden; line-height: 1; font-size: 13px; font-weight: 700;\n  background: #ffe08a; border: 2px solid #c77700; border-radius: 3px; color: #3d2b00;\n}\n.notosaurus-mask.target { background: #ff7a59; border-color: #b3261e; color: #fff; }\n.notosaurus-mask.revealed { background: transparent; border: 3px solid #1b873f; }\n"
+  },
+  "picture": {
+   "name": "Notosaurus image (audio)",
+   "family": "picture",
+   "fields": [
+    "Front",
+    "Back",
+    "Info",
+    "Audio",
+    "Picture",
+    "Id",
+    "Explanation",
+    "Mnemonic"
+   ],
+   "key": "Id",
+   "cloze": false,
+   "cards": [
+    {
+     "name": "Image",
+     "front": "<div class=\"notosaurus-picture\">{{Picture}}</div>{{#Front}}<div>{{Front}}</div>{{/Front}}",
+     "back": "{{FrontSide}}<hr id=\"answer\">{{Back}}{{Audio}}{{#Info}}<div class=\"info\">{{Info}}</div>{{/Info}}{{#Explanation}}<div class=\"notosaurus-help\">💬 {{Explanation}}</div>{{/Explanation}}{{#Mnemonic}}<div class=\"notosaurus-help\">🧠 {{Mnemonic}}</div>{{/Mnemonic}}"
+    }
+   ],
+   "css": ".card { font-family: system-ui, sans-serif; font-size: 26px; text-align: center; }\n.info { font-size: 18px; color: #777; margin-top: 12px; }\n.card img { max-width: 100%; height: auto; }\n.dictation { font-size: 40px; }\n.notosaurus-help {\n  max-width: 32em; margin: 10px auto 0; padding: 4px 10px; border-left: 3px solid #8bb8c4;\n  font-size: 18px; color: #555; text-align: left;\n}\n.nightMode .notosaurus-help { color: #bbb; }\n.notosaurus-picture img { max-width: min(100%, 320px); max-height: 50vh; border-radius: 12px; }\n"
+  },
+  "picture+back": {
+   "name": "Notosaurus image au verso (audio)",
+   "family": "picture",
+   "fields": [
+    "Front",
+    "Back",
+    "Info",
+    "Audio",
+    "Picture",
+    "Id",
+    "Explanation",
+    "Mnemonic"
+   ],
+   "key": "Id",
+   "cloze": false,
+   "cards": [
+    {
+     "name": "Image",
+     "front": "{{Front}}",
+     "back": "{{FrontSide}}<hr id=\"answer\">{{Back}}{{Audio}}<div class=\"notosaurus-picture\">{{Picture}}</div>{{#Info}}<div class=\"info\">{{Info}}</div>{{/Info}}{{#Explanation}}<div class=\"notosaurus-help\">💬 {{Explanation}}</div>{{/Explanation}}{{#Mnemonic}}<div class=\"notosaurus-help\">🧠 {{Mnemonic}}</div>{{/Mnemonic}}"
+    }
+   ],
+   "css": ".card { font-family: system-ui, sans-serif; font-size: 26px; text-align: center; }\n.info { font-size: 18px; color: #777; margin-top: 12px; }\n.card img { max-width: 100%; height: auto; }\n.dictation { font-size: 40px; }\n.notosaurus-help {\n  max-width: 32em; margin: 10px auto 0; padding: 4px 10px; border-left: 3px solid #8bb8c4;\n  font-size: 18px; color: #555; text-align: left;\n}\n.nightMode .notosaurus-help { color: #bbb; }\n.notosaurus-picture img { max-width: min(100%, 320px); max-height: 50vh; border-radius: 12px; }\n"
+  },
+  "diagram+typing": {
+   "name": "Notosaurus légendes à taper (audio)",
+   "family": "diagram",
+   "fields": [
+    "Front",
+    "Back",
+    "Info",
+    "Audio",
+    "Image",
+    "Masks",
+    "AnswerMasks",
+    "Id",
+    "Explanation",
+    "Mnemonic"
+   ],
+   "key": "Id",
+   "cloze": false,
+   "cards": [
+    {
+     "name": "Schéma",
+     "front": "<div class=\"notosaurus-diagram\">{{Image}}{{Masks}}</div><div>{{Front}}</div>{{type:Back}}",
+     "back": "<div class=\"notosaurus-diagram\">{{Image}}{{AnswerMasks}}</div><div>{{Front}}</div><hr id=\"answer\">{{type:Back}}{{Audio}}{{#Info}}<div class=\"info\">{{Info}}</div>{{/Info}}{{#Explanation}}<div class=\"notosaurus-help\">💬 {{Explanation}}</div>{{/Explanation}}{{#Mnemonic}}<div class=\"notosaurus-help\">🧠 {{Mnemonic}}</div>{{/Mnemonic}}"
+    }
+   ],
+   "css": ".card { font-family: system-ui, sans-serif; font-size: 26px; text-align: center; }\n.info { font-size: 18px; color: #777; margin-top: 12px; }\n.card img { max-width: 100%; height: auto; }\n.dictation { font-size: 40px; }\n.notosaurus-help {\n  max-width: 32em; margin: 10px auto 0; padding: 4px 10px; border-left: 3px solid #8bb8c4;\n  font-size: 18px; color: #555; text-align: left;\n}\n.nightMode .notosaurus-help { color: #bbb; }\n.notosaurus-diagram { position: relative; display: inline-block; max-width: 100%; line-height: 0; }\n.notosaurus-diagram img { display: block; }\n.notosaurus-mask {\n  position: absolute; box-sizing: border-box; display: flex; align-items: center; justify-content: center;\n  overflow: hidden; line-height: 1; font-size: 13px; font-weight: 700;\n  background: #ffe08a; border: 2px solid #c77700; border-radius: 3px; color: #3d2b00;\n}\n.notosaurus-mask.target { background: #ff7a59; border-color: #b3261e; color: #fff; }\n.notosaurus-mask.revealed { background: transparent; border: 3px solid #1b873f; }\n"
+  },
+  "picture+typing": {
+   "name": "Notosaurus image à taper (audio)",
+   "family": "picture",
+   "fields": [
+    "Front",
+    "Back",
+    "Info",
+    "Audio",
+    "Picture",
+    "Id",
+    "Explanation",
+    "Mnemonic"
+   ],
+   "key": "Id",
+   "cloze": false,
+   "cards": [
+    {
+     "name": "Image",
+     "front": "<div class=\"notosaurus-picture\">{{Picture}}</div>{{#Front}}<div>{{Front}}</div>{{/Front}}{{type:Back}}",
+     "back": "<div class=\"notosaurus-picture\">{{Picture}}</div>{{#Front}}<div>{{Front}}</div>{{/Front}}<hr id=\"answer\">{{type:Back}}{{Audio}}{{#Info}}<div class=\"info\">{{Info}}</div>{{/Info}}{{#Explanation}}<div class=\"notosaurus-help\">💬 {{Explanation}}</div>{{/Explanation}}{{#Mnemonic}}<div class=\"notosaurus-help\">🧠 {{Mnemonic}}</div>{{/Mnemonic}}"
+    }
+   ],
+   "css": ".card { font-family: system-ui, sans-serif; font-size: 26px; text-align: center; }\n.info { font-size: 18px; color: #777; margin-top: 12px; }\n.card img { max-width: 100%; height: auto; }\n.dictation { font-size: 40px; }\n.notosaurus-help {\n  max-width: 32em; margin: 10px auto 0; padding: 4px 10px; border-left: 3px solid #8bb8c4;\n  font-size: 18px; color: #555; text-align: left;\n}\n.nightMode .notosaurus-help { color: #bbb; }\n.notosaurus-picture img { max-width: min(100%, 320px); max-height: 50vh; border-radius: 12px; }\n"
+  },
+  "picture+back+typing": {
+   "name": "Notosaurus image au verso à taper (audio)",
+   "family": "picture",
+   "fields": [
+    "Front",
+    "Back",
+    "Info",
+    "Audio",
+    "Picture",
+    "Id",
+    "Explanation",
+    "Mnemonic"
+   ],
+   "key": "Id",
+   "cloze": false,
+   "cards": [
+    {
+     "name": "Image",
+     "front": "{{Front}}{{type:Back}}",
+     "back": "{{Front}}<hr id=\"answer\">{{type:Back}}{{Audio}}<div class=\"notosaurus-picture\">{{Picture}}</div>{{#Info}}<div class=\"info\">{{Info}}</div>{{/Info}}{{#Explanation}}<div class=\"notosaurus-help\">💬 {{Explanation}}</div>{{/Explanation}}{{#Mnemonic}}<div class=\"notosaurus-help\">🧠 {{Mnemonic}}</div>{{/Mnemonic}}"
+    }
+   ],
+   "css": ".card { font-family: system-ui, sans-serif; font-size: 26px; text-align: center; }\n.info { font-size: 18px; color: #777; margin-top: 12px; }\n.card img { max-width: 100%; height: auto; }\n.dictation { font-size: 40px; }\n.notosaurus-help {\n  max-width: 32em; margin: 10px auto 0; padding: 4px 10px; border-left: 3px solid #8bb8c4;\n  font-size: 18px; color: #555; text-align: left;\n}\n.nightMode .notosaurus-help { color: #bbb; }\n.notosaurus-picture img { max-width: min(100%, 320px); max-height: 50vh; border-radius: 12px; }\n"
+  },
+  "cloze": {
+   "name": "Notosaurus texte à trous",
+   "family": "cloze",
+   "fields": [
+    "Text",
+    "Extra",
+    "Info",
+    "Id",
+    "Explanation",
+    "Mnemonic"
+   ],
+   "key": "Id",
+   "cloze": true,
+   "cards": [
+    {
+     "name": "Texte à trous",
+     "front": "{{cloze:Text}}",
+     "back": "{{cloze:Text}}{{#Extra}}<div class=\"extra\">{{Extra}}</div>{{/Extra}}{{#Info}}<div class=\"info\">{{Info}}</div>{{/Info}}{{#Explanation}}<div class=\"notosaurus-help\">💬 {{Explanation}}</div>{{/Explanation}}{{#Mnemonic}}<div class=\"notosaurus-help\">🧠 {{Mnemonic}}</div>{{/Mnemonic}}"
+    }
+   ],
+   "css": ".card { font-family: system-ui, sans-serif; font-size: 26px; text-align: center; }\n.info { font-size: 18px; color: #777; margin-top: 12px; }\n.card img { max-width: 100%; height: auto; }\n.dictation { font-size: 40px; }\n.notosaurus-help {\n  max-width: 32em; margin: 10px auto 0; padding: 4px 10px; border-left: 3px solid #8bb8c4;\n  font-size: 18px; color: #555; text-align: left;\n}\n.nightMode .notosaurus-help { color: #bbb; }\n.cloze { font-weight: 700; color: #0b5cad; }\n.extra { margin-top: 12px; }\n"
+  },
+  "choice": {
+   "name": "Notosaurus QCM",
+   "family": "choice",
+   "fields": [
+    "Question",
+    "Answer",
+    "Choices",
+    "AnswerChoices",
+    "Picture",
+    "BackPicture",
+    "Info",
+    "Id",
+    "Explanation",
+    "Mnemonic"
+   ],
+   "key": "Id",
+   "cloze": false,
+   "cards": [
+    {
+     "name": "QCM",
+     "front": "{{#Picture}}<div class=\"notosaurus-picture\">{{Picture}}</div>{{/Picture}}<div>{{Question}}</div>{{Choices}}",
+     "back": "{{#Picture}}<div class=\"notosaurus-picture\">{{Picture}}</div>{{/Picture}}<div>{{Question}}</div><hr id=\"answer\">{{AnswerChoices}}{{#BackPicture}}<div class=\"notosaurus-picture\">{{BackPicture}}</div>{{/BackPicture}}{{#Info}}<div class=\"info\">{{Info}}</div>{{/Info}}{{#Explanation}}<div class=\"notosaurus-help\">💬 {{Explanation}}</div>{{/Explanation}}{{#Mnemonic}}<div class=\"notosaurus-help\">🧠 {{Mnemonic}}</div>{{/Mnemonic}}"
+    }
+   ],
+   "css": ".card { font-family: system-ui, sans-serif; font-size: 26px; text-align: center; }\n.info { font-size: 18px; color: #777; margin-top: 12px; }\n.card img { max-width: 100%; height: auto; }\n.dictation { font-size: 40px; }\n.notosaurus-help {\n  max-width: 32em; margin: 10px auto 0; padding: 4px 10px; border-left: 3px solid #8bb8c4;\n  font-size: 18px; color: #555; text-align: left;\n}\n.nightMode .notosaurus-help { color: #bbb; }\n.notosaurus-picture img { max-width: min(100%, 320px); max-height: 50vh; border-radius: 12px; }\n.notosaurus-choices {\n  display: inline-block; margin: 12px auto 0; padding-left: 1.8em; text-align: left; list-style: upper-alpha;\n}\n.notosaurus-choices li { margin: 6px 0; }\n.notosaurus-choices li.right { color: #1b873f; font-weight: 700; }\n.notosaurus-choices li.right::after { content: \" ✔\"; }\n.notosaurus-choices li.wrong { opacity: .5; }\n"
+  }
+ }
+}
