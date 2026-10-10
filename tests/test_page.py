@@ -687,6 +687,36 @@ def test_review_in_ankidroid_once_sent(page, anki):
     assert [a["deck"] for a in asked] == [page.locator(".field.deck input").input_value()]
 
 
+def test_ankidroid_installed_from_the_message(page, anki):
+    """The app without AnkiDroid: "Add to Anki" says so, with a button to install it
+    (Google Play only opens when asked)."""
+    installs = []
+    page.route(
+        "**/api/anki/send",
+        lambda route: route.fulfill(status=400, json={"detail": {"code": "anki.android_missing", "params": {}}}),
+    )
+    page.route("**/api/anki/install", lambda route: (installs.append(1), route.fulfill(json={"opened": True})))
+    generate_free(page, FRONT_PROMPT)
+    page.get_by_role("button", name="📥 Ajouter à Anki").click()
+    toast = page.locator(".toast[role=alert]")
+    sync_api.expect(toast).to_contain_text("AnkiDroid")
+    assert installs == []
+    toast.get_by_role("button", name="Installer AnkiDroid").click()
+    sync_api.expect(toast).to_be_hidden()
+    assert installs == [1]
+
+    # Another error: no such button
+    page.route(
+        "**/api/anki/send",
+        lambda route: route.fulfill(
+            status=502, json={"detail": {"code": "anki.android_failed", "params": {"detail": "x"}}}
+        ),
+    )
+    page.get_by_role("button", name="📥 Ajouter à Anki").click()
+    sync_api.expect(toast).to_be_visible()
+    sync_api.expect(toast.get_by_role("button", name="Installer AnkiDroid")).to_be_hidden()
+
+
 def test_no_profile_badge_where_there_are_no_profiles(page):
     """The Android app (AnkiDroid doesn't say its profile) says profiles: false."""
     page.route("**/api/anki/status", lambda route: route.fulfill(json={"available": True, "profile": None}))

@@ -705,7 +705,7 @@
       "error": "Anki ({action}): {detail}",
       "no_profile": "Nenhum perfil aberto no Anki: abra um perfil e tente de novo.",
       "sync_not_logged_in": "O Anki não está conectado ao AnkiWeb: clique uma vez em “Sincronizar” no Anki para entrar",
-      "android_missing": "Os cartões vão para o AnkiDroid: o Google Play abre na página dele. Instale-o, abra-o uma vez e adicione os cartões de novo.",
+      "android_missing": "Os cartões vão para o AnkiDroid, o app gratuito do Anki para Android: ele não está instalado. Instale-o, abra-o uma vez e adicione os cartões de novo.",
       "android_refused": "O Notosaurus não tem permissão para adicionar cartões ao AnkiDroid: permita e adicione os cartões de novo.",
       "android_failed": "O AnkiDroid não aceitou os cartões ({detail}): abra o AnkiDroid uma vez e tente de novo.",
       "android_no_deck": "O AnkiDroid não tem o baralho “{deck}”: adicione primeiro a lição ao Anki."

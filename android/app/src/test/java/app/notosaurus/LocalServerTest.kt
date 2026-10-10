@@ -671,6 +671,8 @@ class LocalServerTest {
         val lesson = client.extract()
         val missing = client.send(lesson)
         assertEquals("anki.android_missing", missing.json().jsonObject["detail"]!!.jsonObject.string("code"))
+        assertEquals(0, storeOpened) // said, not opened by surprise
+        client.post("/api/anki/install") { page() } // the message's button
         assertEquals(1, storeOpened) // its Play Store page
         assertEquals(0, permissionAsked)
 

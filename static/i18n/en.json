@@ -705,7 +705,7 @@
       "error": "Anki ({action}): {detail}",
       "no_profile": "No profile open in Anki: open a profile and try again.",
       "sync_not_logged_in": "Anki is not logged in to AnkiWeb: click “Sync” once in Anki to log in",
-      "android_missing": "AnkiDroid is needed for the cards: Google Play opens on it. Install it, open it once, then add the cards again.",
+      "android_missing": "The cards go to AnkiDroid, Anki's free app for Android: it isn't installed. Install it, open it once, then add the cards again.",
       "android_refused": "Notosaurus isn't allowed to add cards to AnkiDroid: allow it, then add the cards again.",
       "android_failed": "AnkiDroid didn't take the cards ({detail}): open AnkiDroid once, then try again.",
       "android_no_deck": "AnkiDroid has no deck “{deck}”: add the lesson to Anki first."

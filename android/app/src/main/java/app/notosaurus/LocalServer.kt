@@ -627,6 +627,11 @@ class LocalServer(
             }
         }
 
+        // AnkiDroid's Google Play page, asked from the message saying it's missing
+        api("POST", "/api/anki/install") {
+            installAnki()
+            buildJsonObject { put("opened", true) }
+        }
         // A lesson's deck reviewed in AnkiDroid ("Review" after sending it)
         api("POST", "/api/anki/review") {
             val deck = body().string("deck")
@@ -656,10 +661,8 @@ class LocalServer(
     /** AnkiDroid installed and allowed, asked for when the cards are first added: its Play
      * Store page when it's missing, its permission dialog when it isn't allowed yet. */
     private suspend fun readyAnki() {
-        if (!anki.installed()) {
-            installAnki()
-            throw BadRequest("anki.android_missing")
-        }
+        // Not installed: said, with a button to install it (Google Play doesn't open by surprise)
+        if (!anki.installed()) throw BadRequest("anki.android_missing")
         if (!anki.permitted() && !requestAnkiPermission()) throw BadRequest("anki.android_refused")
     }
 

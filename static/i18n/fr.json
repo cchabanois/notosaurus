@@ -705,7 +705,7 @@
       "error": "Anki ({action}) : {detail}",
       "no_profile": "Aucun profil ouvert dans Anki : ouvre un profil puis réessaie.",
       "sync_not_logged_in": "Anki n'est pas connecté à AnkiWeb : clique une fois sur « Synchroniser » dans Anki pour te connecter",
-      "android_missing": "Les cartes vont dans AnkiDroid : Google Play s'ouvre sur sa fiche. Installe-le, ouvre-le une fois, puis ajoute à nouveau les cartes.",
+      "android_missing": "Les cartes vont dans AnkiDroid, l'application Anki gratuite pour Android : il n'est pas installé. Installe-le, ouvre-le une fois, puis ajoute à nouveau les cartes.",
       "android_refused": "Notosaurus n'a pas le droit d'ajouter des cartes à AnkiDroid : autorise-le, puis ajoute à nouveau les cartes.",
       "android_failed": "AnkiDroid n'a pas pris les cartes ({detail}) : ouvre AnkiDroid une fois, puis réessaie.",
       "android_no_deck": "AnkiDroid n'a pas de paquet « {deck} » : ajoute d'abord la leçon à Anki."

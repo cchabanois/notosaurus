@@ -186,6 +186,7 @@ document.addEventListener("alpine:init", () => {
     quick: storage("get", undefined, CAREFUL) !== "1",
     madeQuick: false,  // the open lesson was just made quick: "Careful, again" offered
     coming: [],  // the cards being made, as the AI writes them: shown while waiting
+    errorAction: { for: "", kind: "" },  // a button on that error's message ("installAnki")
     generating: "",  // the id of the lesson being made: what "Cancel" stops
     cancelling: false,
     loadingQuick: false,
@@ -1363,9 +1364,21 @@ document.addEventListener("alpine:init", () => {
         if (warnings.length) this.error = t("app.send.butWarning", { warnings: warnings.join(" ; ") });
       } catch (e) {
         this.error = e.message;
+        // The app without AnkiDroid: install it from the message (Google Play only when asked)
+        if (e.detail?.code === "anki.android_missing") this.errorAction = { for: e.message, kind: "installAnki" };
         this.checkAnki();
       } finally {
         this.sending = false;
+      }
+    },
+
+    // AnkiDroid's Google Play page; then "Add to Anki" again once it's installed and opened
+    async installAnki() {
+      this.error = "";
+      try {
+        await api("/api/anki/install", { method: "POST" });
+      } catch (e) {
+        this.error = e.message;
       }
     },
 

@@ -61,6 +61,11 @@
   <div class="toast" x-cloak x-show="error" x-transition.opacity role="alert">
     <span x-text="error"></span>
     <button @click="error = ''" :aria-label="$t('common.close')">✕</button>
+    <!-- What to do about it, when there is something (the app: install AnkiDroid) -->
+    <div class="toast-actions" x-show="errorAction.for === error">
+      <button class="toast-action" x-show="errorAction.kind === 'installAnki'" @click="installAnki()"
+              x-text="$t('android.anki.install')"></button>
+    </div>
   </div>
   <div class="toast ok" x-cloak x-show="success && !error" x-transition.opacity role="status">
     <span x-text="success"></span>
