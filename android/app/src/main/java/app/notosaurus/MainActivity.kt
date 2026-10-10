@@ -143,6 +143,12 @@ class MainActivity : ComponentActivity() {
         }
     }
 
+    override fun onDestroy() {
+        Thread { server.stop() }.start() // off the main thread; another activity starts its own
+        web.destroy()
+        super.onDestroy()
+    }
+
     // A shortcut of the app's icon, the app already open
     override fun onNewIntent(intent: Intent) {
         super.onNewIntent(intent)

@@ -82,6 +82,10 @@ class LocalServer(
         return runBlocking { server.engine.resolvedConnectors().first().port }
     }
 
+    fun stop() {
+        if (::server.isInitialized) server.stop(gracePeriodMillis = 0, timeoutMillis = 1000)
+    }
+
     init {
         // A key saved before keys were per relay: the relay in use then is its own
         prefs[KEY]?.takeIf { it.isNotEmpty() }?.let {

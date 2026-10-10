@@ -18,10 +18,13 @@
         android:usesCleartextTraffic="true">
         <!-- usesCleartextTraffic: the prototype talks to a relay on the computer (http on the LAN) -->
 
+        <!-- Turned, resized (a fold, a split screen): the page stays as it is, with the lesson
+             being made (recreated, it was loaded again: photos and prompt lost) -->
         <activity
             android:name=".MainActivity"
             android:exported="true"
             android:launchMode="singleTask"
+            android:configChanges="orientation|screenSize|smallestScreenSize|screenLayout|keyboardHidden"
             android:windowSoftInputMode="adjustResize">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
