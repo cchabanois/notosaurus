@@ -12,7 +12,7 @@ souvent l'écriture d'un enfant, parfois son nom : voici où elle va.
   corriger les cartes. Le texte d'un PDF numérique part avec sa page.
 - **Les versos des cartes** vont au service de synthèse vocale de Microsoft, pour faire l'audio,
   quand une voix est choisie.
-- **La description d'une image** va au service qui la dessine, pour « Vocabulaire en images ».
+- **La description d'une image** va au service qui la dessine, pour « Langue : vocabulaire en images ».
 
 - **Les mots d'une recherche d'image** (quelques mots en anglais : « dog », « Storming of the
   Bastille painting ») vont à Wikimedia Commons et Openverse, pour trouver des images libres ;

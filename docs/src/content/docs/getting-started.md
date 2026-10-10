@@ -87,7 +87,7 @@ Only devices that scanned this QR code can use Notosaurus. If a phone is lost or
 The lesson is saved: you can reopen it later from the list of lessons, correct it and send it
 again. Its cards are updated in Anki, not duplicated.
 
-With the **Diagram to complete** instructions, the labels of a diagram are hidden behind
+With the **Diagram or map to complete** instructions, the labels of a diagram are hidden behind
 numbers: each card asks for one of them.
 
 ![A diagram with its labels hidden](../../assets/screenshots/en/diagram.png)

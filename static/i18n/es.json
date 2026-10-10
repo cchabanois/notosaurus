@@ -836,26 +836,38 @@
   "builtinPrompts": {
     "auto": {
       "name": "Automático (según la lección)",
-      "text": "Mira la lección y elige las tarjetas más útiles para repasarla:\n- vocabulario de un idioma: una tarjeta por palabra o expresión, anverso en español, reverso en el idioma que se estudia;\n- lección de una asignatura (historia, ciencias, geografía…): preguntas / respuestas cortas, o texto con huecos para las frases que hay que recordar;\n- fórmulas: una tarjeta por fórmula (anverso: lo que calcula, reverso: la fórmula);\n- una noción que una figura hace entender (geometría, o cualquier figura de la lección): tarjetas con una figura exacta cuando ayude;\n- esquema con rótulos: esquema mudo, una tarjeta por rótulo;\n- una imagen solo cuando ayuda de verdad a recordar (un personaje, un lugar, un monumento, una obra, un animal), nunca para una noción abstracta ni en todas las tarjetas: en el reverso cuando muestra la respuesta (el retrato del presidente cuyo nombre se pregunta), en el anverso solo cuando la pregunta trata de la imagen («¿Quién es?»).\nMézclalas si la página contiene varias de estas cosas.\nDi en una frase lo que has elegido.",
+      "text": "Mira la lección y elige las tarjetas más útiles para repasarla:\n- vocabulario de un idioma: una tarjeta por palabra o expresión, anverso en mi idioma, reverso en el idioma que se estudia;\n- lección de una asignatura (historia, ciencias, geografía…): preguntas / respuestas cortas, o texto con huecos para las frases que hay que recordar;\n- fórmulas: una tarjeta por fórmula (anverso: lo que calcula, reverso: la fórmula);\n- una noción que una figura hace entender (geometría, o cualquier figura de la lección): tarjetas con una figura exacta cuando ayude;\n- esquema con rótulos: esquema mudo, una tarjeta por rótulo;\n- una imagen solo cuando ayuda de verdad a recordar (un personaje, un lugar, un monumento, una obra, un animal), nunca para una noción abstracta ni en todas las tarjetas: en el reverso cuando muestra la respuesta (el retrato del presidente cuyo nombre se pregunta), en el anverso solo cuando la pregunta trata de la imagen («¿Quién es?»).\nMézclalas si la página contiene varias de estas cosas.\nDi en una frase lo que has elegido.",
       "deck": "{asignatura}::{título de la lección}",
       "voice": "auto"
     },
     "vocabulary": {
-      "name": "Vocabulario de un idioma",
-      "text": "Crea tarjetas de Anki con el vocabulario de la lección de idioma. Una palabra o expresión por tarjeta. Anverso en mi idioma, reverso en el idioma que se estudia, con el artículo para los sustantivos. En «info», indica el género, el plural si es irregular y un ejemplo corto si la lección lo da.",
+      "name": "Idioma: vocabulario",
+      "text": "Crea tarjetas de Anki con el vocabulario de la lección de idioma. Una palabra o expresión por tarjeta. Anverso en mi idioma, reverso en el idioma que se estudia, con el artículo para los sustantivos. En «info», indica el género, el plural si es irregular y un ejemplo corto si la lección lo da.\nSin foto: a partir de lo que escribo aquí (una lista de palabras o un tema).",
       "deck": "{idioma}::Lección {n}",
       "voice": "auto"
     },
     "sentences": {
-      "name": "Frases de un idioma",
+      "name": "Idioma: frases",
       "text": "Crea tarjetas de Anki con las frases completas de la lección de idioma. Anverso: la frase en mi idioma. Reverso: la frase en el idioma que se estudia.",
       "deck": "{idioma}::Lección {n}::Frases",
       "voice": "auto"
     },
+    "conjugation": {
+      "name": "Idioma: conjugación",
+      "deck": "{idioma}::Conjugación",
+      "voice": "auto",
+      "text": "Crea tarjetas de conjugación con los verbos de la lección de idioma: un verbo, un tiempo y una persona por tarjeta. Anverso: el verbo en infinitivo en el idioma que se estudia, el tiempo y la persona (p. ej. «to be — presente — nosotros»). Reverso: la forma conjugada en el idioma que se estudia, con su pronombre. Info: la regla o la irregularidad que hay que recordar; si no, vacío.\nSin foto: a partir de lo que escribo aquí (verbos, tiempos)."
+    },
     "questions": {
       "name": "Preguntas / respuestas",
-      "text": "Crea tarjetas pregunta → respuesta para repasar el contenido de la lección (fechas, definiciones, conceptos clave). Preguntas cortas y precisas, respuestas breves, en español.",
+      "text": "Crea tarjetas pregunta → respuesta para repasar el contenido de la lección (fechas, definiciones, conceptos clave). Preguntas cortas y precisas, respuestas breves, en el idioma de la lección.",
       "deck": "{asignatura}::{título de la lección}"
+    },
+    "definitions": {
+      "name": "Definiciones",
+      "deck": "{asignatura}::{título de la lección}",
+      "voice": "",
+      "text": "Crea una tarjeta por cada palabra clave de la lección, los términos que hay que saber definir. Anverso: la palabra clave. Reverso: su definición, corta, tal como la da la lección. Info: un ejemplo corto, si la lección lo da.\nSin foto: a partir de lo que escribo aquí."
     },
     "cloze": {
       "name": "Texto con huecos",
@@ -865,7 +877,7 @@
     },
     "quiz": {
       "name": "Test de opción múltiple",
-      "text": "Crea un test de opción múltiple para repasar la lección: una pregunta por cada concepto importante (fechas, definiciones, conceptos clave), con la respuesta correcta y tres respuestas incorrectas verosímiles. Preguntas cortas, en español. Info: una breve explicación de la respuesta correcta, si ayuda.",
+      "text": "Crea un test de opción múltiple para repasar la lección: una pregunta por cada concepto importante (fechas, definiciones, conceptos clave), con la respuesta correcta y tres respuestas incorrectas verosímiles. Preguntas cortas, en el idioma de la lección. Info: una breve explicación de la respuesta correcta, si ayuda.",
       "deck": "{asignatura}::{título de la lección}",
       "voice": ""
     },
@@ -875,6 +887,12 @@
       "deck": "{asignatura}::{título de la lección}",
       "voice": ""
     },
+    "methods": {
+      "name": "Métodos (pasos)",
+      "deck": "{asignatura}::Métodos",
+      "voice": "",
+      "text": "Crea una tarjeta por cada método o procedimiento de la lección (resolver una ecuación, acentuar una palabra, redactar una conclusión…). Anverso: «¿Cómo se …?». Reverso: los pasos, numerados y cortos. Info: un ejemplo corto, si la lección lo da.\nSin foto: a partir de lo que escribo aquí."
+    },
     "formulas": {
       "name": "Fórmulas (matemáticas, física…)",
       "text": "Crea una tarjeta por cada fórmula de la lección. Anverso: lo que permite calcular la fórmula (o su nombre). Reverso: la fórmula. Info: lo que representa cada letra. Cuando la fórmula trate de una figura (área del círculo, Pitágoras…), pon esa figura, con sus letras.",
@@ -883,31 +901,25 @@
     },
     "geometry": {
       "name": "Geometría (con figuras)",
-      "text": "Crea tarjetas para repasar la geometría de la lección (o del tema de abajo): figuras, propiedades, vocabulario (hipotenusa, radio, mediatriz…). Pon una figura exacta cuando ayude a responder, sin escribir nunca la respuesta en ella.",
+      "text": "Crea tarjetas para repasar la geometría de la lección: figuras, propiedades, vocabulario (hipotenusa, radio, mediatriz…). Pon una figura exacta cuando ayude a responder, sin escribir nunca la respuesta en ella.\nSin foto: a partir del tema que escribo aquí.",
       "deck": "Matemáticas::{título de la lección}",
       "voice": ""
     },
     "diagram": {
-      "name": "Esquema mudo",
-      "text": "La foto muestra un esquema con rótulos (nombres unidos al dibujo por una flecha o una línea). Oculta el texto de cada rótulo tras un número y crea una tarjeta por rótulo. Anverso: el esquema, con la pregunta «¿Qué es (n)?». Reverso: el texto del rótulo.",
+      "name": "Esquema o mapa mudo",
+      "text": "La foto muestra un esquema o un mapa con rótulos (nombres unidos al dibujo por una flecha o una línea). Oculta el texto de cada rótulo tras un número y crea una tarjeta por rótulo. Anverso: el esquema, con la pregunta «¿Qué es (n)?». Reverso: el texto del rótulo.",
       "deck": "{asignatura}::{título del esquema}"
     },
     "pictures": {
-      "name": "Vocabulario en imágenes (idiomas)",
-      "text": "Crea tarjetas con el vocabulario de la lección de idioma (sin foto: 10 palabras comunes del tema que añado aquí), solo palabras que una imagen muestre con claridad (objetos, animales, alimentos, lugares, acciones visibles). Anverso: la imagen de la palabra, con la pregunta «¿Cómo se dice?». Reverso: la palabra en el idioma que se estudia, con el artículo. Info: la palabra en español.",
+      "name": "Idioma: vocabulario en imágenes",
+      "text": "Crea tarjetas con el vocabulario de la lección de idioma, solo palabras que una imagen muestre con claridad (objetos, animales, alimentos, lugares, acciones visibles). Anverso: la imagen de la palabra, con la pregunta «¿Cómo se dice?». Reverso: la palabra en el idioma que se estudia, con el artículo. Info: la palabra en mi idioma.\nSin foto: 10 palabras comunes del tema que escribo aquí.",
       "deck": "{idioma}::Imágenes",
-      "voice": "auto"
-    },
-    "wordlist": {
-      "name": "Lista de palabras (sin foto)",
-      "text": "Crea una tarjeta por cada palabra de la lista de abajo. Anverso: la palabra en español. Reverso: su traducción al idioma que se estudia, con el artículo.\nLista: ",
-      "deck": "{idioma}::Palabras",
       "voice": "auto"
     },
     "dictation": {
       "name": "Dictado de palabras",
-      "text": "Crea una tarjeta por cada palabra que hay que saber escribir, tomada de la lección o de la lista de abajo. Anverso: una frase corta que usa la palabra, con la palabra sustituida por «…» (su definición si la frase no basta para adivinarla). Reverso: la palabra sola, escrita exactamente como en la frase. Info: un truco de ortografía útil (tilde, b/v, h muda, familia de palabras…), si no, vacío.",
-      "deck": "Lengua::Ortografía",
+      "text": "Crea una tarjeta por cada palabra que hay que saber escribir, tomada de la lección. Anverso: una frase corta que usa la palabra, con la palabra sustituida por «…» (su definición si la frase no basta para adivinarla). Reverso: la palabra sola, escrita exactamente como en la frase. Info: un truco de ortografía útil (tilde, b/v, h muda, familia de palabras…), si no, vacío.\nSin foto: a partir de lo que escribo aquí (una lista de palabras o un tema).",
+      "deck": "{asignatura}::Ortografía",
       "voice": "auto",
       "typing": true,
       "dictation": true

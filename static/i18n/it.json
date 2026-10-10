@@ -836,26 +836,38 @@
   "builtinPrompts": {
     "auto": {
       "name": "Automatiche (secondo la lezione)",
-      "text": "Guarda la lezione e scegli le carte più utili per ripassarla:\n- lessico di una lingua: una carta per parola o espressione, fronte in italiano, retro nella lingua studiata;\n- lezione di una materia (storia, scienze, geografia…): domande / risposte brevi, o testo da completare per le frasi da ricordare;\n- formule: una carta per formula (fronte: cosa calcola, retro: la formula);\n- un concetto che una figura fa capire (geometria, o qualsiasi figura della lezione): carte con una figura esatta quando aiuta;\n- schema con i nomi: schema da completare, una carta per nome;\n- un'immagine solo quando aiuta davvero a ricordare (un personaggio, un luogo, un monumento, un'opera, un animale), mai per un concetto astratto né su ogni carta: sul retro quando mostra la risposta (il ritratto del presidente di cui si chiede il nome), sul fronte solo quando la domanda riguarda l'immagine («Chi è?»).\nMescolale se la pagina contiene più di queste cose.\nDi' in una frase cosa hai scelto.",
+      "text": "Guarda la lezione e scegli le carte più utili per ripassarla:\n- lessico di una lingua: una carta per parola o espressione, fronte nella mia lingua, retro nella lingua studiata;\n- lezione di una materia (storia, scienze, geografia…): domande / risposte brevi, o testo da completare per le frasi da ricordare;\n- formule: una carta per formula (fronte: cosa calcola, retro: la formula);\n- un concetto che una figura fa capire (geometria, o qualsiasi figura della lezione): carte con una figura esatta quando aiuta;\n- schema con i nomi: schema da completare, una carta per nome;\n- un'immagine solo quando aiuta davvero a ricordare (un personaggio, un luogo, un monumento, un'opera, un animale), mai per un concetto astratto né su ogni carta: sul retro quando mostra la risposta (il ritratto del presidente di cui si chiede il nome), sul fronte solo quando la domanda riguarda l'immagine («Chi è?»).\nMescolale se la pagina contiene più di queste cose.\nDi' in una frase cosa hai scelto.",
       "deck": "{materia}::{titolo della lezione}",
       "voice": "auto"
     },
     "vocabulary": {
-      "name": "Lessico di una lingua",
-      "text": "Crea carte Anki con il lessico della lezione di lingua. Una parola o espressione per carta. Fronte nella mia lingua, retro nella lingua studiata, con l'articolo per i nomi. In “info”, indica il genere, il plurale se è irregolare e un breve esempio se la lezione ne dà uno.",
+      "name": "Lingua: lessico",
+      "text": "Crea carte Anki con il lessico della lezione di lingua. Una parola o espressione per carta. Fronte nella mia lingua, retro nella lingua studiata, con l'articolo per i nomi. In “info”, indica il genere, il plurale se è irregolare e un breve esempio se la lezione ne dà uno.\nSenza foto: a partire da ciò che scrivo qui (un elenco di parole o un argomento).",
       "deck": "{lingua}::Lezione {n}",
       "voice": "auto"
     },
     "sentences": {
-      "name": "Frasi di una lingua",
+      "name": "Lingua: frasi",
       "text": "Crea carte Anki con le frasi complete della lezione di lingua. Fronte: la frase nella mia lingua. Retro: la frase nella lingua studiata.",
       "deck": "{lingua}::Lezione {n}::Frasi",
       "voice": "auto"
     },
+    "conjugation": {
+      "name": "Lingua: coniugazione",
+      "deck": "{lingua}::Coniugazione",
+      "voice": "auto",
+      "text": "Crea carte di coniugazione con i verbi della lezione di lingua: un verbo, un tempo e una persona per carta. Fronte: il verbo all'infinito nella lingua studiata, il tempo e la persona (es. «to be — presente — noi»). Retro: la forma coniugata nella lingua studiata, con il suo pronome. Info: la regola o l'irregolarità da ricordare, altrimenti vuoto.\nSenza foto: a partire da ciò che scrivo qui (verbi, tempi)."
+    },
     "questions": {
       "name": "Domande / risposte",
-      "text": "Crea carte domanda → risposta per ripassare il contenuto della lezione (date, definizioni, concetti chiave). Domande brevi e precise, risposte concise, in italiano.",
+      "text": "Crea carte domanda → risposta per ripassare il contenuto della lezione (date, definizioni, concetti chiave). Domande brevi e precise, risposte concise, nella lingua della lezione.",
       "deck": "{materia}::{titolo della lezione}"
+    },
+    "definitions": {
+      "name": "Definizioni",
+      "deck": "{materia}::{titolo della lezione}",
+      "voice": "",
+      "text": "Crea una carta per ogni parola chiave della lezione, i termini che bisogna saper definire. Fronte: la parola chiave. Retro: la sua definizione, breve, come la dà la lezione. Info: un breve esempio, se la lezione ne dà uno.\nSenza foto: a partire da ciò che scrivo qui."
     },
     "cloze": {
       "name": "Testo da completare",
@@ -865,7 +877,7 @@
     },
     "quiz": {
       "name": "Quiz a risposta multipla",
-      "text": "Crea un quiz a risposta multipla per ripassare la lezione: una domanda per ogni concetto importante (date, definizioni, concetti chiave), con la risposta giusta e tre risposte sbagliate plausibili. Domande brevi, in italiano. Info: una breve spiegazione della risposta giusta, se aiuta.",
+      "text": "Crea un quiz a risposta multipla per ripassare la lezione: una domanda per ogni concetto importante (date, definizioni, concetti chiave), con la risposta giusta e tre risposte sbagliate plausibili. Domande brevi, nella lingua della lezione. Info: una breve spiegazione della risposta giusta, se aiuta.",
       "deck": "{materia}::{titolo della lezione}",
       "voice": ""
     },
@@ -875,6 +887,12 @@
       "deck": "{materia}::{titolo della lezione}",
       "voice": ""
     },
+    "methods": {
+      "name": "Metodi (passaggi)",
+      "deck": "{materia}::Metodi",
+      "voice": "",
+      "text": "Crea una carta per ogni metodo o procedimento della lezione (risolvere un'equazione, fare l'analisi logica, scrivere una conclusione…). Fronte: «Come si …?». Retro: i passaggi, numerati e brevi. Info: un breve esempio, se la lezione ne dà uno.\nSenza foto: a partire da ciò che scrivo qui."
+    },
     "formulas": {
       "name": "Formule (matematica, fisica…)",
       "text": "Crea una carta per ogni formula della lezione. Fronte: cosa permette di calcolare la formula (o il suo nome). Retro: la formula. Info: cosa rappresenta ogni lettera. Quando la formula riguarda una figura (area del cerchio, Pitagora…), metti quella figura, con le sue lettere.",
@@ -883,31 +901,25 @@
     },
     "geometry": {
       "name": "Geometria (con figure)",
-      "text": "Crea carte per ripassare la geometria della lezione (o dell'argomento qui sotto): figure, proprietà, termini (ipotenusa, raggio, asse di un segmento…). Metti una figura esatta quando aiuta a rispondere, senza mai scriverci la risposta.",
+      "text": "Crea carte per ripassare la geometria della lezione: figure, proprietà, termini (ipotenusa, raggio, asse di un segmento…). Metti una figura esatta quando aiuta a rispondere, senza mai scriverci la risposta.\nSenza foto: a partire dall'argomento che scrivo qui.",
       "deck": "Matematica::{titolo della lezione}",
       "voice": ""
     },
     "diagram": {
-      "name": "Schema da completare",
-      "text": "La foto mostra uno schema con dei nomi (collegati al disegno da una freccia o una linea). Nascondi il testo di ogni nome dietro un numero e crea una carta per nome. Fronte: lo schema, con la domanda “Che cos'è (n)?”. Retro: il testo del nome.",
+      "name": "Schema o carta da completare",
+      "text": "La foto mostra uno schema o una carta geografica con dei nomi (collegati al disegno da una freccia o una linea). Nascondi il testo di ogni nome dietro un numero e crea una carta per nome. Fronte: lo schema, con la domanda “Che cos'è (n)?”. Retro: il testo del nome.",
       "deck": "{materia}::{titolo dello schema}"
     },
     "pictures": {
-      "name": "Lessico per immagini (lingue)",
-      "text": "Crea carte con il lessico della lezione di lingua (senza foto: 10 parole comuni dell'argomento che aggiungo qui), solo parole che un'immagine mostra chiaramente (oggetti, animali, cibi, luoghi, azioni visibili). Fronte: l'immagine della parola, con la domanda “Come si dice?”. Retro: la parola nella lingua studiata, con l'articolo. Info: la parola in italiano.",
+      "name": "Lingua: lessico per immagini",
+      "text": "Crea carte con il lessico della lezione di lingua, solo parole che un'immagine mostra chiaramente (oggetti, animali, cibi, luoghi, azioni visibili). Fronte: l'immagine della parola, con la domanda “Come si dice?”. Retro: la parola nella lingua studiata, con l'articolo. Info: la parola nella mia lingua.\nSenza foto: 10 parole comuni dell'argomento che scrivo qui.",
       "deck": "{lingua}::Immagini",
-      "voice": "auto"
-    },
-    "wordlist": {
-      "name": "Elenco di parole (senza foto)",
-      "text": "Crea una carta per ogni parola dell'elenco qui sotto. Fronte: la parola in italiano. Retro: la sua traduzione nella lingua studiata, con l'articolo.\nElenco: ",
-      "deck": "{lingua}::Parole",
       "voice": "auto"
     },
     "dictation": {
       "name": "Dettato di parole",
-      "text": "Crea una carta per ogni parola da saper scrivere, presa dalla lezione o dall'elenco qui sotto. Fronte: una frase breve che usa la parola, con la parola sostituita da “…” (la sua definizione se la frase non basta a indovinarla). Retro: la parola da sola, scritta esattamente come nella frase. Info: un trucco di ortografia utile (doppie, accento, h, famiglia di parole…), altrimenti vuoto.",
-      "deck": "Italiano::Ortografia",
+      "text": "Crea una carta per ogni parola da saper scrivere, presa dalla lezione. Fronte: una frase breve che usa la parola, con la parola sostituita da “…” (la sua definizione se la frase non basta a indovinarla). Retro: la parola da sola, scritta esattamente come nella frase. Info: un trucco di ortografia utile (doppie, accento, h, famiglia di parole…), altrimenti vuoto.\nSenza foto: a partire da ciò che scrivo qui (un elenco di parole o un argomento).",
+      "deck": "{materia}::Ortografia",
       "voice": "auto",
       "typing": true,
       "dictation": true

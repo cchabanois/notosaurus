@@ -20,15 +20,17 @@ BUILTIN = (
     "auto",
     "vocabulary",
     "sentences",
+    "conjugation",
     "questions",
+    "definitions",
     "cloze",
     "quiz",
     "true_false",
+    "methods",
     "formulas",
     "geometry",
     "diagram",
     "pictures",
-    "wordlist",
     "dictation",
 )
 
