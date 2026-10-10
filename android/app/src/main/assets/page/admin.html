@@ -49,6 +49,15 @@
     <!-- The licence: the relay's account -->
     <section class="panel" x-show="onPhone()">
       <h2 x-text="$t('android.licence.title')"></h2>
+      <!-- A debug build: the real relay or the test one in one tap, each with its own licence -->
+      <div class="chips" role="radiogroup" x-show="form?.relays?.test" :aria-label="$t('android.advanced.relay')">
+        <button type="button" class="chip" role="radio" :aria-checked="form?.relay === form?.relays?.real"
+                :class="{ active: form?.relay === form?.relays?.real }" @click="useRelay(form.relays.real)"
+                x-text="$t('android.licence.realRelay')"></button>
+        <button type="button" class="chip" role="radio" :aria-checked="form?.relay === form?.relays?.test"
+                :class="{ active: form?.relay === form?.relays?.test }" @click="useRelay(form.relays.test)"
+                x-text="$t('android.licence.testRelay')"></button>
+      </div>
       <p class="hint" x-show="form && !form.has_key" x-text="$t('android.licence.none')"></p>
       <!-- Free with the add-on: said where the question comes up -->
       <p class="hint" x-show="form && !form.has_key"><a href="#where" x-text="$t('android.licence.free')"></a></p>

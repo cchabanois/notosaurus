@@ -569,7 +569,9 @@
       "credits": "{credits} créditos restantes este mes, {today} hoy",
       "renews": "Se renuevan el {date}",
       "none": "Todavía no hay clave de licencia: llega con la suscripción.",
-      "free": "¿Sin suscripción? Con el complemento de Anki en tu ordenador, la aplicación es gratuita: mira «¿Dónde trabaja Notosaurus?»."
+      "free": "¿Sin suscripción? Con el complemento de Anki en tu ordenador, la aplicación es gratuita: mira «¿Dónde trabaja Notosaurus?».",
+      "realRelay": "Relé real",
+      "testRelay": "🧪 Relé de prueba"
     },
     "anki": {
       "title": "📥 AnkiDroid",
