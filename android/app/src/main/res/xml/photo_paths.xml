@@ -1,4 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <paths>
     <cache-path name="photos" path="photos/" />
+    <!-- The cards' sound (the relay's voices), handed to AnkiDroid -->
+    <files-path name="audio" path="audio/" />
 </paths>

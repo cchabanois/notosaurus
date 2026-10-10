@@ -17,8 +17,10 @@ takes but the AI configuration (the relay's own), and keeps nothing.
 - /v1/extract asked with "Accept: application/x-ndjson" (STREAM_TYPE) answers as the
   AI writes: one JSON object per line, each card as it comes, then the answer or
   the error (ExtractLine). A client going away stops the AI.
-- Each answer says the credits it used and those left (Usage; for /v1/picture, the
-  CREDITS_HEADER and CREDITS_LEFT_HEADER headers). A credit is a share of the
+- /v1/speak reads a card's back aloud with one of /v1/voices (natural voices, the
+  same on every device): an mp3, for the app that has no voices of its own.
+- Each answer says the credits it used and those left (Usage; for /v1/picture and
+  /v1/speak, the CREDITS_HEADER and CREDITS_LEFT_HEADER headers). A credit is a share of the
   call's real AI cost, at least 1 per call: the relay counts them, not the client.
 
 The OpenAPI description (core/relay-api-v1.json) is generated from these models
@@ -47,6 +49,7 @@ MAX_NAME = 300  # a deck name
 MAX_DECKS = 1000
 MAX_INSTRUCTION = 2000  # a correction
 MAX_SUBJECT = 1000  # a picture's subject, a figure's description
+MAX_SPEECH = 500  # a back read aloud (the app reads the first 200 characters)
 
 # Error code → HTTP status, besides the AI's own errors ("llm.*", passed on)
 ERRORS = {
@@ -137,6 +140,16 @@ class FigureRequest(BaseModel):
     description: str = Field(min_length=1, max_length=MAX_SUBJECT, description="What to draw, every label exact.")
 
 
+class SpeakRequest(BaseModel):
+    """POST /v1/speak: a text read aloud. Answer: the mp3 (audio/mpeg), its credits in
+    CREDITS_HEADER and CREDITS_LEFT_HEADER (a share of the characters' real cost, at
+    least 1)."""
+
+    text: str = Field(min_length=1, max_length=MAX_SPEECH)
+    voice: str = Field(max_length=100, description='One of /v1/voices ("es-ES-Chirp3-HD-Aoede").')
+    rate: float = Field(default=0.9, ge=0.25, le=2.0, description="The speed: 1 normal, 0.9 a little slower.")
+
+
 class PictureRequest(BaseModel):
     """A picture for a card, drawn by an image model. JSON; the answer is the JPEG itself."""
 
@@ -175,6 +188,14 @@ class ExplainResponse(Explanation):
 class FigureResponse(BaseModel):
     svg: str = Field(description="The figure, cleaned: shapes and text only (figures.clean).")
     usage: Usage
+
+
+class Voice(BaseModel):
+    """GET /v1/voices gives a list of them: the voices /v1/speak reads with."""
+
+    voice: str = Field(description='Its name, for /v1/speak ("es-ES-Chirp3-HD-Aoede").')
+    locale: str = Field(description='The language it speaks ("es-ES").')
+    gender: str = Field(description='"Female" or "Male".')
 
 
 class Account(BaseModel):

@@ -43,6 +43,7 @@ import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.put
 import java.io.File
 import java.net.URI
+import java.security.MessageDigest
 import java.util.UUID
 import java.util.concurrent.ConcurrentHashMap
 
@@ -76,6 +77,7 @@ class LocalServer(
     val token: String = UUID.randomUUID().toString(),
 ) {
     private val lessons = Lessons(File(dataDir, "lessons").apply { mkdirs() })
+    private val audio = File(dataDir, "audio").apply { mkdirs() } // the backs read aloud, kept
     private val prompts = File(dataDir, "prompts.json")
     private lateinit var server: EmbeddedServer<*, *>
 
@@ -111,7 +113,7 @@ class LocalServer(
     private class Made(val content: Map<String, JsonElement>, val photos: List<ByteArray>)
 
     /** The page's form for making a lesson: its fields and its photos. */
-    private class Form(val fields: Map<String, String>, val images: List<ByteArray>)
+    private class Form(val fields: Map<String, String>, val images: List<ByteArray>, val lang: String)
 
     private suspend fun RoutingContext.form(): Form {
         val fields = mutableMapOf<String, String>()
@@ -124,7 +126,7 @@ class LocalServer(
             }
             part.dispose()
         }
-        return Form(fields, images)
+        return Form(fields, images, lang())
     }
 
     /** The page's form (photos, prompt, options) made into cards by the relay, each
@@ -143,7 +145,11 @@ class LocalServer(
             put("quick", fields["quick"] == "true")
         }
         val found = cancellable(fields["job"]) { relay().extract(request, images, onCard) }
-        val voice = fields["voice"].orEmpty().takeUnless { it.equals("auto", ignoreCase = true) } ?: ""
+        val spelling = fields["typing"] == "true" || fields["dictation"] == "true"
+        val voice = fields["voice"].orEmpty().let {
+            if (!it.equals("auto", ignoreCase = true)) it
+            else voiceFor(learned(found.string("back_language"), form.lang, spelling)) // the language learned
+        }
         val content = mapOf(
             "deck" to found["deck"]!!.jsonObject["deck"]!!,
             "cards" to found["deck"]!!.jsonObject["cards"]!!,
@@ -156,6 +162,59 @@ class LocalServer(
         )
         return Made(content, images) // to do: turned upright (found["turns"]), as the computer does
     }
+
+    /** The relay's voices, asked once. */
+    private var voiceList: JsonArray? = null
+
+    private suspend fun voices(): JsonArray = voiceList ?: relay().voices().also { voiceList = it }
+
+    /** A text read aloud by the relay's voice, kept on the phone: the same text and
+     * voice aren't paid for twice (the 🔊 preview, then the cards). */
+    private suspend fun speech(text: String, voice: String): File {
+        val said = text.trim().take(200) // as the computer: a back's first 200 characters
+        val digest = MessageDigest.getInstance("SHA-1").digest("$voice|${Relay.SPEECH_RATE}|$said".toByteArray())
+        val mp3 = File(audio, digest.joinToString("") { "%02x".format(it) }.take(16) + ".mp3")
+        if (!mp3.isFile) {
+            val bytes = relay().speak(said, voice)
+            withContext(Dispatchers.IO) {
+                val tmp = File(audio, mp3.name + ".tmp")
+                tmp.writeBytes(bytes)
+                tmp.renameTo(mp3)
+            }
+        }
+        return mp3
+    }
+
+    /** The backs' sound for AnkiDroid, with `voice` (none: no sound), and how many
+     * couldn't be made. */
+    private suspend fun sounds(deck: Deck, voice: String): Pair<Map<String, File>, Int> {
+        if (!VOICE.matches(voice)) return emptyMap<String, File>() to 0
+        val backs = deck.cards.map { it.back.trim() }.filter { it.isNotEmpty() }.distinct()
+        val made = backs.associateWith { runCatching { speech(it, voice) }.getOrNull() }
+        return made.filterValues { it != null }.mapValues { it.value!! } to made.count { it.value == null }
+    }
+
+    /** The voice for the backs' language ("es-ES", "en"…): the relay's DEFAULT_VOICE in
+     * that variety, else in another of the language; "" when none (or no relay). */
+    private suspend fun voiceFor(language: String): String {
+        val tag = language.trim().replace('_', '-').lowercase()
+        if (tag.isEmpty()) return ""
+        val all = runCatching { voices() }.getOrNull()?.map { it.jsonObject } ?: return ""
+        val base = tag.substringBefore('-')
+        val ranked = all.filter { it.string("locale").lowercase().substringBefore('-') == base }.sortedWith(
+            compareBy(
+                { it.string("locale").lowercase() != tag }, // the variety asked for
+                { it.string("locale").lowercase() != "$base-$base" }, // else the language's own (es-ES, fr-FR)
+                { !it.string("voice").endsWith("-$DEFAULT_VOICE") },
+            ),
+        )
+        return ranked.firstOrNull()?.string("voice") ?: ""
+    }
+
+    /** The backs' language when it is one being learned: not the pupil's own (the page's)
+     * unless the cards are for writing what is heard, as the computer (app/main.py). */
+    private fun learned(language: String, pupil: String, spelling: Boolean): String =
+        if (!spelling && language.lowercase().substringBefore('-') == pupil.substringBefore('-')) "" else language
 
     private fun instructions(): String {
         val text = prefs[INSTRUCTIONS].orEmpty().trim()
@@ -198,10 +257,13 @@ class LocalServer(
         api("GET", "/api/admin/data") {
             buildJsonObject {
                 put("lessons", lessons.list().size)
-                put("bytes", lessons.bytes())
+                put("bytes", lessons.bytes() + audio.walkTopDown().filter { it.isFile }.sumOf { it.length() }) // with their sound
             }
         }
-        api("DELETE", "/api/admin/lessons") { buildJsonObject { put("deleted", lessons.deleteAll()) } }
+        api("DELETE", "/api/admin/lessons") {
+            audio.listFiles()?.forEach { it.delete() } // their sound too (AnkiDroid keeps its own copy)
+            buildJsonObject { put("deleted", lessons.deleteAll()) }
+        }
 
         // --- With my computer (the Anki add-on's Notosaurus)
         api("POST", "/api/admin/computer/scan") {
@@ -228,7 +290,22 @@ class LocalServer(
                 put("names", JsonObject(codes.associateWith { JsonPrimitive(i18n(it, "meta", "name") ?: it) }))
             }
         }
-        api("GET", "/api/voices") { JsonArray(emptyList()) } // to do: Android's voices
+        api("GET", "/api/voices") {
+            try {
+                voices()
+            } catch (e: RelayException) {
+                throw BadRequest("tts.voices_unavailable", buildJsonObject { put("detail", e.code) })
+            }
+        }
+        // Listen to a text (🔊), read by the relay's voice
+        get("/api/tts") {
+            if (!allowed()) return@get
+            val text = call.request.queryParameters["text"].orEmpty()
+            val voice = call.request.queryParameters["voice"].orEmpty()
+            val mp3 = runCatching { speech(text, voice) }.getOrNull()
+            if (mp3 == null) call.respondText("", status = HttpStatusCode.BadGateway)
+            else call.respondBytes(mp3.readBytes(), ContentType.Audio.MPEG)
+        }
 
         // --- Prompts: Notosaurus's (from the page's languages), then the user's
         api("GET", "/api/prompts") { JsonArray(builtinPrompts(lang()) + userPrompts()) }
@@ -333,8 +410,9 @@ class LocalServer(
                 put("cards", req["cards"]!!)
             })
             readyAnki()
+            val (sounds, failures) = sounds(deck, req.string("voice"))
             val sent = try {
-                withContext(Dispatchers.IO) { anki.send(deck) }
+                withContext(Dispatchers.IO) { anki.send(deck, sounds) }
             } catch (e: Exception) { // e.g. AnkiDroid never opened: no collection yet
                 throw BadRequest("anki.android_failed", buildJsonObject { put("detail", e.message ?: e.javaClass.simpleName) })
             }
@@ -342,6 +420,7 @@ class LocalServer(
                 put("added", sent.added)
                 put("updated", 0) // to do: update the notes sent before (stable ids)
                 put("synced", false)
+                if (failures > 0) put("audio_failures", failures) // the page says some have no sound
             }
         }
 
@@ -561,6 +640,11 @@ class LocalServer(
         const val KEY = "key"
         const val INSTRUCTIONS = "instructions"
         const val CARD_HELPS = "card_helps"
+
+        // The voice chosen for a lesson whose voice is "auto" (Google Chirp 3 HD: the same
+        // name in every language); a voice's name, as the page tells them from Anki locales
+        const val DEFAULT_VOICE = "Aoede"
+        private val VOICE = Regex("""^[a-z]{2,3}-[A-Z]{2}-[\w-]+$""")
 
         // Prototype: the relay on the computer, seen from the emulator (changed in the settings, "Advanced")
         const val DEFAULT_RELAY = "http://10.0.2.2:8080"

@@ -5,8 +5,10 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlinx.coroutines.withContext
+import kotlinx.serialization.json.JsonArray
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.buildJsonObject
+import kotlinx.serialization.json.jsonArray
 import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.put
 import okhttp3.Call
@@ -77,6 +79,19 @@ class Relay(baseUrl: String, private val key: String) {
         return body.build()
     }
 
+    /** The voices /v1/speak reads with: {"voice", "locale", "gender"}, as the page lists them. */
+    suspend fun voices(): JsonArray = open("voices", null).use { json.parseToJsonElement(it.body.string()).jsonArray }
+
+    /** A text read aloud (/v1/speak): the mp3. */
+    suspend fun speak(text: String, voice: String, rate: Double = SPEECH_RATE): ByteArray {
+        val request = buildJsonObject {
+            put("text", text)
+            put("voice", voice)
+            put("rate", rate)
+        }
+        return open("speak", request.toString().toRequestBody(JSON)).use { it.body.bytes() }
+    }
+
     /** A JSON route (explain, figure). */
     suspend fun post(route: String, request: JsonObject): JsonObject = call(route, request.toString().toRequestBody(JSON))
 
@@ -120,6 +135,9 @@ class Relay(baseUrl: String, private val key: String) {
     companion object {
         const val CLIENT_HEADER = "X-Notosaurus-Version"
         const val STREAM_TYPE = "application/x-ndjson"
+
+        // A little slower than normal, for learners (the computer's "-10%")
+        const val SPEECH_RATE = 0.9
 
         // Notosaurus's version (the root pyproject.toml's, as the app's): the relay may
         // refuse one too old for its API

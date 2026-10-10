@@ -595,7 +595,7 @@
       "title": "🗂️ Lektionen auf diesem Handy",
       "size": "{lessons} · {size} MB",
       "deleteAll": "Alle Lektionen löschen",
-      "confirm": "Alle Lektionen auf diesem Handy löschen? Die Karten in AnkiDroid bleiben.",
+      "confirm": "Alle Lektionen auf diesem Handy löschen, samt Ton? Die Karten, die schon in AnkiDroid sind, bleiben, mit ihrem Ton.",
       "deleted": "Lektionen gelöscht."
     },
     "about": {

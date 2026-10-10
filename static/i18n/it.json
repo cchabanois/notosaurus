@@ -595,7 +595,7 @@
       "title": "🗂️ Lezioni su questo telefono",
       "size": "{lessons} · {size} MB",
       "deleteAll": "Elimina tutte le lezioni",
-      "confirm": "Eliminare tutte le lezioni di questo telefono? Le carte già in AnkiDroid restano.",
+      "confirm": "Eliminare tutte le lezioni di questo telefono, e il loro audio? Le carte già in AnkiDroid restano, con il loro audio.",
       "deleted": "Lezioni eliminate."
     },
     "about": {

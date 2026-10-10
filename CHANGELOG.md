@@ -14,6 +14,8 @@ Each pull request adds a line under **Unreleased**. See [Releasing](CONTRIBUTING
 - “Cancel” while the cards are being made: the AI stops, no lesson is saved, the page comes back as it was (generated again: the old lesson stays).
 - The coming Android app shows the cards as the AI writes them too, and its “Cancel” stops the AI on the relay.
 - For developers: the relay's `/v1/extract` can answer as the AI writes (`application/x-ndjson`, `relay_api.ExtractLine`).
+- The coming Android app reads the backs aloud with natural voices (Google Chirp 3 HD, through the relay): 🔊 in the review, and the sound on the cards sent to AnkiDroid. A lesson in a language being learned gets its voice by itself.
+- For developers: the relay's `/v1/speak` and `/v1/voices`.
 - The Android app can generate a lesson again in its place (“Regenerate”, “Make again, carefully”).
 
 ### Changed

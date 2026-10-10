@@ -1,9 +1,12 @@
 package app.notosaurus
 
 import android.content.Context
+import android.content.Intent
 import android.content.pm.PackageManager
 import androidx.core.content.ContextCompat
+import androidx.core.content.FileProvider
 import com.ichi2.anki.api.AddContentApi
+import java.io.File
 
 /** What was done with the cards: added, already in AnkiDroid, left out by the prototype. */
 data class Sent(val added: Int, val duplicates: Int, val skipped: Int, val deck: String)
@@ -13,7 +16,9 @@ interface AnkiTarget {
     fun installed(): Boolean
     fun permitted(): Boolean
     fun deckNames(): List<String>
-    fun send(deck: Deck): Sent
+
+    /** The cards into their decks; `audio`: a back's mp3 (its sound on the card). */
+    fun send(deck: Deck, audio: Map<String, File> = emptyMap()): Sent
 }
 
 /**
@@ -21,8 +26,8 @@ interface AnkiTarget {
  * note type, the lesson's deck and sub-decks, the notes. Needs AnkiDroid installed
  * and its READ_WRITE_DATABASE permission granted.
  *
- * Prototype: text cards only (no diagram masks, pictures or gaps: they need the
- * Notosaurus note types of the PC app).
+ * Text cards, with the back's sound when there is one (no diagram masks, pictures or
+ * gaps yet: they need the Notosaurus note types of the PC app).
  */
 class Anki(private val context: Context) : AnkiTarget {
     private val api = AddContentApi(context)
@@ -36,7 +41,7 @@ class Anki(private val context: Context) : AnkiTarget {
     override fun deckNames(): List<String> =
         if (installed() && permitted()) firstUse { api.deckList?.values?.toList().orEmpty() } else emptyList()
 
-    override fun send(deck: Deck): Sent = firstUse { add(deck) }
+    override fun send(deck: Deck, audio: Map<String, File>): Sent = firstUse { add(deck, audio) }
 
     /** AnkiDroid installed but never opened: its first request fails ("storage is not
      * configured") and sets it up; the next ones work. So: once more. */
@@ -48,7 +53,7 @@ class Anki(private val context: Context) : AnkiTarget {
         request()
     }
 
-    private fun add(deck: Deck): Sent {
+    private fun add(deck: Deck, audio: Map<String, File>): Sent {
         val model = model() ?: error("AnkiDroid refused the note type")
         val cards = deck.cards.filter { it.front.isNotBlank() && !it.unsupported() }
         // Already there: same front in our note type (the API's duplicate check: first field)
@@ -60,21 +65,30 @@ class Anki(private val context: Context) : AnkiTarget {
             duplicates += group.size - fresh.size
             if (fresh.isEmpty()) return@forEach
             val did = deckId(name) ?: error("AnkiDroid refused the deck $name")
-            val fields = fresh.map { (_, c) -> arrayOf(c.front, c.back, c.info) }
+            val fields = fresh.map { (_, c) -> arrayOf(c.front, c.back, c.info, audio[c.back]?.let(::sound) ?: "") }
             val tags = fresh.map { (_, c) -> (c.tags.map { it.replace(' ', '_') } + "notosaurus").toSet() }
             added += maxOf(0, api.addNotes(model, did, fields, tags))
         }
         return Sent(added, duplicates, deck.cards.size - cards.size, deck.deck)
     }
 
+    /** An mp3 into AnkiDroid's media (read through our FileProvider): its "[sound:…]". */
+    private fun sound(mp3: File): String? {
+        val uri = FileProvider.getUriForFile(context, "${context.packageName}.photos", mp3)
+        AddContentApi.getAnkiDroidPackageName(context)?.let {
+            context.grantUriPermission(it, uri, Intent.FLAG_GRANT_READ_URI_PERMISSION)
+        }
+        return api.addMediaFromUri(uri, mp3.nameWithoutExtension, "audio")
+    }
+
     private fun model(): Long? =
         api.modelList?.entries?.firstOrNull { it.value == MODEL }?.key
             ?: api.addNewCustomModel(
                 MODEL,
-                arrayOf("Front", "Back", "Info"),
+                arrayOf("Front", "Back", "Info", "Audio"),
                 arrayOf("Card 1"),
                 arrayOf("{{Front}}"),
-                arrayOf("{{FrontSide}}<hr id=answer>{{Back}}{{#Info}}<div class=info>{{Info}}</div>{{/Info}}"),
+                arrayOf("{{FrontSide}}<hr id=answer>{{Back}}{{#Info}}<div class=info>{{Info}}</div>{{/Info}}{{Audio}}"),
                 CSS,
                 null,
                 null,
@@ -91,7 +105,7 @@ class Anki(private val context: Context) : AnkiTarget {
 
     companion object {
         const val PERMISSION = AddContentApi.READ_WRITE_PERMISSION
-        const val MODEL = "Notosaurus (prototype)"
+        const val MODEL = "Notosaurus (app)" // with the back's sound (before: "Notosaurus (prototype)")
         private const val CSS = """.card { font-family: sans-serif; font-size: 24px; text-align: center; }
 .info { margin-top: 12px; font-size: 18px; color: #666; }"""
     }
