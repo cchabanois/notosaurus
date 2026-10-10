@@ -11,7 +11,8 @@ from conftest import ADMIN
 from fastapi.testclient import TestClient
 
 from app import settings
-from app.main import DEVICE_COOKIE, app
+from app.main import app
+from app.routes.devices import DEVICE_COOKIE
 from notosaurus_core.providers import openai_like
 
 

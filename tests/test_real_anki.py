@@ -23,7 +23,8 @@ from anki.import_export_pb2 import ImportAnkiPackageUpdateCondition  # noqa: E40
 from fastapi.testclient import TestClient  # noqa: E402
 
 from app import settings  # noqa: E402
-from app.main import DEVICE_COOKIE, app  # noqa: E402
+from app.main import app  # noqa: E402
+from app.routes.devices import DEVICE_COOKIE  # noqa: E402
 from notosaurus_core import tts  # noqa: E402
 
 PNG = bytes.fromhex(

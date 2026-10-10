@@ -171,7 +171,7 @@ def test_an_error_is_the_last_line(client):
 def test_cancelled_while_the_ai_writes(client):
     """ "Cancel": the generation stops where it is (the AI's call cancelled), the page
     told so; nothing is saved (saving comes last)."""
-    from app import main
+    from app.routes import generation
 
     stopped, saved = [], []
 
@@ -185,9 +185,9 @@ def test_cancelled_while_the_ai_writes(client):
         saved.append(True)
 
     async def cancelled() -> list[dict]:
-        lines = main._streamed(work, "j1").body_iterator
+        lines = generation._streamed(work, "j1").body_iterator
         first = json.loads(await anext(lines))
-        assert await main.cancel_generation("j1") == {"cancelled": True}
+        assert await generation.cancel_generation("j1") == {"cancelled": True}
         return [first, *[json.loads(line) async for line in lines]]
 
     assert run(cancelled()) == [{"card": {"front": "la mère", "back": "la madre"}}, {"cancelled": True}]

@@ -127,7 +127,7 @@ def test_lesson_list_follows_every_change(client, tmp_path):
 
 
 def test_decks_that_meet():
-    from app.main import _decks_meet
+    from app.routes.lessons import _decks_meet
 
     assert _decks_meet("Maths", "maths") and _decks_meet("Maths", "Maths::Fractions")
     assert _decks_meet("Maths::Fractions", "Maths")

@@ -5,7 +5,8 @@ from conftest import ADMIN
 from fastapi.testclient import TestClient
 
 from app import settings
-from app.main import DEVICE_COOKIE, app
+from app.main import app
+from app.routes.devices import DEVICE_COOKIE
 
 
 def test_only_paired_devices_use_notosaurus(client):
@@ -48,9 +49,9 @@ def test_unpair_every_phone(admin):
 
 
 def test_phone_link_address(client, monkeypatch):
-    from app import main
+    from app.routes import admin
 
-    monkeypatch.setattr(main, "lan_address", lambda: "192.168.1.10")
+    monkeypatch.setattr(admin, "lan_address", lambda: "192.168.1.10")
     monkeypatch.setenv("NOTOSAURUS_EMBEDDED", "1")  # the add-on asks for it on the computer itself
     with TestClient(app, client=("127.0.0.1", 50000), base_url="http://127.0.0.1:8000") as local:
         token = settings.device_token()
@@ -91,9 +92,9 @@ def test_other_sites_never_get_the_page_address(client):
 
 
 def test_the_setup_assistant_sees_the_phone_pair(admin, monkeypatch):
-    from app import main
+    from app.routes import devices
 
-    monkeypatch.setattr(main, "last_paired", None)
+    monkeypatch.setattr(devices, "last_paired", None)
     token = settings.device_token()
     with TestClient(app, client=("127.0.0.1", 50000)) as local:
         assert local.get("/api/admin/phone", headers=ADMIN).json()["paired_at"] is None

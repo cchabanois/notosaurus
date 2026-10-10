@@ -91,7 +91,8 @@ come in as parameters), so that other programs can use it. A test keeps it that 
 | `core/notosaurus_core/errors.py` | errors as translatable codes |
 | `core/notosaurus_core/files.py` | where the caches go, small file helpers |
 | `core/notosaurus_core/relay_api.py`, `core/relay-api-v1.json` | the Notosaurus relay's API (version 1): requests, answers, errors, and its OpenAPI description |
-| `app/main.py` | FastAPI routes and static files |
+| `app/main.py` | the FastAPI app: paired devices, errors, routers, static files |
+| `app/routes/` | the API's routes, one module per topic (prompts, generation, lessons, pictures, Anki, voices, admin, pages); `common.py` their shared helpers, `devices.py` the pairing check |
 | `app/lessons.py` | saved lessons, one folder each |
 | `app/anki.py` | `.apkg` builder (genanki, audio, reverse cards) |
 | `app/ankiconnect.py` | direct send through AnkiConnect or the add-on's bridge |
