@@ -315,7 +315,12 @@
       "search": "🔎 Find a picture",
       "searching": "Searching…",
       "found": "Free pictures ({sources}): tap the one that fits.",
-      "none": "No free picture found: try other words (in English), or draw it."
+      "none": "No free picture found: try other words (in English), or draw it.",
+      "sourceFound": "Source: {source} · {licence}",
+      "sourceDrawn": "Drawn by the AI",
+      "sourceDrawnBy": "Drawn by the AI ({model})",
+      "sourcePhoto": "Your photo",
+      "sourcePage": "see its page"
     },
     "pairing": {
       "title": "Device not allowed"

@@ -24,7 +24,7 @@ def spec(nt: anki.NoteType) -> dict:
     return {
         "name": nt.name,
         "family": nt.family,
-        "fields": list(nt.fields),
+        "fields": [f for f in nt.fields if f != anki.SOURCE_FIELD],  # AnkiDroid can't add it to its note types
         "key": nt.key,  # which note an update is for
         "cloze": nt.cloze,
         "cards": [{"name": t["name"], "front": t["qfmt"], "back": t["afmt"]} for t in nt.templates],

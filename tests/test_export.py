@@ -294,3 +294,46 @@ def test_fun_facts_in_anki(client, tmp_path):
     package = apkg.export(client, {"deck": "D", "cards": cards}, tmp_path)
     info = package.notes[0][2].split("\x1f")[2]
     assert info == 'f.<div style="margin-top:8px;font-style:italic">💡 Vient du latin &lt;mater&gt;.</div>'
+
+
+def test_where_a_picture_comes_from_kept_hidden(tmp_path):
+    """A picture's source in its note's Source field: on no card template (never shown)."""
+    from app.models import ExportRequest
+    from notosaurus_core.models import PictureSource
+
+    name = "picture-c1-0123abcd.jpg"
+    picture = tmp_path / name
+    picture.write_bytes(b"jpeg")
+    found = PictureSource(
+        source="commons",
+        licence="Public domain",
+        title="Prise de la Bastille",
+        page="https://commons.wikimedia.org/wiki/File:Prise_de_la_Bastille.jpg",
+    )
+    cards = [
+        Card(front="Qui est-ce ?", back="Louis XIV", picture=name, picture_source=found),
+        Card(
+            front="Le chat",
+            back="el gato",
+            picture=name,
+            picture_source=PictureSource(source="photo"),
+        ),
+        Card(
+            front="La Bastille ?",
+            back="1789",
+            choices=["1790"],
+            picture=name,
+            picture_source=PictureSource(source="drawn", model="gpt-image-2"),
+        ),
+    ]
+    req = ExportRequest(deck="Histoire", cards=cards, voice="")
+    notes = anki.notes(req, pictures={0: picture, 1: picture, 2: picture})
+    assert notes[0].fields["Source"] == (
+        "Wikimedia Commons · Public domain · Prise de la Bastille · "
+        '<a href="https://commons.wikimedia.org/wiki/File:Prise_de_la_Bastille.jpg">'
+        "https://commons.wikimedia.org/wiki/File:Prise_de_la_Bastille.jpg</a>"
+    )
+    assert notes[1].fields["Source"] == "Own photo"
+    assert notes[2].fields["Source"] == "Drawn by gpt-image-2"
+    for note in notes:
+        assert all("Source" not in t["qfmt"] + t["afmt"] for t in note.nt.templates)  # never shown

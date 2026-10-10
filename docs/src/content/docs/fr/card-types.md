@@ -122,3 +122,8 @@ de la prise de la Bastille, le vrai portrait d'un président.
 dessiner). Dans le panneau d'une carte, **🔎 Chercher une image** montre les images trouvées,
 pour choisir toi-même : elles sont filtrées pour les élèves (pas de contenu adulte), et tu les
 vois toujours avant qu'elles aillent sur une carte.
+
+Chaque carte garde d'où vient son image : son panneau le dit (« Source : Wikimedia Commons ·
+domaine public », avec un lien vers la page de l'image ; « Dessinée par l'IA » ; « Ta photo »).
+Sur l'ordinateur, la note Anki la garde aussi, dans un champ caché **Source** : il n'apparaît sur
+aucune carte, mais suit le paquet si tu le partages.

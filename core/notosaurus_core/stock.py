@@ -28,6 +28,7 @@ from pydantic import BaseModel
 from . import llm, pictures
 from .config import AIConfig
 from .errors import AppError
+from .models import PictureSource
 
 log = logging.getLogger("notosaurus")
 _transport: httpx.AsyncBaseTransport | None = None  # tests plug fake services here
@@ -66,6 +67,7 @@ class Found(BaseModel):
     title: str
     preview: str  # data:image/jpeg;base64,…
     licence: str  # "Public domain", "CC0", "Pixabay"
+    page: str = ""  # its page at its source
 
 
 _cache: dict[tuple, tuple[float, object]] = {}
@@ -104,31 +106,31 @@ async def search(subject: str, pixabay_key: str = "") -> list[Found]:
         chosen = [m for m in mixed if m][:MAX_RESULTS]
         previews = await asyncio.gather(*(_preview(client, source, url) for source, url, _ in chosen))
     return [
-        Found(source=source, id=id_, title=title, preview=preview, licence=licence)
-        for (source, _, (id_, title, licence)), preview in zip(chosen, previews, strict=True)
+        Found(source=source, id=id_, title=title, preview=preview, licence=licence, page=page)
+        for (source, _, (id_, title, licence, page)), preview in zip(chosen, previews, strict=True)
         if preview
     ]
 
 
-async def fetch(source: str, id_: str, pixabay_key: str = "") -> bytes:
-    """The picture chosen, card size (JPEG): looked up again by its source and id."""
+async def fetch(source: str, id_: str, pixabay_key: str = "") -> tuple[bytes, PictureSource]:
+    """The picture chosen, card size (JPEG), and where it comes from: looked up again by
+    its source and id."""
     async with _client() as client:
         if source == "commons":
-            url = await _commons_url(client, id_)
+            url, origin = await _commons_url(client, id_)
         elif source == "openverse":
-            if not re.fullmatch(r"[0-9a-f-]{36}", id_):
-                raise AppError("picture.not_found")
-            url = f"{OPENVERSE}{id_}/thumb/?full_size=true"
+            url, origin = await _openverse_url(client, id_)
         elif source == "pixabay" and pixabay_key:
-            url = await _pixabay_url(client, id_, pixabay_key)
+            url, origin = await _pixabay_url(client, id_, pixabay_key)
         else:
             raise AppError("picture.not_found")
-        return pictures.card_size(await _download(client, source, url))
+        return pictures.card_size(await _download(client, source, url)), origin
 
 
-async def find(s: AIConfig, query: str, context: str, pixabay_key: str = "") -> bytes | None:
+async def find(s: AIConfig, query: str, context: str, pixabay_key: str = "") -> tuple[bytes, PictureSource] | None:
     """A free picture for a card, chosen by the cards' AI among those found (it sees their
-    previews): card size, or None when none fits or nothing could be had (then it is drawn)."""
+    previews): card size, and where it comes from; None when none fits or nothing could be
+    had (then it is drawn)."""
     try:
         found = await search(query, pixabay_key)
         if not found:
@@ -157,19 +159,22 @@ async def _commons(client: httpx.AsyncClient, subject: str) -> list:
     data = await _json(client, COMMONS, _commons_params(gsrsearch=f"{subject} filetype:bitmap", gsrlimit=12))
     pages = sorted((data.get("query") or {}).get("pages", {}).values(), key=lambda p: p.get("index", 0))
     return [
-        ("commons", info["thumburl"], (page["title"], _title(page["title"]), licence))
+        ("commons", info["thumburl"], (page["title"], _title(page["title"]), licence, info.get("descriptionurl", "")))
         for page in pages
         if (info := (page.get("imageinfo") or [None])[0]) and (licence := _commons_licence(page["title"], info))
     ][:PER_SOURCE]
 
 
-async def _commons_url(client: httpx.AsyncClient, title: str) -> str:
+async def _commons_url(client: httpx.AsyncClient, title: str) -> tuple[str, PictureSource]:
     data = await _json(client, COMMONS, _commons_params(titles=title, iiurlwidth=1024))
     for page in (data.get("query") or {}).get("pages", {}).values():
         info = (page.get("imageinfo") or [None])[0]
         same = page.get("title", "").replace("_", " ") == title.replace("_", " ")  # that file, no other
-        if same and info and _commons_licence(title, info):
-            return info["thumburl"]
+        if same and info and (licence := _commons_licence(title, info)):
+            origin = PictureSource(
+                source="commons", licence=licence, page=info.get("descriptionurl", ""), title=_title(title)
+            )
+            return info["thumburl"], origin
     raise AppError("picture.not_found")
 
 
@@ -205,26 +210,52 @@ async def _openverse(client: httpx.AsyncClient, subject: str) -> list:
         (
             "openverse",
             r["thumbnail"],
-            (r["id"], r.get("title") or "", "CC0" if r.get("license") == "cc0" else "Public domain"),
+            (r["id"], r.get("title") or "", _openverse_licence(r), r.get("foreign_landing_url") or ""),
         )
         for r in data.get("results", [])
         if not r.get("mature") and not UNSUITABLE.search(r.get("title") or "")
     ][:PER_SOURCE]
 
 
+def _openverse_licence(result: dict) -> str:
+    return "CC0" if result.get("license") == "cc0" else "Public domain"
+
+
+async def _openverse_url(client: httpx.AsyncClient, id_: str) -> tuple[str, PictureSource]:
+    if not re.fullmatch(r"[0-9a-f-]{36}", id_):
+        raise AppError("picture.not_found")
+    found = await _json(client, f"{OPENVERSE}{id_}/", {})
+    if found.get("license") not in ("cc0", "pdm") or found.get("mature"):
+        raise AppError("picture.not_found")
+    origin = PictureSource(
+        source="openverse",
+        licence=_openverse_licence(found),
+        page=found.get("foreign_landing_url") or "",
+        title=found.get("title") or "",
+    )
+    return f"{OPENVERSE}{id_}/thumb/?full_size=true", origin
+
+
 async def _pixabay(client: httpx.AsyncClient, subject: str, key: str) -> list:
     data = await _json(client, PIXABAY, {"key": key, "q": subject[:100], "safesearch": "true", "per_page": 12})
     hits = data.get("hits", [])[:PER_SOURCE]
-    return [("pixabay", h["previewURL"], (str(h["id"]), _tags(h.get("tags", "")), "Pixabay")) for h in hits]
+    return [
+        ("pixabay", h["previewURL"], (str(h["id"]), _tags(h.get("tags", "")), "Pixabay", h.get("pageURL", "")))
+        for h in hits
+    ]
 
 
-async def _pixabay_url(client: httpx.AsyncClient, id_: str, key: str) -> str:
+async def _pixabay_url(client: httpx.AsyncClient, id_: str, key: str) -> tuple[str, PictureSource]:
     if not id_.isdigit():
         raise AppError("picture.not_found")
     hits = (await _json(client, PIXABAY, {"key": key, "id": id_})).get("hits", [])
     if not hits:
         raise AppError("picture.not_found")
-    return hits[0]["webformatURL"]
+    hit = hits[0]
+    origin = PictureSource(
+        source="pixabay", licence="Pixabay", page=hit.get("pageURL", ""), title=_tags(hit.get("tags", ""))
+    )
+    return hit["webformatURL"], origin
 
 
 def _tags(tags: str) -> str:

@@ -92,8 +92,8 @@ def test_picture_cards_in_anki(client, drawn, tmp_path):
     ]
     assert picture_fields[0][0] == "Comment dit-on en anglais ?"
     assert (
-        picture_fields[0][-4] == f'<img src="{cards[0]["picture"]}">' and picture_fields[0][-3] == cards[0]["id"]
-    )  # then the helps
+        picture_fields[0][-5] == f'<img src="{cards[0]["picture"]}">' and picture_fields[0][-4] == cards[0]["id"]
+    )  # then the helps, and where the picture comes from (hidden)
     assert first.media == sorted([cards[0]["picture"], cards[1]["picture"]])
 
     # Same front on every picture card, then a new picture: the same notes (GUID from the id)

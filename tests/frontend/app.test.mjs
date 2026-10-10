@@ -430,3 +430,21 @@ test("find a picture: the choices, their sources, the one chosen", async () => {
     ["/api/lessons/L1/cards/c1/picture/found", '{"source":"pixabay","id":"42"}'],
   ]);
 });
+
+test("a picture's source: said in its panel, kept when the pictures come", async () => {
+  const page = await loadScripts("app.js", {
+    routes: () => new Response({ lesson: { cards: [{ id: "c1", picture: "picture-c1.jpg",
+      picture_source: { source: "commons", licence: "Public domain", page: "https://commons.wikimedia.org/wiki/File:A.jpg" } }] },
+      failures: 0 }),
+  });
+  const c = page.component();
+  c.lessonId = "L1";
+  c.cards = [{ id: "c1", picture_prompt: "a castle", picture: "" }];
+  await c.drawPictures();
+  assert.equal(c.cards[0].picture, "picture-c1.jpg");
+  assert.equal(c.cards[0].picture_source.page, "https://commons.wikimedia.org/wiki/File:A.jpg");
+  assert.equal(c.pictureSourceText(c.cards[0]), "Source: Wikimedia Commons · Public domain");
+  assert.equal(c.pictureSourceText({ picture_source: { source: "drawn", model: "gpt-image-2" } }), "Drawn by the AI (gpt-image-2)");
+  assert.equal(c.pictureSourceText({ picture_source: { source: "photo" } }), "Your photo");
+  assert.equal(c.pictureSourceText({}), "");
+});

@@ -22,7 +22,8 @@ takes but the AI configuration (the relay's own), and keeps nothing.
   (AUDIO_TYPES, at most MAX_AUDIO_BYTES).
 - /v1/pictures/search finds free pictures of a subject to choose from (stock.search: public
   domain, CC0, Pixabay), their previews as data; /v1/pictures/found gives the one chosen,
-  card size (JPEG), looked up again by its source and id. Both free: no AI.
+  card size (JPEG), looked up again by its source and id. Both free: no AI. Their pictures
+  (and /v1/picture's) say where they come from in PICTURE_SOURCE_HEADER: kept with the card.
 - /v1/speak reads a card's back aloud with one of /v1/voices (natural voices, the
   same on every device): an mp3, for the app that has no voices of its own.
 - Each answer says the credits it used and those left (Usage; for /v1/picture and
@@ -47,6 +48,8 @@ PREFIX = "/v1"
 CLIENT_HEADER = "X-Notosaurus-Version"
 CREDITS_HEADER = "X-Notosaurus-Credits"
 CREDITS_LEFT_HEADER = "X-Notosaurus-Credits-Left"
+# /v1/picture and /v1/pictures/found: where the picture comes from (models.PictureSource, JSON)
+PICTURE_SOURCE_HEADER = "X-Notosaurus-Picture-Source"
 STREAM_TYPE = "application/x-ndjson"
 
 MAX_IMAGES = 10

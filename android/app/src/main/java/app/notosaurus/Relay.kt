@@ -31,6 +31,9 @@ import kotlin.coroutines.resumeWithException
  * the computer) and the licence key. Requests and answers as JSON objects: the
  * cards go through as the page has them (every field, ids included).
  */
+/** A card's picture from the relay: the JPEG, and where it comes from (models.PictureSource, as JSON). */
+class Picture(val jpeg: ByteArray, val source: JsonObject?)
+
 /** Told each card as soon as the AI has written it, or null: start again (another model). */
 typealias OnCard = suspend (JsonObject?) -> Unit
 
@@ -108,7 +111,7 @@ class Relay(baseUrl: String, private val key: String) {
 
     /** A card's picture (/v1/picture): the JPEG, card size. `fresh`: drawn again. `search`
      * (Card.picture_search): a free picture found first, chosen with `context` ("front → back"). */
-    suspend fun picture(subject: String, fresh: Boolean, search: String = "", context: String = ""): ByteArray {
+    suspend fun picture(subject: String, fresh: Boolean, search: String = "", context: String = ""): Picture {
         val request = buildJsonObject {
             put("subject", subject)
             put("fresh", fresh)
@@ -117,19 +120,25 @@ class Relay(baseUrl: String, private val key: String) {
                 put("context", context.take(MAX_CONTEXT))
             }
         }
-        return open("picture", request.toString().toRequestBody(JSON)).use { it.body.bytes() }
+        return open("picture", request.toString().toRequestBody(JSON)).use(::picture)
+    }
+
+    /** A picture answer: the JPEG, and where it comes from (PICTURE_SOURCE_HEADER; null from an older relay). */
+    private fun picture(response: Response): Picture {
+        val source = response.header(PICTURE_SOURCE_HEADER)?.let { runCatching { json.parseToJsonElement(it).jsonObject }.getOrNull() }
+        return Picture(response.body.bytes(), source)
     }
 
     /** Free pictures of a subject to choose from (/v1/pictures/search): {"results": [stock.Found…]}. */
     suspend fun searchPictures(subject: String): JsonObject = post("pictures/search", buildJsonObject { put("subject", subject) })
 
-    /** One of the pictures found (/v1/pictures/found): the JPEG, card size. */
-    suspend fun foundPicture(source: String, id: String): ByteArray {
+    /** One of the pictures found (/v1/pictures/found): the JPEG, card size, and where it comes from. */
+    suspend fun foundPicture(source: String, id: String): Picture {
         val request = buildJsonObject {
             put("source", source)
             put("id", id)
         }
-        return open("pictures/found", request.toString().toRequestBody(JSON)).use { it.body.bytes() }
+        return open("pictures/found", request.toString().toRequestBody(JSON)).use(::picture)
     }
 
     /** A JSON route (explain, figure). */
@@ -175,6 +184,7 @@ class Relay(baseUrl: String, private val key: String) {
     companion object {
         const val CLIENT_HEADER = "X-Notosaurus-Version"
         const val STREAM_TYPE = "application/x-ndjson"
+        const val PICTURE_SOURCE_HEADER = "X-Notosaurus-Picture-Source"
 
         // A little slower than normal, for learners (the computer's "-10%")
         const val SPEECH_RATE = 0.9

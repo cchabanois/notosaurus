@@ -117,3 +117,8 @@ storming of the Bastille, the real portrait of a president.
 **Settings → Pictures on cards → Look for a free picture first** turns it off (always drawn).
 In a card's panel, **🔎 Find a picture** shows the pictures found, to choose yourself: they come
 filtered for pupils (no mature content), and you always see them before they go on a card.
+
+Every card keeps where its picture comes from: its panel says it (“Source: Wikimedia Commons ·
+Public domain”, with a link to the picture's page; “Drawn by the AI”; “Your photo”). On the
+computer, the Anki note keeps it too, in a hidden **Source** field: it is on no card, but goes
+with the deck if you share it.

@@ -851,6 +851,8 @@ html.sheet-open { overflow: hidden; overscroll-behavior: none; }
 .picture-actions { display: flex; flex-wrap: wrap; gap: .4rem; margin-bottom: .3rem; }
 .picture-actions .btn { padding: .45rem .8rem; font-size: .9rem; }
 .found { margin-top: .6rem; }
+.picture-source { margin: 0 0 .5rem; color: var(--muted); font-size: .85rem; }
+.picture-source a { margin-left: .35rem; color: var(--primary); font-weight: 700; }
 .found-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(5.2rem, 1fr)); gap: .4rem; margin-bottom: .35rem; }
 .found-pick {
   aspect-ratio: 1;
