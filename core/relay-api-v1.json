@@ -1466,7 +1466,7 @@
           "figure": {
             "type": "string",
             "title": "Figure",
-            "description": "Only when the card needs an exact figure (see the rules): what to draw, every label with its exact text. Empty otherwise.",
+            "description": "When an exact figure makes the card clearer (see the rules: geometry, or a notion the lesson's page shows a figure for): what to draw, every label with its exact text. Empty otherwise.",
             "default": ""
           },
           "fun_fact": {
