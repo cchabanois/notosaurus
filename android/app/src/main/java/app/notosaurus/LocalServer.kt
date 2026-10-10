@@ -73,7 +73,7 @@ class LocalServer(
     private val texts = PageTexts(web, languages)
     private val prompts = Prompts(File(dataDir, "prompts.json"), texts)
     private val speech = Speech(File(dataDir, "audio").apply { mkdirs() }, prefs, ::relay) // the backs read aloud, kept
-    private val pictures = Pictures(lessons, ::relay)
+    private val pictures = Pictures(lessons, ::relay) { prefs[PICTURE_FIND] != "false" }
     private val generation = Generation(lessons, prefs, ::relay, speech, turnPhoto)
     private val computer = Computer(prefs, modeChanged)
     private val dictation = recorder?.let { Dictation(File(dataDir, "dictation").apply { mkdirs() }, it, ::relay) }
@@ -130,6 +130,7 @@ class LocalServer(
             (changes[KEY] as? JsonPrimitive)?.let { prefs[keyOf(relayUrl())] = it.content.trim() }
             (changes[INSTRUCTIONS] as? JsonPrimitive)?.let { prefs[INSTRUCTIONS] = it.content.take(4000) }
             (changes[CARD_HELPS] as? JsonPrimitive)?.let { prefs[CARD_HELPS] = it.content }
+            (changes[PICTURE_FIND] as? JsonPrimitive)?.let { prefs[PICTURE_FIND] = it.content }
             (changes[TTS_RATE] as? JsonPrimitive)?.content?.takeIf { it in Speech.RATES }?.let { prefs[TTS_RATE] = it }
             settings()
         }
@@ -490,6 +491,7 @@ class LocalServer(
         put("has_key", licence().isNotEmpty())
         put(INSTRUCTIONS, prefs[INSTRUCTIONS].orEmpty())
         put(CARD_HELPS, prefs[CARD_HELPS] == "true")
+        put(PICTURE_FIND, prefs[PICTURE_FIND] != "false") // on unless turned off
         put(TTS_RATE, prefs[TTS_RATE] ?: "-10%")
         put("version", version)
         put(MODE, prefs[MODE] ?: PHONE_MODE)
@@ -578,6 +580,7 @@ class LocalServer(
         fun keyOf(relay: String) = "$KEY@${relay.trimEnd('/')}"
         const val INSTRUCTIONS = "instructions"
         const val CARD_HELPS = "card_helps"
+        const val PICTURE_FIND = "picture_find" // a free picture found first for a real thing (Card.picture_search)
 
         const val TTS_RATE = Speech.TTS_RATE
 

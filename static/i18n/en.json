@@ -539,7 +539,9 @@
       "nobody": "{cards} can't draw, and no other service has a key: add a Gemini, OpenAI or OpenRouter key to get pictures.",
       "missingKey": "{service} has no key: add it, or choose another service.",
       "noneChosen": "No pictures on the cards.",
-      "auto": "Automatic"
+      "auto": "Automatic",
+      "find": "Look for a free picture first",
+      "findHint": "For a real thing (a person, a place, a work of art, an animal): a free photo or painting, chosen by the AI; drawn when none fits. Free, and exact."
     },
     "phones": {
       "title": "📱 Phones",

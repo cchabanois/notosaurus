@@ -15,6 +15,7 @@ shouldn't see; the user always picks the picture.
 import asyncio
 import base64
 import io
+import logging
 import re
 import time
 from typing import Literal
@@ -24,9 +25,11 @@ import httpx
 from PIL import Image as PILImage
 from pydantic import BaseModel
 
+from . import llm, pictures
+from .config import AIConfig
 from .errors import AppError
-from .pictures import card_size
 
+log = logging.getLogger("notosaurus")
 _transport: httpx.AsyncBaseTransport | None = None  # tests plug fake services here
 
 AGENT = "Notosaurus (https://github.com/cchabanois/notosaurus)"  # Wikimedia asks for one
@@ -120,7 +123,22 @@ async def fetch(source: str, id_: str, pixabay_key: str = "") -> bytes:
             url = await _pixabay_url(client, id_, pixabay_key)
         else:
             raise AppError("picture.not_found")
-        return card_size(await _download(client, source, url))
+        return pictures.card_size(await _download(client, source, url))
+
+
+async def find(s: AIConfig, query: str, context: str, pixabay_key: str = "") -> bytes | None:
+    """A free picture for a card, chosen by the cards' AI among those found (it sees their
+    previews): card size, or None when none fits or nothing could be had (then it is drawn)."""
+    try:
+        found = await search(query, pixabay_key)
+        if not found:
+            return None
+        previews = [llm.Image(base64.b64decode(f.preview.split(",", 1)[1]), "image/jpeg") for f in found]
+        choice = await llm.pick_picture(s, previews, query, context)
+        return None if choice is None else await fetch(found[choice].source, found[choice].id, pixabay_key)
+    except AppError as e:  # a source down, a model that can't see pictures…: drawn instead
+        log.warning("No free picture for %r: %s", query, e)
+        return None
 
 
 # --- The sources: each gives (source, preview URL, (id, title, licence)) ------------

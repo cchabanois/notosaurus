@@ -32,14 +32,16 @@ from .demo import (
     _fake_revision,
     _lets_choose,
 )
-from .models import Card, Deck, Dictation, Explanation, Extraction, Frame, Rephrased, Revision
+from .models import Card, Deck, Dictation, Explanation, Extraction, Frame, Picked, Rephrased, Revision
 from .prompts import (
     DICTATION_RULES,
     EXPLAIN_RULES,
+    PICK_RULES,
     REPHRASE_RULES,
     SYSTEM_PROMPT,
     _dictation_text,
     _explain_text,
+    _pick_text,
     _rephrase_text,
     _revision_text,
     _user_text,
@@ -201,6 +203,16 @@ async def rephrase(s: AIConfig, text: str, language: str = "English") -> str:
         return _fake_rephrased(text)
     found = await _generate(s, [], _rephrase_text(text, language), Rephrased, REPHRASE_RULES, light=True)
     return found.text.strip()
+
+
+async def pick_picture(s: AIConfig, candidates: list[Image], search: str, context: str) -> int | None:
+    """Which of the pictures found (their previews, in order) fits a card: its index, or
+    None when none does. `context`: the card, as "front → back"."""
+    if s.llm == "fake":
+        await record(s, "fake", "fake", 0, 0, cost=0.0)
+        return 0 if candidates else None
+    found = await _generate(s, candidates, _pick_text(search, context, len(candidates)), Picked, PICK_RULES, light=True)
+    return found.choice if 0 <= found.choice < len(candidates) else None
 
 
 async def revise_cards(

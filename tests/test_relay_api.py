@@ -43,7 +43,7 @@ def parameters(function, *but: str) -> set[str]:
         (api.ReviseRequest, llm.revise_cards, ("images", "demo")),  # demo: the relay never runs the demo AI
         (api.ExplainRequest, llm.explain_card, ()),
         (api.FigureRequest, llm.draw_figure, ()),
-        (api.PictureRequest, pictures.picture, ()),
+        (api.PictureRequest, pictures.picture, ("pixabay_key",)),  # the relay's own
         (api.TranscribeRequest, llm.transcribe, ("audio",)),  # the multipart's "audio"
         (api.RephraseRequest, llm.rephrase, ()),
     ],

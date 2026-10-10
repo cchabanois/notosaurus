@@ -28,6 +28,8 @@ import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.json.JsonArray
 import kotlinx.serialization.json.JsonObject
+import kotlinx.serialization.json.buildJsonObject
+import kotlinx.serialization.json.put
 import kotlinx.serialization.json.int
 import kotlinx.serialization.json.jsonArray
 import kotlinx.serialization.json.jsonObject
@@ -1035,5 +1037,38 @@ class LocalServerTest {
         assertEquals("/v1/pictures/found", asked.url.encodedPath)
         assertEquals("""{"source":"pixabay","id":"42"}""", asked.body!!.utf8())
         assertArrayEquals("jpeg of 42".toByteArray(), client.get("/api/lessons/${lesson.string("id")}/pictures/$picture") { page() }.bodyAsBytes())
+    }
+
+    @Test
+    fun aFreePictureLookedForFirst() = app { client ->
+        relayAnswers("""{"deck": {"deck": "Espagnol", "cards": [
+            {"front": "Comment dit-on ?", "back": "el perro", "picture_prompt": "a dog sitting", "picture_search": "dog"}]},
+            "turns": [], "usage": {"credits": 1, "credits_left": 99}}""")
+        val lesson = client.submitFormWithBinaryData("/api/extract", formData { append("prompt", "p") }) { page() }.json().jsonObject
+        relay.takeRequest(5, TimeUnit.SECONDS) // the extraction
+        val asked = mutableListOf<JsonObject>()
+        relay.dispatcher = object : mockwebserver3.Dispatcher() {
+            override fun dispatch(request: RecordedRequest): MockResponse {
+                asked += json.parseToJsonElement(request.body!!.utf8()).jsonObject
+                return MockResponse.Builder().setHeader("Content-Type", "image/jpeg").body("jpeg").build()
+            }
+        }
+        val id = lesson.string("id")
+        client.post("/api/lessons/$id/pictures") { page() }
+        assertEquals("dog", asked[0].string("search"))
+        assertEquals("Comment dit-on ? → el perro", asked[0].string("context"))
+
+        // Always drawn: in the settings
+        client.put("/api/admin/settings") { page(); contentType(ContentType.Application.Json); setBody("""{"picture_find": false}""") }
+        assertEquals("false", client.get("/api/admin/settings") { page() }.json().jsonObject["picture_find"]!!.jsonPrimitive.content)
+        val card = lesson["cards"]!!.jsonArray[0].jsonObject.string("id")
+        client.delete("/api/lessons/$id/cards/$card/picture") { page() }
+        val again = client.put("/api/lessons/$id") {
+            page(); contentType(ContentType.Application.Json)
+            setBody(buildJsonObject { put("cards", JsonArray(listOf(lesson["cards"]!!.jsonArray[0]))) }.toString())
+        }
+        assertEquals(HttpStatusCode.OK, again.status)
+        client.post("/api/lessons/$id/pictures") { page() }
+        assertFalse("search" in asked.last())
     }
 }

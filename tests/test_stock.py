@@ -9,8 +9,10 @@ import httpx
 import pytest
 from PIL import Image as PILImage
 
-from notosaurus_core import stock
+from notosaurus_core import files, llm, pictures, stock
+from notosaurus_core.config import AIConfig
 from notosaurus_core.errors import AppError
+from notosaurus_core.providers import gemini
 
 
 def jpeg(side=300) -> bytes:
@@ -196,3 +198,93 @@ def test_found_on_the_computer(client, monkeypatch):
     assert picture and client.get(f"/api/lessons/{lesson['id']}/pictures/{picture}").status_code == 200
     bad = client.post(f"/api/lessons/{lesson['id']}/cards/{card['id']}/picture/found", json={"source": "x", "id": "1"})
     assert bad.status_code == 422
+
+
+# --- Found first, at generation (stock.find, pictures.picture) --------------------
+
+
+def test_the_ai_picks_among_the_pictures_found(services, monkeypatch):
+    seen = []
+
+    async def pick(s, candidates, search, context):
+        seen.append((len(candidates), search, context))
+        return 1
+
+    monkeypatch.setattr(llm, "pick_picture", pick)
+    card = "14 juillet 1789 → prise de la Bastille"
+    picture = run(stock.find(AIConfig(llm="gemini"), "storming of the Bastille", card))
+    assert PILImage.open(io.BytesIO(picture)).size == (300, 300)
+    assert seen == [(3, "storming of the Bastille", card)]
+    assert services.asked[-1].url.host == "upload.wikimedia.org"  # the second one found: Commons' CC0 one
+
+    async def none_fits(s, candidates, search, context):
+        return None
+
+    monkeypatch.setattr(llm, "pick_picture", none_fits)
+    assert run(stock.find(AIConfig(llm="gemini"), "Bastille", "")) is None
+    services.failing = {"commons.wikimedia.org", "api.openverse.org"}
+    stock._cache.clear()
+    assert run(stock.find(AIConfig(llm="gemini"), "Bastille", "")) is None  # nothing to be had: drawn instead
+
+
+def test_found_first_drawn_otherwise(monkeypatch, tmp_path):
+    monkeypatch.setattr(files, "_cache_root", lambda: tmp_path)  # restored after
+    finds, draws = [], []
+
+    async def find(s, query, context, pixabay_key=""):
+        finds.append((query, context, pixabay_key))
+        return None if query == "nothing" else jpeg(100)
+
+    async def draw(s, subject):
+        draws.append(subject)
+        return jpeg(200)
+
+    monkeypatch.setattr(stock, "find", find)
+    monkeypatch.setattr(pictures, "draw", draw)
+    s = AIConfig(llm="gemini")
+    found = run(pictures.picture(s, "a dog sitting", search="dog", context="le chien → el perro", pixabay_key="k"))
+    assert PILImage.open(io.BytesIO(found)).size == (100, 100) and draws == []
+    assert finds == [("dog", "le chien → el perro", "k")]
+    run(pictures.picture(s, "a dog sitting", search="dog"))
+    assert len(finds) == 1  # kept: found once for every lesson
+
+    run(pictures.picture(s, "a cat", search="nothing"))  # none fits: drawn
+    run(pictures.picture(s, "a dog sitting", fresh=True, search="dog"))  # "Draw" asked: drawn
+    run(pictures.picture(s.model_copy(update={"picture_find": False}), "a bird", search="bird"))  # always drawn
+    run(pictures.picture(s, "a happy face"))  # nothing to search for
+    assert draws == ["a cat", "a dog sitting", "a bird", "a happy face"]
+
+
+def test_the_cards_say_what_to_search_for(client, monkeypatch):
+    """The computer's pictures, after a generation: the card's picture_search and the card itself."""
+    asked = []
+
+    async def find(s, query, context, pixabay_key=""):
+        asked.append((query, context, pixabay_key))
+        return jpeg()
+
+    monkeypatch.setattr(stock, "find", find)
+    lesson = client.post("/api/extract", data={"prompt": "Mots en images"}).json()
+    cards = [{**c, "picture_prompt": "a dog", "picture_search": "dog"} for c in lesson["cards"][:1]]
+    client.put(f"/api/lessons/{lesson['id']}", json={**lesson, "cards": cards})
+    res = client.post(f"/api/lessons/{lesson['id']}/pictures").json()
+    assert res["failures"] == 0 and res["lesson"]["cards"][0]["picture"]
+    card = cards[0]
+    assert asked == [("dog", f"{card['front']} → {card['back']}", "")]  # no Pixabay on the computer
+
+
+def test_the_ai_says_which_fits(monkeypatch):
+    from test_dictation import HearingGemini
+
+    for answer, expected in (('{"choice": 2}', 2), ('{"choice": -1}', None), ('{"choice": 9}', None)):
+        fake = HearingGemini(answer)
+        monkeypatch.setattr(gemini, "_gemini_client", lambda s, fake=fake: fake)
+        previews = [llm.Image(jpeg(20), "image/jpeg")] * 3
+        s = AIConfig(llm="gemini", model="gemini-3.5-flash", gemini_api_key="k")
+        assert run(llm.pick_picture(s, previews, "dog", "le chien → el perro")) == expected
+    contents, config = fake.calls[0]
+    assert (
+        len(contents) == 4
+        and "The card: le chien → el perro" in contents[-1]
+        and "that very thing" in config.system_instruction
+    )

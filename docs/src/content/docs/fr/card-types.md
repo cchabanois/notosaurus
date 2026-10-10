@@ -105,3 +105,20 @@ Le bouton **🖼️** d'une carte ouvre son panneau **Image** :
 - **📷 Ma photo** : mets ta propre photo à la place, gratuitement ;
 - **✕ Pas d'image** : retire-la ;
 - **Au verso (avec la réponse)** : quand l'image donne la réponse.
+- **🔎 Chercher une image** : des images libres du sujet, au choix (voir plus bas), gratuitement.
+
+### Des images libres, trouvées plutôt que dessinées
+
+Pour une chose réelle (un personnage, un lieu, un monument, une œuvre, un animal, un aliment),
+l'IA écrit avec la carte quelques mots en anglais pour la chercher (« Storming of the Bastille
+painting », « dog »). Notosaurus cherche alors une **image libre** avant d'en dessiner une : une
+photo ou un tableau du domaine public ou sous CC0 (**Wikimedia Commons**, **Openverse** ; dans
+l'application Android, **Pixabay** aussi), donc rien à citer sur les cartes. L'IA des cartes
+regarde les images trouvées et garde celle qui convient ; si aucune ne va, l'image est dessinée.
+C'est gratuit (seul le choix par l'IA coûte, bien moins d'un centime) et exact : le vrai tableau
+de la prise de la Bastille, le vrai portrait d'un président.
+
+**Réglages → Images des cartes → Chercher d'abord une image libre** le désactive (toujours
+dessiner). Dans le panneau d'une carte, **🔎 Chercher une image** montre les images trouvées,
+pour choisir toi-même : elles sont filtrées pour les élèves (pas de contenu adulte), et tu les
+vois toujours avant qu'elles aillent sur une carte.

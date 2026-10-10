@@ -93,7 +93,11 @@ subject a child recognises at once (e.g. "a red apple", "a dog sitting"). Leave 
 empty for words that can't be drawn clearly (abstract words). The front is then the \
 text shown with the picture, as the instructions say (a question like "How do you say \
 it in English?", or empty if they want the picture alone). Never put the answer in \
-the picture's description. Leave "picture" and "id" empty.
+the picture's description. When the picture shows a real, specific thing that photos or \
+paintings show (a person, a place, a monument, a work of art, an animal, an object, a \
+food), also fill "picture_search": a short English search for a free picture of it \
+("Storming of the Bastille painting", "dog"); a free picture is then used rather than a \
+drawing. Leave it empty for what must be drawn. Leave "picture" and "id" empty.
 - Figures: when a card is about a figure, fill "figure" with a precise description of \
 it, in the language of the instructions: the shapes, their proportions, which angles \
 are right, and every label with its exact text. A card is about a figure when it is \
@@ -108,7 +112,11 @@ objects, animals and scenes, "figure" for these figures; leave the other empty.
 the side opposite the right angle called?"): then never put the answer on it (a side \
 to name stays unlabelled, or gets a letter only). On the back, "picture_on_back": true, \
 when it shows or belongs to the answer (a definition: "What is a tangent to a circle?", \
-a property): then it may show and label everything.
+a property): then it may show and label everything. The same for a picture: one that \
+shows the answer (the portrait of the person whose name is asked, the place, the work) \
+goes on the back, "picture_on_back": true; on the front only when the question is about \
+the picture itself ("Who is this?", "How do you say it?"). A sentence with gaps gets no \
+picture nor figure (Anki shows none on it).
 - Text lines: for each photo, its longest line of printed text (a title, a sentence): \
 the box of its first word and the box of its last word, in reading order, in the same \
 format as the diagram boxes. On a photo taken sideways or upside down, the first word \
@@ -341,3 +349,15 @@ out or comment on them. Plain text, no Markdown headings, no quotes around it.""
 
 def _rephrase_text(text: str, language: str) -> str:
     return f"The app is in {language}. The user's instructions, to tidy up:\n<<<\n{text}\n>>>"
+
+
+PICK_RULES = """\
+You choose a picture for a pupil's flashcard among numbered candidates found by a \
+search. Choose the one that shows the card's subject most clearly and correctly, \
+suitable for pupils: a real thing (a painting, a place, a person, a species) must be \
+that very thing, not something like it. Answer -1 when none fits (another thing, \
+unclear, a text or a logo rather than a picture, unsuitable for pupils)."""
+
+
+def _pick_text(search: str, context: str, count: int) -> str:
+    return f"The card: {context}\nThe picture searched for: {search}\nCandidates 0 to {count - 1}, in that order."

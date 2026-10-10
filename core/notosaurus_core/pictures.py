@@ -17,7 +17,8 @@ from pathlib import Path
 from PIL import Image as PILImage
 from PIL import ImageOps
 
-from . import config, figures, files, llm, recommended
+from . import config, figures, files, llm, recommended, stock
+from .cards import is_cloze
 from .config import AIConfig
 from .errors import AppError
 from .models import Card
@@ -240,9 +241,24 @@ def _cache_path(s: AIConfig, subject: str) -> Path:
     return files.cache_dir("pictures", f"{key}.jpg")
 
 
-async def picture(s: AIConfig, subject: str, fresh: bool = False) -> bytes:
-    """The card-size picture of a subject: from the cache, or drawn (then cached).
-    `fresh`: draw it again (the user didn't like it); the new one replaces it in the cache."""
+async def picture(
+    s: AIConfig, subject: str, fresh: bool = False, search: str = "", context: str = "", pixabay_key: str = ""
+) -> bytes:
+    """The card-size picture of a subject: from the cache, or found or drawn (then cached).
+    `search`: what a free picture would show (Card.picture_search): one is looked for first
+    (s.picture_find), the cards' AI choosing it (`context`: the card, "front → back");
+    drawn when none fits. `fresh`: draw it again (the user didn't like it); the new one
+    replaces it in the cache."""
+    if search.strip() and s.picture_find and not fresh:
+        found_path = files.cache_dir(
+            "pictures", hashlib.sha1(f"found|{search.strip().lower()}".encode()).hexdigest() + ".jpg"
+        )
+        if found_path.is_file():
+            return found_path.read_bytes()
+        if found := await stock.find(s, search, context, pixabay_key):
+            found_path.parent.mkdir(parents=True, exist_ok=True)
+            found_path.write_bytes(found)
+            return found
     path = _cache_path(s, subject)
     if not fresh and path.is_file():
         return path.read_bytes()
@@ -253,18 +269,23 @@ async def picture(s: AIConfig, subject: str, fresh: bool = False) -> bytes:
 
 
 async def figure_or_picture(s: AIConfig, folder: Path, card: Card, fresh: bool = False) -> str:
-    """The card's figure (SVG, drawn by the cards' AI) or picture (image model, from the
-    cache unless `fresh`), saved in the lesson; returns its file name."""
+    """The card's figure (SVG, drawn by the cards' AI) or picture (a free one found, or the
+    image model's; from the cache unless `fresh`: then drawn), saved in the lesson;
+    returns its file name."""
     if card.figure.strip():
         return figures.save(folder, card, await llm.draw_figure(s, card.figure))
-    return save(folder, card, await picture(s, card.picture_prompt, fresh=fresh))
+    context = f"{card.front.strip()} → {card.back.strip()}"
+    return save(folder, card, await picture(s, card.picture_prompt, fresh, card.picture_search, context))
 
 
 async def draw_all(s: AIConfig, folder: Path, cards: list[Card]) -> tuple[int, dict | None]:
     """Draw the missing pictures (cards with a picture_prompt or a figure, and no picture),
     a few at a time. Returns how many failed and why the first did (an error's detail, for
     the page): a card without its picture is still a card."""
-    todo = [c for c in cards if (c.picture_prompt.strip() or c.figure.strip()) and not c.picture]
+    # Not on a sentence with gaps: Anki shows no picture on it (not paid for, then)
+    todo = [
+        c for c in cards if (c.picture_prompt.strip() or c.figure.strip()) and not c.picture and not is_cloze(c.front)
+    ]
     sem = asyncio.Semaphore(CONCURRENCY)
     failures: list[dict] = []
 
