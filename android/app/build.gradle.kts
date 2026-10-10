@@ -61,6 +61,18 @@ android {
         resources.excludes += setOf("META-INF/INDEX.LIST", "META-INF/io.netty.versions.properties")
     }
     buildFeatures { buildConfig = true } // BuildConfig.VERSION_NAME, for the relay
+    lint {
+        // AnkiDroid's own rule (its API brings its lint checks): its code takes the time from
+        // its collection, ours has none
+        disable += "DirectSystemCurrentTimeMillisUsage"
+    }
+    // The relay a fresh install calls (changed in the settings, "Advanced"): the test
+    // instance while developing (its own licences, notosaurus-cloud's README), the real
+    // one in a release, so that no release ever calls the test instance
+    buildTypes {
+        debug { buildConfigField("String", "DEFAULT_RELAY", "\"https://notosaurus-relay-dev-773198805942.europe-west1.run.app\"") }
+        release { buildConfigField("String", "DEFAULT_RELAY", "\"https://notosaurus-relay-773198805942.europe-west1.run.app\"") }
+    }
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_17
         targetCompatibility = JavaVersion.VERSION_17
@@ -75,6 +87,8 @@ androidComponents {
 
 dependencies {
     implementation(libs.androidx.core.ktx)
+    // Not used directly: the version the ActivityResult APIs need (an older one comes with the libraries)
+    implementation(libs.androidx.fragment)
     implementation(libs.androidx.activity)
     implementation(libs.okhttp)
     implementation(libs.kotlinx.serialization.json)

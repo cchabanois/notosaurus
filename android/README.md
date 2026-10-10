@@ -110,15 +110,18 @@ from the phone on the same Wi-Fi:
 RELAY_STORE=memory RELAY_LLM=fake RELAY_DEV_KEY=nts_dev .venv/bin/uvicorn --factory relay.main:create_app --host 0.0.0.0 --port 8080
 ```
 
-The app uses `http://10.0.2.2:8080` (the computer, from the emulator) and the key
-`nts_dev`.
+A fresh install calls, by its build (`app/build.gradle.kts`, `DEFAULT_RELAY`): a debug
+build, Notosaurus's **test** relay (its own licences, Gemini through Vertex AI); a
+release, the real one. To use the relay on the computer, set its address in the app's
+settings ("Advanced"): `http://10.0.2.2:8080` from the emulator, the computer's
+address on the Wi-Fi from a phone, with the key `nts_dev`.
 
 ## What we learnt
 
 - **AnkiDroid's API** (`com.github.ankidroid:Anki-Android:api-v1.1.0`, JitPack; the
   only published version) does what the app needs: custom note types with their CSS,
   decks and sub-decks (`::`), notes in bulk with tags, duplicates by first field,
-  updating fields, media (`addMediaFromUri`, not tried yet).
+  updating fields, media (`addMediaFromUri`).
 - The user grants **one permission** (AnkiDroid's own dialog: "access existing
   notes, cards, note types and decks, as well as create new ones"). AnkiDroid must
   have been opened once (its collection created).
