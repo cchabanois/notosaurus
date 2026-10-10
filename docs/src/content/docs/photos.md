@@ -22,7 +22,8 @@ good and cheaper choice.
 ## Several pages
 
 A lesson can have **up to 10 pages**. After the first photo, **Next page** adds another one;
-**Gallery** picks photos already taken (JPEG, PNG, WebP or GIF).
+**Gallery** picks photos already taken (JPEG, PNG, WebP or GIF). On a computer, you can also drag
+photos or PDFs from a folder and drop them on **Gallery** or **PDF**.
 
 On each photo:
 

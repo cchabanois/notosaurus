@@ -32,7 +32,8 @@
 </head>
 <body>
 <!-- A sheet open: the page behind doesn't scroll (a finger on the list would move it) -->
-<div class="app" x-data="notosaurus" :class="{ 'has-bar': bottomBar() }"
+<div class="app" x-data="notosaurus"
+     @dragover.window="ignoreDrop($event)" @drop.window="ignoreDrop($event)" :class="{ 'has-bar': bottomBar() }"
      x-effect="document.documentElement.classList.toggle('sheet-open', sheetOpen())">
 
   <!-- App bar -->
@@ -123,13 +124,15 @@
             <span x-text="photos.length ? $t('app.photos.nextPage') : $t('app.photos.takePhoto')"></span>
             <input type="file" accept="image/*" capture="environment" hidden @change="addPhotos($event)">
           </label>
-          <label class="add-tile">
+          <label class="add-tile" :class="{ dropping: dropTile === 'gallery' }" @dragover="dragOver($event, 'gallery')"
+                 @dragleave="dropTile = ''" @drop="dropFiles($event)">
             <span class="add-icon">🖼️</span>
             <span x-text="$t('app.photos.gallery')"></span>
             <input type="file" accept="image/*" multiple hidden @change="addPhotos($event)">
           </label>
           <!-- Its own picker: the gallery keeps the phone's photo picker -->
-          <label class="add-tile" :class="{ busy: pdfBusy }">
+          <label class="add-tile" :class="{ busy: pdfBusy, dropping: dropTile === 'pdf' }" @dragover="dragOver($event, 'pdf')"
+                 @dragleave="dropTile = ''" @drop="dropFiles($event)">
             <span class="add-icon">📄</span>
             <span x-text="pdfBusy ? $t('app.pdf.reading') : $t('app.pdf.button')"></span>
             <input type="file" accept="application/pdf,.pdf" multiple hidden :disabled="pdfBusy" @change="addPhotos($event)">

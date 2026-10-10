@@ -9,6 +9,7 @@ Each pull request adds a line under **Unreleased**. See [Releasing](CONTRIBUTING
 
 ### Added
 
+- On a computer, photos and PDFs dragged from a folder can be dropped on **Gallery** or **PDF** (each goes where its type says); a file let go elsewhere on the page no longer makes the browser open it (and leave the lesson).
 - 📚 Review a lesson in AnkiDroid right after adding it (the coming Android app): AnkiDroid opens on its deck.
 - ⚡ Quick or 🎯 Careful, on the page that makes the cards: quick by default, 2 to 4 times faster (a few seconds) and cheaper; careful thinks longer, for a rich lesson (a diagram, maths). After a quick lesson, “Make again, carefully” redoes it in its place.
 - The cards show while they are being made: each one as soon as the AI has written it (the first after a few seconds).

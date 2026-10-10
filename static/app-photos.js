@@ -77,8 +77,36 @@ async function pdfPageText(doc, n) {
 const photosPart = {
   // --- Photos ---------------------------------------------------------
   async addPhotos(event) {
+    await this.addFiles([...event.target.files]);
+    event.target.value = "";  // allows picking the same photo again
+  },
+
+  // Photos or PDFs dragged from the computer onto "Gallery" or "PDF": each goes where its
+  // type says (a PDF dropped on "Gallery" is read as a PDF all the same)
+  dragOver(event, tile) {
+    if (!event.dataTransfer?.types?.includes("Files") || this.readOnly()) return;
+    event.preventDefault();
+    event.dataTransfer.dropEffect = "copy";
+    this.dropTile = tile;
+  },
+
+  // A file let go anywhere else: not opened by the browser (the page and its lesson would go)
+  ignoreDrop(event) {
+    if (!event.dataTransfer?.types?.includes("Files")) return;  // text dragged into a field: as usual
+    event.preventDefault();
+    if (event.type === "drop") this.dropTile = "";
+  },
+
+  async dropFiles(event) {
+    this.dropTile = "";
+    if (!event.dataTransfer?.files?.length || this.readOnly()) return;
+    event.preventDefault();
+    await this.addFiles([...event.dataTransfer.files]);
+  },
+
+  async addFiles(files) {
     this.error = "";
-    for (const file of event.target.files) {
+    for (const file of files) {
       if (isPdf(file)) {
         await this.addPdf(file);
         continue;
@@ -91,7 +119,6 @@ const photosPart = {
         this.error = t("app.photos.unreadable", { name: file.name });
       }
     }
-    event.target.value = "";  // allows picking the same photo again
   },
 
   // A PDF: its pages as photos. More pages than places left: the user picks them
