@@ -91,7 +91,7 @@ const cardsPart = {
   },
 
   canGenerate() {
-    return this.form.text.trim() !== "" && !this.loading;
+    return this.form.text.trim() !== "" && !this.loading && !this.dictating("prompt") && !this.tidy.busy;
   },
 
   bottomBar() {

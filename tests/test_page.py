@@ -815,12 +815,14 @@ def test_dictation_in_the_app(page):
     page.goto("/")
     page.get_by_role("button", name="Dicter").first.click()
     sync_api.expect(page.get_by_text("J'écoute… appuie sur ⏹ quand tu as fini.").first).to_be_visible()
+    sync_api.expect(page.get_by_role("textbox", name="Texte de la consigne")).to_be_disabled()  # waits for its text
     if shots := os.environ.get("NOTOSAURUS_SHOTS"):  # to look at it: a folder for the screenshot
         page.screenshot(path=f"{shots}/dictation.png")
     page.get_by_role("button", name="Arrêter et écrire le texte").click()
     field = page.get_by_role("textbox", name="Texte de la consigne")
     sync_api.expect(field).to_have_value(re.compile("Douze cartes sur el abuelo et la abuela.$"))
     assert stopped == [{"kind": "prompt"}]
+    sync_api.expect(field).to_be_enabled()
     sync_api.expect(page.get_by_role("button", name="Dicter").first).to_be_enabled()
 
 

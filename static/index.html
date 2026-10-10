@@ -158,6 +158,7 @@
       </div>
       <div class="dictated" :class="{ 'with-mic': dictation.available }">
         <textarea x-model="form.text" rows="4" x-ref="promptText" :aria-label="$t('app.prompt.text')"
+                  :disabled="dictating('prompt') || tidy.busy"
                   :placeholder="selectedId === null ? $t('app.prompt.freePlaceholder') : ''"></textarea>
         <button type="button" class="mic" x-show="dictation.available" x-cloak
                 :class="{ listening: dictation.listening === 'prompt', busy: dictation.busy === 'prompt' }"
@@ -165,7 +166,7 @@
                 @click="dictate('prompt')" :aria-label="$t(micKey('prompt'))" :title="$t(micKey('prompt'))"
                 x-text="dictation.listening === 'prompt' ? '⏹' : dictation.busy === 'prompt' ? '…' : '🎤'"></button>
       </div>
-      <p class="hint" x-cloak x-show="dictation.listening === 'prompt'" x-text="$t('app.dictation.listening')"></p>
+      <p class="hint" x-cloak x-show="dictationStep('prompt')" x-text="$t(dictationStep('prompt') || 'app.dictation.busy')"></p>
       <div class="prompt-actions tidy" x-show="form.text.trim()">
         <button type="button" class="link-btn strong" :disabled="tidy.busy" @click="tidyPrompt()"
                 x-text="tidy.busy ? $t('app.prompt.tidyBusy') : $t('app.prompt.tidy')"></button>
@@ -258,7 +259,7 @@
 
       <form class="revise" x-show="!readOnly()" @submit.prevent="revise()">
         <div class="dictated" :class="{ 'with-mic': dictation.available }">
-          <textarea x-model="revision.text" rows="2" :aria-label="$t('app.revise.label')"
+          <textarea x-model="revision.text" rows="2" :aria-label="$t('app.revise.label')" :disabled="dictating('correction')"
                     :placeholder="$t('app.revise.placeholder')"
                     @keydown.ctrl.enter.prevent="revise()" @keydown.meta.enter.prevent="revise()"></textarea>
           <button type="button" class="mic" x-show="dictation.available" x-cloak
@@ -267,9 +268,11 @@
                 @click="dictate('correction')" :aria-label="$t(micKey('correction'))" :title="$t(micKey('correction'))"
                 x-text="dictation.listening === 'correction' ? '⏹' : dictation.busy === 'correction' ? '…' : '🎤'"></button>
         </div>
-        <button class="btn primary" :disabled="!revision.text.trim() || revision.busy" x-text="$t('app.revise.button')"></button>
+        <button class="btn primary" :disabled="!revision.text.trim() || revision.busy || dictating('correction')"
+                x-text="$t('app.revise.button')"></button>
       </form>
-      <p class="hint listening-hint" x-cloak x-show="dictation.listening === 'correction'" x-text="$t('app.dictation.listening')"></p>
+      <p class="hint listening-hint" x-cloak x-show="dictationStep('correction')"
+         x-text="$t(dictationStep('correction') || 'app.dictation.busy')"></p>
       <div class="revision-result" x-cloak x-show="revision.summary" x-transition.opacity>
         <div>
           <strong x-text="revision.summary"></strong>

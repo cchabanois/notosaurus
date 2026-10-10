@@ -52,6 +52,17 @@ const dictationPart = {
     }
   },
 
+  // The field waits for its text (listening, then written down): not typed into meanwhile
+  dictating(kind) {
+    return this.dictation.listening === kind || this.dictation.busy === kind;
+  },
+
+  // What the field is waiting for, said under it ("" when nothing)
+  dictationStep(kind) {
+    if (this.dictation.listening === kind) return "app.dictation.listening";
+    return this.dictation.busy === kind ? "app.dictation.busy" : "";
+  },
+
   // The 🎤's name (an i18n key, translated by the page with $t: it follows the language)
   micKey(kind) {
     if (this.dictation.listening === kind) return "app.dictation.stop";

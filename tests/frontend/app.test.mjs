@@ -341,6 +341,10 @@ test("dictation: listen, then the text said comes after what was written", async
   c.form.text = "Vocabulaire de la famille  ";
   await c.dictate("prompt");
   assert.equal(c.dictation.listening, "prompt");
+  assert.equal(c.dictating("prompt"), true);  // the field waits for its text
+  assert.equal(c.canGenerate(), false);
+  assert.equal(c.dictationStep("prompt"), "app.dictation.listening");
+  assert.equal(c.dictating("correction"), false);
   assert.equal(c.micKey("prompt"), "app.dictation.stop");
   await c.dictate("correction");  // the other field waits
   assert.equal(c.dictation.listening, "prompt");
@@ -349,6 +353,9 @@ test("dictation: listen, then the text said comes after what was written", async
   assert.deepEqual(calls, [["/api/dictation/start", null], ["/api/dictation/stop", '{"kind":"prompt"}']]);
   assert.equal(c.dictation.listening, "");
   assert.equal(c.dictation.busy, "");
+  assert.equal(c.dictating("prompt"), false);
+  assert.equal(c.dictationStep("prompt"), "");
+  assert.equal(c.canGenerate(), true);
 
   said.text = "  ";  // nothing heard: said so, the field untouched
   await c.dictate("correction");
