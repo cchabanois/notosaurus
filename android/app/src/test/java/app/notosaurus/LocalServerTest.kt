@@ -73,13 +73,15 @@ class LocalServerTest {
         var broken = false // e.g. never opened: no collection yet
         val sent = mutableListOf<Deck>()
         var sounds: Map<String, File> = emptyMap()
+        var pictures: Map<String, File> = emptyMap()
         override fun installed() = installed
         override fun permitted() = installed && permitted
         override fun deckNames() = listOf("Default", "Histoire")
-        override fun send(deck: Deck, audio: Map<String, File>): Sent {
+        override fun send(deck: Deck, audio: Map<String, File>, pictures: Map<String, File>): Sent {
             if (broken) error("no collection")
             sent += deck
             sounds = audio
+            this.pictures = pictures
             return Sent(added = deck.cards.size, duplicates = 0, skipped = 0, deck = deck.deck)
         }
     }
@@ -427,6 +429,65 @@ class LocalServerTest {
         assertEquals(1, res["audio_failures"]!!.jsonPrimitive.int)
         assertEquals(setOf("la madre"), anki.sounds.keys)
         assertEquals("mp3 la madre", anki.sounds["la madre"]!!.readText())
+    }
+
+    @Test
+    fun picturesDrawnByTheRelayThenIntoAnkiDroid() = app { client ->
+        relayAnswers("""{"deck": {"deck": "Anglais", "cards": [
+            {"front": "Comment dit-on ?", "back": "an apple", "picture_prompt": "an apple"},
+            {"front": "Ce triangle ?", "back": "rectangle", "figure": "a right triangle", "picture_on_back": true},
+            {"front": "le père", "back": "the father"}]}, "turns": [], "usage": {"credits": 1, "credits_left": 99}}""")
+        val lesson = client.submitFormWithBinaryData("/api/extract", formData { append("prompt", "p") }) { page() }.json().jsonObject
+        val id = lesson.string("id")
+        val (apple, triangle) = lesson["cards"]!!.jsonArray.map { it.jsonObject.string("id") }
+
+        // The missing ones drawn: a picture (/v1/picture) and a figure (/v1/figure)
+        relay.dispatcher = object : mockwebserver3.Dispatcher() {
+            override fun dispatch(request: RecordedRequest) = when (request.url.encodedPath) {
+                "/v1/picture" -> MockResponse.Builder().setHeader("Content-Type", "image/jpeg").body("jpeg " + request.body!!.utf8()).build()
+                else -> MockResponse.Builder().body("""{"svg": "<svg/>", "usage": {"credits": 1, "credits_left": 97}}""").build()
+            }
+        }
+        val drawn = client.post("/api/lessons/$id/pictures") { page() }.json().jsonObject
+        assertEquals(0, drawn["failures"]!!.jsonPrimitive.int)
+        val cards = drawn["lesson"]!!.jsonObject["cards"]!!.jsonArray.map { it.jsonObject }
+        val (picture, figure) = cards.take(2).map { it.string("picture") }
+        assertTrue(picture.matches(Regex("picture-$apple-[0-9a-f]{8}\\.jpg")))
+        assertTrue(figure.matches(Regex("picture-$triangle-[0-9a-f]{8}\\.svg")))
+        assertEquals("", cards[2].string("picture"))
+        assertTrue(client.get("/api/lessons/$id/pictures/$picture") { page() }.bodyAsText().contains("\"fresh\":false"))
+        val svg = client.get("/api/lessons/$id/pictures/$figure") { page() }
+        assertEquals("<svg/>", svg.bodyAsText())
+        assertTrue(svg.headers["Content-Security-Policy"]!!.startsWith("default-src 'none'"))
+
+        // Drawn again with another subject: fresh, the old file gone
+        val again = client.post("/api/lessons/$id/cards/$apple/picture/draw") {
+            page(); contentType(ContentType.Application.Json); setBody("""{"subject": "a red apple"}""")
+        }.json().jsonObject["card"]!!.jsonObject
+        assertEquals("a red apple", again.string("picture_prompt"))
+        assertTrue(client.get("/api/lessons/$id/pictures/${again.string("picture")}") { page() }.bodyAsText().contains("\"fresh\":true"))
+        assertEquals(HttpStatusCode.NotFound, client.get("/api/lessons/$id/pictures/$picture") { page() }.status)
+
+        // Sent to AnkiDroid with their pictures
+        val sending = client.get("/api/lessons/$id") { page() }.json().jsonObject
+        client.post("/api/anki/send") {
+            page(); contentType(ContentType.Application.Json)
+            setBody("""{"deck": "Anglais", "cards": ${sending["cards"]}, "voice": "", "lesson_id": "$id"}""")
+        }
+        assertEquals(setOf(again.string("picture"), figure), anki.pictures.keys)
+        assertTrue(anki.sent.single().cards[1].pictureOnBack)
+
+        // The user's own photo, then no picture at all
+        val own = client.submitFormWithBinaryData("/api/lessons/$id/cards/$apple/picture", formData {
+            append("photo", "my photo".toByteArray(), Headers.build {
+                append(HttpHeaders.ContentType, "image/jpeg")
+                append(HttpHeaders.ContentDisposition, "filename=\"photo.jpg\"")
+            })
+        }) { page() }.json().jsonObject["card"]!!.jsonObject
+        assertEquals("my photo", client.get("/api/lessons/$id/pictures/${own.string("picture")}") { page() }.bodyAsText())
+        val none = client.delete("/api/lessons/$id/cards/$apple/picture") { page() }.json().jsonObject["card"]!!.jsonObject
+        assertEquals(listOf("", "", ""), listOf("picture", "picture_prompt", "figure").map { none.string(it) })
+        assertEquals(HttpStatusCode.NotFound, client.get("/api/lessons/$id/pictures/${own.string("picture")}") { page() }.status)
     }
 
     @Test

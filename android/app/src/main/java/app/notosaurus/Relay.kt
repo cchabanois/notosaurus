@@ -92,6 +92,15 @@ class Relay(baseUrl: String, private val key: String) {
         return open("speak", request.toString().toRequestBody(JSON)).use { it.body.bytes() }
     }
 
+    /** A card's picture (/v1/picture): the JPEG, card size. `fresh`: drawn again. */
+    suspend fun picture(subject: String, fresh: Boolean): ByteArray {
+        val request = buildJsonObject {
+            put("subject", subject)
+            put("fresh", fresh)
+        }
+        return open("picture", request.toString().toRequestBody(JSON)).use { it.body.bytes() }
+    }
+
     /** A JSON route (explain, figure). */
     suspend fun post(route: String, request: JsonObject): JsonObject = call(route, request.toString().toRequestBody(JSON))
 

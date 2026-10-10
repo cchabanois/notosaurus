@@ -40,6 +40,8 @@ data class Card(
     val mask: Mask? = null,
     @SerialName("picture_prompt") val picturePrompt: String = "",
     val figure: String = "",
+    val picture: String = "", // its picture's file, in the lesson's images/
+    @SerialName("picture_on_back") val pictureOnBack: Boolean = false,
 )
 
 @Serializable

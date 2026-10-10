@@ -3,4 +3,6 @@
     <cache-path name="photos" path="photos/" />
     <!-- The cards' sound (the relay's voices), handed to AnkiDroid -->
     <files-path name="audio" path="audio/" />
+    <!-- The cards' pictures (drawn, or the user's photos), handed to AnkiDroid -->
+    <files-path name="lessons" path="lessons/" />
 </paths>

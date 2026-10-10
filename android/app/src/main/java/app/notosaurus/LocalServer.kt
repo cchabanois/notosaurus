@@ -28,6 +28,9 @@ import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.async
+import kotlinx.coroutines.awaitAll
+import kotlinx.coroutines.sync.Semaphore
+import kotlinx.coroutines.sync.withPermit
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.runBlocking
@@ -40,6 +43,7 @@ import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.jsonArray
 import kotlinx.serialization.json.jsonObject
+import kotlinx.serialization.json.jsonPrimitive
 import kotlinx.serialization.json.put
 import java.io.File
 import java.net.URI
@@ -162,6 +166,39 @@ class LocalServer(
         )
         return Made(content, images) // to do: turned upright (found["turns"]), as the computer does
     }
+
+    /** A card's figure (SVG, /v1/figure) or picture (JPEG, /v1/picture), saved in the
+     * lesson; its file name. */
+    private suspend fun drawn(lessonId: String, card: JsonObject, fresh: Boolean): String {
+        val figure = card.string("figure").trim()
+        return if (figure.isNotEmpty()) {
+            val svg = relay().post("figure", buildJsonObject { put("description", figure) }).string("svg")
+            savePicture(lessonId, card.string("id"), svg.toByteArray(), "svg")
+        } else {
+            savePicture(lessonId, card.string("id"), relay().picture(card.string("picture_prompt"), fresh), "jpg")
+        }
+    }
+
+    /** A picture in the lesson's images/, named as the computer names them. */
+    private fun savePicture(lessonId: String, cardId: String, data: ByteArray, extension: String): String {
+        val folder = lessons.images(lessonId) ?: throw NotFound()
+        folder.mkdirs()
+        val digest = MessageDigest.getInstance("SHA-1").digest(data).joinToString("") { "%02x".format(it) }
+        val name = "picture-$cardId-${digest.take(8)}.$extension"
+        File(folder, name).writeBytes(data)
+        return name
+    }
+
+    /** The lesson with these cards, its pictures no card uses any more removed. */
+    private fun savedCards(lessonId: String, cards: List<JsonObject>): JsonObject {
+        val saved = lessons.update(lessonId, buildJsonObject { put("cards", JsonArray(cards)) }) ?: throw NotFound()
+        val used = cards.map { it.string("picture") }.toSet()
+        lessons.images(lessonId)?.listFiles { f -> PICTURE.matches(f.name) && f.name !in used }?.forEach { it.delete() }
+        return saved
+    }
+
+    private fun RoutingContext.cardIndex(cards: List<JsonObject>): Int =
+        cards.indexOfFirst { it.string("id") == param("card") }.takeIf { it >= 0 } ?: throw BadRequest("card.not_found")
 
     /** The relay's voices, asked once. */
     private var voiceList: JsonArray? = null
@@ -385,10 +422,99 @@ class LocalServer(
             }
             JsonObject(relay().post("explain", request) - "usage")
         }
-        api("POST", "/api/lessons/{id}/pictures") { // to do: /v1/picture and /v1/figure
+        // --- Pictures, through the relay (as app/main.py): drawn, the user's own, none
+        api("POST", "/api/lessons/{id}/pictures") {
+            val lesson = lesson()
+            val id = lesson.string("id")
+            val cards = lesson["cards"]!!.jsonArray.map { it.jsonObject }.toMutableList()
+            val failures = mutableListOf<JsonObject>()
+            val todo = cards.indices.filter { i ->
+                cards[i].string("picture").isEmpty() && (cards[i].string("picture_prompt").isNotBlank() || cards[i].string("figure").isNotBlank())
+            }
+            val few = Semaphore(PICTURES_AT_ONCE)
+            coroutineScope {
+                todo.map { i ->
+                    async {
+                        few.withPermit {
+                            try {
+                                cards[i] = JsonObject(cards[i] + ("picture" to JsonPrimitive(drawn(id, cards[i], fresh = false))))
+                            } catch (e: RelayException) { // a card without its picture is still a card
+                                failures += buildJsonObject { put("code", e.code); put("params", e.params) }
+                            }
+                        }
+                    }
+                }.awaitAll()
+            }
             buildJsonObject {
-                put("lesson", lesson())
-                put("failures", 0)
+                put("lesson", savedCards(id, cards))
+                put("failures", failures.size)
+                put("error", failures.firstOrNull() ?: JsonNull)
+            }
+        }
+        // A card's picture drawn again: its subject (or figure), or the one the user wrote
+        api("POST", "/api/lessons/{id}/cards/{card}/picture/draw") {
+            val lesson = lesson()
+            val cards = lesson["cards"]!!.jsonArray.map { it.jsonObject }.toMutableList()
+            val i = cardIndex(cards)
+            val card = cards[i]
+            val figure = card.string("figure").isNotBlank()
+            val given = body()["subject"]?.takeIf { it !is JsonNull }?.jsonPrimitive?.content
+            val subject = (given ?: card.string(if (figure) "figure" else "picture_prompt")).trim()
+            if (subject.isEmpty()) throw BadRequest("picture.no_subject")
+            val asked = JsonObject(card + ((if (figure) "figure" else "picture_prompt") to JsonPrimitive(subject)))
+            cards[i] = JsonObject(asked + ("picture" to JsonPrimitive(drawn(lesson.string("id"), asked, fresh = true))))
+            buildJsonObject {
+                put("card", cards[i])
+                put("lesson", savedCards(lesson.string("id"), cards))
+            }
+        }
+        // The user's own photo as the card's picture (the page made it card size)
+        post("/api/lessons/{id}/cards/{card}/picture") {
+            if (!allowed()) return@post
+            val (status, answer) = try {
+                val lesson = lesson()
+                val cards = lesson["cards"]!!.jsonArray.map { it.jsonObject }.toMutableList()
+                val i = cardIndex(cards)
+                var photo: ByteArray? = null
+                call.receiveMultipart(formFieldLimit = 20L * 1024 * 1024).forEachPart { part ->
+                    if (part is PartData.FileItem && part.name == "photo") photo = part.provider().toByteArray()
+                    part.dispose()
+                }
+                val name = savePicture(lesson.string("id"), cards[i].string("id"), photo ?: throw BadRequest("extract.no_input"), "jpg")
+                cards[i] = JsonObject(cards[i] + ("picture" to JsonPrimitive(name)))
+                HttpStatusCode.Created to buildJsonObject {
+                    put("card", cards[i])
+                    put("lesson", savedCards(lesson.string("id"), cards))
+                }
+            } catch (e: Exception) {
+                failure(e) ?: throw e
+            }
+            call.respondText(answer.toString(), ContentType.Application.Json, status)
+        }
+        // No picture on the card any more: a text card
+        api("DELETE", "/api/lessons/{id}/cards/{card}/picture") {
+            val lesson = lesson()
+            val cards = lesson["cards"]!!.jsonArray.map { it.jsonObject }.toMutableList()
+            val i = cardIndex(cards)
+            cards[i] = JsonObject(cards[i] + listOf("picture", "picture_prompt", "figure").associateWith { JsonPrimitive("") })
+            buildJsonObject {
+                put("card", cards[i])
+                put("lesson", savedCards(lesson.string("id"), cards))
+            }
+        }
+        get("/api/lessons/{id}/pictures/{name}") {
+            if (!allowed()) return@get
+            val name = param("name")
+            val file = lessons.images(param("id"))?.resolve(name)?.takeIf { PICTURE.matches(name) && it.isFile }
+            when {
+                file == null -> call.respondText("", status = HttpStatusCode.NotFound)
+                name.endsWith(".svg") -> {
+                    // Cleaned by the relay; and even opened on its own, nothing in it may run or load
+                    call.response.headers.append("Content-Security-Policy", "default-src 'none'; style-src 'unsafe-inline'")
+                    call.response.headers.append("X-Content-Type-Options", "nosniff")
+                    call.respondBytes(file.readBytes(), ContentType.Image.SVG)
+                }
+                else -> call.respondBytes(file.readBytes(), ContentType.Image.JPEG)
             }
         }
 
@@ -411,8 +537,10 @@ class LocalServer(
             })
             readyAnki()
             val (sounds, failures) = sounds(deck, req.string("voice"))
+            val folder = lessons.images(req.string("lesson_id"))
+            val pictures = deck.cards.mapNotNull { c -> folder?.resolve(c.picture)?.takeIf { c.picture.isNotEmpty() && it.isFile }?.let { c.picture to it } }.toMap()
             val sent = try {
-                withContext(Dispatchers.IO) { anki.send(deck, sounds) }
+                withContext(Dispatchers.IO) { anki.send(deck, sounds, pictures) }
             } catch (e: Exception) { // e.g. AnkiDroid never opened: no collection yet
                 throw BadRequest("anki.android_failed", buildJsonObject { put("detail", e.message ?: e.javaClass.simpleName) })
             }
@@ -644,6 +772,8 @@ class LocalServer(
         // The voice chosen for a lesson whose voice is "auto" (Google Chirp 3 HD: the same
         // name in every language); a voice's name, as the page tells them from Anki locales
         const val DEFAULT_VOICE = "Aoede"
+        private const val PICTURES_AT_ONCE = 4
+        private val PICTURE = Regex("""^picture-[a-z0-9]+-[a-f0-9]{8}\.(jpg|svg)$""") // ours only: no "../"
         private val VOICE = Regex("""^[a-z]{2,3}-[A-Z]{2}-[\w-]+$""")
 
         // Prototype: the relay on the computer, seen from the emulator (changed in the settings, "Advanced")
