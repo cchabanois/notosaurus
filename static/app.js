@@ -134,7 +134,7 @@ document.addEventListener("alpine:init", () => {
     // "✨ Tidy up" the instructions: the text before kept for "↩", while the tidied one is unchanged
     tidy: { busy: false, before: null, after: "" },
     // The 🎤 of the instructions and the correction (the app): the field listening, or being written
-    dictation: { available: false, listening: "", busy: "", timer: null },
+    mic: { available: false, listening: "", busy: "", timer: null },
     openSubjects: (() => { try { return JSON.parse(storage("get", undefined, OPEN_SUBJECTS)) ?? {}; } catch { return {}; } })(),
     picker: { open: false, query: "" },
     // Natural-language correction of the cards; `undo` holds the previous version.
@@ -201,7 +201,7 @@ document.addEventListener("alpine:init", () => {
         this.donations = config.donations ?? true;
         this.apkg = config.apkg ?? true;
         this.reviewInAnki = config.review_in_anki ?? false;
-        this.dictation.available = config.dictation ?? false;
+        this.mic.available = config.dictation ?? false;
         const helps = storage("get", undefined, HELPS);
         this.helps = helps === null ? Boolean(config.card_helps) : helps === "1";
       } catch {}

@@ -61,6 +61,7 @@ Each pull request adds a line under **Unreleased**. See [Releasing](CONTRIBUTING
 
 ### Fixed
 
+- 🎤 vanished as soon as a lesson was shown, and a lesson's saving could fail until one was: the 🎤's state and the lesson's dictation option had the same name.
 - The message after adding to Anki keeps its width on a phone: its buttons go under it (it was squeezed into a narrow column).
 - Without AnkiDroid, the coming Android app no longer opens Google Play by surprise: its message says why, with an “Install AnkiDroid” button.
 - Scrolling the lessons (or another sheet) with a finger no longer moves the lesson behind, on a phone.
