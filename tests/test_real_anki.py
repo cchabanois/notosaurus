@@ -17,6 +17,7 @@ from pathlib import Path
 
 import pytest
 from conftest import fake_synthesize
+from helpers import plain_image
 
 anki_collection = pytest.importorskip("anki.collection")
 from anki.import_export_pb2 import ImportAnkiPackageUpdateCondition  # noqa: E402
@@ -200,15 +201,9 @@ def test_apkg_import_then_reimport_updates(notosaurus, col, tmp_path):
 
 
 def test_diagram_lesson_on_a_real_collection(bridged, col):
-    import io
-
-    from PIL import Image
-
     client, _ = bridged
-    out = io.BytesIO()
-    Image.new("RGB", (800, 600), "white").save(out, "JPEG")
     res = client.post(
-        "/api/extract", files=[("images", ("p.jpg", out.getvalue(), "image/jpeg"))], data={"prompt": "Le schéma"}
+        "/api/extract", files=[("images", ("p.jpg", plain_image(800, 600), "image/jpeg"))], data={"prompt": "Le schéma"}
     )
     lesson = res.json()
     body = {"deck": lesson["deck"], "cards": lesson["cards"], "lesson_id": lesson["id"]}
@@ -233,16 +228,10 @@ def test_diagram_lesson_on_a_real_collection(bridged, col):
 
 
 def test_picture_lesson_on_a_real_collection(bridged, col, monkeypatch):
-    import io
-
-    from PIL import Image
-
     from notosaurus_core import pictures
 
     async def draw(s, subject):
-        out = io.BytesIO()
-        Image.new("RGB", (600, 600), "orange").save(out, "PNG")
-        return out.getvalue()
+        return plain_image(600, 600, "orange", "PNG")
 
     monkeypatch.setattr(pictures, "draw", draw)
     client, _ = bridged

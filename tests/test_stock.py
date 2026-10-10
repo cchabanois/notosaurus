@@ -1,12 +1,11 @@
 """Free pictures found for a card (stock): the licences kept, what pupils mustn't see
 left out, the sources taking turns, nothing fetched from an address the client gives."""
 
-import asyncio
 import io
-from concurrent.futures import ThreadPoolExecutor
 
 import httpx
 import pytest
+from helpers import HearingGemini, plain_image, run
 from PIL import Image as PILImage
 
 from notosaurus_core import files, llm, pictures, stock
@@ -17,9 +16,7 @@ from notosaurus_core.providers import gemini
 
 
 def jpeg(side=300) -> bytes:
-    out = io.BytesIO()
-    PILImage.new("RGB", (side, side), "teal").save(out, "JPEG")
-    return out.getvalue()
+    return plain_image(side, side, "teal")
 
 
 def commons_page(index, title, licence="pd", categories="Paintings", host="upload.wikimedia.org", mime="image/jpeg"):
@@ -101,11 +98,6 @@ class Services:
         if host == "pixabay.com" and request.url.path == "/api/":
             return httpx.Response(200, json=PIXABAY)
         return httpx.Response(200, content=jpeg())  # a picture
-
-
-def run(coroutine):
-    with ThreadPoolExecutor(1) as pool:  # after the page tests, Playwright's loop runs in this thread
-        return pool.submit(asyncio.run, coroutine).result()
 
 
 @pytest.fixture
@@ -314,8 +306,6 @@ def test_the_cards_say_what_to_search_for(client, monkeypatch):
 
 
 def test_the_ai_says_which_fits(monkeypatch):
-    from test_dictation import HearingGemini
-
     for answer, expected in (('{"choice": 2}', 2), ('{"choice": -1}', None), ('{"choice": 9}', None)):
         fake = HearingGemini(answer)
         monkeypatch.setattr(gemini, "_gemini_client", lambda s, fake=fake: fake)

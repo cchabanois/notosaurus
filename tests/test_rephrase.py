@@ -1,21 +1,12 @@
 """“✨ Tidy up”: a lesson's instructions rewritten clear and short, every intention kept."""
 
-import asyncio
-from concurrent.futures import ThreadPoolExecutor
-
-from test_dictation import HearingGemini
+from helpers import HearingGemini, run
 
 from app import usage
 from notosaurus_core import llm
 from notosaurus_core.config import AIConfig
 from notosaurus_core.models import AiCall
 from notosaurus_core.providers import gemini
-
-
-def run(coroutine):
-    """In a thread of its own: the page tests' Playwright leaves an event loop in this one."""
-    with ThreadPoolExecutor(1) as pool:
-        return pool.submit(asyncio.run, coroutine).result()
 
 
 def test_the_ai_is_told_to_keep_every_intention(monkeypatch):

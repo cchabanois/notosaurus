@@ -5,6 +5,7 @@ import io
 
 import apkg
 import pytest
+from helpers import plain_image
 from PIL import Image
 
 from app.settings import Settings
@@ -13,9 +14,7 @@ from notosaurus_core.models import Card
 
 
 def png(color="red") -> bytes:
-    out = io.BytesIO()
-    Image.new("RGB", (1024, 1024), color).save(out, "PNG")
-    return out.getvalue()
+    return plain_image(1024, 1024, color, "PNG")
 
 
 @pytest.fixture
@@ -214,10 +213,8 @@ def test_own_photo_then_no_picture(client, drawn, tmp_path):
     lesson = lesson_with_pictures(client)
     cards = client.post(f"/api/lessons/{lesson['id']}/pictures").json()["lesson"]["cards"]
     dog = cards[1]
-    out = io.BytesIO()
-    Image.new("RGB", (1600, 1200), "blue").save(out, "JPEG")
     url = f"/api/lessons/{lesson['id']}/cards/{dog['id']}/picture"
-    res = client.post(url, files={"photo": ("p.jpg", out.getvalue(), "image/jpeg")}).json()
+    res = client.post(url, files={"photo": ("p.jpg", plain_image(1600, 1200, "blue"), "image/jpeg")}).json()
     assert res["card"]["picture"] != dog["picture"]
     folder = tmp_path / "data" / "lessons" / lesson["id"] / "images"
     assert not (folder / dog["picture"]).exists()  # the replaced picture is removed

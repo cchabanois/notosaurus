@@ -1,13 +1,12 @@
 """What the AI makes is for pupils: the rules in every system prompt, the AI's own
 refusal, Gemini's stricter filters and their blocks, OpenAI's refusals: llm.refused."""
 
-import asyncio
 import json
 import types as py_types
-from concurrent.futures import ThreadPoolExecutor
 
 import pytest
 from google.genai import types
+from helpers import run
 
 from notosaurus_core import figures, llm, prompts
 from notosaurus_core.config import AIConfig
@@ -16,13 +15,6 @@ from notosaurus_core.models import Deck
 from notosaurus_core.providers import gemini, openai_like
 
 GEMINI = AIConfig(llm="gemini", gemini_api_key="k")
-
-
-def run(coroutine):
-    """asyncio.run, in a thread of its own: after the page tests, Playwright's loop runs
-    in this one."""
-    with ThreadPoolExecutor(1) as pool:
-        return pool.submit(asyncio.run, coroutine).result()
 
 
 class FakeGemini:

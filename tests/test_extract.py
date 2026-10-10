@@ -4,6 +4,7 @@ decks the AI is told about, the PDF pages' text, the fun facts, the AI correctio
 import json
 
 from conftest import extract_lesson
+from helpers import run
 
 from app.models import LessonIn
 from notosaurus_core import llm, prompts
@@ -239,9 +240,6 @@ def test_pdf_page_texts_go_to_the_ai_and_stay_with_the_lesson(client, monkeypatc
 def test_a_figure_meant_but_left_undescribed_is_described(monkeypatch):
     """The model set a card's picture on the back but described no figure (now and then,
     thinking little): one light call, seeing the page, describes it. Other cards: no call."""
-    import asyncio
-    from concurrent.futures import ThreadPoolExecutor
-
     from notosaurus_core.config import AIConfig
     from notosaurus_core.models import CardFigure, Figures
 
@@ -260,8 +258,7 @@ def test_a_figure_meant_but_left_undescribed_is_described(monkeypatch):
 
     monkeypatch.setattr(llm, "_generate", generate)
     s = AIConfig(llm="gemini", gemini_api_key="k")
-    with ThreadPoolExecutor(1) as pool:
-        found = pool.submit(asyncio.run, llm.extract_cards(s, [], "Automatique")).result()
+    found = run(llm.extract_cards(s, [], "Automatique"))
     assert [c.figure for c in found.deck.cards] == [
         "Deux ensembles A et B, leur partie commune hachurée",
         "",

@@ -17,6 +17,7 @@ import time
 
 import pytest
 from conftest import fake_synthesize
+from helpers import plain_image
 from PIL import Image as PILImage
 
 sync_api = pytest.importorskip("playwright.sync_api")
@@ -203,13 +204,7 @@ def test_settings_show_what_the_service_needs(page):
 
 
 def png(color: str) -> bytes:
-    import io
-
-    from PIL import Image
-
-    out = io.BytesIO()
-    Image.new("RGB", (600, 800), color).save(out, "PNG")
-    return out.getvalue()
+    return plain_image(600, 800, color, "PNG")
 
 
 def test_photos_and_pictures_seen_in_full(page):
@@ -862,9 +857,7 @@ def test_find_a_free_picture(page):
     """🖼️ → “🔎 Find a picture”: the free pictures found, one tapped becomes the card's."""
     previews = []
     for colour in ("#c0392b", "#2e86de", "#27ae60", "#f39c12", "#8e44ad", "#16a085"):
-        out = io.BytesIO()
-        PILImage.new("RGB", (120, 90), colour).save(out, "JPEG")
-        previews.append("data:image/jpeg;base64," + base64.b64encode(out.getvalue()).decode())
+        previews.append("data:image/jpeg;base64," + base64.b64encode(plain_image(120, 90, colour)).decode())
     results = [
         {"source": source, "id": f"{source}-{n}", "title": f"Picture {n}", "preview": preview, "licence": "CC0"}
         for n, (source, preview) in enumerate(zip(["commons", "openverse"] * 3, previews, strict=True))
