@@ -836,7 +836,7 @@
   "builtinPrompts": {
     "auto": {
       "name": "Automatiche (secondo la lezione)",
-      "text": "Guarda la lezione e scegli le carte più utili per ripassarla:\n- lessico di una lingua: una carta per parola o espressione, fronte in italiano, retro nella lingua studiata;\n- lezione di una materia (storia, scienze, geografia…): domande / risposte brevi, o testo da completare per le frasi da ricordare;\n- formule: una carta per formula (fronte: cosa calcola, retro: la formula);\n- geometria: carte con una figura esatta quando aiuta;\n- schema con i nomi: schema da completare, una carta per nome;\n- un'immagine solo quando aiuta davvero a ricordare (un personaggio, un luogo, un monumento, un'opera, un animale), mai per un concetto astratto né su ogni carta: sul retro quando mostra la risposta (il ritratto del presidente di cui si chiede il nome), sul fronte solo quando la domanda riguarda l'immagine («Chi è?»).\nMescolale se la pagina contiene più di queste cose.\nDi' in una frase cosa hai scelto.",
+      "text": "Guarda la lezione e scegli le carte più utili per ripassarla:\n- lessico di una lingua: una carta per parola o espressione, fronte in italiano, retro nella lingua studiata;\n- lezione di una materia (storia, scienze, geografia…): domande / risposte brevi, o testo da completare per le frasi da ricordare;\n- formule: una carta per formula (fronte: cosa calcola, retro: la formula);\n- un concetto che una figura fa capire (geometria, o qualsiasi figura della lezione): carte con una figura esatta quando aiuta;\n- schema con i nomi: schema da completare, una carta per nome;\n- un'immagine solo quando aiuta davvero a ricordare (un personaggio, un luogo, un monumento, un'opera, un animale), mai per un concetto astratto né su ogni carta: sul retro quando mostra la risposta (il ritratto del presidente di cui si chiede il nome), sul fronte solo quando la domanda riguarda l'immagine («Chi è?»).\nMescolale se la pagina contiene più di queste cose.\nDi' in una frase cosa hai scelto.",
       "deck": "{materia}::{titolo della lezione}",
       "voice": "auto"
     },
@@ -900,7 +900,7 @@
     },
     "wordlist": {
       "name": "Elenco di parole (senza foto)",
-      "text": "Crea una carta per ogni parola dell'elenco qui sotto. Fronte: la parola in italiano. Retro: la sua traduzione in inglese.\nElenco: ",
+      "text": "Crea una carta per ogni parola dell'elenco qui sotto. Fronte: la parola in italiano. Retro: la sua traduzione nella lingua studiata, con l'articolo.\nElenco: ",
       "deck": "{lingua}::Parole",
       "voice": "auto"
     },

@@ -836,7 +836,7 @@
   "builtinPrompts": {
     "auto": {
       "name": "Automático (conforme a lição)",
-      "text": "Olhe a lição e escolha os cartões mais úteis para revisá-la:\n- vocabulário de um idioma: um cartão por palavra ou expressão, frente em português, verso no idioma estudado;\n- lição de uma matéria (história, ciências, geografia…): perguntas / respostas curtas, ou lacunas para as frases que é preciso lembrar;\n- fórmulas: um cartão por fórmula (frente: o que ela calcula, verso: a fórmula);\n- geometria: cartões com uma figura exata quando ajudar;\n- esquema com legendas: esquema para completar, um cartão por legenda;\n- uma imagem só quando ela ajuda de verdade a lembrar (uma pessoa, um lugar, um monumento, uma obra, um animal), nunca para uma noção abstrata nem em todos os cartões: no verso quando mostra a resposta (o retrato do presidente cujo nome se pergunta), na frente só quando a pergunta é sobre a imagem (“Quem é?”).\nMisture se a página tiver várias dessas coisas.\nDiga em uma frase o que você escolheu.",
+      "text": "Olhe a lição e escolha os cartões mais úteis para revisá-la:\n- vocabulário de um idioma: um cartão por palavra ou expressão, frente em português, verso no idioma estudado;\n- lição de uma matéria (história, ciências, geografia…): perguntas / respostas curtas, ou lacunas para as frases que é preciso lembrar;\n- fórmulas: um cartão por fórmula (frente: o que ela calcula, verso: a fórmula);\n- uma noção que uma figura faz entender (geometria, ou qualquer figura da lição): cartões com uma figura exata quando ajudar;\n- esquema com legendas: esquema para completar, um cartão por legenda;\n- uma imagem só quando ela ajuda de verdade a lembrar (uma pessoa, um lugar, um monumento, uma obra, um animal), nunca para uma noção abstrata nem em todos os cartões: no verso quando mostra a resposta (o retrato do presidente cujo nome se pergunta), na frente só quando a pergunta é sobre a imagem (“Quem é?”).\nMisture se a página tiver várias dessas coisas.\nDiga em uma frase o que você escolheu.",
       "deck": "{matéria}::{título da lição}",
       "voice": "auto"
     },
@@ -900,7 +900,7 @@
     },
     "wordlist": {
       "name": "Lista de palavras (sem foto)",
-      "text": "Crie um cartão para cada palavra da lista abaixo. Frente: a palavra em português. Verso: a tradução dela para o inglês.\nLista: ",
+      "text": "Crie um cartão para cada palavra da lista abaixo. Frente: a palavra em português. Verso: a tradução dela para o idioma estudado, com o artigo.\nLista: ",
       "deck": "{idioma}::Palavras",
       "voice": "auto"
     },

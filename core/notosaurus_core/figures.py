@@ -35,8 +35,11 @@ may give the answer away);
 proportions and measures as described;
 - plain text and Unicode only (√, ², π, α, °), no LaTeX; the labels in the \
 description's language, written exactly as given;
-- only shapes, text and arrow markers: no script, no image, no link, no external \
-reference, no animation.
+- a shaded area: a hatching (<pattern>) or a light grey fill, its outline kept; an \
+area shared by shapes (an intersection) cut with <clipPath>; all inside the SVG \
+(references "url(#id)" only);
+- only shapes, text, arrow markers, patterns, clip paths and gradients: no script, no \
+image, no link, no external reference, no animation.
 Answer in "svg" with the SVG document only.
 A figure is for a pupil's lesson: for anything else (or anything unsuited to a \
 child), answer an empty figure, the white background alone."""
@@ -55,11 +58,15 @@ class FigureError(AppError):
 ELEMENTS = {
     "svg", "g", "defs", "marker", "title", "desc",
     "path", "line", "polyline", "polygon", "rect", "circle", "ellipse", "text", "tspan",
+    # Shaded and shared areas (a hatched intersection): they refer to the figure's own parts only
+    "pattern", "clipPath", "mask", "linearGradient", "radialGradient", "stop",
 }  # fmt: skip
 GEOMETRY = {
     "x", "y", "x1", "y1", "x2", "y2", "cx", "cy", "r", "rx", "ry", "width", "height", "d", "points",
     "dx", "dy", "rotate", "transform", "viewBox", "preserveAspectRatio", "id",
     "refX", "refY", "markerWidth", "markerHeight", "orient", "markerUnits", "textLength", "lengthAdjust",
+    "patternUnits", "patternContentUnits", "patternTransform", "clipPathUnits", "maskUnits", "maskContentUnits",
+    "gradientUnits", "gradientTransform", "spreadMethod", "offset", "fx", "fy",
 }  # fmt: skip
 PRESENTATION = {
     "fill", "stroke", "stroke-width", "stroke-dasharray", "stroke-dashoffset", "stroke-linecap",
@@ -67,8 +74,11 @@ PRESENTATION = {
     "font-family", "font-size", "font-weight", "font-style", "text-anchor", "dominant-baseline",
     "alignment-baseline", "baseline-shift", "letter-spacing", "word-spacing", "text-decoration",
     "marker-start", "marker-mid", "marker-end", "visibility", "display",
+    "clip-path", "clip-rule", "mask", "stop-color", "stop-opacity",
 }  # fmt: skip
-MARKER_REF = re.compile(r"^url\(#[\w.-]+\)$")
+# Attributes that may point at a part of the figure itself ("url(#hatch)"), never elsewhere
+REFERENCES = {"marker-start", "marker-mid", "marker-end", "clip-path", "mask", "fill", "stroke"}
+INTERNAL_REF = re.compile(r"^url\(\s*#[\w.-]+\s*\)$")
 SAFE_VALUE = re.compile(r"^[^<>()\\]*$")  # nothing that could call or load (url(…), expression(…))
 # Transforms: geometric functions of numbers only ("rotate(-30 120 80) translate(5,0)")
 TRANSFORM = re.compile(r"^(\s*(matrix|translate|scale|rotate|skewX|skewY)\(\s*[-+\d.eE\s,]*\)\s*,?)+\s*$")
@@ -79,9 +89,11 @@ def _local(name: str) -> str:
 
 
 def _safe_value(name: str, value: str) -> bool:
-    if name.startswith("marker-"):
-        return bool(MARKER_REF.match(value.strip())) or value.strip() == "none"
-    if name == "transform":
+    if name in REFERENCES and INTERNAL_REF.match(value.strip()):
+        return True
+    if name.startswith("marker-") or name in ("clip-path", "mask"):
+        return value.strip() == "none"
+    if name in ("transform", "patternTransform", "gradientTransform"):
         return bool(TRANSFORM.match(value))
     return bool(SAFE_VALUE.match(value)) and "javascript" not in value.lower()
 

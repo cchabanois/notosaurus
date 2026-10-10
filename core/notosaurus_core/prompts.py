@@ -104,8 +104,10 @@ are right, and every label with its exact text. A card is about a figure when it
 about geometry: a formula of a figure (the area of a triangle: the triangle with its \
 base b and height h drawn), a theorem (Pythagoras: the right triangle with its sides \
 a, b, c), a notion (a tangent, a perpendicular bisector), a figure with measures, a \
-simple labelled diagram. The figure's letters are those of the card. Unless the \
-instructions ask for no figures. It \
+simple labelled diagram. Also, in any subject, when a simple exact drawing makes the \
+notion clearer than words; in particular, when the lesson's page shows a figure for \
+the notion, the card gets its own, drawn clean. The figure's letters are those of the \
+card. Unless the instructions ask for no figures. It \
 is drawn as a clean, exact figure (not by an image model). Use "picture_prompt" for \
 objects, animals and scenes, "figure" for these figures; leave the other empty.
 - Where a picture or figure goes: on the front when it is needed to answer ("What is \

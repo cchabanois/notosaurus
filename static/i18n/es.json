@@ -836,7 +836,7 @@
   "builtinPrompts": {
     "auto": {
       "name": "Automático (según la lección)",
-      "text": "Mira la lección y elige las tarjetas más útiles para repasarla:\n- vocabulario de un idioma: una tarjeta por palabra o expresión, anverso en español, reverso en el idioma que se estudia;\n- lección de una asignatura (historia, ciencias, geografía…): preguntas / respuestas cortas, o texto con huecos para las frases que hay que recordar;\n- fórmulas: una tarjeta por fórmula (anverso: lo que calcula, reverso: la fórmula);\n- geometría: tarjetas con una figura exacta cuando ayude;\n- esquema con rótulos: esquema mudo, una tarjeta por rótulo;\n- una imagen solo cuando ayuda de verdad a recordar (un personaje, un lugar, un monumento, una obra, un animal), nunca para una noción abstracta ni en todas las tarjetas: en el reverso cuando muestra la respuesta (el retrato del presidente cuyo nombre se pregunta), en el anverso solo cuando la pregunta trata de la imagen («¿Quién es?»).\nMézclalas si la página contiene varias de estas cosas.\nDi en una frase lo que has elegido.",
+      "text": "Mira la lección y elige las tarjetas más útiles para repasarla:\n- vocabulario de un idioma: una tarjeta por palabra o expresión, anverso en español, reverso en el idioma que se estudia;\n- lección de una asignatura (historia, ciencias, geografía…): preguntas / respuestas cortas, o texto con huecos para las frases que hay que recordar;\n- fórmulas: una tarjeta por fórmula (anverso: lo que calcula, reverso: la fórmula);\n- una noción que una figura hace entender (geometría, o cualquier figura de la lección): tarjetas con una figura exacta cuando ayude;\n- esquema con rótulos: esquema mudo, una tarjeta por rótulo;\n- una imagen solo cuando ayuda de verdad a recordar (un personaje, un lugar, un monumento, una obra, un animal), nunca para una noción abstracta ni en todas las tarjetas: en el reverso cuando muestra la respuesta (el retrato del presidente cuyo nombre se pregunta), en el anverso solo cuando la pregunta trata de la imagen («¿Quién es?»).\nMézclalas si la página contiene varias de estas cosas.\nDi en una frase lo que has elegido.",
       "deck": "{asignatura}::{título de la lección}",
       "voice": "auto"
     },
@@ -900,7 +900,7 @@
     },
     "wordlist": {
       "name": "Lista de palabras (sin foto)",
-      "text": "Crea una tarjeta por cada palabra de la lista de abajo. Anverso: la palabra en español. Reverso: su traducción al inglés, con el artículo.\nLista: ",
+      "text": "Crea una tarjeta por cada palabra de la lista de abajo. Anverso: la palabra en español. Reverso: su traducción al idioma que se estudia, con el artículo.\nLista: ",
       "deck": "{idioma}::Palabras",
       "voice": "auto"
     },
