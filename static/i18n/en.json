@@ -323,7 +323,8 @@
       "hint": "Notosaurus needs an AI service to read the lessons: a few minutes to set it up.",
       "button": "Set up Notosaurus",
       "onComputer": "On the computer, in Anki: Tools → Notosaurus → Getting started."
-    }
+    },
+    "reviewInAnki": "📚 Review"
   },
   "admin": {
     "title": "Settings",
@@ -706,7 +707,8 @@
       "sync_not_logged_in": "Anki is not logged in to AnkiWeb: click “Sync” once in Anki to log in",
       "android_missing": "AnkiDroid is needed for the cards: Google Play opens on it. Install it, open it once, then add the cards again.",
       "android_refused": "Notosaurus isn't allowed to add cards to AnkiDroid: allow it, then add the cards again.",
-      "android_failed": "AnkiDroid didn't take the cards ({detail}): open AnkiDroid once, then try again."
+      "android_failed": "AnkiDroid didn't take the cards ({detail}): open AnkiDroid once, then try again.",
+      "android_no_deck": "AnkiDroid has no deck “{deck}”: add the lesson to Anki first."
     },
     "tts": {
       "voices_unavailable": "Voice list unavailable: {detail}",

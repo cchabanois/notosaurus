@@ -665,6 +665,28 @@ def test_no_apkg_where_the_cards_go_straight_to_ankidroid(page, anki):
     sync_api.expect(page.get_by_role("button", name=re.compile("Anki"))).not_to_have_count(0)
 
 
+def test_review_in_ankidroid_once_sent(page, anki):
+    """The Android app's page (review_in_anki): "📚 Review" once the lesson is sent."""
+    asked = []
+
+    def app(route):
+        route.fulfill(json={**route.fetch().json(), "review_in_anki": True})
+
+    page.route("**/api/config", app)
+    page.route(
+        "**/api/anki/review",
+        lambda route: (asked.append(route.request.post_data_json), route.fulfill(json={"opened": True})),
+    )
+    generate_free(page, FRONT_PROMPT)
+    review = page.locator(".bar-row").get_by_role("button", name="📚 Réviser")
+    sync_api.expect(review).to_be_hidden()  # not sent yet
+    page.get_by_role("button", name="📥 Ajouter à Anki").click()
+    sync_api.expect(page.locator(".toast.ok").get_by_role("button", name="📚 Réviser")).to_be_visible()
+    review.click()
+    sync_api.expect(page.locator(".toast.ok")).to_be_hidden()
+    assert [a["deck"] for a in asked] == [page.locator(".field.deck input").input_value()]
+
+
 def test_no_profile_badge_where_there_are_no_profiles(page):
     """The Android app (AnkiDroid doesn't say its profile) says profiles: false."""
     page.route("**/api/anki/status", lambda route: route.fulfill(json={"available": True, "profile": None}))

@@ -218,6 +218,7 @@ document.addEventListener("alpine:init", () => {
     settingsHere: true,          // false on a phone when Notosaurus runs in the Anki add-on
     inAndroidApp: /\bNotosaurusApp\//.test(navigator.userAgent),
     apkg: true,                  // a .apkg to download: not where the cards go straight to AnkiDroid (the app)
+    reviewInAnki: false,         // a sent lesson reviewed in Anki from here (the app: AnkiDroid)
     donations: true,             // "Support Notosaurus": not where it's paid for (the app's subscription)  // the Notosaurus Android app (its WebView says so)
     profileToApply: null,        // Anki profile switch waiting for the current task to finish
     diagramWarning: false,       // the AI model places diagram masks loosely: say so
@@ -267,6 +268,7 @@ document.addEventListener("alpine:init", () => {
         this.configured = config.configured ?? true;
         this.donations = config.donations ?? true;
         this.apkg = config.apkg ?? true;
+        this.reviewInAnki = config.review_in_anki ?? false;
         const helps = storage("get", undefined, HELPS);
         this.helps = helps === null ? Boolean(config.card_helps) : helps === "1";
       } catch {}
@@ -1364,6 +1366,20 @@ document.addEventListener("alpine:init", () => {
         this.checkAnki();
       } finally {
         this.sending = false;
+      }
+    },
+
+    // The lesson's deck opened in AnkiDroid, to review it now
+    async reviewLesson() {
+      this.success = "";
+      try {
+        await api("/api/anki/review", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ deck: this.deck }),
+        });
+      } catch (e) {
+        this.error = e.message;
       }
     },
 

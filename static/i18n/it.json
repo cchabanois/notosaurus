@@ -323,7 +323,8 @@
       "hint": "Notosaurus ha bisogno di un servizio di IA per leggere le lezioni: pochi minuti per configurarlo.",
       "button": "Configura Notosaurus",
       "onComputer": "Sul computer, in Anki: Strumenti → Notosaurus → Configurazione guidata."
-    }
+    },
+    "reviewInAnki": "📚 Ripassa"
   },
   "admin": {
     "title": "Impostazioni",
@@ -706,7 +707,8 @@
       "sync_not_logged_in": "Anki non ha effettuato l'accesso ad AnkiWeb: clicca una volta su “Sincronizza” in Anki per accedere",
       "android_missing": "Le carte vanno in AnkiDroid: Google Play si apre sulla sua scheda. Installalo, aprilo una volta, poi aggiungi di nuovo le carte.",
       "android_refused": "Notosaurus non ha il permesso di aggiungere carte ad AnkiDroid: consentilo, poi aggiungi di nuovo le carte.",
-      "android_failed": "AnkiDroid non ha accettato le carte ({detail}): apri AnkiDroid una volta, poi riprova."
+      "android_failed": "AnkiDroid non ha accettato le carte ({detail}): apri AnkiDroid una volta, poi riprova.",
+      "android_no_deck": "AnkiDroid non ha il mazzo «{deck}»: aggiungi prima la lezione ad Anki."
     },
     "tts": {
       "voices_unavailable": "Elenco delle voci non disponibile: {detail}",

@@ -65,6 +65,7 @@
   <div class="toast ok" x-cloak x-show="success && !error" x-transition.opacity role="status">
     <span x-text="success"></span>
     <!-- After a send or an export: the lesson is done, start the next one -->
+    <button class="toast-action" x-show="successNext && reviewInAnki && lessonExported" @click="reviewLesson()" x-text="$t('app.reviewInAnki')"></button>
     <button class="toast-action" x-show="successNext" @click="success = ''; newLesson()" x-text="$t('app.newLessonAction')"></button>
     <button @click="success = ''" :aria-label="$t('common.close')">✕</button>
   </div>
@@ -457,6 +458,9 @@
       <!-- Anki reachable: send directly, keep the file as a secondary option -->
       <button class="btn soft" x-show="anki.available && apkg" @click="exportApkg()" :disabled="exporting || sending"
               :aria-label="$t('app.actions.downloadApkg')">⬇️ .apkg</button>
+      <!-- Sent already (the app): reviewed in AnkiDroid from here -->
+      <button class="btn soft" x-show="reviewInAnki && lessonExported" @click="reviewLesson()" :disabled="sending"
+              x-text="$t('app.reviewInAnki')"></button>
       <button class="btn primary wide" x-show="anki.available" @click="sendToAnki()" :disabled="sending || exporting">
         <span x-text="sending ? $t('app.actions.sending') : $t('app.actions.addToAnki')"></span>
       </button>

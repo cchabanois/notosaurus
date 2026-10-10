@@ -7,6 +7,7 @@ import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.ichi2.anki.FlashCardsContract
 import com.ichi2.anki.api.AddContentApi
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
@@ -74,6 +75,26 @@ class AnkiDroidTest {
         assertEquals(listOf(note.id), notes)
         assertEquals(1, anki.delete(notes))
         assertEquals(emptyList<Long>(), anki.lessonNotes(lesson))
+    }
+
+    @Test
+    fun theLessonReviewedInAnkiDroid() {
+        val anki = Anki(Device.context)
+        val deck = "Notosaurus test $run::Leçon"
+        anki.send(Deck(deck, listOf(Card("le chat $run", "el gato"))))
+        assertTrue(anki.review(deck))
+        // The deck selected, AnkiDroid's reviewer on top
+        assertEquals(deck, AddContentApi(Device.context).selectedDeckName)
+        val deadline = System.currentTimeMillis() + 10_000
+        var top = ""
+        while (System.currentTimeMillis() < deadline) {
+            top = Device.shell("dumpsys activity activities").lines().firstOrNull { "ResumedActivity" in it }.orEmpty()
+            if ("com.ichi2.anki/.Reviewer" in top) break
+            Thread.sleep(300)
+        }
+        assertTrue(top, "com.ichi2.anki/.Reviewer" in top)
+        Device.shell("input keyevent KEYCODE_HOME") // back from AnkiDroid
+        assertFalse(anki.review("No such deck $run"))
     }
 
     @Test
