@@ -572,7 +572,10 @@ h2 {
   font-weight: 600;
   box-shadow: 0 8px 24px rgb(0 0 0 / .2);
 }
+.toast { flex-wrap: wrap; }
 .toast span { flex: 1; }
+/* Under the message, on a line of their own: the message keeps the width on a phone */
+.toast-actions { flex-basis: 100%; display: flex; flex-wrap: wrap; justify-content: flex-end; gap: .4rem; }
 .toast button { border: none; background: none; color: inherit; font-size: 1rem; padding: 0 .3rem; }
 .toast .toast-action {
   flex: 0 0 auto; padding: .35rem .7rem; border-radius: 999px; font-weight: 800; font-size: .9rem;
