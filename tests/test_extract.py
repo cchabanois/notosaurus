@@ -65,7 +65,8 @@ def test_extract_fake_cloze(client):
 
 
 def test_existing_decks_given_to_the_ai(anki, client, monkeypatch):
-    from app import lessons, main
+    from app import lessons
+    from app.routes import generation
 
     anki.decks.update({"Maths": 1, "Maths::Fractions": 2, "Espagnol": 3})
     # Lessons: their decks count too (with their parents), another profile's private ones don't
@@ -80,7 +81,7 @@ def test_existing_decks_given_to_the_ai(anki, client, monkeypatch):
         seen["decks"] = decks
         return await llm.extract_cards(s, images, prompt, deck, decks)
 
-    monkeypatch.setattr(main, "extract_cards", extract_cards)
+    monkeypatch.setattr(generation, "extract_cards", extract_cards)
     assert client.post("/api/extract", data={"prompt": "Les fractions"}).status_code == 201
     assert seen["decks"] == expected
     text = prompts._user_text("Les fractions", "{matière}::{leçon}", 1, decks=expected)
@@ -203,7 +204,7 @@ def test_revision_errors(client, monkeypatch):
 
 
 def test_pdf_page_texts_go_to_the_ai_and_stay_with_the_lesson(client, monkeypatch):
-    from app import main
+    from app.routes import generation
 
     page = "La Révolution française commence en 1789 avec la prise de la Bastille."
     # Only the PDF pages with text: a photo ("") and a scan (a few stray characters) have none
@@ -220,7 +221,7 @@ def test_pdf_page_texts_go_to_the_ai_and_stay_with_the_lesson(client, monkeypatc
         seen.append(list(page_texts))
         return await llm.extract_cards(s, images, prompt, deck, decks)
 
-    monkeypatch.setattr(main, "extract_cards", extract_cards)
+    monkeypatch.setattr(generation, "extract_cards", extract_cards)
     files = [("images", (f"p{n}.png", b"img", "image/png")) for n in (1, 2)]
     texts = json.dumps([page, ""])
     lesson = client.post("/api/extract", files=files, data={"prompt": "FR → ES", "page_texts": texts}).json()

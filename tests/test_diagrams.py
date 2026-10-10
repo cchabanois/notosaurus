@@ -160,7 +160,7 @@ def test_rotation_ignored_when_unknown_or_unreadable():
 
 
 def test_sideways_photo_saved_upright(client, monkeypatch):
-    from app import main
+    from app.routes import generation
     from notosaurus_core.models import Deck
 
     async def sideways(s, images, prompt, deck="", decks=(), **options):
@@ -168,7 +168,7 @@ def test_sideways_photo_saved_upright(client, monkeypatch):
         deck = Deck(deck="D", cards=[Card(front="What is (1)?", back="x", mask=mask)])
         return llm.Extracted(deck=deck, turns=[90], frames=[Frame(page=1, box=[0.05, 0.1, 0.5, 0.6])])
 
-    monkeypatch.setattr(main, "extract_cards", sideways)
+    monkeypatch.setattr(generation, "extract_cards", sideways)
     files = [("images", ("p.jpg", photo(1000, 500), "image/jpeg"))]
     lesson = client.post("/api/extract", files=files, data={"prompt": "p"}).json()
     assert lesson["cards"][0]["mask"]["box"] == pytest.approx([0.6, 0.1, 0.8, 0.3])
@@ -271,7 +271,7 @@ def test_cropped_image_and_masks(tmp_path):
 
 
 def test_turning_a_photo_by_hand_turns_its_frame(client, tmp_path, monkeypatch):
-    from app import main
+    from app.routes import generation
     from notosaurus_core.models import Deck
 
     async def framed(s, images, prompt, deck="", decks=(), **options):
@@ -279,7 +279,7 @@ def test_turning_a_photo_by_hand_turns_its_frame(client, tmp_path, monkeypatch):
         deck = Deck(deck="D", cards=[Card(front="What is (1)?", back="x", mask=mask)])
         return llm.Extracted(deck=deck, turns=[0], frames=[Frame(page=1, box=[0.05, 0.1, 0.5, 0.6])])
 
-    monkeypatch.setattr(main, "extract_cards", framed)
+    monkeypatch.setattr(generation, "extract_cards", framed)
     files = [("images", ("p.jpg", photo(1000, 500), "image/jpeg"))]
     lesson = client.post("/api/extract", files=files, data={"prompt": "p"}).json()
     turned = client.post(f"/api/lessons/{lesson['id']}/photos/1/rotate").json()

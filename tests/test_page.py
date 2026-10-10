@@ -751,17 +751,17 @@ def test_help_links_in_the_page_language(page):
 
 def test_the_setup_assistant(page, monkeypatch):
     """No AI yet: the page offers the assistant; the key checked, the phone seen pairing, ready."""
-    from app import main
+    from app.routes import admin, devices
 
     monkeypatch.setenv("NOTOSAURUS_LLM", "gemini")  # the default, without its key
-    monkeypatch.setattr(main, "last_paired", None)
+    monkeypatch.setattr(devices, "last_paired", None)
 
     async def check(s):  # the key's test, without calling Google
         assert s.gemini_api_key == "AIza-test"
         # A free key: no quota for the latest model, the fallback answered
         return {"vision": True, "json": True, "answer": "red", "model": "gemini-3.5-flash", "quota": "gemini-3.8-flash"}
 
-    monkeypatch.setattr(main, "check", check)
+    monkeypatch.setattr(admin, "check", check)
     page.goto("/")
     page.get_by_role("link", name="Configurer Notosaurus").click()
     page.locator("input[autocomplete=new-password]").first.fill("secret")

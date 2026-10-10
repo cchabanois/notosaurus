@@ -10,7 +10,8 @@ import pytest
 from fastapi.testclient import TestClient
 
 from app import ankiconnect, settings
-from app.main import DEVICE_COOKIE, app
+from app.main import app
+from app.routes.devices import DEVICE_COOKIE
 from notosaurus_core import prices, tts
 
 synthesized = []
