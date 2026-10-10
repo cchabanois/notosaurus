@@ -89,6 +89,8 @@ def test_openapi_description():
         "picture",
         "speak",
         "transcribe",
+        "pictures/search",
+        "pictures/found",
         "voices",
         "account",
     )

@@ -184,6 +184,24 @@ def build() -> dict:
     def picture(request: api.PictureRequest, x_notosaurus_version: str = client):
         """A picture for a card (pictures.picture)."""
 
+    @app.post(f"{api.PREFIX}/pictures/search", response_model=api.PictureSearchResponse, responses=errors(*COMMON))
+    def search_pictures(request: api.PictureSearchRequest, x_notosaurus_version: str = client):
+        """Free pictures of a subject to choose from (stock.search). Free."""
+
+    @app.post(
+        f"{api.PREFIX}/pictures/found",
+        response_class=Response,
+        responses={
+            200: {
+                "description": "The picture chosen, card size.",
+                "content": {"image/jpeg": {"schema": {"type": "string", "format": "binary"}}},
+            },
+            **errors(*COMMON),
+        },
+    )
+    def found_picture(request: api.FoundPictureRequest, x_notosaurus_version: str = client):
+        """One of the pictures found (stock.fetch). Free."""
+
     @app.post(
         f"{api.PREFIX}/speak",
         response_class=Response,

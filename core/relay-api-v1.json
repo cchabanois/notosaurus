@@ -3,7 +3,7 @@
   "info": {
     "title": "Notosaurus relay",
     "summary": "notosaurus_core behind a licence key",
-    "description": "The Notosaurus relay's API, version 1: what its client (the Notosaurus app with a\nlicence, later the Android app) and the relay itself both import, so that they\ncan't drift apart.\n\nThe relay is notosaurus_core behind a licence key: each route is the remote form\nof a core function (/v1/extract → llm.extract_cards…), takes what that function\ntakes but the AI configuration (the relay's own), and keeps nothing.\n\n- Authentication: \"Authorization: Bearer <licence key>\".\n- The client says its version in CLIENT_HEADER (\"1.1.0\"); a client too old for\n  the relay gets \"relay.client_outdated\".\n- The routes with photos (extract, revise) take multipart/form-data: a \"request\"\n  part holding the JSON request and one \"images\" part per photo (binary, as\n  diagrams.prepare makes them: JPEG, at most 1568 px). The other routes take JSON.\n- Errors: HTTP status of ERRORS, body {\"code\", \"params\"} (errors.AppError), the\n  AI's own errors (\"llm.*\") passed on as they are.\n- /v1/extract asked with \"Accept: application/x-ndjson\" (STREAM_TYPE) answers as the\n  AI writes: one JSON object per line, each card as it comes, then the answer or\n  the error (ExtractLine). A client going away stops the AI.\n- /v1/transcribe turns a dictation (the app's 🎤) into the text its speaker meant to\n  type: multipart/form-data, a \"request\" part (TranscribeRequest) and an \"audio\" part\n  (AUDIO_TYPES, at most MAX_AUDIO_BYTES).\n- /v1/speak reads a card's back aloud with one of /v1/voices (natural voices, the\n  same on every device): an mp3, for the app that has no voices of its own.\n- Each answer says the credits it used and those left (Usage; for /v1/picture and\n  /v1/speak, the CREDITS_HEADER and CREDITS_LEFT_HEADER headers). A credit is a share of the\n  call's real AI cost, at least 1 per call: the relay counts them, not the client.\n\nThe OpenAPI description (core/relay-api-v1.json) is generated from these models\nby tools/relay_openapi.py. Apps already released keep calling the relay: within /v1 the\nAPI only grows (new routes, optional request fields, answer fields more), checked against\nthe API each released app speaks (core/relay-api-releases/, tools/relay_compat.py).\n",
+    "description": "The Notosaurus relay's API, version 1: what its client (the Notosaurus app with a\nlicence, later the Android app) and the relay itself both import, so that they\ncan't drift apart.\n\nThe relay is notosaurus_core behind a licence key: each route is the remote form\nof a core function (/v1/extract → llm.extract_cards…), takes what that function\ntakes but the AI configuration (the relay's own), and keeps nothing.\n\n- Authentication: \"Authorization: Bearer <licence key>\".\n- The client says its version in CLIENT_HEADER (\"1.1.0\"); a client too old for\n  the relay gets \"relay.client_outdated\".\n- The routes with photos (extract, revise) take multipart/form-data: a \"request\"\n  part holding the JSON request and one \"images\" part per photo (binary, as\n  diagrams.prepare makes them: JPEG, at most 1568 px). The other routes take JSON.\n- Errors: HTTP status of ERRORS, body {\"code\", \"params\"} (errors.AppError), the\n  AI's own errors (\"llm.*\") passed on as they are.\n- /v1/extract asked with \"Accept: application/x-ndjson\" (STREAM_TYPE) answers as the\n  AI writes: one JSON object per line, each card as it comes, then the answer or\n  the error (ExtractLine). A client going away stops the AI.\n- /v1/transcribe turns a dictation (the app's 🎤) into the text its speaker meant to\n  type: multipart/form-data, a \"request\" part (TranscribeRequest) and an \"audio\" part\n  (AUDIO_TYPES, at most MAX_AUDIO_BYTES).\n- /v1/pictures/search finds free pictures of a subject to choose from (stock.search: public\n  domain, CC0, Pixabay), their previews as data; /v1/pictures/found gives the one chosen,\n  card size (JPEG), looked up again by its source and id. Both free: no AI.\n- /v1/speak reads a card's back aloud with one of /v1/voices (natural voices, the\n  same on every device): an mp3, for the app that has no voices of its own.\n- Each answer says the credits it used and those left (Usage; for /v1/picture and\n  /v1/speak, the CREDITS_HEADER and CREDITS_LEFT_HEADER headers). A credit is a share of the\n  call's real AI cost, at least 1 per call: the relay counts them, not the client.\n\nThe OpenAPI description (core/relay-api-v1.json) is generated from these models\nby tools/relay_openapi.py. Apps already released keep calling the relay: within /v1 the\nAPI only grows (new routes, optional request fields, answer fields more), checked against\nthe API each released app speaks (core/relay-api-releases/, tools/relay_compat.py).\n",
     "version": "1"
   },
   "paths": {
@@ -873,6 +873,211 @@
         }
       }
     },
+    "/v1/pictures/search": {
+      "post": {
+        "summary": "Search Pictures",
+        "description": "Free pictures of a subject to choose from (stock.search). Free.",
+        "operationId": "search_pictures_v1_pictures_search_post",
+        "parameters": [
+          {
+            "name": "X-Notosaurus-Version",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "The client's version (\"1.1.0\").",
+              "title": "X-Notosaurus-Version"
+            },
+            "description": "The client's version (\"1.1.0\")."
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PictureSearchRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PictureSearchResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Codes: `relay.invalid_key`",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "402": {
+            "description": "Codes: `relay.no_credits`",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Codes: `relay.invalid_request`",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "426": {
+            "description": "Codes: `relay.client_outdated`",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Codes: `relay.daily_limit`",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Codes: `relay.unavailable`",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/pictures/found": {
+      "post": {
+        "summary": "Found Picture",
+        "description": "One of the pictures found (stock.fetch). Free.",
+        "operationId": "found_picture_v1_pictures_found_post",
+        "parameters": [
+          {
+            "name": "X-Notosaurus-Version",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "The client's version (\"1.1.0\").",
+              "title": "X-Notosaurus-Version"
+            },
+            "description": "The client's version (\"1.1.0\")."
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/FoundPictureRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "The picture chosen, card size.",
+            "content": {
+              "image/jpeg": {
+                "schema": {
+                  "type": "string",
+                  "format": "binary"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Codes: `relay.invalid_key`",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "402": {
+            "description": "Codes: `relay.no_credits`",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Codes: `relay.invalid_request`",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "426": {
+            "description": "Codes: `relay.client_outdated`",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Codes: `relay.daily_limit`",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Codes: `relay.unavailable`",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/v1/speak": {
       "post": {
         "summary": "Speak",
@@ -1623,6 +1828,71 @@
         ],
         "title": "FigureResponse"
       },
+      "Found": {
+        "properties": {
+          "source": {
+            "type": "string",
+            "enum": [
+              "commons",
+              "openverse",
+              "pixabay"
+            ],
+            "title": "Source"
+          },
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "title": {
+            "type": "string",
+            "title": "Title"
+          },
+          "preview": {
+            "type": "string",
+            "title": "Preview"
+          },
+          "licence": {
+            "type": "string",
+            "title": "Licence"
+          }
+        },
+        "type": "object",
+        "required": [
+          "source",
+          "id",
+          "title",
+          "preview",
+          "licence"
+        ],
+        "title": "Found"
+      },
+      "FoundPictureRequest": {
+        "properties": {
+          "source": {
+            "type": "string",
+            "enum": [
+              "commons",
+              "openverse",
+              "pixabay"
+            ],
+            "title": "Source"
+          },
+          "id": {
+            "type": "string",
+            "maxLength": 300,
+            "minLength": 1,
+            "title": "Id",
+            "description": "Found.id, as /v1/pictures/search gave it."
+          }
+        },
+        "type": "object",
+        "required": [
+          "source",
+          "id"
+        ],
+        "title": "FoundPictureRequest",
+        "description": "POST /v1/pictures/found: one of the pictures found, as the card's. Answer: the JPEG\nitself, card size."
+      },
       "Frame": {
         "properties": {
           "page": {
@@ -1699,6 +1969,40 @@
         ],
         "title": "PictureRequest",
         "description": "A picture for a card, drawn by an image model. JSON; the answer is the JPEG itself."
+      },
+      "PictureSearchRequest": {
+        "properties": {
+          "subject": {
+            "type": "string",
+            "maxLength": 200,
+            "minLength": 1,
+            "title": "Subject",
+            "description": "What to find, in English."
+          }
+        },
+        "type": "object",
+        "required": [
+          "subject"
+        ],
+        "title": "PictureSearchRequest",
+        "description": "Free pictures of a subject to choose from. JSON."
+      },
+      "PictureSearchResponse": {
+        "properties": {
+          "results": {
+            "items": {
+              "$ref": "#/components/schemas/Found"
+            },
+            "type": "array",
+            "title": "Results",
+            "description": "The pictures found, at most 8, the sources taking turns."
+          }
+        },
+        "type": "object",
+        "required": [
+          "results"
+        ],
+        "title": "PictureSearchResponse"
       },
       "RephraseRequest": {
         "properties": {

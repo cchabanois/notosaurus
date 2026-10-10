@@ -115,6 +115,18 @@ class Relay(baseUrl: String, private val key: String) {
         return open("picture", request.toString().toRequestBody(JSON)).use { it.body.bytes() }
     }
 
+    /** Free pictures of a subject to choose from (/v1/pictures/search): {"results": [stock.Found…]}. */
+    suspend fun searchPictures(subject: String): JsonObject = post("pictures/search", buildJsonObject { put("subject", subject) })
+
+    /** One of the pictures found (/v1/pictures/found): the JPEG, card size. */
+    suspend fun foundPicture(source: String, id: String): ByteArray {
+        val request = buildJsonObject {
+            put("source", source)
+            put("id", id)
+        }
+        return open("pictures/found", request.toString().toRequestBody(JSON)).use { it.body.bytes() }
+    }
+
     /** A JSON route (explain, figure). */
     suspend fun post(route: String, request: JsonObject): JsonObject = call(route, request.toString().toRequestBody(JSON))
 

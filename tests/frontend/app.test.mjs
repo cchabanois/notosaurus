@@ -398,3 +398,35 @@ test("tidy up: the text rewritten, “↩” brings it back until it's changed",
   c.form.text += " Avec des images.";  // changed since: “↩” would lose it
   assert.equal(c.canUntidy(), false);
 });
+
+// --- Pictures found -----------------------------------------------------------
+
+test("find a picture: the choices, their sources, the one chosen", async () => {
+  const sent = [];
+  const page = await loadScripts("app.js", {
+    routes: (url, options) => {
+      sent.push([url, options?.body]);
+      if (url === "/api/pictures/search") {
+        return new Response({ results: [
+          { source: "commons", id: "File:A.jpg", title: "A", preview: "data:,", licence: "CC0" },
+          { source: "pixabay", id: "42", title: "B", preview: "data:,", licence: "Pixabay" },
+          { source: "commons", id: "File:C.jpg", title: "C", preview: "data:,", licence: "Public domain" },
+        ] });
+      }
+      return new Response({ card: { picture: "picture-x.jpg", picture_prompt: "a castle", figure: "" } });
+    },
+  });
+  const c = page.component();
+  c.lessonId = "L1";
+  const card = { id: "c1", _subject: " a castle " };
+  await c.searchPictures(card);
+  assert.equal(card._found.length, 3);
+  assert.equal(c.foundSources(card), "Wikimedia Commons, Pixabay");
+  await c.chooseFound(card, card._found[1]);
+  assert.equal(card.picture, "picture-x.jpg");
+  assert.equal(card._found, null);
+  assert.deepEqual(sent, [
+    ["/api/pictures/search", '{"subject":"a castle"}'],
+    ["/api/lessons/L1/cards/c1/picture/found", '{"source":"pixabay","id":"42"}'],
+  ]);
+});

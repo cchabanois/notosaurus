@@ -120,6 +120,19 @@ class SettingsUpdate(BaseModel):
     picture_model: str | None = None
 
 
+class PictureSearch(BaseModel):
+    """Free pictures of a subject (English): stock.search."""
+
+    subject: str = Field(min_length=1, max_length=200)
+
+
+class FoundPicture(BaseModel):
+    """One of the pictures found, as the card's: stock.fetch."""
+
+    source: Literal["commons", "openverse", "pixabay"]
+    id: str = Field(min_length=1, max_length=300)
+
+
 class PictureRequest(BaseModel):
     """Draw a card's picture again, with what to draw (None: the card's own): its subject,
     or a figure's description."""

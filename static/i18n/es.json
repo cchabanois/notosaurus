@@ -301,17 +301,21 @@
         "other": "No se han podido dibujar {count} imágenes: esas tarjetas no tienen."
       },
       "panel": "Imagen",
-      "subject": "Qué dibujar (en inglés)",
+      "subject": "Qué buscar o dibujar (en inglés)",
       "subjectPlaceholder": "p. ej.: a red apple",
       "draw": "🎨 Dibujar",
       "redraw": "🎨 Volver a dibujar",
       "photo": "📷 Mi foto",
       "remove": "✕ Sin imagen",
-      "cost": "Un dibujo cuesta entre 3 y 7 céntimos de dólar; tu propia foto es gratis.",
+      "cost": "Una imagen encontrada o tu propia foto es gratis; un dibujo cuesta unos 3 a 7 céntimos de dólar.",
       "figure": "La figura que dibujar (rótulos incluidos)",
       "figurePlaceholder": "p. ej.: un triángulo rectángulo en C, con la hipotenusa llamada «c»",
       "figureCost": "La IA de las tarjetas dibuja la figura por menos de un céntimo de dólar; tu propia foto es gratis.",
-      "onBack": "En el reverso (con la respuesta)"
+      "onBack": "En el reverso (con la respuesta)",
+      "search": "🔎 Buscar una imagen",
+      "searching": "Buscando…",
+      "found": "Imágenes libres ({sources}): toca la que sirva.",
+      "none": "No se ha encontrado ninguna imagen libre: prueba con otras palabras (en inglés) o dibújala."
     },
     "pairing": {
       "title": "Dispositivo no autorizado"
@@ -748,7 +752,9 @@
       "failed": "No se ha podido dibujar la imagen: {detail}",
       "empty": "El modelo de imagen no ha dado ninguna imagen.",
       "quota": "{service} se niega: cuota superada para el modelo de imagen (una clave gratuita no puede dibujar). Elige en los ajustes un modelo de imagen de otro servicio.",
-      "no_subject": "Escribe primero qué dibujar."
+      "no_subject": "Escribe primero qué dibujar.",
+      "search_failed": "La búsqueda de imágenes no ha funcionado: inténtalo de nuevo en un momento.",
+      "not_found": "Esta imagen ya no está disponible: elige otra."
     },
     "card": {
       "not_found": "Esta tarjeta ya no existe: vuelve a cargar la lección."

@@ -301,17 +301,21 @@
         "other": "{count} Bilder konnten nicht gezeichnet werden: Diese Karten haben keins."
       },
       "panel": "Bild",
-      "subject": "Was gezeichnet werden soll (auf Englisch)",
+      "subject": "Was gesucht oder gezeichnet werden soll (auf Englisch)",
       "subjectPlaceholder": "z. B. a red apple",
       "draw": "🎨 Zeichnen",
       "redraw": "🎨 Neu zeichnen",
       "photo": "📷 Mein Foto",
       "remove": "✕ Kein Bild",
-      "cost": "Eine Zeichnung kostet etwa 3 bis 7 US-Cent; dein eigenes Foto ist kostenlos.",
+      "cost": "Ein gefundenes Bild oder dein eigenes Foto ist kostenlos; eine Zeichnung kostet etwa 3 bis 7 US-Cent.",
       "figure": "Die zu zeichnende Figur (mit Beschriftungen)",
       "figurePlaceholder": "z. B. ein bei C rechtwinkliges Dreieck, die Hypotenuse mit „c“ beschriftet",
       "figureCost": "Die Figur zeichnet die KI der Karten, für weniger als einen US-Cent; dein eigenes Foto ist kostenlos.",
-      "onBack": "Auf der Rückseite (mit der Antwort)"
+      "onBack": "Auf der Rückseite (mit der Antwort)",
+      "search": "🔎 Bild suchen",
+      "searching": "Suche…",
+      "found": "Freie Bilder ({sources}): tippe auf das passende.",
+      "none": "Kein freies Bild gefunden: versuch andere Wörter (auf Englisch) oder lass es zeichnen."
     },
     "pairing": {
       "title": "Gerät nicht zugelassen"
@@ -748,7 +752,9 @@
       "failed": "Das Bild konnte nicht gezeichnet werden: {detail}",
       "empty": "Das Bildmodell hat kein Bild geliefert.",
       "quota": "{service} lehnt ab: Kontingent für das Bildmodell überschritten (ein kostenloser Schlüssel kann nicht zeichnen). Wähle in den Einstellungen ein Bildmodell über einen anderen Dienst.",
-      "no_subject": "Schreib zuerst, was gezeichnet werden soll."
+      "no_subject": "Schreib zuerst, was gezeichnet werden soll.",
+      "search_failed": "Die Bildsuche hat nicht geklappt: versuch es gleich noch einmal.",
+      "not_found": "Dieses Bild ist nicht mehr verfügbar: wähle ein anderes."
     },
     "card": {
       "not_found": "Diese Karte gibt es nicht mehr: Lade die Lektion neu."

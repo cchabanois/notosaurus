@@ -301,17 +301,21 @@
         "other": "Não foi possível desenhar {count} imagens: esses cartões ficam sem."
       },
       "panel": "Imagem",
-      "subject": "O que desenhar (em inglês)",
+      "subject": "O que buscar ou desenhar (em inglês)",
       "subjectPlaceholder": "por ex. a red apple",
       "draw": "🎨 Desenhar",
       "redraw": "🎨 Desenhar de novo",
       "photo": "📷 Minha foto",
       "remove": "✕ Sem imagem",
-      "cost": "Um desenho custa de 3 a 7 centavos de dólar; sua própria foto é grátis.",
+      "cost": "Uma imagem encontrada ou sua própria foto é grátis; um desenho custa cerca de 3 a 7 centavos de dólar.",
       "figure": "A figura a desenhar (legendas incluídas)",
       "figurePlaceholder": "por ex. um triângulo retângulo em C, com a hipotenusa chamada “c”",
       "figureCost": "A figura é desenhada pela IA dos cartões, por menos de um centavo de dólar; sua própria foto é grátis.",
-      "onBack": "No verso (com a resposta)"
+      "onBack": "No verso (com a resposta)",
+      "search": "🔎 Buscar uma imagem",
+      "searching": "Buscando…",
+      "found": "Imagens livres ({sources}): toque na que servir.",
+      "none": "Nenhuma imagem livre encontrada: tente outras palavras (em inglês) ou desenhe-a."
     },
     "pairing": {
       "title": "Aparelho não autorizado"
@@ -748,7 +752,9 @@
       "failed": "Não foi possível desenhar a imagem: {detail}",
       "empty": "O modelo de imagem não gerou nenhuma imagem.",
       "quota": "{service} recusa: cota excedida para o modelo de imagem (uma chave gratuita não pode desenhar). Escolha nas configurações um modelo de imagem de outro serviço.",
-      "no_subject": "Escreva primeiro o que desenhar."
+      "no_subject": "Escreva primeiro o que desenhar.",
+      "search_failed": "A busca de imagens não funcionou: tente de novo em instantes.",
+      "not_found": "Esta imagem não está mais disponível: escolha outra."
     },
     "card": {
       "not_found": "Este cartão não existe mais: recarregue a lição."
