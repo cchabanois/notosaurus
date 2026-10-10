@@ -24,7 +24,9 @@ takes but the AI configuration (the relay's own), and keeps nothing.
   call's real AI cost, at least 1 per call: the relay counts them, not the client.
 
 The OpenAPI description (core/relay-api-v1.json) is generated from these models
-by tools/relay_openapi.py.
+by tools/relay_openapi.py. Apps already released keep calling the relay: within /v1 the
+API only grows (new routes, optional request fields, answer fields more), checked against
+the API each released app speaks (core/relay-api-releases/, tools/relay_compat.py).
 """
 
 from typing import Literal

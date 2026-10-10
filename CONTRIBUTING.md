@@ -217,8 +217,12 @@ built from `main`, and the **Unreleased** section of [CHANGELOG.md](CHANGELOG.md
 
 1. Every pull request adds a line under **Unreleased**.
 2. To release, open a pull request that renames **Unreleased** to `[X.Y.Z] - yyyy-mm-dd`
-   (keep an empty **Unreleased** above it, and update the links at the bottom). Once
-   merged, the draft shows these notes.
+   (keep an empty **Unreleased** above it, and update the links at the bottom), and
+   freezes the relay's API this version's Android app speaks:
+   `cp core/relay-api-v1.json core/relay-api-releases/X.Y.Z.json`. From then on, a test
+   (`tools/relay_compat.py`) refuses any change to the relay's API that would break it:
+   within `/v1` the API only grows (new routes, optional fields); a change that can't be
+   one goes in a `/v2` beside it. Once merged, the draft shows these notes.
 3. Review the draft on GitHub (*Releases*) and click *Publish release*: GitHub creates
    the tag `vX.Y.Z` on that commit.
 4. Upload the add-on to AnkiWeb, with the description kept in [docs/ankiweb.md](docs/ankiweb.md)
