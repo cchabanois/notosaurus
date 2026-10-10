@@ -829,7 +829,7 @@
   "builtinPrompts": {
     "auto": {
       "name": "Automatiche (secondo la lezione)",
-      "text": "Guarda la lezione e scegli le carte più utili per ripassarla:\n- lessico di una lingua: una carta per parola o espressione, fronte in italiano, retro nella lingua studiata;\n- lezione di una materia (storia, scienze, geografia…): domande / risposte brevi, o testo da completare per le frasi da ricordare;\n- formule: una carta per formula (fronte: cosa calcola, retro: la formula);\n- geometria: carte con una figura esatta quando aiuta;\n- schema con i nomi: schema da completare, una carta per nome.\nMescolale se la pagina contiene più di queste cose.\nDi' in una frase cosa hai scelto.",
+      "text": "Guarda la lezione e scegli le carte più utili per ripassarla:\n- lessico di una lingua: una carta per parola o espressione, fronte in italiano, retro nella lingua studiata;\n- lezione di una materia (storia, scienze, geografia…): domande / risposte brevi, o testo da completare per le frasi da ricordare;\n- formule: una carta per formula (fronte: cosa calcola, retro: la formula);\n- geometria: carte con una figura esatta quando aiuta;\n- schema con i nomi: schema da completare, una carta per nome;\n- un'immagine solo quando aiuta davvero a ricordare (un personaggio, un luogo, un monumento, un'opera, un animale), mai per un concetto astratto né su ogni carta: sul retro quando mostra la risposta (il ritratto del presidente di cui si chiede il nome), sul fronte solo quando la domanda riguarda l'immagine («Chi è?»).\nMescolale se la pagina contiene più di queste cose.\nDi' in una frase cosa hai scelto.",
       "deck": "{materia}::{titolo della lezione}",
       "voice": "auto"
     },
@@ -874,12 +874,6 @@
       "deck": "{materia}::Formule",
       "voice": ""
     },
-    "school_formulas": {
-      "name": "Formule di matematica delle medie",
-      "text": "Crea carte con le principali formule di matematica della scuola secondaria di primo grado (dagli 11 ai 14 anni): aree e perimetri (quadrato, rettangolo, triangolo, cerchio), volumi (cubo, parallelepipedo, cilindro, cono, sfera), teorema di Pitagora, teorema di Talete, prodotti notevoli, potenze, proporzionalità e percentuali, velocità media. Fronte: cosa permette di calcolare la formula. Retro: la formula. Info: cosa rappresenta ogni lettera, con l'unità di misura se serve. Quando la formula riguarda una figura (area del cerchio, Pitagora…), metti quella figura, con le sue lettere.",
-      "deck": "Matematica::Formule delle medie",
-      "voice": ""
-    },
     "geometry": {
       "name": "Geometria (con figure)",
       "text": "Crea carte per ripassare la geometria della lezione (o dell'argomento qui sotto): figure, proprietà, termini (ipotenusa, raggio, asse di un segmento…). Metti una figura esatta quando aiuta a rispondere, senza mai scriverci la risposta.",
@@ -892,8 +886,8 @@
       "deck": "{materia}::{titolo dello schema}"
     },
     "pictures": {
-      "name": "Parole per immagini",
-      "text": "Crea carte con le parole della lezione (senza foto: 10 parole comuni dell'argomento che aggiungo qui). Fronte: l'immagine della parola, con la domanda “Come si dice?”. Retro: la parola nella lingua studiata, con l'articolo. Info: la parola in italiano.",
+      "name": "Lessico per immagini (lingue)",
+      "text": "Crea carte con il lessico della lezione di lingua (senza foto: 10 parole comuni dell'argomento che aggiungo qui), solo parole che un'immagine mostra chiaramente (oggetti, animali, cibi, luoghi, azioni visibili). Fronte: l'immagine della parola, con la domanda “Come si dice?”. Retro: la parola nella lingua studiata, con l'articolo. Info: la parola in italiano.",
       "deck": "{lingua}::Immagini",
       "voice": "auto"
     },

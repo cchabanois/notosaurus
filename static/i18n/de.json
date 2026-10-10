@@ -829,7 +829,7 @@
   "builtinPrompts": {
     "auto": {
       "name": "Automatisch (nach der Lektion)",
-      "text": "Sieh dir die Lektion an und wähle die nützlichsten Karten, um sie zu lernen:\n- Vokabeln einer Sprache: eine Karte pro Wort oder Ausdruck, vorne auf Deutsch, hinten in der gelernten Sprache;\n- Lernstoff eines Fachs (Geschichte, Naturwissenschaften, Erdkunde …): kurze Fragen / Antworten oder Lückentexte für die Sätze, die man sich merken muss;\n- Formeln: eine Karte pro Formel (vorne: was sie berechnet, hinten: die Formel);\n- Geometrie: Karten mit einer genauen Figur, wenn sie hilft;\n- Abbildung mit Beschriftungen: Abbildung zum Beschriften, eine Karte pro Beschriftung.\nMisch sie, wenn die Seite mehreres davon enthält.\nSag in einem Satz, was du gewählt hast.",
+      "text": "Sieh dir die Lektion an und wähle die nützlichsten Karten, um sie zu lernen:\n- Vokabeln einer Sprache: eine Karte pro Wort oder Ausdruck, vorne auf Deutsch, hinten in der gelernten Sprache;\n- Lernstoff eines Fachs (Geschichte, Naturwissenschaften, Erdkunde …): kurze Fragen / Antworten oder Lückentexte für die Sätze, die man sich merken muss;\n- Formeln: eine Karte pro Formel (vorne: was sie berechnet, hinten: die Formel);\n- Geometrie: Karten mit einer genauen Figur, wenn sie hilft;\n- Abbildung mit Beschriftungen: Abbildung zum Beschriften, eine Karte pro Beschriftung;\n- ein Bild nur, wenn es wirklich beim Merken hilft (eine Person, ein Ort, ein Bauwerk, ein Kunstwerk, ein Tier), nie für einen abstrakten Begriff und nicht auf jeder Karte: hinten, wenn es die Antwort zeigt (das Porträt des Präsidenten, nach dessen Namen gefragt wird), vorne nur, wenn sich die Frage auf das Bild bezieht („Wer ist das?“).\nMisch sie, wenn die Seite mehreres davon enthält.\nSag in einem Satz, was du gewählt hast.",
       "deck": "{Fach}::{Titel der Lektion}",
       "voice": "auto"
     },
@@ -874,12 +874,6 @@
       "deck": "{Fach}::Formeln",
       "voice": ""
     },
-    "school_formulas": {
-      "name": "Mathe-Formeln der Sekundarstufe I",
-      "text": "Erstelle Karten für die wichtigsten Mathe-Formeln der Sekundarstufe I (Klasse 5 bis 10): Flächen und Umfänge (Quadrat, Rechteck, Dreieck, Kreis), Volumen (Würfel, Quader, Zylinder, Kegel, Kugel), Satz des Pythagoras, Strahlensatz, Trigonometrie (sin, cos, tan), binomische Formeln, Potenzen, Proportionalität und Prozentrechnung, Durchschnittsgeschwindigkeit. Vorderseite: was die Formel berechnet. Rückseite: die Formel. Info: wofür jeder Buchstabe steht, mit Einheit, wenn nötig. Wenn es in der Formel um eine Figur geht (Kreisfläche, Pythagoras …), füge diese Figur mit ihren Buchstaben hinzu.",
-      "deck": "Mathe::Formeln der Sekundarstufe I",
-      "voice": ""
-    },
     "geometry": {
       "name": "Geometrie (mit Figuren)",
       "text": "Erstelle Karten, um die Geometrie der Lektion (oder des Themas unten) zu lernen: Figuren, Eigenschaften, Fachbegriffe (Hypotenuse, Radius, Mittelsenkrechte …). Füge eine genaue Figur hinzu, wenn sie beim Antworten hilft, ohne je die Antwort darauf zu schreiben.",
@@ -892,8 +886,8 @@
       "deck": "{Fach}::{Titel der Abbildung}"
     },
     "pictures": {
-      "name": "Wörter in Bildern",
-      "text": "Erstelle Karten mit den Wörtern der Lektion (ohne Foto: 10 häufige Wörter zu dem Thema, das ich hier ergänze). Vorderseite: das Bild des Wortes mit der Frage „Wie sagt man das?“. Rückseite: das Wort in der gelernten Sprache, mit Artikel. Info: das Wort auf Deutsch.",
+      "name": "Vokabeln in Bildern (Sprachen)",
+      "text": "Erstelle Karten mit den Vokabeln der Sprachlektion (ohne Foto: 10 häufige Wörter zu dem Thema, das ich hier ergänze), nur Wörter, die ein Bild eindeutig zeigt (Gegenstände, Tiere, Lebensmittel, Orte, sichtbare Handlungen). Vorderseite: das Bild des Wortes mit der Frage „Wie sagt man das?“. Rückseite: das Wort in der gelernten Sprache, mit Artikel. Info: das Wort auf Deutsch.",
       "deck": "{Sprache}::Bilder",
       "voice": "auto"
     },

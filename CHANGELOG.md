@@ -35,6 +35,7 @@ Each pull request adds a line under **Unreleased**. See [Releasing](CONTRIBUTING
 
 ### Changed
 
+- Notosaurus's instructions: “Words in pictures” is now “Vocabulary in pictures (languages)”, with only words a picture clearly shows; “Automatic” adds a picture only when it truly helps (a person, a place, a work, an animal), on the back when it shows the answer, on the front only when the question is about it; “Middle school maths formulas” removed (too specific: “Formulas” covers a lesson's). The Android app also gets “Dictating words”, missing from its list.
 - Gemini's answer stopping halfway (seen once: nothing for minutes) is given up on after 45 s of silence (90 s before its first part): the next model starts again, and if none answers, “Gemini didn't answer in time: try again” instead of waiting forever.
 - For developers: a fresh install of the Android app calls the test relay in a debug build, the real one in a release (never the test one); the release build passes Android's checks.
 - For developers: the relay's API each released app speaks is frozen (`core/relay-api-releases/`), and a test (`tools/relay_compat.py`) refuses a change that would break an app already released.

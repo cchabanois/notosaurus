@@ -829,7 +829,7 @@
   "builtinPrompts": {
     "auto": {
       "name": "Automático (conforme a lição)",
-      "text": "Olhe a lição e escolha os cartões mais úteis para revisá-la:\n- vocabulário de um idioma: um cartão por palavra ou expressão, frente em português, verso no idioma estudado;\n- lição de uma matéria (história, ciências, geografia…): perguntas / respostas curtas, ou lacunas para as frases que é preciso lembrar;\n- fórmulas: um cartão por fórmula (frente: o que ela calcula, verso: a fórmula);\n- geometria: cartões com uma figura exata quando ajudar;\n- esquema com legendas: esquema para completar, um cartão por legenda.\nMisture se a página tiver várias dessas coisas.\nDiga em uma frase o que você escolheu.",
+      "text": "Olhe a lição e escolha os cartões mais úteis para revisá-la:\n- vocabulário de um idioma: um cartão por palavra ou expressão, frente em português, verso no idioma estudado;\n- lição de uma matéria (história, ciências, geografia…): perguntas / respostas curtas, ou lacunas para as frases que é preciso lembrar;\n- fórmulas: um cartão por fórmula (frente: o que ela calcula, verso: a fórmula);\n- geometria: cartões com uma figura exata quando ajudar;\n- esquema com legendas: esquema para completar, um cartão por legenda;\n- uma imagem só quando ela ajuda de verdade a lembrar (uma pessoa, um lugar, um monumento, uma obra, um animal), nunca para uma noção abstrata nem em todos os cartões: no verso quando mostra a resposta (o retrato do presidente cujo nome se pergunta), na frente só quando a pergunta é sobre a imagem (“Quem é?”).\nMisture se a página tiver várias dessas coisas.\nDiga em uma frase o que você escolheu.",
       "deck": "{matéria}::{título da lição}",
       "voice": "auto"
     },
@@ -874,12 +874,6 @@
       "deck": "{matéria}::Fórmulas",
       "voice": ""
     },
-    "school_formulas": {
-      "name": "Fórmulas de matemática do fundamental II",
-      "text": "Crie cartões com as principais fórmulas de matemática do ensino fundamental II (do 6º ao 9º ano): áreas e perímetros (quadrado, retângulo, triângulo, círculo), volumes (cubo, paralelepípedo, cilindro, cone, esfera), teorema de Pitágoras, teorema de Tales, trigonometria (sen, cos, tg), produtos notáveis, potências, proporcionalidade e porcentagens, velocidade média. Frente: o que a fórmula permite calcular. Verso: a fórmula. Info: o que cada letra representa, com a unidade se precisar. Quando a fórmula tratar de uma figura (área do círculo, Pitágoras…), coloque essa figura, com as letras dela.",
-      "deck": "Matemática::Fórmulas do fundamental II",
-      "voice": ""
-    },
     "geometry": {
       "name": "Geometria (com figuras)",
       "text": "Crie cartões para revisar a geometria da lição (ou do tema abaixo): figuras, propriedades, vocabulário (hipotenusa, raio, mediatriz…). Coloque uma figura exata quando ajudar a responder, sem nunca escrever a resposta nela.",
@@ -892,8 +886,8 @@
       "deck": "{matéria}::{título do esquema}"
     },
     "pictures": {
-      "name": "Palavras em imagens",
-      "text": "Crie cartões com as palavras da lição (sem foto: 10 palavras comuns do tema que eu adiciono aqui). Frente: a imagem da palavra, com a pergunta “Como se diz?”. Verso: a palavra no idioma estudado, com o artigo. Info: a palavra em português.",
+      "name": "Vocabulário em imagens (idiomas)",
+      "text": "Crie cartões com o vocabulário da lição de idioma (sem foto: 10 palavras comuns do tema que eu adiciono aqui), só palavras que uma imagem mostra com clareza (objetos, animais, alimentos, lugares, ações visíveis). Frente: a imagem da palavra, com a pergunta “Como se diz?”. Verso: a palavra no idioma estudado, com o artigo. Info: a palavra em português.",
       "deck": "{idioma}::Imagens",
       "voice": "auto"
     },

@@ -829,7 +829,7 @@
   "builtinPrompts": {
     "auto": {
       "name": "Automático (según la lección)",
-      "text": "Mira la lección y elige las tarjetas más útiles para repasarla:\n- vocabulario de un idioma: una tarjeta por palabra o expresión, anverso en español, reverso en el idioma que se estudia;\n- lección de una asignatura (historia, ciencias, geografía…): preguntas / respuestas cortas, o texto con huecos para las frases que hay que recordar;\n- fórmulas: una tarjeta por fórmula (anverso: lo que calcula, reverso: la fórmula);\n- geometría: tarjetas con una figura exacta cuando ayude;\n- esquema con rótulos: esquema mudo, una tarjeta por rótulo.\nMézclalas si la página contiene varias de estas cosas.\nDi en una frase lo que has elegido.",
+      "text": "Mira la lección y elige las tarjetas más útiles para repasarla:\n- vocabulario de un idioma: una tarjeta por palabra o expresión, anverso en español, reverso en el idioma que se estudia;\n- lección de una asignatura (historia, ciencias, geografía…): preguntas / respuestas cortas, o texto con huecos para las frases que hay que recordar;\n- fórmulas: una tarjeta por fórmula (anverso: lo que calcula, reverso: la fórmula);\n- geometría: tarjetas con una figura exacta cuando ayude;\n- esquema con rótulos: esquema mudo, una tarjeta por rótulo;\n- una imagen solo cuando ayuda de verdad a recordar (un personaje, un lugar, un monumento, una obra, un animal), nunca para una noción abstracta ni en todas las tarjetas: en el reverso cuando muestra la respuesta (el retrato del presidente cuyo nombre se pregunta), en el anverso solo cuando la pregunta trata de la imagen («¿Quién es?»).\nMézclalas si la página contiene varias de estas cosas.\nDi en una frase lo que has elegido.",
       "deck": "{asignatura}::{título de la lección}",
       "voice": "auto"
     },
@@ -874,12 +874,6 @@
       "deck": "{asignatura}::Fórmulas",
       "voice": ""
     },
-    "school_formulas": {
-      "name": "Fórmulas de matemáticas de secundaria",
-      "text": "Crea tarjetas con las principales fórmulas de matemáticas de secundaria (de 12 a 16 años): áreas y perímetros (cuadrado, rectángulo, triángulo, círculo), volúmenes (cubo, ortoedro, cilindro, cono, esfera), Pitágoras, Tales, trigonometría (cos, sen, tan), productos notables, potencias, proporcionalidad y porcentajes, velocidad media. Anverso: lo que permite calcular la fórmula. Reverso: la fórmula. Info: lo que representa cada letra, con la unidad si hace falta. Cuando la fórmula trate de una figura (área del círculo, Pitágoras…), pon esa figura, con sus letras.",
-      "deck": "Matemáticas::Fórmulas de secundaria",
-      "voice": ""
-    },
     "geometry": {
       "name": "Geometría (con figuras)",
       "text": "Crea tarjetas para repasar la geometría de la lección (o del tema de abajo): figuras, propiedades, vocabulario (hipotenusa, radio, mediatriz…). Pon una figura exacta cuando ayude a responder, sin escribir nunca la respuesta en ella.",
@@ -892,8 +886,8 @@
       "deck": "{asignatura}::{título del esquema}"
     },
     "pictures": {
-      "name": "Palabras en imágenes",
-      "text": "Crea tarjetas con las palabras de la lección (sin foto: 10 palabras comunes del tema que añado aquí). Anverso: la imagen de la palabra, con la pregunta «¿Cómo se dice?». Reverso: la palabra en el idioma que se estudia, con el artículo. Info: la palabra en español.",
+      "name": "Vocabulario en imágenes (idiomas)",
+      "text": "Crea tarjetas con el vocabulario de la lección de idioma (sin foto: 10 palabras comunes del tema que añado aquí), solo palabras que una imagen muestre con claridad (objetos, animales, alimentos, lugares, acciones visibles). Anverso: la imagen de la palabra, con la pregunta «¿Cómo se dice?». Reverso: la palabra en el idioma que se estudia, con el artículo. Info: la palabra en español.",
       "deck": "{idioma}::Imágenes",
       "voice": "auto"
     },

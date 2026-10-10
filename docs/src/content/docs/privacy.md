@@ -12,7 +12,7 @@ shows a child's handwriting, sometimes their name: here is where it goes.
   and correct the cards. The text of a digital PDF goes with its page.
 - **The backs of the cards** go to Microsoft's text-to-speech service, to make the audio, when a
   voice is chosen.
-- **The description of a picture** goes to the service that draws it, for “Words in pictures”.
+- **The description of a picture** goes to the service that draws it, for “Vocabulary in pictures”.
 
 Nothing else: no statistics, no tracking. With a model at home (see
 [AI services](../ai-services/#a-model-at-home)), the photos don't leave the house either.

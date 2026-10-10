@@ -33,10 +33,9 @@ Elles ne se modifient pas, mais se **dupliquent** pour en faire ta propre versio
 | QCM | Une question, la bonne réponse et trois mauvaises plausibles. |
 | Vrai / faux | Des affirmations, dont la moitié fausses avec une seule erreur précise. |
 | Formules (maths, physique…) | Une carte par formule, avec ce que représente chaque lettre. |
-| Formules de maths du collège | Les principales formules du collège, sans photo. |
 | Géométrie (avec figures) | Figures, propriétés et vocabulaire, avec une figure exacte dessinée sur les cartes. |
 | Schéma à compléter | Les légendes d'un schéma cachées derrière des numéros : une carte par légende. |
-| Mots en images | L'image de chaque mot au recto, dessinée par un modèle d'images ; le mot au verso. |
+| Vocabulaire en images (langues) | L'image de chaque mot au recto, dessinée par un modèle d'images ; le mot dans la langue étudiée au verso. |
 | Liste de mots (sans photo) | Une carte par mot de la liste ajoutée à la fin de la consigne (français → espagnol : duplique-la pour une autre langue). |
 | Dictée de mots | Une carte par mot à savoir écrire : une phrase où il manque le mot au recto, le mot au verso, une astuce d'orthographe. |
 
