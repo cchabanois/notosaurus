@@ -101,6 +101,7 @@ come in as parameters), so that other programs can use it. A test keeps it that 
 | `app/storage.py` | data folder, atomic JSON writes |
 | `static/` | the phone page and the settings page |
 | `static/app.js`, `static/app-*.js` | the phone page: its state and start in `app.js`, its methods by topic (photos, prompts, lessons, cards, Anki) |
+| `static/admin.js`, `static/admin-*.js` | the settings page (and the setup assistant): its state and start in `admin.js`, its methods by section (AI service, pictures, saving, Anki, lessons, phones, password) |
 | `android/` | the Android app (Kotlin): the same page in a WebView, its `/api` answered on the phone (lessons, AnkiDroid, the Notosaurus relay); see [android/README.md](android/README.md) |
 | `anki_addon/` | the Anki add-on: server launcher and an AnkiConnect-compatible bridge |
 | `tools/build_addon.py` | builds `dist/notosaurus-<version>.ankiaddon` |
