@@ -749,7 +749,7 @@ class LocalServerTest {
             setBody("""{"key": " nts_new_licence_key ", "instructions": "Léa est en 5e", "card_helps": true, "relay": "http://192.168.1.10:8080/"}""")
         }.json().jsonObject
         assertEquals("nts_…_key", saved.string("key"))
-        assertEquals("nts_new_licence_key", prefs[LocalServer.KEY])
+        assertEquals("nts_new_licence_key", prefs[LocalServer.keyOf("http://192.168.1.10:8080")]) // the new relay's
         assertEquals("http://192.168.1.10:8080", prefs[LocalServer.RELAY])
         val config = client.get("/api/config") { page() }.json().jsonObject
         assertEquals("true", config["card_helps"]!!.jsonPrimitive.content)
@@ -758,7 +758,40 @@ class LocalServerTest {
         // Only what's given changes
         client.put("/api/admin/settings") { page(); contentType(ContentType.Application.Json); setBody("""{"card_helps": false}""") }
         assertEquals("Léa est en 5e", prefs[LocalServer.INSTRUCTIONS])
-        assertEquals("nts_new_licence_key", prefs[LocalServer.KEY])
+        assertEquals("nts_new_licence_key", prefs[LocalServer.keyOf("http://192.168.1.10:8080")])
+    }
+
+    @Test
+    fun eachRelayKeepsItsLicence() = app { client ->
+        // The key saved before keys were per relay: the relay in use then got it
+        assertEquals("nts_key", prefs[LocalServer.keyOf(relay.url("/").toString())])
+        val settings = client.get("/api/admin/settings") { page() }.json().jsonObject
+        val relays = settings["relays"]!!.jsonObject
+        assertEquals(LocalServer.REAL_RELAY, relays.string("real"))
+        assertEquals(LocalServer.TEST_RELAY, relays.string("test")) // a debug build: the test relay offered
+
+        suspend fun use(url: String, key: String? = null) = client.put("/api/admin/settings") {
+            page(); contentType(ContentType.Application.Json)
+            setBody(buildString {
+                append("""{"relay": "$url"""")
+                if (key != null) append(""", "key": "$key"""")
+                append("}")
+            })
+        }.json().jsonObject
+        val test = use(LocalServer.TEST_RELAY)
+        assertEquals(false, test["has_key"]!!.jsonPrimitive.content.toBoolean()) // its own licence: none yet
+        use(LocalServer.TEST_RELAY, "nts_test_licence")
+        val real = use(LocalServer.REAL_RELAY, "nts_real_licence")
+        assertEquals("nts_…ence", real.string("key"))
+        assertEquals("nts_…ence", use(LocalServer.TEST_RELAY).string("key"))
+        assertEquals("nts_test_licence", prefs[LocalServer.keyOf(LocalServer.TEST_RELAY)])
+        assertEquals("nts_real_licence", prefs[LocalServer.keyOf(LocalServer.REAL_RELAY)])
+
+        // The relay called with its own key
+        use(relay.url("/").toString())
+        relayAnswers("""{"plan": "test", "credits_left": 10, "daily_left": 5}""")
+        client.get("/api/admin/account") { page() }
+        assertEquals("Bearer nts_key", relay.takeRequest(5, TimeUnit.SECONDS)!!.headers["Authorization"])
     }
 
     @Test

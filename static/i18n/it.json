@@ -569,7 +569,9 @@
       "credits": "{credits} crediti rimasti questo mese, {today} oggi",
       "renews": "Rinnovati il {date}",
       "none": "Ancora nessuna chiave di licenza: arriva con l'abbonamento.",
-      "free": "Nessun abbonamento? Con l'add-on di Anki sul tuo computer, l'app è gratuita: vedi «Dove lavora Notosaurus?»."
+      "free": "Nessun abbonamento? Con l'add-on di Anki sul tuo computer, l'app è gratuita: vedi «Dove lavora Notosaurus?».",
+      "realRelay": "Relay reale",
+      "testRelay": "🧪 Relay di prova"
     },
     "anki": {
       "title": "📥 AnkiDroid",

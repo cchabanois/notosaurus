@@ -68,10 +68,21 @@ android {
     }
     // The relay a fresh install calls (changed in the settings, "Advanced"): the test
     // instance while developing (its own licences, notosaurus-cloud's README), the real
-    // one in a release, so that no release ever calls the test instance
+    // one in a release, so that no release ever calls the test instance. A debug build
+    // switches between the two in one tap (the settings' licence); a release can't.
+    val realRelay = "\"https://notosaurus-relay-773198805942.europe-west1.run.app\""
+    val testRelay = "\"https://notosaurus-relay-dev-773198805942.europe-west1.run.app\""
     buildTypes {
-        debug { buildConfigField("String", "DEFAULT_RELAY", "\"https://notosaurus-relay-dev-773198805942.europe-west1.run.app\"") }
-        release { buildConfigField("String", "DEFAULT_RELAY", "\"https://notosaurus-relay-773198805942.europe-west1.run.app\"") }
+        debug {
+            buildConfigField("String", "DEFAULT_RELAY", testRelay)
+            buildConfigField("String", "REAL_RELAY", realRelay)
+            buildConfigField("String", "TEST_RELAY", testRelay)
+        }
+        release {
+            buildConfigField("String", "DEFAULT_RELAY", realRelay)
+            buildConfigField("String", "REAL_RELAY", realRelay)
+            buildConfigField("String", "TEST_RELAY", "\"\"")
+        }
     }
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_17

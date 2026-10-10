@@ -86,8 +86,21 @@ class LocalServer(
         return runBlocking { server.engine.resolvedConnectors().first().port }
     }
 
-    /** The relay, with the licence key of the settings. */
-    private fun relay() = Relay(prefs[RELAY] ?: DEFAULT_RELAY, prefs[KEY].orEmpty())
+    init {
+        // A key saved before keys were per relay: the relay in use then is its own
+        prefs[KEY]?.takeIf { it.isNotEmpty() }?.let {
+            prefs[keyOf(relayUrl())] = it
+            prefs[KEY] = ""
+        }
+    }
+
+    /** The relay, with its licence key. */
+    private fun relay() = Relay(relayUrl(), licence())
+
+    private fun relayUrl() = prefs[RELAY] ?: DEFAULT_RELAY
+
+    /** The licence key of the relay in use: each relay keeps its own (the test one has its own licences). */
+    private fun licence() = prefs[keyOf(relayUrl())].orEmpty()
 
     /** A text of the page's languages (the app's shortcuts), English when missing. */
     fun text(lang: String, vararg keys: String): String? = texts.get(lang, *keys) ?: texts.get("en", *keys)
@@ -114,7 +127,7 @@ class LocalServer(
         api("PUT", "/api/admin/settings") {
             val changes = body()
             changes.string(RELAY).trim().takeIf { it.isNotEmpty() }?.let { prefs[RELAY] = it.trimEnd('/') }
-            (changes[KEY] as? JsonPrimitive)?.let { prefs[KEY] = it.content.trim() }
+            (changes[KEY] as? JsonPrimitive)?.let { prefs[keyOf(relayUrl())] = it.content.trim() }
             (changes[INSTRUCTIONS] as? JsonPrimitive)?.let { prefs[INSTRUCTIONS] = it.content.take(4000) }
             (changes[CARD_HELPS] as? JsonPrimitive)?.let { prefs[CARD_HELPS] = it.content }
             (changes[TTS_RATE] as? JsonPrimitive)?.content?.takeIf { it in Speech.RATES }?.let { prefs[TTS_RATE] = it }
@@ -447,9 +460,14 @@ class LocalServer(
     }
 
     private fun settings() = buildJsonObject {
-        put(RELAY, prefs[RELAY] ?: DEFAULT_RELAY)
-        put(KEY, masked(prefs[KEY].orEmpty())) // shown, not given back whole
-        put("has_key", prefs[KEY].orEmpty().isNotEmpty())
+        put(RELAY, relayUrl())
+        // The relays to choose from in one tap: the test one in a debug build only
+        put("relays", buildJsonObject {
+            put("real", REAL_RELAY)
+            if (TEST_RELAY.isNotEmpty()) put("test", TEST_RELAY)
+        })
+        put(KEY, masked(licence())) // shown, not given back whole
+        put("has_key", licence().isNotEmpty())
         put(INSTRUCTIONS, prefs[INSTRUCTIONS].orEmpty())
         put(CARD_HELPS, prefs[CARD_HELPS] == "true")
         put(TTS_RATE, prefs[TTS_RATE] ?: "-10%")
@@ -535,7 +553,9 @@ class LocalServer(
 
         // The settings
         const val RELAY = "relay"
-        const val KEY = "key"
+        const val KEY = "key" // the licence key: saved per relay (keyOf), this name only before
+
+        fun keyOf(relay: String) = "$KEY@${relay.trimEnd('/')}"
         const val INSTRUCTIONS = "instructions"
         const val CARD_HELPS = "card_helps"
 
@@ -544,6 +564,8 @@ class LocalServer(
         // The relay of a fresh install, by the build (app/build.gradle.kts): the test instance
         // while developing, the real one in a release (changed in the settings, "Advanced")
         val DEFAULT_RELAY: String = BuildConfig.DEFAULT_RELAY
+        val REAL_RELAY: String = BuildConfig.REAL_RELAY
+        val TEST_RELAY: String = BuildConfig.TEST_RELAY // "" in a release
 
         // Which Notosaurus the app shows: its own (phone) or the computer's (the add-on's)
         const val MODE = "mode"

@@ -89,6 +89,18 @@ document.addEventListener("alpine:init", () => {
       }
     },
 
+    // A debug build: the real relay or the test one, in one tap (each keeps its own licence)
+    async useRelay(url) {
+      if (url === this.form.relay) return;
+      try {
+        this.form = await api("/api/admin/settings", json("PUT", { relay: url }));
+        this.account = null;
+        if (this.form.has_key) await this.loadAccount();
+      } catch (e) {
+        this.error = e.message;
+      }
+    },
+
     scheduleSave() {
       this.saveState = "pending";
       clearTimeout(this.saveTimer);

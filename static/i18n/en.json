@@ -569,7 +569,9 @@
       "credits": "{credits} credits left this month, {today} today",
       "renews": "Renewed on {date}",
       "none": "No licence key yet: it comes with the subscription.",
-      "free": "No subscription? With the Anki add-on on your computer, the app is free: see “Where does Notosaurus work?”."
+      "free": "No subscription? With the Anki add-on on your computer, the app is free: see “Where does Notosaurus work?”.",
+      "realRelay": "Real relay",
+      "testRelay": "🧪 Test relay"
     },
     "anki": {
       "title": "📥 AnkiDroid",
