@@ -28,6 +28,7 @@ Each pull request adds a line under **Unreleased**. See [Releasing](CONTRIBUTING
 - For developers: the relay's `/v1/transcribe`.
 - ✨ “Tidy up” under the instructions: the AI rewrites them clear and short, every intention kept and nothing added (typed in a hurry or dictated); “↩ Undo” brings them back. On the computer (your AI) and in the coming Android app (the relay's).
 - For developers: the relay's `/v1/rephrase`.
+- While 🎤 listens and its text is being written (or the instructions tidied up), the field is greyed out and says so (“Listening…”, then “Writing down what you said…”); “Generate” waits.
 
 ### Changed
 
