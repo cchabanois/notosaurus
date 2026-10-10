@@ -17,6 +17,9 @@ takes but the AI configuration (the relay's own), and keeps nothing.
 - /v1/extract asked with "Accept: application/x-ndjson" (STREAM_TYPE) answers as the
   AI writes: one JSON object per line, each card as it comes, then the answer or
   the error (ExtractLine). A client going away stops the AI.
+- /v1/transcribe turns a dictation (the app's 🎤) into the text its speaker meant to
+  type: multipart/form-data, a "request" part (TranscribeRequest) and an "audio" part
+  (AUDIO_TYPES, at most MAX_AUDIO_BYTES).
 - /v1/speak reads a card's back aloud with one of /v1/voices (natural voices, the
   same on every device): an mp3, for the app that has no voices of its own.
 - Each answer says the credits it used and those left (Usage; for /v1/picture and
@@ -34,7 +37,7 @@ from typing import Literal
 from pydantic import BaseModel, Field
 
 from .llm import Extracted
-from .models import Card, Deck, Explanation, FollowUp, Revision
+from .models import Card, Deck, Dictated, Explanation, FollowUp, Revision
 
 PREFIX = "/v1"
 CLIENT_HEADER = "X-Notosaurus-Version"
@@ -52,6 +55,7 @@ MAX_DECKS = 1000
 MAX_INSTRUCTION = 2000  # a correction
 MAX_SUBJECT = 1000  # a picture's subject, a figure's description
 MAX_SPEECH = 500  # a back read aloud (the app reads the first 200 characters)
+MAX_AUDIO_BYTES = 3 * 1024 * 1024  # a dictation: the app stops at 2 minutes (≈ 500 KB of AAC)
 
 # Error code → HTTP status, besides the AI's own errors ("llm.*", passed on)
 ERRORS = {
@@ -60,12 +64,14 @@ ERRORS = {
     "relay.daily_limit": 429,  # too many credits used today: tomorrow, or wait
     "relay.too_large": 413,  # too many photos, or one too heavy
     "relay.bad_image": 415,  # a photo that isn't JPEG, PNG, WebP or GIF
+    "relay.bad_audio": 415,  # a recording that isn't one of AUDIO_TYPES
     "relay.invalid_request": 422,  # a request that isn't the API's (params: "detail")
     "relay.client_outdated": 426,  # update Notosaurus
     "relay.unavailable": 503,  # the relay itself is down or overloaded
 }
 
 IMAGE_TYPES = ("image/jpeg", "image/png", "image/webp", "image/gif")
+AUDIO_TYPES = ("audio/aac", "audio/ogg", "audio/mpeg", "audio/wav", "audio/flac")
 
 Language = Field(default="English", max_length=50, description='English name of the language to answer in ("French").')
 Instructions = Field(
@@ -152,6 +158,14 @@ class SpeakRequest(BaseModel):
     rate: float = Field(default=0.9, ge=0.25, le=2.0, description="The speed: 1 normal, 0.9 a little slower.")
 
 
+class TranscribeRequest(BaseModel):
+    """A dictation (the "audio" part) as the text its speaker meant to type: their words,
+    hesitations out, their own corrections applied, a lesson's foreign words spelled right."""
+
+    kind: Dictated = Field(description="What it is for: a lesson's instructions, or a correction of its cards.")
+    language: str = Language
+
+
 class PictureRequest(BaseModel):
     """A picture for a card, drawn by an image model. JSON; the answer is the JPEG itself."""
 
@@ -184,6 +198,11 @@ class ReviseResponse(Revision):
 
 
 class ExplainResponse(Explanation):
+    usage: Usage
+
+
+class TranscribeResponse(BaseModel):
+    text: str = Field(description='What was said, as written text ("" when nothing was understood).')
     usage: Usage
 
 

@@ -128,7 +128,7 @@ class AiCall(BaseModel):
     """One request to the AI for a lesson: what it used and cost."""
 
     at: str
-    kind: Literal["extract", "revise", "picture", "explain"]
+    kind: Literal["extract", "revise", "picture", "explain", "transcribe"]  # transcribe: the relay only
     provider: str  # gemini, anthropic; the service's host for the OpenAI-like ones ("openrouter.ai")
     model: str  # the model that answered (a fallback, if the main one was overloaded)
     input_tokens: int | None = None
@@ -141,6 +141,9 @@ class AiCall(BaseModel):
 # says they'd help, an example, a way to remember it, why the answer is right.
 FollowUp = Literal["example", "mnemonic", "why"]
 
+# What a dictation is for: the instructions a lesson is made with, or a correction of its cards
+Dictated = Literal["prompt", "correction"]
+
 
 class Explanation(BaseModel):
     text: str = Field(description="The answer to the request, as asked: plain text, short.")
@@ -149,3 +152,7 @@ class Explanation(BaseModel):
         description="The follow-ups that would truly help with this card, among "
         '"example", "mnemonic" and "why", not the one just given. Often one or none.',
     )
+
+
+class Dictation(BaseModel):
+    text: str = Field(description='What the user meant to type, as written text ("" when nothing was said).')

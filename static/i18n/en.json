@@ -324,7 +324,14 @@
       "button": "Set up Notosaurus",
       "onComputer": "On the computer, in Anki: Tools → Notosaurus → Getting started."
     },
-    "reviewInAnki": "📚 Review"
+    "reviewInAnki": "📚 Review",
+    "dictation": {
+      "start": "Dictate",
+      "stop": "Stop and write the text",
+      "busy": "Writing down what you said…",
+      "listening": "Listening… tap ⏹ when you're done.",
+      "nothing": "Nothing heard: try again, closer to the microphone."
+    }
   },
   "admin": {
     "title": "Settings",
@@ -697,7 +704,8 @@
       "invalid_answer": "The model didn't return valid cards, try again.",
       "truncated": "Answer cut off: too many cards at once, try with fewer pages.",
       "refused": "Request refused: Notosaurus only makes learning material suited to pupils.",
-      "missing_url": "Enter the service address in the settings (⚙️)."
+      "missing_url": "Enter the service address in the settings (⚙️).",
+      "no_audio": "Dictation goes through Gemini: {provider} can't hear recordings."
     },
     "anki": {
       "unreachable": "Anki can't be reached: start Anki on the computer.",
@@ -756,12 +764,17 @@
       "invalid_request": "The Notosaurus service refused the request: update Notosaurus.",
       "client_outdated": "This version of Notosaurus is too old: update it.",
       "unavailable": "The Notosaurus service is unavailable for now: try again in a moment.",
-      "unreachable": "Can't reach the Notosaurus service: check the internet connection."
+      "unreachable": "Can't reach the Notosaurus service: check the internet connection.",
+      "bad_audio": "This recording isn't in a format Notosaurus can read."
     },
     "computer": {
       "not_found": "No Notosaurus answers at this address: is Anki open with the add-on, and this phone on the same Wi-Fi?",
       "not_a_qr": "This QR code isn't Notosaurus's: scan the one Anki shows (Tools → Notosaurus → Open on the phone).",
       "scan_unavailable": "The QR code reader isn't on this phone yet (Google Play services installs it, with internet access): type the computer's address instead."
+    },
+    "dictation": {
+      "refused": "Notosaurus can't use the microphone: allow it in Android's settings to dictate.",
+      "failed": "The microphone couldn't record: try again."
     }
   },
   "demo": {

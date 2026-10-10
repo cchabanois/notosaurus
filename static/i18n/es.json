@@ -324,7 +324,14 @@
       "button": "Configurar Notosaurus",
       "onComputer": "En el ordenador, en Anki: Herramientas → Notosaurus → Asistente de inicio."
     },
-    "reviewInAnki": "📚 Repasar"
+    "reviewInAnki": "📚 Repasar",
+    "dictation": {
+      "start": "Dictar",
+      "stop": "Parar y escribir el texto",
+      "busy": "Escribo lo que has dicho…",
+      "listening": "Te escucho… toca ⏹ cuando termines.",
+      "nothing": "No se ha oído nada: inténtalo de nuevo, más cerca del micrófono."
+    }
   },
   "admin": {
     "title": "Ajustes",
@@ -697,7 +704,8 @@
       "invalid_answer": "El modelo no ha devuelto tarjetas válidas, vuelve a intentarlo.",
       "truncated": "Respuesta cortada: demasiadas tarjetas a la vez, prueba con menos páginas.",
       "refused": "Solicitud rechazada: Notosaurus solo crea material de estudio adecuado para alumnos.",
-      "missing_url": "Indica la dirección del servicio en los ajustes (⚙️)."
+      "missing_url": "Indica la dirección del servicio en los ajustes (⚙️).",
+      "no_audio": "El dictado pasa por Gemini: {provider} no oye las grabaciones."
     },
     "anki": {
       "unreachable": "No se puede contactar con Anki: abre Anki en el ordenador.",
@@ -756,12 +764,17 @@
       "invalid_request": "El servicio Notosaurus rechazó la solicitud: actualiza Notosaurus.",
       "client_outdated": "Esta versión de Notosaurus es demasiado antigua: actualízala.",
       "unavailable": "El servicio Notosaurus no está disponible por ahora: inténtalo dentro de un momento.",
-      "unreachable": "No se puede contactar con el servicio Notosaurus: comprueba la conexión a internet."
+      "unreachable": "No se puede contactar con el servicio Notosaurus: comprueba la conexión a internet.",
+      "bad_audio": "Esta grabación no está en un formato que Notosaurus sepa leer."
     },
     "computer": {
       "not_found": "Ningún Notosaurus responde en esta dirección: ¿está Anki abierto con el complemento, y este teléfono en la misma wifi?",
       "not_a_qr": "Este código QR no es el de Notosaurus: escanea el que muestra Anki (Herramientas → Notosaurus → Abrir en el móvil).",
       "scan_unavailable": "El lector de códigos QR todavía no está en este teléfono (lo instalan los servicios de Google Play, con acceso a internet): escribe mejor la dirección del ordenador."
+    },
+    "dictation": {
+      "refused": "Notosaurus no tiene acceso al micrófono: permítelo en los ajustes de Android para dictar.",
+      "failed": "El micrófono no ha podido grabar: inténtalo de nuevo."
     }
   },
   "demo": {

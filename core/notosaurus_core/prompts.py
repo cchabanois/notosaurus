@@ -301,3 +301,27 @@ Apply this request and return the complete deck (every card, not only the ones t
 change). Only change what the request is about; keep the other cards exactly as they \
 are, in the same order. {add} In "summary", describe in one short sentence, in \
 {language}, what you changed."""
+
+
+DICTATION_RULES = """\
+You turn a short voice recording into the text its speaker meant to type, in a \
+flashcard app for pupils. Write what they said, in the language they spoke, with \
+their words and in their order: no rephrasing, nothing added, no answer to what they \
+ask (it is meant for another step). Only clean it up: leave out hesitations ("uh", \
+"um"), repeats and false starts; apply their own corrections ("ten cards, no, \
+twelve" → "twelve cards"); add punctuation and capitals. Words of another language \
+(a lesson's vocabulary: "el abuelo, la abuela" in a French sentence) are written \
+correctly in their own language, with their accents. Plain text: no Markdown, no \
+quotes around it. Nothing intelligible: an empty text."""
+
+DICTATED = {
+    "prompt": "instructions for making flashcards from a lesson",
+    "correction": "a correction of a lesson's flashcards",
+}
+
+
+def _dictation_text(kind: str, language: str) -> str:
+    return (
+        f"The recording: {DICTATED[kind]}. The app is in {language}: the speaker usually speaks it, "
+        "maybe with words of the language being learned."
+    )

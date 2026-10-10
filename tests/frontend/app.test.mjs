@@ -325,3 +325,44 @@ test("subdecks of the lesson's cards", () => {
 test("dates in the language's variety, short form", () => {
   assert.match(app.run("formatDate('2026-10-03T21:48:00Z')"), /^Oct 3, 09:48[ \u202f]?PM$/);
 });
+
+// --- Dictation (the app's 🎤) ------------------------------------------------
+
+test("dictation: listen, then the text said comes after what was written", async () => {
+  const calls = [];
+  const said = { text: "Ajoute el tío." };
+  const page = await loadScripts("app.js", {
+    routes: (url, options) => {
+      calls.push([url, options?.body ?? null]);
+      return new Response(url === "/api/dictation/stop" ? said : {});
+    },
+  });
+  const c = page.component();
+  c.form.text = "Vocabulaire de la famille  ";
+  await c.dictate("prompt");
+  assert.equal(c.dictation.listening, "prompt");
+  assert.equal(c.micKey("prompt"), "app.dictation.stop");
+  await c.dictate("correction");  // the other field waits
+  assert.equal(c.dictation.listening, "prompt");
+  await c.dictate("prompt");
+  assert.equal(c.form.text, "Vocabulaire de la famille\nAjoute el tío.");
+  assert.deepEqual(calls, [["/api/dictation/start", null], ["/api/dictation/stop", '{"kind":"prompt"}']]);
+  assert.equal(c.dictation.listening, "");
+  assert.equal(c.dictation.busy, "");
+
+  said.text = "  ";  // nothing heard: said so, the field untouched
+  await c.dictate("correction");
+  await c.dictate("correction");
+  assert.equal(c.revision.text, "");
+  assert.equal(c.error, "Nothing heard: try again, closer to the microphone.");
+});
+
+test("dictation: refused microphone, the field doesn't listen", async () => {
+  const page = await loadScripts("app.js", {
+    routes: () => new Response({ detail: { code: "dictation.refused", params: {} } }, { status: 400 }),
+  });
+  const c = page.component();
+  await c.dictate("prompt");
+  assert.equal(c.dictation.listening, "");
+  assert.match(c.error, /can't use the microphone/);
+});

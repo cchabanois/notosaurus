@@ -65,6 +65,8 @@ class LocalServerTest {
     private var scanned: String? = null // what the fake QR scanner reads
     private var scannerMissing = false
     private var modeChanges = 0
+    private var micGranted = true // the user's answer to the microphone's dialog
+    private val mic = FakeMic()
     private lateinit var local: LocalServer
 
     private class FakeAnki : AnkiTarget {
@@ -96,6 +98,23 @@ class LocalServerTest {
         }
     }
 
+    /** A microphone that "records" what it's told to: ADTS frames, as the phone's would. */
+    private class FakeMic : Recorder {
+        var said = ByteArray(4000) { 0x55 }
+        var busy = false // another app holds the microphone
+        var listening = false
+        private var file: File? = null
+        override fun start(file: File) {
+            if (busy) error("start failed")
+            this.file = file
+            listening = true
+        }
+        override fun stop() {
+            listening = false
+            file!!.writeBytes(said)
+        }
+    }
+
     @Before
     fun setUp() {
         relay.start()
@@ -119,6 +138,8 @@ class LocalServerTest {
             scan = { if (scannerMissing) error("module not downloaded") else scanned },
             modeChanged = { modeChanges++ },
             turnPhoto = { data, degrees -> "turned $degrees:".toByteArray() + data }, // (Photos.turn needs Android)
+            recorder = mic,
+            requestMicPermission = { micGranted },
         )
         computer.start()
     }
@@ -888,5 +909,60 @@ class LocalServerTest {
         computerAnswers(name = null) // an add-on older than computer_name
         client.connect("127.0.0.1:${computer.port}/?k=t")
         assertEquals("", client.get("/api/admin/settings") { page() }.json().jsonObject.string("computer_name"))
+    }
+
+    // --- Dictation (🎤)
+
+    private suspend fun HttpClient.dictate(kind: String = "prompt"): HttpResponse {
+        val started = post("/api/dictation/start") { page("fr") }
+        if (started.status != HttpStatusCode.OK) return started
+        return post("/api/dictation/stop") {
+            page("fr")
+            contentType(ContentType.Application.Json)
+            setBody("""{"kind": "$kind"}""")
+        }
+    }
+
+    @Test
+    fun dictationWrittenByTheRelay() = app { client ->
+        assertEquals("true", client.get("/api/config") { page() }.json().jsonObject["dictation"]!!.jsonPrimitive.content)
+        relayAnswers("""{"text": "Enlève la carte sur el tío.", "usage": {"credits": 1, "credits_left": 99}}""")
+        val res = client.dictate("correction")
+        assertEquals(HttpStatusCode.OK, res.status)
+        assertEquals("Enlève la carte sur el tío.", res.json().jsonObject.string("text"))
+        assertFalse(mic.listening)
+        val sent = relay.takeRequest(5, TimeUnit.SECONDS)!!
+        assertEquals("/v1/transcribe", sent.url.encodedPath)
+        assertEquals("correction", sent.multipartRequest().string("kind"))
+        assertEquals("French", sent.multipartRequest().string("language"))
+        val body = sent.body!!.utf8()
+        assertTrue("name=\"audio\"; filename=\"dictation.aac\"" in body && "Content-Type: audio/aac" in body)
+        assertTrue(folder.root.resolve("dictation").list().orEmpty().isEmpty()) // the recording isn't kept
+    }
+
+    @Test
+    fun dictationNothingSaid() = app { client ->
+        mic.said = ByteArray(10) // a tap on start then stop: nothing for the relay
+        val res = client.dictate()
+        assertEquals("", res.json().jsonObject.string("text"))
+        assertEquals(0, relay.requestCount)
+    }
+
+    @Test
+    fun dictationWithoutTheMicrophone() = app { client ->
+        micGranted = false
+        val refused = client.dictate()
+        assertEquals(HttpStatusCode.BadRequest, refused.status)
+        assertEquals("dictation.refused", refused.json().jsonObject["detail"]!!.jsonObject.string("code"))
+        micGranted = true
+        mic.busy = true
+        val failed = client.dictate()
+        assertEquals("dictation.failed", failed.json().jsonObject["detail"]!!.jsonObject.string("code"))
+        mic.busy = false
+        val notStarted = client.post("/api/dictation/stop") {
+            page()
+            setBody("""{"kind": "prompt"}""")
+        }
+        assertEquals("dictation.failed", notStarted.json().jsonObject["detail"]!!.jsonObject.string("code"))
     }
 }

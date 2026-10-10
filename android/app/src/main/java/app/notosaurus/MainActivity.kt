@@ -1,8 +1,10 @@
 package app.notosaurus
 
+import android.Manifest
 import android.annotation.SuppressLint
 import android.app.Activity
 import android.content.Intent
+import android.content.pm.PackageManager
 import android.net.Uri
 import android.os.Bundle
 import android.provider.MediaStore
@@ -18,6 +20,7 @@ import androidx.activity.ComponentActivity
 import androidx.activity.OnBackPressedCallback
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.core.content.ContextCompat
 import androidx.core.content.FileProvider
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
@@ -72,6 +75,21 @@ class MainActivity : ComponentActivity() {
         answer.await()
     }
 
+    // The microphone's permission, asked the first time the 🎤 is used
+    private var micAnswer: CompletableDeferred<Boolean>? = null
+    private val micPermission = registerForActivityResult(ActivityResultContracts.RequestPermission()) { granted ->
+        micAnswer?.complete(granted)
+    }
+
+    private suspend fun askMicPermission(): Boolean = withContext(Dispatchers.Main) {
+        if (ContextCompat.checkSelfPermission(this@MainActivity, Manifest.permission.RECORD_AUDIO) == PackageManager.PERMISSION_GRANTED) {
+            return@withContext true
+        }
+        val answer = CompletableDeferred<Boolean>().also { micAnswer = it }
+        micPermission.launch(Manifest.permission.RECORD_AUDIO)
+        answer.await()
+    }
+
     /** AnkiDroid's page in Google Play (or in the browser, without Google Play). */
     private fun openAnkiDroidPage() = runOnUiThread {
         val store = Intent(Intent.ACTION_VIEW, Uri.parse("market://details?id=$ANKIDROID"))
@@ -114,6 +132,7 @@ class MainActivity : ComponentActivity() {
             installAnki = ::openAnkiDroidPage,
             scan = ::scanQrCode,
             modeChanged = { runOnUiThread { Shortcuts.update(this, server) } },
+            requestMicPermission = ::askMicPermission,
         )
         lifecycleScope.launch {
             val port = withContext(Dispatchers.IO) { server.start() }

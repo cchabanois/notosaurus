@@ -65,7 +65,7 @@ async def record(
 @dataclass
 class Image:
     data: bytes
-    media_type: str  # image/jpeg, image/png, image/webp or image/gif
+    media_type: str  # image/jpeg, image/png, image/webp or image/gif; or a recording (transcribe)
 
 
 # Told each card as soon as the AI has written it ({"front", "back"…} as the AI fills

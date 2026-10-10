@@ -22,9 +22,17 @@ from pydantic import BaseModel, Field, create_model
 from . import config, diagrams
 from .calls import CardStream, ExtractionError, Image, OnCard, record, recording  # noqa: F401 (llm's API)
 from .config import AIConfig
-from .demo import DEMO, _fake, _fake_explanation, _fake_figure, _fake_revision, _lets_choose
-from .models import Card, Deck, Explanation, Extraction, Frame, Revision
-from .prompts import EXPLAIN_RULES, SYSTEM_PROMPT, _explain_text, _revision_text, _user_text
+from .demo import DEMO, _fake, _fake_dictation, _fake_explanation, _fake_figure, _fake_revision, _lets_choose
+from .models import Card, Deck, Dictation, Explanation, Extraction, Frame, Revision
+from .prompts import (
+    DICTATION_RULES,
+    EXPLAIN_RULES,
+    SYSTEM_PROMPT,
+    _dictation_text,
+    _explain_text,
+    _revision_text,
+    _user_text,
+)
 from .providers import anthropic, gemini, openai_like
 from .providers.openai_like import list_models  # noqa: F401 (llm's API)
 
@@ -153,6 +161,23 @@ async def explain_card(
     found = await _generate(s, [], text, Explanation, EXPLAIN_RULES, light=True)
     found.more = list(dict.fromkeys(k for k in found.more if k != kind))
     return found
+
+
+async def transcribe(s: AIConfig, audio: Image, kind: str, language: str = "English") -> str:
+    """A dictation as the text its speaker meant to type (models.Dictated `kind`: a
+    lesson's instructions or a correction): their words, hesitations out, their own
+    corrections applied, a lesson's foreign words spelled right. Gemini only: it hears
+    the recording itself (the others take no audio).
+
+    `audio`: the recording (audio/aac, ogg, mpeg, wav, flac); `language`: the app's,
+    its English name ("French")."""
+    if s.llm == "fake":
+        await record(s, "fake", "fake", 0, 0, cost=0.0)
+        return _fake_dictation(kind)
+    if s.llm != "gemini":
+        raise ExtractionError("llm.no_audio", provider=s.llm)
+    found = await _generate(s, [audio], _dictation_text(kind, language), Dictation, DICTATION_RULES, light=True)
+    return found.text.strip()
 
 
 async def revise_cards(

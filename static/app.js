@@ -131,6 +131,8 @@ document.addEventListener("alpine:init", () => {
     pdfBusy: false,      // a PDF's pages being drawn
     pdf: { open: false, name: "", free: 0, pages: [] },  // its page picker
     lessonQuery: "",
+    // The 🎤 of the instructions and the correction (the app): the field listening, or being written
+    dictation: { available: false, listening: "", busy: "", timer: null },
     openSubjects: (() => { try { return JSON.parse(storage("get", undefined, OPEN_SUBJECTS)) ?? {}; } catch { return {}; } })(),
     picker: { open: false, query: "" },
     // Natural-language correction of the cards; `undo` holds the previous version.
@@ -197,6 +199,7 @@ document.addEventListener("alpine:init", () => {
         this.donations = config.donations ?? true;
         this.apkg = config.apkg ?? true;
         this.reviewInAnki = config.review_in_anki ?? false;
+        this.dictation.available = config.dictation ?? false;
         const helps = storage("get", undefined, HELPS);
         this.helps = helps === null ? Boolean(config.card_helps) : helps === "1";
       } catch {}
@@ -216,11 +219,12 @@ document.addEventListener("alpine:init", () => {
     },
 
     // The methods, by topic: app-photos.js, app-prompts.js, app-lessons.js, app-cards.js,
-    // app-anki.js (loaded before this file)
+    // app-anki.js, app-dictation.js (loaded before this file)
     ...photosPart,
     ...promptsPart,
     ...lessonsPart,
     ...cardsPart,
     ...ankiPart,
+    ...dictationPart,
   }));
 });
