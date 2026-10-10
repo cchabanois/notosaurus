@@ -39,6 +39,7 @@ Each pull request adds a line under **Unreleased**. See [Releasing](CONTRIBUTING
 
 ### Changed
 
+- “✨ Tidy up” is no longer offered for Notosaurus's own instructions (⭐) as they are: only for instructions someone wrote, or a ⭐ one once changed.
 - A card's picture panel: “What the picture should show”, in your own language (no more “in English”), empty when the card has none (it showed the back, LaTeX included). **🎨 Draw** lets the AI decide from the card and what you wrote an exact figure (a diagram, sets, geometry) or a drawn picture, and describes it; a figure's description changed redraws that figure. **🔎 Find a picture** turns what you wrote into English search words first. Buttons of the panel no longer stay greyed on a card never touched.
 - A figure the AI meant to put on a card's back but left undescribed (now and then, more in Quick mode with the helps on) is described by one light call that sees the lesson's page: the set theory page went from about 1 lesson in 8 without its figures to 1 in 16 in Quick, none in Careful. No call when the cards are consistent.
 - Figures beyond geometry: in any subject, a notion a figure makes clearer gets one, in particular when the lesson's page shows a figure for it (a lesson on sets got none: its Venn diagrams are now redrawn on the intersection and union cards). Figures may hatch an area and cut a shared one (patterns and clip paths, inside the figure only): an intersection came out wrong. “Automatic” says so; “Word list” no longer imposes Spanish (or English): the language being learned.

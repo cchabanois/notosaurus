@@ -170,7 +170,7 @@
                 x-text="mic.listening === 'prompt' ? '⏹' : mic.busy === 'prompt' ? '…' : '🎤'"></button>
       </div>
       <p class="hint" x-cloak x-show="dictationStep('prompt')" x-text="$t(dictationStep('prompt') || 'app.mic.busy')"></p>
-      <div class="prompt-actions tidy" x-show="form.text.trim()">
+      <div class="prompt-actions tidy" x-show="canTidy() || canUntidy()">
         <button type="button" class="link-btn strong" :disabled="tidy.busy" @click="tidyPrompt()"
                 x-text="tidy.busy ? $t('app.prompt.tidyBusy') : $t('app.prompt.tidy')"></button>
         <button type="button" class="link-btn" x-cloak x-show="canUntidy()" @click="untidyPrompt()"
