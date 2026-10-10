@@ -285,6 +285,7 @@ test("masks live on their photo", () => {
 test("voices: an edge-tts one is told apart from an Anki locale or \"auto\"", () => {
   const page = app.component();
   assert.equal(page.isVoice("es-ES-ElviraNeural"), true);
+  assert.equal(page.isVoice("es-ES-Chirp3-HD-Aoede"), true);  // the Android app's (Google Chirp 3 HD)
   assert.equal(page.isVoice("es_ES"), false);
   page.voice = "es-ES-ElviraNeural";
   assert.equal(page.hasAudio(), true);

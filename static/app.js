@@ -1257,10 +1257,10 @@ document.addEventListener("alpine:init", () => {
     },
 
     // --- Audio ----------------------------------------------------------
-    // edge-tts voice ("es-ES-ElviraNeural") → mp3 in the package;
-    // Anki locale ("es_ES") → the device reads it aloud.
+    // A voice ("es-ES-ElviraNeural" on the computer, "es-ES-Chirp3-HD-Aoede" in the
+    // Android app) → mp3 in the cards; Anki locale ("es_ES") → the device reads it aloud.
     isVoice(voice) {
-      return /^[a-z]{2,3}-[A-Z]{2}-\w+$/.test(voice);
+      return /^[a-z]{2,3}-[A-Z]{2}-[\w-]+$/.test(voice);
     },
 
     hasAudio() {

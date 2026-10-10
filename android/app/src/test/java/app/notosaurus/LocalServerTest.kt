@@ -71,12 +71,14 @@ class LocalServerTest {
         var permitted = true
         var broken = false // e.g. never opened: no collection yet
         val sent = mutableListOf<Deck>()
+        var sounds: Map<String, File> = emptyMap()
         override fun installed() = installed
         override fun permitted() = installed && permitted
         override fun deckNames() = listOf("Default", "Histoire")
-        override fun send(deck: Deck): Sent {
+        override fun send(deck: Deck, audio: Map<String, File>): Sent {
             if (broken) error("no collection")
             sent += deck
+            sounds = audio
             return Sent(added = deck.cards.size, duplicates = 0, skipped = 0, deck = deck.deck)
         }
     }
@@ -387,6 +389,62 @@ class LocalServerTest {
         assertTrue(client.get("/api/lessons/${lesson.string("id")}") { page() }.json().jsonObject.string("exported_at").isNotEmpty())
 
         assertEquals(0, permissionAsked) // allowed already: not asked
+    }
+
+    private val voices = """[{"voice": "es-US-Chirp3-HD-Aoede", "locale": "es-US", "gender": "Female"},
+        {"voice": "es-ES-Chirp3-HD-Charon", "locale": "es-ES", "gender": "Male"},
+        {"voice": "es-ES-Chirp3-HD-Aoede", "locale": "es-ES", "gender": "Female"}]"""
+
+    @Test
+    fun theRelaysVoicesReadTheBacks() = app { client ->
+        relayAnswers(voices)
+        val listed = client.get("/api/voices") { page() }.json().jsonArray
+        assertEquals("es-US-Chirp3-HD-Aoede", listed[0].jsonObject.string("voice"))
+        assertEquals("/v1/voices", relay.takeRequest().url.encodedPath)
+
+        // 🔊: read by the relay, then kept on the phone (not paid for twice)
+        relay.enqueue(MockResponse.Builder().setHeader("Content-Type", "audio/mpeg").body("mp3 la madre").build())
+        repeat(2) {
+            val heard = client.get("/api/tts?text=la%20madre&voice=es-ES-Chirp3-HD-Aoede") { page() }
+            assertEquals("mp3 la madre", heard.bodyAsText())
+        }
+        val spoken = relay.takeRequest()
+        assertEquals("/v1/speak", spoken.url.encodedPath)
+        val asked = json.parseToJsonElement(spoken.body!!.utf8()).jsonObject
+        assertEquals("es-ES-Chirp3-HD-Aoede", asked.string("voice"))
+        assertEquals(Relay.SPEECH_RATE, asked["rate"]!!.jsonPrimitive.content.toDouble(), 0.0)
+        assertEquals(2, relay.requestCount) // voices, one speak
+
+        // Sent to AnkiDroid: each back's sound (la madre: kept already; el padre: fails)
+        relay.enqueue(MockResponse.Builder().code(503).body("""{"code": "relay.unavailable", "params": {}}""").build())
+        val cards = """[{"front": "la mère", "back": "la madre"}, {"front": "le père", "back": "el padre"}]"""
+        val res = client.post("/api/anki/send") {
+            page(); contentType(ContentType.Application.Json)
+            setBody("""{"deck": "Espagnol", "cards": $cards, "voice": "es-ES-Chirp3-HD-Aoede", "lesson_id": ""}""")
+        }.json().jsonObject
+        assertEquals(2, res["added"]!!.jsonPrimitive.int)
+        assertEquals(1, res["audio_failures"]!!.jsonPrimitive.int)
+        assertEquals(setOf("la madre"), anki.sounds.keys)
+        assertEquals("mp3 la madre", anki.sounds["la madre"]!!.readText())
+    }
+
+    @Test
+    fun anAutoVoiceInTheLanguageLearned() = app { client ->
+        relayAnswers("""{"deck": {"deck": "Espagnol", "cards": [{"front": "la mère", "back": "la madre"}]}, "turns": [], "back_language": "es-ES", "usage": {"credits": 1, "credits_left": 99}}""")
+        relayAnswers(voices)
+        val lesson = client.submitFormWithBinaryData("/api/extract", formData {
+            append("prompt", "FR → ES")
+            append("voice", "auto")
+        }) { page("fr") }.json().jsonObject
+        assertEquals("es-ES-Chirp3-HD-Aoede", lesson.string("voice")) // the variety asked for, the default voice
+
+        // The pupil's own language: no voice (unless the cards are for writing what is heard)
+        relayAnswers("""{"deck": {"deck": "Français", "cards": [{"front": "q", "back": "r"}]}, "turns": [], "back_language": "fr-FR", "usage": {"credits": 1, "credits_left": 98}}""")
+        val french = client.submitFormWithBinaryData("/api/extract", formData {
+            append("prompt", "p")
+            append("voice", "auto")
+        }) { page("fr") }.json().jsonObject
+        assertEquals("", french.string("voice"))
     }
 
     private suspend fun HttpClient.send(lesson: JsonObject) = post("/api/anki/send") {

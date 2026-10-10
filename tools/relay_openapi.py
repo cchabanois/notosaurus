@@ -140,6 +140,29 @@ def build() -> dict:
     def picture(request: api.PictureRequest, x_notosaurus_version: str = client):
         """A picture for a card (pictures.picture)."""
 
+    @app.post(
+        f"{api.PREFIX}/speak",
+        response_class=Response,
+        responses={
+            200: {
+                "description": "The text read aloud.",
+                "content": {"audio/mpeg": {"schema": {"type": "string", "format": "binary"}}},
+                "headers": credit_headers,
+            },
+            **errors(*COMMON),
+        },
+    )
+    def speak(request: api.SpeakRequest, x_notosaurus_version: str = client):
+        """A card's back read aloud with one of /v1/voices."""
+
+    @app.get(
+        f"{api.PREFIX}/voices",
+        response_model=list[api.Voice],
+        responses=errors("relay.invalid_key", "relay.client_outdated", "relay.unavailable"),
+    )
+    def voices(x_notosaurus_version: str = client):
+        """The voices /v1/speak reads with."""
+
     @app.get(
         f"{api.PREFIX}/account",
         response_model=api.Account,

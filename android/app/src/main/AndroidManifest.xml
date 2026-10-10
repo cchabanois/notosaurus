@@ -27,7 +27,7 @@
             </intent-filter>
         </activity>
 
-        <!-- The camera writes its photos here -->
+        <!-- The camera writes its photos here; AnkiDroid reads the cards' sound from here -->
         <provider
             android:name="androidx.core.content.FileProvider"
             android:authorities="${applicationId}.photos"

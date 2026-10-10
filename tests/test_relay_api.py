@@ -79,7 +79,7 @@ def test_limits():
 def test_openapi_description():
     spec = json.loads((ROOT / "core" / "relay-api-v1.json").read_text(encoding="utf-8"))
     assert set(spec["paths"]) == {
-        f"/v1/{route}" for route in ("extract", "revise", "explain", "figure", "picture", "account")
+        f"/v1/{route}" for route in ("extract", "revise", "explain", "figure", "picture", "speak", "voices", "account")
     }
     for route, request in (("extract", "ExtractRequest"), ("revise", "ReviseRequest")):
         body = spec["paths"][f"/v1/{route}"]["post"]["requestBody"]["content"]["multipart/form-data"]
