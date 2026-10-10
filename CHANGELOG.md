@@ -27,6 +27,7 @@ Each pull request adds a line under **Unreleased**. See [Releasing](CONTRIBUTING
 
 ### Changed
 
+- For developers: a fresh install of the Android app calls the test relay in a debug build, the real one in a release (never the test one); the release build passes Android's checks.
 - For developers: the relay's API each released app speaks is frozen (`core/relay-api-releases/`), and a test (`tools/relay_compat.py`) refuses a change that would break an app already released.
 - For developers: the Android app makes its AnkiDroid note types from `static/note-types.json`, written from `app/anki.py` (`tools/note_types.py`): one definition for both. Picture cards get the computer's picture note type on Android too.
 - For developers: `notosaurus-core` can call Gemini through Google Cloud's Vertex AI instead of a key (`gemini_vertex_project`, `gemini_vertex_location`), for the coming relay.

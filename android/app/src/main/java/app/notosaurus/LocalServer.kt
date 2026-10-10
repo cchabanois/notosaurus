@@ -525,8 +525,9 @@ class LocalServer(
 
         const val TTS_RATE = Speech.TTS_RATE
 
-        // Prototype: the relay on the computer, seen from the emulator (changed in the settings, "Advanced")
-        const val DEFAULT_RELAY = "http://10.0.2.2:8080"
+        // The relay of a fresh install, by the build (app/build.gradle.kts): the test instance
+        // while developing, the real one in a release (changed in the settings, "Advanced")
+        val DEFAULT_RELAY: String = BuildConfig.DEFAULT_RELAY
 
         // Which Notosaurus the app shows: its own (phone) or the computer's (the add-on's)
         const val MODE = "mode"
