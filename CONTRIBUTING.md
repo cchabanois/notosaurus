@@ -37,7 +37,7 @@ node --test tests/frontend/*.test.mjs                       # the page scripts' 
 .venv/bin/ruff check . && .venv/bin/ruff format --check .   # lint and formatting (pyproject.toml)
 ```
 
-`tests/frontend/` unit-tests `static/i18n.js`, `app.js` and `admin.js` as they
+`tests/frontend/` unit-tests `static/i18n.js`, `app*.js` and `admin.js` as they
 ship: the scripts run in a Node `vm` context with the browser globals stubbed and
 the real translation files, so the fallback chain, the card preview's escaping,
 the settings page's diffing and the like are checked without a browser.
@@ -98,6 +98,7 @@ come in as parameters), so that other programs can use it. A test keeps it that 
 | `app/i18n.py`, `static/i18n.js`, `static/i18n/` | languages |
 | `app/storage.py` | data folder, atomic JSON writes |
 | `static/` | the phone page and the settings page |
+| `static/app.js`, `static/app-*.js` | the phone page: its state and start in `app.js`, its methods by topic (photos, prompts, lessons, cards, Anki) |
 | `android/` | the Android app (Kotlin): the same page in a WebView, its `/api` answered on the phone (lessons, AnkiDroid, the Notosaurus relay); see [android/README.md](android/README.md) |
 | `anki_addon/` | the Anki add-on: server launcher and an AnkiConnect-compatible bridge |
 | `tools/build_addon.py` | builds `dist/notosaurus-<version>.ankiaddon` |
