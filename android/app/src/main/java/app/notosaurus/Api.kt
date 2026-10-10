@@ -42,6 +42,7 @@ data class Card(
     val figure: String = "",
     val picture: String = "", // its picture's file, in the lesson's images/
     @SerialName("picture_on_back") val pictureOnBack: Boolean = false,
+    val id: String = "", // the lesson's id for it
 )
 
 @Serializable

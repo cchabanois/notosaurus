@@ -12,6 +12,8 @@ import com.ichi2.anki.api.AddContentApi
 import java.io.File
 import java.math.BigDecimal
 import java.math.RoundingMode
+import java.security.MessageDigest
+import kotlin.random.Random
 
 /** What was done with the cards: added, already in AnkiDroid, left out (a diagram card
  * without its photo). */
@@ -41,8 +43,8 @@ interface AnkiTarget {
  * and its READ_WRITE_DATABASE permission granted.
  *
  * Our note types, as the computer's (app/anki.py): text cards (with their picture and
- * the back's sound), diagram labels (the photo, its labels hidden, one asked) and texts
- * with gaps (Anki's own cloze: a card per gap number).
+ * the back's sound), diagram labels (the photo, its labels hidden, one asked), texts
+ * with gaps (Anki's own cloze: a card per gap number) and multiple choices.
  */
 class Anki(private val context: Context) : AnkiTarget {
     private val api = AddContentApi(context)
@@ -74,11 +76,24 @@ class Anki(private val context: Context) : AnkiTarget {
     private fun add(deck: Deck, media: Media): Sent {
         val added = mutableMapOf<File, String?>() // a file into AnkiDroid once, however many cards show it
         fun file(f: File, kind: String) = added.getOrPut(f) { media(f, kind) } ?: ""
-        val notes = deck.cards.filter { it.front.isNotBlank() }.mapNotNull { card ->
+        val notes = deck.cards.withIndex().filter { it.value.front.isNotBlank() }.mapNotNull { (i, card) ->
             val name = deckName(deck.deck, card.subdeck)
             val tags = (card.tags.map { it.replace(' ', '_') } + "notosaurus").toSet()
             val sound = media.audio[card.back.trim()]?.let { file(it, "audio") } ?: ""
             when {
+                card.isChoice() -> {
+                    // Not heard: the options are read. Its picture on the question, or with the answer
+                    val picture = media.pictures[card.picture]?.let { file(it, "image") } ?: ""
+                    Note(
+                        choiceModel() ?: error("AnkiDroid refused the multiple-choice note type"), name,
+                        arrayOf(
+                            card.id.ifBlank { "${media.lesson}:$i" }, card.front, card.back,
+                            choicesHtml(card, reveal = false), choicesHtml(card, reveal = true),
+                            if (card.pictureOnBack) "" else picture, if (card.pictureOnBack) picture else "", card.info,
+                        ),
+                        tags,
+                    )
+                }
                 GAP.containsMatchIn(card.front) -> Note(
                     clozeModel() ?: error("AnkiDroid refused the cloze note type"), name,
                     arrayOf(card.front, card.back, card.info), tags,
@@ -127,6 +142,26 @@ class Anki(private val context: Context) : AnkiTarget {
             context.grantUriPermission(it, uri, Intent.FLAG_GRANT_READ_URI_PERMISSION)
         }
         return api.addMediaFromUri(uri, file.nameWithoutExtension, kind)
+    }
+
+    /** Multiple choice or true/false: the question and its options, then the options again
+     * with the right one marked. Plain HTML, no script: the same on every Anki. "Id"
+     * first: the card's own (questions may repeat). */
+    private fun choiceModel(): Long? {
+        val picture = "{{#Picture}}<div class=notosaurus-picture>{{Picture}}</div>{{/Picture}}"
+        val backPicture = "{{#BackPicture}}<div class=notosaurus-picture>{{BackPicture}}</div>{{/BackPicture}}"
+        val question = "$picture<div>{{Question}}</div>"
+        return api.modelList?.entries?.firstOrNull { it.value == CHOICE_MODEL }?.key
+            ?: api.addNewCustomModel(
+                CHOICE_MODEL,
+                arrayOf("Id", "Question", "Answer", "Choices", "AnswerChoices", "Picture", "BackPicture", "Info"),
+                arrayOf("Card 1"),
+                arrayOf("$question{{Choices}}"),
+                arrayOf("$question<hr id=answer>{{AnswerChoices}}$backPicture{{#Info}}<div class=info>{{Info}}</div>{{/Info}}"),
+                CSS + PICTURE_CSS + CHOICE_CSS,
+                null,
+                1, // sorted by the question
+            )
     }
 
     /** Diagram labels: the photo with every label hidden and the question, then the answer
@@ -197,6 +232,7 @@ class Anki(private val context: Context) : AnkiTarget {
         const val MODEL = "Notosaurus (app)" // with the back's sound (before: "Notosaurus (prototype)")
         const val DIAGRAM_MODEL = "Notosaurus légendes (app)"
         const val CLOZE_MODEL = "Notosaurus texte à trous (app)"
+        const val CHOICE_MODEL = "Notosaurus QCM (app)"
         private val GAP = Regex("""\{\{c\d+::""")
         private const val CSS = """.card { font-family: sans-serif; font-size: 24px; text-align: center; }
 .info { margin-top: 12px; font-size: 18px; color: #666; }
@@ -213,9 +249,45 @@ class Anki(private val context: Context) : AnkiTarget {
 }
 .notosaurus-mask.target { background: #ff7a59; border-color: #b3261e; color: #fff; }
 .notosaurus-mask.revealed { background: transparent; border: 3px solid #1b873f; }"""
+        private const val PICTURE_CSS = """
+.notosaurus-picture img { max-width: min(100%, 320px); max-height: 50vh; border-radius: 12px; }"""
+        private const val CHOICE_CSS = """
+.notosaurus-choices {
+  display: inline-block; margin: 12px auto 0; padding-left: 1.8em; text-align: left; list-style: upper-alpha;
+}
+.notosaurus-choices li { margin: 6px 0; }
+.notosaurus-choices li.right { color: #1b873f; font-weight: 700; }
+.notosaurus-choices li.right::after { content: " ✔"; }"""
         private const val CLOZE_CSS = """
 .cloze { font-weight: 700; color: #0b5cad; }
 .extra { margin-top: 12px; }"""
+
+        /** A multiple-choice or true/false card, as the computer's (cards.is_choice): a
+         * right answer (its back) and wrong ones; a gap text or a diagram label stays one. */
+        fun Card.isChoice() = front.isNotBlank() && back.isNotBlank() && choices.any { it.isNotBlank() } &&
+            mask == null && !GAP.containsMatchIn(front)
+
+        /** The options as AnkiDroid shows them: always the same order for a card (its
+         * question and answer, review after review), the right one anywhere; two
+         * options (true/false): alphabetical. `reveal`: the right one marked. */
+        fun choicesHtml(card: Card, reveal: Boolean): String {
+            val right = card.back.trim()
+            val options = (listOf(card.back) + card.choices).map { it.trim() }.filter { it.isNotEmpty() }.distinct().toMutableList()
+            if (options.size == 2) {
+                options.sortBy { it.lowercase() }
+            } else {
+                val seed = MessageDigest.getInstance("SHA-256").digest(card.front.trim().toByteArray()).fold(0L) { a, b -> a * 31 + b }
+                options.shuffle(Random(seed))
+            }
+            val items = options.joinToString("") { option ->
+                val mark = if (!reveal) "" else if (option == right) " class=\"right\"" else " class=\"wrong\""
+                "<li$mark>${escape(option)}</li>"
+            }
+            return "<ol class=\"notosaurus-choices\">$items</ol>"
+        }
+
+        private fun escape(text: String) =
+            text.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;").replace("\"", "&quot;").replace("\n", "<br>")
 
         /** The masks over a diagram's photo, in % of it, as the computer's
          * (diagrams.masks_html): every label hidden behind its number, `target`

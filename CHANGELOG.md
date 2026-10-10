@@ -18,6 +18,7 @@ Each pull request adds a line under **Unreleased**. See [Releasing](CONTRIBUTING
 - For developers: the relay's `/v1/speak` and `/v1/voices`.
 - The coming Android app draws the cards' pictures and figures (through the relay), takes your own photo or none, and sends the pictures to AnkiDroid (“Draw” said “Not Found”).
 - The coming Android app sends diagram labels (the photo, its labels hidden, one asked) and texts with gaps (Anki's own cloze, a card per gap) to AnkiDroid: they were left out.
+- The coming Android app sends multiple-choice and true/false cards to AnkiDroid with their options (the right one marked on the answer): only the question and answer went.
 - The Android app can generate a lesson again in its place (“Regenerate”, “Make again, carefully”).
 
 ### Changed
