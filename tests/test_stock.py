@@ -62,7 +62,7 @@ PIXABAY = {
     "hits": [
         {
             "id": 42,
-            "tags": "fortress, paris",
+            "tags": "fortress, paris, fortress",
             "previewURL": "https://cdn.pixabay.com/p/42.jpg",
             "webformatURL": "https://pixabay.com/get/42.jpg",
         }
@@ -116,6 +116,7 @@ def test_only_free_pictures_pupils_may_see(services):
 def test_pixabay_with_the_relays_key(services):
     found = run(stock.search("Bastille", pixabay_key="k"))
     assert found[0].source == "pixabay" and found[0].licence == "Pixabay"
+    assert found[0].title == "fortress, paris"  # each tag once
     search = next(r for r in services.asked if r.url.host == "pixabay.com")
     assert search.url.params["safesearch"] == "true"
 

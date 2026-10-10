@@ -196,9 +196,8 @@ async def _openverse(client: httpx.AsyncClient, subject: str) -> list:
 
 async def _pixabay(client: httpx.AsyncClient, subject: str, key: str) -> list:
     data = await _json(client, PIXABAY, {"key": key, "q": subject[:100], "safesearch": "true", "per_page": 12})
-    return [("pixabay", h["previewURL"], (str(h["id"]), h.get("tags", ""), "Pixabay")) for h in data.get("hits", [])][
-        :PER_SOURCE
-    ]
+    hits = data.get("hits", [])[:PER_SOURCE]
+    return [("pixabay", h["previewURL"], (str(h["id"]), _tags(h.get("tags", "")), "Pixabay")) for h in hits]
 
 
 async def _pixabay_url(client: httpx.AsyncClient, id_: str, key: str) -> str:
@@ -208,6 +207,11 @@ async def _pixabay_url(client: httpx.AsyncClient, id_: str, key: str) -> str:
     if not hits:
         raise AppError("picture.not_found")
     return hits[0]["webformatURL"]
+
+
+def _tags(tags: str) -> str:
+    """Pixabay's tags, each once ("grandma, grandma, family" → "grandma, family")."""
+    return ", ".join(dict.fromkeys(t.strip() for t in tags.split(",") if t.strip()))
 
 
 def _title(file: str) -> str:
