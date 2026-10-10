@@ -45,6 +45,7 @@ Each pull request adds a line under **Unreleased**. See [Releasing](CONTRIBUTING
 
 ### Fixed
 
+- The message after adding to Anki keeps its width on a phone: its buttons go under it (it was squeezed into a narrow column).
 - Scrolling the lessons (or another sheet) with a finger no longer moves the lesson behind, on a phone.
 - 🔊 Listening to a card again, or to another one, no longer plays two voices at once: the sound playing stops.
 - A long back, info, wrong option or “Did you know?” is seen whole in the review, on as many lines as it needs (only the front grew before): nothing cut on a phone.
