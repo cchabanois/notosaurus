@@ -1,9 +1,10 @@
 """The app's own data: lessons, prompts, settings forms and requests. The cards
 and what the AI answers are notosaurus_core's (re-exported here)."""
 
+import re
 from typing import Literal
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, field_validator
 
 from notosaurus_core.models import (  # noqa: F401
     AiCall,
@@ -17,6 +18,8 @@ from notosaurus_core.models import (  # noqa: F401
     Revision,
     TextLine,
 )
+
+CARD_ID = re.compile(r"[a-z0-9]{0,40}")  # Notosaurus, the page and the Android app give 12 hex
 
 
 class LessonIn(Deck):
@@ -35,6 +38,16 @@ class LessonIn(Deck):
     # regeneration is undone (None in an update = unchanged)
     prompt: str | None = None
     choice: str | None = None
+
+    @field_validator("cards")
+    @classmethod
+    def _card_ids(cls, cards: list[Card]) -> list[Card]:
+        # A card's id comes from the page and names its picture's file (picture-<id>-…):
+        # letters and digits only, as pictures.NAME reads them back ("" = not given yet)
+        for card in cards:
+            if not CARD_ID.fullmatch(card.id):
+                raise ValueError("invalid card id")
+        return cards
 
 
 class Lesson(LessonIn):
@@ -155,7 +168,7 @@ class LessonAccess(BaseModel):
 
 class AdminPassword(BaseModel):
     current: str | None = None
-    new: str = Field(min_length=4)
+    new: str = Field(min_length=8)  # the settings hold the API keys, open to the network (standalone)
 
 
 class ExplainRequest(BaseModel):

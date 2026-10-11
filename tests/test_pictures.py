@@ -11,6 +11,7 @@ from PIL import Image
 from app.settings import Settings
 from notosaurus_core import llm, pictures
 from notosaurus_core.models import Card
+from notosaurus_core.relay_api import MAX_IMAGE_BYTES
 
 
 def png(color="red") -> bytes:
@@ -224,6 +225,23 @@ def test_own_photo_then_no_picture(client, drawn, tmp_path):
     res = client.delete(url).json()
     assert (res["card"]["picture"], res["card"]["picture_prompt"]) == ("", "")  # a text card now
     assert not any(folder.glob(f"picture-{dog['id']}-*"))
+
+
+def test_uploads_too_heavy_refused(client, drawn):
+    """The page sends prepared photos (a few hundred KB): a far heavier one is refused
+    before being read whole into memory, as the relay refuses it."""
+    heavy = b"\xff\xd8" + b"x" * MAX_IMAGE_BYTES
+    too_large = {"code": "extract.too_large", "params": {"max": 4}}
+    res = client.post("/api/extract", files=[("images", ("p.jpg", heavy, "image/jpeg"))], data={"prompt": "x"})
+    assert (res.status_code, res.json()["detail"]) == (413, too_large)
+
+    lesson = lesson_with_pictures(client)
+    url = f"/api/lessons/{lesson['id']}/cards/{lesson['cards'][0]['id']}/picture"
+    res = client.post(url, files={"photo": ("p.jpg", heavy, "image/jpeg")})
+    assert (res.status_code, res.json()["detail"]) == (413, too_large)
+    res = client.post(f"/api/lessons/{lesson['id']}/complete", files=[("images", ("p.jpg", heavy, "image/jpeg"))],
+                      data={"prompt": "x"})  # fmt: skip
+    assert res.status_code == 413
 
 
 def test_the_settings_picture_test(admin, drawn, monkeypatch):

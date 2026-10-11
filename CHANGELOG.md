@@ -89,6 +89,13 @@ Each pull request adds a line under **Unreleased**. See [Releasing](CONTRIBUTING
 - 🔊 Listening to a card again, or to another one, no longer plays two voices at once: the sound playing stops.
 - A long back, info, wrong option or “Did you know?” is seen whole in the review, on as many lines as it needs (only the front grew before): nothing cut on a phone.
 
+### Security
+
+- Notosaurus answers only when opened by an IP address, `localhost` or the address in `NOTOSAURUS_PUBLIC_URL`: a website open on the computer can no longer reach it by pointing its own name at the computer (DNS rebinding) to read the lessons, delete them or change the settings.
+- A new settings password needs 8 characters at least (the one already chosen still works), and after 5 wrong passwords the device trying them must wait, longer at each new try (up to 15 minutes).
+- A card's id sent by the page is checked (letters and digits only): it names its picture's file, and could have written elsewhere on Windows.
+- A photo heavier than 4 MB is refused (“A photo is too heavy”) instead of being read whole into memory.
+
 ## [1.0.0] - 2026-10-04
 
 The first version.

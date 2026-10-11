@@ -7,7 +7,7 @@ from notosaurus_core.models import PictureSource
 from .. import i18n, lessons, settings, usage
 from ..errors import AppError
 from ..models import FoundPicture, Lesson, LessonIn, PictureRequest, PictureSearch
-from .common import IMAGE_TYPES, _editable, _lesson, page_lang
+from .common import IMAGE_TYPES, _editable, _lesson, page_lang, read_photo
 
 router = APIRouter()
 
@@ -69,10 +69,11 @@ async def upload_picture(id: str, card_id: str, photo: UploadFile) -> dict:
     lesson = await _editable(id)
     if photo.content_type not in IMAGE_TYPES:
         raise AppError("extract.bad_format", format=photo.content_type)
+    data = await read_photo(photo)
     cards = [card.model_copy(deep=True) for card in lesson.cards]
     card = cards[_card(lesson, card_id)]
     try:
-        card.picture = pictures.save(lessons.folder(id) / "images", card, await photo.read())
+        card.picture = pictures.save(lessons.folder(id) / "images", card, data)
         card.picture_source = PictureSource(source="photo")
     except (OSError, ValueError) as e:
         raise AppError("extract.bad_format", format=photo.content_type) from e

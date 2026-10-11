@@ -5,10 +5,9 @@ what happens to a lesson's Anki notes when it is deleted."""
 import json
 
 import httpx
-from conftest import ADMIN, CLOZE, MODEL_ACTIONS, SEND, FakeAnki, extract_lesson
+from conftest import ADMIN, CLOZE, MODEL_ACTIONS, SEND, FakeAnki, extract_lesson, on_the_computer
 
 from app import ankiconnect, settings
-from app.main import app
 from notosaurus_core import tts
 
 
@@ -112,9 +111,7 @@ def test_no_sync_when_the_profile_is_not_logged_in(anki, client, monkeypatch):
 
 def test_addon_mode(client, monkeypatch):
     """In the Anki add-on, the bridge address and key win over saved AnkiConnect settings."""
-    from fastapi.testclient import TestClient
-
-    client.post("/api/admin/password", json={"new": "secret"})
+    client.post("/api/admin/password", json={"new": "secret-pw"})
     client.put(
         "/api/admin/settings",
         headers=ADMIN,
@@ -127,7 +124,7 @@ def test_addon_mode(client, monkeypatch):
     monkeypatch.setenv("NOTOSAURUS_ANKICONNECT_KEY", "bridge-key")
     s = settings.current()
     assert (s.ankiconnect_url, s.ankiconnect_key) == ("http://127.0.0.1:40123", "bridge-key")
-    with TestClient(app, client=("127.0.0.1", 50000)) as local:
+    with on_the_computer() as local:
         assert local.get("/api/admin/settings").json()["embedded"] is True
 
 

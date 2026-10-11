@@ -27,6 +27,7 @@ from .common import (
     _lesson,
     _pictures,
     pupil_lang,
+    read_photo,
 )
 
 log = logging.getLogger("notosaurus")
@@ -49,7 +50,9 @@ class Photo:
 
 
 async def _photos(images: list[UploadFile]) -> list[Photo]:
-    return [Photo(await img.read(), img.content_type) for img in images]
+    if len(images) > MAX_IMAGES:  # before reading any
+        raise AppError("extract.too_many", max=MAX_IMAGES)
+    return [Photo(await read_photo(img), img.content_type) for img in images]
 
 
 @dataclass

@@ -12,6 +12,7 @@ from fastapi.staticfiles import StaticFiles
 
 from . import settings
 from .errors import AppError
+from .hosts import KnownHostsOnly
 from .routes import admin, anki, devices, generation, lessons, pages, pictures, prompts, voices
 from .routes.common import STATIC_DIR
 from .version import VERSION
@@ -44,6 +45,7 @@ async def lifespan(app: FastAPI):
 
 app = FastAPI(title="Notosaurus", version=VERSION, lifespan=lifespan)
 app.middleware("http")(devices.paired_devices_only)
+app.add_middleware(KnownHostsOnly)  # added last: runs first, for every route and file
 
 
 @app.exception_handler(AppError)

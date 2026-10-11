@@ -55,4 +55,4 @@ page wins.
 | `NOTOSAURUS_COMPATIBLE_BASE_URL`, `NOTOSAURUS_COMPATIBLE_API_KEY` | another OpenAI-compatible service (Ollama: `http://localhost:11434/v1`) |
 | `NOTOSAURUS_DATA` | the data folder (default: `data`) |
 | `NOTOSAURUS_ANKICONNECT_URL`, `NOTOSAURUS_ANKICONNECT_KEY` | AnkiConnect (default: `http://localhost:8765`) |
-| `NOTOSAURUS_PUBLIC_URL` | the address in the phones' QR code, when Notosaurus can't see it (Docker) |
+| `NOTOSAURUS_PUBLIC_URL` | the address in the phones' QR code, when Notosaurus can't see it (Docker); besides IP addresses and `localhost`, the only name Notosaurus answers to |

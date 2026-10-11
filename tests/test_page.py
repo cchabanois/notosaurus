@@ -168,8 +168,8 @@ def test_delete_the_open_lesson(page):
 
 def test_settings_show_what_the_service_needs(page):
     page.goto("/admin.html")
-    page.locator("input[autocomplete=new-password]").first.fill("secret")
-    page.locator("input[autocomplete=new-password]").nth(1).fill("secret")
+    page.locator("input[autocomplete=new-password]").first.fill("secret-pw")
+    page.locator("input[autocomplete=new-password]").nth(1).fill("secret-pw")
     page.get_by_role("button", name="Créer et continuer").click()
     address = page.get_by_placeholder("http://localhost:11434/v1")
     page.locator(".options .option", has_text="OpenRouter").click()
@@ -404,11 +404,11 @@ def test_many_lessons_recent_folded_and_searched(page, clock):
 
 def test_admin_lessons_by_owner_then_subject(page, clock):
     page.goto("/admin.html")
-    page.locator("input[autocomplete=new-password]").first.fill("secret")
-    page.locator("input[autocomplete=new-password]").nth(1).fill("secret")
+    page.locator("input[autocomplete=new-password]").first.fill("secret-pw")
+    page.locator("input[autocomplete=new-password]").nth(1).fill("secret-pw")
     page.get_by_role("button", name="Créer et continuer").click()
     page.wait_for_function("Alpine.$data(document.querySelector('[x-data]')).saveState === 'saved'")
-    admin = {"X-Admin-Password": "secret"}
+    admin = {"X-Admin-Password": "secret-pw"}
     for deck, owner in (
         ("Anglais::Leçon 1", "Léa"),
         ("Maths::Fractions", "Paul"),
@@ -481,14 +481,14 @@ def test_every_language_fits_a_narrow_phone(page, browser, server, lang):
         other.locator(".flash").first.wait_for()
         assert other.evaluate(CUT) == []
         other.goto("/admin.html")
-        other.locator("input[autocomplete=new-password]").first.fill("secret")
-        other.locator("input[autocomplete=new-password]").nth(1).fill("secret")
+        other.locator("input[autocomplete=new-password]").first.fill("secret-pw")
+        other.locator("input[autocomplete=new-password]").nth(1).fill("secret-pw")
         other.locator("button.btn.primary.wide").first.click()  # create the password
         other.locator("section.panel h2").nth(3).wait_for()
         assert other.evaluate(CUT) == []
         other.wait_for_function("Alpine.$data(document.querySelector('[x-data]')).saveState !== 'pending'")
         # The setup assistant, with its longest step: Gemini's key, explained
-        other.request.put("/api/admin/settings", headers={"X-Admin-Password": "secret"}, data={"llm": "gemini"})
+        other.request.put("/api/admin/settings", headers={"X-Admin-Password": "secret-pw"}, data={"llm": "gemini"})
         other.goto("/setup.html")
         other.locator(".setup-guide").wait_for()
         assert other.evaluate(CUT) == []
@@ -1025,8 +1025,8 @@ def test_the_setup_assistant(page, monkeypatch):
     monkeypatch.setattr(admin, "check", check)
     page.goto("/")
     page.get_by_role("link", name="Configurer Notosaurus").click()
-    page.locator("input[autocomplete=new-password]").first.fill("secret")
-    page.locator("input[autocomplete=new-password]").nth(1).fill("secret")
+    page.locator("input[autocomplete=new-password]").first.fill("secret-pw")
+    page.locator("input[autocomplete=new-password]").nth(1).fill("secret-pw")
     page.get_by_role("button", name="Créer et continuer").click()
 
     sync_api.expect(page.get_by_role("heading", name="Quelle IA lit les leçons ?")).to_be_visible()

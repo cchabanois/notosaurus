@@ -8,6 +8,7 @@ from notosaurus_core import llm, pictures, recommended
 from notosaurus_core.llm import check, list_models
 
 from .. import ankiconnect, lessons, settings, usage
+from ..attempts import Attempts
 from ..errors import AppError
 from ..models import AdminPassword, Lesson, LessonAccess, LessonSummary, SettingsUpdate
 from . import devices
@@ -23,6 +24,21 @@ router = APIRouter()
 TEST_PICTURE = "a giraffe"  # the settings' picture test: a familiar animal, drawn as on a card
 
 
+attempts = Attempts()  # wrong passwords, per address: guessing is slowed down
+
+
+def _check_password(request: Request, password: str | None, code: str) -> None:
+    """The admin password, or `code` (401); a locked-out address isn't even checked."""
+    address = request.client.host if request.client else ""
+    if wait := attempts.wait(address):
+        raise AppError("admin.too_many_attempts", 429, seconds=wait)
+    if not settings.check_password(password):
+        if password:  # a page without the password yet (no header) isn't guessing
+            attempts.failed(address)
+        raise AppError(code, 401)
+    attempts.succeeded(address)
+
+
 def require_admin(request: Request, x_admin_password: str | None = Header(None)) -> None:
     # In the Anki add-on, settings are opened on the computer (Tools → Notosaurus →
     # Settings): API keys never cross the Wi-Fi and phones can't change anything.
@@ -30,8 +46,7 @@ def require_admin(request: Request, x_admin_password: str | None = Header(None))
         if not is_local(request):
             raise AppError("admin.local_only", 403)
         return
-    if not settings.check_password(x_admin_password):
-        raise AppError("admin.password_required", 401)
+    _check_password(request, x_admin_password, "admin.password_required")
 
 
 def _settings_view() -> dict:
@@ -73,8 +88,8 @@ def admin_password(body: AdminPassword, request: Request) -> None:
     """First visit: create the password. Afterwards: change it (current one required)."""
     if settings.embedded():  # no password in the add-on: the settings only open on the computer
         raise AppError("admin.local_only", 403)
-    if settings.password_is_set() and not settings.check_password(body.current):
-        raise AppError("admin.wrong_password", 401)
+    if settings.password_is_set():
+        _check_password(request, body.current, "admin.wrong_password")
     settings.set_password(body.new)
 
 

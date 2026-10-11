@@ -1,11 +1,9 @@
 """The phones: pairing by the QR code's token, the cookie it becomes, unpairing,
 the link the QR code carries, and the QR codes themselves."""
 
-from conftest import ADMIN
-from fastapi.testclient import TestClient
+from conftest import ADMIN, on_the_computer
 
 from app import settings
-from app.main import app
 from app.routes.devices import DEVICE_COOKIE
 
 
@@ -31,14 +29,14 @@ def test_only_paired_devices_use_notosaurus(client):
     assert client.get("/manifest.json").json()["start_url"] == f"/?k={token}"
 
     # The computer itself needs no token; a request relayed by a proxy isn't the computer
-    with TestClient(app, client=("127.0.0.1", 50000)) as local:
+    with on_the_computer() as local:
         assert local.get("/api/lessons").status_code == 200
         assert local.get("/manifest.json").json()["start_url"] == "/"
         assert local.get("/api/lessons", headers={"X-Forwarded-For": "100.64.0.7"}).status_code == 401
 
 
 def test_unpair_every_phone(admin):
-    with TestClient(app, client=("127.0.0.1", 50000)) as local:
+    with on_the_computer() as local:
         link = local.get("/api/admin/phone", headers=ADMIN).json()["url"]
         assert link.startswith("http://")
         old = settings.device_token()
@@ -53,7 +51,7 @@ def test_phone_link_address(client, monkeypatch):
 
     monkeypatch.setattr(admin, "lan_address", lambda: "192.168.1.10")
     monkeypatch.setenv("NOTOSAURUS_EMBEDDED", "1")  # the add-on asks for it on the computer itself
-    with TestClient(app, client=("127.0.0.1", 50000), base_url="http://127.0.0.1:8000") as local:
+    with on_the_computer() as local:
         token = settings.device_token()
         assert local.get("/api/admin/phone").json()["url"] == f"http://192.168.1.10:8000/?k={token}"
         monkeypatch.setenv("NOTOSAURUS_PUBLIC_URL", "https://pc.example.ts.net/")  # Docker, tailscale serve
@@ -96,7 +94,7 @@ def test_the_setup_assistant_sees_the_phone_pair(admin, monkeypatch):
 
     monkeypatch.setattr(devices, "last_paired", None)
     token = settings.device_token()
-    with TestClient(app, client=("127.0.0.1", 50000)) as local:
+    with on_the_computer() as local:
         assert local.get("/api/admin/phone", headers=ADMIN).json()["paired_at"] is None
         local.get(f"/?k={token}")  # the computer opening its own link: not a phone
         assert local.get("/api/admin/phone", headers=ADMIN).json()["paired_at"] is None
@@ -105,3 +103,27 @@ def test_the_setup_assistant_sees_the_phone_pair(admin, monkeypatch):
     assert admin.get("/api/admin/phone", headers=ADMIN).json()["paired_at"] is None
     admin.get(f"/?k={token}")  # the phone scanning the QR code
     assert admin.get("/api/admin/phone", headers=ADMIN).json()["paired_at"] is not None
+
+
+def test_only_its_own_addresses_answered(client, monkeypatch):
+    """DNS rebinding: a website open on the computer points its own name at 127.0.0.1, and
+    its scripts reach Notosaurus as the computer itself (no token, the add-on's settings).
+    Its requests carry its name: refused, for every route and the page's files."""
+    monkeypatch.setenv("NOTOSAURUS_EMBEDDED", "1")
+    with on_the_computer() as local:
+        rebound = {"Host": "evil.example:8000"}
+        for path in ("/api/lessons", "/api/admin/settings", "/api/admin/phone", "/", "/app.js"):
+            r = local.get(path, headers=rebound)
+            assert r.status_code == 421, path
+            assert r.json()["detail"] == {"code": "host.not_allowed", "params": {"host": "evil.example:8000"}}
+        assert local.delete("/api/lessons/x", headers=rebound).status_code == 421
+        for host in ("", "127.0.0.1.nip.io", "localhost.evil.example", "evil@127.0.0.1", "127.0.0.1:x", "pc.local"):
+            assert local.get("/api/lessons", headers={"Host": host}).status_code == 421, host
+
+        # The computer by localhost or 127.0.0.1, phones by its address (v4 or v6)
+        for host in ("127.0.0.1:8000", "localhost:8000", "LOCALHOST", "[::1]:8000", "192.168.1.20", "[fe80::1]:8000"):
+            assert local.get("/api/lessons", headers={"Host": host}).status_code == 200, host
+        # Docker, a proxy: the name given for the QR code
+        monkeypatch.setenv("NOTOSAURUS_PUBLIC_URL", "https://pc.example.ts.net/")
+        assert local.get("/api/lessons", headers={"Host": "pc.example.ts.net"}).status_code == 200
+        assert local.get("/api/lessons", headers={"Host": "other.example.ts.net"}).status_code == 421
