@@ -27,6 +27,7 @@ import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.json.JsonArray
+import kotlinx.serialization.json.JsonNull
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.buildJsonObject
@@ -62,6 +63,19 @@ class LocalServerTest {
     @get:Rule val folder = TemporaryFolder()
     private val relay = MockWebServer()
     private val anki = FakeAnki()
+    private val play = FakePlay()
+
+    /** Google Play: the offer, a purchase's token (null: given up), the subscriptions owned. */
+    private class FakePlay : SubscriptionStore {
+        var offer: Offer? = Offer("4,99 €", 7)
+        var buying: String? = "token-1"
+        var owned = listOf<String>()
+        var managed = 0
+        override suspend fun offer() = offer
+        override suspend fun subscribe() = buying
+        override suspend fun owned() = owned
+        override fun manage() { managed++ }
+    }
     private val prefs = MemoryPreferences()
     private var permissionAsked = 0
     private var grantPermission = true // the user's answer to AnkiDroid's dialog
@@ -148,6 +162,7 @@ class LocalServerTest {
             turnPhoto = { data, degrees -> "turned $degrees:".toByteArray() + data }, // (Photos.turn needs Android)
             recorder = mic,
             requestMicPermission = { micGranted },
+            subscriptions = play,
         )
         computer.start()
     }
@@ -676,6 +691,47 @@ class LocalServerTest {
         relay.enqueue(MockResponse.Builder().setHeader("Content-Type", "audio/mpeg").body("mp3").build())
         client.get("/api/tts?text=hola&voice=es-ES-Chirp3-HD-Aoede") { page() }
         assertEquals("0.75", json.parseToJsonElement(relay.takeRequest().body!!.utf8()).jsonObject["rate"]!!.jsonPrimitive.content)
+    }
+
+    @Test
+    fun aSubscriptionBoughtThenRestored() = app { client ->
+        val offered = client.get("/api/admin/subscription") { page() }.json().jsonObject
+        assertEquals("4,99 €", offered["offer"]!!.jsonObject.string("price"))
+        assertEquals(7, offered["offer"]!!.jsonObject["trial_days"]!!.jsonPrimitive.int)
+
+        // Bought: the relay checks the purchase and answers its key, kept for this relay
+        relayAnswers("""{"key": "nts_from_play", "account": {"plan": "trial", "credits_left": 1000, "daily_left": 300,
+            "renews_at": "2026-10-18T10:00:00+00:00", "ends_at": "2026-10-18T10:00:00+00:00"}}""")
+        val bought = client.post("/api/admin/subscription/subscribe") { page() }.json().jsonObject
+        assertEquals("trial", bought.string("plan"))
+        val asked = relay.takeRequest(5, TimeUnit.SECONDS)!!
+        assertEquals("/v1/subscribe", asked.url.encodedPath)
+        val sent = json.parseToJsonElement(asked.body!!.utf8()).jsonObject
+        assertEquals(listOf("token-1", PlayStore.PRODUCT), listOf(sent.string("purchase_token"), sent.string("product_id")))
+        assertEquals("nts_from_play", prefs[LocalServer.keyOf(local.relayUrl())])
+
+        // Given up on Google Play's screen: nothing changes
+        play.buying = null
+        assertEquals("true", client.post("/api/admin/subscription/subscribe") { page() }.json().jsonObject["cancelled"]!!.jsonPrimitive.content)
+
+        // A new phone (no key): the subscription this Google account has, restored as the settings open
+        prefs[LocalServer.keyOf(local.relayUrl())] = ""
+        play.owned = listOf("token-1")
+        relayAnswers("""{"key": "nts_from_play", "account": {"plan": "monthly", "credits_left": 20000, "daily_left": 2000}}""")
+        assertEquals("true", client.get("/api/admin/subscription") { page() }.json().jsonObject["restored"]!!.jsonPrimitive.content)
+        assertEquals("nts_from_play", prefs[LocalServer.keyOf(local.relayUrl())])
+
+        // Nothing to restore; Google Play's page to manage it
+        play.owned = emptyList()
+        val none = client.post("/api/admin/subscription/restore") { page() }
+        assertEquals(HttpStatusCode.BadRequest, none.status)
+        assertEquals("subscription.none", none.json().jsonObject["detail"]!!.jsonObject.string("code"))
+        client.post("/api/admin/subscription/manage") { page() }
+        assertEquals(1, play.managed)
+
+        // Not on sale yet: no offer (the settings show the key only)
+        play.offer = null
+        assertEquals(JsonNull, client.get("/api/admin/subscription") { page() }.json().jsonObject["offer"])
     }
 
     @Test

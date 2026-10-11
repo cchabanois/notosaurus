@@ -110,6 +110,7 @@ dependencies {
     implementation(libs.ktor.server.core)
     implementation(libs.ktor.server.cio)
     implementation(libs.code.scanner)
+    implementation(libs.play.billing) // the subscription (Google Play Billing)
     implementation(libs.kotlinx.coroutines.play.services)
     testImplementation(libs.junit)
     testImplementation(libs.ktor.server.test.host)

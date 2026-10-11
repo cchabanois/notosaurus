@@ -646,6 +646,15 @@
       "realRelay": "Relay real",
       "testRelay": "🧪 Relay de teste"
     },
+    "subscription": {
+      "subscribe": "Subscrever: {price} por mês",
+      "trial": "Teste grátis de {days} dias, depois {price} por mês",
+      "restore": "Já tenho uma subscrição",
+      "manage": "Gerir a subscrição (Google Play)",
+      "until": "Subscrição paga até {date}",
+      "done": "✓ Subscrito: boas revisões!",
+      "restored": "✓ A tua subscrição foi encontrada nesta conta Google."
+    },
     "anki": {
       "title": "📥 AnkiDroid",
       "ready": "✓ O AnkiDroid está instalado e o Notosaurus pode adicionar cartões a ele.",
@@ -855,6 +864,10 @@
     "dictation": {
       "refused": "O Notosaurus não tem acesso ao microfone: permita nas configurações do Android para ditar.",
       "failed": "O microfone não conseguiu gravar: tente de novo."
+    },
+    "subscription": {
+      "unavailable": "O Google Play não está disponível neste telemóvel.",
+      "none": "Nenhuma subscrição encontrada nesta conta Google."
     }
   },
   "demo": {
