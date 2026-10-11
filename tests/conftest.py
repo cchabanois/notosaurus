@@ -203,7 +203,8 @@ class FakeAnki:
                     "cards": [i],  # one card a note here: the card's id is the note's
                 }
                 for i in p["notes"]
-            ]
+                if i in self.notes
+            ] + [{} for i in p["notes"] if i not in self.notes]  # as AnkiConnect: {} for a note gone
         elif action == "cardsInfo":
             result = [{"cardId": i, "note": i, "deckName": self.notes[i]["deckName"]} for i in p["cards"]]
         elif action == "changeDeck":

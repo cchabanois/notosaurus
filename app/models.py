@@ -49,6 +49,9 @@ class Lesson(LessonIn):
     # One per photo: the text of a PDF page, as the PDF holds it ("" for a photo). Sent
     # to the AI with the pages; not in the lists (LessonSummary)
     page_texts: list[str] = []
+    # Its notes in Anki, by profile then card id, from its last send: a card whose front
+    # was corrected updates its own note (history kept)
+    anki_notes: dict[str, dict[str, int]] = {}
     created_at: str
     updated_at: str
     exported_at: str | None = None

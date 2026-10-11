@@ -321,6 +321,7 @@ class Note:
     fields: dict[str, str]  # field name → HTML value
     tags: list[str]
     media: list[Path]  # files the note uses: mp3, images
+    card_id: str = ""  # the card it is (Card.id): finds its note again even if its front changed
 
     @property
     def key(self) -> str:
@@ -380,6 +381,7 @@ def notes(
         else:
             note = _two_sided_note(export, i, card)
         if note:
+            note.card_id = export.card_id(i, card)
             result.append(note)
     if not result:
         raise AppError("export.no_cards")

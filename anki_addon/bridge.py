@@ -182,9 +182,15 @@ def _find_notes(p: dict) -> list[int]:
 
 
 def _notes_info(p: dict) -> list[dict]:
+    from anki.errors import NotFoundError
+
     result = []
     for note_id in p["notes"]:
-        note = _col().get_note(note_id)
+        try:
+            note = _col().get_note(note_id)
+        except NotFoundError:  # deleted in Anki: {} as AnkiConnect answers
+            result.append({})
+            continue
         fields = {name: {"value": value, "order": i} for i, (name, value) in enumerate(note.items())}
         result.append(
             {

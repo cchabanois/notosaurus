@@ -404,6 +404,27 @@ def test_the_lessons_deck_changed_on_a_real_collection(bridged, col):
     assert not [n for n in names if n.startswith("Espagnol::Leçon 5")]
 
 
+def test_a_corrected_front_on_a_real_collection(bridged, col):
+    """A card's front corrected after a send: the same note and card, updated, history kept."""
+    client, _ = bridged
+    lesson = extract(client)
+    body = {"deck": lesson["deck"], "cards": lesson["cards"], "voice": VOICE, "lesson_id": lesson["id"]}
+    client.post("/api/anki/send", json=body)
+    (mother,) = col.find_notes('"Front:la mère"')
+    (card,) = col.get_note(mother).cards()
+    card.type = card.queue = 2
+    card.ivl, card.reps, card.due = 12, 5, col.sched.today + 12
+    col.update_card(card)
+    count = len(col.find_notes(""))
+
+    cards = [{**c, "front": "la maman"} if c["front"] == "la mère" else c for c in lesson["cards"]]
+    res = client.post("/api/anki/send", json={**body, "cards": cards}).json()
+    assert res["added"] == 0 and len(col.find_notes("")) == count
+    assert col.get_note(mother)["Front"] == "la maman"
+    kept = col.get_card(card.id)
+    assert (kept.ivl, kept.reps) == (12, 5)
+
+
 def test_figure_lesson_on_a_real_collection(bridged, col):
     client, _ = bridged
     lesson = client.post("/api/extract", data={"prompt": "Le triangle rectangle (géométrie)"}).json()

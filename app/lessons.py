@@ -271,6 +271,16 @@ def completed(
     return _read(path)
 
 
+def set_anki_notes(id: str, profile: str, notes: dict[str, int]) -> None:
+    """The lesson's notes in that Anki profile after a send, by card id (not a content
+    change: its place in the list stays)."""
+    with storage.lock:
+        path = folder(id)
+        if path:
+            lesson = _read(path)
+            _write(path, lesson.model_copy(update={"anki_notes": {**lesson.anki_notes, profile: notes}}))
+
+
 def add_ai_calls(id: str, calls: list[AiCall]) -> None:
     """Keep the AI calls of a correction with the lesson (not a content change)."""
     if not calls:

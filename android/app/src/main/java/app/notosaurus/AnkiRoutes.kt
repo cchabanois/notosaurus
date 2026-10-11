@@ -3,6 +3,8 @@ package app.notosaurus
 import io.ktor.server.routing.Route
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import kotlinx.serialization.json.longOrNull
+import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonArray
 import kotlinx.serialization.json.JsonNull
 import kotlinx.serialization.json.buildJsonObject
@@ -42,7 +44,10 @@ internal fun Route.ankiRoutes(server: LocalServer) {
             val frames = (req["frames"]?.takeIf { it is JsonArray } ?: lessons.get(lessonId)?.get("frames"))
                 ?.jsonArray?.associate { it.jsonObject["page"]!!.jsonPrimitive.content.toInt() to it.jsonObject["box"]!!.jsonArray.map { v -> v.jsonPrimitive.content.toDouble() } }
                 .orEmpty()
-            val media = Media(sounds, pictures, photos, lessonId, frames)
+            // The lesson's notes from its last send, by card: a corrected front updates its own
+            val sentBefore = (lessons.get(lessonId)?.get("anki_notes") as? JsonObject)
+                ?.mapNotNull { (card, note) -> note.jsonPrimitive.longOrNull?.let { card to it } }?.toMap().orEmpty()
+            val media = Media(sounds, pictures, photos, lessonId, frames, sentBefore)
             fun on(option: String) = req[option]?.jsonPrimitive?.content == "true"
             val options = Options(reverse = on("reverse"), typing = on("typing"), dictation = on("dictation"))
             val sent = try {
@@ -50,6 +55,7 @@ internal fun Route.ankiRoutes(server: LocalServer) {
             } catch (e: Exception) { // e.g. AnkiDroid never opened: no collection yet
                 throw BadRequest("anki.android_failed", buildJsonObject { put("detail", e.message ?: e.javaClass.simpleName) })
             }
+            if (lessonId.isNotEmpty()) lessons.setAnkiNotes(lessonId, sent.notes)
             buildJsonObject {
                 put("added", sent.added)
                 put("updated", sent.updated) // the lesson's notes sent before, changed since

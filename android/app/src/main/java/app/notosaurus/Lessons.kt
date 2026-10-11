@@ -119,6 +119,12 @@ class Lessons(private val root: File) {
         return updated
     }
 
+    /** Its notes in AnkiDroid after a send, by card id (not a content change). */
+    fun setAnkiNotes(id: String, notes: Map<String, Long>) {
+        val lesson = get(id) ?: return
+        write(JsonObject(lesson + ("anki_notes" to JsonObject(notes.mapValues { JsonPrimitive(it.value) }))))
+    }
+
     /** The page's changes (LessonIn): null fields leave the lesson's as they are. */
     fun update(id: String, changes: JsonObject, exported: Boolean = false): JsonObject? {
         val lesson = get(id) ?: return null

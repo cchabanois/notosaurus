@@ -39,6 +39,7 @@ class SendResult:
     sync_skipped: bool = False  # the profile isn't logged in to AnkiWeb: not tried
     converted: int = 0  # of the updated notes, those moved to another note type (options changed)
     moved: int = 0  # of the updated notes, those moved to another deck (the lesson's deck changed)
+    note_ids: dict[str, int] = field(default_factory=dict)  # card id → its note: kept with the lesson
     conversion_unsupported: bool = False  # AnkiConnect too old to change a note's type: added instead
     note_types_updated: int = 0  # made by an older Notosaurus: brought up to date
     restructured: list[str] = field(default_factory=list)  # a field or card added: Anki asks for a full sync
@@ -118,7 +119,9 @@ def same_as_packages(extra: dict) -> dict:
     return extra if settings.embedded() else {}
 
 
-async def send(notes: list[Note]) -> SendResult:
+async def send(notes: list[Note], sent_before: dict[str, int] | None = None) -> SendResult:
+    """`sent_before`: the lesson's notes from its last send, by card id: a card whose front was
+    corrected updates its own note (history kept) instead of making another."""
     async with _client() as client:
         note_types = list(dict.fromkeys(n.nt for n in notes))
         known = await _invoke(client, "modelNames")
@@ -128,6 +131,7 @@ async def send(notes: list[Note]) -> SendResult:
         moved, left = await _move_to_their_decks(client, notes)
 
         sending = _Sending(client, dict(zip(map(id, notes), guids(notes), strict=True)))
+        sending.known = await _known_notes(client, notes, sent_before or {})
         for deck, nt in dict.fromkeys((n.deck, n.nt) for n in notes):
             await sending.send(deck, nt, [n for n in notes if (n.deck, n.nt) == (deck, nt)])
         for tag, ids in sending.retag.items():
@@ -139,7 +143,8 @@ async def send(notes: list[Note]) -> SendResult:
             sending.updated,
             synced=False,
             converted=sending.converted,
-            moved=moved,
+            moved=moved + sending.moved,
+            note_ids=sending.sent,
             conversion_unsupported=sending.unsupported,
             note_types_updated=updated_types,
             restructured=restructured,
@@ -178,6 +183,18 @@ async def _move_to_their_decks(client: httpx.AsyncClient, notes: list[Note]) -> 
     return len({c["note"] for c in moving}), {c["deckName"] for c in moving}
 
 
+async def _known_notes(client: httpx.AsyncClient, notes: list[Note], known: dict[str, int]) -> dict[str, dict]:
+    """The notes the cards had at their last send, still in Anki, by card id; with the
+    decks their cards are in ("decks")."""
+    ids = {n.card_id: known[n.card_id] for n in notes if n.card_id in known}
+    infos = await _invoke(client, "notesInfo", notes=list(ids.values())) if ids else []
+    found = {i["noteId"]: i for i in infos if i and i.get("noteId")}  # {} for a note deleted in Anki
+    cards = [c for i in found.values() for c in i.get("cards", [])]
+    for card in await _invoke(client, "cardsInfo", cards=cards) if cards else []:
+        found[card["note"]].setdefault("decks", set()).add(card["deckName"])
+    return {card: found[note] for card, note in ids.items() if note in found}
+
+
 async def _create_note_types(client: httpx.AsyncClient, note_types: list) -> None:
     for nt in note_types:
         await _invoke(
@@ -210,10 +227,15 @@ class _Sending:
     unsupported: bool = False
     retag: dict[str, list[int]] = field(default_factory=dict)  # notes sent before they had the lesson's tag
     others: dict[str, dict] = field(default_factory=dict)  # per deck: its notes of the other Notosaurus note types
+    known: dict[str, dict] = field(default_factory=dict)  # card id → its note at the last send (_known_notes)
+    sent: dict[str, int] = field(default_factory=dict)  # card id → its note now
+    moved: int = 0  # known notes moved to the deck they go to now
 
     async def send(self, deck: str, nt, notes: list[Note]) -> None:
         existing = await self._existing(deck, nt)
         for note in notes:
+            if await self._by_card(deck, nt, note, existing):
+                continue
             if existing.get(note.key):
                 await self._update(existing[note.key].pop(0), note)
             elif not await self._convert(deck, nt, note):
@@ -233,20 +255,30 @@ class _Sending:
                 existing.setdefault(info["fields"][nt.key]["value"], []).append(info["noteId"])
         return existing
 
-    async def _update(self, note_id: int, note: Note) -> None:
-        await _invoke(self.client, "updateNoteFields", note={"id": note_id, "fields": note.fields})
-        for tag in (t for t in note.tags if t.startswith(TAG_PREFIX)):
-            self.retag.setdefault(tag, []).append(note_id)
-        self.updated += 1
+    async def _by_card(self, deck: str, nt, note: Note, existing: dict[str, list[int]]) -> bool:
+        """The card's own note from its last send (its front may have been corrected):
+        updated there, moved to this deck if it was elsewhere, or moved to the new note
+        type (options changed). False when it has none (deleted in Anki, never sent)."""
+        info = self.known.pop(note.card_id, None)
+        if not info or any(t.startswith(TAG_PREFIX) and t not in note.tags for t in info["tags"]):
+            return False  # none, or another lesson's too: left where it is (as _move_to_their_decks)
+        note_id = info["noteId"]
+        if info["modelName"] == nt.name:
+            await self._update(note_id, note)
+        elif family(info["modelName"]) != nt.family or not await self._change_type(info, nt, note):
+            return False
+        for ids in existing.values():  # not taken again by a card with its front
+            if note_id in ids:
+                ids.remove(note_id)
+        if info.get("cards") and info.get("decks", {deck}) != {deck}:
+            await _invoke(self.client, "changeDeck", cards=info["cards"], deck=deck)
+            self.moved += 1
+        return True
 
-    async def _convert(self, deck: str, nt, note: Note) -> bool:
-        """Sent before with other options (voice, reverse, typing, dictation): the same
-        note moves to the new note type, keeping its review history."""
-        if deck not in self.others:
-            self.others[deck] = await _other_notosaurus_notes(self.client, deck)
-        candidates = [i for i in self.others[deck].get((nt.family, nt.key, note.key), []) if i["modelName"] != nt.name]
-        old = candidates[0] if candidates else None
-        if not old or self.unsupported:
+    async def _change_type(self, old: dict, nt, note: Note) -> bool:
+        """The note moved to the note type `nt` (options changed), its history kept;
+        False with an AnkiConnect too old for it."""
+        if self.unsupported:
             return False
         try:
             tags = sorted({*old["tags"], *note.tags})
@@ -257,13 +289,32 @@ class _Sending:
                 raise
             self.unsupported = True  # an old AnkiConnect: added next to it, as before
             return False
-        self.others[deck][(nt.family, nt.key, note.key)].remove(old)
+        self.sent[note.card_id] = old["noteId"]
         self.updated += 1
         self.converted += 1
         return True
 
+    async def _update(self, note_id: int, note: Note) -> None:
+        await _invoke(self.client, "updateNoteFields", note={"id": note_id, "fields": note.fields})
+        for tag in (t for t in note.tags if t.startswith(TAG_PREFIX)):
+            self.retag.setdefault(tag, []).append(note_id)
+        self.sent[note.card_id] = note_id
+        self.updated += 1
+
+    async def _convert(self, deck: str, nt, note: Note) -> bool:
+        """Sent before with other options (voice, reverse, typing, dictation): the same
+        note moves to the new note type, keeping its review history."""
+        if deck not in self.others:
+            self.others[deck] = await _other_notosaurus_notes(self.client, deck)
+        candidates = [i for i in self.others[deck].get((nt.family, nt.key, note.key), []) if i["modelName"] != nt.name]
+        old = candidates[0] if candidates else None
+        if not old or not await self._change_type(old, nt, note):
+            return False
+        self.others[deck][(nt.family, nt.key, note.key)].remove(old)
+        return True
+
     async def _add(self, deck: str, nt, note: Note) -> None:
-        await _invoke(
+        self.sent[note.card_id] = await _invoke(
             self.client,
             "addNote",
             note={

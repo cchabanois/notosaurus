@@ -27,6 +27,7 @@ data class Sent(
     val deck: String,
     val updated: Int = 0,
     val moved: Int = 0, // the lesson's notes moved to the deck they go to now (its deck changed)
+    val notes: Map<String, Long> = emptyMap(), // a card's id → its note: kept with the lesson
 )
 
 /** The lesson's options, as the computer's note types have them. */
@@ -43,6 +44,7 @@ data class Media(
     val photos: Map<Int, File> = emptyMap(), // a photo's number → its file: the diagrams
     val lesson: String = "", // the lesson's id: with a label's number, which note a diagram card is
     val frames: Map<Int, List<Double>> = emptyMap(), // a photo's number → its diagram's frame (fractions)
+    val sentBefore: Map<String, Long> = emptyMap(), // a card's id → its note at the lesson's last send
 )
 
 /** Where the cards go (AnkiDroid; a fake in the tests). */
@@ -130,7 +132,7 @@ class Anki(private val context: Context) : AnkiTarget {
 
     /** A note to send: its note type, deck, fields (the first: its key, what tells it's
      * there already), tags. */
-    private class Note(val model: Long, val deck: String, val fields: Array<String>, val tags: Set<String>)
+    private class Note(val model: Long, val deck: String, val fields: Array<String>, val tags: Set<String>, val card: String)
 
     private fun add(deck: Deck, media: Media, options: Options): Sent {
         val added = mutableMapOf<File, String?>() // a file into AnkiDroid once, however many cards show it
@@ -146,7 +148,7 @@ class Anki(private val context: Context) : AnkiTarget {
             val key = card.id.ifBlank { if (media.lesson.isNotEmpty()) "${media.lesson}:$i" else html(card.front) }
             fun note(variant: String, fields: Map<String, String>): Note {
                 val type = noteTypes[variant]
-                return Note(model(type) ?: error("AnkiDroid refused the note type ${type.androidName}"), name, type.values(common + fields), tags)
+                return Note(model(type) ?: error("AnkiDroid refused the note type ${type.androidName}"), name, type.values(common + fields), tags, key)
             }
             val picture = media.pictures[card.picture]?.let { file(it, "image") }.orEmpty()
             when {
@@ -192,14 +194,31 @@ class Anki(private val context: Context) : AnkiTarget {
         var updated = 0
         var moved = 0
         var duplicates = 0
+        val sent = mutableMapOf<String, Long>()
         notes.groupBy { it.model to it.deck }.forEach { (key, group) ->
             val (model, name) = key
+            val did by lazy { deckId(name) ?: error("AnkiDroid refused the deck $name") }
+            // The card's own note from the last send (its front may have been corrected): updated
+            // there, history kept; none (deleted in AnkiDroid, other options), another lesson's: as below
+            val rest = group.filter { note ->
+                val id = media.sentBefore[note.card] ?: return@filter true
+                val there = api.getNote(id)?.takeIf { noteModel(id) == model } ?: return@filter true
+                if (there.tags.any { it.startsWith(TAG_PREFIX) && it !in own }) return@filter true
+                if (!there.fields.contentEquals(note.fields) || !there.tags.containsAll(note.tags)) {
+                    api.updateNoteFields(id, note.fields)
+                    api.updateNoteTags(id, there.tags + note.tags)
+                    updated++
+                }
+                if (moveCards(id, did)) moved++
+                sent[note.card] = id
+                false
+            }
+            if (rest.isEmpty()) return@forEach
             // There already: the same key (first field) in that note type. This lesson's (its
             // tag), or one sent before the lessons had tags: updated; another lesson's: left
-            val known = api.findDuplicateNotes(model, group.map { it.fields[0] })
-            val did by lazy { deckId(name) ?: error("AnkiDroid refused the deck $name") }
+            val known = api.findDuplicateNotes(model, rest.map { it.fields[0] })
             val fresh = mutableListOf<Note>()
-            group.forEachIndexed { i, note ->
+            rest.forEachIndexed { i, note ->
                 val found = known?.get(i).orEmpty()
                 val mine = found.firstOrNull { info -> own.any { it in info.tags } || info.tags.none { it.startsWith(TAG_PREFIX) } }
                 when {
@@ -213,14 +232,26 @@ class Anki(private val context: Context) : AnkiTarget {
                         }
                         // The lesson's deck (or the card's part) changed: its cards follow, history kept
                         if (moveCards(mine.id, did)) moved++
+                        sent[note.card] = mine.id
                     }
                 }
             }
             if (fresh.isEmpty()) return@forEach
             count += maxOf(0, api.addNotes(model, did, fresh.map { it.fields }, fresh.map { it.tags }))
+            // Their ids (addNotes gives only how many): this lesson's notes with their keys
+            api.findDuplicateNotes(model, fresh.map { it.fields[0] })?.let { added ->
+                fresh.forEachIndexed { i, note ->
+                    added.get(i)?.firstOrNull { info -> own.any { it in info.tags } }?.let { sent[note.card] = it.id }
+                }
+            }
         }
-        return Sent(count, duplicates, deck.cards.size - notes.size, deck.deck, updated, moved)
+        return Sent(count, duplicates, deck.cards.size - notes.size, deck.deck, updated, moved, sent)
     }
+
+    /** The note type of a note; null when it isn't in AnkiDroid any more. */
+    private fun noteModel(note: Long): Long? = context.contentResolver.query(
+        Uri.withAppendedPath(FlashCardsContract.Note.CONTENT_URI, note.toString()), arrayOf(FlashCardsContract.Note.MID), null, null, null,
+    )?.use { cursor -> if (cursor.moveToFirst()) cursor.getLong(0) else null }
 
     /** The note's cards moved into the deck `did` (AnkiDroid lets a card's deck be changed,
      * nothing else: its review history stays); whether any was elsewhere. */
