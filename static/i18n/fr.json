@@ -194,6 +194,7 @@
       "startWithPhoto": "📷 Commence par photographier la leçon",
       "downloadApkg": "Télécharger le fichier .apkg",
       "addToAnki": "📥 Ajouter à Anki",
+      "updateInAnki": "🔄 Mettre à jour dans Anki",
       "sending": "Envoi dans Anki…",
       "exportApkg": "⬇️ Exporter vers Anki (.apkg)",
       "exporting": "Préparation du paquet…"

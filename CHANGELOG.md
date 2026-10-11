@@ -41,6 +41,7 @@ Each pull request adds a line under **Unreleased**. See [Releasing](CONTRIBUTING
 
 ### Changed
 
+- Once a lesson is in Anki, its button says **🔄 Update in Anki** instead of “📥 Add to Anki”.
 - The pages load nothing from elsewhere any more: Alpine.js, KaTeX and the Nunito font come with Notosaurus, as pdf.js does (no CDN, no Google Fonts). A blocked CDN can't break the page, it works offline (the add-on, the Android app), and no third party sees its visits. A test checks it stays so.
 - Notosaurus's instructions reviewed: none imposes French (or English) any more, the lesson's or your language instead; “Word list” merged into “Language: vocabulary” (which takes a list or a topic without a photo); the language ones named alike (“Language: vocabulary”, “Language: sentences”, “Language: vocabulary in pictures”); “Diagram or map to complete”; the dictation's deck by subject; each says the same how to work without a photo. New: **Definitions**, **Language: conjugation**, **Methods (steps)**.
 - “✨ Tidy up” is no longer offered for Notosaurus's own instructions (⭐) as they are: only for instructions someone wrote, or a ⭐ one once changed.

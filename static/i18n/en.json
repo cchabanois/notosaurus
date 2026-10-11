@@ -194,6 +194,7 @@
       "startWithPhoto": "📷 Start by photographing the lesson",
       "downloadApkg": "Download the .apkg file",
       "addToAnki": "📥 Add to Anki",
+      "updateInAnki": "🔄 Update in Anki",
       "sending": "Sending to Anki…",
       "exportApkg": "⬇️ Export to Anki (.apkg)",
       "exporting": "Preparing the deck…"
