@@ -10,7 +10,9 @@ import pytest
 from fastapi.testclient import TestClient
 
 from app import ankiconnect, settings
+from app.attempts import Attempts
 from app.main import app
+from app.routes import admin as admin_routes
 from app.routes.devices import DEVICE_COOKIE
 from notosaurus_core import prices, tts
 
@@ -41,6 +43,17 @@ def anki_unreachable(request):
     raise httpx.ConnectError("refused")
 
 
+# Notosaurus answers only to an IP address or localhost (app/hosts.py), as phones and
+# the computer itself reach it: never to TestClient's default "testserver"
+PHONE = "http://192.168.1.20:8000"  # a phone on the Wi-Fi, by the computer's address
+COMPUTER = "http://127.0.0.1:8000"
+
+
+def on_the_computer(**kwargs) -> TestClient:
+    """A client on the computer itself (no token needed; the add-on's settings)."""
+    return TestClient(app, client=("127.0.0.1", 50000), base_url=COMPUTER, **kwargs)
+
+
 @pytest.fixture
 def client(tmp_path, monkeypatch):
     monkeypatch.setenv("NOTOSAURUS_DATA", str(tmp_path / "data"))
@@ -53,19 +66,21 @@ def client(tmp_path, monkeypatch):
     # Never reach a real Anki from the tests: AnkiConnect is "unreachable" unless a test fakes it.
     monkeypatch.setattr(ankiconnect, "_transport", httpx.MockTransport(anki_unreachable))
     monkeypatch.setattr(prices, "_transport", httpx.MockTransport(model_list))
+    monkeypatch.setattr(admin_routes, "attempts", Attempts())  # no wrong password left by another test
     synthesized.clear()
-    with TestClient(app) as c:
+    with TestClient(app, base_url=PHONE) as c:
         c.cookies.set(DEVICE_COOKIE, settings.device_token())  # a paired phone
         yield c
 
 
-ADMIN = {"X-Admin-Password": "secret"}
+PASSWORD = "secret-pw"  # 8 characters at least
+ADMIN = {"X-Admin-Password": PASSWORD}
 
 
 @pytest.fixture
 def admin(client):
     assert client.get("/api/admin").json()["password_set"] is False
-    assert client.post("/api/admin/password", json={"new": "secret"}).status_code == 204
+    assert client.post("/api/admin/password", json={"new": PASSWORD}).status_code == 204
     return client
 
 

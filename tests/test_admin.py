@@ -7,11 +7,11 @@ import sys
 
 import httpx
 import pytest
-from conftest import ADMIN
-from fastapi.testclient import TestClient
+from conftest import ADMIN, PASSWORD, on_the_computer
 
 from app import settings
-from app.main import app
+from app.attempts import Attempts
+from app.routes import admin as admin_routes
 from app.routes.devices import DEVICE_COOKIE
 from notosaurus_core.providers import openai_like
 
@@ -22,9 +22,61 @@ def test_admin_password_protected(admin):
     assert admin.get("/api/admin/settings", headers={"X-Admin-Password": "faux"}).status_code == 401
     assert admin.get("/api/admin/settings", headers=ADMIN).status_code == 200
     # Once set, changing it requires the current password
-    assert admin.post("/api/admin/password", json={"new": "pirate"}).status_code == 401
-    assert admin.post("/api/admin/password", json={"current": "secret", "new": "nouveau"}).status_code == 204
-    assert admin.get("/api/admin/settings", headers={"X-Admin-Password": "nouveau"}).status_code == 200
+    assert admin.post("/api/admin/password", json={"new": "pirate-pw"}).status_code == 401
+    assert admin.post("/api/admin/password", json={"current": "secret-pw", "new": "nouveau-pw"}).status_code == 204
+    assert admin.get("/api/admin/settings", headers={"X-Admin-Password": "nouveau-pw"}).status_code == 200
+
+
+def test_admin_password_8_characters_at_least(client):
+    """The settings hold the API keys and, standalone, open to the whole network."""
+    assert client.post("/api/admin/password", json={"new": "1234567"}).status_code == 422
+    assert client.post("/api/admin/password", json={"new": "12345678"}).status_code == 204
+    # A short password chosen before still opens the settings; a new one must be longer
+    settings.set_password("abcd")
+    assert client.get("/api/admin/settings", headers={"X-Admin-Password": "abcd"}).status_code == 200
+    assert client.post("/api/admin/password", json={"current": "abcd", "new": "efgh"}).status_code == 422
+
+
+def test_wrong_passwords_lock_the_address_out(admin, monkeypatch):
+    """Guessing the password: after 5 wrong ones, each further one locks the address out
+    for twice as long; even the right password waits. Other addresses aren't affected."""
+    now = [1000.0]
+    monkeypatch.setattr(admin_routes, "attempts", Attempts(clock=lambda: now[0]))
+    wrong = {"X-Admin-Password": "guess-123"}
+    for _ in range(5):
+        assert admin.get("/api/admin/settings", headers=wrong).status_code == 401
+    assert admin.get("/api/admin/settings", headers=ADMIN).status_code == 200  # 5 free: the count is cleared
+    for _ in range(6):
+        assert admin.get("/api/admin/settings", headers=wrong).status_code == 401
+    locked = admin.get("/api/admin/settings", headers=ADMIN)
+    assert locked.status_code == 429
+    assert locked.json()["detail"] == {"code": "admin.too_many_attempts", "params": {"seconds": 1}}
+    # Changing the password is guessing too
+    body = {"current": PASSWORD, "new": "nouveau-pw"}
+    assert admin.post("/api/admin/password", json=body).status_code == 429
+    with on_the_computer() as other:  # another address
+        assert other.get("/api/admin/settings", headers=ADMIN).status_code == 200
+
+    now[0] += 1
+    assert admin.get("/api/admin/settings", headers=wrong).status_code == 401  # 7th: 2 s
+    assert admin.get("/api/admin/settings", headers=ADMIN).json()["detail"]["params"] == {"seconds": 2}
+    now[0] += 2
+    assert admin.get("/api/admin/settings", headers=ADMIN).status_code == 200
+
+
+def test_lockout_grows_up_to_a_limit():
+    now = [0.0]
+    attempts = Attempts(clock=lambda: now[0])
+    waits = []
+    for _ in range(25):
+        attempts.failed("192.168.1.20")
+        waits.append(attempts.wait("192.168.1.20"))
+        now[0] += waits[-1]
+    assert waits[:9] == [0, 0, 0, 0, 0, 1, 2, 4, 8]
+    assert max(waits) == waits[-1] == 15 * 60
+    assert attempts.wait("192.168.1.21") == 0
+    attempts.succeeded("192.168.1.20")
+    assert attempts.wait("192.168.1.20") == 0
 
 
 def test_admin_keys_never_sent_back(admin, monkeypatch, tmp_path):
@@ -55,7 +107,7 @@ def test_admin_keys_never_sent_back(admin, monkeypatch, tmp_path):
 def test_admin_invalid_values(admin):
     assert admin.put("/api/admin/settings", headers=ADMIN, json={"llm": "skynet"}).status_code == 422
     assert admin.put("/api/admin/settings", headers=ADMIN, json={"tts_rate": "vite"}).status_code == 422
-    assert admin.post("/api/admin/password", json={"current": "secret", "new": "abc"}).status_code == 422
+    assert admin.post("/api/admin/password", json={"current": "secret-pw", "new": "abc"}).status_code == 422
 
 
 def test_admin_connection_test(admin):
@@ -80,9 +132,9 @@ def test_addon_settings_only_on_the_computer(client, monkeypatch):
     assert client.get("/api/admin").json() == {"password_set": False, "password_needed": False, "allowed": False}
     assert client.get("/api/admin/settings").status_code == 403
     assert client.get("/api/admin/settings").json()["detail"]["code"] == "admin.local_only"
-    assert client.post("/api/admin/password", json={"new": "pirate"}).status_code == 403
+    assert client.post("/api/admin/password", json={"new": "pirate-pw"}).status_code == 403
 
-    with TestClient(app, client=("127.0.0.1", 50000)) as local:
+    with on_the_computer() as local:
         assert local.get("/api/admin").json()["allowed"] is True
         assert local.get("/api/admin/settings").status_code == 200  # no password needed
         assert local.put("/api/admin/settings", json={"tts_rate": "+0%"}).status_code == 200

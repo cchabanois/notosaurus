@@ -762,12 +762,16 @@
       "not_found": "Lição não encontrada.",
       "read_only": "Somente leitura: só o perfil do Anki de {owner} pode alterar esta lição."
     },
+    "host": {
+      "not_allowed": "O Notosaurus só responde ao endereço IP do computador ou a localhost: abra-o assim, ou defina {host} em NOTOSAURUS_PUBLIC_URL."
+    },
     "photo": {
       "not_found": "Foto não encontrada."
     },
     "extract": {
       "no_input": "Adicione uma foto ou escreva instruções.",
       "too_many": "No máximo {max} fotos.",
+      "too_large": "Uma foto está pesada demais: no máximo {max} MB.",
       "bad_format": "Formato não suportado: {format}",
       "cancelled": "A criação da lição foi cancelada."
     },
@@ -811,6 +815,7 @@
     "admin": {
       "password_required": "Senha de administrador necessária.",
       "wrong_password": "Senha incorreta.",
+      "too_many_attempts": "Senhas incorretas demais: tente de novo em {seconds} s.",
       "local_only": "As configurações são abertas pelo Anki, no computador: Ferramentas → Notosaurus → Configurações."
     },
     "addon": {

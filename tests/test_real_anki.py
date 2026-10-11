@@ -16,7 +16,7 @@ from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 
 import pytest
-from conftest import fake_synthesize
+from conftest import PHONE, fake_synthesize
 from helpers import plain_image
 
 anki_collection = pytest.importorskip("anki.collection")
@@ -81,7 +81,7 @@ def notosaurus(tmp_path, monkeypatch):
     monkeypatch.setenv("NOTOSAURUS_DATA", str(tmp_path / "data"))
     monkeypatch.setenv("NOTOSAURUS_LLM", "fake")
     monkeypatch.setattr(tts, "_synthesize", fake_synthesize)
-    with TestClient(app) as client:
+    with TestClient(app, base_url=PHONE) as client:
         client.cookies.set(DEVICE_COOKIE, settings.device_token())  # a paired phone
         yield client
 
@@ -153,8 +153,8 @@ def test_bridge_on_a_real_collection(bridged, col):
     assert set(decks) <= set(client.get("/api/decks").json())
 
     # Anki's profiles, for the owner picker in the settings
-    assert client.post("/api/admin/password", json={"new": "secret"}).status_code == 204
-    listing = client.get("/api/admin/lessons", headers={"X-Admin-Password": "secret"}).json()
+    assert client.post("/api/admin/password", json={"new": "secret-pw"}).status_code == 204
+    listing = client.get("/api/admin/lessons", headers={"X-Admin-Password": "secret-pw"}).json()
     assert listing["profiles"] == ["Léa", "Paul"]
 
     # Profile screen (no collection open): refused with a clear error

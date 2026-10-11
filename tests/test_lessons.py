@@ -85,6 +85,20 @@ def test_invalid_lesson_id(client):
     assert lessons.folder("../prompts.json") is None
 
 
+def test_card_ids_checked(client):
+    """A card's id names its picture's file (picture-<id>-<hash>.jpg): from the page, only
+    letters and digits, never a path ("..\\" on Windows)."""
+    lesson = extract_lesson(client)
+    url = f"/api/lessons/{lesson['id']}"
+    for bad in ["../../evil", "..\\..\\evil", "a/b", "ABC", "abc\n", "a" * 41, "é"]:
+        cards = [{"id": bad, "front": "le chat", "back": "el gato"}]
+        assert client.put(url, json={"deck": "D", "cards": cards}).status_code == 422, bad
+    # The ids Notosaurus, the page and the Android app give (12 hex), none yet, a short one
+    cards = [{"id": i, "front": "le chat", "back": "el gato"} for i in ("", "0f3a9c41b2de", "rev1")]
+    assert client.put(url, json={"deck": "D", "cards": cards}).status_code == 200
+    assert all(c["id"] for c in client.get(url).json()["cards"])
+
+
 def test_slugify():
     assert storage.slugify("Espagnol::Leçon 5 - La famille") == "espagnol-lecon-5-la-famille"
     assert storage.slugify("¿Cómo te llamas?") == "como-te-llamas"

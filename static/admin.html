@@ -63,7 +63,7 @@
       <p class="hint" x-text="$t('admin.create.hint')"></p>
       <form @submit.prevent="createPassword()">
         <label class="field"><span x-text="$t('admin.password')"></span>
-          <input type="password" x-model="pw.new" autocomplete="new-password" minlength="4" required></label>
+          <input type="password" x-model="pw.new" autocomplete="new-password" minlength="8" required></label>
         <label class="field"><span x-text="$t('admin.confirm')"></span>
           <input type="password" x-model="pw.confirm" autocomplete="new-password" required></label>
         <button class="btn primary wide" x-text="$t('admin.create.button')"></button>
@@ -395,7 +395,7 @@
           <h2><span x-text="$t('admin.passwordSection.title')"></span> <a class="help-link" :href="$docs('privacy')" target="_blank" rel="noopener" :aria-label="$t('common.helpOn', { topic: $t('admin.passwordSection.title') })" :title="$t('common.helpOn', { topic: $t('admin.passwordSection.title') })">?</a></h2>
           <form @submit.prevent="changePassword()">
             <label class="field"><span x-text="$t('admin.passwordSection.new')"></span>
-              <input type="password" x-model="pw.new" autocomplete="new-password" minlength="4"></label>
+              <input type="password" x-model="pw.new" autocomplete="new-password" minlength="8"></label>
             <label class="field"><span x-text="$t('admin.confirm')"></span>
               <input type="password" x-model="pw.confirm" autocomplete="new-password"></label>
             <button class="btn soft" :disabled="!pw.new" x-text="$t('admin.passwordSection.button')"></button>

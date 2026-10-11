@@ -2,9 +2,10 @@ import shutil
 import tempfile
 from pathlib import Path
 
-from fastapi import BackgroundTasks, Header, Request
+from fastapi import BackgroundTasks, Header, Request, UploadFile
 
 from notosaurus_core import diagrams, pictures, tts
+from notosaurus_core.relay_api import MAX_IMAGE_BYTES
 
 from .. import ankiconnect, i18n, lessons, settings
 from ..errors import AppError
@@ -13,6 +14,15 @@ from ..models import ExportRequest, Lesson
 STATIC_DIR = Path(__file__).parent.parent.parent / "static"
 IMAGE_TYPES = {"image/jpeg", "image/png", "image/webp", "image/gif"}
 MAX_IMAGES = 10
+
+
+async def read_photo(photo: UploadFile) -> bytes:
+    """An uploaded photo, read whole only up to the relay's cap: the page sends them
+    prepared (a few hundred KB), anything far heavier is refused before filling memory."""
+    data = await photo.read(MAX_IMAGE_BYTES + 1)
+    if len(data) > MAX_IMAGE_BYTES:
+        raise AppError("extract.too_large", 413, max=MAX_IMAGE_BYTES // (1024 * 1024))
+    return data
 
 
 def page_lang(x_notosaurus_lang: str | None = Header(None)) -> str:
