@@ -263,6 +263,22 @@
         "other": "Elimina le {count} da Anki"
       }
     },
+    "welcome": {
+      "title": "Prima di iniziare",
+      "parentTitle": "Notosaurus è uno strumento per i genitori.",
+      "parent": "Bisogna essere adulti per usarlo: sei tu a preparare le carte, tuo figlio le ripassa in Anki.",
+      "aiTitle": "Usa l'IA Gemini di Google",
+      "ai": "per leggere le foto e creare le carte. Foto, consegne e dettature passano per il servizio Notosaurus il tempo di creare le carte, senza esservi registrate, e sono trattate nell'Unione europea.",
+      "onPhone": "Le tue lezioni restano sul tuo telefono.",
+      "google": "Google può conservare ciò che riceve fino a 90 giorni per rilevare abusi, senza usarlo per addestrare la sua IA.",
+      "guardTitle": "L'IA ha protezioni adatte agli studenti,",
+      "guard": "ma può sbagliare: controlla le carte prima di darle a tuo figlio.",
+      "nameTitle": "Una pagina di quaderno mostra spesso il nome del bambino:",
+      "name": "nascondilo con 🖍️ prima dell'invio.",
+      "policy": "Informativa sulla privacy",
+      "agree": "Sono un genitore (un adulto) e accetto l'informativa sulla privacy.",
+      "accept": "Accetta"
+    },
     "export": {
       "noSound": "Mazzo esportato, ma {count} carta/e senza suono (sintesi vocale non disponibile).",
       "done": "✓ Pacchetto scaricato: aprilo con Anki."

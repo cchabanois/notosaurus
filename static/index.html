@@ -788,6 +788,31 @@
     </template>
   </div>
 
+  <!-- The app's first launch: a parent's tool, the AI it uses, the privacy policy; accepted
+       to go on (nothing ticked beforehand), not closed otherwise -->
+  <div class="sheet-backdrop top" x-cloak x-show="welcome.open"></div>
+  <aside class="sheet top welcome" x-cloak x-show="welcome.open" role="dialog" aria-modal="true" :aria-label="$t('app.welcome.title')">
+    <div class="sheet-head">
+      <h2 x-text="$t('app.welcome.title')"></h2>
+    </div>
+    <div class="sheet-body">
+      <p><strong x-text="$t('app.welcome.parentTitle')"></strong> <span x-text="$t('app.welcome.parent')"></span></p>
+      <p><strong x-text="$t('app.welcome.aiTitle')"></strong> <span x-text="$t('app.welcome.ai')"></span>
+        <strong x-text="$t('app.welcome.onPhone')"></strong> <span x-text="$t('app.welcome.google')"></span></p>
+      <p><strong x-text="$t('app.welcome.guardTitle')"></strong> <span x-text="$t('app.welcome.guard')"></span></p>
+      <p><strong x-text="$t('app.welcome.nameTitle')"></strong> <span x-text="$t('app.welcome.name')"></span></p>
+      <p><a :href="$docs('app-privacy')" target="_blank" rel="noopener" x-text="$t('app.welcome.policy')"></a></p>
+      <label class="welcome-agree">
+        <input type="checkbox" x-model="welcome.agreed">
+        <span x-text="$t('app.welcome.agree')"></span>
+      </label>
+      <div class="sheet-actions">
+        <button type="button" class="btn primary wide" @click="acceptWelcome()" :disabled="!welcome.agreed || welcome.busy"
+                x-text="$t('app.welcome.accept')"></button>
+      </div>
+    </div>
+  </aside>
+
   <!-- After a send: the lesson's notes in Anki no card has any more (cards deleted, or remade
        with another front): deleted only when asked -->
   <div class="sheet-backdrop top" x-cloak x-show="leftovers.open" x-transition.opacity @click="leftovers.open = false"></div>

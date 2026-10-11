@@ -223,6 +223,10 @@ class LocalServer(
         const val COOKIE = "notosaurus_app"
         const val MAX_PHOTOS = 10 // a lesson's pages, as on the computer (MAX_IMAGES)
 
+        // The welcome accepted (its version): raised when what it says changes a lot, so it shows again
+        const val WELCOME = "welcome"
+        const val WELCOME_VERSION = 1
+
         // The settings
         const val RELAY = "relay"
         const val KEY = "key" // the licence key: saved per relay (keyOf), this name only before

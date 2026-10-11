@@ -263,6 +263,22 @@
         "other": "Supprimer les {count} d'Anki"
       }
     },
+    "welcome": {
+      "title": "Avant de commencer",
+      "parentTitle": "Notosaurus est un outil pour les parents.",
+      "parent": "Il faut être un adulte pour l'utiliser : c'est toi qui prépares les cartes, ton enfant les révise dans Anki.",
+      "aiTitle": "Il utilise l'IA Gemini de Google",
+      "ai": "pour lire les photos et faire les cartes. Les photos, consignes et dictées passent par le service Notosaurus le temps de faire les cartes, sans y être enregistrées, et sont traitées dans l'Union européenne.",
+      "onPhone": "Tes leçons restent sur ton téléphone.",
+      "google": "Google peut garder ce qui lui est envoyé jusqu'à 90 jours pour détecter les abus, sans s'en servir pour entraîner son IA.",
+      "guardTitle": "L'IA a des garde-fous adaptés aux élèves,",
+      "guard": "mais elle peut se tromper : vérifie les cartes avant de les donner à ton enfant.",
+      "nameTitle": "Une page de cahier montre souvent le nom de l'enfant :",
+      "name": "cache-le avec 🖍️ avant l'envoi.",
+      "policy": "Politique de confidentialité",
+      "agree": "Je suis un parent (un adulte) et j'accepte la politique de confidentialité.",
+      "accept": "Accepter"
+    },
     "export": {
       "noSound": "Paquet exporté, mais {count} carte(s) sans son (synthèse vocale indisponible).",
       "done": "✓ Paquet téléchargé : ouvre-le avec Anki."
