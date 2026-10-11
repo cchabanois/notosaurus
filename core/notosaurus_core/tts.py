@@ -18,6 +18,7 @@ import edge_tts
 
 from . import files
 from .cards import is_choice, is_cloze
+from .errors import loggable
 from .models import Card
 
 log = logging.getLogger("notosaurus")
@@ -98,7 +99,8 @@ async def tts_many(texts: list[str], voice: str, directory: Path, rate: str = RA
             try:
                 return text, await tts(text, voice, directory, rate)
             except Exception as e:  # network, unknown voice…: the card goes out without sound
-                log.warning("TTS %s %r: %s", voice, text, e)
+                # Never the text (no lesson in logs), nor the message (it may quote it)
+                log.warning("TTS %s failed (%d characters): %s", voice, len(text), loggable(e))
                 return text, None
 
     results = await asyncio.gather(*(one(t) for t in dict.fromkeys(texts)))

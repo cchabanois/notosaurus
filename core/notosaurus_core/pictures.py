@@ -21,7 +21,7 @@ from PIL import ImageOps
 from . import config, figures, files, llm, recommended, stock
 from .cards import is_cloze
 from .config import AIConfig
-from .errors import AppError
+from .errors import AppError, loggable
 from .models import Card, PictureSource
 from .providers import gemini
 
@@ -369,10 +369,10 @@ async def draw_all(s: AIConfig, folder: Path, cards: list[Card]) -> tuple[int, d
                 card.picture = await figure_or_picture(s, folder, card)
             except AppError as e:
                 failures.append(e.detail())
-                log.warning("Picture for %r: %s", card.figure or card.picture_prompt, e)
+                log.warning("Picture not drawn: %s", loggable(e))  # never the subject: no lesson in logs
             except (OSError, ValueError) as e:  # not an image
                 failures.append(PictureError("picture.empty").detail())
-                log.warning("Picture for %r: %s", card.figure or card.picture_prompt, e)
+                log.warning("Picture not an image: %s", loggable(e))
 
     await asyncio.gather(*(one(c) for c in todo))
     return len(failures), (failures[0] if failures else None)
