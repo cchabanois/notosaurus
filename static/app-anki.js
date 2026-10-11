@@ -93,6 +93,7 @@ const ankiPart = {
       if (r.added) parts.push(t("app.send.added", { count: r.added }));
       if (r.updated) parts.push(t("app.send.updated", { count: r.updated }));
       if (r.converted) parts.push(t("app.send.converted", { count: r.converted }));
+      if (r.moved) parts.push(t("app.send.moved", { count: r.moved }));
       let message = t("app.send.done", { parts: parts.join(", ") || t("app.send.nothing") });
       if (r.synced) message += " " + t("app.send.synced");
       this.notify(message, true);

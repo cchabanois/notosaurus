@@ -20,7 +20,14 @@ import kotlin.random.Random
 
 /** What was done with the cards: added, updated (sent before, changed since), already in
  * AnkiDroid (another lesson's), left out (a diagram card without its photo). */
-data class Sent(val added: Int, val duplicates: Int, val skipped: Int, val deck: String, val updated: Int = 0)
+data class Sent(
+    val added: Int,
+    val duplicates: Int,
+    val skipped: Int,
+    val deck: String,
+    val updated: Int = 0,
+    val moved: Int = 0, // the lesson's notes moved to the deck they go to now (its deck changed)
+)
 
 /** The lesson's options, as the computer's note types have them. */
 data class Options(
@@ -183,12 +190,14 @@ class Anki(private val context: Context) : AnkiTarget {
         }
         var count = 0
         var updated = 0
+        var moved = 0
         var duplicates = 0
         notes.groupBy { it.model to it.deck }.forEach { (key, group) ->
             val (model, name) = key
             // There already: the same key (first field) in that note type. This lesson's (its
             // tag), or one sent before the lessons had tags: updated; another lesson's: left
             val known = api.findDuplicateNotes(model, group.map { it.fields[0] })
+            val did by lazy { deckId(name) ?: error("AnkiDroid refused the deck $name") }
             val fresh = mutableListOf<Note>()
             group.forEachIndexed { i, note ->
                 val found = known?.get(i).orEmpty()
@@ -196,18 +205,35 @@ class Anki(private val context: Context) : AnkiTarget {
                 when {
                     found.isEmpty() -> fresh += note
                     mine == null -> duplicates++
-                    else -> if (!mine.fields.contentEquals(note.fields) || !mine.tags.containsAll(note.tags)) {
-                        api.updateNoteFields(mine.id, note.fields)
-                        api.updateNoteTags(mine.id, mine.tags + note.tags)
-                        updated++
+                    else -> {
+                        if (!mine.fields.contentEquals(note.fields) || !mine.tags.containsAll(note.tags)) {
+                            api.updateNoteFields(mine.id, note.fields)
+                            api.updateNoteTags(mine.id, mine.tags + note.tags)
+                            updated++
+                        }
+                        // The lesson's deck (or the card's part) changed: its cards follow, history kept
+                        if (moveCards(mine.id, did)) moved++
                     }
                 }
             }
             if (fresh.isEmpty()) return@forEach
-            val did = deckId(name) ?: error("AnkiDroid refused the deck $name")
             count += maxOf(0, api.addNotes(model, did, fresh.map { it.fields }, fresh.map { it.tags }))
         }
-        return Sent(count, duplicates, deck.cards.size - notes.size, deck.deck, updated)
+        return Sent(count, duplicates, deck.cards.size - notes.size, deck.deck, updated, moved)
+    }
+
+    /** The note's cards moved into the deck `did` (AnkiDroid lets a card's deck be changed,
+     * nothing else: its review history stays); whether any was elsewhere. */
+    private fun moveCards(note: Long, did: Long): Boolean {
+        val cards = Uri.withAppendedPath(Uri.withAppendedPath(FlashCardsContract.Note.CONTENT_URI, note.toString()), "cards")
+        val elsewhere = context.contentResolver.query(
+            cards, arrayOf(FlashCardsContract.Card.CARD_ORD, FlashCardsContract.Card.DECK_ID), null, null, null,
+        )?.use { cursor ->
+            buildList { while (cursor.moveToNext()) if (cursor.getLong(1) != did) add(cursor.getInt(0)) }
+        }.orEmpty()
+        val values = ContentValues().apply { put(FlashCardsContract.Card.DECK_ID, did) }
+        elsewhere.forEach { ord -> context.contentResolver.update(Uri.withAppendedPath(cards, ord.toString()), values, null, null) }
+        return elsewhere.isNotEmpty()
     }
 
     /** The photo as AnkiDroid shows the diagram: cropped to `box` (the whole photo

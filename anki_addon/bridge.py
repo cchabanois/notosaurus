@@ -186,7 +186,15 @@ def _notes_info(p: dict) -> list[dict]:
     for note_id in p["notes"]:
         note = _col().get_note(note_id)
         fields = {name: {"value": value, "order": i} for i, (name, value) in enumerate(note.items())}
-        result.append({"noteId": note.id, "modelName": note.note_type()["name"], "fields": fields, "tags": note.tags})
+        result.append(
+            {
+                "noteId": note.id,
+                "modelName": note.note_type()["name"],
+                "fields": fields,
+                "tags": note.tags,
+                "cards": list(note.card_ids()),
+            }
+        )
     return result
 
 
@@ -245,6 +253,19 @@ def _add_note(p: dict) -> int:
     col.add_note(note, col.decks.id(spec["deckName"], create=True))
     _schedule_refresh()
     return note.id
+
+
+def _cards_info(p: dict) -> list[dict]:
+    col = _col()
+    cards = [col.get_card(card_id) for card_id in p["cards"]]
+    return [{"cardId": c.id, "note": c.nid, "deckName": col.decks.name(c.did)} for c in cards]
+
+
+def _change_deck(p: dict) -> None:
+    # A lesson whose deck changed: its cards moved, their review history with them
+    col = _col()
+    col.set_deck(list(p["cards"]), col.decks.id(p["deck"], create=True))
+    _schedule_refresh()
 
 
 def _find_cards(p: dict) -> list[int]:
@@ -313,6 +334,8 @@ ACTIONS: dict[str, Callable[[dict], Any]] = {
     "updateNoteFields": _update_note_fields,
     "updateNoteModel": _update_note_model,
     "findCards": _find_cards,
+    "cardsInfo": _cards_info,
+    "changeDeck": _change_deck,
     "addTags": _add_tags,
     "deleteNotes": _delete_notes,
     "deleteDecks": _delete_decks,

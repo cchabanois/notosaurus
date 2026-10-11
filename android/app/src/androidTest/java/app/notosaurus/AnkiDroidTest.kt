@@ -49,6 +49,30 @@ class AnkiDroidTest {
     }
 
     @Test
+    fun theLessonsDeckChangedItsCardsMove() {
+        val anki = Anki(Device.context)
+        val lesson = "move-$run"
+        val cards = listOf(Card("rouge $run", "rojo", subdeck = "Couleurs"), Card("bleu $run", "azul"))
+        assertEquals(2, anki.send(Deck("Notosaurus test $run", cards), Media(lesson = lesson)).added)
+        val notes = anki.lessonNotes(lesson)!!
+
+        // Sent again to another deck: the same notes, their cards moved there
+        val moved = anki.send(Deck("Notosaurus test $run::5ème", cards), Media(lesson = lesson))
+        assertEquals(listOf(0, 2), listOf(moved.added, moved.moved))
+        assertEquals(notes.sorted(), anki.lessonNotes(lesson)!!.sorted())
+        val decks = notes.flatMap { note ->
+            val uri = Uri.withAppendedPath(Uri.withAppendedPath(FlashCardsContract.Note.CONTENT_URI, note.toString()), "cards")
+            Device.context.contentResolver.query(uri, arrayOf(FlashCardsContract.Card.DECK_ID), null, null, null)!!.use { c ->
+                buildList { while (c.moveToNext()) add(c.getLong(0)) }
+            }
+        }.map { AddContentApi(Device.context).deckList!![it] }
+        assertEquals(setOf("Notosaurus test $run::5ème::Couleurs", "Notosaurus test $run::5ème"), decks.toSet())
+
+        // Sent again as it is: nothing moves
+        assertEquals(0, anki.send(Deck("Notosaurus test $run::5ème", cards), Media(lesson = lesson)).moved)
+    }
+
+    @Test
     fun completeCardsUpdatedThenDeletedWithTheLesson() {
         val anki = Anki(Device.context)
         val lesson = "test-$run"

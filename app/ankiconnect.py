@@ -2,7 +2,8 @@
 
 https://foosoft.net/projects/anki-connect/ — Anki must be running with the add-on
 installed. Notes already sent are updated (same note type, deck and front) instead
-of duplicated; notes deleted in Notosaurus are left untouched in Anki.
+of duplicated, and moved first when the lesson's deck (or a card's part) changed;
+notes deleted in Notosaurus are left untouched in Anki.
 """
 
 import base64
@@ -37,6 +38,7 @@ class SendResult:
     sync_error: dict | None = None  # {"code", "params"}, translated by the page
     sync_skipped: bool = False  # the profile isn't logged in to AnkiWeb: not tried
     converted: int = 0  # of the updated notes, those moved to another note type (options changed)
+    moved: int = 0  # of the updated notes, those moved to another deck (the lesson's deck changed)
     conversion_unsupported: bool = False  # AnkiConnect too old to change a note's type: added instead
     note_types_updated: int = 0  # made by an older Notosaurus: brought up to date
     restructured: list[str] = field(default_factory=list)  # a field or card added: Anki asks for a full sync
@@ -123,18 +125,21 @@ async def send(notes: list[Note]) -> SendResult:
         await _create_note_types(client, [nt for nt in note_types if nt.name not in known])
         updated_types, restructured = await _bring_up_to_date(client, [nt for nt in note_types if nt.name in known])
         await _store_media(client, notes)
+        moved, left = await _move_to_their_decks(client, notes)
 
         sending = _Sending(client, dict(zip(map(id, notes), guids(notes), strict=True)))
         for deck, nt in dict.fromkeys((n.deck, n.nt) for n in notes):
             await sending.send(deck, nt, [n for n in notes if (n.deck, n.nt) == (deck, nt)])
         for tag, ids in sending.retag.items():
             await _invoke(client, "addTags", notes=ids, tags=tag)
+        await _drop_empty_decks(client, left - {n.deck for n in notes})
 
         result = SendResult(
             sending.added,
             sending.updated,
             synced=False,
             converted=sending.converted,
+            moved=moved,
             conversion_unsupported=sending.unsupported,
             note_types_updated=updated_types,
             restructured=restructured,
@@ -142,6 +147,35 @@ async def send(notes: list[Note]) -> SendResult:
         if not restructured:  # else Anki asks which side to keep: the user's choice, in Anki
             await _sync(client, result)
         return result
+
+
+async def _move_to_their_decks(client: httpx.AsyncClient, notes: list[Note]) -> tuple[int, set[str]]:
+    """The lesson's notes already in Anki (its tag) that are in another deck than where
+    they go now (the lesson's deck, or a card's part, changed): their cards moved there,
+    review history kept, so that the send updates them instead of adding them again.
+    A note another lesson uses too stays. How many moved, and the decks they left."""
+    tags = {t for n in notes for t in n.tags if t.startswith(TAG_PREFIX)}
+    if len(tags) != 1:
+        return 0, set()
+    (tag,) = tags
+    key_field = {n.nt.family: n.nt.key for n in notes}  # a note type's family: which field tells it
+    target = {(n.nt.family, n.key): n.deck for n in notes}
+    ids = await _invoke(client, "findNotes", query=f'"tag:{_search(tag)}"')
+    infos = await _invoke(client, "notesInfo", notes=ids) if ids else []
+    going: dict[int, str] = {}  # card id → its deck now
+    for info in infos:
+        if any(t.startswith(TAG_PREFIX) and t != tag for t in info["tags"]):
+            continue
+        kind = family(info["modelName"])
+        deck = target.get((kind, info["fields"].get(key_field.get(kind, ""), {}).get("value")))
+        going.update(dict.fromkeys(info.get("cards", []), deck) if deck else {})
+    cards = await _invoke(client, "cardsInfo", cards=list(going)) if going else []
+    moving = [c for c in cards if c["deckName"] != going[c["cardId"]]]
+    for deck in dict.fromkeys(going[c["cardId"]] for c in moving):
+        await _invoke(
+            client, "changeDeck", cards=[c["cardId"] for c in moving if going[c["cardId"]] == deck], deck=deck
+        )
+    return len({c["note"] for c in moving}), {c["deckName"] for c in moving}
 
 
 async def _create_note_types(client: httpx.AsyncClient, note_types: list) -> None:
@@ -341,6 +375,15 @@ async def find_lesson_notes(
         return sorted(found)
 
 
+async def _drop_empty_decks(client: httpx.AsyncClient, decks: set[str]) -> None:
+    """`decks` and their parent decks left without any card deleted (a deck still holding
+    cards, even in a subdeck, stays; Anki's "Default" too)."""
+    parents_too = _with_parents(list(decks)) - {"Default"}
+    for deck in sorted(parents_too, key=lambda d: d.count("::"), reverse=True):  # subdecks first
+        if not await _invoke(client, "findCards", query=f'"deck:{_search(deck)}"'):
+            await _invoke(client, "deleteDecks", decks=[deck], cardsToo=True)
+
+
 def _with_parents(decks: list[str]) -> set[str]:
     return {"::".join(d.split("::")[: n + 1]) for d in decks for n in range(d.count("::") + 1)}
 
@@ -352,10 +395,7 @@ async def delete_notes(ids: list[int], decks: list[str]) -> SendResult:
     async with _client() as client:
         if ids:
             await _invoke(client, "deleteNotes", notes=ids)
-        parents_too = _with_parents(decks) - {"Default"}
-        for deck in sorted(parents_too, key=lambda d: d.count("::"), reverse=True):  # subdecks first
-            if not await _invoke(client, "findCards", query=f'"deck:{_search(deck)}"'):
-                await _invoke(client, "deleteDecks", decks=[deck], cardsToo=True)
+        await _drop_empty_decks(client, set(decks))
         result = SendResult(added=0, updated=0, synced=False)
         await _sync(client, result)
         return result

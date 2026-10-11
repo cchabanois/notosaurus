@@ -35,6 +35,7 @@ def test_direct_send_to_anki(anki, client):
         "sync_error": None,
         "sync_skipped": False,
         "converted": 0,
+        "moved": 0,
         "conversion_unsupported": False,
         "note_types_updated": 0,
         "restructured": [],
@@ -282,3 +283,42 @@ def test_a_part_named_as_the_deck_isnt_added_twice():
     assert _deck_name("Anglais::5ème", "School subjects") == "Anglais::5ème::School subjects"
     assert _deck_name("Anglais::5ème", "") == "Anglais::5ème"
     assert _deck_name("School subjects", "School subjects") == "School subjects"
+
+
+def test_the_lessons_deck_changed_its_cards_move(anki, client):
+    """Sent, then sent again to another deck (and a part renamed): its notes move there
+    with their review history, updated, not added twice; the decks left empty go."""
+    lesson = extract_lesson(client)
+    body = {"deck": "Espagnol::Leçon 5", "cards": lesson["cards"], "lesson_id": lesson["id"]}
+    client.post("/api/anki/send", json=body)
+    notes = set(anki.notes)
+    before = {n["deckName"] for n in anki.notes.values()}
+    assert "Espagnol::Leçon 5::Vocabulaire" in before
+
+    cards = [{**c, "subdeck": "Mots" if c["subdeck"] == "Vocabulaire" else c["subdeck"]} for c in lesson["cards"]]
+    moved = {**body, "deck": "Espagnol::5ème::Leçon 5", "cards": cards}
+    r = client.post("/api/anki/send", json=moved).json()
+    assert (r["added"], r["moved"]) == (0, len(notes))
+    assert set(anki.notes) == notes  # the same notes: their history kept
+    after = {
+        d.replace("Espagnol::Leçon 5", "Espagnol::5ème::Leçon 5").replace("::Vocabulaire", "::Mots") for d in before
+    }
+    assert {n["deckName"] for n in anki.notes.values()} == after
+    assert not [d for d in anki.decks if d.startswith("Espagnol::Leçon 5")]  # left empty: gone
+
+    again = client.post("/api/anki/send", json=moved).json()
+    assert (again["added"], again["moved"]) == (0, 0)
+
+
+def test_a_note_another_lesson_uses_doesnt_move(anki, client):
+    """A note both lessons use (tagged for each) stays where it is."""
+    first, second = extract_lesson(client), extract_lesson(client)
+    for lesson in (first, second):
+        client.post(
+            "/api/anki/send", json={"deck": "Espagnol::Leçon 7", "cards": lesson["cards"], "lesson_id": lesson["id"]}
+        )
+    shared = len(anki.notes)
+    body = {"deck": "Ailleurs", "cards": first["cards"], "lesson_id": first["id"]}
+    r = client.post("/api/anki/send", json=body).json()
+    assert r["moved"] == 0
+    assert all(n["deckName"].startswith("Espagnol::Leçon 7") for i, n in anki.notes.items() if i <= shared)
