@@ -529,7 +529,8 @@
       <button class="btn soft" x-show="reviewInAnki && lessonExported" @click="reviewLesson()" :disabled="sending"
               x-text="$t('app.reviewInAnki')"></button>
       <button class="btn primary wide" x-show="anki.available" @click="sendToAnki()" :disabled="sending || exporting">
-        <span x-text="sending ? $t('app.actions.sending') : $t('app.actions.addToAnki')"></span>
+        <!-- Sent before: sending again updates its cards in Anki (moves them if its deck changed) -->
+        <span x-text="sending ? $t('app.actions.sending') : $t(lessonExported ? 'app.actions.updateInAnki' : 'app.actions.addToAnki')"></span>
       </button>
       <button class="btn primary wide" x-show="!anki.available" @click="exportApkg()" :disabled="exporting">
         <span x-text="exporting ? $t('app.actions.exporting') : $t('app.actions.exportApkg')"></span>

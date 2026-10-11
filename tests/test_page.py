@@ -864,6 +864,8 @@ def test_review_in_ankidroid_once_sent(page, anki):
     sync_api.expect(review).to_be_hidden()  # not sent yet
     page.get_by_role("button", name="📥 Ajouter à Anki").click()
     sync_api.expect(page.locator(".toast.ok").get_by_role("button", name="📚 Réviser")).to_be_visible()
+    # Sent: sending again updates its cards
+    sync_api.expect(page.get_by_role("button", name="🔄 Mettre à jour dans Anki")).to_be_visible()
     review.click()
     sync_api.expect(page.locator(".toast.ok")).to_be_hidden()
     assert [a["deck"] for a in asked] == [page.locator(".field.deck input").input_value()]

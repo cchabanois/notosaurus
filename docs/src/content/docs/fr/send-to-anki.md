@@ -21,9 +21,10 @@ exemple « ✓ Dans Anki : 9 cartes ajoutées. Synchronisé avec AnkiWeb. »
 
 ## Renvoyer une leçon
 
-Tu peux corriger une leçon et la renvoyer autant de fois que tu veux : ses cartes sont **mises
-à jour** dans Anki, **pas dupliquées**, et l'historique de révision de chaque carte est
-gardé. Les cartes ajoutées depuis le dernier envoi sont ajoutées ; les cartes supprimées de la
+Une fois la leçon envoyée, le bouton devient **🔄 Mettre à jour dans Anki**. Tu peux corriger
+une leçon et la renvoyer autant de fois que tu veux : ses cartes sont **mises à jour** dans
+Anki, **pas dupliquées**, et l'historique de révision de chaque carte est gardé. Si tu as
+changé le paquet de la leçon, ses cartes y sont **déplacées**, avec leur historique. Les cartes ajoutées depuis le dernier envoi sont ajoutées ; les cartes supprimées de la
 leçon restent dans Anki (supprime-les là-bas si tu veux). Supprimer une leçon entière dans
 Notosaurus propose de supprimer aussi ses cartes dans Anki, avec leur historique de révision.
 
