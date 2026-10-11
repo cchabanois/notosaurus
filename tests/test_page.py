@@ -591,43 +591,188 @@ def test_pdf_text_kept_with_its_page(page, browser):
     assert lesson(page, summary["id"])["page_texts"] == [text]
 
 
-def test_a_name_hidden_before_the_photo_is_sent(page):
-    """Blacked out with a finger, un-blacked the same way; only the blacked-out photo is sent."""
-    page.goto("/")
+def add_photo(page, buffer: bytes) -> None:
     page.locator('input[type=file][accept="image/*"][multiple]').set_input_files(
-        {"name": "page.png", "mimeType": "image/png", "buffer": png("white")}
+        {"name": "page.png", "mimeType": "image/png", "buffer": buffer}
     )
+    sync_api.expect(page.locator(".thumb img")).to_have_count(1)
+
+
+def add_text_pdf(page, browser) -> None:
+    page.locator("input[type=file][accept*=pdf]").set_input_files(
+        {"name": "cours.pdf", "mimeType": "application/pdf", "buffer": text_pdf(browser)}
+    )
+    sync_api.expect(page.locator(".thumb img")).to_have_count(1)
+
+
+def open_hide(page):
+    """The first photo's 🖍️ editor, open."""
     page.get_by_role("button", name="Cacher une partie de la page (un nom…)").click()
     editor = page.locator(".hide-editor")
     sync_api.expect(editor).to_be_visible()
-    canvas = editor.locator("canvas")
-    box = canvas.bounding_box()
+    return editor
 
-    def stroke(y: float) -> None:  # across the photo, a tenth of the way down `y`
-        page.mouse.move(box["x"] + box["width"] * 0.1, box["y"] + box["height"] * y)
-        page.mouse.down()
-        page.mouse.move(box["x"] + box["width"] * 0.9, box["y"] + box["height"] * y, steps=8)
-        page.mouse.up()
 
-    stroke(0.1)  # the name
-    stroke(0.5)  # a mistake…
+def stroke(page, y: float) -> None:
+    """A stroke across the open editor's photo, at `y` of its height."""
+    box = page.locator(".hide-editor canvas").bounding_box()
+    page.mouse.move(box["x"] + box["width"] * 0.1, box["y"] + box["height"] * y)
+    page.mouse.down()
+    page.mouse.move(box["x"] + box["width"] * 0.9, box["y"] + box["height"] * y, steps=8)
+    page.mouse.up()
+
+
+def generate_from_photos(page, prompt: str) -> dict:
+    """A lesson from the photos added and a free prompt: the saved lesson."""
+    page.locator(".chip").first.click()  # the free prompt
+    page.locator("textarea[x-ref=promptText]").fill(prompt)
+    page.get_by_role("button", name="✨ Générer les cartes").click()
+    page.locator(".flash").first.wait_for()
+    (summary,) = lessons(page)
+    return lesson(page, summary["id"])
+
+
+def photo_not_sent(page, i: int = 0):
+    """A photo not sent yet, as it would be sent (its blob in the page), in grey levels."""
+    data = page.evaluate(
+        """async (i) => {
+            const blob = Alpine.$data(document.querySelector('[x-data]')).photos[i].blob;
+            const bytes = new Uint8Array(await blob.arrayBuffer());
+            let s = "";
+            for (const b of bytes) s += String.fromCharCode(b);
+            return btoa(s);
+        }""",
+        i,
+    )
+    return PILImage.open(io.BytesIO(base64.b64decode(data))).convert("L")
+
+
+def editor_pixel(page, x: float, y: float) -> int:
+    """The open editor's canvas at (`x`, `y`) of its size, in grey level."""
+    return page.evaluate(
+        """([x, y]) => {
+            const c = document.querySelector('.hide-editor canvas');
+            const at = [Math.floor(c.width * x), Math.floor(c.height * y)];
+            const [r, g, b] = c.getContext('2d').getImageData(...at, 1, 1).data;
+            return Math.round((r + g + b) / 3);
+        }""",
+        [x, y],
+    )
+
+
+PDF_NOTICE = re.compile("^Sur une page de PDF, son texte n'est alors pas envoyé")
+
+
+def test_a_name_hidden_before_the_photo_is_sent(page):
+    """Blacked out with a finger, un-blacked the same way; only the blacked-out photo is sent."""
+    page.goto("/")
+    add_photo(page, png("white"))
+    editor = open_hide(page)
+    sync_api.expect(editor.get_by_text(PDF_NOTICE)).to_be_hidden()  # a photo: no text to leave out
+    stroke(page, 0.1)  # the name
+    stroke(page, 0.5)  # a mistake…
     editor.get_by_role("button", name="Dénoircir", exact=True).click()
-    stroke(0.5)  # …un-blacked
+    stroke(page, 0.5)  # …un-blacked
     editor.get_by_role("button", name="Terminé").click()
     sync_api.expect(editor).to_be_hidden()
     sync_api.expect(page.locator(".thumb-hide.used")).to_have_count(1)
 
-    page.locator(".chip").first.click()  # the free prompt
-    page.locator("textarea[x-ref=promptText]").fill("Une carte par mot")
-    page.get_by_role("button", name="✨ Générer les cartes").click()
-    page.locator(".flash").first.wait_for()
-    (summary,) = lessons(page)
-    sent = PILImage.open(io.BytesIO(page.request.get(f"/api/lessons/{summary['id']}/photos/1").body())).convert("L")
+    saved = generate_from_photos(page, "Une carte par mot")
+    sent = PILImage.open(io.BytesIO(page.request.get(f"/api/lessons/{saved['id']}/photos/1").body())).convert("L")
     width, height = sent.size
     assert sent.getpixel((width // 2, height // 10)) < 40  # black: the name
     assert sent.getpixel((width // 2, height // 2)) > 215  # white: un-blacked
     assert sent.getpixel((width // 2, height * 8 // 10)) > 215  # never touched
     sync_api.expect(page.locator(".thumb-hide")).to_be_hidden()  # sent: nothing left to hide
+
+
+def test_a_pdf_page_with_a_hidden_part_goes_without_its_text(page, browser):
+    """Its text holds the hidden name too: the page is sent as a picture only, and the editor says so."""
+    page.goto("/")
+    add_text_pdf(page, browser)
+    editor = open_hide(page)
+    sync_api.expect(editor.get_by_text(PDF_NOTICE)).to_be_visible()
+    stroke(page, 0.1)
+    editor.get_by_role("button", name="Terminé").click()
+    sync_api.expect(editor).to_be_hidden()
+
+    sent = []
+    page.on("request", lambda r: sent.append(r.post_data_buffer or b""))
+    assert not any(generate_from_photos(page, "Une carte par date")["page_texts"])
+    assert not any(b"Bastille" in body for body in sent)  # not even sent to the server
+
+
+def test_un_black_all_gives_the_original_and_its_text_back(page, browser):
+    """Everything un-blacked then done: the original photo, the PDF page's text sent with it again."""
+    page.goto("/")
+    add_text_pdf(page, browser)
+    original = photo_not_sent(page)
+    editor = open_hide(page)
+    stroke(page, 0.1)
+    editor.get_by_role("button", name="Terminé").click()
+    sync_api.expect(page.locator(".thumb-hide.used")).to_have_count(1)
+
+    open_hide(page)
+    editor.get_by_role("button", name="Tout dénoircir").click()
+    editor.get_by_role("button", name="Terminé").click()
+    sync_api.expect(editor).to_be_hidden()
+    sync_api.expect(page.locator(".thumb-hide.used")).to_have_count(0)
+    assert photo_not_sent(page).tobytes() == original.tobytes()
+
+    saved = generate_from_photos(page, "Une carte par date")
+    assert saved["page_texts"] == ["La Révolution française\nEn 1789, le peuple de Paris prend la Bastille."]
+
+
+def test_hidden_parts_seen_again_and_cancel_changes_nothing(page):
+    """The editor reopened shows what is blacked out; "Annuler" leaves the photo and its mask as they were."""
+    page.goto("/")
+    add_photo(page, png("white"))
+    editor = open_hide(page)
+    stroke(page, 0.1)
+    editor.get_by_role("button", name="Terminé").click()
+    sync_api.expect(page.locator(".thumb-hide.used")).to_have_count(1)  # done: the photo blacked out
+    hidden = photo_not_sent(page)
+
+    open_hide(page)
+    assert editor_pixel(page, 0.5, 0.1) < 40  # still blacked out
+    assert editor_pixel(page, 0.5, 0.5) > 215
+    editor.get_by_role("button", name="Tout dénoircir").click()  # then thought better of it
+    stroke(page, 0.5)
+    editor.get_by_role("button", name="Annuler").click()
+    sync_api.expect(editor).to_be_hidden()
+    sync_api.expect(page.locator(".thumb-hide.used")).to_have_count(1)
+    assert photo_not_sent(page).tobytes() == hidden.tobytes()
+
+    open_hide(page)
+    assert editor_pixel(page, 0.5, 0.1) < 40
+    assert editor_pixel(page, 0.5, 0.5) > 215
+
+
+def test_a_photo_turned_turns_what_it_hides(page):
+    """↻ on a portrait photo with a stripe hidden at its top: the stripe on the right of the landscape one."""
+    page.goto("/")
+    add_photo(page, png("white"))  # 600 × 800
+    editor = open_hide(page)
+    stroke(page, 0.1)
+    editor.get_by_role("button", name="Terminé").click()
+    sync_api.expect(page.locator(".thumb-hide.used")).to_have_count(1)
+    page.get_by_role("button", name="Tourner la photo d'un quart de tour").click()
+    page.wait_for_function("document.querySelector('.thumb img').naturalWidth === 800")  # landscape now
+    turned = photo_not_sent(page)
+    assert turned.size == (800, 600)
+    assert turned.getpixel((720, 300)) < 40  # the stripe, now on the right
+    assert turned.getpixel((400, 300)) > 215
+    assert turned.getpixel((80, 300)) > 215
+
+    open_hide(page)  # the mask turned with it
+    assert editor_pixel(page, 0.9, 0.5) < 40
+    assert editor_pixel(page, 0.1, 0.5) > 215
+    editor.get_by_role("button", name="Tout dénoircir").click()
+    editor.get_by_role("button", name="Terminé").click()
+    sync_api.expect(page.locator(".thumb-hide.used")).to_have_count(0)
+    original = photo_not_sent(page)  # the turned original, all white
+    assert original.size == (800, 600)
+    assert original.getextrema()[0] > 215
 
 
 def test_a_card_explained_then_its_follow_ups(page):
