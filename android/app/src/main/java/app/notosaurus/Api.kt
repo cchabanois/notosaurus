@@ -69,6 +69,7 @@ data class Account(
     @SerialName("credits_left") val creditsLeft: Int,
     @SerialName("daily_left") val dailyLeft: Int,
     @SerialName("renews_at") val renewsAt: String? = null,
+    @SerialName("ends_at") val endsAt: String? = null, // a subscription's (Google Play): its paid period's end
 )
 
 /** Every error of the relay: a code (relay.*, llm.*) and its parameters. */

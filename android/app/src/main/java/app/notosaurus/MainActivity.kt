@@ -133,6 +133,7 @@ class MainActivity : ComponentActivity() {
             scan = ::scanQrCode,
             modeChanged = { runOnUiThread { Shortcuts.update(this, server) } },
             requestMicPermission = ::askMicPermission,
+            activity = { this.takeUnless { it.isFinishing || it.isDestroyed } },
         )
         lifecycleScope.launch {
             val port = withContext(Dispatchers.IO) { server.start() }

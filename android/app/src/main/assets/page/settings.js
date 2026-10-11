@@ -21,6 +21,8 @@ document.addEventListener("alpine:init", () => {
   Alpine.data("settings", (whole = true) => ({
     form: null,       // the settings (the key masked)
     account: null,    // the relay's answer for the key
+    offer: null,      // the subscription Google Play offers ({ price, trial_days }); none: not on sale
+    buying: false,
     anki: null,       // { installed, permitted }
     data: null,       // { lessons, bytes }
     newKey: "",
@@ -45,6 +47,7 @@ document.addEventListener("alpine:init", () => {
       if (!whole) return;
       this.loadAnki();
       this.loadData();
+      await this.loadSubscription();
       if (this.form.has_key) this.loadAccount();
       // Back from AnkiDroid's permission dialog, or from installing it
       document.addEventListener("visibilitychange", () => {
@@ -64,6 +67,42 @@ document.addEventListener("alpine:init", () => {
       } catch (e) {
         this.error = e.message;
       }
+    },
+
+    // What Google Play offers; without a key, a subscription of this Google account restored
+    async loadSubscription() {
+      try {
+        const found = await api("/api/admin/subscription");
+        this.offer = found.offer;
+        if (found.restored) {
+          this.form = await api("/api/admin/settings");
+          this.notice = t("android.subscription.restored");
+        }
+      } catch {}
+    },
+
+    // Google Play's purchase screen; bought, the relay's licence (its key kept by the app)
+    async subscribe() { await this.buy("/api/admin/subscription/subscribe"); },
+    async restore() { await this.buy("/api/admin/subscription/restore"); },
+
+    async buy(path) {
+      this.buying = true;
+      this.error = "";
+      try {
+        const answer = await api(path, { method: "POST" });
+        if (answer.cancelled) return;
+        this.account = answer;
+        this.form = await api("/api/admin/settings");
+        this.notice = t("android.subscription.done");
+      } catch (e) {
+        this.error = e.message;
+      } finally {
+        this.buying = false;
+      }
+    },
+
+    async manage() {
+      try { await api("/api/admin/subscription/manage", { method: "POST" }); } catch {}
     },
 
     async loadAnki() {

@@ -64,6 +64,7 @@ class LocalServer(
     recorder: Recorder? = null, // the microphone, for the page's 🎤 (none: no 🎤)
     internal val requestMicPermission: suspend () -> Boolean = { false }, // the microphone's permission dialog: granted?
     relayDirectory: String? = null, // where the relays are listed (RelayDirectory.URL); null: the built-in ones
+    internal val subscriptions: SubscriptionStore? = null, // Google Play's subscription (none: a licence key only)
     val token: String = UUID.randomUUID().toString(),
 ) {
     internal val relays = RelayDirectory(prefs, relayDirectory)
@@ -116,6 +117,7 @@ class LocalServer(
         dictationRoutes(this@LocalServer)
         pictureRoutes(this@LocalServer)
         ankiRoutes(this@LocalServer)
+        subscriptionRoutes(this@LocalServer)
 
         // --- The page
         get("/{path...}") {
@@ -267,6 +269,7 @@ class LocalServer(
             scan: suspend () -> String?,
             modeChanged: () -> Unit,
             requestMicPermission: suspend () -> Boolean,
+            activity: () -> android.app.Activity?, // Google Play's purchase screen shows over it
         ) = LocalServer(
             dataDir = context.filesDir,
             web = { path -> asset(context, "page/$path") ?: asset(context, "web/$path") },
@@ -284,6 +287,7 @@ class LocalServer(
             recorder = MicRecorder(context),
             requestMicPermission = requestMicPermission,
             relayDirectory = RelayDirectory.URL,
+            subscriptions = PlayStore(context, activity),
         )
 
         private fun asset(context: Context, path: String) =

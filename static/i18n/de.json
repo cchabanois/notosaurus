@@ -646,6 +646,15 @@
       "realRelay": "Echtes Relais",
       "testRelay": "🧪 Test-Relais"
     },
+    "subscription": {
+      "subscribe": "Abonnieren: {price} pro Monat",
+      "trial": "{days} Tage kostenlos testen, dann {price} pro Monat",
+      "restore": "Ich habe schon ein Abo",
+      "manage": "Abo verwalten (Google Play)",
+      "until": "Abo bezahlt bis {date}",
+      "done": "✓ Abonniert: viel Erfolg beim Lernen!",
+      "restored": "✓ Dein Abo wurde in diesem Google-Konto gefunden."
+    },
     "anki": {
       "title": "📥 AnkiDroid",
       "ready": "✓ AnkiDroid ist installiert und Notosaurus darf Karten hinzufügen.",
@@ -855,6 +864,10 @@
     "dictation": {
       "refused": "Notosaurus hat keinen Zugriff auf das Mikrofon: erlaube es in den Android-Einstellungen, um zu diktieren.",
       "failed": "Das Mikrofon konnte nicht aufnehmen: versuch es noch einmal."
+    },
+    "subscription": {
+      "unavailable": "Google Play ist auf diesem Handy nicht verfügbar.",
+      "none": "Kein Abo in diesem Google-Konto gefunden."
     }
   },
   "demo": {
