@@ -7,7 +7,9 @@ import os
 from conftest import extract_lesson
 
 from app import ankiconnect, lessons, storage
-from app.models import LessonIn
+from app.models import CARD_ID, LessonIn
+from app.routes import lessons as lessons_routes
+from notosaurus_core.models import Card, Revision
 
 
 def test_lesson_saved(client):
@@ -87,16 +89,41 @@ def test_invalid_lesson_id(client):
 
 def test_card_ids_checked(client):
     """A card's id names its picture's file (picture-<id>-<hash>.jpg): from the page, only
-    letters and digits, never a path ("..\\" on Windows)."""
+    letters and digits, never a path ("..\\" on Windows). Any other is replaced by a fresh one."""
     lesson = extract_lesson(client)
     url = f"/api/lessons/{lesson['id']}"
     for bad in ["../../evil", "..\\..\\evil", "a/b", "ABC", "abc\n", "a" * 41, "é"]:
         cards = [{"id": bad, "front": "le chat", "back": "el gato"}]
-        assert client.put(url, json={"deck": "D", "cards": cards}).status_code == 422, bad
+        saved = client.put(url, json={"deck": "D", "cards": cards})
+        assert saved.status_code == 200, bad
+        (card,) = saved.json()["cards"]
+        assert card["id"] and card["id"] != bad and CARD_ID.fullmatch(card["id"]), bad
     # The ids Notosaurus, the page and the Android app give (12 hex), none yet, a short one
     cards = [{"id": i, "front": "le chat", "back": "el gato"} for i in ("", "0f3a9c41b2de", "rev1")]
     assert client.put(url, json={"deck": "D", "cards": cards}).status_code == 200
-    assert all(c["id"] for c in client.get(url).json()["cards"])
+    ids = [c["id"] for c in client.get(url).json()["cards"]]
+    assert ids[0] and ids[1:] == ["0f3a9c41b2de", "rev1"]
+
+
+def test_odd_card_ids_from_the_ai_cleaned(client, monkeypatch):
+    """The AI's answer may carry odd ids: the lesson is built all the same, each card with
+    a fresh clean id, and none of them ever names a file."""
+    lesson = extract_lesson(client)
+    odd = ["../x", "Card 1", "..\\evil", "ok12"]
+
+    async def revise(*args, **kwargs):
+        cards = [Card(id=i, front=f"front {n}", back=f"back {n}") for n, i in enumerate(odd)]
+        return Revision(deck="D", cards=cards, summary="done")
+
+    monkeypatch.setattr(lessons_routes, "revise_cards", revise)
+    body = {"deck": "D", "cards": lesson["cards"], "instruction": "fix"}
+    revised = client.post(f"/api/lessons/{lesson['id']}/revise", json=body)
+    assert revised.status_code == 200
+    ids = [c["id"] for c in revised.json()["lesson"]["cards"]]
+    assert all(i and CARD_ID.fullmatch(i) for i in ids) and ids[3] == "ok12"
+    assert len(set(ids)) == 4 and not set(odd[:3]) & set(ids)
+    assert [c["id"] for c in client.get(f"/api/lessons/{lesson['id']}").json()["cards"]] == ids
+    assert not any(".." in p.name or " " in p.name for p in lessons.folder(lesson["id"]).rglob("*"))
 
 
 def test_slugify():

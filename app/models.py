@@ -42,12 +42,10 @@ class LessonIn(Deck):
     @field_validator("cards")
     @classmethod
     def _card_ids(cls, cards: list[Card]) -> list[Card]:
-        # A card's id comes from the page and names its picture's file (picture-<id>-…):
-        # letters and digits only, as pictures.NAME reads them back ("" = not given yet)
-        for card in cards:
-            if not CARD_ID.fullmatch(card.id):
-                raise ValueError("invalid card id")
-        return cards
+        # A card's id names its picture's file (picture-<id>-…): letters and digits only,
+        # as pictures.NAME reads them back ("" = not given yet). Any other (in the AI's
+        # answer, or from a page gone wrong) is blanked: the card gets a fresh one (with_ids)
+        return [card if CARD_ID.fullmatch(card.id) else card.model_copy(update={"id": ""}) for card in cards]
 
 
 class Lesson(LessonIn):

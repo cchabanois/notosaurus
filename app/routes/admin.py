@@ -28,7 +28,13 @@ attempts = Attempts()  # wrong passwords, per address: guessing is slowed down
 
 
 def _check_password(request: Request, password: str | None, code: str) -> None:
-    """The admin password, or `code` (401); a locked-out address isn't even checked."""
+    """The admin password, or `code` (401); a locked-out address isn't even checked.
+    On the computer itself, never locked out and failures don't count: a shared address
+    (Docker NAT, Tailscale) or a neighbour guessing must not lock the parent out."""
+    if is_local(request):
+        if not settings.check_password(password):
+            raise AppError(code, 401)
+        return
     address = request.client.host if request.client else ""
     if wait := attempts.wait(address):
         raise AppError("admin.too_many_attempts", 429, seconds=wait)

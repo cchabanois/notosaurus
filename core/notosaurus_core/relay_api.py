@@ -72,6 +72,7 @@ ERRORS = {
     "relay.subscription_ended": 402,  # its subscription (Google Play) ended: subscribe again
     "relay.invalid_purchase": 400,  # a purchase Google Play doesn't know, or not of this app
     "relay.daily_limit": 429,  # too many credits used today: tomorrow, or wait
+    "relay.busy": 429,  # too many calls at once for this licence: retry in a moment
     "relay.too_large": 413,  # too many photos, or one too heavy
     "relay.bad_image": 415,  # a photo that isn't JPEG, PNG, WebP or GIF
     "relay.bad_audio": 415,  # a recording that isn't one of AUDIO_TYPES

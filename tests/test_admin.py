@@ -7,10 +7,12 @@ import sys
 
 import httpx
 import pytest
-from conftest import ADMIN, PASSWORD, on_the_computer
+from conftest import ADMIN, PASSWORD, PHONE, on_the_computer
+from fastapi.testclient import TestClient
 
 from app import settings
 from app.attempts import Attempts
+from app.main import app
 from app.routes import admin as admin_routes
 from app.routes.devices import DEVICE_COOKIE
 from notosaurus_core.providers import openai_like
@@ -62,6 +64,27 @@ def test_wrong_passwords_lock_the_address_out(admin, monkeypatch):
     assert admin.get("/api/admin/settings", headers=ADMIN).json()["detail"]["params"] == {"seconds": 2}
     now[0] += 2
     assert admin.get("/api/admin/settings", headers=ADMIN).status_code == 200
+
+
+def test_never_locked_out_on_the_computer_itself(admin, monkeypatch):
+    """A shared address (Docker NAT, Tailscale) or a neighbour guessing locks that
+    address out, never the computer itself: there, failures don't count either."""
+    now = [1000.0]
+    monkeypatch.setattr(admin_routes, "attempts", Attempts(clock=lambda: now[0]))
+    wrong = {"X-Admin-Password": "guess-123"}
+    with TestClient(app, client=("192.168.1.30", 50000), base_url=PHONE) as neighbour:
+        neighbour.cookies.set(DEVICE_COOKIE, settings.device_token())
+        for _ in range(6):
+            assert neighbour.get("/api/admin/settings", headers=wrong).status_code == 401
+        assert neighbour.get("/api/admin/settings", headers=ADMIN).status_code == 429
+    with on_the_computer() as computer:
+        assert computer.get("/api/admin/settings", headers=ADMIN).status_code == 200
+        for _ in range(20):
+            assert computer.get("/api/admin/settings", headers=wrong).status_code == 401
+        assert computer.get("/api/admin/settings", headers=ADMIN).status_code == 200
+        body = {"current": PASSWORD, "new": "nouveau-pw"}
+        assert computer.post("/api/admin/password", json=body).status_code == 204
+    assert admin_routes.attempts.wait("127.0.0.1") == 0
 
 
 def test_lockout_grows_up_to_a_limit():
