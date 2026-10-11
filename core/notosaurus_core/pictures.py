@@ -138,7 +138,9 @@ async def _gemini(s: AIConfig, name: str, prompt: str) -> bytes:
     usage = response.usage_metadata
     if usage:
         await llm.record(s, "gemini", name, usage.prompt_token_count, usage.candidates_token_count)
-    for part in (response.candidates[0].content.parts if response.candidates else []) or []:
+    # A picture refused for safety: its candidate comes without content
+    content = response.candidates[0].content if response.candidates else None
+    for part in (content.parts if content else None) or []:
         if part.inline_data and part.inline_data.data:
             return part.inline_data.data
     raise PictureError("picture.empty")
