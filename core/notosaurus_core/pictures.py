@@ -110,10 +110,11 @@ async def _openrouter(s: AIConfig, name: str, prompt: str) -> bytes:
     if response.usage:
         cost = (response.usage.model_extra or {}).get("cost")
         await llm.record(s, "openrouter.ai", name, response.usage.prompt_tokens, response.usage.completion_tokens, cost)
-    images = (response.choices[0].message.model_extra or {}).get("images") or []
-    if not images:
-        raise PictureError("picture.empty")
-    return base64.b64decode(images[0]["image_url"]["url"].split(",", 1)[1])
+    # No choice, no image, or not as a data URL: nothing drawn (that card only, as below)
+    message = response.choices[0].message if response.choices else None
+    images = ((message.model_extra if message else None) or {}).get("images") or []
+    url = str(((images[0] or {}).get("image_url") or {}).get("url") or "") if images else ""
+    return _decoded(url.split(",", 1)[1] if url.startswith("data:") and "," in url else "")
 
 
 async def _gemini(s: AIConfig, name: str, prompt: str) -> bytes:
@@ -159,7 +160,19 @@ async def _openai(s: AIConfig, name: str, prompt: str) -> bytes:
         raise PictureError("picture.failed", detail=str(e)[:200]) from e
     if response.usage:
         await llm.record(s, "openai", name, response.usage.input_tokens, response.usage.output_tokens)
-    return base64.b64decode(response.data[0].b64_json)
+    # No image, or a link instead of the image (an older model): nothing drawn
+    return _decoded((response.data[0].b64_json or "") if response.data else "")
+
+
+def _decoded(data: str) -> bytes:
+    """An image sent as base64; none, or not base64: picture.empty."""
+    try:
+        image = base64.b64decode(data, validate=True)
+    except ValueError:
+        image = b""
+    if not image:
+        raise PictureError("picture.empty")
+    return image
 
 
 # --- The models that can draw, as each service lists them (listing is free) -----------
