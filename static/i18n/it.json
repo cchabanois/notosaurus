@@ -88,6 +88,16 @@
       "modified": "✏️ Modificate solo per questa volta.",
       "edit": "✏️ Modifica le istruzioni",
       "saveAsNew": "💾 Salva come nuove istruzioni",
+      "complete": {
+        "one": "➕ Aggiungi le carte della nuova pagina",
+        "other": "➕ Aggiungi le carte delle {count} nuove pagine"
+      },
+      "completeHint": "(le carte già fatte restano)",
+      "completed": {
+        "one": "➕ {count} carta aggiunta dalle nuove pagine: controllala.",
+        "other": "➕ {count} carte aggiunte dalle nuove pagine: controllale."
+      },
+      "completedNone": "Niente di nuovo in queste pagine: nessuna carta aggiunta.",
       "regenerate": "✨ Genera di nuovo",
       "fromPrompt": "✨ Genera solo dalle istruzioni",
       "fromPromptHint": "Nessuna foto? L'IA crea le carte dalle tue istruzioni: scrivici le parole o chiedi un argomento. Controlla bene le carte.",

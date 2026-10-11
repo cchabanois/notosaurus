@@ -129,11 +129,13 @@ async def extract_cards(
     instructions: str = "",
     quick: bool = False,
     on_card: OnCard | None = None,
+    existing: list[str] = (),
 ) -> Extracted:
     """`decks`: the decks that already exist, to reuse their names; `instructions`: the
     user's standing instructions, put before the request (never replacing the rules);
     `quick`: made fast, the model thinking little; `on_card`: each card as soon as it is
-    written (see _generate)."""
+    written (see _generate); `existing`: the lesson's cards made from its earlier pages
+    ("front [part]"), when these photos are its next pages: not made again."""
     if s.llm == "fake":
         await record(s, "fake", "fake", 0, 0, cost=0.0)
         choice = "Vocabulaire d'espagnol : français → espagnol" if _lets_choose(prompt) else ""
@@ -148,7 +150,8 @@ async def extract_cards(
         return Extracted(deck=found, turns=[0] * len(images), frames=[], back_language="es-ES", choice=choice)
     fmt = diagrams.box_format(s.model_for_provider())
     images, sizes = _prepare(images)
-    text = instructions + _user_text(prompt, deck, len(images), sizes, fmt, decks, fun_facts, page_texts, helps)
+    asked = _user_text(prompt, deck, len(images), sizes, fmt, decks, fun_facts, page_texts, helps, existing)
+    text = instructions + asked
     schema = ai_schema(Extraction, fun_facts, helps)
     answer = await _generate(s, images, text, schema, quick=quick, on_card=on_card)
     result = Extraction.model_validate(_accepted(answer).model_dump())

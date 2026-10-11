@@ -3,7 +3,7 @@ import json
 import logging
 import os
 import re
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from typing import Annotated
 
 from fastapi import APIRouter, BackgroundTasks, Depends, File, Form, Header, UploadFile
@@ -98,6 +98,7 @@ async def _generate(
     lang: str = "",
     lesson_id: str | None = None,
     on_card: llm.OnCard | None = None,
+    existing: list[str] = (),
 ) -> Generated:
     """Read the photos (or, without photos, work from the prompt alone): the lesson's
     new content, not saved yet. `images`: the form's, read already."""
@@ -129,6 +130,7 @@ async def _generate(
                 instructions=settings.standing_instructions(s, profile),
                 quick=form.quick,
                 on_card=on_card,
+                existing=existing,
             )
         except Exception:
             usage.add(calls, lesson_id=None)  # answered but unusable: paid for, no lesson saved
@@ -241,6 +243,40 @@ async def extract(
     if _wants_stream(accept):
         return _streamed(work, form.job)
     return JSONResponse(jsonable_encoder(await work()), status_code=201)
+
+
+@router.post("/api/lessons/{id}/complete")
+async def complete(
+    id: str,
+    form: Annotated[GenerationForm, Depends()],
+    lang: str = Depends(pupil_lang),
+    accept: str | None = Header(None),
+):
+    """The lesson's next pages (the form's photos: those only, a few days later): the AI
+    reads them knowing the cards made already, and their cards come after the lesson's,
+    which stay as they are (so do their notes in Anki). Only its owner's profile may.
+    Streamed as /api/extract."""
+    old = await _editable(id)
+    photos = await _photos(form.images)
+    if not photos:
+        raise AppError("extract.no_input")
+    if old.photo_count + len(photos) > MAX_IMAGES:
+        raise AppError("extract.too_many", max=MAX_IMAGES)
+    existing = [c.front.strip() + (f" [{c.subdeck.strip()}]" if c.subdeck.strip() else "") for c in old.cards]
+    # Its deck and voice are the lesson's: only the cards, photos and frames are taken
+    form = replace(form, deck=old.deck, voice="")
+
+    async def work(on_card=None) -> Lesson:
+        g = await _generate(form, photos, lang, lesson_id=id, on_card=on_card, existing=existing)
+        lesson = lessons.completed(id, g.found.deck.cards, g.photos, g.found.frames, g.calls, g.page_texts)
+        if lesson is None:  # deleted meanwhile
+            raise AppError("lesson.not_found", 404)
+        usage.add(g.calls, id, lesson.deck)
+        return lesson
+
+    if _wants_stream(accept):
+        return _streamed(work, form.job)
+    return await work()
 
 
 @router.post("/api/lessons/{id}/regenerate")

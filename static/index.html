@@ -207,6 +207,11 @@
                 x-text="$t('app.prompt.saveAsNew')"></button>
       </div>
 
+      <!-- The lesson's next pages, added days later: only they are read, its cards stay -->
+      <button class="btn primary wide" x-show="canComplete()" @click="extract({ complete: true })" :disabled="!canGenerate()">
+        <span x-text="$t('app.prompt.complete', { count: newPages().length })"></span>
+        <small x-text="$t('app.prompt.completeHint')"></small>
+      </button>
       <button class="btn soft wide" x-show="cards.length" @click="extract()" :disabled="!canGenerate()">
         <span x-text="$t('app.prompt.regenerate')"></span>
         <small x-text="regeneratesInPlace() ? $t('app.prompt.regenerateHint') : $t('app.prompt.regenerateNewHint')"></small>

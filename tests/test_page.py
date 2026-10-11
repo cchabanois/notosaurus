@@ -775,6 +775,32 @@ def test_a_photo_turned_turns_what_it_hides(page):
     assert original.getextrema()[0] > 215
 
 
+def test_the_next_page_added_days_later(page):
+    """A lesson reopened, a page added: "Add the new page's cards" reads it alone, its cards
+    come after the lesson's (marked new), the ones made already stay."""
+    page.goto("/")
+    gallery = page.locator('input[type=file][accept="image/*"][multiple]')
+    gallery.set_input_files({"name": "p1.png", "mimeType": "image/png", "buffer": png("white")})
+    page.locator(".chip").first.click()  # the free prompt
+    page.locator("textarea[x-ref=promptText]").fill(FRONT_PROMPT)
+    page.get_by_role("button", name="✨ Générer les cartes").click()
+    page.locator(".flash").first.wait_for()
+    (summary,) = lessons(page)
+    made = lesson(page, summary["id"])["cards"]
+    complete = page.get_by_role("button", name="➕ Ajouter les cartes de la nouvelle page")
+    sync_api.expect(complete).to_be_hidden()  # no new page yet
+
+    gallery.set_input_files({"name": "p2.png", "mimeType": "image/png", "buffer": png("blue")})
+    complete.click()
+    sync_api.expect(page.locator(".flash")).to_have_count(2 * len(made))
+    sync_api.expect(page.get_by_text("cartes ajoutées depuis les nouvelles pages")).to_be_visible()
+    sync_api.expect(page.locator(".flash-badge:visible")).to_have_count(len(made))  # the new ones
+    sync_api.expect(complete).to_be_hidden()  # read now
+    saved = lesson(page, summary["id"])
+    assert saved["cards"][: len(made)] == made and saved["photo_count"] == 2
+    assert len(lessons(page)) == 1
+
+
 def test_a_card_explained_then_its_follow_ups(page):
     generate_free(page, "QCM sur la Révolution")
     card = page.locator(".flash").first

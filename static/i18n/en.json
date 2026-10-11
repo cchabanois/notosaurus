@@ -88,6 +88,16 @@
       "modified": "✏️ Changed for this time only.",
       "edit": "✏️ Edit instructions",
       "saveAsNew": "💾 Save as new instructions",
+      "complete": {
+        "one": "➕ Add the new page's cards",
+        "other": "➕ Add the {count} new pages' cards"
+      },
+      "completeHint": "(the cards made already stay)",
+      "completed": {
+        "one": "➕ {count} card added from the new pages: check it.",
+        "other": "➕ {count} cards added from the new pages: check them."
+      },
+      "completedNone": "Nothing new on these pages: no card added.",
       "regenerate": "✨ Generate again",
       "fromPrompt": "✨ Generate from the prompt alone",
       "fromPromptHint": "No photo? The AI creates the cards from your prompt: put the words in it, or ask for a topic. Check the cards carefully.",

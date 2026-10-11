@@ -2055,6 +2055,15 @@
             "description": "Made fast: the AI thinks little (2 to 4 times faster, a little less careful).",
             "title": "Quick",
             "type": "boolean"
+          },
+          "existing": {
+            "description": "The photos are a lesson's next pages: its cards made already (\"front [part]\"), not made again.",
+            "items": {
+              "type": "string"
+            },
+            "maxItems": 500,
+            "title": "Existing",
+            "type": "array"
           }
         },
         "required": [

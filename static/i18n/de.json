@@ -88,6 +88,16 @@
       "modified": "✏️ Nur für dieses Mal geändert.",
       "edit": "✏️ Anweisungen bearbeiten",
       "saveAsNew": "💾 Als neue Anweisungen speichern",
+      "complete": {
+        "one": "➕ Karten der neuen Seite hinzufügen",
+        "other": "➕ Karten der {count} neuen Seiten hinzufügen"
+      },
+      "completeHint": "(die vorhandenen Karten bleiben)",
+      "completed": {
+        "one": "➕ {count} Karte aus den neuen Seiten hinzugefügt: prüfe sie.",
+        "other": "➕ {count} Karten aus den neuen Seiten hinzugefügt: prüfe sie."
+      },
+      "completedNone": "Nichts Neues auf diesen Seiten: keine Karte hinzugefügt.",
       "regenerate": "✨ Neu erzeugen",
       "fromPrompt": "✨ Nur aus den Anweisungen erzeugen",
       "fromPromptHint": "Kein Foto? Die KI erstellt die Karten aus deinen Anweisungen: Schreib die Wörter hinein oder nenne ein Thema. Prüfe die Karten gut.",

@@ -9,8 +9,19 @@ const lessonsPart = {
     return Boolean(this.lessonId) && !this.readOnly();
   },
 
-  // `careful`: made again carefully ("Careful, again"), whatever the choice above
-  async extract({ careful = false } = {}) {
+  // The lesson's pages added since it was made (a few days later): not read by the AI yet
+  newPages() {
+    return this.lessonId ? this.photos.filter((p) => !p.sent) : [];
+  },
+
+  // "Add the new pages' cards": only they are read, the lesson's cards stay as they are
+  canComplete() {
+    return this.regeneratesInPlace() && this.cards.length > 0 && this.newPages().length > 0;
+  },
+
+  // `careful`: made again carefully ("Careful, again"), whatever the choice above.
+  // `complete`: the new pages only, their cards added after the lesson's (canComplete)
+  async extract({ careful = false, complete = false } = {}) {
     const quick = this.quick && !careful;
     this.error = "";
     this.loading = true;
@@ -23,14 +34,16 @@ const lessonsPart = {
     if (this.saveTimer) await this.saveNow();
     const inPlace = this.regeneratesInPlace();
     // What "Undo" brings back; not when the photos changed (the old ones are gone)
-    const before = inPlace && !this.photosEdited ? this.undoState() : null;
+    const before = inPlace && !this.photosEdited && !complete ? this.undoState() : null;
+    const made = new Set(this.cards.map((c) => c.id));  // completed: the cards there already
+    const sent = complete ? this.newPages() : this.photos;
     const body = new FormData();
-    this.photos.forEach((p, i) => body.append("images", p.blob, `page-${i + 1}.jpg`));
+    sent.forEach((p, i) => body.append("images", p.blob, `page-${i + 1}.jpg`));
     body.append("prompt", this.form.text);
     body.append("deck", this.form.deck);
     body.append("voice", this.form.voice);
     // The PDF pages' text, one per photo ("" for a photo): the exact words for the AI
-    if (this.photos.some((p) => p.text)) body.append("page_texts", JSON.stringify(this.photos.map((p) => p.text ?? "")));
+    if (sent.some((p) => p.text)) body.append("page_texts", JSON.stringify(sent.map((p) => p.text ?? "")));
     // Generated again: the options set in the review stay, the prompt's are added
     body.append("typing", Boolean(this.form.typing || (inPlace && this.typing)));
     body.append("dictation", Boolean(this.form.dictation || (inPlace && this.dictation)));
@@ -40,7 +53,8 @@ const lessonsPart = {
     body.append("job", job);
     if (this.selectedId) body.append("prompt_id", this.selectedId);
     try {
-      const url = inPlace ? `/api/lessons/${this.lessonId}/regenerate` : "/api/extract";
+      const url = complete ? `/api/lessons/${this.lessonId}/complete`
+        : inPlace ? `/api/lessons/${this.lessonId}/regenerate` : "/api/extract";
       const res = await api(url, { method: "POST", body, headers: { Accept: "application/x-ndjson" } });
       const lesson = await lessonAsItComes(res, (card) => {
         if (card) this.coming.push({ front: plainCardText(card.front), back: plainCardText(card.back) });
@@ -52,7 +66,12 @@ const lessonsPart = {
       await this.loadPhotos(lesson);  // as saved: the server turns sideways photos upright
       this.show(lesson);
       this.madeQuick = quick;
-      if (inPlace) {
+      if (complete) {  // the new cards marked, to be checked
+        const added = this.cards.filter((c) => !made.has(c.id));
+        added.forEach((c) => { c._state = "new"; });
+        const summary = added.length ? t("app.prompt.completed", { count: added.length }) : t("app.prompt.completedNone");
+        this.revision = { text: "", busy: false, summary, stats: "", undo: null };
+      } else if (inPlace) {
         this.revision = { text: "", busy: false, summary: t("app.prompt.regenerated"), stats: "", undo: before };
       }
       this.loadLessons();

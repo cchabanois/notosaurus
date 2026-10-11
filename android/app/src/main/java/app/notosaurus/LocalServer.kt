@@ -221,6 +221,7 @@ class LocalServer(
 
     companion object {
         const val COOKIE = "notosaurus_app"
+        const val MAX_PHOTOS = 10 // a lesson's pages, as on the computer (MAX_IMAGES)
 
         // The settings
         const val RELAY = "relay"

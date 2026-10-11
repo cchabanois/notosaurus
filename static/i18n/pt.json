@@ -88,6 +88,16 @@
       "modified": "✏️ Alteradas só para desta vez.",
       "edit": "✏️ Editar as instruções",
       "saveAsNew": "💾 Salvar como novas instruções",
+      "complete": {
+        "one": "➕ Adicionar os cartões da nova página",
+        "other": "➕ Adicionar os cartões das {count} novas páginas"
+      },
+      "completeHint": "(os cartões já feitos ficam)",
+      "completed": {
+        "one": "➕ {count} cartão adicionado das novas páginas: verifica-o.",
+        "other": "➕ {count} cartões adicionados das novas páginas: verifica-os."
+      },
+      "completedNone": "Nada de novo nestas páginas: nenhum cartão adicionado.",
       "regenerate": "✨ Gerar de novo",
       "fromPrompt": "✨ Gerar só com as instruções",
       "fromPromptHint": "Sem foto? A IA cria os cartões a partir das suas instruções: escreva as palavras nelas ou peça um tema. Confira bem os cartões.",

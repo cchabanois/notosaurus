@@ -167,6 +167,58 @@ def test_regenerate_keeps_the_review_options(client):
     assert (new["reverse"], new["typing"], new["dictation"]) == (True, True, True)  # the prompt's added
 
 
+def test_complete_adds_the_next_pages_cards(client, monkeypatch):
+    """A page more, days later: only it is read, the AI knowing the cards made already;
+    its cards come after the lesson's, which keep their ids (their notes in Anki)."""
+    from app import lessons
+    from app.routes import generation
+
+    lesson = extract_lesson(client)  # 2 photos
+    url = f"/api/lessons/{lesson['id']}"
+    asked = {}
+    real = generation.extract_cards
+
+    async def next_page(s, images, prompt, *args, existing=(), **kwargs):
+        asked.update(photos=[i.data for i in images], prompt=prompt, existing=list(existing))
+        found = await real(s, images, prompt, *args, **kwargs)
+        found.deck.cards = [llm.Card(front="le grand-père", back="el abuelo", subdeck="Vocabulaire")]
+        found.deck.deck = "Autre chose"
+        found.frames = [llm.Frame(page=1, box=[0.1, 0.1, 0.5, 0.5])]
+        return found
+
+    monkeypatch.setattr(generation, "extract_cards", next_page)
+    files = [("images", ("p3.jpg", b"page 3", "image/jpeg"))]
+    done = client.post(f"{url}/complete", files=files, data={"prompt": "FR → ES"}).json()
+
+    assert asked["photos"] == [b"page 3"]  # the new page only
+    assert "la mère [Vocabulaire]" in asked["existing"]
+    assert done["cards"][: len(lesson["cards"])] == lesson["cards"]  # untouched, ids included
+    added = done["cards"][-1]
+    assert (added["front"], added["id"] != "") == ("le grand-père", True)
+    assert done["deck"] == lesson["deck"]  # the lesson's, not the AI's
+    assert done["photo_count"] == 3
+    assert (lessons.folder(lesson["id"]) / "page-3.jpg").read_bytes() == b"page 3"
+    assert done["frames"][-1]["page"] == 3  # its page among the lesson's
+    assert len(done["ai_calls"]) == 2
+
+
+def test_complete_counts_the_pages_and_needs_one(client):
+    lesson = extract_lesson(client, n_photos=10)
+    url = f"/api/lessons/{lesson['id']}"
+    assert client.post(f"{url}/complete", data={"prompt": "p"}).json()["detail"]["code"] == "extract.no_input"
+    files = [("images", ("p.jpg", b"one more", "image/jpeg"))]
+    assert (
+        client.post(f"{url}/complete", files=files, data={"prompt": "p"}).json()["detail"]["code"] == "extract.too_many"
+    )
+
+
+def test_the_ai_is_told_the_cards_made_already():
+    text = prompts._user_text("FR → ES", "", 1, existing=["la mère [Vocabulaire]", "le père"])
+    assert "next pages of a lesson that already has these cards: la mère [Vocabulaire]; le père" in text
+    assert "never one of these again" in text
+    assert "already has" not in prompts._user_text("FR → ES", "", 1)
+
+
 # --- The AI correction --------------------------------------------------------
 
 

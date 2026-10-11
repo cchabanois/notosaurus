@@ -58,6 +58,7 @@ MAX_PROMPT = 8000  # Notosaurus's own prompts are under 1,000 characters
 MAX_INSTRUCTIONS = 10_000  # standing instructions, for everyone and for the pupil
 MAX_PAGE_TEXT = 20_000  # per photo; the AI gets the first llm.PAGE_TEXT_MAX
 MAX_NAME = 300  # a deck name
+MAX_EXISTING = 500  # a lesson's cards made already (the AI is sent the first 6,000 characters)
 MAX_DECKS = 1000
 MAX_INSTRUCTION = 2000  # a correction
 MAX_SUBJECT = 1000  # a picture's subject, a figure's description
@@ -122,6 +123,11 @@ class ExtractRequest(BaseModel):
     instructions: str = Instructions
     quick: bool = Field(
         default=False, description="Made fast: the AI thinks little (2 to 4 times faster, a little less careful)."
+    )
+    existing: list[str] = Field(
+        default_factory=list,
+        max_length=MAX_EXISTING,
+        description='The photos are a lesson\'s next pages: its cards made already ("front [part]"), not made again.',
     )
 
 

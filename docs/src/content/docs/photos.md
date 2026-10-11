@@ -37,6 +37,15 @@ On each photo:
 You don't need to turn sideways photos yourself: Notosaurus finds how each page is turned
 when it reads it, and saves it upright.
 
+## Adding a page later
+
+The rest of the lesson comes a few days later? Reopen the lesson in 📚, add the new page's photo
+with **Next page**, then tap **➕ Add the new page's cards**. The AI reads only the new pages,
+knowing which cards exist already: it doesn't make them again. The new cards come after the
+others, marked "new" for you to check; the others don't move, and **🔄 Update in Anki** adds only
+the new ones (the others keep their review history). **✨ Generate again**, next to it, remakes
+the whole lesson.
+
 ## PDFs
 
 **📄 PDF**, next to the camera and the gallery, adds the pages of a PDF: a worksheet sent by the

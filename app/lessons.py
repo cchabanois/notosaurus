@@ -233,6 +233,44 @@ def regenerated(
     return _read(path)
 
 
+def completed(
+    id: str,
+    cards: list[Card],
+    photos: list[bytes],
+    frames: list[Frame],
+    calls: list[AiCall],
+    page_texts: list[str] = (),
+) -> Lesson | None:
+    """The lesson's next pages added: their photos after its own, their cards after its
+    cards (those untouched: their ids, so their notes in Anki, stay). `cards` and `frames`
+    count pages from the first new photo; numbered here from the lesson's own."""
+    with storage.lock:
+        path = folder(id)
+        if not path:
+            return None
+        old = _read(path)
+        before = old.photo_count
+        for n, data in enumerate(photos, start=before + 1):
+            (path / f"page-{n}.jpg").write_bytes(data)
+        for card in cards:
+            if card.mask:
+                card.mask.page += before
+        texts = old.page_texts
+        if any(page_texts):  # one per photo: the earlier pages' ("" without a PDF), then these
+            texts = [*old.page_texts, *[""] * (before - len(old.page_texts)), *page_texts]
+        lesson = old.model_copy(
+            update={
+                "cards": [*old.cards, *cards],
+                "frames": [*old.frames, *(f.model_copy(update={"page": f.page + before}) for f in frames)],
+                "page_texts": texts,
+                "ai_calls": [*old.ai_calls, *calls],
+                "updated_at": storage.now(),
+            }
+        )
+        _write(path, lesson)
+    return _read(path)
+
+
 def add_ai_calls(id: str, calls: list[AiCall]) -> None:
     """Keep the AI calls of a correction with the lesson (not a content change)."""
     if not calls:

@@ -38,7 +38,9 @@ class Generation(
 ) {
     private val running = ConcurrentHashMap<String, Job>() // by the page's id for each
 
-    suspend fun make(form: GenerationForm, onCard: OnCard): Made {
+    /** `existing`: the lesson's cards made already ("front [part]"), when the photos are its
+     * next pages (/v1/extract's "existing"): not made again. */
+    suspend fun make(form: GenerationForm, onCard: OnCard, existing: List<String> = emptyList()): Made {
         val fields = form.fields
         val texts = fields["page_texts"]?.let { json.parseToJsonElement(it) } ?: JsonArray(emptyList())
         val request = buildJsonObject {
@@ -50,6 +52,7 @@ class Generation(
             put("page_texts", texts)
             put("instructions", instructions())
             put("quick", form.on("quick"))
+            if (existing.isNotEmpty()) put("existing", JsonArray(existing.map(::JsonPrimitive)))
         }
         val found = cancellable(fields["job"]) { relay().extract(request, form.images, onCard) }
         val voice = fields["voice"].orEmpty().let {

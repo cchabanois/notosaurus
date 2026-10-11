@@ -1,5 +1,6 @@
 package app.notosaurus
 
+import app.notosaurus.LocalServer.Companion.MAX_PHOTOS
 import app.notosaurus.LocalServer.Companion.CARD_HELPS
 import app.notosaurus.LocalServer.Companion.COMPUTER
 import app.notosaurus.LocalServer.Companion.COMPUTER_MODE
@@ -25,7 +26,7 @@ internal fun Route.settingsRoutes(server: LocalServer) {
             buildJsonObject {
                 put("version", version)
                 put("diagram_warning", false)
-                put("max_photos", 10)
+                put("max_photos", MAX_PHOTOS)
                 put("profiles", false) // AnkiDroid doesn't say its profile: no Anki profile badge
                 put("card_helps", prefs[CARD_HELPS] == "true")
                 put("configured", true)
