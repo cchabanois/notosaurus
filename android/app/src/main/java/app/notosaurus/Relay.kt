@@ -37,7 +37,11 @@ class Picture(val jpeg: ByteArray, val source: JsonObject?)
 /** Told each card as soon as the AI has written it, or null: start again (another model). */
 typealias OnCard = suspend (JsonObject?) -> Unit
 
-class Relay(baseUrl: String, private val key: String) {
+class Relay(
+    baseUrl: String,
+    private val key: String,
+    private val lost: () -> Unit = {}, // not reached, or nothing there: where the relays are, asked again (RelayDirectory)
+) {
     private val base = baseUrl.trimEnd('/')
 
     suspend fun account(): Account = json.decodeFromJsonElement(Account.serializer(), call("account", null))
@@ -148,11 +152,13 @@ class Relay(baseUrl: String, private val key: String) {
         val response = try {
             client.newCall(request).await()
         } catch (e: IOException) {
+            lost()
             throw RelayException("relay.unreachable", buildJsonObject { put("detail", e.message ?: "") })
         }
         if (!response.isSuccessful) {
             val text = response.use { it.body.string() }
             val error = runCatching { json.decodeFromString<ApiError>(text) }.getOrNull()
+            if (error == null && response.code == 404) lost() // not a relay's answer: a service gone
             throw RelayException(error?.code ?: "relay.http_${response.code}", error?.params ?: JsonObject(emptyMap()))
         }
         return response

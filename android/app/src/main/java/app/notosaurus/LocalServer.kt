@@ -97,7 +97,7 @@ class LocalServer(
     }
 
     /** The relay, with its licence key. */
-    internal fun relay() = Relay(relayUrl(), licence())
+    internal fun relay() = Relay(relayUrl(), licence(), lost = relays::refreshSoon)
 
     internal fun relayUrl() = prefs[RELAY] ?: if (DEFAULT_RELAY == TEST_RELAY) relays.test() else relays.real()
 

@@ -11,10 +11,11 @@ import java.util.concurrent.TimeUnit
  * on GitHub Pages), not only the address built into the app. Moved (another Google Cloud
  * project, another host), the file says so and every installed app follows, with no update.
  *
- * Read when the app starts. Unreachable or wrong: the address known last, else the built-in
- * one. A relay that moved keeps the user's choice of it and their licence key (saved per
- * relay, LocalServer.keyOf). Only https Cloud Run addresses are taken: a relay on another
- * host needs an app update adding it ([accepted]).
+ * Read when the app starts, and again when the relay can't be reached (the app started offline,
+ * then online; a relay gone): the next try goes to where it is now. Unreachable or wrong: the
+ * address known last, else the built-in one. A relay that moved keeps the user's choice of it
+ * and their licence key (saved per relay, LocalServer.keyOf). Only https Cloud Run addresses
+ * are taken: a relay on another host needs an app update adding it ([accepted]).
  */
 class RelayDirectory(
     private val prefs: Preferences,
@@ -28,11 +29,30 @@ class RelayDirectory(
     /** The test relay's (a debug build's); "" in a release. */
     fun test(): String = if (builtInTest.isEmpty()) "" else prefs[KNOWN_TEST] ?: builtInTest
 
+    @Volatile private var lastRead: Long? = null // when the file was last read (System.nanoTime)
+    @Volatile private var reading = false
+
     /** The file read again (on the network: off the main thread); the relays that moved followed. */
     fun refresh() {
         val listed = runCatching { read() }.getOrNull() ?: return
+        lastRead = System.nanoTime()
         listed["real"]?.let { move(KNOWN_REAL, real(), it) }
         if (builtInTest.isNotEmpty()) listed["test"]?.let { move(KNOWN_TEST, test(), it) }
+    }
+
+    /** The relay couldn't be reached: the file read again in the background, unless it was
+     * read less than [AGAIN_AFTER_S] ago (not read, offline: tried again each time). */
+    @Synchronized fun refreshSoon() {
+        val last = lastRead
+        if (url == null || reading || (last != null && System.nanoTime() - last < AGAIN_AFTER_S * 1_000_000_000L)) return
+        reading = true
+        Thread {
+            try {
+                refresh()
+            } finally {
+                reading = false
+            }
+        }.start()
     }
 
     private fun read(): Map<String, String>? {
@@ -56,6 +76,7 @@ class RelayDirectory(
 
     companion object {
         const val URL = "https://cchabanois.github.io/notosaurus/relay.json"
+        private const val AGAIN_AFTER_S = 30L
         private const val KNOWN_REAL = "relay_real"
         private const val KNOWN_TEST = "relay_test"
         private val CLOUD_RUN = Regex("""^[a-z0-9-]+\.[a-z0-9-]+\.run\.app$""")

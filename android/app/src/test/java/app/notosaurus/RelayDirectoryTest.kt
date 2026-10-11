@@ -1,5 +1,6 @@
 package app.notosaurus
 
+import kotlinx.coroutines.runBlocking
 import mockwebserver3.MockResponse
 import mockwebserver3.MockWebServer
 import org.junit.After
@@ -64,6 +65,21 @@ class RelayDirectoryTest {
         listed("not json")
         directory().refresh()
         assertEquals(REAL, directory().real())
+    }
+
+    @Test
+    fun readAgainWhenTheRelayCantBeReached() = runBlocking {
+        val relays = directory()
+        listed("", code = 503)
+        relays.refresh() // the app started offline: the file not read
+        listed("""{"real": "$MOVED"}""")
+        val gone = Relay("http://127.0.0.1:1", "nts_key", lost = relays::refreshSoon) // the relay known then
+        runCatching { gone.account() } // online now: not reached, the file read again
+        repeat(50) { if (relays.real() != MOVED) Thread.sleep(40) }
+        assertEquals(MOVED, relays.real())
+        runCatching { gone.account() } // just read: not again before 30 s
+        Thread.sleep(200)
+        assertEquals(2, server.requestCount)
     }
 
     @Test
