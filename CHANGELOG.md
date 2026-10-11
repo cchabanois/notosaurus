@@ -70,6 +70,7 @@ Each pull request adds a line under **Unreleased**. See [Releasing](CONTRIBUTING
 
 ### Fixed
 
+- A picture Gemini refused to draw (its safety filters) made drawing the whole lesson's pictures fail with an unexplained error: that card now just stays without its picture (“The image model gave no picture.”).
 - The coming Android app keeps the lesson being made when the phone is turned (photos and prompt were lost: the page loaded again).
 - A PDF said “unreadable” where the CDN serving pdf.js was blocked (an ad blocker, a privacy setting): pdf.js now comes with Notosaurus, and PDFs open offline too.
 - Instructions picked or written while the page was still starting were replaced by the last ones used, once they had loaded (a quick start lost what was typed).
