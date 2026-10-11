@@ -33,6 +33,7 @@ from .demo import (
     _fake_revision,
     _lets_choose,
 )
+from .errors import loggable
 from .models import (
     Card,
     Deck,
@@ -178,7 +179,7 @@ async def _complete_figures(s: AIConfig, images: list[Image], cards: list[Card])
     try:
         found = await _generate(s, images, text, Figures, FIGURES_RULES, light=True)
     except ExtractionError as e:
-        log.warning("Figures left undescribed: %s", e)
+        log.warning("Figures left undescribed (%d cards): %s", len(todo), loggable(e))
         return
     for item in found.figures:
         if 0 <= item.card < len(todo) and item.figure.strip():

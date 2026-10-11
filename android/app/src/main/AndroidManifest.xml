@@ -16,7 +16,17 @@
         android:label="@string/app_name"
         android:theme="@android:style/Theme.Material.Light.NoActionBar"
         android:usesCleartextTraffic="true">
-        <!-- usesCleartextTraffic: the prototype talks to a relay on the computer (http on the LAN) -->
+        <!-- usesCleartextTraffic: plain http is needed for
+             - "With my computer" (Computer.kt): the phone talks to the Anki add-on's Notosaurus
+               on the family's computer, over the home Wi-Fi, at whatever LAN address its QR code
+               gives (192.168.x.y…). That server has no certificate a phone could trust; it
+               answers a phone only paired with the QR code's token. A network security config
+               can't help: it lists hosts, not address ranges, and the computer's address is
+               only known at pairing.
+             - the WebView's own server (LocalServer.kt), on 127.0.0.1: never leaves the phone.
+             Everything that goes to the relay (lessons, photos, licence) is https: the built-in
+             addresses (build.gradle.kts) and those RelayDirectory follows (https only); only one
+             typed by hand in the settings, "Advanced", could be http. -->
 
         <!-- Turned, resized (a fold, a split screen): the page stays as it is, with the lesson
              being made (recreated, it was loaded again: photos and prompt lost) -->

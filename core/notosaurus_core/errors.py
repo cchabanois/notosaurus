@@ -21,5 +21,16 @@ class AppError(Exception):
     def detail(self) -> dict:
         return {"code": self.code, "params": self.params}
 
-    def __str__(self) -> str:  # logs and tests
+    def __str__(self) -> str:  # tests
         return f"{self.code} {self.params}" if self.params else self.code
+
+
+def loggable(e: BaseException) -> str:
+    """What a log line may say of an error: its code (and a provider's numeric status), or
+    its type, never its message nor its text params. The relay's logs hold nothing of a
+    lesson, and a message can carry one (a subject, a card's text, a provider's detail
+    quoting the prompt)."""
+    if isinstance(e, AppError):
+        status = e.params.get("status")
+        return f"{e.code} ({status})" if isinstance(status, int) else e.code
+    return type(e).__name__

@@ -5,11 +5,12 @@ import io
 
 import apkg
 import pytest
-from helpers import plain_image
+from helpers import plain_image, run
 from PIL import Image
 
 from app.settings import Settings
-from notosaurus_core import llm, pictures
+from notosaurus_core import llm, pictures, tts
+from notosaurus_core.config import AIConfig
 from notosaurus_core.models import Card
 from notosaurus_core.relay_api import MAX_IMAGE_BYTES
 
@@ -299,3 +300,30 @@ def test_every_image_model_of_the_service(admin, monkeypatch):
 
     admin.put("/api/admin/settings", headers=ADMIN, json={"picture_service": "none"})
     assert admin.post("/api/admin/pictures/models", headers=ADMIN).json()["detail"]["code"] == "picture.no_model"
+
+
+def test_failing_pictures_and_sounds_log_nothing_of_the_lesson(monkeypatch, caplog, tmp_path):
+    """The relay's logs hold nothing of a lesson: neither a picture's subject nor a text read,
+    nor an error quoting them."""
+
+    async def figure_or_picture(s, folder, card):
+        if "volcano" in card.picture_prompt:
+            raise pictures.PictureError("picture.failed", detail=f"refused: {card.picture_prompt}")
+        raise ValueError(f"not an image: {card.figure}")
+
+    monkeypatch.setattr(pictures, "figure_or_picture", figure_or_picture)
+    cards = [
+        Card(front="Le volcan", back="El volcán", picture_prompt="an erupting volcano"),
+        Card(front="Le cycle de l'eau", back="…", figure="the water cycle, with clouds"),
+    ]
+
+    async def synthesize(text, voice, path, rate):
+        raise RuntimeError(f"cannot read {text}")
+
+    monkeypatch.setattr(tts, "_synthesize", synthesize)
+    with caplog.at_level("WARNING", logger="notosaurus"):
+        assert run(pictures.draw_all(AIConfig(llm="gemini"), tmp_path, cards))[0] == 2
+        assert run(tts.tts_many(["el volcán ruge"], "es-ES-ElviraNeural", tmp_path)) == ({}, 1)
+    assert len(caplog.records) == 3 and "picture.failed" in caplog.text and "RuntimeError" in caplog.text
+    for content in ("volcano", "water cycle", "volcán"):
+        assert not any(content in r.getMessage() for r in caplog.records)

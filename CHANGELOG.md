@@ -95,6 +95,8 @@ Each pull request adds a line under **Unreleased**. See [Releasing](CONTRIBUTING
 - A new settings password needs 8 characters at least (the one already chosen still works), and after 5 wrong passwords the device trying them must wait, longer at each new try (up to 15 minutes).
 - A card's id sent by the page is checked (letters and digits only): it names its picture's file, and could have written elsewhere on Windows.
 - A photo heavier than 4 MB is refused (“A photo is too heavy”) instead of being read whole into memory.
+- Nothing of a lesson in the logs any more: a picture that fails, a free picture not found, a sound not made or a figure left undescribed logged its subject or text (or an error quoting it), on the computer and on the relay. They now say only what went wrong (an error code, a count, a model).
+- The Docker image runs Notosaurus as its own user, not root. A `notosaurus-data` volume made by an older image is handed over once with `docker run --rm -u 0 -v notosaurus-data:/data notosaurus chown -R notosaurus: /data`.
 
 ## [1.0.0] - 2026-10-04
 

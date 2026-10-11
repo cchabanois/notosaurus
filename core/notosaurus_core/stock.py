@@ -27,7 +27,7 @@ from pydantic import BaseModel
 
 from . import llm, pictures
 from .config import AIConfig
-from .errors import AppError
+from .errors import AppError, loggable
 from .models import PictureSource
 
 log = logging.getLogger("notosaurus")
@@ -139,7 +139,7 @@ async def find(s: AIConfig, query: str, context: str, pixabay_key: str = "") -> 
         choice = await llm.pick_picture(s, previews, query, context)
         return None if choice is None else await fetch(found[choice].source, found[choice].id, pixabay_key)
     except AppError as e:  # a source down, a model that can't see pictures…: drawn instead
-        log.warning("No free picture for %r: %s", query, e)
+        log.warning("No free picture, drawn instead: %s", loggable(e))  # never the query: no lesson in logs
         return None
 
 

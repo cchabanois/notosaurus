@@ -155,7 +155,8 @@ async def _gemini[T: BaseModel](
                 response = await generate(model)
             break
         except errors.ClientError as e:
-            log.warning("Gemini %s : %s %s", model, e.code, e.message)
+            # The status, not the message: a 400's may quote the prompt (no lesson in logs)
+            log.warning("Gemini %s: %s %s", model, e.code, e.status)
             if e.code in (401, 403) or "API key" in str(e):
                 raise ExtractionError("llm.invalid_key", provider="Gemini") from e
             if e.code == 429:
@@ -167,7 +168,7 @@ async def _gemini[T: BaseModel](
                 raise ExtractionError("llm.gemini_quota") from e
             raise ExtractionError("llm.api_error", provider="Gemini", status=e.code, detail=e.message) from e
         except errors.APIError as e:
-            log.warning("Gemini %s : %s %s", model, e.code, e.message)
+            log.warning("Gemini %s: %s %s", model, e.code, e.status)
             if model == models[-1]:
                 raise ExtractionError("llm.overloaded", provider="Gemini", status=e.code) from e
             log.warning("Falling back to the next model")

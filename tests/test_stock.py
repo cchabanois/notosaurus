@@ -318,3 +318,17 @@ def test_the_ai_says_which_fits(monkeypatch):
         and "The card: le chien → el perro" in contents[-1]
         and "that very thing" in config.system_instruction
     )
+
+
+def test_a_failing_search_logs_nothing_of_the_lesson(monkeypatch, caplog):
+    """The relay's logs hold nothing of a lesson: neither the query nor an error quoting it."""
+    subject = "storming of the Bastille"
+
+    async def search(query, pixabay_key=""):
+        raise AppError("picture.api_error", status=503, detail=f"nothing for {query}")
+
+    monkeypatch.setattr(stock, "search", search)
+    with caplog.at_level("WARNING", logger="notosaurus"):
+        assert run(stock.find(AIConfig(llm="gemini"), subject, "14 juillet 1789 → prise de la Bastille")) is None
+    assert caplog.records and "picture.api_error (503)" in caplog.text
+    assert not any("Bastille" in r.getMessage() for r in caplog.records)
