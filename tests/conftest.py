@@ -200,9 +200,16 @@ class FakeAnki:
                     "modelName": self.notes[i]["modelName"],
                     "fields": {k: {"value": v} for k, v in self.notes[i]["fields"].items()},
                     "tags": self.notes[i]["tags"],
+                    "cards": [i],  # one card a note here: the card's id is the note's
                 }
                 for i in p["notes"]
             ]
+        elif action == "cardsInfo":
+            result = [{"cardId": i, "note": i, "deckName": self.notes[i]["deckName"]} for i in p["cards"]]
+        elif action == "changeDeck":
+            self.decks.setdefault(p["deck"], 1000 + len(self.decks))
+            for i in p["cards"]:
+                self.notes[i]["deckName"] = p["deck"]
         elif action == "updateNoteModel":
             if not self.note_model:
                 error = "unsupported action"

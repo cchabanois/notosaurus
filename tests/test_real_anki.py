@@ -380,6 +380,30 @@ def test_options_changed_after_a_send_keep_the_review_history(bridged, col):
     assert by_template["Dictée"].id == dictation_id
 
 
+def test_the_lessons_deck_changed_on_a_real_collection(bridged, col):
+    """Sent again to another deck: the same notes and cards move, their history kept; the
+    decks left empty go."""
+    client, _ = bridged
+    lesson = extract(client)
+    body = {"deck": "Espagnol::Leçon 5", "cards": lesson["cards"], "voice": VOICE, "lesson_id": lesson["id"]}
+    client.post("/api/anki/send", json=body)
+    (mother,) = col.find_notes('"Front:la mère"')
+    (card,) = col.get_note(mother).cards()
+    card.type = card.queue = 2  # reviewed: due in 12 days, after 5 reviews
+    card.ivl, card.reps, card.due = 12, 5, col.sched.today + 12
+    col.update_card(card)
+    notes_before = sorted(col.find_notes(""))
+
+    res = client.post("/api/anki/send", json={**body, "deck": "Espagnol::5ème::Leçon 5"}).json()
+    assert (res["added"], res["moved"]) == (0, len(notes_before))
+    assert sorted(col.find_notes("")) == notes_before
+    moved = col.get_card(card.id)
+    assert col.decks.name(moved.did).startswith("Espagnol::5ème::Leçon 5")
+    assert (moved.ivl, moved.reps) == (12, 5)
+    names = {d.name for d in col.decks.all_names_and_ids()}
+    assert not [n for n in names if n.startswith("Espagnol::Leçon 5")]
+
+
 def test_figure_lesson_on_a_real_collection(bridged, col):
     client, _ = bridged
     lesson = client.post("/api/extract", data={"prompt": "Le triangle rectangle (géométrie)"}).json()
