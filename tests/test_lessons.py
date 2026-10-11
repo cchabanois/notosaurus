@@ -4,6 +4,7 @@ the storage beneath it (ids, folders, the summaries the list shows)."""
 import json
 import os
 
+import pytest
 from conftest import extract_lesson
 
 from app import ankiconnect, lessons, storage
@@ -206,3 +207,40 @@ def test_page_files_revalidated(client):
         assert res.status_code == 200 and res.headers["cache-control"] == "no-cache", path
     etag = client.get("/style.css").headers["etag"]
     assert client.get("/style.css", headers={"If-None-Match": etag}).status_code == 304  # unchanged: nothing re-sent
+
+
+def test_a_creation_that_fails_midway_leaves_nothing(client, tmp_path):
+    """A photo that can't be written (a full disk…): no half lesson, neither its
+    temporary folder nor the final one, and the error reaches the caller."""
+    root = tmp_path / "data" / "lessons"
+    with pytest.raises(TypeError):  # the second photo isn't bytes: written after the first
+        lessons.create(LessonIn(deck="D", cards=[]), "p", [b"photo 1", None])
+    assert not root.exists() or list(root.iterdir()) == []
+    assert lessons.list_all() == []
+    # The next one is made as usual, in the name the failed one would have had
+    made = lessons.create(LessonIn(deck="D", cards=[]), "p", [b"photo 1"])
+    assert [p.name for p in root.iterdir()] == [made.id] and made.photo_count == 1
+
+
+def test_a_lesson_deleted_while_listed_just_disappears(client, monkeypatch):
+    """Another request deletes a lesson between a look at its file and its reading:
+    the list goes on without it, opening it finds nothing; no error."""
+    kept = lessons.create(LessonIn(deck="Kept", cards=[]), "p", [])
+    listed = lessons.create(LessonIn(deck="Listed", cards=[]), "p", [])
+    assert {s.id for s in lessons.list_all()} == {kept.id, listed.id}  # its summary kept
+    lessons.update(listed.id, LessonIn(deck="Listed again", cards=[]))  # read again next time
+    gone = lessons.create(LessonIn(deck="Gone", cards=[]), "p", [])
+    read, doomed = lessons._read, {gone.id, listed.id}
+
+    def deleted_meanwhile(path):
+        if path.name in doomed:
+            assert lessons.delete(path.name)
+        return read(path)
+
+    monkeypatch.setattr(lessons, "_read", deleted_meanwhile)
+    assert [s.id for s in lessons.list_all()] == [kept.id]
+    assert client.get("/api/lessons").json()[0]["id"] == kept.id
+
+    opened = lessons.create(LessonIn(deck="Opened", cards=[]), "p", [])
+    doomed.add(opened.id)
+    assert lessons.get(opened.id) is None

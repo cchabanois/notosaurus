@@ -188,3 +188,26 @@ def test_cancelled_while_the_ai_writes(client):
     assert stopped == [True] and saved == []
     # Gone (or never there): nothing to cancel
     assert client.post("/api/generations/j1/cancel").json() == {"cancelled": False}
+
+
+def test_an_unexpected_error_mid_stream(client, monkeypatch, caplog):
+    """A plain bug after the first card: the page's last line is an "internal" error,
+    no lesson is saved, and the log says where it failed, never what the error said
+    (its message may quote the lesson)."""
+    from app.routes import generation
+
+    async def failing(s, images, prompt, *args, on_card=None, **kwargs):
+        await on_card({"front": "la mère", "back": "la madre"})
+        raise RuntimeError("could not parse 'la madre de Pedro'")
+
+    monkeypatch.setattr(generation, "extract_cards", failing)
+    with caplog.at_level("ERROR", logger="notosaurus"):
+        items = lines(client.post("/api/extract", data={"prompt": "FR → ES"}, headers=NDJSON))
+    assert items == [
+        {"card": {"front": "la mère", "back": "la madre"}},
+        {"error": {"code": "internal", "params": {}}},
+    ]
+    assert client.get("/api/lessons").json() == []
+    assert [r.levelname for r in caplog.records] == ["ERROR"]
+    assert "RuntimeError" in caplog.text and "failing" in caplog.text  # its type, and where
+    assert "madre" not in caplog.text and "Pedro" not in caplog.text
