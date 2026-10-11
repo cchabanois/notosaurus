@@ -63,8 +63,10 @@ class LocalServer(
     internal val turnPhoto: (ByteArray, Int) -> ByteArray = { data, _ -> data }, // a JPEG turned clockwise (Photos.turn)
     recorder: Recorder? = null, // the microphone, for the page's 🎤 (none: no 🎤)
     internal val requestMicPermission: suspend () -> Boolean = { false }, // the microphone's permission dialog: granted?
+    relayDirectory: String? = null, // where the relays are listed (RelayDirectory.URL); null: the built-in ones
     val token: String = UUID.randomUUID().toString(),
 ) {
+    internal val relays = RelayDirectory(prefs, relayDirectory)
     internal val lessons = Lessons(File(dataDir, "lessons").apply { mkdirs() })
     internal val texts = PageTexts(web, languages)
     internal val prompts = Prompts(File(dataDir, "prompts.json"), texts)
@@ -95,9 +97,9 @@ class LocalServer(
     }
 
     /** The relay, with its licence key. */
-    internal fun relay() = Relay(relayUrl(), licence())
+    internal fun relay() = Relay(relayUrl(), licence(), lost = relays::refreshSoon)
 
-    internal fun relayUrl() = prefs[RELAY] ?: DEFAULT_RELAY
+    internal fun relayUrl() = prefs[RELAY] ?: if (DEFAULT_RELAY == TEST_RELAY) relays.test() else relays.real()
 
     /** The licence key of the relay in use: each relay keeps its own (the test one has its own licences). */
     internal fun licence() = prefs[keyOf(relayUrl())].orEmpty()
@@ -232,7 +234,8 @@ class LocalServer(
         const val TTS_RATE = Speech.TTS_RATE
 
         // The relay of a fresh install, by the build (app/build.gradle.kts): the test instance
-        // while developing, the real one in a release (changed in the settings, "Advanced")
+        // while developing, the real one in a release (changed in the settings, "Advanced").
+        // Built in; where they are now: RelayDirectory
         val DEFAULT_RELAY: String = BuildConfig.DEFAULT_RELAY
         val REAL_RELAY: String = BuildConfig.REAL_RELAY
         val TEST_RELAY: String = BuildConfig.TEST_RELAY // "" in a release
@@ -275,6 +278,7 @@ class LocalServer(
             turnPhoto = Photos::turn,
             recorder = MicRecorder(context),
             requestMicPermission = requestMicPermission,
+            relayDirectory = RelayDirectory.URL,
         )
 
         private fun asset(context: Context, path: String) =

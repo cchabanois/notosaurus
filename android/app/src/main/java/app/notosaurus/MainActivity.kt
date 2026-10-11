@@ -140,6 +140,7 @@ class MainActivity : ComponentActivity() {
             CookieManager.getInstance().setCookie(origin, "${LocalServer.COOKIE}=${server.token}; path=/")
             useMode(intent)
             Shortcuts.update(this@MainActivity, server)
+            withContext(Dispatchers.IO) { server.relays.refresh() } // a relay moved: followed from now on
         }
     }
 
