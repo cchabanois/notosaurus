@@ -299,6 +299,43 @@ class LocalServerTest {
     }
 
     @Test
+    fun aLessonsNextPageAddsItsCards() = app { client ->
+        val lesson = client.extract()
+        relay.takeRequest()
+        val id = lesson.string("id")
+        val before = lesson["cards"]!!.jsonArray.map { it.jsonObject }
+
+        // Days later, page 3: only it goes to the relay, with the cards made already
+        relayAnswers("""{"deck": {"deck": "Autre", "cards": [{"front": "le grand-père", "back": "el abuelo",
+            "mask": {"page": 1, "n": 1, "box": [0.1, 0.1, 0.2, 0.2]}}]}, "turns": [0],
+            "frames": [{"page": 1, "box": [0, 0, 1, 1]}], "usage": {"credits": 2, "credits_left": 95}}""")
+        val done = client.submitFormWithBinaryData("/api/lessons/$id/complete", formData {
+            append("images", "photo 3".toByteArray(), Headers.build {
+                append(HttpHeaders.ContentType, "image/jpeg")
+                append(HttpHeaders.ContentDisposition, "filename=\"page-3.jpg\"")
+            })
+            append("prompt", "FR → ES")
+        }) { page() }.json().jsonObject
+        val asked = relay.takeRequest()
+        assertEquals(listOf("la mère", "le père"), asked.multipartRequest()["existing"]!!.jsonArray.map { it.jsonPrimitive.content })
+        assertEquals(1, asked.body!!.utf8().split("filename=").size - 1) // the new page only
+
+        val cards = done["cards"]!!.jsonArray.map { it.jsonObject }
+        assertEquals(before, cards.take(2)) // untouched, ids included
+        assertEquals("le grand-père", cards[2].string("front"))
+        assertTrue(cards[2].string("id").isNotEmpty())
+        assertEquals("3", cards[2]["mask"]!!.jsonObject["page"]!!.jsonPrimitive.content) // its page among the lesson's
+        assertEquals("3", done["frames"]!!.jsonArray.last().jsonObject["page"]!!.jsonPrimitive.content)
+        assertEquals(lesson.string("deck"), done.string("deck")) // the lesson's, not the AI's
+        assertEquals(3, done["photo_count"]!!.jsonPrimitive.int)
+        assertArrayEquals("photo 3".toByteArray(), client.get("/api/lessons/$id/photos/3") { page() }.bodyAsBytes())
+
+        // Nothing to read, or one page too many
+        val none = client.submitFormWithBinaryData("/api/lessons/$id/complete", formData { append("prompt", "p") }) { page() }
+        assertEquals(HttpStatusCode.BadRequest, none.status)
+    }
+
+    @Test
     fun cancelledWhileTheRelayWorks() = app { client ->
         coroutineScope { cancelled(client) }
     }

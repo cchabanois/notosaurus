@@ -175,6 +175,7 @@ def _user_text(
     fun_facts: bool = False,
     texts: list[str] = (),
     helps: bool = False,
+    existing: list[str] = (),
 ) -> str:
     text = f"Instructions: {prompt.strip()}"
     if fun_facts:
@@ -185,6 +186,13 @@ def _user_text(
         text += f"\nDeck name template: {deck.strip()}"
     if decks:
         text += "\nExisting decks: " + "; ".join(decks)
+    if existing:
+        made = "; ".join(existing)[:EXISTING_MAX]
+        text += (
+            f"\nThese photos are the next pages of a lesson that already has these cards: {made}. "
+            "Make cards only for what these pages add, never one of these again; use the same "
+            "parts (subdeck) and the same kinds of cards when they fit."
+        )
     if not photos:
         text += "\nThere is no photo: create the cards from these instructions alone."
     elif fmt:
@@ -195,6 +203,7 @@ def _user_text(
     return text + _pdf_texts(texts)
 
 
+EXISTING_MAX = 6000  # characters of the cards already made sent (a long lesson: its first ones)
 PAGE_TEXT_MAX = 8000  # characters per page: a dense page holds 3 to 5,000
 
 

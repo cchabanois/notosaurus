@@ -41,6 +41,16 @@ Sur chaque photo :
 Pas besoin de redresser toi-même une photo prise de travers : Notosaurus trouve le sens de
 chaque page en la lisant, et l'enregistre à l'endroit.
 
+## Ajouter une page plus tard
+
+La suite de la leçon arrive quelques jours après ? Rouvre la leçon dans 📚, ajoute la photo de
+la nouvelle page avec **Page suivante**, puis touche **➕ Ajouter les cartes de la nouvelle
+page**. L'IA ne lit que les nouvelles pages, en sachant quelles cartes existent déjà : elle
+n'en refait pas. Les nouvelles cartes s'ajoutent à la suite, marquées « nouvelle » pour que tu
+les vérifies ; les autres ne bougent pas, et **🔄 Mettre à jour dans Anki** n'ajoute que les
+nouvelles (l'historique de révision des autres est gardé). **✨ Régénérer**, à côté, refait
+toute la leçon.
+
 ## Les PDF
 
 **📄 PDF**, à côté de l'appareil photo et de la galerie, ajoute les pages d'un PDF : une fiche

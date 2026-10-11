@@ -1,10 +1,13 @@
 package app.notosaurus
 
+import app.notosaurus.LocalServer.Companion.MAX_PHOTOS
 import io.ktor.server.routing.Route
 import kotlinx.serialization.json.JsonArray
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.buildJsonObject
+import kotlinx.serialization.json.intOrNull
+import kotlinx.serialization.json.jsonPrimitive
 import kotlinx.serialization.json.put
 
 /** The AI, through the relay: a lesson made (again), revised, a card explained. */
@@ -24,6 +27,21 @@ internal fun Route.generationRoutes(server: LocalServer) {
             val old = lesson()
             val made = generation.make(form, onCard)
             lessons.regenerated(old.string("id"), made.content, made.photos) ?: notFound()
+        }
+        // Its next pages, days later: only they are read, the AI knowing the cards made already;
+        // their cards come after the lesson's, which stay (so do their notes in AnkiDroid)
+        making("/api/lessons/{id}/complete") { form, onCard ->
+            val old = lesson()
+            if (form.images.isEmpty()) throw BadRequest("extract.no_input")
+            val count = old["photo_count"]?.jsonPrimitive?.intOrNull ?: 0
+            if (count + form.images.size > MAX_PHOTOS) throw BadRequest("extract.too_many", buildJsonObject { put("max", MAX_PHOTOS) })
+            val existing = old.cards().map { c ->
+                c.string("front").trim() + c.string("subdeck").trim().let { if (it.isEmpty()) "" else " [$it]" }
+            }
+            // Its deck and voice are the lesson's: only the cards, photos and frames are taken
+            val asked = GenerationForm(form.fields + mapOf("deck" to old.string("deck"), "voice" to ""), form.images, form.lang)
+            val made = generation.make(asked, onCard, existing)
+            lessons.completed(old.string("id"), made.content, made.photos) ?: notFound()
         }
         api("POST", "/api/lessons/{id}/revise") {
             val lesson = lesson()

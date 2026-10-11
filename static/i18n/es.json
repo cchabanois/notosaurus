@@ -88,6 +88,16 @@
       "modified": "✏️ Cambiadas solo para esta vez.",
       "edit": "✏️ Editar las instrucciones",
       "saveAsNew": "💾 Guardar como nuevas instrucciones",
+      "complete": {
+        "one": "➕ Añadir las tarjetas de la nueva página",
+        "other": "➕ Añadir las tarjetas de las {count} nuevas páginas"
+      },
+      "completeHint": "(las tarjetas ya hechas se quedan)",
+      "completed": {
+        "one": "➕ {count} tarjeta añadida de las nuevas páginas: revísala.",
+        "other": "➕ {count} tarjetas añadidas de las nuevas páginas: revísalas."
+      },
+      "completedNone": "Nada nuevo en estas páginas: ninguna tarjeta añadida.",
       "regenerate": "✨ Volver a generar",
       "fromPrompt": "✨ Generar solo con las instrucciones",
       "fromPromptHint": "¿Sin foto? La IA crea las tarjetas a partir de tus instrucciones: escribe en ellas las palabras o pide un tema. Revisa bien las tarjetas.",

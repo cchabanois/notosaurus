@@ -7,6 +7,7 @@ import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.booleanOrNull
 import kotlinx.serialization.json.int
+import kotlinx.serialization.json.intOrNull
 import kotlinx.serialization.json.jsonArray
 import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
@@ -76,6 +77,41 @@ class Lessons(private val root: File) {
                 "typing" to either("typing"),
                 "dictation" to either("dictation"),
                 "photo_count" to JsonPrimitive(photos.size),
+                "updated_at" to JsonPrimitive(now()),
+            ),
+        )
+        write(updated)
+        return updated
+    }
+
+    /** Its next pages added (/complete): their photos after its own, their cards after its
+     * cards (untouched: their ids, so their notes in AnkiDroid, stay), as app/lessons.py's
+     * completed. `content`'s masks and frames count pages from the first new photo. */
+    fun completed(id: String, content: Map<String, JsonElement>, photos: List<ByteArray>): JsonObject? {
+        val lesson = get(id) ?: return null
+        val dir = folder(id) ?: return null
+        val before = lesson["photo_count"]?.jsonPrimitive?.intOrNull ?: 0
+        photos.forEachIndexed { i, data -> dir.resolve("page-${before + i + 1}.jpg").writeBytes(data) }
+        fun shifted(item: JsonObject, key: String): JsonObject {
+            val mask = item[key] as? JsonObject ?: return item
+            val page = mask["page"]?.jsonPrimitive?.intOrNull ?: return item
+            return JsonObject(item + (key to JsonObject(mask + ("page" to JsonPrimitive(page + before)))))
+        }
+        val cards = content["cards"]?.jsonArray.orEmpty().map { shifted(it.jsonObject, "mask") }
+        val frames = (content["frames"] as? JsonArray).orEmpty().map { f ->
+            val page = f.jsonObject["page"]?.jsonPrimitive?.intOrNull ?: 0
+            JsonObject(f.jsonObject + ("page" to JsonPrimitive(page + before)))
+        }
+        val texts = content["page_texts"]?.jsonArray.orEmpty()
+        val oldTexts = lesson["page_texts"]?.jsonArray.orEmpty()
+        val pageTexts = if (texts.none { it.jsonPrimitive.content.isNotEmpty() }) oldTexts
+        else oldTexts + List(maxOf(0, before - oldTexts.size)) { JsonPrimitive("") } + texts
+        val updated = JsonObject(
+            lesson + mapOf(
+                "cards" to withIds(JsonArray(lesson["cards"]?.jsonArray.orEmpty() + cards)),
+                "frames" to JsonArray((lesson["frames"] as? JsonArray).orEmpty() + frames),
+                "page_texts" to JsonArray(pageTexts),
+                "photo_count" to JsonPrimitive(before + photos.size),
                 "updated_at" to JsonPrimitive(now()),
             ),
         )

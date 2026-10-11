@@ -88,6 +88,16 @@
       "modified": "✏️ Modifiée pour cette fois seulement.",
       "edit": "✏️ Modifier la consigne",
       "saveAsNew": "💾 Enregistrer comme nouvelle consigne",
+      "complete": {
+        "one": "➕ Ajouter les cartes de la nouvelle page",
+        "other": "➕ Ajouter les cartes des {count} nouvelles pages"
+      },
+      "completeHint": "(les cartes déjà faites restent)",
+      "completed": {
+        "one": "➕ {count} carte ajoutée depuis les nouvelles pages : vérifie-la.",
+        "other": "➕ {count} cartes ajoutées depuis les nouvelles pages : vérifie-les."
+      },
+      "completedNone": "Rien de nouveau sur ces pages : aucune carte ajoutée.",
       "regenerate": "✨ Régénérer",
       "fromPrompt": "✨ Générer à partir de la consigne seule",
       "fromPromptHint": "Pas de photo ? L'IA crée les cartes à partir de ta consigne : mets-y les mots, ou demande un thème. Vérifie bien les cartes.",
