@@ -22,6 +22,7 @@ class RelayDirectory(
     private val url: String?, // the file's address; null: none (the tests)
     private val builtInReal: String = BuildConfig.REAL_RELAY,
     private val builtInTest: String = BuildConfig.TEST_RELAY, // "" in a release: no test relay
+    private val now: () -> Long = System::nanoTime, // the tests move time on
 ) {
     /** The real relay's address, as known last. */
     fun real(): String = prefs[KNOWN_REAL] ?: builtInReal
@@ -35,7 +36,7 @@ class RelayDirectory(
     /** The file read again (on the network: off the main thread); the relays that moved followed. */
     fun refresh() {
         val listed = runCatching { read() }.getOrNull() ?: return
-        lastRead = System.nanoTime()
+        lastRead = now()
         listed["real"]?.let { move(KNOWN_REAL, real(), it) }
         if (builtInTest.isNotEmpty()) listed["test"]?.let { move(KNOWN_TEST, test(), it) }
     }
@@ -44,7 +45,7 @@ class RelayDirectory(
      * read less than [AGAIN_AFTER_S] ago (not read, offline: tried again each time). */
     @Synchronized fun refreshSoon() {
         val last = lastRead
-        if (url == null || reading || (last != null && System.nanoTime() - last < AGAIN_AFTER_S * 1_000_000_000L)) return
+        if (url == null || reading || (last != null && now() - last < AGAIN_AFTER_S * 1_000_000_000L)) return
         reading = true
         Thread {
             try {

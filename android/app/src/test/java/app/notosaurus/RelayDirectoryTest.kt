@@ -19,7 +19,11 @@ class RelayDirectoryTest {
 
     @After fun stop() = server.close()
 
-    private fun directory(test: String = TEST) = RelayDirectory(prefs, server.url("/relay.json").toString(), REAL, test)
+    private var clock = 0L // ns
+
+    private fun directory(test: String = TEST) = RelayDirectory(prefs, server.url("/relay.json").toString(), REAL, test) { clock }
+
+    private fun waitFor(requests: Int) = repeat(50) { if (server.requestCount < requests) Thread.sleep(40) }
 
     private fun listed(body: String, code: Int = 200) = server.enqueue(MockResponse.Builder().code(code).body(body).build())
 
@@ -77,9 +81,50 @@ class RelayDirectoryTest {
         runCatching { gone.account() } // online now: not reached, the file read again
         repeat(50) { if (relays.real() != MOVED) Thread.sleep(40) }
         assertEquals(MOVED, relays.real())
+        clock += 29_000_000_000L
         runCatching { gone.account() } // just read: not again before 30 s
         Thread.sleep(200)
         assertEquals(2, server.requestCount)
+        clock += 2_000_000_000L
+        listed("""{"real": "$MOVED"}""")
+        runCatching { gone.account() } // 30 s on: read again
+        waitFor(3)
+        assertEquals(3, server.requestCount)
+    }
+
+    @Test
+    fun offlineEachFailureTriesAgain() = runBlocking {
+        val relays = directory()
+        val gone = Relay("http://127.0.0.1:1", "nts_key", lost = relays::refreshSoon)
+        repeat(3) { n ->
+            listed("", code = 503) // the file can't be had either
+            runCatching { gone.account() }
+            waitFor(n + 1)
+        }
+        assertEquals(3, server.requestCount) // a failed read doesn't hold the next one back
+        assertEquals(REAL, relays.real())
+    }
+
+    @Test
+    fun aServiceGoneReadsAgainButARelaysOwnErrorDoesnt() = runBlocking {
+        val relays = directory()
+        val relay = MockWebServer().apply { start() }
+        try {
+            val there = Relay(relay.url("/").toString(), "nts_key", lost = relays::refreshSoon)
+            relay.enqueue(MockResponse.Builder().code(404).body("""{"code": "picture.not_found", "params": {}}""").build())
+            runCatching { there.account() } // the relay's own 404: it is there, nothing to look up
+            Thread.sleep(200)
+            assertEquals(0, server.requestCount)
+            relay.enqueue(MockResponse.Builder().code(404).body("<html>Not Found</html>").build())
+            listed("""{"real": "$MOVED"}""")
+            runCatching { there.account() } // a 404 that isn't a relay's: a service gone
+            waitFor(1)
+            repeat(50) { if (relays.real() != MOVED) Thread.sleep(40) }
+            assertEquals(MOVED, relays.real())
+            assertEquals(1, server.requestCount)
+        } finally {
+            relay.close()
+        }
     }
 
     @Test
