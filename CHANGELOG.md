@@ -9,6 +9,7 @@ Each pull request adds a line under **Unreleased**. See [Releasing](CONTRIBUTING
 
 ### Added
 
+- The coming Android app reads where the relay is from a file the project publishes (`relay.json`, next to the documentation): if the relay moves, installed apps follow it with no update, the licence key with them.
 - 🖍️ on a photo not sent yet: black out with a finger what the AI shouldn't see (a name, a school), un-black it the same way. Only the blacked-out photo is sent and saved; a PDF page with a hidden part goes without its text.
 - On a computer, photos and PDFs dragged from a folder can be dropped on **Gallery** or **PDF** (each goes where its type says); a file let go elsewhere on the page no longer makes the browser open it (and leave the lesson).
 - 📚 Review a lesson in AnkiDroid right after adding it (the coming Android app): AnkiDroid opens on its deck.

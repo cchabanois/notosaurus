@@ -9,9 +9,7 @@ import app.notosaurus.LocalServer.Companion.KEY
 import app.notosaurus.LocalServer.Companion.MODE
 import app.notosaurus.LocalServer.Companion.PHONE_MODE
 import app.notosaurus.LocalServer.Companion.PICTURE_FIND
-import app.notosaurus.LocalServer.Companion.REAL_RELAY
 import app.notosaurus.LocalServer.Companion.RELAY
-import app.notosaurus.LocalServer.Companion.TEST_RELAY
 import app.notosaurus.LocalServer.Companion.TTS_RATE
 import app.notosaurus.LocalServer.Companion.keyOf
 import io.ktor.server.routing.Route
@@ -94,8 +92,8 @@ private fun LocalServer.settings() = buildJsonObject {
     put(RELAY, relayUrl())
     // The relays to choose from in one tap: the test one in a debug build only
     put("relays", buildJsonObject {
-        put("real", REAL_RELAY)
-        if (TEST_RELAY.isNotEmpty()) put("test", TEST_RELAY)
+        put("real", relays.real())
+        relays.test().takeIf { it.isNotEmpty() }?.let { put("test", it) }
     })
     put(KEY, masked(licence())) // shown, not given back whole
     put("has_key", licence().isNotEmpty())

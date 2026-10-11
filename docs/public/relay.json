@@ -1,0 +1,5 @@
+{
+  "about": "Where the Notosaurus relays are: read by the Android app when it starts (android/.../RelayDirectory.kt). A relay that moves: change its address here.",
+  "real": "https://notosaurus-relay-773198805942.europe-west1.run.app",
+  "test": "https://notosaurus-relay-dev-773198805942.europe-west1.run.app"
+}
