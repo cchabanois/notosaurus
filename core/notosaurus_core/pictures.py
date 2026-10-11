@@ -15,10 +15,7 @@ import re
 from pathlib import Path
 from typing import NamedTuple
 
-from PIL import Image as PILImage
-from PIL import ImageOps
-
-from . import config, figures, files, llm, recommended, stock
+from . import config, figures, files, images, llm, recommended, stock
 from .cards import is_cloze
 from .config import AIConfig
 from .errors import AppError, loggable
@@ -233,7 +230,7 @@ def _drawing_models(drawing: str, models: list[dict]) -> list[str]:
 
 def card_size(data: bytes) -> bytes:
     """A picture (from a model, or a photo) as a card shows it: upright, light JPEG."""
-    image = ImageOps.exif_transpose(PILImage.open(io.BytesIO(data))).convert("RGB")
+    image = images.upright(data)
     image.thumbnail((SIDE, SIDE))
     out = io.BytesIO()
     image.save(out, "JPEG", quality=QUALITY, optimize=True)

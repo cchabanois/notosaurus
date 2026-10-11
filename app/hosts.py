@@ -28,9 +28,15 @@ def public_host() -> str | None:
 
 def allowed(host: str) -> bool:
     """`host`: the Host header, its port included."""
-    if not HOST_HEADER.match(host):
+    if not HOST_HEADER.fullmatch(host):  # fullmatch: "$" alone lets a trailing "\n" through
         return False
-    name = urlsplit(f"//{host}").hostname or ""
+    try:  # ValueError: brackets around no IPv6 address ("[1.2.3.4]"), a port over 65535
+        parts = urlsplit(f"//{host}")
+        name, port = parts.hostname or "", parts.port
+    except ValueError:
+        return False
+    if port == 0:
+        return False
     if name == "localhost" or name == public_host():
         return True
     try:

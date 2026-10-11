@@ -1,5 +1,7 @@
 """Figures on cards: SVG drawn by the AI, cleaned, saved and sent like the pictures."""
 
+from xml.etree import ElementTree
+
 import apkg
 import pytest
 from helpers import plain_image
@@ -51,6 +53,36 @@ def test_clean_keeps_only_shapes_and_text():
 def test_clean_refuses(bad):
     with pytest.raises(figures.FigureError):
         figures.clean(bad)
+
+
+def test_clean_strips_a_kept_elements_dangerous_attributes():
+    """A shape kept, its handlers and external references dropped (not the whole element)."""
+    svg = figures.clean(
+        '<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 400 300">'
+        '<rect onclick="alert(1)" href="https://evil.test/" xlink:href="javascript:alert(1)"'
+        ' style="fill:url(http://evil.test)" x="1" y="1" width="2" height="2"/></svg>'
+    )
+    rect = ElementTree.fromstring(svg).find(f"{{{figures.SVG_NS}}}rect")
+    assert rect.attrib == {"x": "1", "y": "1", "width": "2", "height": "2"}  # no empty style="" left either
+    for gone in ("onclick", "href", "javascript", "evil.test", "style"):
+        assert gone not in svg, gone
+
+
+NO_SIZE = ["a b c d", "0 0 400", "0 0 400 300 1", "0 0 NaN 300", "0 0 400 inf", "0 0 1e309 300", "nan 0 400 300",
+           "0 0 -400 300", "0 0 400 0"]  # fmt: skip
+
+
+@pytest.mark.parametrize("viewbox", NO_SIZE)
+def test_clean_refuses_a_viewbox_without_a_size(viewbox):
+    with pytest.raises(figures.FigureError) as e:
+        figures.clean(f'<svg xmlns="http://www.w3.org/2000/svg" viewBox="{viewbox}"><rect width="1" height="1"/></svg>')
+    assert e.value.code == "figure.invalid"
+
+
+def test_clean_sizes_from_the_viewbox():
+    svg = figures.clean('<svg xmlns="http://www.w3.org/2000/svg" viewBox="-10,-10 420.5 320"/>')
+    assert 'width="420.5" height="320"' in svg  # its origin may be negative, not its size
+    assert 'viewBox="0 0 400 300"' in figures.clean("<svg/>")  # none: the one asked for
 
 
 def test_clean_gives_the_namespace():

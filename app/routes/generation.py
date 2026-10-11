@@ -11,6 +11,7 @@ from fastapi.encoders import jsonable_encoder
 from fastapi.responses import FileResponse, JSONResponse, StreamingResponse
 
 from notosaurus_core import diagrams, llm, tts
+from notosaurus_core.images import refuse_bomb
 from notosaurus_core.llm import Image, extract_cards
 
 from .. import ankiconnect, decks, lessons, prompts, settings, usage
@@ -115,6 +116,8 @@ async def _generate(
             raise AppError("extract.bad_format", format=img.content_type)
 
     data = [Image(await img.read(), img.content_type) for img in images]
+    for img in data:  # a decompression bomb is refused before any AI call
+        refuse_bomb(img.data)
     texts = _page_texts(form.page_texts, len(data))
     profile = await ankiconnect.active_profile() or ""  # the lesson belongs to this Anki profile
     with llm.recording("extract") as calls:  # model, tokens and cost, kept with the lesson

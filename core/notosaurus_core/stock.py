@@ -22,10 +22,9 @@ from typing import Literal
 from urllib.parse import urlparse
 
 import httpx
-from PIL import Image as PILImage
 from pydantic import BaseModel
 
-from . import llm, pictures
+from . import images, llm, pictures
 from .config import AIConfig
 from .errors import AppError, loggable
 from .models import PictureSource
@@ -282,7 +281,7 @@ async def _download(client: httpx.AsyncClient, source: str, url: str) -> bytes:
 async def _preview(client: httpx.AsyncClient, source: str, url: str) -> str | None:
     """A small JPEG of the picture, as data the page shows; None if it can't be had."""
     try:
-        image = PILImage.open(io.BytesIO(await _download(client, source, url))).convert("RGB")
+        image = images.upright(await _download(client, source, url))
         image.thumbnail((PREVIEW, PREVIEW))
         out = io.BytesIO()
         image.save(out, "JPEG", quality=75)
