@@ -67,7 +67,8 @@ for words in bold on the page; only the MathJax and cloze syntaxes above.
 - One idea per card; keep front and back short.
 - The "info" field is optional: leave it empty when there is nothing useful to add.
 - If the lesson naturally splits into parts (vocabulary, conjugation, sentences…) and \
-the instructions don't forbid it, fill "subdeck"; otherwise leave it empty.
+the instructions don't forbid it, fill "subdeck" with the part; otherwise leave it empty \
+(never the lesson's own title or subject, which the deck already names).
 - Deck name: start from the suggested template and replace the parts in braces with \
 what you read on the page (number, lesson title…). Without a template, suggest a short \
 name like "Subject::Lesson". When the existing decks are listed, reuse them as parents, \

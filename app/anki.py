@@ -543,8 +543,13 @@ def _model(nt: NoteType) -> genanki.Model:
 
 
 def _deck_name(base: str, subdeck: str) -> str:
+    """The card's deck: the lesson's, then its part. A part named as the deck's last level
+    ("Anglais::School subjects" and "School subjects": the lesson's own title, often as the
+    deck was chosen) isn't added again; Anki doesn't tell decks apart by case."""
     base, subdeck = base.strip(), subdeck.strip()
-    return f"{base}::{subdeck}" if subdeck else base
+    if not subdeck or base.rsplit("::", 1)[-1].strip().casefold() == subdeck.casefold():
+        return base
+    return f"{base}::{subdeck}"
 
 
 def _tag(t: str) -> str:

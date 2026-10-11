@@ -279,10 +279,17 @@ class Anki(private val context: Context) : AnkiTarget {
     private fun deckId(name: String): Long? =
         api.deckList?.entries?.firstOrNull { it.value == name }?.key ?: api.addNewDeck(name)
 
-    private fun deckName(deck: String, subdeck: String) =
-        if (subdeck.isBlank()) deck.ifBlank { "Notosaurus" } else "${deck.ifBlank { "Notosaurus" }}::$subdeck"
-
     companion object {
+        /** The card's deck: the lesson's, then its part; a part named as the deck's last level
+         * (the lesson's own title, often as the deck was chosen) isn't added again, as on the
+         * computer (app/anki.py: _deck_name). Anki doesn't tell decks apart by case. */
+        internal fun deckName(deck: String, subdeck: String): String {
+            val base = deck.trim().ifBlank { "Notosaurus" }
+            val part = subdeck.trim()
+            val last = base.substringAfterLast("::").trim()
+            return if (part.isEmpty() || last.equals(part, ignoreCase = true)) base else "$base::$part"
+        }
+
         const val PERMISSION = AddContentApi.READ_WRITE_PERMISSION
         // The tag of every note sent for a lesson (as the computer's): its notes found again
         const val TAG_PREFIX = "notosaurus::"
