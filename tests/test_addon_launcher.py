@@ -283,7 +283,7 @@ def test_server_with_its_own_python(addon, popen, monkeypatch, tmp_path):
     server = launcher.Server()
     server.start(config, "http://127.0.0.1:1", "k", "fr")
     (process,) = popen
-    assert process.command[:3] == ["/usr/bin/python3", "-m", "uvicorn"]
+    assert process.command[:3] == [str(Path("/usr/bin/python3")), "-m", "uvicorn"]  # as the OS writes it
     assert process.command[-4:] == ["--host", "127.0.0.1", "--port", "9000"]
     assert process.env["NOTOSAURUS_DATA"] == str(tmp_path / "my-data")
     assert process.cwd == launcher.RUNTIME
