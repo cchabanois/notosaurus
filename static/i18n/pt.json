@@ -853,6 +853,7 @@
       "subscription_ended": "A tua subscrição terminou: subscreve de novo na app para continuar.",
       "invalid_purchase": "Compra não reconhecida pelo Google Play: tenta de novo ou contacta o suporte.",
       "daily_limit": "O limite de hoje foi atingido: tente de novo amanhã.",
+      "busy": "Pedidos demais ao mesmo tempo: tente de novo daqui a pouco.",
       "too_large": "Fotos demais, ou uma pesada demais.",
       "bad_image": "Este arquivo não é uma foto que o Notosaurus consegue ler.",
       "invalid_request": "O serviço Notosaurus recusou o pedido: atualize o Notosaurus.",

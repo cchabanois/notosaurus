@@ -102,7 +102,7 @@
             }
           },
           "429": {
-            "description": "Codes: `relay.daily_limit`",
+            "description": "Codes: `relay.daily_limit`, `relay.busy`",
             "content": {
               "application/json": {
                 "schema": {
@@ -249,7 +249,7 @@
             }
           },
           "429": {
-            "description": "Codes: `relay.daily_limit`",
+            "description": "Codes: `relay.daily_limit`, `relay.busy`",
             "content": {
               "application/json": {
                 "schema": {
@@ -386,7 +386,7 @@
             }
           },
           "429": {
-            "description": "Codes: `relay.daily_limit`",
+            "description": "Codes: `relay.daily_limit`, `relay.busy`",
             "content": {
               "application/json": {
                 "schema": {
@@ -488,7 +488,7 @@
             }
           },
           "429": {
-            "description": "Codes: `relay.daily_limit`",
+            "description": "Codes: `relay.daily_limit`, `relay.busy`",
             "content": {
               "application/json": {
                 "schema": {
@@ -590,7 +590,7 @@
             }
           },
           "429": {
-            "description": "Codes: `relay.daily_limit`",
+            "description": "Codes: `relay.daily_limit`, `relay.busy`",
             "content": {
               "application/json": {
                 "schema": {
@@ -702,7 +702,7 @@
             }
           },
           "429": {
-            "description": "Codes: `relay.daily_limit`",
+            "description": "Codes: `relay.daily_limit`, `relay.busy`",
             "content": {
               "application/json": {
                 "schema": {
@@ -857,7 +857,7 @@
             }
           },
           "429": {
-            "description": "Codes: `relay.daily_limit`",
+            "description": "Codes: `relay.daily_limit`, `relay.busy`",
             "content": {
               "application/json": {
                 "schema": {
@@ -959,7 +959,7 @@
             }
           },
           "429": {
-            "description": "Codes: `relay.daily_limit`",
+            "description": "Codes: `relay.daily_limit`, `relay.busy`",
             "content": {
               "application/json": {
                 "schema": {
@@ -1061,7 +1061,7 @@
             }
           },
           "429": {
-            "description": "Codes: `relay.daily_limit`",
+            "description": "Codes: `relay.daily_limit`, `relay.busy`",
             "content": {
               "application/json": {
                 "schema": {
@@ -1163,7 +1163,7 @@
             }
           },
           "429": {
-            "description": "Codes: `relay.daily_limit`",
+            "description": "Codes: `relay.daily_limit`, `relay.busy`",
             "content": {
               "application/json": {
                 "schema": {
@@ -1274,7 +1274,7 @@
             }
           },
           "429": {
-            "description": "Codes: `relay.daily_limit`",
+            "description": "Codes: `relay.daily_limit`, `relay.busy`",
             "content": {
               "application/json": {
                 "schema": {
@@ -1391,7 +1391,7 @@
             }
           },
           "429": {
-            "description": "Codes: `relay.daily_limit`",
+            "description": "Codes: `relay.daily_limit`, `relay.busy`",
             "content": {
               "application/json": {
                 "schema": {

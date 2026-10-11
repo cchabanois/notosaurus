@@ -88,15 +88,18 @@ Each pull request adds a line under **Unreleased**. See [Releasing](CONTRIBUTING
 - Scrolling the lessons (or another sheet) with a finger no longer moves the lesson behind, on a phone.
 - 🔊 Listening to a card again, or to another one, no longer plays two voices at once: the sound playing stops.
 - A long back, info, wrong option or “Did you know?” is seen whole in the review, on as many lines as it needs (only the front grew before): nothing cut on a phone.
+- A card the AI answered with an odd id (a correction, a lesson made again, new pages) made an error instead of the lesson: the card now just gets a fresh id.
+- Too many requests to the Notosaurus service at once (a burst of pictures) says to try again in a moment, no longer to come back tomorrow (`relay.busy`).
 
 ### Security
 
 - Notosaurus answers only when opened by an IP address, `localhost` or the address in `NOTOSAURUS_PUBLIC_URL`: a website open on the computer can no longer reach it by pointing its own name at the computer (DNS rebinding) to read the lessons, delete them or change the settings.
 - A new settings password needs 8 characters at least (the one already chosen still works), and after 5 wrong passwords the device trying them must wait, longer at each new try (up to 15 minutes).
-- A card's id sent by the page is checked (letters and digits only): it names its picture's file, and could have written elsewhere on Windows.
+- A card's id is checked (letters and digits only, any other replaced by a fresh one): it names its picture's file, and could have written elsewhere on Windows.
 - A photo heavier than 4 MB is refused (“A photo is too heavy”) instead of being read whole into memory.
 - Nothing of a lesson in the logs any more: a picture that fails, a free picture not found, a sound not made or a figure left undescribed logged its subject or text (or an error quoting it), on the computer and on the relay. They now say only what went wrong (an error code, a count, a model).
 - The Docker image runs Notosaurus as its own user, not root. A `notosaurus-data` volume made by an older image is handed over once with `docker run --rm -u 0 -v notosaurus-data:/data notosaurus chown -R notosaurus: /data`.
+- Wrong settings passwords never lock out the computer itself, and those typed on it don't count: a neighbour on the Wi-Fi guessing, or a shared address (Docker, Tailscale), could keep the parent out of the settings.
 
 ## [1.0.0] - 2026-10-04
 

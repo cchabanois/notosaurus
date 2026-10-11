@@ -113,6 +113,21 @@ def test_openapi_description():
     assert "HTTPValidationError" not in described  # FastAPI's own 422 replaced by relay.invalid_request
 
 
+def test_busy_is_not_the_daily_limit():
+    """Too many calls at once (a burst of pictures) is its own code, wherever the daily limit is: the
+    app says to retry in a moment, not to come back tomorrow."""
+    assert api.ERRORS["relay.busy"] == api.ERRORS["relay.daily_limit"] == 429
+    assert "relay.busy" in openapi_tool().COMMON
+    spec = json.loads((ROOT / "core" / "relay-api-v1.json").read_text(encoding="utf-8"))
+    limited = [
+        op["responses"]["429"]["description"]
+        for m in spec["paths"].values()
+        for op in m.values()
+        if "429" in op["responses"]
+    ]
+    assert limited and all("`relay.busy`" in d for d in limited if "`relay.daily_limit`" in d)
+
+
 def test_photos_and_request_in_one_multipart():
     """The routes with photos work as described: the JSON request in a part of its own,
     the photos as files. A minimal relay with the demo AI, called as a client would."""
