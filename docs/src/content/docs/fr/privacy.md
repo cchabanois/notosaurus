@@ -3,7 +3,10 @@ title: "Confidentialité et sécurité"
 description: "Ce qui sort de ton ordinateur, où Notosaurus garde ses données, qui peut l'utiliser, et comment le sauvegarder."
 ---
 
-Notosaurus n'a ni compte ni serveur à lui : il tourne sur ton ordinateur. Une leçon montre
+Cette page concerne Notosaurus sur ordinateur. Pour l'app Android et son service, voir la
+[politique de confidentialité de l'app](../app-privacy/).
+
+Sur ordinateur, Notosaurus n'a ni compte ni serveur à lui : il tourne sur ton ordinateur. Une leçon montre
 souvent l'écriture d'un enfant, parfois son nom : voici où elle va.
 
 ## Ce qui sort de ton ordinateur
