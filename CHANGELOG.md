@@ -69,6 +69,7 @@ Each pull request adds a line under **Unreleased**. See [Releasing](CONTRIBUTING
 
 ### Fixed
 
+- The coming Android app keeps the lesson being made when the phone is turned (photos and prompt were lost: the page loaded again).
 - A PDF said “unreadable” where the CDN serving pdf.js was blocked (an ad blocker, a privacy setting): pdf.js now comes with Notosaurus, and PDFs open offline too.
 - Instructions picked or written while the page was still starting were replaced by the last ones used, once they had loaded (a quick start lost what was typed).
 - 🎤 vanished as soon as a lesson was shown, and a lesson's saving could fail until one was: the 🎤's state and the lesson's dictation option had the same name.
