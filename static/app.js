@@ -146,6 +146,7 @@ document.addEventListener("alpine:init", () => {
     hiding: { open: false, index: -1, erase: false, pdf: false },  // part of a photo hidden before it is sent
     removal: { open: false, lesson: null, checking: false, available: false, count: 0, anki: false, busy: false },
     leftovers: { open: false, notes: [], lesson: null, busy: false },  // the lesson's notes in Anki no card has
+    welcome: { open: false, agreed: false, busy: false },  // the app's first launch: a parent's tool, Gemini
     editor: { open: false, id: null, name: "", text: "", deck: "", voice: "", error: "" },
     error: "",
     success: "",
@@ -206,6 +207,8 @@ document.addEventListener("alpine:init", () => {
         this.apkg = config.apkg ?? true;
         this.reviewInAnki = config.review_in_anki ?? false;
         this.mic.available = config.dictation ?? false;
+        // The app (its own service, Gemini): until its welcome is accepted, it shows first
+        this.welcome.open = Boolean(config.welcome) && !config.welcome_accepted;
         const helps = storage("get", undefined, HELPS);
         this.helps = helps === null ? Boolean(config.card_helps) : helps === "1";
       } catch {}

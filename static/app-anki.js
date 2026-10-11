@@ -149,6 +149,19 @@ const ankiPart = {
   // The explanation first; then the follow-ups (an example, a way to remember it, why
   // the answer is right) the AI said would help with this card, one after the other.
   // A second 💬 just hides or shows what was already explained.
+  // The welcome accepted: a parent, the privacy policy (saved by the app, with its version)
+  async acceptWelcome() {
+    this.welcome.busy = true;
+    try {
+      await api("/api/welcome", { method: "POST" });
+      this.welcome.open = false;
+    } catch (e) {
+      this.error = e.message;
+    } finally {
+      this.welcome.busy = false;
+    }
+  },
+
   // "Delete from Anki" in the leftovers' dialog: their review history goes with them
   async deleteLeftovers() {
     const { lesson, notes } = this.leftovers;

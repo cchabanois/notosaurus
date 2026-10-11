@@ -679,6 +679,15 @@ class LocalServerTest {
     }
 
     @Test
+    fun theWelcomeAcceptedOnce() = app { client ->
+        val before = client.get("/api/config") { page() }.json().jsonObject
+        assertEquals(LocalServer.WELCOME_VERSION, before["welcome"]!!.jsonPrimitive.int)
+        assertFalse(before["welcome_accepted"]!!.jsonPrimitive.content.toBoolean())
+        client.post("/api/welcome") { page() }
+        assertTrue(client.get("/api/config") { page() }.json().jsonObject["welcome_accepted"]!!.jsonPrimitive.content.toBoolean())
+    }
+
+    @Test
     fun notesNoCardHasAnyMoreOfferedThenDeleted() = app { client ->
         val lesson = client.extract()
         val id = lesson.string("id")

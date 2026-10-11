@@ -988,3 +988,8 @@ a.btn { text-decoration: none; }
 /* The lesson's notes in Anki no card has any more: what they say, before deleting them */
 .leftovers { margin: .25rem 0 .75rem; padding-left: 1.2rem; max-height: 12rem; overflow-y: auto; }
 .leftovers li { overflow-wrap: anywhere; }
+
+/* The app's welcome: read, ticked, accepted */
+.welcome .sheet-body p { margin: 0 0 .7rem; line-height: 1.45; }
+.welcome-agree { display: flex; gap: .6rem; align-items: flex-start; margin: .5rem 0 1rem; font-weight: 700; }
+.welcome-agree input { width: 1.3rem; height: 1.3rem; flex: none; margin-top: .1rem; }

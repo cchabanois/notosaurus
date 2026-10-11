@@ -1,5 +1,7 @@
 package app.notosaurus
 
+import app.notosaurus.LocalServer.Companion.WELCOME_VERSION
+import app.notosaurus.LocalServer.Companion.WELCOME
 import app.notosaurus.LocalServer.Companion.MAX_PHOTOS
 import app.notosaurus.LocalServer.Companion.CARD_HELPS
 import app.notosaurus.LocalServer.Companion.COMPUTER
@@ -34,7 +36,14 @@ internal fun Route.settingsRoutes(server: LocalServer) {
                 put("apkg", false) // the cards go to AnkiDroid: no .apkg to download
                 put("review_in_anki", true) // a lesson sent: reviewed in AnkiDroid from here
                 put("dictation", dictation != null) // the 🎤 of the instructions and the correction
+                // The welcome (a parent's tool, Gemini, the privacy policy): until this version is accepted
+                put("welcome", WELCOME_VERSION)
+                put("welcome_accepted", (prefs[WELCOME]?.toIntOrNull() ?: 0) >= WELCOME_VERSION)
             }
+        }
+        api("POST", "/api/welcome") {
+            prefs[WELCOME] = WELCOME_VERSION.toString()
+            buildJsonObject { put("accepted", WELCOME_VERSION) }
         }
 
         // --- The settings (assets/page/admin.html)

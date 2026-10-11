@@ -917,6 +917,40 @@ def test_cards_left_over_in_anki_deleted_when_asked(page, anki):
     assert len(anki.notes) == notes - 1
 
 
+def test_the_apps_welcome_accepted_once(page):
+    """The app's first launch: a parent's tool, Gemini, the privacy policy. Accept stays off
+    until ticked; accepted, it goes (the app keeps it). Not on the computer (no "welcome")."""
+    accepted = []
+
+    def config(route):
+        route.fulfill(json={**route.fetch().json(), "welcome": 1, "welcome_accepted": bool(accepted)})
+
+    page.route("**/api/config", config)
+    page.route("**/api/welcome", lambda route: (accepted.append(1), route.fulfill(json={"accepted": 1})))
+    page.goto("/")
+    welcome = page.get_by_role("dialog", name="Avant de commencer")
+    sync_api.expect(welcome).to_be_visible()
+    sync_api.expect(welcome).to_contain_text("Gemini de Google")
+    sync_api.expect(welcome.get_by_role("link", name="Politique de confidentialité")).to_have_attribute(
+        "href", re.compile(r"/fr/app-privacy/")
+    )
+    accept = welcome.get_by_role("button", name="Accepter")
+    sync_api.expect(accept).to_be_disabled()
+    welcome.get_by_label("Je suis un parent (un adulte) et j'accepte la politique de confidentialité.").check()
+    accept.click()
+    sync_api.expect(welcome).to_be_hidden()
+    assert accepted == [1]
+    page.reload()
+    sync_api.expect(page.locator(".flash, .tagline").first).to_be_visible()
+    sync_api.expect(welcome).to_be_hidden()  # once
+
+
+def test_no_welcome_on_the_computer(page):
+    page.goto("/")
+    page.locator(".tagline").wait_for()
+    sync_api.expect(page.get_by_role("dialog", name="Avant de commencer")).to_be_hidden()
+
+
 def test_ankidroid_installed_from_the_message(page, anki):
     """The app without AnkiDroid: "Add to Anki" says so, with a button to install it
     (Google Play only opens when asked)."""
