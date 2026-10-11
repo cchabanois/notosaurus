@@ -17,8 +17,8 @@ greffon Anki) fonctionne autrement : voir [Confidentialité et sécurité](../pr
 - Tes **leçons restent sur ton téléphone** : photos, cartes, consignes, sons.
 - Ce que l'IA doit lire (photos, consignes, dictées) **passe par le service** le temps de faire
   les cartes, **et n'y est pas gardé**.
-- L'IA est **Gemini de Google, traitée dans l'Union européenne**. Google ne s'en sert pas pour
-  entraîner ses modèles.
+- L'IA (**Gemini de Google**) et les voix sont **traitées dans l'Union européenne**. Google ne
+  s'en sert pas pour entraîner ses modèles.
 - **Ni publicité, ni statistiques, ni pistage**, et rien n'est vendu.
 - Le service ne garde que ta **licence** : son empreinte, ta formule et tes crédits.
 
@@ -70,7 +70,7 @@ dans la leçon.
 |---|---|---|
 | **Google Cloud** : Vertex AI (Gemini) | Photos, consignes, cartes, dictées, descriptions d'images | Union européenne |
 | **Google Cloud** : Cloud Run, Firestore, journaux | Le service lui-même, les licences, les journaux | Belgique (europe-west1) |
-| **Google Cloud** : Text-to-Speech | Le texte à lire (le verso d'une carte) | Serveurs de Google |
+| **Google Cloud** : Text-to-Speech | Le texte à lire (le verso d'une carte) | Union européenne |
 | **Wikimedia Commons**, **Openverse**, **Pixabay** | Quelques mots-clés en anglais (« dog »), jamais une photo | Leurs serveurs |
 | **GitHub** (GitHub Pages) | Au démarrage, l'app y lit l'adresse du service : GitHub voit ton adresse IP | Ses serveurs |
 

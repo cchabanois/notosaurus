@@ -17,8 +17,8 @@ differently: see [Privacy and security](../privacy/).
 - Your **lessons stay on your phone**: photos, cards, instructions, sounds.
 - What the AI must read (photos, instructions, dictations) **goes through the service** while
   the cards are made, **and isn't kept there**.
-- The AI is **Google's Gemini, processed in the European Union**. Google doesn't use it to
-  train its models.
+- The AI (**Google's Gemini**) and the voices are **processed in the European Union**. Google
+  doesn't use them to train its models.
 - **No ads, no statistics, no tracking**, and nothing is sold.
 - The service keeps only your **licence**: its fingerprint, your plan and your credits.
 
@@ -68,7 +68,7 @@ in the lesson.
 |---|---|---|
 | **Google Cloud**: Vertex AI (Gemini) | Photos, instructions, cards, dictations, picture descriptions | European Union |
 | **Google Cloud**: Cloud Run, Firestore, logs | The service itself, the licences, the logs | Belgium (europe-west1) |
-| **Google Cloud**: Text-to-Speech | The text to read (a card's back) | Google's servers |
+| **Google Cloud**: Text-to-Speech | The text to read (a card's back) | European Union |
 | **Wikimedia Commons**, **Openverse**, **Pixabay** | A few English keywords ("dog"), never a photo | Their servers |
 | **GitHub** (GitHub Pages) | At start, the app reads the service's address there: GitHub sees your IP address | Its servers |
 
