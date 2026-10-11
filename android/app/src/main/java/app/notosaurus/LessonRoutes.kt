@@ -8,6 +8,10 @@ import io.ktor.server.routing.Route
 import io.ktor.server.routing.get
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import kotlinx.serialization.json.longOrNull
+import kotlinx.serialization.json.jsonPrimitive
+import kotlinx.serialization.json.jsonArray
+import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonArray
 import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.buildJsonObject
@@ -27,6 +31,21 @@ internal fun Route.lessonRoutes(server: LocalServer) {
             buildJsonObject {
                 put("available", found != null)
                 put("count", found?.size ?: 0)
+            }
+        }
+        // After a send: the lesson's notes no card has any more, deleted when asked; only those
+        // (never a card's own note, nor another lesson's)
+        api("POST", "/api/lessons/{id}/anki-notes/delete") {
+            val lesson = lesson()
+            val asked = body()["ids"]?.jsonArray?.mapNotNull { it.jsonPrimitive.longOrNull }.orEmpty().toSet()
+            val kept = (lesson["anki_notes"] as? JsonObject)?.values?.mapNotNull { it.jsonPrimitive.longOrNull }.orEmpty().toSet()
+            val deleted = withContext(Dispatchers.IO) {
+                val allowed = anki.leftovers(lesson.string("id"), kept).map { it.id }.toSet()
+                anki.delete((asked intersect allowed).toList())
+            }
+            buildJsonObject {
+                put("deleted", deleted)
+                put("synced", false)
             }
         }
         api("DELETE", "/api/lessons/{id}") {

@@ -1,5 +1,6 @@
 from fastapi import APIRouter, Depends, Query
 from fastapi.responses import FileResponse
+from pydantic import BaseModel
 
 from notosaurus_core import diagrams, llm
 from notosaurus_core.llm import Image, revise_cards
@@ -100,6 +101,25 @@ async def lesson_anki_notes(id: str) -> dict:
     """How many of the lesson's notes are in Anki: asked before deleting it."""
     found = await _anki_notes(await _editable(id))
     return {"available": found["available"], "count": found["count"]}
+
+
+class NoteIds(BaseModel):
+    ids: list[int]
+
+
+@router.post("/api/lessons/{id}/anki-notes/delete")
+async def delete_leftovers(id: str, req: NoteIds) -> dict:
+    """The lesson's notes in Anki no card has any more, deleted (asked after a send, never
+    by default; their review history is lost). Only notes of this lesson that none of its
+    cards updated at its last send: never one a card has, nor another lesson's."""
+    lesson = await _editable(id)
+    profile = await ankiconnect.active_profile() or ""
+    kept = set(lesson.anki_notes.get(profile, {}).values())
+    allowed = {n["id"]: n["deck"] for n in await ankiconnect.leftovers(lesson.id, kept)}
+    ids = [i for i in dict.fromkeys(req.ids) if i in allowed]
+    decks = sorted({allowed[i] for i in ids if allowed[i]} | set(_lesson_decks(lesson)))
+    sent = await ankiconnect.delete_notes(ids, decks)  # and the decks they leave empty
+    return {"deleted": len(ids), "synced": sent.synced, "sync_error": sent.sync_error}
 
 
 @router.delete("/api/lessons/{id}")

@@ -47,6 +47,9 @@ data class Media(
     val sentBefore: Map<String, Long> = emptyMap(), // a card's id → its note at the lesson's last send
 )
 
+/** A note of a lesson no card has any more: what it shows first (plain), its deck. */
+data class Leftover(val id: Long, val text: String, val deck: String)
+
 /** Where the cards go (AnkiDroid; a fake in the tests). */
 interface AnkiTarget {
     fun installed(): Boolean
@@ -62,6 +65,10 @@ interface AnkiTarget {
 
     /** These notes deleted (their review history with them); how many were. */
     fun delete(notes: List<Long>): Int = 0
+
+    /** The lesson's notes (its tag) that none of its cards updated (`keep`: those they
+     * did), never another lesson's too: left from cards deleted or remade. */
+    fun leftovers(lesson: String, keep: Set<Long>): List<Leftover> = emptyList()
 
     /** AnkiDroid opened to review the deck (and its sub-decks); false when it has no such deck. */
     fun review(deck: String): Boolean = false
@@ -114,6 +121,23 @@ class Anki(private val context: Context) : AnkiTarget {
             if (runCatching { context.startActivity(intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)) }.isSuccess) return true
         }
         return false
+    }
+
+    override fun leftovers(lesson: String, keep: Set<Long>): List<Leftover> {
+        val ids = lessonNotes(lesson).orEmpty().filter { it !in keep }
+        val decks = api.deckList.orEmpty()
+        return ids.mapNotNull { id ->
+            val note = Uri.withAppendedPath(FlashCardsContract.Note.CONTENT_URI, id.toString())
+            val (text, tags) = context.contentResolver.query(
+                note, arrayOf(FlashCardsContract.Note.SFLD, FlashCardsContract.Note.TAGS), null, null, null,
+            )?.use { c -> if (c.moveToFirst()) c.getString(0).orEmpty() to c.getString(1).orEmpty() else null } ?: return@mapNotNull null
+            if (tags.split(' ').any { it.startsWith(TAG_PREFIX) && it != lessonTag(lesson) }) return@mapNotNull null
+            val did = context.contentResolver.query(
+                Uri.withAppendedPath(note, "cards"), arrayOf(FlashCardsContract.Card.DECK_ID), null, null, null,
+            )?.use { c -> if (c.moveToFirst()) c.getLong(0) else null }
+            val plain = text.replace(Regex("<[^>]+>"), " ").split(Regex("\\s+")).filter { it.isNotEmpty() }.joinToString(" ")
+            Leftover(id, if (plain.length <= LEFTOVER_TEXT) plain else plain.take(LEFTOVER_TEXT - 1) + "…", decks[did].orEmpty())
+        }
     }
 
     override fun delete(notes: List<Long>): Int = notes.count { id ->
@@ -337,6 +361,8 @@ class Anki(private val context: Context) : AnkiTarget {
         api.deckList?.entries?.firstOrNull { it.value == name }?.key ?: api.addNewDeck(name)
 
     companion object {
+        private const val LEFTOVER_TEXT = 80 // characters of a leftover note's text shown, as the computer's
+
         /** The card's deck: the lesson's, then its part; a part named as the deck's last level
          * (the lesson's own title, often as the deck was chosen) isn't added again, as on the
          * computer (app/anki.py: _deck_name). Anki doesn't tell decks apart by case. */

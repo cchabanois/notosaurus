@@ -246,6 +246,23 @@
       "oldAnkiConnect": "AnkiConnect è troppo vecchio per cambiare le opzioni delle carte già inviate: restano accanto alle nuove (aggiorna AnkiConnect o usa l'add-on Notosaurus)",
       "restructured": "Notosaurus ha aggiornato i suoi tipi di nota ({names}) con un nuovo campo o una nuova carta: alla prossima sincronizzazione, Anki chiederà una sincronizzazione completa (questa volta non avviata automaticamente)"
     },
+    "leftovers": {
+      "title": "Carte in più in Anki",
+      "text": {
+        "one": "{count} carta di questa lezione in Anki non corrisponde più a nessuna delle sue carte:",
+        "other": "{count} carte di questa lezione in Anki non corrispondono più a nessuna delle sue carte:"
+      },
+      "more": {
+        "one": "… e {count} altra",
+        "other": "… e altre {count}"
+      },
+      "hint": "Carte eliminate dalla lezione, o rifatte con un altro fronte. Eliminarle da Anki elimina anche la loro cronologia di ripasso.",
+      "keep": "Tieni",
+      "delete": {
+        "one": "Elimina da Anki",
+        "other": "Elimina le {count} da Anki"
+      }
+    },
     "export": {
       "noSound": "Mazzo esportato, ma {count} carta/e senza suono (sintesi vocale non disponibile).",
       "done": "✓ Pacchetto scaricato: aprilo con Anki."

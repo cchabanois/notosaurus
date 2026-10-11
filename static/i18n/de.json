@@ -246,6 +246,23 @@
       "oldAnkiConnect": "AnkiConnect ist zu alt, um die Optionen bereits gesendeter Karten zu ändern: Sie bleiben neben den neuen (aktualisiere AnkiConnect oder nutze die Notosaurus-Erweiterung)",
       "restructured": "Notosaurus hat seine Notiztypen ({names}) um ein Feld oder eine Karte ergänzt: Bei der nächsten Synchronisierung verlangt Anki eine vollständige Synchronisierung (diesmal nicht automatisch gestartet)"
     },
+    "leftovers": {
+      "title": "Übrige Karten in Anki",
+      "text": {
+        "one": "{count} Karte dieser Lektion in Anki passt zu keiner ihrer Karten mehr:",
+        "other": "{count} Karten dieser Lektion in Anki passen zu keiner ihrer Karten mehr:"
+      },
+      "more": {
+        "one": "… und {count} weitere",
+        "other": "… und {count} weitere"
+      },
+      "hint": "Aus der Lektion gelöschte oder mit anderer Vorderseite neu erstellte Karten. Beim Löschen aus Anki geht auch ihr Lernverlauf verloren.",
+      "keep": "Behalten",
+      "delete": {
+        "one": "Aus Anki löschen",
+        "other": "Die {count} aus Anki löschen"
+      }
+    },
     "export": {
       "noSound": "Stapel exportiert, aber {count} Karte(n) ohne Ton (Sprachausgabe nicht verfügbar).",
       "done": "✓ Paket heruntergeladen: Öffne es mit Anki."

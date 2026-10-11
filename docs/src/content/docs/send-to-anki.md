@@ -25,8 +25,8 @@ Once the lesson is sent, the button becomes **🔄 Update in Anki**. You can cor
 send it again as many times as you like: its cards are **updated** in Anki, **not duplicated**,
 and the review history of each card is kept, even when you corrected its front. If you changed the lesson's deck, its cards are
 **moved** there, with their history. Cards
-added since the last send are added; cards deleted from the lesson stay in Anki (delete them
-there if you want). Deleting a whole lesson in Notosaurus offers to delete its cards in Anki
+added since the last send are added; cards deleted from the lesson stay in Anki: after the send, Notosaurus lists them and offers to
+delete them (with their review history), never without asking. Deleting a whole lesson in Notosaurus offers to delete its cards in Anki
 too, with their review history.
 
 Changing a card option (reverse card, type the answer…) on a lesson already sent moves its

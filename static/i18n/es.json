@@ -246,6 +246,23 @@
       "oldAnkiConnect": "AnkiConnect es demasiado antiguo para cambiar las opciones de las tarjetas ya enviadas: se quedan junto a las nuevas (actualiza AnkiConnect o usa el complemento Notosaurus)",
       "restructured": "Notosaurus ha actualizado sus tipos de nota ({names}) con un campo o una tarjeta nuevos: en la próxima sincronización, Anki pedirá una sincronización completa (esta vez no se ha iniciado automáticamente)"
     },
+    "leftovers": {
+      "title": "Tarjetas sobrantes en Anki",
+      "text": {
+        "one": "{count} tarjeta de esta lección en Anki ya no corresponde a ninguna de sus tarjetas:",
+        "other": "{count} tarjetas de esta lección en Anki ya no corresponden a ninguna de sus tarjetas:"
+      },
+      "more": {
+        "one": "… y {count} más",
+        "other": "… y {count} más"
+      },
+      "hint": "Tarjetas borradas de la lección, o rehechas con otro anverso. Borrarlas de Anki borra también su historial de repaso.",
+      "keep": "Conservar",
+      "delete": {
+        "one": "Borrar de Anki",
+        "other": "Borrar las {count} de Anki"
+      }
+    },
     "export": {
       "noSound": "Mazo exportado, pero {count} tarjeta(s) sin sonido (síntesis de voz no disponible).",
       "done": "✓ Paquete descargado: ábrelo con Anki."

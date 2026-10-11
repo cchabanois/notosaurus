@@ -246,6 +246,23 @@
       "oldAnkiConnect": "O AnkiConnect é antigo demais para mudar as opções dos cartões já enviados: eles ficam ao lado dos novos (atualize o AnkiConnect ou use a extensão Notosaurus)",
       "restructured": "O Notosaurus atualizou seus tipos de nota ({names}) com um novo campo ou cartão: na próxima sincronização, o Anki vai pedir uma sincronização completa (desta vez ela não foi iniciada automaticamente)"
     },
+    "leftovers": {
+      "title": "Cartões a mais no Anki",
+      "text": {
+        "one": "{count} cartão desta lição no Anki já não corresponde a nenhum dos seus cartões:",
+        "other": "{count} cartões desta lição no Anki já não correspondem a nenhum dos seus cartões:"
+      },
+      "more": {
+        "one": "… e mais {count}",
+        "other": "… e mais {count}"
+      },
+      "hint": "Cartões apagados da lição, ou refeitos com outra frente. Apagá-los do Anki apaga também o seu histórico de revisão.",
+      "keep": "Manter",
+      "delete": {
+        "one": "Apagar do Anki",
+        "other": "Apagar os {count} do Anki"
+      }
+    },
     "export": {
       "noSound": "Baralho exportado, mas {count} cartão(ões) sem som (síntese de voz indisponível).",
       "done": "✓ Pacote baixado: abra-o com o Anki."

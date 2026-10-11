@@ -38,9 +38,11 @@ async def anki_send(req: ExportRequest, background: BackgroundTasks) -> dict:
     profile = await ankiconnect.active_profile() or ""
     known = lesson.anki_notes.get(profile, {}) if lesson else {}
     result = await ankiconnect.send(notes(req, audio, _diagram_images(req, lesson), _pictures(req, lesson)), known)
+    answer = {**result.__dict__, "audio_failures": failures}
+    answer.pop("note_ids")  # the lesson keeps them, the page needn't
     if save:
         lessons.update(lesson.id, req, exported=True)
         lessons.set_anki_notes(lesson.id, profile, result.note_ids)
-    answer = {**result.__dict__, "audio_failures": failures}
-    answer.pop("note_ids")  # the lesson keeps them, the page needn't
+        # Its notes no card updated (cards deleted, or remade): the page offers to delete them
+        answer["leftovers"] = await ankiconnect.leftovers(lesson.id, set(result.note_ids.values()))
     return answer

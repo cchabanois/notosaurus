@@ -40,6 +40,7 @@ def test_direct_send_to_anki(anki, client):
         "note_types_updated": 0,
         "restructured": [],
         "audio_failures": 0,
+        "leftovers": [],
     }
 
     (model,) = anki.models.values()
@@ -53,7 +54,7 @@ def test_direct_send_to_anki(anki, client):
         tts.filename("la madre", "es-ES-ElviraNeural"),
         tts.filename("el padre", "es-ES-ElviraNeural"),
     }
-    assert anki.calls[-1] == "sync"
+    assert "sync" in anki.calls  # after the notes (then the leftovers are looked for)
     assert client.get(f"/api/lessons/{lesson['id']}").json()["exported_at"] is not None
 
     # Sent again after a correction: notes are updated, not duplicated
@@ -342,3 +343,25 @@ def test_a_corrected_front_updates_its_own_note(anki, client):
     del anki.notes[mother]  # deleted in Anki: sent again, it comes back
     r = client.post("/api/anki/send", json={**body, "cards": cards}).json()
     assert r["added"] == 1
+
+
+def test_notes_no_card_has_any_more_offered_then_deleted(anki, client):
+    """Sent, then two cards deleted and one remade with another front: the three notes left
+    are said after the send, with their text; deleted on request (only those), a note
+    another lesson uses never offered."""
+    lesson = extract_lesson(client)
+    body = {"deck": "Espagnol::Leçon 5", "cards": lesson["cards"], "lesson_id": lesson["id"]}
+    first = client.post("/api/anki/send", json=body).json()
+    assert first["leftovers"] == []
+    by_front = {n["fields"]["Front"]: i for i, n in anki.notes.items() if "Front" in n["fields"]}
+
+    kept = [c for c in lesson["cards"] if c["front"] not in ("la mère", "le père")]
+    r = client.post("/api/anki/send", json={**body, "cards": kept}).json()
+    left = {n["text"]: n["id"] for n in r["leftovers"]}
+    assert left == {"la mère": by_front["la mère"], "le père": by_front["le père"]}
+
+    url = f"/api/lessons/{lesson['id']}/anki-notes/delete"
+    stranger = next(i for i in anki.notes if i not in left.values())  # a card's own note: refused
+    done = client.post(url, json={"ids": [*left.values(), stranger, 999]}).json()
+    assert done["deleted"] == 2
+    assert set(left.values()).isdisjoint(anki.notes) and stranger in anki.notes

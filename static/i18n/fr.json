@@ -246,6 +246,23 @@
       "oldAnkiConnect": "AnkiConnect est trop ancien pour changer les options des cartes déjà envoyées : elles restent à côté des nouvelles (mets à jour AnkiConnect, ou utilise le greffon Notosaurus)",
       "restructured": "Notosaurus a mis à jour ses types de note ({names}) avec un nouveau champ ou une nouvelle carte : à la prochaine synchronisation, Anki demandera une synchronisation complète (pas lancée automatiquement cette fois)"
     },
+    "leftovers": {
+      "title": "Cartes en trop dans Anki",
+      "text": {
+        "one": "{count} carte de cette leçon dans Anki ne correspond plus à aucune de ses cartes :",
+        "other": "{count} cartes de cette leçon dans Anki ne correspondent plus à aucune de ses cartes :"
+      },
+      "more": {
+        "one": "… et {count} autre",
+        "other": "… et {count} autres"
+      },
+      "hint": "Cartes supprimées de la leçon, ou refaites avec un autre recto. Les supprimer d'Anki efface aussi leur historique de révision.",
+      "keep": "Garder",
+      "delete": {
+        "one": "Supprimer d'Anki",
+        "other": "Supprimer les {count} d'Anki"
+      }
+    },
     "export": {
       "noSound": "Paquet exporté, mais {count} carte(s) sans son (synthèse vocale indisponible).",
       "done": "✓ Paquet téléchargé : ouvre-le avec Anki."

@@ -246,6 +246,23 @@
       "oldAnkiConnect": "AnkiConnect is too old to change the options of cards already sent: they stay next to the new ones (update AnkiConnect, or use the Notosaurus add-on)",
       "restructured": "Notosaurus updated its note types ({names}) with a new field or card: at the next sync, Anki will ask for a full sync (not started automatically this time)"
     },
+    "leftovers": {
+      "title": "Cards left over in Anki",
+      "text": {
+        "one": "{count} card of this lesson in Anki matches none of its cards any more:",
+        "other": "{count} cards of this lesson in Anki match none of its cards any more:"
+      },
+      "more": {
+        "one": "… and {count} more",
+        "other": "… and {count} more"
+      },
+      "hint": "Cards deleted from the lesson, or remade with another front. Deleting them from Anki deletes their review history too.",
+      "keep": "Keep",
+      "delete": {
+        "one": "Delete from Anki",
+        "other": "Delete the {count} from Anki"
+      }
+    },
     "export": {
       "noSound": "Deck exported, but {count} card(s) without sound (text-to-speech unavailable).",
       "done": "✓ Package downloaded: open it with Anki."

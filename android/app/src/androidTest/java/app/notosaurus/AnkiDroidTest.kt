@@ -91,6 +91,23 @@ class AnkiDroidTest {
     }
 
     @Test
+    fun notesNoCardHasAnyMoreAreFound() {
+        val anki = Anki(Device.context)
+        val lesson = "left-$run"
+        val cards = listOf(Card("jaune $run", "amarillo", id = "j-$run"), Card("noir $run", "negro", id = "n-$run"))
+        val first = anki.send(Deck("Notosaurus test $run", cards), Media(lesson = lesson))
+        assertEquals(emptyList<Leftover>(), anki.leftovers(lesson, first.notes.values.toSet()))
+
+        // "noir" deleted from the lesson: its note is left, with its text and deck
+        val again = anki.send(Deck("Notosaurus test $run", cards.take(1)), Media(lesson = lesson, sentBefore = first.notes))
+        val left = anki.leftovers(lesson, again.notes.values.toSet())
+        assertEquals(listOf(first.notes.getValue("n-$run")), left.map { it.id })
+        assertEquals("noir $run", left.single().text)
+        assertEquals("Notosaurus test $run", left.single().deck)
+        assertEquals(1, anki.delete(left.map { it.id }))
+    }
+
+    @Test
     fun completeCardsUpdatedThenDeletedWithTheLesson() {
         val anki = Anki(Device.context)
         val lesson = "test-$run"
