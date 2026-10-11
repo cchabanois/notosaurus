@@ -175,6 +175,26 @@ def test_openrouter_errors(openai_api, recorded):
     assert picture_error(pictures._openrouter(AIConfig(), "m", "p")).params == {"service": "OpenRouter"}
 
 
+def test_openrouter_answers_without_an_image(openai_api, recorded):
+    """No choice, an image that isn't a data URL, or not base64: that card has no picture
+    (picture.empty), never a crash that would stop the lesson's other pictures."""
+    s = AIConfig(llm="openrouter", openrouter_api_key="sk-or")
+
+    def answer(choices):
+        return lambda request: httpx.Response(
+            200,
+            json={"id": "gen-1", "object": "chat.completion", "created": 0, "model": "m", "choices": choices},
+        )
+
+    def with_image(url):
+        message = {"role": "assistant", "content": "", "images": [{"type": "image_url", "image_url": {"url": url}}]}
+        return [{"index": 0, "finish_reason": "stop", "message": message}]
+
+    for choices in ([], with_image("https://example.com/dog.png"), with_image("data:image/png;base64,%%%")):
+        openai_api.answer = answer(choices)
+        assert picture_error(pictures.draw(s, "a dog")).code == "picture.empty"
+
+
 def test_gemini_draws_inline(recorded, monkeypatch):
     """Gemini: an image and text asked for, with the app's safety filters; the image is the
     first inline part (after any text); the tokens recorded, the cost estimated later."""
@@ -251,6 +271,11 @@ def test_openai_draws_with_its_images_api(openai_api, recorded):
     error = picture_error(pictures.draw(s, "a dog"))
     assert error.code == "picture.failed" and "rejected" in error.params["detail"]
     assert picture_error(pictures._openai(AIConfig(), "m", "p")).params == {"service": "OpenAI"}
+
+    # No image, or a link instead of it: picture.empty, not a crash
+    for data in ([], [{"url": "https://example.com/dog.png"}]):
+        openai_api.answer = lambda request, data=data: httpx.Response(200, json={"created": 0, "data": data})
+        assert picture_error(pictures.draw(s, "a dog")).code == "picture.empty"
 
 
 def test_image_models_listed_by_each_service(openai_api, monkeypatch):
