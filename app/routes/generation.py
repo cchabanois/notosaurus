@@ -3,6 +3,7 @@ import json
 import logging
 import os
 import re
+import traceback
 from dataclasses import dataclass, replace
 from typing import Annotated
 
@@ -11,6 +12,7 @@ from fastapi.encoders import jsonable_encoder
 from fastapi.responses import FileResponse, JSONResponse, StreamingResponse
 
 from notosaurus_core import diagrams, llm, tts
+from notosaurus_core.errors import loggable
 from notosaurus_core.images import refuse_bomb
 from notosaurus_core.llm import Image, extract_cards
 
@@ -186,8 +188,11 @@ def _streamed(work, job: str = "") -> StreamingResponse:
             await queue.put({"error": e.detail()})
         except asyncio.CancelledError:  # "Cancel": stopped here, nothing saved
             await queue.put({"cancelled": True})
-        except Exception:
-            log.exception("Generating failed")
+        except Exception as e:
+            # Where it failed (files, lines, functions), not what it said: the message,
+            # like the traceback's source lines, may quote the lesson
+            where = "\n".join(f"  {f.filename}:{f.lineno} in {f.name}" for f in traceback.extract_tb(e.__traceback__))
+            log.error("Generating failed: %s\n%s", loggable(e), where)
             await queue.put({"error": {"code": "internal", "params": {}}})
         finally:
             await queue.put(None)

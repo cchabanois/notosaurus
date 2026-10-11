@@ -53,7 +53,10 @@ FORMAT = 1
 
 
 def _read(path: Path) -> Lesson:
-    data = storage.migrate(storage.read_json(path / "lesson.json"), "lesson", FORMAT, {0: dict})
+    raw = storage.read_json(path / "lesson.json")
+    if raw is None:  # deleted meanwhile (another request, between a look and this reading)
+        raise FileNotFoundError(path / "lesson.json")
+    data = storage.migrate(raw, "lesson", FORMAT, {0: dict})
     lesson = Lesson(id=path.name, photo_count=_count_photos(path), **data)
     # Cards saved before cards had ids: the same id at every reading, until it's saved
     for n, card in enumerate(lesson.cards):
@@ -94,6 +97,9 @@ def _summary(path: Path) -> LessonSummary | None:
         return cached[1]
     try:
         lesson = _read(path)
+    except FileNotFoundError:  # deleted between the look at its date and this reading
+        _summaries.pop(path, None)
+        return None
     except storage.DataTooNew as e:  # saved by a newer Notosaurus: left alone
         log.warning("Lesson %s not listed: %s", path.name, e.detail_text)
         return None
@@ -156,7 +162,10 @@ def create(
 
 def get(id: str) -> Lesson | None:
     path = folder(id)
-    return _read(path) if path else None
+    try:
+        return _read(path) if path else None
+    except FileNotFoundError:  # deleted since folder() found it
+        return None
 
 
 def list_all() -> list[LessonSummary]:
