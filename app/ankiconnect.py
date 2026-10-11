@@ -7,6 +7,8 @@ notes deleted in Notosaurus are left untouched in Anki.
 """
 
 import base64
+import html
+import re
 from dataclasses import dataclass, field
 
 import httpx
@@ -437,6 +439,34 @@ async def _drop_empty_decks(client: httpx.AsyncClient, decks: set[str]) -> None:
 
 def _with_parents(decks: list[str]) -> set[str]:
     return {"::".join(d.split("::")[: n + 1]) for d in decks for n in range(d.count("::") + 1)}
+
+
+LEFTOVER_TEXT = 80  # characters of a note's text shown
+
+
+async def leftovers(lesson_id: str, keep: set[int]) -> list[dict]:
+    """The lesson's notes in Anki (its tag) that none of its cards updated (`keep`: the
+    notes they did): what is left of cards deleted, or remade with another front (lesson
+    generated again). Never a note another lesson uses too. {"id", "text"}, the text
+    plain and short, for the parent to see before deleting them."""
+    tag = TAG_PREFIX + lesson_id
+    async with _client() as client:
+        ids = [i for i in await _invoke(client, "findNotes", query=f'"tag:{_search(tag)}"') if i not in keep]
+        infos = await _invoke(client, "notesInfo", notes=ids) if ids else []
+        infos = [i for i in infos if i and not any(t.startswith(TAG_PREFIX) and t != tag for t in i["tags"])]
+        cards = [c for i in infos for c in i.get("cards", [])[:1]]
+        decks = {c["note"]: c["deckName"] for c in await _invoke(client, "cardsInfo", cards=cards)} if cards else {}
+    return [{"id": i["noteId"], "text": _note_text(i), "deck": decks.get(i["noteId"], "")} for i in infos]
+
+
+def _note_text(info: dict) -> str:
+    """What a note shows first (its front, its text with gaps, its question), plain."""
+    fields = info["fields"]
+    name = next((f for f in ("Front", "Text", "Question") if f in fields), None)
+    name = name or min(fields, key=lambda f: fields[f].get("order", 0), default=None)
+    raw = fields[name]["value"] if name else ""
+    text = " ".join(html.unescape(re.sub(r"<[^>]+>", " ", raw)).split())
+    return text if len(text) <= LEFTOVER_TEXT else text[: LEFTOVER_TEXT - 1] + "…"
 
 
 async def delete_notes(ids: list[int], decks: list[str]) -> SendResult:

@@ -984,3 +984,7 @@ html.sheet-open { overflow: hidden; overscroll-behavior: none; }
 .setup-waiting .spinner { width: 1.2rem; height: 1.2rem; margin: 0; border-width: 3px; }
 a.btn { text-decoration: none; }
 .picture-test { display: block; margin: .5rem auto 0; width: 200px; height: auto; max-width: 100%; border-radius: var(--radius-sm); }
+
+/* The lesson's notes in Anki no card has any more: what they say, before deleting them */
+.leftovers { margin: .25rem 0 .75rem; padding-left: 1.2rem; max-height: 12rem; overflow-y: auto; }
+.leftovers li { overflow-wrap: anywhere; }

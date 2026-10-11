@@ -35,6 +35,7 @@ import kotlinx.serialization.json.int
 import kotlinx.serialization.json.jsonArray
 import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
+import kotlinx.serialization.json.long
 import mockwebserver3.MockResponse
 import mockwebserver3.MockWebServer
 import mockwebserver3.RecordedRequest
@@ -98,8 +99,11 @@ class LocalServerTest {
             this.options = options
             sounds = media.audio
             pictures = media.pictures
-            return Sent(added = deck.cards.size, duplicates = 0, skipped = 0, deck = deck.deck)
+            return Sent(added = deck.cards.size, duplicates = 0, skipped = 0, deck = deck.deck, notes = sentNotes)
         }
+        var sentNotes: Map<String, Long> = emptyMap() // the notes the cards updated
+        override fun leftovers(lesson: String, keep: Set<Long>) =
+            notes[lesson].orEmpty().filter { it !in keep }.map { Leftover(it, "note $it", "D") }
     }
 
     /** A microphone that "records" what it's told to: ADTS frames, as the phone's would. */
@@ -672,6 +676,28 @@ class LocalServerTest {
         relay.enqueue(MockResponse.Builder().setHeader("Content-Type", "audio/mpeg").body("mp3").build())
         client.get("/api/tts?text=hola&voice=es-ES-Chirp3-HD-Aoede") { page() }
         assertEquals("0.75", json.parseToJsonElement(relay.takeRequest().body!!.utf8()).jsonObject["rate"]!!.jsonPrimitive.content)
+    }
+
+    @Test
+    fun notesNoCardHasAnyMoreOfferedThenDeleted() = app { client ->
+        val lesson = client.extract()
+        val id = lesson.string("id")
+        anki.notes[id] = mutableListOf(21L, 22L, 23L) // its notes in AnkiDroid
+        anki.sentNotes = mapOf("card" to 21L) // the one its cards still have
+        val sent = client.post("/api/anki/send") {
+            page(); contentType(ContentType.Application.Json)
+            setBody("""{"deck": "D", "cards": ${lesson["cards"]}, "voice": "", "lesson_id": "$id"}""")
+        }.json().jsonObject
+        val left = sent["leftovers"]!!.jsonArray.map { it.jsonObject }
+        assertEquals(listOf(22L, 23L), left.map { it["id"]!!.jsonPrimitive.long })
+        assertEquals("note 22", left[0].string("text"))
+
+        // Deleted when asked: those only, never the card's own note nor an unknown one
+        val done = client.post("/api/lessons/$id/anki-notes/delete") {
+            page(); contentType(ContentType.Application.Json); setBody("""{"ids": [22, 23, 21, 99]}""")
+        }.json().jsonObject
+        assertEquals(2, done["deleted"]!!.jsonPrimitive.int)
+        assertEquals(listOf(22L, 23L), anki.deleted)
     }
 
     @Test

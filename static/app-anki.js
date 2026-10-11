@@ -104,6 +104,8 @@ const ankiPart = {
       // A note type gained a field or a card: Anki asks which side to keep at the next sync
       if (r.restructured?.length) warnings.push(t("app.send.restructured", { names: r.restructured.join(", ") }));
       if (warnings.length) this.error = t("app.send.butWarning", { warnings: warnings.join(" ; ") });
+      // The lesson's notes no card has any more (deleted, or remade): delete them? (asked)
+      if (r.leftovers?.length) this.leftovers = { open: true, notes: r.leftovers, lesson: this.lessonId, busy: false };
     } catch (e) {
       this.error = e.message;
       // The app without AnkiDroid: install it from the message (Google Play only when asked)
@@ -147,6 +149,25 @@ const ankiPart = {
   // The explanation first; then the follow-ups (an example, a way to remember it, why
   // the answer is right) the AI said would help with this card, one after the other.
   // A second 💬 just hides or shows what was already explained.
+  // "Delete from Anki" in the leftovers' dialog: their review history goes with them
+  async deleteLeftovers() {
+    const { lesson, notes } = this.leftovers;
+    this.leftovers.busy = true;
+    try {
+      const r = await (await api(`/api/lessons/${lesson}/anki-notes/delete`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ ids: notes.map((n) => n.id) }),
+      })).json();
+      this.leftovers.open = false;
+      this.notify(t("app.lessons.deletedInAnki", { count: r.deleted }) + (r.synced ? " " + t("app.send.synced") : ""));
+      if (r.sync_error) this.error = t("app.lessons.deletedNoSync", { reason: errorMessage(r.sync_error) });
+    } catch (e) {
+      this.leftovers.busy = false;
+      this.error = e.message;
+    }
+  },
+
   async explain(card, kind = "explain") {
     card._explain ??= { open: false, blocks: [], more: [], loading: "", error: "", kept: false };
     const ex = card._explain;

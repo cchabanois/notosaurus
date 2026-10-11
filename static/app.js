@@ -145,6 +145,7 @@ document.addEventListener("alpine:init", () => {
     viewer: { open: false, list: [], index: 0, zoomed: false, touchX: 0 },  // a photo in full
     hiding: { open: false, index: -1, erase: false, pdf: false },  // part of a photo hidden before it is sent
     removal: { open: false, lesson: null, checking: false, available: false, count: 0, anki: false, busy: false },
+    leftovers: { open: false, notes: [], lesson: null, busy: false },  // the lesson's notes in Anki no card has
     editor: { open: false, id: null, name: "", text: "", deck: "", voice: "", error: "" },
     error: "",
     success: "",

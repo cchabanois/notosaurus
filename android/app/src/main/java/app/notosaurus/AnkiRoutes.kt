@@ -56,7 +56,10 @@ internal fun Route.ankiRoutes(server: LocalServer) {
                 throw BadRequest("anki.android_failed", buildJsonObject { put("detail", e.message ?: e.javaClass.simpleName) })
             }
             if (lessonId.isNotEmpty()) lessons.setAnkiNotes(lessonId, sent.notes)
+            // Its notes no card updated (cards deleted, or remade): the page offers to delete them
+            val leftovers = if (lessonId.isEmpty()) emptyList() else withContext(Dispatchers.IO) { anki.leftovers(lessonId, sent.notes.values.toSet()) }
             buildJsonObject {
+                put("leftovers", JsonArray(leftovers.map { buildJsonObject { put("id", it.id); put("text", it.text); put("deck", it.deck) } }))
                 put("added", sent.added)
                 put("updated", sent.updated) // the lesson's notes sent before, changed since
                 put("moved", sent.moved) // and moved, the lesson's deck having changed

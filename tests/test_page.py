@@ -159,7 +159,7 @@ def test_figures_drawn_after_the_cards(page):
 def test_delete_the_open_lesson(page):
     generate_free(page, FRONT_PROMPT)
     page.locator(".review-head").get_by_role("button", name="Supprimer la leçon").click()
-    sheet = page.locator(".sheet.top")
+    sheet = page.get_by_role("complementary", name="Supprimer la leçon")
     sync_api.expect(sheet).to_contain_text("Anki n'est pas ouvert")  # Anki closed: the lesson alone
     sheet.get_by_role("button", name="Supprimer la leçon").click()
     sync_api.expect(page.locator(".flash")).to_have_count(0)
@@ -895,6 +895,26 @@ def test_review_in_ankidroid_once_sent(page, anki):
     review.click()
     sync_api.expect(page.locator(".toast.ok")).to_be_hidden()
     assert [a["deck"] for a in asked] == [page.locator(".field.deck input").input_value()]
+
+
+def test_cards_left_over_in_anki_deleted_when_asked(page, anki):
+    """A card deleted after a send: the next send says its note is left in Anki, with its
+    text, and deletes it only on "Delete from Anki"."""
+    generate_free(page, FRONT_PROMPT)
+    page.get_by_role("button", name="📥 Ajouter à Anki").click()
+    update = page.get_by_role("button", name="🔄 Mettre à jour dans Anki")
+    sync_api.expect(update).to_be_visible()
+    notes = len(anki.notes)
+    first = page.locator(".flash").first
+    gone = first.locator("textarea").first.input_value()
+    first.get_by_role("button", name="Supprimer la carte").click()
+    update.click()
+    sheet = page.locator("aside.sheet", has_text="Cartes en trop dans Anki")
+    sync_api.expect(sheet).to_be_visible()
+    sync_api.expect(sheet.locator(".leftovers li").first).to_have_text(gone)
+    sheet.get_by_role("button", name="Supprimer d'Anki").click()
+    sync_api.expect(sheet).to_be_hidden()
+    assert len(anki.notes) == notes - 1
 
 
 def test_ankidroid_installed_from_the_message(page, anki):

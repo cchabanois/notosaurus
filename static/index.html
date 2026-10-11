@@ -788,6 +788,33 @@
     </template>
   </div>
 
+  <!-- After a send: the lesson's notes in Anki no card has any more (cards deleted, or remade
+       with another front): deleted only when asked -->
+  <div class="sheet-backdrop top" x-cloak x-show="leftovers.open" x-transition.opacity @click="leftovers.open = false"></div>
+  <aside class="sheet top" x-cloak x-show="leftovers.open"
+         x-transition:enter="sheet-anim" x-transition:enter-start="sheet-down"
+         x-transition:leave="sheet-anim" x-transition:leave-end="sheet-down"
+         @keydown.escape.window="leftovers.open = false" :aria-label="$t('app.leftovers.title')">
+    <div class="sheet-handle"></div>
+    <div class="sheet-head">
+      <h2 x-text="$t('app.leftovers.title')"></h2>
+      <button class="icon-btn" @click="leftovers.open = false" :aria-label="$t('common.close')">✕</button>
+    </div>
+    <div class="sheet-body">
+      <p x-text="$t('app.leftovers.text', { count: leftovers.notes.length })"></p>
+      <ul class="leftovers">
+        <template x-for="n in leftovers.notes.slice(0, 8)" :key="n.id"><li x-text="n.text"></li></template>
+        <li x-show="leftovers.notes.length > 8" x-text="$t('app.leftovers.more', { count: leftovers.notes.length - 8 })"></li>
+      </ul>
+      <p class="hint" x-text="$t('app.leftovers.hint')"></p>
+      <div class="sheet-actions">
+        <button type="button" class="btn soft" @click="leftovers.open = false" x-text="$t('app.leftovers.keep')"></button>
+        <button type="button" class="btn danger-soft" @click="deleteLeftovers()" :disabled="leftovers.busy"
+                x-text="$t('app.leftovers.delete', { count: leftovers.notes.length })"></button>
+      </div>
+    </div>
+  </aside>
+
   <!-- Deleting a lesson: its cards in Anki too? (asked, never by default) -->
   <div class="sheet-backdrop top" x-cloak x-show="removal.open" x-transition.opacity @click="removal.open = false"></div>
   <aside class="sheet top" x-cloak x-show="removal.open"

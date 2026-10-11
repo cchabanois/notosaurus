@@ -9,6 +9,7 @@ Each pull request adds a line under **Unreleased**. See [Releasing](CONTRIBUTING
 
 ### Added
 
+- After a send, the lesson's cards in Anki that none of its cards match any more (deleted from the lesson, or remade with another front) are listed with their text, and deleted from Anki only on **Delete from Anki** (their review history with them). Never a note another lesson uses. On the computer and in the Android app.
 - Add a page to a lesson days later: reopen it, add the photo, then **➕ Add the new page's cards**. The AI reads only the new pages, knowing the cards made already; the new cards come after the others (marked new), which stay as they are, so do their notes in Anki. On the computer and in the Android app. For developers: `/v1/extract` takes `existing`, the cards made already.
 - The coming Android app reads where the relay is from a file the project publishes (`relay.json`, next to the documentation): if the relay moves, installed apps follow it with no update, the licence key with them.
 - 🖍️ on a photo not sent yet: black out with a finger what the AI shouldn't see (a name, a school), un-black it the same way. Only the blacked-out photo is sent and saved; a PDF page with a hidden part goes without its text.

@@ -26,7 +26,8 @@ une leçon et la renvoyer autant de fois que tu veux : ses cartes sont **mises �
 Anki, **pas dupliquées**, et l'historique de révision de chaque carte est gardé, même si tu as
 corrigé son recto. Si tu as
 changé le paquet de la leçon, ses cartes y sont **déplacées**, avec leur historique. Les cartes ajoutées depuis le dernier envoi sont ajoutées ; les cartes supprimées de la
-leçon restent dans Anki (supprime-les là-bas si tu veux). Supprimer une leçon entière dans
+leçon restent dans Anki : après l'envoi, Notosaurus les liste et propose de les supprimer
+(avec leur historique de révision), jamais sans ton accord. Supprimer une leçon entière dans
 Notosaurus propose de supprimer aussi ses cartes dans Anki, avec leur historique de révision.
 
 Changer une option des cartes (carte inverse, taper la réponse…) sur une leçon déjà envoyée
