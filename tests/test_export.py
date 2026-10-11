@@ -117,6 +117,34 @@ def test_voice_preview(client):
     assert client.get("/api/tts", params={"text": "hola", "voice": "es_ES"}).status_code == 400
 
 
+def test_voices_listed(client, monkeypatch):
+    """The page's voice picker: the voices as edge-tts lists them; the service down, a
+    502 with a code the page translates."""
+    available = [{"voice": "es-ES-ElviraNeural", "locale": "es-ES", "gender": "Female"}]
+
+    async def voices():
+        return available
+
+    monkeypatch.setattr(tts, "voices", voices)
+    res = client.get("/api/voices")
+    assert res.status_code == 200 and res.json() == available
+
+    async def unreachable():
+        raise RuntimeError("network down")
+
+    monkeypatch.setattr(tts, "voices", unreachable)
+    res = client.get("/api/voices")
+    assert res.status_code == 502
+    assert res.json()["detail"] == {"code": "tts.voices_unavailable", "params": {"detail": "network down"}}
+
+
+def test_voice_preview_failed(client):
+    """The sound can't be made (edge-tts down): a 502 with a code, not a server crash."""
+    res = client.get("/api/tts", params={"text": "ÉCHEC", "voice": "es-ES-ElviraNeural"})
+    assert res.status_code == 502
+    assert res.json()["detail"] == {"code": "tts.failed", "params": {"detail": "network down"}}
+
+
 def test_voice_for_a_language(monkeypatch):
     import asyncio
 
