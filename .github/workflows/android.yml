@@ -31,8 +31,17 @@ jobs:
           java-version: "21"
           cache: gradle
           cache-dependency-path: android/**/*.gradle*
-      - name: Unit tests, then the app
-        run: ./gradlew testDebugUnitTest assembleDebug
+      - name: Unit tests (with their coverage), then the app
+        run: ./gradlew createDebugUnitTestCoverageReport assembleDebug
+      # The lines the unit tests run, per file: in the run's summary, the full report kept
+      - name: Coverage
+        run: |
+          echo "### Android unit tests' coverage" >> "$GITHUB_STEP_SUMMARY"
+          python3 tools/coverage.py | tee -a "$GITHUB_STEP_SUMMARY"
+      - uses: actions/upload-artifact@v7
+        with:
+          name: coverage
+          path: android/app/build/reports/coverage/test/debug/
       - if: failure()
         uses: actions/upload-artifact@v7
         with:

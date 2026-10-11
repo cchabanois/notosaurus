@@ -74,6 +74,8 @@ android {
     val testRelay = "\"https://notosaurus-relay-dev-773198805942.europe-west1.run.app\""
     buildTypes {
         debug {
+            // The unit tests' coverage (JaCoCo): createDebugUnitTestCoverageReport
+            enableUnitTestCoverage = true
             buildConfigField("String", "DEFAULT_RELAY", testRelay)
             buildConfigField("String", "REAL_RELAY", realRelay)
             buildConfigField("String", "TEST_RELAY", testRelay)
