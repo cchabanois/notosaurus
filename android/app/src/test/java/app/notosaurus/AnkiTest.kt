@@ -9,6 +9,15 @@ import java.io.File
 /** What doesn't need AnkiDroid: the diagrams' masks, as the computer writes them. */
 class AnkiTest {
     @Test
+    fun aPartNamedAsTheDeckIsntAddedTwice() {
+        assertEquals("Anglais::5ème::School subjects", Anki.deckName("Anglais::5ème::School subjects", "School subjects"))
+        assertEquals("Anglais::5ème::School subjects", Anki.deckName("Anglais::5ème::School subjects", " school SUBJECTS "))
+        assertEquals("Anglais::5ème::School subjects", Anki.deckName("Anglais::5ème", "School subjects"))
+        assertEquals("Anglais::5ème", Anki.deckName("Anglais::5ème", ""))
+        assertEquals("Notosaurus::Phrases", Anki.deckName("", "Phrases"))
+    }
+
+    @Test
     fun theComputersNoteTypes() {
         // static/note-types.json, as the app's assets have it
         val web = File(System.getProperty("notosaurus.web") ?: "../../static")

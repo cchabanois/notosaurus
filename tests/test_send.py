@@ -270,3 +270,15 @@ def test_an_old_ankiconnect_leaves_note_types_as_they_are(client, monkeypatch):
     r = client.post("/api/anki/send", json=SEND)
     assert r.status_code == 200 and r.json()["note_types_updated"] == 0
     assert model["css"] == ".card { font-size: 20px; }"
+
+
+def test_a_part_named_as_the_deck_isnt_added_twice():
+    """The AI's part of the lesson ("School subjects") and a deck chosen ending with it:
+    one level, not "…::School subjects::School subjects"; any case."""
+    from app.anki import _deck_name
+
+    assert _deck_name("Anglais::5ème::School subjects", "School subjects") == "Anglais::5ème::School subjects"
+    assert _deck_name("Anglais::5ème::School subjects", " school SUBJECTS ") == "Anglais::5ème::School subjects"
+    assert _deck_name("Anglais::5ème", "School subjects") == "Anglais::5ème::School subjects"
+    assert _deck_name("Anglais::5ème", "") == "Anglais::5ème"
+    assert _deck_name("School subjects", "School subjects") == "School subjects"

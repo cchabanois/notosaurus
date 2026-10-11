@@ -70,6 +70,7 @@ Each pull request adds a line under **Unreleased**. See [Releasing](CONTRIBUTING
 
 ### Fixed
 
+- A part of the lesson named like the deck's last level (“School subjects” in “Anglais::5ème::School subjects”) no longer makes a second deck of the same name inside it, on the computer and in the Android app; the AI no longer names a part after the lesson itself.
 - OpenRouter or OpenAI answering without an image (or not as one) leaves that card without a picture, as Gemini does: it no longer stops the lesson's other pictures.
 - A picture Gemini refused to draw (its safety filters) made drawing the whole lesson's pictures fail with an unexplained error: that card now just stays without its picture (“The image model gave no picture.”).
 - The coming Android app keeps the lesson being made when the phone is turned (photos and prompt were lost: the page loaded again).
