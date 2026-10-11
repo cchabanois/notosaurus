@@ -3,7 +3,9 @@ image as bytes, a Gemini client that only hears and answers."""
 
 import asyncio
 import io
+import struct
 import types as py_types
+import zlib
 from concurrent.futures import ThreadPoolExecutor
 
 from google.genai import types
@@ -22,6 +24,17 @@ def plain_image(width, height, color="white", fmt="JPEG") -> bytes:
     out = io.BytesIO()
     Image.new("RGB", (width, height), color).save(out, fmt)
     return out.getvalue()
+
+
+def bomb_png(side=20_000) -> bytes:
+    """A PNG claiming `side` × `side` pixels in a few dozen bytes (a decompression bomb:
+    decoded, 20,000² would take 1.2 GB). Its header is all Pillow reads before refusing it."""
+
+    def chunk(kind: bytes, data: bytes) -> bytes:
+        return struct.pack(">I", len(data)) + kind + data + struct.pack(">I", zlib.crc32(kind + data))
+
+    header = struct.pack(">IIBBBBB", side, side, 8, 2, 0, 0, 0)  # 8-bit RGB
+    return b"\x89PNG\r\n\x1a\n" + chunk(b"IHDR", header) + chunk(b"IDAT", zlib.compress(b"")) + chunk(b"IEND", b"")
 
 
 class HearingGemini:

@@ -5,12 +5,13 @@ import io
 
 import apkg
 import pytest
-from helpers import plain_image, run
+from helpers import bomb_png, plain_image, run
 from PIL import Image
 
 from app.settings import Settings
-from notosaurus_core import llm, pictures, tts
+from notosaurus_core import diagrams, llm, pictures, tts
 from notosaurus_core.config import AIConfig
+from notosaurus_core.errors import AppError
 from notosaurus_core.models import Card
 from notosaurus_core.relay_api import MAX_IMAGE_BYTES
 
@@ -243,6 +244,47 @@ def test_uploads_too_heavy_refused(client, drawn):
     res = client.post(f"/api/lessons/{lesson['id']}/complete", files=[("images", ("p.jpg", heavy, "image/jpeg"))],
                       data={"prompt": "x"})  # fmt: skip
     assert res.status_code == 413
+
+
+BOMBS = [
+    pytest.param(20_000, id="refused-by-pillow"),  # DecompressionBombError: neither OSError nor ValueError
+    pytest.param(10_000, id="over-the-limit"),  # Pillow only warns below twice its limit: refused all the same
+]
+CANT_READ = {"code": "relay.bad_image", "params": {}}
+
+
+@pytest.mark.filterwarnings("ignore::PIL.Image.DecompressionBombWarning")
+@pytest.mark.parametrize("side", BOMBS)
+def test_a_decompression_bomb_is_a_photo_that_cant_be_read(client, drawn, side):
+    """A PNG of a few bytes claiming side² pixels: a clean error, never a 500, nothing saved."""
+    bomb = [("images", ("p.png", bomb_png(side), "image/png"))]
+    res = client.post("/api/extract", files=bomb, data={"prompt": "FR → ES"})
+    assert (res.status_code, res.json()["detail"]) == (415, CANT_READ)
+    assert client.get("/api/lessons").json() == []
+
+    lesson = lesson_with_pictures(client)
+    res = client.post(f"/api/lessons/{lesson['id']}/complete", files=bomb, data={"prompt": "x"})
+    assert (res.status_code, res.json()["detail"]) == (415, CANT_READ)
+
+    url = f"/api/lessons/{lesson['id']}/cards/{lesson['cards'][0]['id']}/picture"
+    res = client.post(url, files={"photo": ("p.png", bomb_png(side), "image/png")})  # the user's own photo
+    assert (res.status_code, res.json()["detail"]) == (415, CANT_READ)
+    assert not client.get(f"/api/lessons/{lesson['id']}").json()["cards"][0]["picture"]
+
+
+@pytest.mark.filterwarnings("ignore::PIL.Image.DecompressionBombWarning")
+@pytest.mark.parametrize("side", BOMBS)
+def test_a_decompression_bomb_never_decoded(side):
+    """In the core, wherever a picture or a photo is opened (the relay's too)."""
+    for opening in (
+        lambda: pictures.card_size(bomb_png(side)),  # a drawn, found or own picture
+        lambda: diagrams.prepare(bomb_png(side), "image/png"),  # a photo sent to the AI
+        lambda: diagrams.turn(bomb_png(side), [], 90),  # turned upright
+    ):
+        with pytest.raises(AppError) as e:
+            opening()
+        assert (e.value.code, e.value.status) == ("relay.bad_image", 415)
+    assert diagrams.prepare(b"\xff\xd8not a photo", "image/jpeg")[2] is None  # unreadable: sent as is, as before
 
 
 def test_the_settings_picture_test(admin, drawn, monkeypatch):

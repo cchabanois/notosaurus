@@ -5,7 +5,7 @@ import io
 
 import httpx
 import pytest
-from helpers import HearingGemini, plain_image, run
+from helpers import HearingGemini, bomb_png, plain_image, run
 from PIL import Image as PILImage
 
 from notosaurus_core import files, llm, pictures, stock
@@ -183,6 +183,64 @@ def test_nothing_else_fetched(services, source, id_, key):
         run(stock.fetch(source, id_, pixabay_key=key))
     assert e.value.code == "picture.not_found"
     assert not any(r.url.host == "evil.example" for r in services.asked)
+
+
+class Redirecting(Services):
+    """Commons' picture host answering every picture with a redirect to `to`."""
+
+    def __init__(self, to):
+        super().__init__()
+        self.to = to
+
+    def __call__(self, request: httpx.Request) -> httpx.Response:
+        if request.url.host == "upload.wikimedia.org" and request.url.path.startswith("/thumb/"):
+            self.asked.append(request)
+            return httpx.Response(302, headers={"Location": self.to})
+        return super().__call__(request)  # anywhere else, the redirect's target too: a picture
+
+
+REDIRECTS = [
+    "https://evil.example/x.jpg",  # another host
+    "https://upload.wikimedia.org/elsewhere.jpg",  # an allowed host: never followed either
+    "http://upload.wikimedia.org/thumb/1.jpg",  # plain http
+    "http://127.0.0.1:8000/api/admin/settings",  # the computer itself (SSRF)
+]
+
+
+@pytest.mark.parametrize("to", REDIRECTS)
+def test_a_redirect_from_an_allowed_host_never_followed(monkeypatch, to):
+    redirecting = Redirecting(to)
+    monkeypatch.setattr(stock, "_transport", httpx.MockTransport(redirecting))
+    stock._cache.clear()
+
+    async def download():
+        async with stock._client() as client:
+            return await stock._download(client, "commons", "https://upload.wikimedia.org/thumb/1.jpg")
+
+    with pytest.raises(AppError) as e:
+        run(download())
+    assert e.value.code == "picture.search_failed"
+    with pytest.raises(AppError):  # the one chosen
+        run(stock.fetch("commons", "File:Storming.jpg"))
+    found = run(stock.search("Bastille"))  # the previews: Commons' are left out, Openverse's kept
+    assert [f.source for f in found] == ["openverse"]
+    assert redirecting.asked and not any(str(r.url) == to for r in redirecting.asked)
+    assert not any(r.url.host in ("evil.example", "127.0.0.1") for r in redirecting.asked)
+
+
+@pytest.mark.filterwarnings("ignore::PIL.Image.DecompressionBombWarning")
+def test_a_decompression_bomb_found_is_left_out(monkeypatch):
+    def bombs(request: httpx.Request) -> httpx.Response:
+        if request.url.host == "upload.wikimedia.org":
+            return httpx.Response(200, content=bomb_png())
+        return Services()(request)
+
+    monkeypatch.setattr(stock, "_transport", httpx.MockTransport(bombs))
+    stock._cache.clear()
+    assert [f.source for f in run(stock.search("Bastille"))] == ["openverse"]  # no preview: not offered
+    with pytest.raises(AppError) as e:
+        run(stock.fetch("commons", "File:Storming.jpg"))
+    assert e.value.code == "relay.bad_image"
 
 
 def test_found_on_the_computer(client, monkeypatch):

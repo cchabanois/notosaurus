@@ -11,8 +11,9 @@ import hashlib
 import io
 from pathlib import Path
 
-from PIL import Image, ImageOps
+from PIL import Image
 
+from . import images
 from .models import Card, Frame, Mask, TextLine
 
 MAX_SIDE = 1568  # larger images get downsized by some models: pixel boxes refer to what they see
@@ -43,7 +44,7 @@ def prepare(data: bytes, media_type: str) -> tuple[bytes, str, tuple[int, int] |
     """A photo as sent to the AI: upright, at most MAX_SIDE. Returns JPEG bytes,
     their media type and the size the boxes refer to (None: unreadable, sent as is)."""
     try:
-        image = ImageOps.exif_transpose(Image.open(io.BytesIO(data))).convert("RGB")
+        image = images.upright(data)
     except (OSError, ValueError):
         return data, media_type, None
     image.thumbnail((MAX_SIDE, MAX_SIDE))
@@ -156,7 +157,7 @@ def turn(data: bytes, masks: list[Mask | Frame], degrees: int) -> bytes:
     if degrees not in ROTATIONS:
         return data
     try:
-        image = ImageOps.exif_transpose(Image.open(io.BytesIO(data))).convert("RGB")
+        image = images.upright(data)
     except (OSError, ValueError):
         return data
     out = io.BytesIO()
@@ -192,7 +193,7 @@ def page_image(folder: Path, photo: Path, box: list[float] | None = None) -> Pat
     key = hashlib.sha1(data + repr(box).encode()).hexdigest()[:10]
     path = folder / f"diagram-{photo.stem}-{key}.jpg"
     if not path.exists():
-        image = ImageOps.exif_transpose(Image.open(io.BytesIO(data))).convert("RGB")
+        image = images.upright(data)
         if box:
             w, h = image.size
             image = image.crop((round(box[0] * w), round(box[1] * h), round(box[2] * w), round(box[3] * h)))

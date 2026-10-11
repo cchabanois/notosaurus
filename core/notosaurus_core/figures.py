@@ -7,6 +7,7 @@ text: nothing that runs or loads anything) and saved next to the card pictures.
 """
 
 import hashlib
+import math
 import re
 from pathlib import Path
 from xml.etree import ElementTree
@@ -149,9 +150,11 @@ def clean(svg: str) -> str:
     viewbox = root.get("viewBox") or VIEWBOX
     root.set("viewBox", viewbox)
     try:
-        _, _, width, height = (float(v) for v in re.split(r"[\s,]+", viewbox.strip()))
+        x, y, width, height = (float(v) for v in re.split(r"[\s,]+", viewbox.strip()))
     except ValueError as e:
         raise FigureError("figure.invalid") from e
+    if not all(math.isfinite(v) for v in (x, y, width, height)) or width <= 0 or height <= 0:
+        raise FigureError("figure.invalid")  # float() takes "nan", "inf", "1e309": no size to show
     root.set("width", f"{width:g}")
     root.set("height", f"{height:g}")
     return ElementTree.tostring(root, encoding="unicode")

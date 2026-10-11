@@ -119,6 +119,9 @@ def test_only_its_own_addresses_answered(client, monkeypatch):
         assert local.delete("/api/lessons/x", headers=rebound).status_code == 421
         for host in ("", "127.0.0.1.nip.io", "localhost.evil.example", "evil@127.0.0.1", "127.0.0.1:x", "pc.local"):
             assert local.get("/api/lessons", headers={"Host": host}).status_code == 421, host
+        # A port that can't be, brackets around no IPv6 address: refused, never an error (500)
+        for host in ("localhost:65536", "127.0.0.1:99999", "localhost:0", "[1.2.3.4]", "[0]", "[::1]:70000"):
+            assert local.get("/api/lessons", headers={"Host": host}).status_code == 421, host
 
         # The computer by localhost or 127.0.0.1, phones by its address (v4 or v6)
         for host in ("127.0.0.1:8000", "localhost:8000", "LOCALHOST", "[::1]:8000", "192.168.1.20", "[fe80::1]:8000"):

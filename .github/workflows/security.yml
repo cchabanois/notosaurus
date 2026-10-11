@@ -1,0 +1,63 @@
+name: Security
+
+# Known vulnerabilities in the dependencies (the app's pinned Python packages, the
+# documentation site's npm packages) and secrets committed by mistake (gitleaks): on
+# every pull request and push to main, and weekly, for advisories published since.
+on:
+  pull_request:
+  push:
+    branches: [main]
+  schedule:
+    - cron: "23 5 * * 1"  # Mondays
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: security-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  pip-audit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        with:
+          python-version: "3.13"
+      - run: pip install pip-audit==2.10.1
+      # requirements.txt pins every package the app and the core run with (uv pip compile):
+      # audited as pinned, nothing installed
+      - run: pip-audit --disable-pip --no-deps --progress-spinner off -r requirements.txt
+
+  npm-audit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: 24
+      # The site is static: only what may matter at build time fails the job (the lock file)
+      - run: npm audit --audit-level=high
+        working-directory: docs
+
+  gitleaks:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      contents: read
+      pull-requests: read  # the pull request's commits, to scan them
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0  # the history: a pull request's commits, everything on the weekly run
+      # Free for a personal account's repositories (an organisation needs GITLEAKS_LICENSE).
+      # Known false positives: .gitleaksignore, or "gitleaks:allow" on the line.
+      - uses: gitleaks/gitleaks-action@e0c47f4f8be36e29cdc102c57e68cb5cbf0e8d1e # v3.0.0
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITLEAKS_VERSION: 8.30.1
+          GITLEAKS_ENABLE_COMMENTS: false  # no write access: findings in the job's log and summary

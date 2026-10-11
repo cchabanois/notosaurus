@@ -103,7 +103,7 @@ def test_lockout_grows_up_to_a_limit():
 
 
 def test_admin_keys_never_sent_back(admin, monkeypatch, tmp_path):
-    monkeypatch.setenv("GEMINI_API_KEY", "AIzaFROMENV0001")
+    monkeypatch.setenv("GEMINI_API_KEY", "AIzaFROMENV0001")  # gitleaks:allow (a placeholder, not a key)
     res = admin.put(
         "/api/admin/settings",
         headers=ADMIN,

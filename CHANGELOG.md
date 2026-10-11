@@ -74,6 +74,7 @@ Each pull request adds a line under **Unreleased**. See [Releasing](CONTRIBUTING
 
 ### Fixed
 
+- A figure the AI drew with an impossible size (`viewBox` of zero, negative, infinite or NaN size) is refused (“draw it again”) instead of being saved and shown empty.
 - A card whose front was corrected after a send updates its own note in Anki (its review history kept) instead of adding a second one next to the old version. The lesson remembers its notes from the last send; on the computer and in the Android app.
 - A lesson sent again after its deck (or a card's part) changed: its cards move to the new deck, their review history kept. On the computer they were added again (old ones left in the old deck); in the Android app they stayed in the old deck. The decks left empty go (on the computer: AnkiDroid's API can't delete a deck).
 - A part of the lesson named like the deck's last level (“School subjects” in “Anglais::5ème::School subjects”) no longer makes a second deck of the same name inside it, on the computer and in the Android app; the AI no longer names a part after the lesson itself.
@@ -100,6 +101,8 @@ Each pull request adds a line under **Unreleased**. See [Releasing](CONTRIBUTING
 - Nothing of a lesson in the logs any more: a picture that fails, a free picture not found, a sound not made or a figure left undescribed logged its subject or text (or an error quoting it), on the computer and on the relay. They now say only what went wrong (an error code, a count, a model).
 - The Docker image runs Notosaurus as its own user, not root. A `notosaurus-data` volume made by an older image is handed over once with `docker run --rm -u 0 -v notosaurus-data:/data notosaurus chown -R notosaurus: /data`.
 - Wrong settings passwords never lock out the computer itself, and those typed on it don't count: a neighbour on the Wi-Fi guessing, or a shared address (Docker, Tailscale), could keep the parent out of the settings.
+- A picture or photo claiming an enormous size in a few kilobytes (a “decompression bomb”) is refused as a photo Notosaurus can't read, before anything is decoded: it made an error (and, on the relay, “service unavailable”), or could fill the memory. Lesson photos, your own picture for a card, the free pictures found, on the computer and on the relay.
+- A `Host` header with a port that can't be (over 65535, or 0) or brackets around no IPv6 address is refused like any unknown name; the brackets made an error.
 
 ## [1.0.0] - 2026-10-04
 

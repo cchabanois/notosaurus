@@ -74,7 +74,7 @@ ERRORS = {
     "relay.daily_limit": 429,  # too many credits used today: tomorrow, or wait
     "relay.busy": 429,  # too many calls at once for this licence: retry in a moment
     "relay.too_large": 413,  # too many photos, or one too heavy
-    "relay.bad_image": 415,  # a photo that isn't JPEG, PNG, WebP or GIF
+    "relay.bad_image": 415,  # a photo that isn't JPEG, PNG, WebP or GIF, or can't be read (images.py: a bomb)
     "relay.bad_audio": 415,  # a recording that isn't one of AUDIO_TYPES
     "relay.invalid_request": 422,  # a request that isn't the API's (params: "detail")
     "relay.client_outdated": 426,  # update Notosaurus

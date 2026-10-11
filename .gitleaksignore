@@ -1,0 +1,6 @@
+# Known false positives of gitleaks (generic-api-key), by fingerprint (commit:file:rule:line).
+# Old tests set GEMINI_API_KEY to a 15-character placeholder: a real Google key has 39.
+926a0eb4f014580f25de22165052723be08d3842:tests/test_admin.py:generic-api-key:29
+dc92b765333c7178a7f2093568c9a67fe0a2eebb:tests/test_admin.py:generic-api-key:29
+1c7388739bd9641301789a4dd72f407a9f00d1e8:tests/test_api.py:generic-api-key:316
+df62dcea4d41dd4c7f4c75029a4b0ba577e77c93:tests/test_api.py:generic-api-key:332
