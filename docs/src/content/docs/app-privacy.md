@@ -9,8 +9,11 @@ This page is about **the Notosaurus app for Android** and **the Notosaurus servi
 read the photos, make the cards and the voices. Notosaurus on a computer (the Anki add-on) works
 differently: see [Privacy and security](../privacy/).
 
-**Data controller**: [to complete: the publisher's name and address].
+**Data controller**: [to complete: the publisher's name].
 **Contact**: notosaurus.app@gmail.com
+
+**Who uses the app**: a **parent** (an adult), preparing their children's revision. The app
+isn't made to be used by a child.
 
 ## In short
 
@@ -55,8 +58,10 @@ in the lesson.
 ## What the service keeps
 
 - **Your licence**: its key's fingerprint (not the key itself), your plan, your credits left,
-  their renewal date and what was used that day. Kept as long as the licence exists, then
-  deleted on request.
+  their renewal date, what was used that day, and a short note for support (an order number,
+  for instance). Kept while it is valid, then **12 months** after it ends (to answer a question
+  or a claim), then deleted.
+- **Your emails to support**, if any: kept **12 months** after the last exchange.
 - **Technical logs**, kept **30 days** to run the service and spot failures and abuse: the
   time, the action asked for ("make a lesson"…), its duration, its outcome, the AI model and the
   credits used, the app's version, a short licence identifier, and, as for any website, the
@@ -73,7 +78,34 @@ in the lesson.
 | **GitHub** (GitHub Pages) | At start, the app reads the service's address there: GitHub sees your IP address | Its servers |
 
 Google acts as a processor, under the Google Cloud terms, and doesn't use this data to train
-its models.
+its models. To detect abuse, Google may however keep the requests sent to Gemini **up to 90
+days**, under its terms, using them for nothing else.
+
+### Transfers outside the European Union
+
+Processing happens in the European Union, but Google, GitHub, the Wikimedia Foundation and
+Openverse are US organisations, which may access it. These transfers are covered by the
+European Commission's **standard contractual clauses** and, for certified companies such as
+Google, by the **EU–US Data Privacy Framework**. Pixabay is an EU company.
+
+## Why: the legal bases
+
+| Processing | Legal basis |
+|---|---|
+| Making, completing, correcting and explaining cards; dictation; voices; pictures | **Providing the service** you ask for |
+| Checking your licence and counting your credits | **Performing the contract** (your licence) |
+| Technical logs, security, fighting abuse | The **legitimate interest** in running a safe service |
+| The microphone | Your **consent**, asked at the first dictation and withdrawable in the phone's settings |
+| Answering your emails | Your **request** |
+
+Notosaurus makes **no automated decision** about you and does **no profiling**. Without your
+licence the service can't be provided; everything else is sent only when you ask for it.
+
+## The "With my computer" mode
+
+When the app opens Notosaurus on your computer (the Anki add-on), the phone talks straight to
+the computer, on the home Wi-Fi: nothing goes through the Notosaurus service then. The
+[Privacy and security](../privacy/) page applies.
 
 ## The app's permissions
 
@@ -85,15 +117,21 @@ its models.
 
 ## Children
 
-Notosaurus is made for **parents** preparing their children's revision. Notebook photos may
-hold a child's data (name, handwriting): hide the name with 🖍️ before sending, and put nothing
+The app is used by **a parent**, not by the child. But notebook photos may hold the child's
+data (their name, their handwriting): hide the name with 🖍️ before sending, and put nothing
 personal in the instructions.
 
 ## Your rights
 
-You can ask for access to your data, its correction or its deletion, by writing to
-**notosaurus.app@gmail.com**. Lessons are on your phone: you delete them yourself in the app.
-You can also complain to your data protection authority (in France, the CNIL: cnil.fr).
+By writing to **notosaurus.app@gmail.com**, you can:
+
+- **access** your data and get a copy of it (**portability**);
+- have it **corrected** or **erased**;
+- **restrict** its processing, or **object** to the processing based on legitimate interest;
+- **withdraw your consent** (the microphone) at any time, without effect on what was done before.
+
+Lessons are on your phone: you delete them yourself in the app. You get an answer within a
+month. You can also complain to your data protection authority (in France, the CNIL: cnil.fr).
 
 ## Security
 

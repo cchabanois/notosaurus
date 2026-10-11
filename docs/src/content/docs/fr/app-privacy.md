@@ -9,8 +9,11 @@ Cette page concerne **l'app Notosaurus pour Android** et **le service Notosaurus
 utilise pour lire les photos, faire les cartes et les voix. Notosaurus sur ordinateur (le
 greffon Anki) fonctionne autrement : voir [Confidentialité et sécurité](../privacy/).
 
-**Responsable du traitement** : [à compléter : nom et adresse de l'éditeur].
+**Responsable du traitement** : [à compléter : nom de l'éditeur].
 **Contact** : notosaurus.app@gmail.com
+
+**Qui utilise l'app** : un **parent** (un adulte), qui prépare les révisions de ses enfants.
+L'app n'est pas faite pour être utilisée par un enfant.
 
 ## En bref
 
@@ -56,8 +59,10 @@ dans la leçon.
 ## Ce que le service garde
 
 - **Ta licence** : l'empreinte de sa clé (pas la clé elle-même), ta formule, tes crédits
-  restants, leur date de renouvellement et ce qui a été utilisé dans la journée. Elle est gardée
-  tant que la licence existe, puis supprimée sur demande.
+  restants, leur date de renouvellement, ce qui a été utilisé dans la journée, et une courte note
+  pour le support (par exemple un numéro de commande). Elle est gardée tant qu'elle est valable,
+  puis **12 mois** après sa fin (pour répondre à une question ou à une réclamation), puis supprimée.
+- **Tes e-mails au support**, s'il y en a : gardés **12 mois** après le dernier échange.
 - **Des journaux techniques**, gardés **30 jours** pour faire fonctionner le service et repérer
   les pannes et les abus : l'heure, l'action demandée (« faire une leçon »…), sa durée, son
   résultat, le modèle d'IA et les crédits utilisés, la version de l'app, un identifiant court de
@@ -75,7 +80,37 @@ dans la leçon.
 | **GitHub** (GitHub Pages) | Au démarrage, l'app y lit l'adresse du service : GitHub voit ton adresse IP | Ses serveurs |
 
 Google agit comme sous-traitant, sous les conditions de Google Cloud, et n'utilise pas ces
-données pour entraîner ses modèles.
+données pour entraîner ses modèles. Pour détecter les abus, Google peut toutefois garder les
+requêtes envoyées à Gemini **jusqu'à 90 jours**, selon ses conditions, sans s'en servir à
+d'autres fins.
+
+### Transferts hors de l'Union européenne
+
+Les traitements ont lieu dans l'Union européenne, mais Google, GitHub, la Wikimedia
+Foundation et Openverse sont des organisations américaines, qui peuvent y accéder. Ces
+transferts sont encadrés par les **clauses contractuelles types** de la Commission européenne
+et, pour les sociétés certifiées comme Google, par le **cadre de protection des données
+UE–États-Unis**. Pixabay est une société de l'Union européenne.
+
+## Pourquoi : les bases légales
+
+| Traitement | Base légale |
+|---|---|
+| Faire, compléter, corriger et expliquer les cartes ; dictée ; voix ; images | L'**exécution du service** que tu demandes |
+| Vérifier ta licence et compter tes crédits | L'**exécution du contrat** (ta licence) |
+| Journaux techniques, sécurité, lutte contre les abus | L'**intérêt légitime** à faire fonctionner un service sûr |
+| Le micro | Ton **consentement**, demandé à la première dictée et retirable dans les réglages du téléphone |
+| Répondre à tes e-mails | Ta **demande** |
+
+Notosaurus ne prend **aucune décision automatisée** te concernant et ne fait **aucun profilage**.
+Sans ta licence, le service ne peut pas être fourni ; tout le reste n'est envoyé que quand tu le
+demandes.
+
+## Le mode « Avec mon ordinateur »
+
+Quand l'app ouvre Notosaurus sur ton ordinateur (le greffon Anki), le téléphone parle
+directement à l'ordinateur, sur le Wi-Fi de la maison : rien ne passe alors par le service
+Notosaurus. C'est la page [Confidentialité et sécurité](../privacy/) qui s'applique.
 
 ## Les autorisations de l'app
 
@@ -87,15 +122,21 @@ données pour entraîner ses modèles.
 
 ## Les enfants
 
-Notosaurus est fait pour **les parents** qui préparent les révisions de leurs enfants. Les
-photos de cahiers peuvent contenir des données d'enfant (nom, écriture) : cache le nom avec 🖍️
-avant l'envoi, et ne mets rien de personnel dans les consignes.
+L'app est utilisée par **un parent**, pas par l'enfant. Mais les photos de cahiers peuvent
+contenir des données de l'enfant (son nom, son écriture) : cache le nom avec 🖍️ avant l'envoi,
+et ne mets rien de personnel dans les consignes.
 
 ## Tes droits
 
-Tu peux demander l'accès à tes données, leur rectification ou leur suppression, en écrivant à
-**notosaurus.app@gmail.com**. Les leçons, elles, sont sur ton téléphone : tu les supprimes
-toi-même dans l'app. Tu peux aussi saisir la **CNIL** (cnil.fr).
+Tu peux, en écrivant à **notosaurus.app@gmail.com** :
+
+- **accéder** à tes données et en obtenir une copie (**portabilité**) ;
+- les faire **rectifier** ou **effacer** ;
+- en **limiter** le traitement, ou t'**opposer** à celui fondé sur l'intérêt légitime ;
+- **retirer ton consentement** (le micro) à tout moment, sans effet sur ce qui a été fait avant.
+
+Les leçons, elles, sont sur ton téléphone : tu les supprimes toi-même dans l'app. Une réponse
+est donnée sous un mois. Tu peux aussi adresser une réclamation à la **CNIL** (cnil.fr).
 
 ## Sécurité
 
