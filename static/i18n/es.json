@@ -836,6 +836,8 @@
     "relay": {
       "invalid_key": "Clave de licencia desconocida o caducada: compruébala en los ajustes.",
       "no_credits": "No quedan créditos este mes: vuelven con la próxima renovación.",
+      "subscription_ended": "Tu suscripción ha terminado: vuelve a suscribirte en la app para continuar.",
+      "invalid_purchase": "Compra no reconocida por Google Play: inténtalo de nuevo o contacta con el soporte.",
       "daily_limit": "Se alcanzó el límite de hoy: inténtalo mañana.",
       "too_large": "Demasiadas fotos, o una demasiado pesada.",
       "bad_image": "Este archivo no es una foto que Notosaurus pueda leer.",

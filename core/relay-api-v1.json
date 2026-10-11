@@ -52,7 +52,7 @@
             }
           },
           "402": {
-            "description": "Codes: `relay.no_credits`",
+            "description": "Codes: `relay.no_credits`, `relay.subscription_ended`",
             "content": {
               "application/json": {
                 "schema": {
@@ -199,7 +199,7 @@
             }
           },
           "402": {
-            "description": "Codes: `relay.no_credits`",
+            "description": "Codes: `relay.no_credits`, `relay.subscription_ended`",
             "content": {
               "application/json": {
                 "schema": {
@@ -356,7 +356,7 @@
             }
           },
           "402": {
-            "description": "Codes: `relay.no_credits`",
+            "description": "Codes: `relay.no_credits`, `relay.subscription_ended`",
             "content": {
               "application/json": {
                 "schema": {
@@ -458,7 +458,7 @@
             }
           },
           "402": {
-            "description": "Codes: `relay.no_credits`",
+            "description": "Codes: `relay.no_credits`, `relay.subscription_ended`",
             "content": {
               "application/json": {
                 "schema": {
@@ -560,7 +560,7 @@
             }
           },
           "402": {
-            "description": "Codes: `relay.no_credits`",
+            "description": "Codes: `relay.no_credits`, `relay.subscription_ended`",
             "content": {
               "application/json": {
                 "schema": {
@@ -652,7 +652,7 @@
             }
           },
           "402": {
-            "description": "Codes: `relay.no_credits`",
+            "description": "Codes: `relay.no_credits`, `relay.subscription_ended`",
             "content": {
               "application/json": {
                 "schema": {
@@ -827,7 +827,7 @@
             }
           },
           "402": {
-            "description": "Codes: `relay.no_credits`",
+            "description": "Codes: `relay.no_credits`, `relay.subscription_ended`",
             "content": {
               "application/json": {
                 "schema": {
@@ -929,7 +929,7 @@
             }
           },
           "402": {
-            "description": "Codes: `relay.no_credits`",
+            "description": "Codes: `relay.no_credits`, `relay.subscription_ended`",
             "content": {
               "application/json": {
                 "schema": {
@@ -1031,7 +1031,7 @@
             }
           },
           "402": {
-            "description": "Codes: `relay.no_credits`",
+            "description": "Codes: `relay.no_credits`, `relay.subscription_ended`",
             "content": {
               "application/json": {
                 "schema": {
@@ -1133,7 +1133,7 @@
             }
           },
           "402": {
-            "description": "Codes: `relay.no_credits`",
+            "description": "Codes: `relay.no_credits`, `relay.subscription_ended`",
             "content": {
               "application/json": {
                 "schema": {
@@ -1244,7 +1244,7 @@
             }
           },
           "402": {
-            "description": "Codes: `relay.no_credits`",
+            "description": "Codes: `relay.no_credits`, `relay.subscription_ended`",
             "content": {
               "application/json": {
                 "schema": {
@@ -1361,7 +1361,7 @@
             }
           },
           "402": {
-            "description": "Codes: `relay.no_credits`",
+            "description": "Codes: `relay.no_credits`, `relay.subscription_ended`",
             "content": {
               "application/json": {
                 "schema": {
@@ -1560,6 +1560,98 @@
           }
         }
       }
+    },
+    "/v1/subscribe": {
+      "post": {
+        "summary": "Subscribe",
+        "description": "A Google Play subscription's licence: checked with Google Play; no key needed.",
+        "operationId": "subscribe_v1_subscribe_post",
+        "parameters": [
+          {
+            "name": "X-Notosaurus-Version",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "The client's version (\"1.1.0\").",
+              "title": "X-Notosaurus-Version"
+            },
+            "description": "The client's version (\"1.1.0\")."
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SubscribeRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SubscribeResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Codes: `relay.invalid_purchase`",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "402": {
+            "description": "Codes: `relay.subscription_ended`",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Codes: `relay.invalid_request`",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "426": {
+            "description": "Codes: `relay.client_outdated`",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Codes: `relay.unavailable`",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
     }
   },
   "components": {
@@ -1594,6 +1686,18 @@
             ],
             "title": "Renews At",
             "description": "When the credits are renewed (ISO 8601)."
+          },
+          "ends_at": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Ends At",
+            "description": "A subscription: when it ends unless renewed (ISO 8601); none for a licence without end."
           }
         },
         "type": "object",
@@ -2618,6 +2722,49 @@
         ],
         "title": "SpeakRequest",
         "description": "POST /v1/speak: a text read aloud. Answer: the mp3 (audio/mpeg), its credits in\nCREDITS_HEADER and CREDITS_LEFT_HEADER (a share of the characters' real cost, at\nleast 1)."
+      },
+      "SubscribeRequest": {
+        "properties": {
+          "purchase_token": {
+            "type": "string",
+            "maxLength": 1000,
+            "minLength": 1,
+            "title": "Purchase Token",
+            "description": "The purchase's token (Google Play Billing)."
+          },
+          "product_id": {
+            "type": "string",
+            "maxLength": 200,
+            "minLength": 1,
+            "title": "Product Id",
+            "description": "The subscription's product id."
+          }
+        },
+        "type": "object",
+        "required": [
+          "purchase_token",
+          "product_id"
+        ],
+        "title": "SubscribeRequest",
+        "description": "POST /v1/subscribe: a Google Play subscription bought (or restored, on another phone)\nin the app; the relay checks it with Google Play and answers its licence key. The same\npurchase always gives the same key: the phones of one subscription share its credits."
+      },
+      "SubscribeResponse": {
+        "properties": {
+          "key": {
+            "type": "string",
+            "title": "Key",
+            "description": "The licence key, for the requests' Authorization header."
+          },
+          "account": {
+            "$ref": "#/components/schemas/Account"
+          }
+        },
+        "type": "object",
+        "required": [
+          "key",
+          "account"
+        ],
+        "title": "SubscribeResponse"
       },
       "TranscribeRequest": {
         "description": "A dictation (the \"audio\" part) as the text its speaker meant to type: their words,\nhesitations out, their own corrections applied, a lesson's foreign words spelled right.",

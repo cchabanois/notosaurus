@@ -39,6 +39,7 @@ COMMON = (
     "relay.invalid_request",
     "relay.invalid_key",
     "relay.no_credits",
+    "relay.subscription_ended",
     "relay.daily_limit",
     "relay.client_outdated",
     "relay.unavailable",
@@ -247,6 +248,20 @@ def build() -> dict:
     )
     def account(x_notosaurus_version: str = client):
         """What the licence gives; also the connection test."""
+
+    @app.post(
+        f"{api.PREFIX}/subscribe",
+        response_model=api.SubscribeResponse,
+        responses=errors(
+            "relay.invalid_request",
+            "relay.invalid_purchase",
+            "relay.subscription_ended",
+            "relay.client_outdated",
+            "relay.unavailable",
+        ),
+    )
+    def subscribe(req: api.SubscribeRequest, x_notosaurus_version: str = client):
+        """A Google Play subscription's licence: checked with Google Play; no key needed."""
 
     schema = app.openapi()
     # Requests that aren't the API's are answered like any error (relay.invalid_request)

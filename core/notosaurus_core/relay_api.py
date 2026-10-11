@@ -69,6 +69,8 @@ MAX_AUDIO_BYTES = 3 * 1024 * 1024  # a dictation: the app stops at 2 minutes (â‰
 ERRORS = {
     "relay.invalid_key": 401,  # no licence key, unknown, or ended
     "relay.no_credits": 402,  # this period's credits are used up
+    "relay.subscription_ended": 402,  # its subscription (Google Play) ended: subscribe again
+    "relay.invalid_purchase": 400,  # a purchase Google Play doesn't know, or not of this app
     "relay.daily_limit": 429,  # too many credits used today: tomorrow, or wait
     "relay.too_large": 413,  # too many photos, or one too heavy
     "relay.bad_image": 415,  # a photo that isn't JPEG, PNG, WebP or GIF
@@ -315,3 +317,23 @@ class Account(BaseModel):
     credits_left: int = Field(ge=0, description="Credits left in this period.")
     daily_left: int = Field(ge=0, description="Credits that can still be used today.")
     renews_at: str | None = Field(default=None, description="When the credits are renewed (ISO 8601).")
+    ends_at: str | None = Field(
+        default=None,
+        description="A subscription: when it ends unless renewed (ISO 8601); none for a licence without end.",
+    )
+
+
+class SubscribeRequest(BaseModel):
+    """POST /v1/subscribe: a Google Play subscription bought (or restored, on another phone)
+    in the app; the relay checks it with Google Play and answers its licence key. The same
+    purchase always gives the same key: the phones of one subscription share its credits."""
+
+    purchase_token: str = Field(
+        min_length=1, max_length=1000, description="The purchase's token (Google Play Billing)."
+    )
+    product_id: str = Field(min_length=1, max_length=200, description="The subscription's product id.")
+
+
+class SubscribeResponse(BaseModel):
+    key: str = Field(description="The licence key, for the requests' Authorization header.")
+    account: Account
