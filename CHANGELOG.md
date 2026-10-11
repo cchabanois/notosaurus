@@ -72,6 +72,7 @@ Each pull request adds a line under **Unreleased**. See [Releasing](CONTRIBUTING
 
 ### Fixed
 
+- A card whose front was corrected after a send updates its own note in Anki (its review history kept) instead of adding a second one next to the old version. The lesson remembers its notes from the last send; on the computer and in the Android app.
 - A lesson sent again after its deck (or a card's part) changed: its cards move to the new deck, their review history kept. On the computer they were added again (old ones left in the old deck); in the Android app they stayed in the old deck. The decks left empty go (on the computer: AnkiDroid's API can't delete a deck).
 - A part of the lesson named like the deck's last level (“School subjects” in “Anglais::5ème::School subjects”) no longer makes a second deck of the same name inside it, on the computer and in the Android app; the AI no longer names a part after the lesson itself.
 - OpenRouter or OpenAI answering without an image (or not as one) leaves that card without a picture, as Gemini does: it no longer stops the lesson's other pictures.

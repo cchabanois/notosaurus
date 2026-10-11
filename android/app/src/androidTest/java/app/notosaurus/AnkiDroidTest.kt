@@ -73,6 +73,24 @@ class AnkiDroidTest {
     }
 
     @Test
+    fun aCorrectedFrontUpdatesItsOwnNote() {
+        val anki = Anki(Device.context)
+        val lesson = "front-$run"
+        val card = Card("vert $run", "verde", id = "c1-$run")
+        val first = anki.send(Deck("Notosaurus test $run", listOf(card)), Media(lesson = lesson))
+        assertEquals(1, first.added)
+        val note = first.notes.getValue("c1-$run")
+
+        // Its front corrected, sent with the notes of the last send: the same note, updated
+        val corrected = card.copy(front = "le vert $run")
+        val again = anki.send(Deck("Notosaurus test $run", listOf(corrected)), Media(lesson = lesson, sentBefore = first.notes))
+        assertEquals(listOf(0, 1), listOf(again.added, again.updated))
+        assertEquals(mapOf("c1-$run" to note), again.notes)
+        assertEquals("le vert $run", AddContentApi(Device.context).getNote(note)!!.fields[0])
+        assertEquals(listOf(note), anki.lessonNotes(lesson))
+    }
+
+    @Test
     fun completeCardsUpdatedThenDeletedWithTheLesson() {
         val anki = Anki(Device.context)
         val lesson = "test-$run"

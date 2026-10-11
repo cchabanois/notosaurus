@@ -322,3 +322,23 @@ def test_a_note_another_lesson_uses_doesnt_move(anki, client):
     r = client.post("/api/anki/send", json=body).json()
     assert r["moved"] == 0
     assert all(n["deckName"].startswith("Espagnol::Leçon 7") for i, n in anki.notes.items() if i <= shared)
+
+
+def test_a_corrected_front_updates_its_own_note(anki, client):
+    """The front of a card sent already, corrected: its note is updated (its history kept),
+    not a second one added; a note deleted in Anki meanwhile is added again."""
+    lesson = extract_lesson(client)
+    body = {"deck": "Espagnol::Leçon 5", "cards": lesson["cards"], "lesson_id": lesson["id"]}
+    client.post("/api/anki/send", json=body)
+    notes = set(anki.notes)
+    mother = next(i for i, n in anki.notes.items() if n["fields"].get("Front") == "la mère")
+
+    cards = [{**c, "front": "la mère (maman)"} if c["front"] == "la mère" else c for c in lesson["cards"]]
+    r = client.post("/api/anki/send", json={**body, "cards": cards}).json()
+    assert r["added"] == 0 and "note_ids" not in r
+    assert set(anki.notes) == notes
+    assert anki.notes[mother]["fields"]["Front"] == "la mère (maman)"
+
+    del anki.notes[mother]  # deleted in Anki: sent again, it comes back
+    r = client.post("/api/anki/send", json={**body, "cards": cards}).json()
+    assert r["added"] == 1

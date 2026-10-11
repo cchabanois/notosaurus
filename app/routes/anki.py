@@ -35,7 +35,12 @@ async def anki_send(req: ExportRequest, background: BackgroundTasks) -> dict:
     lesson = await _lesson(req.lesson_id)  # another profile's private lesson doesn't exist for this one
     save = lesson and await _is_owner(lesson)  # someone else's lesson: sent, not changed
     audio, failures = await _card_audio(req, background)
-    result = await ankiconnect.send(notes(req, audio, _diagram_images(req, lesson), _pictures(req, lesson)))
+    profile = await ankiconnect.active_profile() or ""
+    known = lesson.anki_notes.get(profile, {}) if lesson else {}
+    result = await ankiconnect.send(notes(req, audio, _diagram_images(req, lesson), _pictures(req, lesson)), known)
     if save:
         lessons.update(lesson.id, req, exported=True)
-    return {**result.__dict__, "audio_failures": failures}
+        lessons.set_anki_notes(lesson.id, profile, result.note_ids)
+    answer = {**result.__dict__, "audio_failures": failures}
+    answer.pop("note_ids")  # the lesson keeps them, the page needn't
+    return answer
