@@ -9,7 +9,7 @@ This page is about **the Notosaurus app for Android** and **the Notosaurus servi
 read the photos, make the cards and the voices. Notosaurus on a computer (the Anki add-on) works
 differently: see [Privacy and security](../privacy/).
 
-**Data controller**: [to complete: the publisher's name].
+**Data controller**: CHABANOIS Cédric.
 **Contact**: notosaurus.app@gmail.com
 
 **Who uses the app**: a **parent** (an adult), preparing their children's revision. The app

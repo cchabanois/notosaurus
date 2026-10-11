@@ -9,7 +9,7 @@ Cette page concerne **l'app Notosaurus pour Android** et **le service Notosaurus
 utilise pour lire les photos, faire les cartes et les voix. Notosaurus sur ordinateur (le
 greffon Anki) fonctionne autrement : voir [Confidentialité et sécurité](../privacy/).
 
-**Responsable du traitement** : [à compléter : nom de l'éditeur].
+**Responsable du traitement** : CHABANOIS Cédric.
 **Contact** : notosaurus.app@gmail.com
 
 **Qui utilise l'app** : un **parent** (un adulte), qui prépare les révisions de ses enfants.
