@@ -3,7 +3,10 @@ title: "Privacy and security"
 description: "What leaves your computer, where Notosaurus keeps its data, who can use it, and how to back it up."
 ---
 
-Notosaurus has no account and no server of its own: it runs on your computer. A lesson often
+This page is about Notosaurus on a computer. For the Android app and its service, see the
+[app's privacy policy](../app-privacy/).
+
+On a computer, Notosaurus has no account and no server of its own: it runs on your computer. A lesson often
 shows a child's handwriting, sometimes their name: here is where it goes.
 
 ## What leaves your computer
