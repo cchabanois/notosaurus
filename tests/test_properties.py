@@ -198,7 +198,8 @@ svg_documents = st.builds(
     st.lists(st.tuples(st.sampled_from(ATTRIBUTES), values), max_size=3, unique_by=lambda a: a[0]),
     st.lists(element(2), max_size=4),
 )
-EXTERNAL = re.compile(r"url\(\s*(?!#[\w.-]+\s*\))", re.IGNORECASE)  # url(…) to anything but a part of the figure
+# (the spaces inside the lookahead: "\s*" before it could give one back and match "url( #a )")
+EXTERNAL = re.compile(r"url\((?!\s*#[\w.-]+\s*\))", re.IGNORECASE)  # url(…) to anything but a part of the figure
 
 
 def cleaned(svg: str) -> str | None:

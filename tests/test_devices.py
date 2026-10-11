@@ -122,6 +122,10 @@ def test_only_its_own_addresses_answered(client, monkeypatch):
         # A port that can't be, brackets around no IPv6 address: refused, never an error (500)
         for host in ("localhost:65536", "127.0.0.1:99999", "localhost:0", "[1.2.3.4]", "[0]", "[::1]:70000"):
             assert local.get("/api/lessons", headers={"Host": host}).status_code == 421, host
+        # A trailing line break (a header can't carry it, the filter refuses it on its own too)
+        from app import hosts
+
+        assert not any(hosts.allowed(h) for h in ("localhost\n", "127.0.0.1\n", "localhost:8000\n"))
 
         # The computer by localhost or 127.0.0.1, phones by its address (v4 or v6)
         for host in ("127.0.0.1:8000", "localhost:8000", "LOCALHOST", "[::1]:8000", "192.168.1.20", "[fe80::1]:8000"):
