@@ -71,15 +71,14 @@ class Speech(private val folder: File, private val prefs: Preferences, private v
         private val BRACKETS = Regex("""\s*\([^)]*\)""")
 
         /** What a card's sound says (as the core's tts.spoken): its back. A dictation's card
-         * whose front is a sentence with a blank: the word, the sentence with it, the word
-         * again, as dictated at school (alone, "vers" could be "verre" or "vert"); each on its
-         * line, read on its own (read). */
+         * whose front is a sentence with a blank: the sentence with the word, then the word
+         * (alone, "vers" could be "verre" or "vert"); each on its line, read on its own (read). */
         fun spoken(card: Card, dictation: Boolean): String {
             val back = card.back.trim()
             val sentence = card.front.replace(BRACKETS, "").trim()
             if (!dictation || '\n' in back || !BLANK.containsMatchIn(sentence)) return back
             val said = BLANK.replaceFirst(sentence, Regex.escapeReplacement(back))
-            return "$back\n$said${if (said.last() in ".!?") "" else "."}\n$back"
+            return "$said${if (said.last() in ".!?") "" else "."}\n$back"
         }
 
         // The voice chosen for a lesson whose voice is "auto" (Chirp 3 HD: the same name in

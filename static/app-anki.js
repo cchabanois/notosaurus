@@ -20,7 +20,7 @@ const ankiPart = {
   },
 
   // What a card's sound says (as tts.spoken): its back; a dictation's sentence with a blank:
-  // the word, the sentence with it, the word again, as dictated at school, each on its line
+  // the sentence with the word, then the word, each on its line
   // (read on its own: tts.lines)
   spokenText(card) {
     const back = (card.back ?? "").trim();
@@ -28,7 +28,7 @@ const ankiPart = {
     const blank = /…|\.{3}|_{3,}/;
     if (!this.dictation || back.includes("\n") || !blank.test(sentence)) return back;
     const said = sentence.replace(blank, () => back);
-    return `${back}\n${said}${/[.!?]$/.test(said) ? "" : "."}\n${back}`;
+    return `${said}${/[.!?]$/.test(said) ? "" : "."}\n${back}`;
   },
 
   play(text, voice = this.voice) {

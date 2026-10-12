@@ -52,14 +52,14 @@ BRACKETS = re.compile(r"\s*\([^)]*\)")
 
 def spoken(card: Card, dictation: bool = False) -> str:
     """What a card's sound says: its back. A dictation's card whose front is a sentence
-    with a blank: the word, the sentence with it, the word again, as dictated at school
-    (alone, "vers" could be "verre" or "vert"); each on its line, read on its own (lines)."""
+    with a blank: the sentence with the word, then the word (alone, "vers" could be
+    "verre" or "vert"); each on its line, read on its own (lines)."""
     back = card.back.strip()
     sentence = BRACKETS.sub("", card.front).strip()
     if not dictation or "\n" in back or not BLANK.search(sentence):
         return back
     said = BLANK.sub(lambda _: back, sentence, count=1)
-    return f"{back}\n{said}{'' if said[-1] in '.!?' else '.'}\n{back}"
+    return f"{said}{'' if said[-1] in '.!?' else '.'}\n{back}"
 
 
 def lines(text: str) -> list[str]:

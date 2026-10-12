@@ -220,7 +220,7 @@ def test_line_breaks_kept_in_anki(client, tmp_path):
     ]
 
 
-def test_a_dictation_says_the_word_its_sentence_the_word(client, tmp_path):
+def test_a_dictation_says_the_sentence_then_the_word(client, tmp_path):
     from conftest import synthesized
 
     export = {
@@ -231,7 +231,7 @@ def test_a_dictation_says_the_word_its_sentence_the_word(client, tmp_path):
     }
     package = apkg.export(client, export, tmp_path)
     # Each line read on its own (a natural voice makes words up from a lone word then a sentence)
-    assert sorted(synthesized) == ["Le chat boit du lait.", "green", "lait", "lait"]  # no blank: the back
+    assert sorted(synthesized) == ["Le chat boit du lait.", "green", "lait"]  # no blank: the back
     sounds = [flds.split("\x1f") for _, _, flds in package.notes]
     assert any("[sound:" in field for fields in sounds for field in fields)
     synthesized.clear()
@@ -246,9 +246,9 @@ def test_what_the_sound_says():
     def said(front, back, dictation=True):
         return tts.spoken(Card(front=front, back=back), dictation)
 
-    assert said("Le pré est ___", "vert") == "vert\nLe pré est vert.\nvert"  # its full stop added
-    assert said("Il a ... ans !", "dix") == "dix\nIl a dix ans !\ndix"
-    assert said("Ça coûte …", r"5 \1 $1") == "5 \\1 $1\nÇa coûte 5 \\1 $1.\n5 \\1 $1"  # as written
+    assert said("Le pré est ___", "vert") == "Le pré est vert.\nvert"  # its full stop added
+    assert said("Il a ... ans !", "dix") == "Il a dix ans !\ndix"
+    assert said("Ça coûte …", r"5 \1 $1") == "Ça coûte 5 \\1 $1.\n5 \\1 $1"  # as written
     assert said("la mère", "la madre") == "la madre"
     assert said("Deux … ici", "mots\nde plus") == "mots\nde plus"  # a back of lines: as it is
     assert tts.lines(" vers \n\nLes bras tendus.\n") == ["vers", "Les bras tendus."]
