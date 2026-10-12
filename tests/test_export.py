@@ -259,7 +259,7 @@ def test_each_line_read_on_its_own_then_joined(tmp_path, monkeypatch):
     each line is read on its own, the mp3s joined into the one file."""
     from notosaurus_core import files
 
-    files.configure(lambda: tmp_path.parent / f"{tmp_path.name}-cache")
+    monkeypatch.setattr(files, "_cache_root", lambda: tmp_path.parent / f"{tmp_path.name}-cache")  # restored after
     read = []
 
     async def synthesize(text, voice, path, rate):
