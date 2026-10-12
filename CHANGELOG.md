@@ -75,6 +75,7 @@ Each pull request adds a line under **Unreleased**. See [Releasing](CONTRIBUTING
 
 ### Fixed
 
+- The Android app takes a PDF's page texts only when there is one per photo, as the computer does: a list of the wrong length could have given a page's text to another photo (a page that isn't JSON no longer fails either).
 - A figure the AI drew with an impossible size (`viewBox` of zero, negative, infinite or NaN size) is refused (“draw it again”) instead of being saved and shown empty.
 - The lessons list no longer fails when a lesson is deleted (from another phone, say) at the very moment the list is read: the deleted lesson just isn't listed.
 - A card whose front was corrected after a send updates its own note in Anki (its review history kept) instead of adding a second one next to the old version. The lesson remembers its notes from the last send; on the computer and in the Android app.

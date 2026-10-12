@@ -778,6 +778,15 @@ class LocalServerTest {
     }
 
     @Test
+    fun pageTextsOnePerPhotoOrNone() {
+        assertEquals(listOf("", "page 2"), Generation.pageTexts("""["", "page 2"]""", 2).map { it.jsonPrimitive.content })
+        // Not one per photo, not strings, not JSON, none: no texts (never a page's text on another photo)
+        for (raw in listOf("""["page 1"]""", """["a", "b", "c"]""", """[1, 2]""", "{}", "not json", "", null)) {
+            assertEquals(raw, 0, Generation.pageTexts(raw, 2).size)
+        }
+    }
+
+    @Test
     fun theWelcomeAcceptedOnce() = app { client ->
         val before = client.get("/api/config") { page() }.json().jsonObject
         assertEquals(LocalServer.WELCOME_VERSION, before["welcome"]!!.jsonPrimitive.int)
