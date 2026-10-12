@@ -1,6 +1,7 @@
 """A lesson's life: created by a generation, saved, edited, listed, deleted — and
 the storage beneath it (ids, folders, the summaries the list shows)."""
 
+import asyncio
 import json
 import os
 
@@ -169,7 +170,7 @@ def test_lesson_list_follows_every_change(client, tmp_path):
 
 
 def test_decks_that_meet():
-    from app.routes.lessons import _decks_meet
+    from app.lesson_notes import _decks_meet
 
     assert _decks_meet("Maths", "maths") and _decks_meet("Maths", "Maths::Fractions")
     assert _decks_meet("Maths::Fractions", "Maths")
@@ -244,3 +245,52 @@ def test_a_lesson_deleted_while_listed_just_disappears(client, monkeypatch):
     opened = lessons.create(LessonIn(deck="Opened", cards=[]), "p", [])
     doomed.add(opened.id)
     assert lessons.get(opened.id) is None
+
+
+def test_edit_saves_what_the_change_changed(client):
+    made = lessons.create(LessonIn(deck="D", cards=[Card(front="a", back="b")], voice="es_ES"), "p", [])
+    lessons.set_anki_notes(made.id, "Alice", {"x": 1})
+
+    def change(draft):
+        draft.cards[0].back = "B"
+        draft.cards.append(Card(front="c", back="d"))
+        draft.shared = True  # never through a content change
+        return "done"
+
+    saved, result = asyncio.run(lessons.edit(made.id, change))
+    assert result == "done"
+    again = lessons.get(made.id)
+    assert again == saved
+    assert [(c.front, c.back) for c in again.cards] == [("a", "B"), ("c", "d")]
+    assert again.cards[1].id  # new cards get their id
+    assert again.cards[0].id == made.cards[0].id
+    assert (again.deck, again.voice, again.shared, again.exported_at) == ("D", "es_ES", False, None)
+    assert again.anki_notes == {"Alice": {"x": 1}} and again.updated_at >= made.updated_at
+
+
+def test_edit_keeps_what_changed_meanwhile_and_nothing_on_failure(client):
+    made = lessons.create(LessonIn(deck="D", cards=[Card(front="a", back="b")]), "p", [])
+
+    async def slow(draft):  # the deck renamed during an AI call: the rename stays
+        lessons.update(made.id, LessonIn(deck="Renamed", cards=draft.cards))
+        draft.cards[0].back = "B"
+
+    saved, _ = asyncio.run(lessons.edit(made.id, slow))
+    assert (saved.deck, saved.cards[0].back) == ("Renamed", "B")
+
+    def failing(draft):
+        draft.cards[0].back = "lost"
+        draft.cards.clear()
+        raise RuntimeError("the AI failed")
+
+    with pytest.raises(RuntimeError):
+        asyncio.run(lessons.edit(made.id, failing))
+    assert [c.back for c in lessons.get(made.id).cards] == ["B"]  # the copy never leaked back
+
+
+def test_edit_of_a_lesson_gone(client):
+    from app.errors import AppError
+
+    with pytest.raises(AppError) as e:
+        asyncio.run(lessons.edit("no-such-lesson", lambda draft: None))
+    assert e.value.status == 404

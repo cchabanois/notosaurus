@@ -16,22 +16,11 @@ from notosaurus_core.errors import loggable
 from notosaurus_core.images import refuse_bomb
 from notosaurus_core.llm import Image, extract_cards
 
-from .. import ankiconnect, decks, lessons, prompts, settings, usage
+from .. import access, ankiconnect, decks, lessons, media, prompts, settings, usage
 from ..anki import build_apkg
 from ..errors import AppError
-from ..models import AiCall, ExportRequest, Lesson, LessonIn
-from .common import (
-    IMAGE_TYPES,
-    MAX_IMAGES,
-    _card_audio,
-    _diagram_images,
-    _editable,
-    _is_owner,
-    _lesson,
-    _pictures,
-    pupil_lang,
-    read_photo,
-)
+from ..models import ExportRequest, Lesson, LessonIn
+from .common import IMAGE_TYPES, MAX_IMAGES, pupil_lang, read_photo
 
 log = logging.getLogger("notosaurus")
 
@@ -63,7 +52,6 @@ class Generated:
     content: LessonIn
     photos: list[bytes]  # upright
     found: llm.Extracted
-    calls: list[AiCall]
     profile: str
     page_texts: list[str]  # one per photo: a PDF page's text, "" for a photo
 
@@ -107,7 +95,8 @@ async def _generate(
     existing: list[str] = (),
 ) -> Generated:
     """Read the photos (or, without photos, work from the prompt alone): the lesson's
-    new content, not saved yet. `images`: the form's, read already."""
+    new content, not saved yet. `images`: the form's, read already. Its AI calls go to
+    the caller's usage.metered (paid for even if the lesson isn't saved)."""
     prompt, voice = form.prompt, form.voice
     if not images and not prompt.strip():
         raise AppError("extract.no_input")
@@ -122,27 +111,22 @@ async def _generate(
         refuse_bomb(img.data)
     texts = _page_texts(form.page_texts, len(data))
     profile = await ankiconnect.active_profile() or ""  # the lesson belongs to this Anki profile
-    with llm.recording("extract") as calls:  # model, tokens and cost, kept with the lesson
-        try:
-            known = await decks.known(profile)
-            s = settings.current()
-            found = await extract_cards(
-                s,
-                data,
-                prompt,
-                form.deck,
-                known,
-                fun_facts=form.fun_facts,
-                page_texts=texts,
-                helps=form.helps,
-                instructions=settings.standing_instructions(s, profile),
-                quick=form.quick,
-                on_card=on_card,
-                existing=existing,
-            )
-        except Exception:
-            usage.add(calls, lesson_id=None)  # answered but unusable: paid for, no lesson saved
-            raise
+    known = await decks.known(profile)
+    s = settings.current()
+    found = await extract_cards(
+        s,
+        data,
+        prompt,
+        form.deck,
+        known,
+        fun_facts=form.fun_facts,
+        page_texts=texts,
+        helps=form.helps,
+        instructions=settings.standing_instructions(s, profile),
+        quick=form.quick,
+        on_card=on_card,
+        existing=existing,
+    )
     if form.prompt_id is not None:
         prompts.mark_used(form.prompt_id)
     # Photos taken sideways are saved upright (masks and diagram frames turn with them)
@@ -152,7 +136,7 @@ async def _generate(
     content = LessonIn(**found.deck.model_dump(), voice=voice, typing=form.typing, dictation=form.dictation)
     # Its own deck: never one that exists already (another lesson's, or the user's in Anki)
     content.deck = await decks.new_name(content.deck, profile or None, but=lesson_id)
-    return Generated(content, photos, found, calls, profile, texts)
+    return Generated(content, photos, found, profile, texts)
 
 
 def _learned(back_language: str, lang: str, spelling: bool) -> str:
@@ -237,18 +221,20 @@ async def extract(
     photos = await _photos(form.images)
 
     async def work(on_card=None) -> Lesson:
-        g = await _generate(form, photos, lang, on_card=on_card)
-        created = lessons.create(
-            g.content,
-            form.prompt,
-            g.photos,
-            g.profile,
-            g.found.frames,
-            g.calls,
-            g.found.choice,
-            page_texts=g.page_texts,
-        )
-        usage.add(g.calls, created.id, created.deck)
+        # Model, tokens and cost, kept with the lesson; answered but unusable: paid for, no lesson
+        with usage.metered("extract") as meter:
+            g = await _generate(form, photos, lang, on_card=on_card)
+            created = lessons.create(
+                g.content,
+                form.prompt,
+                g.photos,
+                g.profile,
+                g.found.frames,
+                meter.calls,
+                g.found.choice,
+                page_texts=g.page_texts,
+            )
+            meter.kept_by(created)
         return created
 
     if _wants_stream(accept):
@@ -267,7 +253,7 @@ async def complete(
     reads them knowing the cards made already, and their cards come after the lesson's,
     which stay as they are (so do their notes in Anki). Only its owner's profile may.
     Streamed as /api/extract."""
-    old = await _editable(id)
+    old = await access.editable(id)
     photos = await _photos(form.images)
     if not photos:
         raise AppError("extract.no_input")
@@ -278,11 +264,12 @@ async def complete(
     form = replace(form, deck=old.deck, voice="")
 
     async def work(on_card=None) -> Lesson:
-        g = await _generate(form, photos, lang, lesson_id=id, on_card=on_card, existing=existing)
-        lesson = lessons.completed(id, g.found.deck.cards, g.photos, g.found.frames, g.calls, g.page_texts)
-        if lesson is None:  # deleted meanwhile
-            raise AppError("lesson.not_found", 404)
-        usage.add(g.calls, id, lesson.deck)
+        with usage.metered("extract") as meter:  # as /api/extract's
+            g = await _generate(form, photos, lang, lesson_id=id, on_card=on_card, existing=existing)
+            lesson = lessons.completed(id, g.found.deck.cards, g.photos, g.found.frames, meter.calls, g.page_texts)
+            if lesson is None:  # deleted meanwhile
+                raise AppError("lesson.not_found", 404)
+            meter.kept_by(lesson)
         return lesson
 
     if _wants_stream(accept):
@@ -299,21 +286,22 @@ async def regenerate(
 ):
     """Generate the lesson again (other prompt, other photos) in its place, instead of
     a second lesson. Only its owner's profile may. Streamed as /api/extract."""
-    old = await _editable(id)
+    old = await access.editable(id)
     photos = await _photos(form.images)
 
     async def work(on_card=None) -> Lesson:
-        g = await _generate(form, photos, lang, lesson_id=id, on_card=on_card)
-        # The options set in the review stay (the prompt's are added): only the cards change
-        g.content.reverse = old.reverse
-        g.content.typing = g.content.typing or old.typing
-        g.content.dictation = g.content.dictation or old.dictation
-        lesson = lessons.regenerated(
-            id, g.content, form.prompt, g.photos, g.found.frames, g.calls, g.found.choice, page_texts=g.page_texts
-        )
-        if lesson is None:  # deleted meanwhile
-            raise AppError("lesson.not_found", 404)
-        usage.add(g.calls, id, lesson.deck)
+        with usage.metered("extract") as meter:  # as /api/extract's
+            g = await _generate(form, photos, lang, lesson_id=id, on_card=on_card)
+            # The options set in the review stay (the prompt's are added): only the cards change
+            g.content.reverse = old.reverse
+            g.content.typing = g.content.typing or old.typing
+            g.content.dictation = g.content.dictation or old.dictation
+            lesson = lessons.regenerated(
+                id, g.content, form.prompt, g.photos, g.found.frames, meter.calls, g.found.choice, g.page_texts
+            )
+            if lesson is None:  # deleted meanwhile
+                raise AppError("lesson.not_found", 404)
+            meter.kept_by(lesson)
         return lesson
 
     if _wants_stream(accept):
@@ -331,11 +319,11 @@ def _filename(deck: str) -> str:
 
 @router.post("/api/export")
 async def export(req: ExportRequest, background: BackgroundTasks) -> FileResponse:
-    lesson = await _lesson(req.lesson_id)
-    audio, failures = await _card_audio(req, background)
-    path = build_apkg(req, audio, _diagram_images(req, lesson), _pictures(req, lesson))
+    lesson = await access.lesson(req.lesson_id)
+    audio, failures = await media.card_audio(req, background)
+    path = build_apkg(req, audio, media.diagram_images(req, lesson), media.card_pictures(req, lesson))
     background.add_task(os.remove, path)
-    if lesson and await _is_owner(lesson):  # someone else's lesson: exported, not changed
+    if lesson and await access.is_owner(lesson):  # someone else's lesson: exported, not changed
         lessons.update(lesson.id, req, exported=True)
     return FileResponse(
         path,

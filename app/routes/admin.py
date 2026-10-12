@@ -7,13 +7,12 @@ from fastapi import APIRouter, Depends, Header, Query, Request
 from notosaurus_core import llm, pictures, recommended
 from notosaurus_core.llm import check, list_models
 
-from .. import ankiconnect, lessons, settings, usage
+from .. import ankiconnect, lesson_notes, lessons, settings, usage
+from ..access import is_local
 from ..attempts import Attempts
 from ..errors import AppError
 from ..models import AdminPassword, Lesson, LessonAccess, LessonSummary, SettingsUpdate
 from . import devices
-from .common import is_local
-from .lessons import _anki_notes, _delete
 
 router = APIRouter()
 
@@ -172,13 +171,13 @@ def _any_lesson(id: str) -> Lesson:
 
 @router.get("/api/admin/lessons/{id}/anki-notes", dependencies=[Depends(require_admin)])
 async def admin_lesson_anki_notes(id: str) -> dict:
-    found = await _anki_notes(_any_lesson(id))
+    found = await lesson_notes.find(_any_lesson(id))
     return {"available": found["available"], "count": found["count"]}
 
 
 @router.delete("/api/admin/lessons/{id}", dependencies=[Depends(require_admin)])
 async def admin_delete_lesson(id: str, in_anki: bool = Query(False, alias="anki")) -> dict:
-    return await _delete(_any_lesson(id), in_anki)
+    return await lesson_notes.delete_lesson(_any_lesson(id), in_anki)
 
 
 def lan_address() -> str:

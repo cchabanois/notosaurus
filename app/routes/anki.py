@@ -1,9 +1,8 @@
 from fastapi import APIRouter, BackgroundTasks
 
-from .. import ankiconnect, decks, lessons
+from .. import access, ankiconnect, decks, lessons, media
 from ..anki import notes
 from ..models import ExportRequest
-from .common import _card_audio, _diagram_images, _is_owner, _lesson, _pictures
 
 router = APIRouter()
 
@@ -32,12 +31,13 @@ async def anki_status() -> dict:
 
 @router.post("/api/anki/send")
 async def anki_send(req: ExportRequest, background: BackgroundTasks) -> dict:
-    lesson = await _lesson(req.lesson_id)  # another profile's private lesson doesn't exist for this one
-    save = lesson and await _is_owner(lesson)  # someone else's lesson: sent, not changed
-    audio, failures = await _card_audio(req, background)
+    lesson = await access.lesson(req.lesson_id)  # another profile's private lesson doesn't exist for this one
+    save = lesson and await access.is_owner(lesson)  # someone else's lesson: sent, not changed
+    audio, failures = await media.card_audio(req, background)
     profile = await ankiconnect.active_profile() or ""
     known = lesson.anki_notes.get(profile, {}) if lesson else {}
-    result = await ankiconnect.send(notes(req, audio, _diagram_images(req, lesson), _pictures(req, lesson)), known)
+    sent = notes(req, audio, media.diagram_images(req, lesson), media.card_pictures(req, lesson))
+    result = await ankiconnect.send(sent, known)
     answer = {**result.__dict__, "audio_failures": failures}
     answer.pop("note_ids")  # the lesson keeps them, the page needn't
     if save:

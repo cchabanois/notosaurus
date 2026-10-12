@@ -6,10 +6,16 @@ disappear, and a generation that failed after the model answered (paid for, no
 lesson) has nowhere else to go. Entries are only ever added.
 """
 
+from collections.abc import Iterator
+from contextlib import contextmanager
+from dataclasses import dataclass
+
 from pydantic import BaseModel
 
+from notosaurus_core.calls import recording
+
 from . import lessons, storage
-from .models import AiCall
+from .models import AiCall, Lesson
 
 
 class Entry(AiCall):
@@ -57,6 +63,36 @@ def add(calls: list[AiCall], lesson_id: str | None, deck: str = "") -> None:
         known = {_key(e) for e in entries}
         new = [Entry(**c.model_dump(), lesson_id=lesson_id, deck=deck) for c in calls]
         _save([*entries, *(e for e in new if _key(e) not in known)])  # filled from the lessons just before
+
+
+@dataclass
+class Meter:
+    """The AI calls made inside `metered`, and whom they are for."""
+
+    calls: list[AiCall]
+    lesson_id: str | None
+    deck: str
+    kept: bool = False  # the lesson keeps them already (saved with them)
+
+    def kept_by(self, lesson: Lesson) -> None:
+        """The calls were saved with this lesson (made, or made again, with them): counted
+        for it, not added to it a second time."""
+        self.lesson_id, self.deck, self.kept = lesson.id, lesson.deck, True
+
+
+@contextmanager
+def metered(kind: str, lesson_id: str | None = None, deck: str = "") -> Iterator[Meter]:
+    """Record the AI calls made inside (llm.recording) and, on the way out, keep them
+    with the lesson and in the costs: also when it failed after the AI answered (paid
+    for). Without a lesson (or for a lesson not saved in the end), counted with none."""
+    with recording(kind) as calls:
+        meter = Meter(calls, lesson_id, deck)
+        try:
+            yield meter
+        finally:
+            if meter.lesson_id and not meter.kept:
+                lessons.add_ai_calls(meter.lesson_id, calls)
+            add(calls, meter.lesson_id, meter.deck)
 
 
 class Totals(BaseModel):
