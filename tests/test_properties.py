@@ -1,11 +1,13 @@
-"""Generated inputs (Hypothesis) against the two most exposed filters: the Host check
-(app/hosts.py: DNS rebinding) and the SVG cleaner (figures.clean: the AI's figures,
-shown in the page and in Anki)."""
+"""Generated inputs (Hypothesis) against the most exposed filters: the Host check
+(app/hosts.py: DNS rebinding), the SVG cleaner (figures.clean: the AI's figures,
+shown in the page and in Anki) and the lesson folders named after any deck."""
 
 import ipaddress
 import os
 import re
 from contextlib import contextmanager
+from pathlib import Path
+from tempfile import TemporaryDirectory
 from unittest import mock
 from xml.etree import ElementTree
 from xml.sax.saxutils import escape, quoteattr
@@ -13,7 +15,9 @@ from xml.sax.saxutils import escape, quoteattr
 from hypothesis import given, settings
 from hypothesis import strategies as st
 
+from app import lessons
 from app.hosts import HOST_HEADER, allowed
+from app.models import LessonIn
 from notosaurus_core import figures
 
 fast = settings(max_examples=200, deadline=None)  # the whole file: about a second
@@ -238,3 +242,31 @@ def test_any_text_is_refused_or_harmless(svg):
     if out is not None:
         assert_harmless(out)
         assert figures.clean(out) == out
+
+
+# --- Lesson folders ---------------------------------------------------------------
+
+# Deck names as people (and the AI) write them, and worse
+deck_names = st.one_of(
+    st.text(max_size=300),
+    st.text(alphabet="./\\:-_ ~%İıßÆœ🦕😀\u0301\u200b\x00\t\n", max_size=60),
+    st.lists(
+        st.sampled_from(["..", ".", "/", "::", "\\", "Maths", "Leçon 5", "🦕", " ", "-", "%2e%2e"]), max_size=12
+    ).map("".join),
+)
+
+
+@fast
+@given(deck=deck_names)
+def test_any_deck_gives_a_lesson_folder_inside_the_lessons(deck):
+    """Whatever the deck's name: the lesson's id is one `folder` accepts (its pattern),
+    finds again, and its folder is a child of the lessons' (no "..", no "/")."""
+    with TemporaryDirectory() as data, mock.patch.dict(os.environ, {"NOTOSAURUS_DATA": data}):
+        made = [lessons.create(LessonIn(deck=deck, cards=[]), "p", []) for _ in range(2)]  # the 2nd: "-2"
+        root = (Path(data) / "lessons").resolve()
+        assert made[0].id != made[1].id
+        for lesson in made:
+            assert lessons.ID_PATTERN.match(lesson.id), lesson.id
+            path = lessons.folder(lesson.id)
+            assert path is not None and path.resolve().parent == root
+            assert lessons.get(lesson.id).deck == deck

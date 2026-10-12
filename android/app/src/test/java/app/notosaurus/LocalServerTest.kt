@@ -355,6 +355,49 @@ class LocalServerTest {
     }
 
     @Test
+    fun aLessonsNextPagesKeepTheirDiagramAndTexts() = app { client ->
+        val lesson = client.extract() // 2 photos, no text kept
+        relay.takeRequest()
+        val id = lesson.string("id")
+        suspend fun next(texts: String): JsonObject {
+            // A label on the new pages' 2nd photo, its diagram's frame on their 1st
+            relayAnswers("""{"deck": {"deck": "Autre", "cards": [{"front": "Label 1", "back": "le cœur",
+                "mask": {"page": 2, "n": 1, "box": [0.1, 0.2, 0.3, 0.25]}}]}, "turns": [0, 0],
+                "frames": [{"page": 1, "box": [0, 0, 1, 0.8]}], "usage": {"credits": 2, "credits_left": 95}}""")
+            val done = client.submitFormWithBinaryData("/api/lessons/$id/complete", formData {
+                listOf("photo a", "photo b").forEachIndexed { i, photo ->
+                    append("images", photo.toByteArray(), Headers.build {
+                        append(HttpHeaders.ContentType, "image/jpeg")
+                        append(HttpHeaders.ContentDisposition, "filename=\"new-${i + 1}.jpg\"")
+                    })
+                }
+                append("prompt", "FR → ES")
+                append("page_texts", texts)
+            }) { page() }.json().jsonObject
+            relay.takeRequest()
+            return done
+        }
+        fun JsonObject.pages(key: String, field: String? = null) = this[key]!!.jsonArray.mapNotNull { item ->
+            (if (field == null) item.jsonObject else item.jsonObject[field] as? JsonObject)?.get("page")?.jsonPrimitive?.int
+        }
+        fun JsonObject.texts() = this["page_texts"]!!.jsonArray.map { it.jsonPrimitive.content }
+
+        // Pages 3 and 4, a PDF page with text then a photo: "" for the lesson's photos before it
+        var done = next("""["page 3", ""]""")
+        assertEquals(listOf(4), done.pages("cards", "mask")) // the new pages' 2nd: the lesson's 4th
+        assertEquals(listOf(3), done.pages("frames"))
+        assertEquals(listOf("", "", "page 3", ""), done.texts())
+        assertEquals(4, done["photo_count"]!!.jsonPrimitive.int)
+
+        // Pages 5 and 6 without text: the texts stay, the earlier diagram where it was
+        done = next("""["", ""]""")
+        assertEquals(listOf(4, 6), done.pages("cards", "mask"))
+        assertEquals(listOf(3, 5), done.pages("frames"))
+        assertEquals(listOf("", "", "page 3", ""), done.texts())
+        assertEquals(done, client.get("/api/lessons/$id") { page() }.json().jsonObject) // as saved
+    }
+
+    @Test
     fun cancelledWhileTheRelayWorks() = app { client ->
         coroutineScope { cancelled(client) }
     }

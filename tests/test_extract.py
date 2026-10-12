@@ -8,6 +8,7 @@ from helpers import run
 
 from app.models import LessonIn
 from notosaurus_core import llm, prompts
+from notosaurus_core.models import Mask
 
 
 def test_extract_fake(client):
@@ -210,6 +211,109 @@ def test_complete_counts_the_pages_and_needs_one(client):
     assert (
         client.post(f"{url}/complete", files=files, data={"prompt": "p"}).json()["detail"]["code"] == "extract.too_many"
     )
+
+
+def test_more_than_ten_photos_are_refused_before_any_ai_call(client, monkeypatch):
+    """Eleven photos: refused at once (none read by the AI, nothing saved), for a new
+    lesson, one generated again, or the next pages of one (counted with its own)."""
+    from app import lessons
+    from app.routes import generation
+
+    lesson = extract_lesson(client)
+    nine = extract_lesson(client, n_photos=9)
+    calls = []
+
+    async def extract_cards(*args, **kwargs):
+        calls.append(args)
+        raise AssertionError("the AI must not be called")
+
+    monkeypatch.setattr(generation, "extract_cards", extract_cards)
+    eleven = [("images", (f"p{n}.jpg", b"photo", "image/jpeg")) for n in range(11)]
+    before = client.get("/api/lessons").json()
+    for url, files in (
+        ("/api/extract", eleven),
+        (f"/api/lessons/{lesson['id']}/regenerate", eleven),
+        (f"/api/lessons/{nine['id']}/complete", eleven[:2]),  # 9 + 2
+    ):
+        for accept in ("application/json", "application/x-ndjson"):  # streamed: refused before it starts
+            res = client.post(url, files=files, data={"prompt": "FR → ES"}, headers={"Accept": accept})
+            assert (res.status_code, res.json()["detail"]) == (
+                400,
+                {"code": "extract.too_many", "params": {"max": 10}},
+            ), url
+    assert calls == []
+    assert client.get("/api/lessons").json() == before  # no lesson made
+    assert client.get(f"/api/lessons/{lesson['id']}").json() == lesson  # nor changed
+    assert client.get(f"/api/lessons/{nine['id']}").json() == nine
+    assert not (lessons.folder(lesson["id"]) / "page-3.jpg").exists()
+    assert not (lessons.folder(nine["id"]) / "page-10.jpg").exists()
+
+
+def _a_diagram_on_the_next_pages(monkeypatch):
+    """The AI's answer for the next pages: a diagram label on their 2nd photo, the
+    diagram's frame on their 1st (numbered from the first new photo)."""
+    from app.routes import generation
+
+    real = generation.extract_cards
+
+    async def next_pages(s, images, prompt, *args, existing=(), **kwargs):
+        found = await real(s, images, prompt, *args, **kwargs)
+        found.deck.cards = [
+            llm.Card(front="Label 1", back="le cœur", mask=Mask(page=2, n=1, box=[0.1, 0.2, 0.3, 0.25]))
+        ]
+        found.frames = [llm.Frame(page=1, box=[0.0, 0.0, 1.0, 0.8])]
+        return found
+
+    monkeypatch.setattr(generation, "extract_cards", next_pages)
+
+
+def test_a_diagram_on_the_next_pages_keeps_its_page(client, monkeypatch):
+    """Its mask and frame numbered from the lesson's own pages (photos 3 and 4 of 4): a
+    wrong number shows the second session's diagram cards on another photo. One text
+    per photo: the lesson's, "" for a photo, the new PDF page's in its place."""
+    from app import lessons
+
+    files = [("images", (f"p{n}.png", b"img", "image/png")) for n in (1, 2)]
+    lesson = client.post(
+        "/api/extract", files=files, data={"prompt": "FR → ES", "page_texts": json.dumps(["", "page 2"])}
+    ).json()
+    _a_diagram_on_the_next_pages(monkeypatch)
+    new = [("images", (f"p{n}.png", f"page {n}".encode(), "image/png")) for n in (3, 4)]
+    done = client.post(
+        f"/api/lessons/{lesson['id']}/complete",
+        files=new,
+        data={"prompt": "FR → ES", "page_texts": json.dumps(["", "page 4"])},
+    ).json()
+
+    assert done["photo_count"] == 4
+    assert done["cards"][-1]["mask"] == {"page": 4, "n": 1, "box": [0.1, 0.2, 0.3, 0.25]}
+    assert done["frames"][-1]["page"] == 3
+    assert done["page_texts"] == ["", "page 2", "", "page 4"]
+    saved = client.get(f"/api/lessons/{lesson['id']}").json()
+    assert (saved["cards"][-1]["mask"]["page"], saved["frames"][-1]["page"]) == (4, 3)
+    assert (lessons.folder(lesson["id"]) / "page-4.jpg").read_bytes() == b"page 4"
+
+
+def test_the_next_pages_texts_after_a_lesson_without_any(client, monkeypatch):
+    """A lesson of photos (no text kept) completed with a PDF page: "" for each of its
+    photos, then the new pages' texts; new pages without text: the lesson's left as they were."""
+    lesson = extract_lesson(client)  # 2 photos, no page_texts
+    assert lesson["page_texts"] == []
+    _a_diagram_on_the_next_pages(monkeypatch)
+    url = f"/api/lessons/{lesson['id']}/complete"
+    new = [("images", (f"p{n}.png", b"img", "image/png")) for n in (3, 4)]
+    done = client.post(url, files=new, data={"prompt": "p", "page_texts": json.dumps(["page 3", ""])}).json()
+    assert done["page_texts"] == ["", "", "page 3", ""]
+    assert (done["cards"][-1]["mask"]["page"], done["frames"][-1]["page"]) == (4, 3)
+
+    # Two more photos without text (6 in all): the texts stay, the diagram on pages 5 and 6
+    done = client.post(url, files=new, data={"prompt": "p", "page_texts": json.dumps(["", ""])}).json()
+    assert done["page_texts"] == ["", "", "page 3", ""]
+    assert (done["cards"][-1]["mask"]["page"], done["frames"][-1]["page"]) == (6, 5)
+    done = client.post(url, files=new, data={"prompt": "p"}).json()  # none sent: the same
+    assert done["page_texts"] == ["", "", "page 3", ""]
+    assert [c["mask"]["page"] for c in done["cards"] if c.get("mask")] == [4, 6, 8]  # the earlier ones unchanged
+    assert [f["page"] for f in done["frames"]] == [3, 5, 7]
 
 
 def test_the_ai_is_told_the_cards_made_already():
