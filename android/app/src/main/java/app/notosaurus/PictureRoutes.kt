@@ -46,7 +46,7 @@ internal fun Route.pictureRoutes(server: LocalServer) {
         api("POST", "/api/pictures/search") {
             val req = body()
             val subject = req.string("subject").trim().takeIf { it.isNotEmpty() } ?: throw BadRequest("picture.no_subject")
-            relay().searchPictures(subject, req.string("context")) // written in any language: translated first
+            relay().searchPictures(subject, req.string("context"), req.string("words"))
         }
         api("POST", "/api/lessons/{id}/cards/{card}/picture/found") {
             val lesson = lesson()

@@ -244,7 +244,7 @@ def test_a_decompression_bomb_found_is_left_out(monkeypatch):
 
 
 def test_found_on_the_computer(client, monkeypatch):
-    async def search(subject, pixabay_key=""):
+    async def search(subject, pixabay_key="", *_):
         assert pixabay_key == ""  # never on the computer
         return [stock.Found(source="commons", id="File:A.jpg", title="A", preview="data:,", licence="CC0")]
 
@@ -284,6 +284,84 @@ def test_found_on_the_computer(client, monkeypatch):
     assert gone.json()["card"]["picture_source"] is None
     bad = client.post(f"/api/lessons/{lesson['id']}/cards/{card['id']}/picture/found", json={"source": "x", "id": "1"})
     assert bad.status_code == 422
+
+
+# --- Searched for by the user, sorted by the AI (stock.sorted_search) ---------------
+
+
+def test_the_ai_keeps_only_the_pictures_that_fit(services, monkeypatch):
+    seen = []
+
+    async def sort(s, candidates, search, context=""):
+        seen.append((len(candidates), search, context))
+        return [2, 0]  # the third first; the second left out
+
+    monkeypatch.setattr(llm, "sort_pictures", sort)
+    found = run(stock.sorted_search(AIConfig(llm="gemini"), "Bastille", "14 juillet 1789 → prise de la Bastille"))
+    assert [f.id for f in found] == ["File:Prise de la Bastille.jpg", "d32a3ea6-bbb6-4987-affb-e6a1198d07ac"]
+    assert seen == [(3, "Bastille", "14 juillet 1789 → prise de la Bastille")]  # every one found, seen
+
+
+def test_more_looked_for_when_sorted(monkeypatch):
+    asked = []
+
+    async def search(subject, pixabay_key="", per_source=stock.PER_SOURCE, most=stock.MAX_RESULTS):
+        asked.append((per_source, most))
+        return [
+            stock.Found(source="commons", id=str(i), title="", preview="data:,", licence="CC0") for i in range(most)
+        ]
+
+    async def sort(s, candidates, search, context=""):
+        return list(range(len(candidates)))
+
+    monkeypatch.setattr(stock, "search", search)
+    monkeypatch.setattr(llm, "sort_pictures", sort)
+    found = run(stock.sorted_search(AIConfig(llm="gemini"), "dog"))
+    assert asked == [(stock.SORT_PER_SOURCE, stock.SORT_PER_SOURCE * 3)] and len(found) == stock.MAX_RESULTS
+
+
+def test_unsorted_when_the_ai_cant(services, monkeypatch, caplog):
+    async def sort(s, candidates, search, context=""):
+        raise AppError("llm.no_key", detail=f"nothing for {search}")
+
+    monkeypatch.setattr(llm, "sort_pictures", sort)
+    with caplog.at_level("WARNING", logger="notosaurus"):
+        found = run(stock.sorted_search(AIConfig(llm="gemini"), "Bastille"))
+    assert [f.source for f in found] == ["openverse", "commons", "commons"]  # as they came
+    assert not any("Bastille" in r.getMessage() for r in caplog.records)
+
+
+def test_none_that_fits_none_offered(services, monkeypatch):
+    async def sort(s, candidates, search, context=""):
+        return []
+
+    monkeypatch.setattr(llm, "sort_pictures", sort)
+    assert run(stock.sorted_search(AIConfig(llm="gemini"), "Bastille")) == []
+
+
+def test_sorting_keeps_the_indexes_that_exist_once(monkeypatch):
+    from notosaurus_core.models import Sorted
+
+    async def ask(s, images, text, schema, rules, **_):
+        assert schema is Sorted and "The card:" not in text  # no card: not said
+        return Sorted(fitting=[1, 5, -1, 1, 0])
+
+    monkeypatch.setattr(llm, "_ask_provider", ask)
+    assert run(llm.sort_pictures(AIConfig(llm="gemini"), [llm.Image(jpeg(), "image/jpeg")] * 3, "dog")) == [1, 0]
+
+
+def test_the_cards_search_words_used_as_they_are(client, monkeypatch):
+    async def words(*_):
+        raise AssertionError("not asked again")
+
+    async def sorted_search(s, subject, context="", pixabay_key=""):
+        assert subject == "Bastille fortress"
+        return []
+
+    monkeypatch.setattr(llm, "search_words", words)
+    monkeypatch.setattr(stock, "sorted_search", sorted_search)
+    res = client.post("/api/pictures/search", json={"subject": "La Bastille prise", "words": "Bastille fortress"})
+    assert res.json() == {"results": [], "words": "Bastille fortress"}
 
 
 # --- Found first, at generation (stock.find, pictures.picture) --------------------

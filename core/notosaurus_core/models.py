@@ -190,6 +190,12 @@ class Picked(BaseModel):
     choice: int = Field(description="The number of the picture that fits, -1 when none does.")
 
 
+class Sorted(BaseModel):
+    fitting: list[int] = Field(
+        description="The numbers of the pictures that fit, the best first; empty when none does."
+    )
+
+
 class CardFigure(BaseModel):
     card: int = Field(description="The card's number, as listed.")
     figure: str = Field(description="What to draw, every label with its exact text; empty when no figure truly helps.")

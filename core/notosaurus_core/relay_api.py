@@ -197,6 +197,11 @@ class PictureSearchRequest(BaseModel):
     translate: bool = Field(
         default=False, description="Written in any language: turned into English search words by the AI first."
     )
+    sort: bool = Field(
+        default=False,
+        description="The AI keeps only the pictures that show the subject, the best first (it sees them): "
+        "1 credit, unless it couldn't sort them. Else free.",
+    )
 
 
 class FoundPictureRequest(BaseModel):
@@ -262,6 +267,7 @@ class RephraseResponse(BaseModel):
 class PictureSearchResponse(BaseModel):
     results: list[Found] = Field(description="The pictures found, at most 8, the sources taking turns.")
     words: str = Field(default="", description="What was searched for (the translation, when asked).")
+    usage: Usage | None = Field(default=None, description="The credits charged: sorted by the AI only.")
 
 
 class CardPictureRequest(BaseModel):

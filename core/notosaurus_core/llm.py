@@ -40,6 +40,7 @@ from .models import (
     Rephrased,
     Revision,
     SearchWords,
+    Sorted,
 )
 from .prompts import (
     DICTATION_RULES,
@@ -49,6 +50,7 @@ from .prompts import (
     PLAN_RULES,
     REPHRASE_RULES,
     SEARCH_WORDS_RULES,
+    SORT_RULES,
     SYSTEM_PROMPT,
     _dictation_text,
     _explain_text,
@@ -250,6 +252,17 @@ async def pick_picture(s: AIConfig, candidates: list[Image], search: str, contex
     text = _pick_text(search, context, len(candidates))
     found = await _ask_provider(s, candidates, text, Picked, PICK_RULES, light=True, demo=demo_ai.picked)
     return found.choice if 0 <= found.choice < len(candidates) else None
+
+
+async def sort_pictures(s: AIConfig, candidates: list[Image], search: str, context: str = "") -> list[int]:
+    """Which of the pictures found (their previews, in order) show what was searched for,
+    the best first: their indexes, none when none does. `context`: the card, as
+    "front → back" ("": none)."""
+    text = _pick_text(search, context, len(candidates))
+    found = await _ask_provider(
+        s, candidates, text, Sorted, SORT_RULES, light=True, demo=lambda: demo_ai.sorted_pictures(len(candidates))
+    )
+    return list(dict.fromkeys(i for i in found.fitting if 0 <= i < len(candidates)))
 
 
 async def plan_picture(s: AIConfig, front: str, back: str, asked: str = "", language: str = "English") -> PicturePlan:

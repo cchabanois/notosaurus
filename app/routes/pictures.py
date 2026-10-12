@@ -84,14 +84,19 @@ async def upload_picture(id: str, card_id: str, photo: UploadFile) -> dict:
 @router.post("/api/pictures/search")
 async def search_pictures(req: PictureSearch) -> dict:
     """Free pictures of what the user wrote (any language: turned into English search
-    words by the cards' AI, a light call), to choose from (Commons, Openverse: no Pixabay
-    on the computer, its key is the relay's)."""
+    words by the cards' AI, a light call, unless the card's are given), to choose from
+    (Commons, Openverse: no Pixabay on the computer, its key is the relay's), the AI
+    keeping only those that show it (stock.sorted_search)."""
+    s = settings.current()
     async with usage.metered("picture"):
-        try:
-            words = await llm.search_words(settings.current(), req.subject, req.context)
-        except AppError:  # no AI to ask: the words as they are
-            words = req.subject
-    return {"results": await stock.search(words), "words": words}
+        words = req.words.strip()
+        if not words:
+            try:
+                words = await llm.search_words(s, req.subject, req.context)
+            except AppError:  # no AI to ask: the words as they are
+                words = req.subject
+        results = await stock.sorted_search(s, words, req.context)
+    return {"results": results, "words": words}
 
 
 @router.post("/api/lessons/{id}/cards/{card_id}/picture/found", status_code=201)

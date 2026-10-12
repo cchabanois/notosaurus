@@ -372,8 +372,17 @@ that very thing, not something like it. Answer -1 when none fits (another thing,
 unclear, a text or a logo rather than a picture, unsuitable for pupils)."""
 
 
+SORT_RULES = """\
+You sort numbered candidates found by a search for a picture on a pupil's flashcard. \
+Keep only those that show the subject searched for clearly and correctly, suitable for \
+pupils, the best first: a real thing (a painting, a place, a person, a species) must be \
+that very thing, not something like it. Leave out the others (another thing, unclear, a \
+text or a logo rather than a picture, unsuitable for pupils); none when none fits."""
+
+
 def _pick_text(search: str, context: str, count: int) -> str:
-    return f"The card: {context}\nThe picture searched for: {search}\nCandidates 0 to {count - 1}, in that order."
+    card = f"The card: {context}\n" if context.strip() else ""
+    return f"{card}The picture searched for: {search}\nCandidates 0 to {count - 1}, in that order."
 
 
 FIGURES_RULES = """\

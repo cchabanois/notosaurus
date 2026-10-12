@@ -9,6 +9,7 @@ Each pull request adds a line under **Unreleased**. See [Releasing](CONTRIBUTING
 
 ### Added
 
+- 🔎 **Find a picture** shows only the pictures that show the card's subject, the best first: the AI looks at those found (more are looked for) and leaves out the others. A card's own picture is searched for with the words chosen with it. In the coming Android app it costs 1 credit (still free when the AI couldn't sort them). For developers: `/v1/pictures/search` takes `sort`.
 - The coming Android app can subscribe through Google Play (a free trial first), and restores the subscription on a new phone by itself: the licence key comes from the purchase, nothing to type. Shown once the subscription is on sale; a licence key can still be typed.
 - After a send, the lesson's cards in Anki that none of its cards match any more (deleted from the lesson, or remade with another front) are listed with their text, and deleted from Anki only on **Delete from Anki** (their review history with them). Never a note another lesson uses. On the computer and in the Android app.
 - Add a page to a lesson days later: reopen it, add the photo, then **➕ Add the new page's cards**. The AI reads only the new pages, knowing the cards made already; the new cards come after the others (marked new), which stay as they are, so do their notes in Anki. On the computer and in the Android app. For developers: `/v1/extract` takes `existing`, the cards made already.

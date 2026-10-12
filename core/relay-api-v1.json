@@ -2435,6 +2435,12 @@
             "title": "Translate",
             "description": "Written in any language: turned into English search words by the AI first.",
             "default": false
+          },
+          "sort": {
+            "type": "boolean",
+            "title": "Sort",
+            "description": "The AI keeps only the pictures that show the subject, the best first (it sees them): 1 credit, unless it couldn't sort them. Else free.",
+            "default": false
           }
         },
         "type": "object",
@@ -2459,6 +2465,17 @@
             "title": "Words",
             "description": "What was searched for (the translation, when asked).",
             "default": ""
+          },
+          "usage": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Usage"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "The credits charged: sorted by the AI only."
           }
         },
         "type": "object",

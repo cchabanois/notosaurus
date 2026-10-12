@@ -164,6 +164,7 @@ class PictureSearch(BaseModel):
 
     subject: str = Field(min_length=1, max_length=200)
     context: str = Field(default="", max_length=2000)  # the card, "front → back"
+    words: str = Field(default="", max_length=200)  # its English search words when known (Card.picture_search)
 
 
 class FoundPicture(BaseModel):
