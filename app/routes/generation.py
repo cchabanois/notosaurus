@@ -71,6 +71,7 @@ class GenerationForm:
     prompt_id: str | None = Form(None)
     typing: bool = Form(False)
     dictation: bool = Form(False)
+    dictation_only: bool = Form(False)
     fun_facts: bool = Form(False)
     page_texts: str = Form("")  # the PDF pages' text, JSON (see _page_texts)
     helps: bool = Form(False)
@@ -125,7 +126,13 @@ async def _generate(
     photos = diagrams.straighten([i.data for i in data], found.deck.cards, found.turns, found.frames)
     if voice.strip().lower() == "auto":  # the voice of the language the backs are in
         voice = await tts.voice_for(_learned(found.back_language, lang, form.typing or form.dictation))
-    content = LessonIn(**found.deck.model_dump(), voice=voice, typing=form.typing, dictation=form.dictation)
+    content = LessonIn(
+        **found.deck.model_dump(),
+        voice=voice,
+        typing=form.typing,
+        dictation=form.dictation or form.dictation_only,
+        dictation_only=form.dictation_only,
+    )
     # Its own deck: never one that exists already (another lesson's, or the user's in Anki)
     content.deck = await decks.new_name(content.deck, profile or None, but=lesson_id)
     return Generated(content, photos, prompt, profile, found.frames, found.choice, texts)
@@ -282,6 +289,7 @@ async def regenerate(
             g.content.reverse = old.reverse
             g.content.typing = g.content.typing or old.typing
             g.content.dictation = g.content.dictation or old.dictation
+            g.content.dictation_only = g.content.dictation_only or old.dictation_only
             lesson = await asyncio.to_thread(lessons.regenerated, id, g, meter.calls)
             if lesson is None:  # deleted meanwhile
                 raise AppError("lesson.not_found", 404)

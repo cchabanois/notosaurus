@@ -35,6 +35,7 @@ data class Options(
     val reverse: Boolean = false, // a card the other way too (back → front)
     val typing: Boolean = false, // the answer typed, compared letter by letter
     val dictation: Boolean = false, // the back heard, then written
+    val dictationOnly: Boolean = false, // that card alone (no front → back card)
     val move: Boolean = true, // a note sent before, now in another deck: its cards moved there
 )
 
@@ -215,7 +216,8 @@ class Anki(private val context: Context) : AnkiTarget {
                 )
                 else -> {
                     val heard = options.dictation && sound.isNotEmpty() // nothing to hear without a voice
-                    val variant = listOf("text") + listOfNotNull("reverse".takeIf { options.reverse }, "typing".takeIf { options.typing }, "dictation".takeIf { heard })
+                    val variant = if (heard && options.dictationOnly) listOf("text", "dictation-only")
+                    else listOf("text") + listOfNotNull("reverse".takeIf { options.reverse }, "typing".takeIf { options.typing }, "dictation".takeIf { heard })
                     note(variant.joinToString("+"), mapOf("Front" to html(card.front), "Back" to html(card.back), "Audio" to sound))
                 }
             }

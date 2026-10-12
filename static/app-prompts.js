@@ -68,7 +68,7 @@ const promptsPart = {
     this.promptChosen = true;
     if (this.selectedId !== null) {
       this.selectedId = null;
-      this.form = { name: "", text: "", deck: "", voice: "auto", typing: false, dictation: false };
+      this.form = { name: "", text: "", deck: "", voice: "auto", typing: false, dictation: false, dictation_only: false };
     }
     this.$nextTick(() => this.$refs.promptText.focus());
   },
@@ -83,8 +83,8 @@ const promptsPart = {
   selectPrompt() {
     const c = this.current();
     this.form = c
-      ? { name: c.name, text: c.text, deck: c.deck, voice: c.voice, typing: c.typing, dictation: c.dictation }
-      : { name: "", text: "", deck: "", voice: "", typing: false, dictation: false };
+      ? { name: c.name, text: c.text, deck: c.deck, voice: c.voice, typing: c.typing, dictation: c.dictation, dictation_only: c.dictation_only ?? false }
+      : { name: "", text: "", deck: "", voice: "", typing: false, dictation: false, dictation_only: false };
     if (c) storage("set", c.id);
   },
 
@@ -105,13 +105,13 @@ const promptsPart = {
   openEditor(mode) {
     const c = this.current();
     const base = mode === "new"
-      ? { name: "", text: "", deck: "", voice: c?.voice ?? "", typing: false, dictation: false }
+      ? { name: "", text: "", deck: "", voice: c?.voice ?? "", typing: false, dictation: false, dictation_only: false }
       : { ...this.form };
     if (mode === "copy") base.name = "";
     // Notosaurus's prompts open read-only: "Duplicate" makes a copy to change
     const builtin = mode === "edit" && Boolean(c?.builtin);
     if (builtin) {
-      Object.assign(base, { name: c.name, text: c.text, deck: c.deck, voice: c.voice, typing: c.typing, dictation: c.dictation });
+      Object.assign(base, { name: c.name, text: c.text, deck: c.deck, voice: c.voice, typing: c.typing, dictation: c.dictation, dictation_only: c.dictation_only ?? false });
     }
     // Voice of the backs: none, automatic (the backs' language, found by the AI), or a chosen one
     const voiceMode = !base.voice ? "none" : base.voice === "auto" ? "auto" : "pick";
@@ -128,7 +128,7 @@ const promptsPart = {
   },
 
   async saveEditor() {
-    const { id, name, text, deck, voiceMode, typing, dictation } = this.editor;
+    const { id, name, text, deck, voiceMode, typing, dictation, dictation_only } = this.editor;
     const voice = voiceMode === "none" ? "" : voiceMode === "auto" ? "auto" : this.editor.voice;
     if (!name.trim() || !text.trim()) {
       this.editor.error = t("app.editor.required");
@@ -141,6 +141,7 @@ const promptsPart = {
         body: JSON.stringify({
           name: name.trim(), text: text.trim(), deck: deck.trim(), voice: voice.trim(),
           typing: Boolean(typing), dictation: Boolean(dictation && voice.trim()),
+          dictation_only: Boolean(dictation_only && dictation && voice.trim()),
         }),
       })).json();
       this.editor.open = false;

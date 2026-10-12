@@ -111,7 +111,7 @@ document.addEventListener("alpine:init", () => {
     prompts: [],
     selectedId: null,
     promptChosen: false,         // a prompt picked (or "Free") by the user: the first load keeps it
-    form: { name: "", text: "", deck: "", voice: "", typing: false, dictation: false },
+    form: { name: "", text: "", deck: "", voice: "", typing: false, dictation: false, dictation_only: false },
     voices: [],          // edge-tts voices: { voice, locale, gender }
     deck: "",
     cards: [],
@@ -123,6 +123,7 @@ document.addEventListener("alpine:init", () => {
     photosEdited: false,         // photos added or removed since the lesson was shown
     typing: false,               // the answer is typed in Anki
     dictation: false,            // a dictation card: hear the back, type it
+    dictationOnly: false,        // with it, that card alone (no front → back card)
     funFacts: storage("get", undefined, FUN_FACTS) === "1",  // ask for "did you know" facts (off by default)
     // Quick by default: the AI thinks little, 2 to 4 times faster; "Careful" for a rich lesson
     quick: storage("get", undefined, CAREFUL) !== "1",

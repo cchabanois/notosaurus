@@ -98,27 +98,33 @@ def test_prompts_in_a_file(client, tmp_path):
 
 
 def test_dictation_prompt_starts_lessons_with_its_options(client):
-    (dictation,) = [p for p in client.get("/api/prompts").json() if p["id"] == "notosaurus:dictation"]
-    assert (dictation["name"], dictation["voice"]) == ("Spelling dictation", "auto")
-    assert dictation["typing"] is True and dictation["dictation"] is True
+    prompts = {p["id"]: p for p in client.get("/api/prompts").json()}
+    dictation = prompts["notosaurus:dictation"]
+    assert (dictation["name"], dictation["voice"]) == ("Dictation", "auto")
+    assert dictation["dictation"] is True and dictation["dictation_only"] is True  # its cards: dictations alone
+    blanks = prompts["notosaurus:blanks"]  # the sentences with a blank, typed: no dictation
+    assert (blanks["name"], blanks["typing"], blanks["dictation"]) == ("Fill in the word", True, False)
 
     # The page sends the prompt's options with the generation: the lesson starts with them
     data = {
         "prompt": dictation["text"],
         "voice": "auto",
         "prompt_id": dictation["id"],
-        "typing": "true",
         "dictation": "true",
+        "dictation_only": "true",
     }
     lesson = client.post("/api/extract", data=data).json()
-    assert lesson["typing"] is True and lesson["dictation"] is True
-    assert client.post("/api/extract", data={"prompt": "FR → ES"}).json()["typing"] is False
+    assert lesson["dictation"] is True and lesson["dictation_only"] is True
+    plain = client.post("/api/extract", data={"prompt": "FR → ES"}).json()
+    assert plain["typing"] is False and plain["dictation_only"] is False
+    only = client.post("/api/extract", data={"prompt": "Dictée", "dictation_only": "true"}).json()
+    assert only["dictation"] is True  # dictation alone is a dictation
 
     # A copy keeps them, to be changed
     copy = client.post("/api/prompts/notosaurus:dictation/duplicate").json()
-    assert copy["typing"] is True and copy["dictation"] is True and copy["builtin"] is False
-    changed = client.put(f"/api/prompts/{copy['id']}", json={**copy, "dictation": False}).json()
-    assert changed["typing"] is True and changed["dictation"] is False
+    assert copy["dictation"] is True and copy["dictation_only"] is True and copy["builtin"] is False
+    changed = client.put(f"/api/prompts/{copy['id']}", json={**copy, "dictation_only": False}).json()
+    assert changed["dictation"] is True and changed["dictation_only"] is False
 
 
 def test_auto_voice_follows_the_language_of_the_backs(client):

@@ -142,6 +142,7 @@ class NoteType:
 # typed answer, dictation) differ. A note can change type within its family.
 FAMILIES = {
     "Notosaurus recto/verso": "text",
+    "Notosaurus dictée": "text",  # the dictation card alone: the same notes
     "Notosaurus légendes": "diagram",
     "Notosaurus image": "picture",
     "Notosaurus texte à trous": "cloze",
@@ -170,7 +171,9 @@ def _variant(name: str, typing: bool, dictation: bool) -> tuple[str, str]:
     return name, "+".join(parts)
 
 
-def note_type(voice: str, reverse: bool, typing: bool = False, dictation: bool = False) -> NoteType:
+def note_type(
+    voice: str, reverse: bool, typing: bool = False, dictation: bool = False, dictation_only: bool = False
+) -> NoteType:
     # Two ways to read the back aloud:
     # - Anki locale ("es_ES"): {{tts}} tag, spoken by the device's speech engine;
     # - edge-tts voice: embedded mp3, in an "Audio" field ([sound:…]).
@@ -196,11 +199,12 @@ def note_type(voice: str, reverse: bool, typing: bool = False, dictation: bool =
         )
     if typing:
         templates = [_typed(templates[0], "Back"), *[_typed(t, "Front") for t in templates[1:]]]
-    dictation = dictation and bool(voice)  # nothing to hear without a voice
+    dictation = (dictation or dictation_only) and bool(voice)  # nothing to hear without a voice
     if dictation:
         # Hear the back, write it; the answer shows the comparison and what it means
         heard = f'<div class="dictation">🎧</div>{sound}{{{{type:Back}}}}'
-        templates.append({"name": "Dictée", "qfmt": heard, "afmt": f'{heard}<hr id="answer">{{{{Front}}}}{info}'})
+        dictated = {"name": "Dictée", "qfmt": heard, "afmt": f'{heard}<hr id="answer">{{{{Front}}}}{info}'}
+        templates = [dictated] if dictation_only else [*templates, dictated]
     fields = ["Front", "Back", "Info"]
     if anki_tts:
         kind = f"TTS Anki {voice}"
@@ -208,7 +212,10 @@ def note_type(voice: str, reverse: bool, typing: bool = False, dictation: bool =
         fields.append("Audio")
         kind = "audio"
     fields += HELP_FIELDS
-    name, variant = _variant("Notosaurus recto/verso" + (" + inverse" if reverse else ""), typing, dictation)
+    if dictation and dictation_only:  # its own note type: the dictation card alone, whatever else is on
+        name, variant, reverse = "Notosaurus dictée", "dictation-only", False
+    else:
+        name, variant = _variant("Notosaurus recto/verso" + (" + inverse" if reverse else ""), typing, dictation)
     return NoteType(f"{name} ({kind})", kind, tuple(fields), tuple(templates), variant=variant, reverse=reverse)
 
 
@@ -340,8 +347,8 @@ class _Export:
     def __post_init__(self):
         req = self.req
         self.own_tags = [lesson_tag(req.lesson_id)] if req.lesson_id else []  # to find the lesson's notes again
-        self.typing = req.typing or req.dictation
-        self.text_nt = note_type(req.voice, req.reverse, req.typing, req.dictation)
+        self.typing = req.typing or req.dictation or req.dictation_only
+        self.text_nt = note_type(req.voice, req.reverse, req.typing, req.dictation, req.dictation_only)
         self.diagram_nt = diagram_note_type(req.voice, req.typing)
         self.picture_nt = picture_note_type(req.voice, req.typing)
         self.answer_picture_nt = picture_note_type(req.voice, req.typing, on_back=True)
@@ -436,7 +443,7 @@ def _two_sided_note(export: _Export, i: int, card) -> Note | None:
     values = {"Front": _html(front), "Back": _html(back), "Info": _info(card), **_helps(card)}
     media = []
     if "Audio" in nt.fields:
-        mp3 = export.audio.get(tts.spoken(card, req.dictation))
+        mp3 = export.audio.get(tts.spoken(card, req.dictation or req.dictation_only))
         values["Audio"] = f"[sound:{mp3.name}]" if mp3 else ""
         media += [mp3] if mp3 else []
     if i in images:

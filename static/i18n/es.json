@@ -147,6 +147,8 @@
       "dictation": "Añadir un dictado",
       "dictationHint": "(oír el reverso, escribirlo)",
       "dictationNoVoice": "(elige antes una voz)",
+      "dictationOnly": "Solo el dictado",
+      "dictationOnlyHint": "(sin tarjeta anverso → reverso)",
       "voiceIncluded": "🔊 Voz <code>{voice}</code>, incluida en el mazo.",
       "voiceDevice": "🔊 Leído en voz alta por el dispositivo en <code>{voice}</code>.",
       "badgeNew": "nueva",
@@ -1002,13 +1004,22 @@
       "deck": "{idioma}::Imágenes",
       "voice": "auto"
     },
-    "dictation": {
-      "name": "Dictado de palabras",
+    "blanks": {
+      "name": "Palabras con hueco",
       "text": "Crea una tarjeta por cada palabra que hay que saber escribir, tomada de la lección. Anverso: una frase corta que usa la palabra, con la palabra sustituida por «…» (su definición si la frase no basta para adivinarla). Reverso: la palabra sola, escrita exactamente como en la frase. Info: un truco de ortografía útil (tilde, b/v, h muda, familia de palabras…), si no, vacío.\nSin foto: a partir de lo que escribo aquí (una lista de palabras o un tema).",
-      "deck": "{asignatura}::Ortografía",
+      "deck": "{asignatura}::Palabras con hueco",
       "voice": "auto",
       "typing": true,
-      "dictation": true
+      "dictation": false
+    },
+    "dictation": {
+      "name": "Dictado",
+      "text": "Crea tarjetas de dictado a partir de la lección.\nPara cada palabra que hay que saber escribir: Anverso: una frase corta que usa la palabra, con la palabra sustituida por «…». Reverso: la palabra sola, escrita exactamente como en la frase.\nPara un texto que hay que saber escribir (el dictado de la semana): una tarjeta por frase, y para una frase larga, una tarjeta por grupo de palabras con sentido. Anverso: «Frase 1», «Frase 2»… en el orden del texto. Reverso: la frase o el grupo de palabras, escrito exactamente como en el texto, con su puntuación.\nInfo: un truco de ortografía útil (tilde, b/v, h muda, familia de palabras…), si no, vacío.\nSin foto: a partir de lo que escribo aquí (una lista de palabras o un texto).",
+      "deck": "{asignatura}::Dictado",
+      "voice": "auto",
+      "typing": false,
+      "dictation": true,
+      "dictation_only": true
     }
   }
 }

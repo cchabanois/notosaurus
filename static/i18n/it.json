@@ -147,6 +147,8 @@
       "dictation": "Aggiungi un dettato",
       "dictationHint": "(ascolta il retro, scrivilo)",
       "dictationNoVoice": "(scegli prima una voce)",
+      "dictationOnly": "Solo il dettato",
+      "dictationOnlyHint": "(nessuna carta fronte → retro)",
       "voiceIncluded": "🔊 Voce <code>{voice}</code>, inclusa nel mazzo.",
       "voiceDevice": "🔊 Letto ad alta voce dal dispositivo in <code>{voice}</code>.",
       "badgeNew": "nuova",
@@ -1002,13 +1004,22 @@
       "deck": "{lingua}::Immagini",
       "voice": "auto"
     },
-    "dictation": {
-      "name": "Dettato di parole",
+    "blanks": {
+      "name": "Parole da completare",
       "text": "Crea una carta per ogni parola da saper scrivere, presa dalla lezione. Fronte: una frase breve che usa la parola, con la parola sostituita da “…” (la sua definizione se la frase non basta a indovinarla). Retro: la parola da sola, scritta esattamente come nella frase. Info: un trucco di ortografia utile (doppie, accento, h, famiglia di parole…), altrimenti vuoto.\nSenza foto: a partire da ciò che scrivo qui (un elenco di parole o un argomento).",
-      "deck": "{materia}::Ortografia",
+      "deck": "{materia}::Parole da completare",
       "voice": "auto",
       "typing": true,
-      "dictation": true
+      "dictation": false
+    },
+    "dictation": {
+      "name": "Dettato",
+      "text": "Crea carte di dettato a partire dalla lezione.\nPer ogni parola da saper scrivere: Fronte: una frase breve che usa la parola, con la parola sostituita da “…”. Retro: la parola da sola, scritta esattamente come nella frase.\nPer un testo da saper scrivere (il dettato della settimana): una carta per frase, e per una frase lunga, una carta per gruppo di parole che ha un senso. Fronte: “Frase 1”, “Frase 2”… nell'ordine del testo. Retro: la frase o il gruppo di parole, scritto esattamente come nel testo, con la sua punteggiatura.\nInfo: un trucco di ortografia utile (doppie, accento, h, famiglia di parole…), altrimenti vuoto.\nSenza foto: a partire da ciò che scrivo qui (un elenco di parole o un testo).",
+      "deck": "{materia}::Dettato",
+      "voice": "auto",
+      "typing": false,
+      "dictation": true,
+      "dictation_only": true
     }
   }
 }
