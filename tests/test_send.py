@@ -362,3 +362,89 @@ def test_notes_no_card_has_any_more_offered_then_deleted(anki, client):
     done = client.post(url, json={"ids": [*left.values(), stranger, 999]}).json()
     assert done["deleted"] == 2
     assert set(left.values()).isdisjoint(anki.notes) and stranger in anki.notes
+
+
+def test_a_card_template_added_says_a_full_sync_is_coming(anki, client):
+    """A note type made before one of its cards existed (the reverse card): the card added,
+    the one there brought up to date, nothing else; Anki will ask for a full sync."""
+    from app import anki as notes
+
+    reverse = {**SEND, "reverse": True}
+    client.post("/api/anki/send", json=reverse)
+    ((name, model),) = anki.models.items()
+    nt = notes.note_type(SEND["voice"], True)
+    assert [t["Name"] for t in model["cardTemplates"]] == [t["name"] for t in nt.templates]
+    model["css"] = ".card { font-size: 20px; }"  # an older Notosaurus's
+    model["cardTemplates"] = [{**model["cardTemplates"][0], "Back": "{{Back}}"}]
+    anki.calls.clear()
+    r = client.post("/api/anki/send", json=reverse).json()
+    assert (r["note_types_updated"], r["restructured"], r["synced"]) == (1, [name], False)
+    assert [(t["Name"], t["Front"], t["Back"]) for t in model["cardTemplates"]] == [
+        (t["name"], t["qfmt"], t["afmt"]) for t in nt.templates
+    ]
+    assert "modelFieldAdd" not in anki.calls and "sync" not in anki.calls
+
+
+def _failing(fake, monkeypatch, action: str, error: str):
+    """`fake` answering `error` to `action`, as AnkiConnect does when Anki refuses it."""
+
+    def handle(request):
+        if json.loads(request.content)["action"] == action:
+            return httpx.Response(200, json={"result": None, "error": error})
+        return fake.handle(request)
+
+    monkeypatch.setattr(ankiconnect, "_transport", httpx.MockTransport(handle))
+
+
+def test_ankiconnect_failing_while_bringing_note_types_up_to_date(anki, client, monkeypatch):
+    """Another error than an action AnkiConnect lacks: said, not taken for an old AnkiConnect."""
+    _made_by_an_older_notosaurus(anki, client)
+    _failing(anki, monkeypatch, "modelFieldNames", "collection is not available")
+    r = client.post("/api/anki/send", json=SEND)
+    assert r.status_code == 502 and r.json()["detail"]["code"] == "anki.error"
+
+
+def test_a_corrected_front_in_a_new_deck_moves_its_own_note(anki, client):
+    """A card's front corrected and the lesson sent to another deck: its note, found by the
+    card's id (its front no longer says which it is), is updated and its card moved there
+    too, counted with the others moved."""
+    lesson = extract_lesson(client)
+    body = {"deck": "Espagnol::Leçon 5", "cards": lesson["cards"], "lesson_id": lesson["id"]}
+    client.post("/api/anki/send", json=body)
+    notes = set(anki.notes)
+    mother = next(i for i, n in anki.notes.items() if n["fields"].get("Front") == "la mère")
+    old_deck = anki.notes[mother]["deckName"]
+
+    cards = [{**c, "front": "la mère (maman)"} if c["front"] == "la mère" else c for c in lesson["cards"]]
+    moved = {**body, "deck": "Espagnol::Leçon 6", "cards": cards}
+    r = client.post("/api/anki/send", json=moved).json()
+    assert (r["added"], r["updated"], r["moved"]) == (0, len(notes), len(notes))
+    assert set(anki.notes) == notes  # the same notes: their history kept
+    assert anki.notes[mother]["fields"]["Front"] == "la mère (maman)"
+    assert anki.notes[mother]["deckName"] == old_deck.replace("Leçon 5", "Leçon 6")
+
+    again = client.post("/api/anki/send", json=moved).json()
+    assert (again["added"], again["moved"]) == (0, 0)  # where it goes already
+
+
+def test_options_changed_without_a_lesson_keep_the_notes(anki, client):
+    """Cards sent without their lesson (no card ids known): the deck's notes sent with other
+    options are found by their front and moved to the new note type, not added again; two
+    cards with the same front ("le vol": vuelo, robo) take a note each."""
+    cards = [{"front": "le vol", "back": "el vuelo"}, {"front": "le vol", "back": "el robo"}]
+    body = {"deck": "Espagnol", "cards": cards, "voice": SEND["voice"]}
+    client.post("/api/anki/send", json=body)
+    ids = sorted(anki.notes)
+    r = client.post("/api/anki/send", json={**body, "typing": True}).json()
+    assert (r["added"], r["updated"], r["converted"]) == (0, 2, 2)
+    assert sorted(anki.notes) == ids
+    assert len({n["modelName"] for n in anki.notes.values()}) == 1
+    assert sorted(n["fields"]["Back"] for n in anki.notes.values()) == ["el robo", "el vuelo"]
+
+
+def test_a_note_type_change_refused_by_anki_is_said(anki, client, monkeypatch):
+    """updateNoteModel failing otherwise than missing: an error, not a note added beside it."""
+    client.post("/api/anki/send", json=SEND)
+    _failing(anki, monkeypatch, "updateNoteModel", "note was modified")
+    r = client.post("/api/anki/send", json={**SEND, "typing": True})
+    assert r.status_code == 502 and r.json()["detail"]["code"] == "anki.error" and len(anki.notes) == 2
