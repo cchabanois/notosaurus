@@ -47,6 +47,7 @@ const lessonsPart = {
     // Generated again: the options set in the review stay, the prompt's are added
     body.append("typing", Boolean(this.form.typing || (inPlace && this.typing)));
     body.append("dictation", Boolean(this.form.dictation || (inPlace && this.dictation)));
+    body.append("dictation_only", Boolean(this.form.dictation_only || (inPlace && this.dictationOnly)));
     if (this.funFacts) body.append("fun_facts", "true");
     if (this.helps) body.append("helps", "true");
     if (quick) body.append("quick", "true");
@@ -200,6 +201,7 @@ const lessonsPart = {
     this.reverse = lesson.reverse;
     this.typing = lesson.typing ?? false;
     this.dictation = lesson.dictation ?? false;
+    this.dictationOnly = lesson.dictation_only ?? false;
     this.voice = lesson.voice;
     this.lastSaved = this.snapshot();
     this.saveState = "saved";
@@ -227,8 +229,10 @@ const lessonsPart = {
     const saved = this.prompts.find((c) => c.text === lesson.prompt);
     this.selectedId = saved?.id ?? null;
     this.form = saved
-      ? { name: saved.name, text: saved.text, deck: saved.deck, voice: saved.voice, typing: saved.typing, dictation: saved.dictation }
-      : { name: "", text: lesson.prompt, deck: "", voice: lesson.voice, typing: lesson.typing, dictation: lesson.dictation };
+      ? { name: saved.name, text: saved.text, deck: saved.deck, voice: saved.voice, typing: saved.typing, dictation: saved.dictation,
+          dictation_only: saved.dictation_only ?? false }
+      : { name: "", text: lesson.prompt, deck: "", voice: lesson.voice, typing: lesson.typing, dictation: lesson.dictation,
+          dictation_only: lesson.dictation_only ?? false };
   },
 
   // The lesson's photos from the server, as blobs, so a generation can be run again.
@@ -255,6 +259,7 @@ const lessonsPart = {
     this.voice = "";
     this.typing = false;
     this.dictation = false;
+    this.dictationOnly = false;
     this.saveState = "";
     this.lessonPrompt = "";
     this.lessonChoice = "";
@@ -324,6 +329,7 @@ const lessonsPart = {
       reverse: this.reverse,
       typing: this.typing,
       dictation: this.dictation,
+      dictation_only: this.dictation && this.dictationOnly,
       shared: this.lessonShared,
       frames: this.frames,
       prompt: this.lessonPrompt,

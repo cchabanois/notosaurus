@@ -67,6 +67,7 @@ const cardsPart = {
       reverse: this.reverse,
       typing: this.typing,
       dictation: this.dictation,
+      dictationOnly: this.dictationOnly,
     };
   },
 

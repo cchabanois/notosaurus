@@ -274,7 +274,7 @@ class LocalServerTest {
 
         // Notosaurus's prompts in the page's language, "Automatic" first
         val prompts = client.get("/api/prompts") { page("fr") }.json().jsonArray.map { it.jsonObject }
-        assertEquals(15, prompts.size) // app/prompts.py BUILTIN
+        assertEquals(16, prompts.size) // app/prompts.py BUILTIN
         assertEquals("notosaurus:auto", prompts[0].string("id"))
         assertTrue(prompts.all { it["builtin"]!!.jsonPrimitive.content == "true" })
         val french = json.parseToJsonElement(File(System.getProperty("notosaurus.web") ?: "../../static", "i18n/fr.json").readText())
@@ -650,6 +650,15 @@ class LocalServerTest {
             setBody("""{"deck": "Dictée", "cards": $dictated, "voice": "es-ES-Chirp3-HD-Aoede", "lesson_id": "", "dictation": true}""")
         }
         assertEquals(setOf("lait. Le chat boit du lait. lait."), anki.sounds.keys) // what's in brackets not read
+        assertFalse(anki.options.dictationOnly)
+
+        // The dictation alone (the built-in Dictation): its sound the same, no front → back card
+        client.post("/api/anki/send") {
+            page(); contentType(ContentType.Application.Json)
+            setBody("""{"deck": "Dictée", "cards": $dictated, "voice": "es-ES-Chirp3-HD-Aoede", "lesson_id": "", "dictation_only": true}""")
+        }
+        assertTrue(anki.options.dictation && anki.options.dictationOnly)
+        assertEquals(setOf("lait. Le chat boit du lait. lait."), anki.sounds.keys)
     }
 
     @Test

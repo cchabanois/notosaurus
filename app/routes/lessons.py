@@ -102,6 +102,7 @@ async def revise_lesson(id: str, req: RevisionRequest, lang: str = Depends(page_
             reverse=req.reverse,
             typing=req.typing,
             dictation=req.dictation,
+            dictation_only=req.dictation_only,
         ),
     )
     return {"lesson": updated, "summary": revision.summary}

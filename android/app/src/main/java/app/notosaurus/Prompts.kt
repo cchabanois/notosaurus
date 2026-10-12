@@ -49,12 +49,12 @@ class Prompts(private val file: File, private val texts: PageTexts) {
         // Notosaurus's prompts, in order (app/prompts.py, BUILTIN)
         private val BUILTIN = listOf(
             "auto", "vocabulary", "sentences", "conjugation", "questions", "definitions", "cloze", "quiz",
-            "true_false", "methods", "formulas", "geometry", "diagram", "pictures", "dictation",
+            "true_false", "methods", "formulas", "geometry", "diagram", "pictures", "blanks", "dictation",
         )
-        private val FIELDS = setOf("name", "text", "deck", "voice", "typing", "dictation")
+        private val FIELDS = setOf("name", "text", "deck", "voice", "typing", "dictation", "dictation_only")
         private val DEFAULTS = mapOf(
             "deck" to JsonPrimitive(""), "voice" to JsonPrimitive(""), "typing" to JsonPrimitive(false),
-            "dictation" to JsonPrimitive(false), "used_at" to JsonNull,
+            "dictation" to JsonPrimitive(false), "dictation_only" to JsonPrimitive(false), "used_at" to JsonNull,
         )
     }
 }

@@ -506,6 +506,11 @@
           <span><span x-text="$t('app.review.dictation')"></span>
             <small x-text="voice ? $t('app.review.dictationHint') : $t('app.review.dictationNoVoice')"></small></span>
         </label>
+        <label class="switch" :class="{ disabled: readOnly() }" x-show="dictation && voice">
+          <input type="checkbox" x-model="dictationOnly" :disabled="readOnly()">
+          <span class="track"><span class="knob"></span></span>
+          <span><span x-text="$t('app.review.dictationOnly')"></span> <small x-text="$t('app.review.dictationOnlyHint')"></small></span>
+        </label>
         <p class="hint" x-show="voice">
           <span x-show="hasAudio()" x-html="$th('app.review.voiceIncluded', { voice })"></span>
           <span x-show="!hasAudio()" x-html="$th('app.review.voiceDevice', { voice })"></span>
@@ -739,6 +744,11 @@
           <span class="track"><span class="knob"></span></span>
           <span><span x-text="$t('app.review.dictation')"></span>
             <small x-text="editor.voiceMode !== 'none' ? $t('app.review.dictationHint') : $t('app.review.dictationNoVoice')"></small></span>
+        </label>
+        <label class="switch" :class="{ disabled: editor.builtin }" x-show="editor.dictation && editor.voiceMode !== 'none'">
+          <input type="checkbox" x-model="editor.dictation_only" :disabled="editor.builtin">
+          <span class="track"><span class="knob"></span></span>
+          <span><span x-text="$t('app.review.dictationOnly')"></span> <small x-text="$t('app.review.dictationOnlyHint')"></small></span>
         </label>
       </div>
       <p class="hint error-text" x-show="editor.error" x-text="editor.error"></p>

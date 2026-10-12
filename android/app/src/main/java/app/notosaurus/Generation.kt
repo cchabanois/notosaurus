@@ -57,7 +57,7 @@ class Generation(
         val found = cancellable(fields["job"]) { relay().extract(request, form.images, onCard) }
         val voice = fields["voice"].orEmpty().let {
             if (!it.equals("auto", ignoreCase = true)) it
-            else speech.voiceFor(Speech.learned(found.string("back_language"), form.lang, form.on("typing") || form.on("dictation")))
+            else speech.voiceFor(Speech.learned(found.string("back_language"), form.lang, form.on("typing") || form.on("dictation") || form.on("dictation_only")))
         }
         // Photos taken sideways saved upright: their masks and frames turn with them
         val turns = found["turns"]?.jsonArray?.map { it.jsonPrimitive.content.toInt() }.orEmpty()
@@ -76,7 +76,8 @@ class Generation(
             "prompt" to JsonPrimitive(fields["prompt"] ?: ""),
             "voice" to JsonPrimitive(voice),
             "typing" to JsonPrimitive(form.on("typing")),
-            "dictation" to JsonPrimitive(form.on("dictation")),
+            "dictation" to JsonPrimitive(form.on("dictation") || form.on("dictation_only")),
+            "dictation_only" to JsonPrimitive(form.on("dictation_only")),
             "choice" to (found["choice"] ?: JsonPrimitive("")),
             "page_texts" to texts,
             "frames" to JsonArray(frames), // each diagram's frame: what AnkiDroid shows

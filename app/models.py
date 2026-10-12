@@ -32,6 +32,7 @@ class LessonOptions(Deck):
     reverse: bool = False  # adds the reverse card (back → front)
     typing: bool = False  # the answer is typed, Anki compares it letter by letter
     dictation: bool = False  # adds a dictation card: hear the back, type it (needs a voice)
+    dictation_only: bool = False  # with dictation: that card alone (no front → back card)
 
     @field_validator("cards")
     @classmethod
@@ -122,6 +123,7 @@ class PromptIn(BaseModel):
     voice: str = ""  # see LessonIn.voice
     typing: bool = False  # the lessons made with it start with these options (see LessonIn)
     dictation: bool = False
+    dictation_only: bool = False
 
 
 class RephraseRequest(BaseModel):

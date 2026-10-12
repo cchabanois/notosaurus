@@ -76,6 +76,7 @@ class Lessons(private val root: File) {
                 "cards" to withIds(content["cards"]),
                 "typing" to either("typing"),
                 "dictation" to either("dictation"),
+                "dictation_only" to either("dictation_only"),
                 "photo_count" to JsonPrimitive(photos.size),
                 "updated_at" to JsonPrimitive(now()),
             ),
@@ -166,11 +167,11 @@ class Lessons(private val root: File) {
         private val NAME = Regex("^[a-z0-9][a-z0-9-]*$") // our folder names only: no "../"
         private val PHOTO = Regex("^page-\\d+\\.jpg$")
         private val EDITABLE = setOf(
-            "deck", "cards", "voice", "reverse", "typing", "dictation", "shared", "frames", "prompt", "choice",
+            "deck", "cards", "voice", "reverse", "typing", "dictation", "dictation_only", "shared", "frames", "prompt", "choice",
         )
         private val DEFAULTS = mapOf(
             "voice" to JsonPrimitive(""), "reverse" to JsonPrimitive(false), "typing" to JsonPrimitive(false),
-            "dictation" to JsonPrimitive(false), "owner" to JsonPrimitive(""), "shared" to JsonPrimitive(false),
+            "dictation" to JsonPrimitive(false), "dictation_only" to JsonPrimitive(false), "owner" to JsonPrimitive(""), "shared" to JsonPrimitive(false),
             "frames" to JsonArray(emptyList()), "ai_calls" to JsonArray(emptyList()), "choice" to JsonPrimitive(""),
             "page_texts" to JsonArray(emptyList()), "exported_at" to JsonNull,
         )

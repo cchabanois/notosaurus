@@ -147,6 +147,8 @@
       "dictation": "Add a dictation",
       "dictationHint": "(hear the back, write it)",
       "dictationNoVoice": "(pick a voice first)",
+      "dictationOnly": "Dictation only",
+      "dictationOnlyHint": "(no front → back card)",
       "voiceIncluded": "🔊 Voice <code>{voice}</code>, included in the deck.",
       "voiceDevice": "🔊 Read aloud by the device in <code>{voice}</code>.",
       "badgeNew": "new",
@@ -1002,13 +1004,22 @@
       "deck": "{language}::Pictures",
       "voice": "auto"
     },
-    "dictation": {
-      "name": "Spelling dictation",
+    "blanks": {
+      "name": "Fill in the word",
       "text": "Create one card per word to learn to spell, from the lesson. Front: a short sentence using the word, with the word replaced by \"…\" (its definition if the sentence isn't enough to guess it). Back: the word alone, written exactly as in the sentence. Info: a useful spelling tip (silent letter, word family…), otherwise empty.\nWithout a photo: from what I write here (a list of words, or a topic).",
-      "deck": "{subject}::Spelling",
+      "deck": "{subject}::Fill in the word",
       "voice": "auto",
       "typing": true,
-      "dictation": true
+      "dictation": false
+    },
+    "dictation": {
+      "name": "Dictation",
+      "text": "Create dictation cards from the lesson.\nFor each word to learn to spell: Front: a short sentence using the word, with the word replaced by \"…\". Back: the word alone, written exactly as in the sentence.\nFor a text to learn to write (this week's dictation): one card per sentence, and for a long sentence, one card per meaningful group of words. Front: \"Sentence 1\", \"Sentence 2\"… in the text's order. Back: the sentence or group of words, written exactly as in the text, with its punctuation.\nInfo: a useful spelling tip (silent letter, word family…), otherwise empty.\nWithout a photo: from what I write here (a list of words, or a text).",
+      "deck": "{subject}::Dictation",
+      "voice": "auto",
+      "typing": false,
+      "dictation": true,
+      "dictation_only": true
     }
   }
 }

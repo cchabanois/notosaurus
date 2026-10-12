@@ -216,6 +216,28 @@
    ],
    "css": ".card { font-family: system-ui, sans-serif; font-size: 26px; text-align: center; }\n.info { font-size: 18px; color: #777; margin-top: 12px; }\n.card img { max-width: 100%; height: auto; }\n.dictation { font-size: 40px; }\n.notosaurus-help {\n  max-width: 32em; margin: 10px auto 0; padding: 4px 10px; border-left: 3px solid #8bb8c4;\n  font-size: 18px; color: #555; text-align: left;\n}\n.nightMode .notosaurus-help { color: #bbb; }\n"
   },
+  "text+dictation-only": {
+   "name": "Notosaurus dictée (audio)",
+   "family": "text",
+   "fields": [
+    "Front",
+    "Back",
+    "Info",
+    "Audio",
+    "Explanation",
+    "Mnemonic"
+   ],
+   "key": "Front",
+   "cloze": false,
+   "cards": [
+    {
+     "name": "Dictée",
+     "front": "<div class=\"dictation\">🎧</div>{{Audio}}{{type:Back}}",
+     "back": "<div class=\"dictation\">🎧</div>{{Audio}}{{type:Back}}<hr id=\"answer\">{{Front}}{{#Info}}<div class=\"info\">{{Info}}</div>{{/Info}}{{#Explanation}}<div class=\"notosaurus-help\">💬 {{Explanation}}</div>{{/Explanation}}{{#Mnemonic}}<div class=\"notosaurus-help\">🧠 {{Mnemonic}}</div>{{/Mnemonic}}"
+    }
+   ],
+   "css": ".card { font-family: system-ui, sans-serif; font-size: 26px; text-align: center; }\n.info { font-size: 18px; color: #777; margin-top: 12px; }\n.card img { max-width: 100%; height: auto; }\n.dictation { font-size: 40px; }\n.notosaurus-help {\n  max-width: 32em; margin: 10px auto 0; padding: 4px 10px; border-left: 3px solid #8bb8c4;\n  font-size: 18px; color: #555; text-align: left;\n}\n.nightMode .notosaurus-help { color: #bbb; }\n"
+  },
   "diagram": {
    "name": "Notosaurus légendes (audio)",
    "family": "diagram",

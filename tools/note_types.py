@@ -40,6 +40,7 @@ def variants() -> dict[str, anki.NoteType]:
             for dictation in (False, True):
                 options = [o for o, on in (("reverse", reverse), ("typing", typing), ("dictation", dictation)) if on]
                 found["+".join(["text", *options])] = anki.note_type(VOICE, reverse, typing, dictation)
+    found["text+dictation-only"] = anki.note_type(VOICE, False, dictation=True, dictation_only=True)
     for typing in (False, True):
         found["diagram" + ("+typing" if typing else "")] = anki.diagram_note_type(VOICE, typing)
         for on_back in (False, True):

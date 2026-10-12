@@ -31,6 +31,7 @@ BUILTIN = (
     "geometry",
     "diagram",
     "pictures",
+    "blanks",
     "dictation",
 )
 
