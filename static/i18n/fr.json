@@ -1020,6 +1020,15 @@
       "typing": false,
       "dictation": true,
       "dictation_only": true
+    },
+    "dictation_gaps": {
+      "name": "Dictée à trous",
+      "text": "Crée une dictée à trous à partir du texte de la leçon : garde seulement les mots les plus difficiles à écrire (lettres muettes, accords, homophones comme a/à ou ces/ses, doubles consonnes, accents, terminaisons de verbes), une dizaine au plus, dans l'ordre du texte. Une carte par mot.\nRecto : la phrase du texte où se trouve le mot, avec le mot remplacé par « … » (pour une longue phrase, seulement la partie autour du mot). Verso : le mot seul, écrit exactement comme dans le texte.\nInfo : pourquoi il s'écrit ainsi (la règle d'accord, la famille du mot…), sinon vide.\nSans photo : à partir du texte que j'écris ici.",
+      "deck": "{matière}::Dictée à trous",
+      "voice": "auto",
+      "typing": false,
+      "dictation": true,
+      "dictation_only": true
     }
   }
 }

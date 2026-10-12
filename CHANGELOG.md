@@ -9,6 +9,7 @@ Each pull request adds a line under **Unreleased**. See [Releasing](CONTRIBUTING
 
 ### Added
 
+- A built-in **Gap dictation** prompt: only the hardest words of the dictation text to spell, one card per word, its sentence shown with the blank and heard. A dictation-only card now shows its front too (the sentence with its blank).
 - A built-in **Dictation** prompt: dictation cards only, heard then typed: the words to learn to spell (the word, a sentence with it, the word again) and the week's dictation text, sentence by sentence. A lesson's new **Dictation only** option (also in a prompt of your own) makes the dictation card alone, without the front → back card. The former **Word dictation** is now **Fill in the word**, without dictation cards.
 - A dictation card whose question is a sentence with a blank (the built-in **Word dictation**) says the word, the sentence with it, then the word again, as dictated at school: alone, "vers" could be "verre" or "vert". In Anki, AnkiDroid and the review's 🔊; a lesson already made gets it when sent again.
 - The coming Android app can be told by the service, with no app update, while a fix waits for the store: a message for every user (closed once), features turned off for now (sending to AnkiDroid, moving or deleting its notes, completing or remaking a lesson, finding or drawing pictures: their buttons hidden, refused if asked), and that a new version is out (a link to its store page). The last ones told stay when offline. For developers: `/v1/account` has `notice`, `disabled` (`relay_api.FEATURES`) and `latest`.

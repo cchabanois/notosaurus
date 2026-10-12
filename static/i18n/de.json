@@ -1020,6 +1020,15 @@
       "typing": false,
       "dictation": true,
       "dictation_only": true
+    },
+    "dictation_gaps": {
+      "name": "Lückendiktat",
+      "text": "Erstelle ein Lückendiktat aus dem Text der Lektion: behalte nur die Wörter, die am schwersten zu schreiben sind (Groß- und Kleinschreibung, ss/ß, Dehnungs-h, Doppelkonsonanten, das/dass, Verbendungen), höchstens zehn, in der Reihenfolge des Textes. Eine Karte pro Wort.\nVorderseite: der Satz des Textes, in dem das Wort steht, mit dem Wort durch „…“ ersetzt (bei einem langen Satz nur der Teil um das Wort). Rückseite: das Wort allein, genau so geschrieben wie im Text.\nInfo: warum es so geschrieben wird (eine Regel, die Wortfamilie …), sonst leer.\nOhne Foto: nach dem Text, den ich hier schreibe.",
+      "deck": "{Fach}::Lückendiktat",
+      "voice": "auto",
+      "typing": false,
+      "dictation": true,
+      "dictation_only": true
     }
   }
 }

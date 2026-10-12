@@ -263,7 +263,7 @@ def test_dictation_only(client, tmp_path):
     (model,) = package.models.values()
     assert model["name"] == "Notosaurus dictée (audio)"
     (card,) = model["tmpls"]
-    assert card["qfmt"] == '<div class="dictation">🎧</div>{{Audio}}{{type:Back}}'
+    assert card["qfmt"] == '<div class="dictation">🎧</div>{{Audio}}{{Front}}{{type:Back}}'  # the blank shown
     assert package.cards == 2  # one a note: no front → back card
     assert anki.family(model["name"]) == "text"  # a lesson's notes can switch to it and back
     nt = anki.note_type("fr-FR-DeniseNeural", True, True, dictation=False, dictation_only=True)
