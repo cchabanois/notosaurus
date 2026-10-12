@@ -250,7 +250,6 @@ def test_what_the_sound_says():
     assert said("Deux … ici", "mots\nde plus") == "mots\nde plus"  # a back of lines: as it is
 
 
-
 def test_dictation_only(client, tmp_path):
     """The dictation card alone: its own note type (of the same family), heard then typed."""
     export = {
@@ -270,6 +269,7 @@ def test_dictation_only(client, tmp_path):
     nt = anki.note_type("fr-FR-DeniseNeural", True, True, dictation=False, dictation_only=True)
     assert [t["name"] for t in nt.templates] == ["Dictée"] and not nt.reverse  # alone, whatever else is on
     assert len(anki.note_type("", False, dictation_only=True).templates) == 1  # no voice: no dictation
+
 
 def test_typed_answer_and_dictation(client, tmp_path):
     export = {
