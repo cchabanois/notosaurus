@@ -316,6 +316,8 @@ const cardsPart = {
     if (card._searching) return;
     const context = `${(card.front ?? "").trim()} → ${(card.back ?? "").trim()}`;
     const subject = (card._subject?.trim() || context).slice(0, 200);  // nothing written: the card itself
+    // Its own picture's description: the search words already chosen with it
+    const words = subject === (card.picture_prompt ?? "").trim() ? (card.picture_search ?? "") : "";
     card._searching = true;
     card._found = null;
     this.error = "";
@@ -323,7 +325,7 @@ const cardsPart = {
       const res = await api("/api/pictures/search", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ subject, context }),
+        body: JSON.stringify({ subject, context, words }),
       });
       card._found = (await res.json()).results;
     } catch (e) {

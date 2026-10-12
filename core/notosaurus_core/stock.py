@@ -45,6 +45,7 @@ HOSTS = {
 
 PER_SOURCE = 4
 MAX_RESULTS = 8
+SORT_PER_SOURCE = 6  # more to choose from when the AI keeps only those that fit
 PREVIEW = 200  # px: a choice in the grid
 TIMEOUT = 10
 CACHE_S = 24 * 3600  # Pixabay asks for its answers to be kept a day: the same for all
@@ -88,9 +89,11 @@ def _client() -> httpx.AsyncClient:
     return httpx.AsyncClient(timeout=TIMEOUT, transport=_transport, headers={"User-Agent": AGENT})
 
 
-async def search(subject: str, pixabay_key: str = "") -> list[Found]:
-    """Up to MAX_RESULTS free pictures of `subject` (English), the sources taking turns.
-    A source that fails or finds nothing leaves the others."""
+async def search(
+    subject: str, pixabay_key: str = "", per_source: int = PER_SOURCE, most: int = MAX_RESULTS
+) -> list[Found]:
+    """Up to `most` free pictures of `subject` (English), `per_source` from each, the
+    sources taking turns. A source that fails or finds nothing leaves the others."""
     subject = " ".join(subject.split())[:200]
     if not subject:
         raise AppError("picture.no_subject")
@@ -101,8 +104,8 @@ async def search(subject: str, pixabay_key: str = "") -> list[Found]:
         lists = [f for f in found if isinstance(f, list)]
         if not lists:
             raise AppError("picture.search_failed")
-        mixed = [item for row in zip(*[lst + [None] * PER_SOURCE for lst in lists], strict=False) for item in row]
-        chosen = [m for m in mixed if m][:MAX_RESULTS]
+        mixed = [item for row in zip(*[lst + [None] * per_source for lst in lists], strict=False) for item in row]
+        chosen = [m for m in mixed if m][:most]
         previews = await asyncio.gather(*(_preview(client, source, url) for source, url, _ in chosen))
     return [
         Found(source=source, id=id_, title=title, preview=preview, licence=licence, page=page)
@@ -126,6 +129,26 @@ async def fetch(source: str, id_: str, pixabay_key: str = "") -> tuple[bytes, Pi
         return pictures.card_size(await _download(client, source, url)), origin
 
 
+async def sorted_search(s: AIConfig, subject: str, context: str = "", pixabay_key: str = "") -> list[Found]:
+    """Up to MAX_RESULTS free pictures of `subject` (English) to choose from: more are
+    looked for, the cards' AI keeping only those that show it, the best first (it sees
+    their previews). As they came when the AI can't sort them. `context`: the card,
+    "front → back"."""
+    found = await search(subject, pixabay_key, SORT_PER_SOURCE, SORT_PER_SOURCE * 3)
+    if not found:
+        return found
+    try:
+        order = await llm.sort_pictures(s, [_image(f) for f in found], subject, context)
+    except AppError as e:  # no AI, or one that can't see pictures: unsorted
+        log.warning("Pictures found not sorted: %s", loggable(e))  # never the query: no lesson in logs
+        return found[:MAX_RESULTS]
+    return [found[i] for i in order][:MAX_RESULTS]
+
+
+def _image(found: Found) -> llm.Image:
+    return llm.Image(base64.b64decode(found.preview.split(",", 1)[1]), "image/jpeg")
+
+
 async def find(s: AIConfig, query: str, context: str, pixabay_key: str = "") -> tuple[bytes, PictureSource] | None:
     """A free picture for a card, chosen by the cards' AI among those found (it sees their
     previews): card size, and where it comes from; None when none fits or nothing could be
@@ -134,8 +157,7 @@ async def find(s: AIConfig, query: str, context: str, pixabay_key: str = "") -> 
         found = await search(query, pixabay_key)
         if not found:
             return None
-        previews = [llm.Image(base64.b64decode(f.preview.split(",", 1)[1]), "image/jpeg") for f in found]
-        choice = await llm.pick_picture(s, previews, query, context)
+        choice = await llm.pick_picture(s, [_image(f) for f in found], query, context)
         return None if choice is None else await fetch(found[choice].source, found[choice].id, pixabay_key)
     except AppError as e:  # a source down, a model that can't see pictures…: drawn instead
         log.warning("No free picture, drawn instead: %s", loggable(e))  # never the query: no lesson in logs

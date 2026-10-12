@@ -1231,7 +1231,21 @@ class LocalServerTest {
             page(); contentType(ContentType.Application.Json); setBody("""{"subject": "a castle"}""")
         }.json().jsonObject
         assertEquals("42", found["results"]!!.jsonArray[0].jsonObject.string("id"))
-        assertEquals("/v1/pictures/search", relay.takeRequest(5, TimeUnit.SECONDS)!!.url.encodedPath)
+        val searched = relay.takeRequest(5, TimeUnit.SECONDS)!!
+        assertEquals("/v1/pictures/search", searched.url.encodedPath)
+        val sent = json.parseToJsonElement(searched.body!!.utf8()).jsonObject
+        assertEquals("a castle", sent.string("subject"))
+        assertEquals("true", sent["translate"].toString()) // written by the user
+        assertEquals("true", sent["sort"].toString()) // sorted by the AI
+
+        // The card's own search words: as they are
+        relayAnswers("""{"results": []}""")
+        client.post("/api/pictures/search") {
+            page(); contentType(ContentType.Application.Json); setBody("""{"subject": "un château fort", "words": "castle"}""")
+        }
+        val withWords = json.parseToJsonElement(relay.takeRequest(5, TimeUnit.SECONDS)!!.body!!.utf8()).jsonObject
+        assertEquals("castle", withWords.string("subject"))
+        assertEquals("false", withWords["translate"].toString())
 
         val lesson = client.extract()
         relay.takeRequest(5, TimeUnit.SECONDS) // the extraction

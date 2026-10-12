@@ -27,6 +27,7 @@ from ..models import (
     Rephrased,
     Revision,
     SearchWords,
+    Sorted,
 )
 
 # How the demo gives diagram boxes (diagrams.FORMATS): already as Notosaurus keeps them
@@ -250,6 +251,11 @@ def rephrased(text: str) -> Rephrased:
 def picked() -> Picked:
     """Demo mode: the first picture found (none found: none fits)."""
     return Picked(choice=0)
+
+
+def sorted_pictures(count: int) -> Sorted:
+    """Demo mode: the pictures found, as they came."""
+    return Sorted(fitting=list(range(count)))
 
 
 def picture_plan(back: str, asked: str) -> PicturePlan:

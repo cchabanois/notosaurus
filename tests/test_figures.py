@@ -201,7 +201,7 @@ def test_search_written_in_any_language(client, monkeypatch):
         assert context == "La réunion ? → A ∪ B"
         return "union Venn diagram"
 
-    async def search(subject, pixabay_key=""):
+    async def search(subject, pixabay_key="", *_):
         return []
 
     monkeypatch.setattr(llm, "search_words", words)

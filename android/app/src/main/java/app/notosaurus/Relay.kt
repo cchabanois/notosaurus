@@ -119,12 +119,16 @@ class Relay(
         return Picture(response.body.bytes(), source)
     }
 
-    /** Free pictures of a subject to choose from (/v1/pictures/search): {"results": [stock.Found…]}. */
-    suspend fun searchPictures(subject: String, context: String = ""): JsonObject = post("pictures/search", buildJsonObject {
-        put("subject", subject)
-        put("context", context.take(8000))
-        put("translate", true) // what the user wrote, any language
-    })
+    /** Free pictures of a subject to choose from (/v1/pictures/search), the AI keeping those
+     * that show it (1 credit): {"results": [stock.Found…]}. `words`: its English search words
+     * when known (the card's picture_search), else what the user wrote is translated. */
+    suspend fun searchPictures(subject: String, context: String = "", words: String = ""): JsonObject =
+        post("pictures/search", buildJsonObject {
+            put("subject", words.ifBlank { subject })
+            put("context", context.take(8000))
+            put("translate", words.isBlank()) // what the user wrote, any language
+            put("sort", true)
+        })
 
     /** One of the pictures found (/v1/pictures/found): the JPEG, card size, and where it comes from. */
     suspend fun foundPicture(source: String, id: String): Picture {
