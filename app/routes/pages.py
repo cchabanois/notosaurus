@@ -6,9 +6,9 @@ from fastapi import APIRouter, Request
 from fastapi.responses import JSONResponse, Response
 
 from .. import i18n, settings
+from ..access import is_local, paired
 from ..version import VERSION
-from .common import MAX_IMAGES, STATIC_DIR, is_local
-from .devices import _paired
+from .common import MAX_IMAGES, STATIC_DIR
 
 router = APIRouter()
 
@@ -46,7 +46,7 @@ def manifest(request: Request) -> JSONResponse:
     """The home screen icon opens the page with the token: on an iPhone, an icon doesn't
     share Safari's cookies."""
     data = json.loads((STATIC_DIR / "manifest.json").read_text(encoding="utf-8"))
-    if _paired(request) and not is_local(request):
+    if paired(request) and not is_local(request):
         data["start_url"] = f"/?k={settings.device_token()}"
     return JSONResponse(data, media_type="application/manifest+json", headers={"Cache-Control": "no-cache"})
 

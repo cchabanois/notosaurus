@@ -7,14 +7,17 @@
 """
 
 import hashlib
+import inspect
 import logging
 import re
 import shutil
 import uuid
+from collections.abc import Awaitable, Callable
 from datetime import date
 from pathlib import Path
 
 from . import storage
+from .errors import AppError
 from .models import AiCall, Card, Frame, Lesson, LessonIn, LessonSummary
 
 log = logging.getLogger("notosaurus")
@@ -180,9 +183,17 @@ def list_all() -> list[LessonSummary]:
     return sorted(summaries, key=lambda s: (s.updated_at, s.id), reverse=True)
 
 
+# What a content update may change: the lesson's content, never its sharing
+CONTENT = set(LessonIn.model_fields) - {"shared"}
+
+
 def update(id: str, changes: LessonIn, exported: bool = False, share: bool | None = None) -> Lesson | None:
     """Save the lesson's content. Sharing only changes through `share`, after the
     caller checked it's the owner's profile (content updates never touch it)."""
+    return _save(id, changes.model_dump(include=CONTENT, exclude_none=True), exported, share)
+
+
+def _save(id: str, content: dict, exported: bool = False, share: bool | None = None) -> Lesson | None:
     with storage.lock:
         path = folder(id)
         if not path:
@@ -192,7 +203,7 @@ def update(id: str, changes: LessonIn, exported: bool = False, share: bool | Non
         lesson = Lesson(
             **{
                 **_read(path).model_dump(),
-                **changes.model_dump(include=set(LessonIn.model_fields) - {"shared"}, exclude_none=True),
+                **content,
                 **({"shared": share} if share is not None else {}),
                 "updated_at": now,
                 **({"exported_at": now} if exported else {}),
@@ -200,6 +211,26 @@ def update(id: str, changes: LessonIn, exported: bool = False, share: bool | Non
         )
         _write(path, lesson)
     return lesson
+
+
+async def edit[T](id: str, change: Callable[[Lesson], T | Awaitable[T]]) -> tuple[Lesson, T]:
+    """Change the lesson in place (a route's cards, pictures, frames…): `change` gets a
+    working copy (cards and frames its own, deep copies) and may take its time (an AI
+    call); what it changed in the content is then saved as `update` saves it (sharing
+    never, the rest read again then: changed meanwhile elsewhere, it stays). If `change`
+    fails, nothing is saved. The saved lesson and what `change` returned."""
+    before = get(id)
+    if before is None:
+        raise AppError("lesson.not_found", 404)
+    draft = before.model_copy(deep=True)
+    result = change(draft)
+    if inspect.isawaitable(result):
+        result = await result
+    changed = {f for f in CONTENT if getattr(draft, f) != getattr(before, f)}
+    saved = _save(id, draft.model_dump(include=changed))
+    if saved is None:  # deleted meanwhile
+        raise AppError("lesson.not_found", 404)
+    return saved, result
 
 
 def regenerated(
@@ -227,7 +258,7 @@ def regenerated(
         lesson = Lesson(
             **{
                 **old.model_dump(),
-                **content.model_dump(include=set(LessonIn.model_fields) - {"shared"}, exclude_none=True),
+                **content.model_dump(include=CONTENT, exclude_none=True),
                 "id": id,
                 "prompt": prompt,
                 "choice": choice,
