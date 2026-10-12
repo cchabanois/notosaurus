@@ -204,6 +204,9 @@ def note_type(
         # Hear the back, write it; the answer shows the comparison and what it means
         heard = f'<div class="dictation">🎧</div>{sound}{{{{type:Back}}}}'
         dictated = {"name": "Dictée", "qfmt": heard, "afmt": f'{heard}<hr id="answer">{{{{Front}}}}{info}'}
+        if dictation_only:  # alone, its front shown too: the sentence with its blank (or "Sentence 3")
+            heard = f'<div class="dictation">🎧</div>{sound}{{{{Front}}}}{{{{type:Back}}}}'
+            dictated = {"name": "Dictée", "qfmt": heard, "afmt": f'{heard}<hr id="answer">{info}'}
         templates = [dictated] if dictation_only else [*templates, dictated]
     fields = ["Front", "Back", "Info"]
     if anki_tts:

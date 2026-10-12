@@ -274,7 +274,7 @@ class LocalServerTest {
 
         // Notosaurus's prompts in the page's language, "Automatic" first
         val prompts = client.get("/api/prompts") { page("fr") }.json().jsonArray.map { it.jsonObject }
-        assertEquals(16, prompts.size) // app/prompts.py BUILTIN
+        assertEquals(17, prompts.size) // app/prompts.py BUILTIN
         assertEquals("notosaurus:auto", prompts[0].string("id"))
         assertTrue(prompts.all { it["builtin"]!!.jsonPrimitive.content == "true" })
         val french = json.parseToJsonElement(File(System.getProperty("notosaurus.web") ?: "../../static", "i18n/fr.json").readText())

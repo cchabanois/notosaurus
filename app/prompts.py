@@ -33,6 +33,7 @@ BUILTIN = (
     "pictures",
     "blanks",
     "dictation",
+    "dictation_gaps",
 )
 
 # Old default prompts that a Notosaurus prompt covers: dropped when left unchanged.

@@ -1020,6 +1020,15 @@
       "typing": false,
       "dictation": true,
       "dictation_only": true
+    },
+    "dictation_gaps": {
+      "name": "Ditado com lacunas",
+      "text": "Crie um ditado com lacunas a partir do texto da lição: mantenha só as palavras mais difíceis de escrever (acentos, s/ss/ç/z, x/ch, h, homófonos como cela/sela, terminações verbais), dez no máximo, na ordem do texto. Um cartão por palavra.\nFrente: a frase do texto em que está a palavra, com a palavra substituída por “…” (para uma frase longa, só a parte em volta da palavra). Verso: a palavra sozinha, escrita exatamente como no texto.\nInfo: por que se escreve assim (uma regra, a família de palavras…), senão vazio.\nSem foto: a partir do texto que eu escrevo aqui.",
+      "deck": "{matéria}::Ditado com lacunas",
+      "voice": "auto",
+      "typing": false,
+      "dictation": true,
+      "dictation_only": true
     }
   }
 }

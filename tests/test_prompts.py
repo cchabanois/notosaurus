@@ -102,6 +102,8 @@ def test_dictation_prompt_starts_lessons_with_its_options(client):
     dictation = prompts["notosaurus:dictation"]
     assert (dictation["name"], dictation["voice"]) == ("Dictation", "auto")
     assert dictation["dictation"] is True and dictation["dictation_only"] is True  # its cards: dictations alone
+    gaps = prompts["notosaurus:dictation_gaps"]  # the hardest words of a text, one a card
+    assert (gaps["name"], gaps["dictation_only"], gaps["voice"]) == ("Gap dictation", True, "auto")
     blanks = prompts["notosaurus:blanks"]  # the sentences with a blank, typed: no dictation
     assert (blanks["name"], blanks["typing"], blanks["dictation"]) == ("Fill in the word", True, False)
 
