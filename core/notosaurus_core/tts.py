@@ -52,14 +52,21 @@ BRACKETS = re.compile(r"\s*\([^)]*\)")
 
 def spoken(card: Card, dictation: bool = False) -> str:
     """What a card's sound says: its back. A dictation's card whose front is a sentence
-    with a blank: the word, the sentence with it, the word again, as dictated at school
-    (alone, "vers" could be "verre" or "vert")."""
+    with a blank: the sentence with the word, then the word (alone, "vers" could be
+    "verre" or "vert"); each on its line, read on its own (lines)."""
     back = card.back.strip()
     sentence = BRACKETS.sub("", card.front).strip()
     if not dictation or "\n" in back or not BLANK.search(sentence):
         return back
     said = BLANK.sub(lambda _: back, sentence, count=1)
-    return f"{back}. {said}{'' if said[-1] in '.!?' else '.'} {back}."
+    return f"{said}{'' if said[-1] in '.!?' else '.'}\n{back}"
+
+
+def lines(text: str) -> list[str]:
+    """What is read on its own, then joined: each line of a text. A natural voice given a
+    lone word then a sentence in one text makes up words (Chirp 3 HD: "vers. Les bras
+    tendus vers lui…" came out twice as long, with words of its own)."""
+    return [line.strip()[:MAX_LINE] for line in text.splitlines() if line.strip()]
 
 
 def spoken_backs(cards: list[Card], dictation: bool = False) -> list[str]:
@@ -78,6 +85,7 @@ def is_anki_locale(voice: str) -> bool:
 
 
 RATE = "-10%"
+MAX_LINE = 200  # characters read of a line: a back's sound, not a text read out
 
 
 def filename(text: str, voice: str, rate: str = RATE) -> str:
@@ -103,8 +111,26 @@ async def tts(text: str, voice: str, directory: Path | None = None, rate: str = 
         if directory and cached.exists():
             shutil.copyfile(cached, path)
         else:
-            await _synthesize(text, voice, path, rate)
+            await _synthesize_lines(text, voice, path, rate)
     return path
+
+
+async def _synthesize_lines(text: str, voice: str, path: Path, rate: str) -> None:
+    """Each line (lines) read on its own, the mp3s joined (MPEG frames follow each other)."""
+    said = lines(text)
+    if len(said) <= 1:
+        await _synthesize(said[0] if said else text, voice, path, rate)
+        return
+    parts = [path.with_name(f"{path.stem}.{i}.mp3") for i in range(len(said))]
+    try:
+        for line, part in zip(said, parts, strict=True):
+            await _synthesize(line, voice, part, rate)
+        tmp = path.with_suffix(".joined")
+        tmp.write_bytes(b"".join(part.read_bytes() for part in parts))
+        tmp.rename(path)
+    finally:
+        for part in parts:
+            part.unlink(missing_ok=True)
 
 
 async def tts_many(texts: list[str], voice: str, directory: Path, rate: str = RATE) -> tuple[dict[str, Path], int]:

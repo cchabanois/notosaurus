@@ -2,6 +2,8 @@
 the audio read aloud, cloze gaps, typed answers, multiple choice — the real
 package, unzipped, its SQLite collection read (tests/apkg.py)."""
 
+import asyncio
+
 import apkg
 from conftest import CLOZE, extract_lesson, synthesized
 
@@ -218,7 +220,7 @@ def test_line_breaks_kept_in_anki(client, tmp_path):
     ]
 
 
-def test_a_dictation_says_the_word_its_sentence_the_word(client, tmp_path):
+def test_a_dictation_says_the_sentence_then_the_word(client, tmp_path):
     from conftest import synthesized
 
     export = {
@@ -228,7 +230,8 @@ def test_a_dictation_says_the_word_its_sentence_the_word(client, tmp_path):
         "cards": [{"front": "Le chat boit du … (une boisson)", "back": "lait"}, {"front": "vert ?", "back": "green"}],
     }
     package = apkg.export(client, export, tmp_path)
-    assert sorted(synthesized) == ["green", "lait. Le chat boit du lait. lait."]  # no blank: the back alone
+    # Each line read on its own (a natural voice makes words up from a lone word then a sentence)
+    assert sorted(synthesized) == ["Le chat boit du lait.", "green", "lait"]  # no blank: the back
     sounds = [flds.split("\x1f") for _, _, flds in package.notes]
     assert any("[sound:" in field for fields in sounds for field in fields)
     synthesized.clear()
@@ -243,11 +246,31 @@ def test_what_the_sound_says():
     def said(front, back, dictation=True):
         return tts.spoken(Card(front=front, back=back), dictation)
 
-    assert said("Le pré est ___", "vert") == "vert. Le pré est vert. vert."  # its full stop added
-    assert said("Il a ... ans !", "dix") == "dix. Il a dix ans ! dix."
-    assert said("Ça coûte …", r"5 \1 $1") == r"5 \1 $1. Ça coûte 5 \1 $1. 5 \1 $1."  # as written
+    assert said("Le pré est ___", "vert") == "Le pré est vert.\nvert"  # its full stop added
+    assert said("Il a ... ans !", "dix") == "Il a dix ans !\ndix"
+    assert said("Ça coûte …", r"5 \1 $1") == "Ça coûte 5 \\1 $1.\n5 \\1 $1"  # as written
     assert said("la mère", "la madre") == "la madre"
     assert said("Deux … ici", "mots\nde plus") == "mots\nde plus"  # a back of lines: as it is
+    assert tts.lines(" vers \n\nLes bras tendus.\n") == ["vers", "Les bras tendus."]
+
+
+def test_each_line_read_on_its_own_then_joined(tmp_path, monkeypatch):
+    """A natural voice given "vers. Les bras tendus vers lui…" in one text made words up:
+    each line is read on its own, the mp3s joined into the one file."""
+    from notosaurus_core import files
+
+    monkeypatch.setattr(files, "_cache_root", lambda: tmp_path.parent / f"{tmp_path.name}-cache")  # restored after
+    read = []
+
+    async def synthesize(text, voice, path, rate):
+        read.append(text)
+        path.write_bytes(f"<{text}>".encode())
+
+    monkeypatch.setattr(tts, "_synthesize", synthesize)
+    path = asyncio.run(tts.tts("vers\nLes bras tendus vers lui.\nvers", "fr-FR-DeniseNeural", tmp_path))
+    assert read == ["vers", "Les bras tendus vers lui.", "vers"]
+    assert path.read_bytes() == b"<vers><Les bras tendus vers lui.><vers>"
+    assert [p.name for p in tmp_path.iterdir()] == [path.name]  # no part left behind
 
 
 def test_dictation_only(client, tmp_path):

@@ -642,14 +642,20 @@ class LocalServerTest {
         assertEquals(setOf("la madre"), anki.sounds.keys)
         assertEquals("mp3 la madre", anki.sounds["la madre"]!!.readText())
 
-        // A dictation: the word, its sentence, the word again
-        relay.enqueue(MockResponse.Builder().setHeader("Content-Type", "audio/mpeg").body("mp3 dictated").build())
+        // A dictation: its sentence, then the word
+        // Each line read on its own (a natural voice makes words up from a lone word then a sentence), joined
+        for (part in listOf("<sentence>", "<lait>")) {
+            relay.enqueue(MockResponse.Builder().setHeader("Content-Type", "audio/mpeg").body(part).build())
+        }
         val dictated = """[{"front": "Le chat boit du … (une boisson)", "back": "lait"}]"""
         client.post("/api/anki/send") {
             page(); contentType(ContentType.Application.Json)
             setBody("""{"deck": "Dictée", "cards": $dictated, "voice": "es-ES-Chirp3-HD-Aoede", "lesson_id": "", "dictation": true}""")
         }
-        assertEquals(setOf("lait. Le chat boit du lait. lait."), anki.sounds.keys) // what's in brackets not read
+        assertEquals(setOf("Le chat boit du lait.\nlait"), anki.sounds.keys) // what's in brackets not read
+        assertEquals("<sentence><lait>", anki.sounds.values.single().readText())
+        val read = (1..3).map { json.parseToJsonElement(relay.takeRequest(5, TimeUnit.SECONDS)!!.body!!.utf8()).jsonObject.string("text") }
+        assertEquals(listOf("Le chat boit du lait.", "lait"), read.takeLast(2)) // after el padre's
         assertFalse(anki.options.dictationOnly)
 
         // The dictation alone (the built-in Dictation): its sound the same, no front → back card
@@ -658,17 +664,17 @@ class LocalServerTest {
             setBody("""{"deck": "Dictée", "cards": $dictated, "voice": "es-ES-Chirp3-HD-Aoede", "lesson_id": "", "dictation_only": true}""")
         }
         assertTrue(anki.options.dictation && anki.options.dictationOnly)
-        assertEquals(setOf("lait. Le chat boit du lait. lait."), anki.sounds.keys)
+        assertEquals(setOf("Le chat boit du lait.\nlait"), anki.sounds.keys)
     }
 
     @Test
     fun whatTheSoundSays() {
         fun card(front: String, back: String) = Card(front = front, back = back)
-        assertEquals("lait. Le chat boit du lait. lait.", Speech.spoken(card("Le chat boit du ….", "lait"), dictation = true))
-        assertEquals("vert. Le pré est vert. vert.", Speech.spoken(card("Le pré est ___", "vert"), dictation = true)) // its full stop added
+        assertEquals("Le chat boit du lait.\nlait", Speech.spoken(card("Le chat boit du ….", "lait"), dictation = true))
+        assertEquals("Le pré est vert.\nvert", Speech.spoken(card("Le pré est ___", "vert"), dictation = true)) // its full stop added
         assertEquals("lait", Speech.spoken(card("Le chat boit du ….", "lait"), dictation = false)) // not a dictation
         assertEquals("la madre", Speech.spoken(card("la mère", "la madre"), dictation = true)) // no blank
-        assertEquals("$1. Ça coûte $1. $1.", Speech.spoken(card("Ça coûte ...", "$1"), dictation = true)) // as written
+        assertEquals("Ça coûte $1.\n$1", Speech.spoken(card("Ça coûte ...", "$1"), dictation = true)) // as written
     }
 
     @Test

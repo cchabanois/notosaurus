@@ -17,12 +17,15 @@ class Speech(private val folder: File, private val prefs: Preferences, private v
 
     /** A text read aloud: its mp3, at the settings' speed. */
     suspend fun read(text: String, voice: String): File {
-        val said = text.trim().take(200) // as the computer: a back's first 200 characters
+        // Each line on its own, the mp3s joined (as the computer's tts.lines): a natural voice
+        // given a lone word then a sentence in one text makes up words. 200 characters a line.
+        val lines = text.lines().map { it.trim().take(200) }.filter { it.isNotEmpty() }.ifEmpty { listOf(text.trim().take(200)) }
+        val said = lines.joinToString("\n")
         val rate = RATES[prefs[TTS_RATE]] ?: Relay.SPEECH_RATE
         val digest = MessageDigest.getInstance("SHA-1").digest("$voice|$rate|$said".toByteArray())
         val mp3 = File(folder, digest.joinToString("") { "%02x".format(it) }.take(16) + ".mp3")
         if (!mp3.isFile) {
-            val bytes = relay().speak(said, voice, rate)
+            val bytes = lines.map { relay().speak(it, voice, rate) }.reduce { all, part -> all + part }
             withContext(Dispatchers.IO) {
                 val tmp = File(folder, mp3.name + ".tmp")
                 tmp.writeBytes(bytes)
@@ -68,14 +71,14 @@ class Speech(private val folder: File, private val prefs: Preferences, private v
         private val BRACKETS = Regex("""\s*\([^)]*\)""")
 
         /** What a card's sound says (as the core's tts.spoken): its back. A dictation's card
-         * whose front is a sentence with a blank: the word, the sentence with it, the word
-         * again, as dictated at school (alone, "vers" could be "verre" or "vert"). */
+         * whose front is a sentence with a blank: the sentence with the word, then the word
+         * (alone, "vers" could be "verre" or "vert"); each on its line, read on its own (read). */
         fun spoken(card: Card, dictation: Boolean): String {
             val back = card.back.trim()
             val sentence = card.front.replace(BRACKETS, "").trim()
             if (!dictation || '\n' in back || !BLANK.containsMatchIn(sentence)) return back
             val said = BLANK.replaceFirst(sentence, Regex.escapeReplacement(back))
-            return "$back. $said${if (said.last() in ".!?") "" else "."} $back."
+            return "$said${if (said.last() in ".!?") "" else "."}\n$back"
         }
 
         // The voice chosen for a lesson whose voice is "auto" (Chirp 3 HD: the same name in
