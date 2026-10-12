@@ -213,6 +213,9 @@ class MainActivity : ComponentActivity() {
             chosen = callback
             photo = null
             val intent = if (params.isCaptureEnabled) {
+                // The camera's photos before it: the page has read them long since (a notebook's
+                // photos, maybe a name on them: not kept on the phone outside the lessons)
+                File(cacheDir, "photos").listFiles()?.forEach { it.delete() }
                 val file = File(cacheDir, "photos/photo-${System.currentTimeMillis()}.jpg").apply { parentFile!!.mkdirs() }
                 photo = FileProvider.getUriForFile(this@MainActivity, "$packageName.photos", file)
                 Intent(MediaStore.ACTION_IMAGE_CAPTURE).putExtra(MediaStore.EXTRA_OUTPUT, photo)

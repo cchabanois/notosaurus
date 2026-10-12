@@ -1,6 +1,15 @@
 // The photos of a lesson: added (a PDF's pages picked), turned, partly hidden, removed, seen in full.
 // Methods of the page's Alpine component (app.js), as `this`.
 
+// A canvas as a file (JPEG, or a PNG mask). Not canvas.toBlob: in Android's WebView it
+// waits for idle time, 4 to 13 s for a photo; toDataURL does the same in ~0.2 s.
+function canvasBlob(canvas, type = "image/jpeg") {
+  const data = atob(canvas.toDataURL(type, JPEG_QUALITY).split(",")[1]);
+  const bytes = new Uint8Array(data.length);
+  for (let i = 0; i < data.length; i++) bytes[i] = data.charCodeAt(i);
+  return new Blob([bytes], { type });
+}
+
 // Shrinks a phone photo (3–5 MB) to ~1600 px JPEG before upload.
 async function resize(file) {
   const bitmap = await createImageBitmap(file, { imageOrientation: "from-image" });
@@ -10,7 +19,7 @@ async function resize(file) {
   canvas.height = Math.round(bitmap.height * scale);
   canvas.getContext("2d").drawImage(bitmap, 0, 0, canvas.width, canvas.height);
   bitmap.close();
-  return new Promise((resolve) => canvas.toBlob(resolve, "image/jpeg", JPEG_QUALITY));
+  return canvasBlob(canvas);
 }
 
 // A photo turned a quarter turn clockwise (JPEG; a hidden areas' mask: PNG).
@@ -24,7 +33,7 @@ async function rotateBlob(blob, type = "image/jpeg") {
   ctx.rotate(Math.PI / 2);
   ctx.drawImage(bitmap, 0, 0);
   bitmap.close();
-  return new Promise((resolve) => canvas.toBlob(resolve, type, JPEG_QUALITY));
+  return canvasBlob(canvas, type);
 }
 
 // Hiding part of a photo before it is sent (a name, a school…): blacked out with a finger,
@@ -79,7 +88,7 @@ async function renderPdfPage(doc, n, side = MAX_SIDE) {
   canvas.height = Math.round(viewport.height);
   await page.render({ canvas, viewport, background: "white" }).promise;
   page.cleanup();
-  return new Promise((resolve) => canvas.toBlob(resolve, "image/jpeg", JPEG_QUALITY));
+  return canvasBlob(canvas);
 }
 
 // A page's text, as the PDF holds it (none in a scan): sent to the AI with the page,
@@ -303,13 +312,12 @@ const photosPart = {
     const photo = this.photos[i];
     try {
       if (keep) {
-        const toBlob = (from, type) => new Promise((resolve) => from.toBlob(resolve, type, JPEG_QUALITY));
         const original = photo.original ?? photo.blob;
         const pdfText = photo.pdfText ?? photo.text;
         const used = hardenMask(mask);
         this.drawHidden();
         const changed = used
-          ? { blob: await toBlob(canvas, "image/jpeg"), original, mask: await toBlob(mask, "image/png"), text: "", pdfText }
+          ? { blob: canvasBlob(canvas), original, mask: canvasBlob(mask, "image/png"), text: "", pdfText }
           : { blob: original, text: pdfText };
         URL.revokeObjectURL(photo.url);
         this.photos.splice(i, 1, { ...changed, url: URL.createObjectURL(changed.blob) });
