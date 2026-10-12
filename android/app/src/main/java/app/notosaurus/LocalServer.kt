@@ -75,6 +75,7 @@ class LocalServer(
     internal val pictures = Pictures(lessons, ::relay) { prefs[PICTURE_FIND] != "false" }
     internal val generation = Generation(lessons, prefs, ::relay, speech, turnPhoto)
     internal val computer = Computer(prefs, modeChanged)
+    internal val switches = Switches(prefs, version)
     internal val dictation = recorder?.let { Dictation(File(dataDir, "dictation").apply { mkdirs() }, it, ::relay) }
     private lateinit var server: EmbeddedServer<*, *>
 

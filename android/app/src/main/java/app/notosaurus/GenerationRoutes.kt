@@ -24,6 +24,7 @@ internal fun Route.generationRoutes(server: LocalServer) {
         }
         // Generated again in its place (another prompt, photos, or carefully this time)
         making("/api/lessons/{id}/regenerate") { form, onCard ->
+            switches.check("lesson.regenerate")
             val old = lesson()
             val made = generation.make(form, onCard)
             lessons.regenerated(old.string("id"), made.content, made.photos) ?: notFound()
@@ -31,6 +32,7 @@ internal fun Route.generationRoutes(server: LocalServer) {
         // Its next pages, days later: only they are read, the AI knowing the cards made already;
         // their cards come after the lesson's, which stay (so do their notes in AnkiDroid)
         making("/api/lessons/{id}/complete") { form, onCard ->
+            switches.check("lesson.complete")
             val old = lesson()
             if (form.images.isEmpty()) throw BadRequest("extract.no_input")
             val count = old["photo_count"]?.jsonPrimitive?.intOrNull ?: 0

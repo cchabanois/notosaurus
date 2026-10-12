@@ -535,3 +535,32 @@ test("instructions written before the prompts come stay (the first load came aft
   await fresh.loadPrompts("notosaurus:auto", true);  // nothing chosen yet: the last prompt used
   assert.equal(fresh.form.text, "Regarde la leçon…");
 });
+
+test("what the service tells for now: a notice closed once, features off, an update", async () => {
+  const page = await loadScripts("app.js", {
+    routes: (url) => (url === "/api/switches"
+      ? new Response({ notice: { id: "n1", level: "warning", text: "Fixing it" }, disabled: ["lesson.complete"],
+        update: true, store: "https://play.google.com/store/apps/details?id=app.notosaurus" })
+      : null),
+  });
+  const c = page.component();
+  await c.loadSwitches();
+  assert.equal(c.switches.notice.text, "Fixing it");
+  assert.equal(c.switches.update, true);
+  assert.ok(c.off("lesson.complete") && !c.off("anki.send"));
+  c.regeneratesInPlace = () => true;
+  c.newPages = () => [{}];
+  c.cards = [{ id: "c1" }];
+  assert.equal(c.canComplete(), false);  // turned off: not offered
+  c.closeNotice();
+  assert.equal(c.noticeClosed, "n1");
+  assert.equal(page.storage.getItem("notosaurus.noticeClosed"), "n1");  // closed for good on this device
+});
+
+test("no switches (the computer's page): nothing off, nothing shown", async () => {
+  const page = await loadScripts("app.js", { routes: () => new Response({ detail: "Not Found" }, { status: 404 }) });
+  const c = page.component();
+  await c.loadSwitches();
+  assert.equal(c.switches.notice, null);
+  assert.equal(c.off("anki.send"), false);
+});

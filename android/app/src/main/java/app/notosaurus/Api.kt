@@ -70,7 +70,14 @@ data class Account(
     @SerialName("daily_left") val dailyLeft: Int,
     @SerialName("renews_at") val renewsAt: String? = null,
     @SerialName("ends_at") val endsAt: String? = null, // a subscription's (Google Play): its paid period's end
+    val notice: Notice? = null, // a message for every user, set on the relay
+    val disabled: List<String> = emptyList(), // relay_api.FEATURES turned off for now
+    val latest: String = "", // the app's latest version ("" not said)
 )
+
+/** A message for every user of the app (relay_api.Notice): its text by language. */
+@Serializable
+data class Notice(val id: String, val level: String = "info", val texts: Map<String, String>)
 
 /** Every error of the relay: a code (relay.*, llm.*) and its parameters. */
 @Serializable

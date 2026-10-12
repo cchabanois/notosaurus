@@ -91,6 +91,16 @@
   </main>
 
   <main x-show="!unpaired">
+    <!-- What the service tells every user for now (the Android app: set on the relay) -->
+    <div class="notice-bar" :class="switches.notice?.level" x-cloak x-show="switches.notice && noticeClosed !== switches.notice.id"
+         role="status">
+      <span x-text="switches.notice?.text"></span>
+      <button class="icon-btn" @click="closeNotice()" :aria-label="$t('common.close')">✕</button>
+    </div>
+    <div class="notice-bar" x-cloak x-show="switches.update" role="status">
+      <span x-text="$t('app.update.available')"></span>
+      <a class="btn soft" :href="switches.store" target="_blank" rel="noopener" x-text="$t('app.update.open')"></a>
+    </div>
     <!-- The mascot, large, until a lesson is started -->
     <img class="hero-logo" x-show="!lessonId && !photos.length" src="logo.webp" alt="Notosaurus" width="511" height="465">
     <p class="tagline" x-show="!lessonId && !photos.length" x-text="$t('app.tagline')"></p>
@@ -212,7 +222,7 @@
         <span x-text="$t('app.prompt.complete', { count: newPages().length })"></span>
         <small x-text="$t('app.prompt.completeHint')"></small>
       </button>
-      <button class="btn soft wide" x-show="cards.length" @click="extract()" :disabled="!canGenerate()">
+      <button class="btn soft wide" x-show="cards.length && !(regeneratesInPlace() && off('lesson.regenerate'))" @click="extract()" :disabled="!canGenerate()">
         <span x-text="$t('app.prompt.regenerate')"></span>
         <small x-text="regeneratesInPlace() ? $t('app.prompt.regenerateHint') : $t('app.prompt.regenerateNewHint')"></small>
       </button>
@@ -292,7 +302,7 @@
       </div>
 
       <!-- Just made quick: once more, carefully (a rich lesson: a figure, maths) -->
-      <div class="careful-again" x-show="madeQuick && regeneratesInPlace()">
+      <div class="careful-again" x-show="madeQuick && regeneratesInPlace() && !off('lesson.regenerate')">
         <small class="hint" x-text="$t('app.review.madeQuick')"></small>
         <button class="btn soft" @click="extract({ careful: true })" :disabled="!canGenerate()"
                 x-text="$t('app.review.carefulAgain')"></button>
@@ -441,10 +451,10 @@
                 <span x-text="$t('app.pictures.onBack')"></span>
               </label>
               <div class="picture-actions">
-                <button type="button" class="btn soft" x-show="!card.figure" @click="searchPictures(card)"
+                <button type="button" class="btn soft" x-show="!card.figure && !off('pictures.search')" @click="searchPictures(card)"
                         :disabled="Boolean(card._drawing || card._searching)"
                         x-text="card._searching ? $t('app.pictures.searching') : $t('app.pictures.search')"></button>
-                <button type="button" class="btn soft" @click="redrawPicture(card)" :disabled="Boolean(card._drawing)"
+                <button type="button" class="btn soft" x-show="!off('pictures.draw')" @click="redrawPicture(card)" :disabled="Boolean(card._drawing)"
                         x-text="card.picture ? $t('app.pictures.redraw') : $t('app.pictures.draw')"></button>
                 <label class="btn soft" :class="{ disabled: card._drawing }">
                   <span x-text="$t('app.pictures.photo')"></span>
@@ -533,7 +543,7 @@
       <!-- Sent already (the app): reviewed in AnkiDroid from here -->
       <button class="btn soft" x-show="reviewInAnki && lessonExported" @click="reviewLesson()" :disabled="sending"
               x-text="$t('app.reviewInAnki')"></button>
-      <button class="btn primary wide" x-show="anki.available" @click="sendToAnki()" :disabled="sending || exporting">
+      <button class="btn primary wide" x-show="anki.available && !off('anki.send')" @click="sendToAnki()" :disabled="sending || exporting">
         <!-- Sent before: sending again updates its cards in Anki (moves them if its deck changed) -->
         <span x-text="sending ? $t('app.actions.sending') : $t(lessonExported ? 'app.actions.updateInAnki' : 'app.actions.addToAnki')"></span>
       </button>

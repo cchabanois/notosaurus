@@ -36,6 +36,7 @@ internal fun Route.lessonRoutes(server: LocalServer) {
         // After a send: the lesson's notes no card has any more, deleted when asked; only those
         // (never a card's own note, nor another lesson's)
         api("POST", "/api/lessons/{id}/anki-notes/delete") {
+            switches.check("anki.delete")
             val lesson = lesson()
             val asked = body()["ids"]?.jsonArray?.mapNotNull { it.jsonPrimitive.longOrNull }.orEmpty().toSet()
             val kept = (lesson["anki_notes"] as? JsonObject)?.values?.mapNotNull { it.jsonPrimitive.longOrNull }.orEmpty().toSet()
@@ -52,6 +53,7 @@ internal fun Route.lessonRoutes(server: LocalServer) {
             val id = lesson().string("id")
             var inAnki = 0
             if (call.request.queryParameters["anki"] == "true") {
+                switches.check("anki.delete")
                 inAnki = withContext(Dispatchers.IO) {
                     val notes = runCatching { anki.lessonNotes(id) }.getOrNull() ?: throw BadRequest("anki.android_failed")
                     anki.delete(notes)

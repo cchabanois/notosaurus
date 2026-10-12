@@ -27,9 +27,13 @@ import kotlinx.serialization.json.put
 internal fun Route.pictureRoutes(server: LocalServer) {
     with(server) {
         // --- Pictures, through the relay (as app/main.py): drawn, the user's own, none
-        api("POST", "/api/lessons/{id}/pictures") { pictures.drawMissing(lesson()) }
+        api("POST", "/api/lessons/{id}/pictures") {
+            switches.check("pictures.draw")
+            pictures.drawMissing(lesson())
+        }
         // A card's picture drawn again: its subject (or figure), or the one the user wrote
         api("POST", "/api/lessons/{id}/cards/{card}/picture/draw") {
+            switches.check("pictures.draw")
             val lesson = lesson()
             val subject = body()["subject"]?.takeIf { it !is JsonNull }?.jsonPrimitive?.content
             pictures.redraw(lesson, cardIndex(lesson), subject, languageName())
@@ -59,6 +63,7 @@ internal fun Route.pictureRoutes(server: LocalServer) {
             val req = body()
             val subject = req.string("subject").trim()
             suspend fun search(onFound: suspend (JsonArray) -> Unit): JsonObject {
+                switches.check("pictures.search")
                 if (subject.isEmpty()) throw BadRequest("picture.no_subject")
                 return relay().searchPictures(subject, req.string("context"), req.string("words"), onFound)
             }

@@ -980,6 +980,10 @@ html.sheet-open { overflow: hidden; overscroll-behavior: none; }
 .setup-done img { display: block; margin: 0 auto .5rem; }
 .setup-done .setup-nav { justify-content: center; }
 .setup-banner { display: grid; gap: .5rem; border-color: var(--primary); }
+.notice-bar { display: flex; align-items: center; gap: .75rem; margin: 0 0 1rem; padding: .75rem 1rem;
+  border-radius: var(--radius-sm); background: var(--primary-soft); color: var(--text); }
+.notice-bar > span { flex: 1; }
+.notice-bar.warning { background: var(--danger-soft); }
 .setup-banner p { margin: 0; }
 .setup-waiting .spinner { width: 1.2rem; height: 1.2rem; margin: 0; border-width: 3px; }
 a.btn { text-decoration: none; }
