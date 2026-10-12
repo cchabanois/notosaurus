@@ -15,6 +15,9 @@ OPENAI_URL = "https://api.openai.com/v1"
 OPENROUTER_URL = "https://openrouter.ai/api/v1"
 OPENAI_LIKE = ("openai", "openrouter", "compatible")
 
+# The providers that hear a recording (a dictation): Gemini, and the demo (canned)
+HEARS_AUDIO = ("gemini", "fake")
+
 # Each service's first recommended model (recommended.py); a compatible service's
 # depends on it: chosen in the admin page
 DEFAULT_MODELS = {provider: recommended.default(recommended.CARDS, provider) for provider in PROVIDERS}

@@ -9,14 +9,15 @@ A single interface, `extract_cards`, and a provider chosen in the AI configurati
 - "openrouter": OpenRouter, every provider's models with one key.
 - "compatible": any other OpenAI-compatible service at its address (Ollama, LM Studio,
   Mistral…); these three in providers/openai_like.py.
-- "fake":      canned cards, to work on the UI without a key or any cost (demo.py).
+- "fake":      the demo AI: canned cards, to work on the UI without a key or any cost
+  (providers/demo.py).
 
 What the AI is told is in prompts.py; what every call shares (photos, errors, the
 calls recorded, the cards streamed) in calls.py.
 """
 
 import logging
-from collections.abc import Sequence
+from collections.abc import Callable, Sequence
 from functools import cache
 from typing import Any
 
@@ -25,16 +26,6 @@ from pydantic import BaseModel, Field, create_model
 from . import config, diagrams
 from .calls import CardStream, ExtractionError, Image, OnCard, record, recording  # noqa: F401 (llm's API)
 from .config import AIConfig
-from .demo import (
-    DEMO,
-    _fake,
-    _fake_dictation,
-    _fake_explanation,
-    _fake_figure,
-    _fake_rephrased,
-    _fake_revision,
-    _lets_choose,
-)
 from .errors import loggable
 from .models import (
     Card,
@@ -70,6 +61,7 @@ from .prompts import (
     _user_text,
 )
 from .providers import anthropic, gemini, openai_like
+from .providers import demo as demo_ai
 from .providers.openai_like import list_models  # noqa: F401 (llm's API)
 
 log = logging.getLogger("notosaurus")
@@ -94,6 +86,11 @@ def ai_schema(base: type[BaseModel], fun_facts: bool = False, helps: bool = Fals
     fields: dict[str, Any] = {k: (f.annotation, f) for k, f in base.model_fields.items() if k != "cards"}
     refused = (bool, Field(default=False, description="True when the request must be refused (see the rules)."))
     return create_model(base.__name__, __doc__=base.__doc__, cards=(list[card], Field()), **fields, refused=refused)
+
+
+def _box_format(s: AIConfig) -> str:
+    """How the provider's model gives diagram boxes (diagrams.FORMATS)."""
+    return demo_ai.BOX_FORMAT if s.llm == "fake" else diagrams.box_format(s.model_for_provider())
 
 
 def _accepted[T: BaseModel](answer: T) -> T:
@@ -140,25 +137,20 @@ async def extract_cards(
     `quick`: made fast, the model thinking little; `on_card`: each card as soon as it is
     written (see _ask_provider); `existing`: the lesson's cards made from its earlier pages
     ("front [part]"), when these photos are its next pages: not made again."""
-    if s.llm == "fake":
-        await record(s, "fake", "fake", 0, 0, cost=0.0)
-        choice = "Vocabulaire d'espagnol : français → espagnol" if _lets_choose(prompt) else ""
-        found = _fake(images, prompt)
-        if fun_facts:  # the demo's "did you know" on its first card
-            found.cards[0].fun_fact = "Le savais-tu ? Ce mot vient du latin."
-        if helps:  # the demo's helps: an explanation on the first card, a mnemonic on the second
-            found.cards[0].explanation = "(démo) Pourquoi c'est la réponse."
-            found.cards[-1].mnemonic = "(démo) Une astuce pour retenir."
-        if on_card:
-            for card in found.cards:  # one by one, as a real AI writes them
-                await on_card(card.model_dump(exclude_defaults=True))
-        return Extracted(deck=found, turns=[0] * len(images), frames=[], back_language="es-ES", choice=choice)
-    fmt = diagrams.box_format(s.model_for_provider())
+    fmt = _box_format(s)
     images, sizes = _prepare(images)
     asked = _user_text(prompt, deck, len(images), sizes, fmt, decks, fun_facts, page_texts, helps, existing)
     text = instructions + asked
     schema = ai_schema(Extraction, fun_facts, helps)
-    answer = await _ask_provider(s, images, text, schema, quick=quick, on_card=on_card)
+    answer = await _ask_provider(
+        s,
+        images,
+        text,
+        schema,
+        quick=quick,
+        on_card=on_card,
+        demo=lambda: demo_ai.extraction(images, prompt, fun_facts, helps),
+    )
     result = Extraction.model_validate(_accepted(answer).model_dump())
     diagrams.normalize(result.cards, sizes, fmt)
     await _complete_figures(s, images, result.cards)
@@ -181,7 +173,7 @@ async def _complete_figures(s: AIConfig, images: list[Image], cards: list[Card])
         return
     text = _figures_text([f"{c.front.strip()} → {c.back.strip()}" for c in todo])
     try:
-        found = await _ask_provider(s, images, text, Figures, FIGURES_RULES, light=True)
+        found = await _ask_provider(s, images, text, Figures, FIGURES_RULES, light=True, demo=Figures)
     except ExtractionError as e:
         log.warning("Figures left undescribed (%d cards): %s", len(todo), loggable(e))
         return
@@ -194,11 +186,9 @@ async def draw_figure(s: AIConfig, description: str) -> str:
     """The SVG of a figure, drawn by the cards' AI with the drawing rules (figures.py)."""
     from . import figures
 
-    if s.llm == "fake":
-        await record(s, "fake", "fake", 0, 0, cost=0.0)
-        return _fake_figure(description)
+    text = f"Figure to draw: {description.strip()}"
     drawing = await _ask_provider(
-        s, [], f"Figure to draw: {description.strip()}", figures.Drawing, figures.RULES, light=True
+        s, [], text, figures.Drawing, figures.RULES, light=True, demo=lambda: demo_ai.figure(description)
     )
     return drawing.svg
 
@@ -217,11 +207,10 @@ async def explain_card(
     why the answer is right), and the follow-ups worth offering. A light call: no photo.
 
     `language`: its English name ("French"); `instructions`: see extract_cards."""
-    if s.llm == "fake":
-        await record(s, "fake", "fake", 0, 0, cost=0.0)
-        return _fake_explanation(card, kind)
     text = instructions + _explain_text(card, kind, prompt, deck, language, page_texts)
-    found = await _ask_provider(s, [], text, Explanation, EXPLAIN_RULES, light=True)
+    found = await _ask_provider(
+        s, [], text, Explanation, EXPLAIN_RULES, light=True, demo=lambda: demo_ai.explanation(card, kind)
+    )
     found.more = list(dict.fromkeys(k for k in found.more if k != kind))
     return found
 
@@ -234,12 +223,12 @@ async def transcribe(s: AIConfig, audio: Image, kind: str, language: str = "Engl
 
     `audio`: the recording (audio/aac, ogg, mpeg, wav, flac); `language`: the app's,
     its English name ("French")."""
-    if s.llm == "fake":
-        await record(s, "fake", "fake", 0, 0, cost=0.0)
-        return _fake_dictation(kind)
-    if s.llm != "gemini":
+    if s.llm not in config.HEARS_AUDIO:
         raise ExtractionError("llm.no_audio", provider=s.llm)
-    found = await _ask_provider(s, [audio], _dictation_text(kind, language), Dictation, DICTATION_RULES, light=True)
+    text = _dictation_text(kind, language)
+    found = await _ask_provider(
+        s, [audio], text, Dictation, DICTATION_RULES, light=True, demo=lambda: demo_ai.dictation(kind)
+    )
     return found.text.strip()
 
 
@@ -248,22 +237,18 @@ async def rephrase(s: AIConfig, text: str, language: str = "English") -> str:
     language, every intention kept and none added. A light call, text only.
 
     `language`: the app's, its English name ("French")."""
-    if s.llm == "fake":
-        await record(s, "fake", "fake", 0, 0, cost=0.0)
-        return _fake_rephrased(text)
-    found = await _ask_provider(s, [], _rephrase_text(text, language), Rephrased, REPHRASE_RULES, light=True)
+    asked = _rephrase_text(text, language)
+    found = await _ask_provider(
+        s, [], asked, Rephrased, REPHRASE_RULES, light=True, demo=lambda: demo_ai.rephrased(text)
+    )
     return found.text.strip()
 
 
 async def pick_picture(s: AIConfig, candidates: list[Image], search: str, context: str) -> int | None:
     """Which of the pictures found (their previews, in order) fits a card: its index, or
     None when none does. `context`: the card, as "front → back"."""
-    if s.llm == "fake":
-        await record(s, "fake", "fake", 0, 0, cost=0.0)
-        return 0 if candidates else None
-    found = await _ask_provider(
-        s, candidates, _pick_text(search, context, len(candidates)), Picked, PICK_RULES, light=True
-    )
+    text = _pick_text(search, context, len(candidates))
+    found = await _ask_provider(s, candidates, text, Picked, PICK_RULES, light=True, demo=demo_ai.picked)
     return found.choice if 0 <= found.choice < len(candidates) else None
 
 
@@ -271,10 +256,10 @@ async def plan_picture(s: AIConfig, front: str, back: str, asked: str = "", lang
     """What a card's picture should be ("🎨 Draw" in its panel): an exact figure or an image
     model's picture, described from the card and what the user wrote (any language; empty:
     the card alone). `language`: the cards', its English name."""
-    if s.llm == "fake":
-        await record(s, "fake", "fake", 0, 0, cost=0.0)
-        return PicturePlan(kind="picture", description=asked.strip() or back.strip(), search=asked.strip())
-    plan = await _ask_provider(s, [], _plan_text(front, back, asked, language), PicturePlan, PLAN_RULES, light=True)
+    text = _plan_text(front, back, asked, language)
+    plan = await _ask_provider(
+        s, [], text, PicturePlan, PLAN_RULES, light=True, demo=lambda: demo_ai.picture_plan(back, asked)
+    )
     plan.description, plan.search = plan.description.strip(), plan.search.strip()
     return plan
 
@@ -282,10 +267,10 @@ async def plan_picture(s: AIConfig, front: str, back: str, asked: str = "", lang
 async def search_words(s: AIConfig, asked: str, context: str = "") -> str:
     """A few English words to search free pictures of what the user wrote (any language,
     maybe LaTeX); `context`: the card, "front → back"."""
-    if s.llm == "fake":
-        await record(s, "fake", "fake", 0, 0, cost=0.0)
-        return asked.strip()
-    found = await _ask_provider(s, [], _search_words_text(asked, context), SearchWords, SEARCH_WORDS_RULES, light=True)
+    text = _search_words_text(asked, context)
+    found = await _ask_provider(
+        s, [], text, SearchWords, SEARCH_WORDS_RULES, light=True, demo=lambda: demo_ai.search_words(asked)
+    )
     return found.words.strip() or asked.strip()
 
 
@@ -304,13 +289,10 @@ async def revise_cards(
     `language`: English name of the page's language ("French"), for the one-line
     summary; `instructions`: see extract_cards; `demo`: the demo provider's texts in
     that language ("removed", "added", "addedFront"; English by default)."""
-    if s.llm == "fake":
-        await record(s, "fake", "fake", 0, 0, cost=0.0)
-        return _fake_revision(deck, instruction, {**DEMO, **(demo or {})})
     # The existing masks stay out of the conversation (their boxes are in our own
     # format): the revised cards get back the mask of the card they were. New cards
     # about a diagram label come with a mask in the model's format.
-    fmt = diagrams.box_format(s.model_for_provider())
+    fmt = _box_format(s)
     images, sizes = _prepare(images)
     labels: dict[int, list[int]] = {}
     for card in deck.cards:
@@ -321,7 +303,14 @@ async def revise_cards(
     )
     text = instructions + _revision_text(prompt, plain, instruction, language, len(images), sizes, fmt, labels)
     # The fun facts and helps already there are kept: the AI sees them
-    answer = await _ask_provider(s, images, text, ai_schema(Revision, fun_facts=True, helps=True))
+    texts = {**demo_ai.DEMO, **(demo or {})}
+    answer = await _ask_provider(
+        s,
+        images,
+        text,
+        ai_schema(Revision, fun_facts=True, helps=True),
+        demo=lambda: demo_ai.revision(deck, instruction, texts),
+    )
     revision = Revision.model_validate(_accepted(answer).model_dump())
     _keep_masks(revision.cards, deck.cards, sizes, fmt)
     return revision
@@ -382,6 +371,7 @@ async def _ask_provider[T: BaseModel](
     light: bool = False,
     quick: bool = False,
     on_card: OnCard | None = None,
+    demo: Callable[[], T] | None = None,
 ) -> T:
     """Send photos + text to the configured provider and parse the answer as `schema`.
     `system`: the fixed rules (the cards' by default). `light`: a task that needs little
@@ -389,7 +379,11 @@ async def _ask_provider[T: BaseModel](
     can, where the service lets us say so — cheaper and faster. `quick`: a lesson made
     fast (the page's "Quick"): the model thinks little ("low"), 2 to 4 times faster,
     a little less careful on rich lessons (a figure, maths). `on_card`: each card as soon
-    as it is written (Gemini; the other services answer all at once)."""
+    as it is written (Gemini and the demo; the other services answer all at once).
+    `demo`: the demo AI's answer to this request, built from what it was made of (the
+    prompt, the card…): see providers/demo.py."""
+    if s.llm == "fake":
+        return await demo_ai._demo(s, demo, on_card)
     if s.llm == "gemini":
         return await gemini._gemini(s, images, text, schema, system, light, quick, on_card)
     if s.llm == "anthropic":
@@ -424,8 +418,6 @@ async def check(s: AIConfig) -> dict:
     Returns {"vision": bool, "json": bool, "answer": str}, with "model" and "quota" (the
     chosen model) when a Gemini fallback answered instead; raises ExtractionError
     when the service itself fails (key, address, model name…)."""
-    if s.llm == "fake":
-        return {"vision": True, "json": True, "answer": "red"}
     try:
         return await _check_model(s.model_copy(update={"fallback_models": ""}))  # the chosen model, not a fallback
     except ExtractionError as e:
@@ -447,7 +439,10 @@ async def check(s: AIConfig) -> dict:
 async def _check_model(only_main_model: AIConfig) -> dict:
     prompt = "What is the main colour of this image? Answer with one lowercase English word."
     try:
-        answer = await _ask_provider(only_main_model, [Image(_test_image(), "image/png")], prompt, _CheckAnswer)
+        image = Image(_test_image(), "image/png")
+        answer = await _ask_provider(
+            only_main_model, [image], prompt, _CheckAnswer, demo=lambda: _CheckAnswer(color="red")
+        )
     except ExtractionError as e:
         if e.code in ("llm.invalid_answer", "llm.truncated"):
             return {"vision": False, "json": False, "answer": ""}  # answered, but not in the JSON format

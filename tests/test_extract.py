@@ -23,6 +23,41 @@ def test_extract_fake(client):
     assert lesson["prompt"] == "FR → ES"
 
 
+def test_the_demo_ai_is_a_provider_like_the_others():
+    """The demo answers through llm._ask_provider, as the services do: a free call
+    recorded, its cards told one by one, its diagram boxes kept exactly (already
+    fractions of the photo, even an unreadable one). No answer for a request: said."""
+    import pytest
+
+    from notosaurus_core.calls import recording
+    from notosaurus_core.config import AIConfig
+    from notosaurus_core.figures import Drawing
+
+    demo, told = AIConfig(llm="fake"), []
+
+    async def on_card(card):
+        told.append(card)
+
+    async def extract():
+        with recording("extract") as calls:
+            photo = llm.Image(b"not a photo", "image/jpeg")
+            found = await llm.extract_cards(demo, [photo], "Le schéma", on_card=on_card)
+        return found, calls
+
+    found, calls = run(extract())
+    boxes = [[0.1, 0.1, 0.35, 0.2], [0.55, 0.4, 0.85, 0.5], [0.2, 0.7, 0.5, 0.8]]
+    assert [c.mask.box for c in found.deck.cards if c.mask] == boxes
+    assert (found.turns, found.frames, found.back_language) == ([0], [], "es-ES")
+    assert [c["back"] for c in told] == ["la bouche", "le cœur", "l'estomac"]
+    assert [(c.provider, c.model, c.cost) for c in calls] == [("fake", "fake", 0.0)]
+
+    assert run(llm.check(demo)) == {"vision": True, "json": True, "answer": "red"}
+    assert run(llm.pick_picture(demo, [], "x", "y")) is None
+    with pytest.raises(llm.ExtractionError) as e:
+        run(llm._ask_provider(demo, [], "x", Drawing))
+    assert e.value.code == "llm.empty_answer"
+
+
 def test_extract_rejects_non_image(client):
     files = [("images", ("a.pdf", b"%PDF", "application/pdf"))]
     res = client.post("/api/extract", files=files, data={"prompt": "x"})

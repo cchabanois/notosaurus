@@ -29,6 +29,14 @@ def test_box_format_follows_the_model(model, fmt):
     assert diagrams.box_format(model) == fmt
 
 
+def test_boxes_already_fractions_kept_as_they_are():
+    """The demo AI's boxes: as Notosaurus keeps them, placed exactly (no margin added)."""
+    cards = [Card(front="What is (1)?", back="mouth", mask=Mask(page=1, n=1, box=[0.2, 0.1, 0.4, 0.3]))]
+    diagrams.normalize(cards, [None], "fractions")
+    assert cards[0].mask.box == [0.2, 0.1, 0.4, 0.3]
+    assert diagrams._fractions([0.4, 0.1, 0.2, 0.3], (1000, 500), "fractions") == [0.2, 0.1, 0.4, 0.3]
+
+
 @pytest.mark.parametrize(
     ("fmt", "box"),
     [
