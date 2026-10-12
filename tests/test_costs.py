@@ -141,28 +141,33 @@ def test_journal_starts_from_the_lessons(client, tmp_path):
     assert [e["kind"] for e in entries] == ["extract", "revise"]  # no duplicate
 
 
-def _answered(cost: float) -> None:
+async def _answered(cost: float) -> None:
     """An AI call answered (and paid for) inside the current recording."""
     from notosaurus_core.calls import record
     from notosaurus_core.config import AIConfig
 
-    asyncio.run(record(AIConfig(llm="fake"), "fake", "m", 10, 5, cost=cost))
+    await record(AIConfig(llm="fake"), "fake", "m", 10, 5, cost=cost)
 
 
 def test_metered_calls_go_to_the_lesson_and_the_costs(client, tmp_path):
     from app import lessons, usage
     from app.errors import AppError
-    from app.models import LessonIn
+    from app.models import Generated, LessonIn
 
-    lesson = lessons.create(LessonIn(deck="D", cards=[]), "p", [])
-    with usage.metered("revise", lesson.id, "D"):
-        _answered(0.01)
-    # An error after the AI answered: paid for, kept all the same
-    with pytest.raises(AppError), usage.metered("explain", lesson.id, "D"):
-        _answered(0.02)
-        raise AppError("llm.bad_answer", 502)
-    with usage.metered("rephrase"):  # for no lesson
-        _answered(0.03)
+    lesson = lessons.create(Generated(LessonIn(deck="D", cards=[]), [], prompt="p"))
+
+    async def calls():
+        async with usage.metered("revise", lesson.id, "D"):
+            await _answered(0.01)
+        # An error after the AI answered: paid for, kept all the same
+        with pytest.raises(AppError):
+            async with usage.metered("explain", lesson.id, "D"):
+                await _answered(0.02)
+                raise AppError("llm.bad_answer", 502)
+        async with usage.metered("rephrase"):  # for no lesson
+            await _answered(0.03)
+
+    asyncio.run(calls())
     assert [c.kind for c in lessons.get(lesson.id).ai_calls] == ["revise", "explain"]
     journal = json.loads((tmp_path / "data" / "ai-calls.json").read_text(encoding="utf-8"))["calls"]
     assert [(e["kind"], e["lesson_id"], e["deck"]) for e in journal] == [
@@ -174,17 +179,26 @@ def test_metered_calls_go_to_the_lesson_and_the_costs(client, tmp_path):
 
 def test_metered_calls_kept_by_a_new_lesson_counted_once(client, tmp_path):
     from app import lessons, usage
-    from app.models import LessonIn
+    from app.models import Generated, LessonIn
 
-    with usage.metered("extract") as meter:
-        _answered(0.01)
-        made = lessons.create(LessonIn(deck="D", cards=[]), "p", [], ai_calls=meter.calls)
-        meter.kept_by(made)
+    async def made_with_its_calls():
+        async with usage.metered("extract") as meter:
+            await _answered(0.01)
+            made = lessons.create(Generated(LessonIn(deck="D", cards=[]), [], prompt="p"), meter.calls)
+            meter.kept_by(made)
+        return made
+
+    made = asyncio.run(made_with_its_calls())
     assert len(lessons.get(made.id).ai_calls) == 1  # not added a second time
     journal = json.loads((tmp_path / "data" / "ai-calls.json").read_text(encoding="utf-8"))["calls"]
     assert [(e["lesson_id"], e["deck"]) for e in journal] == [(made.id, "D")]
+
     # Failed before a lesson kept them: counted with none (a generation that failed)
-    with pytest.raises(RuntimeError), usage.metered("extract"):
-        _answered(0.02)
-        raise RuntimeError("disk full")
+    async def failed():
+        async with usage.metered("extract"):
+            await _answered(0.02)
+            raise RuntimeError("disk full")
+
+    with pytest.raises(RuntimeError):
+        asyncio.run(failed())
     assert usage.totals().failed == 0.02

@@ -19,7 +19,7 @@ async def draw_pictures(id: str) -> dict:
     await access.editable(id)
 
     async def draw(draft: Lesson) -> tuple:
-        with usage.metered("picture", id, draft.deck):
+        async with usage.metered("picture", id, draft.deck):
             return await pictures.draw_all(settings.current(), lessons.existing_folder(id) / "images", draft.cards)
 
     lesson, (failures, error) = await lessons.edit(id, draw)
@@ -50,7 +50,7 @@ async def redraw_picture(id: str, card_id: str, req: PictureRequest, lang: str =
     await access.editable(id)
 
     async def draw(draft: Lesson, card: Card) -> None:
-        with usage.metered("picture", id, draft.deck):  # figures count as pictures in the costs
+        async with usage.metered("picture", id, draft.deck):  # figures count as pictures in the costs
             card.picture = await pictures.figure_or_picture(
                 settings.current(),
                 lessons.existing_folder(id) / "images",
@@ -86,7 +86,7 @@ async def search_pictures(req: PictureSearch) -> dict:
     """Free pictures of what the user wrote (any language: turned into English search
     words by the cards' AI, a light call), to choose from (Commons, Openverse: no Pixabay
     on the computer, its key is the relay's)."""
-    with usage.metered("picture"):
+    async with usage.metered("picture"):
         try:
             words = await llm.search_words(settings.current(), req.subject, req.context)
         except AppError:  # no AI to ask: the words as they are

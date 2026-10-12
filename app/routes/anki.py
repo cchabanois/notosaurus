@@ -1,3 +1,5 @@
+import asyncio
+
 from fastapi import APIRouter, BackgroundTasks
 
 from .. import access, ankiconnect, decks, lessons, media
@@ -41,8 +43,8 @@ async def anki_send(req: ExportRequest, background: BackgroundTasks) -> dict:
     answer = {**result.__dict__, "audio_failures": failures}
     answer.pop("note_ids")  # the lesson keeps them, the page needn't
     if saved:
-        lessons.update(saved.id, req, exported=True)
-        lessons.set_anki_notes(saved.id, profile, result.note_ids)
+        await asyncio.to_thread(lessons.update, saved.id, req, exported=True)
+        await asyncio.to_thread(lessons.set_anki_notes, saved.id, profile, result.note_ids)
         # Its notes no card updated (cards deleted, or remade): the page offers to delete them
         answer["leftovers"] = await ankiconnect.leftovers(saved.id, set(result.note_ids.values()))
     return answer

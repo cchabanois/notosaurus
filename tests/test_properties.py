@@ -17,7 +17,7 @@ from hypothesis import strategies as st
 
 from app import lessons
 from app.hosts import HOST_HEADER, allowed
-from app.models import LessonIn
+from app.models import Generated, LessonIn
 from notosaurus_core import figures
 
 fast = settings(max_examples=200, deadline=None)  # the whole file: about a second
@@ -262,7 +262,9 @@ def test_any_deck_gives_a_lesson_folder_inside_the_lessons(deck):
     """Whatever the deck's name: the lesson's id is one `folder` accepts (its pattern),
     finds again, and its folder is a child of the lessons' (no "..", no "/")."""
     with TemporaryDirectory() as data, mock.patch.dict(os.environ, {"NOTOSAURUS_DATA": data}):
-        made = [lessons.create(LessonIn(deck=deck, cards=[]), "p", []) for _ in range(2)]  # the 2nd: "-2"
+        made = [
+            lessons.create(Generated(LessonIn(deck=deck, cards=[]), [], prompt="p")) for _ in range(2)
+        ]  # the 2nd: "-2"
         root = (Path(data) / "lessons").resolve()
         assert made[0].id != made[1].id
         for lesson in made:

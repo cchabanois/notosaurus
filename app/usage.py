@@ -6,8 +6,9 @@ disappear, and a generation that failed after the model answered (paid for, no
 lesson) has nowhere else to go. Entries are only ever added.
 """
 
-from collections.abc import Iterator
-from contextlib import contextmanager
+import asyncio
+from collections.abc import AsyncIterator
+from contextlib import asynccontextmanager
 from dataclasses import dataclass
 
 from pydantic import BaseModel
@@ -81,19 +82,24 @@ class Meter:
         self.lesson_id, self.deck, self.kept = lesson.id, lesson.deck, True
 
 
-@contextmanager
-def metered(kind: CallKind, lesson_id: str | None = None, deck: str = "") -> Iterator[Meter]:
+def _keep(meter: Meter) -> None:
+    if meter.lesson_id and not meter.kept:
+        lessons.add_ai_calls(meter.lesson_id, meter.calls)
+    add(meter.calls, meter.lesson_id, meter.deck)
+
+
+@asynccontextmanager
+async def metered(kind: CallKind, lesson_id: str | None = None, deck: str = "") -> AsyncIterator[Meter]:
     """Record the AI calls made inside (llm.recording) and, on the way out, keep them
     with the lesson and in the costs: also when it failed after the AI answered (paid
-    for). Without a lesson (or for a lesson not saved in the end), counted with none."""
+    for). Without a lesson (or for a lesson not saved in the end), counted with none.
+    Written in a worker thread, off the event loop."""
     with recording(kind) as calls:
         meter = Meter(calls, lesson_id, deck)
         try:
             yield meter
         finally:
-            if meter.lesson_id and not meter.kept:
-                lessons.add_ai_calls(meter.lesson_id, calls)
-            add(calls, meter.lesson_id, meter.deck)
+            await asyncio.to_thread(_keep, meter)
 
 
 class Totals(BaseModel):

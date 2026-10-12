@@ -47,6 +47,6 @@ def duplicate_prompt(id: str, lang: str = Depends(page_lang)) -> Prompt:
 @router.post("/api/prompt/rephrase")
 async def rephrase_prompt(req: RephraseRequest, lang: str = Depends(page_lang)) -> dict:
     """The instructions being written, tidied up ("✨ Tidy up"): every intention kept, none added."""
-    with usage.metered("rephrase"):  # in the costs, with no lesson
+    async with usage.metered("rephrase"):  # in the costs, with no lesson
         text = await llm.rephrase(settings.current(), req.text, i18n.language_name(lang))
     return {"text": text}

@@ -9,7 +9,7 @@ import pytest
 from conftest import extract_lesson
 
 from app import ankiconnect, lessons, storage
-from app.models import CARD_ID, LessonIn
+from app.models import CARD_ID, Generated, LessonIn
 from app.routes import lessons as lessons_routes
 from notosaurus_core.models import Card, Revision
 
@@ -136,7 +136,7 @@ def test_slugify():
 
 def test_lessons_listed_with_one_question_to_anki(client, monkeypatch):
     for owner in ("Léa", "Paul", "Léa"):
-        lessons.create(LessonIn(deck=f"{owner}::x", cards=[]), "p", [], owner=owner)
+        lessons.create(Generated(LessonIn(deck=f"{owner}::x", cards=[]), [], prompt="p", profile=owner))
     asked = []
 
     async def active_profile():
@@ -150,7 +150,7 @@ def test_lessons_listed_with_one_question_to_anki(client, monkeypatch):
 
 def test_lesson_list_follows_every_change(client, tmp_path):
     """The summaries are kept between listings: every change still shows."""
-    a = lessons.create(LessonIn(deck="A", cards=[]), "p", [])
+    a = lessons.create(Generated(LessonIn(deck="A", cards=[]), [], prompt="p"))
     assert [s.deck for s in lessons.list_all()] == ["A"]
     lessons.update(a.id, LessonIn(deck="A2", cards=[{"front": "x", "back": "y"}]))
     assert [(s.deck, s.card_count) for s in lessons.list_all()] == [("A2", 1)]
@@ -160,7 +160,7 @@ def test_lesson_list_follows_every_change(client, tmp_path):
     path.write_text(path.read_text(encoding="utf-8").replace('"A2"', '"B2"'), encoding="utf-8")
     os.utime(path, ns=(before + 10**9, before + 10**9))
     assert [s.deck for s in lessons.list_all()] == ["B2"]
-    b = lessons.create(LessonIn(deck="C", cards=[]), "p", [])
+    b = lessons.create(Generated(LessonIn(deck="C", cards=[]), [], prompt="p"))
     assert {s.deck for s in lessons.list_all()} == {"B2", "C"}
     lessons.delete(b.id)
     assert [s.deck for s in lessons.list_all()] == ["B2"]
@@ -215,22 +215,22 @@ def test_a_creation_that_fails_midway_leaves_nothing(client, tmp_path):
     temporary folder nor the final one, and the error reaches the caller."""
     root = tmp_path / "data" / "lessons"
     with pytest.raises(TypeError):  # the second photo isn't bytes: written after the first
-        lessons.create(LessonIn(deck="D", cards=[]), "p", [b"photo 1", None])
+        lessons.create(Generated(LessonIn(deck="D", cards=[]), [b"photo 1", None], prompt="p"))
     assert not root.exists() or list(root.iterdir()) == []
     assert lessons.list_all() == []
     # The next one is made as usual, in the name the failed one would have had
-    made = lessons.create(LessonIn(deck="D", cards=[]), "p", [b"photo 1"])
+    made = lessons.create(Generated(LessonIn(deck="D", cards=[]), [b"photo 1"], prompt="p"))
     assert [p.name for p in root.iterdir()] == [made.id] and made.photo_count == 1
 
 
 def test_a_lesson_deleted_while_listed_just_disappears(client, monkeypatch):
     """Another request deletes a lesson between a look at its file and its reading:
     the list goes on without it, opening it finds nothing; no error."""
-    kept = lessons.create(LessonIn(deck="Kept", cards=[]), "p", [])
-    listed = lessons.create(LessonIn(deck="Listed", cards=[]), "p", [])
+    kept = lessons.create(Generated(LessonIn(deck="Kept", cards=[]), [], prompt="p"))
+    listed = lessons.create(Generated(LessonIn(deck="Listed", cards=[]), [], prompt="p"))
     assert {s.id for s in lessons.list_all()} == {kept.id, listed.id}  # its summary kept
     lessons.update(listed.id, LessonIn(deck="Listed again", cards=[]))  # read again next time
-    gone = lessons.create(LessonIn(deck="Gone", cards=[]), "p", [])
+    gone = lessons.create(Generated(LessonIn(deck="Gone", cards=[]), [], prompt="p"))
     read, doomed = lessons._read, {gone.id, listed.id}
 
     def deleted_meanwhile(path):
@@ -242,13 +242,15 @@ def test_a_lesson_deleted_while_listed_just_disappears(client, monkeypatch):
     assert [s.id for s in lessons.list_all()] == [kept.id]
     assert client.get("/api/lessons").json()[0]["id"] == kept.id
 
-    opened = lessons.create(LessonIn(deck="Opened", cards=[]), "p", [])
+    opened = lessons.create(Generated(LessonIn(deck="Opened", cards=[]), [], prompt="p"))
     doomed.add(opened.id)
     assert lessons.get(opened.id) is None
 
 
 def test_edit_saves_what_the_change_changed(client):
-    made = lessons.create(LessonIn(deck="D", cards=[Card(front="a", back="b")], voice="es_ES"), "p", [])
+    made = lessons.create(
+        Generated(LessonIn(deck="D", cards=[Card(front="a", back="b")], voice="es_ES"), [], prompt="p")
+    )
     lessons.set_anki_notes(made.id, "Alice", {"x": 1})
 
     def change(draft):
@@ -269,7 +271,7 @@ def test_edit_saves_what_the_change_changed(client):
 
 
 def test_edit_keeps_what_changed_meanwhile_and_nothing_on_failure(client):
-    made = lessons.create(LessonIn(deck="D", cards=[Card(front="a", back="b")]), "p", [])
+    made = lessons.create(Generated(LessonIn(deck="D", cards=[Card(front="a", back="b")]), [], prompt="p"))
 
     async def slow(draft):  # the deck renamed during an AI call: the rename stays
         lessons.update(made.id, LessonIn(deck="Renamed", cards=draft.cards))
@@ -286,6 +288,29 @@ def test_edit_keeps_what_changed_meanwhile_and_nothing_on_failure(client):
     with pytest.raises(RuntimeError):
         asyncio.run(lessons.edit(made.id, failing))
     assert [c.back for c in lessons.get(made.id).cards] == ["B"]  # the copy never leaked back
+
+
+def test_concurrent_edits_of_a_lesson_both_land(client):
+    """Two edits of the same lesson at once, each changing its own field (both read it
+    before either saves): each saves only what it changed, so neither undoes the other."""
+    made = lessons.create(Generated(LessonIn(deck="D", cards=[Card(front="a", back="b")]), [], prompt="p"))
+
+    async def both():
+        both_read = asyncio.Barrier(2)
+
+        async def rename(draft):
+            await both_read.wait()
+            draft.deck = "Renamed"
+
+        async def correct(draft):
+            await both_read.wait()
+            draft.cards[0].back = "B"
+
+        return await asyncio.gather(lessons.edit(made.id, rename), lessons.edit(made.id, correct))
+
+    asyncio.run(both())
+    again = lessons.get(made.id)
+    assert (again.deck, again.cards[0].back) == ("Renamed", "B")
 
 
 def test_edit_of_a_lesson_gone(client):
