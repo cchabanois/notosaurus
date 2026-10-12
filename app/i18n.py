@@ -9,6 +9,7 @@ import json
 import os
 from functools import cache
 from pathlib import Path
+from typing import Any
 
 I18N_DIR = Path(__file__).parent.parent / "static" / "i18n"
 DEFAULT = "en"
@@ -44,7 +45,7 @@ def messages(lang: str) -> dict:
         return {}
 
 
-def get(lang: str, key: str, default=None):
+def get(lang: str, key: str, default: Any = None) -> Any:
     """Value at a dotted key ("meta.englishName"), falling back to English."""
     for source in (messages(lang), messages(DEFAULT)):
         value = source

@@ -17,7 +17,8 @@ async def _all(profile: str | None, but: str | None = None) -> set[str]:
     """Every deck name: Anki's (Anki closed: none) and the lessons' this profile sees,
     their parents included; `but`: a lesson left out (the one being generated again)."""
     names = {n for n in await ankiconnect.deck_names() or [] if n not in SKIPPED}
-    own = lessons.get(but).deck.strip() if but and lessons.get(but) else None
+    left_out = lessons.get(but) if but else None
+    own = left_out.deck.strip() if left_out else None
     if own:  # its deck (and subdecks) in Anki are its own, not another's
         names = {
             n for n in names if n.casefold() != own.casefold() and not n.casefold().startswith(own.casefold() + "::")

@@ -65,7 +65,7 @@ def test_what_the_ai_fills(monkeypatch):
     async def answer(s, images, text, schema, system=None, **options):
         return schema(deck="D", cards=[{"front": "a", "back": "b", "explanation": "c"}])
 
-    monkeypatch.setattr(llm, "_generate", answer)
+    monkeypatch.setattr(llm, "_ask_provider", answer)
     found = asyncio.run(llm.extract_cards(AIConfig(llm="gemini"), [], "p", helps=True))
     card = found.deck.cards[0]
     from notosaurus_core.models import Card

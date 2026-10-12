@@ -7,14 +7,14 @@
 """
 
 import hashlib
-import inspect
 import logging
 import re
 import shutil
 import uuid
-from collections.abc import Awaitable, Callable
+from collections.abc import Awaitable, Callable, Sequence
 from datetime import date
 from pathlib import Path
+from typing import cast
 
 from . import storage
 from .errors import AppError
@@ -40,6 +40,22 @@ def folder(id: str) -> Path | None:
 def photo_path(id: str, n: int) -> Path | None:
     path = folder(id)
     return path / f"page-{n}.jpg" if path else None
+
+
+def existing_folder(id: str) -> Path:
+    """Folder of a lesson that must exist: lesson.not_found (404) otherwise (deleted meanwhile)."""
+    path = folder(id)
+    if path is None:
+        raise AppError("lesson.not_found", 404)
+    return path
+
+
+def photo(id: str, n: int) -> bytes:
+    """The lesson's photo n (from 1): photo.not_found (404) when there's none."""
+    path = photo_path(id, n)
+    if path is None or not path.is_file():
+        raise AppError("photo.not_found", 404)
+    return path.read_bytes()
 
 
 def audio_dir(id: str) -> Path | None:
@@ -124,10 +140,10 @@ def create(
     prompt: str,
     photos: list[bytes],
     owner: str = "",
-    frames: list[Frame] = (),
-    ai_calls: list[AiCall] = (),
+    frames: Sequence[Frame] = (),
+    ai_calls: Sequence[AiCall] = (),
     choice: str = "",
-    page_texts: list[str] = (),
+    page_texts: Sequence[str] = (),
 ) -> Lesson:
     with storage.lock:
         path = _new_folder(lesson.deck)
@@ -223,9 +239,9 @@ async def edit[T](id: str, change: Callable[[Lesson], T | Awaitable[T]]) -> tupl
     if before is None:
         raise AppError("lesson.not_found", 404)
     draft = before.model_copy(deep=True)
-    result = change(draft)
-    if inspect.isawaitable(result):
-        result = await result
+    outcome = change(draft)
+    # cast: an awaitable `change` gives its T once awaited (pyright can't tell)
+    result = cast("T", await outcome) if isinstance(outcome, Awaitable) else outcome
     changed = {f for f in CONTENT if getattr(draft, f) != getattr(before, f)}
     saved = _save(id, draft.model_dump(include=changed))
     if saved is None:  # deleted meanwhile
@@ -241,7 +257,7 @@ def regenerated(
     frames: list[Frame],
     calls: list[AiCall],
     choice: str,
-    page_texts: list[str] = (),
+    page_texts: Sequence[str] = (),
 ) -> Lesson | None:
     """A new generation in place of the lesson's content: its cards, photos, frames and
     prompt replaced; its owner, sharing, dates and AI calls kept (the new ones added)."""
@@ -279,7 +295,7 @@ def completed(
     photos: list[bytes],
     frames: list[Frame],
     calls: list[AiCall],
-    page_texts: list[str] = (),
+    page_texts: Sequence[str] = (),
 ) -> Lesson | None:
     """The lesson's next pages added: their photos after its own, their cards after its
     cards (those untouched: their ids, so their notes in Anki, stay). `cards` and `frames`

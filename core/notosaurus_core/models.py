@@ -144,11 +144,15 @@ class Revision(Deck):
     summary: str = Field(description="One short sentence describing what changed, in the requested language.")
 
 
+# What an AI call was for (transcribe: the relay only)
+CallKind = Literal["extract", "revise", "picture", "explain", "transcribe", "rephrase"]
+
+
 class AiCall(BaseModel):
     """One request to the AI for a lesson: what it used and cost."""
 
     at: str
-    kind: Literal["extract", "revise", "picture", "explain", "transcribe", "rephrase"]  # transcribe: the relay only
+    kind: CallKind
     provider: str  # gemini, anthropic; the service's host for the OpenAI-like ones ("openrouter.ai")
     model: str  # the model that answered (a fallback, if the main one was overloaded)
     input_tokens: int | None = None

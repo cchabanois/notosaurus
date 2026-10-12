@@ -4,6 +4,7 @@ by older versions, and who may open the settings at all."""
 
 import json
 import sys
+import typing
 
 import httpx
 import pytest
@@ -13,6 +14,7 @@ from fastapi.testclient import TestClient
 from app import settings
 from app.attempts import Attempts
 from app.main import app
+from app.models import SettingsUpdate
 from app.routes import admin as admin_routes
 from app.routes.devices import DEVICE_COOKIE
 from notosaurus_core.providers import openai_like
@@ -131,6 +133,40 @@ def test_admin_invalid_values(admin):
     assert admin.put("/api/admin/settings", headers=ADMIN, json={"llm": "skynet"}).status_code == 422
     assert admin.put("/api/admin/settings", headers=ADMIN, json={"tts_rate": "vite"}).status_code == 422
     assert admin.post("/api/admin/password", json={"current": "secret-pw", "new": "abc"}).status_code == 422
+
+
+def test_settings_fields_described_once():
+    """settings.SPECS says, for every field, whether the settings page edits it and which
+    environment variable gives its default: the form's model agrees with it."""
+    assert settings.SPECS.keys() == settings.Settings.model_fields.keys()
+    assert SettingsUpdate.model_fields.keys() == settings.EDITABLE_FIELDS
+    for name, field in SettingsUpdate.model_fields.items():
+        assert field.default is None, name  # None: left unchanged
+    assert set(typing.get_args(typing.get_args(SettingsUpdate.model_fields["llm"].annotation)[0])) == set(
+        settings.PROVIDERS
+    )
+    assert len(set(settings.ENV.values())) == len(settings.ENV)
+    assert set(settings.SECRET_FIELDS) <= settings.ENV.keys() & settings.EDITABLE_FIELDS
+
+
+def test_every_environment_variable_read(client, monkeypatch):
+    for var in settings.ENV.values():
+        monkeypatch.setenv(var, f"from-{var}")
+    s = settings.current()
+    assert {field: getattr(s, field) for field in settings.ENV} == {f: f"from-{v}" for f, v in settings.ENV.items()}
+
+
+def test_no_secret_sent_back(admin, monkeypatch):
+    """Whether from the environment or saved: every secret field is masked."""
+    half = len(settings.SECRET_FIELDS) // 2
+    for field in settings.SECRET_FIELDS[:half]:
+        monkeypatch.setenv(settings.ENV[field], f"env-secret-{field}-0001")
+    saved = {field: f"saved-secret-{field}-0002" for field in settings.SECRET_FIELDS[half:]}
+    res = admin.put("/api/admin/settings", headers=ADMIN, json=saved)
+    assert res.status_code == 200
+    for view in (res, admin.get("/api/admin/settings", headers=ADMIN)):
+        assert "secret-" not in view.text
+        assert {view.json()[f] for f in settings.SECRET_FIELDS} == {"•••• 0001", "•••• 0002"}
 
 
 def test_admin_connection_test(admin):
@@ -459,22 +495,22 @@ def test_test_image_and_json(admin, monkeypatch):
     async def answer(color):
         return llm._CheckAnswer(color=color)
 
-    monkeypatch.setattr(llm, "_generate", lambda s, images, text, schema: answer("Red"))
+    monkeypatch.setattr(llm, "_ask_provider", lambda s, images, text, schema: answer("Red"))
     assert (test().json()["vision"], test().json()["json"]) == (True, True)
 
-    monkeypatch.setattr(llm, "_generate", lambda s, images, text, schema: answer("I see no image"))
+    monkeypatch.setattr(llm, "_ask_provider", lambda s, images, text, schema: answer("I see no image"))
     assert (test().json()["vision"], test().json()["json"]) == (False, True)
 
     async def not_json(*_):
         raise llm.ExtractionError("llm.invalid_answer")
 
-    monkeypatch.setattr(llm, "_generate", not_json)
+    monkeypatch.setattr(llm, "_ask_provider", not_json)
     assert test().json()["json"] is False
 
     async def bad_key(*_):
         raise llm.ExtractionError("llm.invalid_key", provider="Gemini")
 
-    monkeypatch.setattr(llm, "_generate", bad_key)
+    monkeypatch.setattr(llm, "_ask_provider", bad_key)
     assert test().status_code == 502 and test().json()["detail"]["code"] == "llm.invalid_key"
 
 
@@ -492,7 +528,7 @@ def test_model_without_vision_refuses_image(admin, monkeypatch):
             detail="Multimodal data provided, but model does not support multimodal requests.",
         )
 
-    monkeypatch.setattr(llm, "_generate", refuse)
+    monkeypatch.setattr(llm, "_ask_provider", refuse)
     r = admin.post("/api/admin/test", headers=ADMIN).json()
     assert (r["vision"], r["json"]) == (False, None)
     assert "multimodal" in r["refused"]

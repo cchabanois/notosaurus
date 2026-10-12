@@ -22,22 +22,15 @@ from notosaurus_core.models import (  # noqa: F401
 CARD_ID = re.compile(r"[a-z0-9]{0,40}")  # Notosaurus, the page and the Android app give 12 hex
 
 
-class LessonIn(Deck):
+class LessonOptions(Deck):
+    """What a lesson sent by the page and a saved lesson both have, the same way."""
+
     # Voice for the back: "es-ES-ElviraNeural" → edge-tts mp3 embedded in the package;
     # "es_ES" → {{tts}} tag read by Anki itself; empty → no sound.
     voice: str = ""
     reverse: bool = False  # adds the reverse card (back → front)
     typing: bool = False  # the answer is typed, Anki compares it letter by letter
     dictation: bool = False  # adds a dictation card: hear the back, type it (needs a voice)
-    # Whether every Anki profile sees the lesson (None in an update = unchanged).
-    # Only the owner's profile may change it; the owner itself never changes.
-    shared: bool | None = None
-    # Diagram frames: what Anki shows of each photo (None in an update = unchanged)
-    frames: list[Frame] | None = None
-    # The prompt it was generated with and what the AI chose, sent back when a
-    # regeneration is undone (None in an update = unchanged)
-    prompt: str | None = None
-    choice: str | None = None
 
     @field_validator("cards")
     @classmethod
@@ -48,15 +41,30 @@ class LessonIn(Deck):
         return [card if CARD_ID.fullmatch(card.id) else card.model_copy(update={"id": ""}) for card in cards]
 
 
-class Lesson(LessonIn):
-    id: str  # folder name, e.g. "2026-09-28-spanish-lesson-5"
-    prompt: str
-    owner: str = ""  # Anki profile open when the lesson was created ("" = none: shared)
-    shared: bool = False
-    photo_count: int
+class LessonIn(LessonOptions):
+    """A lesson as the page sends it: None leaves a saved lesson's field unchanged."""
+
+    # Whether every Anki profile sees the lesson. Only the owner's profile may change
+    # it; the owner itself never changes.
+    shared: bool | None = None
+    frames: list[Frame] | None = None  # diagram frames: what Anki shows of each photo
+    # The prompt it was generated with and what the AI chose, sent back when a
+    # regeneration is undone
+    prompt: str | None = None
+    choice: str | None = None
+
+
+class Lesson(LessonOptions):
+    """A saved lesson (lesson.json); its fields in the order they always had."""
+
+    shared: bool = False  # see LessonIn.shared
     frames: list[Frame] = []  # fractions of the photos: from the AI, then as the user set them
-    ai_calls: list[AiCall] = []  # generation, then corrections
+    prompt: str  # the prompt it was generated with
     choice: str = ""  # what the AI chose to make, when the prompt let it choose
+    id: str  # folder name, e.g. "2026-09-28-spanish-lesson-5"
+    owner: str = ""  # Anki profile open when the lesson was created ("" = none: shared)
+    photo_count: int
+    ai_calls: list[AiCall] = []  # generation, then corrections
     # One per photo: the text of a PDF page, as the PDF holds it ("" for a photo). Sent
     # to the AI with the pages; not in the lists (LessonSummary)
     page_texts: list[str] = []
@@ -112,7 +120,8 @@ class Prompt(PromptIn):
 
 
 class SettingsUpdate(BaseModel):
-    """Admin page form: None leaves a field unchanged ("" clears an API key)."""
+    """Admin page form: None leaves a field unchanged ("" clears an API key). Its fields
+    are the settings.SPECS marked editable (tests/test_admin.py checks they agree)."""
 
     llm: Literal["gemini", "anthropic", "openai", "openrouter", "compatible", "fake"] | None = None
     model: str | None = None

@@ -6,6 +6,7 @@ import asyncio
 import logging
 from contextlib import suppress
 from types import SimpleNamespace
+from typing import Any
 
 from pydantic import BaseModel
 
@@ -122,7 +123,8 @@ async def _gemini[T: BaseModel](
                 await stream.aclose()
         return _joined(chunks)
 
-    contents = [types.Part.from_bytes(data=img.data, mime_type=img.media_type) for img in images]
+    # The photos then the text (the SDK's PartUnion is a variable, not usable as a type)
+    contents: list[Any] = [types.Part.from_bytes(data=img.data, mime_type=img.media_type) for img in images]
     contents.append(text)
     config = types.GenerateContentConfig(
         system_instruction=system,

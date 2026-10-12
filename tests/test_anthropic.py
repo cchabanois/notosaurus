@@ -203,8 +203,8 @@ def test_service_errors_become_codes(client, monkeypatch, error, code, params):
 
 
 def test_chosen_by_the_settings(monkeypatch):
-    """llm._generate sends to Claude when the settings say "anthropic"."""
+    """llm._ask_provider sends to Claude when the settings say "anthropic"."""
     fake = FakeClaude(answer={"svg": "<svg/>"})
     monkeypatch.setattr(anthropic, "_anthropic_client", lambda s: fake)
-    assert run(llm._generate(CONFIG, [], "x", Drawing, "rules", light=True)).svg == "<svg/>"
+    assert run(llm._ask_provider(CONFIG, [], "x", Drawing, "rules", light=True)).svg == "<svg/>"
     assert len(fake.calls) == 1

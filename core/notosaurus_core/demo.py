@@ -2,7 +2,7 @@
 the page without a key or any cost."""
 
 from .calls import Image
-from .models import Card, Deck, Explanation, Mask, Revision
+from .models import Card, Deck, Explanation, FollowUp, Mask, Revision
 
 
 def _lets_choose(prompt: str) -> bool:
@@ -28,19 +28,22 @@ def _fake_vocabulary(images: list[Image], prompt: str) -> Deck:
     )
 
 
-def _fake(images: list[Image], prompt: str, deck: str) -> Deck:
+def _fake(images: list[Image], prompt: str) -> Deck:
+    """The demo's cards: the kind the prompt's words ask for (the first that matches),
+    vocabulary otherwise and when the AI is let choose."""
     if _lets_choose(prompt):  # "Automatic": the demo always chooses vocabulary
         return _fake_vocabulary(images, prompt)
-    if images and any(w in prompt.lower() for w in ("diagram", "schéma", "schema")):
-        return _fake_diagram()
-    if any(w in prompt.lower() for w in ("picture", "image", "dessin")):
-        return _fake_pictures()
-    if any(w in prompt.lower() for w in ("cloze", "trous", "gaps")):
-        return _fake_cloze()
-    if any(w in prompt.lower() for w in ("qcm", "quiz", "vrai", "true")):
-        return _fake_choices()
-    if any(w in prompt.lower() for w in ("figure", "géométrie", "geometry", "triangle")):
-        return _fake_figures()
+    kinds = (
+        (("diagram", "schéma", "schema") if images else (), _fake_diagram),  # a diagram needs a photo
+        (("picture", "image", "dessin"), _fake_pictures),
+        (("cloze", "trous", "gaps"), _fake_cloze),
+        (("qcm", "quiz", "vrai", "true"), _fake_choices),
+        (("figure", "géométrie", "geometry", "triangle"), _fake_figures),
+    )
+    words = prompt.lower()
+    for keywords, make in kinds:
+        if any(w in words for w in keywords):
+            return make()
     return _fake_vocabulary(images, prompt)
 
 
@@ -135,7 +138,9 @@ def _fake_choices() -> Deck:
 def _fake_explanation(card: Card, kind: str) -> Explanation:
     """Demo mode: a canned explanation; "why" offered for a multiple choice only."""
     text = f"(démo, {kind}) {card.front.strip()} → {card.back.strip()}."
-    more = [k for k in ("example", "mnemonic") if k != kind] + (["why"] if card.choices and kind != "why" else [])
+    more: list[FollowUp] = [k for k in ("example", "mnemonic") if k != kind]
+    if card.choices and kind != "why":
+        more.append("why")
     return Explanation(text=text, more=more)
 
 

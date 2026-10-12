@@ -32,7 +32,7 @@ async def anki_status() -> dict:
 @router.post("/api/anki/send")
 async def anki_send(req: ExportRequest, background: BackgroundTasks) -> dict:
     lesson = await access.lesson(req.lesson_id)  # another profile's private lesson doesn't exist for this one
-    save = lesson and await access.is_owner(lesson)  # someone else's lesson: sent, not changed
+    saved = lesson if lesson and await access.is_owner(lesson) else None  # someone else's: sent, not changed
     audio, failures = await media.card_audio(req, background)
     profile = await ankiconnect.active_profile() or ""
     known = lesson.anki_notes.get(profile, {}) if lesson else {}
@@ -40,9 +40,9 @@ async def anki_send(req: ExportRequest, background: BackgroundTasks) -> dict:
     result = await ankiconnect.send(sent, known)
     answer = {**result.__dict__, "audio_failures": failures}
     answer.pop("note_ids")  # the lesson keeps them, the page needn't
-    if save:
-        lessons.update(lesson.id, req, exported=True)
-        lessons.set_anki_notes(lesson.id, profile, result.note_ids)
+    if saved:
+        lessons.update(saved.id, req, exported=True)
+        lessons.set_anki_notes(saved.id, profile, result.note_ids)
         # Its notes no card updated (cards deleted, or remade): the page offers to delete them
-        answer["leftovers"] = await ankiconnect.leftovers(lesson.id, set(result.note_ids.values()))
+        answer["leftovers"] = await ankiconnect.leftovers(saved.id, set(result.note_ids.values()))
     return answer

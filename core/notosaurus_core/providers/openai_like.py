@@ -4,6 +4,7 @@ service offers (list_models)."""
 
 import base64
 import json
+from typing import Any
 
 from pydantic import BaseModel
 
@@ -153,7 +154,7 @@ def _strict(schema: dict) -> dict:
     schema for response_format… 'additionalProperties' is required to be supplied and to
     be false"."""
 
-    def walk(node):
+    def walk(node: Any) -> Any:
         if isinstance(node, dict):
             if "properties" in node:
                 node["additionalProperties"] = False
@@ -202,7 +203,8 @@ async def _openai[T: BaseModel](
             model=s.model_for_provider(),
             messages=[
                 {"role": "system", "content": system},
-                {"role": "user", "content": content},
+                # A plain dict of the API's documented shape, not the SDK's TypedDicts
+                {"role": "user", "content": content},  # pyright: ignore[reportArgumentType]
             ],
             response_format={
                 "type": "json_schema",

@@ -13,6 +13,7 @@ from dataclasses import dataclass
 from pydantic import BaseModel
 
 from notosaurus_core.calls import recording
+from notosaurus_core.models import CallKind
 
 from . import lessons, storage
 from .models import AiCall, Lesson
@@ -81,7 +82,7 @@ class Meter:
 
 
 @contextmanager
-def metered(kind: str, lesson_id: str | None = None, deck: str = "") -> Iterator[Meter]:
+def metered(kind: CallKind, lesson_id: str | None = None, deck: str = "") -> Iterator[Meter]:
     """Record the AI calls made inside (llm.recording) and, on the way out, keep them
     with the lesson and in the costs: also when it failed after the AI answered (paid
     for). Without a lesson (or for a lesson not saved in the end), counted with none."""
@@ -107,11 +108,11 @@ def totals() -> Totals:
     with storage.lock:
         entries = _load()
     existing = {s.id for s in lessons.list_all()}
-    known = [e for e in entries if e.cost is not None]
+    known = [(e, e.cost) for e in entries if e.cost is not None]
     return Totals(
-        total=round(sum(e.cost for e in known), 6),
-        deleted=round(sum(e.cost for e in known if e.lesson_id and e.lesson_id not in existing), 6),
-        failed=round(sum(e.cost for e in known if e.lesson_id is None and e.kind == "extract"), 6),
-        estimated=any(not e.exact and e.cost for e in known),
+        total=round(sum(cost for _, cost in known), 6),
+        deleted=round(sum(cost for e, cost in known if e.lesson_id and e.lesson_id not in existing), 6),
+        failed=round(sum(cost for e, cost in known if e.lesson_id is None and e.kind == "extract"), 6),
+        estimated=any(not e.exact and cost for e, cost in known),
         unknown=sum(1 for e in entries if e.cost is None),
     )

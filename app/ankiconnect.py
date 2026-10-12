@@ -9,6 +9,7 @@ notes deleted in Notosaurus are left untouched in Anki.
 import base64
 import html
 import re
+from collections.abc import Set as AbstractSet
 from dataclasses import dataclass, field
 
 import httpx
@@ -406,8 +407,8 @@ def _search(text: str) -> str:
 async def find_lesson_notes(
     lesson_id: str,
     notes: list[Note],
-    others: set[tuple[str, str]] = frozenset(),
-    other_tags: set[str] = frozenset(),
+    others: AbstractSet[tuple[str, str]] = frozenset(),
+    other_tags: AbstractSet[str] = frozenset(),
 ) -> list[int]:
     """The lesson's notes in the open profile: those with its tag, and those sent before
     notes had it (same note type and deck, same key). Never a note another lesson uses

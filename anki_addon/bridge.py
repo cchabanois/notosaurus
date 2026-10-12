@@ -6,6 +6,9 @@ a random key, so the same server code works with the real AnkiConnect
 on Anki's main thread, as Anki requires.
 """
 
+# aqt and anki are Anki's own: there inside Anki, not installed where this is type-checked
+# pyright: reportMissingImports=false
+
 from __future__ import annotations
 
 import base64

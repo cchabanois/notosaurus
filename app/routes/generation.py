@@ -4,6 +4,7 @@ import logging
 import os
 import re
 import traceback
+from collections.abc import Sequence
 from dataclasses import dataclass, replace
 from typing import Annotated
 
@@ -92,7 +93,7 @@ async def _generate(
     lang: str = "",
     lesson_id: str | None = None,
     on_card: llm.OnCard | None = None,
-    existing: list[str] = (),
+    existing: Sequence[str] = (),
 ) -> Generated:
     """Read the photos (or, without photos, work from the prompt alone): the lesson's
     new content, not saved yet. `images`: the form's, read already. Its AI calls go to
@@ -102,11 +103,11 @@ async def _generate(
         raise AppError("extract.no_input")
     if len(images) > MAX_IMAGES:
         raise AppError("extract.too_many", max=MAX_IMAGES)
+    data = []
     for img in images:
-        if img.content_type not in IMAGE_TYPES:
+        if img.content_type is None or img.content_type not in IMAGE_TYPES:
             raise AppError("extract.bad_format", format=img.content_type)
-
-    data = [Image(await img.read(), img.content_type) for img in images]
+        data.append(Image(await img.read(), img.content_type))
     for img in data:  # a decompression bomb is refused before any AI call
         refuse_bomb(img.data)
     texts = _page_texts(form.page_texts, len(data))

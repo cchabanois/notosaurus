@@ -9,6 +9,9 @@ The Notosaurus server can still run on its own (standalone mode); this add-on is
 just another way to launch it.
 """
 
+# aqt and anki are Anki's own: there inside Anki, not installed where this is type-checked
+# pyright: reportMissingImports=false
+
 from __future__ import annotations
 
 import atexit

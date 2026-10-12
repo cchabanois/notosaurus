@@ -13,14 +13,14 @@ from datetime import datetime
 from . import prices
 from .config import AIConfig
 from .errors import AppError
-from .models import AiCall
+from .models import AiCall, CallKind
 
 # The AI calls of the request being handled (kind, list), set by `recording`.
-_recording: ContextVar[tuple[str, list[AiCall]] | None] = ContextVar("notosaurus_ai_calls", default=None)
+_recording: ContextVar[tuple[CallKind, list[AiCall]] | None] = ContextVar("notosaurus_ai_calls", default=None)
 
 
 @contextmanager
-def recording(kind: str) -> Iterator[list[AiCall]]:
+def recording(kind: CallKind) -> Iterator[list[AiCall]]:
     """Collect the AI calls made inside, with their model, tokens and cost, to keep
     them with the lesson ("extract" or "revise"). Calls that failed after the model
     answered are kept too: they are paid for."""
@@ -95,17 +95,16 @@ class CardStream:
                 return []
             self.at = found.end()
         cards = []
-        while (end := self._object_end()) is not None:
+        while (end := self._object_end(self.at)) is not None:
             start = self.text.index("{", self.at)
             with suppress(ValueError):  # not a card after all: skipped
                 cards.append(json.loads(self.text[start : end + 1]))
             self.at = end + 1
         return cards
 
-    def _object_end(self) -> int | None:
-        """Where the next card's object closes; None when it isn't complete yet (or the
-        list is over)."""
-        i = self.at
+    def _object_end(self, i: int) -> int | None:
+        """Where the next card's object (from `i` on) closes; None when it isn't complete
+        yet (or the list is over)."""
         while i < len(self.text) and self.text[i] in " \t\r\n,":
             i += 1
         if i >= len(self.text) or self.text[i] != "{":

@@ -27,7 +27,7 @@ async def list_lessons() -> list[LessonSummary]:
 
 @router.get("/api/lessons/{id}")
 async def get_lesson(id: str) -> Lesson:
-    return await access.lesson(id)
+    return await access.seen(id)
 
 
 @router.put("/api/lessons/{id}")
@@ -35,7 +35,10 @@ async def update_lesson(id: str, lesson: LessonIn) -> Lesson:
     current = await access.editable(id)
     # Sharing only changes when asked, and only for a lesson that has an owner.
     share = lesson.shared if lesson.shared is not None and current.owner else None
-    return lessons.update(id, lesson, share=share)
+    updated = lessons.update(id, lesson, share=share)
+    if updated is None:  # deleted meanwhile
+        raise AppError("lesson.not_found", 404)
+    return updated
 
 
 @router.get("/api/lessons/{id}/anki-notes")
@@ -74,7 +77,7 @@ async def delete_lesson(id: str, in_anki: bool = Query(False, alias="anki")) -> 
 async def revise_lesson(id: str, req: RevisionRequest, lang: str = Depends(page_lang)) -> dict:
     """Apply a natural-language correction to the cards, using the lesson photos."""
     lesson = await access.editable(id)
-    photos = [Image(lessons.photo_path(id, n).read_bytes(), "image/jpeg") for n in range(1, lesson.photo_count + 1)]
+    photos = [Image(lessons.photo(id, n), "image/jpeg") for n in range(1, lesson.photo_count + 1)]
     with usage.metered("revise", id, req.deck):  # an answer that couldn't be used is paid for too
         s = settings.current()
         revision = await revise_cards(
@@ -106,7 +109,7 @@ async def explain(id: str, req: ExplainRequest, lang: str = Depends(page_lang)) 
     """A card explained to the pupil (or an example, a way to remember it, why the answer
     is right), in the page's language. Also for a lesson only read here: nothing in it
     changes but its record of AI calls."""
-    lesson = await access.lesson(id)  # not found, or another profile's private one: 404
+    lesson = await access.seen(id)  # not found, or another profile's private one: 404
     with usage.metered("explain", id, lesson.deck):  # paid for, kept with the lesson
         s = settings.current()
         return await llm.explain_card(
@@ -138,7 +141,7 @@ async def rotate_photo(id: str, n: int) -> Lesson:
 
 @router.get("/api/lessons/{id}/photos/{n}")
 async def get_photo(id: str, n: int) -> FileResponse:
-    await access.lesson(id)
+    await access.seen(id)
     path = lessons.photo_path(id, n)
     if path is None or not path.is_file():
         raise AppError("photo.not_found", 404)

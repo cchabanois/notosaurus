@@ -40,7 +40,7 @@ def test_light_tasks_think_as_little_as_each_model_allows(client, monkeypatch):
     s = settings.current()
 
     def draw():
-        return asyncio.run(llm._generate(s, [], "a triangle", Drawing, "rules", light=True))
+        return asyncio.run(llm._ask_provider(s, [], "a triangle", Drawing, "rules", light=True))
 
     assert draw().svg == "<svg/>"  # refused "minimal": "low", at once
     assert fake.levels == [
@@ -56,7 +56,7 @@ def test_light_tasks_think_as_little_as_each_model_allows(client, monkeypatch):
     s = settings.current()
     fake.levels.clear()
     draw()
-    asyncio.run(llm._generate(s, [], "cards", Drawing, "rules"))
+    asyncio.run(llm._ask_provider(s, [], "cards", Drawing, "rules"))
     assert fake.levels == [("gemini-3.5-flash-lite", types.ThinkingLevel.MINIMAL), ("gemini-3.5-flash-lite", None)]
 
 
@@ -74,7 +74,7 @@ def test_other_refusals_are_still_errors(client, monkeypatch):
     fake = Refusing()
     monkeypatch.setattr(gemini, "_gemini_client", lambda s: fake)
     try:
-        asyncio.run(llm._generate(settings.current(), [], "x", Drawing, "rules", light=True))
+        asyncio.run(llm._ask_provider(settings.current(), [], "x", Drawing, "rules", light=True))
     except llm.ExtractionError as e:
         assert e.code == "llm.api_error" and fake.levels == ["gemini-3.8-flash"]  # no second try
     else:
@@ -104,7 +104,7 @@ def test_no_quota_left_the_fallback_answers(client, monkeypatch):
     assert s.fallback_models == "gemini-3.5-flash"  # by default: not flash-lite, which reads lessons badly
     fake = NoQuota({"gemini-3.8-flash"})
     monkeypatch.setattr(gemini, "_gemini_client", lambda s: fake)
-    assert asyncio.run(llm._generate(s, [], "cards", Drawing, "rules")).svg == "<svg/>"
+    assert asyncio.run(llm._ask_provider(s, [], "cards", Drawing, "rules")).svg == "<svg/>"
     assert [m for m, _ in fake.levels] == ["gemini-3.8-flash", "gemini-3.5-flash"]
 
     # The key check says which model answered, and which one the key can't use
@@ -113,7 +113,7 @@ def test_no_quota_left_the_fallback_answers(client, monkeypatch):
 
     # No quota anywhere: said, with what to do (not "try again in a moment")
     fake.without_quota.add("gemini-3.5-flash")
-    for call in (lambda: llm._generate(s, [], "cards", Drawing, "rules"), lambda: llm.check(s)):
+    for call in (lambda: llm._ask_provider(s, [], "cards", Drawing, "rules"), lambda: llm.check(s)):
         try:
             asyncio.run(call())
         except llm.ExtractionError as e:
@@ -147,8 +147,8 @@ def test_quick_lessons_think_little(monkeypatch):
     fake = FakeGemini()
     monkeypatch.setattr(gemini, "_gemini_client", lambda s: fake)
     s = AIConfig(gemini_api_key="k", model="gemini-3.8-flash")
-    asyncio.run(llm._generate(s, [], "cards", Drawing, "rules", quick=True))
-    asyncio.run(llm._generate(s, [], "cards", Drawing, "rules"))
+    asyncio.run(llm._ask_provider(s, [], "cards", Drawing, "rules", quick=True))
+    asyncio.run(llm._ask_provider(s, [], "cards", Drawing, "rules"))
     assert fake.levels == [("gemini-3.8-flash", types.ThinkingLevel.LOW), ("gemini-3.8-flash", None)]
 
 
