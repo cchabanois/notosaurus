@@ -42,7 +42,7 @@ class Generation(
      * next pages (/v1/extract's "existing"): not made again. */
     suspend fun make(form: GenerationForm, onCard: OnCard, existing: List<String> = emptyList()): Made {
         val fields = form.fields
-        val texts = fields["page_texts"]?.let { json.parseToJsonElement(it) } ?: JsonArray(emptyList())
+        val texts = pageTexts(fields["page_texts"], form.images.size)
         val request = buildJsonObject {
             put("prompt", fields["prompt"] ?: "")
             put("deck", fields["deck"] ?: "")
@@ -82,6 +82,19 @@ class Generation(
             "frames" to JsonArray(frames), // each diagram's frame: what AnkiDroid shows
         )
         return Made(content, photos)
+    }
+
+    companion object {
+        /** The pages' texts sent by the page (JSON, one string per photo: a PDF page's text, "" for
+         * a photo); anything else (not JSON, not strings, not one per photo): none, as the computer
+         * (app/routes/generation.py, _page_texts). A list of the wrong length would give a page's
+         * text to another photo. */
+        fun pageTexts(raw: String?, photos: Int): JsonArray {
+            val none = JsonArray(emptyList())
+            val texts = runCatching { json.parseToJsonElement(raw.orEmpty().ifBlank { "[]" }) }.getOrNull() as? JsonArray ?: return none
+            val strings = texts.all { it is JsonPrimitive && it.isString }
+            return if (strings && texts.size == photos) texts else none
+        }
     }
 
     /** "Cancel": the lesson with that id stops being made; false when it isn't (done, unknown). */
