@@ -6,7 +6,7 @@ import json
 from conftest import extract_lesson
 from helpers import run
 
-from app.models import LessonIn
+from app.models import Generated, LessonIn
 from notosaurus_core import llm, prompts
 from notosaurus_core.models import Mask
 
@@ -72,8 +72,8 @@ def test_existing_decks_given_to_the_ai(anki, client, monkeypatch):
 
     anki.decks.update({"Maths": 1, "Maths::Fractions": 2, "Espagnol": 3})
     # Lessons: their decks count too (with their parents), another profile's private ones don't
-    lessons.create(LessonIn(deck="Histoire::La Révolution", cards=[]), "p", [], owner="Léa")
-    lessons.create(LessonIn(deck="Secret::De Paul", cards=[]), "p", [], owner="Paul")
+    lessons.create(Generated(LessonIn(deck="Histoire::La Révolution", cards=[]), [], prompt="p", profile="Léa"))
+    lessons.create(Generated(LessonIn(deck="Secret::De Paul", cards=[]), [], prompt="p", profile="Paul"))
     expected = ["Espagnol", "Histoire", "Histoire::La Révolution", "Maths", "Maths::Fractions"]
     assert client.get("/api/decks").json() == expected  # Léa's view, without Anki's "Default"
 
@@ -93,7 +93,7 @@ def test_existing_decks_given_to_the_ai(anki, client, monkeypatch):
 def test_existing_decks_without_anki(client):
     from app import lessons
 
-    lessons.create(LessonIn(deck="Anglais::Leçon 2", cards=[]), "p", [])
+    lessons.create(Generated(LessonIn(deck="Anglais::Leçon 2", cards=[]), [], prompt="p"))
     assert client.get("/api/decks").json() == ["Anglais", "Anglais::Leçon 2"]
 
 

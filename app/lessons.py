@@ -6,6 +6,7 @@
   audio/          mp3 of the card backs, embedded in exported packages
 """
 
+import asyncio
 import hashlib
 import logging
 import re
@@ -18,7 +19,7 @@ from typing import cast
 
 from . import storage
 from .errors import AppError
-from .models import AiCall, Card, Frame, Lesson, LessonIn, LessonSummary
+from .models import AiCall, Card, Generated, Lesson, LessonIn, LessonSummary
 
 log = logging.getLogger("notosaurus")
 
@@ -135,39 +136,31 @@ def _new_folder(deck: str) -> Path:
     return path
 
 
-def create(
-    lesson: LessonIn,
-    prompt: str,
-    photos: list[bytes],
-    owner: str = "",
-    frames: Sequence[Frame] = (),
-    ai_calls: Sequence[AiCall] = (),
-    choice: str = "",
-    page_texts: Sequence[str] = (),
-) -> Lesson:
+def create(g: Generated, ai_calls: Sequence[AiCall] = ()) -> Lesson:
+    """A new lesson, saved: what the AI made (owned by its profile) and the calls it took."""
     with storage.lock:
-        path = _new_folder(lesson.deck)
+        path = _new_folder(g.content.deck)
         tmp = path.with_name(f".{path.name}.tmp")
         tmp.mkdir(parents=True)
         try:
-            for n, data in enumerate(photos, start=1):
+            for n, data in enumerate(g.photos, start=1):
                 (tmp / f"page-{n}.jpg").write_bytes(data)
             now = storage.now()
             _write(
                 tmp,
                 Lesson(
                     **{
-                        **lesson.model_dump(exclude={"prompt", "choice"}),
-                        "owner": owner,
+                        **g.content.model_dump(exclude={"prompt", "choice"}),
+                        "owner": g.profile,
                         "shared": False,
-                        "frames": list(frames),
+                        "frames": list(g.frames),
                     },
                     ai_calls=list(ai_calls),
-                    choice=choice,
-                    page_texts=list(page_texts),
+                    choice=g.choice,
+                    page_texts=list(g.page_texts),
                     id=path.name,
-                    prompt=prompt,
-                    photo_count=len(photos),
+                    prompt=g.prompt,
+                    photo_count=len(g.photos),
                     created_at=now,
                     updated_at=now,
                 ),
@@ -234,7 +227,13 @@ async def edit[T](id: str, change: Callable[[Lesson], T | Awaitable[T]]) -> tupl
     working copy (cards and frames its own, deep copies) and may take its time (an AI
     call); what it changed in the content is then saved as `update` saves it (sharing
     never, the rest read again then: changed meanwhile elsewhere, it stays). If `change`
-    fails, nothing is saved. The saved lesson and what `change` returned."""
+    fails, nothing is saved. The saved lesson and what `change` returned.
+
+    The lesson is read outside the lock on purpose: `change` may wait seconds for the AI,
+    and holding storage.lock that long would stall every other write. Not a race but a
+    choice: `_save` merges field by field, writing only the fields `change` modified over
+    the lesson as it is then, so a concurrent change to other fields is kept. The save
+    runs in a worker thread, off the event loop (storage.lock serializes the threads)."""
     before = get(id)
     if before is None:
         raise AppError("lesson.not_found", 404)
@@ -243,22 +242,13 @@ async def edit[T](id: str, change: Callable[[Lesson], T | Awaitable[T]]) -> tupl
     # cast: an awaitable `change` gives its T once awaited (pyright can't tell)
     result = cast("T", await outcome) if isinstance(outcome, Awaitable) else outcome
     changed = {f for f in CONTENT if getattr(draft, f) != getattr(before, f)}
-    saved = _save(id, draft.model_dump(include=changed))
+    saved = await asyncio.to_thread(_save, id, draft.model_dump(include=changed))
     if saved is None:  # deleted meanwhile
         raise AppError("lesson.not_found", 404)
     return saved, result
 
 
-def regenerated(
-    id: str,
-    content: LessonIn,
-    prompt: str,
-    photos: list[bytes],
-    frames: list[Frame],
-    calls: list[AiCall],
-    choice: str,
-    page_texts: Sequence[str] = (),
-) -> Lesson | None:
+def regenerated(id: str, g: Generated, calls: Sequence[AiCall] = ()) -> Lesson | None:
     """A new generation in place of the lesson's content: its cards, photos, frames and
     prompt replaced; its owner, sharing, dates and AI calls kept (the new ones added)."""
     with storage.lock:
@@ -268,19 +258,19 @@ def regenerated(
         old = _read(path)
         for photo in path.glob("page-*.jpg"):
             photo.unlink()
-        for n, data in enumerate(photos, start=1):
+        for n, data in enumerate(g.photos, start=1):
             (path / f"page-{n}.jpg").write_bytes(data)
         # images/ is kept: "Undo" brings back the old cards with their pictures (pruned at export)
         lesson = Lesson(
             **{
                 **old.model_dump(),
-                **content.model_dump(include=CONTENT, exclude_none=True),
+                **g.content.model_dump(include=CONTENT, exclude_none=True),
                 "id": id,
-                "prompt": prompt,
-                "choice": choice,
-                "page_texts": list(page_texts),
-                "frames": list(frames),
-                "photo_count": len(photos),
+                "prompt": g.prompt,
+                "choice": g.choice,
+                "page_texts": list(g.page_texts),
+                "frames": list(g.frames),
+                "photo_count": len(g.photos),
                 "ai_calls": [*old.ai_calls, *calls],
                 "updated_at": storage.now(),
             }
@@ -289,35 +279,30 @@ def regenerated(
     return _read(path)
 
 
-def completed(
-    id: str,
-    cards: list[Card],
-    photos: list[bytes],
-    frames: list[Frame],
-    calls: list[AiCall],
-    page_texts: Sequence[str] = (),
-) -> Lesson | None:
+def completed(id: str, g: Generated, calls: Sequence[AiCall] = ()) -> Lesson | None:
     """The lesson's next pages added: their photos after its own, their cards after its
-    cards (those untouched: their ids, so their notes in Anki, stay). `cards` and `frames`
-    count pages from the first new photo; numbered here from the lesson's own."""
+    cards (those untouched: their ids, so their notes in Anki, stay). `g`'s cards and frames
+    count pages from the first new photo; numbered here from the lesson's own. Only its
+    cards, photos, frames and page texts are taken (the deck, voice… stay the lesson's)."""
+    cards = g.content.cards
     with storage.lock:
         path = folder(id)
         if not path:
             return None
         old = _read(path)
         before = old.photo_count
-        for n, data in enumerate(photos, start=before + 1):
+        for n, data in enumerate(g.photos, start=before + 1):
             (path / f"page-{n}.jpg").write_bytes(data)
         for card in cards:
             if card.mask:
                 card.mask.page += before
         texts = old.page_texts
-        if any(page_texts):  # one per photo: the earlier pages' ("" without a PDF), then these
-            texts = [*old.page_texts, *[""] * (before - len(old.page_texts)), *page_texts]
+        if any(g.page_texts):  # one per photo: the earlier pages' ("" without a PDF), then these
+            texts = [*old.page_texts, *[""] * (before - len(old.page_texts)), *g.page_texts]
         lesson = old.model_copy(
             update={
                 "cards": [*old.cards, *cards],
-                "frames": [*old.frames, *(f.model_copy(update={"page": f.page + before}) for f in frames)],
+                "frames": [*old.frames, *(f.model_copy(update={"page": f.page + before}) for f in g.frames)],
                 "page_texts": texts,
                 "ai_calls": [*old.ai_calls, *calls],
                 "updated_at": storage.now(),

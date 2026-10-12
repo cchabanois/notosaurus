@@ -17,6 +17,9 @@ src = [".", "core"]
 [tool.pyright]
 include = ["app", "core/notosaurus_core", "anki_addon"]
 extraPaths = ["core"]
+# The project's .venv, wherever pyright is run from (CI makes one too): no --pythonpath
+venvPath = "."
+venv = ".venv"
 pythonVersion = "3.13"
 typeCheckingMode = "basic"
 

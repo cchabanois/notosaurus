@@ -1,3 +1,5 @@
+import asyncio
+
 from fastapi import APIRouter, Depends, Query
 from fastapi.responses import FileResponse
 from pydantic import BaseModel
@@ -35,7 +37,7 @@ async def update_lesson(id: str, lesson: LessonIn) -> Lesson:
     current = await access.editable(id)
     # Sharing only changes when asked, and only for a lesson that has an owner.
     share = lesson.shared if lesson.shared is not None and current.owner else None
-    updated = lessons.update(id, lesson, share=share)
+    updated = await asyncio.to_thread(lessons.update, id, lesson, share=share)
     if updated is None:  # deleted meanwhile
         raise AppError("lesson.not_found", 404)
     return updated
@@ -78,7 +80,7 @@ async def revise_lesson(id: str, req: RevisionRequest, lang: str = Depends(page_
     """Apply a natural-language correction to the cards, using the lesson photos."""
     lesson = await access.editable(id)
     photos = [Image(lessons.photo(id, n), "image/jpeg") for n in range(1, lesson.photo_count + 1)]
-    with usage.metered("revise", id, req.deck):  # an answer that couldn't be used is paid for too
+    async with usage.metered("revise", id, req.deck):  # an answer that couldn't be used is paid for too
         s = settings.current()
         revision = await revise_cards(
             s,
@@ -90,7 +92,8 @@ async def revise_lesson(id: str, req: RevisionRequest, lang: str = Depends(page_
             settings.standing_instructions(s, lesson.owner),
             demo=i18n.get(lang, "demo"),
         )
-    updated = lessons.update(
+    updated = await asyncio.to_thread(
+        lessons.update,
         id,
         LessonIn(
             deck=revision.deck,
@@ -110,7 +113,7 @@ async def explain(id: str, req: ExplainRequest, lang: str = Depends(page_lang)) 
     is right), in the page's language. Also for a lesson only read here: nothing in it
     changes but its record of AI calls."""
     lesson = await access.seen(id)  # not found, or another profile's private one: 404
-    with usage.metered("explain", id, lesson.deck):  # paid for, kept with the lesson
+    async with usage.metered("explain", id, lesson.deck):  # paid for, kept with the lesson
         s = settings.current()
         return await llm.explain_card(
             s,

@@ -20,7 +20,7 @@ from notosaurus_core.llm import Image, extract_cards
 from .. import access, ankiconnect, decks, lessons, media, prompts, settings, usage
 from ..anki import build_apkg
 from ..errors import AppError
-from ..models import ExportRequest, Lesson, LessonIn
+from ..models import ExportRequest, Generated, Lesson, LessonIn
 from .common import IMAGE_TYPES, MAX_IMAGES, pupil_lang, read_photo
 
 log = logging.getLogger("notosaurus")
@@ -46,15 +46,6 @@ async def _photos(images: list[UploadFile]) -> list[Photo]:
     if len(images) > MAX_IMAGES:  # before reading any
         raise AppError("extract.too_many", max=MAX_IMAGES)
     return [Photo(await read_photo(img), img.content_type) for img in images]
-
-
-@dataclass
-class Generated:
-    content: LessonIn
-    photos: list[bytes]  # upright
-    found: llm.Extracted
-    profile: str
-    page_texts: list[str]  # one per photo: a PDF page's text, "" for a photo
 
 
 def _page_texts(raw: str, count: int) -> list[str]:
@@ -129,7 +120,7 @@ async def _generate(
         existing=existing,
     )
     if form.prompt_id is not None:
-        prompts.mark_used(form.prompt_id)
+        await asyncio.to_thread(prompts.mark_used, form.prompt_id)
     # Photos taken sideways are saved upright (masks and diagram frames turn with them)
     photos = diagrams.straighten([i.data for i in data], found.deck.cards, found.turns, found.frames)
     if voice.strip().lower() == "auto":  # the voice of the language the backs are in
@@ -137,7 +128,7 @@ async def _generate(
     content = LessonIn(**found.deck.model_dump(), voice=voice, typing=form.typing, dictation=form.dictation)
     # Its own deck: never one that exists already (another lesson's, or the user's in Anki)
     content.deck = await decks.new_name(content.deck, profile or None, but=lesson_id)
-    return Generated(content, photos, found, profile, texts)
+    return Generated(content, photos, prompt, profile, found.frames, found.choice, texts)
 
 
 def _learned(back_language: str, lang: str, spelling: bool) -> str:
@@ -223,18 +214,9 @@ async def extract(
 
     async def work(on_card=None) -> Lesson:
         # Model, tokens and cost, kept with the lesson; answered but unusable: paid for, no lesson
-        with usage.metered("extract") as meter:
+        async with usage.metered("extract") as meter:
             g = await _generate(form, photos, lang, on_card=on_card)
-            created = lessons.create(
-                g.content,
-                form.prompt,
-                g.photos,
-                g.profile,
-                g.found.frames,
-                meter.calls,
-                g.found.choice,
-                page_texts=g.page_texts,
-            )
+            created = await asyncio.to_thread(lessons.create, g, meter.calls)
             meter.kept_by(created)
         return created
 
@@ -265,9 +247,9 @@ async def complete(
     form = replace(form, deck=old.deck, voice="")
 
     async def work(on_card=None) -> Lesson:
-        with usage.metered("extract") as meter:  # as /api/extract's
+        async with usage.metered("extract") as meter:  # as /api/extract's
             g = await _generate(form, photos, lang, lesson_id=id, on_card=on_card, existing=existing)
-            lesson = lessons.completed(id, g.found.deck.cards, g.photos, g.found.frames, meter.calls, g.page_texts)
+            lesson = await asyncio.to_thread(lessons.completed, id, g, meter.calls)
             if lesson is None:  # deleted meanwhile
                 raise AppError("lesson.not_found", 404)
             meter.kept_by(lesson)
@@ -291,15 +273,13 @@ async def regenerate(
     photos = await _photos(form.images)
 
     async def work(on_card=None) -> Lesson:
-        with usage.metered("extract") as meter:  # as /api/extract's
+        async with usage.metered("extract") as meter:  # as /api/extract's
             g = await _generate(form, photos, lang, lesson_id=id, on_card=on_card)
             # The options set in the review stay (the prompt's are added): only the cards change
             g.content.reverse = old.reverse
             g.content.typing = g.content.typing or old.typing
             g.content.dictation = g.content.dictation or old.dictation
-            lesson = lessons.regenerated(
-                id, g.content, form.prompt, g.photos, g.found.frames, meter.calls, g.found.choice, g.page_texts
-            )
+            lesson = await asyncio.to_thread(lessons.regenerated, id, g, meter.calls)
             if lesson is None:  # deleted meanwhile
                 raise AppError("lesson.not_found", 404)
             meter.kept_by(lesson)
@@ -325,7 +305,7 @@ async def export(req: ExportRequest, background: BackgroundTasks) -> FileRespons
     path = build_apkg(req, audio, media.diagram_images(req, lesson), media.card_pictures(req, lesson))
     background.add_task(os.remove, path)
     if lesson and await access.is_owner(lesson):  # someone else's lesson: exported, not changed
-        lessons.update(lesson.id, req, exported=True)
+        await asyncio.to_thread(lessons.update, lesson.id, req, exported=True)
     return FileResponse(
         path,
         media_type=APKG_TYPE,

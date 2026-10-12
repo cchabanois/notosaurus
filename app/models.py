@@ -2,6 +2,7 @@
 and what the AI answers are notosaurus_core's (re-exported here)."""
 
 import re
+from dataclasses import dataclass, field
 from typing import Literal
 
 from pydantic import BaseModel, Field, field_validator
@@ -74,6 +75,20 @@ class Lesson(LessonOptions):
     created_at: str
     updated_at: str
     exported_at: str | None = None
+
+
+@dataclass
+class Generated:
+    """A lesson's content as the AI made it from the photos, not saved yet: what
+    lessons.create, regenerated and completed save."""
+
+    content: LessonIn
+    photos: list[bytes]  # upright
+    prompt: str = ""  # the prompt it was generated with
+    profile: str = ""  # the Anki profile it belongs to ("" = none)
+    frames: list[Frame] = field(default_factory=list)  # diagram frames, on the upright photos
+    choice: str = ""  # what the AI chose to make (prompt "Automatic")
+    page_texts: list[str] = field(default_factory=list)  # one per photo: a PDF page's text, "" for a photo
 
 
 class LessonSummary(BaseModel):

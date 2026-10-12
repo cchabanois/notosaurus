@@ -1,6 +1,8 @@
 """A saved lesson's notes in Anki: finding them, the decks they go to, and deleting the
 lesson with them."""
 
+import asyncio
+
 from . import anki, ankiconnect, lessons
 from .errors import AppError
 from .models import ExportRequest, Lesson, LessonIn
@@ -60,5 +62,5 @@ async def delete_lesson(lesson: Lesson, in_anki: bool) -> dict:
             sync_error=sent.sync_error,
             sync_skipped=sent.sync_skipped,
         )
-    lessons.delete(lesson.id)
+    await asyncio.to_thread(lessons.delete, lesson.id)
     return result
