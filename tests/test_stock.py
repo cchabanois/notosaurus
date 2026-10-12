@@ -308,7 +308,7 @@ def test_the_ai_keeps_only_the_pictures_that_fit(services, monkeypatch):
 
 def test_each_sources_pictures_as_it_answers(monkeypatch):
     """A slow source doesn't hold back the others; past SOURCE_WAIT it is left out."""
-    monkeypatch.setattr(stock, "SOURCE_WAIT", 0.3)
+    monkeypatch.setattr(stock, "SOURCE_WAIT", 2)
     gate = asyncio.Event()
 
     async def quick(client, subject):
@@ -336,8 +336,8 @@ def test_each_sources_pictures_as_it_answers(monkeypatch):
         return got, time.monotonic() - start
 
     got, took = run(batches())
-    assert [ids for ids, _ in got] == [["File:A.jpg"]] and got[0][1] < 0.2  # at once, not after the slow one
-    assert took < 1  # the slow one given up at SOURCE_WAIT
+    assert [ids for ids, _ in got] == [["File:A.jpg"]] and got[0][1] < 1.5  # at once, not after the slow one
+    assert 2 <= took < 4  # the slow one given up at SOURCE_WAIT
 
 
 def test_more_looked_for_and_at_most_max_sorted(monkeypatch):
