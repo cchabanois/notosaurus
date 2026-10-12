@@ -75,6 +75,7 @@ Each pull request adds a line under **Unreleased**. See [Releasing](CONTRIBUTING
 
 ### Fixed
 
+- The Android app waits a few seconds for an AnkiDroid installed just before (setting its storage up) instead of failing the first send.
 - The Android app takes a PDF's page texts only when there is one per photo, as the computer does: a list of the wrong length could have given a page's text to another photo (a page that isn't JSON no longer fails either).
 - A figure the AI drew with an impossible size (`viewBox` of zero, negative, infinite or NaN size) is refused (“draw it again”) instead of being saved and shown empty.
 - The lessons list no longer fails when a lesson is deleted (from another phone, say) at the very moment the list is read: the deleted lesson just isn't listed.

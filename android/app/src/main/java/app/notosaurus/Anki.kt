@@ -146,12 +146,17 @@ class Anki(private val context: Context) : AnkiTarget {
 
     /** AnkiDroid installed but never opened: its first request fails ("storage is not
      * configured") and sets it up; the next ones work. So: once more. */
-    private fun <T> firstUse(request: () -> T): T = try {
-        request()
-    } catch (e: IllegalStateException) {
-        if ("storage is not configured" !in e.message.orEmpty()) throw e
-        Thread.sleep(1000)
-        request()
+    private fun <T> firstUse(request: () -> T): T {
+        // Setting its storage up takes AnkiDroid a moment, more on a slow phone: a few tries (~7 s)
+        for (wait in FIRST_USE_WAITS) {
+            try {
+                return request()
+            } catch (e: IllegalStateException) {
+                if ("storage is not configured" !in e.message.orEmpty()) throw e
+                Thread.sleep(wait)
+            }
+        }
+        return request()
     }
 
     /** A note to send: its note type, deck, fields (the first: its key, what tells it's
@@ -362,6 +367,7 @@ class Anki(private val context: Context) : AnkiTarget {
 
     companion object {
         private const val LEFTOVER_TEXT = 80 // characters of a leftover note's text shown, as the computer's
+        private val FIRST_USE_WAITS = listOf(500L, 1_000L, 2_000L, 3_500L) // ms between the tries
 
         /** The card's deck: the lesson's, then its part; a part named as the deck's last level
          * (the lesson's own title, often as the deck was chosen) isn't added again, as on the
