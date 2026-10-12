@@ -110,4 +110,24 @@ class LessonsTest {
         assertEquals("", Lessons.slug("!!!"))
         assertTrue(Lessons.slug("x".repeat(100)).length <= 40)
     }
+
+    @Test
+    fun anyDeckGivesAFolderOfItsOwnInsideTheLessons() {
+        val lessons = lessons()
+        val random = java.util.Random(42)
+        val odd = listOf("", "..", "../..", "/", "\\..\\", "::", ".", "🦕", "İıßÆœ", "e\u0301\u200b", "\u0000\t\n", "%2e%2e/x", "-", "a".repeat(500))
+        val pieces = listOf(".", "/", "\\", ":", "-", " ", "İ", "🦕", "\u0301")
+        val generated = List(200) { // any characters (no lone surrogate), those above more often
+            (1..random.nextInt(60)).joinToString("") {
+                if (random.nextBoolean()) pieces[random.nextInt(pieces.size)] else random.nextInt(0xD000).toChar().toString()
+            }
+        }
+        for (deck in odd + generated) {
+            val lesson = lessons.create(mapOf("deck" to JsonPrimitive(deck)), emptyList())
+            val id = lesson.string("id")
+            assertTrue(id, Regex("^[a-z0-9][a-z0-9-]*$").matches(id))
+            assertEquals(deck, lessons.get(id)!!.string("deck")) // found again by its id
+            assertEquals(folder.root.canonicalFile, folder.root.resolve(id).canonicalFile.parentFile)
+        }
+    }
 }
