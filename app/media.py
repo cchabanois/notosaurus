@@ -14,7 +14,7 @@ from .models import ExportRequest, Lesson
 
 
 async def card_audio(req: ExportRequest, background: BackgroundTasks) -> tuple[dict[str, Path], int]:
-    """mp3 of the card backs for an edge-tts voice: {back: mp3} and the number of failures."""
+    """mp3 of the cards for an edge-tts voice: {what it says (tts.spoken): mp3} and the number of failures."""
     if not req.voice or tts.is_anki_locale(req.voice):
         return {}, 0
     # Saved lesson: mp3s go to its audio/ folder; otherwise a throwaway folder.
@@ -22,7 +22,8 @@ async def card_audio(req: ExportRequest, background: BackgroundTasks) -> tuple[d
     if directory is None:
         directory = Path(tempfile.mkdtemp(prefix="notosaurus-audio-"))
         background.add_task(shutil.rmtree, directory, ignore_errors=True)
-    audio, failures = await tts.tts_many(tts.spoken_backs(req.cards), req.voice, directory, settings.current().tts_rate)
+    said = tts.spoken_backs(req.cards, req.dictation)
+    audio, failures = await tts.tts_many(said, req.voice, directory, settings.current().tts_rate)
     tts.prune(directory, set(audio.values()))
     return audio, failures
 

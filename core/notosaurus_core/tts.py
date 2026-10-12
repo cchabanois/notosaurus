@@ -45,12 +45,29 @@ def has_math(text: str) -> bool:
     return bool(MATH.search(text))
 
 
-def spoken_backs(cards: list[Card]) -> list[str]:
-    """The backs read aloud. Not: a back with a formula (the voice would read the MathJax
-    code), a text with gaps (its back is only an extra), a multiple choice (the options
-    are read)."""
+# A sentence's blank for the word to write ("Le chat boit du …"), and what it says in brackets
+BLANK = re.compile(r"…|\.{3}|_{3,}")
+BRACKETS = re.compile(r"\s*\([^)]*\)")
+
+
+def spoken(card: Card, dictation: bool = False) -> str:
+    """What a card's sound says: its back. A dictation's card whose front is a sentence
+    with a blank: the word, the sentence with it, the word again, as dictated at school
+    (alone, "vers" could be "verre" or "vert")."""
+    back = card.back.strip()
+    sentence = BRACKETS.sub("", card.front).strip()
+    if not dictation or "\n" in back or not BLANK.search(sentence):
+        return back
+    said = BLANK.sub(lambda _: back, sentence, count=1)
+    return f"{back}. {said}{'' if said[-1] in '.!?' else '.'} {back}."
+
+
+def spoken_backs(cards: list[Card], dictation: bool = False) -> list[str]:
+    """What the cards' sounds say (spoken). None for: a back with a formula (the voice
+    would read the MathJax code), a text with gaps (its back is only an extra), a multiple
+    choice (the options are read)."""
     return [
-        c.back.strip()
+        spoken(c, dictation)
         for c in cards
         if c.front.strip() and c.back.strip() and not has_math(c.back) and not is_cloze(c.front) and not is_choice(c)
     ]

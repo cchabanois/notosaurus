@@ -34,9 +34,9 @@ class Speech(private val folder: File, private val prefs: Preferences, private v
 
     /** The backs' sound for AnkiDroid, with `voice` (none: no sound), and how many
      * couldn't be made. */
-    suspend fun sounds(deck: Deck, voice: String): Pair<Map<String, File>, Int> {
+    suspend fun sounds(deck: Deck, voice: String, dictation: Boolean = false): Pair<Map<String, File>, Int> {
         if (!VOICE.matches(voice)) return emptyMap<String, File>() to 0
-        val backs = deck.cards.map { it.back.trim() }.filter { it.isNotEmpty() }.distinct()
+        val backs = deck.cards.map { spoken(it, dictation) }.filter { it.isNotEmpty() }.distinct()
         val made = backs.associateWith { runCatching { read(it, voice) }.getOrNull() }
         return made.filterValues { it != null }.mapValues { it.value!! } to made.count { it.value == null }
     }
@@ -64,6 +64,20 @@ class Speech(private val folder: File, private val prefs: Preferences, private v
     fun deleteAll() = folder.listFiles()?.forEach { it.delete() }
 
     companion object {
+        private val BLANK = Regex("""…|\.{3}|_{3,}""") // a sentence's blank for the word to write
+        private val BRACKETS = Regex("""\s*\([^)]*\)""")
+
+        /** What a card's sound says (as the core's tts.spoken): its back. A dictation's card
+         * whose front is a sentence with a blank: the word, the sentence with it, the word
+         * again, as dictated at school (alone, "vers" could be "verre" or "vert"). */
+        fun spoken(card: Card, dictation: Boolean): String {
+            val back = card.back.trim()
+            val sentence = card.front.replace(BRACKETS, "").trim()
+            if (!dictation || '\n' in back || !BLANK.containsMatchIn(sentence)) return back
+            val said = BLANK.replaceFirst(sentence, Regex.escapeReplacement(back))
+            return "$back. $said${if (said.last() in ".!?") "" else "."} $back."
+        }
+
         // The voice chosen for a lesson whose voice is "auto" (Chirp 3 HD: the same name in
         // every language); a voice's name, as the page tells them from Anki locales
         const val DEFAULT_VOICE = "Aoede"

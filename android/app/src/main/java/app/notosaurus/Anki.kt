@@ -172,7 +172,7 @@ class Anki(private val context: Context) : AnkiTarget {
         val notes = deck.cards.withIndex().filter { it.value.front.isNotBlank() }.mapNotNull { (i, card) ->
             val name = deckName(deck.deck, card.subdeck)
             val tags = (card.tags.map { it.trim().replace(' ', '_') }.filter { it.isNotEmpty() } + "notosaurus" + own).toSet()
-            val sound = media.audio[card.back.trim()]?.let { file(it, "audio") } ?: ""
+            val sound = media.audio[Speech.spoken(card, options.dictation)]?.let { file(it, "audio") } ?: ""
             val common = mapOf("Info" to info(card), "Explanation" to html(card.explanation), "Mnemonic" to html(card.mnemonic))
             // Which note it is, sent again: the card's own id; else its place in the lesson; else its text
             val key = card.id.ifBlank { if (media.lesson.isNotEmpty()) "${media.lesson}:$i" else html(card.front) }
