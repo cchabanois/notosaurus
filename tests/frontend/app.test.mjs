@@ -426,9 +426,15 @@ test("find a picture: the choices, their sources, the one chosen", async () => {
   assert.equal(card.picture, "picture-x.jpg");
   assert.equal(card._found, null);
   assert.deepEqual(sent, [
-    ["/api/pictures/search", '{"subject":"un château fort","context":"Un château ? → el castillo"}'],
+    ["/api/pictures/search", '{"subject":"un château fort","context":"Un château ? → el castillo","words":""}'],
     ["/api/lessons/L1/cards/c1/picture/found", '{"source":"pixabay","id":"42"}'],
   ]);
+
+  // Its own picture's description: the search words chosen with it, as they are
+  sent.length = 0;
+  Object.assign(card, { picture_prompt: "a stone castle", picture_search: "castle", _subject: "a stone castle" });
+  await c.searchPictures(card);
+  assert.equal(JSON.parse(sent[0][1]).words, "castle");
 });
 
 test("a picture's source: said in its panel, kept when the pictures come", async () => {
