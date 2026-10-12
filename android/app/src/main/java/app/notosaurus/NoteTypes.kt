@@ -1,6 +1,7 @@
 package app.notosaurus
 
 import kotlinx.serialization.Serializable
+import java.security.MessageDigest
 
 /**
  * The Anki note types, as the computer makes them: static/note-types.json, written from
@@ -38,6 +39,20 @@ data class NoteType(
 
     /** The field the browser sorts by: the computer's first (the question, the text). */
     val sortField: Int get() = androidFields.indexOf(fields.first())
+
+    /** What it is made of (name, fields, card templates, style), in 12 characters: the
+     * version AnkiDroid's has, written in its style (signedCss). */
+    val signature: String
+        get() {
+            val templates = cards.map { "${it.name}\u001e${it.front}\u001e${it.back}" }
+            val parts = listOf(androidName, cloze.toString()) + androidFields + templates + css
+            val digest = MessageDigest.getInstance("SHA-256").digest(parts.joinToString("\u001f").toByteArray())
+            return digest.joinToString("") { "%02x".format(it) }.take(12)
+        }
+
+    /** Its style, signed (as the computer's full_css): a note type in AnkiDroid without
+     * today's signature was made by an older app, and is brought up to date at the next send. */
+    val signedCss: String get() = "$css\n/* Notosaurus note type, version $signature: updated by Notosaurus */\n"
 
     /** A note's values (by field name) in AnkiDroid's order; missing ones empty. */
     fun values(fields: Map<String, String>): Array<String> = androidFields.map { fields[it].orEmpty() }.toTypedArray()

@@ -49,6 +49,33 @@ class AnkiDroidTest {
     }
 
     @Test
+    fun aNoteTypeOfAnOlderAppBroughtUpToDate() {
+        val anki = Anki(Device.context)
+        anki.send(Deck("Notosaurus test $run", listOf(Card("soleil $run", "sol"))))
+        val type = types["text"]
+        val api = AddContentApi(Device.context)
+        val model = Uri.withAppendedPath(FlashCardsContract.Model.CONTENT_URI, api.modelList!!.entries.first { it.value == type.androidName }.key.toString())
+        val resolver = Device.context.contentResolver
+
+        // As an older app made it: another template, another style (no signature)
+        val old = android.content.ContentValues().apply {
+            put(FlashCardsContract.CardTemplate.QUESTION_FORMAT, "{{Front}} (old)")
+            put(FlashCardsContract.CardTemplate.ANSWER_FORMAT, "{{Back}} (old)")
+        }
+        resolver.update(Uri.withAppendedPath(Uri.withAppendedPath(model, "templates"), "0"), old, null, null)
+        resolver.update(model, android.content.ContentValues().apply { put(FlashCardsContract.Model.CSS, ".card { color: red; }") }, null, null)
+
+        // The next send (a new run of the app): brought up to date, the note kept
+        assertEquals(1, Anki(Device.context).send(Deck("Notosaurus test $run", listOf(Card("lune $run", "luna")))).added)
+        val template = resolver.query(Uri.withAppendedPath(Uri.withAppendedPath(model, "templates"), "0"), arrayOf(FlashCardsContract.CardTemplate.QUESTION_FORMAT, FlashCardsContract.CardTemplate.ANSWER_FORMAT), null, null, null)!!
+            .use { c -> c.moveToFirst(); c.getString(0) to c.getString(1) }
+        assertEquals(type.cards[0].front to type.cards[0].back, template)
+        val css = resolver.query(model, arrayOf(FlashCardsContract.Model.CSS), null, null, null)!!.use { c -> c.moveToFirst(); c.getString(0) }
+        assertTrue(css, "version ${type.signature}:" in css)
+        assertEquals(1, api.findDuplicateNotes(api.modelList!!.entries.first { it.value == type.androidName }.key, "soleil $run").size)
+    }
+
+    @Test
     fun theLessonsDeckChangedItsCardsMove() {
         val anki = Anki(Device.context)
         val lesson = "move-$run"

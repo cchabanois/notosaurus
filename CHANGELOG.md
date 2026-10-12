@@ -81,6 +81,7 @@ Each pull request adds a line under **Unreleased**. See [Releasing](CONTRIBUTING
 
 ### Fixed
 
+- The coming Android app brings its note types in AnkiDroid up to date at the next send when the cards' look changed (their templates and style), as the computer does: before, a phone kept the look of its first send for good. The notes, their cards and reviews are kept.
 - A dictation's sound sometimes said words that weren't there, half in no known language: the natural voices make words up when given a lone word then a sentence in one text. The sentence and the word are now read separately, then joined; so is each line of a card's back.
 - A dictation in the pupil's own language (the built-in **Word dictation** for a French lesson) had no voice with **Automatic**, so no dictation card: the AI names no language for the pupil's own, and that is now the page's language.
 - A photo taken or picked in the coming Android app shows in the lesson's photos in under a second, not 4 to 13 (the phone's browser encoded it slowly); so do turned, partly hidden photos and PDF pages. The camera's photos are no longer kept in the app's cache once read.

@@ -335,22 +335,25 @@ class Anki(private val context: Context) : AnkiTarget {
     }
 
     /** The note type in AnkiDroid, made the first time (AnkiDroid tells note types apart by
-     * name). A cloze note type through AnkiDroid's provider, as its API makes the others,
-     * with its type: the API makes standard ones only. */
+     * name), else brought up to date (current). A cloze note type through AnkiDroid's
+     * provider, as its API makes the others, with its type: the API makes standard ones only. */
     private fun model(type: NoteType): Long? {
-        api.modelList?.entries?.firstOrNull { it.value == type.androidName }?.key?.let { return it }
+        api.modelList?.entries?.firstOrNull { it.value == type.androidName }?.key?.let { id ->
+            runCatching { current(id, type) } // its look an older one's: the cards still go in
+            return id
+        }
         val cards = type.cards
         if (!type.cloze) {
             return api.addNewCustomModel(
                 type.androidName, type.androidFields.toTypedArray(), cards.map { it.name }.toTypedArray(),
-                cards.map { it.front }.toTypedArray(), cards.map { it.back }.toTypedArray(), type.css, null, type.sortField,
+                cards.map { it.front }.toTypedArray(), cards.map { it.back }.toTypedArray(), type.signedCss, null, type.sortField,
             )
         }
         val values = ContentValues().apply {
             put(FlashCardsContract.Model.NAME, type.androidName)
             put(FlashCardsContract.Model.FIELD_NAMES, type.androidFields.joinToString("\u001f"))
             put(FlashCardsContract.Model.NUM_CARDS, 1)
-            put(FlashCardsContract.Model.CSS, type.css)
+            put(FlashCardsContract.Model.CSS, type.signedCss)
             put(FlashCardsContract.Model.SORT_FIELD_INDEX, type.sortField)
             put(FlashCardsContract.Model.TYPE, 1) // cloze
         }
@@ -363,6 +366,29 @@ class Anki(private val context: Context) : AnkiTarget {
         }
         resolver.update(Uri.withAppendedPath(Uri.withAppendedPath(made, "templates"), "0"), template, null, null)
         return made.lastPathSegment?.toLong()
+    }
+
+    private val current = mutableSetOf<Long>() // the note types brought up to date already
+
+    /** A note type made by an older app (its style without today's signature) brought up to
+     * date: its cards' templates and its style, as the computer does; its notes, cards and
+     * reviews kept. One with another number of cards (one added or removed) is left as it is. */
+    private fun current(id: Long, type: NoteType) {
+        if (!current.add(id)) return
+        val resolver = context.contentResolver
+        val model = Uri.withAppendedPath(FlashCardsContract.Model.CONTENT_URI, id.toString())
+        val (css, count) = resolver.query(model, arrayOf(FlashCardsContract.Model.CSS, FlashCardsContract.Model.NUM_CARDS), null, null, null)
+            ?.use { c -> if (c.moveToFirst()) c.getString(0).orEmpty() to c.getInt(1) else null } ?: return
+        if ("version ${type.signature}:" in css || count != type.cards.size) return
+        type.cards.forEachIndexed { ord, card ->
+            val template = ContentValues().apply {
+                put(FlashCardsContract.CardTemplate.NAME, card.name)
+                put(FlashCardsContract.CardTemplate.QUESTION_FORMAT, card.front)
+                put(FlashCardsContract.CardTemplate.ANSWER_FORMAT, card.back)
+            }
+            resolver.update(Uri.withAppendedPath(Uri.withAppendedPath(model, "templates"), ord.toString()), template, null, null)
+        }
+        resolver.update(model, ContentValues().apply { put(FlashCardsContract.Model.CSS, type.signedCss) }, null, null)
     }
 
     private fun deckId(name: String): Long? =
