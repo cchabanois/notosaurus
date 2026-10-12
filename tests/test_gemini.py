@@ -150,3 +150,120 @@ def test_quick_lessons_think_little(monkeypatch):
     asyncio.run(llm._generate(s, [], "cards", Drawing, "rules", quick=True))
     asyncio.run(llm._generate(s, [], "cards", Drawing, "rules"))
     assert fake.levels == [("gemini-3.8-flash", types.ThinkingLevel.LOW), ("gemini-3.8-flash", None)]
+
+
+class Recording(FakeGemini):
+    """A Gemini that answers `answer` and keeps each request: its model, contents and config."""
+
+    def __init__(self, answer: str, finish=types.FinishReason.STOP):
+        super().__init__()
+        self.answer, self.finish, self.calls = answer, finish, []
+
+    async def generate(self, model, contents, config):
+        self.calls.append((model, contents, config))
+        candidate = py_types.SimpleNamespace(finish_reason=self.finish)
+        usage = py_types.SimpleNamespace(prompt_token_count=100, candidates_token_count=20, thoughts_token_count=5)
+        return py_types.SimpleNamespace(usage_metadata=usage, candidates=[candidate], text=self.answer)
+
+
+LIGHT = AIConfig(gemini_api_key="k", model="gemini-3.8-flash")
+
+
+def _light_call(monkeypatch, answer: str, call, finish=types.FinishReason.STOP):
+    """`call` (a coroutine of the light-call function, given the config) answered by a
+    recording Gemini: the result, and the one request made."""
+    fake = Recording(answer, finish)
+    monkeypatch.setattr(gemini, "_gemini_client", lambda s: fake)
+    monkeypatch.setattr(gemini, "_NO_MINIMAL_THINKING", set())
+    found = asyncio.run(call(LIGHT))
+    assert len(fake.calls) == 1  # one call, to the configured model
+    return found, fake.calls[0]
+
+
+def _assert_light_request(request, schema, rules):
+    model, contents, config = request
+    assert model == "gemini-3.8-flash"
+    assert config.system_instruction == rules
+    assert config.response_mime_type == "application/json"
+    assert config.response_json_schema == schema.model_json_schema()
+    assert config.thinking_config.thinking_level == types.ThinkingLevel.MINIMAL  # light: thinks as little as it can
+    assert config.automatic_function_calling.disable and config.safety_settings  # the stricter filters too
+    assert len(contents) == 1 and isinstance(contents[0], str)  # text only, no photo
+    return contents[0]
+
+
+def _error(monkeypatch, answer: str, call, finish=types.FinishReason.STOP) -> str:
+    try:
+        _light_call(monkeypatch, answer, call, finish)
+    except llm.ExtractionError as e:
+        return e.code
+    raise AssertionError("an error was expected")
+
+
+def test_draw_figure_with_gemini(monkeypatch):
+    from notosaurus_core import figures
+    from notosaurus_core.calls import recording
+
+    with recording("picture") as calls:
+        svg, request = _light_call(
+            monkeypatch,
+            '{"svg": "<svg viewBox=\\"0 0 400 300\\"/>"}',
+            lambda s: llm.draw_figure(s, "  a right triangle ABC "),
+        )
+    assert svg == '<svg viewBox="0 0 400 300"/>'
+    text = _assert_light_request(request, Drawing, figures.RULES)
+    assert text == "Figure to draw: a right triangle ABC"
+    assert [(c.model, c.input_tokens, c.output_tokens) for c in calls] == [("gemini-3.8-flash", 100, 25)]
+
+    draw = lambda s: llm.draw_figure(s, "a square")  # noqa: E731
+    assert _error(monkeypatch, "", draw) == "llm.empty_answer"
+    assert _error(monkeypatch, "<svg/>", draw) == "llm.invalid_answer"  # not the JSON asked for
+    assert _error(monkeypatch, '{"drawing": "<svg/>"}', draw) == "llm.invalid_answer"
+    assert _error(monkeypatch, '{"svg": "<svg', draw, types.FinishReason.MAX_TOKENS) == "llm.truncated"
+    assert _error(monkeypatch, '{"svg": ""}', draw, types.FinishReason.SAFETY) == "llm.refused"
+
+
+def test_plan_picture_with_gemini(monkeypatch):
+    from notosaurus_core.models import PicturePlan
+    from notosaurus_core.prompts import PLAN_RULES
+
+    answer = '{"kind": "picture", "description": " a red fox in snow ", "search": " red fox "}'
+    plan, request = _light_call(
+        monkeypatch, answer, lambda s: llm.plan_picture(s, " le renard ", " fox ", " un renard roux ", "French")
+    )
+    assert (plan.kind, plan.description, plan.search) == ("picture", "a red fox in snow", "red fox")  # trimmed
+    text = _assert_light_request(request, PicturePlan, PLAN_RULES)
+    assert "in French" in text and "le renard → fox" in text and "un renard roux" in text
+
+    # Nothing written: the card alone decides; a figure has no search
+    answer = '{"kind": "figure", "description": "Un triangle ABC rectangle en A"}'
+    plan, request = _light_call(monkeypatch, answer, lambda s: llm.plan_picture(s, "Pythagore", "BC² = AB² + AC²"))
+    assert (plan.kind, plan.description, plan.search) == ("figure", "Un triangle ABC rectangle en A", "")
+    assert "nothing: decide from the card" in request[1][0]
+
+    plan_ = lambda s: llm.plan_picture(s, "a", "b")  # noqa: E731
+    assert _error(monkeypatch, "", plan_) == "llm.empty_answer"
+    assert _error(monkeypatch, '{"kind": "photo", "description": "x"}', plan_) == "llm.invalid_answer"
+    assert _error(monkeypatch, '{"kind": "picture"}', plan_) == "llm.invalid_answer"  # no description
+    assert _error(monkeypatch, "not json", plan_) == "llm.invalid_answer"
+
+
+def test_search_words_with_gemini(monkeypatch):
+    from notosaurus_core.models import SearchWords
+    from notosaurus_core.prompts import SEARCH_WORDS_RULES
+
+    words, request = _light_call(
+        monkeypatch, '{"words": " Eiffel tower "}', lambda s: llm.search_words(s, " la tour Eiffel ", "Paris → France")
+    )
+    assert words == "Eiffel tower"
+    text = _assert_light_request(request, SearchWords, SEARCH_WORDS_RULES)
+    assert "la tour Eiffel" in text and "The card it is for: Paris → France" in text
+
+    # No context: no card line; empty words: what the user wrote, searched as it is
+    words, request = _light_call(monkeypatch, '{"words": "  "}', lambda s: llm.search_words(s, " un chat "))
+    assert words == "un chat" and "The card" not in request[1][0]
+
+    search = lambda s: llm.search_words(s, "x")  # noqa: E731
+    assert _error(monkeypatch, "", search) == "llm.empty_answer"
+    assert _error(monkeypatch, '{"word": "cat"}', search) == "llm.invalid_answer"
+    assert _error(monkeypatch, "[]", search) == "llm.invalid_answer"
