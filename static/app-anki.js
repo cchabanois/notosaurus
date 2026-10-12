@@ -19,6 +19,17 @@ const ankiPart = {
     return samples[voice.slice(0, 2)] ?? "Hello!";
   },
 
+  // What a card's sound says (as tts.spoken): its back; a dictation's sentence with a blank:
+  // the word, the sentence with it, the word again, as dictated at school
+  spokenText(card) {
+    const back = (card.back ?? "").trim();
+    const sentence = (card.front ?? "").replace(/\s*\([^)]*\)/g, "").trim();
+    const blank = /…|\.{3}|_{3,}/;
+    if (!this.dictation || back.includes("\n") || !blank.test(sentence)) return back;
+    const said = sentence.replace(blank, () => back);
+    return `${back}. ${said}${/[.!?]$/.test(said) ? "" : "."} ${back}.`;
+  },
+
   play(text, voice = this.voice) {
     if (!text.trim()) return;
     const params = new URLSearchParams({ text, voice });

@@ -564,3 +564,14 @@ test("no switches (the computer's page): nothing off, nothing shown", async () =
   assert.equal(c.switches.notice, null);
   assert.equal(c.off("anki.send"), false);
 });
+
+test("🔊 says what the card's sound says: a dictation's word, its sentence, the word", async () => {
+  const page = await loadScripts("app.js");
+  const c = page.component();
+  const card = { front: "Le chat boit du … (une boisson)", back: "lait" };
+  assert.equal(c.spokenText(card), "lait");  // not a dictation
+  c.dictation = true;
+  assert.equal(c.spokenText(card), "lait. Le chat boit du lait. lait.");
+  assert.equal(c.spokenText({ front: "Il a ... ans !", back: "$1" }), "$1. Il a $1 ans ! $1.");
+  assert.equal(c.spokenText({ front: "la mère", back: "la madre" }), "la madre");
+});

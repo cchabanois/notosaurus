@@ -406,7 +406,7 @@
               <button class="icon-btn" x-show="lessonId && card.front.trim() && (card.back.trim() || isCloze(card.front))"
                       @click="explain(card)" :class="{ active: card._explain?.open }" :aria-label="$t('app.explain.button')"
                       :title="$t('app.explain.button')">💬</button>
-              <button class="icon-btn" x-show="hasAudio() && !hasMath(card.back) && !isCloze(card.front) && !card.choices.length" @click="play(card.back)" :aria-label="$t('app.review.listen')">🔊</button>
+              <button class="icon-btn" x-show="hasAudio() && !hasMath(card.back) && !isCloze(card.front) && !card.choices.length" @click="play(spokenText(card))" :aria-label="$t('app.review.listen')">🔊</button>
               <button class="icon-btn" x-show="!readOnly() && !card.mask && !isCloze(card.front) && lessonId" @click="togglePicturePanel(card)"
                       :class="{ active: card._panel }" :aria-label="$t('app.pictures.panel')">🖼️</button>
               <button class="icon-btn muted" x-show="!readOnly()" @click="removeCard(card)" :aria-label="$t('app.review.removeCard')">✕</button>

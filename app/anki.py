@@ -436,7 +436,7 @@ def _two_sided_note(export: _Export, i: int, card) -> Note | None:
     values = {"Front": _html(front), "Back": _html(back), "Info": _info(card), **_helps(card)}
     media = []
     if "Audio" in nt.fields:
-        mp3 = export.audio.get(back)
+        mp3 = export.audio.get(tts.spoken(card, req.dictation))
         values["Audio"] = f"[sound:{mp3.name}]" if mp3 else ""
         media += [mp3] if mp3 else []
     if i in images:

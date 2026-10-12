@@ -35,7 +35,8 @@ internal fun Route.ankiRoutes(server: LocalServer) {
                 put("cards", req["cards"]!!)
             })
             readyAnki()
-            val (sounds, failures) = speech.sounds(deck, req.string("voice"))
+            fun on(option: String) = req[option]?.jsonPrimitive?.content == "true"
+            val (sounds, failures) = speech.sounds(deck, req.string("voice"), on("dictation"))
             val lessonId = req.string("lesson_id")
             val folder = lessons.images(lessonId)
             val pictures = deck.cards.mapNotNull { c -> folder?.resolve(c.picture)?.takeIf { c.picture.isNotEmpty() && it.isFile }?.let { c.picture to it } }.toMap()
@@ -49,7 +50,6 @@ internal fun Route.ankiRoutes(server: LocalServer) {
             val sentBefore = (lessons.get(lessonId)?.get("anki_notes") as? JsonObject)
                 ?.mapNotNull { (card, note) -> note.jsonPrimitive.longOrNull?.let { card to it } }?.toMap().orEmpty()
             val media = Media(sounds, pictures, photos, lessonId, frames, sentBefore)
-            fun on(option: String) = req[option]?.jsonPrimitive?.content == "true"
             val options = Options(reverse = on("reverse"), typing = on("typing"), dictation = on("dictation"), move = !switches.off("anki.move"))
             val sent = try {
                 withContext(Dispatchers.IO) { anki.send(deck, media, options) }

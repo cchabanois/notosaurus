@@ -218,6 +218,38 @@ def test_line_breaks_kept_in_anki(client, tmp_path):
     ]
 
 
+def test_a_dictation_says_the_word_its_sentence_the_word(client, tmp_path):
+    from conftest import synthesized
+
+    export = {
+        "deck": "Dictée",
+        "voice": "fr-FR-DeniseNeural",
+        "dictation": True,
+        "cards": [{"front": "Le chat boit du … (une boisson)", "back": "lait"}, {"front": "vert ?", "back": "green"}],
+    }
+    package = apkg.export(client, export, tmp_path)
+    assert sorted(synthesized) == ["green", "lait. Le chat boit du lait. lait."]  # no blank: the back alone
+    sounds = [flds.split("\x1f") for _, _, flds in package.notes]
+    assert any("[sound:" in field for fields in sounds for field in fields)
+    synthesized.clear()
+    apkg.export(client, {**export, "dictation": False}, tmp_path)
+    assert sorted(synthesized) == ["green", "lait"]  # not a dictation: the back
+
+
+def test_what_the_sound_says():
+    from notosaurus_core import tts
+    from notosaurus_core.models import Card
+
+    def said(front, back, dictation=True):
+        return tts.spoken(Card(front=front, back=back), dictation)
+
+    assert said("Le pré est ___", "vert") == "vert. Le pré est vert. vert."  # its full stop added
+    assert said("Il a ... ans !", "dix") == "dix. Il a dix ans ! dix."
+    assert said("Ça coûte …", r"5 \1 $1") == r"5 \1 $1. Ça coûte 5 \1 $1. 5 \1 $1."  # as written
+    assert said("la mère", "la madre") == "la madre"
+    assert said("Deux … ici", "mots\nde plus") == "mots\nde plus"  # a back of lines: as it is
+
+
 def test_typed_answer_and_dictation(client, tmp_path):
     export = {
         "deck": "Espagnol",
