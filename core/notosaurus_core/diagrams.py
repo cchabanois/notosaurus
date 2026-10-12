@@ -9,6 +9,7 @@ number, the asked one highlighted; on the back that one shown again.
 
 import hashlib
 import io
+from collections.abc import Sequence
 from pathlib import Path
 
 from PIL import Image
@@ -70,7 +71,7 @@ def _fractions(box: list[float], size: tuple[int, int], fmt: str) -> list[float]
     return [x0, y0, x1, y1] if x1 > x0 and y1 > y0 else None
 
 
-def normalize(cards: list[Card], sizes: list[tuple[int, int] | None], fmt: str) -> None:
+def normalize(cards: list[Card], sizes: Sequence[tuple[int, int] | None], fmt: str) -> None:
     """Turn the AI's boxes into fractions of the photo, with a little margin. A mask
     that can't be placed (unknown photo, empty box) is dropped: the card stays text."""
     for card in cards:
@@ -79,7 +80,7 @@ def normalize(cards: list[Card], sizes: list[tuple[int, int] | None], fmt: str) 
             continue
         size = sizes[mask.page - 1] if 1 <= mask.page <= len(sizes) else None
         box = _fractions(mask.box, size, fmt) if size else None
-        if box is None:
+        if size is None or box is None:
             card.mask = None
             continue
         width, height = size
@@ -124,7 +125,7 @@ def turns(lines: list[TextLine], sizes: list[tuple[int, int] | None], fmt: str) 
         size = sizes[line.page - 1] if 1 <= line.page <= len(sizes) else None
         first = _fractions(line.first_word, size, fmt) if size else None
         last = _fractions(line.last_word, size, fmt) if size else None
-        if first is None or last is None:
+        if size is None or first is None or last is None:
             continue
         width, height = size
         dx = ((last[0] + last[2]) - (first[0] + first[2])) / 2 * width
@@ -167,7 +168,9 @@ def turn(data: bytes, masks: list[Mask | Frame], degrees: int) -> bytes:
     return out.getvalue()
 
 
-def straighten(photos: list[bytes], cards: list[Card], rotations: list[int], frames: list[Frame] = ()) -> list[bytes]:
+def straighten(
+    photos: list[bytes], cards: list[Card], rotations: list[int], frames: Sequence[Frame] = ()
+) -> list[bytes]:
     """Turn the photos the AI found sideways or upside down, their masks and diagram
     frames with them."""
     return [
@@ -176,7 +179,7 @@ def straighten(photos: list[bytes], cards: list[Card], rotations: list[int], fra
     ]
 
 
-def boxes_on(page: int, cards: list[Card], frames: list[Frame]) -> list[Mask | Frame]:
+def boxes_on(page: int, cards: list[Card], frames: Sequence[Frame]) -> list[Mask | Frame]:
     return [c.mask for c in cards if c.mask and c.mask.page == page] + [f for f in frames if f.page == page]
 
 

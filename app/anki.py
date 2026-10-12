@@ -467,7 +467,9 @@ def lesson_tag(lesson_id: str) -> str:
 def lesson_notes(req: ExportRequest) -> list[Note]:
     """The notes a lesson gives, as sent (note type, deck, key), without their media:
     to find in Anki the notes sent before they had the lesson's tag."""
-    diagrams_ = {i: (Path("diagram.jpg"), None) for i, c in enumerate(req.cards) if c.mask}
+    diagrams_: dict[int, tuple[Path, list[float] | None]] = {
+        i: (Path("diagram.jpg"), None) for i, c in enumerate(req.cards) if c.mask
+    }
     pictures_ = {i: Path("picture.jpg") for i, c in enumerate(req.cards) if c.picture and not c.mask}
     try:
         return notes(req, images=diagrams_, pictures=pictures_)

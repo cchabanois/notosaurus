@@ -111,7 +111,7 @@ def _user_id(id: int | str) -> int:
 def add(p: PromptIn) -> Prompt:
     with storage.lock:
         user, used = _read()
-        prompt = Prompt(id=max((x.id for x in user), default=0) + 1, **p.model_dump())
+        prompt = Prompt(id=max((int(x.id) for x in user), default=0) + 1, **p.model_dump())
         _write([*user, prompt], used)
     return prompt
 

@@ -412,7 +412,7 @@ def test_a_figure_meant_but_left_undescribed_is_described(monkeypatch):
         ]
         return schema.model_validate({"deck": "Maths", "cards": cards})
 
-    monkeypatch.setattr(llm, "_generate", generate)
+    monkeypatch.setattr(llm, "_ask_provider", generate)
     s = AIConfig(llm="gemini", gemini_api_key="k")
     found = run(llm.extract_cards(s, [], "Automatique"))
     assert [c.figure for c in found.deck.cards] == [

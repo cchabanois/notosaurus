@@ -20,7 +20,7 @@ async def draw_pictures(id: str) -> dict:
 
     async def draw(draft: Lesson) -> tuple:
         with usage.metered("picture", id, draft.deck):
-            return await pictures.draw_all(settings.current(), lessons.folder(id) / "images", draft.cards)
+            return await pictures.draw_all(settings.current(), lessons.existing_folder(id) / "images", draft.cards)
 
     lesson, (failures, error) = await lessons.edit(id, draw)
     return {"lesson": lesson, "failures": failures, "error": error}
@@ -35,7 +35,7 @@ async def _edit_card(id: str, card_id: str, change) -> dict:
         if card is None:
             raise AppError("card.not_found", 404)
         await change(draft, card)
-        pictures.prune(lessons.folder(id) / "images", draft.cards)
+        pictures.prune(lessons.existing_folder(id) / "images", draft.cards)
         return card
 
     lesson, card = await lessons.edit(id, edit)
@@ -53,7 +53,7 @@ async def redraw_picture(id: str, card_id: str, req: PictureRequest, lang: str =
         with usage.metered("picture", id, draft.deck):  # figures count as pictures in the costs
             card.picture = await pictures.figure_or_picture(
                 settings.current(),
-                lessons.folder(id) / "images",
+                lessons.existing_folder(id) / "images",
                 card,
                 fresh=True,
                 asked=req.subject,
@@ -73,7 +73,7 @@ async def upload_picture(id: str, card_id: str, photo: UploadFile) -> dict:
 
     async def use(draft: Lesson, card: Card) -> None:
         try:
-            card.picture = pictures.save(lessons.folder(id) / "images", card, data)
+            card.picture = pictures.save(lessons.existing_folder(id) / "images", card, data)
             card.picture_source = PictureSource(source="photo")
         except (OSError, ValueError) as e:
             raise AppError("extract.bad_format", format=photo.content_type) from e
@@ -101,7 +101,7 @@ async def found_picture(id: str, card_id: str, req: FoundPicture) -> dict:
 
     async def use(draft: Lesson, card: Card) -> None:
         jpeg, card.picture_source = await stock.fetch(req.source, req.id)
-        card.picture = pictures.save(lessons.folder(id) / "images", card, jpeg)
+        card.picture = pictures.save(lessons.existing_folder(id) / "images", card, jpeg)
 
     return await _edit_card(id, card_id, use)
 
@@ -120,7 +120,7 @@ async def remove_picture(id: str, card_id: str) -> dict:
 
 @router.get("/api/lessons/{id}/pictures/{name}")
 async def get_picture(id: str, name: str) -> FileResponse:
-    await access.lesson(id)
+    await access.seen(id)
     folder = lessons.folder(id)
     path = folder / "images" / name if folder and pictures.NAME.match(name) else None
     if path is None or not path.is_file():

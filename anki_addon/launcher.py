@@ -148,7 +148,7 @@ def download_uv(log, archive: str | None = None, destination: Path | None = None
     else:
         with tarfile.open(fileobj=io.BytesIO(data), mode="r:gz") as t:
             member = next(m for m in t.getmembers() if m.isfile() and m.name.rsplit("/", 1)[-1] == name)
-            binary = t.extractfile(member).read()
+            binary = t.extractfile(member).read()  # pyright: ignore[reportOptionalMemberAccess] (a file: opens)
     destination.mkdir(parents=True, exist_ok=True)
     fd, tmp = tempfile.mkstemp(dir=destination)
     with os.fdopen(fd, "wb") as f:
@@ -163,7 +163,7 @@ def find_uv(log) -> str:
     """Anki's own uv (25.07 to 26.05), else one downloaded before, else one on PATH,
     else download it."""
     try:
-        from aqt.package import uv_binary
+        from aqt.package import uv_binary  # pyright: ignore[reportMissingImports] (Anki's own)
 
         path = uv_binary()
         if path and Path(path).exists():
@@ -276,13 +276,13 @@ class Server:
         )
 
     def stop(self) -> None:
-        if self.running():
-            self.process.terminate()
+        process, self.process = self.process, None
+        if process is not None and process.poll() is None:
+            process.terminate()
             try:
-                self.process.wait(timeout=5)
+                process.wait(timeout=5)
             except subprocess.TimeoutExpired:
-                self.process.kill()
-        self.process = None
+                process.kill()
 
     def log_tail(self, lines: int = 40) -> str:
         try:

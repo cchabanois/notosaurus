@@ -41,12 +41,13 @@ async def visible(owner: str, shared: bool) -> bool:
 
 async def lesson(id: str | None) -> Lesson | None:
     """The lesson, if the open Anki profile may see it (None without an id)."""
-    found = lessons.get(id) if id else None
-    if found is None:
-        if id:
-            raise AppError("lesson.not_found", 404)
-        return None
-    if not await visible(found.owner, found.shared):
+    return await seen(id) if id else None
+
+
+async def seen(id: str) -> Lesson:
+    """The lesson, if the open Anki profile may see it: lesson.not_found otherwise."""
+    found = lessons.get(id)
+    if found is None or not await visible(found.owner, found.shared):
         raise AppError("lesson.not_found", 404)
     return found
 
@@ -59,7 +60,7 @@ async def is_owner(lesson: Lesson) -> bool:
 async def editable(id: str) -> Lesson:
     """The lesson, if the open Anki profile may change it: for the others, it's read-only
     (they can still read it, send it to their own Anki and export it)."""
-    found = await lesson(id)
+    found = await seen(id)
     if not await is_owner(found):
         raise AppError("lesson.read_only", 403, owner=found.owner)
     return found

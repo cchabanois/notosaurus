@@ -2,6 +2,7 @@
 rules, and the requests built from the user's prompt, the lesson's text, the cards."""
 
 import json
+from collections.abc import Sequence
 
 from . import diagrams
 from .models import Card, Deck
@@ -169,13 +170,13 @@ def _user_text(
     prompt: str,
     deck: str,
     photos: int,
-    sizes: list[tuple[int, int] | None] = (),
+    sizes: Sequence[tuple[int, int] | None] = (),
     fmt: str = "",
-    decks: list[str] = (),
+    decks: Sequence[str] = (),
     fun_facts: bool = False,
-    texts: list[str] = (),
+    texts: Sequence[str] = (),
     helps: bool = False,
-    existing: list[str] = (),
+    existing: Sequence[str] = (),
 ) -> str:
     text = f"Instructions: {prompt.strip()}"
     if fun_facts:
@@ -207,7 +208,7 @@ EXISTING_MAX = 6000  # characters of the cards already made sent (a long lesson:
 PAGE_TEXT_MAX = 8000  # characters per page: a dense page holds 3 to 5,000
 
 
-def _pdf_texts(texts: list[str]) -> str:
+def _pdf_texts(texts: Sequence[str]) -> str:
     """The text of the photos that are PDF pages, as the PDF holds it: the exact words
     (no misreading), the photo keeping the layout and the diagrams. A scanned PDF has
     no text (or a few stray characters): nothing then."""
@@ -267,8 +268,8 @@ EXPLAIN_ASKS = {
 }
 
 
-def _explain_text(card: Card, kind: str, prompt: str, deck: str, language: str, page_texts: list[str]) -> str:
-    shown = {"front": card.front, "back": card.back, "info": card.info}
+def _explain_text(card: Card, kind: str, prompt: str, deck: str, language: str, page_texts: Sequence[str]) -> str:
+    shown: dict[str, str | list[str]] = {"front": card.front, "back": card.back, "info": card.info}
     if card.choices:
         shown["wrong_options"] = card.choices
     text = (
@@ -288,7 +289,7 @@ def _revision_text(
     instruction: str,
     language: str,
     photos: int,
-    sizes: list[tuple[int, int] | None] = (),
+    sizes: Sequence[tuple[int, int] | None] = (),
     fmt: str = "",
     labels: dict[int, list[int]] | None = None,
 ) -> str:

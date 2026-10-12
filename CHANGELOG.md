@@ -41,6 +41,7 @@ Each pull request adds a line under **Unreleased**. See [Releasing](CONTRIBUTING
 - A card's picture showing a real thing (a person, a place, a work, an animal) is now found before it is drawn: the AI writes what to search for, looks at the free pictures found and keeps the one that fits (drawn when none does). Free (the choice costs well under a cent), and exact. **Settings → Pictures on cards → Look for a free picture first** turns it off.
 - Each card keeps where its picture comes from (a free picture's source, licence and page; drawn by the AI; your photo), said in its picture panel with a link to the page; on the computer, its Anki note keeps it too, in a hidden **Source** field (on no card; the Android app's notes don't have it: AnkiDroid can't add a field to its note types).
 - A picture that shows the answer (the portrait of the person asked about) goes on the back; a sentence with gaps gets no picture (Anki shows none on it: it was paid for nothing).
+- `NOTOSAURUS_PICTURE_SERVICE` and `NOTOSAURUS_PICTURE_MODEL` (`.env`) give the pictures' service and model by default, as `NOTOSAURUS_LLM` and `NOTOSAURUS_MODEL` do for the cards (Docker); the settings page still wins.
 
 ### Changed
 

@@ -18,7 +18,7 @@ import io
 import logging
 import re
 import time
-from typing import Literal
+from typing import Any, Literal
 from urllib.parse import urlparse
 
 import httpx
@@ -69,10 +69,10 @@ class Found(BaseModel):
     page: str = ""  # its page at its source
 
 
-_cache: dict[tuple, tuple[float, object]] = {}
+_cache: dict[tuple, tuple[float, Any]] = {}  # key → (when, a source's answer)
 
 
-def _cached(key: tuple):
+def _cached(key: tuple) -> Any:
     hit = _cache.get(key)
     return hit[1] if hit and time.monotonic() - hit[0] < CACHE_S else None
 

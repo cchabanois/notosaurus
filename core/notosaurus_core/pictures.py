@@ -13,7 +13,7 @@ import io
 import logging
 import re
 from pathlib import Path
-from typing import NamedTuple
+from typing import Any, NamedTuple
 
 from . import config, figures, files, images, llm, recommended, stock
 from .cards import is_cloze
@@ -202,11 +202,13 @@ async def _fetch_models(s: AIConfig, drawing: str) -> list[dict]:
         return [
             {"id": m.name.rsplit("/", 1)[-1], "actions": m.supported_actions or vertex}
             async for m in await client.aio.models.list()
+            if m.name
         ]
     import openai
 
     key = {"openai": s.openai_api_key, "openrouter": s.openrouter_api_key}[drawing]
-    client = openai.AsyncOpenAI(api_key=key, **({"base_url": OPENROUTER} if drawing == "openrouter" else {}))
+    address: dict[str, Any] = {"base_url": OPENROUTER} if drawing == "openrouter" else {}  # else OpenAI's
+    client = openai.AsyncOpenAI(api_key=key, **address)
     return [
         {"id": m.id, "outputs": ((m.model_extra or {}).get("architecture") or {}).get("output_modalities")}
         async for m in client.models.list()

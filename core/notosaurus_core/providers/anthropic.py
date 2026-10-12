@@ -41,7 +41,8 @@ async def _anthropic[T: BaseModel](
             model=s.model_for_provider(),
             max_tokens=16000,
             system=system,
-            messages=[{"role": "user", "content": content}],
+            # Plain dicts of the API's documented shape, not the SDK's TypedDicts
+            messages=[{"role": "user", "content": content}],  # pyright: ignore[reportArgumentType]
             output_format=schema,
             # If the model refuses, the API reruns the request on a fallback model.
             extra_headers={"anthropic-beta": "server-side-fallback-2026-07-01"},

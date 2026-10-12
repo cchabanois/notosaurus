@@ -41,14 +41,16 @@ def diagram_images(req: ExportRequest, lesson: Lesson | None) -> dict[int, tuple
     """The diagram image of each diagram card (index in req.cards → path and crop),
     from the saved lesson's photos. Without a saved lesson, there is no photo to show."""
     folder = lessons.folder(lesson.id) if lesson else None
-    if folder is None:
+    if lesson is None or folder is None:
         return {}
     frames = {f.page: f.box for f in (req.frames if req.frames is not None else lesson.frames)}
     images, used = {}, set()
     for i, card in enumerate(req.cards):
-        photo = lessons.photo_path(lesson.id, card.mask.page) if card.mask else None
+        if card.mask is None:
+            continue
+        page = card.mask.page
+        photo = lessons.photo_path(lesson.id, page)
         if photo and photo.is_file():
-            page = card.mask.page
             box = diagrams.crop(frames.get(page), [c.mask for c in req.cards if c.mask and c.mask.page == page])
             images[i] = (diagrams.page_image(folder / "images", photo, box), box)
             used.add(images[i][0])

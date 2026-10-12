@@ -9,6 +9,7 @@ import hashlib
 import hmac
 import os
 import secrets
+from dataclasses import dataclass
 
 from notosaurus_core import config
 
@@ -24,31 +25,6 @@ from notosaurus_core.config import (  # noqa: F401
 
 from . import storage
 
-SECRET_FIELDS = (
-    "gemini_api_key",
-    "anthropic_api_key",
-    "openai_api_key",
-    "openrouter_api_key",
-    "compatible_api_key",
-    "ankiconnect_key",
-)
-
-# Settings field → environment variable giving its default value.
-ENV = {
-    "llm": "NOTOSAURUS_LLM",
-    "model": "NOTOSAURUS_MODEL",
-    "fallback_models": "NOTOSAURUS_FALLBACK_MODEL",
-    "gemini_api_key": "GEMINI_API_KEY",
-    "anthropic_api_key": "ANTHROPIC_API_KEY",
-    "openai_api_key": "OPENAI_API_KEY",
-    "openrouter_api_key": "OPENROUTER_API_KEY",
-    "compatible_base_url": "NOTOSAURUS_COMPATIBLE_BASE_URL",
-    "compatible_api_key": "NOTOSAURUS_COMPATIBLE_API_KEY",
-    "tts_rate": "NOTOSAURUS_TTS_RATE",
-    "ankiconnect_url": "NOTOSAURUS_ANKICONNECT_URL",
-    "ankiconnect_key": "NOTOSAURUS_ANKICONNECT_KEY",
-}
-
 
 class Settings(AIConfig):
     tts_rate: str = "-10%"
@@ -60,6 +36,53 @@ class Settings(AIConfig):
     # profile, e.g. "Bastien is in year 8", "short answers, with the article".
     instructions: str = ""
     profile_instructions: dict[str, str] = {}
+
+
+@dataclass(frozen=True)
+class Spec:
+    """How a settings field is set besides its default. `editable`: from the settings
+    page (models.SettingsUpdate has it); `env`: the environment variable (.env) giving
+    its default; `secret`: masked in what the settings API sends back."""
+
+    editable: bool = True
+    env: str | None = None
+    secret: bool = False
+
+
+# Every Settings field, described once: ENV, SECRET_FIELDS and EDITABLE_FIELDS come
+# from here (tests/test_admin.py checks SettingsUpdate agrees). No environment variable
+# for the preferences and texts made in the settings page.
+SPECS: dict[str, Spec] = {
+    "llm": Spec(env="NOTOSAURUS_LLM"),
+    "model": Spec(env="NOTOSAURUS_MODEL"),
+    "fallback_models": Spec(env="NOTOSAURUS_FALLBACK_MODEL"),
+    "gemini_api_key": Spec(env="GEMINI_API_KEY", secret=True),
+    # Vertex AI is the relay's way to Gemini (notosaurus-core with a service account):
+    # here Gemini takes a key, so neither the settings page nor the environment sets them
+    "gemini_vertex_project": Spec(editable=False),
+    "gemini_vertex_location": Spec(editable=False),
+    "anthropic_api_key": Spec(env="ANTHROPIC_API_KEY", secret=True),
+    "openai_api_key": Spec(env="OPENAI_API_KEY", secret=True),
+    "openrouter_api_key": Spec(env="OPENROUTER_API_KEY", secret=True),
+    "compatible_base_url": Spec(env="NOTOSAURUS_COMPATIBLE_BASE_URL"),
+    "compatible_api_key": Spec(env="NOTOSAURUS_COMPATIBLE_API_KEY", secret=True),
+    "picture_service": Spec(env="NOTOSAURUS_PICTURE_SERVICE"),
+    "picture_model": Spec(env="NOTOSAURUS_PICTURE_MODEL"),
+    "picture_find": Spec(),
+    "tts_rate": Spec(env="NOTOSAURUS_TTS_RATE"),
+    "ankiconnect_url": Spec(env="NOTOSAURUS_ANKICONNECT_URL"),
+    "ankiconnect_key": Spec(env="NOTOSAURUS_ANKICONNECT_KEY", secret=True),
+    "anki_sync": Spec(),
+    "card_helps": Spec(),
+    "instructions": Spec(),
+    "profile_instructions": Spec(),
+}
+if SPECS.keys() != Settings.model_fields.keys():  # a field added without saying how it's set
+    raise RuntimeError(f"settings.SPECS and Settings differ: {sorted(SPECS.keys() ^ Settings.model_fields.keys())}")
+
+ENV = {field: spec.env for field, spec in SPECS.items() if spec.env}  # field → environment variable
+SECRET_FIELDS = tuple(field for field, spec in SPECS.items() if spec.secret)
+EDITABLE_FIELDS = frozenset(field for field, spec in SPECS.items() if spec.editable)
 
 
 def configured(s: Settings) -> bool:

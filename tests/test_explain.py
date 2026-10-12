@@ -51,6 +51,6 @@ def test_what_the_ai_is_asked(monkeypatch):
 
     import asyncio
 
-    monkeypatch.setattr(llm, "_generate", answer)
+    monkeypatch.setattr(llm, "_ask_provider", answer)
     found = asyncio.run(llm.explain_card(AIConfig(llm="gemini"), card, "why", "p", "d", "French"))
     assert found.more == ["example", "mnemonic"]

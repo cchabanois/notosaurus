@@ -54,6 +54,7 @@ enregistré dans la page des réglages l'emporte.
 | `NOTOSAURUS_MODEL` | le modèle (vide : le choix de Notosaurus pour le service) |
 | `NOTOSAURUS_FALLBACK_MODEL` | modèles Gemini essayés quand le principal est surchargé |
 | `NOTOSAURUS_COMPATIBLE_BASE_URL`, `NOTOSAURUS_COMPATIBLE_API_KEY` | un autre service compatible OpenAI (Ollama : `http://localhost:11434/v1`) |
+| `NOTOSAURUS_PICTURE_SERVICE`, `NOTOSAURUS_PICTURE_MODEL` | le service qui dessine les images des cartes (`gemini`, `openai`, `openrouter`, `none` ; vide : celui des cartes) et son modèle |
 | `NOTOSAURUS_DATA` | le dossier de données (par défaut : `data`) |
 | `NOTOSAURUS_ANKICONNECT_URL`, `NOTOSAURUS_ANKICONNECT_KEY` | AnkiConnect (par défaut : `http://localhost:8765`) |
 | `NOTOSAURUS_PUBLIC_URL` | l'adresse du QR code des téléphones, quand Notosaurus ne la voit pas (Docker) ; en dehors des adresses IP et de `localhost`, le seul nom auquel Notosaurus répond |

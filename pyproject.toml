@@ -14,6 +14,12 @@ testpaths = ["tests"]
 line-length = 120
 src = [".", "core"]
 
+[tool.pyright]
+include = ["app", "core/notosaurus_core", "anki_addon"]
+extraPaths = ["core"]
+pythonVersion = "3.13"
+typeCheckingMode = "basic"
+
 [tool.ruff.lint]
 select = [
   "E", "W",  # pycodestyle
