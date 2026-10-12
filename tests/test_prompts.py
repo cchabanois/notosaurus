@@ -160,3 +160,16 @@ def test_the_android_app_has_the_same_prompts():
     kotlin = Path("android/app/src/main/java/app/notosaurus/Prompts.kt").read_text(encoding="utf-8")
     listed = re.search(r"BUILTIN = listOf\(([^)]*)\)", kotlin).group(1)
     assert tuple(re.findall(r'"(\w+)"', listed)) == prompts.BUILTIN
+
+
+def test_a_dictation_in_the_pupils_own_language_has_their_voice():
+    """For their own language the AI gives none: a dictation (or typed answers) still needs
+    a voice, the page's language."""
+    from app.routes.generation import _learned
+
+    assert _learned("", "fr", spelling=True) == "fr"
+    assert _learned("", "fr-FR", spelling=True) == "fr"
+    assert _learned("es-ES", "fr", spelling=True) == "es-ES"  # a language learned: its own
+    assert _learned("fr-FR", "fr", spelling=True) == "fr-FR"
+    assert _learned("fr-FR", "fr", spelling=False) == ""  # not a dictation: no voice
+    assert _learned("", "fr", spelling=False) == ""

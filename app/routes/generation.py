@@ -134,9 +134,12 @@ async def _generate(
 def _learned(back_language: str, lang: str, spelling: bool) -> str:
     """The backs' language when it is one being learned: not the pupil's own (the page's)
     for a lesson in their language ("Français" is no foreign language to a French pupil),
-    unless the cards are for writing what is heard (a dictation)."""
+    unless the cards are for writing what is heard (a dictation): then theirs when the AI
+    gave none (it doesn't for their own language)."""
     own = lang.split("-")[0].lower()
-    if own and back_language.strip().lower().split("-")[0] == own and not spelling:
+    if spelling:
+        return back_language.strip() or own
+    if own and back_language.strip().lower().split("-")[0] == own:
         return ""
     return back_language
 
