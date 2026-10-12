@@ -16,10 +16,15 @@ import app.notosaurus.LocalServer.Companion.RELAY
 import app.notosaurus.LocalServer.Companion.TTS_RATE
 import app.notosaurus.LocalServer.Companion.keyOf
 import io.ktor.server.routing.Route
+import kotlinx.coroutines.withTimeout
+import kotlinx.serialization.json.JsonArray
+import kotlinx.serialization.json.JsonNull
 import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.put
 import java.net.URI
+
+private const val SWITCHES_WAIT_MS = 5_000L // the page shows meanwhile; the relay may be starting
 
 /** The page's configuration, the settings (assets/page/admin.html) and "With my computer". */
 internal fun Route.settingsRoutes(server: LocalServer) {
@@ -39,6 +44,16 @@ internal fun Route.settingsRoutes(server: LocalServer) {
                 // The welcome (a parent's tool, Gemini, the privacy policy): until this version is accepted
                 put("welcome", WELCOME_VERSION)
                 put("welcome_accepted", (prefs[WELCOME]?.toIntOrNull() ?: 0) >= WELCOME_VERSION)
+            }
+        }
+        // What the relay tells the app for now (Switches): read again, the last known when it can't be
+        api("GET", "/api/switches") {
+            runCatching { withTimeout(SWITCHES_WAIT_MS) { relay().account() } }.getOrNull()?.let(switches::keep)
+            buildJsonObject {
+                put("notice", switches.notice(lang()) ?: JsonNull)
+                put("disabled", JsonArray(switches.disabled().map(::JsonPrimitive)))
+                put("update", switches.updateAvailable())
+                put("store", "https://play.google.com/store/apps/details?id=${BuildConfig.APPLICATION_ID}")
             }
         }
         api("POST", "/api/welcome") {

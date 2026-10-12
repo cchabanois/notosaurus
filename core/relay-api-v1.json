@@ -1703,6 +1703,31 @@
             ],
             "title": "Ends At",
             "description": "A subscription: when it ends unless renewed (ISO 8601); none for a licence without end."
+          },
+          "notice": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Notice"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "A message for every user, if any."
+          },
+          "disabled": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Disabled",
+            "description": "FEATURES turned off for now: the app hides them and refuses them."
+          },
+          "latest": {
+            "type": "string",
+            "title": "Latest",
+            "description": "The latest version of the app (\"1.2.0\"); \"\" when not said.",
+            "default": ""
           }
         },
         "type": "object",
@@ -1712,7 +1737,7 @@
           "daily_left"
         ],
         "title": "Account",
-        "description": "GET /v1/account: what the licence gives; also the client's connection test."
+        "description": "GET /v1/account: what the licence gives; also the client's connection test. And what\nthe app is told for now (set on the relay, no app update): a notice, the FEATURES\nturned off, the latest version."
       },
       "Card": {
         "properties": {
@@ -2381,6 +2406,42 @@
         ],
         "title": "Mask",
         "description": "Where a diagram label is, to hide it on the photo (image occlusion).\n\nFrom the AI, `box` is in the format its instructions give (depends on the model);\nonce saved, it is [x_min, y_min, x_max, y_max] as fractions of the photo's size."
+      },
+      "Notice": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "maxLength": 100,
+            "minLength": 1,
+            "title": "Id",
+            "description": "Another id: shown again, even once closed."
+          },
+          "level": {
+            "type": "string",
+            "enum": [
+              "info",
+              "warning"
+            ],
+            "title": "Level",
+            "default": "info"
+          },
+          "texts": {
+            "additionalProperties": {
+              "type": "string"
+            },
+            "type": "object",
+            "minProperties": 1,
+            "title": "Texts",
+            "description": "By language (\"fr\", \"en\"…): the app shows its own, else English, else any."
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "texts"
+        ],
+        "title": "Notice",
+        "description": "A message for every user of the app, shown until closed (a problem being fixed…)."
       },
       "PictureRequest": {
         "properties": {

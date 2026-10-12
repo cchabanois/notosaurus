@@ -331,8 +331,34 @@ class Voice(BaseModel):
     gender: str = Field(description='"Female" or "Male".')
 
 
+# What the app can be told to turn off (Account.disabled) while a fix of it waits for the
+# store: the actions that change the user's data on the phone (AnkiDroid, the lessons),
+# which the relay doesn't see, and the costly ones
+FEATURES = (
+    "anki.send",  # cards sent to AnkiDroid
+    "anki.move",  # a lesson's cards moved to its new deck when sent
+    "anki.delete",  # its notes deleted from AnkiDroid (after a send, or with the lesson)
+    "lesson.complete",  # its next pages added
+    "lesson.regenerate",  # made again in its place
+    "pictures.search",  # free pictures found
+    "pictures.draw",  # pictures drawn
+)
+
+
+class Notice(BaseModel):
+    """A message for every user of the app, shown until closed (a problem being fixed…)."""
+
+    id: str = Field(min_length=1, max_length=100, description="Another id: shown again, even once closed.")
+    level: Literal["info", "warning"] = "info"
+    texts: dict[str, str] = Field(
+        min_length=1, description='By language ("fr", "en"…): the app shows its own, else English, else any.'
+    )
+
+
 class Account(BaseModel):
-    """GET /v1/account: what the licence gives; also the client's connection test."""
+    """GET /v1/account: what the licence gives; also the client's connection test. And what
+    the app is told for now (set on the relay, no app update): a notice, the FEATURES
+    turned off, the latest version."""
 
     plan: str = Field(description='The subscription ("monthly", "yearly"…).')
     credits_left: int = Field(ge=0, description="Credits left in this period.")
@@ -342,6 +368,11 @@ class Account(BaseModel):
         default=None,
         description="A subscription: when it ends unless renewed (ISO 8601); none for a licence without end.",
     )
+    notice: Notice | None = Field(default=None, description="A message for every user, if any.")
+    disabled: list[str] = Field(
+        default_factory=list, description="FEATURES turned off for now: the app hides them and refuses them."
+    )
+    latest: str = Field(default="", description='The latest version of the app ("1.2.0"); "" when not said.')
 
 
 class SubscribeRequest(BaseModel):

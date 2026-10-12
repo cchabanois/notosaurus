@@ -401,6 +401,10 @@
       "busy": "Ich schreibe auf, was du gesagt hast…",
       "listening": "Ich höre zu… tippe auf ⏹, wenn du fertig bist.",
       "nothing": "Nichts gehört: versuch es noch einmal, näher am Mikrofon."
+    },
+    "update": {
+      "available": "Eine neue Version von Notosaurus ist verfügbar.",
+      "open": "Aktualisieren"
     }
   },
   "admin": {
@@ -874,6 +878,9 @@
     "subscription": {
       "unavailable": "Google Play ist auf diesem Handy nicht verfügbar.",
       "none": "Kein Abo in diesem Google-Konto gefunden."
+    },
+    "app": {
+      "feature_off": "Diese Funktion ist vorübergehend nicht verfügbar. Versuche es später noch einmal."
     }
   },
   "demo": {

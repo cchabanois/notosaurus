@@ -66,6 +66,7 @@ function storage(action, value, key = LAST_PROMPT) {
     localStorage.setItem(key, value);
   } catch {}
 }
+const NOTICE_CLOSED = "notosaurus.noticeClosed";  // the id of the last notice closed on this device
 const HELPS = "notosaurus.helps";  // the "helps on the back" switch, once changed on this device
 const FUN_FACTS = "notosaurus.funFacts";  // the "did you know" switch, kept on this device
 const CAREFUL = "notosaurus.careful";  // "Careful" chosen over "Quick" (the default), kept on this device
@@ -104,6 +105,9 @@ const newId = () => [...crypto.getRandomValues(new Uint8Array(6))].map((b) => b.
 document.addEventListener("alpine:init", () => {
   Alpine.data("notosaurus", () => ({
     photos: [],          // { blob, url, text, sent; when partly hidden: original, mask, pdfText }
+    // What the service tells for now (the Android app, loadSwitches): a notice, features off, an update
+    switches: { notice: null, disabled: [], update: false, store: "" },
+    noticeClosed: storage("get", undefined, NOTICE_CLOSED),
     prompts: [],
     selectedId: null,
     promptChosen: false,         // a prompt picked (or "Free") by the user: the first load keeps it
@@ -222,6 +226,7 @@ document.addEventListener("alpine:init", () => {
         const helps = storage("get", undefined, HELPS);
         this.helps = helps === null ? Boolean(config.card_helps) : helps === "1";
       } catch {}
+      this.loadSwitches();  // not waited for: the relay may be starting
       this.$watch("funFacts", (on) => storage("set", on ? "1" : "0", FUN_FACTS));
       this.$watch("quick", (on) => storage("set", on ? "0" : "1", CAREFUL));
       await Promise.all([this.loadPrompts(storage("get"), true), this.loadLessons()]);
@@ -235,6 +240,22 @@ document.addEventListener("alpine:init", () => {
       try {
         this.voices = await (await api("/api/voices")).json();
       } catch {}  // the list is only an input aid
+    },
+
+    async loadSwitches() {
+      try {
+        this.switches = { ...this.switches, ...(await (await api("/api/switches")).json()) };
+      } catch {}  // the computer's own page: none
+    },
+
+    // A feature turned off for now (relay_api.FEATURES): its buttons hidden
+    off(feature) {
+      return this.switches.disabled.includes(feature);
+    },
+
+    closeNotice() {
+      this.noticeClosed = this.switches.notice.id;
+      storage("set", this.noticeClosed, NOTICE_CLOSED);
     },
 
     // The methods, by topic: app-photos.js, app-prompts.js, app-lessons.js, app-cards.js,

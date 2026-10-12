@@ -16,7 +16,7 @@ const lessonsPart = {
 
   // "Add the new pages' cards": only they are read, the lesson's cards stay as they are
   canComplete() {
-    return this.regeneratesInPlace() && this.cards.length > 0 && this.newPages().length > 0;
+    return this.regeneratesInPlace() && this.cards.length > 0 && this.newPages().length > 0 && !this.off("lesson.complete");
   },
 
   // `careful`: made again carefully ("Careful, again"), whatever the choice above.

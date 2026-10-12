@@ -538,6 +538,59 @@ class LocalServerTest {
     }
 
     @Test
+    fun whatTheRelayTellsForNow() = app { client ->
+        relayAnswers(
+            """{"plan": "monthly", "credits_left": 10, "daily_left": 5, "latest": "0.2.0", "disabled": ["anki.send", "anki.move", "lesson.complete"],
+            "notice": {"id": "n1", "level": "warning", "texts": {"fr": "On répare", "en": "Fixing it"}}}""",
+        )
+        val switches = client.get("/api/switches") { page("fr") }.json().jsonObject
+        assertEquals("On répare", switches["notice"]!!.jsonObject.string("text"))
+        assertEquals("warning", switches["notice"]!!.jsonObject.string("level"))
+        assertEquals(listOf("anki.send", "anki.move", "lesson.complete"), switches["disabled"]!!.jsonArray.map { it.jsonPrimitive.content })
+        assertEquals("true", switches["update"]!!.jsonPrimitive.content) // 0.2.0 after this 0.1.0
+        assertTrue(switches.string("store").endsWith("id=app.notosaurus"))
+
+        // Turned off: refused, said so
+        val lesson = client.extract()
+        relay.takeRequest(5, TimeUnit.SECONDS) // /v1/account
+        relay.takeRequest(5, TimeUnit.SECONDS) // the extraction
+        val send = client.post("/api/anki/send") {
+            page(); contentType(ContentType.Application.Json)
+            setBody("""{"deck": "D", "cards": ${lesson["cards"]}, "voice": "", "lesson_id": "${lesson.string("id")}"}""")
+        }
+        assertEquals(HttpStatusCode.BadRequest, send.status)
+        assertEquals("app.feature_off", send.json().jsonObject["detail"]!!.jsonObject.string("code"))
+        assertTrue(anki.sent.isEmpty())
+
+        // The relay unreachable: the last ones told stay (offline, still off); another language: English
+        relayAnswers("", 503)
+        val offline = client.get("/api/switches") { page("de") }.json().jsonObject
+        assertEquals("Fixing it", offline["notice"]!!.jsonObject.string("text"))
+        assertEquals(3, offline["disabled"]!!.jsonArray.size)
+
+        // Turned on again: sent, its cards not moved while anki.move is off
+        relayAnswers("""{"plan": "monthly", "credits_left": 10, "daily_left": 5, "disabled": ["anki.move"]}""")
+        val again = client.get("/api/switches") { page() }.json().jsonObject
+        assertEquals(JsonNull, again["notice"])
+        assertEquals("false", again["update"]!!.jsonPrimitive.content)
+        client.post("/api/anki/send") {
+            page(); contentType(ContentType.Application.Json)
+            setBody("""{"deck": "D", "cards": ${lesson["cards"]}, "voice": "", "lesson_id": "${lesson.string("id")}"}""")
+        }
+        assertEquals(false, anki.options?.move)
+    }
+
+    @Test
+    fun versionsCompared() {
+        assertTrue(Switches.newer("1.10.0", "1.9.2"))
+        assertTrue(Switches.newer("1.2", "1.1.9"))
+        assertFalse(Switches.newer("1.2.0", "1.2.0"))
+        assertFalse(Switches.newer("1.2.0", "1.3.0-debug"))
+        assertFalse(Switches.newer("", "1.0.0"))
+        assertFalse(Switches.newer("soon", "1.0.0"))
+    }
+
+    @Test
     fun cardsIntoAnkiDroid() = app { client ->
         assertEquals("true", client.get("/api/anki/status") { page() }.json().jsonObject["available"]!!.jsonPrimitive.content)
         val lesson = client.extract()

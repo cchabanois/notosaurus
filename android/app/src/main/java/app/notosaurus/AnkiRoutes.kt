@@ -27,6 +27,7 @@ internal fun Route.ankiRoutes(server: LocalServer) {
             }
         }
         api("POST", "/api/anki/send") {
+            switches.check("anki.send")
             val req = body()
             req.string("lesson_id").takeIf { it.isNotEmpty() }?.let { lessons.update(it, req, exported = true) }
             val deck = json.decodeFromJsonElement(Deck.serializer(), buildJsonObject {
@@ -49,7 +50,7 @@ internal fun Route.ankiRoutes(server: LocalServer) {
                 ?.mapNotNull { (card, note) -> note.jsonPrimitive.longOrNull?.let { card to it } }?.toMap().orEmpty()
             val media = Media(sounds, pictures, photos, lessonId, frames, sentBefore)
             fun on(option: String) = req[option]?.jsonPrimitive?.content == "true"
-            val options = Options(reverse = on("reverse"), typing = on("typing"), dictation = on("dictation"))
+            val options = Options(reverse = on("reverse"), typing = on("typing"), dictation = on("dictation"), move = !switches.off("anki.move"))
             val sent = try {
                 withContext(Dispatchers.IO) { anki.send(deck, media, options) }
             } catch (e: Exception) { // e.g. AnkiDroid never opened: no collection yet
@@ -57,7 +58,7 @@ internal fun Route.ankiRoutes(server: LocalServer) {
             }
             if (lessonId.isNotEmpty()) lessons.setAnkiNotes(lessonId, sent.notes)
             // Its notes no card updated (cards deleted, or remade): the page offers to delete them
-            val leftovers = if (lessonId.isEmpty()) emptyList() else withContext(Dispatchers.IO) { anki.leftovers(lessonId, sent.notes.values.toSet()) }
+            val leftovers = if (lessonId.isEmpty() || switches.off("anki.delete")) emptyList() else withContext(Dispatchers.IO) { anki.leftovers(lessonId, sent.notes.values.toSet()) }
             buildJsonObject {
                 put("leftovers", JsonArray(leftovers.map { buildJsonObject { put("id", it.id); put("text", it.text); put("deck", it.deck) } }))
                 put("added", sent.added)

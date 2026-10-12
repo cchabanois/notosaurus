@@ -9,6 +9,7 @@ Each pull request adds a line under **Unreleased**. See [Releasing](CONTRIBUTING
 
 ### Added
 
+- The coming Android app can be told by the service, with no app update, while a fix waits for the store: a message for every user (closed once), features turned off for now (sending to AnkiDroid, moving or deleting its notes, completing or remaking a lesson, finding or drawing pictures: their buttons hidden, refused if asked), and that a new version is out (a link to its store page). The last ones told stay when offline. For developers: `/v1/account` has `notice`, `disabled` (`relay_api.FEATURES`) and `latest`.
 - 🔎 **Find a picture** shows only the pictures that show the card's subject, the best first: the AI looks at those found (more are looked for) and leaves out the others. A card's own picture is searched for with the words chosen with it. In the coming Android app it costs 1 credit (still free when the AI couldn't sort them). For developers: `/v1/pictures/search` takes `sort`.
 - 🔎 **Find a picture** shows each source's pictures as soon as it answers, instead of waiting for all of them; a source slower than 5 seconds is left out of that search. For developers: a sorted `/v1/pictures/search` asked as `application/x-ndjson` answers source by source (`relay_api.PictureSearchLine`).
 - The coming Android app can subscribe through Google Play (a free trial first), and restores the subscription on a new phone by itself: the licence key comes from the purchase, nothing to type. Shown once the subscription is on sale; a licence key can still be typed.

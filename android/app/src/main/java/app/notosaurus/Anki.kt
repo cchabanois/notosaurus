@@ -35,6 +35,7 @@ data class Options(
     val reverse: Boolean = false, // a card the other way too (back → front)
     val typing: Boolean = false, // the answer typed, compared letter by letter
     val dictation: Boolean = false, // the back heard, then written
+    val move: Boolean = true, // a note sent before, now in another deck: its cards moved there
 )
 
 /** The files the cards show, on the phone. */
@@ -238,7 +239,7 @@ class Anki(private val context: Context) : AnkiTarget {
                     api.updateNoteTags(id, there.tags + note.tags)
                     updated++
                 }
-                if (moveCards(id, did)) moved++
+                if (options.move && moveCards(id, did)) moved++
                 sent[note.card] = id
                 false
             }
@@ -260,7 +261,7 @@ class Anki(private val context: Context) : AnkiTarget {
                             updated++
                         }
                         // The lesson's deck (or the card's part) changed: its cards follow, history kept
-                        if (moveCards(mine.id, did)) moved++
+                        if (options.move && moveCards(mine.id, did)) moved++
                         sent[note.card] = mine.id
                     }
                 }
