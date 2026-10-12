@@ -9,6 +9,7 @@ import android.webkit.WebView
 import androidx.core.content.edit
 import androidx.test.core.app.ActivityScenario
 import androidx.test.platform.app.InstrumentationRegistry
+import com.ichi2.anki.api.AddContentApi
 import org.junit.Assume.assumeTrue
 import org.junit.rules.ExternalResource
 import java.util.concurrent.CountDownLatch
@@ -29,6 +30,10 @@ object Device {
     fun ankiDroidReady() {
         assumeTrue("AnkiDroid isn't installed on this device", Anki(context).installed())
         shell("pm grant ${context.packageName} ${Anki.PERMISSION}")
+        // Freshly installed (the CI's emulator), AnkiDroid sets its storage up at the first
+        // request: waited for here, so that no test's first request meets it half done
+        val ready = System.nanoTime() + 60_000_000_000L
+        while (runCatching { AddContentApi(context).deckList }.isFailure && System.nanoTime() < ready) Thread.sleep(1000)
     }
 
     /** The app's settings as they were before the test, put back after it: the device
