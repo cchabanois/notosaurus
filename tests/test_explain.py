@@ -45,7 +45,7 @@ def test_what_the_ai_is_asked(monkeypatch):
     assert "PDF" not in prompts._explain_text(card, "explain", "p", "d", "English", ["", "  "])
 
     # The AI's follow-ups: never the one just given, each once
-    async def answer(s, images, text, schema, system, light=False):
+    async def answer(s, images, text, schema, system, light=False, **_):
         assert system == prompts.EXPLAIN_RULES and light and images == []
         return Explanation(text="…", more=["why", "example", "why", "mnemonic"])
 

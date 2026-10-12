@@ -2,8 +2,10 @@
 
 import asyncio
 import types as py_types
+from contextlib import suppress
 
 from google.genai import errors, types
+from helpers import run
 
 from app import settings
 from notosaurus_core import llm
@@ -267,3 +269,116 @@ def test_search_words_with_gemini(monkeypatch):
     assert _error(monkeypatch, "", search) == "llm.empty_answer"
     assert _error(monkeypatch, '{"word": "cat"}', search) == "llm.invalid_answer"
     assert _error(monkeypatch, "[]", search) == "llm.invalid_answer"
+
+
+# --- One model, the fallback over the models, the answer read ---------------------
+
+
+class Scripted(FakeGemini):
+    """A Gemini whose models each do as told (`by_model`): "stall" (never answers), an
+    HTTP status (an error still there after the SDK's retries), or answer (by default)."""
+
+    def __init__(self, **by_model):
+        super().__init__()
+        self.by_model, self.models = by_model, []
+
+    async def generate(self, model, contents, config):
+        self.models.append(model)
+        what = self.by_model.get(model)
+        if what == "stall":
+            await asyncio.sleep(3600)
+        if isinstance(what, int):
+            error = errors.ClientError if what < 500 else errors.ServerError
+            message = "API key not valid" if model == "bad-key" else "no"
+            raise error(what, {"error": {"code": what, "message": message, "status": "X"}})
+        candidate = py_types.SimpleNamespace(finish_reason=types.FinishReason.STOP)
+        usage = py_types.SimpleNamespace(prompt_token_count=100, candidates_token_count=20, thoughts_token_count=5)
+        return py_types.SimpleNamespace(usage_metadata=usage, candidates=[candidate], text=SVG)
+
+
+def _request(fake) -> gemini._Request:
+    return gemini._Request(fake, LIGHT, ["cards"], types.GenerateContentConfig())
+
+
+def _failure(call) -> tuple[str, dict]:
+    try:
+        run(call)
+    except llm.ExtractionError as e:
+        return e.code, e.params
+    raise AssertionError("an error was expected")
+
+
+def test_overloaded_without_quota_or_stalled_the_next_model_answers(monkeypatch):
+    monkeypatch.setattr(gemini, "WHOLE_ANSWER_S", 0.05)
+    for failure in ("stall", 503, 429):
+        fake = Scripted(a=failure)
+        response = run(gemini._fallback(_request(fake), ["a", "b"]))
+        assert response.text == SVG and fake.models == ["a", "b"]
+
+
+def test_the_last_models_failure_is_said(monkeypatch):
+    monkeypatch.setattr(gemini, "WHOLE_ANSWER_S", 0.05)
+    said = {
+        "stall": ("llm.timeout", {"provider": "Gemini"}),
+        503: ("llm.overloaded", {"provider": "Gemini", "status": 503}),
+        429: ("llm.gemini_quota", {}),
+    }
+    for failure, error in said.items():
+        fake = Scripted(a=failure, b=failure)
+        assert _failure(gemini._fallback(_request(fake), ["a", "b"])) == error
+        assert fake.models == ["a", "b"]
+
+
+def test_other_errors_stop_at_the_first_model():
+    """A wrong key or a request refused: the next model would fail the same way."""
+    stops = {
+        401: ("llm.invalid_key", {"provider": "Gemini"}),
+        403: ("llm.invalid_key", {"provider": "Gemini"}),
+        400: ("llm.api_error", {"provider": "Gemini", "status": 400, "detail": "no"}),
+    }
+    for status, error in stops.items():
+        fake = Scripted(a=status)
+        assert _failure(gemini._fallback(_request(fake), ["a", "b"])) == error
+        assert fake.models == ["a"]
+    fake = Scripted(**{"bad-key": 400})  # a key refused with a 400: said as a wrong key
+    assert _failure(gemini._fallback(_request(fake), ["bad-key", "b"]))[0] == "llm.invalid_key"
+    assert fake.models == ["bad-key"]
+    assert _failure(gemini._fallback(_request(fake), [])) == ("llm.empty_answer", {"provider": "Gemini"})
+
+
+def test_one_models_answer_is_recorded():
+    from notosaurus_core.calls import recording
+
+    async def recorded(fake, model):
+        with recording("extract") as calls, suppress(llm.ExtractionError):
+            await gemini._call_one_model(_request(fake), model)
+        return [(c.provider, c.model, c.input_tokens, c.output_tokens) for c in calls]
+
+    assert run(recorded(Scripted(), "gemini-3.8-flash")) == [
+        ("gemini", "gemini-3.8-flash", 100, 25)  # the thinking billed too
+    ]
+    assert run(recorded(Scripted(a=503), "a")) == []  # no answer, nothing paid
+
+
+def _response(text=SVG, finish=types.FinishReason.STOP, block_reason=None, candidates=True):
+    candidate = py_types.SimpleNamespace(finish_reason=finish)
+    feedback = py_types.SimpleNamespace(block_reason=block_reason)
+    return py_types.SimpleNamespace(text=text, candidates=[candidate] if candidates else None, prompt_feedback=feedback)
+
+
+def test_the_answer_read():
+    assert gemini._read_answer(_response(), Drawing).svg == "<svg/>"
+    unread = {
+        "llm.refused": [_response(finish=types.FinishReason.SAFETY), _response(block_reason="PROHIBITED_CONTENT")],
+        "llm.empty_answer": [_response(text=""), _response(candidates=False)],
+        "llm.truncated": [_response(text='{"svg": "<sv', finish=types.FinishReason.MAX_TOKENS)],
+        "llm.invalid_answer": [_response(text="<svg/>"), _response(text='{"drawing": "<svg/>"}')],
+    }
+    for code, responses in unread.items():
+        for response in responses:
+            try:
+                gemini._read_answer(response, Drawing)
+            except llm.ExtractionError as e:
+                assert e.code == code
+            else:
+                raise AssertionError(f"{code} expected")

@@ -495,19 +495,19 @@ def test_test_image_and_json(admin, monkeypatch):
     async def answer(color):
         return llm._CheckAnswer(color=color)
 
-    monkeypatch.setattr(llm, "_ask_provider", lambda s, images, text, schema: answer("Red"))
+    monkeypatch.setattr(llm, "_ask_provider", lambda s, images, text, schema, **_: answer("Red"))
     assert (test().json()["vision"], test().json()["json"]) == (True, True)
 
-    monkeypatch.setattr(llm, "_ask_provider", lambda s, images, text, schema: answer("I see no image"))
+    monkeypatch.setattr(llm, "_ask_provider", lambda s, images, text, schema, **_: answer("I see no image"))
     assert (test().json()["vision"], test().json()["json"]) == (False, True)
 
-    async def not_json(*_):
+    async def not_json(*_, **__):
         raise llm.ExtractionError("llm.invalid_answer")
 
     monkeypatch.setattr(llm, "_ask_provider", not_json)
     assert test().json()["json"] is False
 
-    async def bad_key(*_):
+    async def bad_key(*_, **__):
         raise llm.ExtractionError("llm.invalid_key", provider="Gemini")
 
     monkeypatch.setattr(llm, "_ask_provider", bad_key)
@@ -520,7 +520,7 @@ def test_model_without_vision_refuses_image(admin, monkeypatch):
 
     admin.put("/api/admin/settings", headers=ADMIN, json={"llm": "gemini", "gemini_api_key": "k"})
 
-    async def refuse(*_):
+    async def refuse(*_, **__):
         raise llm.ExtractionError(
             "llm.api_error",
             provider="localhost:11434",

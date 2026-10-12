@@ -1,8 +1,61 @@
 """The demo AI (provider "fake"): canned cards, explanations and corrections, to work on
-the page without a key or any cost."""
+the page without a key or any cost.
 
-from .calls import Image
-from .models import Card, Deck, Explanation, FollowUp, Mask, Revision
+A provider like the others, behind llm._ask_provider: it gets the same request, and
+answers what the entry point asking passes it (`answer`), built from what the request
+was made of (the prompt, the card, the correction…). Its answers are in Notosaurus's own
+terms: its models whole (ids and pictures kept on a correction), its boxes as fractions
+of the photo (BOX_FORMAT)."""
+
+from collections.abc import Callable
+
+from pydantic import BaseModel
+
+from ..calls import ExtractionError, Image, OnCard, record
+from ..config import AIConfig
+from ..figures import Drawing
+from ..models import (
+    Card,
+    Deck,
+    Dictation,
+    Explanation,
+    Extraction,
+    FollowUp,
+    Mask,
+    Picked,
+    PicturePlan,
+    Rephrased,
+    Revision,
+    SearchWords,
+)
+
+# How the demo gives diagram boxes (diagrams.FORMATS): already as Notosaurus keeps them
+BOX_FORMAT = "fractions"
+
+
+async def _demo[T: BaseModel](s: AIConfig, answer: Callable[[], T] | None, on_card: OnCard | None = None) -> T:
+    """The demo's `answer` to a request, recorded as a free call; its cards told one by
+    one, as a real AI writes them. None: the demo has no answer for this request."""
+    if answer is None:
+        raise ExtractionError("llm.empty_answer", provider="demo")
+    await record(s, "fake", "fake", 0, 0, cost=0.0)
+    found = answer()
+    if on_card:
+        for card in getattr(found, "cards", ()):
+            await on_card(card.model_dump(exclude_defaults=True))
+    return found
+
+
+def extraction(images: list[Image], prompt: str, fun_facts: bool = False, helps: bool = False) -> Extraction:
+    """The demo's lesson (see _fake), with a fun fact and helps when asked for."""
+    found = _fake(images, prompt)
+    if fun_facts:  # the demo's "did you know" on its first card
+        found.cards[0].fun_fact = "Le savais-tu ? Ce mot vient du latin."
+    if helps:  # the demo's helps: an explanation on the first card, a mnemonic on the second
+        found.cards[0].explanation = "(démo) Pourquoi c'est la réponse."
+        found.cards[-1].mnemonic = "(démo) Une astuce pour retenir."
+    choice = "Vocabulaire d'espagnol : français → espagnol" if _lets_choose(prompt) else ""
+    return Extraction(deck=found.deck, cards=found.cards, back_language="es-ES", choice=choice)
 
 
 def _lets_choose(prompt: str) -> bool:
@@ -57,6 +110,11 @@ def _fake_pictures() -> Deck:
             for subject, back in words
         ],
     )
+
+
+def figure(description: str) -> Drawing:
+    """Demo mode: a figure drawn."""
+    return Drawing(svg=_fake_figure(description))
 
 
 def _fake_figure(description: str) -> str:
@@ -135,7 +193,7 @@ def _fake_choices() -> Deck:
     )
 
 
-def _fake_explanation(card: Card, kind: str) -> Explanation:
+def explanation(card: Card, kind: str) -> Explanation:
     """Demo mode: a canned explanation; "why" offered for a multiple choice only."""
     text = f"(démo, {kind}) {card.front.strip()} → {card.back.strip()}."
     more: list[FollowUp] = [k for k in ("example", "mnemonic") if k != kind]
@@ -163,7 +221,7 @@ def _fake_diagram() -> Deck:
 DEMO = {"removed": "Last card removed (demo).", "added": "One card added (demo).", "addedFront": "(demo addition)"}
 
 
-def _fake_revision(deck: Deck, instruction: str, texts: dict[str, str]) -> Revision:
+def revision(deck: Deck, instruction: str, texts: dict[str, str]) -> Revision:
     """Demo mode: a request mentioning removal drops the last card, anything else adds one."""
     if any(w in instruction.lower() for w in ("supprime", "remove", "delete")) and deck.cards:
         return Revision(deck=deck.deck, cards=deck.cards[:-1], summary=texts["removed"])
@@ -179,3 +237,26 @@ def _fake_dictation(kind: str) -> str:
 def _fake_rephrased(text: str) -> str:
     """Demo mode: the instructions as they were, marked."""
     return f"(démo) {text.strip()}"
+
+
+def dictation(kind: str) -> Dictation:
+    return Dictation(text=_fake_dictation(kind))
+
+
+def rephrased(text: str) -> Rephrased:
+    return Rephrased(text=_fake_rephrased(text))
+
+
+def picked() -> Picked:
+    """Demo mode: the first picture found (none found: none fits)."""
+    return Picked(choice=0)
+
+
+def picture_plan(back: str, asked: str) -> PicturePlan:
+    """Demo mode: a picture of what was asked, else of the card's answer."""
+    return PicturePlan(kind="picture", description=asked.strip() or back.strip(), search=asked.strip())
+
+
+def search_words(asked: str) -> SearchWords:
+    """Demo mode: what was asked, searched as it is."""
+    return SearchWords(words=asked.strip())

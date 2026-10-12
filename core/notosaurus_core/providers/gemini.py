@@ -5,14 +5,19 @@ filters, the fallback models when one is overloaded, has no quota or stops answe
 import asyncio
 import logging
 from contextlib import suppress
+from dataclasses import dataclass
 from types import SimpleNamespace
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from pydantic import BaseModel
 
 from ..calls import CardStream, ExtractionError, Image, OnCard, record
 from ..config import AIConfig
 from ..prompts import SYSTEM_PROMPT
+
+if TYPE_CHECKING:
+    from google import genai
+    from google.genai import errors, types
 
 log = logging.getLogger("notosaurus")
 
@@ -66,9 +71,31 @@ FIRST_PART_S = 90
 NEXT_PART_S = 45
 WHOLE_ANSWER_S = 180
 
+# What makes the next model tried, unless it was the last: overloaded (a 5xx still there
+# after the SDK's retries), no quota (a free key has none for the latest models, and a
+# quota of its own for each model: the next one may still answer), stopped answering.
+# Anything else (a wrong key, a request refused) stops at once.
+_NEXT_MODEL = {"llm.overloaded", "llm.gemini_quota", "llm.timeout"}
+
 
 class _Stalled(Exception):
     """The model stopped answering."""
+
+
+@dataclass
+class _Request:
+    """What every model tried is sent: the photos then the text, and the config (its
+    thinking set for each model). `told`: the cards told so far to `on_card`, dropped
+    when another model starts again."""
+
+    client: "genai.Client"
+    s: AIConfig
+    contents: list[Any]
+    config: "types.GenerateContentConfig"
+    light: bool = False
+    quick: bool = False
+    on_card: OnCard | None = None
+    told: int = 0
 
 
 async def _gemini[T: BaseModel](
@@ -81,48 +108,9 @@ async def _gemini[T: BaseModel](
     quick: bool = False,
     on_card: OnCard | None = None,
 ) -> T:
-    from google.genai import errors, types
+    from google.genai import types
 
     client = _gemini_client(s)
-    told = 0  # cards told to on_card
-
-    async def within(seconds: float, awaitable):
-        try:
-            return await asyncio.wait_for(awaitable, seconds)
-        except TimeoutError:
-            raise _Stalled from None
-
-    async def generate(model: str):
-        """The model's answer; written as it comes when the cards are wanted at once."""
-        nonlocal told
-        if on_card is None:
-            return await within(
-                WHOLE_ANSWER_S, client.aio.models.generate_content(model=model, contents=contents, config=config)
-            )
-        if told:  # another model starts again
-            await on_card(None)
-            told = 0
-        chunks, cards = [], CardStream()
-        stream = await within(
-            FIRST_PART_S, client.aio.models.generate_content_stream(model=model, contents=contents, config=config)
-        )
-        parts, wait = aiter(stream), FIRST_PART_S
-        try:
-            while True:
-                try:
-                    chunk = await within(wait, anext(parts))
-                except StopAsyncIteration:
-                    break
-                wait = NEXT_PART_S
-                chunks.append(chunk)
-                for card in cards.feed(chunk.text or ""):
-                    await on_card(card)
-                    told += 1
-        finally:
-            with suppress(Exception):  # given up on: the connection goes too
-                await stream.aclose()
-        return _joined(chunks)
-
     # The photos then the text (the SDK's PartUnion is a variable, not usable as a type)
     contents: list[Any] = [types.Part.from_bytes(data=img.data, mime_type=img.media_type) for img in images]
     contents.append(text)
@@ -135,55 +123,140 @@ async def _gemini[T: BaseModel](
     )
     models = [s.model_for_provider()]
     models += [m.strip() for m in s.fallback_models.split(",") if m.strip()]
+    response = await _fallback(_Request(client, s, contents, config, light, quick, on_card), models)
+    return _read_answer(response, schema)
 
-    def thinking(model: str):
-        if not ((light or quick) and model.startswith("gemini-3")):  # older models set thinking otherwise
-            return None
-        if quick:
-            return types.ThinkingConfig(thinking_level=types.ThinkingLevel.LOW)
-        level = types.ThinkingLevel.LOW if model in _NO_MINIMAL_THINKING else types.ThinkingLevel.MINIMAL
-        return types.ThinkingConfig(thinking_level=level)
 
+async def _fallback(request: _Request, models: list[str]):
+    """The answer of the first model that gives one, in order (the configured model, then
+    the fallback ones): overloaded, without quota or stalled, the next one is tried; any
+    other error stops, as does the last model's."""
     for model in models:
         try:
-            config.thinking_config = thinking(model)
-            try:
-                response = await generate(model)
-            except errors.ClientError as e:
-                if not (config.thinking_config and e.code == 400 and "Thinking level" in str(e.message)):
-                    raise
-                _NO_MINIMAL_THINKING.add(model)  # this model thinks a little at least: "low" from now on
-                config.thinking_config = thinking(model)
-                response = await generate(model)
-            break
-        except errors.ClientError as e:
-            # The status, not the message: a 400's may quote the prompt (no lesson in logs)
-            log.warning("Gemini %s: %s %s", model, e.code, e.status)
-            if e.code in (401, 403) or "API key" in str(e):
-                raise ExtractionError("llm.invalid_key", provider="Gemini") from e
-            if e.code == 429:
-                # A free key has no quota for the latest models, and a quota of its own
-                # for each model: the next one may still answer
-                if model != models[-1]:
-                    log.warning("Quota exceeded: falling back to the next model")
-                    continue
-                raise ExtractionError("llm.gemini_quota") from e
-            raise ExtractionError("llm.api_error", provider="Gemini", status=e.code, detail=e.message) from e
-        except errors.APIError as e:
-            log.warning("Gemini %s: %s %s", model, e.code, e.status)
-            if model == models[-1]:
-                raise ExtractionError("llm.overloaded", provider="Gemini", status=e.code) from e
-            log.warning("Falling back to the next model")
-        except _Stalled:
-            log.warning("Gemini %s stopped answering", model)
-            if model == models[-1]:
-                raise ExtractionError("llm.timeout", provider="Gemini") from None
-            log.warning("Falling back to the next model")
+            return await _call_one_model(request, model)
+        except ExtractionError as e:
+            if e.code not in _NEXT_MODEL or model == models[-1]:
+                raise
+            quota = e.code == "llm.gemini_quota"
+            log.warning("Quota exceeded: falling back to the next model" if quota else "Falling back to the next model")
+    raise ExtractionError("llm.empty_answer", provider="Gemini")  # no model at all
 
+
+async def _call_one_model(request: _Request, model: str):
+    """One model's answer, its usage recorded; its failures as ExtractionError. A model
+    refusing the "minimal" thinking of a light task is asked again at once, "low"."""
+    from google.genai import errors
+
+    config = request.config
+    try:
+        config.thinking_config = _thinking(model, request.light, request.quick)
+        try:
+            response = await _generate(request, model)
+        except errors.ClientError as e:
+            if not (config.thinking_config and e.code == 400 and "Thinking level" in str(e.message)):
+                raise
+            _NO_MINIMAL_THINKING.add(model)  # this model thinks a little at least: "low" from now on
+            config.thinking_config = _thinking(model, request.light, request.quick)
+            response = await _generate(request, model)
+    except errors.APIError as e:
+        raise _api_error(model, e) from e
+    except _Stalled:
+        log.warning("Gemini %s stopped answering", model)
+        raise ExtractionError("llm.timeout", provider="Gemini") from None
     usage = response.usage_metadata
     if usage:
         output = (usage.candidates_token_count or 0) + (usage.thoughts_token_count or 0)  # thinking is billed too
-        await record(s, "gemini", model, usage.prompt_token_count, output)
+        await record(request.s, "gemini", model, usage.prompt_token_count, output)
+    return response
+
+
+def _thinking(model: str, light: bool, quick: bool) -> "types.ThinkingConfig | None":
+    """How much the model thinks: "low" when quick, as little as it can when light."""
+    from google.genai import types
+
+    if not ((light or quick) and model.startswith("gemini-3")):  # older models set thinking otherwise
+        return None
+    if quick:
+        return types.ThinkingConfig(thinking_level=types.ThinkingLevel.LOW)
+    level = types.ThinkingLevel.LOW if model in _NO_MINIMAL_THINKING else types.ThinkingLevel.MINIMAL
+    return types.ThinkingConfig(thinking_level=level)
+
+
+def _api_error(model: str, e: "errors.APIError") -> ExtractionError:
+    """An error from Gemini, as the page says it (still there after the SDK's retries)."""
+    from google.genai import errors
+
+    # The status, not the message: a 400's may quote the prompt (no lesson in logs)
+    log.warning("Gemini %s: %s %s", model, e.code, e.status)
+    if not isinstance(e, errors.ClientError):
+        return ExtractionError("llm.overloaded", provider="Gemini", status=e.code)
+    if e.code in (401, 403) or "API key" in str(e):
+        return ExtractionError("llm.invalid_key", provider="Gemini")
+    if e.code == 429:
+        return ExtractionError("llm.gemini_quota")
+    return ExtractionError("llm.api_error", provider="Gemini", status=e.code, detail=e.message)
+
+
+async def _within(seconds: float, awaitable):
+    try:
+        return await asyncio.wait_for(awaitable, seconds)
+    except TimeoutError:
+        raise _Stalled from None
+
+
+async def _generate(request: _Request, model: str):
+    """The model's answer; written as it comes when the cards are wanted at once."""
+    if request.on_card is None:
+        call = request.client.aio.models.generate_content(model=model, contents=request.contents, config=request.config)
+        return await _within(WHOLE_ANSWER_S, call)
+    return await _streamed(request, model, request.on_card)
+
+
+async def _streamed(request: _Request, model: str, on_card: OnCard):
+    """The answer as it comes, each card told as soon as written (those of a model tried
+    before dropped first); given up on when its next part is too long in coming."""
+    if request.told:  # another model starts again
+        await on_card(None)
+        request.told = 0
+    chunks, cards = [], CardStream()
+    call = request.client.aio.models.generate_content_stream(
+        model=model, contents=request.contents, config=request.config
+    )
+    stream = await _within(FIRST_PART_S, call)
+    parts, wait = aiter(stream), FIRST_PART_S
+    try:
+        while True:
+            try:
+                chunk = await _within(wait, anext(parts))
+            except StopAsyncIteration:
+                break
+            wait = NEXT_PART_S
+            chunks.append(chunk)
+            for card in cards.feed(chunk.text or ""):
+                await on_card(card)
+                request.told += 1
+    finally:
+        with suppress(Exception):  # given up on: the connection goes too
+            await stream.aclose()
+    return _joined(chunks)
+
+
+def _joined(chunks: list):
+    """A streamed answer as one: its whole text, the last usage and candidate (where the
+    finish reason is), the first prompt feedback (where a block is said)."""
+    return SimpleNamespace(
+        text="".join(c.text or "" for c in chunks),
+        usage_metadata=next((c.usage_metadata for c in reversed(chunks) if c.usage_metadata), None),
+        candidates=next((c.candidates for c in reversed(chunks) if c.candidates), None),
+        prompt_feedback=next((c.prompt_feedback for c in chunks if c.prompt_feedback), None),
+    )
+
+
+def _read_answer[T: BaseModel](response, schema: type[T]) -> T:
+    """The answer as `schema`, unless Gemini's filters stopped it, it is empty, cut short
+    or not the JSON asked for."""
+    from google.genai import types
+
     candidate = response.candidates[0] if response.candidates else None
     feedback = getattr(response, "prompt_feedback", None)
     stopped = getattr(getattr(candidate, "finish_reason", None), "value", None)
@@ -197,14 +270,3 @@ async def _gemini[T: BaseModel](
         return schema.model_validate_json(response.text)
     except ValueError as e:
         raise ExtractionError("llm.invalid_answer") from e
-
-
-def _joined(chunks: list):
-    """A streamed answer as one: its whole text, the last usage and candidate (where the
-    finish reason is), the first prompt feedback (where a block is said)."""
-    return SimpleNamespace(
-        text="".join(c.text or "" for c in chunks),
-        usage_metadata=next((c.usage_metadata for c in reversed(chunks) if c.usage_metadata), None),
-        candidates=next((c.candidates for c in reversed(chunks) if c.candidates), None),
-        prompt_feedback=next((c.prompt_feedback for c in chunks if c.prompt_feedback), None),
-    )

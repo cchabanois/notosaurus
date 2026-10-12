@@ -29,6 +29,8 @@ FORMATS = {
     "gemini": "[y_min, x_min, y_max, x_max] normalized to 0-1000 (box_2d)",
     "normalized": "[x_min, y_min, x_max, y_max] normalized to 0-1000",
     "pixels": "[x_min, y_min, x_max, y_max] in pixels of the photo (sizes below)",
+    # As Notosaurus keeps them: the demo AI's (providers/demo.py)
+    "fractions": "[x_min, y_min, x_max, y_max] as fractions of the photo's size (0-1)",
 }
 
 
@@ -64,6 +66,8 @@ def _fractions(box: list[float], size: tuple[int, int], fmt: str) -> list[float]
         x0, y0, x1, y1 = b / 1000, a / 1000, d / 1000, c / 1000
     elif fmt == "normalized":
         x0, y0, x1, y1 = a / 1000, b / 1000, c / 1000, d / 1000
+    elif fmt == "fractions":
+        x0, y0, x1, y1 = a, b, c, d
     else:
         x0, y0, x1, y1 = a / width, b / height, c / width, d / height
     x0, x1 = sorted((x0, x1))
@@ -73,7 +77,10 @@ def _fractions(box: list[float], size: tuple[int, int], fmt: str) -> list[float]
 
 def normalize(cards: list[Card], sizes: Sequence[tuple[int, int] | None], fmt: str) -> None:
     """Turn the AI's boxes into fractions of the photo, with a little margin. A mask
-    that can't be placed (unknown photo, empty box) is dropped: the card stays text."""
+    that can't be placed (unknown photo, empty box) is dropped: the card stays text.
+    Boxes already as fractions are kept as they are, placed exactly."""
+    if fmt == "fractions":
+        return
     for card in cards:
         mask = card.mask
         if mask is None:
