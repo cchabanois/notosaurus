@@ -28,7 +28,7 @@ async def preview(text: str, voice: str, lesson: str | None = None) -> FileRespo
         raise AppError("tts.no_preview_for_anki_locale")
     directory = lessons.audio_dir(lesson) if lesson else None
     try:
-        path = await tts.tts(text[:200], voice, directory, settings.current().tts_rate)
+        path = await tts.tts(text[:600], voice, directory, settings.current().tts_rate)  # lines of 200 at most
     except Exception as e:
         raise AppError("tts.failed", 502, detail=str(e)) from e
     return FileResponse(path, media_type="audio/mpeg")

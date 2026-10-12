@@ -571,7 +571,7 @@ test("🔊 says what the card's sound says: a dictation's word, its sentence, th
   const card = { front: "Le chat boit du … (une boisson)", back: "lait" };
   assert.equal(c.spokenText(card), "lait");  // not a dictation
   c.dictation = true;
-  assert.equal(c.spokenText(card), "lait. Le chat boit du lait. lait.");
-  assert.equal(c.spokenText({ front: "Il a ... ans !", back: "$1" }), "$1. Il a $1 ans ! $1.");
+  assert.equal(c.spokenText(card), "lait\nLe chat boit du lait.\nlait");
+  assert.equal(c.spokenText({ front: "Il a ... ans !", back: "$1" }), "$1\nIl a $1 ans !\n$1");
   assert.equal(c.spokenText({ front: "la mère", back: "la madre" }), "la madre");
 });
