@@ -87,7 +87,13 @@ class Speech(private val folder: File, private val prefs: Preferences, private v
 
         /** The backs' language when it is one being learned: not the pupil's own (the page's)
          * unless the cards are for writing what is heard, as the computer (app/main.py). */
-        fun learned(language: String, pupil: String, spelling: Boolean): String =
-            if (!spelling && language.lowercase().substringBefore('-') == pupil.substringBefore('-')) "" else language
+        /** The backs' language when it is one being learned: not the pupil's own, unless the cards
+         * are for writing what is heard (a dictation): then theirs when the AI gave none (it
+         * doesn't for their own language). As the computer's (generation._learned). */
+        fun learned(language: String, pupil: String, spelling: Boolean): String = when {
+            spelling -> language.trim().ifEmpty { pupil.substringBefore('-').lowercase() }
+            language.lowercase().substringBefore('-') == pupil.substringBefore('-') -> ""
+            else -> language
+        }
     }
 }

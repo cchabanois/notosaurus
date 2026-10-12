@@ -930,7 +930,8 @@ class LocalServerTest {
     @Test
     fun anAutoVoiceInTheLanguageLearned() = app { client ->
         relayAnswers("""{"deck": {"deck": "Espagnol", "cards": [{"front": "la mère", "back": "la madre"}]}, "turns": [], "back_language": "es-ES", "usage": {"credits": 1, "credits_left": 99}}""")
-        relayAnswers(voices)
+        // The relay's voices, read once
+        relayAnswers(voices.dropLast(1) + """, {"voice": "fr-CA-Chirp3-HD-Aoede", "locale": "fr-CA", "gender": "Female"}, {"voice": "fr-FR-Chirp3-HD-Aoede", "locale": "fr-FR", "gender": "Female"}]""")
         val lesson = client.submitFormWithBinaryData("/api/extract", formData {
             append("prompt", "FR → ES")
             append("voice", "auto")
@@ -944,6 +945,16 @@ class LocalServerTest {
             append("voice", "auto")
         }) { page("fr") }.json().jsonObject
         assertEquals("", french.string("voice"))
+
+        // A dictation in their own language, the AI giving none: theirs (the page's)
+        relayAnswers("""{"deck": {"deck": "Français::Dictée", "cards": [{"front": "Le … boit", "back": "chat"}]}, "turns": [], "back_language": "", "usage": {"credits": 1, "credits_left": 97}}""")
+        val dictation = client.submitFormWithBinaryData("/api/extract", formData {
+            append("prompt", "Dictée")
+            append("voice", "auto")
+            append("typing", "true")
+            append("dictation", "true")
+        }) { page("fr") }.json().jsonObject
+        assertEquals("fr-FR-Chirp3-HD-Aoede", dictation.string("voice"))
     }
 
     private suspend fun HttpClient.send(lesson: JsonObject) = post("/api/anki/send") {
