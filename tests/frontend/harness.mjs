@@ -28,6 +28,17 @@ export class Response {
     this._body = body ?? {};
   }
 
+  // An answer written as it comes (application/x-ndjson): `items` one per line, in two chunks
+  // cut mid-line, as a network may deliver them
+  static ndjson(items) {
+    const res = new Response("");
+    res.headers.set("Content-Type", "application/x-ndjson");
+    const text = new TextEncoder().encode(items.map((i) => JSON.stringify(i) + "\n").join(""));
+    const chunks = [text.slice(0, Math.floor(text.length / 2)), text.slice(Math.floor(text.length / 2))];
+    res.body = { getReader: () => ({ read: async () => (chunks.length ? { value: chunks.shift(), done: false } : { done: true }) }) };
+    return res;
+  }
+
   json() { return typeof this._body === "string" ? JSON.parse(this._body) : this._body; }
   async blob() { return this._body; }
   async text() { return typeof this._body === "string" ? this._body : JSON.stringify(this._body); }
@@ -149,7 +160,7 @@ export async function loadScripts(
     katex,
     CustomEvent,
     crypto: globalThis.crypto,
-    URL, URLSearchParams, Blob, FormData,
+    URL, URLSearchParams, Blob, FormData, TextDecoder, Uint8Array,
     structuredClone,
     confirm: () => true,
     window: { scrollTo: () => {}, addEventListener: () => {}, removeEventListener: () => {} },

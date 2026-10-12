@@ -18,6 +18,8 @@ import io
 import logging
 import re
 import time
+from collections.abc import AsyncIterator, Awaitable
+from itertools import zip_longest
 from typing import Any, Literal
 from urllib.parse import urlparse
 
@@ -46,6 +48,8 @@ HOSTS = {
 PER_SOURCE = 4
 MAX_RESULTS = 8
 SORT_PER_SOURCE = 6  # more to choose from when the AI keeps only those that fit
+MAX_SORTED = 12  # the pictures the AI kept, at most (all sources)
+SOURCE_WAIT = 5  # s: a source slower than that (Openverse, at times 10 s) is left out of the search
 PREVIEW = 200  # px: a choice in the grid
 TIMEOUT = 10
 CACHE_S = 24 * 3600  # Pixabay asks for its answers to be kept a day: the same for all
@@ -93,25 +97,94 @@ async def search(
     subject: str, pixabay_key: str = "", per_source: int = PER_SOURCE, most: int = MAX_RESULTS
 ) -> list[Found]:
     """Up to `most` free pictures of `subject` (English), `per_source` from each, the
-    sources taking turns. A source that fails or finds nothing leaves the others."""
+    sources taking turns. A source that fails, finds nothing or is too slow (SOURCE_WAIT)
+    leaves the others."""
+    subject = _subject(subject)
+    async with _client() as client:
+        found = await asyncio.gather(*_sources(client, subject, pixabay_key, per_source), return_exceptions=True)
+    lists = [f for f in found if isinstance(f, list)]
+    if not lists:
+        raise AppError("picture.search_failed")
+    return [item for row in zip_longest(*lists) for item in row if item][:most]
+
+
+async def sorted_as_found(
+    s: AIConfig, subject: str, context: str = "", pixabay_key: str = ""
+) -> AsyncIterator[list[Found]]:
+    """Free pictures of `subject` (English) to choose from, each source's as soon as it
+    answers (within SOURCE_WAIT), the cards' AI keeping those that show it, the best first
+    (it sees their previews; as they came when it can't sort them): MAX_SORTED at most in
+    all. picture.search_failed when every source failed. `context`: the card,
+    "front → back"."""
+    subject = _subject(subject)
+    async with _client() as client:
+
+        async def kept(source: Awaitable[list[Found]]) -> list[Found]:
+            found = await source
+            return await _sorted(s, found, subject, context) if found else []
+
+        tasks = [asyncio.ensure_future(kept(f)) for f in _sources(client, subject, pixabay_key, SORT_PER_SOURCE)]
+        failed, left = 0, MAX_SORTED
+        try:
+            for done in asyncio.as_completed(tasks):
+                try:
+                    batch = (await done)[:left]
+                except Exception:  # a source that fails or is too slow leaves the others
+                    failed += 1
+                    continue
+                if batch:
+                    left -= len(batch)
+                    yield batch
+            if failed == len(tasks):
+                raise AppError("picture.search_failed")
+        finally:
+            for task in tasks:
+                task.cancel()  # the client went away: the sources and the AI stop
+
+
+async def sorted_search(s: AIConfig, subject: str, context: str = "", pixabay_key: str = "") -> list[Found]:
+    """sorted_as_found's pictures, all at once."""
+    return [f async for batch in sorted_as_found(s, subject, context, pixabay_key) for f in batch]
+
+
+def _subject(subject: str) -> str:
     subject = " ".join(subject.split())[:200]
     if not subject:
         raise AppError("picture.no_subject")
-    async with _client() as client:
-        sources = [_pixabay(client, subject, pixabay_key)] if pixabay_key else []
-        sources += [_openverse(client, subject), _commons(client, subject)]
-        found = await asyncio.gather(*sources, return_exceptions=True)
-        lists = [f for f in found if isinstance(f, list)]
-        if not lists:
-            raise AppError("picture.search_failed")
-        mixed = [item for row in zip(*[lst + [None] * per_source for lst in lists], strict=False) for item in row]
-        chosen = [m for m in mixed if m][:most]
+    return subject
+
+
+def _sources(client: httpx.AsyncClient, subject: str, pixabay_key: str, per_source: int) -> list:
+    """Each source's pictures (awaitables of list[Found])."""
+    listed = [_pixabay(client, subject, pixabay_key)] if pixabay_key else []
+    listed += [_openverse(client, subject), _commons(client, subject)]
+    return [_with_previews(client, found, per_source) for found in listed]
+
+
+async def _with_previews(client: httpx.AsyncClient, listed: Awaitable[list], per_source: int) -> list[Found]:
+    """A source's first `per_source` pictures, with their previews (none: left out),
+    within SOURCE_WAIT."""
+
+    async def found() -> list[Found]:
+        chosen = (await listed)[:per_source]
         previews = await asyncio.gather(*(_preview(client, source, url) for source, url, _ in chosen))
-    return [
-        Found(source=source, id=id_, title=title, preview=preview, licence=licence, page=page)
-        for (source, _, (id_, title, licence, page)), preview in zip(chosen, previews, strict=True)
-        if preview
-    ]
+        return [
+            Found(source=source, id=id_, title=title, preview=preview, licence=licence, page=page)
+            for (source, _, (id_, title, licence, page)), preview in zip(chosen, previews, strict=True)
+            if preview
+        ]
+
+    return await asyncio.wait_for(found(), SOURCE_WAIT)
+
+
+async def _sorted(s: AIConfig, found: list[Found], subject: str, context: str) -> list[Found]:
+    """The pictures the AI keeps, the best first; all, as they came, when it can't sort them."""
+    try:
+        order = await llm.sort_pictures(s, [_image(f) for f in found], subject, context)
+    except AppError as e:  # no AI, or one that can't see pictures: unsorted
+        log.warning("Pictures found not sorted: %s", loggable(e))  # never the query: no lesson in logs
+        return found
+    return [found[i] for i in order]
 
 
 async def fetch(source: str, id_: str, pixabay_key: str = "") -> tuple[bytes, PictureSource]:
@@ -127,22 +200,6 @@ async def fetch(source: str, id_: str, pixabay_key: str = "") -> tuple[bytes, Pi
         else:
             raise AppError("picture.not_found")
         return pictures.card_size(await _download(client, source, url)), origin
-
-
-async def sorted_search(s: AIConfig, subject: str, context: str = "", pixabay_key: str = "") -> list[Found]:
-    """Up to MAX_RESULTS free pictures of `subject` (English) to choose from: more are
-    looked for, the cards' AI keeping only those that show it, the best first (it sees
-    their previews). As they came when the AI can't sort them. `context`: the card,
-    "front → back"."""
-    found = await search(subject, pixabay_key, SORT_PER_SOURCE, SORT_PER_SOURCE * 3)
-    if not found:
-        return found
-    try:
-        order = await llm.sort_pictures(s, [_image(f) for f in found], subject, context)
-    except AppError as e:  # no AI, or one that can't see pictures: unsorted
-        log.warning("Pictures found not sorted: %s", loggable(e))  # never the query: no lesson in logs
-        return found[:MAX_RESULTS]
-    return [found[i] for i in order][:MAX_RESULTS]
 
 
 def _image(found: Found) -> llm.Image:
@@ -183,7 +240,7 @@ async def _commons(client: httpx.AsyncClient, subject: str) -> list:
         ("commons", info["thumburl"], (page["title"], _title(page["title"]), licence, info.get("descriptionurl", "")))
         for page in pages
         if (info := (page.get("imageinfo") or [None])[0]) and (licence := _commons_licence(page["title"], info))
-    ][:PER_SOURCE]
+    ]
 
 
 async def _commons_url(client: httpx.AsyncClient, title: str) -> tuple[str, PictureSource]:
@@ -235,7 +292,7 @@ async def _openverse(client: httpx.AsyncClient, subject: str) -> list:
         )
         for r in data.get("results", [])
         if not r.get("mature") and not UNSUITABLE.search(r.get("title") or "")
-    ][:PER_SOURCE]
+    ]
 
 
 def _openverse_licence(result: dict) -> str:
@@ -259,7 +316,7 @@ async def _openverse_url(client: httpx.AsyncClient, id_: str) -> tuple[str, Pict
 
 async def _pixabay(client: httpx.AsyncClient, subject: str, key: str) -> list:
     data = await _json(client, PIXABAY, {"key": key, "q": subject[:100], "safesearch": "true", "per_page": 12})
-    hits = data.get("hits", [])[:PER_SOURCE]
+    hits = data.get("hits", [])
     return [
         ("pixabay", h["previewURL"], (str(h["id"]), _tags(h.get("tags", "")), "Pixabay", h.get("pageURL", "")))
         for h in hits

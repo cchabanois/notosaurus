@@ -200,9 +200,21 @@ def build() -> dict:
     def plan_picture(request: api.PlanPictureRequest, x_notosaurus_version: str = client):
         """What a card's picture should be: a figure or a picture, described (llm.plan_picture)."""
 
-    @app.post(f"{api.PREFIX}/pictures/search", response_model=api.PictureSearchResponse, responses=errors(*COMMON))
+    @app.post(
+        f"{api.PREFIX}/pictures/search",
+        response_model=api.PictureSearchResponse,
+        responses={
+            200: {
+                "description": f'The pictures found; `sort`ed and asked with "Accept: {api.STREAM_TYPE}": each '
+                "source's as it answers, one PictureSearchLine per line.",
+                "content": {api.STREAM_TYPE: {"schema": {"$ref": REF.format(model="PictureSearchLine")}}},
+            },
+            **errors(*COMMON),
+        },
+    )
     def search_pictures(request: api.PictureSearchRequest, x_notosaurus_version: str = client):
-        """Free pictures of a subject to choose from (stock.search). Free."""
+        """Free pictures of a subject to choose from (stock.search). Free, unless `sort`ed by the AI
+        (stock.sorted_as_found): 1 credit."""
 
     @app.post(
         f"{api.PREFIX}/pictures/found",
@@ -281,6 +293,7 @@ def build() -> dict:
             (api.ReviseRequest, "validation"),
             (api.TranscribeRequest, "validation"),
             (api.ExtractLine, "serialization"),
+            (api.PictureSearchLine, "serialization"),
         ],
         ref_template=REF,
     )

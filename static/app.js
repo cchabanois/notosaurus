@@ -19,11 +19,8 @@ async function api(path, options = {}) {
   return res;
 }
 
-// A lesson made as the AI writes it (application/x-ndjson, one JSON per line): each
-// card told to `onCard` as it comes (null: start again), then the lesson; null when
-// it was cancelled. A server that answers all at once (the Android app's): its lesson.
-async function lessonAsItComes(res, onCard) {
-  if (!(res.headers.get("Content-Type") ?? "").includes("ndjson")) return res.json();
+// The JSON items of an answer written as it comes (application/x-ndjson, one per line)
+async function* ndjsonItems(res) {
   const reader = res.body.getReader();
   const decoder = new TextDecoder();
   let buffer = "";
@@ -34,15 +31,28 @@ async function lessonAsItComes(res, onCard) {
     while ((end = buffer.indexOf("\n")) >= 0) {
       const line = buffer.slice(0, end).trim();
       buffer = buffer.slice(end + 1);
-      if (!line) continue;
-      const item = JSON.parse(line);
-      if (item.lesson) return item.lesson;
-      if (item.cancelled) return null;
-      if (item.error) throw Object.assign(new Error(errorMessage(item.error)), { detail: item.error });
-      onCard(item.card ?? null);
+      if (line) yield JSON.parse(line);
     }
-    if (done) throw new Error(t("errors.unreachable"));
+    if (done) return;
   }
+}
+
+function itemError(error) {
+  return Object.assign(new Error(errorMessage(error)), { detail: error });
+}
+
+// A lesson made as the AI writes it (application/x-ndjson, one JSON per line): each
+// card told to `onCard` as it comes (null: start again), then the lesson; null when
+// it was cancelled. A server that answers all at once (the Android app's): its lesson.
+async function lessonAsItComes(res, onCard) {
+  if (!(res.headers.get("Content-Type") ?? "").includes("ndjson")) return res.json();
+  for await (const item of ndjsonItems(res)) {
+    if (item.lesson) return item.lesson;
+    if (item.cancelled) return null;
+    if (item.error) throw itemError(item.error);
+    onCard(item.card ?? null);
+  }
+  throw new Error(t("errors.unreachable"));
 }
 
 // A card's text as it shows while it is being made: the gaps' words, not their syntax

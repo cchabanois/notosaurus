@@ -1,5 +1,9 @@
-from fastapi import APIRouter, Depends, UploadFile
-from fastapi.responses import FileResponse
+import json
+from collections.abc import AsyncIterator
+
+from fastapi import APIRouter, Depends, Header, UploadFile
+from fastapi.encoders import jsonable_encoder
+from fastapi.responses import FileResponse, StreamingResponse
 
 from notosaurus_core import llm, pictures, stock
 from notosaurus_core.models import Card, PictureSource
@@ -8,6 +12,7 @@ from .. import access, i18n, lessons, settings, usage
 from ..errors import AppError
 from ..models import FoundPicture, Lesson, PictureRequest, PictureSearch
 from .common import IMAGE_TYPES, page_lang, read_photo
+from .generation import NDJSON
 
 router = APIRouter()
 
@@ -82,11 +87,31 @@ async def upload_picture(id: str, card_id: str, photo: UploadFile) -> dict:
 
 
 @router.post("/api/pictures/search")
-async def search_pictures(req: PictureSearch) -> dict:
+async def search_pictures(req: PictureSearch, accept: str | None = Header(None)):
     """Free pictures of what the user wrote (any language: turned into English search
     words by the cards' AI, a light call, unless the card's are given), to choose from
     (Commons, Openverse: no Pixabay on the computer, its key is the relay's), the AI
-    keeping only those that show it (stock.sorted_search)."""
+    keeping only those that show it (stock.sorted_as_found). Asked as
+    application/x-ndjson: each source's as it answers, {"found": [...]} lines, then
+    {"done": {"words"}} or {"error"}."""
+    if NDJSON not in (accept or ""):
+        results, words = [], ""
+        async for item in _found(req):
+            results += item.get("found", [])
+            words = item.get("done", {}).get("words", words)
+        return {"results": results, "words": words}
+
+    async def lines():
+        try:
+            async for item in _found(req):
+                yield json.dumps(item, ensure_ascii=False) + "\n"
+        except AppError as e:
+            yield json.dumps({"error": e.detail()}) + "\n"
+
+    return StreamingResponse(lines(), media_type=NDJSON)
+
+
+async def _found(req: PictureSearch) -> AsyncIterator[dict]:
     s = settings.current()
     async with usage.metered("picture"):
         words = req.words.strip()
@@ -95,8 +120,9 @@ async def search_pictures(req: PictureSearch) -> dict:
                 words = await llm.search_words(s, req.subject, req.context)
             except AppError:  # no AI to ask: the words as they are
                 words = req.subject
-        results = await stock.sorted_search(s, words, req.context)
-    return {"results": results, "words": words}
+        async for batch in stock.sorted_as_found(s, words, req.context):
+            yield {"found": jsonable_encoder(batch)}
+        yield {"done": {"words": words}}
 
 
 @router.post("/api/lessons/{id}/cards/{card_id}/picture/found", status_code=201)
