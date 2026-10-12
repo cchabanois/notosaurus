@@ -319,15 +319,22 @@ const cardsPart = {
     // Its own picture's description: the search words already chosen with it
     const words = subject === (card.picture_prompt ?? "").trim() ? (card.picture_search ?? "") : "";
     card._searching = true;
-    card._found = null;
+    card._found = [];  // each source's, as it answers
     this.error = "";
     try {
       const res = await api("/api/pictures/search", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { "Content-Type": "application/json", Accept: "application/x-ndjson" },
         body: JSON.stringify({ subject, context, words }),
       });
-      card._found = (await res.json()).results;
+      if (!(res.headers.get("Content-Type") ?? "").includes("ndjson")) {
+        card._found = (await res.json()).results;
+        return;
+      }
+      for await (const item of ndjsonItems(res)) {
+        if (item.error) throw itemError(item.error);
+        if (item.found) card._found = [...card._found, ...item.found];
+      }
     } catch (e) {
       this.error = e.message;
     } finally {

@@ -1225,6 +1225,33 @@ class LocalServerTest {
     }
 
     @Test
+    fun picturesFoundShownAsEachSourceAnswers() = app { client ->
+        val lines = listOf(
+            """{"found": [{"source": "pixabay", "id": "1", "title": "a", "preview": "data:,", "licence": "Pixabay"}]}""",
+            """{"found": [{"source": "commons", "id": "File:B.jpg", "title": "b", "preview": "data:,", "licence": "CC0"}]}""",
+            """{"done": {"results": [], "words": "castle", "usage": {"credits": 1, "credits_left": 99}}}""",
+        )
+        relay.enqueue(MockResponse.Builder().setHeader("Content-Type", Relay.STREAM_TYPE).body(lines.joinToString("\n", postfix = "\n")).build())
+        val res = client.post("/api/pictures/search") {
+            page(); contentType(ContentType.Application.Json); header(HttpHeaders.Accept, Relay.STREAM_TYPE)
+            setBody("""{"subject": "un château"}""")
+        }
+        assertTrue(res.headers[HttpHeaders.ContentType]!!.startsWith(Relay.STREAM_TYPE))
+        val items = res.bodyAsText().lines().filter { it.isNotBlank() }.map { json.parseToJsonElement(it).jsonObject }
+        assertEquals(listOf("1", "File:B.jpg"), items.take(2).map { it["found"]!!.jsonArray[0].jsonObject.string("id") })
+        assertEquals("castle", items[2]["done"]!!.jsonObject.string("words"))
+        assertEquals(Relay.STREAM_TYPE, relay.takeRequest(5, TimeUnit.SECONDS)!!.headers["Accept"])
+
+        // Every source down: the error as the last line
+        relayAnswers("""{"code": "picture.search_failed", "params": {}}""", 502)
+        val failed = client.post("/api/pictures/search") {
+            page(); contentType(ContentType.Application.Json); header(HttpHeaders.Accept, Relay.STREAM_TYPE)
+            setBody("""{"subject": "un château"}""")
+        }.bodyAsText().trim()
+        assertEquals("picture.search_failed", json.parseToJsonElement(failed).jsonObject["error"]!!.jsonObject.string("code"))
+    }
+
+    @Test
     fun picturesFoundThroughTheRelay() = app { client ->
         relayAnswers("""{"results": [{"source": "pixabay", "id": "42", "title": "fortress", "preview": "data:,", "licence": "Pixabay"}]}""")
         val found = client.post("/api/pictures/search") {

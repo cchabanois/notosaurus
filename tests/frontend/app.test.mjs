@@ -437,6 +437,40 @@ test("find a picture: the choices, their sources, the one chosen", async () => {
   assert.equal(JSON.parse(sent[0][1]).words, "castle");
 });
 
+test("find a picture: each source's pictures shown as it answers", async () => {
+  let seen = null;
+  const page = await loadScripts("app.js", {
+    routes: (url, options) => {
+      seen = options.headers.Accept;
+      return Response.ndjson([
+        { found: [{ source: "commons", id: "File:A.jpg", title: "A", preview: "data:,", licence: "CC0" }] },
+        { found: [{ source: "openverse", id: "o1", title: "B", preview: "data:,", licence: "CC0" }] },
+        { done: { words: "castle" } },
+      ]);
+    },
+  });
+  const c = page.component();
+  const card = { id: "c1", front: "Un château ?", back: "el castillo", _subject: "un château" };
+  await c.searchPictures(card);
+  assert.equal(seen, "application/x-ndjson");
+  assert.deepEqual(plain(card._found.map((f) => f.id)), ["File:A.jpg", "o1"]);
+  assert.equal(card._searching, false);
+});
+
+test("find a picture: an error as the last line is said, the pictures already shown kept", async () => {
+  const page = await loadScripts("app.js", {
+    routes: () => Response.ndjson([
+      { found: [{ source: "commons", id: "File:A.jpg", title: "A", preview: "data:,", licence: "CC0" }] },
+      { error: { code: "picture.search_failed", params: {} } },
+    ]),
+  });
+  const c = page.component();
+  const card = { id: "c1", front: "x", back: "y" };
+  await c.searchPictures(card);
+  assert.ok(c.error);
+  assert.equal(card._found.length, 1);
+});
+
 test("a picture's source: said in its panel, kept when the pictures come", async () => {
   const page = await loadScripts("app.js", {
     routes: () => new Response({ lesson: { cards: [{ id: "c1", picture: "picture-c1.jpg",

@@ -201,11 +201,12 @@ def test_search_written_in_any_language(client, monkeypatch):
         assert context == "La réunion ? → A ∪ B"
         return "union Venn diagram"
 
-    async def search(subject, pixabay_key="", *_):
-        return []
+    async def as_found(s, subject, context="", pixabay_key=""):
+        return
+        yield
 
     monkeypatch.setattr(llm, "search_words", words)
-    monkeypatch.setattr(stock, "search", search)
+    monkeypatch.setattr(stock, "sorted_as_found", as_found)
     res = client.post(
         "/api/pictures/search", json={"subject": r"\(A \cup B\)", "context": "La réunion ? → A ∪ B"}
     ).json()

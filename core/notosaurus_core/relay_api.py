@@ -22,8 +22,11 @@ takes but the AI configuration (the relay's own), and keeps nothing.
   (AUDIO_TYPES, at most MAX_AUDIO_BYTES).
 - /v1/pictures/search finds free pictures of a subject to choose from (stock.search: public
   domain, CC0, Pixabay), their previews as data; /v1/pictures/found gives the one chosen,
-  card size (JPEG), looked up again by its source and id. Both free: no AI. Their pictures
-  (and /v1/picture's) say where they come from in PICTURE_SOURCE_HEADER: kept with the card.
+  card size (JPEG), looked up again by its source and id. Both free: no AI, unless the
+  search is asked `sort`ed (the AI keeps the pictures that show the subject: 1 credit);
+  asked so with "Accept: application/x-ndjson", each source's pictures come as it
+  answers (PictureSearchLine). Their pictures (and /v1/picture's) say where they come
+  from in PICTURE_SOURCE_HEADER: kept with the card.
 - /v1/speak reads a card's back aloud with one of /v1/voices (natural voices, the
   same on every device): an mp3, for the app that has no voices of its own.
 - Each answer says the credits it used and those left (Usage; for /v1/picture and
@@ -200,7 +203,7 @@ class PictureSearchRequest(BaseModel):
     sort: bool = Field(
         default=False,
         description="The AI keeps only the pictures that show the subject, the best first (it sees them): "
-        "1 credit, unless it couldn't sort them. Else free.",
+        "1 credit, unless it couldn't sort them. Else free. Asked as STREAM_TYPE: PictureSearchLine.",
     )
 
 
@@ -268,6 +271,17 @@ class PictureSearchResponse(BaseModel):
     results: list[Found] = Field(description="The pictures found, at most 8, the sources taking turns.")
     words: str = Field(default="", description="What was searched for (the translation, when asked).")
     usage: Usage | None = Field(default=None, description="The credits charged: sorted by the AI only.")
+
+
+class PictureSearchLine(BaseModel):
+    """A line of a sorted /v1/pictures/search asked as STREAM_TYPE, one of: {"found"},
+    the pictures a source gave that the AI kept, the best first, as each source answers;
+    last, {"done"} (its `results` empty: they came as "found") or {"error"} (the HTTP
+    status is 200 once a line is sent)."""
+
+    found: list[Found] | None = None
+    done: PictureSearchResponse | None = None
+    error: Error | None = None
 
 
 class CardPictureRequest(BaseModel):

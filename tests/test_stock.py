@@ -1,7 +1,10 @@
 """Free pictures found for a card (stock): the licences kept, what pupils mustn't see
 left out, the sources taking turns, nothing fetched from an address the client gives."""
 
+import asyncio
 import io
+import json
+import time
 
 import httpx
 import pytest
@@ -244,9 +247,9 @@ def test_a_decompression_bomb_found_is_left_out(monkeypatch):
 
 
 def test_found_on_the_computer(client, monkeypatch):
-    async def search(subject, pixabay_key="", *_):
+    async def as_found(s, subject, context="", pixabay_key=""):
         assert pixabay_key == ""  # never on the computer
-        return [stock.Found(source="commons", id="File:A.jpg", title="A", preview="data:,", licence="CC0")]
+        yield [stock.Found(source="commons", id="File:A.jpg", title="A", preview="data:,", licence="CC0")]
 
     async def fetch(source, id_, pixabay_key=""):
         assert (source, id_) == ("commons", "File:A.jpg")
@@ -254,7 +257,7 @@ def test_found_on_the_computer(client, monkeypatch):
             source="commons", licence="CC0", page="https://commons.wikimedia.org/wiki/File:A.jpg"
         )
 
-    monkeypatch.setattr(stock, "search", search)
+    monkeypatch.setattr(stock, "sorted_as_found", as_found)
     monkeypatch.setattr(stock, "fetch", fetch)
     res = client.post("/api/pictures/search", json={"subject": "a castle"})
     assert res.json()["results"][0]["id"] == "File:A.jpg"
@@ -294,30 +297,68 @@ def test_the_ai_keeps_only_the_pictures_that_fit(services, monkeypatch):
 
     async def sort(s, candidates, search, context=""):
         seen.append((len(candidates), search, context))
-        return [2, 0]  # the third first; the second left out
+        return [1, 0] if len(candidates) == 2 else []  # Commons': the second first; Openverse's: none
 
     monkeypatch.setattr(llm, "sort_pictures", sort)
     found = run(stock.sorted_search(AIConfig(llm="gemini"), "Bastille", "14 juillet 1789 → prise de la Bastille"))
-    assert [f.id for f in found] == ["File:Prise de la Bastille.jpg", "d32a3ea6-bbb6-4987-affb-e6a1198d07ac"]
-    assert seen == [(3, "Bastille", "14 juillet 1789 → prise de la Bastille")]  # every one found, seen
+    assert [f.id for f in found] == ["File:Prise de la Bastille.jpg", "File:Storming.jpg"]
+    context = "14 juillet 1789 → prise de la Bastille"
+    assert sorted(seen) == [(1, "Bastille", context), (2, "Bastille", context)]  # each source's, seen
 
 
-def test_more_looked_for_when_sorted(monkeypatch):
-    asked = []
+def test_each_sources_pictures_as_it_answers(monkeypatch):
+    """A slow source doesn't hold back the others; past SOURCE_WAIT it is left out."""
+    monkeypatch.setattr(stock, "SOURCE_WAIT", 0.3)
+    gate = asyncio.Event()
 
-    async def search(subject, pixabay_key="", per_source=stock.PER_SOURCE, most=stock.MAX_RESULTS):
-        asked.append((per_source, most))
-        return [
-            stock.Found(source="commons", id=str(i), title="", preview="data:,", licence="CC0") for i in range(most)
-        ]
+    async def quick(client, subject):
+        return [("commons", "u", ("File:A.jpg", "A", "CC0", ""))]
+
+    async def slow(client, subject):
+        await gate.wait()  # never: too slow
+        return []
+
+    async def preview(client, source, url):
+        return "data:,"
 
     async def sort(s, candidates, search, context=""):
         return list(range(len(candidates)))
 
-    monkeypatch.setattr(stock, "search", search)
+    monkeypatch.setattr(stock, "_commons", quick)
+    monkeypatch.setattr(stock, "_openverse", slow)
+    monkeypatch.setattr(stock, "_preview", preview)
     monkeypatch.setattr(llm, "sort_pictures", sort)
-    found = run(stock.sorted_search(AIConfig(llm="gemini"), "dog"))
-    assert asked == [(stock.SORT_PER_SOURCE, stock.SORT_PER_SOURCE * 3)] and len(found) == stock.MAX_RESULTS
+
+    async def batches():
+        got, start = [], time.monotonic()
+        async for batch in stock.sorted_as_found(AIConfig(llm="gemini"), "x"):
+            got.append(([f.id for f in batch], time.monotonic() - start))
+        return got, time.monotonic() - start
+
+    got, took = run(batches())
+    assert [ids for ids, _ in got] == [["File:A.jpg"]] and got[0][1] < 0.2  # at once, not after the slow one
+    assert took < 1  # the slow one given up at SOURCE_WAIT
+
+
+def test_more_looked_for_and_at_most_max_sorted(monkeypatch):
+    many = [("commons", f"u{i}", (f"File:{i}.jpg", "", "CC0", "")) for i in range(12)]
+
+    async def listed(client, subject):
+        return many
+
+    async def preview(client, source, url):
+        return "data:,"
+
+    async def sort(s, candidates, search, context=""):
+        assert len(candidates) == stock.SORT_PER_SOURCE
+        return list(range(len(candidates)))
+
+    monkeypatch.setattr(stock, "_commons", listed)
+    monkeypatch.setattr(stock, "_openverse", listed)
+    monkeypatch.setattr(stock, "_preview", preview)
+    monkeypatch.setattr(llm, "sort_pictures", sort)
+    monkeypatch.setattr(stock, "MAX_SORTED", 8)
+    assert len(run(stock.sorted_search(AIConfig(llm="gemini"), "dog"))) == 8
 
 
 def test_unsorted_when_the_ai_cant(services, monkeypatch, caplog):
@@ -327,7 +368,9 @@ def test_unsorted_when_the_ai_cant(services, monkeypatch, caplog):
     monkeypatch.setattr(llm, "sort_pictures", sort)
     with caplog.at_level("WARNING", logger="notosaurus"):
         found = run(stock.sorted_search(AIConfig(llm="gemini"), "Bastille"))
-    assert [f.source for f in found] == ["openverse", "commons", "commons"]  # as they came
+    assert sorted(f.id for f in found) == sorted(
+        ["d32a3ea6-bbb6-4987-affb-e6a1198d07ac", "File:Storming.jpg", "File:Prise de la Bastille.jpg"]
+    )
     assert not any("Bastille" in r.getMessage() for r in caplog.records)
 
 
@@ -337,6 +380,13 @@ def test_none_that_fits_none_offered(services, monkeypatch):
 
     monkeypatch.setattr(llm, "sort_pictures", sort)
     assert run(stock.sorted_search(AIConfig(llm="gemini"), "Bastille")) == []
+
+
+def test_every_source_down_said(services):
+    services.failing = {"commons.wikimedia.org", "api.openverse.org"}
+    with pytest.raises(AppError) as e:
+        run(stock.sorted_search(AIConfig(llm="gemini"), "Bastille"))
+    assert e.value.code == "picture.search_failed"
 
 
 def test_sorting_keeps_the_indexes_that_exist_once(monkeypatch):
@@ -354,14 +404,34 @@ def test_the_cards_search_words_used_as_they_are(client, monkeypatch):
     async def words(*_):
         raise AssertionError("not asked again")
 
-    async def sorted_search(s, subject, context="", pixabay_key=""):
+    async def as_found(s, subject, context="", pixabay_key=""):
         assert subject == "Bastille fortress"
-        return []
+        yield [stock.Found(source="commons", id="File:A.jpg", title="A", preview="data:,", licence="CC0")]
+        yield [stock.Found(source="openverse", id="o1", title="B", preview="data:,", licence="CC0")]
 
     monkeypatch.setattr(llm, "search_words", words)
-    monkeypatch.setattr(stock, "sorted_search", sorted_search)
-    res = client.post("/api/pictures/search", json={"subject": "La Bastille prise", "words": "Bastille fortress"})
-    assert res.json() == {"results": [], "words": "Bastille fortress"}
+    monkeypatch.setattr(stock, "sorted_as_found", as_found)
+    body = {"subject": "La Bastille prise", "words": "Bastille fortress"}
+    res = client.post("/api/pictures/search", json=body)
+    assert [f["id"] for f in res.json()["results"]] == ["File:A.jpg", "o1"]
+    assert res.json()["words"] == "Bastille fortress"
+
+    streamed = client.post("/api/pictures/search", json=body, headers={"Accept": "application/x-ndjson"})
+    assert streamed.headers["content-type"].startswith("application/x-ndjson")
+    lines = [json.loads(line) for line in streamed.text.splitlines()]
+    assert [[f["id"] for f in line["found"]] for line in lines[:2]] == [["File:A.jpg"], ["o1"]]
+    assert lines[2] == {"done": {"words": "Bastille fortress"}}
+
+
+def test_a_search_failing_as_it_streams_ends_with_its_error(client, monkeypatch):
+    async def as_found(s, subject, context="", pixabay_key=""):
+        raise AppError("picture.search_failed", 502)
+        yield []
+
+    monkeypatch.setattr(stock, "sorted_as_found", as_found)
+    body = {"subject": "x", "words": "x"}
+    streamed = client.post("/api/pictures/search", json=body, headers={"Accept": "application/x-ndjson"})
+    assert json.loads(streamed.text.splitlines()[-1])["error"]["code"] == "picture.search_failed"
 
 
 # --- Found first, at generation (stock.find, pictures.picture) --------------------

@@ -56,10 +56,15 @@ class Relay(
      * all at once (an older one): its answer. Cancelled, the request stops: so does the AI.
      */
     suspend fun extract(request: JsonObject, photos: List<ByteArray>, onCard: OnCard): JsonObject {
-        return open("extract", multipart(request, photos), stream = true).use { answer(it, onCard) }
+        return open("extract", multipart(request, photos), stream = true).use { response ->
+            streamed(response, "result") { onCard(it["card"]?.jsonObject) }
+        }
     }
 
-    private suspend fun answer(response: Response, onCard: OnCard): JsonObject {
+    /** An answer asked as it comes (STREAM_TYPE): each line told to `onLine`, until the
+     * `last` one, its value the answer; an {"error"} line thrown. A relay answering all at
+     * once: its answer. */
+    private suspend fun streamed(response: Response, last: String, onLine: suspend (JsonObject) -> Unit): JsonObject {
         if (response.header("Content-Type")?.startsWith(STREAM_TYPE) != true) {
             return json.parseToJsonElement(response.body.string()).jsonObject
         }
@@ -69,11 +74,11 @@ class Relay(
                 ?: throw RelayException("relay.unreachable", buildJsonObject { put("detail", "cut") })
             if (line.isBlank()) continue
             val item = json.parseToJsonElement(line).jsonObject
-            item["result"]?.let { return it.jsonObject }
+            item[last]?.let { return it.jsonObject }
             item["error"]?.jsonObject?.let {
                 throw RelayException(it.string("code"), it["params"]?.jsonObject ?: JsonObject(emptyMap()))
             }
-            onCard(item["card"]?.jsonObject)
+            onLine(item)
         }
     }
 
@@ -120,15 +125,28 @@ class Relay(
     }
 
     /** Free pictures of a subject to choose from (/v1/pictures/search), the AI keeping those
-     * that show it (1 credit): {"results": [stock.Found…]}. `words`: its English search words
-     * when known (the card's picture_search), else what the user wrote is translated. */
-    suspend fun searchPictures(subject: String, context: String = "", words: String = ""): JsonObject =
-        post("pictures/search", buildJsonObject {
+     * that show it (1 credit): each source's [stock.Found…] told to `onFound` as it answers
+     * (relay_api.PictureSearchLine), then the answer ({"words", "usage"}). `words`: its
+     * English search words when known (the card's picture_search), else what the user wrote
+     * is translated. Cancelled, the request stops. */
+    suspend fun searchPictures(
+        subject: String,
+        context: String = "",
+        words: String = "",
+        onFound: suspend (JsonArray) -> Unit = {},
+    ): JsonObject {
+        val request = buildJsonObject {
             put("subject", words.ifBlank { subject })
             put("context", context.take(8000))
             put("translate", words.isBlank()) // what the user wrote, any language
             put("sort", true)
-        })
+        }
+        return open("pictures/search", request.toString().toRequestBody(JSON), stream = true).use { response ->
+            val answer = streamed(response, "done") { line -> line["found"]?.jsonArray?.let { onFound(it) } }
+            answer["results"]?.jsonArray?.takeIf { it.isNotEmpty() }?.let { onFound(it) } // all at once
+            answer
+        }
+    }
 
     /** One of the pictures found (/v1/pictures/found): the JPEG, card size, and where it comes from. */
     suspend fun foundPicture(source: String, id: String): Picture {

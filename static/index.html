@@ -456,7 +456,7 @@
               <!-- The pictures found: tap one, it becomes the card's -->
               <template x-if="card._found">
                 <div class="found">
-                  <p class="hint" x-show="!card._found.length" x-text="$t('app.pictures.none')"></p>
+                  <p class="hint" x-show="!card._found.length && !card._searching" x-text="$t('app.pictures.none')"></p>
                   <div class="found-grid" x-show="card._found.length">
                     <template x-for="f in card._found" :key="f.source + f.id">
                       <button type="button" class="found-pick" @click="chooseFound(card, f)" :disabled="Boolean(card._drawing)"
