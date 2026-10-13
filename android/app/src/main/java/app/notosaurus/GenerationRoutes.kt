@@ -80,5 +80,17 @@ internal fun Route.generationRoutes(server: LocalServer) {
             }
             JsonObject(relay().post("explain", request) - "usage")
         }
+        // Content the AI made, reported (Google Play's policy on generated content): what the
+        // page showed the user and they sent, the lesson's instructions; no photo, no child's name
+        api("POST", "/api/lessons/{id}/report") {
+            val lesson = lesson()
+            val req = body()
+            val request = buildJsonObject {
+                for (field in listOf("kind", "reason", "comment", "content", "picture")) req[field]?.let { put(field, it) }
+                put("prompt", lesson.string("prompt"))
+                put("language", languageName())
+            }
+            relay().post("report", request)
+        }
     }
 }

@@ -445,6 +445,30 @@
       },
       "pick": "Who is the next lesson for? Tap their name.",
       "edit": "Edit {name}"
+    },
+    "report": {
+      "button": "Report",
+      "title": "Report content",
+      "kinds": {
+        "card": "The card",
+        "explanation": "The explanation",
+        "picture": "The picture"
+      },
+      "why": "Why?",
+      "reasons": {
+        "offensive": "Shocking or inappropriate",
+        "wrong": "Wrong",
+        "other": "Other"
+      },
+      "comment": "Comment (optional)",
+      "sent": "What will be sent to Notosaurus (not the lesson's photos, nor the child's name):",
+      "withPicture": "The picture is sent too.",
+      "send": "Send",
+      "thanks": "Thank you, it's sent. We read every report to improve Notosaurus.",
+      "drop": {
+        "card": "Delete the card",
+        "picture": "Remove the picture"
+      }
     }
   },
   "admin": {

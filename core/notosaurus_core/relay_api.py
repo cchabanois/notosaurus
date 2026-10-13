@@ -27,6 +27,9 @@ takes but the AI configuration (the relay's own), and keeps nothing.
   asked so with "Accept: application/x-ndjson", each source's pictures come as it
   answers (PictureSearchLine). Their pictures (and /v1/picture's) say where they come
   from in PICTURE_SOURCE_HEADER: kept with the card.
+- /v1/report: content the AI made, reported by the user (shocking, wrong…: Google Play's
+  policy on generated content). The only thing the relay keeps of a lesson: what the user
+  saw and sent, for REPORT_DAYS, read by Notosaurus. Free, REPORTS_PER_DAY a licence.
 - /v1/speak reads a card's back aloud with one of /v1/voices (natural voices, the
   same on every device): an mp3, for the app that has no voices of its own.
 - Each answer says the credits it used and those left (Usage; for /v1/picture and
@@ -67,6 +70,10 @@ MAX_INSTRUCTION = 2000  # a correction
 MAX_SUBJECT = 1000  # a picture's subject, a figure's description
 MAX_SPEECH = 500  # a back read aloud (the app reads the first 200 characters)
 MAX_AUDIO_BYTES = 3 * 1024 * 1024  # a dictation: the app stops at 2 minutes (≈ 500 KB of AAC)
+MAX_REPORT = 6000  # a reported card, with its helps, or an explanation
+MAX_REPORT_PICTURE = 700_000  # a reported picture, as a data URL (a card's: 512 px, ≈ 60 KB)
+REPORT_DAYS = 180  # a report kept, then deleted
+REPORTS_PER_DAY = 20  # a licence's
 
 # Error code → HTTP status, besides the AI's own errors ("llm.*", passed on)
 ERRORS = {
@@ -326,6 +333,32 @@ class PlanPictureResponse(PicturePlan):
 class FigureResponse(BaseModel):
     svg: str = Field(description="The figure, cleaned: shapes and text only (figures.clean).")
     usage: Usage
+
+
+class ReportRequest(BaseModel):
+    """POST /v1/report: content the AI made, reported by the user. Only what they saw and
+    sent: never the lesson's photos, nor the child's name. JSON."""
+
+    kind: Literal["card", "explanation", "picture"] = Field(description="What is reported.")
+    reason: Literal["offensive", "wrong", "other"] = Field(description="Shocking or inappropriate, wrong, other.")
+    comment: str = Field(default="", max_length=1000, description="The user's words, if any.")
+    content: str = Field(
+        min_length=1,
+        max_length=MAX_REPORT,
+        description="The content, as text: the card, its explanation, its picture's subject.",
+    )
+    picture: str = Field(
+        default="",
+        max_length=MAX_REPORT_PICTURE,
+        pattern=r"^(data:image/(jpeg|png|webp|svg\+xml);base64,[A-Za-z0-9+/=]+)?$",
+        description="A picture the AI made (kind picture): as a data URL; else empty.",
+    )
+    prompt: str = Field(default="", max_length=MAX_PROMPT, description="The instructions the lesson was made with.")
+    language: str = Language
+
+
+class ReportResponse(BaseModel):
+    received: bool = True
 
 
 class Voice(BaseModel):

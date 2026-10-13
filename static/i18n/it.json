@@ -445,6 +445,30 @@
       },
       "pick": "Per chi è la prossima lezione? Tocca il suo nome.",
       "edit": "Modifica {name}"
+    },
+    "report": {
+      "button": "Segnala",
+      "title": "Segnala un contenuto",
+      "kinds": {
+        "card": "La carta",
+        "explanation": "La spiegazione",
+        "picture": "L'immagine"
+      },
+      "why": "Perché?",
+      "reasons": {
+        "offensive": "Offensivo o inappropriato",
+        "wrong": "Sbagliato",
+        "other": "Altro"
+      },
+      "comment": "Commento (facoltativo)",
+      "sent": "Cosa verrà inviato a Notosaurus (né le foto della lezione, né il nome del bambino):",
+      "withPicture": "Viene inviata anche l'immagine.",
+      "send": "Invia",
+      "thanks": "Grazie, è stato inviato. Leggiamo ogni segnalazione per migliorare Notosaurus.",
+      "drop": {
+        "card": "Elimina la carta",
+        "picture": "Rimuovi l'immagine"
+      }
     }
   },
   "admin": {

@@ -246,6 +246,21 @@ def build() -> dict:
     def speak(request: api.SpeakRequest, x_notosaurus_version: str = client):
         """A card's back read aloud with one of /v1/voices."""
 
+    @app.post(
+        f"{api.PREFIX}/report",
+        response_model=api.ReportResponse,
+        responses=errors(
+            "relay.invalid_request",
+            "relay.invalid_key",
+            "relay.daily_limit",
+            "relay.busy",
+            "relay.client_outdated",
+            "relay.unavailable",
+        ),
+    )
+    def report(request: api.ReportRequest, x_notosaurus_version: str = client):
+        """Content the AI made, reported by the user: kept REPORT_DAYS days, read by Notosaurus."""
+
     @app.get(
         f"{api.PREFIX}/voices",
         response_model=list[api.Voice],

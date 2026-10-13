@@ -542,6 +542,25 @@ class LocalServerTest {
     }
 
     @Test
+    fun aCardReportedToTheRelay() = app { client ->
+        val lesson = client.extract()
+        relay.takeRequest()
+        relayAnswers("""{"received": true}""")
+        val res = client.post("/api/lessons/${lesson.string("id")}/report") {
+            page(); contentType(ContentType.Application.Json)
+            setBody("""{"kind": "card", "reason": "wrong", "comment": "", "content": "Front: la mère\nBack: la madre", "picture": "", "deck": "not sent"}""")
+        }.json().jsonObject
+        assertEquals("true", res["received"]!!.jsonPrimitive.content)
+        val sent = relay.takeRequest()
+        assertEquals("/v1/report", sent.url.encodedPath)
+        val request = json.parseToJsonElement(sent.body!!.utf8()).jsonObject
+        assertEquals("wrong", request.string("reason"))
+        assertEquals("Front: la mère\nBack: la madre", request.string("content"))
+        assertEquals(lesson.string("prompt"), request.string("prompt")) // the lesson's instructions, from the phone
+        assertFalse("deck" in request) // only the report's fields
+    }
+
+    @Test
     fun whatTheRelayTellsForNow() = app { client ->
         relayAnswers(
             """{"plan": "monthly", "credits_left": 10, "daily_left": 5, "latest": "0.2.0", "disabled": ["anki.send", "anki.move", "lesson.complete"],

@@ -1013,3 +1013,15 @@ a.btn { text-decoration: none; }
 .welcome .sheet-body p { margin: 0 0 .7rem; line-height: 1.45; }
 .welcome-agree { display: flex; gap: .6rem; align-items: flex-start; margin: .5rem 0 1rem; font-weight: 700; }
 .welcome-agree input { width: 1.3rem; height: 1.3rem; flex: none; margin-top: .1rem; }
+
+/* A card, its explanation or its picture reported (app-report.js) */
+.report .chips { margin-bottom: .75rem; }
+.report-reasons { border: 0; padding: 0; margin: 0 0 .75rem; display: grid; gap: .4rem; }
+.report-reasons legend { font-weight: 600; margin-bottom: .4rem; }
+.radio { display: flex; align-items: center; gap: .6rem; cursor: pointer; }
+.radio input { width: auto; margin: 0; accent-color: var(--primary); }
+.report-preview {
+  white-space: pre-wrap; overflow-wrap: anywhere; max-height: 10rem; overflow: auto; margin: .25rem 0 .75rem;
+  padding: .6rem .75rem; border-radius: 10px; background: var(--surface-2); font-size: .85rem;
+}
+.report textarea { min-height: 3.5rem; }

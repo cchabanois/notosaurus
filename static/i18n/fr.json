@@ -445,6 +445,30 @@
       },
       "pick": "Pour qui est la prochaine leçon ? Touche son prénom.",
       "edit": "Modifier {name}"
+    },
+    "report": {
+      "button": "Signaler",
+      "title": "Signaler un contenu",
+      "kinds": {
+        "card": "La carte",
+        "explanation": "L'explication",
+        "picture": "L'image"
+      },
+      "why": "Pourquoi ?",
+      "reasons": {
+        "offensive": "Choquant ou inapproprié",
+        "wrong": "Faux",
+        "other": "Autre"
+      },
+      "comment": "Commentaire (facultatif)",
+      "sent": "Ce qui sera envoyé à Notosaurus (ni les photos de la leçon, ni le prénom de l'enfant) :",
+      "withPicture": "L'image est envoyée aussi.",
+      "send": "Envoyer",
+      "thanks": "Merci, c'est envoyé. Nous lisons chaque signalement pour améliorer Notosaurus.",
+      "drop": {
+        "card": "Supprimer la carte",
+        "picture": "Retirer l'image"
+      }
     }
   },
   "admin": {

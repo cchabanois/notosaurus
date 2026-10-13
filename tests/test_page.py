@@ -826,6 +826,49 @@ def test_a_card_explained_then_its_follow_ups(page):
     assert [c["kind"] for c in lesson(page, summary["id"])["ai_calls"]].count("explain") == 2
 
 
+def test_a_card_and_its_explanation_reported_in_the_app(page):
+    """The app's page (config "report") reports the AI's content to Notosaurus: exactly what
+    the sheet shows; the computer, its own AI, has nothing to report to."""
+    generate_free(page, "QCM sur la Révolution")
+    sync_api.expect(page.get_by_role("button", name="Signaler").first).to_be_hidden()
+
+    sent = []
+    page.route("**/api/config", lambda route: route.fulfill(json={**route.fetch().json(), "report": True}))
+
+    def report(route):
+        sent.append(route.request.post_data_json)
+        route.fulfill(json={"received": True})
+
+    page.route("**/api/lessons/*/report", report)
+    generate_free(page, "QCM sur la Révolution")
+    card = page.locator(".flash").first
+    card.get_by_role("button", name="Signaler").click()
+    sheet = page.get_by_role("dialog", name="Signaler un contenu")
+    sync_api.expect(sheet.locator(".chips")).to_be_hidden()  # no explanation, no picture: the card
+    send = sheet.get_by_role("button", name="Envoyer")
+    sync_api.expect(send).to_be_disabled()  # a reason first
+    sheet.get_by_label("Faux").check()
+    sheet.locator("textarea").fill("La date est fausse")
+    preview = sheet.locator(".report-preview").inner_text()
+    send.click()
+    sync_api.expect(sheet).to_contain_text("Merci")
+    assert sent == [
+        {"kind": "card", "reason": "wrong", "comment": "La date est fausse", "content": preview, "picture": ""}
+    ]
+    assert preview.startswith("Front: ") and "En quelle année" in preview
+
+    sheet.get_by_role("button", name="Fermer").last.click()
+    card.get_by_role("button", name="Expliquer cette carte").click()
+    sync_api.expect(card.locator(".explain")).to_contain_text("(démo, explain)")
+    card.get_by_role("button", name="Signaler").click()
+    sheet.get_by_role("button", name="L'explication").click()
+    sheet.get_by_label("Choquant ou inapproprié").check()
+    sync_api.expect(sheet.locator(".report-preview")).to_contain_text("explain: (démo, explain)")
+    send.click()
+    sync_api.expect(sheet).to_contain_text("Merci")
+    assert sent[1]["kind"] == "explanation" and sent[1]["reason"] == "offensive"
+
+
 def test_helps_switch_default_from_the_settings(page):
     page.goto("/")
     switch = page.locator(".switch.helps input")

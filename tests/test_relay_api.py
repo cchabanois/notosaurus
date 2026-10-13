@@ -95,6 +95,7 @@ def test_openapi_description():
         "card-picture",
         "pictures/search",
         "pictures/found",
+        "report",
         "voices",
         "account",
         "subscribe",

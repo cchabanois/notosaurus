@@ -3,7 +3,7 @@ title: "Privacy policy of the Android app"
 description: "The data the Notosaurus Android app and its service process, why, where, for how long, and your rights."
 ---
 
-*Last updated: 11 October 2026.*
+*Last updated: 13 October 2026.*
 
 This page is about **the Notosaurus app for Android** and **the Notosaurus service** it uses to
 read the photos, make the cards and the voices. Notosaurus on a computer (the Anki add-on) works
@@ -23,7 +23,8 @@ isn't made to be used by a child.
 - The AI (**Google's Gemini**) and the voices are **processed in the European Union**. Google
   doesn't use them to train its models.
 - **No ads, no statistics, no tracking**, and nothing is sold.
-- The service keeps only your **licence**: its fingerprint, your plan and your credits.
+- The service keeps only your **licence** (its fingerprint, your plan and your credits), and
+  what you **report** with ⚑, if you do.
 
 ## What stays on your phone
 
@@ -49,7 +50,7 @@ When you ask for it, the app sends the service, over HTTPS:
 
 The service passes these contents to the processors below, sends the result back to the app,
 and **doesn't keep them**: no photo, card, recording or lesson text is stored or written into
-its logs.
+its logs. Except a **report**: see below.
 
 A notebook page often shows the **child's name**. Before sending a photo you can **hide** it:
 🖍️ on the photo, then black it out with your finger. Only the blacked-out photo leaves and stays
@@ -61,6 +62,11 @@ in the lesson.
   their renewal date, what was used that day, and a short note for support (an order number,
   for instance). Kept while it is valid, then **12 months** after it ends (to answer a question
   or a claim), then deleted.
+- **What you report** with ⚑ (a card, its explanation or its picture the AI made, shocking or
+  wrong), if you do: exactly what the app shows you before sending, the reason, your comment,
+  the lesson's instructions, the language and a short licence identifier. Never the lesson's
+  photos, nor the child's name. Read by Notosaurus to improve the AI's content, kept **180
+  days**, then deleted.
 - **Your emails to support**, if any: kept **12 months** after the last exchange.
 - **Technical logs**, kept **30 days** to run the service and spot failures and abuse: the
   time, the action asked for ("make a lesson"…), its duration, its outcome, the AI model and the
@@ -95,6 +101,7 @@ Google, by the **EU–US Data Privacy Framework**. Pixabay is an EU company.
 | Making, completing, correcting and explaining cards; dictation; voices; pictures | **Providing the service** you ask for |
 | Checking your licence and counting your credits | **Performing the contract** (your licence) |
 | Technical logs, security, fighting abuse | The **legitimate interest** in running a safe service |
+| Your reports of the AI's content | Your **request**, and the legitimate interest in an AI that makes fit content |
 | The microphone | Your **consent**, asked at the first dictation and withdrawable in the phone's settings |
 | Answering your emails | Your **request** |
 
