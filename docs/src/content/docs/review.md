@@ -66,8 +66,9 @@ At the bottom of the lesson:
 ![Card options](../../assets/screenshots/en/review-options.png)
 
 - **Add the reverse card**: Anki also asks back → front.
-- **Type the answer**: Anki compares what is typed letter by letter. Great for spelling.
-- **Add a dictation**: a card where the back is heard, then written. It needs a voice.
+
+Typing the answer and the dictation come with the [instructions](../instructions/): they go
+with what the AI writes. To change them, make the lesson again with other instructions.
 
 The line below says which voice reads the backs. It is included in the deck, so it plays
 everywhere, even offline.
