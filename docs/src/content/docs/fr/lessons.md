@@ -1,10 +1,10 @@
 ---
-title: "Tes leçons"
+title: "Vos leçons"
 description: "Chaque leçon est enregistrée : la retrouver, la rouvrir pour la corriger ou la renvoyer, et la supprimer."
 ---
 
 Chaque génération crée une **leçon** : ses photos, sa consigne et ses cartes, enregistrées sur
-l'ordinateur. Tu peux y revenir à tout moment pour la corriger, la régénérer ou la renvoyer à
+l'ordinateur. Vous pouvez y revenir à tout moment pour la corriger, la régénérer ou la renvoyer à
 Anki.
 
 ## La liste des leçons
@@ -23,7 +23,7 @@ récentes d'abord.
   sont repliées, sauf celle de la leçon ouverte. Une matière ouverte ou fermée à la main le reste
   sur cet appareil.
 
-Touche une leçon pour la rouvrir : ses photos et ses cartes reviennent, prêtes à être corrigées ou
+Touchez une leçon pour la rouvrir : ses photos et ses cartes reviennent, prêtes à être corrigées ou
 renvoyées. **＋ Nouvelle** commence une nouvelle leçon.
 
 ## Leçons et profils

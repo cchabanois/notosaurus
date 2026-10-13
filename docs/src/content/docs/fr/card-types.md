@@ -9,7 +9,7 @@ Chaque type devient son propre **type de note** dans Anki, dont le nom commence 
 
 ## Question et réponse
 
-La carte classique : un **recto** (la question, un mot dans ta langue) et un **verso** (la
+La carte classique : un **recto** (la question, un mot dans votre langue) et un **verso** (la
 réponse, le mot dans la langue étudiée), avec une **info** facultative affichée sous la
 réponse. C'est ce que font les consignes de vocabulaire, de phrases et de questions.
 
@@ -25,7 +25,7 @@ La consigne **Texte à trous** fait des phrases à trous :
 
 Ce qui est entre `{{c1::` et `}}` est caché. **Chaque numéro donne une carte** dans Anki ; le
 même numéro utilisé deux fois cache deux trous ensemble. Dans la relecture, les trous
-s'affichent numérotés : tu peux changer leur texte, en ajouter ou en retirer en modifiant les
+s'affichent numérotés : vous pouvez changer leur texte, en ajouter ou en retirer en modifiant les
 accolades.
 
 ![Des cartes à trous](../../../assets/screenshots/fr/cloze.png)
@@ -33,7 +33,7 @@ accolades.
 ## QCM et vrai ou faux
 
 Les cartes de **QCM** ont une question, la **bonne réponse** et des **mauvaises réponses**
-(trois, plausibles) : modifie-les dans la relecture, ou ajoutes-en avec **+ mauvaise
+(trois, plausibles) : modifiez-les dans la relecture, ou ajoutez-en avec **+ mauvaise
 réponse**. **Vrai / faux** fait des affirmations, dont la moitié fausses avec une seule erreur
 précise.
 
@@ -52,12 +52,12 @@ schéma.
 
 Dans la relecture :
 
-- fais glisser un **masque rouge** pour le déplacer, et son **coin rond** pour l'agrandir,
+- faites glisser un **masque rouge** pour le déplacer, et son **coin rond** pour l'agrandir,
   afin qu'il cache toute la légende ;
-- le **cadre en pointillés** est la partie de la photo qu'Anki affiche : fais glisser ses
+- le **cadre en pointillés** est la partie de la photo qu'Anki affiche : faites glisser ses
   coins bleus pour la recadrer.
 
-Gemini et GPT placent les masques le plus précisément. Avec Claude, vérifie que les masques
+Gemini et GPT placent les masques le plus précisément. Avec Claude, vérifiez que les masques
 cachent toute la légende sur une écriture manuscrite.
 
 ## Formules
@@ -77,8 +77,8 @@ proprement sur la carte.
 
 ![Des cartes de géométrie avec leurs figures](../../../assets/screenshots/fr/figures.png)
 
-Le bouton **🖼️** d'une carte ouvre sa figure : modifie sa description et redessine-la, ou
-déplace-la au verso quand elle fait partie de la réponse. La consigne **Géométrie (avec
+Le bouton **🖼️** d'une carte ouvre sa figure : modifiez sa description et redessinez-la, ou
+déplacez-la au verso quand elle fait partie de la réponse. La consigne **Géométrie (avec
 figures)** fait ce type de cartes, tout comme **Automatique** et les consignes de formules
 quand c'est utile.
 
@@ -94,7 +94,7 @@ pas). Cette section choisit aussi le modèle d'images, ou **Pas d'images** :
   service, avec le coût d'une image ; celui qui a une ⭐ est le défaut. Nous avons comparé
   leurs dessins à l'œil : avec OpenAI, GPT Image 2 (environ 0,6 centime de dollar par image) ;
   avec Gemini ou OpenRouter, Gemini 3.1 Flash-Lite Image (environ 3 centimes).
-- Le champ propose aussi **tous les modèles d'images du service**, nouveaux compris : tape
+- Le champ propose aussi **tous les modèles d'images du service**, nouveaux compris : tapez
   pour les filtrer.
 - **🖼️ Tester : dessiner une girafe** dessine une vraie image avec le service et le modèle
   choisis, et la montre comme sur une carte, avec la durée et le coût.
@@ -103,13 +103,13 @@ pas). Cette section choisit aussi le modèle d'images, ou **Pas d'images** :
 
 Le bouton **🖼️** d'une carte ouvre son panneau **Image** :
 
-- **Ce que l'image doit montrer**, dans ta langue : laisse vide et **🎨 Dessiner** laisse l'IA
-  choisir d'après la carte une figure exacte (un schéma, de la géométrie) ou une image dessinée ;
-  ou écris ce que tu veux (« deux ensembles qui se chevauchent, leur réunion hachurée », « une
-  pomme rouge »). Un dessin coûte de moins d'un centime à quelques centimes de dollar, selon le
-  modèle ;
-- **📷 Ma photo** : mets ta propre photo à la place, gratuitement ;
-- **✕ Pas d'image** : retire-la ;
+- **Ce que l'image doit montrer**, dans votre langue : laissez vide et **🎨 Dessiner** laisse
+  l'IA choisir d'après la carte une figure exacte (un schéma, de la géométrie) ou une image
+  dessinée ; ou écrivez ce que vous voulez (« deux ensembles qui se chevauchent, leur réunion
+  hachurée », « une pomme rouge »). Un dessin coûte de moins d'un centime à quelques centimes de
+  dollar, selon le modèle ;
+- **📷 Ma photo** : mettez votre propre photo à la place, gratuitement ;
+- **✕ Pas d'image** : retirez-la ;
 - **Au verso (avec la réponse)** : quand l'image donne la réponse.
 - **🔎 Chercher une image** : des images libres du sujet, au choix (voir plus bas), gratuitement.
 
@@ -126,10 +126,10 @@ de la prise de la Bastille, le vrai portrait d'un président.
 
 **Réglages → Images des cartes → Chercher d'abord une image libre** le désactive (toujours
 dessiner). Dans le panneau d'une carte, **🔎 Chercher une image** montre les images trouvées,
-pour choisir toi-même : elles sont filtrées pour les élèves (pas de contenu adulte), et tu les
-vois toujours avant qu'elles aillent sur une carte.
+pour choisir vous-même : elles sont filtrées pour les élèves (pas de contenu adulte), et vous
+les voyez toujours avant qu'elles aillent sur une carte.
 
 Chaque carte garde d'où vient son image : son panneau le dit (« Source : Wikimedia Commons ·
-domaine public », avec un lien vers la page de l'image ; « Dessinée par l'IA » ; « Ta photo »).
+domaine public », avec un lien vers la page de l'image ; « Dessinée par l'IA » ; « Votre photo »).
 Sur l'ordinateur, la note Anki la garde aussi, dans un champ caché **Source** : il n'apparaît sur
-aucune carte, mais suit le paquet si tu le partages.
+aucune carte, mais suit le paquet si vous le partagez.

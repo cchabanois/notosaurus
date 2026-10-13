@@ -54,7 +54,7 @@
     },
     "hide": {
       "title": "Cacher ce que l'IA ne doit pas voir",
-      "hint": "Avec le doigt, noircis un nom, une école, tout ce qui est personnel. Seule la photo noircie est gardée et envoyée.",
+      "hint": "Avec le doigt, noircissez un nom, une école, tout ce qui est personnel. Seule la photo noircie est gardée et envoyée.",
       "pdf": "Sur une page de PDF, son texte n'est alors pas envoyé : l'IA lit la page comme une image.",
       "paint": "Noircir",
       "erase": "Dénoircir",
@@ -65,20 +65,20 @@
       "button": "PDF",
       "reading": "Lecture…",
       "title": "Pages à ajouter",
-      "hint": "« {name} » a {count} pages : choisis-en {free} au plus (une leçon tient en 10 pages ; chaque page envoyée coûte comme une photo).",
+      "hint": "« {name} » a {count} pages : choisissez-en {free} au plus (une leçon tient en 10 pages ; chaque page envoyée coûte comme une photo).",
       "add": {
         "one": "Ajouter {count} page",
         "other": "Ajouter {count} pages"
       },
-      "full": "Déjà {max} pages : retires-en avant d'ajouter un PDF.",
-      "protected": "« {name} » est protégé par un mot de passe : enregistre-le sans mot de passe, puis ajoute-le à nouveau."
+      "full": "Déjà {max} pages : retirez-en avant d'ajouter un PDF.",
+      "protected": "« {name} » est protégé par un mot de passe : enregistrez-le sans mot de passe, puis ajoutez-le à nouveau."
     },
     "prompt": {
       "title": "Consigne",
       "free": "✏️ Libre",
       "freeHint": "Une consigne pour cette fois, sans l'enregistrer",
-      "freePlaceholder": "Écris ce que l'IA doit faire de la leçon, par exemple : « une carte par date, recto l'événement, verso la date ».",
-      "freeNote": "Consigne libre : elle reste avec la leçon mais n'est pas ajoutée à tes consignes.",
+      "freePlaceholder": "Écrivez ce que l'IA doit faire de la leçon, par exemple : « une carte par date, recto l'événement, verso la date ».",
+      "freeNote": "Consigne libre : elle reste avec la leçon mais n'est pas ajoutée à vos consignes.",
       "funFacts": "💡 Ajouter des « Le savais-tu ? »",
       "helps": "💬 Aides au verso (explication, astuce pour retenir)",
       "all": "Toutes",
@@ -94,13 +94,13 @@
       },
       "completeHint": "(les cartes déjà faites restent)",
       "completed": {
-        "one": "➕ {count} carte ajoutée depuis les nouvelles pages : vérifie-la.",
-        "other": "➕ {count} cartes ajoutées depuis les nouvelles pages : vérifie-les."
+        "one": "➕ {count} carte ajoutée depuis les nouvelles pages : vérifiez-la.",
+        "other": "➕ {count} cartes ajoutées depuis les nouvelles pages : vérifiez-les."
       },
       "completedNone": "Rien de nouveau sur ces pages : aucune carte ajoutée.",
       "regenerate": "✨ Régénérer",
       "fromPrompt": "✨ Générer à partir de la consigne seule",
-      "fromPromptHint": "Pas de photo ? L'IA crée les cartes à partir de ta consigne : mets-y les mots, ou demande un thème. Vérifie bien les cartes.",
+      "fromPromptHint": "Pas de photo ? L'IA crée les cartes à partir de votre consigne : mettez-y les mots, ou demandez un thème. Vérifiez bien les cartes.",
       "regenerateHint": "(remplace les cartes)",
       "unavailable": "Consignes indisponibles : {message}",
       "builtin": "Consigne Notosaurus : en lecture seule, améliorée avec l'appli",
@@ -146,23 +146,23 @@
       "typingHint": "(Anki compare lettre par lettre : idéal pour l'orthographe)",
       "dictation": "Ajouter une dictée",
       "dictationHint": "(entendre le verso, l'écrire)",
-      "dictationNoVoice": "(choisis d'abord une voix)",
+      "dictationNoVoice": "(choisissez d'abord une voix)",
       "dictationOnly": "Seulement la dictée",
       "dictationOnlyHint": "(pas de carte recto → verso)",
       "voiceIncluded": "🔊 Voix <code>{voice}</code>, incluse dans le paquet.",
       "voiceDevice": "🔊 Lu par l'appareil en <code>{voice}</code>.",
       "badgeNew": "nouvelle",
       "badgeModified": "modifiée",
-      "noCards": "Aucune carte trouvée : vérifie les photos ou la consigne.",
+      "noCards": "Aucune carte trouvée : vérifiez les photos ou la consigne.",
       "owner": "👤 Leçon de <strong>{owner}</strong>",
       "sharedSwitch": "Partagée avec les autres profils",
       "choice": "🤖 {choice}",
       "promptUsed": "📝 Consigne utilisée pour cette leçon",
       "clozeHint": "Texte à trous : {{c1::…}} cache ce qui est entre les accolades. Chaque numéro donne une carte dans Anki ; le même numéro cache plusieurs trous ensemble.",
-      "diagramHint": "Schéma : fais glisser un masque rouge pour le déplacer, et son coin rond pour l'agrandir, afin qu'il cache tout le nom. Le cadre en pointillés est ce qu'Anki montrera de la photo : fais glisser ses coins bleus pour le recadrer.",
-      "diagramWarning": "Avec ce modèle d'IA (Claude), les masques sont parfois trop petits sur l'écriture manuscrite : vérifie qu'ils cachent bien tout le nom.",
+      "diagramHint": "Schéma : faites glisser un masque rouge pour le déplacer, et son coin rond pour l'agrandir, afin qu'il cache tout le nom. Le cadre en pointillés est ce qu'Anki montrera de la photo : faites glisser ses coins bleus pour le recadrer.",
+      "diagramWarning": "Avec ce modèle d'IA (Claude), les masques sont parfois trop petits sur l'écriture manuscrite : vérifiez qu'ils cachent bien tout le nom.",
       "cropFrame": "Ce qu'Anki montre de la photo",
-      "readOnly": "🔒 Lecture seule : seul le profil de {owner} peut la modifier. Tu peux quand même l'ajouter à ton Anki.",
+      "readOnly": "🔒 Lecture seule : seul le profil de {owner} peut la modifier. Vous pouvez quand même l'ajouter à votre Anki.",
       "madeQuick": "Créées en mode rapide.",
       "carefulAgain": "🎯 Refaire en mode soigné"
     },
@@ -203,7 +203,7 @@
     },
     "actions": {
       "generate": "✨ Générer les cartes",
-      "startWithPhoto": "📷 Commence par photographier la leçon",
+      "startWithPhoto": "📷 Commencez par photographier la leçon",
       "downloadApkg": "Télécharger le fichier .apkg",
       "addToAnki": "📥 Ajouter à Anki",
       "updateInAnki": "🔄 Mettre à jour dans Anki",
@@ -245,7 +245,7 @@
         "one": "dont {count} déplacée vers le nouveau paquet (historique gardé)",
         "other": "dont {count} déplacées vers le nouveau paquet (historique gardé)"
       },
-      "oldAnkiConnect": "AnkiConnect est trop ancien pour changer les options des cartes déjà envoyées : elles restent à côté des nouvelles (mets à jour AnkiConnect, ou utilise le greffon Notosaurus)",
+      "oldAnkiConnect": "AnkiConnect est trop ancien pour changer les options des cartes déjà envoyées : elles restent à côté des nouvelles (mettez à jour AnkiConnect, ou utilisez le greffon Notosaurus)",
       "restructured": "Notosaurus a mis à jour ses types de note ({names}) avec un nouveau champ ou une nouvelle carte : à la prochaine synchronisation, Anki demandera une synchronisation complète (pas lancée automatiquement cette fois)"
     },
     "leftovers": {
@@ -268,22 +268,22 @@
     "welcome": {
       "title": "Avant de commencer",
       "parentTitle": "Notosaurus est un outil pour les parents.",
-      "parent": "Il faut être un adulte pour l'utiliser : c'est toi qui prépares les cartes, ton enfant les révise dans Anki.",
+      "parent": "Il faut être un adulte pour l'utiliser : c'est vous qui préparez les cartes, votre enfant les révise dans Anki.",
       "aiTitle": "Il utilise l'IA Gemini de Google",
       "ai": "pour lire les photos et faire les cartes. Les photos, consignes et dictées passent par le service Notosaurus le temps de faire les cartes, sans y être enregistrées, et sont traitées dans l'Union européenne.",
-      "onPhone": "Tes leçons restent sur ton téléphone.",
+      "onPhone": "Vos leçons restent sur votre téléphone.",
       "google": "Google peut garder ce qui lui est envoyé jusqu'à 90 jours pour détecter les abus, sans s'en servir pour entraîner son IA.",
       "guardTitle": "L'IA a des garde-fous adaptés aux élèves,",
-      "guard": "mais elle peut se tromper : vérifie les cartes avant de les donner à ton enfant.",
+      "guard": "mais elle peut se tromper : vérifiez les cartes avant de les donner à votre enfant.",
       "nameTitle": "Une page de cahier montre souvent le nom de l'enfant :",
-      "name": "cache-le avec 🖍️ avant l'envoi.",
+      "name": "cachez-le avec 🖍️ avant l'envoi.",
       "policy": "Politique de confidentialité",
       "agree": "Je suis un parent (un adulte) et j'accepte la politique de confidentialité.",
       "accept": "Accepter"
     },
     "export": {
       "noSound": "Paquet exporté, mais {count} carte(s) sans son (synthèse vocale indisponible).",
-      "done": "✓ Paquet téléchargé : ouvre-le avec Anki."
+      "done": "✓ Paquet téléchargé : ouvrez-le avec Anki."
     },
     "audio": {
       "failed": "Lecture impossible : voix inconnue ou synthèse indisponible.",
@@ -340,7 +340,7 @@
       "confirmDelete": "Supprimer la consigne « {name} » ?",
       "copyName": "{name} (copie)",
       "builtin": "⭐ Consigne Notosaurus",
-      "builtinHint": "Cette consigne fait partie de Notosaurus et s'améliore avec lui : duplique-la pour l'adapter (langue, voix, paquet…).",
+      "builtinHint": "Cette consigne fait partie de Notosaurus et s'améliore avec lui : dupliquez-la pour l'adapter (langue, voix, paquet…).",
       "duplicate": "⧉ Dupliquer",
       "duplicateToChange": "⧉ Dupliquer pour modifier",
       "voiceMode": {
@@ -351,7 +351,7 @@
       "voiceModeHint": {
         "none": "Le verso n'est pas lu à voix haute.",
         "auto": "L'IA reconnaît la langue du verso et Notosaurus prend une voix de cette langue (espagnol → Elvira, anglais britannique → Sonia…).",
-        "pick": "Tape le début de la langue (« en-GB », « es-ES »…) pour voir les voix ; ▶ pour écouter."
+        "pick": "Tapez le début de la langue (« en-GB », « es-ES »…) pour voir les voix ; ▶ pour écouter."
       }
     },
     "pictures": {
@@ -362,25 +362,25 @@
       },
       "panel": "Image",
       "subject": "Ce que l'image doit montrer",
-      "subjectPlaceholder": "Laisse vide : l'IA choisit d'après la carte. Ex. : deux ensembles qui se chevauchent",
+      "subjectPlaceholder": "Laissez vide : l'IA choisit d'après la carte. Ex. : deux ensembles qui se chevauchent",
       "photo": "📷 Ma photo",
       "remove": "✕ Pas d'image",
-      "cost": "Un schéma ou une image libre coûte très peu ; un dessin par l'IA est toujours demandé avant (il coûte plus) ; ta photo est gratuite.",
+      "cost": "Un schéma ou une image libre coûte très peu ; un dessin par l'IA est toujours demandé avant (il coûte plus) ; votre photo est gratuite.",
       "figure": "La figure à dessiner (étiquettes comprises)",
       "figurePlaceholder": "ex. : un triangle rectangle en C, l'hypoténuse étiquetée « c »",
-      "figureCost": "Une figure est dessinée par l'IA des cartes, pour moins d'un centime US ; ta propre photo est gratuite.",
+      "figureCost": "Une figure est dessinée par l'IA des cartes, pour moins d'un centime US ; votre propre photo est gratuite.",
       "onBack": "Au verso (avec la réponse)",
       "searching": "Recherche…",
-      "found": "Images libres de droits ({sources}) : touche celle qui va.",
-      "none": "Aucune image libre trouvée : essaie d'autres mots.",
+      "found": "Images libres de droits ({sources}) : touchez celle qui va.",
+      "none": "Aucune image libre trouvée : essayez d'autres mots.",
       "sourceFound": "Source : {source} · {licence}",
       "sourceDrawn": "Dessinée par l'IA",
       "sourceDrawnBy": "Dessinée par l'IA ({model})",
-      "sourcePhoto": "Ta photo",
+      "sourcePhoto": "Votre photo",
       "sourcePage": "voir la page",
       "make": "✨ Image",
       "change": "✨ Changer l'image",
-      "pick": "⭐ : le choix de l'IA. Touche l'image qui va.",
+      "pick": "⭐ : le choix de l'IA. Touchez l'image qui va.",
       "drawAsk": "Aucune image libre ne convient pour « {subject} ». La faire dessiner par l'IA ?",
       "drawYes": "🎨 Dessiner",
       "drawNo": "Non",
@@ -410,9 +410,9 @@
     "dictation": {
       "start": "Dicter",
       "stop": "Arrêter et écrire le texte",
-      "busy": "J'écris ce que tu as dit…",
-      "listening": "J'écoute… appuie sur ⏹ quand tu as fini.",
-      "nothing": "Rien entendu : réessaie, plus près du micro."
+      "busy": "J'écris ce que vous avez dit…",
+      "listening": "J'écoute… appuyez sur ⏹ quand vous avez fini.",
+      "nothing": "Rien entendu : réessayez, plus près du micro."
     },
     "update": {
       "available": "Une nouvelle version de Notosaurus est disponible.",
@@ -421,7 +421,7 @@
     "children": {
       "title": "Enfants",
       "who": "Pour qui ?",
-      "hint": "Sa classe et tes instructions sont données à l'IA ; son prénom, jamais.",
+      "hint": "Sa classe et vos instructions sont données à l'IA ; son prénom, jamais.",
       "name": "Prénom",
       "choose": "Choisir",
       "chosen": "✓ Choisi",
@@ -443,7 +443,7 @@
         "middle": "ex. : il prépare un contrôle : insiste sur les dates et les définitions.",
         "high": "ex. : elle prépare le bac : formules exactes, démonstrations en étapes."
       },
-      "pick": "Pour qui est la prochaine leçon ? Touche son prénom.",
+      "pick": "Pour qui est la prochaine leçon ? Touchez son prénom.",
       "edit": "Modifier {name}"
     },
     "report": {
@@ -475,7 +475,7 @@
     "title": "Réglages",
     "create": {
       "title": "🔐 Créer le mot de passe",
-      "hint": "Cette page contient les clés d'API. Choisis un mot de passe pour la protéger : les autres utilisateurs de l'appli n'y auront pas accès.",
+      "hint": "Cette page contient les clés d'API. Choisissez un mot de passe pour la protéger : les autres utilisateurs de l'appli n'y auront pas accès.",
       "button": "Créer et continuer"
     },
     "locked": {
@@ -510,12 +510,12 @@
       },
       "compatible": {
         "name": "Autre service compatible OpenAI",
-        "description": "Un modèle chez toi (Ollama, LM Studio…) ou un autre service (Mistral…), à son adresse."
+        "description": "Un modèle chez vous (Ollama, LM Studio…) ou un autre service (Mistral…), à son adresse."
       },
       "fake": {
         "name": "Démo",
         "description": "Cartes factices, pour les tests et le développement.",
-        "warning": "Mode démo : les cartes ne viennent pas de tes photos, ce sont toujours les mêmes. Choisis un autre fournisseur pour utiliser Notosaurus."
+        "warning": "Mode démo : les cartes ne viennent pas de vos photos, ce sont toujours les mêmes. Choisissez un autre fournisseur pour utiliser Notosaurus."
       },
       "model": "Modèle",
       "default": "{model} (par défaut)",
@@ -532,18 +532,18 @@
       "openrouterKey": "Clé API OpenRouter",
       "compatibleKey": "Clé API du service (souvent inutile pour un modèle local)",
       "keySaved": "{masked} (enregistrée)",
-      "pasteKey": "Colle la clé ici",
-      "replaceHint": "Pour la remplacer, colle la nouvelle clé.",
+      "pasteKey": "Collez la clé ici",
+      "replaceHint": "Pour la remplacer, collez la nouvelle clé.",
       "willBeCleared": "Sera effacée à l'enregistrement.",
       "clear": "Effacer {label}",
       "apiAddress": "Adresse de l'API",
       "ollamaHint": "Service compatible OpenAI : son adresse se termine en général par <code>/v1</code> (Ollama en local : <code>http://localhost:11434/v1</code>).",
       "test": "🔌 Tester (lecture d'image + JSON)",
       "testOk": "✓ {model} lit les images et répond au bon format ({seconds} s).",
-      "testOkQuota": "✓ Ta clé fonctionne avec {model} ({seconds} s) : {quota} n'est pas inclus dans son offre (gratuite ?). Active la facturation de la clé dans Google AI Studio pour l'avoir (≈ 1 ¢ US par leçon).",
-      "testNoVision": "⚠ {model} répond, mais ne semble pas voir l'image (il a répondu « {answer} » pour un carré rouge). Choisis un modèle qui accepte les images.",
-      "testNoJson": "⚠ {model} ne répond pas au format JSON demandé : choisis un autre modèle.",
-      "testRefused": "⚠ {model} n'accepte pas les images (« {refused} »). Choisis un modèle vision."
+      "testOkQuota": "✓ Votre clé fonctionne avec {model} ({seconds} s) : {quota} n'est pas inclus dans son offre (gratuite ?). Activez la facturation de la clé dans Google AI Studio pour l'avoir (≈ 1 ¢ US par leçon).",
+      "testNoVision": "⚠ {model} répond, mais ne semble pas voir l'image (il a répondu « {answer} » pour un carré rouge). Choisissez un modèle qui accepte les images.",
+      "testNoJson": "⚠ {model} ne répond pas au format JSON demandé : choisissez un autre modèle.",
+      "testRefused": "⚠ {model} n'accepte pas les images (« {refused} »). Choisissez un modèle vision."
     },
     "voice": {
       "title": "Voix des cartes",
@@ -556,7 +556,7 @@
     "anki": {
       "title": "📥 Envoi direct dans Anki",
       "embedded": "✓ Notosaurus tourne dans le <strong>greffon Anki</strong> : « Ajouter à Anki » écrit directement dans le profil ouvert, sans AnkiConnect.",
-      "howTo": "Pour ajouter les cartes sans passer par un fichier <code>.apkg</code> : dans Anki sur l'ordinateur, <em>Outils → Modules → Obtenir des modules</em>, code <code>2055492159</code> (AnkiConnect), puis redémarre Anki. Anki doit être ouvert pendant l'envoi. Autre possibilité : installer le greffon Notosaurus, qui fait tourner Notosaurus dans Anki.",
+      "howTo": "Pour ajouter les cartes sans passer par un fichier <code>.apkg</code> : dans Anki sur l'ordinateur, <em>Outils → Modules → Obtenir des modules</em>, code <code>2055492159</code> (AnkiConnect), puis redémarrez Anki. Anki doit être ouvert pendant l'envoi. Autre possibilité : installer le greffon Notosaurus, qui fait tourner Notosaurus dans Anki.",
       "address": "Adresse d'AnkiConnect",
       "addressHint": "Anki sur le même ordinateur que Notosaurus : <code>http://localhost:8765</code>.",
       "key": "Clé AnkiConnect",
@@ -567,14 +567,14 @@
       "test": "🔌 Tester la connexion avec Anki",
       "testOk": "✓ Anki répond (AnkiConnect version {version}, profil « {profile} »).",
       "testOkAddon": "✓ Anki répond (greffon Notosaurus, profil « {profile} »).",
-      "testNoProfile": "Anki répond, mais aucun profil n'est ouvert : ouvre-en un dans Anki.",
+      "testNoProfile": "Anki répond, mais aucun profil n'est ouvert : ouvrez-en un dans Anki.",
       "syncOn": "✓ « {profile} » est connecté à AnkiWeb.",
-      "syncOff": "« {profile} » n'est pas connecté à AnkiWeb : pas de synchro après l'envoi. Pour synchroniser, connecte-toi dans Anki (bouton Synchroniser)."
+      "syncOff": "« {profile} » n'est pas connecté à AnkiWeb : pas de synchro après l'envoi. Pour synchroniser, connectez-vous dans Anki (bouton Synchroniser)."
     },
     "lessons": {
       "title": "Leçons",
       "hint": "À qui appartient chaque leçon. Une leçon ne se modifie que depuis le profil Anki de son propriétaire ; sans propriétaire, elle est à tout le monde. Les changements faits ici s'appliquent tout de suite.",
-      "ankiClosed": "Anki est injoignable : ouvre-le pour choisir parmi ses profils.",
+      "ankiClosed": "Anki est injoignable : ouvrez-le pour choisir parmi ses profils.",
       "none": "Aucune leçon pour l'instant.",
       "owner": "Propriétaire",
       "noOwner": "Personne (commune à tous)",
@@ -592,7 +592,7 @@
     },
     "service": {
       "keyAt": "Clé à créer sur",
-      "vision": "Choisis un modèle qui accepte les images (vision).",
+      "vision": "Choisissez un modèle qui accepte les images (vision).",
       "loadModels": "📋 Charger les modèles du service",
       "loading": "Chargement…",
       "noModels": "Le service n'a renvoyé aucun modèle.",
@@ -601,8 +601,8 @@
         "other": "{count} modèles qui acceptent les images, proposés dans la liste."
       },
       "modelsAll": {
-        "one": "{count} modèle proposé : le service ne dit pas s'il accepte les images, vérifie avec « Tester ».",
-        "other": "{count} modèles proposés : le service ne dit pas lesquels acceptent les images, vérifie avec « Tester »."
+        "one": "{count} modèle proposé : le service ne dit pas s'il accepte les images, vérifiez avec « Tester ».",
+        "other": "{count} modèles proposés : le service ne dit pas lesquels acceptent les images, vérifiez avec « Tester »."
       },
       "noVisionModels": "Aucun modèle de ce service n'accepte les images : il en faut un pour lire les photos des leçons."
     },
@@ -647,7 +647,7 @@
       "profile": "Pour {profile}",
       "missingProfile": "Pour {profile} (n'existe plus dans Anki)",
       "profilePlaceholder": "ex. : en 5ᵉ ; réponses courtes",
-      "noProfiles": "Ouvre Anki pour régler des instructions pour chacun de ses profils.",
+      "noProfiles": "Ouvrez Anki pour régler des instructions pour chacun de ses profils.",
       "helps": "Aides au verso des cartes, activées par défaut",
       "helpsHint": "(une explication, une astuce pour retenir, là où elles aident ; chaque appareil peut le changer, ≈ +1 à 3 ¢ US par leçon)"
     },
@@ -655,7 +655,7 @@
     "pictures": {
       "model": "Modèle d'images",
       "hint": "Pour les consignes du type « recto : image du mot ». De moins d'un centime à quelques centimes US par image selon le modèle.",
-      "listed": "Du meilleur rapport qualité/prix au plus cher, avec le coût d'une image ; ⭐ : le défaut. Ou tape dans le champ le nom d'un des {count} modèles d'image du service.",
+      "listed": "Du meilleur rapport qualité/prix au plus cher, avec le coût d'une image ; ⭐ : le défaut. Ou tapez dans le champ le nom d'un des {count} modèles d'image du service.",
       "test": "🖼️ Tester : dessiner une girafe (quelques centimes)",
       "testOk": "✓ {model} a dessiné ceci en {seconds} s ({cost}).",
       "testAlt": "L'image de test : une girafe",
@@ -667,8 +667,8 @@
       "drawnBySame": "Dessinées par {service}, le même service que les cartes.",
       "drawnBy": "Dessinées par {service}.",
       "cantDraw": "{cards} ne dessine pas : les images passent par {service}.",
-      "nobody": "{cards} ne dessine pas, et aucun autre service n'a de clé : ajoute une clé Gemini, OpenAI ou OpenRouter pour avoir des images.",
-      "missingKey": "{service} n'a pas de clé : ajoute-la, ou choisis un autre service.",
+      "nobody": "{cards} ne dessine pas, et aucun autre service n'a de clé : ajoutez une clé Gemini, OpenAI ou OpenRouter pour avoir des images.",
+      "missingKey": "{service} n'a pas de clé : ajoutez-la, ou choisissez un autre service.",
       "noneChosen": "Pas d'images sur les cartes.",
       "auto": "Automatique",
       "find": "Chercher d'abord une image libre",
@@ -676,21 +676,21 @@
     },
     "phones": {
       "title": "📱 Téléphones",
-      "hint": "Scanne ce QR code avec le téléphone : il ouvre Notosaurus et autorise ce téléphone. Ensuite, ajoute la page à l'écran d'accueil.",
+      "hint": "Scannez ce QR code avec le téléphone : il ouvre Notosaurus et autorise ce téléphone. Ensuite, ajoutez la page à l'écran d'accueil.",
       "qr": "QR code pour ouvrir Notosaurus sur le téléphone",
       "security": "Seuls les appareils qui ont scanné ce QR code peuvent utiliser Notosaurus sur le Wi-Fi (l'ordinateur lui-même, toujours). Sans HTTPS, ça arrête les curieux et les autres sites web, pas quelqu'un qui espionne le Wi-Fi.",
       "unpair": "Déconnecter tous les téléphones",
       "confirmUnpair": "Déconnecter tous les téléphones ? Chacun devra scanner à nouveau le QR code (utile si un téléphone a été perdu ou prêté).",
-      "unpaired": "Téléphones déconnectés : scanne le nouveau QR code sur chacun.",
-      "thisDevice": "Ou autoriser l'appareil où tu lis cette page (Docker, autre ordinateur)"
+      "unpaired": "Téléphones déconnectés : scannez le nouveau QR code sur chacun.",
+      "thisDevice": "Ou autoriser l'appareil où vous lisez cette page (Docker, autre ordinateur)"
     },
     "model": {
       "title": "Modèle"
     },
     "recommended": {
       "title": "Conseillés, d'après nos essais",
-      "cardsHint": "Du meilleur rapport qualité/prix au plus cher, avec le coût d'une leçon ; ⭐ : le défaut. Ou tape le nom d'un autre modèle dans le champ.",
-      "picturesHint": "Du meilleur rapport qualité/prix au plus cher, avec le coût d'une image ; ⭐ : le défaut. Ou tape le nom d'un autre modèle dans le champ.",
+      "cardsHint": "Du meilleur rapport qualité/prix au plus cher, avec le coût d'une leçon ; ⭐ : le défaut. Ou tapez le nom d'un autre modèle dans le champ.",
+      "picturesHint": "Du meilleur rapport qualité/prix au plus cher, avec le coût d'une image ; ⭐ : le défaut. Ou tapez le nom d'un autre modèle dans le champ.",
       "notes": {
         "freeKey": "celui d'une clé gratuite",
         "photos": "le meilleur sur les photos",
@@ -718,7 +718,7 @@
       "credits": "{credits} crédits restants ce mois-ci, {today} aujourd'hui",
       "renews": "Renouvelés le {date}",
       "none": "Pas encore de clé de licence : elle vient avec l'abonnement.",
-      "free": "Pas d'abonnement ? Avec l'add-on Anki sur ton ordinateur, l'application est gratuite : voir « Où travaille Notosaurus ? ».",
+      "free": "Pas d'abonnement ? Avec l'add-on Anki sur votre ordinateur, l'application est gratuite : voir « Où travaille Notosaurus ? ».",
       "realRelay": "Relais réel",
       "testRelay": "🧪 Relais de test"
     },
@@ -729,7 +729,7 @@
       "manage": "Gérer l'abonnement (Google Play)",
       "until": "Abonnement payé jusqu'au {date}",
       "done": "✓ Abonné : bonnes révisions !",
-      "restored": "✓ Ton abonnement a été retrouvé sur ce compte Google."
+      "restored": "✓ Votre abonnement a été retrouvé sur ce compte Google."
     },
     "anki": {
       "title": "📥 AnkiDroid",
@@ -738,7 +738,7 @@
       "install": "Installer AnkiDroid",
       "notAllowed": "Notosaurus n'a pas encore le droit d'ajouter des cartes à AnkiDroid.",
       "allow": "Autoriser",
-      "openOnce": "Après avoir installé AnkiDroid, ouvre-le une fois pour qu'il crée sa collection."
+      "openOnce": "Après avoir installé AnkiDroid, ouvrez-le une fois pour qu'il crée sa collection."
     },
     "where": {
       "title": "📍 Où travaille Notosaurus ?",
@@ -746,7 +746,7 @@
       "phoneHint": "Leçons sur le téléphone, cartes dans AnkiDroid. Avec l'abonnement.",
       "computer": "💻 Sur mon ordinateur",
       "computerHint": "Avec l'add-on Anki : leçons et cartes sur l'ordinateur. Gratuit.",
-      "someComputer": "ton ordinateur",
+      "someComputer": "votre ordinateur",
       "change": "Changer d'ordinateur",
       "typeAddress": "Saisir l'adresse à la place",
       "computerSettings": "Les instructions pour l'IA et les autres réglages de ce mode sont sur l'ordinateur : Anki → Outils → Notosaurus → Réglages."
@@ -776,7 +776,7 @@
       "relayHint": "Pour les tests seulement : le service Notosaurus auquel l'application parle."
     },
     "unreachable": {
-      "title": "💻 Ton ordinateur ne répond pas",
+      "title": "💻 Votre ordinateur ne répond pas",
       "hint": "Notosaurus doit y tourner (Anki ouvert avec l'add-on), et ce téléphone être sur le même Wi-Fi.",
       "retry": "Réessayer",
       "rescan": "Scanner à nouveau le QR code",
@@ -797,13 +797,13 @@
     },
     "ai": {
       "title": "Quelle IA lit les leçons ?",
-      "hint": "Elle lit les photos et prépare les cartes. Tu pourras la changer plus tard dans les réglages.",
+      "hint": "Elle lit les photos et prépare les cartes. Vous pourrez la changer plus tard dans les réglages.",
       "recommended": "⭐ Conseillé : le meilleur rapport qualité/prix à nos essais (≈ 1 ¢ US par leçon)",
       "geminiTitle": "Obtenir une clé Gemini (2 minutes)",
-      "gemini1": "Ouvre <a href=\"https://aistudio.google.com/apikey\" target=\"_blank\" rel=\"noopener\">aistudio.google.com/apikey</a> et connecte-toi avec un compte Google.",
-      "gemini2": "Clique sur <b>Create API key</b> (créer une clé), puis copie la clé.",
-      "gemini3": "Colle-la ci-dessous, puis vérifie-la.",
-      "billing": "Sans facturation, la clé est gratuite mais limitée : Notosaurus prend alors gemini-3.5-flash (le dernier modèle n'est pas inclus), les limites sont basses, et Google peut utiliser ce que tu envoies. Pour les cahiers de tes enfants, active la facturation du projet de la clé dans Google AI Studio : ≈ 1 ¢ US par leçon, le dernier modèle, et tes données ne servent pas.",
+      "gemini1": "Ouvrez <a href=\"https://aistudio.google.com/apikey\" target=\"_blank\" rel=\"noopener\">aistudio.google.com/apikey</a> et connectez-vous avec un compte Google.",
+      "gemini2": "Cliquez sur <b>Create API key</b> (créer une clé), puis copiez la clé.",
+      "gemini3": "Collez-la ci-dessous, puis vérifiez-la.",
+      "billing": "Sans facturation, la clé est gratuite mais limitée : Notosaurus prend alors gemini-3.5-flash (le dernier modèle n'est pas inclus), les limites sont basses, et Google peut utiliser ce que vous envoyez. Pour les cahiers de vos enfants, activez la facturation du projet de la clé dans Google AI Studio : ≈ 1 ¢ US par leçon, le dernier modèle, et vos données ne servent pas.",
       "otherHelp": "Comment obtenir une clé pour ce service",
       "check": "🔌 Vérifier la clé"
     },
@@ -811,7 +811,7 @@
     "back": "← Retour",
     "phone": {
       "title": "Ouvrir Notosaurus sur le téléphone",
-      "hint": "Scanne ce QR code avec l'appareil photo du téléphone, puis ouvre le lien.",
+      "hint": "Scannez ce QR code avec l'appareil photo du téléphone, puis ouvrez le lien.",
       "waiting": "En attente du téléphone…",
       "paired": "✓ Le téléphone est connecté.",
       "sameWifi": "Le téléphone doit être sur le même Wi-Fi que cet ordinateur.",
@@ -819,8 +819,8 @@
     },
     "done": {
       "title": "Notosaurus est prêt !",
-      "onPhone": "Sur le téléphone : prends une leçon en photo, Notosaurus en fait les cartes.",
-      "here": "Prends une leçon en photo, Notosaurus en fait les cartes. Le téléphone peut attendre : le QR code est dans les réglages.",
+      "onPhone": "Sur le téléphone : prenez une leçon en photo, Notosaurus en fait les cartes.",
+      "here": "Prenez une leçon en photo, Notosaurus en fait les cartes. Le téléphone peut attendre : le QR code est dans les réglages.",
       "more": "Images sur les cartes, voix, consignes par enfant : tout le reste est dans les réglages.",
       "settings": "Tous les réglages",
       "open": "Ouvrir Notosaurus"
@@ -832,20 +832,20 @@
     "unreachable": "Serveur injoignable.",
     "prompt": {
       "not_found": "Consigne introuvable.",
-      "builtin": "Cette consigne fait partie de Notosaurus : duplique-la pour la modifier."
+      "builtin": "Cette consigne fait partie de Notosaurus : dupliquez-la pour la modifier."
     },
     "lesson": {
       "not_found": "Leçon introuvable.",
       "read_only": "Lecture seule : seul le profil Anki de {owner} peut modifier cette leçon."
     },
     "host": {
-      "not_allowed": "Notosaurus ne répond qu'à l'adresse IP de l'ordinateur ou à localhost : ouvre-le ainsi, ou indique {host} dans NOTOSAURUS_PUBLIC_URL."
+      "not_allowed": "Notosaurus ne répond qu'à l'adresse IP de l'ordinateur ou à localhost : ouvrez-le ainsi, ou indiquez {host} dans NOTOSAURUS_PUBLIC_URL."
     },
     "photo": {
       "not_found": "Photo introuvable."
     },
     "extract": {
-      "no_input": "Ajoute une photo, ou écris une consigne.",
+      "no_input": "Ajoutez une photo, ou écrivez une consigne.",
       "too_many": "{max} photos maximum.",
       "too_large": "Une photo est trop lourde : {max} Mo maximum.",
       "bad_format": "Format non pris en charge : {format}",
@@ -855,33 +855,33 @@
       "no_cards": "Aucune carte complète à exporter."
     },
     "llm": {
-      "missing_model": "Aucun modèle choisi : indique-en un dans les réglages (⚙️).",
+      "missing_model": "Aucun modèle choisi : indiquez-en un dans les réglages (⚙️).",
       "unknown_provider": "Fournisseur d'IA inconnu : {provider}.",
-      "missing_key": "Aucune clé {provider} : ajoute-la dans les réglages (⚙️).",
-      "invalid_key": "Clé {provider} invalide : vérifie-la dans les réglages (⚙️).",
-      "quota": "Quota {provider} atteint, réessaie dans un instant.",
-      "gemini_quota": "Quota Gemini dépassé, y compris pour le modèle de secours. Une clé gratuite a des limites basses : active la facturation de la clé dans Google AI Studio (≈ 1 ¢ US par leçon), ou réessaie plus tard.",
-      "overloaded": "{provider} est surchargé en ce moment ({status}), réessaie dans une minute.",
+      "missing_key": "Aucune clé {provider} : ajoutez-la dans les réglages (⚙️).",
+      "invalid_key": "Clé {provider} invalide : vérifiez-la dans les réglages (⚙️).",
+      "quota": "Quota {provider} atteint, réessayez dans un instant.",
+      "gemini_quota": "Quota Gemini dépassé, y compris pour le modèle de secours. Une clé gratuite a des limites basses : activez la facturation de la clé dans Google AI Studio (≈ 1 ¢ US par leçon), ou réessayez plus tard.",
+      "overloaded": "{provider} est surchargé en ce moment ({status}), réessayez dans une minute.",
       "api_error": "Erreur de l'API {provider} ({status}) : {detail}",
       "unreachable": "Impossible de joindre l'API {provider}.",
       "empty_answer": "{provider} n'a rien renvoyé (images refusées ou illisibles ?).",
-      "invalid_answer": "Le modèle n'a pas renvoyé de cartes valides, réessaie.",
-      "truncated": "Réponse tronquée : trop de cartes d'un coup, essaie avec moins de pages.",
+      "invalid_answer": "Le modèle n'a pas renvoyé de cartes valides, réessayez.",
+      "truncated": "Réponse tronquée : trop de cartes d'un coup, essayez avec moins de pages.",
       "refused": "Demande refusée : Notosaurus ne fait que des cartes pour apprendre, adaptées à des élèves.",
-      "missing_url": "Indique l'adresse du service dans les réglages (⚙️).",
+      "missing_url": "Indiquez l'adresse du service dans les réglages (⚙️).",
       "no_audio": "La dictée passe par Gemini : {provider} n'entend pas les enregistrements.",
-      "timeout": "{provider} n'a pas répondu à temps : réessaie."
+      "timeout": "{provider} n'a pas répondu à temps : réessayez."
     },
     "anki": {
-      "unreachable": "Anki est injoignable : lance Anki sur l'ordinateur.",
+      "unreachable": "Anki est injoignable : lancez Anki sur l'ordinateur.",
       "bad_response": "Réponse inattendue : est-ce bien AnkiConnect à cette adresse ?",
       "error": "Anki ({action}) : {detail}",
-      "no_profile": "Aucun profil ouvert dans Anki : ouvre un profil puis réessaie.",
-      "sync_not_logged_in": "Anki n'est pas connecté à AnkiWeb : clique une fois sur « Synchroniser » dans Anki pour te connecter",
-      "android_missing": "Les cartes vont dans AnkiDroid, l'application Anki gratuite pour Android : il n'est pas installé. Installe-le, ouvre-le une fois, puis ajoute à nouveau les cartes.",
-      "android_refused": "Notosaurus n'a pas le droit d'ajouter des cartes à AnkiDroid : autorise-le, puis ajoute à nouveau les cartes.",
-      "android_failed": "AnkiDroid n'a pas pris les cartes ({detail}) : ouvre AnkiDroid une fois, puis réessaie.",
-      "android_no_deck": "AnkiDroid n'a pas de paquet « {deck} » : ajoute d'abord la leçon à Anki."
+      "no_profile": "Aucun profil ouvert dans Anki : ouvrez un profil puis réessayez.",
+      "sync_not_logged_in": "Anki n'est pas connecté à AnkiWeb : cliquez une fois sur « Synchroniser » dans Anki pour vous connecter",
+      "android_missing": "Les cartes vont dans AnkiDroid, l'application Anki gratuite pour Android : il n'est pas installé. Installez-le, ouvrez-le une fois, puis ajoutez à nouveau les cartes.",
+      "android_refused": "Notosaurus n'a pas le droit d'ajouter des cartes à AnkiDroid : autorisez-le, puis ajoutez à nouveau les cartes.",
+      "android_failed": "AnkiDroid n'a pas pris les cartes ({detail}) : ouvrez AnkiDroid une fois, puis réessayez.",
+      "android_no_deck": "AnkiDroid n'a pas de paquet « {deck} » : ajoutez d'abord la leçon à Anki."
     },
     "tts": {
       "voices_unavailable": "Liste des voix indisponible : {detail}",
@@ -891,69 +891,69 @@
     "admin": {
       "password_required": "Mot de passe administrateur requis.",
       "wrong_password": "Mot de passe incorrect.",
-      "too_many_attempts": "Trop de mots de passe incorrects : réessaie dans {seconds} s.",
+      "too_many_attempts": "Trop de mots de passe incorrects : réessayez dans {seconds} s.",
       "local_only": "Les réglages s'ouvrent depuis Anki, sur l'ordinateur : Outils → Notosaurus → Réglages."
     },
     "addon": {
       "source_not_found": "Code du serveur Notosaurus introuvable.",
-      "uv_unsupported": "Cet ordinateur n'est pas pris en charge (pas de uv pour lui) : installe uv toi-même (https://docs.astral.sh/uv/), puis redémarre Anki.",
-      "uv_download_failed": "Téléchargement de uv depuis GitHub impossible (voir le journal). Vérifie la connexion Internet, puis Outils → Notosaurus → Redémarrer le serveur.",
+      "uv_unsupported": "Cet ordinateur n'est pas pris en charge (pas de uv pour lui) : installez uv vous-même (https://docs.astral.sh/uv/), puis redémarrez Anki.",
+      "uv_download_failed": "Téléchargement de uv depuis GitHub impossible (voir le journal). Vérifiez la connexion Internet, puis Outils → Notosaurus → Redémarrer le serveur.",
       "install_failed": "Installation des dépendances de Notosaurus impossible (voir le journal)."
     },
     "picture": {
-      "no_model": "Pas de modèle d'images : choisis-en un dans les réglages (ou ajoute une clé Gemini ou OpenRouter).",
+      "no_model": "Pas de modèle d'images : choisissez-en un dans les réglages (ou ajoutez une clé Gemini ou OpenRouter).",
       "unknown_model": "Modèle d'images inconnu : {model}.",
       "missing_key": "Pas de clé {service} pour le modèle d'images.",
       "failed": "L'image n'a pas pu être dessinée : {detail}",
       "empty": "Le modèle d'images n'a renvoyé aucune image.",
-      "quota": "{service} refuse : quota dépassé pour le modèle d'images (une clé gratuite ne permet pas les images). Choisis un modèle d'images d'un autre service dans les réglages.",
-      "no_subject": "Écris d'abord ce qu'il faut dessiner.",
-      "search_failed": "La recherche d'images n'a pas abouti : réessaie dans un moment.",
-      "not_found": "Cette image n'est plus disponible : choisis-en une autre.",
+      "quota": "{service} refuse : quota dépassé pour le modèle d'images (une clé gratuite ne permet pas les images). Choisissez un modèle d'images d'un autre service dans les réglages.",
+      "no_subject": "Écrivez d'abord ce qu'il faut dessiner.",
+      "search_failed": "La recherche d'images n'a pas abouti : réessayez dans un moment.",
+      "not_found": "Cette image n'est plus disponible : choisissez-en une autre.",
       "needs_drawing": "Aucune image libre ne convient : elle doit être dessinée par l'IA."
     },
     "card": {
-      "not_found": "Cette carte n'existe plus : recharge la leçon."
+      "not_found": "Cette carte n'existe plus : rechargez la leçon."
     },
     "device": {
-      "not_paired": "Cet appareil n'est pas encore autorisé : scanne le QR code de Notosaurus (dans Anki : Outils → Notosaurus → Ouvrir sur le téléphone ; sinon dans les réglages, sur l'ordinateur)."
+      "not_paired": "Cet appareil n'est pas encore autorisé : scannez le QR code de Notosaurus (dans Anki : Outils → Notosaurus → Ouvrir sur le téléphone ; sinon dans les réglages, sur l'ordinateur)."
     },
     "figure": {
-      "invalid": "La figure dessinée par l'IA n'est pas lisible : redessine-la."
+      "invalid": "La figure dessinée par l'IA n'est pas lisible : redessinez-la."
     },
     "data": {
-      "too_new": "Ces données ({what}) viennent d'une version plus récente de Notosaurus : mets Notosaurus à jour pour les utiliser."
+      "too_new": "Ces données ({what}) viennent d'une version plus récente de Notosaurus : mettez Notosaurus à jour pour les utiliser."
     },
     "relay": {
-      "invalid_key": "Clé de licence inconnue ou expirée : vérifie-la dans les réglages.",
+      "invalid_key": "Clé de licence inconnue ou expirée : vérifiez-la dans les réglages.",
       "no_credits": "Plus de crédits ce mois-ci : ils reviennent au prochain renouvellement.",
-      "subscription_ended": "Ton abonnement est terminé : réabonne-toi dans l'app pour continuer.",
-      "invalid_purchase": "Achat non reconnu par Google Play : réessaie, ou contacte le support.",
-      "daily_limit": "Limite du jour atteinte : réessaie demain.",
-      "busy": "Trop de demandes en même temps : réessaie dans un instant.",
+      "subscription_ended": "Votre abonnement est terminé : réabonnez-vous dans l'app pour continuer.",
+      "invalid_purchase": "Achat non reconnu par Google Play : réessayez, ou contactez le support.",
+      "daily_limit": "Limite du jour atteinte : réessayez demain.",
+      "busy": "Trop de demandes en même temps : réessayez dans un instant.",
       "too_large": "Trop de photos, ou une photo trop lourde.",
       "bad_image": "Ce fichier n'est pas une photo que Notosaurus sait lire.",
-      "invalid_request": "Le service Notosaurus a refusé la demande : mets Notosaurus à jour.",
-      "client_outdated": "Cette version de Notosaurus est trop ancienne : mets-la à jour.",
-      "unavailable": "Le service Notosaurus est indisponible pour l'instant : réessaie dans un moment.",
-      "unreachable": "Impossible de joindre le service Notosaurus : vérifie la connexion internet.",
+      "invalid_request": "Le service Notosaurus a refusé la demande : mettez Notosaurus à jour.",
+      "client_outdated": "Cette version de Notosaurus est trop ancienne : mettez-la à jour.",
+      "unavailable": "Le service Notosaurus est indisponible pour l'instant : réessayez dans un moment.",
+      "unreachable": "Impossible de joindre le service Notosaurus : vérifiez la connexion internet.",
       "bad_audio": "Cet enregistrement n'est pas dans un format que Notosaurus sait lire."
     },
     "computer": {
       "not_found": "Aucun Notosaurus ne répond à cette adresse : Anki est-il ouvert avec l'add-on, et ce téléphone sur le même Wi-Fi ?",
-      "not_a_qr": "Ce QR code n'est pas celui de Notosaurus : scanne celui qu'affiche Anki (Outils → Notosaurus → Ouvrir sur le téléphone).",
-      "scan_unavailable": "Le lecteur de QR code n'est pas encore sur ce téléphone (les services Google Play l'installent, avec un accès à internet) : saisis plutôt l'adresse de l'ordinateur."
+      "not_a_qr": "Ce QR code n'est pas celui de Notosaurus : scannez celui qu'affiche Anki (Outils → Notosaurus → Ouvrir sur le téléphone).",
+      "scan_unavailable": "Le lecteur de QR code n'est pas encore sur ce téléphone (les services Google Play l'installent, avec un accès à internet) : saisissez plutôt l'adresse de l'ordinateur."
     },
     "dictation": {
-      "refused": "Notosaurus n'a pas accès au micro : autorise-le dans les réglages d'Android pour dicter.",
-      "failed": "Le micro n'a pas pu enregistrer : réessaie."
+      "refused": "Notosaurus n'a pas accès au micro : autorisez-le dans les réglages d'Android pour dicter.",
+      "failed": "Le micro n'a pas pu enregistrer : réessayez."
     },
     "subscription": {
       "unavailable": "Google Play n'est pas disponible sur ce téléphone.",
       "none": "Aucun abonnement trouvé sur ce compte Google."
     },
     "app": {
-      "feature_off": "Cette fonction est momentanément indisponible. Réessaie plus tard."
+      "feature_off": "Cette fonction est momentanément indisponible. Réessayez plus tard."
     },
     "children": {
       "same_id": "Deux enfants ont le même prénom.",
@@ -987,13 +987,13 @@
     "menuSetup": "Assistant de démarrage",
     "menuSettings": "Réglages",
     "phoneTitle": "Ouvrir Notosaurus sur le téléphone",
-    "phoneSteps": "1. Connecte le téléphone au même Wi-Fi que cet ordinateur.\n2. Scanne ce QR code avec l'appareil photo du téléphone.\n3. Dans le navigateur : menu → « Ajouter à l'écran d'accueil », pour l'avoir comme une appli.\n\nLes réglages (clés d'IA…) s'ouvrent ici, sur l'ordinateur : Outils → Notosaurus → Réglages.",
+    "phoneSteps": "1. Connectez le téléphone au même Wi-Fi que cet ordinateur.\n2. Scannez ce QR code avec l'appareil photo du téléphone.\n3. Dans le navigateur : menu → « Ajouter à l'écran d'accueil », pour l'avoir comme une appli.\n\nLes réglages (clés d'IA…) s'ouvrent ici, sur l'ordinateur : Outils → Notosaurus → Réglages.",
     "phoneHelp": "Aide : {url}",
-    "localOnly": "⚠ Le serveur n'écoute que sur cet ordinateur (réglage « host » à 127.0.0.1) : mets « 0.0.0.0 » dans la config du greffon pour y accéder depuis le téléphone.",
-    "notRunningYet": "Notosaurus démarre : réessaie dans quelques secondes.",
+    "localOnly": "⚠ Le serveur n'écoute que sur cet ordinateur (réglage « host » à 127.0.0.1) : mettez « 0.0.0.0 » dans la config du greffon pour y accéder depuis le téléphone.",
+    "notRunningYet": "Notosaurus démarre : réessayez dans quelques secondes.",
     "installConfirm": "Avant de démarrer, Notosaurus doit installer ses composants :\n\n• uv (depuis GitHub), Python 3.13 et ses bibliothèques Python (depuis PyPI) : environ 300 Mo sur le disque ;\n• uniquement dans le dossier d'Anki (Anki2/notosaurus-runtime) : rien ne change sur le reste de l'ordinateur, et désinstaller le greffon les supprime.\n\nCela prend une ou deux minutes, la première fois et après certaines mises à jour. Installer maintenant ?",
     "installDeclined": "Notosaurus n'est pas démarré. Pour l'installer plus tard : Outils → Notosaurus → Ouvrir Notosaurus.",
-    "setupConfirm": "Notosaurus est installé. Le configurer maintenant ? Deux étapes, quelques minutes : une IA pour lire les leçons (avec sa clé), puis ton téléphone.\n\nL'assistant s'ouvre dans ton navigateur.",
+    "setupConfirm": "Notosaurus est installé. Le configurer maintenant ? Deux étapes, quelques minutes : une IA pour lire les leçons (avec sa clé), puis votre téléphone.\n\nL'assistant s'ouvre dans votre navigateur.",
     "setupLater": "Plus tard : Outils → Notosaurus → Assistant de démarrage."
   },
   "builtinPrompts": {

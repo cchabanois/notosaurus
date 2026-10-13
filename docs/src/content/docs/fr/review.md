@@ -3,8 +3,8 @@ title: Relire les cartes
 description: "Vérifier, modifier et corriger les cartes avant de les envoyer à Anki, avec l'aide de l'IA, et choisir les options des cartes."
 ---
 
-Même la meilleure IA lit parfois un mot de travers : **parcours toujours les cartes** avant
-de les envoyer. Tout ce que tu modifies est enregistré au fur et à mesure (« ✓ Enregistrée »).
+Même la meilleure IA lit parfois un mot de travers : **parcourez toujours les cartes** avant
+de les envoyer. Tout ce que vous modifiez est enregistré au fur et à mesure (« ✓ Enregistrée »).
 
 ![Les cartes, prêtes à être relues](../../../assets/screenshots/fr/review.png)
 
@@ -12,7 +12,7 @@ de les envoyer. Tout ce que tu modifies est enregistré au fur et à mesure (« 
 
 - **Paquet** : le nom du paquet Anki. `::` crée des sous-paquets :
   `Espagnol::Unité 3 - À l'école`.
-- Chaque carte a un **recto** (la question) et un **verso** (la réponse). Touche un texte
+- Chaque carte a un **recto** (la question) et un **verso** (la réponse). Touchez un texte
   pour le modifier.
 - **+ info** ajoute une note affichée sous la réponse : genre, pluriel, un exemple…
 - **sous-paquet** range la carte dans un sous-paquet de la leçon (« Vocabulaire »,
@@ -25,7 +25,7 @@ demandé à l'IA.
 
 ## Corriger avec l'IA
 
-Plutôt que de modifier les cartes une par une, demande avec tes mots, dans le champ
+Plutôt que de modifier les cartes une par une, demandez avec vos mots, dans le champ
 au-dessus des cartes :
 
 - « supprime la carte sur le père »
@@ -35,7 +35,7 @@ au-dessus des cartes :
 
 ![Demander une correction à l'IA](../../../assets/screenshots/fr/correction.png)
 
-Touche **Corriger**. L'IA revoit les photos et ne change que ce que tu as demandé : les
+Touchez **Corriger**. L'IA revoit les photos et ne change que ce que vous avez demandé : les
 cartes changées sont marquées **modifiée**, les nouvelles **nouvelle**, et une phrase
 résume ce qu'elle a fait. **↩ Annuler** remet les cartes comme avant.
 
@@ -59,9 +59,9 @@ Gemini Flash, environ un centime avec Claude Sonnet), compté dans les coûts de
 ## Signaler un contenu
 
 Dans l'app, **⚑** sur une carte signale à Notosaurus ce que l'IA a fait : la carte, son
-explication (quand elle est affichée) ou son image. Dis pourquoi (choquant ou inapproprié, faux,
-autre), ajoute un commentaire si tu veux : la fenêtre montre exactement ce qui sera envoyé,
-jamais les photos de la leçon ni le prénom de l'enfant. Ensuite, tu peux supprimer la carte ou
+explication (quand elle est affichée) ou son image. Dites pourquoi (choquant ou inapproprié, faux,
+autre), ajoutez un commentaire si vous voulez : la fenêtre montre exactement ce qui sera envoyé,
+jamais les photos de la leçon ni le prénom de l'enfant. Ensuite, vous pouvez supprimer la carte ou
 retirer son image. Voir [Confidentialité](../app-privacy/).
 
 ## Régénérer
@@ -80,13 +80,13 @@ En bas de la leçon :
 - **Ajouter la carte inverse** : Anki demande aussi verso → recto.
 
 La réponse tapée et la dictée viennent de la [consigne](../instructions/) : elles vont avec ce
-que l'IA écrit. Pour les changer, refais la leçon avec une autre consigne.
+que l'IA écrit. Pour les changer, refaites la leçon avec une autre consigne.
 
 La ligne en dessous indique la voix qui lit les versos. Elle est incluse dans le paquet :
 elle fonctionne partout, même hors connexion.
 
 ## La leçon d'un autre profil
 
-Une leçon partagée par le profil d'un autre enfant s'ouvre **en lecture seule** : tu peux
-quand même l'ajouter à ton Anki, mais seul son propriétaire peut la modifier. Voir
+Une leçon partagée par le profil d'un autre enfant s'ouvre **en lecture seule** : vous pouvez
+quand même l'ajouter à votre Anki, mais seul son propriétaire peut la modifier. Voir
 [Plusieurs enfants](../several-children/).

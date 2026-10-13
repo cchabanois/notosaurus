@@ -21,13 +21,13 @@ exemple « ✓ Dans Anki : 9 cartes ajoutées. Synchronisé avec AnkiWeb. »
 
 ## Renvoyer une leçon
 
-Une fois la leçon envoyée, le bouton devient **🔄 Mettre à jour dans Anki**. Tu peux corriger
-une leçon et la renvoyer autant de fois que tu veux : ses cartes sont **mises à jour** dans
-Anki, **pas dupliquées**, et l'historique de révision de chaque carte est gardé, même si tu as
-corrigé son recto. Si tu as
+Une fois la leçon envoyée, le bouton devient **🔄 Mettre à jour dans Anki**. Vous pouvez corriger
+une leçon et la renvoyer autant de fois que vous voulez : ses cartes sont **mises à jour** dans
+Anki, **pas dupliquées**, et l'historique de révision de chaque carte est gardé, même si vous avez
+corrigé son recto. Si vous avez
 changé le paquet de la leçon, ses cartes y sont **déplacées**, avec leur historique. Les cartes ajoutées depuis le dernier envoi sont ajoutées ; les cartes supprimées de la
 leçon restent dans Anki : après l'envoi, Notosaurus les liste et propose de les supprimer
-(avec leur historique de révision), jamais sans ton accord. Supprimer une leçon entière dans
+(avec leur historique de révision), jamais sans votre accord. Supprimer une leçon entière dans
 Notosaurus propose de supprimer aussi ses cartes dans Anki, avec leur historique de révision.
 
 Changer une option des cartes (la carte inverse) sur une leçon déjà envoyée
@@ -41,18 +41,18 @@ les retrouver dans le navigateur.
 **⬇️ .apkg** télécharge le paquet sous forme de fichier, avec son audio et ses images, sans
 qu'Anki ait besoin d'être ouvert :
 
-- **sur un ordinateur**, double-clique dessus : Anki l'importe ;
-- **sur Android**, ouvre le fichier téléchargé et choisis **AnkiDroid**. Si AnkiDroid n'est pas
-  proposé, partage le fichier vers AnkiDroid, ou utilise **Importer** dans le menu
+- **sur un ordinateur**, double-cliquez dessus : Anki l'importe ;
+- **sur Android**, ouvrez le fichier téléchargé et choisissez **AnkiDroid**. Si AnkiDroid n'est pas
+  proposé, partagez le fichier vers AnkiDroid, ou utilisez **Importer** dans le menu
   d'AnkiDroid ;
-- **sur iPhone**, ouvre-le avec **AnkiMobile** depuis le menu de partage.
+- **sur iPhone**, ouvrez-le avec **AnkiMobile** depuis le menu de partage.
 
 Importer un `.apkg` plus récent de la même leçon met aussi ses cartes à jour au lieu de les
 dupliquer.
 
 Avec le **greffon Notosaurus**, une leçon envoyée par **📥 Ajouter à Anki** et son `.apkg`
-donnent les mêmes cartes : tu peux mélanger les deux, sur l'ordinateur et sur le téléphone. Avec
-**AnkiConnect**, choisis une seule méthode par profil Anki : un `.apkg` importé là où la leçon a
+donnent les mêmes cartes : vous pouvez mélanger les deux, sur l'ordinateur et sur le téléphone. Avec
+**AnkiConnect**, choisissez une seule méthode par profil Anki : un `.apkg` importé là où la leçon a
 déjà été envoyée directement (ou dans un profil synchronisé avec lui) ajouterait chaque carte une
 deuxième fois.
 

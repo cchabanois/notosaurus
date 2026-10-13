@@ -15,11 +15,11 @@ publiée sur GitHub avec le fichier du greffon à télécharger :
 ## Mettre à jour Notosaurus
 
 - **Installé depuis AnkiWeb** : Anki vérifie les mises à jour des greffons au démarrage, et propose
-  de les installer. Tu peux aussi vérifier dans **Outils → Greffons → Vérifier les mises à jour**.
-- **Installé depuis un fichier** : télécharge le nouveau `.ankiaddon` depuis la
-  [dernière version](https://github.com/cchabanois/notosaurus/releases/latest) et ouvre-le, comme
+  de les installer. Vous pouvez aussi vérifier dans **Outils → Greffons → Vérifier les mises à jour**.
+- **Installé depuis un fichier** : téléchargez le nouveau `.ankiaddon` depuis la
+  [dernière version](https://github.com/cchabanois/notosaurus/releases/latest) et ouvrez-le, comme
   pour la première installation.
 
-Puis **redémarre Anki**. Les leçons, les consignes et les réglages sont conservés. Quand une
+Puis **redémarrez Anki**. Les leçons, les consignes et les réglages sont conservés. Quand une
 nouvelle version a besoin de nouveaux composants, Notosaurus demande à nouveau avant de les
 installer (une minute ou deux).
