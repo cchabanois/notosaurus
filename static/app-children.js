@@ -42,16 +42,45 @@ const childrenPart = {
     return parts.slice(n);
   },
 
+  // The sheet opens on the choice (a row each, tapped: chosen); a child's card edited on
+  // its own (editing: its place in the list); none yet: a new one's card at once
   openChildren() {
-    this.childrenSheet = { open: true, list: this.children.map((c) => ({ ...c })), saving: false, error: "" };
+    this.childrenSheet = { open: true, list: this.children.map((c) => ({ ...c })), editing: null, saving: false, error: "" };
+    if (!this.children.length) this.addChild();
   },
 
   addChild() {
     this.childrenSheet.list.push({ id: "", name: "", grade: "", decks: "", instructions: "" });
+    this.childrenSheet.editing = this.childrenSheet.list.length - 1;
   },
 
-  removeChild(i) {
+  editChild(i) {
+    this.childrenSheet.error = "";
+    this.childrenSheet.editing = i;
+  },
+
+  // Back to the choice, the card as it was (a new one, not kept)
+  cancelChild() {
+    const sheet = this.childrenSheet;
+    sheet.list = this.children.map((c) => ({ ...c }));
+    sheet.editing = null;
+    sheet.error = "";
+    if (!sheet.list.length) sheet.open = false;
+  },
+
+  async removeChild(i) {
     this.childrenSheet.list.splice(i, 1);
+    await this.saveChildren();
+  },
+
+  // The instructions' example, for its class: primary, middle or high school (the language's
+  // grades list, cut where gradeBands says), else a general one
+  instructionsExample(child) {
+    const grades = t("app.children.grades").split("|");
+    const i = grades.indexOf(child.grade);
+    if (i < 0) return t("app.children.examples.none");
+    const [middle, high] = t("app.children.gradeBands").split("|").map(Number);
+    return t(`app.children.examples.${i < middle ? "primary" : i < high ? "middle" : "high"}`);
   },
 
   // The decks' suggestions: its first name, or its first name and its class (updated each year)
@@ -82,8 +111,12 @@ const childrenPart = {
         body: JSON.stringify(list.map(({ id, name, grade, decks, instructions }) => (
           { id, name: name.trim(), grade, decks: decks.trim(), instructions: instructions.trim() }))),
       })).json();
-      if (!this.children.some((c) => c.id === this.childId)) this.chooseChild(this.children[0]?.id ?? "");
-      sheet.open = false;
+      const edited = sheet.editing === null ? null : sheet.list[sheet.editing];
+      if (edited?.id && !this.children.some((c) => c.id === this.childId)) this.childId = edited.id;  // the first: chosen
+      if (!this.children.some((c) => c.id === this.childId)) this.childId = this.children[0]?.id ?? "";
+      storage("set", this.childId, CHILD);
+      sheet.list = this.children.map((c) => ({ ...c }));
+      sheet.editing = null;  // back to the choice
     } catch (e) {
       sheet.error = e.message;
     } finally {

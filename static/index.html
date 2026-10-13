@@ -847,16 +847,36 @@
       <button class="icon-btn" @click="childrenSheet.open = false" :aria-label="$t('common.close')">✕</button>
     </div>
     <div class="sheet-body children">
-      <p class="hint" x-text="$t('app.children.hint')"></p>
-      <template x-for="(c, i) in childrenSheet.list" :key="i">
-        <div class="child-card" :class="{ current: c.id && c.id === childId }">
-          <div class="child-head">
-            <input class="child-name" x-model="c.name" maxlength="40" :placeholder="$t('app.children.name')" :aria-label="$t('app.children.name')">
-            <button type="button" class="btn soft" x-show="c.id && c.id !== childId" @click="chooseChild(c.id)"
-                    x-text="$t('app.children.choose')"></button>
-            <span class="badge" x-show="c.id && c.id === childId" x-text="$t('app.children.chosen')"></span>
-            <button type="button" class="icon-btn muted" @click="removeChild(i)" :aria-label="$t('app.children.remove')">🗑️</button>
+      <!-- The choice: a row each, tapped: chosen (the sheet closes) -->
+      <template x-if="childrenSheet.editing === null">
+        <div>
+          <p class="hint" x-text="$t('app.children.pick')"></p>
+          <ul class="child-rows">
+            <template x-for="(c, i) in childrenSheet.list" :key="c.id">
+              <li :class="{ current: c.id === childId }">
+                <button type="button" class="child-row" @click="chooseChild(c.id)" :aria-pressed="String(c.id === childId)">
+                  <span class="child-check" aria-hidden="true" x-text="c.id === childId ? '✓' : ''"></span>
+                  <strong x-text="c.name"></strong>
+                  <small class="muted" x-text="c.grade"></small>
+                </button>
+                <button type="button" class="icon-btn" @click="editChild(i)" :aria-label="$t('app.children.edit', { name: c.name })"
+                        :title="$t('app.children.edit', { name: c.name })">✏️</button>
+              </li>
+            </template>
+          </ul>
+          <p class="hint" x-text="$t('app.children.hint')"></p>
+          <div class="sheet-actions">
+            <button type="button" class="btn soft" @click="addChild()" x-text="$t('app.children.add')"></button>
           </div>
+        </div>
+      </template>
+      <!-- One child's card, edited on its own -->
+      <template x-if="childrenSheet.editing !== null && childrenSheet.list[childrenSheet.editing]">
+        <div class="child-card" x-data="{ get c() { return childrenSheet.list[childrenSheet.editing] ?? { name: '', grade: '', decks: '', instructions: '' } } }">
+          <label class="field">
+            <span x-text="$t('app.children.name')"></span>
+            <input class="child-name" x-model="c.name" maxlength="40">
+          </label>
           <label class="field">
             <span x-text="$t('app.children.grade')"></span>
             <select x-model="c.grade">
@@ -876,15 +896,17 @@
           </div>
           <label class="field">
             <span x-text="$t('app.children.instructions')"></span>
-            <textarea x-model="c.instructions" rows="2" maxlength="4000" :placeholder="$t('app.children.instructionsPlaceholder')"></textarea>
+            <textarea x-model="c.instructions" rows="2" maxlength="4000" :placeholder="instructionsExample(c)"></textarea>
           </label>
+          <p class="hint error-text" x-show="childrenSheet.error" x-text="childrenSheet.error"></p>
+          <div class="sheet-actions">
+            <button type="button" class="btn danger-soft" x-show="c.id" @click="removeChild(childrenSheet.editing)" x-text="$t('app.children.remove')"></button>
+            <button type="button" class="btn soft" @click="cancelChild()" x-text="$t('common.cancel')"></button>
+            <button type="button" class="btn primary" @click="saveChildren()" :disabled="childrenSheet.saving || !c.name.trim()"
+                    x-text="$t('app.children.save')"></button>
+          </div>
         </div>
       </template>
-      <p class="hint error-text" x-show="childrenSheet.error" x-text="childrenSheet.error"></p>
-      <div class="sheet-actions">
-        <button type="button" class="btn soft" @click="addChild()" x-text="$t('app.children.add')"></button>
-        <button type="button" class="btn primary" @click="saveChildren()" :disabled="childrenSheet.saving" x-text="$t('app.children.save')"></button>
-      </div>
     </div>
   </aside>
 

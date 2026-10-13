@@ -138,7 +138,7 @@ document.addEventListener("alpine:init", () => {
     children: [],        // the children's cards (app-children.js): first name, class, decks, instructions
     childId: "",         // the child the next lesson is for (kept on this device)
     allChildren: false,  // the lessons sheet: every child's, not only the chosen one's
-    childrenSheet: { open: false, list: [], saving: false, error: "" },
+    childrenSheet: { open: false, list: [], editing: null, saving: false, error: "" },
     lessonId: null,       // open lesson (null = new lesson, not generated yet)
     saveState: "",       // "", "pending", "saving", "saved", "error"
     lastSaved: "",

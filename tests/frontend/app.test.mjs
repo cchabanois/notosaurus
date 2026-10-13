@@ -665,3 +665,34 @@ test("children: the one chosen kept on this device, the lessons filtered, its de
   assert.deepEqual(plain(sent[0].map((k) => k.id)), ["jules", "mathilde", "lea"]);
   assert.equal(c.children.length, 3);
 });
+
+
+test("children: the instructions' example fits the class", async () => {
+  const page = await loadScripts("app.js", { languages: ["fr-FR"] });
+  const c = page.component();
+  const example = (grade) => c.instructionsExample({ grade });
+  assert.match(example("CE1"), /lit encore lentement/);
+  assert.match(example("5e"), /contrôle/);
+  assert.match(example("Terminale"), /bac/);
+  assert.match(example(""), /peu de cartes/);
+});
+
+test("children: the sheet opens on the choice; one card edited at a time, cancelled as it was", async () => {
+  const kids = [{ id: "jules", name: "Jules", grade: "5e", decks: "", instructions: "" }];
+  const page = await loadScripts("app.js", { routes: (url) => (url === "/api/children" ? new Response(kids) : null) });
+  const c = page.component();
+  await c.loadChildren();
+  c.openChildren();
+  assert.equal(c.childrenSheet.editing, null);  // the choice first
+  c.editChild(0);
+  c.childrenSheet.list[0].name = "Julien";
+  c.cancelChild();
+  assert.equal(c.childrenSheet.list[0].name, "Jules");  // as it was
+  assert.equal(c.childrenSheet.editing, null);
+  c.chooseChild("jules");
+  assert.equal(c.childrenSheet.open, false);  // chosen: closed
+
+  c.children = [];
+  c.openChildren();
+  assert.equal(c.childrenSheet.editing, 0);  // none yet: a new one's card at once
+});

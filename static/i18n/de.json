@@ -421,7 +421,7 @@
     "children": {
       "title": "Kinder",
       "who": "Für wen?",
-      "hint": "Für wen die Lektionen sind. Klasse und deine Anweisungen bekommt die KI; den Vornamen nie.",
+      "hint": "Klasse und deine Anweisungen bekommt die KI; den Vornamen nie.",
       "name": "Vorname",
       "choose": "Wählen",
       "chosen": "✓ Gewählt",
@@ -433,11 +433,19 @@
       "decksPlaceholder": "z. B. Jules::{Klasse} (leer: wie immer)",
       "classToken": "{Klasse}",
       "instructions": "Anweisungen für die KI (ohne den Vornamen)",
-      "instructionsPlaceholder": "z. B. verwechselt b und d; wenige Karten auf einmal.",
       "add": "+ Kind hinzufügen",
       "save": "Speichern",
       "allLessons": "Die Lektionen aller Kinder",
-      "lessonsOf": "Die Lektionen von {name}"
+      "lessonsOf": "Die Lektionen von {name}",
+      "gradeBands": "4|10",
+      "examples": {
+        "none": "z. B. wenige Karten auf einmal; betone, was es verwechselt.",
+        "primary": "z. B. liest noch langsam: kurze Sätze, höchstens 8 Karten.",
+        "middle": "z. B. lernt für eine Klassenarbeit: betone Daten und Definitionen.",
+        "high": "z. B. bereitet das Abitur vor: genaue Formeln, Beweise Schritt für Schritt."
+      },
+      "pick": "Für wen ist die nächste Lektion? Tippe auf den Namen.",
+      "edit": "{name} bearbeiten"
     }
   },
   "admin": {

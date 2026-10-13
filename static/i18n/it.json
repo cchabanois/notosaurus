@@ -421,7 +421,7 @@
     "children": {
       "title": "Figli",
       "who": "Per chi?",
-      "hint": "Per chi sono le lezioni. La classe e le tue istruzioni vanno all'IA; il nome, mai.",
+      "hint": "La classe e le tue istruzioni vanno all'IA; il nome, mai.",
       "name": "Nome",
       "choose": "Scegli",
       "chosen": "✓ Scelto",
@@ -433,11 +433,19 @@
       "decksPlaceholder": "es. Jules::{classe} (vuoto: come al solito)",
       "classToken": "{classe}",
       "instructions": "Istruzioni per l'IA (senza il nome)",
-      "instructionsPlaceholder": "es. confonde la b e la d; poche carte alla volta.",
       "add": "+ Aggiungi un figlio",
       "save": "Salva",
       "allLessons": "Le lezioni di tutti i figli",
-      "lessonsOf": "Le lezioni di {name}"
+      "lessonsOf": "Le lezioni di {name}",
+      "gradeBands": "5|8",
+      "examples": {
+        "none": "es. poche carte alla volta; insisti su ciò che confonde.",
+        "primary": "es. legge ancora lentamente: frasi brevi, al massimo 8 carte.",
+        "middle": "es. prepara una verifica: insisti su date e definizioni.",
+        "high": "es. prepara la maturità: formule esatte, dimostrazioni passo per passo."
+      },
+      "pick": "Per chi è la prossima lezione? Tocca il suo nome.",
+      "edit": "Modifica {name}"
     }
   },
   "admin": {

@@ -421,7 +421,7 @@
     "children": {
       "title": "Enfants",
       "who": "Pour qui ?",
-      "hint": "Pour qui sont les leçons. Sa classe et tes instructions sont données à l'IA ; son prénom, jamais.",
+      "hint": "Sa classe et tes instructions sont données à l'IA ; son prénom, jamais.",
       "name": "Prénom",
       "choose": "Choisir",
       "chosen": "✓ Choisi",
@@ -433,11 +433,19 @@
       "decksPlaceholder": "ex. : Jules::{classe} (vide : comme d'habitude)",
       "classToken": "{classe}",
       "instructions": "Instructions pour l'IA (sans son prénom)",
-      "instructionsPlaceholder": "ex. : il confond b et d ; peu de cartes à la fois.",
       "add": "+ Ajouter un enfant",
       "save": "Enregistrer",
       "allLessons": "Les leçons de tous les enfants",
-      "lessonsOf": "Les leçons de {name}"
+      "lessonsOf": "Les leçons de {name}",
+      "gradeBands": "5|9",
+      "examples": {
+        "none": "ex. : peu de cartes à la fois ; insiste sur ce qu'il confond.",
+        "primary": "ex. : il lit encore lentement : phrases courtes, 8 cartes au plus.",
+        "middle": "ex. : il prépare un contrôle : insiste sur les dates et les définitions.",
+        "high": "ex. : elle prépare le bac : formules exactes, démonstrations en étapes."
+      },
+      "pick": "Pour qui est la prochaine leçon ? Touche son prénom.",
+      "edit": "Modifier {name}"
     }
   },
   "admin": {
