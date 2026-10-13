@@ -417,6 +417,27 @@
     "update": {
       "available": "Eine neue Version von Notosaurus ist verfügbar.",
       "open": "Aktualisieren"
+    },
+    "children": {
+      "title": "Kinder",
+      "who": "Für wen?",
+      "hint": "Für wen die Lektionen sind. Klasse und deine Anweisungen bekommt die KI; den Vornamen nie.",
+      "name": "Vorname",
+      "choose": "Wählen",
+      "chosen": "✓ Gewählt",
+      "remove": "Entfernen",
+      "grade": "Klasse",
+      "noGrade": "Keine Angabe",
+      "grades": "Klasse 1|Klasse 2|Klasse 3|Klasse 4|Klasse 5|Klasse 6|Klasse 7|Klasse 8|Klasse 9|Klasse 10|Klasse 11|Klasse 12|Klasse 13",
+      "decks": "Stapel in",
+      "decksPlaceholder": "z. B. Jules::{Klasse} (leer: wie immer)",
+      "classToken": "{Klasse}",
+      "instructions": "Anweisungen für die KI (ohne den Vornamen)",
+      "instructionsPlaceholder": "z. B. verwechselt b und d; wenige Karten auf einmal.",
+      "add": "+ Kind hinzufügen",
+      "save": "Speichern",
+      "allLessons": "Die Lektionen aller Kinder",
+      "lessonsOf": "Die Lektionen von {name}"
     }
   },
   "admin": {
@@ -902,6 +923,10 @@
     },
     "app": {
       "feature_off": "Diese Funktion ist vorübergehend nicht verfügbar. Versuche es später noch einmal."
+    },
+    "children": {
+      "same_id": "Zwei Kinder haben denselben Vornamen.",
+      "too_many": "Höchstens {max} Kinder."
     }
   },
   "demo": {

@@ -45,6 +45,7 @@ const lessonsPart = {
     // The PDF pages' text, one per photo ("" for a photo): the exact words for the AI
     if (sent.some((p) => p.text)) body.append("page_texts", JSON.stringify(sent.map((p) => p.text ?? "")));
     // Generated again: the options set in the review stay, the prompt's are added
+    if (this.childId) body.append("child", this.childId);  // its class, instructions, decks
     body.append("typing", Boolean(this.form.typing || (inPlace && this.typing)));
     body.append("dictation", Boolean(this.form.dictation || (inPlace && this.dictation)));
     body.append("dictation_only", Boolean(this.form.dictation_only || (inPlace && this.dictationOnly)));
@@ -117,10 +118,11 @@ const lessonsPart = {
 
   // Lessons of the open Anki profile, shared lessons, lessons without owner (the server
   // sends no others; filtered here too, so a profile switch shows at once).
+  // And the chosen child's (forChild).
   visibleLessons() {
     const profile = this.anki.profile;
-    if (!profile) return this.lessons;
-    return this.lessons.filter((l) => l.shared || !l.owner || l.owner === profile);
+    const mine = profile ? this.lessons.filter((l) => l.shared || !l.owner || l.owner === profile) : this.lessons;
+    return this.forChild(mine);
   },
 
   manyLessons() {
@@ -136,15 +138,16 @@ const lessonsPart = {
   lessonSections() {
     const all = this.visibleLessons();
     const many = all.length > MANY_LESSONS;
-    const named = (l) => ({ ...l, title: deckParts(l.deck).join(" › ") || t("app.lessons.noDeck") });
+    const parts = (l) => this.withoutChildLevels(deckParts(l.deck));  // "Jules::5e::" not shown again
+    const named = (l) => ({ ...l, title: parts(l).join(" › ") || t("app.lessons.noDeck") });
     const query = fold(this.lessonQuery.trim());
     if (many && query) {
-      const found = all.filter((l) => fold(deckParts(l.deck).join(" ")).includes(query)).map(named);
+      const found = all.filter((l) => fold(parts(l).join(" ")).includes(query)).map(named);
       return [{ key: "found", name: t("app.lessons.found"), count: found.length, open: true, lessons: found }];
     }
     const subjects = new Map();
     for (const l of all) {
-      const [head, ...rest] = deckParts(l.deck);
+      const [head, ...rest] = parts(l);
       const name = head ?? t("app.lessons.noDeck");
       const subject = name.toLocaleLowerCase();
       if (!subjects.has(subject)) subjects.set(subject, { key: `subject:${subject}`, subject, name, lessons: [] });

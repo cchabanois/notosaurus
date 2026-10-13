@@ -5,6 +5,7 @@ import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.JsonNull
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
+import kotlinx.serialization.json.contentOrNull
 import kotlinx.serialization.json.booleanOrNull
 import kotlinx.serialization.json.int
 import kotlinx.serialization.json.intOrNull
@@ -77,6 +78,7 @@ class Lessons(private val root: File) {
                 "typing" to either("typing"),
                 "dictation" to either("dictation"),
                 "dictation_only" to either("dictation_only"),
+                "child" to JsonPrimitive(content["child"]?.jsonPrimitive?.contentOrNull?.ifEmpty { null } ?: lesson.string("child")), // still for its child
                 "photo_count" to JsonPrimitive(photos.size),
                 "updated_at" to JsonPrimitive(now()),
             ),
@@ -171,7 +173,8 @@ class Lessons(private val root: File) {
         )
         private val DEFAULTS = mapOf(
             "voice" to JsonPrimitive(""), "reverse" to JsonPrimitive(false), "typing" to JsonPrimitive(false),
-            "dictation" to JsonPrimitive(false), "dictation_only" to JsonPrimitive(false), "owner" to JsonPrimitive(""), "shared" to JsonPrimitive(false),
+            "dictation" to JsonPrimitive(false), "dictation_only" to JsonPrimitive(false), "owner" to JsonPrimitive(""),
+            "child" to JsonPrimitive(""), "shared" to JsonPrimitive(false),
             "frames" to JsonArray(emptyList()), "ai_calls" to JsonArray(emptyList()), "choice" to JsonPrimitive(""),
             "page_texts" to JsonArray(emptyList()), "exported_at" to JsonNull,
         )

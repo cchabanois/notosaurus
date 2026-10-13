@@ -70,11 +70,12 @@ class LocalServer(
 ) {
     internal val relays = RelayDirectory(prefs, relayDirectory)
     internal val lessons = Lessons(File(dataDir, "lessons").apply { mkdirs() })
+    internal val children = Children(prefs) // the children the lessons are for (the page's "For: …")
     internal val texts = PageTexts(web, languages)
     internal val prompts = Prompts(File(dataDir, "prompts.json"), texts)
     internal val speech = Speech(File(dataDir, "audio").apply { mkdirs() }, prefs, ::relay) // the backs read aloud, kept
     internal val pictures = Pictures(lessons, ::relay, cardSize) { prefs[PICTURE_FIND] != "false" }
-    internal val generation = Generation(lessons, prefs, ::relay, speech, turnPhoto)
+    internal val generation = Generation(lessons, prefs, ::relay, speech, turnPhoto, children)
     internal val computer = Computer(prefs, modeChanged)
     internal val switches = Switches(prefs, version)
     internal val dictation = recorder?.let { Dictation(File(dataDir, "dictation").apply { mkdirs() }, it, ::relay) }

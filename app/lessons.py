@@ -151,6 +151,7 @@ def create(g: Generated, ai_calls: Sequence[AiCall] = ()) -> Lesson:
                 Lesson(
                     **{
                         **g.content.model_dump(exclude={"prompt", "choice"}),
+                        "child": g.content.child or "",
                         "owner": g.profile,
                         "shared": False,
                         "frames": list(g.frames),

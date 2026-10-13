@@ -54,6 +54,7 @@ class LessonIn(LessonOptions):
     # regeneration is undone
     prompt: str | None = None
     choice: str | None = None
+    child: str | None = None  # the child it is for (children.Child.id)
 
 
 class Lesson(LessonOptions):
@@ -65,6 +66,7 @@ class Lesson(LessonOptions):
     choice: str = ""  # what the AI chose to make, when the prompt let it choose
     id: str  # folder name, e.g. "2026-09-28-spanish-lesson-5"
     owner: str = ""  # Anki profile open when the lesson was created ("" = none: shared)
+    child: str = ""  # the child it is for (children.Child.id; "" none said)
     photo_count: int
     ai_calls: list[AiCall] = []  # generation, then corrections
     # One per photo: the text of a PDF page, as the PDF holds it ("" for a photo). Sent
@@ -96,6 +98,7 @@ class LessonSummary(BaseModel):
     id: str
     deck: str
     owner: str = ""
+    child: str = ""
     shared: bool = False
     card_count: int
     photo_count: int

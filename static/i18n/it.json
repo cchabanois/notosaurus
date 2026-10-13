@@ -417,6 +417,27 @@
     "update": {
       "available": "È disponibile una nuova versione di Notosaurus.",
       "open": "Aggiorna"
+    },
+    "children": {
+      "title": "Figli",
+      "who": "Per chi?",
+      "hint": "Per chi sono le lezioni. La classe e le tue istruzioni vanno all'IA; il nome, mai.",
+      "name": "Nome",
+      "choose": "Scegli",
+      "chosen": "✓ Scelto",
+      "remove": "Rimuovi",
+      "grade": "Classe",
+      "noGrade": "Non indicata",
+      "grades": "1ª elementare|2ª elementare|3ª elementare|4ª elementare|5ª elementare|1ª media|2ª media|3ª media|1ª superiore|2ª superiore|3ª superiore|4ª superiore|5ª superiore",
+      "decks": "Mazzi in",
+      "decksPlaceholder": "es. Jules::{classe} (vuoto: come al solito)",
+      "classToken": "{classe}",
+      "instructions": "Istruzioni per l'IA (senza il nome)",
+      "instructionsPlaceholder": "es. confonde la b e la d; poche carte alla volta.",
+      "add": "+ Aggiungi un figlio",
+      "save": "Salva",
+      "allLessons": "Le lezioni di tutti i figli",
+      "lessonsOf": "Le lezioni di {name}"
     }
   },
   "admin": {
@@ -902,6 +923,10 @@
     },
     "app": {
       "feature_off": "Questa funzione è momentaneamente non disponibile. Riprova più tardi."
+    },
+    "children": {
+      "same_id": "Due figli hanno lo stesso nome.",
+      "too_many": "Al massimo {max} figli."
     }
   },
   "demo": {

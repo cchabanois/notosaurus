@@ -585,6 +585,53 @@ class LocalServerTest {
     }
 
     @Test
+    fun aLessonForAChild() = app { client ->
+        val jules = """{"id": "jules", "name": "Jules", "grade": "5e", "decks": "Jules::{classe}", "instructions": "Peu de cartes."}"""
+        val saved = client.put("/api/children") { page(); contentType(ContentType.Application.Json); setBody("[$jules]") }.json().jsonArray
+        assertEquals("Jules", saved.single().jsonObject.string("name"))
+        val twice = client.put("/api/children") { page(); contentType(ContentType.Application.Json); setBody("[$jules, $jules]") }
+        assertEquals("children.same_id", twice.json().jsonObject["detail"]!!.jsonObject.string("code"))
+
+        relayAnswers("""{"deck": {"deck": "Anglais::5ème::Food", "cards": [{"front": "le pain", "back": "bread"}]}, "turns": [], "usage": {"credits": 1, "credits_left": 99}}""")
+        val lesson = client.submitFormWithBinaryData("/api/extract", formData {
+            append("prompt", "FR → EN")
+            append("child", "jules")
+        }) { page() }.json().jsonObject
+        assertEquals("Jules::5e::Anglais::Food", lesson.string("deck")) // in its decks, the class not twice
+        assertEquals("jules", lesson.string("child"))
+        val asked = relay.takeRequest(5, TimeUnit.SECONDS)!!.multipartRequest()
+        assertTrue("5e" in asked.string("instructions") && "Peu de cartes." in asked.string("instructions"))
+        assertFalse("Jules" in asked.toString()) // its name never to the AI
+
+        // Another lesson: the decks the AI may reuse, without the child's levels
+        relayAnswers("""{"deck": {"deck": "Anglais::Food", "cards": [{"front": "le lait", "back": "milk"}]}, "turns": [], "usage": {"credits": 1, "credits_left": 98}}""")
+        client.submitFormWithBinaryData("/api/extract", formData { append("prompt", "FR → EN"); append("child", "jules") }) { page() }
+        val second = relay.takeRequest(5, TimeUnit.SECONDS)!!.multipartRequest()
+        assertEquals(listOf("Anglais::Food"), second["decks"]!!.jsonArray.map { it.jsonPrimitive.content })
+
+        // Corrected: the AI sees the deck without the child's levels, which are put back
+        relayAnswers("""{"deck": "Anglais::Food", "cards": [{"front": "le pain", "back": "bread"}], "summary": "ok", "usage": {"credits": 1, "credits_left": 97}}""")
+        val revised = client.post("/api/lessons/${lesson.string("id")}/revise") {
+            page(); contentType(ContentType.Application.Json)
+            setBody("""{"deck": "Jules::5e::Anglais::Food", "cards": ${lesson["cards"]}, "instruction": "ok"}""")
+        }.json().jsonObject
+        assertEquals("Jules::5e::Anglais::Food", revised["lesson"]!!.jsonObject.string("deck"))
+        val sent = relay.takeRequest(5, TimeUnit.SECONDS)!!.multipartRequest()
+        assertEquals("Anglais::Food", sent["deck"]!!.jsonObject.string("deck"))
+    }
+
+    @Test
+    fun aChildsDecks() {
+        val jules = Child("jules", "Jules", "5e", "Jules::{classe}")
+        assertEquals("Jules::5e::Maths", Children.deckFor(jules, "Maths"))
+        assertEquals("Jules::5e::Maths", Children.deckFor(jules, "jules::5ème::Maths"))
+        assertEquals("Maths", Children.deckFor(Child("m", "M"), "Maths"))
+        assertEquals("Jules::5e" to "Maths::Fractions", Children.splitDeck("Jules::5e::Maths::Fractions", listOf(jules)))
+        assertEquals("" to "Maths", Children.splitDeck("Maths", listOf(jules)))
+        assertFalse("Jules" in Children.forAi(Child("jules", "Jules", "5e", instructions = "Lent.")))
+    }
+
+    @Test
     fun versionsCompared() {
         assertTrue(Switches.newer("1.10.0", "1.9.2"))
         assertTrue(Switches.newer("1.2", "1.1.9"))
