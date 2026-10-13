@@ -47,8 +47,9 @@ class Generation(
         val texts = pageTexts(fields["page_texts"], form.images.size)
         val every = children.list()
         val child = every.firstOrNull { it.id == fields["child"] } // the child it is for: its class, instructions, decks
-        // The decks the AI may reuse, without the children's levels: no child's name to the AI
-        val decks = lessons.list().map { Children.splitDeck(it.string("deck"), every).second }.filter { it.isNotEmpty() }.distinct()
+        // The decks the AI may reuse: this child's and no child's, without the children's levels
+        // (no child's name to the AI, nothing of another child's lessons)
+        val decks = Children.decksForAi(lessons.list().map { it.string("deck") }, every, child)
         val request = buildJsonObject {
             put("prompt", fields["prompt"] ?: "")
             put("deck", fields["deck"] ?: "")

@@ -109,8 +109,9 @@ async def _generate(
     s = settings.current()
     every = await asyncio.to_thread(children.list_all)
     child = next((c for c in every if c.id == form.child), None)
-    # The decks the AI may reuse, without the children's levels: no child's name to the AI
-    known = sorted({name for d in known if (name := children.for_ai_deck(d, every))})
+    # The decks the AI may reuse: this child's and no child's, without the children's levels
+    # (no child's name to the AI, nothing of another child's lessons)
+    known = children.decks_for_ai(known, every, child)
     found = await extract_cards(
         s,
         data,

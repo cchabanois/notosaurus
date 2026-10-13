@@ -112,3 +112,13 @@ def test_no_childs_name_in_the_decks_the_ai_sees(client, monkeypatch):
     body = {**first, "instruction": "ajoute une carte"}
     revised = client.post(f"/api/lessons/{first['id']}/revise", json=body).json()["lesson"]
     assert not seen["revised"].startswith("Jules") and revised["deck"] == first["deck"]  # put back
+
+
+def test_only_the_childs_decks_and_no_ones_to_the_ai():
+    jules = Child(id="jules", name="Jules", grade="5e", decks="Jules::{classe}")
+    mathilde = Child(id="mathilde", name="Mathilde", grade="3e", decks="Mathilde")
+    every = [jules, mathilde]
+    decks = ["Jules::5e::Anglais::Food", "Mathilde::SVT::La cellule", "Maths::Fractions", "Jules"]
+    assert children.decks_for_ai(decks, every, jules) == ["Anglais::Food", "Maths::Fractions"]
+    assert children.decks_for_ai(decks, every, mathilde) == ["Maths::Fractions", "SVT::La cellule"]
+    assert children.decks_for_ai(decks, every, None) == ["Maths::Fractions"]  # a lesson for no one
