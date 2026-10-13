@@ -421,7 +421,7 @@
     "children": {
       "title": "Figli",
       "who": "Per chi?",
-      "hint": "Per chi sono le lezioni. La classe e le tue istruzioni vanno all'IA; il nome, mai.",
+      "hint": "La classe e le tue istruzioni vanno all'IA; il nome, mai.",
       "name": "Nome",
       "choose": "Scegli",
       "chosen": "✓ Scelto",
@@ -443,7 +443,9 @@
         "primary": "es. legge ancora lentamente: frasi brevi, al massimo 8 carte.",
         "middle": "es. prepara una verifica: insisti su date e definizioni.",
         "high": "es. prepara la maturità: formule esatte, dimostrazioni passo per passo."
-      }
+      },
+      "pick": "Per chi è la prossima lezione? Tocca il suo nome.",
+      "edit": "Modifica {name}"
     }
   },
   "admin": {

@@ -421,7 +421,7 @@
     "children": {
       "title": "Children",
       "who": "Who for?",
-      "hint": "Who the lessons are for. Their class and your instructions are given to the AI; their first name, never.",
+      "hint": "Their class and your instructions are given to the AI; their first name, never.",
       "name": "First name",
       "choose": "Choose",
       "chosen": "✓ Chosen",
@@ -443,7 +443,9 @@
         "primary": "e.g. still reads slowly: short sentences, 8 cards at most.",
         "middle": "e.g. revising for a test: stress dates and definitions.",
         "high": "e.g. preparing for exams: exact formulas, proofs step by step."
-      }
+      },
+      "pick": "Who is the next lesson for? Tap their name.",
+      "edit": "Edit {name}"
     }
   },
   "admin": {

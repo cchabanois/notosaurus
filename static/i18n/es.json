@@ -421,7 +421,7 @@
     "children": {
       "title": "Hijos",
       "who": "¿Para quién?",
-      "hint": "Para quién son las lecciones. Su curso y tus instrucciones se dan a la IA; su nombre, nunca.",
+      "hint": "Su curso y tus instrucciones se dan a la IA; su nombre, nunca.",
       "name": "Nombre",
       "choose": "Elegir",
       "chosen": "✓ Elegido",
@@ -443,7 +443,9 @@
         "primary": "p. ej. aún lee despacio: frases cortas, 8 tarjetas como máximo.",
         "middle": "p. ej. prepara un examen: insiste en fechas y definiciones.",
         "high": "p. ej. prepara la selectividad: fórmulas exactas, demostraciones paso a paso."
-      }
+      },
+      "pick": "¿Para quién es la próxima lección? Toca su nombre.",
+      "edit": "Editar a {name}"
     }
   },
   "admin": {

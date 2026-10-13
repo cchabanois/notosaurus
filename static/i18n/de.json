@@ -421,7 +421,7 @@
     "children": {
       "title": "Kinder",
       "who": "Für wen?",
-      "hint": "Für wen die Lektionen sind. Klasse und deine Anweisungen bekommt die KI; den Vornamen nie.",
+      "hint": "Klasse und deine Anweisungen bekommt die KI; den Vornamen nie.",
       "name": "Vorname",
       "choose": "Wählen",
       "chosen": "✓ Gewählt",
@@ -443,7 +443,9 @@
         "primary": "z. B. liest noch langsam: kurze Sätze, höchstens 8 Karten.",
         "middle": "z. B. lernt für eine Klassenarbeit: betone Daten und Definitionen.",
         "high": "z. B. bereitet das Abitur vor: genaue Formeln, Beweise Schritt für Schritt."
-      }
+      },
+      "pick": "Für wen ist die nächste Lektion? Tippe auf den Namen.",
+      "edit": "{name} bearbeiten"
     }
   },
   "admin": {
