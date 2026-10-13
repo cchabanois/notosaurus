@@ -208,5 +208,5 @@ def test_the_automatic_prompt_knows_a_dictation():
     from pathlib import Path
 
     for lang in Path(__file__).resolve().parent.parent.joinpath("static/i18n").glob("*.json"):
-        auto = json.loads(lang.read_text())["builtinPrompts"]["auto"]["text"]
+        auto = json.loads(lang.read_text(encoding="utf-8"))["builtinPrompts"]["auto"]["text"]
         assert auto.count("\n- ") >= 7, lang.name  # its cases, a dictation to prepare among them

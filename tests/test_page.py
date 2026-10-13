@@ -484,7 +484,7 @@ def test_every_language_fits_a_narrow_phone(page, browser, server, lang):
         other.locator("input[autocomplete=new-password]").first.fill("secret-pw")
         other.locator("input[autocomplete=new-password]").nth(1).fill("secret-pw")
         other.locator("button.btn.primary.wide").first.click()  # create the password
-        other.locator("section.panel h2").nth(3).wait_for()
+        other.locator("section.panel h2 .step").first.wait_for()  # the settings, unlocked (About is always there)
         assert other.evaluate(CUT) == []
         other.wait_for_function("Alpine.$data(document.querySelector('[x-data]')).saveState !== 'pending'")
         # The setup assistant, with its longest step: Gemini's key, explained
