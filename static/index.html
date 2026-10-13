@@ -107,8 +107,7 @@
       <span x-text="$t('app.update.available')"></span>
       <a class="btn soft" :href="switches.store" target="_blank" rel="noopener" x-text="$t('app.update.open')"></a>
     </div>
-    <!-- The mascot, large, until a lesson is started -->
-    <img class="hero-logo" x-show="!lessonId && !photos.length" src="logo.webp" alt="Notosaurus" width="511" height="465">
+    <!-- What Notosaurus does, until a lesson is started (the mascot: the header's logo only) -->
     <p class="tagline" x-show="!lessonId && !photos.length" x-text="$t('app.tagline')"></p>
 
     <!-- No AI service yet: the setup assistant (on the computer when it's the Anki add-on) -->

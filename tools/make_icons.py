@@ -1,7 +1,7 @@
 """Make the logo images and the icons from the Notosaurus logo (assets/notosaurus-logo.png).
 
 Run again after changing the logo (and the crop boxes below, in its pixels):
-- static/logo.webp: the whole logo, drawing and name, large on the home screen;
+- static/logo.webp: the whole logo, drawing and name (the README);
 - static/logo-mark.webp: the head alone, in the app bar: the whole drawing is a blur
   at that size, the head is still recognised;
 - the icons, from the head, named after the logo (notosaurus-…): phones keep an
