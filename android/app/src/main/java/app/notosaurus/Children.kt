@@ -63,12 +63,24 @@ class Children(private val prefs: Preferences) {
             return (levels + rest).joinToString("::")
         }
 
+        /** The decks the AI may reuse for a lesson of `child`: its own (its levels left out) and
+         * those of no child; never another child's (as the computer's children.decks_for_ai). */
+        fun decksForAi(decks: List<String>, children: List<Child>, child: Child?): List<String> {
+            val mine = child?.let(::levels).orEmpty()
+            return decks.mapNotNull { deck ->
+                val (private, rest) = splitDeck(deck, children)
+                rest.takeIf { it.isNotEmpty() && private.split("::").filter { l -> l.isNotEmpty() }.all { same(it) in mine } }
+            }.distinct().sorted()
+        }
+
+        /** A child's own levels: its first name, its decks' levels (its class put in). */
+        private fun levels(child: Child): Set<String> =
+            (listOf(same(child.name)) + CLASS_TOKEN.replace(child.decks, child.grade.trim()).split("::").filter { it.isNotBlank() }.map(::same)).toSet()
+
         /** A deck's name as the children's levels it starts with ("Jules::5e") and the rest:
          * the rest is what the AI sees (no child's name), the levels are put back. */
         fun splitDeck(deck: String, children: List<Child>): Pair<String, String> {
-            val private = children.flatMap { c ->
-                listOf(same(c.name)) + CLASS_TOKEN.replace(c.decks, c.grade.trim()).split("::").filter { it.isNotBlank() }.map(::same)
-            }.toSet()
+            val private = children.flatMap(::levels).toSet()
             val levels = deck.split("::").map { it.trim() }.filter { it.isNotEmpty() }
             val n = levels.takeWhile { same(it) in private }.size
             return levels.take(n).joinToString("::") to levels.drop(n).joinToString("::")

@@ -629,6 +629,11 @@ class LocalServerTest {
         assertEquals("Jules::5e" to "Maths::Fractions", Children.splitDeck("Jules::5e::Maths::Fractions", listOf(jules)))
         assertEquals("" to "Maths", Children.splitDeck("Maths", listOf(jules)))
         assertFalse("Jules" in Children.forAi(Child("jules", "Jules", "5e", instructions = "Lent.")))
+        // The decks the AI may reuse: the child's own and no one's, never another child's
+        val mathilde = Child("mathilde", "Mathilde", "3e", "Mathilde")
+        val decks = listOf("Jules::5e::Anglais::Food", "Mathilde::SVT::La cellule", "Maths::Fractions")
+        assertEquals(listOf("Anglais::Food", "Maths::Fractions"), Children.decksForAi(decks, listOf(jules, mathilde), jules))
+        assertEquals(listOf("Maths::Fractions"), Children.decksForAi(decks, listOf(jules, mathilde), null))
     }
 
     @Test

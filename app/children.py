@@ -103,13 +103,28 @@ def for_ai_deck(deck: str, cards: list[Child]) -> str:
     return split_deck(deck, cards)[1]
 
 
+def decks_for_ai(decks: list[str], cards: list[Child], child: Child | None) -> list[str]:
+    """The decks the AI may reuse for a lesson of `child`: its own (its levels left out) and
+    those of no child; never another child's (nothing of its lessons in this one's)."""
+    mine = _levels(child) if child else set()
+    kept = set()
+    for deck in decks:
+        private, rest = split_deck(deck, cards)
+        if rest and all(_same(level) in mine for level in private.split("::") if level):
+            kept.add(rest)
+    return sorted(kept)
+
+
+def _levels(child: Child) -> set[str]:
+    """A child's own levels: its first name, its decks' levels (its class put in)."""
+    prefix = CLASS_TOKEN.sub(child.grade.strip(), child.decks)
+    return {_same(child.name)} | {_same(level) for level in prefix.split("::") if level.strip()}
+
+
 def split_deck(deck: str, cards: list[Child]) -> tuple[str, str]:
     """A deck's name as the children's levels it starts with ("Jules::5e") and the rest
     ("Anglais::School subjects"): the rest is what the AI sees, the levels are put back."""
-    private = {_same(c.name) for c in cards}
-    for c in cards:
-        prefix = CLASS_TOKEN.sub(c.grade.strip(), c.decks)
-        private |= {_same(level) for level in prefix.split("::") if level.strip()}
+    private = set().union(*(_levels(c) for c in cards)) if cards else set()
     levels = [level.strip() for level in deck.split("::") if level.strip()]
     n = 0
     while n < len(levels) and _same(levels[n]) in private:
