@@ -206,6 +206,14 @@
     <section class="panel">
       <h2 x-text="$t('android.about.title')"></h2>
       <p x-text="$t('android.about.version', { version: form?.version })"></p>
+      <!-- Free software: its code, its licence, its libraries' (as the computer's settings) -->
+      <p x-text="$t('admin.about.free')"></p>
+      <ul class="about-links">
+        <li><a href="https://github.com/cchabanois/notosaurus" target="_blank" rel="noopener" x-text="$t('admin.about.source')"></a></li>
+        <li><a href="https://www.gnu.org/licenses/agpl-3.0.html" target="_blank" rel="noopener" x-text="$t('admin.about.licence')"></a></li>
+        <li><a :href="$docs('app-privacy')" target="_blank" rel="noopener" x-text="$t('admin.about.privacy')"></a></li>
+        <li><a href="licences.html" x-text="$t('admin.about.libraries')"></a></li>
+      </ul>
       <details x-show="onPhone()">
         <summary x-text="$t('android.advanced.title')"></summary>
         <label class="field"><span x-text="$t('android.advanced.relay')"></span>

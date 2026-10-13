@@ -9,7 +9,7 @@ Each pull request adds a line under **Unreleased**. See [Releasing](CONTRIBUTING
 
 ### Added
 
-- **About**, in the settings: Notosaurus is free software (AGPL-3.0, its code on GitHub, without any warranty), with links to the privacy policy and to the libraries' licences (the page's, and the Android app's, listed at its build). The Android app's build fails on a library whose licence wasn't reviewed (licensee).
+- **About**, in the settings (the computer's, and the Android app's own): Notosaurus is free software (AGPL-3.0, its code on GitHub, without any warranty), with links to the privacy policy and to the libraries' licences (the page's, and the Android app's, listed at its build). The Android app's build fails on a library whose licence wasn't reviewed (licensee).
 - A built-in **Gap dictation** prompt: only the hardest words of the dictation text to spell, one card per word, its sentence shown with the blank and heard. A dictation-only card now shows its front too (the sentence with its blank).
 - A built-in **Dictation** prompt: dictation cards only, heard then typed: the words to learn to spell (the word, a sentence with it, the word again) and the week's dictation text, sentence by sentence. A lesson's new **Dictation only** option (also in a prompt of your own) makes the dictation card alone, without the front → back card. The former **Word dictation** is now **Fill in the word**, without dictation cards.
 - A dictation card whose question is a sentence with a blank (the built-in **Word dictation**) says the sentence with the word, then the word: alone, "vers" could be "verre" or "vert". In Anki, AnkiDroid and the review's 🔊; a lesson already made gets it when sent again.

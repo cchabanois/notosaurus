@@ -1039,6 +1039,9 @@ class LocalServerTest {
         val page = client.get("/admin.html").bodyAsText()
         assertTrue("settings.js" in page) // the app's, not the computer's admin.js
         assertTrue("android.licence.title" in page)
+        // About: free software, its libraries' licences (the computer's page, served with the app's)
+        assertTrue("admin.about.free" in page && "licences.html" in page)
+        assertTrue("licences.js" in client.get("/licences.html").bodyAsText())
         assertEquals("true", client.get("/api/admin") { page() }.json().jsonObject["allowed"]!!.jsonPrimitive.content)
         // The texts the app's pages use are in every language of the web page
         var own = ""
