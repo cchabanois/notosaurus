@@ -57,8 +57,8 @@ enfant apprend chaque semaine. **Dupliquer** part d'une consigne de Notosaurus.
 - **Voix du verso** : pas de son, **Automatique** (l'IA reconnaît la langue des versos et
   Notosaurus prend une voix de cette langue), ou une voix que tu choisis et que tu peux
   écouter.
-- **Options des cartes** : taper la réponse, ajouter une dictée (voir
-  [Relire les cartes](../review/)).
+- **Options des cartes** : taper la réponse (Anki compare lettre par lettre), ajouter une
+  dictée (entendre le verso, l'écrire). Elles vont avec les leçons faites avec cette consigne.
 
 **✏️ Libre** écrit une consigne pour cette fois seulement : elle reste avec la leçon, mais
 n'est pas ajoutée à ta liste. **Enregistrer comme nouvelle consigne** la garde si elle a

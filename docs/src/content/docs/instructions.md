@@ -54,7 +54,8 @@ every week. **Duplicate** starts from a Notosaurus prompt.
   filled in from the lesson: `Spanish::Lesson {n}` becomes `Spanish::Lesson 5`.
 - **Voice for the back**: no sound, **Automatic** (the AI recognises the language of the backs
   and Notosaurus picks a voice of that language), or a voice you choose and can listen to.
-- **Card options**: type the answer, add a dictation (see [Reviewing the cards](../review/)).
+- **Card options**: type the answer (Anki compares letter by letter), add a dictation (hear
+  the back, write it). They go with the lessons made with these instructions.
 
 **✏️ Free** writes instructions for this time only: they stay with the lesson but aren't
 added to your list. **Save as new instructions** keeps them if they worked well.

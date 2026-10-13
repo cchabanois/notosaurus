@@ -36,9 +36,8 @@ before sending the cards.
 
 ## Dictation
 
-With a voice, the **Add a dictation** option (at the bottom of the lesson, or in the
-instructions) adds a card where the back is heard, then written. See
-[Reviewing the cards](../review/#card-options).
+With a voice, the **Add a dictation** option of the instructions adds a card where the back is heard, then written. See
+[Instructions](../instructions/).
 
 ## Cards without sound
 

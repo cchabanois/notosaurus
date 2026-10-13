@@ -37,9 +37,9 @@ ensuite.
 
 ## Dictée
 
-Avec une voix, l'option **Ajouter une dictée** (en bas de la leçon, ou dans la consigne) ajoute
+Avec une voix, l'option **Ajouter une dictée** de la consigne ajoute
 une carte où l'on entend le verso, puis on l'écrit. Voir
-[Relire les cartes](../review/#les-options-des-cartes).
+[Les consignes](../instructions/).
 
 ## Des cartes sans son
 

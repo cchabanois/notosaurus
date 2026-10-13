@@ -70,10 +70,9 @@ En bas de la leçon :
 ![Les options des cartes](../../../assets/screenshots/fr/review-options.png)
 
 - **Ajouter la carte inverse** : Anki demande aussi verso → recto.
-- **Taper la réponse** : Anki compare ce qui est tapé lettre par lettre. Idéal pour
-  l'orthographe.
-- **Ajouter une dictée** : une carte où l'on entend le verso, puis on l'écrit. Il faut une
-  voix.
+
+La réponse tapée et la dictée viennent de la [consigne](../instructions/) : elles vont avec ce
+que l'IA écrit. Pour les changer, refais la leçon avec une autre consigne.
 
 La ligne en dessous indique la voix qui lit les versos. Elle est incluse dans le paquet :
 elle fonctionne partout, même hors connexion.

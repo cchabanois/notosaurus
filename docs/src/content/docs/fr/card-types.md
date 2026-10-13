@@ -13,9 +13,9 @@ La carte classique : un **recto** (la question, un mot dans ta langue) et un **v
 réponse, le mot dans la langue étudiée), avec une **info** facultative affichée sous la
 réponse. C'est ce que font les consignes de vocabulaire, de phrases et de questions.
 
-Options, en bas de la leçon : la **carte inverse** (verso → recto), **taper la réponse**
-(Anki compare lettre par lettre) et la **dictée** (entendre le verso, l'écrire). Voir
-[Relire les cartes](../review/#les-options-des-cartes).
+En bas de la leçon, la **carte inverse** (verso → recto). La consigne ajoute **taper la
+réponse** (Anki compare lettre par lettre) et la **dictée** (entendre le verso, l'écrire).
+Voir [Les consignes](../instructions/).
 
 ## Texte à trous
 
