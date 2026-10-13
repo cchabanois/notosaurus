@@ -22,23 +22,28 @@ import java.security.MessageDigest
 class Pictures(
     private val lessons: Lessons,
     private val relay: () -> Relay,
+    private val cardSize: (ByteArray) -> ByteArray = { it }, // the user's photo as a card shows it (Photos.cardSize)
     private val find: () -> Boolean = { true }, // a free picture found first for a real thing (the settings)
 ) {
-    /** The missing pictures drawn, a few at a time: {"lesson", "failures", "error"}. A
-     * card without its picture is still a card: counted, not fatal. */
-    suspend fun drawMissing(lesson: JsonObject): JsonObject {
+    /** The missing pictures, a few at a time: figures drawn, free pictures found; those no
+     * free one fits drawn by the image model only when `draw` (the user said yes), else in
+     * "to_draw". {"lesson", "failures", "error", "to_draw"}. A card without its picture is
+     * still a card: counted, not fatal. */
+    suspend fun drawMissing(lesson: JsonObject, draw: Boolean = false): JsonObject {
         val id = lesson.string("id")
         val cards = lesson.cards()
         val failures = mutableListOf<JsonObject>()
+        val toDraw = mutableListOf<String>()
         val few = Semaphore(AT_ONCE)
         coroutineScope {
             cards.indices.filter { i -> cards[i].missingPicture() }.map { i ->
                 async {
                     few.withPermit {
                         try {
-                            cards[i] = drawn(id, cards[i], fresh = false)
+                            cards[i] = drawn(id, cards[i], fresh = false, draw = draw, find = find() && !draw)
                         } catch (e: RelayException) {
-                            failures += buildJsonObject { put("code", e.code); put("params", e.params) }
+                            if (e.code == NEEDS_DRAWING) toDraw += cards[i].string("id")
+                            else failures += buildJsonObject { put("code", e.code); put("params", e.params) }
                         }
                     }
                 }
@@ -48,21 +53,44 @@ class Pictures(
             put("lesson", saved(id, cards))
             put("failures", failures.size)
             put("error", failures.firstOrNull() ?: JsonNull)
+            put("to_draw", JsonArray(toDraw.map(::JsonPrimitive)))
         }
     }
 
-    /** Card `i`'s picture drawn again, from what the user wrote for it (`subject`; null: its
-     * own description), the relay's AI deciding a figure or a picture when needed. {"card", "lesson"}. */
-    suspend fun redraw(lesson: JsonObject, i: Int, subject: String?, language: String = "English"): JsonObject {
+    /** "✨ Image", its first step (as the computer's /picture/make): from what the user wrote
+     * (`subject`; null: its own description) the relay's AI decides a figure, then drawn
+     * (cheap), or a picture, its description and search words set, nothing drawn: the page
+     * then looks for free ones and asks before the image model draws one. {"card", "lesson",
+     * "search" (a picture's)}. */
+    suspend fun make(lesson: JsonObject, i: Int, subject: String?, language: String = "English"): JsonObject {
         val cards = lesson.cards()
-        cards[i] = drawn(lesson.string("id"), cards[i], fresh = true, asked = subject, language = language)
+        try {
+            cards[i] = drawn(lesson.string("id"), cards[i], fresh = true, asked = subject, language = language, draw = false, find = false)
+            return answer(lesson, cards, i)
+        } catch (e: RelayException) {
+            if (e.code != NEEDS_DRAWING) throw e
+            val description = e.params.string("description")
+            val search = e.params.string("search")
+            cards[i] = cards[i].with(
+                "figure" to JsonPrimitive(""), "picture_prompt" to JsonPrimitive(description), "picture_search" to JsonPrimitive(search),
+            )
+            return JsonObject(answer(lesson, cards, i) + ("search" to JsonPrimitive(search.ifEmpty { description })))
+        }
+    }
+
+    /** Card `i`'s picture drawn by the image model, now: the user said yes (no free one fit). A
+     * figure: drawn again. {"card", "lesson"}. */
+    suspend fun draw(lesson: JsonObject, i: Int): JsonObject {
+        val cards = lesson.cards()
+        cards[i] = drawn(lesson.string("id"), cards[i], fresh = true, draw = true, find = false)
         return answer(lesson, cards, i)
     }
 
-    /** The user's own photo as card `i`'s picture (the page made it card size). */
+    /** The user's own photo as card `i`'s picture, made card size (512 px, as the computer's). */
     fun own(lesson: JsonObject, i: Int, photo: ByteArray, source: JsonObject? = PHOTO): JsonObject {
         val cards = lesson.cards()
-        val name = save(lesson.string("id"), cards[i].string("id"), photo, "jpg")
+        val data = if (source == PHOTO) cardSize(photo) else photo // a found one is card size already
+        val name = save(lesson.string("id"), cards[i].string("id"), data, "jpg")
         cards[i] = cards[i].with("picture" to JsonPrimitive(name), "picture_source" to (source ?: JsonNull))
         return answer(lesson, cards, i)
     }
@@ -90,13 +118,16 @@ class Pictures(
         fresh: Boolean,
         asked: String? = null,
         language: String = "English",
+        draw: Boolean = true,
+        find: Boolean = find(),
     ): JsonObject {
         val made = relay().post("card-picture", buildJsonObject {
             put("card", card)
             put("asked", asked?.let(::JsonPrimitive) ?: JsonNull)
             put("language", language)
             put("fresh", fresh)
-            put("find", find()) // a free picture found first for a real thing, unless always drawn
+            put("find", find) // a free picture found first for a real thing
+            put("draw", draw) // else picture.needs_drawing: the image model costs, the user is asked
         })
         val decided = made["card"]!!.jsonObject
         val extension = if (made.string("media_type") == "image/svg+xml") "svg" else "jpg"
@@ -134,6 +165,7 @@ class Pictures(
 
     companion object {
         private const val AT_ONCE = 4
+        private const val NEEDS_DRAWING = "picture.needs_drawing" // no free picture fits: the user is asked
         private val PHOTO = buildJsonObject { put("source", "photo") }
         // What the relay decides of a card's picture (Card's fields): taken into the card
         private val PICTURE_FIELDS = listOf("figure", "picture_prompt", "picture_search", "picture_source")

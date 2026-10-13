@@ -363,24 +363,34 @@
       "panel": "Picture",
       "subject": "What the picture should show",
       "subjectPlaceholder": "Leave it empty: the AI decides from the card. E.g. two overlapping sets",
-      "draw": "🎨 Draw",
-      "redraw": "🎨 Draw again",
       "photo": "📷 My photo",
       "remove": "✕ No picture",
-      "cost": "A picture found or your own photo is free; a drawing costs about 3 to 7 US ¢.",
+      "cost": "A figure or a free picture costs very little; a drawing by the AI is always asked for first (it costs more); your photo is free.",
       "figure": "The figure to draw (labels included)",
       "figurePlaceholder": "e.g. a triangle with a right angle at C, the hypotenuse labelled “c”",
       "figureCost": "A figure is drawn by the cards' AI, for under a US cent; your own photo is free.",
       "onBack": "On the back (with the answer)",
-      "search": "🔎 Find a picture",
       "searching": "Searching…",
       "found": "Free pictures ({sources}): tap the one that fits.",
-      "none": "No free picture found: try other words (in English), or draw it.",
+      "none": "No free picture found: try other words.",
       "sourceFound": "Source: {source} · {licence}",
       "sourceDrawn": "Drawn by the AI",
       "sourceDrawnBy": "Drawn by the AI ({model})",
       "sourcePhoto": "Your photo",
-      "sourcePage": "see its page"
+      "sourcePage": "see its page",
+      "make": "✨ Picture",
+      "change": "✨ Change the picture",
+      "pick": "⭐: the AI's choice. Tap the one that fits.",
+      "drawAsk": "No free picture fits “{subject}”. Have the AI draw it?",
+      "drawYes": "🎨 Draw",
+      "drawNo": "No",
+      "toDraw": {
+        "one": "{count} picture has no free match. Have the AI draw it?",
+        "other": "{count} pictures have no free match. Have the AI draw them?"
+      },
+      "toDrawNo": "No thanks",
+      "costUsd": "Cost: about US${amount}.",
+      "costCredits": "Cost: about {count} credits."
     },
     "pairing": {
       "title": "Device not allowed"
@@ -847,7 +857,8 @@
       "quota": "{service} refuses: quota exceeded for the image model (a free key can't draw). Choose an image model through another service in the settings.",
       "no_subject": "Write what to draw first.",
       "search_failed": "The picture search didn't work: try again in a moment.",
-      "not_found": "This picture isn't available any more: choose another one."
+      "not_found": "This picture isn't available any more: choose another one.",
+      "needs_drawing": "No free picture fits: it has to be drawn by the AI."
     },
     "card": {
       "not_found": "This card no longer exists: reload the lesson."

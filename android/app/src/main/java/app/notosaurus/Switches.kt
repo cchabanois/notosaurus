@@ -18,7 +18,12 @@ class Switches(private val prefs: Preferences, private val version: String) {
         prefs[DISABLED] = json.encodeToString(ListSerializer(String.serializer()), account.disabled)
         prefs[NOTICE] = account.notice?.let { json.encodeToString(Notice.serializer(), it) }.orEmpty()
         prefs[LATEST] = account.latest
+        prefs[DRAWING] = account.drawingCredits?.toString().orEmpty()
     }
+
+    /** About what a picture drawn by the image model costs, in credits, as the relay told it
+     * (told the user before one is drawn); null when not told. */
+    fun drawingCredits(): Int? = prefs[DRAWING]?.toIntOrNull()
 
     fun disabled(): List<String> =
         runCatching { json.decodeFromString(ListSerializer(String.serializer()), prefs[DISABLED].orEmpty()) }.getOrDefault(emptyList())
@@ -48,6 +53,7 @@ class Switches(private val prefs: Preferences, private val version: String) {
         private const val DISABLED = "switches_disabled"
         private const val NOTICE = "switches_notice"
         private const val LATEST = "switches_latest"
+        private const val DRAWING = "switches_drawing_credits"
 
         /** Whether `latest` ("1.10.0") is a newer version than `current` ("1.9.2"); never when either isn't one. */
         fun newer(latest: String, current: String): Boolean {

@@ -93,7 +93,7 @@ def test_clean_gives_the_namespace():
 def test_figures_drawn_shown_and_exported(client, tmp_path):
     lesson = client.post("/api/extract", data={"prompt": "Le triangle rectangle (géométrie)"}).json()
     assert all(c["figure"] and not c["picture"] for c in lesson["cards"])
-    res = client.post(f"/api/lessons/{lesson['id']}/pictures").json()
+    res = client.post(f"/api/lessons/{lesson['id']}/pictures", json={"draw": True}).json()
     assert res["failures"] == 0
     cards = res["lesson"]["cards"]
     assert all(c["picture"].endswith(".svg") for c in cards)
@@ -114,7 +114,7 @@ def test_figures_drawn_shown_and_exported(client, tmp_path):
 def test_redraw_a_figure_from_its_description(client):
     lesson = client.post("/api/extract", data={"prompt": "géométrie"}).json()
     card = lesson["cards"][0]
-    url = f"/api/lessons/{lesson['id']}/cards/{card['id']}/picture/draw"
+    url = f"/api/lessons/{lesson['id']}/cards/{card['id']}/picture/make"
     res = client.post(url, json={"subject": "Un triangle, l'hypoténuse étiquetée « hypoténuse »"}).json()
     assert res["card"]["figure"].startswith("Un triangle") and res["card"]["picture"].endswith(".svg")
     svg = (lessons.folder(lesson["id"]) / "images" / res["card"]["picture"]).read_text(encoding="utf-8")
@@ -127,7 +127,7 @@ def test_redraw_a_figure_from_its_description(client):
 def test_a_figure_with_the_answer_goes_on_the_back(client, tmp_path):
     """ "What is a tangent?": the figure belongs to the answer, it shows with it only."""
     lesson = client.post("/api/extract", data={"prompt": "géométrie"}).json()
-    cards = client.post(f"/api/lessons/{lesson['id']}/pictures").json()["lesson"]["cards"]
+    cards = client.post(f"/api/lessons/{lesson['id']}/pictures", json={"draw": True}).json()["lesson"]["cards"]
     tangent = next(c for c in cards if c["picture_on_back"])
     assert tangent["front"].startswith("Qu'est-ce qu'une tangente")
     body = {"deck": lesson["deck"], "cards": cards, "lesson_id": lesson["id"]}
@@ -177,7 +177,7 @@ def test_draw_decides_a_figure_or_a_picture(client, monkeypatch):
     lesson = client.post("/api/extract", data={"prompt": "FR → ES"}).json()
     cards = [{**lesson["cards"][0], "front": "La réunion de A et B ?", "back": r"\(A \cup B\)"}, lesson["cards"][1]]
     client.put(f"/api/lessons/{lesson['id']}", json={**lesson, "cards": cards})
-    url = f"/api/lessons/{lesson['id']}/cards/{{}}/picture/draw"
+    url = f"/api/lessons/{lesson['id']}/cards/{{}}/picture/make"
     french = {"X-Notosaurus-Lang": "fr"}
 
     union = client.post(url.format(cards[0]["id"]), json={"subject": ""}, headers=french).json()["card"]

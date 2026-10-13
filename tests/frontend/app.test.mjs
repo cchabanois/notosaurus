@@ -433,8 +433,8 @@ test("find a picture: the choices, their sources, the one chosen", async () => {
   // Its own picture's description: the search words chosen with it, as they are
   sent.length = 0;
   Object.assign(card, { picture_prompt: "a stone castle", picture_search: "castle", _subject: "a stone castle" });
-  await c.searchPictures(card);
-  assert.equal(JSON.parse(sent[0][1]).words, "castle");
+  await c.searchPictures(card, "castle");
+  assert.deepEqual(plain(JSON.parse(sent[0][1])), { subject: "a stone castle", context: "Un château ? → el castillo", words: "castle" });
 });
 
 test("find a picture: each source's pictures shown as it answers", async () => {
@@ -574,4 +574,53 @@ test("🔊 says what the card's sound says: a dictation's sentence, then the wor
   assert.equal(c.spokenText(card), "Le chat boit du lait.\nlait");
   assert.equal(c.spokenText({ front: "Il a ... ans !", back: "$1" }), "Il a $1 ans !\n$1");
   assert.equal(c.spokenText({ front: "la mère", back: "la madre" }), "la madre");
+});
+
+
+// "✨ Image": the AI decides, then free pictures; one fits: it's the card's; several: picked;
+// none: asked before the image model draws (it costs)
+async function imagePage(found) {
+  const sent = [];
+  const page = await loadScripts("app.js", {
+    routes: (url, options) => {
+      sent.push(url);
+      if (url.endsWith("/picture/make")) {
+        return new Response({ card: { picture: "", picture_prompt: "a castle", picture_search: "castle", figure: "" }, search: "castle" });
+      }
+      if (url === "/api/pictures/search") return Response.ndjson([{ found }, { done: { words: "castle" } }]);
+      return new Response({ card: { picture: "picture-c1-1.jpg", picture_prompt: "a castle", figure: "" } });
+    },
+  });
+  const c = page.component();
+  c.lessonId = "L1";
+  return { c, sent };
+}
+const castle = (id) => ({ source: "commons", id, title: id, preview: "data:,", licence: "CC0", page: `https://x/${id}` });
+
+test("✨ Image: the one free picture that fits is the card's at once", async () => {
+  const { c, sent } = await imagePage([castle("a")]);
+  const card = { id: "c1", front: "Un château ?", back: "el castillo" };
+  await c.makePicture(card);
+  assert.deepEqual(sent, ["/api/lessons/L1/cards/c1/picture/make", "/api/pictures/search", "/api/lessons/L1/cards/c1/picture/found"]);
+  assert.equal(card.picture, "picture-c1-1.jpg");
+  assert.equal(card._ask, false);
+});
+
+test("✨ Image: several fit, the user picks (the AI's first); none, asked before drawing", async () => {
+  const several = await imagePage([castle("a"), castle("b")]);
+  const card = { id: "c1", front: "Un château ?", back: "el castillo" };
+  await several.c.makePicture(card);
+  assert.deepEqual(plain(card._found.map((f) => f.id)), ["a", "b"]);  // the AI's order: its choice first
+  assert.ok(!several.sent.some((u) => u.endsWith("/found")));
+
+  const none = await imagePage([]);
+  const other = { id: "c1", front: "Un château ?", back: "el castillo" };
+  none.c.drawingCredits = 67;
+  await none.c.makePicture(other);
+  assert.equal(other._ask, true);
+  assert.ok(!none.sent.some((u) => u.endsWith("/draw")));  // never drawn without a yes
+  assert.match(none.c.drawingCost(), /67/);
+  await none.c.drawPicture(other);
+  assert.ok(none.sent.at(-1).endsWith("/picture/draw"));
+  assert.equal(other._ask, false);
 });

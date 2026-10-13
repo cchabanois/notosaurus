@@ -49,7 +49,7 @@ def test_cards_ask_for_pictures_and_get_ids(client):
 
 def test_pictures_drawn_and_kept(client, drawn):
     lesson = lesson_with_pictures(client)
-    res = client.post(f"/api/lessons/{lesson['id']}/pictures").json()
+    res = client.post(f"/api/lessons/{lesson['id']}/pictures", json={"draw": True}).json()
     cards = res["lesson"]["cards"]
     assert res["failures"] == 1  # the umbrella: its card stays without a picture
     assert res["error"] == {"code": "picture.failed", "params": {"detail": "refused"}}  # why, for the page
@@ -64,7 +64,7 @@ def test_pictures_drawn_and_kept(client, drawn):
 
     # Drawn again: only what is missing (the umbrella, failing again)
     drawn.clear()
-    client.post(f"/api/lessons/{lesson['id']}/pictures")
+    client.post(f"/api/lessons/{lesson['id']}/pictures", json={"draw": True})
     assert drawn == ["an umbrella"]
 
 
@@ -76,7 +76,7 @@ def test_picture_names_checked(client, drawn):
 
 def test_picture_cards_in_anki(client, drawn, tmp_path):
     lesson = lesson_with_pictures(client)
-    cards = client.post(f"/api/lessons/{lesson['id']}/pictures").json()["lesson"]["cards"]
+    cards = client.post(f"/api/lessons/{lesson['id']}/pictures", json={"draw": True}).json()["lesson"]["cards"]
 
     def package(cards):
         return apkg.export(client, {"deck": "D", "cards": cards, "lesson_id": lesson["id"]}, tmp_path)
@@ -176,45 +176,64 @@ def test_picture_model_saved_before_the_service(client, tmp_path):
 
 def test_cache_reused_by_the_next_lessons(client, drawn):
     first = lesson_with_pictures(client)
-    client.post(f"/api/lessons/{first['id']}/pictures")
+    client.post(f"/api/lessons/{first['id']}/pictures", json={"draw": True})
     assert sorted(drawn) == ["a dog", "an apple", "an umbrella"]
     drawn.clear()
     second = lesson_with_pictures(client)  # the same subjects
-    cards = client.post(f"/api/lessons/{second['id']}/pictures").json()["lesson"]["cards"]
+    cards = client.post(f"/api/lessons/{second['id']}/pictures", json={"draw": True}).json()["lesson"]["cards"]
     assert drawn == ["an umbrella"]  # only the one that failed: the others come from the cache, free
     assert [bool(c["picture"]) for c in cards] == [True, True, False, False]
     calls = client.get(f"/api/lessons/{second['id']}").json()["ai_calls"]
     assert [c["kind"] for c in calls] == ["extract"]  # nothing paid for the pictures
 
 
-def test_redraw_with_another_subject(client, drawn):
+def test_image_made_then_drawn_when_asked(client, drawn):
+    """ "✨ Image": decided first (make: a figure drawn, a picture's description and search
+    words for the page to look for free ones); drawn by the image model only when asked."""
     lesson = lesson_with_pictures(client)
-    cards = client.post(f"/api/lessons/{lesson['id']}/pictures").json()["lesson"]["cards"]
+    cards = client.post(f"/api/lessons/{lesson['id']}/pictures", json={"draw": True}).json()["lesson"]["cards"]
     apple = cards[0]
-    url = f"/api/lessons/{lesson['id']}/cards/{apple['id']}/picture/draw"
+    make = f"/api/lessons/{lesson['id']}/cards/{apple['id']}/picture/make"
+    draw = f"/api/lessons/{lesson['id']}/cards/{apple['id']}/picture/draw"
 
     drawn.clear()
-    res = client.post(url, json={}).json()  # again, the same subject: drawn anew, not from the cache
+    res = client.post(make, json={}).json()  # the same subject: nothing to decide, nothing drawn
+    assert drawn == [] and res["search"] and res["card"]["picture"] == apple["picture"]
+    res = client.post(draw).json()  # the user said yes: drawn anew, not from the cache
     assert drawn == ["an apple"] and res["card"]["picture"] and res["card"]["id"] == apple["id"]
-    res = client.post(url, json={"subject": "a green apple"}).json()
-    assert res["card"]["picture_prompt"] == "a green apple"
+    res = client.post(make, json={"subject": "a green apple"}).json()
+    assert res["card"]["picture_prompt"] == "a green apple" and res["search"] and drawn == ["an apple"]
+    res = client.post(draw).json()
+    assert drawn[-1] == "a green apple"
     saved = client.get(f"/api/lessons/{lesson['id']}").json()
     assert saved["cards"][0]["picture"] == res["card"]["picture"]
-    # 2 at first + 1 drawn again + the new subject planned (figure or picture) and drawn
+    # 2 at first + 1 drawn again + the new subject planned and drawn
     assert [c["kind"] for c in saved["ai_calls"]].count("picture") == 5
 
-    # A card without a picture gets one ("tomorrow"): nothing written, the AI plans it from the card
+    # A card without a picture ("tomorrow"): nothing written, the AI plans it from the card
     tomorrow = cards[3]
-    url = f"/api/lessons/{lesson['id']}/cards/{tomorrow['id']}/picture/draw"
-    res = client.post(url, json={"subject": " "}).json()["card"]
-    assert res["picture"] and res["picture_prompt"] == tomorrow["back"]  # the demo AI: the back
-    assert client.post(url, json={"subject": "un calendrier"}).json()["card"]["picture_prompt"] == "un calendrier"
-    assert client.post(f"/api/lessons/{lesson['id']}/cards/nope/picture/draw", json={}).status_code == 404
+    make = f"/api/lessons/{lesson['id']}/cards/{tomorrow['id']}/picture/make"
+    res = client.post(make, json={"subject": " "}).json()
+    assert res["card"]["picture_prompt"] == tomorrow["back"] and not res["card"]["picture"]  # the demo AI: the back
+    assert client.post(make, json={"subject": "un calendrier"}).json()["card"]["picture_prompt"] == "un calendrier"
+    assert client.post(f"/api/lessons/{lesson['id']}/cards/nope/picture/make", json={}).status_code == 404
+
+
+def test_no_picture_drawn_without_a_yes(client, drawn):
+    """After a generation, the pictures no free one fits are listed, not drawn: the image
+    model costs, the user is asked first."""
+    lesson = lesson_with_pictures(client)
+    res = client.post(f"/api/lessons/{lesson['id']}/pictures").json()
+    assert drawn == []
+    assert sorted(res["to_draw"]) == sorted(c["id"] for c in lesson["cards"][:3])  # the three with a picture
+    assert not any(c["picture"] for c in res["lesson"]["cards"])
+    res = client.post(f"/api/lessons/{lesson['id']}/pictures", json={"draw": True}).json()
+    assert sorted(drawn) == ["a dog", "an apple", "an umbrella"] and res["to_draw"] == []
 
 
 def test_own_photo_then_no_picture(client, drawn, tmp_path):
     lesson = lesson_with_pictures(client)
-    cards = client.post(f"/api/lessons/{lesson['id']}/pictures").json()["lesson"]["cards"]
+    cards = client.post(f"/api/lessons/{lesson['id']}/pictures", json={"draw": True}).json()["lesson"]["cards"]
     dog = cards[1]
     url = f"/api/lessons/{lesson['id']}/cards/{dog['id']}/picture"
     res = client.post(url, files={"photo": ("p.jpg", plain_image(1600, 1200, "blue"), "image/jpeg")}).json()
@@ -348,7 +367,7 @@ def test_failing_pictures_and_sounds_log_nothing_of_the_lesson(monkeypatch, capl
     """The relay's logs hold nothing of a lesson: neither a picture's subject nor a text read,
     nor an error quoting them."""
 
-    async def figure_or_picture(s, folder, card):
+    async def figure_or_picture(s, folder, card, **_):
         if "volcano" in card.picture_prompt:
             raise pictures.PictureError("picture.failed", detail=f"refused: {card.picture_prompt}")
         raise ValueError(f"not an image: {card.figure}")
@@ -364,7 +383,7 @@ def test_failing_pictures_and_sounds_log_nothing_of_the_lesson(monkeypatch, capl
 
     monkeypatch.setattr(tts, "_synthesize", synthesize)
     with caplog.at_level("WARNING", logger="notosaurus"):
-        assert run(pictures.draw_all(AIConfig(llm="gemini"), tmp_path, cards))[0] == 2
+        assert run(pictures.draw_all(AIConfig(llm="gemini"), tmp_path, cards, draw=True))[0] == 2
         assert run(tts.tts_many(["el volcán ruge"], "es-ES-ElviraNeural", tmp_path)) == ({}, 1)
     assert len(caplog.records) == 3 and "picture.failed" in caplog.text and "RuntimeError" in caplog.text
     for content in ("volcano", "water cycle", "volcán"):

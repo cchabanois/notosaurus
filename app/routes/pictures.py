@@ -10,7 +10,7 @@ from notosaurus_core.models import Card, PictureSource
 
 from .. import access, i18n, lessons, settings, usage
 from ..errors import AppError
-from ..models import FoundPicture, Lesson, PictureRequest, PictureSearch
+from ..models import DrawPictures, FoundPicture, Lesson, PictureRequest, PictureSearch
 from .common import IMAGE_TYPES, page_lang, read_photo
 from .generation import NDJSON
 
@@ -18,17 +18,21 @@ router = APIRouter()
 
 
 @router.post("/api/lessons/{id}/pictures")
-async def draw_pictures(id: str) -> dict:
-    """Draw the pictures the cards ask for and don't have yet (after a generation or a
-    correction). A picture that fails leaves its card without one: said, not fatal."""
+async def draw_pictures(id: str, req: DrawPictures | None = None) -> dict:
+    """The pictures the cards ask for and don't have yet (after a generation or a
+    correction): figures drawn, free pictures found; those no free one fits drawn by the
+    image model only when asked (`draw`: the user said yes), else listed in to_draw. A
+    picture that fails leaves its card without one: said, not fatal."""
     await access.editable(id)
+    allowed = bool(req and req.draw)
 
-    async def draw(draft: Lesson) -> tuple:
+    async def draw(draft: Lesson) -> pictures.Drawn:
         async with usage.metered("picture", id, draft.deck):
-            return await pictures.draw_all(settings.current(), lessons.existing_folder(id) / "images", draft.cards)
+            folder = lessons.existing_folder(id) / "images"
+            return await pictures.draw_all(settings.current(), folder, draft.cards, draw=allowed)
 
-    lesson, (failures, error) = await lessons.edit(id, draw)
-    return {"lesson": lesson, "failures": failures, "error": error}
+    lesson, drawn = await lessons.edit(id, draw)
+    return {"lesson": lesson, "failures": drawn.failures, "error": drawn.error, "to_draw": drawn.to_draw}
 
 
 async def _edit_card(id: str, card_id: str, change) -> dict:
@@ -47,23 +51,41 @@ async def _edit_card(id: str, card_id: str, change) -> dict:
     return {"card": card, "lesson": lesson.model_dump()}
 
 
+@router.post("/api/lessons/{id}/cards/{card_id}/picture/make")
+async def make_picture(id: str, card_id: str, req: PictureRequest, lang: str = Depends(page_lang)) -> dict:
+    """ "✨ Image", its first step (pictures.decided): from what was written for it (any
+    language; none: the card), the AI decides a figure, then drawn (cheap), or a picture,
+    its description and search words set: the page then looks for free ones (search) and
+    asks the user before the image model draws one (draw)."""
+    await access.editable(id)
+    found: dict = {}
+
+    async def make(draft: Lesson, card: Card) -> None:
+        async with usage.metered("picture", id, draft.deck):  # figures count as pictures in the costs
+            s = settings.current()
+            decided = await pictures.decided(s, card, req.subject, i18n.language_name(lang))
+            for field in ("figure", "picture_prompt", "picture_search"):
+                setattr(card, field, getattr(decided, field))
+            if card.figure.strip():
+                folder = lessons.existing_folder(id) / "images"
+                card.picture = await pictures.figure_or_picture(s, folder, card, fresh=True)
+            else:
+                found["search"] = card.picture_search or card.picture_prompt
+
+    return {**await _edit_card(id, card_id, make), **found}
+
+
 @router.post("/api/lessons/{id}/cards/{card_id}/picture/draw")
-async def redraw_picture(id: str, card_id: str, req: PictureRequest, lang: str = Depends(page_lang)) -> dict:
-    """Draw a card's picture (again), from what was written for it (pictures.card_picture:
-    a figure or a picture, decided by the AI when needed). Never from the cache: this is
-    asked when the picture didn't suit."""
+async def draw_picture(id: str, card_id: str) -> dict:
+    """The card's picture drawn by the image model, now: the user said yes (no free one
+    fit). Its figure drawn again, for a figure. Never from the cache: asked when it didn't
+    suit."""
     await access.editable(id)
 
     async def draw(draft: Lesson, card: Card) -> None:
-        async with usage.metered("picture", id, draft.deck):  # figures count as pictures in the costs
-            card.picture = await pictures.figure_or_picture(
-                settings.current(),
-                lessons.existing_folder(id) / "images",
-                card,
-                fresh=True,
-                asked=req.subject,
-                language=i18n.language_name(lang),
-            )
+        async with usage.metered("picture", id, draft.deck):
+            folder = lessons.existing_folder(id) / "images"
+            card.picture = await pictures.figure_or_picture(settings.current(), folder, card, fresh=True, find=False)
 
     return await _edit_card(id, card_id, draw)
 

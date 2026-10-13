@@ -19,6 +19,7 @@ import kotlinx.serialization.json.JsonArray
 import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.JsonNull
 import kotlinx.serialization.json.JsonObject
+import kotlinx.serialization.json.booleanOrNull
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.jsonPrimitive
 import kotlinx.serialization.json.put
@@ -27,16 +28,25 @@ import kotlinx.serialization.json.put
 internal fun Route.pictureRoutes(server: LocalServer) {
     with(server) {
         // --- Pictures, through the relay (as app/main.py): drawn, the user's own, none
+        // The pictures the cards ask for: figures, free pictures; drawn by the image model only
+        // when asked ("draw": the user said yes), else listed in "to_draw"
         api("POST", "/api/lessons/{id}/pictures") {
-            switches.check("pictures.draw")
-            pictures.drawMissing(lesson())
+            val draw = runCatching { body()["draw"]?.jsonPrimitive?.booleanOrNull }.getOrNull() == true
+            if (draw) switches.check("pictures.draw")
+            pictures.drawMissing(lesson(), draw)
         }
-        // A card's picture drawn again: its subject (or figure), or the one the user wrote
+        // "✨ Image", its first step: a figure drawn, or a picture decided (the page then looks
+        // for free ones, and asks before one is drawn)
+        api("POST", "/api/lessons/{id}/cards/{card}/picture/make") {
+            val lesson = lesson()
+            val subject = body()["subject"]?.takeIf { it !is JsonNull }?.jsonPrimitive?.content
+            pictures.make(lesson, cardIndex(lesson), subject, languageName())
+        }
+        // The user said yes: drawn by the image model (it costs)
         api("POST", "/api/lessons/{id}/cards/{card}/picture/draw") {
             switches.check("pictures.draw")
             val lesson = lesson()
-            val subject = body()["subject"]?.takeIf { it !is JsonNull }?.jsonPrimitive?.content
-            pictures.redraw(lesson, cardIndex(lesson), subject, languageName())
+            pictures.draw(lesson, cardIndex(lesson))
         }
         // The user's own photo as the card's picture (the page made it card size)
         post("/api/lessons/{id}/cards/{card}/picture") {

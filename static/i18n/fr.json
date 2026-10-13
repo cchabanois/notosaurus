@@ -363,24 +363,34 @@
       "panel": "Image",
       "subject": "Ce que l'image doit montrer",
       "subjectPlaceholder": "Laisse vide : l'IA choisit d'après la carte. Ex. : deux ensembles qui se chevauchent",
-      "draw": "🎨 Dessiner",
-      "redraw": "🎨 Refaire",
       "photo": "📷 Ma photo",
       "remove": "✕ Pas d'image",
-      "cost": "Une image trouvée ou ta propre photo est gratuite ; un dessin coûte environ 3 à 7 ¢ US.",
+      "cost": "Un schéma ou une image libre coûte très peu ; un dessin par l'IA est toujours demandé avant (il coûte plus) ; ta photo est gratuite.",
       "figure": "La figure à dessiner (étiquettes comprises)",
       "figurePlaceholder": "ex. : un triangle rectangle en C, l'hypoténuse étiquetée « c »",
       "figureCost": "Une figure est dessinée par l'IA des cartes, pour moins d'un centime US ; ta propre photo est gratuite.",
       "onBack": "Au verso (avec la réponse)",
-      "search": "🔎 Chercher une image",
       "searching": "Recherche…",
       "found": "Images libres de droits ({sources}) : touche celle qui va.",
-      "none": "Aucune image libre trouvée : essaie d'autres mots (en anglais), ou dessine-la.",
+      "none": "Aucune image libre trouvée : essaie d'autres mots.",
       "sourceFound": "Source : {source} · {licence}",
       "sourceDrawn": "Dessinée par l'IA",
       "sourceDrawnBy": "Dessinée par l'IA ({model})",
       "sourcePhoto": "Ta photo",
-      "sourcePage": "voir la page"
+      "sourcePage": "voir la page",
+      "make": "✨ Image",
+      "change": "✨ Changer l'image",
+      "pick": "⭐ : le choix de l'IA. Touche l'image qui va.",
+      "drawAsk": "Aucune image libre ne convient pour « {subject} ». La faire dessiner par l'IA ?",
+      "drawYes": "🎨 Dessiner",
+      "drawNo": "Non",
+      "toDraw": {
+        "one": "{count} image n'a pas d'équivalent libre. La faire dessiner par l'IA ?",
+        "other": "{count} images n'ont pas d'équivalent libre. Les faire dessiner par l'IA ?"
+      },
+      "toDrawNo": "Non merci",
+      "costUsd": "Coût : environ {amount} $ US.",
+      "costCredits": "Coût : environ {count} crédits."
     },
     "pairing": {
       "title": "Appareil non autorisé"
@@ -847,7 +857,8 @@
       "quota": "{service} refuse : quota dépassé pour le modèle d'images (une clé gratuite ne permet pas les images). Choisis un modèle d'images d'un autre service dans les réglages.",
       "no_subject": "Écris d'abord ce qu'il faut dessiner.",
       "search_failed": "La recherche d'images n'a pas abouti : réessaie dans un moment.",
-      "not_found": "Cette image n'est plus disponible : choisis-en une autre."
+      "not_found": "Cette image n'est plus disponible : choisis-en une autre.",
+      "needs_drawing": "Aucune image libre ne convient : elle doit être dessinée par l'IA."
     },
     "card": {
       "not_found": "Cette carte n'existe plus : recharge la leçon."

@@ -1728,6 +1728,18 @@
             "title": "Latest",
             "description": "The latest version of the app (\"1.2.0\"); \"\" when not said.",
             "default": ""
+          },
+          "drawing_credits": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Drawing Credits",
+            "description": "About what a picture drawn by the image model costs, in credits (told to the user)."
           }
         },
         "type": "object",
@@ -1897,6 +1909,12 @@
             "type": "boolean",
             "title": "Find",
             "description": "A free picture looked for first, for a real thing.",
+            "default": true
+          },
+          "draw": {
+            "type": "boolean",
+            "title": "Draw",
+            "description": "A picture no free one fits drawn by the image model (it costs: the user said yes). False: 409 picture.needs_drawing instead, its params what was decided (description, search).",
             "default": true
           }
         },

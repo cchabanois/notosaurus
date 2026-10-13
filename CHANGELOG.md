@@ -9,6 +9,7 @@ Each pull request adds a line under **Unreleased**. See [Releasing](CONTRIBUTING
 
 ### Added
 
+- One **✨ Image** button on a card instead of **Find a picture** and **Draw**, the cheapest first: the AI decides; a figure is drawn (cheap); for a picture, free ones are looked for and sorted: one fits, it is the card's; several, you pick (⭐ the AI's choice); none, **you are asked before the AI draws one** (it costs: about 0.07 $, or its credits in the app). After a lesson is made, the pictures no free one fits are listed in a banner, drawn only if you say yes. For developers: `/v1/card-picture` takes `draw` (false: 409 `picture.needs_drawing`, with what was decided); `/v1/account` says `drawing_credits`.
 - **Automatic** recognises a dictation to prepare (a text or a list of words to learn to write, in any language): the lesson's cards are then dictation cards only, heard in the dictation's language, as with the **Dictation** prompt. For developers: `/v1/extract` answers `dictation`; the bench checks it (`tools/bench.py --prompt auto`, a lesson's expect.json `"dictation": true`).
 - **About**, in the settings (the computer's, and the Android app's own): Notosaurus is free software (AGPL-3.0, its code on GitHub, without any warranty), with links to the privacy policy and to the libraries' licences (the page's, and the Android app's, listed at its build). The Android app's build fails on a library whose licence wasn't reviewed (licensee).
 - A built-in **Gap dictation** prompt: only the hardest words of the dictation text to spell, one card per word, its sentence shown with the blank and heard. A dictation-only card now shows its front too (the sentence with its blank).
@@ -83,6 +84,7 @@ Each pull request adds a line under **Unreleased**. See [Releasing](CONTRIBUTING
 
 ### Fixed
 
+- In the coming Android app, a card's own photo is now made card size (512 px), as on the computer: it was kept at 1600 px, heavy for AnkiDroid and its sync.
 - The coming Android app's **Automatic** voice for an English lesson whose AI said just "en" was Australian (the first English voice by name): it is now British, as on the computer (Portuguese: European).
 - The coming Android app brings its note types in AnkiDroid up to date at the next send when the cards' look changed (their templates and style), as the computer does: before, a phone kept the look of its first send for good. The notes, their cards and reviews are kept.
 - A dictation's sound sometimes said words that weren't there, half in no known language: the natural voices make words up when given a lone word then a sentence in one text. The sentence and the word are now read separately, then joined; so is each line of a card's back.

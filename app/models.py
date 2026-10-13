@@ -161,6 +161,10 @@ class SettingsUpdate(BaseModel):
     picture_find: bool | None = None
 
 
+class DrawPictures(BaseModel):
+    draw: bool = False  # the pictures no free one fits drawn by the image model: the user said yes
+
+
 class PictureSearch(BaseModel):
     """Free pictures of what the user wrote (any language): stock.search."""
 

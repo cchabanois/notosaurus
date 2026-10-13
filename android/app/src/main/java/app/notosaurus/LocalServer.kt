@@ -61,6 +61,7 @@ class LocalServer(
     internal val scan: suspend () -> String? = { null }, // a QR code read by the camera (null: cancelled)
     internal val modeChanged: () -> Unit = {}, // the app's shortcuts follow
     internal val turnPhoto: (ByteArray, Int) -> ByteArray = { data, _ -> data }, // a JPEG turned clockwise (Photos.turn)
+    internal val cardSize: (ByteArray) -> ByteArray = { it }, // a picture as a card shows it (Photos.cardSize)
     recorder: Recorder? = null, // the microphone, for the page's 🎤 (none: no 🎤)
     internal val requestMicPermission: suspend () -> Boolean = { false }, // the microphone's permission dialog: granted?
     relayDirectory: String? = null, // where the relays are listed (RelayDirectory.URL); null: the built-in ones
@@ -72,7 +73,7 @@ class LocalServer(
     internal val texts = PageTexts(web, languages)
     internal val prompts = Prompts(File(dataDir, "prompts.json"), texts)
     internal val speech = Speech(File(dataDir, "audio").apply { mkdirs() }, prefs, ::relay) // the backs read aloud, kept
-    internal val pictures = Pictures(lessons, ::relay) { prefs[PICTURE_FIND] != "false" }
+    internal val pictures = Pictures(lessons, ::relay, cardSize) { prefs[PICTURE_FIND] != "false" }
     internal val generation = Generation(lessons, prefs, ::relay, speech, turnPhoto)
     internal val computer = Computer(prefs, modeChanged)
     internal val switches = Switches(prefs, version)
@@ -285,6 +286,7 @@ class LocalServer(
             scan = scan,
             modeChanged = modeChanged,
             turnPhoto = Photos::turn,
+            cardSize = Photos::cardSize,
             recorder = MicRecorder(context),
             requestMicPermission = requestMicPermission,
             relayDirectory = RelayDirectory.URL,

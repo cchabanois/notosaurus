@@ -5,6 +5,8 @@ import socket
 from fastapi import APIRouter, Request
 from fastapi.responses import JSONResponse, Response
 
+from notosaurus_core import pictures
+
 from .. import i18n, settings
 from ..access import is_local, paired
 from ..version import VERSION
@@ -38,6 +40,7 @@ def config() -> dict:
         "card_helps": s.card_helps,
         "configured": settings.configured(s),
         "computer_name": socket.gethostname(),  # the Android app names the computer it uses
+        "drawing_usd": pictures.drawing_usd(s),  # a picture drawn by the image model: told before
     }
 
 
