@@ -74,6 +74,14 @@ def model(s: AIConfig) -> str:
     return (s.picture_model.strip() or DEFAULT_MODELS[drawing]) if drawing else ""
 
 
+def drawing_usd(s: AIConfig) -> float | None:
+    """About what one picture drawn by the image model costs, in US dollars (the
+    recommended models' prices: told to the user before drawing); None when unknown."""
+    drawing, name = service(s), model(s)
+    found = next((m for m in recommended.PICTURES.get(drawing or "", []) if m.id == name), None)
+    return found.cents / 100 if found else None
+
+
 async def draw(s: AIConfig, subject: str) -> bytes:
     """One picture (PNG/JPEG bytes from the model), its cost recorded."""
     drawing, name = service(s), model(s)
@@ -265,12 +273,19 @@ async def picture(
 
 
 async def sourced_picture(
-    s: AIConfig, subject: str, fresh: bool = False, search: str = "", context: str = "", pixabay_key: str = ""
+    s: AIConfig,
+    subject: str,
+    fresh: bool = False,
+    search: str = "",
+    context: str = "",
+    pixabay_key: str = "",
+    draw_it: bool = True,
 ) -> tuple[bytes, PictureSource]:
     """The card-size picture of a subject, and where it comes from: from the cache, or
     found or drawn (then cached). `search`: what a free picture would show
     (Card.picture_search): one is looked for first (s.picture_find), the cards' AI
-    choosing it (`context`: the card, "front → back"); drawn when none fits. `fresh`: draw
+    choosing it (`context`: the card, "front → back"); drawn when none fits, if `draw_it`
+    (the image model costs: the user said yes), else picture.needs_drawing. `fresh`: draw
     it again (the user didn't like it); the new one replaces it in the cache."""
     if search.strip() and s.picture_find and not fresh:
         key = hashlib.sha1(f"found|{search.strip().lower()}".encode()).hexdigest()
@@ -286,6 +301,8 @@ async def sourced_picture(
     path = _cache_path(s, subject)
     if not fresh and path.is_file():
         return path.read_bytes(), drawn
+    if not draw_it:
+        raise AppError("picture.needs_drawing", 409)
     jpeg = card_size(await draw(s, subject))
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_bytes(jpeg)
@@ -306,6 +323,7 @@ async def card_picture(
     fresh: bool = False,
     find: bool = True,
     pixabay_key: str = "",
+    draw: bool = True,
 ) -> CardPicture:
     """A card's figure or picture: the one rule for the computer and the relay (the app).
 
@@ -314,8 +332,34 @@ async def card_picture(
     any language): the cards' AI decides an exact figure or an image model's picture and
     describes it (llm.plan_picture). A figure is drawn by the cards' AI; a picture is a
     free one found first for a real thing (s.picture_find and `find`), else the image
-    model's; from the cache unless `fresh` (then drawn again). `language`: the cards', its
-    English name."""
+    model's, if `draw` (it costs: the user said yes; else picture.needs_drawing); from the
+    cache unless `fresh` (then drawn again). `language`: the cards', its English name."""
+    card = await decided(s, card, asked, language)
+    if card.figure.strip():
+        svg = figures.clean(await llm.draw_figure(s, card.figure))
+        card.picture_source = PictureSource(source="drawn", model=s.model_for_provider())
+        return CardPicture(card, svg.encode(), "svg")
+    context = f"{card.front.strip()} → {card.back.strip()}"
+    search = card.picture_search if find else ""
+    try:
+        jpeg, card.picture_source = await sourced_picture(
+            s, card.picture_prompt, fresh, search, context, pixabay_key, draw_it=draw
+        )
+    except AppError as e:
+        if e.code != "picture.needs_drawing":
+            raise
+        # What was decided, for the client to look for free pictures itself or ask the user
+        raise AppError("picture.needs_drawing", 409, description=card.picture_prompt, search=card.picture_search) from e
+    return CardPicture(card, jpeg, "jpg")
+
+
+async def decided(s: AIConfig, card: Card, asked: str | None = None, language: str = "English") -> Card:
+    """What a card's picture should be, decided (card_picture's first step; the "✨ Image"
+    button's, before free pictures are looked for): its own description, unchanged (`asked`
+    None or the same); a figure's changed: that figure; otherwise (nothing yet, or a
+    picture's text changed, in any language) the cards' AI decides an exact figure or a
+    picture and describes it (llm.plan_picture). A copy of the card, its figure or its
+    picture_prompt and picture_search set."""
     card = card.model_copy()
     current = (card.figure or card.picture_prompt).strip()
     written = (asked or "").strip()
@@ -328,22 +372,22 @@ async def card_picture(
         figure = plan.kind == "figure"
         card.figure = plan.description if figure else ""
         card.picture_prompt, card.picture_search = ("", "") if figure else (plan.description, plan.search)
-    if card.figure.strip():
-        svg = figures.clean(await llm.draw_figure(s, card.figure))
-        card.picture_source = PictureSource(source="drawn", model=s.model_for_provider())
-        return CardPicture(card, svg.encode(), "svg")
-    context = f"{card.front.strip()} → {card.back.strip()}"
-    search = card.picture_search if find else ""
-    jpeg, card.picture_source = await sourced_picture(s, card.picture_prompt, fresh, search, context, pixabay_key)
-    return CardPicture(card, jpeg, "jpg")
+    return card
 
 
 async def figure_or_picture(
-    s: AIConfig, folder: Path, card: Card, fresh: bool = False, asked: str | None = None, language: str = "English"
+    s: AIConfig,
+    folder: Path,
+    card: Card,
+    fresh: bool = False,
+    asked: str | None = None,
+    language: str = "English",
+    draw: bool = True,
+    find: bool = True,
 ) -> str:
     """The card's figure or picture (card_picture), saved in the lesson, the card's picture
     fields updated in place (what it shows, where it comes from); returns its file name."""
-    made = await card_picture(s, card, asked, language, fresh)
+    made = await card_picture(s, card, asked, language, fresh, find, draw=draw)
     for field in ("figure", "picture_prompt", "picture_search", "picture_source"):
         setattr(card, field, getattr(made.card, field))
     if made.extension == "svg":
@@ -351,22 +395,33 @@ async def figure_or_picture(
     return save(folder, card, made.data)
 
 
-async def draw_all(s: AIConfig, folder: Path, cards: list[Card]) -> tuple[int, dict | None]:
-    """Draw the missing pictures (cards with a picture_prompt or a figure, and no picture),
-    a few at a time. Returns how many failed and why the first did (an error's detail, for
-    the page): a card without its picture is still a card."""
+class Drawn(NamedTuple):
+    failures: int  # how many failed
+    error: dict | None  # why the first did (an error's detail, for the page)
+    to_draw: list[str]  # the cards whose picture no free one fits: drawn only if the user says yes
+
+
+async def draw_all(s: AIConfig, folder: Path, cards: list[Card], draw: bool = False) -> Drawn:
+    """The missing pictures (cards with a picture_prompt or a figure, and no picture), a few
+    at a time: figures drawn, free pictures found; a picture none fits drawn by the image
+    model only if `draw` (it costs: the user said yes), else its card in to_draw. A card
+    without its picture is still a card."""
     # Not on a sentence with gaps: Anki shows no picture on it (not paid for, then)
     todo = [
         c for c in cards if (c.picture_prompt.strip() or c.figure.strip()) and not c.picture and not is_cloze(c.front)
     ]
     sem = asyncio.Semaphore(CONCURRENCY)
     failures: list[dict] = []
+    to_draw: list[str] = []
 
     async def one(card: Card) -> None:
         async with sem:
             try:
-                card.picture = await figure_or_picture(s, folder, card)
+                card.picture = await figure_or_picture(s, folder, card, draw=draw, find=not draw)
             except AppError as e:
+                if e.code == "picture.needs_drawing":
+                    to_draw.append(card.id)
+                    return
                 failures.append(e.detail())
                 log.warning("Picture not drawn: %s", loggable(e))  # never the subject: no lesson in logs
             except (OSError, ValueError) as e:  # not an image
@@ -374,7 +429,7 @@ async def draw_all(s: AIConfig, folder: Path, cards: list[Card]) -> tuple[int, d
                 log.warning("Picture not an image: %s", loggable(e))
 
     await asyncio.gather(*(one(c) for c in todo))
-    return len(failures), (failures[0] if failures else None)
+    return Drawn(len(failures), failures[0] if failures else None, to_draw)
 
 
 def prune(folder: Path, cards: list[Card]) -> None:

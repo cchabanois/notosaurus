@@ -73,6 +73,7 @@ data class Account(
     val notice: Notice? = null, // a message for every user, set on the relay
     val disabled: List<String> = emptyList(), // relay_api.FEATURES turned off for now
     val latest: String = "", // the app's latest version ("" not said)
+    @SerialName("drawing_credits") val drawingCredits: Int? = null, // about what a picture drawn by the AI costs
 )
 
 /** A message for every user of the app (relay_api.Notice): its text by language. */

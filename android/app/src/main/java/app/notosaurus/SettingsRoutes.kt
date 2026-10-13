@@ -41,6 +41,7 @@ internal fun Route.settingsRoutes(server: LocalServer) {
                 put("apkg", false) // the cards go to AnkiDroid: no .apkg to download
                 put("review_in_anki", true) // a lesson sent: reviewed in AnkiDroid from here
                 put("dictation", dictation != null) // the 🎤 of the instructions and the correction
+                put("drawing_credits", switches.drawingCredits()?.let(::JsonPrimitive) ?: JsonNull) // told before drawing
                 // The welcome (a parent's tool, Gemini, the privacy policy): until this version is accepted
                 put("welcome", WELCOME_VERSION)
                 put("welcome_accepted", (prefs[WELCOME]?.toIntOrNull() ?: 0) >= WELCOME_VERSION)

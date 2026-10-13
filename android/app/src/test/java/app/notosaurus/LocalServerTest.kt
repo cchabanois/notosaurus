@@ -195,6 +195,10 @@ class LocalServerTest {
         val asked = json.parseToJsonElement(request.body!!.utf8()).jsonObject
         val card = JsonObject(asked["card"]!!.jsonObject + decide(asked).mapValues { JsonPrimitive(it.value) })
         val figure = card.string("figure").isNotBlank()
+        if (!figure && asked["draw"]?.jsonPrimitive?.content == "false") { // as the core: no free one fits, not drawn
+            val params = buildJsonObject { put("description", card.string("picture_prompt")); put("search", card.string("picture_search")) }
+            return MockResponse.Builder().code(409).body(buildJsonObject { put("code", "picture.needs_drawing"); put("params", params) }.toString()).build()
+        }
         val data = if (figure) "<svg/>" else "jpeg $asked"
         return MockResponse.Builder().body(buildJsonObject {
             put("card", card)
@@ -697,8 +701,16 @@ class LocalServerTest {
                 else -> MockResponse.Builder().code(404).build()
             }
         }
-        val drawn = client.post("/api/lessons/$id/pictures") { page() }.json().jsonObject
+        // Not drawn without a yes: the picture listed, the figure (cheap) drawn
+        val asked = client.post("/api/lessons/$id/pictures") {
+            page(); contentType(ContentType.Application.Json); setBody("""{"draw": false}""")
+        }.json().jsonObject
+        assertEquals(listOf(apple), asked["to_draw"]!!.jsonArray.map { it.jsonPrimitive.content })
+        val drawn = client.post("/api/lessons/$id/pictures") {
+            page(); contentType(ContentType.Application.Json); setBody("""{"draw": true}""")
+        }.json().jsonObject
         assertEquals(0, drawn["failures"]!!.jsonPrimitive.int)
+        assertEquals(0, drawn["to_draw"]!!.jsonArray.size)
         val cards = drawn["lesson"]!!.jsonObject["cards"]!!.jsonArray.map { it.jsonObject }
         val (picture, figure) = cards.take(2).map { it.string("picture") }
         assertTrue(picture.matches(Regex("picture-$apple-[0-9a-f]{8}\\.jpg")))
@@ -709,10 +721,14 @@ class LocalServerTest {
         assertEquals("<svg/>", svg.bodyAsText())
         assertTrue(svg.headers["Content-Security-Policy"]!!.startsWith("default-src 'none'"))
 
-        // Drawn again with another subject: fresh, the old file gone
-        val again = client.post("/api/lessons/$id/cards/$apple/picture/draw") {
+        // "✨ Image" with another subject: decided (a picture: its words, nothing drawn), then drawn
+        // when the user says yes: fresh, the old file gone
+        val made = client.post("/api/lessons/$id/cards/$apple/picture/make") {
             page(); contentType(ContentType.Application.Json); setBody("""{"subject": "a red apple"}""")
-        }.json().jsonObject["card"]!!.jsonObject
+        }.json().jsonObject
+        assertEquals("a red apple", made["card"]!!.jsonObject.string("picture_prompt"))
+        assertEquals("a red apple", made.string("search"))
+        val again = client.post("/api/lessons/$id/cards/$apple/picture/draw") { page() }.json().jsonObject["card"]!!.jsonObject
         assertEquals("a red apple", again.string("picture_prompt"))
         assertTrue(client.get("/api/lessons/$id/pictures/${again.string("picture")}") { page() }.bodyAsText().contains("\"fresh\":true"))
         assertEquals(HttpStatusCode.NotFound, client.get("/api/lessons/$id/pictures/$picture") { page() }.status)
@@ -1477,7 +1493,7 @@ class LocalServerTest {
         }
         val id = lesson.string("id")
         val card = lesson["cards"]!!.jsonArray[0].jsonObject.string("id")
-        val drawn = client.post("/api/lessons/$id/cards/$card/picture/draw") {
+        val drawn = client.post("/api/lessons/$id/cards/$card/picture/make") {
             page("fr"); contentType(ContentType.Application.Json); setBody("""{"subject": ""}""")
         }.json().jsonObject["card"]!!.jsonObject
         assertEquals("Deux ensembles, leur réunion hachurée", drawn.string("figure"))
@@ -1487,6 +1503,7 @@ class LocalServerTest {
         assertEquals("French", made.string("language"))
         assertEquals("", made.string("asked"))
         assertEquals("true", made["fresh"]!!.jsonPrimitive.content)
+        assertEquals("false", made["draw"]!!.jsonPrimitive.content) // never the image model without a yes
 
         client.post("/api/pictures/search") {
             page(); contentType(ContentType.Application.Json); setBody("""{"subject": "la réunion", "context": "La réunion ? → A ∪ B"}""")

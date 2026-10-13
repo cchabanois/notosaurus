@@ -260,6 +260,7 @@ const lessonsPart = {
     this.typing = false;
     this.dictation = false;
     this.dictationOnly = false;
+    this.toDraw = [];
     this.saveState = "";
     this.lessonPrompt = "";
     this.lessonChoice = "";

@@ -181,6 +181,9 @@ document.addEventListener("alpine:init", () => {
     sending: false,
     drawing: false,              // the pictures the cards ask for are being drawn
     pictureJobs: 0,              // a card's picture being redrawn, uploaded or removed
+    toDraw: [],                  // the cards whose picture no free one fits: drawn if the user says yes
+    drawingUsd: null,            // about what a picture drawn by the image model costs: the computer's (US $)
+    drawingCredits: null,        // the app's (credits)
     katexReady: false,           // the formula previews can be drawn (KaTeX loaded)
     unpaired: false,             // this device has no token yet: it must scan the QR code
 
@@ -222,6 +225,8 @@ document.addEventListener("alpine:init", () => {
         this.apkg = config.apkg ?? true;
         this.reviewInAnki = config.review_in_anki ?? false;
         this.mic.available = config.dictation ?? false;
+        this.drawingUsd = config.drawing_usd ?? null;
+        this.drawingCredits = config.drawing_credits ?? null;
         // The app (its own service, Gemini): until its welcome is accepted, it shows first
         this.welcome.open = Boolean(config.welcome) && !config.welcome_accepted;
         const helps = storage("get", undefined, HELPS);

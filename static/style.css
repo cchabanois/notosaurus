@@ -985,6 +985,13 @@ html.sheet-open { overflow: hidden; overscroll-behavior: none; }
 .notice-bar { display: flex; align-items: center; gap: .75rem; margin: 0 0 1rem; padding: .75rem 1rem;
   border-radius: var(--radius-sm); background: var(--primary-soft); color: var(--text); }
 .notice-bar > span { flex: 1; }
+.notice-bar small { display: block; color: var(--muted); }
+.notice-bar.ask { flex-wrap: wrap; }
+.notice-bar.ask > span { flex-basis: 100%; }
+.found-pick { position: relative; }
+.found-best { position: absolute; top: .2rem; left: .2rem; font-size: 1rem; }
+.draw-ask { display: grid; gap: .4rem; margin-top: .6rem; padding: .6rem .8rem; border-radius: var(--radius-sm); background: var(--primary-soft); }
+.draw-ask p { margin: 0; }
 .notice-bar.warning { background: var(--danger-soft); }
 .setup-banner p { margin: 0; }
 .setup-waiting .spinner { width: 1.2rem; height: 1.2rem; margin: 0; border-width: 3px; }

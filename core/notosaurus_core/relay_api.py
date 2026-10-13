@@ -293,6 +293,11 @@ class CardPictureRequest(BaseModel):
     language: str = Language
     fresh: bool = Field(default=False, description="Draw it again rather than take it from the cache.")
     find: bool = Field(default=True, description="A free picture looked for first, for a real thing.")
+    draw: bool = Field(
+        default=True,
+        description="A picture no free one fits drawn by the image model (it costs: the user said yes). False: "
+        "409 picture.needs_drawing instead, its params what was decided (description, search).",
+    )
 
 
 class CardPictureResponse(BaseModel):
@@ -373,6 +378,9 @@ class Account(BaseModel):
         default_factory=list, description="FEATURES turned off for now: the app hides them and refuses them."
     )
     latest: str = Field(default="", description='The latest version of the app ("1.2.0"); "" when not said.')
+    drawing_credits: int | None = Field(
+        default=None, description="About what a picture drawn by the image model costs, in credits (told to the user)."
+    )
 
 
 class SubscribeRequest(BaseModel):

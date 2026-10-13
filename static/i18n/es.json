@@ -363,24 +363,34 @@
       "panel": "Imagen",
       "subject": "Lo que debe mostrar la imagen",
       "subjectPlaceholder": "Déjalo vacío: la IA decide según la tarjeta. Ej.: dos conjuntos que se cruzan",
-      "draw": "🎨 Dibujar",
-      "redraw": "🎨 Volver a dibujar",
       "photo": "📷 Mi foto",
       "remove": "✕ Sin imagen",
-      "cost": "Una imagen encontrada o tu propia foto es gratis; un dibujo cuesta unos 3 a 7 céntimos de dólar.",
+      "cost": "Un esquema o una imagen libre cuesta muy poco; un dibujo de la IA siempre se pregunta antes (cuesta más); tu foto es gratis.",
       "figure": "La figura que dibujar (rótulos incluidos)",
       "figurePlaceholder": "p. ej.: un triángulo rectángulo en C, con la hipotenusa llamada «c»",
       "figureCost": "La IA de las tarjetas dibuja la figura por menos de un céntimo de dólar; tu propia foto es gratis.",
       "onBack": "En el reverso (con la respuesta)",
-      "search": "🔎 Buscar una imagen",
       "searching": "Buscando…",
       "found": "Imágenes libres ({sources}): toca la que sirva.",
-      "none": "No se ha encontrado ninguna imagen libre: prueba con otras palabras (en inglés) o dibújala.",
+      "none": "No se encontró ninguna imagen libre: prueba con otras palabras.",
       "sourceFound": "Fuente: {source} · {licence}",
       "sourceDrawn": "Dibujada por la IA",
       "sourceDrawnBy": "Dibujada por la IA ({model})",
       "sourcePhoto": "Tu foto",
-      "sourcePage": "ver la página"
+      "sourcePage": "ver la página",
+      "make": "✨ Imagen",
+      "change": "✨ Cambiar la imagen",
+      "pick": "⭐: la elección de la IA. Toca la imagen que vaya.",
+      "drawAsk": "Ninguna imagen libre encaja con «{subject}». ¿Que la dibuje la IA?",
+      "drawYes": "🎨 Dibujar",
+      "drawNo": "No",
+      "toDraw": {
+        "one": "{count} imagen no tiene equivalente libre. ¿Que la dibuje la IA?",
+        "other": "{count} imágenes no tienen equivalente libre. ¿Que las dibuje la IA?"
+      },
+      "toDrawNo": "No, gracias",
+      "costUsd": "Coste: unos {amount} US$.",
+      "costCredits": "Coste: unos {count} créditos."
     },
     "pairing": {
       "title": "Dispositivo no autorizado"
@@ -847,7 +857,8 @@
       "quota": "{service} se niega: cuota superada para el modelo de imagen (una clave gratuita no puede dibujar). Elige en los ajustes un modelo de imagen de otro servicio.",
       "no_subject": "Escribe primero qué dibujar.",
       "search_failed": "La búsqueda de imágenes no ha funcionado: inténtalo de nuevo en un momento.",
-      "not_found": "Esta imagen ya no está disponible: elige otra."
+      "not_found": "Esta imagen ya no está disponible: elige otra.",
+      "needs_drawing": "Ninguna imagen libre encaja: tiene que dibujarla la IA."
     },
     "card": {
       "not_found": "Esta tarjeta ya no existe: vuelve a cargar la lección."

@@ -301,6 +301,14 @@
         <button class="icon-btn muted" @click="clearRevision()" :aria-label="$t('common.close')">✕</button>
       </div>
 
+      <!-- The pictures no free one fits, after a generation: drawn only if the user says yes (it costs) -->
+      <div class="notice-bar ask" x-cloak x-show="toDraw.length && !drawing && !readOnly()" role="status">
+        <span><span x-text="$t('app.pictures.toDraw', { count: toDraw.length })"></span>
+          <small x-show="drawingCost(toDraw.length)" x-text="drawingCost(toDraw.length)"></small></span>
+        <button type="button" class="btn primary" @click="drawPictures(true)" x-text="$t('app.pictures.drawYes')"></button>
+        <button type="button" class="btn soft" @click="toDraw = []" x-text="$t('app.pictures.toDrawNo')"></button>
+      </div>
+
       <!-- Just made quick: once more, carefully (a rich lesson: a figure, maths) -->
       <div class="careful-again" x-show="madeQuick && regeneratesInPlace() && !off('lesson.regenerate')">
         <small class="hint" x-text="$t('app.review.madeQuick')"></small>
@@ -443,7 +451,7 @@
               <label class="field">
                 <span x-text="card.figure ? $t('app.pictures.figure') : $t('app.pictures.subject')"></span>
                 <input x-model="card._subject" :placeholder="card.figure ? $t('app.pictures.figurePlaceholder') : $t('app.pictures.subjectPlaceholder')"
-                       @keydown.enter.prevent="redrawPicture(card)">
+                       @keydown.enter.prevent="makePicture(card)">
               </label>
               <label class="switch">
                 <input type="checkbox" x-model="card.picture_on_back">
@@ -451,11 +459,10 @@
                 <span x-text="$t('app.pictures.onBack')"></span>
               </label>
               <div class="picture-actions">
-                <button type="button" class="btn soft" x-show="!card.figure && !off('pictures.search')" @click="searchPictures(card)"
-                        :disabled="Boolean(card._drawing || card._searching)"
-                        x-text="card._searching ? $t('app.pictures.searching') : $t('app.pictures.search')"></button>
-                <button type="button" class="btn soft" x-show="!off('pictures.draw')" @click="redrawPicture(card)" :disabled="Boolean(card._drawing)"
-                        x-text="card.picture ? $t('app.pictures.redraw') : $t('app.pictures.draw')"></button>
+                <!-- One button, the cheapest first (makePicture): a figure, a free picture, else asked -->
+                <button type="button" class="btn soft" x-show="!(off('pictures.search') && off('pictures.draw'))"
+                        @click="makePicture(card)" :disabled="Boolean(card._drawing || card._searching)"
+                        x-text="card._searching ? $t('app.pictures.searching') : card.picture ? $t('app.pictures.change') : $t('app.pictures.make')"></button>
                 <label class="btn soft" :class="{ disabled: card._drawing }">
                   <span x-text="$t('app.pictures.photo')"></span>
                   <input type="file" accept="image/*" hidden :disabled="Boolean(card._drawing)" @change="uploadPicture(card, $event)">
@@ -467,17 +474,29 @@
               <template x-if="card._found">
                 <div class="found">
                   <p class="hint" x-show="!card._found.length && !card._searching" x-text="$t('app.pictures.none')"></p>
+                  <p class="hint" x-show="card._found.length > 1 && !card._searching" x-text="$t('app.pictures.pick')"></p>
                   <div class="found-grid" x-show="card._found.length">
-                    <template x-for="f in card._found" :key="f.source + f.id">
+                    <template x-for="(f, i) in card._found" :key="f.source + f.id">
                       <button type="button" class="found-pick" @click="chooseFound(card, f)" :disabled="Boolean(card._drawing)"
                               :title="f.title + ' · ' + f.licence" :aria-label="f.title + ' · ' + f.licence">
                         <img :src="f.preview" alt="">
+                        <span class="found-best" x-show="i === 0 && !card._searching && card._found.length > 1" aria-hidden="true">⭐</span>
                       </button>
                     </template>
                   </div>
                   <small class="muted" x-show="card._found.length" x-text="$t('app.pictures.found', { sources: foundSources(card) })"></small>
                 </div>
               </template>
+              <!-- No free picture fits: drawn by the image model only if the user says yes (it costs) -->
+              <div class="draw-ask" x-show="card._ask">
+                <p x-text="$t('app.pictures.drawAsk', { subject: card.picture_prompt })"></p>
+                <small class="muted" x-show="drawingCost()" x-text="drawingCost()"></small>
+                <div class="picture-actions">
+                  <button type="button" class="btn primary" @click="drawPicture(card)" :disabled="Boolean(card._drawing)"
+                          x-text="$t('app.pictures.drawYes')"></button>
+                  <button type="button" class="btn soft" @click="card._ask = false" x-text="$t('app.pictures.drawNo')"></button>
+                </div>
+              </div>
               <small class="muted" x-text="card.figure ? $t('app.pictures.figureCost') : $t('app.pictures.cost')"></small>
             </div>
           </article>

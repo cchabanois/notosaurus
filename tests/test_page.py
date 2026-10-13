@@ -1120,7 +1120,8 @@ def test_tidy_up_the_instructions(page):
 
 
 def test_find_a_free_picture(page):
-    """🖼️ → “🔎 Find a picture”: the free pictures found, one tapped becomes the card's."""
+    """🖼️ → “✨ Image”: the AI decides a picture, the free pictures that fit are offered (its
+    choice first, ⭐), one tapped becomes the card's."""
     previews = []
     for colour in ("#c0392b", "#2e86de", "#27ae60", "#f39c12", "#8e44ad", "#16a085"):
         previews.append("data:image/jpeg;base64," + base64.b64encode(plain_image(120, 90, colour)).decode())
@@ -1146,10 +1147,12 @@ def test_find_a_free_picture(page):
     page.route("**/picture/found", found)
     generate_free(page, FRONT_PROMPT)
     first = page.locator(".flash").first
-    first.get_by_role("button", name="Image").click()
-    first.get_by_role("button", name="🔎 Chercher une image").click()
+    first.get_by_role("button", name="Image", exact=True).click()
+    first.get_by_role("button", name="✨ Image").click()
     picks = first.locator(".found-pick")
     sync_api.expect(picks).to_have_count(6)
+    sync_api.expect(picks.first.locator(".found-best")).to_be_visible()  # the AI's choice
+    sync_api.expect(picks.nth(1).locator(".found-best")).to_be_hidden()
     sync_api.expect(
         first.get_by_text("Images libres de droits (Wikimedia Commons, Openverse) : touche celle qui va.")
     ).to_be_visible()

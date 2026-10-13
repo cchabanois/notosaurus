@@ -282,25 +282,54 @@ const cardsPart = {
       card.picture_prompt = res.card.picture_prompt;
       card.picture_search = res.card.picture_search ?? "";
       card.figure = res.card.figure;
-      if (!card.picture) card._panel = false;
+      return res;
     } catch (e) {
       this.error = e.message;
+      return null;
     } finally {
       card._drawing = false;
       this.pictureJobs--;
     }
   },
 
-  // "🎨 Draw": what was written (any language), or the card itself when nothing was; the
-  // field then shows the description the AI wrote (a figure's, or the picture's)
-  async redrawPicture(card) {
-    await this.pictureAction(card, {
-      path: "/draw",
+  // "✨ Image", the cheapest first: the AI decides from what was written (any language; none:
+  // the card); a figure is drawn (cheap). A picture: free ones looked for, sorted by the AI;
+  // one fits, it is the card's; several, the user picks (the AI's choice first); none, the
+  // user is asked before the image model draws one (it costs)
+  async makePicture(card) {
+    card._found = null;
+    card._ask = false;
+    const had = card.picture_source?.page ?? "";  // "Change": not the one it has
+    const res = await this.pictureAction(card, {
+      path: "/make",
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ subject: card._subject ?? null }),
     });
-    if (card.picture) card._subject = card.figure || card.picture_prompt;
+    if (!res) return;
+    card._subject = card.figure || card.picture_prompt;
+    if (!res.search) return;  // a figure: drawn
+    if (!this.off("pictures.search")) await this.searchPictures(card, res.search);
+    const found = (card._found ?? []).filter((f) => !had || f.page !== had);
+    if (found.length === 1) return this.chooseFound(card, found[0]);
+    card._found = found.length ? found : null;
+    if (!found.length) {
+      if (this.off("pictures.draw")) this.error = t("app.pictures.none");
+      else card._ask = true;
+    }
+  },
+
+  // The user said yes: drawn by the image model (a figure: drawn again)
+  async drawPicture(card) {
+    card._ask = false;
+    await this.pictureAction(card, { path: "/draw", method: "POST" });
+  },
+
+  // What a picture drawn by the image model costs, about (for `count` of them): "" when unknown
+  drawingCost(count = 1) {
+    if (this.drawingCredits) return t("app.pictures.costCredits", { count: this.drawingCredits * count });
+    if (this.drawingUsd) return t("app.pictures.costUsd", { amount: (this.drawingUsd * count).toFixed(2) });
+    return "";
   },
 
   async uploadPicture(card, event) {
@@ -312,13 +341,12 @@ const cardsPart = {
     return this.pictureAction(card, { method: "POST", body });
   },
 
-  // "🔎 Find a picture": free pictures of the subject to choose from (previews come as data)
-  async searchPictures(card) {
+  // Free pictures of the card's picture (its description, its search words: makePicture),
+  // sorted by the AI, each source's as it answers (previews come as data)
+  async searchPictures(card, words = "") {
     if (card._searching) return;
     const context = `${(card.front ?? "").trim()} → ${(card.back ?? "").trim()}`;
-    const subject = (card._subject?.trim() || context).slice(0, 200);  // nothing written: the card itself
-    // Its own picture's description: the search words already chosen with it
-    const words = subject === (card.picture_prompt ?? "").trim() ? (card.picture_search ?? "") : "";
+    const subject = (card.picture_prompt?.trim() || card._subject?.trim() || context).slice(0, 200);
     card._searching = true;
     card._found = [];  // each source's, as it answers
     this.error = "";
@@ -373,13 +401,20 @@ const cardsPart = {
     return this.pictureAction(card, { method: "DELETE" });
   },
 
-  async drawPictures() {
+  // The pictures the cards ask for: figures drawn, free pictures found; those none fits are
+  // drawn by the image model only when the user says yes (`draw`: the banner's "Draw them")
+  async drawPictures(draw = false) {
     if (this.readOnly() || !this.cards.some((c) => (c.picture_prompt || c.figure) && !c.picture)) return;
     if (this.saveTimer) await this.saveNow();
     this.drawing = true;
+    this.toDraw = [];
     const lessonId = this.lessonId;
     try {
-      const res = await (await api(`/api/lessons/${lessonId}/pictures`, { method: "POST" })).json();
+      const res = await (await api(`/api/lessons/${lessonId}/pictures`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ draw }),
+      })).json();
       if (this.lessonId !== lessonId) return;  // another lesson opened meanwhile
       // With where each comes from: the next save would drop it otherwise
       const drawn = new Map(res.lesson.cards.map((c) => [c.id, c]));
@@ -387,6 +422,7 @@ const cardsPart = {
         const made = drawn.get(c.id);
         if (!c.picture && made?.picture) Object.assign(c, { picture: made.picture, picture_source: made.picture_source ?? null });
       });
+      this.toDraw = res.to_draw ?? [];
       if (res.failures) {
         this.error = t("app.pictures.failed", { count: res.failures }) + (res.error ? ` ${errorMessage(res.error)}` : "");
       }

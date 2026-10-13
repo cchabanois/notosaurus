@@ -348,6 +348,6 @@ def test_a_drawing_that_is_no_image(monkeypatch, tmp_path):
         Card(front="Q", back="a dog", picture_prompt="a dog", id="d"),
         Card(front="Q", back="a cat", picture_prompt="a cat", id="c"),
     ]
-    failed, first = run(pictures.draw_all(AIConfig(picture_find=False), tmp_path / "images", cards))
+    failed, first, _ = run(pictures.draw_all(AIConfig(picture_find=False), tmp_path / "images", cards, draw=True))
     assert (failed, first) == (1, {"code": "picture.empty", "params": {}})
     assert [bool(c.picture) for c in cards] == [False, True]
