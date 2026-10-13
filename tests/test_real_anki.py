@@ -236,7 +236,7 @@ def test_picture_lesson_on_a_real_collection(bridged, col, monkeypatch):
     monkeypatch.setattr(pictures, "draw", draw)
     client, _ = bridged
     lesson = client.post("/api/extract", data={"prompt": "recto : image du mot"}).json()
-    cards = client.post(f"/api/lessons/{lesson['id']}/pictures").json()["lesson"]["cards"]
+    cards = client.post(f"/api/lessons/{lesson['id']}/pictures", json={"draw": True}).json()["lesson"]["cards"]
     body = {"deck": "Anglais", "cards": cards, "lesson_id": lesson["id"]}
     assert client.post("/api/anki/send", json=body).json()["added"] == 4
 
@@ -428,7 +428,7 @@ def test_a_corrected_front_on_a_real_collection(bridged, col):
 def test_figure_lesson_on_a_real_collection(bridged, col):
     client, _ = bridged
     lesson = client.post("/api/extract", data={"prompt": "Le triangle rectangle (géométrie)"}).json()
-    cards = client.post(f"/api/lessons/{lesson['id']}/pictures").json()["lesson"]["cards"]
+    cards = client.post(f"/api/lessons/{lesson['id']}/pictures", json={"draw": True}).json()["lesson"]["cards"]
     body = {"deck": lesson["deck"], "cards": cards, "lesson_id": lesson["id"]}
     assert client.post("/api/anki/send", json=body).json()["added"] == 3
     svg = Path(col.media.dir()) / cards[0]["picture"]
