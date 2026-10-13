@@ -107,6 +107,7 @@ come in as parameters), so that other programs can use it. A test keeps it that 
 | `anki_addon/` | the Anki add-on: server launcher and an AnkiConnect-compatible bridge |
 | `tools/build_addon.py` | builds `dist/notosaurus-<version>.ankiaddon` |
 | `tools/relay_openapi.py` | writes `core/relay-api-v1.json` from `relay_api.py` (run it after changing them; a test checks) |
+| `tools/bench.py` | the bench of real lessons: each made again by the test relay's AI, its Anki package built and checked (note types, voice and its side, masks, the lesson's `expect.json`); the lessons are private (`notes/bench/lessons`, never committed). Run it before changing a prompt, a rule or a model (~0.50 $ for 22 lessons; `--reuse` checks again for free) |
 | `tools/changelog_section.py` | release notes of a version, from `CHANGELOG.md` |
 | `tools/make_icons.py` | the logo images and the icons (home screen, browser), from `assets/notosaurus-logo.png` |
 
