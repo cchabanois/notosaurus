@@ -42,6 +42,21 @@ const childrenPart = {
     return parts.slice(n);
   },
 
+  // The decks offered for the deck name: the chosen child's and those of no child, never
+  // another child's (as children.decks_for_ai); no child chosen: all
+  decksForChild(decks) {
+    const child = this.currentChild();
+    if (!child) return decks;
+    const mine = childLevels(child);
+    const every = new Set(this.children.flatMap((c) => [...childLevels(c)]));
+    return decks.filter((deck) => {
+      const parts = deck.split("::").map((p) => p.trim()).filter(Boolean);
+      let n = 0;
+      while (n < parts.length && every.has(sameLevel(parts[n]))) n++;
+      return parts.slice(0, n).every((p) => mine.has(sameLevel(p)));
+    });
+  },
+
   // The sheet opens on the choice (a row each, tapped: chosen); a child's card edited on
   // its own (editing: its place in the list); none yet: a new one's card at once
   openChildren() {
@@ -133,6 +148,17 @@ const childrenPart = {
     }
   },
 };
+
+// A child's own deck levels: its first name, its decks' levels (its class put in)
+function childLevels(child) {
+  const decks = (child.decks ?? "").replace(/\{[^}]+\}/g, child.grade ?? "");
+  return new Set([child.name, ...decks.split("::")].map(sameLevel).filter(Boolean));
+}
+
+// A deck level as compared: no case, no accents, an ordinal's ending dropped ("5ème", "5e")
+function sameLevel(level) {
+  return fold(level.trim()).replace(/^(\d+)\s*(e|eme|er|ere|re|de|nd|nde|st|rd|th|o|a|º|ª)$/, "$1");
+}
 
 // A child's id from its first name: letters and digits ("Léa" → "lea")
 function childSlug(name) {

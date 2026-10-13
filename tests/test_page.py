@@ -869,6 +869,25 @@ def test_a_card_and_its_explanation_reported_in_the_app(page):
     assert sent[1]["kind"] == "explanation" and sent[1]["reason"] == "offensive"
 
 
+def test_the_decks_offered_are_the_chosen_childs_and_no_ones(page):
+    jules = {"id": "jules", "name": "Jules", "grade": "5e", "decks": "Jules::5e"}
+    mathilde = {"id": "mathilde", "name": "Mathilde", "grade": "3e", "decks": "Mathilde"}
+    page.request.put("/api/children", data=[jules, mathilde])
+    decks = ["Jules::5ème::Anglais", "Mathilde::SVT", "Maths::Fractions", "Jules"]
+    page.route("**/api/decks", lambda route: route.fulfill(json=decks))
+    generate_free(page, FRONT_PROMPT)
+    page.locator("input[list=decks]").focus()
+
+    def offered():
+        return page.locator("#decks option").evaluate_all("options => options.map((o) => o.value)")
+
+    sync_api.expect(page.locator("#decks option")).not_to_have_count(0)
+    assert offered() == ["Jules::5ème::Anglais", "Maths::Fractions", "Jules"]  # Jules is chosen first
+    page.evaluate("document.querySelector('[x-data]')._x_dataStack[0].chooseChild('mathilde')")
+    sync_api.expect(page.locator("#decks option")).to_have_count(2)
+    assert offered() == ["Mathilde::SVT", "Maths::Fractions"]
+
+
 def test_helps_switch_default_from_the_settings(page):
     page.goto("/")
     switch = page.locator(".switch.helps input")

@@ -261,7 +261,7 @@
       </label>
       <p class="hint ai-choice" x-show="lessonChoice" x-text="$t('app.review.choice', { choice: lessonChoice })"></p>
       <datalist id="decks">
-        <template x-for="d in decks" :key="d"><option :value="d"></option></template>
+        <template x-for="d in decksForChild(decks)" :key="d"><option :value="d"></option></template>
       </datalist>
       <!-- The prompt this lesson was generated with (read-only; the prompt area above holds it too) -->
       <details class="lesson-prompt" x-show="lessonPrompt">
