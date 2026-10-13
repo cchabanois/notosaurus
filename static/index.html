@@ -876,7 +876,7 @@
           </div>
           <label class="field">
             <span x-text="$t('app.children.instructions')"></span>
-            <textarea x-model="c.instructions" rows="2" maxlength="4000" :placeholder="$t('app.children.instructionsPlaceholder')"></textarea>
+            <textarea x-model="c.instructions" rows="2" maxlength="4000" :placeholder="instructionsExample(c)"></textarea>
           </label>
         </div>
       </template>

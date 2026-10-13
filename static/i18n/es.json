@@ -433,11 +433,17 @@
       "decksPlaceholder": "p. ej. Jules::{curso} (vacío: como siempre)",
       "classToken": "{curso}",
       "instructions": "Instrucciones para la IA (sin su nombre)",
-      "instructionsPlaceholder": "p. ej. confunde la b y la d; pocas tarjetas a la vez.",
       "add": "+ Añadir un hijo",
       "save": "Guardar",
       "allLessons": "Las lecciones de todos los hijos",
-      "lessonsOf": "Las lecciones de {name}"
+      "lessonsOf": "Las lecciones de {name}",
+      "gradeBands": "6|10",
+      "examples": {
+        "none": "p. ej. pocas tarjetas a la vez; insiste en lo que confunde.",
+        "primary": "p. ej. aún lee despacio: frases cortas, 8 tarjetas como máximo.",
+        "middle": "p. ej. prepara un examen: insiste en fechas y definiciones.",
+        "high": "p. ej. prepara la selectividad: fórmulas exactas, demostraciones paso a paso."
+      }
     }
   },
   "admin": {

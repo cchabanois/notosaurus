@@ -665,3 +665,14 @@ test("children: the one chosen kept on this device, the lessons filtered, its de
   assert.deepEqual(plain(sent[0].map((k) => k.id)), ["jules", "mathilde", "lea"]);
   assert.equal(c.children.length, 3);
 });
+
+
+test("children: the instructions' example fits the class", async () => {
+  const page = await loadScripts("app.js", { languages: ["fr-FR"] });
+  const c = page.component();
+  const example = (grade) => c.instructionsExample({ grade });
+  assert.match(example("CE1"), /lit encore lentement/);
+  assert.match(example("5e"), /contrôle/);
+  assert.match(example("Terminale"), /bac/);
+  assert.match(example(""), /peu de cartes/);
+});

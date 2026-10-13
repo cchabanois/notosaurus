@@ -433,11 +433,17 @@
       "decksPlaceholder": "e.g. Jules::{class} (empty: as usual)",
       "classToken": "{class}",
       "instructions": "Instructions for the AI (without their first name)",
-      "instructionsPlaceholder": "e.g. mixes up b and d; few cards at a time.",
       "add": "+ Add a child",
       "save": "Save",
       "allLessons": "Every child's lessons",
-      "lessonsOf": "{name}'s lessons"
+      "lessonsOf": "{name}'s lessons",
+      "gradeBands": "6|9",
+      "examples": {
+        "none": "e.g. few cards at a time; stress what they mix up.",
+        "primary": "e.g. still reads slowly: short sentences, 8 cards at most.",
+        "middle": "e.g. revising for a test: stress dates and definitions.",
+        "high": "e.g. preparing for exams: exact formulas, proofs step by step."
+      }
     }
   },
   "admin": {

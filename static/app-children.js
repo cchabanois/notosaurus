@@ -54,6 +54,16 @@ const childrenPart = {
     this.childrenSheet.list.splice(i, 1);
   },
 
+  // The instructions' example, for its class: primary, middle or high school (the language's
+  // grades list, cut where gradeBands says), else a general one
+  instructionsExample(child) {
+    const grades = t("app.children.grades").split("|");
+    const i = grades.indexOf(child.grade);
+    if (i < 0) return t("app.children.examples.none");
+    const [middle, high] = t("app.children.gradeBands").split("|").map(Number);
+    return t(`app.children.examples.${i < middle ? "primary" : i < high ? "middle" : "high"}`);
+  },
+
   // The decks' suggestions: its first name, or its first name and its class (updated each year)
   suggestDecks(child, withClass) {
     const name = child.name.trim();
