@@ -118,6 +118,7 @@ class Extracted(BaseModel):
     frames: list[Frame]  # diagram frames, as fractions of the photos (not turned yet)
     back_language: str = ""  # "es-ES": for a prompt whose voice is "auto"
     choice: str = ""  # what the AI chose to make (prompt "Automatic")
+    dictation: bool = False  # it chose a dictation (prompt "Automatic"): the lesson's cards dictation cards alone
 
 
 async def extract_cards(
@@ -162,6 +163,7 @@ async def extract_cards(
         frames=diagrams.frames(result.frames, sizes, fmt),
         back_language=result.back_language.strip(),
         choice=result.choice.strip(),
+        dictation=result.dictation and bool(result.choice.strip()),  # only when it could choose
     )
 
 

@@ -8,9 +8,9 @@ STATIC = Path(__file__).resolve().parent.parent / "static"
 
 
 def test_the_pages_libraries_as_vendor_ships_them():
-    script = (STATIC / "licences.js").read_text()
+    script = (STATIC / "licences.js").read_text(encoding="utf-8")
     listed = re.findall(r'version: "([^"]+)", licence: "([^"]+)", file: "([^"]+)"', script)
-    readme = (STATIC / "vendor/README.md").read_text()
+    readme = (STATIC / "vendor/README.md").read_text(encoding="utf-8")
     shipped = {
         folder: (version, licence)
         for folder, version, licence in re.findall(r"\| `(\w+)/` \|[^|]*\| `[^`]*@([\d.]+)`[^|]*\| (\S+) \|", readme)

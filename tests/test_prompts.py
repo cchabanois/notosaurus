@@ -181,3 +181,32 @@ def test_a_dictation_in_the_pupils_own_language_has_their_voice():
     assert _learned("fr-FR", "fr", spelling=True) == "fr-FR"
     assert _learned("fr-FR", "fr", spelling=False) == ""  # not a dictation: no voice
     assert _learned("", "fr", spelling=False) == ""
+
+
+def test_a_dictation_the_ai_recognised_makes_dictation_cards_alone(client, monkeypatch):
+    """Automatic: the AI says the page is a dictation to prepare; the lesson's cards are
+    then dictation cards alone, heard in the pupil's own language."""
+    from app.routes import generation
+    from notosaurus_core.llm import Extracted
+    from notosaurus_core.models import Card, Deck
+
+    async def extract(*_, **__):
+        cards = [Card(front="Le chat boit du …", back="lait")]
+        return Extracted(
+            deck=Deck(deck="Français::Dictée", cards=cards), turns=[], frames=[], choice="Une dictée.", dictation=True
+        )
+
+    monkeypatch.setattr(generation, "extract_cards", extract)
+    page = {"X-Notosaurus-Lang": "fr"}
+    lesson = client.post("/api/extract", data={"prompt": "Automatique", "voice": "auto"}, headers=page).json()
+    assert lesson["dictation"] is True and lesson["dictation_only"] is True
+    assert lesson["voice"].startswith("fr-")  # the pupil's own language: its dictation's voice
+
+
+def test_the_automatic_prompt_knows_a_dictation():
+    import json
+    from pathlib import Path
+
+    for lang in Path(__file__).resolve().parent.parent.joinpath("static/i18n").glob("*.json"):
+        auto = json.loads(lang.read_text(encoding="utf-8"))["builtinPrompts"]["auto"]["text"]
+        assert auto.count("\n- ") >= 7, lang.name  # its cases, a dictation to prepare among them

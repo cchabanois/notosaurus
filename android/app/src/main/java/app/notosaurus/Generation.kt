@@ -9,6 +9,7 @@ import kotlinx.serialization.json.JsonArray
 import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
+import kotlinx.serialization.json.booleanOrNull
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.jsonArray
 import kotlinx.serialization.json.jsonObject
@@ -55,9 +56,11 @@ class Generation(
             if (existing.isNotEmpty()) put("existing", JsonArray(existing.map(::JsonPrimitive)))
         }
         val found = cancellable(fields["job"]) { relay().extract(request, form.images, onCard) }
+        // A dictation the AI recognised (prompt "Automatic"): its cards dictation cards alone
+        val dictationOnly = form.on("dictation_only") || found["dictation"]?.jsonPrimitive?.booleanOrNull == true
         val voice = fields["voice"].orEmpty().let {
             if (!it.equals("auto", ignoreCase = true)) it
-            else speech.voiceFor(Speech.learned(found.string("back_language"), form.lang, form.on("typing") || form.on("dictation") || form.on("dictation_only")))
+            else speech.voiceFor(Speech.learned(found.string("back_language"), form.lang, form.on("typing") || form.on("dictation") || dictationOnly))
         }
         // Photos taken sideways saved upright: their masks and frames turn with them
         val turns = found["turns"]?.jsonArray?.map { it.jsonPrimitive.content.toInt() }.orEmpty()
@@ -76,8 +79,8 @@ class Generation(
             "prompt" to JsonPrimitive(fields["prompt"] ?: ""),
             "voice" to JsonPrimitive(voice),
             "typing" to JsonPrimitive(form.on("typing")),
-            "dictation" to JsonPrimitive(form.on("dictation") || form.on("dictation_only")),
-            "dictation_only" to JsonPrimitive(form.on("dictation_only")),
+            "dictation" to JsonPrimitive(form.on("dictation") || dictationOnly),
+            "dictation_only" to JsonPrimitive(dictationOnly),
             "choice" to (found["choice"] ?: JsonPrimitive("")),
             "page_texts" to texts,
             "frames" to JsonArray(frames), // each diagram's frame: what AnkiDroid shows

@@ -978,6 +978,16 @@ class LocalServerTest {
             append("voice", "auto")
         }) { page("fr") }.json().jsonObject
         assertEquals("en-GB-Chirp3-HD-Aoede", english.string("voice"))
+
+        // Automatic, the AI recognising a dictation to prepare: dictation cards alone, the pupil's voice
+        relayAnswers("""{"deck": {"deck": "Français::Dictée", "cards": [{"front": "Le … boit", "back": "chat"}]}, "turns": [], "back_language": "", "choice": "Une dictée.", "dictation": true, "usage": {"credits": 1, "credits_left": 95}}""")
+        val recognised = client.submitFormWithBinaryData("/api/extract", formData {
+            append("prompt", "Automatique")
+            append("voice", "auto")
+        }) { page("fr") }.json().jsonObject
+        assertEquals("fr-FR-Chirp3-HD-Aoede", recognised.string("voice"))
+        assertEquals("true", recognised["dictation_only"].toString())
+        assertEquals("true", recognised["dictation"].toString())
     }
 
     private suspend fun HttpClient.send(lesson: JsonObject) = post("/api/anki/send") {

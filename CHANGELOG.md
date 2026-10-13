@@ -9,6 +9,7 @@ Each pull request adds a line under **Unreleased**. See [Releasing](CONTRIBUTING
 
 ### Added
 
+- **Automatic** recognises a dictation to prepare (a text or a list of words to learn to write, in any language): the lesson's cards are then dictation cards only, heard in the dictation's language, as with the **Dictation** prompt. For developers: `/v1/extract` answers `dictation`; the bench checks it (`tools/bench.py --prompt auto`, a lesson's expect.json `"dictation": true`).
 - **About**, in the settings (the computer's, and the Android app's own): Notosaurus is free software (AGPL-3.0, its code on GitHub, without any warranty), with links to the privacy policy and to the libraries' licences (the page's, and the Android app's, listed at its build). The Android app's build fails on a library whose licence wasn't reviewed (licensee).
 - A built-in **Gap dictation** prompt: only the hardest words of the dictation text to spell, one card per word, its sentence shown with the blank and heard. A dictation-only card now shows its front too (the sentence with its blank).
 - A built-in **Dictation** prompt: dictation cards only, heard then typed: the words to learn to spell (the word, a sentence with it, the word again) and the week's dictation text, sentence by sentence. A lesson's new **Dictation only** option (also in a prompt of your own) makes the dictation card alone, without the front → back card. The former **Word dictation** is now **Fill in the word**, without dictation cards.
