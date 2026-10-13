@@ -635,6 +635,14 @@
         "best": "the best average",
         "slower": "slower"
       }
+    },
+    "about": {
+      "title": "About",
+      "free": "Notosaurus is free software: its code is public, anyone can read it, check it and improve it. It is released under the AGPL‑3.0 licence, without any warranty.",
+      "source": "Source code (GitHub)",
+      "licence": "AGPL‑3.0 licence",
+      "privacy": "Privacy policy",
+      "libraries": "Licences of the libraries used"
     }
   },
   "android": {
@@ -1030,5 +1038,11 @@
       "dictation": true,
       "dictation_only": true
     }
+  },
+  "licences": {
+    "title": "Libraries' licences",
+    "intro": "Notosaurus uses these libraries, each under its own licence.",
+    "page": "In the page",
+    "android": "In the Android app"
   }
 }
