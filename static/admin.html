@@ -405,6 +405,18 @@
     </template>
 
     <!-- Language: automatic (Anki's or the browser's) or picked here, for this device -->
+    <!-- Free software: its code, its licence, its libraries' (no password: nothing private) -->
+    <section class="panel about" x-data="{ app: false }" x-init="app = Boolean((await (await fetch('/api/config')).json()).welcome)">
+      <h2>ℹ️ <span x-text="$t('admin.about.title')"></span></h2>
+      <p x-text="$t('admin.about.free')"></p>
+      <ul class="about-links">
+        <li><a href="https://github.com/cchabanois/notosaurus" target="_blank" rel="noopener" x-text="$t('admin.about.source')"></a></li>
+        <li><a href="https://www.gnu.org/licenses/agpl-3.0.html" target="_blank" rel="noopener" x-text="$t('admin.about.licence')"></a></li>
+        <li><a :href="$docs(app ? 'app-privacy' : 'privacy')" target="_blank" rel="noopener" x-text="$t('admin.about.privacy')"></a></li>
+        <li><a href="licences.html" x-text="$t('admin.about.libraries')"></a></li>
+      </ul>
+    </section>
+
     <footer class="page-footer">
       <a class="docs-link" :href="$docs('')" target="_blank" rel="noopener">📖 <span x-text="$t('common.help')"></span></a>
       <a class="support-link" href="https://ko-fi.com/notosaurus" target="_blank" rel="noopener">☕ <span x-text="$t('common.support')"></span></a>
@@ -422,6 +434,7 @@
       <span class="version" x-data="{ version: '' }" x-text="version && 'Notosaurus ' + version"
             x-init="version = (await (await fetch('/api/config')).json()).version"></span>
     </footer>
+
   </main>
 
 </div>

@@ -980,6 +980,8 @@ html.sheet-open { overflow: hidden; overscroll-behavior: none; }
 .setup-done img { display: block; margin: 0 auto .5rem; }
 .setup-done .setup-nav { justify-content: center; }
 .setup-banner { display: grid; gap: .5rem; border-color: var(--primary); }
+.about-links, .licences { margin: .5rem 0 0; padding-left: 1.2rem; display: grid; gap: .35rem; }
+.licences li { overflow-wrap: anywhere; }
 .notice-bar { display: flex; align-items: center; gap: .75rem; margin: 0 0 1rem; padding: .75rem 1rem;
   border-radius: var(--radius-sm); background: var(--primary-soft); color: var(--text); }
 .notice-bar > span { flex: 1; }

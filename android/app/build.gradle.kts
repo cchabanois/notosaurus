@@ -4,6 +4,7 @@ import javax.inject.Inject
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.serialization)
+    alias(libs.plugins.licensee)
 }
 
 /** The Notosaurus web page (the repository's static/), shipped in the app's
@@ -120,4 +121,23 @@ dependencies {
     androidTestImplementation(libs.androidx.test.core)
     androidTestImplementation(libs.androidx.test.junit)
     androidTestImplementation(libs.mockwebserver)
+}
+
+// The libraries' licences: only those allowed here (a new one fails the build until it is
+// read and added), their list shipped with the page (web/licences-android.json, "About")
+licensee {
+    allow("Apache-2.0")
+    allow("MIT")
+    allowUrl("https://opensource.org/license/mit") { because("MIT (slf4j)") }
+    allowUrl("https://api.github.com/licenses/gpl-3.0") {
+        because("AnkiDroid's API: GPL-3.0, which Notosaurus's AGPL-3.0 may be combined with (AGPL §13)")
+    }
+    allowUrl("https://developer.android.com/studio/terms.html") {
+        because("Google Play services and Play Billing: not open source, theirs to ship in an app")
+    }
+    allowUrl("https://developers.google.com/ml-kit/terms") {
+        because("ML Kit (the QR code scanner): not open source, its terms let an app ship it")
+    }
+    bundleAndroidAsset.set(true)
+    androidAssetReportPath.set("web/licences-android.json")
 }

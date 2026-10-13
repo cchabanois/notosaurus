@@ -1,0 +1,39 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="referrer" content="same-origin">
+  <meta name="theme-color" content="#eaf3fa" media="(prefers-color-scheme: light)">
+  <meta name="theme-color" content="#16181d" media="(prefers-color-scheme: dark)">
+  <title>Notosaurus</title>
+  <link rel="icon" href="notosaurus-64.png" type="image/png" sizes="64x64">
+  <link rel="stylesheet" href="vendor/nunito/nunito.css">
+  <link rel="stylesheet" href="style.css">
+  <script defer src="i18n.js"></script>
+  <script defer src="licences.js"></script>
+</head>
+<body>
+<!-- The libraries Notosaurus ships, each under its own licence (the page's, the Android app's) -->
+<div class="app has-bar">
+  <header class="appbar">
+    <a class="brand" href="admin.html">
+      <span class="back">←</span>
+      <img class="brand-logo" src="logo-mark.webp" alt="" width="44" height="44">
+      <span data-t="licences.title"></span>
+    </a>
+  </header>
+  <main>
+    <section class="panel">
+      <p data-t="licences.intro"></p>
+      <h2 data-t="licences.page"></h2>
+      <ul class="licences" id="page-libraries"></ul>
+    </section>
+    <section class="panel" id="android" hidden>
+      <h2 data-t="licences.android"></h2>
+      <ul class="licences" id="android-libraries"></ul>
+    </section>
+  </main>
+</div>
+</body>
+</html>

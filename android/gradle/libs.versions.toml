@@ -39,3 +39,4 @@ androidx-test-junit = { module = "androidx.test.ext:junit", version.ref = "andro
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }
 kotlin-serialization = { id = "org.jetbrains.kotlin.plugin.serialization", version.ref = "kotlin" }
+licensee = { id = "app.cash.licensee", version = "1.14.1" }
