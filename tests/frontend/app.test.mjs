@@ -659,8 +659,11 @@ test("children: the one chosen kept on this device, the lessons filtered, its de
   c.addChild();
   const added = c.childrenSheet.list.at(-1);
   added.name = "Léa";
-  c.suggestDecks(added, true);
-  assert.equal(added.decks, "Léa::{class}");  // the page in English: its word
+  c.setGrade(added, "Year 7");
+  added.decks = c.decksWithClass(added);
+  assert.equal(added.decks, "Léa::Year 7");
+  c.setGrade(added, "Year 8");  // a new school year: its decks follow
+  assert.equal(added.decks, "Léa::Year 8");
   await c.saveChildren();
   assert.deepEqual(plain(sent[0].map((k) => k.id)), ["jules", "mathilde", "lea"]);
   assert.equal(c.children.length, 3);

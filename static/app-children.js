@@ -83,11 +83,20 @@ const childrenPart = {
     return t(`app.children.examples.${i < middle ? "primary" : i < high ? "middle" : "high"}`);
   },
 
-  // The decks' suggestions: its first name, or its first name and its class (updated each year)
-  suggestDecks(child, withClass) {
+  // The decks' suggestions: its first name, or its first name and its class ("Mathilde::4e")
+  decksWithClass(child) {
     const name = child.name.trim();
-    if (!name) return;
-    child.decks = withClass ? `${name}::${t("app.children.classToken")}` : name;
+    return child.grade ? `${name}::${child.grade}` : name;
+  },
+
+  // Its class changed (a new school year): decks ending with the old one ("Mathilde::4e")
+  // follow ("Mathilde::3e"); the lessons made before stay in theirs
+  setGrade(child, grade) {
+    const old = child.grade;
+    child.grade = grade;
+    const decks = child.decks.trim();
+    if (old && decks.endsWith(`::${old}`)) child.decks = decks.slice(0, -old.length) + grade;
+    if (old && !grade && decks.endsWith("::")) child.decks = decks.slice(0, -2);
   },
 
   async saveChildren() {

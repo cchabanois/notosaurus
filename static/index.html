@@ -879,7 +879,7 @@
           </label>
           <label class="field">
             <span x-text="$t('app.children.grade')"></span>
-            <select x-model="c.grade">
+            <select :value="c.grade" @change="setGrade(c, $event.target.value)">
               <option value="" x-text="$t('app.children.noGrade')"></option>
               <template x-for="g in $t('app.children.grades').split('|')" :key="g">
                 <option :value="g" x-text="g" :selected="c.grade === g"></option>
@@ -891,8 +891,8 @@
             <input x-model="c.decks" maxlength="200" :placeholder="$t('app.children.decksPlaceholder')">
           </label>
           <div class="chips" x-show="c.name.trim()">
-            <button type="button" class="chip" @click="suggestDecks(c, false)" x-text="c.name.trim()"></button>
-            <button type="button" class="chip" @click="suggestDecks(c, true)" x-text="c.name.trim() + '::' + $t('app.children.classToken')"></button>
+            <button type="button" class="chip" @click="c.decks = c.name.trim()" x-text="c.name.trim()"></button>
+            <button type="button" class="chip" x-show="c.grade" @click="c.decks = decksWithClass(c)" x-text="decksWithClass(c)"></button>
           </div>
           <label class="field">
             <span x-text="$t('app.children.instructions')"></span>
