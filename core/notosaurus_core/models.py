@@ -136,6 +136,12 @@ class Extraction(Deck):
         'language of the instructions, saying what you made (e.g. "Spanish vocabulary: French → Spanish"). '
         "Otherwise empty.",
     )
+    dictation: bool = Field(
+        default=False,
+        description="Whenever the instructions let you choose the kind of cards: true when the page is a dictation "
+        "to prepare (a text or a list of words to learn to write) and you made only dictation cards for it. "
+        "Otherwise false.",
+    )
 
 
 class Revision(Deck):

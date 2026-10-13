@@ -124,14 +124,17 @@ async def _generate(
         await asyncio.to_thread(prompts.mark_used, form.prompt_id)
     # Photos taken sideways are saved upright (masks and diagram frames turn with them)
     photos = diagrams.straighten([i.data for i in data], found.deck.cards, found.turns, found.frames)
+    # A dictation the AI recognised (prompt "Automatic"): its cards dictation cards alone
+    dictation_only = form.dictation_only or found.dictation
     if voice.strip().lower() == "auto":  # the voice of the language the backs are in
-        voice = await tts.voice_for(_learned(found.back_language, lang, form.typing or form.dictation))
+        spelling = form.typing or form.dictation or dictation_only
+        voice = await tts.voice_for(_learned(found.back_language, lang, spelling))
     content = LessonIn(
         **found.deck.model_dump(),
         voice=voice,
         typing=form.typing,
-        dictation=form.dictation or form.dictation_only,
-        dictation_only=form.dictation_only,
+        dictation=form.dictation or dictation_only,
+        dictation_only=dictation_only,
     )
     # Its own deck: never one that exists already (another lesson's, or the user's in Anki)
     content.deck = await decks.new_name(content.deck, profile or None, but=lesson_id)

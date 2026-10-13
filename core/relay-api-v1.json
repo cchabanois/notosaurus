@@ -2235,6 +2235,11 @@
             "title": "Choice",
             "default": ""
           },
+          "dictation": {
+            "type": "boolean",
+            "title": "Dictation",
+            "default": false
+          },
           "usage": {
             "$ref": "#/components/schemas/Usage"
           }

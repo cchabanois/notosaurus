@@ -6,7 +6,8 @@ on), the diagrams' masks, and the cards against the lesson's own.
 The lessons are private (children's notebooks): a folder of lesson folders, each its
 lesson.json and its page-N.jpg, never committed (notes/bench/lessons by default). A
 lesson's expect.json, if any, says what the general rules can't:
-  {"voice": "any" | "none" | "en", "cards": [3, 8], "contains": ["vendredi"], "why": "…"}
+  {"voice": "any" | "none" | "en", "cards": [3, 8], "contains": ["vendredi"], "dictation": true, "why": "…"}
+("dictation": the page is one to prepare, which Automatic must see: --prompt auto)
 
   .venv/bin/python tools/bench.py [--only espagnol] [--jobs 6] [--bench notes/bench]
 
@@ -57,9 +58,13 @@ def relay() -> tuple[str, str]:
     return url, key
 
 
-def options(lesson: dict, builtins: list) -> dict:
+def options(lesson: dict, builtins: list, forced: str = "") -> dict:
     """How the lesson was asked for: its prompt's options when it is one of Notosaurus's (its
-    voice "auto"), else the lesson's own."""
+    voice "auto"), else the lesson's own. `forced`: a built-in prompt's key, for every lesson
+    with only its options ("auto": does the AI make what each page calls for?)."""
+    if forced:
+        prompt = next(p for p in builtins if p.id == f"notosaurus:{forced}")
+        lesson = {"prompt": prompt.text}
 
     def same(text: str) -> str:
         return " ".join(text.split())  # a phone's line ends (\r\n) as the computer's
@@ -135,7 +140,7 @@ def got(res) -> dict:
 
 def package(client, folder: Path, made: dict, asked: dict, voice: str, scratch: Path):
     """The lesson saved as the app saves it (its photos, the new cards), then exported."""
-    import apkg
+    import apkg  # pyright: ignore[reportMissingImports] (tests/, on the path above)
 
     lesson = json.loads((folder / "lesson.json").read_text())
     lesson_id = lesson.get("id") or folder.name.split("-", 1)[1]  # the computer's: its folder's name
@@ -194,16 +199,22 @@ def check(
     learned = LEARNED.get(subject, "")
     spelling = asked["typing"] or asked["dictation"] or asked["dictation_only"]
 
+    # Automatic: a dictation recognised when the page is one (expect.json "dictation"), never otherwise
+    if asked["builtin"] == "notosaurus:auto":
+        dictated, page_is_one = bool(made.get("dictation")), bool(expect.get("dictation"))
+        said = "recognised" if dictated else "not chosen"
+        results.append((dictated == page_is_one, f"dictation {said} (expected: {page_is_one})"))
+
     # The voice: the language learned's, the pupil's own for a dictation, else none
-    said = made.get("back_language") or "none"
+    said = made.get("back_language") or "none"  # (the voice's language the AI said)
     if expect.get("voice") == "any":
         results.append((None, f"voice {voice or 'none'} (any; the AI said {said})"))
     elif asked["voice"] == "auto":
         expected = expect.get("voice", learned or (PAGE if spelling else ""))
         expected = "" if expected == "none" else expected
-        got = voice.split("-")[0].lower() if voice else ""
+        language = voice.split("-")[0].lower() if voice else ""
         what = f"voice {voice or 'none'} (expected {expected or 'none'}; the AI said {said})"
-        results.append((got == expected, what))
+        results.append((language == expected, what))
 
     # Each card's note type: its family by what it is
     def expected_family(c: dict) -> str:
@@ -324,11 +335,12 @@ def check(
 
 
 def main() -> int:
-    parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
+    parser = argparse.ArgumentParser(description=(__doc__ or "").splitlines()[0])
     parser.add_argument("--bench", default=str(ROOT / "notes/bench"))
     parser.add_argument("--only", default="", help="lessons whose folder name holds this")
     parser.add_argument("--jobs", type=int, default=3)
     parser.add_argument("--reuse", default="", help="a run's folder (runs/<at>): its AI answers, not asked again")
+    parser.add_argument("--prompt", default="", help='a built-in prompt for every lesson ("auto": its choices checked)')
     args = parser.parse_args()
     bench = Path(args.bench)
     folders = [f for f in sorted((bench / "lessons").iterdir()) if f.is_dir() and args.only.lower() in f.name.lower()]
@@ -359,7 +371,7 @@ def main() -> int:
 
     def make(folder: Path):
         lesson = json.loads((folder / "lesson.json").read_text())
-        asked = options(lesson, builtins)
+        asked = options(lesson, builtins, args.prompt)
         kept = reused / f"{folder.name}.json" if reused else None
         if kept and kept.is_file():
             made = json.loads(kept.read_text())
@@ -391,6 +403,8 @@ def main() -> int:
             run["lessons"][name] = {"error": str(result)}
             failed += 1
             continue
+        if result.get("dictation"):  # a dictation the AI recognised (Automatic): as the app does
+            asked = {**asked, "dictation": True, "dictation_only": True}
         voice = asked["voice"]
         if voice == "auto":
             voice = voice_for(
