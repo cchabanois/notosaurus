@@ -156,7 +156,7 @@
 
         <!-- 3. Ready -->
         <section class="panel setup-step setup-done" x-show="step === 'done'">
-          <img src="logo-mark.webp" alt="" width="96" height="96">
+          <p class="setup-done-mark" aria-hidden="true">✓</p>
           <h2 tabindex="-1" x-text="$t('setup.done.title')"></h2>
           <p x-text="phonePaired ? $t('setup.done.onPhone') : $t('setup.done.here')"></p>
           <p class="hint" x-text="$t('setup.done.more')"></p>
