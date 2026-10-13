@@ -1,15 +1,15 @@
 ---
 title: "Confidentialité et sécurité"
-description: "Ce qui sort de ton ordinateur, où Notosaurus garde ses données, qui peut l'utiliser, et comment le sauvegarder."
+description: "Ce qui sort de votre ordinateur, où Notosaurus garde ses données, qui peut l'utiliser, et comment le sauvegarder."
 ---
 
 Cette page concerne Notosaurus sur ordinateur. Pour l'app Android et son service, voir la
 [politique de confidentialité de l'app](../app-privacy/).
 
-Sur ordinateur, Notosaurus n'a ni compte ni serveur à lui : il tourne sur ton ordinateur. Une leçon montre
+Sur ordinateur, Notosaurus n'a ni compte ni serveur à lui : il tourne sur votre ordinateur. Une leçon montre
 souvent l'écriture d'un enfant, parfois son nom : voici où elle va.
 
-## Ce qui sort de ton ordinateur
+## Ce qui sort de votre ordinateur
 
 - **Les photos et la consigne** vont au **service d'IA choisi dans les réglages**, pour faire et
   corriger les cartes. Le texte d'un PDF numérique part avec sa page.
@@ -24,14 +24,14 @@ souvent l'écriture d'un enfant, parfois son nom : voici où elle va.
 Les pages elles-mêmes ne chargent rien d'ailleurs : leurs scripts et leurs polices viennent avec
 Notosaurus (ni Google Fonts, ni CDN).
 
-Rien d'autre : ni statistiques, ni pistage. Avec un modèle chez toi (voir
-[Services d'IA](../ai-services/#un-modèle-chez-toi)), les photos ne sortent pas non plus de la
+Rien d'autre : ni statistiques, ni pistage. Avec un modèle chez vous (voir
+[Services d'IA](../ai-services/#un-modèle-chez-vous)), les photos ne sortent pas non plus de la
 maison.
 
 :::caution[Offres gratuites]
-Les offres gratuites autorisent en général le service d'IA à utiliser ce que tu envoies pour
-améliorer ses modèles. Pour les cahiers des enfants, préfère une clé payante. Avant de prendre
-la photo, tu peux aussi cacher un nom écrit sur la page.
+Les offres gratuites autorisent en général le service d'IA à utiliser ce que vous envoyez pour
+améliorer ses modèles. Pour les cahiers des enfants, préférez une clé payante. Avant de prendre
+la photo, vous pouvez aussi cacher un nom écrit sur la page.
 :::
 
 ## Où sont les données ?
@@ -44,18 +44,18 @@ les leçons (photos, cartes, audio), les consignes et les réglages.
   supprimé avec lui.
 - En **autonome**, c'est le dossier `data/` (ou `NOTOSAURUS_DATA`).
 
-Les **clés d'API** sont rangées dans ce dossier, dans `settings.json`, lisible seulement par ton
+Les **clés d'API** sont rangées dans ce dossier, dans `settings.json`, lisible seulement par votre
 compte utilisateur. Elles ne sont jamais renvoyées à un téléphone ni à un navigateur : les
 réglages n'en montrent que les quatre derniers caractères.
 
-**Pour sauvegarder Notosaurus**, copie le dossier de données. Les cartes elles-mêmes sont dans
+**Pour sauvegarder Notosaurus**, copiez le dossier de données. Les cartes elles-mêmes sont dans
 Anki, sauvegardées par Anki et, avec un compte, par AnkiWeb.
 
 ## Qui peut utiliser Notosaurus ?
 
 - **Seulement les appareils associés.** Sur le Wi-Fi, seuls l'ordinateur lui-même et les
   appareils qui ont scanné le QR code (**Réglages → Téléphones**) peuvent utiliser Notosaurus :
-  les autres ne peuvent ni dépenser tes crédits d'IA ni supprimer des leçons. **Déconnecter tous
+  les autres ne peuvent ni dépenser vos crédits d'IA ni supprimer des leçons. **Déconnecter tous
   les téléphones** les dissocie tous, par exemple après la perte ou le prêt d'un téléphone.
 - **Les réglages seulement sur l'ordinateur.** Avec le greffon, les réglages ne s'ouvrent que
   sur l'ordinateur lui-même : les enfants ne peuvent ni changer le service d'IA ni voir les clés
@@ -65,9 +65,9 @@ Anki, sauvegardées par Anki et, avec un compte, par AnkiWeb.
 
 ## Le Wi-Fi
 
-Notosaurus parle aux téléphones en HTTP simple, sur ton réseau local. L'association écarte les
-curieux et les autres sites web, mais pas quelqu'un qui espionnerait le trafic du Wi-Fi : garde
-ton Wi-Fi protégé (WPA2 ou WPA3).
+Notosaurus parle aux téléphones en HTTP simple, sur votre réseau local. L'association écarte les
+curieux et les autres sites web, mais pas quelqu'un qui espionnerait le trafic du Wi-Fi : gardez
+votre Wi-Fi protégé (WPA2 ou WPA3).
 
 Notosaurus est fait pour la maison : les téléphones l'utilisent sur le même Wi-Fi que
-l'ordinateur. **N'expose jamais Notosaurus** (ni AnkiConnect) **sur Internet.**
+l'ordinateur. **N'exposez jamais Notosaurus** (ni AnkiConnect) **sur Internet.**

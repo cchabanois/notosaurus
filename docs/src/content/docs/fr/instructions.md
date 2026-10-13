@@ -1,6 +1,6 @@
 ---
 title: Les consignes
-description: "Dire à l'IA quelles cartes faire : les consignes de Notosaurus, les tiennes, une consigne pour cette fois seulement, et les instructions permanentes."
+description: "Dire à l'IA quelles cartes faire : les consignes de Notosaurus, les vôtres, une consigne pour cette fois seulement, et les instructions permanentes."
 ---
 
 La **consigne** dit à l'IA quoi faire de la leçon : quelles cartes, dans quel sens, dans
@@ -13,21 +13,21 @@ complète, avec une recherche.
 
 ![Toutes les consignes](../../../assets/screenshots/fr/prompt-picker.png)
 
-Le texte de la consigne choisie s'affiche sous les boutons. Tu peux le modifier **pour cette
+Le texte de la consigne choisie s'affiche sous les boutons. Vous pouvez le modifier **pour cette
 fois seulement** (« Modifiée pour cette fois seulement »), par exemple pour ajouter
-« seulement les verbes » : ta modification reste avec la leçon, la consigne enregistrée ne
+« seulement les verbes » : votre modification reste avec la leçon, la consigne enregistrée ne
 change pas.
 
 ## Les consignes de Notosaurus
 
 Les consignes marquées ⭐ sont fournies par Notosaurus et s'améliorent à chaque version.
-Elles ne se modifient pas, mais se **dupliquent** pour en faire ta propre version.
+Elles ne se modifient pas, mais se **dupliquent** pour en faire votre propre version.
 
 | Consigne | Ce qu'elle fait |
 |---|---|
 | Automatique (d'après la leçon) | L'IA regarde la leçon et choisit les cartes les plus utiles. |
 | Langue : vocabulaire | Une carte par mot ou expression, avec l'article, le genre et le pluriel dans l'info ; sans photo, à partir d'une liste ou d'un thème. |
-| Langue : phrases | Une carte par phrase, dans ta langue et dans la langue étudiée. |
+| Langue : phrases | Une carte par phrase, dans votre langue et dans la langue étudiée. |
 | Langue : conjugaison | Un verbe, un temps et une personne par carte ; la forme conjuguée au verso. |
 | Questions / réponses | Des questions courtes sur le contenu : dates, définitions, idées clés. |
 | Définitions | Une carte par mot-clé à savoir définir, sa définition au verso. |
@@ -41,27 +41,27 @@ Elles ne se modifient pas, mais se **dupliquent** pour en faire ta propre versio
 | Langue : vocabulaire en images | L'image de chaque mot au recto (trouvée ou dessinée) ; le mot dans la langue étudiée au verso. |
 | Dictée de mots | Une carte par mot à savoir écrire : une phrase où il manque le mot au recto, le mot au verso, une astuce d'orthographe. |
 
-## Tes propres consignes
+## Vos propres consignes
 
-**Nouvelle** crée une consigne que tu réutiliseras, par exemple pour la langue que ton
+**Nouvelle** crée une consigne que vous réutiliserez, par exemple pour la langue que votre
 enfant apprend chaque semaine. **Dupliquer** part d'une consigne de Notosaurus.
 
 ![Consigne : nom, texte, nom du paquet, voix et options des cartes](../../../assets/screenshots/fr/prompt-editor.png)
 
 - **Nom** : ce qu'affiche le bouton.
-- **Consigne** : ce que l'IA doit faire, avec tes mots (« une carte par date, au recto
+- **Consigne** : ce que l'IA doit faire, avec vos mots (« une carte par date, au recto
   l'événement, au verso la date »).
 - **Nom de paquet proposé** : le paquet Anki, avec `::` pour les sous-paquets. Les parties
   entre accolades sont remplies d'après la leçon : `Espagnol::Leçon {n}` devient
   `Espagnol::Leçon 5`.
 - **Voix du verso** : pas de son, **Automatique** (l'IA reconnaît la langue des versos et
-  Notosaurus prend une voix de cette langue), ou une voix que tu choisis et que tu peux
-  écouter.
+  Notosaurus prend une voix de cette langue), ou une voix que vous choisissez et que vous
+  pouvez écouter.
 - **Options des cartes** : taper la réponse (Anki compare lettre par lettre), ajouter une
   dictée (entendre le verso, l'écrire). Elles vont avec les leçons faites avec cette consigne.
 
 **✏️ Libre** écrit une consigne pour cette fois seulement : elle reste avec la leçon, mais
-n'est pas ajoutée à ta liste. **Enregistrer comme nouvelle consigne** la garde si elle a
+n'est pas ajoutée à votre liste. **Enregistrer comme nouvelle consigne** la garde si elle a
 bien marché.
 
 ## Les « Le savais-tu ? »
@@ -88,11 +88,11 @@ et se modifient ou s'effacent dans la relecture. Elles ajoutent environ 1 à 3 c
 dollar par leçon avec Claude Sonnet.
 
 Désactivé au départ ; on peut l'activer par défaut dans les réglages (⚙️ → Instructions pour
-l'IA). Changé sur un appareil, l'interrupteur y reste tel que tu l'as mis.
+l'IA). Changé sur un appareil, l'interrupteur y reste tel que vous l'avez mis.
 
 ## Les instructions permanentes
 
 Certaines instructions valent pour toutes les leçons : « espagnol d'Espagne », « en 5ᵉ ;
-réponses courtes ». Écris-les une fois dans **Réglages → Instructions pour l'IA**, pour tous
+réponses courtes ». Écrivez-les une fois dans **Réglages → Instructions pour l'IA**, pour tous
 les profils ou pour chaque enfant : voir
 [Plusieurs enfants](../several-children/#des-instructions-pour-chaque-enfant).

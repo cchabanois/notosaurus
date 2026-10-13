@@ -537,7 +537,7 @@ def test_pdf_pages_become_photos(page):
     pdf_input.set_input_files({"name": "manuel.pdf", "mimeType": "application/pdf", "buffer": pdf(12)})
     sheet = page.locator(".sheet", has=page.locator(".pdf-pages"))
     sync_api.expect(sheet).to_be_visible()
-    sync_api.expect(sheet).to_contain_text("« manuel.pdf » a 12 pages : choisis-en 7 au plus")
+    sync_api.expect(sheet).to_contain_text("« manuel.pdf » a 12 pages : choisissez-en 7 au plus")
     sync_api.expect(sheet.locator(".pdf-page img").first).to_be_visible()  # thumbnails drawn
     for n in range(1, 8):
         sheet.get_by_role("button", name=f"Page {n}", exact=True).click()
@@ -1082,7 +1082,7 @@ def test_the_setup_assistant(page, monkeypatch):
     assert page.evaluate(CUT) == []
     page.get_by_label("Clé API Gemini").fill("AIza-test")
     page.get_by_role("button", name="🔌 Vérifier la clé").click()  # saves the key, then tests it
-    sync_api.expect(page.get_by_text("✓ Ta clé fonctionne avec gemini-3.5-flash")).to_contain_text(
+    sync_api.expect(page.get_by_text("✓ Votre clé fonctionne avec gemini-3.5-flash")).to_contain_text(
         "gemini-3.8-flash n'est pas inclus"
     )
     next_.click()
@@ -1121,7 +1121,7 @@ def test_dictation_in_the_app(page):
     )
     page.goto("/")
     page.get_by_role("button", name="Dicter").first.click()
-    sync_api.expect(page.get_by_text("J'écoute… appuie sur ⏹ quand tu as fini.").first).to_be_visible()
+    sync_api.expect(page.get_by_text("J'écoute… appuyez sur ⏹ quand vous avez fini.").first).to_be_visible()
     sync_api.expect(page.get_by_role("textbox", name="Texte de la consigne")).to_be_disabled()  # waits for its text
     if shots := os.environ.get("NOTOSAURUS_SHOTS"):  # to look at it: a folder for the screenshot
         page.screenshot(path=f"{shots}/dictation.png")
@@ -1197,7 +1197,7 @@ def test_find_a_free_picture(page):
     sync_api.expect(picks.first.locator(".found-best")).to_be_visible()  # the AI's choice
     sync_api.expect(picks.nth(1).locator(".found-best")).to_be_hidden()
     sync_api.expect(
-        first.get_by_text("Images libres de droits (Wikimedia Commons, Openverse) : touche celle qui va.")
+        first.get_by_text("Images libres de droits (Wikimedia Commons, Openverse) : touchez celle qui va.")
     ).to_be_visible()
     assert asked[0]["subject"]
     if shots := os.environ.get("NOTOSAURUS_SHOTS"):

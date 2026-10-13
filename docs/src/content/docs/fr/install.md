@@ -4,7 +4,7 @@ description: "Faire tourner Notosaurus en autonome ou avec Docker, sans le greff
 ---
 
 Le [greffon Anki](../getting-started/) est la façon la plus simple d'utiliser Notosaurus. Pour le
-faire tourner seul, par exemple sur un serveur toujours allumé à la maison, installe-le **en
+faire tourner seul, par exemple sur un serveur toujours allumé à la maison, installez-le **en
 autonome** ou avec **Docker**.
 
 Les différences avec le greffon :
@@ -27,8 +27,8 @@ python3 -m venv .venv
 .venv/bin/uvicorn app.main:app --host 0.0.0.0
 ```
 
-Ouvre http://localhost:8000 sur l'ordinateur. Pour le téléphone (même Wi-Fi) : **⚙️ →
-Téléphones**, et scanne le QR code.
+Ouvrez http://localhost:8000 sur l'ordinateur. Pour le téléphone (même Wi-Fi) : **⚙️ →
+Téléphones**, et scannez le QR code.
 
 ## Docker
 
@@ -39,12 +39,12 @@ docker run -p 8000:8000 -v notosaurus-data:/data --env-file .env \
 ```
 
 Dans Docker, Notosaurus ne voit pas l'adresse de l'ordinateur : `NOTOSAURUS_PUBLIC_URL` la met
-dans le QR code des téléphones. L'ordinateur lui-même passe aussi par le réseau de Docker : ouvre
-**⚙️ → Téléphones** et utilise une fois le lien sous le QR code.
+dans le QR code des téléphones. L'ordinateur lui-même passe aussi par le réseau de Docker : ouvrez
+**⚙️ → Téléphones** et utilisez une fois le lien sous le QR code.
 
 ## Variables d'environnement
 
-Copie `.env.example` en `.env`. Ces variables donnent les valeurs par défaut : ce qui est
+Copiez `.env.example` en `.env`. Ces variables donnent les valeurs par défaut : ce qui est
 enregistré dans la page des réglages l'emporte.
 
 | Variable | Rôle |
