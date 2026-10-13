@@ -26,6 +26,7 @@
   <script defer src="app-anki.js"></script>
   <script defer src="app-dictation.js"></script>
   <script defer src="app-children.js"></script>
+  <script defer src="app-report.js"></script>
   <script defer src="app.js"></script>
   <script defer src="vendor/alpinejs/cdn.min.js"></script>
 </head>
@@ -422,6 +423,8 @@
               <button class="icon-btn" x-show="hasAudio() && !hasMath(card.back) && !isCloze(card.front) && !card.choices.length" @click="play(spokenText(card))" :aria-label="$t('app.review.listen')">🔊</button>
               <button class="icon-btn" x-show="!readOnly() && !card.mask && !isCloze(card.front) && lessonId" @click="togglePicturePanel(card)"
                       :class="{ active: card._panel }" :aria-label="$t('app.pictures.panel')">🖼️</button>
+              <button class="icon-btn muted" x-show="reportable" @click="openReport(card)" :aria-label="$t('app.report.button')"
+                      :title="$t('app.report.button')">⚑</button>
               <button class="icon-btn muted" x-show="!readOnly()" @click="removeCard(card)" :aria-label="$t('app.review.removeCard')">✕</button>
             </div>
             <!-- 💬 The card explained, on demand; then only the follow-ups the AI says would help -->
@@ -888,6 +891,61 @@
             <button type="button" class="btn soft" @click="cancelChild()" x-text="$t('common.cancel')"></button>
             <button type="button" class="btn primary" @click="saveChildren()" :disabled="childrenSheet.saving || !c.name.trim()"
                     x-text="$t('app.children.save')"></button>
+          </div>
+        </div>
+      </template>
+    </div>
+  </aside>
+
+  <!-- Content the AI made, reported (app-report.js): what, why, exactly what is sent -->
+  <div class="sheet-backdrop" x-cloak x-show="report.open" x-transition.opacity @click="report.open = false"></div>
+  <aside class="sheet" x-cloak x-show="report.open" @keydown.escape.window="report.open = false"
+         role="dialog" :aria-label="$t('app.report.title')">
+    <div class="sheet-handle"></div>
+    <div class="sheet-head">
+      <h2 x-text="$t('app.report.title')"></h2>
+      <button class="icon-btn" @click="report.open = false" :aria-label="$t('common.close')">✕</button>
+    </div>
+    <div class="sheet-body report">
+      <template x-if="report.card && !report.sent">
+        <div>
+          <div class="chips" x-show="reportKinds(report.card).length > 1">
+            <template x-for="k in reportKinds(report.card)" :key="k">
+              <button type="button" class="chip" :class="{ active: report.kind === k }" :aria-pressed="String(report.kind === k)"
+                      @click="report.kind = k" x-text="$t('app.report.kinds.' + k)"></button>
+            </template>
+          </div>
+          <fieldset class="report-reasons">
+            <legend x-text="$t('app.report.why')"></legend>
+            <template x-for="r in ['offensive', 'wrong', 'other']" :key="r">
+              <label class="radio">
+                <input type="radio" name="report-reason" :value="r" x-model="report.reason">
+                <span x-text="$t('app.report.reasons.' + r)"></span>
+              </label>
+            </template>
+          </fieldset>
+          <label class="field">
+            <span x-text="$t('app.report.comment')"></span>
+            <textarea x-model="report.comment" rows="2" maxlength="1000"></textarea>
+          </label>
+          <p class="hint" x-text="$t('app.report.sent')"></p>
+          <pre class="report-preview" x-text="reportContent()"></pre>
+          <p class="hint" x-show="report.kind === 'picture'" x-text="$t('app.report.withPicture')"></p>
+          <p class="hint error-text" x-show="report.error" x-text="report.error"></p>
+          <div class="sheet-actions">
+            <button type="button" class="btn soft" @click="report.open = false" x-text="$t('common.cancel')"></button>
+            <button type="button" class="btn primary" @click="sendReport()" :disabled="report.sending || !report.reason"
+                    x-text="$t('app.report.send')"></button>
+          </div>
+        </div>
+      </template>
+      <template x-if="report.sent">
+        <div>
+          <p x-text="$t('app.report.thanks')"></p>
+          <div class="sheet-actions">
+            <button type="button" class="btn danger-soft" x-show="!readOnly() && report.kind !== 'explanation'" @click="dropReported()"
+                    x-text="$t('app.report.drop.' + report.kind)"></button>
+            <button type="button" class="btn primary" @click="report.open = false" x-text="$t('common.close')"></button>
           </div>
         </div>
       </template>

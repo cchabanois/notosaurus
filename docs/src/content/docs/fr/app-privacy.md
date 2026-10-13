@@ -3,7 +3,7 @@ title: "Politique de confidentialité de l'app Android"
 description: "Les données que l'app Notosaurus pour Android et son service traitent, pourquoi, où, combien de temps, et tes droits."
 ---
 
-*Dernière mise à jour : 11 octobre 2026.*
+*Dernière mise à jour : 13 octobre 2026.*
 
 Cette page concerne **l'app Notosaurus pour Android** et **le service Notosaurus** qu'elle
 utilise pour lire les photos, faire les cartes et les voix. Notosaurus sur ordinateur (le
@@ -23,7 +23,8 @@ L'app n'est pas faite pour être utilisée par un enfant.
 - L'IA (**Gemini de Google**) et les voix sont **traitées dans l'Union européenne**. Google ne
   s'en sert pas pour entraîner ses modèles.
 - **Ni publicité, ni statistiques, ni pistage**, et rien n'est vendu.
-- Le service ne garde que ta **licence** : son empreinte, ta formule et tes crédits.
+- Le service ne garde que ta **licence** (son empreinte, ta formule et tes crédits), et ce que
+  tu **signales** avec ⚑, si tu le fais.
 
 ## Ce qui reste sur ton téléphone
 
@@ -50,7 +51,7 @@ Quand tu le demandes, l'app envoie au service, en HTTPS :
 
 Le service transmet ces contenus aux sous-traitants ci-dessous, renvoie le résultat à l'app,
 et **ne les garde pas** : ni photo, ni carte, ni enregistrement, ni texte de leçon n'est
-enregistré, ni écrit dans ses journaux.
+enregistré, ni écrit dans ses journaux. Sauf un **signalement** : voir plus bas.
 
 Une page de cahier montre souvent le **nom de l'enfant**. Avant d'envoyer une photo, tu peux le
 **cacher** : 🖍️ sur la photo, puis noircis-le du doigt. Seule la photo noircie part et reste
@@ -62,6 +63,11 @@ dans la leçon.
   restants, leur date de renouvellement, ce qui a été utilisé dans la journée, et une courte note
   pour le support (par exemple un numéro de commande). Elle est gardée tant qu'elle est valable,
   puis **12 mois** après sa fin (pour répondre à une question ou à une réclamation), puis supprimée.
+- **Ce que tu signales** avec ⚑ (une carte, son explication ou son image faites par l'IA,
+  choquantes ou fausses), si tu le fais : exactement ce que l'app te montre avant l'envoi, le
+  motif, ton commentaire, la consigne de la leçon, la langue et un identifiant court de la
+  licence. Jamais les photos de la leçon, ni le prénom de l'enfant. Lu par Notosaurus pour
+  améliorer le contenu de l'IA, gardé **180 jours**, puis supprimé.
 - **Tes e-mails au support**, s'il y en a : gardés **12 mois** après le dernier échange.
 - **Des journaux techniques**, gardés **30 jours** pour faire fonctionner le service et repérer
   les pannes et les abus : l'heure, l'action demandée (« faire une leçon »…), sa durée, son
@@ -99,6 +105,7 @@ UE–États-Unis**. Pixabay est une société de l'Union européenne.
 | Faire, compléter, corriger et expliquer les cartes ; dictée ; voix ; images | L'**exécution du service** que tu demandes |
 | Vérifier ta licence et compter tes crédits | L'**exécution du contrat** (ta licence) |
 | Journaux techniques, sécurité, lutte contre les abus | L'**intérêt légitime** à faire fonctionner un service sûr |
+| Tes signalements du contenu de l'IA | Ta **demande**, et l'intérêt légitime à une IA qui fait un contenu adapté |
 | Le micro | Ton **consentement**, demandé à la première dictée et retirable dans les réglages du téléphone |
 | Répondre à tes e-mails | Ta **demande** |
 

@@ -52,6 +52,14 @@ Under the explanation, the AI offers only what would help with **that** card:
 Anki. Each explanation is a short AI call (a fraction of a cent with Gemini Flash, about a cent
 with Claude Sonnet), counted with the lesson's costs.
 
+## Reporting a content
+
+In the app, **⚑** on a card reports what the AI made to Notosaurus: the card, its explanation
+(when shown) or its picture. Say why (shocking or inappropriate, wrong, other), add a comment
+if you like: the sheet shows exactly what will be sent, never the lesson's photos nor the
+child's name. Then you can delete the card or remove its picture. See
+[Privacy](../app-privacy/).
+
 ## Generating again
 
 **✨ Generate again**, under the instructions, makes the cards of the open lesson again, for

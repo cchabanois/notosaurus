@@ -42,6 +42,7 @@ internal fun Route.settingsRoutes(server: LocalServer) {
                 put("donations", false) // paid for by the subscription: no "Support Notosaurus" (Ko-fi)
                 put("apkg", false) // the cards go to AnkiDroid: no .apkg to download
                 put("review_in_anki", true) // a lesson sent: reviewed in AnkiDroid from here
+                put("report", true) // the AI's content reported to Notosaurus (the relay): ⚑ on the cards
                 put("dictation", dictation != null) // the 🎤 of the instructions and the correction
                 put("drawing_credits", switches.drawingCredits()?.let(::JsonPrimitive) ?: JsonNull) // told before drawing
                 // The welcome (a parent's tool, Gemini, the privacy policy): until this version is accepted

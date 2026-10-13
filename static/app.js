@@ -139,6 +139,9 @@ document.addEventListener("alpine:init", () => {
     childId: "",         // the child the next lesson is for (kept on this device)
     allChildren: false,  // the lessons sheet: every child's, not only the chosen one's
     childrenSheet: { open: false, list: [], editing: null, saving: false, error: "" },
+    // A card, its explanation or its picture reported (app-report.js); `reportable`: the host relays it
+    report: { open: false, card: null, kind: "card", reason: "", comment: "", sending: false, sent: false, error: "" },
+    reportable: false,
     lessonId: null,       // open lesson (null = new lesson, not generated yet)
     saveState: "",       // "", "pending", "saving", "saved", "error"
     lastSaved: "",
@@ -228,6 +231,7 @@ document.addEventListener("alpine:init", () => {
         this.donations = config.donations ?? true;
         this.apkg = config.apkg ?? true;
         this.reviewInAnki = config.review_in_anki ?? false;
+        this.reportable = config.report ?? false;
         this.mic.available = config.dictation ?? false;
         this.drawingUsd = config.drawing_usd ?? null;
         this.drawingCredits = config.drawing_credits ?? null;
@@ -277,5 +281,6 @@ document.addEventListener("alpine:init", () => {
     ...ankiPart,
     ...dictationPart,
     ...childrenPart,
+    ...reportPart,
   }));
 });

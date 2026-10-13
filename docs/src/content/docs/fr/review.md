@@ -56,6 +56,14 @@ Sous l'explication, l'IA ne propose que ce qui aide pour **cette** carte :
 verso dans Anki. Chaque explication est un appel court à l'IA (une fraction de centime avec
 Gemini Flash, environ un centime avec Claude Sonnet), compté dans les coûts de la leçon.
 
+## Signaler un contenu
+
+Dans l'app, **⚑** sur une carte signale à Notosaurus ce que l'IA a fait : la carte, son
+explication (quand elle est affichée) ou son image. Dis pourquoi (choquant ou inapproprié, faux,
+autre), ajoute un commentaire si tu veux : la fenêtre montre exactement ce qui sera envoyé,
+jamais les photos de la leçon ni le prénom de l'enfant. Ensuite, tu peux supprimer la carte ou
+retirer son image. Voir [Confidentialité](../app-privacy/).
+
 ## Régénérer
 
 **✨ Régénérer**, sous la consigne, refait les cartes de la leçon ouverte, par exemple avec
