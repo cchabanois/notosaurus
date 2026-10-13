@@ -13,7 +13,7 @@ from fastapi.staticfiles import StaticFiles
 from . import settings
 from .errors import AppError
 from .hosts import KnownHostsOnly
-from .routes import admin, anki, devices, generation, lessons, pages, pictures, prompts, voices
+from .routes import admin, anki, children, devices, generation, lessons, pages, pictures, prompts, voices
 from .routes.common import STATIC_DIR
 from .version import VERSION
 
@@ -65,6 +65,6 @@ class PageFiles(StaticFiles):
         return response
 
 
-for module in (pages, prompts, generation, anki, lessons, pictures, voices, admin):
+for module in (pages, prompts, generation, anki, lessons, pictures, voices, admin, children):
     app.include_router(module.router)
 app.mount("/", PageFiles(directory=STATIC_DIR, html=True), name="static")

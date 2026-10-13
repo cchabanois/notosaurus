@@ -7,7 +7,7 @@ from pydantic import BaseModel
 from notosaurus_core import diagrams, llm
 from notosaurus_core.llm import Image, revise_cards
 
-from .. import access, ankiconnect, i18n, lesson_notes, lessons, settings, usage
+from .. import access, ankiconnect, children, i18n, lesson_notes, lessons, settings, usage
 from ..errors import AppError
 from ..models import Deck, ExplainRequest, Explanation, Lesson, LessonIn, LessonSummary, RevisionRequest
 from .common import page_lang
@@ -80,18 +80,23 @@ async def revise_lesson(id: str, req: RevisionRequest, lang: str = Depends(page_
     """Apply a natural-language correction to the cards, using the lesson photos."""
     lesson = await access.editable(id)
     photos = [Image(lessons.photo(id, n), "image/jpeg") for n in range(1, lesson.photo_count + 1)]
+    every = await asyncio.to_thread(children.list_all)
+    child = next((c for c in every if c.id == lesson.child), None)
+    # The deck without the children's levels: no child's name to the AI (put back after)
+    private, deck = children.split_deck(req.deck, every)
     async with usage.metered("revise", id, req.deck):  # an answer that couldn't be used is paid for too
         s = settings.current()
         revision = await revise_cards(
             s,
             photos,
             lesson.prompt,
-            Deck(deck=req.deck, cards=req.cards),
+            Deck(deck=deck, cards=req.cards),
             req.instruction,
             i18n.language_name(lang),
-            settings.standing_instructions(s, lesson.owner),
+            settings.standing_instructions(s, lesson.owner, children.for_ai(child)),
             demo=i18n.get(lang, "demo"),
         )
+    revision.deck = "::".join(part for part in (private, revision.deck) if part)
     updated = await asyncio.to_thread(
         lessons.update,
         id,
@@ -114,6 +119,8 @@ async def explain(id: str, req: ExplainRequest, lang: str = Depends(page_lang)) 
     is right), in the page's language. Also for a lesson only read here: nothing in it
     changes but its record of AI calls."""
     lesson = await access.seen(id)  # not found, or another profile's private one: 404
+    every = await asyncio.to_thread(children.list_all)
+    child = next((c for c in every if c.id == lesson.child), None)
     async with usage.metered("explain", id, lesson.deck):  # paid for, kept with the lesson
         s = settings.current()
         return await llm.explain_card(
@@ -121,9 +128,9 @@ async def explain(id: str, req: ExplainRequest, lang: str = Depends(page_lang)) 
             req.card,
             req.kind,
             lesson.prompt,
-            lesson.deck,
+            children.for_ai_deck(lesson.deck, every),  # no child's name to the AI
             i18n.language_name(lang),
-            settings.standing_instructions(s, lesson.owner),
+            settings.standing_instructions(s, lesson.owner, children.for_ai(child)),
             lesson.page_texts,
         )
 

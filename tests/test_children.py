@@ -1,0 +1,114 @@
+"""The children's cards (app/children.py): their class and instructions told to the AI,
+never their name; their decks the lessons go in; the instructions per Anki profile, before,
+made cards."""
+
+from app import children, settings
+from app.children import Child
+
+
+def test_cards_listed_saved_and_refused_twice(client):
+    assert client.get("/api/children").json() == []
+    jules = {
+        "id": "jules",
+        "name": "Jules",
+        "grade": "5e",
+        "decks": "Jules::{classe}",
+        "instructions": "Peu de cartes.",
+    }
+    saved = client.put("/api/children", json=[jules, {"id": "mathilde", "name": "Mathilde", "grade": "3e"}]).json()
+    assert [c["name"] for c in saved] == ["Jules", "Mathilde"]
+    assert client.get("/api/children").json()[0] == jules
+    twice = client.put("/api/children", json=[jules, jules])
+    assert (twice.status_code, twice.json()["detail"]["code"]) == (400, "children.same_id")
+    assert client.put("/api/children", json=[{**jules, "id": "../x"}]).status_code == 422
+
+
+def test_the_ai_told_the_class_and_instructions_never_the_name():
+    jules = Child(id="jules", name="Jules", grade="5e", instructions="Il confond b et d.")
+    told = children.for_ai(jules)
+    assert "5e" in told and "Il confond b et d." in told and "Jules" not in told
+    assert children.for_ai(None) == ""
+    text = settings.standing_instructions(settings.Settings(instructions="Pour tous."), "Jules", told)
+    assert "Pour tous." in text and "5e" in text and "Jules" not in text  # the profile's name neither
+
+
+def test_the_childs_decks_with_its_class_not_twice():
+    jules = Child(id="jules", name="Jules", grade="5e", decks="Jules::{classe}")
+    assert children.deck_for(jules, "Anglais::School subjects") == "Jules::5e::Anglais::School subjects"
+    # The AI's deck holding the class already ("5ème"), or the child's name: not twice
+    assert children.deck_for(jules, "Anglais::5ème::School subjects") == "Jules::5e::Anglais::School subjects"
+    assert children.deck_for(jules, "jules::Maths") == "Jules::5e::Maths"
+    assert children.deck_for(Child(id="m", name="M", decks="Mathilde"), "SVT") == "Mathilde::SVT"
+    assert children.deck_for(Child(id="m", name="M", decks="Mathilde::{class}"), "SVT") == "Mathilde::SVT"  # no class
+    assert children.deck_for(Child(id="m", name="M"), "SVT") == "SVT"  # no decks of its own
+    assert children.deck_for(None, "SVT") == "SVT"
+
+
+def test_the_instructions_per_profile_become_cards(client, monkeypatch):
+    s = settings.current()
+    monkeypatch.setattr(
+        settings, "current", lambda: s.model_copy(update={"profile_instructions": {"Léa": "5e", "Tom": " "}})
+    )
+    assert [(c.id, c.name, c.instructions) for c in children.list_all()] == [("lea", "Léa", "5e")]
+
+
+def test_a_lesson_for_a_child(client, monkeypatch):
+    from app.routes import generation
+    from notosaurus_core import llm
+
+    seen = {}
+
+    async def extract_cards(s, images, prompt, deck="", decks=(), **options):
+        seen["instructions"] = options["instructions"]
+        return await llm.extract_cards(s, images, prompt, deck, decks)
+
+    monkeypatch.setattr(generation, "extract_cards", extract_cards)
+    jules = {
+        "id": "jules",
+        "name": "Jules",
+        "grade": "5e",
+        "decks": "Jules::{classe}",
+        "instructions": "Peu de cartes.",
+    }
+    client.put("/api/children", json=[jules])
+    lesson = client.post("/api/extract", data={"prompt": "FR → ES", "child": "jules"}).json()
+    assert lesson["child"] == "jules" and lesson["deck"].startswith("Jules::5e::")
+    assert "5e" in seen["instructions"] and "Peu de cartes." in seen["instructions"]
+    assert "Jules" not in seen["instructions"]
+    assert client.get("/api/lessons").json()[0]["child"] == "jules"  # the list tells, the page filters
+    # Made again: still for Jules
+    again = client.post(f"/api/lessons/{lesson['id']}/regenerate", data={"prompt": "FR → ES"}).json()
+    assert again["child"] == "jules"
+    # For no child: as before
+    other = client.post("/api/extract", data={"prompt": "FR → ES"}).json()
+    assert other["child"] == "" and not other["deck"].startswith("Jules")
+
+
+def test_no_childs_name_in_the_decks_the_ai_sees(client, monkeypatch):
+    from app.routes import generation, lessons
+    from notosaurus_core import llm
+
+    every = [Child(id="jules", name="Jules", grade="5e", decks="Jules::{classe}")]
+    assert children.split_deck("Jules::5e::Anglais::Food", every) == ("Jules::5e", "Anglais::Food")
+    assert children.for_ai_deck("Anglais::Food", every) == "Anglais::Food"
+
+    client.put("/api/children", json=[every[0].model_dump()])
+    seen = {}
+
+    async def extract_cards(s, images, prompt, deck="", decks=(), **options):
+        seen["decks"] = decks
+        return await llm.extract_cards(s, images, prompt, deck, decks)
+
+    monkeypatch.setattr(generation, "extract_cards", extract_cards)
+    first = client.post("/api/extract", data={"prompt": "FR → ES", "child": "jules"}).json()
+    client.post("/api/extract", data={"prompt": "FR → ES", "child": "jules"})
+    assert seen["decks"] and not any("Jules" in d or d.startswith("5e") for d in seen["decks"])
+
+    async def revise_cards(s, photos, prompt, deck, instruction, *rest, **options):
+        seen["revised"] = deck.deck
+        return await llm.revise_cards(s, photos, prompt, deck, instruction, *rest, **options)
+
+    monkeypatch.setattr(lessons, "revise_cards", revise_cards)
+    body = {**first, "instruction": "ajoute une carte"}
+    revised = client.post(f"/api/lessons/{first['id']}/revise", json=body).json()["lesson"]
+    assert not seen["revised"].startswith("Jules") and revised["deck"] == first["deck"]  # put back

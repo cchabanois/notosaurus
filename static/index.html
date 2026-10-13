@@ -25,6 +25,7 @@
   <script defer src="app-cards.js"></script>
   <script defer src="app-anki.js"></script>
   <script defer src="app-dictation.js"></script>
+  <script defer src="app-children.js"></script>
   <script defer src="app.js"></script>
   <script defer src="vendor/alpinejs/cdn.min.js"></script>
 </head>
@@ -51,6 +52,10 @@
       <button class="chip-btn" @click="lessonQuery = ''; lessonsOpen = true" x-show="lessons.length" :aria-label="$t('app.lessonsButton')">
         <span aria-hidden="true">📚</span><span class="wide-only" x-text="$t('app.lessonsButton')"></span>
         <span class="count" x-text="visibleLessons().length"></span>
+      </button>
+      <!-- The child the next lesson is for (app-children.js): its card, the others -->
+      <button class="chip-btn" @click="openChildren()" :aria-label="$t('app.children.title')" :title="$t('app.children.title')">
+        <span aria-hidden="true">🧒</span><span x-text="currentChild()?.name ?? $t('app.children.who')"></span>
       </button>
       <button class="chip-btn" x-show="lessonId" @click="newLesson()"
               :aria-label="$t('app.newLesson')" :title="$t('app.newLessonHint')" x-text="$t('app.newLessonShort')"></button>
@@ -607,6 +612,11 @@
     <div class="profile-filter" x-show="anki.profile">
       <span x-html="$th('app.lessons.ankiProfile', { profile: anki.profile })"></span>
     </div>
+    <label class="switch profile-filter" x-show="children.length > 1">
+      <input type="checkbox" x-model="allChildren">
+      <span class="track"><span class="knob"></span></span>
+      <span x-text="allChildren ? $t('app.children.allLessons') : $t('app.children.lessonsOf', { name: currentChild()?.name ?? '' })"></span>
+    </label>
     <input type="search" class="lesson-search" x-show="manyLessons()" x-model="lessonQuery"
            :placeholder="$t('app.lessons.search')" :aria-label="$t('app.lessons.search')">
     <!-- By subject (the deck's first level), the most recent first; see lessonSections() -->
@@ -826,6 +836,57 @@
       </div>
     </template>
   </div>
+
+  <!-- The children (app-children.js): the one the next lesson is for, their cards -->
+  <div class="sheet-backdrop" x-cloak x-show="childrenSheet.open" x-transition.opacity @click="childrenSheet.open = false"></div>
+  <aside class="sheet" x-cloak x-show="childrenSheet.open" @keydown.escape.window="childrenSheet.open = false"
+         role="dialog" :aria-label="$t('app.children.title')">
+    <div class="sheet-handle"></div>
+    <div class="sheet-head">
+      <h2 x-text="$t('app.children.title')"></h2>
+      <button class="icon-btn" @click="childrenSheet.open = false" :aria-label="$t('common.close')">✕</button>
+    </div>
+    <div class="sheet-body children">
+      <p class="hint" x-text="$t('app.children.hint')"></p>
+      <template x-for="(c, i) in childrenSheet.list" :key="i">
+        <div class="child-card" :class="{ current: c.id && c.id === childId }">
+          <div class="child-head">
+            <input class="child-name" x-model="c.name" maxlength="40" :placeholder="$t('app.children.name')" :aria-label="$t('app.children.name')">
+            <button type="button" class="btn soft" x-show="c.id && c.id !== childId" @click="chooseChild(c.id)"
+                    x-text="$t('app.children.choose')"></button>
+            <span class="badge" x-show="c.id && c.id === childId" x-text="$t('app.children.chosen')"></span>
+            <button type="button" class="icon-btn muted" @click="removeChild(i)" :aria-label="$t('app.children.remove')">🗑️</button>
+          </div>
+          <label class="field">
+            <span x-text="$t('app.children.grade')"></span>
+            <select x-model="c.grade">
+              <option value="" x-text="$t('app.children.noGrade')"></option>
+              <template x-for="g in $t('app.children.grades').split('|')" :key="g">
+                <option :value="g" x-text="g" :selected="c.grade === g"></option>
+              </template>
+            </select>
+          </label>
+          <label class="field">
+            <span x-text="$t('app.children.decks')"></span>
+            <input x-model="c.decks" maxlength="200" :placeholder="$t('app.children.decksPlaceholder')">
+          </label>
+          <div class="chips" x-show="c.name.trim()">
+            <button type="button" class="chip" @click="suggestDecks(c, false)" x-text="c.name.trim()"></button>
+            <button type="button" class="chip" @click="suggestDecks(c, true)" x-text="c.name.trim() + '::' + $t('app.children.classToken')"></button>
+          </div>
+          <label class="field">
+            <span x-text="$t('app.children.instructions')"></span>
+            <textarea x-model="c.instructions" rows="2" maxlength="4000" :placeholder="$t('app.children.instructionsPlaceholder')"></textarea>
+          </label>
+        </div>
+      </template>
+      <p class="hint error-text" x-show="childrenSheet.error" x-text="childrenSheet.error"></p>
+      <div class="sheet-actions">
+        <button type="button" class="btn soft" @click="addChild()" x-text="$t('app.children.add')"></button>
+        <button type="button" class="btn primary" @click="saveChildren()" :disabled="childrenSheet.saving" x-text="$t('app.children.save')"></button>
+      </div>
+    </div>
+  </aside>
 
   <!-- The app's first launch: a parent's tool, the AI it uses, the privacy policy; accepted
        to go on (nothing ticked beforehand), not closed otherwise -->

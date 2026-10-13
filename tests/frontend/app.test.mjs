@@ -624,3 +624,44 @@ test("✨ Image: several fit, the user picks (the AI's first); none, asked befor
   assert.ok(none.sent.at(-1).endsWith("/picture/draw"));
   assert.equal(other._ask, false);
 });
+
+test("children: the one chosen kept on this device, the lessons filtered, its decks' levels not shown again", async () => {
+  const sent = [];
+  const kids = [
+    { id: "jules", name: "Jules", grade: "5e", decks: "Jules::{classe}", instructions: "" },
+    { id: "mathilde", name: "Mathilde", grade: "3e", decks: "Mathilde", instructions: "" },
+  ];
+  const page = await loadScripts("app.js", {
+    routes: (url, options) => {
+      if (url === "/api/children" && options?.method === "PUT") {
+        sent.push(JSON.parse(options.body));
+        return new Response(JSON.parse(options.body));
+      }
+      if (url === "/api/children") return new Response(kids);
+      return null;
+    },
+  });
+  const c = page.component();
+  await c.loadChildren();
+  assert.equal(c.currentChild().name, "Jules");  // the first, nothing chosen yet
+  c.chooseChild("mathilde");
+  assert.equal(page.storage.getItem("notosaurus.child"), "mathilde");
+  c.lessons = [{ id: "a", deck: "Mathilde::SVT", child: "mathilde" }, { id: "b", deck: "Jules::5e::Anglais", child: "jules" },
+               { id: "c", deck: "Maths", child: "" }];
+  assert.deepEqual(plain(c.visibleLessons().map((l) => l.id)), ["a", "c"]);  // hers, and those for no one
+  c.allChildren = true;
+  assert.equal(c.visibleLessons().length, 3);
+  c.chooseChild("jules");
+  assert.deepEqual(plain(c.withoutChildLevels(["Jules", "5e", "Anglais"])), ["Anglais"]);
+
+  // A new child: its id from its first name; its decks suggested
+  c.openChildren();
+  c.addChild();
+  const added = c.childrenSheet.list.at(-1);
+  added.name = "Léa";
+  c.suggestDecks(added, true);
+  assert.equal(added.decks, "Léa::{class}");  // the page in English: its word
+  await c.saveChildren();
+  assert.deepEqual(plain(sent[0].map((k) => k.id)), ["jules", "mathilde", "lea"]);
+  assert.equal(c.children.length, 3);
+});

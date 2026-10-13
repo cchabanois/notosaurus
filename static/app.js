@@ -135,6 +135,10 @@ document.addEventListener("alpine:init", () => {
     loadingQuick: false,
     helps: false,  // ask for helps on the back: as changed on this device, else the settings' default
     lessons: [],         // saved lesson summaries
+    children: [],        // the children's cards (app-children.js): first name, class, decks, instructions
+    childId: "",         // the child the next lesson is for (kept on this device)
+    allChildren: false,  // the lessons sheet: every child's, not only the chosen one's
+    childrenSheet: { open: false, list: [], saving: false, error: "" },
     lessonId: null,       // open lesson (null = new lesson, not generated yet)
     saveState: "",       // "", "pending", "saving", "saved", "error"
     lastSaved: "",
@@ -235,7 +239,7 @@ document.addEventListener("alpine:init", () => {
       this.loadSwitches();  // not waited for: the relay may be starting
       this.$watch("funFacts", (on) => storage("set", on ? "1" : "0", FUN_FACTS));
       this.$watch("quick", (on) => storage("set", on ? "0" : "1", CAREFUL));
-      await Promise.all([this.loadPrompts(storage("get"), true), this.loadLessons()]);
+      await Promise.all([this.loadPrompts(storage("get"), true), this.loadLessons(), this.loadChildren()]);
       this.checkAnki();
       // Anki may be started later: check again when coming back to the app.
       document.addEventListener("visibilitychange", () => {
@@ -272,5 +276,6 @@ document.addEventListener("alpine:init", () => {
     ...cardsPart,
     ...ankiPart,
     ...dictationPart,
+    ...childrenPart,
   }));
 });

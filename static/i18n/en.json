@@ -417,6 +417,27 @@
     "update": {
       "available": "A new version of Notosaurus is available.",
       "open": "Update"
+    },
+    "children": {
+      "title": "Children",
+      "who": "Who for?",
+      "hint": "Who the lessons are for. Their class and your instructions are given to the AI; their first name, never.",
+      "name": "First name",
+      "choose": "Choose",
+      "chosen": "✓ Chosen",
+      "remove": "Remove",
+      "grade": "Class",
+      "noGrade": "Not said",
+      "grades": "Year 1|Year 2|Year 3|Year 4|Year 5|Year 6|Year 7|Year 8|Year 9|Year 10|Year 11|Year 12|Year 13",
+      "decks": "Decks in",
+      "decksPlaceholder": "e.g. Jules::{class} (empty: as usual)",
+      "classToken": "{class}",
+      "instructions": "Instructions for the AI (without their first name)",
+      "instructionsPlaceholder": "e.g. mixes up b and d; few cards at a time.",
+      "add": "+ Add a child",
+      "save": "Save",
+      "allLessons": "Every child's lessons",
+      "lessonsOf": "{name}'s lessons"
     }
   },
   "admin": {
@@ -902,6 +923,10 @@
     },
     "app": {
       "feature_off": "This feature is unavailable for the moment. Try again later."
+    },
+    "children": {
+      "same_id": "Two children have the same first name.",
+      "too_many": "{max} children at most."
     }
   },
   "demo": {

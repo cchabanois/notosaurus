@@ -15,7 +15,9 @@ import app.notosaurus.LocalServer.Companion.PICTURE_FIND
 import app.notosaurus.LocalServer.Companion.RELAY
 import app.notosaurus.LocalServer.Companion.TTS_RATE
 import app.notosaurus.LocalServer.Companion.keyOf
+import io.ktor.server.request.receiveText
 import io.ktor.server.routing.Route
+import kotlinx.serialization.builtins.ListSerializer
 import kotlinx.coroutines.withTimeout
 import kotlinx.serialization.json.JsonArray
 import kotlinx.serialization.json.JsonNull
@@ -56,6 +58,12 @@ internal fun Route.settingsRoutes(server: LocalServer) {
                 put("update", switches.updateAvailable())
                 put("store", "https://play.google.com/store/apps/details?id=${BuildConfig.APPLICATION_ID}")
             }
+        }
+        // The children's cards (Children): listed, saved by the page's "For: …" sheet
+        api("GET", "/api/children") { json.encodeToJsonElement(ListSerializer(Child.serializer()), children.list()) }
+        api("PUT", "/api/children") {
+            val asked = json.decodeFromJsonElement(ListSerializer(Child.serializer()), json.parseToJsonElement(call.receiveText()))
+            json.encodeToJsonElement(ListSerializer(Child.serializer()), children.save(asked))
         }
         api("POST", "/api/welcome") {
             prefs[WELCOME] = WELCOME_VERSION.toString()

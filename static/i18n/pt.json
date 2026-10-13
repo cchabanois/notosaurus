@@ -417,6 +417,27 @@
     "update": {
       "available": "Uma nova versão do Notosaurus está disponível.",
       "open": "Atualizar"
+    },
+    "children": {
+      "title": "Filhos",
+      "who": "Para quem?",
+      "hint": "Para quem são as lições. A série e as suas instruções vão para a IA; o nome, nunca.",
+      "name": "Nome",
+      "choose": "Escolher",
+      "chosen": "✓ Escolhido",
+      "remove": "Remover",
+      "grade": "Série",
+      "noGrade": "Não informar",
+      "grades": "1º ano|2º ano|3º ano|4º ano|5º ano|6º ano|7º ano|8º ano|9º ano|1ª série EM|2ª série EM|3ª série EM",
+      "decks": "Baralhos em",
+      "decksPlaceholder": "ex.: Jules::{ano} (vazio: como sempre)",
+      "classToken": "{ano}",
+      "instructions": "Instruções para a IA (sem o nome)",
+      "instructionsPlaceholder": "ex.: confunde b e d; poucos cartões por vez.",
+      "add": "+ Adicionar um filho",
+      "save": "Salvar",
+      "allLessons": "As lições de todos os filhos",
+      "lessonsOf": "As lições de {name}"
     }
   },
   "admin": {
@@ -902,6 +923,10 @@
     },
     "app": {
       "feature_off": "Esta função está indisponível no momento: tente de novo mais tarde."
+    },
+    "children": {
+      "same_id": "Dois filhos têm o mesmo nome.",
+      "too_many": "No máximo {max} filhos."
     }
   },
   "demo": {

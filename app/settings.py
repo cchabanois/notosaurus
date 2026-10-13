@@ -90,14 +90,18 @@ def configured(s: Settings) -> bool:
     return config.configured(s)
 
 
-def standing_instructions(s: Settings, profile: str | None) -> str:
-    """What the parent set in the settings, for everyone and for this Anki profile:
-    added before the request to the AI, never replacing its fixed rules."""
+def standing_instructions(s: Settings, profile: str | None, child: str = "") -> str:
+    """What the parent set, for everyone and for this child (`child`: what the AI is told of
+    it, children.for_ai: its class, its instructions, never its name), else for this Anki
+    profile (before the children's cards): added before the request to the AI, never
+    replacing its fixed rules."""
     parts = []
     if s.instructions.strip():
         parts.append(f"Standing instructions, for every lesson:\n{s.instructions.strip()}")
     own = s.profile_instructions.get(profile or "", "").strip()
-    if own:
+    if child.strip():
+        parts.append(f"Standing instructions for this pupil:\n{child.strip()}")
+    elif own:
         parts.append(f"Standing instructions for this pupil ({profile}):\n{own}")
     if not parts:
         return ""

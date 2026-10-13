@@ -48,15 +48,19 @@ internal fun Route.generationRoutes(server: LocalServer) {
         api("POST", "/api/lessons/{id}/revise") {
             val lesson = lesson()
             val req = body()
+            val every = children.list()
+            // The deck without the children's levels: no child's name to the AI (put back after)
+            val (private, deck) = Children.splitDeck(req.string("deck"), every)
             val request = buildJsonObject {
                 put("prompt", lesson.string("prompt"))
-                put("deck", buildJsonObject { put("deck", req["deck"]!!); put("cards", req["cards"]!!) })
+                put("deck", buildJsonObject { put("deck", deck); put("cards", req["cards"]!!) })
                 put("instruction", req["instruction"]!!)
                 put("language", languageName())
-                put("instructions", generation.instructions())
+                put("instructions", generation.instructions(children.get(lesson.string("child"))))
             }
             val revised = relay().withPhotos("revise", request, lessons.photos(lesson.string("id")))
-            val changes = JsonObject(req + mapOf("deck" to revised["deck"]!!, "cards" to revised["cards"]!!))
+            val revisedDeck = listOf(private, revised.string("deck")).filter { it.isNotEmpty() }.joinToString("::")
+            val changes = JsonObject(req + mapOf("deck" to JsonPrimitive(revisedDeck), "cards" to revised["cards"]!!))
             buildJsonObject {
                 put("lesson", lessons.update(lesson.string("id"), changes)!!)
                 put("summary", revised["summary"]!!)
@@ -69,10 +73,10 @@ internal fun Route.generationRoutes(server: LocalServer) {
                 put("card", req["card"]!!)
                 put("kind", req["kind"] ?: JsonPrimitive("explain"))
                 put("prompt", lesson.string("prompt"))
-                put("deck", lesson.string("deck"))
+                put("deck", Children.splitDeck(lesson.string("deck"), children.list()).second) // no child's name to the AI
                 put("language", languageName())
                 put("page_texts", lesson["page_texts"] ?: JsonArray(emptyList()))
-                put("instructions", generation.instructions())
+                put("instructions", generation.instructions(children.get(lesson.string("child"))))
             }
             JsonObject(relay().post("explain", request) - "usage")
         }

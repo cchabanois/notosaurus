@@ -17,7 +17,7 @@ from notosaurus_core.errors import loggable
 from notosaurus_core.images import refuse_bomb
 from notosaurus_core.llm import Image, extract_cards
 
-from .. import access, ankiconnect, decks, lessons, media, prompts, settings, usage
+from .. import access, ankiconnect, children, decks, lessons, media, prompts, settings, usage
 from ..anki import build_apkg
 from ..errors import AppError
 from ..models import ExportRequest, Generated, Lesson, LessonIn
@@ -72,6 +72,7 @@ class GenerationForm:
     typing: bool = Form(False)
     dictation: bool = Form(False)
     dictation_only: bool = Form(False)
+    child: str = Form("")  # the child it is for (children.Child.id): its class, instructions, decks
     fun_facts: bool = Form(False)
     page_texts: str = Form("")  # the PDF pages' text, JSON (see _page_texts)
     helps: bool = Form(False)
@@ -106,6 +107,10 @@ async def _generate(
     profile = await ankiconnect.active_profile() or ""  # the lesson belongs to this Anki profile
     known = await decks.known(profile)
     s = settings.current()
+    every = await asyncio.to_thread(children.list_all)
+    child = next((c for c in every if c.id == form.child), None)
+    # The decks the AI may reuse, without the children's levels: no child's name to the AI
+    known = sorted({name for d in known if (name := children.for_ai_deck(d, every))})
     found = await extract_cards(
         s,
         data,
@@ -115,7 +120,7 @@ async def _generate(
         fun_facts=form.fun_facts,
         page_texts=texts,
         helps=form.helps,
-        instructions=settings.standing_instructions(s, profile),
+        instructions=settings.standing_instructions(s, profile, children.for_ai(child)),
         quick=form.quick,
         on_card=on_card,
         existing=existing,
@@ -135,9 +140,11 @@ async def _generate(
         typing=form.typing,
         dictation=form.dictation or dictation_only,
         dictation_only=dictation_only,
+        child=child.id if child else "",
     )
-    # Its own deck: never one that exists already (another lesson's, or the user's in Anki)
-    content.deck = await decks.new_name(content.deck, profile or None, but=lesson_id)
+    # In the child's decks ("Jules::{classe}"), its own: never one that exists already
+    # (another lesson's, or the user's in Anki)
+    content.deck = await decks.new_name(children.deck_for(child, content.deck), profile or None, but=lesson_id)
     return Generated(content, photos, prompt, profile, found.frames, found.choice, texts)
 
 
@@ -293,6 +300,7 @@ async def regenerate(
             g.content.typing = g.content.typing or old.typing
             g.content.dictation = g.content.dictation or old.dictation
             g.content.dictation_only = g.content.dictation_only or old.dictation_only
+            g.content.child = g.content.child or old.child  # still for its child
             lesson = await asyncio.to_thread(lessons.regenerated, id, g, meter.calls)
             if lesson is None:  # deleted meanwhile
                 raise AppError("lesson.not_found", 404)

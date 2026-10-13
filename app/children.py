@@ -1,0 +1,123 @@
+"""The children the parent makes lessons for, each its card: a first name (the parent's, to
+tell them apart: never sent to the AI), a school class, the decks its lessons go in, and
+standing instructions. The page says which child a lesson is for (Lesson.child).
+
+data/children.json: {"format": 1, "children": [...]}. Before, the instructions per Anki
+profile (Settings.profile_instructions) were the way to tell the children apart: the
+first reading makes a card of each, named after its profile.
+"""
+
+import re
+import unicodedata
+
+from pydantic import BaseModel, Field
+
+from . import settings, storage
+
+FORMAT = 1
+# A class in the decks' path ("Jules::{classe}"): the child's class there, in any of the
+# page's languages (its word in each)
+CLASS_TOKEN = re.compile(r"\{(classe|class|klasse|curso|ano)\}", re.IGNORECASE)
+
+
+class Child(BaseModel):
+    id: str = Field(pattern=r"^[a-z0-9-]{1,40}$")
+    name: str = Field(min_length=1, max_length=40)  # the parent's: never sent to the AI
+    grade: str = Field(default="", max_length=40)  # its school class ("5e"): told to the AI
+    decks: str = Field(default="", max_length=200)  # the decks its lessons go in ("Jules::{classe}")
+    instructions: str = Field(default="", max_length=4000)  # told to the AI, with every lesson
+
+
+def _path():
+    return storage.data_dir() / "children.json"
+
+
+def list_all() -> list[Child]:
+    with storage.lock:
+        data = storage.read_json(_path())
+        if data is None:
+            return _from_profiles()
+        data = storage.migrate(data, "children", FORMAT, {})
+        return [Child(**c) for c in data.get("children", [])]
+
+
+def save_all(children: list[Child]) -> list[Child]:
+    with storage.lock:
+        storage.write_json(_path(), {"format": FORMAT, "children": [c.model_dump() for c in children]})
+    return children
+
+
+def get(id: str | None) -> Child | None:
+    return next((c for c in list_all() if c.id == id), None) if id else None
+
+
+def _from_profiles() -> list[Child]:
+    """The instructions per Anki profile, as they were: a child's card each."""
+    s = settings.current()
+    made, seen = [], set()
+    for profile, text in s.profile_instructions.items():
+        if not text.strip():
+            continue
+        base = slug(profile) or "child"
+        id_, n = base, 2
+        while id_ in seen:
+            id_, n = f"{base}-{n}", n + 1
+        seen.add(id_)
+        made.append(Child(id=id_, name=profile[:40], instructions=text.strip()[:4000]))
+    return made
+
+
+def slug(text: str) -> str:
+    plain = unicodedata.normalize("NFKD", text).encode("ascii", "ignore").decode().lower()
+    return re.sub(r"[^a-z0-9]+", "-", plain).strip("-")[:40]
+
+
+def for_ai(child: Child | None) -> str:
+    """What the AI is told of the child: its class and the parent's instructions; never its
+    name (no pupil's data where it isn't needed)."""
+    if child is None:
+        return ""
+    parts = []
+    if child.grade.strip():
+        parts.append(f"The pupil's school class: {child.grade.strip()} (word the cards and helps for that level).")
+    if child.instructions.strip():
+        parts.append(child.instructions.strip())
+    return "\n".join(parts)
+
+
+def deck_for(child: Child | None, deck: str) -> str:
+    """The lesson's deck in the child's decks ("Jules::{classe}"): the class put in, and the
+    levels the deck has already (the AI may have written "Anglais::5e") not twice."""
+    if child is None or not child.decks.strip():
+        return deck
+    prefix = CLASS_TOKEN.sub(child.grade.strip(), child.decks)
+    levels = [level.strip() for level in prefix.split("::") if level.strip()]
+    seen = {_same(level) for level in levels}
+    rest = [level.strip() for level in deck.split("::") if level.strip() and _same(level) not in seen]
+    return "::".join(levels + rest)
+
+
+def for_ai_deck(deck: str, cards: list[Child]) -> str:
+    """A deck's name as the AI may see it: the children's levels it starts with (their decks'
+    first names and classes, "Jules::5e::") left out, the name of none of them told."""
+    return split_deck(deck, cards)[1]
+
+
+def split_deck(deck: str, cards: list[Child]) -> tuple[str, str]:
+    """A deck's name as the children's levels it starts with ("Jules::5e") and the rest
+    ("Anglais::School subjects"): the rest is what the AI sees, the levels are put back."""
+    private = {_same(c.name) for c in cards}
+    for c in cards:
+        prefix = CLASS_TOKEN.sub(c.grade.strip(), c.decks)
+        private |= {_same(level) for level in prefix.split("::") if level.strip()}
+    levels = [level.strip() for level in deck.split("::") if level.strip()]
+    n = 0
+    while n < len(levels) and _same(levels[n]) in private:
+        n += 1
+    return "::".join(levels[:n]), "::".join(levels[n:])
+
+
+def _same(level: str) -> str:
+    """A deck level as compared: no case, no accents, an ordinal's ending dropped ("5ème", "5e")."""
+    plain = unicodedata.normalize("NFKD", level).encode("ascii", "ignore").decode().casefold().strip()
+    return re.sub(r"^(\d+)\s*(e|eme|er|ere|re|de|nd|nde|st|rd|th|o|a|º|ª)$", r"\1", plain)

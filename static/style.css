@@ -987,6 +987,10 @@ html.sheet-open { overflow: hidden; overscroll-behavior: none; }
 .notice-bar > span { flex: 1; }
 .notice-bar small { display: block; color: var(--muted); }
 .notice-bar.ask { flex-wrap: wrap; }
+.children .child-card { display: grid; gap: .5rem; padding: .75rem; margin-bottom: .75rem; border: 1px solid var(--border); border-radius: var(--radius-sm); }
+.children .child-card.current { border-color: var(--primary); }
+.children .child-head { display: flex; align-items: center; gap: .5rem; }
+.children .child-name { flex: 1; min-width: 0; font-weight: 700; }
 .notice-bar.ask > span { flex-basis: 100%; }
 .found-pick { position: relative; }
 .found-best { position: absolute; top: .2rem; left: .2rem; font-size: 1rem; }

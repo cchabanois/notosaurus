@@ -36,6 +36,7 @@ class Generation(
     private val relay: () -> Relay,
     private val speech: Speech,
     private val turnPhoto: (ByteArray, Int) -> ByteArray,
+    private val children: Children = Children(prefs),
 ) {
     private val running = ConcurrentHashMap<String, Job>() // by the page's id for each
 
@@ -44,14 +45,18 @@ class Generation(
     suspend fun make(form: GenerationForm, onCard: OnCard, existing: List<String> = emptyList()): Made {
         val fields = form.fields
         val texts = pageTexts(fields["page_texts"], form.images.size)
+        val every = children.list()
+        val child = every.firstOrNull { it.id == fields["child"] } // the child it is for: its class, instructions, decks
+        // The decks the AI may reuse, without the children's levels: no child's name to the AI
+        val decks = lessons.list().map { Children.splitDeck(it.string("deck"), every).second }.filter { it.isNotEmpty() }.distinct()
         val request = buildJsonObject {
             put("prompt", fields["prompt"] ?: "")
             put("deck", fields["deck"] ?: "")
-            put("decks", JsonArray(lessons.list().map { JsonPrimitive(it.string("deck")) }.distinct()))
+            put("decks", JsonArray(decks.map(::JsonPrimitive)))
             put("fun_facts", form.on("fun_facts"))
             put("helps", form.on("helps"))
             put("page_texts", texts)
-            put("instructions", instructions())
+            put("instructions", instructions(child))
             put("quick", form.on("quick"))
             if (existing.isNotEmpty()) put("existing", JsonArray(existing.map(::JsonPrimitive)))
         }
@@ -74,7 +79,8 @@ class Generation(
             turnPhoto(data, degrees)
         }
         val content = mapOf(
-            "deck" to found["deck"]!!.jsonObject["deck"]!!,
+            "deck" to JsonPrimitive(Children.deckFor(child, found["deck"]!!.jsonObject.string("deck"))), // in the child's decks
+            "child" to JsonPrimitive(child?.id ?: ""),
             "cards" to JsonArray(cards),
             "prompt" to JsonPrimitive(fields["prompt"] ?: ""),
             "voice" to JsonPrimitive(voice),
@@ -104,12 +110,16 @@ class Generation(
     /** "Cancel": the lesson with that id stops being made; false when it isn't (done, unknown). */
     fun cancel(job: String): Boolean = running[job]?.also { it.cancel() } != null
 
-    /** The settings' standing instructions, put before every request to the AI
-     * (app/settings.py, standing_instructions). */
-    fun instructions(): String {
+    /** The settings' standing instructions and the child's (its class, instructions: never its
+     * name), put before every request to the AI (app/settings.py, standing_instructions). */
+    fun instructions(child: Child? = null): String {
+        val parts = mutableListOf<String>()
         val text = prefs[LocalServer.INSTRUCTIONS].orEmpty().trim()
-        if (text.isEmpty()) return ""
-        return "Standing instructions, for every lesson:\n$text\n(The request below wins if it says otherwise.)\n\n"
+        if (text.isNotEmpty()) parts += "Standing instructions, for every lesson:\n$text"
+        val own = Children.forAi(child)
+        if (own.isNotEmpty()) parts += "Standing instructions for this pupil:\n$own"
+        if (parts.isEmpty()) return ""
+        return parts.joinToString("\n\n") + "\n(The request below wins if it says otherwise.)\n\n"
     }
 
     /** `work`, stopped by "Cancel" (`job`: the page's id for it): Cancelled then. */
