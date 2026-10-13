@@ -45,7 +45,7 @@ class Speech(private val folder: File, private val prefs: Preferences, private v
     }
 
     /** The voice for the backs' language ("es-ES", "en"…): DEFAULT_VOICE in that variety,
-     * else in another of the language; "" when none (or no relay). */
+     * else in the language's usual one (VARIETY), else in another; "" when none (or no relay). */
     suspend fun voiceFor(language: String): String {
         val tag = language.trim().replace('_', '-').lowercase()
         if (tag.isEmpty()) return ""
@@ -54,7 +54,7 @@ class Speech(private val folder: File, private val prefs: Preferences, private v
         val ranked = all.filter { it.string("locale").lowercase().substringBefore('-') == base }.sortedWith(
             compareBy(
                 { it.string("locale").lowercase() != tag }, // the variety asked for
-                { it.string("locale").lowercase() != "$base-$base" }, // else the language's own (es-ES, fr-FR)
+                { it.string("locale").lowercase() != (VARIETY[base] ?: "$base-$base") }, // else its usual one (en-GB, es-ES)
                 { !it.string("voice").endsWith("-$DEFAULT_VOICE") },
             ),
         )
@@ -67,6 +67,10 @@ class Speech(private val folder: File, private val prefs: Preferences, private v
     fun deleteAll() = folder.listFiles()?.forEach { it.delete() }
 
     companion object {
+        // A language's usual variety, as the computer's (tts.PREFERRED): "en" alone isn't
+        // en-AU, the first English voice by name ("en-en" isn't one)
+        private val VARIETY = mapOf("en" to "en-gb", "pt" to "pt-pt")
+
         private val BLANK = Regex("""…|\.{3}|_{3,}""") // a sentence's blank for the word to write
         private val BRACKETS = Regex("""\s*\([^)]*\)""")
 

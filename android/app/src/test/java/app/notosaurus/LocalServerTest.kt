@@ -946,7 +946,7 @@ class LocalServerTest {
     fun anAutoVoiceInTheLanguageLearned() = app { client ->
         relayAnswers("""{"deck": {"deck": "Espagnol", "cards": [{"front": "la mère", "back": "la madre"}]}, "turns": [], "back_language": "es-ES", "usage": {"credits": 1, "credits_left": 99}}""")
         // The relay's voices, read once
-        relayAnswers(voices.dropLast(1) + """, {"voice": "fr-CA-Chirp3-HD-Aoede", "locale": "fr-CA", "gender": "Female"}, {"voice": "fr-FR-Chirp3-HD-Aoede", "locale": "fr-FR", "gender": "Female"}]""")
+        relayAnswers(voices.dropLast(1) + """, {"voice": "fr-CA-Chirp3-HD-Aoede", "locale": "fr-CA", "gender": "Female"}, {"voice": "fr-FR-Chirp3-HD-Aoede", "locale": "fr-FR", "gender": "Female"}, {"voice": "en-AU-Chirp3-HD-Aoede", "locale": "en-AU", "gender": "Female"}, {"voice": "en-GB-Chirp3-HD-Aoede", "locale": "en-GB", "gender": "Female"}, {"voice": "en-US-Chirp3-HD-Aoede", "locale": "en-US", "gender": "Female"}]""")
         val lesson = client.submitFormWithBinaryData("/api/extract", formData {
             append("prompt", "FR → ES")
             append("voice", "auto")
@@ -970,6 +970,14 @@ class LocalServerTest {
             append("dictation", "true")
         }) { page("fr") }.json().jsonObject
         assertEquals("fr-FR-Chirp3-HD-Aoede", dictation.string("voice"))
+
+        // "en" alone: its usual variety, not the first by name (en-AU)
+        relayAnswers("""{"deck": {"deck": "Anglais", "cards": [{"front": "le chat", "back": "the cat"}]}, "turns": [], "back_language": "en", "usage": {"credits": 1, "credits_left": 96}}""")
+        val english = client.submitFormWithBinaryData("/api/extract", formData {
+            append("prompt", "FR → EN")
+            append("voice", "auto")
+        }) { page("fr") }.json().jsonObject
+        assertEquals("en-GB-Chirp3-HD-Aoede", english.string("voice"))
     }
 
     private suspend fun HttpClient.send(lesson: JsonObject) = post("/api/anki/send") {
