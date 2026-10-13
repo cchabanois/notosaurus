@@ -161,7 +161,6 @@ class SettingsUpdate(BaseModel):
     profile_instructions: dict[str, str] | None = None  # replaces them all ("" removes one)
     picture_service: Literal["", "gemini", "openai", "openrouter", "none"] | None = None
     picture_model: str | None = None
-    picture_find: bool | None = None
 
 
 class DrawPictures(BaseModel):

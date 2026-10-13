@@ -1530,19 +1530,6 @@ class LocalServerTest {
         assertEquals("https://commons.wikimedia.org/wiki/File:Dog.jpg", source.string("page")) // kept with the card
         assertEquals("dog", asked[0]["card"]!!.jsonObject.string("picture_search")) // the relay looks for it
         assertEquals("true", asked[0]["find"]!!.jsonPrimitive.content)
-
-        // Always drawn: in the settings
-        client.put("/api/admin/settings") { page(); contentType(ContentType.Application.Json); setBody("""{"picture_find": false}""") }
-        assertEquals("false", client.get("/api/admin/settings") { page() }.json().jsonObject["picture_find"]!!.jsonPrimitive.content)
-        val card = lesson["cards"]!!.jsonArray[0].jsonObject.string("id")
-        client.delete("/api/lessons/$id/cards/$card/picture") { page() }
-        val again = client.put("/api/lessons/$id") {
-            page(); contentType(ContentType.Application.Json)
-            setBody(buildJsonObject { put("cards", JsonArray(listOf(lesson["cards"]!!.jsonArray[0]))) }.toString())
-        }
-        assertEquals(HttpStatusCode.OK, again.status)
-        client.post("/api/lessons/$id/pictures") { page() }
-        assertEquals("false", asked.last()["find"]!!.jsonPrimitive.content)
     }
 
     @Test

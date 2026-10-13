@@ -571,3 +571,12 @@ def test_configured_once_the_service_has_its_key(admin, monkeypatch):
     assert admin.get("/api/config").json()["configured"] is False  # its address first
     admin.put("/api/admin/settings", headers=ADMIN, json={"compatible_base_url": "http://localhost:11434/v1"})
     assert admin.get("/api/config").json()["configured"] is True
+
+
+def test_a_free_picture_always_looked_for_first(client):
+    """No longer a setting (a drawing is asked for anyway): turned off before, ignored."""
+    from app import storage
+
+    storage.write_json(settings._path(), {"format": settings.FORMAT, "picture_find": False})
+    assert settings.current().picture_find is True
+    assert "picture_find" not in settings.EDITABLE_FIELDS

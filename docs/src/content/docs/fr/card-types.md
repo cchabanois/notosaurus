@@ -124,8 +124,7 @@ regarde les images trouvées et garde celle qui convient ; si aucune ne va, l'im
 C'est gratuit (seul le choix par l'IA coûte, bien moins d'un centime) et exact : le vrai tableau
 de la prise de la Bastille, le vrai portrait d'un président.
 
-**Réglages → Images des cartes → Chercher d'abord une image libre** le désactive (toujours
-dessiner). Dans le panneau d'une carte, **🔎 Chercher une image** montre les images trouvées,
+Dans le panneau d'une carte, **🔎 Chercher une image** montre les images trouvées,
 pour choisir vous-même : elles sont filtrées pour les élèves (pas de contenu adulte), et vous
 les voyez toujours avant qu'elles aillent sur une carte.
 

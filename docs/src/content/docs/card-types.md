@@ -118,7 +118,6 @@ the pictures found and keeps the one that fits; when none does, the picture is d
 free (only the AI's choice costs: well under a cent) and exact: the real painting of the
 storming of the Bastille, the real portrait of a president.
 
-**Settings → Pictures on cards → Look for a free picture first** turns it off (always drawn).
 In a card's panel, **🔎 Find a picture** shows the pictures found, to choose yourself: they come
 filtered for pupils (no mature content), and you always see them before they go on a card.
 

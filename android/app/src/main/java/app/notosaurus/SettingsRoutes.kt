@@ -11,7 +11,6 @@ import app.notosaurus.LocalServer.Companion.INSTRUCTIONS
 import app.notosaurus.LocalServer.Companion.KEY
 import app.notosaurus.LocalServer.Companion.MODE
 import app.notosaurus.LocalServer.Companion.PHONE_MODE
-import app.notosaurus.LocalServer.Companion.PICTURE_FIND
 import app.notosaurus.LocalServer.Companion.RELAY
 import app.notosaurus.LocalServer.Companion.TTS_RATE
 import app.notosaurus.LocalServer.Companion.keyOf
@@ -80,7 +79,6 @@ internal fun Route.settingsRoutes(server: LocalServer) {
             (changes[KEY] as? JsonPrimitive)?.let { prefs[keyOf(relayUrl())] = it.content.trim() }
             (changes[INSTRUCTIONS] as? JsonPrimitive)?.let { prefs[INSTRUCTIONS] = it.content.take(4000) }
             (changes[CARD_HELPS] as? JsonPrimitive)?.let { prefs[CARD_HELPS] = it.content }
-            (changes[PICTURE_FIND] as? JsonPrimitive)?.let { prefs[PICTURE_FIND] = it.content }
             (changes[TTS_RATE] as? JsonPrimitive)?.content?.takeIf { it in Speech.RATES }?.let { prefs[TTS_RATE] = it }
             settings()
         }
@@ -134,7 +132,6 @@ private fun LocalServer.settings() = buildJsonObject {
     put("has_key", licence().isNotEmpty())
     put(INSTRUCTIONS, prefs[INSTRUCTIONS].orEmpty())
     put(CARD_HELPS, prefs[CARD_HELPS] == "true")
-    put(PICTURE_FIND, prefs[PICTURE_FIND] != "false") // on unless turned off
     put(TTS_RATE, prefs[TTS_RATE] ?: "-10%")
     put("version", version)
     put(MODE, prefs[MODE] ?: PHONE_MODE)

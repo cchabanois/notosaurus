@@ -68,7 +68,8 @@ SPECS: dict[str, Spec] = {
     "compatible_api_key": Spec(env="NOTOSAURUS_COMPATIBLE_API_KEY", secret=True),
     "picture_service": Spec(env="NOTOSAURUS_PICTURE_SERVICE"),
     "picture_model": Spec(env="NOTOSAURUS_PICTURE_MODEL"),
-    "picture_find": Spec(),
+    # No longer a setting: a free picture is always looked for first (drawing one is asked)
+    "picture_find": Spec(editable=False),
     "tts_rate": Spec(env="NOTOSAURUS_TTS_RATE"),
     "ankiconnect_url": Spec(env="NOTOSAURUS_ANKICONNECT_URL"),
     "ankiconnect_key": Spec(env="NOTOSAURUS_ANKICONNECT_KEY", secret=True),
@@ -194,10 +195,14 @@ def embedded() -> bool:
     return os.environ.get("NOTOSAURUS_EMBEDDED") == "1"
 
 
+# Saved by older versions, no longer settings: their saved value ignored
+NO_LONGER_SET = frozenset({"picture_find"})
+
+
 def current() -> Settings:
     """Defaults ← environment ← saved values (← the add-on's bridge, when embedded)."""
     values = _environment()
-    values.update({k: v for k, v in _stored().items() if k in Settings.model_fields})
+    values.update({k: v for k, v in _stored().items() if k in Settings.model_fields and k not in NO_LONGER_SET})
     if embedded():
         values.update({f: os.environ[ENV[f]] for f in EMBEDDED_FIELDS if ENV[f] in os.environ})
     return Settings(**values)
