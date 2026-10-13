@@ -23,7 +23,6 @@ class Pictures(
     private val lessons: Lessons,
     private val relay: () -> Relay,
     private val cardSize: (ByteArray) -> ByteArray = { it }, // the user's photo as a card shows it (Photos.cardSize)
-    private val find: () -> Boolean = { true }, // a free picture found first for a real thing (the settings)
 ) {
     /** The missing pictures, a few at a time: figures drawn, free pictures found; those no
      * free one fits drawn by the image model only when `draw` (the user said yes), else in
@@ -40,7 +39,7 @@ class Pictures(
                 async {
                     few.withPermit {
                         try {
-                            cards[i] = drawn(id, cards[i], fresh = false, draw = draw, find = find() && !draw)
+                            cards[i] = drawn(id, cards[i], fresh = false, draw = draw, find = !draw)
                         } catch (e: RelayException) {
                             if (e.code == NEEDS_DRAWING) toDraw += cards[i].string("id")
                             else failures += buildJsonObject { put("code", e.code); put("params", e.params) }
@@ -119,7 +118,7 @@ class Pictures(
         asked: String? = null,
         language: String = "English",
         draw: Boolean = true,
-        find: Boolean = find(),
+        find: Boolean = true,
     ): JsonObject {
         val made = relay().post("card-picture", buildJsonObject {
             put("card", card)

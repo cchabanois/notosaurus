@@ -74,7 +74,7 @@ class LocalServer(
     internal val texts = PageTexts(web, languages)
     internal val prompts = Prompts(File(dataDir, "prompts.json"), texts)
     internal val speech = Speech(File(dataDir, "audio").apply { mkdirs() }, prefs, ::relay) // the backs read aloud, kept
-    internal val pictures = Pictures(lessons, ::relay, cardSize) { prefs[PICTURE_FIND] != "false" }
+    internal val pictures = Pictures(lessons, ::relay, cardSize)
     internal val generation = Generation(lessons, prefs, ::relay, speech, turnPhoto, children)
     internal val computer = Computer(prefs, modeChanged)
     internal val switches = Switches(prefs, version)
@@ -239,7 +239,6 @@ class LocalServer(
         fun keyOf(relay: String) = "$KEY@${relay.trimEnd('/')}"
         const val INSTRUCTIONS = "instructions"
         const val CARD_HELPS = "card_helps"
-        const val PICTURE_FIND = "picture_find" // a free picture found first for a real thing (Card.picture_search)
 
         const val TTS_RATE = Speech.TTS_RATE
 
