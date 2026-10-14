@@ -28,6 +28,7 @@ be changed, but they can be **duplicated** to make your own version.
 | Language: vocabulary | One card per word or expression, with the article, gender and plural in the info; without a photo, from a list or a topic. |
 | Language: sentences | One card per sentence, in your language and the language being learnt. |
 | Language: conjugation | One verb, tense and person per card; the conjugated form on the back. |
+| Table to learn | A table to know by heart (declension, irregular verbs…): one card per cell, or per row when each row is a word; the answer typed. |
 | Questions / answers | Short questions on the content: dates, definitions, key ideas. |
 | Definitions | One card per key word to define, its definition on the back. |
 | Fill in the blanks | Sentences with gaps (cloze): one card per gap number. |
@@ -38,7 +39,9 @@ be changed, but they can be **duplicated** to make your own version.
 | Geometry (with figures) | Figures, properties and vocabulary, with an exact figure drawn on the cards. |
 | Diagram or map to complete | The labels of a diagram or a map hidden behind numbers: one card per label. |
 | Language: vocabulary in pictures | The picture of each word on the front (found or drawn); the word in the language being learned on the back. |
-| Spelling dictation | One card per word to spell: a sentence with the word missing on the front, the word on the back, a spelling tip. |
+| Fill in the word | One card per word to spell: a sentence with the word missing on the front, the word on the back (typed), a spelling tip. |
+| Dictation | Dictation cards only: the words to learn to spell, and the dictation text sentence by sentence, heard then typed. |
+| Gap dictation | The hardest words of the dictation text, one per card: its sentence with the blank, heard, the word typed. |
 
 ## Your own instructions
 

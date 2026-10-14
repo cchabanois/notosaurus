@@ -163,7 +163,7 @@ def package(client, folder: Path, made: dict, asked: dict, voice: str, scratch: 
         "cards": got(client.get(f"/api/lessons/{lesson_id}"))["cards"],  # with the ids the app gives
         "voice": voice,
         "reverse": asked["reverse"],
-        "typing": asked["typing"],
+        "typing": asked["typing"] or bool(made.get("typing")),  # the prompt's, or read by the AI
         "dictation": asked["dictation"],
         "dictation_only": asked["dictation_only"],
         "frames": frames,
@@ -204,6 +204,11 @@ def check(
         dictated, page_is_one = bool(made.get("dictation")), bool(expect.get("dictation"))
         said = "recognised" if dictated else "not chosen"
         results.append((dictated == page_is_one, f"dictation {said} (expected: {page_is_one})"))
+
+    # A typed answer when the page calls for one (expect.json "typing"): the prompt's, or read by the AI
+    if "typing" in expect:
+        typed = asked["typing"] or bool(made.get("typing"))
+        results.append((typed == expect["typing"], f"typed answer: {typed} (expected: {expect['typing']})"))
 
     # The voice: the language learned's, the pupil's own for a dictation, else none
     said = made.get("back_language") or "none"  # (the voice's language the AI said)
@@ -246,7 +251,7 @@ def check(
             ok = model.startswith("Notosaurus dictée")
         else:
             ok = model.startswith("Notosaurus recto/verso")
-            ok &= ("à taper" in model) == asked["typing"]
+            ok &= ("à taper" in model) == body["typing"]
             ok &= ("+ dictée" in model) == bool(heard)
             ok &= ("+ inverse" in model) == asked["reverse"]
         results.append((ok, f"note type {model!r}"))
@@ -316,7 +321,7 @@ def check(
     elif before:
         ratio = len(cards) / len(before)
         results.append((0.5 <= ratio <= 2, f"{len(cards)} cards ({len(before)} before)"))
-    text = plain(" ".join(f"{c.get('front', '')} {c.get('back', '')}" for c in cards))
+    text = plain(" ".join(f"{c.get('front', '')} {c.get('back', '')} {c.get('info', '')}" for c in cards))
     for word in expect.get("contains", []):
         results.append((plain(word) in text, f"contains {word!r}"))
     if before:

@@ -29,6 +29,7 @@ Elles ne se modifient pas, mais se **dupliquent** pour en faire votre propre ver
 | Langue : vocabulaire | Une carte par mot ou expression, avec l'article, le genre et le pluriel dans l'info ; sans photo, à partir d'une liste ou d'un thème. |
 | Langue : phrases | Une carte par phrase, dans votre langue et dans la langue étudiée. |
 | Langue : conjugaison | Un verbe, un temps et une personne par carte ; la forme conjuguée au verso. |
+| Tableau à apprendre | Un tableau à savoir par cœur (déclinaison, verbes irréguliers…) : une carte par case, ou par ligne quand chaque ligne est un mot ; la réponse tapée. |
 | Questions / réponses | Des questions courtes sur le contenu : dates, définitions, idées clés. |
 | Définitions | Une carte par mot-clé à savoir définir, sa définition au verso. |
 | Texte à trous | Des phrases à trous : une carte par numéro de trou. |
@@ -39,7 +40,9 @@ Elles ne se modifient pas, mais se **dupliquent** pour en faire votre propre ver
 | Géométrie (avec figures) | Figures, propriétés et vocabulaire, avec une figure exacte dessinée sur les cartes. |
 | Schéma ou carte à compléter | Les légendes d'un schéma ou d'une carte cachées derrière des numéros : une carte par légende. |
 | Langue : vocabulaire en images | L'image de chaque mot au recto (trouvée ou dessinée) ; le mot dans la langue étudiée au verso. |
-| Dictée de mots | Une carte par mot à savoir écrire : une phrase où il manque le mot au recto, le mot au verso, une astuce d'orthographe. |
+| Mots à trous | Une carte par mot à savoir écrire : une phrase où il manque le mot au recto, le mot au verso (tapé), une astuce d'orthographe. |
+| Dictée | Seulement des cartes de dictée : les mots à savoir écrire, et le texte de la dictée phrase par phrase, entendus puis tapés. |
+| Dictée à trous | Les mots les plus difficiles du texte de la dictée, un par carte : sa phrase avec le trou, entendue, le mot tapé. |
 
 ## Vos propres consignes
 
