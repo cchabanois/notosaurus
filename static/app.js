@@ -116,6 +116,7 @@ document.addEventListener("alpine:init", () => {
     cards: [],
     reverse: false,
     voice: "",                   // the open lesson's voice (the prompt's may be "auto": form.voice)
+    rate: "",                    // its voice's speed ("-10%"; "": the settings')
     decks: [],                   // existing deck names, for the deck field
     lessonChoice: "",            // what the AI chose to make (prompt "Automatic")
     lessonExported: false,       // already sent to Anki or exported

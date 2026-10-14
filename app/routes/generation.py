@@ -135,11 +135,13 @@ async def _generate(
     dictation_only = form.dictation_only or found.dictation
     typing = form.typing or found.typing
     dictation = form.dictation or found.dictation_card or dictation_only
+    foreign = bool(_learned(found.back_language, lang, spelling=False))
     if voice.strip().lower() == "auto":  # the voice of the language the backs are in
         voice = await tts.voice_for(_learned(found.back_language, lang, typing or dictation), s.voices)
     content = LessonIn(
         **found.deck.model_dump(),
         voice=voice,
+        rate=_rate(s.tts_rate, found.speed, foreign=foreign, dictation=dictation),
         typing=typing,
         dictation=dictation,
         dictation_only=dictation_only,
@@ -149,6 +151,15 @@ async def _generate(
     # (another lesson's, or the user's in Anki)
     content.deck = await decks.new_name(children.deck_for(child, content.deck), profile or None, but=lesson_id)
     return Generated(content, photos, prompt, profile, found.frames, found.choice, texts)
+
+
+def _rate(slowed: str, speed: str, foreign: bool, dictation: bool) -> str:
+    """The backs' speed, kept with the lesson: the settings' slowdown (`slowed`) for a
+    language being learned or a dictation (time to write), normal otherwise. What the
+    instructions say comes first: "slow" slows even when the settings don't."""
+    if speed == "slow":
+        return slowed if slowed != tts.NORMAL else tts.RATE
+    return slowed if speed != "normal" and (foreign or dictation) else tts.NORMAL
 
 
 def _learned(back_language: str, lang: str, spelling: bool) -> str:

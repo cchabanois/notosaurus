@@ -29,9 +29,15 @@ la prononciation avant d'envoyer les cartes.
 
 ## Débit
 
-**Réglages → Voix des cartes → Débit de la voix** : **Normal**, **Un peu ralenti (−10 %)** (par
-défaut) ou **Lent (−25 %)**, pratique pour les débutants. Le débit s'applique à l'audio fait
-ensuite.
+Une leçon est ralentie là où ça aide : les versos dans une langue apprise, et les dictées (le temps
+d'écrire). Une leçon dans la langue de l'enfant (histoire, français…) est lue à vitesse normale.
+
+**Réglages → Voix des cartes → Ralentir les langues étrangères et les dictées** : **Beaucoup
+(−25 %)**, **Un peu (−10 %)** (par défaut) ou **Non**. Une consigne peut aussi le dire, pour ses
+leçons : « lecture lente », « vitesse normale ».
+
+Le débit est choisi quand la leçon est faite et gardé avec elle : ses sons restent pareils, même si
+le réglage change ensuite.
 
 ![Réglages : le débit de la voix](../../../assets/screenshots/fr/settings-voice.png)
 

@@ -86,6 +86,7 @@ def is_anki_locale(voice: str) -> bool:
 
 
 RATE = "-10%"
+NORMAL = "+0%"  # not slowed
 MAX_LINE = 200  # characters read of a line: a back's sound, not a text read out
 
 

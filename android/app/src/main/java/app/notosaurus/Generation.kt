@@ -89,6 +89,12 @@ class Generation(
             "cards" to JsonArray(cards),
             "prompt" to JsonPrimitive(fields["prompt"] ?: ""),
             "voice" to JsonPrimitive(voice),
+            "rate" to JsonPrimitive(
+                Speech.rate(
+                    prefs[Speech.TTS_RATE] ?: Speech.SLOWED, found.string("speed"),
+                    foreign = Speech.learned(found.string("back_language"), form.lang, false).isNotEmpty(), dictation = dictation,
+                ),
+            ),
             "typing" to JsonPrimitive(typing),
             "dictation" to JsonPrimitive(dictation),
             "dictation_only" to JsonPrimitive(dictationOnly),

@@ -777,6 +777,16 @@ class LocalServerTest {
     }
 
     @Test
+    fun theBacksSpeed() { // as the computer's (test_prompts.test_the_backs_speed)
+        assertEquals("-25%", Speech.rate("-25%", "", foreign = true, dictation = false))
+        assertEquals("-25%", Speech.rate("-25%", "", foreign = false, dictation = true)) // time to write
+        assertEquals("+0%", Speech.rate("-25%", "", foreign = false, dictation = false)) // a history lesson
+        assertEquals("+0%", Speech.rate("-25%", "normal", foreign = true, dictation = false))
+        assertEquals("-10%", Speech.rate("+0%", "slow", foreign = false, dictation = false)) // asked: slowed all the same
+        assertEquals("+0%", Speech.rate("+0%", "", foreign = true, dictation = true)) // the settings don't slow
+    }
+
+    @Test
     fun picturesDrawnByTheRelayThenIntoAnkiDroid() = app { client ->
         relayAnswers("""{"deck": {"deck": "Anglais", "cards": [
             {"front": "Comment dit-on ?", "back": "an apple", "picture_prompt": "an apple"},

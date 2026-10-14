@@ -36,7 +36,8 @@ internal fun Route.languageRoutes(server: LocalServer) {
             if (!allowed()) return@get
             val text = call.request.queryParameters["text"].orEmpty()
             val voice = call.request.queryParameters["voice"].orEmpty()
-            val mp3 = runCatching { speech.read(text, voice) }.getOrNull()
+            val rate = call.request.queryParameters["rate"].orEmpty().takeIf { it in Speech.RATES }.orEmpty() // the lesson's
+            val mp3 = runCatching { speech.read(text, voice, rate) }.getOrNull()
             if (mp3 == null) call.respondText("", status = HttpStatusCode.BadGateway)
             else call.respondBytes(mp3.readBytes(), ContentType.Audio.MPEG)
         }

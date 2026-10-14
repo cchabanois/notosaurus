@@ -121,6 +121,7 @@ class Extracted(BaseModel):
     dictation: bool = False  # dictation cards alone: asked, or chosen (prompt "Automatic")
     dictation_card: bool = False  # the instructions ask for a dictation of each card too
     typing: bool = False  # the instructions ask for the answers to be typed
+    speed: str = ""  # how fast the instructions ask for the backs to be read: "slow", "normal", "" not said
 
 
 async def extract_cards(
@@ -168,6 +169,7 @@ async def extract_cards(
         dictation=result.dictation,
         dictation_card=result.dictation_card,
         typing=result.typing,
+        speed=result.speed,
     )
 
 

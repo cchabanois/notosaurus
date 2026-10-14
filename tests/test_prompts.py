@@ -226,6 +226,42 @@ def test_the_options_the_ai_read_in_the_instructions(client, monkeypatch):
     assert lesson["voice"] == "es-ES-ElviraNeural"
 
 
+def test_the_backs_speed():
+    """Slowed (the settings' slowdown) for a language being learned or a dictation, normal
+    for the pupil's own language; what the instructions say first."""
+    from app.routes.generation import _rate
+
+    assert _rate("-25%", "", foreign=True, dictation=False) == "-25%"
+    assert _rate("-25%", "", foreign=False, dictation=True) == "-25%"  # time to write
+    assert _rate("-25%", "", foreign=False, dictation=False) == "+0%"  # a history lesson
+    assert _rate("-25%", "normal", foreign=True, dictation=False) == "+0%"
+    assert _rate("-25%", "slow", foreign=False, dictation=False) == "-25%"
+    assert _rate("+0%", "slow", foreign=False, dictation=False) == "-10%"  # asked: slowed all the same
+    assert _rate("+0%", "", foreign=True, dictation=True) == "+0%"  # the settings don't slow
+
+
+def test_a_lesson_keeps_its_speed(client, monkeypatch):
+    from app.routes import generation
+    from notosaurus_core.llm import Extracted
+    from notosaurus_core.models import Card, Deck
+
+    found = {"back_language": "", "speed": ""}
+
+    async def extract(*_, **__):
+        deck = Deck(deck="Histoire", cards=[Card(front="1789", back="La Révolution")])
+        return Extracted(deck=deck, turns=[], frames=[], **found)
+
+    monkeypatch.setattr(generation, "extract_cards", extract)
+    page = {"X-Notosaurus-Lang": "fr"}
+    assert client.post("/api/extract", data={"prompt": "p"}, headers=page).json()["rate"] == "+0%"
+    found["back_language"] = "es-ES"
+    lesson = client.post("/api/extract", data={"prompt": "p"}, headers=page).json()
+    assert lesson["rate"] == "-10%"  # the settings' default
+    assert client.get(f"/api/lessons/{lesson['id']}").json()["rate"] == "-10%"
+    found["speed"] = "normal"
+    assert client.post("/api/extract", data={"prompt": "p"}, headers=page).json()["rate"] == "+0%"
+
+
 def test_the_automatic_prompt_knows_a_dictation():
     import json
     from pathlib import Path
