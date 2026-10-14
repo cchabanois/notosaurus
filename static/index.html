@@ -836,6 +836,18 @@
       <!-- The choice: a row each, tapped: chosen (the sheet closes) -->
       <template x-if="childrenSheet.editing === null">
         <div>
+          <!-- The Anki profile open on the computer: which child it is for (only the open one is
+               linked: never a profile one isn't in) -->
+          <label class="field profile-link" x-show="profiles && anki.available && anki.profile && childrenSheet.list.length">
+            <span x-text="$t('app.children.openProfile', { profile: anki.profile })"></span>
+            <select @change="linkProfile($event.target.value)" :disabled="childrenSheet.saving">
+              <option value="" x-text="$t('app.children.sharedProfile')"
+                      :selected="!childrenSheet.list.some((c) => c.anki_profile === anki.profile)"></option>
+              <template x-for="c in childrenSheet.list" :key="c.id">
+                <option :value="c.id" x-text="c.name" :selected="c.anki_profile === anki.profile"></option>
+              </template>
+            </select>
+          </label>
           <p class="hint" x-text="$t('app.children.pick')"></p>
           <ul class="child-rows">
             <template x-for="(c, i) in childrenSheet.list" :key="c.id">
@@ -882,17 +894,6 @@
             <button type="button" class="chip" @click="c.decks = c.name.trim()" x-text="c.name.trim()"></button>
             <button type="button" class="chip" x-show="c.grade" @click="c.decks = decksWithClass(c)" x-text="decksWithClass(c)"></button>
           </div>
-          <!-- Its own Anki profile (the computer): open, the lessons are for this child -->
-          <label class="field" x-show="profiles && anki.available && (ankiProfiles.length || c.anki_profile)">
-            <span x-text="$t('app.children.ankiProfile')"></span>
-            <select :value="c.anki_profile ?? ''" @change="c.anki_profile = $event.target.value">
-              <option value="" x-text="$t('app.children.noAnkiProfile')"></option>
-              <template x-for="p in [...new Set([...ankiProfiles, ...(c.anki_profile ? [c.anki_profile] : [])])]" :key="p">
-                <option :value="p" x-text="p" :selected="c.anki_profile === p" :disabled="profileTaken(p, c)"></option>
-              </template>
-            </select>
-            <small class="muted" x-text="$t('app.children.ankiProfileHint')"></small>
-          </label>
           <label class="field">
             <span x-text="$t('app.children.instructions')"></span>
             <textarea x-model="c.instructions" rows="2" maxlength="4000" :placeholder="instructionsExample(c)"></textarea>

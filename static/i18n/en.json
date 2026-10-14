@@ -432,9 +432,6 @@
       "decks": "Decks in",
       "decksPlaceholder": "e.g. Jules::Year 7 (empty: as usual)",
       "instructions": "Instructions for the AI (without their first name)",
-      "ankiProfile": "Anki profile",
-      "noAnkiProfile": "None (one profile for all)",
-      "ankiProfileHint": "With this profile open in Anki, the lesson is for this child.",
       "add": "+ Add a child",
       "save": "Save",
       "allLessons": "Every child's lessons",
@@ -447,6 +444,8 @@
         "high": "e.g. preparing for exams: exact formulas, proofs step by step."
       },
       "pick": "Who is the next lesson for? Tap their name.",
+      "openProfile": "The Anki profile open, “{profile}”, is for:",
+      "sharedProfile": "No child (a shared profile)",
       "edit": "Edit {name}"
     },
     "report": {

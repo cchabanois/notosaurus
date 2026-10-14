@@ -432,9 +432,6 @@
       "decks": "Mazos en",
       "decksPlaceholder": "p. ej. Jules::1.º ESO (vacío: como siempre)",
       "instructions": "Instrucciones para la IA (sin su nombre)",
-      "ankiProfile": "Perfil de Anki",
-      "noAnkiProfile": "Ninguno (un perfil para todos)",
-      "ankiProfileHint": "Con este perfil abierto en Anki, la lección es para este niño.",
       "add": "+ Añadir un hijo",
       "save": "Guardar",
       "allLessons": "Las lecciones de todos los hijos",
@@ -447,6 +444,8 @@
         "high": "p. ej. prepara la selectividad: fórmulas exactas, demostraciones paso a paso."
       },
       "pick": "¿Para quién es la próxima lección? Toca su nombre.",
+      "openProfile": "El perfil de Anki abierto, «{profile}», es para:",
+      "sharedProfile": "Ningún niño (perfil compartido)",
       "edit": "Editar a {name}"
     },
     "report": {

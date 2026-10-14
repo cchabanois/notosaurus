@@ -432,9 +432,6 @@
       "decks": "Baralhos em",
       "decksPlaceholder": "ex.: Jules::6º ano (vazio: como sempre)",
       "instructions": "Instruções para a IA (sem o nome)",
-      "ankiProfile": "Perfil do Anki",
-      "noAnkiProfile": "Nenhum (um perfil para todos)",
-      "ankiProfileHint": "Com este perfil aberto no Anki, a lição é para esta criança.",
       "add": "+ Adicionar um filho",
       "save": "Salvar",
       "allLessons": "As lições de todos os filhos",
@@ -447,6 +444,8 @@
         "high": "ex.: prepara o vestibular: fórmulas exatas, demonstrações passo a passo."
       },
       "pick": "Para quem é a próxima lição? Toque no nome.",
+      "openProfile": "O perfil do Anki aberto, «{profile}», é para:",
+      "sharedProfile": "Nenhuma criança (perfil partilhado)",
       "edit": "Editar {name}"
     },
     "report": {

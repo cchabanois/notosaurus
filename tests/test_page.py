@@ -1044,43 +1044,40 @@ def test_ankidroid_installed_from_the_message(page, anki):
 
 
 def test_the_open_anki_profiles_child_chosen(page):
-    """A child's card linked to an Anki profile (a profile per child, on the computer): that
+    """On the computer, the Anki profile open is linked to a child (only the open one): that
     profile open, the child is chosen, one chip says it; another profile's child can't be."""
-    kids = [
-        {"id": "jules", "name": "Jules", "anki_profile": "Jules"},
-        {"id": "mathilde", "name": "Mathilde", "anki_profile": "Mathilde"},
-        {"id": "tom", "name": "Tom"},
-    ]
+    kids = [{"id": "jules", "name": "Jules"}, {"id": "mathilde", "name": "Mathilde"}, {"id": "tom", "name": "Tom"}]
     page.request.put("/api/children", data=kids)
-    open_profile = {"name": "Mathilde"}
+    open_profile = {"name": "Jules"}
     page.route(
         "**/api/anki/status",
         lambda route: route.fulfill(json={"available": True, "profile": open_profile["name"]}),
     )
-    page.route("**/api/anki/profiles", lambda route: route.fulfill(json=["Jules", "Mathilde", "Parents"]))
     page.goto("/")
     chip = page.get_by_role("button", name="Enfants")
-    sync_api.expect(chip).to_contain_text("Mathilde")
-    sync_api.expect(page.locator(".brand-profile")).to_be_hidden()  # the chip says it
+    sync_api.expect(page.locator(".brand-profile")).to_contain_text("Jules")  # linked to no child yet
 
     chip.click()
     sheet = page.get_by_role("dialog", name="Enfants")
-    sync_api.expect(sheet.locator(".child-row", has_text="Jules")).to_be_disabled()  # Jules's cards: Jules's Anki
-    sync_api.expect(sheet.locator(".child-row", has_text="Tom")).to_be_enabled()
-    sheet.get_by_role("button", name="Modifier Tom").click()
-    profile = sheet.get_by_label("Profil Anki")
-    sync_api.expect(profile.locator("option[value=Jules]")).to_have_attribute("disabled", "disabled")  # one child's
-    profile.select_option("Parents")
-    sheet.get_by_role("button", name="Enregistrer").click()
-    sync_api.expect(sheet.locator(".child-row", has_text="Tom")).to_be_disabled()  # Parents isn't open
-    assert [c["anki_profile"] for c in page.request.get("/api/children").json()] == ["Jules", "Mathilde", "Parents"]
+    link = sheet.get_by_label("Le profil Anki ouvert « Jules » est pour :")
+    link.select_option("jules")
+    sync_api.expect(sheet.locator(".child-row", has_text="Jules")).to_contain_text("👤 Jules")
     sheet.get_by_role("button", name="Fermer").click()
+    sync_api.expect(chip).to_contain_text("Jules")
+    sync_api.expect(page.locator(".brand-profile")).to_be_hidden()  # the chip says it
 
-    open_profile["name"] = "Jules"  # another profile opened in Anki: its child
-    sync_api.expect(chip).to_contain_text("Jules", timeout=8000)
-    open_profile["name"] = "Autre"  # a profile no card is linked to: shown, the unlinked children
-    sync_api.expect(page.locator(".brand-profile")).to_contain_text("Autre", timeout=8000)
-    sync_api.expect(chip).to_contain_text("Pour qui ?")
+    open_profile["name"] = "Mathilde"  # another profile opened in Anki
+    sync_api.expect(page.locator(".brand-profile")).to_contain_text("Mathilde", timeout=8000)
+    sync_api.expect(chip).not_to_contain_text("Jules")  # Jules's cards go to Jules's Anki
+    chip.click()
+    sync_api.expect(sheet.locator(".child-row", has_text="Jules")).to_be_disabled()
+    link = sheet.get_by_label("Le profil Anki ouvert « Mathilde » est pour :")
+    link.select_option("mathilde")
+    sync_api.expect(chip).to_contain_text("Mathilde")
+    link.select_option("")  # a shared profile again
+    sync_api.expect(sheet.locator(".child-row", has_text="Mathilde").get_by_text("👤")).to_be_hidden()
+    links = {c["id"]: c["anki_profile"] for c in page.request.get("/api/children").json()}
+    assert links == {"jules": "Jules", "mathilde": "", "tom": ""}
 
 
 def test_no_profile_badge_where_there_are_no_profiles(page):
