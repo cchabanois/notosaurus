@@ -73,9 +73,7 @@ class GenerationForm:
     dictation: bool = Form(False)
     dictation_only: bool = Form(False)
     child: str = Form("")  # the child it is for (children.Child.id): its class, instructions, decks
-    fun_facts: bool = Form(False)
     page_texts: str = Form("")  # the PDF pages' text, JSON (see _page_texts)
-    helps: bool = Form(False)
     quick: bool = Form(False)
     job: str = Form("")  # the page's id for it: what "Cancel" stops
 
@@ -118,9 +116,9 @@ async def _generate(
         prompt,
         form.deck,
         known,
-        fun_facts=form.fun_facts,
+        fun_facts=s.fun_facts,
         page_texts=texts,
-        helps=form.helps,
+        helps=s.helps,
         instructions=settings.standing_instructions(s, children.for_ai(child)),
         quick=form.quick,
         on_card=on_card,

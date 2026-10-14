@@ -66,14 +66,12 @@ added to your list. **Save as new instructions** keeps them if they worked well.
 
 ## “Did you know?” facts
 
-The **💡 Add “Did you know?” facts** switch, under the instructions, asks the AI to add a
-short, well-known fact to some cards. It shows on the back in Anki. It is off by default and
-remembered on each device.
+The AI adds a short, well-known fact to the cards where one fits (one in three at most). It
+shows on the back in Anki.
 
 ## Helps on the back
 
-The **💬 Helps on the back (explanation, a way to remember)** switch, under the instructions,
-asks the AI to add, **only on the cards where they truly help**:
+The AI adds, **only on the cards where they truly help**:
 
 - **an explanation**: why the answer is the answer, when understanding helps remember it (a
   cause in history, a rule, a formula); never for a plain word or a bare date;
@@ -84,8 +82,8 @@ So a history lesson gets mostly explanations, a vocabulary lesson a few memory t
 no explanation. They show on the back in Anki, under the info (💬 and 🧠), and can be edited
 or cleared in the review. They add about 1 to 3 US cents to a lesson with Claude Sonnet.
 
-Off at first; turn it on by default in the settings (⚙️ → Instructions for the AI). Changed
-on a device, the switch stays as you set it there.
+Both are on at first, for every lesson. To stop them: **Settings → Instructions for the AI**.
+For one prompt only, say so in its text: "no fun facts", "no helps".
 
 ## Standing instructions
 

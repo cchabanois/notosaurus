@@ -31,7 +31,9 @@ class Settings(AIConfig):
     ankiconnect_url: str = "http://localhost:8765"  # Anki desktop with the AnkiConnect add-on
     ankiconnect_key: str = ""  # AnkiConnect "apiKey", if one is configured
     anki_sync: bool = True  # sync with AnkiWeb after sending, so phones get the cards
-    card_helps: bool = False  # the review's "helps on the back" switch, on at first (a device may change it)
+    # Asked of the AI at every generation (a prompt may say otherwise: "no fun facts")
+    fun_facts: bool = True  # "did you know" facts, on the cards where one truly fits
+    helps: bool = True  # helps on the back (an explanation, a way to remember), where they truly help
     # Added to the AI's fixed rules (never replacing them): for everyone, and per Anki
     # profile, e.g. "Bastien is in year 8", "short answers, with the article".
     instructions: str = ""
@@ -76,7 +78,8 @@ SPECS: dict[str, Spec] = {
     "ankiconnect_url": Spec(env="NOTOSAURUS_ANKICONNECT_URL"),
     "ankiconnect_key": Spec(env="NOTOSAURUS_ANKICONNECT_KEY", secret=True),
     "anki_sync": Spec(),
-    "card_helps": Spec(),
+    "fun_facts": Spec(),
+    "helps": Spec(),
     "instructions": Spec(),
     # Before the children's cards (children.py makes a card of each, linked to its profile)
     "profile_instructions": Spec(editable=False),

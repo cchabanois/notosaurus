@@ -67,8 +67,6 @@ function storage(action, value, key = LAST_PROMPT) {
   } catch {}
 }
 const NOTICE_CLOSED = "notosaurus.noticeClosed";  // the id of the last notice closed on this device
-const HELPS = "notosaurus.helps";  // the "helps on the back" switch, once changed on this device
-const FUN_FACTS = "notosaurus.funFacts";  // the "did you know" switch, kept on this device
 const CAREFUL = "notosaurus.careful";  // "Careful" chosen over "Quick" (the default), kept on this device
 const OPEN_SUBJECTS = "notosaurus.openSubjects";  // subjects opened or closed in the lessons, on this device
 const MANY_LESSONS = 8;  // beyond: a search, the recent lessons first, the subjects folded
@@ -124,7 +122,6 @@ document.addEventListener("alpine:init", () => {
     typing: false,               // the answer is typed in Anki
     dictation: false,            // a dictation card: hear the back, type it
     dictationOnly: false,        // with it, that card alone (no front → back card)
-    funFacts: storage("get", undefined, FUN_FACTS) === "1",  // ask for "did you know" facts (off by default)
     // Quick by default: the AI thinks little, 2 to 4 times faster; "Careful" for a rich lesson
     quick: storage("get", undefined, CAREFUL) !== "1",
     madeQuick: false,  // the open lesson was just made quick: "Careful, again" offered
@@ -133,7 +130,6 @@ document.addEventListener("alpine:init", () => {
     generating: "",  // the id of the lesson being made: what "Cancel" stops
     cancelling: false,
     loadingQuick: false,
-    helps: false,  // ask for helps on the back: as changed on this device, else the settings' default
     lessons: [],         // saved lesson summaries
     children: [],        // the children's cards (app-children.js): first name, class, decks, instructions
     childId: "",         // the child the next lesson is for (kept on this device)
@@ -239,11 +235,8 @@ document.addEventListener("alpine:init", () => {
         this.drawingCredits = config.drawing_credits ?? null;
         // The app (its own service, Gemini): until its welcome is accepted, it shows first
         this.welcome.open = Boolean(config.welcome) && !config.welcome_accepted;
-        const helps = storage("get", undefined, HELPS);
-        this.helps = helps === null ? Boolean(config.card_helps) : helps === "1";
       } catch {}
       this.loadSwitches();  // not waited for: the relay may be starting
-      this.$watch("funFacts", (on) => storage("set", on ? "1" : "0", FUN_FACTS));
       this.$watch("quick", (on) => storage("set", on ? "0" : "1", CAREFUL));
       await Promise.all([this.loadPrompts(storage("get"), true), this.loadLessons(), this.loadChildren()]);
       this.checkAnki();

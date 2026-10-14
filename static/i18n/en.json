@@ -79,8 +79,6 @@
       "freeHint": "A prompt for this time, not saved",
       "freePlaceholder": "Write what the AI should do with the lesson, e.g. “one card per date, front the event, back the date”.",
       "freeNote": "Free prompt: it stays with the lesson but isn't added to your prompts.",
-      "funFacts": "💡 Add “Did you know?” facts",
-      "helps": "💬 Helps on the back (explanation, a way to remember)",
       "all": "All",
       "new": "💾 New",
       "newHint": "Create a saved prompt, to use again",
@@ -641,8 +639,10 @@
       "general": "For every child",
       "generalPlaceholder": "e.g. Spanish from Spain; always the article with nouns",
       "children": "Each child's own instructions are in their card: 🧒 on the main page.",
-      "helps": "Helps on the back of the cards, on by default",
-      "helpsHint": "(an explanation, a way to remember it, where they help; each device can change it, ≈ +1 to 3 US¢ per lesson)"
+      "funFacts": "💡 “Did you know?” facts on the cards",
+      "funFactsHint": "(a short, well-known fact, where one fits; a prompt can say “no fun facts”)",
+      "helps": "💬 Helps on the back of the cards",
+      "helpsHint": "(an explanation, a way to remember it, where they help; ≈ +1 to 3 US¢ per lesson)"
     },
     "notSaved": "Not saved",
     "pictures": {

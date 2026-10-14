@@ -3,7 +3,8 @@ package app.notosaurus
 import app.notosaurus.LocalServer.Companion.WELCOME_VERSION
 import app.notosaurus.LocalServer.Companion.WELCOME
 import app.notosaurus.LocalServer.Companion.MAX_PHOTOS
-import app.notosaurus.LocalServer.Companion.CARD_HELPS
+import app.notosaurus.LocalServer.Companion.FUN_FACTS
+import app.notosaurus.LocalServer.Companion.HELPS
 import app.notosaurus.LocalServer.Companion.COMPUTER
 import app.notosaurus.LocalServer.Companion.COMPUTER_MODE
 import app.notosaurus.LocalServer.Companion.COMPUTER_NAME
@@ -22,6 +23,7 @@ import kotlinx.serialization.json.JsonArray
 import kotlinx.serialization.json.JsonNull
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
+import kotlinx.serialization.json.booleanOrNull
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.put
 import java.net.URI
@@ -37,7 +39,6 @@ internal fun Route.settingsRoutes(server: LocalServer) {
                 put("diagram_warning", false)
                 put("max_photos", MAX_PHOTOS)
                 put("profiles", false) // AnkiDroid doesn't say its profile: no Anki profile badge
-                put("card_helps", prefs[CARD_HELPS] == "true")
                 put("configured", true)
                 put("donations", false) // paid for by the subscription: no "Support Notosaurus" (Ko-fi)
                 put("apkg", false) // the cards go to AnkiDroid: no .apkg to download
@@ -79,7 +80,7 @@ internal fun Route.settingsRoutes(server: LocalServer) {
             changes.string(RELAY).trim().takeIf { it.isNotEmpty() }?.let { prefs[RELAY] = it.trimEnd('/') }
             (changes[KEY] as? JsonPrimitive)?.let { prefs[keyOf(relayUrl())] = it.content.trim() }
             (changes[INSTRUCTIONS] as? JsonPrimitive)?.let { prefs[INSTRUCTIONS] = it.content.take(4000) }
-            (changes[CARD_HELPS] as? JsonPrimitive)?.let { prefs[CARD_HELPS] = it.content }
+            for (option in listOf(FUN_FACTS, HELPS)) (changes[option] as? JsonPrimitive)?.booleanOrNull?.let { prefs[option] = it.toString() }
             (changes[TTS_RATE] as? JsonPrimitive)?.content?.takeIf { it in Speech.RATES }?.let { prefs[TTS_RATE] = it }
             (changes[Speech.VOICES] as? JsonObject)?.let { voices -> speech.choose(voices.mapValues { it.value.plain() }) }
             settings()
@@ -133,7 +134,8 @@ private fun LocalServer.settings() = buildJsonObject {
     put(KEY, masked(licence())) // shown, not given back whole
     put("has_key", licence().isNotEmpty())
     put(INSTRUCTIONS, prefs[INSTRUCTIONS].orEmpty())
-    put(CARD_HELPS, prefs[CARD_HELPS] == "true")
+    put(FUN_FACTS, prefs[FUN_FACTS] != "false")
+    put(HELPS, prefs[HELPS] != "false")
     put(TTS_RATE, prefs[TTS_RATE] ?: "-10%")
     put(Speech.VOICES, JsonObject(speech.chosen().mapValues { JsonPrimitive(it.value) }))
     put("version", version)

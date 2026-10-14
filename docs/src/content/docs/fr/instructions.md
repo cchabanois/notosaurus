@@ -70,14 +70,12 @@ bien marché.
 
 ## Les « Le savais-tu ? »
 
-L'interrupteur **💡 Ajouter des « Le savais-tu ? »**, sous la consigne, demande à l'IA
-d'ajouter une anecdote courte et connue à certaines cartes. Elle s'affiche au verso dans
-Anki. Il est désactivé par défaut et mémorisé sur chaque appareil.
+L'IA ajoute une anecdote courte et connue aux cartes où elle va bien (une sur trois au plus).
+Elle s'affiche au verso dans Anki.
 
 ## Les aides au verso
 
-L'interrupteur **💬 Aides au verso (explication, astuce pour retenir)**, sous la consigne,
-demande à l'IA d'ajouter, **seulement sur les cartes où elles aident vraiment** :
+L'IA ajoute, **seulement sur les cartes où elles aident vraiment** :
 
 - **une explication** : pourquoi la réponse est la bonne, quand comprendre aide à retenir
   (une cause en histoire, une règle, une formule) ; jamais pour un simple mot ou une date
@@ -91,8 +89,9 @@ astuces et aucune explication. Elles s'affichent au verso dans Anki, sous l'info
 et se modifient ou s'effacent dans la relecture. Elles ajoutent environ 1 à 3 centimes de
 dollar par leçon avec Claude Sonnet.
 
-Désactivé au départ ; on peut l'activer par défaut dans les réglages (⚙️ → Instructions pour
-l'IA). Changé sur un appareil, l'interrupteur y reste tel que vous l'avez mis.
+Les deux sont activés au départ, pour toutes les leçons. Pour les arrêter : **Réglages →
+Instructions pour l'IA**. Pour une seule consigne, dites-le dans son texte : « sans
+anecdotes », « sans aides ».
 
 ## Les instructions permanentes
 

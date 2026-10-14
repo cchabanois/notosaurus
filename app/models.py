@@ -160,7 +160,8 @@ class SettingsUpdate(BaseModel):
     ankiconnect_url: str | None = Field(default=None, pattern=r"^https?://")
     ankiconnect_key: str | None = None
     anki_sync: bool | None = None
-    card_helps: bool | None = None
+    fun_facts: bool | None = None
+    helps: bool | None = None
     instructions: str | None = Field(default=None, max_length=4000)
     picture_service: Literal["", "gemini", "openai", "openrouter", "none"] | None = None
     picture_model: str | None = None

@@ -79,8 +79,6 @@
       "freeHint": "Une consigne pour cette fois, sans l'enregistrer",
       "freePlaceholder": "Écrivez ce que l'IA doit faire de la leçon, par exemple : « une carte par date, recto l'événement, verso la date ».",
       "freeNote": "Consigne libre : elle reste avec la leçon mais n'est pas ajoutée à vos consignes.",
-      "funFacts": "💡 Ajouter des « Le savais-tu ? »",
-      "helps": "💬 Aides au verso (explication, astuce pour retenir)",
       "all": "Toutes",
       "new": "💾 Nouvelle",
       "newHint": "Créer une consigne enregistrée, à réutiliser",
@@ -641,8 +639,10 @@
       "general": "Pour tous les enfants",
       "generalPlaceholder": "ex. : espagnol d'Espagne ; toujours l'article avec les noms",
       "children": "Les instructions propres à chaque enfant sont dans sa fiche : 🧒 sur la page principale.",
-      "helps": "Aides au verso des cartes, activées par défaut",
-      "helpsHint": "(une explication, une astuce pour retenir, là où elles aident ; chaque appareil peut le changer, ≈ +1 à 3 ¢ US par leçon)"
+      "funFacts": "💡 « Le savais-tu ? » sur les cartes",
+      "funFactsHint": "(une anecdote courte et connue, là où elle va bien ; une consigne peut dire « sans anecdotes »)",
+      "helps": "💬 Aides au verso des cartes",
+      "helpsHint": "(une explication, une astuce pour retenir, là où elles aident ; ≈ +1 à 3 ¢ US par leçon)"
     },
     "notSaved": "Non enregistré",
     "pictures": {
