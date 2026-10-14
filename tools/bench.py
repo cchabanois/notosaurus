@@ -195,8 +195,9 @@ def check(
     expectations (expect.json), over the general rules."""
     results: list[tuple[bool | None, str]] = []
     cards = body["cards"]
-    subject = lesson.get("deck", "").split("::")[0].strip().lower()
-    learned = LEARNED.get(subject, "")
+    # The subject: any level of the deck (a child's lesson's starts with its name, its class)
+    parts = [part.strip().lower() for part in lesson.get("deck", "").split("::")]
+    learned = next((LEARNED[part] for part in parts if part in LEARNED), "")
     spelling = asked["typing"] or asked["dictation"] or asked["dictation_only"]
 
     # Automatic: a dictation recognised when the page is one (expect.json "dictation"), never otherwise
