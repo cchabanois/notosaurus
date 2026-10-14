@@ -18,12 +18,6 @@ async def deck_names() -> list[str]:
     return await decks.known(await ankiconnect.active_profile())
 
 
-@router.get("/api/anki/profiles")
-async def anki_profiles() -> list[str] | None:
-    """Anki's profiles, for a child's card (None: Anki not reachable)."""
-    return await ankiconnect.profiles()
-
-
 @router.get("/api/anki/status")
 async def anki_status() -> dict:
     try:

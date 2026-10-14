@@ -1,8 +1,9 @@
 // The children the lessons are for (app/children.py): which one the next lesson is for
 // (kept on this device), their cards edited in a sheet (first name, class, decks,
-// instructions, Anki profile). The first name never goes to the AI: only the class and the
-// instructions. A card linked to an Anki profile (the computer): that profile open, it is
-// chosen, and no child linked to another profile can be (its cards would go to that one's).
+// instructions). The first name never goes to the AI: only the class and the instructions.
+// On the computer, the Anki profile open is linked to a child (in this sheet, only the open
+// one: never a profile one isn't in): that profile open, the child is chosen, and no child
+// linked to another profile can be (its cards would go to that one's collection).
 // Methods of the page's Alpine component (app.js), as `this`.
 
 const CHILD = "notosaurus.child";  // the child chosen on this device
@@ -86,20 +87,17 @@ const childrenPart = {
   openChildren() {
     this.childrenSheet = { open: true, list: this.children.map((c) => ({ ...c })), editing: null, saving: false, error: "" };
     if (!this.children.length) this.addChild();
-    this.loadAnkiProfiles();
   },
 
-  // Anki's profiles, for a card's link (the computer, Anki open): none where profiles aren't said
-  async loadAnkiProfiles() {
-    if (!this.profiles || !this.anki.available) return;
-    try {
-      this.ankiProfiles = (await (await api("/api/anki/profiles")).json()) ?? [];
-    } catch {}  // only offered
-  },
-
-  // An Anki profile linked to another card of the sheet: not offered for this one
-  profileTaken(profile, child) {
-    return this.childrenSheet.list.some((c) => c !== child && c.anki_profile === profile);
+  // The open Anki profile is this child's (`id`), or no child's (""): saved at once
+  async linkProfile(id) {
+    const profile = this.anki.profile;
+    if (!profile) return;
+    for (const c of this.childrenSheet.list) {
+      if (c.anki_profile === profile) c.anki_profile = "";
+      if (c.id === id) c.anki_profile = profile;
+    }
+    await this.saveChildren();
   },
 
   addChild() {

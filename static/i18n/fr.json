@@ -432,9 +432,6 @@
       "decks": "Paquets dans",
       "decksPlaceholder": "ex. : Jules::5e (vide : comme d'habitude)",
       "instructions": "Instructions pour l'IA (sans son prénom)",
-      "ankiProfile": "Profil Anki",
-      "noAnkiProfile": "Aucun (un profil pour tous)",
-      "ankiProfileHint": "Ce profil ouvert dans Anki, la leçon est pour cet enfant.",
       "add": "+ Ajouter un enfant",
       "save": "Enregistrer",
       "allLessons": "Les leçons de tous les enfants",
@@ -447,6 +444,8 @@
         "high": "ex. : elle prépare le bac : formules exactes, démonstrations en étapes."
       },
       "pick": "Pour qui est la prochaine leçon ? Touchez son prénom.",
+      "openProfile": "Le profil Anki ouvert « {profile} » est pour :",
+      "sharedProfile": "Aucun enfant (profil partagé)",
       "edit": "Modifier {name}"
     },
     "report": {

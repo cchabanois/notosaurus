@@ -432,9 +432,6 @@
       "decks": "Stapel in",
       "decksPlaceholder": "z. B. Jules::Klasse 7 (leer: wie immer)",
       "instructions": "Anweisungen für die KI (ohne den Vornamen)",
-      "ankiProfile": "Anki-Profil",
-      "noAnkiProfile": "Keines (ein Profil für alle)",
-      "ankiProfileHint": "Ist dieses Profil in Anki geöffnet, ist die Lektion für dieses Kind.",
       "add": "+ Kind hinzufügen",
       "save": "Speichern",
       "allLessons": "Die Lektionen aller Kinder",
@@ -447,6 +444,8 @@
         "high": "z. B. bereitet das Abitur vor: genaue Formeln, Beweise Schritt für Schritt."
       },
       "pick": "Für wen ist die nächste Lektion? Tippe auf den Namen.",
+      "openProfile": "Das geöffnete Anki-Profil „{profile}“ ist für:",
+      "sharedProfile": "Kein Kind (gemeinsames Profil)",
       "edit": "{name} bearbeiten"
     },
     "report": {

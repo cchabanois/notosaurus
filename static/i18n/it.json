@@ -432,9 +432,6 @@
       "decks": "Mazzi in",
       "decksPlaceholder": "es. Jules::1ª media (vuoto: come al solito)",
       "instructions": "Istruzioni per l'IA (senza il nome)",
-      "ankiProfile": "Profilo Anki",
-      "noAnkiProfile": "Nessuno (un profilo per tutti)",
-      "ankiProfileHint": "Con questo profilo aperto in Anki, la lezione è per questo bambino.",
       "add": "+ Aggiungi un figlio",
       "save": "Salva",
       "allLessons": "Le lezioni di tutti i figli",
@@ -447,6 +444,8 @@
         "high": "es. prepara la maturità: formule esatte, dimostrazioni passo per passo."
       },
       "pick": "Per chi è la prossima lezione? Tocca il suo nome.",
+      "openProfile": "Il profilo Anki aperto, «{profile}», è per:",
+      "sharedProfile": "Nessun bambino (profilo condiviso)",
       "edit": "Modifica {name}"
     },
     "report": {
