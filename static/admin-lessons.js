@@ -68,14 +68,16 @@ const lessonsPart = {
 
   // Its cards in Anki go only when confirmed (asked when the open profile has some)
   async deleteLesson(l) {
-    if (!confirm(t("admin.lessons.confirmDelete", { deck: l.deck }))) return;
+    if (!(await this.askConfirm(t("admin.lessons.confirmDelete", { deck: l.deck })))) return;
     this.error = this.notice = "";
     try {
       let count = 0;
       try {
         count = (await this.request(`/api/admin/lessons/${l.id}/anki-notes`)).count;
       } catch {}  // Anki unknown: the lesson alone
-      const anki = count > 0 && confirm(t("admin.lessons.alsoAnki", { count }));
+      const anki = count > 0 && (await this.askConfirm(t("admin.lessons.alsoAnki", { count }), {
+        ok: t("admin.lessons.deleteCards"), cancel: t("admin.lessons.keepCards"),
+      }));
       const r = await this.request(`/api/admin/lessons/${l.id}?anki=${anki}`, { method: "DELETE" });
       if (r.anki_deleted) this.notice = t("app.lessons.deletedInAnki", { count: r.anki_deleted });
       this.lessons.lessons = this.lessons.lessons.filter((x) => x.id !== l.id);

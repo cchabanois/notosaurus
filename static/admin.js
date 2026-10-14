@@ -72,6 +72,7 @@ function adminComponent() {
     saveTimer: null,
     error: "",
     notice: "",
+    asking: { open: false, message: "", ok: "", cancel: "", answer: null },  // a yes/no (ask-confirm.js)
     phone: null,      // { url }: the link in the phones' QR code
     voiceList: [],    // the voices that can be chosen per language (voice-choice.js)
 
@@ -163,6 +164,7 @@ function adminComponent() {
     ...phonesPart,
     ...passwordPart,
     ...voiceChoicePart,
+    ...askConfirmPart,
   };
 }
 

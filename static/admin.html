@@ -21,6 +21,7 @@
   <script defer src="admin-phones.js"></script>
   <script defer src="admin-password.js"></script>
   <script defer src="voice-choice.js"></script>
+  <script defer src="ask-confirm.js"></script>
   <script defer src="admin.js"></script>
   <script defer src="vendor/alpinejs/cdn.min.js"></script>
 </head>
@@ -446,6 +447,25 @@
     </footer>
 
   </main>
+
+  <!-- A yes/no asked in the page (ask-confirm.js), above the sheet it comes from -->
+  <div class="sheet-backdrop top" x-cloak x-show="asking.open" x-transition.opacity @click="answerConfirm(false)"></div>
+  <aside class="sheet top" x-cloak x-show="asking.open"
+         x-transition:enter="sheet-anim" x-transition:enter-start="sheet-down"
+         x-transition:leave="sheet-anim" x-transition:leave-end="sheet-down"
+         @keydown.escape.window="asking.open && answerConfirm(false)" role="alertdialog" aria-modal="true" :aria-label="asking.message">
+    <div class="sheet-handle"></div>
+    <div class="sheet-head">
+      <h2 x-text="asking.message"></h2>
+      <button class="icon-btn" @click="answerConfirm(false)" :aria-label="$t('common.close')">✕</button>
+    </div>
+    <div class="sheet-body">
+      <div class="sheet-actions">
+        <button type="button" class="btn soft" @click="answerConfirm(false)" x-text="asking.cancel"></button>
+        <button type="button" class="btn danger-soft" @click="answerConfirm(true)" x-text="asking.ok"></button>
+      </div>
+    </div>
+  </aside>
 
 </div>
 </body>

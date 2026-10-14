@@ -156,7 +156,7 @@ const promptsPart = {
   async deletePrompt(prompt = null) {
     const inEditor = prompt === null;
     const { id, name } = inEditor ? this.editor : prompt;
-    if (!id || !confirm(t("app.editor.confirmDelete", { name }))) return;
+    if (!id || !(await this.askConfirm(t("app.editor.confirmDelete", { name })))) return;
     try {
       await api(`/api/prompts/${id}`, { method: "DELETE" });
       if (inEditor) this.editor.open = false;

@@ -165,6 +165,7 @@ document.addEventListener("alpine:init", () => {
     removal: { open: false, lesson: null, checking: false, available: false, count: 0, anki: false, busy: false },
     leftovers: { open: false, notes: [], lesson: null, busy: false },  // the lesson's notes in Anki no card has
     welcome: { open: false, agreed: false, busy: false },  // the app's first launch: a parent's tool, Gemini
+    asking: { open: false, message: "", ok: "", cancel: "", answer: null },  // a yes/no (ask-confirm.js)
     editor: { open: false, id: null, name: "", text: "", deck: "", voice: "", error: "" },
     error: "",
     success: "",
@@ -265,7 +266,7 @@ document.addEventListener("alpine:init", () => {
     },
 
     // The methods, by topic: app-photos.js, app-prompts.js, app-lessons.js, app-cards.js,
-    // app-anki.js, app-dictation.js (loaded before this file)
+    // app-anki.js, app-dictation.js, ask-confirm.js (loaded before this file)
     ...photosPart,
     ...promptsPart,
     ...lessonsPart,
@@ -274,5 +275,6 @@ document.addEventListener("alpine:init", () => {
     ...dictationPart,
     ...childrenPart,
     ...reportPart,
+    ...askConfirmPart,
   }));
 });

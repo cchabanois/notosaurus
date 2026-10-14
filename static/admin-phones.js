@@ -10,7 +10,7 @@ const phonesPart = {
 
   // A new token: every phone must scan the QR code again (one was lost or lent)
   async unpairPhones() {
-    if (!confirm(t("admin.phones.confirmUnpair"))) return;
+    if (!(await this.askConfirm(t("admin.phones.confirmUnpair"), { ok: t("admin.phones.unpair") }))) return;
     try {
       this.phone = await this.request("/api/admin/phone/unpair", { method: "POST" });
       this.notice = t("admin.phones.unpaired");

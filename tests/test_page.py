@@ -452,6 +452,14 @@ def test_admin_lessons_by_owner_then_subject(page, clock):
     sync_api.expect(lea.locator(".admin-lesson-head strong")).to_have_text(["Leçon 2", "Leçon 1"])
     sync_api.expect(page.locator(".owner-group").last.locator(".admin-lesson-head strong")).to_have_text(["SVT"])
 
+    dialogs = []  # deleted after a question in the page's own sheet, not the browser's confirm()
+    page.on("dialog", lambda d: (dialogs.append(d.message), d.dismiss()))
+    page.locator(".owner-group").last.locator("> summary").click()
+    page.locator(".owner-group").last.get_by_role("button", name="Supprimer la leçon").click()
+    page.get_by_role("alertdialog", name=re.compile("« SVT »")).get_by_role("button", name="Supprimer").click()
+    sync_api.expect(owners).to_have_text(["👤 Léa", "👤 Paul"])
+    assert not dialogs
+
 
 @pytest.mark.parametrize(
     ("locale", "date"), [("en-GB", "3 Oct, 10:00"), ("en-US", "Oct 3, 10:00 AM"), ("fr-CA", "10 h 00")]
@@ -534,6 +542,27 @@ def test_prompts_follow_the_language(page):
     page.locator(".lang-select select").select_option("it")
     sync_api.expect(page.get_by_role("radio", name="✏️ Libere")).to_be_checked()
     sync_api.expect(text).to_have_value("Lo mío")
+
+
+def test_deleting_a_prompt_is_asked_in_the_app(page):
+    """The app's own sheet, not the browser's confirm() (which shows the page's address)."""
+    page.request.post("/api/prompts", data={"name": "Definitions", "text": "Les définitions de la leçon"})
+    dialogs = []
+    page.on("dialog", lambda d: (dialogs.append(d.message), d.dismiss()))
+    page.goto("/")
+    page.locator(".chip.more").click()
+    trash = page.get_by_role("button", name="Supprimer la consigne « Definitions »")
+    trash.click()
+    asked = page.get_by_role("alertdialog", name="Supprimer la consigne « Definitions » ?")
+    asked.get_by_role("button", name="Annuler").click()
+    sync_api.expect(asked).to_be_hidden()
+    assert [p["name"] for p in page.request.get("/api/prompts").json() if not p["builtin"]] == ["Definitions"]
+
+    trash.click()
+    asked.get_by_role("button", name="Supprimer").click()
+    sync_api.expect(trash).to_have_count(0)
+    assert not [p for p in page.request.get("/api/prompts").json() if not p["builtin"]]
+    assert not dialogs
 
 
 def pdf(pages: int) -> bytes:

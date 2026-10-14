@@ -577,7 +577,9 @@
       "delete": "Elimina la lezione",
       "confirmDelete": "Eliminare la lezione “{deck}” per tutti i profili? Le sue foto e le sue carte vengono cancellate.",
       "changed": "“{deck}”: salvata.",
-      "alsoAnki": "Eliminare anche le sue {count} carte in Anki? La loro cronologia di ripetizione andrà persa.\n\nOK: elimina anche le carte. Annulla: tieni le carte in Anki."
+      "alsoAnki": "Eliminare anche le sue {count} carte in Anki? La loro cronologia di ripetizione andrà persa.",
+      "deleteCards": "Elimina anche le carte",
+      "keepCards": "Tieni le carte in Anki"
     },
     "passwordSection": {
       "title": "🔐 Password di amministrazione",
