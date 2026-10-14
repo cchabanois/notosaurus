@@ -4,7 +4,6 @@ const PAGE_LIBRARIES = [
   { name: "Alpine.js", version: "3.14.9", licence: "MIT", file: "vendor/alpinejs/LICENSE" },
   { name: "KaTeX", version: "0.19.0", licence: "MIT", file: "vendor/katex/LICENSE" },
   { name: "PDF.js", version: "6.4.299", licence: "Apache-2.0", file: "vendor/pdfjs/LICENSE" },
-  { name: "Nunito", version: "5.3.0", licence: "OFL-1.1", file: "vendor/nunito/LICENSE" },
 ];
 
 function libraryItem(name, detail, licences) {

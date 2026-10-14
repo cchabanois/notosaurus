@@ -15,7 +15,7 @@ def test_the_pages_libraries_as_vendor_ships_them():
         folder: (version, licence)
         for folder, version, licence in re.findall(r"\| `(\w+)/` \|[^|]*\| `[^`]*@([\d.]+)`[^|]*\| (\S+) \|", readme)
     }
-    assert len(listed) == len(shipped) == 4
+    assert len(listed) == len(shipped) == 3
     for version, licence, file in listed:
         folder = file.split("/")[1]
         assert shipped[folder] == (version, licence), folder  # the README's version and licence
