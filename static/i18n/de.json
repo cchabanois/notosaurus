@@ -432,6 +432,9 @@
       "decks": "Stapel in",
       "decksPlaceholder": "z. B. Jules::Klasse 7 (leer: wie immer)",
       "instructions": "Anweisungen für die KI (ohne den Vornamen)",
+      "ankiProfile": "Anki-Profil",
+      "noAnkiProfile": "Keines (ein Profil für alle)",
+      "ankiProfileHint": "Ist dieses Profil in Anki geöffnet, ist die Lektion für dieses Kind.",
       "add": "+ Kind hinzufügen",
       "save": "Speichern",
       "allLessons": "Die Lektionen aller Kinder",
@@ -642,12 +645,9 @@
     "instructions": {
       "title": "📝 Anweisungen für die KI",
       "hint": "Werden jeder Erzeugung und Korrektur hinzugefügt, zusätzlich zu den für die Lektion gewählten Anweisungen. Bei Widerspruch gelten die der Lektion.",
-      "general": "Für alle Benutzerprofile",
+      "general": "Für alle Kinder",
       "generalPlaceholder": "z. B. britisches Englisch; Nomen immer mit Artikel",
-      "profile": "Für {profile}",
-      "missingProfile": "Für {profile} (nicht mehr in Anki)",
-      "profilePlaceholder": "z. B. in der 8. Klasse; kurze Antworten",
-      "noProfiles": "Öffne Anki, um Anweisungen für jedes seiner Benutzerprofile festzulegen.",
+      "children": "Die Anweisungen für jedes Kind stehen in seiner Karte: 🧒 auf der Hauptseite.",
       "helps": "Hilfen auf der Rückseite der Karten, standardmäßig an",
       "helpsHint": "(eine Erklärung, eine Merkhilfe, wo sie helfen; jedes Gerät kann es ändern, ≈ +1 bis 3 US-Cent pro Lektion)"
     },
@@ -955,7 +955,8 @@
     },
     "children": {
       "same_id": "Zwei Kinder haben denselben Vornamen.",
-      "too_many": "Höchstens {max} Kinder."
+      "too_many": "Höchstens {max} Kinder.",
+      "same_profile": "Dieses Anki-Profil gehört schon einem anderen Kind."
     }
   },
   "demo": {

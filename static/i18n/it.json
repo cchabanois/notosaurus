@@ -432,6 +432,9 @@
       "decks": "Mazzi in",
       "decksPlaceholder": "es. Jules::1ª media (vuoto: come al solito)",
       "instructions": "Istruzioni per l'IA (senza il nome)",
+      "ankiProfile": "Profilo Anki",
+      "noAnkiProfile": "Nessuno (un profilo per tutti)",
+      "ankiProfileHint": "Con questo profilo aperto in Anki, la lezione è per questo bambino.",
       "add": "+ Aggiungi un figlio",
       "save": "Salva",
       "allLessons": "Le lezioni di tutti i figli",
@@ -642,12 +645,9 @@
     "instructions": {
       "title": "📝 Istruzioni per l'IA",
       "hint": "Aggiunte a ogni generazione e correzione, oltre alle istruzioni scelte per la lezione. Se sono in contrasto, valgono quelle della lezione.",
-      "general": "Per tutti i profili",
+      "general": "Per tutti i bambini",
       "generalPlaceholder": "per es. inglese britannico; sempre l'articolo con i nomi",
-      "profile": "Per {profile}",
-      "missingProfile": "Per {profile} (non è più in Anki)",
-      "profilePlaceholder": "per es. in seconda media; risposte brevi",
-      "noProfiles": "Apri Anki per impostare istruzioni per ciascuno dei suoi profili.",
+      "children": "Le istruzioni di ogni bambino sono nella sua scheda: 🧒 nella pagina principale.",
       "helps": "Aiuti sul retro delle carte, attivi per impostazione predefinita",
       "helpsHint": "(una spiegazione, un trucco per ricordare, dove aiutano; ogni dispositivo può cambiarlo, ≈ +1-3 centesimi di dollaro per lezione)"
     },
@@ -955,7 +955,8 @@
     },
     "children": {
       "same_id": "Due figli hanno lo stesso nome.",
-      "too_many": "Al massimo {max} figli."
+      "too_many": "Al massimo {max} figli.",
+      "same_profile": "Questo profilo Anki è già di un altro bambino."
     }
   },
   "demo": {

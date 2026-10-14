@@ -1,4 +1,4 @@
-// Anki: its status (profile, AnkiWeb), the connection tested, its profiles for the instructions.
+// Anki: its status (profile, AnkiWeb), the connection tested.
 // Methods of the settings page's Alpine component (admin.js), as `this`.
 
 const ankiPart = {
@@ -32,12 +32,5 @@ const ankiPart = {
     } finally {
       this.testingAnki = false;
     }
-  },
-
-  // Anki's profiles, and those that have instructions but aren't in Anki any more
-  instructionProfiles() {
-    const fromAnki = this.lessons?.profiles ?? [];
-    const saved = Object.keys(this.form?.profile_instructions ?? {});
-    return [...new Set([...fromAnki, ...saved])];
   },
 };

@@ -227,7 +227,7 @@
           </label>
         </section>
 
-        <!-- Standing instructions for the AI: added to its fixed rules, for everyone and per profile -->
+        <!-- Standing instructions for the AI: added to its fixed rules, for every child -->
         <section class="panel">
           <h2><span x-text="$t('admin.instructions.title')"></span> <a class="help-link" :href="$docs('several-children')" target="_blank" rel="noopener" :aria-label="$t('common.helpOn', { topic: $t('admin.instructions.title') })" :title="$t('common.helpOn', { topic: $t('admin.instructions.title') })">?</a></h2>
           <p class="hint" x-text="$t('admin.instructions.hint')"></p>
@@ -236,16 +236,8 @@
             <textarea x-model="form.instructions" rows="3" maxlength="4000"
                       :placeholder="$t('admin.instructions.generalPlaceholder')"></textarea>
           </label>
-          <template x-for="profile in instructionProfiles()" :key="profile">
-            <label class="field">
-              <span x-text="lessons?.profiles && !lessons.profiles.includes(profile)
-                ? $t('admin.instructions.missingProfile', { profile }) : $t('admin.instructions.profile', { profile })"></span>
-              <textarea rows="2" maxlength="4000" :placeholder="$t('admin.instructions.profilePlaceholder')"
-                        :value="form.profile_instructions[profile] ?? ''"
-                        @input="form.profile_instructions = { ...form.profile_instructions, [profile]: $event.target.value }"></textarea>
-            </label>
-          </template>
-          <p class="hint" x-show="!instructionProfiles().length" x-text="$t('admin.instructions.noProfiles')"></p>
+          <!-- Each child's own: in its card (the page's 🧒), linked to its Anki profile if it has one -->
+          <p class="hint" x-text="$t('admin.instructions.children')"></p>
           <!-- The page's "helps on the back" switch: on or off at first (each device may change it) -->
           <label class="switch field">
             <input type="checkbox" x-model="form.card_helps">

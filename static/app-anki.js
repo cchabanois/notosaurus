@@ -63,6 +63,7 @@ const ankiPart = {
     // Another Anki profile opened (not at page load, not on the profile screen)
     if (before && now && now !== before) this.profileToApply = now;
     if (this.profileToApply) await this.applyProfile();
+    this.followProfile();
   },
 
   // Follow an Anki profile switch: a lesson of the previous profile is saved and

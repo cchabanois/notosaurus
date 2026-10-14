@@ -432,6 +432,9 @@
       "decks": "Decks in",
       "decksPlaceholder": "e.g. Jules::Year 7 (empty: as usual)",
       "instructions": "Instructions for the AI (without their first name)",
+      "ankiProfile": "Anki profile",
+      "noAnkiProfile": "None (one profile for all)",
+      "ankiProfileHint": "With this profile open in Anki, the lesson is for this child.",
       "add": "+ Add a child",
       "save": "Save",
       "allLessons": "Every child's lessons",
@@ -642,12 +645,9 @@
     "instructions": {
       "title": "📝 Instructions for the AI",
       "hint": "Added to every generation and correction, on top of the prompt chosen for the lesson. The prompt of the lesson wins if they disagree.",
-      "general": "For every profile",
+      "general": "For every child",
       "generalPlaceholder": "e.g. Spanish from Spain; always the article with nouns",
-      "profile": "For {profile}",
-      "missingProfile": "For {profile} (not in Anki any more)",
-      "profilePlaceholder": "e.g. in year 8; short answers",
-      "noProfiles": "Open Anki to set instructions for each of its profiles.",
+      "children": "Each child's own instructions are in their card: 🧒 on the main page.",
       "helps": "Helps on the back of the cards, on by default",
       "helpsHint": "(an explanation, a way to remember it, where they help; each device can change it, ≈ +1 to 3 US¢ per lesson)"
     },
@@ -955,7 +955,8 @@
     },
     "children": {
       "same_id": "Two children have the same first name.",
-      "too_many": "{max} children at most."
+      "too_many": "{max} children at most.",
+      "same_profile": "This Anki profile is already another child's."
     }
   },
   "demo": {

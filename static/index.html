@@ -43,7 +43,7 @@
       <span class="brand-text">
         <span class="brand-name">Notosaurus</span>
         <!-- Anki profile the lessons and cards go to -->
-        <small class="brand-profile" x-cloak x-show="anki.available && profiles"
+        <small class="brand-profile" x-cloak x-show="profileShown()"
                :title="anki.profile ? $t('app.profile.open') : $t('app.profile.none')"
                x-text="'👤 ' + (anki.profile || $t('app.profile.noneShort'))"
                :class="{ none: !anki.profile }"></small>
@@ -840,10 +840,12 @@
           <ul class="child-rows">
             <template x-for="(c, i) in childrenSheet.list" :key="c.id">
               <li :class="{ current: c.id === childId }">
-                <button type="button" class="child-row" @click="chooseChild(c.id)" :aria-pressed="String(c.id === childId)">
+                <button type="button" class="child-row" @click="chooseChild(c.id)" :aria-pressed="String(c.id === childId)"
+                        :disabled="!choosable(c)">
                   <span class="child-check" aria-hidden="true" x-text="c.id === childId ? '✓' : ''"></span>
                   <strong x-text="c.name"></strong>
                   <small class="muted" x-text="c.grade"></small>
+                  <small class="muted" x-show="c.anki_profile" x-text="'👤 ' + c.anki_profile"></small>
                 </button>
                 <button type="button" class="icon-btn" @click="editChild(i)" :aria-label="$t('app.children.edit', { name: c.name })"
                         :title="$t('app.children.edit', { name: c.name })">✏️</button>
@@ -880,6 +882,17 @@
             <button type="button" class="chip" @click="c.decks = c.name.trim()" x-text="c.name.trim()"></button>
             <button type="button" class="chip" x-show="c.grade" @click="c.decks = decksWithClass(c)" x-text="decksWithClass(c)"></button>
           </div>
+          <!-- Its own Anki profile (the computer): open, the lessons are for this child -->
+          <label class="field" x-show="profiles && anki.available && (ankiProfiles.length || c.anki_profile)">
+            <span x-text="$t('app.children.ankiProfile')"></span>
+            <select :value="c.anki_profile ?? ''" @change="c.anki_profile = $event.target.value">
+              <option value="" x-text="$t('app.children.noAnkiProfile')"></option>
+              <template x-for="p in [...new Set([...ankiProfiles, ...(c.anki_profile ? [c.anki_profile] : [])])]" :key="p">
+                <option :value="p" x-text="p" :selected="c.anki_profile === p" :disabled="profileTaken(p, c)"></option>
+              </template>
+            </select>
+            <small class="muted" x-text="$t('app.children.ankiProfileHint')"></small>
+          </label>
           <label class="field">
             <span x-text="$t('app.children.instructions')"></span>
             <textarea x-model="c.instructions" rows="2" maxlength="4000" :placeholder="instructionsExample(c)"></textarea>
