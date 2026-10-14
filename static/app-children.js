@@ -152,6 +152,40 @@ const childrenPart = {
     if (old && !grade && decks.endsWith("::")) child.decks = decks.slice(0, -2);
   },
 
+  // The children the open lesson can be copied for: every other one, whatever its profile
+  copyTargets() {
+    return this.children.filter((c) => c.id !== this.lessonChild);
+  },
+
+  // The open lesson copied for another child (its decks, its Anki profile): the copy opened
+  // when it is in the open profile, else said where it is
+  async copyFor(child) {
+    const sheet = this.copySheet;
+    sheet.busy = true;
+    sheet.error = "";
+    try {
+      if (this.saveTimer) await this.saveNow();
+      const copy = await (await api(`/api/lessons/${this.lessonId}/copy`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ child: child.id }),
+      })).json();
+      sheet.open = false;
+      await this.loadLessons();
+      if (this.ofProfile(child)) {
+        this.chooseChild(child.id);
+        await this.openLesson(copy.id);
+        this.notify(t("app.copy.done", { name: child.name }));
+      } else {
+        this.notify(t("app.copy.doneElsewhere", { name: child.name, profile: child.anki_profile }));
+      }
+    } catch (e) {
+      sheet.error = e.message;
+    } finally {
+      sheet.busy = false;
+    }
+  },
+
   async saveChildren() {
     const sheet = this.childrenSheet;
     const list = sheet.list.filter((c) => c.name.trim());

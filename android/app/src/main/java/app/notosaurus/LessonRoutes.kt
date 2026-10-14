@@ -26,6 +26,15 @@ internal fun Route.lessonRoutes(server: LocalServer) {
         api("GET", "/api/lessons/{id}") { lesson() }
         api("PUT", "/api/lessons/{id}") { lessons.update(param("id"), body()) ?: notFound() }
         // Deleting a lesson: its notes in AnkiDroid counted first; deleted too when asked (?anki=true)
+        // Copied for another child: its decks (Children.deckFor, the other children's levels
+        // left out first); free, nothing asked of the AI
+        api("POST", "/api/lessons/{id}/copy") {
+            val lesson = lesson()
+            val every = children.list()
+            val child = children.get(body().string("child")) ?: throw BadRequest("children.not_found")
+            val deck = Children.deckFor(child, Children.splitDeck(lesson.string("deck"), every).second).ifEmpty { lesson.string("deck") }
+            lessons.copy(lesson.string("id"), deck, child.id) ?: notFound()
+        }
         api("GET", "/api/lessons/{id}/anki-notes") {
             val found = withContext(Dispatchers.IO) { runCatching { anki.lessonNotes(lesson().string("id")) }.getOrNull() }
             buildJsonObject {

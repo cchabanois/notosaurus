@@ -155,7 +155,6 @@
       "badgeModified": "alterado",
       "noCards": "Nenhum cartão encontrado: confira as fotos ou as instruções.",
       "owner": "👤 Lição de <strong>{owner}</strong>",
-      "sharedSwitch": "Compartilhada com os outros perfis",
       "choice": "🤖 {choice}",
       "promptUsed": "📝 Instruções usadas nesta lição",
       "clozeHint": "Lacunas (omissão de palavras no Anki): {{c1::…}} esconde o que está entre as chaves. Cada número gera um cartão no Anki; o mesmo número esconde várias lacunas juntas.",
@@ -447,6 +446,13 @@
       "ofProfile": "As crianças do perfil do Anki «{profile}»:",
       "edit": "Editar {name}"
     },
+    "copy": {
+      "button": "⧉ Copiar para…",
+      "title": "Copiar para…",
+      "hint": "Uma cópia só sua: os seus baralhos, os seus próprios cartões no Anki. Grátis: nada é pedido à IA.",
+      "done": "Copiada para {name}: aqui está a lição.",
+      "doneElsewhere": "Copiada para {name}: está nas suas lições, perfil do Anki «{profile}»."
+    },
     "report": {
       "button": "Denunciar",
       "title": "Denunciar um conteúdo",
@@ -580,7 +586,6 @@
       "owner": "Dono",
       "noOwner": "Ninguém (de todos)",
       "missing": "{owner} (não está mais no Anki)",
-      "shared": "Compartilhada com os outros perfis",
       "delete": "Excluir a lição",
       "confirmDelete": "Excluir a lição “{deck}” para todos os perfis? As fotos e os cartões dela serão apagados.",
       "changed": "“{deck}”: salva.",
@@ -953,7 +958,8 @@
     },
     "children": {
       "same_id": "Dois filhos têm o mesmo nome.",
-      "too_many": "No máximo {max} filhos."
+      "too_many": "No máximo {max} filhos.",
+      "not_found": "Esta criança já não existe: recarregue a página."
     }
   },
   "demo": {

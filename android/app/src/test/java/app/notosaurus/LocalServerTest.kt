@@ -604,6 +604,31 @@ class LocalServerTest {
     }
 
     @Test
+    fun aLessonCopiedForAnotherChild() = app { client ->
+        val kids = """[{"id": "jules", "name": "Jules", "grade": "5e", "decks": "Jules::5e"}, {"id": "mathilde", "name": "Mathilde", "grade": "3e", "decks": "Mathilde::3e"}]"""
+        client.put("/api/children") { page(); contentType(ContentType.Application.Json); setBody(kids) }
+        relayAnswers("""{"deck": {"deck": "Anglais::Food", "cards": [{"front": "le pain", "back": "bread"}]}, "turns": [], "usage": {"credits": 1, "credits_left": 99}}""")
+        val lesson = client.submitFormWithBinaryData("/api/extract", formData {
+            append("prompt", "FR → EN")
+            append("child", "jules")
+        }) { page() }.json().jsonObject
+        relay.takeRequest(5, TimeUnit.SECONDS)
+        val copy = client.post("/api/lessons/${lesson.string("id")}/copy") {
+            page(); contentType(ContentType.Application.Json); setBody("""{"child": "mathilde"}""")
+        }.json().jsonObject
+        assertEquals("Mathilde::3e::Anglais::Food", copy.string("deck"))
+        assertEquals("mathilde", copy.string("child"))
+        assertTrue(copy.string("id") != lesson.string("id"))
+        val ids = { l: JsonObject -> l["cards"]!!.jsonArray.map { it.jsonObject.string("id") }.toSet() }
+        assertTrue((ids(copy) intersect ids(lesson)).isEmpty()) // other notes in AnkiDroid
+        assertEquals(2, client.get("/api/lessons") { page() }.json().jsonArray.size)
+        val gone = client.post("/api/lessons/${lesson.string("id")}/copy") {
+            page(); contentType(ContentType.Application.Json); setBody("""{"child": "nobody"}""")
+        }
+        assertEquals("children.not_found", gone.json().jsonObject["detail"]!!.jsonObject.string("code"))
+    }
+
+    @Test
     fun aLessonForAChild() = app { client ->
         val jules = """{"id": "jules", "name": "Jules", "grade": "5e", "decks": "Jules::{classe}", "instructions": "Peu de cartes."}"""
         val saved = client.put("/api/children") { page(); contentType(ContentType.Application.Json); setBody("[$jules]") }.json().jsonArray

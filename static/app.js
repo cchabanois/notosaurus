@@ -182,7 +182,9 @@ document.addEventListener("alpine:init", () => {
     profileToApply: null,        // Anki profile switch waiting for the current task to finish
     diagramWarning: false,       // the AI model places diagram masks loosely: say so
     lessonOwner: "",              // Anki profile that created the open lesson ("" = nobody: shared)
-    lessonShared: false,         // visible from every profile (only the owner's profile can change it)
+    lessonShared: false,         // visible from every profile (shared before copies: only the owner's profile can change it)
+    lessonChild: "",             // the child the open lesson is for
+    copySheet: { open: false, busy: false, error: "" },  // the open lesson copied for another child
     lessonPrompt: "",            // prompt text the open lesson was generated with
     frames: [],                  // diagram frames of the open lesson: what Anki shows of each photo
     sending: false,

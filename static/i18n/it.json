@@ -155,7 +155,6 @@
       "badgeModified": "modificata",
       "noCards": "Nessuna carta trovata: controlla le foto o le istruzioni.",
       "owner": "👤 Lezione di <strong>{owner}</strong>",
-      "sharedSwitch": "Condivisa con gli altri profili",
       "choice": "🤖 {choice}",
       "promptUsed": "📝 Istruzioni usate per questa lezione",
       "clozeHint": "Testo da completare (cloze in Anki): {{c1::…}} nasconde ciò che sta tra le graffe. Ogni numero dà una carta in Anki; lo stesso numero nasconde più spazi insieme.",
@@ -447,6 +446,13 @@
       "ofProfile": "I bambini del profilo Anki «{profile}»:",
       "edit": "Modifica {name}"
     },
+    "copy": {
+      "button": "⧉ Copia per…",
+      "title": "Copia per…",
+      "hint": "Una copia tutta sua: i suoi mazzi, le sue carte in Anki. Gratis: non si chiede nulla all'IA.",
+      "done": "Copiata per {name}: ecco la sua lezione.",
+      "doneElsewhere": "Copiata per {name}: è nelle sue lezioni, profilo Anki «{profile}»."
+    },
     "report": {
       "button": "Segnala",
       "title": "Segnala un contenuto",
@@ -580,7 +586,6 @@
       "owner": "Proprietario",
       "noOwner": "Nessuno (di tutti)",
       "missing": "{owner} (non è più in Anki)",
-      "shared": "Condivisa con gli altri profili",
       "delete": "Elimina la lezione",
       "confirmDelete": "Eliminare la lezione “{deck}” per tutti i profili? Le sue foto e le sue carte vengono cancellate.",
       "changed": "“{deck}”: salvata.",
@@ -953,7 +958,8 @@
     },
     "children": {
       "same_id": "Due figli hanno lo stesso nome.",
-      "too_many": "Al massimo {max} figli."
+      "too_many": "Al massimo {max} figli.",
+      "not_found": "Questo bambino non esiste più: ricarica la pagina."
     }
   },
   "demo": {

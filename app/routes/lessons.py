@@ -43,6 +43,25 @@ async def update_lesson(id: str, lesson: LessonIn) -> Lesson:
     return updated
 
 
+class CopyFor(BaseModel):
+    child: str  # children.Child.id
+
+
+@router.post("/api/lessons/{id}/copy")
+async def copy_lesson(id: str, req: CopyFor) -> Lesson:
+    """The lesson copied for another child: its decks ("Jules::5e::Anglais" →
+    "Mathilde::3e::Anglais"), its Anki profile (on the computer); also from a lesson only
+    read here (another profile's). Free: nothing asked of the AI."""
+    lesson = await access.seen(id)
+    every = await asyncio.to_thread(children.list_all)
+    child = next((c for c in every if c.id == req.child), None)
+    if child is None:
+        raise AppError("children.not_found", 404)
+    deck = children.deck_for(child, children.split_deck(lesson.deck, every)[1]) or lesson.deck
+    owner = child.anki_profile or await ankiconnect.active_profile() or ""
+    return await asyncio.to_thread(lessons.copy, id, deck, child.id, owner)
+
+
 @router.get("/api/lessons/{id}/anki-notes")
 async def lesson_anki_notes(id: str) -> dict:
     """How many of the lesson's notes are in Anki: asked before deleting it."""
