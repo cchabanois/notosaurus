@@ -31,6 +31,7 @@ Elles ne se modifient pas, mais se **dupliquent** pour en faire votre propre ver
 | Langue : conjugaison | Un verbe, un temps et une personne par carte ; la forme conjuguée au verso. |
 | Tableau à apprendre | Un tableau à savoir par cœur (déclinaison, verbes irréguliers…) : une carte par case, ou par ligne quand chaque ligne est un mot ; la réponse tapée. |
 | Questions / réponses | Des questions courtes sur le contenu : dates, définitions, idées clés. |
+| Dates et repères | Une carte par date à retenir (une frise, un encadré) : l'événement au recto, sa date au verso, le siècle dans l'info ; avec la carte inverse, pour l'apprendre dans les deux sens. |
 | Définitions | Une carte par mot-clé à savoir définir, sa définition au verso. |
 | Texte à trous | Des phrases à trous : une carte par numéro de trou. |
 | QCM | Une question, la bonne réponse et trois mauvaises plausibles. |

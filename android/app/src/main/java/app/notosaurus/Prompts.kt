@@ -48,7 +48,7 @@ class Prompts(private val file: File, private val texts: PageTexts) {
     companion object {
         // Notosaurus's prompts, in order (app/prompts.py, BUILTIN)
         private val BUILTIN = listOf(
-            "auto", "vocabulary", "sentences", "conjugation", "table", "questions", "definitions", "cloze", "quiz",
+            "auto", "vocabulary", "sentences", "conjugation", "table", "questions", "dates", "definitions", "cloze", "quiz",
             "true_false", "methods", "formulas", "geometry", "diagram", "pictures", "blanks", "dictation", "dictation_gaps",
         )
         private val FIELDS = setOf("name", "text", "deck", "voice", "typing", "dictation", "dictation_only")

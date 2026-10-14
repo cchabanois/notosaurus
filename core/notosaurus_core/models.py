@@ -153,6 +153,12 @@ class Extraction(Deck):
         description="True when the instructions ask for the answers to be typed (the pupil writes the answer, "
         "checked letter by letter: spelling, words with blanks). Otherwise false.",
     )
+    reverse: bool = Field(
+        default=False,
+        description="True when the instructions ask for the reverse card too (each card asked both ways: "
+        "back → front as well). Anki makes that card from each card: never write the reverse cards yourself. "
+        "Otherwise false.",
+    )
     speed: Literal["", "slow", "normal"] = Field(
         default="",
         description='How fast the instructions ask for the backs to be read aloud: "slow" (e.g. "read slowly") '

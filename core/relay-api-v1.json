@@ -2360,6 +2360,11 @@
             "title": "Typing",
             "default": false
           },
+          "reverse": {
+            "type": "boolean",
+            "title": "Reverse",
+            "default": false
+          },
           "speed": {
             "type": "string",
             "title": "Speed",

@@ -63,7 +63,7 @@ class Generation(
         }
         val found = cancellable(fields["job"]) { relay().extract(request, form.images, onCard) }
         // The options: Notosaurus's prompt's own, else what the AI read in the instructions (a
-        // typed answer, a dictation) or recognised (prompt "Automatic": a dictation)
+        // typed answer, the reverse card, a dictation) or recognised (prompt "Automatic": a dictation)
         fun said(key: String) = found[key]?.jsonPrimitive?.booleanOrNull == true
         val dictationOnly = form.on("dictation_only") || said("dictation")
         val typing = form.on("typing") || said("typing")
@@ -95,6 +95,7 @@ class Generation(
                     foreign = Speech.learned(found.string("back_language"), form.lang, false).isNotEmpty(), dictation = dictation,
                 ),
             ),
+            "reverse" to JsonPrimitive(said("reverse")),
             "typing" to JsonPrimitive(typing),
             "dictation" to JsonPrimitive(dictation),
             "dictation_only" to JsonPrimitive(dictationOnly),

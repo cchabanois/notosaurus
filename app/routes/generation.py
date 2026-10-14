@@ -131,7 +131,7 @@ async def _generate(
     # Photos taken sideways are saved upright (masks and diagram frames turn with them)
     photos = diagrams.straighten([i.data for i in data], found.deck.cards, found.turns, found.frames)
     # The options: Notosaurus's prompt's own, else what the AI read in the instructions (a
-    # typed answer, a dictation) or recognised (prompt "Automatic": a dictation)
+    # typed answer, the reverse card, a dictation) or recognised (prompt "Automatic": a dictation)
     dictation_only = form.dictation_only or found.dictation
     typing = form.typing or found.typing
     dictation = form.dictation or found.dictation_card or dictation_only
@@ -142,6 +142,7 @@ async def _generate(
         **found.deck.model_dump(),
         voice=voice,
         rate=_rate(s.tts_rate, found.speed, foreign=foreign, dictation=dictation),
+        reverse=found.reverse,
         typing=typing,
         dictation=dictation,
         dictation_only=dictation_only,
@@ -310,7 +311,7 @@ async def regenerate(
         async with usage.metered("extract") as meter:  # as /api/extract's
             g = await _generate(form, photos, lang, lesson_id=id, on_card=on_card)
             # The options set in the review stay (the prompt's are added): only the cards change
-            g.content.reverse = old.reverse
+            g.content.reverse = g.content.reverse or old.reverse
             g.content.typing = g.content.typing or old.typing
             g.content.dictation = g.content.dictation or old.dictation
             g.content.dictation_only = g.content.dictation_only or old.dictation_only
