@@ -21,6 +21,7 @@ BUILTIN = (
     "vocabulary",
     "sentences",
     "conjugation",
+    "table",
     "questions",
     "definitions",
     "cloze",
