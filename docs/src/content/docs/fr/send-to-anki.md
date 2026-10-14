@@ -30,7 +30,7 @@ leçon restent dans Anki : après l'envoi, Notosaurus les liste et propose de le
 (avec leur historique de révision), jamais sans votre accord. Supprimer une leçon entière dans
 Notosaurus propose de supprimer aussi ses cartes dans Anki, avec leur historique de révision.
 
-Changer une option des cartes (la carte inverse) sur une leçon déjà envoyée
+Changer une option des cartes (la carte inverse, la réponse tapée) sur une leçon déjà envoyée
 fait passer ses cartes au type de note correspondant, historique gardé.
 
 Dans Anki, les notes de chaque leçon portent l'étiquette `notosaurus::<leçon>` : pratique pour

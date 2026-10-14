@@ -3020,6 +3020,39 @@
             "title": "Summary",
             "description": "One short sentence describing what changed, in the requested language."
           },
+          "reverse": {
+            "type": "string",
+            "enum": [
+              "",
+              "on",
+              "off"
+            ],
+            "title": "Reverse",
+            "description": "\"on\" when the correction asks for the reverse card too (each card asked both ways), \"off\" when it asks for one way only; otherwise empty. Anki makes that card: never write it yourself.",
+            "default": ""
+          },
+          "typing": {
+            "type": "string",
+            "enum": [
+              "",
+              "on",
+              "off"
+            ],
+            "title": "Typing",
+            "description": "\"on\" when the correction asks for the answers to be typed, \"off\" when it asks for them not to be; otherwise empty.",
+            "default": ""
+          },
+          "dictation": {
+            "type": "string",
+            "enum": [
+              "",
+              "on",
+              "off"
+            ],
+            "title": "Dictation",
+            "description": "\"on\" when the correction asks for a dictation of each card (hear the back, write it), \"off\" when it asks for none; otherwise empty. Anki makes that card: never write it yourself.",
+            "default": ""
+          },
           "usage": {
             "$ref": "#/components/schemas/Usage"
           }

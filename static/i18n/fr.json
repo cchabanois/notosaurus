@@ -140,8 +140,13 @@
       "listen": "Écouter le verso",
       "removeCard": "Supprimer la carte",
       "addCard": "＋ Ajouter une carte",
-      "reverse": "Ajouter la carte inverse",
-      "reverseHint": "(verso → recto)",
+      "options": {
+        "reverse": "↔ Dans les deux sens",
+        "typing": "⌨️ Réponse tapée",
+        "dictation": "🎧 Avec une dictée",
+        "dictationOnly": "🎧 Dictée seule"
+      },
+      "optionsChange": "Pour changer : dites-le dans la correction (« dans un seul sens », « sans la réponse tapée »).",
       "voiceIncluded": "🔊 Voix <code>{voice}</code>, incluse dans le paquet.",
       "voiceDevice": "🔊 Lu par l'appareil en <code>{voice}</code>.",
       "badgeNew": "nouvelle",

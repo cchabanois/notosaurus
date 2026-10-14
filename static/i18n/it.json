@@ -140,8 +140,13 @@
       "listen": "Ascolta il retro",
       "removeCard": "Elimina la carta",
       "addCard": "＋ Aggiungi una carta",
-      "reverse": "Aggiungi la carta inversa",
-      "reverseHint": "(retro → fronte)",
+      "options": {
+        "reverse": "↔ Nei due sensi",
+        "typing": "⌨️ Risposta scritta",
+        "dictation": "🎧 Con un dettato",
+        "dictationOnly": "🎧 Solo dettato"
+      },
+      "optionsChange": "Per cambiarlo: dillo nella correzione («in un solo senso», «senza scrivere la risposta»).",
       "voiceIncluded": "🔊 Voce <code>{voice}</code>, inclusa nel mazzo.",
       "voiceDevice": "🔊 Letto ad alta voce dal dispositivo in <code>{voice}</code>.",
       "badgeNew": "nuova",

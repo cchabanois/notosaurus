@@ -140,8 +140,13 @@
       "listen": "Escuchar el reverso",
       "removeCard": "Eliminar la tarjeta",
       "addCard": "＋ Añadir una tarjeta",
-      "reverse": "Añadir la tarjeta inversa",
-      "reverseHint": "(reverso → anverso)",
+      "options": {
+        "reverse": "↔ En los dos sentidos",
+        "typing": "⌨️ Respuesta escrita",
+        "dictation": "🎧 Con un dictado",
+        "dictationOnly": "🎧 Solo dictado"
+      },
+      "optionsChange": "Para cambiarlo: dígalo en la corrección («en un solo sentido», «sin escribir la respuesta»).",
       "voiceIncluded": "🔊 Voz <code>{voice}</code>, incluida en el mazo.",
       "voiceDevice": "🔊 Leído en voz alta por el dispositivo en <code>{voice}</code>.",
       "badgeNew": "nueva",

@@ -503,10 +503,10 @@ class LocalServerTest {
         relay.takeRequest()
         val id = lesson.string("id")
         val cards = lesson["cards"]!!.jsonArray
-        relayAnswers("""{"deck": "Espagnol::Leçon 5", "cards": [${cards[0]}, {"front": "le frère", "back": "el hermano"}], "summary": "Une carte remplacée.", "usage": {"credits": 2, "credits_left": 95}}""")
+        relayAnswers("""{"deck": "Espagnol::Leçon 5", "cards": [${cards[0]}, {"front": "le frère", "back": "el hermano"}], "summary": "Une carte remplacée.", "reverse": "off", "typing": "on", "usage": {"credits": 2, "credits_left": 95}}""")
         val res = client.post("/api/lessons/$id/revise") {
             page("fr"); contentType(ContentType.Application.Json)
-            setBody("""{"deck": "Espagnol::Leçon 5", "cards": $cards, "voice": "", "instruction": "remplace le père par le frère"}""")
+            setBody("""{"deck": "Espagnol::Leçon 5", "cards": $cards, "voice": "", "reverse": true, "dictation": true, "instruction": "remplace le père par le frère"}""")
         }.json().jsonObject
 
         val sent = relay.takeRequest()
@@ -521,6 +521,9 @@ class LocalServerTest {
         val revised = res["lesson"]!!.jsonObject["cards"]!!.jsonArray.map { it.jsonObject }
         assertEquals(cards[0].jsonObject.string("id"), revised[0].string("id")) // kept
         assertTrue(revised[1].string("id").isNotEmpty())
+        // How the cards are asked: as the correction said ("off", "on"), the others as they were
+        val saved = res["lesson"]!!.jsonObject
+        assertEquals(listOf("false", "true", "true"), listOf("reverse", "typing", "dictation").map { saved[it]!!.jsonPrimitive.content })
         assertEquals("le frère", client.get("/api/lessons/$id") { page() }.json().jsonObject["cards"]!!.jsonArray[1].jsonObject.string("front"))
     }
 
