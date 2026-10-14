@@ -43,9 +43,7 @@ class Lessons(private val root: File) {
 
     /** A new lesson from what the AI made: its own folder, named after the date and deck. */
     fun create(content: Map<String, JsonElement>, photos: List<ByteArray>): JsonObject {
-        val deck = content["deck"]?.jsonPrimitive?.content ?: ""
-        val base = "${LocalDate.now()}-${slug(deck).ifBlank { "lesson" }}"
-        val id = generateSequence(base) { "$base-${UUID.randomUUID().toString().take(4)}" }.first { !root.resolve(it).exists() }
+        val id = newId(content["deck"]?.jsonPrimitive?.content ?: "")
         val dir = root.resolve(id).apply { mkdirs() }
         photos.forEachIndexed { i, data -> dir.resolve("page-${i + 1}.jpg").writeBytes(data) }
         val now = now()
@@ -60,6 +58,42 @@ class Lessons(private val root: File) {
         )
         write(lesson)
         return lesson
+    }
+
+    /** A copy for another child (its `deck`): photos, cards, pictures; new card ids (other
+     * notes in AnkiDroid, with their own history); not sent yet, no AI calls (nothing asked
+     * of the AI), as the computer's lessons.copy. Null: no such lesson. */
+    fun copy(id: String, deck: String, child: String): JsonObject? {
+        val source = folder(id) ?: return null
+        val lesson = get(id) ?: return null
+        val copyId = newId(deck)
+        val dir = root.resolve(copyId)
+        source.copyRecursively(dir) // photos, pictures
+        val cards = lesson.cards().map { card ->
+            val fresh = UUID.randomUUID().toString().replace("-", "").take(12)
+            val picture = card.string("picture")
+            val file = dir.resolve("images").resolve(picture)
+            val renamed = if (PICTURE.matches(picture) && file.isFile) {
+                picture.replaceFirst(Regex("^picture-[a-z0-9]+-"), "picture-$fresh-").also { file.renameTo(file.resolveSibling(it)) }
+            } else ""
+            card.with("id" to JsonPrimitive(fresh), "picture" to JsonPrimitive(renamed))
+        }
+        val now = now()
+        val copy = JsonObject(
+            lesson - "anki_notes" + mapOf(
+                "id" to JsonPrimitive(copyId), "deck" to JsonPrimitive(deck), "child" to JsonPrimitive(child),
+                "shared" to JsonPrimitive(false), "cards" to JsonArray(cards), "ai_calls" to JsonArray(emptyList()),
+                "created_at" to JsonPrimitive(now), "updated_at" to JsonPrimitive(now), "exported_at" to JsonNull,
+            ),
+        )
+        write(copy)
+        return copy
+    }
+
+    /** A new lesson's folder name: the date and its deck, another if taken. */
+    private fun newId(deck: String): String {
+        val base = "${LocalDate.now()}-${slug(deck).ifBlank { "lesson" }}"
+        return generateSequence(base) { "$base-${UUID.randomUUID().toString().take(4)}" }.first { !root.resolve(it).exists() }
     }
 
     /** Generated again in its place: new cards and photos; the options set in the review
@@ -168,6 +202,7 @@ class Lessons(private val root: File) {
     companion object {
         private val NAME = Regex("^[a-z0-9][a-z0-9-]*$") // our folder names only: no "../"
         private val PHOTO = Regex("^page-\\d+\\.jpg$")
+        private val PICTURE = Regex("""^picture-[a-z0-9]+-[a-f0-9]{8}\.(jpg|svg)$""") // Pictures.NAME
         private val EDITABLE = setOf(
             "deck", "cards", "voice", "reverse", "typing", "dictation", "dictation_only", "shared", "frames", "prompt", "choice",
         )

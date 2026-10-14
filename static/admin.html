@@ -360,12 +360,6 @@
                               </template>
                             </select>
                           </label>
-                          <label class="switch" :class="{ disabled: !l.owner }">
-                            <input type="checkbox" :checked="l.shared || !l.owner" :disabled="!l.owner"
-                                   @change="setAccess(l, { shared: $event.target.checked })">
-                            <span class="track"><span class="knob"></span></span>
-                            <span x-text="$t('admin.lessons.shared')"></span>
-                          </label>
                         </div>
                       </li>
                     </template>

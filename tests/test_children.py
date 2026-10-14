@@ -145,3 +145,34 @@ def test_cards_saved_before_linked_to_their_profile(client, monkeypatch):
     cards = [{"id": "lea", "name": "Léa", "instructions": "5e"}, {"id": "tom", "name": "Tom"}]
     storage.write_json(children._path(), {"format": 1, "children": cards})
     assert [c.anki_profile for c in children.list_all()] == ["Léa", ""]
+
+
+def test_a_lesson_copied_for_another_child(client):
+    """Its decks, its child, new cards (other notes in Anki), the pictures with them; free."""
+    from app import lessons, storage
+
+    jules = {"id": "jules", "name": "Jules", "grade": "5e", "decks": "Jules::5e"}
+    mathilde = {"id": "mathilde", "name": "Mathilde", "grade": "3e", "decks": "Mathilde::3e"}
+    client.put("/api/children", json=[jules, mathilde])
+    lesson = client.post("/api/extract", data={"prompt": "FR → ES", "child": "jules"}).json()
+    first = lesson["cards"][0]
+    folder = lessons.folder(lesson["id"])
+    (folder / "images").mkdir(exist_ok=True)
+    picture = f"picture-{first['id']}-abcdef12.jpg"
+    (folder / "images" / picture).write_bytes(b"jpeg")
+    saved = storage.read_json(folder / "lesson.json")  # a picture (the server sets them)
+    saved["cards"][0]["picture"] = picture
+    storage.write_json(folder / "lesson.json", saved)
+
+    copy = client.post(f"/api/lessons/{lesson['id']}/copy", json={"child": "mathilde"}).json()
+    assert copy["id"] != lesson["id"] and copy["child"] == "mathilde"
+    assert copy["deck"] == lesson["deck"].replace("Jules::5e", "Mathilde::3e")
+    assert [c["front"] for c in copy["cards"]] == [c["front"] for c in lesson["cards"]]
+    assert not {c["id"] for c in copy["cards"]} & {c["id"] for c in lesson["cards"]}
+    copied = copy["cards"][0]["picture"]
+    assert copied == f"picture-{copy['cards'][0]['id']}-abcdef12.jpg"
+    assert (lessons.folder(copy["id"]) / "images" / copied).read_bytes() == b"jpeg"
+    assert copy["ai_calls"] == [] and copy["exported_at"] is None and copy["anki_notes"] == {}
+    assert client.get(f"/api/lessons/{lesson['id']}").json()["cards"][0]["picture"] == picture  # unchanged
+    gone = client.post(f"/api/lessons/{lesson['id']}/copy", json={"child": "nobody"})
+    assert (gone.status_code, gone.json()["detail"]["code"]) == (404, "children.not_found")

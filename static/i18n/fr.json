@@ -155,7 +155,6 @@
       "badgeModified": "modifiée",
       "noCards": "Aucune carte trouvée : vérifiez les photos ou la consigne.",
       "owner": "👤 Leçon de <strong>{owner}</strong>",
-      "sharedSwitch": "Partagée avec les autres profils",
       "choice": "🤖 {choice}",
       "promptUsed": "📝 Consigne utilisée pour cette leçon",
       "clozeHint": "Texte à trous : {{c1::…}} cache ce qui est entre les accolades. Chaque numéro donne une carte dans Anki ; le même numéro cache plusieurs trous ensemble.",
@@ -447,6 +446,13 @@
       "ofProfile": "Les enfants du profil Anki « {profile} » :",
       "edit": "Modifier {name}"
     },
+    "copy": {
+      "button": "⧉ Copier pour…",
+      "title": "Copier pour…",
+      "hint": "Une copie à lui : ses paquets, ses propres cartes dans Anki. Gratuit : rien n'est demandé à l'IA.",
+      "done": "Copiée pour {name} : voici sa leçon.",
+      "doneElsewhere": "Copiée pour {name} : elle est dans ses leçons, profil Anki « {profile} »."
+    },
     "report": {
       "button": "Signaler",
       "title": "Signaler un contenu",
@@ -580,7 +586,6 @@
       "owner": "Propriétaire",
       "noOwner": "Personne (commune à tous)",
       "missing": "{owner} (n'existe plus dans Anki)",
-      "shared": "Partagée avec les autres profils",
       "delete": "Supprimer la leçon",
       "confirmDelete": "Supprimer la leçon « {deck} » pour tous les profils ? Ses photos et ses cartes sont effacées.",
       "changed": "« {deck} » : enregistré.",
@@ -953,7 +958,8 @@
     },
     "children": {
       "same_id": "Deux enfants ont le même prénom.",
-      "too_many": "Au plus {max} enfants."
+      "too_many": "Au plus {max} enfants.",
+      "not_found": "Cet enfant n'existe plus : rechargez la page."
     }
   },
   "demo": {

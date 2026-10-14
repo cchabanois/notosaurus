@@ -1085,6 +1085,26 @@ def test_the_children_of_the_open_anki_profile(page):
     sync_api.expect(chip).not_to_contain_text("Léa", timeout=8000)
 
 
+def test_a_lesson_copied_for_another_child(page):
+    """⧉ Copy for…: the other children; the copy (its decks) opened, for that child."""
+    kids = [
+        {"id": "jules", "name": "Jules", "grade": "5e", "decks": "Jules::5e"},
+        {"id": "mathilde", "name": "Mathilde", "grade": "3e", "decks": "Mathilde::3e"},
+    ]
+    page.request.put("/api/children", data=kids)
+    generate_free(page, FRONT_PROMPT)
+    deck = page.locator("input[list=decks]")
+    sync_api.expect(deck).to_have_value(re.compile(r"^Jules::5e::"))
+    page.get_by_role("button", name="⧉ Copier pour…").click()
+    sheet = page.get_by_role("dialog", name="Copier pour…")
+    sync_api.expect(sheet.locator(".child-row")).to_have_count(1)  # not Jules: his already
+    sheet.locator(".child-row", has_text="Mathilde").click()
+    sync_api.expect(page.locator(".toast.ok")).to_contain_text("Copiée pour Mathilde")
+    sync_api.expect(deck).to_have_value(re.compile(r"^Mathilde::3e::"))
+    sync_api.expect(page.get_by_role("button", name="Enfants")).to_contain_text("Mathilde")
+    assert sorted(summary["child"] for summary in lessons(page)) == ["jules", "mathilde"]
+
+
 def test_no_profile_badge_where_there_are_no_profiles(page):
     """The Android app (AnkiDroid doesn't say its profile) says profiles: false."""
     page.route("**/api/anki/status", lambda route: route.fulfill(json={"available": True, "profile": None}))

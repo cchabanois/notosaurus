@@ -155,7 +155,6 @@
       "badgeModified": "geändert",
       "noCards": "Keine Karten gefunden: Prüfe die Fotos oder die Anweisungen.",
       "owner": "👤 Lektion von <strong>{owner}</strong>",
-      "sharedSwitch": "Mit den anderen Benutzerprofilen geteilt",
       "choice": "🤖 {choice}",
       "promptUsed": "📝 Für diese Lektion verwendete Anweisungen",
       "clozeHint": "Lückentext: {{c1::…}} verdeckt, was zwischen den Klammern steht. Jede Nummer ergibt eine Karte in Anki; dieselbe Nummer verdeckt mehrere Lücken gleichzeitig.",
@@ -447,6 +446,13 @@
       "ofProfile": "Die Kinder des Anki-Profils „{profile}“:",
       "edit": "{name} bearbeiten"
     },
+    "copy": {
+      "button": "⧉ Kopieren für…",
+      "title": "Kopieren für…",
+      "hint": "Eine eigene Kopie: seine Stapel, seine eigenen Karten in Anki. Kostenlos: Die KI wird nicht gefragt.",
+      "done": "Für {name} kopiert: Hier ist die Lektion.",
+      "doneElsewhere": "Für {name} kopiert: Sie ist in den Lektionen, Anki-Profil „{profile}“."
+    },
     "report": {
       "button": "Melden",
       "title": "Inhalt melden",
@@ -580,7 +586,6 @@
       "owner": "Besitzer",
       "noOwner": "Niemand (gehört allen)",
       "missing": "{owner} (nicht mehr in Anki)",
-      "shared": "Mit den anderen Benutzerprofilen geteilt",
       "delete": "Lektion löschen",
       "confirmDelete": "Die Lektion „{deck}“ für alle Benutzerprofile löschen? Ihre Fotos und Karten werden entfernt.",
       "changed": "„{deck}“: gespeichert.",
@@ -953,7 +958,8 @@
     },
     "children": {
       "same_id": "Zwei Kinder haben denselben Vornamen.",
-      "too_many": "Höchstens {max} Kinder."
+      "too_many": "Höchstens {max} Kinder.",
+      "not_found": "Dieses Kind gibt es nicht mehr: Seite neu laden."
     }
   },
   "demo": {

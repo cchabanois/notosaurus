@@ -155,7 +155,6 @@
       "badgeModified": "changed",
       "noCards": "No cards found: check the photos or the instructions.",
       "owner": "👤 <strong>{owner}</strong>'s lesson",
-      "sharedSwitch": "Shared with the other profiles",
       "choice": "🤖 {choice}",
       "promptUsed": "📝 Instructions used for this lesson",
       "clozeHint": "Cloze: {{c1::…}} hides what is between the braces. Each number makes one card in Anki; the same number hides several gaps together.",
@@ -447,6 +446,13 @@
       "ofProfile": "The children of the Anki profile “{profile}”:",
       "edit": "Edit {name}"
     },
+    "copy": {
+      "button": "⧉ Copy for…",
+      "title": "Copy for…",
+      "hint": "A copy of their own: their decks, their own cards in Anki. Free: nothing is asked of the AI.",
+      "done": "Copied for {name}: here is their lesson.",
+      "doneElsewhere": "Copied for {name}: it is in their lessons, Anki profile “{profile}”."
+    },
     "report": {
       "button": "Report",
       "title": "Report content",
@@ -580,7 +586,6 @@
       "owner": "Owner",
       "noOwner": "Nobody (everyone's)",
       "missing": "{owner} (not in Anki any more)",
-      "shared": "Shared with the other profiles",
       "delete": "Delete the lesson",
       "confirmDelete": "Delete the lesson \"{deck}\" for every profile? Its photos and cards are removed.",
       "changed": "\"{deck}\": saved.",
@@ -953,7 +958,8 @@
     },
     "children": {
       "same_id": "Two children have the same first name.",
-      "too_many": "{max} children at most."
+      "too_many": "{max} children at most.",
+      "not_found": "This child no longer exists: reload the page."
     }
   },
   "demo": {

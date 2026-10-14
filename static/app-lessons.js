@@ -171,11 +171,6 @@ const lessonsPart = {
     storage("set", JSON.stringify(this.openSubjects), OPEN_SUBJECTS);
   },
 
-  // Only the lesson's creator decides to share it
-  canShare() {
-    return Boolean(this.lessonOwner) && this.anki.profile === this.lessonOwner;
-  },
-
   // Someone else's lesson (shared, or seen with "All profiles"): it can be read,
   // sent to Anki and exported, not changed. Lessons without owner are everyone's.
   readOnly() {
@@ -194,6 +189,7 @@ const lessonsPart = {
     this.lessonId = lesson.id;
     this.lessonOwner = lesson.owner ?? "";
     this.lessonShared = lesson.shared ?? false;
+    this.lessonChild = lesson.child ?? "";
     this.lessonPrompt = lesson.prompt ?? "";
     this.lessonChoice = lesson.choice ?? "";
     this.lessonExported = Boolean(lesson.exported_at);
@@ -256,6 +252,7 @@ const lessonsPart = {
     this.lessonId = null;
     this.lessonOwner = "";
     this.lessonShared = false;
+    this.lessonChild = "";
     this.deck = "";
     this.cards = [];
     this.reverse = false;

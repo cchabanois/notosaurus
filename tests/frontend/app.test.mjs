@@ -219,10 +219,8 @@ test("read-only when the lesson belongs to another profile", () => {
   list.anki.profile = "Léa";
   list.lessonOwner = "Léa";
   assert.equal(list.readOnly(), false);
-  assert.equal(list.canShare(), true);
   list.lessonOwner = "Paul";
   assert.equal(list.readOnly(), true);
-  assert.equal(list.canShare(), false);
   assert.equal(list.canDelete({ owner: "Paul" }), false);
   assert.equal(list.canDelete({ owner: "" }), true);  // nobody's: everyone's
 });

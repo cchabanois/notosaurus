@@ -17,6 +17,8 @@ from datetime import date
 from pathlib import Path
 from typing import cast
 
+from notosaurus_core import pictures
+
 from . import storage
 from .errors import AppError
 from .models import AiCall, Card, Generated, Lesson, LessonIn, LessonSummary
@@ -167,6 +169,44 @@ def create(g: Generated, ai_calls: Sequence[AiCall] = ()) -> Lesson:
                 ),
             )
             tmp.rename(path)  # the lesson appears complete, or not at all
+        except BaseException:
+            shutil.rmtree(tmp, ignore_errors=True)
+            raise
+    return _read(path)
+
+
+def copy(id: str, deck: str, child: str, owner: str) -> Lesson:
+    """A copy of lesson `id` for another child (its `deck`, its Anki profile `owner`): the
+    photos, cards, pictures and sounds, the prompt and options. New card ids: in Anki, other
+    notes with their own history, even in the same collection. Not sent yet; no AI calls
+    (nothing asked of the AI: its costs stay the original's)."""
+    with storage.lock:
+        source = existing_folder(id)
+        lesson = _read(source)
+        path = _new_folder(deck)
+        tmp = path.with_name(f".{path.name}.tmp")
+        tmp.mkdir(parents=True)
+        try:
+            for photo in source.glob("page-*.jpg"):
+                shutil.copy2(photo, tmp / photo.name)
+            if (source / "audio").is_dir():  # read aloud: by what it says, whatever the card
+                shutil.copytree(source / "audio", tmp / "audio")
+            cards = []
+            for card in lesson.cards:
+                new_id = uuid.uuid4().hex[:12]
+                picture = card.picture
+                if picture and pictures.NAME.match(picture) and (source / "images" / picture).is_file():
+                    picture = re.sub(r"^picture-[a-z0-9]+-", f"picture-{new_id}-", picture)  # named after its card
+                    (tmp / "images").mkdir(exist_ok=True)
+                    shutil.copy2(source / "images" / card.picture, tmp / "images" / picture)
+                else:
+                    picture = ""
+                cards.append(card.model_copy(update={"id": new_id, "picture": picture}))
+            now = storage.now()
+            changes = {"id": path.name, "deck": deck, "child": child, "owner": owner, "shared": False, "cards": cards}
+            reset = {"ai_calls": [], "anki_notes": {}, "created_at": now, "updated_at": now, "exported_at": None}
+            _write(tmp, lesson.model_copy(update={**changes, **reset}))
+            tmp.rename(path)
         except BaseException:
             shutil.rmtree(tmp, ignore_errors=True)
             raise
