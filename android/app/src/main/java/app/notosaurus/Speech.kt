@@ -51,6 +51,10 @@ class Speech(private val folder: File, private val prefs: Preferences, private v
         if (tag.isEmpty()) return ""
         val all = runCatching { voices() }.getOrNull()?.map { it.jsonObject } ?: return ""
         val base = tag.substringBefore('-')
+        // The one the user chose for that variety (for a language alone: for one of its varieties)
+        val mine = chosen().mapKeys { it.key.lowercase() }.filterValues { it.isNotBlank() }
+        mine[tag]?.let { return it }
+        if (tag == base) mine.toSortedMap().entries.firstOrNull { it.key.substringBefore('-') == base }?.let { return it.value }
         val ranked = all.filter { it.string("locale").lowercase().substringBefore('-') == base }.sortedWith(
             compareBy(
                 { it.string("locale").lowercase() != tag }, // the variety asked for
@@ -59,6 +63,14 @@ class Speech(private val folder: File, private val prefs: Preferences, private v
             ),
         )
         return ranked.firstOrNull()?.string("voice") ?: ""
+    }
+
+    /** The voice chosen per language variety ("es-ES" → "es-ES-Chirp3-HD-Puck"), in the settings. */
+    fun chosen(): Map<String, String> =
+        runCatching { json.decodeFromString<Map<String, String>>(prefs[VOICES].orEmpty()) }.getOrDefault(emptyMap())
+
+    fun choose(voices: Map<String, String>) {
+        prefs[VOICES] = json.encodeToString(voices.filter { (locale, voice) -> locale.isNotBlank() && voice.isNotBlank() })
     }
 
     /** What the kept sounds take on the phone. */
@@ -89,6 +101,7 @@ class Speech(private val folder: File, private val prefs: Preferences, private v
         // every language); a voice's name, as the page tells them from Anki locales
         const val DEFAULT_VOICE = "Aoede"
         const val TTS_RATE = "tts_rate" // the setting: the voice's speed, as the computer's
+        const val VOICES = "voices" // the setting: the voice chosen per language variety, as the computer's
         val RATES = mapOf("-25%" to 0.75, "-10%" to Relay.SPEECH_RATE, "+0%" to 1.0)
         private val VOICE = Regex("""^[a-z]{2,3}-[A-Z]{2}-[\w-]+$""")
 

@@ -153,6 +153,7 @@ class SettingsUpdate(BaseModel):
     compatible_base_url: str | None = Field(default=None, pattern=r"^(https?://.*)?$")
     compatible_api_key: str | None = None
     tts_rate: str | None = Field(default=None, pattern=r"^[+-]\d{1,2}%$")
+    voices: dict[str, str] | None = None  # the voice chosen per language variety (replaces them all)
     ankiconnect_url: str | None = Field(default=None, pattern=r"^https?://")
     ankiconnect_key: str | None = None
     anki_sync: bool | None = None

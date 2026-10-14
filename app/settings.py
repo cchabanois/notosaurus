@@ -36,6 +36,7 @@ class Settings(AIConfig):
     # profile, e.g. "Bastien is in year 8", "short answers, with the article".
     instructions: str = ""
     profile_instructions: dict[str, str] = {}
+    voices: dict[str, str] = {}  # the voice chosen per language variety ("es-ES": "es-ES-AlvaroNeural")
 
 
 @dataclass(frozen=True)
@@ -71,6 +72,7 @@ SPECS: dict[str, Spec] = {
     # No longer a setting: a free picture is always looked for first (drawing one is asked)
     "picture_find": Spec(editable=False),
     "tts_rate": Spec(env="NOTOSAURUS_TTS_RATE"),
+    "voices": Spec(),
     "ankiconnect_url": Spec(env="NOTOSAURUS_ANKICONNECT_URL"),
     "ankiconnect_key": Spec(env="NOTOSAURUS_ANKICONNECT_KEY", secret=True),
     "anki_sync": Spec(),

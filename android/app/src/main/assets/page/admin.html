@@ -11,6 +11,7 @@
   <!-- The web page's style and languages (the repository's static/): texts under "android" -->
   <link rel="stylesheet" href="style.css">
   <script defer src="i18n.js"></script>
+  <script defer src="voice-choice.js"></script>
   <script defer src="settings.js"></script>
   <script defer src="vendor/alpinejs/cdn.min.js"></script>
 </head>
@@ -179,8 +180,32 @@
           <option value="-10%" x-text="$t('admin.voice.slower')"></option>
           <option value="+0%" x-text="$t('admin.voice.normal')"></option>
         </select>
-        <small x-text="$t('admin.voice.hint')"></small>
       </label>
+      <!-- The voice chosen per language variety (voice-choice.js); none: the language's usual one -->
+      <div class="field voice-choice" x-show="voiceList.length">
+        <span x-text="$t('admin.voice.byLanguage')"></span>
+        <template x-for="locale in Object.keys(form?.voices ?? {})" :key="locale">
+          <div class="voice-row">
+            <span class="voice-locale" x-text="localeName(locale)"></span>
+            <select :aria-label="localeName(locale)" @change="setVoice(locale, $event.target.value); scheduleSave()">
+              <template x-for="v in voicesOf(locale)" :key="v.voice">
+                <option :value="v.voice" x-text="voiceLabel(v)" :selected="v.voice === form.voices[locale]"></option>
+              </template>
+            </select>
+            <button type="button" class="icon-btn" @click="listenVoice(locale, form.voices[locale])"
+                    :aria-label="$t('admin.voice.listen')" :title="$t('admin.voice.listen')">▶</button>
+            <button type="button" class="icon-btn muted" @click="removeVoice(locale); scheduleSave()"
+                    :aria-label="$t('common.delete')">✕</button>
+          </div>
+        </template>
+        <select class="voice-add" @change="addVoice($event.target.value); $event.target.value = ''; scheduleSave()">
+          <option value="" x-text="$t('admin.voice.add')"></option>
+          <template x-for="locale in voiceLocales()" :key="locale">
+            <option :value="locale" x-text="localeName(locale) + ' · ' + locale"></option>
+          </template>
+        </select>
+        <small x-text="$t('admin.voice.byLanguageHint')"></small>
+      </div>
     </section>
 
     <!-- Lessons kept on the phone -->

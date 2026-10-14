@@ -12,6 +12,7 @@ import hashlib
 import logging
 import re
 import shutil
+from collections.abc import Mapping
 from pathlib import Path
 
 import edge_tts
@@ -173,14 +174,21 @@ PREFERRED = {
 }
 
 
-async def voice_for(language: str) -> str:
-    """The voice for a language ("es-ES", "en", "pt-BR"…): the preferred voice of that
-    variety, else one of its voices (a female one first), else the preferred voice of
-    the language, else any of its voices; "" when there is none."""
+async def voice_for(language: str, chosen: Mapping[str, str] | None = None) -> str:
+    """The voice for a language ("es-ES", "en", "pt-BR"…): the one the user chose for that
+    variety (`chosen`, by locale; for a language alone, the one chosen for one of its
+    varieties), else the preferred voice of that variety, else one of its voices (a female
+    one first), else the preferred voice of the language, else any of its voices; "" when
+    there is none."""
     tag = language.strip().replace("_", "-").lower()
     if not tag:
         return ""
     base = tag.split("-")[0]
+    mine = {locale.lower(): voice for locale, voice in (chosen or {}).items() if voice}
+    if tag in mine:
+        return mine[tag]
+    if tag == base and (same := [v for locale, v in sorted(mine.items()) if locale.split("-")[0] == base]):
+        return same[0]
     preferred = PREFERRED.get(tag) or PREFERRED.get(base, "")
     if preferred.lower().startswith(tag):  # "es-ES" → es-ES-ElviraNeural, "es" → es-ES-ElviraNeural
         return preferred

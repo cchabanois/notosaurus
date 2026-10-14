@@ -537,7 +537,12 @@
       "slow": "Slow (−25%)",
       "slower": "A bit slower (−10%)",
       "normal": "Normal",
-      "hint": "The voice itself is chosen in each set of instructions."
+      "byLanguage": "Voice per language",
+      "byLanguageHint": "Without a choice, the language's usual voice (Spanish: Elvira). The backs' language: the AI finds it in the lesson.",
+      "add": "+ Choose a language's voice…",
+      "listen": "Listen",
+      "female": "female",
+      "male": "male"
     },
     "anki": {
       "title": "📥 Send straight to Anki",

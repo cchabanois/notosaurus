@@ -537,7 +537,12 @@
       "slow": "Lent (−25 %)",
       "slower": "Un peu ralenti (−10 %)",
       "normal": "Normal",
-      "hint": "La voix elle-même se choisit dans chaque consigne."
+      "byLanguage": "Voix par langue",
+      "byLanguageHint": "Sans choix, la voix habituelle de la langue (espagnol : Elvira). La langue du verso, l'IA la trouve dans la leçon.",
+      "add": "+ Choisir la voix d'une langue…",
+      "listen": "Écouter",
+      "female": "femme",
+      "male": "homme"
     },
     "anki": {
       "title": "📥 Envoi direct dans Anki",
