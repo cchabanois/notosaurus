@@ -170,6 +170,28 @@ class Revision(Deck):
     """Cards after a natural-language correction, with what changed."""
 
     summary: str = Field(description="One short sentence describing what changed, in the requested language.")
+    # How the cards are asked, when the correction says to change it ("both ways", "without
+    # typing"): "on", "off", or "" (unchanged). Anki makes these cards: never write them.
+    reverse: Literal["", "on", "off"] = Field(
+        default="",
+        description='"on" when the correction asks for the reverse card too (each card asked both ways), "off" '
+        "when it asks for one way only; otherwise empty. Anki makes that card: never write it yourself.",
+    )
+    typing: Literal["", "on", "off"] = Field(
+        default="",
+        description='"on" when the correction asks for the answers to be typed, "off" when it asks for them '
+        "not to be; otherwise empty.",
+    )
+    dictation: Literal["", "on", "off"] = Field(
+        default="",
+        description='"on" when the correction asks for a dictation of each card (hear the back, write it), '
+        '"off" when it asks for none; otherwise empty. Anki makes that card: never write it yourself.',
+    )
+
+
+def switched(current: bool, said: str) -> bool:
+    """A lesson's option after a correction's word on it (Revision: "on", "off", "")."""
+    return {"on": True, "off": False}.get(said, current)
 
 
 # What an AI call was for (transcribe: the relay only)

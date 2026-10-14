@@ -69,14 +69,13 @@ are added at the next send.
 
 ## Card options
 
-At the bottom of the lesson:
+At the bottom of the lesson, a line says how the cards are asked: **↔ Both ways** (Anki also
+asks back → front), **⌨️ Typed answer** (Anki compares letter by letter), **🎧 With a
+dictation** (hear the back, write it).
 
-![Card options](../../assets/screenshots/en/review-options.png)
-
-- **Add the reverse card**: Anki also asks back → front.
-
-Typing the answer and the dictation come with the [instructions](../instructions/): they go
-with what the AI writes. To change them, make the lesson again with other instructions.
+These options come from the [instructions](../instructions/): the AI reads them in their text.
+To change them, say so in the correction, e.g. "one way only" or "with the answer typed": the
+cards stay the same, only how Anki asks them changes.
 
 The line below says which voice reads the backs. It is included in the deck, so it plays
 everywhere, even offline.

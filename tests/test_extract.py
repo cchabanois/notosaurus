@@ -386,6 +386,27 @@ def test_revision_by_instruction(client):
     assert [c["front"] for c in cards] == ["le chat", "(demo addition)"]
 
 
+def test_a_correction_changes_how_the_cards_are_asked(client, monkeypatch):
+    """ "Dans un seul sens", "avec la réponse tapée": the lesson's options change as the AI
+    says ("on", "off"), the others stay; the cards are the AI's as for any correction."""
+    from app.routes import lessons as routes
+    from notosaurus_core.models import Card, Revision
+
+    async def revise(*_, **__):
+        cards = [Card(front="le chat", back="el gato")]
+        return Revision(deck="D", cards=cards, summary="ok", reverse="off", typing="on")
+
+    monkeypatch.setattr(routes, "revise_cards", revise)
+    lesson = extract_lesson(client)
+    body = {"deck": "D", "cards": lesson["cards"], "reverse": True, "dictation": True, "instruction": "x"}
+    saved = client.post(f"/api/lessons/{lesson['id']}/revise", json=body).json()["lesson"]
+    assert (saved["reverse"], saved["typing"], saved["dictation"]) == (False, True, True)
+
+    from notosaurus_core.models import switched
+
+    assert switched(True, "") is True and switched(False, "on") is True and switched(True, "off") is False
+
+
 def test_revision_errors(client, monkeypatch):
     body = {"deck": "D", "cards": [], "instruction": "x"}
     assert client.post("/api/lessons/unknown/revise", json=body).status_code == 404

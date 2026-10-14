@@ -513,11 +513,11 @@
       <button class="btn dashed wide" x-show="!readOnly()" @click="addCard()" x-text="$t('app.review.addCard')"></button>
 
       <div class="export-options">
-        <label class="switch" :class="{ disabled: readOnly() }">
-          <input type="checkbox" x-model="reverse" :disabled="readOnly()">
-          <span class="track"><span class="knob"></span></span>
-          <span><span x-text="$t('app.review.reverse')"></span> <small x-text="$t('app.review.reverseHint')"></small></span>
-        </label>
+        <!-- How the cards are asked: said in the prompt, changed by a correction ("both ways") -->
+        <p class="hint" x-show="askedHow()">
+          <span x-text="askedHow()"></span>
+          <small x-show="!readOnly()" x-text="$t('app.review.optionsChange')"></small>
+        </p>
         <p class="hint" x-show="voice">
           <span x-show="hasAudio()" x-html="$th('app.review.voiceIncluded', { voice })"></span>
           <span x-show="!hasAudio()" x-html="$th('app.review.voiceDevice', { voice })"></span>

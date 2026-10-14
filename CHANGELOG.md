@@ -57,6 +57,7 @@ Each pull request adds a line under **Unreleased**. See [Releasing](CONTRIBUTING
 
 ### Changed
 
+- The review's **Add the reverse card** switch is gone: how the cards are asked (both ways, typed answer, dictation) comes from the prompt, and shows as a line at the bottom of the review. To change it, say so in the correction ("one way only", "with the answer typed"): only how Anki asks the cards changes. For developers: `/v1/revise` answers `reverse`, `typing`, `dictation` ("on", "off", "").
 - The card voices are slowed only where it helps: a language being learned, and dictations (time to write); a lesson in the pupil's own language is read at normal speed. The setting is now **Slow down foreign languages and dictations** (a lot, a bit, no). A prompt can say it ("read slowly", "at normal speed"). The speed is kept with the lesson, so its sounds stay alike; a lesson made before keeps the setting's. For developers: `/v1/extract` answers `speed`.
 - Once a lesson is in Anki, its button says **🔄 Update in Anki** instead of “📥 Add to Anki”.
 - The pages load nothing from elsewhere any more: Alpine.js, KaTeX and the Nunito font come with Notosaurus, as pdf.js does (no CDN, no Google Fonts). A blocked CDN can't break the page, it works offline (the add-on, the Android app), and no third party sees its visits. A test checks it stays so.

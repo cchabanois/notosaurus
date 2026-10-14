@@ -73,14 +73,13 @@ Anki, les cartes envoyées y restent, et les nouvelles sont ajoutées au prochai
 
 ## Les options des cartes
 
-En bas de la leçon :
+En bas de la leçon, une ligne dit comment les cartes sont posées : **↔ Dans les deux sens**
+(Anki demande aussi verso → recto), **⌨️ Réponse tapée** (Anki compare lettre par lettre),
+**🎧 Avec une dictée** (entendre le verso, l'écrire).
 
-![Les options des cartes](../../../assets/screenshots/fr/review-options.png)
-
-- **Ajouter la carte inverse** : Anki demande aussi verso → recto.
-
-La réponse tapée et la dictée viennent de la [consigne](../instructions/) : elles vont avec ce
-que l'IA écrit. Pour les changer, refaites la leçon avec une autre consigne.
+Ces options viennent de la [consigne](../instructions/) : l'IA les lit dans son texte. Pour les
+changer, dites-le dans la correction, par exemple « dans un seul sens » ou « avec la réponse
+tapée » : les cartes ne changent pas, seulement la façon dont Anki les pose.
 
 La ligne en dessous indique la voix qui lit les versos. Elle est incluse dans le paquet :
 elle fonctionne partout, même hors connexion.

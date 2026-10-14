@@ -5,6 +5,7 @@ import io.ktor.server.routing.Route
 import kotlinx.serialization.json.JsonArray
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
+import kotlinx.serialization.json.booleanOrNull
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.intOrNull
 import kotlinx.serialization.json.jsonPrimitive
@@ -60,7 +61,20 @@ internal fun Route.generationRoutes(server: LocalServer) {
             }
             val revised = relay().withPhotos("revise", request, lessons.photos(lesson.string("id")))
             val revisedDeck = listOf(private, revised.string("deck")).filter { it.isNotEmpty() }.joinToString("::")
-            val changes = JsonObject(req + mapOf("deck" to JsonPrimitive(revisedDeck), "cards" to revised["cards"]!!))
+            // How the cards are asked: as they were, unless the correction said otherwise ("on",
+            // "off"), as the computer's (models.switched)
+            fun switched(option: String) = when (revised.string(option)) {
+                "on" -> true
+                "off" -> false
+                else -> req[option]?.jsonPrimitive?.booleanOrNull == true
+            }
+            val options = mapOf(
+                "reverse" to JsonPrimitive(switched("reverse")),
+                "typing" to JsonPrimitive(switched("typing")),
+                "dictation" to JsonPrimitive(switched("dictation")),
+                "dictation_only" to JsonPrimitive(switched("dictation") && req["dictation_only"]?.jsonPrimitive?.booleanOrNull == true),
+            )
+            val changes = JsonObject(req + options + mapOf("deck" to JsonPrimitive(revisedDeck), "cards" to revised["cards"]!!))
             buildJsonObject {
                 put("lesson", lessons.update(lesson.string("id"), changes)!!)
                 put("summary", revised["summary"]!!)

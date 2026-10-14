@@ -424,8 +424,6 @@ def shoot(lang: str) -> None:
         scroll_to(page, "form.revise", 120)
         shot("correction")
         page.locator("form.revise textarea").fill("")
-        scroll_to(page, ".export-options", 420)
-        shot("review-options")
 
         page.evaluate(f"id => {APP}.openLesson(id)", lesson_id(page, plant_deck))
         page.wait_for_load_state("networkidle")

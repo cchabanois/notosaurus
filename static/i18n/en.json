@@ -140,8 +140,13 @@
       "listen": "Listen to the back",
       "removeCard": "Delete card",
       "addCard": "＋ Add a card",
-      "reverse": "Add the reverse card",
-      "reverseHint": "(back → front)",
+      "options": {
+        "reverse": "↔ Both ways",
+        "typing": "⌨️ Typed answer",
+        "dictation": "🎧 With a dictation",
+        "dictationOnly": "🎧 Dictation only"
+      },
+      "optionsChange": "To change it: say so in the correction (“one way only”, “without typing”).",
       "voiceIncluded": "🔊 Voice <code>{voice}</code>, included in the deck.",
       "voiceDevice": "🔊 Read aloud by the device in <code>{voice}</code>.",
       "badgeNew": "new",

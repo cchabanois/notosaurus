@@ -140,8 +140,13 @@
       "listen": "Ouvir o verso",
       "removeCard": "Excluir o cartão",
       "addCard": "＋ Adicionar um cartão",
-      "reverse": "Adicionar o cartão inverso",
-      "reverseHint": "(verso → frente)",
+      "options": {
+        "reverse": "↔ Nos dois sentidos",
+        "typing": "⌨️ Resposta escrita",
+        "dictation": "🎧 Com um ditado",
+        "dictationOnly": "🎧 Só ditado"
+      },
+      "optionsChange": "Para mudar: diga-o na correção («num só sentido», «sem escrever a resposta»).",
       "voiceIncluded": "🔊 Voz <code>{voice}</code>, incluída no baralho.",
       "voiceDevice": "🔊 Lido em voz alta pelo aparelho em <code>{voice}</code>.",
       "badgeNew": "novo",

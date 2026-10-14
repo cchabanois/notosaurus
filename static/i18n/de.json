@@ -140,8 +140,13 @@
       "listen": "Rückseite anhören",
       "removeCard": "Karte löschen",
       "addCard": "＋ Karte hinzufügen",
-      "reverse": "Umgekehrte Karte hinzufügen",
-      "reverseHint": "(Rückseite → Vorderseite)",
+      "options": {
+        "reverse": "↔ In beide Richtungen",
+        "typing": "⌨️ Getippte Antwort",
+        "dictation": "🎧 Mit Diktat",
+        "dictationOnly": "🎧 Nur Diktat"
+      },
+      "optionsChange": "Zum Ändern: sagen Sie es in der Korrektur („nur in eine Richtung“, „ohne Eintippen“).",
       "voiceIncluded": "🔊 Stimme <code>{voice}</code>, im Stapel enthalten.",
       "voiceDevice": "🔊 Vom Gerät vorgelesen, auf <code>{voice}</code>.",
       "badgeNew": "neu",

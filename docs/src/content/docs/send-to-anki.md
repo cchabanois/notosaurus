@@ -29,7 +29,7 @@ added since the last send are added; cards deleted from the lesson stay in Anki:
 delete them (with their review history), never without asking. Deleting a whole lesson in Notosaurus offers to delete its cards in Anki
 too, with their review history.
 
-Changing a card option (the reverse card) on a lesson already sent moves its
+Changing a card option (the reverse card, the typed answer) on a lesson already sent moves its
 cards to the matching note type, history kept.
 
 In Anki, each lesson's notes carry a tag `notosaurus::<lesson>`: handy to find them in the

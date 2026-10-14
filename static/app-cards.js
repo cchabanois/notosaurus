@@ -8,7 +8,10 @@ const cardsPart = {
     if (!instruction || this.revision.busy || !this.lessonId || this.readOnly()) return;
     this.error = "";
     this.revision.busy = true;
-    const before = { deck: this.deck, cards: this.cards.map((c) => ({ ...c, _state: undefined })) };
+    const before = {
+      deck: this.deck, cards: this.cards.map((c) => ({ ...c, _state: undefined })),
+      reverse: this.reverse, typing: this.typing, dictation: this.dictation, dictationOnly: this.dictationOnly,
+    };
     try {
       const res = await (await api(`/api/lessons/${this.lessonId}/revise`, {
         method: "POST",
@@ -20,6 +23,11 @@ const cardsPart = {
       this.saveTimer = null;
       this.deck = res.lesson.deck;
       this.cards = cards;
+      // How the cards are asked, if the correction changed it ("both ways")
+      this.reverse = res.lesson.reverse;
+      this.typing = res.lesson.typing ?? false;
+      this.dictation = res.lesson.dictation ?? false;
+      this.dictationOnly = res.lesson.dictation_only ?? false;
       this.lastSaved = this.snapshot();  // the server already saved the revision
       this.saveState = "saved";
       this.revision = { text: "", busy: false, summary: res.summary, stats, undo: before };
@@ -70,6 +78,15 @@ const cardsPart = {
       dictation: this.dictation,
       dictationOnly: this.dictationOnly,
     };
+  },
+
+  // How the lesson's cards are asked, in a line: "↔ both ways · ⌨️ typed answer"; "" none
+  askedHow() {
+    const said = [];
+    if (this.reverse) said.push(t("app.review.options.reverse"));
+    if (this.typing) said.push(t("app.review.options.typing"));
+    if (this.dictation) said.push(t(this.dictationOnly ? "app.review.options.dictationOnly" : "app.review.options.dictation"));
+    return said.join(" · ");
   },
 
   undoRevision() {

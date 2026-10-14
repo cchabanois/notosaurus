@@ -6,6 +6,7 @@ from pydantic import BaseModel
 
 from notosaurus_core import diagrams, llm
 from notosaurus_core.llm import Image, revise_cards
+from notosaurus_core.models import switched
 
 from .. import access, ankiconnect, children, i18n, lesson_notes, lessons, settings, usage
 from ..errors import AppError
@@ -123,10 +124,11 @@ async def revise_lesson(id: str, req: RevisionRequest, lang: str = Depends(page_
             deck=revision.deck,
             cards=revision.cards,
             voice=req.voice,
-            reverse=req.reverse,
-            typing=req.typing,
-            dictation=req.dictation,
-            dictation_only=req.dictation_only,
+            # How the cards are asked: as they were, unless the correction said otherwise
+            reverse=switched(req.reverse, revision.reverse),
+            typing=switched(req.typing, revision.typing),
+            dictation=switched(req.dictation, revision.dictation),
+            dictation_only=req.dictation_only and switched(req.dictation, revision.dictation),
         ),
     )
     return {"lesson": updated, "summary": revision.summary}
