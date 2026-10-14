@@ -202,6 +202,7 @@ const lessonsPart = {
     this.dictation = lesson.dictation ?? false;
     this.dictationOnly = lesson.dictation_only ?? false;
     this.voice = lesson.voice;
+    this.rate = lesson.rate ?? "";
     this.lastSaved = this.snapshot();
     this.saveState = "saved";
     this.revision = { text: "", busy: false, summary: "", stats: "", undo: null };
@@ -257,6 +258,7 @@ const lessonsPart = {
     this.cards = [];
     this.reverse = false;
     this.voice = "";
+    this.rate = "";
     this.typing = false;
     this.dictation = false;
     this.dictationOnly = false;
@@ -327,6 +329,7 @@ const lessonsPart = {
       cards: this.cards.map((card) =>
         Object.fromEntries(Object.entries(card).filter(([k]) => k !== "key" && !k.startsWith("_")))),
       voice: this.voice,
+      rate: this.rate,
       reverse: this.reverse,
       typing: this.typing,
       dictation: this.dictation,

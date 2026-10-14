@@ -64,6 +64,7 @@ const cardsPart = {
       lessonPrompt: this.lessonPrompt,
       lessonChoice: this.lessonChoice,
       voice: this.voice,
+      rate: this.rate,
       reverse: this.reverse,
       typing: this.typing,
       dictation: this.dictation,

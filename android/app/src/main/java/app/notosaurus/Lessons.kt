@@ -204,10 +204,10 @@ class Lessons(private val root: File) {
         private val PHOTO = Regex("^page-\\d+\\.jpg$")
         private val PICTURE = Regex("""^picture-[a-z0-9]+-[a-f0-9]{8}\.(jpg|svg)$""") // Pictures.NAME
         private val EDITABLE = setOf(
-            "deck", "cards", "voice", "reverse", "typing", "dictation", "dictation_only", "shared", "frames", "prompt", "choice",
+            "deck", "cards", "voice", "rate", "reverse", "typing", "dictation", "dictation_only", "shared", "frames", "prompt", "choice",
         )
         private val DEFAULTS = mapOf(
-            "voice" to JsonPrimitive(""), "reverse" to JsonPrimitive(false), "typing" to JsonPrimitive(false),
+            "voice" to JsonPrimitive(""), "rate" to JsonPrimitive(""), "reverse" to JsonPrimitive(false), "typing" to JsonPrimitive(false),
             "dictation" to JsonPrimitive(false), "dictation_only" to JsonPrimitive(false), "owner" to JsonPrimitive(""),
             "child" to JsonPrimitive(""), "shared" to JsonPrimitive(false),
             "frames" to JsonArray(emptyList()), "ai_calls" to JsonArray(emptyList()), "choice" to JsonPrimitive(""),

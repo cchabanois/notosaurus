@@ -23,7 +23,7 @@ async def card_audio(req: ExportRequest, background: BackgroundTasks) -> tuple[d
         directory = Path(tempfile.mkdtemp(prefix="notosaurus-audio-"))
         background.add_task(shutil.rmtree, directory, ignore_errors=True)
     said = tts.spoken_backs(req.cards, req.dictation or req.dictation_only)
-    audio, failures = await tts.tts_many(said, req.voice, directory, settings.current().tts_rate)
+    audio, failures = await tts.tts_many(said, req.voice, directory, req.rate or settings.current().tts_rate)
     tts.prune(directory, set(audio.values()))
     return audio, failures
 

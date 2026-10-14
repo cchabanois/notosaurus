@@ -2360,6 +2360,11 @@
             "title": "Typing",
             "default": false
           },
+          "speed": {
+            "type": "string",
+            "title": "Speed",
+            "default": ""
+          },
           "usage": {
             "$ref": "#/components/schemas/Usage"
           }

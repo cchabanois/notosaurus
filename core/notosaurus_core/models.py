@@ -153,6 +153,11 @@ class Extraction(Deck):
         description="True when the instructions ask for the answers to be typed (the pupil writes the answer, "
         "checked letter by letter: spelling, words with blanks). Otherwise false.",
     )
+    speed: Literal["", "slow", "normal"] = Field(
+        default="",
+        description='How fast the instructions ask for the backs to be read aloud: "slow" (e.g. "read slowly") '
+        'or "normal" (e.g. "at normal speed"). Empty when they don\'t say.',
+    )
 
 
 class Revision(Deck):

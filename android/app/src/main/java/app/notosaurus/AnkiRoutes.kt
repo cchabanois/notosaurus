@@ -37,7 +37,7 @@ internal fun Route.ankiRoutes(server: LocalServer) {
             readyAnki()
             fun on(option: String) = req[option]?.jsonPrimitive?.content == "true"
             val dictation = on("dictation") || on("dictation_only")
-            val (sounds, failures) = speech.sounds(deck, req.string("voice"), dictation)
+            val (sounds, failures) = speech.sounds(deck, req.string("voice"), dictation, req.string("rate"))
             val lessonId = req.string("lesson_id")
             val folder = lessons.images(lessonId)
             val pictures = deck.cards.mapNotNull { c -> folder?.resolve(c.picture)?.takeIf { c.picture.isNotEmpty() && it.isFile }?.let { c.picture to it } }.toMap()

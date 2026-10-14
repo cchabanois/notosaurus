@@ -29,6 +29,9 @@ class LessonOptions(Deck):
     # Voice for the back: "es-ES-ElviraNeural" → edge-tts mp3 embedded in the package;
     # "es_ES" → {{tts}} tag read by Anki itself; empty → no sound.
     voice: str = ""
+    # The voice's speed, e.g. "-10%", chosen at generation (generation._rate); "" (lessons
+    # made before): the settings' tts_rate
+    rate: str = Field(default="", pattern=r"^([+-]\d{1,2}%)?$")
     reverse: bool = False  # adds the reverse card (back → front)
     typing: bool = False  # the answer is typed, Anki compares it letter by letter
     dictation: bool = False  # adds a dictation card: hear the back, type it (needs a voice)

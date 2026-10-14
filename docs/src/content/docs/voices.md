@@ -29,8 +29,15 @@ before sending the cards.
 
 ## Speed
 
-**Settings → Card voices → Speech rate**: **Normal**, **A bit slower (−10 %)** (the default) or
-**Slow (−25 %)**, handy for beginners. The speed applies to the audio made from then on.
+A lesson is slowed down where it helps: the backs in a language being learned, and dictations (time
+to write). A lesson in the pupil's own language (history, French…) is read at normal speed.
+
+**Settings → Card voices → Slow down foreign languages and dictations**: **A lot (−25 %)**,
+**A bit (−10 %)** (the default) or **No**. A prompt can also say it, for its lessons: "read
+slowly", "at normal speed".
+
+The speed is chosen when the lesson is made and kept with it: its sounds stay alike, even if the
+setting changes later.
 
 ![Settings: the speech rate](../../assets/screenshots/en/settings-voice.png)
 

@@ -29,6 +29,7 @@ const ankiPart = {
     if (!text.trim()) return;
     const params = new URLSearchParams({ text, voice });
     if (this.lessonId) params.set("lesson", this.lessonId);  // kept in the lesson, reused on export
+    if (this.rate) params.set("rate", this.rate);
     const audio = new Audio(`/api/tts?${params}`);
     // One voice at a time: listening again, or to another card, stops the one playing
     sounding?.pause();

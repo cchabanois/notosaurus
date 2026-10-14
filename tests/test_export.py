@@ -112,6 +112,19 @@ def test_preview_then_export_reuses_the_sound(client):
     assert synthesized == ["la madre"]
 
 
+def test_the_lesson_s_rate(client):
+    """A lesson's sounds at its own speed, chosen at generation, the 🔊 as the export;
+    a lesson made before (none): the settings'."""
+    lesson = extract_lesson(client)
+    params = {"text": "la madre", "voice": "es-ES-ElviraNeural", "lesson": lesson["id"], "rate": "+0%"}
+    assert client.get("/api/tts", params=params).status_code == 200
+    client.post("/api/export", json={**AUDIO_EXPORT, "lesson_id": lesson["id"], "rate": "+0%"})
+    assert synthesized == ["la madre"]  # the same speed: the same sound
+    client.post("/api/export", json={**AUDIO_EXPORT, "lesson_id": lesson["id"]})
+    assert synthesized == ["la madre", "la madre"]  # the settings' (−10 %): another
+    assert client.get("/api/tts", params={**params, "rate": "vite"}).status_code == 422
+
+
 def test_voice_preview(client):
     res = client.get("/api/tts", params={"text": "hola", "voice": "es-ES-ElviraNeural"})
     assert res.status_code == 200

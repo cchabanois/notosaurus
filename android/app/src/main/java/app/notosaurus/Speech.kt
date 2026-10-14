@@ -15,17 +15,17 @@ class Speech(private val folder: File, private val prefs: Preferences, private v
     /** The relay's voices ({"voice", "locale", "gender"}, as the page lists them), asked once. */
     suspend fun voices(): JsonArray = voiceList ?: relay().voices().also { voiceList = it }
 
-    /** A text read aloud: its mp3, at the settings' speed. */
-    suspend fun read(text: String, voice: String): File {
+    /** A text read aloud: its mp3, at the lesson's `rate` ("-10%"; "": the settings'). */
+    suspend fun read(text: String, voice: String, rate: String = ""): File {
         // Each line on its own, the mp3s joined (as the computer's tts.lines): a natural voice
         // given a lone word then a sentence in one text makes up words. 200 characters a line.
         val lines = text.lines().map { it.trim().take(200) }.filter { it.isNotEmpty() }.ifEmpty { listOf(text.trim().take(200)) }
         val said = lines.joinToString("\n")
-        val rate = RATES[prefs[TTS_RATE]] ?: Relay.SPEECH_RATE
-        val digest = MessageDigest.getInstance("SHA-1").digest("$voice|$rate|$said".toByteArray())
+        val speed = RATES[rate.ifEmpty { prefs[TTS_RATE] }] ?: Relay.SPEECH_RATE
+        val digest = MessageDigest.getInstance("SHA-1").digest("$voice|$speed|$said".toByteArray())
         val mp3 = File(folder, digest.joinToString("") { "%02x".format(it) }.take(16) + ".mp3")
         if (!mp3.isFile) {
-            val bytes = lines.map { relay().speak(it, voice, rate) }.reduce { all, part -> all + part }
+            val bytes = lines.map { relay().speak(it, voice, speed) }.reduce { all, part -> all + part }
             withContext(Dispatchers.IO) {
                 val tmp = File(folder, mp3.name + ".tmp")
                 tmp.writeBytes(bytes)
@@ -37,10 +37,10 @@ class Speech(private val folder: File, private val prefs: Preferences, private v
 
     /** The backs' sound for AnkiDroid, with `voice` (none: no sound), and how many
      * couldn't be made. */
-    suspend fun sounds(deck: Deck, voice: String, dictation: Boolean = false): Pair<Map<String, File>, Int> {
+    suspend fun sounds(deck: Deck, voice: String, dictation: Boolean = false, rate: String = ""): Pair<Map<String, File>, Int> {
         if (!VOICE.matches(voice)) return emptyMap<String, File>() to 0
         val backs = deck.cards.map { spoken(it, dictation) }.filter { it.isNotEmpty() }.distinct()
-        val made = backs.associateWith { runCatching { read(it, voice) }.getOrNull() }
+        val made = backs.associateWith { runCatching { read(it, voice, rate) }.getOrNull() }
         return made.filterValues { it != null }.mapValues { it.value!! } to made.count { it.value == null }
     }
 
@@ -103,6 +103,18 @@ class Speech(private val folder: File, private val prefs: Preferences, private v
         const val TTS_RATE = "tts_rate" // the setting: the voice's speed, as the computer's
         const val VOICES = "voices" // the setting: the voice chosen per language variety, as the computer's
         val RATES = mapOf("-25%" to 0.75, "-10%" to Relay.SPEECH_RATE, "+0%" to 1.0)
+        const val SLOWED = "-10%" // the setting's default
+        private const val NORMAL = "+0%"
+
+        /** The backs' speed, kept with the lesson: the settings' slowdown (`slowed`) for a
+         * language being learned or a dictation (time to write), normal otherwise. What the
+         * instructions say ("slow", "normal") comes first: "slow" slows even when the settings
+         * don't. As the computer's (generation._rate). */
+        fun rate(slowed: String, speed: String, foreign: Boolean, dictation: Boolean): String = when {
+            speed == "slow" -> if (slowed != NORMAL) slowed else SLOWED
+            speed != "normal" && (foreign || dictation) -> slowed
+            else -> NORMAL
+        }
         private val VOICE = Regex("""^[a-z]{2,3}-[A-Z]{2}-[\w-]+$""")
 
         /** The backs' language when it is one being learned: not the pupil's own (the page's)
