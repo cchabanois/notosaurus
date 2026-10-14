@@ -403,6 +403,7 @@ h2 {
 
 .field.deck input { font-weight: 800; }
 .count-line { margin: -.35rem 0 .6rem; color: var(--muted); font-size: .85rem; font-weight: 700; }
+.copy-lesson { margin: .25rem 0 1.2rem; }  /* the count line below pulls itself up */
 
 .cards { display: flex; flex-direction: column; gap: .6rem; }
 
