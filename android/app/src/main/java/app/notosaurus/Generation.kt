@@ -62,11 +62,15 @@ class Generation(
             if (existing.isNotEmpty()) put("existing", JsonArray(existing.map(::JsonPrimitive)))
         }
         val found = cancellable(fields["job"]) { relay().extract(request, form.images, onCard) }
-        // A dictation the AI recognised (prompt "Automatic"): its cards dictation cards alone
-        val dictationOnly = form.on("dictation_only") || found["dictation"]?.jsonPrimitive?.booleanOrNull == true
+        // The options: Notosaurus's prompt's own, else what the AI read in the instructions (a
+        // typed answer, a dictation) or recognised (prompt "Automatic": a dictation)
+        fun said(key: String) = found[key]?.jsonPrimitive?.booleanOrNull == true
+        val dictationOnly = form.on("dictation_only") || said("dictation")
+        val typing = form.on("typing") || said("typing")
+        val dictation = form.on("dictation") || said("dictation_card") || dictationOnly
         val voice = fields["voice"].orEmpty().let {
             if (!it.equals("auto", ignoreCase = true)) it
-            else speech.voiceFor(Speech.learned(found.string("back_language"), form.lang, form.on("typing") || form.on("dictation") || dictationOnly))
+            else speech.voiceFor(Speech.learned(found.string("back_language"), form.lang, typing || dictation))
         }
         // Photos taken sideways saved upright: their masks and frames turn with them
         val turns = found["turns"]?.jsonArray?.map { it.jsonPrimitive.content.toInt() }.orEmpty()
@@ -85,8 +89,8 @@ class Generation(
             "cards" to JsonArray(cards),
             "prompt" to JsonPrimitive(fields["prompt"] ?: ""),
             "voice" to JsonPrimitive(voice),
-            "typing" to JsonPrimitive(form.on("typing")),
-            "dictation" to JsonPrimitive(form.on("dictation") || dictationOnly),
+            "typing" to JsonPrimitive(typing),
+            "dictation" to JsonPrimitive(dictation),
             "dictation_only" to JsonPrimitive(dictationOnly),
             "choice" to (found["choice"] ?: JsonPrimitive("")),
             "page_texts" to texts,

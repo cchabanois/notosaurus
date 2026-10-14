@@ -112,7 +112,6 @@ document.addEventListener("alpine:init", () => {
     selectedId: null,
     promptChosen: false,         // a prompt picked (or "Free") by the user: the first load keeps it
     form: { name: "", text: "", deck: "", voice: "", typing: false, dictation: false, dictation_only: false },
-    voices: [],          // edge-tts voices: { voice, locale, gender }
     deck: "",
     cards: [],
     reverse: false,
@@ -253,9 +252,6 @@ document.addEventListener("alpine:init", () => {
       });
       // Follow profile switches in Anki while the page stays open.
       setInterval(() => { if (document.visibilityState === "visible") this.checkAnki(); }, PROFILE_POLL);
-      try {
-        this.voices = await (await api("/api/voices")).json();
-      } catch {}  // the list is only an input aid
     },
 
     async loadSwitches() {

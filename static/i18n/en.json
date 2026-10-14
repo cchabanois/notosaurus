@@ -142,13 +142,6 @@
       "addCard": "＋ Add a card",
       "reverse": "Add the reverse card",
       "reverseHint": "(back → front)",
-      "typing": "Type the answer",
-      "typingHint": "(Anki compares it letter by letter: great for spelling)",
-      "dictation": "Add a dictation",
-      "dictationHint": "(hear the back, write it)",
-      "dictationNoVoice": "(pick a voice first)",
-      "dictationOnly": "Dictation only",
-      "dictationOnlyHint": "(no front → back card)",
       "voiceIncluded": "🔊 Voice <code>{voice}</code>, included in the deck.",
       "voiceDevice": "🔊 Read aloud by the device in <code>{voice}</code>.",
       "badgeNew": "new",
@@ -329,11 +322,7 @@
       "deck": "Suggested deck name",
       "deckPlaceholder": "French::Lesson {n}",
       "deckHint": "Parts in braces are filled in from the lesson.",
-      "options": "Card options",
-      "voice": "Voice for the back",
-      "listenVoice": "Listen to the voice",
-      "female": "female",
-      "male": "male",
+      "optionsHint": "Reading the back aloud, typing the answer, adding a dictation: the AI reads it in the instructions. Just say so, e.g. “with the answer typed” or “a dictation only”.",
       "create": "Create instructions",
       "required": "A name and a text are required.",
       "confirmDelete": "Delete the instructions “{name}”?",
@@ -341,17 +330,7 @@
       "builtin": "⭐ Notosaurus's prompt",
       "builtinHint": "This prompt is part of Notosaurus and is improved with it: duplicate it to adapt it (language, voice, deck…).",
       "duplicate": "⧉ Duplicate",
-      "duplicateToChange": "⧉ Duplicate to change",
-      "voiceMode": {
-        "none": "No sound",
-        "auto": "Automatic",
-        "pick": "Choose a voice"
-      },
-      "voiceModeHint": {
-        "none": "The backs aren't read aloud.",
-        "auto": "The AI recognises the language of the backs and Notosaurus takes a voice of that language (Spanish → Elvira, British English → Sonia…).",
-        "pick": "Type the start of the language (“fr-FR”, “es-ES”…) to see the voices; ▶ to listen."
-      }
+      "duplicateToChange": "⧉ Duplicate to change"
     },
     "pictures": {
       "drawing": "🎨 Drawing…",

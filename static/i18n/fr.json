@@ -142,13 +142,6 @@
       "addCard": "＋ Ajouter une carte",
       "reverse": "Ajouter la carte inverse",
       "reverseHint": "(verso → recto)",
-      "typing": "Taper la réponse",
-      "typingHint": "(Anki compare lettre par lettre : idéal pour l'orthographe)",
-      "dictation": "Ajouter une dictée",
-      "dictationHint": "(entendre le verso, l'écrire)",
-      "dictationNoVoice": "(choisissez d'abord une voix)",
-      "dictationOnly": "Seulement la dictée",
-      "dictationOnlyHint": "(pas de carte recto → verso)",
       "voiceIncluded": "🔊 Voix <code>{voice}</code>, incluse dans le paquet.",
       "voiceDevice": "🔊 Lu par l'appareil en <code>{voice}</code>.",
       "badgeNew": "nouvelle",
@@ -329,11 +322,7 @@
       "deck": "Nom de paquet proposé",
       "deckPlaceholder": "Anglais::Leçon {n}",
       "deckHint": "Les parties entre accolades sont remplies d'après la leçon.",
-      "options": "Options des cartes",
-      "voice": "Voix du verso",
-      "listenVoice": "Écouter la voix",
-      "female": "femme",
-      "male": "homme",
+      "optionsHint": "Lire le verso à voix haute, taper la réponse, ajouter une dictée : l'IA le déduit de la consigne. Dites-le simplement, par exemple « avec la réponse tapée » ou « seulement une dictée ».",
       "create": "Créer la consigne",
       "required": "Il faut au moins un nom et un texte.",
       "confirmDelete": "Supprimer la consigne « {name} » ?",
@@ -341,17 +330,7 @@
       "builtin": "⭐ Consigne Notosaurus",
       "builtinHint": "Cette consigne fait partie de Notosaurus et s'améliore avec lui : dupliquez-la pour l'adapter (langue, voix, paquet…).",
       "duplicate": "⧉ Dupliquer",
-      "duplicateToChange": "⧉ Dupliquer pour modifier",
-      "voiceMode": {
-        "none": "Pas de son",
-        "auto": "Automatique",
-        "pick": "Choisir une voix"
-      },
-      "voiceModeHint": {
-        "none": "Le verso n'est pas lu à voix haute.",
-        "auto": "L'IA reconnaît la langue du verso et Notosaurus prend une voix de cette langue (espagnol → Elvira, anglais britannique → Sonia…).",
-        "pick": "Tapez le début de la langue (« en-GB », « es-ES »…) pour voir les voix ; ▶ pour écouter."
-      }
+      "duplicateToChange": "⧉ Dupliquer pour modifier"
     },
     "pictures": {
       "drawing": "🎨 Dessin…",

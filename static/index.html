@@ -721,49 +721,9 @@
         <input x-model="editor.deck" :placeholder="$t('app.editor.deckPlaceholder')" :disabled="editor.builtin">
         <small x-text="$t('app.editor.deckHint')"></small>
       </label>
-      <!-- Voice of the backs: none, automatic, or a chosen one -->
-      <div class="field">
-        <span x-text="$t('app.editor.voice')"></span>
-        <div class="chips" role="radiogroup" :aria-label="$t('app.editor.voice')">
-          <template x-for="mode in ['none', 'auto', 'pick']" :key="mode">
-            <button type="button" class="chip" role="radio" :aria-checked="editor.voiceMode === mode"
-                    :class="{ active: editor.voiceMode === mode }" :disabled="editor.builtin"
-                    @click="setVoiceMode(mode)" x-text="$t(`app.editor.voiceMode.${mode}`)"></button>
-          </template>
-        </div>
-        <div class="with-action" x-show="editor.voiceMode === 'pick'">
-          <input x-model="editor.voice" placeholder="en-GB-SoniaNeural" list="voices" :disabled="editor.builtin"
-                 :aria-label="$t('app.editor.voice')">
-          <button type="button" class="icon-btn" x-show="isVoice(editor.voice)"
-                  @click="play(sampleText(editor.voice), editor.voice)" :aria-label="$t('app.editor.listenVoice')">▶</button>
-        </div>
-        <small x-text="$t(`app.editor.voiceModeHint.${editor.voiceMode}`)"></small>
-      </div>
-      <datalist id="voices">
-        <template x-for="v in voices" :key="v.voice">
-          <option :value="v.voice"
-                  x-text="v.locale + ' · ' + (v.gender === 'Female' ? $t('app.editor.female') : $t('app.editor.male'))"></option>
-        </template>
-      </datalist>
-      <div class="field">
-        <span x-text="$t('app.editor.options')"></span>
-        <label class="switch" :class="{ disabled: editor.builtin }">
-          <input type="checkbox" x-model="editor.typing" :disabled="editor.builtin">
-          <span class="track"><span class="knob"></span></span>
-          <span><span x-text="$t('app.review.typing')"></span> <small x-text="$t('app.review.typingHint')"></small></span>
-        </label>
-        <label class="switch" :class="{ disabled: editor.builtin || editor.voiceMode === 'none' }">
-          <input type="checkbox" x-model="editor.dictation" :disabled="editor.builtin || editor.voiceMode === 'none'">
-          <span class="track"><span class="knob"></span></span>
-          <span><span x-text="$t('app.review.dictation')"></span>
-            <small x-text="editor.voiceMode !== 'none' ? $t('app.review.dictationHint') : $t('app.review.dictationNoVoice')"></small></span>
-        </label>
-        <label class="switch" :class="{ disabled: editor.builtin }" x-show="editor.dictation && editor.voiceMode !== 'none'">
-          <input type="checkbox" x-model="editor.dictation_only" :disabled="editor.builtin">
-          <span class="track"><span class="knob"></span></span>
-          <span><span x-text="$t('app.review.dictationOnly')"></span> <small x-text="$t('app.review.dictationOnlyHint')"></small></span>
-        </label>
-      </div>
+      <!-- The voice, a typed answer, a dictation: what the AI reads in the text (Notosaurus's
+           prompts: their own) -->
+      <p class="hint" x-show="!editor.builtin" x-text="$t('app.editor.optionsHint')"></p>
       <p class="hint error-text" x-show="editor.error" x-text="editor.error"></p>
       <div class="sheet-actions">
         <button type="button" class="btn danger-soft" x-show="editor.id && !editor.builtin" @click="deletePrompt()"
