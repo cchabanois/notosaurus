@@ -2,10 +2,10 @@
 tell them apart: never sent to the AI), a school class, the decks its lessons go in, and
 standing instructions. The page says which child a lesson is for (Lesson.child).
 
-A card may be linked to an Anki profile (a profile per child, on the computer): that
-profile open, the lesson is for that child (`chosen`); the page chooses it, and offers no
-child linked to another profile. Without links (a profile for all, one deck per child,
-AnkiDroid), the child is chosen in the page.
+On the computer, a card belongs to the Anki profile it was made in (anki_profile): the
+page offers only the open profile's. A profile per child: its one, chosen by itself (and
+by the server when the page names none: `chosen`); a shared profile: its children, one
+deck each, chosen in the page. In the app (AnkiDroid says no profile), cards of none.
 
 data/children.json: {"format": 2, "children": [...]}. Before, the instructions per Anki
 profile (Settings.profile_instructions) were the way to tell the children apart: the
@@ -31,7 +31,7 @@ class Child(BaseModel):
     grade: str = Field(default="", max_length=40)  # its school class ("5e"): told to the AI
     decks: str = Field(default="", max_length=200)  # the decks its lessons go in ("Jules::{classe}")
     instructions: str = Field(default="", max_length=4000)  # told to the AI, with every lesson
-    anki_profile: str = Field(default="", max_length=100)  # its Anki profile (the computer), if one
+    anki_profile: str = Field(default="", max_length=100)  # the Anki profile it belongs to (the computer)
 
 
 def _path():
@@ -90,11 +90,12 @@ def slug(text: str) -> str:
 
 
 def chosen(cards: list[Child], id: str | None, profile: str | None) -> Child | None:
-    """The child a lesson is for: the one the page chose (`id`), else the one linked to the
+    """The child a lesson is for: the one the page chose (`id`), else the only child of the
     Anki profile it is made in (`profile`), else none."""
     if id:
         return next((c for c in cards if c.id == id), None)
-    return next((c for c in cards if profile and c.anki_profile == profile), None)
+    mine = [c for c in cards if profile and c.anki_profile == profile]
+    return mine[0] if len(mine) == 1 else None
 
 
 def for_ai(child: Child | None) -> str:

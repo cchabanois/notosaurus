@@ -444,8 +444,7 @@
         "high": "es. prepara la maturità: formule esatte, dimostrazioni passo per passo."
       },
       "pick": "Per chi è la prossima lezione? Tocca il suo nome.",
-      "openProfile": "Il profilo Anki aperto, «{profile}», è per:",
-      "sharedProfile": "Nessun bambino (profilo condiviso)",
+      "ofProfile": "I bambini del profilo Anki «{profile}»:",
       "edit": "Modifica {name}"
     },
     "report": {
@@ -954,8 +953,7 @@
     },
     "children": {
       "same_id": "Due figli hanno lo stesso nome.",
-      "too_many": "Al massimo {max} figli.",
-      "same_profile": "Questo profilo Anki è già di un altro bambino."
+      "too_many": "Al massimo {max} figli."
     }
   },
   "demo": {

@@ -444,8 +444,7 @@
         "high": "ex. : elle prépare le bac : formules exactes, démonstrations en étapes."
       },
       "pick": "Pour qui est la prochaine leçon ? Touchez son prénom.",
-      "openProfile": "Le profil Anki ouvert « {profile} » est pour :",
-      "sharedProfile": "Aucun enfant (profil partagé)",
+      "ofProfile": "Les enfants du profil Anki « {profile} » :",
       "edit": "Modifier {name}"
     },
     "report": {
@@ -954,8 +953,7 @@
     },
     "children": {
       "same_id": "Deux enfants ont le même prénom.",
-      "too_many": "Au plus {max} enfants.",
-      "same_profile": "Ce profil Anki est déjà celui d'un autre enfant."
+      "too_many": "Au plus {max} enfants."
     }
   },
   "demo": {

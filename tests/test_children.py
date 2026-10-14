@@ -126,16 +126,14 @@ def test_only_the_childs_decks_and_no_ones_to_the_ai():
     assert children.decks_for_ai(decks, every, None) == ["Maths::Fractions"]  # a lesson for no one
 
 
-def test_a_card_linked_to_its_anki_profile(client, monkeypatch):
-    """The child of the lessons made in its Anki profile (none chosen); a profile one child's."""
+def test_the_child_of_the_anki_profile():
+    """The child of a lesson made in an Anki profile, none chosen: its only one."""
     jules = Child(id="jules", name="Jules", anki_profile="Jules (Anki)")
-    every = [jules, Child(id="m", name="Mathilde")]
+    every = [jules, Child(id="m", name="M", anki_profile="Famille"), Child(id="t", name="T", anki_profile="Famille")]
     assert children.chosen(every, "", "Jules (Anki)") is jules
     assert children.chosen(every, "m", "Jules (Anki)").id == "m"  # the page's choice first
+    assert children.chosen(every, "", "Famille") is None  # a shared profile: chosen in the page
     assert children.chosen(every, "", "Autre") is None and children.chosen(every, "", None) is None
-    twice = [jules.model_dump(), {"id": "j2", "name": "J2", "anki_profile": "Jules (Anki)"}]
-    answer = client.put("/api/children", json=twice)
-    assert (answer.status_code, answer.json()["detail"]["code"]) == (400, "children.same_profile")
 
 
 def test_cards_saved_before_linked_to_their_profile(client, monkeypatch):

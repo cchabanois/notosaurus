@@ -444,8 +444,7 @@
         "high": "z. B. bereitet das Abitur vor: genaue Formeln, Beweise Schritt für Schritt."
       },
       "pick": "Für wen ist die nächste Lektion? Tippe auf den Namen.",
-      "openProfile": "Das geöffnete Anki-Profil „{profile}“ ist für:",
-      "sharedProfile": "Kein Kind (gemeinsames Profil)",
+      "ofProfile": "Die Kinder des Anki-Profils „{profile}“:",
       "edit": "{name} bearbeiten"
     },
     "report": {
@@ -954,8 +953,7 @@
     },
     "children": {
       "same_id": "Zwei Kinder haben denselben Vornamen.",
-      "too_many": "Höchstens {max} Kinder.",
-      "same_profile": "Dieses Anki-Profil gehört schon einem anderen Kind."
+      "too_many": "Höchstens {max} Kinder."
     }
   },
   "demo": {

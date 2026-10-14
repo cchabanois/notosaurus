@@ -836,28 +836,16 @@
       <!-- The choice: a row each, tapped: chosen (the sheet closes) -->
       <template x-if="childrenSheet.editing === null">
         <div>
-          <!-- The Anki profile open on the computer: which child it is for (only the open one is
-               linked: never a profile one isn't in) -->
-          <label class="field profile-link" x-show="profiles && anki.available && anki.profile && childrenSheet.list.length">
-            <span x-text="$t('app.children.openProfile', { profile: anki.profile })"></span>
-            <select @change="linkProfile($event.target.value)" :disabled="childrenSheet.saving">
-              <option value="" x-text="$t('app.children.sharedProfile')"
-                      :selected="!childrenSheet.list.some((c) => c.anki_profile === anki.profile)"></option>
-              <template x-for="c in childrenSheet.list" :key="c.id">
-                <option :value="c.id" x-text="c.name" :selected="c.anki_profile === anki.profile"></option>
-              </template>
-            </select>
-          </label>
+          <!-- On the computer: the children of the Anki profile open (each card is its profile's) -->
+          <p class="hint" x-show="childrenProfile()" x-text="$t('app.children.ofProfile', { profile: childrenProfile() })"></p>
           <p class="hint" x-text="$t('app.children.pick')"></p>
           <ul class="child-rows">
             <template x-for="(c, i) in childrenSheet.list" :key="c.id">
-              <li :class="{ current: c.id === childId }">
-                <button type="button" class="child-row" @click="chooseChild(c.id)" :aria-pressed="String(c.id === childId)"
-                        :disabled="!choosable(c)">
+              <li :class="{ current: c.id === childId }" x-show="ofProfile(c)">
+                <button type="button" class="child-row" @click="chooseChild(c.id)" :aria-pressed="String(c.id === childId)">
                   <span class="child-check" aria-hidden="true" x-text="c.id === childId ? '✓' : ''"></span>
                   <strong x-text="c.name"></strong>
                   <small class="muted" x-text="c.grade"></small>
-                  <small class="muted" x-show="c.anki_profile" x-text="'👤 ' + c.anki_profile"></small>
                 </button>
                 <button type="button" class="icon-btn" @click="editChild(i)" :aria-label="$t('app.children.edit', { name: c.name })"
                         :title="$t('app.children.edit', { name: c.name })">✏️</button>
