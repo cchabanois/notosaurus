@@ -97,7 +97,7 @@ class Lessons(private val root: File) {
     }
 
     /** Generated again in its place: new cards and photos; the options set in the review
-     * stay (reverse), the prompt's are added (typing, dictation), as app/main.py does. */
+     * stay, the prompt's (or the AI's) are added (reverse, typing, dictation), as the computer's. */
     fun regenerated(id: String, content: Map<String, JsonElement>, photos: List<ByteArray>): JsonObject? {
         val lesson = get(id) ?: return null
         val dir = folder(id) ?: return null
@@ -109,6 +109,7 @@ class Lessons(private val root: File) {
         val updated = JsonObject(
             lesson + content + mapOf(
                 "cards" to withIds(content["cards"]),
+                "reverse" to either("reverse"),
                 "typing" to either("typing"),
                 "dictation" to either("dictation"),
                 "dictation_only" to either("dictation_only"),

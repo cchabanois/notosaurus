@@ -23,6 +23,7 @@ BUILTIN = (
     "conjugation",
     "table",
     "questions",
+    "dates",
     "definitions",
     "cloze",
     "quiz",

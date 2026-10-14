@@ -104,6 +104,8 @@ def test_dictation_prompt_starts_lessons_with_its_options(client):
     assert dictation["dictation"] is True and dictation["dictation_only"] is True  # its cards: dictations alone
     gaps = prompts["notosaurus:dictation_gaps"]  # the hardest words of a text, one a card
     assert (gaps["name"], gaps["dictation_only"], gaps["voice"]) == ("Gap dictation", True, "auto")
+    dates = prompts["notosaurus:dates"]  # a timeline, both ways: the AI reads it in the text
+    assert dates["name"] == "Dates and landmarks" and "reverse card" in dates["text"]
     table = prompts["notosaurus:table"]  # a table by heart: its answers typed
     assert (table["name"], table["typing"], table["dictation"]) == ("Table to learn", True, False)
     blanks = prompts["notosaurus:blanks"]  # the sentences with a blank, typed: no dictation
@@ -219,12 +221,15 @@ def test_the_options_the_ai_read_in_the_instructions(client, monkeypatch):
     async def extract(*_, **__):
         cards = [Card(front="la mère", back="la madre")]
         deck = Deck(deck="Espagnol::Famille", cards=cards)
-        return Extracted(deck=deck, turns=[], frames=[], back_language="es-ES", typing=True, dictation_card=True)
+        return Extracted(
+            deck=deck, turns=[], frames=[], back_language="es-ES", typing=True, dictation_card=True, reverse=True
+        )
 
     monkeypatch.setattr(generation, "extract_cards", extract)
-    data = {"prompt": "Vocabulaire espagnol, réponse tapée, avec une dictée", "voice": "auto"}
+    data = {"prompt": "Vocabulaire espagnol dans les deux sens, réponse tapée, avec une dictée", "voice": "auto"}
     lesson = client.post("/api/extract", data=data).json()
     assert (lesson["typing"], lesson["dictation"], lesson["dictation_only"]) == (True, True, False)
+    assert lesson["reverse"] is True  # "both ways"
     assert lesson["voice"] == "es-ES-ElviraNeural"
 
 
