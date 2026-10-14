@@ -234,7 +234,6 @@ class LocalServerTest {
                 append("prompt", prompt)
                 append("deck", "")
                 append("voice", voice)
-                append("fun_facts", "true")
                 if (quick) append("quick", "true")
             },
         ) { page() }.json().jsonObject
@@ -463,7 +462,7 @@ class LocalServerTest {
         assertEquals("/v1/extract", sent.url.encodedPath)
         val request = sent.multipartRequest()
         assertEquals("FR → ES", request.string("prompt"))
-        assertEquals("true", request["fun_facts"]!!.jsonPrimitive.content)
+        assertEquals("true", request["fun_facts"]!!.jsonPrimitive.content) // the settings', on at first
         assertEquals(2, Regex("""name="images"""").findAll(sent.body!!.utf8()).count())
 
         // Saved on the phone, as the page then reads it
@@ -1205,17 +1204,17 @@ class LocalServerTest {
 
         val saved = client.put("/api/admin/settings") {
             page(); contentType(ContentType.Application.Json)
-            setBody("""{"key": " nts_new_licence_key ", "instructions": "Léa est en 5e", "card_helps": true, "relay": "http://192.168.1.10:8080/"}""")
+            setBody("""{"key": " nts_new_licence_key ", "instructions": "Léa est en 5e", "helps": false, "relay": "http://192.168.1.10:8080/"}""")
         }.json().jsonObject
         assertEquals("nts_…_key", saved.string("key"))
         assertEquals("nts_new_licence_key", prefs[LocalServer.keyOf("http://192.168.1.10:8080")]) // the new relay's
         assertEquals("http://192.168.1.10:8080", prefs[LocalServer.RELAY])
+        assertEquals(listOf("true", "false"), listOf("fun_facts", "helps").map { saved[it]!!.jsonPrimitive.content }) // on at first
         val config = client.get("/api/config") { page() }.json().jsonObject
-        assertEquals("true", config["card_helps"]!!.jsonPrimitive.content)
         assertEquals("false", config["donations"]!!.jsonPrimitive.content) // paid for: no Ko-fi link
 
         // Only what's given changes
-        client.put("/api/admin/settings") { page(); contentType(ContentType.Application.Json); setBody("""{"card_helps": false}""") }
+        client.put("/api/admin/settings") { page(); contentType(ContentType.Application.Json); setBody("""{"helps": true}""") }
         assertEquals("Léa est en 5e", prefs[LocalServer.INSTRUCTIONS])
         assertEquals("nts_new_licence_key", prefs[LocalServer.keyOf("http://192.168.1.10:8080")])
     }

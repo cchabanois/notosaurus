@@ -37,7 +37,6 @@ def config() -> dict:
         "version": VERSION,
         "diagram_warning": loose_boxes,
         "max_photos": MAX_IMAGES,
-        "card_helps": s.card_helps,
         "configured": settings.configured(s),
         "computer_name": socket.gethostname(),  # the Android app names the computer it uses
         "drawing_usd": pictures.drawing_usd(s),  # a picture drawn by the image model: told before

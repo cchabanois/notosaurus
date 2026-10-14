@@ -238,7 +238,9 @@ class LocalServer(
 
         fun keyOf(relay: String) = "$KEY@${relay.trimEnd('/')}"
         const val INSTRUCTIONS = "instructions"
-        const val CARD_HELPS = "card_helps"
+        // Asked of the AI at every generation, on unless turned off ("false"), as the computer's
+        const val FUN_FACTS = "fun_facts"
+        const val HELPS = "helps"
 
         const val TTS_RATE = Speech.TTS_RATE
 

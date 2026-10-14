@@ -263,9 +263,14 @@
           </label>
           <!-- Each child's own: in its card (the page's 🧒), linked to its Anki profile if it has one -->
           <p class="hint" x-text="$t('admin.instructions.children')"></p>
-          <!-- The page's "helps on the back" switch: on or off at first (each device may change it) -->
+          <!-- Asked at every generation (a prompt may say otherwise: "no fun facts") -->
           <label class="switch field">
-            <input type="checkbox" x-model="form.card_helps">
+            <input type="checkbox" x-model="form.fun_facts">
+            <span class="track"><span class="knob"></span></span>
+            <span><span x-text="$t('admin.instructions.funFacts')"></span> <small x-text="$t('admin.instructions.funFactsHint')"></small></span>
+          </label>
+          <label class="switch field">
+            <input type="checkbox" x-model="form.helps">
             <span class="track"><span class="knob"></span></span>
             <span><span x-text="$t('admin.instructions.helps')"></span> <small x-text="$t('admin.instructions.helpsHint')"></small></span>
           </label>

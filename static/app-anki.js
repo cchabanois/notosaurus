@@ -149,10 +149,6 @@ const ankiPart = {
   },
 
   // Changed here: kept on this device, whatever the settings' default
-  rememberHelps() {
-    storage("set", this.helps ? "1" : "0", HELPS);
-  },
-
   // --- Explaining a card (💬) ------------------------------------------
   // The explanation first; then the follow-ups (an example, a way to remember it, why
   // the answer is right) the AI said would help with this card, one after the other.

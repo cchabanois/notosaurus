@@ -6,6 +6,7 @@ import json
 from conftest import extract_lesson
 from helpers import run
 
+from app import settings
 from app.models import Generated, LessonIn
 from notosaurus_core import llm, prompts
 from notosaurus_core.models import Mask
@@ -132,16 +133,18 @@ def test_existing_decks_without_anki(client):
     assert client.get("/api/decks").json() == ["Anglais", "Anglais::Leçon 2"]
 
 
-def test_fun_facts_only_when_asked(client):
-    # Off by default: the AI isn't told about them
+def test_fun_facts_as_the_settings_say(client):
+    # Asked only then: otherwise the AI isn't told about them
     assert prompts.FUN_FACTS not in prompts._user_text("Vocabulary", "", photos=1)
     assert prompts.FUN_FACTS in prompts._user_text("Vocabulary", "", photos=1, fun_facts=True)
     files = [("images", ("p.png", b"img", "image/png"))]
+    asked = client.post("/api/extract", files=files, data={"prompt": "FR → ES"}).json()
+    assert asked["cards"][0]["fun_fact"]  # on by default
+    settings.save({"fun_facts": False})
     plain = client.post("/api/extract", files=files, data={"prompt": "FR → ES"}).json()
     assert not any(c["fun_fact"] for c in plain["cards"])
-    asked = client.post("/api/extract", files=files, data={"prompt": "FR → ES", "fun_facts": "true"}).json()
-    assert asked["cards"][0]["fun_fact"]
-    again = client.post(f"/api/lessons/{plain['id']}/regenerate", data={"prompt": "FR → ES", "fun_facts": "true"})
+    settings.save({"fun_facts": True})
+    again = client.post(f"/api/lessons/{plain['id']}/regenerate", data={"prompt": "FR → ES"})
     assert again.json()["cards"][0]["fun_fact"]  # generated again with them
 
 

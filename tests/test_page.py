@@ -255,13 +255,10 @@ def test_photos_and_pictures_seen_in_full(page):
     sync_api.expect(viewer.locator(".viewer-nav")).to_have_count(0)
 
 
-def test_fun_facts_switch(page):
+def test_fun_facts_as_the_settings_say(page):
+    """No switch under the prompt: the fun facts come as the settings say (on at first)."""
     page.goto("/")
-    switch = page.get_by_text("💡 Ajouter des « Le savais-tu ? »")
-    assert not page.locator(".switch.fun-facts input").is_checked()  # off by default
-    switch.click()
-    page.reload()  # kept on the device
-    assert page.locator(".switch.fun-facts input").is_checked()
+    sync_api.expect(page.locator(".switch.fun-facts")).to_have_count(0)
     generate_free(page, FRONT_PROMPT)
     fact = page.locator(".flash .fun-fact textarea").first
     sync_api.expect(fact).to_be_visible()
@@ -913,22 +910,13 @@ def test_the_decks_offered_are_the_chosen_childs_and_no_ones(page):
     assert offered() == ["Mathilde::SVT", "Maths::Fractions"]
 
 
-def test_helps_switch_default_from_the_settings(page):
+def test_helps_as_the_settings_say(page):
+    """No switch under the prompt: the helps come as the settings say (on at first)."""
     page.goto("/")
-    switch = page.locator(".switch.helps input")
-    sync_api.expect(switch).not_to_be_checked()  # off by default
-    settings.save({"card_helps": True})  # turned on in the settings: on at first on every device
-    page.reload()
-    sync_api.expect(switch).to_be_checked()
-
+    sync_api.expect(page.locator(".switch.helps")).to_have_count(0)
     generate_free(page, FRONT_PROMPT)
     sync_api.expect(page.locator(".card-help textarea").first).to_have_value("(démo) Pourquoi c'est la réponse.")
     sync_api.expect(page.locator(".card-help:visible")).to_have_count(2)  # an explanation, a mnemonic: the others none
-
-    page.goto("/")
-    page.locator(".switch.helps").click()  # changed on this device: kept, whatever the default
-    page.reload()
-    sync_api.expect(switch).not_to_be_checked()
 
 
 def test_no_support_link_where_notosaurus_is_paid_for(page):

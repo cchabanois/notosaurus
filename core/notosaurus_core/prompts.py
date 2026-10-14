@@ -134,14 +134,16 @@ Fun facts are asked for: on the cards where one truly fits (one card in three at
 fewer is fine), fill "fun_fact" with one short "did you know" sentence, in the language \
 of the instructions, related to the card (history, etymology, nature, how things \
 work…). Only well-known, established facts: no invented details, no precise figure \
-you aren't sure of, no legend told as true. When unsure, leave it empty."""
+you aren't sure of, no legend told as true. When unsure, leave it empty. None at all \
+when the instructions ask for none."""
 
 # Helps on the back, asked for with a switch (its default set in the settings): only
 # where they truly help, as the follow-ups of an explanation (see EXPLAIN_RULES).
 HELPS = """\
 Helps are asked for, on the back of the cards where they truly help, in the language \
 of the instructions, at the pupil's level (no tool they haven't learnt: an intuitive \
-reason instead), only well-established facts; when unsure, leave them empty:
+reason instead), only well-established facts; when unsure, leave them empty; none at \
+all when the instructions ask for none:
 - "explanation": one or two short sentences saying why this card's answer is the \
 answer (an event's cause, a rule, a formula), when understanding it is what makes it \
 stick: not the context around it, not what follows. Look at what the question asks: \

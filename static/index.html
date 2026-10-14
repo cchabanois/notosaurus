@@ -194,18 +194,6 @@
       <p class="hint" x-show="isModified()" x-text="$t('app.prompt.modified')"></p>
       <p class="hint" x-show="selectedId === null" x-text="$t('app.prompt.freeNote')"></p>
 
-      <!-- Off by default: only then is the AI asked for them -->
-      <label class="switch fun-facts">
-        <input type="checkbox" x-model="funFacts">
-        <span class="track"><span class="knob"></span></span>
-        <span x-text="$t('app.prompt.funFacts')"></span>
-      </label>
-      <!-- Its default in the settings; changed here, kept on this device -->
-      <label class="switch helps">
-        <input type="checkbox" x-model="helps" @change="rememberHelps()">
-        <span class="track"><span class="knob"></span></span>
-        <span x-text="$t('app.prompt.helps')"></span>
-      </label>
       <!-- Quick by default (a few seconds); careful for a rich lesson. Kept on this device -->
       <div class="speed" role="radiogroup" :aria-label="$t('app.prompt.speed')">
         <button type="button" class="chip" role="radio" :aria-checked="quick" :class="{ active: quick }"

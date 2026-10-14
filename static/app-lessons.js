@@ -49,8 +49,6 @@ const lessonsPart = {
     body.append("typing", Boolean(this.form.typing || (inPlace && this.typing)));
     body.append("dictation", Boolean(this.form.dictation || (inPlace && this.dictation)));
     body.append("dictation_only", Boolean(this.form.dictation_only || (inPlace && this.dictationOnly)));
-    if (this.funFacts) body.append("fun_facts", "true");
-    if (this.helps) body.append("helps", "true");
     if (quick) body.append("quick", "true");
     body.append("job", job);
     if (this.selectedId) body.append("prompt_id", this.selectedId);

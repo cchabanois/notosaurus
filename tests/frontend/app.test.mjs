@@ -50,7 +50,7 @@ test("blocked storage: last prompt and options degrade silently", async () => {
   const blocked = await loadScripts("app.js", { throwingStorage: true });
   assert.equal(blocked.run("storage('get')"), undefined);
   blocked.run("storage('set', 'x')");
-  assert.equal(blocked.component().funFacts, false);
+  assert.equal(blocked.component().quick, true);  // quick by default
   assert.deepEqual(plain(blocked.component().openSubjects), {});
 });
 

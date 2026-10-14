@@ -1,22 +1,24 @@
-"""Helps on the back (an explanation, a way to remember it), asked for at generation;
-their switch's default in the settings."""
+"""Helps on the back (an explanation, a way to remember it), asked for at generation as the
+settings say (on at first)."""
 
 import apkg
 from conftest import ADMIN
 
-from app import anki
+from app import anki, settings
 from notosaurus_core import llm, prompts
 from notosaurus_core.config import AIConfig
 
 
-def test_helps_only_when_asked(client):
+def test_helps_as_the_settings_say(client):
     assert prompts.HELPS not in prompts._user_text("Vocabulary", "", photos=1)
     assert prompts.HELPS in prompts._user_text("Vocabulary", "", photos=1, helps=True)
+    asked = client.post("/api/extract", data={"prompt": "FR → ES"}).json()  # on by default
+    assert asked["cards"][0]["explanation"] and asked["cards"][-1]["mnemonic"]  # the demo: one of each
+    settings.save({"helps": False})
     plain = client.post("/api/extract", data={"prompt": "FR → ES"}).json()
     assert not any(c["explanation"] or c["mnemonic"] for c in plain["cards"])
-    asked = client.post("/api/extract", data={"prompt": "FR → ES", "helps": "true"}).json()
-    assert asked["cards"][0]["explanation"] and asked["cards"][-1]["mnemonic"]  # the demo: one of each
-    again = client.post(f"/api/lessons/{plain['id']}/regenerate", data={"prompt": "FR → ES", "helps": "true"}).json()
+    settings.save({"helps": True})
+    again = client.post(f"/api/lessons/{plain['id']}/regenerate", data={"prompt": "FR → ES"}).json()
     assert again["cards"][0]["explanation"]
 
 
@@ -41,10 +43,13 @@ def test_helps_on_the_back_in_anki(client, tmp_path):
     assert anki.BACK_INFO.endswith("{{/Mnemonic}}")
 
 
-def test_the_switch_default_is_set_in_the_settings(admin):
-    assert admin.get("/api/config").json()["card_helps"] is False  # off at first
-    assert admin.put("/api/admin/settings", headers=ADMIN, json={"card_helps": True}).status_code == 200
-    assert admin.get("/api/config").json()["card_helps"] is True
+def test_set_in_the_settings_alone(admin):
+    shown = admin.get("/api/admin/settings", headers=ADMIN).json()
+    assert (shown["fun_facts"], shown["helps"]) == (True, True)  # on at first
+    assert admin.put("/api/admin/settings", headers=ADMIN, json={"helps": False}).status_code == 200
+    assert admin.get("/api/admin/settings", headers=ADMIN).json()["helps"] is False
+    settings._write({"card_helps": False})  # the page's switch's default, saved by older versions: not a choice
+    assert settings.current().helps is True
 
 
 def test_what_the_ai_fills(monkeypatch):

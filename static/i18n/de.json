@@ -79,8 +79,6 @@
       "freeHint": "Anweisungen nur für dieses Mal, nicht gespeichert",
       "freePlaceholder": "Schreib, was die KI mit der Lektion machen soll, z. B. „eine Karte pro Datum, vorne das Ereignis, hinten das Datum“.",
       "freeNote": "Freie Anweisungen: Sie bleiben bei der Lektion, werden aber nicht zu deinen Anweisungen hinzugefügt.",
-      "funFacts": "💡 „Wusstest du schon?“ hinzufügen",
-      "helps": "💬 Hilfen auf der Rückseite (Erklärung, Merkhilfe)",
       "all": "Alle",
       "new": "💾 Neu",
       "newHint": "Gespeicherte Anweisungen anlegen, um sie wiederzuverwenden",
@@ -641,8 +639,10 @@
       "general": "Für alle Kinder",
       "generalPlaceholder": "z. B. britisches Englisch; Nomen immer mit Artikel",
       "children": "Die Anweisungen für jedes Kind stehen in seiner Karte: 🧒 auf der Hauptseite.",
-      "helps": "Hilfen auf der Rückseite der Karten, standardmäßig an",
-      "helpsHint": "(eine Erklärung, eine Merkhilfe, wo sie helfen; jedes Gerät kann es ändern, ≈ +1 bis 3 US-Cent pro Lektion)"
+      "funFacts": "💡 „Wusstest du?“ auf den Karten",
+      "funFactsHint": "(eine kurze, bekannte Anekdote, wo sie passt; eine Anweisung kann „ohne Anekdoten“ sagen)",
+      "helps": "💬 Hilfen auf der Rückseite der Karten",
+      "helpsHint": "(eine Erklärung, eine Merkhilfe, wo sie helfen; ≈ +1 bis 3 US-Cent pro Lektion)"
     },
     "notSaved": "Nicht gespeichert",
     "pictures": {
