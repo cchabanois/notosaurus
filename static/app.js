@@ -168,8 +168,8 @@ document.addEventListener("alpine:init", () => {
     hiding: { open: false, index: -1, erase: false, pdf: false },  // part of a photo hidden before it is sent
     removal: { open: false, lesson: null, checking: false, available: false, count: 0, anki: false, busy: false },
     leftovers: { open: false, notes: [], lesson: null, busy: false },  // the lesson's notes in Anki no card has
-    welcome: { open: false, agreed: false, busy: false },
-    asking: { open: false, message: "", ok: "", answer: null },  // a yes/no asked in the app (askConfirm)  // the app's first launch: a parent's tool, Gemini
+    welcome: { open: false, agreed: false, busy: false },  // the app's first launch: a parent's tool, Gemini
+    asking: { open: false, message: "", ok: "", cancel: "", answer: null },  // a yes/no (ask-confirm.js)
     editor: { open: false, id: null, name: "", text: "", deck: "", voice: "", error: "" },
     error: "",
     success: "",
@@ -267,28 +267,13 @@ document.addEventListener("alpine:init", () => {
       return this.switches.disabled.includes(feature);
     },
 
-    // A yes/no asked in the app's own sheet (the browser's confirm() shows the page's address):
-    // resolves true on the confirming button, false when cancelled or closed.
-    askConfirm(message, ok = t("common.delete")) {
-      this.asking.answer?.(false);
-      return new Promise((resolve) => {
-        this.asking = { open: true, message, ok, answer: resolve };
-      });
-    },
-
-    answerConfirm(yes) {
-      const answer = this.asking.answer;
-      this.asking = { open: false, message: this.asking.message, ok: this.asking.ok, answer: null };
-      answer?.(yes);
-    },
-
     closeNotice() {
       this.noticeClosed = this.switches.notice.id;
       storage("set", this.noticeClosed, NOTICE_CLOSED);
     },
 
     // The methods, by topic: app-photos.js, app-prompts.js, app-lessons.js, app-cards.js,
-    // app-anki.js, app-dictation.js (loaded before this file)
+    // app-anki.js, app-dictation.js, ask-confirm.js (loaded before this file)
     ...photosPart,
     ...promptsPart,
     ...lessonsPart,
@@ -297,5 +282,6 @@ document.addEventListener("alpine:init", () => {
     ...dictationPart,
     ...childrenPart,
     ...reportPart,
+    ...askConfirmPart,
   }));
 });

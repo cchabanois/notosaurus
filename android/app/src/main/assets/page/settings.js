@@ -20,6 +20,7 @@ document.addEventListener("alpine:init", () => {
   // whole: the settings page; false: only the settings themselves (unreachable.html)
   Alpine.data("settings", (whole = true) => ({
     ...voiceChoicePart,
+    ...askConfirmPart,
     form: null,       // the settings (the key masked)
     account: null,    // the relay's answer for the key
     offer: null,      // the subscription Google Play offers ({ price, trial_days }); none: not on sale
@@ -36,6 +37,7 @@ document.addEventListener("alpine:init", () => {
     saveTimer: null,
     error: "",
     notice: "",
+    asking: { open: false, message: "", ok: "", cancel: "", answer: null },  // a yes/no (ask-confirm.js)
     voiceList: [],    // the relay's voices, to choose one per language (voice-choice.js)
 
     async init() {
@@ -232,7 +234,7 @@ document.addEventListener("alpine:init", () => {
     },
 
     async deleteLessons() {
-      if (!confirm(t("android.data.confirm"))) return;
+      if (!(await this.askConfirm(t("android.data.confirm")))) return;
       try {
         await api("/api/admin/lessons", { method: "DELETE" });
         this.notice = t("android.data.deleted");

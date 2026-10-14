@@ -574,7 +574,9 @@
       "delete": "Lektion löschen",
       "confirmDelete": "Die Lektion „{deck}“ für alle Benutzerprofile löschen? Ihre Fotos und Karten werden entfernt.",
       "changed": "„{deck}“: gespeichert.",
-      "alsoAnki": "Auch ihre {count} Karten in Anki löschen? Ihr Wiederholungsverlauf geht verloren.\n\nOK: auch die Karten löschen. Abbrechen: die Karten in Anki behalten."
+      "alsoAnki": "Auch ihre {count} Karten in Anki löschen? Ihr Wiederholungsverlauf geht verloren.",
+      "deleteCards": "Auch die Karten löschen",
+      "keepCards": "Die Karten in Anki behalten"
     },
     "passwordSection": {
       "title": "🔐 Admin-Passwort",

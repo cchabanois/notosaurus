@@ -26,6 +26,7 @@
   <script defer src="app-dictation.js"></script>
   <script defer src="app-children.js"></script>
   <script defer src="app-report.js"></script>
+  <script defer src="ask-confirm.js"></script>
   <script defer src="app.js"></script>
   <script defer src="vendor/alpinejs/cdn.min.js"></script>
 </head>
@@ -988,7 +989,7 @@
     </div>
   </aside>
 
-  <!-- A yes/no asked in the app (askConfirm), above the sheet it comes from -->
+  <!-- A yes/no asked in the page (ask-confirm.js), above the sheet it comes from -->
   <div class="sheet-backdrop top" x-cloak x-show="asking.open" x-transition.opacity @click="answerConfirm(false)"></div>
   <aside class="sheet top" x-cloak x-show="asking.open"
          x-transition:enter="sheet-anim" x-transition:enter-start="sheet-down"
@@ -1001,7 +1002,7 @@
     </div>
     <div class="sheet-body">
       <div class="sheet-actions">
-        <button type="button" class="btn soft" @click="answerConfirm(false)" x-text="$t('common.cancel')"></button>
+        <button type="button" class="btn soft" @click="answerConfirm(false)" x-text="asking.cancel"></button>
         <button type="button" class="btn danger-soft" @click="answerConfirm(true)" x-text="asking.ok"></button>
       </div>
     </div>

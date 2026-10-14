@@ -574,7 +574,9 @@
       "delete": "Excluir a lição",
       "confirmDelete": "Excluir a lição “{deck}” para todos os perfis? As fotos e os cartões dela serão apagados.",
       "changed": "“{deck}”: salva.",
-      "alsoAnki": "Excluir também os {count} cartões dela no Anki? O histórico de revisão deles será perdido.\n\nOK: excluir também os cartões. Cancelar: manter os cartões no Anki."
+      "alsoAnki": "Excluir também os {count} cartões dela no Anki? O histórico de revisão deles será perdido.",
+      "deleteCards": "Excluir também os cartões",
+      "keepCards": "Manter os cartões no Anki"
     },
     "passwordSection": {
       "title": "🔐 Senha de administrador",

@@ -574,7 +574,9 @@
       "delete": "Supprimer la leçon",
       "confirmDelete": "Supprimer la leçon « {deck} » pour tous les profils ? Ses photos et ses cartes sont effacées.",
       "changed": "« {deck} » : enregistré.",
-      "alsoAnki": "Supprimer aussi ses {count} cartes dans Anki ? Leur historique de révision sera perdu.\n\nOK : supprimer aussi les cartes. Annuler : garder les cartes dans Anki."
+      "alsoAnki": "Supprimer aussi ses {count} cartes dans Anki ? Leur historique de révision sera perdu.",
+      "deleteCards": "Supprimer aussi les cartes",
+      "keepCards": "Garder les cartes dans Anki"
     },
     "passwordSection": {
       "title": "🔐 Mot de passe administrateur",

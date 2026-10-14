@@ -574,7 +574,9 @@
       "delete": "Delete the lesson",
       "confirmDelete": "Delete the lesson \"{deck}\" for every profile? Its photos and cards are removed.",
       "changed": "\"{deck}\": saved.",
-      "alsoAnki": "Also delete its {count} cards in Anki? Their review history will be lost.\n\nOK: delete the cards too. Cancel: keep the cards in Anki."
+      "alsoAnki": "Also delete its {count} cards in Anki? Their review history will be lost.",
+      "deleteCards": "Delete the cards too",
+      "keepCards": "Keep the cards in Anki"
     },
     "passwordSection": {
       "title": "🔐 Admin password",

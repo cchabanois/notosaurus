@@ -1,5 +1,6 @@
 // static/admin.js: what the settings page computes — the diff it saves, the model
-// names it shows, who draws the card pictures, the lessons by owner and the costs.
+// names it shows, who draws the card pictures, the lessons by owner and the costs, and
+// what deleting a lesson asks.
 
 import assert from "node:assert/strict";
 import test from "node:test";
@@ -156,6 +157,27 @@ test("whose lessons can be given away: Anki's profiles, a gone owner first", () 
   admin.lessons = { profiles: ["Léa", "Paul"], lessons: [] };
   assert.deepEqual(plain(admin.ownerChoices({ owner: "Léa" })), ["Léa", "Paul"]);
   assert.deepEqual(plain(admin.ownerChoices({ owner: "Ghost" })), ["Ghost", "Léa", "Paul"]);
+});
+
+test("deleting a lesson asks in the page, then about its cards in Anki", async () => {
+  const admin = page.component();
+  const calls = [];
+  admin.request = async (path, options = {}) => {
+    calls.push(`${options.method ?? "GET"} ${path}`);
+    return path.endsWith("/anki-notes") ? { count: 3 } : {};
+  };
+  admin.lessons = { lessons: [{ id: "l1", deck: "Anglais" }] };
+  const until = async (check) => { while (!check()) await new Promise((r) => setTimeout(r)); };
+
+  const deleting = admin.deleteLesson(admin.lessons.lessons[0]);
+  assert.match(admin.asking.message, /Anglais/);
+  admin.answerConfirm(true);
+  await until(() => admin.asking.open && /3/.test(admin.asking.message));  // its cards: asked next
+  assert.notEqual(admin.asking.cancel, admin.asking.ok);
+  admin.answerConfirm(false);  // kept in Anki
+  await deleting;
+  assert.deepEqual(calls, ["GET /api/admin/lessons/l1/anki-notes", "DELETE /api/admin/lessons/l1?anki=false"]);
+  assert.deepEqual(plain(admin.lessons.lessons), []);
 });
 
 test("costs: cents say more than dollars, unknown is a dash", () => {
