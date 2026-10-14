@@ -930,6 +930,11 @@ class LocalServerTest {
         client.put("/api/admin/settings") { page(); contentType(ContentType.Application.Json); setBody("""{"tts_rate": "-25%"}""") }
         client.put("/api/admin/settings") { page(); contentType(ContentType.Application.Json); setBody("""{"tts_rate": "+90%"}""") } // not one: ignored
         assertEquals("-25%", client.get("/api/admin/settings") { page() }.json().jsonObject.string("tts_rate"))
+        // A voice chosen per language variety (an empty one not kept)
+        val voices = """{"voices": {"es-ES": "es-ES-Chirp3-HD-Puck", "en-GB": ""}}"""
+        client.put("/api/admin/settings") { page(); contentType(ContentType.Application.Json); setBody(voices) }
+        val chosen = client.get("/api/admin/settings") { page() }.json().jsonObject["voices"]!!.jsonObject
+        assertEquals(mapOf("es-ES" to "es-ES-Chirp3-HD-Puck"), chosen.mapValues { it.value.jsonPrimitive.content })
         relay.enqueue(MockResponse.Builder().setHeader("Content-Type", "audio/mpeg").body("mp3").build())
         client.get("/api/tts?text=hola&voice=es-ES-Chirp3-HD-Aoede") { page() }
         assertEquals("0.75", json.parseToJsonElement(relay.takeRequest().body!!.utf8()).jsonObject["rate"]!!.jsonPrimitive.content)

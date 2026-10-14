@@ -169,6 +169,11 @@ def test_voice_for_a_language(monkeypatch):
     assert voice("de-AT") == "de-AT-IngridNeural"  # that variety, not the preferred German one
     assert voice("ja-JP") == voice("ja") == "ja-JP-NanamiNeural"  # a female voice first
     assert voice("xx") == voice("") == ""
+    # The one chosen for a variety, in the settings: for it, and for its language alone
+    chosen = {"es-ES": "es-ES-AlvaroNeural"}
+    mine = lambda language: asyncio.run(tts.voice_for(language, chosen))  # noqa: E731
+    assert mine("es-ES") == mine("es") == "es-ES-AlvaroNeural"
+    assert mine("es-MX") == "es-MX-DaliaNeural"  # another variety: its own
 
 
 def test_formulas_shown_by_anki_not_read_aloud(client, tmp_path):

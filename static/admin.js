@@ -29,7 +29,7 @@ const PICTURE_SERVICES = ["gemini", "openai", "openrouter"];
 const PICTURE_KEYS = { gemini: "gemini_api_key", openai: "openai_api_key", openrouter: "openrouter_api_key" };
 
 const EDITABLE = ["llm", "model", "fallback_models", "compatible_base_url", "picture_service", "tts_rate", "ankiconnect_url", "anki_sync", "card_helps",
-                  "instructions", "picture_model"];
+                  "instructions", "picture_model", "voices"];
 
 const deckParts = (deck) => deck.split("::").map((part) => part.trim()).filter(Boolean);
 
@@ -73,12 +73,14 @@ function adminComponent() {
     error: "",
     notice: "",
     phone: null,      // { url }: the link in the phones' QR code
+    voiceList: [],    // the voices that can be chosen per language (voice-choice.js)
 
     async init() {
       await i18nReady;
       const setTitle = () => { document.title = `Notosaurus · ${t("admin.title")}`; };
       setTitle();
       document.addEventListener("i18n:changed", setTitle);
+      this.loadVoiceList();  // not waited for: only offered
       try {
         this.status = await (await fetch("/api/admin")).json();
       } catch {
@@ -160,6 +162,7 @@ function adminComponent() {
     ...lessonsPart,
     ...phonesPart,
     ...passwordPart,
+    ...voiceChoicePart,
   };
 }
 

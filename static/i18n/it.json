@@ -537,7 +537,12 @@
       "slow": "Lenta (−25%)",
       "slower": "Un po' più lenta (−10%)",
       "normal": "Normale",
-      "hint": "La voce si sceglie in ciascun gruppo di istruzioni."
+      "byLanguage": "Voce per lingua",
+      "byLanguageHint": "Senza scelta, la voce abituale della lingua (spagnolo: Elvira). La lingua del retro la trova l'IA nella lezione.",
+      "add": "+ Scegli la voce di una lingua…",
+      "listen": "Ascolta",
+      "female": "donna",
+      "male": "uomo"
     },
     "anki": {
       "title": "📥 Invia direttamente ad Anki",

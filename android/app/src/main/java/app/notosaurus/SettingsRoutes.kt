@@ -20,6 +20,7 @@ import kotlinx.serialization.builtins.ListSerializer
 import kotlinx.coroutines.withTimeout
 import kotlinx.serialization.json.JsonArray
 import kotlinx.serialization.json.JsonNull
+import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.put
@@ -80,6 +81,7 @@ internal fun Route.settingsRoutes(server: LocalServer) {
             (changes[INSTRUCTIONS] as? JsonPrimitive)?.let { prefs[INSTRUCTIONS] = it.content.take(4000) }
             (changes[CARD_HELPS] as? JsonPrimitive)?.let { prefs[CARD_HELPS] = it.content }
             (changes[TTS_RATE] as? JsonPrimitive)?.content?.takeIf { it in Speech.RATES }?.let { prefs[TTS_RATE] = it }
+            (changes[Speech.VOICES] as? JsonObject)?.let { voices -> speech.choose(voices.mapValues { it.value.plain() }) }
             settings()
         }
         api("GET", "/api/admin/account") { json.encodeToJsonElement(Account.serializer(), relay().account()) }
@@ -133,6 +135,7 @@ private fun LocalServer.settings() = buildJsonObject {
     put(INSTRUCTIONS, prefs[INSTRUCTIONS].orEmpty())
     put(CARD_HELPS, prefs[CARD_HELPS] == "true")
     put(TTS_RATE, prefs[TTS_RATE] ?: "-10%")
+    put(Speech.VOICES, JsonObject(speech.chosen().mapValues { JsonPrimitive(it.value) }))
     put("version", version)
     put(MODE, prefs[MODE] ?: PHONE_MODE)
     prefs[COMPUTER]?.let {

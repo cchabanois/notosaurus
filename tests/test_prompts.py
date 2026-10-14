@@ -4,7 +4,7 @@ import json
 import re
 from pathlib import Path
 
-from app import prompts
+from app import prompts, settings
 
 
 def test_notosaurus_prompts(client):
@@ -135,6 +135,10 @@ def test_auto_voice_follows_the_language_of_the_backs(client):
     voices = {p["id"]: p["voice"] for p in client.get("/api/prompts").json()}
     assert voices["notosaurus:sentences"] == voices["notosaurus:vocabulary"] == "auto"
     assert voices["notosaurus:questions"] == ""
+    settings.save({"voices": {"es-ES": "es-ES-AlvaroNeural"}})  # chosen in the settings
+    assert (
+        client.post("/api/extract", data={"prompt": "FR → ES", "voice": "auto"}).json()["voice"] == "es-ES-AlvaroNeural"
+    )
 
 
 def test_no_auto_voice_in_the_pupils_own_language(client):

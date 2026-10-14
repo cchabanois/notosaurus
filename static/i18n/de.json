@@ -537,7 +537,12 @@
       "slow": "Langsam (−25 %)",
       "slower": "Etwas langsamer (−10 %)",
       "normal": "Normal",
-      "hint": "Die Stimme selbst wird in den jeweiligen Anweisungen gewählt."
+      "byLanguage": "Stimme pro Sprache",
+      "byLanguageHint": "Ohne Auswahl die übliche Stimme der Sprache (Spanisch: Elvira). Die Sprache der Rückseite erkennt die KI in der Lektion.",
+      "add": "+ Stimme einer Sprache wählen…",
+      "listen": "Anhören",
+      "female": "weiblich",
+      "male": "männlich"
     },
     "anki": {
       "title": "📥 Direkt an Anki senden",

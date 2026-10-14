@@ -166,6 +166,31 @@ def test_delete_the_open_lesson(page):
     assert lessons(page) == []
 
 
+def test_a_voice_chosen_per_language(page):
+    """Settings → Voices: a language's voice chosen (its usual one otherwise), listened to."""
+    voices = [
+        {"voice": "es-ES-ElviraNeural", "locale": "es-ES", "gender": "Female"},
+        {"voice": "es-ES-AlvaroNeural", "locale": "es-ES", "gender": "Male"},
+        {"voice": "en-GB-SoniaNeural", "locale": "en-GB", "gender": "Female"},
+    ]
+    page.route("**/api/voices", lambda route: route.fulfill(json=voices))
+    page.goto("/admin.html")
+    page.locator("input[autocomplete=new-password]").first.fill("secret-pw")
+    page.locator("input[autocomplete=new-password]").nth(1).fill("secret-pw")
+    page.get_by_role("button", name="Créer et continuer").click()
+    choice = page.locator(".voice-choice")
+    choice.locator("select.voice-add").select_option("es-ES")
+    row = choice.locator(".voice-row")
+    sync_api.expect(row).to_contain_text("espagnol")
+    row.locator("select").select_option("es-ES-AlvaroNeural")
+    sync_api.expect(row.locator("select option:checked")).to_have_text("Alvaro · homme")
+    for _ in range(50):  # saved as it changes, after a short pause
+        if settings.current().voices == {"es-ES": "es-ES-AlvaroNeural"}:
+            break
+        time.sleep(0.1)
+    assert settings.current().voices == {"es-ES": "es-ES-AlvaroNeural"}
+
+
 def test_settings_show_what_the_service_needs(page):
     page.goto("/admin.html")
     page.locator("input[autocomplete=new-password]").first.fill("secret-pw")

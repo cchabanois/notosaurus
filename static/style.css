@@ -1026,3 +1026,9 @@ a.btn { text-decoration: none; }
   padding: .6rem .75rem; border-radius: 10px; background: var(--surface-2); font-size: .85rem;
 }
 .report textarea { min-height: 3.5rem; }
+
+/* The voice chosen per language (the settings, voice-choice.js) */
+.voice-row { display: flex; align-items: center; gap: .4rem; margin-bottom: .4rem; }
+.voice-row .voice-locale { flex: 0 1 40%; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-weight: 600; }
+.voice-row select { flex: 1; min-width: 0; }
+.voice-choice .voice-add { margin-top: .2rem; }

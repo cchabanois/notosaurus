@@ -19,6 +19,7 @@ const json = (method, body) => ({ method, headers: { "Content-Type": "applicatio
 document.addEventListener("alpine:init", () => {
   // whole: the settings page; false: only the settings themselves (unreachable.html)
   Alpine.data("settings", (whole = true) => ({
+    ...voiceChoicePart,
     form: null,       // the settings (the key masked)
     account: null,    // the relay's answer for the key
     offer: null,      // the subscription Google Play offers ({ price, trial_days }); none: not on sale
@@ -35,9 +36,11 @@ document.addEventListener("alpine:init", () => {
     saveTimer: null,
     error: "",
     notice: "",
+    voiceList: [],    // the relay's voices, to choose one per language (voice-choice.js)
 
     async init() {
       await i18nReady;
+      this.loadVoiceList();  // not waited for: only offered
       try {
         this.form = await api("/api/admin/settings");
       } catch (e) {
@@ -149,9 +152,9 @@ document.addEventListener("alpine:init", () => {
     async saveNow() {
       clearTimeout(this.saveTimer);
       this.saveState = "saving";
-      const { relay, instructions, card_helps, tts_rate } = this.form;
+      const { relay, instructions, card_helps, tts_rate, voices } = this.form;
       try {
-        const saved = await api("/api/admin/settings", json("PUT", { relay, instructions, card_helps, tts_rate }));
+        const saved = await api("/api/admin/settings", json("PUT", { relay, instructions, card_helps, tts_rate, voices }));
         this.form.relay = saved.relay;
         this.saveState = "saved";
       } catch (e) {
