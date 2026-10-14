@@ -1043,6 +1043,46 @@ def test_ankidroid_installed_from_the_message(page, anki):
     sync_api.expect(toast.get_by_role("button", name="Installer AnkiDroid")).to_be_hidden()
 
 
+def test_the_open_anki_profiles_child_chosen(page):
+    """A child's card linked to an Anki profile (a profile per child, on the computer): that
+    profile open, the child is chosen, one chip says it; another profile's child can't be."""
+    kids = [
+        {"id": "jules", "name": "Jules", "anki_profile": "Jules"},
+        {"id": "mathilde", "name": "Mathilde", "anki_profile": "Mathilde"},
+        {"id": "tom", "name": "Tom"},
+    ]
+    page.request.put("/api/children", data=kids)
+    open_profile = {"name": "Mathilde"}
+    page.route(
+        "**/api/anki/status",
+        lambda route: route.fulfill(json={"available": True, "profile": open_profile["name"]}),
+    )
+    page.route("**/api/anki/profiles", lambda route: route.fulfill(json=["Jules", "Mathilde", "Parents"]))
+    page.goto("/")
+    chip = page.get_by_role("button", name="Enfants")
+    sync_api.expect(chip).to_contain_text("Mathilde")
+    sync_api.expect(page.locator(".brand-profile")).to_be_hidden()  # the chip says it
+
+    chip.click()
+    sheet = page.get_by_role("dialog", name="Enfants")
+    sync_api.expect(sheet.locator(".child-row", has_text="Jules")).to_be_disabled()  # Jules's cards: Jules's Anki
+    sync_api.expect(sheet.locator(".child-row", has_text="Tom")).to_be_enabled()
+    sheet.get_by_role("button", name="Modifier Tom").click()
+    profile = sheet.get_by_label("Profil Anki")
+    sync_api.expect(profile.locator("option[value=Jules]")).to_have_attribute("disabled", "disabled")  # one child's
+    profile.select_option("Parents")
+    sheet.get_by_role("button", name="Enregistrer").click()
+    sync_api.expect(sheet.locator(".child-row", has_text="Tom")).to_be_disabled()  # Parents isn't open
+    assert [c["anki_profile"] for c in page.request.get("/api/children").json()] == ["Jules", "Mathilde", "Parents"]
+    sheet.get_by_role("button", name="Fermer").click()
+
+    open_profile["name"] = "Jules"  # another profile opened in Anki: its child
+    sync_api.expect(chip).to_contain_text("Jules", timeout=8000)
+    open_profile["name"] = "Autre"  # a profile no card is linked to: shown, the unlinked children
+    sync_api.expect(page.locator(".brand-profile")).to_contain_text("Autre", timeout=8000)
+    sync_api.expect(chip).to_contain_text("Pour qui ?")
+
+
 def test_no_profile_badge_where_there_are_no_profiles(page):
     """The Android app (AnkiDroid doesn't say its profile) says profiles: false."""
     page.route("**/api/anki/status", lambda route: route.fulfill(json={"available": True, "profile": None}))

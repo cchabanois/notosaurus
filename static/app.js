@@ -139,6 +139,7 @@ document.addEventListener("alpine:init", () => {
     childId: "",         // the child the next lesson is for (kept on this device)
     allChildren: false,  // the lessons sheet: every child's, not only the chosen one's
     childrenSheet: { open: false, list: [], editing: null, saving: false, error: "" },
+    ankiProfiles: [],    // Anki's profiles, a child's card linked to one (the computer)
     // A card, its explanation or its picture reported (app-report.js); `reportable`: the host relays it
     report: { open: false, card: null, kind: "card", reason: "", comment: "", sending: false, sent: false, error: "" },
     reportable: false,

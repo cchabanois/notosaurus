@@ -432,6 +432,9 @@
       "decks": "Paquets dans",
       "decksPlaceholder": "ex. : Jules::5e (vide : comme d'habitude)",
       "instructions": "Instructions pour l'IA (sans son prénom)",
+      "ankiProfile": "Profil Anki",
+      "noAnkiProfile": "Aucun (un profil pour tous)",
+      "ankiProfileHint": "Ce profil ouvert dans Anki, la leçon est pour cet enfant.",
       "add": "+ Ajouter un enfant",
       "save": "Enregistrer",
       "allLessons": "Les leçons de tous les enfants",
@@ -642,12 +645,9 @@
     "instructions": {
       "title": "📝 Instructions pour l'IA",
       "hint": "Ajoutées à chaque génération et correction, en plus de la consigne choisie pour la leçon. La consigne de la leçon l'emporte en cas de désaccord.",
-      "general": "Pour tous les profils",
+      "general": "Pour tous les enfants",
       "generalPlaceholder": "ex. : espagnol d'Espagne ; toujours l'article avec les noms",
-      "profile": "Pour {profile}",
-      "missingProfile": "Pour {profile} (n'existe plus dans Anki)",
-      "profilePlaceholder": "ex. : en 5ᵉ ; réponses courtes",
-      "noProfiles": "Ouvrez Anki pour régler des instructions pour chacun de ses profils.",
+      "children": "Les instructions propres à chaque enfant sont dans sa fiche : 🧒 sur la page principale.",
       "helps": "Aides au verso des cartes, activées par défaut",
       "helpsHint": "(une explication, une astuce pour retenir, là où elles aident ; chaque appareil peut le changer, ≈ +1 à 3 ¢ US par leçon)"
     },
@@ -955,7 +955,8 @@
     },
     "children": {
       "same_id": "Deux enfants ont le même prénom.",
-      "too_many": "Au plus {max} enfants."
+      "too_many": "Au plus {max} enfants.",
+      "same_profile": "Ce profil Anki est déjà celui d'un autre enfant."
     }
   },
   "demo": {

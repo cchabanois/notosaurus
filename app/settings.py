@@ -76,7 +76,8 @@ SPECS: dict[str, Spec] = {
     "anki_sync": Spec(),
     "card_helps": Spec(),
     "instructions": Spec(),
-    "profile_instructions": Spec(),
+    # Before the children's cards (children.py makes a card of each, linked to its profile)
+    "profile_instructions": Spec(editable=False),
 }
 if SPECS.keys() != Settings.model_fields.keys():  # a field added without saying how it's set
     raise RuntimeError(f"settings.SPECS and Settings differ: {sorted(SPECS.keys() ^ Settings.model_fields.keys())}")
@@ -91,19 +92,16 @@ def configured(s: Settings) -> bool:
     return config.configured(s)
 
 
-def standing_instructions(s: Settings, profile: str | None, child: str = "") -> str:
+def standing_instructions(s: Settings, child: str = "") -> str:
     """What the parent set, for everyone and for this child (`child`: what the AI is told of
-    it, children.for_ai: its class, its instructions, never its name), else for this Anki
-    profile (before the children's cards): added before the request to the AI, never
-    replacing its fixed rules."""
+    it, children.for_ai: its class, its instructions, never its name): added before the
+    request to the AI, never replacing its fixed rules. (The instructions per Anki profile,
+    before: in the children's cards now, linked to their profile.)"""
     parts = []
     if s.instructions.strip():
         parts.append(f"Standing instructions, for every lesson:\n{s.instructions.strip()}")
-    own = s.profile_instructions.get(profile or "", "").strip()
     if child.strip():
         parts.append(f"Standing instructions for this pupil:\n{child.strip()}")
-    elif own:
-        parts.append(f"Standing instructions for this pupil ({profile}):\n{own}")
     if not parts:
         return ""
     return "\n\n".join(parts) + "\n(The request below wins if it says otherwise.)\n\n"
@@ -213,10 +211,6 @@ def save(changes: dict) -> Settings:
     changes = dict(changes)
     with storage.lock:
         stored = _stored()
-        if changes.get("profile_instructions") is not None:  # empty ones aren't kept
-            changes["profile_instructions"] = {
-                profile: text.strip() for profile, text in changes["profile_instructions"].items() if text.strip()
-            }
         stored.update(
             {
                 k: v.strip() if isinstance(v, str) else v

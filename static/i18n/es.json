@@ -432,6 +432,9 @@
       "decks": "Mazos en",
       "decksPlaceholder": "p. ej. Jules::1.º ESO (vacío: como siempre)",
       "instructions": "Instrucciones para la IA (sin su nombre)",
+      "ankiProfile": "Perfil de Anki",
+      "noAnkiProfile": "Ninguno (un perfil para todos)",
+      "ankiProfileHint": "Con este perfil abierto en Anki, la lección es para este niño.",
       "add": "+ Añadir un hijo",
       "save": "Guardar",
       "allLessons": "Las lecciones de todos los hijos",
@@ -642,12 +645,9 @@
     "instructions": {
       "title": "📝 Instrucciones para la IA",
       "hint": "Se añaden a cada generación y corrección, además de las instrucciones elegidas para la lección. Si se contradicen, mandan las de la lección.",
-      "general": "Para todos los perfiles",
+      "general": "Para todos los niños",
       "generalPlaceholder": "p. ej.: inglés británico; siempre el artículo con los sustantivos",
-      "profile": "Para {profile}",
-      "missingProfile": "Para {profile} (ya no está en Anki)",
-      "profilePlaceholder": "p. ej.: en 2.º de ESO; respuestas cortas",
-      "noProfiles": "Abre Anki para definir instrucciones para cada uno de sus perfiles.",
+      "children": "Las instrucciones propias de cada niño están en su ficha: 🧒 en la página principal.",
       "helps": "Ayudas en el reverso de las tarjetas, activadas por defecto",
       "helpsHint": "(una explicación, un truco para recordar, donde ayudan; cada dispositivo puede cambiarlo, ≈ +1 a 3 ¢ de dólar por lección)"
     },
@@ -955,7 +955,8 @@
     },
     "children": {
       "same_id": "Dos hijos tienen el mismo nombre.",
-      "too_many": "Como máximo {max} hijos."
+      "too_many": "Como máximo {max} hijos.",
+      "same_profile": "Este perfil de Anki ya es de otro niño."
     }
   },
   "demo": {

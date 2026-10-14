@@ -1,6 +1,8 @@
 // The children the lessons are for (app/children.py): which one the next lesson is for
 // (kept on this device), their cards edited in a sheet (first name, class, decks,
-// instructions). The first name never goes to the AI: only the class and the instructions.
+// instructions, Anki profile). The first name never goes to the AI: only the class and the
+// instructions. A card linked to an Anki profile (the computer): that profile open, it is
+// chosen, and no child linked to another profile can be (its cards would go to that one's).
 // Methods of the page's Alpine component (app.js), as `this`.
 
 const CHILD = "notosaurus.child";  // the child chosen on this device
@@ -14,6 +16,28 @@ const childrenPart = {
     }
     const kept = storage("get", undefined, CHILD);
     this.childId = this.children.some((c) => c.id === kept) ? kept : (this.children[0]?.id ?? "");
+    this.followProfile();
+  },
+
+  // A child the next lesson can be for: not linked to another Anki profile than the open one
+  choosable(child) {
+    return !child.anki_profile || !this.anki.profile || child.anki_profile === this.anki.profile;
+  },
+
+  // The open Anki profile's child chosen (Anki checked, the children loaded); a child of
+  // another profile no longer
+  followProfile() {
+    const linked = this.anki.profile && this.children.find((c) => c.anki_profile === this.anki.profile);
+    const current = this.currentChild();
+    if (linked && linked !== current) this.childId = linked.id;
+    else if (current && !this.choosable(current)) this.childId = this.children.find((c) => this.choosable(c))?.id ?? "";
+    else return;
+    storage("set", this.childId, CHILD);
+  },
+
+  // The open Anki profile, shown when no child's card says it (a profile for every child)
+  profileShown() {
+    return this.anki.available && this.profiles && !(this.anki.profile && this.currentChild()?.anki_profile === this.anki.profile);
   },
 
   currentChild() {
@@ -62,10 +86,24 @@ const childrenPart = {
   openChildren() {
     this.childrenSheet = { open: true, list: this.children.map((c) => ({ ...c })), editing: null, saving: false, error: "" };
     if (!this.children.length) this.addChild();
+    this.loadAnkiProfiles();
+  },
+
+  // Anki's profiles, for a card's link (the computer, Anki open): none where profiles aren't said
+  async loadAnkiProfiles() {
+    if (!this.profiles || !this.anki.available) return;
+    try {
+      this.ankiProfiles = (await (await api("/api/anki/profiles")).json()) ?? [];
+    } catch {}  // only offered
+  },
+
+  // An Anki profile linked to another card of the sheet: not offered for this one
+  profileTaken(profile, child) {
+    return this.childrenSheet.list.some((c) => c !== child && c.anki_profile === profile);
   },
 
   addChild() {
-    this.childrenSheet.list.push({ id: "", name: "", grade: "", decks: "", instructions: "" });
+    this.childrenSheet.list.push({ id: "", name: "", grade: "", decks: "", instructions: "", anki_profile: "" });
     this.childrenSheet.editing = this.childrenSheet.list.length - 1;
   },
 
@@ -132,13 +170,14 @@ const childrenPart = {
       this.children = await (await api("/api/children", {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(list.map(({ id, name, grade, decks, instructions }) => (
-          { id, name: name.trim(), grade, decks: decks.trim(), instructions: instructions.trim() }))),
+        body: JSON.stringify(list.map(({ id, name, grade, decks, instructions, anki_profile }) => (
+          { id, name: name.trim(), grade, decks: decks.trim(), instructions: instructions.trim(), anki_profile: anki_profile ?? "" }))),
       })).json();
       const edited = sheet.editing === null ? null : sheet.list[sheet.editing];
       if (edited?.id && !this.children.some((c) => c.id === this.childId)) this.childId = edited.id;  // the first: chosen
       if (!this.children.some((c) => c.id === this.childId)) this.childId = this.children[0]?.id ?? "";
       storage("set", this.childId, CHILD);
+      this.followProfile();
       sheet.list = this.children.map((c) => ({ ...c }));
       sheet.editing = null;  // back to the choice
     } catch (e) {

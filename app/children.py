@@ -2,9 +2,14 @@
 tell them apart: never sent to the AI), a school class, the decks its lessons go in, and
 standing instructions. The page says which child a lesson is for (Lesson.child).
 
-data/children.json: {"format": 1, "children": [...]}. Before, the instructions per Anki
+A card may be linked to an Anki profile (a profile per child, on the computer): that
+profile open, the lesson is for that child (`chosen`); the page chooses it, and offers no
+child linked to another profile. Without links (a profile for all, one deck per child,
+AnkiDroid), the child is chosen in the page.
+
+data/children.json: {"format": 2, "children": [...]}. Before, the instructions per Anki
 profile (Settings.profile_instructions) were the way to tell the children apart: the
-first reading makes a card of each, named after its profile.
+first reading makes a card of each, named after its profile and linked to it.
 """
 
 import re
@@ -14,7 +19,7 @@ from pydantic import BaseModel, Field
 
 from . import settings, storage
 
-FORMAT = 1
+FORMAT = 2
 # A class in the decks' path ("Jules::{classe}"): the child's class there, in any of the
 # page's languages (its word in each)
 CLASS_TOKEN = re.compile(r"\{(classe|class|klasse|curso|ano)\}", re.IGNORECASE)
@@ -26,6 +31,7 @@ class Child(BaseModel):
     grade: str = Field(default="", max_length=40)  # its school class ("5e"): told to the AI
     decks: str = Field(default="", max_length=200)  # the decks its lessons go in ("Jules::{classe}")
     instructions: str = Field(default="", max_length=4000)  # told to the AI, with every lesson
+    anki_profile: str = Field(default="", max_length=100)  # its Anki profile (the computer), if one
 
 
 def _path():
@@ -37,8 +43,19 @@ def list_all() -> list[Child]:
         data = storage.read_json(_path())
         if data is None:
             return _from_profiles()
-        data = storage.migrate(data, "children", FORMAT, {})
+        data = storage.migrate(data, "children", FORMAT, {1: _format_2})
         return [Child(**c) for c in data.get("children", [])]
+
+
+def _format_2(data: dict) -> dict:
+    """Format 1 → 2: the cards made from the instructions per Anki profile (named after it)
+    linked to it."""
+    profiles = set(settings.current().profile_instructions)
+    cards = [
+        {**c, "anki_profile": c["name"]} if c.get("name") in profiles and not c.get("anki_profile") else c
+        for c in data.get("children", [])
+    ]
+    return {**data, "children": cards}
 
 
 def save_all(children: list[Child]) -> list[Child]:
@@ -63,13 +80,21 @@ def _from_profiles() -> list[Child]:
         while id_ in seen:
             id_, n = f"{base}-{n}", n + 1
         seen.add(id_)
-        made.append(Child(id=id_, name=profile[:40], instructions=text.strip()[:4000]))
+        made.append(Child(id=id_, name=profile[:40], instructions=text.strip()[:4000], anki_profile=profile[:100]))
     return made
 
 
 def slug(text: str) -> str:
     plain = unicodedata.normalize("NFKD", text).encode("ascii", "ignore").decode().lower()
     return re.sub(r"[^a-z0-9]+", "-", plain).strip("-")[:40]
+
+
+def chosen(cards: list[Child], id: str | None, profile: str | None) -> Child | None:
+    """The child a lesson is for: the one the page chose (`id`), else the one linked to the
+    Anki profile it is made in (`profile`), else none."""
+    if id:
+        return next((c for c in cards if c.id == id), None)
+    return next((c for c in cards if profile and c.anki_profile == profile), None)
 
 
 def for_ai(child: Child | None) -> str:

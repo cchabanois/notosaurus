@@ -108,7 +108,7 @@ async def _generate(
     known = await decks.known(profile)
     s = settings.current()
     every = await asyncio.to_thread(children.list_all)
-    child = next((c for c in every if c.id == form.child), None)
+    child = children.chosen(every, form.child, profile)  # chosen, else its Anki profile's
     # The decks the AI may reuse: this child's and no child's, without the children's levels
     # (no child's name to the AI, nothing of another child's lessons)
     known = children.decks_for_ai(known, every, child)
@@ -121,7 +121,7 @@ async def _generate(
         fun_facts=form.fun_facts,
         page_texts=texts,
         helps=form.helps,
-        instructions=settings.standing_instructions(s, profile, children.for_ai(child)),
+        instructions=settings.standing_instructions(s, children.for_ai(child)),
         quick=form.quick,
         on_card=on_card,
         existing=existing,

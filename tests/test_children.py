@@ -17,7 +17,7 @@ def test_cards_listed_saved_and_refused_twice(client):
     }
     saved = client.put("/api/children", json=[jules, {"id": "mathilde", "name": "Mathilde", "grade": "3e"}]).json()
     assert [c["name"] for c in saved] == ["Jules", "Mathilde"]
-    assert client.get("/api/children").json()[0] == jules
+    assert client.get("/api/children").json()[0] == {**jules, "anki_profile": ""}
     twice = client.put("/api/children", json=[jules, jules])
     assert (twice.status_code, twice.json()["detail"]["code"]) == (400, "children.same_id")
     assert client.put("/api/children", json=[{**jules, "id": "../x"}]).status_code == 422
@@ -28,7 +28,7 @@ def test_the_ai_told_the_class_and_instructions_never_the_name():
     told = children.for_ai(jules)
     assert "5e" in told and "Il confond b et d." in told and "Jules" not in told
     assert children.for_ai(None) == ""
-    text = settings.standing_instructions(settings.Settings(instructions="Pour tous."), "Jules", told)
+    text = settings.standing_instructions(settings.Settings(instructions="Pour tous."), told)
     assert "Pour tous." in text and "5e" in text and "Jules" not in text  # the profile's name neither
 
 
@@ -49,7 +49,9 @@ def test_the_instructions_per_profile_become_cards(client, monkeypatch):
     monkeypatch.setattr(
         settings, "current", lambda: s.model_copy(update={"profile_instructions": {"Léa": "5e", "Tom": " "}})
     )
-    assert [(c.id, c.name, c.instructions) for c in children.list_all()] == [("lea", "Léa", "5e")]
+    assert [(c.id, c.name, c.instructions, c.anki_profile) for c in children.list_all()] == [
+        ("lea", "Léa", "5e", "Léa")
+    ]
 
 
 def test_a_lesson_for_a_child(client, monkeypatch):
@@ -122,3 +124,26 @@ def test_only_the_childs_decks_and_no_ones_to_the_ai():
     assert children.decks_for_ai(decks, every, jules) == ["Anglais::Food", "Maths::Fractions"]
     assert children.decks_for_ai(decks, every, mathilde) == ["Maths::Fractions", "SVT::La cellule"]
     assert children.decks_for_ai(decks, every, None) == ["Maths::Fractions"]  # a lesson for no one
+
+
+def test_a_card_linked_to_its_anki_profile(client, monkeypatch):
+    """The child of the lessons made in its Anki profile (none chosen); a profile one child's."""
+    jules = Child(id="jules", name="Jules", anki_profile="Jules (Anki)")
+    every = [jules, Child(id="m", name="Mathilde")]
+    assert children.chosen(every, "", "Jules (Anki)") is jules
+    assert children.chosen(every, "m", "Jules (Anki)").id == "m"  # the page's choice first
+    assert children.chosen(every, "", "Autre") is None and children.chosen(every, "", None) is None
+    twice = [jules.model_dump(), {"id": "j2", "name": "J2", "anki_profile": "Jules (Anki)"}]
+    answer = client.put("/api/children", json=twice)
+    assert (answer.status_code, answer.json()["detail"]["code"]) == (400, "children.same_profile")
+
+
+def test_cards_saved_before_linked_to_their_profile(client, monkeypatch):
+    """Format 1 (no links): the cards made from the instructions per profile linked to it."""
+    from app import storage
+
+    s = settings.current()
+    monkeypatch.setattr(settings, "current", lambda: s.model_copy(update={"profile_instructions": {"Léa": "5e"}}))
+    cards = [{"id": "lea", "name": "Léa", "instructions": "5e"}, {"id": "tom", "name": "Tom"}]
+    storage.write_json(children._path(), {"format": 1, "children": cards})
+    assert [c.anki_profile for c in children.list_all()] == ["Léa", ""]
