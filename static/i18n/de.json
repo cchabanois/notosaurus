@@ -142,13 +142,6 @@
       "addCard": "＋ Karte hinzufügen",
       "reverse": "Umgekehrte Karte hinzufügen",
       "reverseHint": "(Rückseite → Vorderseite)",
-      "typing": "Antwort eintippen",
-      "typingHint": "(Anki vergleicht Buchstabe für Buchstabe: ideal für die Rechtschreibung)",
-      "dictation": "Diktat hinzufügen",
-      "dictationHint": "(Rückseite hören, aufschreiben)",
-      "dictationNoVoice": "(wähle zuerst eine Stimme)",
-      "dictationOnly": "Nur das Diktat",
-      "dictationOnlyHint": "(keine Karte Vorderseite → Rückseite)",
       "voiceIncluded": "🔊 Stimme <code>{voice}</code>, im Stapel enthalten.",
       "voiceDevice": "🔊 Vom Gerät vorgelesen, auf <code>{voice}</code>.",
       "badgeNew": "neu",
@@ -329,11 +322,7 @@
       "deck": "Vorgeschlagener Stapelname",
       "deckPlaceholder": "Englisch::Lektion {n}",
       "deckHint": "Die Teile in geschweiften Klammern werden aus der Lektion ergänzt.",
-      "options": "Kartenoptionen",
-      "voice": "Stimme für die Rückseite",
-      "listenVoice": "Stimme anhören",
-      "female": "weiblich",
-      "male": "männlich",
+      "optionsHint": "Rückseite vorlesen, Antwort eintippen, Diktat hinzufügen: Die KI entnimmt es der Anweisung. Sagen Sie es einfach, z. B. „mit getippter Antwort“ oder „nur ein Diktat“.",
       "create": "Anweisungen anlegen",
       "required": "Ein Name und ein Text sind nötig.",
       "confirmDelete": "Die Anweisungen „{name}“ löschen?",
@@ -341,17 +330,7 @@
       "builtin": "⭐ Anweisungen von Notosaurus",
       "builtinHint": "Diese Anweisungen gehören zu Notosaurus und werden mit ihm verbessert: Dupliziere sie, um sie anzupassen (Sprache, Stimme, Stapel …).",
       "duplicate": "⧉ Duplizieren",
-      "duplicateToChange": "⧉ Zum Ändern duplizieren",
-      "voiceMode": {
-        "none": "Ohne Ton",
-        "auto": "Automatisch",
-        "pick": "Stimme wählen"
-      },
-      "voiceModeHint": {
-        "none": "Die Rückseiten werden nicht vorgelesen.",
-        "auto": "Die KI erkennt die Sprache der Rückseiten, und Notosaurus nimmt eine Stimme dieser Sprache (britisches Englisch → Sonia, Französisch → Denise …).",
-        "pick": "Tippe den Anfang der Sprache („de-DE“, „en-GB“ …), um die Stimmen zu sehen; ▶ zum Anhören."
-      }
+      "duplicateToChange": "⧉ Zum Ändern duplizieren"
     },
     "pictures": {
       "drawing": "🎨 Wird gezeichnet …",

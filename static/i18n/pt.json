@@ -142,13 +142,6 @@
       "addCard": "＋ Adicionar um cartão",
       "reverse": "Adicionar o cartão inverso",
       "reverseHint": "(verso → frente)",
-      "typing": "Digitar a resposta",
-      "typingHint": "(o Anki compara letra por letra: ótimo para a ortografia)",
-      "dictation": "Adicionar um ditado",
-      "dictationHint": "(ouvir o verso, escrevê-lo)",
-      "dictationNoVoice": "(escolha uma voz antes)",
-      "dictationOnly": "Só o ditado",
-      "dictationOnlyHint": "(sem cartão frente → verso)",
       "voiceIncluded": "🔊 Voz <code>{voice}</code>, incluída no baralho.",
       "voiceDevice": "🔊 Lido em voz alta pelo aparelho em <code>{voice}</code>.",
       "badgeNew": "novo",
@@ -329,11 +322,7 @@
       "deck": "Nome de baralho sugerido",
       "deckPlaceholder": "Inglês::Lição {n}",
       "deckHint": "As partes entre chaves são completadas a partir da lição.",
-      "options": "Opções dos cartões",
-      "voice": "Voz do verso",
-      "listenVoice": "Ouvir a voz",
-      "female": "feminina",
-      "male": "masculina",
+      "optionsHint": "Ler o verso em voz alta, escrever a resposta, juntar um ditado: a IA deduz da instrução. Basta dizê-lo, p. ex. «com a resposta escrita» ou «só um ditado».",
       "create": "Criar as instruções",
       "required": "São necessários um nome e um texto.",
       "confirmDelete": "Excluir as instruções “{name}”?",
@@ -341,17 +330,7 @@
       "builtin": "⭐ Instruções do Notosaurus",
       "builtinHint": "Estas instruções fazem parte do Notosaurus e melhoram com ele: duplique-as para adaptá-las (idioma, voz, baralho…).",
       "duplicate": "⧉ Duplicar",
-      "duplicateToChange": "⧉ Duplicar para alterar",
-      "voiceMode": {
-        "none": "Sem som",
-        "auto": "Automática",
-        "pick": "Escolher uma voz"
-      },
-      "voiceModeHint": {
-        "none": "Os versos não são lidos em voz alta.",
-        "auto": "A IA reconhece o idioma dos versos e o Notosaurus usa uma voz desse idioma (inglês britânico → Sonia, espanhol → Elvira…).",
-        "pick": "Digite o começo do idioma (“pt-BR”, “en-US”…) para ver as vozes; ▶ para ouvir."
-      }
+      "duplicateToChange": "⧉ Duplicar para alterar"
     },
     "pictures": {
       "drawing": "🎨 Desenhando…",

@@ -130,16 +130,18 @@ async def _generate(
         await asyncio.to_thread(prompts.mark_used, form.prompt_id)
     # Photos taken sideways are saved upright (masks and diagram frames turn with them)
     photos = diagrams.straighten([i.data for i in data], found.deck.cards, found.turns, found.frames)
-    # A dictation the AI recognised (prompt "Automatic"): its cards dictation cards alone
+    # The options: Notosaurus's prompt's own, else what the AI read in the instructions (a
+    # typed answer, a dictation) or recognised (prompt "Automatic": a dictation)
     dictation_only = form.dictation_only or found.dictation
+    typing = form.typing or found.typing
+    dictation = form.dictation or found.dictation_card or dictation_only
     if voice.strip().lower() == "auto":  # the voice of the language the backs are in
-        spelling = form.typing or form.dictation or dictation_only
-        voice = await tts.voice_for(_learned(found.back_language, lang, spelling))
+        voice = await tts.voice_for(_learned(found.back_language, lang, typing or dictation))
     content = LessonIn(
         **found.deck.model_dump(),
         voice=voice,
-        typing=form.typing,
-        dictation=form.dictation or dictation_only,
+        typing=typing,
+        dictation=dictation,
         dictation_only=dictation_only,
         child=child.id if child else "",
     )

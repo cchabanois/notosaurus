@@ -138,9 +138,20 @@ class Extraction(Deck):
     )
     dictation: bool = Field(
         default=False,
-        description="Whenever the instructions let you choose the kind of cards: true when the page is a dictation "
-        "to prepare (a text or a list of words to learn to write) and you made only dictation cards for it. "
-        "Otherwise false.",
+        description="True when the instructions ask for dictation cards only (the pupil hears the back read "
+        "aloud and writes it; no question → answer card), or, whenever they let you choose the kind of "
+        "cards, when the page is a dictation to prepare (a text or a list of words to learn to write) and "
+        "you made only dictation cards for it. Otherwise false.",
+    )
+    dictation_card: bool = Field(
+        default=False,
+        description="True when the instructions ask, besides the question → answer cards, for a dictation of "
+        "each card too (hear the back read aloud, write it). Otherwise false.",
+    )
+    typing: bool = Field(
+        default=False,
+        description="True when the instructions ask for the answers to be typed (the pupil writes the answer, "
+        "checked letter by letter: spelling, words with blanks). Otherwise false.",
     )
 
 

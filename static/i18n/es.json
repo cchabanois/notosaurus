@@ -142,13 +142,6 @@
       "addCard": "＋ Añadir una tarjeta",
       "reverse": "Añadir la tarjeta inversa",
       "reverseHint": "(reverso → anverso)",
-      "typing": "Escribir la respuesta",
-      "typingHint": "(Anki la compara letra a letra: ideal para la ortografía)",
-      "dictation": "Añadir un dictado",
-      "dictationHint": "(oír el reverso, escribirlo)",
-      "dictationNoVoice": "(elige antes una voz)",
-      "dictationOnly": "Solo el dictado",
-      "dictationOnlyHint": "(sin tarjeta anverso → reverso)",
       "voiceIncluded": "🔊 Voz <code>{voice}</code>, incluida en el mazo.",
       "voiceDevice": "🔊 Leído en voz alta por el dispositivo en <code>{voice}</code>.",
       "badgeNew": "nueva",
@@ -329,11 +322,7 @@
       "deck": "Nombre de mazo propuesto",
       "deckPlaceholder": "Inglés::Lección {n}",
       "deckHint": "Las partes entre llaves se completan a partir de la lección.",
-      "options": "Opciones de las tarjetas",
-      "voice": "Voz del reverso",
-      "listenVoice": "Escuchar la voz",
-      "female": "femenina",
-      "male": "masculina",
+      "optionsHint": "Leer el reverso en voz alta, escribir la respuesta, añadir un dictado: la IA lo deduce de la consigna. Dígalo sin más, p. ej. «con la respuesta escrita» o «solo un dictado».",
       "create": "Crear las instrucciones",
       "required": "Hacen falta un nombre y un texto.",
       "confirmDelete": "¿Eliminar las instrucciones «{name}»?",
@@ -341,17 +330,7 @@
       "builtin": "⭐ Instrucciones de Notosaurus",
       "builtinHint": "Estas instrucciones forman parte de Notosaurus y mejoran con él: duplícalas para adaptarlas (idioma, voz, mazo…).",
       "duplicate": "⧉ Duplicar",
-      "duplicateToChange": "⧉ Duplicar para cambiar",
-      "voiceMode": {
-        "none": "Sin sonido",
-        "auto": "Automática",
-        "pick": "Elegir una voz"
-      },
-      "voiceModeHint": {
-        "none": "Los reversos no se leen en voz alta.",
-        "auto": "La IA reconoce el idioma de los reversos y Notosaurus toma una voz de ese idioma (inglés británico → Sonia, alemán → Katja…).",
-        "pick": "Escribe el principio del idioma («es-ES», «en-GB»…) para ver las voces; ▶ para escuchar."
-      }
+      "duplicateToChange": "⧉ Duplicar para cambiar"
     },
     "pictures": {
       "drawing": "🎨 Dibujando…",

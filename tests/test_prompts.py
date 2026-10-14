@@ -203,6 +203,25 @@ def test_a_dictation_the_ai_recognised_makes_dictation_cards_alone(client, monke
     assert lesson["voice"].startswith("fr-")  # the pupil's own language: its dictation's voice
 
 
+def test_the_options_the_ai_read_in_the_instructions(client, monkeypatch):
+    """One's own prompt: a typed answer, a dictation of each card, as its text asks (the AI
+    says so); its voice "auto", the backs' language's."""
+    from app.routes import generation
+    from notosaurus_core.llm import Extracted
+    from notosaurus_core.models import Card, Deck
+
+    async def extract(*_, **__):
+        cards = [Card(front="la mère", back="la madre")]
+        deck = Deck(deck="Espagnol::Famille", cards=cards)
+        return Extracted(deck=deck, turns=[], frames=[], back_language="es-ES", typing=True, dictation_card=True)
+
+    monkeypatch.setattr(generation, "extract_cards", extract)
+    data = {"prompt": "Vocabulaire espagnol, réponse tapée, avec une dictée", "voice": "auto"}
+    lesson = client.post("/api/extract", data=data).json()
+    assert (lesson["typing"], lesson["dictation"], lesson["dictation_only"]) == (True, True, False)
+    assert lesson["voice"] == "es-ES-ElviraNeural"
+
+
 def test_the_automatic_prompt_knows_a_dictation():
     import json
     from pathlib import Path

@@ -2350,6 +2350,16 @@
             "title": "Dictation",
             "default": false
           },
+          "dictation_card": {
+            "type": "boolean",
+            "title": "Dictation Card",
+            "default": false
+          },
+          "typing": {
+            "type": "boolean",
+            "title": "Typing",
+            "default": false
+          },
           "usage": {
             "$ref": "#/components/schemas/Usage"
           }

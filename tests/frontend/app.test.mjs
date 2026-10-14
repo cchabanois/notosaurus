@@ -307,13 +307,6 @@ test("one voice at a time: listening again stops the sound playing", () => {
   assert.deepEqual(plain(sounds), [true, true, false]);  // only the last one plays
 });
 
-test("a sample sentence in the voice's language", () => {
-  const page = app.component();
-  assert.equal(page.sampleText("es-ES-X"), "Hola, ¿cómo estás?");
-  assert.equal(page.sampleText("fr-FR-X"), "Bonjour, comment ça va ?");
-  assert.equal(page.sampleText("xx-XX-X"), "Hello!");
-});
-
 test("subdecks of the lesson's cards", () => {
   const page = app.component();
   page.cards = [{ subdeck: "Vocabulaire" }, { subdeck: "Phrases" }, { subdeck: "Vocabulaire" }, {}];

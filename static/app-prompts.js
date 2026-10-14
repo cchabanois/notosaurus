@@ -105,31 +105,20 @@ const promptsPart = {
   openEditor(mode) {
     const c = this.current();
     const base = mode === "new"
-      ? { name: "", text: "", deck: "", voice: c?.voice ?? "", typing: false, dictation: false, dictation_only: false }
+      ? { name: "", text: "", deck: "" }
       : { ...this.form };
     if (mode === "copy") base.name = "";
     // Notosaurus's prompts open read-only: "Duplicate" makes a copy to change
     const builtin = mode === "edit" && Boolean(c?.builtin);
-    if (builtin) {
-      Object.assign(base, { name: c.name, text: c.text, deck: c.deck, voice: c.voice, typing: c.typing, dictation: c.dictation, dictation_only: c.dictation_only ?? false });
-    }
-    // Voice of the backs: none, automatic (the backs' language, found by the AI), or a chosen one
-    const voiceMode = !base.voice ? "none" : base.voice === "auto" ? "auto" : "pick";
-    this.editor = { open: true, id: mode === "edit" ? c.id : null, builtin, error: "", ...base, voiceMode };
+    if (builtin) Object.assign(base, { name: c.name, text: c.text, deck: c.deck });
+    this.editor = { open: true, id: mode === "edit" ? c.id : null, builtin, error: "", ...base };
     this.$nextTick(() => {
       if (!this.editor.name) this.$refs.editorName.focus();
     });
   },
 
-  setVoiceMode(mode) {
-    if (this.editor.builtin) return;
-    if (mode === "pick" && ["", "auto"].includes(this.editor.voice)) this.editor.voice = "";
-    this.editor.voiceMode = mode;
-  },
-
   async saveEditor() {
-    const { id, name, text, deck, voiceMode, typing, dictation, dictation_only } = this.editor;
-    const voice = voiceMode === "none" ? "" : voiceMode === "auto" ? "auto" : this.editor.voice;
+    const { id, name, text, deck } = this.editor;
     if (!name.trim() || !text.trim()) {
       this.editor.error = t("app.editor.required");
       return;
@@ -138,10 +127,10 @@ const promptsPart = {
       const saved = await (await api(id ? `/api/prompts/${id}` : "/api/prompts", {
         method: id ? "PUT" : "POST",
         headers: { "Content-Type": "application/json" },
+        // The voice and options: what the AI reads in the text, at each lesson
         body: JSON.stringify({
-          name: name.trim(), text: text.trim(), deck: deck.trim(), voice: voice.trim(),
-          typing: Boolean(typing), dictation: Boolean(dictation && voice.trim()),
-          dictation_only: Boolean(dictation_only && dictation && voice.trim()),
+          name: name.trim(), text: text.trim(), deck: deck.trim(), voice: "auto",
+          typing: false, dictation: false, dictation_only: false,
         }),
       })).json();
       this.editor.open = false;

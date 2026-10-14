@@ -13,12 +13,6 @@ const ankiPart = {
     return this.isVoice(this.voice);
   },
 
-  sampleText(voice) {
-    const samples = { es: "Hola, ¿cómo estás?", en: "Hello, how are you?", de: "Hallo, wie geht's?",
-                      it: "Ciao, come stai?", fr: "Bonjour, comment ça va ?", pt: "Olá, tudo bem?" };
-    return samples[voice.slice(0, 2)] ?? "Hello!";
-  },
-
   // What a card's sound says (as tts.spoken): its back; a dictation's sentence with a blank:
   // the sentence with the word, then the word, each on its line
   // (read on its own: tts.lines)
