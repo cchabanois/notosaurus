@@ -1,9 +1,9 @@
 // The children the lessons are for (app/children.py): which one the next lesson is for
 // (kept on this device), their cards edited in a sheet (first name, class, decks,
 // instructions). The first name never goes to the AI: only the class and the instructions.
-// On the computer, the Anki profile open is linked to a child (in this sheet, only the open
-// one: never a profile one isn't in): that profile open, the child is chosen, and no child
-// linked to another profile can be (its cards would go to that one's collection).
+// On the computer, a card belongs to the Anki profile it was made in (anki_profile): only the
+// open profile's are offered (a profile per child: its one, chosen; a shared profile: its
+// children), never another profile's (its cards would go to that one's collection).
 // Methods of the page's Alpine component (app.js), as `this`.
 
 const CHILD = "notosaurus.child";  // the child chosen on this device
@@ -20,25 +20,31 @@ const childrenPart = {
     this.followProfile();
   },
 
-  // A child the next lesson can be for: not linked to another Anki profile than the open one
-  choosable(child) {
-    return !child.anki_profile || !this.anki.profile || child.anki_profile === this.anki.profile;
+  // The Anki profile the cards belong to: the open one, on the computer (none: the app, Anki closed)
+  childrenProfile() {
+    return this.profiles ? (this.anki.profile ?? "") : "";
   },
 
-  // The open Anki profile's child chosen (Anki checked, the children loaded); a child of
-  // another profile no longer
+  // A child of the open Anki profile (every one where no profile is open)
+  ofProfile(child) {
+    const profile = this.childrenProfile();
+    return !profile || child.anki_profile === profile;
+  },
+
+  // The open profile's children: its only one chosen, a child of another profile no longer
   followProfile() {
-    const linked = this.anki.profile && this.children.find((c) => c.anki_profile === this.anki.profile);
+    const mine = this.children.filter((c) => this.ofProfile(c));
     const current = this.currentChild();
-    if (linked && linked !== current) this.childId = linked.id;
-    else if (current && !this.choosable(current)) this.childId = this.children.find((c) => this.choosable(c))?.id ?? "";
+    if (mine.length === 1 && current !== mine[0]) this.childId = mine[0].id;
+    else if (current && !this.ofProfile(current)) this.childId = mine[0]?.id ?? "";
+    else if (!current && mine.length) this.childId = mine[0].id;
     else return;
     storage("set", this.childId, CHILD);
   },
 
-  // The open Anki profile, shown when no child's card says it (a profile for every child)
+  // The open Anki profile, shown unless its one child's chip says it (a profile per child)
   profileShown() {
-    return this.anki.available && this.profiles && !(this.anki.profile && this.currentChild()?.anki_profile === this.anki.profile);
+    return this.anki.available && this.profiles && this.children.filter((c) => this.ofProfile(c)).length !== 1;
   },
 
   currentChild() {
@@ -84,24 +90,20 @@ const childrenPart = {
 
   // The sheet opens on the choice (a row each, tapped: chosen); a child's card edited on
   // its own (editing: its place in the list); none yet: a new one's card at once
-  openChildren() {
+  // Cards made before they belonged to a profile: the open profile's (saved)
+  async openChildren() {
     this.childrenSheet = { open: true, list: this.children.map((c) => ({ ...c })), editing: null, saving: false, error: "" };
-    if (!this.children.length) this.addChild();
-  },
-
-  // The open Anki profile is this child's (`id`), or no child's (""): saved at once
-  async linkProfile(id) {
-    const profile = this.anki.profile;
-    if (!profile) return;
-    for (const c of this.childrenSheet.list) {
-      if (c.anki_profile === profile) c.anki_profile = "";
-      if (c.id === id) c.anki_profile = profile;
+    const profile = this.childrenProfile();
+    const orphans = profile ? this.childrenSheet.list.filter((c) => !c.anki_profile) : [];
+    if (orphans.length) {
+      for (const c of orphans) c.anki_profile = profile;
+      await this.saveChildren();
     }
-    await this.saveChildren();
+    if (!this.childrenSheet.list.some((c) => this.ofProfile(c))) this.addChild();
   },
 
   addChild() {
-    this.childrenSheet.list.push({ id: "", name: "", grade: "", decks: "", instructions: "", anki_profile: "" });
+    this.childrenSheet.list.push({ id: "", name: "", grade: "", decks: "", instructions: "", anki_profile: this.childrenProfile() });
     this.childrenSheet.editing = this.childrenSheet.list.length - 1;
   },
 

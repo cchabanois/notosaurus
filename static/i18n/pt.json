@@ -444,8 +444,7 @@
         "high": "ex.: prepara o vestibular: fórmulas exatas, demonstrações passo a passo."
       },
       "pick": "Para quem é a próxima lição? Toque no nome.",
-      "openProfile": "O perfil do Anki aberto, «{profile}», é para:",
-      "sharedProfile": "Nenhuma criança (perfil partilhado)",
+      "ofProfile": "As crianças do perfil do Anki «{profile}»:",
       "edit": "Editar {name}"
     },
     "report": {
@@ -954,8 +953,7 @@
     },
     "children": {
       "same_id": "Dois filhos têm o mesmo nome.",
-      "too_many": "No máximo {max} filhos.",
-      "same_profile": "Este perfil do Anki já é de outra criança."
+      "too_many": "No máximo {max} filhos."
     }
   },
   "demo": {

@@ -444,8 +444,7 @@
         "high": "p. ej. prepara la selectividad: fórmulas exactas, demostraciones paso a paso."
       },
       "pick": "¿Para quién es la próxima lección? Toca su nombre.",
-      "openProfile": "El perfil de Anki abierto, «{profile}», es para:",
-      "sharedProfile": "Ningún niño (perfil compartido)",
+      "ofProfile": "Los niños del perfil de Anki «{profile}»:",
       "edit": "Editar a {name}"
     },
     "report": {
@@ -954,8 +953,7 @@
     },
     "children": {
       "same_id": "Dos hijos tienen el mismo nombre.",
-      "too_many": "Como máximo {max} hijos.",
-      "same_profile": "Este perfil de Anki ya es de otro niño."
+      "too_many": "Como máximo {max} hijos."
     }
   },
   "demo": {

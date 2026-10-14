@@ -444,8 +444,7 @@
         "high": "e.g. preparing for exams: exact formulas, proofs step by step."
       },
       "pick": "Who is the next lesson for? Tap their name.",
-      "openProfile": "The Anki profile open, “{profile}”, is for:",
-      "sharedProfile": "No child (a shared profile)",
+      "ofProfile": "The children of the Anki profile “{profile}”:",
       "edit": "Edit {name}"
     },
     "report": {
@@ -954,8 +953,7 @@
     },
     "children": {
       "same_id": "Two children have the same first name.",
-      "too_many": "{max} children at most.",
-      "same_profile": "This Anki profile is already another child's."
+      "too_many": "{max} children at most."
     }
   },
   "demo": {
