@@ -668,7 +668,7 @@
   <aside class="sheet" x-cloak x-show="picker.open"
          x-transition:enter="sheet-anim" x-transition:enter-start="sheet-down"
          x-transition:leave="sheet-anim" x-transition:leave-end="sheet-down"
-         @keydown.escape.window="picker.open = false" :aria-label="$t('app.picker.label')">
+         @keydown.escape.window="asking.open || (picker.open = false)" :aria-label="$t('app.picker.label')">
     <div class="sheet-handle"></div>
     <div class="sheet-head">
       <h2><span x-text="$t('app.picker.title')"></span> <small class="muted" x-text="'(' + prompts.length + ')'"></small> <a class="help-link" :href="$docs('instructions')" target="_blank" rel="noopener" :aria-label="$t('common.helpOn', { topic: $t('app.picker.title') })" :title="$t('common.helpOn', { topic: $t('app.picker.title') })">?</a></h2>
@@ -699,7 +699,7 @@
   <aside class="sheet" x-cloak x-show="editor.open"
          x-transition:enter="sheet-anim" x-transition:enter-start="sheet-down"
          x-transition:leave="sheet-anim" x-transition:leave-end="sheet-down"
-         @keydown.escape.window="editor.open = false" :aria-label="$t('app.prompt.title')">
+         @keydown.escape.window="asking.open || (editor.open = false)" :aria-label="$t('app.prompt.title')">
     <div class="sheet-handle"></div>
     <div class="sheet-head">
       <h2><span x-text="editor.builtin ? $t('app.editor.builtin') : editor.id ? $t('app.editor.edit') : $t('app.editor.new')"></span> <a class="help-link" :href="$docs('instructions')" target="_blank" rel="noopener" :aria-label="$t('common.helpOn', { topic: $t('app.picker.title') })" :title="$t('common.helpOn', { topic: $t('app.picker.title') })">?</a></h2>
@@ -984,6 +984,25 @@
         <button type="button" class="btn soft" @click="leftovers.open = false" x-text="$t('app.leftovers.keep')"></button>
         <button type="button" class="btn danger-soft" @click="deleteLeftovers()" :disabled="leftovers.busy"
                 x-text="$t('app.leftovers.delete', { count: leftovers.notes.length })"></button>
+      </div>
+    </div>
+  </aside>
+
+  <!-- A yes/no asked in the app (askConfirm), above the sheet it comes from -->
+  <div class="sheet-backdrop top" x-cloak x-show="asking.open" x-transition.opacity @click="answerConfirm(false)"></div>
+  <aside class="sheet top" x-cloak x-show="asking.open"
+         x-transition:enter="sheet-anim" x-transition:enter-start="sheet-down"
+         x-transition:leave="sheet-anim" x-transition:leave-end="sheet-down"
+         @keydown.escape.window="asking.open && answerConfirm(false)" role="alertdialog" aria-modal="true" :aria-label="asking.message">
+    <div class="sheet-handle"></div>
+    <div class="sheet-head">
+      <h2 x-text="asking.message"></h2>
+      <button class="icon-btn" @click="answerConfirm(false)" :aria-label="$t('common.close')">✕</button>
+    </div>
+    <div class="sheet-body">
+      <div class="sheet-actions">
+        <button type="button" class="btn soft" @click="answerConfirm(false)" x-text="$t('common.cancel')"></button>
+        <button type="button" class="btn danger-soft" @click="answerConfirm(true)" x-text="asking.ok"></button>
       </div>
     </div>
   </aside>

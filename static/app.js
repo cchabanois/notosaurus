@@ -168,7 +168,8 @@ document.addEventListener("alpine:init", () => {
     hiding: { open: false, index: -1, erase: false, pdf: false },  // part of a photo hidden before it is sent
     removal: { open: false, lesson: null, checking: false, available: false, count: 0, anki: false, busy: false },
     leftovers: { open: false, notes: [], lesson: null, busy: false },  // the lesson's notes in Anki no card has
-    welcome: { open: false, agreed: false, busy: false },  // the app's first launch: a parent's tool, Gemini
+    welcome: { open: false, agreed: false, busy: false },
+    asking: { open: false, message: "", ok: "", answer: null },  // a yes/no asked in the app (askConfirm)  // the app's first launch: a parent's tool, Gemini
     editor: { open: false, id: null, name: "", text: "", deck: "", voice: "", error: "" },
     error: "",
     success: "",
@@ -264,6 +265,21 @@ document.addEventListener("alpine:init", () => {
     // A feature turned off for now (relay_api.FEATURES): its buttons hidden
     off(feature) {
       return this.switches.disabled.includes(feature);
+    },
+
+    // A yes/no asked in the app's own sheet (the browser's confirm() shows the page's address):
+    // resolves true on the confirming button, false when cancelled or closed.
+    askConfirm(message, ok = t("common.delete")) {
+      this.asking.answer?.(false);
+      return new Promise((resolve) => {
+        this.asking = { open: true, message, ok, answer: resolve };
+      });
+    },
+
+    answerConfirm(yes) {
+      const answer = this.asking.answer;
+      this.asking = { open: false, message: this.asking.message, ok: this.asking.ok, answer: null };
+      answer?.(yes);
     },
 
     closeNotice() {

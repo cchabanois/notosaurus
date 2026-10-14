@@ -539,6 +539,27 @@ def test_prompts_follow_the_language(page):
     sync_api.expect(text).to_have_value("Lo mío")
 
 
+def test_deleting_a_prompt_is_asked_in_the_app(page):
+    """The app's own sheet, not the browser's confirm() (which shows the page's address)."""
+    page.request.post("/api/prompts", data={"name": "Definitions", "text": "Les définitions de la leçon"})
+    dialogs = []
+    page.on("dialog", lambda d: (dialogs.append(d.message), d.dismiss()))
+    page.goto("/")
+    page.locator(".chip.more").click()
+    trash = page.get_by_role("button", name="Supprimer la consigne « Definitions »")
+    trash.click()
+    asked = page.get_by_role("alertdialog", name="Supprimer la consigne « Definitions » ?")
+    asked.get_by_role("button", name="Annuler").click()
+    sync_api.expect(asked).to_be_hidden()
+    assert [p["name"] for p in page.request.get("/api/prompts").json() if not p["builtin"]] == ["Definitions"]
+
+    trash.click()
+    asked.get_by_role("button", name="Supprimer").click()
+    sync_api.expect(trash).to_have_count(0)
+    assert not [p for p in page.request.get("/api/prompts").json() if not p["builtin"]]
+    assert not dialogs
+
+
 def pdf(pages: int) -> bytes:
     """A PDF of `pages` A4 pages, each of its own colour."""
     import io

@@ -243,6 +243,31 @@ test("the most recently used prompts, never-used ones in the server's order", ()
   assert.deepEqual(plain(many.recentPrompts().map((p) => p.id)), [1, 2, 3, 6]);
 });
 
+test("deleting a prompt is asked in the app's own sheet, not the browser's confirm()", async () => {
+  const calls = [];
+  const page = await loadScripts("app.js", {
+    routes: (url, options) => {
+      calls.push(`${options?.method ?? "GET"} ${url}`);
+      return new Response([]);
+    },
+  });
+  const c = page.component();
+  c.loadPrompts = async () => {};
+
+  const cancelled = c.deletePrompt({ id: 7, name: "Definitions" });
+  assert.equal(c.asking.open, true);
+  assert.match(c.asking.message, /Definitions/);
+  c.answerConfirm(false);
+  await cancelled;
+  assert.equal(c.asking.open, false);
+  assert.deepEqual(calls, []);
+
+  const confirmed = c.deletePrompt({ id: 7, name: "Definitions" });
+  c.answerConfirm(true);
+  await confirmed;
+  assert.deepEqual(calls, ["DELETE /api/prompts/7"]);
+});
+
 // --- Diagrams ----------------------------------------------------------------
 
 const diagram = app.component();
