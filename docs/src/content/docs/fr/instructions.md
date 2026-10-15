@@ -33,6 +33,7 @@ Elles ne se modifient pas, mais se **dupliquent** pour en faire votre propre ver
 | Questions / réponses | Des questions courtes sur le contenu : dates, définitions, idées clés. |
 | Dates et repères | Une carte par date à retenir (une frise, un encadré) : l'événement au recto, sa date au verso, le siècle dans l'info ; avec la carte inverse, pour l'apprendre dans les deux sens. |
 | Définitions et propriétés | Une carte par mot-clé à savoir définir ; pour une propriété ou un théorème, son nom → l'énoncé complet (« Si …, alors … ») et les hypothèses → la conclusion, la réciproque à part, à quoi il sert dans l'info. |
+| Reconnaître sur un exemple | Une carte par exemple de la leçon (figure de style, classe de mots…) : l'exemple au recto, la notion au verso, sa définition dans l'info. Jamais d'exemple inventé. |
 | Texte à trous | Des phrases à trous : une carte par numéro de trou. |
 | QCM | Une question, la bonne réponse et trois mauvaises plausibles. |
 | Vrai / faux | Des affirmations, dont la moitié fausses avec une seule erreur précise. |
