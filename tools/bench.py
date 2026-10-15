@@ -178,6 +178,13 @@ def package(client, folder: Path, made: dict, asked: dict, voice: str, scratch: 
 # --- The checks ----------------------------------------------------------------------
 
 
+def own_language_heard(asked: dict, made: dict) -> bool:
+    """Whether the backs are heard in the pupil's own language too, as the app tells it: the
+    prompt's options, or what the AI read (a typed answer, a dictation, "read aloud")."""
+    said = ("typing", "dictation_card", "read_aloud")
+    return asked["typing"] or asked["dictation"] or asked["dictation_only"] or any(made.get(k) for k in said)
+
+
 def plain(text: str) -> str:
     text = unicodedata.normalize("NFKD", re.sub(r"<[^>]+>|\{\{c\d+::|\}\}|::[^}]*", " ", text or ""))
     return " ".join("".join(c for c in text if not unicodedata.combining(c)).lower().split())
@@ -199,7 +206,7 @@ def check(
     # The subject: any level of the deck (a child's lesson's starts with its name, its class)
     parts = [part.strip().lower() for part in lesson.get("deck", "").split("::")]
     learned = next((LEARNED[part] for part in parts if part in LEARNED), "")
-    spelling = asked["typing"] or asked["dictation"] or asked["dictation_only"]
+    spelling = own_language_heard(asked, made)
 
     # Automatic: a dictation recognised when the page is one (expect.json "dictation"), never otherwise
     if asked["builtin"] == "notosaurus:auto":
@@ -422,11 +429,7 @@ def main() -> int:
             voice = voice_for(
                 url,
                 key,
-                _learned(
-                    result.get("back_language", ""),
-                    PAGE,
-                    asked["typing"] or asked["dictation"] or asked["dictation_only"],
-                ),
+                _learned(result.get("back_language", ""), PAGE, own_language_heard(asked, result)),
             )
         try:
             body, pack = package(client, folder, result, asked, voice, data / "packages")
