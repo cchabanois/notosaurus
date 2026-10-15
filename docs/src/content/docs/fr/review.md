@@ -18,7 +18,7 @@ de les envoyer. Tout ce que vous modifiez est enregistré au fur et à mesure (�
 - **sous-paquet** range la carte dans un sous-paquet de la leçon (« Vocabulaire »,
   « Verbes »).
 - **🔊** fait écouter le verso avec la voix de la leçon.
-- **×** supprime la carte ; **＋ Ajouter une carte**, en bas, en ajoute une.
+- **⋯**, en haut à droite de la carte, la supprime ; **＋ Ajouter une carte**, en bas, en ajoute une.
 
 **📝 Consigne utilisée pour cette leçon**, au-dessus des cartes, rappelle ce qui a été
 demandé à l'IA.
@@ -58,7 +58,7 @@ Gemini Flash, environ un centime avec Claude Sonnet), compté dans les coûts de
 
 ## Signaler un contenu
 
-Dans l'app, **⚑** sur une carte signale à Notosaurus ce que l'IA a fait : la carte, son
+Dans l'app, **⋯ → ⚑ Signaler** sur une carte signale à Notosaurus ce que l'IA a fait : la carte, son
 explication (quand elle est affichée) ou son image. Dites pourquoi (choquant ou inapproprié, faux,
 autre), ajoutez un commentaire si vous voulez : la fenêtre montre exactement ce qui sera envoyé,
 jamais les photos de la leçon ni le prénom de l'enfant. Ensuite, vous pouvez supprimer la carte ou

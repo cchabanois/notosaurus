@@ -16,7 +16,7 @@ sending them. Everything you change is saved as you go (“✓ Saved”).
 - **+ info** adds a note shown under the answer: gender, plural, an example…
 - **sub-deck** puts the card in a sub-deck of the lesson (“Vocabulary”, “Verbs”).
 - **🔊** plays the back with the lesson's voice.
-- **×** deletes the card; **＋ Add a card**, at the bottom, adds one.
+- **⋯**, at the card's top right, deletes it; **＋ Add a card**, at the bottom, adds one.
 
 **📝 Instructions used for this lesson**, above the cards, reminds what the AI was asked.
 
@@ -54,7 +54,7 @@ with Claude Sonnet), counted with the lesson's costs.
 
 ## Reporting a content
 
-In the app, **⚑** on a card reports what the AI made to Notosaurus: the card, its explanation
+In the app, **⋯ → ⚑ Report** on a card reports what the AI made to Notosaurus: the card, its explanation
 (when shown) or its picture. Say why (shocking or inappropriate, wrong, other), add a comment
 if you like: the sheet shows exactly what will be sent, never the lesson's photos nor the
 child's name. Then you can delete the card or remove its picture. See

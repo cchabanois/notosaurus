@@ -349,8 +349,28 @@
             <div class="flash-body">
               <span class="flash-badge" x-show="card._state"
                     x-text="card._state === 'new' ? $t('app.review.badgeNew') : $t('app.review.badgeModified')"></span>
-              <textarea class="front" rows="1" x-model="card.front" :readonly="readOnly()" :placeholder="$t('app.review.front')" :aria-label="$t('app.review.front')"
-                        x-init="watchHeight($el)" x-effect="card.front; fitHeight($el)"></textarea>
+              <div class="front-row">
+                <textarea class="front" rows="1" x-model="card.front" :readonly="readOnly()" :placeholder="$t('app.review.front')" :aria-label="$t('app.review.front')"
+                          x-init="watchHeight($el)" x-effect="card.front; fitHeight($el)"></textarea>
+                <!-- On the front's line, not a column beside the card (it made every card as tall as
+                     its buttons); the rare ones (report, delete) behind ⋯ -->
+                <div class="flash-actions">
+                  <button class="icon-btn" x-show="lessonId && card.front.trim() && (card.back.trim() || isCloze(card.front))"
+                          @click="explain(card)" :class="{ active: card._explain?.open }" :aria-label="$t('app.explain.button')"
+                          :title="$t('app.explain.button')">💬</button>
+                  <button class="icon-btn" x-show="hasAudio() && !hasMath(card.back) && !isCloze(card.front) && !card.choices.length" @click="play(spokenText(card))" :aria-label="$t('app.review.listen')">🔊</button>
+                  <button class="icon-btn" x-show="!readOnly() && !card.mask && !isCloze(card.front) && lessonId" @click="togglePicturePanel(card)"
+                          :class="{ active: card._panel }" :aria-label="$t('app.pictures.panel')">🖼️</button>
+                  <div class="card-menu" x-show="reportable || !readOnly()" @click.outside="card._menu = false" @keydown.escape="card._menu = false">
+                    <button class="icon-btn muted" @click="card._menu = !card._menu" :class="{ active: card._menu }"
+                            :aria-expanded="Boolean(card._menu)" :aria-label="$t('app.review.more')" :title="$t('app.review.more')">⋯</button>
+                    <div class="card-menu-items" x-show="card._menu">
+                      <button type="button" x-show="reportable" @click="card._menu = false; openReport(card)">⚑ <span x-text="$t('app.report.button')"></span></button>
+                      <button type="button" class="danger" x-show="!readOnly()" @click="card._menu = false; removeCard(card)">✕ <span x-text="$t('app.review.removeCard')"></span></button>
+                    </div>
+                  </div>
+                </div>
+              </div>
               <div class="math-preview" x-show="hasMath(card.front) || isCloze(card.front)" x-html="previewHtml(card.front)"></div>
               <!-- The back, the info, the wrong options and the "did you know" grow with their text,
                    as the front: a long answer is seen whole -->
@@ -403,17 +423,6 @@
                 <span aria-hidden="true">🧠</span>
                 <textarea rows="2" x-model="card.mnemonic" :readonly="readOnly()" :aria-label="$t('app.review.mnemonic')"></textarea>
               </div>
-            </div>
-            <div class="flash-actions">
-              <button class="icon-btn" x-show="lessonId && card.front.trim() && (card.back.trim() || isCloze(card.front))"
-                      @click="explain(card)" :class="{ active: card._explain?.open }" :aria-label="$t('app.explain.button')"
-                      :title="$t('app.explain.button')">💬</button>
-              <button class="icon-btn" x-show="hasAudio() && !hasMath(card.back) && !isCloze(card.front) && !card.choices.length" @click="play(spokenText(card))" :aria-label="$t('app.review.listen')">🔊</button>
-              <button class="icon-btn" x-show="!readOnly() && !card.mask && !isCloze(card.front) && lessonId" @click="togglePicturePanel(card)"
-                      :class="{ active: card._panel }" :aria-label="$t('app.pictures.panel')">🖼️</button>
-              <button class="icon-btn muted" x-show="reportable" @click="openReport(card)" :aria-label="$t('app.report.button')"
-                      :title="$t('app.report.button')">⚑</button>
-              <button class="icon-btn muted" x-show="!readOnly()" @click="removeCard(card)" :aria-label="$t('app.review.removeCard')">✕</button>
             </div>
             <!-- 💬 The card explained, on demand; then only the follow-ups the AI says would help -->
             <div class="explain" x-show="card._explain?.open">
