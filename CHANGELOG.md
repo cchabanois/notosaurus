@@ -60,6 +60,7 @@ Each pull request adds a line under **Unreleased**. See [Releasing](CONTRIBUTING
 
 ### Changed
 
+- The page speaks of children, not Anki profiles: the review says whom the lesson is for (its child), the lessons list and the children's sheet no longer repeat the profile, a profile switch is said with its child's name (a profile per child). The open Anki profile stays under the name, always (where the cards go); Anki open on another child's profile is said with their names.
 - The review's cards are a third shorter: their buttons (💬, 🔊, 🖼️) sit on the front's line instead of a column beside the card, which made every card as tall as its buttons. Report and delete are behind **⋯**.
 - **Pictures** where they truly help, whatever the prompt: a work of art, a person, a place, a monument, an animal; never for an abstract notion nor on every card. A setting, on by default (**Settings → Instructions for the AI → 🖼️ Pictures on the cards**); a prompt can say "no pictures". The prompts no longer say it each (Automatic, Dates and landmarks). For developers: `/v1/extract` takes `pictures`.
 - The review's **Add the reverse card** switch is gone: how the cards are asked (both ways, typed answer, dictation) comes from the prompt, and shows as a line at the bottom of the review. To change it, say so in the correction ("one way only", "with the answer typed"): only how Anki asks the cards changes. For developers: `/v1/revise` answers `reverse`, `typing`, `dictation` ("on", "off", "").

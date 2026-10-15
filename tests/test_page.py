@@ -1090,7 +1090,8 @@ def test_ankidroid_installed_from_the_message(page, anki):
 
 def test_the_children_of_the_open_anki_profile(page):
     """On the computer, a card belongs to the Anki profile it was made in: only the open
-    profile's are offered; a profile's only child chosen by itself, one chip saying it."""
+    profile's are offered; a profile's only child chosen by itself. The profile stays said
+    under the name (where the cards go), nowhere else."""
     kids = [
         {"id": "jules", "name": "Jules", "anki_profile": "Famille"},
         {"id": "mathilde", "name": "Mathilde", "anki_profile": "Famille"},
@@ -1107,7 +1108,7 @@ def test_the_children_of_the_open_anki_profile(page):
     sync_api.expect(page.locator(".brand-profile")).to_contain_text("Famille")  # a shared profile: said
     chip.click()
     sheet = page.get_by_role("dialog", name="Enfants")
-    sync_api.expect(sheet).to_contain_text("Les enfants du profil Anki « Famille » :")
+    sync_api.expect(sheet).not_to_contain_text("profil Anki")  # the children, not the profile
     sync_api.expect(sheet.locator(".child-rows li:visible")).to_have_count(3)  # Tom: this profile's now
     sheet.locator(".child-row", has_text="Mathilde").click()
     sync_api.expect(chip).to_contain_text("Mathilde")
@@ -1123,7 +1124,7 @@ def test_the_children_of_the_open_anki_profile(page):
     sync_api.expect(sheet.locator(".child-rows li:visible")).to_have_count(1)
     sheet.get_by_role("button", name="Fermer").click()
     sync_api.expect(chip).to_contain_text("Léa")  # its only child, chosen
-    sync_api.expect(page.locator(".brand-profile")).to_be_hidden()  # the chip says it
+    sync_api.expect(page.locator(".brand-profile")).to_contain_text("Léa")  # always said
     assert page.request.get("/api/children").json()[-1]["anki_profile"] == "Léa"
 
     open_profile["name"] = "Famille"  # back: Léa's card not offered

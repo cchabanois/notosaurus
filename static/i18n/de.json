@@ -32,7 +32,8 @@
       "open": "Geöffnetes Anki-Benutzerprofil",
       "none": "Kein Benutzerprofil in Anki geöffnet",
       "noneShort": "keins",
-      "switched": "👤 Anki-Benutzerprofil: {profile}. Seine Lektionen sind unter 📚."
+      "switched": "👤 Anki-Benutzerprofil: {profile}. Seine Lektionen sind unter 📚.",
+      "switchedChild": "🧒 {child}: die Lektionen sind unter 📚."
     },
     "lessonsButton": "Lektionen",
     "newLesson": "Neue Lektion",
@@ -120,7 +121,7 @@
       "saving": "Wird gespeichert …",
       "notSaved": "⚠ Nicht gespeichert",
       "deck": "Stapel",
-      "otherProfileOpen": "— aber „{profile}“ ist in Anki geöffnet",
+      "otherProfileOpen": "⚠️ Anki ist für {open} geöffnet: Öffne in Anki das Benutzerprofil von {child}, um die Karten dorthin zu senden.",
       "front": "Vorderseite",
       "back": "Rückseite",
       "extra": "Rückseite (optional)",
@@ -151,14 +152,14 @@
       "badgeNew": "neu",
       "badgeModified": "geändert",
       "noCards": "Keine Karten gefunden: Prüfe die Fotos oder die Anweisungen.",
-      "owner": "👤 Lektion von <strong>{owner}</strong>",
+      "owner": "🧒 Lektion von <strong>{owner}</strong>",
       "choice": "🤖 {choice}",
       "promptUsed": "📝 Für diese Lektion verwendete Anweisungen",
       "clozeHint": "Lückentext: {{c1::…}} verdeckt, was zwischen den Klammern steht. Jede Nummer ergibt eine Karte in Anki; dieselbe Nummer verdeckt mehrere Lücken gleichzeitig.",
       "diagramHint": "Abbildung: Zieh eine rote Maske, um sie zu verschieben, und ihre runde Ecke, um ihre Größe zu ändern, sodass sie die ganze Beschriftung verdeckt. Der gestrichelte Rahmen ist das, was Anki vom Foto zeigt: Zieh an seinen blauen Ecken, um es zuzuschneiden.",
       "diagramWarning": "Mit diesem KI-Modell (Claude) sind die Masken auf Handschrift manchmal zu klein: Prüfe, ob sie die ganze Beschriftung verdecken.",
       "cropFrame": "Was Anki vom Foto zeigt",
-      "readOnly": "🔒 Schreibgeschützt: Nur das Benutzerprofil von {owner} kann sie ändern. Du kannst sie trotzdem zu deinem Anki hinzufügen.",
+      "readOnly": "🔒 Schreibgeschützt: änderbar, wenn Anki mit dem Benutzerprofil von {owner} geöffnet ist. Du kannst sie trotzdem zu deinem Anki hinzufügen.",
       "madeQuick": "Im Schnellmodus erstellt.",
       "carefulAgain": "🎯 Sorgfältig neu erstellen"
     },
@@ -287,8 +288,7 @@
     },
     "lessons": {
       "title": "Meine Lektionen",
-      "ankiProfile": "👤 Anki-Benutzerprofil: <strong>{profile}</strong>",
-      "none": "Keine Lektionen für dieses Benutzerprofil.",
+      "none": "Keine Lektionen.",
       "noDeck": "Ohne Stapel",
       "search": "🔍 Lektion suchen …",
       "recent": "Zuletzt",
@@ -426,7 +426,6 @@
         "high": "z. B. bereitet das Abitur vor: genaue Formeln, Beweise Schritt für Schritt."
       },
       "pick": "Für wen ist die nächste Lektion? Tippe auf den Namen.",
-      "ofProfile": "Die Kinder des Anki-Profils „{profile}“:",
       "edit": "{name} bearbeiten"
     },
     "copy": {
@@ -434,7 +433,7 @@
       "title": "Kopieren für…",
       "hint": "Eine eigene Kopie: seine Stapel, seine eigenen Karten in Anki. Kostenlos: Die KI wird nicht gefragt.",
       "done": "Für {name} kopiert: Hier ist die Lektion.",
-      "doneElsewhere": "Für {name} kopiert: Sie ist in den Lektionen, Anki-Profil „{profile}“."
+      "doneElsewhere": "Für {name} kopiert: Sie ist in den Lektionen."
     },
     "report": {
       "button": "Melden",
