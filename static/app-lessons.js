@@ -1,6 +1,19 @@
 // A lesson made from the photos (extraction), and the saved lessons: opened, saved, deleted.
 // Methods of the page's Alpine component (app.js), as `this`.
 
+// The card a note's key names (the "✎ Notosaurus" link): its id, a diagram label's
+// "lesson:page:n", or its front text as Anki's {{text:}} gives it (tags gone, spaces loose)
+function findLinkedCard(cards, key) {
+  const plain = (s) => (s || "").replace(/<[^>]+>/g, " ").replace(/\s+/g, " ").trim();
+  const label = /^[^:]*:(\d+):(\d+)$/.exec(key || "");
+  return (
+    cards.find((c) => c.id && c.id === key) ||
+    (label && cards.find((c) => c.mask && String(c.mask.page) === label[1] && String(c.mask.n) === label[2])) ||
+    cards.find((c) => plain(c.front) === plain(key)) ||
+    null
+  );
+}
+
 const lessonsPart = {
   // --- Extraction -----------------------------------------------------
   // A lesson open and ours: generating again replaces its cards (no second lesson).
@@ -225,6 +238,23 @@ const lessonsPart = {
     } catch (e) {
       this.error = t("app.lessons.openFailed", { message: e.message });
     }
+  },
+
+  // "✎ Notosaurus" on a card in Anki (the note types' link): the page opened on the lesson
+  // (?lesson=…) and that card (&key=: the note's key, its id or its front text)
+  async openLinkedCard(id, key) {
+    history.replaceState(null, "", location.pathname); // once: a reload keeps the lesson, not the jump
+    await this.openLesson(id);
+    if (this.lessonId !== id) return; // not found, said already
+    const card = findLinkedCard(this.cards, key);
+    if (!card) {
+      this.error = t("app.lessons.cardNotFound");
+      return;
+    }
+    card._linked = true;
+    await this.$nextTick();
+    document.querySelector(`.flash[data-card="${card.key}"]`)?.scrollIntoView({ block: "center" });
+    setTimeout(() => { card._linked = false; }, 3000);
   },
 
   // A reopened lesson brings back the prompt it was generated with, so "Generate

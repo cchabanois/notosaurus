@@ -306,7 +306,8 @@
       "deleteLesson": "Lektion löschen",
       "deleteBoth": "Lektion und die {count} Karten löschen",
       "deletedInAnki": "🗑 {count} Karten aus Anki gelöscht.",
-      "deletedNoSync": "Karten aus Anki gelöscht, aber keine Synchronisierung mit AnkiWeb ({reason})."
+      "deletedNoSync": "Karten aus Anki gelöscht, aber keine Synchronisierung mit AnkiWeb ({reason}).",
+      "cardNotFound": "Diese Karte ist nicht mehr in der Lektion."
     },
     "picker": {
       "title": "Anweisungen",

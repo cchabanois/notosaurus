@@ -3,7 +3,7 @@
 import random
 from pathlib import Path
 
-from .common import BACK_INFO, CSS, HELP_FIELDS, SOURCE_FIELD, NoteType, field_html, helps, info, stable_id
+from .common import BACK_INFO, CSS, HELP_FIELDS, SOURCE_FIELD, NoteType, field_html, fix_link, helps, info, stable_id
 from .picture import PICTURE_CSS, source
 
 # The options in a list (A, B, C…), the right one marked on the answer
@@ -44,7 +44,7 @@ def choice_note_type() -> NoteType:
     Anki. The options' order is fixed per card ("Choices", "AnswerChoices"). Its picture
     or figure, if any, goes on the question ("Picture") or with the answer
     ("BackPicture"). "Id" (the card's own id) tells which note an update is for."""
-    info = BACK_INFO
+    info = BACK_INFO + fix_link("Id")
     picture = '{{#Picture}}<div class="notosaurus-picture">{{Picture}}</div>{{/Picture}}'
     back_picture = '{{#BackPicture}}<div class="notosaurus-picture">{{BackPicture}}</div>{{/BackPicture}}'
     question = f"{picture}<div>{{{{Question}}}}</div>"

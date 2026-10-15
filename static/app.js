@@ -258,6 +258,9 @@ document.addEventListener("alpine:init", () => {
       this.$watch("quick", (on) => storage("set", on ? "0" : "1", CAREFUL));
       await Promise.all([this.loadPrompts(storage("get"), true), this.loadLessons(), this.loadChildren(), this.loadExams()]);
       this.checkAnki();
+      // "✎ Notosaurus" on a card in Anki: the page opened on that lesson and card
+      const linked = new URLSearchParams(location.search);
+      if (linked.get("lesson")) this.openLinkedCard(linked.get("lesson"), linked.get("key") || "");
       // Anki may be started later: check again when coming back to the app.
       document.addEventListener("visibilitychange", () => {
         if (document.visibilityState === "visible") this.checkAnki();

@@ -40,6 +40,14 @@
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
+            <!-- "✎ Notosaurus" on a card in AnkiDroid: notosaurus://fix?lesson=…&key=… opens the page
+                 on that card (the note types' link, app/note_types/common.py) -->
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <data android:scheme="notosaurus" android:host="fix" />
+            </intent-filter>
         </activity>
 
         <!-- The camera writes its photos here; AnkiDroid reads the cards' sound from here -->

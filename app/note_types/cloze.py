@@ -1,6 +1,6 @@
 """Cloze cards: a text with gaps, one card per gap number."""
 
-from .common import BACK_INFO, CSS, HELP_FIELDS, NoteType, field_html, helps, info
+from .common import BACK_INFO, CSS, HELP_FIELDS, NoteType, field_html, fix_link, helps, info
 
 CLOZE_CSS = """\
 .cloze { font-weight: 700; color: #0b5cad; }
@@ -13,7 +13,7 @@ def cloze_note_type() -> NoteType:
     others shown. "Extra" (the card's back, often empty) shows with the answer. Not
     read aloud. "Id" (the card's own id) tells which note an update is for: the text
     is what gets corrected."""
-    info = BACK_INFO
+    info = BACK_INFO + fix_link("Id")
     templates = (
         {
             "name": "Texte à trous",

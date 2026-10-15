@@ -5,7 +5,7 @@ from pathlib import Path
 
 from notosaurus_core import tts
 
-from .common import BACK_INFO, CSS, HELP_FIELDS, SOURCE_FIELD, NoteType, field_html, typed, variant
+from .common import BACK_INFO, CSS, HELP_FIELDS, SOURCE_FIELD, NoteType, field_html, fix_link, typed, variant
 
 PICTURE_CSS = """\
 .notosaurus-picture img { max-width: min(100%, 320px); max-height: 50vh; border-radius: 12px; }
@@ -21,7 +21,7 @@ def picture_note_type(voice: str, typing: bool = False, on_back: bool = False) -
     moves from one to the other keeping its history."""
     anki_tts = tts.is_anki_locale(voice)
     sound = f"{{{{tts {voice}:Back}}}}" if anki_tts else "{{Audio}}"
-    info = BACK_INFO
+    info = BACK_INFO + fix_link("Id")
     picture = '<div class="notosaurus-picture">{{Picture}}</div>'
     if on_back:
         question, answer = "{{Front}}", f'{{{{FrontSide}}}}<hr id="answer">{{{{Back}}}}{sound}{picture}{info}'

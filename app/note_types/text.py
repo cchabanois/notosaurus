@@ -3,7 +3,7 @@ the dictation (with the other cards, or alone)."""
 
 from notosaurus_core import tts
 
-from .common import BACK_INFO, HELP_FIELDS, NoteType, typed, variant
+from .common import BACK_INFO, HELP_FIELDS, NoteType, fix_link, typed, variant
 
 
 def note_type(
@@ -16,7 +16,7 @@ def note_type(
     # never overwrite a note type the user already has.
     anki_tts = tts.is_anki_locale(voice)
     sound = f"{{{{tts {voice}:Back}}}}" if anki_tts else "{{Audio}}"
-    info = BACK_INFO
+    info = BACK_INFO + fix_link("Front")
     templates = [
         {
             "name": "Recto → Verso",

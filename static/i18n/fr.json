@@ -306,7 +306,8 @@
       "deleteLesson": "Supprimer la leçon",
       "deleteBoth": "Supprimer la leçon et les {count} cartes",
       "deletedInAnki": "🗑 {count} cartes supprimées d'Anki.",
-      "deletedNoSync": "Cartes supprimées d'Anki, mais pas de synchro AnkiWeb ({reason})."
+      "deletedNoSync": "Cartes supprimées d'Anki, mais pas de synchro AnkiWeb ({reason}).",
+      "cardNotFound": "Cette carte n'est plus dans la leçon."
     },
     "picker": {
       "title": "Consignes",

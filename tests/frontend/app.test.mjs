@@ -747,3 +747,17 @@ test("a profile said with its child's name; a lesson, whom it is for", () => {
   c.lessonChild = "";
   assert.equal(c.lessonFor(), "Famille");  // no child said: the profile that made it
 });
+
+test("the card a note's key names: its id, a diagram label, or its front text", () => {
+  const cards = JSON.stringify([
+    { id: "a1", front: "le <b>crayon</b>\nbleu", mask: null },
+    { id: "d1", front: "Qu'est-ce que (2) ?", mask: { page: 1, n: 2 } },
+    { id: "d2", front: "Qu'est-ce que (2) ?", mask: { page: 2, n: 2 } },
+  ]);
+  const found = (key) => plain(app.run(`findLinkedCard(${cards}, ${JSON.stringify(key)})?.id ?? null`));
+  assert.equal(found("a1"), "a1");
+  assert.equal(found("2026-10-15-svt:2:2"), "d2"); // a diagram label: lesson:page:n
+  assert.equal(found("le crayon bleu"), "a1"); // Anki's {{text:Front}}: tags gone, one space
+  assert.equal(found("Qu'est-ce que (2) ?"), "d1"); // the same front twice: the first
+  assert.equal(found("nope"), null);
+});

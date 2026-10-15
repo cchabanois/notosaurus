@@ -15,6 +15,8 @@ CSS = """\
   font-size: 18px; color: #555; text-align: left;
 }
 .nightMode .notosaurus-help { color: #bbb; }
+.notosaurus-fix { margin-top: 16px; font-size: 14px; }
+.notosaurus-fix a { color: #8bb8c4; text-decoration: none; }
 """
 
 # On the back, under the info: the helps asked for at generation (why the answer is the
@@ -25,6 +27,30 @@ BACK_INFO = (
     '{{#Mnemonic}}<div class="notosaurus-help">🧠 {{Mnemonic}}</div>{{/Mnemonic}}'
 )
 HELP_FIELDS = ("Explanation", "Mnemonic")
+
+# Under the back: "✎ Notosaurus", the card opened in Notosaurus to correct it. Built on
+# the card from what the note holds already (AnkiDroid can't add a field to a note type
+# it has): the lesson from its tag, the card from the note's key field. On Android, the
+# app (an intent: Google Play's page when it is missing); on the computer, the page
+# served by the add-on; nowhere else (AnkiWeb, AnkiMobile: the link is hidden).
+FIX_SCRIPT = """<script>(function(){var A=document.querySelectorAll("a.nfix:not([data-done])");\
+for(var i=0;i<A.length;i++){var a=A[i];a.dataset.done="1";\
+var m=/(?:^|\\s)notosaurus::(\\S+)/.exec(a.dataset.tags||"");\
+var c=document.body.className||"",android=/\\bandroid\\b/.test(c)||/Android/.test(navigator.userAgent),\
+desktop=/\\b(win|mac|linux)\\b/.test(c);\
+if(!m||!(android||desktop)){a.parentNode.style.display="none";continue;}\
+var q="lesson="+encodeURIComponent(m[1])+"&key="+encodeURIComponent(a.dataset.key||"");\
+a.href=android?"intent://fix?"+q+"#Intent;scheme=notosaurus;package=app.notosaurus;\
+S.browser_fallback_url=https%3A%2F%2Fcchabanois.github.io%2Fnotosaurus%2F;end":"http://localhost:8000/?"+q;}})();</script>"""
+
+
+def fix_link(key: str) -> str:
+    """The back's "✎ Notosaurus" link (FIX_SCRIPT): `key`, the note's key field, tells the
+    card ("Front": its text; "Id": its id)."""
+    link = f'<a class="nfix" href="#" data-key="{{{{text:{key}}}}}" data-tags="{{{{Tags}}}}">✎ Notosaurus</a>'
+    return f'<div class="notosaurus-fix">{link}</div>{FIX_SCRIPT}'
+
+
 # Where a card's picture comes from (models.PictureSource): kept with the note, never shown
 # (no card template uses it). The computer's only: AnkiDroid can't add a field to a note
 # type it already has (tools/note_types.py leaves it out of the app's)

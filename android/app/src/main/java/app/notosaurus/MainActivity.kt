@@ -162,6 +162,12 @@ class MainActivity : ComponentActivity() {
         when (intent?.action) {
             Shortcuts.PHONE -> prefs[LocalServer.MODE] = LocalServer.PHONE_MODE
             Shortcuts.COMPUTER -> if (prefs[LocalServer.COMPUTER] != null) prefs[LocalServer.MODE] = LocalServer.COMPUTER_MODE
+            // "✎ Notosaurus" on a card in AnkiDroid (notosaurus://fix?lesson=…&key=…): the phone's
+            // page on that card (its query, nothing else: the page looks the lesson and card up)
+            Intent.ACTION_VIEW -> intent.data?.takeIf { it.scheme == "notosaurus" && it.host == "fix" }?.let { link ->
+                web.loadUrl("$origin/?${link.encodedQuery.orEmpty()}")
+                return
+            }
         }
         val computer = prefs[LocalServer.COMPUTER]
         web.loadUrl(if (prefs[LocalServer.MODE] == LocalServer.COMPUTER_MODE && computer != null) computer else "$origin/")
