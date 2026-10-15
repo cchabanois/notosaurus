@@ -27,6 +27,20 @@ test("a PDF is told by its type or its name", () => {
   assert.equal(app.run('isPdf({ type: "image/jpeg", name: "p.jpg" })'), false);
 });
 
+test("the cards being made: the words they all begin with are left out", () => {
+  assert.equal(app.run('sharedStart(["Quelle est la figure de style : A ?", "Quelle est la figure de style : B ?"])'),
+    "Quelle est la figure de style : ");
+  assert.equal(app.run('sharedStart(["Quelle est la figure", "Quelle est la figure de style ?"])'), "Quelle est la ");  // a word stays
+  assert.equal(app.run('sharedStart(["Le chat", "La chatte"])'), "");
+  assert.equal(app.run('sharedStart(["Seule"])'), "");
+
+  const c = app.component();
+  c.coming = [{ front: "Quelle est la figure de style : « Ce toit tranquille »" }];
+  assert.equal(c.comingFront(c.coming[0]), "Quelle est la figure de style : « Ce toit tranquille »");  // alone: whole
+  c.coming.push({ front: "Quelle est la figure de style : « Je meurs de soif auprès de la fontaine »" });
+  assert.equal(c.comingFront(c.coming[1]), "…« Je meurs de soif auprès de la fontaine »");
+});
+
 test("a card's id is 12 hex characters, different every time", () => {
   assert.match(app.run("newId()"), /^[0-9a-f]{12}$/);
   assert.notEqual(app.run("newId()"), app.run("newId()"));
