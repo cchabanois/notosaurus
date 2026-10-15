@@ -563,7 +563,7 @@
       <!-- The cards as the AI writes them: the last ones, while the others come -->
       <ul class="coming" x-show="loading && coming.length">
         <template x-for="(card, i) in coming.slice(-5)" :key="coming.length - 5 + i">
-          <li><strong x-text="card.front"></strong> <span x-text="card.back"></span></li>
+          <li><strong x-text="comingFront(card)"></strong> <span x-text="card.back"></span></li>
         </template>
       </ul>
       <button class="btn soft" x-show="loading && generating" @click="cancelGeneration()" :disabled="cancelling"

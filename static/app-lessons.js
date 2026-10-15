@@ -86,6 +86,13 @@ const lessonsPart = {
     }
   },
 
+  // A card being made, as it shows while waiting: without the words every card begins
+  // with (all "Quelle est la figure de style…": only what tells them apart is seen)
+  comingFront(card) {
+    const start = sharedStart(this.coming.map((c) => c.front));
+    return start ? `…${card.front.slice(start.length)}` : card.front;
+  },
+
   // "Cancel" while waiting: the AI stops, no lesson is saved (generated again: the old one stays)
   async cancelGeneration() {
     if (!this.generating || this.cancelling) return;

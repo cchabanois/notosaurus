@@ -60,6 +60,18 @@ function plainCardText(text) {
   return (text ?? "").replace(/\{\{c\d+::(.*?)(::[^}]*)?\}\}/g, "[$1]");
 }
 
+// The words every text begins with ("Quelle est la figure de style" when every card
+// asks it): "" for a single text, or when one is nothing but those words; a quote or a
+// bracket opening stays with what it opens
+function sharedStart(texts) {
+  if (texts.length < 2) return "";
+  const [first, ...others] = texts.map((text) => text.split(/(\s+)/));
+  let end = 0;  // in words and the spaces after them
+  while (end + 1 < first.length && !/^[«“‘"'(\[¿¡]/.test(first[end])
+    && others.every((words) => words[end] === first[end] && end + 1 < words.length)) end += 2;
+  return first.slice(0, end).join("");
+}
+
 function storage(action, value, key = LAST_PROMPT) {
   try {
     if (action === "get") return localStorage.getItem(key);
