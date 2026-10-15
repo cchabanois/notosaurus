@@ -32,7 +32,8 @@
       "open": "Profilo Anki aperto",
       "none": "Nessun profilo aperto in Anki",
       "noneShort": "nessuno",
-      "switched": "👤 Profilo Anki: {profile}. Le sue lezioni sono in 📚."
+      "switched": "👤 Profilo Anki: {profile}. Le sue lezioni sono in 📚.",
+      "switchedChild": "🧒 {child}: le sue lezioni sono in 📚."
     },
     "lessonsButton": "Lezioni",
     "newLesson": "Nuova lezione",
@@ -120,7 +121,7 @@
       "saving": "Salvataggio…",
       "notSaved": "⚠ Non salvata",
       "deck": "Mazzo",
-      "otherProfileOpen": "— ma in Anki è aperto “{profile}”",
+      "otherProfileOpen": "⚠️ Anki è aperto per {open}: apri il profilo di {child} in Anki per inviargli le sue carte.",
       "front": "Fronte",
       "back": "Retro",
       "extra": "Retro (facoltativo)",
@@ -151,14 +152,14 @@
       "badgeNew": "nuova",
       "badgeModified": "modificata",
       "noCards": "Nessuna carta trovata: controlla le foto o le istruzioni.",
-      "owner": "👤 Lezione di <strong>{owner}</strong>",
+      "owner": "🧒 Lezione di <strong>{owner}</strong>",
       "choice": "🤖 {choice}",
       "promptUsed": "📝 Istruzioni usate per questa lezione",
       "clozeHint": "Testo da completare (cloze in Anki): {{c1::…}} nasconde ciò che sta tra le graffe. Ogni numero dà una carta in Anki; lo stesso numero nasconde più spazi insieme.",
       "diagramHint": "Schema: trascina una maschera rossa per spostarla e il suo angolo tondo per ridimensionarla, in modo che nasconda tutto il nome. La cornice tratteggiata è ciò che Anki mostra della foto: trascina i suoi angoli blu per ritagliarla.",
       "diagramWarning": "Con questo modello di IA (Claude), sulla scrittura a mano le maschere a volte sono troppo piccole: controlla che nascondano tutto il nome.",
       "cropFrame": "Ciò che Anki mostra della foto",
-      "readOnly": "🔒 Sola lettura: solo il profilo di {owner} può modificarla. Puoi comunque aggiungerla al tuo Anki.",
+      "readOnly": "🔒 Sola lettura: si può modificare quando Anki è aperto sul profilo di {owner}. Puoi comunque aggiungerla al tuo Anki.",
       "madeQuick": "Create in modalità veloce.",
       "carefulAgain": "🎯 Rifai in modalità accurata"
     },
@@ -287,8 +288,7 @@
     },
     "lessons": {
       "title": "Le mie lezioni",
-      "ankiProfile": "👤 Profilo Anki: <strong>{profile}</strong>",
-      "none": "Nessuna lezione per questo profilo.",
+      "none": "Nessuna lezione.",
       "noDeck": "Senza mazzo",
       "search": "🔍 Cerca una lezione…",
       "recent": "Recenti",
@@ -426,7 +426,6 @@
         "high": "es. prepara la maturità: formule esatte, dimostrazioni passo per passo."
       },
       "pick": "Per chi è la prossima lezione? Tocca il suo nome.",
-      "ofProfile": "I bambini del profilo Anki «{profile}»:",
       "edit": "Modifica {name}"
     },
     "copy": {
@@ -434,7 +433,7 @@
       "title": "Copia per…",
       "hint": "Una copia tutta sua: i suoi mazzi, le sue carte in Anki. Gratis: non si chiede nulla all'IA.",
       "done": "Copiata per {name}: ecco la sua lezione.",
-      "doneElsewhere": "Copiata per {name}: è nelle sue lezioni, profilo Anki «{profile}»."
+      "doneElsewhere": "Copiata per {name}: è nelle sue lezioni."
     },
     "report": {
       "button": "Segnala",

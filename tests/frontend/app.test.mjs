@@ -729,3 +729,21 @@ test("children: the sheet opens on the choice; one card edited at a time, cancel
   c.openChildren();
   assert.equal(c.childrenSheet.editing, 0);  // none yet: a new one's card at once
 });
+
+test("a profile said with its child's name; a lesson, whom it is for", () => {
+  const c = app.component();
+  c.children = [
+    { id: "lea", name: "Léa", anki_profile: "Léa" },  // a profile per child
+    { id: "jules", name: "Jules", anki_profile: "Famille" },
+    { id: "tom", name: "Tom", anki_profile: "Famille" },
+  ];
+  assert.equal(c.profileFor("Léa"), "Léa");
+  assert.equal(c.profileChild("Léa").id, "lea");  // the same name as its profile: still its child
+  assert.equal(c.profileFor("Famille"), "Famille");  // two children: the profile's name
+  assert.equal(c.profileChild("Famille"), null);
+  c.lessonChild = "jules";
+  c.lessonOwner = "Famille";
+  assert.equal(c.lessonFor(), "Jules");
+  c.lessonChild = "";
+  assert.equal(c.lessonFor(), "Famille");  // no child said: the profile that made it
+});

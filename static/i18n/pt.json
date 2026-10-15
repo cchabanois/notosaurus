@@ -32,7 +32,8 @@
       "open": "Perfil do Anki aberto",
       "none": "Nenhum perfil aberto no Anki",
       "noneShort": "nenhum",
-      "switched": "👤 Perfil do Anki: {profile}. As lições dele estão em 📚."
+      "switched": "👤 Perfil do Anki: {profile}. As lições dele estão em 📚.",
+      "switchedChild": "🧒 {child}: as lições estão em 📚."
     },
     "lessonsButton": "Lições",
     "newLesson": "Nova lição",
@@ -120,7 +121,7 @@
       "saving": "Salvando…",
       "notSaved": "⚠ Não salva",
       "deck": "Baralho",
-      "otherProfileOpen": "— mas “{profile}” está aberto no Anki",
+      "otherProfileOpen": "⚠️ O Anki está aberto para {open}: abra o perfil de {child} no Anki para lhe enviar os cartões.",
       "front": "Frente",
       "back": "Verso",
       "extra": "Verso (opcional)",
@@ -151,14 +152,14 @@
       "badgeNew": "novo",
       "badgeModified": "alterado",
       "noCards": "Nenhum cartão encontrado: confira as fotos ou as instruções.",
-      "owner": "👤 Lição de <strong>{owner}</strong>",
+      "owner": "🧒 Lição de <strong>{owner}</strong>",
       "choice": "🤖 {choice}",
       "promptUsed": "📝 Instruções usadas nesta lição",
       "clozeHint": "Lacunas (omissão de palavras no Anki): {{c1::…}} esconde o que está entre as chaves. Cada número gera um cartão no Anki; o mesmo número esconde várias lacunas juntas.",
       "diagramHint": "Esquema: arraste uma máscara vermelha para movê-la e o canto redondo dela para mudar o tamanho, de modo que esconda toda a legenda. O quadro tracejado é o que o Anki mostra da foto: arraste os cantos azuis dele para recortá-la.",
       "diagramWarning": "Com este modelo de IA (Claude), as máscaras às vezes ficam pequenas demais sobre letra manuscrita: confira se escondem toda a legenda.",
       "cropFrame": "O que o Anki mostra da foto",
-      "readOnly": "🔒 Somente leitura: só o perfil de {owner} pode alterá-la. Mesmo assim, você pode adicioná-la ao seu Anki.",
+      "readOnly": "🔒 Somente leitura: pode ser alterada quando o Anki está aberto no perfil de {owner}. Mesmo assim, você pode adicioná-la ao seu Anki.",
       "madeQuick": "Criados no modo rápido.",
       "carefulAgain": "🎯 Refazer no modo caprichado"
     },
@@ -287,8 +288,7 @@
     },
     "lessons": {
       "title": "Minhas lições",
-      "ankiProfile": "👤 Perfil do Anki: <strong>{profile}</strong>",
-      "none": "Nenhuma lição para este perfil.",
+      "none": "Nenhuma lição.",
       "noDeck": "Sem baralho",
       "search": "🔍 Procurar uma lição…",
       "recent": "Recentes",
@@ -426,7 +426,6 @@
         "high": "ex.: prepara o vestibular: fórmulas exatas, demonstrações passo a passo."
       },
       "pick": "Para quem é a próxima lição? Toque no nome.",
-      "ofProfile": "As crianças do perfil do Anki «{profile}»:",
       "edit": "Editar {name}"
     },
     "copy": {
@@ -434,7 +433,7 @@
       "title": "Copiar para…",
       "hint": "Uma cópia só sua: os seus baralhos, os seus próprios cartões no Anki. Grátis: nada é pedido à IA.",
       "done": "Copiada para {name}: aqui está a lição.",
-      "doneElsewhere": "Copiada para {name}: está nas suas lições, perfil do Anki «{profile}»."
+      "doneElsewhere": "Copiada para {name}: está nas suas lições."
     },
     "report": {
       "button": "Denunciar",

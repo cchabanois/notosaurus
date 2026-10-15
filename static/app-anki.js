@@ -73,7 +73,8 @@ const ankiPart = {
       if (this.saveTimer) await this.saveNow();
       await this.newLesson();
     }
-    this.notify(t("app.profile.switched", { profile }));
+    const child = this.profileChild(profile);  // a profile per child: said with the child's name
+    this.notify(child ? t("app.profile.switchedChild", { child: child.name }) : t("app.profile.switched", { profile }));
   },
 
   // Pictures being drawn or changed: the cards sent must have them

@@ -32,7 +32,8 @@
       "open": "Profil Anki ouvert",
       "none": "Aucun profil ouvert dans Anki",
       "noneShort": "aucun",
-      "switched": "👤 Profil Anki : {profile}. Ses leçons sont dans 📚."
+      "switched": "👤 Profil Anki : {profile}. Ses leçons sont dans 📚.",
+      "switchedChild": "🧒 {child} : ses leçons sont dans 📚."
     },
     "lessonsButton": "Leçons",
     "newLesson": "Nouvelle leçon",
@@ -120,7 +121,7 @@
       "saving": "Enregistrement…",
       "notSaved": "⚠ Non enregistrée",
       "deck": "Paquet",
-      "otherProfileOpen": "— mais « {profile} » est ouvert dans Anki",
+      "otherProfileOpen": "⚠️ Anki est ouvert pour {open} : ouvrez le profil de {child} dans Anki pour lui envoyer ses cartes.",
       "front": "Recto",
       "back": "Verso",
       "extra": "Verso (facultatif)",
@@ -151,14 +152,14 @@
       "badgeNew": "nouvelle",
       "badgeModified": "modifiée",
       "noCards": "Aucune carte trouvée : vérifiez les photos ou la consigne.",
-      "owner": "👤 Leçon de <strong>{owner}</strong>",
+      "owner": "🧒 Leçon de <strong>{owner}</strong>",
       "choice": "🤖 {choice}",
       "promptUsed": "📝 Consigne utilisée pour cette leçon",
       "clozeHint": "Texte à trous : {{c1::…}} cache ce qui est entre les accolades. Chaque numéro donne une carte dans Anki ; le même numéro cache plusieurs trous ensemble.",
       "diagramHint": "Schéma : faites glisser un masque rouge pour le déplacer, et son coin rond pour l'agrandir, afin qu'il cache tout le nom. Le cadre en pointillés est ce qu'Anki montrera de la photo : faites glisser ses coins bleus pour le recadrer.",
       "diagramWarning": "Avec ce modèle d'IA (Claude), les masques sont parfois trop petits sur l'écriture manuscrite : vérifiez qu'ils cachent bien tout le nom.",
       "cropFrame": "Ce qu'Anki montre de la photo",
-      "readOnly": "🔒 Lecture seule : seul le profil de {owner} peut la modifier. Vous pouvez quand même l'ajouter à votre Anki.",
+      "readOnly": "🔒 Lecture seule : modifiable quand Anki est ouvert sur le profil de {owner}. Vous pouvez quand même l'ajouter à votre Anki.",
       "madeQuick": "Créées en mode rapide.",
       "carefulAgain": "🎯 Refaire en mode soigné"
     },
@@ -287,8 +288,7 @@
     },
     "lessons": {
       "title": "Mes leçons",
-      "ankiProfile": "👤 Profil Anki : <strong>{profile}</strong>",
-      "none": "Aucune leçon pour ce profil.",
+      "none": "Aucune leçon.",
       "noDeck": "Sans paquet",
       "search": "🔍 Chercher une leçon…",
       "recent": "Récentes",
@@ -426,7 +426,6 @@
         "high": "ex. : elle prépare le bac : formules exactes, démonstrations en étapes."
       },
       "pick": "Pour qui est la prochaine leçon ? Touchez son prénom.",
-      "ofProfile": "Les enfants du profil Anki « {profile} » :",
       "edit": "Modifier {name}"
     },
     "copy": {
@@ -434,7 +433,7 @@
       "title": "Copier pour…",
       "hint": "Une copie à lui : ses paquets, ses propres cartes dans Anki. Gratuit : rien n'est demandé à l'IA.",
       "done": "Copiée pour {name} : voici sa leçon.",
-      "doneElsewhere": "Copiée pour {name} : elle est dans ses leçons, profil Anki « {profile} »."
+      "doneElsewhere": "Copiée pour {name} : elle est dans ses leçons."
     },
     "report": {
       "button": "Signaler",

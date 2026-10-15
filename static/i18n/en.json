@@ -32,7 +32,8 @@
       "open": "Open Anki profile",
       "none": "No profile open in Anki",
       "noneShort": "none",
-      "switched": "👤 Anki profile: {profile}. Their lessons are in 📚."
+      "switched": "👤 Anki profile: {profile}. Their lessons are in 📚.",
+      "switchedChild": "🧒 {child}: their lessons are in 📚."
     },
     "lessonsButton": "Lessons",
     "newLesson": "New lesson",
@@ -120,7 +121,7 @@
       "saving": "Saving…",
       "notSaved": "⚠ Not saved",
       "deck": "Deck",
-      "otherProfileOpen": "— but “{profile}” is open in Anki",
+      "otherProfileOpen": "⚠️ Anki is open for {open}: open {child}'s profile in Anki to send them their cards.",
       "front": "Front",
       "back": "Back",
       "extra": "Back (optional)",
@@ -151,14 +152,14 @@
       "badgeNew": "new",
       "badgeModified": "changed",
       "noCards": "No cards found: check the photos or the instructions.",
-      "owner": "👤 <strong>{owner}</strong>'s lesson",
+      "owner": "🧒 <strong>{owner}</strong>'s lesson",
       "choice": "🤖 {choice}",
       "promptUsed": "📝 Instructions used for this lesson",
       "clozeHint": "Cloze: {{c1::…}} hides what is between the braces. Each number makes one card in Anki; the same number hides several gaps together.",
       "diagramHint": "Diagram: drag a red mask to move it, its round corner to resize it, so it hides the whole label. The dashed frame is what Anki shows of the photo: drag its blue corners to crop it.",
       "diagramWarning": "With this AI model (Claude), masks are sometimes too small on handwriting: check that they hide the whole label.",
       "cropFrame": "What Anki shows of the photo",
-      "readOnly": "🔒 Read only: only {owner}'s profile can change it. You can still add it to your Anki.",
+      "readOnly": "🔒 Read only: it can be changed when Anki is open on {owner}'s profile. You can still add it to your Anki.",
       "madeQuick": "Made in quick mode.",
       "carefulAgain": "🎯 Make again, carefully"
     },
@@ -287,8 +288,7 @@
     },
     "lessons": {
       "title": "My lessons",
-      "ankiProfile": "👤 Anki profile: <strong>{profile}</strong>",
-      "none": "No lessons for this profile.",
+      "none": "No lessons.",
       "noDeck": "No deck",
       "search": "🔍 Search a lesson…",
       "recent": "Recent",
@@ -426,7 +426,6 @@
         "high": "e.g. preparing for exams: exact formulas, proofs step by step."
       },
       "pick": "Who is the next lesson for? Tap their name.",
-      "ofProfile": "The children of the Anki profile “{profile}”:",
       "edit": "Edit {name}"
     },
     "copy": {
@@ -434,7 +433,7 @@
       "title": "Copy for…",
       "hint": "A copy of their own: their decks, their own cards in Anki. Free: nothing is asked of the AI.",
       "done": "Copied for {name}: here is their lesson.",
-      "doneElsewhere": "Copied for {name}: it is in their lessons, Anki profile “{profile}”."
+      "doneElsewhere": "Copied for {name}: it is in their lessons."
     },
     "report": {
       "button": "Report",

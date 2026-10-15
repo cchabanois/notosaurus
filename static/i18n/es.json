@@ -32,7 +32,8 @@
       "open": "Perfil de Anki abierto",
       "none": "Ningún perfil abierto en Anki",
       "noneShort": "ninguno",
-      "switched": "👤 Perfil de Anki: {profile}. Sus lecciones están en 📚."
+      "switched": "👤 Perfil de Anki: {profile}. Sus lecciones están en 📚.",
+      "switchedChild": "🧒 {child}: sus lecciones están en 📚."
     },
     "lessonsButton": "Lecciones",
     "newLesson": "Nueva lección",
@@ -120,7 +121,7 @@
       "saving": "Guardando…",
       "notSaved": "⚠ Sin guardar",
       "deck": "Mazo",
-      "otherProfileOpen": "— pero «{profile}» está abierto en Anki",
+      "otherProfileOpen": "⚠️ Anki está abierto para {open}: abre el perfil de {child} en Anki para enviarle sus tarjetas.",
       "front": "Anverso",
       "back": "Reverso",
       "extra": "Reverso (opcional)",
@@ -151,14 +152,14 @@
       "badgeNew": "nueva",
       "badgeModified": "cambiada",
       "noCards": "No se ha encontrado ninguna tarjeta: revisa las fotos o las instrucciones.",
-      "owner": "👤 Lección de <strong>{owner}</strong>",
+      "owner": "🧒 Lección de <strong>{owner}</strong>",
       "choice": "🤖 {choice}",
       "promptUsed": "📝 Instrucciones usadas para esta lección",
       "clozeHint": "Texto con huecos (respuesta anidada en Anki): {{c1::…}} oculta lo que hay entre las llaves. Cada número da una tarjeta en Anki; el mismo número oculta varios huecos a la vez.",
       "diagramHint": "Esquema: arrastra una máscara roja para moverla y su esquina redonda para cambiar su tamaño, de modo que oculte todo el rótulo. El marco discontinuo es lo que Anki muestra de la foto: arrastra sus esquinas azules para recortarla.",
       "diagramWarning": "Con este modelo de IA (Claude), las máscaras a veces son demasiado pequeñas sobre la letra manuscrita: comprueba que ocultan todo el rótulo.",
       "cropFrame": "Lo que Anki muestra de la foto",
-      "readOnly": "🔒 Solo lectura: solo el perfil de {owner} puede cambiarla. Aun así puedes añadirla a tu Anki.",
+      "readOnly": "🔒 Solo lectura: se puede cambiar cuando Anki está abierto en el perfil de {owner}. Aun así puedes añadirla a tu Anki.",
       "madeQuick": "Creadas en modo rápido.",
       "carefulAgain": "🎯 Rehacer en modo cuidado"
     },
@@ -287,8 +288,7 @@
     },
     "lessons": {
       "title": "Mis lecciones",
-      "ankiProfile": "👤 Perfil de Anki: <strong>{profile}</strong>",
-      "none": "No hay lecciones para este perfil.",
+      "none": "No hay lecciones.",
       "noDeck": "Sin mazo",
       "search": "🔍 Buscar una lección…",
       "recent": "Recientes",
@@ -426,7 +426,6 @@
         "high": "p. ej. prepara la selectividad: fórmulas exactas, demostraciones paso a paso."
       },
       "pick": "¿Para quién es la próxima lección? Toca su nombre.",
-      "ofProfile": "Los niños del perfil de Anki «{profile}»:",
       "edit": "Editar a {name}"
     },
     "copy": {
@@ -434,7 +433,7 @@
       "title": "Copiar para…",
       "hint": "Una copia propia: sus mazos, sus propias tarjetas en Anki. Gratis: no se pide nada a la IA.",
       "done": "Copiada para {name}: aquí está su lección.",
-      "doneElsewhere": "Copiada para {name}: está en sus lecciones, perfil de Anki «{profile}»."
+      "doneElsewhere": "Copiada para {name}: está en sus lecciones."
     },
     "report": {
       "button": "Denunciar",

@@ -42,9 +42,25 @@ const childrenPart = {
     storage("set", this.childId, CHILD);
   },
 
-  // The open Anki profile, shown unless its one child's chip says it (a profile per child)
+  // The open Anki profile, under the name: where the cards go, always said on the computer
   profileShown() {
-    return this.anki.available && this.profiles && this.children.filter((c) => this.ofProfile(c)).length !== 1;
+    return this.anki.available && this.profiles;
+  },
+
+  // The child an Anki profile is for, when it is one child's alone (a profile per child)
+  profileChild(profile) {
+    const theirs = this.children.filter((c) => c.anki_profile === profile);
+    return theirs.length === 1 ? theirs[0] : null;
+  },
+
+  // An Anki profile said with its child's name, when it has one
+  profileFor(profile) {
+    return this.profileChild(profile)?.name ?? profile;
+  },
+
+  // Whom the open lesson is for: its child, else the Anki profile that made it
+  lessonFor() {
+    return this.children.find((c) => c.id === this.lessonChild)?.name || this.lessonOwner;
   },
 
   currentChild() {
@@ -177,7 +193,7 @@ const childrenPart = {
         await this.openLesson(copy.id);
         this.notify(t("app.copy.done", { name: child.name }));
       } else {
-        this.notify(t("app.copy.doneElsewhere", { name: child.name, profile: child.anki_profile }));
+        this.notify(t("app.copy.doneElsewhere", { name: child.name }));
       }
     } catch (e) {
       sheet.error = e.message;
