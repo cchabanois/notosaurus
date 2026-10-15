@@ -200,7 +200,7 @@
     },
     "actions": {
       "generate": "✨ Karten erzeugen",
-      "startWithPhoto": "📷 Fotografiere zuerst die Lektion",
+      "startWithPhoto": "📷 Fotografiere die Lektion",
       "downloadApkg": "Die .apkg-Datei herunterladen",
       "addToAnki": "📥 Zu Anki hinzufügen",
       "updateInAnki": "🔄 In Anki aktualisieren",
