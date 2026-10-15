@@ -1,4 +1,4 @@
-"""Write static/note-types.json: the Anki note types as app/anki.py makes them (with a
+"""Write static/note-types.json: the Anki note types as app/note_types/ makes them (with a
 voice: the back's sound in an "Audio" field), in every variant the Android app uses. The
 app (android/, its assets copied from static/) makes its AnkiDroid note types from it
 instead of a copy of its own. A test checks it is up to date.

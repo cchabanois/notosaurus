@@ -94,14 +94,15 @@ come in as parameters), so that other programs can use it. A test keeps it that 
 | `app/main.py` | the FastAPI app: paired devices, errors, routers, static files |
 | `app/routes/` | the API's routes, one module per topic (prompts, generation, lessons, pictures, Anki, voices, admin, pages); `common.py` their shared helpers, `devices.py` the pairing check |
 | `app/lessons.py` | saved lessons, one folder each |
-| `app/anki.py` | `.apkg` builder (genanki, audio, reverse cards) |
+| `app/anki.py` | the notes a lesson gives and the `.apkg` builder (genanki) |
+| `app/note_types/` | the Anki note types, one module per family (text with its reverse, typed and dictation variants, diagram, picture, cloze, choice); `common.py` what they share |
 | `app/ankiconnect.py` | direct send through AnkiConnect or the add-on's bridge |
 | `app/prompts.py` | saved prompts |
 | `app/settings.py` | settings (the AI configuration and the app's own), API keys, admin password |
 | `app/i18n.py`, `static/i18n.js`, `static/i18n/` | languages |
 | `app/storage.py` | data folder, atomic JSON writes |
 | `static/` | the phone page and the settings page |
-| `static/app.js`, `static/app-*.js` | the phone page: its state and start in `app.js`, its methods by topic (photos, prompts, lessons, cards, Anki) |
+| `static/app.js`, `static/app-*.js` | the phone page: its state and start in `app.js`, its methods by topic (photos, prompts, lessons, cards, the AI correction, diagram labels, pictures, Anki, dictation, children, reports) |
 | `static/admin.js`, `static/admin-*.js` | the settings page (and the setup assistant): its state and start in `admin.js`, its methods by section (AI service, pictures, saving, Anki, lessons, phones, password) |
 | `android/` | the Android app (Kotlin): the same page in a WebView, its `/api` answered on the phone (lessons, AnkiDroid, the Notosaurus relay); see [android/README.md](android/README.md) |
 | `anki_addon/` | the Anki add-on: server launcher and an AnkiConnect-compatible bridge |
