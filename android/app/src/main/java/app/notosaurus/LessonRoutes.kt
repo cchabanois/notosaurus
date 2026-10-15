@@ -69,6 +69,7 @@ internal fun Route.lessonRoutes(server: LocalServer) {
                 }
             }
             lessons.delete(id)
+            exams.forgetLesson(id) // out of the tests it was in
             buildJsonObject {
                 put("deleted", true)
                 put("anki_deleted", inAnki)

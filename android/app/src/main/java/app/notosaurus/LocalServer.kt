@@ -71,6 +71,7 @@ class LocalServer(
     internal val relays = RelayDirectory(prefs, relayDirectory)
     internal val lessons = Lessons(File(dataDir, "lessons").apply { mkdirs() })
     internal val children = Children(prefs) // the children the lessons are for (the page's "For: …")
+    internal val exams = Exams(prefs, lessons) // the tests to prepare: lessons under one tag in AnkiDroid
     internal val texts = PageTexts(web, languages)
     internal val prompts = Prompts(File(dataDir, "prompts.json"), texts)
     internal val speech = Speech(File(dataDir, "audio").apply { mkdirs() }, prefs, ::relay) // the backs read aloud, kept
@@ -120,6 +121,7 @@ class LocalServer(
         dictationRoutes(this@LocalServer)
         pictureRoutes(this@LocalServer)
         ankiRoutes(this@LocalServer)
+        examRoutes(this@LocalServer)
         subscriptionRoutes(this@LocalServer)
 
         // --- The page

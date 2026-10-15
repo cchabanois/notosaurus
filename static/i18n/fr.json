@@ -458,6 +458,57 @@
         "card": "Supprimer la carte",
         "picture": "Retirer l'image"
       }
+    },
+    "exams": {
+      "button": "📌 Contrôle…",
+      "buttonIn": "📌 {names}",
+      "title": "Contrôles à préparer",
+      "titleFor": "Un contrôle pour cette leçon",
+      "hint": "Un contrôle réunit des leçons, entières ou quelques cartes, sous une étiquette dans Anki : révisées ensemble avec l'étude personnalisée d'Anki, puis de retour dans leurs paquets.",
+      "none": "Aucun contrôle prévu.",
+      "noLessons": "Aucune leçon dans ce contrôle : ajoutez-en une depuis sa relecture.",
+      "new": "+ Nouveau contrôle",
+      "name": "Nom",
+      "namePlaceholder": "ex. : Interro SVT de lundi",
+      "date": "Date",
+      "create": "Créer",
+      "add": "Ajouter cette leçon",
+      "inWhole": "✓ Toute la leçon",
+      "inSome": "✓ {count} cartes",
+      "remove": "Retirer",
+      "pickCards": "Choisir les cartes",
+      "openLesson": "Ouvrir et choisir les cartes",
+      "back": "‹ Contrôles",
+      "whole": "toute la leçon",
+      "some": "{count} cartes",
+      "inAnki": "{sent} cartes sur {total} dans Anki",
+      "notSent": "Pas encore dans Anki : l'étiquette viendra avec la leçon à l'envoi.",
+      "tag": "Étiquette",
+      "ankiClosed": "Anki est fermé : l'étiquette suivra au prochain envoi.",
+      "delete": "Supprimer le contrôle",
+      "confirmDelete": "Supprimer « {name} » ? Les cartes restent dans Anki, sans son étiquette.",
+      "past": "Passé",
+      "picked": "{count} cartes pour {name}.",
+      "pick": {
+        "bar": "{count} cartes pour {name}",
+        "all": "Toutes",
+        "done": "Terminer",
+        "card": "Dans le contrôle"
+      },
+      "guide": {
+        "titleAndroid": "Le réviser dans AnkiDroid",
+        "titleDesktop": "Le réviser dans Anki",
+        "step1": "Ouvrez le paquet <strong>{deck}</strong>",
+        "openDeck": "Ouvrir dans AnkiDroid",
+        "step2android": "En bas, touchez <strong>Étude personnalisée</strong>",
+        "step2desktop": "Cliquez sur <strong>Étude personnalisée</strong> en bas de l'écran du paquet",
+        "step3": "Choisissez <strong>Étudier par état ou étiquette</strong>, puis <strong>Toutes les cartes</strong>",
+        "step4": "Cochez l'étiquette <strong>{tag}</strong> et validez",
+        "after": "Anki crée un paquet « Étude personnalisée » avec ces cartes ; une fois fini, elles retournent dans leurs paquets.",
+        "noDeck": "Les leçons sont dans des paquets différents. Dans Anki : <strong>Créer un paquet filtré</strong>, et collez cette recherche :",
+        "copy": "Copier",
+        "copied": "Copié"
+      }
     }
   },
   "admin": {
@@ -954,6 +1005,10 @@
       "same_id": "Deux enfants ont le même prénom.",
       "too_many": "Au plus {max} enfants.",
       "not_found": "Cet enfant n'existe plus : rechargez la page."
+    },
+    "exams": {
+      "not_found": "Ce contrôle n'existe plus : rechargez la page.",
+      "too_many": "Au plus {max} contrôles."
     }
   },
   "demo": {

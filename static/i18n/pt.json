@@ -458,6 +458,57 @@
         "card": "Eliminar o cartão",
         "picture": "Retirar a imagem"
       }
+    },
+    "exams": {
+      "button": "📌 Prova…",
+      "buttonIn": "📌 {names}",
+      "title": "Provas a preparar",
+      "titleFor": "Uma prova para esta lição",
+      "hint": "Uma prova reúne lições, inteiras ou algumas das suas cartas, sob uma etiqueta no Anki: revisadas juntas com o estudo personalizado do Anki e depois de volta aos seus baralhos.",
+      "none": "Nenhuma prova prevista.",
+      "noLessons": "Ainda não há lições nesta prova: adicione uma a partir da sua revisão.",
+      "new": "+ Nova prova",
+      "name": "Nome",
+      "namePlaceholder": "ex.: Prova de Ciências de segunda",
+      "date": "Data",
+      "create": "Criar",
+      "add": "Adicionar esta lição",
+      "inWhole": "✓ Lição inteira",
+      "inSome": "✓ {count} cartas",
+      "remove": "Retirar",
+      "pickCards": "Escolher as cartas",
+      "openLesson": "Abrir e escolher as cartas",
+      "back": "‹ Provas",
+      "whole": "lição inteira",
+      "some": "{count} cartas",
+      "inAnki": "{sent} de {total} cartas no Anki",
+      "notSent": "Ainda não está no Anki: a etiqueta virá com a lição ao enviar.",
+      "tag": "Etiqueta",
+      "ankiClosed": "O Anki está fechado: a etiqueta será posta no próximo envio.",
+      "delete": "Excluir a prova",
+      "confirmDelete": "Excluir “{name}”? As cartas ficam no Anki, sem a sua etiqueta.",
+      "past": "Passada",
+      "picked": "{count} cartas para {name}.",
+      "pick": {
+        "bar": "{count} cartas para {name}",
+        "all": "Todas",
+        "done": "Concluir",
+        "card": "Na prova"
+      },
+      "guide": {
+        "titleAndroid": "Revisá-la no AnkiDroid",
+        "titleDesktop": "Revisá-la no Anki",
+        "step1": "Abra o baralho <strong>{deck}</strong>",
+        "openDeck": "Abrir no AnkiDroid",
+        "step2android": "Embaixo, toque em <strong>Estudo personalizado</strong>",
+        "step2desktop": "Clique em <strong>Estudo personalizado</strong> no fim da tela do baralho",
+        "step3": "Escolha <strong>Estudar por estado do cartão ou etiqueta</strong> e depois <strong>Todas as cartas</strong>",
+        "step4": "Marque a etiqueta <strong>{tag}</strong> e confirme",
+        "after": "O Anki cria um baralho “Sessão de estudo personalizado” com estas cartas; ao terminar, elas voltam aos seus baralhos.",
+        "noDeck": "As lições estão em baralhos diferentes. No Anki: <strong>Criar baralho filtrado</strong>, e cole esta busca:",
+        "copy": "Copiar",
+        "copied": "Copiado"
+      }
     }
   },
   "admin": {
@@ -954,6 +1005,10 @@
       "same_id": "Dois filhos têm o mesmo nome.",
       "too_many": "No máximo {max} filhos.",
       "not_found": "Esta criança já não existe: recarregue a página."
+    },
+    "exams": {
+      "not_found": "Esta prova já não existe: recarregue a página.",
+      "too_many": "No máximo {max} provas."
     }
   },
   "demo": {

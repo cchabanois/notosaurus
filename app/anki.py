@@ -85,6 +85,7 @@ class _Export:
     audio: dict[str, Path]
     images: dict[int, tuple[Path, list[float] | None]]
     pictures: dict[int, Path]
+    extra_tags: dict[str, list[str]] | None = None  # card id → tags of the tests it is in (exams.py)
 
     def __post_init__(self):
         req = self.req
@@ -103,7 +104,7 @@ class _Export:
             nt=nt,
             deck=_deck_name(self.req.deck, card.subdeck),
             fields=fields,
-            tags=[_tag(t) for t in card.tags if t.strip()] + self.own_tags,
+            tags=[_tag(t) for t in card.tags if t.strip()] + self.own_tags + (self.extra_tags or {}).get(card.id, []),
             media=media,
         )
 
@@ -116,11 +117,13 @@ def notes(
     audio: dict[str, Path] | None = None,
     images: dict[int, tuple[Path, list[float] | None]] | None = None,
     pictures: dict[int, Path] | None = None,
+    extra_tags: dict[str, list[str]] | None = None,
 ) -> list[Note]:
     """The notes to send, in both output formats. `audio` maps a card back to its mp3;
     `images` maps the index of a diagram card to its diagram's image and crop;
-    `pictures`, the index of a picture card to its picture."""
-    export = _Export(req, audio or {}, images or {}, pictures or {})
+    `pictures`, the index of a picture card to its picture; `extra_tags`, a card's id to
+    the tags of the tests it is in (exams.card_tags)."""
+    export = _Export(req, audio or {}, images or {}, pictures or {}, extra_tags)
     result = []
     for i, card in enumerate(req.cards):
         if is_cloze(card.front.strip()):
@@ -235,6 +238,7 @@ def build_apkg(
     audio: dict[str, Path] | None = None,
     images: dict[int, tuple[Path, list[float] | None]] | None = None,
     pictures: dict[int, Path] | None = None,
+    extra_tags: dict[str, list[str]] | None = None,
 ) -> str:
     """Write the package to a temporary file and return its path.
 
@@ -243,7 +247,7 @@ def build_apkg(
     """
     decks: dict[str, genanki.Deck] = {}
     models: dict[NoteType, genanki.Model] = {}
-    all_notes = notes(req, audio, images, pictures)
+    all_notes = notes(req, audio, images, pictures, extra_tags)
     for note, guid in zip(all_notes, guids(all_notes), strict=True):
         deck = decks.setdefault(note.deck, genanki.Deck(_stable_id("deck", note.deck), note.deck))
         deck.add_note(

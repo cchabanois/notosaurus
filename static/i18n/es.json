@@ -458,6 +458,57 @@
         "card": "Eliminar la tarjeta",
         "picture": "Quitar la imagen"
       }
+    },
+    "exams": {
+      "button": "📌 Examen…",
+      "buttonIn": "📌 {names}",
+      "title": "Exámenes que preparar",
+      "titleFor": "Un examen para esta lección",
+      "hint": "Un examen reúne lecciones, enteras o algunas de sus tarjetas, bajo una etiqueta en Anki: se repasan juntas con el estudio personalizado de Anki y luego vuelven a sus mazos.",
+      "none": "Ningún examen previsto.",
+      "noLessons": "Este examen aún no tiene lecciones: añada una desde su revisión.",
+      "new": "+ Nuevo examen",
+      "name": "Nombre",
+      "namePlaceholder": "p. ej. Examen de Biología del lunes",
+      "date": "Fecha",
+      "create": "Crear",
+      "add": "Añadir esta lección",
+      "inWhole": "✓ Toda la lección",
+      "inSome": "✓ {count} tarjetas",
+      "remove": "Quitar",
+      "pickCards": "Elegir las tarjetas",
+      "openLesson": "Abrir y elegir las tarjetas",
+      "back": "‹ Exámenes",
+      "whole": "toda la lección",
+      "some": "{count} tarjetas",
+      "inAnki": "{sent} de {total} tarjetas en Anki",
+      "notSent": "Aún no está en Anki: la etiqueta llegará con la lección al enviarla.",
+      "tag": "Etiqueta",
+      "ankiClosed": "Anki está cerrado: la etiqueta se pondrá en el próximo envío.",
+      "delete": "Eliminar el examen",
+      "confirmDelete": "¿Eliminar «{name}»? Las tarjetas se quedan en Anki, sin su etiqueta.",
+      "past": "Pasado",
+      "picked": "{count} tarjetas para {name}.",
+      "pick": {
+        "bar": "{count} tarjetas para {name}",
+        "all": "Todas",
+        "done": "Listo",
+        "card": "En el examen"
+      },
+      "guide": {
+        "titleAndroid": "Repasarlo en AnkiDroid",
+        "titleDesktop": "Repasarlo en Anki",
+        "step1": "Abra el mazo <strong>{deck}</strong>",
+        "openDeck": "Abrir en AnkiDroid",
+        "step2android": "Abajo, toque <strong>Estudio personalizado</strong>",
+        "step2desktop": "Haga clic en <strong>Estudio personalizado</strong> al pie de la pantalla del mazo",
+        "step3": "Elija <strong>Estudiar por estado o etiqueta</strong> y luego <strong>Todas las tarjetas</strong>",
+        "step4": "Marque la etiqueta <strong>{tag}</strong> y confirme",
+        "after": "Anki crea un mazo «Sesión de estudio personalizado» con estas tarjetas; al terminar, vuelven a sus mazos.",
+        "noDeck": "Las lecciones están en mazos distintos. En Anki: <strong>Crear mazo filtrado</strong>, y pegue esta búsqueda:",
+        "copy": "Copiar",
+        "copied": "Copiado"
+      }
     }
   },
   "admin": {
@@ -954,6 +1005,10 @@
       "same_id": "Dos hijos tienen el mismo nombre.",
       "too_many": "Como máximo {max} hijos.",
       "not_found": "Este niño ya no existe: recargue la página."
+    },
+    "exams": {
+      "not_found": "Este examen ya no existe: recargue la página.",
+      "too_many": "Como máximo {max} exámenes."
     }
   },
   "demo": {

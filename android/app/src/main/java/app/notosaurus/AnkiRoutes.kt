@@ -50,7 +50,9 @@ internal fun Route.ankiRoutes(server: LocalServer) {
             // The lesson's notes from its last send, by card: a corrected front updates its own
             val sentBefore = (lessons.get(lessonId)?.get("anki_notes") as? JsonObject)
                 ?.mapNotNull { (card, note) -> note.jsonPrimitive.longOrNull?.let { card to it } }?.toMap().orEmpty()
-            val media = Media(sounds, pictures, photos, lessonId, frames, sentBefore)
+            // The tests the lesson is in: their tags on its cards' notes (Exams.kt)
+            val extraTags = if (lessonId.isEmpty()) emptyMap() else exams.cardTags(lessonId, deck.cards.map { it.id })
+            val media = Media(sounds, pictures, photos, lessonId, frames, sentBefore, extraTags)
             val options = Options(
                 reverse = on("reverse"), typing = on("typing"), dictation = dictation, dictationOnly = on("dictation_only"),
                 move = !switches.off("anki.move"),

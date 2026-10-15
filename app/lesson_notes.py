@@ -3,7 +3,7 @@ lesson with them."""
 
 import asyncio
 
-from . import anki, ankiconnect, lessons
+from . import anki, ankiconnect, exams, lessons
 from .errors import AppError
 from .models import ExportRequest, Lesson, LessonIn
 
@@ -63,4 +63,5 @@ async def delete_lesson(lesson: Lesson, in_anki: bool) -> dict:
             sync_skipped=sent.sync_skipped,
         )
     await asyncio.to_thread(lessons.delete, lesson.id)
+    await asyncio.to_thread(exams.forget_lesson, lesson.id)  # out of the tests it was in
     return result

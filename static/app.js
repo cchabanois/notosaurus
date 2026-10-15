@@ -194,6 +194,9 @@ document.addEventListener("alpine:init", () => {
     lessonShared: false,         // visible from every profile (shared before copies: only the owner's profile can change it)
     lessonChild: "",             // the child the open lesson is for
     copySheet: { open: false, busy: false, error: "" },  // the open lesson copied for another child
+    exams: [],  // the tests to prepare (app-exams.js): lessons under one tag in Anki
+    examSheet: { open: false, view: "list", exam: null, draft: { name: "", date: "" }, busy: false, error: "", copied: false },
+    examPick: null,  // choosing the open lesson's cards for a test: { id, name, selected: Set }
     lessonPrompt: "",            // prompt text the open lesson was generated with
     frames: [],                  // diagram frames of the open lesson: what Anki shows of each photo
     sending: false,
@@ -251,7 +254,7 @@ document.addEventListener("alpine:init", () => {
       } catch {}
       this.loadSwitches();  // not waited for: the relay may be starting
       this.$watch("quick", (on) => storage("set", on ? "0" : "1", CAREFUL));
-      await Promise.all([this.loadPrompts(storage("get"), true), this.loadLessons(), this.loadChildren()]);
+      await Promise.all([this.loadPrompts(storage("get"), true), this.loadLessons(), this.loadChildren(), this.loadExams()]);
       this.checkAnki();
       // Anki may be started later: check again when coming back to the app.
       document.addEventListener("visibilitychange", () => {
@@ -290,6 +293,7 @@ document.addEventListener("alpine:init", () => {
     ...ankiPart,
     ...dictationPart,
     ...childrenPart,
+    ...examsPart,
     ...reportPart,
     ...askConfirmPart,
   }));

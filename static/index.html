@@ -28,6 +28,7 @@
   <script defer src="app-anki.js"></script>
   <script defer src="app-dictation.js"></script>
   <script defer src="app-children.js"></script>
+  <script defer src="app-exams.js"></script>
   <script defer src="app-report.js"></script>
   <script defer src="ask-confirm.js"></script>
   <script defer src="app.js"></script>
@@ -269,6 +270,9 @@
       <!-- The lesson for another child too: a copy of its own (its decks, its Anki profile) -->
       <button type="button" class="btn soft copy-lesson" x-show="lessonId && copyTargets().length"
               @click="copySheet = { open: true, busy: false, error: '' }" x-text="$t('app.copy.button')"></button>
+      <!-- The lesson in a test to prepare: its cards tagged in Anki, revised together (app-exams.js) -->
+      <button type="button" class="btn soft copy-lesson" x-show="lessonId && !readOnly()" @click="openExams()"
+              x-text="examButtonLabel()"></button>
       <p class="count-line" x-text="$t('common.count.cards', { count: cards.length })"></p>
 
       <form class="revise" x-show="!readOnly()" @submit.prevent="revise()">
@@ -321,6 +325,11 @@
       <div class="cards">
         <template x-for="card in cards" :key="card.key">
           <article class="flash" :class="{ changed: card._state, 'has-explain': card._explain?.open, 'has-diagram': card.mask, 'has-picture': card.picture || card.picture_prompt || card.figure || card._panel }">
+            <!-- Choosing the cards of a test (app-exams.js): one tick per card -->
+            <label class="pick" x-cloak x-show="examPick">
+              <input type="checkbox" :checked="examPick?.selected.has(card.id)" @change="togglePick(card)"
+                     :aria-label="$t('app.exams.pick.card')">
+            </label>
             <!-- Diagram label: the photo with every label hidden, this card's mask highlighted and movable -->
             <template x-if="card.mask && photoFor(card)">
               <div class="diagram">
@@ -547,7 +556,16 @@
   </main>
 
   <!-- Bottom action bar -->
-  <div class="bottom-bar" x-show="bottomBar()">
+  <!-- Choosing a test's cards: how many, finish (app-exams.js) -->
+  <div class="bottom-bar" x-cloak x-show="examPick">
+    <div class="bar-row pick-bar">
+      <span class="pick-count" x-text="$t('app.exams.pick.bar', { count: examPick?.selected.size ?? 0, name: examPick?.name ?? '' })"></span>
+      <button class="btn soft" @click="pickAll()" x-text="$t('app.exams.pick.all')"></button>
+      <button class="btn soft" @click="cancelPick()" x-text="$t('common.cancel')"></button>
+      <button class="btn primary" @click="finishPick()" x-text="$t('app.exams.pick.done')"></button>
+    </div>
+  </div>
+  <div class="bottom-bar" x-show="bottomBar() && !examPick">
     <button class="btn primary wide" x-show="!cards.length" @click="extract()" :disabled="!photos.length || !canGenerate()"
             x-text="photos.length ? $t('app.actions.generate') : $t('app.actions.startWithPhoto')"></button>
     <div class="bar-row" x-show="cards.length">
@@ -601,6 +619,21 @@
     </label>
     <input type="search" class="lesson-search" x-show="manyLessons()" x-model="lessonQuery"
            :placeholder="$t('app.lessons.search')" :aria-label="$t('app.lessons.search')">
+    <!-- The tests to prepare: lessons under one tag in Anki, revised together (app-exams.js) -->
+    <section class="exam-list" x-show="exams.length">
+      <h3 class="exam-head" x-text="$t('app.exams.title')"></h3>
+      <ul class="child-rows">
+        <template x-for="e in exams" :key="e.id">
+          <li>
+            <button type="button" class="child-row" @click="lessonsOpen = false; openExams(e)">
+              <strong x-text="e.name"></strong>
+              <small class="muted" x-text="examDate(e)"></small>
+              <small class="muted" x-text="$t('common.count.lessons', { count: e.lessons.length })"></small>
+            </button>
+          </li>
+        </template>
+      </ul>
+    </section>
     <!-- By subject (the deck's first level), the most recent first; see lessonSections() -->
     <div class="lesson-list">
       <p class="empty" x-show="!visibleLessons().length" x-text="$t('app.lessons.none')"></p>
@@ -848,6 +881,112 @@
             <button type="button" class="btn primary" @click="saveChildren()" :disabled="childrenSheet.saving || !c.name.trim()"
                     x-text="$t('app.children.save')"></button>
           </div>
+        </div>
+      </template>
+    </div>
+  </aside>
+
+  <!-- The tests to prepare (app-exams.js): the list, with the open lesson's place in each;
+       one test: how to revise it in Anki, its lessons -->
+  <div class="sheet-backdrop" x-cloak x-show="examSheet.open" x-transition.opacity @click="examSheet.open = false"></div>
+  <aside class="sheet" x-cloak x-show="examSheet.open" @keydown.escape.window="asking.open || (examSheet.open = false)"
+         role="dialog" :aria-label="$t('app.exams.title')">
+    <div class="sheet-handle"></div>
+    <div class="sheet-head">
+      <button type="button" class="link back" x-show="examSheet.view === 'detail'" @click="backToExams()" x-text="$t('app.exams.back')"></button>
+      <h2 x-show="examSheet.view === 'list'" x-text="lessonId ? $t('app.exams.titleFor') : $t('app.exams.title')"></h2>
+      <h2 x-show="examSheet.view === 'detail'" x-text="examSheet.exam?.name ?? ''"></h2>
+      <button class="icon-btn" @click="examSheet.open = false" :aria-label="$t('common.close')">✕</button>
+    </div>
+
+    <!-- Every test: the open lesson added to one, whole or some cards; a new one -->
+    <div class="sheet-body children" x-show="examSheet.view === 'list'">
+      <p class="hint" x-text="$t('app.exams.hint')"></p>
+      <p class="empty" x-show="!exams.length" x-text="$t('app.exams.none')"></p>
+      <ul class="child-rows exam-rows">
+        <template x-for="e in exams" :key="e.id">
+          <li :class="{ current: lessonId && examPart(e) }">
+            <button type="button" class="child-row" @click="showExam(e)" :disabled="examSheet.busy">
+              <strong x-text="e.name"></strong>
+              <small class="muted" x-text="examDate(e)"></small>
+              <small class="muted" x-text="$t('common.count.lessons', { count: e.lessons.length })"></small>
+              <span class="badge" x-show="examPast(e)" x-text="$t('app.exams.past')"></span>
+            </button>
+            <div class="exam-actions" x-show="lessonId">
+              <button type="button" class="chip-btn" :class="{ on: examPart(e) }" @click="toggleExamLesson(e)" :disabled="examSheet.busy"
+                      x-text="!examPart(e) ? $t('app.exams.add') : examPart(e).cards === null ? $t('app.exams.inWhole') : $t('app.exams.inSome', { count: examPart(e).cards.length })"></button>
+              <button type="button" class="chip-btn" @click="startPick(e)" :disabled="examSheet.busy" x-text="$t('app.exams.pickCards')"></button>
+            </div>
+          </li>
+        </template>
+      </ul>
+      <form class="exam-new" @submit.prevent="createExam()">
+        <h3 x-text="$t('app.exams.new')"></h3>
+        <label>
+          <span x-text="$t('app.exams.name')"></span>
+          <input type="text" x-model="examSheet.draft.name" maxlength="60" required :placeholder="$t('app.exams.namePlaceholder')">
+        </label>
+        <label>
+          <span x-text="$t('app.exams.date')"></span>
+          <input type="date" x-model="examSheet.draft.date">
+        </label>
+        <button type="submit" class="btn primary" :disabled="examSheet.busy || !examSheet.draft.name.trim()" x-text="$t('app.exams.create')"></button>
+      </form>
+      <p class="hint error-text" x-show="examSheet.error" x-text="examSheet.error"></p>
+    </div>
+
+    <!-- One test: how to revise it in Anki, then its lessons -->
+    <div class="sheet-body children" x-show="examSheet.view === 'detail' && examSheet.exam">
+      <template x-if="examSheet.exam">
+        <div>
+          <p class="hint" x-show="examSheet.exam.date">
+            <span x-text="examDate(examSheet.exam)"></span>
+            <span class="badge" x-show="examPast(examSheet.exam)" x-text="$t('app.exams.past')"></span>
+          </p>
+          <section class="exam-guide" x-show="examSheet.exam.lessons.length">
+            <h3 x-text="reviewInAnki ? $t('app.exams.guide.titleAndroid') : $t('app.exams.guide.titleDesktop')"></h3>
+            <ol x-show="examSheet.exam.deck">
+              <li>
+                <span x-html="$th('app.exams.guide.step1', { deck: examSheet.exam.deck })"></span>
+                <button type="button" class="chip-btn" x-show="reviewInAnki" @click="openExamDeck(examSheet.exam)" x-text="$t('app.exams.guide.openDeck')"></button>
+              </li>
+              <li x-html="reviewInAnki ? $th('app.exams.guide.step2android') : $th('app.exams.guide.step2desktop')"></li>
+              <li x-html="$th('app.exams.guide.step3')"></li>
+              <li x-html="$th('app.exams.guide.step4', { tag: examSheet.exam.tag })"></li>
+            </ol>
+            <p class="hint" x-show="examSheet.exam.deck" x-text="$t('app.exams.guide.after')"></p>
+            <div x-show="!examSheet.exam.deck">
+              <p class="hint" x-html="$th('app.exams.guide.noDeck')"></p>
+              <p class="exam-search">
+                <code x-text="examSheet.exam.search"></code>
+                <button type="button" class="chip-btn" @click="copyExamSearch(examSheet.exam)"
+                        x-text="examSheet.copied ? $t('app.exams.guide.copied') : $t('app.exams.guide.copy')"></button>
+              </p>
+            </div>
+          </section>
+          <ul class="child-rows exam-lessons">
+            <template x-for="p in examSheet.exam.lessons" :key="p.lesson">
+              <li>
+                <div class="child-row static">
+                  <strong x-text="examLessonTitle(p)"></strong>
+                  <small class="muted" x-text="p.cards === null ? $t('app.exams.whole') : $t('app.exams.some', { count: p.total })"></small>
+                  <small class="muted" x-show="p.in_anki" x-text="$t('app.exams.inAnki', { sent: p.in_anki, total: p.total })"></small>
+                  <small class="warn" x-show="!p.in_anki" x-text="$t('app.exams.notSent')"></small>
+                </div>
+                <div class="exam-actions">
+                  <button type="button" class="chip-btn" x-show="p.lesson === lessonId" @click="startPick(examSheet.exam)" x-text="$t('app.exams.pickCards')"></button>
+                  <button type="button" class="chip-btn" x-show="p.lesson !== lessonId" @click="pickIn(examSheet.exam, p)" x-text="$t('app.exams.openLesson')"></button>
+                  <button type="button" class="chip-btn" @click="removeExamLesson(examSheet.exam, p)" :disabled="examSheet.busy" x-text="$t('app.exams.remove')"></button>
+                </div>
+              </li>
+            </template>
+          </ul>
+          <p class="hint" x-show="!examSheet.exam.lessons.length" x-text="$t('app.exams.noLessons')"></p>
+          <p class="hint"><span x-text="$t('app.exams.tag')"></span> : <code x-text="examSheet.exam.tag"></code></p>
+          <div class="sheet-actions">
+            <button type="button" class="btn danger-soft" @click="deleteExam(examSheet.exam)" :disabled="examSheet.busy" x-text="$t('app.exams.delete')"></button>
+          </div>
+          <p class="hint error-text" x-show="examSheet.error" x-text="examSheet.error"></p>
         </div>
       </template>
     </div>

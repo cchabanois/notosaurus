@@ -458,6 +458,57 @@
         "card": "Elimina la carta",
         "picture": "Rimuovi l'immagine"
       }
+    },
+    "exams": {
+      "button": "📌 Verifica…",
+      "buttonIn": "📌 {names}",
+      "title": "Verifiche da preparare",
+      "titleFor": "Una verifica per questa lezione",
+      "hint": "Una verifica raccoglie lezioni, intere o alcune delle loro carte, sotto un tag in Anki: ripassate insieme con lo studio personalizzato di Anki, poi di nuovo nei loro mazzi.",
+      "none": "Nessuna verifica prevista.",
+      "noLessons": "Nessuna lezione in questa verifica: aggiungetene una dalla sua revisione.",
+      "new": "+ Nuova verifica",
+      "name": "Nome",
+      "namePlaceholder": "es. Verifica di scienze di lunedì",
+      "date": "Data",
+      "create": "Crea",
+      "add": "Aggiungi questa lezione",
+      "inWhole": "✓ Tutta la lezione",
+      "inSome": "✓ {count} carte",
+      "remove": "Togli",
+      "pickCards": "Scegli le carte",
+      "openLesson": "Apri e scegli le carte",
+      "back": "‹ Verifiche",
+      "whole": "tutta la lezione",
+      "some": "{count} carte",
+      "inAnki": "{sent} carte su {total} in Anki",
+      "notSent": "Non ancora in Anki: il tag arriverà con la lezione all'invio.",
+      "tag": "Tag",
+      "ankiClosed": "Anki è chiuso: il tag seguirà al prossimo invio.",
+      "delete": "Elimina la verifica",
+      "confirmDelete": "Eliminare «{name}»? Le carte restano in Anki, senza il suo tag.",
+      "past": "Passata",
+      "picked": "{count} carte per {name}.",
+      "pick": {
+        "bar": "{count} carte per {name}",
+        "all": "Tutte",
+        "done": "Fatto",
+        "card": "Nella verifica"
+      },
+      "guide": {
+        "titleAndroid": "Ripassarla in AnkiDroid",
+        "titleDesktop": "Ripassarla in Anki",
+        "step1": "Aprite il mazzo <strong>{deck}</strong>",
+        "openDeck": "Apri in AnkiDroid",
+        "step2android": "In basso, toccate <strong>Studio personalizzato</strong>",
+        "step2desktop": "Fate clic su <strong>Studio personalizzato</strong> in fondo alla schermata del mazzo",
+        "step3": "Scegliete <strong>Studia per stato della carta o tag</strong>, poi <strong>Tutte le carte</strong>",
+        "step4": "Spuntate il tag <strong>{tag}</strong> e confermate",
+        "after": "Anki crea un mazzo «Sessione di studio personalizzato» con queste carte; alla fine tornano nei loro mazzi.",
+        "noDeck": "Le lezioni sono in mazzi diversi. In Anki: <strong>Crea mazzo filtrato</strong>, e incollate questa ricerca:",
+        "copy": "Copia",
+        "copied": "Copiato"
+      }
     }
   },
   "admin": {
@@ -954,6 +1005,10 @@
       "same_id": "Due figli hanno lo stesso nome.",
       "too_many": "Al massimo {max} figli.",
       "not_found": "Questo bambino non esiste più: ricarica la pagina."
+    },
+    "exams": {
+      "not_found": "Questa verifica non esiste più: ricaricate la pagina.",
+      "too_many": "Al massimo {max} verifiche."
     }
   },
   "demo": {

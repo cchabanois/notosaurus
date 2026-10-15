@@ -106,6 +106,8 @@ class LocalServerTest {
         override fun delete(notes: List<Long>) = notes.size.also { deleted += notes }
         val reviewed = mutableListOf<String>()
         override fun review(deck: String) = (deck in deckNames() || sent.any { it.deck == deck }).also { if (it) reviewed += deck }
+        val retagged = mutableListOf<Pair<Map<String, Set<Long>>, Map<String, Set<Long>>>>() // (added, removed)
+        override fun retag(add: Map<String, Set<Long>>, remove: Map<String, Set<Long>>) = !broken.also { if (!broken) retagged += add to remove }
         override fun send(deck: Deck, media: Media, options: Options): Sent {
             if (broken) error("no collection")
             sent += deck
@@ -602,6 +604,55 @@ class LocalServerTest {
             setBody("""{"deck": "D", "cards": ${lesson["cards"]}, "voice": "", "lesson_id": "${lesson.string("id")}"}""")
         }
         assertEquals(false, anki.options?.move)
+    }
+
+    @Test
+    fun aTestToPrepareTagsItsLessonsNotesInAnkiDroid() = app { client ->
+        relayAnswers("""{"deck": {"deck": "SVT::Chapitre 1", "cards": [{"front": "Q1", "back": "R1"}, {"front": "Q2", "back": "R2"}]}, "turns": [], "usage": {"credits": 1, "credits_left": 99}}""")
+        val lesson = client.submitFormWithBinaryData("/api/extract", formData { append("prompt", "Questions") }) { page() }.json().jsonObject
+        relay.takeRequest(5, TimeUnit.SECONDS)
+        val id = lesson.string("id")
+        val ids = lesson["cards"]!!.jsonArray.map { it.jsonObject.string("id") }
+        assertEquals("[]", client.get("/api/exams") { page() }.bodyAsText())
+
+        // Made before the lesson is in AnkiDroid: nothing to tag yet; sent, the notes carry the tag
+        val made = client.put("/api/exams/interro-svt") {
+            page(); contentType(ContentType.Application.Json)
+            setBody("""{"name": "Interro SVT de lundi", "date": "2026-10-20", "lessons": [{"lesson": "$id"}]}""")
+        }.json().jsonObject
+        assertEquals("Exam::Interro_SVT_de_lundi", made.string("tag"))
+        assertEquals("tag:Exam::Interro_SVT_de_lundi", made.string("search"))
+        assertEquals("SVT::Chapitre 1", made.string("deck"))
+        assertEquals(0, made["lessons"]!!.jsonArray.single().jsonObject["in_anki"]!!.jsonPrimitive.int)
+        assertTrue(made["anki"]!!.jsonPrimitive.content == "true" && anki.retagged.isEmpty())
+        anki.sentNotes = mapOf(ids[0] to 11L, ids[1] to 12L)
+        client.post("/api/anki/send") {
+            page(); contentType(ContentType.Application.Json)
+            setBody("""{"deck": "SVT::Chapitre 1", "cards": ${lesson["cards"]}, "voice": "", "lesson_id": "$id"}""")
+        }
+        assertEquals(setOf("Exam::Interro_SVT_de_lundi"), anki.media.extraTags[ids[0]])
+        assertEquals(2, client.get("/api/exams") { page() }.json().jsonArray.single().jsonObject["lessons"]!!.jsonArray.single().jsonObject["in_anki"]!!.jsonPrimitive.int)
+
+        // Some of its cards only: the other note loses the tag; renamed: the tag follows
+        client.put("/api/exams/interro-svt") {
+            page(); contentType(ContentType.Application.Json)
+            setBody("""{"name": "Interro SVT de lundi", "date": "2026-10-20", "lessons": [{"lesson": "$id", "cards": ["${ids[0]}"]}]}""")
+        }
+        assertEquals(emptyMap<String, Set<Long>>() to mapOf("Exam::Interro_SVT_de_lundi" to setOf(12L)), anki.retagged.last())
+        client.put("/api/exams/interro-svt") {
+            page(); contentType(ContentType.Application.Json)
+            setBody("""{"name": "Brevet blanc", "lessons": [{"lesson": "$id"}]}""")
+        }
+        assertEquals(mapOf("Exam::Brevet_blanc" to setOf(11L, 12L)) to mapOf("Exam::Interro_SVT_de_lundi" to setOf(11L)), anki.retagged.last())
+
+        // Deleted: the tag taken off; a lesson deleted leaves the tests
+        assertEquals("""{"deleted":true,"anki":true}""", client.delete("/api/exams/interro-svt") { page() }.bodyAsText())
+        assertEquals(mapOf("Exam::Brevet_blanc" to setOf(11L, 12L)), anki.retagged.last().second)
+        client.put("/api/exams/brevet") { page(); contentType(ContentType.Application.Json); setBody("""{"name": "Brevet", "lessons": [{"lesson": "$id"}, {"lesson": "2026-01-01-gone"}]}""") }
+        client.delete("/api/lessons/$id") { page() }
+        assertEquals(0, client.get("/api/exams") { page() }.json().jsonArray.single().jsonObject["lessons"]!!.jsonArray.size)
+        val refused = client.put("/api/exams/Bad id") { page(); contentType(ContentType.Application.Json); setBody("""{"name": "x"}""") }
+        assertEquals(400, refused.status.value)
     }
 
     @Test
