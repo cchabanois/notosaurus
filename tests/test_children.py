@@ -60,9 +60,9 @@ def test_a_lesson_for_a_child(client, monkeypatch):
 
     seen = {}
 
-    async def extract_cards(s, images, prompt, deck="", decks=(), **options):
-        seen["instructions"] = options["instructions"]
-        return await llm.extract_cards(s, images, prompt, deck, decks)
+    async def extract_cards(s, images, prompt, options, **kwargs):
+        seen["instructions"] = options.instructions
+        return await llm.extract_cards(s, images, prompt, options)
 
     monkeypatch.setattr(generation, "extract_cards", extract_cards)
     jules = {
@@ -97,9 +97,9 @@ def test_no_childs_name_in_the_decks_the_ai_sees(client, monkeypatch):
     client.put("/api/children", json=[every[0].model_dump()])
     seen = {}
 
-    async def extract_cards(s, images, prompt, deck="", decks=(), **options):
-        seen["decks"] = decks
-        return await llm.extract_cards(s, images, prompt, deck, decks)
+    async def extract_cards(s, images, prompt, options, **kwargs):
+        seen["decks"] = options.decks
+        return await llm.extract_cards(s, images, prompt, options)
 
     monkeypatch.setattr(generation, "extract_cards", extract_cards)
     first = client.post("/api/extract", data={"prompt": "FR → ES", "child": "jules"}).json()

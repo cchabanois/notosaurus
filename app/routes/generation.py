@@ -15,7 +15,7 @@ from fastapi.responses import FileResponse, JSONResponse, StreamingResponse
 from notosaurus_core import diagrams, llm, tts
 from notosaurus_core.errors import loggable
 from notosaurus_core.images import refuse_bomb
-from notosaurus_core.llm import Image, extract_cards
+from notosaurus_core.llm import ExtractOptions, Image, extract_cards
 
 from .. import access, ankiconnect, children, decks, lessons, media, prompts, settings, usage
 from ..anki import build_apkg
@@ -89,8 +89,36 @@ async def _generate(
     """Read the photos (or, without photos, work from the prompt alone): the lesson's
     new content, not saved yet. `images`: the form's, read already. Its AI calls go to
     the caller's usage.metered (paid for even if the lesson isn't saved)."""
-    prompt, voice = form.prompt, form.voice
-    if not images and not prompt.strip():
+    data, texts = await _inputs(form, images)
+    profile = await ankiconnect.active_profile() or ""  # the lesson belongs to this Anki profile
+    s = settings.current()
+    child, known = await _child(form, profile)
+    options = ExtractOptions(
+        deck=form.deck,
+        decks=known,
+        fun_facts=s.fun_facts,
+        helps=s.helps,
+        pictures=s.pictures,
+        page_texts=texts,
+        instructions=settings.standing_instructions(s, children.for_ai(child)),
+        quick=form.quick,
+        existing=existing,
+    )
+    found = await extract_cards(s, data, form.prompt, options, on_card=on_card)
+    if form.prompt_id is not None:
+        await asyncio.to_thread(prompts.mark_used, form.prompt_id)
+    # Photos taken sideways are saved upright (masks and diagram frames turn with them)
+    photos = diagrams.straighten([i.data for i in data], found.deck.cards, found.turns, found.frames)
+    content = await _content(form, found, s, lang, child)
+    # In the child's decks ("Jules::{classe}"), its own: never one that exists already
+    # (another lesson's, or the user's in Anki)
+    content.deck = await decks.new_name(children.deck_for(child, content.deck), profile or None, but=lesson_id)
+    return Generated(content, photos, form.prompt, profile, found.frames, found.choice, texts)
+
+
+async def _inputs(form: GenerationForm, images: list[Photo]) -> tuple[list[Image], list[str]]:
+    """The photos checked and read, and their pages' texts: refused before any AI call."""
+    if not images and not form.prompt.strip():
         raise AppError("extract.no_input")
     if len(images) > MAX_IMAGES:
         raise AppError("extract.too_many", max=MAX_IMAGES)
@@ -101,44 +129,34 @@ async def _generate(
         data.append(Image(await img.read(), img.content_type))
     for img in data:  # a decompression bomb is refused before any AI call
         refuse_bomb(img.data)
-    texts = _page_texts(form.page_texts, len(data))
-    profile = await ankiconnect.active_profile() or ""  # the lesson belongs to this Anki profile
+    return data, _page_texts(form.page_texts, len(data))
+
+
+async def _child(form: GenerationForm, profile: str) -> tuple[children.Child | None, list[str]]:
+    """The child the lesson is for (chosen, else its Anki profile's), and the decks the AI
+    may reuse: this child's and no child's, without the children's levels (no child's
+    name to the AI, nothing of another child's lessons)."""
     known = await decks.known(profile)
-    s = settings.current()
     every = await asyncio.to_thread(children.list_all)
-    child = children.chosen(every, form.child, profile)  # chosen, else its Anki profile's
-    # The decks the AI may reuse: this child's and no child's, without the children's levels
-    # (no child's name to the AI, nothing of another child's lessons)
-    known = children.decks_for_ai(known, every, child)
-    found = await extract_cards(
-        s,
-        data,
-        prompt,
-        form.deck,
-        known,
-        fun_facts=s.fun_facts,
-        page_texts=texts,
-        helps=s.helps,
-        pictures=s.pictures,
-        instructions=settings.standing_instructions(s, children.for_ai(child)),
-        quick=form.quick,
-        on_card=on_card,
-        existing=existing,
-    )
-    if form.prompt_id is not None:
-        await asyncio.to_thread(prompts.mark_used, form.prompt_id)
-    # Photos taken sideways are saved upright (masks and diagram frames turn with them)
-    photos = diagrams.straighten([i.data for i in data], found.deck.cards, found.turns, found.frames)
-    # The options: Notosaurus's prompt's own, else what the AI read in the instructions (a
-    # typed answer, the reverse card, a dictation) or recognised (prompt "Automatic": a dictation)
+    child = children.chosen(every, form.child, profile)
+    return child, children.decks_for_ai(known, every, child)
+
+
+async def _content(
+    form: GenerationForm, found: llm.Extracted, s: settings.Settings, lang: str, child: children.Child | None
+) -> LessonIn:
+    """The lesson made of what the AI found, with its options: Notosaurus's prompt's own,
+    else what the AI read in the instructions (a typed answer, the reverse card, a
+    dictation) or recognised (prompt "Automatic": a dictation)."""
     dictation_only = form.dictation_only or found.dictation
     typing = form.typing or found.typing
     dictation = form.dictation or found.dictation_card or dictation_only
     foreign = bool(_learned(found.back_language, lang, spelling=False))
+    voice = form.voice
     if voice.strip().lower() == "auto":  # the voice of the language the backs are in
         heard = typing or dictation or found.read_aloud  # in the pupil's own language too
         voice = await tts.voice_for(_learned(found.back_language, lang, heard), s.voices)
-    content = LessonIn(
+    return LessonIn(
         **found.deck.model_dump(),
         voice=voice,
         rate=_rate(s.tts_rate, found.speed, foreign=foreign, dictation=dictation),
@@ -148,10 +166,6 @@ async def _generate(
         dictation_only=dictation_only,
         child=child.id if child else "",
     )
-    # In the child's decks ("Jules::{classe}"), its own: never one that exists already
-    # (another lesson's, or the user's in Anki)
-    content.deck = await decks.new_name(children.deck_for(child, content.deck), profile or None, but=lesson_id)
-    return Generated(content, photos, prompt, profile, found.frames, found.choice, texts)
 
 
 def _rate(slowed: str, speed: str, foreign: bool, dictation: bool) -> str:

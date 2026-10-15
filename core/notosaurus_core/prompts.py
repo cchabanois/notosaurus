@@ -3,6 +3,7 @@ rules, and the requests built from the user's prompt, the lesson's text, the car
 
 import json
 from collections.abc import Sequence
+from dataclasses import dataclass
 
 from . import diagrams
 from .models import Card, Deck
@@ -178,32 +179,48 @@ never an impersonal textbook sentence; each help in its own words, straight to t
 point, no stock opener repeated from card to card."""
 
 
+@dataclass(frozen=True)
+class ExtractOptions:
+    """How a lesson is made, besides its prompt and photos (llm.extract_cards): an option
+    added here once, not in every signature. `deck`: the deck name template; `decks`: the
+    decks that already exist, to reuse their names; `fun_facts`, `helps`, `pictures`: the
+    AI may add them (FUN_FACTS, HELPS, PICTURES); `page_texts`: one per photo, the text of
+    a PDF page ("" for a photo); `instructions`: the user's standing instructions, put
+    before the request (never replacing the rules); `quick`: made fast, the model thinking
+    little; `existing`: the lesson's cards made from its earlier pages ("front [part]"),
+    when these photos are its next pages: not made again."""
+
+    deck: str = ""
+    decks: Sequence[str] = ()
+    fun_facts: bool = False
+    helps: bool = False
+    pictures: bool = False
+    page_texts: Sequence[str] = ()
+    instructions: str = ""
+    quick: bool = False
+    existing: Sequence[str] = ()
+
+
 def _user_text(
     prompt: str,
-    deck: str,
+    options: ExtractOptions,
     photos: int,
     sizes: Sequence[tuple[int, int] | None] = (),
     fmt: str = "",
-    decks: Sequence[str] = (),
-    fun_facts: bool = False,
-    texts: Sequence[str] = (),
-    helps: bool = False,
-    existing: Sequence[str] = (),
-    pictures: bool = False,
 ) -> str:
     text = f"Instructions: {prompt.strip()}"
-    if fun_facts:
+    if options.fun_facts:
         text += "\n" + FUN_FACTS
-    if helps:
+    if options.helps:
         text += "\n" + HELPS
-    if pictures:
+    if options.pictures:
         text += "\n" + PICTURES
-    if deck.strip():
-        text += f"\nDeck name template: {deck.strip()}"
-    if decks:
-        text += "\nExisting decks: " + "; ".join(decks)
-    if existing:
-        made = "; ".join(existing)[:EXISTING_MAX]
+    if options.deck.strip():
+        text += f"\nDeck name template: {options.deck.strip()}"
+    if options.decks:
+        text += "\nExisting decks: " + "; ".join(options.decks)
+    if options.existing:
+        made = "; ".join(options.existing)[:EXISTING_MAX]
         text += (
             f"\nThese photos are the next pages of a lesson that already has these cards: {made}. "
             "Make cards only for what these pages add, never one of these again; use the same "
@@ -216,7 +233,7 @@ def _user_text(
         if fmt == "pixels":
             known = [f"photo {i}: {size[0]}x{size[1]}" for i, size in enumerate(sizes, 1) if size]
             text += "\nPhoto sizes: " + ", ".join(known) + "."
-    return text + _pdf_texts(texts)
+    return text + _pdf_texts(options.page_texts)
 
 
 EXISTING_MAX = 6000  # characters of the cards already made sent (a long lesson: its first ones)
