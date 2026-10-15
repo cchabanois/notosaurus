@@ -893,6 +893,7 @@ def test_a_card_and_its_explanation_reported_in_the_app(page):
     page.route("**/api/lessons/*/report", report)
     generate_free(page, "QCM sur la Révolution")
     card = page.locator(".flash").first
+    card.get_by_role("button", name="Plus d'actions").click()
     card.get_by_role("button", name="Signaler").click()
     sheet = page.get_by_role("dialog", name="Signaler un contenu")
     sync_api.expect(sheet.locator(".chips")).to_be_hidden()  # no explanation, no picture: the card
@@ -911,6 +912,7 @@ def test_a_card_and_its_explanation_reported_in_the_app(page):
     sheet.get_by_role("button", name="Fermer").last.click()
     card.get_by_role("button", name="Expliquer cette carte").click()
     sync_api.expect(card.locator(".explain")).to_contain_text("(démo, explain)")
+    card.get_by_role("button", name="Plus d'actions").click()
     card.get_by_role("button", name="Signaler").click()
     sheet.get_by_role("button", name="L'explication").click()
     sheet.get_by_label("Choquant ou inapproprié").check()
@@ -1011,6 +1013,7 @@ def test_cards_left_over_in_anki_deleted_when_asked(page, anki):
     notes = len(anki.notes)
     first = page.locator(".flash").first
     gone = first.locator("textarea").first.input_value()
+    first.get_by_role("button", name="Plus d'actions").click()
     first.get_by_role("button", name="Supprimer la carte").click()
     update.click()
     sheet = page.locator("aside.sheet", has_text="Cartes en trop dans Anki")
