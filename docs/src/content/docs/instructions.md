@@ -31,7 +31,7 @@ be changed, but they can be **duplicated** to make your own version.
 | Table to learn | A table to know by heart (declension, irregular verbs…): one card per cell, or per row when each row is a word; the answer typed. |
 | Questions / answers | Short questions on the content: dates, definitions, key ideas. |
 | Dates and landmarks | One card per date to remember (a timeline, a box): the event on the front, its date on the back, the century in the info; with the reverse card, to learn it both ways. |
-| Definitions | One card per key word to define, its definition on the back. |
+| Definitions and properties | One card per key word to define; for a property or a theorem, its name → the full statement ("If …, then …") and the hypotheses → the conclusion, the converse on its own, what it is for in the info. |
 | Fill in the blanks | Sentences with gaps (cloze): one card per gap number. |
 | Multiple choice | A question, the right answer and three plausible wrong ones. |
 | True / false | Statements, half of them false with one precise mistake. |
