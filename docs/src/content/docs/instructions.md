@@ -44,6 +44,7 @@ be changed, but they can be **duplicated** to make your own version.
 | Fill in the word | One card per word to spell: a sentence with the word missing on the front, the word on the back (typed), a spelling tip. |
 | Dictation | Dictation cards only: the words to learn to spell, and the dictation text sentence by sentence, heard then typed. |
 | Gap dictation | The hardest words of the dictation text, one per card: its sentence with the blank, heard, the word typed. |
+| By heart (poem, recitation) | The text copied exactly, read aloud: one card per line (the title, its number and the two lines before on the front), one card per stanza start. |
 
 ## Your own instructions
 

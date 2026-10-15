@@ -2371,6 +2371,11 @@
             "title": "Reverse",
             "default": false
           },
+          "read_aloud": {
+            "type": "boolean",
+            "title": "Read Aloud",
+            "default": false
+          },
           "speed": {
             "type": "string",
             "title": "Speed",

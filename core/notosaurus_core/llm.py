@@ -122,6 +122,7 @@ class Extracted(BaseModel):
     dictation_card: bool = False  # the instructions ask for a dictation of each card too
     typing: bool = False  # the instructions ask for the answers to be typed
     reverse: bool = False  # the instructions ask for the reverse card too
+    read_aloud: bool = False  # the instructions ask for the backs to be heard, even in the pupil's own language
     speed: str = ""  # how fast the instructions ask for the backs to be read: "slow", "normal", "" not said
 
 
@@ -173,6 +174,7 @@ async def extract_cards(
         dictation_card=result.dictation_card,
         typing=result.typing,
         reverse=result.reverse,
+        read_aloud=result.read_aloud,
         speed=result.speed,
     )
 
