@@ -132,6 +132,7 @@ class ExtractRequest(BaseModel):
     )
     fun_facts: bool = False
     helps: bool = False
+    pictures: bool = Field(default=False, description="Pictures where they truly help, even unasked by the prompt.")
     page_texts: list[str] = PageTexts
     instructions: str = Instructions
     quick: bool = Field(

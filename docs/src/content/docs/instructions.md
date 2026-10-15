@@ -86,6 +86,14 @@ or cleared in the review. They add about 1 to 3 US cents to a lesson with Claude
 Both are on at first, for every lesson. To stop them: **Settings → Instructions for the AI**.
 For one prompt only, say so in its text: "no fun facts", "no helps".
 
+## Pictures
+
+The AI adds a picture to the cards where it truly helps to remember, whatever the
+instructions: a work of art, a person, a place, a monument, an animal. Never for an abstract
+notion, nor on every card. A free picture is looked for first; having the AI draw one is
+always asked. It is on at first: **Settings → Instructions for the AI → 🖼️ Pictures on the
+cards**. For one prompt only, say so in its text: "no pictures".
+
 ## Standing instructions
 
 Some instructions apply to every lesson: “Spanish from Spain”, “in year 8; short answers”.

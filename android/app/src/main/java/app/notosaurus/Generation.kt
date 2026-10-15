@@ -57,6 +57,7 @@ class Generation(
             // The settings' (a prompt may say otherwise: "no fun facts")
             put("fun_facts", prefs[LocalServer.FUN_FACTS] != "false")
             put("helps", prefs[LocalServer.HELPS] != "false")
+            put("pictures", prefs[LocalServer.PICTURES] != "false")
             put("page_texts", texts)
             put("instructions", instructions(child))
             put("quick", form.on("quick"))

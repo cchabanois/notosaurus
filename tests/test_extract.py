@@ -148,6 +148,26 @@ def test_fun_facts_as_the_settings_say(client):
     assert again.json()["cards"][0]["fun_fact"]  # generated again with them
 
 
+def test_pictures_as_the_settings_say(client, monkeypatch):
+    """Pictures where they truly help, even unasked by the prompt: told to the AI as the
+    settings say (on at first)."""
+    from app.routes import generation
+
+    assert prompts.PICTURES not in prompts._user_text("Q/R", "", photos=1)
+    assert prompts.PICTURES in prompts._user_text("Q/R", "", photos=1, pictures=True)
+    asked = []
+
+    async def extract_cards(s, images, prompt, deck="", decks=(), pictures=False, **options):
+        asked.append(pictures)
+        return await llm.extract_cards(s, images, prompt, deck, decks)
+
+    monkeypatch.setattr(generation, "extract_cards", extract_cards)
+    client.post("/api/extract", data={"prompt": "Q/R"})
+    settings.save({"pictures": False})
+    client.post("/api/extract", data={"prompt": "Q/R"})
+    assert asked == [True, False]
+
+
 def test_each_lesson_has_a_deck_of_its_own(anki, client):
     first = extract_lesson(client)
     assert first["deck"] == "Espagnol::Leçon 5 - La famille"

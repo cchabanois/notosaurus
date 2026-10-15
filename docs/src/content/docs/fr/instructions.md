@@ -94,6 +94,14 @@ Les deux sont activés au départ, pour toutes les leçons. Pour les arrêter : 
 Instructions pour l'IA**. Pour une seule consigne, dites-le dans son texte : « sans
 anecdotes », « sans aides ».
 
+## Les images
+
+L'IA ajoute une image aux cartes où elle aide vraiment à retenir, quelle que soit la consigne :
+une œuvre, un personnage, un lieu, un monument, un animal. Jamais pour une notion abstraite,
+ni sur chaque carte. Une image libre est cherchée d'abord ; la faire dessiner par l'IA vous est
+toujours demandé. C'est activé au départ : **Réglages → Instructions pour l'IA → 🖼️ Images
+sur les cartes**. Pour une seule consigne, dites-le dans son texte : « sans images ».
+
 ## Les instructions permanentes
 
 Certaines instructions valent pour toutes les leçons : « espagnol d'Espagne », « en 5ᵉ ;

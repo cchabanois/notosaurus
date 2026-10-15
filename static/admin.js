@@ -28,7 +28,7 @@ const KEYS = {
 const PICTURE_SERVICES = ["gemini", "openai", "openrouter"];
 const PICTURE_KEYS = { gemini: "gemini_api_key", openai: "openai_api_key", openrouter: "openrouter_api_key" };
 
-const EDITABLE = ["llm", "model", "fallback_models", "compatible_base_url", "picture_service", "tts_rate", "ankiconnect_url", "anki_sync", "fun_facts", "helps",
+const EDITABLE = ["llm", "model", "fallback_models", "compatible_base_url", "picture_service", "tts_rate", "ankiconnect_url", "anki_sync", "fun_facts", "helps", "pictures",
                   "instructions", "picture_model", "voices"];
 
 const deckParts = (deck) => deck.split("::").map((part) => part.trim()).filter(Boolean);

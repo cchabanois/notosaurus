@@ -88,8 +88,8 @@ class Limit(RuntimeError):
 
 def extract(url: str, key: str, folder: Path, asked: dict, lesson: dict) -> dict:
     photos = sorted(folder.glob("page-*.jpg"), key=lambda p: int(p.stem.split("-")[1]))
-    # The fun facts and helps asked, as the app's settings do at first
-    request = {"prompt": asked["prompt"], "deck": asked["deck"], "fun_facts": True, "helps": True}
+    # The fun facts, helps and pictures asked, as the app's settings do at first
+    request = {"prompt": asked["prompt"], "deck": asked["deck"], "fun_facts": True, "helps": True, "pictures": True}
     texts = lesson.get("page_texts") or []
     if any(texts):
         request["page_texts"] = texts

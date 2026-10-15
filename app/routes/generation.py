@@ -119,6 +119,7 @@ async def _generate(
         fun_facts=s.fun_facts,
         page_texts=texts,
         helps=s.helps,
+        pictures=s.pictures,
         instructions=settings.standing_instructions(s, children.for_ai(child)),
         quick=form.quick,
         on_card=on_card,
