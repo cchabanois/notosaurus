@@ -1,5 +1,5 @@
 """static/note-types.json: the note types the Android app makes in AnkiDroid, written
-from app/anki.py (tools/note_types.py): the same as the computer's."""
+from app/note_types/ (tools/note_types.py): the same as the computer's."""
 
 import importlib.util
 import json
@@ -16,7 +16,7 @@ def tool():
 
 
 def test_up_to_date():
-    """Changed app/anki.py: run tools/note_types.py."""
+    """Changed app/note_types/: run tools/note_types.py."""
     assert (ROOT / "static" / "note-types.json").read_text(encoding="utf-8") == tool().text()
 
 

@@ -278,11 +278,15 @@ document.addEventListener("alpine:init", () => {
     },
 
     // The methods, by topic: app-photos.js, app-prompts.js, app-lessons.js, app-cards.js,
-    // app-anki.js, app-dictation.js, ask-confirm.js (loaded before this file)
+    // app-revision.js, app-diagram.js, app-pictures.js, app-anki.js, app-dictation.js,
+    // app-children.js, app-report.js, ask-confirm.js (loaded before this file)
     ...photosPart,
     ...promptsPart,
     ...lessonsPart,
     ...cardsPart,
+    ...revisionPart,
+    ...diagramPart,
+    ...picturesPart,
     ...ankiPart,
     ...dictationPart,
     ...childrenPart,
