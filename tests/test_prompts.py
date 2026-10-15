@@ -108,6 +108,8 @@ def test_dictation_prompt_starts_lessons_with_its_options(client):
     assert dates["name"] == "Dates and landmarks" and "reverse card" in dates["text"]
     examples = prompts["notosaurus:examples"]  # the lesson's examples → their notion, none made up
     assert examples["name"] == "Recognise from an example" and "never make one up" in examples["text"]
+    recitation = prompts["notosaurus:recitation"]  # a text by heart, heard: the AI reads it in the text
+    assert recitation["voice"] == "auto" and "read aloud" in recitation["text"]
     table = prompts["notosaurus:table"]  # a table by heart: its answers typed
     assert (table["name"], table["typing"], table["dictation"]) == ("Table to learn", True, False)
     blanks = prompts["notosaurus:blanks"]  # the sentences with a blank, typed: no dictation
@@ -233,6 +235,27 @@ def test_the_options_the_ai_read_in_the_instructions(client, monkeypatch):
     assert (lesson["typing"], lesson["dictation"], lesson["dictation_only"]) == (True, True, False)
     assert lesson["reverse"] is True  # "both ways"
     assert lesson["voice"] == "es-ES-ElviraNeural"
+
+
+def test_a_text_read_aloud_is_heard_in_the_pupils_own_language(client, monkeypatch):
+    """A text to recite (the AI read "read aloud" in the instructions): its voice, the
+    pupil's own language's, as a dictation's."""
+    from app.routes import generation
+    from notosaurus_core.llm import Extracted
+    from notosaurus_core.models import Card, Deck
+
+    read_aloud = {"read_aloud": True}
+
+    async def extract(*_, **__):
+        cards = [Card(front="Le Dormeur du val, v. 2", back="Accrochant follement aux herbes des haillons")]
+        return Extracted(deck=Deck(deck="Français::Poème", cards=cards), turns=[], frames=[], **read_aloud)
+
+    monkeypatch.setattr(generation, "extract_cards", extract)
+    page = {"X-Notosaurus-Lang": "fr"}
+    lesson = client.post("/api/extract", data={"prompt": "Par cœur", "voice": "auto"}, headers=page).json()
+    assert lesson["voice"].startswith("fr-") and lesson["rate"] == "+0%"  # heard, at normal speed
+    read_aloud["read_aloud"] = False
+    assert client.post("/api/extract", data={"prompt": "Q/R", "voice": "auto"}, headers=page).json()["voice"] == ""
 
 
 def test_the_backs_speed():

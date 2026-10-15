@@ -153,6 +153,11 @@ class Extraction(Deck):
         description="True when the instructions ask for the answers to be typed (the pupil writes the answer, "
         "checked letter by letter: spelling, words with blanks). Otherwise false.",
     )
+    read_aloud: bool = Field(
+        default=False,
+        description="True when the instructions ask for the backs to be heard, read aloud (a text to recite, "
+        "a pronunciation to hear), even in the pupil's own language. Otherwise false.",
+    )
     reverse: bool = Field(
         default=False,
         description="True when the instructions ask for the reverse card too (each card asked both ways: "

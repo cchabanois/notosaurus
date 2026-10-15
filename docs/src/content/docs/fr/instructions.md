@@ -45,6 +45,7 @@ Elles ne se modifient pas, mais se **dupliquent** pour en faire votre propre ver
 | Mots à trous | Une carte par mot à savoir écrire : une phrase où il manque le mot au recto, le mot au verso (tapé), une astuce d'orthographe. |
 | Dictée | Seulement des cartes de dictée : les mots à savoir écrire, et le texte de la dictée phrase par phrase, entendus puis tapés. |
 | Dictée à trous | Les mots les plus difficiles du texte de la dictée, un par carte : sa phrase avec le trou, entendue, le mot tapé. |
+| Par cœur (poème, récitation) | Le texte recopié exactement, lu à voix haute : une carte titre → premier vers, puis une carte par vers (le titre, son numéro et les deux vers d'avant au recto, le début d'une strophe signalé). |
 
 ## Vos propres consignes
 

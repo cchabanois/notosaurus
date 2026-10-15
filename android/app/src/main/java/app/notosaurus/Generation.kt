@@ -72,7 +72,7 @@ class Generation(
         val dictation = form.on("dictation") || said("dictation_card") || dictationOnly
         val voice = fields["voice"].orEmpty().let {
             if (!it.equals("auto", ignoreCase = true)) it
-            else speech.voiceFor(Speech.learned(found.string("back_language"), form.lang, typing || dictation))
+            else speech.voiceFor(Speech.learned(found.string("back_language"), form.lang, typing || dictation || said("read_aloud"))) // heard in their own language too
         }
         // Photos taken sideways saved upright: their masks and frames turn with them
         val turns = found["turns"]?.jsonArray?.map { it.jsonPrimitive.content.toInt() }.orEmpty()

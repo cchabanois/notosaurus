@@ -136,7 +136,8 @@ async def _generate(
     dictation = form.dictation or found.dictation_card or dictation_only
     foreign = bool(_learned(found.back_language, lang, spelling=False))
     if voice.strip().lower() == "auto":  # the voice of the language the backs are in
-        voice = await tts.voice_for(_learned(found.back_language, lang, typing or dictation), s.voices)
+        heard = typing or dictation or found.read_aloud  # in the pupil's own language too
+        voice = await tts.voice_for(_learned(found.back_language, lang, heard), s.voices)
     content = LessonIn(
         **found.deck.model_dump(),
         voice=voice,
