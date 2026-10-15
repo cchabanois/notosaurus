@@ -108,6 +108,8 @@ class LocalServerTest {
         override fun review(deck: String) = (deck in deckNames() || sent.any { it.deck == deck }).also { if (it) reviewed += deck }
         val retagged = mutableListOf<Pair<Map<String, Set<Long>>, Map<String, Set<Long>>>>() // (added, removed)
         override fun retag(add: Map<String, Set<Long>>, remove: Map<String, Set<Long>>) = !broken.also { if (!broken) retagged += add to remove }
+        var opened = 0
+        override fun open() = installed.also { if (it) opened++ }
         override fun send(deck: Deck, media: Media, options: Options): Sent {
             if (broken) error("no collection")
             sent += deck
@@ -1119,6 +1121,16 @@ class LocalServerTest {
         assertEquals(listOf("Espagnol::Leçon 5"), anki.reviewed)
         val missing = client.post("/api/anki/review") { page(); contentType(ContentType.Application.Json); setBody("""{"deck": "Nope"}""") }
         assertEquals("anki.android_no_deck", missing.json().jsonObject["detail"]!!.jsonObject.string("code"))
+    }
+
+    @Test
+    fun ankiDroidOpenedFromThePage() = app { client ->
+        assertEquals(HttpStatusCode.OK, client.post("/api/anki/open") { page() }.status)
+        assertEquals(1, anki.opened)
+        anki.installed = false // missing: said, the page offers to install it
+        val missing = client.post("/api/anki/open") { page() }
+        assertEquals("anki.android_missing", missing.json().jsonObject["detail"]!!.jsonObject.string("code"))
+        assertEquals(1, anki.opened)
     }
 
     @Test

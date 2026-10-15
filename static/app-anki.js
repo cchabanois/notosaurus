@@ -125,6 +125,17 @@ const ankiPart = {
     }
   },
 
+  // AnkiDroid opened on its own screen (the app); missing: the message offers to install it
+  async openAnkiDroid() {
+    this.error = "";
+    try {
+      await api("/api/anki/open", { method: "POST" });
+    } catch (e) {
+      this.error = e.message;
+      if (e.detail?.code === "anki.android_missing") this.errorAction = { for: e.message, kind: "installAnki" };
+    }
+  },
+
   // AnkiDroid's Google Play page; then "Add to Anki" again once it's installed and opened
   async installAnki() {
     this.error = "";

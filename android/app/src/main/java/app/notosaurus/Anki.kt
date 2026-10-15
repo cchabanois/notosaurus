@@ -79,6 +79,8 @@ interface AnkiTarget {
     /** Tags put on notes and taken off others ({tag: note ids}): a test's tag following its
      * lessons (Exams.retagging); false when AnkiDroid couldn't be asked. */
     fun retag(add: Map<String, Set<Long>>, remove: Map<String, Set<Long>>): Boolean = true
+    /** AnkiDroid opened, on its own screen (the page's "Open AnkiDroid"); false when it can't be. */
+    fun open(): Boolean = false
 }
 
 /**
@@ -128,6 +130,13 @@ class Anki(private val context: Context) : AnkiTarget {
             if (runCatching { context.startActivity(intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)) }.isSuccess) return true
         }
         return false
+    }
+
+    override fun open(): Boolean {
+        val package_ = AddContentApi.getAnkiDroidPackageName(context) ?: return false
+        val home = context.packageManager.getLaunchIntentForPackage(package_) ?: return false
+        // Its own task: Android's Back from AnkiDroid's first screen comes back here
+        return runCatching { context.startActivity(home.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)) }.isSuccess
     }
 
     override fun leftovers(lesson: String, keep: Set<Long>): List<Leftover> {

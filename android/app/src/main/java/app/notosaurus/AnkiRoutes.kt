@@ -80,6 +80,13 @@ internal fun Route.ankiRoutes(server: LocalServer) {
             installAnki()
             buildJsonObject { put("opened", true) }
         }
+        // AnkiDroid opened on its own screen (the page's "Open AnkiDroid"); missing: said, with Install
+        api("POST", "/api/anki/open") {
+            if (!anki.installed()) throw BadRequest("anki.android_missing")
+            val opened = withContext(Dispatchers.IO) { runCatching { anki.open() }.getOrDefault(false) }
+            if (!opened) throw BadRequest("anki.android_failed", buildJsonObject { put("detail", "open") })
+            buildJsonObject { put("opened", true) }
+        }
         // A lesson's deck reviewed in AnkiDroid ("Review" after sending it)
         api("POST", "/api/anki/review") {
             val deck = body().string("deck")

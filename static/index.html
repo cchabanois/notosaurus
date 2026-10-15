@@ -58,6 +58,9 @@
         <span aria-hidden="true">📚</span><span class="wide-only" x-text="$t('app.lessonsButton')"></span>
         <span class="count" x-text="visibleLessons().length"></span>
       </button>
+      <!-- The app: AnkiDroid, one tap away (the cards are revised there) -->
+      <button class="chip-btn icon-only" x-cloak x-show="reviewInAnki" @click="openAnkiDroid()"
+              :aria-label="$t('app.openAnkiDroid')" :title="$t('app.openAnkiDroid')">🎓</button>
       <!-- The child the next lesson is for (app-children.js): its card, the others -->
       <button class="chip-btn" @click="openChildren()" :aria-label="$t('app.children.title')" :title="$t('app.children.title')">
         <span aria-hidden="true">🧒</span><span x-text="currentChild()?.name ?? $t('app.children.who')"></span>
@@ -538,6 +541,7 @@
 
     <!-- Language: automatic (Anki's or the browser's) or picked here, for this device -->
     <footer class="page-footer">
+      <button type="button" class="docs-link" x-cloak x-show="reviewInAnki" @click="openAnkiDroid()">🎓 <span x-text="$t('app.openAnkiDroid')"></span></button>
       <a class="docs-link" :href="$docs('')" target="_blank" rel="noopener">📖 <span x-text="$t('common.help')"></span></a>
       <!-- Not where Notosaurus is paid for already (the Android app's subscription) -->
       <a class="support-link" x-show="donations" href="https://ko-fi.com/notosaurus" target="_blank" rel="noopener">☕ <span x-text="$t('common.support')"></span></a>
