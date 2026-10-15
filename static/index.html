@@ -945,6 +945,13 @@
           </p>
           <section class="exam-guide" x-show="examSheet.exam.lessons.length">
             <h3 x-text="reviewInAnki ? $t('app.exams.guide.titleAndroid') : $t('app.exams.guide.titleDesktop')"></h3>
+            <!-- The computer, Anki open: the filtered deck made and shown from here (AnkiConnect) -->
+            <div class="exam-review" x-show="!reviewInAnki && anki.available">
+              <button type="button" class="btn primary" @click="reviewExam(examSheet.exam)" :disabled="examSheet.busy"
+                      x-text="examSheet.busy ? $t('app.exams.reviewing') : $t('app.exams.reviewNow')"></button>
+              <p class="hint ok" x-show="examSheet.reviewed" x-text="examSheet.reviewed"></p>
+              <p class="hint" x-text="$t('app.exams.manual')"></p>
+            </div>
             <ol x-show="examSheet.exam.deck">
               <li>
                 <span x-html="$th('app.exams.guide.step1', { deck: examSheet.exam.deck })"></span>

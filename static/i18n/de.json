@@ -508,7 +508,12 @@
         "noDeck": "Die Lektionen liegen in verschiedenen Stapeln. In Anki: <strong>Gefilterten Stapel erstellen</strong>, und fügen Sie diese Suche ein:",
         "copy": "Kopieren",
         "copied": "Kopiert"
-      }
+      },
+      "reviewNow": "Jetzt in Anki lernen",
+      "reviewing": "Stapel wird angelegt…",
+      "reviewed": "{count} Karten im Stapel „{deck}“, in Anki geöffnet. Danach kehren sie in ihre Stapel zurück.",
+      "filteredDeck": "Test: {name}",
+      "manual": "Oder von Hand, in Anki oder AnkiDroid:"
     }
   },
   "admin": {

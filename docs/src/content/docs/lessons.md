@@ -42,6 +42,9 @@ them, whatever their lessons: the test's sheet says how, on the computer and in 
 (open the deck holding the lessons, **Custom study → Study by card state or tag**, tick the tag).
 Once revised, the cards go back to their decks. Deleting a test takes the tag off; the cards stay.
 
+On the computer with Anki open, **Revise now in Anki** does it in one click: a filtered deck
+"Test: …" with the test's cards, opened in Anki, made again each time and deleted with the test.
+
 ## Deleting a lesson
 
 **🗑** next to a lesson deletes it, with its photos. If its cards are in Anki, Notosaurus looks

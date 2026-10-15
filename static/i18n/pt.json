@@ -508,7 +508,12 @@
         "noDeck": "As lições estão em baralhos diferentes. No Anki: <strong>Criar baralho filtrado</strong>, e cole esta busca:",
         "copy": "Copiar",
         "copied": "Copiado"
-      }
+      },
+      "reviewNow": "Revisar agora no Anki",
+      "reviewing": "Criando o baralho…",
+      "reviewed": "{count} cartas no baralho “{deck}”, aberto no Anki. Depois de revisadas, voltam aos seus baralhos.",
+      "filteredDeck": "Prova: {name}",
+      "manual": "Ou à mão, no Anki ou no AnkiDroid:"
     }
   },
   "admin": {

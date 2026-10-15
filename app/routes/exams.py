@@ -4,6 +4,7 @@ the notes in Anki tagged to follow."""
 import asyncio
 
 from fastapi import APIRouter, Path
+from pydantic import BaseModel, Field
 
 from .. import ankiconnect, exams, lessons
 from ..errors import AppError
@@ -11,6 +12,12 @@ from ..exams import Exam, ExamIn
 from ..models import Lesson
 
 router = APIRouter()
+
+
+class ReviewIn(BaseModel):
+    """What "Revise now" sends: the name of the filtered deck to make, in the page's language."""
+
+    deck: str = Field(min_length=1, max_length=100)
 
 
 async def _lessons(ids: set[str]) -> dict[str, Lesson]:
@@ -67,5 +74,25 @@ async def delete_exam(id: str = Path(pattern=exams.ID)) -> dict:
         raise AppError("exams.not_found", 404)
     found = await _lessons({part.lesson for part in before.lessons})
     anki = await _retag(before, None, found, await ankiconnect.active_profile())
+    if before.filtered_deck and anki:  # its filtered deck too: the cards go back to their decks
+        try:
+            await ankiconnect.drop_deck(before.filtered_deck)
+        except ankiconnect.AnkiConnectError:
+            anki = False
     await asyncio.to_thread(exams.delete, id)
     return {"deleted": True, "anki": anki}
+
+
+@router.post("/api/exams/{id}/review")
+async def review_exam(req: ReviewIn, id: str = Path(pattern=exams.ID)) -> dict:
+    """The test revised now, on the computer: a filtered deck of its tagged cards, made
+    (again) and shown in Anki; how many cards it holds."""
+    exam = await asyncio.to_thread(exams.get, id)
+    if exam is None:
+        raise AppError("exams.not_found", 404)
+    name = " ".join(req.deck.split()).replace("::", " ")  # one deck, not a hierarchy
+    if exam.filtered_deck and exam.filtered_deck != name:  # named otherwise before (another language): one deck
+        await ankiconnect.drop_deck(exam.filtered_deck)
+    count = await ankiconnect.filtered_deck(name, exam.tag)
+    await asyncio.to_thread(exams.set_filtered_deck, id, name)
+    return {"deck": name, "count": count}

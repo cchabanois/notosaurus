@@ -101,3 +101,25 @@ def test_the_tag_and_the_deck_anki_studies_in():
     assert exams.common_deck(["Jules::5e::SVT", "jules::5e::Histoire"]) == "Jules::5e"
     assert exams.common_deck(["SVT", "Histoire"]) == ""  # no deck holds both: the search instead
     assert exams.common_deck([]) == ""
+
+
+def test_revised_now_on_the_computer_in_a_filtered_deck(anki, client):
+    lesson = _sent(client, extract_lesson(client))
+    client.put("/api/exams/interro-svt", json={**INTERRO, "lessons": [{"lesson": lesson["id"]}]})
+    res = client.post("/api/exams/interro-svt/review", json={"deck": "Contrôle : Interro SVT de lundi"})
+    assert res.json() == {"deck": "Contrôle : Interro SVT de lundi", "count": len(lesson["cards"])}
+    made = anki.filtered["Contrôle : Interro SVT de lundi"]
+    assert made["searchQuery"] == '"tag:Exam::Interro\\_SVT\\_de\\_lundi"' and made["reschedule"] is True
+    assert anki.shown == "Contrôle : Interro SVT de lundi"  # opened in Anki
+    assert all(n["deckName"] == "Contrôle : Interro SVT de lundi" for n in anki.notes.values())
+    assert exams.get("interro-svt").filtered_deck == "Contrôle : Interro SVT de lundi"
+
+    # Asked again (more cards since): made anew, not twice; a hierarchy isn't made of the name
+    res = client.post("/api/exams/interro-svt/review", json={"deck": " Contrôle::Interro  SVT "})
+    assert res.json()["deck"] == "Contrôle Interro SVT" and "Contrôle : Interro SVT de lundi" not in anki.decks
+
+    # The test deleted: its filtered deck too, the cards back in their decks
+    assert client.delete("/api/exams/interro-svt").json() == {"deleted": True, "anki": True}
+    assert "Contrôle Interro SVT" not in anki.decks
+    assert all(n["deckName"].startswith(lesson["deck"]) for n in anki.notes.values())  # home (its subdecks)
+    assert client.post("/api/exams/interro-svt/review", json={"deck": "x"}).status_code == 404

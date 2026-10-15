@@ -508,7 +508,12 @@
         "noDeck": "The lessons are in different decks. In Anki: <strong>Create filtered deck</strong>, and paste this search:",
         "copy": "Copy",
         "copied": "Copied"
-      }
+      },
+      "reviewNow": "Revise now in Anki",
+      "reviewing": "Making the deck…",
+      "reviewed": "{count} cards in the deck “{deck}”, open in Anki. Once revised, they go back to their decks.",
+      "filteredDeck": "Test: {name}",
+      "manual": "Or by hand, in Anki or AnkiDroid:"
     }
   },
   "admin": {

@@ -125,6 +125,7 @@ class FakeAnki:
 
     def __init__(self, fail_sync=False, profile="Léa", note_model=True):
         self.models, self.decks, self.media, self.notes = {}, {}, {}, {}
+        self.filtered, self.shown = {}, None  # filtered decks made (name → params), the deck Anki shows
         self.profile = profile
         self.calls, self.keys, self.fail_sync = [], [], fail_sync
         self.note_model = note_model  # AnkiConnect recent enough for updateNoteModel
@@ -213,6 +214,10 @@ class FakeAnki:
         elif action == "deleteDecks":
             for name in p["decks"]:
                 self.decks.pop(name, None)
+                if self.filtered.pop(name, None):  # a filtered deck gone: its cards back home
+                    for n in self.notes.values():
+                        if n["deckName"] == name:
+                            n["deckName"] = n.pop("home")
         elif action == "notesInfo":
             result = [
                 {
@@ -242,6 +247,18 @@ class FakeAnki:
         elif action == "addNote":
             result = len(self.notes) + 1
             self.notes[result] = p["note"]
+        elif action == "createFilteredDeck":
+            # Every card whose note has the tag of the query, moved into the new deck
+            tag = re.fullmatch(r'"tag:(.+)"', p["searchQuery"])[1].replace("\\", "")
+            self.filtered[p["newDeckName"]] = p
+            self.decks[p["newDeckName"]] = 2000 + len(self.decks)
+            for n in self.notes.values():
+                if tag in n["tags"] and n["deckName"] not in self.filtered:
+                    n["home"], n["deckName"] = n["deckName"], p["newDeckName"]
+            result = self.decks[p["newDeckName"]]
+        elif action == "guiDeckOverview":
+            self.shown = p["name"]
+            result = True
         elif action == "sync":
             error = "AnkiWeb: login required" if self.fail_sync else None
         return httpx.Response(200, json={"result": result, "error": error})
