@@ -241,6 +241,7 @@ class LocalServer(
         // Asked of the AI at every generation, on unless turned off ("false"), as the computer's
         const val FUN_FACTS = "fun_facts"
         const val HELPS = "helps"
+        const val PICTURES = "pictures"
 
         const val TTS_RATE = Speech.TTS_RATE
 

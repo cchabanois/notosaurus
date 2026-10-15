@@ -34,6 +34,7 @@ class Settings(AIConfig):
     # Asked of the AI at every generation (a prompt may say otherwise: "no fun facts")
     fun_facts: bool = True  # "did you know" facts, on the cards where one truly fits
     helps: bool = True  # helps on the back (an explanation, a way to remember), where they truly help
+    pictures: bool = True  # pictures where they truly help, even when the prompt asks for none
     # Added to the AI's fixed rules (never replacing them): for everyone, and per Anki
     # profile, e.g. "Bastien is in year 8", "short answers, with the article".
     instructions: str = ""
@@ -80,6 +81,7 @@ SPECS: dict[str, Spec] = {
     "anki_sync": Spec(),
     "fun_facts": Spec(),
     "helps": Spec(),
+    "pictures": Spec(),
     "instructions": Spec(),
     # Before the children's cards (children.py makes a card of each, linked to its profile)
     "profile_instructions": Spec(editable=False),

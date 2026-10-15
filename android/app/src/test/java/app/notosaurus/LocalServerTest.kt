@@ -1209,7 +1209,7 @@ class LocalServerTest {
         assertEquals("nts_…_key", saved.string("key"))
         assertEquals("nts_new_licence_key", prefs[LocalServer.keyOf("http://192.168.1.10:8080")]) // the new relay's
         assertEquals("http://192.168.1.10:8080", prefs[LocalServer.RELAY])
-        assertEquals(listOf("true", "false"), listOf("fun_facts", "helps").map { saved[it]!!.jsonPrimitive.content }) // on at first
+        assertEquals(listOf("true", "false", "true"), listOf("fun_facts", "helps", "pictures").map { saved[it]!!.jsonPrimitive.content }) // on at first
         val config = client.get("/api/config") { page() }.json().jsonObject
         assertEquals("false", config["donations"]!!.jsonPrimitive.content) // paid for: no Ko-fi link
 

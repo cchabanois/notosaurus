@@ -162,6 +162,7 @@ class SettingsUpdate(BaseModel):
     anki_sync: bool | None = None
     fun_facts: bool | None = None
     helps: bool | None = None
+    pictures: bool | None = None
     instructions: str | None = Field(default=None, max_length=4000)
     picture_service: Literal["", "gemini", "openai", "openrouter", "none"] | None = None
     picture_model: str | None = None

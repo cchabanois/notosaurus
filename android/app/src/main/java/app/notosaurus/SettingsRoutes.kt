@@ -5,6 +5,7 @@ import app.notosaurus.LocalServer.Companion.WELCOME
 import app.notosaurus.LocalServer.Companion.MAX_PHOTOS
 import app.notosaurus.LocalServer.Companion.FUN_FACTS
 import app.notosaurus.LocalServer.Companion.HELPS
+import app.notosaurus.LocalServer.Companion.PICTURES
 import app.notosaurus.LocalServer.Companion.COMPUTER
 import app.notosaurus.LocalServer.Companion.COMPUTER_MODE
 import app.notosaurus.LocalServer.Companion.COMPUTER_NAME
@@ -80,7 +81,7 @@ internal fun Route.settingsRoutes(server: LocalServer) {
             changes.string(RELAY).trim().takeIf { it.isNotEmpty() }?.let { prefs[RELAY] = it.trimEnd('/') }
             (changes[KEY] as? JsonPrimitive)?.let { prefs[keyOf(relayUrl())] = it.content.trim() }
             (changes[INSTRUCTIONS] as? JsonPrimitive)?.let { prefs[INSTRUCTIONS] = it.content.take(4000) }
-            for (option in listOf(FUN_FACTS, HELPS)) (changes[option] as? JsonPrimitive)?.booleanOrNull?.let { prefs[option] = it.toString() }
+            for (option in listOf(FUN_FACTS, HELPS, PICTURES)) (changes[option] as? JsonPrimitive)?.booleanOrNull?.let { prefs[option] = it.toString() }
             (changes[TTS_RATE] as? JsonPrimitive)?.content?.takeIf { it in Speech.RATES }?.let { prefs[TTS_RATE] = it }
             (changes[Speech.VOICES] as? JsonObject)?.let { voices -> speech.choose(voices.mapValues { it.value.plain() }) }
             settings()
@@ -136,6 +137,7 @@ private fun LocalServer.settings() = buildJsonObject {
     put(INSTRUCTIONS, prefs[INSTRUCTIONS].orEmpty())
     put(FUN_FACTS, prefs[FUN_FACTS] != "false")
     put(HELPS, prefs[HELPS] != "false")
+    put(PICTURES, prefs[PICTURES] != "false")
     put(TTS_RATE, prefs[TTS_RATE] ?: "-10%")
     put(Speech.VOICES, JsonObject(speech.chosen().mapValues { JsonPrimitive(it.value) }))
     put("version", version)

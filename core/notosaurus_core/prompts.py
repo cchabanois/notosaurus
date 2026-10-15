@@ -137,6 +137,16 @@ work…). Only well-known, established facts: no invented details, no precise fi
 you aren't sure of, no legend told as true. When unsure, leave it empty. None at all \
 when the instructions ask for none."""
 
+# Pictures where they truly help, whatever the prompt (a setting, on at first): only then
+# is the AI told it may add them unasked.
+PICTURES = """\
+Pictures are welcome, even when the instructions don't ask for them: on the cards where \
+one truly helps to remember, fill "picture_prompt" and "picture_search" as the rules say, \
+for something real and specific that a photo or a painting shows (a person, a place, a \
+monument, a work of art, an animal, an object, a food). Never for an abstract notion, \
+never on every card; where it goes, as the rules say. None at all when the \
+instructions ask for none."""
+
 # Helps on the back, asked for with a switch (its default set in the settings): only
 # where they truly help, as the follow-ups of an explanation (see EXPLAIN_RULES).
 HELPS = """\
@@ -179,12 +189,15 @@ def _user_text(
     texts: Sequence[str] = (),
     helps: bool = False,
     existing: Sequence[str] = (),
+    pictures: bool = False,
 ) -> str:
     text = f"Instructions: {prompt.strip()}"
     if fun_facts:
         text += "\n" + FUN_FACTS
     if helps:
         text += "\n" + HELPS
+    if pictures:
+        text += "\n" + PICTURES
     if deck.strip():
         text += f"\nDeck name template: {deck.strip()}"
     if decks:

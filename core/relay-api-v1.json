@@ -2278,6 +2278,12 @@
             "title": "Helps",
             "type": "boolean"
           },
+          "pictures": {
+            "default": false,
+            "description": "Pictures where they truly help, even unasked by the prompt.",
+            "title": "Pictures",
+            "type": "boolean"
+          },
           "page_texts": {
             "description": "One per photo: the text of a PDF page, as the PDF holds it (\"\" for a photo).",
             "items": {

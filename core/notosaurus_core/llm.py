@@ -138,15 +138,17 @@ async def extract_cards(
     quick: bool = False,
     on_card: OnCard | None = None,
     existing: Sequence[str] = (),
+    pictures: bool = False,
 ) -> Extracted:
     """`decks`: the decks that already exist, to reuse their names; `instructions`: the
     user's standing instructions, put before the request (never replacing the rules);
     `quick`: made fast, the model thinking little; `on_card`: each card as soon as it is
     written (see _ask_provider); `existing`: the lesson's cards made from its earlier pages
-    ("front [part]"), when these photos are its next pages: not made again."""
+    ("front [part]"), when these photos are its next pages: not made again; `pictures`:
+    the AI may add pictures where they truly help, unasked (prompts.PICTURES)."""
     fmt = _box_format(s)
     images, sizes = _prepare(images)
-    asked = _user_text(prompt, deck, len(images), sizes, fmt, decks, fun_facts, page_texts, helps, existing)
+    asked = _user_text(prompt, deck, len(images), sizes, fmt, decks, fun_facts, page_texts, helps, existing, pictures)
     text = instructions + asked
     schema = ai_schema(Extraction, fun_facts, helps)
     answer = await _ask_provider(
