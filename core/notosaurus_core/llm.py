@@ -52,6 +52,7 @@ from .prompts import (
     SEARCH_WORDS_RULES,
     SORT_RULES,
     SYSTEM_PROMPT,
+    ExtractOptions,
     _dictation_text,
     _explain_text,
     _figures_text,
@@ -130,34 +131,24 @@ async def extract_cards(
     s: AIConfig,
     images: list[Image],
     prompt: str,
-    deck: str = "",
-    decks: Sequence[str] = (),
-    fun_facts: bool = False,
-    page_texts: Sequence[str] = (),
-    helps: bool = False,
-    instructions: str = "",
-    quick: bool = False,
+    options: ExtractOptions | None = None,
     on_card: OnCard | None = None,
-    existing: Sequence[str] = (),
-    pictures: bool = False,
 ) -> Extracted:
-    """`decks`: the decks that already exist, to reuse their names; `instructions`: the
-    user's standing instructions, put before the request (never replacing the rules);
-    `quick`: made fast, the model thinking little; `on_card`: each card as soon as it is
-    written (see _ask_provider); `existing`: the lesson's cards made from its earlier pages
-    ("front [part]"), when these photos are its next pages: not made again; `pictures`:
-    the AI may add pictures where they truly help, unasked (prompts.PICTURES)."""
+    """The lesson's cards from its photos (or from the prompt alone), made as `options`
+    says (prompts.ExtractOptions; None: the defaults); `on_card`: each card as soon as it
+    is written (see _ask_provider)."""
+    options = options or ExtractOptions()
     fmt = _box_format(s)
     images, sizes = _prepare(images)
-    asked = _user_text(prompt, deck, len(images), sizes, fmt, decks, fun_facts, page_texts, helps, existing, pictures)
-    text = instructions + asked
+    text = options.instructions + _user_text(prompt, options, len(images), sizes, fmt)
+    fun_facts, helps = options.fun_facts, options.helps
     schema = ai_schema(Extraction, fun_facts, helps)
     answer = await _ask_provider(
         s,
         images,
         text,
         schema,
-        quick=quick,
+        quick=options.quick,
         on_card=on_card,
         demo=lambda: demo_ai.extraction(images, prompt, fun_facts, helps),
     )
@@ -222,7 +213,7 @@ async def explain_card(
     """A short explanation of a card for the pupil (or an example, a way to remember it,
     why the answer is right), and the follow-ups worth offering. A light call: no photo.
 
-    `language`: its English name ("French"); `instructions`: see extract_cards."""
+    `language`: its English name ("French"); `instructions`: see prompts.ExtractOptions."""
     text = instructions + _explain_text(card, kind, prompt, deck, language, page_texts)
     found = await _ask_provider(
         s, [], text, Explanation, EXPLAIN_RULES, light=True, demo=lambda: demo_ai.explanation(card, kind)
@@ -314,7 +305,7 @@ async def revise_cards(
     """Apply a natural-language correction ("remove…", "you forgot…") to the cards.
 
     `language`: English name of the page's language ("French"), for the one-line
-    summary; `instructions`: see extract_cards; `demo`: the demo provider's texts in
+    summary; `instructions`: see prompts.ExtractOptions; `demo`: the demo provider's texts in
     that language ("removed", "added", "addedFront"; English by default)."""
     # The existing masks stay out of the conversation (their boxes are in our own
     # format): the revised cards get back the mask of the card they were. New cards

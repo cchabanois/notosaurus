@@ -10,6 +10,7 @@ from app import settings
 from app.models import Generated, LessonIn
 from notosaurus_core import llm, prompts
 from notosaurus_core.models import Mask
+from notosaurus_core.prompts import ExtractOptions
 
 
 def test_extract_fake(client):
@@ -90,8 +91,8 @@ def test_lesson_from_the_prompt_alone(client):
 def test_prompt_only_tells_the_ai_there_is_no_photo():
     from notosaurus_core.models import Deck
 
-    assert "no photo" in prompts._user_text("Cards with: le chat", "", photos=0)
-    assert "no photo" not in prompts._user_text("Vocabulary", "", photos=2)
+    assert "no photo" in prompts._user_text("Cards with: le chat", ExtractOptions(), 0)
+    assert "no photo" not in prompts._user_text("Vocabulary", ExtractOptions(), 2)
     assert "these instructions (no photo)" in prompts._revision_text("p", Deck(deck="D", cards=[]), "x", "en", photos=0)
 
 
@@ -115,14 +116,14 @@ def test_existing_decks_given_to_the_ai(anki, client, monkeypatch):
 
     seen = {}
 
-    async def extract_cards(s, images, prompt, deck="", decks=(), **options):
-        seen["decks"] = decks
-        return await llm.extract_cards(s, images, prompt, deck, decks)
+    async def extract_cards(s, images, prompt, options, **kwargs):
+        seen["decks"] = options.decks
+        return await llm.extract_cards(s, images, prompt, options)
 
     monkeypatch.setattr(generation, "extract_cards", extract_cards)
     assert client.post("/api/extract", data={"prompt": "Les fractions"}).status_code == 201
     assert seen["decks"] == expected
-    text = prompts._user_text("Les fractions", "{matière}::{leçon}", 1, decks=expected)
+    text = prompts._user_text("Les fractions", ExtractOptions(deck="{matière}::{leçon}", decks=expected), 1)
     assert "Existing decks: Espagnol; Histoire; Histoire::La Révolution; Maths; Maths::Fractions" in text
 
 
@@ -135,8 +136,8 @@ def test_existing_decks_without_anki(client):
 
 def test_fun_facts_as_the_settings_say(client):
     # Asked only then: otherwise the AI isn't told about them
-    assert prompts.FUN_FACTS not in prompts._user_text("Vocabulary", "", photos=1)
-    assert prompts.FUN_FACTS in prompts._user_text("Vocabulary", "", photos=1, fun_facts=True)
+    assert prompts.FUN_FACTS not in prompts._user_text("Vocabulary", ExtractOptions(), 1)
+    assert prompts.FUN_FACTS in prompts._user_text("Vocabulary", ExtractOptions(fun_facts=True), 1)
     files = [("images", ("p.png", b"img", "image/png"))]
     asked = client.post("/api/extract", files=files, data={"prompt": "FR → ES"}).json()
     assert asked["cards"][0]["fun_fact"]  # on by default
@@ -153,13 +154,13 @@ def test_pictures_as_the_settings_say(client, monkeypatch):
     settings say (on at first)."""
     from app.routes import generation
 
-    assert prompts.PICTURES not in prompts._user_text("Q/R", "", photos=1)
-    assert prompts.PICTURES in prompts._user_text("Q/R", "", photos=1, pictures=True)
+    assert prompts.PICTURES not in prompts._user_text("Q/R", ExtractOptions(), 1)
+    assert prompts.PICTURES in prompts._user_text("Q/R", ExtractOptions(pictures=True), 1)
     asked = []
 
-    async def extract_cards(s, images, prompt, deck="", decks=(), pictures=False, **options):
-        asked.append(pictures)
-        return await llm.extract_cards(s, images, prompt, deck, decks)
+    async def extract_cards(s, images, prompt, options, **kwargs):
+        asked.append(options.pictures)
+        return await llm.extract_cards(s, images, prompt, options)
 
     monkeypatch.setattr(generation, "extract_cards", extract_cards)
     client.post("/api/extract", data={"prompt": "Q/R"})
@@ -237,9 +238,9 @@ def test_complete_adds_the_next_pages_cards(client, monkeypatch):
     asked = {}
     real = generation.extract_cards
 
-    async def next_page(s, images, prompt, *args, existing=(), **kwargs):
-        asked.update(photos=[i.data for i in images], prompt=prompt, existing=list(existing))
-        found = await real(s, images, prompt, *args, **kwargs)
+    async def next_page(s, images, prompt, options, **kwargs):
+        asked.update(photos=[i.data for i in images], prompt=prompt, existing=list(options.existing))
+        found = await real(s, images, prompt, options, **kwargs)
         found.deck.cards = [llm.Card(front="le grand-père", back="el abuelo", subdeck="Vocabulaire")]
         found.deck.deck = "Autre chose"
         found.frames = [llm.Frame(page=1, box=[0.1, 0.1, 0.5, 0.5])]
@@ -375,10 +376,10 @@ def test_the_next_pages_texts_after_a_lesson_without_any(client, monkeypatch):
 
 
 def test_the_ai_is_told_the_cards_made_already():
-    text = prompts._user_text("FR → ES", "", 1, existing=["la mère [Vocabulaire]", "le père"])
+    text = prompts._user_text("FR → ES", ExtractOptions(existing=["la mère [Vocabulaire]", "le père"]), 1)
     assert "next pages of a lesson that already has these cards: la mère [Vocabulaire]; le père" in text
     assert "never one of these again" in text
-    assert "already has" not in prompts._user_text("FR → ES", "", 1)
+    assert "already has" not in prompts._user_text("FR → ES", ExtractOptions(), 1)
 
 
 # --- The AI correction --------------------------------------------------------
@@ -444,18 +445,20 @@ def test_pdf_page_texts_go_to_the_ai_and_stay_with_the_lesson(client, monkeypatc
 
     page = "La Révolution française commence en 1789 avec la prise de la Bastille."
     # Only the PDF pages with text: a photo ("") and a scan (a few stray characters) have none
-    text = prompts._user_text("Q/R", "", photos=3, texts=[page, "", " i . "])
+    text = prompts._user_text("Q/R", ExtractOptions(page_texts=[page, "", " i . "]), 3)
     assert (
         f"Text of photo 1, from its PDF:\n<<<\n{page}\n>>>" in text and "photo 2" not in text and "photo 3" not in text
     )
-    assert "Text of photo" not in prompts._user_text("Q/R", "", photos=1)
-    assert len(prompts._user_text("Q/R", "", photos=1, texts=["x" * 20_000])) < 9_000  # a page at most PAGE_TEXT_MAX
+    assert "Text of photo" not in prompts._user_text("Q/R", ExtractOptions(), 1)
+    assert (
+        len(prompts._user_text("Q/R", ExtractOptions(page_texts=["x" * 20_000]), 1)) < 9_000
+    )  # a page at most PAGE_TEXT_MAX
 
     seen = []
 
-    async def extract_cards(s, images, prompt, deck="", decks=(), page_texts=(), **options):
-        seen.append(list(page_texts))
-        return await llm.extract_cards(s, images, prompt, deck, decks)
+    async def extract_cards(s, images, prompt, options, **kwargs):
+        seen.append(list(options.page_texts))
+        return await llm.extract_cards(s, images, prompt, options)
 
     monkeypatch.setattr(generation, "extract_cards", extract_cards)
     files = [("images", (f"p{n}.png", b"img", "image/png")) for n in (1, 2)]

@@ -7,11 +7,12 @@ from conftest import ADMIN
 from app import anki, settings
 from notosaurus_core import llm, prompts
 from notosaurus_core.config import AIConfig
+from notosaurus_core.prompts import ExtractOptions
 
 
 def test_helps_as_the_settings_say(client):
-    assert prompts.HELPS not in prompts._user_text("Vocabulary", "", photos=1)
-    assert prompts.HELPS in prompts._user_text("Vocabulary", "", photos=1, helps=True)
+    assert prompts.HELPS not in prompts._user_text("Vocabulary", ExtractOptions(), 1)
+    assert prompts.HELPS in prompts._user_text("Vocabulary", ExtractOptions(helps=True), 1)
     asked = client.post("/api/extract", data={"prompt": "FR → ES"}).json()  # on by default
     assert asked["cards"][0]["explanation"] and asked["cards"][-1]["mnemonic"]  # the demo: one of each
     settings.save({"helps": False})
@@ -71,7 +72,7 @@ def test_what_the_ai_fills(monkeypatch):
         return schema(deck="D", cards=[{"front": "a", "back": "b", "explanation": "c"}])
 
     monkeypatch.setattr(llm, "_ask_provider", answer)
-    found = asyncio.run(llm.extract_cards(AIConfig(llm="gemini"), [], "p", helps=True))
+    found = asyncio.run(llm.extract_cards(AIConfig(llm="gemini"), [], "p", ExtractOptions(helps=True)))
     card = found.deck.cards[0]
     from notosaurus_core.models import Card
 

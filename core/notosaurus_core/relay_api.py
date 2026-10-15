@@ -46,7 +46,7 @@ from typing import Literal
 
 from pydantic import BaseModel, Field
 
-from .llm import Extracted
+from .llm import Extracted, ExtractOptions
 from .models import Card, Deck, Dictated, Explanation, FollowUp, PicturePlan, Revision
 from .stock import Found, Source
 
@@ -143,6 +143,10 @@ class ExtractRequest(BaseModel):
         max_length=MAX_EXISTING,
         description='The photos are a lesson\'s next pages: its cards made already ("front [part]"), not made again.',
     )
+
+    def options(self) -> ExtractOptions:
+        """All but the prompt, as llm.extract_cards takes them."""
+        return ExtractOptions(**self.model_dump(exclude={"prompt"}))
 
 
 class ReviseRequest(BaseModel):

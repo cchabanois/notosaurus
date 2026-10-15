@@ -1,6 +1,7 @@
 """The relay's API (notosaurus_core.relay_api): in step with core's functions, its
 OpenAPI description up to date, and workable as described."""
 
+import dataclasses
 import importlib.util
 import inspect
 import json
@@ -39,7 +40,6 @@ def parameters(function, *but: str) -> set[str]:
 @pytest.mark.parametrize(
     ("request_model", "function", "not_sent"),
     [
-        (api.ExtractRequest, llm.extract_cards, ("images", "on_card")),  # the multipart's "images"; on_card: not sent
         (api.ReviseRequest, llm.revise_cards, ("images", "demo")),  # demo: the relay never runs the demo AI
         (api.ExplainRequest, llm.explain_card, ()),
         (api.FigureRequest, llm.draw_figure, ()),
@@ -53,6 +53,17 @@ def parameters(function, *but: str) -> set[str]:
 def test_each_request_is_its_core_function(request_model, function, not_sent):
     """A parameter added to a core function is added to its route too (or said not sent)."""
     assert set(request_model.model_fields) == parameters(function, *not_sent)
+
+
+def test_the_extract_request_is_extract_cards_options():
+    """An option added to llm.ExtractOptions is added to /v1/extract too; the request
+    gives them to extract_cards as they are."""
+    assert parameters(llm.extract_cards, "images", "on_card") == {"prompt", "options"}
+    options = {f.name for f in dataclasses.fields(llm.ExtractOptions)}
+    assert set(api.ExtractRequest.model_fields) == {"prompt", *options}
+    request = api.ExtractRequest(prompt="p", deck="D", decks=["A"], helps=True, quick=True, existing=["x"])
+    expected = llm.ExtractOptions(deck="D", decks=["A"], helps=True, page_texts=[], quick=True, existing=["x"])
+    assert request.options() == expected
 
 
 def test_answers_carry_core_results():
@@ -138,7 +149,7 @@ def test_photos_and_request_in_one_multipart():
     async def extract(request: str = Form(), images: list[UploadFile] = File([])) -> api.ExtractResponse:
         req = api.ExtractRequest.model_validate_json(request)
         photos = [llm.Image(await i.read(), i.content_type) for i in images]
-        found = await llm.extract_cards(AIConfig(llm="fake"), photos, **req.model_dump())
+        found = await llm.extract_cards(AIConfig(llm="fake"), photos, req.prompt, req.options())
         return api.ExtractResponse(**found.model_dump(), usage=api.Usage(credits=1, credits_left=99))
 
     request = api.ExtractRequest(prompt="FR → ES", decks=["Espagnol"], page_texts=["", ""])
