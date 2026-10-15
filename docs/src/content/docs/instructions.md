@@ -32,6 +32,7 @@ be changed, but they can be **duplicated** to make your own version.
 | Questions / answers | Short questions on the content: dates, definitions, key ideas. |
 | Dates and landmarks | One card per date to remember (a timeline, a box): the event on the front, its date on the back, the century in the info; with the reverse card, to learn it both ways. |
 | Definitions and properties | One card per key word to define; for a property or a theorem, its name → the full statement ("If …, then …") and the hypotheses → the conclusion, the converse on its own, what it is for in the info. |
+| Recognise from an example | One card per example of the lesson (a figure of speech, a word class…): the example on the front, the notion on the back, its definition in the info. Never a made-up example. |
 | Fill in the blanks | Sentences with gaps (cloze): one card per gap number. |
 | Multiple choice | A question, the right answer and three plausible wrong ones. |
 | True / false | Statements, half of them false with one precise mistake. |

@@ -106,6 +106,8 @@ def test_dictation_prompt_starts_lessons_with_its_options(client):
     assert (gaps["name"], gaps["dictation_only"], gaps["voice"]) == ("Gap dictation", True, "auto")
     dates = prompts["notosaurus:dates"]  # a timeline, both ways: the AI reads it in the text
     assert dates["name"] == "Dates and landmarks" and "reverse card" in dates["text"]
+    examples = prompts["notosaurus:examples"]  # the lesson's examples → their notion, none made up
+    assert examples["name"] == "Recognise from an example" and "never make one up" in examples["text"]
     table = prompts["notosaurus:table"]  # a table by heart: its answers typed
     assert (table["name"], table["typing"], table["dictation"]) == ("Table to learn", True, False)
     blanks = prompts["notosaurus:blanks"]  # the sentences with a blank, typed: no dictation

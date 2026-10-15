@@ -25,6 +25,7 @@ BUILTIN = (
     "questions",
     "dates",
     "definitions",
+    "examples",
     "cloze",
     "quiz",
     "true_false",
