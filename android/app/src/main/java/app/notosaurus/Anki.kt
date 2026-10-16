@@ -81,6 +81,10 @@ interface AnkiTarget {
     fun retag(add: Map<String, Set<Long>>, remove: Map<String, Set<Long>>): Boolean = true
     /** AnkiDroid opened, on its own screen (the page's "Open AnkiDroid"); false when it can't be. */
     fun open(): Boolean = false
+
+    /** AnkiDroid's own icon as installed on this phone (a PNG), for the page's "Open AnkiDroid":
+     * read from the installed app, never shipped with Notosaurus; null when it isn't installed. */
+    fun icon(): ByteArray? = null
 }
 
 /**
@@ -137,6 +141,18 @@ class Anki(private val context: Context) : AnkiTarget {
         val home = context.packageManager.getLaunchIntentForPackage(package_) ?: return false
         // Its own task: Android's Back from AnkiDroid's first screen comes back here
         return runCatching { context.startActivity(home.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)) }.isSuccess
+    }
+
+    override fun icon(): ByteArray? {
+        val package_ = AddContentApi.getAnkiDroidPackageName(context) ?: return null
+        return runCatching {
+            val drawable = context.packageManager.getApplicationIcon(package_)
+            val size = ICON_PX
+            val bitmap = Bitmap.createBitmap(size, size, Bitmap.Config.ARGB_8888)
+            drawable.setBounds(0, 0, size, size)
+            drawable.draw(android.graphics.Canvas(bitmap))
+            java.io.ByteArrayOutputStream().also { bitmap.compress(Bitmap.CompressFormat.PNG, 100, it) }.toByteArray()
+        }.getOrNull()
     }
 
     override fun leftovers(lesson: String, keep: Set<Long>): List<Leftover> {
@@ -427,6 +443,7 @@ class Anki(private val context: Context) : AnkiTarget {
 
     companion object {
         private const val LEFTOVER_TEXT = 80 // characters of a leftover note's text shown, as the computer's
+        private const val ICON_PX = 96 // AnkiDroid's icon for the page: a chip's size, sharp on any screen
         private val FIRST_USE_WAITS = listOf(500L, 1_000L, 2_000L, 3_500L) // ms between the tries
 
         /** The card's deck: the lesson's, then its part; a part named as the deck's last level

@@ -1,6 +1,11 @@
 package app.notosaurus
 
+import io.ktor.http.ContentType
+import io.ktor.http.HttpStatusCode
+import io.ktor.server.response.respondBytes
+import io.ktor.server.response.respondText
 import io.ktor.server.routing.Route
+import io.ktor.server.routing.get
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.json.longOrNull
@@ -79,6 +84,13 @@ internal fun Route.ankiRoutes(server: LocalServer) {
         api("POST", "/api/anki/install") {
             installAnki()
             buildJsonObject { put("opened", true) }
+        }
+        // AnkiDroid's own icon, as installed (the page's "Open AnkiDroid"); none: 404, the page shows 🎓
+        get("/api/anki/icon") {
+            if (!allowed()) return@get
+            val png = withContext(Dispatchers.IO) { runCatching { anki.icon() }.getOrNull() }
+            if (png == null) call.respondText("", status = HttpStatusCode.NotFound)
+            else call.respondBytes(png, ContentType.Image.PNG)
         }
         // AnkiDroid opened on its own screen (the page's "Open AnkiDroid"); missing: said, with Install
         api("POST", "/api/anki/open") {

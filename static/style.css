@@ -1076,5 +1076,6 @@ a.btn { text-decoration: none; }
 .exam-review { display: grid; gap: .4rem; margin-bottom: .6rem; }
 .exam-review .btn { margin: 0; }
 .exam-review .hint.ok { color: var(--primary); font-weight: 700; }
-.anki-link { background: none; border: 0; padding: 0; font: inherit; font-size: .9rem; color: var(--muted); cursor: pointer; }
+.anki-link { display: inline-flex; align-items: center; gap: .35rem; background: none; border: 0; padding: 0; font: inherit; font-size: .9rem; color: var(--muted); cursor: pointer; }
+.anki-icon { width: 1.3em; height: 1.3em; border-radius: 5px; vertical-align: middle; }  /* AnkiDroid's own icon, from the phone */
 .anki-link:hover, .anki-link:focus-visible { color: var(--primary); text-decoration: underline; }
