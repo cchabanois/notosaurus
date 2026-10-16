@@ -102,6 +102,7 @@ Each pull request adds a line under **Unreleased**. See [Releasing](CONTRIBUTING
 
 ### Fixed
 
+- A tag or Markdown the AI wrote in a card despite its rules (a letter underlined with `<u>`, a word in `**bold**`) showed as it is in Anki, every field being plain text: the cards' texts are now made plain as they come from the AI, emphasis as square brackets (the lesson's own way of singling out a part), other tags gone, line breaks kept; the rules also say how to single out a part of a word or sentence (square brackets).
 - In the coming Android app, a card's own photo is now made card size (512 px), as on the computer: it was kept at 1600 px, heavy for AnkiDroid and its sync.
 - The coming Android app's **Automatic** voice for an English lesson whose AI said just "en" was Australian (the first English voice by name): it is now British, as on the computer (Portuguese: European).
 - The coming Android app brings its note types in AnkiDroid up to date at the next send when the cards' look changed (their templates and style), as the computer does: before, a phone kept the look of its first send for good. The notes, their cards and reviews are kept.
