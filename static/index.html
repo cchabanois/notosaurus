@@ -332,13 +332,12 @@
 
       <div class="cards">
         <template x-for="card in cards" :key="card.key">
-          <article class="flash" :class="{ changed: card._state, 'has-explain': card._explain?.open, 'has-diagram': card.mask, 'has-picture': card.picture || card.picture_prompt || card.figure || card._panel }">
+          <article class="flash" :data-card="card.key" :class="{ changed: card._state, linked: card._linked, 'has-explain': card._explain?.open, 'has-diagram': card.mask, 'has-picture': card.picture || card.picture_prompt || card.figure || card._panel }">
             <!-- Choosing the cards of a test (app-exams.js): one tick per card -->
             <label class="pick" x-cloak x-show="examPick">
               <input type="checkbox" :checked="examPick?.selected.has(card.id)" @change="togglePick(card)"
                      :aria-label="$t('app.exams.pick.card')">
             </label>
-          <article class="flash" :data-card="card.key" :class="{ changed: card._state, linked: card._linked, 'has-explain': card._explain?.open, 'has-diagram': card.mask, 'has-picture': card.picture || card.picture_prompt || card.figure || card._panel }">
             <!-- Diagram label: the photo with every label hidden, this card's mask highlighted and movable -->
             <template x-if="card.mask && photoFor(card)">
               <div class="diagram">
