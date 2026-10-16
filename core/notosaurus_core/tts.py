@@ -49,13 +49,37 @@ def has_math(text: str) -> bool:
 # A sentence's blank for the word to write ("Le chat boit du …"), and what it says in brackets
 BLANK = re.compile(r"…|\.{3}|_{3,}")
 BRACKETS = re.compile(r"\s*\([^)]*\)")
+# A phonetic transcription, between slashes or square brackets ("/ɜː/", "[ˈtaɪɡə]"): a voice
+# would read the slashes and guess at the symbols. Between slashes: no space, no digit (a
+# date, "km/h" stay); between square brackets: with a phonetic symbol (IPA letters, length
+# and stress marks, diacritics, æ ø œ θ ð), since brackets also single a part out ("t[i]ger")
+PHONETIC = r"ɐ-ʯʰ-˿̀-ͯæøœθð"
+TRANSCRIPTION = re.compile(
+    rf"(?<![\w/])/[^/\s\d]{{1,24}}/(?![\w/])|\[[^\[\]\s\d]{{0,24}}[{PHONETIC}][^\[\]\s\d]{{0,24}}\]"
+)
+MARKED = re.compile(r"\[([^\[\]\n]{1,40})\]")  # a part singled out ("t[i]ger"): read as the word
+QUOTED = re.compile(r"[“\"«]\s*([^”\"»\n]{1,60}?)\s*[”\"»]|‘([^’\n]{1,60}?)’")  # the front's examples
+LETTER = re.compile(r"[^\W_]")  # a letter or a digit: something a voice says ("$1" is read)
+
+
+def speakable(text: str) -> str:
+    """The text as a voice can read it: transcriptions out, a part singled out in brackets
+    read as its word."""
+    text = TRANSCRIPTION.sub(" ", text)
+    text = MARKED.sub(lambda m: m.group(1), text)
+    return re.sub(r"[ \t]{2,}", " ", text).strip()
 
 
 def spoken(card: Card, dictation: bool = False) -> str:
-    """What a card's sound says: its back. A dictation's card whose front is a sentence
-    with a blank: the sentence with the word, then the word (alone, "vers" could be
-    "verre" or "vert"); each on its line, read on its own (lines)."""
-    back = card.back.strip()
+    """What a card's sound says: its back, as a voice can read it (speakable). A back that
+    is only a transcription ("/ɜː/"): the examples quoted on the front, the only way to hear
+    the sound ("bird"), each read on its own; none: nothing. A dictation's card whose front
+    is a sentence with a blank: the sentence with the word, then the word (alone, "vers"
+    could be "verre" or "vert"); each on its line, read on its own (lines)."""
+    back = speakable(card.back.strip())
+    if not LETTER.search(back):
+        examples = [speakable(a or b) for a, b in QUOTED.findall(card.front)]
+        return "\n".join(e for e in examples if LETTER.search(e))
     sentence = BRACKETS.sub("", card.front).strip()
     if not dictation or "\n" in back or not BLANK.search(sentence):
         return back
@@ -73,12 +97,13 @@ def lines(text: str) -> list[str]:
 def spoken_backs(cards: list[Card], dictation: bool = False) -> list[str]:
     """What the cards' sounds say (spoken). None for: a back with a formula (the voice
     would read the MathJax code), a text with gaps (its back is only an extra), a multiple
-    choice (the options are read)."""
-    return [
+    choice (the options are read), a transcription with no example to read."""
+    said = [
         spoken(c, dictation)
         for c in cards
         if c.front.strip() and c.back.strip() and not has_math(c.back) and not is_cloze(c.front) and not is_choice(c)
     ]
+    return [s for s in said if s]
 
 
 def is_anki_locale(voice: str) -> bool:

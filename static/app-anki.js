@@ -1,6 +1,19 @@
 // What goes to Anki: the cards' audio, the direct send (AnkiConnect, AnkiDroid), a card explained, the .apkg.
 // Methods of the page's Alpine component (app.js), as `this`.
 
+// As tts.py: a phonetic transcription ("/ɜː/", "[ˈtaɪɡə]") isn't read (a voice would say "slash");
+// a part singled out in brackets ("t[i]ger") is read as its word; the front's quoted examples
+const PHONETIC = "ɐ-ʯʰ-˿̀-ͯæøœθð";
+const TRANSCRIPTION = new RegExp(`(?<![\\w/])/[^/\\s\\d]{1,24}/(?![\\w/])|\\[[^\\[\\]\\s\\d]{0,24}[${PHONETIC}][^\\[\\]\\s\\d]{0,24}\\]`, "g");
+const MARKED = /\[([^\[\]\n]{1,40})\]/g;
+const QUOTED = /[“"«]\s*([^”"»\n]{1,60}?)\s*[”"»]|‘([^’\n]{1,60}?)’/g;
+const LETTER = /[^\W_]/u;  // a letter or a digit: something a voice says
+
+// The text as a voice can read it (tts.speakable)
+function speakable(text) {
+  return text.replace(TRANSCRIPTION, " ").replace(MARKED, "$1").replace(/[ \t]{2,}/g, " ").trim();
+}
+
 const ankiPart = {
   // --- Audio ----------------------------------------------------------
   // A voice ("es-ES-ElviraNeural" on the computer, "es-ES-Chirp3-HD-Aoede" in the
@@ -17,7 +30,12 @@ const ankiPart = {
   // the sentence with the word, then the word, each on its line
   // (read on its own: tts.lines)
   spokenText(card) {
-    const back = (card.back ?? "").trim();
+    const back = speakable((card.back ?? "").trim());
+    // A back that is only a transcription ("/ɜː/"): the examples quoted on the front, each read on its own
+    if (!LETTER.test(back)) {
+      const examples = [...(card.front ?? "").matchAll(QUOTED)].map((m) => speakable(m[1] ?? m[2])).filter((e) => LETTER.test(e));
+      return examples.join("\n");
+    }
     const sentence = (card.front ?? "").replace(/\s*\([^)]*\)/g, "").trim();
     const blank = /…|\.{3}|_{3,}/;
     if (!this.dictation || back.includes("\n") || !blank.test(sentence)) return back;

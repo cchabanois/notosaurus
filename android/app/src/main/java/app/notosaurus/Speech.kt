@@ -120,12 +120,27 @@ class Speech(private val folder: File, private val prefs: Preferences, private v
 
         private val BLANK = Regex("""…|\.{3}|_{3,}""") // a sentence's blank for the word to write
         private val BRACKETS = Regex("""\s*\([^)]*\)""")
+        // As the computer's tts.py: a phonetic transcription ("/ɜː/", "[ˈtaɪɡə]") isn't read; a part
+        // singled out in brackets ("t[i]ger") is read as its word; the front's quoted examples
+        private const val PHONETIC = "ɐ-ʯʰ-˿̀-ͯæøœθð"
+        private val TRANSCRIPTION = Regex("""(?<![\w/])/[^/\s\d]{1,24}/(?![\w/])|\[[^\[\]\s\d]{0,24}[$PHONETIC][^\[\]\s\d]{0,24}\]""")
+        private val MARKED = Regex("""\[([^\[\]\n]{1,40})\]""")
+        private val QUOTED = Regex("""[“"«]\s*([^”"»\n]{1,60}?)\s*[”"»]|‘([^’\n]{1,60}?)’""")
+        private val LETTER = Regex("""[^\W_]""") // a letter or a digit: something a voice says
+
+        /** The text as a voice can read it (the computer's tts.speakable). */
+        fun speakable(text: String): String =
+            text.replace(TRANSCRIPTION, " ").replace(MARKED) { it.groupValues[1] }.replace(Regex("[ \t]{2,}"), " ").trim()
 
         /** What a card's sound says (as the core's tts.spoken): its back. A dictation's card
          * whose front is a sentence with a blank: the sentence with the word, then the word
          * (alone, "vers" could be "verre" or "vert"); each on its line, read on its own (read). */
         fun spoken(card: Card, dictation: Boolean): String {
-            val back = card.back.trim()
+            val back = speakable(card.back.trim())
+            if (!LETTER.containsMatchIn(back)) { // only a transcription: the front's quoted examples, each on its own
+                return QUOTED.findAll(card.front).map { speakable(it.groupValues[1].ifEmpty { it.groupValues[2] }) }
+                    .filter { LETTER.containsMatchIn(it) }.joinToString("\n")
+            }
             val sentence = card.front.replace(BRACKETS, "").trim()
             if (!dictation || '\n' in back || !BLANK.containsMatchIn(sentence)) return back
             val said = BLANK.replaceFirst(sentence, Regex.escapeReplacement(back))
