@@ -40,13 +40,21 @@
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
-            <!-- "✎ Notosaurus" on a card in AnkiDroid: notosaurus://fix?lesson=…&key=… opens the page
-                 on that card (the note types' link, app/note_types/common.py) -->
+            <!-- "✎ Notosaurus" on a card in AnkiDroid (the note types' link, app/note_types/common.py):
+                 the documentation's /fix/ page, then notosaurus://fix?lesson=…&key=… from its button;
+                 the https link itself when Android lets the app take it (its settings, or a verified
+                 assetlinks.json at the site's root one day) -->
             <intent-filter>
                 <action android:name="android.intent.action.VIEW" />
                 <category android:name="android.intent.category.DEFAULT" />
                 <category android:name="android.intent.category.BROWSABLE" />
                 <data android:scheme="notosaurus" android:host="fix" />
+            </intent-filter>
+            <intent-filter android:autoVerify="true">
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <data android:scheme="https" android:host="cchabanois.github.io" android:pathPrefix="/notosaurus/fix" />
             </intent-filter>
         </activity>
 

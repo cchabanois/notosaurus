@@ -62,7 +62,8 @@ Here is what the [card types](../card-types/) look like during a review in Anki 
 AnkiDroid and AnkiMobile show the same cards.
 
 Under every answer, a small **✎ Notosaurus** opens the card in Notosaurus to correct it: in
-the app on Android, in the page on the computer (Anki open, Notosaurus on its usual port).
+the app on Android (AnkiDroid opens a short web page first, whose button opens the app), in the
+page on the computer (Anki open, Notosaurus on its usual port).
 Nothing is lost: the correction updates the same note, its review history stays. The link
 only knows where the lesson lives: a lesson made on the computer opens there, one made in
 the app opens in the app. AnkiWeb and AnkiMobile don't show it.

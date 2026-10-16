@@ -30,18 +30,19 @@ HELP_FIELDS = ("Explanation", "Mnemonic")
 
 # Under the back: "✎ Notosaurus", the card opened in Notosaurus to correct it. Built on
 # the card from what the note holds already (AnkiDroid can't add a field to a note type
-# it has): the lesson from its tag, the card from the note's key field. On Android, the
-# app (an intent: Google Play's page when it is missing); on the computer, the page
-# served by the add-on; nowhere else (AnkiWeb, AnkiMobile: the link is hidden).
-FIX_SCRIPT = """<script>(function(){var A=document.querySelectorAll("a.nfix:not([data-done])");\
-for(var i=0;i<A.length;i++){var a=A[i];a.dataset.done="1";\
+# it has): the lesson from its tag, the card from the note's key field. On Android, a
+# short page of the documentation (FIX_PAGE) that opens the app: AnkiDroid lets a card
+# open http(s) links, and blocks every other scheme unless a setting allows it. On the
+# computer, the page served by the add-on. Nowhere else (AnkiWeb, AnkiMobile): hidden.
+FIX_PAGE = "https://cchabanois.github.io/notosaurus/fix/"  # docs/public/fix/index.html
+FIX_SCRIPT = f"""<script>(function(){{var A=document.querySelectorAll("a.nfix:not([data-done])");\
+for(var i=0;i<A.length;i++){{var a=A[i];a.dataset.done="1";\
 var m=/(?:^|\\s)notosaurus::(\\S+)/.exec(a.dataset.tags||"");\
 var c=document.body.className||"",android=/\\bandroid\\b/.test(c)||/Android/.test(navigator.userAgent),\
 desktop=/\\b(win|mac|linux)\\b/.test(c);\
-if(!m||!(android||desktop)){a.parentNode.style.display="none";continue;}\
+if(!m||!(android||desktop)){{a.parentNode.style.display="none";continue;}}\
 var q="lesson="+encodeURIComponent(m[1])+"&key="+encodeURIComponent(a.dataset.key||"");\
-a.href=android?"intent://fix?"+q+"#Intent;scheme=notosaurus;package=app.notosaurus;\
-S.browser_fallback_url=https%3A%2F%2Fcchabanois.github.io%2Fnotosaurus%2F;end":"http://localhost:8000/?"+q;}})();</script>"""
+a.href=(android?"{FIX_PAGE}?":"http://localhost:8000/?")+q;}}}})();</script>"""
 
 
 def fix_link(key: str) -> str:

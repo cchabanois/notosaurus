@@ -33,11 +33,21 @@ def test_every_note_type_links_back_with_its_key():
 
 def test_the_link_opens_the_app_or_the_computers_page_nowhere_else():
     script = common.FIX_SCRIPT
-    assert "intent://fix?" in script and "package=app.notosaurus" in script  # Android: the app
+    # Android: an https page of the documentation (AnkiDroid lets a card open those), which opens the app
+    assert common.FIX_PAGE.startswith("https://") and f'"{common.FIX_PAGE}?"' in script
+    assert "intent:" not in script  # blocked by AnkiDroid unless a setting allows it: never straight from the card
     assert "http://localhost:8000/?" in script  # the computer: the add-on's page
-    assert "browser_fallback_url" in script  # the app missing: Google Play's page
     assert 'display="none"' in script  # neither (AnkiWeb, AnkiMobile): hidden
     assert "notosaurus::" in script and "encodeURIComponent" in script  # the lesson's tag, the key encoded
+    assert "{" not in script.replace("(function(){", "").replace("){", "").replace("}})();", "")  # no f-string left
+
+
+def test_the_documentations_page_opens_the_app():
+    page = (ROOT / "docs" / "public" / "fix" / "index.html").read_text(encoding="utf-8")
+    assert "intent://fix?" in page and "package=app.notosaurus" in page  # Android: the app
+    assert "browser_fallback_url" in page and "play.google.com" in page  # the app missing: Google Play
+    assert "http://localhost:8000/?" in page  # opened on a computer all the same: the add-on's page
+    assert "location.search" in page  # the lesson and the card, passed on as they came
 
 
 def test_the_android_note_types_have_it_too():

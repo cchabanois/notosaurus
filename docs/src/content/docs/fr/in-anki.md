@@ -64,8 +64,9 @@ Voici à quoi ressemblent les [types de cartes](../card-types/) pendant une rév
 sur l'ordinateur. AnkiDroid et AnkiMobile affichent les mêmes cartes.
 
 Sous chaque réponse, un petit **✎ Notosaurus** ouvre la carte dans Notosaurus pour la
-corriger : dans l'application sur Android, dans la page sur l'ordinateur (Anki ouvert,
-Notosaurus sur son port habituel). Rien n'est perdu : la correction met à jour la même note,
+corriger : dans l'application sur Android (AnkiDroid ouvre d'abord une courte page web, dont le
+bouton ouvre l'application), dans la page sur l'ordinateur (Anki ouvert, Notosaurus sur son
+port habituel). Rien n'est perdu : la correction met à jour la même note,
 son historique de révision reste. Le lien ne sait ouvrir que là où la leçon se trouve : une
 leçon faite sur l'ordinateur s'ouvre là, une leçon faite dans l'application s'ouvre dans
 l'application. AnkiWeb et AnkiMobile ne l'affichent pas.
