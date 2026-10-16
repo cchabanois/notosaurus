@@ -1,0 +1,59 @@
+<!doctype html>
+<!-- "✎ Notosaurus" on a card in AnkiDroid (app/note_types/common.py): AnkiDroid lets a card
+     open an https link, not the app itself (unless a setting allows it), so the card opens
+     this page, which opens the app on the card (an intent: Google Play's page when the app
+     is missing). On a computer, the add-on's page instead. The lesson and the card come in
+     the query (?lesson=…&key=…) and are passed on as they came. -->
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex">
+  <title>Notosaurus</title>
+  <style>
+    :root { color-scheme: light dark; }
+    body { margin: 0; min-height: 100vh; display: grid; place-items: center; font-family: system-ui, sans-serif; background: #eef5f8; color: #1d2b33; }
+    @media (prefers-color-scheme: dark) { body { background: #10191e; color: #e6edf0; } }
+    main { max-width: 24rem; padding: 2rem 1.25rem; text-align: center; }
+    img { width: 96px; height: 96px; border-radius: 24px; }
+    h1 { font-size: 1.3rem; margin: 1rem 0 .5rem; }
+    p { margin: .5rem 0; line-height: 1.45; }
+    .btn { display: inline-block; margin: 1.2rem 0 .6rem; padding: .9rem 1.6rem; border-radius: 12px; background: #1b6b7a; color: #fff; font-weight: 700; font-size: 1.05rem; text-decoration: none; }
+    .small { font-size: .9rem; opacity: .75; }
+    .small a { color: inherit; }
+    [hidden] { display: none !important; }
+  </style>
+</head>
+<body>
+  <main>
+    <img src="../favicon.png" alt="">
+    <h1 data-fr="Corriger cette carte dans Notosaurus" data-en="Correct this card in Notosaurus"></h1>
+    <p data-android data-fr="Notosaurus s'ouvre sur la carte." data-en="Notosaurus opens on the card."></p>
+    <a id="open" class="btn" data-android data-fr="Ouvrir dans Notosaurus" data-en="Open in Notosaurus" href="#"></a>
+    <p class="small" data-android data-fr="Notosaurus n'est pas installé ? Le bouton ouvre sa page sur Google Play."
+       data-en="Notosaurus isn't installed? The button opens its page on Google Play."></p>
+    <p data-computer data-fr="Sur un ordinateur, Notosaurus s'ouvre dans la page du greffon Anki (Anki ouvert)."
+       data-en="On a computer, Notosaurus opens in the Anki add-on's page (Anki open)."></p>
+    <a id="computer" class="btn" data-computer data-fr="Ouvrir Notosaurus" data-en="Open Notosaurus" href="#"></a>
+    <p class="small"><a href="../" data-fr="Documentation de Notosaurus" data-en="Notosaurus documentation"></a></p>
+  </main>
+  <script>
+    (function () {
+      var fr = /^fr/i.test(navigator.language || "");
+      document.documentElement.lang = fr ? "fr" : "en";
+      var texts = document.querySelectorAll("[data-fr]");
+      for (var i = 0; i < texts.length; i++) texts[i].textContent = texts[i].getAttribute(fr ? "data-fr" : "data-en");
+      var query = location.search.replace(/^\?/, "");  // lesson=…&key=…, as the card gave them
+      var android = /Android/.test(navigator.userAgent);
+      var shown = document.querySelectorAll(android ? "[data-computer]" : "[data-android]");
+      for (var j = 0; j < shown.length; j++) shown[j].hidden = true;
+      var store = "https://play.google.com/store/apps/details?id=app.notosaurus";
+      document.getElementById("open").href = "intent://fix?" + query + "#Intent;scheme=notosaurus;package=app.notosaurus;" +
+        "S.browser_fallback_url=" + encodeURIComponent(store) + ";end";
+      var computer = "http://localhost:8000/?" + query;
+      document.getElementById("computer").href = computer;
+      if (!android && query) location.replace(computer);  // a computer: straight to the add-on's page
+    })();
+  </script>
+</body>
+</html>

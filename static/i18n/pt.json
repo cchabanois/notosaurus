@@ -306,7 +306,8 @@
       "deleteLesson": "Excluir a lição",
       "deleteBoth": "Excluir a lição e os {count} cartões",
       "deletedInAnki": "🗑 {count} cartões excluídos do Anki.",
-      "deletedNoSync": "Cartões excluídos do Anki, mas sem sincronização com o AnkiWeb ({reason})."
+      "deletedNoSync": "Cartões excluídos do Anki, mas sem sincronização com o AnkiWeb ({reason}).",
+      "cardNotFound": "Esta carta já não está na lição."
     },
     "picker": {
       "title": "Instruções",

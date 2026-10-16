@@ -15,6 +15,8 @@ CSS = """\
   font-size: 18px; color: #555; text-align: left;
 }
 .nightMode .notosaurus-help { color: #bbb; }
+.notosaurus-fix { margin-top: 16px; font-size: 14px; }
+.notosaurus-fix a { color: #8bb8c4; text-decoration: none; }
 """
 
 # On the back, under the info: the helps asked for at generation (why the answer is the
@@ -25,6 +27,31 @@ BACK_INFO = (
     '{{#Mnemonic}}<div class="notosaurus-help">🧠 {{Mnemonic}}</div>{{/Mnemonic}}'
 )
 HELP_FIELDS = ("Explanation", "Mnemonic")
+
+# Under the back: "✎ Notosaurus", the card opened in Notosaurus to correct it. Built on
+# the card from what the note holds already (AnkiDroid can't add a field to a note type
+# it has): the lesson from its tag, the card from the note's key field. On Android, a
+# short page of the documentation (FIX_PAGE) that opens the app: AnkiDroid lets a card
+# open http(s) links, and blocks every other scheme unless a setting allows it. On the
+# computer, the page served by the add-on. Nowhere else (AnkiWeb, AnkiMobile): hidden.
+FIX_PAGE = "https://cchabanois.github.io/notosaurus/fix/"  # docs/public/fix/index.html
+FIX_SCRIPT = f"""<script>(function(){{var A=document.querySelectorAll("a.nfix:not([data-done])");\
+for(var i=0;i<A.length;i++){{var a=A[i];a.dataset.done="1";\
+var m=/(?:^|\\s)notosaurus::(\\S+)/.exec(a.dataset.tags||"");\
+var c=document.body.className||"",android=/\\bandroid\\b/.test(c)||/Android/.test(navigator.userAgent),\
+desktop=/\\b(win|mac|linux)\\b/.test(c);\
+if(!m||!(android||desktop)){{a.parentNode.style.display="none";continue;}}\
+var q="lesson="+encodeURIComponent(m[1])+"&key="+encodeURIComponent(a.dataset.key||"");\
+a.href=(android?"{FIX_PAGE}?":"http://localhost:8000/?")+q;}}}})();</script>"""
+
+
+def fix_link(key: str) -> str:
+    """The back's "✎ Notosaurus" link (FIX_SCRIPT): `key`, the note's key field, tells the
+    card ("Front": its text; "Id": its id)."""
+    link = f'<a class="nfix" href="#" data-key="{{{{text:{key}}}}}" data-tags="{{{{Tags}}}}">✎ Notosaurus</a>'
+    return f'<div class="notosaurus-fix">{link}</div>{FIX_SCRIPT}'
+
+
 # Where a card's picture comes from (models.PictureSource): kept with the note, never shown
 # (no card template uses it). The computer's only: AnkiDroid can't add a field to a note
 # type it already has (tools/note_types.py leaves it out of the app's)

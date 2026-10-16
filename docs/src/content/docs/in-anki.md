@@ -61,6 +61,13 @@ To review a whole subject, click its deck: Anki takes the cards of all the decks
 Here is what the [card types](../card-types/) look like during a review in Anki desktop.
 AnkiDroid and AnkiMobile show the same cards.
 
+Under every answer, a small **✎ Notosaurus** opens the card in Notosaurus to correct it: in
+the app on Android (AnkiDroid opens a short web page first, whose button opens the app), in the
+page on the computer (Anki open, Notosaurus on its usual port).
+Nothing is lost: the correction updates the same note, its review history stays. The link
+only knows where the lesson lives: a lesson made on the computer opens there, one made in
+the app opens in the app. AnkiWeb and AnkiMobile don't show it.
+
 **Question and answer**: a word with its audio (▶) and a note.
 
 ![A vocabulary card in Anki](../../assets/screenshots/en/anki-vocab.png)

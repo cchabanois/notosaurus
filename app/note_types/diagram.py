@@ -4,7 +4,7 @@ from pathlib import Path
 
 from notosaurus_core import diagrams, tts
 
-from .common import BACK_INFO, CSS, HELP_FIELDS, NoteType, typed, variant
+from .common import BACK_INFO, CSS, HELP_FIELDS, NoteType, fix_link, typed, variant
 
 # The masks are HTML over the image, placed in % of its size.
 DIAGRAM_CSS = """\
@@ -27,7 +27,7 @@ def diagram_note_type(voice: str, typing: bool = False) -> NoteType:
     tells which note an update is for, as the question alone ("What is (1)?") repeats."""
     anki_tts = tts.is_anki_locale(voice)
     sound = f"{{{{tts {voice}:Back}}}}" if anki_tts else "{{Audio}}"
-    info = BACK_INFO
+    info = BACK_INFO + fix_link("Id")
     templates = (
         {
             "name": "Schéma",

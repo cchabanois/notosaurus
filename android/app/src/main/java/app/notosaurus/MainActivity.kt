@@ -162,6 +162,12 @@ class MainActivity : ComponentActivity() {
         when (intent?.action) {
             Shortcuts.PHONE -> prefs[LocalServer.MODE] = LocalServer.PHONE_MODE
             Shortcuts.COMPUTER -> if (prefs[LocalServer.COMPUTER] != null) prefs[LocalServer.MODE] = LocalServer.COMPUTER_MODE
+            // "✎ Notosaurus" on a card in AnkiDroid (notosaurus://fix?lesson=…&key=…): the phone's
+            // page on that card (its query, nothing else: the page looks the lesson and card up)
+            Intent.ACTION_VIEW -> intent.data?.takeIf { isFixLink(it) }?.let { link ->
+                web.loadUrl("$origin/?${link.encodedQuery.orEmpty()}")
+                return
+            }
         }
         val computer = prefs[LocalServer.COMPUTER]
         web.loadUrl(if (prefs[LocalServer.MODE] == LocalServer.COMPUTER_MODE && computer != null) computer else "$origin/")
@@ -179,6 +185,12 @@ class MainActivity : ComponentActivity() {
     }
 
     private fun computerHost(): String? = prefs[LocalServer.COMPUTER]?.let { Uri.parse(it).host }
+
+    /** "✎ Notosaurus" on a card: notosaurus://fix?… (the documentation page's button), or that
+     * page's own https address when Android gives it to the app. */
+    private fun isFixLink(uri: Uri): Boolean =
+        (uri.scheme == "notosaurus" && uri.host == "fix") ||
+            (uri.scheme == "https" && uri.host == "cchabanois.github.io" && uri.path.orEmpty().startsWith("/notosaurus/fix"))
 
     companion object {
         const val ANKIDROID = "com.ichi2.anki"
