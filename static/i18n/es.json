@@ -200,7 +200,7 @@
     },
     "actions": {
       "generate": "✨ Generar las tarjetas",
-      "startWithPhoto": "📷 Empieza fotografiando la lección",
+      "startWithPhoto": "📷 Fotografía la lección",
       "downloadApkg": "Descargar el archivo .apkg",
       "addToAnki": "📥 Añadir a Anki",
       "updateInAnki": "🔄 Actualizar en Anki",
