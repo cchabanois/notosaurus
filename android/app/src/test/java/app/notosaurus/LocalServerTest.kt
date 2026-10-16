@@ -834,6 +834,12 @@ class LocalServerTest {
         assertEquals("lait", Speech.spoken(card("Le chat boit du ….", "lait"), dictation = false)) // not a dictation
         assertEquals("la madre", Speech.spoken(card("la mère", "la madre"), dictation = true)) // no blank
         assertEquals("Ça coûte $1.\n$1", Speech.spoken(card("Ça coûte ...", "$1"), dictation = true)) // as written
+        // A transcription isn't read (a voice would say "slash"): the front's quoted examples are
+        assertEquals("bird", Speech.spoken(card("Quel son de voyelle entend-on dans le mot anglais \"bird\" ?", "/ɜː/"), dictation = false))
+        assertEquals("bird\ngirl", Speech.spoken(card("Le son de « bird » et de “girl” ?", "/ɜː/"), dictation = true))
+        assertEquals("", Speech.spoken(card("Comment prononce-t-on thought ?", "[θɔːt]"), dictation = false)) // no example
+        assertEquals("a tiger", Speech.spoken(card("x", "a t[i]ger"), dictation = false)) // a part singled out
+        assertEquals("12/10/2026, 90 km/h", Speech.spoken(card("x", "12/10/2026, 90 km/h"), dictation = false))
     }
 
     @Test
