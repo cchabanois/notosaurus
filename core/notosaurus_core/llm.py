@@ -25,6 +25,7 @@ from pydantic import BaseModel, Field, create_model
 
 from . import config, diagrams
 from .calls import CardStream, ExtractionError, Image, OnCard, record, recording  # noqa: F401 (llm's API)
+from .cards import plain_cards
 from .config import AIConfig
 from .errors import loggable
 from .models import (
@@ -153,6 +154,7 @@ async def extract_cards(
         demo=lambda: demo_ai.extraction(images, prompt, fun_facts, helps),
     )
     result = Extraction.model_validate(_accepted(answer).model_dump())
+    plain_cards(result.cards)  # a tag the AI wrote all the same would show as it is
     diagrams.normalize(result.cards, sizes, fmt)
     await _complete_figures(s, images, result.cards)
     return Extracted(
@@ -330,6 +332,7 @@ async def revise_cards(
         demo=lambda: demo_ai.revision(deck, instruction, texts),
     )
     revision = Revision.model_validate(_accepted(answer).model_dump())
+    plain_cards(revision.cards)
     _keep_masks(revision.cards, deck.cards, sizes, fmt)
     return revision
 
