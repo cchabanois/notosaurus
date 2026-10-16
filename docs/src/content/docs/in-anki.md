@@ -68,6 +68,10 @@ Nothing is lost: the correction updates the same note, its review history stays.
 only knows where the lesson lives: a lesson made on the computer opens there, one made in
 the app opens in the app. AnkiWeb and AnkiMobile don't show it.
 
+On AnkiDroid 2.25 and before, first turn on **Settings → Advanced → Allow cards to launch other
+apps**: without it, AnkiDroid blocks every link on a card ("Card blocked from launching another
+app"). Later versions let links to a web page through.
+
 **Question and answer**: a word with its audio (▶) and a note.
 
 ![A vocabulary card in Anki](../../assets/screenshots/en/anki-vocab.png)

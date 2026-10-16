@@ -102,6 +102,8 @@ Each pull request adds a line under **Unreleased**. See [Releasing](CONTRIBUTING
 
 ### Fixed
 
+- Android: the "computer not answering" page works again (its buttons did nothing since the yes/no sheet, #248: a script it needs wasn't loaded): try again, scan again, or use the phone.
+- Android: every Notosaurus note type in AnkiDroid is brought up to date at each send, not only the sent lesson's: an older lesson's cards (pictures, diagrams) get **✎ Notosaurus** too. A note type that can't be updated is said in the log. The docs say AnkiDroid 2.25 and before need **Allow cards to launch other apps** for the link.
 - In the coming Android app, a card's own photo is now made card size (512 px), as on the computer: it was kept at 1600 px, heavy for AnkiDroid and its sync.
 - The coming Android app's **Automatic** voice for an English lesson whose AI said just "en" was Australian (the first English voice by name): it is now British, as on the computer (Portuguese: European).
 - The coming Android app brings its note types in AnkiDroid up to date at the next send when the cards' look changed (their templates and style), as the computer does: before, a phone kept the look of its first send for good. The notes, their cards and reviews are kept.

@@ -48,7 +48,8 @@ class ModesTest {
         // The computer gone: the app's page saying so, then back to the phone's
         computer.close()
         ActivityScenario.launch(MainActivity::class.java).use { app ->
-            Device.waitFor(app, "location.pathname === '/unreachable.html' && document.querySelectorAll('button').length >= 3", "the unreachable page")
+            // Its component started (the buttons are in the HTML before Alpine runs it)
+            Device.waitFor(app, "location.pathname === '/unreachable.html' && document.querySelector('[x-data]')._x_dataStack !== undefined", "the unreachable page")
             Device.js(app, "document.querySelector('[x-data]')._x_dataStack[0].usePhone()")
             Device.waitFor(app, "location.pathname === '/' && typeof api === 'function'", "the phone's page")
         }

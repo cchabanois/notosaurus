@@ -5,6 +5,7 @@ import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.graphics.Bitmap
+import android.util.Log
 import android.graphics.BitmapFactory
 import android.net.Uri
 import androidx.core.content.ContextCompat
@@ -213,6 +214,7 @@ class Anki(private val context: Context) : AnkiTarget {
     private class Note(val model: Long, val deck: String, val fields: Array<String>, val tags: Set<String>, val card: String)
 
     private fun add(deck: Deck, media: Media, options: Options): Sent {
+        everyCurrent()
         val added = mutableMapOf<File, String?>() // a file into AnkiDroid once, however many cards show it
         val diagrams = mutableMapOf<Int, File>() // a photo's diagram image, made once
         fun file(f: File, kind: String) = added.getOrPut(f) { media(f, kind) } ?: ""
@@ -386,7 +388,8 @@ class Anki(private val context: Context) : AnkiTarget {
      * provider, as its API makes the others, with its type: the API makes standard ones only. */
     private fun model(type: NoteType): Long? {
         api.modelList?.entries?.firstOrNull { it.value == type.androidName }?.key?.let { id ->
-            runCatching { current(id, type) } // its look an older one's: the cards still go in
+            // its look an older one's: the cards still go in, the failure said in the log
+            runCatching { current(id, type) }.onFailure { Log.w(TAG, "note type ${type.androidName} not brought up to date", it) }
             return id
         }
         val cards = type.cards
@@ -417,6 +420,16 @@ class Anki(private val context: Context) : AnkiTarget {
 
     private val current = mutableSetOf<Long>() // the note types brought up to date already
 
+    /** Every note type of ours already in AnkiDroid brought up to date, not only the sent
+     * lesson's: an older lesson's cards (pictures, diagrams…) get the change too, sent or not. */
+    private fun everyCurrent() {
+        val there = api.modelList ?: return
+        noteTypes.all.values.distinctBy { it.androidName }.forEach { type ->
+            val id = there.entries.firstOrNull { it.value == type.androidName }?.key ?: return@forEach
+            runCatching { current(id, type) }.onFailure { Log.w(TAG, "note type ${type.androidName} not brought up to date", it) }
+        }
+    }
+
     /** A note type made by an older app (its style without today's signature) brought up to
      * date: its cards' templates and its style, as the computer does; its notes, cards and
      * reviews kept. One with another number of cards (one added or removed) is left as it is. */
@@ -426,7 +439,11 @@ class Anki(private val context: Context) : AnkiTarget {
         val model = Uri.withAppendedPath(FlashCardsContract.Model.CONTENT_URI, id.toString())
         val (css, count) = resolver.query(model, arrayOf(FlashCardsContract.Model.CSS, FlashCardsContract.Model.NUM_CARDS), null, null, null)
             ?.use { c -> if (c.moveToFirst()) c.getString(0).orEmpty() to c.getInt(1) else null } ?: return
-        if ("version ${type.signature}:" in css || count != type.cards.size) return
+        if ("version ${type.signature}:" in css || count != type.cards.size) {
+            Log.i(TAG, "note type ${type.androidName}: kept (${if (count != type.cards.size) "$count cards" else "up to date"})")
+            return
+        }
+        Log.i(TAG, "note type ${type.androidName}: bringing it up to date")
         type.cards.forEachIndexed { ord, card ->
             val template = ContentValues().apply {
                 put(FlashCardsContract.CardTemplate.NAME, card.name)
@@ -442,6 +459,7 @@ class Anki(private val context: Context) : AnkiTarget {
         api.deckList?.entries?.firstOrNull { it.value == name }?.key ?: api.addNewDeck(name)
 
     companion object {
+        private const val TAG = "Notosaurus"
         private const val LEFTOVER_TEXT = 80 // characters of a leftover note's text shown, as the computer's
         private const val ICON_PX = 96 // AnkiDroid's icon for the page: a chip's size, sharp on any screen
         private val FIRST_USE_WAITS = listOf(500L, 1_000L, 2_000L, 3_500L) // ms between the tries

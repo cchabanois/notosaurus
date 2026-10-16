@@ -71,6 +71,11 @@ son historique de révision reste. Le lien ne sait ouvrir que là où la leçon 
 leçon faite sur l'ordinateur s'ouvre là, une leçon faite dans l'application s'ouvre dans
 l'application. AnkiWeb et AnkiMobile ne l'affichent pas.
 
+Sur AnkiDroid 2.25 et avant, activez d'abord **Paramètres → Avancé → Autoriser les cartes à
+lancer d'autres applications** : sans ce réglage, AnkiDroid bloque tout lien d'une carte (« La
+carte ne peut pas lancer d'autres applications »). Les versions suivantes laissent passer les
+liens vers une page web.
+
 **Question et réponse** : un mot avec son audio (▶) et une précision.
 
 ![Une carte de vocabulaire dans Anki](../../../assets/screenshots/fr/anki-vocab.png)
