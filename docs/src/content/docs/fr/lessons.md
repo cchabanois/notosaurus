@@ -31,6 +31,20 @@ renvoyées. **＋ Nouvelle** commence une nouvelle leçon.
 Une leçon appartient au profil ouvert dans Anki au moment où elle a été faite, et peut être
 partagée avec les autres profils. Voir [Plusieurs enfants](../several-children/).
 
+## Contrôles à préparer
+
+Une interro lundi sur trois leçons ? **📌 Contrôle…** dans la relecture d'une leçon l'ajoute à
+un contrôle à préparer (un nom, une date), entière ou **quelques-unes de ses cartes seulement**
+(une coche sur chaque carte). Les contrôles sont listés en haut de **Mes leçons**.
+
+Chaque carte d'un contrôle reçoit une étiquette dans Anki, `Exam::<nom>`, posée tout de suite
+sur ses notes quand elles sont dans Anki, ou avec elles à l'envoi de la leçon. L'**étude
+personnalisée** d'Anki les réunit ensuite, quelles que soient leurs leçons : la fiche du contrôle
+dit comment, sur l'ordinateur et dans AnkiDroid (ouvrir le paquet qui contient les leçons,
+**Étude personnalisée → Étudier par état ou étiquette**, cocher l'étiquette). Une fois révisées,
+les cartes retournent dans leurs paquets. Supprimer un contrôle retire l'étiquette ; les cartes
+restent.
+
 ## Supprimer une leçon
 
 **🗑** à côté d'une leçon la supprime, avec ses photos. Si ses cartes sont dans Anki, Notosaurus

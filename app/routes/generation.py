@@ -17,7 +17,7 @@ from notosaurus_core.errors import loggable
 from notosaurus_core.images import refuse_bomb
 from notosaurus_core.llm import ExtractOptions, Image, extract_cards
 
-from .. import access, ankiconnect, children, decks, lessons, media, prompts, settings, usage
+from .. import access, ankiconnect, children, decks, exams, lessons, media, prompts, settings, usage
 from ..anki import build_apkg
 from ..errors import AppError
 from ..models import ExportRequest, Generated, Lesson, LessonIn
@@ -353,7 +353,8 @@ def _filename(deck: str) -> str:
 async def export(req: ExportRequest, background: BackgroundTasks) -> FileResponse:
     lesson = await access.lesson(req.lesson_id)
     audio, failures = await media.card_audio(req, background)
-    path = build_apkg(req, audio, media.diagram_images(req, lesson), media.card_pictures(req, lesson))
+    tags = await asyncio.to_thread(exams.card_tags, lesson.id, [c.id for c in req.cards]) if lesson else {}
+    path = build_apkg(req, audio, media.diagram_images(req, lesson), media.card_pictures(req, lesson), tags)
     background.add_task(os.remove, path)
     if lesson and await access.is_owner(lesson):  # someone else's lesson: exported, not changed
         await asyncio.to_thread(lessons.update, lesson.id, req, exported=True)

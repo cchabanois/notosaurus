@@ -47,6 +47,7 @@ data class Media(
     val lesson: String = "", // the lesson's id: with a label's number, which note a diagram card is
     val frames: Map<Int, List<Double>> = emptyMap(), // a photo's number → its diagram's frame (fractions)
     val sentBefore: Map<String, Long> = emptyMap(), // a card's id → its note at the lesson's last send
+    val extraTags: Map<String, Set<String>> = emptyMap(), // a card's id → the tags of the tests it is in (Exams.kt)
 )
 
 /** A note of a lesson no card has any more: what it shows first (plain), its deck. */
@@ -74,6 +75,10 @@ interface AnkiTarget {
 
     /** AnkiDroid opened to review the deck (and its sub-decks); false when it has no such deck. */
     fun review(deck: String): Boolean = false
+
+    /** Tags put on notes and taken off others ({tag: note ids}): a test's tag following its
+     * lessons (Exams.retagging); false when AnkiDroid couldn't be asked. */
+    fun retag(add: Map<String, Set<Long>>, remove: Map<String, Set<Long>>): Boolean = true
 }
 
 /**
@@ -146,6 +151,23 @@ class Anki(private val context: Context) : AnkiTarget {
         context.contentResolver.delete(Uri.withAppendedPath(FlashCardsContract.Note.CONTENT_URI, id.toString()), null, null) > 0
     }
 
+    override fun retag(add: Map<String, Set<Long>>, remove: Map<String, Set<Long>>): Boolean {
+        if (!installed() || !permitted()) return false
+        return runCatching {
+            firstUse {
+                val wanted = mutableMapOf<Long, MutableSet<String>>() // a note: the tags it gets, those it loses
+                val dropped = mutableMapOf<Long, MutableSet<String>>()
+                add.forEach { (tag, ids) -> ids.forEach { wanted.getOrPut(it) { mutableSetOf() } += tag } }
+                remove.forEach { (tag, ids) -> ids.forEach { dropped.getOrPut(it) { mutableSetOf() } += tag } }
+                for (id in wanted.keys + dropped.keys) {
+                    val note = api.getNote(id) ?: continue // gone from AnkiDroid: nothing to tag
+                    val tags = (note.tags - dropped[id].orEmpty()) + wanted[id].orEmpty()
+                    if (tags != note.tags) api.updateNoteTags(id, tags)
+                }
+            }
+        }.isSuccess
+    }
+
     /** AnkiDroid installed but never opened: its first request fails ("storage is not
      * configured") and sets it up; the next ones work. So: once more. */
     private fun <T> firstUse(request: () -> T): T {
@@ -172,7 +194,7 @@ class Anki(private val context: Context) : AnkiTarget {
         val own = listOfNotNull(media.lesson.takeIf { it.isNotEmpty() }?.let(::lessonTag)) // to find the lesson's notes again
         val notes = deck.cards.withIndex().filter { it.value.front.isNotBlank() }.mapNotNull { (i, card) ->
             val name = deckName(deck.deck, card.subdeck)
-            val tags = (card.tags.map { it.trim().replace(' ', '_') }.filter { it.isNotEmpty() } + "notosaurus" + own).toSet()
+            val tags = (card.tags.map { it.trim().replace(' ', '_') }.filter { it.isNotEmpty() } + "notosaurus" + own + media.extraTags[card.id].orEmpty()).toSet()
             val sound = media.audio[Speech.spoken(card, options.dictation)]?.let { file(it, "audio") } ?: ""
             val common = mapOf("Info" to info(card), "Explanation" to html(card.explanation), "Mnemonic" to html(card.mnemonic))
             // Which note it is, sent again: the card's own id; else its place in the lesson; else its text

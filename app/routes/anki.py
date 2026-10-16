@@ -2,7 +2,7 @@ import asyncio
 
 from fastapi import APIRouter, BackgroundTasks
 
-from .. import access, ankiconnect, decks, lessons, media
+from .. import access, ankiconnect, decks, exams, lessons, media
 from ..anki import notes
 from ..models import ExportRequest
 
@@ -38,7 +38,8 @@ async def anki_send(req: ExportRequest, background: BackgroundTasks) -> dict:
     audio, failures = await media.card_audio(req, background)
     profile = await ankiconnect.active_profile() or ""
     known = lesson.anki_notes.get(profile, {}) if lesson else {}
-    sent = notes(req, audio, media.diagram_images(req, lesson), media.card_pictures(req, lesson))
+    tags = await asyncio.to_thread(exams.card_tags, lesson.id, [c.id for c in req.cards]) if lesson else {}
+    sent = notes(req, audio, media.diagram_images(req, lesson), media.card_pictures(req, lesson), tags)
     result = await ankiconnect.send(sent, known)
     answer = {**result.__dict__, "audio_failures": failures}
     answer.pop("note_ids")  # the lesson keeps them, the page needn't

@@ -201,7 +201,12 @@ class FakeAnki:
             ]
         elif action == "addTags":
             for i in p["notes"]:
-                self.notes[i]["tags"] = [*self.notes[i]["tags"], p["tags"]]
+                if i in self.notes and p["tags"] not in self.notes[i]["tags"]:
+                    self.notes[i]["tags"] = [*self.notes[i]["tags"], p["tags"]]
+        elif action == "removeTags":
+            for i in p["notes"]:
+                if i in self.notes:
+                    self.notes[i]["tags"] = [t for t in self.notes[i]["tags"] if t != p["tags"]]
         elif action == "deleteNotes":
             for i in p["notes"]:
                 del self.notes[i]

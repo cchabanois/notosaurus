@@ -458,6 +458,57 @@
         "card": "Karte löschen",
         "picture": "Bild entfernen"
       }
+    },
+    "exams": {
+      "button": "📌 Test…",
+      "buttonIn": "📌 {names}",
+      "title": "Tests vorbereiten",
+      "titleFor": "Ein Test für diese Lektion",
+      "hint": "Ein Test sammelt Lektionen, ganz oder einige ihrer Karten, unter einem Schlagwort in Anki: zusammen gelernt mit Ankis benutzerdefiniertem Lernen, danach zurück in ihren Stapeln.",
+      "none": "Kein Test geplant.",
+      "noLessons": "Noch keine Lektion in diesem Test: fügen Sie eine aus ihrer Durchsicht hinzu.",
+      "new": "+ Neuer Test",
+      "name": "Name",
+      "namePlaceholder": "z. B. Bio-Test am Montag",
+      "date": "Datum",
+      "create": "Anlegen",
+      "add": "Diese Lektion hinzufügen",
+      "inWhole": "✓ Ganze Lektion",
+      "inSome": "✓ {count} Karten",
+      "remove": "Entfernen",
+      "pickCards": "Karten auswählen",
+      "openLesson": "Öffnen und Karten auswählen",
+      "back": "‹ Tests",
+      "whole": "ganze Lektion",
+      "some": "{count} Karten",
+      "inAnki": "{sent} von {total} Karten in Anki",
+      "notSent": "Noch nicht in Anki: das Schlagwort kommt mit der Lektion beim Senden.",
+      "tag": "Schlagwort",
+      "ankiClosed": "Anki ist geschlossen: das Schlagwort folgt beim nächsten Senden.",
+      "delete": "Test löschen",
+      "confirmDelete": "„{name}“ löschen? Die Karten bleiben in Anki, ohne sein Schlagwort.",
+      "past": "Vorbei",
+      "picked": "{count} Karten für {name}.",
+      "pick": {
+        "bar": "{count} Karten für {name}",
+        "all": "Alle",
+        "done": "Fertig",
+        "card": "Im Test"
+      },
+      "guide": {
+        "titleAndroid": "In AnkiDroid lernen",
+        "titleDesktop": "In Anki lernen",
+        "step1": "Öffnen Sie den Stapel <strong>{deck}</strong>",
+        "openDeck": "In AnkiDroid öffnen",
+        "step2android": "Tippen Sie unten auf <strong>Benutzerdefiniertes Lernen</strong>",
+        "step2desktop": "Klicken Sie unten auf dem Stapelbildschirm auf <strong>Benutzerdefiniertes Lernen</strong>",
+        "step3": "Wählen Sie <strong>Nach Kartenstatus oder Schlagwort lernen</strong>, dann <strong>Alle Karten</strong>",
+        "step4": "Haken Sie das Schlagwort <strong>{tag}</strong> an und bestätigen Sie",
+        "after": "Anki legt einen Stapel „Benutzerdefinierte Lernsitzung“ mit diesen Karten an; danach kehren sie in ihre Stapel zurück.",
+        "noDeck": "Die Lektionen liegen in verschiedenen Stapeln. In Anki: <strong>Gefilterten Stapel erstellen</strong>, und fügen Sie diese Suche ein:",
+        "copy": "Kopieren",
+        "copied": "Kopiert"
+      }
     }
   },
   "admin": {
@@ -954,6 +1005,10 @@
       "same_id": "Zwei Kinder haben denselben Vornamen.",
       "too_many": "Höchstens {max} Kinder.",
       "not_found": "Dieses Kind gibt es nicht mehr: Seite neu laden."
+    },
+    "exams": {
+      "not_found": "Diesen Test gibt es nicht mehr: laden Sie die Seite neu.",
+      "too_many": "Höchstens {max} Tests."
     }
   },
   "demo": {

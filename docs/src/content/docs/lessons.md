@@ -30,6 +30,18 @@ Tap a lesson to reopen it: its photos and cards come back, ready to be corrected
 A lesson belongs to the profile open in Anki when it was made, and can be shared with the other
 profiles. See [Several children](../several-children/).
 
+## Tests to prepare
+
+A test on Monday covers three lessons? **📌 Test…** in a lesson's review adds it to a test to
+prepare (a name, a date), whole or **some of its cards only** (a tick on each card). The tests
+are listed at the top of **Lessons**.
+
+Every card of a test gets a tag in Anki, `Exam::<name>`, put on its notes right away when
+they are in Anki, or with them when the lesson is sent. Anki's **custom study** then gathers
+them, whatever their lessons: the test's sheet says how, on the computer and in AnkiDroid
+(open the deck holding the lessons, **Custom study → Study by card state or tag**, tick the tag).
+Once revised, the cards go back to their decks. Deleting a test takes the tag off; the cards stay.
+
 ## Deleting a lesson
 
 **🗑** next to a lesson deletes it, with its photos. If its cards are in Anki, Notosaurus looks

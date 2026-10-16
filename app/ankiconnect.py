@@ -71,6 +71,18 @@ def _client() -> httpx.AsyncClient:
     return httpx.AsyncClient(timeout=TIMEOUT, transport=_transport)
 
 
+async def tag_notes(add: dict[str, set[int]], remove: dict[str, set[int]]) -> None:
+    """Tags put on notes and taken off others ({tag: note ids}): a test's tag following
+    its lessons (exams.retagging). Notes gone from Anki are skipped by AnkiConnect."""
+    async with _client() as client:
+        for tag, ids in remove.items():
+            if ids:
+                await _invoke(client, "removeTags", notes=sorted(ids), tags=tag)
+        for tag, ids in add.items():
+            if ids:
+                await _invoke(client, "addTags", notes=sorted(ids), tags=tag)
+
+
 async def active_profile() -> str | None:
     """Anki profile open right now, or None (Anki closed, profile screen, old AnkiConnect)."""
     try:

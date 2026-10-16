@@ -458,6 +458,57 @@
         "card": "Delete the card",
         "picture": "Remove the picture"
       }
+    },
+    "exams": {
+      "button": "📌 Test…",
+      "buttonIn": "📌 {names}",
+      "title": "Tests to prepare",
+      "titleFor": "A test for this lesson",
+      "hint": "A test gathers lessons, whole or some of their cards, under one tag in Anki: revised together with Anki's custom study, then back in their decks.",
+      "none": "No test planned.",
+      "noLessons": "No lesson in this test yet: add one from its review.",
+      "new": "+ New test",
+      "name": "Name",
+      "namePlaceholder": "e.g. Biology test on Monday",
+      "date": "Date",
+      "create": "Create",
+      "add": "Add this lesson",
+      "inWhole": "✓ Whole lesson",
+      "inSome": "✓ {count} cards",
+      "remove": "Remove",
+      "pickCards": "Choose the cards",
+      "openLesson": "Open and choose the cards",
+      "back": "‹ Tests",
+      "whole": "whole lesson",
+      "some": "{count} cards",
+      "inAnki": "{sent} of {total} cards in Anki",
+      "notSent": "Not in Anki yet: the tag comes with the lesson when it is sent.",
+      "tag": "Tag",
+      "ankiClosed": "Anki is closed: the tag will follow at the next send.",
+      "delete": "Delete the test",
+      "confirmDelete": "Delete “{name}”? The cards stay in Anki, without its tag.",
+      "past": "Past",
+      "picked": "{count} cards for {name}.",
+      "pick": {
+        "bar": "{count} cards for {name}",
+        "all": "All",
+        "done": "Done",
+        "card": "In the test"
+      },
+      "guide": {
+        "titleAndroid": "Revise it in AnkiDroid",
+        "titleDesktop": "Revise it in Anki",
+        "step1": "Open the deck <strong>{deck}</strong>",
+        "openDeck": "Open in AnkiDroid",
+        "step2android": "At the bottom, tap <strong>Custom study</strong>",
+        "step2desktop": "Click <strong>Custom Study</strong> at the bottom of the deck's screen",
+        "step3": "Choose <strong>Study by card state or tag</strong>, then <strong>All cards</strong>",
+        "step4": "Tick the tag <strong>{tag}</strong> and confirm",
+        "after": "Anki makes a “Custom study session” deck with these cards; once done, they go back to their decks.",
+        "noDeck": "The lessons are in different decks. In Anki: <strong>Create filtered deck</strong>, and paste this search:",
+        "copy": "Copy",
+        "copied": "Copied"
+      }
     }
   },
   "admin": {
@@ -954,6 +1005,10 @@
       "same_id": "Two children have the same first name.",
       "too_many": "{max} children at most.",
       "not_found": "This child no longer exists: reload the page."
+    },
+    "exams": {
+      "not_found": "This test no longer exists: reload the page.",
+      "too_many": "At most {max} tests."
     }
   },
   "demo": {
