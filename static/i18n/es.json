@@ -205,6 +205,8 @@
       "addToAnki": "📥 Añadir a Anki",
       "updateInAnki": "🔄 Actualizar en Anki",
       "sending": "Enviando a Anki…",
+      "sendingSounds": "🔊 Voz: {done} / {total}…",
+      "sendingCards": "📥 Tarjetas…",
       "exportApkg": "⬇️ Exportar a Anki (.apkg)",
       "exporting": "Preparando el mazo…"
     },

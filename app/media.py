@@ -3,27 +3,43 @@ audio, the cards' pictures and the diagrams' images."""
 
 import shutil
 import tempfile
+from collections.abc import Callable
 from pathlib import Path
 
 from fastapi import BackgroundTasks
 
 from notosaurus_core import diagrams, pictures, tts
 
-from . import lessons, settings
+from . import lessons, settings, sounds
 from .models import ExportRequest, Lesson
 
 
-async def card_audio(req: ExportRequest, background: BackgroundTasks) -> tuple[dict[str, Path], int]:
-    """mp3 of the cards for an edge-tts voice: {what it says (tts.spoken): mp3} and the number of failures."""
-    if not req.voice or tts.is_anki_locale(req.voice):
+async def card_audio(
+    req: ExportRequest, background: BackgroundTasks, on_sound: Callable[[int, int], None] | None = None
+) -> tuple[dict[str, Path], int]:
+    """mp3 of the cards for an edge-tts voice: {what it says (tts.spoken): mp3} and the number of failures.
+    `on_sound`: told (done, total) first then as each sound is done, for the page's progress."""
+    if not sounds.wanted(req.voice):
         return {}, 0
+    await sounds.settle(req.lesson_id)  # the sounds being made ahead: made here instead
     # Saved lesson: mp3s go to its audio/ folder; otherwise a throwaway folder.
     directory = lessons.audio_dir(req.lesson_id) if req.lesson_id else None
     if directory is None:
         directory = Path(tempfile.mkdtemp(prefix="notosaurus-audio-"))
         background.add_task(shutil.rmtree, directory, ignore_errors=True)
     said = tts.spoken_backs(req.cards, req.dictation or req.dictation_only)
-    audio, failures = await tts.tts_many(said, req.voice, directory, req.rate or settings.current().tts_rate)
+    total, done = len(dict.fromkeys(said)), 0
+
+    def one_done() -> None:
+        nonlocal done
+        done += 1
+        if on_sound:
+            on_sound(done, total)
+
+    if on_sound and total:
+        on_sound(0, total)
+    rate = req.rate or settings.current().tts_rate
+    audio, failures = await tts.tts_many(said, req.voice, directory, rate, on_done=one_done)
     tts.prune(directory, set(audio.values()))
     return audio, failures
 

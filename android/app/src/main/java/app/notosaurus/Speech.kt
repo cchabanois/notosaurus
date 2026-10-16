@@ -1,6 +1,14 @@
 package app.notosaurus
 
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.async
+import kotlinx.coroutines.awaitAll
+import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.Semaphore
+import kotlinx.coroutines.sync.withLock
+import kotlinx.coroutines.sync.withPermit
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.json.JsonArray
 import kotlinx.serialization.json.jsonObject
@@ -37,11 +45,38 @@ class Speech(private val folder: File, private val prefs: Preferences, private v
 
     /** The backs' sound for AnkiDroid, with `voice` (none: no sound), and how many
      * couldn't be made. */
-    suspend fun sounds(deck: Deck, voice: String, dictation: Boolean = false, rate: String = ""): Pair<Map<String, File>, Int> {
-        if (!VOICE.matches(voice)) return emptyMap<String, File>() to 0
+    suspend fun sounds(
+        deck: Deck,
+        voice: String,
+        dictation: Boolean = false,
+        rate: String = "",
+        onSound: suspend (done: Int, total: Int) -> Unit = { _, _ -> }, // first (0, total), then as each is done
+    ): Pair<Map<String, File>, Int> {
+        if (!reads(voice)) return emptyMap<String, File>() to 0
         val backs = deck.cards.map { spoken(it, dictation) }.filter { it.isNotEmpty() }.distinct()
-        val made = backs.associateWith { runCatching { read(it, voice, rate) }.getOrNull() }
-        return made.filterValues { it != null }.mapValues { it.value!! } to made.count { it.value == null }
+        if (backs.isNotEmpty()) onSound(0, backs.size)
+        // PARALLEL at a time, as the computer's (tts.MAX_PARALLEL): one by one, a lesson's took minutes
+        val gate = Semaphore(PARALLEL)
+        val counting = Mutex() // told in order: the page shows the last one
+        var done = 0
+        val made = coroutineScope {
+            backs.map { back ->
+                async {
+                    gate.withPermit {
+                        val mp3 = try {
+                            read(back, voice, rate)
+                        } catch (e: CancellationException) {
+                            throw e
+                        } catch (e: Exception) { // the card goes without sound, counted
+                            null
+                        }
+                        counting.withLock { onSound(++done, backs.size) }
+                        back to mp3
+                    }
+                }
+            }.awaitAll()
+        }
+        return made.mapNotNull { (back, mp3) -> mp3?.let { back to it } }.toMap() to made.count { it.second == null }
     }
 
     /** The voice for the backs' language ("es-ES", "en"…): DEFAULT_VOICE in that variety,
@@ -116,6 +151,11 @@ class Speech(private val folder: File, private val prefs: Preferences, private v
             else -> NORMAL
         }
         private val VOICE = Regex("""^[a-z]{2,3}-[A-Z]{2}-[\w-]+$""")
+
+        /** A voice the relay reads with (not an Anki locale, not none). */
+        fun reads(voice: String) = VOICE.matches(voice)
+
+        const val PARALLEL = 4 // sounds read at once
 
         /** The backs' language when it is one being learned: not the pupil's own (the page's)
          * unless the cards are for writing what is heard, as the computer (app/main.py). */

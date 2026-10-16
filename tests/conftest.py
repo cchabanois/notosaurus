@@ -9,7 +9,7 @@ import httpx
 import pytest
 from fastapi.testclient import TestClient
 
-from app import ankiconnect, settings
+from app import ankiconnect, settings, sounds
 from app.attempts import Attempts
 from app.main import app
 from app.routes import admin as admin_routes
@@ -63,6 +63,9 @@ def client(tmp_path, monkeypatch):
         monkeypatch.delenv(var, raising=False)
     monkeypatch.setenv("NOTOSAURUS_LLM", "fake")
     monkeypatch.setattr(tts, "_synthesize", fake_synthesize)
+    # No sound made ahead while a test runs, unless it says so (tests/test_sounds_ahead.py):
+    # what a test sees synthesized is its own doing
+    monkeypatch.setattr(sounds, "DELAY", 3600)
     # Never reach a real Anki from the tests: AnkiConnect is "unreachable" unless a test fakes it.
     monkeypatch.setattr(ankiconnect, "_transport", httpx.MockTransport(anki_unreachable))
     monkeypatch.setattr(prices, "_transport", httpx.MockTransport(model_list))

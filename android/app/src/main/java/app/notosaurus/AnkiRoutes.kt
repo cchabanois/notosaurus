@@ -31,9 +31,9 @@ internal fun Route.ankiRoutes(server: LocalServer) {
                 put("sync", JsonNull)
             }
         }
-        api("POST", "/api/anki/send") {
+        // Told as it goes when the page asks (stepping): the sounds read, then the cards sent
+        stepping("/api/anki/send") { req, step ->
             switches.check("anki.send")
-            val req = body()
             req.string("lesson_id").takeIf { it.isNotEmpty() }?.let { lessons.update(it, req, exported = true) }
             val deck = json.decodeFromJsonElement(Deck.serializer(), buildJsonObject {
                 put("deck", req["deck"]!!)
@@ -42,8 +42,12 @@ internal fun Route.ankiRoutes(server: LocalServer) {
             readyAnki()
             fun on(option: String) = req[option]?.jsonPrimitive?.content == "true"
             val dictation = on("dictation") || on("dictation_only")
-            val (sounds, failures) = speech.sounds(deck, req.string("voice"), dictation, req.string("rate"))
             val lessonId = req.string("lesson_id")
+            soundsAhead.settle(lessonId) // the sounds being read ahead: read here instead
+            val (sounds, failures) = speech.sounds(deck, req.string("voice"), dictation, req.string("rate")) { done, total ->
+                step(buildJsonObject { put("step", "sounds"); put("done", done); put("total", total) })
+            }
+            step(buildJsonObject { put("step", "cards") })
             val folder = lessons.images(lessonId)
             val pictures = deck.cards.mapNotNull { c -> folder?.resolve(c.picture)?.takeIf { c.picture.isNotEmpty() && it.isFile }?.let { c.picture to it } }.toMap()
             // The diagrams: the photos their labels are on

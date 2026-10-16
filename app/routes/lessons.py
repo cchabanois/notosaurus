@@ -8,7 +8,7 @@ from notosaurus_core import diagrams, llm
 from notosaurus_core.llm import Image, revise_cards
 from notosaurus_core.models import switched
 
-from .. import access, ankiconnect, children, i18n, lesson_notes, lessons, settings, usage
+from .. import access, ankiconnect, children, i18n, lesson_notes, lessons, settings, sounds, usage
 from ..errors import AppError
 from ..models import Deck, ExplainRequest, Explanation, Lesson, LessonIn, LessonSummary, RevisionRequest
 from .common import page_lang
@@ -41,6 +41,7 @@ async def update_lesson(id: str, lesson: LessonIn) -> Lesson:
     updated = await asyncio.to_thread(lessons.update, id, lesson, share=share)
     if updated is None:  # deleted meanwhile
         raise AppError("lesson.not_found", 404)
+    sounds.soon(updated.id, updated.voice)  # the backs as edited: their sounds made meanwhile
     return updated
 
 
@@ -60,7 +61,9 @@ async def copy_lesson(id: str, req: CopyFor) -> Lesson:
         raise AppError("children.not_found", 404)
     deck = children.deck_for(child, children.split_deck(lesson.deck, every)[1]) or lesson.deck
     owner = child.anki_profile or await ankiconnect.active_profile() or ""
-    return await asyncio.to_thread(lessons.copy, id, deck, child.id, owner)
+    copied = await asyncio.to_thread(lessons.copy, id, deck, child.id, owner)
+    sounds.soon(copied.id, copied.voice)
+    return copied
 
 
 @router.get("/api/lessons/{id}/anki-notes")
@@ -131,6 +134,8 @@ async def revise_lesson(id: str, req: RevisionRequest, lang: str = Depends(page_
             dictation_only=req.dictation_only and switched(req.dictation, revision.dictation),
         ),
     )
+    if updated:
+        sounds.soon(updated.id, updated.voice)
     return {"lesson": updated, "summary": revision.summary}
 
 

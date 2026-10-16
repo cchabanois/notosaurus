@@ -761,3 +761,44 @@ test("the card a note's key names: its id, a diagram label, or its front text", 
   assert.equal(found("Qu'est-ce que (2) ?"), "d1"); // the same front twice: the first
   assert.equal(found("nope"), null);
 });
+
+// "Add to Anki" with the page's answer to /api/anki/send (`lines`, as it comes): the
+// labels its button showed meanwhile, and the component after
+async function sendWith(lines) {
+  const page = await loadScripts("app.js", {
+    routes: (url, options) => {
+      if (url !== "/api/anki/send") return new Response([]);
+      assert.equal(options.headers.Accept, "application/x-ndjson");
+      return Response.ndjson(lines);
+    },
+  });
+  const c = page.component();
+  const shown = [];
+  let step = "";
+  Object.defineProperty(c, "sendStep", { get: () => step, set: (v) => { step = v; if (v) shown.push(v); } });
+  await c.sendToAnki();
+  return { c, shown };
+}
+
+test("Add to Anki: its steps said on the button as they come, then its answer", async () => {
+  const { c, shown } = await sendWith([
+    { step: "sounds", done: 0, total: 2 },
+    { step: "sounds", done: 1, total: 2 },
+    { step: "cards" },
+    { result: { added: 2, updated: 0, audio_failures: 0, leftovers: [] } },
+  ]);
+  assert.equal(shown.length, 3);
+  assert.match(shown[1], /1 \/ 2/);
+  assert.ok(!/\d/.test(shown[2]));  // the cards: no count
+  assert.equal(c.sending, false);
+  assert.equal(c.sendStep, "");  // the button's own label again
+  assert.equal(c.error, "");
+  assert.equal(c.lessonExported, true);
+});
+
+test("Add to Anki: an error as the last line is said", async () => {
+  const { c } = await sendWith([{ step: "cards" }, { error: { code: "anki.unreachable", params: {} } }]);
+  assert.ok(c.error);
+  assert.equal(c.sending, false);
+  assert.equal(c.lessonExported, false);
+});

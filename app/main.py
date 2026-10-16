@@ -10,7 +10,7 @@ from fastapi import FastAPI
 from fastapi.responses import JSONResponse, Response
 from fastapi.staticfiles import StaticFiles
 
-from . import settings
+from . import settings, sounds
 from .errors import AppError
 from .hosts import KnownHostsOnly
 from .routes import admin, anki, children, devices, exams, generation, lessons, pages, pictures, prompts, voices
@@ -41,6 +41,7 @@ logging.getLogger("uvicorn.access").addFilter(HideDeviceToken())
 async def lifespan(app: FastAPI):
     log.warning("Notosaurus %s, LLM provider: %s", VERSION, settings.current().llm)
     yield
+    await sounds.stop()  # the sounds being made ahead
 
 
 app = FastAPI(title="Notosaurus", version=VERSION, lifespan=lifespan)

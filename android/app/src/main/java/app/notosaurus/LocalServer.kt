@@ -24,17 +24,26 @@ import io.ktor.server.routing.post
 import io.ktor.server.routing.put
 import io.ktor.server.routing.routing
 import io.ktor.utils.io.toByteArray
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
+import kotlinx.serialization.builtins.ListSerializer
+import kotlinx.serialization.json.JsonArray
 import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.jsonObject
+import kotlinx.serialization.json.jsonPrimitive
 import kotlinx.serialization.json.put
 import java.io.File
 import java.net.URI
 import java.util.UUID
+
+/** A step of a route told as it goes (LocalServer.stepping): a line to the page. */
+typealias Step = suspend (JsonObject) -> Unit
 
 /**
  * The computer's server, as the page sees it: the same /api routes (app/main.py),
@@ -80,6 +89,7 @@ class LocalServer(
     internal val computer = Computer(prefs, modeChanged)
     internal val switches = Switches(prefs, version)
     internal val dictation = recorder?.let { Dictation(File(dataDir, "dictation").apply { mkdirs() }, it, ::relay) }
+    internal val soundsAhead = SoundsAhead(::makeSounds) // the backs' sounds read once a lesson is saved
     private lateinit var server: EmbeddedServer<*, *>
 
     /** Starts it; returns its port. */
@@ -90,7 +100,25 @@ class LocalServer(
     }
 
     fun stop() {
+        soundsAhead.stop()
         if (::server.isInitialized) server.stop(gracePeriodMillis = 0, timeoutMillis = 1000)
+    }
+
+    /** The lesson's backs' sounds read in a moment (SoundsAhead), when the send would read
+     * them: a relay voice, a licence for the relay, sending to AnkiDroid not turned off. */
+    internal fun soundsSoon(lesson: JsonObject) {
+        if (readsAhead(lesson)) soundsAhead.soon(lesson.string("id"))
+    }
+
+    private fun readsAhead(lesson: JsonObject) =
+        Speech.reads(lesson.string("voice")) && licence().isNotEmpty() && !switches.off("anki.send")
+
+    /** The lesson's missing sounds, as the send reads them (same texts, voice, rate: same files). */
+    private suspend fun makeSounds(id: String) {
+        val lesson = lessons.get(id)?.takeIf(::readsAhead) ?: return // as saved now: it may have changed, or gone
+        val deck = Deck(lesson.string("deck"), json.decodeFromJsonElement(ListSerializer(Card.serializer()), lesson["cards"] ?: JsonArray(emptyList())))
+        fun on(option: String) = lesson[option]?.jsonPrimitive?.content == "true"
+        speech.sounds(deck, lesson.string("voice"), on("dictation") || on("dictation_only"), lesson.string("rate"))
     }
 
     init {
@@ -196,6 +224,48 @@ class LocalServer(
                 } catch (e: Exception) {
                     val (_, answer) = failure(e) ?: throw e
                     buildJsonObject { put("error", answer["detail"]!!) }
+                }
+                line(last)
+            }
+        }
+    }
+
+    /**
+     * A JSON route told as it goes when the page asks Relay.STREAM_TYPE, as the computer's
+     * (app/routes/anki.py, _steps): the `step` lines the work tells ({"step": "sounds",
+     * "done", "total"}, {"step": "cards"}), then {"result"} or {"error"}. Without it: its
+     * answer, as `api`. The body is read first: the answer then outlives the request.
+     */
+    internal fun Route.stepping(path: String, work: suspend RoutingContext.(JsonObject, Step) -> JsonObject) {
+        post(path) {
+            if (!allowed()) return@post
+            val req = body()
+            if (call.request.headers[HttpHeaders.Accept]?.contains(Relay.STREAM_TYPE) != true) {
+                val (status, answer) = try {
+                    HttpStatusCode.OK to work(req) {}
+                } catch (e: Exception) {
+                    failure(e) ?: throw e
+                }
+                call.respondText(answer.toString(), ContentType.Application.Json, status)
+                return@post
+            }
+            val routing = this
+            call.respondTextWriter(ContentType.parse(Relay.STREAM_TYPE)) {
+                val writer = this
+                val writing = Mutex() // steps told from the sounds read at once
+                suspend fun line(item: JsonObject) = writing.withLock {
+                    withContext(Dispatchers.IO) {
+                        writer.write("$item\n")
+                        writer.flush()
+                    }
+                }
+                val last = try {
+                    buildJsonObject { put("result", routing.work(req) { line(it) }) }
+                } catch (e: CancellationException) {
+                    throw e
+                } catch (e: Exception) {
+                    val detail = failure(e)?.second?.get("detail") ?: error("internal", JsonObject(emptyMap()))["detail"]!!
+                    buildJsonObject { put("error", detail) }
                 }
                 line(last)
             }
