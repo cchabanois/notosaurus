@@ -76,6 +76,22 @@ class AnkiDroidTest {
     }
 
     @Test
+    fun anotherLessonsNoteTypeBroughtUpToDateToo() {
+        // A text with gaps sent once: its note type in AnkiDroid
+        Anki(Device.context).send(Deck("Notosaurus test $run", listOf(Card("Le {{c1::soleil}} brille $run", ""))))
+        val type = types["cloze"]
+        val api = AddContentApi(Device.context)
+        val model = Uri.withAppendedPath(FlashCardsContract.Model.CONTENT_URI, api.modelList!!.entries.first { it.value == type.androidName }.key.toString())
+        val resolver = Device.context.contentResolver
+        resolver.update(model, android.content.ContentValues().apply { put(FlashCardsContract.Model.CSS, ".card { color: red; }") }, null, null)
+
+        // A lesson without any gap sent next (a new run of the app): the cloze type brought up to date all the same
+        Anki(Device.context).send(Deck("Notosaurus test $run", listOf(Card("étoile $run", "estrella"))))
+        val css = resolver.query(model, arrayOf(FlashCardsContract.Model.CSS), null, null, null)!!.use { c -> c.moveToFirst(); c.getString(0) }
+        assertTrue(css, "version ${type.signature}:" in css)
+    }
+
+    @Test
     fun theLessonsDeckChangedItsCardsMove() {
         val anki = Anki(Device.context)
         val lesson = "move-$run"
