@@ -12,7 +12,7 @@ import hashlib
 import logging
 import re
 import shutil
-from collections.abc import Mapping
+from collections.abc import Callable, Mapping
 from pathlib import Path
 
 import edge_tts
@@ -99,7 +99,11 @@ def filename(text: str, voice: str, rate: str = RATE) -> str:
 
 async def _synthesize(text: str, voice: str, path: Path, rate: str) -> None:
     tmp = path.with_suffix(".part")
-    await edge_tts.Communicate(text, voice, rate=rate).save(str(tmp))
+    try:
+        await edge_tts.Communicate(text, voice, rate=rate).save(str(tmp))
+    except BaseException:  # failed or stopped (sounds made ahead, replaced): nothing left behind
+        tmp.unlink(missing_ok=True)
+        raise
     tmp.rename(path)  # never leave a half-written mp3 behind
 
 
@@ -135,8 +139,15 @@ async def _synthesize_lines(text: str, voice: str, path: Path, rate: str) -> Non
             part.unlink(missing_ok=True)
 
 
-async def tts_many(texts: list[str], voice: str, directory: Path, rate: str = RATE) -> tuple[dict[str, Path], int]:
-    """Audio for every text in `directory`. Returns {text: mp3} and the number of failures."""
+async def tts_many(
+    texts: list[str],
+    voice: str,
+    directory: Path,
+    rate: str = RATE,
+    on_done: Callable[[], None] | None = None,
+) -> tuple[dict[str, Path], int]:
+    """Audio for every text in `directory`. Returns {text: mp3} and the number of failures.
+    `on_done`: told as each different text is done (made, found or failed), for a progress."""
     sem = asyncio.Semaphore(MAX_PARALLEL)
 
     async def one(text: str) -> tuple[str, Path | None]:
@@ -147,6 +158,9 @@ async def tts_many(texts: list[str], voice: str, directory: Path, rate: str = RA
                 # Never the text (no lesson in logs), nor the message (it may quote it)
                 log.warning("TTS %s failed (%d characters): %s", voice, len(text), loggable(e))
                 return text, None
+            finally:
+                if on_done:
+                    on_done()
 
     results = await asyncio.gather(*(one(t) for t in dict.fromkeys(texts)))
     audio = {t: p for t, p in results if p}

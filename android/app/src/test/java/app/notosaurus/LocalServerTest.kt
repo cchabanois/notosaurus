@@ -170,10 +170,14 @@ class LocalServerTest {
             subscriptions = play,
         )
         computer.start()
+        // No sound read ahead while a test runs, unless it says so (soundsReadAhead…): the
+        // relay's answers go to what the test asks
+        local.soundsAhead.delayMs = 3_600_000
     }
 
     @After
     fun tearDown() {
+        local.stop()
         relay.close()
         computer.close()
     }
@@ -1681,5 +1685,107 @@ class LocalServerTest {
         val search = json.parseToJsonElement(asked.last().second).jsonObject
         assertEquals("true", search["translate"]!!.jsonPrimitive.content) // written in any language
         assertEquals("La réunion ? → A ∪ B", search.string("context"))
+    }
+
+    /** The relay reading aloud (/v1/speak): "mp3 <text>", `slowMs` each; what it read, and the
+     * most it read at once. */
+    private class Speaker(private val slowMs: Long = 0) : mockwebserver3.Dispatcher() {
+        val read: MutableList<String> = java.util.Collections.synchronizedList(mutableListOf())
+        private val now = java.util.concurrent.atomic.AtomicInteger()
+        val most = java.util.concurrent.atomic.AtomicInteger()
+        override fun dispatch(request: RecordedRequest): MockResponse {
+            if (request.url.encodedPath != "/v1/speak") return MockResponse.Builder().code(404).build()
+            val text = json.parseToJsonElement(request.body!!.utf8()).jsonObject.string("text")
+            most.accumulateAndGet(now.incrementAndGet(), ::maxOf)
+            Thread.sleep(slowMs)
+            now.decrementAndGet()
+            read += text
+            return MockResponse.Builder().setHeader("Content-Type", "audio/mpeg").body("mp3 $text").build()
+        }
+    }
+
+    private suspend fun waitFor(condition: () -> Boolean): Boolean {
+        repeat(250) {
+            if (condition()) return true
+            kotlinx.coroutines.delay(20)
+        }
+        return condition()
+    }
+
+    private suspend fun HttpClient.saveLesson(id: String, backs: List<String>, voice: String = "es-ES-Chirp3-HD-Aoede") {
+        val cards = JsonArray(backs.mapIndexed { i, back -> buildJsonObject { put("front", "carte $i"); put("back", back) } })
+        val res = put("/api/lessons/$id") {
+            page(); contentType(ContentType.Application.Json)
+            setBody("""{"deck": "Espagnol", "cards": $cards, "voice": "$voice"}""")
+        }
+        assertEquals(HttpStatusCode.OK, res.status)
+    }
+
+    private suspend fun HttpClient.sendSteps(body: String): List<JsonObject> {
+        val res = post("/api/anki/send") {
+            page(); contentType(ContentType.Application.Json); header(HttpHeaders.Accept, Relay.STREAM_TYPE)
+            setBody(body)
+        }
+        assertTrue(res.headers[HttpHeaders.ContentType]!!.startsWith(Relay.STREAM_TYPE))
+        return res.bodyAsText().lines().filter { it.isNotBlank() }.map { json.parseToJsonElement(it).jsonObject }
+    }
+
+    @Test
+    fun theSendReadsItsSoundsFourAtATimeAndSaysHowFarItIs() = app { client ->
+        val speaker = Speaker(slowMs = 150)
+        relay.dispatcher = speaker
+        val cards = JsonArray((1..6).map { buildJsonObject { put("front", "carte $it"); put("back", "réponse $it") } })
+        val lines = client.sendSteps("""{"deck": "Espagnol", "cards": $cards, "voice": "es-ES-Chirp3-HD-Aoede", "lesson_id": ""}""")
+        val sounds = lines.filter { it.string("step") == "sounds" }
+        assertEquals((0..6).toList(), sounds.map { it["done"]!!.jsonPrimitive.int })
+        assertTrue(sounds.all { it["total"]!!.jsonPrimitive.int == 6 })
+        assertEquals("cards", lines[lines.size - 2].string("step"))
+        val result = lines.last()["result"]!!.jsonObject
+        assertEquals(6, result["added"]!!.jsonPrimitive.int)
+        assertFalse("audio_failures" in result)
+        assertEquals(6, anki.sounds.size)
+        assertTrue("${speaker.most}", speaker.most.get() in 2..Speech.PARALLEL) // at once, never more than 4
+
+        // AnkiDroid missing: the error as the page knows it
+        anki.installed = false
+        val refused = client.sendSteps("""{"deck": "Espagnol", "cards": $cards, "voice": "", "lesson_id": ""}""")
+        assertEquals("anki.android_missing", refused.single()["error"]!!.jsonObject.string("code"))
+    }
+
+    @Test
+    fun soundsReadAheadOnceALessonIsSaved() = app { client ->
+        val lesson = client.extract(voice = "")
+        val id = lesson.string("id")
+        relay.takeRequest(5, TimeUnit.SECONDS) // the extraction
+        val speaker = Speaker()
+        relay.dispatcher = speaker
+        local.soundsAhead.delayMs = 50
+        client.saveLesson(id, listOf("la madre", "el padre"))
+        assertTrue(waitFor { speaker.read.toSet() == setOf("la madre", "el padre") && local.soundsAhead.pending().isEmpty() })
+
+        // Sent as the page sends it (the lesson's rate): its sounds read already, the relay not asked again
+        val saved = client.get("/api/lessons/$id") { page() }.json().jsonObject
+        val lines = client.sendSteps("""{"deck": "Espagnol", "cards": ${saved["cards"]}, "voice": "es-ES-Chirp3-HD-Aoede", "rate": "${saved.string("rate")}", "lesson_id": "$id"}""")
+        assertEquals(2, speaker.read.size)
+        assertEquals(setOf("la madre", "el padre"), anki.sounds.keys)
+        assertEquals("mp3 la madre", anki.sounds["la madre"]!!.readText())
+        assertEquals(2, lines.last()["result"]!!.jsonObject["added"]!!.jsonPrimitive.int)
+
+        // Saved as the user types: only the backs as last saved are read
+        local.soundsAhead.delayMs = 300
+        client.saveLesson(id, listOf("la mad"))
+        client.saveLesson(id, listOf("la mamá"))
+        assertTrue(waitFor { "la mamá" in speaker.read && local.soundsAhead.pending().isEmpty() })
+        assertFalse("la mad" in speaker.read)
+
+        // Nothing for a voice AnkiDroid reads, nor without a licence
+        local.soundsAhead.delayMs = 10
+        client.saveLesson(id, listOf("el hijo"), voice = "es_ES")
+        assertTrue(local.soundsAhead.pending().isEmpty())
+        prefs[LocalServer.keyOf(local.relayUrl())] = ""
+        client.saveLesson(id, listOf("el hijo"))
+        assertTrue(local.soundsAhead.pending().isEmpty())
+        kotlinx.coroutines.delay(100)
+        assertFalse("el hijo" in speaker.read)
     }
 }

@@ -17,7 +17,7 @@ internal fun Route.generationRoutes(server: LocalServer) {
         // --- The AI, through the relay
         making("/api/extract") { form, onCard ->
             val made = generation.make(form, onCard)
-            lessons.create(made.content, made.photos)
+            lessons.create(made.content, made.photos).also(::soundsSoon) // its backs' sounds read meanwhile
         }
         // "Cancel" while waiting: the relay call stops, no lesson is saved
         api("POST", "/api/generations/{job}/cancel") {
@@ -28,7 +28,7 @@ internal fun Route.generationRoutes(server: LocalServer) {
             switches.check("lesson.regenerate")
             val old = lesson()
             val made = generation.make(form, onCard)
-            lessons.regenerated(old.string("id"), made.content, made.photos) ?: notFound()
+            (lessons.regenerated(old.string("id"), made.content, made.photos) ?: notFound()).also(::soundsSoon)
         }
         // Its next pages, days later: only they are read, the AI knowing the cards made already;
         // their cards come after the lesson's, which stay (so do their notes in AnkiDroid)
@@ -44,7 +44,7 @@ internal fun Route.generationRoutes(server: LocalServer) {
             // Its deck and voice are the lesson's: only the cards, photos and frames are taken
             val asked = GenerationForm(form.fields + mapOf("deck" to old.string("deck"), "voice" to ""), form.images, form.lang)
             val made = generation.make(asked, onCard, existing)
-            lessons.completed(old.string("id"), made.content, made.photos) ?: notFound()
+            (lessons.completed(old.string("id"), made.content, made.photos) ?: notFound()).also(::soundsSoon)
         }
         api("POST", "/api/lessons/{id}/revise") {
             val lesson = lesson()
@@ -76,7 +76,7 @@ internal fun Route.generationRoutes(server: LocalServer) {
             )
             val changes = JsonObject(req + options + mapOf("deck" to JsonPrimitive(revisedDeck), "cards" to revised["cards"]!!))
             buildJsonObject {
-                put("lesson", lessons.update(lesson.string("id"), changes)!!)
+                put("lesson", lessons.update(lesson.string("id"), changes)!!.also(::soundsSoon))
                 put("summary", revised["summary"]!!)
             }
         }

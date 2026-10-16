@@ -202,6 +202,7 @@ document.addEventListener("alpine:init", () => {
     lessonPrompt: "",            // prompt text the open lesson was generated with
     frames: [],                  // diagram frames of the open lesson: what Anki shows of each photo
     sending: false,
+    sendStep: "",                // what the send is doing (its sounds, its cards), on its button
     drawing: false,              // the pictures the cards ask for are being drawn
     pictureJobs: 0,              // a card's picture being redrawn, uploaded or removed
     toDraw: [],                  // the cards whose picture no free one fits: drawn if the user says yes

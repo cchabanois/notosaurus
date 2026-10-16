@@ -17,7 +17,7 @@ from notosaurus_core.errors import loggable
 from notosaurus_core.images import refuse_bomb
 from notosaurus_core.llm import ExtractOptions, Image, extract_cards
 
-from .. import access, ankiconnect, children, decks, exams, lessons, media, prompts, settings, usage
+from .. import access, ankiconnect, children, decks, exams, lessons, media, prompts, settings, sounds, usage
 from ..anki import build_apkg
 from ..errors import AppError
 from ..models import ExportRequest, Generated, Lesson, LessonIn
@@ -267,6 +267,7 @@ async def extract(
             g = await _generate(form, photos, lang, on_card=on_card)
             created = await asyncio.to_thread(lessons.create, g, meter.calls)
             meter.kept_by(created)
+        sounds.soon(created.id, created.voice)  # its backs' sounds made meanwhile
         return created
 
     if _wants_stream(accept):
@@ -302,6 +303,7 @@ async def complete(
             if lesson is None:  # deleted meanwhile
                 raise AppError("lesson.not_found", 404)
             meter.kept_by(lesson)
+        sounds.soon(lesson.id, lesson.voice)
         return lesson
 
     if _wants_stream(accept):
@@ -334,6 +336,7 @@ async def regenerate(
             if lesson is None:  # deleted meanwhile
                 raise AppError("lesson.not_found", 404)
             meter.kept_by(lesson)
+        sounds.soon(lesson.id, lesson.voice)
         return lesson
 
     if _wants_stream(accept):
