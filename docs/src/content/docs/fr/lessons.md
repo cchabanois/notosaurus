@@ -45,6 +45,10 @@ dit comment, sur l'ordinateur et dans AnkiDroid (ouvrir le paquet qui contient l
 les cartes retournent dans leurs paquets. Supprimer un contrôle retire l'étiquette ; les cartes
 restent.
 
+Sur l'ordinateur, Anki ouvert, **Réviser maintenant dans Anki** le fait en un clic : un paquet
+filtré « Contrôle : … » avec les cartes du contrôle, ouvert dans Anki, refait à chaque fois et
+supprimé avec le contrôle.
+
 ## Supprimer une leçon
 
 **🗑** à côté d'une leçon la supprime, avec ses photos. Si ses cartes sont dans Anki, Notosaurus

@@ -508,7 +508,12 @@
         "noDeck": "Le lezioni sono in mazzi diversi. In Anki: <strong>Crea mazzo filtrato</strong>, e incollate questa ricerca:",
         "copy": "Copia",
         "copied": "Copiato"
-      }
+      },
+      "reviewNow": "Ripassa ora in Anki",
+      "reviewing": "Creazione del mazzo…",
+      "reviewed": "{count} carte nel mazzo «{deck}», aperto in Anki. Una volta ripassate, tornano nei loro mazzi.",
+      "filteredDeck": "Verifica: {name}",
+      "manual": "Oppure a mano, in Anki o AnkiDroid:"
     }
   },
   "admin": {

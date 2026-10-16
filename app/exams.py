@@ -38,6 +38,7 @@ class ExamIn(BaseModel):
 class Exam(ExamIn):
     id: str = Field(pattern=ID)
     created_at: str = ""
+    filtered_deck: str = ""  # the deck "Revise now" made in Anki (the computer), deleted with the test
 
     @property
     def tag(self) -> str:
@@ -77,10 +78,17 @@ def save(id: str, content: ExamIn) -> Exam:
     with storage.lock:
         exams = list_all()
         found = next((e for e in exams if e.id == id), None)
-        exam = Exam(id=id, created_at=found.created_at if found else storage.now(), **content.model_dump())
+        kept = {"created_at": found.created_at, "filtered_deck": found.filtered_deck} if found else {}
+        exam = Exam(id=id, **{"created_at": storage.now(), **kept}, **content.model_dump())
         exams = [exam if e.id == id else e for e in exams] if found else [*exams, exam]
         _write(exams)
     return exam
+
+
+def set_filtered_deck(id: str, name: str) -> None:
+    with storage.lock:
+        exams = list_all()
+        _write([e.model_copy(update={"filtered_deck": name}) if e.id == id else e for e in exams])
 
 
 def delete(id: str) -> bool:

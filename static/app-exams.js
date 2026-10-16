@@ -51,13 +51,13 @@ const examsPart = {
 
   // The sheet: every test, with the open lesson's place in each; or one test's detail
   async openExams(exam = null) {
-    this.examSheet = { open: true, view: exam ? "detail" : "list", exam, draft: { name: "", date: "" }, busy: false, error: "", copied: false };
+    this.examSheet = { open: true, view: exam ? "detail" : "list", exam, draft: { name: "", date: "" }, busy: false, error: "", copied: false, reviewed: "" };
     await this.loadExams();
     if (exam) this.examSheet.exam = this.exams.find((e) => e.id === exam.id) ?? exam;
   },
 
   showExam(exam) {
-    this.examSheet = { ...this.examSheet, exam, view: "detail", error: "" };
+    this.examSheet = { ...this.examSheet, exam, view: "detail", error: "", reviewed: "" };
   },
 
   backToExams() {
@@ -163,6 +163,23 @@ const examsPart = {
       this.backToExams();
     } catch (e) {
       this.examSheet.error = e.message;
+    }
+  },
+
+  // The computer, Anki open: a filtered deck of the test's cards, made and shown in Anki
+  async reviewExam(exam) {
+    const sheet = this.examSheet;
+    sheet.busy = true;
+    sheet.error = "";
+    sheet.reviewed = "";
+    try {
+      const body = JSON.stringify({ deck: t("app.exams.filteredDeck", { name: exam.name }) });
+      const made = await (await api(`/api/exams/${exam.id}/review`, { method: "POST", headers: JSON_BODY, body })).json();
+      sheet.reviewed = t("app.exams.reviewed", { count: made.count, deck: made.deck });
+    } catch (e) {
+      sheet.error = e.message;
+    } finally {
+      sheet.busy = false;
     }
   },
 

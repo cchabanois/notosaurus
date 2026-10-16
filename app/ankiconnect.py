@@ -71,6 +71,35 @@ def _client() -> httpx.AsyncClient:
     return httpx.AsyncClient(timeout=TIMEOUT, transport=_transport)
 
 
+async def filtered_deck(name: str, tag: str) -> int:
+    """A filtered deck `name` of every card tagged `tag` (made anew: one that exists is
+    emptied first, its cards back to their decks), shown in Anki; how many cards it holds.
+    Anki's own "custom study" by hand, done from here."""
+    async with _client() as client:
+        if name in await _invoke(client, "deckNames"):
+            await _invoke(client, "deleteDecks", decks=[name], cardsToo=False)  # filtered: the cards go home
+        await _invoke(
+            client,
+            "createFilteredDeck",
+            newDeckName=name,
+            searchQuery=f'"tag:{_search(tag)}"',
+            gatherCount=1000,
+            reschedule=True,
+            sortOrder=0,
+            createEmpty=False,
+        )
+        count = len(await _invoke(client, "findCards", query=f'"deck:{_search(name)}"'))
+        await _invoke(client, "guiDeckOverview", name=name)
+        return count
+
+
+async def drop_deck(name: str) -> None:
+    """The deck deleted if it exists (a filtered one: its cards go back to their decks)."""
+    async with _client() as client:
+        if name in await _invoke(client, "deckNames"):
+            await _invoke(client, "deleteDecks", decks=[name], cardsToo=False)
+
+
 async def tag_notes(add: dict[str, set[int]], remove: dict[str, set[int]]) -> None:
     """Tags put on notes and taken off others ({tag: note ids}): a test's tag following
     its lessons (exams.retagging). Notes gone from Anki are skipped by AnkiConnect."""

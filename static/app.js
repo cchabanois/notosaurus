@@ -195,7 +195,7 @@ document.addEventListener("alpine:init", () => {
     lessonChild: "",             // the child the open lesson is for
     copySheet: { open: false, busy: false, error: "" },  // the open lesson copied for another child
     exams: [],  // the tests to prepare (app-exams.js): lessons under one tag in Anki
-    examSheet: { open: false, view: "list", exam: null, draft: { name: "", date: "" }, busy: false, error: "", copied: false },
+    examSheet: { open: false, view: "list", exam: null, draft: { name: "", date: "" }, busy: false, error: "", copied: false, reviewed: "" },
     examPick: null,  // choosing the open lesson's cards for a test: { id, name, selected: Set }
     lessonPrompt: "",            // prompt text the open lesson was generated with
     frames: [],                  // diagram frames of the open lesson: what Anki shows of each photo

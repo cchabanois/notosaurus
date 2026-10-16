@@ -508,7 +508,12 @@
         "noDeck": "Les leçons sont dans des paquets différents. Dans Anki : <strong>Créer un paquet filtré</strong>, et collez cette recherche :",
         "copy": "Copier",
         "copied": "Copié"
-      }
+      },
+      "reviewNow": "Réviser maintenant dans Anki",
+      "reviewing": "Création du paquet…",
+      "reviewed": "{count} cartes dans le paquet « {deck} », ouvert dans Anki. Une fois révisées, elles retournent dans leurs paquets.",
+      "filteredDeck": "Contrôle : {name}",
+      "manual": "Ou à la main, dans Anki ou AnkiDroid :"
     }
   },
   "admin": {
