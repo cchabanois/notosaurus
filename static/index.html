@@ -41,7 +41,7 @@
      x-effect="document.documentElement.classList.toggle('sheet-open', sheetOpen())">
 
   <!-- App bar -->
-  <header class="appbar">
+  <header class="appbar" :class="{ 'in-lesson': lessonId }">
     <div class="brand">
       <img class="brand-logo" src="logo-mark.webp" alt="" width="44" height="44">
       <span class="brand-text">
@@ -65,10 +65,13 @@
       </button>
       <!-- The child the next lesson is for (app-children.js): its card, the others -->
       <button class="chip-btn" @click="openChildren()" :aria-label="$t('app.children.title')" :title="$t('app.children.title')">
-        <span aria-hidden="true">🧒</span><span x-text="currentChild()?.name ?? $t('app.children.who')"></span>
+        <!-- A lesson open on a narrow screen: the icons alone (the lesson says whose it is below) -->
+        <span aria-hidden="true">🧒</span><span class="wide-or-home" x-text="currentChild()?.name ?? $t('app.children.who')"></span>
       </button>
       <button class="chip-btn" x-show="lessonId" @click="newLesson()"
-              :aria-label="$t('app.newLesson')" :title="$t('app.newLessonHint')" x-text="$t('app.newLessonShort')"></button>
+              :aria-label="$t('app.newLesson')" :title="$t('app.newLessonHint')">
+        <span aria-hidden="true">＋</span><span class="wide-or-home" x-text="$t('app.newLessonShort').replace(/^＋\s*/, '')"></span>
+      </button>
       <a class="chip-btn icon-only" href="admin.html" x-show="settingsHere"
          :aria-label="$t('app.settings')" :title="$t('app.settings')">⚙️</a>
       <!-- In the Android app, on the computer's page (whose settings stay on the computer): the app's own -->
