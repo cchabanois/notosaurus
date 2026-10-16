@@ -389,6 +389,7 @@
       "onComputer": "On the computer, in Anki: Tools → Notosaurus → Getting started."
     },
     "reviewInAnki": "📚 Review",
+    "openAnkiDroid": "Open AnkiDroid",
     "dictation": {
       "start": "Dictate",
       "stop": "Stop and write the text",

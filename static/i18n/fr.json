@@ -389,6 +389,7 @@
       "onComputer": "Sur l'ordinateur, dans Anki : Outils → Notosaurus → Assistant de démarrage."
     },
     "reviewInAnki": "📚 Réviser",
+    "openAnkiDroid": "Ouvrir AnkiDroid",
     "dictation": {
       "start": "Dicter",
       "stop": "Arrêter et écrire le texte",

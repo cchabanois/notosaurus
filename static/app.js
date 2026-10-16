@@ -187,6 +187,8 @@ document.addEventListener("alpine:init", () => {
     inAndroidApp: /\bNotosaurusApp\//.test(navigator.userAgent),
     apkg: true,                  // a .apkg to download: not where the cards go straight to AnkiDroid (the app)
     reviewInAnki: false,         // a sent lesson reviewed in Anki from here (the app: AnkiDroid)
+    ankiIcon: "",                // the app: AnkiDroid's own icon, from the phone (app-anki.js); "": 🎓
+    ankiIconAsked: 0,
     donations: true,             // "Support Notosaurus": not where it's paid for (the app's subscription)  // the Notosaurus Android app (its WebView says so)
     profileToApply: null,        // Anki profile switch waiting for the current task to finish
     diagramWarning: false,       // the AI model places diagram masks loosely: say so

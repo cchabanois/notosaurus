@@ -59,6 +59,18 @@ const ankiPart = {
     if (before && now && now !== before) this.profileToApply = now;
     if (this.profileToApply) await this.applyProfile();
     this.followProfile();
+    if (this.reviewInAnki && !this.ankiIcon) this.loadAnkiIcon();
+  },
+
+  // The app: AnkiDroid's own icon, as installed on this phone, for "Open AnkiDroid" (🎓 until
+  // it is installed; asked again at most once a minute, so it appears once it is)
+  async loadAnkiIcon() {
+    if (Date.now() - this.ankiIconAsked < 60_000) return;
+    this.ankiIconAsked = Date.now();
+    try {
+      const res = await fetch("/api/anki/icon", { headers: { "X-Notosaurus-Lang": I18N.lang } });
+      if (res.ok) this.ankiIcon = URL.createObjectURL(await res.blob());
+    } catch {}
   },
 
   // Follow an Anki profile switch: a lesson of the previous profile is saved and
@@ -122,6 +134,17 @@ const ankiPart = {
       this.checkAnki();
     } finally {
       this.sending = false;
+    }
+  },
+
+  // AnkiDroid opened on its own screen (the app); missing: the message offers to install it
+  async openAnkiDroid() {
+    this.error = "";
+    try {
+      await api("/api/anki/open", { method: "POST" });
+    } catch (e) {
+      this.error = e.message;
+      if (e.detail?.code === "anki.android_missing") this.errorAction = { for: e.message, kind: "installAnki" };
     }
   },
 

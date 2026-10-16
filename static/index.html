@@ -41,7 +41,7 @@
      x-effect="document.documentElement.classList.toggle('sheet-open', sheetOpen())">
 
   <!-- App bar -->
-  <header class="appbar">
+  <header class="appbar" :class="{ 'in-lesson': lessonId }">
     <div class="brand">
       <img class="brand-logo" src="logo-mark.webp" alt="" width="44" height="44">
       <span class="brand-text">
@@ -58,12 +58,20 @@
         <span aria-hidden="true">📚</span><span class="wide-only" x-text="$t('app.lessonsButton')"></span>
         <span class="count" x-text="visibleLessons().length"></span>
       </button>
+      <!-- The app: AnkiDroid, one tap away (the cards are revised there) -->
+      <button class="chip-btn icon-only" x-cloak x-show="reviewInAnki" @click="openAnkiDroid()"
+              :aria-label="$t('app.openAnkiDroid')" :title="$t('app.openAnkiDroid')">
+        <img class="anki-icon" x-show="ankiIcon" :src="ankiIcon" alt=""><span x-show="!ankiIcon" aria-hidden="true">🎓</span>
+      </button>
       <!-- The child the next lesson is for (app-children.js): its card, the others -->
       <button class="chip-btn" @click="openChildren()" :aria-label="$t('app.children.title')" :title="$t('app.children.title')">
-        <span aria-hidden="true">🧒</span><span x-text="currentChild()?.name ?? $t('app.children.who')"></span>
+        <!-- A lesson open on a narrow screen: the icons alone (the lesson says whose it is below) -->
+        <span aria-hidden="true">🧒</span><span class="wide-or-home" x-text="currentChild()?.name ?? $t('app.children.who')"></span>
       </button>
       <button class="chip-btn" x-show="lessonId" @click="newLesson()"
-              :aria-label="$t('app.newLesson')" :title="$t('app.newLessonHint')" x-text="$t('app.newLessonShort')"></button>
+              :aria-label="$t('app.newLesson')" :title="$t('app.newLessonHint')">
+        <span aria-hidden="true">＋</span><span class="wide-or-home" x-text="$t('app.newLessonShort').replace(/^＋\s*/, '')"></span>
+      </button>
       <a class="chip-btn icon-only" href="admin.html" x-show="settingsHere"
          :aria-label="$t('app.settings')" :title="$t('app.settings')">⚙️</a>
       <!-- In the Android app, on the computer's page (whose settings stay on the computer): the app's own -->
@@ -538,6 +546,10 @@
 
     <!-- Language: automatic (Anki's or the browser's) or picked here, for this device -->
     <footer class="page-footer">
+      <button type="button" class="anki-link" x-cloak x-show="reviewInAnki" @click="openAnkiDroid()">
+        <img class="anki-icon" x-show="ankiIcon" :src="ankiIcon" alt=""><span x-show="!ankiIcon" aria-hidden="true">🎓</span>
+        <span x-text="$t('app.openAnkiDroid')"></span>
+      </button>
       <a class="docs-link" :href="$docs('')" target="_blank" rel="noopener">📖 <span x-text="$t('common.help')"></span></a>
       <!-- Not where Notosaurus is paid for already (the Android app's subscription) -->
       <a class="support-link" x-show="donations" href="https://ko-fi.com/notosaurus" target="_blank" rel="noopener">☕ <span x-text="$t('common.support')"></span></a>

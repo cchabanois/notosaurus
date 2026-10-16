@@ -108,6 +108,9 @@ class LocalServerTest {
         override fun review(deck: String) = (deck in deckNames() || sent.any { it.deck == deck }).also { if (it) reviewed += deck }
         val retagged = mutableListOf<Pair<Map<String, Set<Long>>, Map<String, Set<Long>>>>() // (added, removed)
         override fun retag(add: Map<String, Set<Long>>, remove: Map<String, Set<Long>>) = !broken.also { if (!broken) retagged += add to remove }
+        var opened = 0
+        override fun open() = installed.also { if (it) opened++ }
+        override fun icon() = if (installed) byteArrayOf(0x89.toByte(), 0x50, 0x4E, 0x47) else null // "PNG"
         override fun send(deck: Deck, media: Media, options: Options): Sent {
             if (broken) error("no collection")
             sent += deck
@@ -1119,6 +1122,23 @@ class LocalServerTest {
         assertEquals(listOf("Espagnol::Leçon 5"), anki.reviewed)
         val missing = client.post("/api/anki/review") { page(); contentType(ContentType.Application.Json); setBody("""{"deck": "Nope"}""") }
         assertEquals("anki.android_no_deck", missing.json().jsonObject["detail"]!!.jsonObject.string("code"))
+    }
+
+    @Test
+    fun ankiDroidOpenedFromThePage() = app { client ->
+        assertEquals(HttpStatusCode.OK, client.post("/api/anki/open") { page() }.status)
+        assertEquals(1, anki.opened)
+        // Its own icon, as installed, for the button; the page's cookie needed as for the rest
+        val icon = client.get("/api/anki/icon") { page() }
+        assertEquals(HttpStatusCode.OK, icon.status)
+        assertEquals("image/png", icon.headers[HttpHeaders.ContentType])
+        assertEquals(4, icon.bodyAsBytes().size)
+        assertEquals(HttpStatusCode.Unauthorized, client.get("/api/anki/icon").status)
+        anki.installed = false // missing: said, the page offers to install it; no icon (the page shows 🎓)
+        val missing = client.post("/api/anki/open") { page() }
+        assertEquals("anki.android_missing", missing.json().jsonObject["detail"]!!.jsonObject.string("code"))
+        assertEquals(1, anki.opened)
+        assertEquals(HttpStatusCode.NotFound, client.get("/api/anki/icon") { page() }.status)
     }
 
     @Test
