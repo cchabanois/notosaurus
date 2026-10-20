@@ -472,6 +472,12 @@
       "none": "Aucun contrôle prévu.",
       "noLessons": "Aucune leçon dans ce contrôle : ajoutez-en une depuis sa relecture.",
       "new": "+ Nouveau contrôle",
+      "newShort": "＋ Nouveau contrôle",
+      "addLessons": "＋ Ajouter des leçons",
+      "addChosen": {
+        "one": "Ajouter {count} leçon",
+        "other": "Ajouter {count} leçons"
+      },
       "name": "Nom",
       "namePlaceholder": "ex. : Interro SVT de lundi",
       "date": "Date",

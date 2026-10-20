@@ -472,6 +472,12 @@
       "none": "Nenhuma prova prevista.",
       "noLessons": "Ainda não há lições nesta prova: adicione uma a partir da sua revisão.",
       "new": "+ Nova prova",
+      "newShort": "＋ Nova prova",
+      "addLessons": "＋ Adicionar lições",
+      "addChosen": {
+        "one": "Adicionar {count} lição",
+        "other": "Adicionar {count} lições"
+      },
       "name": "Nome",
       "namePlaceholder": "ex.: Prova de Ciências de segunda",
       "date": "Data",

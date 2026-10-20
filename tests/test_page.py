@@ -1397,3 +1397,24 @@ def test_a_tests_lessons_sent_from_its_sheet(page):
     page.get_by_role("button", name="📥 Tout envoyer à Anki (2 leçons)").click()
     sync_api.expect(page.get_by_role("button", name="📥 Tout envoyer à Anki (2 leçons)")).to_be_enabled()
     assert sent == [m["id"] for m in made]
+
+
+def test_a_test_made_from_my_lessons_then_its_lessons_ticked(page):
+    """"＋ New test" in My lessons, with no test yet and no lesson open: made empty; its
+    lessons then ticked from its sheet."""
+    page.goto("/")
+    made = [page.request.post("/api/extract", multipart={"prompt": FRONT_PROMPT}).json() for _ in range(2)]
+    page.reload()
+    page.get_by_role("button", name="Leçons").click()
+    page.get_by_role("button", name="＋ Nouveau contrôle").click()
+    sheet = page.get_by_role("dialog", name="Contrôles à préparer")
+    sheet.get_by_placeholder("ex. : Interro SVT de lundi").fill("Interro")
+    sheet.get_by_role("button", name="Créer").click()
+    sheet.get_by_role("button", name="＋ Ajouter des leçons").click()
+    sync_api.expect(sheet.locator(".exam-add li")).to_have_count(2)
+    sheet.locator(".exam-add input[type=checkbox]").first.check()
+    sheet.get_by_role("button", name="Ajouter 1 leçon").click()
+    sync_api.expect(sheet.locator(".exam-lessons li")).to_have_count(1)
+    (exam,) = page.request.get("/api/exams").json()
+    assert exam["name"] == "Interro"
+    assert [p["lesson"] for p in exam["lessons"]] in ([made[0]["id"]], [made[1]["id"]])

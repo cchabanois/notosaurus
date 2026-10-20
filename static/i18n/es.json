@@ -472,6 +472,12 @@
       "none": "Ningún examen previsto.",
       "noLessons": "Este examen aún no tiene lecciones: añada una desde su revisión.",
       "new": "+ Nuevo examen",
+      "newShort": "＋ Nuevo examen",
+      "addLessons": "＋ Añadir lecciones",
+      "addChosen": {
+        "one": "Añadir {count} lección",
+        "other": "Añadir {count} lecciones"
+      },
       "name": "Nombre",
       "namePlaceholder": "p. ej. Examen de Biología del lunes",
       "date": "Fecha",

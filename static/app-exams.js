@@ -50,8 +50,12 @@ const examsPart = {
   },
 
   // The sheet: every test, with the open lesson's place in each; or one test's detail
-  async openExams(exam = null) {
-    this.examSheet = { open: true, view: exam ? "detail" : "list", exam, draft: { name: "", date: "" }, busy: false, error: "", copied: false, reviewed: "", sendingLeft: 0 };
+  // `alone`: from the lessons' list, not about the open lesson (a new test starts empty)
+  async openExams(exam = null, alone = false) {
+    this.examSheet = {
+      open: true, view: exam ? "detail" : "list", exam, alone, draft: { name: "", date: "" }, busy: false, error: "",
+      copied: false, reviewed: "", sendingLeft: 0, adding: { query: "", chosen: [] },
+    };
     await this.loadExams();
     if (exam) this.examSheet.exam = this.exams.find((e) => e.id === exam.id) ?? exam;
   },
@@ -89,12 +93,39 @@ const examsPart = {
     const draft = this.examSheet.draft;
     const name = draft.name.trim();
     if (!name) return;
-    const lessons = this.lessonId ? [{ lesson: this.lessonId, cards: null }] : [];
+    const lessons = this.lessonId && !this.examSheet.alone ? [{ lesson: this.lessonId, cards: null }] : [];
     const saved = await this.saveExam({ id: this.examId(name), name, date: draft.date }, lessons);
     if (saved) {
       this.examSheet.draft = { name: "", date: "" };
       this.showExam(saved);
     }
+  },
+
+  // Lessons added to the test from its sheet, whole (some cards: "Open and pick the cards"):
+  // the child's lessons not in it yet, found by their name
+  addable(exam) {
+    const query = fold(this.examSheet.adding.query.trim());
+    const inIt = new Set(exam.lessons.map((p) => p.lesson));
+    return this.visibleLessons()
+      .filter((l) => !inIt.has(l.id))
+      .map((l) => ({ id: l.id, title: this.examLessonTitle(l) }))
+      .filter((l) => !query || fold(l.title).includes(query));
+  },
+
+  startAdding() {
+    this.examSheet = { ...this.examSheet, view: "add", adding: { query: "", chosen: [] }, error: "" };
+  },
+
+  toggleAdding(id) {
+    const chosen = this.examSheet.adding.chosen;
+    this.examSheet.adding.chosen = chosen.includes(id) ? chosen.filter((c) => c !== id) : [...chosen, id];
+  },
+
+  async finishAdding() {
+    const exam = this.examSheet.exam;
+    const added = this.examSheet.adding.chosen.map((lesson) => ({ lesson, cards: null }));
+    const saved = await this.saveExam(exam, [...exam.lessons, ...added]);
+    if (saved) this.showExam(saved);
   },
 
   // The open lesson in the test, whole, or out of it

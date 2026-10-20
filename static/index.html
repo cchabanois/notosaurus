@@ -625,8 +625,11 @@
       <button class="icon-btn" @click="lessonsOpen = false" :aria-label="$t('common.close')">✕</button>
     </div>
     <!-- The tests to prepare: lessons under one tag in Anki, revised together (app-exams.js) -->
-    <section class="exam-list" x-show="exams.length">
-      <h3 class="exam-head" x-text="$t('app.exams.title')"></h3>
+    <section class="exam-list">
+      <h3 class="exam-head">
+        <span x-text="$t('app.exams.title')"></span>
+        <button type="button" class="chip-btn" @click="lessonsOpen = false; openExams(null, true)" x-text="$t('app.exams.newShort')"></button>
+      </h3>
       <ul class="child-rows">
         <template x-for="e in exams" :key="e.id">
           <li>
@@ -907,7 +910,9 @@
     <div class="sheet-handle"></div>
     <div class="sheet-head">
       <button type="button" class="link back" x-show="examSheet.view === 'detail'" @click="backToExams()" x-text="$t('app.exams.back')"></button>
-      <h2 x-show="examSheet.view === 'list'" x-text="lessonId ? $t('app.exams.titleFor') : $t('app.exams.title')"></h2>
+      <button type="button" class="link back" x-show="examSheet.view === 'add'" @click="showExam(examSheet.exam)" x-text="'‹ ' + (examSheet.exam?.name ?? '')"></button>
+      <h2 x-show="examSheet.view === 'list'" x-text="lessonId && !examSheet.alone ? $t('app.exams.titleFor') : $t('app.exams.title')"></h2>
+      <h2 x-show="examSheet.view === 'add'" x-text="$t('app.exams.addLessons')"></h2>
       <h2 x-show="examSheet.view === 'detail'" x-text="examSheet.exam?.name ?? ''"></h2>
       <button class="icon-btn" @click="examSheet.open = false" :aria-label="$t('common.close')">✕</button>
     </div>
@@ -918,14 +923,14 @@
       <p class="empty" x-show="!exams.length" x-text="$t('app.exams.none')"></p>
       <ul class="child-rows exam-rows">
         <template x-for="e in exams" :key="e.id">
-          <li :class="{ current: lessonId && examPart(e) }">
+          <li :class="{ current: lessonId && !examSheet.alone && examPart(e) }">
             <button type="button" class="child-row" @click="showExam(e)" :disabled="examSheet.busy">
               <strong x-text="e.name"></strong>
               <small class="muted" x-text="examDate(e)"></small>
               <small class="muted" x-text="$t('common.count.lessons', { count: e.lessons.length })"></small>
               <span class="badge" x-show="examPast(e)" x-text="$t('app.exams.past')"></span>
             </button>
-            <div class="exam-actions" x-show="lessonId">
+            <div class="exam-actions" x-show="lessonId && !examSheet.alone">
               <button type="button" class="chip-btn" :class="{ on: examPart(e) }" @click="toggleExamLesson(e)" :disabled="examSheet.busy"
                       x-text="!examPart(e) ? $t('app.exams.add') : examPart(e).cards === null ? $t('app.exams.inWhole') : $t('app.exams.inSome', { count: examPart(e).cards.length })"></button>
               <button type="button" class="chip-btn" @click="startPick(e)" :disabled="examSheet.busy" x-text="$t('app.exams.pickCards')"></button>
@@ -1015,6 +1020,7 @@
             </template>
           </ul>
           <p class="hint" x-show="!examSheet.exam.lessons.length" x-text="$t('app.exams.noLessons')"></p>
+          <button type="button" class="btn soft" @click="startAdding()" :disabled="examSheet.busy" x-text="$t('app.exams.addLessons')"></button>
           <p class="hint"><span x-text="$t('app.exams.tag')"></span> : <code x-text="examSheet.exam.tag"></code></p>
           <div class="sheet-actions">
             <button type="button" class="btn danger-soft" @click="deleteExam(examSheet.exam)" :disabled="examSheet.busy" x-text="$t('app.exams.delete')"></button>
@@ -1023,6 +1029,31 @@
         </div>
       </template>
     </div>
+
+    <!-- Lessons added to the test, whole: the child's lessons not in it yet, ticked (in the
+         page only then: its search isn't the lessons list's) -->
+    <template x-if="examSheet.view === 'add'">
+    <div class="sheet-body children">
+      <input type="search" class="lesson-search" x-model="examSheet.adding.query"
+             :placeholder="$t('app.lessons.search')" :aria-label="$t('app.lessons.search')">
+      <ul class="child-rows exam-add">
+        <template x-for="l in addable(examSheet.exam)" :key="l.id">
+          <li>
+            <label class="child-row static">
+              <input type="checkbox" :checked="examSheet.adding.chosen.includes(l.id)" @change="toggleAdding(l.id)">
+              <strong x-text="l.title"></strong>
+            </label>
+          </li>
+        </template>
+      </ul>
+      <p class="empty" x-show="!addable(examSheet.exam).length" x-text="$t('app.lessons.none')"></p>
+      <div class="sheet-actions">
+        <button type="button" class="btn primary" @click="finishAdding()" :disabled="examSheet.busy || !examSheet.adding.chosen.length"
+                x-text="$t('app.exams.addChosen', { count: examSheet.adding.chosen.length })"></button>
+      </div>
+      <p class="hint error-text" x-show="examSheet.error" x-text="examSheet.error"></p>
+    </div>
+    </template>
   </aside>
 
   <!-- The open lesson copied for another child (app-children.js) -->

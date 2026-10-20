@@ -472,6 +472,12 @@
       "none": "Nessuna verifica prevista.",
       "noLessons": "Nessuna lezione in questa verifica: aggiungetene una dalla sua revisione.",
       "new": "+ Nuova verifica",
+      "newShort": "＋ Nuova verifica",
+      "addLessons": "＋ Aggiungi lezioni",
+      "addChosen": {
+        "one": "Aggiungi {count} lezione",
+        "other": "Aggiungi {count} lezioni"
+      },
       "name": "Nome",
       "namePlaceholder": "es. Verifica di scienze di lunedì",
       "date": "Data",

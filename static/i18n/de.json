@@ -472,6 +472,12 @@
       "none": "Kein Test geplant.",
       "noLessons": "Noch keine Lektion in diesem Test: fügen Sie eine aus ihrer Durchsicht hinzu.",
       "new": "+ Neuer Test",
+      "newShort": "＋ Neue Prüfung",
+      "addLessons": "＋ Lektionen hinzufügen",
+      "addChosen": {
+        "one": "{count} Lektion hinzufügen",
+        "other": "{count} Lektionen hinzufügen"
+      },
       "name": "Name",
       "namePlaceholder": "z. B. Bio-Test am Montag",
       "date": "Datum",
