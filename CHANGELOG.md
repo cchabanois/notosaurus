@@ -102,6 +102,7 @@ Each pull request adds a line under **Unreleased**. See [Releasing](CONTRIBUTING
 
 ### Fixed
 
+- A card whose back is a phonetic transcription ("/ɜː/") had it read aloud, slashes and all: the transcription is no longer read; the voice says the example quoted on the front instead ("bird"), the only way to hear the sound, or nothing when there is none. A part singled out in brackets ("t[i]ger") is read as its word. On the computer, in the app and in the page's 🔊 alike.
 - Android: the "computer not answering" page works again (its buttons did nothing since the yes/no sheet, #248: a script it needs wasn't loaded): try again, scan again, or use the phone.
 - Android: every Notosaurus note type in AnkiDroid is brought up to date at each send, not only the sent lesson's: an older lesson's cards (pictures, diagrams) get **✎ Notosaurus** too. A note type that can't be updated is said in the log. The docs say AnkiDroid 2.25 and before need **Allow cards to launch other apps** for the link.
 - A tag or Markdown the AI wrote in a card despite its rules (a letter underlined with `<u>`, a word in `**bold**`) showed as it is in Anki, every field being plain text: the cards' texts are now made plain as they come from the AI, emphasis as square brackets (the lesson's own way of singling out a part), other tags gone, line breaks kept; the rules also say how to single out a part of a word or sentence (square brackets).

@@ -271,6 +271,17 @@ def test_what_the_sound_says():
     assert said("Deux … ici", "mots\nde plus") == "mots\nde plus"  # a back of lines: as it is
     assert tts.lines(" vers \n\nLes bras tendus.\n") == ["vers", "Les bras tendus."]
 
+    # A transcription isn't read (a voice would say "slash"): the examples quoted on the front are
+    assert said('Quel son de voyelle entend-on dans le mot anglais "bird" ?', "/ɜː/", False) == "bird"
+    assert said("Le son de « bird » et de “girl” ?", "/ɜː/") == "bird\ngirl"  # each read on its own
+    assert said("Le son de ‘bird’ ?", "[ɜːd]") == "bird"  # phonetic brackets too
+    assert said("Comment prononce-t-on thought ?", "/θɔːt/") == ""  # no example: no sound
+    assert said("x", "/ɜː/ (comme dans bird)") == "(comme dans bird)"  # what else the back says
+    assert said("x", "a t[i]ger") == "a tiger"  # a part singled out: the word
+    assert said("x", "12/10/2026, 90 km/h, et/ou") == "12/10/2026, 90 km/h, et/ou"  # not transcriptions
+    assert said("x", "[le groupe entre crochets]") == "le groupe entre crochets"  # brackets without symbols
+    assert tts.spoken_backs([Card(front='Dans "bird" ?', back="/ɜː/"), Card(front="x", back="/θ/")]) == ["bird"]
+
 
 def test_each_line_read_on_its_own_then_joined(tmp_path, monkeypatch):
     """A natural voice given "vers. Les bras tendus vers lui…" in one text made words up:
