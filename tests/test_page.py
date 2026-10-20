@@ -1390,7 +1390,10 @@ def test_a_tests_lessons_sent_from_its_sheet(page):
     page.route("**/api/anki/send", send)
     page.reload()
     page.wait_for_function("document.documentElement.classList.contains('i18n-ready')")
-    page.evaluate("(async () => { const app = document.querySelector('[x-data]')._x_dataStack[0]; await app.loadExams(); app.openExams(app.exams[0]); })()")
+    page.evaluate(
+        "(async () => { const app = document.querySelector('[x-data]')._x_dataStack[0];"
+        " await app.loadExams(); app.openExams(app.exams[0]); })()"
+    )
     page.get_by_role("button", name="📥 Tout envoyer à Anki (2 leçons)").click()
     sync_api.expect(page.get_by_role("button", name="📥 Tout envoyer à Anki (2 leçons)")).to_be_enabled()
     assert sent == [m["id"] for m in made]
