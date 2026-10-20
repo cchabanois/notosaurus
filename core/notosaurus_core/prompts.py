@@ -64,8 +64,11 @@ the back is the word for true or for false in the instructions' language ("Vrai"
 "Faux"), "choices" the other word; about as many false statements as true ones, the \
 false ones wrong by one precise thing (a date, a name, a number), never a trick in \
 the wording. Other cards have no choices.
-- Plain text in every field: no HTML tags and no Markdown (no <b>, no **bold**), even \
-for words in bold on the page; only the MathJax and cloze syntaxes above.
+- Plain text in every field: no HTML tags and no Markdown (no <b>, no <u>, no **bold**), \
+even for words in bold or underlined on the page; to single out a part of a word or of a \
+sentence (a letter, a sound, a group of words), put that part in square brackets, and never \
+refer to how the page shows it ("the underlined letters", "the word in red"): the card \
+doesn't show that; only the MathJax and cloze syntaxes above.
 - One idea per card; keep front and back short.
 - The "info" field is optional: leave it empty when there is nothing useful to add.
 - If the lesson naturally splits into parts (vocabulary, conjugation, sentences…) and \
