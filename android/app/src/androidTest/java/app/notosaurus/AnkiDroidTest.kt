@@ -76,6 +76,31 @@ class AnkiDroidTest {
     }
 
     @Test
+    fun aSearchOpensAnkiDroidsBrowserEachTime() {
+        // Each call a browser of its own on top (the link processed again, not AnkiDroid only
+        // brought back as it was left: what a phone did with the same link twice)
+        val anki = Anki(Device.context)
+        val seen = mutableSetOf<String>()
+        repeat(2) { time ->
+            assertTrue(anki.browse("tag:notosaurus"))
+            seen += waitForTop("com.ichi2.anki/.CardBrowser", seen, "AnkiDroid's browser, time ${time + 1}")
+        }
+    }
+
+    /** The resumed activity once it is `activity`, a record not in `before`; its record. */
+    private fun waitForTop(activity: String, before: Set<String>, what: String): String {
+        val deadline = System.currentTimeMillis() + 15_000
+        var top = ""
+        while (System.currentTimeMillis() < deadline) {
+            top = Device.shell("dumpsys activity activities").lines().firstOrNull { "ResumedActivity" in it }.orEmpty().trim()
+            val record = Regex("""ActivityRecord\{(\w+)""").find(top)?.groupValues?.get(1).orEmpty()
+            if (activity in top && record !in before) return record
+            Thread.sleep(300)
+        }
+        error("$what not on top: $top")
+    }
+
+    @Test
     fun anotherLessonsNoteTypeBroughtUpToDateToo() {
         // A text with gaps sent once: its note type in AnkiDroid
         Anki(Device.context).send(Deck("Notosaurus test $run", listOf(Card("Le {{c1::soleil}} brille $run", ""))))

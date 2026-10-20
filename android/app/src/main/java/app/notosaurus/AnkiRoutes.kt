@@ -110,6 +110,14 @@ internal fun Route.ankiRoutes(server: LocalServer) {
             if (!opened) throw BadRequest("anki.android_no_deck", buildJsonObject { put("deck", deck) })
             buildJsonObject { put("opened", true) }
         }
+        // A test's cards in AnkiDroid's browser, where its menu makes their filtered deck
+        api("POST", "/api/anki/browse") {
+            val search = body().string("search")
+            if (!anki.installed()) throw BadRequest("anki.android_missing")
+            val opened = withContext(Dispatchers.IO) { runCatching { anki.browse(search) }.getOrDefault(false) }
+            if (!opened) throw BadRequest("anki.android_browse_failed")
+            buildJsonObject { put("opened", true) }
+        }
     }
 }
 

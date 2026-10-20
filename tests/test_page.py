@@ -1371,3 +1371,29 @@ def test_photos_and_pdfs_dropped_on_their_tiles(page):
         }"""
     )
     assert prevented and page.locator(".thumb img").count() == 4
+
+
+def test_a_tests_lessons_sent_from_its_sheet(page):
+    """Lessons of a test not in Anki yet: sent from the test's sheet, one or all, without
+    opening each."""
+    page.goto("/")
+    made = [page.request.post("/api/extract", multipart={"prompt": FRONT_PROMPT}).json() for _ in range(2)]
+    exam = {"name": "Interro", "date": "2026-10-30", "lessons": [{"lesson": m["id"]} for m in made]}
+    page.request.put("/api/exams/interro", data=exam)
+    page.route("**/api/anki/status", lambda route: route.fulfill(json={"available": True, "profile": None}))
+    sent = []
+
+    def send(route):
+        sent.append(route.request.post_data_json["lesson_id"])
+        route.fulfill(json={"added": 2, "updated": 0, "leftovers": [], "synced": False})
+
+    page.route("**/api/anki/send", send)
+    page.reload()
+    page.wait_for_function("document.documentElement.classList.contains('i18n-ready')")
+    page.evaluate(
+        "(async () => { const app = document.querySelector('[x-data]')._x_dataStack[0];"
+        " await app.loadExams(); app.openExams(app.exams[0]); })()"
+    )
+    page.get_by_role("button", name="📥 Tout envoyer à Anki (2 leçons)").click()
+    sync_api.expect(page.get_by_role("button", name="📥 Tout envoyer à Anki (2 leçons)")).to_be_enabled()
+    assert sent == [m["id"] for m in made]

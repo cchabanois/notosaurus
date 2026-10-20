@@ -487,6 +487,9 @@
       "some": "{count} tarjetas",
       "inAnki": "{sent} de {total} tarjetas en Anki",
       "notSent": "Aún no está en Anki: la etiqueta llegará con la lección al enviarla.",
+      "send": "📥 Enviar a Anki",
+      "sendAll": "📥 Enviar todo a Anki ({count} lecciones)",
+      "sending": "Enviando… (quedan {count})",
       "tag": "Etiqueta",
       "ankiClosed": "Anki está cerrado: la etiqueta se pondrá en el próximo envío.",
       "delete": "Eliminar el examen",
@@ -503,15 +506,17 @@
         "titleAndroid": "Repasarlo en AnkiDroid",
         "titleDesktop": "Repasarlo en Anki",
         "step1": "Abra el mazo <strong>{deck}</strong>",
-        "openDeck": "Abrir en AnkiDroid",
-        "step2android": "Abajo, toque <strong>Estudio personalizado</strong>",
         "step2desktop": "Haga clic en <strong>Estudio personalizado</strong> al pie de la pantalla del mazo",
         "step3": "Elija <strong>Estudiar por estado o etiqueta</strong> y luego <strong>Todas las tarjetas</strong>",
         "step4": "Marque la etiqueta <strong>{tag}</strong> y confirme",
         "after": "Anki crea un mazo «Sesión de estudio personalizado» con estas tarjetas; al terminar, vuelven a sus mazos.",
         "noDeck": "Las lecciones están en mazos distintos. En Anki: <strong>Crear mazo filtrado</strong>, y pegue esta búsqueda:",
         "copy": "Copiar",
-        "copied": "Copiado"
+        "copied": "Copiado",
+        "droid1": "Abra las tarjetas del examen en AnkiDroid",
+        "droidOpen": "Abrir en AnkiDroid",
+        "droid2": "Toque <strong>⋮</strong> y luego <strong>Crear mazo filtrado</strong>",
+        "droid3": "Toque <strong>Generar</strong> (más de {limit} tarjetas: aumente antes <strong>Limitar a</strong>)"
       },
       "reviewNow": "Repasar ahora en Anki",
       "reviewing": "Creando el mazo…",
@@ -936,7 +941,8 @@
       "android_missing": "Las tarjetas van a AnkiDroid, la aplicación gratuita de Anki para Android: no está instalada. Instálala, ábrela una vez y vuelve a añadir las tarjetas.",
       "android_refused": "Notosaurus no tiene permiso para añadir tarjetas a AnkiDroid: permítelo y vuelve a añadir las tarjetas.",
       "android_failed": "AnkiDroid no aceptó las tarjetas ({detail}): abre AnkiDroid una vez y vuelve a intentarlo.",
-      "android_no_deck": "AnkiDroid no tiene el mazo «{deck}»: añade primero la lección a Anki."
+      "android_no_deck": "AnkiDroid no tiene el mazo «{deck}»: añade primero la lección a Anki.",
+      "android_browse_failed": "AnkiDroid no pudo abrir sus tarjetas: abre AnkiDroid una vez y vuelve a intentarlo."
     },
     "tts": {
       "voices_unavailable": "Lista de voces no disponible: {detail}",

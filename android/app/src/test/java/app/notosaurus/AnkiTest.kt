@@ -106,4 +106,11 @@ class AnkiTest {
         assertEquals(null, Anki.crop(null, masks)) // no frame: the whole photo
         assertEquals(listOf(0.0, 0.0, 0.99, 0.99), Anki.crop(listOf(0.0, 0.0, 0.99, 0.99), masks))
     }
+
+    @Test
+    fun aSearchOpenedInAnkiDroidsBrowser() {
+        // "deck:*" added (AnkiDroid would put "null" before the search), the search encoded, a new link each time
+        assertEquals("anki://x-callback-url/browser?search=deck%3A*%20tag%3AExam%3A%3AInterro&at=1", Anki.browserLink("tag:Exam::Interro", 1))
+        assertEquals("anki://x-callback-url/browser?search=deck%3AEspagnol%20tag%3Ax&at=2", Anki.browserLink("deck:Espagnol tag:x", 2))
+    }
 }

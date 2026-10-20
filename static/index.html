@@ -624,13 +624,6 @@
       <h2><span x-text="$t('app.lessons.title')"></span> <a class="help-link" :href="$docs('lessons')" target="_blank" rel="noopener" :aria-label="$t('common.helpOn', { topic: $t('app.lessons.title') })" :title="$t('common.helpOn', { topic: $t('app.lessons.title') })">?</a></h2>
       <button class="icon-btn" @click="lessonsOpen = false" :aria-label="$t('common.close')">✕</button>
     </div>
-    <label class="switch profile-filter" x-show="children.length > 1">
-      <input type="checkbox" x-model="allChildren">
-      <span class="track"><span class="knob"></span></span>
-      <span x-text="allChildren ? $t('app.children.allLessons') : $t('app.children.lessonsOf', { name: currentChild()?.name ?? '' })"></span>
-    </label>
-    <input type="search" class="lesson-search" x-show="manyLessons()" x-model="lessonQuery"
-           :placeholder="$t('app.lessons.search')" :aria-label="$t('app.lessons.search')">
     <!-- The tests to prepare: lessons under one tag in Anki, revised together (app-exams.js) -->
     <section class="exam-list" x-show="exams.length">
       <h3 class="exam-head" x-text="$t('app.exams.title')"></h3>
@@ -646,6 +639,14 @@
         </template>
       </ul>
     </section>
+    <!-- What filters the lessons, right above them (the tests to prepare aren't filtered) -->
+    <label class="switch profile-filter" x-show="children.length > 1">
+      <input type="checkbox" x-model="allChildren">
+      <span class="track"><span class="knob"></span></span>
+      <span x-text="allChildren ? $t('app.children.allLessons') : $t('app.children.lessonsOf', { name: currentChild()?.name ?? '' })"></span>
+    </label>
+    <input type="search" class="lesson-search" x-show="manyLessons()" x-model="lessonQuery"
+           :placeholder="$t('app.lessons.search')" :aria-label="$t('app.lessons.search')">
     <!-- By subject (the deck's first level), the most recent first; see lessonSections() -->
     <div class="lesson-list">
       <p class="empty" x-show="!visibleLessons().length" x-text="$t('app.lessons.none')"></p>
@@ -964,17 +965,24 @@
               <p class="hint ok" x-show="examSheet.reviewed" x-text="examSheet.reviewed"></p>
               <p class="hint" x-text="$t('app.exams.manual')"></p>
             </div>
-            <ol x-show="examSheet.exam.deck">
+            <!-- AnkiDroid: no app may make a filtered deck there; its browser, opened on the test's
+                 cards, makes it from its menu (any decks the lessons are in) -->
+            <ol x-show="reviewInAnki">
               <li>
-                <span x-html="$th('app.exams.guide.step1', { deck: examSheet.exam.deck })"></span>
-                <button type="button" class="chip-btn" x-show="reviewInAnki" @click="openExamDeck(examSheet.exam)" x-text="$t('app.exams.guide.openDeck')"></button>
+                <span x-text="$t('app.exams.guide.droid1')"></span>
+                <button type="button" class="chip-btn" @click="browseExam(examSheet.exam)" x-text="$t('app.exams.guide.droidOpen')"></button>
               </li>
-              <li x-html="reviewInAnki ? $th('app.exams.guide.step2android') : $th('app.exams.guide.step2desktop')"></li>
+              <li x-html="$th('app.exams.guide.droid2')"></li>
+              <li x-html="$th('app.exams.guide.droid3', { limit: 100 })"></li>
+            </ol>
+            <ol x-show="!reviewInAnki && examSheet.exam.deck">
+              <li x-html="$th('app.exams.guide.step1', { deck: examSheet.exam.deck })"></li>
+              <li x-html="$th('app.exams.guide.step2desktop')"></li>
               <li x-html="$th('app.exams.guide.step3')"></li>
               <li x-html="$th('app.exams.guide.step4', { tag: examSheet.exam.tag })"></li>
             </ol>
-            <p class="hint" x-show="examSheet.exam.deck" x-text="$t('app.exams.guide.after')"></p>
-            <div x-show="!examSheet.exam.deck">
+            <p class="hint" x-show="reviewInAnki || examSheet.exam.deck" x-text="$t('app.exams.guide.after')"></p>
+            <div x-show="!reviewInAnki && !examSheet.exam.deck">
               <p class="hint" x-html="$th('app.exams.guide.noDeck')"></p>
               <p class="exam-search">
                 <code x-text="examSheet.exam.search"></code>
@@ -983,6 +991,10 @@
               </p>
             </div>
           </section>
+          <!-- Lessons not (all) in Anki: sent from here, without opening each -->
+          <button type="button" class="btn soft" x-show="anki.available && !off('anki.send') && unsentLessons(examSheet.exam).length > 1"
+                  @click="sendExamLessons(examSheet.exam, unsentLessons(examSheet.exam))" :disabled="examSheet.busy"
+                  x-text="examSheet.sendingLeft ? $t('app.exams.sending', { count: examSheet.sendingLeft }) : $t('app.exams.sendAll', { count: unsentLessons(examSheet.exam).length })"></button>
           <ul class="child-rows exam-lessons">
             <template x-for="p in examSheet.exam.lessons" :key="p.lesson">
               <li>
@@ -993,6 +1005,8 @@
                   <small class="warn" x-show="!p.in_anki" x-text="$t('app.exams.notSent')"></small>
                 </div>
                 <div class="exam-actions">
+                  <button type="button" class="chip-btn" x-show="anki.available && !off('anki.send') && p.in_anki < p.total"
+                          @click="sendExamLessons(examSheet.exam, [p])" :disabled="examSheet.busy" x-text="$t('app.exams.send')"></button>
                   <button type="button" class="chip-btn" x-show="p.lesson === lessonId" @click="startPick(examSheet.exam)" x-text="$t('app.exams.pickCards')"></button>
                   <button type="button" class="chip-btn" x-show="p.lesson !== lessonId" @click="pickIn(examSheet.exam, p)" x-text="$t('app.exams.openLesson')"></button>
                   <button type="button" class="chip-btn" @click="removeExamLesson(examSheet.exam, p)" :disabled="examSheet.busy" x-text="$t('app.exams.remove')"></button>

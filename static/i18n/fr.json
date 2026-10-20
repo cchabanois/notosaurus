@@ -487,6 +487,9 @@
       "some": "{count} cartes",
       "inAnki": "{sent} cartes sur {total} dans Anki",
       "notSent": "Pas encore dans Anki : l'étiquette viendra avec la leçon à l'envoi.",
+      "send": "📥 Envoyer à Anki",
+      "sendAll": "📥 Tout envoyer à Anki ({count} leçons)",
+      "sending": "Envoi… (encore {count})",
       "tag": "Étiquette",
       "ankiClosed": "Anki est fermé : l'étiquette suivra au prochain envoi.",
       "delete": "Supprimer le contrôle",
@@ -503,15 +506,17 @@
         "titleAndroid": "Le réviser dans AnkiDroid",
         "titleDesktop": "Le réviser dans Anki",
         "step1": "Ouvrez le paquet <strong>{deck}</strong>",
-        "openDeck": "Ouvrir dans AnkiDroid",
-        "step2android": "En bas, touchez <strong>Étude personnalisée</strong>",
         "step2desktop": "Cliquez sur <strong>Étude personnalisée</strong> en bas de l'écran du paquet",
         "step3": "Choisissez <strong>Étudier par état ou étiquette</strong>, puis <strong>Toutes les cartes</strong>",
         "step4": "Cochez l'étiquette <strong>{tag}</strong> et validez",
         "after": "Anki crée un paquet « Étude personnalisée » avec ces cartes ; une fois fini, elles retournent dans leurs paquets.",
         "noDeck": "Les leçons sont dans des paquets différents. Dans Anki : <strong>Créer un paquet filtré</strong>, et collez cette recherche :",
         "copy": "Copier",
-        "copied": "Copié"
+        "copied": "Copié",
+        "droid1": "Ouvrez les cartes du contrôle dans AnkiDroid",
+        "droidOpen": "Ouvrir dans AnkiDroid",
+        "droid2": "Touchez <strong>⋮</strong>, puis <strong>Créer un paquet filtré</strong>",
+        "droid3": "Touchez <strong>Générer</strong> (plus de {limit} cartes : augmentez d'abord <strong>Limiter à</strong>)"
       },
       "reviewNow": "Réviser maintenant dans Anki",
       "reviewing": "Création du paquet…",
@@ -936,7 +941,8 @@
       "android_missing": "Les cartes vont dans AnkiDroid, l'application Anki gratuite pour Android : il n'est pas installé. Installez-le, ouvrez-le une fois, puis ajoutez à nouveau les cartes.",
       "android_refused": "Notosaurus n'a pas le droit d'ajouter des cartes à AnkiDroid : autorisez-le, puis ajoutez à nouveau les cartes.",
       "android_failed": "AnkiDroid n'a pas pris les cartes ({detail}) : ouvrez AnkiDroid une fois, puis réessayez.",
-      "android_no_deck": "AnkiDroid n'a pas de paquet « {deck} » : ajoutez d'abord la leçon à Anki."
+      "android_no_deck": "AnkiDroid n'a pas de paquet « {deck} » : ajoutez d'abord la leçon à Anki.",
+      "android_browse_failed": "AnkiDroid n'a pas pu ouvrir ses cartes : ouvrez AnkiDroid une fois, puis réessayez."
     },
     "tts": {
       "voices_unavailable": "Liste des voix indisponible : {detail}",
