@@ -110,6 +110,8 @@ class LocalServerTest {
         override fun retag(add: Map<String, Set<Long>>, remove: Map<String, Set<Long>>) = !broken.also { if (!broken) retagged += add to remove }
         var opened = 0
         override fun open() = installed.also { if (it) opened++ }
+        val browsed = mutableListOf<String>()
+        override fun browse(search: String) = installed.also { if (it) browsed += search }
         override fun icon() = if (installed) byteArrayOf(0x89.toByte(), 0x50, 0x4E, 0x47) else null // "PNG"
         override fun send(deck: Deck, media: Media, options: Options): Sent {
             if (broken) error("no collection")
@@ -1132,6 +1134,16 @@ class LocalServerTest {
         assertEquals(listOf("Espagnol::Leçon 5"), anki.reviewed)
         val missing = client.post("/api/anki/review") { page(); contentType(ContentType.Application.Json); setBody("""{"deck": "Nope"}""") }
         assertEquals("anki.android_no_deck", missing.json().jsonObject["detail"]!!.jsonObject.string("code"))
+    }
+
+    @Test
+    fun aTestsCardsInAnkiDroidsBrowser() = app { client ->
+        val res = client.post("/api/anki/browse") { page(); contentType(ContentType.Application.Json); setBody("""{"search": "tag:notosaurus::controle::svt"}""") }
+        assertEquals(HttpStatusCode.OK, res.status)
+        assertEquals(listOf("tag:notosaurus::controle::svt"), anki.browsed)
+        anki.installed = false
+        val missing = client.post("/api/anki/browse") { page(); contentType(ContentType.Application.Json); setBody("""{"search": "tag:x"}""") }
+        assertEquals("anki.android_missing", missing.json().jsonObject["detail"]!!.jsonObject.string("code"))
     }
 
     @Test

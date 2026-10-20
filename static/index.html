@@ -964,17 +964,24 @@
               <p class="hint ok" x-show="examSheet.reviewed" x-text="examSheet.reviewed"></p>
               <p class="hint" x-text="$t('app.exams.manual')"></p>
             </div>
-            <ol x-show="examSheet.exam.deck">
+            <!-- AnkiDroid: no app may make a filtered deck there; its browser, opened on the test's
+                 cards, makes it from its menu (any decks the lessons are in) -->
+            <ol x-show="reviewInAnki">
               <li>
-                <span x-html="$th('app.exams.guide.step1', { deck: examSheet.exam.deck })"></span>
-                <button type="button" class="chip-btn" x-show="reviewInAnki" @click="openExamDeck(examSheet.exam)" x-text="$t('app.exams.guide.openDeck')"></button>
+                <span x-text="$t('app.exams.guide.droid1')"></span>
+                <button type="button" class="chip-btn" @click="browseExam(examSheet.exam)" x-text="$t('app.exams.guide.droidOpen')"></button>
               </li>
-              <li x-html="reviewInAnki ? $th('app.exams.guide.step2android') : $th('app.exams.guide.step2desktop')"></li>
+              <li x-html="$th('app.exams.guide.droid2')"></li>
+              <li x-html="$th('app.exams.guide.droid3', { limit: 100 })"></li>
+            </ol>
+            <ol x-show="!reviewInAnki && examSheet.exam.deck">
+              <li x-html="$th('app.exams.guide.step1', { deck: examSheet.exam.deck })"></li>
+              <li x-html="$th('app.exams.guide.step2desktop')"></li>
               <li x-html="$th('app.exams.guide.step3')"></li>
               <li x-html="$th('app.exams.guide.step4', { tag: examSheet.exam.tag })"></li>
             </ol>
-            <p class="hint" x-show="examSheet.exam.deck" x-text="$t('app.exams.guide.after')"></p>
-            <div x-show="!examSheet.exam.deck">
+            <p class="hint" x-show="reviewInAnki || examSheet.exam.deck" x-text="$t('app.exams.guide.after')"></p>
+            <div x-show="!reviewInAnki && !examSheet.exam.deck">
               <p class="hint" x-html="$th('app.exams.guide.noDeck')"></p>
               <p class="exam-search">
                 <code x-text="examSheet.exam.search"></code>

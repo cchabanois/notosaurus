@@ -503,15 +503,17 @@
         "titleAndroid": "Revisá-la no AnkiDroid",
         "titleDesktop": "Revisá-la no Anki",
         "step1": "Abra o baralho <strong>{deck}</strong>",
-        "openDeck": "Abrir no AnkiDroid",
-        "step2android": "Embaixo, toque em <strong>Estudo personalizado</strong>",
         "step2desktop": "Clique em <strong>Estudo personalizado</strong> no fim da tela do baralho",
         "step3": "Escolha <strong>Estudar por estado do cartão ou etiqueta</strong> e depois <strong>Todas as cartas</strong>",
         "step4": "Marque a etiqueta <strong>{tag}</strong> e confirme",
         "after": "O Anki cria um baralho “Sessão de estudo personalizado” com estas cartas; ao terminar, elas voltam aos seus baralhos.",
         "noDeck": "As lições estão em baralhos diferentes. No Anki: <strong>Criar baralho filtrado</strong>, e cole esta busca:",
         "copy": "Copiar",
-        "copied": "Copiado"
+        "copied": "Copiado",
+        "droid1": "Abra os cartões da prova no AnkiDroid",
+        "droidOpen": "Abrir no AnkiDroid",
+        "droid2": "Toque em <strong>⋮</strong> e depois em <strong>Criar baralho filtrado</strong>",
+        "droid3": "Toque em <strong>Gerar</strong> (mais de {limit} cartões: aumente antes <strong>Limitar a</strong>)"
       },
       "reviewNow": "Revisar agora no Anki",
       "reviewing": "Criando o baralho…",
@@ -936,7 +938,8 @@
       "android_missing": "Os cartões vão para o AnkiDroid, o app gratuito do Anki para Android: ele não está instalado. Instale-o, abra-o uma vez e adicione os cartões de novo.",
       "android_refused": "O Notosaurus não tem permissão para adicionar cartões ao AnkiDroid: permita e adicione os cartões de novo.",
       "android_failed": "O AnkiDroid não aceitou os cartões ({detail}): abra o AnkiDroid uma vez e tente de novo.",
-      "android_no_deck": "O AnkiDroid não tem o baralho “{deck}”: adicione primeiro a lição ao Anki."
+      "android_no_deck": "O AnkiDroid não tem o baralho “{deck}”: adicione primeiro a lição ao Anki.",
+      "android_browse_failed": "O AnkiDroid não conseguiu abrir os cartões: abra o AnkiDroid uma vez e tente de novo."
     },
     "tts": {
       "voices_unavailable": "Lista de vozes indisponível: {detail}",

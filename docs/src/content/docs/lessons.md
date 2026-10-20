@@ -45,6 +45,10 @@ Once revised, the cards go back to their decks. Deleting a test takes the tag of
 On the computer with Anki open, **Revise now in Anki** does it in one click: a filtered deck
 "Test: …" with the test's cards, opened in Anki, made again each time and deleted with the test.
 
+In the app, **Open in AnkiDroid** opens the test's cards in AnkiDroid's browser, whatever their
+decks; then **⋮ → Create filtered deck → Build** (over 100 cards, raise **Limit to** first).
+AnkiDroid lets no other app make a filtered deck.
+
 ## Deleting a lesson
 
 **🗑** next to a lesson deletes it, with its photos. If its cards are in Anki, Notosaurus looks

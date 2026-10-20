@@ -66,6 +66,7 @@ Each pull request adds a line under **Unreleased**. See [Releasing](CONTRIBUTING
 
 ### Changed
 
+- Android, a test to prepare: **Open in AnkiDroid** opens the test's cards in AnkiDroid's browser (whatever their decks), then **⋮ → Create filtered deck → Build**: three taps instead of finding the tag in the custom study. AnkiDroid lets no other app make the filtered deck itself.
 - The page speaks of children, not Anki profiles: the review says whom the lesson is for (its child), the lessons list and the children's sheet no longer repeat the profile, a profile switch is said with its child's name (a profile per child). The open Anki profile stays under the name, always (where the cards go); Anki open on another child's profile is said with their names.
 - The review's cards are a third shorter: their buttons (💬, 🔊, 🖼️) sit on the front's line instead of a column beside the card, which made every card as tall as its buttons. Report and delete are behind **⋯**.
 - **Pictures** where they truly help, whatever the prompt: a work of art, a person, a place, a monument, an animal; never for an abstract notion nor on every card. A setting, on by default (**Settings → Instructions for the AI → 🖼️ Pictures on the cards**); a prompt can say "no pictures". The prompts no longer say it each (Automatic, Dates and landmarks). For developers: `/v1/extract` takes `pictures`.

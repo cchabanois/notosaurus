@@ -503,15 +503,17 @@
         "titleAndroid": "Revise it in AnkiDroid",
         "titleDesktop": "Revise it in Anki",
         "step1": "Open the deck <strong>{deck}</strong>",
-        "openDeck": "Open in AnkiDroid",
-        "step2android": "At the bottom, tap <strong>Custom study</strong>",
         "step2desktop": "Click <strong>Custom Study</strong> at the bottom of the deck's screen",
         "step3": "Choose <strong>Study by card state or tag</strong>, then <strong>All cards</strong>",
         "step4": "Tick the tag <strong>{tag}</strong> and confirm",
         "after": "Anki makes a “Custom study session” deck with these cards; once done, they go back to their decks.",
         "noDeck": "The lessons are in different decks. In Anki: <strong>Create filtered deck</strong>, and paste this search:",
         "copy": "Copy",
-        "copied": "Copied"
+        "copied": "Copied",
+        "droid1": "Open the test's cards in AnkiDroid",
+        "droidOpen": "Open in AnkiDroid",
+        "droid2": "Tap <strong>⋮</strong>, then <strong>Create filtered deck</strong>",
+        "droid3": "Tap <strong>Build</strong> (more than {limit} cards: raise <strong>Limit to</strong> first)"
       },
       "reviewNow": "Revise now in Anki",
       "reviewing": "Making the deck…",
@@ -936,7 +938,8 @@
       "android_missing": "The cards go to AnkiDroid, Anki's free app for Android: it isn't installed. Install it, open it once, then add the cards again.",
       "android_refused": "Notosaurus isn't allowed to add cards to AnkiDroid: allow it, then add the cards again.",
       "android_failed": "AnkiDroid didn't take the cards ({detail}): open AnkiDroid once, then try again.",
-      "android_no_deck": "AnkiDroid has no deck “{deck}”: add the lesson to Anki first."
+      "android_no_deck": "AnkiDroid has no deck “{deck}”: add the lesson to Anki first.",
+      "android_browse_failed": "AnkiDroid couldn't open its cards: open AnkiDroid once, then try again."
     },
     "tts": {
       "voices_unavailable": "Voice list unavailable: {detail}",

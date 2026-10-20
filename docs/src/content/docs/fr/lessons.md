@@ -49,6 +49,11 @@ Sur l'ordinateur, Anki ouvert, **Réviser maintenant dans Anki** le fait en un c
 filtré « Contrôle : … » avec les cartes du contrôle, ouvert dans Anki, refait à chaque fois et
 supprimé avec le contrôle.
 
+Dans l'application, **Ouvrir dans AnkiDroid** ouvre les cartes du contrôle dans le navigateur
+d'AnkiDroid, quels que soient leurs paquets ; puis **⋮ → Créer un paquet filtré → Générer**
+(au-delà de 100 cartes, augmentez d'abord **Limiter à**). AnkiDroid ne laisse aucune autre
+application créer un paquet filtré.
+
 ## Supprimer une leçon
 
 **🗑** à côté d'une leçon la supprime, avec ses photos. Si ses cartes sont dans Anki, Notosaurus

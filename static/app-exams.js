@@ -183,11 +183,11 @@ const examsPart = {
     }
   },
 
-  // AnkiDroid opened on the deck holding every lesson of the test (the custom study starts there)
-  async openExamDeck(exam) {
+  // AnkiDroid's browser opened on the test's cards: its menu makes their filtered deck
+  async browseExam(exam) {
     this.examSheet.error = "";
     try {
-      await api("/api/anki/review", { method: "POST", headers: JSON_BODY, body: JSON.stringify({ deck: exam.deck }) });
+      await api("/api/anki/browse", { method: "POST", headers: JSON_BODY, body: JSON.stringify({ search: exam.search }) });
     } catch (e) {
       this.examSheet.error = e.message;
     }

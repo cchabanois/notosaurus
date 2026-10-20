@@ -83,6 +83,10 @@ interface AnkiTarget {
     /** AnkiDroid opened, on its own screen (the page's "Open AnkiDroid"); false when it can't be. */
     fun open(): Boolean = false
 
+    /** AnkiDroid's card browser opened on a search (a test's cards): its menu's "Create filtered
+     * deck" takes the search from there, as no other app may make one; false when it can't be. */
+    fun browse(search: String): Boolean = false
+
     /** AnkiDroid's own icon as installed on this phone (a PNG), for the page's "Open AnkiDroid":
      * read from the installed app, never shipped with Notosaurus; null when it isn't installed. */
     fun icon(): ByteArray? = null
@@ -135,6 +139,16 @@ class Anki(private val context: Context) : AnkiTarget {
             if (runCatching { context.startActivity(intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)) }.isSuccess) return true
         }
         return false
+    }
+
+    override fun browse(search: String): Boolean {
+        val package_ = AddContentApi.getAnkiDroidPackageName(context) ?: return false
+        // "deck:" in the search: AnkiDroid 2.25 puts the browser's deck before a search without
+        // one, and opened by this link it has none ("null tag:…": an empty filtered deck)
+        val query = if ("deck:" in search) search else "deck:* $search"
+        val link = Uri.Builder().scheme("anki").authority("x-callback-url").path("/browser").appendQueryParameter("search", query).build()
+        val intent = Intent(Intent.ACTION_VIEW, link).setPackage(package_).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+        return runCatching { context.startActivity(intent) }.isSuccess
     }
 
     override fun open(): Boolean {
