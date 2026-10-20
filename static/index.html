@@ -990,6 +990,10 @@
               </p>
             </div>
           </section>
+          <!-- Lessons not (all) in Anki: sent from here, without opening each -->
+          <button type="button" class="btn soft" x-show="anki.available && !off('anki.send') && unsentLessons(examSheet.exam).length > 1"
+                  @click="sendExamLessons(examSheet.exam, unsentLessons(examSheet.exam))" :disabled="examSheet.busy"
+                  x-text="examSheet.sendingLeft ? $t('app.exams.sending', { count: examSheet.sendingLeft }) : $t('app.exams.sendAll', { count: unsentLessons(examSheet.exam).length })"></button>
           <ul class="child-rows exam-lessons">
             <template x-for="p in examSheet.exam.lessons" :key="p.lesson">
               <li>
@@ -1000,6 +1004,8 @@
                   <small class="warn" x-show="!p.in_anki" x-text="$t('app.exams.notSent')"></small>
                 </div>
                 <div class="exam-actions">
+                  <button type="button" class="chip-btn" x-show="anki.available && !off('anki.send') && p.in_anki < p.total"
+                          @click="sendExamLessons(examSheet.exam, [p])" :disabled="examSheet.busy" x-text="$t('app.exams.send')"></button>
                   <button type="button" class="chip-btn" x-show="p.lesson === lessonId" @click="startPick(examSheet.exam)" x-text="$t('app.exams.pickCards')"></button>
                   <button type="button" class="chip-btn" x-show="p.lesson !== lessonId" @click="pickIn(examSheet.exam, p)" x-text="$t('app.exams.openLesson')"></button>
                   <button type="button" class="chip-btn" @click="removeExamLesson(examSheet.exam, p)" :disabled="examSheet.busy" x-text="$t('app.exams.remove')"></button>

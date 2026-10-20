@@ -51,7 +51,7 @@ const examsPart = {
 
   // The sheet: every test, with the open lesson's place in each; or one test's detail
   async openExams(exam = null) {
-    this.examSheet = { open: true, view: exam ? "detail" : "list", exam, draft: { name: "", date: "" }, busy: false, error: "", copied: false, reviewed: "" };
+    this.examSheet = { open: true, view: exam ? "detail" : "list", exam, draft: { name: "", date: "" }, busy: false, error: "", copied: false, reviewed: "", sendingLeft: 0 };
     await this.loadExams();
     if (exam) this.examSheet.exam = this.exams.find((e) => e.id === exam.id) ?? exam;
   },
@@ -180,6 +180,45 @@ const examsPart = {
       sheet.error = e.message;
     } finally {
       sheet.busy = false;
+    }
+  },
+
+  // A test's lessons not (all) in Anki yet, sent from its sheet one after the other: the open
+  // lesson as it stands (its unsaved edits too), the others as saved
+  unsentLessons(exam) {
+    return (exam?.lessons ?? []).filter((p) => p.in_anki < p.total);
+  },
+
+  async sendExamLessons(exam, parts) {
+    const sheet = this.examSheet;
+    sheet.busy = true;
+    sheet.error = "";
+    sheet.sendingLeft = parts.length;
+    try {
+      for (const p of parts) {
+        const open = p.lesson === this.lessonId;
+        if (open) await this.picturesDone();
+        const lesson = open ? this.payload() : await (await api(`/api/lessons/${p.lesson}`)).json();
+        const body = {
+          deck: lesson.deck, cards: lesson.cards, voice: lesson.voice, rate: lesson.rate, reverse: lesson.reverse,
+          typing: lesson.typing, dictation: lesson.dictation, dictation_only: lesson.dictation && lesson.dictation_only,
+          frames: lesson.frames, lesson_id: p.lesson,
+        };
+        await api("/api/anki/send", { method: "POST", headers: JSON_BODY, body: JSON.stringify(body) });
+        if (open) {
+          this.lessonExported = true;
+          this.lastSaved = this.snapshot();  // sending also saves the lesson
+        }
+        sheet.sendingLeft--;
+      }
+    } catch (e) {
+      sheet.error = e.message;
+    } finally {
+      sheet.busy = false;
+      sheet.sendingLeft = 0;
+      await this.loadExams();  // how many of its cards are in Anki now
+      sheet.exam = this.exams.find((e) => e.id === exam.id) ?? sheet.exam;
+      this.loadLessons();
     }
   },
 
