@@ -143,10 +143,7 @@ class Anki(private val context: Context) : AnkiTarget {
 
     override fun browse(search: String): Boolean {
         val package_ = AddContentApi.getAnkiDroidPackageName(context) ?: return false
-        // "deck:" in the search: AnkiDroid 2.25 puts the browser's deck before a search without
-        // one, and opened by this link it has none ("null tag:…": an empty filtered deck)
-        val query = if ("deck:" in search) search else "deck:* $search"
-        val link = Uri.Builder().scheme("anki").authority("x-callback-url").path("/browser").appendQueryParameter("search", query).build()
+        val link = Uri.parse(browserLink(search, System.currentTimeMillis()))
         val intent = Intent(Intent.ACTION_VIEW, link).setPackage(package_).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
         return runCatching { context.startActivity(intent) }.isSuccess
     }
@@ -492,6 +489,16 @@ class Anki(private val context: Context) : AnkiTarget {
         // The tag of every note sent for a lesson (as the computer's): its notes found again
         const val TAG_PREFIX = "notosaurus::"
         fun lessonTag(lesson: String) = "$TAG_PREFIX$lesson"
+
+        /** AnkiDroid's link to its card browser on a search. "deck:" in the search: AnkiDroid
+         * 2.25 puts the browser's deck before a search without one, and opened by this link it
+         * has none ("null tag:…": an empty filtered deck). A new link each time (`at`, ignored
+         * by AnkiDroid): the same one again only brings its task back where it was left. */
+        internal fun browserLink(search: String, at: Long): String {
+            val query = if ("deck:" in search) search else "deck:* $search"
+            val encoded = java.net.URLEncoder.encode(query, "UTF-8").replace("+", "%20")
+            return "anki://x-callback-url/browser?search=$encoded&at=$at"
+        }
 
         /** A card's text as an AnkiDroid field: escaped, its line breaks kept. */
         fun html(text: String) = escape(text.trim())
