@@ -298,6 +298,37 @@ def _delete_decks(p: dict) -> None:
     _schedule_refresh()
 
 
+def _create_filtered_deck(p: dict) -> int:
+    """A filtered deck of the cards a search finds (same action as AnkiConnect): a test to
+    prepare, revised with Anki's own custom study."""
+    from anki.decks import DeckId
+
+    col = _col()
+    deck = col.sched.get_or_create_filtered_deck(deck_id=DeckId(0))
+    deck.name = p["newDeckName"]
+    deck.allow_empty = p.get("createEmpty", False)
+    config = deck.config
+    config.reschedule = p.get("reschedule", True)
+    term = config.search_terms[0]
+    term.search = p.get("searchQuery", "")
+    term.limit = p.get("gatherCount", 100)
+    term.order = p.get("sortOrder", 0)
+    deck_id = col.sched.add_or_update_filtered_deck(deck).id
+    _schedule_refresh()
+    return deck_id
+
+
+def _gui_deck_overview(p: dict) -> bool:
+    """The deck shown in Anki, ready to study (same action as AnkiConnect)."""
+    col = _col()
+    deck_id = col.decks.id_for_name(p["name"])
+    if not deck_id:
+        return False
+    col.decks.select(deck_id)
+    mw.moveToState("overview")
+    return True
+
+
 def _sync(p: dict) -> None:
     # Never open the login dialog in the middle of a send: report it instead
     # (Notosaurus translates this into "Anki is not logged in to AnkiWeb").
@@ -348,6 +379,8 @@ ACTIONS: dict[str, Callable[[dict], Any]] = {
     "addTags": _add_tags,
     "deleteNotes": _delete_notes,
     "deleteDecks": _delete_decks,
+    "createFilteredDeck": _create_filtered_deck,
+    "guiDeckOverview": _gui_deck_overview,
     "addNote": _add_note,
     "sync": _sync,
 }

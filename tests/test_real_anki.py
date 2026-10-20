@@ -47,9 +47,13 @@ class FakeMainWindow:
         self.taskman = types.SimpleNamespace(run_on_main=self.main.submit)
         self.pm = types.SimpleNamespace(name=profile, profiles=lambda: profiles, sync_auth=lambda: None)
         self.resets = 0
+        self.state = "deckBrowser"
 
     def reset(self) -> None:
         self.resets += 1
+
+    def moveToState(self, state: str) -> None:
+        self.state = state
 
     def on_sync_button_clicked(self) -> None:
         raise AssertionError("no sync without an AnkiWeb login")
@@ -198,6 +202,30 @@ def test_apkg_import_then_reimport_updates(notosaurus, col, tmp_path):
     assert (len(log.new), len(log.updated)) == (0, len(cards))
     assert col.note_count() == len(cards)
     assert fields(col, mother[0])["Back"] == "la mamá"
+
+
+def test_a_test_to_prepare_revised_in_a_filtered_deck(bridged, col):
+    """The add-on's bridge makes the test's filtered deck of its tagged cards and shows it,
+    as AnkiConnect does: "Revise now in Anki" from the computer."""
+    import asyncio
+
+    from app import ankiconnect
+
+    client, mw = bridged
+    lesson = extract(client)
+    body = {"deck": lesson["deck"], "cards": lesson["cards"], "voice": VOICE, "lesson_id": lesson["id"]}
+    added = client.post("/api/anki/send", json=body).json()["added"]
+    tag = f"notosaurus::{lesson['id']}"
+    assert asyncio.run(ankiconnect.filtered_deck("Contrôle : Espagnol", tag)) == added
+    deck = col.decks.by_name("Contrôle : Espagnol")
+    assert deck["dyn"] and len(col.find_cards('"deck:Contrôle : Espagnol"')) == added
+    assert mw.state == "overview" and col.decks.current()["name"] == "Contrôle : Espagnol"
+
+    # Made again: the deck emptied first (its cards home), then filled
+    assert asyncio.run(ankiconnect.filtered_deck("Contrôle : Espagnol", tag)) == added
+    asyncio.run(ankiconnect.drop_deck("Contrôle : Espagnol"))
+    assert col.decks.by_name("Contrôle : Espagnol") is None
+    assert not col.find_cards("deck:filtered")
 
 
 def test_diagram_lesson_on_a_real_collection(bridged, col):
