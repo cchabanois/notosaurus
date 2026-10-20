@@ -1400,7 +1400,7 @@ def test_a_tests_lessons_sent_from_its_sheet(page):
 
 
 def test_a_test_made_from_my_lessons_then_its_lessons_ticked(page):
-    """"＋ New test" in My lessons, with no test yet and no lesson open: made empty; its
+    """ "＋ New test" in My lessons, with no test yet and no lesson open: made empty; its
     lessons then ticked from its sheet."""
     page.goto("/")
     made = [page.request.post("/api/extract", multipart={"prompt": FRONT_PROMPT}).json() for _ in range(2)]
