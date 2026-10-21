@@ -797,9 +797,12 @@
         "monthly": "Prova gratuita di {days} giorni, poi {price} al mese",
         "yearly": "Prova gratuita di {days} giorni, poi {price} all'anno"
       },
+      "freeTrial": "🎁 Prova gratis, senza carta",
+      "trialStarted": "✓ Prova gratuita: {credits} crediti fino al {date}. Buon ripasso!",
       "restore": "Ho già un abbonamento",
       "manage": "Gestisci l'abbonamento (Google Play)",
       "until": "Abbonamento pagato fino al {date}",
+      "trialUntil": "Prova gratuita fino al {date}",
       "done": "✓ Abbonato: buon ripasso!",
       "restored": "✓ Il tuo abbonamento è stato trovato su questo account Google."
     },

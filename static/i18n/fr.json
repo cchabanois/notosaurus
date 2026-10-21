@@ -797,9 +797,12 @@
         "monthly": "Essai gratuit de {days} jours, puis {price} par mois",
         "yearly": "Essai gratuit de {days} jours, puis {price} par an"
       },
+      "freeTrial": "🎁 Essayer gratuitement, sans carte",
+      "trialStarted": "✓ Essai gratuit : {credits} crédits jusqu'au {date}. Bonnes révisions !",
       "restore": "J'ai déjà un abonnement",
       "manage": "Gérer l'abonnement (Google Play)",
       "until": "Abonnement payé jusqu'au {date}",
+      "trialUntil": "Essai gratuit jusqu'au {date}",
       "done": "✓ Abonné : bonnes révisions !",
       "restored": "✓ Votre abonnement a été retrouvé sur ce compte Google."
     },

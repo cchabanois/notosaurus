@@ -797,9 +797,12 @@
         "monthly": "Teste grátis de {days} dias, depois {price} por mês",
         "yearly": "Teste grátis de {days} dias, depois {price} por ano"
       },
+      "freeTrial": "🎁 Experimentar grátis, sem cartão",
+      "trialStarted": "✓ Teste grátis: {credits} créditos até {date}. Bons estudos!",
       "restore": "Já tenho uma subscrição",
       "manage": "Gerir a subscrição (Google Play)",
       "until": "Subscrição paga até {date}",
+      "trialUntil": "Teste grátis até {date}",
       "done": "✓ Subscrito: boas revisões!",
       "restored": "✓ A tua subscrição foi encontrada nesta conta Google."
     },

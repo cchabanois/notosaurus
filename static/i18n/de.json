@@ -797,9 +797,12 @@
         "monthly": "{days} Tage kostenlos testen, dann {price} pro Monat",
         "yearly": "{days} Tage kostenlos testen, dann {price} pro Jahr"
       },
+      "freeTrial": "🎁 Kostenlos testen, ohne Karte",
+      "trialStarted": "✓ Kostenlose Testphase: {credits} Credits bis zum {date}. Viel Erfolg beim Lernen!",
       "restore": "Ich habe schon ein Abo",
       "manage": "Abo verwalten (Google Play)",
       "until": "Abo bezahlt bis {date}",
+      "trialUntil": "Kostenlose Testphase bis zum {date}",
       "done": "✓ Abonniert: viel Erfolg beim Lernen!",
       "restored": "✓ Dein Abo wurde in diesem Google-Konto gefunden."
     },

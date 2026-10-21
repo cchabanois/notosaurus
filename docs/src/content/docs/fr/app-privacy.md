@@ -3,7 +3,7 @@ title: "Politique de confidentialité de l'app Android"
 description: "Les données que l'app Notosaurus pour Android et son service traitent, pourquoi, où, combien de temps, et vos droits."
 ---
 
-*Dernière mise à jour : 13 octobre 2026.*
+*Dernière mise à jour : 21 octobre 2026.*
 
 Cette page concerne **l'app Notosaurus pour Android** et **le service Notosaurus** qu'elle
 utilise pour lire les photos, faire les cartes et les voix. Notosaurus sur ordinateur (le
@@ -48,6 +48,8 @@ Quand vous le demandez, l'app envoie au service, en HTTPS :
 | Le **verso** d'une carte | Le lire à voix haute (voix des cartes) |
 | La **description** d'une image, ou quelques **mots-clés** | Dessiner l'image d'une carte, ou chercher une image libre |
 | Votre **clé de licence** | Vérifier votre licence et compter vos crédits |
+| Si vous vous abonnez : le **jeton de votre achat** Google Play | Vérifier l'abonnement auprès de Google Play et en faire votre licence |
+| Pour l'**essai gratuit** : une **empreinte du téléphone** (calculée par l'app, jamais son identifiant lui-même) et l'attestation **Play Integrity** de Google | N'offrir l'essai qu'une fois par téléphone, à l'app installée depuis Google Play sur un vrai téléphone |
 
 Le service transmet ces contenus aux sous-traitants ci-dessous, renvoie le résultat à l'app,
 et **ne les garde pas** : ni photo, ni carte, ni enregistrement, ni texte de leçon n'est
@@ -83,6 +85,7 @@ reste dans la leçon.
 | **Google Cloud** : Cloud Run, Firestore, journaux | Le service lui-même, les licences, les journaux | Belgique (europe-west1) |
 | **Google Cloud** : Text-to-Speech | Le texte à lire (le verso d'une carte) | Union européenne |
 | **Wikimedia Commons**, **Openverse**, **Pixabay** | Quelques mots-clés en anglais (« dog »), jamais une photo | Leurs serveurs |
+| **Google Play** : abonnements, Play Integrity | Le jeton d'un achat ; l'attestation de l'essai gratuit | Ses serveurs |
 | **GitHub** (GitHub Pages) | Au démarrage, l'app y lit l'adresse du service : GitHub voit votre adresse IP | Ses serveurs |
 
 Google agit comme sous-traitant, sous les conditions de Google Cloud, et n'utilise pas ces
@@ -105,6 +108,7 @@ UE–États-Unis**. Pixabay est une société de l'Union européenne.
 | Faire, compléter, corriger et expliquer les cartes ; dictée ; voix ; images | L'**exécution du service** que vous demandez |
 | Vérifier votre licence et compter vos crédits | L'**exécution du contrat** (votre licence) |
 | Journaux techniques, sécurité, lutte contre les abus | L'**intérêt légitime** à faire fonctionner un service sûr |
+| L'essai gratuit une seule fois par téléphone (Play Integrity) | L'**intérêt légitime** à éviter les abus de l'essai |
 | Vos signalements du contenu de l'IA | Votre **demande**, et l'intérêt légitime à une IA qui fait un contenu adapté |
 | Le micro | Votre **consentement**, demandé à la première dictée et retirable dans les réglages du téléphone |
 | Répondre à vos e-mails | Votre **demande** |

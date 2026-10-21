@@ -27,6 +27,7 @@ internal fun Route.subscriptionRoutes(server: LocalServer) {
             buildJsonObject {
                 put("offers", JsonArray(offers.map { buildJsonObject { put("plan", it.plan); put("price", it.price); put("trial_days", it.trialDays) } }))
                 put("restored", restored)
+                put("trial", store != null) // the free trial (no card), offered without a key
             }
         }
         // Google Play's purchase screen for a base plan, then the relay's licence for the purchase
@@ -35,6 +36,15 @@ internal fun Route.subscriptionRoutes(server: LocalServer) {
             val plan = body().string("plan").takeIf { it in PlayStore.PLANS } ?: throw BadRequest("subscription.none")
             val token = store.subscribe(plan) ?: return@api buildJsonObject { put("cancelled", true) }
             licensed(token)
+        }
+        // The free trial, no card: once per phone (Play Integrity says it is the app from
+        // Google Play on a real one); the relay answers its key, kept as a purchase's is
+        api("POST", "/api/admin/subscription/trial") {
+            val store = subscriptions ?: throw BadRequest("subscription.unavailable")
+            val device = store.device()
+            val token = withContext(Dispatchers.IO) { store.integrity(device) } ?: throw BadRequest("relay.trial_refused")
+            val request = buildJsonObject { put("integrity_token", token); put("device", device) }
+            keep(withContext(Dispatchers.IO) { Relay(relayUrl(), "").post("trial", request) })
         }
         // A new phone, the app reinstalled: the subscription this Google account has
         api("POST", "/api/admin/subscription/restore") {
@@ -58,6 +68,11 @@ private suspend fun LocalServer.licensed(token: String): JsonObject {
             put("product_id", PlayStore.PRODUCT)
         })
     }
+    return keep(answer)
+}
+
+/** The relay's licence key kept for the relay in use; its account. */
+private fun LocalServer.keep(answer: JsonObject): JsonObject {
     prefs[keyOf(relayUrl())] = answer.string("key")
     return answer["account"]!!.jsonObject
 }

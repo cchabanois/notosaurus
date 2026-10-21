@@ -1,9 +1,11 @@
 package app.notosaurus
 
+import android.annotation.SuppressLint
 import android.app.Activity
 import android.content.Context
 import android.content.Intent
 import android.net.Uri
+import android.provider.Settings
 import com.android.billingclient.api.BillingClient
 import com.android.billingclient.api.BillingClientStateListener
 import com.android.billingclient.api.BillingFlowParams
@@ -13,12 +15,17 @@ import com.android.billingclient.api.ProductDetails
 import com.android.billingclient.api.Purchase
 import com.android.billingclient.api.QueryProductDetailsParams
 import com.android.billingclient.api.QueryPurchasesParams
+import com.google.android.play.core.integrity.IntegrityManagerFactory
+import com.google.android.play.core.integrity.StandardIntegrityManager.PrepareIntegrityTokenRequest
+import com.google.android.play.core.integrity.StandardIntegrityManager.StandardIntegrityTokenRequest
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
+import kotlinx.coroutines.tasks.await
 import kotlinx.coroutines.withContext
+import java.security.MessageDigest
 import kotlin.coroutines.resume
 
 /** A base plan as Google Play offers it ("monthly" or "yearly"): its price a period, its
@@ -40,6 +47,13 @@ interface SubscriptionStore {
 
     /** Google Play's page of the subscription: cancel it, change the card. */
     fun manage()
+
+    /** This phone, for the free trial (once per phone): a SHA-256 in hex, the same as long
+     * as the app is on it (reinstalled too), never the same in another app. */
+    fun device(): String
+
+    /** Play Integrity's token for the free trial, bound to `device`; null without Google Play. */
+    suspend fun integrity(device: String): String?
 }
 
 /**
@@ -102,6 +116,21 @@ class PlayStore(private val context: Context, private val activity: () -> Activi
         }
     }
 
+    override fun device(): String {
+        @SuppressLint("HardwareIds") // the free trial's, once per phone: what ANDROID_ID is for
+        val id = Settings.Secure.getString(context.contentResolver, Settings.Secure.ANDROID_ID).orEmpty()
+        val digest = MessageDigest.getInstance("SHA-256").digest("${context.packageName}:$id".toByteArray())
+        return digest.joinToString("") { "%02x".format(it) }
+    }
+
+    override suspend fun integrity(device: String): String? = runCatching {
+        val manager = IntegrityManagerFactory.createStandard(context)
+        val provider = manager.prepareIntegrityToken(
+            PrepareIntegrityTokenRequest.builder().setCloudProjectNumber(CLOUD_PROJECT).build(),
+        ).await()
+        provider.request(StandardIntegrityTokenRequest.builder().setRequestHash(device).build()).await().token()
+    }.getOrNull()
+
     override fun manage() {
         val page = Uri.parse("https://play.google.com/store/account/subscriptions?sku=$PRODUCT&package=${context.packageName}")
         runCatching { context.startActivity(Intent(Intent.ACTION_VIEW, page).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)) }
@@ -136,6 +165,10 @@ class PlayStore(private val context: Context, private val activity: () -> Activi
 
     companion object {
         const val PRODUCT = "notosaurus" // the relay's RELAY_PLAY_PRODUCT
+
+        /** The Google Cloud project linked to the app in Play Console: the relay's, which
+         * decodes Play Integrity's tokens. */
+        const val CLOUD_PROJECT = 773198805942L
 
         /** Its base plans in Play Console, as offered: a month, a year (a month's credits each month). */
         val PLANS = listOf("monthly", "yearly")

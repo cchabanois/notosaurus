@@ -797,9 +797,12 @@
         "monthly": "{days}-day free trial, then {price} a month",
         "yearly": "{days}-day free trial, then {price} a year"
       },
+      "freeTrial": "🎁 Try it free, no card",
+      "trialStarted": "✓ Free trial: {credits} credits until {date}. Happy revising!",
       "restore": "I already have a subscription",
       "manage": "Manage the subscription (Google Play)",
       "until": "Subscription paid until {date}",
+      "trialUntil": "Free trial until {date}",
       "done": "✓ Subscribed: happy revising!",
       "restored": "✓ Your subscription was found on this Google account."
     },
