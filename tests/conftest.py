@@ -32,10 +32,15 @@ PRICES = {
     "google/gemini-3.8-flash": ("0.00000075", "0.00000375"),
     "anthropic/claude-sonnet-4.6": ("0.000003", "0.000015"),
 }
+# An image model: its pictures' tokens at their own price
+IMAGE_PRICES = {"google/gemini-3.1-flash-image": ("0.0000005", "0.000003", "0.00006")}
 
 
 def model_list(request):
     data = [{"id": i, "pricing": {"prompt": p, "completion": c}} for i, (p, c) in PRICES.items()]
+    data += [
+        {"id": i, "pricing": {"prompt": p, "completion": c, "image_output": o}} for i, (p, c, o) in IMAGE_PRICES.items()
+    ]
     return httpx.Response(200, json={"data": data})
 
 

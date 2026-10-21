@@ -143,7 +143,14 @@ async def _gemini(s: AIConfig, name: str, prompt: str) -> bytes:
         raise PictureError("picture.failed", detail=f"{e.code} {e.message}"[:200]) from e
     usage = response.usage_metadata
     if usage:
-        await llm.record(s, "gemini", name, usage.prompt_token_count, usage.candidates_token_count)
+        # The picture's tokens at the image's price (20 times the text's); without the
+        # detail, the whole output
+        output = usage.candidates_token_count or 0
+        details = usage.candidates_tokens_details
+        image = (
+            sum(d.token_count or 0 for d in details if d.modality == types.MediaModality.IMAGE) if details else output
+        )
+        await llm.record(s, "gemini", name, usage.prompt_token_count, output, image_tokens=image)
     # A picture refused for safety: its candidate comes without content
     content = response.candidates[0].content if response.candidates else None
     for part in (content.parts if content else None) or []:
