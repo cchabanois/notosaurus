@@ -23,7 +23,7 @@ document.addEventListener("alpine:init", () => {
     ...askConfirmPart,
     form: null,       // the settings (the key masked)
     account: null,    // the relay's answer for the key
-    offer: null,      // the subscription Google Play offers ({ price, trial_days }); none: not on sale
+    offers: [],       // the base plans Google Play offers ({ plan, price, trial_days }); none: not on sale
     buying: false,
     anki: null,       // { installed, permitted }
     data: null,       // { lessons, bytes }
@@ -78,7 +78,7 @@ document.addEventListener("alpine:init", () => {
     async loadSubscription() {
       try {
         const found = await api("/api/admin/subscription");
-        this.offer = found.offer;
+        this.offers = found.offers;
         if (found.restored) {
           this.form = await api("/api/admin/settings");
           this.notice = t("android.subscription.restored");
@@ -87,14 +87,14 @@ document.addEventListener("alpine:init", () => {
     },
 
     // Google Play's purchase screen; bought, the relay's licence (its key kept by the app)
-    async subscribe() { await this.buy("/api/admin/subscription/subscribe"); },
+    async subscribe(plan) { await this.buy("/api/admin/subscription/subscribe", { plan }); },
     async restore() { await this.buy("/api/admin/subscription/restore"); },
 
-    async buy(path) {
+    async buy(path, body = {}) {
       this.buying = true;
       this.error = "";
       try {
-        const answer = await api(path, { method: "POST" });
+        const answer = await api(path, json("POST", body));
         if (answer.cancelled) return;
         this.account = answer;
         this.form = await api("/api/admin/settings");

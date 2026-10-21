@@ -789,8 +789,14 @@
       "testRelay": "🧪 Relay di prova"
     },
     "subscription": {
-      "subscribe": "Abbonati: {price} al mese",
-      "trial": "Prova gratuita di {days} giorni, poi {price} al mese",
+      "subscribe": {
+        "monthly": "Abbonati: {price} al mese",
+        "yearly": "Abbonati: {price} all'anno"
+      },
+      "trial": {
+        "monthly": "Prova gratuita di {days} giorni, poi {price} al mese",
+        "yearly": "Prova gratuita di {days} giorni, poi {price} all'anno"
+      },
       "restore": "Ho già un abbonamento",
       "manage": "Gestisci l'abbonamento (Google Play)",
       "until": "Abbonamento pagato fino al {date}",

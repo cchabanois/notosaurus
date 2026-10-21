@@ -789,8 +789,14 @@
       "testRelay": "🧪 Relay de teste"
     },
     "subscription": {
-      "subscribe": "Subscrever: {price} por mês",
-      "trial": "Teste grátis de {days} dias, depois {price} por mês",
+      "subscribe": {
+        "monthly": "Subscrever: {price} por mês",
+        "yearly": "Subscrever: {price} por ano"
+      },
+      "trial": {
+        "monthly": "Teste grátis de {days} dias, depois {price} por mês",
+        "yearly": "Teste grátis de {days} dias, depois {price} por ano"
+      },
       "restore": "Já tenho uma subscrição",
       "manage": "Gerir a subscrição (Google Play)",
       "until": "Subscrição paga até {date}",

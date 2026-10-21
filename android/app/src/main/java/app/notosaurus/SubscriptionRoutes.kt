@@ -4,7 +4,7 @@ import app.notosaurus.LocalServer.Companion.keyOf
 import io.ktor.server.routing.Route
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
-import kotlinx.serialization.json.JsonNull
+import kotlinx.serialization.json.JsonArray
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.jsonObject
@@ -18,21 +18,22 @@ internal fun Route.subscriptionRoutes(server: LocalServer) {
         // What is offered; without a key, a subscription this Google account has is restored
         api("GET", "/api/admin/subscription") {
             val store = subscriptions
-            val offer = store?.let { withContext(Dispatchers.IO) { runCatching { it.offer() }.getOrNull() } }
+            val offers = store?.let { withContext(Dispatchers.IO) { runCatching { it.offers() }.getOrNull() } }.orEmpty()
             var restored = false
             if (store != null && licence().isEmpty()) {
                 val owned = withContext(Dispatchers.IO) { runCatching { store.owned() }.getOrDefault(emptyList()) }
                 restored = owned.firstNotNullOfOrNull { token -> runCatching { licensed(token) }.getOrNull() } != null
             }
             buildJsonObject {
-                put("offer", offer?.let { buildJsonObject { put("price", it.price); put("trial_days", it.trialDays) } } ?: JsonNull)
+                put("offers", JsonArray(offers.map { buildJsonObject { put("plan", it.plan); put("price", it.price); put("trial_days", it.trialDays) } }))
                 put("restored", restored)
             }
         }
-        // Google Play's purchase screen, then the relay's licence for the purchase
+        // Google Play's purchase screen for a base plan, then the relay's licence for the purchase
         api("POST", "/api/admin/subscription/subscribe") {
             val store = subscriptions ?: throw BadRequest("subscription.unavailable")
-            val token = store.subscribe() ?: return@api buildJsonObject { put("cancelled", true) }
+            val plan = body().string("plan").takeIf { it in PlayStore.PLANS } ?: throw BadRequest("subscription.none")
+            val token = store.subscribe(plan) ?: return@api buildJsonObject { put("cancelled", true) }
             licensed(token)
         }
         // A new phone, the app reinstalled: the subscription this Google account has

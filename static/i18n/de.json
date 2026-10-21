@@ -789,8 +789,14 @@
       "testRelay": "🧪 Test-Relais"
     },
     "subscription": {
-      "subscribe": "Abonnieren: {price} pro Monat",
-      "trial": "{days} Tage kostenlos testen, dann {price} pro Monat",
+      "subscribe": {
+        "monthly": "Abonnieren: {price} pro Monat",
+        "yearly": "Abonnieren: {price} pro Jahr"
+      },
+      "trial": {
+        "monthly": "{days} Tage kostenlos testen, dann {price} pro Monat",
+        "yearly": "{days} Tage kostenlos testen, dann {price} pro Jahr"
+      },
       "restore": "Ich habe schon ein Abo",
       "manage": "Abo verwalten (Google Play)",
       "until": "Abo bezahlt bis {date}",

@@ -58,20 +58,24 @@
                 x-text="$t('android.licence.testRelay')"></button>
       </div>
       <!-- The subscription (Google Play): shown once it is on sale; a key can still be typed below -->
-      <template x-if="offer">
+      <template x-if="offers.length">
         <div class="subscription">
           <template x-if="!form?.has_key">
             <div>
-              <button class="btn primary wide" :disabled="buying" @click="subscribe()"
-                      x-text="offer.trial_days ? $t('android.subscription.trial', { days: offer.trial_days, price: offer.price })
-                                               : $t('android.subscription.subscribe', { price: offer.price })"></button>
+              <!-- A month, a year: one button each (the trial first when Google Play still offers it) -->
+              <template x-for="(o, i) in offers" :key="o.plan">
+                <button class="btn wide" :class="{ primary: i === 0 }" :disabled="buying" @click="subscribe(o.plan)"
+                        x-text="o.trial_days
+                          ? $t(o.plan === 'yearly' ? 'android.subscription.trial.yearly' : 'android.subscription.trial.monthly', { days: o.trial_days, price: o.price })
+                          : $t(o.plan === 'yearly' ? 'android.subscription.subscribe.yearly' : 'android.subscription.subscribe.monthly', { price: o.price })"></button>
+              </template>
               <button class="link-btn" :disabled="buying" @click="restore()" x-text="$t('android.subscription.restore')"></button>
             </div>
           </template>
           <button class="link-btn" x-show="account?.ends_at" @click="manage()" x-text="$t('android.subscription.manage')"></button>
         </div>
       </template>
-      <p class="hint" x-show="form && !form.has_key && !offer" x-text="$t('android.licence.none')"></p>
+      <p class="hint" x-show="form && !form.has_key && !offers.length" x-text="$t('android.licence.none')"></p>
       <!-- Free with the add-on: said where the question comes up -->
       <p class="hint" x-show="form && !form.has_key"><a href="#where" x-text="$t('android.licence.free')"></a></p>
       <p x-show="form?.has_key" x-text="$t('android.licence.keySet', { key: form?.key })"></p>
