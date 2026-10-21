@@ -472,6 +472,12 @@
       "none": "No test planned.",
       "noLessons": "No lesson in this test yet: add one from its review.",
       "new": "+ New test",
+      "newShort": "＋ New test",
+      "addLessons": "＋ Add lessons",
+      "addChosen": {
+        "one": "Add {count} lesson",
+        "other": "Add {count} lessons"
+      },
       "name": "Name",
       "namePlaceholder": "e.g. Biology test on Monday",
       "date": "Date",
@@ -515,7 +521,7 @@
         "copied": "Copied",
         "droid1": "Open the test's cards in AnkiDroid",
         "droidOpen": "Open in AnkiDroid",
-        "droid2": "Tap <strong>⋮</strong>, then <strong>Create filtered deck</strong>",
+        "droid2": "Tap <strong>⋮</strong>, then <strong>Create filtered deck</strong>, even if the list is empty",
         "droid3": "Tap <strong>Build</strong> (more than {limit} cards: raise <strong>Limit to</strong> first)"
       },
       "reviewNow": "Revise now in Anki",

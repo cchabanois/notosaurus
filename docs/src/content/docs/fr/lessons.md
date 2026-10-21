@@ -35,7 +35,9 @@ partagée avec les autres profils. Voir [Plusieurs enfants](../several-children/
 
 Une interro lundi sur trois leçons ? **📌 Contrôle…** dans la relecture d'une leçon l'ajoute à
 un contrôle à préparer (un nom, une date), entière ou **quelques-unes de ses cartes seulement**
-(une coche sur chaque carte). Les contrôles sont listés en haut de **Mes leçons**.
+(une coche sur chaque carte). Les contrôles sont listés en haut de **Mes leçons**, où
+**＋ Nouveau contrôle** en crée un ; sa fiche ajoute ensuite ses leçons (**＋ Ajouter des
+leçons**, entières) et envoie à Anki celles qui n'y sont pas encore.
 
 Chaque carte d'un contrôle reçoit une étiquette dans Anki, `Exam::<nom>`, posée tout de suite
 sur ses notes quand elles sont dans Anki, ou avec elles à l'envoi de la leçon. L'**étude

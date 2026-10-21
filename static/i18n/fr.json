@@ -472,6 +472,12 @@
       "none": "Aucun contrôle prévu.",
       "noLessons": "Aucune leçon dans ce contrôle : ajoutez-en une depuis sa relecture.",
       "new": "+ Nouveau contrôle",
+      "newShort": "＋ Nouveau contrôle",
+      "addLessons": "＋ Ajouter des leçons",
+      "addChosen": {
+        "one": "Ajouter {count} leçon",
+        "other": "Ajouter {count} leçons"
+      },
       "name": "Nom",
       "namePlaceholder": "ex. : Interro SVT de lundi",
       "date": "Date",
@@ -515,7 +521,7 @@
         "copied": "Copié",
         "droid1": "Ouvrez les cartes du contrôle dans AnkiDroid",
         "droidOpen": "Ouvrir dans AnkiDroid",
-        "droid2": "Touchez <strong>⋮</strong>, puis <strong>Créer un paquet filtré</strong>",
+        "droid2": "Touchez <strong>⋮</strong>, puis <strong>Créer un paquet filtré</strong>, même si la liste est vide",
         "droid3": "Touchez <strong>Générer</strong> (plus de {limit} cartes : augmentez d'abord <strong>Limiter à</strong>)"
       },
       "reviewNow": "Réviser maintenant dans Anki",

@@ -472,6 +472,12 @@
       "none": "Nessuna verifica prevista.",
       "noLessons": "Nessuna lezione in questa verifica: aggiungetene una dalla sua revisione.",
       "new": "+ Nuova verifica",
+      "newShort": "＋ Nuova verifica",
+      "addLessons": "＋ Aggiungi lezioni",
+      "addChosen": {
+        "one": "Aggiungi {count} lezione",
+        "other": "Aggiungi {count} lezioni"
+      },
       "name": "Nome",
       "namePlaceholder": "es. Verifica di scienze di lunedì",
       "date": "Data",
@@ -515,7 +521,7 @@
         "copied": "Copiato",
         "droid1": "Aprite le carte della verifica in AnkiDroid",
         "droidOpen": "Apri in AnkiDroid",
-        "droid2": "Toccate <strong>⋮</strong>, poi <strong>Crea mazzo filtrato</strong>",
+        "droid2": "Toccate <strong>⋮</strong>, poi <strong>Crea mazzo filtrato</strong>, anche se l’elenco è vuoto",
         "droid3": "Toccate <strong>Genera</strong> (più di {limit} carte: aumentate prima <strong>Limita a</strong>)"
       },
       "reviewNow": "Ripassa ora in Anki",

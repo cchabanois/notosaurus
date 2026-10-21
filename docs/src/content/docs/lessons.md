@@ -34,7 +34,8 @@ profiles. See [Several children](../several-children/).
 
 A test on Monday covers three lessons? **📌 Test…** in a lesson's review adds it to a test to
 prepare (a name, a date), whole or **some of its cards only** (a tick on each card). The tests
-are listed at the top of **Lessons**.
+are listed at the top of **Lessons**, where **＋ New test** makes one; its sheet then adds its
+lessons (**＋ Add lessons**, whole) and sends to Anki those not there yet.
 
 Every card of a test gets a tag in Anki, `Exam::<name>`, put on its notes right away when
 they are in Anki, or with them when the lesson is sent. Anki's **custom study** then gathers

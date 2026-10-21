@@ -472,6 +472,12 @@
       "none": "Nenhuma prova prevista.",
       "noLessons": "Ainda não há lições nesta prova: adicione uma a partir da sua revisão.",
       "new": "+ Nova prova",
+      "newShort": "＋ Nova prova",
+      "addLessons": "＋ Adicionar lições",
+      "addChosen": {
+        "one": "Adicionar {count} lição",
+        "other": "Adicionar {count} lições"
+      },
       "name": "Nome",
       "namePlaceholder": "ex.: Prova de Ciências de segunda",
       "date": "Data",
@@ -515,7 +521,7 @@
         "copied": "Copiado",
         "droid1": "Abra os cartões da prova no AnkiDroid",
         "droidOpen": "Abrir no AnkiDroid",
-        "droid2": "Toque em <strong>⋮</strong> e depois em <strong>Criar baralho filtrado</strong>",
+        "droid2": "Toque em <strong>⋮</strong> e depois em <strong>Criar baralho filtrado</strong>, mesmo que a lista esteja vazia",
         "droid3": "Toque em <strong>Gerar</strong> (mais de {limit} cartões: aumente antes <strong>Limitar a</strong>)"
       },
       "reviewNow": "Revisar agora no Anki",
