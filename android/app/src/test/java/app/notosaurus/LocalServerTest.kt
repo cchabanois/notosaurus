@@ -76,6 +76,9 @@ class LocalServerTest {
         override suspend fun subscribe(plan: String) = buying.also { plans += plan }
         override suspend fun owned() = owned
         override fun manage() { managed++ }
+        var integrity: String? = "integrity-1" // Play Integrity's token (null: not the app from Google Play)
+        override fun device() = "ab".repeat(32)
+        override suspend fun integrity(device: String) = integrity
     }
     private val prefs = MemoryPreferences()
     private var permissionAsked = 0
@@ -1016,6 +1019,26 @@ class LocalServerTest {
         relay.enqueue(MockResponse.Builder().setHeader("Content-Type", "audio/mpeg").body("mp3").build())
         client.get("/api/tts?text=hola&voice=es-ES-Chirp3-HD-Aoede") { page() }
         assertEquals("0.75", json.parseToJsonElement(relay.takeRequest().body!!.utf8()).jsonObject["rate"]!!.jsonPrimitive.content)
+    }
+
+    @Test
+    fun aFreeTrialWithoutACard() = app { client ->
+        assertEquals("true", client.get("/api/admin/subscription") { page() }.json().jsonObject["trial"]!!.jsonPrimitive.content)
+        relayAnswers("""{"key": "nts_trial", "account": {"plan": "free_trial", "credits_left": 300, "daily_left": 150,
+            "renews_at": "2026-11-04T10:00:00+00:00", "ends_at": "2026-11-04T10:00:00+00:00"}}""")
+        val started = client.post("/api/admin/subscription/trial") { page() }.json().jsonObject
+        assertEquals("free_trial", started.string("plan"))
+        val asked = relay.takeRequest(5, TimeUnit.SECONDS)!!
+        assertEquals("/v1/trial", asked.url.encodedPath)
+        val sent = json.parseToJsonElement(asked.body!!.utf8()).jsonObject
+        assertEquals(listOf("integrity-1", "ab".repeat(32)), listOf(sent.string("integrity_token"), sent.string("device")))
+        assertEquals("nts_trial", prefs[LocalServer.keyOf(local.relayUrl())])
+
+        // Play Integrity giving no token: refused, the relay never asked
+        play.integrity = null
+        val refused = client.post("/api/admin/subscription/trial") { page() }
+        assertEquals(HttpStatusCode.BadRequest, refused.status)
+        assertEquals("relay.trial_refused", refused.json().jsonObject["detail"]!!.jsonObject.string("code"))
     }
 
     @Test

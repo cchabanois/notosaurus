@@ -797,9 +797,12 @@
         "monthly": "Prova gratuita di {days} giorni, poi {price} al mese",
         "yearly": "Prova gratuita di {days} giorni, poi {price} all'anno"
       },
+      "freeTrial": "🎁 Prova gratis, senza carta",
+      "trialStarted": "✓ Prova gratuita: {credits} crediti fino al {date}. Buon ripasso!",
       "restore": "Ho già un abbonamento",
       "manage": "Gestisci l'abbonamento (Google Play)",
       "until": "Abbonamento pagato fino al {date}",
+      "trialUntil": "Prova gratuita fino al {date}",
       "done": "✓ Abbonato: buon ripasso!",
       "restored": "✓ Il tuo abbonamento è stato trovato su questo account Google."
     },
@@ -1002,6 +1005,7 @@
       "no_credits": "Crediti esauriti per questo mese: tornano al prossimo rinnovo.",
       "subscription_ended": "Il tuo abbonamento è terminato: abbonati di nuovo nell'app per continuare.",
       "invalid_purchase": "Acquisto non riconosciuto da Google Play: riprova o contatta il supporto.",
+      "trial_refused": "La prova gratuita è possibile solo con l'app installata da Google Play, su un vero telefono.",
       "daily_limit": "Limite di oggi raggiunto: riprova domani.",
       "busy": "Troppe richieste contemporaneamente: riprova tra un attimo.",
       "too_large": "Troppe foto, o una troppo pesante.",

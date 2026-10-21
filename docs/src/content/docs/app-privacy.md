@@ -3,7 +3,7 @@ title: "Privacy policy of the Android app"
 description: "The data the Notosaurus Android app and its service process, why, where, for how long, and your rights."
 ---
 
-*Last updated: 13 October 2026.*
+*Last updated: 21 October 2026.*
 
 This page is about **the Notosaurus app for Android** and **the Notosaurus service** it uses to
 read the photos, make the cards and the voices. Notosaurus on a computer (the Anki add-on) works
@@ -47,6 +47,8 @@ When you ask for it, the app sends the service, over HTTPS:
 | A card's **back** | Reading it aloud (the cards' voices) |
 | A picture's **description**, or a few **keywords** | Drawing a card's picture, or looking for a free one |
 | Your **licence key** | Checking your licence and counting your credits |
+| If you subscribe: your Google Play **purchase's token** | Checking the subscription with Google Play and making it your licence |
+| For the **free trial**: a **fingerprint of the phone** (worked out by the app, never its identifier itself) and Google's **Play Integrity** attestation | Offering the trial only once per phone, to the app installed from Google Play on a real phone |
 
 The service passes these contents to the processors below, sends the result back to the app,
 and **doesn't keep them**: no photo, card, recording or lesson text is stored or written into
@@ -81,6 +83,7 @@ in the lesson.
 | **Google Cloud**: Cloud Run, Firestore, logs | The service itself, the licences, the logs | Belgium (europe-west1) |
 | **Google Cloud**: Text-to-Speech | The text to read (a card's back) | European Union |
 | **Wikimedia Commons**, **Openverse**, **Pixabay** | A few English keywords ("dog"), never a photo | Their servers |
+| **Google Play**: subscriptions, Play Integrity | A purchase's token; the free trial's attestation | Its servers |
 | **GitHub** (GitHub Pages) | At start, the app reads the service's address there: GitHub sees your IP address | Its servers |
 
 Google acts as a processor, under the Google Cloud terms, and doesn't use this data to train
@@ -101,6 +104,7 @@ Google, by the **EU–US Data Privacy Framework**. Pixabay is an EU company.
 | Making, completing, correcting and explaining cards; dictation; voices; pictures | **Providing the service** you ask for |
 | Checking your licence and counting your credits | **Performing the contract** (your licence) |
 | Technical logs, security, fighting abuse | The **legitimate interest** in running a safe service |
+| The free trial only once per phone (Play Integrity) | The **legitimate interest** in preventing abuse of the trial |
 | Your reports of the AI's content | Your **request**, and the legitimate interest in an AI that makes fit content |
 | The microphone | Your **consent**, asked at the first dictation and withdrawable in the phone's settings |
 | Answering your emails | Your **request** |

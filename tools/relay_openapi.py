@@ -291,6 +291,19 @@ def build() -> dict:
     def subscribe(req: api.SubscribeRequest, x_notosaurus_version: str = client):
         """A Google Play subscription's licence: checked with Google Play; no key needed."""
 
+    @app.post(
+        f"{api.PREFIX}/trial",
+        response_model=api.SubscribeResponse,
+        responses=errors(
+            "relay.invalid_request",
+            "relay.trial_refused",
+            "relay.client_outdated",
+            "relay.unavailable",
+        ),
+    )
+    def trial(req: api.TrialRequest, x_notosaurus_version: str = client):
+        """The free trial's licence (no card), once per phone: checked with Play Integrity; no key needed."""
+
     schema = app.openapi()
     # Requests that aren't the API's are answered like any error (relay.invalid_request)
     for path in schema["paths"].values():

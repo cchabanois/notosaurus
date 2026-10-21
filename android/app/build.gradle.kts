@@ -112,6 +112,7 @@ dependencies {
     implementation(libs.ktor.server.cio)
     implementation(libs.code.scanner)
     implementation(libs.play.billing) // the subscription (Google Play Billing)
+    implementation(libs.play.integrity) // the free trial: the app from Google Play on a real phone
     implementation(libs.kotlinx.coroutines.play.services)
     testImplementation(libs.junit)
     testImplementation(libs.ktor.server.test.host)
@@ -134,6 +135,12 @@ licensee {
     }
     allowUrl("https://developer.android.com/studio/terms.html") {
         because("Google Play services and Play Billing: not open source, theirs to ship in an app")
+    }
+    allowUrl("https://developer.android.com/google/play/integrity/overview#tos") {
+        because("Play Integrity (the free trial): not open source, its terms let an app ship it")
+    }
+    allowUrl("https://developer.android.com/guide/playcore/license") {
+        because("Play Core's common part, which Play Integrity brings: Google's terms, as Play Integrity's")
     }
     allowUrl("https://developers.google.com/ml-kit/terms") {
         because("ML Kit (the QR code scanner): not open source, its terms let an app ship it")

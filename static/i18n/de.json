@@ -797,9 +797,12 @@
         "monthly": "{days} Tage kostenlos testen, dann {price} pro Monat",
         "yearly": "{days} Tage kostenlos testen, dann {price} pro Jahr"
       },
+      "freeTrial": "🎁 Kostenlos testen, ohne Karte",
+      "trialStarted": "✓ Kostenlose Testphase: {credits} Credits bis zum {date}. Viel Erfolg beim Lernen!",
       "restore": "Ich habe schon ein Abo",
       "manage": "Abo verwalten (Google Play)",
       "until": "Abo bezahlt bis {date}",
+      "trialUntil": "Kostenlose Testphase bis zum {date}",
       "done": "✓ Abonniert: viel Erfolg beim Lernen!",
       "restored": "✓ Dein Abo wurde in diesem Google-Konto gefunden."
     },
@@ -1002,6 +1005,7 @@
       "no_credits": "Diesen Monat keine Credits mehr: Sie kommen mit der nächsten Erneuerung zurück.",
       "subscription_ended": "Dein Abo ist beendet: Schließe es in der App erneut ab, um weiterzumachen.",
       "invalid_purchase": "Kauf von Google Play nicht erkannt: Versuche es erneut oder kontaktiere den Support.",
+      "trial_refused": "Die kostenlose Testphase ist nur mit der App aus Google Play auf einem echten Telefon möglich.",
       "daily_limit": "Das Tageslimit ist erreicht: Versuche es morgen wieder.",
       "busy": "Zu viele Anfragen gleichzeitig: Versuche es gleich noch einmal.",
       "too_large": "Zu viele Fotos, oder eines ist zu groß.",
