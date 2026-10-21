@@ -9,6 +9,7 @@ Each pull request adds a line under **Unreleased**. See [Releasing](CONTRIBUTING
 
 ### Added
 
+- For developers: the draft GitHub release also holds `notosaurus-X.Y.Z.aab`, the Android app for Google Play, built from `main` and signed with the upload key (the `release` environment's secrets, `main` only).
 - For developers: a release (`bundleRelease`) is signed with the upload key from `~/.config/notosaurus/keystore.properties` (never in git; without it, unsigned), for Google Play (Play App Signing keeps the app's own key).
 - 📱 The subscription by the year too: the app offers both of Google Play's base plans, **a month** or **a year** (each with its free trial while Google Play still offers it); a year gets a month's credits on the same day of each month. The product becomes `notosaurus` (base plans `monthly` and `yearly`).
 - 🎁 **A free trial without a card** on Android: **Try it free, no card** in the settings gives a few credits for two weeks, once per phone (Play Integrity: the app from Google Play on a real phone; reinstalled, the same trial), then the subscription. For developers: `/v1/trial` (`relay.trial_refused`). The privacy policy says what it sends (a fingerprint of the phone, Play Integrity's attestation) and what a subscription sends (its purchase's token).
