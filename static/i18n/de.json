@@ -521,7 +521,7 @@
         "copied": "Kopiert",
         "droid1": "Öffnen Sie die Karten der Prüfung in AnkiDroid",
         "droidOpen": "In AnkiDroid öffnen",
-        "droid2": "Tippen Sie auf <strong>⋮</strong>, dann auf <strong>Gefilterten Stapel erstellen</strong>",
+        "droid2": "Tippen Sie auf <strong>⋮</strong>, dann auf <strong>Gefilterten Stapel erstellen</strong>, auch wenn die Liste leer ist",
         "droid3": "Tippen Sie auf <strong>Erstellen</strong> (mehr als {limit} Karten: erhöhen Sie zuerst <strong>Begrenzen auf</strong>)"
       },
       "reviewNow": "Jetzt in Anki lernen",

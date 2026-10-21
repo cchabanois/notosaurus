@@ -521,7 +521,7 @@
         "copied": "Copiado",
         "droid1": "Abra las tarjetas del examen en AnkiDroid",
         "droidOpen": "Abrir en AnkiDroid",
-        "droid2": "Toque <strong>⋮</strong> y luego <strong>Crear mazo filtrado</strong>",
+        "droid2": "Toque <strong>⋮</strong> y luego <strong>Crear mazo filtrado</strong>, aunque la lista esté vacía",
         "droid3": "Toque <strong>Generar</strong> (más de {limit} tarjetas: aumente antes <strong>Limitar a</strong>)"
       },
       "reviewNow": "Repasar ahora en Anki",

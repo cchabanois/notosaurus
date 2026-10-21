@@ -521,7 +521,7 @@
         "copied": "Copié",
         "droid1": "Ouvrez les cartes du contrôle dans AnkiDroid",
         "droidOpen": "Ouvrir dans AnkiDroid",
-        "droid2": "Touchez <strong>⋮</strong>, puis <strong>Créer un paquet filtré</strong>",
+        "droid2": "Touchez <strong>⋮</strong>, puis <strong>Créer un paquet filtré</strong>, même si la liste est vide",
         "droid3": "Touchez <strong>Générer</strong> (plus de {limit} cartes : augmentez d'abord <strong>Limiter à</strong>)"
       },
       "reviewNow": "Réviser maintenant dans Anki",
