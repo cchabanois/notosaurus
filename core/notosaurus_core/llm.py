@@ -89,7 +89,8 @@ def ai_schema(base: type[BaseModel], fun_facts: bool = False, helps: bool = Fals
     card = create_model("Card", __doc__=Card.__doc__, **card_fields)
     fields: dict[str, Any] = {k: (f.annotation, f) for k, f in base.model_fields.items() if k != "cards"}
     refused = (bool, Field(default=False, description="True when the request must be refused (see the rules)."))
-    return create_model(base.__name__, __doc__=base.__doc__, cards=(list[card], Field()), **fields, refused=refused)
+    cards: Any = (list[card], Field())  # Any: a model built at run time, not a type pyright can check
+    return create_model(base.__name__, __doc__=base.__doc__, cards=cards, **fields, refused=refused)
 
 
 def _box_format(s: AIConfig) -> str:
