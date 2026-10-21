@@ -116,6 +116,13 @@ release, the real one. To use the relay on the computer, set its address in the 
 settings ("Advanced"): `http://10.0.2.2:8080` from the emulator, the computer's
 address on the Wi-Fi from a phone, with the key `nts_dev`.
 
+A release for Google Play (`./gradlew bundleRelease`, `app/build/outputs/bundle/release/app-release.aab`)
+is signed with the **upload key**, read from `~/.config/notosaurus/keystore.properties`
+(or the file `NOTOSAURUS_KEYSTORE_PROPERTIES` names: `storeFile`, `storePassword`, `keyAlias`,
+`keyPassword`), never in git; without it, the release is built unsigned. Google Play signs
+the app itself with its own key (Play App Signing): a lost upload key is reset by Play's
+support.
+
 ## What we learnt
 
 - **AnkiDroid's API** (`com.github.ankidroid:Anki-Android:api-v1.1.0`, JitPack; the
