@@ -1,7 +1,8 @@
 name: Draft release
 
 # After every merge on main, keep a draft GitHub release ready for the version
-# in pyproject.toml: the Anki add-on built from main, and the CHANGELOG.md notes.
+# in pyproject.toml: the Anki add-on built from main, the Android app for Google Play
+# (its .aab, signed with the upload key), and the CHANGELOG.md notes.
 # Publishing the draft on GitHub creates the tag v<version> on that commit.
 on:
   push:
@@ -21,6 +22,10 @@ jobs:
     timeout-minutes: 10
     env:
       GH_TOKEN: ${{ github.token }}
+    outputs:
+      tag: ${{ env.TAG }}
+      version: ${{ env.VERSION }}
+      published: ${{ env.PUBLISHED }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
@@ -54,3 +59,49 @@ jobs:
           else
             gh release create "$TAG" dist/*.ankiaddon --draft --target "$GITHUB_SHA" --title "Notosaurus $VERSION" --notes-file notes.md
           fi
+
+  android:
+    # The app for Google Play (Play Console takes it; Play App Signing then signs it with
+    # the app's own key), signed with the upload key: the "release" environment's
+    # secrets, which only main may use
+    needs: draft
+    if: needs.draft.outputs.published != '1'
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    environment: release
+    env:
+      GH_TOKEN: ${{ github.token }}
+      TAG: ${{ needs.draft.outputs.tag }}
+      VERSION: ${{ needs.draft.outputs.version }}
+    defaults:
+      run:
+        working-directory: android
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/setup-java@b843ebf9b913146b38da2eaa7aeddf76074ae1ad # v6.1.0
+        with:
+          distribution: temurin
+          java-version: "21"
+          cache: gradle
+          cache-dependency-path: android/**/*.gradle*
+      - name: The upload key, outside the checkout (app/build.gradle.kts reads it)
+        env:
+          UPLOAD_KEYSTORE: ${{ secrets.UPLOAD_KEYSTORE }}  # the .jks, in base64
+          UPLOAD_KEYSTORE_PASSWORD: ${{ secrets.UPLOAD_KEYSTORE_PASSWORD }}
+        run: |
+          dir="$RUNNER_TEMP/upload-key"
+          mkdir -m 700 "$dir"
+          printf '%s' "$UPLOAD_KEYSTORE" | base64 -d > "$dir/upload.jks"
+          printf 'storeFile=%s\nstorePassword=%s\nkeyAlias=upload\nkeyPassword=%s\n' \
+            "$dir/upload.jks" "$UPLOAD_KEYSTORE_PASSWORD" "$UPLOAD_KEYSTORE_PASSWORD" > "$dir/keystore.properties"
+          echo "NOTOSAURUS_KEYSTORE_PROPERTIES=$dir/keystore.properties" >> "$GITHUB_ENV"
+      - run: ./gradlew bundleRelease
+      # An unsigned .aab (no secrets): never attached
+      - name: Signed
+        run: jarsigner -verify app/build/outputs/bundle/release/app-release.aab | grep -q "jar verified"
+      - name: Into the draft
+        run: |
+          cp app/build/outputs/bundle/release/app-release.aab "notosaurus-$VERSION.aab"
+          gh release upload "$TAG" "notosaurus-$VERSION.aab" --clobber
+      - if: always()
+        run: rm -rf "$RUNNER_TEMP/upload-key"
