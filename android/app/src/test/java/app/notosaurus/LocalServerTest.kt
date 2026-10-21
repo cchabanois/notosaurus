@@ -67,12 +67,13 @@ class LocalServerTest {
 
     /** Google Play: the offer, a purchase's token (null: given up), the subscriptions owned. */
     private class FakePlay : SubscriptionStore {
-        var offer: Offer? = Offer("4,99 €", 7)
+        var offers = listOf(Offer("monthly", "3,99 €", 7), Offer("yearly", "29,99 €", 7))
         var buying: String? = "token-1"
+        var plans = mutableListOf<String>() // the base plans bought
         var owned = listOf<String>()
         var managed = 0
-        override suspend fun offer() = offer
-        override suspend fun subscribe() = buying
+        override suspend fun offers() = offers
+        override suspend fun subscribe(plan: String) = buying.also { plans += plan }
         override suspend fun owned() = owned
         override fun manage() { managed++ }
     }
@@ -1020,14 +1021,16 @@ class LocalServerTest {
     @Test
     fun aSubscriptionBoughtThenRestored() = app { client ->
         val offered = client.get("/api/admin/subscription") { page() }.json().jsonObject
-        assertEquals("4,99 €", offered["offer"]!!.jsonObject.string("price"))
-        assertEquals(7, offered["offer"]!!.jsonObject["trial_days"]!!.jsonPrimitive.int)
+        val offers = offered["offers"]!!.jsonArray.map { it.jsonObject }
+        assertEquals(listOf("monthly" to "3,99 €", "yearly" to "29,99 €"), offers.map { it.string("plan") to it.string("price") })
+        assertEquals(7, offers[1]["trial_days"]!!.jsonPrimitive.int)
 
         // Bought: the relay checks the purchase and answers its key, kept for this relay
         relayAnswers("""{"key": "nts_from_play", "account": {"plan": "trial", "credits_left": 1000, "daily_left": 300,
             "renews_at": "2026-10-18T10:00:00+00:00", "ends_at": "2026-10-18T10:00:00+00:00"}}""")
-        val bought = client.post("/api/admin/subscription/subscribe") { page() }.json().jsonObject
+        val bought = client.post("/api/admin/subscription/subscribe") { page(); contentType(ContentType.Application.Json); setBody("""{"plan": "yearly"}""") }.json().jsonObject
         assertEquals("trial", bought.string("plan"))
+        assertEquals(listOf("yearly"), play.plans)
         val asked = relay.takeRequest(5, TimeUnit.SECONDS)!!
         assertEquals("/v1/subscribe", asked.url.encodedPath)
         val sent = json.parseToJsonElement(asked.body!!.utf8()).jsonObject
@@ -1036,7 +1039,10 @@ class LocalServerTest {
 
         // Given up on Google Play's screen: nothing changes
         play.buying = null
-        assertEquals("true", client.post("/api/admin/subscription/subscribe") { page() }.json().jsonObject["cancelled"]!!.jsonPrimitive.content)
+        assertEquals("true", client.post("/api/admin/subscription/subscribe") { page(); contentType(ContentType.Application.Json); setBody("""{"plan": "monthly"}""") }.json().jsonObject["cancelled"]!!.jsonPrimitive.content)
+        // A base plan that isn't one: not asked of Google Play
+        assertEquals(HttpStatusCode.BadRequest, client.post("/api/admin/subscription/subscribe") { page(); contentType(ContentType.Application.Json); setBody("""{"plan": "weekly"}""") }.status)
+        assertEquals(listOf("yearly", "monthly"), play.plans)
 
         // A new phone (no key): the subscription this Google account has, restored as the settings open
         prefs[LocalServer.keyOf(local.relayUrl())] = ""
@@ -1054,8 +1060,8 @@ class LocalServerTest {
         assertEquals(1, play.managed)
 
         // Not on sale yet: no offer (the settings show the key only)
-        play.offer = null
-        assertEquals(JsonNull, client.get("/api/admin/subscription") { page() }.json().jsonObject["offer"])
+        play.offers = emptyList()
+        assertEquals(0, client.get("/api/admin/subscription") { page() }.json().jsonObject["offers"]!!.jsonArray.size)
     }
 
     @Test

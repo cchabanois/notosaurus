@@ -21,17 +21,18 @@ import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
 import kotlin.coroutines.resume
 
-/** The subscription as Google Play offers it: its price a month, its free trial (days; 0: none). */
-data class Offer(val price: String, val trialDays: Int)
+/** A base plan as Google Play offers it ("monthly" or "yearly"): its price a period, its
+ * free trial (days; 0: none). */
+data class Offer(val plan: String, val price: String, val trialDays: Int)
 
 /** Google Play's subscription (a fake in the tests). The relay checks every purchase
  * (/v1/subscribe): the app only buys and lists them. */
 interface SubscriptionStore {
-    /** The subscription offered; null without Google Play, or before it is on sale. */
-    suspend fun offer(): Offer?
+    /** The base plans offered, a month's first; none without Google Play, or before it is on sale. */
+    suspend fun offers(): List<Offer>
 
-    /** Google Play's purchase screen; the purchase's token, or null when given up. */
-    suspend fun subscribe(): String?
+    /** Google Play's purchase screen for a base plan; the purchase's token, or null when given up. */
+    suspend fun subscribe(plan: String): String?
 
     /** The tokens of the subscriptions this Google account has (a new phone, the app
      * reinstalled: restored with them). */
@@ -42,9 +43,9 @@ interface SubscriptionStore {
 }
 
 /**
- * Google Play Billing: the monthly subscription (its free trial first, when this Google
- * account may have it: Google Play only offers it once). `activity`: the one showing the
- * purchase screen.
+ * Google Play Billing: the subscription, a month or a year (its free trial first, when this
+ * Google account may have it: Google Play only offers it once). `activity`: the one showing
+ * the purchase screen.
  */
 class PlayStore(private val context: Context, private val activity: () -> Activity?) : SubscriptionStore {
     private var bought: CompletableDeferred<String?>? = null
@@ -58,21 +59,23 @@ class PlayStore(private val context: Context, private val activity: () -> Activi
         .build()
     private val connecting = Mutex()
 
-    override suspend fun offer(): Offer? {
-        val product = details() ?: return null
-        val offers = product.subscriptionOfferDetails.orEmpty()
-        val base = offers.firstOrNull { it.offerId == null } ?: return null
-        val price = base.pricingPhases.pricingPhaseList.lastOrNull()?.formattedPrice ?: return null
-        // A free first phase: the trial this account may still have
-        val trial = offers.firstNotNullOfOrNull { offer ->
-            offer.pricingPhases.pricingPhaseList.firstOrNull()?.takeIf { it.priceAmountMicros == 0L }?.billingPeriod
+    override suspend fun offers(): List<Offer> {
+        val product = details() ?: return emptyList()
+        return PLANS.mapNotNull { plan ->
+            val offers = product.subscriptionOfferDetails.orEmpty().filter { it.basePlanId == plan }
+            val base = offers.firstOrNull { it.offerId == null } ?: return@mapNotNull null
+            val price = base.pricingPhases.pricingPhaseList.lastOrNull()?.formattedPrice ?: return@mapNotNull null
+            // A free first phase: the trial this account may still have
+            val trial = offers.firstNotNullOfOrNull { offer ->
+                offer.pricingPhases.pricingPhaseList.firstOrNull()?.takeIf { it.priceAmountMicros == 0L }?.billingPeriod
+            }
+            Offer(plan, price, trial?.let(::days) ?: 0)
         }
-        return Offer(price, trial?.let(::days) ?: 0)
     }
 
-    override suspend fun subscribe(): String? {
+    override suspend fun subscribe(plan: String): String? {
         val product = details() ?: return null
-        val offers = product.subscriptionOfferDetails.orEmpty()
+        val offers = product.subscriptionOfferDetails.orEmpty().filter { it.basePlanId == plan }
         // The trial when offered (Google Play lists only the offers this account may have)
         val offer = offers.firstOrNull { o -> o.pricingPhases.pricingPhaseList.firstOrNull()?.priceAmountMicros == 0L }
             ?: offers.firstOrNull { it.offerId == null } ?: return null
@@ -132,7 +135,10 @@ class PlayStore(private val context: Context, private val activity: () -> Activi
     }
 
     companion object {
-        const val PRODUCT = "notosaurus_monthly" // the relay's RELAY_PLAY_PRODUCT
+        const val PRODUCT = "notosaurus" // the relay's RELAY_PLAY_PRODUCT
+
+        /** Its base plans in Play Console, as offered: a month, a year (a month's credits each month). */
+        val PLANS = listOf("monthly", "yearly")
 
         /** "P7D", "P1W", "P1M"… as days. */
         fun days(period: String): Int {
