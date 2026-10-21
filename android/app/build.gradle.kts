@@ -1,4 +1,5 @@
 import org.gradle.api.file.FileSystemOperations
+import java.util.Properties
 import javax.inject.Inject
 
 plugins {
@@ -34,6 +35,14 @@ val notosaurusVersionCode: Int = Regex("""^(\d+)\.(\d+)\.(\d+)""").find(notosaur
     .let { (major, minor, patch) -> major.toInt() * 10000 + minor.toInt() * 100 + patch.toInt() }
 
 // The same revision's: android/app → ../../static (another with -Pnotosaurus.web=<path>)
+// The upload key Google Play takes a release with (Play App Signing then signs it with the
+// app's own key): never in git, on the computer making the release only. Without it (CI),
+// the release is built unsigned.
+val uploadKey: Properties? = providers.environmentVariable("NOTOSAURUS_KEYSTORE_PROPERTIES")
+    .orElse(System.getProperty("user.home") + "/.config/notosaurus/keystore.properties")
+    .map { file(it) }.get().takeIf { it.isFile }
+    ?.let { found -> Properties().apply { found.inputStream().use(::load) } }
+
 val webPage = providers.gradleProperty("notosaurus.web").orElse("../../static")
 val copyWebPage = tasks.register<CopyWebPage>("copyWebPage") {
     source.set(layout.projectDirectory.dir(webPage))
@@ -73,6 +82,16 @@ android {
     // switches between the two in one tap (the settings' licence); a release can't.
     val realRelay = "\"https://notosaurus-relay-773198805942.europe-west1.run.app\""
     val testRelay = "\"https://notosaurus-relay-dev-773198805942.europe-west1.run.app\""
+    signingConfigs {
+        if (uploadKey != null) {
+            create("upload") {
+                storeFile = file(uploadKey.getProperty("storeFile"))
+                storePassword = uploadKey.getProperty("storePassword")
+                keyAlias = uploadKey.getProperty("keyAlias")
+                keyPassword = uploadKey.getProperty("keyPassword")
+            }
+        }
+    }
     buildTypes {
         debug {
             // The unit tests' coverage (JaCoCo): createDebugUnitTestCoverageReport
@@ -82,6 +101,7 @@ android {
             buildConfigField("String", "TEST_RELAY", testRelay)
         }
         release {
+            signingConfig = signingConfigs.findByName("upload")
             buildConfigField("String", "DEFAULT_RELAY", realRelay)
             buildConfigField("String", "REAL_RELAY", realRelay)
             buildConfigField("String", "TEST_RELAY", "\"\"")
