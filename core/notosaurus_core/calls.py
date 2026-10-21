@@ -39,15 +39,17 @@ async def record(
     input_tokens: int | None,
     output_tokens: int | None,
     cost: float | None = None,
+    image_tokens: int = 0,
 ) -> None:
-    """Note an answered call; without a cost from the service, estimate it."""
+    """Note an answered call; without a cost from the service, estimate it (`image_tokens`:
+    the output's that are a picture drawn, at the image's price)."""
     current = _recording.get()
     if current is None:  # e.g. the settings page's connection test
         return
     kind, calls = current
     exact = cost is not None
     if cost is None and input_tokens is not None:
-        cost = await prices.estimate(s.llm, model, input_tokens, output_tokens or 0)
+        cost = await prices.estimate(s.llm, model, input_tokens, output_tokens or 0, image_tokens)
     calls.append(
         AiCall(
             at=datetime.now().isoformat(timespec="seconds"),

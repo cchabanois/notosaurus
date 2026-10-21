@@ -105,6 +105,7 @@ Each pull request adds a line under **Unreleased**. See [Releasing](CONTRIBUTING
 
 ### Fixed
 
+- A picture drawn by Gemini cost a twentieth of its price in the lesson's costs (and the relay's credits): its tokens were priced as text; a drawn picture's tokens now count at the image's price (OpenRouter's `image_output`), about 6.7 cents with Gemini 3.1 Flash Image.
 - The Anki add-on: **Revise now in Anki** for a test to prepare works ("unsupported action: createFilteredDeck"): its bridge makes the filtered deck and shows it, as AnkiConnect does.
 - A card whose back is a phonetic transcription ("/ɜː/") had it read aloud, slashes and all: the transcription is no longer read; the voice says the example quoted on the front instead ("bird"), the only way to hear the sound, or nothing when there is none. A part singled out in brackets ("t[i]ger") is read as its word. On the computer, in the app and in the page's 🔊 alike.
 - Android: the "computer not answering" page works again (its buttons did nothing since the yes/no sheet, #248: a script it needs wasn't loaded): try again, scan again, or use the phone.

@@ -23,11 +23,11 @@ PNG = plain_image(64, 64, "red", "PNG")
 
 @pytest.fixture
 def recorded(monkeypatch):
-    """The calls noted for the costs: (provider, model, input, output, cost)."""
+    """The calls noted for the costs: (provider, model, input, output, cost, the output's image tokens)."""
     calls = []
 
-    async def record(s, provider, model, input_tokens, output_tokens, cost=None):
-        calls.append((provider, model, input_tokens, output_tokens, cost))
+    async def record(s, provider, model, input_tokens, output_tokens, cost=None, image_tokens=0):
+        calls.append((provider, model, input_tokens, output_tokens, cost, image_tokens))
 
     monkeypatch.setattr(llm, "record", record)
     return calls
@@ -81,8 +81,10 @@ class FakeGemini:
         return pager()
 
 
-def gemini_answer(*parts, finish_reason="STOP", usage=True):
-    usage_metadata = types.GenerateContentResponseUsageMetadata(prompt_token_count=20, candidates_token_count=1290)
+def gemini_answer(*parts, finish_reason="STOP", usage=True, details=None):
+    usage_metadata = types.GenerateContentResponseUsageMetadata(
+        prompt_token_count=20, candidates_token_count=1290, candidates_tokens_details=details
+    )
     content = types.Content(role="model", parts=list(parts)) if parts else None
     return types.GenerateContentResponse(
         candidates=[types.Candidate(content=content, finish_reason=finish_reason)],
@@ -141,7 +143,7 @@ def test_openrouter_draws_in_a_chat_answer(openai_api, recorded):
     assert body["model"] == "google/gemini-3.1-flash-lite-image"
     assert body["messages"] == [{"role": "user", "content": pictures.STYLE.format(subject="an apple")}]
     assert body["modalities"] == ["image", "text"] and body["usage"] == {"include": True}
-    assert recorded == [("openrouter.ai", "google/gemini-3.1-flash-lite-image", 20, 1300, 0.03)]
+    assert recorded == [("openrouter.ai", "google/gemini-3.1-flash-lite-image", 20, 1300, 0.03, 0)]
 
 
 def test_openrouter_errors(openai_api, recorded):
@@ -209,7 +211,14 @@ def test_gemini_draws_inline(recorded, monkeypatch):
     model, contents, config = fake.calls[0]
     assert model == "gemini-3.1-flash-lite-image" and contents == pictures.STYLE.format(subject="an apple")
     assert config.response_modalities == ["IMAGE", "TEXT"] and config.safety_settings
-    assert recorded == [("gemini", "gemini-3.1-flash-lite-image", 20, 1290, None)]
+    # Without the output's detail, all of it is the picture's (at the image's price)
+    assert recorded == [("gemini", "gemini-3.1-flash-lite-image", 20, 1290, None, 1290)]
+    recorded.clear()
+    text, image = (types.ModalityTokenCount(modality=m, token_count=n) for m, n in (("TEXT", 10), ("IMAGE", 1280)))
+    fake.response = gemini_answer(types.Part.from_bytes(data=PNG, mime_type="image/png"), details=[text, image])
+    run(pictures.draw(s, "an apple"))
+    assert recorded == [("gemini", "gemini-3.1-flash-lite-image", 20, 1290, None, 1280)]
+    fake.response = gemini_answer(types.Part.from_bytes(data=PNG, mime_type="image/png"))
 
     # Through Vertex AI (a project, no key): the same
     vertex = AIConfig(llm="gemini", gemini_vertex_project="p", gemini_vertex_location="europe-west1")
@@ -265,7 +274,7 @@ def test_openai_draws_with_its_images_api(openai_api, recorded):
         "size": "1024x1024",
         "quality": "low",
     }
-    assert recorded == [("openai", "gpt-image-2", 30, 272, None)]
+    assert recorded == [("openai", "gpt-image-2", 30, 272, None, 0)]
 
     openai_api.answer = lambda request: httpx.Response(400, json={"error": {"message": "Your request was rejected"}})
     error = picture_error(pictures.draw(s, "a dog"))

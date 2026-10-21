@@ -28,8 +28,9 @@ def _cache_path():
     return files.cache_dir("model-prices.json")
 
 
-async def _prices() -> dict[str, tuple[float, float]]:
-    """Model id → (price of an input token, of an output token), in US dollars."""
+async def _prices() -> dict[str, tuple[float, ...]]:
+    """Model id → (price of an input token, of an output token[, of an output image's
+    token]), in US dollars: an image model draws at its own, far higher price."""
     path = _cache_path()
     cached = files.read_json(path)
     if cached and time.time() - cached.get("at", 0) < MAX_AGE:
@@ -39,16 +40,18 @@ async def _prices() -> dict[str, tuple[float, float]]:
             response = await client.get(MODELS_URL)
             response.raise_for_status()
             models = response.json()["data"]
-        prices = {
-            m["id"]: (float(m["pricing"]["prompt"]), float(m["pricing"]["completion"]))
-            for m in models
-            if m.get("pricing", {}).get("prompt") is not None
-        }
+        prices = {m["id"]: _price(m["pricing"]) for m in models if m.get("pricing", {}).get("prompt") is not None}
     except (httpx.HTTPError, ValueError, KeyError, TypeError) as e:
         log.warning("Model prices unavailable: %s", e)
         return {k: tuple(v) for k, v in (cached or {}).get("prices", {}).items()}  # older prices, or none
     files.write_json(path, {"at": time.time(), "prices": prices})
     return prices
+
+
+def _price(pricing: dict) -> tuple[float, ...]:
+    """A model's prices in OpenRouter's list: its image output's when it draws."""
+    price = (float(pricing["prompt"]), float(pricing["completion"]))
+    return (*price, float(pricing["image_output"])) if pricing.get("image_output") else price
 
 
 def _candidates(provider: str, model: str) -> list[str]:
@@ -61,14 +64,18 @@ def _candidates(provider: str, model: str) -> list[str]:
     return ids
 
 
-async def estimate(provider: str, model: str, input_tokens: int, output_tokens: int) -> float | None:
-    """Estimated cost of a call in US dollars; None if the model's price is unknown."""
+async def estimate(
+    provider: str, model: str, input_tokens: int, output_tokens: int, image_tokens: int = 0
+) -> float | None:
+    """Estimated cost of a call in US dollars; None if the model's price is unknown.
+    `image_tokens`: those of the output that are a picture drawn."""
     prices = await _prices()
     known = [prices.get(model_id) for model_id in _candidates(provider, model)]
     # Not in OpenRouter's list (OpenAI's image models): the prices written in Notosaurus
     known.append(recommended.PRICES.get(re.sub(r"-\d{4}-\d{2}-\d{2}$", "", model.strip())))
     for price in known:
         if price:
-            price_in, price_out = price
-            return round(input_tokens * price_in + output_tokens * price_out, 6)
+            price_in, price_out, price_image = (*price, price[1])[:3]  # no image price: the output's
+            text = output_tokens - image_tokens
+            return round(input_tokens * price_in + text * price_out + image_tokens * price_image, 6)
     return None

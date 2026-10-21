@@ -49,6 +49,17 @@ def test_estimated_cost(client, provider, model, cost):
     assert estimate == (pytest.approx(cost) if cost is not None else None)
 
 
+def test_a_drawn_pictures_tokens_at_the_images_price(client):
+    """An image model's output: its text at the text's price, its picture at the image's
+    (20 times more: a picture would else cost a twentieth of its price)."""
+    estimate = asyncio.run(prices.estimate("gemini", "gemini-3.1-flash-image", 20, 1300, image_tokens=1290))
+    assert estimate == pytest.approx(20 * 0.5e-6 + 10 * 3e-6 + 1290 * 60e-6)
+    # OpenAI's image models (Notosaurus's own prices): the output's
+    assert asyncio.run(prices.estimate("openai", "gpt-image-2", 1000, 100, image_tokens=100)) == pytest.approx(
+        1000 * 8e-6 + 100 * 30e-6
+    )
+
+
 def test_prices_fetched_once_a_day(client, monkeypatch):
     asyncio.run(prices.estimate("openai", "gpt-6.1-sol", 1, 1))
     monkeypatch.setattr(prices, "_transport", None)  # the network would now be used: the cache must answer
