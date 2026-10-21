@@ -1002,6 +1002,7 @@
       "no_credits": "Crediti esauriti per questo mese: tornano al prossimo rinnovo.",
       "subscription_ended": "Il tuo abbonamento è terminato: abbonati di nuovo nell'app per continuare.",
       "invalid_purchase": "Acquisto non riconosciuto da Google Play: riprova o contatta il supporto.",
+      "trial_refused": "La prova gratuita è possibile solo con l'app installata da Google Play, su un vero telefono.",
       "daily_limit": "Limite di oggi raggiunto: riprova domani.",
       "busy": "Troppe richieste contemporaneamente: riprova tra un attimo.",
       "too_large": "Troppe foto, o una troppo pesante.",

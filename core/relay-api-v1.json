@@ -1749,6 +1749,88 @@
           }
         }
       }
+    },
+    "/v1/trial": {
+      "post": {
+        "summary": "Trial",
+        "description": "The free trial's licence (no card), once per phone: checked with Play Integrity; no key needed.",
+        "operationId": "trial_v1_trial_post",
+        "parameters": [
+          {
+            "name": "X-Notosaurus-Version",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "The client's version (\"1.1.0\").",
+              "title": "X-Notosaurus-Version"
+            },
+            "description": "The client's version (\"1.1.0\")."
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/TrialRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SubscribeResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Codes: `relay.trial_refused`",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Codes: `relay.invalid_request`",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "426": {
+            "description": "Codes: `relay.client_outdated`",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Codes: `relay.unavailable`",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
     }
   },
   "components": {
@@ -3194,6 +3276,30 @@
           "usage"
         ],
         "title": "TranscribeResponse"
+      },
+      "TrialRequest": {
+        "properties": {
+          "integrity_token": {
+            "type": "string",
+            "maxLength": 10000,
+            "minLength": 1,
+            "title": "Integrity Token",
+            "description": "Play Integrity's token (its standard request)."
+          },
+          "device": {
+            "type": "string",
+            "pattern": "^[0-9a-f]{64}$",
+            "title": "Device",
+            "description": "The phone, as the app knows it (a SHA-256, in hex): the token's request hash is its own."
+          }
+        },
+        "type": "object",
+        "required": [
+          "integrity_token",
+          "device"
+        ],
+        "title": "TrialRequest",
+        "description": "POST /v1/trial: the free trial, without a card: a few credits for a while, once per\nphone. Play Integrity's token says it is the app from Google Play on a real phone; the\nsame phone always gets the same key (reinstalled: the trial's credits left, not new ones)."
       },
       "Usage": {
         "properties": {

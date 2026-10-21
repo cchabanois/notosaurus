@@ -81,6 +81,7 @@ ERRORS = {
     "relay.no_credits": 402,  # this period's credits are used up
     "relay.subscription_ended": 402,  # its subscription (Google Play) ended: subscribe again
     "relay.invalid_purchase": 400,  # a purchase Google Play doesn't know, or not of this app
+    "relay.trial_refused": 403,  # no free trial: not the app from Google Play, or not a real phone (Play Integrity)
     "relay.daily_limit": 429,  # too many credits used today: tomorrow, or wait
     "relay.busy": 429,  # too many calls at once for this licence: retry in a moment
     "relay.too_large": 413,  # too many photos, or one too heavy
@@ -430,6 +431,20 @@ class SubscribeRequest(BaseModel):
         min_length=1, max_length=1000, description="The purchase's token (Google Play Billing)."
     )
     product_id: str = Field(min_length=1, max_length=200, description="The subscription's product id.")
+
+
+class TrialRequest(BaseModel):
+    """POST /v1/trial: the free trial, without a card: a few credits for a while, once per
+    phone. Play Integrity's token says it is the app from Google Play on a real phone; the
+    same phone always gets the same key (reinstalled: the trial's credits left, not new ones)."""
+
+    integrity_token: str = Field(
+        min_length=1, max_length=10000, description="Play Integrity's token (its standard request)."
+    )
+    device: str = Field(
+        pattern=r"^[0-9a-f]{64}$",
+        description="The phone, as the app knows it (a SHA-256, in hex): the token's request hash is its own.",
+    )
 
 
 class SubscribeResponse(BaseModel):

@@ -1002,6 +1002,7 @@
       "no_credits": "Sem créditos este mês: eles voltam na próxima renovação.",
       "subscription_ended": "A tua subscrição terminou: subscreve de novo na app para continuar.",
       "invalid_purchase": "Compra não reconhecida pelo Google Play: tenta de novo ou contacta o suporte.",
+      "trial_refused": "O teste grátis só é possível com a app instalada a partir do Google Play, num telemóvel real.",
       "daily_limit": "O limite de hoje foi atingido: tente de novo amanhã.",
       "busy": "Pedidos demais ao mesmo tempo: tente de novo daqui a pouco.",
       "too_large": "Fotos demais, ou uma pesada demais.",

@@ -110,6 +110,7 @@ def test_openapi_description():
         "voices",
         "account",
         "subscribe",
+        "trial",
     )
     assert set(spec["paths"]) == {f"/v1/{route}" for route in routes}
     multipart = {"extract": "ExtractRequest", "revise": "ReviseRequest", "transcribe": "TranscribeRequest"}
