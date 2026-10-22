@@ -52,7 +52,7 @@
             }
           },
           "402": {
-            "description": "Codes: `relay.no_credits`, `relay.subscription_ended`",
+            "description": "Codes: `relay.no_credits`, `relay.subscription_ended`, `relay.payment_pending`",
             "content": {
               "application/json": {
                 "schema": {
@@ -199,7 +199,7 @@
             }
           },
           "402": {
-            "description": "Codes: `relay.no_credits`, `relay.subscription_ended`",
+            "description": "Codes: `relay.no_credits`, `relay.subscription_ended`, `relay.payment_pending`",
             "content": {
               "application/json": {
                 "schema": {
@@ -356,7 +356,7 @@
             }
           },
           "402": {
-            "description": "Codes: `relay.no_credits`, `relay.subscription_ended`",
+            "description": "Codes: `relay.no_credits`, `relay.subscription_ended`, `relay.payment_pending`",
             "content": {
               "application/json": {
                 "schema": {
@@ -458,7 +458,7 @@
             }
           },
           "402": {
-            "description": "Codes: `relay.no_credits`, `relay.subscription_ended`",
+            "description": "Codes: `relay.no_credits`, `relay.subscription_ended`, `relay.payment_pending`",
             "content": {
               "application/json": {
                 "schema": {
@@ -560,7 +560,7 @@
             }
           },
           "402": {
-            "description": "Codes: `relay.no_credits`, `relay.subscription_ended`",
+            "description": "Codes: `relay.no_credits`, `relay.subscription_ended`, `relay.payment_pending`",
             "content": {
               "application/json": {
                 "schema": {
@@ -652,7 +652,7 @@
             }
           },
           "402": {
-            "description": "Codes: `relay.no_credits`, `relay.subscription_ended`",
+            "description": "Codes: `relay.no_credits`, `relay.subscription_ended`, `relay.payment_pending`",
             "content": {
               "application/json": {
                 "schema": {
@@ -827,7 +827,7 @@
             }
           },
           "402": {
-            "description": "Codes: `relay.no_credits`, `relay.subscription_ended`",
+            "description": "Codes: `relay.no_credits`, `relay.subscription_ended`, `relay.payment_pending`",
             "content": {
               "application/json": {
                 "schema": {
@@ -929,7 +929,7 @@
             }
           },
           "402": {
-            "description": "Codes: `relay.no_credits`, `relay.subscription_ended`",
+            "description": "Codes: `relay.no_credits`, `relay.subscription_ended`, `relay.payment_pending`",
             "content": {
               "application/json": {
                 "schema": {
@@ -1031,7 +1031,7 @@
             }
           },
           "402": {
-            "description": "Codes: `relay.no_credits`, `relay.subscription_ended`",
+            "description": "Codes: `relay.no_credits`, `relay.subscription_ended`, `relay.payment_pending`",
             "content": {
               "application/json": {
                 "schema": {
@@ -1138,7 +1138,7 @@
             }
           },
           "402": {
-            "description": "Codes: `relay.no_credits`, `relay.subscription_ended`",
+            "description": "Codes: `relay.no_credits`, `relay.subscription_ended`, `relay.payment_pending`",
             "content": {
               "application/json": {
                 "schema": {
@@ -1249,7 +1249,7 @@
             }
           },
           "402": {
-            "description": "Codes: `relay.no_credits`, `relay.subscription_ended`",
+            "description": "Codes: `relay.no_credits`, `relay.subscription_ended`, `relay.payment_pending`",
             "content": {
               "application/json": {
                 "schema": {
@@ -1366,7 +1366,7 @@
             }
           },
           "402": {
-            "description": "Codes: `relay.no_credits`, `relay.subscription_ended`",
+            "description": "Codes: `relay.no_credits`, `relay.subscription_ended`, `relay.payment_pending`",
             "content": {
               "application/json": {
                 "schema": {
@@ -1708,7 +1708,7 @@
             }
           },
           "402": {
-            "description": "Codes: `relay.subscription_ended`",
+            "description": "Codes: `relay.subscription_ended`, `relay.payment_pending`",
             "content": {
               "application/json": {
                 "schema": {

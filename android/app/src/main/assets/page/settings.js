@@ -9,7 +9,7 @@ async function api(path, options = {}) {
   if (!res.ok) {
     let detail = res.statusText;
     try { detail = (await res.json()).detail ?? detail; } catch {}
-    throw new Error(errorMessage(detail));
+    throw Object.assign(new Error(errorMessage(detail)), { code: detail?.code });
   }
   return res.json();
 }
@@ -25,6 +25,7 @@ document.addEventListener("alpine:init", () => {
     account: null,    // the relay's answer for the key
     offers: [],       // the base plans Google Play offers ({ plan, price, trial_days }); none: not on sale
     trial: false,     // the free trial (no card) offered: Google Play is there
+    lapsed: "",       // the subscription ended, or on hold (a payment failed): the relay's code
     buying: false,
     anki: null,       // { installed, permitted }
     data: null,       // { lessons, bytes }
@@ -68,10 +69,13 @@ document.addEventListener("alpine:init", () => {
 
     async loadAccount() {
       this.account = null;
+      this.lapsed = "";
       try {
         this.account = await api("/api/admin/account");
       } catch (e) {
         this.error = e.message;
+        // Ended: subscribing again; on hold: Google Play's page, where the payment is fixed
+        if (["relay.subscription_ended", "relay.payment_pending"].includes(e.code)) this.lapsed = e.code;
       }
     },
 
@@ -100,6 +104,7 @@ document.addEventListener("alpine:init", () => {
         const answer = await api(path, json("POST", body));
         if (answer.cancelled) return;
         this.account = answer;
+        this.lapsed = "";
         this.form = await api("/api/admin/settings");
         this.notice = t(done, { credits: answer.credits_left, date: answer.ends_at ? this.formatDate(answer.ends_at) : "" });
       } catch (e) {

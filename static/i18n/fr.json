@@ -1004,6 +1004,7 @@
       "invalid_key": "Clé de licence inconnue ou expirée : vérifiez-la dans les réglages.",
       "no_credits": "Plus de crédits ce mois-ci : ils reviennent au prochain renouvellement.",
       "subscription_ended": "Votre abonnement est terminé : réabonnez-vous dans l'app pour continuer.",
+      "payment_pending": "Paiement en attente : Google Play n'a pas pu renouveler votre abonnement. Mettez à jour votre moyen de paiement dans Google Play (Réglages → Gérer l'abonnement) pour continuer.",
       "invalid_purchase": "Achat non reconnu par Google Play : réessayez, ou contactez le support.",
       "trial_refused": "L'essai gratuit n'est possible qu'avec l'app installée depuis Google Play, sur un vrai téléphone.",
       "daily_limit": "Limite du jour atteinte : réessayez demain.",
