@@ -70,6 +70,7 @@ data class Account(
     @SerialName("daily_left") val dailyLeft: Int,
     @SerialName("renews_at") val renewsAt: String? = null,
     @SerialName("ends_at") val endsAt: String? = null, // a subscription's (Google Play): its paid period's end
+    @SerialName("on_hold") val onHold: Boolean = false, // past its end because a renewal's payment failed
     val notice: Notice? = null, // a message for every user, set on the relay
     val disabled: List<String> = emptyList(), // relay_api.FEATURES turned off for now
     val latest: String = "", // the app's latest version ("" not said)

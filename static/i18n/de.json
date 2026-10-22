@@ -1004,6 +1004,7 @@
       "invalid_key": "Unbekannter oder abgelaufener Lizenzschlüssel: Prüfe ihn in den Einstellungen.",
       "no_credits": "Diesen Monat keine Credits mehr: Sie kommen mit der nächsten Erneuerung zurück.",
       "subscription_ended": "Dein Abo ist beendet: Schließe es in der App erneut ab, um weiterzumachen.",
+      "payment_pending": "Zahlung ausstehend: Google Play konnte dein Abo nicht verlängern. Aktualisiere deine Zahlungsmethode in Google Play (Einstellungen → Abo verwalten), um weiterzumachen.",
       "invalid_purchase": "Kauf von Google Play nicht erkannt: Versuche es erneut oder kontaktiere den Support.",
       "trial_refused": "Die kostenlose Testphase ist nur mit der App aus Google Play auf einem echten Telefon möglich.",
       "daily_limit": "Das Tageslimit ist erreicht: Versuche es morgen wieder.",

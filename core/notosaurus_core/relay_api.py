@@ -80,6 +80,7 @@ ERRORS = {
     "relay.invalid_key": 401,  # no licence key, unknown, or ended
     "relay.no_credits": 402,  # this period's credits are used up
     "relay.subscription_ended": 402,  # its subscription (Google Play) ended: subscribe again
+    "relay.payment_pending": 402,  # its subscription on hold: a renewal's payment failed, to fix in Google Play
     "relay.invalid_purchase": 400,  # a purchase Google Play doesn't know, or not of this app
     "relay.trial_refused": 403,  # no free trial: not the app from Google Play, or not a real phone (Play Integrity)
     "relay.daily_limit": 429,  # too many credits used today: tomorrow, or wait
@@ -411,6 +412,11 @@ class Account(BaseModel):
     ends_at: str | None = Field(
         default=None,
         description="A subscription: when it ends unless renewed (ISO 8601); none for a licence without end.",
+    )
+    on_hold: bool = Field(
+        default=False,
+        description="Past its end because a renewal's payment failed (Google Play's account hold): "
+        "a payment to fix in Google Play, not a subscription ended.",
     )
     notice: Notice | None = Field(default=None, description="A message for every user, if any.")
     disabled: list[str] = Field(

@@ -1004,6 +1004,7 @@
       "invalid_key": "Chave de licença desconhecida ou expirada: verifique-a nas configurações.",
       "no_credits": "Sem créditos este mês: eles voltam na próxima renovação.",
       "subscription_ended": "A tua subscrição terminou: subscreve de novo na app para continuar.",
+      "payment_pending": "Pagamento pendente: o Google Play não conseguiu renovar a tua subscrição. Atualiza o método de pagamento no Google Play (Definições → Gerir a subscrição) para continuar.",
       "invalid_purchase": "Compra não reconhecida pelo Google Play: tenta de novo ou contacta o suporte.",
       "trial_refused": "O teste grátis só é possível com a app instalada a partir do Google Play, num telemóvel real.",
       "daily_limit": "O limite de hoje foi atingido: tente de novo amanhã.",

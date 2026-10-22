@@ -1004,6 +1004,7 @@
       "invalid_key": "Chiave di licenza sconosciuta o scaduta: controllala nelle impostazioni.",
       "no_credits": "Crediti esauriti per questo mese: tornano al prossimo rinnovo.",
       "subscription_ended": "Il tuo abbonamento è terminato: abbonati di nuovo nell'app per continuare.",
+      "payment_pending": "Pagamento in sospeso: Google Play non è riuscito a rinnovare il tuo abbonamento. Aggiorna il metodo di pagamento in Google Play (Impostazioni → Gestisci l'abbonamento) per continuare.",
       "invalid_purchase": "Acquisto non riconosciuto da Google Play: riprova o contatta il supporto.",
       "trial_refused": "La prova gratuita è possibile solo con l'app installata da Google Play, su un vero telefono.",
       "daily_limit": "Limite di oggi raggiunto: riprova domani.",

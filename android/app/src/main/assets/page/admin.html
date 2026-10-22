@@ -63,8 +63,8 @@
       <!-- The subscription (Google Play): shown once it is on sale; a key can still be typed below -->
       <template x-if="offers.length">
         <div class="subscription">
-          <!-- No key yet, or the free trial's: subscribing -->
-          <template x-if="!form?.has_key || account?.plan === 'free_trial'">
+          <!-- No key yet, the free trial's, or a subscription that ended: subscribing -->
+          <template x-if="!form?.has_key || account?.plan === 'free_trial' || lapsed === 'relay.subscription_ended'">
             <div>
               <!-- A month, a year: one button each (the trial first when Google Play still offers it) -->
               <template x-for="(o, i) in offers" :key="o.plan">
@@ -76,7 +76,7 @@
               <button class="link-btn" :disabled="buying" @click="restore()" x-text="$t('android.subscription.restore')"></button>
             </div>
           </template>
-          <button class="link-btn" x-show="account?.ends_at && account?.plan !== 'free_trial'" @click="manage()" x-text="$t('android.subscription.manage')"></button>
+          <button class="link-btn" x-show="(account?.ends_at && account?.plan !== 'free_trial') || lapsed" @click="manage()" x-text="$t('android.subscription.manage')"></button>
         </div>
       </template>
       <p class="hint" x-show="form && !form.has_key && !offers.length" x-text="$t('android.licence.none')"></p>
@@ -89,8 +89,10 @@
           <p x-text="$t('android.licence.credits', { credits: account.credits_left, today: account.daily_left })"></p>
           <p class="hint" x-show="account.renews_at && !account.ends_at"
              x-text="$t('android.licence.renews', { date: formatDate(account.renews_at) })"></p>
-          <p class="hint" x-show="account.ends_at"
+          <p class="hint" x-show="account.ends_at && !lapsed"
              x-text="$t(account.plan === 'free_trial' ? 'android.subscription.trialUntil' : 'android.subscription.until', { date: formatDate(account.ends_at) })"></p>
+          <!-- Ended, or on hold: what to do -->
+          <p class="hint" x-show="lapsed" x-text="lapsedText()"></p>
         </div>
       </template>
       <form @submit.prevent="saveKey()">
