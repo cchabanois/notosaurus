@@ -80,7 +80,7 @@ ERRORS = {
     "relay.invalid_key": 401,  # no licence key, unknown, or ended
     "relay.no_credits": 402,  # this period's credits are used up
     "relay.subscription_ended": 402,  # its subscription (Google Play) ended: subscribe again
-    "relay.payment_pending": 402,  # its subscription on hold (Google Play): a renewal's payment failed, to fix in Google Play
+    "relay.payment_pending": 402,  # its subscription on hold: a renewal's payment failed, to fix in Google Play
     "relay.invalid_purchase": 400,  # a purchase Google Play doesn't know, or not of this app
     "relay.trial_refused": 403,  # no free trial: not the app from Google Play, or not a real phone (Play Integrity)
     "relay.daily_limit": 429,  # too many credits used today: tomorrow, or wait
