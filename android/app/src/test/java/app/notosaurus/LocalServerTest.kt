@@ -1022,6 +1022,28 @@ class LocalServerTest {
     }
 
     @Test
+    fun aRenewalTheRelayMissedFoundFromGooglePlay() = app { client ->
+        prefs[LocalServer.keyOf(local.relayUrl())] = "nts_from_play"
+        play.owned = listOf("token-1")
+        // Past its end for the relay (a renewal's notification lost): the purchase checked again, the new period
+        relayAnswers("""{"plan": "monthly", "credits_left": 12, "daily_left": 12, "ends_at": "2026-01-01T00:00:00+00:00"}""")
+        relayAnswers("""{"key": "nts_from_play", "account": {"plan": "monthly", "credits_left": 3000, "daily_left": 500,
+            "ends_at": "2999-01-01T00:00:00+00:00"}}""")
+        relayAnswers("""{"plan": "monthly", "credits_left": 3000, "daily_left": 500, "ends_at": "2999-01-01T00:00:00+00:00"}""")
+        val account = client.get("/api/admin/account") { page() }.json().jsonObject
+        assertEquals(3000, account["credits_left"]!!.jsonPrimitive.int)
+        val asked = (1..3).map { relay.takeRequest(5, TimeUnit.SECONDS)!!.url.encodedPath }
+        assertEquals(listOf("/v1/account", "/v1/subscribe", "/v1/account"), asked)
+
+        // Nothing owned (it really ended): the account as the relay says, nothing else asked
+        play.owned = emptyList()
+        relayAnswers("""{"plan": "monthly", "credits_left": 12, "daily_left": 12, "ends_at": "2026-01-01T00:00:00+00:00"}""")
+        assertEquals(12, client.get("/api/admin/account") { page() }.json().jsonObject["credits_left"]!!.jsonPrimitive.int)
+        assertEquals("/v1/account", relay.takeRequest(5, TimeUnit.SECONDS)!!.url.encodedPath)
+        assertEquals(null, relay.takeRequest(200, TimeUnit.MILLISECONDS))
+    }
+
+    @Test
     fun aFreeTrialWithoutACard() = app { client ->
         assertEquals("true", client.get("/api/admin/subscription") { page() }.json().jsonObject["trial"]!!.jsonPrimitive.content)
         relayAnswers("""{"key": "nts_trial", "account": {"plan": "free_trial", "credits_left": 300, "daily_left": 150,

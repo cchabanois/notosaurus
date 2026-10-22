@@ -130,7 +130,29 @@ class LocalServer(
     }
 
     /** The relay, with its licence key. */
-    internal fun relay() = Relay(relayUrl(), licence(), lost = relays::refreshSoon)
+    internal fun relay() = Relay(relayUrl(), licence(), lost = relays::refreshSoon, lapsed = ::recheckSoon)
+
+    private var recheckedAt: Long? = null
+
+    /**
+     * The relay said the subscription ended or is on hold: Google Play's purchases checked
+     * again in the background, at most every RECHECK_S (a renewal, or a payment fixed,
+     * whose notification never reached the relay: the next call has the new period).
+     */
+    @Synchronized private fun recheckSoon() {
+        val store = subscriptions ?: return
+        val last = recheckedAt
+        if (last != null && System.nanoTime() - last < RECHECK_S * 1_000_000_000L) return
+        recheckedAt = System.nanoTime()
+        Thread { runBlocking { recheck(store) } }.start()
+    }
+
+    /** Google Play's purchases of this Google account checked again by the relay: the first
+     * it gives access to, its key kept; false if none does. */
+    internal suspend fun recheck(store: SubscriptionStore): Boolean = withContext(Dispatchers.IO) {
+        val owned = runCatching { store.owned() }.getOrDefault(emptyList())
+        owned.any { token -> runCatching { licensed(token) }.isSuccess }
+    }
 
     internal fun relayUrl() = prefs[RELAY] ?: if (DEFAULT_RELAY == TEST_RELAY) relays.test() else relays.real()
 
@@ -298,6 +320,8 @@ class LocalServer(
 
     companion object {
         const val COOKIE = "notosaurus_app"
+        // The subscription's purchases checked again at most this often when the relay says it lapsed
+        private const val RECHECK_S = 600L
         const val MAX_PHOTOS = 10 // a lesson's pages, as on the computer (MAX_IMAGES)
 
         // The welcome accepted (its version): raised when what it says changes a lot, so it shows again

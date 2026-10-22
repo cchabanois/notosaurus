@@ -109,6 +109,7 @@ Each pull request adds a line under **Unreleased**. See [Releasing](CONTRIBUTING
 
 ### Fixed
 
+- A subscription renewed (or its payment fixed) while the relay missed Google Play's notification is no longer cut off: when the relay says it ended or is on hold, the Android app checks this Google account's purchases again (the settings at once, a refused call in the background, at most every 10 minutes).
 - A subscription on hold (a renewal's payment failed) says so: "Payment pending", to fix in Google Play, with **Manage the subscription** in the settings, instead of "subscription ended"; an ended one shows the subscribe buttons again, as its message says. For developers: `relay.payment_pending` (402).
 - A picture drawn by Gemini cost a twentieth of its price in the lesson's costs (and the relay's credits): its tokens were priced as text; a drawn picture's tokens now count at the image's price (OpenRouter's `image_output`), about 6.7 cents with Gemini 3.1 Flash Image.
 - The Anki add-on: **Revise now in Anki** for a test to prepare works ("unsupported action: createFilteredDeck"): its bridge makes the filtered deck and shows it, as AnkiConnect does.

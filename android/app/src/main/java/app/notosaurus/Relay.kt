@@ -41,6 +41,7 @@ class Relay(
     baseUrl: String,
     private val key: String,
     private val lost: () -> Unit = {}, // not reached, or nothing there: where the relays are, asked again (RelayDirectory)
+    private val lapsed: () -> Unit = {}, // the subscription ended or on hold: Google Play's purchases checked again
 ) {
     private val base = baseUrl.trimEnd('/')
 
@@ -181,6 +182,7 @@ class Relay(
             val text = response.use { it.body.string() }
             val error = runCatching { json.decodeFromString<ApiError>(text) }.getOrNull()
             if (error == null && response.code == 404) lost() // not a relay's answer: a service gone
+            if (error?.code in LAPSED) lapsed()
             throw RelayException(error?.code ?: "relay.http_${response.code}", error?.params ?: JsonObject(emptyMap()))
         }
         return response
@@ -203,6 +205,9 @@ class Relay(
         const val CLIENT_HEADER = "X-Notosaurus-Version"
         const val STREAM_TYPE = "application/x-ndjson"
         const val PICTURE_SOURCE_HEADER = "X-Notosaurus-Picture-Source"
+
+        // The relay's answers for a subscription past its end: ended, or on hold
+        val LAPSED = setOf("relay.subscription_ended", "relay.payment_pending")
 
         // A little slower than normal, for learners (the computer's "-10%")
         const val SPEECH_RATE = 0.9

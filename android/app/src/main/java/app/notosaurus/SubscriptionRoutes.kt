@@ -61,7 +61,7 @@ internal fun Route.subscriptionRoutes(server: LocalServer) {
 
 /** The purchase's licence key from the relay (it checks the purchase with Google Play),
  * kept for the relay in use; its account (the settings show it). */
-private suspend fun LocalServer.licensed(token: String): JsonObject {
+internal suspend fun LocalServer.licensed(token: String): JsonObject {
     val answer = withContext(Dispatchers.IO) {
         Relay(relayUrl(), "").post("subscribe", buildJsonObject {
             put("purchase_token", token)

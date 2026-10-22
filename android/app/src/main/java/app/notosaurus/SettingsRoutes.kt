@@ -28,6 +28,7 @@ import kotlinx.serialization.json.booleanOrNull
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.put
 import java.net.URI
+import java.time.OffsetDateTime
 
 private const val SWITCHES_WAIT_MS = 5_000L // the page shows meanwhile; the relay may be starting
 
@@ -86,7 +87,18 @@ internal fun Route.settingsRoutes(server: LocalServer) {
             (changes[Speech.VOICES] as? JsonObject)?.let { voices -> speech.choose(voices.mapValues { it.value.plain() }) }
             settings()
         }
-        api("GET", "/api/admin/account") { json.encodeToJsonElement(Account.serializer(), relay().account()) }
+        api("GET", "/api/admin/account") {
+            var account = relay().account()
+            // Past its end (a renewal or a payment fixed the relay hasn't heard of): Google
+            // Play's purchases checked again, the account then as it is
+            val store = subscriptions
+            if (store != null && account.endsAt?.let { runCatching { OffsetDateTime.parse(it) }.getOrNull() }?.isBefore(OffsetDateTime.now()) == true &&
+                recheck(store)
+            ) {
+                account = relay().account()
+            }
+            json.encodeToJsonElement(Account.serializer(), account)
+        }
         api("GET", "/api/admin/anki") {
             buildJsonObject {
                 put("installed", anki.installed())
