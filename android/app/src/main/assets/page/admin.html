@@ -89,8 +89,10 @@
           <p x-text="$t('android.licence.credits', { credits: account.credits_left, today: account.daily_left })"></p>
           <p class="hint" x-show="account.renews_at && !account.ends_at"
              x-text="$t('android.licence.renews', { date: formatDate(account.renews_at) })"></p>
-          <p class="hint" x-show="account.ends_at"
+          <p class="hint" x-show="account.ends_at && !lapsed"
              x-text="$t(account.plan === 'free_trial' ? 'android.subscription.trialUntil' : 'android.subscription.until', { date: formatDate(account.ends_at) })"></p>
+          <!-- Ended, or on hold: what to do -->
+          <p class="hint" x-show="lapsed" x-text="lapsedText()"></p>
         </div>
       </template>
       <form @submit.prevent="saveKey()">

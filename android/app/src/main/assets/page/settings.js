@@ -67,11 +67,21 @@ document.addEventListener("alpine:init", () => {
       return new Date(iso).toLocaleDateString(I18N.locale, { day: "numeric", month: "long" });
     },
 
+    // What an ended subscription, or one on hold, asks of the parent (in the page's language)
+    lapsedText() {
+      Alpine.store("i18n").version;
+      return this.lapsed ? errorMessage({ code: this.lapsed }) : "";
+    },
+
     async loadAccount() {
       this.account = null;
       this.lapsed = "";
       try {
         this.account = await api("/api/admin/account");
+        // Past its end: on hold (a payment to fix in Google Play), or ended
+        if (this.account.ends_at && new Date(this.account.ends_at) <= new Date()) {
+          this.lapsed = this.account.on_hold ? "relay.payment_pending" : "relay.subscription_ended";
+        }
       } catch (e) {
         this.error = e.message;
         // Ended: subscribing again; on hold: Google Play's page, where the payment is fixed

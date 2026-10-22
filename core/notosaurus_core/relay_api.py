@@ -413,6 +413,11 @@ class Account(BaseModel):
         default=None,
         description="A subscription: when it ends unless renewed (ISO 8601); none for a licence without end.",
     )
+    on_hold: bool = Field(
+        default=False,
+        description="Past its end because a renewal's payment failed (Google Play's account hold): "
+        "a payment to fix in Google Play, not a subscription ended.",
+    )
     notice: Notice | None = Field(default=None, description="A message for every user, if any.")
     disabled: list[str] = Field(
         default_factory=list, description="FEATURES turned off for now: the app hides them and refuses them."

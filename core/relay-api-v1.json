@@ -1878,6 +1878,12 @@
             "title": "Ends At",
             "description": "A subscription: when it ends unless renewed (ISO 8601); none for a licence without end."
           },
+          "on_hold": {
+            "type": "boolean",
+            "title": "On Hold",
+            "description": "Past its end because a renewal's payment failed (Google Play's account hold): a payment to fix in Google Play, not a subscription ended.",
+            "default": false
+          },
           "notice": {
             "anyOf": [
               {
