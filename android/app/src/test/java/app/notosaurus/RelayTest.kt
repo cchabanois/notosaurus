@@ -43,6 +43,22 @@ class RelayTest {
     }
 
     @Test
+    fun aSubscriptionPastItsEndTold() = runBlocking {
+        var lapsed = 0
+        val relay = Relay(server.url("/").toString(), "nts_key", lapsed = { lapsed++ })
+        for (code in listOf("relay.subscription_ended", "relay.payment_pending", "relay.no_credits")) {
+            server.enqueue(MockResponse.Builder().code(402).body("""{"code": "$code"}""").build())
+            try {
+                relay.post("explain", buildJsonObject {})
+                fail("refused")
+            } catch (e: RelayException) {
+                assertEquals(code, e.code)
+            }
+        }
+        assertEquals(2, lapsed) // not for credits used up
+    }
+
+    @Test
     fun theCardsAsTheAiWritesThem() = runBlocking {
         val lines = listOf(
             """{"card": {"front": "a", "back": "x"}}""",
