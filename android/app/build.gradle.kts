@@ -25,14 +25,17 @@ abstract class CopyWebPage : DefaultTask() {
 }
 
 // Notosaurus's version, the same everywhere: the root pyproject.toml's (the only place
-// to change it), e.g. 1.1.0 → versionName "1.1.0", versionCode 10100 (Google Play's
-// number, which must grow: major × 10000 + minor × 100 + patch)
+// to change it), e.g. 1.1.0 → versionName "1.1.0", versionCode 101000000 + the build
+// (Google Play's number, which must grow, and differ for each upload: (major × 10000 +
+// minor × 100 + patch) × 10000 + -Pnotosaurus.build, 0 without it; Draft release
+// passes its run's number)
 val notosaurusVersion: String = Regex("""(?m)^version\s*=\s*"([^"]+)"""")
     // read through Gradle, so that a change is always seen (configuration cache included)
     .find(providers.fileContents(rootProject.layout.projectDirectory.file("../pyproject.toml")).asText.get())!!
     .groupValues[1]
 val notosaurusVersionCode: Int = Regex("""^(\d+)\.(\d+)\.(\d+)""").find(notosaurusVersion)!!.destructured
     .let { (major, minor, patch) -> major.toInt() * 10000 + minor.toInt() * 100 + patch.toInt() }
+    .let { it * 10000 + providers.gradleProperty("notosaurus.build").orElse("0").get().toInt() }
 
 // The same revision's: android/app → ../../static (another with -Pnotosaurus.web=<path>)
 // The upload key Google Play takes a release with (Play App Signing then signs it with the
@@ -105,6 +108,15 @@ android {
             buildConfigField("String", "DEFAULT_RELAY", realRelay)
             buildConfigField("String", "REAL_RELAY", realRelay)
             buildConfigField("String", "TEST_RELAY", "\"\"")
+        }
+        // A release (signed with the upload key, not debuggable: what Google Play takes on its
+        // tracks) calling the test relay: Google Play's purchases tested there, in Internal
+        // testing, before the real relay has them (./gradlew bundleStaging -Pnotosaurus.build=N)
+        create("staging") {
+            initWith(getByName("release"))
+            matchingFallbacks += "release"
+            buildConfigField("String", "DEFAULT_RELAY", testRelay)
+            buildConfigField("String", "TEST_RELAY", testRelay)
         }
     }
     compileOptions {

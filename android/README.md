@@ -70,8 +70,10 @@ language and "About": the AI's instructions and the rest are the computer's own.
 Android SDK with platform 37 (`sdkmanager "platforms;android-37.0"`), JDK 17+.
 
 The app's version is Notosaurus's, the root `pyproject.toml`'s (the only place to
-change it): `versionName` "1.1.0", `versionCode` 10100 (major × 10000 + minor × 100 +
-patch, always growing as Google Play wants), and the version the relay is told.
+change it): `versionName` "1.1.0", `versionCode` (major × 10000 + minor × 100 + patch)
+× 10000 + the build (`-Pnotosaurus.build=N`, 0 without it; Draft release passes its run's
+number), always growing and new for each upload as Google Play wants, and the version
+the relay is told.
 
 ```sh
 ./gradlew testDebugUnitTest   # the tests (JVM: no phone needed)
@@ -122,6 +124,10 @@ is signed with the **upload key**, read from `~/.config/notosaurus/keystore.prop
 `keyPassword`), never in git; without it, the release is built unsigned. Google Play signs
 the app itself with its own key (Play App Signing): a lost upload key is reset by Play's
 support.
+
+`./gradlew bundleStaging -Pnotosaurus.build=N` makes the same release calling the **test**
+relay: put in Google Play's Internal testing, it tests the purchases (Google Play takes
+them only from an app it signed) before the real relay has them.
 
 ## What we learnt
 
