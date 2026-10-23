@@ -9,6 +9,7 @@ Each pull request adds a line under **Unreleased**. See [Releasing](CONTRIBUTING
 
 ### Added
 
+- For developers: when Google Play doesn't offer the subscription, or can't be reached, the Android app says why in the phone's log (`Notosaurus` tag: the response code and each product not fetched, with its status).
 - For developers: the draft GitHub release also holds `notosaurus-X.Y.Z.aab`, the Android app for Google Play, built from `main` and signed with the upload key (the `release` environment's secrets, `main` only).
 - For developers: a release (`bundleRelease`) is signed with the upload key from `~/.config/notosaurus/keystore.properties` (never in git; without it, unsigned), for Google Play (Play App Signing keeps the app's own key).
 - 📱 The subscription by the year too: the app offers both of Google Play's base plans, **a month** or **a year** (each with its free trial while Google Play still offers it); a year gets a month's credits on the same day of each month. The product becomes `notosaurus` (base plans `monthly` and `yearly`).

@@ -6,6 +6,7 @@ import android.content.Context
 import android.content.Intent
 import android.net.Uri
 import android.provider.Settings
+import android.util.Log
 import com.android.billingclient.api.BillingClient
 import com.android.billingclient.api.BillingClientStateListener
 import com.android.billingclient.api.BillingFlowParams
@@ -142,7 +143,13 @@ class PlayStore(private val context: Context, private val activity: () -> Activi
         val params = QueryProductDetailsParams.newBuilder().setProductList(listOf(product)).build()
         return suspendCancellableCoroutine { done ->
             client.queryProductDetailsAsync(params) { result, found ->
-                done.resume(found.productDetailsList.firstOrNull().takeIf { result.responseCode == BillingClient.BillingResponseCode.OK })
+                val details = found.productDetailsList.firstOrNull().takeIf { result.responseCode == BillingClient.BillingResponseCode.OK }
+                // Not on sale (the product or its base plans not active, this account or build not a tester's): why
+                if (details == null) {
+                    val missing = found.unfetchedProductList.joinToString { "${it.productId}: ${it.statusCode}" }
+                    Log.w(TAG, "subscription $PRODUCT not offered: ${result.responseCode} ${result.debugMessage} [$missing]")
+                }
+                done.resume(details)
             }
         }
     }
@@ -153,6 +160,9 @@ class PlayStore(private val context: Context, private val activity: () -> Activi
         suspendCancellableCoroutine { done ->
             client.startConnection(object : BillingClientStateListener {
                 override fun onBillingSetupFinished(result: BillingResult) {
+                    if (result.responseCode != BillingClient.BillingResponseCode.OK) {
+                        Log.w(TAG, "Google Play Billing unavailable: ${result.responseCode} ${result.debugMessage}")
+                    }
                     if (done.isActive) done.resume(result.responseCode == BillingClient.BillingResponseCode.OK)
                 }
 
@@ -165,6 +175,7 @@ class PlayStore(private val context: Context, private val activity: () -> Activi
 
     companion object {
         const val PRODUCT = "notosaurus" // the relay's RELAY_PLAY_PRODUCT
+        private const val TAG = "Notosaurus"
 
         /** The Google Cloud project linked to the app in Play Console: the relay's, which
          * decodes Play Integrity's tokens. */
