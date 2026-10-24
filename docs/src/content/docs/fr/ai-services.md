@@ -28,6 +28,8 @@ Ce que seul l'ordinateur a :
 - **Leçons** : à qui appartient chaque leçon, ce qu'elle a coûté, la supprimer (voir
   [Ce que ça coûte](#ce-que-ça-coûte)).
 
+![Réglages : les téléphones, par QR code](../../../assets/screenshots/fr/settings-phones.png)
+
 Les **📝 Instructions pour l'IA** et les **Voix des cartes** sont aussi dans les réglages de
 l'application Android : voir [Les consignes](../instructions/#les-instructions-permanentes) et
 [Les voix](../voices/).

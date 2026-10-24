@@ -26,6 +26,8 @@ What only the computer has:
 - **Lessons**: who each lesson belongs to, what it cost, deleting it (see
   [What it costs](#what-it-costs)).
 
+![Settings: the phones, by QR code](../../assets/screenshots/en/settings-phones.png)
+
 **📝 Instructions for the AI** and **Card voices** are in the Android app's settings too: see
 [Instructions](../instructions/#standing-instructions) and [Voices](../voices/).
 

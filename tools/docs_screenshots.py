@@ -87,16 +87,32 @@ LESSONS = {
         },
     },
 }
-# Shown in the settings screenshots
+# Shown in the settings screenshots: the instructions for every child
 INSTRUCTIONS = {
-    "en": (
-        "Spanish from Spain; always the article with nouns",
-        {"Léa": "in year 8", "Paul": "in year 5; short answers"},
-    ),
-    "fr": (
-        "Espagnol d'Espagne ; toujours l'article avec les noms",
-        {"Léa": "en 5ᵉ", "Paul": "en CM2 ; réponses courtes"},
-    ),
+    "en": "Spanish from Spain; always the article with nouns",
+    "fr": "Espagnol d'Espagne ; toujours l'article avec les noms",
+}
+# The children's cards (app/children.py), one per fake Anki profile: the class from the page's
+# list (app.children.grades), their own instructions
+CHILDREN = {
+    "en": [
+        ("Léa", "Year 8", "revising for a test: stress dates and definitions"),
+        ("Paul", "Year 5", "still reads slowly: short sentences, 8 cards at most"),
+    ],
+    "fr": [
+        ("Léa", "4e", "prépare un contrôle : insiste sur les dates et les définitions"),
+        ("Paul", "CM2", "lit encore lentement : phrases courtes, 8 cartes au plus"),
+    ],
+}
+# A test to prepare (app/exams.py): its name, date, and the lessons it holds (by their deck)
+EXAM = {
+    "en": ("Spanish test", "2026-11-09", ["vocab", "pictures"]),
+    "fr": ("Contrôle d'espagnol", "2026-11-09", ["vocab", "pictures"]),
+}
+# Added to a Notosaurus prompt, for "✨ Tidy up"
+PROMPT_CHANGE = {
+    "en": "only the nouns, and say if it's masculine or feminine",
+    "fr": "seulement les noms, et dis si c'est masculin ou féminin",
 }
 CORRECTION_TYPED = {
     "en": "You forgot: el libro = the book",
@@ -337,13 +353,25 @@ def generate(lang: str, settings_file: Path, only: list[str] | None = None) -> N
 def demo_data(lang: str, tmp: Path) -> Path:
     data = tmp / "data"
     shutil.copytree(DEMO / lang / "lessons", data / "lessons")
-    general, per_profile = INSTRUCTIONS[lang]
-    settings = {
-        "llm": "gemini",
-        "gemini_api_key": "AIzaSy-notosaurus-demo-key-1234",
-        "instructions": general,
-        "profile_instructions": per_profile,
-    }
+    children = [
+        {"id": name.lower().replace("é", "e"), "name": name, "grade": grade, "decks": "", "instructions": text,
+         "anki_profile": name}
+        for name, grade, text in CHILDREN[lang]
+    ]
+    folders = {}  # deck → lesson folder
+    for lesson in (data / "lessons").glob("*/lesson.json"):  # the demo lessons: Léa's
+        content = json.loads(lesson.read_text(encoding="utf-8"))
+        content["child"] = children[0]["id"]
+        lesson.write_text(json.dumps(content, ensure_ascii=False, indent=1), encoding="utf-8")
+        folders[content["deck"]] = lesson.parent.name
+    (data / "children.json").write_text(
+        json.dumps({"format": 2, "children": children}, ensure_ascii=False), encoding="utf-8"
+    )
+    name, date, keys = EXAM[lang]
+    exam = {"id": "exam", "name": name, "date": date, "created_at": "2026-10-25T10:00:00",
+            "lessons": [{"lesson": folders[LESSONS[lang][k]["deck"]], "cards": None} for k in keys]}
+    (data / "exams.json").write_text(json.dumps({"format": 1, "exams": [exam]}, ensure_ascii=False), encoding="utf-8")
+    settings = {"llm": "gemini", "gemini_api_key": "AIzaSy-notosaurus-demo-key-1234", "instructions": INSTRUCTIONS[lang]}
     (data / "settings.json").write_text(json.dumps(settings, ensure_ascii=False), encoding="utf-8")
     return data
 
@@ -385,6 +413,21 @@ def shoot(lang: str) -> None:
         page.evaluate(f"{APP}.choose('notosaurus:vocabulary')")
         scroll_to(page, "section.panel:has(input[type=file])", 70)
         shot("instructions")
+        # A Notosaurus prompt changed for this time: ✨ Tidy up offered, then ⚡ Quick / 🎯 Careful
+        page.evaluate(f"t => {{ {APP}.form.text += '\\n' + t; }}", PROMPT_CHANGE[lang])
+        wait_for(page, f"{APP}.canTidy()", timeout=10)
+        time.sleep(0.5)  # ✨ Tidy up shown
+        scroll_to(page, ".prompt-actions.tidy", 330)
+        shot("prompt-options")
+        page.evaluate(f"{APP}.choose('notosaurus:vocabulary')")
+
+        page.evaluate(f"{APP}.openChildren()")  # who the next lesson is for
+        time.sleep(0.8)
+        shot("children")
+        page.evaluate(f"{APP}.editChild(0)")
+        time.sleep(0.5)
+        shot("child-card")
+        page.evaluate(f"{APP}.cancelChild(); {APP}.childrenSheet.open = false")
 
         page.evaluate(f"{APP}.openViewer({APP}.photos.map(p => p.url), 0)")
         time.sleep(0.8)
@@ -415,6 +458,11 @@ def shoot(lang: str) -> None:
         time.sleep(0.8)
         shot("lessons")
         page.evaluate(f"{APP}.lessonsOpen = false")
+        page.evaluate(f"{APP}.openExams({{ id: 'exam' }}, true)")  # a test to prepare's sheet
+        wait_for(page, f"{APP}.examSheet.exam?.lessons?.length > 0", timeout=30)
+        time.sleep(0.8)
+        shot("exam")
+        page.evaluate(f"{APP}.examSheet.open = false")
 
         page.evaluate(f"id => {APP}.openLesson(id)", lesson_id(page, vocab_deck))
         page.wait_for_load_state("networkidle")
@@ -424,6 +472,10 @@ def shoot(lang: str) -> None:
         scroll_to(page, "form.revise", 120)
         shot("correction")
         page.locator("form.revise textarea").fill("")
+        page.evaluate(f"{APP}.copySheet = {{ open: true, busy: false, error: '' }}")  # ⧉ Copy for…
+        time.sleep(0.8)
+        shot("copy-for")
+        page.evaluate(f"{APP}.copySheet.open = false")
 
         page.evaluate(f"id => {APP}.openLesson(id)", lesson_id(page, plant_deck))
         page.wait_for_load_state("networkidle")
@@ -437,6 +489,11 @@ def shoot(lang: str) -> None:
             scroll_to(page, "section.review", 10)
             page.evaluate("window.scrollBy(0, 230)")
             shot(name)
+            if key == "pictures":  # a card's 🖼️ panel
+                page.evaluate(f"{APP}.togglePicturePanel({APP}.cards[0])")
+                time.sleep(0.5)
+                scroll_to(page, ".picture-panel", 560)
+                shot("picture-panel")
 
         page.evaluate(f"id => {APP}.openLesson(id)", lesson_id(page, vocab_deck))
         page.wait_for_load_state("networkidle")
