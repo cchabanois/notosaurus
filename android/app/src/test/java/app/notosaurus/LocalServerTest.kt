@@ -1372,6 +1372,13 @@ class LocalServerTest {
         assertTrue("admin.about.free" in page && "licences.html" in page)
         assertTrue("licences.js" in client.get("/licences.html").bodyAsText())
         assertEquals("true", client.get("/api/admin") { page() }.json().jsonObject["allowed"]!!.jsonPrimitive.content)
+        // Every setting the page shows or saves (form.…) is one the server gives: a name the
+        // server doesn't know would be neither shown as it is nor saved
+        val script = page + client.get("/settings.js").bodyAsText()
+        val fields = Regex("""form\.([a-z_]+)""").findAll(script).map { it.groupValues[1] }.toSet()
+        val given = client.get("/api/admin/settings") { page() }.json().jsonObject.keys + "computer" // given once one is connected
+        assertTrue(fields.size > 5)
+        assertEquals(emptySet<String>(), fields - given)
         // The texts the app's pages use are in every language of the web page
         var own = ""
         for (file in listOf("admin.html", "unreachable.html", "settings.js")) own += client.get("/$file").bodyAsText()
