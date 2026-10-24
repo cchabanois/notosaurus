@@ -15,7 +15,25 @@ list, with a search.
 
 The text of the chosen instructions shows below the buttons. You can change it **for this
 time only** (“Changed for this time only”), for instance to add “only the verbs”: your
-change stays with the lesson, the saved instructions don't change.
+change stays with the lesson, the saved instructions don't change. In the app, **🎤** next to
+the text dictates it: say what you want, the AI writes it in.
+
+**✨ Tidy up**, under the text, has the AI rewrite instructions typed in a hurry or dictated:
+clear and short, in their own language, with every intention kept (how many cards, which
+languages and direction, which kind of cards) and nothing added. **↩ Undo** brings back your
+text, as long as you haven't changed the tidied one. It isn't offered for Notosaurus's own
+instructions as they are: they are tidy already.
+
+## Quick or careful
+
+**How the cards are made**, under the instructions, sets how long the AI thinks:
+
+- **⚡ Quick** (the default): a few seconds. Right for vocabulary or a simple lesson.
+- **🎯 Careful**: longer (up to 30 s), more thought through: for a rich lesson (a diagram,
+  maths).
+
+The choice is kept on the device. A lesson made in quick mode says so in the review (“Made in
+quick mode.”), with **🎯 Make again, carefully**.
 
 ## Notosaurus's instructions
 
@@ -51,17 +69,19 @@ be changed, but they can be **duplicated** to make your own version.
 **New** creates instructions you will use again, for example for a language your child learns
 every week. **Duplicate** starts from a Notosaurus prompt.
 
-![Instructions: name, text, deck name, voice and card options](../../assets/screenshots/en/prompt-editor.png)
+![Instructions: name, text and deck name](../../assets/screenshots/en/prompt-editor.png)
 
 - **Name**: what the button shows.
 - **Instructions**: what the AI must do, in plain words (“one card per date, front the event,
   back the date”).
 - **Suggested deck name**: the Anki deck, with `::` for sub-decks. The parts in braces are
   filled in from the lesson: `Spanish::Lesson {n}` becomes `Spanish::Lesson 5`.
-- **Voice for the back**: no sound, **Automatic** (the AI recognises the language of the backs
-  and Notosaurus picks a voice of that language), or a voice you choose and can listen to.
-- **Card options**: type the answer (Anki compares letter by letter), add a dictation (hear
-  the back, write it). They go with the lessons made with these instructions.
+
+How the cards are asked and heard is said in the text too, and the AI reads it there:
+“with the answer typed” (Anki compares letter by letter), “both ways” (the reverse card),
+“read aloud”, “with a dictation” (hear the back, write it) or “a dictation only”. The backs in
+a language being learned are read aloud anyway, with the voice chosen for that language (see
+[Voices and audio](../voices/)).
 
 **✏️ Free** writes instructions for this time only: they stay with the lesson but aren't
 added to your list. **Save as new instructions** keeps them if they worked well.

@@ -7,20 +7,23 @@ Notosaurus can read the back of each card aloud: handy for languages, to hear th
 pronunciation. The audio is **included in the deck**, so it plays in Anki everywhere, on the
 computer and the phone, even offline.
 
+## Which cards are read aloud
+
+Notosaurus reads aloud the backs **in a language being learned**: the AI finds that language
+in the lesson (Spanish from Spain, British English…). A lesson in the pupil's own language
+(history, grammar…) has no sound, unless its cards are for writing what is heard (a typed
+answer, a dictation) or its instructions ask for it (“read aloud”, as **By heart** does).
+Notosaurus's instructions for questions, quizzes, formulas or diagrams have no sound.
+
+At the bottom of a lesson, a line says which voice reads its backs.
+
 ## Choosing the voice
 
-The voice is part of the **instructions** (see [Instructions](../instructions/)): open them
-with **✏️ Edit instructions**, or **Duplicate** a Notosaurus prompt, then choose under **Voice for
-the back**:
-
-- **No sound**: the backs aren't read aloud.
-- **Automatic**: the AI recognises the language of the backs, and Notosaurus takes a voice of
-  that language (Spanish → Elvira, British English → Sonia…). The simplest choice.
-- **Choose a voice**: type the start of the language (`fr-FR`, `es-ES`, `en-GB`…) to see its
-  voices, female or male, and **▶** to listen to one.
-
-The Notosaurus vocabulary instructions use **Automatic**. At the bottom of a lesson, a line says
-which voice reads its backs.
+Without a choice, each language has its usual voice (on the computer: Spanish → Elvira, British
+English → Sonia…). To prefer another one: **Settings → Card voices → Voice per language**, then
+**+ Choose a language's voice…**: pick the language, then one of its voices, female or male, and
+**Listen** to it. The choice applies to the next lessons in that language. The app's settings have
+the same section, with its own voices.
 
 ## Listening
 
@@ -43,12 +46,16 @@ setting changes later.
 
 ## Dictation
 
-With a voice, the **Add a dictation** option of the instructions adds a card where the back is heard, then written. See
-[Instructions](../instructions/).
+A dictation card has the back heard, then written. The **Dictation** and **Gap dictation**
+instructions make only such cards; for others, say it in their text: “with a dictation”, or
+“a dictation only”. **Automatic** makes dictation cards when the page is a dictation to prepare.
+See [Instructions](../instructions/).
 
 ## Cards without sound
 
-The voices come from Microsoft's text-to-speech service, so making the audio needs the Internet.
+On the computer, the voices come from Microsoft's text-to-speech service (through
+[edge-tts](https://github.com/rany2/edge-tts)); in the Android app, from Google's voices, through
+the Notosaurus service. Either way, making the audio needs the Internet.
 If it doesn't answer, the cards are sent without sound and the message says how many. Send the
 lesson again later: the missing audio is added. See
 [Privacy and security](../privacy/) for what is sent.

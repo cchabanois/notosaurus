@@ -12,8 +12,8 @@ The classic card: a **front** (the question, a word in your language) and a **ba
 answer, the word in the language being learnt), with an optional **info** shown under the
 answer. It's what the vocabulary, sentences and questions instructions make.
 
-The instructions add the **reverse card** (back → front), **type the answer** (Anki compares
-letter by letter) and **dictation** (hear the back, write it). See
+When the instructions ask for it, Anki adds the **reverse card** (back → front), has the
+answer **typed** (compared letter by letter) or makes a **dictation** (hear the back, write it). See
 [Instructions](../instructions/).
 
 ## Fill in the blanks

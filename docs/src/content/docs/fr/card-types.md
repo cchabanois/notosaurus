@@ -13,8 +13,8 @@ La carte classique : un **recto** (la question, un mot dans votre langue) et un 
 réponse, le mot dans la langue étudiée), avec une **info** facultative affichée sous la
 réponse. C'est ce que font les consignes de vocabulaire, de phrases et de questions.
 
-La consigne ajoute la **carte inverse** (verso → recto), **taper la réponse** (Anki compare
-lettre par lettre) et la **dictée** (entendre le verso, l'écrire). Voir
+Quand la consigne le demande, Anki ajoute la **carte inverse** (verso → recto), fait **taper la
+réponse** (comparée lettre par lettre) ou fait une **dictée** (entendre le verso, l'écrire). Voir
 [Les consignes](../instructions/).
 
 ## Texte à trous

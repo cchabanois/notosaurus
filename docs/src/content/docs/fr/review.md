@@ -75,7 +75,7 @@ Anki, les cartes envoyées y restent, et les nouvelles sont ajoutées au prochai
 
 En bas de la leçon, une ligne dit comment les cartes sont posées : **↔ Dans les deux sens**
 (Anki demande aussi verso → recto), **⌨️ Réponse tapée** (Anki compare lettre par lettre),
-**🎧 Avec une dictée** (entendre le verso, l'écrire).
+**🎧 Avec une dictée** (entendre le verso, l'écrire), ou **🎧 Dictée seule**.
 
 Ces options viennent de la [consigne](../instructions/) : l'IA les lit dans son texte. Pour les
 changer, dites-le dans la correction, par exemple « dans un seul sens » ou « avec la réponse
