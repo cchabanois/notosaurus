@@ -3,8 +3,14 @@ title: "On the phone"
 description: "Open Notosaurus on the phone with the QR code, and add it to the home screen on Android and iPhone."
 ---
 
-Notosaurus is a web page, not an app from a store: the phone opens it in its browser. Added to the
-home screen, it then opens with one tap, like an app.
+With the Anki add-on on the computer, the phone opens Notosaurus in its browser: a web page, on
+the same Wi-Fi. Added to the home screen, it then opens with one tap, like an app.
+
+:::tip[On Android, the app]
+On Android, the [Notosaurus app](../android-app/) can do it too: in its **💻 On my computer**
+mode, it shows the computer's page, without a browser. Or, in **📱 On this phone**, it makes the
+cards on its own, without the computer.
+:::
 
 ## 1. Open Notosaurus
 

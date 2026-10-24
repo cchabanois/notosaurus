@@ -62,3 +62,10 @@ computer, and the message says that it wasn't synced.
 
 Without an AnkiWeb account, the `.apkg` file opened on the phone puts the deck straight into
 AnkiDroid, but the reviews then stay on that phone only.
+
+## In the app
+
+In the [Android app](../android-app/), on this phone, **📥 Add to Anki** writes the cards
+straight into **AnkiDroid**, with their sounds and pictures: no `.apkg`, no sync to wait for. The
+first time, the app asks for AnkiDroid's permission. Sent again, a lesson updates its cards, as on
+the computer. AnkiDroid syncs them with AnkiWeb as usual, if it is logged in.

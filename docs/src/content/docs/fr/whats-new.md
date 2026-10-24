@@ -23,3 +23,7 @@ publiée sur GitHub avec le fichier du greffon à télécharger :
 Puis **redémarrez Anki**. Les leçons, les consignes et les réglages sont conservés. Quand une
 nouvelle version a besoin de nouveaux composants, Notosaurus demande à nouveau avant de les
 installer (une minute ou deux).
+
+L'**[application Android](../android-app/)** se met à jour par Google Play, comme toute
+application. Quand une nouvelle version est disponible, l'application le dit, avec un bouton
+**Mettre à jour**.

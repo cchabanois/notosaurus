@@ -2,9 +2,9 @@
 
 Photos of a lesson become cards in AnkiDroid, through the Notosaurus relay (`/v1`,
 see `core/notosaurus_core/relay_api.py` and `core/relay-api-v1.json`). No computer,
-no API key. Not published yet.
+no API key. Not on Google Play yet: its release is built and signed (see Build and try).
 
-## Status: prototype 2, the web page in the app
+## The web page in the app
 
 The app shows **Notosaurus's own page** (the repository's `static/`: the same
 screens, prompts and languages as on the computer) in a WebView. What the computer's
@@ -17,11 +17,13 @@ Notosaurus page (static/) ──/api──▶ LocalServer (Ktor, 127.0.0.1) ─�
                                                                      └── AnkiDroid (cards)
 ```
 
-Checked on an emulator (Android 15, AnkiDroid 2.25.0) against a relay on the
-computer (demo AI): the page with its 13 prompts; a photo from the gallery and one
-from the camera; cards generated; a correction in plain words ("add the brother": 7
-cards, Undo); an explanation (💬, with its follow-ups); "Add to Anki" (only the new
-card: the others were already there); the lesson kept after a restart.
+What the computer does, the app does too: every prompt and card type (diagrams,
+figures, pictures found or drawn, voices), correcting and explaining, completing or
+regenerating a lesson, photos turned upright, children, ⧉ Copy for…, tests to prepare,
+cards updated in AnkiDroid when a lesson is sent again. Its own: the subscription and the
+free trial (Google Play), 🎤 dictating an instruction or a correction, ⚑ reporting the AI's
+content, what the service tells for now (a notice, features off, an update). Left out:
+the `.apkg` download (the cards go to AnkiDroid) and Ko-fi (the subscription pays).
 
 | File | |
 |---|---|
@@ -34,6 +36,11 @@ card: the others were already there); the lesson kept after a restart.
 | `Lessons.kt` | lessons on the phone, as the computer keeps them (lesson.json, page-N.jpg) |
 | `Relay.kt`, `Api.kt` | the relay's client (`/v1`), its errors |
 | `Anki.kt` | AnkiDroid's API: note type, decks and sub-decks, notes, duplicates. Asked for at the first "Add to Anki": its Play Store page when it's missing, its permission dialog when it isn't allowed yet |
+| `*Routes.kt` | the `/api` routes by subject (lessons, generation, pictures, AnkiDroid, tests, settings, subscription…) |
+| `Generation.kt`, `Pictures.kt`, `Speech.kt`, `Dictation.kt` | a lesson made by the relay; the cards' pictures; the backs read aloud (the relay's voices); 🎤 |
+| `Subscription.kt` | Google Play Billing: subscribing, restoring, the free trial (Play Integrity) |
+| `Switches.kt` | what the relay tells for now: a notice, features off, an update |
+| `Children.kt`, `Exams.kt` | the children's cards, the tests to prepare |
 
 The page is copied at build time from this revision's `static/` (another with
 `-Pnotosaurus.web=<path>`): a change to the page and the app goes in one pull request,
@@ -42,11 +49,9 @@ and a build always ships the page it was tested with. The app's own files
 computer's. The relay's address is the emulator's by default (`LocalServer.DEFAULT_RELAY`),
 changed in the settings ("Advanced"); the licence key is entered there too.
 
-Not done yet (answered as "nothing" for now): voices and audio previews, pictures and
-figures, regenerating a lesson, rotating a photo, `.apkg` export, sharing lessons,
-updating notes sent before; photos aren't turned upright (the relay's `turns`).
-The page also needs small changes for the phone: no Anki profile badge ("none"), no
-`.apkg` button, Alpine.js and KaTeX bundled instead of a CDN (offline use).
+The page tells the app's differences from `/api/config` (`apkg`, `donations`,
+`profiles`, `report`, `dictation`…): no Anki profile badge, no `.apkg` button, no Ko-fi;
+Alpine.js and KaTeX come with the page (`static/vendor/`), so it works offline.
 
 ## Two modes
 
@@ -148,19 +153,10 @@ them only from an app it signed) before the real relay has them.
   have been opened once (its collection created).
 - `<queries>` for `com.ichi2.anki` is needed (Android 11+).
 
-## Before a real app
+## Still to do
 
-- Notosaurus's **note types** (cloze, multiple choice, typing, diagram masks,
-  pictures) instead of the prototype's front/back: their templates and CSS, from
-  the PC app's `anki.py` (exposed by the relay, or copied by a script).
-- **Audio**: the PC uses edge-tts; here Android's text-to-speech, or a `/v1/speak`.
-- **Diagrams**: cropped images and masks (`diagrams.py` on the PC): a relay route,
-  or done in the app.
-- Updating notes sent before (stable ids), pictures (`/v1/picture`).
-- Licence through Google Play billing; Play Store listing (an app **for parents**,
-  not "for children", see the Families policy); a "my own key" mode.
+- A "my own key" mode (the AI with the parent's own key, no subscription).
 - **Android 17's local network permission**: targeting SDK 37, `ACCESS_LOCAL_NETWORK`
   (group "Nearby devices") will be needed for "With my computer" (LAN; WebView traffic
   too). Ask for it when a computer is connected, after a sentence of ours; check that
   LocalServer (127.0.0.1) doesn't need it.
-- The final application id: `app.notosaurus` here, unchangeable once published.

@@ -3,8 +3,15 @@ title: Pour commencer
 description: "Installer Notosaurus dans Anki, le configurer avec l'assistant, connecter votre téléphone et faire votre premier paquet à partir d'une photo."
 ---
 
-Notosaurus est un greffon pour Anki sur ordinateur. Il tourne sur votre ordinateur, et vous
-l'utilisez depuis le navigateur de votre téléphone, sur le même Wi-Fi.
+Notosaurus fonctionne de deux façons :
+
+- **L'[application Android](../android-app/) toute seule** : ni ordinateur ni clé d'IA, avec
+  un abonnement. Installez-la depuis Google Play, c'est tout.
+- **Le greffon Anki**, gratuit, sur votre ordinateur, avec votre propre clé d'IA. Vous
+  l'utilisez depuis le navigateur du téléphone, ou depuis l'application Android, sur le même
+  Wi-Fi.
+
+Cette page parle du greffon.
 
 ## Ce qu'il vous faut
 
