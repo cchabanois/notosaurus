@@ -3,6 +3,8 @@ title: Instructions
 description: "Tell the AI what cards to make: Notosaurus's prompts, your own, a prompt for this time only, and standing instructions."
 ---
 
+import { Tabs, TabItem } from '@astrojs/starlight/components';
+
 The **instructions** (or prompt) tell the AI what to make of the lesson: which cards, in which
 direction, in which languages. The photo says *what* to learn; the instructions say *how*.
 
@@ -102,22 +104,43 @@ The AI adds, **only on the cards where they truly help**:
 
 So a history lesson gets mostly explanations, a vocabulary lesson a few memory tricks and
 no explanation. They show on the back in Anki, under the info (💬 and 🧠), and can be edited
-or cleared in the review. They add about 1 to 3 US cents to a lesson with Claude Sonnet.
+or cleared in the review. On the computer, they add about 1 to 3 US cents to a lesson with
+Claude Sonnet.
 
-Both are on at first, for every lesson. To stop them: **Settings → Instructions for the AI**.
-For one prompt only, say so in its text: "no fun facts", "no helps".
+Both are on at first, for every lesson: to stop them, see
+[Turning them off](#turning-them-off). For one prompt only, say so in its text: "no fun facts",
+"no helps".
 
 ## Pictures
 
 The AI adds a picture to the cards where it truly helps to remember, whatever the
 instructions: a work of art, a person, a place, a monument, an animal. Never for an abstract
 notion, nor on every card. A free picture is looked for first; having the AI draw one is
-always asked. It is on at first: **Settings → Instructions for the AI → 🖼️ Pictures on the
-cards**. For one prompt only, say so in its text: "no pictures".
+always asked. It is on at first (see [Turning them off](#turning-them-off)). For one prompt
+only, say so in its text: "no pictures".
+
+## Turning them off
+
+<Tabs syncKey="mode">
+<TabItem label="Android app">
+
+**⚙️ → 📝 Instructions for the AI → 💬 Helps on the back of the cards** turns the helps off. The
+“Did you know?” facts and the pictures have no switch in the app: say so in the instructions'
+text, or in the standing instructions below.
+
+</TabItem>
+<TabItem label="Computer">
+
+**Settings → 📝 Instructions for the AI** has a switch for each: **💡 “Did you know?” facts on
+the cards**, **💬 Helps on the back of the cards** and **🖼️ Pictures on the cards**.
+
+</TabItem>
+</Tabs>
 
 ## Standing instructions
 
 Some instructions apply to every lesson: “Spanish from Spain”, “always the article with nouns”.
-Write them once in **Settings → Instructions for the AI → For every child**. Each child's own
+Write them once in the settings: **⚙️ → 📝 Instructions for the AI** in the app, **Settings →
+📝 Instructions for the AI → For every child** on the computer. Each child's own
 (their class, “still reads slowly”) are in their card, **🧒** on the main page: see
 [Several children](../several-children/#the-childrens-cards).

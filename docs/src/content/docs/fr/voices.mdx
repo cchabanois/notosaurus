@@ -3,6 +3,8 @@ title: "Les voix et l'audio"
 description: "Choisir la voix qui lit les versos des cartes, l'écouter, régler son débit, et ce qui se passe sans son."
 ---
 
+import { Tabs, TabItem } from '@astrojs/starlight/components';
+
 Notosaurus peut lire à voix haute le verso de chaque carte : pratique pour les langues, pour
 entendre la bonne prononciation. L'audio est **inclus dans le paquet** : il fonctionne partout
 dans Anki, sur l'ordinateur et le téléphone, même hors connexion.
@@ -54,9 +56,23 @@ une dictée à préparer. Voir [Les consignes](../instructions/).
 
 ## Des cartes sans son
 
-Sur l'ordinateur, les voix viennent du service de synthèse vocale de Microsoft (par
-[edge-tts](https://github.com/rany2/edge-tts)) ; dans l'application Android, des voix de Google, par
-le service Notosaurus. Dans les deux cas, faire l'audio demande Internet. S'il
-ne répond pas, les cartes sont envoyées sans son et le message dit combien. Renvoyez la leçon plus
-tard : l'audio manquant est ajouté. Voir [Confidentialité et sécurité](../privacy/) pour ce qui est
-envoyé.
+Faire l'audio demande Internet :
+
+<Tabs syncKey="mode">
+<TabItem label="Application Android">
+
+Les voix sont celles de Google, par le service Notosaurus. Voir la
+[politique de confidentialité de l'application](../app-privacy/) pour ce qui est envoyé.
+
+</TabItem>
+<TabItem label="Ordinateur">
+
+Les voix viennent du service de synthèse vocale de Microsoft, par
+[edge-tts](https://github.com/rany2/edge-tts), un outil non officiel. Voir
+[Confidentialité et sécurité](../privacy/) pour ce qui est envoyé.
+
+</TabItem>
+</Tabs>
+
+Si les voix ne répondent pas, les cartes sont envoyées sans son et le message dit combien.
+Renvoyez la leçon plus tard : l'audio manquant est ajouté.

@@ -49,12 +49,12 @@ Under the explanation, the AI offers only what would help with **that** card:
   (why the other options are wrong too).
 
 **Keep in “Info”** adds what was explained to the card's info: you'll find it on the back in
-Anki. Each explanation is a short AI call (a fraction of a cent with Gemini Flash, about a cent
-with Claude Sonnet), counted with the lesson's costs.
+Anki. Each explanation is a short AI call: credits in the app; on the computer, a fraction
+of a cent with Gemini Flash, about a cent with Claude Sonnet, counted with the lesson's costs.
 
 ## Reporting a content
 
-In the app, **⋯ → ⚑ Report** on a card reports what the AI made to Notosaurus: the card, its explanation
+In the Android app, **⋯ → ⚑ Report** on a card reports what the AI made to Notosaurus: the card, its explanation
 (when shown) or its picture. Say why (shocking or inappropriate, wrong, other), add a comment
 if you like: the sheet shows exactly what will be sent, never the lesson's photos nor the
 child's name. Then you can delete the card or remove its picture. See
@@ -82,12 +82,12 @@ everywhere, even offline.
 
 ## Whose lesson it is
 
-Above the cards, a line says whom the lesson is for: **🧒 Paul's lesson**. If Anki is open on
-another child's profile, it says so before you send the cards.
+Above the cards, a line says whom the lesson is for: **🧒 Paul's lesson**. On the computer, if
+Anki is open on another child's profile, it says so before you send the cards.
 
 **⧉ Copy for…**, when there is another child, makes a copy of the lesson for them: their decks,
 their own cards in Anki. It's free: nothing is asked of the AI.
 
-A lesson shared with every profile by an older version opens **read only** in the other
+On the computer, a lesson shared with every profile by an older version opens **read only** in the other
 profiles: you can still add it to your own Anki, or copy it, but only from its owner's profile
 can it be changed. See [Several children](../several-children/).

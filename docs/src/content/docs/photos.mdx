@@ -3,6 +3,8 @@ title: "Photos and PDFs"
 description: "How to photograph a lesson so that the AI reads it well, several pages, PDFs, and what Notosaurus does with them."
 ---
 
+import { Tabs, TabItem } from '@astrojs/starlight/components';
+
 The AI reads what it sees: a clear photo gives better cards, and fewer corrections.
 
 ## Tips
@@ -16,8 +18,8 @@ The AI reads what it sees: a clear photo gives better cards, and fewer correctio
 - **Only the lesson.** Leave out other pages, drawings in the margin and corrections that
   aren't part of what must be learnt, or tell the AI what to ignore in the instructions.
 
-Handwriting is read well when it is legible to an adult. Claude reads it best; Gemini is a
-good and cheaper choice.
+Handwriting is read well when it is legible to an adult. On the computer, where you choose the
+AI, Claude reads it best; Gemini is a good and cheaper choice.
 
 ## Several pages
 
@@ -73,10 +75,25 @@ reads the page as a picture.
 
 ## What happens to the photos
 
+<Tabs syncKey="mode">
+<TabItem label="Android app">
+
+- The photos go through the **Notosaurus service** to Google's Gemini, to read them, processed in
+  the European Union and not kept there. See the [app's privacy policy](../app-privacy/).
+- They are **saved with the lesson** on the phone, in the app's private storage.
+
+</TabItem>
+<TabItem label="Computer">
+
 - The photos are sent to the **AI service chosen in the settings**, to read them, and to
-  nobody else.
-- They are **saved with the lesson** on your computer, so that you can reopen it, correct
-  it or generate it again later. Deleting the lesson deletes them.
+  nobody else. See [Privacy and security](../privacy/).
+- They are **saved with the lesson** on your computer.
+
+</TabItem>
+</Tabs>
+
+- Saved with the lesson, they let you reopen it, correct it or generate it again later. Deleting
+  the lesson deletes them.
 - Diagram cards keep a **cropped copy** of the diagram, with its labels hidden: that's what
   Anki shows.
 

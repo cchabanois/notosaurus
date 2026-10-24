@@ -3,8 +3,10 @@ title: "Nouveautés"
 description: "Les versions de Notosaurus et ce que chacune change."
 ---
 
+import { Tabs, TabItem } from '@astrojs/starlight/components';
+
 Chaque changement de Notosaurus est noté dans son journal des modifications, et chaque version est
-publiée sur GitHub avec le fichier du greffon à télécharger :
+publiée sur GitHub (avec le fichier du greffon à télécharger) :
 
 - **[Versions](https://github.com/cchabanois/notosaurus/releases)** : les versions, avec leurs notes
   et le fichier `notosaurus-<version>.ankiaddon`.
@@ -13,6 +15,16 @@ publiée sur GitHub avec le fichier du greffon à télécharger :
   (**Unreleased**).
 
 ## Mettre à jour Notosaurus
+
+<Tabs syncKey="mode">
+<TabItem label="Application Android">
+
+L'**[application Android](../android-app/)** se met à jour par Google Play, comme toute
+application. Quand une nouvelle version est disponible, l'application le dit, avec un bouton
+**Mettre à jour**. Les leçons et les réglages sont conservés.
+
+</TabItem>
+<TabItem label="Ordinateur">
 
 - **Installé depuis AnkiWeb** : Anki vérifie les mises à jour des greffons au démarrage, et propose
   de les installer. Vous pouvez aussi vérifier dans **Outils → Greffons → Vérifier les mises à jour**.
@@ -24,6 +36,5 @@ Puis **redémarrez Anki**. Les leçons, les consignes et les réglages sont cons
 nouvelle version a besoin de nouveaux composants, Notosaurus demande à nouveau avant de les
 installer (une minute ou deux).
 
-L'**[application Android](../android-app/)** se met à jour par Google Play, comme toute
-application. Quand une nouvelle version est disponible, l'application le dit, avec un bouton
-**Mettre à jour**.
+</TabItem>
+</Tabs>

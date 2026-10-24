@@ -3,6 +3,8 @@ title: "Photos et PDF"
 description: "Comment photographier une leçon pour que l'IA la lise bien, plusieurs pages, les PDF, et ce que Notosaurus en fait."
 ---
 
+import { Tabs, TabItem } from '@astrojs/starlight/components';
+
 L'IA lit ce qu'elle voit : une photo nette donne de meilleures cartes, et moins de
 corrections.
 
@@ -19,8 +21,8 @@ corrections.
   et les corrections qui ne sont pas à apprendre, ou dites à l'IA quoi ignorer dans la
   consigne.
 
-L'écriture manuscrite est bien lue quand un adulte peut la lire. Claude la lit le mieux ;
-Gemini est un bon choix, moins cher.
+L'écriture manuscrite est bien lue quand un adulte peut la lire. Sur l'ordinateur, où vous
+choisissez l'IA, Claude la lit le mieux ; Gemini est un bon choix, moins cher.
 
 ## Plusieurs pages
 
@@ -79,10 +81,27 @@ qui est caché) : l'IA lit la page comme une image.
 
 ## Que deviennent les photos ?
 
+<Tabs syncKey="mode">
+<TabItem label="Application Android">
+
+- Les photos passent par le **service Notosaurus** jusqu'à Gemini, de Google, pour être lues,
+  traitées dans l'Union européenne et sans y être gardées. Voir la
+  [politique de confidentialité de l'application](../app-privacy/).
+- Elles sont **enregistrées avec la leçon** sur le téléphone, dans le stockage privé de
+  l'application.
+
+</TabItem>
+<TabItem label="Ordinateur">
+
 - Les photos sont envoyées au **service d'IA choisi dans les réglages**, pour être lues, et à
-  personne d'autre.
-- Elles sont **enregistrées avec la leçon** sur votre ordinateur, pour pouvoir la rouvrir, la
-  corriger ou la régénérer plus tard. Supprimer la leçon les supprime.
+  personne d'autre. Voir [Confidentialité et sécurité](../privacy/).
+- Elles sont **enregistrées avec la leçon** sur votre ordinateur.
+
+</TabItem>
+</Tabs>
+
+- Enregistrées avec la leçon, elles permettent de la rouvrir, la corriger ou la régénérer plus
+  tard. Supprimer la leçon les supprime.
 - Les cartes de schéma gardent une **copie recadrée** du schéma, avec ses légendes
   masquées : c'est ce qu'Anki affiche.
 
