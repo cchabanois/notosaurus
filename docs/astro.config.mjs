@@ -69,6 +69,7 @@ export default defineConfig({
 						{ slug: 'lessons' },
 						{ slug: 'voices' },
 						{ slug: 'card-types' },
+						{ slug: 'cards-in-anki' },
 						{ slug: 'several-children' },
 					],
 				},

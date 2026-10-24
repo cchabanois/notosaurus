@@ -3,6 +3,8 @@ title: "Les types de cartes"
 description: "Question et réponse, texte à trous, QCM, vrai ou faux, schémas, formules, figures et images : ce que fait chaque type de carte dans Notosaurus et dans Anki."
 ---
 
+import { Tabs, TabItem } from '@astrojs/starlight/components';
+
 La consigne décide du type de cartes que fait l'IA (voir [Les consignes](../instructions/)).
 Chaque type devient son propre **type de note** dans Anki, dont le nom commence par
 « Notosaurus ».
@@ -84,11 +86,22 @@ quand c'est utile.
 
 ## Images
 
-La consigne **Langue : vocabulaire en images** met au recto une image de chaque mot, dessinée par un modèle
-d'images : de moins d'un centime à quelques centimes par image. Les images sont dessinées par
-le service d'IA des cartes quand il sait dessiner (Gemini, OpenAI, OpenRouter), sinon par un
-autre choisi dans **Réglages → Images des cartes** (Claude et les modèles locaux ne dessinent
-pas). Cette section choisit aussi le modèle d'images, ou **Pas d'images** :
+La consigne **Langue : vocabulaire en images** met au recto une image de chaque mot, trouvée
+gratuitement ou dessinée par un modèle d'images.
+
+<Tabs syncKey="mode">
+<TabItem label="Application Android">
+
+Le service Notosaurus dessine les images : rien à choisir. Un dessin coûte des crédits,
+annoncés avant qu'il soit fait.
+
+</TabItem>
+<TabItem label="Ordinateur">
+
+Un dessin coûte de moins d'un centime à quelques centimes. Les images sont dessinées par le
+service d'IA des cartes quand il sait dessiner (Gemini, OpenAI, OpenRouter), sinon par un autre
+choisi dans **Réglages → Images des cartes** (Claude et les modèles locaux ne dessinent pas).
+Cette section choisit aussi le modèle d'images, ou **Pas d'images** :
 
 - **Conseillés, d'après nos essais** liste les modèles d'images que nous conseillons pour le
   service, avec le coût d'une image ; celui qui a une ⭐ est le défaut. Nous avons comparé
@@ -99,6 +112,9 @@ pas). Cette section choisit aussi le modèle d'images, ou **Pas d'images** :
 - **🖼️ Tester : dessiner une girafe** dessine une vraie image avec le service et le modèle
   choisis, et la montre comme sur une carte, avec la durée et le coût.
 
+</TabItem>
+</Tabs>
+
 ![Des cartes avec des images](../../../assets/screenshots/fr/pictures.png)
 
 Le bouton **🖼️** d'une carte ouvre son panneau **Image** :
@@ -106,8 +122,8 @@ Le bouton **🖼️** d'une carte ouvre son panneau **Image** :
 - **Ce que l'image doit montrer**, dans votre langue : laissez vide et **🎨 Dessiner** laisse
   l'IA choisir d'après la carte une figure exacte (un schéma, de la géométrie) ou une image
   dessinée ; ou écrivez ce que vous voulez (« deux ensembles qui se chevauchent, leur réunion
-  hachurée », « une pomme rouge »). Un dessin coûte de moins d'un centime à quelques centimes de
-  dollar, selon le modèle ;
+  hachurée », « une pomme rouge »). Un dessin coûte des crédits dans
+  l'application, de moins d'un centime à quelques centimes de dollar sur l'ordinateur ;
 - **📷 Ma photo** : mettez votre propre photo à la place, gratuitement ;
 - **✕ Pas d'image** : retirez-la ;
 - **Au verso (avec la réponse)** : quand l'image donne la réponse.

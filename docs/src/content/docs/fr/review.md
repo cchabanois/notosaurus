@@ -53,12 +53,13 @@ Sous l'explication, l'IA ne propose que ce qui aide pour **cette** carte :
   (pourquoi les autres réponses sont fausses aussi).
 
 **Garder dans « Info »** ajoute ce qui a été expliqué à l'info de la carte : on le retrouve au
-verso dans Anki. Chaque explication est un appel court à l'IA (une fraction de centime avec
-Gemini Flash, environ un centime avec Claude Sonnet), compté dans les coûts de la leçon.
+verso dans Anki. Chaque explication est un appel court à l'IA : des crédits dans
+l'application ; sur l'ordinateur, une fraction de centime avec Gemini Flash, environ un centime
+avec Claude Sonnet, compté dans les coûts de la leçon.
 
 ## Signaler un contenu
 
-Dans l'app, **⋯ → ⚑ Signaler** sur une carte signale à Notosaurus ce que l'IA a fait : la carte, son
+Dans l'application Android, **⋯ → ⚑ Signaler** sur une carte signale à Notosaurus ce que l'IA a fait : la carte, son
 explication (quand elle est affichée) ou son image. Dites pourquoi (choquant ou inapproprié, faux,
 autre), ajoutez un commentaire si vous voulez : la fenêtre montre exactement ce qui sera envoyé,
 jamais les photos de la leçon ni le prénom de l'enfant. Ensuite, vous pouvez supprimer la carte ou
@@ -86,12 +87,13 @@ elle fonctionne partout, même hors connexion.
 
 ## À qui est la leçon
 
-Au-dessus des cartes, une ligne dit pour qui est la leçon : **🧒 Leçon de Paul**. Si Anki est
-ouvert sur le profil d'un autre enfant, elle le dit avant que vous envoyiez les cartes.
+Au-dessus des cartes, une ligne dit pour qui est la leçon : **🧒 Leçon de Paul**. Sur
+l'ordinateur, si Anki est ouvert sur le profil d'un autre enfant, elle le dit avant que vous
+envoyiez les cartes.
 
 **⧉ Copier pour…**, quand il y a un autre enfant, en fait une copie pour lui : ses paquets, ses
 propres cartes dans Anki. C'est gratuit : rien n'est demandé à l'IA.
 
-Une leçon partagée avec tous les profils par une version précédente s'ouvre **en lecture seule**
+Sur l'ordinateur, une leçon partagée avec tous les profils par une version précédente s'ouvre **en lecture seule**
 dans les autres profils : vous pouvez quand même l'ajouter à votre Anki, ou la copier, mais elle
 ne se modifie que depuis le profil de son propriétaire. Voir [Plusieurs enfants](../several-children/).

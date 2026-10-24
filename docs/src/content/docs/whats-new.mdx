@@ -3,8 +3,10 @@ title: "What's new"
 description: "Notosaurus's versions and what each one changes."
 ---
 
+import { Tabs, TabItem } from '@astrojs/starlight/components';
+
 Every change to Notosaurus is listed in its changelog, and each version is published on GitHub
-with the add-on file to download:
+(with the add-on file to download):
 
 - **[Releases](https://github.com/cchabanois/notosaurus/releases)**: the versions, with their
   notes and the `notosaurus-<version>.ankiaddon` file.
@@ -12,6 +14,16 @@ with the add-on file to download:
   that changed, including what is coming in the next version (**Unreleased**).
 
 ## Updating Notosaurus
+
+<Tabs syncKey="mode">
+<TabItem label="Android app">
+
+The **[Android app](../android-app/)** updates through Google Play, like any app. When a new
+version is available, the app says so, with an **Update** button. The lessons and the settings
+are kept.
+
+</TabItem>
+<TabItem label="Computer">
 
 - **Installed from AnkiWeb**: Anki checks for add-on updates when it starts, and offers to install
   them. You can also check in **Tools → Add-ons → Check for Updates**.
@@ -22,5 +34,5 @@ with the add-on file to download:
 Then **restart Anki**. The lessons, the instructions and the settings are kept. When a new version
 needs new components, Notosaurus asks again before installing them (a minute or two).
 
-The **[Android app](../android-app/)** updates through Google Play, like any app. When a new
-version is available, the app says so, with an **Update** button.
+</TabItem>
+</Tabs>

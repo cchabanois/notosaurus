@@ -3,6 +3,8 @@ title: Les consignes
 description: "Dire à l'IA quelles cartes faire : les consignes de Notosaurus, les vôtres, une consigne pour cette fois seulement, et les instructions permanentes."
 ---
 
+import { Tabs, TabItem } from '@astrojs/starlight/components';
+
 La **consigne** dit à l'IA quoi faire de la leçon : quelles cartes, dans quel sens, dans
 quelles langues. La photo dit *quoi* apprendre ; la consigne dit *comment*.
 
@@ -106,11 +108,11 @@ L'IA ajoute, **seulement sur les cartes où elles aident vraiment** :
 
 Une leçon d'histoire reçoit donc surtout des explications, une leçon de vocabulaire quelques
 astuces et aucune explication. Elles s'affichent au verso dans Anki, sous l'info (💬 et 🧠),
-et se modifient ou s'effacent dans la relecture. Elles ajoutent environ 1 à 3 centimes de
-dollar par leçon avec Claude Sonnet.
+et se modifient ou s'effacent dans la relecture. Sur l'ordinateur, elles ajoutent environ 1 à 3
+centimes de dollar par leçon avec Claude Sonnet.
 
-Les deux sont activés au départ, pour toutes les leçons. Pour les arrêter : **Réglages →
-Instructions pour l'IA**. Pour une seule consigne, dites-le dans son texte : « sans
+Les deux sont activés au départ, pour toutes les leçons : pour les arrêter, voir
+[Les désactiver](#les-désactiver). Pour une seule consigne, dites-le dans son texte : « sans
 anecdotes », « sans aides ».
 
 ## Les images
@@ -118,13 +120,31 @@ anecdotes », « sans aides ».
 L'IA ajoute une image aux cartes où elle aide vraiment à retenir, quelle que soit la consigne :
 une œuvre, un personnage, un lieu, un monument, un animal. Jamais pour une notion abstraite,
 ni sur chaque carte. Une image libre est cherchée d'abord ; la faire dessiner par l'IA vous est
-toujours demandé. C'est activé au départ : **Réglages → Instructions pour l'IA → 🖼️ Images
-sur les cartes**. Pour une seule consigne, dites-le dans son texte : « sans images ».
+toujours demandé. C'est activé au départ (voir [Les désactiver](#les-désactiver)). Pour une
+seule consigne, dites-le dans son texte : « sans images ».
+
+## Les désactiver
+
+<Tabs syncKey="mode">
+<TabItem label="Application Android">
+
+**⚙️ → 📝 Instructions pour l'IA → 💬 Aides au verso des cartes** désactive les aides. Les
+« Le savais-tu ? » et les images n'ont pas d'interrupteur dans l'application : dites-le dans le
+texte de la consigne, ou dans les instructions permanentes ci-dessous.
+
+</TabItem>
+<TabItem label="Ordinateur">
+
+**Réglages → 📝 Instructions pour l'IA** a un interrupteur pour chacun : **💡 « Le savais-tu ? »
+sur les cartes**, **💬 Aides au verso des cartes** et **🖼️ Images sur les cartes**.
+
+</TabItem>
+</Tabs>
 
 ## Les instructions permanentes
 
 Certaines instructions valent pour toutes les leçons : « espagnol d'Espagne », « toujours
-l'article avec les noms ». Écrivez-les une fois dans **Réglages → Instructions pour l'IA → Pour tous
-les enfants**. Celles propres à chaque enfant (sa classe, « il lit encore lentement ») sont dans
+l'article avec les noms ». Écrivez-les une fois dans les réglages : **⚙️ → 📝 Instructions pour l'IA** dans l'application,
+**Réglages → 📝 Instructions pour l'IA → Pour tous les enfants** sur l'ordinateur. Celles propres à chaque enfant (sa classe, « il lit encore lentement ») sont dans
 sa fiche, **🧒** sur la page principale : voir
 [Plusieurs enfants](../several-children/#les-fiches-des-enfants).

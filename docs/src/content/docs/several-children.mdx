@@ -3,10 +3,11 @@ title: Several children
 description: "A card per child (class, decks, instructions), one Anki profile and one AnkiWeb account each; or, on a shared tablet, one deck per child."
 ---
 
+import { Tabs, TabItem } from '@astrojs/starlight/components';
+
 Each child gets a **card** in Notosaurus: their first name, their class, the decks their lessons
-go in, and your instructions for them. Each lesson is for one child. On the computer, each child
-also gets their own **Anki profile**: their own cards, their own progress. Children sharing one
-phone or tablet: see [One tablet for several children](#one-tablet-for-several-children).
+go in, and your instructions for them. Each lesson is for one child. Where their cards go in
+Anki depends on where Notosaurus runs: see [Where each child's cards go](#where-each-childs-cards-go).
 
 ## The children's cards
 
@@ -25,13 +26,48 @@ phone or tablet: see [One tablet for several children](#one-tablet-for-several-c
 **Who is the next lesson for? Tap their name**: the child chosen is shown next to 🧒, and the
 next lessons are for them. ✏️ next to a name edits their card.
 
-Instructions for every child (“Spanish from Spain”) are in **Settings → Instructions for the AI →
-For every child**. See [Instructions](../instructions/#standing-instructions).
+Instructions for every child (“Spanish from Spain”) are in the settings: see [Instructions](../instructions/#standing-instructions).
 
-## One profile per child
+## Lessons belong to a child
 
-On the computer, cards go into the profile open in Anki. For each child to have their own cards
-and progress, give each one a profile:
+- A lesson is for the child chosen when it is made. Its review says whose it is: **🧒 Paul's
+  lesson**.
+- **📚 My lessons** shows the chosen child's lessons. With more than one child, the switch above
+  the list shows **Every child's lessons**.
+- On the computer, if Anki is open on another child's profile, the lesson says so before you send it: ⚠️ *Anki is
+  open for Léa: open Paul's profile in Anki to send them their cards.*
+
+### The same lesson for two children
+
+Two children have the same lesson? **⧉ Copy for…**, in the lesson's review, makes a copy for
+another child: their decks, their own cards in Anki, their own review history. It's free: nothing
+is asked of the AI. The copy opens if that child is in the open profile; otherwise it waits in
+their lessons.
+
+On the computer, lessons shared with every profile by an older version stay visible to every profile, read only
+except from their owner's profile: **⧉ Copy for…** gives each child their own.
+
+## Where each child's cards go
+
+<Tabs syncKey="mode">
+<TabItem label="Android app">
+
+The app writes into **AnkiDroid**, which has no profiles: one collection on the phone, logged in
+to one AnkiWeb account. Each child's lessons go into their own decks: fill in their **Decks in**
+with one tap on its suggestion (`Léa::Year 5`, `Paul::Year 8`), and each child opens **their own**
+deck to review (Léa, Paul): AnkiDroid then only takes their cards. Not the button that reviews
+everything.
+
+Notosaurus keeps the children apart in that collection: the list of lessons shows the chosen
+child's, grouped by subject (their name and class left out), and the decks suggested are theirs,
+never another child's. Each child sees the other children's decks in AnkiDroid, though, and its
+statistics are shared.
+
+</TabItem>
+<TabItem label="Computer">
+
+**One profile per child.** Cards go into the profile open in Anki. For each child to have their
+own cards and progress, give each one a profile:
 
 1. In Anki, **File → Switch Profile → Add**, and create a profile per child (Léa, Paul…).
 2. For each profile, create an **AnkiWeb account** and log in to it in that profile
@@ -49,35 +85,13 @@ Many e-mail services accept aliases with a `+`: `parent+lea@example.com` and
 A child's card belongs to the **Anki profile open when it was made**. Notosaurus only offers the
 cards of the profile open in Anki: open Paul's profile, and Paul is chosen.
 
-## Lessons belong to a child
-
-- A lesson is for the child chosen when it is made. Its review says whose it is: **🧒 Paul's
-  lesson**.
-- **📚 My lessons** shows the chosen child's lessons. With more than one child, the switch above
-  the list shows **Every child's lessons**.
-- If Anki is open on another child's profile, the lesson says so before you send it: ⚠️ *Anki is
-  open for Léa: open Paul's profile in Anki to send them their cards.*
-
-### The same lesson for two children
-
-Two children have the same lesson? **⧉ Copy for…**, in the lesson's review, makes a copy for
-another child: their decks, their own cards in Anki, their own review history. It's free: nothing
-is asked of the AI. The copy opens if that child is in the open profile; otherwise it waits in
-their lessons.
-
-Lessons shared with every profile by an older version stay visible to every profile, read only
-except from their owner's profile: **⧉ Copy for…** gives each child their own.
-
-## Getting the cards to the phone
-
 After **Add to Anki**, Notosaurus syncs the open profile with AnkiWeb. The cards reach the
 child's phone at its next sync.
 
-## One tablet for several children
-
-**AnkiDroid has no profiles**: an installation holds one collection, logged in to one AnkiWeb
-account. AnkiMobile doesn't switch accounts without logging out either. If the children share
-a phone or a tablet, the simplest is **a single Anki profile, with one deck per child**:
+**One tablet for several children.** **AnkiDroid has no profiles**: an installation holds one
+collection, logged in to one AnkiWeb account. AnkiMobile doesn't switch accounts without logging
+out either. If the children share a phone or a tablet, the simplest is **a single Anki profile,
+with one deck per child**:
 
 1. Keep a single profile in Anki, logged in to a single AnkiWeb account, and log AnkiDroid in
    to that account.
@@ -99,8 +113,5 @@ AnkiDroid can be installed several times on the same device, one per child, each
 AnkiWeb account (the “parallel builds”, see the
 [AnkiDroid FAQ](https://github.com/ankidroid/Anki-Android/wiki/FAQ)).
 
-## In the Android app
-
-The app has no Anki profiles: the children's cards are the same (first name, class, decks,
-instructions), and their lessons go into AnkiDroid's single collection, into each child's decks,
-as on a shared tablet.
+</TabItem>
+</Tabs>

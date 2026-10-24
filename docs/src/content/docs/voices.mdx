@@ -3,6 +3,8 @@ title: "Voices and audio"
 description: "Choose the voice that reads the backs of the cards, listen to it, set its speed, and what happens without sound."
 ---
 
+import { Tabs, TabItem } from '@astrojs/starlight/components';
+
 Notosaurus can read the back of each card aloud: handy for languages, to hear the right
 pronunciation. The audio is **included in the deck**, so it plays in Anki everywhere, on the
 computer and the phone, even offline.
@@ -53,9 +55,23 @@ See [Instructions](../instructions/).
 
 ## Cards without sound
 
-On the computer, the voices come from Microsoft's text-to-speech service (through
-[edge-tts](https://github.com/rany2/edge-tts)); in the Android app, from Google's voices, through
-the Notosaurus service. Either way, making the audio needs the Internet.
-If it doesn't answer, the cards are sent without sound and the message says how many. Send the
-lesson again later: the missing audio is added. See
+Making the audio needs the Internet:
+
+<Tabs syncKey="mode">
+<TabItem label="Android app">
+
+The voices are Google's, through the Notosaurus service. See the
+[app's privacy policy](../app-privacy/) for what is sent.
+
+</TabItem>
+<TabItem label="Computer">
+
+The voices come from Microsoft's text-to-speech service, through
+[edge-tts](https://github.com/rany2/edge-tts), an unofficial tool. See
 [Privacy and security](../privacy/) for what is sent.
+
+</TabItem>
+</Tabs>
+
+If the voices don't answer, the cards are sent without sound and the message says how many. Send
+the lesson again later: the missing audio is added.

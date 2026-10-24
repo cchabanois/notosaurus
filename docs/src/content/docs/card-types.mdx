@@ -3,6 +3,8 @@ title: "Card types"
 description: "Question and answer, fill in the blanks, multiple choice, true or false, diagrams, formulas, figures and pictures: what each card type does in Notosaurus and in Anki."
 ---
 
+import { Tabs, TabItem } from '@astrojs/starlight/components';
+
 The instructions decide which kind of cards the AI makes (see [Instructions](../instructions/)).
 Each kind becomes its own **note type** in Anki, whose name starts with “Notosaurus”.
 
@@ -79,11 +81,22 @@ make such cards, and so do **Automatic** and the formula instructions when it he
 
 ## Pictures
 
-The **Language: vocabulary in pictures** instructions put a picture of each word on the front, drawn by an
-image model: from less than a cent to a few cents per picture. Pictures are drawn by the AI
-service of the cards when it can draw (Gemini, OpenAI, OpenRouter), otherwise by another one
-chosen in **Settings → Pictures on cards** (Claude and local models can't draw). That section
-also chooses the image model, or **No pictures**:
+The **Language: vocabulary in pictures** instructions put a picture of each word on the front,
+found free or drawn by an image model.
+
+<Tabs syncKey="mode">
+<TabItem label="Android app">
+
+The Notosaurus service draws the pictures: nothing to choose. A drawing costs credits, told
+before it is made.
+
+</TabItem>
+<TabItem label="Computer">
+
+A drawing costs from less than a cent to a few cents. Pictures are drawn by the AI service of
+the cards when it can draw (Gemini, OpenAI, OpenRouter), otherwise by another one chosen in
+**Settings → Pictures on cards** (Claude and local models can't draw). That section also
+chooses the image model, or **No pictures**:
 
 - **Recommended, from our tests** lists the image models we advise for the service, with what
   a picture costs; the ⭐ one is the default. We compared their drawings by eye: with OpenAI,
@@ -94,14 +107,17 @@ also chooses the image model, or **No pictures**:
 - **🖼️ Test: draw a giraffe** draws one real picture with the chosen service and model, and
   shows it as a card would, with the time and the cost.
 
+</TabItem>
+</Tabs>
+
 ![Cards with pictures](../../assets/screenshots/en/pictures.png)
 
 The **🖼️** button of a card opens its **Picture** panel:
 
 - **What the picture should show**, in your own language: leave it empty and **🎨 Draw** lets the
   AI decide from the card an exact figure (a diagram, geometry) or a drawn picture; or write
-  what you want ("two overlapping sets, their union hatched", "a red apple"). A drawing costs from
-  under a cent to a few US cents, depending on the model;
+  what you want ("two overlapping sets, their union hatched", "a red apple"). A drawing costs
+  credits in the app, from under a cent to a few US cents on the computer;
 - **📷 My photo**: put your own photo instead, for free;
 - **✕ No picture**: remove it;
 - **On the back (with the answer)**: when the picture gives the answer away.

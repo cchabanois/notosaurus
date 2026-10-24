@@ -3,8 +3,10 @@ title: "Your lessons"
 description: "Every lesson is saved: find it again, reopen it to correct or send it again, and delete it."
 ---
 
-Each generation creates a **lesson**: its photos, its instructions and its cards, saved on the
-computer. You can come back to it at any time to correct it, generate it again or send it to Anki
+import { Tabs, TabItem } from '@astrojs/starlight/components';
+
+Each generation creates a **lesson**: its photos, its instructions and its cards, saved where
+Notosaurus runs (on the phone in the app, on the computer with the add-on). You can come back to it at any time to correct it, generate it again or send it to Anki
 again.
 
 ## The list of lessons
@@ -44,12 +46,23 @@ them, whatever their lessons: the test's sheet says how, on the computer and in 
 (open the deck holding the lessons, **Custom study → Study by card state or tag**, tick the tag).
 Once revised, the cards go back to their decks. Deleting a test takes the tag off; the cards stay.
 
-On the computer with Anki open, **Revise now in Anki** does it in one click: a filtered deck
-"Test: …" with the test's cards, opened in Anki, made again each time and deleted with the test.
+A filtered deck gathers them faster:
 
-In the app, **Open in AnkiDroid** opens the test's cards in AnkiDroid's browser, whatever their
-decks; then **⋮ → Create filtered deck → Build** (over 100 cards, raise **Limit to** first).
-AnkiDroid lets no other app make a filtered deck.
+<Tabs syncKey="mode">
+<TabItem label="Android app">
+
+**Open in AnkiDroid** opens the test's cards in AnkiDroid's browser, whatever their decks; then
+**⋮ → Create filtered deck → Build** (over 100 cards, raise **Limit to** first). AnkiDroid lets
+no other app make a filtered deck.
+
+</TabItem>
+<TabItem label="Computer">
+
+With Anki open, **Revise now in Anki** does it in one click: a filtered deck "Test: …" with the
+test's cards, opened in Anki, made again each time and deleted with the test.
+
+</TabItem>
+</Tabs>
 
 ## Deleting a lesson
 
@@ -57,5 +70,18 @@ AnkiDroid lets no other app make a filtered deck.
 for them and offers to **delete them too**: their review history is then lost. Otherwise, the
 cards already sent stay in Anki.
 
-The lessons can also be managed from the computer, in **Settings → Lessons**: which Anki profile
-each one belongs to (it can be changed there), what it cost, and deleting it.
+<Tabs syncKey="mode">
+<TabItem label="Android app">
+
+**⚙️ → 🗂️ Lessons on this phone** says how many lessons the phone keeps and their size, and
+**Delete all the lessons** deletes them all, with their sound. The cards already in AnkiDroid
+stay, with their sound.
+
+</TabItem>
+<TabItem label="Computer">
+
+The lessons can also be managed in **Settings → Lessons**: which Anki profile each one belongs
+to (it can be changed there), what it cost, and deleting it.
+
+</TabItem>
+</Tabs>

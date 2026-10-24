@@ -3,8 +3,10 @@ title: "Vos leçons"
 description: "Chaque leçon est enregistrée : la retrouver, la rouvrir pour la corriger ou la renvoyer, et la supprimer."
 ---
 
-Chaque génération crée une **leçon** : ses photos, sa consigne et ses cartes, enregistrées sur
-l'ordinateur. Vous pouvez y revenir à tout moment pour la corriger, la régénérer ou la renvoyer à
+import { Tabs, TabItem } from '@astrojs/starlight/components';
+
+Chaque génération crée une **leçon** : ses photos, sa consigne et ses cartes, enregistrées là où
+tourne Notosaurus (sur le téléphone dans l'application, sur l'ordinateur avec le greffon). Vous pouvez y revenir à tout moment pour la corriger, la régénérer ou la renvoyer à
 Anki.
 
 ## La liste des leçons
@@ -49,14 +51,25 @@ dit comment, sur l'ordinateur et dans AnkiDroid (ouvrir le paquet qui contient l
 les cartes retournent dans leurs paquets. Supprimer un contrôle retire l'étiquette ; les cartes
 restent.
 
-Sur l'ordinateur, Anki ouvert, **Réviser maintenant dans Anki** le fait en un clic : un paquet
-filtré « Contrôle : … » avec les cartes du contrôle, ouvert dans Anki, refait à chaque fois et
-supprimé avec le contrôle.
+Un paquet filtré les réunit plus vite :
 
-Dans l'application, **Ouvrir dans AnkiDroid** ouvre les cartes du contrôle dans le navigateur
-d'AnkiDroid, quels que soient leurs paquets ; puis **⋮ → Créer un paquet filtré → Générer**
-(au-delà de 100 cartes, augmentez d'abord **Limiter à**). AnkiDroid ne laisse aucune autre
-application créer un paquet filtré.
+<Tabs syncKey="mode">
+<TabItem label="Application Android">
+
+**Ouvrir dans AnkiDroid** ouvre les cartes du contrôle dans le navigateur d'AnkiDroid, quels que
+soient leurs paquets ; puis **⋮ → Créer un paquet filtré → Générer** (au-delà de 100 cartes,
+augmentez d'abord **Limiter à**). AnkiDroid ne laisse aucune autre application créer un paquet
+filtré.
+
+</TabItem>
+<TabItem label="Ordinateur">
+
+Anki ouvert, **Réviser maintenant dans Anki** le fait en un clic : un paquet filtré
+« Contrôle : … » avec les cartes du contrôle, ouvert dans Anki, refait à chaque fois et supprimé
+avec le contrôle.
+
+</TabItem>
+</Tabs>
 
 ## Supprimer une leçon
 
@@ -64,5 +77,18 @@ application créer un paquet filtré.
 les cherche et propose de **les supprimer aussi** : leur historique de révision est alors perdu.
 Sinon, les cartes déjà envoyées restent dans Anki.
 
-Les leçons se gèrent aussi depuis l'ordinateur, dans **Réglages → Leçons** : à quel profil Anki
-appartient chacune (il se change là), ce qu'elle a coûté, et sa suppression.
+<Tabs syncKey="mode">
+<TabItem label="Application Android">
+
+**⚙️ → 🗂️ Leçons sur ce téléphone** dit combien de leçons le téléphone garde et leur taille, et
+**Supprimer toutes les leçons** les supprime toutes, avec leur son. Les cartes déjà dans
+AnkiDroid restent, avec leur son.
+
+</TabItem>
+<TabItem label="Ordinateur">
+
+Les leçons se gèrent aussi dans **Réglages → Leçons** : à quel profil Anki appartient chacune
+(il se change là), ce qu'elle a coûté, et sa suppression.
+
+</TabItem>
+</Tabs>

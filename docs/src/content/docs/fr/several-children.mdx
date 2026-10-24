@@ -3,11 +3,12 @@ title: Plusieurs enfants
 description: "Une fiche par enfant (classe, paquets, instructions), un profil Anki et un compte AnkiWeb chacun ; ou, sur une tablette partagée, un paquet par enfant."
 ---
 
+import { Tabs, TabItem } from '@astrojs/starlight/components';
+
 Chaque enfant a sa **fiche** dans Notosaurus : son prénom, sa classe, les paquets où vont ses
-leçons et vos instructions pour lui. Chaque leçon est pour un enfant. Sur l'ordinateur, chaque
-enfant a aussi son propre **profil Anki** : ses cartes, sa progression. Des enfants qui partagent
-un téléphone ou une tablette : voir
-[Une seule tablette pour plusieurs enfants](#une-seule-tablette-pour-plusieurs-enfants).
+leçons et vos instructions pour lui. Chaque leçon est pour un enfant. Où vont ses cartes dans
+Anki dépend de l'endroit où tourne Notosaurus : voir
+[Où vont les cartes de chaque enfant](#où-vont-les-cartes-de-chaque-enfant).
 
 ## Les fiches des enfants
 
@@ -27,14 +28,50 @@ un téléphone ou une tablette : voir
 **Pour qui est la prochaine leçon ? Touchez son prénom** : l'enfant choisi s'affiche à côté de 🧒,
 et les leçons suivantes sont pour lui. ✏️ à côté d'un prénom modifie sa fiche.
 
-Les instructions pour tous les enfants (« espagnol d'Espagne ») sont dans **Réglages →
-Instructions pour l'IA → Pour tous les enfants**. Voir
+Les instructions pour tous les enfants (« espagnol d'Espagne ») sont dans les réglages : voir
 [Les consignes](../instructions/#les-instructions-permanentes).
 
-## Un profil par enfant
+## Les leçons appartiennent à un enfant
 
-Sur l'ordinateur, les cartes vont dans le profil ouvert dans Anki. Pour que chaque enfant ait ses
-propres cartes et sa progression, donnez-lui un profil :
+- Une leçon est pour l'enfant choisi quand elle est créée. Sa relecture dit à qui elle est :
+  **🧒 Leçon de Paul**.
+- **📚 Mes leçons** montre les leçons de l'enfant choisi. Avec plus d'un enfant, l'interrupteur
+  au-dessus de la liste montre **Les leçons de tous les enfants**.
+- Sur l'ordinateur, si Anki est ouvert sur le profil d'un autre enfant, la leçon le dit avant que vous l'envoyiez :
+  ⚠️ *Anki est ouvert pour Léa : ouvrez le profil de Paul dans Anki pour lui envoyer ses cartes.*
+
+### La même leçon pour deux enfants
+
+Deux enfants ont la même leçon ? **⧉ Copier pour…**, dans la relecture de la leçon, en fait une
+copie pour un autre enfant : ses paquets, ses propres cartes dans Anki, son propre historique de
+révision. C'est gratuit : rien n'est demandé à l'IA. La copie s'ouvre si cet enfant est dans le
+profil ouvert ; sinon, elle l'attend dans ses leçons.
+
+Sur l'ordinateur, les leçons partagées avec tous les profils par une version précédente restent visibles de tous
+les profils, en lecture seule sauf depuis le profil de leur propriétaire : **⧉ Copier pour…**
+donne à chaque enfant la sienne.
+
+## Où vont les cartes de chaque enfant
+
+<Tabs syncKey="mode">
+<TabItem label="Application Android">
+
+L'application écrit dans **AnkiDroid**, qui n'a pas de profils : une seule collection sur le
+téléphone, connectée à un seul compte AnkiWeb. Les leçons de chaque enfant vont dans ses propres
+paquets : remplissez ses **Paquets dans** d'un toucher sur sa suggestion (`Léa::CM2`,
+`Paul::4e`), et chaque enfant ouvre **son** paquet pour réviser (Léa, Paul) : AnkiDroid ne prend
+alors que ses cartes. Pas le bouton qui révise tout.
+
+Notosaurus sépare les enfants dans cette collection : la liste des leçons montre celles de
+l'enfant choisi, rangées par matière (sans son prénom ni sa classe), et les paquets proposés sont
+les siens, jamais ceux d'un autre enfant. Chaque enfant voit quand même les paquets des autres
+dans AnkiDroid, et ses statistiques sont communes.
+
+</TabItem>
+<TabItem label="Ordinateur">
+
+**Un profil par enfant.** Les cartes vont dans le profil ouvert dans Anki. Pour que chaque enfant
+ait ses propres cartes et sa progression, donnez-lui un profil :
 
 1. Dans Anki, **Fichier → Changer de profil → Ajouter**, et créez un profil par enfant
    (Léa, Paul…).
@@ -53,37 +90,14 @@ Beaucoup de messageries acceptent les alias avec un `+` : `parent+lea@exemple.fr
 La fiche d'un enfant appartient au **profil Anki ouvert quand elle a été créée**. Notosaurus ne
 propose que les fiches du profil ouvert dans Anki : ouvrez le profil de Paul, et Paul est choisi.
 
-## Les leçons appartiennent à un enfant
-
-- Une leçon est pour l'enfant choisi quand elle est créée. Sa relecture dit à qui elle est :
-  **🧒 Leçon de Paul**.
-- **📚 Mes leçons** montre les leçons de l'enfant choisi. Avec plus d'un enfant, l'interrupteur
-  au-dessus de la liste montre **Les leçons de tous les enfants**.
-- Si Anki est ouvert sur le profil d'un autre enfant, la leçon le dit avant que vous l'envoyiez :
-  ⚠️ *Anki est ouvert pour Léa : ouvrez le profil de Paul dans Anki pour lui envoyer ses cartes.*
-
-### La même leçon pour deux enfants
-
-Deux enfants ont la même leçon ? **⧉ Copier pour…**, dans la relecture de la leçon, en fait une
-copie pour un autre enfant : ses paquets, ses propres cartes dans Anki, son propre historique de
-révision. C'est gratuit : rien n'est demandé à l'IA. La copie s'ouvre si cet enfant est dans le
-profil ouvert ; sinon, elle l'attend dans ses leçons.
-
-Les leçons partagées avec tous les profils par une version précédente restent visibles de tous
-les profils, en lecture seule sauf depuis le profil de leur propriétaire : **⧉ Copier pour…**
-donne à chaque enfant la sienne.
-
-## Faire arriver les cartes sur le téléphone
-
 Après **Ajouter à Anki**, Notosaurus synchronise le profil ouvert avec AnkiWeb. Les cartes
 arrivent sur le téléphone de l'enfant à sa prochaine synchronisation.
 
-## Une seule tablette pour plusieurs enfants
-
-**AnkiDroid n'a pas de profils** : une installation contient une seule collection, connectée à
-un seul compte AnkiWeb. AnkiMobile non plus ne passe pas d'un compte à l'autre sans se
-déconnecter. Si les enfants partagent un téléphone ou une tablette, le plus simple est donc
-**un seul profil Anki, avec un paquet par enfant** :
+**Une seule tablette pour plusieurs enfants.** **AnkiDroid n'a pas de profils** : une
+installation contient une seule collection, connectée à un seul compte AnkiWeb. AnkiMobile non
+plus ne passe pas d'un compte à l'autre sans se déconnecter. Si les enfants partagent un
+téléphone ou une tablette, le plus simple est donc **un seul profil Anki, avec un paquet par
+enfant** :
 
 1. Gardez un seul profil dans Anki, connecté à un seul compte AnkiWeb, et connectez AnkiDroid à
    ce compte.
@@ -105,8 +119,6 @@ l'aise : AnkiDroid peut être installé en plusieurs exemplaires sur le même ap
 enfant, chacun avec son compte AnkiWeb (les « parallel builds », voir la
 [FAQ d'AnkiDroid](https://github.com/ankidroid/Anki-Android/wiki/FAQ), en anglais).
 
-## Dans l'application Android
 
-L'application n'a pas de profils Anki : les fiches des enfants sont les mêmes (prénom, classe,
-paquets, instructions), et leurs leçons vont dans la collection unique d'AnkiDroid, dans les
-paquets de chaque enfant, comme sur une tablette partagée.
+</TabItem>
+</Tabs>
