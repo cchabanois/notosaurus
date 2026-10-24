@@ -101,9 +101,10 @@ phone). With an emulator (or a phone) connected and AnkiDroid installed (the
 ⚠️ Gradle installs the app for the tests and **uninstalls it afterwards**: its lessons
 and settings on that device are gone. Use an emulator, not your own phone.
 
-On GitHub: on every pull request changing `android/` or `static/`, on Mondays, and on
-demand (Actions → "Android on a device" → Run workflow): an emulator, AnkiDroid 2.25.0, a
-few minutes. Without AnkiDroid the tests are skipped.
+On GitHub: on every pull request changing `android/` or `static/` (an emulator, AnkiDroid
+2.25.0, a few minutes); on Mondays and on demand (Actions → "Android on a device" → Run
+workflow), with AnkiDroid's latest release, 2.25.0, 2.24.1 and 2.23.3, side by side.
+Without AnkiDroid the tests are skipped.
 
 Without a computer, the app needs a relay implementing the `/v1` API. Notosaurus's own
 isn't public; run on the computer for development (demo AI, a test licence), reachable

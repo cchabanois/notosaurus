@@ -74,6 +74,7 @@ Each pull request adds a line under **Unreleased**. See [Releasing](CONTRIBUTING
 
 ### Changed
 
+- For developers: the device tests (Android on a device) also run on the pull requests changing `android/` or `static/`, with AnkiDroid 2.25.0; on Mondays and on demand, with AnkiDroid's latest release, 2.25.0, 2.24.1 and 2.23.3 side by side.
 - A test's lessons not in Anki yet are sent from its sheet (**📥 Send to Anki** on each, **Send all** when several), without opening each.
 - Android, a test to prepare: **Open in AnkiDroid** opens the test's cards in AnkiDroid's browser (whatever their decks), then **⋮ → Create filtered deck → Build**: three taps instead of finding the tag in the custom study. AnkiDroid lets no other app make the filtered deck itself.
 - The page speaks of children, not Anki profiles: the review says whom the lesson is for (its child), the lessons list and the children's sheet no longer repeat the profile, a profile switch is said with its child's name (a profile per child). The open Anki profile stays under the name, always (where the cards go); Anki open on another child's profile is said with their names.
