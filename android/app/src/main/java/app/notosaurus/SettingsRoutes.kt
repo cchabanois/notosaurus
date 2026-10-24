@@ -15,7 +15,6 @@ import app.notosaurus.LocalServer.Companion.MODE
 import app.notosaurus.LocalServer.Companion.PHONE_MODE
 import app.notosaurus.LocalServer.Companion.RELAY
 import app.notosaurus.LocalServer.Companion.TTS_RATE
-import app.notosaurus.LocalServer.Companion.keyOf
 import io.ktor.server.request.receiveText
 import io.ktor.server.routing.Route
 import kotlinx.serialization.builtins.ListSerializer
@@ -62,8 +61,7 @@ internal fun Route.settingsRoutes(server: LocalServer) {
                 put("update", switches.updateAvailable())
                 put("store", "https://play.google.com/store/apps/details?id=${BuildConfig.APPLICATION_ID}")
                 // The free trial just started (the first lesson): its credits and end, told once
-                put("trial", trialStarted ?: JsonNull)
-                trialStarted = null
+                put("trial", licensing.takeTrialStarted() ?: JsonNull)
             }
         }
         // The children's cards (Children): listed, saved by the page's "For: …" sheet
@@ -83,7 +81,7 @@ internal fun Route.settingsRoutes(server: LocalServer) {
         api("PUT", "/api/admin/settings") {
             val changes = body()
             changes.string(RELAY).trim().takeIf { it.isNotEmpty() }?.let { prefs[RELAY] = it.trimEnd('/') }
-            (changes[KEY] as? JsonPrimitive)?.let { prefs[keyOf(relayUrl())] = it.content.trim() }
+            (changes[KEY] as? JsonPrimitive)?.let { licensing.setKey(it.content) }
             (changes[INSTRUCTIONS] as? JsonPrimitive)?.let { prefs[INSTRUCTIONS] = it.content.take(4000) }
             for (option in listOf(FUN_FACTS, HELPS, PICTURES)) (changes[option] as? JsonPrimitive)?.booleanOrNull?.let { prefs[option] = it.toString() }
             (changes[TTS_RATE] as? JsonPrimitive)?.content?.takeIf { it in Speech.RATES }?.let { prefs[TTS_RATE] = it }
@@ -94,9 +92,8 @@ internal fun Route.settingsRoutes(server: LocalServer) {
             var account = relay().account()
             // Past its end (a renewal or a payment fixed the relay hasn't heard of): Google
             // Play's purchases checked again, the account then as it is
-            val store = subscriptions
-            if (store != null && account.endsAt?.let { runCatching { OffsetDateTime.parse(it) }.getOrNull() }?.isBefore(OffsetDateTime.now()) == true &&
-                recheck(store)
+            if (licensing.store != null && account.endsAt?.let { runCatching { OffsetDateTime.parse(it) }.getOrNull() }?.isBefore(OffsetDateTime.now()) == true &&
+                licensing.recheck()
             ) {
                 account = relay().account()
             }
