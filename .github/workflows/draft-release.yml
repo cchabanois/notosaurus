@@ -95,7 +95,8 @@ jobs:
           printf 'storeFile=%s\nstorePassword=%s\nkeyAlias=upload\nkeyPassword=%s\n' \
             "$dir/upload.jks" "$UPLOAD_KEYSTORE_PASSWORD" "$UPLOAD_KEYSTORE_PASSWORD" > "$dir/keystore.properties"
           echo "NOTOSAURUS_KEYSTORE_PROPERTIES=$dir/keystore.properties" >> "$GITHUB_ENV"
-      - run: ./gradlew bundleRelease
+      # Its run's number in the versionCode: every upload to Google Play a new one
+      - run: ./gradlew bundleRelease -Pnotosaurus.build=${{ github.run_number }}
       # An unsigned .aab (no secrets): never attached
       - name: Signed
         run: jarsigner -verify app/build/outputs/bundle/release/app-release.aab | grep -q "jar verified"

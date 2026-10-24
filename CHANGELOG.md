@@ -9,6 +9,7 @@ Each pull request adds a line under **Unreleased**. See [Releasing](CONTRIBUTING
 
 ### Added
 
+- For developers: a `staging` build (`./gradlew bundleStaging -Pnotosaurus.build=N`), a release calling the test relay, to test Google Play's purchases in Internal testing; the Android `versionCode` gets a build number (`(major × 10000 + minor × 100 + patch) × 10000 + build`, Draft release's run number), so that every upload to Google Play is a new one.
 - For developers: when Google Play doesn't offer the subscription, or can't be reached, the Android app says why in the phone's log (`Notosaurus` tag: the response code and each product not fetched, with its status).
 - For developers: the draft GitHub release also holds `notosaurus-X.Y.Z.aab`, the Android app for Google Play, built from `main` and signed with the upload key (the `release` environment's secrets, `main` only).
 - For developers: a release (`bundleRelease`) is signed with the upload key from `~/.config/notosaurus/keystore.properties` (never in git; without it, unsigned), for Google Play (Play App Signing keeps the app's own key).
