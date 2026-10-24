@@ -81,7 +81,15 @@ export default defineConfig({
 						it: 'App Android',
 						'pt-BR': 'App Android',
 					},
-					items: [{ slug: 'android-app' }, { slug: 'app-privacy' }],
+					items: [
+						{ slug: 'android-app' },
+						{ slug: 'app-subscription' },
+						{ slug: 'app-ankidroid' },
+						{ slug: 'app-with-computer' },
+						{ slug: 'app-settings' },
+						{ slug: 'app-troubleshooting' },
+						{ slug: 'app-privacy' },
+					],
 				},
 				{
 					label: 'Anki add-on',
