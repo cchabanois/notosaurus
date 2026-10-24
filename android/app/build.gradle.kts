@@ -63,6 +63,10 @@ android {
         versionName = notosaurusVersion
         // On a device (androidTest): AnkiDroid's real API, the whole app (see README, "Tests on a device")
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+        // The tests needing the app freshly installed (FreshInstall: PermissionTest) in a run of
+        // their own, -Pnotosaurus.freshInstall; the others without it
+        val freshInstall = providers.gradleProperty("notosaurus.freshInstall").isPresent
+        testInstrumentationRunnerArguments[if (freshInstall) "annotation" else "notAnnotation"] = "app.notosaurus.FreshInstall"
     }
     testOptions {
         unitTests.all {

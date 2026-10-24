@@ -74,6 +74,7 @@ Each pull request adds a line under **Unreleased**. See [Releasing](CONTRIBUTING
 
 ### Changed
 
+- For developers: `./gradlew connectedDebugAndroidTest` runs every device test but those needing the app freshly installed (`@FreshInstall`: `PermissionTest`), run on their own with `-Pnotosaurus.freshInstall`; no more test reported failed (skipped) in a run with the others.
 - For developers: a device test of AnkiDroid's permission (`PermissionTest`): refused, asked again, refused for good (the send and the settings' **Allow** answered at once, not left waiting), then granted; run on its own, the app freshly installed.
 - For developers: the device tests (Android on a device) also run on the pull requests changing `android/` or `static/`, with AnkiDroid 2.25.0; on Mondays and on demand, with AnkiDroid's latest release, 2.25.0, 2.24.1 and 2.23.3 side by side.
 - A test's lessons not in Anki yet are sent from its sheet (**📥 Send to Anki** on each, **Send all** when several), without opening each.
@@ -118,6 +119,7 @@ Each pull request adds a line under **Unreleased**. See [Releasing](CONTRIBUTING
 - A test changed while Anki (or AnkiDroid) couldn't follow (renamed, a lesson taken out, deleted) is followed once it can (a change, or the tests listed): its old tag taken off, instead of kept on the notes for good.
 - Two tests whose names differ by their case only are refused (Anki tells tags apart without it: they would tag the same notes).
 - Android: a purchase paid later (some ways to pay) is said pending, not cancelled, and restored as the settings open once Google Play has it.
+- Android: a picture card whose picture AnkiDroid refuses goes in as a text card again, and a dictation whose sound it refuses as a card not heard (since the sounds and pictures are no longer copied again, such a card went in as a picture card without its picture, or a dictation with nothing to hear).
 - Android: a lesson sent again to AnkiDroid no longer copies its sounds and pictures again (AnkiDroid's media folder grew at every send, each copy under a new name, and the notes counted as updated): a note already showing a file keeps it.
 - The free trial's start ("✓ Free trial: 300 credits until …") shows in the toast after the first lesson, seen wherever the page is, instead of a bar at its top (scrolled away by the new cards). For developers: the page tests wait for a page's requests before the next test, whose data a late save landed in (a lesson too many, now and then).
 - **✨ Générer à partir de la consigne seule** shows only when the prompt can do without a photo: the free one with a text, the user's own, a built-in one once something is written in it (as it is, "Automatic" or "Dictation" reads a lesson); the hint saying how stays.

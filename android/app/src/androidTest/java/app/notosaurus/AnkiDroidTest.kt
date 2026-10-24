@@ -274,6 +274,56 @@ class AnkiDroidTest {
         assertTrue(now, now.startsWith("gata-$run") && now in media())
     }
 
+    @Test
+    fun aPictureCardSentAgainKeepsItsPicture() {
+        val anki = Anki(Device.context)
+        val lesson = "pic-$run"
+        val picture = File(Device.context.filesDir, "lessons/$lesson/images/picture-p-$run.jpg").apply {
+            parentFile!!.mkdirs()
+            outputStream().use { Bitmap.createBitmap(20, 20, Bitmap.Config.ARGB_8888).compress(Bitmap.CompressFormat.JPEG, 80, it) }
+        }
+        val deck = Deck("Notosaurus test $run", listOf(Card("le renard $run", "el zorro", id = "p-$run", picture = picture.name)))
+        val first = anki.send(deck, Media(pictures = mapOf(picture.name to picture), lesson = lesson))
+        assertEquals(1, first.added)
+        val note = AddContentApi(Device.context).getNote(first.notes.getValue("p-$run"))!!
+        assertEquals(types["picture"].androidName, AddContentApi(Device.context).modelList!![noteModel(note.id)])
+
+        // Sent again with the last send's notes: nothing updated, the picture not copied again
+        val again = anki.send(deck, Media(pictures = mapOf(picture.name to picture), lesson = lesson, sentBefore = first.notes))
+        assertEquals(listOf(0, 0), listOf(again.added, again.updated))
+        assertEquals(1, media().count { it.startsWith("picture-p-$run") })
+    }
+
+    @Test
+    fun aFileAnkiDroidRefusesMakesTheCardItWouldBeWithoutIt() {
+        val anki = Anki(Device.context)
+        val api = AddContentApi(Device.context)
+        // Files AnkiDroid can't read (not there): a picture card's, a dictation's sound
+        val missing = File(Device.context.filesDir, "lessons/refused-$run/images/picture-r-$run.jpg")
+        val silent = File(Device.context.filesDir, "audio/refused-$run.mp3")
+        val picture = anki.send(
+            Deck("Notosaurus test $run", listOf(Card("la souris $run", "el ratón", id = "r-$run", picture = missing.name))),
+            Media(pictures = mapOf(missing.name to missing), lesson = "refused-$run"),
+        )
+        assertEquals(1, picture.added)
+        assertEquals(types["text"].androidName, api.modelList!![noteModel(picture.notes.getValue("r-$run"))])
+
+        val dictation = anki.send(
+            Deck("Notosaurus test $run", listOf(Card("le hibou $run", "el búho", id = "d-$run"))),
+            Media(audio = mapOf("el búho" to silent), lesson = "refused-d-$run"),
+            Options(dictation = true),
+        )
+        assertEquals(1, dictation.added)
+        val note = api.getNote(dictation.notes.getValue("d-$run"))!!
+        assertEquals(types["text"].androidName, api.modelList!![noteModel(note.id)])
+        assertFalse(note.fields.toList().toString(), note.fields.any { "[sound:" in it || "\uE000" in it })
+    }
+
+    /** A note's note type. */
+    private fun noteModel(note: Long): Long = Device.context.contentResolver.query(
+        Uri.withAppendedPath(FlashCardsContract.Note.CONTENT_URI, note.toString()), arrayOf(FlashCardsContract.Note.MID), null, null, null,
+    )!!.use { c -> c.moveToFirst(); c.getLong(0) }
+
     /** The file a note's "[sound:…]" names (one field has it). */
     private fun soundOf(fields: Array<String>): String =
         fields.firstNotNullOfOrNull { Regex("""\[sound:([^\]]+)]""").find(it)?.groupValues?.get(1) } ?: error("no sound in ${fields.toList()}")

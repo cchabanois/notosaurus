@@ -95,14 +95,14 @@ phone), `PermissionTest` (below). With an emulator (or a phone) connected and An
 `dev-AnkiDroid-<version>-play-universal.apk` of its releases; never opened is fine):
 
 ```sh
-./gradlew connectedDebugAndroidTest -Pandroid.testInstrumentationRunnerArguments.notClass=app.notosaurus.PermissionTest
-./gradlew connectedDebugAndroidTest -Pandroid.testInstrumentationRunnerArguments.class=app.notosaurus.PermissionTest
+./gradlew connectedDebugAndroidTest
+./gradlew connectedDebugAndroidTest -Pnotosaurus.freshInstall
 ```
 
-`PermissionTest` (AnkiDroid's permission refused, asked again, refused for good, granted:
-Android's own dialog) needs the app never granted it, so a run of its own: Gradle installs
-the app again; revoking the permission instead would kill the tests' process. In a run with
-the others it is skipped once they have granted it.
+The first runs every test but `PermissionTest` (AnkiDroid's permission refused, asked again,
+refused for good, granted: Android's own dialog), which needs the app never granted it: the
+second runs it (and any test marked `@FreshInstall`) on its own, Gradle installing the app
+again; revoking the permission instead would kill the tests' process.
 
 ⚠️ Gradle installs the app for the tests and **uninstalls it afterwards**: its lessons
 and settings on that device are gone. Use an emulator, not your own phone.

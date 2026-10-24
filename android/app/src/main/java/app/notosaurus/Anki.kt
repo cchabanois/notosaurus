@@ -231,9 +231,15 @@ class Anki(private val context: Context) : AnkiTarget {
         val files = mutableListOf<Pair<File, String>>()
         val added = mutableMapOf<Int, String>()
         val diagrams = mutableMapOf<Int, File>() // a photo's diagram image, made once
-        fun file(f: File, kind: String): String {
-            val i = files.indexOf(f to kind).takeIf { it >= 0 } ?: files.size.also { files += f to kind }
-            return "$FILE_MARK$i$FILE_MARK"
+        fun index(f: File, kind: String) = files.indexOf(f to kind).takeIf { it >= 0 } ?: files.size.also { files += f to kind }
+        fun file(f: File, kind: String) = "$FILE_MARK${index(f, kind)}$FILE_MARK"
+        // A file deciding the note's type (a picture card's, a dictation's sound): into AnkiDroid
+        // now unless the card's note from the last send shows it, so that one AnkiDroid refuses
+        // makes the card it would be without it (text, not heard): ""
+        fun deciding(f: File, kind: String, key: String): String {
+            val before = media.sentBefore[key]?.let { api.getNote(it) }
+            if (before != null && shown(before.fields, f, kind) != null) return file(f, kind)
+            return if (added.getOrPut(index(f, kind)) { media(f, kind) ?: "" }.isEmpty()) "" else file(f, kind)
         }
         fun withFiles(fields: Array<String>, there: Array<String>?): Array<String> = Array(fields.size) { k ->
             FILE_REF.replace(fields[k]) { mark ->
@@ -246,15 +252,16 @@ class Anki(private val context: Context) : AnkiTarget {
         val notes = deck.cards.withIndex().filter { it.value.front.isNotBlank() }.mapNotNull { (i, card) ->
             val name = deckName(deck.deck, card.subdeck)
             val tags = (card.tags.map { it.trim().replace(' ', '_') }.filter { it.isNotEmpty() } + "notosaurus" + own + media.extraTags[card.id].orEmpty()).toSet()
-            val sound = media.audio[Speech.spoken(card, options.dictation)]?.let { file(it, "audio") } ?: ""
             val common = mapOf("Info" to info(card), "Explanation" to html(card.explanation), "Mnemonic" to html(card.mnemonic))
             // Which note it is, sent again: the card's own id; else its place in the lesson; else its text
             val key = card.id.ifBlank { if (media.lesson.isNotEmpty()) "${media.lesson}:$i" else html(card.front) }
+            val sound by lazy { media.audio[Speech.spoken(card, options.dictation)]?.let { if (options.dictation) deciding(it, "audio", key) else file(it, "audio") }.orEmpty() }
             fun note(variant: String, fields: Map<String, String>): Note {
                 val type = noteTypes[variant]
                 return Note(model(type) ?: error("AnkiDroid refused the note type ${type.androidName}"), name, type.values(common + fields), tags, key)
             }
-            val picture = media.pictures[card.picture]?.let { file(it, "image") }.orEmpty()
+            // Only for the cards showing them (lazy): no file into AnkiDroid that no note shows
+            val picture by lazy { media.pictures[card.picture]?.let { if (card.isChoice()) file(it, "image") else deciding(it, "image", key) }.orEmpty() }
             when {
                 card.isChoice() -> note( // not heard: the options are read
                     "choice",
