@@ -61,6 +61,9 @@ internal fun Route.settingsRoutes(server: LocalServer) {
                 put("disabled", JsonArray(switches.disabled().map(::JsonPrimitive)))
                 put("update", switches.updateAvailable())
                 put("store", "https://play.google.com/store/apps/details?id=${BuildConfig.APPLICATION_ID}")
+                // The free trial just started (the first lesson): its credits and end, told once
+                put("trial", trialStarted ?: JsonNull)
+                trialStarted = null
             }
         }
         // The children's cards (Children): listed, saved by the page's "For: …" sheet

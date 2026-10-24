@@ -59,6 +59,23 @@ class RelayTest {
     }
 
     @Test
+    fun noKeyTheFreeTrialsForAnAiCallOnly() = runBlocking {
+        var asked = 0
+        val relay = Relay(server.url("/").toString(), "", noKey = { asked++; "nts_trial" })
+        server.enqueue(MockResponse.Builder().body("""{"plan": "free_trial", "credits_left": 300, "daily_left": 150}""").build())
+        relay.account() // not an AI call: no trial
+        assertEquals("Bearer", server.takeRequest().headers["Authorization"]?.trim())
+        server.enqueue(MockResponse.Builder().body("""{"text": "t"}""").build())
+        relay.post("rephrase", buildJsonObject {})
+        assertEquals("Bearer nts_trial", server.takeRequest().headers["Authorization"])
+        assertEquals(1, asked)
+        // A key already: never asked
+        server.enqueue(MockResponse.Builder().body("""{"text": "t"}""").build())
+        Relay(server.url("/").toString(), "nts_key", noKey = { asked++; "x" }).post("rephrase", buildJsonObject {})
+        assertEquals(1, asked)
+    }
+
+    @Test
     fun theCardsAsTheAiWritesThem() = runBlocking {
         val lines = listOf(
             """{"card": {"front": "a", "back": "x"}}""",

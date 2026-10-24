@@ -130,7 +130,25 @@ class LocalServer(
     }
 
     /** The relay, with its licence key. */
-    internal fun relay() = Relay(relayUrl(), licence(), lost = relays::refreshSoon, lapsed = ::recheckSoon)
+    internal fun relay() = Relay(relayUrl(), licence(), lost = relays::refreshSoon, lapsed = ::recheckSoon, noKey = ::trialKey)
+
+    private val trialStarting = Mutex()
+
+    /** The free trial's account, just started: told once to the page (/api/switches). */
+    @Volatile internal var trialStarted: JsonObject? = null
+
+    /**
+     * No key yet, an AI call (the first lesson): the free trial started without a word
+     * (Google Play missing: none, the relay then says a key is needed). Once, however many
+     * calls come at the same time (a lesson's pictures).
+     */
+    private suspend fun trialKey(): String = trialStarting.withLock {
+        licence().ifEmpty {
+            val store = subscriptions ?: return@withLock ""
+            trialStarted = startTrial(store)
+            licence()
+        }
+    }
 
     private var recheckedAt: Long? = null
 

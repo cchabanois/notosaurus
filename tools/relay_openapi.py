@@ -41,6 +41,7 @@ COMMON = (
     "relay.no_credits",
     "relay.subscription_ended",
     "relay.payment_pending",
+    "relay.trial_ended",
     "relay.daily_limit",
     "relay.busy",
     "relay.client_outdated",

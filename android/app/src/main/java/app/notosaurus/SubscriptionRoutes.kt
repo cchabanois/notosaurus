@@ -37,15 +37,6 @@ internal fun Route.subscriptionRoutes(server: LocalServer) {
             val token = store.subscribe(plan) ?: return@api buildJsonObject { put("cancelled", true) }
             licensed(token)
         }
-        // The free trial, no card: once per phone (Play Integrity says it is the app from
-        // Google Play on a real one); the relay answers its key, kept as a purchase's is
-        api("POST", "/api/admin/subscription/trial") {
-            val store = subscriptions ?: throw BadRequest("subscription.unavailable")
-            val device = store.device()
-            val token = withContext(Dispatchers.IO) { store.integrity(device) } ?: throw BadRequest("relay.trial_refused")
-            val request = buildJsonObject { put("integrity_token", token); put("device", device) }
-            keep(withContext(Dispatchers.IO) { Relay(relayUrl(), "").post("trial", request) })
-        }
         // A new phone, the app reinstalled: the subscription this Google account has
         api("POST", "/api/admin/subscription/restore") {
             val store = subscriptions ?: throw BadRequest("subscription.unavailable")
@@ -69,6 +60,16 @@ internal suspend fun LocalServer.licensed(token: String): JsonObject {
         })
     }
     return keep(answer)
+}
+
+/** The free trial, no card, started at the first AI call without a key (LocalServer.trialKey):
+ * once per phone (Play Integrity says it is the app from Google Play on a real one); the
+ * relay answers its key, kept as a purchase's is; its account. */
+internal suspend fun LocalServer.startTrial(store: SubscriptionStore): JsonObject {
+    val device = store.device()
+    val token = withContext(Dispatchers.IO) { store.integrity(device) } ?: throw BadRequest("relay.trial_refused")
+    val request = buildJsonObject { put("integrity_token", token); put("device", device) }
+    return keep(withContext(Dispatchers.IO) { Relay(relayUrl(), "").post("trial", request) })
 }
 
 /** The relay's licence key kept for the relay in use; its account. */

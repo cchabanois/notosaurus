@@ -276,6 +276,8 @@
       "guard": "but it can make mistakes: check the cards before giving them to your child.",
       "nameTitle": "A notebook page often shows the child's name:",
       "name": "hide it with 🖍️ before sending.",
+      "trialTitle": "The first lesson starts a free trial,",
+      "trial": "no card, once per phone (Google checks that it is a real phone, the app knows this one by a fingerprint).",
       "policy": "Privacy policy",
       "agree": "I am a parent (an adult) and I accept the privacy policy.",
       "accept": "Accept"
@@ -797,7 +799,8 @@
         "monthly": "{days}-day free trial, then {price} a month",
         "yearly": "{days}-day free trial, then {price} a year"
       },
-      "freeTrial": "🎁 Try it free, no card",
+      "trialAtFirstLesson": "🎁 Your free trial, no card, will start with your first lesson.",
+      "subscribeShort": "Subscribe",
       "trialStarted": "✓ Free trial: {credits} credits until {date}. Happy revising!",
       "restore": "I already have a subscription",
       "manage": "Manage the subscription (Google Play)",
@@ -1004,6 +1007,7 @@
       "invalid_key": "Unknown or ended licence key: check it in the settings.",
       "no_credits": "No credits left this month: they come back with the next renewal.",
       "subscription_ended": "Your subscription has ended: subscribe again in the app to go on.",
+      "trial_ended": "Your free trial is over: subscribe in the Settings to go on.",
       "payment_pending": "Payment pending: Google Play couldn't renew your subscription. Update your payment method in Google Play (Settings → Manage the subscription) to go on.",
       "invalid_purchase": "Purchase not recognised by Google Play: try again, or contact support.",
       "trial_refused": "The free trial is only possible with the app installed from Google Play, on a real phone.",
