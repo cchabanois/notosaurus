@@ -25,7 +25,11 @@ import io.ktor.server.routing.put
 import io.ktor.server.routing.routing
 import io.ktor.utils.io.toByteArray
 import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.cancel
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
@@ -101,6 +105,7 @@ class LocalServer(
 
     fun stop() {
         soundsAhead.stop()
+        background.cancel()
         if (::server.isInitialized) server.stop(gracePeriodMillis = 0, timeoutMillis = 1000)
     }
 
@@ -152,6 +157,9 @@ class LocalServer(
 
     private var recheckedAt: Long? = null
 
+    // The server's own work in the background (a subscription checked again): stopped with it
+    private val background = CoroutineScope(SupervisorJob() + Dispatchers.IO)
+
     /**
      * The relay said the subscription ended or is on hold: Google Play's purchases checked
      * again in the background, at most every RECHECK_S (a renewal, or a payment fixed,
@@ -162,7 +170,7 @@ class LocalServer(
         val last = recheckedAt
         if (last != null && System.nanoTime() - last < RECHECK_S * 1_000_000_000L) return
         recheckedAt = System.nanoTime()
-        Thread { runBlocking { recheck(store) } }.start()
+        background.launch { recheck(store) }
     }
 
     /** Google Play's purchases of this Google account checked again by the relay: the first

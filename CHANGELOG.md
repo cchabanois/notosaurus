@@ -114,6 +114,7 @@ Each pull request adds a line under **Unreleased**. See [Releasing](CONTRIBUTING
 
 ### Fixed
 
+- Android: a test to prepare refused (a name too long…) says why, instead of a message about the relay; two changes to the tests at once no longer lose one.
 - Tests to prepare with the Anki add-on (not AnkiConnect): a lesson taken out of a test no longer fails as "Anki closed" (the add-on now takes a tag off: removeTags); a test checks that the add-on answers every action Notosaurus asks for.
 - A test changed while Anki (or AnkiDroid) couldn't follow (renamed, a lesson taken out, deleted) is followed once it can (a change, or the tests listed): its old tag taken off, instead of kept on the notes for good.
 - Two tests whose names differ by their case only are refused (Anki tells tags apart without it: they would tag the same notes).

@@ -1044,6 +1044,7 @@
       "not_found": "Esta criança já não existe: recarregue a página."
     },
     "exams": {
+      "invalid": "Esta prova não é válida: um nome com 60 caracteres no máximo, uma data, 50 lições no máximo.",
       "not_found": "Esta prova já não existe: recarregue a página.",
       "too_many": "No máximo {max} provas.",
       "same_name": "Outra prova já tem este nome (o Anki não distingue maiúsculas): escolhe outro."

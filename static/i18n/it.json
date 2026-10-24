@@ -1044,6 +1044,7 @@
       "not_found": "Questo bambino non esiste più: ricarica la pagina."
     },
     "exams": {
+      "invalid": "Questa verifica non è valida: un nome di 60 caratteri al massimo, una data, 50 lezioni al massimo.",
       "not_found": "Questa verifica non esiste più: ricaricate la pagina.",
       "too_many": "Al massimo {max} verifiche.",
       "same_name": "Un'altra verifica ha già questo nome (Anki non distingue le maiuscole): scegline un altro."

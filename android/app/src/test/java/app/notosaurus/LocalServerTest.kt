@@ -684,6 +684,9 @@ class LocalServerTest {
         assertEquals(0, client.get("/api/exams") { page() }.json().jsonArray.single().jsonObject["lessons"]!!.jsonArray.size)
         val refused = client.put("/api/exams/Bad id") { page(); contentType(ContentType.Application.Json); setBody("""{"name": "x"}""") }
         assertEquals(400, refused.status.value)
+        assertEquals("exams.invalid", refused.json().jsonObject["detail"]!!.jsonObject.string("code")) // the test's, not the relay's
+        val tooLong = client.put("/api/exams/long") { page(); contentType(ContentType.Application.Json); setBody("""{"name": "${"x".repeat(61)}"}""") }
+        assertEquals("exams.invalid", tooLong.json().jsonObject["detail"]!!.jsonObject.string("code"))
     }
 
     @Test

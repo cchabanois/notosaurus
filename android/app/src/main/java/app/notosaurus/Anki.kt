@@ -401,7 +401,9 @@ class Anki(private val context: Context) : AnkiTarget {
 
     /** How a note's fields show `file` already ("[sound:…]", "<img src=…>"): AnkiDroid names its
      * copy after ours, a number added ("ab12_8455….mp3"), and ours are named after their
-     * content (Speech, Pictures, diagramImage); null when none does. */
+     * content (Speech, Pictures, diagramImage); null when none does. That naming is AnkiDroid's,
+     * not documented: AnkiDroidTest.theBacksSoundIntoAnkiDroidsMedia and diagramLabelsAndGaps
+     * check it (a version naming copies otherwise: they fail, every send copying the files again). */
     private fun shown(fields: Array<String>, file: File, kind: String): String? {
         val name = Regex.escape(file.nameWithoutExtension) + "(?:_\\d+)?\\." + Regex.escape(file.extension)
         val ref = Regex(if (kind == "audio") "\\[sound:$name]" else "<img src=\"$name\"[^>]*>")
