@@ -85,9 +85,18 @@ Then open http://localhost:8000 on the computer. For the phone (same Wi-Fi): ⚙
 
 Docker and the environment variables: see [Advanced installation](https://cchabanois.github.io/notosaurus/install/).
 
-## Settings
+## Good to know
 
-On the computer, the ⚙️ page chooses:
+- **Always review the cards.** Even good models misread a word now and then.
+- **Children's schoolwork is private data.** A notebook page often shows the child's name: hide it with 🖍️ before sending. In the app, photos go through the Notosaurus service to Gemini, without being kept there (see the [app's privacy policy](https://cchabanois.github.io/notosaurus/app-privacy/)). On the computer, they go to the AI provider you choose (see [Privacy and security](https://cchabanois.github.io/notosaurus/privacy/)).
+
+## On the computer
+
+For the add-on, standalone and Docker, and for the app's "💻 On my computer" mode, which uses them. The app "📱 On this phone" needs none of this: no AI key, and its own settings page.
+
+### Settings
+
+The ⚙️ page chooses:
 
 - the AI service and model, and the image model for the pictures;
 - API keys, which are stored in `data/settings.json` (readable only by the server's user) and never sent back to the browser;
@@ -98,7 +107,7 @@ On the computer, the ⚙️ page chooses:
 
 Environment variables (see `.env.example`) provide defaults. Whatever is saved on the ⚙️ page wins.
 
-### AI providers
+#### AI providers
 
 | Provider | Notes |
 |---|---|
@@ -113,9 +122,9 @@ For the last three, *Load models* lists only models that accept images (and stru
 
 Local models (Ollama, LM Studio) work, but they read handwritten pages much less reliably. Claude and local models can't draw: pictures are then drawn by another service, chosen in ⚙️. What each costs: see [AI services and costs](https://cchabanois.github.io/notosaurus/ai-services/).
 
-## Data
+### Data
 
-There is no database. On the computer, everything is plain files under `data/` (or `NOTOSAURUS_DATA`), so backing up Notosaurus means copying that folder.
+There is no database. Everything is plain files under `data/` (or `NOTOSAURUS_DATA`), so backing up Notosaurus means copying that folder.
 
 ```
 data/
@@ -133,22 +142,21 @@ data/
   cache/                                     voices and pictures, safe to delete
 ```
 
-In the add-on, `data/` lives in the add-on's `user_files/` folder. In the Android app, lessons are kept the same way, in the app's private storage.
+In the add-on, `data/` lives in the add-on's `user_files/` folder.
+
+### Good to know on the computer
+
+- **A local model keeps the photos at home**, at the cost of accuracy.
+- **Only paired devices.** On the Wi-Fi, only the computer itself and the devices that scanned Notosaurus's QR code (Tools → Notosaurus → Open on the phone, or ⚙️ → Phones) can use it: the others can't spend your AI credits or delete lessons. "Disconnect every phone" in ⚙️ → Phones unpairs them all (a phone lost or lent).
+- **Plain HTTP on the local network.** The camera works over plain HTTP, and the page can be added to the home screen as a shortcut. Pairing stops the curious and other websites, not someone spying on the Wi-Fi traffic: keep your Wi-Fi protected (WPA2/WPA3).
+- **Never expose AnkiConnect or Notosaurus to the Internet.** Keep them on your local network.
+- **edge-tts is unofficial.** The computer's voices come from [edge-tts](https://github.com/rany2/edge-tts); Microsoft could shut it down.
 
 ## Languages
 
 The interface follows the page's language picker, then Anki's language (in the add-on), then the browser's, and falls back to English.
 
 To add a language, see [CONTRIBUTING.md](CONTRIBUTING.md#adding-a-language): it takes a single file.
-
-## Good to know
-
-- **Always review the cards.** Even good models misread a word now and then.
-- **Children's schoolwork is private data.** On the computer, photos go to the AI provider you choose; a local model keeps them at home, at the cost of accuracy. In the app, they go through the Notosaurus service to Gemini, without being kept. See [Privacy and security](https://cchabanois.github.io/notosaurus/privacy/).
-- **Only paired devices.** On the Wi-Fi, only the computer itself and the devices that scanned Notosaurus's QR code (Tools → Notosaurus → Open on the phone, or ⚙️ → Phones) can use it: the others can't spend your AI credits or delete lessons. "Disconnect every phone" in ⚙️ → Phones unpairs them all (a phone lost or lent).
-- **Plain HTTP on the local network.** The camera works over plain HTTP, and the page can be added to the home screen as a shortcut. Pairing stops the curious and other websites, not someone spying on the Wi-Fi traffic: keep your Wi-Fi protected (WPA2/WPA3).
-- **Never expose AnkiConnect or Notosaurus to the Internet.** Keep them on your local network.
-- **edge-tts is unofficial.** The computer's voices come from [edge-tts](https://github.com/rany2/edge-tts); Microsoft could shut it down.
 
 ## Support
 
