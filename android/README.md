@@ -91,12 +91,18 @@ What only a device shows (`app/src/androidTest`): `AnkiDroidTest` (AnkiDroid's r
 API: note type, decks and sub-decks, duplicates, a test's tags, sounds and pictures), `AppTest` (the activity, its
 WebView and the page, a lesson made with a fake relay and sent to AnkiDroid),
 `ModesTest` (a fake computer's page, the page when it stops answering, back to the
-phone). With an emulator (or a phone) connected and AnkiDroid installed (the
+phone), `PermissionTest` (below). With an emulator (or a phone) connected and AnkiDroid installed (the
 `dev-AnkiDroid-<version>-play-universal.apk` of its releases; never opened is fine):
 
 ```sh
-./gradlew connectedDebugAndroidTest
+./gradlew connectedDebugAndroidTest -Pandroid.testInstrumentationRunnerArguments.notClass=app.notosaurus.PermissionTest
+./gradlew connectedDebugAndroidTest -Pandroid.testInstrumentationRunnerArguments.class=app.notosaurus.PermissionTest
 ```
+
+`PermissionTest` (AnkiDroid's permission refused, asked again, refused for good, granted:
+Android's own dialog) needs the app never granted it, so a run of its own: Gradle installs
+the app again; revoking the permission instead would kill the tests' process. In a run with
+the others it is skipped once they have granted it.
 
 ⚠️ Gradle installs the app for the tests and **uninstalls it afterwards**: its lessons
 and settings on that device are gone. Use an emulator, not your own phone.
