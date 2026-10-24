@@ -97,6 +97,7 @@ cards**. For one prompt only, say so in its text: "no pictures".
 
 ## Standing instructions
 
-Some instructions apply to every lesson: “Spanish from Spain”, “in year 8; short answers”.
-Write them once in **Settings → Instructions for the AI**, for every profile or for each
-child: see [Several children](../several-children/#instructions-per-child).
+Some instructions apply to every lesson: “Spanish from Spain”, “always the article with nouns”.
+Write them once in **Settings → Instructions for the AI → For every child**. Each child's own
+(their class, “still reads slowly”) are in their card, **🧒** on the main page: see
+[Several children](../several-children/#the-childrens-cards).

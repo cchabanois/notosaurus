@@ -80,7 +80,14 @@ cards stay the same, only how Anki asks them changes.
 The line below says which voice reads the backs. It is included in the deck, so it plays
 everywhere, even offline.
 
-## A lesson of another profile
+## Whose lesson it is
 
-A lesson shared by another child's profile opens **read only**: you can still add it to your
-own Anki, but only its owner can change it. See [Several children](../several-children/).
+Above the cards, a line says whom the lesson is for: **🧒 Paul's lesson**. If Anki is open on
+another child's profile, it says so before you send the cards.
+
+**⧉ Copy for…**, when there is another child, makes a copy of the lesson for them: their decks,
+their own cards in Anki. It's free: nothing is asked of the AI.
+
+A lesson shared with every profile by an older version opens **read only** in the other
+profiles: you can still add it to your own Anki, or copy it, but only from its owner's profile
+can it be changed. See [Several children](../several-children/).
