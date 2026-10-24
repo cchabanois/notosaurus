@@ -24,8 +24,9 @@ import java.util.regex.Pattern
  * refused (the page told why), asked again, refused for good (Android asks no more), then
  * granted. Needs the app freshly installed, never granted it: revoking a permission kills the
  * app's process, the tests' too. So on its own, after the others (see README):
- * `-Pandroid.testInstrumentationRunnerArguments.class=app.notosaurus.PermissionTest`.
+ * `./gradlew connectedDebugAndroidTest -Pnotosaurus.freshInstall` (FreshInstall).
  */
+@FreshInstall
 @RunWith(AndroidJUnit4::class)
 class PermissionTest {
     @get:Rule val keepSettings = Device.KeepSettings()
@@ -38,7 +39,7 @@ class PermissionTest {
     @Before
     fun setUp() {
         assumeTrue("AnkiDroid isn't installed on this device", anki.installed())
-        assumeFalse("AnkiDroid's permission granted already: run this test on its own (README)", anki.permitted())
+        assumeFalse("AnkiDroid's permission granted already: needs the app freshly installed (FreshInstall)", anki.permitted())
         relay.start()
         Device.settings(
             LocalServer.MODE to LocalServer.PHONE_MODE,
