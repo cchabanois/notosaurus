@@ -33,6 +33,8 @@ applications ») : sur AnkiDroid 2.25 et avant, activez **Paramètres → Avanc�
 d'Internet). Les cartes sont envoyées sans leur son, et le message dit combien. Ajoutez à nouveau
 la leçon à Anki plus tard : les sons qui manquent sont ajoutés.
 
+![Le message après un envoi dont les voix n'ont pas répondu : cartes envoyées, mais certaines sans son](../../../assets/screenshots/fr/app-no-sound.png)
+
 Voir [L'application et AnkiDroid](../app-ankidroid/).
 
 ## Avec votre ordinateur

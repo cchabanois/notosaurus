@@ -5,6 +5,8 @@ description: "The Android app's own settings page: the subscription, AnkiDroid, 
 
 **⚙️**, at the top of the page, opens the app's own settings. They are saved as you go.
 
+![The top of the app's settings: subscription, AnkiDroid, where Notosaurus works](../../assets/screenshots/en/app-settings.png)
+
 - **🔑 Subscription**: the free trial or the plan, the credits left this month and today, when they
   are renewed; **I already have a subscription**, **Manage the subscription (Google Play)**, and a
   **Licence key** field. See [The subscription](../app-subscription/).
@@ -22,6 +24,8 @@ description: "The Android app's own settings page: the subscription, AnkiDroid, 
 - **ℹ️ About**: the version, the licence, the source code, the
   [privacy policy](../app-privacy/) and the licences of the libraries used.
 - **Advanced**: the relay address, for tests only. Leave it as it is.
+
+![Further down: instructions for the AI, card voices, lessons on this phone](../../assets/screenshots/en/app-settings-more.png)
 
 At the bottom, **🌐** chooses the language of the page, and **📖 Help** opens this documentation.
 

@@ -37,6 +37,8 @@ leçons, puis vous demande d'accepter sa [politique de confidentialité](../app-
 - Une page de cahier montre souvent le nom de l'enfant : cachez-le avec **🖍️** avant l'envoi
   (voir [Photos et PDF](../photos/)).
 
+![L'accueil de l'application : un outil pour les parents, Gemini, l'essai gratuit, la politique de confidentialité à accepter](../../../assets/screenshots/fr/app-welcome.png)
+
 ## Votre première leçon
 
 1. **🧒** en haut de la page : ajoutez la fiche de votre enfant (prénom, classe), pour que les
@@ -53,6 +55,10 @@ leçons, puis vous demande d'accepter sa [politique de confidentialité](../app-
 
 La leçon est gardée sur le téléphone : rouvrez-la depuis **📚** pour la corriger et la renvoyer.
 Ses cartes sont mises à jour dans AnkiDroid, pas dupliquées.
+
+![La page principale de l'application : les photos de la leçon, la consigne avec 🎤, l'enfant choisi en haut](../../../assets/screenshots/fr/app-home.png)
+
+![Les cartes d'une leçon dans l'application, avec le champ de correction et son 🎤](../../../assets/screenshots/fr/app-review.png)
 
 ## Où elle fonctionne
 
@@ -82,6 +88,8 @@ pas :
 - **Les mises à jour** passent par Google Play. Quand une nouvelle version est disponible,
   l'application dit **Une nouvelle version de Notosaurus est disponible**, avec un bouton
   **Mettre à jour**.
+
+![La feuille Signaler un contenu : pourquoi, un commentaire, et exactement ce qui sera envoyé](../../../assets/screenshots/fr/app-report.png)
 
 Voir aussi [Les réglages de l'application](../app-settings/) et, quand quelque chose ne va pas,
 [Dépannage de l'application](../app-troubleshooting/).

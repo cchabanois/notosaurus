@@ -20,6 +20,8 @@ lesson you make starts it, and the app then says how many credits it gives and u
   phone (Play Integrity), and the app knows this phone by a fingerprint, never its identifier
   itself. On an emulator, the trial isn't offered.
 
+![The app's settings without a subscription: the free trial will start with the first lesson](../../assets/screenshots/en/app-settings.png)
+
 ## Subscribing
 
 In the settings, **🔑 Subscription** offers the subscription by the month and by the year, with

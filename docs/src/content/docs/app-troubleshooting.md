@@ -33,6 +33,8 @@ AnkiDroid.
 Internet). The cards are sent without their sound, and the message says how many. Add the lesson
 to Anki again later: the missing sounds are added.
 
+![The message after a send whose voices didn't answer: cards sent, but some without sound](../../assets/screenshots/en/app-no-sound.png)
+
 See [The app and AnkiDroid](../app-ankidroid/).
 
 ## With your computer

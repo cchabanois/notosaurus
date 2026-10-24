@@ -26,6 +26,8 @@ Anki doit être ouvert sur l'ordinateur, avec le greffon, et le téléphone sur 
 L'application vérifie que l'ordinateur répond, le garde, et affiche sa page. **Changer
 d'ordinateur** en scanne un autre.
 
+![Les réglages de l'application reliée à un ordinateur : son nom, Changer d'ordinateur, À propos](../../../assets/screenshots/fr/app-computer-settings.png)
+
 ## Ce qui est sur l'ordinateur
 
 Dans ce mode, tout est à l'ordinateur : ses leçons, son service d'IA et sa clé, ses enfants, et
@@ -43,6 +45,8 @@ avec le greffon), et ce téléphone être sur le même Wi-Fi. Ensuite :
 - **Scanner à nouveau le QR code**, par exemple quand l'adresse de l'ordinateur a changé (après
   un redémarrage de la box) ;
 - **Utiliser sans ordinateur** : retour à **📱 Sur ce téléphone**.
+
+![L'ordinateur ne répond pas : Réessayer, Scanner à nouveau le QR code, Utiliser sans ordinateur](../../../assets/screenshots/fr/app-computer-unreachable.png)
 
 ## Deux modes, deux listes de leçons
 
