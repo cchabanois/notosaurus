@@ -1,16 +1,22 @@
 name: Android on a device
 
 # The app's tests on an emulator (android/app/src/androidTest): AnkiDroid's real API,
-# the whole app (WebView, page, LocalServer), its two modes. Slow (minutes), so on
-# demand only: Actions → "Android on a device" → Run workflow. And once a week, since
-# no pull request runs them: a test broken (or the app broken on a device) seen within days.
+# the whole app (WebView, page, LocalServer), its two modes. Slow (minutes): on the pull
+# requests that change the app or its page, as the workflow "Android"; on demand (Actions →
+# "Android on a device" → Run workflow); and once a week, AnkiDroid's new releases with it.
 on:
+  pull_request:
+    paths: ["android/**", "static/**", ".github/workflows/android-device.yml"]
   workflow_dispatch:
   schedule:
     - cron: "0 4 * * 1" # Mondays, 04:00 UTC
 
 permissions:
   contents: read
+
+concurrency:
+  group: android-device-${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
   emulator:

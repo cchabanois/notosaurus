@@ -226,9 +226,22 @@ class Anki(private val context: Context) : AnkiTarget {
 
     private fun add(deck: Deck, media: Media, options: Options): Sent {
         everyCurrent()
-        val added = mutableMapOf<File, String?>() // a file into AnkiDroid once, however many cards show it
+        // The files the cards show: a mark in the fields until a note needs them, then into
+        // AnkiDroid once, however many cards show them; not again for a note showing them already
+        val files = mutableListOf<Pair<File, String>>()
+        val added = mutableMapOf<Int, String>()
         val diagrams = mutableMapOf<Int, File>() // a photo's diagram image, made once
-        fun file(f: File, kind: String) = added.getOrPut(f) { media(f, kind) } ?: ""
+        fun file(f: File, kind: String): String {
+            val i = files.indexOf(f to kind).takeIf { it >= 0 } ?: files.size.also { files += f to kind }
+            return "$FILE_MARK$i$FILE_MARK"
+        }
+        fun withFiles(fields: Array<String>, there: Array<String>?): Array<String> = Array(fields.size) { k ->
+            FILE_REF.replace(fields[k]) { mark ->
+                val i = mark.groupValues[1].toInt()
+                val (f, kind) = files[i]
+                there?.let { shown(it, f, kind) } ?: added.getOrPut(i) { media(f, kind) ?: "" }
+            }
+        }
         val own = listOfNotNull(media.lesson.takeIf { it.isNotEmpty() }?.let(::lessonTag)) // to find the lesson's notes again
         val notes = deck.cards.withIndex().filter { it.value.front.isNotBlank() }.mapNotNull { (i, card) ->
             val name = deckName(deck.deck, card.subdeck)
@@ -296,8 +309,9 @@ class Anki(private val context: Context) : AnkiTarget {
                 val id = media.sentBefore[note.card] ?: return@filter true
                 val there = api.getNote(id)?.takeIf { noteModel(id) == model } ?: return@filter true
                 if (there.tags.any { it.startsWith(TAG_PREFIX) && it !in own }) return@filter true
-                if (!there.fields.contentEquals(note.fields) || !there.tags.containsAll(note.tags)) {
-                    api.updateNoteFields(id, note.fields)
+                val fields = withFiles(note.fields, there.fields)
+                if (!there.fields.contentEquals(fields) || !there.tags.containsAll(note.tags)) {
+                    api.updateNoteFields(id, fields)
                     api.updateNoteTags(id, there.tags + note.tags)
                     updated++
                 }
@@ -317,8 +331,9 @@ class Anki(private val context: Context) : AnkiTarget {
                     found.isEmpty() -> fresh += note
                     mine == null -> duplicates++
                     else -> {
-                        if (!mine.fields.contentEquals(note.fields) || !mine.tags.containsAll(note.tags)) {
-                            api.updateNoteFields(mine.id, note.fields)
+                        val fields = withFiles(note.fields, mine.fields)
+                        if (!mine.fields.contentEquals(fields) || !mine.tags.containsAll(note.tags)) {
+                            api.updateNoteFields(mine.id, fields)
                             api.updateNoteTags(mine.id, mine.tags + note.tags)
                             updated++
                         }
@@ -329,7 +344,7 @@ class Anki(private val context: Context) : AnkiTarget {
                 }
             }
             if (fresh.isEmpty()) return@forEach
-            count += maxOf(0, api.addNotes(model, did, fresh.map { it.fields }, fresh.map { it.tags }))
+            count += maxOf(0, api.addNotes(model, did, fresh.map { withFiles(it.fields, null) }, fresh.map { it.tags }))
             // Their ids (addNotes gives only how many): this lesson's notes with their keys
             api.findDuplicateNotes(model, fresh.map { it.fields[0] })?.let { added ->
                 fresh.forEachIndexed { i, note ->
@@ -382,6 +397,15 @@ class Anki(private val context: Context) : AnkiTarget {
         image.parentFile!!.mkdirs()
         image.outputStream().use { bitmap.compress(Bitmap.CompressFormat.JPEG, CARD_QUALITY, it) }
         return image
+    }
+
+    /** How a note's fields show `file` already ("[sound:…]", "<img src=…>"): AnkiDroid names its
+     * copy after ours, a number added ("ab12_8455….mp3"), and ours are named after their
+     * content (Speech, Pictures, diagramImage); null when none does. */
+    private fun shown(fields: Array<String>, file: File, kind: String): String? {
+        val name = Regex.escape(file.nameWithoutExtension) + "(?:_\\d+)?\\." + Regex.escape(file.extension)
+        val ref = Regex(if (kind == "audio") "\\[sound:$name]" else "<img src=\"$name\"[^>]*>")
+        return fields.firstNotNullOfOrNull { ref.find(it)?.value }
     }
 
     /** A file into AnkiDroid's media (read through our FileProvider): how a field shows
@@ -488,6 +512,8 @@ class Anki(private val context: Context) : AnkiTarget {
         const val PERMISSION = AddContentApi.READ_WRITE_PERMISSION
         // The tag of every note sent for a lesson (as the computer's): its notes found again
         const val TAG_PREFIX = "notosaurus::"
+        private const val FILE_MARK = '\uE000' // a file in a note's fields, until it is in AnkiDroid
+        private val FILE_REF = Regex("$FILE_MARK(\\d+)$FILE_MARK")
         fun lessonTag(lesson: String) = "$TAG_PREFIX$lesson"
 
         /** AnkiDroid's link to its card browser on a search. "deck:" in the search: AnkiDroid
