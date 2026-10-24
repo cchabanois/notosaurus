@@ -112,6 +112,7 @@ Each pull request adds a line under **Unreleased**. See [Releasing](CONTRIBUTING
 
 ### Fixed
 
+- A picture that would give the answer away, even half of it ("Which animal… and what is its name?" with the animal on it), goes on the back: the rule asks the AI, card by card, whether the pupil could answer from the picture alone, instead of listing examples (a portrait, a place, a work).
 - A subscription renewed (or its payment fixed) while the relay missed Google Play's notification is no longer cut off: when the relay says it ended or is on hold, the Android app checks this Google account's purchases again (the settings at once, a refused call in the background, at most every 10 minutes).
 - A subscription on hold (a renewal's payment failed) says so: "Payment pending", to fix in Google Play, with **Manage the subscription** in the settings, instead of "subscription ended"; an ended one shows the subscribe buttons again, as its message says. For developers: `relay.payment_pending` (402).
 - A picture drawn by Gemini cost a twentieth of its price in the lesson's costs (and the relay's credits): its tokens were priced as text; a drawn picture's tokens now count at the image's price (OpenRouter's `image_output`), about 6.7 cents with Gemini 3.1 Flash Image.

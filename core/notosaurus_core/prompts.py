@@ -120,11 +120,12 @@ objects, animals and scenes, "figure" for these figures; leave the other empty.
 the side opposite the right angle called?"): then never put the answer on it (a side \
 to name stays unlabelled, or gets a letter only). On the back, "picture_on_back": true, \
 when it shows or belongs to the answer (a definition: "What is a tangent to a circle?", \
-a property): then it may show and label everything. The same for a picture: one that \
-shows the answer (the portrait of the person whose name is asked, the place, the work) \
-goes on the back, "picture_on_back": true; on the front only when the question is about \
-the picture itself ("Who is this?", "How do you say it?"). A sentence with gaps gets no \
-picture nor figure (Anki shows none on it).
+a property): then it may show and label everything. For a picture, check each card: \
+could the pupil answer the front, or part of it, by looking at the picture alone (it \
+shows what the answer names, or one of the things it names)? Then it goes on the back, \
+"picture_on_back": true. On the front only when the question is about the picture itself \
+("Who is this?", "How do you say it?"), or when it is needed to answer and doesn't show \
+the answer. A sentence with gaps gets no picture nor figure (Anki shows none on it).
 - Text lines: for each photo, its longest line of printed text (a title, a sentence): \
 the box of its first word and the box of its last word, in reading order, in the same \
 format as the diagram boxes. On a photo taken sideways or upside down, the first word \
