@@ -25,11 +25,7 @@ import io.ktor.server.routing.put
 import io.ktor.server.routing.routing
 import io.ktor.utils.io.toByteArray
 import kotlinx.coroutines.CancellationException
-import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.SupervisorJob
-import kotlinx.coroutines.cancel
-import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
@@ -105,7 +101,7 @@ class LocalServer(
 
     fun stop() {
         soundsAhead.stop()
-        background.cancel()
+        licensing.stop()
         if (::server.isInitialized) server.stop(gracePeriodMillis = 0, timeoutMillis = 1000)
     }
 
@@ -135,55 +131,15 @@ class LocalServer(
     }
 
     /** The relay, with its licence key. */
-    internal fun relay() = Relay(relayUrl(), licence(), lost = relays::refreshSoon, lapsed = ::recheckSoon, noKey = ::trialKey)
+    internal fun relay() = Relay(relayUrl(), licence(), lost = relays::refreshSoon, lapsed = licensing::recheckSoon, noKey = licensing::trialKey)
 
-    private val trialStarting = Mutex()
-
-    /** The free trial's account, just started: told once to the page (/api/switches). */
-    @Volatile internal var trialStarted: JsonObject? = null
-
-    /**
-     * No key yet, an AI call (the first lesson): the free trial started without a word
-     * (Google Play missing: none, the relay then says a key is needed). Once, however many
-     * calls come at the same time (a lesson's pictures).
-     */
-    private suspend fun trialKey(): String = trialStarting.withLock {
-        licence().ifEmpty {
-            val store = subscriptions ?: return@withLock ""
-            trialStarted = startTrial(store)
-            licence()
-        }
-    }
-
-    private var recheckedAt: Long? = null
-
-    // The server's own work in the background (a subscription checked again): stopped with it
-    private val background = CoroutineScope(SupervisorJob() + Dispatchers.IO)
-
-    /**
-     * The relay said the subscription ended or is on hold: Google Play's purchases checked
-     * again in the background, at most every RECHECK_S (a renewal, or a payment fixed,
-     * whose notification never reached the relay: the next call has the new period).
-     */
-    @Synchronized private fun recheckSoon() {
-        val store = subscriptions ?: return
-        val last = recheckedAt
-        if (last != null && System.nanoTime() - last < RECHECK_S * 1_000_000_000L) return
-        recheckedAt = System.nanoTime()
-        background.launch { recheck(store) }
-    }
-
-    /** Google Play's purchases of this Google account checked again by the relay: the first
-     * it gives access to, its key kept; false if none does. */
-    internal suspend fun recheck(store: SubscriptionStore): Boolean = withContext(Dispatchers.IO) {
-        val owned = runCatching { store.owned() }.getOrDefault(emptyList())
-        owned.any { token -> runCatching { licensed(token) }.isSuccess }
-    }
+    /** The licence: its key, the free trial, Google Play's purchases (Licensing). */
+    internal val licensing = Licensing(prefs, ::relayUrl, subscriptions)
 
     internal fun relayUrl() = prefs[RELAY] ?: if (DEFAULT_RELAY == TEST_RELAY) relays.test() else relays.real()
 
     /** The licence key of the relay in use: each relay keeps its own (the test one has its own licences). */
-    internal fun licence() = prefs[keyOf(relayUrl())].orEmpty()
+    internal fun licence() = licensing.key()
 
     /** A text of the page's languages (the app's shortcuts), English when missing. */
     fun text(lang: String, vararg keys: String): String? = texts.get(lang, *keys) ?: texts.get("en", *keys)
@@ -346,8 +302,6 @@ class LocalServer(
 
     companion object {
         const val COOKIE = "notosaurus_app"
-        // The subscription's purchases checked again at most this often when the relay says it lapsed
-        private const val RECHECK_S = 600L
         const val MAX_PHOTOS = 10 // a lesson's pages, as on the computer (MAX_IMAGES)
 
         // The welcome accepted (its version): raised when what it says changes a lot, so it shows again

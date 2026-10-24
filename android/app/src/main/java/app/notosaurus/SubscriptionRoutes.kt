@@ -1,13 +1,10 @@
 package app.notosaurus
 
-import app.notosaurus.LocalServer.Companion.keyOf
 import io.ktor.server.routing.Route
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.json.JsonArray
-import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.buildJsonObject
-import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.put
 
 /** The subscription (Google Play), in the app's settings: what is offered, subscribing,
@@ -21,10 +18,10 @@ internal fun Route.subscriptionRoutes(server: LocalServer) {
             val offers = store?.let { withContext(Dispatchers.IO) { runCatching { it.offers() }.getOrNull() } }.orEmpty()
             var restored = false
             // No key yet, or a purchase paid later (pending when bought): the one this Google account has
-            if (store != null && (licence().isEmpty() || prefs[PURCHASE_PENDING] == "1")) {
+            if (store != null && (licence().isEmpty() || licensing.purchasePending)) {
                 val owned = withContext(Dispatchers.IO) { runCatching { store.owned() }.getOrDefault(emptyList()) }
-                restored = owned.firstNotNullOfOrNull { token -> runCatching { licensed(token) }.getOrNull() } != null
-                if (restored) prefs[PURCHASE_PENDING] = ""
+                restored = owned.firstNotNullOfOrNull { token -> runCatching { licensing.licensed(token) }.getOrNull() } != null
+                if (restored) licensing.purchasePending = false
             }
             buildJsonObject {
                 put("offers", JsonArray(offers.map { buildJsonObject { put("plan", it.plan); put("price", it.price); put("trial_days", it.trialDays) } }))
@@ -37,9 +34,9 @@ internal fun Route.subscriptionRoutes(server: LocalServer) {
             val store = subscriptions ?: throw BadRequest("subscription.unavailable")
             val plan = body().string("plan").takeIf { it in PlayStore.PLANS } ?: throw BadRequest("subscription.none")
             when (val bought = store.subscribe(plan)) {
-                is Bought.Paid -> licensed(bought.token)
+                is Bought.Paid -> licensing.licensed(bought.token)
                 // Paid later (some ways to pay): restored as the settings open once Google Play has it
-                Bought.Pending -> buildJsonObject { put("pending", true) }.also { prefs[PURCHASE_PENDING] = "1" }
+                Bought.Pending -> buildJsonObject { put("pending", true) }.also { licensing.purchasePending = true }
                 Bought.GivenUp -> buildJsonObject { put("cancelled", true) }
             }
         }
@@ -47,7 +44,7 @@ internal fun Route.subscriptionRoutes(server: LocalServer) {
         api("POST", "/api/admin/subscription/restore") {
             val store = subscriptions ?: throw BadRequest("subscription.unavailable")
             val owned = withContext(Dispatchers.IO) { store.owned() }
-            licensed(owned.firstOrNull() ?: throw BadRequest("subscription.none"))
+            licensing.licensed(owned.firstOrNull() ?: throw BadRequest("subscription.none"))
         }
         api("POST", "/api/admin/subscription/manage") {
             subscriptions?.manage()
@@ -55,34 +52,3 @@ internal fun Route.subscriptionRoutes(server: LocalServer) {
         }
     }
 }
-
-/** The purchase's licence key from the relay (it checks the purchase with Google Play),
- * kept for the relay in use; its account (the settings show it). */
-internal suspend fun LocalServer.licensed(token: String): JsonObject {
-    val answer = withContext(Dispatchers.IO) {
-        Relay(relayUrl(), "").post("subscribe", buildJsonObject {
-            put("purchase_token", token)
-            put("product_id", PlayStore.PRODUCT)
-        })
-    }
-    return keep(answer)
-}
-
-/** The free trial, no card, started at the first AI call without a key (LocalServer.trialKey):
- * once per phone (Play Integrity says it is the app from Google Play on a real one); the
- * relay answers its key, kept as a purchase's is; its account. */
-internal suspend fun LocalServer.startTrial(store: SubscriptionStore): JsonObject {
-    val device = store.device()
-    val token = withContext(Dispatchers.IO) { store.integrity(device) } ?: throw BadRequest("relay.trial_refused")
-    val request = buildJsonObject { put("integrity_token", token); put("device", device) }
-    return keep(withContext(Dispatchers.IO) { Relay(relayUrl(), "").post("trial", request) })
-}
-
-/** The relay's licence key kept for the relay in use; its account. */
-private fun LocalServer.keep(answer: JsonObject): JsonObject {
-    prefs[keyOf(relayUrl())] = answer.string("key")
-    return answer["account"]!!.jsonObject
-}
-
-/** A purchase Google Play said pending (paid later): the settings look for it until found. */
-private const val PURCHASE_PENDING = "purchase_pending"
