@@ -36,6 +36,11 @@ export default defineConfig({
 				it: { label: 'Italiano' },
 				'pt-br': { label: 'Português (Brasil)', lang: 'pt-BR' },
 			},
+			// Three kinds of pages: what is the same everywhere, the Android app's own, the add-on's
+			// own (and standalone's). A common page shows a difference in <Tabs syncKey="mode">
+			// (labels: "Android app" / "Computer"; fr: "Application Android" / "Ordinateur"), so the
+			// reader's choice follows from page to page. Slugs stay flat: the app and the add-on link
+			// to some of them.
 			sidebar: [
 				{
 					label: 'Start here',
@@ -46,7 +51,7 @@ export default defineConfig({
 						it: 'Per iniziare',
 						'pt-BR': 'Para começar',
 					},
-					items: [{ slug: 'android-app' }, { slug: 'getting-started' }, { slug: 'phone' }],
+					items: [{ slug: 'which-notosaurus' }],
 				},
 				{
 					label: 'Using Notosaurus',
@@ -64,19 +69,43 @@ export default defineConfig({
 						{ slug: 'lessons' },
 						{ slug: 'voices' },
 						{ slug: 'card-types' },
-						{ slug: 'send-to-anki' },
-						{ slug: 'in-anki' },
+						{ slug: 'several-children' },
 					],
 				},
 				{
-					label: 'Guides',
-					translations: { fr: 'Guides', es: 'Guías', de: 'Anleitungen', it: 'Guide', 'pt-BR': 'Guias' },
-					items: [{ slug: 'several-children' }, { slug: 'ai-services' }, { slug: 'privacy' }, { slug: 'app-privacy' }],
+					label: 'Android app',
+					translations: {
+						fr: 'Application Android',
+						es: 'Aplicación Android',
+						de: 'Android-App',
+						it: 'App Android',
+						'pt-BR': 'App Android',
+					},
+					items: [{ slug: 'android-app' }, { slug: 'app-privacy' }],
+				},
+				{
+					label: 'Anki add-on',
+					translations: {
+						fr: 'Greffon Anki',
+						es: 'Complemento de Anki',
+						de: 'Anki-Add-on',
+						it: 'Add-on di Anki',
+						'pt-BR': 'Complemento do Anki',
+					},
+					items: [
+						{ slug: 'getting-started' },
+						{ slug: 'phone' },
+						{ slug: 'ai-services' },
+						{ slug: 'send-to-anki' },
+						{ slug: 'in-anki' },
+						{ slug: 'privacy' },
+						{ slug: 'install' },
+					],
 				},
 				{
 					label: 'Help',
 					translations: { fr: 'Aide', es: 'Ayuda', de: 'Hilfe', it: 'Aiuto', 'pt-BR': 'Ajuda' },
-					items: [{ slug: 'faq' }, { slug: 'install' }, { slug: 'whats-new' }],
+					items: [{ slug: 'faq' }, { slug: 'whats-new' }],
 				},
 			],
 		}),
