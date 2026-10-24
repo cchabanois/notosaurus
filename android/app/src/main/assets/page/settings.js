@@ -113,6 +113,10 @@ document.addEventListener("alpine:init", () => {
       try {
         const answer = await api(path, json("POST", body));
         if (answer.cancelled) return;
+        if (answer.pending) {  // paid later: restored as the settings open once Google Play has it
+          this.notice = t("android.subscription.pending");
+          return;
+        }
         this.account = answer;
         this.lapsed = "";
         this.form = await api("/api/admin/settings");

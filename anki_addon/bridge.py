@@ -285,6 +285,10 @@ def _add_tags(p: dict) -> None:
     _col().tags.bulk_add(list(p["notes"]), p["tags"])
 
 
+def _remove_tags(p: dict) -> None:
+    _col().tags.bulk_remove(list(p["notes"]), p["tags"])
+
+
 def _delete_notes(p: dict) -> None:
     _col().remove_notes(list(p["notes"]))
     _schedule_refresh()
@@ -377,6 +381,7 @@ ACTIONS: dict[str, Callable[[dict], Any]] = {
     "cardsInfo": _cards_info,
     "changeDeck": _change_deck,
     "addTags": _add_tags,
+    "removeTags": _remove_tags,
     "deleteNotes": _delete_notes,
     "deleteDecks": _delete_decks,
     "createFilteredDeck": _create_filtered_deck,

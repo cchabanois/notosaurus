@@ -33,14 +33,25 @@ import kotlin.coroutines.resume
  * free trial (days; 0: none). */
 data class Offer(val plan: String, val price: String, val trialDays: Int)
 
+/** What Google Play's purchase screen ended with. */
+sealed interface Bought {
+    data class Paid(val token: String) : Bought
+
+    /** A payment made later (some ways to pay, cash or a bank transfer): the subscription
+     * restored once Google Play has it. */
+    data object Pending : Bought
+
+    data object GivenUp : Bought
+}
+
 /** Google Play's subscription (a fake in the tests). The relay checks every purchase
  * (/v1/subscribe): the app only buys and lists them. */
 interface SubscriptionStore {
     /** The base plans offered, a month's first; none without Google Play, or before it is on sale. */
     suspend fun offers(): List<Offer>
 
-    /** Google Play's purchase screen for a base plan; the purchase's token, or null when given up. */
-    suspend fun subscribe(plan: String): String?
+    /** Google Play's purchase screen for a base plan: paid (its token), pending, or given up. */
+    suspend fun subscribe(plan: String): Bought
 
     /** The tokens of the subscriptions this Google account has (a new phone, the app
      * reinstalled: restored with them). */
@@ -63,11 +74,19 @@ interface SubscriptionStore {
  * the purchase screen.
  */
 class PlayStore(private val context: Context, private val activity: () -> Activity?) : SubscriptionStore {
-    private var bought: CompletableDeferred<String?>? = null
+    private var bought: CompletableDeferred<Bought>? = null
     private val client = BillingClient.newBuilder(context)
         .setListener { result, purchases ->
-            val token = purchases?.firstOrNull { it.purchaseState == Purchase.PurchaseState.PURCHASED }?.purchaseToken
-            bought?.complete(if (result.responseCode == BillingClient.BillingResponseCode.OK) token else null)
+            val ok = result.responseCode == BillingClient.BillingResponseCode.OK
+            val paid = purchases?.firstOrNull { it.purchaseState == Purchase.PurchaseState.PURCHASED }?.purchaseToken
+            val pending = purchases?.any { it.purchaseState == Purchase.PurchaseState.PENDING } == true
+            bought?.complete(
+                when {
+                    ok && paid != null -> Bought.Paid(paid)
+                    ok && pending -> Bought.Pending
+                    else -> Bought.GivenUp
+                },
+            )
         }
         .enablePendingPurchases(PendingPurchasesParams.newBuilder().enableOneTimeProducts().build())
         .enableAutoServiceReconnection()
@@ -88,21 +107,21 @@ class PlayStore(private val context: Context, private val activity: () -> Activi
         }
     }
 
-    override suspend fun subscribe(plan: String): String? {
-        val product = details() ?: return null
+    override suspend fun subscribe(plan: String): Bought {
+        val product = details() ?: return Bought.GivenUp
         val offers = product.subscriptionOfferDetails.orEmpty().filter { it.basePlanId == plan }
         // The trial when offered (Google Play lists only the offers this account may have)
         val offer = offers.firstOrNull { o -> o.pricingPhases.pricingPhaseList.firstOrNull()?.priceAmountMicros == 0L }
-            ?: offers.firstOrNull { it.offerId == null } ?: return null
+            ?: offers.firstOrNull { it.offerId == null } ?: return Bought.GivenUp
         val params = BillingFlowParams.newBuilder().setProductDetailsParamsList(
             listOf(BillingFlowParams.ProductDetailsParams.newBuilder().setProductDetails(product).setOfferToken(offer.offerToken).build()),
         ).build()
-        val answer = CompletableDeferred<String?>().also { bought = it }
+        val answer = CompletableDeferred<Bought>().also { bought = it }
         val shown = withContext(Dispatchers.Main) {
             val on = activity() ?: return@withContext null
             client.launchBillingFlow(on, params)
         }
-        if (shown?.responseCode != BillingClient.BillingResponseCode.OK) return null
+        if (shown?.responseCode != BillingClient.BillingResponseCode.OK) return Bought.GivenUp
         return answer.await()
     }
 

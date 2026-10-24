@@ -6,7 +6,9 @@ Each test is a tag on its cards' notes in Anki, `Exam::<name>`: Anki's custom st
 and gives them back to their decks after. The tag is put on the notes the lessons have
 in Anki already (Lesson.anki_notes) and on those sent later (anki.notes' extra tags).
 
-data/exams.json: {"format": 1, "exams": [...]}.
+data/exams.json: {"format": 1, "exams": [...], "pending": {id: the test as Anki's notes
+still have it, or null}}: a change made while Anki was closed (or failing) waits there,
+its tags put on and taken off once Anki can be reached (exams.pending).
 """
 
 import re
@@ -65,8 +67,39 @@ def list_all() -> list[Exam]:
         return [Exam(**e) for e in data.get("exams", [])]
 
 
-def _write(exams: list[Exam]) -> None:
-    storage.write_json(_path(), {"format": FORMAT, "exams": [e.model_dump() for e in exams]})
+def _write(exams: list[Exam], pending: dict | None = None) -> None:
+    if pending is None:  # kept as it is
+        pending = (storage.read_json(_path()) or {}).get("pending", {})
+    storage.write_json(_path(), {"format": FORMAT, "exams": [e.model_dump() for e in exams], "pending": pending})
+
+
+def pending() -> dict[str, Exam | None]:
+    """The tests changed while Anki couldn't follow: {id: the test as Anki's notes still
+    have it (its tag, its notes); None: made since}."""
+    with storage.lock:
+        data = storage.read_json(_path()) or {}
+        return {i: Exam(**e) if e else None for i, e in data.get("pending", {}).items()}
+
+
+def set_pending(id: str, before: Exam | None, done: bool) -> None:
+    """A change Anki followed (`done`: the test's notes now as it is), or not yet: the
+    first state Anki's notes still have kept until then, whatever changes come after."""
+    with storage.lock:
+        waiting = {i: e.model_dump() if e else None for i, e in pending().items()}
+        if (id in waiting) != done:  # nothing to change: no write
+            return
+        if done:
+            waiting.pop(id, None)
+        else:
+            waiting.setdefault(id, before.model_dump() if before else None)
+        _write(list_all(), waiting)
+
+
+def same_tag(id: str, name: str) -> bool:
+    """Another test with this name's tag: Anki tells tags apart without their case, so
+    "Maths lundi" and "maths lundi" would tag the same notes."""
+    tag = tag_text(name).casefold()
+    return any(e.id != id and tag_text(e.name).casefold() == tag for e in list_all())
 
 
 def get(id: str) -> Exam | None:

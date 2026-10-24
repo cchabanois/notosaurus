@@ -68,7 +68,7 @@ class LocalServerTest {
     /** Google Play: the offer, a purchase's token (null: given up), the subscriptions owned. */
     private class FakePlay : SubscriptionStore {
         var offers = listOf(Offer("monthly", "3,99 €", 7), Offer("yearly", "29,99 €", 7))
-        var buying: String? = "token-1"
+        var buying: Bought = Bought.Paid("token-1")
         var plans = mutableListOf<String>() // the base plans bought
         var owned = listOf<String>()
         var managed = 0
@@ -658,9 +658,27 @@ class LocalServerTest {
         }
         assertEquals(mapOf("Exam::Brevet_blanc" to setOf(11L, 12L)) to mapOf("Exam::Interro_SVT_de_lundi" to setOf(11L)), anki.retagged.last())
 
+        // Renamed while AnkiDroid couldn't follow: the old tag taken off once it can (the tests listed)
+        anki.broken = true
+        val renamed = client.put("/api/exams/interro-svt") {
+            page(); contentType(ContentType.Application.Json)
+            setBody("""{"name": "Brevet blanc 2", "lessons": [{"lesson": "$id"}]}""")
+        }.json().jsonObject
+        assertEquals("false", renamed["anki"]!!.jsonPrimitive.content)
+        anki.broken = false
+        client.get("/api/exams") { page() }
+        assertEquals(mapOf("Exam::Brevet_blanc_2" to setOf(11L, 12L)) to mapOf("Exam::Brevet_blanc" to setOf(11L, 12L)), anki.retagged.last())
+        val followed = anki.retagged.size
+        client.get("/api/exams") { page() }
+        assertEquals(followed, anki.retagged.size) // done: not again
+
+        // Another test whose name differs by its case only: one tag for AnkiDroid, refused
+        val same = client.put("/api/exams/other") { page(); contentType(ContentType.Application.Json); setBody("""{"name": "brevet BLANC 2"}""") }
+        assertEquals("exams.same_name", same.json().jsonObject["detail"]!!.jsonObject.string("code"))
+
         // Deleted: the tag taken off; a lesson deleted leaves the tests
         assertEquals("""{"deleted":true,"anki":true}""", client.delete("/api/exams/interro-svt") { page() }.bodyAsText())
-        assertEquals(mapOf("Exam::Brevet_blanc" to setOf(11L, 12L)), anki.retagged.last().second)
+        assertEquals(mapOf("Exam::Brevet_blanc_2" to setOf(11L, 12L)), anki.retagged.last().second)
         client.put("/api/exams/brevet") { page(); contentType(ContentType.Application.Json); setBody("""{"name": "Brevet", "lessons": [{"lesson": "$id"}, {"lesson": "2026-01-01-gone"}]}""") }
         client.delete("/api/lessons/$id") { page() }
         assertEquals(0, client.get("/api/exams") { page() }.json().jsonArray.single().jsonObject["lessons"]!!.jsonArray.size)
@@ -1100,11 +1118,20 @@ class LocalServerTest {
         assertEquals("nts_from_play", prefs[LocalServer.keyOf(local.relayUrl())])
 
         // Given up on Google Play's screen: nothing changes
-        play.buying = null
+        play.buying = Bought.GivenUp
         assertEquals("true", client.post("/api/admin/subscription/subscribe") { page(); contentType(ContentType.Application.Json); setBody("""{"plan": "monthly"}""") }.json().jsonObject["cancelled"]!!.jsonPrimitive.content)
+        // Paid later (some ways to pay): said pending, then restored as the settings open once paid
+        play.buying = Bought.Pending
+        assertEquals("true", client.post("/api/admin/subscription/subscribe") { page(); contentType(ContentType.Application.Json); setBody("""{"plan": "monthly"}""") }.json().jsonObject["pending"]!!.jsonPrimitive.content)
+        play.owned = listOf("token-2")
+        relayAnswers("""{"key": "nts_paid_later", "account": {"plan": "monthly", "credits_left": 3000, "daily_left": 500}}""")
+        assertEquals("true", client.get("/api/admin/subscription") { page() }.json().jsonObject["restored"]!!.jsonPrimitive.content)
+        assertEquals("nts_paid_later", prefs[LocalServer.keyOf(local.relayUrl())])
+        relay.takeRequest(5, TimeUnit.SECONDS)
+        play.owned = emptyList()
         // A base plan that isn't one: not asked of Google Play
         assertEquals(HttpStatusCode.BadRequest, client.post("/api/admin/subscription/subscribe") { page(); contentType(ContentType.Application.Json); setBody("""{"plan": "weekly"}""") }.status)
-        assertEquals(listOf("yearly", "monthly"), play.plans)
+        assertEquals(listOf("yearly", "monthly", "monthly"), play.plans)
 
         // A new phone (no key): the subscription this Google account has, restored as the settings open
         prefs[LocalServer.keyOf(local.relayUrl())] = ""

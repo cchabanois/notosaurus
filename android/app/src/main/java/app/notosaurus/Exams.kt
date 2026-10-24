@@ -3,6 +3,9 @@ package app.notosaurus
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.builtins.ListSerializer
+import kotlinx.serialization.builtins.MapSerializer
+import kotlinx.serialization.builtins.nullable
+import kotlinx.serialization.builtins.serializer
 import kotlinx.serialization.json.JsonArray
 import kotlinx.serialization.json.JsonNull
 import kotlinx.serialization.json.JsonObject
@@ -47,6 +50,9 @@ class Exams(private val prefs: Preferences, private val lessons: Lessons) {
         val every = list()
         val before = every.firstOrNull { it.id == id }
         if (before == null && every.size >= MAX) throw BadRequest("exams.too_many", buildJsonObject { put("max", MAX) })
+        // AnkiDroid tells tags apart without their case: "Maths lundi" and "maths lundi" would be one
+        val tag = tagText(name.trim()).lowercase()
+        if (every.any { it.id != id && tagText(it.name).lowercase() == tag }) throw BadRequest("exams.same_name")
         val kept = parts.filter { lessons.get(it.lesson) != null }
         val exam = Exam(id, name.trim(), date, kept, before?.createdAt?.ifEmpty { null } ?: Instant.now().toString())
         write(if (before == null) every + exam else every.map { if (it.id == id) exam else it })
@@ -69,6 +75,19 @@ class Exams(private val prefs: Preferences, private val lessons: Lessons) {
 
     private fun write(exams: List<Exam>) {
         prefs[KEY] = json.encodeToString(ListSerializer(Exam.serializer()), exams)
+    }
+
+    /** The tests changed while AnkiDroid couldn't follow (not installed, not allowed): {id:
+     * the test as AnkiDroid's notes still have it (its tag, its notes); null: made since}. */
+    fun pending(): Map<String, Exam?> =
+        runCatching { json.decodeFromString(PENDING_TYPE, prefs[PENDING].orEmpty()) }.getOrDefault(emptyMap())
+
+    /** A change AnkiDroid followed (`done`: the test's notes now as it is), or not yet: the
+     * first state AnkiDroid's notes still have kept until then, whatever changes come after. */
+    fun setPending(id: String, before: Exam?, done: Boolean) {
+        val waiting = pending()
+        if (waiting.containsKey(id) != done) return // nothing to change
+        prefs[PENDING] = json.encodeToString(PENDING_TYPE, if (done) waiting - id else waiting + (id to before))
     }
 
     // --- What a test tags
@@ -142,6 +161,8 @@ class Exams(private val prefs: Preferences, private val lessons: Lessons) {
     companion object {
         const val TAG_PREFIX = "Exam::"
         private const val KEY = "exams"
+        private const val PENDING = "exams_pending"
+        private val PENDING_TYPE = MapSerializer(String.serializer(), Exam.serializer().nullable)
         private const val MAX = 50
         private val ID = Regex("^[a-z0-9-]{1,40}$")
         private val DATE = Regex("""^(\d{4}-\d{2}-\d{2})?$""")

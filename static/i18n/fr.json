@@ -807,6 +807,7 @@
       "until": "Abonnement payé jusqu'au {date}",
       "trialUntil": "Essai gratuit jusqu'au {date}",
       "done": "✓ Abonné : bonnes révisions !",
+      "pending": "⏳ Paiement en attente : votre abonnement sera actif dès que Google Play l'aura reçu. Rouvrez les Réglages ensuite.",
       "restored": "✓ Votre abonnement a été retrouvé sur ce compte Google."
     },
     "anki": {
@@ -1044,7 +1045,8 @@
     },
     "exams": {
       "not_found": "Ce contrôle n'existe plus : rechargez la page.",
-      "too_many": "Au plus {max} contrôles."
+      "too_many": "Au plus {max} contrôles.",
+      "same_name": "Un autre contrôle porte déjà ce nom (Anki ne distingue pas les majuscules) : choisissez-en un autre."
     }
   },
   "demo": {

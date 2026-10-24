@@ -26,13 +26,21 @@ async def _lessons(ids: set[str]) -> dict[str, Lesson]:
     return {lesson.id: lesson for lesson in found if lesson}
 
 
-async def _retag(before: Exam | None, after: Exam | None, found: dict[str, Lesson], profile: str | None) -> bool:
-    """Anki's notes made to follow the change; False when Anki can't be reached (`profile`
-    None: closed; the tags of the notes sent later come with them anyway, anki.notes'
-    extra tags, and a tag to take off waits for the next change)."""
-    if profile is None:
-        return False
-    add, remove = exams.retagging(before, after, found, profile)
+async def _retag(id: str, before: Exam | None, after: Exam | None, profile: str | None) -> bool:
+    """Anki's notes made to follow the test's change; False when Anki can't be reached
+    (`profile` None: closed): the change then waits (exams.pending), from the state Anki's
+    notes still have (a test renamed or deleted meanwhile: its old tag taken off then)."""
+    waiting = await asyncio.to_thread(exams.pending)
+    if id in waiting:
+        before = waiting[id]
+    done = profile is not None and await _tag(before, after, profile)
+    await asyncio.to_thread(exams.set_pending, id, before, done)
+    return done
+
+
+async def _tag(before: Exam | None, after: Exam | None, profile: str) -> bool:
+    parts = [part.lesson for exam in (before, after) if exam for part in exam.lessons]
+    add, remove = exams.retagging(before, after, await _lessons(set(parts)), profile)
     if not add and not remove:
         return True
     try:
@@ -42,10 +50,20 @@ async def _retag(before: Exam | None, after: Exam | None, found: dict[str, Lesso
     return True
 
 
+async def _catch_up(profile: str | None) -> None:
+    """Anki open: the changes made while it wasn't, followed now."""
+    if profile is None:
+        return
+    for id in await asyncio.to_thread(exams.pending):
+        await _retag(id, None, await asyncio.to_thread(exams.get, id), profile)
+
+
 @router.get("/api/exams")
 async def list_exams() -> list[dict]:
+    profile = await ankiconnect.active_profile()
+    await _catch_up(profile)
     every = await asyncio.to_thread(exams.list_all)
-    profile = await ankiconnect.active_profile() or ""
+    profile = profile or ""
     found = await _lessons({part.lesson for exam in every for part in exam.lessons})
     return [exams.view(exam, found, profile) for exam in every]
 
@@ -57,12 +75,14 @@ async def save_exam(content: ExamIn, id: str = Path(pattern=exams.ID)) -> dict:
     before = await asyncio.to_thread(exams.get, id)
     if before is None and len(await asyncio.to_thread(exams.list_all)) >= exams.MAX_EXAMS:
         raise AppError("exams.too_many", 400, max=exams.MAX_EXAMS)
+    if await asyncio.to_thread(exams.same_tag, id, content.name):
+        raise AppError("exams.same_name", 400)
     wanted = {part.lesson for part in content.lessons} | ({part.lesson for part in before.lessons} if before else set())
     found = await _lessons(wanted)
     content = content.model_copy(update={"lessons": [p for p in content.lessons if p.lesson in found]})
     after = await asyncio.to_thread(exams.save, id, content)
     profile = await ankiconnect.active_profile()
-    anki = await _retag(before, after, found, profile)
+    anki = await _retag(id, before, after, profile)
     return {**exams.view(after, found, profile or ""), "anki": anki}
 
 
@@ -72,8 +92,7 @@ async def delete_exam(id: str = Path(pattern=exams.ID)) -> dict:
     before = await asyncio.to_thread(exams.get, id)
     if before is None:
         raise AppError("exams.not_found", 404)
-    found = await _lessons({part.lesson for part in before.lessons})
-    anki = await _retag(before, None, found, await ankiconnect.active_profile())
+    anki = await _retag(id, before, None, await ankiconnect.active_profile())
     if before.filtered_deck and anki:  # its filtered deck too: the cards go back to their decks
         try:
             await ankiconnect.drop_deck(before.filtered_deck)

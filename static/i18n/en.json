@@ -807,6 +807,7 @@
       "until": "Subscription paid until {date}",
       "trialUntil": "Free trial until {date}",
       "done": "✓ Subscribed: happy revising!",
+      "pending": "⏳ Payment pending: your subscription will be active as soon as Google Play has received it. Open the Settings again then.",
       "restored": "✓ Your subscription was found on this Google account."
     },
     "anki": {
@@ -1044,7 +1045,8 @@
     },
     "exams": {
       "not_found": "This test no longer exists: reload the page.",
-      "too_many": "At most {max} tests."
+      "too_many": "At most {max} tests.",
+      "same_name": "Another test already has this name (Anki doesn't tell capitals apart): choose another one."
     }
   },
   "demo": {
