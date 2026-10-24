@@ -24,7 +24,7 @@ document.addEventListener("alpine:init", () => {
     form: null,       // the settings (the key masked)
     account: null,    // the relay's answer for the key
     offers: [],       // the base plans Google Play offers ({ plan, price, trial_days }); none: not on sale
-    trial: false,     // the free trial (no card) offered: Google Play is there
+    trial: false,     // the free trial (no card) offered, by the first lesson: Google Play is there
     lapsed: "",       // the subscription ended, or on hold (a payment failed): the relay's code
     buying: false,
     anki: null,       // { installed, permitted }
@@ -80,12 +80,13 @@ document.addEventListener("alpine:init", () => {
         this.account = await api("/api/admin/account");
         // Past its end: on hold (a payment to fix in Google Play), or ended
         if (this.account.ends_at && new Date(this.account.ends_at) <= new Date()) {
-          this.lapsed = this.account.on_hold ? "relay.payment_pending" : "relay.subscription_ended";
+          this.lapsed = this.account.plan === "free_trial" ? "relay.trial_ended"
+            : this.account.on_hold ? "relay.payment_pending" : "relay.subscription_ended";
         }
       } catch (e) {
         this.error = e.message;
         // Ended: subscribing again; on hold: Google Play's page, where the payment is fixed
-        if (["relay.subscription_ended", "relay.payment_pending"].includes(e.code)) this.lapsed = e.code;
+        if (["relay.subscription_ended", "relay.payment_pending", "relay.trial_ended"].includes(e.code)) this.lapsed = e.code;
       }
     },
 
@@ -105,9 +106,8 @@ document.addEventListener("alpine:init", () => {
     // Google Play's purchase screen; bought, the relay's licence (its key kept by the app)
     async subscribe(plan) { await this.buy("/api/admin/subscription/subscribe", { plan }); },
     async restore() { await this.buy("/api/admin/subscription/restore"); },
-    async startTrial() { await this.buy("/api/admin/subscription/trial", {}, "android.subscription.trialStarted"); },
 
-    async buy(path, body = {}, done = "android.subscription.done") {
+    async buy(path, body = {}) {
       this.buying = true;
       this.error = "";
       try {
@@ -116,7 +116,7 @@ document.addEventListener("alpine:init", () => {
         this.account = answer;
         this.lapsed = "";
         this.form = await api("/api/admin/settings");
-        this.notice = t(done, { credits: answer.credits_left, date: answer.ends_at ? this.formatDate(answer.ends_at) : "" });
+        this.notice = t("android.subscription.done");
       } catch (e) {
         this.error = e.message;
       } finally {

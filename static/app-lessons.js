@@ -88,10 +88,11 @@ const lessonsPart = {
         this.revision = { text: "", busy: false, summary: t("app.prompt.regenerated"), stats: "", undo: before };
       }
       this.loadLessons();
+      if (this.switches.store) this.loadSwitches();  // the Android app: the free trial maybe just started
       if (!this.cards.length) this.error = t("app.review.noCards");
       this.drawPictures();  // the cards show now, their pictures when drawn
     } catch (e) {
-      if (!this.cancelling) this.error = e.message;  // cancelled: no error to show
+      if (!this.cancelling) this.aiError(e);  // cancelled: no error to show
     } finally {
       this.loading = false;
       this.generating = "";

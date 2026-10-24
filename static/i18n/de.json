@@ -276,6 +276,8 @@
       "guard": "kann sich aber irren: Prüfe die Karten, bevor du sie deinem Kind gibst.",
       "nameTitle": "Eine Heftseite zeigt oft den Namen des Kindes:",
       "name": "verdecke ihn vor dem Senden mit 🖍️.",
+      "trialTitle": "Die erste Lektion startet eine kostenlose Testphase,",
+      "trial": "ohne Karte, einmal pro Telefon (Google prüft, dass es ein echtes Telefon ist, die App erkennt dieses an einem Fingerabdruck).",
       "policy": "Datenschutzerklärung",
       "agree": "Ich bin ein Elternteil (erwachsen) und akzeptiere die Datenschutzerklärung.",
       "accept": "Akzeptieren"
@@ -797,7 +799,8 @@
         "monthly": "{days} Tage kostenlos testen, dann {price} pro Monat",
         "yearly": "{days} Tage kostenlos testen, dann {price} pro Jahr"
       },
-      "freeTrial": "🎁 Kostenlos testen, ohne Karte",
+      "trialAtFirstLesson": "🎁 Deine kostenlose Testphase, ohne Karte, beginnt mit deiner ersten Lektion.",
+      "subscribeShort": "Abonnieren",
       "trialStarted": "✓ Kostenlose Testphase: {credits} Credits bis zum {date}. Viel Erfolg beim Lernen!",
       "restore": "Ich habe schon ein Abo",
       "manage": "Abo verwalten (Google Play)",
@@ -1004,6 +1007,7 @@
       "invalid_key": "Unbekannter oder abgelaufener Lizenzschlüssel: Prüfe ihn in den Einstellungen.",
       "no_credits": "Diesen Monat keine Credits mehr: Sie kommen mit der nächsten Erneuerung zurück.",
       "subscription_ended": "Dein Abo ist beendet: Schließe es in der App erneut ab, um weiterzumachen.",
+      "trial_ended": "Deine kostenlose Testphase ist vorbei: Schließe in den Einstellungen ein Abo ab, um weiterzumachen.",
       "payment_pending": "Zahlung ausstehend: Google Play konnte dein Abo nicht verlängern. Aktualisiere deine Zahlungsmethode in Google Play (Einstellungen → Abo verwalten), um weiterzumachen.",
       "invalid_purchase": "Kauf von Google Play nicht erkannt: Versuche es erneut oder kontaktiere den Support.",
       "trial_refused": "Die kostenlose Testphase ist nur mit der App aus Google Play auf einem echten Telefon möglich.",

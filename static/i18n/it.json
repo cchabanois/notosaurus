@@ -276,6 +276,8 @@
       "guard": "ma può sbagliare: controlla le carte prima di darle a tuo figlio.",
       "nameTitle": "Una pagina di quaderno mostra spesso il nome del bambino:",
       "name": "nascondilo con 🖍️ prima dell'invio.",
+      "trialTitle": "La prima lezione avvia una prova gratuita,",
+      "trial": "senza carta, una volta per telefono (Google verifica che sia un vero telefono, l'app riconosce questo con un'impronta).",
       "policy": "Informativa sulla privacy",
       "agree": "Sono un genitore (un adulto) e accetto l'informativa sulla privacy.",
       "accept": "Accetta"
@@ -797,7 +799,8 @@
         "monthly": "Prova gratuita di {days} giorni, poi {price} al mese",
         "yearly": "Prova gratuita di {days} giorni, poi {price} all'anno"
       },
-      "freeTrial": "🎁 Prova gratis, senza carta",
+      "trialAtFirstLesson": "🎁 La tua prova gratuita, senza carta, inizierà con la tua prima lezione.",
+      "subscribeShort": "Abbonati",
       "trialStarted": "✓ Prova gratuita: {credits} crediti fino al {date}. Buon ripasso!",
       "restore": "Ho già un abbonamento",
       "manage": "Gestisci l'abbonamento (Google Play)",
@@ -1004,6 +1007,7 @@
       "invalid_key": "Chiave di licenza sconosciuta o scaduta: controllala nelle impostazioni.",
       "no_credits": "Crediti esauriti per questo mese: tornano al prossimo rinnovo.",
       "subscription_ended": "Il tuo abbonamento è terminato: abbonati di nuovo nell'app per continuare.",
+      "trial_ended": "La tua prova gratuita è finita: abbonati nelle Impostazioni per continuare.",
       "payment_pending": "Pagamento in sospeso: Google Play non è riuscito a rinnovare il tuo abbonamento. Aggiorna il metodo di pagamento in Google Play (Impostazioni → Gestisci l'abbonamento) per continuare.",
       "invalid_purchase": "Acquisto non riconosciuto da Google Play: riprova o contatta il supporto.",
       "trial_refused": "La prova gratuita è possibile solo con l'app installata da Google Play, su un vero telefono.",

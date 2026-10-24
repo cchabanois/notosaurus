@@ -116,7 +116,7 @@ document.addEventListener("alpine:init", () => {
   Alpine.data("notosaurus", () => ({
     photos: [],          // { blob, url, text, sent; when partly hidden: original, mask, pdfText }
     // What the service tells for now (the Android app, loadSwitches): a notice, features off, an update
-    switches: { notice: null, disabled: [], update: false, store: "" },
+    switches: { notice: null, disabled: [], update: false, store: "", trial: null },
     noticeClosed: storage("get", undefined, NOTICE_CLOSED),
     prompts: [],
     selectedId: null,
@@ -138,7 +138,7 @@ document.addEventListener("alpine:init", () => {
     quick: storage("get", undefined, CAREFUL) !== "1",
     madeQuick: false,  // the open lesson was just made quick: "Careful, again" offered
     coming: [],  // the cards being made, as the AI writes them: shown while waiting
-    errorAction: { for: "", kind: "" },  // a button on that error's message ("installAnki")
+    errorAction: { for: "", kind: "" },  // a button on that error's message ("installAnki", "subscribe")
     generating: "",  // the id of the lesson being made: what "Cancel" stops
     cancelling: false,
     loadingQuick: false,
@@ -279,6 +279,23 @@ document.addEventListener("alpine:init", () => {
     // A feature turned off for now (relay_api.FEATURES): its buttons hidden
     off(feature) {
       return this.switches.disabled.includes(feature);
+    },
+
+    // The free trial just started (the first lesson): what it gives, until when
+    trialText() {
+      Alpine.store("i18n").version;
+      const trial = this.switches.trial;
+      if (!trial) return "";
+      const date = trial.ends_at ? new Date(trial.ends_at).toLocaleDateString(I18N.locale, { day: "numeric", month: "long" }) : "";
+      return t("android.subscription.trialStarted", { credits: trial.credits_left, date });
+    },
+
+    // The AI's error; the free trial over, or the subscription lapsed (the Android app):
+    // "Subscribe" on it, to the settings
+    aiError(e) {
+      this.error = e.message;
+      const lapsed = ["relay.trial_ended", "relay.subscription_ended", "relay.payment_pending"];
+      if (this.switches.store && lapsed.includes(e.detail?.code)) this.errorAction = { for: e.message, kind: "subscribe" };
     },
 
     closeNotice() {

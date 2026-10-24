@@ -42,6 +42,8 @@ class Relay(
     private val key: String,
     private val lost: () -> Unit = {}, // not reached, or nothing there: where the relays are, asked again (RelayDirectory)
     private val lapsed: () -> Unit = {}, // the subscription ended or on hold: Google Play's purchases checked again
+    // No key yet, an AI call: the free trial's key (started then), or an error thrown (null: none, the call without it)
+    private val noKey: (suspend () -> String)? = null,
 ) {
     private val base = baseUrl.trimEnd('/')
 
@@ -166,8 +168,9 @@ class Relay(
 
     /** The relay's answer, when it is one (its errors thrown); `stream`: asked as it comes. */
     private suspend fun open(route: String, body: RequestBody?, stream: Boolean = false): Response {
+        val key = key.trim().ifEmpty { if (route in AI_ROUTES) noKey?.invoke().orEmpty() else "" }
         val request = Request.Builder().url("$base/v1/$route")
-            .header("Authorization", "Bearer ${key.trim()}")
+            .header("Authorization", "Bearer $key")
             .header(CLIENT_HEADER, CLIENT_VERSION)
             .apply { if (stream) header("Accept", STREAM_TYPE) }
             .apply { if (body != null) post(body) }
@@ -206,8 +209,12 @@ class Relay(
         const val STREAM_TYPE = "application/x-ndjson"
         const val PICTURE_SOURCE_HEADER = "X-Notosaurus-Picture-Source"
 
-        // The relay's answers for a subscription past its end: ended, or on hold
-        val LAPSED = setOf("relay.subscription_ended", "relay.payment_pending")
+        // The AI's routes: the first one called without a key starts the free trial (not reading
+        // aloud, the voices, the free pictures, a report: they come after a lesson, or need none)
+        val AI_ROUTES = setOf("extract", "revise", "explain", "rephrase", "figure", "picture", "card-picture", "plan-picture", "transcribe")
+
+        // The relay's answers for a subscription past its end: ended, on hold, or the free trial over
+        val LAPSED = setOf("relay.subscription_ended", "relay.payment_pending", "relay.trial_ended")
 
         // A little slower than normal, for learners (the computer's "-10%")
         const val SPEECH_RATE = 0.9

@@ -1044,23 +1044,40 @@ class LocalServerTest {
     }
 
     @Test
-    fun aFreeTrialWithoutACard() = app { client ->
+    fun aFreeTrialStartedByTheFirstAiCall() = app { client ->
+        prefs[LocalServer.keyOf(local.relayUrl())] = "" // a new user: no key yet
         assertEquals("true", client.get("/api/admin/subscription") { page() }.json().jsonObject["trial"]!!.jsonPrimitive.content)
+        // No key: the first AI call starts the free trial, then is made with its key
         relayAnswers("""{"key": "nts_trial", "account": {"plan": "free_trial", "credits_left": 300, "daily_left": 150,
             "renews_at": "2026-11-04T10:00:00+00:00", "ends_at": "2026-11-04T10:00:00+00:00"}}""")
-        val started = client.post("/api/admin/subscription/trial") { page() }.json().jsonObject
-        assertEquals("free_trial", started.string("plan"))
-        val asked = relay.takeRequest(5, TimeUnit.SECONDS)!!
-        assertEquals("/v1/trial", asked.url.encodedPath)
-        val sent = json.parseToJsonElement(asked.body!!.utf8()).jsonObject
+        relayAnswers("""{"text": "Tidied"}""")
+        val tidied = client.post("/api/prompt/rephrase") { page(); contentType(ContentType.Application.Json); setBody("""{"text": "t"}""") }
+        assertEquals("Tidied", tidied.json().jsonObject.string("text"))
+        val trial = relay.takeRequest(5, TimeUnit.SECONDS)!!
+        assertEquals("/v1/trial", trial.url.encodedPath)
+        val sent = json.parseToJsonElement(trial.body!!.utf8()).jsonObject
         assertEquals(listOf("integrity-1", "ab".repeat(32)), listOf(sent.string("integrity_token"), sent.string("device")))
+        val call = relay.takeRequest(5, TimeUnit.SECONDS)!!
+        assertEquals("/v1/rephrase" to "Bearer nts_trial", call.url.encodedPath to call.headers["Authorization"])
         assertEquals("nts_trial", prefs[LocalServer.keyOf(local.relayUrl())])
 
-        // Play Integrity giving no token: refused, the relay never asked
+        // Told once to the page (its notice), with what it gives
+        relayAnswers("""{"plan": "free_trial", "credits_left": 290, "daily_left": 140}""")
+        val told = client.get("/api/switches") { page() }.json().jsonObject["trial"]!!.jsonObject
+        assertEquals(300, told["credits_left"]!!.jsonPrimitive.int)
+        relayAnswers("""{"plan": "free_trial", "credits_left": 290, "daily_left": 140}""")
+        assertEquals(JsonNull, client.get("/api/switches") { page() }.json().jsonObject["trial"])
+    }
+
+    @Test
+    fun aFreeTrialRefusedSaysSo() = app { client ->
+        prefs[LocalServer.keyOf(local.relayUrl())] = "" // a new user: no key yet
+        // Play Integrity giving no token: the AI call refused with why, the relay never asked
         play.integrity = null
-        val refused = client.post("/api/admin/subscription/trial") { page() }
+        val refused = client.post("/api/prompt/rephrase") { page(); contentType(ContentType.Application.Json); setBody("""{"text": "t"}""") }
         assertEquals(HttpStatusCode.BadRequest, refused.status)
         assertEquals("relay.trial_refused", refused.json().jsonObject["detail"]!!.jsonObject.string("code"))
+        assertEquals(null, relay.takeRequest(200, TimeUnit.MILLISECONDS))
     }
 
     @Test

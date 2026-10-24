@@ -276,6 +276,8 @@
       "guard": "mas pode enganar-se: verifica os cartões antes de os dares ao teu filho.",
       "nameTitle": "Uma página de caderno mostra muitas vezes o nome da criança:",
       "name": "esconde-o com 🖍️ antes de enviar.",
+      "trialTitle": "A primeira lição inicia um teste grátis,",
+      "trial": "sem cartão, uma vez por telemóvel (o Google verifica que é um telemóvel real, a app reconhece este por uma impressão digital).",
       "policy": "Política de privacidade",
       "agree": "Sou pai ou mãe (um adulto) e aceito a política de privacidade.",
       "accept": "Aceitar"
@@ -797,7 +799,8 @@
         "monthly": "Teste grátis de {days} dias, depois {price} por mês",
         "yearly": "Teste grátis de {days} dias, depois {price} por ano"
       },
-      "freeTrial": "🎁 Experimentar grátis, sem cartão",
+      "trialAtFirstLesson": "🎁 O teu teste grátis, sem cartão, começará com a tua primeira lição.",
+      "subscribeShort": "Subscrever",
       "trialStarted": "✓ Teste grátis: {credits} créditos até {date}. Bons estudos!",
       "restore": "Já tenho uma subscrição",
       "manage": "Gerir a subscrição (Google Play)",
@@ -1004,6 +1007,7 @@
       "invalid_key": "Chave de licença desconhecida ou expirada: verifique-a nas configurações.",
       "no_credits": "Sem créditos este mês: eles voltam na próxima renovação.",
       "subscription_ended": "A tua subscrição terminou: subscreve de novo na app para continuar.",
+      "trial_ended": "O teu teste grátis terminou: subscreve nas Definições para continuar.",
       "payment_pending": "Pagamento pendente: o Google Play não conseguiu renovar a tua subscrição. Atualiza o método de pagamento no Google Play (Definições → Gerir a subscrição) para continuar.",
       "invalid_purchase": "Compra não reconhecida pelo Google Play: tenta de novo ou contacta o suporte.",
       "trial_refused": "O teste grátis só é possível com a app instalada a partir do Google Play, num telemóvel real.",

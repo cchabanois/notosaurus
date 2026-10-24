@@ -88,6 +88,8 @@
     <div class="toast-actions" x-show="errorAction.for === error">
       <button class="toast-action" x-show="errorAction.kind === 'installAnki'" @click="installAnki()"
               x-text="$t('android.anki.install')"></button>
+      <a class="toast-action" x-show="errorAction.kind === 'subscribe'" href="admin.html"
+         x-text="$t('android.subscription.subscribeShort')"></a>
     </div>
   </div>
   <div class="toast ok" x-cloak x-show="success && !error" x-transition.opacity role="status">
@@ -114,6 +116,11 @@
          role="status">
       <span x-text="switches.notice?.text"></span>
       <button class="icon-btn" @click="closeNotice()" :aria-label="$t('common.close')">✕</button>
+    </div>
+    <!-- The Android app: the free trial started by the first lesson, said once -->
+    <div class="notice-bar" x-cloak x-show="switches.trial" role="status">
+      <span x-text="trialText()"></span>
+      <button class="icon-btn" @click="switches.trial = null" :aria-label="$t('common.close')">✕</button>
     </div>
     <div class="notice-bar" x-cloak x-show="switches.update" role="status">
       <span x-text="$t('app.update.available')"></span>
@@ -1150,6 +1157,8 @@
         <strong x-text="$t('app.welcome.onPhone')"></strong> <span x-text="$t('app.welcome.google')"></span></p>
       <p><strong x-text="$t('app.welcome.guardTitle')"></strong> <span x-text="$t('app.welcome.guard')"></span></p>
       <p><strong x-text="$t('app.welcome.nameTitle')"></strong> <span x-text="$t('app.welcome.name')"></span></p>
+      <!-- The free trial (Play Integrity, a fingerprint of the phone): said before the first lesson starts it -->
+      <p><strong x-text="$t('app.welcome.trialTitle')"></strong> <span x-text="$t('app.welcome.trial')"></span></p>
       <p><a :href="$docs('app-privacy')" target="_blank" rel="noopener" x-text="$t('app.welcome.policy')"></a></p>
       <label class="welcome-agree">
         <input type="checkbox" x-model="welcome.agreed">

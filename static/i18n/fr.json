@@ -276,6 +276,8 @@
       "guard": "mais elle peut se tromper : vérifiez les cartes avant de les donner à votre enfant.",
       "nameTitle": "Une page de cahier montre souvent le nom de l'enfant :",
       "name": "cachez-le avec 🖍️ avant l'envoi.",
+      "trialTitle": "La première leçon démarre un essai gratuit,",
+      "trial": "sans carte, une fois par téléphone (Google vérifie que c'est un vrai téléphone, l'app reconnaît celui-ci par une empreinte).",
       "policy": "Politique de confidentialité",
       "agree": "Je suis un parent (un adulte) et j'accepte la politique de confidentialité.",
       "accept": "Accepter"
@@ -797,7 +799,8 @@
         "monthly": "Essai gratuit de {days} jours, puis {price} par mois",
         "yearly": "Essai gratuit de {days} jours, puis {price} par an"
       },
-      "freeTrial": "🎁 Essayer gratuitement, sans carte",
+      "trialAtFirstLesson": "🎁 Votre essai gratuit, sans carte, démarrera à votre première leçon.",
+      "subscribeShort": "S'abonner",
       "trialStarted": "✓ Essai gratuit : {credits} crédits jusqu'au {date}. Bonnes révisions !",
       "restore": "J'ai déjà un abonnement",
       "manage": "Gérer l'abonnement (Google Play)",
@@ -1004,6 +1007,7 @@
       "invalid_key": "Clé de licence inconnue ou expirée : vérifiez-la dans les réglages.",
       "no_credits": "Plus de crédits ce mois-ci : ils reviennent au prochain renouvellement.",
       "subscription_ended": "Votre abonnement est terminé : réabonnez-vous dans l'app pour continuer.",
+      "trial_ended": "Votre essai gratuit est terminé : abonnez-vous dans les Réglages pour continuer.",
       "payment_pending": "Paiement en attente : Google Play n'a pas pu renouveler votre abonnement. Mettez à jour votre moyen de paiement dans Google Play (Réglages → Gérer l'abonnement) pour continuer.",
       "invalid_purchase": "Achat non reconnu par Google Play : réessayez, ou contactez le support.",
       "trial_refused": "L'essai gratuit n'est possible qu'avec l'app installée depuis Google Play, sur un vrai téléphone.",
