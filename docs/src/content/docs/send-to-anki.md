@@ -1,9 +1,11 @@
 ---
-title: "Sending to Anki"
-description: "Send the cards straight into Anki or download a .apkg file, update a lesson without duplicates, and get the cards to the phone."
+title: "Sending to Anki desktop"
+description: "From the add-on or standalone: send the cards straight into Anki desktop or download a .apkg file, and get the cards to the phone."
 ---
 
-Once the cards are checked, they go to Anki in one tap, or as a file.
+With the add-on (or standalone), once the cards are checked, they go to Anki desktop in one tap, or
+as a file. In the Android app, they go straight into AnkiDroid: see
+[The app and AnkiDroid](../app-ankidroid/).
 
 ## Add to Anki
 
@@ -21,19 +23,9 @@ deck, with their audio and pictures. A message says what was done, for instance 
 
 ## Sending a lesson again
 
-Once the lesson is sent, the button becomes **🔄 Update in Anki**. You can correct a lesson and
-send it again as many times as you like: its cards are **updated** in Anki, **not duplicated**,
-and the review history of each card is kept, even when you corrected its front. If you changed the lesson's deck, its cards are
-**moved** there, with their history. Cards
-added since the last send are added; cards deleted from the lesson stay in Anki: after the send, Notosaurus lists them and offers to
-delete them (with their review history), never without asking. Deleting a whole lesson in Notosaurus offers to delete its cards in Anki
-too, with their review history.
-
-Changing a card option (the reverse card, the typed answer) on a lesson already sent moves its
-cards to the matching note type, history kept.
-
-In Anki, each lesson's notes carry a tag `notosaurus::<lesson>`: handy to find them in the
-browser.
+Once the lesson is sent, the button becomes **🔄 Update in Anki**: a corrected lesson sent again
+updates its cards in Anki, history kept, instead of duplicating them. See
+[The cards in Anki](../cards-in-anki/).
 
 ## The .apkg file
 
@@ -62,10 +54,3 @@ computer, and the message says that it wasn't synced.
 
 Without an AnkiWeb account, the `.apkg` file opened on the phone puts the deck straight into
 AnkiDroid, but the reviews then stay on that phone only.
-
-## In the app
-
-In the [Android app](../android-app/), on this phone, **📥 Add to Anki** writes the cards
-straight into **AnkiDroid**, with their sounds and pictures: no `.apkg`, no sync to wait for. The
-first time, the app asks for AnkiDroid's permission. Sent again, a lesson updates its cards, as on
-the computer. AnkiDroid syncs them with AnkiWeb as usual, if it is logged in.

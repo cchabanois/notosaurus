@@ -3,14 +3,9 @@ title: Getting started
 description: "Install Notosaurus in Anki, set it up with the assistant, connect your phone and make your first deck from a photo."
 ---
 
-Notosaurus works in two ways:
-
-- **The [Android app](../android-app/) on its own**: no computer, no AI key, by subscription.
-  Install it from Google Play, and that's all.
-- **The Anki add-on**, free, on your computer, with your own AI key. You use it from the
-  phone's browser, or from the Android app, on the same Wi-Fi.
-
-This page is about the add-on.
+The Anki add-on runs Notosaurus on your computer, inside Anki desktop, free, with your own AI
+key. You use it from the phone's browser, or from the Android app, on the same Wi-Fi. Rather the
+app on its own? See [Which Notosaurus?](../which-notosaurus/).
 
 ## What you need
 
@@ -42,7 +37,7 @@ Getting started**, and as long as no AI is set up, the Notosaurus page shows **‚
 left‚Äù** with a button to start it.
 
 **The AI.** Choose the service that reads the lessons. **Gemini** is recommended: the best
-value in our tests, about 1 US cent per lesson (see [AI services and costs](../ai-services/)
+value in our tests, about 1 US cent per lesson (see [Settings and AI services](../ai-services/)
 for the others).
 
 ![The assistant: choosing the AI](../../assets/screenshots/en/setup-start.png)

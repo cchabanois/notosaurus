@@ -1,57 +1,14 @@
 ---
-title: "Troubleshooting and FAQ"
-description: "What to do when Notosaurus doesn't start, the phone can't connect, the AI fails, or the cards don't reach Anki, and answers to common questions."
+title: "FAQ"
+description: "Answers to common questions about Notosaurus, the Android app and the Anki add-on: cost, iPhone, several children, PDFs."
 ---
 
-The messages below are the ones Notosaurus shows. When something goes wrong in the add-on,
-**Tools → Notosaurus → Server log** shows what happened, and **Restart the server** often
-fixes it.
+When something goes wrong, see [Troubleshooting the add-on](../troubleshooting/) or
+[Troubleshooting the app](../app-troubleshooting/).
 
-## Notosaurus doesn't start
+## The cards are wrong or missing
 
-**“Notosaurus isn't started.”** You declined the installation of its components on first
-start. To install them: **Tools → Notosaurus → Open Notosaurus**.
-
-**“Couldn't download uv from GitHub”** or **“Couldn't install Notosaurus's dependencies”.** The
-first start downloads about 300 MB: check the Internet connection, then **Tools → Notosaurus →
-Restart the server**. The log says what failed.
-
-**The server stops right after starting.** Another program may use port 8000, for instance
-Notosaurus started standalone at the same time. Stop it, or choose another port in the add-on's
-config (**Tools → Add-ons → Notosaurus → Config**, `port`), then restart Anki.
-
-## The phone can't open Notosaurus
-
-See also [On the phone](../phone/).
-
-- The phone and the computer must be on the **same Wi-Fi**. A “guest” network often keeps its
-  devices apart: use the main one.
-- On Windows, allow Anki (or Python) when the **firewall** asks, the first time.
-- If the computer's address changed (after restarting the router), **scan the QR code again**:
-  **Tools → Notosaurus → Open on the phone…**.
-- **“The server only listens on this computer”**: set `host` to `0.0.0.0` in the add-on's
-  config.
-- **“This device isn't allowed yet”**: the phone hasn't scanned the QR code, or every phone was
-  disconnected. Scan it again.
-
-## The settings don't open on the phone
-
-**“Settings open from Anki, on the computer.”** That's on purpose: in the add-on, the settings
-(and the API keys) are only reachable on the computer itself. Open them with **Tools →
-Notosaurus → Settings**.
-
-## The AI fails
-
-| Message | What to do |
-|---|---|
-| “No … key” / “Invalid … key” | Paste the key again in **Settings → Access**, then **🔌 Test**. |
-| “… is overloaded right now” | Common with Gemini: try again in a minute. Fallback models take over automatically. |
-| “… quota reached” | A free key's limit is reached: wait, or turn on billing. |
-| “Answer cut off: too many cards at once” | Send fewer pages at a time, or ask for fewer cards. |
-| “The model didn't return valid cards” | Try again; if it keeps happening, choose another model. |
-| The model “doesn't seem to see the image” (Test) | The model doesn't read images: choose a vision model. |
-
-**The cards are wrong or missing.** Check the photo (see [Photos and PDFs](../photos/)), be
+Check the photo (see [Photos and PDFs](../photos/)), be
 more precise in the instructions, or correct them with the AI. Claude reads handwriting best.
 
 ## A PDF can't be added
@@ -62,39 +19,6 @@ more precise in the instructions, or correct them with the AI. Claude reads hand
   PDF), then add it again.
 - **Words misread in a PDF**: a scanned PDF is only pictures, read like photos. A PDF made on a
   computer gives the AI its exact text.
-
-## The cards don't reach Anki
-
-- **“Anki can't be reached”**: start Anki on the computer. Standalone, Anki needs the AnkiConnect
-  add-on.
-- **“No profile open in Anki”**: open the child's profile, then send again.
-- **A warning about another profile**: the lesson belongs to another child than the profile open
-  in Anki. Open the right profile, or confirm.
-- **The cards don't reach the phone**: the message says “no AnkiWeb sync” when the profile isn't
-  logged in to AnkiWeb. Click **Sync** once in Anki to log in, then send again. On the phone,
-  sync AnkiDroid or AnkiMobile.
-- **Cards without sound**: the voice service didn't answer (it needs the Internet). Send the
-  lesson again later: the missing audio is added.
-
-## In the app
-
-See also [The Android app](../android-app/).
-
-| Message | What to do |
-|---|---|
-| “No credits left this month” | They come back with the next renewal: **🔑 Subscription**, in the settings, says when. |
-| “Your free trial is over” | Subscribe in the Settings (**🔑 Subscription**) to go on. |
-| “Your subscription has ended” | Subscribe again in the app. |
-| “Payment pending” | Google Play couldn't renew the subscription: update your payment method in Google Play (**Settings → Manage the subscription**). |
-| “The free trial is only possible with the app installed from Google Play, on a real phone” | Install the app from Google Play; the trial isn't offered on an emulator. |
-| “No subscription found on this Google account” (**I already have a subscription**) | Check that the phone uses the Google account the subscription was taken with. |
-| “Notosaurus isn't allowed to add cards to AnkiDroid” | **Settings → 📥 AnkiDroid → Allow**, then add the cards again. Refused for good (Android asks no more): allow it in Android's settings, **Apps → Notosaurus → Permissions**. |
-| “AnkiDroid isn't installed” / “AnkiDroid didn't take the cards” | Install AnkiDroid, **open it once** (it creates its collection), then add the cards again. |
-| “💻 Your computer doesn't answer” | In **💻 On my computer**: Anki must be open with the add-on, and the phone on the same Wi-Fi. |
-
-**✎ Notosaurus does nothing in AnkiDroid** (“Card blocked from launching another app”): on
-AnkiDroid 2.25 and before, turn on **Settings → Advanced → Allow cards to launch other apps**
-(see [Notosaurus in Anki](../in-anki/#the-cards-in-anki)).
 
 ## Questions
 
@@ -114,7 +38,7 @@ instructions and their lessons. See [Several children](../several-children/).
 
 **How much does it cost?**
 The add-on is free: you pay the AI service directly, from a fraction of a cent to a few cents per
-lesson (see [AI services and costs](../ai-services/)). The [Android app](../android-app/) on its
+lesson (see [Settings and AI services](../ai-services/)). The [Android app](../android-app/) on its
 own works by subscription, with a free trial; with the add-on, it is free.
 
 **How can I support Notosaurus?**
@@ -124,9 +48,3 @@ Notosaurus → Support Notosaurus…** in Anki (on the computer: the app has non
 
 **How is it updated?**
 See [What's new](../whats-new/#updating-notosaurus).
-
-**How do I uninstall it?**
-In Anki, **Tools → Add-ons**, select Notosaurus, **Delete**. Its components and **its data
-folder (lessons, photos, settings) are deleted too**: copy the data folder first if you want to
-keep them (see [Privacy and security](../privacy/#where-the-data-is)). The cards already sent
-stay in Anki.

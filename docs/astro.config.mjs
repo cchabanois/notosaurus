@@ -98,6 +98,7 @@ export default defineConfig({
 						{ slug: 'ai-services' },
 						{ slug: 'send-to-anki' },
 						{ slug: 'in-anki' },
+						{ slug: 'troubleshooting' },
 						{ slug: 'privacy' },
 						{ slug: 'install' },
 					],

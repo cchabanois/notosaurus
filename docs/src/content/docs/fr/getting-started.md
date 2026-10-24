@@ -3,15 +3,10 @@ title: Pour commencer
 description: "Installer Notosaurus dans Anki, le configurer avec l'assistant, connecter votre téléphone et faire votre premier paquet à partir d'une photo."
 ---
 
-Notosaurus fonctionne de deux façons :
-
-- **L'[application Android](../android-app/) toute seule** : ni ordinateur ni clé d'IA, avec
-  un abonnement. Installez-la depuis Google Play, c'est tout.
-- **Le greffon Anki**, gratuit, sur votre ordinateur, avec votre propre clé d'IA. Vous
-  l'utilisez depuis le navigateur du téléphone, ou depuis l'application Android, sur le même
-  Wi-Fi.
-
-Cette page parle du greffon.
+Le greffon Anki fait tourner Notosaurus sur votre ordinateur, dans Anki, gratuitement, avec votre
+propre clé d'IA. Vous l'utilisez depuis le navigateur du téléphone, ou depuis l'application
+Android, sur le même Wi-Fi. Plutôt l'application toute seule ? Voir
+[Quel Notosaurus ?](../which-notosaurus/).
 
 ## Ce qu'il vous faut
 
@@ -46,7 +41,7 @@ lancer.
 
 **L'IA.** Choisissez le service qui lit les leçons. **Gemini** est conseillé : le meilleur
 rapport qualité/prix dans nos essais, environ 1 centime par leçon (voir
-[Services d'IA et coûts](../ai-services/) pour les autres).
+[Réglages et services d'IA](../ai-services/) pour les autres).
 
 ![L'assistant : le choix de l'IA](../../../assets/screenshots/fr/setup-start.png)
 
