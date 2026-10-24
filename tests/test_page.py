@@ -97,6 +97,16 @@ def generate_free(page, prompt: str) -> None:
     page.locator(".flash").first.wait_for()
 
 
+def test_the_main_button_takes_the_first_photo(page):
+    """No photo yet: "📷 Photographiez la leçon" is not a dead button, it opens the camera."""
+    page.goto("/")
+    start = page.get_by_role("button", name="📷 Photographiez la leçon")
+    sync_api.expect(start).to_be_enabled()
+    with page.expect_file_chooser() as chooser:
+        start.click()
+    assert chooser.value.element.get_attribute("capture") == "environment"
+
+
 def test_generate_then_edit_saves_by_itself(page):
     generate_free(page, FRONT_PROMPT)
     assert page.locator(".flash").count() == 6
