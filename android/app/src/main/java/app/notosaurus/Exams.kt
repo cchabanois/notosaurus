@@ -175,7 +175,7 @@ class Exams(private val prefs: Preferences, private val lessons: Lessons) {
         /** The name as an Anki tag's last part: no space (they separate tags), none of the
          * characters Anki's search or hierarchy use. */
         fun tagText(name: String): String =
-            name.replace(Regex("""[:"*\\]"""), " ").trim().replace(Regex("(?U)\\s+"), "_").ifEmpty { "exam" } // any space, a non-breaking one too
+            name.replace(Regex("""[:"*\\]"""), " ").trim().replace(Regex("[\\s\\p{Z}]+"), "_").ifEmpty { "exam" } // any space, a non-breaking one too
 
         /** The deck holding every one of these (itself or a subdeck): where AnkiDroid's custom
          * study finds all the test's cards; "" when they share none. */
