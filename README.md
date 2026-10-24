@@ -7,47 +7,73 @@
 <p align="center"><a href="https://www.youtube.com/shorts/Q7bUTMEj6Kk"><img src="docs/src/assets/demo.gif" alt="Notosaurus on a phone: a notebook page becomes Anki cards. Click to watch the full demo on YouTube." width="280"></a><br>
 ▶ <a href="https://www.youtube.com/shorts/Q7bUTMEj6Kk">Watch the full demo</a> (75 s) · 📖 <a href="https://cchabanois.github.io/notosaurus/">Documentation</a> · ☕ <a href="https://ko-fi.com/notosaurus">Support on Ko-fi</a></p>
 
-Take photos of a lesson with your phone. A vision AI reads the pages and drafts Anki cards. You review and fix them, then send them straight into Anki or download a `.apkg`.
+Take photos of a lesson with your phone. A vision AI reads the pages and drafts Anki cards. You review and fix them, then send them straight into Anki or AnkiDroid, or download a `.apkg`.
 
-Notosaurus was built for learning languages (French → Spanish vocabulary and sentences, with audio), but a prompt can ask for any kind of question/answer card.
+Notosaurus was first built for learning languages (vocabulary and sentences, with audio), and now makes cards for any subject: history dates, definitions and theorems, diagrams, formulas, dictations, poems to learn by heart…
 
-- **Phone first**: a web page, not an app. It opens the phone's own camera, and you can add it to the home screen.
-- **Several pages per lesson**, with a saved prompt that says what to extract ("one word per card, gender and plural in the notes").
-- **Review screen**: edit, delete or add cards, or ask the AI to fix them ("remove the card about the father", "you forgot the colours").
-- **Diagrams**: ask for "one card per label" and the AI hides every label of a diagram behind a number; each card asks "What is (2)?" and shows the answer on the diagram. Masks can be moved and resized in the review. Gemini and GPT place them most precisely.
-- **Cloze**: ask for "fill in the blanks" and each card is a sentence with gaps, `La Révolution française commence en {{c1::1789}} avec la prise de {{c2::la Bastille}}.`: Anki makes one card per gap number. The review shows the gaps, numbered.
-- **Multiple choice and true/false**: ask for a quiz (QCM) or true/false statements: each card has its right answer and wrong ones, edited in the review. In Anki, the question shows the options (A, B, C…, in the same order every time), the answer marks the right one; plain HTML, the same on every Anki.
-- **Formulas**: written in MathJax (`\(…\)`), which Anki displays; the review shows them drawn.
-- **Spelling**: "Type the answer" makes Anki compare what the pupil types letter by letter; "Add a dictation" adds a card where the back is heard, then written.
-- **Pictures**: with a prompt like "front: the picture of the word", an image model draws a picture for each card, through the cards' own service when it can draw (Gemini, OpenAI, OpenRouter), else another one chosen in ⚙️ (Claude and local models can't draw). From under a cent to a few US cents per picture.
-- **Figures**: geometry and labelled figures (a right triangle with its hypotenuse, a circle and its radius, a measured rectangle…) are drawn as SVG by the cards' own AI, exact and with clean text, instead of an image model. They are cleaned (shapes and text only) and go to Anki like the pictures.
-- **Audio**: the back of each card is read aloud with [edge-tts](https://github.com/rany2/edge-tts) and embedded in the deck, so it plays everywhere, even offline.
-- **Straight into Anki**, or as a `.apkg`. Sending a corrected lesson again updates its cards instead of duplicating them.
-- **PDFs too**: each page becomes a photo, drawn in the browser (pdf.js); past the 10 pages a lesson holds, you pick the pages. A digital PDF's text goes to the AI with its page: the exact words, no misreading.
-- **Lessons are saved** (photos + cards), so you can reopen, fix and re-send them later.
-- **One lesson list per Anki profile**, handy when each child has their own profile. The profile that creates a lesson owns it and can share it with the other profiles.
-- **Choice of AI**: Gemini, Claude, or any OpenAI-compatible service (OpenAI, OpenRouter, Mistral, Ollama…).
+## What it does
+
+The [documentation](https://cchabanois.github.io/notosaurus/) explains each of these in detail.
+
+**From the lesson**
+
+- **Photos or PDFs**, up to 10 pages per lesson. A digital PDF's text goes to the AI with its page: the exact words, no misreading. A child's name or school can be blacked out with a finger before the photo is sent.
+- **Instructions** say what to make: about twenty come with Notosaurus (vocabulary, conjugation, questions, dates and landmarks, definitions and properties, fill in the blanks, multiple choice, diagram to complete, dictation, by heart…), and **Automatic** chooses from the lesson. You can write your own.
+- **Complete a lesson** days later with its next pages: only the new pages' cards are made.
+
+**The cards**
+
+- **Question and answer**, **fill in the blanks** (cloze), **multiple choice** and **true/false**, the same on every Anki.
+- **Diagrams**: every label hidden behind a number, one card per label; the masks can be moved in the review.
+- **Formulas** in MathJax, and **figures** (geometry, labelled shapes) drawn exactly as SVG.
+- **Pictures** where they truly help: a free picture found first (Wikimedia Commons, Openverse), else one drawn by an image model.
+- **Audio**: the back read aloud, embedded in the deck, so it plays everywhere, even offline. **Dictations** and **typed answers** for spelling.
+- **"Did you know?"** facts and **helps on the back** (why the answer is the answer, a way to remember it).
+
+**The review**
+
+- Edit, delete or add cards, or ask the AI in plain words ("remove the card about the father", "you forgot the colours").
+- **💬** explains a card at a pupil's level; **⚑** reports a wrong or unsuitable content.
+
+**Into Anki**
+
+- **Straight into Anki** desktop or **AnkiDroid**, or as a `.apkg`. Sending a corrected lesson again updates its cards instead of duplicating them, and cards left over in Anki are listed, to delete if you want.
+- **✎ Notosaurus** under every answer in Anki opens the card in Notosaurus to correct it, its review history kept.
+- **Tests to prepare**: gather several lessons, or some of their cards, under one tag, and revise them together with Anki's custom study ("Revise now in Anki" on the computer).
+
+**For families**
+
+- **One card per child** (class, decks, standing instructions), linked to their Anki profile; each child has their own lessons, and **⧉ Copy for…** gives one to another child.
 - **English, French, Spanish, German, Italian and Portuguese (Brazil)**, and adding a language takes a single file.
 
-## Two ways to run it
+## Three ways to run it
 
-### As an Anki add-on (recommended)
+### The Android app (recommended)
 
-Notosaurus starts and stops with Anki desktop and writes cards directly into the open profile. You don't need AnkiConnect.
+Coming soon to Google Play. The app shows the same Notosaurus page, and works in two ways, chosen in its settings:
+
+- **📱 On this phone**: no computer and no API key. The AI (Google's Gemini) and the voices go through the Notosaurus service, processed in the European Union, and nothing is kept there. Lessons stay on the phone, and cards go straight into AnkiDroid. The first lesson starts a free trial, without a card, then it's a monthly or yearly subscription. See the [app's privacy policy](https://cchabanois.github.io/notosaurus/app-privacy/).
+- **💻 On my computer**: with the Anki add-on below, lessons and cards stay on the computer. Free.
+
+The app's code is in [`android/`](android/README.md).
+
+### The Anki add-on
+
+Notosaurus starts and stops with Anki desktop and writes cards directly into the open profile. You use it from the phone's browser (or the app), on the same Wi-Fi. You don't need AnkiConnect.
 
 1. Download `notosaurus-<version>.ankiaddon` from the [latest release](https://github.com/cchabanois/notosaurus/releases/latest) (to build it yourself, see [CONTRIBUTING.md](CONTRIBUTING.md)).
 2. Double-click the file (or *Tools → Add-ons → Install from file*) and restart Anki.
 3. On first start, the add-on asks before installing its components into `Anki2/notosaurus-runtime/`, next to the add-ons (about 300 MB, kept by add-on updates, removed with the add-on; outside the add-on's own folder, so that Anki can update it while Notosaurus runs, Windows included): [uv](https://docs.astral.sh/uv/), Python 3.13 and the Python libraries. It uses the uv shipped with Anki 25.07 to 26.05 or one already installed; otherwise it downloads a pinned uv release from GitHub and checks its SHA-256.
-4. A QR code appears: scan it with the phone (same Wi-Fi) and add the page to the home screen.
+4. The setup assistant opens: choose the AI service and paste its key, then scan the QR code with the phone and add the page to the home screen. See [Getting started](https://cchabanois.github.io/notosaurus/getting-started/).
 
-Everything else is in the **Tools → Notosaurus** menu: open, open on the phone (QR code), settings, server status, restart and log.
+Everything else is in the **Tools → Notosaurus** menu: open, open on the phone (QR code), getting started, settings, server status, restart, log and help.
 
 - **Settings** (AI provider, API keys…) only open on the computer, without a password. Phones are refused, so API keys never travel over the Wi-Fi and children can't change them.
 - The server listens on port 8000 by default. The port and other options are in the add-on's config (*Tools → Add-ons → Notosaurus → Config*).
 
-### Standalone
+### Standalone or with Docker
 
-Notosaurus runs on its own, even when Anki is closed. The `.apkg` download always works. "Add to Anki" needs Anki desktop open with the [AnkiConnect](https://ankiweb.net/shared/info/2055492159) add-on.
+Notosaurus runs on its own, even when Anki is closed, for instance on a home server. The `.apkg` download always works. "Add to Anki" needs Anki desktop open with the [AnkiConnect](https://ankiweb.net/shared/info/2055492159) add-on.
 
 ```sh
 python3 -m venv .venv
@@ -55,29 +81,20 @@ python3 -m venv .venv
 .venv/bin/uvicorn app.main:app --host 0.0.0.0
 ```
 
-Then open http://localhost:8000 on the computer. For the phone (same Wi-Fi): ⚙️ → **Phones**, and scan the QR code.
+Then open http://localhost:8000 on the computer. For the phone (same Wi-Fi): ⚙️ → **Phones**, and scan the QR code. The ⚙️ page is reachable from the network in this mode, protected by an admin password created on the first visit.
 
-Or with Docker:
-
-```sh
-docker build -t notosaurus .
-docker run -p 8000:8000 -v notosaurus-data:/data --env-file .env -e NOTOSAURUS_PUBLIC_URL=http://<computer-ip>:8000 notosaurus
-```
-
-Inside Docker, Notosaurus can't see the computer's address: `NOTOSAURUS_PUBLIC_URL` puts it in the phones' QR code. The computer itself goes through Docker's network too: open ⚙️ → **Phones** and use the link under the QR code once.
-
-The ⚙️ page (`/admin.html`) is reachable from the network in this mode. It is protected by an admin password, created on the first visit.
+Docker and the environment variables: see [Advanced installation](https://cchabanois.github.io/notosaurus/install/).
 
 ## Settings
 
-The ⚙️ page chooses:
+On the computer, the ⚙️ page chooses:
 
-- the AI provider and model;
+- the AI service and model, and the image model for the pictures;
 - API keys, which are stored in `data/settings.json` (readable only by the server's user) and never sent back to the browser;
-- the voice speed;
-- standing instructions for the AI, for every profile and for each Anki profile (e.g. "in year 8"), added to the prompt of each lesson;
-- AnkiConnect and syncing options;
-- whether a profile may see the other profiles' private lessons.
+- a voice per language, and its speed;
+- the children: their class, their decks and their standing instructions (e.g. "in year 8"), added to the prompt of each lesson;
+- pictures, "Did you know?" facts and helps on the back (on by default);
+- AnkiConnect and syncing options.
 
 Environment variables (see `.env.example`) provide defaults. Whatever is saved on the ⚙️ page wins.
 
@@ -94,28 +111,29 @@ Environment variables (see `.env.example`) provide defaults. Whatever is saved o
 
 For the last three, *Load models* lists only models that accept images (and structured output, when the service says so). *Test* sends a small image to check that the model can read it and answer in JSON. The output format is always forced with a JSON schema. The user's prompt only says *what* to extract.
 
-Local models (Ollama, LM Studio) work, but they read handwritten pages much less reliably.
-
-Settings saved before OpenAI, OpenRouter and the other services were separate providers (`NOTOSAURUS_OPENAI_BASE_URL`, `NOTOSAURUS_OPENAI_API_KEY`…) still work: they are read as the matching provider.
+Local models (Ollama, LM Studio) work, but they read handwritten pages much less reliably. Claude and local models can't draw: pictures are then drawn by another service, chosen in ⚙️. What each costs: see [AI services and costs](https://cchabanois.github.io/notosaurus/ai-services/).
 
 ## Data
 
-There is no database. Everything is plain files under `data/` (or `NOTOSAURUS_DATA`), so backing up Notosaurus means copying that folder.
+There is no database. On the computer, everything is plain files under `data/` (or `NOTOSAURUS_DATA`), so backing up Notosaurus means copying that folder.
 
 ```
 data/
   settings.json                              settings and API keys
   prompts.json                               saved prompts
+  children.json                              the children: class, decks, instructions
+  exams.json                                 tests to prepare
+  ai-calls.json                              every AI call and its cost
   lessons/
     2026-09-28-espagnol-lecon-5-la-famille/  one folder per lesson
       lesson.json                            deck, cards, prompt, voice, owner, dates
       page-1.jpg, page-2.jpg                 photos
       audio/la-madre-3f2a1c9e.mp3            card audio (included in the .apkg)
-      images/diagram-1-2-3cdb18fcc2-q.jpg    diagram cards: labels hidden (q) or shown (a)
-  cache/tts/                                 voice previews, safe to delete
+      images/                                card pictures, and diagrams with their labels hidden or shown
+  cache/                                     voices and pictures, safe to delete
 ```
 
-In the add-on, `data/` lives in the add-on's `user_files/` folder.
+In the add-on, `data/` lives in the add-on's `user_files/` folder. In the Android app, lessons are kept the same way, in the app's private storage.
 
 ## Languages
 
@@ -126,19 +144,19 @@ To add a language, see [CONTRIBUTING.md](CONTRIBUTING.md#adding-a-language): it 
 ## Good to know
 
 - **Always review the cards.** Even good models misread a word now and then.
-- **Children's schoolwork is private data.** Photos go to the AI provider you choose. A local model keeps them at home, at the cost of accuracy.
+- **Children's schoolwork is private data.** On the computer, photos go to the AI provider you choose; a local model keeps them at home, at the cost of accuracy. In the app, they go through the Notosaurus service to Gemini, without being kept. See [Privacy and security](https://cchabanois.github.io/notosaurus/privacy/).
 - **Only paired devices.** On the Wi-Fi, only the computer itself and the devices that scanned Notosaurus's QR code (Tools → Notosaurus → Open on the phone, or ⚙️ → Phones) can use it: the others can't spend your AI credits or delete lessons. "Disconnect every phone" in ⚙️ → Phones unpairs them all (a phone lost or lent).
 - **Plain HTTP on the local network.** The camera works over plain HTTP, and the page can be added to the home screen as a shortcut. Pairing stops the curious and other websites, not someone spying on the Wi-Fi traffic: keep your Wi-Fi protected (WPA2/WPA3).
 - **Never expose AnkiConnect or Notosaurus to the Internet.** Keep them on your local network.
-- **edge-tts is unofficial.** Microsoft could shut it down.
+- **edge-tts is unofficial.** The computer's voices come from [edge-tts](https://github.com/rany2/edge-tts); Microsoft could shut it down.
 
 ## Support
 
-Notosaurus is free, with no ads and no tracking. If it helps your family, you can [buy me a coffee on Ko-fi](https://ko-fi.com/notosaurus) ☕.
+Notosaurus is free software, with no ads and no tracking; the add-on is free to use. If it helps your family, you can [buy me a coffee on Ko-fi](https://ko-fi.com/notosaurus) ☕.
 
 ## Contributing
 
-Setting up, tests, architecture, translations and releases: see [CONTRIBUTING.md](CONTRIBUTING.md).
+Setting up, tests, architecture, translations and releases: see [CONTRIBUTING.md](CONTRIBUTING.md). The Android app: see [android/README.md](android/README.md).
 
 ## License
 
