@@ -71,7 +71,7 @@ are added at the next send.
 
 At the bottom of the lesson, a line says how the cards are asked: **↔ Both ways** (Anki also
 asks back → front), **⌨️ Typed answer** (Anki compares letter by letter), **🎧 With a
-dictation** (hear the back, write it).
+dictation** (hear the back, write it), or **🎧 Dictation only**.
 
 These options come from the [instructions](../instructions/): the AI reads them in their text.
 To change them, say so in the correction, e.g. "one way only" or "with the answer typed": the

@@ -16,7 +16,24 @@ complète, avec une recherche.
 Le texte de la consigne choisie s'affiche sous les boutons. Vous pouvez le modifier **pour cette
 fois seulement** (« Modifiée pour cette fois seulement »), par exemple pour ajouter
 « seulement les verbes » : votre modification reste avec la leçon, la consigne enregistrée ne
-change pas.
+change pas. Dans l'application, **🎤** à côté du texte permet de le dicter : dites ce que vous voulez,
+l'IA l'écrit.
+
+**✨ Mettre au propre**, sous le texte, fait réécrire par l'IA une consigne tapée vite ou dictée :
+claire et courte, dans sa langue, avec toutes ses intentions gardées (combien de cartes, quelles
+langues et dans quel sens, quel genre de cartes), sans rien ajouter. **↩ Annuler** rend votre
+texte, tant que vous n'avez pas modifié celui mis au propre. Ce n'est pas proposé pour les
+consignes de Notosaurus telles quelles : elles sont déjà au propre.
+
+## Rapide ou soigné
+
+**Création des cartes**, sous la consigne, règle le temps de réflexion de l'IA :
+
+- **⚡ Rapide** (par défaut) : quelques secondes. Idéal pour du vocabulaire ou une leçon simple.
+- **🎯 Soigné** : plus long (jusqu'à 30 s), plus réfléchi : pour une leçon riche (schéma, maths).
+
+Le choix est gardé sur l'appareil. Une leçon faite en mode rapide le dit dans la relecture
+(« Créées en mode rapide. »), avec **🎯 Refaire en mode soigné**.
 
 ## Les consignes de Notosaurus
 
@@ -52,7 +69,7 @@ Elles ne se modifient pas, mais se **dupliquent** pour en faire votre propre ver
 **Nouvelle** crée une consigne que vous réutiliserez, par exemple pour la langue que votre
 enfant apprend chaque semaine. **Dupliquer** part d'une consigne de Notosaurus.
 
-![Consigne : nom, texte, nom du paquet, voix et options des cartes](../../../assets/screenshots/fr/prompt-editor.png)
+![Consigne : nom, texte et nom du paquet](../../../assets/screenshots/fr/prompt-editor.png)
 
 - **Nom** : ce qu'affiche le bouton.
 - **Consigne** : ce que l'IA doit faire, avec vos mots (« une carte par date, au recto
@@ -60,11 +77,12 @@ enfant apprend chaque semaine. **Dupliquer** part d'une consigne de Notosaurus.
 - **Nom de paquet proposé** : le paquet Anki, avec `::` pour les sous-paquets. Les parties
   entre accolades sont remplies d'après la leçon : `Espagnol::Leçon {n}` devient
   `Espagnol::Leçon 5`.
-- **Voix du verso** : pas de son, **Automatique** (l'IA reconnaît la langue des versos et
-  Notosaurus prend une voix de cette langue), ou une voix que vous choisissez et que vous
-  pouvez écouter.
-- **Options des cartes** : taper la réponse (Anki compare lettre par lettre), ajouter une
-  dictée (entendre le verso, l'écrire). Elles vont avec les leçons faites avec cette consigne.
+
+La façon dont les cartes sont posées et entendues se dit aussi dans le texte, et l'IA la lit :
+« avec la réponse tapée » (Anki compare lettre par lettre), « dans les deux sens » (la carte
+inverse), « lu à voix haute », « avec une dictée » (entendre le verso, l'écrire) ou « seulement
+une dictée ». Les versos dans une langue apprise sont lus de toute façon, avec la voix choisie
+pour cette langue (voir [Les voix et l'audio](../voices/)).
 
 **✏️ Libre** écrit une consigne pour cette fois seulement : elle reste avec la leçon, mais
 n'est pas ajoutée à votre liste. **Enregistrer comme nouvelle consigne** la garde si elle a

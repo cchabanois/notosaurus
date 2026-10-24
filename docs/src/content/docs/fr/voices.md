@@ -7,20 +7,24 @@ Notosaurus peut lire à voix haute le verso de chaque carte : pratique pour les 
 entendre la bonne prononciation. L'audio est **inclus dans le paquet** : il fonctionne partout
 dans Anki, sur l'ordinateur et le téléphone, même hors connexion.
 
+## Quelles cartes sont lues
+
+Notosaurus lit à voix haute les versos **dans une langue apprise** : l'IA trouve cette langue
+dans la leçon (espagnol d'Espagne, anglais britannique…). Une leçon dans la langue de l'enfant
+(histoire, grammaire…) n'a pas de son, sauf si ses cartes servent à écrire ce qu'on entend
+(réponse tapée, dictée) ou si sa consigne le demande (« lu à voix haute », comme **Par cœur**).
+Les consignes de Notosaurus pour les questions, les QCM, les formules ou les schémas n'ont pas de
+son.
+
+En bas d'une leçon, une ligne indique la voix qui lit ses versos.
+
 ## Choisir la voix
 
-La voix fait partie de la **consigne** (voir [Les consignes](../instructions/)) : ouvrez-la avec
-**✏️ Modifier la consigne**, ou **Dupliquez** une consigne de Notosaurus, puis choisissez dans **Voix
-du verso** :
-
-- **Pas de son** : les versos ne sont pas lus.
-- **Automatique** : l'IA reconnaît la langue des versos, et Notosaurus prend une voix de cette
-  langue (espagnol → Elvira, anglais britannique → Sonia…). Le plus simple.
-- **Choisir une voix** : tapez le début de la langue (`fr-FR`, `es-ES`, `en-GB`…) pour voir ses
-  voix, féminines ou masculines, et **▶** pour en écouter une.
-
-Les consignes de vocabulaire de Notosaurus utilisent **Automatique**. En bas d'une leçon, une
-ligne indique la voix qui lit ses versos.
+Sans choix, chaque langue a sa voix habituelle (sur l'ordinateur : espagnol → Elvira, anglais
+britannique → Sonia…). Pour en préférer une autre : **Réglages → Voix des cartes → Voix par
+langue**, puis **+ Choisir la voix d'une langue…** : choisissez la langue, puis une de ses voix,
+femme ou homme, et **Écouter** pour l'entendre. Le choix vaut pour les leçons suivantes dans
+cette langue. Les réglages de l'application ont la même section, avec leurs propres voix.
 
 ## Écouter
 
@@ -43,13 +47,16 @@ le réglage change ensuite.
 
 ## Dictée
 
-Avec une voix, l'option **Ajouter une dictée** de la consigne ajoute
-une carte où l'on entend le verso, puis on l'écrit. Voir
-[Les consignes](../instructions/).
+Une carte de dictée fait entendre le verso, puis l'écrire. Les consignes **Dictée** et **Dictée à
+trous** ne font que ce genre de cartes ; pour les autres, dites-le dans leur texte : « avec une
+dictée », ou « seulement une dictée ». **Automatique** fait des cartes de dictée quand la page est
+une dictée à préparer. Voir [Les consignes](../instructions/).
 
 ## Des cartes sans son
 
-Les voix viennent du service de synthèse vocale de Microsoft : faire l'audio demande Internet. S'il
+Sur l'ordinateur, les voix viennent du service de synthèse vocale de Microsoft (par
+[edge-tts](https://github.com/rany2/edge-tts)) ; dans l'application Android, des voix de Google, par
+le service Notosaurus. Dans les deux cas, faire l'audio demande Internet. S'il
 ne répond pas, les cartes sont envoyées sans son et le message dit combien. Renvoyez la leçon plus
 tard : l'audio manquant est ajouté. Voir [Confidentialité et sécurité](../privacy/) pour ce qui est
 envoyé.
