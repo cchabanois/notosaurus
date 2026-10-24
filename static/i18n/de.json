@@ -807,6 +807,7 @@
       "until": "Abo bezahlt bis {date}",
       "trialUntil": "Kostenlose Testphase bis zum {date}",
       "done": "✓ Abonniert: viel Erfolg beim Lernen!",
+      "pending": "⏳ Zahlung ausstehend: Dein Abo ist aktiv, sobald Google Play sie erhalten hat. Öffne dann die Einstellungen erneut.",
       "restored": "✓ Dein Abo wurde in diesem Google-Konto gefunden."
     },
     "anki": {
@@ -1044,7 +1045,8 @@
     },
     "exams": {
       "not_found": "Diesen Test gibt es nicht mehr: laden Sie die Seite neu.",
-      "too_many": "Höchstens {max} Tests."
+      "too_many": "Höchstens {max} Tests.",
+      "same_name": "Ein anderer Test hat schon diesen Namen (Anki unterscheidet keine Großbuchstaben): Wähle einen anderen."
     }
   },
   "demo": {

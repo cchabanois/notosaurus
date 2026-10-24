@@ -114,6 +114,10 @@ Each pull request adds a line under **Unreleased**. See [Releasing](CONTRIBUTING
 
 ### Fixed
 
+- Tests to prepare with the Anki add-on (not AnkiConnect): a lesson taken out of a test no longer fails as "Anki closed" (the add-on now takes a tag off: removeTags); a test checks that the add-on answers every action Notosaurus asks for.
+- A test changed while Anki (or AnkiDroid) couldn't follow (renamed, a lesson taken out, deleted) is followed once it can (a change, or the tests listed): its old tag taken off, instead of kept on the notes for good.
+- Two tests whose names differ by their case only are refused (Anki tells tags apart without it: they would tag the same notes).
+- Android: a purchase paid later (some ways to pay) is said pending, not cancelled, and restored as the settings open once Google Play has it.
 - Android: a lesson sent again to AnkiDroid no longer copies its sounds and pictures again (AnkiDroid's media folder grew at every send, each copy under a new name, and the notes counted as updated): a note already showing a file keeps it.
 - The free trial's start ("✓ Free trial: 300 credits until …") shows in the toast after the first lesson, seen wherever the page is, instead of a bar at its top (scrolled away by the new cards). For developers: the page tests wait for a page's requests before the next test, whose data a late save landed in (a lesson too many, now and then).
 - **✨ Générer à partir de la consigne seule** shows only when the prompt can do without a photo: the free one with a text, the user's own, a built-in one once something is written in it (as it is, "Automatic" or "Dictation" reads a lesson); the hint saying how stays.

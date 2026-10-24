@@ -87,6 +87,38 @@ def test_anki_closed_the_test_is_saved_all_the_same(anki, client, monkeypatch):
     assert client.delete("/api/exams/interro-svt").json() == {"deleted": True, "anki": False}
 
 
+def test_changes_made_while_anki_was_closed_followed_once_it_opens(anki, client, monkeypatch):
+    """Renamed, a lesson taken out, then deleted, with Anki closed: nothing lost, the old
+    tag taken off once Anki can be reached (a change, or the tests listed)."""
+    lesson, other = _sent(client, extract_lesson(client)), _sent(client, extract_lesson(client))
+    both = [{"lesson": lesson["id"]}, {"lesson": other["id"]}]
+    client.put("/api/exams/interro-svt", json={**INTERRO, "lessons": both})
+    assert all(tags == {"Exam::Interro_SVT_de_lundi"} for tags in _tags(anki).values())
+    opened = ankiconnect._transport
+
+    monkeypatch.setattr(ankiconnect, "_transport", httpx.MockTransport(anki_unreachable))
+    renamed = {**INTERRO, "name": "Brevet blanc", "lessons": [{"lesson": lesson["id"]}]}
+    assert client.put("/api/exams/interro-svt", json=renamed).json()["anki"] is False
+    monkeypatch.setattr(ankiconnect, "_transport", opened)
+    client.get("/api/exams")  # Anki open again: caught up
+    own = {note for notes in lesson["anki_notes"].values() for note in notes.values()}
+    assert {i: tags for i, tags in _tags(anki).items() if tags} == {i: {"Exam::Brevet_blanc"} for i in own}
+
+    monkeypatch.setattr(ankiconnect, "_transport", httpx.MockTransport(anki_unreachable))
+    assert client.delete("/api/exams/interro-svt").json()["anki"] is False
+    monkeypatch.setattr(ankiconnect, "_transport", opened)
+    client.get("/api/exams")
+    assert not any(_tags(anki).values()) and exams.pending() == {}
+
+
+def test_two_tests_one_tag_refused(client):
+    """Anki tells tags apart without their case: "Maths lundi" and "maths lundi" would be one."""
+    assert client.put("/api/exams/a", json={**INTERRO, "name": "Maths lundi"}).status_code == 200
+    refused = client.put("/api/exams/b", json={**INTERRO, "name": "maths  LUNDI"})
+    assert refused.status_code == 400 and refused.json()["detail"]["code"] == "exams.same_name"
+    assert client.put("/api/exams/a", json={**INTERRO, "name": "MATHS lundi"}).status_code == 200  # itself: fine
+
+
 def test_refused(client):
     assert client.put("/api/exams/Interro SVT", json=INTERRO).status_code == 422  # not an id
     assert client.put("/api/exams/a", json={"name": ""}).status_code == 422

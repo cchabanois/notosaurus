@@ -807,6 +807,7 @@
       "until": "Subscrição paga até {date}",
       "trialUntil": "Teste grátis até {date}",
       "done": "✓ Subscrito: boas revisões!",
+      "pending": "⏳ Pagamento pendente: a tua subscrição ficará ativa assim que o Google Play o receber. Volta depois a abrir as Definições.",
       "restored": "✓ A tua subscrição foi encontrada nesta conta Google."
     },
     "anki": {
@@ -1044,7 +1045,8 @@
     },
     "exams": {
       "not_found": "Esta prova já não existe: recarregue a página.",
-      "too_many": "No máximo {max} provas."
+      "too_many": "No máximo {max} provas.",
+      "same_name": "Outra prova já tem este nome (o Anki não distingue maiúsculas): escolhe outro."
     }
   },
   "demo": {

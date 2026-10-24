@@ -807,6 +807,7 @@
       "until": "Abbonamento pagato fino al {date}",
       "trialUntil": "Prova gratuita fino al {date}",
       "done": "✓ Abbonato: buon ripasso!",
+      "pending": "⏳ Pagamento in sospeso: il tuo abbonamento sarà attivo appena Google Play lo avrà ricevuto. Riapri poi le Impostazioni.",
       "restored": "✓ Il tuo abbonamento è stato trovato su questo account Google."
     },
     "anki": {
@@ -1044,7 +1045,8 @@
     },
     "exams": {
       "not_found": "Questa verifica non esiste più: ricaricate la pagina.",
-      "too_many": "Al massimo {max} verifiche."
+      "too_many": "Al massimo {max} verifiche.",
+      "same_name": "Un'altra verifica ha già questo nome (Anki non distingue le maiuscole): scegline un altro."
     }
   },
   "demo": {

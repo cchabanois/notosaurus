@@ -105,3 +105,29 @@ def test_anki_not_responding(bridge, monkeypatch):
     bridge.mw.stuck = True
     answer = post(bridge, {"action": "findCards", "key": bridge.server.key, "params": {"query": "deck:D"}})
     assert answer["result"] is None and "not responding" in answer["error"]
+
+
+def asked_of_anki() -> set[str]:
+    """Every action Notosaurus asks AnkiConnect for (app/ankiconnect.py): the second
+    argument of each _invoke, and the "action" of the requests sent in a multi."""
+    import ast
+
+    tree = ast.parse(Path("app/ankiconnect.py").read_text(encoding="utf-8"))
+    found = set()
+    for node in ast.walk(tree):
+        invoke = isinstance(node, ast.Call) and getattr(node.func, "id", "") == "_invoke" and len(node.args) > 1
+        if invoke and isinstance(node.args[1], ast.Constant):
+            found.add(node.args[1].value)
+        if isinstance(node, ast.Dict):
+            for key, value in zip(node.keys, node.values, strict=True):
+                if isinstance(key, ast.Constant) and key.value == "action" and isinstance(value, ast.Constant):
+                    found.add(value.value)
+    return found
+
+
+def test_every_action_notosaurus_asks_for_the_bridge_answers(bridge):
+    """With the add-on instead of AnkiConnect, an action missing from the bridge fails the
+    whole request ("removeTags" did: a test's lesson taken out failed, Anki "closed")."""
+    asked = asked_of_anki()
+    assert {"addTags", "removeTags", "findNotes", "createFilteredDeck"} <= asked  # the walk finds them
+    assert asked - {"version"} <= set(bridge.module.ACTIONS)  # "version": answered before the table

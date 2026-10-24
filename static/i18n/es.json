@@ -807,6 +807,7 @@
       "until": "Suscripción pagada hasta el {date}",
       "trialUntil": "Prueba gratuita hasta el {date}",
       "done": "✓ Suscrito: ¡buen repaso!",
+      "pending": "⏳ Pago pendiente: tu suscripción estará activa en cuanto Google Play lo reciba. Vuelve a abrir los Ajustes entonces.",
       "restored": "✓ Se ha encontrado tu suscripción en esta cuenta de Google."
     },
     "anki": {
@@ -1044,7 +1045,8 @@
     },
     "exams": {
       "not_found": "Este examen ya no existe: recargue la página.",
-      "too_many": "Como máximo {max} exámenes."
+      "too_many": "Como máximo {max} exámenes.",
+      "same_name": "Otro examen ya tiene este nombre (Anki no distingue mayúsculas): elige otro."
     }
   },
   "demo": {

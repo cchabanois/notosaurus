@@ -20,9 +20,11 @@ internal fun Route.subscriptionRoutes(server: LocalServer) {
             val store = subscriptions
             val offers = store?.let { withContext(Dispatchers.IO) { runCatching { it.offers() }.getOrNull() } }.orEmpty()
             var restored = false
-            if (store != null && licence().isEmpty()) {
+            // No key yet, or a purchase paid later (pending when bought): the one this Google account has
+            if (store != null && (licence().isEmpty() || prefs[PURCHASE_PENDING] == "1")) {
                 val owned = withContext(Dispatchers.IO) { runCatching { store.owned() }.getOrDefault(emptyList()) }
                 restored = owned.firstNotNullOfOrNull { token -> runCatching { licensed(token) }.getOrNull() } != null
+                if (restored) prefs[PURCHASE_PENDING] = ""
             }
             buildJsonObject {
                 put("offers", JsonArray(offers.map { buildJsonObject { put("plan", it.plan); put("price", it.price); put("trial_days", it.trialDays) } }))
@@ -34,8 +36,12 @@ internal fun Route.subscriptionRoutes(server: LocalServer) {
         api("POST", "/api/admin/subscription/subscribe") {
             val store = subscriptions ?: throw BadRequest("subscription.unavailable")
             val plan = body().string("plan").takeIf { it in PlayStore.PLANS } ?: throw BadRequest("subscription.none")
-            val token = store.subscribe(plan) ?: return@api buildJsonObject { put("cancelled", true) }
-            licensed(token)
+            when (val bought = store.subscribe(plan)) {
+                is Bought.Paid -> licensed(bought.token)
+                // Paid later (some ways to pay): restored as the settings open once Google Play has it
+                Bought.Pending -> buildJsonObject { put("pending", true) }.also { prefs[PURCHASE_PENDING] = "1" }
+                Bought.GivenUp -> buildJsonObject { put("cancelled", true) }
+            }
         }
         // A new phone, the app reinstalled: the subscription this Google account has
         api("POST", "/api/admin/subscription/restore") {
@@ -77,3 +83,6 @@ private fun LocalServer.keep(answer: JsonObject): JsonObject {
     prefs[keyOf(relayUrl())] = answer.string("key")
     return answer["account"]!!.jsonObject
 }
+
+/** A purchase Google Play said pending (paid later): the settings look for it until found. */
+private const val PURCHASE_PENDING = "purchase_pending"
