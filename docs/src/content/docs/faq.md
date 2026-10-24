@@ -76,28 +76,51 @@ more precise in the instructions, or correct them with the AI. Claude reads hand
 - **Cards without sound**: the voice service didn't answer (it needs the Internet). Send the
   lesson again later: the missing audio is added.
 
+## In the app
+
+See also [The Android app](../android-app/).
+
+| Message | What to do |
+|---|---|
+| “No credits left this month” | They come back with the next renewal: **🔑 Subscription**, in the settings, says when. |
+| “Your free trial is over” | Subscribe in the Settings (**🔑 Subscription**) to go on. |
+| “Your subscription has ended” | Subscribe again in the app. |
+| “Payment pending” | Google Play couldn't renew the subscription: update your payment method in Google Play (**Settings → Manage the subscription**). |
+| “The free trial is only possible with the app installed from Google Play, on a real phone” | Install the app from Google Play; the trial isn't offered on an emulator. |
+| “No subscription found on this Google account” (**I already have a subscription**) | Check that the phone uses the Google account the subscription was taken with. |
+| “Notosaurus isn't allowed to add cards to AnkiDroid” | **Settings → 📥 AnkiDroid → Allow**, then add the cards again. Refused for good (Android asks no more): allow it in Android's settings, **Apps → Notosaurus → Permissions**. |
+| “AnkiDroid isn't installed” / “AnkiDroid didn't take the cards” | Install AnkiDroid, **open it once** (it creates its collection), then add the cards again. |
+| “💻 Your computer doesn't answer” | In **💻 On my computer**: Anki must be open with the add-on, and the phone on the same Wi-Fi. |
+
+**✎ Notosaurus does nothing in AnkiDroid** (“Card blocked from launching another app”): on
+AnkiDroid 2.25 and before, turn on **Settings → Advanced → Allow cards to launch other apps**
+(see [Notosaurus in Anki](../in-anki/#the-cards-in-anki)).
+
 ## Questions
 
 **Does Notosaurus work without Anki desktop?**
-The add-on needs Anki on a computer. Notosaurus can also run [standalone](../install/), and the
-`.apkg` file opens in AnkiDroid without a computer. But the phone page itself always needs the
-computer (or a server) running Notosaurus.
+Yes, with the [Android app](../android-app/): it makes the cards on the phone and puts them into
+AnkiDroid. The add-on needs Anki on a computer; Notosaurus can also run
+[standalone](../install/). The phone's browser always needs the computer (or a server) running
+Notosaurus.
 
 **Does it work on an iPhone?**
-Yes: the page opens in Safari and can be added to the home screen. Reviews happen in AnkiMobile
+Yes, in the browser, with Notosaurus on the computer (there's no iPhone app): the page opens in Safari and can be added to the home screen. Reviews happen in AnkiMobile
 (paid, it funds Anki's development).
 
 **Can several children use it?**
-Yes, with one Anki profile each: see [Several children](../several-children/).
+Yes: each child has their card (**🧒** on the main page), with their class, their decks, their
+instructions and their lessons. See [Several children](../several-children/).
 
 **How much does it cost?**
-Notosaurus is free. The AI service costs from a fraction of a cent to a few cents per lesson:
-see [AI services and costs](../ai-services/).
+The add-on is free: you pay the AI service directly, from a fraction of a cent to a few cents per
+lesson (see [AI services and costs](../ai-services/)). The [Android app](../android-app/) on its
+own works by subscription, with a free trial; with the add-on, it is free.
 
 **How can I support Notosaurus?**
 If Notosaurus helps you, you can make a donation on [Ko-fi](https://ko-fi.com/notosaurus):
 **☕ Support Notosaurus** at the bottom of the page and of the settings, or **Tools →
-Notosaurus → Support Notosaurus…** in Anki. Notosaurus stays free, with no ads.
+Notosaurus → Support Notosaurus…** in Anki (on the computer: the app has none, its subscription pays). Notosaurus stays free, with no ads.
 
 **How is it updated?**
 See [What's new](../whats-new/#updating-notosaurus).

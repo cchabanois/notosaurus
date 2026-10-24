@@ -79,29 +79,53 @@ lit le mieux l'écriture manuscrite.
 - **Des cartes sans son** : le service de voix n'a pas répondu (il a besoin d'Internet). Renvoyez
   la leçon plus tard : l'audio manquant est ajouté.
 
+## Dans l'application
+
+Voir aussi [L'application Android](../android-app/).
+
+| Message | Que faire |
+|---|---|
+| « Plus de crédits ce mois-ci » | Ils reviennent au prochain renouvellement : **🔑 Abonnement**, dans les réglages, dit quand. |
+| « Votre essai gratuit est terminé » | Abonnez-vous dans les Réglages (**🔑 Abonnement**) pour continuer. |
+| « Votre abonnement est terminé » | Réabonnez-vous dans l'application. |
+| « Paiement en attente » | Google Play n'a pas pu renouveler l'abonnement : mettez à jour votre moyen de paiement dans Google Play (**Réglages → Gérer l'abonnement**). |
+| « L'essai gratuit n'est possible qu'avec l'app installée depuis Google Play, sur un vrai téléphone » | Installez l'application depuis Google Play ; l'essai n'est pas proposé sur un émulateur. |
+| « Aucun abonnement trouvé sur ce compte Google » (**J'ai déjà un abonnement**) | Vérifiez que le téléphone utilise le compte Google avec lequel l'abonnement a été pris. |
+| « Notosaurus n'a pas le droit d'ajouter des cartes à AnkiDroid » | **Réglages → 📥 AnkiDroid → Autoriser**, puis ajoutez à nouveau les cartes. Refusé pour de bon (Android ne demande plus) : autorisez-le dans les paramètres d'Android, **Applications → Notosaurus → Autorisations**. |
+| « AnkiDroid n'est pas installé » / « AnkiDroid n'a pas pris les cartes » | Installez AnkiDroid, **ouvrez-le une fois** (il crée sa collection), puis ajoutez à nouveau les cartes. |
+| « 💻 Votre ordinateur ne répond pas » | En **💻 Sur mon ordinateur** : Anki doit être ouvert avec le greffon, et le téléphone sur le même Wi-Fi. |
+
+**✎ Notosaurus ne fait rien dans AnkiDroid** (« La carte ne peut pas lancer d'autres
+applications ») : sur AnkiDroid 2.25 et avant, activez **Paramètres → Avancé → Autoriser les cartes
+à lancer d'autres applications** (voir [Notosaurus dans Anki](../in-anki/#les-cartes-dans-anki)).
+
 ## Questions
 
 **Notosaurus marche-t-il sans Anki sur ordinateur ?**
-Le greffon a besoin d'Anki sur un ordinateur. Notosaurus peut aussi tourner
-[en autonome](../install/), et le fichier `.apkg` s'ouvre dans AnkiDroid sans ordinateur. Mais la
-page du téléphone a toujours besoin de l'ordinateur (ou d'un serveur) où tourne Notosaurus.
+Oui, avec l'[application Android](../android-app/) : elle fait les cartes sur le téléphone et les
+met dans AnkiDroid. Le greffon a besoin d'Anki sur un ordinateur ; Notosaurus peut aussi tourner
+[en autonome](../install/). Le navigateur du téléphone a toujours besoin de l'ordinateur (ou d'un
+serveur) où tourne Notosaurus.
 
 **Est-ce que ça marche sur iPhone ?**
-Oui : la page s'ouvre dans Safari et peut être ajoutée à l'écran d'accueil. Les révisions se font
+Oui, dans le navigateur, avec Notosaurus sur l'ordinateur (il n'y a pas d'application iPhone) : la page s'ouvre dans Safari et peut être ajoutée à l'écran d'accueil. Les révisions se font
 dans AnkiMobile (payant, il finance le développement d'Anki).
 
 **Plusieurs enfants peuvent-ils l'utiliser ?**
-Oui, avec un profil Anki chacun : voir [Plusieurs enfants](../several-children/).
+Oui : chaque enfant a sa fiche (**🧒** sur la page principale), avec sa classe, ses paquets, ses
+instructions et ses leçons. Voir [Plusieurs enfants](../several-children/).
 
 **Combien ça coûte ?**
-Notosaurus est gratuit. Le service d'IA coûte d'une fraction de centime à quelques centimes par
-leçon : voir [Services d'IA et coûts](../ai-services/).
+Le greffon est gratuit : vous payez directement le service d'IA, d'une fraction de centime à
+quelques centimes par leçon (voir [Services d'IA et coûts](../ai-services/)).
+L'[application Android](../android-app/) seule fonctionne avec un abonnement, avec un essai
+gratuit ; avec le greffon, elle est gratuite.
 
 **Comment soutenir Notosaurus ?**
 Si Notosaurus vous rend service, vous pouvez faire un don sur
 [Ko-fi](https://ko-fi.com/notosaurus) : **☕ Soutenir Notosaurus** en bas de la page et des
-réglages, ou **Outils → Notosaurus → Soutenir Notosaurus…** dans Anki. Notosaurus reste gratuit,
-sans publicité.
+réglages, ou **Outils → Notosaurus → Soutenir Notosaurus…** dans Anki (sur l'ordinateur : l'application n'en a pas, son
+abonnement paie). Notosaurus reste gratuit, sans publicité.
 
 **Comment le mettre à jour ?**
 Voir [Nouveautés](../whats-new/#mettre-à-jour-notosaurus).

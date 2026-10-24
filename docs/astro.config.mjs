@@ -46,7 +46,7 @@ export default defineConfig({
 						it: 'Per iniziare',
 						'pt-BR': 'Para começar',
 					},
-					items: [{ slug: 'getting-started' }, { slug: 'phone' }],
+					items: [{ slug: 'android-app' }, { slug: 'getting-started' }, { slug: 'phone' }],
 				},
 				{
 					label: 'Using Notosaurus',

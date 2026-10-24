@@ -3,8 +3,15 @@ title: "Sur le téléphone"
 description: "Ouvrir Notosaurus sur le téléphone avec le QR code, et l'ajouter à l'écran d'accueil sur Android et iPhone."
 ---
 
-Notosaurus est une page web, pas une appli d'un magasin d'applications : le téléphone l'ouvre dans
-son navigateur. Ajoutée à l'écran d'accueil, elle s'ouvre ensuite d'un geste, comme une appli.
+Avec le greffon Anki sur l'ordinateur, le téléphone ouvre Notosaurus dans son navigateur : une
+page web, sur le même Wi-Fi. Ajoutée à l'écran d'accueil, elle s'ouvre ensuite d'un geste, comme
+une appli.
+
+:::tip[Sur Android, l'application]
+Sur Android, l'[application Notosaurus](../android-app/) peut le faire aussi : dans son mode
+**💻 Sur mon ordinateur**, elle affiche la page de l'ordinateur, sans navigateur. Ou, en
+**📱 Sur ce téléphone**, elle fait les cartes toute seule, sans l'ordinateur.
+:::
 
 ## 1. Ouvrir Notosaurus
 

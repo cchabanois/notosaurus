@@ -3,8 +3,14 @@ title: Getting started
 description: "Install Notosaurus in Anki, set it up with the assistant, connect your phone and make your first deck from a photo."
 ---
 
-Notosaurus is an add-on for Anki desktop. It runs on your computer, and you use it from
-your phone's browser, on the same Wi-Fi.
+Notosaurus works in two ways:
+
+- **The [Android app](../android-app/) on its own**: no computer, no AI key, by subscription.
+  Install it from Google Play, and that's all.
+- **The Anki add-on**, free, on your computer, with your own AI key. You use it from the
+  phone's browser, or from the Android app, on the same Wi-Fi.
+
+This page is about the add-on.
 
 ## What you need
 

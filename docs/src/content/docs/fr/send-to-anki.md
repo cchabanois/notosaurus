@@ -66,3 +66,11 @@ pas eu de synchronisation.
 
 Sans compte AnkiWeb, le fichier `.apkg` ouvert sur le téléphone met le paquet directement dans
 AnkiDroid, mais les révisions restent alors sur ce téléphone seulement.
+
+## Dans l'application
+
+Dans l'[application Android](../android-app/), sur ce téléphone, **📥 Ajouter à Anki** écrit les
+cartes directement dans **AnkiDroid**, avec leurs sons et leurs images : pas de `.apkg`, pas de
+synchronisation à attendre. La première fois, l'application demande l'autorisation d'AnkiDroid.
+Renvoyée, une leçon met à jour ses cartes, comme sur l'ordinateur. AnkiDroid les synchronise avec
+AnkiWeb comme d'habitude, s'il y est connecté.

@@ -21,3 +21,6 @@ with the add-on file to download:
 
 Then **restart Anki**. The lessons, the instructions and the settings are kept. When a new version
 needs new components, Notosaurus asks again before installing them (a minute or two).
+
+The **[Android app](../android-app/)** updates through Google Play, like any app. When a new
+version is available, the app says so, with an **Update** button.
