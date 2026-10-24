@@ -88,7 +88,7 @@ request that touches `android/` or `static/`.
 ### Tests on a device
 
 What only a device shows (`app/src/androidTest`): `AnkiDroidTest` (AnkiDroid's real
-API: note type, decks and sub-decks, duplicates), `AppTest` (the activity, its
+API: note type, decks and sub-decks, duplicates, a test's tags, sounds and pictures), `AppTest` (the activity, its
 WebView and the page, a lesson made with a fake relay and sent to AnkiDroid),
 `ModesTest` (a fake computer's page, the page when it stops answering, back to the
 phone). With an emulator (or a phone) connected and AnkiDroid installed (the
@@ -101,8 +101,9 @@ phone). With an emulator (or a phone) connected and AnkiDroid installed (the
 ⚠️ Gradle installs the app for the tests and **uninstalls it afterwards**: its lessons
 and settings on that device are gone. Use an emulator, not your own phone.
 
-On GitHub, on demand: Actions → "Android on a device" → Run workflow (an emulator,
-AnkiDroid 2.25.0; a few minutes). Without AnkiDroid the tests are skipped.
+On GitHub: on every pull request changing `android/` or `static/`, on Mondays, and on
+demand (Actions → "Android on a device" → Run workflow): an emulator, AnkiDroid 2.25.0, a
+few minutes. Without AnkiDroid the tests are skipped.
 
 Without a computer, the app needs a relay implementing the `/v1` API. Notosaurus's own
 isn't public; run on the computer for development (demo AI, a test licence), reachable

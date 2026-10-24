@@ -85,6 +85,7 @@ class AnkiDroidTest {
             assertTrue(anki.browse("tag:notosaurus"))
             seen += waitForTop("com.ichi2.anki/.CardBrowser", seen, "AnkiDroid's browser, time ${time + 1}")
         }
+        Device.shell("input keyevent KEYCODE_HOME") // back from AnkiDroid: not on top of the next test's
     }
 
     /** The resumed activity once it is `activity`, a record not in `before`; its record. */
@@ -206,6 +207,82 @@ class AnkiDroidTest {
     }
 
     @Test
+    fun aTestsTagPutOnItsNotesAndTakenOff() {
+        val anki = Anki(Device.context)
+        val lesson = "exam-$run"
+        val cards = listOf(Card("gris $run", "gris", id = "g-$run", tags = listOf("couleurs")), Card("blanc $run", "blanco", id = "b-$run"))
+        val sent = anki.send(Deck("Notosaurus test $run", cards), Media(lesson = lesson))
+        val (grey, white) = listOf(sent.notes.getValue("g-$run"), sent.notes.getValue("b-$run"))
+        val api = AddContentApi(Device.context)
+        api.updateNoteTags(white, api.getNote(white)!!.tags + "mon_tag") // one the user put in AnkiDroid
+        val exam = "Exam::Interro_$run"
+
+        // Put on both: every other tag kept, AnkiDroid's search finds them
+        assertTrue(anki.retag(mapOf(exam to setOf(grey, white)), emptyMap()))
+        assertEquals(setOf("couleurs", "notosaurus", Anki.lessonTag(lesson), exam), api.getNote(grey)!!.tags)
+        assertEquals(setOf("notosaurus", Anki.lessonTag(lesson), "mon_tag", exam), api.getNote(white)!!.tags)
+        assertEquals(setOf(grey, white), search("tag:$exam"))
+
+        // The lesson sent again: the test's tag stays
+        anki.send(Deck("Notosaurus test $run", cards), Media(lesson = lesson, sentBefore = sent.notes))
+        assertEquals(setOf(grey, white), search("tag:$exam"))
+
+        // Taken off one (its card out of the test), another test's put on it: nothing else touched
+        assertTrue(anki.retag(mapOf("Exam::Brevet_$run" to setOf(white)), mapOf(exam to setOf(white))))
+        assertEquals(setOf("notosaurus", Anki.lessonTag(lesson), "mon_tag", "Exam::Brevet_$run"), api.getNote(white)!!.tags)
+        assertEquals(setOf(grey), search("tag:$exam"))
+
+        // A note deleted in AnkiDroid meanwhile: the others tagged all the same
+        assertEquals(1, anki.delete(listOf(grey)))
+        assertTrue(anki.retag(emptyMap(), mapOf("Exam::Brevet_$run" to setOf(grey, white))))
+        assertEquals(setOf("notosaurus", Anki.lessonTag(lesson), "mon_tag"), api.getNote(white)!!.tags)
+    }
+
+    /** The notes AnkiDroid's search finds. */
+    private fun search(query: String): Set<Long> = Device.context.contentResolver.query(
+        FlashCardsContract.Note.CONTENT_URI, arrayOf(FlashCardsContract.Note._ID), query, null, null,
+    )?.use { c -> buildSet { while (c.moveToNext()) add(c.getLong(0)) } }.orEmpty()
+
+    @Test
+    fun theBacksSoundIntoAnkiDroidsMedia() {
+        val anki = Anki(Device.context)
+        val lesson = "sound-$run"
+        fun mp3(name: String) = File(Device.context.filesDir, "audio/$name-$run.mp3").apply {
+            parentFile!!.mkdirs()
+            writeBytes(ByteArray(64) { (it + name.length).toByte() }) // AnkiDroid doesn't read it: any bytes
+        }
+        val card = Card("le chat $run", "el gato", id = "s-$run")
+        val first = anki.send(Deck("Notosaurus test $run", listOf(card)), Media(audio = mapOf("el gato" to mp3("gato")), lesson = lesson))
+        assertEquals(1, first.added)
+        val api = AddContentApi(Device.context)
+        val note = first.notes.getValue("s-$run")
+        val sound = soundOf(api.getNote(note)!!.fields)
+        assertTrue(sound, sound.startsWith("gato-$run"))
+        assertTrue("$sound not in AnkiDroid's media", sound in media())
+
+        // Sent again as it is: the same note, its sound not copied again
+        val again = anki.send(Deck("Notosaurus test $run", listOf(card)), Media(audio = mapOf("el gato" to mp3("gato")), lesson = lesson, sentBefore = first.notes))
+        assertEquals(listOf(0, 0), listOf(again.added, again.updated))
+        assertEquals(sound, soundOf(api.getNote(note)!!.fields))
+        assertEquals(listOf(sound), media().filter { it.startsWith("gato-$run") })
+
+        // Its back corrected, a new sound: the note's field says the new one
+        val corrected = card.copy(back = "la gata")
+        val fixed = anki.send(Deck("Notosaurus test $run", listOf(corrected)), Media(audio = mapOf("la gata" to mp3("gata")), lesson = lesson, sentBefore = first.notes))
+        assertEquals(listOf(0, 1), listOf(fixed.added, fixed.updated))
+        val now = soundOf(api.getNote(note)!!.fields)
+        assertTrue(now, now.startsWith("gata-$run") && now in media())
+    }
+
+    /** The file a note's "[sound:…]" names (one field has it). */
+    private fun soundOf(fields: Array<String>): String =
+        fields.firstNotNullOfOrNull { Regex("""\[sound:([^\]]+)]""").find(it)?.groupValues?.get(1) } ?: error("no sound in ${fields.toList()}")
+
+    /** The files in AnkiDroid's media folder. */
+    private fun media(): List<String> =
+        Device.shell("ls /sdcard/Android/data/com.ichi2.anki/files/AnkiDroid/collection.media").lines().map { it.trim() }.filter { it.isNotEmpty() }
+
+    @Test
     fun theLessonReviewedInAnkiDroid() {
         val anki = Anki(Device.context)
         val deck = "Notosaurus test $run::Leçon"
@@ -281,6 +358,9 @@ class AnkiDroidTest {
         val cropped = File(photo.parentFile, "images").listFiles()!!.single { it.name.startsWith("diagram-page-1-") }
         val size = BitmapFactory.decodeFile(cropped.path)
         assertTrue("${size.width}×${size.height}", size.width < 40 && size.height < 30)
-        assertEquals(0, anki.send(deck, Media(photos = mapOf(1 to photo), lesson = "test-$run", frames = mapOf(1 to listOf(0.0, 0.0, 0.5, 0.5)))).added) // not twice
+        // Sent again: not twice, the diagram's image not copied into AnkiDroid again
+        val again = anki.send(deck, Media(photos = mapOf(1 to photo), lesson = "test-$run", frames = mapOf(1 to listOf(0.0, 0.0, 0.5, 0.5))))
+        assertEquals(listOf(0, 0), listOf(again.added, again.updated))
+        assertEquals(label.fields[5], api.findDuplicateNotes(diagram, "test-$run:1:1").single().fields[5])
     }
 }

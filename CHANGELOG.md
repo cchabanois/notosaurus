@@ -112,6 +112,7 @@ Each pull request adds a line under **Unreleased**. See [Releasing](CONTRIBUTING
 
 ### Fixed
 
+- Android: a lesson sent again to AnkiDroid no longer copies its sounds and pictures again (AnkiDroid's media folder grew at every send, each copy under a new name, and the notes counted as updated): a note already showing a file keeps it.
 - The free trial's start ("✓ Free trial: 300 credits until …") shows in the toast after the first lesson, seen wherever the page is, instead of a bar at its top (scrolled away by the new cards). For developers: the page tests wait for a page's requests before the next test, whose data a late save landed in (a lesson too many, now and then).
 - **✨ Générer à partir de la consigne seule** shows only when the prompt can do without a photo: the free one with a text, the user's own, a built-in one once something is written in it (as it is, "Automatic" or "Dictation" reads a lesson); the hint saying how stays.
 - **📷 Photographiez la leçon**, the main button before any photo, opens the camera (as the 📷 tile) instead of being a greyed-out button.
