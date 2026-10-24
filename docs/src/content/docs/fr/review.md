@@ -84,8 +84,14 @@ tapée » : les cartes ne changent pas, seulement la façon dont Anki les pose.
 La ligne en dessous indique la voix qui lit les versos. Elle est incluse dans le paquet :
 elle fonctionne partout, même hors connexion.
 
-## La leçon d'un autre profil
+## À qui est la leçon
 
-Une leçon partagée par le profil d'un autre enfant s'ouvre **en lecture seule** : vous pouvez
-quand même l'ajouter à votre Anki, mais seul son propriétaire peut la modifier. Voir
-[Plusieurs enfants](../several-children/).
+Au-dessus des cartes, une ligne dit pour qui est la leçon : **🧒 Leçon de Paul**. Si Anki est
+ouvert sur le profil d'un autre enfant, elle le dit avant que vous envoyiez les cartes.
+
+**⧉ Copier pour…**, quand il y a un autre enfant, en fait une copie pour lui : ses paquets, ses
+propres cartes dans Anki. C'est gratuit : rien n'est demandé à l'IA.
+
+Une leçon partagée avec tous les profils par une version précédente s'ouvre **en lecture seule**
+dans les autres profils : vous pouvez quand même l'ajouter à votre Anki, ou la copier, mais elle
+ne se modifie que depuis le profil de son propriétaire. Voir [Plusieurs enfants](../several-children/).

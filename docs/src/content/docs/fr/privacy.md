@@ -12,7 +12,8 @@ souvent l'écriture d'un enfant, parfois son nom : voici où elle va.
 ## Ce qui sort de votre ordinateur
 
 - **Les photos et la consigne** vont au **service d'IA choisi dans les réglages**, pour faire et
-  corriger les cartes. Le texte d'un PDF numérique part avec sa page.
+  corriger les cartes. Le texte d'un PDF numérique part avec sa page. Avec elles partent la classe
+  de l'enfant et vos instructions pour lui, **jamais son prénom**.
 - **Les versos des cartes** vont au service de synthèse vocale de Microsoft, pour faire l'audio,
   quand une voix est choisie.
 - **La description d'une image** va au service qui la dessine, pour « Langue : vocabulaire en images ».
@@ -60,8 +61,8 @@ Anki, sauvegardées par Anki et, avec un compte, par AnkiWeb.
 - **Les réglages seulement sur l'ordinateur.** Avec le greffon, les réglages ne s'ouvrent que
   sur l'ordinateur lui-même : les enfants ne peuvent ni changer le service d'IA ni voir les clés
   depuis un téléphone. En autonome, ils sont protégés par un mot de passe.
-- **Une leçon appartient à un profil.** Seul le profil qui a créé une leçon peut la modifier ;
-  une leçon partagée est en lecture seule pour les autres.
+- **Une leçon appartient à un profil.** Une leçon ne se modifie que depuis le profil Anki où elle
+  a été faite ; un autre enfant a sa propre copie (**⧉ Copier pour…**).
 
 ## Le Wi-Fi
 

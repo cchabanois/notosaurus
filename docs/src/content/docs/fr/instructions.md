@@ -105,7 +105,8 @@ sur les cartes**. Pour une seule consigne, dites-le dans son texte : « sans ima
 
 ## Les instructions permanentes
 
-Certaines instructions valent pour toutes les leçons : « espagnol d'Espagne », « en 5ᵉ ;
-réponses courtes ». Écrivez-les une fois dans **Réglages → Instructions pour l'IA**, pour tous
-les profils ou pour chaque enfant : voir
-[Plusieurs enfants](../several-children/#des-instructions-pour-chaque-enfant).
+Certaines instructions valent pour toutes les leçons : « espagnol d'Espagne », « toujours
+l'article avec les noms ». Écrivez-les une fois dans **Réglages → Instructions pour l'IA → Pour tous
+les enfants**. Celles propres à chaque enfant (sa classe, « il lit encore lentement ») sont dans
+sa fiche, **🧒** sur la page principale : voir
+[Plusieurs enfants](../several-children/#les-fiches-des-enfants).

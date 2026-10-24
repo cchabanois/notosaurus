@@ -12,7 +12,8 @@ shows a child's handwriting, sometimes their name: here is where it goes.
 ## What leaves your computer
 
 - **The photos and the instructions** go to the **AI service chosen in the settings**, to make
-  and correct the cards. The text of a digital PDF goes with its page.
+  and correct the cards. The text of a digital PDF goes with its page. With them go the child's
+  class and your instructions for them, **never their first name**.
 - **The backs of the cards** go to Microsoft's text-to-speech service, to make the audio, when a
   voice is chosen.
 - **The description of a picture** goes to the service that draws it, for “Language: vocabulary in pictures”.
@@ -57,8 +58,8 @@ Anki and, with an account, by AnkiWeb.
 - **Settings only on the computer.** In the add-on, the settings open only on the computer
   itself: children can't change the AI service or see the keys from a phone. Standalone, they are
   protected by a password.
-- **A lesson belongs to a profile.** Only the profile that created a lesson can change it; a
-  shared lesson is read only for the others.
+- **A lesson belongs to a profile.** A lesson can only be changed from the Anki profile it was
+  made in; another child gets their own copy (**⧉ Copy for…**).
 
 ## The Wi-Fi
 
