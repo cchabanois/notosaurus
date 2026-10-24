@@ -1,6 +1,6 @@
 ---
-title: "Notosaurus dans Anki"
-description: "Le menu Outils → Notosaurus du greffon, ses réglages, et à quoi ressemblent les cartes quand on les révise dans Anki."
+title: "Dans Anki sur l'ordinateur"
+description: "Le greffon dans Anki sur l'ordinateur : son menu Outils → Notosaurus et sa configuration."
 ---
 
 Avec le greffon, Notosaurus tourne dans Anki sur l'ordinateur : il démarre avec Anki, s'arrête
@@ -23,7 +23,7 @@ avec lui, et écrit les cartes directement dans le profil ouvert.
 - **Redémarrer le serveur** arrête et relance Notosaurus : après avoir changé la configuration
   du greffon, ou quand quelque chose est bloqué.
 - **Journal du serveur** montre ce que Notosaurus a fait dernièrement. C'est la première chose à
-  regarder quand quelque chose ne va pas (voir la [FAQ](../faq/)).
+  regarder quand quelque chose ne va pas (voir [Dépannage du greffon](../troubleshooting/)).
 - **Aide** ouvre cette documentation, dans la langue d'Anki.
 - **Soutenir Notosaurus…** ouvre sa page [Ko-fi](https://ko-fi.com/notosaurus), pour faire un
   don si vous l'appréciez. Notosaurus reste gratuit.
@@ -47,60 +47,5 @@ Quelques options techniques sont dans **Outils → Greffons**, sélectionnez **N
 
 Après un changement : **Outils → Notosaurus → Redémarrer le serveur**.
 
-## Les paquets
-
-Chaque leçon a son paquet, par exemple `Espagnol::Unité 3 - À l'école` : `::` met un paquet
-dans un autre, les leçons d'une matière sont donc regroupées. Les cartes qui ont une section
-(Vocabulaire, QCM…) vont dans un sous-paquet du paquet de la leçon.
-
-![Les paquets de Notosaurus dans Anki](../../../assets/screenshots/fr/anki-decks.png)
-
-Pour réviser toute une matière, cliquez sur son paquet : Anki prend les cartes de tous les
-paquets qu'il contient.
-
-## Les cartes dans Anki
-
-Voici à quoi ressemblent les [types de cartes](../card-types/) pendant une révision dans Anki
-sur l'ordinateur. AnkiDroid et AnkiMobile affichent les mêmes cartes.
-
-Sous chaque réponse, un petit **✎ Notosaurus** ouvre la carte dans Notosaurus pour la
-corriger : dans l'application sur Android (AnkiDroid ouvre d'abord une courte page web, dont le
-bouton ouvre l'application), dans la page sur l'ordinateur (Anki ouvert, Notosaurus sur son
-port habituel). Rien n'est perdu : la correction met à jour la même note,
-son historique de révision reste. Le lien ne sait ouvrir que là où la leçon se trouve : une
-leçon faite sur l'ordinateur s'ouvre là, une leçon faite dans l'application s'ouvre dans
-l'application. AnkiWeb et AnkiMobile ne l'affichent pas.
-
-Sur AnkiDroid 2.25 et avant, activez d'abord **Paramètres → Avancé → Autoriser les cartes à
-lancer d'autres applications** : sans ce réglage, AnkiDroid bloque tout lien d'une carte (« La
-carte ne peut pas lancer d'autres applications »). Les versions suivantes laissent passer les
-liens vers une page web.
-
-**Question et réponse** : un mot avec son audio (▶) et une précision.
-
-![Une carte de vocabulaire dans Anki](../../../assets/screenshots/fr/anki-vocab.png)
-
-**Texte à trous** : la question cache le mot, la réponse le montre.
-
-![Une carte à trous : la question](../../../assets/screenshots/fr/anki-cloze-q.png)
-
-![Une carte à trous : la réponse](../../../assets/screenshots/fr/anki-cloze-a.png)
-
-**QCM** : la réponse marque le bon choix d'un ✔ et donne l'explication.
-
-![Une carte de QCM : la question](../../../assets/screenshots/fr/anki-quiz-q.png)
-
-![Une carte de QCM : la réponse](../../../assets/screenshots/fr/anki-quiz-a.png)
-
-**Schémas** : la photo de la leçon avec des étiquettes numérotées ; une carte par étiquette à
-nommer.
-
-![Une carte de schéma dans Anki](../../../assets/screenshots/fr/anki-diagram.png)
-
-**Images** : un dessin à nommer dans la langue apprise, avec son audio.
-
-![Une carte image dans Anki](../../../assets/screenshots/fr/anki-picture.png)
-
-**Figures** : la figure dessinée par Notosaurus accompagne la question.
-
-![Une carte avec une figure dans Anki](../../../assets/screenshots/fr/anki-figure.png)
+Les paquets que fait Notosaurus et l'allure de ses cartes dans Anki, sur l'ordinateur et les
+téléphones : voir [Les cartes dans Anki](../cards-in-anki/).

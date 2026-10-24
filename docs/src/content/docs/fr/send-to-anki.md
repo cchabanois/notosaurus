@@ -1,9 +1,11 @@
 ---
-title: "Envoyer vers Anki"
-description: "Envoyer les cartes directement dans Anki ou télécharger un fichier .apkg, mettre à jour une leçon sans doublons, et faire arriver les cartes sur le téléphone."
+title: "Envoyer vers Anki sur l'ordinateur"
+description: "Avec le greffon ou en autonome : envoyer les cartes directement dans Anki sur l'ordinateur ou télécharger un fichier .apkg, et faire arriver les cartes sur le téléphone."
 ---
 
-Une fois les cartes vérifiées, elles partent dans Anki d'un geste, ou sous forme de fichier.
+Avec le greffon (ou en autonome), une fois les cartes vérifiées, elles partent dans Anki sur
+l'ordinateur d'un geste, ou sous forme de fichier. Dans l'application Android, elles vont
+directement dans AnkiDroid : voir [L'application et AnkiDroid](../app-ankidroid/).
 
 ## Ajouter à Anki
 
@@ -21,20 +23,9 @@ exemple « ✓ Dans Anki : 9 cartes ajoutées. Synchronisé avec AnkiWeb. »
 
 ## Renvoyer une leçon
 
-Une fois la leçon envoyée, le bouton devient **🔄 Mettre à jour dans Anki**. Vous pouvez corriger
-une leçon et la renvoyer autant de fois que vous voulez : ses cartes sont **mises à jour** dans
-Anki, **pas dupliquées**, et l'historique de révision de chaque carte est gardé, même si vous avez
-corrigé son recto. Si vous avez
-changé le paquet de la leçon, ses cartes y sont **déplacées**, avec leur historique. Les cartes ajoutées depuis le dernier envoi sont ajoutées ; les cartes supprimées de la
-leçon restent dans Anki : après l'envoi, Notosaurus les liste et propose de les supprimer
-(avec leur historique de révision), jamais sans votre accord. Supprimer une leçon entière dans
-Notosaurus propose de supprimer aussi ses cartes dans Anki, avec leur historique de révision.
-
-Changer une option des cartes (la carte inverse, la réponse tapée) sur une leçon déjà envoyée
-fait passer ses cartes au type de note correspondant, historique gardé.
-
-Dans Anki, les notes de chaque leçon portent l'étiquette `notosaurus::<leçon>` : pratique pour
-les retrouver dans le navigateur.
+Une fois la leçon envoyée, le bouton devient **🔄 Mettre à jour dans Anki** : une leçon corrigée
+et renvoyée met à jour ses cartes dans Anki, historique gardé, au lieu de les dupliquer. Voir
+[Les cartes dans Anki](../cards-in-anki/).
 
 ## Le fichier .apkg
 
@@ -66,11 +57,3 @@ pas eu de synchronisation.
 
 Sans compte AnkiWeb, le fichier `.apkg` ouvert sur le téléphone met le paquet directement dans
 AnkiDroid, mais les révisions restent alors sur ce téléphone seulement.
-
-## Dans l'application
-
-Dans l'[application Android](../android-app/), sur ce téléphone, **📥 Ajouter à Anki** écrit les
-cartes directement dans **AnkiDroid**, avec leurs sons et leurs images : pas de `.apkg`, pas de
-synchronisation à attendre. La première fois, l'application demande l'autorisation d'AnkiDroid.
-Renvoyée, une leçon met à jour ses cartes, comme sur l'ordinateur. AnkiDroid les synchronise avec
-AnkiWeb comme d'habitude, s'il y est connecté.

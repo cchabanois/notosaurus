@@ -1,10 +1,36 @@
 ---
-title: "Services d'IA et coûts"
-description: "Quel service et quel modèle d'IA choisir (testés sur de vraies photos de cahier), comment obtenir sa clé d'API pas à pas, les modèles chez soi, et ce que coûte une leçon."
+title: "Réglages et services d'IA"
+description: "Les réglages du greffon sur l'ordinateur ; quel service et quel modèle d'IA choisir (testés sur de vraies photos de cahier), comment obtenir sa clé d'API pas à pas, les modèles chez soi, et ce que coûte une leçon."
 ---
 
 Notosaurus n'a pas sa propre IA : il utilise le service que vous choisissez, avec **votre propre
 clé**. Vous payez directement le service, selon ce que vous utilisez : pas d'abonnement.
+
+## Les réglages
+
+Sur l'ordinateur, **Outils → Notosaurus → Réglages** les ouvre dans le navigateur. Ils ne
+s'ouvrent que sur l'ordinateur lui-même : un téléphone ne peut ni les changer ni voir les clés.
+En autonome ou avec Docker, la page des réglages (`/admin.html`) est joignable depuis le réseau,
+protégée par un **🔐 Mot de passe administrateur** créé à la première visite.
+
+Ce que seul l'ordinateur a :
+
+- **Service d'IA**, **Accès** (les clés d'API) et **Modèle** : ci-dessous.
+- **Images des cartes** : le **Service qui dessine** (celui des cartes quand il sait dessiner :
+  Gemini, OpenAI, OpenRouter ; Claude et les modèles locaux ne savent pas) et son **Modèle
+  d'images**, avec **🖼️ Tester : dessiner une girafe**. Voir
+  [Les types de cartes](../card-types/#images).
+- **📥 Envoi direct dans Anki** : AnkiConnect, en autonome, et la synchronisation avec AnkiWeb.
+  Voir [Envoyer vers Anki sur l'ordinateur](../send-to-anki/).
+- **📱 Téléphones** : le QR code qui ouvre Notosaurus sur un téléphone et l'autorise, et
+  **Déconnecter tous les téléphones**. Voir [Sur le téléphone](../phone/) et
+  [Confidentialité et sécurité](../privacy/).
+- **Leçons** : à qui appartient chaque leçon, ce qu'elle a coûté, la supprimer (voir
+  [Ce que ça coûte](#ce-que-ça-coûte)).
+
+Les **📝 Instructions pour l'IA** et les **Voix des cartes** sont aussi dans les réglages de
+l'application Android : voir [Les consignes](../instructions/#les-instructions-permanentes) et
+[Les voix](../voices/).
 
 ## Quel service ?
 

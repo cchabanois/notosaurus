@@ -1,10 +1,33 @@
 ---
-title: "AI services and costs"
-description: "Which AI service and which model to choose (tested on real notebook photos), how to get its API key step by step, local models, and what a lesson costs."
+title: "Settings and AI services"
+description: "The add-on's settings on the computer; which AI service and which model to choose (tested on real notebook photos), how to get its API key step by step, local models, and what a lesson costs."
 ---
 
 Notosaurus doesn't have its own AI: it uses the service you choose, with **your own key**. You
 pay the service directly, for what you use: no subscription.
+
+## The settings
+
+On the computer, **Tools → Notosaurus → Settings** opens them in the browser. They open only on
+the computer itself: a phone can't change them nor see the keys. Standalone or with Docker, the
+settings page (`/admin.html`) is reachable from the network, protected by an **🔐 Admin
+password** created on the first visit.
+
+What only the computer has:
+
+- **AI service**, **Access** (the API keys) and **Model**: below.
+- **Pictures on cards**: the **Service drawing them** (the cards' own when it can draw: Gemini,
+  OpenAI, OpenRouter; Claude and local models can't) and its **Image model**, with
+  **🖼️ Test: draw a giraffe**. See [Card types](../card-types/#pictures).
+- **📥 Send straight to Anki**: AnkiConnect, standalone, and the sync with AnkiWeb. See
+  [Sending to Anki desktop](../send-to-anki/).
+- **📱 Phones**: the QR code that opens Notosaurus on a phone and allows it, and **Disconnect
+  every phone**. See [On the phone](../phone/) and [Privacy and security](../privacy/).
+- **Lessons**: who each lesson belongs to, what it cost, deleting it (see
+  [What it costs](#what-it-costs)).
+
+**📝 Instructions for the AI** and **Card voices** are in the Android app's settings too: see
+[Instructions](../instructions/#standing-instructions) and [Voices](../voices/).
 
 ## Which service?
 
