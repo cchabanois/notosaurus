@@ -77,9 +77,12 @@ jobs:
           target: google_apis
           disable-animations: true
           working-directory: android
+          # PermissionTest on its own, the app installed again (Gradle removes it after a run):
+          # never granted AnkiDroid's permission, as revoking it would kill the tests' process
           script: |
             adb install ../ankidroid.apk
-            ./gradlew connectedDebugAndroidTest
+            ./gradlew connectedDebugAndroidTest -Pandroid.testInstrumentationRunnerArguments.notClass=app.notosaurus.PermissionTest
+            ./gradlew connectedDebugAndroidTest -Pandroid.testInstrumentationRunnerArguments.class=app.notosaurus.PermissionTest
       - if: failure()
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:

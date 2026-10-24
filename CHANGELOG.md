@@ -74,6 +74,7 @@ Each pull request adds a line under **Unreleased**. See [Releasing](CONTRIBUTING
 
 ### Changed
 
+- For developers: a device test of AnkiDroid's permission (`PermissionTest`): refused, asked again, refused for good (the send and the settings' **Allow** answered at once, not left waiting), then granted; run on its own, the app freshly installed.
 - For developers: the device tests (Android on a device) also run on the pull requests changing `android/` or `static/`, with AnkiDroid 2.25.0; on Mondays and on demand, with AnkiDroid's latest release, 2.25.0, 2.24.1 and 2.23.3 side by side.
 - A test's lessons not in Anki yet are sent from its sheet (**📥 Send to Anki** on each, **Send all** when several), without opening each.
 - Android, a test to prepare: **Open in AnkiDroid** opens the test's cards in AnkiDroid's browser (whatever their decks), then **⋮ → Create filtered deck → Build**: three taps instead of finding the tag in the custom study. AnkiDroid lets no other app make the filtered deck itself.
