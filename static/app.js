@@ -273,6 +273,8 @@ document.addEventListener("alpine:init", () => {
     async loadSwitches() {
       try {
         this.switches = { ...this.switches, ...(await (await api("/api/switches")).json()) };
+        // The free trial just started (the first lesson): said where the page is, not at its top
+        if (this.switches.trial) this.notify(this.trialText());
       } catch {}  // the computer's own page: none
     },
 

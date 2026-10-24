@@ -73,6 +73,9 @@ def page(browser, server, tmp_path, monkeypatch):
     errors = []
     page.on("pageerror", lambda e: errors.append(str(e)))
     yield page
+    # The page's requests done first (a lesson still being saved, its pictures): else one
+    # lands after NOTOSAURUS_DATA is the next test's, a lesson made there (a flaky count)
+    page.wait_for_load_state("networkidle")
     # A route handler still at work (route.fetch) when the context closes fails the
     # next test's new_context: "Response has been disposed"
     page.unroute_all(behavior="ignoreErrors")
@@ -124,6 +127,30 @@ def test_from_the_prompt_alone_only_when_it_can(page):
     sync_api.expect(alone).to_be_hidden()
     text.fill("chat, chien, vache")
     sync_api.expect(alone).to_be_visible()
+
+
+def test_the_free_trial_started_said_after_the_first_lesson(page):
+    """The Android app: the first lesson starts the free trial; the page asks after it and
+    says so in a toast (seen wherever the page is scrolled), once."""
+    told = {"trial": None}
+
+    def switches(route):
+        trial, told["trial"] = told["trial"], None  # told once
+        body = {"notice": None, "disabled": [], "update": False, "store": "https://play.google.com/x", "trial": trial}
+        route.fulfill(json=body)
+
+    page.route("**/api/switches", switches)
+    page.goto("/")
+    told["trial"] = {
+        "plan": "free_trial",
+        "credits_left": 300,
+        "daily_left": 150,
+        "ends_at": "2026-11-07T10:00:00+00:00",
+    }
+    page.get_by_role("radio", name="✏️ Libre").click()
+    page.locator("textarea[x-ref=promptText]").fill(FRONT_PROMPT)
+    page.get_by_role("button", name="✨ Générer à partir de la consigne seule").click()
+    sync_api.expect(page.locator(".toast.ok")).to_contain_text("Essai gratuit : 300 crédits jusqu'au 7 novembre")
 
 
 def test_generate_then_edit_saves_by_itself(page):

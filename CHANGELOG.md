@@ -112,6 +112,7 @@ Each pull request adds a line under **Unreleased**. See [Releasing](CONTRIBUTING
 
 ### Fixed
 
+- The free trial's start ("✓ Free trial: 300 credits until …") shows in the toast after the first lesson, seen wherever the page is, instead of a bar at its top (scrolled away by the new cards). For developers: the page tests wait for a page's requests before the next test, whose data a late save landed in (a lesson too many, now and then).
 - **✨ Générer à partir de la consigne seule** shows only when the prompt can do without a photo: the free one with a text, the user's own, a built-in one once something is written in it (as it is, "Automatic" or "Dictation" reads a lesson); the hint saying how stays.
 - **📷 Photographiez la leçon**, the main button before any photo, opens the camera (as the 📷 tile) instead of being a greyed-out button.
 - A picture that would give the answer away, even half of it ("Which animal… and what is its name?" with the animal on it), goes on the back: the rule asks the AI, card by card, whether the pupil could answer from the picture alone, instead of listing examples (a portrait, a place, a work).

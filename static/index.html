@@ -117,11 +117,6 @@
       <span x-text="switches.notice?.text"></span>
       <button class="icon-btn" @click="closeNotice()" :aria-label="$t('common.close')">✕</button>
     </div>
-    <!-- The Android app: the free trial started by the first lesson, said once -->
-    <div class="notice-bar" x-cloak x-show="switches.trial" role="status">
-      <span x-text="trialText()"></span>
-      <button class="icon-btn" @click="switches.trial = null" :aria-label="$t('common.close')">✕</button>
-    </div>
     <div class="notice-bar" x-cloak x-show="switches.update" role="status">
       <span x-text="$t('app.update.available')"></span>
       <a class="btn soft" :href="switches.store" target="_blank" rel="noopener" x-text="$t('app.update.open')"></a>
