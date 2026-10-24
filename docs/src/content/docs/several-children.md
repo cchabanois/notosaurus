@@ -14,9 +14,11 @@ phone or tablet: see [One tablet for several children](#one-tablet-for-several-c
 
 - **First name**: to tell them apart. It is **never sent to the AI**.
 - **Class**: told to the AI, so that the cards fit the pupil's level.
-- **Decks in**: where their lessons go in Anki, for instance `Jules::{class}`: `{class}` becomes
-  their class, and the lesson's deck comes after it (`Jules::Year 7::Spanish::Unit 3`). Empty:
-  the lesson's deck as usual.
+- **Decks in**: where their lessons go in Anki, empty at first (the lesson's deck as usual).
+  Under it, one tap on a suggestion fills it in: their first name (`Jules`), or their first name
+  and class (`Jules::Year 7`), which follows when the class changes. The lesson's deck then
+  comes after it: `Jules::Year 7::Spanish::Unit 3`. Typed by hand, `{class}` also becomes their
+  class.
 - **Instructions for the AI (without their first name)**: added to every lesson of that child
   (“still reads slowly: short sentences”, “revising for a test: stress dates and definitions”).
 
@@ -79,8 +81,9 @@ a phone or a tablet, the simplest is **a single Anki profile, with one deck per 
 
 1. Keep a single profile in Anki, logged in to a single AnkiWeb account, and log AnkiDroid in
    to that account.
-2. Make a card for each child, with their own **Decks in**: `Léa::{class}`, `Paul::{class}`.
-   Their lessons then go into their own decks, without typing their name.
+2. Make a card for each child, and fill in their **Decks in** with one tap on its suggestion
+   (`Léa::Year 5`, `Paul::Year 8`). Their lessons then go into their own decks, without typing
+   their name again.
 3. To review, each child opens **their own** deck (Léa, Paul): Anki then only takes their
    cards. Not the button that reviews everything.
 

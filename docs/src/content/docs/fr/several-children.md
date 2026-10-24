@@ -15,9 +15,11 @@ un téléphone ou une tablette : voir
 
 - **Prénom** : pour les distinguer. Il n'est **jamais envoyé à l'IA**.
 - **Classe** : donnée à l'IA, pour que les cartes soient à son niveau.
-- **Paquets dans** : où vont ses leçons dans Anki, par exemple `Jules::{classe}` : `{classe}`
-  devient sa classe, et le paquet de la leçon vient après (`Jules::5e::Espagnol::Unité 3`).
-  Vide : le paquet de la leçon, comme d'habitude.
+- **Paquets dans** : où vont ses leçons dans Anki, vide au départ (le paquet de la leçon, comme
+  d'habitude). Dessous, un toucher sur une suggestion le remplit : son prénom (`Jules`), ou son
+  prénom et sa classe (`Jules::5e`), qui suit quand la classe change. Le paquet de la leçon vient
+  alors après : `Jules::5e::Espagnol::Unité 3`. Tapé à la main, `{classe}` devient aussi sa
+  classe.
 - **Instructions pour l'IA (sans son prénom)** : ajoutées à chaque leçon de cet enfant (« il lit
   encore lentement : phrases courtes », « il prépare un contrôle : insiste sur les dates et les
   définitions »).
@@ -85,8 +87,9 @@ déconnecter. Si les enfants partagent un téléphone ou une tablette, le plus s
 
 1. Gardez un seul profil dans Anki, connecté à un seul compte AnkiWeb, et connectez AnkiDroid à
    ce compte.
-2. Créez une fiche pour chaque enfant, avec ses propres **Paquets dans** : `Léa::{classe}`,
-   `Paul::{classe}`. Ses leçons vont alors dans ses paquets, sans taper son prénom.
+2. Créez une fiche pour chaque enfant, et remplissez ses **Paquets dans** d'un toucher sur sa
+   suggestion (`Léa::CM2`, `Paul::4e`). Ses leçons vont alors dans ses paquets, sans retaper son
+   prénom.
 3. Pour réviser, chaque enfant ouvre **son** paquet (Léa, Paul) : Anki ne prend alors que ses
    cartes. Pas le bouton qui révise tout.
 
