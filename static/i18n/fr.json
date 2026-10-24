@@ -1044,6 +1044,7 @@
       "not_found": "Cet enfant n'existe plus : rechargez la page."
     },
     "exams": {
+      "invalid": "Ce contrôle n'est pas valide : un nom de 60 caractères au plus, une date, 50 leçons au plus.",
       "not_found": "Ce contrôle n'existe plus : rechargez la page.",
       "too_many": "Au plus {max} contrôles.",
       "same_name": "Un autre contrôle porte déjà ce nom (Anki ne distingue pas les majuscules) : choisissez-en un autre."

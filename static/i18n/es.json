@@ -1044,6 +1044,7 @@
       "not_found": "Este niño ya no existe: recargue la página."
     },
     "exams": {
+      "invalid": "Este examen no es válido: un nombre de 60 caracteres como máximo, una fecha, 50 lecciones como máximo.",
       "not_found": "Este examen ya no existe: recargue la página.",
       "too_many": "Como máximo {max} exámenes.",
       "same_name": "Otro examen ya tiene este nombre (Anki no distingue mayúsculas): elige otro."

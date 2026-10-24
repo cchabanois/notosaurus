@@ -1044,6 +1044,7 @@
       "not_found": "This child no longer exists: reload the page."
     },
     "exams": {
+      "invalid": "This test isn't valid: a name of 60 characters at most, a date, 50 lessons at most.",
       "not_found": "This test no longer exists: reload the page.",
       "too_many": "At most {max} tests.",
       "same_name": "Another test already has this name (Anki doesn't tell capitals apart): choose another one."

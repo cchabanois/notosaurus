@@ -43,9 +43,11 @@ class Exams(private val prefs: Preferences, private val lessons: Lessons) {
 
     /** The test saved under `id` (made, or changed); refused when it isn't one (BadRequest).
      * Lessons that don't exist (any more) are left out. */
+    // Read, changed, written back: one at a time (two requests at once would lose one's change)
+    @Synchronized
     fun save(id: String, name: String, date: String, parts: List<ExamLesson>): Exam {
         if (!ID.matches(id) || name.isBlank() || name.length > 60 || !DATE.matches(date) || parts.size > 50) {
-            throw BadRequest("relay.invalid_request")
+            throw BadRequest("exams.invalid")
         }
         val every = list()
         val before = every.firstOrNull { it.id == id }
@@ -59,6 +61,7 @@ class Exams(private val prefs: Preferences, private val lessons: Lessons) {
         return exam
     }
 
+    @Synchronized
     fun delete(id: String): Boolean {
         val every = list()
         val kept = every.filter { it.id != id }
@@ -67,6 +70,7 @@ class Exams(private val prefs: Preferences, private val lessons: Lessons) {
     }
 
     /** A lesson deleted: out of every test. */
+    @Synchronized
     fun forgetLesson(lessonId: String) {
         val every = list()
         val changed = every.map { e -> e.copy(lessons = e.lessons.filter { it.lesson != lessonId }) }
@@ -84,6 +88,7 @@ class Exams(private val prefs: Preferences, private val lessons: Lessons) {
 
     /** A change AnkiDroid followed (`done`: the test's notes now as it is), or not yet: the
      * first state AnkiDroid's notes still have kept until then, whatever changes come after. */
+    @Synchronized
     fun setPending(id: String, before: Exam?, done: Boolean) {
         val waiting = pending()
         if (waiting.containsKey(id) != done) return // nothing to change
