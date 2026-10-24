@@ -36,6 +36,15 @@ const promptsPart = {
     return this.prompts.find((c) => c.id === this.selectedId);
   },
 
+  // The prompt can make cards without a photo: the free one with a text, the user's own
+  // (what they wrote), a built-in one only once something was written in it (as is, it
+  // has a lesson to read, not words: "Automatique", "Dictée"…)
+  worksWithoutPhoto() {
+    const prompt = this.current();
+    if (!prompt) return this.form.text.trim() !== "";
+    return !prompt.builtin || this.isModified();
+  },
+
   // Most recently used prompts first (never used: oldest first), always
   // including the selected one.
   recentPrompts() {

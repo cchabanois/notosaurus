@@ -157,7 +157,7 @@
           <label class="add-tile primary">
             <span class="add-icon">📷</span>
             <span x-text="photos.length ? $t('app.photos.nextPage') : $t('app.photos.takePhoto')"></span>
-            <input type="file" accept="image/*" capture="environment" hidden @change="addPhotos($event)">
+            <input type="file" accept="image/*" capture="environment" hidden x-ref="camera" @change="addPhotos($event)">
           </label>
           <label class="add-tile" :class="{ dropping: dropTile === 'gallery' }" @dragover="dragOver($event, 'gallery')"
                  @dragleave="dropTile = ''" @drop="dropFiles($event)">
@@ -242,7 +242,9 @@
 
       <!-- No photo: the prompt alone (a word list, a topic…). Photos stay the main way. -->
       <div class="from-prompt" x-show="!cards.length && !photos.length">
-        <button class="btn soft wide" @click="extract()" :disabled="!canGenerate()" x-text="$t('app.prompt.fromPrompt')"></button>
+        <!-- Only when the prompt can do without (worksWithoutPhoto); the hint says how -->
+        <button class="btn soft wide" x-show="worksWithoutPhoto()" @click="extract()" :disabled="!canGenerate()"
+                x-text="$t('app.prompt.fromPrompt')"></button>
         <p class="hint" x-text="$t('app.prompt.fromPromptHint')"></p>
       </div>
     </section>
@@ -585,7 +587,9 @@
     </div>
   </div>
   <div class="bottom-bar" x-show="bottomBar() && !examPick">
-    <button class="btn primary wide" x-show="!cards.length" @click="extract()" :disabled="!photos.length || !canGenerate()"
+    <!-- No photo yet: it opens the camera (as the 📷 tile); then it makes the cards -->
+    <button class="btn primary wide" x-show="!cards.length" @click="photos.length ? extract() : $refs.camera.click()"
+            :disabled="photos.length ? !canGenerate() : loading"
             x-text="photos.length ? $t('app.actions.generate') : $t('app.actions.startWithPhoto')"></button>
     <div class="bar-row" x-show="cards.length">
       <!-- Anki reachable: send directly, keep the file as a secondary option -->

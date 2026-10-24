@@ -112,6 +112,8 @@ Each pull request adds a line under **Unreleased**. See [Releasing](CONTRIBUTING
 
 ### Fixed
 
+- **✨ Générer à partir de la consigne seule** shows only when the prompt can do without a photo: the free one with a text, the user's own, a built-in one once something is written in it (as it is, "Automatic" or "Dictation" reads a lesson); the hint saying how stays.
+- **📷 Photographiez la leçon**, the main button before any photo, opens the camera (as the 📷 tile) instead of being a greyed-out button.
 - A picture that would give the answer away, even half of it ("Which animal… and what is its name?" with the animal on it), goes on the back: the rule asks the AI, card by card, whether the pupil could answer from the picture alone, instead of listing examples (a portrait, a place, a work).
 - A subscription renewed (or its payment fixed) while the relay missed Google Play's notification is no longer cut off: when the relay says it ended or is on hold, the Android app checks this Google account's purchases again (the settings at once, a refused call in the background, at most every 10 minutes).
 - A subscription on hold (a renewal's payment failed) says so: "Payment pending", to fix in Google Play, with **Manage the subscription** in the settings, instead of "subscription ended"; an ended one shows the subscribe buttons again, as its message says. For developers: `relay.payment_pending` (402).
