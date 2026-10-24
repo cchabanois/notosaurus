@@ -786,7 +786,7 @@
       "credits": "{credits} crédits restants ce mois-ci, {today} aujourd'hui",
       "renews": "Renouvelés le {date}",
       "none": "Pas encore de clé de licence : elle vient avec l'abonnement.",
-      "free": "Pas d'abonnement ? Avec l'add-on Anki sur votre ordinateur, l'application est gratuite : voir « Où travaille Notosaurus ? ».",
+      "free": "Pas d'abonnement ? Avec le greffon Anki sur votre ordinateur, l'application est gratuite : voir « Où travaille Notosaurus ? ».",
       "realRelay": "Relais réel",
       "testRelay": "🧪 Relais de test"
     },
@@ -824,7 +824,7 @@
       "phone": "📱 Sur ce téléphone",
       "phoneHint": "Leçons sur le téléphone, cartes dans AnkiDroid. Avec l'abonnement.",
       "computer": "💻 Sur mon ordinateur",
-      "computerHint": "Avec l'add-on Anki : leçons et cartes sur l'ordinateur. Gratuit.",
+      "computerHint": "Avec le greffon Anki : leçons et cartes sur l'ordinateur. Gratuit.",
       "someComputer": "votre ordinateur",
       "change": "Changer d'ordinateur",
       "typeAddress": "Saisir l'adresse à la place",
@@ -856,7 +856,7 @@
     },
     "unreachable": {
       "title": "💻 Votre ordinateur ne répond pas",
-      "hint": "Notosaurus doit y tourner (Anki ouvert avec l'add-on), et ce téléphone être sur le même Wi-Fi.",
+      "hint": "Notosaurus doit y tourner (Anki ouvert avec le greffon), et ce téléphone être sur le même Wi-Fi.",
       "retry": "Réessayer",
       "rescan": "Scanner à nouveau le QR code",
       "phone": "Utiliser sans ordinateur"
@@ -1023,7 +1023,7 @@
       "bad_audio": "Cet enregistrement n'est pas dans un format que Notosaurus sait lire."
     },
     "computer": {
-      "not_found": "Aucun Notosaurus ne répond à cette adresse : Anki est-il ouvert avec l'add-on, et ce téléphone sur le même Wi-Fi ?",
+      "not_found": "Aucun Notosaurus ne répond à cette adresse : Anki est-il ouvert avec le greffon, et ce téléphone sur le même Wi-Fi ?",
       "not_a_qr": "Ce QR code n'est pas celui de Notosaurus : scannez celui qu'affiche Anki (Outils → Notosaurus → Ouvrir sur le téléphone).",
       "scan_unavailable": "Le lecteur de QR code n'est pas encore sur ce téléphone (les services Google Play l'installent, avec un accès à internet) : saisissez plutôt l'adresse de l'ordinateur."
     },
