@@ -50,10 +50,16 @@ The [documentation](https://cchabanois.github.io/notosaurus/) explains each of t
 
 ### The Android app (recommended)
 
-Coming soon to Google Play. The app shows the same Notosaurus page, and works in two ways, chosen in its settings:
+Coming soon to Google Play. Notosaurus on its own, on the phone: no computer, no AI key. Photograph the lesson, check the cards, and they go straight into AnkiDroid.
 
-- **📱 On this phone**: no computer and no API key. The AI (Google's Gemini) and the voices go through the Notosaurus service, processed in the European Union, and nothing is kept there. Lessons stay on the phone, and cards go straight into AnkiDroid. The first lesson starts a free trial, without a card, then it's a monthly or yearly subscription. See the [app's privacy policy](https://cchabanois.github.io/notosaurus/app-privacy/).
-- **💻 On my computer**: with the Anki add-on below, lessons and cards stay on the computer. Free.
+- **The same Notosaurus** as on the computer: the same page, instructions, card types, review and languages, with pictures, voices, diagrams, figures, children and tests to prepare. Only the `.apkg` download is left out: the cards go into AnkiDroid.
+- **The Notosaurus service does the work**: the AI (Google's Gemini), the voices and the pictures (drawn, or found free on Wikimedia Commons, Openverse and Pixabay). It works in the European Union, and keeps neither the photos nor the cards.
+- **Lessons stay on the phone**, in the app's private storage. The cards are written into AnkiDroid, which syncs them with AnkiWeb as usual. AnkiDroid asks once for its permission; when it's missing, the app opens its Google Play page.
+- **Made for the phone**: the camera, the gallery or a PDF; 🎤 to dictate an instruction or a correction; 🎓 opens AnkiDroid in one tap; ✎ Notosaurus under an answer in AnkiDroid opens the card in the app; a test's cards opened in AnkiDroid, to make its filtered deck.
+- **A subscription through Google Play**, by the month or by the year, with credits each month (a drawn picture says what it costs before). The first lesson starts a free trial: no card, once per phone.
+- **For parents**: the app is a tool for adults, who prepare the cards their child revises. Its welcome says what goes where, and asks to accept the [privacy policy](https://cchabanois.github.io/notosaurus/app-privacy/).
+
+**With your computer, for free.** In the app's settings, *📍 Where does Notosaurus work?* → *💻 On my computer*, then scan the QR code of *Anki → Tools → Notosaurus → Open on the phone*: the app shows the computer's page, and lessons, AI and cards stay on the computer, with the [add-on](#the-anki-add-on) below. Each mode keeps its own lessons, and the icon's shortcuts switch between them.
 
 The app's code is in [`android/`](android/README.md).
 
