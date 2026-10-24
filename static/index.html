@@ -242,7 +242,9 @@
 
       <!-- No photo: the prompt alone (a word list, a topic…). Photos stay the main way. -->
       <div class="from-prompt" x-show="!cards.length && !photos.length">
-        <button class="btn soft wide" @click="extract()" :disabled="!canGenerate()" x-text="$t('app.prompt.fromPrompt')"></button>
+        <!-- Only when the prompt can do without (worksWithoutPhoto); the hint says how -->
+        <button class="btn soft wide" x-show="worksWithoutPhoto()" @click="extract()" :disabled="!canGenerate()"
+                x-text="$t('app.prompt.fromPrompt')"></button>
         <p class="hint" x-text="$t('app.prompt.fromPromptHint')"></p>
       </div>
     </section>

@@ -107,6 +107,25 @@ def test_the_main_button_takes_the_first_photo(page):
     assert chooser.value.element.get_attribute("capture") == "environment"
 
 
+def test_from_the_prompt_alone_only_when_it_can(page):
+    """No photo: "from the prompt alone" only for a prompt that can do without one; a
+    built-in one as it is reads a lesson ("Automatique"), so not until something is
+    written in it. The hint saying how stays."""
+    page.goto("/")
+    alone = page.get_by_role("button", name="✨ Générer à partir de la consigne seule")
+    page.get_by_role("radio", name=re.compile("Automatique")).first.click()
+    sync_api.expect(alone).to_be_hidden()
+    sync_api.expect(page.locator(".from-prompt .hint")).to_be_visible()
+    text = page.locator("textarea[x-ref=promptText]")
+    text.fill(text.input_value() + "\nLes animaux de la ferme")
+    sync_api.expect(alone).to_be_visible()
+    page.get_by_role("radio", name="✏️ Libre").click()
+    text.fill("")
+    sync_api.expect(alone).to_be_hidden()
+    text.fill("chat, chien, vache")
+    sync_api.expect(alone).to_be_visible()
+
+
 def test_generate_then_edit_saves_by_itself(page):
     generate_free(page, FRONT_PROMPT)
     assert page.locator(".flash").count() == 6
