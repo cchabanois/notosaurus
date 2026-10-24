@@ -4,10 +4,12 @@
 // As tts.py: a phonetic transcription ("/ɜː/", "[ˈtaɪɡə]") isn't read (a voice would say "slash");
 // a part singled out in brackets ("t[i]ger") is read as its word; the front's quoted examples
 const PHONETIC = "ɐ-ʯʰ-˿̀-ͯæøœθð";
-const TRANSCRIPTION = new RegExp(`(?<![\\w/])/[^/\\s\\d]{1,24}/(?![\\w/])|\\[[^\\[\\]\\s\\d]{0,24}[${PHONETIC}][^\\[\\]\\s\\d]{0,24}\\]`, "g");
+// Letters and digits of every script, as Python's \w (JavaScript's \w is ASCII only: "кошка",
+// "猫" would be no letters, their sound nothing)
+const TRANSCRIPTION = new RegExp(`(?<![\\p{L}\\p{N}_/])/[^/\\s\\p{N}]{1,24}/(?![\\p{L}\\p{N}_/])|\\[[^\\[\\]\\s\\p{N}]{0,24}[${PHONETIC}][^\\[\\]\\s\\p{N}]{0,24}\\]`, "gu");
 const MARKED = /\[([^\[\]\n]{1,40})\]/g;
 const QUOTED = /[“"«]\s*([^”"»\n]{1,60}?)\s*[”"»]|‘([^’\n]{1,60}?)’/g;
-const LETTER = /[^\W_]/u;  // a letter or a digit: something a voice says
+const LETTER = /[\p{L}\p{N}]/u;  // a letter or a digit, of any script: something a voice says
 
 // The text as a voice can read it (tts.speakable)
 function speakable(text) {

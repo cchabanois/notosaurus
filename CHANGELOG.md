@@ -115,6 +115,7 @@ Each pull request adds a line under **Unreleased**. See [Releasing](CONTRIBUTING
 
 ### Fixed
 
+- A card whose back is in Russian, Greek, Chinese, Japanese, Arabic… has its sound again on Android (it had none: only Latin letters were seen as letters) and in the page's 🔊; on Android, a test's name with a non-breaking space gets the same tag as on the computer. For developers: `core/shared-cases.json`, the cases Python, Kotlin and JavaScript must agree on (a test's tag, the deck holding its lessons, what a voice reads, a card's sound), read by the three test suites; it found these.
 - Android: a test to prepare refused (a name too long…) says why, instead of a message about the relay; two changes to the tests at once no longer lose one.
 - Tests to prepare with the Anki add-on (not AnkiConnect): a lesson taken out of a test no longer fails as "Anki closed" (the add-on now takes a tag off: removeTags); a test checks that the add-on answers every action Notosaurus asks for.
 - A test changed while Anki (or AnkiDroid) couldn't follow (renamed, a lesson taken out, deleted) is followed once it can (a change, or the tests listed): its old tag taken off, instead of kept on the notes for good.

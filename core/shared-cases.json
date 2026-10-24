@@ -1,0 +1,164 @@
+{
+ "_": "Cases the three implementations must agree on (Python app/exams.py, notosaurus_core/tts.py; Kotlin Exams.kt, Speech.kt; JavaScript static/app-anki.js): their tests read this file. Python's answers are the reference.",
+ "tag_text": [
+  {
+   "in": "Interro SVT de lundi",
+   "out": "Interro_SVT_de_lundi"
+  },
+  {
+   "in": "Maths: \"chapitre\" 2*",
+   "out": "Maths_chapitre_2"
+  },
+  {
+   "in": "Brevet::blanc",
+   "out": "Brevet_blanc"
+  },
+  {
+   "in": "Contrôle d'anglais",
+   "out": "Contrôle_d'anglais"
+  },
+  {
+   "in": "Interro SVT",
+   "out": "Interro_SVT"
+  },
+  {
+   "in": "  ",
+   "out": "exam"
+  },
+  {
+   "in": "Ελληνικά τεστ",
+   "out": "Ελληνικά_τεστ"
+  }
+ ],
+ "common_deck": [
+  {
+   "in": [
+    "SVT::Chapitre 1",
+    "SVT::Chapitre 2"
+   ],
+   "out": "SVT"
+  },
+  {
+   "in": [
+    "svt::a",
+    "SVT::b"
+   ],
+   "out": "svt"
+  },
+  {
+   "in": [
+    "Anglais",
+    "Espagnol"
+   ],
+   "out": ""
+  },
+  {
+   "in": [],
+   "out": ""
+  },
+  {
+   "in": [
+    "Anglais::Leçon 1"
+   ],
+   "out": "Anglais::Leçon 1"
+  },
+  {
+   "in": [
+    "Straße::a",
+    "STRASSE::b"
+   ],
+   "out": "Straße"
+  },
+  {
+   "in": [
+    "  ",
+    "Histoire::1"
+   ],
+   "out": "Histoire::1"
+  }
+ ],
+ "speakable": [
+  {
+   "in": "/ɜː/",
+   "out": ""
+  },
+  {
+   "in": "t[i]ger",
+   "out": "tiger"
+  },
+  {
+   "in": "the [ˈtaɪɡə] tiger",
+   "out": "the tiger"
+  },
+  {
+   "in": "bird /bɜːd/",
+   "out": "bird"
+  },
+  {
+   "in": "  a   b ",
+   "out": "a b"
+  },
+  {
+   "in": "кошка",
+   "out": "кошка"
+  },
+  {
+   "in": "a/b/c",
+   "out": "a/b/c"
+  },
+  {
+   "in": "x [ab] y",
+   "out": "x ab y"
+  }
+ ],
+ "spoken": [
+  {
+   "front": "The sound in \"bird\" and «word»",
+   "back": "/ɜː/",
+   "dictation": false,
+   "out": "bird\nword"
+  },
+  {
+   "front": "le chat",
+   "back": "кошка",
+   "dictation": false,
+   "out": "кошка"
+  },
+  {
+   "front": "le chat",
+   "back": "猫",
+   "dictation": false,
+   "out": "猫"
+  },
+  {
+   "front": "l'été",
+   "back": "é",
+   "dictation": false,
+   "out": "é"
+  },
+  {
+   "front": "Le chat boit du ... (boisson)",
+   "back": "lait",
+   "dictation": true,
+   "out": "Le chat boit du lait.\nlait"
+  },
+  {
+   "front": "Le chat boit du ...",
+   "back": "lait",
+   "dictation": false,
+   "out": "lait"
+  },
+  {
+   "front": "Il a ... ans !",
+   "back": "$1",
+   "dictation": true,
+   "out": "Il a $1 ans !\n$1"
+  },
+  {
+   "front": "Où ?",
+   "back": "là-bas",
+   "dictation": true,
+   "out": "là-bas"
+  }
+ ]
+}

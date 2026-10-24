@@ -72,6 +72,8 @@ android {
         unitTests.all {
             // The page's files for LocalServer's tests (the same as in the app's assets)
             it.systemProperty("notosaurus.web", layout.projectDirectory.dir(webPage).get().asFile.absolutePath)
+            // The cases the computer's code, the page's and the app's must agree on (SharedCasesTest)
+            it.systemProperty("notosaurus.cases", rootProject.layout.projectDirectory.file("../core/shared-cases.json").asFile.absolutePath)
         }
     }
     packaging {

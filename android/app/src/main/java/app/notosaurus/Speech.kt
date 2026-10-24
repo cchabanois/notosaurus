@@ -123,10 +123,12 @@ class Speech(private val folder: File, private val prefs: Preferences, private v
         // As the computer's tts.py: a phonetic transcription ("/ɜː/", "[ˈtaɪɡə]") isn't read; a part
         // singled out in brackets ("t[i]ger") is read as its word; the front's quoted examples
         private const val PHONETIC = "ɐ-ʯʰ-˿̀-ͯæøœθð"
-        private val TRANSCRIPTION = Regex("""(?<![\w/])/[^/\s\d]{1,24}/(?![\w/])|\[[^\[\]\s\d]{0,24}[$PHONETIC][^\[\]\s\d]{0,24}\]""")
+        // (?U): \w, \s, \d of every script, as Python's (Java's are ASCII only: "кошка", "猫"
+        // would be no letters, their sound nothing)
+        private val TRANSCRIPTION = Regex("""(?U)(?<![\w/])/[^/\s\d]{1,24}/(?![\w/])|\[[^\[\]\s\d]{0,24}[$PHONETIC][^\[\]\s\d]{0,24}\]""")
         private val MARKED = Regex("""\[([^\[\]\n]{1,40})\]""")
         private val QUOTED = Regex("""[“"«]\s*([^”"»\n]{1,60}?)\s*[”"»]|‘([^’\n]{1,60}?)’""")
-        private val LETTER = Regex("""[^\W_]""") // a letter or a digit: something a voice says
+        private val LETTER = Regex("""(?U)[^\W_]""") // a letter or a digit, of any script: something a voice says
 
         /** The text as a voice can read it (the computer's tts.speakable). */
         fun speakable(text: String): String =

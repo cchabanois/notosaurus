@@ -53,8 +53,8 @@ class Exams(private val prefs: Preferences, private val lessons: Lessons) {
         val before = every.firstOrNull { it.id == id }
         if (before == null && every.size >= MAX) throw BadRequest("exams.too_many", buildJsonObject { put("max", MAX) })
         // AnkiDroid tells tags apart without their case: "Maths lundi" and "maths lundi" would be one
-        val tag = tagText(name.trim()).lowercase()
-        if (every.any { it.id != id && tagText(it.name).lowercase() == tag }) throw BadRequest("exams.same_name")
+        val tag = fold(tagText(name.trim()))
+        if (every.any { it.id != id && fold(tagText(it.name)) == tag }) throw BadRequest("exams.same_name")
         val kept = parts.filter { lessons.get(it.lesson) != null }
         val exam = Exam(id, name.trim(), date, kept, before?.createdAt?.ifEmpty { null } ?: Instant.now().toString())
         write(if (before == null) every + exam else every.map { if (it.id == id) exam else it })
@@ -175,16 +175,19 @@ class Exams(private val prefs: Preferences, private val lessons: Lessons) {
         /** The name as an Anki tag's last part: no space (they separate tags), none of the
          * characters Anki's search or hierarchy use. */
         fun tagText(name: String): String =
-            name.replace(Regex("""[:"*\\]"""), " ").trim().replace(Regex("\\s+"), "_").ifEmpty { "exam" }
+            name.replace(Regex("""[:"*\\]"""), " ").trim().replace(Regex("(?U)\\s+"), "_").ifEmpty { "exam" } // any space, a non-breaking one too
 
         /** The deck holding every one of these (itself or a subdeck): where AnkiDroid's custom
          * study finds all the test's cards; "" when they share none. */
+        /** A name without its case, as Python's casefold: "Straße" and "STRASSE" one. */
+        internal fun fold(name: String): String = name.uppercase().lowercase()
+
         fun commonDeck(decks: List<String>): String {
             val parts = decks.map { it.trim() }.filter { it.isNotEmpty() }.map { it.split("::") }
             if (parts.isEmpty()) return ""
             val common = mutableListOf<String>()
             for (level in 0 until parts.minOf { it.size }) {
-                if (parts.map { it[level].lowercase() }.toSet().size != 1) break
+                if (parts.map { fold(it[level]) }.toSet().size != 1) break
                 common += parts[0][level]
             }
             return common.joinToString("::")
