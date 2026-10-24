@@ -19,7 +19,37 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  # Which AnkiDroids: on a pull request the one pinned (a new AnkiDroid never fails a pull
+  # request that has nothing to do with it); on Mondays and on demand, its latest release
+  # and older ones still on phones too (their API's surprises: what an older one refuses)
+  versions:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    outputs:
+      ankidroid: ${{ steps.pick.outputs.ankidroid }}
+    steps:
+      - id: pick
+        env:
+          EVENT: ${{ github.event_name }}
+          GH_TOKEN: ${{ github.token }}
+          PINNED: "2.25.0"
+          OLDER: '["2.24.1", "2.23.3"]'
+        run: |
+          if [ "$EVENT" = pull_request ]; then
+            echo "ankidroid=[\"$PINNED\"]" >> "$GITHUB_OUTPUT"
+          else
+            latest=$(gh api repos/ankidroid/Anki-Android/releases/latest --jq '.tag_name | ltrimstr("v")')
+            echo "ankidroid=$(jq -cn --arg latest "$latest" --arg pinned "$PINNED" --argjson older "$OLDER" '[$latest, $pinned] + $older | unique')" >> "$GITHUB_OUTPUT"
+          fi
+          cat "$GITHUB_OUTPUT"
+
   emulator:
+    needs: versions
+    name: emulator (AnkiDroid ${{ matrix.ankidroid }})
+    strategy:
+      fail-fast: false # each version's result, not the first failure only
+      matrix:
+        ankidroid: ${{ fromJSON(needs.versions.outputs.ankidroid) }}
     runs-on: ubuntu-latest
     timeout-minutes: 40
     steps:
@@ -36,8 +66,10 @@ jobs:
           cache: gradle
           cache-dependency-path: android/**/*.gradle*
       # AnkiDroid as people get it (the "play" build: no all-files permission at start)
-      - name: Download AnkiDroid
-        run: curl -sSfL -o ankidroid.apk https://github.com/ankidroid/Anki-Android/releases/download/v2.25.0/dev-AnkiDroid-2.25.0-play-universal.apk
+      - name: Download AnkiDroid ${{ matrix.ankidroid }}
+        env:
+          VERSION: ${{ matrix.ankidroid }}
+        run: curl -sSfL -o ankidroid.apk "https://github.com/ankidroid/Anki-Android/releases/download/v$VERSION/dev-AnkiDroid-$VERSION-play-universal.apk"
       - uses: reactivecircus/android-emulator-runner@a421e43855164a8197daf9d8d40fe71c6996bb0d # v2.38.0
         with:
           api-level: 35
@@ -51,5 +83,5 @@ jobs:
       - if: failure()
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
-          name: device-test-reports
+          name: device-test-reports-ankidroid-${{ matrix.ankidroid }}
           path: android/app/build/reports/androidTests/
