@@ -83,6 +83,15 @@ def page(browser, server, tmp_path, monkeypatch):
     assert not errors, errors
 
 
+def new_password(page) -> None:
+    """The settings' password typed twice, once the page runs (its title written by it): a
+    field filled before, on a slow machine, was emptied as the page started, the form never sent."""
+    sync_api.expect(page.get_by_role("heading", name=re.compile("🔐"))).to_be_visible()
+    fields = page.locator("input[autocomplete=new-password]")
+    fields.first.fill("secret-pw")
+    fields.nth(1).fill("secret-pw")
+
+
 def lessons(page) -> list[dict]:
     return page.request.get("/api/lessons").json()
 
@@ -231,8 +240,7 @@ def test_a_voice_chosen_per_language(page):
     ]
     page.route("**/api/voices", lambda route: route.fulfill(json=voices))
     page.goto("/admin.html")
-    page.locator("input[autocomplete=new-password]").first.fill("secret-pw")
-    page.locator("input[autocomplete=new-password]").nth(1).fill("secret-pw")
+    new_password(page)
     page.get_by_role("button", name="Créer et continuer").click()
     choice = page.locator(".voice-choice")
     choice.locator("select.voice-add").select_option("es-ES")
@@ -249,8 +257,7 @@ def test_a_voice_chosen_per_language(page):
 
 def test_settings_show_what_the_service_needs(page):
     page.goto("/admin.html")
-    page.locator("input[autocomplete=new-password]").first.fill("secret-pw")
-    page.locator("input[autocomplete=new-password]").nth(1).fill("secret-pw")
+    new_password(page)
     page.get_by_role("button", name="Créer et continuer").click()
     address = page.get_by_placeholder("http://localhost:11434/v1")
     page.locator(".options .option", has_text="OpenRouter").click()
@@ -482,8 +489,7 @@ def test_many_lessons_recent_folded_and_searched(page, clock):
 
 def test_admin_lessons_by_owner_then_subject(page, clock):
     page.goto("/admin.html")
-    page.locator("input[autocomplete=new-password]").first.fill("secret-pw")
-    page.locator("input[autocomplete=new-password]").nth(1).fill("secret-pw")
+    new_password(page)
     page.get_by_role("button", name="Créer et continuer").click()
     page.wait_for_function("Alpine.$data(document.querySelector('[x-data]')).saveState === 'saved'")
     admin = {"X-Admin-Password": "secret-pw"}
@@ -567,8 +573,7 @@ def test_every_language_fits_a_narrow_phone(page, browser, server, lang):
         other.locator(".flash").first.wait_for()
         assert other.evaluate(CUT) == []
         other.goto("/admin.html")
-        other.locator("input[autocomplete=new-password]").first.fill("secret-pw")
-        other.locator("input[autocomplete=new-password]").nth(1).fill("secret-pw")
+        new_password(other)
         other.locator("button.btn.primary.wide").first.click()  # create the password
         other.locator("section.panel h2 .step").first.wait_for()  # the settings, unlocked (About is always there)
         assert other.evaluate(CUT) == []
@@ -1251,8 +1256,7 @@ def test_the_setup_assistant(page, monkeypatch):
     monkeypatch.setattr(admin, "check", check)
     page.goto("/")
     page.get_by_role("link", name="Configurer Notosaurus").click()
-    page.locator("input[autocomplete=new-password]").first.fill("secret-pw")
-    page.locator("input[autocomplete=new-password]").nth(1).fill("secret-pw")
+    new_password(page)
     page.get_by_role("button", name="Créer et continuer").click()
 
     sync_api.expect(page.get_by_role("heading", name="Quelle IA lit les leçons ?")).to_be_visible()
