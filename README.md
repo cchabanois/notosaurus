@@ -106,7 +106,7 @@ The ⚙️ page chooses:
 - the AI service and model, and the image model for the pictures;
 - API keys, which are stored in `data/settings.json` (readable only by the server's user) and never sent back to the browser;
 - a voice per language, and its speed;
-- the children: their class, their decks and their standing instructions (e.g. "in year 8"), added to the prompt of each lesson;
+- standing instructions for every child ("Spanish from Spain"), added to the prompt of each lesson; each child's own (their class, decks and instructions) are in their card, 🧒 on the main page;
 - pictures, "Did you know?" facts and helps on the back (on by default);
 - AnkiConnect and syncing options.
 
