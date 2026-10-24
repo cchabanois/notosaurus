@@ -4,10 +4,10 @@ name: Android
 # (static/, which it shows). Only when they change.
 on:
   pull_request:
-    paths: ["android/**", "static/**", ".github/workflows/android.yml"]
+    paths: ["android/**", "static/**", "core/shared-cases.json", ".github/workflows/android.yml"]
   push:
     branches: [main]
-    paths: ["android/**", "static/**", ".github/workflows/android.yml"]
+    paths: ["android/**", "static/**", "core/shared-cases.json", ".github/workflows/android.yml"]
 
 permissions:
   contents: read
