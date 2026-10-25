@@ -160,7 +160,9 @@ const childrenPart = {
 
   // Its class changed (a new school year): decks ending with the old one ("Mathilde::4e")
   // follow ("Mathilde::3e"); the lessons made before stay in theirs
-  setGrade(child, grade) {
+  setGrade(child, typed) {
+    // Typed freely: one deck's name ("::" would make sub-decks of it), no stray spaces
+    const grade = typed.replaceAll("::", " ").replace(/\s+/g, " ").trim().slice(0, 40);
     const old = child.grade;
     child.grade = grade;
     const decks = child.decks.trim();

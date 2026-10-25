@@ -1195,6 +1195,25 @@ def test_the_children_of_the_open_anki_profile(page):
     sync_api.expect(chip).not_to_contain_text("Léa", timeout=8000)
 
 
+def test_a_childs_class_typed_freely_the_countrys_suggested(page):
+    """The class: the language's classes suggested (and the higher ones), any other typed
+    ("Maths Sup", another country's): told as it is, its decks named after it."""
+    page.goto("/")
+    page.get_by_role("button", name="Enfants").click()
+    sheet = page.get_by_role("dialog", name="Enfants")
+    sheet.locator("input.child-name").fill("Léa")
+    grade = sheet.get_by_placeholder("Choisissez ou écrivez : 4e, Maths Sup…")
+    suggested = sheet.locator("datalist#child-grades option").evaluate_all("(o) => o.map((e) => e.value)")
+    assert suggested[0] == "CP" and "Terminale" in suggested and "Prépa" in suggested
+    grade.fill("Maths Sup")
+    grade.press("Tab")  # its change: the class set
+    sync_api.expect(sheet.get_by_role("button", name="Léa::Maths Sup")).to_be_visible()  # its decks suggested
+    sheet.get_by_role("button", name="Léa::Maths Sup").click()
+    sheet.get_by_role("button", name="Enregistrer").click()
+    (child,) = page.request.get("/api/children").json()
+    assert (child["grade"], child["decks"]) == ("Maths Sup", "Léa::Maths Sup")
+
+
 def test_a_lesson_copied_for_another_child(page):
     """⧉ Copy for…: the other children; the copy (its decks) opened, for that child."""
     kids = [

@@ -694,6 +694,10 @@ test("children: the one chosen kept on this device, the lessons filtered, its de
   assert.equal(added.decks, "Léa::Year 7");
   c.setGrade(added, "Year 8");  // a new school year: its decks follow
   assert.equal(added.decks, "Léa::Year 8");
+  c.setGrade(added, "  Maths::Sup  ");  // typed freely: one deck's name, not sub-decks
+  assert.equal(added.grade, "Maths Sup");
+  assert.equal(added.decks, "Léa::Maths Sup");
+  c.setGrade(added, "Year 8");
   await c.saveChildren();
   assert.deepEqual(plain(sent[0].map((k) => k.id)), ["jules", "mathilde", "lea"]);
   assert.equal(c.children.length, 3);
@@ -708,6 +712,8 @@ test("children: the instructions' example fits the class", async () => {
   assert.match(example("5e"), /contrôle/);
   assert.match(example("Terminale"), /bac/);
   assert.match(example(""), /peu de cartes/);
+  assert.match(example("Maths Sup"), /peu de cartes/);  // a class of its own: the general example
+  assert.match(example("Prépa"), /bac/);  // the suggested higher classes: the oldest's
 });
 
 test("children: the sheet opens on the choice; one card edited at a time, cancelled as it was", async () => {
