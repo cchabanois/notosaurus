@@ -1,5 +1,5 @@
 ---
-title: Pour commencer
+title: "Commencer avec le greffon"
 description: "Installer Notosaurus dans Anki, le configurer avec l'assistant, connecter votre téléphone et faire votre premier paquet à partir d'une photo."
 ---
 

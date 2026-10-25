@@ -42,9 +42,9 @@ Nothing is lost: the correction updates the same note, its review history stays.
 only knows where the lesson lives: a lesson made on the computer opens there, one made in
 the app opens in the app. AnkiWeb and AnkiMobile don't show it.
 
-On AnkiDroid 2.25 and before, first turn on **Settings → Advanced → Allow cards to launch other
+Up to AnkiDroid 2.25.2, first turn on **Settings → Advanced → Allow cards to launch other
 apps**: without it, AnkiDroid blocks every link on a card ("Card blocked from launching another
-app"). Later versions let links to a web page through.
+app"). From AnkiDroid 2.25.3, links to a web page go through without it.
 
 ## What they look like
 

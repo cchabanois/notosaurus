@@ -1,26 +1,17 @@
 ---
 title: "FAQ"
-description: "Answers to common questions about Notosaurus, the Android app and the Anki add-on: cost, iPhone, several children, PDFs."
+description: "Answers to common questions about Notosaurus, the Android app and the Anki add-on: which one, cost, iPhone, several children, support."
 ---
 
-When something goes wrong, see [Troubleshooting the add-on](../troubleshooting/) or
-[Troubleshooting the app](../app-troubleshooting/).
-
-## The cards are wrong or missing
-
-Check the photo (see [Photos and PDFs](../photos/)), be
-more precise in the instructions, or correct them with the AI. Claude reads handwriting best.
-
-## A PDF can't be added
-
-- **“Already 10 pages: remove some before adding a PDF.”** A lesson holds 10 pages: remove photos
-  you don't need (**×**), or make two lessons.
-- **“… is password-protected”**: open the PDF, save it without its password (or print it to a new
-  PDF), then add it again.
-- **Words misread in a PDF**: a scanned PDF is only pictures, read like photos. A PDF made on a
-  computer gives the AI its exact text.
+Something goes wrong (wrong cards, a PDF that won't add, an error message)? See
+[Troubleshooting the add-on](../troubleshooting/) or [Troubleshooting the app](../app-troubleshooting/).
 
 ## Questions
+
+**The app or the add-on?**
+The [Android app](../android-app/) works on its own on the phone, by subscription; the add-on runs
+on the computer, free, with your own key for an AI service. See
+[Which Notosaurus?](../which-notosaurus/).
 
 **Does Notosaurus work without Anki desktop?**
 Yes, with the [Android app](../android-app/): it makes the cards on the phone and puts them into
@@ -33,13 +24,14 @@ Yes, in the browser, with Notosaurus on the computer (there's no iPhone app): th
 (paid, it funds Anki's development).
 
 **Can several children use it?**
-Yes: each child has their card (**🧒** on the main page), with their class, their decks, their
+Yes: each child has their card (the **Children** button, 🧒, on the main page), with their class, their decks, their
 instructions and their lessons. See [Several children](../several-children/).
 
 **How much does it cost?**
 The add-on is free: you pay the AI service directly, from a fraction of a cent to a few cents per
 lesson (see [Settings and AI services](../ai-services/)). The [Android app](../android-app/) on its
-own works by subscription, with a free trial; with the add-on, it is free.
+own works by subscription, after a free trial of 14 days (see
+[The subscription](../app-subscription/)); with the add-on, it is free.
 
 **How can I support Notosaurus?**
 If Notosaurus helps you, you can make a donation on [Ko-fi](https://ko-fi.com/notosaurus):

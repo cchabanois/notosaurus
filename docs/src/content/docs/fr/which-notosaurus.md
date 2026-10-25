@@ -15,6 +15,7 @@ tourne et par qui paie l'IA.
 | | Application Android | Greffon Anki |
 |---|---|---|
 | **Ce qu'il faut** | Un téléphone Android, AnkiDroid | Un ordinateur avec Anki, un téléphone sur le même Wi-Fi (Android ou iPhone) |
+| **iPhone** | Non : Android seulement | Oui : la page dans Safari, les cartes révisées dans AnkiMobile |
 | **L'IA** | Gemini de Google, par le service Notosaurus | Le service de votre choix : Gemini, Claude, OpenAI, OpenRouter, ou un modèle à la maison |
 | **Ce que ça coûte** | Un abonnement par Google Play, après un essai gratuit | Gratuit ; le service d'IA vous facture directement, d'une fraction de centime à quelques centimes par leçon |
 | **Les leçons** | Gardées sur le téléphone | Gardées sur l'ordinateur |
@@ -28,7 +29,7 @@ gratuitement.
 ## Commencer
 
 - **L'application Android** : voir [L'application Android](../android-app/).
-- **Le greffon Anki** : voir [Pour commencer](../getting-started/), puis
+- **Le greffon Anki** : voir [Commencer avec le greffon](../getting-started/), puis
   [Sur le téléphone](../phone/).
 - **Sur un serveur à la maison, sans le greffon** : voir [Installation avancée](../install/).
 

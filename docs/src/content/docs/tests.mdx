@@ -1,0 +1,65 @@
+---
+title: "Preparing a test"
+description: "A test on Monday covers three lessons: gather them, or some of their cards, under one tag in Anki, and revise them together."
+---
+
+import { Tabs, TabItem } from '@astrojs/starlight/components';
+
+A test on Monday covers three lessons? A **test to prepare** gathers them, whole or some of
+their cards only, so that the child revises them together, whatever their decks. Once revised,
+the cards go back to their decks.
+
+## Making a test
+
+- From a lesson: **📝 Prepare for a test…**, in its review, adds it to a test (a name, a date),
+  whole or **some of its cards only** (a tick on each card). Once the lesson is in a test, the
+  button shows the test's name (**📌 …**).
+- From the list: the tests are at the top of **My lessons**, where **＋ New test** makes one. Its
+  sheet then adds lessons (**＋ Add lessons**, whole) and sends to Anki those not there yet.
+
+![A test to prepare: its lessons, and how to revise it in Anki](../../assets/screenshots/en/exam.png)
+
+## In Anki: a tag
+
+Every card of a test gets a tag in Anki, `Exam::<name>`. It is put on its notes right away when
+they are in Anki already, or with them when the lesson is sent.
+
+Deleting a test (**Delete the test**, in its sheet) takes the tag off. The cards stay in Anki,
+with their review history.
+
+## Revising it
+
+The test's sheet says how, step by step. With Anki's **custom study**, by hand:
+
+1. Open the deck holding the lessons.
+2. **Custom Study** → **Study by card state or tag**, then **All cards**.
+3. Tick the tag `Exam::<name>` and confirm.
+
+Anki makes a session with these cards; once done, they go back to their decks. When the
+lessons are in different decks, the sheet gives a search to paste into **Create filtered deck**,
+with a **Copy** button.
+
+A filtered deck gathers them faster:
+
+<Tabs syncKey="mode">
+<TabItem label="Android app">
+
+1. In the test's sheet, **Open in AnkiDroid**: AnkiDroid's browser opens with the test's
+   cards, whatever their decks.
+2. Tap **⋮**, then **Create filtered deck**, even if the list looks empty.
+3. Tap **Build**. Over 100 cards, raise **Limit to** first.
+
+AnkiDroid lets no other app make a filtered deck itself: these three taps are needed. See
+[The app and AnkiDroid](../app-ankidroid/).
+
+</TabItem>
+<TabItem label="Computer">
+
+With Anki open, **Revise now in Anki** does it in one click: a filtered deck "Test: …" with the
+test's cards, opened in Anki. It is made again each time, and deleted with the test.
+
+</TabItem>
+</Tabs>
+
+For several children, a test is made from the chosen child's lessons: see
+[Several children](../several-children/).

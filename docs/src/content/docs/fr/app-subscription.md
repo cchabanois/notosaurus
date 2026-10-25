@@ -13,8 +13,10 @@ Sans abonnement, l'application est gratuite avec le greffon Anki sur votre ordin
 ## L'essai gratuit
 
 **🎁 Votre essai gratuit, sans carte, démarrera à votre première leçon.** Rien à toucher : la
-première leçon que vous faites le démarre, et l'application dit alors combien de crédits il donne
-et jusqu'à quand.
+première leçon que vous faites le démarre. Il dure **14 jours** et donne **300 crédits** (150 par
+jour au plus) : de quoi essayer Notosaurus sur bon nombre de leçons (voir
+[Les crédits](#les-crédits)). À son démarrage, l'application dit combien de crédits il donne et
+jusqu'à quand.
 
 - **Sans carte bancaire**, et rien à résilier : à la fin, l'application vous propose de vous
   abonner pour continuer.
@@ -35,12 +37,20 @@ renouvelée.
 
 ## Les crédits
 
-L'abonnement donne des **crédits chaque mois**. **🔑 Abonnement** montre combien il en reste ce
-mois-ci et aujourd'hui, et quand ils sont renouvelés.
+L'abonnement donne **3 000 crédits par mois** (500 par jour au plus) ; à l'année, les crédits
+d'un mois le même jour de chaque mois. **🔑 Abonnement** montre combien il en reste ce mois-ci et
+aujourd'hui, et quand ils sont renouvelés.
 
 Ce que le service fait pour vous en utilise : faire et corriger les cartes, en expliquer une, les
-voix, les images. Avant de dessiner une image, l'application dit environ combien de crédits elle
-coûtera. Quand il n'y en a plus, ils reviennent au prochain renouvellement.
+voix, les images. Un crédit vaut un dixième de centime de dollar de ce que l'IA coûte vraiment :
+
+- une leçon d'une page avec Gemini : environ **10 crédits**, plus quelques-uns pour ses voix ;
+- une correction ou une explication : quelques crédits ;
+- une image dessinée : davantage. Avant d'en dessiner une, l'application dit environ combien de
+  crédits elle coûtera.
+
+Quand il n'y en a plus, ils reviennent au prochain renouvellement. Ces chiffres sont ceux du
+service aujourd'hui ; l'application montre toujours les chiffres actuels.
 
 ## Sur un nouveau téléphone, ou pour le modifier
 

@@ -1,27 +1,17 @@
 ---
 title: "FAQ"
-description: "Réponses aux questions fréquentes sur Notosaurus, l'application Android et le greffon Anki : coût, iPhone, plusieurs enfants, PDF."
+description: "Réponses aux questions fréquentes sur Notosaurus, l'application Android et le greffon Anki : lequel choisir, coût, iPhone, plusieurs enfants, soutien."
 ---
 
-Quand quelque chose ne va pas, voir [Dépannage du greffon](../troubleshooting/) ou
-[Dépannage de l'application](../app-troubleshooting/).
-
-## Les cartes sont fausses ou il en manque
-
-Vérifiez la photo (voir
-[Photos et PDF](../photos/)), précisez la consigne, ou faites-les corriger par l'IA. Claude
-lit le mieux l'écriture manuscrite.
-
-## Un PDF ne s'ajoute pas
-
-- **« Déjà 10 pages : retirez-en avant d'ajouter un PDF. »** Une leçon tient en 10 pages :
-  retirez les photos inutiles (**×**), ou faites deux leçons.
-- **« … est protégé par un mot de passe »** : ouvrez le PDF, enregistrez-le sans mot de passe (ou
-  imprimez-le dans un nouveau PDF), puis ajoutez-le à nouveau.
-- **Des mots mal lus dans un PDF** : un PDF scanné ne contient que des images, lues comme des
-  photos. Un PDF fait sur ordinateur donne à l'IA son texte exact.
+Quelque chose ne va pas (des cartes fausses, un PDF qui ne s'ajoute pas, un message d'erreur) ?
+Voir [Dépannage du greffon](../troubleshooting/) ou [Dépannage de l'application](../app-troubleshooting/).
 
 ## Questions
+
+**L'application ou le greffon ?**
+L'[application Android](../android-app/) fonctionne seule sur le téléphone, avec un abonnement ; le
+greffon tourne sur l'ordinateur, gratuitement, avec votre propre clé pour un service d'IA. Voir
+[Quel Notosaurus ?](../which-notosaurus/).
 
 **Notosaurus marche-t-il sans Anki sur ordinateur ?**
 Oui, avec l'[application Android](../android-app/) : elle fait les cartes sur le téléphone et les
@@ -34,14 +24,14 @@ Oui, dans le navigateur, avec Notosaurus sur l'ordinateur (il n'y a pas d'applic
 dans AnkiMobile (payant, il finance le développement d'Anki).
 
 **Plusieurs enfants peuvent-ils l'utiliser ?**
-Oui : chaque enfant a sa fiche (**🧒** sur la page principale), avec sa classe, ses paquets, ses
+Oui : chaque enfant a sa fiche (le bouton **Enfants**, 🧒, sur la page principale), avec sa classe, ses paquets, ses
 instructions et ses leçons. Voir [Plusieurs enfants](../several-children/).
 
 **Combien ça coûte ?**
 Le greffon est gratuit : vous payez directement le service d'IA, d'une fraction de centime à
 quelques centimes par leçon (voir [Réglages et services d'IA](../ai-services/)).
-L'[application Android](../android-app/) seule fonctionne avec un abonnement, avec un essai
-gratuit ; avec le greffon, elle est gratuite.
+L'[application Android](../android-app/) seule fonctionne avec un abonnement, après un essai
+gratuit de 14 jours (voir [L'abonnement](../app-subscription/)) ; avec le greffon, elle est gratuite.
 
 **Comment soutenir Notosaurus ?**
 Si Notosaurus vous rend service, vous pouvez faire un don sur

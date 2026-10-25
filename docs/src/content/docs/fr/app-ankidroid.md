@@ -49,17 +49,17 @@ l'application). La correction met à jour la même note : son historique de rév
 leçon faite avec l'ordinateur ([Avec votre ordinateur](../app-with-computer/)) s'ouvre sur
 l'ordinateur, pas dans l'application.
 
-Sur **AnkiDroid 2.25 et avant**, activez d'abord **Paramètres → Avancé → Autoriser les cartes à
+Jusqu'à **AnkiDroid 2.25.2**, activez d'abord **Paramètres → Avancé → Autoriser les cartes à
 lancer d'autres applications** dans AnkiDroid : sans ce réglage, AnkiDroid bloque tout lien d'une
-carte (« La carte ne peut pas lancer d'autres applications »). Les versions suivantes laissent
-passer les liens vers une page web.
+carte (« La carte ne peut pas lancer d'autres applications »). Depuis AnkiDroid 2.25.3, les liens
+vers une page web passent sans ce réglage.
 
 ![Une carte dans AnkiDroid, avec son son et, sous la réponse, ✎ Notosaurus](../../../assets/screenshots/fr/app-ankidroid-card.png)
 
 ## Le paquet filtré d'un contrôle
 
 Un contrôle à préparer réunit des cartes de plusieurs leçons sous une étiquette (voir
-[Vos leçons](../lessons/)). Dans sa fiche, **Ouvrir dans AnkiDroid** ouvre les cartes du
+[Préparer un contrôle](../tests/)). Dans sa fiche, **Ouvrir dans AnkiDroid** ouvre les cartes du
 contrôle dans le navigateur d'AnkiDroid, quels que soient leurs paquets ; puis
 **⋮ → Créer un paquet filtré → Générer** (au-delà de 100 cartes, augmentez d'abord
 **Limiter à**). AnkiDroid ne laisse aucune autre application créer elle-même un paquet filtré.

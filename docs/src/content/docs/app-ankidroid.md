@@ -47,16 +47,16 @@ Under every answer in AnkiDroid, a small **✎ Notosaurus** opens the card in th
 same note: its review history stays. A lesson made with the computer
 ([With your computer](../app-with-computer/)) opens on the computer, not in the app.
 
-On **AnkiDroid 2.25 and before**, first turn on **Settings → Advanced → Allow cards to launch other
+Up to **AnkiDroid 2.25.2**, first turn on **Settings → Advanced → Allow cards to launch other
 apps** in AnkiDroid: without it, AnkiDroid blocks every link on a card ("Card blocked from
-launching another app"). Later versions let links to a web page through.
+launching another app"). From AnkiDroid 2.25.3, links to a web page go through without it.
 
 ![A card in AnkiDroid with its sound and, under the answer, ✎ Notosaurus](../../assets/screenshots/en/app-ankidroid-card.png)
 
 ## A test's filtered deck
 
 A test to prepare gathers cards of several lessons under one tag (see
-[Your lessons](../lessons/)). In its sheet, **Open in AnkiDroid** opens the test's cards in
+[Preparing a test](../tests/)). In its sheet, **Open in AnkiDroid** opens the test's cards in
 AnkiDroid's browser, whatever their decks; then **⋮ → Create filtered deck → Build** (over 100
 cards, raise **Limit to** first). AnkiDroid lets no other app make a filtered deck itself.
 

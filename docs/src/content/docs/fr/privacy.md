@@ -1,10 +1,10 @@
 ---
-title: "Confidentialité et sécurité"
+title: "Confidentialité et sécurité sur l'ordinateur"
 description: "Ce qui sort de votre ordinateur, où Notosaurus garde ses données, qui peut l'utiliser, et comment le sauvegarder."
 ---
 
-Cette page concerne Notosaurus sur ordinateur. Pour l'app Android et son service, voir la
-[politique de confidentialité de l'app](../app-privacy/).
+Cette page concerne Notosaurus sur ordinateur. Pour l'application Android et son service, voir la
+[politique de confidentialité de l'application](../app-privacy/).
 
 Sur ordinateur, Notosaurus n'a ni compte ni serveur à lui : il tourne sur votre ordinateur. Une leçon montre
 souvent l'écriture d'un enfant, parfois son nom : voici où elle va.

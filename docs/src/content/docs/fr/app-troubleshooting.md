@@ -26,8 +26,9 @@ Voir [L'abonnement](../app-subscription/).
 | « AnkiDroid n'est pas installé » / « AnkiDroid n'a pas pris les cartes » | Installez AnkiDroid, **ouvrez-le une fois** (il crée sa collection), puis ajoutez à nouveau les cartes. |
 
 **✎ Notosaurus ne fait rien dans AnkiDroid** (« La carte ne peut pas lancer d'autres
-applications ») : sur AnkiDroid 2.25 et avant, activez **Paramètres → Avancé → Autoriser les cartes
-à lancer d'autres applications** dans AnkiDroid.
+applications ») : jusqu'à AnkiDroid 2.25.2, activez **Paramètres → Avancé → Autoriser les cartes
+à lancer d'autres applications** dans AnkiDroid, ou mettez AnkiDroid à jour (depuis 2.25.3, le lien
+passe sans ce réglage).
 
 **Des cartes sans son** : les voix du service Notosaurus n'ont pas répondu (le téléphone a besoin
 d'Internet). Les cartes sont envoyées sans leur son, et le message dit combien. Ajoutez à nouveau
@@ -48,3 +49,13 @@ Voir [Avec votre ordinateur](../app-with-computer/).
 **Les cartes sont fausses ou il en manque.** Vérifiez la photo (voir [Photos et PDF](../photos/)),
 précisez la consigne, ou corrigez-les avec l'IA (voir [Relire les cartes](../review/)). Une carte
 faite par l'IA fausse ou inadaptée : **⋯ → ⚑ Signaler** dessus.
+
+## Un PDF ne s'ajoute pas
+
+- **« Déjà 10 pages : retirez-en avant d'ajouter un PDF. »** Une leçon tient en 10 pages : retirez
+  les photos inutiles (le bouton **Retirer cette page**, ✕, sur chacune), ou faites deux leçons.
+- **« … est protégé par un mot de passe : enregistrez-le sans mot de passe, puis ajoutez-le à
+  nouveau. »** Ouvrez le PDF, enregistrez-le sans mot de passe (ou imprimez-le dans un nouveau
+  PDF), puis ajoutez-le à nouveau.
+- **Des mots mal lus dans un PDF** : un PDF scanné ne contient que des images, lues comme des
+  photos. Un PDF fait sur ordinateur donne à l'IA son texte exact.

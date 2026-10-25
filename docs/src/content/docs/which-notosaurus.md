@@ -14,6 +14,7 @@ instructions and review; they differ in where Notosaurus runs and who pays for t
 | | Android app | Anki add-on |
 |---|---|---|
 | **What you need** | An Android phone, AnkiDroid | A computer with Anki desktop, a phone on the same Wi-Fi (Android or iPhone) |
+| **iPhone** | No: Android only | Yes: the page in Safari, the cards reviewed in AnkiMobile |
 | **The AI** | Google's Gemini, through the Notosaurus service | The service you choose: Gemini, Claude, OpenAI, OpenRouter, or a model at home |
 | **What it costs** | A subscription through Google Play, after a free trial | Free; the AI service bills you directly, from a fraction of a cent to a few cents per lesson |
 | **The lessons** | Kept on the phone | Kept on the computer |
@@ -26,7 +27,7 @@ the lessons, the AI and the cards stay on the computer, for free.
 ## Start
 
 - **The Android app**: see [The Android app](../android-app/).
-- **The Anki add-on**: see [Getting started](../getting-started/), then [On the phone](../phone/).
+- **The Anki add-on**: see [Getting started with the add-on](../getting-started/), then [On the phone](../phone/).
 - **On a home server, without the add-on**: see [Advanced installation](../install/).
 
 Then everything else is the same: [Photos and PDFs](../photos/), [Instructions](../instructions/),
