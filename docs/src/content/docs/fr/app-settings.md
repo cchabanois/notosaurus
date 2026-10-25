@@ -3,7 +3,7 @@ title: "Les réglages de l'application"
 description: "La page de réglages propre à l'application Android : l'abonnement, AnkiDroid, où travaille Notosaurus, les instructions pour l'IA, les voix, les leçons sur le téléphone."
 ---
 
-**⚙️**, en haut de la page, ouvre les réglages propres à l'application. Ils s'enregistrent au fur
+Le bouton **Réglages** (⚙️), en haut de la page, ouvre les réglages propres à l'application. Ils s'enregistrent au fur
 et à mesure.
 
 ![Le haut des réglages de l'application : abonnement, AnkiDroid, où travaille Notosaurus](../../../assets/screenshots/fr/app-settings.png)
@@ -18,7 +18,7 @@ et à mesure.
   [Avec votre ordinateur](../app-with-computer/).
 - **📝 Instructions pour l'IA** : les instructions pour tous les enfants (« espagnol
   d'Espagne »), ajoutées à chaque leçon, et **💬 Aides au verso des cartes**. Celles de chaque
-  enfant sont dans sa fiche, **🧒** sur la page principale : voir
+  enfant sont dans sa fiche, depuis le bouton **Enfants** (🧒) de la page principale : voir
   [Plusieurs enfants](../several-children/).
 - **Voix des cartes** : **Ralentir les langues étrangères et les dictées**, et une **Voix par
   langue**, avec **Écouter**. Voir [Les voix et l'audio](../voices/).

@@ -17,8 +17,8 @@ de les envoyer. Tout ce que vous modifiez est enregistré au fur et à mesure (�
 - **+ info** ajoute une note affichée sous la réponse : genre, pluriel, un exemple…
 - **sous-paquet** range la carte dans un sous-paquet de la leçon (« Vocabulaire »,
   « Verbes »).
-- **🔊** fait écouter le verso avec la voix de la leçon.
-- **⋯**, en haut à droite de la carte, la supprime ; **＋ Ajouter une carte**, en bas, en ajoute une.
+- **Écouter le verso** (🔊) le fait entendre avec la voix de la leçon.
+- **Plus d'actions** (⋯), en haut à droite de la carte, la supprime ; **＋ Ajouter une carte**, en bas, en ajoute une.
 
 **📝 Consigne utilisée pour cette leçon**, au-dessus des cartes, rappelle ce qui a été
 demandé à l'IA.
@@ -41,7 +41,7 @@ résume ce qu'elle a fait. **↩ Annuler** remet les cartes comme avant.
 
 ## Expliquer une carte
 
-**💬** sur une carte demande à l'IA de l'expliquer : ce qu'elle veut dire, et pourquoi sa réponse
+**Expliquer cette carte** (💬) demande à l'IA de l'expliquer : ce qu'elle veut dire, et pourquoi sa réponse
 est la réponse, en deux à quatre phrases, au niveau d'un élève, dans la langue de la page.
 Pratique pour une matière qu'on a oubliée, ou une carte que l'élève ne comprend pas.
 

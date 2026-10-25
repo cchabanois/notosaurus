@@ -34,7 +34,7 @@ leçons, puis vous demande d'accepter sa [politique de confidentialité](../app-
   l'Union européenne. Vos leçons restent sur votre téléphone.
 - L'IA a des garde-fous adaptés aux élèves, mais elle peut se tromper : vérifiez les cartes avant
   de les donner à votre enfant.
-- Une page de cahier montre souvent le nom de l'enfant : cachez-le avec **🖍️** avant l'envoi
+- Une page de cahier montre souvent le nom de l'enfant : cachez-le avec le bouton **Cacher** (🖍️) avant l'envoi
   (voir [Photos et PDF](../photos/)).
 
 ![L'accueil de l'application : un outil pour les parents, Gemini, l'essai gratuit, la politique de confidentialité à accepter](../../../assets/screenshots/fr/app-welcome.png)
@@ -45,7 +45,7 @@ leçons, puis vous demande d'accepter sa [politique de confidentialité](../app-
    cartes soient à son niveau. Voir [Plusieurs enfants](../several-children/).
 2. Sous **Photos de la leçon**, prenez la page en photo (ou plusieurs pages), ou ajoutez un PDF.
 3. Sous **Consigne**, choisissez ce qu'il faut faire, ou gardez **Automatique (d'après la
-   leçon)** : voir [Les consignes](../instructions/). **🎤**, à côté du champ, permet de les
+   leçon)** : voir [Les consignes](../instructions/). Le bouton **Dicter** (🎤), à côté du champ, permet de les
    dire au lieu de les taper.
 4. Touchez **✨ Générer les cartes**. La première leçon démarre l'essai gratuit.
 5. Vérifiez les cartes, corrigez-les ou demandez à l'IA en quelques mots : voir
@@ -53,7 +53,7 @@ leçons, puis vous demande d'accepter sa [politique de confidentialité](../app-
 6. Touchez **📥 Ajouter à Anki** : les cartes vont dans AnkiDroid. La première fois, AnkiDroid
    demande si Notosaurus peut y ajouter des cartes.
 
-La leçon est gardée sur le téléphone : rouvrez-la depuis **📚** pour la corriger et la renvoyer.
+La leçon est gardée sur le téléphone : rouvrez-la depuis le bouton **Leçons** (📚) pour la corriger et la renvoyer.
 Ses cartes sont mises à jour dans AnkiDroid, pas dupliquées.
 
 ![La page principale de l'application : les photos de la leçon, la consigne avec 🎤, l'enfant choisi en haut](../../../assets/screenshots/fr/app-home.png)
