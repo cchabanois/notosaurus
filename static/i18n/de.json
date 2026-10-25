@@ -1013,6 +1013,7 @@
       "payment_pending": "Zahlung ausstehend: Google Play konnte dein Abo nicht verlängern. Aktualisiere deine Zahlungsmethode in Google Play (Einstellungen → Abo verwalten), um weiterzumachen.",
       "invalid_purchase": "Kauf von Google Play nicht erkannt: Versuche es erneut oder kontaktiere den Support.",
       "trial_refused": "Die kostenlose Testphase ist nur mit der App aus Google Play auf einem echten Telefon möglich.",
+      "trial_closed": "Gerade keine neue kostenlose Testphase: Du kannst in den Einstellungen ein Abo abschließen oder es morgen erneut versuchen.",
       "daily_limit": "Das Tageslimit ist erreicht: Versuche es morgen wieder.",
       "busy": "Zu viele Anfragen gleichzeitig: Versuche es gleich noch einmal.",
       "too_large": "Zu viele Fotos, oder eines ist zu groß.",

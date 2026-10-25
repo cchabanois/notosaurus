@@ -1790,7 +1790,7 @@
             }
           },
           "403": {
-            "description": "Codes: `relay.trial_refused`",
+            "description": "Codes: `relay.trial_refused`, `relay.trial_closed`",
             "content": {
               "application/json": {
                 "schema": {

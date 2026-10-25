@@ -1013,6 +1013,7 @@
       "payment_pending": "Pagamento in sospeso: Google Play non è riuscito a rinnovare il tuo abbonamento. Aggiorna il metodo di pagamento in Google Play (Impostazioni → Gestisci l'abbonamento) per continuare.",
       "invalid_purchase": "Acquisto non riconosciuto da Google Play: riprova o contatta il supporto.",
       "trial_refused": "La prova gratuita è possibile solo con l'app installata da Google Play, su un vero telefono.",
+      "trial_closed": "Al momento nessuna nuova prova gratuita: puoi abbonarti nelle Impostazioni o riprovare domani.",
       "daily_limit": "Limite di oggi raggiunto: riprova domani.",
       "busy": "Troppe richieste contemporaneamente: riprova tra un attimo.",
       "too_large": "Troppe foto, o una troppo pesante.",

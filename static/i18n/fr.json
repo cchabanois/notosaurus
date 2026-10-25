@@ -1013,6 +1013,7 @@
       "payment_pending": "Paiement en attente : Google Play n'a pas pu renouveler votre abonnement. Mettez à jour votre moyen de paiement dans Google Play (Réglages → Gérer l'abonnement) pour continuer.",
       "invalid_purchase": "Achat non reconnu par Google Play : réessayez, ou contactez le support.",
       "trial_refused": "L'essai gratuit n'est possible qu'avec l'app installée depuis Google Play, sur un vrai téléphone.",
+      "trial_closed": "Pas de nouvel essai gratuit pour le moment : vous pouvez vous abonner dans les Réglages, ou réessayer demain.",
       "daily_limit": "Limite du jour atteinte : réessayez demain.",
       "busy": "Trop de demandes en même temps : réessayez dans un instant.",
       "too_large": "Trop de photos, ou une photo trop lourde.",

@@ -9,6 +9,7 @@ Each pull request adds a line under **Unreleased**. See [Releasing](CONTRIBUTING
 
 ### Added
 
+- New free trials can be stopped for now: turned off by hand (config/app's `disabled`: `trial`) or past the day's number (the relay's setting); a phone that has its trial keeps it. The app then says so and offers to subscribe. For developers: `relay.trial_closed` (403), the feature `trial`.
 - A child's class is typed freely ("Maths Sup", another country's: Québec, Portugal, the US…), the language's classes suggested as before, and now the higher ones (Prépa, BTS, university…). The AI is told it as it is; its decks are named after it.
 - For developers: a `staging` build (`./gradlew bundleStaging -Pnotosaurus.build=N`), a release calling the test relay, to test Google Play's purchases in Internal testing; the Android `versionCode` gets a build number (`(major × 10000 + minor × 100 + patch) × 10000 + build`, Draft release's run number), so that every upload to Google Play is a new one.
 - 🎁 The free trial starts by itself with the first lesson on Android, no button: the first AI call without a key starts it (Play Integrity), then is made; a notice says what it gives and until when, the welcome says it is once per phone. Over (its credits or days), the lesson's error says so (`relay.trial_ended`) with **Subscribe**, to the settings; the settings say it starts with the first lesson, then show the subscribe buttons during it.

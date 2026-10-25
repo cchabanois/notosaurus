@@ -300,6 +300,7 @@ def build() -> dict:
         responses=errors(
             "relay.invalid_request",
             "relay.trial_refused",
+            "relay.trial_closed",
             "relay.client_outdated",
             "relay.unavailable",
         ),
