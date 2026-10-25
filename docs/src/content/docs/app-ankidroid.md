@@ -17,6 +17,8 @@ computer, no sync to wait for.
 **📥 AnkiDroid**, in the app's settings, says where things stand: **✓ AnkiDroid is installed and
 Notosaurus may add cards to it**, or a button to **Install AnkiDroid** or to **Allow**.
 
+![AnkiDroid asks whether Notosaurus may access and create notes, cards, note types and decks](../../assets/screenshots/en/app-ankidroid-permission.png)
+
 ## Sending the cards
 
 **📥 Add to Anki** writes the cards into AnkiDroid, in the lesson's deck, with their sounds and
@@ -36,6 +38,8 @@ Anki on a computer, or another phone.
 **Open AnkiDroid**, at the top of the page and at its foot, opens it in one tap, to review the
 cards just sent.
 
+![AnkiDroid's decks after sending lessons from the app: one deck per subject, a sub-deck per lesson](../../assets/screenshots/en/app-ankidroid-decks.png)
+
 ## Correcting a card from AnkiDroid
 
 Under every answer in AnkiDroid, a small **✎ Notosaurus** opens the card in the app to correct it
@@ -46,6 +50,8 @@ same note: its review history stays. A lesson made with the computer
 On **AnkiDroid 2.25 and before**, first turn on **Settings → Advanced → Allow cards to launch other
 apps** in AnkiDroid: without it, AnkiDroid blocks every link on a card ("Card blocked from
 launching another app"). Later versions let links to a web page through.
+
+![A card in AnkiDroid with its sound and, under the answer, ✎ Notosaurus](../../assets/screenshots/en/app-ankidroid-card.png)
 
 ## A test's filtered deck
 

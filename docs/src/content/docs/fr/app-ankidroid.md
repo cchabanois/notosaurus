@@ -18,6 +18,8 @@ pas de `.apkg`, pas d'ordinateur, pas de synchronisation à attendre.
 installé et Notosaurus peut y ajouter des cartes**, ou un bouton pour **Installer AnkiDroid** ou
 pour **Autoriser**.
 
+![AnkiDroid demande si Notosaurus peut accéder aux notes, cartes, types de notes et paquets, et en créer](../../../assets/screenshots/fr/app-ankidroid-permission.png)
+
 ## Envoyer les cartes
 
 **📥 Ajouter à Anki** écrit les cartes dans AnkiDroid, dans le paquet de la leçon, avec leurs sons
@@ -37,6 +39,8 @@ elles arrivent alors dans Anki sur un ordinateur, ou sur un autre téléphone.
 **Ouvrir AnkiDroid**, en haut de la page et en bas, l'ouvre d'un geste, pour réviser les cartes
 qui viennent d'être envoyées.
 
+![Les paquets d'AnkiDroid après l'envoi de leçons depuis l'application : un paquet par matière, un sous-paquet par leçon](../../../assets/screenshots/fr/app-ankidroid-decks.png)
+
 ## Corriger une carte depuis AnkiDroid
 
 Sous chaque réponse dans AnkiDroid, un petit **✎ Notosaurus** ouvre la carte dans l'application
@@ -49,6 +53,8 @@ Sur **AnkiDroid 2.25 et avant**, activez d'abord **Paramètres → Avancé → A
 lancer d'autres applications** dans AnkiDroid : sans ce réglage, AnkiDroid bloque tout lien d'une
 carte (« La carte ne peut pas lancer d'autres applications »). Les versions suivantes laissent
 passer les liens vers une page web.
+
+![Une carte dans AnkiDroid, avec son son et, sous la réponse, ✎ Notosaurus](../../../assets/screenshots/fr/app-ankidroid-card.png)
 
 ## Le paquet filtré d'un contrôle
 

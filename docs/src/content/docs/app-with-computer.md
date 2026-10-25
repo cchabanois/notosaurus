@@ -25,6 +25,8 @@ Anki must be open on the computer, with the add-on, and the phone on the same Wi
 The app checks the computer answers, keeps it, and shows its page. **Change computer** scans
 another one.
 
+![The app's settings with a computer connected: its name, Change computer, About](../../assets/screenshots/en/app-computer-settings.png)
+
 ## What is on the computer
 
 In this mode, everything is the computer's: its lessons, its AI service and key, its children,
@@ -42,6 +44,8 @@ the add-on), and this phone on the same Wi-Fi. Then:
 - **Scan the QR code again**, for instance when the computer's address changed (after restarting
   the router);
 - **Use without computer**: back to **📱 On this phone**.
+
+![The computer doesn't answer: Try again, Scan the QR code again, Use without computer](../../assets/screenshots/en/app-computer-unreachable.png)
 
 ## Two modes, two lists of lessons
 

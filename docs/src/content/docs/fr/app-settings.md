@@ -6,6 +6,8 @@ description: "La page de réglages propre à l'application Android : l'abonnemen
 **⚙️**, en haut de la page, ouvre les réglages propres à l'application. Ils s'enregistrent au fur
 et à mesure.
 
+![Le haut des réglages de l'application : abonnement, AnkiDroid, où travaille Notosaurus](../../../assets/screenshots/fr/app-settings.png)
+
 - **🔑 Abonnement** : l'essai gratuit ou la formule, les crédits qui restent ce mois-ci et
   aujourd'hui, quand ils sont renouvelés ; **J'ai déjà un abonnement**, **Gérer l'abonnement
   (Google Play)**, et un champ **Clé de licence**. Voir [L'abonnement](../app-subscription/).
@@ -25,6 +27,8 @@ et à mesure.
 - **ℹ️ À propos** : la version, la licence, le code source, la
   [politique de confidentialité](../app-privacy/) et les licences des bibliothèques utilisées.
 - **Avancé** : l'adresse du relais, pour les tests seulement. Laissez-la telle quelle.
+
+![Plus bas : instructions pour l'IA, voix des cartes, leçons sur ce téléphone](../../../assets/screenshots/fr/app-settings-more.png)
 
 En bas, **🌐** choisit la langue de la page, et **📖 Aide** ouvre cette documentation.
 

@@ -22,6 +22,8 @@ et jusqu'à quand.
   Play, sur un vrai téléphone (Play Integrity), et l'application reconnaît ce téléphone par une
   empreinte, jamais son identifiant lui-même. Sur un émulateur, l'essai n'est pas proposé.
 
+![Les réglages de l'application sans abonnement : l'essai gratuit démarrera à la première leçon](../../../assets/screenshots/fr/app-settings.png)
+
 ## S'abonner
 
 Dans les réglages, **🔑 Abonnement** propose l'abonnement au mois et à l'année, avec leur prix.

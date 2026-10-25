@@ -34,6 +34,8 @@ you to accept its [privacy policy](../app-privacy/):
 - A notebook page often shows the child's name: hide it with **🖍️** before sending (see
   [Photos and PDFs](../photos/)).
 
+![The app's welcome: a tool for parents, Gemini, the free trial, the privacy policy to accept](../../assets/screenshots/en/app-welcome.png)
+
 ## Your first lesson
 
 1. **🧒** at the top of the page: add your child's card (first name, class), so that the cards
@@ -49,6 +51,10 @@ you to accept its [privacy policy](../app-privacy/):
 
 The lesson is kept on the phone: reopen it from **📚** to correct it and send it again. Its cards
 are updated in AnkiDroid, not duplicated.
+
+![The app's main page: the lesson photos, the instructions with 🎤, the child chosen at the top](../../assets/screenshots/en/app-home.png)
+
+![A lesson's cards in the app, with the correction field and its 🎤](../../assets/screenshots/en/app-review.png)
 
 ## Where it works
 
@@ -74,6 +80,8 @@ Most of Notosaurus is the same as on the computer. What only the app has, or doe
   for Notosaurus.
 - **Updates** come through Google Play. When a new version is available, the app says **A new
   version of Notosaurus is available**, with an **Update** button.
+
+![The Report content sheet: why, a comment, and exactly what will be sent](../../assets/screenshots/en/app-report.png)
 
 See also [The app's settings](../app-settings/) and, when something goes wrong,
 [Troubleshooting the app](../app-troubleshooting/).
