@@ -43,7 +43,9 @@ internal fun Route.examRoutes(server: LocalServer) {
  * renamed or deleted meanwhile: its old tag taken off then). */
 private suspend fun LocalServer.retag(id: String, before: Exam?, after: Exam?): Boolean {
     val waiting = exams.pending()
-    val from = if (waiting.containsKey(id)) waiting[id] else before
+    // Made while AnkiDroid couldn't follow (null: nothing in it): sends may have tagged its notes
+    // since, as it was before this change; from there (a tag not there: no harm)
+    val from = if (waiting.containsKey(id)) waiting[id] ?: before else before
     val (add, remove) = exams.retagging(from, after)
     val done = add.isEmpty() && remove.isEmpty() ||
         withContext(Dispatchers.IO) { runCatching { anki.retag(add, remove) }.getOrDefault(false) }

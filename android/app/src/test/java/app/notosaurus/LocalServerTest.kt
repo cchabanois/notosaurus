@@ -672,6 +672,22 @@ class LocalServerTest {
         client.get("/api/exams") { page() }
         assertEquals(followed, anki.retagged.size) // done: not again
 
+        // Made while AnkiDroid couldn't follow, its notes tagged by a send since, then renamed
+        // while it couldn't again: the old tag still taken off once it can
+        anki.broken = true
+        client.put("/api/exams/later") { page(); contentType(ContentType.Application.Json); setBody("""{"name": "Plus tard", "lessons": [{"lesson": "$id"}]}""") }
+        anki.broken = false
+        client.post("/api/anki/send") {
+            page(); contentType(ContentType.Application.Json)
+            setBody("""{"deck": "SVT::Chapitre 1", "cards": ${lesson["cards"]}, "voice": "", "lesson_id": "$id"}""")
+        }
+        anki.broken = true
+        client.put("/api/exams/later") { page(); contentType(ContentType.Application.Json); setBody("""{"name": "Plus tard 2", "lessons": [{"lesson": "$id"}]}""") }
+        anki.broken = false
+        client.get("/api/exams") { page() }
+        assertEquals(mapOf("Exam::Plus_tard_2" to setOf(11L, 12L)) to mapOf("Exam::Plus_tard" to setOf(11L, 12L)), anki.retagged.last())
+        client.delete("/api/exams/later") { page() }
+
         // Another test whose name differs by its case only: one tag for AnkiDroid, refused
         val same = client.put("/api/exams/other") { page(); contentType(ContentType.Application.Json); setBody("""{"name": "brevet BLANC 2"}""") }
         assertEquals("exams.same_name", same.json().jsonObject["detail"]!!.jsonObject.string("code"))

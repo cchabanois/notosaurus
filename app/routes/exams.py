@@ -32,8 +32,15 @@ async def _retag(id: str, before: Exam | None, after: Exam | None, profile: str 
     notes still have (a test renamed or deleted meanwhile: its old tag taken off then)."""
     waiting = await asyncio.to_thread(exams.pending)
     if id in waiting:
-        before = waiting[id]
+        # Made while Anki was closed (None: nothing in Anki then): sends may have tagged its
+        # notes since, as it was before this change; from there (a tag not there: no harm)
+        before = waiting[id] or before
     done = profile is not None and await _tag(before, after, profile)
+    if done and after is None and before and before.filtered_deck:  # deleted: its filtered deck too
+        try:  # its cards back to their decks
+            await ankiconnect.drop_deck(before.filtered_deck)
+        except ankiconnect.AnkiConnectError:
+            done = False
     await asyncio.to_thread(exams.set_pending, id, before, done)
     return done
 
@@ -75,8 +82,6 @@ async def save_exam(content: ExamIn, id: str = Path(pattern=exams.ID)) -> dict:
     before = await asyncio.to_thread(exams.get, id)
     if before is None and len(await asyncio.to_thread(exams.list_all)) >= exams.MAX_EXAMS:
         raise AppError("exams.too_many", 400, max=exams.MAX_EXAMS)
-    if await asyncio.to_thread(exams.same_tag, id, content.name):
-        raise AppError("exams.same_name", 400)
     wanted = {part.lesson for part in content.lessons} | ({part.lesson for part in before.lessons} if before else set())
     found = await _lessons(wanted)
     content = content.model_copy(update={"lessons": [p for p in content.lessons if p.lesson in found]})
@@ -92,12 +97,7 @@ async def delete_exam(id: str = Path(pattern=exams.ID)) -> dict:
     before = await asyncio.to_thread(exams.get, id)
     if before is None:
         raise AppError("exams.not_found", 404)
-    anki = await _retag(id, before, None, await ankiconnect.active_profile())
-    if before.filtered_deck and anki:  # its filtered deck too: the cards go back to their decks
-        try:
-            await ankiconnect.drop_deck(before.filtered_deck)
-        except ankiconnect.AnkiConnectError:
-            anki = False
+    anki = await _retag(id, before, None, await ankiconnect.active_profile())  # its filtered deck too
     await asyncio.to_thread(exams.delete, id)
     return {"deleted": True, "anki": anki}
 

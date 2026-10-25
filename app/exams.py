@@ -16,6 +16,7 @@ import re
 from pydantic import BaseModel, Field
 
 from . import lessons, storage
+from .errors import AppError
 from .models import Lesson
 
 FORMAT = 1
@@ -86,12 +87,15 @@ def set_pending(id: str, before: Exam | None, done: bool) -> None:
     first state Anki's notes still have kept until then, whatever changes come after."""
     with storage.lock:
         waiting = {i: e.model_dump() if e else None for i, e in pending().items()}
-        if (id in waiting) != done:  # nothing to change: no write
-            return
         if done:
-            waiting.pop(id, None)
+            if id not in waiting:  # nothing to change: no write
+                return
+            waiting.pop(id)
         else:
-            waiting.setdefault(id, before.model_dump() if before else None)
+            # The first state kept; "nothing" (made while closed) replaced by one known since
+            if id in waiting and (waiting[id] is not None or before is None):
+                return
+            waiting[id] = before.model_dump() if before else None
         _write(list_all(), waiting)
 
 
@@ -107,8 +111,11 @@ def get(id: str) -> Exam | None:
 
 
 def save(id: str, content: ExamIn) -> Exam:
-    """The test saved under `id` (made, or changed: its name, date, lessons)."""
+    """The test saved under `id` (made, or changed: its name, date, lessons); refused when
+    another test has its tag (same_tag), checked under the same lock: two at once can't both pass."""
     with storage.lock:
+        if same_tag(id, content.name):
+            raise AppError("exams.same_name", 400)
         exams = list_all()
         found = next((e for e in exams if e.id == id), None)
         kept = {"created_at": found.created_at, "filtered_deck": found.filtered_deck} if found else {}

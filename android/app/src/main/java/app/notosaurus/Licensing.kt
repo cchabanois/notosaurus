@@ -77,11 +77,15 @@ class Licensing(
         return keep(answer)
     }
 
-    /** A purchase Google Play said pending (paid later): the settings look for it until found. */
+    /** A purchase Google Play said pending (paid later): the settings look for it until found,
+     * for PENDING_DAYS at most (Google Play cancels one not paid by then: not asked forever). */
     var purchasePending: Boolean
-        get() = prefs[PURCHASE_PENDING] == "1"
+        get() {
+            val since = prefs[PURCHASE_PENDING]?.toLongOrNull() ?: return false
+            return System.currentTimeMillis() - since < PENDING_DAYS * 86_400_000L
+        }
         set(value) {
-            prefs[PURCHASE_PENDING] = if (value) "1" else ""
+            prefs[PURCHASE_PENDING] = if (value) System.currentTimeMillis().toString() else ""
         }
 
     /** Google Play's purchases of this Google account checked by the relay: the first it
@@ -120,6 +124,7 @@ class Licensing(
     companion object {
         // The subscription's purchases checked again at most this often when the relay says it lapsed
         private const val RECHECK_S = 600L
-        private const val PURCHASE_PENDING = "purchase_pending"
+        private const val PURCHASE_PENDING = "purchase_pending" // since when (ms)
+        private const val PENDING_DAYS = 7L
     }
 }
