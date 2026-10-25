@@ -25,9 +25,9 @@ See [The subscription](../app-subscription/).
 | “Notosaurus isn't allowed to add cards to AnkiDroid” | **Settings → 📥 AnkiDroid → Allow**, then add the cards again. Refused for good (Android asks no more): allow it in Android's settings, **Apps → Notosaurus → Permissions**. |
 | “AnkiDroid isn't installed” / “AnkiDroid didn't take the cards” | Install AnkiDroid, **open it once** (it creates its collection), then add the cards again. |
 
-**✎ Notosaurus does nothing in AnkiDroid** (“Card blocked from launching another app”): on
-AnkiDroid 2.25 and before, turn on **Settings → Advanced → Allow cards to launch other apps** in
-AnkiDroid.
+**✎ Notosaurus does nothing in AnkiDroid** (“Card blocked from launching another app”): up to
+AnkiDroid 2.25.2, turn on **Settings → Advanced → Allow cards to launch other apps** in
+AnkiDroid, or update AnkiDroid (from 2.25.3, the link goes through without it).
 
 **Cards without sound**: the Notosaurus service's voices didn't answer (the phone needs the
 Internet). The cards are sent without their sound, and the message says how many. Add the lesson
@@ -48,3 +48,12 @@ See [With your computer](../app-with-computer/).
 **The cards are wrong or missing.** Check the photo (see [Photos and PDFs](../photos/)), be more
 precise in the instructions, or correct them with the AI (see [Reviewing the cards](../review/)).
 A card the AI made that is wrong or unsuitable: **⋯ → ⚑ Report** on it.
+
+## A PDF can't be added
+
+- **“Already 10 pages: remove some before adding a PDF.”** A lesson holds 10 pages: remove the
+  photos you don't need (the **Remove this page** button, ✕, on each), or make two lessons.
+- **“… is password-protected: save it without a password, then add it again.”** Open the PDF,
+  save it without its password (or print it to a new PDF), then add it again.
+- **Words misread in a PDF**: a scanned PDF is only pictures, read like photos. A PDF made on a
+  computer gives the AI its exact text.

@@ -51,6 +51,21 @@ Notosaurus → Settings**.
 | “The model didn't return valid cards” | Try again; if it keeps happening, choose another model. |
 | The model “doesn't seem to see the image” (Test) | The model doesn't read images: choose a vision model. |
 
+## The cards are wrong or missing
+
+Check the photo (see [Photos and PDFs](../photos/)), be more precise in the instructions, or
+correct them with the AI (see [Reviewing the cards](../review/)). On handwriting, Claude reads
+best: see [Settings and AI services](../ai-services/).
+
+## A PDF can't be added
+
+- **“Already 10 pages: remove some before adding a PDF.”** A lesson holds 10 pages: remove the
+  photos you don't need (the **Remove this page** button, ✕, on each), or make two lessons.
+- **“… is password-protected: save it without a password, then add it again.”** Open the PDF,
+  save it without its password (or print it to a new PDF), then add it again.
+- **Words misread in a PDF**: a scanned PDF is only pictures, read like photos. A PDF made on a
+  computer gives the AI its exact text.
+
 ## The cards don't reach Anki
 
 - **“Anki can't be reached”**: start Anki on the computer. Standalone, Anki needs the AnkiConnect
@@ -68,5 +83,5 @@ Notosaurus → Settings**.
 
 In Anki, **Tools → Add-ons**, select Notosaurus, **Delete**. Its components and **its data
 folder (lessons, photos, settings) are deleted too**: copy the data folder first if you want to
-keep them (see [Privacy and security](../privacy/#where-the-data-is)). The cards already sent
+keep them (see [Privacy and security on the computer](../privacy/#where-the-data-is)). The cards already sent
 stay in Anki.

@@ -13,7 +13,9 @@ Without a subscription, the app is free with the Anki add-on on your computer: s
 ## The free trial
 
 **🎁 Your free trial, no card, will start with your first lesson.** Nothing to tap: the first
-lesson you make starts it, and the app then says how many credits it gives and until when.
+lesson you make starts it. It lasts **14 days** and gives **300 credits** (150 a day at most):
+enough to try Notosaurus on a good number of lessons (see [Credits](#credits)). When it starts,
+the app says how many credits it gives and until when.
 
 - **No card** to give, and nothing to cancel: at its end, the app asks you to subscribe to go on.
 - **Once per phone.** Google checks that it is the app installed from Google Play, on a real
@@ -32,12 +34,19 @@ revising!**
 
 ## Credits
 
-The subscription gives **credits each month**. **🔑 Subscription** shows how many are left this
-month and today, and when they are renewed.
+The subscription gives **3,000 credits a month** (500 a day at most); by the year, a month's
+credits on the same day of each month. **🔑 Subscription** shows how many are left this month and
+today, and when they are renewed.
 
 What the service does for you uses them: making and correcting the cards, explaining one, the
-voices, the pictures. Before drawing a picture, the app says about how many credits it will cost.
-When there are none left, they come back with the next renewal.
+voices, the pictures. A credit is a tenth of a US cent of what the AI really costs:
+
+- a one-page lesson with Gemini: about **10 credits**, plus a few for its voices;
+- a correction or an explanation: a few credits;
+- a drawn picture: more. Before drawing one, the app says about how many credits it will cost.
+
+When there are none left, they come back with the next renewal. These figures are the service's
+today; the app always shows the current ones.
 
 ## On a new phone, or to change it
 

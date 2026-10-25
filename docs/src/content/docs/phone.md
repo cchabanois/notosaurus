@@ -18,7 +18,7 @@ In Anki on the computer, **Tools → Notosaurus → Open on the phone…** shows
 on the **same Wi-Fi** as the computer, scan it with the phone's camera and open the link.
 
 Scanning the QR code also **allows that phone** to use Notosaurus: other devices on the Wi-Fi can't
-(see [Privacy and security](../privacy/#who-can-use-notosaurus)).
+(see [Privacy and security on the computer](../privacy/#who-can-use-notosaurus)).
 
 ## 2. Add it to the home screen
 

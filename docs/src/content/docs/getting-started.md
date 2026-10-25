@@ -1,5 +1,5 @@
 ---
-title: Getting started
+title: "Getting started with the add-on"
 description: "Install Notosaurus in Anki, set it up with the assistant, connect your phone and make your first deck from a photo."
 ---
 

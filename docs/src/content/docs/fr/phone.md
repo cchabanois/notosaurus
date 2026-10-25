@@ -21,7 +21,7 @@ téléphone et ouvrez le lien.
 
 Scanner le QR code **autorise aussi ce téléphone** à utiliser Notosaurus : les autres appareils du
 Wi-Fi ne le peuvent pas (voir
-[Confidentialité et sécurité](../privacy/#qui-peut-utiliser-notosaurus-)).
+[Confidentialité et sécurité sur l'ordinateur](../privacy/#qui-peut-utiliser-notosaurus-)).
 
 ## 2. L'ajouter à l'écran d'accueil
 

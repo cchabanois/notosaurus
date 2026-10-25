@@ -1,5 +1,5 @@
 ---
-title: "Privacy and security"
+title: "Privacy and security on the computer"
 description: "What leaves your computer, where Notosaurus keeps its data, who can use it, and how to back it up."
 ---
 

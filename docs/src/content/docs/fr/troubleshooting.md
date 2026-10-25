@@ -53,6 +53,22 @@ réglages (et les clés d'API) ne sont accessibles que sur l'ordinateur lui-mêm
 | « Le modèle n'a pas renvoyé de cartes valides » | Réessayez ; si ça se répète, choisissez un autre modèle. |
 | Le modèle « ne semble pas voir l'image » (Tester) | Le modèle ne lit pas les images : choisissez un modèle « vision ». |
 
+## Les cartes sont fausses ou il en manque
+
+Vérifiez la photo (voir [Photos et PDF](../photos/)), précisez la consigne, ou corrigez-les avec
+l'IA (voir [Relire les cartes](../review/)). Pour l'écriture manuscrite, Claude lit le mieux :
+voir [Réglages et services d'IA](../ai-services/).
+
+## Un PDF ne s'ajoute pas
+
+- **« Déjà 10 pages : retirez-en avant d'ajouter un PDF. »** Une leçon tient en 10 pages : retirez
+  les photos inutiles (le bouton **Retirer cette page**, ✕, sur chacune), ou faites deux leçons.
+- **« … est protégé par un mot de passe : enregistrez-le sans mot de passe, puis ajoutez-le à
+  nouveau. »** Ouvrez le PDF, enregistrez-le sans mot de passe (ou imprimez-le dans un nouveau
+  PDF), puis ajoutez-le à nouveau.
+- **Des mots mal lus dans un PDF** : un PDF scanné ne contient que des images, lues comme des
+  photos. Un PDF fait sur ordinateur donne à l'IA son texte exact.
+
 ## Les cartes n'arrivent pas dans Anki
 
 - **« Anki est injoignable »** : lancez Anki sur l'ordinateur. En autonome, Anki a besoin du
@@ -71,5 +87,5 @@ réglages (et les clés d'API) ne sont accessibles que sur l'ordinateur lui-mêm
 Dans Anki, **Outils → Greffons**, sélectionnez Notosaurus, **Supprimer**. Ses composants **et son
 dossier de données (leçons, photos, réglages) sont supprimés aussi** : copiez d'abord le dossier
 de données si vous voulez les garder (voir
-[Confidentialité et sécurité](../privacy/#où-sont-les-données-)). Les cartes déjà envoyées restent
+[Confidentialité et sécurité sur l'ordinateur](../privacy/#où-sont-les-données-)). Les cartes déjà envoyées restent
 dans Anki.

@@ -14,7 +14,7 @@ writes the cards straight into the profile that is open.
 - **Open on the phone…** shows a QR code to open Notosaurus on the phone, and the three steps
   to get there (see [On the phone](../phone/)).
 - **Getting started** opens the setup assistant: the AI and its key, then the phone (see
-  [Getting started](../getting-started/#2-the-setup-assistant)). The first time, Anki offers
+  [Getting started with the add-on](../getting-started/#2-the-setup-assistant)). The first time, Anki offers
   it by itself when no AI is set up yet.
 - **Settings** opens the settings (AI service and key, voices, children…) in the computer's
   browser. They only open on the computer: the phone can't change them.

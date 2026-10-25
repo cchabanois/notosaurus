@@ -1,19 +1,19 @@
 ---
-title: "Politique de confidentialité de l'app Android"
-description: "Les données que l'app Notosaurus pour Android et son service traitent, pourquoi, où, combien de temps, et vos droits."
+title: "Politique de confidentialité de l'application Android"
+description: "Les données que l'application Notosaurus pour Android et son service traitent, pourquoi, où, combien de temps, et vos droits."
 ---
 
 *Dernière mise à jour : 21 octobre 2026.*
 
-Cette page concerne **l'app Notosaurus pour Android** et **le service Notosaurus** qu'elle
+Cette page concerne **l'application Notosaurus pour Android** et **le service Notosaurus** qu'elle
 utilise pour lire les photos, faire les cartes et les voix. Notosaurus sur ordinateur (le
 greffon Anki) fonctionne autrement : voir [Confidentialité et sécurité](../privacy/).
 
 **Responsable du traitement** : CHABANOIS Cédric.
 **Contact** : notosaurus.app@gmail.com
 
-**Qui utilise l'app** : un **parent** (un adulte), qui prépare les révisions de ses enfants.
-L'app n'est pas faite pour être utilisée par un enfant.
+**Qui utilise l'application** : un **parent** (un adulte), qui prépare les révisions de ses enfants.
+L'application n'est pas faite pour être utilisée par un enfant.
 
 ## En bref
 
@@ -30,15 +30,15 @@ L'app n'est pas faite pour être utilisée par un enfant.
 
 Les leçons (photos des pages, cartes, consignes, images des cartes, sons), vos consignes
 enregistrées et vos réglages, dont votre clé de licence, sont gardés **dans l'espace privé de
-l'app** sur votre téléphone. Les autres apps n'y ont pas accès. Ils sont supprimés si vous
-supprimez une leçon, ou l'app.
+l'application** sur votre téléphone. Les autres applications n'y ont pas accès. Ils sont supprimés si vous
+supprimez une leçon, ou l'application.
 
 Les cartes envoyées dans **AnkiDroid** y sont écrites sur votre téléphone. Leur synchronisation
 avec AnkiWeb dépend d'AnkiDroid et de votre compte AnkiWeb, pas de Notosaurus.
 
 ## Ce qui passe par le service Notosaurus
 
-Quand vous le demandez, l'app envoie au service, en HTTPS :
+Quand vous le demandez, l'application envoie au service, en HTTPS :
 
 | Quoi | Pour quoi faire |
 |---|---|
@@ -49,9 +49,9 @@ Quand vous le demandez, l'app envoie au service, en HTTPS :
 | La **description** d'une image, ou quelques **mots-clés** | Dessiner l'image d'une carte, ou chercher une image libre |
 | Votre **clé de licence** | Vérifier votre licence et compter vos crédits |
 | Si vous vous abonnez : le **jeton de votre achat** Google Play | Vérifier l'abonnement auprès de Google Play et en faire votre licence |
-| Pour l'**essai gratuit** : une **empreinte du téléphone** (calculée par l'app, jamais son identifiant lui-même) et l'attestation **Play Integrity** de Google | N'offrir l'essai qu'une fois par téléphone, à l'app installée depuis Google Play sur un vrai téléphone |
+| Pour l'**essai gratuit** : une **empreinte du téléphone** (calculée par l'application, jamais son identifiant lui-même) et l'attestation **Play Integrity** de Google | N'offrir l'essai qu'une fois par téléphone, à l'application installée depuis Google Play sur un vrai téléphone |
 
-Le service transmet ces contenus aux sous-traitants ci-dessous, renvoie le résultat à l'app,
+Le service transmet ces contenus aux sous-traitants ci-dessous, renvoie le résultat à l'application,
 et **ne les garde pas** : ni photo, ni carte, ni enregistrement, ni texte de leçon n'est
 enregistré, ni écrit dans ses journaux. Sauf un **signalement** : voir plus bas.
 
@@ -66,14 +66,14 @@ reste dans la leçon.
   pour le support (par exemple un numéro de commande). Elle est gardée tant qu'elle est valable,
   puis **12 mois** après sa fin (pour répondre à une question ou à une réclamation), puis supprimée.
 - **Ce que vous signalez** avec ⚑ (une carte, son explication ou son image faites par l'IA,
-  choquantes ou fausses), si vous le faites : exactement ce que l'app vous montre avant l'envoi,
+  choquantes ou fausses), si vous le faites : exactement ce que l'application vous montre avant l'envoi,
   le motif, votre commentaire, la consigne de la leçon, la langue et un identifiant court de la
   licence. Jamais les photos de la leçon, ni le prénom de l'enfant. Lu par Notosaurus pour
   améliorer le contenu de l'IA, gardé **180 jours**, puis supprimé.
 - **Vos e-mails au support**, s'il y en a : gardés **12 mois** après le dernier échange.
 - **Des journaux techniques**, gardés **30 jours** pour faire fonctionner le service et repérer
   les pannes et les abus : l'heure, l'action demandée (« faire une leçon »…), sa durée, son
-  résultat, le modèle d'IA et les crédits utilisés, la version de l'app, un identifiant court de
+  résultat, le modèle d'IA et les crédits utilisés, la version de l'application, un identifiant court de
   la licence, et, comme pour tout site web, l'**adresse IP** de la requête. Jamais le contenu
   des leçons.
 
@@ -86,7 +86,7 @@ reste dans la leçon.
 | **Google Cloud** : Text-to-Speech | Le texte à lire (le verso d'une carte) | Union européenne |
 | **Wikimedia Commons**, **Openverse**, **Pixabay** | Quelques mots-clés en anglais (« dog »), jamais une photo | Leurs serveurs |
 | **Google Play** : abonnements, Play Integrity | Le jeton d'un achat ; l'attestation de l'essai gratuit | Ses serveurs |
-| **GitHub** (GitHub Pages) | Au démarrage, l'app y lit l'adresse du service : GitHub voit votre adresse IP | Ses serveurs |
+| **GitHub** (GitHub Pages) | Au démarrage, l'application y lit l'adresse du service : GitHub voit votre adresse IP | Ses serveurs |
 
 Google agit comme sous-traitant, sous les conditions de Google Cloud, et n'utilise pas ces
 données pour entraîner ses modèles. Pour détecter les abus, Google peut toutefois garder les
@@ -119,21 +119,21 @@ que quand vous le demandez.
 
 ## Le mode « Avec mon ordinateur »
 
-Quand l'app ouvre Notosaurus sur votre ordinateur (le greffon Anki), le téléphone parle
+Quand l'application ouvre Notosaurus sur votre ordinateur (le greffon Anki), le téléphone parle
 directement à l'ordinateur, sur le Wi-Fi de la maison : rien ne passe alors par le service
 Notosaurus. C'est la page [Confidentialité et sécurité](../privacy/) qui s'applique.
 
-## Les autorisations de l'app
+## Les autorisations de l'application
 
 - **Internet** : pour joindre le service.
 - **Micro**, demandé la première fois que vous touchez 🎤, et utilisé seulement pendant la dictée.
 - **AnkiDroid**, pour y ajouter les cartes, demandé au premier envoi.
 - Les photos sont prises par l'appareil photo du téléphone ou choisies dans la galerie, au
-  moment où vous le faites. L'app n'a pas besoin d'accéder à toutes vos photos.
+  moment où vous le faites. L'application n'a pas besoin d'accéder à toutes vos photos.
 
 ## Les enfants
 
-L'app est utilisée par **un parent**, pas par l'enfant. Mais les photos de cahiers peuvent
+L'application est utilisée par **un parent**, pas par l'enfant. Mais les photos de cahiers peuvent
 contenir des données de l'enfant (son nom, son écriture) : cachez le nom avec 🖍️ avant
 l'envoi, et ne mettez rien de personnel dans les consignes.
 
@@ -146,14 +146,14 @@ Vous pouvez, en écrivant à **notosaurus.app@gmail.com** :
 - en **limiter** le traitement, ou vous **opposer** à celui fondé sur l'intérêt légitime ;
 - **retirer votre consentement** (le micro) à tout moment, sans effet sur ce qui a été fait avant.
 
-Les leçons, elles, sont sur votre téléphone : vous les supprimez vous-même dans l'app. Une
+Les leçons, elles, sont sur votre téléphone : vous les supprimez vous-même dans l'application. Une
 réponse est donnée sous un mois. Vous pouvez aussi adresser une réclamation à la **CNIL**
 (cnil.fr).
 
 ## Sécurité
 
 Tous les échanges avec le service passent en **HTTPS**. Seule l'empreinte de votre clé de
-licence est gardée côté service. Sur votre téléphone, la clé reste dans l'espace privé de l'app,
+licence est gardée côté service. Sur votre téléphone, la clé reste dans l'espace privé de l'application,
 et les réglages n'en montrent que les derniers caractères.
 
 ## Changements

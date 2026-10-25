@@ -14,7 +14,7 @@ avec lui, et écrit les cartes directement dans le profil ouvert.
 - **Ouvrir sur le téléphone…** affiche un QR code pour ouvrir Notosaurus sur le téléphone, et
   les trois étapes pour y arriver (voir [Sur le téléphone](../phone/)).
 - **Assistant de démarrage** ouvre l'assistant : l'IA et sa clé, puis le téléphone (voir
-  [Pour commencer](../getting-started/#2-lassistant-de-démarrage)). La première fois, Anki le
+  [Commencer avec le greffon](../getting-started/#2-lassistant-de-démarrage)). La première fois, Anki le
   propose tout seul tant qu'aucune IA n'est configurée.
 - **Réglages** ouvre les réglages (service d'IA et clé, voix, enfants…) dans le navigateur de
   l'ordinateur. Ils ne s'ouvrent que sur l'ordinateur : le téléphone ne peut pas les changer.
