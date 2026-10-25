@@ -580,3 +580,12 @@ def test_a_free_picture_always_looked_for_first(client):
     storage.write_json(settings._path(), {"format": settings.FORMAT, "picture_find": False})
     assert settings.current().picture_find is True
     assert "picture_find" not in settings.EDITABLE_FIELDS
+
+
+def test_the_pictures_switch_is_the_settings_own(admin):
+    """The "🖼 Pictures on the cards" switch: the view says it as it is saved, and who
+    draws the pictures under another name (it once hid the switch: the page saw an object)."""
+    view = admin.get("/api/admin/settings", headers=ADMIN).json()
+    assert view["pictures"] is True and set(view["drawing"]) >= {"service", "model", "default_models"}
+    admin.put("/api/admin/settings", headers=ADMIN, json={"pictures": False})
+    assert admin.get("/api/admin/settings", headers=ADMIN).json()["pictures"] is False

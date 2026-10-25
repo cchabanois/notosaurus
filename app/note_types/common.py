@@ -38,8 +38,9 @@ FIX_PAGE = "https://cchabanois.github.io/notosaurus/fix/"  # docs/public/fix/ind
 FIX_SCRIPT = f"""<script>(function(){{var A=document.querySelectorAll("a.nfix:not([data-done])");\
 for(var i=0;i<A.length;i++){{var a=A[i];a.dataset.done="1";\
 var m=/(?:^|\\s)notosaurus::(\\S+)/.exec(a.dataset.tags||"");\
-var c=document.body.className||"",android=/\\bandroid\\b/.test(c)||/Android/.test(navigator.userAgent),\
-desktop=/\\b(win|mac|linux)\\b/.test(c);\
+var c=document.documentElement.className+" "+document.body.className,\
+android=/\\bandroid\\b/.test(c)||/Android/.test(navigator.userAgent),\
+desktop=typeof pycmd==="function"||/\\b(win|mac|linux)\\b/.test(c);\
 if(!m||!(android||desktop)){{a.parentNode.style.display="none";continue;}}\
 var q="lesson="+encodeURIComponent(m[1])+"&key="+encodeURIComponent(a.dataset.key||"");\
 a.href=(android?"{FIX_PAGE}?":"http://localhost:8000/?")+q;}}}})();</script>"""

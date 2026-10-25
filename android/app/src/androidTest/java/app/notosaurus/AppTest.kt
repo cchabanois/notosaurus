@@ -65,10 +65,14 @@ class AppTest {
                 form.append("prompt", "FR → ES");
                 const lesson = await (await api("/api/extract", { method: "POST", body: form })).json();
                 const body = JSON.stringify({ deck: lesson.deck, cards: lesson.cards, voice: "", lesson_id: lesson.id });
-                return await (await api("/api/anki/send", { method: "POST", headers: { "Content-Type": "application/json" }, body })).json();
+                const sent = await (await api("/api/anki/send", { method: "POST", headers: { "Content-Type": "application/json" }, body })).json();
+                return { ...sent, lesson: lesson.id };
                 """,
             )
             assertTrue(sent, "\"added\":2" in sent)
+            // Its notes carry the lesson's tag: found again (its leftovers, the ✎ link)
+            val lessonId = Regex("\"lesson\":\"([^\"]+)\"").find(sent)!!.groupValues[1]
+            assertEquals(sent, 2, Anki(Device.context).leftovers(lessonId, emptySet()).size)
         }
         val request = extracts.single()
         assertEquals("Bearer nts_test", request.headers["Authorization"])
