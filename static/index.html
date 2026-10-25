@@ -338,7 +338,7 @@
 
       <div class="cards">
         <template x-for="card in cards" :key="card.key">
-          <article class="flash" :data-card="card.key" :class="{ changed: card._state, linked: card._linked, 'has-explain': card._explain?.open, 'has-diagram': card.mask, 'has-picture': card.picture || card.picture_prompt || card.figure || card._panel }">
+          <article class="flash" :data-card="card.key" :class="{ changed: card._state, linked: card._linked, 'has-explain': card._explain?.open, 'has-diagram': card.mask, 'has-doubt': card.doubt, 'has-picture': card.picture || card.picture_prompt || card.figure || card._panel }">
             <!-- Choosing the cards of a test (app-exams.js): one tick per card -->
             <label class="pick" x-cloak x-show="examPick">
               <input type="checkbox" :checked="examPick?.selected.has(card.id)" @change="togglePick(card)"
@@ -364,6 +364,16 @@
                 </template>
               </div>
             </template>
+            <!-- The lesson looks wrong on this card (a pupil's notes, a copy mistake): the card says
+                 what the lesson says; the parent corrects it, or keeps it. Never sent to Anki -->
+            <div class="card-doubt" role="note" x-show="card.doubt">
+              <p><span aria-hidden="true">⚠️</span> <span x-text="card.doubt?.reason"></span></p>
+              <p class="muted" x-text="$t('app.review.doubt.fix', { front: card.doubt?.front, back: card.doubt?.back })"></p>
+              <div class="picture-actions" x-show="!readOnly()">
+                <button type="button" class="btn primary" @click="fixDoubt(card)" x-text="$t('app.review.doubt.correct')"></button>
+                <button type="button" class="btn soft" @click="card.doubt = null" x-text="$t('app.review.doubt.keep')"></button>
+              </div>
+            </div>
             <!-- Picture card: the picture shows with the front text (or with the answer, below) -->
             <div class="card-picture" :class="{ figure: card.figure }" x-show="!card.picture_on_back && (card.picture || card._drawing || ((card.picture_prompt || card.figure) && drawing))">
               <img x-show="card.picture && !card._drawing" :src="card.picture && pictureUrl(card)" :alt="card.figure || card.picture_prompt"

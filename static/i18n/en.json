@@ -161,7 +161,12 @@
       "cropFrame": "What Anki shows of the photo",
       "readOnly": "🔒 Read only: it can be changed when Anki is open on {owner}'s profile. You can still add it to your Anki.",
       "madeQuick": "Made in quick mode.",
-      "carefulAgain": "🎯 Make again, carefully"
+      "carefulAgain": "🎯 Make again, carefully",
+      "doubt": {
+        "fix": "Suggested correction: “{front}” → “{back}”",
+        "correct": "Correct",
+        "keep": "Keep the lesson"
+      }
     },
     "explain": {
       "button": "Explain this card",

@@ -29,6 +29,15 @@ class PictureSource(BaseModel):
     model: str = ""  # a drawing's: the model that drew it
 
 
+class Doubt(BaseModel):
+    """A card whose lesson is clearly wrong (a pupil's notes, a copy mistake): the card says
+    what the lesson says, this what is right; the parent chooses."""
+
+    reason: str = Field(description="One short sentence: what the lesson says, and what is right.")
+    front: str = Field(description="The card's front, corrected.")
+    back: str = Field(description="The card's back, corrected.")
+
+
 class Card(BaseModel):
     front: str = Field(
         description="Front: what is shown first (e.g. the word in the pupil's language), "
@@ -82,6 +91,10 @@ class Card(BaseModel):
         default=False,
         description="True when the picture or figure belongs to the answer (see the rules); false when it is "
         "needed to answer.",
+    )
+    doubt: Doubt | None = Field(
+        default=None,
+        description="Only when the lesson itself is clearly wrong on this card (see the rules); otherwise null.",
     )
     # Set by Notosaurus, not by the AI:
     picture: str = Field(default="", description="Leave empty.")  # file in the lesson's images/ folder

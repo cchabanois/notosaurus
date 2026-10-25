@@ -9,6 +9,7 @@ Each pull request adds a line under **Unreleased**. See [Releasing](CONTRIBUTING
 
 ### Added
 
+- ⚠️ A lesson that looks wrong is said (a pupil's notes, a copy mistake: "Génocide des Juifs → 1915"): the card keeps what the lesson says, with a note saying why it looks wrong and the correction; **Correct** takes it, **Keep the lesson** dismisses it. Only clear, verifiable mistakes (dates, names, numbers, formulas), never a convention or a simplification; never sent to Anki. For developers: `Card.doubt` (reason, front, back) in the `/v1` contract.
 - New free trials can be stopped for now: turned off by hand (config/app's `disabled`: `trial`) or past the day's number (the relay's setting); a phone that has its trial keeps it. The app then says so and offers to subscribe. For developers: `relay.trial_closed` (403), the feature `trial`.
 - A child's class is typed freely ("Maths Sup", another country's: Québec, Portugal, the US…), the language's classes suggested as before, and now the higher ones (Prépa, BTS, university…). The AI is told it as it is; its decks are named after it.
 - For developers: a `staging` build (`./gradlew bundleStaging -Pnotosaurus.build=N`), a release calling the test relay, to test Google Play's purchases in Internal testing; the Android `versionCode` gets a build number (`(major × 10000 + minor × 100 + patch) × 10000 + build`, Draft release's run number), so that every upload to Google Play is a new one.

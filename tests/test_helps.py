@@ -65,6 +65,7 @@ def test_what_the_ai_fills(monkeypatch):
 
     plain = card_fields(llm.ai_schema(Extraction))
     assert not plain & {"picture", "id", "fun_fact", "explanation", "mnemonic"} and {"front", "back"} <= plain
+    assert "doubt" in plain  # a lesson that looks wrong: always said
     assert {"explanation", "mnemonic"} <= card_fields(llm.ai_schema(Extraction, helps=True))
     assert "fun_fact" in card_fields(llm.ai_schema(Extraction, fun_facts=True))
 

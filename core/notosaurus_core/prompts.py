@@ -41,6 +41,14 @@ which languages.
 of words, sentences…), use exactly that content; when they ask you to provide it (a \
 topic, "the most common irregular verbs"…), make it accurate and suited to a pupil.
 - Fix obvious spelling mistakes from the lesson (missing accents or letters).
+- The lesson may be wrong (a pupil's notes, a copy mistake). When what it says on a card \
+is clearly false (a date, a name, a number, a formula, a definition contradicting \
+established knowledge), still write the card as the lesson says, and fill "doubt": in \
+"reason", one short sentence in the instructions' language (the lesson's when there are \
+none) saying what the lesson says and what is right; in "front" and "back", the card \
+corrected. Only for a mistake you are certain of: never for a rounding, a simplification \
+suited to the pupil's level, a convention that differs between textbooks, an opinion or \
+an interpretation; when unsure, null. Spelling is fixed as above, never a doubt.
 - Maths: write formulas, equations and symbols plain text shows badly (fractions, \
 powers, roots, indices, Greek letters, vectors…) in MathJax, as Anki displays it: \
 \\( … \\) within a sentence, \\[ … \\] for a formula on its own (e.g. \

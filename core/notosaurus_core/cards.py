@@ -36,6 +36,9 @@ def plain_cards(cards: list[Card]) -> None:
         for name in TEXT_FIELDS:
             setattr(card, name, plain(getattr(card, name)))
         card.choices = [plain(c) for c in card.choices]
+        if card.doubt:
+            for name in ("reason", "front", "back"):
+                setattr(card.doubt, name, plain(getattr(card.doubt, name)))
 
 
 def is_cloze(text: str) -> bool:

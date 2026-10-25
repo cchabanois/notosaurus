@@ -161,7 +161,12 @@
       "cropFrame": "Was Anki vom Foto zeigt",
       "readOnly": "🔒 Schreibgeschützt: änderbar, wenn Anki mit dem Benutzerprofil von {owner} geöffnet ist. Du kannst sie trotzdem zu deinem Anki hinzufügen.",
       "madeQuick": "Im Schnellmodus erstellt.",
-      "carefulAgain": "🎯 Sorgfältig neu erstellen"
+      "carefulAgain": "🎯 Sorgfältig neu erstellen",
+      "doubt": {
+        "fix": "Vorgeschlagene Korrektur: „{front}“ → „{back}“",
+        "correct": "Korrigieren",
+        "keep": "Lektion beibehalten"
+      }
     },
     "explain": {
       "button": "Diese Karte erklären",

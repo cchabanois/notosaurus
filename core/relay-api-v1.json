@@ -2023,6 +2023,17 @@
             "description": "True when the picture or figure belongs to the answer (see the rules); false when it is needed to answer.",
             "default": false
           },
+          "doubt": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Doubt"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Only when the lesson itself is clearly wrong on this card (see the rules); otherwise null."
+          },
           "picture": {
             "type": "string",
             "title": "Picture",
@@ -2158,6 +2169,33 @@
           "cards"
         ],
         "title": "Deck"
+      },
+      "Doubt": {
+        "properties": {
+          "reason": {
+            "type": "string",
+            "title": "Reason",
+            "description": "One short sentence: what the lesson says, and what is right."
+          },
+          "front": {
+            "type": "string",
+            "title": "Front",
+            "description": "The card's front, corrected."
+          },
+          "back": {
+            "type": "string",
+            "title": "Back",
+            "description": "The card's back, corrected."
+          }
+        },
+        "type": "object",
+        "required": [
+          "reason",
+          "front",
+          "back"
+        ],
+        "title": "Doubt",
+        "description": "A card whose lesson is clearly wrong (a pupil's notes, a copy mistake): the card says\nwhat the lesson says, this what is right; the parent chooses."
       },
       "Error": {
         "properties": {
