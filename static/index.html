@@ -879,12 +879,14 @@
           </label>
           <label class="field">
             <span x-text="$t('app.children.grade')"></span>
-            <select :value="c.grade" @change="setGrade(c, $event.target.value)">
-              <option value="" x-text="$t('app.children.noGrade')"></option>
+            <!-- Typed freely (another country's, "Maths Sup"), the language's classes suggested -->
+            <input list="child-grades" :value="c.grade" @change="setGrade(c, $event.target.value)" maxlength="40"
+                   autocomplete="off" :placeholder="$t('app.children.gradePlaceholder')">
+            <datalist id="child-grades">
               <template x-for="g in $t('app.children.grades').split('|')" :key="g">
-                <option :value="g" x-text="g" :selected="c.grade === g"></option>
+                <option :value="g"></option>
               </template>
-            </select>
+            </datalist>
           </label>
           <label class="field">
             <span x-text="$t('app.children.decks')"></span>
