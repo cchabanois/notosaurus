@@ -6,7 +6,7 @@
 const PHONETIC = "ɐ-ʯʰ-˿̀-ͯæøœθð";
 // Letters and digits of every script, as Python's \w (JavaScript's \w is ASCII only: "кошка",
 // "猫" would be no letters, their sound nothing)
-const TRANSCRIPTION = new RegExp(`(?<![\\p{L}\\p{N}_/])/[^/\\s\\p{N}]{1,24}/(?![\\p{L}\\p{N}_/])|\\[[^\\[\\]\\s\\p{N}]{0,24}[${PHONETIC}][^\\[\\]\\s\\p{N}]{0,24}\\]`, "gu");
+const TRANSCRIPTION = new RegExp(`(?<![\\p{L}\\p{N}_/])/[^/\\s\\p{Nd}]{1,24}/(?![\\p{L}\\p{N}_/])|\\[[^\\[\\]\\s\\p{Nd}]{0,24}[${PHONETIC}][^\\[\\]\\s\\p{Nd}]{0,24}\\]`, "gu");
 const MARKED = /\[([^\[\]\n]{1,40})\]/g;
 const QUOTED = /[“"«]\s*([^”"»\n]{1,60}?)\s*[”"»]|‘([^’\n]{1,60}?)’/g;
 const LETTER = /[\p{L}\p{N}]/u;  // a letter or a digit, of any script: something a voice says

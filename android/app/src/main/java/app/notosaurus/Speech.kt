@@ -126,7 +126,7 @@ class Speech(private val folder: File, private val prefs: Preferences, private v
         // Letters, digits and spaces of every script spelled out (\p{L}, \p{N}, \p{Z}), as Python's
         // \w, \d, \s: the JVM's are ASCII only ("кошка" no letters), Android's (ICU) aren't, and
         // Android knows no (?U): the same answer on both
-        private val TRANSCRIPTION = Regex("""(?<![\p{L}\p{N}_/])/[^/\s\p{Z}\p{N}]{1,24}/(?![\p{L}\p{N}_/])|\[[^\[\]\s\p{Z}\p{N}]{0,24}[$PHONETIC][^\[\]\s\p{Z}\p{N}]{0,24}\]""")
+        private val TRANSCRIPTION = Regex("""(?<![\p{L}\p{N}_/])/[^/\s\p{Z}\p{Nd}]{1,24}/(?![\p{L}\p{N}_/])|\[[^\[\]\s\p{Z}\p{Nd}]{0,24}[$PHONETIC][^\[\]\s\p{Z}\p{Nd}]{0,24}\]""")
         private val MARKED = Regex("""\[([^\[\]\n]{1,40})\]""")
         private val QUOTED = Regex("""[“"«]\s*([^”"»\n]{1,60}?)\s*[”"»]|‘([^’\n]{1,60}?)’""")
         private val LETTER = Regex("""[\p{L}\p{N}]""") // a letter or a digit, of any script: something a voice says

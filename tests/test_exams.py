@@ -111,6 +111,39 @@ def test_changes_made_while_anki_was_closed_followed_once_it_opens(anki, client,
     assert not any(_tags(anki).values()) and exams.pending() == {}
 
 
+def test_made_with_anki_closed_then_its_lesson_sent_then_renamed_closed(anki, client, monkeypatch):
+    """The state Anki's notes had when the test was made is "nothing": a send tags them
+    since. Renamed with Anki closed again: the old tag still taken off once it opens."""
+    lesson = extract_lesson(client)
+    opened = ankiconnect._transport
+    monkeypatch.setattr(ankiconnect, "_transport", httpx.MockTransport(anki_unreachable))
+    client.put("/api/exams/interro-svt", json={**INTERRO, "lessons": [{"lesson": lesson["id"]}]})
+    monkeypatch.setattr(ankiconnect, "_transport", opened)
+    _sent(client, lesson)  # its notes tagged as they are sent
+    assert all(tags == {"Exam::Interro_SVT_de_lundi"} for tags in _tags(anki).values())
+
+    monkeypatch.setattr(ankiconnect, "_transport", httpx.MockTransport(anki_unreachable))
+    renamed = {**INTERRO, "name": "Brevet blanc", "lessons": [{"lesson": lesson["id"]}]}
+    client.put("/api/exams/interro-svt", json=renamed)
+    monkeypatch.setattr(ankiconnect, "_transport", opened)
+    client.get("/api/exams")
+    assert all(tags == {"Exam::Brevet_blanc"} for tags in _tags(anki).values())
+
+
+def test_deleted_with_anki_closed_its_filtered_deck_goes_once_it_opens(anki, client, monkeypatch):
+    lesson = _sent(client, extract_lesson(client))
+    client.put("/api/exams/interro-svt", json={**INTERRO, "lessons": [{"lesson": lesson["id"]}]})
+    client.post("/api/exams/interro-svt/review", json={"deck": "Contrôle"})
+    opened = ankiconnect._transport
+    monkeypatch.setattr(ankiconnect, "_transport", httpx.MockTransport(anki_unreachable))
+    assert client.delete("/api/exams/interro-svt").json() == {"deleted": True, "anki": False}
+    monkeypatch.setattr(ankiconnect, "_transport", opened)
+    client.get("/api/exams")
+    assert "Contrôle" not in anki.decks and not any(_tags(anki).values())
+    assert all(n["deckName"].startswith(lesson["deck"]) for n in anki.notes.values())  # back home
+    assert exams.pending() == {}
+
+
 def test_two_tests_one_tag_refused(client):
     """Anki tells tags apart without their case: "Maths lundi" and "maths lundi" would be one."""
     assert client.put("/api/exams/a", json={**INTERRO, "name": "Maths lundi"}).status_code == 200

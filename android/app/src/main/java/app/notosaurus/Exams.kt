@@ -91,7 +91,9 @@ class Exams(private val prefs: Preferences, private val lessons: Lessons) {
     @Synchronized
     fun setPending(id: String, before: Exam?, done: Boolean) {
         val waiting = pending()
-        if (waiting.containsKey(id) != done) return // nothing to change
+        if (done && !waiting.containsKey(id)) return // nothing to change
+        // The first state kept; "nothing" (made while AnkiDroid couldn't follow) replaced by one known since
+        if (!done && waiting.containsKey(id) && (waiting[id] != null || before == null)) return
         prefs[PENDING] = json.encodeToString(PENDING_TYPE, if (done) waiting - id else waiting + (id to before))
     }
 
