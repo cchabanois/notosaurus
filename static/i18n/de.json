@@ -382,7 +382,9 @@
       },
       "toDrawNo": "Nein danke",
       "costUsd": "Kosten: etwa {amount} US-$.",
-      "costCredits": "Kosten: etwa {count} Credits."
+      "costCredits": "Kosten: etwa {count} Credits.",
+      "drawingFigure": "📐 Figur wird gezeichnet…",
+      "about": "etwa {seconds} s"
     },
     "pairing": {
       "title": "Gerät nicht zugelassen"

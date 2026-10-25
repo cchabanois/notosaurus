@@ -382,7 +382,9 @@
       },
       "toDrawNo": "No thanks",
       "costUsd": "Cost: about US${amount}.",
-      "costCredits": "Cost: about {count} credits."
+      "costCredits": "Cost: about {count} credits.",
+      "drawingFigure": "📐 Drawing the figure…",
+      "about": "about {seconds} s"
     },
     "pairing": {
       "title": "Device not allowed"
