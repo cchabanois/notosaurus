@@ -1435,6 +1435,23 @@ class LocalServerTest {
     }
 
     @Test
+    fun aReleaseTalksToTheRealRelayOnly() {
+        // Saved before (an older version, the settings' "Advanced"): ignored, and none taken
+        val release = LocalServer(folder.newFolder(), { null }, { listOf("en") }, anki, prefs, relayChoosable = false)
+        assertEquals(LocalServer.REAL_RELAY, release.relayUrl())
+        testApplication {
+            application { with(release) { module() } }
+            client.put("/api/admin/settings") {
+                header(HttpHeaders.Cookie, "${LocalServer.COOKIE}=${release.token}")
+                contentType(ContentType.Application.Json); setBody("""{"relay": "https://elsewhere.example"}""")
+            }
+        }
+        assertEquals(relay.url("/").toString(), prefs[LocalServer.RELAY]) // untouched
+        assertEquals(LocalServer.REAL_RELAY, release.relayUrl())
+        release.stop()
+    }
+
+    @Test
     fun eachRelayKeepsItsLicence() = app { client ->
         // The key saved before keys were per relay: the relay in use then got it
         assertEquals("nts_key", prefs[LocalServer.keyOf(relay.url("/").toString())])

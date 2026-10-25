@@ -238,7 +238,8 @@
         <li><a :href="$docs('app-privacy')" target="_blank" rel="noopener" x-text="$t('admin.about.privacy')"></a></li>
         <li><a href="licences.html" x-text="$t('admin.about.libraries')"></a></li>
       </ul>
-      <details x-show="onPhone()">
+      <!-- A debug or staging build only (as the relays' chips): a release talks to the real relay -->
+      <details x-show="onPhone() && form?.relays?.test">
         <summary x-text="$t('android.advanced.title')"></summary>
         <label class="field"><span x-text="$t('android.advanced.relay')"></span>
           <input type="url" x-model="form.relay" @change="saveNow()" autocomplete="off">

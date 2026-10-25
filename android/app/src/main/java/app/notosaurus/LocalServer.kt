@@ -75,6 +75,10 @@ class LocalServer(
     internal val requestMicPermission: suspend () -> Boolean = { false }, // the microphone's permission dialog: granted?
     relayDirectory: String? = null, // where the relays are listed (RelayDirectory.URL); null: the built-in ones
     internal val subscriptions: SubscriptionStore? = null, // Google Play's subscription (none: a licence key only)
+    // A debug or staging build: the relay chosen in the settings (the test one, one on the computer).
+    // A release: the real one only, whatever was saved (a parent's typo, or someone's "tip",
+    // would send the lessons elsewhere)
+    internal val relayChoosable: Boolean = TEST_RELAY.isNotEmpty(),
     val token: String = UUID.randomUUID().toString(),
 ) {
     internal val relays = RelayDirectory(prefs, relayDirectory)
@@ -136,7 +140,10 @@ class LocalServer(
     /** The licence: its key, the free trial, Google Play's purchases (Licensing). */
     internal val licensing = Licensing(prefs, ::relayUrl, subscriptions)
 
-    internal fun relayUrl() = prefs[RELAY] ?: if (DEFAULT_RELAY == TEST_RELAY) relays.test() else relays.real()
+    internal fun relayUrl() = when {
+        !relayChoosable -> relays.real()
+        else -> prefs[RELAY] ?: if (DEFAULT_RELAY == TEST_RELAY) relays.test() else relays.real()
+    }
 
     /** The licence key of the relay in use: each relay keeps its own (the test one has its own licences). */
     internal fun licence() = licensing.key()
@@ -322,7 +329,8 @@ class LocalServer(
         const val TTS_RATE = Speech.TTS_RATE
 
         // The relay of a fresh install, by the build (app/build.gradle.kts): the test instance
-        // while developing, the real one in a release (changed in the settings, "Advanced").
+        // while developing, the real one in a release (changed in the settings, "Advanced", but in a
+    // debug or staging build only: relayChoosable).
         // Built in; where they are now: RelayDirectory
         val DEFAULT_RELAY: String = BuildConfig.DEFAULT_RELAY
         val REAL_RELAY: String = BuildConfig.REAL_RELAY

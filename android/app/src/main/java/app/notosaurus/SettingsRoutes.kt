@@ -80,7 +80,7 @@ internal fun Route.settingsRoutes(server: LocalServer) {
         api("GET", "/api/admin/settings") { settings() }
         api("PUT", "/api/admin/settings") {
             val changes = body()
-            changes.string(RELAY).trim().takeIf { it.isNotEmpty() }?.let { prefs[RELAY] = it.trimEnd('/') }
+            changes.string(RELAY).trim().takeIf { it.isNotEmpty() && relayChoosable }?.let { prefs[RELAY] = it.trimEnd('/') }
             (changes[KEY] as? JsonPrimitive)?.let { licensing.setKey(it.content) }
             (changes[INSTRUCTIONS] as? JsonPrimitive)?.let { prefs[INSTRUCTIONS] = it.content.take(4000) }
             for (option in listOf(FUN_FACTS, HELPS, PICTURES)) (changes[option] as? JsonPrimitive)?.booleanOrNull?.let { prefs[option] = it.toString() }
