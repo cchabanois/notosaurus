@@ -1,5 +1,6 @@
 """Figures on cards: SVG drawn by the AI, cleaned, saved and sent like the pictures."""
 
+import asyncio
 from xml.etree import ElementTree
 
 import apkg
@@ -7,7 +8,8 @@ import pytest
 from helpers import plain_image
 
 from app import lessons
-from notosaurus_core import figures, pictures
+from notosaurus_core import figures, llm, pictures
+from notosaurus_core.config import AIConfig
 
 TRAPPED = """<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 300" width="9999" onload="alert(1)">
 <script>alert(1)</script><rect width="400" height="300" fill="white"/>
@@ -211,3 +213,17 @@ def test_search_written_in_any_language(client, monkeypatch):
         "/api/pictures/search", json={"subject": r"\(A \cup B\)", "context": "La réunion ? → A ∪ B"}
     ).json()
     assert res == {"results": [], "words": "union Venn diagram"}
+
+
+def test_a_figure_drawn_with_the_models_thinking(monkeypatch):
+    """Its coordinates (a mark on its segment, an angle at its vertex) need the model's
+    thinking: thinking little, it placed them by eye. Not a light call."""
+    asked = {}
+
+    async def answer(s, images, text, schema, system=None, light=False, **options):
+        asked["light"] = light
+        return schema(svg="<svg/>")
+
+    monkeypatch.setattr(llm, "_ask_provider", answer)
+    asyncio.run(llm.draw_figure(AIConfig(llm="gemini"), "un triangle"))
+    assert asked == {"light": False}

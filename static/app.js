@@ -203,7 +203,7 @@ document.addEventListener("alpine:init", () => {
     frames: [],                  // diagram frames of the open lesson: what Anki shows of each photo
     sending: false,
     sendStep: "",                // what the send is doing (its sounds, its cards), on its button
-    drawing: false,              // the pictures the cards ask for are being drawn
+    drawingLessons: [],          // the lessons whose cards' pictures are being drawn (another may be open)
     pictureJobs: 0,              // a card's picture being redrawn, uploaded or removed
     toDraw: [],                  // the cards whose picture no free one fits: drawn if the user says yes
     drawingUsd: null,            // about what a picture drawn by the image model costs: the computer's (US $)

@@ -197,9 +197,9 @@ async def draw_figure(s: AIConfig, description: str) -> str:
     from . import figures
 
     text = f"Figure to draw: {description.strip()}"
-    drawing = await _ask_provider(
-        s, [], text, figures.Drawing, figures.RULES, light=True, demo=lambda: demo_ai.figure(description)
-    )
+    # Not a light call: its exact coordinates (a mark on its segment, an angle at its vertex)
+    # need the model's thinking; little, it placed them by eye (a mark off its diagonal)
+    drawing = await _ask_provider(s, [], text, figures.Drawing, figures.RULES, demo=lambda: demo_ai.figure(description))
     return drawing.svg
 
 

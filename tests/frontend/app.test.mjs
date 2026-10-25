@@ -655,6 +655,27 @@ test("✨ Image: several fit, the user picks (the AI's first); none, asked befor
   assert.equal(other._ask, false);
 });
 
+test("the pictures being drawn belong to their lesson: another one opened meanwhile isn't held back", async () => {
+  let done;
+  const page = await loadScripts("app.js", {
+    routes: () => new Promise((resolve) => { done = () => resolve(new Response({ lesson: { cards: [] } })); }),
+  });
+  const c = page.component();
+  c.lessonId = "A";
+  c.cards = [{ id: "c1", front: "f", back: "b", figure: "un triangle", picture: "" }];
+  const drawing = c.drawPictures();
+  assert.equal(c.drawingHere(), true);
+  c.lessonId = "B";  // another lesson opened: its saves and its "drawing…" not held back by A's
+  assert.equal(c.drawingHere(), false);
+  c.lessonId = "A";
+  assert.equal(c.drawingHere(), true);
+  await new Promise((resolve) => setTimeout(resolve, 0));
+  done();
+  await drawing;
+  assert.equal(c.drawingHere(), false);
+  assert.deepEqual(plain(c.drawingLessons), []);
+});
+
 test("children: the one chosen kept on this device, the lessons filtered, its decks' levels not shown again", async () => {
   const sent = [];
   const kids = [
