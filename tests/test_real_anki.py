@@ -599,3 +599,24 @@ def test_a_direct_send_and_a_package_make_the_same_notes(bridged, col, tmp_path,
     assert len(types) == 1, types
     backs = {fields(col, n)["Back"] for n in col.find_notes("deck:*")}
     assert all(b.endswith(" !") for b in backs if b)  # the second one updated them
+
+
+def test_a_tests_tag_put_on_then_taken_off_through_the_bridge(bridged, col):
+    """The tests to prepare through the add-on (addTags, removeTags) on a real collection:
+    the tag on the lesson's notes, then off when the lesson leaves the test, the parent's
+    own tags kept."""
+    client, _ = bridged
+    lesson = extract(client)
+    body = {"deck": lesson["deck"], "cards": lesson["cards"], "voice": VOICE, "lesson_id": lesson["id"]}
+    client.post("/api/anki/send", json=body)
+    notes = list(col.find_notes(f'"tag:notosaurus::{lesson["id"]}"'))
+    assert notes
+    col.tags.bulk_add(notes[:1], "mine")  # the parent's own
+
+    exam = {"name": "Interro de lundi", "lessons": [{"lesson": lesson["id"]}]}
+    assert client.put("/api/exams/interro", json=exam).json()["anki"] is True
+    assert all("Exam::Interro_de_lundi" in col.get_note(n).tags for n in notes)
+
+    assert client.put("/api/exams/interro", json={**exam, "lessons": []}).json()["anki"] is True  # removeTags
+    assert not any("Exam::Interro_de_lundi" in col.get_note(n).tags for n in notes)
+    assert "mine" in col.get_note(notes[0]).tags

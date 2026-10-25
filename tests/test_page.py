@@ -54,7 +54,10 @@ def server():
 def browser():
     with sync_api.sync_playwright() as p:
         executable = os.environ.get("NOTOSAURUS_TEST_CHROMIUM")
-        browser = p.chromium.launch(executable_path=executable) if executable else p.chromium.launch()
+        try:
+            browser = p.chromium.launch(executable_path=executable) if executable else p.chromium.launch()
+        except sync_api.Error as e:  # no browser here: skipped, not 60 errors (CI has one)
+            pytest.skip(f"no Chromium (python -m playwright install chromium, or NOTOSAURUS_TEST_CHROMIUM): {e}")
         yield browser
         browser.close()
 

@@ -1146,7 +1146,8 @@ class LocalServerTest {
         relayAnswers("""{"key": "nts_paid_later", "account": {"plan": "monthly", "credits_left": 3000, "daily_left": 500}}""")
         assertEquals("true", client.get("/api/admin/subscription") { page() }.json().jsonObject["restored"]!!.jsonPrimitive.content)
         assertEquals("nts_paid_later", prefs[LocalServer.keyOf(local.relayUrl())])
-        relay.takeRequest(5, TimeUnit.SECONDS)
+        assertEquals("/v1/subscribe", relay.takeRequest(5, TimeUnit.SECONDS)!!.url.encodedPath)
+        assertFalse(local.licensing.purchasePending) // found: no more looked for
         play.owned = emptyList()
         // A base plan that isn't one: not asked of Google Play
         assertEquals(HttpStatusCode.BadRequest, client.post("/api/admin/subscription/subscribe") { page(); contentType(ContentType.Application.Json); setBody("""{"plan": "weekly"}""") }.status)
