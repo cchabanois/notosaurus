@@ -354,8 +354,14 @@ def demo_data(lang: str, tmp: Path) -> Path:
     data = tmp / "data"
     shutil.copytree(DEMO / lang / "lessons", data / "lessons")
     children = [
-        {"id": name.lower().replace("é", "e"), "name": name, "grade": grade, "decks": "", "instructions": text,
-         "anki_profile": name}
+        {
+            "id": name.lower().replace("é", "e"),
+            "name": name,
+            "grade": grade,
+            "decks": "",
+            "instructions": text,
+            "anki_profile": name,
+        }
         for name, grade, text in CHILDREN[lang]
     ]
     folders = {}  # deck → lesson folder
@@ -368,10 +374,19 @@ def demo_data(lang: str, tmp: Path) -> Path:
         json.dumps({"format": 2, "children": children}, ensure_ascii=False), encoding="utf-8"
     )
     name, date, keys = EXAM[lang]
-    exam = {"id": "exam", "name": name, "date": date, "created_at": "2026-10-25T10:00:00",
-            "lessons": [{"lesson": folders[LESSONS[lang][k]["deck"]], "cards": None} for k in keys]}
+    exam = {
+        "id": "exam",
+        "name": name,
+        "date": date,
+        "created_at": "2026-10-25T10:00:00",
+        "lessons": [{"lesson": folders[LESSONS[lang][k]["deck"]], "cards": None} for k in keys],
+    }
     (data / "exams.json").write_text(json.dumps({"format": 1, "exams": [exam]}, ensure_ascii=False), encoding="utf-8")
-    settings = {"llm": "gemini", "gemini_api_key": "AIzaSy-notosaurus-demo-key-1234", "instructions": INSTRUCTIONS[lang]}
+    settings = {
+        "llm": "gemini",
+        "gemini_api_key": "AIzaSy-notosaurus-demo-key-1234",
+        "instructions": INSTRUCTIONS[lang],
+    }
     (data / "settings.json").write_text(json.dumps(settings, ensure_ascii=False), encoding="utf-8")
     return data
 
