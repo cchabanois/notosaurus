@@ -183,7 +183,9 @@ const examsPart = {
     const lessons = chosen.length ? [...others, { lesson: this.lessonId, cards: whole ? null : chosen }] : others;
     const saved = await this.saveExam(exam, lessons);
     this.examPick = null;
-    if (saved) this.notify(t("app.exams.picked", { count: chosen.length, name: exam.name }));
+    // Not in Anki yet: sending it is the next step, offered on the message
+    const next = this.anki.available && !this.off("anki.send") && !this.lessonExported ? "send" : false;
+    if (saved) this.notify(t("app.exams.picked", { count: chosen.length, name: exam.name }), next);
   },
 
   async deleteExam(exam) {
