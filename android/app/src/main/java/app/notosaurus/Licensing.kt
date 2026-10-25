@@ -18,12 +18,13 @@ import kotlinx.serialization.json.put
  * own: the test one has its own licences), the free trial started by the first AI call, a
  * Google Play purchase checked by the relay (bought, restored, paid later), and checked
  * again when the relay says the subscription lapsed. `relayUrl`: the relay in use; `store`:
- * Google Play (none: a key typed in the settings only).
+ * Google Play (none: a key typed in the settings only); `now`: nanoseconds, a clock.
  */
 class Licensing(
     private val prefs: Preferences,
     private val relayUrl: () -> String,
     val store: SubscriptionStore?,
+    private val now: () -> Long = System::nanoTime, // the tests move time on
 ) {
     /** The key for the relay in use; "" when there is none yet. */
     fun key(): String = prefs[LocalServer.keyOf(relayUrl())].orEmpty()
@@ -108,8 +109,8 @@ class Licensing(
     @Synchronized fun recheckSoon() {
         if (store == null) return
         val last = recheckedAt
-        if (last != null && System.nanoTime() - last < RECHECK_S * 1_000_000_000L) return
-        recheckedAt = System.nanoTime()
+        if (last != null && now() - last < RECHECK_S * 1_000_000_000L) return
+        recheckedAt = now()
         background.launch { recheck() }
     }
 

@@ -125,6 +125,9 @@ android {
             buildConfigField("String", "TEST_RELAY", testRelay)
         }
     }
+    // The device tests read the cases the computer, the page and the app must agree on
+    // (core/shared-cases.json, RegexOnDeviceTest): in the test APK only
+    sourceSets.getByName("androidTest").assets.directories += rootProject.layout.projectDirectory.dir("../core").asFile.path
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_17
         targetCompatibility = JavaVersion.VERSION_17

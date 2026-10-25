@@ -144,6 +144,21 @@ def test_deleted_with_anki_closed_its_filtered_deck_goes_once_it_opens(anki, cli
     assert exams.pending() == {}
 
 
+def test_two_changes_with_anki_closed_the_first_state_kept(anki, client, monkeypatch):
+    """Renamed twice with Anki closed: what Anki's notes have is the first name's tag, the one
+    taken off once it opens (not the second's, never put on)."""
+    lesson = _sent(client, extract_lesson(client))
+    client.put("/api/exams/interro-svt", json={**INTERRO, "lessons": [{"lesson": lesson["id"]}]})
+    opened = ankiconnect._transport
+    monkeypatch.setattr(ankiconnect, "_transport", httpx.MockTransport(anki_unreachable))
+    for name in ("Brevet blanc", "Brevet blanc 2"):
+        client.put("/api/exams/interro-svt", json={**INTERRO, "name": name, "lessons": [{"lesson": lesson["id"]}]})
+    assert exams.pending()["interro-svt"].name == INTERRO["name"]  # the first state, kept
+    monkeypatch.setattr(ankiconnect, "_transport", opened)
+    client.get("/api/exams")
+    assert all(tags == {"Exam::Brevet_blanc_2"} for tags in _tags(anki).values())
+
+
 def test_two_tests_one_tag_refused(client):
     """Anki tells tags apart without their case: "Maths lundi" and "maths lundi" would be one."""
     assert client.put("/api/exams/a", json={**INTERRO, "name": "Maths lundi"}).status_code == 200
