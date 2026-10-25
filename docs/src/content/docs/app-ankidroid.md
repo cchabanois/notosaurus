@@ -51,6 +51,8 @@ On **AnkiDroid 2.25 and before**, first turn on **Settings → Advanced → Allo
 apps** in AnkiDroid: without it, AnkiDroid blocks every link on a card ("Card blocked from
 launching another app"). Later versions let links to a web page through.
 
+![A card in AnkiDroid with its sound and, under the answer, ✎ Notosaurus](../../assets/screenshots/en/app-ankidroid-card.png)
+
 ## A test's filtered deck
 
 A test to prepare gathers cards of several lessons under one tag (see

@@ -54,6 +54,8 @@ lancer d'autres applications** dans AnkiDroid : sans ce réglage, AnkiDroid bloq
 carte (« La carte ne peut pas lancer d'autres applications »). Les versions suivantes laissent
 passer les liens vers une page web.
 
+![Une carte dans AnkiDroid, avec son son et, sous la réponse, ✎ Notosaurus](../../../assets/screenshots/fr/app-ankidroid-card.png)
+
 ## Le paquet filtré d'un contrôle
 
 Un contrôle à préparer réunit des cartes de plusieurs leçons sous une étiquette (voir
