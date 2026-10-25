@@ -1013,6 +1013,7 @@
       "payment_pending": "Pagamento pendente: o Google Play não conseguiu renovar a tua subscrição. Atualiza o método de pagamento no Google Play (Definições → Gerir a subscrição) para continuar.",
       "invalid_purchase": "Compra não reconhecida pelo Google Play: tenta de novo ou contacta o suporte.",
       "trial_refused": "O teste grátis só é possível com a app instalada a partir do Google Play, num telemóvel real.",
+      "trial_closed": "De momento não há novos testes grátis: podes subscrever nas Definições ou tentar de novo amanhã.",
       "daily_limit": "O limite de hoje foi atingido: tente de novo amanhã.",
       "busy": "Pedidos demais ao mesmo tempo: tente de novo daqui a pouco.",
       "too_large": "Fotos demais, ou uma pesada demais.",

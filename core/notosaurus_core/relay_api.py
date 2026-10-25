@@ -83,6 +83,7 @@ ERRORS = {
     "relay.trial_ended": 402,  # the free trial's credits used up, or its days over: subscribe
     "relay.payment_pending": 402,  # its subscription on hold: a renewal's payment failed, to fix in Google Play
     "relay.invalid_purchase": 400,  # a purchase Google Play doesn't know, or not of this app
+    "relay.trial_closed": 403,  # no new free trial for now (turned off, or today's all given): subscribe
     "relay.trial_refused": 403,  # no free trial: not the app from Google Play, or not a real phone (Play Integrity)
     "relay.daily_limit": 429,  # too many credits used today: tomorrow, or wait
     "relay.busy": 429,  # too many calls at once for this licence: retry in a moment
@@ -388,6 +389,7 @@ FEATURES = (
     "lesson.regenerate",  # made again in its place
     "pictures.search",  # free pictures found
     "pictures.draw",  # pictures drawn
+    "trial",  # new free trials (a phone that has one keeps it)
 )
 
 
