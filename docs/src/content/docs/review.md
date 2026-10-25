@@ -15,8 +15,8 @@ sending them. Everything you change is saved as you go (“✓ Saved”).
   it.
 - **+ info** adds a note shown under the answer: gender, plural, an example…
 - **sub-deck** puts the card in a sub-deck of the lesson (“Vocabulary”, “Verbs”).
-- **🔊** plays the back with the lesson's voice.
-- **⋯**, at the card's top right, deletes it; **＋ Add a card**, at the bottom, adds one.
+- **Listen to the back** (🔊) plays it with the lesson's voice.
+- **More actions** (⋯), at the card's top right, deletes it; **＋ Add a card**, at the bottom, adds one.
 
 **📝 Instructions used for this lesson**, above the cards, reminds what the AI was asked.
 
@@ -37,7 +37,7 @@ the cards back as they were.
 
 ## Explaining a card
 
-**💬** on a card asks the AI to explain it: what it means, and why its answer is the answer, in
+**Explain this card** (💬) asks the AI to explain it: what it means, and why its answer is the answer, in
 two to four sentences, at a pupil's level, in the page's language. Handy for a subject you've
 forgotten, or a card the pupil doesn't understand.
 

@@ -31,7 +31,7 @@ you to accept its [privacy policy](../app-privacy/):
   in the European Union. Your lessons stay on your phone.
 - The AI has safeguards suited to pupils, but it can make mistakes: check the cards before
   giving them to your child.
-- A notebook page often shows the child's name: hide it with **🖍️** before sending (see
+- A notebook page often shows the child's name: hide it with the **Hide** button (🖍️) before sending (see
   [Photos and PDFs](../photos/)).
 
 ![The app's welcome: a tool for parents, Gemini, the free trial, the privacy policy to accept](../../assets/screenshots/en/app-welcome.png)
@@ -42,14 +42,14 @@ you to accept its [privacy policy](../app-privacy/):
    fit their level. See [Several children](../several-children/).
 2. Under **Lesson photos**, take a photo of the page (or several pages), or add a PDF.
 3. Under **Instructions**, pick what to make, or keep **Automatic (from the lesson)**: see
-   [Instructions](../instructions/). **🎤** next to the field lets you say them instead of typing.
+   [Instructions](../instructions/). The **Dictate** button (🎤) next to the field lets you say them instead of typing.
 4. Tap **✨ Generate cards**. The first lesson starts the free trial.
 5. Check the cards, correct them or ask the AI in plain words: see
    [Reviewing the cards](../review/).
 6. Tap **📥 Add to Anki**: the cards go into AnkiDroid. The first time, AnkiDroid asks whether
    Notosaurus may add cards to it.
 
-The lesson is kept on the phone: reopen it from **📚** to correct it and send it again. Its cards
+The lesson is kept on the phone: reopen it from the **Lessons** button (📚) to correct it and send it again. Its cards
 are updated in AnkiDroid, not duplicated.
 
 ![The app's main page: the lesson photos, the instructions with 🎤, the child chosen at the top](../../assets/screenshots/en/app-home.png)

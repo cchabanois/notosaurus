@@ -22,14 +22,18 @@ paquets qu'il contient.
 ## Renvoyer une leçon
 
 Une fois la leçon envoyée, le bouton devient **🔄 Mettre à jour dans Anki**. Vous pouvez corriger
-une leçon et la renvoyer autant de fois que vous voulez : ses cartes sont **mises à jour** dans
-Anki, **pas dupliquées**, et l'historique de révision de chaque carte est gardé, même si vous avez
-corrigé son recto. Si vous avez changé le paquet de la leçon, ses cartes y sont **déplacées**,
-avec leur historique. Les cartes ajoutées depuis le dernier envoi sont ajoutées ; les cartes
-supprimées de la leçon restent dans Anki : après l'envoi, Notosaurus les liste et propose de les
-supprimer (avec leur historique de révision), jamais sans votre accord. Supprimer une leçon
-entière dans Notosaurus propose de supprimer aussi ses cartes dans Anki, avec leur historique de
-révision.
+une leçon et la renvoyer autant de fois que vous voulez :
+
+- ses cartes sont **mises à jour** dans Anki, **pas dupliquées**, et chaque carte garde son
+  historique de révision, même si vous avez corrigé son recto ;
+- si vous avez changé le paquet de la leçon, ses cartes y sont **déplacées**, avec leur
+  historique ;
+- les cartes ajoutées depuis le dernier envoi sont ajoutées ;
+- les cartes supprimées de la leçon restent dans Anki : après l'envoi, Notosaurus les liste et
+  propose de les supprimer (avec leur historique de révision), jamais sans votre accord.
+
+Supprimer une leçon entière dans Notosaurus propose de supprimer aussi ses cartes dans Anki, avec
+leur historique de révision.
 
 Sur l'ordinateur, changer une option des cartes (la carte inverse, la réponse tapée) sur une
 leçon déjà envoyée fait passer ses cartes au type de note correspondant, historique gardé.
