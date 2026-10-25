@@ -97,8 +97,10 @@
     <button @click="success = ''" :aria-label="$t('common.close')">✕</button>
     <!-- After a send or an export: the lesson is done, review it (the app), start the next one -->
     <div class="toast-actions" x-show="successNext">
-      <button class="toast-action" x-show="reviewInAnki && lessonExported" @click="reviewLesson()" x-text="$t('app.reviewInAnki')"></button>
-      <button class="toast-action" @click="success = ''; newLesson()" x-text="$t('app.newLessonAction')"></button>
+      <button class="toast-action" x-show="successNext === true && reviewInAnki && lessonExported" @click="reviewLesson()" x-text="$t('app.reviewInAnki')"></button>
+      <button class="toast-action" x-show="successNext === true" @click="success = ''; newLesson()" x-text="$t('app.newLessonAction')"></button>
+      <!-- A test's cards picked: sent to Anki from there (their tag goes with them) -->
+      <button class="toast-action" x-show="successNext === 'send'" @click="success = ''; sendToAnki()" x-text="$t('app.exams.send')"></button>
     </div>
   </div>
 
@@ -967,7 +969,12 @@
             <span x-text="examDate(examSheet.exam)"></span>
             <span class="badge" x-show="examPast(examSheet.exam)" x-text="$t('app.exams.past')"></span>
           </p>
-          <section class="exam-guide" x-show="examSheet.exam.lessons.length">
+          <!-- Nothing in Anki yet: sending is what to do first (the guide comes once something is there) -->
+          <button type="button" class="btn wide" :class="examSheet.exam.lessons.some((p) => p.in_anki) ? 'soft' : 'primary'"
+                  x-show="anki.available && !off('anki.send') && unsentLessons(examSheet.exam).length"
+                  @click="sendExamLessons(examSheet.exam, unsentLessons(examSheet.exam))" :disabled="examSheet.busy"
+                  x-text="examSheet.sendingLeft ? $t('app.exams.sending', { count: examSheet.sendingLeft }) : $t('app.exams.sendAll', { count: unsentLessons(examSheet.exam).length })"></button>
+          <section class="exam-guide" x-show="examSheet.exam.lessons.some((p) => p.in_anki)">
             <h3 x-text="reviewInAnki ? $t('app.exams.guide.titleAndroid') : $t('app.exams.guide.titleDesktop')"></h3>
             <!-- The computer, Anki open: the filtered deck made and shown from here (AnkiConnect) -->
             <div class="exam-review" x-show="!reviewInAnki && anki.available">
@@ -992,7 +999,7 @@
               <li x-html="$th('app.exams.guide.step3')"></li>
               <li x-html="$th('app.exams.guide.step4', { tag: examSheet.exam.tag })"></li>
             </ol>
-            <p class="hint" x-show="reviewInAnki || examSheet.exam.deck" x-text="$t('app.exams.guide.after')"></p>
+            <p class="hint" x-show="reviewInAnki || examSheet.exam.deck" x-text="reviewInAnki ? $t('app.exams.guide.afterAndroid') : $t('app.exams.guide.after')"></p>
             <div x-show="!reviewInAnki && !examSheet.exam.deck">
               <p class="hint" x-html="$th('app.exams.guide.noDeck')"></p>
               <p class="exam-search">
@@ -1002,10 +1009,6 @@
               </p>
             </div>
           </section>
-          <!-- Lessons not (all) in Anki: sent from here, without opening each -->
-          <button type="button" class="btn soft" x-show="anki.available && !off('anki.send') && unsentLessons(examSheet.exam).length > 1"
-                  @click="sendExamLessons(examSheet.exam, unsentLessons(examSheet.exam))" :disabled="examSheet.busy"
-                  x-text="examSheet.sendingLeft ? $t('app.exams.sending', { count: examSheet.sendingLeft }) : $t('app.exams.sendAll', { count: unsentLessons(examSheet.exam).length })"></button>
           <ul class="child-rows exam-lessons">
             <template x-for="p in examSheet.exam.lessons" :key="p.lesson">
               <li>
@@ -1014,13 +1017,13 @@
                   <small class="muted" x-text="p.cards === null ? $t('app.exams.whole') : $t('app.exams.some', { count: p.total })"></small>
                   <small class="muted" x-show="p.in_anki" x-text="$t('app.exams.inAnki', { sent: p.in_anki, total: p.total })"></small>
                   <small class="warn" x-show="!p.in_anki" x-text="$t('app.exams.notSent')"></small>
-                </div>
                 <div class="exam-actions">
                   <button type="button" class="chip-btn" x-show="anki.available && !off('anki.send') && p.in_anki < p.total"
                           @click="sendExamLessons(examSheet.exam, [p])" :disabled="examSheet.busy" x-text="$t('app.exams.send')"></button>
                   <button type="button" class="chip-btn" x-show="p.lesson === lessonId" @click="startPick(examSheet.exam)" x-text="$t('app.exams.pickCards')"></button>
                   <button type="button" class="chip-btn" x-show="p.lesson !== lessonId" @click="pickIn(examSheet.exam, p)" x-text="$t('app.exams.openLesson')"></button>
                   <button type="button" class="chip-btn" @click="removeExamLesson(examSheet.exam, p)" :disabled="examSheet.busy" x-text="$t('app.exams.remove')"></button>
+                </div>
                 </div>
               </li>
             </template>
@@ -1055,7 +1058,7 @@
       <p class="empty" x-show="!addable(examSheet.exam).length" x-text="$t('app.lessons.none')"></p>
       <div class="sheet-actions">
         <button type="button" class="btn primary" @click="finishAdding()" :disabled="examSheet.busy || !examSheet.adding.chosen.length"
-                x-text="$t('app.exams.addChosen', { count: examSheet.adding.chosen.length })"></button>
+                x-text="examSheet.adding.chosen.length ? $t('app.exams.addChosen', { count: examSheet.adding.chosen.length }) : $t('app.exams.add')"></button>
       </div>
       <p class="hint error-text" x-show="examSheet.error" x-text="examSheet.error"></p>
     </div>

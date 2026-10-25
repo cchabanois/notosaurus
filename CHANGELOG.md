@@ -115,6 +115,7 @@ Each pull request adds a line under **Unreleased**. See [Releasing](CONTRIBUTING
 
 ### Fixed
 
+- A test's sheet: nothing of it in Anki yet, **Send to Anki (n lessons)** comes first, the guide once something is there; a lesson's buttons inside its card; **Add lessons** with its boxes on their rows, "Add" (off) until one is ticked; on Android the guide's end says "filtered deck" as its steps do. The review's button says **📝 Prepare for a test…**, and the message once a test's cards are picked offers to send the lesson to Anki. German says "Test" throughout.
 - A test to prepare made while Anki was closed, its lesson sent since, then renamed or deleted with Anki closed again: its old tag still taken off once Anki opens; deleted with Anki closed, its "Revise now" filtered deck goes too (its cards back in their decks). Android: a purchase paid later is looked for a week at most. For developers: the same-name check is atomic; speakable takes only decimal digits for digits ("/x²/" is a transcription), as Python.
 - The computer's settings: the **🖼 Pictures on the cards** switch shows and saves its own value again (the view sent, under the same name, who draws the pictures).
 - **✎ Notosaurus** under the answer in Anki on the computer: shown again where Anki puts its platform on the page's <html> rather than its <body> (the script now also knows Anki by its pycmd).
