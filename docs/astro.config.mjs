@@ -105,6 +105,7 @@ export default defineConfig({
 						{ slug: 'getting-started' },
 						{ slug: 'phone' },
 						{ slug: 'ai-services' },
+						{ slug: 'which-model' },
 						{ slug: 'send-to-anki' },
 						{ slug: 'in-anki' },
 						{ slug: 'troubleshooting' },
