@@ -45,6 +45,12 @@ def test_every_text_of_a_card_choices_too():
     assert card.picture_prompt == "<b>kept</b>"  # not a card text (never shown)
 
 
+def test_a_doubts_texts_too():
+    card = Card(front="a", back="b", doubt={"reason": "<b>1915</b>: no", "front": "<u>c</u>", "back": "**d**"})
+    cards.plain_cards([card])
+    assert card.doubt and (card.doubt.reason, card.doubt.front, card.doubt.back) == ("[1915]: no", "[c]", "[d]")
+
+
 def test_extraction_and_revision_come_out_plain(monkeypatch):
     async def answer(s, images, text, schema, *args, **kwargs):
         # The schema the AI fills (its own Card model), as JSON: a revision has a summary

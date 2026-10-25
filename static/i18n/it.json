@@ -161,7 +161,12 @@
       "cropFrame": "Ciò che Anki mostra della foto",
       "readOnly": "🔒 Sola lettura: si può modificare quando Anki è aperto sul profilo di {owner}. Puoi comunque aggiungerla al tuo Anki.",
       "madeQuick": "Create in modalità veloce.",
-      "carefulAgain": "🎯 Rifai in modalità accurata"
+      "carefulAgain": "🎯 Rifai in modalità accurata",
+      "doubt": {
+        "fix": "Correzione proposta: «{front}» → «{back}»",
+        "correct": "Correggi",
+        "keep": "Mantieni la lezione"
+      }
     },
     "explain": {
       "button": "Spiega questa carta",

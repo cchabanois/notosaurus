@@ -50,7 +50,7 @@ test("withKey fills the card defaults and gives each card its own key", () => {
   const a = app.run("withKey({ front: 'la mère' })");
   assert.deepEqual(
     plain(Object.keys(a).sort()),
-    ["choices", "explanation", "figure", "front", "fun_fact", "info", "key", "mnemonic", "picture", "picture_on_back",
+    ["choices", "doubt", "explanation", "figure", "front", "fun_fact", "info", "key", "mnemonic", "picture", "picture_on_back",
      "picture_prompt", "subdeck", "tags"],
   );
   assert.equal(a.info, "");

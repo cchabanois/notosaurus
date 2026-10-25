@@ -208,3 +208,27 @@ def test_chosen_by_the_settings(monkeypatch):
     monkeypatch.setattr(anthropic, "_anthropic_client", lambda s: fake)
     assert run(llm._ask_provider(CONFIG, [], "x", Drawing, "rules", light=True)).svg == "<svg/>"
     assert len(fake.calls) == 1
+
+
+def test_the_schemas_within_claudes_limits():
+    """Claude's structured outputs refuse a schema past 24 optional fields or 16 with a
+    union (a nullable one), all nested ones counted: the largest schemas asked stay within."""
+    from notosaurus_core.models import Extraction, Revision
+
+    def counted(schema: dict) -> tuple[int, int]:
+        optional = unions = 0
+        if isinstance(schema, dict):
+            if "properties" in schema:
+                optional += len(set(schema["properties"]) - set(schema.get("required", [])))
+            unions += "anyOf" in schema
+            parts = schema.values()
+        else:
+            parts = schema if isinstance(schema, list) else []
+        for part in parts:
+            more = counted(part)
+            optional, unions = optional + more[0], unions + more[1]
+        return optional, unions
+
+    for base in (Extraction, Revision):
+        optional, unions = counted(llm.ai_schema(base, fun_facts=True, helps=True).model_json_schema())
+        assert optional <= 24 and unions <= 16, (base.__name__, optional, unions)

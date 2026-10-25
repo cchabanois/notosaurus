@@ -18,6 +18,7 @@ from ..models import (
     Card,
     Deck,
     Dictation,
+    Doubt,
     Explanation,
     Extraction,
     FollowUp,
@@ -93,12 +94,33 @@ def _fake(images: list[Image], prompt: str) -> Deck:
         (("cloze", "trous", "gaps"), _fake_cloze),
         (("qcm", "quiz", "vrai", "true"), _fake_choices),
         (("figure", "géométrie", "geometry", "triangle"), _fake_figures),
+        (("dates", "histoire", "history"), _fake_dates),
     )
     words = prompt.lower()
     for keywords, make in kinds:
         if any(w in words for w in keywords):
             return make()
     return _fake_vocabulary(images, prompt)
+
+
+def _fake_dates() -> Deck:
+    """Demo mode, history dates: a pupil's notes, one of them wrong (its doubt)."""
+    return Deck(
+        deck="Histoire::Dates",
+        cards=[
+            Card(front="Première Guerre mondiale", back="1914 – 1918"),
+            Card(
+                front="Génocide des Juifs",
+                back="1915",
+                doubt=Doubt(
+                    reason="La leçon dit 1915 : le génocide des Juifs (la Shoah) a eu lieu de 1941 à 1945 ; "
+                    "1915 est l'année du génocide arménien.",
+                    front="Génocide des Juifs (Shoah)",
+                    back="1941 – 1945",
+                ),
+            ),
+        ],
+    )
 
 
 def _fake_pictures() -> Deck:

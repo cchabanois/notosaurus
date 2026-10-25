@@ -1539,3 +1539,25 @@ def test_a_test_made_from_my_lessons_then_its_lessons_ticked(page):
     (exam,) = page.request.get("/api/exams").json()
     assert exam["name"] == "Interro"
     assert [p["lesson"] for p in exam["lessons"]] in ([made[0]["id"]], [made[1]["id"]])
+
+
+def test_a_lesson_that_looks_wrong_corrected_or_kept(page):
+    """A pupil's notes with a wrong date: the card says what the lesson says, with why it
+    looks wrong; "Correct" takes the AI's correction, "Keep" keeps the lesson."""
+    generate_free(page, "Les dates d'histoire")
+    wrong = page.locator(".flash").nth(1)
+    sync_api.expect(wrong.locator(".card-doubt")).to_contain_text("1915 est l'année du génocide arménien")
+    sync_api.expect(page.locator(".flash").first.locator(".card-doubt")).to_be_hidden()
+    wrong.get_by_role("button", name="Corriger").click()
+    sync_api.expect(wrong.locator(".card-doubt")).to_be_hidden()
+    sync_api.expect(wrong.locator("textarea.back")).to_have_value("1941 – 1945")
+    sync_api.expect(page.locator(".save-pill")).to_have_class(SAVED)
+    (summary,) = lessons(page)
+    card = lesson(page, summary["id"])["cards"][1]
+    assert (card["front"], card["back"], card["doubt"]) == ("Génocide des Juifs (Shoah)", "1941 – 1945", None)
+
+    generate_free(page, "Les dates d'histoire")
+    wrong = page.locator(".flash").nth(1)
+    wrong.get_by_role("button", name="Garder la leçon").click()
+    sync_api.expect(wrong.locator(".card-doubt")).to_be_hidden()
+    sync_api.expect(wrong.locator("textarea.back")).to_have_value("1915")

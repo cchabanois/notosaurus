@@ -30,6 +30,11 @@ const cardsPart = {
     this.cards = this.cards.filter((c) => c !== card);
   },
 
+  // The AI's correction of a lesson that looked wrong, taken: the card corrected, the doubt gone
+  fixDoubt(card) {
+    Object.assign(card, { front: card.doubt.front, back: card.doubt.back, doubt: null });
+  },
+
   subdecks() {
     return [...new Set(this.cards.map((c) => c.subdeck).filter(Boolean))];
   },
