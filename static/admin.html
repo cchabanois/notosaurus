@@ -189,7 +189,7 @@
           <label class="field" x-show="drawingService()">
             <span x-text="$t('admin.pictures.model')"></span>
             <input x-model="form.picture_model" list="picture-models"
-                   :placeholder="$t('admin.provider.default', { model: saved.pictures.default_models[drawingService()] ?? '' })">
+                   :placeholder="$t('admin.provider.default', { model: saved.drawing.default_models[drawingService()] ?? '' })">
             <datalist id="picture-models">
               <template x-for="m in pictureSuggestions()" :key="m">
                 <option :value="m"></option>
@@ -201,7 +201,7 @@
             <span x-text="$t('admin.recommended.title')"></span>
             <div class="chips">
               <template x-for="(m, i) in recommendedPictures()" :key="m.id">
-                <button type="button" class="chip recommended" :class="{ active: (form.picture_model || saved.pictures.default_models[drawingService()]) === m.id }"
+                <button type="button" class="chip recommended" :class="{ active: (form.picture_model || saved.drawing.default_models[drawingService()]) === m.id }"
                         @click="form.picture_model = m.id" :title="m.id" x-text="recommendedLabel(m, i)"></button>
               </template>
             </div>

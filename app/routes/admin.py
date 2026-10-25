@@ -67,8 +67,9 @@ def _settings_view() -> dict:
         "recommended": recommended.view(),  # per service, in order: the first is the default
         "embedded": settings.embedded(),
         # The image model used when none is set: from the saved keys
-        # Who draws the pictures now, and what "same as the cards" means here
-        "pictures": {
+        # Who draws the pictures now, and what "same as the cards" means here ("drawing": not
+        # "pictures", the setting of the same name, a switch, it would hide)
+        "drawing": {
             "service": pictures.service(current),
             "model": pictures.model(current),
             "cards_draw": current.llm in pictures.DEFAULT_MODELS,
