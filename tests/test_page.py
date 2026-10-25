@@ -165,6 +165,41 @@ def test_the_free_trial_started_said_after_the_first_lesson(page):
     sync_api.expect(page.locator(".toast.ok")).to_contain_text("Essai gratuit : 300 crédits jusqu'au 7 novembre")
 
 
+def test_touch_targets_and_an_off_button_readable(page):
+    """Every small control a finger hits is 44 px at least (its invisible layer), its look
+    unchanged; a main button off reads plainly (not a paler teal, 2.2:1 before)."""
+    generate_free(page, FRONT_PROMPT)
+    sizes = page.evaluate(
+        """[...document.querySelectorAll('.flash-actions .icon-btn, .appbar .chip-btn.icon-only')]
+           .filter((b) => b.offsetParent)
+           .map((b) => {
+             const s = getComputedStyle(b, '::after');
+             return [b.getBoundingClientRect().width, parseFloat(s.width), parseFloat(s.height)];
+           })"""
+    )
+    assert sizes and all(w < 44 for w, _, _ in sizes)  # small to look at…
+    assert all(aw >= 44 and ah >= 44 for _, aw, ah in sizes), sizes  # …44 px to touch
+    for scheme in ("light", "dark"):
+        page.emulate_media(color_scheme=scheme)
+        assert off_contrast(page) >= 4.5, scheme
+
+
+def off_contrast(page) -> float:
+    """A main button off: its text's contrast with its background (WCAG's ratio)."""
+    return page.evaluate(
+        """(() => {
+          const b = document.createElement('button');
+          b.className = 'btn primary'; b.disabled = true; b.textContent = 'x';
+          document.body.append(b); const s = getComputedStyle(b);
+          const linear = (v) => (v <= .03928 ? v / 12.92 : ((v + .055) / 1.055) ** 2.4);
+          const rgb = (c) => c.match(/\\d+/g).slice(0, 3).map((v) => linear(Number(v) / 255));
+          const lum = (c) => { const [r, g, bl] = rgb(c); return .2126 * r + .7152 * g + .0722 * bl; };
+          const [a, z] = [lum(s.color), lum(s.backgroundColor)].sort((x, y) => y - x);
+          b.remove(); return (a + .05) / (z + .05);
+        })()"""
+    )
+
+
 def test_generate_then_edit_saves_by_itself(page):
     generate_free(page, FRONT_PROMPT)
     assert page.locator(".flash").count() == 6
@@ -547,7 +582,11 @@ def test_dates_in_the_browser_variety(page, clock, browser, server, locale, date
 CUT = """() => {
   const width = document.documentElement.clientWidth, found = [];
   if (document.documentElement.scrollWidth > width) found.push(`page: ${document.documentElement.scrollWidth}px`);
+  // An icon's button: no text to cut, its touch layer (::after, 44 px) wider than it on purpose
+  const icon = [".icon-btn", ".chip-btn.icon-only", ".thumb-remove", ".thumb-rotate", ".thumb-hide",
+    ".toast > button", ".flash .pick"].join(", ");
   for (const el of document.querySelectorAll("button, .chip, .badge, summary, h2, h3, label")) {
+    if (el.matches(icon)) continue;
     if (el.getBoundingClientRect().width && el.scrollWidth > el.clientWidth + 2) found.push(el.innerText.trim());
   }
   const canvas = document.createElement("canvas").getContext("2d");
