@@ -171,6 +171,7 @@ Each pull request adds a line under **Unreleased**. See [Releasing](CONTRIBUTING
 
 ### Security
 
+- Android: a release always talks to the real relay. The relay's address (the settings' "Advanced", in About) is shown and taken in a debug or staging build only; one saved before is ignored, so a typo or someone's "tip" can't send the lessons elsewhere.
 - The address check also refuses a Host ending with a line break (Python's "$" let it through).
 - Notosaurus answers only when opened by an IP address, `localhost` or the address in `NOTOSAURUS_PUBLIC_URL`: a website open on the computer can no longer reach it by pointing its own name at the computer (DNS rebinding) to read the lessons, delete them or change the settings.
 - A new settings password needs 8 characters at least (the one already chosen still works), and after 5 wrong passwords the device trying them must wait, longer at each new try (up to 15 minutes).
