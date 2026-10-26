@@ -192,15 +192,60 @@ async def _complete_figures(s: AIConfig, images: list[Image], cards: list[Card])
             todo[item.card].figure = item.figure.strip()
 
 
+# A light drawing not worth checking: drawn again with the model's thinking
+_UNUSABLE = {"llm.invalid_answer", "llm.truncated", "llm.empty_answer", "figure.invalid"}
+
+
 async def draw_figure(s: AIConfig, description: str) -> str:
-    """The SVG of a figure, drawn by the cards' AI with the drawing rules (figures.py)."""
+    """The SVG of a figure (cleaned, figures.clean), drawn by the cards' AI with the
+    drawing rules (figures.py). Drawn quickly first (a light call), then checked by looking
+    at it (another light call, figures.CHECK_RULES): right, it stays (a few seconds); wrong
+    (thinking little, the model places by eye what belongs to another element: a mark off
+    its segment, an angle on the other side of its line), drawn again with the model's
+    thinking, told what was wrong (half a minute). Unchecked (no PNG, the check failing):
+    drawn with thinking when the light one couldn't be seen, else the light one kept."""
     from . import figures
 
     text = f"Figure to draw: {description.strip()}"
-    # Not a light call: its exact coordinates (a mark on its segment, an angle at its vertex)
-    # need the model's thinking; little, it placed them by eye (a mark off its diagonal)
-    drawing = await _ask_provider(s, [], text, figures.Drawing, figures.RULES, demo=lambda: demo_ai.figure(description))
-    return drawing.svg
+    demo = lambda: demo_ai.figure(description)  # noqa: E731
+    problem = ""
+    try:
+        light = await _ask_provider(s, [], text, figures.Drawing, figures.RULES, light=True, demo=demo)
+        svg = figures.clean(light.svg)
+        png = figures.to_png(svg)
+        if png is not None:
+            problem = await _figure_problem(s, description, png)
+            if not problem:
+                return svg
+    except (ExtractionError, figures.FigureError) as e:
+        if e.code not in _UNUSABLE:
+            raise
+        log.warning("Figure drawn again with thinking: %s", loggable(e))
+    if problem:
+        text += f"\n\nA first drawing had this problem: {problem} Draw it right."
+    drawing = await _ask_provider(s, [], text, figures.Drawing, figures.RULES, demo=demo)
+    return figures.clean(drawing.svg)
+
+
+async def _figure_problem(s: AIConfig, description: str, png: bytes) -> str:
+    """What is wrong in the figure, seen as a picture against its description; "" when
+    right, or when it couldn't be checked (the light drawing kept, rather than a wait)."""
+    from . import figures
+
+    try:
+        checked = await _ask_provider(
+            s,
+            [Image(png, "image/png")],
+            f"Description: {description.strip()}",
+            figures.Checked,
+            figures.CHECK_RULES,
+            light=True,
+            demo=lambda: figures.Checked(ok=True, problem=""),
+        )
+    except ExtractionError as e:
+        log.warning("Figure not checked: %s", loggable(e))
+        return ""
+    return "" if checked.ok else (checked.problem.strip() or "it doesn't match its description.")
 
 
 async def explain_card(

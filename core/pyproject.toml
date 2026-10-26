@@ -12,6 +12,7 @@ dependencies = [
   "anthropic>=1.9",
   "openai>=3.20",
   "edge-tts>=7.2.8",
+  "resvg-py>=0.5",  # a figure seen as a PNG, to check it (figures.to_png)
 ]
 dynamic = ["version"]
 
