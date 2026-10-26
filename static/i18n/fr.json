@@ -382,7 +382,9 @@
       },
       "toDrawNo": "Non merci",
       "costUsd": "Coût : environ {amount} $ US.",
-      "costCredits": "Coût : environ {count} crédits."
+      "costCredits": "Coût : environ {count} crédits.",
+      "drawingFigure": "📐 Tracé de la figure…",
+      "about": "environ {seconds} s"
     },
     "pairing": {
       "title": "Appareil non autorisé"

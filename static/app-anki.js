@@ -111,7 +111,7 @@ const ankiPart = {
 
   // Pictures being drawn or changed: the cards sent must have them
   async picturesDone() {
-    while (this.drawing || this.pictureJobs) await new Promise((resolve) => setTimeout(resolve, 300));
+    while (this.drawingHere() || this.pictureJobs) await new Promise((resolve) => setTimeout(resolve, 300));
   },
 
   async sendToAnki() {

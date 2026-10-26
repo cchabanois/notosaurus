@@ -259,6 +259,22 @@ def test_figures_drawn_after_the_cards(page):
     sync_api.expect(tangent.locator(".card-picture:not(.on-back)")).to_be_hidden()
 
 
+def test_a_figure_being_drawn_says_how_long(page):
+    """A figure takes the model's thinking: its place says so, with roughly how long, a bar
+    filling meanwhile; the cards are there already."""
+    held = []
+    page.route("**/api/lessons/*/pictures", lambda route: held.append(route))
+    generate_free(page, "Le triangle rectangle (géométrie)")
+    waiting = page.locator(".card-picture.figure .drawing").first
+    sync_api.expect(waiting).to_contain_text("Tracé de la figure")
+    sync_api.expect(waiting).to_contain_text("environ 30 s")
+    sync_api.expect(waiting.locator(".progress")).to_be_visible()
+    sync_api.expect(page.locator(".flash textarea.back").first).to_be_editable()  # the cards usable meanwhile
+    for route in held:
+        route.continue_()
+    sync_api.expect(page.locator(".card-picture.figure img").first).to_be_visible()
+
+
 def test_delete_the_open_lesson(page):
     generate_free(page, FRONT_PROMPT)
     page.locator(".review-head").get_by_role("button", name="Supprimer la leçon").click()

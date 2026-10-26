@@ -382,7 +382,9 @@
       },
       "toDrawNo": "No, grazie",
       "costUsd": "Costo: circa {amount} US$.",
-      "costCredits": "Costo: circa {count} crediti."
+      "costCredits": "Costo: circa {count} crediti.",
+      "drawingFigure": "📐 Disegno della figura…",
+      "about": "circa {seconds} s"
     },
     "pairing": {
       "title": "Dispositivo non autorizzato"

@@ -391,7 +391,7 @@ const lessonsPart = {
     clearTimeout(this.saveTimer);
     this.saveTimer = null;
     if (!this.lessonId || this.readOnly()) return;
-    if (this.drawing || this.pictureJobs) return this.scheduleSave();  // after: the server is changing pictures
+    if (this.drawingHere() || this.pictureJobs) return this.scheduleSave();  // after: the server is changing its pictures
     const body = this.snapshot();
     // Before the request: otherwise clearing saveTimer re-runs the autosave effect,
     // which would see an unsaved snapshot and schedule the same save again.

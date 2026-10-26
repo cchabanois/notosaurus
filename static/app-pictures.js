@@ -145,14 +145,19 @@ const picturesPart = {
     return this.pictureAction(card, { method: "DELETE" });
   },
 
+  // The open lesson's pictures are being drawn (not another's, left while they were)
+  drawingHere() {
+    return this.drawingLessons.includes(this.lessonId);
+  },
+
   // The pictures the cards ask for: figures drawn, free pictures found; those none fits are
   // drawn by the image model only when the user says yes (`draw`: the banner's "Draw them")
   async drawPictures(draw = false) {
     if (this.readOnly() || !this.cards.some((c) => (c.picture_prompt || c.figure) && !c.picture)) return;
     if (this.saveTimer) await this.saveNow();
-    this.drawing = true;
-    this.toDraw = [];
     const lessonId = this.lessonId;
+    this.drawingLessons.push(lessonId);
+    this.toDraw = [];
     try {
       const res = await (await api(`/api/lessons/${lessonId}/pictures`, {
         method: "POST",
@@ -173,7 +178,7 @@ const picturesPart = {
     } catch (e) {
       this.error = e.message;
     } finally {
-      this.drawing = false;
+      this.drawingLessons.splice(this.drawingLessons.indexOf(lessonId), 1);
     }
   },
 };

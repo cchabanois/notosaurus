@@ -182,13 +182,16 @@ def _light_call(monkeypatch, answer: str, call, finish=types.FinishReason.STOP):
     return found, fake.calls[0]
 
 
-def _assert_light_request(request, schema, rules):
+def _assert_light_request(request, schema, rules, light=True):
     model, contents, config = request
     assert model == "gemini-3.8-flash"
     assert config.system_instruction == rules
     assert config.response_mime_type == "application/json"
     assert config.response_json_schema == schema.model_json_schema()
-    assert config.thinking_config.thinking_level == types.ThinkingLevel.MINIMAL  # light: thinks as little as it can
+    if light:  # thinks as little as it can
+        assert config.thinking_config.thinking_level == types.ThinkingLevel.MINIMAL
+    else:  # the model's own thinking (a figure's coordinates)
+        assert config.thinking_config is None
     assert config.automatic_function_calling.disable and config.safety_settings  # the stricter filters too
     assert len(contents) == 1 and isinstance(contents[0], str)  # text only, no photo
     return contents[0]
@@ -213,7 +216,7 @@ def test_draw_figure_with_gemini(monkeypatch):
             lambda s: llm.draw_figure(s, "  a right triangle ABC "),
         )
     assert svg == '<svg viewBox="0 0 400 300"/>'
-    text = _assert_light_request(request, Drawing, figures.RULES)
+    text = _assert_light_request(request, Drawing, figures.RULES, light=False)
     assert text == "Figure to draw: a right triangle ABC"
     assert [(c.model, c.input_tokens, c.output_tokens) for c in calls] == [("gemini-3.8-flash", 100, 25)]
 
