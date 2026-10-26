@@ -309,6 +309,22 @@ def test_a_voice_chosen_per_language(page):
     assert settings.current().voices == {"es-ES": "es-ES-AlvaroNeural"}
 
 
+def test_a_voice_that_cant_be_heard_says_why(page):
+    """Settings → Voices → ▶: a sound that can't be made (the relay's credits used up…) is
+    said with its reason, not left silent."""
+    voices = [{"voice": "es-ES-AlvaroNeural", "locale": "es-ES", "gender": "Male"}]
+    page.route("**/api/voices", lambda route: route.fulfill(json=voices))
+    failed = {"detail": {"code": "tts.failed", "params": {"detail": "no credits left"}}}
+    page.route("**/api/tts?*", lambda route: route.fulfill(status=502, json=failed))
+    page.goto("/admin.html")
+    new_password(page)
+    page.get_by_role("button", name="Créer et continuer").click()
+    choice = page.locator(".voice-choice")
+    choice.locator("select.voice-add").select_option("es-ES")
+    choice.locator(".voice-row").get_by_role("button", name="Écouter").click()
+    sync_api.expect(page.get_by_role("alert")).to_contain_text("no credits left")
+
+
 def test_settings_show_what_the_service_needs(page):
     page.goto("/admin.html")
     new_password(page)

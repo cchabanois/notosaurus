@@ -4,6 +4,8 @@
 // the relay's in the app (/api/voices). Methods of the settings page's component, as
 // `this`; it holds form.voices ({locale: voice}) and voiceList.
 
+let listening = null;  // the voice being heard
+
 const voiceChoicePart = {
   async loadVoiceList() {
     try {
@@ -53,9 +55,24 @@ const voiceChoicePart = {
     this.form.voices = rest;
   },
 
-  // Heard saying its language's name, in that language ("español (España)")
+  // Heard saying its language's name, in that language ("español (España)"). Played at
+  // once (the tap allows the sound); a failure said, its reason asked again (the relay's
+  // credits used up, unreachable…): an <audio> doesn't give the server's answer.
   listenVoice(locale, voice) {
-    const text = this.localeName(locale, locale);
-    new Audio(`/api/tts?text=${encodeURIComponent(text)}&voice=${encodeURIComponent(voice)}`).play().catch(() => {});
+    const url = `/api/tts?${new URLSearchParams({ text: this.localeName(locale, locale), voice })}`;
+    const audio = new Audio(url);
+    listening?.pause();  // one voice at a time
+    listening = audio;
+    audio.addEventListener("error", async () => {
+      let message = t("app.audio.failed");
+      try {
+        const res = await fetch(url);
+        if (!res.ok) message = errorMessage((await res.json()).detail) || message;
+      } catch {}
+      this.error = message;
+    });
+    audio.play().catch((e) => {
+      if (e.name === "NotAllowedError") this.error = t("app.audio.blocked");
+    });
   },
 };

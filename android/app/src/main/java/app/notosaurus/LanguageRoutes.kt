@@ -6,6 +6,7 @@ import io.ktor.server.response.respondBytes
 import io.ktor.server.response.respondText
 import io.ktor.server.routing.Route
 import io.ktor.server.routing.get
+import kotlinx.coroutines.CancellationException
 import kotlinx.serialization.json.JsonArray
 import kotlinx.serialization.json.JsonNull
 import kotlinx.serialization.json.JsonObject
@@ -37,9 +38,17 @@ internal fun Route.languageRoutes(server: LocalServer) {
             val text = call.request.queryParameters["text"].orEmpty()
             val voice = call.request.queryParameters["voice"].orEmpty()
             val rate = call.request.queryParameters["rate"].orEmpty().takeIf { it in Speech.RATES }.orEmpty() // the lesson's
-            val mp3 = runCatching { speech.read(text, voice, rate) }.getOrNull()
-            if (mp3 == null) call.respondText("", status = HttpStatusCode.BadGateway)
-            else call.respondBytes(mp3.readBytes(), ContentType.Audio.MPEG)
+            val mp3 = try {
+                speech.read(text, voice, rate)
+            } catch (e: CancellationException) {
+                throw e
+            } catch (e: Exception) { // said by the page (credits used up, relay unreachable…), as the computer's
+                val (status, body) = failure(e)
+                    ?: (HttpStatusCode.BadGateway to error("tts.failed", buildJsonObject { put("detail", e.message.orEmpty()) }))
+                call.respondText(body.toString(), ContentType.Application.Json, status)
+                return@get
+            }
+            call.respondBytes(mp3.readBytes(), ContentType.Audio.MPEG)
         }
     }
 }
