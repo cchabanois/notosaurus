@@ -56,7 +56,9 @@ def browser():
         executable = os.environ.get("NOTOSAURUS_TEST_CHROMIUM")
         try:
             browser = p.chromium.launch(executable_path=executable) if executable else p.chromium.launch()
-        except sync_api.Error as e:  # no browser here: skipped, not 60 errors (CI has one)
+        except sync_api.Error as e:  # no browser here: skipped, not 60 errors
+            if executable:  # one asked for (CI's Chrome) that can't start: an error, not all skipped
+                raise
             pytest.skip(f"no Chromium (python -m playwright install chromium, or NOTOSAURUS_TEST_CHROMIUM): {e}")
         yield browser
         browser.close()

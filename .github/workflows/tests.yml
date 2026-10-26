@@ -133,8 +133,11 @@ jobs:
           cache: pip
           cache-dependency-path: requirements*.txt
       - run: pip install -r requirements-page.txt
-      - run: python -m playwright install --with-deps chromium
-      - run: pytest -q tests/test_page.py
+      # The runner's own Chrome, not Playwright's download: its system packages (--with-deps,
+      # apt) once took the job's 10 minutes. Checked first: without it the tests are skipped.
+      - run: test -x /usr/bin/google-chrome && pytest -q tests/test_page.py
+        env:
+          NOTOSAURUS_TEST_CHROMIUM: /usr/bin/google-chrome
 
   addon-install:
     # The packaged add-on, unpacked as Anki would: downloads uv, installs Python
