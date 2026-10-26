@@ -9,7 +9,10 @@ lesson's expect.json, if any, says what the general rules can't:
   {"voice": "any" | "none" | "en", "cards": [3, 8], "contains": ["vendredi"], "dictation": true, "why": "…"}
 ("dictation": the page is one to prepare, which Automatic must see: --prompt auto)
 
-  .venv/bin/python tools/bench.py [--only espagnol] [--jobs 6] [--bench notes/bench]
+  .venv/bin/python tools/bench.py [--only espagnol] [--jobs 6] [--bench notes/bench] [--figures]
+
+--figures: the cards' figures drawn too (/v1/figure, as the app) and judged as
+tools/bench_figures.py does, their sheet in the run's figures/ folder.
 
 The test relay's licence: RELAY_KEY, else ~/git/notosaurus-cloud/.test-licence-bench (its
 own: 5,000 credits a day), else .test-licence-dev. Each run is kept in <bench>/runs/, the
@@ -353,6 +356,30 @@ def check(
 # --- Running it ------------------------------------------------------------------------
 
 
+def figures_judged(url: str, key: str, name: str, made: dict, out: Path, sheets: list) -> tuple[bool | None, str]:
+    """The lesson's figures drawn by the relay (as the app asks for them) and judged
+    (tools/bench_figures.py): a check, its drawings on the run's sheet."""
+    from bench_figures import draw, judge_config, judged
+
+    out.mkdir(parents=True, exist_ok=True)
+    judge = judge_config()
+    asked = [c for c in made["deck"]["cards"] if c.get("figure", "").strip()]
+    if not asked:
+        return None, "figures: none"
+    wrong = []
+    for n, card in enumerate(asked, 1):
+        verdict = judged(judge, card["figure"], draw(url, key, card["figure"]))
+        verdict.pop("png", None)
+        if "svg" in verdict:
+            verdict["file"] = f"{name}-{n}.svg"
+            (out / verdict["file"]).write_text(verdict.pop("svg"))
+        sheets.append((f"{name} · {card['front'][:60]}", card["figure"], [verdict]))
+        if verdict.get("right") is False:
+            wrong.append(verdict.get("problem", ""))
+    said = f"figures: {len(asked) - len(wrong)}/{len(asked)} judged right"
+    return not wrong, said + "".join(f"; ✗ {p}" for p in wrong)
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(description=(__doc__ or "").splitlines()[0])
     parser.add_argument("--bench", default=str(ROOT / "notes/bench"))
@@ -360,6 +387,7 @@ def main() -> int:
     parser.add_argument("--jobs", type=int, default=3)
     parser.add_argument("--reuse", default="", help="a run's folder (runs/<at>): its AI answers, not asked again")
     parser.add_argument("--prompt", default="", help='a built-in prompt for every lesson ("auto": its choices checked)')
+    parser.add_argument("--figures", action="store_true", help="the cards' figures drawn and judged too")
     args = parser.parse_args()
     bench = Path(args.bench)
     folders = [f for f in sorted((bench / "lessons").iterdir()) if f.is_dir() and args.only.lower() in f.name.lower()]
@@ -414,6 +442,7 @@ def main() -> int:
     from app.routes.generation import _learned
 
     run = {"at": at, "lessons": {}}
+    runs_dir, sheets = bench / "runs", []
     failed = 0
     for folder, lesson, asked, result in made:
         name = folder.name
@@ -436,6 +465,8 @@ def main() -> int:
             expect_file = folder / "expect.json"
             expect = json.loads(expect_file.read_text()) if expect_file.is_file() else {}
             results = check(lesson, asked, result, voice, body, pack, expect)
+            if args.figures:
+                results.append(figures_judged(url, key, name, result, runs_dir / at / "figures", sheets))
         except Exception as e:  # the bench's own fault: the others still checked
             print(f"\n✗ {name}: not checked: {type(e).__name__}: {e}")
             run["lessons"][name] = {"error": f"{type(e).__name__}: {e}"}
@@ -452,8 +483,15 @@ def main() -> int:
             "voice": voice,
         }
 
+    if sheets:
+        from bench_figures import sheet
+
+        sheet(runs_dir / at / "figures" / "sheet.html", sheets)
+        print(f"\nThe figures' sheet: {runs_dir / at / 'figures' / 'sheet.html'}")
     runs = bench / "runs"
-    previous = sorted(p for p in runs.glob("*/run.json") if p.parent.name != at)
+    previous = sorted(  # the lessons' runs, not the figures' (tools/bench_figures.py)
+        p for p in runs.glob("*/run.json") if p.parent.name != at and not p.parent.name.endswith("-figures")
+    )
     (runs / at / "run.json").write_text(json.dumps(run, ensure_ascii=False, indent=1))
     print(f"\n{len(folders) - failed}/{len(folders)} lessons pass all their checks.")
     if previous:
