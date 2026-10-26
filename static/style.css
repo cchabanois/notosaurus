@@ -1056,9 +1056,11 @@ a.btn { text-decoration: none; }
 .report textarea { min-height: 3.5rem; }
 
 /* The voice chosen per language (the settings, voice-choice.js) */
-.voice-row { display: flex; align-items: center; gap: .4rem; margin-bottom: .4rem; }
-.voice-row .voice-locale { flex: 0 1 40%; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-weight: 600; }
-.voice-row select { flex: 1; min-width: 0; }
+/* The language whole on its line, then its voice (whole width) with ▶ and ✕: on a phone,
+   both on one line cut them ("espagnol d'Es…", "Puck · ho…") */
+.voice-row { display: grid; grid-template-columns: minmax(0, 1fr) auto auto; align-items: center; gap: .2rem .4rem; margin-bottom: .7rem; }
+.voice-row .voice-locale { grid-column: 1 / -1; font-weight: 600; }
+.voice-row .voice-locale::first-letter { text-transform: uppercase; }
 .voice-choice .voice-add { margin-top: .2rem; }
 
 /* ---- Tests to prepare (app-exams.js) ------------------------------------ */
