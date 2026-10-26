@@ -98,6 +98,13 @@ class NoQuota(FakeGemini):
         return await super().generate(model, contents, config)
 
 
+def test_a_busy_service_tried_again_before_the_fallback():
+    """Vertex AI's 429 (its shared pool busy for a moment) and the 5xx: tried again by the
+    SDK, with backoff and jitter, before the fallback model (Google's advice for 429s)."""
+    retry = gemini._gemini_client(AIConfig(gemini_api_key="k"))._api_client._http_options.retry_options
+    assert retry.attempts == 3 and retry.jitter and 429 in retry.http_status_codes and 503 in retry.http_status_codes
+
+
 def test_no_quota_left_the_fallback_answers(client, monkeypatch):
     monkeypatch.setenv("NOTOSAURUS_LLM", "gemini")
     monkeypatch.setenv("NOTOSAURUS_MODEL", "gemini-3.8-flash")
@@ -182,16 +189,13 @@ def _light_call(monkeypatch, answer: str, call, finish=types.FinishReason.STOP):
     return found, fake.calls[0]
 
 
-def _assert_light_request(request, schema, rules, light=True):
+def _assert_light_request(request, schema, rules):
     model, contents, config = request
     assert model == "gemini-3.8-flash"
     assert config.system_instruction == rules
     assert config.response_mime_type == "application/json"
     assert config.response_json_schema == schema.model_json_schema()
-    if light:  # thinks as little as it can
-        assert config.thinking_config.thinking_level == types.ThinkingLevel.MINIMAL
-    else:  # the model's own thinking (a figure's coordinates)
-        assert config.thinking_config is None
+    assert config.thinking_config.thinking_level == types.ThinkingLevel.MINIMAL  # light: thinks as little as it can
     assert config.automatic_function_calling.disable and config.safety_settings  # the stricter filters too
     assert len(contents) == 1 and isinstance(contents[0], str)  # text only, no photo
     return contents[0]
@@ -206,26 +210,43 @@ def _error(monkeypatch, answer: str, call, finish=types.FinishReason.STOP) -> st
 
 
 def test_draw_figure_with_gemini(monkeypatch):
+    """Drawn in a light call, then seen as a PNG and checked in another; right, it stays."""
     from notosaurus_core import figures
     from notosaurus_core.calls import recording
 
+    # One answer both calls can read: the drawing's "svg", the check's "ok"
+    fake = Recording('{"svg": "<svg viewBox=\\"0 0 400 300\\"/>", "ok": true, "problem": ""}')
+    monkeypatch.setattr(gemini, "_gemini_client", lambda s: fake)
+    monkeypatch.setattr(gemini, "_NO_MINIMAL_THINKING", set())
     with recording("picture") as calls:
-        svg, request = _light_call(
-            monkeypatch,
-            '{"svg": "<svg viewBox=\\"0 0 400 300\\"/>"}',
-            lambda s: llm.draw_figure(s, "  a right triangle ABC "),
-        )
-    assert svg == '<svg viewBox="0 0 400 300"/>'
-    text = _assert_light_request(request, Drawing, figures.RULES, light=False)
-    assert text == "Figure to draw: a right triangle ABC"
-    assert [(c.model, c.input_tokens, c.output_tokens) for c in calls] == [("gemini-3.8-flash", 100, 25)]
+        svg = asyncio.run(llm.draw_figure(LIGHT, "  a right triangle ABC "))
+    assert svg.startswith("<svg") and 'viewBox="0 0 400 300"' in svg  # cleaned
+    drawn, checked = fake.calls
+    assert _assert_light_request(drawn, Drawing, figures.RULES) == "Figure to draw: a right triangle ABC"
+    _, contents, config = checked
+    assert config.system_instruction == figures.CHECK_RULES
+    assert config.thinking_config.thinking_level == types.ThinkingLevel.MINIMAL  # light too
+    assert config.response_json_schema == figures.Checked.model_json_schema()
+    picture = contents[0]
+    assert picture.inline_data.mime_type == "image/png" and picture.inline_data.data.startswith(b"\x89PNG")
+    assert contents[-1] == "Description: a right triangle ABC"
+    assert len(calls) == 2
 
-    draw = lambda s: llm.draw_figure(s, "a square")  # noqa: E731
-    assert _error(monkeypatch, "", draw) == "llm.empty_answer"
-    assert _error(monkeypatch, "<svg/>", draw) == "llm.invalid_answer"  # not the JSON asked for
-    assert _error(monkeypatch, '{"drawing": "<svg/>"}', draw) == "llm.invalid_answer"
-    assert _error(monkeypatch, '{"svg": "<svg', draw, types.FinishReason.MAX_TOKENS) == "llm.truncated"
-    assert _error(monkeypatch, '{"svg": ""}', draw, types.FinishReason.SAFETY) == "llm.refused"
+    def error(answer, finish=types.FinishReason.STOP):
+        """The error, and how many calls: an unusable light drawing is drawn again with thinking."""
+        fake = Recording(answer, finish)
+        monkeypatch.setattr(gemini, "_gemini_client", lambda s: fake)
+        try:
+            asyncio.run(llm.draw_figure(LIGHT, "a square"))
+        except llm.ExtractionError as e:
+            return e.code, len(fake.calls)
+        raise AssertionError("an error was expected")
+
+    assert error("") == ("llm.empty_answer", 2)
+    assert error("<svg/>") == ("llm.invalid_answer", 2)  # not the JSON asked for
+    assert error('{"drawing": "<svg/>"}') == ("llm.invalid_answer", 2)
+    assert error('{"svg": "<svg', types.FinishReason.MAX_TOKENS) == ("llm.truncated", 2)
+    assert error('{"svg": ""}', types.FinishReason.SAFETY) == ("llm.refused", 1)  # refused: not asked again
 
 
 def test_plan_picture_with_gemini(monkeypatch):

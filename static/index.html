@@ -380,9 +380,9 @@
                    @click="openViewer([pictureUrl(card)], 0)">
               <!-- How long it takes, roughly (a figure: the model thinks; a picture: found or drawn):
                    the bar fills over that time, slower near the end; restarts each time it shows -->
-              <span class="drawing" x-show="!card.picture || card._drawing" :style="`--expected: ${card.figure ? 30 : 15}s`">
+              <span class="drawing" x-show="!card.picture || card._drawing" :style="`--expected: ${card.figure ? 10 : 15}s`">
                 <span x-text="$t(card.figure ? 'app.pictures.drawingFigure' : 'app.pictures.drawing')"></span>
-                <small x-text="$t('app.pictures.about', { seconds: card.figure ? 30 : 15 })"></small>
+                <small x-text="$t('app.pictures.about', { seconds: card.figure ? 10 : 15 })"></small>
                 <i class="progress" aria-hidden="true"></i>
               </span>
             </div>
@@ -439,9 +439,9 @@
                    @click="openViewer([pictureUrl(card)], 0)">
                 <!-- How long it takes, roughly (a figure: the model thinks; a picture: found or drawn):
                    the bar fills over that time, slower near the end; restarts each time it shows -->
-              <span class="drawing" x-show="!card.picture || card._drawing" :style="`--expected: ${card.figure ? 30 : 15}s`">
+              <span class="drawing" x-show="!card.picture || card._drawing" :style="`--expected: ${card.figure ? 10 : 15}s`">
                 <span x-text="$t(card.figure ? 'app.pictures.drawingFigure' : 'app.pictures.drawing')"></span>
-                <small x-text="$t('app.pictures.about', { seconds: card.figure ? 30 : 15 })"></small>
+                <small x-text="$t('app.pictures.about', { seconds: card.figure ? 10 : 15 })"></small>
                 <i class="progress" aria-hidden="true"></i>
               </span>
               </div>

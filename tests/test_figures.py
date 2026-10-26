@@ -215,15 +215,64 @@ def test_search_written_in_any_language(client, monkeypatch):
     assert res == {"results": [], "words": "union Venn diagram"}
 
 
-def test_a_figure_drawn_with_the_models_thinking(monkeypatch):
-    """Its coordinates (a mark on its segment, an angle at its vertex) need the model's
-    thinking: thinking little, it placed them by eye. Not a light call."""
-    asked = {}
+SQUARE = (
+    '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 300">'
+    '<rect width="400" height="300" fill="white"/><text x="20" y="40">A</text></svg>'
+)
+
+
+def drawing_with(monkeypatch, light_svg=SQUARE, checked=None, check_fails=None):
+    """draw_figure with a fake AI: the light drawing `light_svg`, the check's answer
+    `checked` (ok, problem) or its error; the calls made, in order."""
+    calls = []
 
     async def answer(s, images, text, schema, system=None, light=False, **options):
-        asked["light"] = light
-        return schema(svg="<svg/>")
+        calls.append({"schema": schema.__name__, "light": light, "text": text, "images": len(images)})
+        if schema is figures.Checked:
+            if check_fails:
+                raise llm.ExtractionError(check_fails)
+            ok, problem = checked or (True, "")
+            return schema(ok=ok, problem=problem)
+        return schema(svg=light_svg if light else SQUARE.replace(">A<", ">B<"))
 
     monkeypatch.setattr(llm, "_ask_provider", answer)
-    asyncio.run(llm.draw_figure(AIConfig(llm="gemini"), "un triangle"))
-    assert asked == {"light": False}
+    svg = asyncio.run(llm.draw_figure(AIConfig(llm="gemini"), "un triangle ABC"))
+    return svg, calls
+
+
+def test_a_figure_right_at_once_stays_light(monkeypatch):
+    """Drawn quickly, seen as a picture and checked: right, it's the one (no thinking)."""
+    svg, calls = drawing_with(monkeypatch)
+    assert ">A<" in svg and svg.startswith("<svg") and 'width="400"' in svg  # cleaned
+    assert [(c["schema"], c["light"], c["images"]) for c in calls] == [("Drawing", True, 0), ("Checked", True, 1)]
+
+
+def test_a_wrong_figure_drawn_again_with_thinking_told_why(monkeypatch):
+    svg, calls = drawing_with(monkeypatch, checked=(False, "The arc is on the wrong side of the line."))
+    assert ">B<" in svg
+    assert [(c["schema"], c["light"]) for c in calls] == [("Drawing", True), ("Checked", True), ("Drawing", False)]
+    assert "The arc is on the wrong side of the line." in calls[-1]["text"]
+
+
+def test_an_unchecked_figure_kept_an_unusable_one_redrawn(monkeypatch):
+    # The check failing (no quota…): the light drawing kept rather than a wait
+    svg, calls = drawing_with(monkeypatch, check_fails="llm.gemini_quota")
+    assert ">A<" in svg and len(calls) == 2
+    # Not SVG at all, or nothing to look at: drawn with thinking, not checked
+    svg, calls = drawing_with(monkeypatch, light_svg="no figure")
+    assert ">B<" in svg and [c["light"] for c in calls] == [True, False]
+    monkeypatch.setattr(figures, "to_png", lambda svg: None)  # resvg missing
+    svg, calls = drawing_with(monkeypatch)
+    assert ">B<" in svg and [c["light"] for c in calls] == [True, False]
+
+
+def test_the_check_sees_the_figure_with_its_text():
+    """The PNG the check sees: the figure's size, on white, its labels drawn (fonts found)."""
+    import io
+
+    from PIL import Image
+
+    png = figures.to_png(figures.clean(SQUARE.replace(">A<", ' font-size="40">A<')))
+    picture = Image.open(io.BytesIO(png)).convert("L")
+    assert picture.size == (figures.PNG_WIDTH, 450)
+    assert picture.getextrema()[0] < 100  # dark pixels: the letter

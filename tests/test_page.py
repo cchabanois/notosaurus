@@ -267,7 +267,7 @@ def test_a_figure_being_drawn_says_how_long(page):
     generate_free(page, "Le triangle rectangle (géométrie)")
     waiting = page.locator(".card-picture.figure .drawing").first
     sync_api.expect(waiting).to_contain_text("Tracé de la figure")
-    sync_api.expect(waiting).to_contain_text("environ 30 s")
+    sync_api.expect(waiting).to_contain_text("environ 10 s")
     sync_api.expect(waiting.locator(".progress")).to_be_visible()
     sync_api.expect(page.locator(".flash textarea.back").first).to_be_editable()  # the cards usable meanwhile
     for route in held:

@@ -2,7 +2,8 @@
 that writes the cards (image models draw text and exact measures badly).
 
 The cards say what to draw (Card.figure, a description); each figure is then drawn
-by a short call of its own with the drawing rules below, cleaned (only shapes and
+by a short call of its own with the drawing rules below, checked by looking at it
+(CHECK_RULES: drawn again with the model's thinking when it's wrong), cleaned (only shapes and
 text: nothing that runs or loads anything) and saved next to the card pictures.
 """
 
@@ -46,8 +47,27 @@ A figure is for a pupil's lesson: for anything else (or anything unsuited to a \
 child), answer an empty figure, the white background alone."""
 
 
+# The figure seen as a picture, against its description: what a light drawing gets wrong
+# is placing by eye what belongs to another element (a mark off its segment, an angle's
+# arc on the other side of its line); looking at it tells, where its coordinates don't
+CHECK_RULES = """\
+You check a figure drawn for a pupil's flashcard against its description, as a strict \
+maths teacher. Look at every element the description asks for: each mark is on the \
+segment or at the angle it belongs to; each angle mark covers the angle described, on the \
+side described (left or right of a line, above or below), not the other angle at the same \
+vertex nor a reflex angle; equal things marked the same way; labels present, readable, not \
+on a line; the figure fills the picture, readable. Answer "ok" true only when everything is \
+right; else false, with the problem in one short sentence."""
+PNG_WIDTH = 600  # pixels: what the check sees
+
+
 class Drawing(BaseModel):
     svg: str = Field(description="The SVG document, starting with <svg.")
+
+
+class Checked(BaseModel):
+    problem: str = Field(description="The problem, in one short sentence; empty when none.")
+    ok: bool
 
 
 class FigureError(AppError):
@@ -158,6 +178,19 @@ def clean(svg: str) -> str:
     root.set("width", f"{width:g}")
     root.set("height", f"{height:g}")
     return ElementTree.tostring(root, encoding="unicode")
+
+
+def to_png(svg: str) -> bytes | None:
+    """The cleaned figure as a PNG on white, as the check sees it; None when it can't be
+    made (resvg not installed, or it fails on this figure)."""
+    try:
+        import resvg_py
+    except ImportError:
+        return None
+    try:
+        return bytes(resvg_py.svg_to_bytes(svg_string=svg, background="#ffffff", width=PNG_WIDTH))
+    except Exception:  # resvg's own errors (a Rust panic told as an exception): no check
+        return None
 
 
 def save(folder: Path, card: Card, svg: str) -> str:

@@ -48,12 +48,16 @@ def _gemini_client(s: AIConfig):
 
     if not s.gemini_ready():
         raise ExtractionError("llm.missing_key", provider="Gemini")
-    # 5xx errors (mostly 503 "model overloaded") are frequent and short-lived:
-    # the SDK retries with exponential backoff before giving up.
+    # 5xx errors (mostly 503 "model overloaded") are frequent and short-lived, and so is a
+    # 429 on Vertex AI's shared quota (its pool busy for a moment, not ours spent): the SDK
+    # tries again with exponential backoff and jitter (2 s, then 4 s, give or take) before
+    # the fallback model, often as busy then (Google's advice for 429s).
     return genai.Client(
         **s.gemini_options(),
         http_options=types.HttpOptions(
-            retry_options=types.HttpRetryOptions(attempts=3, initial_delay=2, http_status_codes=[500, 502, 503, 504])
+            retry_options=types.HttpRetryOptions(
+                attempts=3, initial_delay=2, jitter=1, http_status_codes=[429, 500, 502, 503, 504]
+            )
         ),
     )
 
