@@ -59,6 +59,7 @@ vertex nor a reflex angle; equal things marked the same way; labels present, rea
 on a line; the figure fills the picture, readable. Answer "ok" true only when everything is \
 right; else false, with the problem in one short sentence."""
 PNG_WIDTH = 600  # pixels: what the check sees
+FONT = Path(__file__).parent / "fonts" / "DejaVuSans.ttf"  # its licence beside it
 
 
 class Drawing(BaseModel):
@@ -187,8 +188,23 @@ def to_png(svg: str) -> bytes | None:
         import resvg_py
     except ImportError:
         return None
+    # Every text in DejaVu Sans, shipped here: resvg's "sans-serif" is Arial, which a Linux
+    # computer or the relay's container may not have, and it then draws no letter at all
+    # (a figure without its labels: refused by the check every time)
+    font = str(FONT)
     try:
-        return bytes(resvg_py.svg_to_bytes(svg_string=svg, background="#ffffff", width=PNG_WIDTH))
+        return bytes(
+            resvg_py.svg_to_bytes(
+                svg_string=svg,
+                background="#ffffff",
+                width=PNG_WIDTH,
+                font_files=[font],
+                font_family="DejaVu Sans",
+                sans_serif_family="DejaVu Sans",
+                serif_family="DejaVu Sans",
+                monospace_family="DejaVu Sans",
+            )
+        )
     except Exception:  # resvg's own errors (a Rust panic told as an exception): no check
         return None
 

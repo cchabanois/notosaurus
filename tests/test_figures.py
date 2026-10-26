@@ -267,12 +267,15 @@ def test_an_unchecked_figure_kept_an_unusable_one_redrawn(monkeypatch):
 
 
 def test_the_check_sees_the_figure_with_its_text():
-    """The PNG the check sees: the figure's size, on white, its labels drawn (fonts found)."""
+    """The PNG the check sees: the figure's size, on white, its labels drawn whatever their
+    font (the one shipped: a computer, or the relay's container, may have no Arial)."""
     import io
 
     from PIL import Image
 
-    png = figures.to_png(figures.clean(SQUARE.replace(">A<", ' font-size="40">A<')))
-    picture = Image.open(io.BytesIO(png)).convert("L")
-    assert picture.size == (figures.PNG_WIDTH, 450)
-    assert picture.getextrema()[0] < 100  # dark pixels: the letter
+    assert figures.FONT.is_file() and (figures.FONT.parent / "DejaVuSans-LICENSE.txt").is_file()
+    for family in ("sans-serif", "serif", "monospace", "Arial", "Times New Roman"):
+        png = figures.to_png(figures.clean(SQUARE.replace(">A<", f' font-size="40" font-family="{family}">A∩B<')))
+        picture = Image.open(io.BytesIO(png)).convert("L")
+        assert picture.size == (figures.PNG_WIDTH, 450)
+        assert picture.getextrema()[0] < 100, family  # dark pixels: the letters
