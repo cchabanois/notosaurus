@@ -12,6 +12,7 @@ import hashlib
 import io
 import logging
 import re
+from collections.abc import Callable
 from pathlib import Path
 from typing import Any, NamedTuple
 
@@ -23,6 +24,7 @@ from .models import Card, PictureSource
 from .providers import gemini
 
 log = logging.getLogger("notosaurus")
+Step = Callable[[dict], Any]  # told each step of a card's picture as it begins (relay_api.PictureStep)
 
 OPENROUTER = config.OPENROUTER_URL
 NAME = re.compile(r"^picture-[a-z0-9]+-[a-f0-9]{8}\.(jpg|svg)$")  # files we write; blocks "../"
@@ -287,18 +289,22 @@ async def sourced_picture(
     context: str = "",
     pixabay_key: str = "",
     draw_it: bool = True,
+    step: Step | None = None,
 ) -> tuple[bytes, PictureSource]:
     """The card-size picture of a subject, and where it comes from: from the cache, or
     found or drawn (then cached). `search`: what a free picture would show
     (Card.picture_search): one is looked for first (s.picture_find), the cards' AI
     choosing it (`context`: the card, "front → back"); drawn when none fits, if `draw_it`
     (the image model costs: the user said yes), else picture.needs_drawing. `fresh`: draw
-    it again (the user didn't like it); the new one replaces it in the cache."""
+    it again (the user didn't like it); the new one replaces it in the cache. `step`: told
+    each step as it begins (relay_api.PictureStep's fields)."""
+    tell = step or (lambda _: None)
     if search.strip() and s.picture_find and not fresh:
         key = hashlib.sha1(f"found|{search.strip().lower()}".encode()).hexdigest()
         found_path, origin_path = (files.cache_dir("pictures", f"{key}.{ext}") for ext in ("jpg", "json"))
         if found_path.is_file() and origin_path.is_file():
             return found_path.read_bytes(), PictureSource.model_validate_json(origin_path.read_text())
+        tell({"step": "searching"})
         if found := await stock.find(s, search, context, pixabay_key):
             found_path.parent.mkdir(parents=True, exist_ok=True)
             found_path.write_bytes(found[0])
@@ -310,6 +316,7 @@ async def sourced_picture(
         return path.read_bytes(), drawn
     if not draw_it:
         raise AppError("picture.needs_drawing", 409)
+    tell({"step": "drawing"})
     jpeg = card_size(await draw(s, subject))
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_bytes(jpeg)
@@ -331,6 +338,7 @@ async def card_picture(
     find: bool = True,
     pixabay_key: str = "",
     draw: bool = True,
+    step: Step | None = None,
 ) -> CardPicture:
     """A card's figure or picture: the one rule for the computer and the relay (the app).
 
@@ -340,17 +348,18 @@ async def card_picture(
     describes it (llm.plan_picture). A figure is drawn by the cards' AI; a picture is a
     free one found first for a real thing (s.picture_find and `find`), else the image
     model's, if `draw` (it costs: the user said yes; else picture.needs_drawing); from the
-    cache unless `fresh` (then drawn again). `language`: the cards', its English name."""
-    card = await decided(s, card, asked, language)
+    cache unless `fresh` (then drawn again). `language`: the cards', its English name.
+    `step`: told each step as it begins (relay_api.PictureStep's fields)."""
+    card = await decided(s, card, asked, language, step)
     if card.figure.strip():
-        svg = figures.clean(await llm.draw_figure(s, card.figure))
+        svg = figures.clean(await llm.draw_figure(s, card.figure, step))
         card.picture_source = PictureSource(source="drawn", model=s.model_for_provider())
         return CardPicture(card, svg.encode(), "svg")
     context = f"{card.front.strip()} → {card.back.strip()}"
     search = card.picture_search if find else ""
     try:
         jpeg, card.picture_source = await sourced_picture(
-            s, card.picture_prompt, fresh, search, context, pixabay_key, draw_it=draw
+            s, card.picture_prompt, fresh, search, context, pixabay_key, draw_it=draw, step=step
         )
     except AppError as e:
         if e.code != "picture.needs_drawing":
@@ -360,7 +369,9 @@ async def card_picture(
     return CardPicture(card, jpeg, "jpg")
 
 
-async def decided(s: AIConfig, card: Card, asked: str | None = None, language: str = "English") -> Card:
+async def decided(
+    s: AIConfig, card: Card, asked: str | None = None, language: str = "English", step: Step | None = None
+) -> Card:
     """What a card's picture should be, decided (card_picture's first step; the "✨ Image"
     button's, before free pictures are looked for): its own description, unchanged (`asked`
     None or the same); a figure's changed: that figure; otherwise (nothing yet, or a
@@ -373,6 +384,8 @@ async def decided(s: AIConfig, card: Card, asked: str | None = None, language: s
     if card.figure.strip() and written:
         card.figure = written  # a figure stays one: drawn from what was written
     elif not current or (asked is not None and written != current):
+        if step:
+            step({"step": "deciding"})
         plan = await llm.plan_picture(s, card.front, card.back, written, language)
         if not plan.description:
             raise AppError("picture.no_subject")  # (a 400, as before: nothing to draw)
@@ -391,10 +404,11 @@ async def figure_or_picture(
     language: str = "English",
     draw: bool = True,
     find: bool = True,
+    step: Step | None = None,
 ) -> str:
     """The card's figure or picture (card_picture), saved in the lesson, the card's picture
     fields updated in place (what it shows, where it comes from); returns its file name."""
-    made = await card_picture(s, card, asked, language, fresh, find, draw=draw)
+    made = await card_picture(s, card, asked, language, fresh, find, draw=draw, step=step)
     for field in ("figure", "picture_prompt", "picture_search", "picture_source"):
         setattr(card, field, getattr(made.card, field))
     if made.extension == "svg":
@@ -408,11 +422,12 @@ class Drawn(NamedTuple):
     to_draw: list[str]  # the cards whose picture no free one fits: drawn only if the user says yes
 
 
-async def draw_all(s: AIConfig, folder: Path, cards: list[Card], draw: bool = False) -> Drawn:
+async def draw_all(s: AIConfig, folder: Path, cards: list[Card], draw: bool = False, step: Step | None = None) -> Drawn:
     """The missing pictures (cards with a picture_prompt or a figure, and no picture), a few
     at a time: figures drawn, free pictures found; a picture none fits drawn by the image
     model only if `draw` (it costs: the user said yes), else its card in to_draw. A card
-    without its picture is still a card."""
+    without its picture is still a card. `step`: told each card's steps as they begin,
+    {"card": its id, …relay_api.PictureStep's fields}."""
     # Not on a sentence with gaps: Anki shows no picture on it (not paid for, then)
     todo = [
         c for c in cards if (c.picture_prompt.strip() or c.figure.strip()) and not c.picture and not is_cloze(c.front)
@@ -424,7 +439,11 @@ async def draw_all(s: AIConfig, folder: Path, cards: list[Card], draw: bool = Fa
     async def one(card: Card) -> None:
         async with sem:
             try:
-                card.picture = await figure_or_picture(s, folder, card, draw=draw, find=not draw)
+                told = None
+                if step is not None:
+                    tell = step  # (bound here: pyright sees it set)
+                    told = lambda said, card=card: tell({"card": card.id, **said})  # noqa: E731
+                card.picture = await figure_or_picture(s, folder, card, draw=draw, find=not draw, step=told)
             except AppError as e:
                 if e.code == "picture.needs_drawing":
                     to_draw.append(card.id)

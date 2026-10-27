@@ -896,6 +896,40 @@ class LocalServerTest {
     }
 
     @Test
+    fun eachCardsPictureStepsToldAsTheRelayTellsThem() = app { client ->
+        relayAnswers("""{"deck": {"deck": "Maths", "cards": [
+            {"front": "Ce triangle ?", "back": "rectangle", "figure": "a right triangle"}]}, "turns": [], "usage": {"credits": 1, "credits_left": 99}}""")
+        val lesson = client.submitFormWithBinaryData("/api/extract", formData { append("prompt", "p") }) { page() }.json().jsonObject
+        val (id, triangle) = lesson.string("id") to lesson["cards"]!!.jsonArray.single().jsonObject.string("id")
+        // The relay's steps as the core tells them (relay_api.CardPictureLine), then its answer
+        relay.dispatcher = object : mockwebserver3.Dispatcher() {
+            override fun dispatch(request: RecordedRequest): MockResponse {
+                val card = json.parseToJsonElement(request.body!!.utf8()).jsonObject["card"]!!
+                val svg = Base64.getEncoder().encodeToString("<svg/>".toByteArray())
+                val answer = """{"card": $card, "data": "$svg", "media_type": "image/svg+xml", "usage": {"credits": 3, "credits_left": 90}}"""
+                val lines = listOf(
+                    """{"step": {"step": "drawing", "problem": "", "first": ""}}""",
+                    """{"step": {"step": "checking", "problem": "", "first": ""}}""",
+                    """{"step": {"step": "redrawing", "problem": "Off its segment.", "first": "<svg>1</svg>"}}""",
+                    """{"result": $answer}""",
+                )
+                return MockResponse.Builder().addHeader("Content-Type", Relay.STREAM_TYPE).body(lines.joinToString("\n") + "\n").build()
+            }
+        }
+        val response = client.post("/api/lessons/$id/pictures") {
+            page(); header(HttpHeaders.Accept, Relay.STREAM_TYPE)
+            contentType(ContentType.Application.Json); setBody("""{"draw": true}""")
+        }
+        val lines = response.bodyAsText().lines().filter { it.isNotBlank() }.map { json.parseToJsonElement(it).jsonObject }
+        val steps = lines.filter { "step" in it }
+        assertEquals(listOf("drawing", "checking", "redrawing"), steps.map { it.string("step") })
+        assertTrue(steps.all { it.string("card") == triangle })
+        assertEquals("Off its segment." to "<svg>1</svg>", steps.last().string("problem") to steps.last().string("first"))
+        val drawn = lines.last()["result"]!!.jsonObject["lesson"]!!.jsonObject["cards"]!!.jsonArray.single().jsonObject
+        assertTrue(drawn.string("picture").endsWith(".svg"))
+    }
+
+    @Test
     fun picturesDrawnByTheRelayThenIntoAnkiDroid() = app { client ->
         relayAnswers("""{"deck": {"deck": "Anglais", "cards": [
             {"front": "Comment dit-on ?", "back": "an apple", "picture_prompt": "an apple"},

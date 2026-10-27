@@ -27,6 +27,9 @@ takes but the AI configuration (the relay's own), and keeps nothing.
   asked so with "Accept: application/x-ndjson", each source's pictures come as it
   answers (PictureSearchLine). Their pictures (and /v1/picture's) say where they come
   from in PICTURE_SOURCE_HEADER: kept with the card.
+- /v1/card-picture asked with "Accept: application/x-ndjson" says each step as it begins
+  (deciding, drawing, checking, redrawing with the first figure, searching), then the
+  answer or the error (CardPictureLine).
 - /v1/report: content the AI made, reported by the user (shocking, wrong…: Google Play's
   policy on generated content). The only thing the relay keeps of a lesson: what the user
   saw and sent, for REPORT_DAYS, read by Notosaurus. Free, REPORTS_PER_DAY a licence.
@@ -323,6 +326,27 @@ class CardPictureResponse(BaseModel):
     data: str = Field(description="The figure's SVG or the picture's JPEG, base64.")
     media_type: Literal["image/svg+xml", "image/jpeg"]
     usage: Usage
+
+
+class PictureStep(BaseModel):
+    """What a card's picture is being made by, now (pictures.card_picture's steps)."""
+
+    step: Literal["deciding", "drawing", "checking", "redrawing", "searching"] = Field(
+        description='"deciding": a figure or a picture; "drawing": a figure drawn, or a picture by the image '
+        'model; "checking": the figure looked at; "redrawing": it was wrong, drawn again with the model\'s '
+        'thinking; "searching": a free picture looked for.'
+    )
+    problem: str = Field(default="", description='"redrawing": what was wrong.')
+    first: str = Field(default="", description='"redrawing": the first figure, its SVG (never kept).')
+
+
+class CardPictureLine(BaseModel):
+    """A line of /v1/card-picture asked as STREAM_TYPE, one of: {"step"} as each begins;
+    last, {"result"} or {"error"} (the HTTP status is 200 once a line is sent)."""
+
+    step: PictureStep | None = None
+    result: CardPictureResponse | None = None
+    error: Error | None = None
 
 
 class PlanPictureRequest(BaseModel):

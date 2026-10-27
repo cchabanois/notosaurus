@@ -1,6 +1,7 @@
 """Figures on cards: SVG drawn by the AI, cleaned, saved and sent like the pictures."""
 
 import asyncio
+import json
 from xml.etree import ElementTree
 
 import apkg
@@ -111,6 +112,34 @@ def test_figures_drawn_shown_and_exported(client, tmp_path):
     package = apkg.export(client, body, tmp_path)
     assert {cards[0]["picture"], cards[1]["picture"]} <= set(package.media_map.values())
     assert any(f'<img src="{cards[0]["picture"]}">' in note[2] for note in package.notes)
+
+
+def test_each_cards_steps_told_as_they_begin(client, monkeypatch):
+    """Asked as a stream: each card's steps (drawn, checked; wrong: redrawn, with its first
+    figure), then the answer as without it."""
+    lesson = client.post("/api/extract", data={"prompt": "Le triangle rectangle (géométrie)"}).json()
+    first = lesson["cards"][0]["id"]
+    real = llm._figure_problem
+
+    async def problem(s, description, png):  # the first card's figure found wrong once
+        return (
+            "The arc is on the wrong side."
+            if description == lesson["cards"][0]["figure"]
+            else await real(s, description, png)
+        )
+
+    monkeypatch.setattr(llm, "_figure_problem", problem)
+    res = client.post(
+        f"/api/lessons/{lesson['id']}/pictures", json={"draw": True}, headers={"Accept": "application/x-ndjson"}
+    )
+    lines = [json.loads(line) for line in res.text.splitlines()]
+    steps = [(line["card"], line["step"]) for line in lines if "step" in line]
+    assert [s for c, s in steps if c == first] == ["drawing", "checking", "redrawing"]
+    assert [s for c, s in steps if c == lesson["cards"][1]["id"]] == ["drawing", "checking"]
+    redrawn = next(line for line in lines if line.get("step") == "redrawing")
+    assert redrawn["problem"] == "The arc is on the wrong side." and redrawn["first"].startswith("<svg")
+    answer = lines[-1]["result"]
+    assert answer["failures"] == 0 and all(c["picture"].endswith(".svg") for c in answer["lesson"]["cards"])
 
 
 def test_redraw_a_figure_from_its_description(client):

@@ -57,7 +57,7 @@ segment or at the angle it belongs to; each angle mark covers the angle describe
 side described (left or right of a line, above or below), not the other angle at the same \
 vertex nor a reflex angle; equal things marked the same way; labels present, readable, not \
 on a line; the figure fills the picture, readable. Answer "ok" true only when everything is \
-right; else false, with the problem in one short sentence."""
+right; else false, with the problem in one short sentence, in the description's language."""
 PNG_WIDTH = 600  # pixels: what the check sees
 FONT = Path(__file__).parent / "fonts" / "DejaVuSans.ttf"  # its licence beside it
 

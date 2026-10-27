@@ -42,12 +42,12 @@ def parameters(function, *but: str) -> set[str]:
     [
         (api.ReviseRequest, llm.revise_cards, ("images", "demo")),  # demo: the relay never runs the demo AI
         (api.ExplainRequest, llm.explain_card, ()),
-        (api.FigureRequest, llm.draw_figure, ()),
+        (api.FigureRequest, llm.draw_figure, ("step",)),  # told as it goes, not sent
         (api.PictureRequest, pictures.picture, ("pixabay_key",)),  # the relay's own
         (api.TranscribeRequest, llm.transcribe, ("audio",)),  # the multipart's "audio"
         (api.RephraseRequest, llm.rephrase, ()),
         (api.PlanPictureRequest, llm.plan_picture, ()),
-        (api.CardPictureRequest, pictures.card_picture, ("pixabay_key",)),  # the relay's own
+        (api.CardPictureRequest, pictures.card_picture, ("pixabay_key", "step")),  # the relay's own; told as it goes
     ],
 )
 def test_each_request_is_its_core_function(request_model, function, not_sent):

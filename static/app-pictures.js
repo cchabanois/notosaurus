@@ -159,11 +159,11 @@ const picturesPart = {
     this.drawingLessons.push(lessonId);
     this.toDraw = [];
     try {
-      const res = await (await api(`/api/lessons/${lessonId}/pictures`, {
+      const res = await this.pictureSteps(lessonId, await api(`/api/lessons/${lessonId}/pictures`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { "Content-Type": "application/json", Accept: "application/x-ndjson" },
         body: JSON.stringify({ draw }),
-      })).json();
+      }));
       if (this.lessonId !== lessonId) return;  // another lesson opened meanwhile
       // With where each comes from: the next save would drop it otherwise
       const drawn = new Map(res.lesson.cards.map((c) => [c.id, c]));
@@ -179,6 +179,45 @@ const picturesPart = {
       this.error = e.message;
     } finally {
       this.drawingLessons.splice(this.drawingLessons.indexOf(lessonId), 1);
+      if (this.lessonId === lessonId) this.cards.forEach((c) => Object.assign(c, { _step: "", _problem: "", _first: "" }));
     }
+  },
+
+  // The pictures' answer, each card's steps shown on it as they begin (application/x-ndjson):
+  // a figure drawn, checked, redrawn when wrong (its first one shown meanwhile, faded); a
+  // picture looked for, drawn. A server answering all at once (an older one): its answer
+  async pictureSteps(lessonId, res) {
+    if (!(res.headers.get("Content-Type") ?? "").includes("ndjson")) return res.json();
+    for await (const item of ndjsonItems(res)) {
+      if (item.result) return item.result;
+      if (item.error) throw itemError(item.error);
+      const card = this.lessonId === lessonId && item.step && this.cards.find((c) => c.id === item.card);
+      if (card) Object.assign(card, { _step: item.step, _problem: item.problem ?? "", _first: item.first ?? "" });
+    }
+    throw new Error(t("errors.unreachable"));
+  },
+
+  // What a card's picture is being made by, on it ("drawing…", "checked…", "drawn again…")
+  pictureStepText(card) {
+    const figure = Boolean(card.figure);
+    const key = {
+      deciding: "deciding", searching: "searching", checking: "checking", redrawing: "redrawing",
+      drawing: figure ? "drawingFigure" : "drawing",
+    }[card._step];
+    if (key) return t(`app.pictures.steps.${key}`);
+    // Others already under way, not this one: its turn to come (a few at a time)
+    if (!card._drawing && this.drawingHere() && this.cards.some((c) => c._step)) return t("app.pictures.steps.waiting");
+    return t(figure ? "app.pictures.drawingFigure" : "app.pictures.drawing");
+  },
+
+  // Roughly how long, in seconds: a figure quick then checked; drawn again with thinking, longer
+  pictureExpected(card) {
+    if (card._step === "redrawing") return 40;
+    return card.figure ? 10 : 15;
+  },
+
+  // The first figure, found wrong, shown faded while it's drawn again (never kept)
+  firstFigureUrl(card) {
+    return card._first ? `data:image/svg+xml;charset=utf-8,${encodeURIComponent(card._first)}` : "";
   },
 };

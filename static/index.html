@@ -380,10 +380,16 @@
                    @click="openViewer([pictureUrl(card)], 0)">
               <!-- How long it takes, roughly (a figure: the model thinks; a picture: found or drawn):
                    the bar fills over that time, slower near the end; restarts each time it shows -->
-              <span class="drawing" x-show="!card.picture || card._drawing" :style="`--expected: ${card.figure ? 10 : 15}s`">
-                <span x-text="$t(card.figure ? 'app.pictures.drawingFigure' : 'app.pictures.drawing')"></span>
-                <small x-text="$t('app.pictures.about', { seconds: card.figure ? 10 : 15 })"></small>
-                <i class="progress" aria-hidden="true"></i>
+              <span class="drawing" :class="{ redrawing: card._first }" x-show="!card.picture || card._drawing"
+                    :style="`--expected: ${pictureExpected(card)}s`">
+                <!-- Drawn again because it was wrong: the first one, faded, with what was wrong -->
+                <template x-if="card._first"><img class="first" :src="firstFigureUrl(card)" alt=""></template>
+                <span x-text="pictureStepText(card)"></span>
+                <small class="problem" x-show="card._problem" x-text="card._problem"></small>
+                <small x-text="$t('app.pictures.about', { seconds: pictureExpected(card) })"></small>
+                <!-- The bar starts again when the figure is drawn again (its own, longer time) -->
+                <i class="progress" aria-hidden="true"
+                   x-effect="card._step === 'redrawing'; $el.style.animation = 'none'; $el.offsetWidth; $el.style.animation = ''"></i>
               </span>
             </div>
             <div class="flash-body">
@@ -439,10 +445,16 @@
                    @click="openViewer([pictureUrl(card)], 0)">
                 <!-- How long it takes, roughly (a figure: the model thinks; a picture: found or drawn):
                    the bar fills over that time, slower near the end; restarts each time it shows -->
-              <span class="drawing" x-show="!card.picture || card._drawing" :style="`--expected: ${card.figure ? 10 : 15}s`">
-                <span x-text="$t(card.figure ? 'app.pictures.drawingFigure' : 'app.pictures.drawing')"></span>
-                <small x-text="$t('app.pictures.about', { seconds: card.figure ? 10 : 15 })"></small>
-                <i class="progress" aria-hidden="true"></i>
+              <span class="drawing" :class="{ redrawing: card._first }" x-show="!card.picture || card._drawing"
+                    :style="`--expected: ${pictureExpected(card)}s`">
+                <!-- Drawn again because it was wrong: the first one, faded, with what was wrong -->
+                <template x-if="card._first"><img class="first" :src="firstFigureUrl(card)" alt=""></template>
+                <span x-text="pictureStepText(card)"></span>
+                <small class="problem" x-show="card._problem" x-text="card._problem"></small>
+                <small x-text="$t('app.pictures.about', { seconds: pictureExpected(card) })"></small>
+                <!-- The bar starts again when the figure is drawn again (its own, longer time) -->
+                <i class="progress" aria-hidden="true"
+                   x-effect="card._step === 'redrawing'; $el.style.animation = 'none'; $el.offsetWidth; $el.style.animation = ''"></i>
               </span>
               </div>
               <div class="meta">

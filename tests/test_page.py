@@ -277,6 +277,35 @@ def test_a_figure_being_drawn_says_how_long(page):
     sync_api.expect(page.locator(".card-picture.figure img").first).to_be_visible()
 
 
+def test_a_figure_redrawn_shows_its_steps_and_first_try(page, monkeypatch):
+    """Each card says what its picture is being made by; a figure found wrong shows its first
+    try, faded, with what was wrong, while it's drawn again."""
+    import asyncio
+
+    from app.routes import pictures as routes
+
+    real, go_on = routes.pictures.draw_all, threading.Event()
+    first = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 300" width="400" height="300"></svg>'
+
+    async def draw_all(s, folder, cards, draw=False, step=None):
+        step({"card": cards[0].id, "step": "drawing"})
+        step({"card": cards[0].id, "step": "redrawing", "problem": "L'angle est du mauvais côté.", "first": first})
+        await asyncio.to_thread(go_on.wait, 30)
+        return await real(s, folder, cards, draw, step)
+
+    monkeypatch.setattr(routes.pictures, "draw_all", draw_all)
+    generate_free(page, "Le triangle rectangle (géométrie)")
+    redrawn = page.locator(".card-picture.figure .drawing.redrawing").first
+    sync_api.expect(redrawn).to_contain_text("Première version imparfaite : nouveau tracé, plus soigné")
+    sync_api.expect(redrawn).to_contain_text("L'angle est du mauvais côté.")
+    sync_api.expect(redrawn).to_contain_text("environ 40 s")
+    sync_api.expect(redrawn.locator("img.first")).to_be_visible()
+    sync_api.expect(page.locator(".flash").nth(1).locator(".drawing:visible")).to_contain_text("En attente")
+    go_on.set()
+    sync_api.expect(page.locator(".card-picture.figure img:not(.first)").first).to_be_visible()
+    sync_api.expect(page.locator(".drawing.redrawing")).to_have_count(0)
+
+
 def test_delete_the_open_lesson(page):
     generate_free(page, FRONT_PROMPT)
     page.locator(".review-head").get_by_role("button", name="Supprimer la leçon").click()

@@ -385,7 +385,16 @@
       "costUsd": "Kosten: etwa {amount} US-$.",
       "costCredits": "Kosten: etwa {count} Credits.",
       "drawingFigure": "📐 Figur wird gezeichnet…",
-      "about": "etwa {seconds} s"
+      "about": "etwa {seconds} s",
+      "steps": {
+        "waiting": "⏳ Wartet…",
+        "deciding": "💭 Bild oder Figur wird gewählt…",
+        "drawingFigure": "📐 Figur wird gezeichnet…",
+        "checking": "🔎 Figur wird geprüft…",
+        "redrawing": "📐 Erste Fassung nicht richtig: wird sorgfältiger neu gezeichnet…",
+        "searching": "🔎 Freies Bild wird gesucht…",
+        "drawing": "🎨 Bild wird gezeichnet…"
+      }
     },
     "pairing": {
       "title": "Gerät nicht zugelassen"
