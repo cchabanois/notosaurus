@@ -64,8 +64,8 @@ in the lesson.
   their renewal date, what was used that day, and a short note for support (an order number,
   for instance). Kept while it is valid, then **12 months** after it ends (to answer a question
   or a claim), then deleted.
-- **What you report** with ⚑ (a card, its explanation or its picture the AI made, shocking or
-  wrong), if you do: exactly what the app shows you before sending, the reason, your comment,
+- **What you report** with ⚑ (a card the AI made, with its explanation if shown and its
+  picture, unless it's a photo you took; shocking or wrong), if you do: exactly what the app shows you before sending, the reason, your comment,
   the lesson's instructions, the language and a short licence identifier. Never the lesson's
   photos, nor the child's name. Read by Notosaurus to improve the AI's content, kept **180
   days**, then deleted.

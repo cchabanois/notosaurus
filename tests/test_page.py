@@ -1112,7 +1112,6 @@ def test_a_card_and_its_explanation_reported_in_the_app(page):
     card.get_by_role("button", name="Plus d'actions").click()
     card.get_by_role("button", name="Signaler").click()
     sheet = page.get_by_role("dialog", name="Signaler un contenu")
-    sync_api.expect(sheet.locator(".chips")).to_be_hidden()  # no explanation, no picture: the card
     send = sheet.get_by_role("button", name="Envoyer")
     sync_api.expect(send).to_be_disabled()  # a reason first
     sheet.get_by_label("Faux").check()
@@ -1130,12 +1129,40 @@ def test_a_card_and_its_explanation_reported_in_the_app(page):
     sync_api.expect(card.locator(".explain")).to_contain_text("(démo, explain)")
     card.get_by_role("button", name="Plus d'actions").click()
     card.get_by_role("button", name="Signaler").click()
-    sheet.get_by_role("button", name="L'explication").click()
     sheet.get_by_label("Choquant ou inapproprié").check()
+    # The whole card as seen: its texts and its explanation, shown
     sync_api.expect(sheet.locator(".report-preview")).to_contain_text("explain: (démo, explain)")
+    sync_api.expect(sheet.locator(".report-preview")).to_contain_text("En quelle année")
     send.click()
     sync_api.expect(sheet).to_contain_text("Merci")
-    assert sent[1]["kind"] == "explanation" and sent[1]["reason"] == "offensive"
+    assert sent[1]["kind"] == "card" and sent[1]["reason"] == "offensive" and "Front: " in sent[1]["content"]
+
+
+def test_a_card_reported_with_its_picture_and_dropped(page):
+    """A card with a figure reported: the whole card and its figure sent; then the figure
+    alone removed, the card kept."""
+    sent = []
+    page.route("**/api/config", lambda route: route.fulfill(json={**route.fetch().json(), "report": True}))
+    page.route(
+        "**/api/lessons/*/report",
+        lambda route: (sent.append(route.request.post_data_json), route.fulfill(json={"received": True})),
+    )
+    generate_free(page, "Le triangle rectangle (géométrie)")
+    card = page.locator(".flash").first
+    sync_api.expect(card.locator(".card-picture img:not(.first):visible")).to_be_visible()
+    card.get_by_role("button", name="Plus d'actions").click()
+    card.get_by_role("button", name="Signaler").click()
+    sheet = page.get_by_role("dialog", name="Signaler un contenu")
+    sheet.get_by_label("Faux").check()
+    sync_api.expect(sheet).to_contain_text("L'image est envoyée aussi")
+    sync_api.expect(sheet.locator(".report-preview")).to_contain_text("Picture: ")
+    sheet.get_by_role("button", name="Envoyer").click()
+    sync_api.expect(sheet).to_contain_text("Merci")
+    (report,) = sent
+    assert report["picture"].startswith("data:image/svg+xml;base64,") and report["content"].startswith("Front: ")
+    sheet.get_by_role("button", name="Retirer l'image").click()
+    sync_api.expect(card.locator(".card-picture img:visible")).to_have_count(0)
+    sync_api.expect(page.locator(".flash")).to_have_count(3)  # the card kept
 
 
 def test_the_decks_offered_are_the_chosen_childs_and_no_ones(page):

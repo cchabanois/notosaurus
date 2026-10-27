@@ -65,8 +65,8 @@ reste dans la leçon.
   restants, leur date de renouvellement, ce qui a été utilisé dans la journée, et une courte note
   pour le support (par exemple un numéro de commande). Elle est gardée tant qu'elle est valable,
   puis **12 mois** après sa fin (pour répondre à une question ou à une réclamation), puis supprimée.
-- **Ce que vous signalez** avec ⚑ (une carte, son explication ou son image faites par l'IA,
-  choquantes ou fausses), si vous le faites : exactement ce que l'application vous montre avant l'envoi,
+- **Ce que vous signalez** avec ⚑ (une carte faite par l'IA, avec son explication si elle est
+  affichée et son image, sauf une photo que vous avez prise ; choquante ou fausse), si vous le faites : exactement ce que l'application vous montre avant l'envoi,
   le motif, votre commentaire, la consigne de la leçon, la langue et un identifiant court de la
   licence. Jamais les photos de la leçon, ni le prénom de l'enfant. Lu par Notosaurus pour
   améliorer le contenu de l'IA, gardé **180 jours**, puis supprimé.

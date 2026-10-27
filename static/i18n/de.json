@@ -466,11 +466,6 @@
     "report": {
       "button": "Melden",
       "title": "Inhalt melden",
-      "kinds": {
-        "card": "Die Karte",
-        "explanation": "Die Erklärung",
-        "picture": "Das Bild"
-      },
       "why": "Warum?",
       "reasons": {
         "offensive": "Anstößig oder unangemessen",
