@@ -44,13 +44,26 @@ function itemError(error) {
 // A lesson made as the AI writes it (application/x-ndjson, one JSON per line): each
 // card told to `onCard` as it comes (null: start again), then the lesson; null when
 // it was cancelled. A server that answers all at once (the Android app's): its lesson.
-async function lessonAsItComes(res, onCard) {
+async function lessonAsItComes(res, onCard, onStep = () => {}) {
   if (!(res.headers.get("Content-Type") ?? "").includes("ndjson")) return res.json();
   for await (const item of ndjsonItems(res)) {
     if (item.lesson) return item.lesson;
     if (item.cancelled) return null;
     if (item.error) throw itemError(item.error);
-    onCard(item.card ?? null);
+    if (item.step) onStep(item.step);  // what the AI is at: slow, the fallback model, the figures
+    else onCard(item.card ?? null);
+  }
+  throw new Error(t("errors.unreachable"));
+}
+
+// An answer told as it comes (application/x-ndjson): what the AI is at to `onStep`, then
+// its {"result"}; a server answering all at once (an older one): its answer
+async function resultAsItComes(res, onStep) {
+  if (!(res.headers.get("Content-Type") ?? "").includes("ndjson")) return res.json();
+  for await (const item of ndjsonItems(res)) {
+    if (item.result) return item.result;
+    if (item.error) throw itemError(item.error);
+    if (item.step) onStep(item.step);
   }
   throw new Error(t("errors.unreachable"));
 }
@@ -203,6 +216,7 @@ document.addEventListener("alpine:init", () => {
     frames: [],                  // diagram frames of the open lesson: what Anki shows of each photo
     sending: false,
     sendStep: "",                // what the send is doing (its sounds, its cards), on its button
+    aiStep: "",                  // what the AI is at while making or correcting: slow, fallback, figures
     drawingLessons: [],          // the lessons whose cards' pictures are being drawn (another may be open)
     pictureJobs: 0,              // a card's picture being redrawn, uploaded or removed
     toDraw: [],                  // the cards whose picture no free one fits: drawn if the user says yes

@@ -11,7 +11,7 @@ from typing import TYPE_CHECKING, Any
 
 from pydantic import BaseModel
 
-from ..calls import CardStream, ExtractionError, Image, OnCard, record
+from ..calls import CardStream, ExtractionError, Image, OnCard, record, tell
 from ..config import AIConfig
 from ..prompts import SYSTEM_PROMPT
 
@@ -143,6 +143,7 @@ async def _fallback(request: _Request, models: list[str]):
                 raise
             quota = e.code == "llm.gemini_quota"
             log.warning("Quota exceeded: falling back to the next model" if quota else "Falling back to the next model")
+            tell({"step": "fallback"})
     raise ExtractionError("llm.empty_answer", provider="Gemini")  # no model at all
 
 

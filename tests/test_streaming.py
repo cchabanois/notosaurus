@@ -211,3 +211,31 @@ def test_an_unexpected_error_mid_stream(client, monkeypatch, caplog):
     assert [r.levelname for r in caplog.records] == ["ERROR"]
     assert "RuntimeError" in caplog.text and "failing" in caplog.text  # its type, and where
     assert "madre" not in caplog.text and "Pedro" not in caplog.text
+
+
+def test_what_the_ai_is_at_told_with_the_cards_and_the_correction(client, monkeypatch):
+    """The AI's steps (slow, another model, the figures: llm.tell) come in the lesson's stream
+    and in the correction's, asked as a stream; the correction without it: as before."""
+    from notosaurus_core.providers import demo
+
+    real = demo._demo
+
+    async def busy(s, answer, on_card):  # the AI slow, then another model asked
+        llm.tell({"step": "slow"})
+        llm.tell({"step": "fallback"})
+        return await real(s, answer, on_card)
+
+    monkeypatch.setattr(demo, "_demo", busy)
+    res = client.post("/api/extract", data={"prompt": "Vocabulaire"}, headers=NDJSON)
+    lines = [json.loads(line) for line in res.text.splitlines()]
+    assert {"step": {"step": "slow"}} in lines and {"step": {"step": "fallback"}} in lines
+    assert lines.index({"step": {"step": "slow"}}) < next(i for i, x in enumerate(lines) if "card" in x)
+    lesson = lines[-1]["lesson"]
+
+    body = {"deck": lesson["deck"], "cards": lesson["cards"], "instruction": "supprime la première carte"}
+    res = client.post(f"/api/lessons/{lesson['id']}/revise", json=body, headers=NDJSON)
+    lines = [json.loads(line) for line in res.text.splitlines()]
+    assert lines[:2] == [{"step": {"step": "slow"}}, {"step": {"step": "fallback"}}]
+    assert len(lines[-1]["result"]["lesson"]["cards"]) == len(lesson["cards"]) - 1
+    plain = client.post(f"/api/lessons/{lesson['id']}/revise", json=body).json()
+    assert "lesson" in plain and "summary" in plain

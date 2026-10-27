@@ -12,12 +12,13 @@ const revisionPart = {
       deck: this.deck, cards: this.cards.map((c) => ({ ...c, _state: undefined })),
       reverse: this.reverse, typing: this.typing, dictation: this.dictation, dictationOnly: this.dictationOnly,
     };
+    this.aiStep = "";
     try {
-      const res = await (await api(`/api/lessons/${this.lessonId}/revise`, {
+      const res = await resultAsItComes(await api(`/api/lessons/${this.lessonId}/revise`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { "Content-Type": "application/json", Accept: "application/x-ndjson" },
         body: JSON.stringify({ ...this.payload(), instruction }),
-      })).json();
+      }), (step) => { this.aiStep = step.step; });
       const { cards, stats } = this.compareCards(before.cards, res.lesson.cards);
       clearTimeout(this.saveTimer);
       this.saveTimer = null;
@@ -36,7 +37,24 @@ const revisionPart = {
     } catch (e) {
       this.error = e.message;
       this.revision.busy = false;
+    } finally {
+      this.aiStep = "";
     }
+  },
+
+  // The waiting card's title: what is being done, now (the cards counted as they come)
+  loadingTitle() {
+    if (this.revision.busy) return t("app.loading.revising");
+    if (this.aiStep === "figures") return t("app.loading.figures");
+    if (this.coming.length) return t("app.loading.writingCards", { count: this.coming.length });
+    return t(this.photos.length ? "app.loading.reading" : "app.loading.writing");
+  },
+
+  // Under it: how long it usually takes; the AI slow to answer, or another model asked
+  loadingNote() {
+    if (this.aiStep === "fallback") return t("app.loading.fallback");
+    if (this.aiStep === "slow" && !this.coming.length) return t("app.loading.slow");
+    return t(!this.revision.busy && this.loadingQuick ? "app.loading.durationQuick" : "app.loading.duration");
   },
 
   // Keep the keys of unchanged cards and flag new or modified ones.

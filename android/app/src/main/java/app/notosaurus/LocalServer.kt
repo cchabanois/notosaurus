@@ -202,7 +202,7 @@ class LocalServer(
     /**
      * A lesson made (a new one, or again in its place): as JSON, or as the AI writes
      * it when the page asks Relay.STREAM_TYPE, as the computer answers (app/main.py,
-     * _streamed): {"card"} (or {"restart"}) lines, then {"lesson"}, {"error"} or
+     * _streamed): {"card"} (or {"restart"}; {"step"}: what the AI is at) lines, then {"lesson"}, {"error"} or
      * {"cancelled"}. The form is read first: the answer then outlives the request.
      */
     internal fun Route.making(path: String, make: suspend RoutingContext.(GenerationForm, OnCard) -> JsonObject) {
@@ -226,8 +226,11 @@ class LocalServer(
                     writer.flush()
                 }
                 val last = try {
-                    val lesson = routing.make(form) { card ->
-                        line(if (card != null) buildJsonObject { put("card", card) } else buildJsonObject { put("restart", true) })
+                    // What the AI is at (slow, the fallback model, the figures): told as it comes too
+                    val lesson = withContext(Telling { step -> line(buildJsonObject { put("step", step) }) }) {
+                        routing.make(form) { card ->
+                            line(if (card != null) buildJsonObject { put("card", card) } else buildJsonObject { put("restart", true) })
+                        }
                     }
                     buildJsonObject { put("lesson", lesson) }
                 } catch (e: Cancelled) {

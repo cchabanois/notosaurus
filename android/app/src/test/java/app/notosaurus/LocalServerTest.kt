@@ -446,6 +446,7 @@ class LocalServerTest {
     @Test
     fun theCardsAsTheyComeThenTheLesson() = app { client ->
         val lines = listOf(
+            """{"step": {"step": "slow"}}""", // what the AI is at: passed on to the page
             """{"card": {"front": "la mère", "back": "la madre"}}""",
             """{"result": {"deck": {"deck": "Espagnol", "cards": [{"front": "la mère", "back": "la madre"}]}, "turns": [], "usage": {"credits": 1, "credits_left": 99}}}""",
         )
@@ -456,10 +457,24 @@ class LocalServerTest {
         }
         assertTrue(res.headers[HttpHeaders.ContentType]!!.startsWith(Relay.STREAM_TYPE))
         val items = res.bodyAsText().lines().filter { it.isNotBlank() }.map { json.parseToJsonElement(it).jsonObject }
-        assertEquals("la madre", items[0]["card"]!!.jsonObject.string("back"))
-        val lesson = items[1]["lesson"]!!.jsonObject
+        assertEquals("slow", items[0]["step"]!!.jsonObject.string("step"))
+        assertEquals("la madre", items[1]["card"]!!.jsonObject.string("back"))
+        val lesson = items[2]["lesson"]!!.jsonObject
         assertEquals("Espagnol", lesson.string("deck"))
         assertEquals(lesson, client.get("/api/lessons/${lesson.string("id")}") { page() }.json()) // saved
+
+        // Corrected, asked as it goes: what the AI is at, then the answer
+        val revision = listOf(
+            """{"step": {"step": "fallback"}}""",
+            """{"result": {"deck": "Espagnol", "cards": [{"front": "la mère", "back": "la madre", "info": "f."}], "summary": "ok", "usage": {"credits": 1, "credits_left": 98}}}""",
+        )
+        relay.enqueue(MockResponse.Builder().setHeader("Content-Type", Relay.STREAM_TYPE).body(revision.joinToString("\n", postfix = "\n")).build())
+        val revised = client.post("/api/lessons/${lesson.string("id")}/revise") {
+            page(); header(HttpHeaders.Accept, Relay.STREAM_TYPE); contentType(ContentType.Application.Json)
+            setBody("""{"deck": "Espagnol", "cards": ${lesson["cards"]}, "instruction": "ajoute le genre"}""")
+        }.bodyAsText().lines().filter { it.isNotBlank() }.map { json.parseToJsonElement(it).jsonObject }
+        assertEquals("fallback", revised[0]["step"]!!.jsonObject.string("step"))
+        assertEquals("ok", revised[1]["result"]!!.jsonObject.string("summary"))
 
         // An error: the last line, as the page translates it
         relay.enqueue(MockResponse.Builder().code(402).body("""{"code": "relay.no_credits", "params": {}}""").build())

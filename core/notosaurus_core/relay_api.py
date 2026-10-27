@@ -27,6 +27,8 @@ takes but the AI configuration (the relay's own), and keeps nothing.
   asked so with "Accept: application/x-ndjson", each source's pictures come as it
   answers (PictureSearchLine). Their pictures (and /v1/picture's) say where they come
   from in PICTURE_SOURCE_HEADER: kept with the card.
+- /v1/revise asked with "Accept: application/x-ndjson" says what the AI is at (slow, the
+  fallback model), then the answer or the error (ReviseLine).
 - /v1/card-picture asked with "Accept: application/x-ndjson" says each step as it begins
   (deciding, drawing, checking, redrawing with the first figure, searching), then the
   answer or the error (CardPictureLine).
@@ -255,21 +257,41 @@ class ExtractResponse(Extracted):
     usage: Usage
 
 
+class AiStep(BaseModel):
+    """What the AI is at, for the user waiting (calls.tell)."""
+
+    step: Literal["slow", "fallback", "figures"] = Field(
+        description='"slow": no answer yet after a while (the model busy); "fallback": the model not '
+        'answering, the fallback one asked; "figures": the cards written, their figures being described.'
+    )
+
+
 class ExtractLine(BaseModel):
     """A line of /v1/extract's answer as the AI writes it (STREAM_TYPE), one of:
     {"card"} as soon as a card is written; {"restart": true}: the cards sent so far
-    are dropped (another model starts again); last, {"result"} or {"error"} (the
-    HTTP status is 200 once a line is sent: an error comes as the last line). A
-    client going away stops the AI: what it used is charged, at least 1 credit."""
+    are dropped (another model starts again); {"step"}: what the AI is at; last,
+    {"result"} or {"error"} (the HTTP status is 200 once a line is sent: an error
+    comes as the last line). A client going away stops the AI: what it used is
+    charged, at least 1 credit."""
 
     card: dict | None = Field(default=None, description="A card as the AI wrote it (Card's fields, some missing).")
     restart: bool | None = None
+    step: AiStep | None = None
     result: ExtractResponse | None = None
     error: Error | None = None
 
 
 class ReviseResponse(Revision):
     usage: Usage
+
+
+class ReviseLine(BaseModel):
+    """A line of /v1/revise asked as STREAM_TYPE, one of: {"step"}, what the AI is at;
+    last, {"result"} or {"error"} (the HTTP status is 200 once a line is sent)."""
+
+    step: AiStep | None = None
+    result: ReviseResponse | None = None
+    error: Error | None = None
 
 
 class ExplainResponse(Explanation):

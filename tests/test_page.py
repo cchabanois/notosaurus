@@ -306,6 +306,35 @@ def test_a_figure_redrawn_shows_its_steps_and_first_try(page, monkeypatch):
     sync_api.expect(page.locator(".drawing.redrawing")).to_have_count(0)
 
 
+def test_while_waiting_what_the_ai_is_at(page, monkeypatch):
+    """The waiting card says what the AI is at: slow to answer, another model asked; then the
+    cards counted as they come."""
+    import asyncio
+
+    from notosaurus_core import llm
+    from notosaurus_core.providers import demo
+
+    real, go_on = demo._demo, threading.Event()
+
+    async def busy(s, answer, on_card):
+        llm.tell({"step": "slow"})
+        await asyncio.sleep(0.5)
+        llm.tell({"step": "fallback"})
+        await asyncio.to_thread(go_on.wait, 30)
+        return await real(s, answer, on_card)
+
+    monkeypatch.setattr(demo, "_demo", busy)
+    page.goto("/")
+    page.get_by_role("radio", name="✏️ Libre").click()
+    page.locator("textarea[x-ref=promptText]").fill("Vocabulaire")
+    page.get_by_role("button", name="✨ Générer à partir de la consigne seule").click()
+    waiting = page.locator(".loading-card")
+    sync_api.expect(waiting).to_contain_text("L'IA met plus de temps que d'habitude à répondre")
+    sync_api.expect(waiting).to_contain_text("L'IA ne répond pas : passage à un autre modèle")
+    go_on.set()
+    page.locator(".flash").first.wait_for()
+
+
 def test_delete_the_open_lesson(page):
     generate_free(page, FRONT_PROMPT)
     page.locator(".review-head").get_by_role("button", name="Supprimer la leçon").click()

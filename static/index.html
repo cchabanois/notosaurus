@@ -643,8 +643,8 @@
   <div class="overlay" x-cloak x-show="loading || revision.busy" x-transition.opacity>
     <div class="loading-card">
       <div class="spinner"></div>
-      <strong x-text="revision.busy ? $t('app.loading.revising') : photos.length ? $t('app.loading.reading') : $t('app.loading.writing')"></strong>
-      <small x-text="!revision.busy && loadingQuick ? $t('app.loading.durationQuick') : $t('app.loading.duration')"></small>
+      <strong x-text="loadingTitle()"></strong>
+      <small :class="{ notice: aiStep === 'slow' || aiStep === 'fallback' }" x-text="loadingNote()"></small>
       <!-- The cards as the AI writes them: the last ones, while the others come -->
       <ul class="coming" x-show="loading && coming.length">
         <template x-for="(card, i) in coming.slice(-5)" :key="coming.length - 5 + i">

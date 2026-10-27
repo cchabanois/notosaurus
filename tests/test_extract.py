@@ -496,7 +496,14 @@ def test_a_figure_meant_but_left_undescribed_is_described(monkeypatch):
 
     monkeypatch.setattr(llm, "_ask_provider", generate)
     s = AIConfig(llm="gemini", gemini_api_key="k")
-    found = run(llm.extract_cards(s, [], "Automatique"))
+    told = []
+
+    async def extracted():
+        with llm.telling(told.append):  # the user told the figures are being described
+            return await llm.extract_cards(s, [], "Automatique")
+
+    found = run(extracted())
+    assert told == [{"step": "figures"}]
     assert [c.figure for c in found.deck.cards] == [
         "Deux ensembles A et B, leur partie commune hachurée",
         "",

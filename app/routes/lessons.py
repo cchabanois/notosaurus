@@ -1,17 +1,19 @@
 import asyncio
 
-from fastapi import APIRouter, Depends, Query
+from fastapi import APIRouter, Depends, Header, Query
+from fastapi.encoders import jsonable_encoder
 from fastapi.responses import FileResponse
 from pydantic import BaseModel
 
 from notosaurus_core import diagrams, llm
 from notosaurus_core.llm import Image, revise_cards
 from notosaurus_core.models import switched
+from notosaurus_core.relay_api import STREAM_TYPE
 
 from .. import access, ankiconnect, children, i18n, lesson_notes, lessons, settings, sounds, usage
 from ..errors import AppError
 from ..models import Deck, ExplainRequest, Explanation, Lesson, LessonIn, LessonSummary, RevisionRequest
-from .common import page_lang
+from .common import Step, page_lang, stepped
 
 router = APIRouter()
 
@@ -99,8 +101,22 @@ async def delete_lesson(id: str, in_anki: bool = Query(False, alias="anki")) -> 
 
 
 @router.post("/api/lessons/{id}/revise")
-async def revise_lesson(id: str, req: RevisionRequest, lang: str = Depends(page_lang)) -> dict:
-    """Apply a natural-language correction to the cards, using the lesson photos."""
+async def revise_lesson(
+    id: str, req: RevisionRequest, lang: str = Depends(page_lang), accept: str | None = Header(None)
+):
+    """Apply a natural-language correction to the cards, using the lesson photos. Asked as
+    application/x-ndjson: what the AI is at ({"step": relay_api.AiStep}), then the answer."""
+    if STREAM_TYPE in (accept or ""):
+
+        async def told(step: Step) -> dict:
+            with llm.telling(lambda said: step({"step": said})):
+                return jsonable_encoder(await _revised(id, req, lang))
+
+        return stepped(told, "Correcting")
+    return await _revised(id, req, lang)
+
+
+async def _revised(id: str, req: RevisionRequest, lang: str) -> dict:
     lesson = await access.editable(id)
     photos = [Image(lessons.photo(id, n), "image/jpeg") for n in range(1, lesson.photo_count + 1)]
     every = await asyncio.to_thread(children.list_all)
