@@ -109,9 +109,16 @@ const ankiPart = {
     this.notify(child ? t("app.profile.switchedChild", { child: child.name }) : t("app.profile.switched", { profile }));
   },
 
-  // Pictures being drawn or changed: the cards sent must have them
+  // Pictures being drawn or changed: the cards sent must have them. The wait said on the
+  // button meanwhile, with how many are there ("2 / 5 ready"): a figure can take a minute
   async picturesDone() {
-    while (this.drawingHere() || this.pictureJobs) await new Promise((resolve) => setTimeout(resolve, 300));
+    const waited = () => this.cards.filter((c) => c._drawing || ((c.figure || c.picture_prompt) && !c.picture));
+    const total = waited().length;
+    while (this.drawingHere() || this.pictureJobs) {
+      if (total) this.sendStep = t("app.actions.waitingPictures", { done: total - waited().length, total });
+      await new Promise((resolve) => setTimeout(resolve, 300));
+    }
+    this.sendStep = "";
   },
 
   async sendToAnki() {
@@ -307,6 +314,7 @@ const ankiPart = {
       this.error = e.message;
     } finally {
       this.exporting = false;
+      this.sendStep = "";
     }
   },
 };

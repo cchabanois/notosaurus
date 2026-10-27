@@ -213,7 +213,8 @@
       "sendingSounds": "🔊 Voz: {done} / {total}…",
       "sendingCards": "📥 Cartões…",
       "exportApkg": "⬇️ Exportar para o Anki (.apkg)",
-      "exporting": "Preparando o baralho…"
+      "exporting": "Preparando o baralho…",
+      "waitingPictures": "⏳ Imagens e figuras: {done} / {total} prontas…"
     },
     "loading": {
       "reading": "Lendo a lição…",

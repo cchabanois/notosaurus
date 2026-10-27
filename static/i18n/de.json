@@ -213,7 +213,8 @@
       "sendingSounds": "🔊 Stimme: {done} / {total} …",
       "sendingCards": "📥 Karten …",
       "exportApkg": "⬇️ Für Anki exportieren (.apkg)",
-      "exporting": "Stapel wird vorbereitet …"
+      "exporting": "Stapel wird vorbereitet …",
+      "waitingPictures": "⏳ Bilder und Figuren: {done} / {total} fertig…"
     },
     "loading": {
       "reading": "Lektion wird gelesen …",

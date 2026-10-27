@@ -622,7 +622,7 @@
         <span x-text="sending ? (sendStep || $t('app.actions.sending')) : $t(lessonExported ? 'app.actions.updateInAnki' : 'app.actions.addToAnki')"></span>
       </button>
       <button class="btn primary wide" x-show="!anki.available" @click="exportApkg()" :disabled="exporting">
-        <span x-text="exporting ? $t('app.actions.exporting') : $t('app.actions.exportApkg')"></span>
+        <span x-text="exporting ? (sendStep || $t('app.actions.exporting')) : $t('app.actions.exportApkg')"></span>
       </button>
     </div>
   </div>
