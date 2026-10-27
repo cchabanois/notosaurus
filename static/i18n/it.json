@@ -222,7 +222,11 @@
       "revising": "Correzione delle carte…",
       "duration": "Di solito ci vogliono da 10 a 30 secondi.",
       "durationQuick": "Di solito ci vogliono meno di 10 secondi.",
-      "cancelling": "Annullamento…"
+      "cancelling": "Annullamento…",
+      "figures": "Descrizione delle figure…",
+      "writingCards": "Scrittura delle carte: {count}…",
+      "slow": "L'IA impiega più del solito a rispondere…",
+      "fallback": "L'IA non risponde: passaggio a un altro modello…"
     },
     "send": {
       "added": {

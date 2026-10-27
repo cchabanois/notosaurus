@@ -113,8 +113,15 @@ def test_no_quota_left_the_fallback_answers(client, monkeypatch):
     assert s.fallback_models == "gemini-3.5-flash"  # by default: not flash-lite, which reads lessons badly
     fake = NoQuota({"gemini-3.8-flash"})
     monkeypatch.setattr(gemini, "_gemini_client", lambda s: fake)
-    assert asyncio.run(llm._ask_provider(s, [], "cards", Drawing, "rules")).svg == "<svg/>"
+    told = []
+
+    async def asked():
+        with llm.telling(told.append):  # the user told another model is asked
+            return await llm._ask_provider(s, [], "cards", Drawing, "rules")
+
+    assert asyncio.run(asked()).svg == "<svg/>"
     assert [m for m, _ in fake.levels] == ["gemini-3.8-flash", "gemini-3.5-flash"]
+    assert told == [{"step": "fallback"}]
 
     # The key check says which model answered, and which one the key can't use
     found = asyncio.run(llm.check(s))
@@ -406,3 +413,23 @@ def test_the_answer_read():
                 assert e.code == code
             else:
                 raise AssertionError(f"{code} expected")
+
+
+def test_an_ai_slow_to_answer_said(monkeypatch):
+    """No answer after a while: the user told (llm.SLOW_S, longer when the model thinks);
+    an answer in time: nothing said."""
+
+    async def answer_after(seconds):
+        async def provider(*args):
+            await asyncio.sleep(seconds)
+            return Drawing(svg="<svg/>")
+
+        monkeypatch.setattr(llm, "_provider", provider)
+        told = []
+        with llm.telling(told.append):
+            await llm._ask_provider(AIConfig(llm="gemini"), [], "t", Drawing, "rules", light=True)
+        return told
+
+    monkeypatch.setattr(llm, "SLOW_S", 0.05)
+    assert asyncio.run(answer_after(0.2)) == [{"step": "slow"}]
+    assert asyncio.run(answer_after(0.0)) == []

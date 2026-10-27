@@ -3,7 +3,7 @@
   "info": {
     "title": "Notosaurus relay",
     "summary": "notosaurus_core behind a licence key",
-    "description": "The Notosaurus relay's API, version 1: what its client (the Notosaurus app with a\nlicence, later the Android app) and the relay itself both import, so that they\ncan't drift apart.\n\nThe relay is notosaurus_core behind a licence key: each route is the remote form\nof a core function (/v1/extract → llm.extract_cards…), takes what that function\ntakes but the AI configuration (the relay's own), and keeps nothing.\n\n- Authentication: \"Authorization: Bearer <licence key>\".\n- The client says its version in CLIENT_HEADER (\"1.1.0\"); a client too old for\n  the relay gets \"relay.client_outdated\".\n- The routes with photos (extract, revise) take multipart/form-data: a \"request\"\n  part holding the JSON request and one \"images\" part per photo (binary, as\n  diagrams.prepare makes them: JPEG, at most 1568 px). The other routes take JSON.\n- Errors: HTTP status of ERRORS, body {\"code\", \"params\"} (errors.AppError), the\n  AI's own errors (\"llm.*\") passed on as they are.\n- /v1/extract asked with \"Accept: application/x-ndjson\" (STREAM_TYPE) answers as the\n  AI writes: one JSON object per line, each card as it comes, then the answer or\n  the error (ExtractLine). A client going away stops the AI.\n- /v1/transcribe turns a dictation (the app's 🎤) into the text its speaker meant to\n  type: multipart/form-data, a \"request\" part (TranscribeRequest) and an \"audio\" part\n  (AUDIO_TYPES, at most MAX_AUDIO_BYTES).\n- /v1/pictures/search finds free pictures of a subject to choose from (stock.search: public\n  domain, CC0, Pixabay), their previews as data; /v1/pictures/found gives the one chosen,\n  card size (JPEG), looked up again by its source and id. Both free: no AI, unless the\n  search is asked `sort`ed (the AI keeps the pictures that show the subject: 1 credit);\n  asked so with \"Accept: application/x-ndjson\", each source's pictures come as it\n  answers (PictureSearchLine). Their pictures (and /v1/picture's) say where they come\n  from in PICTURE_SOURCE_HEADER: kept with the card.\n- /v1/card-picture asked with \"Accept: application/x-ndjson\" says each step as it begins\n  (deciding, drawing, checking, redrawing with the first figure, searching), then the\n  answer or the error (CardPictureLine).\n- /v1/report: content the AI made, reported by the user (shocking, wrong…: Google Play's\n  policy on generated content). The only thing the relay keeps of a lesson: what the user\n  saw and sent, for REPORT_DAYS, read by Notosaurus. Free, REPORTS_PER_DAY a licence.\n- /v1/speak reads a card's back aloud with one of /v1/voices (natural voices, the\n  same on every device): an mp3, for the app that has no voices of its own.\n- Each answer says the credits it used and those left (Usage; for /v1/picture and\n  /v1/speak, the CREDITS_HEADER and CREDITS_LEFT_HEADER headers). A credit is a share of the\n  call's real AI cost, at least 1 per call: the relay counts them, not the client.\n\nThe OpenAPI description (core/relay-api-v1.json) is generated from these models\nby tools/relay_openapi.py. Apps already released keep calling the relay: within /v1 the\nAPI only grows (new routes, optional request fields, answer fields more), checked against\nthe API each released app speaks (core/relay-api-releases/, tools/relay_compat.py).\n",
+    "description": "The Notosaurus relay's API, version 1: what its client (the Notosaurus app with a\nlicence, later the Android app) and the relay itself both import, so that they\ncan't drift apart.\n\nThe relay is notosaurus_core behind a licence key: each route is the remote form\nof a core function (/v1/extract → llm.extract_cards…), takes what that function\ntakes but the AI configuration (the relay's own), and keeps nothing.\n\n- Authentication: \"Authorization: Bearer <licence key>\".\n- The client says its version in CLIENT_HEADER (\"1.1.0\"); a client too old for\n  the relay gets \"relay.client_outdated\".\n- The routes with photos (extract, revise) take multipart/form-data: a \"request\"\n  part holding the JSON request and one \"images\" part per photo (binary, as\n  diagrams.prepare makes them: JPEG, at most 1568 px). The other routes take JSON.\n- Errors: HTTP status of ERRORS, body {\"code\", \"params\"} (errors.AppError), the\n  AI's own errors (\"llm.*\") passed on as they are.\n- /v1/extract asked with \"Accept: application/x-ndjson\" (STREAM_TYPE) answers as the\n  AI writes: one JSON object per line, each card as it comes, then the answer or\n  the error (ExtractLine). A client going away stops the AI.\n- /v1/transcribe turns a dictation (the app's 🎤) into the text its speaker meant to\n  type: multipart/form-data, a \"request\" part (TranscribeRequest) and an \"audio\" part\n  (AUDIO_TYPES, at most MAX_AUDIO_BYTES).\n- /v1/pictures/search finds free pictures of a subject to choose from (stock.search: public\n  domain, CC0, Pixabay), their previews as data; /v1/pictures/found gives the one chosen,\n  card size (JPEG), looked up again by its source and id. Both free: no AI, unless the\n  search is asked `sort`ed (the AI keeps the pictures that show the subject: 1 credit);\n  asked so with \"Accept: application/x-ndjson\", each source's pictures come as it\n  answers (PictureSearchLine). Their pictures (and /v1/picture's) say where they come\n  from in PICTURE_SOURCE_HEADER: kept with the card.\n- /v1/revise asked with \"Accept: application/x-ndjson\" says what the AI is at (slow, the\n  fallback model), then the answer or the error (ReviseLine).\n- /v1/card-picture asked with \"Accept: application/x-ndjson\" says each step as it begins\n  (deciding, drawing, checking, redrawing with the first figure, searching), then the\n  answer or the error (CardPictureLine).\n- /v1/report: content the AI made, reported by the user (shocking, wrong…: Google Play's\n  policy on generated content). The only thing the relay keeps of a lesson: what the user\n  saw and sent, for REPORT_DAYS, read by Notosaurus. Free, REPORTS_PER_DAY a licence.\n- /v1/speak reads a card's back aloud with one of /v1/voices (natural voices, the\n  same on every device): an mp3, for the app that has no voices of its own.\n- Each answer says the credits it used and those left (Usage; for /v1/picture and\n  /v1/speak, the CREDITS_HEADER and CREDITS_LEFT_HEADER headers). A credit is a share of the\n  call's real AI cost, at least 1 per call: the relay counts them, not the client.\n\nThe OpenAPI description (core/relay-api-v1.json) is generated from these models\nby tools/relay_openapi.py. Apps already released keep calling the relay: within /v1 the\nAPI only grows (new routes, optional request fields, answer fields more), checked against\nthe API each released app speaks (core/relay-api-releases/, tools/relay_compat.py).\n",
     "version": "1"
   },
   "paths": {
@@ -179,11 +179,16 @@
         ],
         "responses": {
           "200": {
-            "description": "Successful Response",
+            "description": "The cards corrected; asked with \"Accept: application/x-ndjson\": what the AI is at, then the answer, one ReviseLine per line.",
             "content": {
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/ReviseResponse"
+                }
+              },
+              "application/x-ndjson": {
+                "schema": {
+                  "$ref": "#/components/schemas/ReviseLine"
                 }
               }
             }
@@ -1936,6 +1941,26 @@
         "title": "Account",
         "description": "GET /v1/account: what the licence gives; also the client's connection test. And what\nthe app is told for now (set on the relay, no app update): a notice, the FEATURES\nturned off, the latest version."
       },
+      "AiStep": {
+        "description": "What the AI is at, for the user waiting (calls.tell).",
+        "properties": {
+          "step": {
+            "description": "\"slow\": no answer yet after a while (the model busy); \"fallback\": the model not answering, the fallback one asked; \"figures\": the cards written, their figures being described.",
+            "enum": [
+              "slow",
+              "fallback",
+              "figures"
+            ],
+            "title": "Step",
+            "type": "string"
+          }
+        },
+        "required": [
+          "step"
+        ],
+        "title": "AiStep",
+        "type": "object"
+      },
       "Card": {
         "properties": {
           "front": {
@@ -2359,7 +2384,7 @@
         "title": "ExplainResponse"
       },
       "ExtractLine": {
-        "description": "A line of /v1/extract's answer as the AI writes it (STREAM_TYPE), one of:\n{\"card\"} as soon as a card is written; {\"restart\": true}: the cards sent so far\nare dropped (another model starts again); last, {\"result\"} or {\"error\"} (the\nHTTP status is 200 once a line is sent: an error comes as the last line). A\nclient going away stops the AI: what it used is charged, at least 1 credit.",
+        "description": "A line of /v1/extract's answer as the AI writes it (STREAM_TYPE), one of:\n{\"card\"} as soon as a card is written; {\"restart\": true}: the cards sent so far\nare dropped (another model starts again); {\"step\"}: what the AI is at; last,\n{\"result\"} or {\"error\"} (the HTTP status is 200 once a line is sent: an error\ncomes as the last line). A client going away stops the AI: what it used is\ncharged, at least 1 credit.",
         "properties": {
           "card": {
             "anyOf": [
@@ -2386,6 +2411,17 @@
             ],
             "default": null,
             "title": "Restart"
+          },
+          "step": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/AiStep"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null
           },
           "result": {
             "anyOf": [
@@ -3175,6 +3211,46 @@
         },
         "type": "object",
         "title": "ReportResponse"
+      },
+      "ReviseLine": {
+        "description": "A line of /v1/revise asked as STREAM_TYPE, one of: {\"step\"}, what the AI is at;\nlast, {\"result\"} or {\"error\"} (the HTTP status is 200 once a line is sent).",
+        "properties": {
+          "step": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/AiStep"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null
+          },
+          "result": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ReviseResponse"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null
+          },
+          "error": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Error"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null
+          }
+        },
+        "title": "ReviseLine",
+        "type": "object"
       },
       "ReviseRequest": {
         "description": "A natural-language correction of the cards, with the lesson's photos (the\n\"images\" parts, possibly none).",

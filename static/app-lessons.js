@@ -40,6 +40,7 @@ const lessonsPart = {
     this.loading = true;
     this.loadingQuick = quick;
     this.coming = [];
+    this.aiStep = "";
     // Its id, for "Cancel" (not crypto.randomUUID: a phone opens the page over plain http)
     const job = Math.random().toString(36).slice(2) + Date.now().toString(36);
     this.generating = job;
@@ -72,7 +73,7 @@ const lessonsPart = {
       const lesson = await lessonAsItComes(res, (card) => {
         if (card) this.coming.push({ front: plainCardText(card.front), back: plainCardText(card.back) });
         else this.coming = [];
-      });
+      }, (step) => { this.aiStep = step.step; });
       if (!lesson) return;  // cancelled: the page as it was (the photos, the prompt)
       const used = this.current();
       if (used) used.used_at = new Date().toISOString();  // moves it to the front of the chips
@@ -97,6 +98,7 @@ const lessonsPart = {
       this.loading = false;
       this.generating = "";
       this.cancelling = false;
+      this.aiStep = "";
     }
   },
 

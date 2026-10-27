@@ -15,6 +15,28 @@ from .config import AIConfig
 from .errors import AppError
 from .models import AiCall, CallKind
 
+# What the user is told while waiting (relay_api.AiStep), set by `telling`.
+_telling: ContextVar[Callable[[dict], object] | None] = ContextVar("notosaurus_ai_steps", default=None)
+
+
+@contextmanager
+def telling(step: Callable[[dict], object]) -> Iterator[None]:
+    """The AI's steps inside told to `step` as they happen (relay_api.AiStep: it is slow
+    to answer, the fallback model asked, the figures described), for the page to say."""
+    token = _telling.set(step)
+    try:
+        yield
+    finally:
+        _telling.reset(token)
+
+
+def tell(step: dict) -> None:
+    """A step of the AI, told if someone listens (`telling`)."""
+    listener = _telling.get()
+    if listener is not None:
+        listener(step)
+
+
 # The AI calls of the request being handled (kind, list), set by `recording`.
 _recording: ContextVar[tuple[CallKind, list[AiCall]] | None] = ContextVar("notosaurus_ai_calls", default=None)
 

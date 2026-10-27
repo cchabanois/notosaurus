@@ -16,6 +16,7 @@ What the AI is told is in prompts.py; what every call shares (photos, errors, th
 calls recorded, the cards streamed) in calls.py.
 """
 
+import asyncio
 import logging
 from collections.abc import Callable, Sequence
 from functools import cache
@@ -24,7 +25,16 @@ from typing import Any
 from pydantic import BaseModel, Field, create_model
 
 from . import config, diagrams
-from .calls import CardStream, ExtractionError, Image, OnCard, record, recording  # noqa: F401 (llm's API)
+from .calls import (  # noqa: F401 (llm's API)
+    CardStream,
+    ExtractionError,
+    Image,
+    OnCard,
+    record,
+    recording,
+    tell,
+    telling,
+)
 from .cards import plain_cards
 from .config import AIConfig
 from .errors import loggable
@@ -69,6 +79,8 @@ from .providers import demo as demo_ai
 from .providers.openai_like import list_models  # noqa: F401 (llm's API)
 
 log = logging.getLogger("notosaurus")
+SLOW_S = 20  # an answer not started by then: the user told it's slow (calls.tell)
+SLOW_THINKING_S = 45  # the same when the model thinks (a careful lesson): longer at first
 
 # What the AI sees of a card: what it fills, and only that. Anthropic refuses a response
 # schema with too many optional fields ("Schema is too complex"): the fields Notosaurus
@@ -182,6 +194,7 @@ async def _complete_figures(s: AIConfig, images: list[Image], cards: list[Card])
     if not todo:
         return
     text = _figures_text([f"{c.front.strip()} → {c.back.strip()}" for c in todo])
+    tell({"step": "figures"})
     try:
         found = await _ask_provider(s, images, text, Figures, FIGURES_RULES, light=True, demo=Figures)
     except ExtractionError as e:
@@ -457,6 +470,25 @@ async def _ask_provider[T: BaseModel](
     prompt, the card…): see providers/demo.py."""
     if s.llm == "fake":
         return await demo_ai._demo(s, demo, on_card)
+    # Not a word after a while (a model busy, stalled): said, the user knows it's not stuck
+    after = SLOW_S if light or quick else SLOW_THINKING_S
+    slow = asyncio.get_running_loop().call_later(after, tell, {"step": "slow"})
+    try:
+        return await _provider(s, images, text, schema, system, light, quick, on_card)
+    finally:
+        slow.cancel()
+
+
+async def _provider[T: BaseModel](
+    s: AIConfig,
+    images: list[Image],
+    text: str,
+    schema: type[T],
+    system: str,
+    light: bool,
+    quick: bool,
+    on_card: OnCard | None,
+) -> T:
     if s.llm == "gemini":
         return await gemini._gemini(s, images, text, schema, system, light, quick, on_card)
     if s.llm == "anthropic":

@@ -222,7 +222,11 @@
       "revising": "Corrigiendo las tarjetas…",
       "duration": "Suele tardar entre 10 y 30 segundos.",
       "durationQuick": "Suele tardar menos de 10 segundos.",
-      "cancelling": "Cancelando…"
+      "cancelling": "Cancelando…",
+      "figures": "Describiendo las figuras…",
+      "writingCards": "Escribiendo las tarjetas: {count}…",
+      "slow": "La IA tarda más de lo habitual en responder…",
+      "fallback": "La IA no responde: cambiando a otro modelo…"
     },
     "send": {
       "added": {

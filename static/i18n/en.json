@@ -222,7 +222,11 @@
       "revising": "Correcting the cards…",
       "duration": "This usually takes 10 to 30 seconds.",
       "durationQuick": "It usually takes under 10 seconds.",
-      "cancelling": "Cancelling…"
+      "cancelling": "Cancelling…",
+      "figures": "Describing the figures…",
+      "writingCards": "Writing the cards: {count}…",
+      "slow": "The AI is taking longer than usual to answer…",
+      "fallback": "The AI isn't answering: switching to another model…"
     },
     "send": {
       "added": {

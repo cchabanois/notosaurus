@@ -1,6 +1,7 @@
 package app.notosaurus
 
 import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.currentCoroutineContext
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.suspendCancellableCoroutine
@@ -23,6 +24,8 @@ import okhttp3.RequestBody.Companion.toRequestBody
 import okhttp3.Response
 import java.io.IOException
 import java.util.concurrent.TimeUnit
+import kotlin.coroutines.AbstractCoroutineContextElement
+import kotlin.coroutines.CoroutineContext
 import kotlin.coroutines.resume
 import kotlin.coroutines.resumeWithException
 
@@ -36,6 +39,17 @@ class Picture(val jpeg: ByteArray, val source: JsonObject?)
 
 /** Told each card as soon as the AI has written it, or null: start again (another model). */
 typealias OnCard = suspend (JsonObject?) -> Unit
+
+/** Who listens to what the AI is at (relay_api.AiStep: slow, the fallback model, the figures)
+ * while it works, as the core's calls.telling: set around a call, read by the relay's lines. */
+class Telling(val step: Step) : AbstractCoroutineContextElement(Key) {
+    companion object Key : CoroutineContext.Key<Telling>
+}
+
+/** A step of the AI told to whoever listens (Telling), if anyone does. */
+suspend fun tell(step: JsonObject) {
+    currentCoroutineContext()[Telling]?.step?.invoke(step)
+}
 
 class Relay(
     baseUrl: String,
@@ -53,6 +67,13 @@ class Relay(
     suspend fun withPhotos(route: String, request: JsonObject, photos: List<ByteArray>): JsonObject =
         call(route, multipart(request, photos))
 
+    /** /v1/revise asked as it goes (relay_api.ReviseLine): what the AI is at told (Telling),
+     * then the answer. */
+    suspend fun revise(request: JsonObject, photos: List<ByteArray>): JsonObject =
+        open("revise", multipart(request, photos), stream = true).use { response ->
+            streamed(response, "result") { line -> line["step"]?.jsonObject?.let { tell(it) } }
+        }
+
     /**
      * /v1/extract as the AI writes (STREAM_TYPE, relay_api.ExtractLine): each card told
      * to `onCard` as it comes (null: start again), then the answer. A relay answering
@@ -60,7 +81,10 @@ class Relay(
      */
     suspend fun extract(request: JsonObject, photos: List<ByteArray>, onCard: OnCard): JsonObject {
         return open("extract", multipart(request, photos), stream = true).use { response ->
-            streamed(response, "result") { onCard(it["card"]?.jsonObject) }
+            streamed(response, "result") { line ->
+                val step = line["step"]?.jsonObject
+                if (step != null) tell(step) else onCard(line["card"]?.jsonObject)
+            }
         }
     }
 

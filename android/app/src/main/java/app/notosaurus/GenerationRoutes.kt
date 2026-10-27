@@ -6,6 +6,7 @@ import kotlinx.serialization.json.JsonArray
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.booleanOrNull
+import kotlinx.coroutines.withContext
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.intOrNull
 import kotlinx.serialization.json.jsonPrimitive
@@ -46,9 +47,9 @@ internal fun Route.generationRoutes(server: LocalServer) {
             val made = generation.make(asked, onCard, existing)
             (lessons.completed(old.string("id"), made.content, made.photos) ?: notFound()).also(::soundsSoon)
         }
-        api("POST", "/api/lessons/{id}/revise") {
+        // Asked as Relay.STREAM_TYPE: what the AI is at ({"step"}), then the answer
+        stepping("/api/lessons/{id}/revise") { req, step ->
             val lesson = lesson()
-            val req = body()
             val every = children.list()
             // The deck without the children's levels: no child's name to the AI (put back after)
             val (private, deck) = Children.splitDeck(req.string("deck"), every)
@@ -59,7 +60,9 @@ internal fun Route.generationRoutes(server: LocalServer) {
                 put("language", languageName())
                 put("instructions", generation.instructions(children.get(lesson.string("child"))))
             }
-            val revised = relay().withPhotos("revise", request, lessons.photos(lesson.string("id")))
+            val revised = withContext(Telling { said -> step(buildJsonObject { put("step", said) }) }) {
+                relay().revise(request, lessons.photos(lesson.string("id")))
+            }
             val revisedDeck = listOf(private, revised.string("deck")).filter { it.isNotEmpty() }.joinToString("::")
             // How the cards are asked: as they were, unless the correction said otherwise ("on",
             // "off"), as the computer's (models.switched)

@@ -197,7 +197,8 @@ _generating: dict[str, asyncio.Task] = {}  # by the page's id for each one: what
 
 def _streamed(work, job: str = "") -> StreamingResponse:
     """The cards sent to the page as soon as the AI writes them, one JSON per line:
-    {"card": …} (or {"restart": true}: the ones sent so far are dropped), then
+    {"card": …} (or {"restart": true}: the ones sent so far are dropped; {"step": …}:
+    what the AI is at, relay_api.AiStep), then
     {"lesson": …}, {"error": {"code", "params"}} as the page translates it, or
     {"cancelled": true}. The lesson is made and saved even if the page goes away
     meanwhile: only "Cancel" (`job`, see cancel_generation) stops it."""
@@ -208,7 +209,9 @@ def _streamed(work, job: str = "") -> StreamingResponse:
 
     async def run() -> None:
         try:
-            await queue.put({"lesson": jsonable_encoder(await work(card))})
+            with llm.telling(lambda step: queue.put_nowait({"step": step})):
+                lesson = await work(card)
+            await queue.put({"lesson": jsonable_encoder(lesson)})
         except AppError as e:
             await queue.put({"error": e.detail()})
         except asyncio.CancelledError:  # "Cancel": stopped here, nothing saved

@@ -141,7 +141,14 @@ def build() -> dict:
     @app.post(
         f"{api.PREFIX}/revise",
         response_model=api.ReviseResponse,
-        responses=errors(*PHOTOS),
+        responses={
+            200: {
+                "description": f'The cards corrected; asked with "Accept: {api.STREAM_TYPE}": what the AI is '
+                "at, then the answer, one ReviseLine per line.",
+                "content": {api.STREAM_TYPE: {"schema": {"$ref": REF.format(model="ReviseLine")}}},
+            },
+            **errors(*PHOTOS),
+        },
         openapi_extra=multipart(api.ReviseRequest),
     )
     def revise(x_notosaurus_version: str = client):
@@ -338,6 +345,7 @@ def build() -> dict:
             (api.ExtractLine, "serialization"),
             (api.PictureSearchLine, "serialization"),
             (api.CardPictureLine, "serialization"),
+            (api.ReviseLine, "serialization"),
         ],
         ref_template=REF,
     )
