@@ -65,10 +65,10 @@ class Pictures(
      * (cheap), or a picture, its description and search words set, nothing drawn: the page
      * then looks for free ones and asks before the image model draws one. {"card", "lesson",
      * "search" (a picture's)}. */
-    suspend fun make(lesson: JsonObject, i: Int, subject: String?, language: String = "English"): JsonObject {
+    suspend fun make(lesson: JsonObject, i: Int, subject: String?, language: String = "English", step: Step = {}): JsonObject {
         val cards = lesson.cards()
         try {
-            cards[i] = drawn(lesson.string("id"), cards[i], fresh = true, asked = subject, language = language, draw = false, find = false)
+            cards[i] = drawn(lesson.string("id"), cards[i], fresh = true, asked = subject, language = language, draw = false, find = false, onStep = step)
             return answer(lesson, cards, i)
         } catch (e: RelayException) {
             if (e.code != NEEDS_DRAWING) throw e
@@ -83,9 +83,9 @@ class Pictures(
 
     /** Card `i`'s picture drawn by the image model, now: the user said yes (no free one fit). A
      * figure: drawn again. {"card", "lesson"}. */
-    suspend fun draw(lesson: JsonObject, i: Int): JsonObject {
+    suspend fun draw(lesson: JsonObject, i: Int, step: Step = {}): JsonObject {
         val cards = lesson.cards()
-        cards[i] = drawn(lesson.string("id"), cards[i], fresh = true, draw = true, find = false)
+        cards[i] = drawn(lesson.string("id"), cards[i], fresh = true, draw = true, find = false, onStep = step)
         return answer(lesson, cards, i)
     }
 

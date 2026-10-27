@@ -942,6 +942,14 @@ class LocalServerTest {
         assertEquals("Off its segment." to "<svg>1</svg>", steps.last().string("problem") to steps.last().string("first"))
         val drawn = lines.last()["result"]!!.jsonObject["lesson"]!!.jsonObject["cards"]!!.jsonArray.single().jsonObject
         assertTrue(drawn.string("picture").endsWith(".svg"))
+
+        // "✨ Image" on that card, asked as it goes: its steps nested ({"step": {…}}), then the answer
+        val made = client.post("/api/lessons/$id/cards/$triangle/picture/make") {
+            page(); header(HttpHeaders.Accept, Relay.STREAM_TYPE)
+            contentType(ContentType.Application.Json); setBody("""{"subject": null}""")
+        }.bodyAsText().lines().filter { it.isNotBlank() }.map { json.parseToJsonElement(it).jsonObject }
+        assertEquals(listOf("drawing", "checking", "redrawing"), made.dropLast(1).map { it["step"]!!.jsonObject.string("step") })
+        assertTrue(made.last()["result"]!!.jsonObject["card"]!!.jsonObject.string("picture").endsWith(".svg"))
     }
 
     @Test

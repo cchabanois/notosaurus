@@ -150,6 +150,14 @@ def test_redraw_a_figure_from_its_description(client):
     assert res["card"]["figure"].startswith("Un triangle") and res["card"]["picture"].endswith(".svg")
     svg = (lessons.folder(lesson["id"]) / "images" / res["card"]["picture"]).read_text(encoding="utf-8")
     assert "hypoténuse" in svg
+    # Asked as a stream ("✨ Image" again, then drawn again): its steps, then the answer as before
+    for path, body in (("make", {"subject": "Un triangle rectangle"}), ("draw", None)):
+        streamed = client.post(
+            url.replace("/make", f"/{path}"), json=body, headers={"Accept": "application/x-ndjson"}
+        ).text.splitlines()
+        lines = [json.loads(line) for line in streamed]
+        assert [line["step"]["step"] for line in lines if "step" in line] == ["drawing", "checking"]
+        assert lines[-1]["result"]["card"]["picture"].endswith(".svg")
     # No picture any more: a text card again
     gone = client.delete(f"/api/lessons/{lesson['id']}/cards/{card['id']}/picture").json()["card"]
     assert (gone["figure"], gone["picture"]) == ("", "")

@@ -20,7 +20,12 @@ const picturesPart = {
     this.pictureJobs++;
     this.error = "";
     try {
-      const res = await (await api(`/api/lessons/${this.lessonId}/cards/${card.id}/picture${request.path ?? ""}`, request)).json();
+      // Its steps shown on it as they begin (drawing, checked, drawn again…), as the batch's
+      const asked = { ...request, headers: { ...(request.headers ?? {}), Accept: "application/x-ndjson" } };
+      const res = await resultAsItComes(
+        await api(`/api/lessons/${this.lessonId}/cards/${card.id}/picture${request.path ?? ""}`, asked),
+        (step) => Object.assign(card, { _step: step.step, _problem: step.problem ?? "", _first: step.first ?? "" }),
+      );
       card.picture = res.card.picture;
       card.picture_source = res.card.picture_source ?? null;
       card.picture_prompt = res.card.picture_prompt;
@@ -31,7 +36,7 @@ const picturesPart = {
       this.error = e.message;
       return null;
     } finally {
-      card._drawing = false;
+      Object.assign(card, { _drawing: false, _step: "", _problem: "", _first: "" });
       this.pictureJobs--;
     }
   },
