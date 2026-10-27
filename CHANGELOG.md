@@ -123,6 +123,7 @@ Each pull request adds a line under **Unreleased**. See [Releasing](CONTRIBUTING
 
 ### Fixed
 
+- A figure no longer writes what its description only names to say what to draw ("the curve of f(x) = ln(x)"): a label only when asked for. On a card asking which function a graph is, the graph gave the answer.
 - Settings → Voices on a phone: each language's name is shown whole ("Espagnol d'Espagne"), its voice below on the whole width ("Puck · homme"), no longer both cut on one line.
 - Settings → Voices → ▶ no longer stays silent when the voice can't be heard: the reason is said (the relay's credits used up, its key, unreachable…). On Android, `/api/tts` now answers the relay's error instead of an empty 502.
 - The figures' marks where they belong (equal-length ticks on their segment, an angle's arc at its vertex): a figure is drawn with the model's thinking, no more as a light call that placed them by eye. A figure takes about 30 s instead of 4 (the cards show at once, as before) and about 1 cent instead of 0.3. Its place says so while it's drawn ("Drawing the figure… about 30 s", a pictures' "about 15 s"), with a bar filling over that time.
