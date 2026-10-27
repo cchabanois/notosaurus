@@ -38,16 +38,17 @@ internal fun Route.pictureRoutes(server: LocalServer) {
         }
         // "✨ Image", its first step: a figure drawn, or a picture decided (the page then looks
         // for free ones, and asks before one is drawn)
-        api("POST", "/api/lessons/{id}/cards/{card}/picture/make") {
+        // Asked as Relay.STREAM_TYPE (both): its steps ({"step": {…}}) as they begin, then the answer
+        stepping("/api/lessons/{id}/cards/{card}/picture/make") { req, step ->
             val lesson = lesson()
-            val subject = body()["subject"]?.takeIf { it !is JsonNull }?.jsonPrimitive?.content
-            pictures.make(lesson, cardIndex(lesson), subject, languageName())
+            val subject = req["subject"]?.takeIf { it !is JsonNull }?.jsonPrimitive?.content
+            pictures.make(lesson, cardIndex(lesson), subject, languageName()) { step(buildJsonObject { put("step", it) }) }
         }
         // The user said yes: drawn by the image model (it costs)
-        api("POST", "/api/lessons/{id}/cards/{card}/picture/draw") {
+        stepping("/api/lessons/{id}/cards/{card}/picture/draw") { _, step ->
             switches.check("pictures.draw")
             val lesson = lesson()
-            pictures.draw(lesson, cardIndex(lesson))
+            pictures.draw(lesson, cardIndex(lesson)) { step(buildJsonObject { put("step", it) }) }
         }
         // The user's own photo as the card's picture (the page made it card size)
         post("/api/lessons/{id}/cards/{card}/picture") {

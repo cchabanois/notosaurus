@@ -42,6 +42,12 @@ async def draw_pictures(id: str, req: DrawPictures | None = None, accept: str | 
     return await drawn()
 
 
+def _nested(step: Step) -> Step:
+    """A card's steps as lines of their own: {"step": {"step", "problem", "first"}}
+    (relay_api.CardPictureLine's)."""
+    return lambda said: step({"step": said})
+
+
 async def _encoded(answer) -> dict:
     """An answer as JSON can write it (a lesson: its dates, its models)."""
     return jsonable_encoder(await answer)
@@ -64,42 +70,57 @@ async def _edit_card(id: str, card_id: str, change) -> dict:
 
 
 @router.post("/api/lessons/{id}/cards/{card_id}/picture/make")
-async def make_picture(id: str, card_id: str, req: PictureRequest, lang: str = Depends(page_lang)) -> dict:
+async def make_picture(
+    id: str, card_id: str, req: PictureRequest, lang: str = Depends(page_lang), accept: str | None = Header(None)
+):
     """ "✨ Image", its first step (pictures.decided): from what was written for it (any
     language; none: the card), the AI decides a figure, then drawn (cheap), or a picture,
     its description and search words set: the page then looks for free ones (search) and
-    asks the user before the image model draws one (draw)."""
+    asks the user before the image model draws one (draw). Asked as application/x-ndjson:
+    its steps as they begin (relay_api.PictureStep), then the answer."""
     await access.editable(id)
-    found: dict = {}
 
-    async def make(draft: Lesson, card: Card) -> None:
-        async with usage.metered("picture", id, draft.deck):  # figures count as pictures in the costs
-            s = settings.current()
-            decided = await pictures.decided(s, card, req.subject, i18n.language_name(lang))
-            for field in ("figure", "picture_prompt", "picture_search"):
-                setattr(card, field, getattr(decided, field))
-            if card.figure.strip():
-                folder = lessons.existing_folder(id) / "images"
-                card.picture = await pictures.figure_or_picture(s, folder, card, fresh=True)
-            else:
-                found["search"] = card.picture_search or card.picture_prompt
+    async def made(step: Step | None = None) -> dict:
+        found: dict = {}
 
-    return {**await _edit_card(id, card_id, make), **found}
+        async def make(draft: Lesson, card: Card) -> None:
+            async with usage.metered("picture", id, draft.deck):  # figures count as pictures in the costs
+                s = settings.current()
+                decided = await pictures.decided(s, card, req.subject, i18n.language_name(lang), step)
+                for field in ("figure", "picture_prompt", "picture_search"):
+                    setattr(card, field, getattr(decided, field))
+                if card.figure.strip():
+                    folder = lessons.existing_folder(id) / "images"
+                    card.picture = await pictures.figure_or_picture(s, folder, card, fresh=True, step=step)
+                else:
+                    found["search"] = card.picture_search or card.picture_prompt
+
+        return {**await _edit_card(id, card_id, make), **found}
+
+    if NDJSON in (accept or ""):
+        return stepped(lambda step: _encoded(made(_nested(step))), "Making a picture")
+    return await made()
 
 
 @router.post("/api/lessons/{id}/cards/{card_id}/picture/draw")
-async def draw_picture(id: str, card_id: str) -> dict:
+async def draw_picture(id: str, card_id: str, accept: str | None = Header(None)):
     """The card's picture drawn by the image model, now: the user said yes (no free one
     fit). Its figure drawn again, for a figure. Never from the cache: asked when it didn't
-    suit."""
+    suit. Asked as application/x-ndjson: its steps as they begin, then the answer."""
     await access.editable(id)
 
-    async def draw(draft: Lesson, card: Card) -> None:
-        async with usage.metered("picture", id, draft.deck):
-            folder = lessons.existing_folder(id) / "images"
-            card.picture = await pictures.figure_or_picture(settings.current(), folder, card, fresh=True, find=False)
+    async def drawn(step: Step | None = None) -> dict:
+        async def draw(draft: Lesson, card: Card) -> None:
+            async with usage.metered("picture", id, draft.deck):
+                folder = lessons.existing_folder(id) / "images"
+                s = settings.current()
+                card.picture = await pictures.figure_or_picture(s, folder, card, fresh=True, find=False, step=step)
 
-    return await _edit_card(id, card_id, draw)
+        return await _edit_card(id, card_id, draw)
+
+    if NDJSON in (accept or ""):
+        return stepped(lambda step: _encoded(drawn(_nested(step))), "Drawing a picture")
+    return await drawn()
 
 
 @router.post("/api/lessons/{id}/cards/{card_id}/picture", status_code=201)
