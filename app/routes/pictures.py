@@ -11,28 +11,40 @@ from notosaurus_core.models import Card, PictureSource
 from .. import access, i18n, lessons, settings, usage
 from ..errors import AppError
 from ..models import DrawPictures, FoundPicture, Lesson, PictureRequest, PictureSearch
-from .common import IMAGE_TYPES, page_lang, read_photo
+from .common import IMAGE_TYPES, Step, page_lang, read_photo, stepped
 from .generation import NDJSON
 
 router = APIRouter()
 
 
 @router.post("/api/lessons/{id}/pictures")
-async def draw_pictures(id: str, req: DrawPictures | None = None) -> dict:
+async def draw_pictures(id: str, req: DrawPictures | None = None, accept: str | None = Header(None)):
     """The pictures the cards ask for and don't have yet (after a generation or a
     correction): figures drawn, free pictures found; those no free one fits drawn by the
     image model only when asked (`draw`: the user said yes), else listed in to_draw. A
-    picture that fails leaves its card without one: said, not fatal."""
+    picture that fails leaves its card without one: said, not fatal. Asked as
+    application/x-ndjson: each card's steps as they begin ({"card", "step", "problem",
+    "first"}: what the page shows on it meanwhile), then the answer (common.stepped)."""
     await access.editable(id)
     allowed = bool(req and req.draw)
 
-    async def draw(draft: Lesson) -> pictures.Drawn:
-        async with usage.metered("picture", id, draft.deck):
-            folder = lessons.existing_folder(id) / "images"
-            return await pictures.draw_all(settings.current(), folder, draft.cards, draw=allowed)
+    async def drawn(step: Step | None = None) -> dict:
+        async def draw(draft: Lesson) -> pictures.Drawn:
+            async with usage.metered("picture", id, draft.deck):
+                folder = lessons.existing_folder(id) / "images"
+                return await pictures.draw_all(settings.current(), folder, draft.cards, draw=allowed, step=step)
 
-    lesson, drawn = await lessons.edit(id, draw)
-    return {"lesson": lesson, "failures": drawn.failures, "error": drawn.error, "to_draw": drawn.to_draw}
+        lesson, made = await lessons.edit(id, draw)
+        return {"lesson": lesson, "failures": made.failures, "error": made.error, "to_draw": made.to_draw}
+
+    if NDJSON in (accept or ""):
+        return stepped(lambda step: _encoded(drawn(step)), "Drawing pictures")
+    return await drawn()
+
+
+async def _encoded(answer) -> dict:
+    """An answer as JSON can write it (a lesson: its dates, its models)."""
+    return jsonable_encoder(await answer)
 
 
 async def _edit_card(id: str, card_id: str, change) -> dict:

@@ -385,7 +385,16 @@
       "costUsd": "Costo: circa {amount} US$.",
       "costCredits": "Costo: circa {count} crediti.",
       "drawingFigure": "📐 Disegno della figura…",
-      "about": "circa {seconds} s"
+      "about": "circa {seconds} s",
+      "steps": {
+        "waiting": "⏳ In attesa…",
+        "deciding": "💭 Scelta di un'immagine o di una figura…",
+        "drawingFigure": "📐 Disegno della figura…",
+        "checking": "🔎 Verifica della figura…",
+        "redrawing": "📐 Prima versione imperfetta: nuovo disegno, più accurato…",
+        "searching": "🔎 Ricerca di un'immagine libera…",
+        "drawing": "🎨 Disegno dell'immagine…"
+      }
     },
     "pairing": {
       "title": "Dispositivo non autorizzato"

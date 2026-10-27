@@ -196,33 +196,39 @@ async def _complete_figures(s: AIConfig, images: list[Image], cards: list[Card])
 _UNUSABLE = {"llm.invalid_answer", "llm.truncated", "llm.empty_answer", "figure.invalid"}
 
 
-async def draw_figure(s: AIConfig, description: str) -> str:
+async def draw_figure(s: AIConfig, description: str, step: Callable[[dict], Any] | None = None) -> str:
     """The SVG of a figure (cleaned, figures.clean), drawn by the cards' AI with the
     drawing rules (figures.py). Drawn quickly first (a light call), then checked by looking
     at it (another light call, figures.CHECK_RULES): right, it stays (a few seconds); wrong
     (thinking little, the model places by eye what belongs to another element: a mark off
     its segment, an angle on the other side of its line), drawn again with the model's
     thinking, told what was wrong (half a minute). Unchecked (no PNG, the check failing):
-    drawn with thinking when the light one couldn't be seen, else the light one kept."""
+    drawn with thinking when the light one couldn't be seen, else the light one kept.
+    `step`: told each step as it begins (relay_api.PictureStep's fields)."""
     from . import figures
 
+    tell = step or (lambda _: None)
     text = f"Figure to draw: {description.strip()}"
     demo = lambda: demo_ai.figure(description)  # noqa: E731
-    problem = ""
+    problem, first = "", ""
+    tell({"step": "drawing"})
     try:
         light = await _ask_provider(s, [], text, figures.Drawing, figures.RULES, light=True, demo=demo)
         svg = figures.clean(light.svg)
         png = figures.to_png(svg)
         if png is not None:
+            tell({"step": "checking"})
             problem = await _figure_problem(s, description, png)
             if not problem:
                 return svg
+            first = svg
     except (ExtractionError, figures.FigureError) as e:
         if e.code not in _UNUSABLE:
             raise
         log.warning("Figure drawn again with thinking: %s", loggable(e))
     if problem:
         text += f"\n\nA first drawing had this problem: {problem} Draw it right."
+    tell({"step": "redrawing", "problem": problem, "first": first})
     drawing = await _ask_provider(s, [], text, figures.Drawing, figures.RULES, demo=demo)
     return figures.clean(drawing.svg)
 

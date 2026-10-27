@@ -64,6 +64,15 @@ class Relay(
         }
     }
 
+    /** A card's figure or picture (/v1/card-picture, relay_api.CardPictureLine): each step told
+     * to `onStep` as it begins ({"step", "problem", "first"}: what the page shows on the card
+     * meanwhile), then the answer (relay_api.CardPictureResponse). */
+    suspend fun cardPicture(request: JsonObject, onStep: Step): JsonObject {
+        return open("card-picture", request.toString().toRequestBody(JSON), stream = true).use { response ->
+            streamed(response, "result") { line -> line["step"]?.jsonObject?.let { onStep(it) } }
+        }
+    }
+
     /** An answer asked as it comes (STREAM_TYPE): each line told to `onLine`, until the
      * `last` one, its value the answer; an {"error"} line thrown. A relay answering all at
      * once: its answer. */

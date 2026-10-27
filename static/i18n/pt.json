@@ -385,7 +385,16 @@
       "costUsd": "Custo: cerca de US$ {amount}.",
       "costCredits": "Custo: cerca de {count} créditos.",
       "drawingFigure": "📐 A desenhar a figura…",
-      "about": "cerca de {seconds} s"
+      "about": "cerca de {seconds} s",
+      "steps": {
+        "waiting": "⏳ Em espera…",
+        "deciding": "💭 A escolher uma imagem ou uma figura…",
+        "drawingFigure": "📐 A desenhar a figura…",
+        "checking": "🔎 A verificar a figura…",
+        "redrawing": "📐 Primeira versão imperfeita: novo desenho, mais cuidado…",
+        "searching": "🔎 À procura de uma imagem livre…",
+        "drawing": "🎨 A desenhar a imagem…"
+      }
     },
     "pairing": {
       "title": "Aparelho não autorizado"

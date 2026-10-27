@@ -27,8 +27,9 @@ class Pictures(
     /** The missing pictures, a few at a time: figures drawn, free pictures found; those no
      * free one fits drawn by the image model only when `draw` (the user said yes), else in
      * "to_draw". {"lesson", "failures", "error", "to_draw"}. A card without its picture is
-     * still a card: counted, not fatal. */
-    suspend fun drawMissing(lesson: JsonObject, draw: Boolean = false): JsonObject {
+     * still a card: counted, not fatal. `step`: each card's steps as they begin, {"card": its
+     * id, "step"…} (what the page shows on it meanwhile, as the computer's). */
+    suspend fun drawMissing(lesson: JsonObject, draw: Boolean = false, step: Step = {}): JsonObject {
         val id = lesson.string("id")
         val cards = lesson.cards()
         val failures = mutableListOf<JsonObject>()
@@ -39,7 +40,10 @@ class Pictures(
                 async {
                     few.withPermit {
                         try {
-                            cards[i] = drawn(id, cards[i], fresh = false, draw = draw, find = !draw)
+                            val card = cards[i].string("id")
+                            cards[i] = drawn(id, cards[i], fresh = false, draw = draw, find = !draw) {
+                                step(JsonObject(mapOf("card" to JsonPrimitive(card)) + it))
+                            }
                         } catch (e: RelayException) {
                             if (e.code == NEEDS_DRAWING) toDraw += cards[i].string("id")
                             else failures += buildJsonObject { put("code", e.code); put("params", e.params) }
@@ -119,15 +123,16 @@ class Pictures(
         language: String = "English",
         draw: Boolean = true,
         find: Boolean = true,
+        onStep: Step = {},
     ): JsonObject {
-        val made = relay().post("card-picture", buildJsonObject {
+        val made = relay().cardPicture(buildJsonObject {
             put("card", card)
             put("asked", asked?.let(::JsonPrimitive) ?: JsonNull)
             put("language", language)
             put("fresh", fresh)
             put("find", find) // a free picture found first for a real thing
             put("draw", draw) // else picture.needs_drawing: the image model costs, the user is asked
-        })
+        }, onStep)
         val decided = made["card"]!!.jsonObject
         val extension = if (made.string("media_type") == "image/svg+xml") "svg" else "jpg"
         val name = save(lessonId, card.string("id"), Base64.getDecoder().decode(made.string("data")), extension)

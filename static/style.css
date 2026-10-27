@@ -868,6 +868,11 @@ html.sheet-open { overflow: hidden; overscroll-behavior: none; }
 .card-picture .drawing { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: .3rem;
   width: 160px; height: 160px; border-radius: var(--radius-sm); background: var(--surface-2); color: var(--muted); font-size: .85rem; }
 .card-picture .drawing > span { animation: pulse 1.4s ease-in-out infinite; }
+.card-picture .drawing { position: relative; overflow: hidden; padding: .4rem; text-align: center; }
+.card-picture .drawing > :not(.first) { position: relative; }  /* over the first figure */
+.card-picture .drawing .first { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: contain; opacity: .28; background: #fff; }
+.card-picture .drawing .problem { font-size: .75rem; line-height: 1.25; color: var(--text);
+  display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
 .card-picture .drawing .progress { position: relative; width: 70%; height: 4px; border-radius: 2px; background: var(--border); overflow: hidden; }
 .card-picture .drawing .progress::after { content: ""; position: absolute; inset: 0 auto 0 0; border-radius: 2px; background: var(--primary);
   animation: estimated calc(2 * var(--expected, 15s)) linear forwards; }

@@ -385,7 +385,16 @@
       "costUsd": "Coût : environ {amount} $ US.",
       "costCredits": "Coût : environ {count} crédits.",
       "drawingFigure": "📐 Tracé de la figure…",
-      "about": "environ {seconds} s"
+      "about": "environ {seconds} s",
+      "steps": {
+        "waiting": "⏳ En attente…",
+        "deciding": "💭 Choix d'une image ou d'une figure…",
+        "drawingFigure": "📐 Tracé de la figure…",
+        "checking": "🔎 Vérification de la figure…",
+        "redrawing": "📐 Première version imparfaite : nouveau tracé, plus soigné…",
+        "searching": "🔎 Recherche d'une image libre…",
+        "drawing": "🎨 Dessin de l'image…"
+      }
     },
     "pairing": {
       "title": "Appareil non autorisé"

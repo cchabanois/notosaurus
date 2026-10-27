@@ -194,7 +194,18 @@ def build() -> dict:
     def picture(request: api.PictureRequest, x_notosaurus_version: str = client):
         """A picture for a card (pictures.picture)."""
 
-    @app.post(f"{api.PREFIX}/card-picture", response_model=api.CardPictureResponse, responses=errors(*COMMON))
+    @app.post(
+        f"{api.PREFIX}/card-picture",
+        response_model=api.CardPictureResponse,
+        responses={
+            200: {
+                "description": f'The card\'s picture; asked with "Accept: {api.STREAM_TYPE}": each step as it '
+                "begins, then the answer, one CardPictureLine per line.",
+                "content": {api.STREAM_TYPE: {"schema": {"$ref": REF.format(model="CardPictureLine")}}},
+            },
+            **errors(*COMMON),
+        },
+    )
     def card_picture(request: api.CardPictureRequest, x_notosaurus_version: str = client):
         """A card's figure or picture, the AI deciding which when needed (pictures.card_picture)."""
 
@@ -326,6 +337,7 @@ def build() -> dict:
             (api.TranscribeRequest, "validation"),
             (api.ExtractLine, "serialization"),
             (api.PictureSearchLine, "serialization"),
+            (api.CardPictureLine, "serialization"),
         ],
         ref_template=REF,
     )

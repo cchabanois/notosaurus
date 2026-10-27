@@ -245,12 +245,12 @@ class LocalServer(
      * A JSON route told as it goes when the page asks Relay.STREAM_TYPE, as the computer's
      * (app/routes/anki.py, _steps): the `step` lines the work tells ({"step": "sounds",
      * "done", "total"}, {"step": "cards"}), then {"result"} or {"error"}. Without it: its
-     * answer, as `api`. The body is read first: the answer then outlives the request.
+     * answer, as `api`. The body is read first (none: {}): the answer then outlives the request.
      */
     internal fun Route.stepping(path: String, work: suspend RoutingContext.(JsonObject, Step) -> JsonObject) {
         post(path) {
             if (!allowed()) return@post
-            val req = body()
+            val req = call.receiveText().let { if (it.isBlank()) JsonObject(emptyMap()) else json.parseToJsonElement(it).jsonObject }
             if (call.request.headers[HttpHeaders.Accept]?.contains(Relay.STREAM_TYPE) != true) {
                 val (status, answer) = try {
                     HttpStatusCode.OK to work(req) {}

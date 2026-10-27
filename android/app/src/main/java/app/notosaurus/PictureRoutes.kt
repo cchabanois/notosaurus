@@ -30,10 +30,11 @@ internal fun Route.pictureRoutes(server: LocalServer) {
         // --- Pictures, through the relay (as app/main.py): drawn, the user's own, none
         // The pictures the cards ask for: figures, free pictures; drawn by the image model only
         // when asked ("draw": the user said yes), else listed in "to_draw"
-        api("POST", "/api/lessons/{id}/pictures") {
-            val draw = runCatching { body()["draw"]?.jsonPrimitive?.booleanOrNull }.getOrNull() == true
+        // Asked as Relay.STREAM_TYPE: each card's steps as they begin, then the answer
+        stepping("/api/lessons/{id}/pictures") { req, step ->
+            val draw = req["draw"]?.jsonPrimitive?.booleanOrNull == true
             if (draw) switches.check("pictures.draw")
-            pictures.drawMissing(lesson(), draw)
+            pictures.drawMissing(lesson(), draw, step)
         }
         // "✨ Image", its first step: a figure drawn, or a picture decided (the page then looks
         // for free ones, and asks before one is drawn)
