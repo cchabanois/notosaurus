@@ -1117,13 +1117,15 @@ def test_no_apkg_where_the_cards_go_straight_to_ankidroid(page, anki):
 
 
 def test_send_waits_for_the_figures_and_says_so(page, anki):
-    """"Add to Anki" while the figures are drawn: the button says it waits for them, how many
+    """ "Add to Anki" while the figures are drawn: the button says it waits for them, how many
     are ready; sent once they're there, with them."""
     held = []
     page.route("**/api/lessons/*/pictures", lambda route: held.append(route))
     generate_free(page, "Le triangle rectangle (géométrie)")  # demo mode: three figures to draw
     page.get_by_role("button", name="📥 Ajouter à Anki").click()
-    sync_api.expect(page.locator(".bar-row button.primary.wide", has_text="Images")).to_contain_text("Images et figures : 0 / 3 prêtes")
+    sync_api.expect(page.locator(".bar-row button.primary.wide", has_text="Images")).to_contain_text(
+        "Images et figures : 0 / 3 prêtes"
+    )
     for route in held:
         route.continue_()
     sync_api.expect(page.get_by_role("button", name="🔄 Mettre à jour dans Anki")).to_be_visible()
