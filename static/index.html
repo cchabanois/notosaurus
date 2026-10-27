@@ -396,8 +396,13 @@
               <span class="flash-badge" x-show="card._state"
                     x-text="card._state === 'new' ? $t('app.review.badgeNew') : $t('app.review.badgeModified')"></span>
               <div class="front-row">
+                <!-- A formula or gaps: shown as the card shows them; their text only while edited
+                     (a click on them), the preview then under it as it's typed -->
+                <div class="math-preview shown" x-show="renderedOnly(card, 'front')" x-html="previewHtml(card.front)"
+                     @click="editField(card, 'front', $el)" :title="readOnly() ? '' : $t('app.review.editFormula')"></div>
                 <textarea class="front" rows="1" x-model="card.front" :readonly="readOnly()" :placeholder="$t('app.review.front')" :aria-label="$t('app.review.front')"
-                          x-init="watchHeight($el)" x-effect="card.front; fitHeight($el)"></textarea>
+                          x-show="!renderedOnly(card, 'front')" @focus="card._editing = 'front'" @blur="card._editing = ''"
+                          x-init="watchHeight($el)" x-effect="card.front; card._editing; fitHeight($el)"></textarea>
                 <!-- On the front's line, not a column beside the card (it made every card as tall as
                      its buttons); the rare ones (report, delete) behind ⋯ -->
                 <div class="flash-actions">
@@ -417,14 +422,17 @@
                   </div>
                 </div>
               </div>
-              <div class="math-preview" x-show="hasMath(card.front) || isCloze(card.front)" x-html="previewHtml(card.front)"></div>
+              <div class="math-preview" x-show="card._editing === 'front' && (hasMath(card.front) || isCloze(card.front))" x-html="previewHtml(card.front)"></div>
               <!-- The back, the info, the wrong options and the "did you know" grow with their text,
                    as the front: a long answer is seen whole -->
+              <div class="math-preview back shown" x-show="renderedOnly(card, 'back')" x-html="previewHtml(card.back)"
+                   @click="editField(card, 'back', $el)" :title="readOnly() ? '' : $t('app.review.editFormula')"></div>
               <textarea class="back" rows="1" x-model="card.back" :readonly="readOnly()" @keydown.enter.prevent
                         :placeholder="isCloze(card.front) ? $t('app.review.extra') : card.choices.length ? $t('app.review.rightChoice') : $t('app.review.back')"
                         :aria-label="card.choices.length ? $t('app.review.rightChoice') : $t('app.review.back')"
-                        x-init="watchHeight($el)" x-effect="card.back; fitHeight($el)"></textarea>
-              <div class="math-preview back" x-show="hasMath(card.back)" x-html="previewHtml(card.back)"></div>
+                        x-show="!renderedOnly(card, 'back')" @focus="card._editing = 'back'" @blur="card._editing = ''"
+                        x-init="watchHeight($el)" x-effect="card.back; card._editing; fitHeight($el)"></textarea>
+              <div class="math-preview back" x-show="card._editing === 'back' && hasMath(card.back)" x-html="previewHtml(card.back)"></div>
               <!-- Multiple choice, true/false: the back is the right answer, these the wrong ones -->
               <div class="choices" x-show="card.choices.length">
                 <template x-for="(choice, n) in card.choices" :key="n">

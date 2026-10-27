@@ -166,7 +166,8 @@
         "fix": "Correção proposta: «{front}» → «{back}»",
         "correct": "Corrigir",
         "keep": "Manter a lição"
-      }
+      },
+      "editFormula": "Clique para editar"
     },
     "explain": {
       "button": "Explicar este cartão",

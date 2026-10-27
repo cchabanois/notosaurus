@@ -166,7 +166,8 @@
         "fix": "Vorgeschlagene Korrektur: „{front}“ → „{back}“",
         "correct": "Korrigieren",
         "keep": "Lektion beibehalten"
-      }
+      },
+      "editFormula": "Zum Bearbeiten klicken"
     },
     "explain": {
       "button": "Diese Karte erklären",
