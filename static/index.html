@@ -1147,12 +1147,6 @@
     <div class="sheet-body report">
       <template x-if="report.card && !report.sent">
         <div>
-          <div class="chips" x-show="reportKinds(report.card).length > 1">
-            <template x-for="k in reportKinds(report.card)" :key="k">
-              <button type="button" class="chip" :class="{ active: report.kind === k }" :aria-pressed="String(report.kind === k)"
-                      @click="report.kind = k" x-text="$t('app.report.kinds.' + k)"></button>
-            </template>
-          </div>
           <fieldset class="report-reasons">
             <legend x-text="$t('app.report.why')"></legend>
             <template x-for="r in ['offensive', 'wrong', 'other']" :key="r">
@@ -1168,7 +1162,7 @@
           </label>
           <p class="hint" x-text="$t('app.report.sent')"></p>
           <pre class="report-preview" x-text="reportContent()"></pre>
-          <p class="hint" x-show="report.kind === 'picture'" x-text="$t('app.report.withPicture')"></p>
+          <p class="hint" x-show="reportedPicture(report.card)" x-text="$t('app.report.withPicture')"></p>
           <p class="hint error-text" x-show="report.error" x-text="report.error"></p>
           <div class="sheet-actions">
             <button type="button" class="btn soft" @click="report.open = false" x-text="$t('common.cancel')"></button>
@@ -1181,8 +1175,10 @@
         <div>
           <p x-text="$t('app.report.thanks')"></p>
           <div class="sheet-actions">
-            <button type="button" class="btn danger-soft" x-show="!readOnly() && report.kind !== 'explanation'" @click="dropReported()"
-                    x-text="$t('app.report.drop.' + report.kind)"></button>
+            <button type="button" class="btn danger-soft" x-show="!readOnly()" @click="dropReported('card')"
+                    x-text="$t('app.report.drop.card')"></button>
+            <button type="button" class="btn danger-soft" x-show="!readOnly() && report.card?.picture" @click="dropReported('picture')"
+                    x-text="$t('app.report.drop.picture')"></button>
             <button type="button" class="btn primary" @click="report.open = false" x-text="$t('common.close')"></button>
           </div>
         </div>

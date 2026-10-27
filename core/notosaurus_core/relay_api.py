@@ -406,7 +406,7 @@ class ReportRequest(BaseModel):
         default="",
         max_length=MAX_REPORT_PICTURE,
         pattern=r"^(data:image/(jpeg|png|webp|svg\+xml);base64,[A-Za-z0-9+/=]+)?$",
-        description="A picture the AI made (kind picture): as a data URL; else empty.",
+        description="The card's picture, the AI's or a free one (never the user's photo): as a data URL; else empty.",
     )
     prompt: str = Field(default="", max_length=MAX_PROMPT, description="The instructions the lesson was made with.")
     language: str = Language

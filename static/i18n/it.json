@@ -466,11 +466,6 @@
     "report": {
       "button": "Segnala",
       "title": "Segnala un contenuto",
-      "kinds": {
-        "card": "La carta",
-        "explanation": "La spiegazione",
-        "picture": "L'immagine"
-      },
       "why": "Perché?",
       "reasons": {
         "offensive": "Offensivo o inappropriato",

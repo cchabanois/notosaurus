@@ -59,8 +59,9 @@ avec Claude Sonnet, compté dans les coûts de la leçon.
 
 ## Signaler un contenu
 
-Dans l'application Android, **⋯ → ⚑ Signaler** sur une carte signale à Notosaurus ce que l'IA a fait : la carte, son
-explication (quand elle est affichée) ou son image. Dites pourquoi (choquant ou inapproprié, faux,
+Dans l'application Android, **⋯ → ⚑ Signaler** sur une carte signale à Notosaurus ce que l'IA a fait : la carte
+entière, telle que vous la voyez (ses textes, son explication quand elle est affichée, son image ou
+sa figure, sauf une photo que vous avez prise vous-même). Dites pourquoi (choquant ou inapproprié, faux,
 autre), ajoutez un commentaire si vous voulez : la fenêtre montre exactement ce qui sera envoyé,
 jamais les photos de la leçon ni le prénom de l'enfant. Ensuite, vous pouvez supprimer la carte ou
 retirer son image. Voir [Confidentialité](../app-privacy/).

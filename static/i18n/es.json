@@ -466,11 +466,6 @@
     "report": {
       "button": "Denunciar",
       "title": "Denunciar un contenido",
-      "kinds": {
-        "card": "La tarjeta",
-        "explanation": "La explicación",
-        "picture": "La imagen"
-      },
       "why": "¿Por qué?",
       "reasons": {
         "offensive": "Ofensivo o inapropiado",

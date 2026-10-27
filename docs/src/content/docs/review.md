@@ -54,8 +54,9 @@ of a cent with Gemini Flash, about a cent with Claude Sonnet, counted with the l
 
 ## Reporting a content
 
-In the Android app, **⋯ → ⚑ Report** on a card reports what the AI made to Notosaurus: the card, its explanation
-(when shown) or its picture. Say why (shocking or inappropriate, wrong, other), add a comment
+In the Android app, **⋯ → ⚑ Report** on a card reports what the AI made to Notosaurus: the whole
+card as you see it (its texts, its explanation when shown, its picture or figure, unless it's a
+photo you took yourself). Say why (shocking or inappropriate, wrong, other), add a comment
 if you like: the sheet shows exactly what will be sent, never the lesson's photos nor the
 child's name. Then you can delete the card or remove its picture. See
 [Privacy](../app-privacy/).

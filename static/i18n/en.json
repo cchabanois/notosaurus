@@ -466,11 +466,6 @@
     "report": {
       "button": "Report",
       "title": "Report content",
-      "kinds": {
-        "card": "The card",
-        "explanation": "The explanation",
-        "picture": "The picture"
-      },
       "why": "Why?",
       "reasons": {
         "offensive": "Shocking or inappropriate",

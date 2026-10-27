@@ -3174,7 +3174,7 @@
             "maxLength": 700000,
             "pattern": "^(data:image/(jpeg|png|webp|svg\\+xml);base64,[A-Za-z0-9+/=]+)?$",
             "title": "Picture",
-            "description": "A picture the AI made (kind picture): as a data URL; else empty.",
+            "description": "The card's picture, the AI's or a free one (never the user's photo): as a data URL; else empty.",
             "default": ""
           },
           "prompt": {
