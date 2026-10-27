@@ -884,6 +884,8 @@ html.sheet-open { overflow: hidden; overscroll-behavior: none; }
 .math-preview { margin: .1rem 0 .4rem; padding: .35rem .6rem; border-radius: var(--radius-sm); background: var(--surface-2); font-size: 1.05rem; overflow-x: auto; }
 .math-preview.back { color: var(--accent, inherit); }
 .math-preview .katex-display { margin: .2rem 0; }
+.front-row .math-preview.shown { flex: 1; min-width: 0; margin: 0; font-weight: 700; }
+.math-preview.shown { cursor: text; }
 .picture-panel { flex: 1 0 100%; margin-top: .5rem; padding-top: .6rem; border-top: 1px dashed var(--border); }
 .picture-panel .field { margin-bottom: .5rem; }
 .picture-actions { display: flex; flex-wrap: wrap; gap: .4rem; margin-bottom: .3rem; }

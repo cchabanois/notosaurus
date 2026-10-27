@@ -166,7 +166,8 @@
         "fix": "Suggested correction: “{front}” → “{back}”",
         "correct": "Correct",
         "keep": "Keep the lesson"
-      }
+      },
+      "editFormula": "Click to edit"
     },
     "explain": {
       "button": "Explain this card",

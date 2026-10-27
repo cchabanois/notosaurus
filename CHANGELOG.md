@@ -77,6 +77,7 @@ Each pull request adds a line under **Unreleased**. See [Releasing](CONTRIBUTING
 
 ### Changed
 
+- A formula (and a sentence with gaps) shows once on its card, as the card shows it; its text only while it's edited (a click on it), the preview under it as it's typed.
 - While a lesson is made or corrected, the waiting card says what the AI is at: reading the lesson, then writing the cards (counted as they come), describing the figures; and, when it happens, that the AI is taking longer than usual, or isn't answering and another model is asked. For developers: `AiStep` lines in `/v1/extract`'s stream, `/v1/revise` asked as `application/x-ndjson` (`ReviseLine`), the same on the computer's and the phone's routes.
 - Each card says what its picture is being made by, as it goes: deciding, looking for a free picture, drawing, checking the figure; a figure found wrong shows its first try, faded, with what was wrong (in the cards' language), while it's drawn again more carefully ("about 40 s"); the others "Waiting…" their turn. The same for a card's own "✨ Image" and its "draw it". For developers: `/v1/card-picture` asked as `application/x-ndjson` tells each step (`CardPictureLine`), and so does `/api/lessons/{id}/pictures` on the computer and the phone.
 - "Add to Anki" (and the .apkg export) while the pictures and figures are drawn: the button says it waits for them, and how many are ready ("⏳ Pictures and figures: 2 / 5 ready…"), then sends them with the cards as before.

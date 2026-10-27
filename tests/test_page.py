@@ -230,6 +230,27 @@ def test_long_back_and_info_seen_whole(page):
         assert box.input_value() == long
 
 
+def test_a_formula_shown_once_its_text_while_edited(page):
+    """A formula: only as the card shows it; a click shows its text to edit, the preview under
+    it as it's typed; out of it, the formula alone again."""
+    generate_free(page, FRONT_PROMPT)
+    card = page.locator(".flash").first
+    back = card.locator("textarea.back")
+    back.fill(r"\(x^2\)")
+    card.locator("textarea.front").click()  # out of the back
+    shown = card.locator(".math-preview.back.shown")
+    sync_api.expect(shown).to_be_visible()
+    sync_api.expect(back).to_be_hidden()
+    sync_api.expect(shown.locator(".katex")).to_be_visible()
+    shown.click()
+    sync_api.expect(back).to_be_focused()
+    sync_api.expect(back).to_have_value(r"\(x^2\)")
+    sync_api.expect(card.locator(".math-preview.back:not(.shown)")).to_be_visible()  # the preview, under it
+    card.locator("textarea.front").click()
+    sync_api.expect(back).to_be_hidden()
+    sync_api.expect(page.locator(".save-pill")).to_have_class(SAVED)
+
+
 def test_generate_again_in_place_then_undo(page):
     generate_free(page, FRONT_PROMPT)
     (first,) = lessons(page)

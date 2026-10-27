@@ -45,6 +45,19 @@ const cardsPart = {
   },
 
   // --- Formulas --------------------------------------------------------
+  // A formula or gaps not being edited: only as the card shows them (their text: a click away)
+  renderedOnly(card, field) {
+    const special = this.hasMath(card[field]) || (field === "front" && this.isCloze(card.front));
+    return special && card._editing !== field;
+  },
+
+  // A click on a formula: its text to edit, the cursor in it
+  editField(card, field, el) {
+    if (this.readOnly()) return;
+    card._editing = field;
+    this.$nextTick(() => el.closest(".flash")?.querySelector(`textarea.${field}`)?.focus());
+  },
+
   hasMath(text) {
     return HAS_MATH.test(text ?? "");
   },
