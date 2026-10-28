@@ -1243,6 +1243,7 @@
     "title": "Lizenzen der Bibliotheken",
     "intro": "Notosaurus verwendet diese Bibliotheken, jede unter ihrer eigenen Lizenz.",
     "page": "In der Seite",
-    "android": "In der Android-App"
+    "android": "In der Android-App",
+    "figures": "Zum Zeichnen der Figuren"
   }
 }

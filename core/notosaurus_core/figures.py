@@ -57,7 +57,8 @@ maths teacher. Look at every element the description asks for: each mark is on t
 segment or at the angle it belongs to; each angle mark covers the angle described, on the \
 side described (left or right of a line, above or below), not the other angle at the same \
 vertex nor a reflex angle; equal things marked the same way; labels present, readable, not \
-on a line; the figure fills the picture, readable. Answer "ok" true only when everything is \
+on a line (an axis's numbers that a curve passes over are fine: axes crossing at the origin \
+put them there); the figure fills the picture, readable. Answer "ok" true only when everything is \
 right; else false, with the problem in one short sentence, in the description's language."""
 PNG_WIDTH = 600  # pixels: what the check sees
 FONT = Path(__file__).parent / "fonts" / "DejaVuSans.ttf"  # its licence beside it
@@ -83,6 +84,8 @@ ELEMENTS = {
     "path", "line", "polyline", "polygon", "rect", "circle", "ellipse", "text", "tspan",
     # Shaded and shared areas (a hatched intersection): they refer to the figure's own parts only
     "pattern", "clipPath", "mask", "linearGradient", "radialGradient", "stop",
+    # A shape drawn again where it is used (Typst's letters): the figure's own, by its id only
+    "symbol", "use",
 }  # fmt: skip
 GEOMETRY = {
     "x", "y", "x1", "y1", "x2", "y2", "cx", "cy", "r", "rx", "ry", "width", "height", "d", "points",
@@ -96,12 +99,13 @@ PRESENTATION = {
     "stroke-linejoin", "stroke-miterlimit", "fill-opacity", "stroke-opacity", "opacity", "fill-rule",
     "font-family", "font-size", "font-weight", "font-style", "text-anchor", "dominant-baseline",
     "alignment-baseline", "baseline-shift", "letter-spacing", "word-spacing", "text-decoration",
-    "marker-start", "marker-mid", "marker-end", "visibility", "display",
+    "marker-start", "marker-mid", "marker-end", "visibility", "display", "overflow",
     "clip-path", "clip-rule", "mask", "stop-color", "stop-opacity",
 }  # fmt: skip
 # Attributes that may point at a part of the figure itself ("url(#hatch)"), never elsewhere
 REFERENCES = {"marker-start", "marker-mid", "marker-end", "clip-path", "mask", "fill", "stroke"}
 INTERNAL_REF = re.compile(r"^url\(\s*#[\w.-]+\s*\)$")
+INTERNAL_HREF = re.compile(r"^#[\w.-]+$")  # a <use> of the figure's own shape, never a file or a page
 SAFE_VALUE = re.compile(r"^[^<>()\\]*$")  # nothing that could call or load (url(…), expression(…))
 # Transforms: geometric functions of numbers only ("rotate(-30 120 80) translate(5,0)")
 TRANSFORM = re.compile(r"^(\s*(matrix|translate|scale|rotate|skewX|skewY)\(\s*[-+\d.eE\s,]*\)\s*,?)+\s*$")
@@ -145,6 +149,8 @@ def _clean(element: ElementTree.Element) -> None:
                 element.attrib[name] = cleaned
             else:
                 del element.attrib[name]
+        elif local == "href" and _local(element.tag) == "use" and INTERNAL_HREF.match(value.strip()):
+            continue  # one of the figure's own shapes ("#g1"): nothing loaded
         elif local not in GEOMETRY | PRESENTATION or not _safe_value(local, value):
             del element.attrib[name]  # on…, href, xlink:href, anything unknown or unsafe
 

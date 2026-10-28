@@ -2,6 +2,7 @@
 
 import asyncio
 import json
+import re
 from xml.etree import ElementTree
 
 import apkg
@@ -9,7 +10,7 @@ import pytest
 from helpers import plain_image
 
 from app import lessons
-from notosaurus_core import figures, llm, pictures
+from notosaurus_core import figures, figures_typst, llm, pictures
 from notosaurus_core.config import AIConfig
 
 TRAPPED = """<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 300" width="9999" onload="alert(1)">
@@ -273,6 +274,7 @@ def drawing_with(monkeypatch, light_svg=SQUARE, checked=None, check_fails=None):
         return schema(svg=light_svg if light else SQUARE.replace(">A<", ">B<"))
 
     monkeypatch.setattr(llm, "_ask_provider", answer)
+    monkeypatch.setattr(figures_typst, "available", lambda: False)  # the circuit, as SVG (Typst: below)
     svg = asyncio.run(llm.draw_figure(AIConfig(llm="gemini"), "un triangle ABC"))
     return svg, calls
 
@@ -316,3 +318,145 @@ def test_the_check_sees_the_figure_with_its_text():
         picture = Image.open(io.BytesIO(png)).convert("L")
         assert picture.size == (figures.PNG_WIDTH, 450)
         assert picture.getextrema()[0] < 100, family  # dark pixels: the letters
+
+
+TRIANGLE = """#ctz-canvas({
+  ctz-init()
+  ctz-def-points(A: (0, 0), B: (4, 0), C: (2, 3))
+  ctz-draw-polygon("A", "B", "C")
+  ctz-draw-angle("A", "B", "C", radius: 0.6)
+  ctz-draw-labels(A: "below left")
+})"""
+
+
+def typst_drawing(monkeypatch, bodies, checked=(True, "")):
+    """draw_figure with a fake AI writing the Typst `bodies` in turn (then, asked for SVG,
+    SQUARE); the calls made, in order."""
+    calls, written = [], iter(bodies)
+
+    async def answer(s, images, text, schema, system=None, light=False, **options):
+        calls.append({"schema": schema.__name__, "light": light, "text": text})
+        if schema is figures.Checked:
+            return schema(ok=checked[0], problem=checked[1])
+        if schema is figures_typst.Kind:
+            return schema(family="geometry")
+        if schema is figures_typst.Figure:
+            return schema(typst=next(written))
+        return schema(svg=SQUARE)
+
+    monkeypatch.setattr(llm, "_ask_provider", answer)
+    svg = asyncio.run(llm.draw_figure(AIConfig(llm="gemini"), "un triangle ABC, l'angle en A marqué"))
+    return svg, calls
+
+
+def test_a_figure_drawn_in_typst_compiled_offline():
+    """Typst with the packages and the font shipped (nothing downloaded): an SVG, black and
+    grey, its letters kept by the cleaning (their shapes, used where they go)."""
+    svg = figures.clean(figures_typst.compile_svg("geometry", TRIANGLE))
+    assert svg.startswith("<svg") and "<use" in svg and "<symbol" in svg  # the letter A
+    assert set(re.findall(r'(?:fill|stroke)="(#[0-9a-f]{6})"', svg)) <= {"#000000", "#e1e1e1", "#ffffff"}
+    assert figures.to_png(svg)
+
+
+def test_typst_asked_again_with_its_error_then_used(monkeypatch):
+    svg, calls = typst_drawing(monkeypatch, ["#ctz-canvas({ ctz-init(", TRIANGLE])
+    assert "<use" in svg  # Typst's, its letter
+    assert [c["schema"] for c in calls] == ["Kind", "Figure", "Figure", "Checked"]
+    assert "Typst said:" in calls[2]["text"] and "ctz-init(" in calls[2]["text"]
+    # Refused twice (an import, then unclosed): the SVG drawing, as before
+    svg, calls = typst_drawing(monkeypatch, ['#import "@preview/other:1.0.0"', "#ctz-canvas({"])
+    assert ">A<" in svg and [c["schema"] for c in calls] == ["Kind", "Figure", "Figure", "Drawing", "Checked"]
+    assert "no import" in calls[2]["text"]
+
+
+def test_a_typst_figure_found_wrong_drawn_again_with_thinking(monkeypatch):
+    _, calls = typst_drawing(monkeypatch, [TRIANGLE, TRIANGLE], checked=(False, "The angle is at B."))
+    assert [(c["schema"], c["light"]) for c in calls] == [
+        ("Kind", True),
+        ("Figure", True),
+        ("Checked", True),
+        ("Figure", False),
+    ]
+    assert "The angle is at B." in calls[-1]["text"]
+
+
+def test_typst_cut_when_too_long_and_nothing_loaded(monkeypatch):
+    import subprocess
+
+    def slow(*args, **kwargs):
+        raise subprocess.TimeoutExpired("typst", figures_typst.COMPILE_S)
+
+    for bad in ('read("/etc/passwd")', 'image("x.png")', 'plugin("p.wasm")', '#include "x.typ"'):
+        with pytest.raises(figures_typst.Unusable):
+            figures_typst.source("geometry", bad)
+    monkeypatch.setattr(subprocess, "run", slow)
+    with pytest.raises(figures_typst.Unusable, match="too long"):
+        figures_typst.compile_svg("geometry", TRIANGLE)
+
+
+def test_the_packages_colours_black_and_grey():
+    assert (
+        figures_typst.monochrome('<path stroke="#0074d9" fill="#aaccff"/>') == '<path stroke="#000000" fill="#e1e1e1"/>'
+    )
+    assert (
+        figures_typst.monochrome('<path fill="#ff4136" stroke="#333333"/>') == '<path fill="#000000" stroke="#333333"/>'
+    )
+
+
+def test_a_use_only_of_the_figures_own_shapes():
+    svg = (
+        '<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 10 10">'
+        '<symbol id="g"><path d="M0 0L1 1"/></symbol><use xlink:href="#g"/>'
+        '<use xlink:href="https://x.example/a.svg#g"/><use href="data:image/svg+xml,x"/></svg>'
+    )
+    cleaned = figures.clean(svg)
+    assert cleaned.count('href="#g"') == 1 and "x.example" not in cleaned and "data:" not in cleaned
+
+
+@pytest.mark.parametrize("family", sorted(figures_typst.FAMILIES))
+def test_each_familys_sheet_example_compiles(family):
+    """What each sheet shows the AI compiles as it is, with the packages shipped: a sheet
+    out of step with its package (a version changed) shows here."""
+    example = re.search(r"exactly so:\n(.*?)\n- ", figures_typst.FAMILIES[family].rules, re.S)
+    assert example, family
+    svg = figures.clean(figures_typst.compile_svg(family, example.group(1).replace("  ...\n", "")))
+    assert svg.startswith("<svg")
+
+
+def test_a_closed_switch_is_seen():
+    """zap's closed switch is a mere wire: ours keeps its two contacts, closed or open."""
+    circuit = '#circuit({{ battery("g", (0, 0), (0, 3)); {} lamp("l", (3, 3), (3, 0)); wire((3, 0), (0, 0)) }})'
+    wired = figures_typst.compile_svg("circuit", circuit.format("wire((0, 3), (3, 3));"))
+    closed = figures_typst.compile_svg("circuit", circuit.format('switch("k", (0, 3), (3, 3), closed: true);'))
+    opened = figures_typst.compile_svg("circuit", circuit.format('switch("k", (0, 3), (3, 3));'))
+    assert closed != wired and closed != opened
+
+
+def test_a_timelines_texts_never_on_one_another():
+    """Events a year apart, long texts: each on its own row, the figure taller for it."""
+    one = figures_typst.compile_svg(
+        "timeline", '#timeline(start: 1780, end: 1800, step: 5, events: ((1789, "Prise de la Bastille"),))'
+    )
+    crowded = figures_typst.compile_svg(
+        "timeline",
+        '#timeline(start: 1780, end: 1800, step: 5, events: ((1789, "Prise de la Bastille"), '
+        '(1790, "Fête de la Fédération"), (1791, "Fuite à Varennes")), periods: ((1793, 1794, "La Terreur"),))',
+    )
+    height = lambda svg: float(re.search(r'height="([\d.]+)', svg).group(1))  # noqa: E731
+    assert height(crowded) > height(one) * 1.5
+
+
+def test_a_figure_of_no_family_drawn_as_svg(monkeypatch):
+    calls = []
+
+    async def answer(s, images, text, schema, system=None, light=False, **options):
+        calls.append(schema.__name__)
+        if schema is figures_typst.Kind:
+            return schema(family="other")
+        if schema is figures.Checked:
+            return schema(ok=True, problem="")
+        return schema(svg=SQUARE)
+
+    monkeypatch.setattr(llm, "_ask_provider", answer)
+    svg = asyncio.run(llm.draw_figure(AIConfig(llm="gemini"), "un tableau de valeurs"))
+    assert ">A<" in svg and calls == ["Kind", "Drawing", "Checked"]
