@@ -327,6 +327,35 @@ def test_a_figure_redrawn_shows_its_steps_and_first_try(page, monkeypatch):
     sync_api.expect(page.locator(".drawing.redrawing")).to_have_count(0)
 
 
+def test_a_picture_shown_as_soon_as_ready(page, monkeypatch):
+    """A card's figure shows the moment it is drawn, while another card's is still coming."""
+    import asyncio
+
+    from app.routes import pictures as routes
+
+    real, go_on = routes.pictures.draw_all, threading.Event()
+
+    async def draw_all(s, folder, cards, draw=False, step=None):
+        folder.mkdir(parents=True, exist_ok=True)
+        name = f"picture-{cards[0].id}-0123abcd.svg"
+        (folder / name).write_text(
+            '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 300" width="400" height="300"></svg>'
+        )
+        step({"card": cards[1].id, "step": "drawing"})
+        step({"card": cards[0].id, "step": "ready", "picture": name, "figure": cards[0].figure})
+        await asyncio.to_thread(go_on.wait, 30)
+        return await real(s, folder, cards, draw, step)
+
+    monkeypatch.setattr(routes.pictures, "draw_all", draw_all)
+    generate_free(page, "Le triangle rectangle (géométrie)")
+    first, second = page.locator(".flash").nth(0), page.locator(".flash").nth(1)
+    sync_api.expect(first.locator(".card-picture.figure img:not(.first):visible")).to_be_visible()
+    sync_api.expect(first.locator(".drawing:visible")).to_have_count(0)
+    sync_api.expect(second.locator(".drawing:visible")).to_be_visible()  # still coming
+    go_on.set()
+    sync_api.expect(second.locator(".card-picture.figure img:not(.first):visible")).to_be_visible()
+
+
 def test_while_waiting_what_the_ai_is_at(page, monkeypatch):
     """The waiting card says what the AI is at: slow to answer, another model asked; then the
     cards counted as they come."""
