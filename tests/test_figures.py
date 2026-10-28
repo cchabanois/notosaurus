@@ -305,13 +305,13 @@ def test_a_figure_checked_when_asked(client, monkeypatch):
     assert client.post(f"{url}/check").json() == {"ok": False, "problem": "The angle is at B."}
     assert seen == [(card["figure"], "<svg")]
     asked = []
-    real = llm.draw_figure
+    real = llm.made_figure
 
     async def draw(s, description, step=None, kind="", problem="", careful=False):
         asked.append((problem, careful))
         return await real(s, description, step, kind, problem, careful)
 
-    monkeypatch.setattr(llm, "draw_figure", draw)
+    monkeypatch.setattr(llm, "made_figure", draw)
     told = {False: [{"step": "drawing"}], True: [{"step": "redrawing", "problem": "The angle is at B."}]}
     for careful, steps in told.items():  # quickly, told the problem; then with the model's thinking
         body = {"problem": "The angle is at B.", "careful": careful}
@@ -366,6 +366,28 @@ def typst_drawing(monkeypatch, bodies, kind="", problem="", careful=False):
     description = "un triangle ABC, l'angle en A marqué"
     svg = asyncio.run(llm.draw_figure(AIConfig(llm="gemini"), description, kind=kind, problem=problem, careful=careful))
     return svg, calls
+
+
+def test_a_figures_source_says_what_drew_it(monkeypatch):
+    """Typst and its family's packages, with their versions (credited where the figure
+    shows); an SVG figure, none; careful when drawn with the model's thinking."""
+    from notosaurus_core.models import Card
+
+    written = iter([TRIANGLE, TRIANGLE])
+
+    async def answer(s, images, text, schema, system=None, light=False, **options):
+        return schema(typst=next(written)) if schema is figures_typst.Figure else schema(svg=SQUARE)
+
+    monkeypatch.setattr(llm, "_ask_provider", answer)
+    card = Card(front="Ce triangle ?", back="rectangle", figure="un triangle", figure_kind="geometry")
+    made = asyncio.run(pictures.card_picture(AIConfig(llm="gemini"), card))
+    origin = made.card.picture_source
+    assert (origin.engine, origin.careful) == ("typst", False)
+    assert origin.made_with[0].startswith("Typst ") and origin.made_with[1] == "ctz-euclide 0.3.0"
+    made = asyncio.run(pictures.card_picture(AIConfig(llm="gemini"), card, problem="x", careful=True))
+    assert made.card.picture_source.careful
+    svg = asyncio.run(pictures.card_picture(AIConfig(llm="gemini"), card.model_copy(update={"figure_kind": "other"})))
+    assert (svg.card.picture_source.engine, svg.card.picture_source.made_with) == ("svg", [])
 
 
 def test_a_figure_drawn_in_typst_compiled_offline():

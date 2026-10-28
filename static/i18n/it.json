@@ -406,7 +406,9 @@
       "checkProblem": "La verifica segnala:",
       "redraw": "📐 Ridisegnala",
       "redrawCareful": "📐 Ridisegnala con cura",
-      "keep": "Tienila"
+      "keep": "Tienila",
+      "madeWith": "📐 Disegnata da {model} con ",
+      "carefully": "con cura"
     },
     "pairing": {
       "title": "Dispositivo non autorizzato"

@@ -282,6 +282,9 @@ def test_found_on_the_computer(client, monkeypatch):
         "page": "",
         "title": "",
         "model": "",
+        "engine": "",
+        "made_with": [],
+        "careful": False,
     }
     gone = client.delete(f"/api/lessons/{lesson['id']}/cards/{card['id']}/picture")
     assert gone.json()["card"]["picture_source"] is None

@@ -385,6 +385,39 @@ def test_a_figure_checked_on_demand_then_redrawn(page, monkeypatch):
     sync_api.expect(found.get_by_role("button", name="📐 Redessiner avec soin")).to_be_visible()
 
 
+def test_a_figures_credits_link_its_projects(page, monkeypatch):
+    """What drew a figure, each project linked: in its picture panel and under it full screen."""
+    from app.routes import pictures as routes
+
+    real = routes.pictures.draw_all
+
+    typst = routes.PictureSource(
+        source="drawn", model="gemini-x", engine="typst", made_with=["Typst 0.15.0", "lilaq 0.6.0"]
+    )
+
+    async def draw_all(s, folder, cards, draw=False, step=None):
+        def told(said):  # each card's picture as Typst drew it
+            step({**said, "picture_source": typst.model_dump()} if said["step"] == "ready" else said)
+
+        drawn = await real(s, folder, cards, draw, told)
+        for card in cards:
+            card.picture_source = typst
+        return drawn
+
+    monkeypatch.setattr(routes.pictures, "draw_all", draw_all)
+    generate_free(page, "Le triangle rectangle (géométrie)")
+    card = page.locator(".flash").first
+    card.locator(".card-picture.figure img:not(.first):visible").click()
+    credit = page.locator(".viewer-credit")
+    sync_api.expect(credit).to_contain_text("📐 Dessinée par gemini-x avec Typst + lilaq")
+    sync_api.expect(credit.get_by_role("link", name="lilaq")).to_have_attribute(
+        "href", "https://typst.app/universe/package/lilaq"
+    )
+    page.keyboard.press("Escape")
+    card.get_by_role("button", name="Image").first.click()
+    sync_api.expect(card.locator(".picture-source:visible")).to_contain_text("Typst + lilaq")
+
+
 def test_while_waiting_what_the_ai_is_at(page, monkeypatch):
     """The waiting card says what the AI is at: slow to answer, another model asked; then the
     cards counted as they come."""

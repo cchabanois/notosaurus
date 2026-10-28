@@ -331,8 +331,9 @@ const photosPart = {
   },
 
   // --- Viewer: a photo (or a card's picture) in full ---------------------
-  openViewer(list, index) {
-    this.viewer = { open: true, list, index, zoomed: false, touchX: 0 };
+  // `card`: a card's picture, its credits shown under it (a figure's: what drew it)
+  openViewer(list, index, card = null) {
+    this.viewer = { open: true, list, index, zoomed: false, touchX: 0, card };
   },
 
   moveViewer(step) {

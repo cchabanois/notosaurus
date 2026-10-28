@@ -458,9 +458,22 @@ def test_where_a_picture_comes_from_kept_hidden(tmp_path):
             picture=name,
             picture_source=PictureSource(source="drawn", model="gpt-image-2"),
         ),
+        Card(
+            front="Ce triangle ?",
+            back="rectangle",
+            choices=["isocèle"],
+            picture=name,
+            picture_source=PictureSource(
+                source="drawn",
+                model="gemini-x",
+                engine="typst",
+                made_with=["Typst 0.15.0", "ctz-euclide 0.3.0"],
+                careful=True,
+            ),
+        ),
     ]
     req = ExportRequest(deck="Histoire", cards=cards, voice="")
-    notes = anki.notes(req, pictures={0: picture, 1: picture, 2: picture})
+    notes = anki.notes(req, pictures={0: picture, 1: picture, 2: picture, 3: picture})
     assert notes[0].fields["Source"] == (
         "Wikimedia Commons · Public domain · Prise de la Bastille · "
         '<a href="https://commons.wikimedia.org/wiki/File:Prise_de_la_Bastille.jpg">'
@@ -468,5 +481,6 @@ def test_where_a_picture_comes_from_kept_hidden(tmp_path):
     )
     assert notes[1].fields["Source"] == "Own photo"
     assert notes[2].fields["Source"] == "Drawn by gpt-image-2"
+    assert notes[3].fields["Source"] == "Drawn by gemini-x with Typst 0.15.0, ctz-euclide 0.3.0, carefully"
     for note in notes:
         assert all("Source" not in t["qfmt"] + t["afmt"] for t in note.nt.templates)  # never shown

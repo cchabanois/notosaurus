@@ -406,7 +406,9 @@
       "checkProblem": "La vérification signale :",
       "redraw": "📐 Redessiner",
       "redrawCareful": "📐 Redessiner avec soin",
-      "keep": "Garder"
+      "keep": "Garder",
+      "madeWith": "📐 Dessinée par {model} avec ",
+      "carefully": "avec soin"
     },
     "pairing": {
       "title": "Appareil non autorisé"

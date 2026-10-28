@@ -377,7 +377,7 @@
             <!-- Picture card: the picture shows with the front text (or with the answer, below) -->
             <div class="card-picture" :class="{ figure: card.figure }" x-show="!card.picture_on_back && (card.picture || card._drawing || ((card.picture_prompt || card.figure) && drawingHere()))">
               <img x-show="card.picture && !card._drawing" :src="card.picture && pictureUrl(card)" :alt="card.figure || card.picture_prompt"
-                   @click="openViewer([pictureUrl(card)], 0)">
+                   @click="openViewer([pictureUrl(card)], 0, card)">
               <!-- A figure checked only when asked, on it: the AI looks at it against its description -->
               <button type="button" class="icon-btn figure-check-btn" x-show="card.figure && card.picture && !card._drawing && !readOnly()"
                       @click="checkFigure(card)" :disabled="Boolean(card._checking)" :class="{ checking: card._checking }"
@@ -469,7 +469,7 @@
               <!-- The picture belongs to the answer ("What is a tangent?"): shown under it, as in Anki -->
               <div class="card-picture on-back" :class="{ figure: card.figure }" x-show="card.picture_on_back && (card.picture || card._drawing || ((card.picture_prompt || card.figure) && drawingHere()))">
                 <img x-show="card.picture && !card._drawing" :src="card.picture && pictureUrl(card)" :alt="card.figure || card.picture_prompt"
-                   @click="openViewer([pictureUrl(card)], 0)">
+                   @click="openViewer([pictureUrl(card)], 0, card)">
                 <!-- A figure checked only when asked, on it: the AI looks at it against its description -->
                 <button type="button" class="icon-btn figure-check-btn" x-show="card.figure && card.picture && !card._drawing && !readOnly()"
                         @click="checkFigure(card)" :disabled="Boolean(card._checking)" :class="{ checking: card._checking }"
@@ -552,7 +552,12 @@
                  a boolean: Alpine leaves a button disabled when its value is undefined) -->
             <div class="picture-panel" x-show="card._panel">
               <!-- Where the picture comes from (a free one: its page, to check it) -->
-              <p class="picture-source" x-show="card.picture && pictureSourceText(card)">
+              <p class="picture-source" x-show="card.picture && figureCredits(card).length">
+                <span x-text="figureCreditText(card)"></span>
+                <template x-for="(project, n) in figureCredits(card)" :key="project.name"><span><span x-text="n ? ' + ' : ''"></span><a :href="project.url" target="_blank" rel="noopener" :title="project.version" x-text="project.name"></a></span></template>
+                <span x-text="card?.picture_source?.careful ? ' · ' + $t('app.pictures.carefully') : ''"></span>
+              </p>
+              <p class="picture-source" x-show="card.picture && pictureSourceText(card) && !figureCredits(card).length">
                 <span x-text="pictureSourceText(card)"></span>
                 <a x-show="card.picture_source?.page" :href="card.picture_source?.page" target="_blank" rel="noopener"
                    x-text="$t('app.pictures.sourcePage')"></a>
@@ -906,6 +911,12 @@
       <img :src="viewer.list[viewer.index]" :alt="$t('app.photos.page', { n: viewer.index + 1 })"
            @click="viewer.zoomed = !viewer.zoomed">
     </div>
+    <!-- A figure's credits: what drew it, each project linked -->
+    <p class="viewer-credit" x-show="figureCredits(viewer.card).length" @click.stop>
+      <span x-text="figureCreditText(viewer.card)"></span>
+      <template x-for="(project, n) in figureCredits(viewer.card)" :key="project.name"><span><span x-text="n ? ' + ' : ''"></span><a :href="project.url" target="_blank" rel="noopener" :title="project.version" x-text="project.name"></a></span></template>
+      <span x-text="viewer.card?.picture_source?.careful ? ' · ' + $t('app.pictures.carefully') : ''"></span>
+    </p>
     <button class="viewer-close" @click="viewer.open = false" :aria-label="$t('common.close')">✕</button>
     <template x-if="viewer.list.length > 1">
       <div>

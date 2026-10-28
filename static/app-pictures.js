@@ -168,6 +168,21 @@ const picturesPart = {
     return t("app.pictures.sourceFound", { source: names[origin.source] ?? origin.source, licence: origin.licence });
   },
 
+  // What a figure was drawn with, credited with a link to each project's page: Typst and
+  // its packages (picture_source.made_with: "ctz-euclide 0.3.0"); [] for an SVG one
+  figureCredits(card) {
+    return (card?.picture_source?.made_with ?? []).map((item) => {
+      const [name, version = ""] = item.split(" ");
+      const url = name === "Typst" ? "https://typst.app" : `https://typst.app/universe/package/${name}`;
+      return { name, version, url };
+    });
+  },
+
+  // A figure's credit line, before its projects' links: who drew it
+  figureCreditText(card) {
+    return t("app.pictures.madeWith", { model: card?.picture_source?.model || "AI" });
+  },
+
   // The sources of the pictures found, as their credit line says them
   foundSources(card) {
     const names = { commons: "Wikimedia Commons", openverse: "Openverse", pixabay: "Pixabay" };

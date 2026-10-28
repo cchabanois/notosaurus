@@ -29,6 +29,11 @@ class PictureSource(BaseModel):
     page: str = ""  # its page at its source
     title: str = ""
     model: str = ""  # a drawing's: the model that drew it
+    # A figure's: drawn in Typst or as SVG; Typst's and its packages' names and versions
+    # ("Typst 0.15.0", "ctz-euclide 0.3.0"), credited where it shows; with the model's thinking
+    engine: Literal["", "typst", "svg"] = ""
+    made_with: list[str] = []
+    careful: bool = False
 
 
 class Doubt(BaseModel):
