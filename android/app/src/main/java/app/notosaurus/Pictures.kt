@@ -10,6 +10,9 @@ import kotlinx.serialization.json.JsonNull
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.buildJsonObject
+import kotlinx.serialization.json.intOrNull
+import kotlinx.serialization.json.jsonArray
+import kotlinx.serialization.json.jsonPrimitive
 import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.put
 import java.io.File
@@ -29,10 +32,12 @@ class Pictures(
      * "to_draw". {"lesson", "failures", "error", "to_draw"}. A card without its picture is
      * still a card: counted, not fatal. `step`: each card's steps as they begin, {"card": its
      * id, "step"…} (what the page shows on it meanwhile, as the computer's), then {"card", "step":
-     * "ready", its picture's fields (READY)} as soon as it has it. */
+     * "ready", its picture's fields (READY)} as soon as it has it. The lesson's own drawings
+     * first (fromTheLesson), for the cards whose thing its photos show. */
     suspend fun drawMissing(lesson: JsonObject, draw: Boolean = false, step: Step = {}): JsonObject {
         val id = lesson.string("id")
         val cards = lesson.cards()
+        fromTheLesson(id, cards, step)
         val failures = mutableListOf<JsonObject>()
         val toDraw = mutableListOf<String>()
         val few = Semaphore(AT_ONCE)
@@ -61,6 +66,31 @@ class Pictures(
             put("failures", failures.size)
             put("error", failures.firstOrNull() ?: JsonNull)
             put("to_draw", JsonArray(toDraw.map(::JsonPrimitive)))
+        }
+    }
+
+    /** The pictures (not the figures: drawn exact) the lesson's own drawings give, cut out of
+     * its photos by the relay (/v1/lesson-drawings, the core's pictures.lesson_drawings), in
+     * `cards` at once and told ready; none, or the relay failing: the cards as they were (their
+     * pictures then looked for, as without). {"card", "step": "lesson"} while looked at. */
+    private suspend fun fromTheLesson(lessonId: String, cards: MutableList<JsonObject>, step: Step) {
+        val wanted = cards.indices.filter { i ->
+            cards[i].missingPicture() && cards[i].string("picture_prompt").isNotBlank() && cards[i].string("figure").isBlank()
+        }
+        val photos = lessons.photos(lessonId)
+        if (wanted.isEmpty() || photos.isEmpty()) return
+        wanted.forEach { i -> step(buildJsonObject { put("card", cards[i].string("id")); put("step", "lesson") }) }
+        val found = try {
+            relay().withPhotos("lesson-drawings", buildJsonObject { put("cards", JsonArray(wanted.map { cards[it] })) }, photos)
+        } catch (e: RelayException) {
+            return // looked for one by one, as without
+        }
+        for (drawing in found["drawings"]?.jsonArray.orEmpty().map { it.jsonObject }) {
+            val i = wanted.getOrNull(drawing["card"]?.jsonPrimitive?.intOrNull ?: -1) ?: continue
+            val name = save(lessonId, cards[i].string("id"), Base64.getDecoder().decode(drawing.string("data")), "jpg")
+            cards[i] = cards[i].with("picture" to JsonPrimitive(name), "picture_source" to LESSON)
+            val ready = READY.mapNotNull { field -> cards[i][field]?.let { field to it } }
+            step(JsonObject(mapOf("card" to JsonPrimitive(cards[i].string("id")), "step" to JsonPrimitive("ready")) + ready))
         }
     }
 
@@ -198,6 +228,7 @@ class Pictures(
         private const val AT_ONCE = 4
         private const val NEEDS_DRAWING = "picture.needs_drawing" // no free picture fits: the user is asked
         private val PHOTO = buildJsonObject { put("source", "photo") }
+        private val LESSON = buildJsonObject { put("source", "lesson") } // its own pages' drawing
         // What the relay decides of a card's picture (Card's fields): taken into the card
         private val PICTURE_FIELDS = listOf("figure", "figure_kind", "picture_prompt", "picture_search", "picture_source")
         // A card's picture fields, told with "ready" (drawMissing) the moment it has them (core's pictures.READY)

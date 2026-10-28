@@ -56,7 +56,7 @@ def prepare(data: bytes, media_type: str) -> tuple[bytes, str, tuple[int, int] |
     return out.getvalue(), "image/jpeg", image.size
 
 
-def _fractions(box: list[float], size: tuple[int, int], fmt: str) -> list[float] | None:
+def fractions(box: list[float], size: tuple[int, int], fmt: str) -> list[float] | None:
     """A box from the AI as [x0, y0, x1, y1] fractions of the photo; None if it isn't a box."""
     if len(box) != 4:
         return None
@@ -86,7 +86,7 @@ def normalize(cards: list[Card], sizes: Sequence[tuple[int, int] | None], fmt: s
         if mask is None:
             continue
         size = sizes[mask.page - 1] if 1 <= mask.page <= len(sizes) else None
-        box = _fractions(mask.box, size, fmt) if size else None
+        box = fractions(mask.box, size, fmt) if size else None
         if size is None or box is None:
             card.mask = None
             continue
@@ -102,7 +102,7 @@ def frames(found: list[Frame], sizes: list[tuple[int, int] | None], fmt: str) ->
     result = []
     for frame in found:
         size = sizes[frame.page - 1] if 1 <= frame.page <= len(sizes) else None
-        box = _fractions(frame.box, size, fmt) if size else None
+        box = fractions(frame.box, size, fmt) if size else None
         if box:
             margin = [-CROP_MARGIN, -CROP_MARGIN, CROP_MARGIN, CROP_MARGIN]  # a frame drawn tight on the drawing
             result.append(Frame(page=frame.page, box=_clamp([v + m for v, m in zip(box, margin, strict=True)])))
@@ -130,8 +130,8 @@ def turns(lines: list[TextLine], sizes: list[tuple[int, int] | None], fmt: str) 
     result = [0] * len(sizes)
     for line in lines:
         size = sizes[line.page - 1] if 1 <= line.page <= len(sizes) else None
-        first = _fractions(line.first_word, size, fmt) if size else None
-        last = _fractions(line.last_word, size, fmt) if size else None
+        first = fractions(line.first_word, size, fmt) if size else None
+        last = fractions(line.last_word, size, fmt) if size else None
         if size is None or first is None or last is None:
             continue
         width, height = size

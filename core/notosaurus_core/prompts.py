@@ -429,6 +429,23 @@ def _pick_text(search: str, context: str, count: int) -> str:
     return f"{card}The picture searched for: {search}\nCandidates 0 to {count - 1}, in that order."
 
 
+DRAWINGS_RULES = """\
+A pupil's lesson pages and flashcards made from them are given. For each card whose \
+thing the pages show as a drawing, a picture or a photo of its own (an object, an animal, \
+a person, a place, a body part: not a word, not a table, not a whole page), give where \
+that drawing is: its page and its bounding box, the whole drawing and nothing of its \
+label nor of another drawing. A card the pages show no drawing of its own for: leave it \
+out."""
+
+
+def _drawings_text(cards: list[str], fmt: str, sizes: list[tuple[int, int] | None]) -> str:
+    """The cards to look for ("front → back", numbered), and how to give the boxes (in pixels:
+    the photos' sizes)."""
+    listed = "\n".join(f"{i}. {card}" for i, card in enumerate(cards))
+    sized = [f"photo {i + 1}: {size[0]}x{size[1]}" for i, size in enumerate(sizes) if size and fmt == "pixels"]
+    return f"Cards:\n{listed}\n\nBoxes: {diagrams.FORMATS[fmt]}" + (f" ({'; '.join(sized)})" if sized else "") + "."
+
+
 FIGURES_RULES = """\
 A pupil's flashcards were made from a lesson; the cards listed were meant to show a \
 figure on their back, with the answer, but it wasn't described. For each, describe the \

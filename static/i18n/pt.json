@@ -398,7 +398,8 @@
         "checking": "🔎 A verificar a figura…",
         "redrawing": "📐 Primeira versão imperfeita: novo desenho, mais cuidado…",
         "searching": "🔎 À procura de uma imagem livre…",
-        "drawing": "🎨 A desenhar a imagem…"
+        "drawing": "🎨 A desenhar a imagem…",
+        "lesson": "📖 A procurar um desenho na lição…"
       },
       "check": "🔍 Verificar a figura",
       "checking": "🔍 A verificar…",
@@ -408,7 +409,8 @@
       "redrawCareful": "📐 Redesenhar com cuidado",
       "keep": "Manter",
       "madeWith": "📐 Desenhada por {model} com ",
-      "carefully": "com cuidado"
+      "carefully": "com cuidado",
+      "sourceLesson": "📖 Desenho da lição"
     },
     "pairing": {
       "title": "Aparelho não autorizado"

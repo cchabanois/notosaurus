@@ -34,7 +34,7 @@ def test_boxes_already_fractions_kept_as_they_are():
     cards = [Card(front="What is (1)?", back="mouth", mask=Mask(page=1, n=1, box=[0.2, 0.1, 0.4, 0.3]))]
     diagrams.normalize(cards, [None], "fractions")
     assert cards[0].mask.box == [0.2, 0.1, 0.4, 0.3]
-    assert diagrams._fractions([0.4, 0.1, 0.2, 0.3], (1000, 500), "fractions") == [0.2, 0.1, 0.4, 0.3]
+    assert diagrams.fractions([0.4, 0.1, 0.2, 0.3], (1000, 500), "fractions") == [0.2, 0.1, 0.4, 0.3]
 
 
 @pytest.mark.parametrize(

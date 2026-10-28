@@ -24,7 +24,7 @@ class PictureSource(BaseModel):
     Anki note's hidden Source field): to check a free picture's page later, or find the
     cards using one that must go."""
 
-    source: Literal["commons", "openverse", "pixabay", "drawn", "photo"]
+    source: Literal["commons", "openverse", "pixabay", "drawn", "photo", "lesson"]  # lesson: its own pages' drawing
     licence: str = ""  # a free picture's: "Public domain", "CC0", "Pixabay"
     page: str = ""  # its page at its source
     title: str = ""
@@ -282,6 +282,19 @@ class CardFigure(BaseModel):
 
 class Figures(BaseModel):
     figures: list[CardFigure] = Field(default_factory=list)
+
+
+class CardDrawing(BaseModel):
+    card: int = Field(description="The card's number, as listed.")
+    page: int = Field(description="The photo showing its drawing (1 = first).")
+    box: list[float] = Field(
+        description="The drawing's bounding box, in the format of the instructions: the whole drawing, nothing of "
+        "its label nor of another drawing."
+    )
+
+
+class Drawings(BaseModel):
+    drawings: list[CardDrawing] = Field(default_factory=list)
 
 
 class PicturePlan(BaseModel):

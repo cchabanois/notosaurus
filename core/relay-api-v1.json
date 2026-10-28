@@ -311,6 +311,153 @@
         }
       }
     },
+    "/v1/lesson-drawings": {
+      "post": {
+        "summary": "Lesson Drawings",
+        "description": "The lesson's own drawings for its cards, cut out of its photos (pictures.lesson_drawings).",
+        "operationId": "lesson_drawings_v1_lesson_drawings_post",
+        "parameters": [
+          {
+            "name": "X-Notosaurus-Version",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "The client's version (\"1.1.0\").",
+              "title": "X-Notosaurus-Version"
+            },
+            "description": "The client's version (\"1.1.0\")."
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LessonDrawingsResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Codes: `relay.invalid_key`",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "402": {
+            "description": "Codes: `relay.no_credits`, `relay.subscription_ended`, `relay.payment_pending`, `relay.trial_ended`",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "413": {
+            "description": "Codes: `relay.too_large`",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "415": {
+            "description": "Codes: `relay.bad_image`",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Codes: `relay.invalid_request`",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "426": {
+            "description": "Codes: `relay.client_outdated`",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Codes: `relay.daily_limit`, `relay.busy`",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Codes: `relay.unavailable`",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "request"
+                ],
+                "properties": {
+                  "request": {
+                    "$ref": "#/components/schemas/LessonDrawingsRequest"
+                  },
+                  "images": {
+                    "type": "array",
+                    "maxItems": 10,
+                    "items": {
+                      "type": "string",
+                      "format": "binary"
+                    },
+                    "description": "The photos, in order: image/jpeg, image/png, image/webp, image/gif, at most 4 MB each."
+                  }
+                }
+              },
+              "encoding": {
+                "request": {
+                  "contentType": "application/json"
+                },
+                "images": {
+                  "contentType": "image/jpeg, image/png, image/webp, image/gif"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/v1/explain": {
       "post": {
         "summary": "Explain",
@@ -2911,6 +3058,66 @@
         "title": "Frame",
         "description": "Where a diagram is on a photo: the image Anki gets is cropped to it."
       },
+      "LessonDrawing": {
+        "properties": {
+          "card": {
+            "type": "integer",
+            "title": "Card",
+            "description": "The card's index in the request."
+          },
+          "data": {
+            "type": "string",
+            "title": "Data",
+            "description": "The drawing, cut out of its page: a JPEG, card size, base64."
+          }
+        },
+        "type": "object",
+        "required": [
+          "card",
+          "data"
+        ],
+        "title": "LessonDrawing"
+      },
+      "LessonDrawingsRequest": {
+        "description": "The drawings of their own the lesson's photos (the \"images\" parts) show for these\ncards, cut out (pictures.lesson_drawings): the cards' pictures, before any is looked\nfor or drawn.",
+        "properties": {
+          "cards": {
+            "description": "The cards wanting a picture.",
+            "items": {
+              "$ref": "#/components/schemas/Card"
+            },
+            "maxItems": 200,
+            "title": "Cards",
+            "type": "array"
+          }
+        },
+        "required": [
+          "cards"
+        ],
+        "title": "LessonDrawingsRequest",
+        "type": "object"
+      },
+      "LessonDrawingsResponse": {
+        "properties": {
+          "drawings": {
+            "items": {
+              "$ref": "#/components/schemas/LessonDrawing"
+            },
+            "type": "array",
+            "title": "Drawings",
+            "description": "Those found; the other cards none (look for theirs)."
+          },
+          "usage": {
+            "$ref": "#/components/schemas/Usage"
+          }
+        },
+        "type": "object",
+        "required": [
+          "drawings",
+          "usage"
+        ],
+        "title": "LessonDrawingsResponse"
+      },
       "Mask": {
         "properties": {
           "page": {
@@ -3137,7 +3344,8 @@
               "openverse",
               "pixabay",
               "drawn",
-              "photo"
+              "photo",
+              "lesson"
             ],
             "title": "Source"
           },

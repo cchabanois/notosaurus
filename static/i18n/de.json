@@ -398,7 +398,8 @@
         "checking": "🔎 Figur wird geprüft…",
         "redrawing": "📐 Erste Fassung nicht richtig: wird sorgfältiger neu gezeichnet…",
         "searching": "🔎 Freies Bild wird gesucht…",
-        "drawing": "🎨 Bild wird gezeichnet…"
+        "drawing": "🎨 Bild wird gezeichnet…",
+        "lesson": "📖 Zeichnung in der Lektion wird gesucht…"
       },
       "check": "🔍 Figur prüfen",
       "checking": "🔍 Wird geprüft…",
@@ -408,7 +409,8 @@
       "redrawCareful": "📐 Sorgfältig neu zeichnen",
       "keep": "Behalten",
       "madeWith": "📐 Gezeichnet von {model} mit ",
-      "carefully": "sorgfältig"
+      "carefully": "sorgfältig",
+      "sourceLesson": "📖 Zeichnung aus der Lektion"
     },
     "pairing": {
       "title": "Gerät nicht zugelassen"

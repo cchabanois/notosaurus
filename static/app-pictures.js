@@ -163,6 +163,7 @@ const picturesPart = {
     const origin = card.picture_source;
     if (!origin) return "";
     if (origin.source === "photo") return t("app.pictures.sourcePhoto");
+    if (origin.source === "lesson") return t("app.pictures.sourceLesson");
     if (origin.source === "drawn") return origin.model ? t("app.pictures.sourceDrawnBy", { model: origin.model }) : t("app.pictures.sourceDrawn");
     const names = { commons: "Wikimedia Commons", openverse: "Openverse", pixabay: "Pixabay" };
     return t("app.pictures.sourceFound", { source: names[origin.source] ?? origin.source, licence: origin.licence });
@@ -269,7 +270,7 @@ const picturesPart = {
   pictureStepText(card) {
     const figure = Boolean(card.figure);
     const key = {
-      deciding: "deciding", searching: "searching", checking: "checking", redrawing: "redrawing",
+      deciding: "deciding", searching: "searching", checking: "checking", redrawing: "redrawing", lesson: "lesson",
       drawing: figure ? "drawingFigure" : "drawing",
     }[card._step];
     if (key) return t(`app.pictures.steps.${key}`);

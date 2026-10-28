@@ -42,6 +42,7 @@ from .models import (
     Card,
     Deck,
     Dictation,
+    Drawings,
     Explanation,
     Extraction,
     Figures,
@@ -55,6 +56,7 @@ from .models import (
 )
 from .prompts import (
     DICTATION_RULES,
+    DRAWINGS_RULES,
     EXPLAIN_RULES,
     FIGURES_RULES,
     PICK_RULES,
@@ -65,6 +67,7 @@ from .prompts import (
     SYSTEM_PROMPT,
     ExtractOptions,
     _dictation_text,
+    _drawings_text,
     _explain_text,
     _figures_text,
     _pick_text,
@@ -407,6 +410,27 @@ async def pick_picture(s: AIConfig, candidates: list[Image], search: str, contex
     text = _pick_text(search, context, len(candidates))
     found = await _ask_provider(s, candidates, text, Picked, PICK_RULES, light=True, demo=demo_ai.picked)
     return found.choice if 0 <= found.choice < len(candidates) else None
+
+
+async def find_drawings(s: AIConfig, images: list[Image], cards: list[str]) -> dict[int, tuple[int, list[float]]]:
+    """The drawings of their own the lesson's pages show for these cards ("front → back"),
+    in one light call: {card's index: (its page, from 0; its box, [x0, y0, x1, y1] fractions
+    of the page)}; none found: {}."""
+    if not images or not cards:
+        return {}
+    prepared, sizes = _prepare(images)
+    fmt = _box_format(s)
+    found = await _ask_provider(
+        s, prepared, _drawings_text(cards, fmt, sizes), Drawings, DRAWINGS_RULES, light=True, demo=Drawings
+    )
+    drawings: dict[int, tuple[int, list[float]]] = {}
+    for item in found.drawings:
+        page = item.page - 1
+        size = sizes[page] if 0 <= page < len(sizes) else None
+        box = diagrams.fractions(item.box, size, fmt) if size and 0 <= item.card < len(cards) else None
+        if box:
+            drawings.setdefault(item.card, (page, box))
+    return drawings
 
 
 async def sort_pictures(s: AIConfig, candidates: list[Image], search: str, context: str = "") -> list[int]:
