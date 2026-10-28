@@ -474,6 +474,17 @@ def test_a_light_call_that_hangs_is_asked_again(monkeypatch):
     assert fake.models == ["a", "b"]
 
 
+def test_a_light_call_left_waiting_twice_goes_to_the_next_model(monkeypatch):
+    """Asked again, both still waiting after LIGHT_ANSWER_S: the next model, not the 180 s a
+    lesson may take."""
+    monkeypatch.setattr(gemini, "ASK_AGAIN_S", 0.05)
+    monkeypatch.setattr(gemini, "LIGHT_ANSWER_S", 0.2)
+    fake = Scripted(a="stall")
+    light = gemini._Request(fake, LIGHT, ["a figure"], types.GenerateContentConfig(), light=True)
+    response = run(gemini._fallback(light, ["a", "b"]))
+    assert response.text == SVG and fake.models == ["a", "a", "b"]
+
+
 def test_a_light_call_failing_at_once_is_not_asked_again(monkeypatch):
     monkeypatch.setattr(gemini, "ASK_AGAIN_S", 0.05)
     fake = Scripted(a=400)

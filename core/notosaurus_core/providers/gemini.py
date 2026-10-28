@@ -79,6 +79,9 @@ WHOLE_ANSWER_S = 180
 # the model's own wait, not the work (seen on Vertex AI): not answered after this, it is
 # asked again beside it, the first answer taken, the other one cancelled
 ASK_AGAIN_S = 12
+# …and given up on (the next model tried) when neither came after this: both left waiting,
+# seen for 180 s, the fallback model answering in under 2
+LIGHT_ANSWER_S = 30
 
 # What makes the next model tried, unless it was the last: overloaded (a 5xx still there
 # after the SDK's retries), no quota (a free key has none for the latest models, and a
@@ -223,7 +226,9 @@ async def _generate(request: _Request, model: str):
                 model=model, contents=request.contents, config=request.config
             )
 
-        return await _within(WHOLE_ANSWER_S, _asked_again(call) if request.light else call())
+        if request.light:
+            return await _within(LIGHT_ANSWER_S, _asked_again(call))
+        return await _within(WHOLE_ANSWER_S, call())
     return await _streamed(request, model, request.on_card)
 
 
