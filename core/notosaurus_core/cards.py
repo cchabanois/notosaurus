@@ -1,5 +1,6 @@
 """What kind of card a card is, from its content; its texts as plain text."""
 
+import html
 import re
 
 from .models import Card
@@ -32,8 +33,11 @@ TEXT_FIELDS = ("front", "back", "info", "fun_fact", "explanation", "mnemonic")
 
 
 def plain(text: str) -> str:
-    """The text without markup: emphasis in square brackets, tags gone, breaks kept;
-    LaTeX commands whose backslash JSON read as an escape put back."""
+    """The text without markup: HTML entities decoded (the AI writes "&eacute;" now and then:
+    a card never means one), emphasis in square brackets, tags gone, breaks kept; LaTeX
+    commands whose backslash JSON read as an escape put back."""
+    if "&" in text:
+        text = html.unescape(text)
     text = formulas(text)
     if "<" not in text and "**" not in text:
         return text

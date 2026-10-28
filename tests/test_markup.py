@@ -76,3 +76,38 @@ def test_latex_commands_whose_backslash_json_read_as_an_escape():
     assert cards.plain("une (\\textbf{note}) et \\(x\\)") == "une (\\textbf{note}) et \\(x\\)"  # a formula already
     for text in ("col 1\t2", "(voir page 3)", "f(x) = \\(x^2\\)"):
         assert cards.plain(text) == text, text
+
+
+def test_html_entities_decoded():
+    """The lesson made on the phone (2026-10-29): every accent as an entity, its deck and
+    its choice too."""
+    assert cards.plain("Nez / bouche → trach&eacute;e → alv&eacute;oles") == "Nez / bouche → trachée → alvéoles"
+    assert cards.plain("le r&ocirc;le du c&oelig;ur, l&#39;art&egrave;re") == "le rôle du cœur, l'artère"
+    assert cards.plain("&lt;b&gt;gras&lt;/b&gt;") == "[gras]"  # a tag written as entities: a tag
+    assert cards.plain("Tom & Jerry") == "Tom & Jerry"  # not an entity: kept
+
+
+def test_extraction_and_revision_texts_decoded(monkeypatch):
+    async def answer(s, images, text, schema, *args, **kwargs):
+        if "summary" in schema.model_fields:
+            return schema.model_validate(
+                {"deck": "D", "cards": [{"front": "a", "back": "b"}], "summary": "Carte modifi&eacute;e"}
+            )
+        return schema.model_validate(
+            {
+                "deck": "SVT::Sch&eacute;mas",
+                "choice": "Questions sur les sch&eacute;mas",
+                "cards": [{"front": "Le r&ocirc;le ?", "back": "b"}],
+            }
+        )
+
+    monkeypatch.setattr(llm, "_ask_provider", answer)
+    s = AIConfig(llm="gemini", gemini_api_key="k")
+    found = asyncio.run(llm.extract_cards(s, [], "p"))
+    assert (found.deck.deck, found.choice, found.deck.cards[0].front) == (
+        "SVT::Schémas",
+        "Questions sur les schémas",
+        "Le rôle ?",
+    )
+    revised = asyncio.run(llm.revise_cards(s, [], "p", Deck(deck="D", cards=[Card(front="a", back="b")]), "fix"))
+    assert revised.summary == "Carte modifiée"
