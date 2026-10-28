@@ -153,12 +153,14 @@ when the instructions ask for none."""
 # Pictures where they truly help, whatever the prompt (a setting, on at first): only then
 # is the AI told it may add them unasked.
 PICTURES = """\
-Pictures are welcome, even when the instructions don't ask for them: on the cards where \
-one truly helps to remember, fill "picture_prompt" and "picture_search" as the rules say, \
-for something real and specific that a photo or a painting shows (a person, a place, a \
-monument, a work of art, an animal, an object, a food). Never for an abstract notion, \
-never on every card; where it goes, as the rules say. None at all when the \
-instructions ask for none."""
+Pictures are welcome, even when the instructions don't ask for them: on each card about \
+something concrete that a picture shows at once (an object, an animal, a food, a place, a \
+person, a monument, a work of art), fill "picture_prompt" and "picture_search" as the rules \
+say: every such card, all of a list of words for things included. And, whatever the word, \
+on each card the lesson's pages draw a picture for (a drawing, an icon next to the word). \
+Never otherwise for an abstract notion, a word a picture can't show without doubt (a \
+feeling, a grammar word, most actions), nor a card the picture would answer; where it \
+goes, as the rules say. None at all when the instructions ask for none."""
 
 # Helps on the back, asked for with a switch (its default set in the settings): only
 # where they truly help, as the follow-ups of an explanation (see EXPLAIN_RULES).

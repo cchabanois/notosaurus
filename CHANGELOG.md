@@ -132,6 +132,7 @@ Each pull request adds a line under **Unreleased**. See [Releasing](CONTRIBUTING
 
 ### Fixed
 
+- A list of words for things (school things, animals) gets a picture on every card, the same each time it's made, and so does each word the lesson draws a picture for: the rule said "never on every card", and the same lesson got pictures on all its cards, then on none.
 - A lesson's photo seen in full can be turned (↻) and have a name hidden (🖍️) from there too, as from its thumbnail; the photo shown follows at once.
 - 🧮 A formula the AI wrote with a single backslash shows as meant: JSON read `\text` as a tab and "ext", `\frac` as a form feed and "rac", so a card said "(<tab>ext{m})" (`\(` isn't a JSON escape: its backslash was dropped). A tab, form feed, backspace or carriage return before a letter becomes the LaTeX command again, a line break too within a formula, and a group in parentheses opening on a command, in a text without a formula, the formula it meant.
 - A light AI call (sorting free pictures, drawing a figure) left waiting is given up on after 30 s for the fallback model, which answered in under 2 s, instead of 180 s: a card's free picture took three minutes.
