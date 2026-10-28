@@ -210,6 +210,7 @@
       "downloadApkg": "Scarica il file .apkg",
       "addToAnki": "📥 Aggiungi ad Anki",
       "updateInAnki": "🔄 Aggiorna in Anki",
+      "upToDateInAnki": "✓ Aggiornato in Anki",
       "sending": "Invio ad Anki…",
       "sendingSounds": "🔊 Voce: {done} / {total}…",
       "sendingCards": "📥 Carte…",

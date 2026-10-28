@@ -143,6 +143,7 @@ document.addEventListener("alpine:init", () => {
     decks: [],                   // existing deck names, for the deck field
     lessonChoice: "",            // what the AI chose to make (prompt "Automatic")
     lessonExported: false,       // already sent to Anki or exported
+    sentKey: null,               // what Anki has of it (ankiKey()); null: not known to be up to date
     photosEdited: false,         // photos added or removed since the lesson was shown
     typing: false,               // the answer is typed in Anki
     dictation: false,            // a dictation card: hear the back, type it

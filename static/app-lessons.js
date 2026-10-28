@@ -225,6 +225,10 @@ const lessonsPart = {
     this.voice = lesson.voice;
     this.rate = lesson.rate ?? "";
     this.lastSaved = this.snapshot();
+    // Not changed since it was sent (sending saves it: both dates the same), else to send again;
+    // dates, not texts: the app writes "10:15" for 10:15:00
+    const sent = Date.parse(lesson.exported_at ?? "");
+    this.sentKey = sent >= Date.parse(lesson.updated_at ?? "") ? this.ankiKey() : null;
     this.saveState = "saved";
     this.revision = { text: "", busy: false, summary: "", stats: "", undo: null };
     this.$nextTick(() => this.$refs.review?.scrollIntoView({ behavior: "smooth" }));
@@ -305,6 +309,7 @@ const lessonsPart = {
     this.lessonPrompt = "";
     this.lessonChoice = "";
     this.lessonExported = false;
+    this.sentKey = null;
     this.photosEdited = false;
     this.frames = [];
     // Back to the saved prompt picked last (a reopened lesson may have left its own text)
@@ -381,6 +386,19 @@ const lessonsPart = {
 
   snapshot() {
     return JSON.stringify(this.payload());
+  },
+
+  // What Anki gets of the lesson: its cards (their pictures and figures), deck and options;
+  // not who it is shared with, its prompt (sent or not, the same in Anki)
+  ankiKey() {
+    const { shared, prompt, choice, ...sent } = this.payload();
+    return JSON.stringify(sent);
+  },
+
+  // Sent and not changed since: Anki has it all (sending again stays possible: a sound that
+  // couldn't be made, a card deleted in Anki)
+  ankiUpToDate() {
+    return this.lessonExported && this.sentKey === this.ankiKey();
   },
 
   scheduleSave() {
