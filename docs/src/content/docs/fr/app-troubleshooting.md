@@ -48,8 +48,12 @@ Voir [Avec votre ordinateur](../app-with-computer/).
 ## Les cartes
 
 **Les cartes sont fausses ou il en manque.** Vérifiez la photo (voir [Photos et PDF](../photos/)),
-précisez la consigne, ou corrigez-les avec l'IA (voir [Relire les cartes](../review/)). Une carte
-faite par l'IA fausse ou inadaptée : **⋯ → ⚑ Signaler** dessus.
+précisez la consigne, ou corrigez-les avec l'IA (voir [Relire les cartes](../review/)).
+
+**Signalez-le.** Une carte qui ne va pas (un mot mal lu, une réponse fausse, une figure de
+travers, une image inadaptée) : **⋯ → ⚑ Signaler** dessus, avec un mot sur ce que vous
+attendiez. Chaque signalement est lu, et c'est ainsi que ces erreurs sont corrigées. Voir
+[Signaler un problème](../review/#signaler-un-problème).
 
 ## Un PDF ne s'ajoute pas
 

@@ -48,7 +48,10 @@ See [With your computer](../app-with-computer/).
 
 **The cards are wrong or missing.** Check the photo (see [Photos and PDFs](../photos/)), be more
 precise in the instructions, or correct them with the AI (see [Reviewing the cards](../review/)).
-A card the AI made that is wrong or unsuitable: **⋯ → ⚑ Report** on it.
+
+**Report it.** A card that isn't right (a word misread, a wrong answer, a figure off, an
+unsuitable picture): **⋯ → ⚑ Report** on it, with a word on what you expected. Every report is
+read, and it's how such mistakes get fixed. See [Reporting a problem](../review/#reporting-a-problem).
 
 ## A PDF can't be added
 

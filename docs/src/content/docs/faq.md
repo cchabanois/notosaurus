@@ -38,5 +38,10 @@ If Notosaurus helps you, you can make a donation on [Ko-fi](https://ko-fi.com/no
 **☕ Support Notosaurus** at the bottom of the page and of the settings, or **Tools →
 Notosaurus → Support Notosaurus…** in Anki (on the computer: the app has none, its subscription pays). Notosaurus stays free, with no ads.
 
+**A card is wrong: how do I tell you?**
+In the Android app, **⋯ → ⚑ Report** on the card: it sends the card as you see it, with your
+comment, never the lesson's photos nor the child's name. Every report is read. See
+[Reporting a problem](../review/#reporting-a-problem).
+
 **How is it updated?**
 See [What's new](../whats-new/#updating-notosaurus).

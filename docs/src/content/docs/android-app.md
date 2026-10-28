@@ -45,7 +45,8 @@ you to accept its [privacy policy](../app-privacy/):
    [Instructions](../instructions/). The **Dictate** button (🎤) next to the field lets you say them instead of typing.
 4. Tap **✨ Generate cards**. The first lesson starts the free trial.
 5. Check the cards, correct them or ask the AI in plain words: see
-   [Reviewing the cards](../review/).
+   [Reviewing the cards](../review/). A card that isn't right: **⋯ → ⚑ Report** on it, every
+   report is read.
 6. Tap **📥 Add to Anki**: the cards go into AnkiDroid. The first time, AnkiDroid asks whether
    Notosaurus may add cards to it.
 
@@ -72,8 +73,9 @@ Most of Notosaurus is the same as on the computer. What only the app has, or doe
 
 - **🎤 Dictate**: say an instruction or a correction instead of typing it. The app asks for the
   microphone the first time.
-- **⚑ Report**, on a card, reports to Notosaurus a wrong or unsuitable content the AI made (see
-  [Reviewing the cards](../review/)).
+- **⚑ Report**, on a card, tells Notosaurus what went wrong: a word misread, a wrong answer, a
+  figure off, an unsuitable picture. Every report is read and helps fix Notosaurus (see
+  [Reporting a problem](../review/#reporting-a-problem)).
 - **The voices** are Google's, through the Notosaurus service; the
   [voice settings](../voices/) are the same.
 - **No `.apkg`** and no Ko-fi: the cards go straight into AnkiDroid, and the subscription pays

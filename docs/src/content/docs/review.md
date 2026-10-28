@@ -6,6 +6,12 @@ description: "Check, edit and correct the cards before sending them to Anki, wit
 Even the best AI misreads a word now and then: **always look through the cards** before
 sending them. Everything you change is saved as you go (“✓ Saved”).
 
+:::tip[Something wrong? Report it]
+In the Android app, a card that isn't right (a word misread, a wrong answer, a figure off, an
+unsuitable picture, a card that makes no sense): **⋯ → ⚑ Report** on it. Every report is read,
+and it's the best way to get Notosaurus fixed. See [Reporting a problem](#reporting-a-problem).
+:::
+
 ![The cards, ready to review](../../assets/screenshots/en/review.png)
 
 ## The deck and the cards
@@ -27,6 +33,22 @@ name, number or formula), the card keeps what the lesson says, with a note (⚠�
 looks wrong and the suggested correction. **Correct** takes it; **Keep the lesson** dismisses the
 note. Only clear, verifiable mistakes are flagged, never a convention or a simplification, and
 the note never goes to Anki.
+
+## Reporting a problem
+
+In the Android app, **⋯ → ⚑ Report**, at the top right of a card, tells Notosaurus what went wrong:
+a word misread, a wrong answer, a figure with a mark in the wrong place, an unsuitable picture,
+a card that makes no sense. Don't hesitate: **every report is read**, and it's how such mistakes
+get fixed in Notosaurus, for every lesson to come.
+
+- Say why (**Wrong**, **Shocking or inappropriate**, **Other**) and, if you like, add a comment:
+  what you expected helps most.
+- What is sent is the whole card as you see it (its texts, its explanation when shown, its
+  picture or figure, unless it's a photo you took yourself); the sheet shows exactly what, never
+  the lesson's photos nor the child's name. See [Privacy](../app-privacy/).
+- Then you can delete the card or remove its picture.
+
+![The Report content sheet: why, a comment, and exactly what will be sent](../../assets/screenshots/en/app-report.png)
 
 ## Correcting with the AI
 
@@ -59,15 +81,6 @@ Under the explanation, the AI offers only what would help with **that** card:
 **Keep in “Info”** adds what was explained to the card's info: you'll find it on the back in
 Anki. Each explanation is a short AI call: credits in the app; on the computer, a fraction
 of a cent with Gemini Flash, about a cent with Claude Sonnet, counted with the lesson's costs.
-
-## Reporting a content
-
-In the Android app, **⋯ → ⚑ Report** on a card reports what the AI made to Notosaurus: the whole
-card as you see it (its texts, its explanation when shown, its picture or figure, unless it's a
-photo you took yourself). Say why (shocking or inappropriate, wrong, other), add a comment
-if you like: the sheet shows exactly what will be sent, never the lesson's photos nor the
-child's name. Then you can delete the card or remove its picture. See
-[Privacy](../app-privacy/).
 
 ## Generating again
 
