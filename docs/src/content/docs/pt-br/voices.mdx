@@ -1,0 +1,79 @@
+---
+title: "Vozes e áudio"
+description: "Escolher a voz que lê o verso dos cartões, ouvi-la, ajustar a velocidade, e o que acontece sem som."
+---
+
+import { Tabs, TabItem } from '@astrojs/starlight/components';
+
+O Notosaurus pode ler em voz alta o verso de cada cartão: útil para idiomas, para ouvir a
+pronúncia certa. O áudio vai **incluído no baralho**, então toca no Anki em qualquer lugar, no
+computador e no celular, até offline.
+
+## Quais cartões são lidos em voz alta
+
+O Notosaurus lê em voz alta os versos **em um idioma estudado**: a IA identifica esse idioma na
+lição (espanhol da Espanha, inglês britânico…). Uma lição no idioma do próprio aluno (história,
+gramática…) não tem som, a não ser que os cartões sirvam para escrever o que se ouve (uma
+resposta digitada, um ditado) ou que as instruções peçam isso ("lido em voz alta", como faz
+**De cor**). As instruções do Notosaurus para perguntas, quizzes, fórmulas ou esquemas não têm
+som.
+
+No fim de uma lição, uma linha diz qual voz lê os versos.
+
+## Escolher a voz
+
+Sem escolha, cada idioma tem a sua voz habitual (no computador: espanhol → Elvira, inglês
+britânico → Sonia…). Para preferir outra: **Configurações → Vozes dos cartões → Voz por língua**,
+depois **+ Escolher a voz de uma língua…**: escolha o idioma, depois uma das vozes dele, feminina
+ou masculina, e **Ouvir**. A escolha vale para as próximas lições nesse idioma. As configurações
+do app têm a mesma seção, com as suas próprias vozes.
+
+## Ouvir
+
+Na revisão, o botão **Ouvir o verso** (🔊) de um cartão toca o verso com a voz da lição: confira a
+pronúncia antes de enviar os cartões.
+
+## Velocidade
+
+Uma lição fica mais lenta onde isso ajuda: os versos em um idioma estudado, e os ditados (tempo
+para escrever). Uma lição no idioma do próprio aluno (história, português…) é lida na velocidade
+normal.
+
+**Configurações → Vozes dos cartões → Abrandar as línguas estrangeiras e os ditados**: **Muito
+(−25%)**, **Um pouco (−10%)** (o padrão) ou **Não**. Instruções também podem dizer isso, para as
+lições delas: "ler devagar", "na velocidade normal".
+
+A velocidade é escolhida quando a lição é feita e fica salva com ela: os sons dela continuam
+iguais, mesmo que a configuração mude depois.
+
+![Configurações: a velocidade da fala](../../../assets/screenshots/en/settings-voice.png)
+
+## Ditado
+
+Em um cartão de ditado, o verso é ouvido e depois escrito. As instruções **Ditado** e **Ditado com
+lacunas** fazem só esse tipo de cartão; para outras, diga isso no texto delas: "com um ditado" ou
+"só ditado". **Automático** faz cartões de ditado quando a página é um ditado a preparar. Veja
+[Instruções](../instructions/).
+
+## Cartões sem som
+
+Criar o áudio precisa de internet:
+
+<Tabs syncKey="mode">
+<TabItem label="App Android">
+
+As vozes são as do Google, pelo serviço Notosaurus. Veja a
+[política de privacidade do app](../app-privacy/) para saber o que é enviado.
+
+</TabItem>
+<TabItem label="Computador">
+
+As vozes vêm do serviço de síntese de voz da Microsoft, pelo
+[edge-tts](https://github.com/rany2/edge-tts), uma ferramenta não oficial. Veja
+[Privacidade e segurança no computador](../privacy/) para saber o que é enviado.
+
+</TabItem>
+</Tabs>
+
+Se as vozes não responderem, os cartões são enviados sem som e a mensagem diz quantos. Envie a
+lição de novo mais tarde: o áudio que falta é acrescentado.

@@ -1,0 +1,79 @@
+---
+title: "Voces y audio"
+description: "Elegir la voz que lee el reverso de las tarjetas, escucharla, ajustar su velocidad, y qué pasa sin sonido."
+---
+
+import { Tabs, TabItem } from '@astrojs/starlight/components';
+
+Notosaurus puede leer en voz alta el reverso de cada tarjeta: útil para los idiomas, para oír la
+pronunciación correcta. El audio va **incluido en el mazo**, así que suena en Anki en todas
+partes, en el ordenador y en el móvil, incluso sin conexión.
+
+## Qué tarjetas se leen en voz alta
+
+Notosaurus lee en voz alta los reversos **en un idioma que se aprende**: la IA detecta ese idioma
+en la lección (español de España, inglés británico…). Una lección en el idioma del propio alumno
+(historia, gramática…) no tiene sonido, salvo si sus tarjetas sirven para escribir lo que se oye
+(una respuesta escrita, un dictado) o si sus instrucciones lo piden («leído en voz alta», como
+hace **De memoria**). Las instrucciones de Notosaurus para preguntas, tests, fórmulas o esquemas
+no tienen sonido.
+
+Al final de una lección, una línea dice qué voz lee sus reversos.
+
+## Elegir la voz
+
+Sin elegir nada, cada idioma tiene su voz habitual (en el ordenador: español → Elvira, inglés
+británico → Sonia…). Para preferir otra: **Ajustes → Voces de las tarjetas → Voz por idioma**, y
+luego **+ Elegir la voz de un idioma…**: elige el idioma, luego una de sus voces, de mujer o de
+hombre, y **Escuchar**. La elección se aplica a las próximas lecciones en ese idioma. Los ajustes
+de la aplicación tienen la misma sección, con sus propias voces.
+
+## Escuchar
+
+En la revisión, el botón **Escuchar el reverso** (🔊) de una tarjeta reproduce su reverso con la
+voz de la lección: comprueba la pronunciación antes de enviar las tarjetas.
+
+## Velocidad
+
+Una lección se ralentiza donde ayuda: los reversos en un idioma que se aprende, y los dictados
+(tiempo para escribir). Una lección en el idioma del propio alumno (historia, lengua…) se lee a
+velocidad normal.
+
+**Ajustes → Voces de las tarjetas → Ralentizar los idiomas extranjeros y los dictados**:
+**Mucho (−25 %)**, **Un poco (−10 %)** (por defecto) o **No**. Unas instrucciones también pueden
+decirlo, para sus lecciones: «leer despacio», «a velocidad normal».
+
+La velocidad se elige al crear la lección y se guarda con ella: sus sonidos siguen iguales,
+aunque el ajuste cambie después.
+
+![Ajustes: la velocidad de lectura](../../../assets/screenshots/en/settings-voice.png)
+
+## Dictado
+
+En una tarjeta de dictado, el reverso se oye y luego se escribe. Las instrucciones **Dictado** y
+**Dictado con huecos** solo hacen ese tipo de tarjetas; para otras, dilo en su texto: «con un
+dictado» o «solo dictado». **Automático** hace tarjetas de dictado cuando la página es un dictado
+que preparar. Consulta [Instrucciones](../instructions/).
+
+## Tarjetas sin sonido
+
+Crear el audio necesita Internet:
+
+<Tabs syncKey="mode">
+<TabItem label="Aplicación Android">
+
+Las voces son de Google, a través del servicio Notosaurus. Consulta la
+[política de privacidad de la aplicación](../app-privacy/) para saber qué se envía.
+
+</TabItem>
+<TabItem label="Ordenador">
+
+Las voces vienen del servicio de síntesis de voz de Microsoft, a través de
+[edge-tts](https://github.com/rany2/edge-tts), una herramienta no oficial. Consulta
+[Privacidad y seguridad en el ordenador](../privacy/) para saber qué se envía.
+
+</TabItem>
+</Tabs>
+
+Si las voces no responden, las tarjetas se envían sin sonido y el mensaje dice cuántas. Vuelve a
+enviar la lección más tarde: se añade el audio que falta.

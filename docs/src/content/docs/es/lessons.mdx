@@ -1,0 +1,62 @@
+---
+title: "Tus lecciones"
+description: "Cada lección se guarda: encontrarla, volver a abrirla para corregirla o enviarla otra vez, y eliminarla."
+---
+
+import { Tabs, TabItem } from '@astrojs/starlight/components';
+
+Cada generación crea una **lección**: sus fotos, sus instrucciones y sus tarjetas, guardadas
+donde funciona Notosaurus (en el móvil con la aplicación, en el ordenador con el complemento).
+Puedes volver a ella en cualquier momento para corregirla, generarla de nuevo o enviarla otra vez
+a Anki.
+
+## La lista de lecciones
+
+El botón **Lecciones** (📚), arriba de la página, abre **Mis lecciones**: las lecciones del **hijo
+elegido** (y, en el ordenador, del **perfil abierto en Anki**), las más recientes primero. Con más
+de un hijo, el selector encima de la lista muestra **Las lecciones de todos los hijos**.
+
+![La lista de lecciones](../../../assets/screenshots/en/lessons.png)
+
+- Las lecciones se **agrupan por asignatura**: la primera parte del nombre del mazo (`Inglés`,
+  `Ciencias`…), la asignatura trabajada por última vez primero.
+- **exportada** marca una lección ya enviada a Anki o descargada.
+- Con muchas lecciones (más de 8), aparece un **buscador** (da igual mayúsculas o tildes), las 3
+  lecciones más recientes se muestran primero, y las asignaturas se pliegan, salvo la de la
+  lección abierta. Una asignatura abierta o cerrada a mano se queda así en ese dispositivo.
+
+Toca una lección para volver a abrirla: sus fotos y tarjetas vuelven, listas para corregirlas o
+enviarlas otra vez. **＋ Nueva** empieza una lección nueva.
+
+## Lecciones e hijos
+
+Una lección es del hijo elegido cuando se hizo (el botón **Hijos**, 🧒, arriba de la página) y, en
+el ordenador, pertenece al perfil abierto entonces en Anki. **⧉ Copiar para…**, en su revisión,
+hace una copia para otro hijo, gratis. Consulta [Varios hijos](../several-children/).
+
+## Exámenes que preparar
+
+¿Un examen abarca varias lecciones? Reúnelas, o algunas de sus tarjetas, y repásalas juntas:
+consulta [Preparar un examen](../tests/). Los exámenes aparecen arriba de **Mis lecciones**.
+
+## Eliminar una lección
+
+El botón **Eliminar la lección** (🗑), junto a una lección, la elimina, con sus fotos. Si sus
+tarjetas están en Anki, Notosaurus las busca y ofrece **eliminarlas también**: su historial de
+repaso se pierde entonces. Si no, las tarjetas ya enviadas se quedan en Anki.
+
+<Tabs syncKey="mode">
+<TabItem label="Aplicación Android">
+
+**Ajustes** (⚙️) → **🗂️ Lecciones en este teléfono** dice cuántas lecciones guarda el móvil y su
+tamaño, y **Borrar todas las lecciones** las borra todas, con su sonido. Las tarjetas que ya están
+en AnkiDroid se quedan, con su sonido.
+
+</TabItem>
+<TabItem label="Ordenador">
+
+Las lecciones también se gestionan en **Ajustes → Lecciones**: a qué perfil de Anki pertenece cada
+una (se puede cambiar ahí), cuánto costó, y eliminarla.
+
+</TabItem>
+</Tabs>

@@ -1,0 +1,111 @@
+---
+title: "Fotos und PDFs"
+description: "Wie man eine Lektion fotografiert, damit die KI sie gut liest, mehrere Seiten, PDFs und was Notosaurus damit macht."
+---
+
+import { Tabs, TabItem } from '@astrojs/starlight/components';
+
+Die KI liest, was sie sieht: Ein klares Foto ergibt bessere Karten und weniger Korrekturen.
+
+## Tipps
+
+- **Gutes Licht, kein Schatten.** Tageslicht am Fenster ist am besten. Vermeide den Schatten des
+  Handys und deiner Hand auf der Seite.
+- **Die Seite flach, das Foto ausfüllend.** Halte das Handy parallel über die Seite. Ein leichter
+  Winkel ist in Ordnung; ein starker macht die hintere Seite unscharf.
+- **Eine Seite pro Foto.** Für eine Doppelseite mach zwei Fotos.
+- **Scharf.** Tippe vor dem Foto auf den Bildschirm, um scharfzustellen, und halte still.
+- **Nur die Lektion.** Lass andere Seiten, Kritzeleien am Rand und Korrekturen weg, die nicht zum
+  Lernstoff gehören, oder sag der KI in den Anweisungen, was sie ignorieren soll.
+
+Handschrift wird gut gelesen, wenn ein Erwachsener sie lesen kann. Auf dem Computer, wo du die
+KI wählst, liest Claude sie am besten; Gemini ist eine gute und günstigere Wahl.
+
+## Mehrere Seiten
+
+Eine Lektion kann **bis zu 10 Seiten** haben. Nach dem ersten Foto fügt **Nächste Seite** eine
+weitere hinzu; **Galerie** wählt bereits gemachte Fotos (JPEG, PNG, WebP oder GIF). Auf einem
+Computer kannst du Fotos oder PDFs auch aus einem Ordner ziehen und auf **Galerie** oder **PDF**
+ablegen.
+
+Auf jedem Foto:
+
+- **Drehen** (↻): um eine Vierteldrehung;
+- **Entfernen** (×): Das Foto verlässt die Lektion;
+- **Verdecken** (🖍️): verdeckt einen Teil der Seite, bevor sie gesendet wird (siehe unten);
+- ein Tippen zeigt es im Vollbild: Wische zwischen den Seiten, tippe noch einmal für die echte
+  Größe; **Drehen** und **Verdecken** funktionieren auch dort.
+
+![Das Foto der Lektion im Vollbild](../../../assets/screenshots/en/photo-viewer.png)
+
+Seitlich gedrehte Fotos musst du nicht selbst drehen: Notosaurus erkennt beim Lesen, wie jede
+Seite gedreht ist, und speichert sie aufrecht.
+
+## Später eine Seite hinzufügen
+
+Der Rest der Lektion kommt ein paar Tage später? Öffne die Lektion wieder über die Schaltfläche
+**Lektionen** (📚), füge mit **Nächste Seite** das Foto der neuen Seite hinzu und tippe dann auf
+**➕ Karten der neuen Seite hinzufügen**. Die KI liest nur die neuen Seiten und weiß, welche
+Karten es schon gibt: Sie macht sie nicht noch einmal. Die neuen Karten kommen nach den anderen,
+als „neu“ markiert, damit du sie prüfst; die anderen bleiben, wo sie sind, und **🔄 In Anki
+aktualisieren** fügt nur die neuen hinzu (die anderen behalten ihren Lernverlauf). **✨ Neu
+erzeugen** daneben macht die ganze Lektion neu.
+
+## PDFs
+
+**📄 PDF**, neben Kamera und Galerie, fügt die Seiten eines PDFs hinzu: ein Arbeitsblatt der
+Lehrkraft, eine Seite eines digitalen Schulbuchs, ein Heft… Jede Seite wird zu einem Foto der
+Lektion, also funktioniert alles wie mit Fotos: Abbildungen, Korrekturen, jeder KI-Dienst.
+
+- **Ein am Computer erstelltes PDF** (kein Scan) enthält auch seinen genauen Text: Notosaurus
+  schickt ihn mit seiner Seite an die KI, sodass kein Wort, Akzent, Datum und keine Zahl falsch
+  gelesen wird.
+- **Mehr Seiten, als in die Lektion passen** (insgesamt 10): Notosaurus zeigt alle, und du tippst
+  die an, die du hinzufügen willst.
+- **Jede gesendete Seite kostet wie ein Foto**: Wähle nur die Seiten der Lektion.
+- **Ein passwortgeschütztes PDF** muss erst ohne Passwort gespeichert werden.
+
+![Die Seiten eines PDFs auswählen](../../../assets/screenshots/en/pdf-pages.png)
+
+## Einen Namen oder eine Schule verdecken
+
+Eine Heftseite zeigt oft den Namen des Kindes, die Klasse, die Schule. Die Schaltfläche
+**Verdecken** (🖍️) auf einem noch nicht gesendeten Foto öffnet es ganz: Mit dem Finger deckt
+**Schwärzen** ab, was die KI nicht sehen soll, **Aufdecken** holt es zurück. **Fertig** behält
+das geschwärzte Foto: Nur dieses wird gesendet und gespeichert. Bis das Foto gesendet ist, kannst
+du zurückkommen und ändern, was verdeckt ist.
+
+Bei einer PDF-Seite mit einem verdeckten Teil wird ihr Text nicht gesendet (er enthält auch das
+Verdeckte): Die KI liest die Seite als Bild.
+
+## Was mit den Fotos passiert
+
+<Tabs syncKey="mode">
+<TabItem label="Android-App">
+
+- Die Fotos gehen über den **Notosaurus-Dienst** an Gemini von Google, um sie zu lesen,
+  verarbeitet in der Europäischen Union und dort nicht gespeichert. Siehe die
+  [Datenschutzerklärung der App](../app-privacy/).
+- Sie werden **mit der Lektion gespeichert**, auf dem Handy, im privaten Speicher der App.
+
+</TabItem>
+<TabItem label="Computer">
+
+- Die Fotos werden an den **in den Einstellungen gewählten KI-Dienst** geschickt, um sie zu
+  lesen, und an niemanden sonst. Siehe [Datenschutz und Sicherheit am Computer](../privacy/).
+- Sie werden **mit der Lektion gespeichert**, auf deinem Computer.
+
+</TabItem>
+</Tabs>
+
+- Mit der Lektion gespeichert, kannst du sie später wieder öffnen, korrigieren oder neu erzeugen.
+  Wird die Lektion gelöscht, werden sie mitgelöscht.
+- Abbildungskarten behalten eine **zugeschnittene Kopie** der Abbildung, mit verdeckten
+  Beschriftungen: Das zeigt Anki.
+
+## Kein Foto?
+
+Ohne Foto erstellt **Nur aus den Anweisungen erzeugen** die Karten aus den Anweisungen: Schreib
+die Wörter hinein („die 20 unregelmäßigen Verben: sein, haben, gehen…“) oder bitte um ein Thema
+(„die Planeten des Sonnensystems“). Prüfe diese Karten sorgfältig: Sie stammen nicht aus deiner
+Lektion.

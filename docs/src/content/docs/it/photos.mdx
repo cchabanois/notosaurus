@@ -1,0 +1,108 @@
+---
+title: "Foto e PDF"
+description: "Come fotografare una lezione perché l'IA la legga bene, più pagine, i PDF, e cosa ne fa Notosaurus."
+---
+
+import { Tabs, TabItem } from '@astrojs/starlight/components';
+
+L'IA legge ciò che vede: una foto nitida dà carte migliori, e meno correzioni.
+
+## Consigli
+
+- **Buona luce, niente ombre.** La luce del giorno vicino a una finestra è la migliore. Evita
+  l'ombra del telefono e della mano sulla pagina.
+- **La pagina piatta, che riempie la foto.** Tieni il telefono sopra la pagina, parallelo. Una
+  leggera inclinazione va bene; una forte sfoca il lato lontano.
+- **Una pagina per foto.** Per una doppia pagina, scatta due foto.
+- **Nitida.** Tocca lo schermo per mettere a fuoco prima dello scatto, e resta fermo.
+- **Solo la lezione.** Lascia fuori altre pagine, i disegni a margine e le correzioni che non
+  fanno parte di ciò che va imparato, oppure di' all'IA cosa ignorare nelle istruzioni.
+
+La scrittura a mano viene letta bene quando un adulto riesce a leggerla. Sul computer, dove
+scegli l'IA, Claude la legge meglio; Gemini è una buona scelta, più economica.
+
+## Più pagine
+
+Una lezione può avere **fino a 10 pagine**. Dopo la prima foto, **Pagina successiva** ne aggiunge
+un'altra; **Galleria** sceglie foto già scattate (JPEG, PNG, WebP o GIF). Su un computer puoi
+anche trascinare foto o PDF da una cartella e rilasciarli su **Galleria** o **PDF**.
+
+Su ogni foto:
+
+- **Ruota** (↻): di un quarto di giro;
+- **Togli** (×): la foto esce dalla lezione;
+- **Nascondi** (🖍️): nasconde una parte della pagina prima dell'invio (vedi sotto);
+- un tocco la mostra a schermo intero: scorri da una pagina all'altra, tocca di nuovo per vederla
+  a grandezza reale; **Ruota** e **Nascondi** funzionano anche da lì.
+
+![La foto della lezione a schermo intero](../../../assets/screenshots/en/photo-viewer.png)
+
+Non serve ruotare tu le foto di lato: Notosaurus capisce come è girata ogni pagina quando la
+legge, e la salva dritta.
+
+## Aggiungere una pagina più tardi
+
+Il resto della lezione arriva qualche giorno dopo? Riapri la lezione dal pulsante **Lezioni**
+(📚), aggiungi la foto della nuova pagina con **Pagina successiva**, poi tocca **➕ Aggiungi le
+carte della nuova pagina**. L'IA legge solo le pagine nuove, sapendo quali carte esistono già: non
+le rifà. Le nuove carte arrivano dopo le altre, segnate come "nuova" perché tu le controlli; le
+altre non si spostano, e **🔄 Aggiorna in Anki** aggiunge solo le nuove (le altre conservano la
+cronologia di ripasso). **✨ Genera di nuovo**, accanto, rifà tutta la lezione.
+
+## PDF
+
+**📄 PDF**, accanto alla fotocamera e alla galleria, aggiunge le pagine di un PDF: una scheda
+mandata dall'insegnante, una pagina di un libro digitale, un fascicolo… Ogni pagina diventa una
+foto della lezione, quindi tutto funziona come con le foto: schemi, correzioni, ogni servizio di
+IA.
+
+- **Un PDF creato al computer** (non una scansione) contiene anche il suo testo esatto:
+  Notosaurus lo manda all'IA con la sua pagina, così nessuna parola, accento, data o numero viene
+  letto male.
+- **Più pagine di quante ne stiano nella lezione** (10 in tutto): Notosaurus le mostra tutte, e
+  tocchi quelle da aggiungere.
+- **Ogni pagina inviata costa come una foto**: scegli solo le pagine della lezione.
+- **Un PDF protetto da password** va prima salvato senza password.
+
+![Scegliere le pagine di un PDF](../../../assets/screenshots/en/pdf-pages.png)
+
+## Nascondere un nome o una scuola
+
+Una pagina di quaderno mostra spesso il nome del bambino, la classe, la scuola. Il pulsante
+**Nascondi** (🖍️), su una foto non ancora inviata, la apre per intero: con il dito, **Annerisci**
+copre ciò che l'IA non deve vedere, **Scopri** lo fa tornare. **Fatto** tiene la foto annerita:
+solo quella viene inviata e salvata. Finché la foto non è inviata, puoi tornarci e cambiare ciò che
+è nascosto.
+
+Su una pagina di PDF con una parte nascosta, il suo testo non viene inviato (contiene anche ciò
+che è nascosto): l'IA legge la pagina come un'immagine.
+
+## Cosa succede alle foto
+
+<Tabs syncKey="mode">
+<TabItem label="App Android">
+
+- Le foto passano dal **servizio Notosaurus** a Gemini di Google, per leggerle, trattate
+  nell'Unione europea e lì non conservate. Vedi l'[informativa sulla privacy dell'app](../app-privacy/).
+- Sono **salvate con la lezione** sul telefono, nella memoria privata dell'app.
+
+</TabItem>
+<TabItem label="Computer">
+
+- Le foto sono inviate al **servizio di IA scelto nelle impostazioni**, per leggerle, e a
+  nessun altro. Vedi [Privacy e sicurezza sul computer](../privacy/).
+- Sono **salvate con la lezione** sul tuo computer.
+
+</TabItem>
+</Tabs>
+
+- Salvate con la lezione, ti permettono di riaprirla, correggerla o rigenerarla più tardi.
+  Eliminando la lezione, vengono eliminate.
+- Le carte di uno schema tengono una **copia ritagliata** dello schema, con i nomi nascosti: è
+  ciò che mostra Anki.
+
+## Nessuna foto?
+
+Senza foto, **Genera solo dalle istruzioni** crea le carte a partire dalle istruzioni: mettici le
+parole ("i 20 verbi irregolari: essere, avere, andare…"), oppure chiedi un argomento ("i pianeti
+del sistema solare"). Controlla bene queste carte: non vengono dalla tua lezione.

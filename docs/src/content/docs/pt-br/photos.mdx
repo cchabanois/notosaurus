@@ -1,0 +1,107 @@
+---
+title: "Fotos e PDFs"
+description: "Como fotografar uma lição para a IA lê-la bem, várias páginas, os PDFs, e o que o Notosaurus faz com eles."
+---
+
+import { Tabs, TabItem } from '@astrojs/starlight/components';
+
+A IA lê o que vê: uma foto nítida dá cartões melhores, e menos correções.
+
+## Dicas
+
+- **Boa luz, sem sombra.** A luz do dia perto de uma janela é a melhor. Evite a sombra do
+  celular e da sua mão sobre a página.
+- **A página plana, ocupando a foto.** Segure o celular acima da página, paralelo a ela. Um leve
+  ângulo não tem problema; um forte desfoca o lado de longe.
+- **Uma página por foto.** Para uma página dupla, tire duas fotos.
+- **Nítida.** Toque na tela para focar antes de tirar a foto, e não se mexa.
+- **Só a lição.** Deixe de fora outras páginas, desenhos na margem e correções que não fazem
+  parte do que deve ser aprendido, ou diga à IA o que ignorar nas instruções.
+
+A letra manuscrita é bem lida quando um adulto consegue lê-la. No computador, onde você escolhe
+a IA, o Claude a lê melhor; o Gemini é uma boa escolha, mais barata.
+
+## Várias páginas
+
+Uma lição pode ter **até 10 páginas**. Depois da primeira foto, **Próxima página** adiciona
+outra; **Galeria** escolhe fotos já tiradas (JPEG, PNG, WebP ou GIF). Em um computador, você
+também pode arrastar fotos ou PDFs de uma pasta e soltá-los em **Galeria** ou **PDF**.
+
+Em cada foto:
+
+- **Girar** (↻): um quarto de volta;
+- **Remover** (×): a foto sai da lição;
+- **Ocultar** (🖍️): oculta parte da página antes de ela ser enviada (veja abaixo);
+- um toque a mostra em tela cheia: deslize para passar de uma página a outra, toque de novo para
+  vê-la em tamanho real; **Girar** e **Ocultar** também funcionam ali.
+
+![A foto da lição em tela cheia](../../../assets/screenshots/en/photo-viewer.png)
+
+Não é preciso girar você mesmo as fotos de lado: o Notosaurus descobre como cada página está
+girada ao lê-la, e a salva em pé.
+
+## Adicionar uma página depois
+
+O resto da lição chega alguns dias depois? Reabra a lição pelo botão **Lições** (📚), adicione a
+foto da nova página com **Próxima página** e toque em **➕ Adicionar os cartões da nova página**.
+A IA lê só as páginas novas, sabendo quais cartões já existem: ela não os faz de novo. Os cartões
+novos vêm depois dos outros, marcados como "novo" para você conferir; os outros não mudam de
+lugar, e **🔄 Atualizar no Anki** adiciona só os novos (os outros mantêm o histórico de revisão).
+**✨ Gerar de novo**, ao lado, refaz a lição inteira.
+
+## PDFs
+
+**📄 PDF**, ao lado da câmera e da galeria, adiciona as páginas de um PDF: uma folha de
+exercícios enviada pelo professor, uma página de um livro digital, uma apostila… Cada página vira
+uma foto da lição, então tudo funciona como com as fotos: esquemas, correções, qualquer serviço
+de IA.
+
+- **Um PDF feito em um computador** (não digitalizado) também traz o texto exato: o Notosaurus o
+  envia à IA com a página, para que nenhuma palavra, acento, data ou número seja lido errado.
+- **Mais páginas do que cabem na lição** (10 no total): o Notosaurus mostra todas, e você toca nas
+  que quer adicionar.
+- **Cada página enviada custa como uma foto**: escolha só as páginas da lição.
+- **Um PDF protegido por senha** precisa antes ser salvo sem a senha.
+
+![Escolher as páginas de um PDF](../../../assets/screenshots/en/pdf-pages.png)
+
+## Ocultar um nome ou uma escola
+
+Uma página de caderno muitas vezes mostra o nome da criança, a série, a escola. O botão
+**Ocultar** (🖍️), em uma foto ainda não enviada, a abre inteira: com o dedo, **Tapar** cobre o
+que a IA não deve ver, **Destapar** traz de volta. **Concluído** fica com a foto tapada: só ela é
+enviada e salva. Até a foto ser enviada, você pode voltar a ela e mudar o que está oculto.
+
+Em uma página de PDF com uma parte oculta, o texto dela não é enviado (ele contém também o que
+está oculto): a IA lê a página como uma imagem.
+
+## O que acontece com as fotos
+
+<Tabs syncKey="mode">
+<TabItem label="App Android">
+
+- As fotos passam pelo **serviço Notosaurus** até o Gemini do Google, para serem lidas,
+  processadas na União Europeia e não guardadas lá. Veja a
+  [política de privacidade do app](../app-privacy/).
+- Elas são **salvas com a lição** no celular, no armazenamento privado do app.
+
+</TabItem>
+<TabItem label="Computador">
+
+- As fotos são enviadas ao **serviço de IA escolhido nas configurações**, para serem lidas, e a
+  mais ninguém. Veja [Privacidade e segurança no computador](../privacy/).
+- Elas são **salvas com a lição** no seu computador.
+
+</TabItem>
+</Tabs>
+
+- Salvas com a lição, elas permitem reabri-la, corrigi-la ou gerá-la de novo mais tarde. Excluir
+  a lição as exclui.
+- Os cartões de esquema guardam uma **cópia recortada** do esquema, com as legendas ocultas: é o
+  que o Anki mostra.
+
+## Sem foto?
+
+Sem foto, **Gerar só com as instruções** cria os cartões a partir das instruções: coloque as
+palavras nelas ("os 20 verbos irregulares: ser, ter, ir…"), ou peça um tema ("os planetas do
+sistema solar"). Confira bem esses cartões: eles não vêm da sua lição.

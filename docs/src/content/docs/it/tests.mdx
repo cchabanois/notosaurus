@@ -1,0 +1,68 @@
+---
+title: "Preparare una verifica"
+description: "Una verifica lunedì copre tre lezioni: raccoglierle, o alcune delle loro carte, sotto un'etichetta in Anki, e ripassarle insieme."
+---
+
+import { Tabs, TabItem } from '@astrojs/starlight/components';
+
+Una verifica lunedì copre tre lezioni? Una **verifica da preparare** le raccoglie, intere o solo
+alcune delle loro carte, perché il bambino le ripassi insieme, qualunque sia il loro mazzo. Una
+volta ripassate, le carte tornano nei loro mazzi.
+
+## Creare una verifica
+
+- Da una lezione: **📝 Preparare una verifica…**, nella sua revisione, la aggiunge a una verifica
+  (un nome, una data), intera o **solo alcune delle sue carte** (una spunta su ogni carta). Quando
+  la lezione è in una verifica, il pulsante mostra il nome della verifica (**📌 …**).
+- Dall'elenco: le verifiche sono in cima a **Le mie lezioni**, dove **＋ Nuova verifica** ne crea
+  una. La sua finestra aggiunge poi lezioni (**＋ Aggiungi lezioni**, intere) e invia ad Anki
+  quelle che non ci sono ancora.
+
+![Una verifica da preparare: le sue lezioni, e come ripassarla in Anki](../../../assets/screenshots/en/exam.png)
+
+## In Anki: un'etichetta
+
+Ogni carta di una verifica riceve un'etichetta in Anki, `Exam::<nome>`. Viene messa subito sulle
+sue note se sono già in Anki, o con loro quando la lezione viene inviata.
+
+Eliminare una verifica (**Elimina la verifica**, nella sua finestra) toglie l'etichetta. Le carte
+restano in Anki, con la loro cronologia di ripasso.
+
+## Ripassarla
+
+La finestra della verifica spiega come, passo per passo. Con lo **studio personalizzato** di Anki,
+a mano:
+
+1. Apri il mazzo che contiene le lezioni.
+2. **Studio personalizzato** → **Studia per stato delle carte o etichetta**, poi **Tutte le carte
+   in ordine casuale**.
+3. Spunta l'etichetta `Exam::<nome>` e conferma.
+
+Anki crea una sessione con queste carte; alla fine tornano nei loro mazzi. Quando le lezioni sono
+in mazzi diversi, la finestra dà una ricerca da incollare in **Crea mazzo filtrato**, con un
+pulsante **Copia**.
+
+Un mazzo filtrato le raccoglie più in fretta:
+
+<Tabs syncKey="mode">
+<TabItem label="App Android">
+
+1. Nella finestra della verifica, **Apri in AnkiDroid**: il browser delle carte di AnkiDroid si apre
+   con le carte della verifica, qualunque sia il loro mazzo.
+2. Tocca **⋮**, poi **Crea mazzo filtrato**, anche se l'elenco sembra vuoto.
+3. Tocca **Crea**. Oltre 100 carte, alza prima **Limita a**.
+
+AnkiDroid non lascia che un'altra app crei da sola un mazzo filtrato: servono questi tre tocchi.
+Vedi [L'app e AnkiDroid](../app-ankidroid/).
+
+</TabItem>
+<TabItem label="Computer">
+
+Con Anki aperto, **Ripassa ora in Anki** lo fa con un clic: un mazzo filtrato "Verifica: …" con le
+carte della verifica, aperto in Anki. Viene ricreato ogni volta, ed eliminato con la verifica.
+
+</TabItem>
+</Tabs>
+
+Con più figli, una verifica si fa con le lezioni del figlio scelto: vedi
+[Più figli](../several-children/).

@@ -1,0 +1,69 @@
+---
+title: "Einen Test vorbereiten"
+description: "Ein Test am Montag umfasst drei Lektionen: sie, oder einige ihrer Karten, unter einem Schlagwort in Anki sammeln und zusammen lernen."
+---
+
+import { Tabs, TabItem } from '@astrojs/starlight/components';
+
+Ein Test am Montag umfasst drei Lektionen? Ein **Test zum Vorbereiten** sammelt sie, ganz oder nur
+einige ihrer Karten, damit das Kind sie zusammen lernt, egal in welchen Stapeln sie liegen. Nach
+dem Lernen kehren die Karten in ihre Stapel zurück.
+
+## Einen Test anlegen
+
+- Aus einer Lektion: **📝 Für einen Test lernen…**, bei ihrer Durchsicht, fügt sie einem Test
+  hinzu (ein Name, ein Datum), ganz oder **nur einige ihrer Karten** (ein Häkchen auf jeder
+  Karte). Ist die Lektion in einem Test, zeigt die Schaltfläche den Namen des Tests (**📌 …**).
+- Aus der Liste: Die Tests stehen oben in **Meine Lektionen**, wo **＋ Neuer Test** einen anlegt.
+  Sein Fenster fügt dann Lektionen hinzu (**＋ Lektionen hinzufügen**, ganz) und sendet die noch
+  fehlenden an Anki.
+
+![Ein Test zum Vorbereiten: seine Lektionen und wie man ihn in Anki lernt](../../../assets/screenshots/en/exam.png)
+
+## In Anki: ein Schlagwort
+
+Jede Karte eines Tests bekommt in Anki ein Schlagwort, `Exam::<Name>`. Es kommt sofort auf ihre
+Notizen, wenn sie schon in Anki sind, oder mit ihnen, wenn die Lektion gesendet wird.
+
+Einen Test löschen (**Test löschen**, in seinem Fenster) nimmt das Schlagwort weg. Die Karten
+bleiben in Anki, mit ihrem Lernverlauf.
+
+## Ihn lernen
+
+Das Fenster des Tests erklärt Schritt für Schritt, wie. Mit dem **benutzerdefinierten Lernen**
+von Anki, von Hand:
+
+1. Öffne den Stapel mit den Lektionen.
+2. **Benutzerdefiniertes Lernen** → **Karten mit bestimmtem Status oder Schlagwörtern**, dann
+   **Alle Karten in zufälliger Reihenfolge**.
+3. Hake das Schlagwort `Exam::<Name>` an und bestätige.
+
+Anki macht eine Sitzung mit diesen Karten; danach kehren sie in ihre Stapel zurück. Liegen die
+Lektionen in verschiedenen Stapeln, gibt das Fenster eine Suche zum Einfügen in **Auswahlstapel
+erstellen**, mit einer Schaltfläche **Kopieren**.
+
+Ein gefilterter Stapel sammelt sie schneller:
+
+<Tabs syncKey="mode">
+<TabItem label="Android-App">
+
+1. Im Fenster des Tests **In AnkiDroid öffnen**: Die Kartenübersicht von AnkiDroid öffnet sich mit
+   den Karten des Tests, egal in welchen Stapeln.
+2. Tippe auf **⋮**, dann auf **Gefilterten Stapel erstellen**, auch wenn die Liste leer aussieht.
+3. Tippe auf **Erstellen**. Bei mehr als 100 Karten erhöhe zuerst **Beschränken auf**.
+
+AnkiDroid lässt keine andere App selbst einen gefilterten Stapel anlegen: Diese drei Schritte sind
+nötig. Siehe [Die App und AnkiDroid](../app-ankidroid/).
+
+</TabItem>
+<TabItem label="Computer">
+
+Bei geöffnetem Anki erledigt **Jetzt in Anki lernen** das mit einem Klick: ein Auswahlstapel
+„Test: …“ mit den Karten des Tests, in Anki geöffnet. Er wird jedes Mal neu erstellt und mit dem
+Test gelöscht.
+
+</TabItem>
+</Tabs>
+
+Bei mehreren Kindern wird ein Test aus den Lektionen des gewählten Kindes gemacht: siehe
+[Mehrere Kinder](../several-children/).

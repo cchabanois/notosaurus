@@ -1,0 +1,140 @@
+---
+title: Mehrere Kinder
+description: "Ein Eintrag pro Kind (Klasse, Stapel, Anweisungen), je ein Anki-Benutzerprofil und ein AnkiWeb-Konto; oder, auf einem gemeinsamen Tablet, ein Stapel pro Kind."
+---
+
+import { Tabs, TabItem } from '@astrojs/starlight/components';
+
+Jedes Kind bekommt in Notosaurus einen **Eintrag**: seinen Vornamen, seine Klasse, die Stapel, in
+die seine Lektionen kommen, und deine Anweisungen für es. Jede Lektion ist für ein Kind. Wohin
+seine Karten in Anki kommen, hängt davon ab, wo Notosaurus läuft: siehe
+[Wohin die Karten jedes Kindes gehen](#wohin-die-karten-jedes-kindes-gehen).
+
+## Die Einträge der Kinder
+
+Die Schaltfläche **Kinder** (🧒), oben auf der Seite, öffnet **Kinder**. **+ Kind hinzufügen**
+legt einen Eintrag an:
+
+- **Vorname**: um die Kinder zu unterscheiden. Er wird **nie an die KI gesendet**.
+- **Klasse**: wird der KI gesagt, damit die Karten zum Niveau des Kindes passen.
+- **Stapel in**: wohin seine Lektionen in Anki kommen, anfangs leer (der Stapel der Lektion wie
+  üblich). Darunter füllt ein Tippen auf einen Vorschlag es aus: sein Vorname (`Jules`) oder sein
+  Vorname und seine Klasse (`Jules::Klasse 7`), was mitgeht, wenn sich die Klasse ändert. Der
+  Stapel der Lektion kommt dann danach: `Jules::Klasse 7::Spanisch::Unidad 3`. Von Hand getippt
+  wird `{Klasse}` ebenfalls zu seiner Klasse.
+- **Anweisungen für die KI (ohne den Vornamen)**: zu jeder Lektion dieses Kindes hinzugefügt
+  („liest noch langsam: kurze Sätze“, „lernt für eine Klassenarbeit: betone Daten und
+  Definitionen“).
+
+**Für wen ist die nächste Lektion? Tippe auf den Namen**: Das gewählte Kind steht auf dieser
+Schaltfläche, und die nächsten Lektionen sind für es. **Bearbeiten** (✏️), neben einem Namen,
+bearbeitet seinen Eintrag.
+
+![Kinder: für wen die nächste Lektion ist](../../../assets/screenshots/en/children.png)
+
+![Der Eintrag eines Kindes: Vorname, Klasse, Stapel, Anweisungen](../../../assets/screenshots/en/child-card.png)
+
+Anweisungen für alle Kinder („Spanisch aus Spanien“) stehen in den Einstellungen: siehe
+[Anweisungen](../instructions/#feste-anweisungen).
+
+## Lektionen gehören einem Kind
+
+- Eine Lektion ist für das Kind, das beim Erstellen gewählt ist. Ihre Durchsicht sagt, wem sie
+  gehört: **🧒 Lektion von Paul**.
+- **📚 Meine Lektionen** zeigt die Lektionen des gewählten Kindes. Bei mehreren Kindern zeigt der
+  Schalter über der Liste **Die Lektionen aller Kinder**.
+- Am Computer sagt die Lektion, wenn Anki im Benutzerprofil eines anderen Kindes geöffnet ist, das
+  vor dem Senden: ⚠️ *Anki ist für Léa geöffnet: Öffne in Anki das Benutzerprofil von Paul, um die
+  Karten dorthin zu senden.*
+
+### Dieselbe Lektion für zwei Kinder
+
+Zwei Kinder haben dieselbe Lektion? **⧉ Kopieren für…**, bei der Durchsicht der Lektion, macht
+eine Kopie für ein anderes Kind: seine Stapel, seine eigenen Karten in Anki, sein eigener
+Lernverlauf. Das ist kostenlos: Die KI wird nichts gefragt. Die Kopie öffnet sich, wenn dieses
+Kind im geöffneten Profil ist; sonst wartet sie in seinen Lektionen.
+
+![Kopieren für…: die anderen Kinder](../../../assets/screenshots/en/copy-for.png)
+
+Am Computer bleiben Lektionen, die eine ältere Version mit allen Benutzerprofilen geteilt hat,
+für jedes Profil sichtbar, schreibgeschützt außer im Profil ihres Besitzers: **⧉ Kopieren für…**
+gibt jedem Kind seine eigene.
+
+## Wohin die Karten jedes Kindes gehen
+
+<Tabs syncKey="mode">
+<TabItem label="Android-App">
+
+Die App schreibt in **AnkiDroid**, das keine Benutzerprofile hat: eine Sammlung auf dem Handy,
+mit einem AnkiWeb-Konto verbunden. Also bekommt jedes Kind seine eigenen Stapel:
+
+- fülle sein **Stapel in** mit einem Tippen auf den Vorschlag aus (`Léa::Klasse 5`,
+  `Paul::Klasse 8`): Seine Lektionen kommen in seine eigenen Stapel;
+- zum Lernen öffnet jedes Kind **seinen eigenen** Stapel (Léa, Paul): AnkiDroid nimmt dann nur
+  seine Karten. Nicht die Schaltfläche, die alles abfragt.
+
+Notosaurus hält die Kinder in dieser Sammlung auseinander:
+
+- die Liste der Lektionen zeigt die des gewählten Kindes, nach Fach gruppiert (Name und Klasse
+  weggelassen);
+- die vorgeschlagenen Stapel sind seine, nie die eines anderen Kindes.
+
+Jedes Kind sieht in AnkiDroid aber die Stapel der anderen Kinder, und die Statistik ist
+gemeinsam.
+
+</TabItem>
+<TabItem label="Computer">
+
+**Ein Benutzerprofil pro Kind.** Die Karten kommen in das in Anki geöffnete Profil. Damit jedes
+Kind seine eigenen Karten und Fortschritte hat, gib jedem ein Profil:
+
+1. In Anki **Datei → Benutzerprofil wechseln → Hinzufügen**, und lege ein Profil pro Kind an
+   (Léa, Paul…).
+2. Lege für jedes Profil ein **AnkiWeb-Konto** an und melde dich in diesem Profil an (**Extras →
+   Einstellungen → Synchronisierung**). Ein AnkiWeb-Konto enthält eine Sammlung, also braucht
+   jedes Kind sein eigenes.
+3. Melde dich auf dem Handy jedes Kindes in **AnkiDroid** oder **AnkiMobile** mit dem
+   AnkiWeb-Konto dieses Kindes an.
+4. Öffne das Profil jedes Kindes in Anki, dann **🧒** in Notosaurus, und lege seinen Eintrag an.
+
+:::tip[Kein Postfach pro Kind]
+Viele E-Mail-Dienste akzeptieren Aliasse mit `+`: `eltern+lea@example.com` und
+`eltern+paul@example.com` kommen in deinem eigenen Postfach an, zählen aber als zwei Adressen.
+:::
+
+Der Eintrag eines Kindes gehört zum **Anki-Benutzerprofil, das beim Anlegen geöffnet war**.
+Notosaurus bietet nur die Einträge des in Anki geöffneten Profils an: Öffne das Profil von Paul,
+und Paul ist gewählt.
+
+Nach **Zu Anki hinzufügen** synchronisiert Notosaurus das geöffnete Profil mit AnkiWeb. Die
+Karten kommen beim nächsten Synchronisieren auf das Handy des Kindes.
+
+**Ein Tablet für mehrere Kinder.** **AnkiDroid hat keine Benutzerprofile**: Eine Installation
+enthält eine Sammlung, mit einem AnkiWeb-Konto verbunden. Auch AnkiMobile wechselt das Konto nicht
+ohne Abmelden. Teilen sich die Kinder ein Handy oder ein Tablet, ist am einfachsten **ein einziges
+Anki-Benutzerprofil, mit einem Stapel pro Kind**:
+
+1. Behalte ein einziges Profil in Anki, mit einem einzigen AnkiWeb-Konto verbunden, und melde
+   AnkiDroid mit diesem Konto an.
+2. Lege für jedes Kind einen Eintrag an und fülle sein **Stapel in** mit einem Tippen auf den
+   Vorschlag aus (`Léa::Klasse 5`, `Paul::Klasse 8`). Seine Lektionen kommen dann in seine eigenen
+   Stapel, ohne den Namen noch einmal zu tippen.
+3. Zum Lernen öffnet jedes Kind **seinen eigenen** Stapel (Léa, Paul): Anki nimmt dann nur seine
+   Karten. Nicht die Schaltfläche, die alles abfragt.
+
+Notosaurus hält die Kinder dann im selben Profil auseinander:
+
+- die Liste der Lektionen zeigt die des gewählten Kindes, nach Fach gruppiert (Name und Klasse
+  weggelassen);
+- die vorgeschlagenen Stapel sind seine, nie die eines anderen Kindes.
+
+Was du gegenüber einem Profil pro Kind verlierst: Jedes Kind sieht in Anki die Stapel der anderen
+Kinder, und die Statistik von Anki ist gemeinsam.
+
+Hat jedes Kind sein eigenes Gerät, nimm lieber **ein Profil pro Kind**. Für Technikfans:
+AnkiDroid lässt sich mehrmals auf demselben Gerät installieren, einmal pro Kind, jedes mit seinem
+eigenen AnkiWeb-Konto (die „parallel builds“, siehe die
+[AnkiDroid-FAQ](https://github.com/ankidroid/Anki-Android/wiki/FAQ)).
+
+</TabItem>
+</Tabs>

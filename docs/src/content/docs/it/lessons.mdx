@@ -1,0 +1,61 @@
+---
+title: "Le tue lezioni"
+description: "Ogni lezione viene salvata: ritrovarla, riaprirla per correggerla o reinviarla, ed eliminarla."
+---
+
+import { Tabs, TabItem } from '@astrojs/starlight/components';
+
+Ogni generazione crea una **lezione**: le sue foto, le sue istruzioni e le sue carte, salvate dove
+gira Notosaurus (sul telefono nell'app, sul computer con l'add-on). Puoi tornarci in qualsiasi
+momento per correggerla, rigenerarla o inviarla di nuovo ad Anki.
+
+## L'elenco delle lezioni
+
+Il pulsante **Lezioni** (📚), in cima alla pagina, apre **Le mie lezioni**: le lezioni del **figlio
+scelto** (e, sul computer, del **profilo aperto in Anki**), le più recenti prima. Con più figli,
+il selettore sopra l'elenco mostra **Le lezioni di tutti i figli**.
+
+![L'elenco delle lezioni](../../../assets/screenshots/en/lessons.png)
+
+- Le lezioni sono **raggruppate per materia**: la prima parte del nome del mazzo (`Inglese`,
+  `Scienze`…), la materia studiata per ultima prima.
+- **esportata** segna una lezione già inviata ad Anki o scaricata.
+- Con molte lezioni (più di 8), compare una **ricerca** (maiuscole e accenti non contano), le 3
+  lezioni più recenti sono mostrate per prime, e le materie sono chiuse, tranne quella della
+  lezione aperta. Una materia aperta o chiusa a mano resta così su quel dispositivo.
+
+Tocca una lezione per riaprirla: le sue foto e carte tornano, pronte da correggere o reinviare.
+**＋ Nuova** inizia una nuova lezione.
+
+## Lezioni e figli
+
+Una lezione è del figlio scelto quando è stata fatta (il pulsante **Figli**, 🧒, in cima alla
+pagina) e, sul computer, appartiene al profilo aperto allora in Anki. **⧉ Copia per…**, nella sua
+revisione, ne fa una copia per un altro figlio, gratis. Vedi [Più figli](../several-children/).
+
+## Verifiche da preparare
+
+Una verifica copre più lezioni? Raccoglile, o alcune delle loro carte, e ripassale insieme: vedi
+[Preparare una verifica](../tests/). Le verifiche sono in cima a **Le mie lezioni**.
+
+## Eliminare una lezione
+
+Il pulsante **Elimina la lezione** (🗑), accanto a una lezione, la elimina, con le sue foto. Se le
+sue carte sono in Anki, Notosaurus le cerca e propone di **eliminarle anche**: la loro cronologia
+di ripasso va allora persa. Altrimenti, le carte già inviate restano in Anki.
+
+<Tabs syncKey="mode">
+<TabItem label="App Android">
+
+**Impostazioni** (⚙️) → **🗂️ Lezioni su questo telefono** dice quante lezioni tiene il telefono e
+quanto spazio occupano, ed **Elimina tutte le lezioni** le elimina tutte, con il loro audio. Le
+carte già in AnkiDroid restano, con il loro audio.
+
+</TabItem>
+<TabItem label="Computer">
+
+Le lezioni si gestiscono anche in **Impostazioni → Lezioni**: a quale profilo Anki appartiene
+ognuna (si può cambiare lì), quanto è costata, ed eliminarla.
+
+</TabItem>
+</Tabs>

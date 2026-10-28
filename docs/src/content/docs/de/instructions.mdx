@@ -1,0 +1,155 @@
+---
+title: Anweisungen
+description: "Der KI sagen, welche Karten sie machen soll: die Anweisungen von Notosaurus, deine eigenen, Anweisungen nur für dieses Mal und feste Anweisungen."
+---
+
+import { Tabs, TabItem } from '@astrojs/starlight/components';
+
+Die **Anweisungen** (oder der Prompt) sagen der KI, was sie aus der Lektion machen soll: welche
+Karten, in welche Richtung, in welchen Sprachen. Das Foto sagt, *was* gelernt wird; die
+Anweisungen sagen, *wie*.
+
+## Anweisungen wählen
+
+Unter **Anweisungen** werden die zuletzt benutzten als Schaltflächen angezeigt. **Alle** öffnet
+die ganze Liste, mit einer Suche.
+
+![Alle Anweisungen](../../../assets/screenshots/en/prompt-picker.png)
+
+Der Text der gewählten Anweisungen steht unter den Schaltflächen. Du kannst ihn **nur für dieses
+Mal** ändern („Nur für dieses Mal geändert“), etwa um „nur die Verben“ hinzuzufügen: Deine
+Änderung bleibt bei der Lektion, die gespeicherten Anweisungen ändern sich nicht. In der App
+diktiert die Schaltfläche **Diktieren** (🎤) neben dem Text: Sag, was du willst, die KI schreibt
+es hinein.
+
+**✨ Aufräumen**, unter dem Text, lässt die KI eilig getippte oder diktierte Anweisungen neu
+schreiben: klar und kurz, in ihrer eigenen Sprache, mit jeder Absicht erhalten (wie viele Karten,
+welche Sprachen und Richtung, welche Art von Karten) und nichts hinzugefügt. **↩ Rückgängig**
+holt deinen Text zurück, solange du den aufgeräumten nicht geändert hast. Für die Anweisungen von
+Notosaurus selbst wird es nicht angeboten: Sie sind schon aufgeräumt.
+
+## Schnell oder sorgfältig
+
+**Erstellung der Karten**, unter den Anweisungen, legt fest, wie lange die KI nachdenkt:
+
+- **⚡ Schnell** (Standard): ein paar Sekunden. Ideal für Vokabeln oder eine einfache Lektion.
+- **🎯 Sorgfältig**: länger (bis zu 30 s), durchdachter: für eine umfangreiche Lektion (ein
+  Schema, Mathe).
+
+Die Wahl wird auf dem Gerät gespeichert. Eine im Schnellmodus erstellte Lektion sagt es bei der
+Durchsicht („Im Schnellmodus erstellt.“), mit **🎯 Sorgfältig neu erstellen**.
+
+![Für dieses Mal geänderte Anweisungen: Aufräumen, Schnell oder Sorgfältig](../../../assets/screenshots/en/prompt-options.png)
+
+## Die Anweisungen von Notosaurus
+
+Die mit ⭐ markierten Anweisungen kommen mit Notosaurus und werden mit jeder Version besser. Sie
+lassen sich nicht ändern, aber **duplizieren**, um deine eigene Version zu machen.
+
+| Anweisungen | Was sie machen |
+|---|---|
+| Automatisch (nach der Lektion) | Die KI sieht sich die Lektion an und wählt die nützlichsten Karten. |
+| Sprache: Vokabeln | Eine Karte pro Wort oder Ausdruck, mit Artikel, Geschlecht und Plural in der Info; ohne Foto aus einer Liste oder einem Thema. |
+| Sprache: Sätze | Eine Karte pro Satz, in deiner Sprache und in der Lernsprache. |
+| Sprache: Konjugation | Ein Verb, eine Zeit und eine Person pro Karte; die konjugierte Form auf der Rückseite. |
+| Tabelle lernen | Eine auswendig zu lernende Tabelle (Deklination, unregelmäßige Verben…): eine Karte pro Zelle oder pro Zeile, wenn jede Zeile ein Wort ist; die Antwort wird eingetippt. |
+| Fragen / Antworten | Kurze Fragen zum Inhalt: Daten, Definitionen, Kernaussagen. |
+| Daten und Ereignisse | Eine Karte pro zu merkendem Datum (ein Zeitstrahl, ein Kasten): das Ereignis vorne, sein Datum hinten, das Jahrhundert in der Info; mit der umgekehrten Karte, um es in beide Richtungen zu lernen. |
+| Definitionen und Eigenschaften | Eine Karte pro zu definierendem Schlüsselwort; für eine Eigenschaft oder einen Satz sein Name → die vollständige Aussage („Wenn …, dann …“) und die Voraussetzungen → die Folgerung, die Umkehrung extra, wozu er dient in der Info. |
+| Am Beispiel erkennen | Eine Karte pro Beispiel der Lektion (ein Stilmittel, eine Wortart…): das Beispiel vorne, der Begriff hinten, seine Definition in der Info. Nie ein erfundenes Beispiel. |
+| Lückentext | Sätze mit Lücken (Cloze): eine Karte pro Lückennummer. |
+| Multiple Choice | Eine Frage, die richtige Antwort und drei plausible falsche. |
+| Richtig / falsch | Aussagen, die Hälfte davon falsch, mit einem genauen Fehler. |
+| Methoden (Schritte) | Eine Karte pro Fertigkeit: „Wie macht man …?“, die Schritte auf der Rückseite. |
+| Formeln (Mathe, Physik …) | Eine Karte pro Formel, mit der Bedeutung jedes Buchstabens. |
+| Geometrie (mit Figuren) | Figuren, Eigenschaften und Fachbegriffe, mit einer exakten Figur auf den Karten. |
+| Abbildung oder Karte beschriften | Die Beschriftungen einer Abbildung oder Landkarte hinter Nummern verdeckt: eine Karte pro Beschriftung. |
+| Sprache: Vokabeln in Bildern | Das Bild jedes Worts vorne (gefunden oder gezeichnet); das Wort in der Lernsprache hinten. |
+| Lückenwörter | Eine Karte pro zu schreibendem Wort: ein Satz, in dem das Wort fehlt, vorne, das Wort hinten (eingetippt), ein Rechtschreibtipp. |
+| Diktat | Nur Diktatkarten: die Wörter, deren Schreibung gelernt wird, und der Diktattext Satz für Satz, gehört, dann eingetippt. |
+| Lückendiktat | Die schwierigsten Wörter des Diktattexts, eins pro Karte: sein Satz mit der Lücke, gehört, das Wort eingetippt. |
+| Auswendig (Gedicht, Vortrag) | Der Text genau abgeschrieben, vorgelesen: eine Karte Titel → erste Zeile, dann eine Karte pro Zeile (vorne der Titel, ihre Nummer und die zwei Zeilen davor, der Anfang einer Strophe angesagt). |
+
+## Deine eigenen Anweisungen
+
+**Neu** erstellt Anweisungen, die du wiederverwendest, zum Beispiel für eine Sprache, die dein
+Kind jede Woche lernt. **Duplizieren** geht von Anweisungen von Notosaurus aus.
+
+![Anweisungen: Name, Text und Stapelname](../../../assets/screenshots/en/prompt-editor.png)
+
+- **Name**: was die Schaltfläche zeigt.
+- **Anweisungen**: was die KI tun soll, in einfachen Worten („eine Karte pro Datum, vorne das
+  Ereignis, hinten das Datum“).
+- **Vorgeschlagener Stapelname**: der Anki-Stapel, mit `::` für Unterstapel. Die Teile in
+  geschweiften Klammern werden aus der Lektion gefüllt: `Spanisch::Lektion {n}` wird zu
+  `Spanisch::Lektion 5`.
+
+Wie die Karten abgefragt und gehört werden, steht ebenfalls im Text, und die KI liest es dort:
+„mit eingetippter Antwort“ (Anki vergleicht Buchstabe für Buchstabe), „in beide Richtungen“ (die
+umgekehrte Karte), „vorgelesen“, „mit Diktat“ (die Rückseite hören, sie schreiben) oder „nur
+Diktat“. Rückseiten in einer Lernsprache werden ohnehin vorgelesen, mit der für diese Sprache
+gewählten Stimme (siehe [Stimmen und Audio](../voices/)).
+
+**✏️ Frei** schreibt Anweisungen nur für dieses Mal: Sie bleiben bei der Lektion, kommen aber
+nicht in deine Liste. **Als neue Anweisungen speichern** behält sie, wenn sie gut funktioniert
+haben.
+
+## „Wusstest du schon?“
+
+Die KI fügt den Karten, wo es passt, eine kurze, bekannte Tatsache hinzu (höchstens bei einer von
+drei). Sie erscheint in Anki auf der Rückseite.
+
+## Hilfen auf der Rückseite
+
+Die KI fügt hinzu, **nur auf den Karten, wo sie wirklich helfen**:
+
+- **eine Erklärung**: warum die Antwort die Antwort ist, wenn Verstehen beim Merken hilft (eine
+  Ursache in Geschichte, eine Regel, eine Formel); nie für ein einfaches Wort oder ein bloßes
+  Datum;
+- **eine Eselsbrücke**: Herkunft oder Wortfamilie des Worts (*Hippopotamus*: „das Flusspferd“),
+  ein einfaches Bild, ein bekannter Merkspruch aus der Schule, eine echte Rechtschreibregel. Nie
+  eine erfundene.
+
+So bekommt eine Geschichtslektion vor allem Erklärungen, eine Vokabellektion ein paar
+Eselsbrücken und keine Erklärung. Sie erscheinen in Anki auf der Rückseite, unter der Info (💬
+und 🧠), und lassen sich bei der Durchsicht bearbeiten oder löschen. Am Computer kosten sie mit
+Claude Sonnet etwa 1 bis 3 US-Cent mehr pro Lektion.
+
+Beides ist anfangs für jede Lektion eingeschaltet: Zum Abschalten siehe
+[Abschalten](#abschalten). Nur für bestimmte Anweisungen: Schreib es in ihren Text, „keine
+Wusstest-du-Fakten“, „keine Hilfen“.
+
+## Bilder
+
+Die KI fügt den Karten ein Bild hinzu, wo es beim Merken wirklich hilft, egal welche Anweisungen:
+ein Kunstwerk, eine Person, ein Ort, ein Bauwerk, ein Tier. Nie für einen abstrakten Begriff und
+nicht auf jeder Karte. Zuerst wird ein freies Bild gesucht; ob die KI eins zeichnet, wird immer
+gefragt. Es ist anfangs eingeschaltet (siehe [Abschalten](#abschalten)). Nur für bestimmte
+Anweisungen: Schreib es in ihren Text, „keine Bilder“.
+
+## Abschalten
+
+<Tabs syncKey="mode">
+<TabItem label="Android-App">
+
+**Einstellungen** (⚙️) **→ 📝 Anweisungen für die KI → 💬 Hilfen auf der Rückseite der Karten**
+schaltet die Hilfen ab. „Wusstest du schon?“ und die Bilder haben in der App keinen Schalter:
+Schreib es in den Text der Anweisungen oder in die festen Anweisungen unten.
+
+</TabItem>
+<TabItem label="Computer">
+
+**Einstellungen → 📝 Anweisungen für die KI** hat für jedes einen Schalter: **💡 „Wusstest du?“
+auf den Karten**, **💬 Hilfen auf der Rückseite der Karten** und **🖼️ Bilder auf den Karten**.
+
+</TabItem>
+</Tabs>
+
+## Feste Anweisungen
+
+Manche Anweisungen gelten für jede Lektion: „Spanisch aus Spanien“, „bei Nomen immer den
+Artikel“. Schreib sie einmal in die Einstellungen: **Einstellungen** (⚙️) **→ 📝 Anweisungen für
+die KI** in der App, **Einstellungen → 📝 Anweisungen für die KI → Für alle Kinder** am Computer.
+Die eigenen jedes Kindes (seine Klasse, „liest noch langsam“) stehen in seinem Eintrag, über die
+Schaltfläche **Kinder** (🧒) auf der Hauptseite: siehe
+[Mehrere Kinder](../several-children/#die-einträge-der-kinder).

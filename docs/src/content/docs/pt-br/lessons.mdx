@@ -1,0 +1,61 @@
+---
+title: "Suas lições"
+description: "Cada lição é salva: encontrá-la, reabri-la para corrigir ou enviar de novo, e excluí-la."
+---
+
+import { Tabs, TabItem } from '@astrojs/starlight/components';
+
+Cada geração cria uma **lição**: as fotos, as instruções e os cartões dela, salvos onde o
+Notosaurus roda (no celular com o app, no computador com o complemento). Você pode voltar a ela a
+qualquer momento para corrigi-la, gerá-la de novo ou enviá-la de novo ao Anki.
+
+## A lista de lições
+
+O botão **Lições** (📚), no alto da página, abre **Minhas lições**: as lições do **filho
+escolhido** (e, no computador, do **perfil aberto no Anki**), as mais recentes primeiro. Com mais
+de um filho, a chave acima da lista mostra **As lições de todos os filhos**.
+
+![A lista de lições](../../../assets/screenshots/en/lessons.png)
+
+- As lições são **agrupadas por matéria**: a primeira parte do nome do baralho (`Inglês`,
+  `Ciências`…), a matéria estudada por último primeiro.
+- **exportada** marca uma lição já enviada ao Anki ou baixada.
+- Com muitas lições (mais de 8), aparece uma **busca** (maiúsculas e acentos não importam), as 3
+  lições mais recentes aparecem primeiro, e as matérias ficam recolhidas, menos a da lição
+  aberta. Uma matéria aberta ou fechada à mão fica assim naquele aparelho.
+
+Toque em uma lição para reabri-la: as fotos e os cartões voltam, prontos para serem corrigidos ou
+enviados de novo. **＋ Nova** começa uma lição nova.
+
+## Lições e filhos
+
+Uma lição é do filho escolhido quando ela foi feita (o botão **Filhos**, 🧒, no alto da página) e,
+no computador, pertence ao perfil aberto no Anki naquele momento. **⧉ Copiar para…**, na revisão
+dela, faz uma cópia para outro filho, de graça. Veja [Vários filhos](../several-children/).
+
+## Provas a preparar
+
+Uma prova cobre várias lições? Junte-as, ou alguns dos cartões delas, e revise tudo junto: veja
+[Preparar uma prova](../tests/). As provas ficam no alto de **Minhas lições**.
+
+## Excluir uma lição
+
+O botão **Excluir a lição** (🗑), ao lado de uma lição, a exclui, com as fotos. Se os cartões dela
+estão no Anki, o Notosaurus os procura e oferece **excluí-los também**: o histórico de revisão
+deles se perde. Senão, os cartões já enviados ficam no Anki.
+
+<Tabs syncKey="mode">
+<TabItem label="App Android">
+
+**Configurações** (⚙️) → **🗂️ Lições neste celular** diz quantas lições o celular guarda e o
+tamanho delas, e **Apagar todas as lições** apaga todas, com o som. Os cartões que já estão no
+AnkiDroid ficam, com o som.
+
+</TabItem>
+<TabItem label="Computador">
+
+As lições também podem ser gerenciadas em **Configurações → Lições**: a que perfil do Anki cada
+uma pertence (dá para mudar ali), quanto custou, e excluí-la.
+
+</TabItem>
+</Tabs>
