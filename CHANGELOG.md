@@ -77,7 +77,7 @@ Each pull request adds a line under **Unreleased**. See [Releasing](CONTRIBUTING
 
 ### Changed
 
-- 🔍 A figure is no longer checked by the AI on its own: drawn at once, in one call. "🔍" under a figure has the AI look at it when you doubt it; if it finds something wrong, it says what, and you choose to have it redrawn carefully (with the model's thinking, told the problem) or to keep it. For developers: `/v1/check-figure`; `/v1/card-picture` takes the `problem` to redraw from.
+- 🔍 A figure is no longer checked by the AI on its own: drawn at once, in one call. "🔍" under a figure has the AI look at it when you doubt it; if it finds something wrong, it says what, and you choose to have it redrawn, told the problem (quickly; still wrong, carefully, with the model's thinking) or to keep it. For developers: `/v1/check-figure`; `/v1/card-picture` takes the `problem` to redraw from, and `careful`.
 - A figure's kind (geometry, graph, timeline…) said by the AI with its description, when it reads the lesson or plans a picture: drawn without a call to ask it, one AI call fewer per figure. A figure rewritten by the user has its kind asked again.
 - A light AI call (a figure drawn or checked, a picture planned) not answered after 12 s is asked again beside it, the first answer taken: Gemini at times leaves one waiting for a minute (measured: 68 s, now 20 s at most for the same kind of call).
 - The cards' pictures each shown the moment they are drawn, on the computer and the phone: a slow one no longer holds the others back (they all showed at once, when the last one was done).

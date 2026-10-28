@@ -250,7 +250,7 @@ SQUARE = (
 )
 
 
-def drawing_with(monkeypatch, light_svg=SQUARE, problem=""):
+def drawing_with(monkeypatch, light_svg=SQUARE, problem="", careful=False):
     """draw_figure with a fake AI: the light drawing `light_svg` (with thinking: B), what a
     check found (`problem`); the calls made, in order."""
     calls = []
@@ -261,7 +261,7 @@ def drawing_with(monkeypatch, light_svg=SQUARE, problem=""):
 
     monkeypatch.setattr(llm, "_ask_provider", answer)
     monkeypatch.setattr(figures_typst, "available", lambda: False)  # the circuit, as SVG (Typst: below)
-    svg = asyncio.run(llm.draw_figure(AIConfig(llm="gemini"), "un triangle ABC", problem=problem))
+    svg = asyncio.run(llm.draw_figure(AIConfig(llm="gemini"), "un triangle ABC", problem=problem, careful=careful))
     return svg, calls
 
 
@@ -272,8 +272,12 @@ def test_a_figure_drawn_light_and_not_checked(monkeypatch):
     assert [(c["schema"], c["light"], c["images"]) for c in calls] == [("Drawing", True, 0)]
 
 
-def test_a_figure_found_wrong_drawn_again_with_thinking_told_why(monkeypatch):
+def test_a_figure_found_wrong_drawn_again_told_why(monkeypatch):
+    """Told the problem: quickly first; with the model's thinking when asked (careful)."""
     svg, calls = drawing_with(monkeypatch, problem="The arc is on the wrong side of the line.")
+    assert ">A<" in svg and [(c["schema"], c["light"]) for c in calls] == [("Drawing", True)]
+    assert "The arc is on the wrong side of the line." in calls[-1]["text"]
+    svg, calls = drawing_with(monkeypatch, problem="The arc is on the wrong side of the line.", careful=True)
     assert ">B<" in svg and [(c["schema"], c["light"]) for c in calls] == [("Drawing", False)]
     assert "The arc is on the wrong side of the line." in calls[-1]["text"]
 
@@ -303,19 +307,19 @@ def test_a_figure_checked_when_asked(client, monkeypatch):
     asked = []
     real = llm.draw_figure
 
-    async def draw(s, description, step=None, kind="", problem=""):
-        asked.append(problem)
-        return await real(s, description, step, kind, problem)
+    async def draw(s, description, step=None, kind="", problem="", careful=False):
+        asked.append((problem, careful))
+        return await real(s, description, step, kind, problem, careful)
 
     monkeypatch.setattr(llm, "draw_figure", draw)
-    streamed = client.post(
-        f"{url}/draw", json={"problem": "The angle is at B."}, headers={"Accept": "application/x-ndjson"}
-    )
-    lines = [json.loads(line) for line in streamed.text.splitlines()]
-    assert [line["step"] for line in lines if "step" in line] == [
-        {"step": "redrawing", "problem": "The angle is at B."}
-    ]
-    assert asked == ["The angle is at B."] and lines[-1]["result"]["card"]["picture"].endswith(".svg")
+    told = {False: [{"step": "drawing"}], True: [{"step": "redrawing", "problem": "The angle is at B."}]}
+    for careful, steps in told.items():  # quickly, told the problem; then with the model's thinking
+        body = {"problem": "The angle is at B.", "careful": careful}
+        streamed = client.post(f"{url}/draw", json=body, headers={"Accept": "application/x-ndjson"})
+        lines = [json.loads(line) for line in streamed.text.splitlines()]
+        assert [line["step"] for line in lines if "step" in line] == steps
+        assert asked[-1] == ("The angle is at B.", careful)
+        assert lines[-1]["result"]["card"]["picture"].endswith(".svg")
     # A card without a figure: nothing to check
     other = client.post("/api/extract", data={"prompt": "FR → ES"}).json()
     assert client.post(f"/api/lessons/{other['id']}/cards/{other['cards'][0]['id']}/picture/check").status_code == 404
@@ -345,7 +349,7 @@ TRIANGLE = """#ctz-canvas({
 })"""
 
 
-def typst_drawing(monkeypatch, bodies, kind="", problem=""):
+def typst_drawing(monkeypatch, bodies, kind="", problem="", careful=False):
     """draw_figure with a fake AI writing the Typst `bodies` in turn (then, asked for SVG,
     SQUARE), its `kind` given or not; the calls made, in order."""
     calls, written = [], iter(bodies)
@@ -360,7 +364,7 @@ def typst_drawing(monkeypatch, bodies, kind="", problem=""):
 
     monkeypatch.setattr(llm, "_ask_provider", answer)
     description = "un triangle ABC, l'angle en A marqué"
-    svg = asyncio.run(llm.draw_figure(AIConfig(llm="gemini"), description, kind=kind, problem=problem))
+    svg = asyncio.run(llm.draw_figure(AIConfig(llm="gemini"), description, kind=kind, problem=problem, careful=careful))
     return svg, calls
 
 
@@ -394,7 +398,7 @@ def test_a_figures_kind_given_is_not_asked_again(monkeypatch):
 
 
 def test_a_typst_figure_found_wrong_drawn_again_with_thinking(monkeypatch):
-    _, calls = typst_drawing(monkeypatch, [TRIANGLE], problem="The angle is at B.")
+    _, calls = typst_drawing(monkeypatch, [TRIANGLE], problem="The angle is at B.", careful=True)
     assert [(c["schema"], c["light"]) for c in calls] == [("Kind", True), ("Figure", False)]
     assert "The angle is at B." in calls[-1]["text"]
 

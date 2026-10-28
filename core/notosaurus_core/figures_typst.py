@@ -174,7 +174,8 @@ You draw a graph of functions in Typst with lilaq 0.6 (`lq`), the axes crossing 
 defined (a function undefined at 0: two `lq.linspace`, one each side, two plots);
 - `xlim` and `ylim` so that the whole curve asked for shows (its lowest and highest values, a \
 vertex, the points named); an orthonormal frame (the same unit on both axes): width / height = \
-(xlim's length) / (ylim's length);
+(xlim's length) / (ylim's length), exactly, the figure up to 12 cm wide for it (a long, flat \
+curve: 12 cm by 3), never squeezed to fit 6 by 4;
 - points on it: `lq.scatter((1, calc.e), (0, 1), color: black)` (all x, then all y); a value on \
 an axis: `xaxis: (ticks: ((calc.e, $e$), 1, 2, 3))` (a tick with its label); a tick at a value \
 that isn't a short number (π, e, √2, π/2…): always with its label as the lesson writes it \

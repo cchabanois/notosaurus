@@ -404,7 +404,8 @@
       "checking": "🔍 Verifica in corso…",
       "checkOk": "✓ La figura sembra corretta.",
       "checkProblem": "La verifica segnala:",
-      "redraw": "📐 Ridisegnala con cura",
+      "redraw": "📐 Ridisegnala",
+      "redrawCareful": "📐 Ridisegnala con cura",
       "keep": "Tienila"
     },
     "pairing": {

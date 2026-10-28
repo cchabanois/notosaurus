@@ -404,7 +404,8 @@
       "checking": "🔍 Wird geprüft…",
       "checkOk": "✓ Die Figur scheint richtig.",
       "checkProblem": "Die Prüfung meldet:",
-      "redraw": "📐 Sorgfältig neu zeichnen",
+      "redraw": "📐 Neu zeichnen",
+      "redrawCareful": "📐 Sorgfältig neu zeichnen",
       "keep": "Behalten"
     },
     "pairing": {

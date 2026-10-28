@@ -374,6 +374,10 @@ def test_a_figure_checked_on_demand_then_redrawn(page, monkeypatch):
     found.get_by_role("button", name="Garder").click()
     sync_api.expect(found).to_be_hidden()
     card.get_by_role("button", name="🔍 Vérifier la figure").first.click()
+    found.get_by_role("button", name="📐 Redessiner", exact=True).click()  # quickly, told the problem
+    sync_api.expect(found).to_be_hidden()
+    sync_api.expect(card.locator(".card-picture.figure img:not(.first):visible")).to_be_visible()
+    card.get_by_role("button", name="🔍 Vérifier la figure").first.click()  # still wrong: with care now
     found.get_by_role("button", name="📐 Redessiner avec soin").click()
     sync_api.expect(found).to_be_hidden()
     sync_api.expect(card.locator(".card-picture.figure img:not(.first):visible")).to_be_visible()

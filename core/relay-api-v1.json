@@ -2301,8 +2301,14 @@
             "type": "string",
             "maxLength": 1000,
             "title": "Problem",
-            "description": "What /v1/check-figure found wrong in the card's figure: drawn again with the model's thinking, told it (the user asked it). Empty: drawn as usual.",
+            "description": "What /v1/check-figure found wrong in the card's figure: drawn again, told it (the user asked it). Empty: drawn as usual.",
             "default": ""
+          },
+          "careful": {
+            "type": "boolean",
+            "title": "Careful",
+            "description": "With a problem: drawn with the model's thinking (slower), not quickly.",
+            "default": false
           }
         },
         "type": "object",

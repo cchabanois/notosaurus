@@ -390,7 +390,8 @@
                   <div>
                     <p><strong x-text="$t('app.pictures.checkProblem')"></strong> <span x-text="card._check.problem"></span></p>
                     <div class="picture-actions">
-                      <button type="button" class="btn primary" @click="redrawFigure(card)" x-text="$t('app.pictures.redraw')"></button>
+                      <button type="button" class="btn primary" @click="redrawFigure(card)"
+                x-text="card._triedQuick ? $t('app.pictures.redrawCareful') : $t('app.pictures.redraw')"></button>
                       <button type="button" class="btn soft" @click="card._check = null" x-text="$t('app.pictures.keep')"></button>
                     </div>
                   </div>
@@ -481,7 +482,8 @@
                     <div>
                       <p><strong x-text="$t('app.pictures.checkProblem')"></strong> <span x-text="card._check.problem"></span></p>
                       <div class="picture-actions">
-                        <button type="button" class="btn primary" @click="redrawFigure(card)" x-text="$t('app.pictures.redraw')"></button>
+                        <button type="button" class="btn primary" @click="redrawFigure(card)"
+                x-text="card._triedQuick ? $t('app.pictures.redrawCareful') : $t('app.pictures.redraw')"></button>
                         <button type="button" class="btn soft" @click="card._check = null" x-text="$t('app.pictures.keep')"></button>
                       </div>
                     </div>
