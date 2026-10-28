@@ -4,8 +4,9 @@ lilaq (a curve computed from its function), sets with cetz-venn, diagrams with f
 circuits with zap, chemistry with alchemist, timelines with cetz (TIMELINE). What can be computed is,
 never placed by eye.
 
-A light call first picks the family from the description (FAMILY_RULES; none of them: the
-figure is drawn as SVG, figures.py); the AI then writes the figure's Typst with that family's
+The family is the one the AI gave with the figure's description (models.Card.figure_kind),
+else a light call picks it from the description (FAMILY_RULES; none of them: the figure is
+drawn as SVG, figures.py); the AI then writes the figure's Typst with that family's
 sheet (Family.rules), after its preamble (Family.preamble: its packages, the page). It is
 compiled in a process of its own, cut after COMPILE_S seconds, with the packages and the
 fonts shipped here (typst/: tools/typst_packages.py, fonts/: nothing downloaded), in an empty
@@ -271,17 +272,21 @@ placed by the function, never on one another.
     ),
 }
 
-FAMILY_RULES = """\
-A figure for a pupil's flashcard is described below. Which kind of figure is it? "geometry": \
-points, segments, lines, circles, polygons, angles, their marks (a theorem, a construction); \
-"graph": the graph of one or more functions in a frame; "sets": a Venn diagram of two or three \
-sets; "diagram": boxes and arrows (a flowchart, a cycle, a chain, a classification); \
-"circuit": an electric circuit; "chemistry": a molecule's formula; "timeline": dates on a line; \
-"other": anything else (a table, a labelled drawing, a solid in perspective, a map…)."""
+# The kinds of figures, said to the AI that describes a figure (models.Card.figure_kind) or
+# picks its family (FAMILY_RULES)
+KINDS = (
+    '"geometry": points, segments, lines, circles, polygons, angles, their marks (a theorem, a '
+    'construction); "graph": the graph of one or more functions in a frame; "sets": a Venn diagram of '
+    'two or three sets; "diagram": boxes and arrows (a flowchart, a cycle, a chain, a classification); '
+    '"circuit": an electric circuit; "chemistry": a molecule\'s formula; "timeline": dates on a line; '
+    '"other": anything else (a table, a labelled drawing, a solid in perspective, a map…)'
+)
+FAMILY_RULES = f"A figure for a pupil's flashcard is described below. Which kind of figure is it? {KINDS}."
+FigureKind = Literal["geometry", "graph", "sets", "diagram", "circuit", "chemistry", "timeline", "other"]
 
 
 class Kind(BaseModel):
-    family: Literal["geometry", "graph", "sets", "diagram", "circuit", "chemistry", "timeline", "other"]
+    family: FigureKind
 
 
 # What a body may not do: load anything (the packages are given), read a file

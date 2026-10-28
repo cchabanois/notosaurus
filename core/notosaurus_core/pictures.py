@@ -352,7 +352,7 @@ async def card_picture(
     `step`: told each step as it begins (relay_api.PictureStep's fields)."""
     card = await decided(s, card, asked, language, step)
     if card.figure.strip():
-        svg = figures.clean(await llm.draw_figure(s, card.figure, step))
+        svg = figures.clean(await llm.draw_figure(s, card.figure, step, card.figure_kind))
         card.picture_source = PictureSource(source="drawn", model=s.model_for_provider())
         return CardPicture(card, svg.encode(), "svg")
     context = f"{card.front.strip()} → {card.back.strip()}"
@@ -382,6 +382,8 @@ async def decided(
     current = (card.figure or card.picture_prompt).strip()
     written = (asked or "").strip()
     if card.figure.strip() and written:
+        if written != card.figure.strip():
+            card.figure_kind = ""  # another figure written: its kind asked again
         card.figure = written  # a figure stays one: drawn from what was written
     elif not current or (asked is not None and written != current):
         if step:
@@ -391,6 +393,7 @@ async def decided(
             raise AppError("picture.no_subject")  # (a 400, as before: nothing to draw)
         figure = plan.kind == "figure"
         card.figure = plan.description if figure else ""
+        card.figure_kind = plan.figure_kind if figure else ""
         card.picture_prompt, card.picture_search = ("", "") if figure else (plan.description, plan.search)
     return card
 
@@ -409,7 +412,7 @@ async def figure_or_picture(
     """The card's figure or picture (card_picture), saved in the lesson, the card's picture
     fields updated in place (what it shows, where it comes from); returns its file name."""
     made = await card_picture(s, card, asked, language, fresh, find, draw=draw, step=step)
-    for field in ("figure", "picture_prompt", "picture_search", "picture_source"):
+    for field in ("figure", "figure_kind", "picture_prompt", "picture_search", "picture_source"):
         setattr(card, field, getattr(made.card, field))
     if made.extension == "svg":
         return figures.save(folder, card, made.data.decode())
@@ -423,7 +426,7 @@ class Drawn(NamedTuple):
 
 
 # A card's picture fields, told with "ready" (draw_all) the moment it has them
-READY = {"picture", "picture_source", "figure", "picture_prompt", "picture_search"}
+READY = {"picture", "picture_source", "figure", "figure_kind", "picture_prompt", "picture_search"}
 
 
 async def draw_all(s: AIConfig, folder: Path, cards: list[Card], draw: bool = False, step: Step | None = None) -> Drawn:

@@ -5,6 +5,8 @@ from typing import Literal
 
 from pydantic import BaseModel, Field
 
+from .figures_typst import KINDS, FigureKind
+
 
 class Mask(BaseModel):
     """Where a diagram label is, to hide it on the photo (image occlusion).
@@ -71,6 +73,9 @@ class Card(BaseModel):
         default="",
         description="When an exact figure makes the card clearer (see the rules: geometry, or a notion the "
         "lesson's page shows a figure for): what to draw, every label with its exact text. Empty otherwise.",
+    )
+    figure_kind: Literal["", FigureKind] = Field(
+        default="", description=f"With a figure, which kind it is: {KINDS}. Empty otherwise."
     )
     fun_fact: str = Field(
         default="",
@@ -267,6 +272,7 @@ class Sorted(BaseModel):
 class CardFigure(BaseModel):
     card: int = Field(description="The card's number, as listed.")
     figure: str = Field(description="What to draw, every label with its exact text; empty when no figure truly helps.")
+    figure_kind: Literal["", FigureKind] = Field(default="", description=f"Which kind of figure it is: {KINDS}.")
 
 
 class Figures(BaseModel):
@@ -283,6 +289,9 @@ class PicturePlan(BaseModel):
     description: str = Field(
         description="A figure: what to draw, in the cards' language, every label with its exact text. A "
         "picture: what to draw, in English, one concrete subject a child recognises at once."
+    )
+    figure_kind: Literal["", FigureKind] = Field(
+        default="", description=f"A figure: which kind it is, {KINDS}. Empty for a picture."
     )
     search: str = Field(
         default="",
