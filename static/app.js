@@ -185,7 +185,7 @@ document.addEventListener("alpine:init", () => {
     // Natural-language correction of the cards; `undo` holds the previous version.
     revision: { text: "", busy: false, summary: "", stats: "", undo: null },
     successNext: false,          // the success toast offers to start a new lesson
-    viewer: { open: false, list: [], index: 0, zoomed: false, touchX: 0, card: null },  // a photo in full
+    viewer: { open: false, list: [], index: 0, zoomed: false, touchX: 0, card: null, photos: false },  // a photo in full
     hiding: { open: false, index: -1, erase: false, pdf: false },  // part of a photo hidden before it is sent
     removal: { open: false, lesson: null, checking: false, available: false, count: 0, anki: false, busy: false },
     leftovers: { open: false, notes: [], lesson: null, busy: false },  // the lesson's notes in Anki no card has

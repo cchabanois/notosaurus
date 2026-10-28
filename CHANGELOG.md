@@ -130,6 +130,7 @@ Each pull request adds a line under **Unreleased**. See [Releasing](CONTRIBUTING
 
 ### Fixed
 
+- A lesson's photo seen in full can be turned (↻) and have a name hidden (🖍️) from there too, as from its thumbnail; the photo shown follows at once.
 - A light AI call (sorting free pictures, drawing a figure) left waiting is given up on after 30 s for the fallback model, which answered in under 2 s, instead of 180 s: a card's free picture took three minutes.
 - "Cancel" while a lesson is made on the phone stops at once, also once the relay has begun answering (it waited for the relay to finish: the button did nothing).
 - A graph's ticks at π, e, √2… written as the lesson writes them (π/2, 2π), no longer as long decimals running into one another.

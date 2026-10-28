@@ -140,7 +140,7 @@
       <div class="strip">
         <template x-for="(p, i) in photos" :key="p.url">
           <figure class="thumb">
-            <img :src="p.url" :alt="$t('app.photos.page', { n: i + 1 })" @click="openViewer(photos.map((x) => x.url), i)">
+            <img :src="p.url" :alt="$t('app.photos.page', { n: i + 1 })" @click="openViewer([], i, null, true)">
             <figcaption x-text="i + 1"></figcaption>
             <button class="thumb-remove" @click="removePhoto(i)" :aria-label="$t('app.photos.remove')">✕</button>
             <button class="thumb-rotate" x-show="!readOnly()" @click="rotatePhoto(i)" :disabled="loading"
@@ -878,7 +878,7 @@
 
   <!-- Part of a photo hidden before it is sent: blacked out with a finger, un-blacked the same way -->
   <div class="hide-editor" x-cloak x-show="hiding.open" role="dialog" :aria-label="$t('app.hide.title')"
-       @keydown.escape.window="hiding.open && doneHide(false)">
+       @keydown.escape.window="hiding.open && ($event.preventDefault(), doneHide(false))">
     <p class="hide-hint">
       <strong x-text="$t('app.hide.title')"></strong>
       <span x-text="$t('app.hide.hint')"></span>
@@ -903,12 +903,12 @@
 
   <!-- A photo (or a card's picture) in full: ‹ › or a swipe between pages, a tap on it for its real size -->
   <div class="viewer" x-cloak x-show="viewer.open" x-transition.opacity role="dialog" :aria-label="$t('app.viewer.label')"
-       @keydown.escape.window="viewer.open = false" @keydown.arrow-left.window="viewer.open && moveViewer(-1)"
-       @keydown.arrow-right.window="viewer.open && moveViewer(1)" @click.self="viewer.open = false"
+       @keydown.escape.window="hiding.open || $event.defaultPrevented || (viewer.open = false)" @keydown.arrow-left.window="viewer.open && !hiding.open && moveViewer(-1)"
+       @keydown.arrow-right.window="viewer.open && !hiding.open && moveViewer(1)" @click.self="viewer.open = false"
        @touchstart="viewer.touchX = $event.touches[0].clientX"
        @touchend="if (!viewer.zoomed) swipeViewer($event.changedTouches[0].clientX)">
     <div class="viewer-frame" :class="{ zoomed: viewer.zoomed }" @click.self="viewer.open = false">
-      <img :src="viewer.list[viewer.index]" :alt="$t('app.photos.page', { n: viewer.index + 1 })"
+      <img :src="viewerList()[viewer.index]" :alt="$t('app.photos.page', { n: viewer.index + 1 })"
            @click="viewer.zoomed = !viewer.zoomed">
     </div>
     <!-- A figure's credits: what drew it, each project linked -->
@@ -918,11 +918,18 @@
       <span x-text="viewer.card?.picture_source?.careful ? ' · ' + $t('app.pictures.carefully') : ''"></span>
     </p>
     <button class="viewer-close" @click="viewer.open = false" :aria-label="$t('common.close')">✕</button>
-    <template x-if="viewer.list.length > 1">
+    <!-- A lesson's photo: turned, a name hidden, from here too (as on its thumbnail) -->
+    <div class="viewer-actions" x-show="viewer.photos && !readOnly()">
+      <button @click="rotatePhoto(viewer.index)" :disabled="loading" :aria-label="$t('app.photos.rotate')"
+              :title="$t('app.photos.rotate')">↻</button>
+      <button :class="{ used: photos[viewer.index]?.mask }" x-show="!photos[viewer.index]?.sent" @click="openHide(viewer.index)"
+              :disabled="loading" :aria-label="$t('app.photos.hide')" :title="$t('app.photos.hide')">🖍️</button>
+    </div>
+    <template x-if="viewerList().length > 1">
       <div>
         <button class="viewer-nav prev" @click="moveViewer(-1)" :aria-label="$t('app.viewer.previous')">‹</button>
         <button class="viewer-nav next" @click="moveViewer(1)" :aria-label="$t('app.viewer.next')">›</button>
-        <span class="viewer-count" x-text="`${viewer.index + 1} / ${viewer.list.length}`"></span>
+        <span class="viewer-count" x-text="`${viewer.index + 1} / ${viewerList().length}`"></span>
       </div>
     </template>
   </div>
