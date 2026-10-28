@@ -10,7 +10,7 @@ from notosaurus_core.models import Card, PictureSource
 
 from .. import access, i18n, lessons, settings, usage
 from ..errors import AppError
-from ..models import DrawPictures, FoundPicture, Lesson, PictureRequest, PictureSearch
+from ..models import DrawPictures, FoundPicture, Lesson, PictureRequest, PictureSearch, RedrawRequest
 from .common import IMAGE_TYPES, Step, page_lang, read_photo, stepped
 from .generation import NDJSON
 
@@ -103,24 +103,48 @@ async def make_picture(
 
 
 @router.post("/api/lessons/{id}/cards/{card_id}/picture/draw")
-async def draw_picture(id: str, card_id: str, accept: str | None = Header(None)):
+async def draw_picture(id: str, card_id: str, req: RedrawRequest | None = None, accept: str | None = Header(None)):
     """The card's picture drawn by the image model, now: the user said yes (no free one
-    fit). Its figure drawn again, for a figure. Never from the cache: asked when it didn't
+    fit). Its figure drawn again, for a figure: with the model's thinking, told what its
+    check found (`problem`), when there is one. Never from the cache: asked when it didn't
     suit. Asked as application/x-ndjson: its steps as they begin, then the answer."""
     await access.editable(id)
+    problem = req.problem if req else ""
 
     async def drawn(step: Step | None = None) -> dict:
         async def draw(draft: Lesson, card: Card) -> None:
             async with usage.metered("picture", id, draft.deck):
                 folder = lessons.existing_folder(id) / "images"
                 s = settings.current()
-                card.picture = await pictures.figure_or_picture(s, folder, card, fresh=True, find=False, step=step)
+                card.picture = await pictures.figure_or_picture(
+                    s, folder, card, fresh=True, find=False, step=step, problem=problem
+                )
 
         return await _edit_card(id, card_id, draw)
 
     if NDJSON in (accept or ""):
         return stepped(lambda step: _encoded(drawn(_nested(step))), "Drawing a picture")
     return await drawn()
+
+
+@router.post("/api/lessons/{id}/cards/{card_id}/picture/check")
+async def check_picture(id: str, card_id: str) -> dict:
+    """The card's figure looked at against its description (the "🔍 Check" button): {"ok",
+    "problem"}, what is wrong in the cards' language. Nothing changed: the user then decides
+    whether it is drawn again (draw, with the problem)."""
+    await access.editable(id)
+    lesson, folder = lessons.get(id), lessons.folder(id)
+    if lesson is None or folder is None:
+        raise AppError("lesson.not_found", 404)
+    card = next((c for c in lesson.cards if c.id == card_id), None)
+    if card is None or not card.figure.strip() or not card.picture.endswith(".svg"):
+        raise AppError("card.not_found", 404)
+    path = folder / "images" / card.picture
+    if not pictures.NAME.match(card.picture) or not path.is_file():
+        raise AppError("photo.not_found", 404)
+    async with usage.metered("picture", id, lesson.deck):
+        problem = await llm.check_figure(settings.current(), card.figure, path.read_text(encoding="utf-8"))
+    return {"ok": not problem, "problem": problem}
 
 
 @router.post("/api/lessons/{id}/cards/{card_id}/picture", status_code=201)

@@ -32,6 +32,7 @@ import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.put
+import kotlinx.serialization.json.boolean
 import kotlinx.serialization.json.int
 import kotlinx.serialization.json.jsonArray
 import kotlinx.serialization.json.jsonObject
@@ -953,6 +954,42 @@ class LocalServerTest {
         }.bodyAsText().lines().filter { it.isNotBlank() }.map { json.parseToJsonElement(it).jsonObject }
         assertEquals(listOf("drawing", "checking", "redrawing"), made.dropLast(1).map { it["step"]!!.jsonObject.string("step") })
         assertTrue(made.last()["result"]!!.jsonObject["card"]!!.jsonObject.string("picture").endsWith(".svg"))
+    }
+
+    @Test
+    fun aFigureCheckedWhenAskedThenDrawnAgainWithItsProblem() = app { client ->
+        relayAnswers("""{"deck": {"deck": "Maths", "cards": [
+            {"front": "Ce triangle ?", "back": "rectangle", "figure": "a right triangle"}]}, "turns": [], "usage": {"credits": 1, "credits_left": 99}}""")
+        val lesson = client.submitFormWithBinaryData("/api/extract", formData { append("prompt", "p") }) { page() }.json().jsonObject
+        val (id, triangle) = lesson.string("id") to lesson["cards"]!!.jsonArray.single().jsonObject.string("id")
+        val asked = mutableListOf<Pair<String, JsonObject>>()
+        relay.dispatcher = object : mockwebserver3.Dispatcher() {
+            override fun dispatch(request: RecordedRequest): MockResponse {
+                val body = json.parseToJsonElement(request.body!!.utf8()).jsonObject
+                asked += request.url.encodedPath to body
+                val answer = when (request.url.encodedPath) {
+                    "/v1/check-figure" -> """{"ok": false, "problem": "The angle is at B.", "usage": {"credits": 1, "credits_left": 90}}"""
+                    else -> {
+                        val svg = Base64.getEncoder().encodeToString("<svg>${asked.size}</svg>".toByteArray())
+                        """{"card": ${body["card"]}, "data": "$svg", "media_type": "image/svg+xml", "usage": {"credits": 3, "credits_left": 90}}"""
+                    }
+                }
+                return MockResponse.Builder().addHeader("Content-Type", "application/json").body(answer).build()
+            }
+        }
+        client.post("/api/lessons/$id/pictures") { page(); contentType(ContentType.Application.Json); setBody("""{"draw": true}""") }
+        // Checked: the figure as drawn sent with its description, nothing changed
+        val checked = client.post("/api/lessons/$id/cards/$triangle/picture/check") { page() }.json().jsonObject
+        assertEquals(false to "The angle is at B.", checked["ok"]!!.jsonPrimitive.boolean to checked.string("problem"))
+        val (path, sent) = asked.last()
+        assertEquals("/v1/check-figure" to "a right triangle", path to sent.string("description"))
+        assertEquals("<svg>1</svg>", sent.string("svg"))
+        // Drawn again, told the problem: the relay redraws it with thinking
+        val drawn = client.post("/api/lessons/$id/cards/$triangle/picture/draw") {
+            page(); contentType(ContentType.Application.Json); setBody("""{"problem": "The angle is at B."}""")
+        }.json().jsonObject
+        assertEquals("The angle is at B.", asked.last().second.string("problem"))
+        assertTrue(drawn["card"]!!.jsonObject.string("picture").endsWith(".svg"))
     }
 
     @Test

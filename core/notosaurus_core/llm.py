@@ -213,43 +213,59 @@ async def _complete_figures(s: AIConfig, images: list[Image], cards: list[Card])
             todo[item.card].figure_kind = item.figure_kind
 
 
-# A light drawing not worth checking: drawn again with the model's thinking
+# A light drawing that can't be used: drawn again with the model's thinking
 _UNUSABLE = {"llm.invalid_answer", "llm.truncated", "llm.empty_answer", "figure.invalid"}
 
 
-async def draw_figure(s: AIConfig, description: str, step: Callable[[dict], Any] | None = None, kind: str = "") -> str:
-    """The SVG of a figure (cleaned, figures.clean), drawn by the cards' AI: in Typst with
-    CeTZ (figures_typst.py: a curve computed from its function, marks from their points,
-    angles by angle-mark), else as SVG (figures.py). Drawn quickly first (light calls), then
-    checked by looking at it (another light call, figures.CHECK_RULES): right, it stays (a
-    few seconds); wrong, drawn again with the model's thinking, told what was wrong.
-    Unchecked (no PNG, the check failing): drawn with thinking when the light one couldn't be
-    seen, else the light one kept. `step`: told each step as it begins (relay_api.PictureStep).
-    `kind`: its family, when the AI that described it said it (Card.figure_kind): not asked again."""
+async def draw_figure(
+    s: AIConfig, description: str, step: Callable[[dict], Any] | None = None, kind: str = "", problem: str = ""
+) -> str:
+    """The SVG of a figure (cleaned, figures.clean), drawn by the cards' AI: in Typst
+    (figures_typst.py: a curve computed from its function, marks from their points, angles
+    by angle-mark), else as SVG (figures.py). Drawn quickly (light calls), not checked: the
+    user checks it when in doubt (check_figure). A light drawing that can't be used: drawn
+    again with the model's thinking. `problem`: what the check found in the last one, told
+    to the AI, drawn with its thinking (the user asked it). `step`: told each step as it
+    begins (relay_api.PictureStep). `kind`: its family, when the AI that described it said it
+    (Card.figure_kind): not asked again."""
     from . import figures
 
     tell = step or (lambda _: None)
     text = f"Figure to draw: {description.strip()}"
-    problem, first = "", ""
-    tell({"step": "drawing"})
     family = await _figure_family(s, description, kind)
+    if problem.strip():
+        tell({"step": "redrawing", "problem": problem.strip()})
+        text += f"\n\nA first drawing had this problem: {problem.strip()} Draw it right."
+        return await _drawn(s, text, description, family, light=False)
+    tell({"step": "drawing"})
     try:
-        svg = await _drawn(s, text, description, family, light=True)
-        png = figures.to_png(svg)
-        if png is not None:
-            tell({"step": "checking"})
-            problem = await _figure_problem(s, description, png)
-            if not problem:
-                return svg
-            first = svg
+        return await _drawn(s, text, description, family, light=True)
     except (ExtractionError, figures.FigureError) as e:
         if e.code not in _UNUSABLE:
             raise
         log.warning("Figure drawn again with thinking: %s", loggable(e))
-    if problem:
-        text += f"\n\nA first drawing had this problem: {problem} Draw it right."
-    tell({"step": "redrawing", "problem": problem, "first": first})
+    tell({"step": "redrawing", "problem": ""})
     return await _drawn(s, text, description, family, light=False)
+
+
+async def check_figure(s: AIConfig, description: str, svg: str) -> str:
+    """What is wrong in a figure, seen as a picture against its description (the user asked
+    it: the "🔍 Check" button); "" when it looks right. figure.invalid: it can't be seen."""
+    from . import figures
+
+    png = figures.to_png(figures.clean(svg))
+    if png is None:
+        raise figures.FigureError("figure.invalid")
+    checked = await _ask_provider(
+        s,
+        [Image(png, "image/png")],
+        f"Description: {description.strip()}",
+        figures.Checked,
+        figures.CHECK_RULES,
+        light=True,
+        demo=lambda: figures.Checked(ok=True, problem=""),
+    )
+    return "" if checked.ok else (checked.problem.strip() or "It doesn't match its description.")
 
 
 async def _figure_family(s: AIConfig, description: str, kind: str = "") -> str:
@@ -301,27 +317,6 @@ async def _drawn(s: AIConfig, text: str, description: str, family: str, light: b
     demo = lambda: demo_ai.figure(description)  # noqa: E731
     drawing = await _ask_provider(s, [], text, figures.Drawing, figures.RULES, light=light, demo=demo)
     return figures.clean(drawing.svg)
-
-
-async def _figure_problem(s: AIConfig, description: str, png: bytes) -> str:
-    """What is wrong in the figure, seen as a picture against its description; "" when
-    right, or when it couldn't be checked (the light drawing kept, rather than a wait)."""
-    from . import figures
-
-    try:
-        checked = await _ask_provider(
-            s,
-            [Image(png, "image/png")],
-            f"Description: {description.strip()}",
-            figures.Checked,
-            figures.CHECK_RULES,
-            light=True,
-            demo=lambda: figures.Checked(ok=True, problem=""),
-        )
-    except ExtractionError as e:
-        log.warning("Figure not checked: %s", loggable(e))
-        return ""
-    return "" if checked.ok else (checked.problem.strip() or "it doesn't match its description.")
 
 
 async def explain_card(

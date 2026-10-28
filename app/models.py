@@ -187,6 +187,13 @@ class FoundPicture(BaseModel):
     id: str = Field(min_length=1, max_length=300)
 
 
+class RedrawRequest(BaseModel):
+    """A card's picture drawn again now ("draw"): for a figure, what its check found wrong
+    (the AI told it, drawing with its thinking); empty: drawn as usual."""
+
+    problem: str = Field(default="", max_length=1000)
+
+
 class PictureRequest(BaseModel):
     """Draw a card's picture again, with what to draw (None: the card's own): its subject,
     or a figure's description."""

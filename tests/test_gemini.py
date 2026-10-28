@@ -4,6 +4,7 @@ import asyncio
 import types as py_types
 from contextlib import suppress
 
+import pytest
 from google.genai import errors, types
 from helpers import run
 
@@ -217,28 +218,20 @@ def _error(monkeypatch, answer: str, call, finish=types.FinishReason.STOP) -> st
 
 
 def test_draw_figure_with_gemini(monkeypatch):
-    """Drawn in a light call, then seen as a PNG and checked in another; right, it stays."""
+    """Drawn in a light call, not checked (the user asks it: check_figure, below)."""
     from notosaurus_core import figures, figures_typst
     from notosaurus_core.calls import recording
 
     monkeypatch.setattr(figures_typst, "available", lambda: False)  # its SVG drawing (Typst: test_figures)
-    # One answer both calls can read: the drawing's "svg", the check's "ok"
-    fake = Recording('{"svg": "<svg viewBox=\\"0 0 400 300\\"/>", "ok": true, "problem": ""}')
+    fake = Recording('{"svg": "<svg viewBox=\\"0 0 400 300\\"/>"}')
     monkeypatch.setattr(gemini, "_gemini_client", lambda s: fake)
     monkeypatch.setattr(gemini, "_NO_MINIMAL_THINKING", set())
     with recording("picture") as calls:
         svg = asyncio.run(llm.draw_figure(LIGHT, "  a right triangle ABC "))
     assert svg.startswith("<svg") and 'viewBox="0 0 400 300"' in svg  # cleaned
-    drawn, checked = fake.calls
+    (drawn,) = fake.calls
     assert _assert_light_request(drawn, Drawing, figures.RULES) == "Figure to draw: a right triangle ABC"
-    _, contents, config = checked
-    assert config.system_instruction == figures.CHECK_RULES
-    assert config.thinking_config.thinking_level == types.ThinkingLevel.MINIMAL  # light too
-    assert config.response_json_schema == figures.Checked.model_json_schema()
-    picture = contents[0]
-    assert picture.inline_data.mime_type == "image/png" and picture.inline_data.data.startswith(b"\x89PNG")
-    assert contents[-1] == "Description: a right triangle ABC"
-    assert len(calls) == 2
+    assert len(calls) == 1
 
     def error(answer, finish=types.FinishReason.STOP):
         """The error, and how many calls: an unusable light drawing is drawn again with thinking."""
@@ -255,6 +248,26 @@ def test_draw_figure_with_gemini(monkeypatch):
     assert error('{"drawing": "<svg/>"}') == ("llm.invalid_answer", 2)
     assert error('{"svg": "<svg', types.FinishReason.MAX_TOKENS) == ("llm.truncated", 2)
     assert error('{"svg": ""}', types.FinishReason.SAFETY) == ("llm.refused", 1)  # refused: not asked again
+
+
+def test_check_figure_with_gemini(monkeypatch):
+    """The figure seen as a PNG, in a light call, against its description."""
+    from notosaurus_core import figures
+
+    fake = Recording('{"ok": false, "problem": " The angle is at B. "}')
+    monkeypatch.setattr(gemini, "_gemini_client", lambda s: fake)
+    monkeypatch.setattr(gemini, "_NO_MINIMAL_THINKING", set())
+    svg = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 300"><rect width="400" height="300"/></svg>'
+    assert asyncio.run(llm.check_figure(LIGHT, " a right triangle ABC ", svg)) == "The angle is at B."
+    (_, contents, config) = fake.calls[0]
+    assert config.system_instruction == figures.CHECK_RULES
+    assert config.thinking_config.thinking_level == types.ThinkingLevel.MINIMAL  # light
+    assert config.response_json_schema == figures.Checked.model_json_schema()
+    picture = contents[0]
+    assert picture.inline_data.mime_type == "image/png" and picture.inline_data.data.startswith(b"\x89PNG")
+    assert contents[-1] == "Description: a right triangle ABC"
+    with pytest.raises(figures.FigureError):  # nothing to look at
+        asyncio.run(llm.check_figure(LIGHT, "a square", "not a figure"))
 
 
 def test_plan_picture_with_gemini(monkeypatch):

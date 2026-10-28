@@ -399,7 +399,13 @@
         "redrawing": "📐 Première version imparfaite : nouveau tracé, plus soigné…",
         "searching": "🔎 Recherche d'une image libre…",
         "drawing": "🎨 Dessin de l'image…"
-      }
+      },
+      "check": "🔍 Vérifier la figure",
+      "checking": "🔍 Vérification…",
+      "checkOk": "✓ La figure semble juste.",
+      "checkProblem": "La vérification signale :",
+      "redraw": "📐 Redessiner avec soin",
+      "keep": "Garder"
     },
     "pairing": {
       "title": "Appareil non autorisé"

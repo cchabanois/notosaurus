@@ -133,6 +133,7 @@ Ces montants sont estimés d'après les tarifs publics des services (OpenRouter 
 exact). Avec une clé Gemini gratuite, rien n'est réellement facturé. Par exemple, la leçon de
 vocabulaire de ces captures a coûté environ 2 centimes de dollar à générer avec Claude Sonnet,
 et autant pour sa correction. Les images coûtent de moins d'un centime à quelques centimes
-chacune ; les figures, d'un demi-centime à un centime et demi (dessinées vite, puis vérifiées
-par l'IA qui les regarde : environ 10 secondes chacune ; une figure fausse est redessinée avec
-la réflexion du modèle, jusqu'à une minute ; le tout pendant que vous relisez les cartes).
+chacune ; les figures, moins d'un centime (dessinées vite, quelques secondes chacune, pendant
+que vous relisez les cartes). Une figure vous semble douteuse : « 🔍 Vérifier la figure », dans
+son panneau d'image, la fait regarder par l'IA ; si elle y voit une erreur, vous choisissez de
+la faire redessiner avec soin, avec la réflexion du modèle (jusqu'à une minute).

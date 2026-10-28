@@ -115,30 +115,17 @@ def test_figures_drawn_shown_and_exported(client, tmp_path):
     assert any(f'<img src="{cards[0]["picture"]}">' in note[2] for note in package.notes)
 
 
-def test_each_cards_steps_told_as_they_begin(client, monkeypatch):
-    """Asked as a stream: each card's steps (drawn, checked; wrong: redrawn, with its first
-    figure), then the answer as without it."""
+def test_each_cards_steps_told_as_they_begin(client):
+    """Asked as a stream: each card's steps (drawn, then its picture ready), then the answer
+    as without it. Not checked: the user asks it (check)."""
     lesson = client.post("/api/extract", data={"prompt": "Le triangle rectangle (géométrie)"}).json()
-    first = lesson["cards"][0]["id"]
-    real = llm._figure_problem
-
-    async def problem(s, description, png):  # the first card's figure found wrong once
-        return (
-            "The arc is on the wrong side."
-            if description == lesson["cards"][0]["figure"]
-            else await real(s, description, png)
-        )
-
-    monkeypatch.setattr(llm, "_figure_problem", problem)
     res = client.post(
         f"/api/lessons/{lesson['id']}/pictures", json={"draw": True}, headers={"Accept": "application/x-ndjson"}
     )
     lines = [json.loads(line) for line in res.text.splitlines()]
     steps = [(line["card"], line["step"]) for line in lines if "step" in line]
-    assert [s for c, s in steps if c == first] == ["drawing", "checking", "redrawing", "ready"]
-    assert [s for c, s in steps if c == lesson["cards"][1]["id"]] == ["drawing", "checking", "ready"]
-    redrawn = next(line for line in lines if line.get("step") == "redrawing")
-    assert redrawn["problem"] == "The arc is on the wrong side." and redrawn["first"].startswith("<svg")
+    for card in lesson["cards"]:
+        assert [s for c, s in steps if c == card["id"]] == ["drawing", "ready"]
     answer = lines[-1]["result"]
     assert answer["failures"] == 0 and all(c["picture"].endswith(".svg") for c in answer["lesson"]["cards"])
 
@@ -157,7 +144,7 @@ def test_redraw_a_figure_from_its_description(client):
             url.replace("/make", f"/{path}"), json=body, headers={"Accept": "application/x-ndjson"}
         ).text.splitlines()
         lines = [json.loads(line) for line in streamed]
-        assert [line["step"]["step"] for line in lines if "step" in line] == ["drawing", "checking"]
+        assert [line["step"]["step"] for line in lines if "step" in line] == ["drawing"]
         assert lines[-1]["result"]["card"]["picture"].endswith(".svg")
     # No picture any more: a text card again
     gone = client.delete(f"/api/lessons/{lesson['id']}/cards/{card['id']}/picture").json()["card"]
@@ -263,50 +250,75 @@ SQUARE = (
 )
 
 
-def drawing_with(monkeypatch, light_svg=SQUARE, checked=None, check_fails=None):
-    """draw_figure with a fake AI: the light drawing `light_svg`, the check's answer
-    `checked` (ok, problem) or its error; the calls made, in order."""
+def drawing_with(monkeypatch, light_svg=SQUARE, problem=""):
+    """draw_figure with a fake AI: the light drawing `light_svg` (with thinking: B), what a
+    check found (`problem`); the calls made, in order."""
     calls = []
 
     async def answer(s, images, text, schema, system=None, light=False, **options):
         calls.append({"schema": schema.__name__, "light": light, "text": text, "images": len(images)})
-        if schema is figures.Checked:
-            if check_fails:
-                raise llm.ExtractionError(check_fails)
-            ok, problem = checked or (True, "")
-            return schema(ok=ok, problem=problem)
         return schema(svg=light_svg if light else SQUARE.replace(">A<", ">B<"))
 
     monkeypatch.setattr(llm, "_ask_provider", answer)
     monkeypatch.setattr(figures_typst, "available", lambda: False)  # the circuit, as SVG (Typst: below)
-    svg = asyncio.run(llm.draw_figure(AIConfig(llm="gemini"), "un triangle ABC"))
+    svg = asyncio.run(llm.draw_figure(AIConfig(llm="gemini"), "un triangle ABC", problem=problem))
     return svg, calls
 
 
-def test_a_figure_right_at_once_stays_light(monkeypatch):
-    """Drawn quickly, seen as a picture and checked: right, it's the one (no thinking)."""
+def test_a_figure_drawn_light_and_not_checked(monkeypatch):
+    """Drawn quickly, one call: not checked (the user asks it, check_figure)."""
     svg, calls = drawing_with(monkeypatch)
     assert ">A<" in svg and svg.startswith("<svg") and 'width="400"' in svg  # cleaned
-    assert [(c["schema"], c["light"], c["images"]) for c in calls] == [("Drawing", True, 0), ("Checked", True, 1)]
+    assert [(c["schema"], c["light"], c["images"]) for c in calls] == [("Drawing", True, 0)]
 
 
-def test_a_wrong_figure_drawn_again_with_thinking_told_why(monkeypatch):
-    svg, calls = drawing_with(monkeypatch, checked=(False, "The arc is on the wrong side of the line."))
-    assert ">B<" in svg
-    assert [(c["schema"], c["light"]) for c in calls] == [("Drawing", True), ("Checked", True), ("Drawing", False)]
+def test_a_figure_found_wrong_drawn_again_with_thinking_told_why(monkeypatch):
+    svg, calls = drawing_with(monkeypatch, problem="The arc is on the wrong side of the line.")
+    assert ">B<" in svg and [(c["schema"], c["light"]) for c in calls] == [("Drawing", False)]
     assert "The arc is on the wrong side of the line." in calls[-1]["text"]
 
 
-def test_an_unchecked_figure_kept_an_unusable_one_redrawn(monkeypatch):
-    # The check failing (no quota…): the light drawing kept rather than a wait
-    svg, calls = drawing_with(monkeypatch, check_fails="llm.gemini_quota")
-    assert ">A<" in svg and len(calls) == 2
-    # Not SVG at all, or nothing to look at: drawn with thinking, not checked
+def test_an_unusable_light_figure_drawn_again_with_thinking(monkeypatch):
     svg, calls = drawing_with(monkeypatch, light_svg="no figure")
     assert ">B<" in svg and [c["light"] for c in calls] == [True, False]
-    monkeypatch.setattr(figures, "to_png", lambda svg: None)  # resvg missing
-    svg, calls = drawing_with(monkeypatch)
-    assert ">B<" in svg and [c["light"] for c in calls] == [True, False]
+
+
+def test_a_figure_checked_when_asked(client, monkeypatch):
+    """ "🔍 Check": what the AI sees wrong said, nothing changed; drawn again with the problem
+    when the user says so, with the model's thinking."""
+    lesson = client.post("/api/extract", data={"prompt": "géométrie"}).json()
+    lesson = client.post(f"/api/lessons/{lesson['id']}/pictures", json={"draw": True}).json()["lesson"]
+    card = lesson["cards"][0]
+    url = f"/api/lessons/{lesson['id']}/cards/{card['id']}/picture"
+    assert client.post(f"{url}/check").json() == {"ok": True, "problem": ""}  # the demo AI: right
+    seen = []
+
+    async def check(s, description, svg):
+        seen.append((description, svg[:4]))
+        return "The angle is at B."
+
+    monkeypatch.setattr(llm, "check_figure", check)
+    assert client.post(f"{url}/check").json() == {"ok": False, "problem": "The angle is at B."}
+    assert seen == [(card["figure"], "<svg")]
+    asked = []
+    real = llm.draw_figure
+
+    async def draw(s, description, step=None, kind="", problem=""):
+        asked.append(problem)
+        return await real(s, description, step, kind, problem)
+
+    monkeypatch.setattr(llm, "draw_figure", draw)
+    streamed = client.post(
+        f"{url}/draw", json={"problem": "The angle is at B."}, headers={"Accept": "application/x-ndjson"}
+    )
+    lines = [json.loads(line) for line in streamed.text.splitlines()]
+    assert [line["step"] for line in lines if "step" in line] == [
+        {"step": "redrawing", "problem": "The angle is at B."}
+    ]
+    assert asked == ["The angle is at B."] and lines[-1]["result"]["card"]["picture"].endswith(".svg")
+    # A card without a figure: nothing to check
+    other = client.post("/api/extract", data={"prompt": "FR → ES"}).json()
+    assert client.post(f"/api/lessons/{other['id']}/cards/{other['cards'][0]['id']}/picture/check").status_code == 404
 
 
 def test_the_check_sees_the_figure_with_its_text():
@@ -333,15 +345,13 @@ TRIANGLE = """#ctz-canvas({
 })"""
 
 
-def typst_drawing(monkeypatch, bodies, checked=(True, ""), kind=""):
+def typst_drawing(monkeypatch, bodies, kind="", problem=""):
     """draw_figure with a fake AI writing the Typst `bodies` in turn (then, asked for SVG,
     SQUARE), its `kind` given or not; the calls made, in order."""
     calls, written = [], iter(bodies)
 
     async def answer(s, images, text, schema, system=None, light=False, **options):
         calls.append({"schema": schema.__name__, "light": light, "text": text})
-        if schema is figures.Checked:
-            return schema(ok=checked[0], problem=checked[1])
         if schema is figures_typst.Kind:
             return schema(family="geometry")
         if schema is figures_typst.Figure:
@@ -349,7 +359,8 @@ def typst_drawing(monkeypatch, bodies, checked=(True, ""), kind=""):
         return schema(svg=SQUARE)
 
     monkeypatch.setattr(llm, "_ask_provider", answer)
-    svg = asyncio.run(llm.draw_figure(AIConfig(llm="gemini"), "un triangle ABC, l'angle en A marqué", kind=kind))
+    description = "un triangle ABC, l'angle en A marqué"
+    svg = asyncio.run(llm.draw_figure(AIConfig(llm="gemini"), description, kind=kind, problem=problem))
     return svg, calls
 
 
@@ -365,11 +376,11 @@ def test_a_figure_drawn_in_typst_compiled_offline():
 def test_typst_asked_again_with_its_error_then_used(monkeypatch):
     svg, calls = typst_drawing(monkeypatch, ["#ctz-canvas({ ctz-init(", TRIANGLE])
     assert "<use" in svg  # Typst's, its letter
-    assert [c["schema"] for c in calls] == ["Kind", "Figure", "Figure", "Checked"]
+    assert [c["schema"] for c in calls] == ["Kind", "Figure", "Figure"]
     assert "Typst said:" in calls[2]["text"] and "ctz-init(" in calls[2]["text"]
     # Refused twice (an import, then unclosed): the SVG drawing, as before
     svg, calls = typst_drawing(monkeypatch, ['#import "@preview/other:1.0.0"', "#ctz-canvas({"])
-    assert ">A<" in svg and [c["schema"] for c in calls] == ["Kind", "Figure", "Figure", "Drawing", "Checked"]
+    assert ">A<" in svg and [c["schema"] for c in calls] == ["Kind", "Figure", "Figure", "Drawing"]
     assert "no import" in calls[2]["text"]
 
 
@@ -377,19 +388,14 @@ def test_a_figures_kind_given_is_not_asked_again(monkeypatch):
     """Its kind said with its description (Card.figure_kind): one call fewer. Not one of
     the families (an old or a wrong one): asked."""
     _, calls = typst_drawing(monkeypatch, [TRIANGLE], kind="geometry")
-    assert [c["schema"] for c in calls] == ["Figure", "Checked"]
+    assert [c["schema"] for c in calls] == ["Figure"]
     _, calls = typst_drawing(monkeypatch, [TRIANGLE], kind="a map")
-    assert [c["schema"] for c in calls] == ["Kind", "Figure", "Checked"]
+    assert [c["schema"] for c in calls] == ["Kind", "Figure"]
 
 
 def test_a_typst_figure_found_wrong_drawn_again_with_thinking(monkeypatch):
-    _, calls = typst_drawing(monkeypatch, [TRIANGLE, TRIANGLE], checked=(False, "The angle is at B."))
-    assert [(c["schema"], c["light"]) for c in calls] == [
-        ("Kind", True),
-        ("Figure", True),
-        ("Checked", True),
-        ("Figure", False),
-    ]
+    _, calls = typst_drawing(monkeypatch, [TRIANGLE], problem="The angle is at B.")
+    assert [(c["schema"], c["light"]) for c in calls] == [("Kind", True), ("Figure", False)]
     assert "The angle is at B." in calls[-1]["text"]
 
 
@@ -466,10 +472,8 @@ def test_a_figure_of_no_family_drawn_as_svg(monkeypatch):
         calls.append(schema.__name__)
         if schema is figures_typst.Kind:
             return schema(family="other")
-        if schema is figures.Checked:
-            return schema(ok=True, problem="")
         return schema(svg=SQUARE)
 
     monkeypatch.setattr(llm, "_ask_provider", answer)
     svg = asyncio.run(llm.draw_figure(AIConfig(llm="gemini"), "un tableau de valeurs"))
-    assert ">A<" in svg and calls == ["Kind", "Drawing", "Checked"]
+    assert ">A<" in svg and calls == ["Kind", "Drawing"]

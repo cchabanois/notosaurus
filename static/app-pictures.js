@@ -17,6 +17,7 @@ const picturesPart = {
   async pictureAction(card, request) {
     if (this.saveTimer) await this.saveNow();  // the server must know the card
     card._drawing = true;
+    card._check = null;  // about the picture it had
     this.pictureJobs++;
     this.error = "";
     try {
@@ -73,6 +74,38 @@ const picturesPart = {
   async drawPicture(card) {
     card._ask = false;
     await this.pictureAction(card, { path: "/draw", method: "POST" });
+  },
+
+  // "🔍 Check": the figure looked at by the AI against its description, on demand (never on
+  // its own: a figure is drawn at once); something wrong, the user decides to draw it again
+  async checkFigure(card) {
+    Object.assign(card, { _check: null, _checking: true });
+    this.error = "";
+    try {
+      const res = await api(`/api/lessons/${this.lessonId}/cards/${card.id}/picture/check`, { method: "POST" });
+      card._check = await res.json();
+    } catch (e) {
+      this.error = e.message;
+    } finally {
+      card._checking = false;
+    }
+  },
+
+  // Drawn again with the model's thinking, told what the check found; the figure it replaces
+  // shown faded meanwhile
+  async redrawFigure(card) {
+    const problem = card._check?.problem ?? "";
+    Object.assign(card, { _check: null, _replacing: this.pictureUrl(card) });
+    try {
+      await this.pictureAction(card, {
+        path: "/draw",
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ problem }),
+      });
+    } finally {
+      card._replacing = "";
+    }
   },
 
   // What a picture drawn by the image model costs, about (for `count` of them): "" when unknown
@@ -232,8 +265,10 @@ const picturesPart = {
     return card.figure ? 10 : 15;
   },
 
-  // The first figure, found wrong, shown faded while it's drawn again (never kept)
+  // The figure found wrong, shown faded while it's drawn again (never kept): the one being
+  // replaced (redrawFigure), or a first one the server sent
   firstFigureUrl(card) {
+    if (card._replacing) return card._replacing;
     return card._first ? `data:image/svg+xml;charset=utf-8,${encodeURIComponent(card._first)}` : "";
   },
 };

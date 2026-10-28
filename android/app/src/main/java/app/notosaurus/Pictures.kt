@@ -87,11 +87,29 @@ class Pictures(
     }
 
     /** Card `i`'s picture drawn by the image model, now: the user said yes (no free one fit). A
-     * figure: drawn again. {"card", "lesson"}. */
-    suspend fun draw(lesson: JsonObject, i: Int, step: Step = {}): JsonObject {
+     * figure: drawn again, with the model's thinking, told what its check found (`problem`)
+     * when there is one. {"card", "lesson"}. */
+    suspend fun draw(lesson: JsonObject, i: Int, problem: String = "", step: Step = {}): JsonObject {
         val cards = lesson.cards()
-        cards[i] = drawn(lesson.string("id"), cards[i], fresh = true, draw = true, find = false, onStep = step)
+        cards[i] = drawn(lesson.string("id"), cards[i], fresh = true, draw = true, find = false, problem = problem, onStep = step)
         return answer(lesson, cards, i)
+    }
+
+    /** "🔍 Check": card `i`'s figure looked at by the relay's AI against its description
+     * (/v1/check-figure), nothing changed. {"ok", "problem"}. */
+    suspend fun check(lesson: JsonObject, i: Int): JsonObject {
+        val card = lesson.cards()[i]
+        val figure = card.string("figure")
+        val svg = file(lesson.string("id"), card.string("picture"))?.takeIf { figure.isNotBlank() && it.extension == "svg" }
+            ?: throw BadRequest("card.not_found")
+        val checked = relay().post("check-figure", buildJsonObject {
+            put("description", figure)
+            put("svg", svg.readText())
+        })
+        return buildJsonObject {
+            put("ok", checked["ok"]!!)
+            put("problem", checked["problem"]!!)
+        }
     }
 
     /** The user's own photo as card `i`'s picture, made card size (512 px, as the computer's). */
@@ -128,6 +146,7 @@ class Pictures(
         language: String = "English",
         draw: Boolean = true,
         find: Boolean = true,
+        problem: String = "",
         onStep: Step = {},
     ): JsonObject {
         val made = relay().cardPicture(buildJsonObject {
@@ -137,6 +156,7 @@ class Pictures(
             put("fresh", fresh)
             put("find", find) // a free picture found first for a real thing
             put("draw", draw) // else picture.needs_drawing: the image model costs, the user is asked
+            put("problem", problem) // its figure's, the check found it: drawn again with thinking
         }, onStep)
         val decided = made["card"]!!.jsonObject
         val extension = if (made.string("media_type") == "image/svg+xml") "svg" else "jpg"

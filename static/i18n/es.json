@@ -399,7 +399,13 @@
         "redrawing": "📐 Primera versión imperfecta: nuevo trazado, más cuidado…",
         "searching": "🔎 Buscando una imagen libre…",
         "drawing": "🎨 Dibujando la imagen…"
-      }
+      },
+      "check": "🔍 Comprobar la figura",
+      "checking": "🔍 Comprobando…",
+      "checkOk": "✓ La figura parece correcta.",
+      "checkProblem": "La comprobación indica:",
+      "redraw": "📐 Volver a dibujarla con cuidado",
+      "keep": "Conservarla"
     },
     "pairing": {
       "title": "Dispositivo no autorizado"

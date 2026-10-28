@@ -356,6 +356,30 @@ def test_a_picture_shown_as_soon_as_ready(page, monkeypatch):
     sync_api.expect(second.locator(".card-picture.figure img:not(.first):visible")).to_be_visible()
 
 
+def test_a_figure_checked_on_demand_then_redrawn(page, monkeypatch):
+    """ "🔍 Vérifier la figure" in its panel: what the AI sees wrong, then drawn again with
+    care when asked; "Garder" keeps it."""
+    from notosaurus_core import llm
+
+    async def check(s, description, svg):
+        return "L'angle est en B."
+
+    monkeypatch.setattr(llm, "check_figure", check)
+    generate_free(page, "Le triangle rectangle (géométrie)")
+    card = page.locator(".flash").first
+    sync_api.expect(card.locator(".card-picture.figure img:not(.first):visible")).to_be_visible()
+    card.get_by_role("button", name="Image", exact=False).first.click()
+    card.get_by_role("button", name="🔍 Vérifier la figure").click()
+    found = card.locator(".figure-check")
+    sync_api.expect(found).to_contain_text("La vérification signale : L'angle est en B.")
+    found.get_by_role("button", name="Garder").click()
+    sync_api.expect(found).to_be_hidden()
+    card.get_by_role("button", name="🔍 Vérifier la figure").click()
+    found.get_by_role("button", name="📐 Redessiner avec soin").click()
+    sync_api.expect(found).to_be_hidden()
+    sync_api.expect(card.locator(".card-picture.figure img:not(.first):visible")).to_be_visible()
+
+
 def test_while_waiting_what_the_ai_is_at(page, monkeypatch):
     """The waiting card says what the AI is at: slow to answer, another model asked; then the
     cards counted as they come."""
