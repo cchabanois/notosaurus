@@ -864,7 +864,7 @@ html.sheet-open { overflow: hidden; overscroll-behavior: none; }
   background: #b3261e; border: 2px solid #fff; border-radius: 50%; box-shadow: 0 0 0 1px #b3261e;
 }
 .diagram .handle::after { content: ""; position: absolute; inset: -10px; }  /* a bigger target for fingers */
-.card-picture { flex: 1 0 100%; display: flex; justify-content: center; margin-bottom: .5rem; }
+.card-picture { flex: 1 0 100%; display: flex; flex-wrap: wrap; justify-content: center; margin-bottom: .5rem; }
 .card-picture img { width: 160px; height: 160px; object-fit: contain; border-radius: var(--radius-sm); background: #fff; }
 .card-picture .drawing { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: .3rem;
   width: 160px; height: 160px; border-radius: var(--radius-sm); background: var(--surface-2); color: var(--muted); font-size: .85rem; }
@@ -890,9 +890,12 @@ html.sheet-open { overflow: hidden; overscroll-behavior: none; }
 .picture-panel .field { margin-bottom: .5rem; }
 .picture-actions { display: flex; flex-wrap: wrap; gap: .4rem; margin-bottom: .3rem; }
 .picture-actions .btn { padding: .45rem .8rem; font-size: .9rem; }
-/* What a figure's check found (the "🔍" button): right, or what is wrong and the choice */
-.figure-check { margin: .2rem 0 .4rem; font-size: .9rem; }
+/* A figure's check, on it (the "🔍" button beside it): right, or what is wrong and the choice */
+.card-picture .figure-check-btn { align-self: flex-end; margin-left: .2rem; }
+.card-picture .figure-check-btn.checking { animation: pulse 1.4s ease-in-out infinite; }
+.figure-check { flex: 1 0 100%; margin: .4rem 0 0; font-size: .9rem; text-align: center; }
 .figure-check p { margin: 0 0 .35rem; }
+.figure-check .picture-actions { justify-content: center; }
 .found { margin-top: .6rem; }
 .picture-source { margin: 0 0 .5rem; color: var(--muted); font-size: .85rem; }
 .picture-source a { margin-left: .35rem; color: var(--primary); font-weight: 700; }

@@ -218,14 +218,21 @@ _UNUSABLE = {"llm.invalid_answer", "llm.truncated", "llm.empty_answer", "figure.
 
 
 async def draw_figure(
-    s: AIConfig, description: str, step: Callable[[dict], Any] | None = None, kind: str = "", problem: str = ""
+    s: AIConfig,
+    description: str,
+    step: Callable[[dict], Any] | None = None,
+    kind: str = "",
+    problem: str = "",
+    careful: bool = False,
 ) -> str:
     """The SVG of a figure (cleaned, figures.clean), drawn by the cards' AI: in Typst
     (figures_typst.py: a curve computed from its function, marks from their points, angles
     by angle-mark), else as SVG (figures.py). Drawn quickly (light calls), not checked: the
     user checks it when in doubt (check_figure). A light drawing that can't be used: drawn
     again with the model's thinking. `problem`: what the check found in the last one, told
-    to the AI, drawn with its thinking (the user asked it). `step`: told each step as it
+    to the AI: drawn quickly again (told the problem, it mostly gets it right: 9 times in 12,
+    10 with thinking, four times slower), with the model's thinking when `careful` (the user
+    asks it again after a quick one still wrong). `step`: told each step as it
     begins (relay_api.PictureStep). `kind`: its family, when the AI that described it said it
     (Card.figure_kind): not asked again."""
     from . import figures
@@ -234,9 +241,10 @@ async def draw_figure(
     text = f"Figure to draw: {description.strip()}"
     family = await _figure_family(s, description, kind)
     if problem.strip():
-        tell({"step": "redrawing", "problem": problem.strip()})
         text += f"\n\nA first drawing had this problem: {problem.strip()} Draw it right."
-        return await _drawn(s, text, description, family, light=False)
+        if careful:
+            tell({"step": "redrawing", "problem": problem.strip()})
+            return await _drawn(s, text, description, family, light=False)
     tell({"step": "drawing"})
     try:
         return await _drawn(s, text, description, family, light=True)

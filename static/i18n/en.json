@@ -404,7 +404,8 @@
       "checking": "🔍 Checking…",
       "checkOk": "✓ The figure looks right.",
       "checkProblem": "The check found:",
-      "redraw": "📐 Redraw it carefully",
+      "redraw": "📐 Redraw it",
+      "redrawCareful": "📐 Redraw it carefully",
       "keep": "Keep it"
     },
     "pairing": {
