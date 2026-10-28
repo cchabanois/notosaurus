@@ -360,3 +360,34 @@ def test_a_drawing_that_is_no_image(monkeypatch, tmp_path):
     failed, first, _ = run(pictures.draw_all(AIConfig(picture_find=False), tmp_path / "images", cards, draw=True))
     assert (failed, first) == (1, {"code": "picture.empty", "params": {}})
     assert [bool(c.picture) for c in cards] == [False, True]
+
+
+def test_each_picture_told_as_soon_as_drawn(monkeypatch, tmp_path):
+    """A card's picture told the moment it has it ("ready", with its fields), not when the
+    slower ones are done: the page shows it at once."""
+    import asyncio
+
+    monkeypatch.setattr(files, "_cache_root", lambda: tmp_path / "cache")
+    slow = asyncio.Event()
+    told = []
+
+    async def draw(s, subject):
+        if subject == "a dog":
+            await slow.wait()
+        return PNG
+
+    def step(said):
+        told.append(said)
+        if said["step"] == "ready" and said["card"] == "c":
+            slow.set()  # the dog waits for the cat: its picture told first
+
+    monkeypatch.setattr(pictures, "draw", draw)
+    cards = [
+        Card(front="Q", back="a dog", picture_prompt="a dog", id="d"),
+        Card(front="Q", back="a cat", picture_prompt="a cat", id="c"),
+    ]
+    run(pictures.draw_all(AIConfig(picture_find=False), tmp_path / "images", cards, draw=True, step=step))
+    ready = [said for said in told if said["step"] == "ready"]
+    assert [said["card"] for said in ready] == ["c", "d"]
+    assert ready[0]["picture"] == cards[1].picture and ready[0]["picture_prompt"] == "a cat"
+    assert set(ready[0]) == {"card", "step"} | pictures.READY

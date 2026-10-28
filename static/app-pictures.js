@@ -198,7 +198,17 @@ const picturesPart = {
       if (item.result) return item.result;
       if (item.error) throw itemError(item.error);
       const card = this.lessonId === lessonId && item.step && this.cards.find((c) => c.id === item.card);
-      if (card) Object.assign(card, { _step: item.step, _problem: item.problem ?? "", _first: item.first ?? "" });
+      if (!card) continue;
+      if (item.step === "ready") {  // its picture, shown at once: not when the others are done
+        if (!card.picture) {
+          Object.assign(card, {
+            picture: item.picture, picture_source: item.picture_source ?? null, figure: item.figure ?? card.figure,
+            figure_kind: item.figure_kind ?? card.figure_kind ?? "",
+            picture_prompt: item.picture_prompt ?? card.picture_prompt, picture_search: item.picture_search ?? card.picture_search,
+          });
+        }
+        Object.assign(card, { _step: "", _problem: "", _first: "" });
+      } else Object.assign(card, { _step: item.step, _problem: item.problem ?? "", _first: item.first ?? "" });
     }
     throw new Error(t("errors.unreachable"));
   },

@@ -135,8 +135,8 @@ def test_each_cards_steps_told_as_they_begin(client, monkeypatch):
     )
     lines = [json.loads(line) for line in res.text.splitlines()]
     steps = [(line["card"], line["step"]) for line in lines if "step" in line]
-    assert [s for c, s in steps if c == first] == ["drawing", "checking", "redrawing"]
-    assert [s for c, s in steps if c == lesson["cards"][1]["id"]] == ["drawing", "checking"]
+    assert [s for c, s in steps if c == first] == ["drawing", "checking", "redrawing", "ready"]
+    assert [s for c, s in steps if c == lesson["cards"][1]["id"]] == ["drawing", "checking", "ready"]
     redrawn = next(line for line in lines if line.get("step") == "redrawing")
     assert redrawn["problem"] == "The arc is on the wrong side." and redrawn["first"].startswith("<svg")
     answer = lines[-1]["result"]

@@ -28,7 +28,8 @@ class Pictures(
      * free one fits drawn by the image model only when `draw` (the user said yes), else in
      * "to_draw". {"lesson", "failures", "error", "to_draw"}. A card without its picture is
      * still a card: counted, not fatal. `step`: each card's steps as they begin, {"card": its
-     * id, "step"…} (what the page shows on it meanwhile, as the computer's). */
+     * id, "step"…} (what the page shows on it meanwhile, as the computer's), then {"card", "step":
+     * "ready", its picture's fields (READY)} as soon as it has it. */
     suspend fun drawMissing(lesson: JsonObject, draw: Boolean = false, step: Step = {}): JsonObject {
         val id = lesson.string("id")
         val cards = lesson.cards()
@@ -44,6 +45,9 @@ class Pictures(
                             cards[i] = drawn(id, cards[i], fresh = false, draw = draw, find = !draw) {
                                 step(JsonObject(mapOf("card" to JsonPrimitive(card)) + it))
                             }
+                            // Shown at once, not when the others are done
+                            val ready = READY.mapNotNull { field -> cards[i][field]?.let { field to it } }
+                            step(JsonObject(mapOf("card" to JsonPrimitive(card), "step" to JsonPrimitive("ready")) + ready))
                         } catch (e: RelayException) {
                             if (e.code == NEEDS_DRAWING) toDraw += cards[i].string("id")
                             else failures += buildJsonObject { put("code", e.code); put("params", e.params) }
@@ -174,6 +178,8 @@ class Pictures(
         private val PHOTO = buildJsonObject { put("source", "photo") }
         // What the relay decides of a card's picture (Card's fields): taken into the card
         private val PICTURE_FIELDS = listOf("figure", "figure_kind", "picture_prompt", "picture_search", "picture_source")
+        // A card's picture fields, told with "ready" (drawMissing) the moment it has them (core's pictures.READY)
+        private val READY = PICTURE_FIELDS + "picture"
         private val CLOZE = Regex("""\{\{c\d+::""") // a gap, as core/notosaurus_core/cards.py
         private val NAME = Regex("""^picture-[a-z0-9]+-[a-f0-9]{8}\.(jpg|svg)$""") // the files we write
     }
