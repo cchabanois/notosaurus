@@ -937,11 +937,14 @@ class LocalServerTest {
         }
         val lines = response.bodyAsText().lines().filter { it.isNotBlank() }.map { json.parseToJsonElement(it).jsonObject }
         val steps = lines.filter { "step" in it }
-        assertEquals(listOf("drawing", "checking", "redrawing"), steps.map { it.string("step") })
+        assertEquals(listOf("drawing", "checking", "redrawing", "ready"), steps.map { it.string("step") })
         assertTrue(steps.all { it.string("card") == triangle })
-        assertEquals("Off its segment." to "<svg>1</svg>", steps.last().string("problem") to steps.last().string("first"))
+        val redrawing = steps[2]
+        assertEquals("Off its segment." to "<svg>1</svg>", redrawing.string("problem") to redrawing.string("first"))
         val drawn = lines.last()["result"]!!.jsonObject["lesson"]!!.jsonObject["cards"]!!.jsonArray.single().jsonObject
         assertTrue(drawn.string("picture").endsWith(".svg"))
+        // Its picture told the moment it has it, not when the others are done
+        assertEquals(drawn.string("picture"), steps.last().string("picture"))
 
         // "✨ Image" on that card, asked as it goes: its steps nested ({"step": {…}}), then the answer
         val made = client.post("/api/lessons/$id/cards/$triangle/picture/make") {

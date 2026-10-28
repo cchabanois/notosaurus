@@ -422,12 +422,17 @@ class Drawn(NamedTuple):
     to_draw: list[str]  # the cards whose picture no free one fits: drawn only if the user says yes
 
 
+# A card's picture fields, told with "ready" (draw_all) the moment it has them
+READY = {"picture", "picture_source", "figure", "picture_prompt", "picture_search"}
+
+
 async def draw_all(s: AIConfig, folder: Path, cards: list[Card], draw: bool = False, step: Step | None = None) -> Drawn:
     """The missing pictures (cards with a picture_prompt or a figure, and no picture), a few
     at a time: figures drawn, free pictures found; a picture none fits drawn by the image
     model only if `draw` (it costs: the user said yes), else its card in to_draw. A card
     without its picture is still a card. `step`: told each card's steps as they begin,
-    {"card": its id, …relay_api.PictureStep's fields}."""
+    {"card": its id, …relay_api.PictureStep's fields}, then {"card", "step": "ready", its
+    picture's fields (READY)} as soon as it has it."""
     # Not on a sentence with gaps: Anki shows no picture on it (not paid for, then)
     todo = [
         c for c in cards if (c.picture_prompt.strip() or c.figure.strip()) and not c.picture and not is_cloze(c.front)
@@ -444,6 +449,8 @@ async def draw_all(s: AIConfig, folder: Path, cards: list[Card], draw: bool = Fa
                     tell = step  # (bound here: pyright sees it set)
                     told = lambda said, card=card: tell({"card": card.id, **said})  # noqa: E731
                 card.picture = await figure_or_picture(s, folder, card, draw=draw, find=not draw, step=told)
+                if told is not None:  # shown at once, not when the others are done
+                    told({"step": "ready", **card.model_dump(mode="json", include=READY)})
             except AppError as e:
                 if e.code == "picture.needs_drawing":
                     to_draw.append(card.id)
