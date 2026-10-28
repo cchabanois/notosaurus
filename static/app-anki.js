@@ -133,6 +133,7 @@ const ankiPart = {
       }));
       this.lastSaved = this.snapshot();  // sending also saves the lesson
       this.lessonExported = true;
+      this.sentKey = this.ankiKey();
       clearTimeout(this.saveTimer);
       this.saveTimer = null;
       this.saveState = "saved";
@@ -296,6 +297,7 @@ const ankiPart = {
       });
       this.lastSaved = this.snapshot();  // exporting also saves the lesson
       this.lessonExported = true;
+      this.sentKey = this.ankiKey();
       clearTimeout(this.saveTimer);
       this.saveTimer = null;
       this.saveState = "saved";

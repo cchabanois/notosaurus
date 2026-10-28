@@ -1346,7 +1346,7 @@ def test_send_waits_for_the_figures_and_says_so(page, anki):
     )
     for route in held:
         route.continue_()
-    sync_api.expect(page.get_by_role("button", name="🔄 Mettre à jour dans Anki")).to_be_visible()
+    sync_api.expect(page.get_by_role("button", name="✓ À jour dans Anki")).to_be_visible()
     (summary,) = lessons(page)
     assert all(c["picture"].endswith(".svg") for c in lesson(page, summary["id"])["cards"])
 
@@ -1368,8 +1368,8 @@ def test_review_in_ankidroid_once_sent(page, anki):
     sync_api.expect(review).to_be_hidden()  # not sent yet
     page.get_by_role("button", name="📥 Ajouter à Anki").click()
     sync_api.expect(page.locator(".toast.ok").get_by_role("button", name="📚 Réviser")).to_be_visible()
-    # Sent: sending again updates its cards
-    sync_api.expect(page.get_by_role("button", name="🔄 Mettre à jour dans Anki")).to_be_visible()
+    # Sent: up to date in Anki (sending again stays possible)
+    sync_api.expect(page.get_by_role("button", name="✓ À jour dans Anki")).to_be_visible()
     review.click()
     sync_api.expect(page.locator(".toast.ok")).to_be_hidden()
     assert [a["deck"] for a in asked] == [page.locator(".field.deck input").input_value()]
@@ -1380,8 +1380,8 @@ def test_cards_left_over_in_anki_deleted_when_asked(page, anki):
     text, and deletes it only on "Delete from Anki"."""
     generate_free(page, FRONT_PROMPT)
     page.get_by_role("button", name="📥 Ajouter à Anki").click()
+    sync_api.expect(page.get_by_role("button", name="✓ À jour dans Anki")).to_be_visible()
     update = page.get_by_role("button", name="🔄 Mettre à jour dans Anki")
-    sync_api.expect(update).to_be_visible()
     notes = len(anki.notes)
     first = page.locator(".flash").first
     gone = first.locator("textarea").first.input_value()
@@ -1394,6 +1394,40 @@ def test_cards_left_over_in_anki_deleted_when_asked(page, anki):
     sheet.get_by_role("button", name="Supprimer d'Anki").click()
     sync_api.expect(sheet).to_be_hidden()
     assert len(anki.notes) == notes - 1
+
+
+def test_up_to_date_in_anki_until_it_changes(page, anki):
+    """Sent: "Up to date in Anki" (sending again stays possible), until a card changes:
+    "Update in Anki", sent again up to date; reopened unchanged, still up to date."""
+    generate_free(page, FRONT_PROMPT)
+    page.get_by_role("button", name="📥 Ajouter à Anki").click()
+    up_to_date = page.get_by_role("button", name="✓ À jour dans Anki")
+    sync_api.expect(up_to_date).to_be_visible()
+    sync_api.expect(up_to_date).to_have_class(re.compile(r"\bsoft\b"))
+    notes = len(anki.notes)
+    up_to_date.click()  # sent again all the same: no card added
+    sync_api.expect(up_to_date).to_be_visible()
+    assert len(anki.notes) == notes
+
+    page.locator(".flash textarea").first.fill("la abuela")
+    update = page.get_by_role("button", name="🔄 Mettre à jour dans Anki")
+    sync_api.expect(update).to_be_visible()
+    sync_api.expect(update).to_have_class(re.compile(r"\bprimary\b"))
+    page.locator(".flash textarea").first.press("Tab")
+    sync_api.expect(page.locator(".save-pill")).to_have_class(SAVED)  # saved: changed since it was sent
+    reopen(page)
+    sync_api.expect(update).to_be_visible()  # reopened: still to send
+    update.click()
+    sync_api.expect(up_to_date).to_be_visible()
+    reopen(page)
+    sync_api.expect(up_to_date).to_be_visible()  # reopened unchanged since
+
+
+def reopen(page) -> None:
+    """The page loaded again, its lesson opened from the list."""
+    page.reload()
+    page.get_by_role("button", name="Leçons").click()
+    page.locator(".lesson-list .lesson").first.click()
 
 
 def test_the_apps_welcome_accepted_once(page):

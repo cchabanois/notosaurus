@@ -240,6 +240,7 @@ const examsPart = {
         await api("/api/anki/send", { method: "POST", headers: JSON_BODY, body: JSON.stringify(body) });
         if (open) {
           this.lessonExported = true;
+          this.sentKey = this.ankiKey();
           this.lastSaved = this.snapshot();  // sending also saves the lesson
         }
         sheet.sendingLeft--;
