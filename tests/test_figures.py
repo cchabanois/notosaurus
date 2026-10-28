@@ -446,6 +446,18 @@ def test_each_familys_sheet_example_compiles(family):
     assert svg.startswith("<svg")
 
 
+def test_the_graph_sheets_own_fragments_compile():
+    """What the graph sheet shows besides its example (the axis's ticks, points, a line)
+    compiles too, in that example: a fragment out of step makes every graph with it fail."""
+    rules = figures_typst.FAMILIES["graph"].rules
+    example = re.search(r"exactly so:\n(.*?)\n- ", rules, re.S).group(1)
+    fragments = re.findall(r"`((?:xaxis: |lq\.scatter|lq\.line|lq\.place)[^`]*)`", rules)
+    assert len(fragments) >= 4
+    for fragment in fragments:
+        body = example.replace("  lq.plot(", f"  {fragment},\n  lq.plot(")
+        assert figures_typst.compile_svg("graph", body).startswith("<svg"), fragment
+
+
 def test_a_closed_switch_is_seen():
     """zap's closed switch is a mere wire: ours keeps its two contacts, closed or open."""
     circuit = '#circuit({{ battery("g", (0, 0), (0, 3)); {} lamp("l", (3, 3), (3, 0)); wire((3, 0), (0, 0)) }})'

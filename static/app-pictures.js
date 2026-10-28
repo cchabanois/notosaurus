@@ -93,8 +93,8 @@ const picturesPart = {
   },
 
   // Drawn again, told what the check found: quickly first (told the problem, it mostly gets
-  // it right, four times faster), with the model's thinking when a quick one was still found
-  // wrong; the figure it replaces shown faded meanwhile
+  // it right, four times faster), with the model's thinking from then on when found wrong
+  // again; the figure it replaces shown faded meanwhile
   async redrawFigure(card) {
     const problem = card._check?.problem ?? "";
     const careful = Boolean(card._triedQuick);
@@ -106,7 +106,7 @@ const picturesPart = {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ problem, careful }),
       });
-      if (res && !careful) card._triedQuick = true;
+      if (res) card._triedQuick = true;  // a careful one too: once thinking was paid for, never less
     } finally {
       card._replacing = "";
     }

@@ -381,6 +381,8 @@ def test_a_figure_checked_on_demand_then_redrawn(page, monkeypatch):
     found.get_by_role("button", name="📐 Redessiner avec soin").click()
     sync_api.expect(found).to_be_hidden()
     sync_api.expect(card.locator(".card-picture.figure img:not(.first):visible")).to_be_visible()
+    card.get_by_role("button", name="🔍 Vérifier la figure").first.click()  # wrong again: still with care
+    sync_api.expect(found.get_by_role("button", name="📐 Redessiner avec soin")).to_be_visible()
 
 
 def test_while_waiting_what_the_ai_is_at(page, monkeypatch):
