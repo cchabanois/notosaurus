@@ -44,11 +44,19 @@ internal fun Route.pictureRoutes(server: LocalServer) {
             val subject = req["subject"]?.takeIf { it !is JsonNull }?.jsonPrimitive?.content
             pictures.make(lesson, cardIndex(lesson), subject, languageName()) { step(buildJsonObject { put("step", it) }) }
         }
-        // The user said yes: drawn by the image model (it costs)
-        stepping("/api/lessons/{id}/cards/{card}/picture/draw") { _, step ->
-            switches.check("pictures.draw")
+        // The user said yes: drawn by the image model (it costs); a figure drawn again, told what
+        // its check found ("problem")
+        stepping("/api/lessons/{id}/cards/{card}/picture/draw") { req, step ->
             val lesson = lesson()
-            pictures.draw(lesson, cardIndex(lesson)) { step(buildJsonObject { put("step", it) }) }
+            val i = cardIndex(lesson)
+            if (lesson.cards()[i].string("figure").isBlank()) switches.check("pictures.draw")
+            val problem = req["problem"]?.takeIf { it !is JsonNull }?.jsonPrimitive?.content.orEmpty()
+            pictures.draw(lesson, i, problem) { step(buildJsonObject { put("step", it) }) }
+        }
+        // "🔍 Check": the card's figure looked at by the AI, nothing changed ({"ok", "problem"})
+        stepping("/api/lessons/{id}/cards/{card}/picture/check") { _, _ ->
+            val lesson = lesson()
+            pictures.check(lesson, cardIndex(lesson))
         }
         // The user's own photo as the card's picture (the page made it card size)
         post("/api/lessons/{id}/cards/{card}/picture") {

@@ -399,7 +399,13 @@
         "redrawing": "📐 Erste Fassung nicht richtig: wird sorgfältiger neu gezeichnet…",
         "searching": "🔎 Freies Bild wird gesucht…",
         "drawing": "🎨 Bild wird gezeichnet…"
-      }
+      },
+      "check": "🔍 Figur prüfen",
+      "checking": "🔍 Wird geprüft…",
+      "checkOk": "✓ Die Figur scheint richtig.",
+      "checkProblem": "Die Prüfung meldet:",
+      "redraw": "📐 Sorgfältig neu zeichnen",
+      "keep": "Behalten"
     },
     "pairing": {
       "title": "Gerät nicht zugelassen"

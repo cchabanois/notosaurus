@@ -617,6 +617,108 @@
         }
       }
     },
+    "/v1/check-figure": {
+      "post": {
+        "summary": "Check Figure",
+        "description": "A figure looked at against its description, what is wrong said (llm.check_figure).",
+        "operationId": "check_figure_v1_check_figure_post",
+        "parameters": [
+          {
+            "name": "X-Notosaurus-Version",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "The client's version (\"1.1.0\").",
+              "title": "X-Notosaurus-Version"
+            },
+            "description": "The client's version (\"1.1.0\")."
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CheckFigureRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CheckFigureResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Codes: `relay.invalid_key`",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "402": {
+            "description": "Codes: `relay.no_credits`, `relay.subscription_ended`, `relay.payment_pending`, `relay.trial_ended`",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Codes: `relay.invalid_request`",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "426": {
+            "description": "Codes: `relay.client_outdated`",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Codes: `relay.daily_limit`, `relay.busy`",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Codes: `relay.unavailable`",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/v1/transcribe": {
       "post": {
         "summary": "Transcribe",
@@ -2194,6 +2296,13 @@
             "title": "Draw",
             "description": "A picture no free one fits drawn by the image model (it costs: the user said yes). False: 409 picture.needs_drawing instead, its params what was decided (description, search).",
             "default": true
+          },
+          "problem": {
+            "type": "string",
+            "maxLength": 1000,
+            "title": "Problem",
+            "description": "What /v1/check-figure found wrong in the card's figure: drawn again with the model's thinking, told it (the user asked it). Empty: drawn as usual.",
+            "default": ""
           }
         },
         "type": "object",
@@ -2234,6 +2343,55 @@
           "usage"
         ],
         "title": "CardPictureResponse"
+      },
+      "CheckFigureRequest": {
+        "properties": {
+          "description": {
+            "type": "string",
+            "maxLength": 1000,
+            "minLength": 1,
+            "title": "Description",
+            "description": "What it should show."
+          },
+          "svg": {
+            "type": "string",
+            "maxLength": 1000000,
+            "minLength": 1,
+            "title": "Svg",
+            "description": "The figure, as drawn."
+          }
+        },
+        "type": "object",
+        "required": [
+          "description",
+          "svg"
+        ],
+        "title": "CheckFigureRequest",
+        "description": "POST /v1/check-figure: a figure looked at against its description (the user asked it:\nthe \"🔍 Check\" button), as llm.check_figure. JSON."
+      },
+      "CheckFigureResponse": {
+        "properties": {
+          "ok": {
+            "type": "boolean",
+            "title": "Ok",
+            "description": "It looks right."
+          },
+          "problem": {
+            "type": "string",
+            "title": "Problem",
+            "description": "What is wrong, in the cards' language; empty when it looks right."
+          },
+          "usage": {
+            "$ref": "#/components/schemas/Usage"
+          }
+        },
+        "type": "object",
+        "required": [
+          "ok",
+          "problem",
+          "usage"
+        ],
+        "title": "CheckFigureResponse"
       },
       "Deck": {
         "properties": {

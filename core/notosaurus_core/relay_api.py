@@ -73,6 +73,7 @@ MAX_EXISTING = 500  # a lesson's cards made already (the AI is sent the first 6,
 MAX_DECKS = 1000
 MAX_INSTRUCTION = 2000  # a correction
 MAX_SUBJECT = 1000  # a picture's subject, a figure's description
+MAX_FIGURE_SVG = 1_000_000  # a figure checked: Typst's, its letters as shapes, weighs tens of KB
 MAX_SPEECH = 500  # a back read aloud (the app reads the first 200 characters)
 MAX_AUDIO_BYTES = 3 * 1024 * 1024  # a dictation: the app stops at 2 minutes (≈ 500 KB of AAC)
 MAX_REPORT = 6000  # a reported card, with its helps, or an explanation
@@ -186,6 +187,20 @@ class FigureRequest(BaseModel):
     """An exact figure (geometry, a labelled drawing), drawn as SVG. JSON."""
 
     description: str = Field(min_length=1, max_length=MAX_SUBJECT, description="What to draw, every label exact.")
+
+
+class CheckFigureRequest(BaseModel):
+    """POST /v1/check-figure: a figure looked at against its description (the user asked it:
+    the "🔍 Check" button), as llm.check_figure. JSON."""
+
+    description: str = Field(min_length=1, max_length=MAX_SUBJECT, description="What it should show.")
+    svg: str = Field(min_length=1, max_length=MAX_FIGURE_SVG, description="The figure, as drawn.")
+
+
+class CheckFigureResponse(BaseModel):
+    ok: bool = Field(description="It looks right.")
+    problem: str = Field(description="What is wrong, in the cards' language; empty when it looks right.")
+    usage: Usage
 
 
 class SpeakRequest(BaseModel):
@@ -338,6 +353,12 @@ class CardPictureRequest(BaseModel):
         default=True,
         description="A picture no free one fits drawn by the image model (it costs: the user said yes). False: "
         "409 picture.needs_drawing instead, its params what was decided (description, search).",
+    )
+    problem: str = Field(
+        default="",
+        max_length=MAX_SUBJECT,
+        description="What /v1/check-figure found wrong in the card's figure: drawn again with the model's "
+        "thinking, told it (the user asked it). Empty: drawn as usual.",
     )
 
 

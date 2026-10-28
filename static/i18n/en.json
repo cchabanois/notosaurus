@@ -399,7 +399,13 @@
         "redrawing": "📐 First version not right: drawing it again, more carefully…",
         "searching": "🔎 Looking for a free picture…",
         "drawing": "🎨 Drawing the picture…"
-      }
+      },
+      "check": "🔍 Check the figure",
+      "checking": "🔍 Checking…",
+      "checkOk": "✓ The figure looks right.",
+      "checkProblem": "The check found:",
+      "redraw": "📐 Redraw it carefully",
+      "keep": "Keep it"
     },
     "pairing": {
       "title": "Device not allowed"

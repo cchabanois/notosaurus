@@ -166,6 +166,10 @@ def build() -> dict:
     def figure(request: api.FigureRequest, x_notosaurus_version: str = client):
         """An exact figure as SVG (llm.draw_figure)."""
 
+    @app.post(f"{api.PREFIX}/check-figure", response_model=api.CheckFigureResponse, responses=errors(*COMMON))
+    def check_figure(request: api.CheckFigureRequest, x_notosaurus_version: str = client):
+        """A figure looked at against its description, what is wrong said (llm.check_figure)."""
+
     @app.post(
         f"{api.PREFIX}/transcribe",
         response_model=api.TranscribeResponse,

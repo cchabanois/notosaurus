@@ -42,7 +42,9 @@ def parameters(function, *but: str) -> set[str]:
     [
         (api.ReviseRequest, llm.revise_cards, ("images", "demo")),  # demo: the relay never runs the demo AI
         (api.ExplainRequest, llm.explain_card, ()),
-        (api.FigureRequest, llm.draw_figure, ("step", "kind")),  # told as it goes; its kind asked by the AI
+        # told as it goes; its kind asked by the AI; drawn again from a card (card-picture's problem)
+        (api.FigureRequest, llm.draw_figure, ("step", "kind", "problem")),
+        (api.CheckFigureRequest, llm.check_figure, ()),
         (api.PictureRequest, pictures.picture, ("pixabay_key",)),  # the relay's own
         (api.TranscribeRequest, llm.transcribe, ("audio",)),  # the multipart's "audio"
         (api.RephraseRequest, llm.rephrase, ()),
@@ -99,6 +101,7 @@ def test_openapi_description():
         "explain",
         "rephrase",
         "figure",
+        "check-figure",
         "picture",
         "speak",
         "transcribe",

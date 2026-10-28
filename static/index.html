@@ -380,10 +380,10 @@
                    @click="openViewer([pictureUrl(card)], 0)">
               <!-- How long it takes, roughly (a figure: the model thinks; a picture: found or drawn):
                    the bar fills over that time, slower near the end; restarts each time it shows -->
-              <span class="drawing" :class="{ redrawing: card._first }" x-show="!card.picture || card._drawing"
+              <span class="drawing" :class="{ redrawing: firstFigureUrl(card) }" x-show="!card.picture || card._drawing"
                     :style="`--expected: ${pictureExpected(card)}s`">
                 <!-- Drawn again because it was wrong: the first one, faded, with what was wrong -->
-                <template x-if="card._first"><img class="first" :src="firstFigureUrl(card)" alt=""></template>
+                <template x-if="firstFigureUrl(card)"><img class="first" :src="firstFigureUrl(card)" alt=""></template>
                 <span x-text="pictureStepText(card)"></span>
                 <small class="problem" x-show="card._problem" x-text="card._problem"></small>
                 <small x-text="$t('app.pictures.about', { seconds: pictureExpected(card) })"></small>
@@ -453,10 +453,10 @@
                    @click="openViewer([pictureUrl(card)], 0)">
                 <!-- How long it takes, roughly (a figure: the model thinks; a picture: found or drawn):
                    the bar fills over that time, slower near the end; restarts each time it shows -->
-              <span class="drawing" :class="{ redrawing: card._first }" x-show="!card.picture || card._drawing"
+              <span class="drawing" :class="{ redrawing: firstFigureUrl(card) }" x-show="!card.picture || card._drawing"
                     :style="`--expected: ${pictureExpected(card)}s`">
                 <!-- Drawn again because it was wrong: the first one, faded, with what was wrong -->
-                <template x-if="card._first"><img class="first" :src="firstFigureUrl(card)" alt=""></template>
+                <template x-if="firstFigureUrl(card)"><img class="first" :src="firstFigureUrl(card)" alt=""></template>
                 <span x-text="pictureStepText(card)"></span>
                 <small class="problem" x-show="card._problem" x-text="card._problem"></small>
                 <small x-text="$t('app.pictures.about', { seconds: pictureExpected(card) })"></small>
@@ -540,6 +540,22 @@
                 </label>
                 <button type="button" class="btn danger-soft" x-show="card.picture" @click="removePicture(card)"
                         :disabled="Boolean(card._drawing)" x-text="$t('app.pictures.remove')"></button>
+                <!-- A figure checked only when asked: the AI looks at it against its description -->
+                <button type="button" class="btn soft" x-show="card.figure && card.picture && !card._drawing" @click="checkFigure(card)"
+                        :disabled="Boolean(card._checking)" x-text="card._checking ? $t('app.pictures.checking') : $t('app.pictures.check')"></button>
+              </div>
+              <!-- What the check found: right, or what is wrong and the choice to draw it again -->
+              <div class="figure-check" x-show="card._check" role="status">
+                <p x-show="card._check?.ok" x-text="$t('app.pictures.checkOk')"></p>
+                <template x-if="card._check && !card._check.ok">
+                  <div>
+                    <p><strong x-text="$t('app.pictures.checkProblem')"></strong> <span x-text="card._check.problem"></span></p>
+                    <div class="picture-actions">
+                      <button type="button" class="btn primary" @click="redrawFigure(card)" x-text="$t('app.pictures.redraw')"></button>
+                      <button type="button" class="btn soft" @click="card._check = null" x-text="$t('app.pictures.keep')"></button>
+                    </div>
+                  </div>
+                </template>
               </div>
               <!-- The pictures found: tap one, it becomes the card's -->
               <template x-if="card._found">

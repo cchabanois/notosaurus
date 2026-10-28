@@ -1,7 +1,7 @@
 """A bench of figures: each case's description drawn by the test relay (/v1/figure, as the
 Android app asks), a few times, then judged: by code (a figure that renders, fills its
 picture, has its labels) and by the AI looking at it, with its thinking (stricter than the
-light check the drawing itself goes through). A sheet of every figure to look at, its
+light check of the "🔍 Check" button). A sheet of every figure to look at, its
 verdicts, time and credits; compared with the run before.
 
 The cases: <bench>/figures.json (private, never committed; notes/bench by default), the

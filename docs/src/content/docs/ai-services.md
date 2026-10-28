@@ -124,7 +124,7 @@ each generation, correction and picture.
 These figures are estimated from the services' public prices (OpenRouter gives the exact
 cost). With a free Gemini key, nothing is actually charged. As an example, the vocabulary
 lesson of these screenshots cost about 2 US cents to generate with Claude Sonnet, and as much
-for its correction. Pictures cost from under a cent to a few cents each; figures, about half a
-cent to a cent and a half (drawn quickly, then checked by the AI looking at them: about 10
-seconds each; one that's wrong is drawn again with the model's thinking, up to a minute; all
-drawn while you review the cards).
+for its correction. Pictures cost from under a cent to a few cents each; figures, under a cent
+(drawn quickly, a few seconds each, while you review the cards). A figure you doubt: "🔍 Check
+the figure", in its picture panel, has the AI look at it; if it finds something wrong, you
+choose whether it's redrawn carefully, with the model's thinking (up to a minute).
