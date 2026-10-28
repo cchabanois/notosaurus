@@ -111,15 +111,15 @@ class Relay(
         }
         val source = response.body.source()
         // A line is waited for in a blocking read, which a cancelled coroutine doesn't stop:
-        // "Cancel" closes the answer beside it, the read stops at once (else it waits for the relay)
+        // "Cancel" stops its call beside it, the read stops at once (else it waits for the relay)
         return coroutineScope {
             val closer = launch(start = CoroutineStart.UNDISPATCHED) {
                 try {
                     awaitCancellation()
                 } finally {
-                    // Closing the answer doesn't stop a read waiting on the socket: its call does
+                    // Its call cancelled: the socket closed, the read fails at once (the answer
+                    // itself closed by its reader, `use`: closed from here meanwhile, okio refuses)
                     response.request.tag(Streaming::class.java)?.call?.cancel()
-                    response.close()
                 }
             }
             try {
