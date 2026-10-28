@@ -189,9 +189,10 @@ class FoundPicture(BaseModel):
 
 class RedrawRequest(BaseModel):
     """A card's picture drawn again now ("draw"): for a figure, what its check found wrong
-    (the AI told it, drawing with its thinking); empty: drawn as usual."""
+    (the AI told it), drawn quickly or `careful`ly; empty: drawn as usual."""
 
     problem: str = Field(default="", max_length=1000)
+    careful: bool = False  # with a problem: with the model's thinking (asked again after a quick one)
 
 
 class PictureRequest(BaseModel):

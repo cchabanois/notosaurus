@@ -340,6 +340,7 @@ async def card_picture(
     draw: bool = True,
     step: Step | None = None,
     problem: str = "",
+    careful: bool = False,
 ) -> CardPicture:
     """A card's figure or picture: the one rule for the computer and the relay (the app).
 
@@ -351,10 +352,11 @@ async def card_picture(
     model's, if `draw` (it costs: the user said yes; else picture.needs_drawing); from the
     cache unless `fresh` (then drawn again). `language`: the cards', its English name.
     `step`: told each step as it begins (relay_api.PictureStep's fields). `problem`: what the
-    check found in its figure (the user asked it again): drawn again with thinking, told it."""
+    check found in its figure (the user asked it again): drawn again, told it; with the
+    model's thinking when `careful`."""
     card = await decided(s, card, asked, language, step)
     if card.figure.strip():
-        svg = figures.clean(await llm.draw_figure(s, card.figure, step, card.figure_kind, problem))
+        svg = figures.clean(await llm.draw_figure(s, card.figure, step, card.figure_kind, problem, careful))
         card.picture_source = PictureSource(source="drawn", model=s.model_for_provider())
         return CardPicture(card, svg.encode(), "svg")
     context = f"{card.front.strip()} → {card.back.strip()}"
@@ -411,10 +413,13 @@ async def figure_or_picture(
     find: bool = True,
     step: Step | None = None,
     problem: str = "",
+    careful: bool = False,
 ) -> str:
     """The card's figure or picture (card_picture), saved in the lesson, the card's picture
     fields updated in place (what it shows, where it comes from); returns its file name."""
-    made = await card_picture(s, card, asked, language, fresh, find, draw=draw, step=step, problem=problem)
+    made = await card_picture(
+        s, card, asked, language, fresh, find, draw=draw, step=step, problem=problem, careful=careful
+    )
     for field in ("figure", "figure_kind", "picture_prompt", "picture_search", "picture_source"):
         setattr(card, field, getattr(made.card, field))
     if made.extension == "svg":

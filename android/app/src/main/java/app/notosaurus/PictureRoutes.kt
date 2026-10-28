@@ -45,13 +45,14 @@ internal fun Route.pictureRoutes(server: LocalServer) {
             pictures.make(lesson, cardIndex(lesson), subject, languageName()) { step(buildJsonObject { put("step", it) }) }
         }
         // The user said yes: drawn by the image model (it costs); a figure drawn again, told what
-        // its check found ("problem")
+        // its check found ("problem"), with the model's thinking when "careful"
         stepping("/api/lessons/{id}/cards/{card}/picture/draw") { req, step ->
             val lesson = lesson()
             val i = cardIndex(lesson)
             if (lesson.cards()[i].string("figure").isBlank()) switches.check("pictures.draw")
             val problem = req["problem"]?.takeIf { it !is JsonNull }?.jsonPrimitive?.content.orEmpty()
-            pictures.draw(lesson, i, problem) { step(buildJsonObject { put("step", it) }) }
+            val careful = req["careful"]?.jsonPrimitive?.booleanOrNull == true
+            pictures.draw(lesson, i, problem, careful) { step(buildJsonObject { put("step", it) }) }
         }
         // "🔍 Check": the card's figure looked at by the AI, nothing changed ({"ok", "problem"})
         stepping("/api/lessons/{id}/cards/{card}/picture/check") { _, _ ->

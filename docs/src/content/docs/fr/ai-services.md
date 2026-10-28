@@ -134,6 +134,7 @@ exact). Avec une clé Gemini gratuite, rien n'est réellement facturé. Par exem
 vocabulaire de ces captures a coûté environ 2 centimes de dollar à générer avec Claude Sonnet,
 et autant pour sa correction. Les images coûtent de moins d'un centime à quelques centimes
 chacune ; les figures, moins d'un centime (dessinées vite, quelques secondes chacune, pendant
-que vous relisez les cartes). Une figure vous semble douteuse : « 🔍 Vérifier la figure », dans
-son panneau d'image, la fait regarder par l'IA ; si elle y voit une erreur, vous choisissez de
-la faire redessiner avec soin, avec la réflexion du modèle (jusqu'à une minute).
+que vous relisez les cartes). Une figure vous semble douteuse : la loupe « 🔍 », sous la figure,
+la fait regarder par l'IA ; si elle y voit une erreur, vous choisissez de
+la faire redessiner en lui indiquant l'erreur : vite d'abord (quelques secondes), puis, si elle
+est encore fausse, avec soin, avec la réflexion du modèle (jusqu'à une minute).

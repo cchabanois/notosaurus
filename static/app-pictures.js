@@ -18,6 +18,7 @@ const picturesPart = {
     if (this.saveTimer) await this.saveNow();  // the server must know the card
     card._drawing = true;
     card._check = null;  // about the picture it had
+    card._triedQuick = false;  // (redrawFigure sets it again after a quick redraw)
     this.pictureJobs++;
     this.error = "";
     try {
@@ -91,18 +92,21 @@ const picturesPart = {
     }
   },
 
-  // Drawn again with the model's thinking, told what the check found; the figure it replaces
-  // shown faded meanwhile
+  // Drawn again, told what the check found: quickly first (told the problem, it mostly gets
+  // it right, four times faster), with the model's thinking from then on when found wrong
+  // again; the figure it replaces shown faded meanwhile
   async redrawFigure(card) {
     const problem = card._check?.problem ?? "";
+    const careful = Boolean(card._triedQuick);
     Object.assign(card, { _check: null, _replacing: this.pictureUrl(card) });
     try {
-      await this.pictureAction(card, {
+      const res = await this.pictureAction(card, {
         path: "/draw",
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ problem }),
+        body: JSON.stringify({ problem, careful }),
       });
+      if (res) card._triedQuick = true;  // a careful one too: once thinking was paid for, never less
     } finally {
       card._replacing = "";
     }

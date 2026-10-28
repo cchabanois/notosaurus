@@ -105,11 +105,11 @@ async def make_picture(
 @router.post("/api/lessons/{id}/cards/{card_id}/picture/draw")
 async def draw_picture(id: str, card_id: str, req: RedrawRequest | None = None, accept: str | None = Header(None)):
     """The card's picture drawn by the image model, now: the user said yes (no free one
-    fit). Its figure drawn again, for a figure: with the model's thinking, told what its
-    check found (`problem`), when there is one. Never from the cache: asked when it didn't
+    fit). Its figure drawn again, for a figure: told what its check found (`problem`), when
+    there is one, with the model's thinking when `careful`. Never from the cache: asked when it didn't
     suit. Asked as application/x-ndjson: its steps as they begin, then the answer."""
     await access.editable(id)
-    problem = req.problem if req else ""
+    problem, careful = (req.problem, req.careful) if req else ("", False)
 
     async def drawn(step: Step | None = None) -> dict:
         async def draw(draft: Lesson, card: Card) -> None:
@@ -117,7 +117,7 @@ async def draw_picture(id: str, card_id: str, req: RedrawRequest | None = None, 
                 folder = lessons.existing_folder(id) / "images"
                 s = settings.current()
                 card.picture = await pictures.figure_or_picture(
-                    s, folder, card, fresh=True, find=False, step=step, problem=problem
+                    s, folder, card, fresh=True, find=False, step=step, problem=problem, careful=careful
                 )
 
         return await _edit_card(id, card_id, draw)

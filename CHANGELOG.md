@@ -77,7 +77,7 @@ Each pull request adds a line under **Unreleased**. See [Releasing](CONTRIBUTING
 
 ### Changed
 
-- 🔍 A figure is no longer checked by the AI on its own: drawn at once, in one call. "🔍 Check the figure", in its picture panel, has the AI look at it when you doubt it; if it finds something wrong, it says what, and you choose to have it redrawn carefully (with the model's thinking, told the problem) or to keep it. For developers: `/v1/check-figure`; `/v1/card-picture` takes the `problem` to redraw from.
+- 🔍 A figure is no longer checked by the AI on its own: drawn at once, in one call. "🔍" under a figure has the AI look at it when you doubt it; if it finds something wrong, it says what, and you choose to keep it or to have it redrawn, told the problem: quickly first (a few seconds), then, if it's still wrong, carefully, with the model's thinking. For developers: `/v1/check-figure`; `/v1/card-picture` takes the `problem` to redraw from, and `careful`.
 - A figure's kind (geometry, graph, timeline…) said by the AI with its description, when it reads the lesson or plans a picture: drawn without a call to ask it, one AI call fewer per figure. A figure rewritten by the user has its kind asked again.
 - A light AI call (a figure drawn or checked, a picture planned) not answered after 12 s is asked again beside it, the first answer taken: Gemini at times leaves one waiting for a minute (measured: 68 s, now 20 s at most for the same kind of call).
 - The cards' pictures each shown the moment they are drawn, on the computer and the phone: a slow one no longer holds the others back (they all showed at once, when the last one was done).
@@ -129,6 +129,7 @@ Each pull request adds a line under **Unreleased**. See [Releasing](CONTRIBUTING
 
 ### Fixed
 
+- A graph's ticks at π, e, √2… written as the lesson writes them (π/2, 2π), no longer as long decimals running into one another.
 - A figure no longer writes what its description only names to say what to draw ("the curve of f(x) = ln(x)"): a label only when asked for. On a card asking which function a graph is, the graph gave the answer.
 - Settings → Voices on a phone: each language's name is shown whole ("Espagnol d'Espagne"), its voice below on the whole width ("Puck · homme"), no longer both cut on one line.
 - Settings → Voices → ▶ no longer stays silent when the voice can't be heard: the reason is said (the relay's credits used up, its key, unreachable…). On Android, `/api/tts` now answers the relay's error instead of an empty 502.

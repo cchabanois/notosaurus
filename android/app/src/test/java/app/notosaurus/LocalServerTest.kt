@@ -984,12 +984,17 @@ class LocalServerTest {
         val (path, sent) = asked.last()
         assertEquals("/v1/check-figure" to "a right triangle", path to sent.string("description"))
         assertEquals("<svg>1</svg>", sent.string("svg"))
-        // Drawn again, told the problem: the relay redraws it with thinking
+        // Drawn again, told the problem: quickly first
         val drawn = client.post("/api/lessons/$id/cards/$triangle/picture/draw") {
             page(); contentType(ContentType.Application.Json); setBody("""{"problem": "The angle is at B."}""")
         }.json().jsonObject
-        assertEquals("The angle is at B.", asked.last().second.string("problem"))
+        assertEquals("The angle is at B." to "false", asked.last().second.string("problem") to asked.last().second["careful"].toString())
         assertTrue(drawn["card"]!!.jsonObject.string("picture").endsWith(".svg"))
+        // Still wrong: drawn again with the model's thinking
+        client.post("/api/lessons/$id/cards/$triangle/picture/draw") {
+            page(); contentType(ContentType.Application.Json); setBody("""{"problem": "Still at B.", "careful": true}""")
+        }
+        assertEquals("Still at B." to "true", asked.last().second.string("problem") to asked.last().second["careful"].toString())
     }
 
     @Test

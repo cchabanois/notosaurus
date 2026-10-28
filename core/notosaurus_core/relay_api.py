@@ -357,8 +357,11 @@ class CardPictureRequest(BaseModel):
     problem: str = Field(
         default="",
         max_length=MAX_SUBJECT,
-        description="What /v1/check-figure found wrong in the card's figure: drawn again with the model's "
-        "thinking, told it (the user asked it). Empty: drawn as usual.",
+        description="What /v1/check-figure found wrong in the card's figure: drawn again, told it (the user "
+        "asked it). Empty: drawn as usual.",
+    )
+    careful: bool = Field(
+        default=False, description="With a problem: drawn with the model's thinking (slower), not quickly."
     )
 
 
