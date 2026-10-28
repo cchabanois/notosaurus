@@ -1,7 +1,7 @@
 """Figures drawn in Typst, each family with the package made for it (FAMILIES): geometry
 with ctz-euclide (marks at their segment's middle, angles between their rays), graphs with
 lilaq (a curve computed from its function), sets with cetz-venn, diagrams with fletcher,
-circuits with zap, chemistry with alchemist, timelines with herodot. What can be computed is,
+circuits with zap, chemistry with alchemist, timelines with cetz (TIMELINE). What can be computed is,
 never placed by eye.
 
 A light call first picks the family from the description (FAMILY_RULES; none of them: the
@@ -41,6 +41,77 @@ theorem, an object, is not a label): one word too many may give the card's answe
 - only drawing: no import (the packages are imported already), include, read, image, plugin, \
 no file.
 A figure is for a pupil's lesson: for anything else, answer an empty answer."""
+
+
+# zap's switch with its two contacts: closed, its blade lies between them (zap's own closed
+# switch is a mere wire, nothing to see)
+CONTACTS = """\
+#let switch(name, ..args) = {
+  let params = args.named()
+  let closed = params.remove("closed", default: false)
+  symbol("switch", name, ..args.pos(), ..params, draw: (ctx, position, style) => {
+    interface((-style.width / 2, -0.2), (style.width / 2, 0.2), io: position.len() < 2)
+    let w = style.width / 2
+    cetz.draw.set-style(stroke: style.stroke)
+    let blade = if closed { (w, 0) } else { (-w + 2 * w * calc.cos(style.angle), 2 * w * calc.sin(style.angle)) }
+    cetz.draw.line((-w, 0), blade)
+    cetz.draw.circle((-w, 0), radius: 0.06, fill: black)
+    cetz.draw.circle((w, 0), radius: 0.06, fill: black)
+  })
+}
+"""
+
+# A timeline drawn with cetz: the years under the line, each text from its date, on a row
+# above it, never on another text nor on another's line
+TIMELINE = """\
+#let timeline(start: 0, end: 10, step: 1, width: 12, events: (), periods: ()) = context {
+  let unit = width / (end - start)
+  // a date: its year, or (year, month, day): placed within its year
+  let at(date) = if type(date) == array {
+    (date.at(0) + (date.at(1, default: 1) - 1) / 12 + (date.at(2, default: 1) - 1) / 365 - start) * unit
+  } else { (date - start) * unit }
+  let gap = 0.25
+  let shown(body) = {
+    let t = text(9pt, body)
+    if measure(t).width > 3cm { block(width: 3cm, t) } else { t }
+  }
+  let items = (
+    events.map(e => (x: at(e.at(0)), body: shown(e.at(1))))
+      + periods.map(p => (x: at(p.at(0)), body: shown(p.at(2))))
+  ).sorted(key: i => -i.x)
+  // From the right: each text starts at its date, above the line, on the first row where it
+  // reaches no text on its row and passes over the lines of those it reaches: no line
+  // crosses a text
+  let placed = ()
+  for item in items {
+    let size = measure(item.body)
+    let right = item.x + 0.1 + size.width / 1cm
+    let row = 1
+    while not placed.all(q => right + gap <= q.x or row > q.row) { row += 1 }
+    placed.push((..item, h: size.height / 1cm, row: row))
+  }
+  let tall = calc.max(0.4, ..placed.map(p => p.h)) + 0.2
+  let y(row) = 0.3 + (row - 1) * tall
+  cetz.canvas({
+    import cetz.draw: *
+    for p in periods {
+      rect((at(p.at(0)), -0.14), (at(p.at(1)), 0.14), fill: luma(225), stroke: 0.6pt)
+    }
+    line((-0.3, 0), (width + 0.6, 0), stroke: 0.8pt, mark: (end: ">", fill: black))
+    let year = start
+    while year <= end {
+      line((at(year), -0.1), (at(year), 0.1), stroke: 0.6pt)
+      content((at(year), -0.2), text(8pt, if year < 0 { "−" + str(-year) } else { str(year) }), anchor: "north")
+      year += step
+    }
+    for p in placed {
+      line((p.x, 0.14), (p.x, y(p.row) + p.h), stroke: 0.4pt)
+      content((p.x + 0.1, y(p.row)), p.body, anchor: "south-west")
+    }
+    for e in events { circle((at(e.at(0)), 0), radius: 0.07, fill: black) }
+  })
+}
+"""
 
 
 @dataclass(frozen=True)
@@ -145,18 +216,18 @@ a plain line, `bend: 30deg` curved;
 """,
     ),
     "circuit": Family(
-        PAGE + '#import "@preview/zap:0.6.0"\n',
+        PAGE + '#import "@preview/zap:0.6.0": *\n' + CONTACTS,
         """\
 You draw an electric circuit in Typst with zap 0.6. Answer the Typst only, exactly so:
-#zap.circuit({
-  import zap: *
+#circuit({
   battery("g", (0, 0), (0, 3), label: $G$)
   switch("k", (0, 3), (3, 3), label: $K$)
   lamp("l", (3, 3), (3, 0), label: $L$)
   wire((3, 0), (0, 0))
 })
-- each component between two points, the loop closed by `wire`s: `battery`, `vsource` (a \
-generator), `resistor`, `lamp`, `switch` (`closed: true`), `led`, `diode`, `capacitor`, `isource`; \
+- no import (zap's components are given); each component between two points, the loop closed \
+by `wire`s: `battery`, `vsource` (a generator), `resistor`, `lamp`, `switch` (open, its \
+contacts drawn; `closed: true` closed), `led`, `diode`, `capacitor`, `isource`; \
 `node("n", (3, 0))` a junction; meters as the description names them, with labels;
 - a name per component (`"r1"`), a label as the description writes it; in parallel: two \
 branches between the same two points.
@@ -181,21 +252,21 @@ double(); ... })` a ring;
 """,
     ),
     "timeline": Family(
-        PAGE + '#import "@preview/herodot:1.0.0": *\n',
+        PAGE + '#import "@preview/cetz:0.5.2"\n' + TIMELINE,
         """\
-You draw a timeline in Typst with herodot 1.0. Answer the Typst only, exactly so:
-#timeline(interval: 2, startyear: 1788, endyear: 1800, length-of-timeline: 12, linestroke: 0.6pt + black,
-  events: (
-    event(title: "Prise de la Bastille", year: 1789, month: 7, day: 14),
-    event(title: "Proclamation de la République", year: 1792),
-  ),
-  eventspans: (eventspan(title: "La Terreur", start-point: 1793, end-point: 1794, color: luma(225)),),
+You draw a timeline in Typst with the timeline function given (cetz). Answer the Typst only, \
+exactly so:
+#timeline(start: 1788, end: 1800, step: 2,
+  events: (((1789, 7, 14), "Prise de la Bastille, 14 juillet 1789"), (1792, "Proclamation de la République")),
+  periods: ((1793, 1794, "La Terreur"),),
 )
-- `startyear`, `endyear` around the events, `interval` between the years written (few enough \
-that they don't run into each other); events and periods as the description gives them, their \
-titles and dates exactly; a period's `color: luma(225)`; a single item still in `( …, )`;
-- the timeline shows the years: a date with its day or month goes in its event's title, as the \
-description writes it (`title: "Prise de la Bastille, 14 juillet 1789"`).
+- `start`, `end` the description's when it gives them, else a little around the dates; `step` \
+the years written on the line (ten of them at most); a year before Christ negative (`-52`);
+- events and periods as the description gives them, their texts and dates exactly: a date is \
+its year (`1792`), or `(year, month, day)` when the description gives its month (`(1789, 8)`) \
+or day (`(1789, 7, 14)`): placed within its year, never a fraction of yours; the date written \
+in its text as the description writes it; a single item still in `( …, )`; the texts are \
+placed by the function, never on one another.
 """,
     ),
 }

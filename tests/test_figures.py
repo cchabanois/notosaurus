@@ -423,6 +423,29 @@ def test_each_familys_sheet_example_compiles(family):
     assert svg.startswith("<svg")
 
 
+def test_a_closed_switch_is_seen():
+    """zap's closed switch is a mere wire: ours keeps its two contacts, closed or open."""
+    circuit = '#circuit({{ battery("g", (0, 0), (0, 3)); {} lamp("l", (3, 3), (3, 0)); wire((3, 0), (0, 0)) }})'
+    wired = figures_typst.compile_svg("circuit", circuit.format("wire((0, 3), (3, 3));"))
+    closed = figures_typst.compile_svg("circuit", circuit.format('switch("k", (0, 3), (3, 3), closed: true);'))
+    opened = figures_typst.compile_svg("circuit", circuit.format('switch("k", (0, 3), (3, 3));'))
+    assert closed != wired and closed != opened
+
+
+def test_a_timelines_texts_never_on_one_another():
+    """Events a year apart, long texts: each on its own row, the figure taller for it."""
+    one = figures_typst.compile_svg(
+        "timeline", '#timeline(start: 1780, end: 1800, step: 5, events: ((1789, "Prise de la Bastille"),))'
+    )
+    crowded = figures_typst.compile_svg(
+        "timeline",
+        '#timeline(start: 1780, end: 1800, step: 5, events: ((1789, "Prise de la Bastille"), '
+        '(1790, "Fête de la Fédération"), (1791, "Fuite à Varennes")), periods: ((1793, 1794, "La Terreur"),))',
+    )
+    height = lambda svg: float(re.search(r'height="([\d.]+)', svg).group(1))  # noqa: E731
+    assert height(crowded) > height(one) * 1.5
+
+
 def test_a_figure_of_no_family_drawn_as_svg(monkeypatch):
     calls = []
 

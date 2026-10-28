@@ -1,7 +1,7 @@
 """The Typst packages the figures are drawn with (notosaurus_core/figures_typst.py), kept
 in core/notosaurus_core/typst/ so that nothing is downloaded when a figure is drawn: their
-versions fixed, their licences with them (LGPL-3.0 for cetz, GPL-3.0 for herodot, the others
-MIT or Apache-2.0). Run again to change a version (PACKAGES), then commit what it wrote.
+versions fixed, their licences with them (LGPL-3.0 for cetz, the others MIT or Apache-2.0).
+Run again to change a version (PACKAGES), then commit what it wrote.
 
   .venv/bin/python tools/typst_packages.py
 """
@@ -25,7 +25,6 @@ PACKAGES = {
     "fletcher": "0.5.8",  # diagrams: nodes and arrows
     "zap": "0.6.0",  # electric circuits
     "alchemist": "0.2.0",  # chemistry: skeletal formulas
-    "herodot": "1.0.0",  # timelines
 }
 SKIP = {
     "gallery",
@@ -42,6 +41,7 @@ SKIP = {
 
 
 IMPORT = re.compile(r"@preview/([\w-]+):(\d+\.\d+\.\d+)")
+COMMENT = re.compile(r"^\s*//.*", re.M)  # an import in a comment line (its docs): not imported
 
 
 def main() -> None:
@@ -77,7 +77,7 @@ def fetch(name: str, version: str) -> list[tuple[str, str]]:
                 data = archive.extractfile(member).read()  # type: ignore[union-attr]
                 path.write_bytes(data)
                 if path.suffix == ".typ":
-                    imports += IMPORT.findall(data.decode("utf-8", "replace"))
+                    imports += IMPORT.findall(COMMENT.sub("", data.decode("utf-8", "replace")))
         print(f"{name} {version}: {sum(1 for _ in folder.rglob('*') if _.is_file())} files")
     return imports
 
