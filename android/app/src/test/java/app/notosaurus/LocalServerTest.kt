@@ -26,6 +26,7 @@ import kotlinx.coroutines.async
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withContext
+import kotlinx.coroutines.withTimeout
 import kotlinx.serialization.json.JsonArray
 import kotlinx.serialization.json.JsonNull
 import kotlinx.serialization.json.JsonObject
@@ -442,6 +443,28 @@ class LocalServerTest {
         assertEquals(0, client.get("/api/lessons") { page() }.json().jsonArray.size) // nothing saved
         // Gone: nothing to cancel
         assertFalse(client.post("/api/generations/j1/cancel") { page() }.json().jsonObject["cancelled"]!!.jsonPrimitive.content.toBoolean())
+    }
+
+    @Test
+    fun cancelledWhileTheRelaysAnswerComes() = app { client ->
+        // The relay answering as it goes, then slow to write the rest (the AI at work): "Cancel"
+        // stops it then too, not only before its first line (the stream read, not waited for)
+        val first = """{"step": {"step": "slow"}}""" + "\n"
+        relay.enqueue(
+            MockResponse.Builder().addHeader("Content-Type", Relay.STREAM_TYPE)
+                // (the throttle also reads the request: a request under 4096 bytes isn't held)
+                .body(first + "x".repeat(8192) + "\n").throttleBody(4096, 20, TimeUnit.SECONDS).build(),
+        )
+        coroutineScope {
+            val made = async {
+                client.submitFormWithBinaryData("/api/extract", formData { append("prompt", "FR → ES"); append("job", "j2") }) { page() }
+            }
+            assertNotNull(withContext(Dispatchers.IO) { relay.takeRequest(5, TimeUnit.SECONDS) })
+            withContext(Dispatchers.IO) { Thread.sleep(500) } // its first line read
+            assertTrue(client.post("/api/generations/j2/cancel") { page() }.json().jsonObject["cancelled"]!!.jsonPrimitive.content.toBoolean())
+            val answer = withTimeout(5_000) { made.await() } // at once, not when the relay is done
+            assertEquals("extract.cancelled", answer.json().jsonObject["detail"]!!.jsonObject.string("code"))
+        }
     }
 
     @Test

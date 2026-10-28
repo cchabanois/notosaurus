@@ -1,6 +1,11 @@
 package app.notosaurus
 
 import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.CoroutineStart
+import kotlinx.coroutines.awaitCancellation
+import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.ensureActive
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.currentCoroutineContext
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
@@ -105,16 +110,39 @@ class Relay(
             return json.parseToJsonElement(response.body.string()).jsonObject
         }
         val source = response.body.source()
-        while (true) {
-            val line = withContext(Dispatchers.IO) { source.readUtf8Line() }
-                ?: throw RelayException("relay.unreachable", buildJsonObject { put("detail", "cut") })
-            if (line.isBlank()) continue
-            val item = json.parseToJsonElement(line).jsonObject
-            item[last]?.let { return it.jsonObject }
-            item["error"]?.jsonObject?.let {
-                throw RelayException(it.string("code"), it["params"]?.jsonObject ?: JsonObject(emptyMap()))
+        // A line is waited for in a blocking read, which a cancelled coroutine doesn't stop:
+        // "Cancel" stops its call beside it, the read stops at once (else it waits for the relay)
+        return coroutineScope {
+            val closer = launch(start = CoroutineStart.UNDISPATCHED) {
+                try {
+                    awaitCancellation()
+                } finally {
+                    // Its call cancelled: the socket closed, the read fails at once (the answer
+                    // itself closed by its reader, `use`: closed from here meanwhile, okio refuses)
+                    response.request.tag(Streaming::class.java)?.call?.cancel()
+                }
             }
-            onLine(item)
+            try {
+                while (true) {
+                    val line = try {
+                        withContext(Dispatchers.IO) { source.readUtf8Line() }
+                    } catch (e: IOException) {
+                        ensureActive() // closed by "Cancel": cancelled, not a relay unreachable
+                        throw e
+                    } ?: throw RelayException("relay.unreachable", buildJsonObject { put("detail", "cut") })
+                    if (line.isBlank()) continue
+                    val item = json.parseToJsonElement(line).jsonObject
+                    item[last]?.let { return@coroutineScope it.jsonObject }
+                    item["error"]?.jsonObject?.let {
+                        throw RelayException(it.string("code"), it["params"]?.jsonObject ?: JsonObject(emptyMap()))
+                    }
+                    onLine(item)
+                }
+                @Suppress("UNREACHABLE_CODE")
+                error("unreachable")
+            } finally {
+                closer.cancel()
+            }
         }
     }
 
@@ -205,11 +233,11 @@ class Relay(
         val request = Request.Builder().url("$base/v1/$route")
             .header("Authorization", "Bearer $key")
             .header(CLIENT_HEADER, CLIENT_VERSION)
-            .apply { if (stream) header("Accept", STREAM_TYPE) }
+            .apply { if (stream) header("Accept", STREAM_TYPE).tag(Streaming::class.java, Streaming()) }
             .apply { if (body != null) post(body) }
             .build()
         val response = try {
-            client.newCall(request).await()
+            client.newCall(request).also { request.tag(Streaming::class.java)?.call = it }.await()
         } catch (e: IOException) {
             lost()
             throw RelayException("relay.unreachable", buildJsonObject { put("detail", e.message ?: "") })
@@ -235,6 +263,11 @@ class Relay(
             override fun onResponse(call: Call, response: Response) =
                 waiting.resume(response) { _, _, _ -> response.close() }
         })
+    }
+
+    /** A streamed answer's call, kept with its request: "Cancel" stops it (streamed). */
+    private class Streaming {
+        @Volatile var call: Call? = null
     }
 
     companion object {
