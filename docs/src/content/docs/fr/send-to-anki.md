@@ -11,7 +11,9 @@ directement dans AnkiDroid : voir [L'application et AnkiDroid](../app-ankidroid/
 
 **📥 Ajouter à Anki** écrit les cartes directement dans le **profil ouvert dans Anki**, dans
 le paquet de la leçon, avec leur audio et leurs images. Un message dit ce qui a été fait, par
-exemple « ✓ Dans Anki : 9 cartes ajoutées. Synchronisé avec AnkiWeb. »
+exemple « ✓ Dans Anki : 9 cartes ajoutées. Synchronisé avec AnkiWeb. » Si les images et les figures sont encore en
+cours de dessin, le bouton les attend et dit combien sont prêtes (« ⏳ Images et figures : 2 / 5
+prêtes… »).
 
 ![Les cartes envoyées dans Anki](../../../assets/screenshots/fr/sent.png)
 
@@ -23,7 +25,9 @@ exemple « ✓ Dans Anki : 9 cartes ajoutées. Synchronisé avec AnkiWeb. »
 
 ## Renvoyer une leçon
 
-Une fois la leçon envoyée, le bouton devient **🔄 Mettre à jour dans Anki** : une leçon corrigée
+Une fois la leçon envoyée, et tant que rien ne change, le bouton dit **✓ À jour dans Anki** (il
+renvoie quand même la leçon si besoin). Dès que ce qu'Anki reçoit a changé (une carte, son image,
+le paquet, la voix, les options), il devient **🔄 Mettre à jour dans Anki** : une leçon corrigée
 et renvoyée met à jour ses cartes dans Anki, historique gardé, au lieu de les dupliquer. Voir
 [Les cartes dans Anki](../cards-in-anki/).
 

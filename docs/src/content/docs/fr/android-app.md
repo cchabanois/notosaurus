@@ -49,7 +49,8 @@ leçons, puis vous demande d'accepter sa [politique de confidentialité](../app-
    dire au lieu de les taper.
 4. Touchez **✨ Générer les cartes**. La première leçon démarre l'essai gratuit.
 5. Vérifiez les cartes, corrigez-les ou demandez à l'IA en quelques mots : voir
-   [Relire les cartes](../review/).
+   [Relire les cartes](../review/). Une carte qui ne va pas : **⋯ → ⚑ Signaler** dessus, chaque
+   signalement est lu.
 6. Touchez **📥 Ajouter à Anki** : les cartes vont dans AnkiDroid. La première fois, AnkiDroid
    demande si Notosaurus peut y ajouter des cartes.
 
@@ -79,8 +80,9 @@ pas :
 
 - **🎤 Dicter** : dites une consigne ou une correction au lieu de la taper. L'application demande
   le micro la première fois.
-- **⚑ Signaler**, sur une carte, signale à Notosaurus un contenu faux ou inadapté fait par l'IA
-  (voir [Relire les cartes](../review/)).
+- **⚑ Signaler**, sur une carte, dit à Notosaurus ce qui ne va pas : un mot mal lu, une réponse
+  fausse, une figure de travers, une image inadaptée. Chaque signalement est lu et aide à corriger
+  Notosaurus (voir [Signaler un problème](../review/#signaler-un-problème)).
 - **Les voix** sont celles de Google, par le service Notosaurus ; les
   [réglages des voix](../voices/) sont les mêmes.
 - **Pas de `.apkg`** ni de Ko-fi : les cartes vont directement dans AnkiDroid, et l'abonnement

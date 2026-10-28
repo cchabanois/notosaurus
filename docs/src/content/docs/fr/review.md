@@ -6,6 +6,13 @@ description: "Vérifier, modifier et corriger les cartes avant de les envoyer à
 Même la meilleure IA lit parfois un mot de travers : **parcourez toujours les cartes** avant
 de les envoyer. Tout ce que vous modifiez est enregistré au fur et à mesure (« ✓ Enregistrée »).
 
+:::tip[Quelque chose ne va pas ? Signalez-le]
+Dans l'application Android, une carte qui ne va pas (un mot mal lu, une réponse fausse, une figure
+de travers, une image inadaptée, une carte qui n'a pas de sens) : **⋯ → ⚑ Signaler** dessus. Chaque
+signalement est lu, et c'est le meilleur moyen de faire corriger Notosaurus. Voir
+[Signaler un problème](#signaler-un-problème).
+:::
+
 ![Les cartes, prêtes à être relues](../../../assets/screenshots/fr/review.png)
 
 ## Le paquet et les cartes
@@ -22,6 +29,31 @@ de les envoyer. Tout ce que vous modifiez est enregistré au fur et à mesure (�
 
 **📝 Consigne utilisée pour cette leçon**, au-dessus des cartes, rappelle ce qui a été
 demandé à l'IA.
+
+## Une leçon qui semble fausse
+
+Quand la leçon elle-même semble contenir une erreur (des notes d'élève, une faute de copie : une
+date, un nom, un nombre ou une formule faux), la carte garde ce que dit la leçon, avec une note
+(⚠️) qui dit pourquoi cela semble faux et la correction proposée. **Corriger** l'applique ;
+**Garder la leçon** retire la note. Seules les erreurs nettes et vérifiables sont signalées, jamais
+une convention ou une simplification, et la note ne part jamais dans Anki.
+
+## Signaler un problème
+
+Dans l'application Android, **⋯ → ⚑ Signaler**, en haut à droite d'une carte, dit à Notosaurus ce
+qui ne va pas : un mot mal lu, une réponse fausse, une figure avec un codage mal placé, une image
+inadaptée, une carte qui n'a pas de sens. N'hésitez pas : **chaque signalement est lu**, et c'est
+ainsi que ces erreurs sont corrigées dans Notosaurus, pour toutes les leçons à venir.
+
+- Dites pourquoi (**Faux**, **Choquant ou inapproprié**, **Autre**) et, si vous voulez, ajoutez un
+  commentaire : ce que vous attendiez aide le plus.
+- Ce qui part est la carte entière, telle que vous la voyez (ses textes, son explication quand
+  elle est affichée, son image ou sa figure, sauf une photo que vous avez prise vous-même) ; la
+  fenêtre montre exactement quoi, jamais les photos de la leçon ni le prénom de l'enfant. Voir
+  [Confidentialité](../app-privacy/).
+- Ensuite, vous pouvez supprimer la carte ou retirer son image.
+
+![La feuille Signaler un contenu : pourquoi, un commentaire, et exactement ce qui sera envoyé](../../../assets/screenshots/fr/app-report.png)
 
 ## Corriger avec l'IA
 
@@ -56,15 +88,6 @@ Sous l'explication, l'IA ne propose que ce qui aide pour **cette** carte :
 verso dans Anki. Chaque explication est un appel court à l'IA : des crédits dans
 l'application ; sur l'ordinateur, une fraction de centime avec Gemini Flash, environ un centime
 avec Claude Sonnet, compté dans les coûts de la leçon.
-
-## Signaler un contenu
-
-Dans l'application Android, **⋯ → ⚑ Signaler** sur une carte signale à Notosaurus ce que l'IA a fait : la carte
-entière, telle que vous la voyez (ses textes, son explication quand elle est affichée, son image ou
-sa figure, sauf une photo que vous avez prise vous-même). Dites pourquoi (choquant ou inapproprié, faux,
-autre), ajoutez un commentaire si vous voulez : la fenêtre montre exactement ce qui sera envoyé,
-jamais les photos de la leçon ni le prénom de l'enfant. Ensuite, vous pouvez supprimer la carte ou
-retirer son image. Voir [Confidentialité](../app-privacy/).
 
 ## Régénérer
 

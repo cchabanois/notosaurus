@@ -39,5 +39,10 @@ Si Notosaurus vous rend service, vous pouvez faire un don sur
 réglages, ou **Outils → Notosaurus → Soutenir Notosaurus…** dans Anki (sur l'ordinateur : l'application n'en a pas, son
 abonnement paie). Notosaurus reste gratuit, sans publicité.
 
+**Une carte est fausse : comment vous le dire ?**
+Dans l'application Android, **⋯ → ⚑ Signaler** sur la carte : cela envoie la carte telle que vous
+la voyez, avec votre commentaire, jamais les photos de la leçon ni le prénom de l'enfant. Chaque
+signalement est lu. Voir [Signaler un problème](../review/#signaler-un-problème).
+
 **Comment le mettre à jour ?**
 Voir [Nouveautés](../whats-new/#mettre-à-jour-notosaurus).

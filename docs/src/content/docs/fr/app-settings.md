@@ -26,7 +26,6 @@ et à mesure.
   leçons** les efface, avec leur son ; les cartes déjà dans AnkiDroid restent.
 - **ℹ️ À propos** : la version, la licence, le code source, la
   [politique de confidentialité](../app-privacy/) et les licences des bibliothèques utilisées.
-- **Avancé** : l'adresse du relais, pour les tests seulement. Laissez-la telle quelle.
 
 ![Plus bas : instructions pour l'IA, voix des cartes, leçons sur ce téléphone](../../../assets/screenshots/fr/app-settings-more.png)
 

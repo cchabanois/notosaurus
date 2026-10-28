@@ -23,7 +23,6 @@ The **Settings** button (⚙️), at the top of the page, opens the app's own se
   removes them, with their sound; the cards already in AnkiDroid stay.
 - **ℹ️ About**: the version, the licence, the source code, the
   [privacy policy](../app-privacy/) and the licences of the libraries used.
-- **Advanced**: the relay address, for tests only. Leave it as it is.
 
 ![Further down: instructions for the AI, card voices, lessons on this phone](../../assets/screenshots/en/app-settings-more.png)
 

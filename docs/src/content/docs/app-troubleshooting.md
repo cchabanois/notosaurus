@@ -11,6 +11,7 @@ The messages below are the ones the app shows.
 |---|---|
 | “No credits left this month” | They come back with the next renewal: **🔑 Subscription**, in the settings, says when. |
 | “Your free trial is over” | Subscribe in the Settings (**🔑 Subscription**) to go on. |
+| “No new free trial for now…” | New free trials are paused for the moment: subscribe in the Settings, or try again tomorrow. A trial already started goes on. |
 | “Your subscription has ended” | Subscribe again in the app. |
 | “Payment pending” | Google Play couldn't renew the subscription: update your payment method in Google Play (**Settings → Manage the subscription**). |
 | “The free trial is only possible with the app installed from Google Play, on a real phone” | Install the app from Google Play; the trial isn't offered on an emulator. |
@@ -47,7 +48,10 @@ See [With your computer](../app-with-computer/).
 
 **The cards are wrong or missing.** Check the photo (see [Photos and PDFs](../photos/)), be more
 precise in the instructions, or correct them with the AI (see [Reviewing the cards](../review/)).
-A card the AI made that is wrong or unsuitable: **⋯ → ⚑ Report** on it.
+
+**Report it.** A card that isn't right (a word misread, a wrong answer, a figure off, an
+unsuitable picture): **⋯ → ⚑ Report** on it, with a word on what you expected. Every report is
+read, and it's how such mistakes get fixed. See [Reporting a problem](../review/#reporting-a-problem).
 
 ## A PDF can't be added
 
