@@ -982,7 +982,7 @@ html.sheet-open { overflow: hidden; overscroll-behavior: none; }
 
 /* Viewer: a photo in full screen; a tap on it shows it at its real size, to pan */
 .thumb img, .card-picture img { cursor: zoom-in; }
-.hide-editor { position: fixed; inset: 0; z-index: 60; display: flex; flex-direction: column; gap: .5rem; background: rgb(8 12 18); color: #fff;
+.hide-editor { position: fixed; inset: 0; z-index: 61; display: flex; flex-direction: column; gap: .5rem; background: rgb(8 12 18); color: #fff;
   padding: calc(.6rem + env(safe-area-inset-top)) .6rem calc(.6rem + env(safe-area-inset-bottom)); }
 .hide-hint { margin: 0; font-size: .9rem; line-height: 1.35; }
 .hide-hint strong { display: block; }
@@ -1001,6 +1001,10 @@ html.sheet-open { overflow: hidden; overscroll-behavior: none; }
   width: 2.6rem; height: 2.6rem; font-size: 1.3rem; line-height: 1;
 }
 .viewer-close { top: calc(.6rem + env(safe-area-inset-top)); right: .6rem; }
+.viewer-actions { position: absolute; top: calc(.6rem + env(safe-area-inset-top)); left: .6rem; display: flex; gap: .5rem; }
+.viewer-actions button { border: 1px solid rgb(255 255 255 / .35); border-radius: 50%; background: rgb(0 0 0 / .55); color: #fff;
+  width: 2.6rem; height: 2.6rem; font-size: 1.2rem; line-height: 1; }
+.viewer-actions button.used { background: var(--primary); }  /* something hidden on this page */
 .viewer-nav { top: 50%; transform: translateY(-50%); font-size: 2rem; }
 .viewer-nav.prev { left: .4rem; }
 .viewer-nav.next { right: .4rem; }

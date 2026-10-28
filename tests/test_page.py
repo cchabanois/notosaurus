@@ -560,6 +560,27 @@ def test_photos_and_pictures_seen_in_full(page):
     sync_api.expect(viewer.locator(".viewer-nav")).to_have_count(0)
 
 
+def test_a_photo_seen_in_full_turned_and_a_name_hidden(page):
+    """A lesson's photo seen in full: turned from there (the photo shown follows), a name
+    hidden from there (its editor above the viewer), as from its thumbnail."""
+    page.goto("/")
+    page.locator('input[type=file][accept="image/*"][multiple]').set_input_files(
+        [{"name": "page-1.png", "mimeType": "image/png", "buffer": png("red")}]
+    )
+    page.locator(".thumb img").first.click()
+    viewer = page.locator(".viewer")
+    shown = viewer.locator(".viewer-frame img")
+    shown.wait_for()
+    page.wait_for_function("() => document.querySelector('.viewer-frame img').naturalWidth === 600")
+    viewer.get_by_role("button", name="Tourner la photo d'un quart de tour").click()
+    page.wait_for_function("() => document.querySelector('.viewer-frame img').naturalWidth === 800")
+    viewer.get_by_role("button", name="Cacher une partie de la page (un nom…)").click()
+    sync_api.expect(page.get_by_role("dialog", name="Cacher ce que l'IA ne doit pas voir")).to_be_visible()
+    page.keyboard.press("Escape")  # the editor closes, the viewer stays
+    sync_api.expect(page.get_by_role("dialog", name="Cacher ce que l'IA ne doit pas voir")).to_be_hidden()
+    sync_api.expect(viewer).to_be_visible()
+
+
 def test_fun_facts_as_the_settings_say(page):
     """No switch under the prompt: the fun facts come as the settings say (on at first)."""
     page.goto("/")

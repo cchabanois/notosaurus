@@ -331,20 +331,25 @@ const photosPart = {
   },
 
   // --- Viewer: a photo (or a card's picture) in full ---------------------
-  // `card`: a card's picture, its credits shown under it (a figure's: what drew it)
-  openViewer(list, index, card = null) {
-    this.viewer = { open: true, list, index, zoomed: false, touchX: 0, card };
+  // `card`: a card's picture, its credits shown under it (a figure's: what drew it).
+  // `photos`: the lesson's photos, followed as they change (turned, a name hidden from it)
+  openViewer(list, index, card = null, photos = false) {
+    this.viewer = { open: true, list, index, zoomed: false, touchX: 0, card, photos };
+  },
+
+  viewerList() {
+    return this.viewer.photos ? this.photos.map((p) => p.url) : this.viewer.list;
   },
 
   moveViewer(step) {
-    const n = this.viewer.list.length;
+    const n = this.viewerList().length;
     this.viewer.index = (this.viewer.index + step + n) % n;
     this.viewer.zoomed = false;
   },
 
   swipeViewer(x) {
     const dx = x - this.viewer.touchX;
-    if (Math.abs(dx) > 50 && this.viewer.list.length > 1) this.moveViewer(dx < 0 ? 1 : -1);
+    if (Math.abs(dx) > 50 && this.viewerList().length > 1) this.moveViewer(dx < 0 ? 1 : -1);
   },
 
   removePhoto(i) {
