@@ -31,6 +31,7 @@ const picturesPart = {
       card.picture_prompt = res.card.picture_prompt;
       card.picture_search = res.card.picture_search ?? "";
       card.figure = res.card.figure;
+      card.figure_kind = res.card.figure_kind ?? "";
       return res;
     } catch (e) {
       this.error = e.message;

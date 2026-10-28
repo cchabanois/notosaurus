@@ -206,7 +206,9 @@ def test_draw_decides_a_figure_or_a_picture(client, monkeypatch):
     async def plan(s, front, back, written="", language="English"):
         asked.append((front, back, written, language))
         if "\\cup" in back:
-            return PicturePlan(kind="figure", description="Deux ensembles A et B, leur réunion hachurée")
+            return PicturePlan(
+                kind="figure", description="Deux ensembles A et B, leur réunion hachurée", figure_kind="sets"
+            )
         return PicturePlan(kind="picture", description="a red apple", search="red apple")
 
     async def draw(s, subject):  # the image model: never a real one here (no key on the CI, a cost elsewhere)
@@ -223,6 +225,7 @@ def test_draw_decides_a_figure_or_a_picture(client, monkeypatch):
     union = client.post(url.format(cards[0]["id"]), json={"subject": ""}, headers=french).json()["card"]
     assert union["figure"] == "Deux ensembles A et B, leur réunion hachurée" and union["picture"].endswith(".svg")
     assert union["picture_prompt"] == "" and asked[-1] == ("La réunion de A et B ?", r"\(A \cup B\)", "", "French")
+    assert union["figure_kind"] == "sets"  # kept: its figure drawn again without asking it
 
     apple = client.post(url.format(cards[1]["id"]), json={"subject": "une pomme rouge"}, headers=french).json()["card"]
     assert (apple["picture_prompt"], apple["picture_search"], apple["figure"]) == ("a red apple", "red apple", "")
@@ -232,6 +235,7 @@ def test_draw_decides_a_figure_or_a_picture(client, monkeypatch):
     count = len(asked)
     again = client.post(url.format(cards[0]["id"]), json={"subject": "Deux ensembles, rien de hachuré"}).json()["card"]
     assert again["figure"] == "Deux ensembles, rien de hachuré" and len(asked) == count
+    assert again["figure_kind"] == ""  # another figure: its kind asked when drawn
 
 
 def test_search_written_in_any_language(client, monkeypatch):
@@ -329,9 +333,9 @@ TRIANGLE = """#ctz-canvas({
 })"""
 
 
-def typst_drawing(monkeypatch, bodies, checked=(True, "")):
+def typst_drawing(monkeypatch, bodies, checked=(True, ""), kind=""):
     """draw_figure with a fake AI writing the Typst `bodies` in turn (then, asked for SVG,
-    SQUARE); the calls made, in order."""
+    SQUARE), its `kind` given or not; the calls made, in order."""
     calls, written = [], iter(bodies)
 
     async def answer(s, images, text, schema, system=None, light=False, **options):
@@ -345,7 +349,7 @@ def typst_drawing(monkeypatch, bodies, checked=(True, "")):
         return schema(svg=SQUARE)
 
     monkeypatch.setattr(llm, "_ask_provider", answer)
-    svg = asyncio.run(llm.draw_figure(AIConfig(llm="gemini"), "un triangle ABC, l'angle en A marqué"))
+    svg = asyncio.run(llm.draw_figure(AIConfig(llm="gemini"), "un triangle ABC, l'angle en A marqué", kind=kind))
     return svg, calls
 
 
@@ -367,6 +371,15 @@ def test_typst_asked_again_with_its_error_then_used(monkeypatch):
     svg, calls = typst_drawing(monkeypatch, ['#import "@preview/other:1.0.0"', "#ctz-canvas({"])
     assert ">A<" in svg and [c["schema"] for c in calls] == ["Kind", "Figure", "Figure", "Drawing", "Checked"]
     assert "no import" in calls[2]["text"]
+
+
+def test_a_figures_kind_given_is_not_asked_again(monkeypatch):
+    """Its kind said with its description (Card.figure_kind): one call fewer. Not one of
+    the families (an old or a wrong one): asked."""
+    _, calls = typst_drawing(monkeypatch, [TRIANGLE], kind="geometry")
+    assert [c["schema"] for c in calls] == ["Figure", "Checked"]
+    _, calls = typst_drawing(monkeypatch, [TRIANGLE], kind="a map")
+    assert [c["schema"] for c in calls] == ["Kind", "Figure", "Checked"]
 
 
 def test_a_typst_figure_found_wrong_drawn_again_with_thinking(monkeypatch):

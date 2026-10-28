@@ -87,7 +87,7 @@ async def make_picture(
             async with usage.metered("picture", id, draft.deck):  # figures count as pictures in the costs
                 s = settings.current()
                 decided = await pictures.decided(s, card, req.subject, i18n.language_name(lang), step)
-                for field in ("figure", "picture_prompt", "picture_search"):
+                for field in ("figure", "figure_kind", "picture_prompt", "picture_search"):
                     setattr(card, field, getattr(decided, field))
                 if card.figure.strip():
                     folder = lessons.existing_folder(id) / "images"
@@ -198,7 +198,7 @@ async def remove_picture(id: str, card_id: str) -> dict:
     await access.editable(id)
 
     async def remove(draft: Lesson, card: Card) -> None:
-        card.picture = card.picture_prompt = card.figure = ""
+        card.picture = card.picture_prompt = card.figure = card.figure_kind = ""
         card.picture_source = None
 
     return await _edit_card(id, card_id, remove)

@@ -486,7 +486,8 @@ def test_a_figure_meant_but_left_undescribed_is_described(monkeypatch):
     async def generate(s, images, text, schema, system=None, **options):
         calls.append((schema.__name__, text, len(images)))
         if schema is Figures:
-            return Figures(figures=[CardFigure(card=0, figure="Deux ensembles A et B, leur partie commune hachurée")])
+            described = "Deux ensembles A et B, leur partie commune hachurée"
+            return Figures(figures=[CardFigure(card=0, figure=described, figure_kind="sets")])
         cards = [
             {"front": "L'intersection de A et B ?", "back": "Les éléments communs", "picture_on_back": True},
             {"front": "Notation ?", "back": "A ∩ B"},
@@ -504,6 +505,7 @@ def test_a_figure_meant_but_left_undescribed_is_described(monkeypatch):
 
     found = run(extracted())
     assert told == [{"step": "figures"}]
+    assert found.deck.cards[0].figure_kind == "sets"  # its kind with it: not asked when drawn
     assert [c.figure for c in found.deck.cards] == [
         "Deux ensembles A et B, leur partie commune hachurée",
         "",

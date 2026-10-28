@@ -75,7 +75,8 @@ class Pictures(
             val description = e.params.string("description")
             val search = e.params.string("search")
             cards[i] = cards[i].with(
-                "figure" to JsonPrimitive(""), "picture_prompt" to JsonPrimitive(description), "picture_search" to JsonPrimitive(search),
+                "figure" to JsonPrimitive(""), "figure_kind" to JsonPrimitive(""), "picture_prompt" to JsonPrimitive(description),
+                "picture_search" to JsonPrimitive(search),
             )
             return JsonObject(answer(lesson, cards, i) + ("search" to JsonPrimitive(search.ifEmpty { description })))
         }
@@ -103,7 +104,7 @@ class Pictures(
         val cards = lesson.cards()
         cards[i] = cards[i].with(
             "picture" to JsonPrimitive(""), "picture_prompt" to JsonPrimitive(""), "figure" to JsonPrimitive(""),
-            "picture_source" to JsonNull,
+            "figure_kind" to JsonPrimitive(""), "picture_source" to JsonNull,
         )
         return answer(lesson, cards, i)
     }
@@ -172,7 +173,7 @@ class Pictures(
         private const val NEEDS_DRAWING = "picture.needs_drawing" // no free picture fits: the user is asked
         private val PHOTO = buildJsonObject { put("source", "photo") }
         // What the relay decides of a card's picture (Card's fields): taken into the card
-        private val PICTURE_FIELDS = listOf("figure", "picture_prompt", "picture_search", "picture_source")
+        private val PICTURE_FIELDS = listOf("figure", "figure_kind", "picture_prompt", "picture_search", "picture_source")
         private val CLOZE = Regex("""\{\{c\d+::""") // a gap, as core/notosaurus_core/cards.py
         private val NAME = Regex("""^picture-[a-z0-9]+-[a-f0-9]{8}\.(jpg|svg)$""") // the files we write
     }

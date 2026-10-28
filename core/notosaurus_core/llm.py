@@ -22,7 +22,7 @@ from collections.abc import Callable, Sequence
 from functools import cache
 from typing import Any
 
-from pydantic import BaseModel, Field, create_model
+from pydantic import BaseModel, ConfigDict, Field, create_model
 
 from . import config, diagrams
 from .calls import (  # noqa: F401 (llm's API)
@@ -98,7 +98,14 @@ def ai_schema(base: type[BaseModel], fun_facts: bool = False, helps: bool = Fals
     left_out |= set() if helps else {"explanation", "mnemonic"}
     # Field name → (annotation, FieldInfo), as create_model takes them
     card_fields: dict[str, Any] = {k: (f.annotation, f) for k, f in Card.model_fields.items() if k not in left_out}
-    card = create_model("Card", __doc__=Card.__doc__, **card_fields)
+
+    # figure_kind required in the schema the AI is given ("" without a figure): an optional
+    # field more would pass Claude's limit; an answer without it still read (its default)
+    def required(schema: dict[str, Any]) -> None:
+        schema.setdefault("required", []).append("figure_kind")
+
+    config = ConfigDict(json_schema_extra=required)  # pyright: ignore[reportArgumentType]
+    card = create_model("Card", __doc__=Card.__doc__, __config__=config, **card_fields)
     fields: dict[str, Any] = {k: (f.annotation, f) for k, f in base.model_fields.items() if k != "cards"}
     refused = (bool, Field(default=False, description="True when the request must be refused (see the rules)."))
     cards: Any = (list[card], Field())  # Any: a model built at run time, not a type pyright can check
@@ -203,27 +210,29 @@ async def _complete_figures(s: AIConfig, images: list[Image], cards: list[Card])
     for item in found.figures:
         if 0 <= item.card < len(todo) and item.figure.strip():
             todo[item.card].figure = item.figure.strip()
+            todo[item.card].figure_kind = item.figure_kind
 
 
 # A light drawing not worth checking: drawn again with the model's thinking
 _UNUSABLE = {"llm.invalid_answer", "llm.truncated", "llm.empty_answer", "figure.invalid"}
 
 
-async def draw_figure(s: AIConfig, description: str, step: Callable[[dict], Any] | None = None) -> str:
+async def draw_figure(s: AIConfig, description: str, step: Callable[[dict], Any] | None = None, kind: str = "") -> str:
     """The SVG of a figure (cleaned, figures.clean), drawn by the cards' AI: in Typst with
     CeTZ (figures_typst.py: a curve computed from its function, marks from their points,
     angles by angle-mark), else as SVG (figures.py). Drawn quickly first (light calls), then
     checked by looking at it (another light call, figures.CHECK_RULES): right, it stays (a
     few seconds); wrong, drawn again with the model's thinking, told what was wrong.
     Unchecked (no PNG, the check failing): drawn with thinking when the light one couldn't be
-    seen, else the light one kept. `step`: told each step as it begins (relay_api.PictureStep)."""
+    seen, else the light one kept. `step`: told each step as it begins (relay_api.PictureStep).
+    `kind`: its family, when the AI that described it said it (Card.figure_kind): not asked again."""
     from . import figures
 
     tell = step or (lambda _: None)
     text = f"Figure to draw: {description.strip()}"
     problem, first = "", ""
     tell({"step": "drawing"})
-    family = await _figure_family(s, description)
+    family = await _figure_family(s, description, kind)
     try:
         svg = await _drawn(s, text, description, family, light=True)
         png = figures.to_png(svg)
@@ -243,22 +252,25 @@ async def draw_figure(s: AIConfig, description: str, step: Callable[[dict], Any]
     return await _drawn(s, text, description, family, light=False)
 
 
-async def _figure_family(s: AIConfig, description: str) -> str:
-    """Which family of figures_typst draws it (a light call); "other" (drawn as SVG): none
-    of them, Typst not installed, the demo, or not told."""
+async def _figure_family(s: AIConfig, description: str, kind: str = "") -> str:
+    """Which family of figures_typst draws it: `kind` when given (the AI that described it
+    said it), else a light call; "other" (drawn as SVG): none of them, Typst not installed,
+    the demo, or not told."""
     from . import figures_typst
 
     if s.llm == "fake" or not figures_typst.available():
         return "other"
+    if kind in figures_typst.FAMILIES or kind == "other":
+        return kind
     try:
-        kind = await _ask_provider(
+        picked = await _ask_provider(
             s, [], f"Figure: {description.strip()}", figures_typst.Kind, figures_typst.FAMILY_RULES, light=True
         )
     except ExtractionError as e:
         if e.code not in _UNUSABLE:
             raise
         return "other"
-    return kind.family
+    return picked.family
 
 
 async def _drawn(s: AIConfig, text: str, description: str, family: str, light: bool) -> str:

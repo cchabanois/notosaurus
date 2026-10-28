@@ -2029,6 +2029,23 @@
             "description": "When an exact figure makes the card clearer (see the rules: geometry, or a notion the lesson's page shows a figure for): what to draw, every label with its exact text. Empty otherwise.",
             "default": ""
           },
+          "figure_kind": {
+            "type": "string",
+            "enum": [
+              "",
+              "geometry",
+              "graph",
+              "sets",
+              "diagram",
+              "circuit",
+              "chemistry",
+              "timeline",
+              "other"
+            ],
+            "title": "Figure Kind",
+            "description": "With a figure, which kind it is: \"geometry\": points, segments, lines, circles, polygons, angles, their marks (a theorem, a construction); \"graph\": the graph of one or more functions in a frame; \"sets\": a Venn diagram of two or three sets; \"diagram\": boxes and arrows (a flowchart, a cycle, a chain, a classification); \"circuit\": an electric circuit; \"chemistry\": a molecule's formula; \"timeline\": dates on a line; \"other\": anything else (a table, a labelled drawing, a solid in perspective, a map…). Empty otherwise.",
+            "default": ""
+          },
           "fun_fact": {
             "type": "string",
             "title": "Fun Fact",
@@ -3072,6 +3089,23 @@
             "type": "string",
             "title": "Description",
             "description": "A figure: what to draw, in the cards' language, every label with its exact text. A picture: what to draw, in English, one concrete subject a child recognises at once."
+          },
+          "figure_kind": {
+            "type": "string",
+            "enum": [
+              "",
+              "geometry",
+              "graph",
+              "sets",
+              "diagram",
+              "circuit",
+              "chemistry",
+              "timeline",
+              "other"
+            ],
+            "title": "Figure Kind",
+            "description": "A figure: which kind it is, \"geometry\": points, segments, lines, circles, polygons, angles, their marks (a theorem, a construction); \"graph\": the graph of one or more functions in a frame; \"sets\": a Venn diagram of two or three sets; \"diagram\": boxes and arrows (a flowchart, a cycle, a chain, a classification); \"circuit\": an electric circuit; \"chemistry\": a molecule's formula; \"timeline\": dates on a line; \"other\": anything else (a table, a labelled drawing, a solid in perspective, a map…). Empty for a picture.",
+            "default": ""
           },
           "search": {
             "type": "string",
