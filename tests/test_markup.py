@@ -64,3 +64,15 @@ def test_extraction_and_revision_come_out_plain(monkeypatch):
     assert (found.deck.cards[0].front, found.deck.cards[0].back) == ("t[i]ger", "[i]")
     revised = asyncio.run(llm.revise_cards(s, [], "p", Deck(deck="D", cards=[Card(front="a", back="b")]), "fix"))
     assert isinstance(revised, Revision) and revised.cards[0].front == "[x]"
+
+
+def test_latex_commands_whose_backslash_json_read_as_an_escape():
+    # The card reported: "\text" written with one backslash, "\(" with none
+    reported = "Combien de mètres (\text{m}) y a-t-il dans 1 kilomètre (\text{km}) ?"
+    assert cards.plain(reported) == "Combien de mètres \\(\\text{m}\\) y a-t-il dans 1 kilomètre \\(\\text{km}\\) ?"
+    assert cards.plain("\\(\frac{1}{2} \times \beta\\)") == "\\(\\frac{1}{2} \\times \\beta\\)"
+    assert cards.plain("\\[\rho \neq 0\\]") == "\\[\\rho \\neq 0\\]"  # a line break, within a formula
+    assert cards.plain("\\(x\\)\nne pas oublier") == "\\(x\\)\nne pas oublier"  # outside one: meant
+    assert cards.plain("une (\\textbf{note}) et \\(x\\)") == "une (\\textbf{note}) et \\(x\\)"  # a formula already
+    for text in ("col 1\t2", "(voir page 3)", "f(x) = \\(x^2\\)"):
+        assert cards.plain(text) == text, text
