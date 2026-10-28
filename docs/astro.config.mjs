@@ -38,7 +38,9 @@ export default defineConfig({
 			},
 			// Three kinds of pages: what is the same everywhere, the Android app's own, the add-on's
 			// own (and standalone's). A common page shows a difference in <Tabs syncKey="mode">
-			// (labels: "Android app" / "Computer"; fr: "Application Android" / "Ordinateur"), so the
+			// (labels: "Android app" / "Computer"; fr: "Application Android" / "Ordinateur"; es:
+			// "Aplicación Android" / "Ordenador"; de: "Android-App" / "Computer"; it: "App Android" /
+			// "Computer"; pt-br: "App Android" / "Computador"), so the
 			// reader's choice follows from page to page. Slugs stay flat: the app and the add-on link
 			// to some of them.
 			sidebar: [
