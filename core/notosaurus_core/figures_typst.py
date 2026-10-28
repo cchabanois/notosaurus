@@ -312,8 +312,9 @@ def source(family: str, body: str) -> str:
 
 
 _COMPILE = """\
-import resource, sys, typst
-try:  # the memory it may take, where the system lets us say so
+import sys, typst
+try:  # the memory it may take, where the system lets us say so (not on Windows: no resource)
+    import resource
     resource.setrlimit(resource.RLIMIT_AS, ({memory}, {memory}))
 except Exception:
     pass
