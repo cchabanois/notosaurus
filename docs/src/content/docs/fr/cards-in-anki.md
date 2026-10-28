@@ -21,7 +21,8 @@ paquets qu'il contient.
 
 ## Renvoyer une leçon
 
-Une fois la leçon envoyée, le bouton devient **🔄 Mettre à jour dans Anki**. Vous pouvez corriger
+Une fois la leçon envoyée, le bouton dit **✓ À jour dans Anki**, puis **🔄 Mettre à jour dans
+Anki** dès que quelque chose change. Vous pouvez corriger
 une leçon et la renvoyer autant de fois que vous voulez :
 
 - ses cartes sont **mises à jour** dans Anki, **pas dupliquées**, et chaque carte garde son

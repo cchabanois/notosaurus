@@ -11,6 +11,7 @@ The messages below are the ones the app shows.
 |---|---|
 | “No credits left this month” | They come back with the next renewal: **🔑 Subscription**, in the settings, says when. |
 | “Your free trial is over” | Subscribe in the Settings (**🔑 Subscription**) to go on. |
+| “No new free trial for now…” | New free trials are paused for the moment: subscribe in the Settings, or try again tomorrow. A trial already started goes on. |
 | “Your subscription has ended” | Subscribe again in the app. |
 | “Payment pending” | Google Play couldn't renew the subscription: update your payment method in Google Play (**Settings → Manage the subscription**). |
 | “The free trial is only possible with the app installed from Google Play, on a real phone” | Install the app from Google Play; the trial isn't offered on an emulator. |

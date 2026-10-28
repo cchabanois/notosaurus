@@ -11,7 +11,8 @@ as a file. In the Android app, they go straight into AnkiDroid: see
 
 **📥 Add to Anki** writes the cards straight into the **profile open in Anki**, in the lesson's
 deck, with their audio and pictures. A message says what was done, for instance “✓ In Anki:
-9 cards added. Synced with AnkiWeb.”
+9 cards added. Synced with AnkiWeb.” While the pictures and figures are still being drawn, the
+button waits for them and says how many are ready (“⏳ Pictures and figures: 2 / 5 ready…”).
 
 ![The cards sent to Anki](../../assets/screenshots/en/sent.png)
 
@@ -23,7 +24,9 @@ deck, with their audio and pictures. A message says what was done, for instance 
 
 ## Sending a lesson again
 
-Once the lesson is sent, the button becomes **🔄 Update in Anki**: a corrected lesson sent again
+Once the lesson is sent and as long as nothing changes, the button says **✓ Up to date in Anki**
+(it still sends the lesson again if needed). Once something Anki gets has changed (a card, its
+picture, the deck, the voice, the options), it becomes **🔄 Update in Anki**: a corrected lesson sent again
 updates its cards in Anki, history kept, instead of duplicating them. See
 [The cards in Anki](../cards-in-anki/).
 

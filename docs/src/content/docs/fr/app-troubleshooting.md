@@ -11,6 +11,7 @@ Les messages ci-dessous sont ceux qu'affiche l'application.
 |---|---|
 | « Plus de crédits ce mois-ci » | Ils reviennent au prochain renouvellement : **🔑 Abonnement**, dans les réglages, dit quand. |
 | « Votre essai gratuit est terminé » | Abonnez-vous dans les Réglages (**🔑 Abonnement**) pour continuer. |
+| « Pas de nouvel essai gratuit pour le moment… » | Les nouveaux essais gratuits sont suspendus pour l'instant : abonnez-vous dans les Réglages, ou réessayez demain. Un essai déjà commencé continue. |
 | « Votre abonnement est terminé » | Réabonnez-vous dans l'application. |
 | « Paiement en attente » | Google Play n'a pas pu renouveler l'abonnement : mettez à jour votre moyen de paiement dans Google Play (**Réglages → Gérer l'abonnement**). |
 | « L'essai gratuit n'est possible qu'avec l'app installée depuis Google Play, sur un vrai téléphone » | Installez l'application depuis Google Play ; l'essai n'est pas proposé sur un émulateur. |

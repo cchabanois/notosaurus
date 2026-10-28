@@ -19,7 +19,8 @@ To review a whole subject, click its deck: Anki takes the cards of all the decks
 
 ## Sending a lesson again
 
-Once the lesson is sent, the button becomes **🔄 Update in Anki**. You can correct a lesson and
+Once the lesson is sent, the button says **✓ Up to date in Anki**, then **🔄 Update in Anki** as
+soon as something changes. You can correct a lesson and
 send it again as many times as you like:
 
 - its cards are **updated** in Anki, **not duplicated**, and each card keeps its review history,

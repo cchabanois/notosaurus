@@ -20,6 +20,14 @@ sending them. Everything you change is saved as you go (“✓ Saved”).
 
 **📝 Instructions used for this lesson**, above the cards, reminds what the AI was asked.
 
+## A lesson that looks wrong
+
+When the lesson itself seems to contain a mistake (a pupil's notes, a copy error: a wrong date,
+name, number or formula), the card keeps what the lesson says, with a note (⚠️) saying why it
+looks wrong and the suggested correction. **Correct** takes it; **Keep the lesson** dismisses the
+note. Only clear, verifiable mistakes are flagged, never a convention or a simplification, and
+the note never goes to Anki.
+
 ## Correcting with the AI
 
 Instead of changing the cards one by one, ask in plain words, in the field above the cards:

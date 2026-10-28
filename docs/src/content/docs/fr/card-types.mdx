@@ -84,6 +84,15 @@ déplacez-la au verso quand elle fait partie de la réponse. La consigne **Géom
 figures)** fait ce type de cartes, tout comme **Automatique** et les consignes de formules
 quand c'est utile.
 
+Les figures sont dessinées avec [Typst](https://typst.app), chaque type avec un paquet fait pour
+lui (géométrie, courbes de fonctions, ensembles, schémas, circuits électriques, chimie, frises
+chronologiques) : une courbe est calculée à partir de sa fonction, un codage est sur son segment.
+Sous la figure, une ligne dit ce qui l'a dessinée (« 📐 Dessinée par gemini-… avec Typst +
+ctz-euclide », chacun avec un lien vers sa page). Une figure qui vous laisse un doute :
+**🔍 Vérifier la figure** demande à l'IA de la regarder ; si elle trouve une erreur, elle dit
+laquelle, et vous choisissez **Garder** ou **📐 Redessiner** (puis, si besoin, **📐 Redessiner avec
+soin**).
+
 ## Images
 
 La consigne **Langue : vocabulaire en images** met au recto une image de chaque mot, trouvée
@@ -149,4 +158,5 @@ les voyez toujours avant qu'elles aillent sur une carte.
 Chaque carte garde d'où vient son image : son panneau le dit (« Source : Wikimedia Commons ·
 domaine public », avec un lien vers la page de l'image ; « Dessinée par l'IA » ; « Votre photo »).
 Sur l'ordinateur, la note Anki la garde aussi, dans un champ caché **Source** : il n'apparaît sur
-aucune carte, mais suit le paquet si vous le partagez.
+aucune carte, mais suit le paquet si vous le partagez. Pour une figure, il nomme aussi le modèle
+et les paquets Typst qui l'ont dessinée.

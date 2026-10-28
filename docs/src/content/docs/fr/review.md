@@ -23,6 +23,14 @@ de les envoyer. Tout ce que vous modifiez est enregistré au fur et à mesure (�
 **📝 Consigne utilisée pour cette leçon**, au-dessus des cartes, rappelle ce qui a été
 demandé à l'IA.
 
+## Une leçon qui semble fausse
+
+Quand la leçon elle-même semble contenir une erreur (des notes d'élève, une faute de copie : une
+date, un nom, un nombre ou une formule faux), la carte garde ce que dit la leçon, avec une note
+(⚠️) qui dit pourquoi cela semble faux et la correction proposée. **Corriger** l'applique ;
+**Garder la leçon** retire la note. Seules les erreurs nettes et vérifiables sont signalées, jamais
+une convention ou une simplification, et la note ne part jamais dans Anki.
+
 ## Corriger avec l'IA
 
 Plutôt que de modifier les cartes une par une, demandez avec vos mots, dans le champ
