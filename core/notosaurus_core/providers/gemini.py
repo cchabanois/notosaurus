@@ -75,6 +75,11 @@ FIRST_PART_S = 90
 NEXT_PART_S = 45
 WHOLE_ANSWER_S = 180
 
+# A light call (a few seconds: a figure drawn, checked) at times hangs for a minute or more,
+# the model's own wait, not the work (seen on Vertex AI): not answered after this, it is
+# asked again beside it, the first answer taken, the other one cancelled
+ASK_AGAIN_S = 12
+
 # What makes the next model tried, unless it was the last: overloaded (a 5xx still there
 # after the SDK's retries), no quota (a free key has none for the latest models, and a
 # quota of its own for each model: the next one may still answer), stopped answering.
@@ -212,9 +217,36 @@ async def _within(seconds: float, awaitable):
 async def _generate(request: _Request, model: str):
     """The model's answer; written as it comes when the cards are wanted at once."""
     if request.on_card is None:
-        call = request.client.aio.models.generate_content(model=model, contents=request.contents, config=request.config)
-        return await _within(WHOLE_ANSWER_S, call)
+
+        def call():
+            return request.client.aio.models.generate_content(
+                model=model, contents=request.contents, config=request.config
+            )
+
+        return await _within(WHOLE_ANSWER_S, _asked_again(call) if request.light else call())
     return await _streamed(request, model, request.on_card)
+
+
+async def _asked_again(call):
+    """`call`'s answer; not there after ASK_AGAIN_S, the same asked again beside it: the
+    first answer that comes, the other cancelled. Both failing: the last one's error."""
+    first = asyncio.ensure_future(call())
+    done, _ = await asyncio.wait({first}, timeout=ASK_AGAIN_S)
+    if done:
+        return first.result()
+    log.info("Gemini slow to answer: asked again")
+    running = {first, asyncio.ensure_future(call())}
+    try:
+        while True:
+            done, running = await asyncio.wait(running, return_when=asyncio.FIRST_COMPLETED)
+            answered = [t for t in done if not t.exception()]
+            if answered:
+                return answered[0].result()
+            if not running:
+                return done.pop().result()  # raises: the last one's error
+    finally:
+        for task in running:
+            task.cancel()
 
 
 async def _streamed(request: _Request, model: str, on_card: OnCard):
