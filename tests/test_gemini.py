@@ -434,3 +434,51 @@ def test_an_ai_slow_to_answer_said(monkeypatch):
     monkeypatch.setattr(llm, "SLOW_S", 0.05)
     assert asyncio.run(answer_after(0.2)) == [{"step": "slow"}]
     assert asyncio.run(answer_after(0.0)) == []
+
+
+class SlowOnce(Scripted):
+    """A Gemini whose first answer hangs (the model's wait, not the work), the next ones come."""
+
+    async def generate(self, model, contents, config):
+        if not self.models:
+            self.models.append(model)
+            await asyncio.sleep(3600)
+        return await super().generate(model, contents, config)
+
+
+def test_a_light_call_that_hangs_is_asked_again(monkeypatch):
+    """Not answered after a while: asked again beside it, the first answer taken, from the
+    same model (not the fallback one); a call that isn't light waits for its answer."""
+    monkeypatch.setattr(gemini, "ASK_AGAIN_S", 0.05)
+    fake = SlowOnce()
+    light = gemini._Request(fake, LIGHT, ["a figure"], types.GenerateContentConfig(), light=True)
+    response = run(gemini._fallback(light, ["a", "b"]))
+    assert response.text == SVG and fake.models == ["a", "a"]
+
+    monkeypatch.setattr(gemini, "WHOLE_ANSWER_S", 0.2)
+    fake = SlowOnce()
+    run(gemini._fallback(_request(fake), ["a", "b"]))  # not light: stalled, then the next model
+    assert fake.models == ["a", "b"]
+
+
+def test_a_light_call_failing_at_once_is_not_asked_again(monkeypatch):
+    monkeypatch.setattr(gemini, "ASK_AGAIN_S", 0.05)
+    fake = Scripted(a=400)
+    light = gemini._Request(fake, LIGHT, ["a figure"], types.GenerateContentConfig(), light=True)
+    assert _failure(gemini._fallback(light, ["a", "b"]))[0] == "llm.api_error"
+    assert fake.models == ["a"]
+
+
+def test_a_light_call_asked_again_both_failing_says_it(monkeypatch):
+    monkeypatch.setattr(gemini, "ASK_AGAIN_S", 0.05)
+
+    class Late503(Scripted):
+        async def generate(self, model, contents, config):
+            self.models.append(model)
+            await asyncio.sleep(0.1)
+            raise errors.ServerError(503, {"error": {"code": 503, "message": "no", "status": "X"}})
+
+    fake = Late503()
+    light = gemini._Request(fake, LIGHT, ["a figure"], types.GenerateContentConfig(), light=True)
+    assert _failure(gemini._fallback(light, ["a"])) == ("llm.overloaded", {"provider": "Gemini", "status": 503})
+    assert fake.models == ["a", "a"]
