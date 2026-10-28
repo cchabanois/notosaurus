@@ -406,7 +406,9 @@
       "checkProblem": "The check found:",
       "redraw": "📐 Redraw it",
       "redrawCareful": "📐 Redraw it carefully",
-      "keep": "Keep it"
+      "keep": "Keep it",
+      "madeWith": "📐 Drawn by {model} with ",
+      "carefully": "carefully"
     },
     "pairing": {
       "title": "Device not allowed"

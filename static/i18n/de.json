@@ -406,7 +406,9 @@
       "checkProblem": "Die Prüfung meldet:",
       "redraw": "📐 Neu zeichnen",
       "redrawCareful": "📐 Sorgfältig neu zeichnen",
-      "keep": "Behalten"
+      "keep": "Behalten",
+      "madeWith": "📐 Gezeichnet von {model} mit ",
+      "carefully": "sorgfältig"
     },
     "pairing": {
       "title": "Gerät nicht zugelassen"

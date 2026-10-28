@@ -898,6 +898,12 @@ html.sheet-open { overflow: hidden; overscroll-behavior: none; }
 .figure-check .picture-actions { justify-content: center; }
 .found { margin-top: .6rem; }
 .picture-source { margin: 0 0 .5rem; color: var(--muted); font-size: .85rem; }
+/* A figure's credits under it, full screen: what drew it, each project linked */
+.viewer-credit { position: absolute; left: 0; right: 0; bottom: max(.8rem, env(safe-area-inset-bottom)); margin: 0 auto;
+  width: fit-content; max-width: calc(100% - 2rem); padding: .35rem .8rem; border-radius: 999px; background: rgba(0, 0, 0, .6);
+  color: #fff; font-size: .85rem; text-align: center; }
+.viewer-credit a { color: #fff; text-decoration: underline; white-space: nowrap; }
+.picture-source a { white-space: nowrap; }
 .picture-source a { margin-left: .35rem; color: var(--primary); font-weight: 700; }
 .found-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(5.2rem, 1fr)); gap: .4rem; margin-bottom: .35rem; }
 .found-pick {

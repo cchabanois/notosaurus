@@ -3160,6 +3160,29 @@
             "type": "string",
             "title": "Model",
             "default": ""
+          },
+          "engine": {
+            "type": "string",
+            "enum": [
+              "",
+              "typst",
+              "svg"
+            ],
+            "title": "Engine",
+            "default": ""
+          },
+          "made_with": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Made With",
+            "default": []
+          },
+          "careful": {
+            "type": "boolean",
+            "title": "Careful",
+            "default": false
           }
         },
         "type": "object",

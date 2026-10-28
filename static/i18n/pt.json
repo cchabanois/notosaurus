@@ -406,7 +406,9 @@
       "checkProblem": "A verificação indica:",
       "redraw": "📐 Redesenhar",
       "redrawCareful": "📐 Redesenhar com cuidado",
-      "keep": "Manter"
+      "keep": "Manter",
+      "madeWith": "📐 Desenhada por {model} com ",
+      "carefully": "com cuidado"
     },
     "pairing": {
       "title": "Aparelho não autorizado"

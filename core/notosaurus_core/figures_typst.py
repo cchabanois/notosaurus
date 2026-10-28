@@ -301,6 +301,23 @@ FORBIDDEN = re.compile(
 _COLOR = re.compile(r'\b(fill|stroke)="#([0-9a-fA-F]{6})"')
 
 
+_IMPORTED = re.compile(r"@preview/([\w-]+):(\d+\.\d+\.\d+)")
+
+
+def made_with(family: str) -> list[str]:
+    """What a family's figure is drawn with, to credit them: Typst, then the packages its
+    preamble imports ("ctz-euclide 0.3.0"); [] for no family of ours."""
+    if family not in FAMILIES:
+        return []
+    from importlib.metadata import PackageNotFoundError, version
+
+    try:
+        typst = f"Typst {version('typst')}"
+    except PackageNotFoundError:
+        typst = "Typst"
+    return [typst] + [f"{name} {at}" for name, at in _IMPORTED.findall(FAMILIES[family].preamble)]
+
+
 def available() -> bool:
     """Typst installed (the typst package): else the figures are drawn as SVG."""
     return importlib.util.find_spec("typst") is not None

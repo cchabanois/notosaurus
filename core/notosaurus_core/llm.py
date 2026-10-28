@@ -20,7 +20,7 @@ import asyncio
 import logging
 from collections.abc import Callable, Sequence
 from functools import cache
-from typing import Any
+from typing import Any, Literal, NamedTuple
 
 from pydantic import BaseModel, ConfigDict, Field, create_model
 
@@ -217,6 +217,16 @@ async def _complete_figures(s: AIConfig, images: list[Image], cards: list[Card])
 _UNUSABLE = {"llm.invalid_answer", "llm.truncated", "llm.empty_answer", "figure.invalid"}
 
 
+class MadeFigure(NamedTuple):
+    """A figure drawn (made_figure): its SVG, cleaned, and how: "typst" (its family's
+    packages) or "svg"; its family; with the model's thinking or not."""
+
+    svg: str
+    engine: Literal["typst", "svg"]
+    family: str
+    careful: bool
+
+
 async def draw_figure(
     s: AIConfig,
     description: str,
@@ -225,7 +235,19 @@ async def draw_figure(
     problem: str = "",
     careful: bool = False,
 ) -> str:
-    """The SVG of a figure (cleaned, figures.clean), drawn by the cards' AI: in Typst
+    """The SVG of a figure (made_figure's)."""
+    return (await made_figure(s, description, step, kind, problem, careful)).svg
+
+
+async def made_figure(
+    s: AIConfig,
+    description: str,
+    step: Callable[[dict], Any] | None = None,
+    kind: str = "",
+    problem: str = "",
+    careful: bool = False,
+) -> MadeFigure:
+    """A figure, its SVG cleaned (figures.clean) and how it was made, drawn by the cards' AI: in Typst
     (figures_typst.py: a curve computed from its function, marks from their points, angles
     by angle-mark), else as SVG (figures.py). Drawn quickly (light calls), not checked: the
     user checks it when in doubt (check_figure). A light drawing that can't be used: drawn
@@ -297,7 +319,7 @@ async def _figure_family(s: AIConfig, description: str, kind: str = "") -> str:
     return picked.family
 
 
-async def _drawn(s: AIConfig, text: str, description: str, family: str, light: bool) -> str:
+async def _drawn(s: AIConfig, text: str, description: str, family: str, light: bool) -> MadeFigure:
     """A figure drawn once, cleaned: in Typst with its family's package and sheet (asked again
     once, told what Typst said, when it doesn't compile), else as SVG (family "other", Typst
     refusing it twice; the demo)."""
@@ -314,7 +336,8 @@ async def _drawn(s: AIConfig, text: str, description: str, family: str, light: b
                     raise
                 break
             try:
-                return figures.clean(await asyncio.to_thread(figures_typst.compile_svg, family, body))
+                svg = figures.clean(await asyncio.to_thread(figures_typst.compile_svg, family, body))
+                return MadeFigure(svg, "typst", family, not light)
             except (figures_typst.Unusable, figures.FigureError) as e:
                 said = str(e) if isinstance(e, figures_typst.Unusable) else "its SVG was unusable"
                 asked = (
@@ -324,7 +347,7 @@ async def _drawn(s: AIConfig, text: str, description: str, family: str, light: b
         log.warning("Figure drawn as SVG: Typst refused it")
     demo = lambda: demo_ai.figure(description)  # noqa: E731
     drawing = await _ask_provider(s, [], text, figures.Drawing, figures.RULES, light=light, demo=demo)
-    return figures.clean(drawing.svg)
+    return MadeFigure(figures.clean(drawing.svg), "svg", family, not light)
 
 
 async def explain_card(

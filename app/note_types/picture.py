@@ -46,12 +46,16 @@ def picture_fields(card, picture: Path, card_id: str) -> dict[str, str]:
 
 def source(card) -> str:
     """Where the card's picture comes from, as its note's hidden Source field: "Wikimedia
-    Commons · Public domain · Prise de la Bastille · <its page>", "Drawn by <model>", "Own photo"."""
+    Commons · Public domain · Prise de la Bastille · <its page>", "Drawn by <model>" (a figure:
+    "… with Typst 0.15.0, ctz-euclide 0.3.0"), "Own photo"."""
     origin = card.picture_source
     if origin is None:
         return ""
     if origin.source == "drawn":
-        return field_html(f"Drawn by {origin.model}" if origin.model else "Drawn")
+        drawn = f"Drawn by {origin.model}" if origin.model else "Drawn"
+        if origin.made_with:  # a figure: credited to what drew it (Typst, its packages)
+            drawn += f" with {', '.join(origin.made_with)}"
+        return field_html(drawn + (", carefully" if origin.careful else ""))
     if origin.source == "photo":
         return "Own photo"
     parts = [field_html(p) for p in (SOURCE_NAMES.get(origin.source, origin.source), origin.licence, origin.title) if p]

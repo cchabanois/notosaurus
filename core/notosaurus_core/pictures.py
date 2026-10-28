@@ -16,7 +16,7 @@ from collections.abc import Callable
 from pathlib import Path
 from typing import Any, NamedTuple
 
-from . import config, figures, files, images, llm, recommended, stock
+from . import config, figures, figures_typst, files, images, llm, recommended, stock
 from .cards import is_cloze
 from .config import AIConfig
 from .errors import AppError, loggable
@@ -356,9 +356,15 @@ async def card_picture(
     model's thinking when `careful`."""
     card = await decided(s, card, asked, language, step)
     if card.figure.strip():
-        svg = figures.clean(await llm.draw_figure(s, card.figure, step, card.figure_kind, problem, careful))
-        card.picture_source = PictureSource(source="drawn", model=s.model_for_provider())
-        return CardPicture(card, svg.encode(), "svg")
+        made = await llm.made_figure(s, card.figure, step, card.figure_kind, problem, careful)
+        card.picture_source = PictureSource(
+            source="drawn",
+            model=s.model_for_provider(),
+            engine=made.engine,
+            made_with=figures_typst.made_with(made.family) if made.engine == "typst" else [],
+            careful=made.careful,
+        )
+        return CardPicture(card, figures.clean(made.svg).encode(), "svg")
     context = f"{card.front.strip()} → {card.back.strip()}"
     search = card.picture_search if find else ""
     try:
