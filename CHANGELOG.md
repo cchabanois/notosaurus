@@ -130,6 +130,7 @@ Each pull request adds a line under **Unreleased**. See [Releasing](CONTRIBUTING
 
 ### Fixed
 
+- A light AI call (sorting free pictures, drawing a figure) left waiting is given up on after 30 s for the fallback model, which answered in under 2 s, instead of 180 s: a card's free picture took three minutes.
 - "Cancel" while a lesson is made on the phone stops at once, also once the relay has begun answering (it waited for the relay to finish: the button did nothing).
 - A graph's ticks at π, e, √2… written as the lesson writes them (π/2, 2π), no longer as long decimals running into one another.
 - A figure no longer writes what its description only names to say what to draw ("the curve of f(x) = ln(x)"): a label only when asked for. On a card asking which function a graph is, the graph gave the answer.
