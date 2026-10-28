@@ -210,24 +210,22 @@ _UNUSABLE = {"llm.invalid_answer", "llm.truncated", "llm.empty_answer", "figure.
 
 
 async def draw_figure(s: AIConfig, description: str, step: Callable[[dict], Any] | None = None) -> str:
-    """The SVG of a figure (cleaned, figures.clean), drawn by the cards' AI with the
-    drawing rules (figures.py). Drawn quickly first (a light call), then checked by looking
-    at it (another light call, figures.CHECK_RULES): right, it stays (a few seconds); wrong
-    (thinking little, the model places by eye what belongs to another element: a mark off
-    its segment, an angle on the other side of its line), drawn again with the model's
-    thinking, told what was wrong (half a minute). Unchecked (no PNG, the check failing):
-    drawn with thinking when the light one couldn't be seen, else the light one kept.
-    `step`: told each step as it begins (relay_api.PictureStep's fields)."""
+    """The SVG of a figure (cleaned, figures.clean), drawn by the cards' AI: in Typst with
+    CeTZ (figures_typst.py: a curve computed from its function, marks from their points,
+    angles by angle-mark), else as SVG (figures.py). Drawn quickly first (light calls), then
+    checked by looking at it (another light call, figures.CHECK_RULES): right, it stays (a
+    few seconds); wrong, drawn again with the model's thinking, told what was wrong.
+    Unchecked (no PNG, the check failing): drawn with thinking when the light one couldn't be
+    seen, else the light one kept. `step`: told each step as it begins (relay_api.PictureStep)."""
     from . import figures
 
     tell = step or (lambda _: None)
     text = f"Figure to draw: {description.strip()}"
-    demo = lambda: demo_ai.figure(description)  # noqa: E731
     problem, first = "", ""
     tell({"step": "drawing"})
+    family = await _figure_family(s, description)
     try:
-        light = await _ask_provider(s, [], text, figures.Drawing, figures.RULES, light=True, demo=demo)
-        svg = figures.clean(light.svg)
+        svg = await _drawn(s, text, description, family, light=True)
         png = figures.to_png(svg)
         if png is not None:
             tell({"step": "checking"})
@@ -242,7 +240,54 @@ async def draw_figure(s: AIConfig, description: str, step: Callable[[dict], Any]
     if problem:
         text += f"\n\nA first drawing had this problem: {problem} Draw it right."
     tell({"step": "redrawing", "problem": problem, "first": first})
-    drawing = await _ask_provider(s, [], text, figures.Drawing, figures.RULES, demo=demo)
+    return await _drawn(s, text, description, family, light=False)
+
+
+async def _figure_family(s: AIConfig, description: str) -> str:
+    """Which family of figures_typst draws it (a light call); "other" (drawn as SVG): none
+    of them, Typst not installed, the demo, or not told."""
+    from . import figures_typst
+
+    if s.llm == "fake" or not figures_typst.available():
+        return "other"
+    try:
+        kind = await _ask_provider(
+            s, [], f"Figure: {description.strip()}", figures_typst.Kind, figures_typst.FAMILY_RULES, light=True
+        )
+    except ExtractionError as e:
+        if e.code not in _UNUSABLE:
+            raise
+        return "other"
+    return kind.family
+
+
+async def _drawn(s: AIConfig, text: str, description: str, family: str, light: bool) -> str:
+    """A figure drawn once, cleaned: in Typst with its family's package and sheet (asked again
+    once, told what Typst said, when it doesn't compile), else as SVG (family "other", Typst
+    refusing it twice; the demo)."""
+    from . import figures, figures_typst
+
+    if family in figures_typst.FAMILIES:
+        rules = figures_typst.FAMILIES[family].rules + figures_typst.COMMON
+        asked = text
+        for _ in range(2):
+            try:
+                body = (await _ask_provider(s, [], asked, figures_typst.Figure, rules, light=light)).typst
+            except ExtractionError as e:
+                if e.code not in _UNUSABLE:
+                    raise
+                break
+            try:
+                return figures.clean(await asyncio.to_thread(figures_typst.compile_svg, family, body))
+            except (figures_typst.Unusable, figures.FigureError) as e:
+                said = str(e) if isinstance(e, figures_typst.Unusable) else "its SVG was unusable"
+                asked = (
+                    f"{text}\n\nYour previous answer didn't compile:\n{body}\n\n"
+                    f"Typst said: {said}\n\nAnswer it again, corrected."
+                )
+        log.warning("Figure drawn as SVG: Typst refused it")
+    demo = lambda: demo_ai.figure(description)  # noqa: E731
+    drawing = await _ask_provider(s, [], text, figures.Drawing, figures.RULES, light=light, demo=demo)
     return figures.clean(drawing.svg)
 
 

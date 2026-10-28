@@ -218,9 +218,10 @@ def _error(monkeypatch, answer: str, call, finish=types.FinishReason.STOP) -> st
 
 def test_draw_figure_with_gemini(monkeypatch):
     """Drawn in a light call, then seen as a PNG and checked in another; right, it stays."""
-    from notosaurus_core import figures
+    from notosaurus_core import figures, figures_typst
     from notosaurus_core.calls import recording
 
+    monkeypatch.setattr(figures_typst, "available", lambda: False)  # its SVG drawing (Typst: test_figures)
     # One answer both calls can read: the drawing's "svg", the check's "ok"
     fake = Recording('{"svg": "<svg viewBox=\\"0 0 400 300\\"/>", "ok": true, "problem": ""}')
     monkeypatch.setattr(gemini, "_gemini_client", lambda s: fake)
