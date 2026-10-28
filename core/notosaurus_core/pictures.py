@@ -433,6 +433,53 @@ async def figure_or_picture(
     return save(folder, card, made.data)
 
 
+# --- The lesson's own drawings: a card's thing drawn on its pages, cut out ---------
+
+DRAWING_MARGIN = 0.04  # of the drawing's width and height, each side: nothing of it cut off
+
+
+def cut_out(photo: bytes, box: list[float]) -> bytes:
+    """A drawing cut out of its page (`box`: fractions of the page, a margin added), its
+    paper made white (a photo's is grey or yellow), card size."""
+    from PIL import ImageOps
+
+    page = images.upright(photo)
+    x0, y0, x1, y1 = box
+    dx, dy = (x1 - x0) * DRAWING_MARGIN, (y1 - y0) * DRAWING_MARGIN
+    width, height = page.size
+    area = (
+        max(0.0, x0 - dx) * width,
+        max(0.0, y0 - dy) * height,
+        min(1.0, x1 + dx) * width,
+        min(1.0, y1 + dy) * height,
+    )
+    drawing = ImageOps.autocontrast(
+        page.crop((round(area[0]), round(area[1]), round(area[2]), round(area[3]))), cutoff=1
+    )
+    drawing.thumbnail((SIDE, SIDE))
+    out = io.BytesIO()
+    drawing.save(out, "JPEG", quality=QUALITY, optimize=True)
+    return out.getvalue()
+
+
+async def lesson_drawings(s: AIConfig, photos: list[llm.Image], cards: list[Card]) -> dict[int, bytes]:
+    """The drawings of their own the lesson's photos show for these cards, cut out (one
+    light call, llm.find_drawings): {card's index: its JPEG}. None, or the call failing: {}
+    (the cards' pictures then looked for or drawn, as without)."""
+    try:
+        found = await llm.find_drawings(s, photos, [f"{c.front.strip()} → {c.back.strip()}" for c in cards])
+    except AppError as e:
+        log.warning("The lesson's drawings not looked for: %s", loggable(e))
+        return {}
+    drawings = {}
+    for i, (page, box) in found.items():
+        try:
+            drawings[i] = cut_out(photos[page].data, box)
+        except (OSError, ValueError) as e:
+            log.warning("A lesson's drawing not cut out: %s", loggable(e))
+    return drawings
+
+
 class Drawn(NamedTuple):
     failures: int  # how many failed
     error: dict | None  # why the first did (an error's detail, for the page)
@@ -443,17 +490,29 @@ class Drawn(NamedTuple):
 READY = {"picture", "picture_source", "figure", "figure_kind", "picture_prompt", "picture_search"}
 
 
-async def draw_all(s: AIConfig, folder: Path, cards: list[Card], draw: bool = False, step: Step | None = None) -> Drawn:
+async def draw_all(
+    s: AIConfig,
+    folder: Path,
+    cards: list[Card],
+    draw: bool = False,
+    step: Step | None = None,
+    photos: list[llm.Image] | None = None,
+) -> Drawn:
     """The missing pictures (cards with a picture_prompt or a figure, and no picture), a few
     at a time: figures drawn, free pictures found; a picture none fits drawn by the image
     model only if `draw` (it costs: the user said yes), else its card in to_draw. A card
     without its picture is still a card. `step`: told each card's steps as they begin,
     {"card": its id, …relay_api.PictureStep's fields}, then {"card", "step": "ready", its
-    picture's fields (READY)} as soon as it has it."""
+    picture's fields (READY)} as soon as it has it. `photos`: the lesson's, its own drawings
+    taken first for the cards whose thing they show (lesson_drawings: one call, no search,
+    the pupil's own pictures; {"card", "step": "lesson"} while they are looked at)."""
     # Not on a sentence with gaps: Anki shows no picture on it (not paid for, then)
     todo = [
         c for c in cards if (c.picture_prompt.strip() or c.figure.strip()) and not c.picture and not is_cloze(c.front)
     ]
+    if photos:
+        await _from_the_lesson(s, folder, todo, photos, step)
+        todo = [c for c in todo if not c.picture]
     sem = asyncio.Semaphore(CONCURRENCY)
     failures: list[dict] = []
     to_draw: list[str] = []
@@ -480,6 +539,25 @@ async def draw_all(s: AIConfig, folder: Path, cards: list[Card], draw: bool = Fa
 
     await asyncio.gather(*(one(c) for c in todo))
     return Drawn(len(failures), failures[0] if failures else None, to_draw)
+
+
+async def _from_the_lesson(
+    s: AIConfig, folder: Path, cards: list[Card], photos: list[llm.Image], step: Step | None
+) -> None:
+    """The pictures (not the figures: those are drawn exact) the lesson's own drawings
+    give, saved and told at once (draw_all)."""
+    wanted = [c for c in cards if c.picture_prompt.strip() and not c.figure.strip()]
+    if not wanted:
+        return
+    for card in wanted:
+        if step:
+            step({"card": card.id, "step": "lesson"})
+    for i, jpeg in (await lesson_drawings(s, photos, wanted)).items():
+        card = wanted[i]
+        card.picture = save(folder, card, jpeg)
+        card.picture_source = PictureSource(source="lesson")
+        if step:
+            step({"card": card.id, "step": "ready", **card.model_dump(mode="json", include=READY)})
 
 
 def prune(folder: Path, cards: list[Card]) -> None:

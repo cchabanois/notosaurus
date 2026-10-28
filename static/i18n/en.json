@@ -399,7 +399,8 @@
         "checking": "🔎 Checking the figure…",
         "redrawing": "📐 First version not right: drawing it again, more carefully…",
         "searching": "🔎 Looking for a free picture…",
-        "drawing": "🎨 Drawing the picture…"
+        "drawing": "🎨 Drawing the picture…",
+        "lesson": "📖 Looking for a drawing in the lesson…"
       },
       "check": "🔍 Check the figure",
       "checking": "🔍 Checking…",
@@ -409,7 +410,8 @@
       "redrawCareful": "📐 Redraw it carefully",
       "keep": "Keep it",
       "madeWith": "📐 Drawn by {model} with ",
-      "carefully": "carefully"
+      "carefully": "carefully",
+      "sourceLesson": "📖 Drawing from the lesson"
     },
     "pairing": {
       "title": "Device not allowed"

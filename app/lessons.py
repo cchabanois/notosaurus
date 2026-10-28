@@ -66,6 +66,14 @@ def audio_dir(id: str) -> Path | None:
     return path / "audio" if path else None
 
 
+def photos(id: str) -> list[Path]:
+    """The lesson's photos, in their order (page-1.jpg, page-2.jpg…); none: []."""
+    path = folder(id)
+    if path is None:
+        return []
+    return sorted(path.glob("page-*.jpg"), key=lambda photo: int(photo.stem.removeprefix("page-")))
+
+
 def _count_photos(path: Path) -> int:
     return len(list(path.glob("page-*.jpg")))
 

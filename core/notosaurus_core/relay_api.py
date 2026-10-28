@@ -73,6 +73,7 @@ MAX_EXISTING = 500  # a lesson's cards made already (the AI is sent the first 6,
 MAX_DECKS = 1000
 MAX_INSTRUCTION = 2000  # a correction
 MAX_SUBJECT = 1000  # a picture's subject, a figure's description
+MAX_DRAWN_CARDS = 200  # a lesson's cards wanting a picture
 MAX_FIGURE_SVG = 1_000_000  # a figure checked: Typst's, its letters as shapes, weighs tens of KB
 MAX_SPEECH = 500  # a back read aloud (the app reads the first 200 characters)
 MAX_AUDIO_BYTES = 3 * 1024 * 1024  # a dictation: the app stops at 2 minutes (≈ 500 KB of AAC)
@@ -168,6 +169,24 @@ class ReviseRequest(BaseModel):
     instruction: str = Field(min_length=1, max_length=MAX_INSTRUCTION)
     language: str = Language
     instructions: str = Instructions
+
+
+class LessonDrawingsRequest(BaseModel):
+    """The drawings of their own the lesson's photos (the "images" parts) show for these
+    cards, cut out (pictures.lesson_drawings): the cards' pictures, before any is looked
+    for or drawn."""
+
+    cards: list[Card] = Field(max_length=MAX_DRAWN_CARDS, description="The cards wanting a picture.")
+
+
+class LessonDrawing(BaseModel):
+    card: int = Field(description="The card's index in the request.")
+    data: str = Field(description="The drawing, cut out of its page: a JPEG, card size, base64.")
+
+
+class LessonDrawingsResponse(BaseModel):
+    drawings: list[LessonDrawing] = Field(description="Those found; the other cards none (look for theirs).")
+    usage: Usage
 
 
 class ExplainRequest(BaseModel):

@@ -308,11 +308,11 @@ def test_a_figure_redrawn_shows_its_steps_and_first_try(page, monkeypatch):
     real, go_on = routes.pictures.draw_all, threading.Event()
     first = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 300" width="400" height="300"></svg>'
 
-    async def draw_all(s, folder, cards, draw=False, step=None):
+    async def draw_all(s, folder, cards, draw=False, step=None, photos=None):
         step({"card": cards[0].id, "step": "drawing"})
         step({"card": cards[0].id, "step": "redrawing", "problem": "L'angle est du mauvais côté.", "first": first})
         await asyncio.to_thread(go_on.wait, 30)
-        return await real(s, folder, cards, draw, step)
+        return await real(s, folder, cards, draw, step, photos)
 
     monkeypatch.setattr(routes.pictures, "draw_all", draw_all)
     generate_free(page, "Le triangle rectangle (géométrie)")
@@ -335,7 +335,7 @@ def test_a_picture_shown_as_soon_as_ready(page, monkeypatch):
 
     real, go_on = routes.pictures.draw_all, threading.Event()
 
-    async def draw_all(s, folder, cards, draw=False, step=None):
+    async def draw_all(s, folder, cards, draw=False, step=None, photos=None):
         folder.mkdir(parents=True, exist_ok=True)
         name = f"picture-{cards[0].id}-0123abcd.svg"
         (folder / name).write_text(
@@ -344,7 +344,7 @@ def test_a_picture_shown_as_soon_as_ready(page, monkeypatch):
         step({"card": cards[1].id, "step": "drawing"})
         step({"card": cards[0].id, "step": "ready", "picture": name, "figure": cards[0].figure})
         await asyncio.to_thread(go_on.wait, 30)
-        return await real(s, folder, cards, draw, step)
+        return await real(s, folder, cards, draw, step, photos)
 
     monkeypatch.setattr(routes.pictures, "draw_all", draw_all)
     generate_free(page, "Le triangle rectangle (géométrie)")
@@ -395,11 +395,11 @@ def test_a_figures_credits_link_its_projects(page, monkeypatch):
         source="drawn", model="gemini-x", engine="typst", made_with=["Typst 0.15.0", "lilaq 0.6.0"]
     )
 
-    async def draw_all(s, folder, cards, draw=False, step=None):
+    async def draw_all(s, folder, cards, draw=False, step=None, photos=None):
         def told(said):  # each card's picture as Typst drew it
             step({**said, "picture_source": typst.model_dump()} if said["step"] == "ready" else said)
 
-        drawn = await real(s, folder, cards, draw, told)
+        drawn = await real(s, folder, cards, draw, told, photos)
         for card in cards:
             card.picture_source = typst
         return drawn

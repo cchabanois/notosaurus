@@ -1021,6 +1021,47 @@ class LocalServerTest {
     }
 
     @Test
+    fun theLessonsOwnDrawingsTakenFirst() = app { client ->
+        relayAnswers("""{"deck": {"deck": "Anglais", "cards": [
+            {"front": "le chat", "back": "the cat", "picture_prompt": "a cat"},
+            {"front": "le chien", "back": "the dog", "picture_prompt": "a dog"},
+            {"front": "Ce triangle ?", "back": "rectangle", "figure": "a right triangle"}]}, "turns": [0], "usage": {"credits": 1, "credits_left": 99}}""")
+        val lesson = client.submitFormWithBinaryData("/api/extract", formData {
+            append("images", "the page".toByteArray(), Headers.build {
+                append(HttpHeaders.ContentType, "image/jpeg")
+                append(HttpHeaders.ContentDisposition, "filename=\"page-1.jpg\"")
+            })
+            append("prompt", "p")
+        }) { page() }.json().jsonObject
+        val id = lesson.string("id")
+        val asked = mutableListOf<String>()
+        relay.dispatcher = object : mockwebserver3.Dispatcher() {
+            override fun dispatch(request: RecordedRequest): MockResponse = when (request.url.encodedPath) {
+                "/v1/lesson-drawings" -> {
+                    val body = request.body!!.utf8()
+                    asked += "lesson-drawings " + request.multipartRequest()["cards"]!!.jsonArray.size + " " + body.contains("the page")
+                    val cat = Base64.getEncoder().encodeToString("the cat, cut out".toByteArray())
+                    MockResponse.Builder().body("""{"drawings": [{"card": 0, "data": "$cat"}], "usage": {"credits": 1, "credits_left": 98}}""").build()
+                }
+                "/v1/card-picture" -> {
+                    asked += "card-picture " + json.parseToJsonElement(request.body!!.utf8()).jsonObject["card"]!!.jsonObject.string("front")
+                    cardPicture(request)
+                }
+                else -> MockResponse.Builder().code(404).build()
+            }
+        }
+        val drawn = client.post("/api/lessons/$id/pictures") {
+            page(); contentType(ContentType.Application.Json); setBody("""{"draw": true}""")
+        }.json().jsonObject
+        // One call for the lesson's drawings (the pictures' cards, the photo), then the others one by one
+        assertEquals("lesson-drawings 2 true", asked.first())
+        assertEquals(setOf("card-picture le chien", "card-picture Ce triangle ?"), asked.drop(1).toSet())
+        val cat = drawn["lesson"]!!.jsonObject["cards"]!!.jsonArray.first().jsonObject
+        assertEquals("lesson", cat["picture_source"]!!.jsonObject.string("source"))
+        assertEquals("the cat, cut out", client.get("/api/lessons/$id/pictures/${cat.string("picture")}") { page() }.bodyAsText())
+    }
+
+    @Test
     fun picturesDrawnByTheRelayThenIntoAnkiDroid() = app { client ->
         relayAnswers("""{"deck": {"deck": "Anglais", "cards": [
             {"front": "Comment dit-on ?", "back": "an apple", "picture_prompt": "an apple"},

@@ -399,7 +399,8 @@
         "checking": "🔎 Comprobando la figura…",
         "redrawing": "📐 Primera versión imperfecta: nuevo trazado, más cuidado…",
         "searching": "🔎 Buscando una imagen libre…",
-        "drawing": "🎨 Dibujando la imagen…"
+        "drawing": "🎨 Dibujando la imagen…",
+        "lesson": "📖 Buscando un dibujo en la lección…"
       },
       "check": "🔍 Comprobar la figura",
       "checking": "🔍 Comprobando…",
@@ -409,7 +410,8 @@
       "redrawCareful": "📐 Volver a dibujarla con cuidado",
       "keep": "Conservarla",
       "madeWith": "📐 Dibujada por {model} con ",
-      "carefully": "con cuidado"
+      "carefully": "con cuidado",
+      "sourceLesson": "📖 Dibujo de la lección"
     },
     "pairing": {
       "title": "Dispositivo no autorizado"

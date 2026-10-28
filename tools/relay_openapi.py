@@ -154,6 +154,15 @@ def build() -> dict:
     def revise(x_notosaurus_version: str = client):
         """A natural-language correction of the cards (llm.revise_cards)."""
 
+    @app.post(
+        f"{api.PREFIX}/lesson-drawings",
+        response_model=api.LessonDrawingsResponse,
+        responses=errors(*PHOTOS),
+        openapi_extra=multipart(api.LessonDrawingsRequest),
+    )
+    def lesson_drawings(x_notosaurus_version: str = client):
+        """The lesson's own drawings for its cards, cut out of its photos (pictures.lesson_drawings)."""
+
     @app.post(f"{api.PREFIX}/explain", response_model=api.ExplainResponse, responses=errors(*COMMON))
     def explain(request: api.ExplainRequest, x_notosaurus_version: str = client):
         """A card explained to the pupil (llm.explain_card)."""
@@ -345,6 +354,7 @@ def build() -> dict:
         [
             (api.ExtractRequest, "validation"),
             (api.ReviseRequest, "validation"),
+            (api.LessonDrawingsRequest, "validation"),
             (api.TranscribeRequest, "validation"),
             (api.ExtractLine, "serialization"),
             (api.PictureSearchLine, "serialization"),

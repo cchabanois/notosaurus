@@ -58,6 +58,8 @@ def source(card) -> str:
         return field_html(drawn + (", carefully" if origin.careful else ""))
     if origin.source == "photo":
         return "Own photo"
+    if origin.source == "lesson":
+        return "Drawing from the lesson's pages"
     parts = [field_html(p) for p in (SOURCE_NAMES.get(origin.source, origin.source), origin.licence, origin.title) if p]
     if origin.page:
         page = html.escape(origin.page, quote=True)

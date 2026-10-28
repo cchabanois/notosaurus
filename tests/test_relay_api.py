@@ -45,6 +45,7 @@ def parameters(function, *but: str) -> set[str]:
         # told as it goes; its kind asked by the AI; drawn again from a card (card-picture's problem)
         (api.FigureRequest, llm.draw_figure, ("step", "kind", "problem", "careful")),
         (api.CheckFigureRequest, llm.check_figure, ()),
+        (api.LessonDrawingsRequest, pictures.lesson_drawings, ("photos",)),  # the multipart's "images"
         (api.PictureRequest, pictures.picture, ("pixabay_key",)),  # the relay's own
         (api.TranscribeRequest, llm.transcribe, ("audio",)),  # the multipart's "audio"
         (api.RephraseRequest, llm.rephrase, ()),
@@ -102,6 +103,7 @@ def test_openapi_description():
         "rephrase",
         "figure",
         "check-figure",
+        "lesson-drawings",
         "picture",
         "speak",
         "transcribe",

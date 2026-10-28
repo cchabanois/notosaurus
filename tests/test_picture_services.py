@@ -19,6 +19,7 @@ from notosaurus_core.config import AIConfig
 from notosaurus_core.models import Card, PicturePlan
 
 PNG = plain_image(64, 64, "red", "PNG")
+SVG = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 300" width="400" height="300"></svg>'
 
 
 @pytest.fixture
@@ -391,3 +392,69 @@ def test_each_picture_told_as_soon_as_drawn(monkeypatch, tmp_path):
     assert [said["card"] for said in ready] == ["c", "d"]
     assert ready[0]["picture"] == cards[1].picture and ready[0]["picture_prompt"] == "a cat"
     assert set(ready[0]) == {"card", "step"} | pictures.READY
+
+
+def _page_with_a_drawing() -> bytes:
+    """A 1000 × 800 page, grey paper, a black square drawn at x 200–400, y 100–300."""
+    import io
+
+    from PIL import Image as Picture
+    from PIL import ImageDraw
+
+    page = Picture.new("RGB", (1000, 800), (200, 190, 150))
+    ImageDraw.Draw(page).rectangle((200, 100, 400, 300), fill="black")
+    out = io.BytesIO()
+    page.save(out, "JPEG")
+    return out.getvalue()
+
+
+def test_a_lesson_drawing_cut_out_and_taken_first(monkeypatch, tmp_path):
+    """The lesson's own drawing of a card's thing: cut out of its page (a margin, its paper
+    made white), the card's picture at once, no search; the other cards looked for as before."""
+    import io
+
+    from PIL import Image as Picture
+
+    from notosaurus_core.models import CardDrawing, Drawings
+
+    monkeypatch.setattr(files, "_cache_root", lambda: tmp_path / "cache")
+    asked = []
+
+    async def answer(s, images, text, schema, system=None, light=False, **options):
+        asked.append(schema.__name__)
+        if schema is not Drawings:  # the figure, drawn as always
+            return schema(family="other") if schema.__name__ == "Kind" else schema(svg=SVG)
+        assert light and "0. le chat → the cat" in text and "Ce triangle" not in text and "box_2d" in text
+        # gemini's boxes: [y_min, x_min, y_max, x_max] in thousandths
+        return Drawings(drawings=[CardDrawing(card=0, page=1, box=[125, 200, 375, 400])])
+
+    async def draw(s, subject):
+        return PNG
+
+    monkeypatch.setattr(llm, "_ask_provider", answer)
+    monkeypatch.setattr(pictures, "draw", draw)
+    cards = [
+        Card(front="le chat", back="the cat", picture_prompt="a cat", id="c"),
+        Card(front="le chien", back="the dog", picture_prompt="a dog", id="d"),
+        Card(front="Ce triangle ?", back="rectangle", figure="un triangle", id="t"),
+    ]
+    told = []
+    s = AIConfig(llm="gemini", gemini_api_key="k", picture_find=False)
+    photo = llm.Image(_page_with_a_drawing(), "image/jpeg")
+    run(pictures.draw_all(s, tmp_path / "images", cards, draw=True, step=told.append, photos=[photo]))
+    assert cards[0].picture_source.source == "lesson" and cards[1].picture_source.source == "drawn"
+    assert [(t["card"], t["step"]) for t in told[:3]] == [("c", "lesson"), ("d", "lesson"), ("c", "ready")]
+    assert asked.count("Drawings") == 1  # one call for the lesson
+    drawing = Picture.open(io.BytesIO((tmp_path / "images" / cards[0].picture).read_bytes())).convert("L")
+    assert drawing.size == (216, 216)  # the square and its margin (4 % of its side)
+    assert drawing.getpixel((2, 2)) > 240 and drawing.getpixel((108, 108)) < 20  # white paper, black drawing
+
+
+def test_no_lesson_drawing_when_the_call_fails(monkeypatch, tmp_path):
+    async def answer(s, images, text, schema, system=None, light=False, **options):
+        raise llm.ExtractionError("llm.overloaded", provider="Gemini")
+
+    monkeypatch.setattr(llm, "_ask_provider", answer)
+    cards = [Card(front="le chat", back="the cat", picture_prompt="a cat", id="c")]
+    photo = llm.Image(_page_with_a_drawing(), "image/jpeg")
+    assert run(pictures.lesson_drawings(AIConfig(llm="gemini", gemini_api_key="k"), [photo], cards)) == {}
