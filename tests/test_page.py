@@ -368,13 +368,12 @@ def test_a_figure_checked_on_demand_then_redrawn(page, monkeypatch):
     generate_free(page, "Le triangle rectangle (géométrie)")
     card = page.locator(".flash").first
     sync_api.expect(card.locator(".card-picture.figure img:not(.first):visible")).to_be_visible()
-    card.get_by_role("button", name="Image", exact=False).first.click()
-    card.get_by_role("button", name="🔍 Vérifier la figure").click()
-    found = card.locator(".figure-check")
+    card.get_by_role("button", name="🔍 Vérifier la figure").first.click()  # on the figure itself
+    found = card.locator(".figure-check:visible")
     sync_api.expect(found).to_contain_text("La vérification signale : L'angle est en B.")
     found.get_by_role("button", name="Garder").click()
     sync_api.expect(found).to_be_hidden()
-    card.get_by_role("button", name="🔍 Vérifier la figure").click()
+    card.get_by_role("button", name="🔍 Vérifier la figure").first.click()
     found.get_by_role("button", name="📐 Redessiner avec soin").click()
     sync_api.expect(found).to_be_hidden()
     sync_api.expect(card.locator(".card-picture.figure img:not(.first):visible")).to_be_visible()

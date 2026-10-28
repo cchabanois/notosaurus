@@ -378,6 +378,24 @@
             <div class="card-picture" :class="{ figure: card.figure }" x-show="!card.picture_on_back && (card.picture || card._drawing || ((card.picture_prompt || card.figure) && drawingHere()))">
               <img x-show="card.picture && !card._drawing" :src="card.picture && pictureUrl(card)" :alt="card.figure || card.picture_prompt"
                    @click="openViewer([pictureUrl(card)], 0)">
+              <!-- A figure checked only when asked, on it: the AI looks at it against its description -->
+              <button type="button" class="icon-btn figure-check-btn" x-show="card.figure && card.picture && !card._drawing && !readOnly()"
+                      @click="checkFigure(card)" :disabled="Boolean(card._checking)" :class="{ checking: card._checking }"
+                      :aria-label="$t('app.pictures.check')" :title="card._checking ? $t('app.pictures.checking') : $t('app.pictures.check')">🔍</button>
+              <!-- What the check found: right, or what is wrong and the choice to draw it again -->
+              <div class="figure-check" x-show="card._check || card._checking" role="status">
+                <p x-show="card._checking" x-text="$t('app.pictures.checking')"></p>
+                <p x-show="card._check?.ok" x-text="$t('app.pictures.checkOk')"></p>
+                <template x-if="card._check && !card._check.ok">
+                  <div>
+                    <p><strong x-text="$t('app.pictures.checkProblem')"></strong> <span x-text="card._check.problem"></span></p>
+                    <div class="picture-actions">
+                      <button type="button" class="btn primary" @click="redrawFigure(card)" x-text="$t('app.pictures.redraw')"></button>
+                      <button type="button" class="btn soft" @click="card._check = null" x-text="$t('app.pictures.keep')"></button>
+                    </div>
+                  </div>
+                </template>
+              </div>
               <!-- How long it takes, roughly (a figure: the model thinks; a picture: found or drawn):
                    the bar fills over that time, slower near the end; restarts each time it shows -->
               <span class="drawing" :class="{ redrawing: firstFigureUrl(card) }" x-show="!card.picture || card._drawing"
@@ -451,6 +469,24 @@
               <div class="card-picture on-back" :class="{ figure: card.figure }" x-show="card.picture_on_back && (card.picture || card._drawing || ((card.picture_prompt || card.figure) && drawingHere()))">
                 <img x-show="card.picture && !card._drawing" :src="card.picture && pictureUrl(card)" :alt="card.figure || card.picture_prompt"
                    @click="openViewer([pictureUrl(card)], 0)">
+                <!-- A figure checked only when asked, on it: the AI looks at it against its description -->
+                <button type="button" class="icon-btn figure-check-btn" x-show="card.figure && card.picture && !card._drawing && !readOnly()"
+                        @click="checkFigure(card)" :disabled="Boolean(card._checking)" :class="{ checking: card._checking }"
+                        :aria-label="$t('app.pictures.check')" :title="card._checking ? $t('app.pictures.checking') : $t('app.pictures.check')">🔍</button>
+                <!-- What the check found: right, or what is wrong and the choice to draw it again -->
+                <div class="figure-check" x-show="card._check || card._checking" role="status">
+                  <p x-show="card._checking" x-text="$t('app.pictures.checking')"></p>
+                  <p x-show="card._check?.ok" x-text="$t('app.pictures.checkOk')"></p>
+                  <template x-if="card._check && !card._check.ok">
+                    <div>
+                      <p><strong x-text="$t('app.pictures.checkProblem')"></strong> <span x-text="card._check.problem"></span></p>
+                      <div class="picture-actions">
+                        <button type="button" class="btn primary" @click="redrawFigure(card)" x-text="$t('app.pictures.redraw')"></button>
+                        <button type="button" class="btn soft" @click="card._check = null" x-text="$t('app.pictures.keep')"></button>
+                      </div>
+                    </div>
+                  </template>
+                </div>
                 <!-- How long it takes, roughly (a figure: the model thinks; a picture: found or drawn):
                    the bar fills over that time, slower near the end; restarts each time it shows -->
               <span class="drawing" :class="{ redrawing: firstFigureUrl(card) }" x-show="!card.picture || card._drawing"
@@ -540,22 +576,6 @@
                 </label>
                 <button type="button" class="btn danger-soft" x-show="card.picture" @click="removePicture(card)"
                         :disabled="Boolean(card._drawing)" x-text="$t('app.pictures.remove')"></button>
-                <!-- A figure checked only when asked: the AI looks at it against its description -->
-                <button type="button" class="btn soft" x-show="card.figure && card.picture && !card._drawing" @click="checkFigure(card)"
-                        :disabled="Boolean(card._checking)" x-text="card._checking ? $t('app.pictures.checking') : $t('app.pictures.check')"></button>
-              </div>
-              <!-- What the check found: right, or what is wrong and the choice to draw it again -->
-              <div class="figure-check" x-show="card._check" role="status">
-                <p x-show="card._check?.ok" x-text="$t('app.pictures.checkOk')"></p>
-                <template x-if="card._check && !card._check.ok">
-                  <div>
-                    <p><strong x-text="$t('app.pictures.checkProblem')"></strong> <span x-text="card._check.problem"></span></p>
-                    <div class="picture-actions">
-                      <button type="button" class="btn primary" @click="redrawFigure(card)" x-text="$t('app.pictures.redraw')"></button>
-                      <button type="button" class="btn soft" @click="card._check = null" x-text="$t('app.pictures.keep')"></button>
-                    </div>
-                  </div>
-                </template>
               </div>
               <!-- The pictures found: tap one, it becomes the card's -->
               <template x-if="card._found">

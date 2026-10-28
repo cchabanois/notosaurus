@@ -176,7 +176,9 @@ defined (a function undefined at 0: two `lq.linspace`, one each side, two plots)
 vertex, the points named); an orthonormal frame (the same unit on both axes): width / height = \
 (xlim's length) / (ylim's length);
 - points on it: `lq.scatter((1, calc.e), (0, 1), color: black)` (all x, then all y); a value on \
-an axis: `xaxis: (ticks: ((calc.e, $e$), 1, 2, 3))` (a tick with its label);
+an axis: `xaxis: (ticks: ((calc.e, $e$), 1, 2, 3))` (a tick with its label); a tick at a value \
+that isn't a short number (π, e, √2, π/2…): always with its label as the lesson writes it \
+(`(calc.pi / 2, $pi/2$)`), never its digits;
 - a line (an asymptote): `lq.line((0, -3), (0, 2), stroke: (dash: "dashed"))`; text: \
 `lq.place(2, 1, [$f$], align: left)`.
 """,
