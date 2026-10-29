@@ -535,6 +535,24 @@ def test_a_voice_that_cant_be_heard_says_why(page):
     sync_api.expect(page.get_by_role("alert")).to_contain_text("no credits left")
 
 
+def test_lessons_exported_then_imported_from_the_settings(page, tmp_path):
+    """Settings → "Back up or move my lessons": the file downloaded, then taken in again (the
+    lesson there already: kept), what was done said."""
+    generate_free(page, FRONT_PROMPT)
+    page.goto("/admin.html")
+    new_password(page)
+    page.get_by_role("button", name="Créer et continuer").click()
+    with page.expect_download() as download:
+        page.get_by_role("button", name="⬇️ Exporter mes leçons").click()
+    saved = tmp_path / download.value.suggested_filename
+    download.value.save_as(saved)
+    assert saved.name.startswith("notosaurus-") and saved.suffix == ".zip"
+    sync_api.expect(page.get_by_role("status")).to_contain_text("Leçons exportées")
+    page.locator(".admin-transfer input[type=file]").set_input_files(str(saved))
+    sync_api.expect(page.get_by_role("status")).to_contain_text("0 leçon(s) ajoutée(s)")
+    sync_api.expect(page.get_by_role("status")).to_contain_text("1 déjà à jour")
+
+
 def test_settings_show_what_the_service_needs(page):
     page.goto("/admin.html")
     new_password(page)

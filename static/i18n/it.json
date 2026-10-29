@@ -682,6 +682,17 @@
       "syncOn": "✓ “{profile}” ha effettuato l'accesso ad AnkiWeb.",
       "syncOff": "“{profile}” non ha effettuato l'accesso ad AnkiWeb: nessuna sincronizzazione dopo l'invio. Per sincronizzare, accedi in Anki (pulsante Sincronizza)."
     },
+    "transfer": {
+      "title": "💾 Salvare o spostare le mie lezioni",
+      "hint": "Un solo file con tutte le lezioni (foto, schede, immagini, suoni), i bambini, le verifiche e le sue istruzioni: per conservarle, o aprirle su un altro computer o nell'app Android. Le schede già in Anki vi vengono ritrovate, mai doppie.",
+      "export": "⬇️ Esporta le mie lezioni",
+      "import": "⬆️ Importa un file",
+      "exporting": "Esportazione…",
+      "importing": "Importazione…",
+      "exported": "Lezioni esportate in {name}.",
+      "imported": "Importazione terminata: {added} lezione/i aggiunta/e, {replaced} sostituita/e da una più recente, {kept} già aggiornata/e; {children} bambino/i, {exams} verifica/che, {prompts} istruzione/i aggiunti.",
+      "private": "Il file contiene le foto delle lezioni e i nomi dei bambini: lo tenga per sé. Non contiene alcuna chiave né password."
+    },
     "lessons": {
       "title": "Lezioni",
       "hint": "A chi appartiene ogni lezione. Una lezione si può modificare solo dal profilo Anki del suo proprietario; senza proprietario, è di tutti. Le modifiche fatte qui valgono subito.",
@@ -1087,6 +1098,11 @@
       "too_many": "Al massimo {max} figli.",
       "not_found": "Questo bambino non esiste più: ricarica la pagina.",
       "invalid": "La scheda di un figlio non è valida: un nome (40 caratteri al massimo), una classe e mazzi brevi."
+    },
+    "transfer": {
+      "not_an_export": "Questo file non è un'esportazione di Notosaurus.",
+      "too_new": "Questa esportazione viene da una versione più recente di Notosaurus: aggiorni questa, poi la importi di nuovo.",
+      "too_large": "Questa esportazione è troppo grande (oltre 4 GB decompressa)."
     },
     "exams": {
       "invalid": "Questa verifica non è valida: un nome di 60 caratteri al massimo, una data, 50 lezioni al massimo.",

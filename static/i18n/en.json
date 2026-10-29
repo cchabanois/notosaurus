@@ -682,6 +682,17 @@
       "syncOn": "✓ “{profile}” is logged in to AnkiWeb.",
       "syncOff": "“{profile}” isn't logged in to AnkiWeb: no sync after sending. To sync, log in in Anki (Sync button)."
     },
+    "transfer": {
+      "title": "💾 Back up or move my lessons",
+      "hint": "One file with every lesson (photos, cards, pictures, sounds), the children, the tests and your prompts: to keep them, or to open them on another computer or in the Android app. Their cards already in Anki are found there again, never added twice.",
+      "export": "⬇️ Export my lessons",
+      "import": "⬆️ Import a file",
+      "exporting": "Exporting…",
+      "importing": "Importing…",
+      "exported": "Lessons exported to {name}.",
+      "imported": "Import done: {added} lesson(s) added, {replaced} replaced by a newer one, {kept} already up to date; {children} child(ren), {exams} test(s), {prompts} prompt(s) added.",
+      "private": "The file holds the lessons' photos and the children's names: keep it to yourself. It holds no key and no password."
+    },
     "lessons": {
       "title": "Lessons",
       "hint": "Who each lesson belongs to. A lesson can only be changed from its owner's Anki profile; one without owner is everyone's. Changes here apply right away.",
@@ -1087,6 +1098,11 @@
       "too_many": "{max} children at most.",
       "not_found": "This child no longer exists: reload the page.",
       "invalid": "A child's sheet isn't valid: a first name (40 characters at most), a short class and decks."
+    },
+    "transfer": {
+      "not_an_export": "This file isn't a Notosaurus export.",
+      "too_new": "This export comes from a newer Notosaurus: update this one, then import it again.",
+      "too_large": "This export is too large (over 4 GB unpacked)."
     },
     "exams": {
       "invalid": "This test isn't valid: a name of 60 characters at most, a date, 50 lessons at most.",

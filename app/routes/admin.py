@@ -1,13 +1,18 @@
+import asyncio
 import base64
 import os
+import shutil
+import tempfile
 import time
+from pathlib import Path
 
-from fastapi import APIRouter, Depends, Header, Query, Request
+from fastapi import APIRouter, BackgroundTasks, Depends, File, Header, Query, Request, UploadFile
+from fastapi.responses import FileResponse
 
 from notosaurus_core import llm, pictures, recommended
 from notosaurus_core.llm import check, list_models
 
-from .. import ankiconnect, lesson_notes, lessons, settings, usage
+from .. import ankiconnect, lesson_notes, lessons, settings, storage, transfer, usage
 from ..access import is_local
 from ..attempts import Attempts
 from ..errors import AppError
@@ -179,6 +184,28 @@ async def admin_lesson_anki_notes(id: str) -> dict:
 @router.delete("/api/admin/lessons/{id}", dependencies=[Depends(require_admin)])
 async def admin_delete_lesson(id: str, in_anki: bool = Query(False, alias="anki")) -> dict:
     return await lesson_notes.delete_lesson(_any_lesson(id), in_anki)
+
+
+@router.get("/api/admin/transfer", dependencies=[Depends(require_admin)])
+async def admin_export(background: BackgroundTasks) -> FileResponse:
+    """Every lesson, the children, the tests and the prompts, in one zip (transfer.py): to
+    keep them, or to take them to another device."""
+    folder = Path(tempfile.mkdtemp(prefix="notosaurus-export-"))
+    background.add_task(shutil.rmtree, folder, ignore_errors=True)
+    path = folder / "export.zip"
+    await asyncio.to_thread(transfer.export, path)
+    name = f"notosaurus-{storage.now()[:10]}.zip"
+    return FileResponse(path, media_type="application/zip", filename=name)
+
+
+@router.post("/api/admin/transfer", dependencies=[Depends(require_admin)])
+async def admin_import(file: UploadFile = File()) -> dict:
+    """An export taken in (transfer.import_): what was added, replaced, kept."""
+    with tempfile.TemporaryDirectory(prefix="notosaurus-import-") as folder:
+        path = Path(folder) / "import.zip"
+        with path.open("wb") as out:
+            await asyncio.to_thread(shutil.copyfileobj, file.file, out)
+        return (await transfer.import_(path)).dict()
 
 
 def lan_address() -> str:

@@ -67,6 +67,7 @@ function adminComponent() {
     testingAnki: false,
     ankiResult: null,
     lessons: null,   // { lessons, profiles } from /api/admin/lessons (profiles: null = Anki closed)
+    transferring: "",  // "export" or "import" while the lessons' file is made or taken in
     ankiStatus: null,  // /api/anki/status: profile, logged in to AnkiWeb (sync: null = unknown)
     saveState: "saved",  // "saved", "pending", "saving", "error": settings are saved as they change
     saveTimer: null,
@@ -103,10 +104,12 @@ function adminComponent() {
       this.$nextTick(() => this.$refs.login?.focus());
     },
 
-    async request(path, options = {}) {
+    // `raw`: the response itself (a file to save); a FormData body goes as it is (a file sent)
+    async request(path, { raw = false, ...options } = {}) {
+      const json = options.body instanceof FormData ? {} : { "Content-Type": "application/json" };
       const res = await fetch(path, {
         ...options,
-        headers: { "Content-Type": "application/json", "X-Admin-Password": this.password ?? "", ...options.headers },
+        headers: { ...json, "X-Admin-Password": this.password ?? "", ...options.headers },
       });
       if (res.status === 401 && path !== "/api/admin/password") {
         this.lock();
@@ -117,6 +120,7 @@ function adminComponent() {
         try { detail = (await res.json()).detail ?? detail; } catch {}
         throw new Error(errorMessage(detail));
       }
+      if (raw) return res;
       return res.status === 204 ? null : res.json();
     },
 
