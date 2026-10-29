@@ -42,6 +42,46 @@ const revisionPart = {
     }
   },
 
+  // --- One card corrected by the AI ("✨ Correct this card") ----------------
+  // card._fix: its field ({ text, busy }); card._fixed: what changed ({ summary, before }),
+  // until undone or corrected again
+  openFix(card) {
+    card._menu = false;
+    card._fix = { text: "", busy: false };
+    this.$nextTick(() => document.querySelector(`[data-card="${card.key}"] .card-fix textarea`)?.focus());
+  },
+
+  async fixCard(card) {
+    const fix = card._fix;
+    const instruction = fix?.text.trim();
+    if (!instruction || fix.busy || !this.lessonId || this.readOnly()) return;
+    this.error = "";
+    fix.busy = true;
+    const plain = (c) => Object.fromEntries(Object.entries(c).filter(([k]) => k !== "key" && !k.startsWith("_")));
+    const lessonId = this.lessonId;
+    try {
+      const res = await (await api(`/api/lessons/${lessonId}/fix-card`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ card: plain(card), instruction, others: this.cards.filter((c) => c !== card).map((c) => c.front) }),
+      })).json();
+      const i = this.cards.indexOf(card);
+      if (this.lessonId !== lessonId || i === -1) return;  // another lesson opened, or the card removed, meanwhile
+      const fixed = { ...res.card, key: card.key, _state: "modified", _fixed: { summary: res.summary, before: plain(card) } };
+      this.cards.splice(i, 1, fixed);
+      await this.saveNow();  // its picture is drawn from the saved lesson
+      if ((fixed.figure || fixed.picture_prompt) && !fixed.picture) this.drawPictures();
+    } catch (e) {
+      this.error = e.message;
+      fix.busy = false;
+    }
+  },
+
+  undoFix(card) {
+    const i = this.cards.indexOf(card);
+    if (i !== -1 && card._fixed) this.cards.splice(i, 1, { ...card._fixed.before, key: card.key });  // autosave sends it
+  },
+
   // The waiting card's title: what is being done, now (the cards counted as they come)
   loadingTitle() {
     if (this.revision.busy) return t("app.loading.revising");

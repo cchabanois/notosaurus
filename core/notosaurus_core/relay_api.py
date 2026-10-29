@@ -9,7 +9,7 @@ takes but the AI configuration (the relay's own), and keeps nothing.
 - Authentication: "Authorization: Bearer <licence key>".
 - The client says its version in CLIENT_HEADER ("1.1.0"); a client too old for
   the relay gets "relay.client_outdated".
-- The routes with photos (extract, revise) take multipart/form-data: a "request"
+- The routes with photos (extract, revise, fix-card) take multipart/form-data: a "request"
   part holding the JSON request and one "images" part per photo (binary, as
   diagrams.prepare makes them: JPEG, at most 1568 px). The other routes take JSON.
 - Errors: HTTP status of ERRORS, body {"code", "params"} (errors.AppError), the
@@ -29,6 +29,8 @@ takes but the AI configuration (the relay's own), and keeps nothing.
   from in PICTURE_SOURCE_HEADER: kept with the card.
 - /v1/revise asked with "Accept: application/x-ndjson" says what the AI is at (slow, the
   fallback model), then the answer or the error (ReviseLine).
+- /v1/fix-card: one card corrected by the user's request ("the answer is 1789"), seeing
+  the lesson's photos: the AI writes that card alone (llm.fix_card).
 - /v1/card-picture asked with "Accept: application/x-ndjson" says each step as it begins
   (deciding, drawing, checking, redrawing with the first figure, searching), then the
   answer or the error (CardPictureLine).
@@ -52,7 +54,7 @@ from typing import Literal
 from pydantic import BaseModel, Field
 
 from .llm import Extracted, ExtractOptions
-from .models import Card, Deck, Dictated, Explanation, FollowUp, PicturePlan, Revision
+from .models import Card, Deck, Dictated, Explanation, FixedCard, FollowUp, PicturePlan, Revision
 from .stock import Found, Source
 
 PREFIX = "/v1"
@@ -167,6 +169,21 @@ class ReviseRequest(BaseModel):
     prompt: str = Field(max_length=MAX_PROMPT, description="What the cards were made with.")
     deck: Deck
     instruction: str = Field(min_length=1, max_length=MAX_INSTRUCTION)
+    language: str = Language
+    instructions: str = Instructions
+
+
+class FixCardRequest(BaseModel):
+    """One card corrected by a natural-language request, with the lesson's photos (the
+    "images" parts, possibly none)."""
+
+    prompt: str = Field(max_length=MAX_PROMPT, description="What the cards were made with.")
+    deck: str = Field(max_length=MAX_NAME)
+    card: Card
+    instruction: str = Field(min_length=1, max_length=MAX_INSTRUCTION)
+    others: list[str] = Field(
+        default_factory=list, max_length=MAX_EXISTING, description="The lesson's other cards' fronts."
+    )
     language: str = Language
     instructions: str = Instructions
 
@@ -316,6 +333,10 @@ class ExtractLine(BaseModel):
 
 
 class ReviseResponse(Revision):
+    usage: Usage
+
+
+class FixCardResponse(FixedCard):
     usage: Usage
 
 

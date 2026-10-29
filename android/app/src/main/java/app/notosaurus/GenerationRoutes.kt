@@ -83,6 +83,22 @@ internal fun Route.generationRoutes(server: LocalServer) {
                 put("summary", revised["summary"]!!)
             }
         }
+        // One card corrected as asked, seeing the lesson's photos (relay_api.FixCardRequest): the
+        // card answered, not saved here (the page puts it in place, and can undo it)
+        api("POST", "/api/lessons/{id}/fix-card") {
+            val lesson = lesson()
+            val req = body()
+            val request = buildJsonObject {
+                put("prompt", lesson.string("prompt"))
+                put("deck", Children.splitDeck(lesson.string("deck"), children.list()).second) // no child's name to the AI
+                put("card", req["card"]!!)
+                put("instruction", req["instruction"]!!)
+                put("others", req["others"] ?: JsonArray(emptyList()))
+                put("language", languageName())
+                put("instructions", generation.instructions(children.get(lesson.string("child"))))
+            }
+            JsonObject(relay().withPhotos("fix-card", request, lessons.photos(lesson.string("id"))) - "usage")
+        }
         api("POST", "/api/lessons/{id}/explain") {
             val lesson = lesson()
             val req = body()

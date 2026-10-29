@@ -184,6 +184,14 @@
         "why": "Warum ist das richtig?"
       }
     },
+    "fix": {
+      "button": "Diese Karte korrigieren",
+      "label": "Was stimmt nicht?",
+      "placeholder": "„die Antwort ist 1789“, „kürzer“…",
+      "submit": "Korrigieren",
+      "busy": "Wird korrigiert…",
+      "undo": "↩ Rückgängig"
+    },
     "revise": {
       "label": "Karten mit KI korrigieren",
       "placeholder": "✨ Mit KI korrigieren: „lösch die Karte zum Vater“, „du hast die Farben vergessen“ …",
@@ -1084,7 +1092,8 @@
   "demo": {
     "removed": "Letzte Karte entfernt (Demo).",
     "added": "Eine Karte hinzugefügt (Demo).",
-    "addedFront": "(Demo-Ergänzung)"
+    "addedFront": "(Demo-Ergänzung)",
+    "fixed": "Karte korrigiert (Demo)."
   },
   "addon": {
     "menuOpen": "Notosaurus öffnen",

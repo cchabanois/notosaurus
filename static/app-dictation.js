@@ -9,7 +9,8 @@ const DICTATION_MAX = 120_000;  // ms: the recording stops by itself after 2 min
 const joinDictated = (before, text) => (before.trim() ? `${before.trimEnd()}\n${text}` : text);
 
 const dictationPart = {
-  // `kind`: "prompt" (the instructions) or "correction" (the AI correction's field).
+  // `kind`: "prompt" (the instructions), "correction" (the AI correction's field) or
+  // "card:<key>" (a card's own correction, heard as a correction).
   // Once to start listening, again to stop: the text then comes into the field.
   async dictate(kind) {
     if (this.mic.busy) return;
@@ -35,13 +36,16 @@ const dictationPart = {
       const res = await api("/api/dictation/stop", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ kind }),
+        body: JSON.stringify({ kind: kind.startsWith("card:") ? "correction" : kind }),
       });
       const text = ((await res.json()).text ?? "").trim();
       if (!text) {
         this.error = t("app.dictation.nothing");
       } else if (kind === "prompt") {
         this.form.text = joinDictated(this.form.text, text);
+      } else if (kind.startsWith("card:")) {
+        const card = this.cards.find((c) => `card:${c.key}` === kind);
+        if (card?._fix) card._fix.text = joinDictated(card._fix.text, text);
       } else {
         this.revision.text = joinDictated(this.revision.text, text);
       }

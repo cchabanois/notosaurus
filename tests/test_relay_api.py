@@ -41,6 +41,7 @@ def parameters(function, *but: str) -> set[str]:
     ("request_model", "function", "not_sent"),
     [
         (api.ReviseRequest, llm.revise_cards, ("images", "demo")),  # demo: the relay never runs the demo AI
+        (api.FixCardRequest, llm.fix_card, ("images", "demo")),
         (api.ExplainRequest, llm.explain_card, ()),
         # told as it goes; its kind asked by the AI; drawn again from a card (card-picture's problem)
         (api.FigureRequest, llm.draw_figure, ("step", "kind", "problem", "careful")),
@@ -73,6 +74,7 @@ def test_answers_carry_core_results():
     for answer, result in [
         (api.ExtractResponse, llm.Extracted),
         (api.ReviseResponse, llm.Revision),
+        (api.FixCardResponse, llm.FixedCard),
         (api.ExplainResponse, llm.Explanation),
     ]:
         assert set(answer.model_fields) == {*result.model_fields, "usage"}
@@ -99,6 +101,7 @@ def test_openapi_description():
     routes = (
         "extract",
         "revise",
+        "fix-card",
         "explain",
         "rephrase",
         "figure",
@@ -118,7 +121,12 @@ def test_openapi_description():
         "trial",
     )
     assert set(spec["paths"]) == {f"/v1/{route}" for route in routes}
-    multipart = {"extract": "ExtractRequest", "revise": "ReviseRequest", "transcribe": "TranscribeRequest"}
+    multipart = {
+        "extract": "ExtractRequest",
+        "revise": "ReviseRequest",
+        "fix-card": "FixCardRequest",
+        "transcribe": "TranscribeRequest",
+    }
     for route, request in multipart.items():
         body = spec["paths"][f"/v1/{route}"]["post"]["requestBody"]["content"]["multipart/form-data"]
         assert body["schema"]["properties"]["request"]["$ref"] == f"#/components/schemas/{request}"

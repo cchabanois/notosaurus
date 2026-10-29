@@ -12,7 +12,16 @@ from notosaurus_core.relay_api import STREAM_TYPE
 
 from .. import access, ankiconnect, children, i18n, lesson_notes, lessons, settings, sounds, usage
 from ..errors import AppError
-from ..models import Deck, ExplainRequest, Explanation, Lesson, LessonIn, LessonSummary, RevisionRequest
+from ..models import (
+    Deck,
+    ExplainRequest,
+    Explanation,
+    FixCardRequest,
+    Lesson,
+    LessonIn,
+    LessonSummary,
+    RevisionRequest,
+)
 from .common import Step, page_lang, stepped
 
 router = APIRouter()
@@ -153,6 +162,30 @@ async def _revised(id: str, req: RevisionRequest, lang: str) -> dict:
     if updated:
         sounds.soon(updated.id, updated.voice)
     return {"lesson": updated, "summary": revision.summary}
+
+
+@router.post("/api/lessons/{id}/fix-card")
+async def fix_card(id: str, req: FixCardRequest, lang: str = Depends(page_lang)) -> llm.FixedCard:
+    """One card corrected by the AI as asked ("the answer is 1789"), seeing the lesson's
+    photos; the lesson isn't saved here: the page puts the card in place (and can undo it)."""
+    lesson = await access.editable(id)
+    photos = [Image(lessons.photo(id, n), "image/jpeg") for n in range(1, lesson.photo_count + 1)]
+    every = await asyncio.to_thread(children.list_all)
+    child = children.chosen(every, lesson.child, lesson.owner)
+    async with usage.metered("fix", id, lesson.deck):  # an answer that couldn't be used is paid for too
+        s = settings.current()
+        return await llm.fix_card(
+            s,
+            photos,
+            lesson.prompt,
+            children.for_ai_deck(lesson.deck, every),  # no child's name to the AI
+            req.card,
+            req.instruction,
+            req.others,
+            i18n.language_name(lang),
+            settings.standing_instructions(s, children.for_ai(child)),
+            demo=i18n.get(lang, "demo"),
+        )
 
 
 @router.post("/api/lessons/{id}/explain")

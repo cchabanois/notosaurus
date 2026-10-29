@@ -1694,6 +1694,62 @@ def test_dictation_in_the_app(page):
     sync_api.expect(page.get_by_role("button", name="Dicter").first).to_be_enabled()
 
 
+def test_one_card_corrected_by_the_ai(page):
+    """⋯ → "✨ Correct this card": a field under the card (focused); the demo AI makes its
+    back what was asked; the card marked changed, saved, "↩ Undo" puts it back. The others
+    untouched. Escape closes the field."""
+    generate_free(page, FRONT_PROMPT)
+    cards = page.locator(".flash")
+    first, second = cards.nth(0), cards.nth(1)
+    back = first.locator("textarea").nth(1)
+    before, other = back.input_value(), second.locator("textarea").nth(1).input_value()
+    first.get_by_role("button", name="Plus d'actions").click()
+    first.get_by_role("button", name="✨ Corriger cette carte").click()
+    field = first.get_by_role("textbox", name="Qu'est-ce qui ne va pas ?")
+    sync_api.expect(field).to_be_focused()
+    page.keyboard.press("Escape")
+    sync_api.expect(field).to_be_hidden()
+
+    first.get_by_role("button", name="Plus d'actions").click()
+    first.get_by_role("button", name="✨ Corriger cette carte").click()
+    field.fill("la mamá")
+    field.press("Enter")
+    sync_api.expect(back).to_have_value("la mamá")
+    sync_api.expect(field).to_be_hidden()
+    sync_api.expect(first.locator(".card-fixed")).to_contain_text("Carte corrigée (démo).")
+    sync_api.expect(first.locator(".flash-badge")).to_be_visible()  # marked changed
+    assert second.locator("textarea").nth(1).input_value() == other
+    sync_api.expect(page.locator(".save-pill")).to_have_class(SAVED)
+    (summary,) = lessons(page)
+    assert lesson(page, summary["id"])["cards"][0]["back"] == "la mamá"
+
+    first.get_by_role("button", name="↩ Annuler").click()
+    sync_api.expect(back).to_have_value(before)
+    sync_api.expect(first.locator(".card-fixed")).to_be_hidden()
+    saved = f"fetch('/api/lessons/{summary['id']}').then(r => r.json()).then(l => l.cards[0].back === {before!r})"
+    page.wait_for_function(f"() => {saved}")  # the card as it was, saved again
+
+
+def test_a_card_correction_dictated(page):
+    """The Android app's page: the card's field has its 🎤, heard as a correction."""
+    stopped = []
+    page.route("**/api/config", lambda route: route.fulfill(json={**route.fetch().json(), "dictation": True}))
+    page.route("**/api/dictation/start", lambda route: route.fulfill(json={"listening": True}))
+    page.route(
+        "**/api/dictation/stop",
+        lambda route: (stopped.append(route.request.post_data_json), route.fulfill(json={"text": "plutôt la mamá"})),
+    )
+    generate_free(page, FRONT_PROMPT)
+    first = page.locator(".flash").first
+    first.get_by_role("button", name="Plus d'actions").click()
+    first.get_by_role("button", name="✨ Corriger cette carte").click()
+    fix = first.locator(".card-fix")
+    fix.get_by_role("button", name="Dicter").click()
+    fix.get_by_role("button", name="Arrêter et écrire le texte").click()
+    sync_api.expect(fix.get_by_role("textbox", name="Qu'est-ce qui ne va pas ?")).to_have_value("plutôt la mamá")
+    assert stopped == [{"kind": "correction"}]
+
+
 def test_tidy_up_the_instructions(page):
     """“✨ Tidy up” under the instructions (the demo AI marks them), “↩” brings them back."""
     page.goto("/")

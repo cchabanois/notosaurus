@@ -338,7 +338,7 @@
 
       <div class="cards">
         <template x-for="card in cards" :key="card.key">
-          <article class="flash" :data-card="card.key" :class="{ changed: card._state, linked: card._linked, 'has-explain': card._explain?.open, 'has-diagram': card.mask, 'has-doubt': card.doubt, 'has-picture': card.picture || card.picture_prompt || card.figure || card._panel }">
+          <article class="flash" :data-card="card.key" :class="{ changed: card._state, linked: card._linked, 'has-explain': card._explain?.open, 'has-fix': card._fix || card._fixed, 'has-diagram': card.mask, 'has-doubt': card.doubt, 'has-picture': card.picture || card.picture_prompt || card.figure || card._panel }">
             <!-- Choosing the cards of a test (app-exams.js): one tick per card -->
             <label class="pick" x-cloak x-show="examPick">
               <input type="checkbox" :checked="examPick?.selected.has(card.id)" @change="togglePick(card)"
@@ -435,6 +435,7 @@
                     <button class="icon-btn muted" @click="card._menu = !card._menu" :class="{ active: card._menu }"
                             :aria-expanded="Boolean(card._menu)" :aria-label="$t('app.review.more')" :title="$t('app.review.more')">⋯</button>
                     <div class="card-menu-items" x-show="card._menu">
+                      <button type="button" x-show="!readOnly() && lessonId" @click="openFix(card)">✨ <span x-text="$t('app.fix.button')"></span></button>
                       <button type="button" x-show="reportable" @click="card._menu = false; openReport(card)">⚑ <span x-text="$t('app.report.button')"></span></button>
                       <button type="button" class="danger" x-show="!readOnly()" @click="card._menu = false; removeCard(card)">✕ <span x-text="$t('app.review.removeCard')"></span></button>
                     </div>
@@ -527,6 +528,31 @@
                 <span aria-hidden="true">🧠</span>
                 <textarea rows="2" x-model="card.mnemonic" :readonly="readOnly()" :aria-label="$t('app.review.mnemonic')"></textarea>
               </div>
+            </div>
+            <!-- ✨ This card corrected by the AI as asked (typed or 🎤), the others untouched -->
+            <template x-if="card._fix">
+              <form class="card-fix" @submit.prevent="fixCard(card)" @keydown.escape="card._fix.busy || (card._fix = null)">
+                <div class="dictated" :class="{ 'with-mic': mic.available }">
+                  <textarea x-model="card._fix.text" rows="2" :aria-label="$t('app.fix.label')" :placeholder="$t('app.fix.placeholder')"
+                            :disabled="card._fix.busy || dictating('card:' + card.key)"
+                            @keydown.enter="if (!$event.shiftKey) { $event.preventDefault(); fixCard(card) }"></textarea>
+                  <button type="button" class="mic" x-show="mic.available" x-cloak
+                          :class="{ listening: mic.listening === 'card:' + card.key, busy: mic.busy === 'card:' + card.key }"
+                          :disabled="mic.busy !== '' || (mic.listening !== '' && mic.listening !== 'card:' + card.key)"
+                          @click="dictate('card:' + card.key)" :aria-label="$t(micKey('card:' + card.key))" :title="$t(micKey('card:' + card.key))"
+                          x-text="mic.listening === 'card:' + card.key ? '⏹' : mic.busy === 'card:' + card.key ? '…' : '🎤'"></button>
+                </div>
+                <p class="hint" x-show="dictationStep('card:' + card.key)" x-text="$t(dictationStep('card:' + card.key) || 'app.mic.busy')"></p>
+                <div class="card-fix-actions">
+                  <button type="button" class="btn soft" @click="card._fix = null" :disabled="card._fix.busy" x-text="$t('common.cancel')"></button>
+                  <button class="btn primary" :disabled="!card._fix.text.trim() || card._fix.busy || dictating('card:' + card.key)"
+                          x-text="card._fix.busy ? $t('app.fix.busy') : $t('app.fix.submit')"></button>
+                </div>
+              </form>
+            </template>
+            <div class="card-fixed" x-show="card._fixed && !card._fix">
+              <span x-text="card._fixed?.summary"></span>
+              <button type="button" class="link-btn" @click="undoFix(card)" x-text="$t('app.fix.undo')"></button>
             </div>
             <!-- 💬 The card explained, on demand; then only the follow-ups the AI says would help -->
             <div class="explain" x-show="card._explain?.open">

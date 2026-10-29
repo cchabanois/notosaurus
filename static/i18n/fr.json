@@ -184,6 +184,14 @@
         "why": "Pourquoi c'est juste ?"
       }
     },
+    "fix": {
+      "button": "Corriger cette carte",
+      "label": "Qu'est-ce qui ne va pas ?",
+      "placeholder": "« la réponse c'est 1789 », « plus court »…",
+      "submit": "Corriger",
+      "busy": "Correction…",
+      "undo": "↩ Annuler"
+    },
     "revise": {
       "label": "Corriger les cartes avec l'IA",
       "placeholder": "✨ Corriger avec l'IA : « supprime la carte sur le père », « tu as oublié les couleurs »…",
@@ -1084,7 +1092,8 @@
   "demo": {
     "removed": "Dernière carte supprimée (démo).",
     "added": "Une carte ajoutée (démo).",
-    "addedFront": "(ajout démo)"
+    "addedFront": "(ajout démo)",
+    "fixed": "Carte corrigée (démo)."
   },
   "addon": {
     "menuOpen": "Ouvrir Notosaurus",

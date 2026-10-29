@@ -597,6 +597,31 @@ class LocalServerTest {
     }
 
     @Test
+    fun aCardCorrectedOnItsOwn() = app { client ->
+        val lesson = client.extract()
+        relay.takeRequest()
+        val card = lesson["cards"]!!.jsonArray[0].jsonObject
+        relayAnswers("""{"card": ${JsonObject(card + ("back" to JsonPrimitive("la mamá")))}, "summary": "Réponse corrigée.", "usage": {"credits": 2, "credits_left": 95}}""")
+        val res = client.post("/api/lessons/${lesson.string("id")}/fix-card") {
+            page("fr"); contentType(ContentType.Application.Json)
+            setBody("""{"card": $card, "instruction": "plutôt la mamá", "others": ["le père"]}""")
+        }.json().jsonObject
+        assertEquals("la mamá", res["card"]!!.jsonObject.string("back"))
+        assertEquals("Réponse corrigée.", res.string("summary"))
+        assertFalse("usage" in res) // the relay's own
+
+        val sent = relay.takeRequest()
+        assertEquals("/v1/fix-card", sent.url.encodedPath)
+        val request = sent.multipartRequest()
+        assertEquals("plutôt la mamá", request.string("instruction"))
+        assertEquals("French", request.string("language"))
+        assertEquals("Espagnol::Leçon 5", request.string("deck"))
+        assertEquals(listOf("le père"), request["others"]!!.jsonArray.map { it.jsonPrimitive.content })
+        // Not saved here: the page puts it in place
+        assertEquals(card.string("back"), client.get("/api/lessons/${lesson.string("id")}") { page() }.json().jsonObject["cards"]!!.jsonArray[0].jsonObject.string("back"))
+    }
+
+    @Test
     fun aCardReportedToTheRelay() = app { client ->
         val lesson = client.extract()
         relay.takeRequest()

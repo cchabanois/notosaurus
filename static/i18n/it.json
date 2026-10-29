@@ -184,6 +184,14 @@
         "why": "Perché è giusta?"
       }
     },
+    "fix": {
+      "button": "Correggi questa scheda",
+      "label": "Cosa non va?",
+      "placeholder": "«la risposta è 1789», «più breve»…",
+      "submit": "Correggi",
+      "busy": "Correzione…",
+      "undo": "↩ Annulla"
+    },
     "revise": {
       "label": "Correggi le carte con l'IA",
       "placeholder": "✨ Correggi con l'IA: “togli la carta sul padre”, “hai dimenticato i colori”…",
@@ -1084,7 +1092,8 @@
   "demo": {
     "removed": "Ultima carta tolta (demo).",
     "added": "Una carta aggiunta (demo).",
-    "addedFront": "(aggiunta della demo)"
+    "addedFront": "(aggiunta della demo)",
+    "fixed": "Scheda corretta (demo)."
   },
   "addon": {
     "menuOpen": "Apri Notosaurus",

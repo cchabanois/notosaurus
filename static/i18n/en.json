@@ -184,6 +184,14 @@
         "why": "Why is it right?"
       }
     },
+    "fix": {
+      "button": "Correct this card",
+      "label": "What's wrong?",
+      "placeholder": "\"the answer is 1789\", \"shorter\"…",
+      "submit": "Correct",
+      "busy": "Correcting…",
+      "undo": "↩ Undo"
+    },
     "revise": {
       "label": "Correct the cards with AI",
       "placeholder": "✨ Correct with AI: “remove the card about father”, “you forgot the colours”…",
@@ -1084,7 +1092,8 @@
   "demo": {
     "removed": "Last card removed (demo).",
     "added": "One card added (demo).",
-    "addedFront": "(demo addition)"
+    "addedFront": "(demo addition)",
+    "fixed": "Card corrected (demo)."
   },
   "addon": {
     "menuOpen": "Open Notosaurus",

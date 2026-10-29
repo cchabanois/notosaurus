@@ -217,13 +217,27 @@ class Revision(Deck):
     )
 
 
+class CardFix(BaseModel):
+    """One card after a correction asked for it alone (as the AI fills it: ai_schema)."""
+
+    cards: list[Card] = Field(description="The corrected card: exactly one.")
+    summary: str = Field(description="One short sentence describing what changed, in the requested language.")
+
+
+class FixedCard(BaseModel):
+    """A card corrected on its own (llm.fix_card), with what changed."""
+
+    card: Card
+    summary: str
+
+
 def switched(current: bool, said: str) -> bool:
     """A lesson's option after a correction's word on it (Revision: "on", "off", "")."""
     return {"on": True, "off": False}.get(said, current)
 
 
 # What an AI call was for (transcribe: the relay only)
-CallKind = Literal["extract", "revise", "picture", "explain", "transcribe", "rephrase"]
+CallKind = Literal["extract", "revise", "fix", "picture", "explain", "transcribe", "rephrase"]
 
 
 class AiCall(BaseModel):
