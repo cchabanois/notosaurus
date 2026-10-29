@@ -232,6 +232,7 @@ class MadeFigure(NamedTuple):
     engine: Literal["typst", "svg"]
     family: str
     careful: bool
+    typst: str = ""  # its Typst, what it was drawn with (figures_typst.made_with)
 
 
 async def draw_figure(
@@ -344,7 +345,7 @@ async def _drawn(s: AIConfig, text: str, description: str, family: str, light: b
                 break
             try:
                 svg = figures.clean(await asyncio.to_thread(figures_typst.compile_svg, family, body))
-                return MadeFigure(svg, "typst", family, not light)
+                return MadeFigure(svg, "typst", family, not light, body)
             except (figures_typst.Unusable, figures.FigureError) as e:
                 said = str(e) if isinstance(e, figures_typst.Unusable) else "its SVG was unusable"
                 asked = (

@@ -2439,7 +2439,7 @@
               "other"
             ],
             "title": "Figure Kind",
-            "description": "With a figure, which kind it is: \"geometry\": points, segments, lines, circles, polygons, angles, their marks (a theorem, a construction); \"graph\": the graph of one or more functions in a frame; \"sets\": a Venn diagram of two or three sets; \"diagram\": boxes and arrows (a flowchart, a cycle, a chain, a classification); \"circuit\": an electric circuit; \"chemistry\": a molecule's formula; \"timeline\": dates on a line; \"other\": anything else (a table, a labelled drawing, a solid in perspective, a map…). Empty otherwise.",
+            "description": "With a figure, which kind it is: \"geometry\": points, segments, lines, circles, polygons, angles, their marks (a theorem, a construction); \"graph\": the graph of one or more functions in a frame; \"sets\": a Venn diagram of two or three sets; \"diagram\": boxes and arrows (a flowchart, a cycle, a chain, a classification); \"circuit\": an electric circuit; \"chemistry\": a molecule's formula written with its atoms' symbols and bonds (developed, semi-developed, skeletal, a ring), never a model of balls; \"timeline\": dates on a line; \"other\": anything else (a table, a labelled drawing, a solid in perspective, a map, a molecular model of coloured balls…). Empty otherwise.",
             "default": ""
           },
           "fun_fact": {
@@ -3729,7 +3729,7 @@
               "other"
             ],
             "title": "Figure Kind",
-            "description": "A figure: which kind it is, \"geometry\": points, segments, lines, circles, polygons, angles, their marks (a theorem, a construction); \"graph\": the graph of one or more functions in a frame; \"sets\": a Venn diagram of two or three sets; \"diagram\": boxes and arrows (a flowchart, a cycle, a chain, a classification); \"circuit\": an electric circuit; \"chemistry\": a molecule's formula; \"timeline\": dates on a line; \"other\": anything else (a table, a labelled drawing, a solid in perspective, a map…). Empty for a picture.",
+            "description": "A figure: which kind it is, \"geometry\": points, segments, lines, circles, polygons, angles, their marks (a theorem, a construction); \"graph\": the graph of one or more functions in a frame; \"sets\": a Venn diagram of two or three sets; \"diagram\": boxes and arrows (a flowchart, a cycle, a chain, a classification); \"circuit\": an electric circuit; \"chemistry\": a molecule's formula written with its atoms' symbols and bonds (developed, semi-developed, skeletal, a ring), never a model of balls; \"timeline\": dates on a line; \"other\": anything else (a table, a labelled drawing, a solid in perspective, a map, a molecular model of coloured balls…). Empty for a picture.",
             "default": ""
           },
           "search": {

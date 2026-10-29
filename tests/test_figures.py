@@ -453,13 +453,32 @@ def test_typst_cut_when_too_long_and_nothing_loaded(monkeypatch):
         figures_typst.compile_svg("geometry", TRIANGLE)
 
 
-def test_the_packages_colours_black_and_grey():
-    assert (
-        figures_typst.monochrome('<path stroke="#0074d9" fill="#aaccff"/>') == '<path stroke="#000000" fill="#e1e1e1"/>'
-    )
-    assert (
-        figures_typst.monochrome('<path fill="#ff4136" stroke="#333333"/>') == '<path fill="#000000" stroke="#333333"/>'
-    )
+def test_the_figures_colours_kept():
+    """A figure keeps its colours: a lesson's colour code (an atom's, a legend's) is what the
+    card teaches, never turned black."""
+    body = "#cetz.canvas({ import cetz.draw: *\n circle((0, 0), radius: 0.8, fill: red) })"
+    svg = figures_typst.compile_svg("chemistry", body)
+    assert re.search(r'fill="#ff4136"|fill="#ff0000"', svg), svg[:300]
+
+
+def test_credited_with_what_its_typst_uses():
+    """A figure credits the packages its Typst really calls, not all its family imports: a
+    model of balls drawn with cetz under the chemistry family is cetz's, not alchemist's."""
+    balls = "#cetz.canvas({ import cetz.draw: *\n circle((0, 0), radius: 0.8, fill: red) })"
+    formula = '#skeletize({ fragment("CH_3"); single(); fragment("OH") })'
+    assert figures_typst.made_with("chemistry", balls)[1:] == ["cetz 0.5.2"]
+    assert figures_typst.made_with("chemistry", formula)[1:] == ["alchemist 0.2.0"]
+    assert figures_typst.made_with("geometry", TRIANGLE)[1:] == ["ctz-euclide 0.3.0"]
+    assert figures_typst.made_with("graph", "#lq.diagram(lq.plot((0, 1), (0, 1)))")[1:] == ["lilaq 0.6.0"]
+    timeline = "#timeline(start: 1914, end: 1918, events: ((1916, [Verdun]),))"  # our function: what it uses
+    assert figures_typst.made_with("timeline", timeline)[1:] == ["cetz 0.5.2"]
+    assert figures_typst.made_with("other", balls) == []
+
+
+def test_a_model_of_balls_is_no_chemistry():
+    """The chemistry family draws formulas (its package's): a molecular model of coloured
+    balls is "other", said to the AI that picks a figure's kind."""
+    assert "never a model of balls" in figures_typst.KINDS and "molecular model" in figures_typst.KINDS
 
 
 def test_a_use_only_of_the_figures_own_shapes():
