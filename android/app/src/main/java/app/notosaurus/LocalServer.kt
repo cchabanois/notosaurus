@@ -39,6 +39,7 @@ import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
 import kotlinx.serialization.json.put
 import java.io.File
+import kotlin.concurrent.thread
 import java.net.URI
 import java.util.UUID
 
@@ -87,7 +88,8 @@ class LocalServer(
     internal val exams = Exams(prefs, lessons) // the tests to prepare: lessons under one tag in AnkiDroid
     internal val texts = PageTexts(web, languages)
     internal val prompts = Prompts(File(dataDir, "prompts.json"), texts)
-    internal val speech = Speech(File(dataDir, "audio").apply { mkdirs() }, prefs, ::relay) // the backs read aloud, kept
+    // The backs read aloud, kept in each lesson's folder (the previews' in audio/)
+    internal val speech = Speech(File(dataDir, "audio").apply { mkdirs() }, prefs, ::relay, lessons::audio)
     internal val pictures = Pictures(lessons, ::relay, cardSize)
     internal val generation = Generation(lessons, prefs, ::relay, speech, turnPhoto, children)
     internal val computer = Computer(prefs, modeChanged)
@@ -123,7 +125,7 @@ class LocalServer(
         val lesson = lessons.get(id)?.takeIf(::readsAhead) ?: return // as saved now: it may have changed, or gone
         val deck = Deck(lesson.string("deck"), json.decodeFromJsonElement(ListSerializer(Card.serializer()), lesson["cards"] ?: JsonArray(emptyList())))
         fun on(option: String) = lesson[option]?.jsonPrimitive?.content == "true"
-        speech.sounds(deck, lesson.string("voice"), on("dictation") || on("dictation_only"), lesson.string("rate"))
+        speech.sounds(deck, lesson.string("voice"), on("dictation") || on("dictation_only"), lesson.string("rate"), id)
     }
 
     init {
@@ -131,6 +133,11 @@ class LocalServer(
         prefs[KEY]?.takeIf { it.isNotEmpty() }?.let {
             prefs[keyOf(relayUrl())] = it
             prefs[KEY] = ""
+        }
+        // The sounds an older version kept together moved into their lessons, once, in the
+        // background (a few seconds of copies at most: not at the app's start)
+        thread(isDaemon = true, name = "sounds-into-lessons") {
+            runCatching { speech.moveIntoLessons(lessons.list()) } // failed: each sound still found there when read (Speech.read)
         }
     }
 

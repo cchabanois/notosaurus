@@ -198,6 +198,9 @@ class Lessons(private val root: File) {
         tmp.renameTo(dir.resolve("lesson.json")) // never half a file
     }
 
+    /** The lesson's sounds' folder (Speech: its mp3s and what they say); null: no such lesson. */
+    fun audio(id: String): File? = folder(id)?.resolve("audio")
+
     private fun folder(id: String): File? = root.resolve(id).takeIf { NAME.matches(id) && it.isDirectory }
 
     companion object {

@@ -3,6 +3,7 @@ the audio read aloud, cloze gaps, typed answers, multiple choice — the real
 package, unzipped, its SQLite collection read (tests/apkg.py)."""
 
 import asyncio
+import json
 
 import apkg
 from conftest import CLOZE, extract_lesson, synthesized
@@ -95,13 +96,24 @@ def test_audio_in_the_lesson(client):
     from app import lessons
 
     audio = lessons.audio_dir(lesson["id"])
-    assert [p.name for p in audio.iterdir()] == [tts.filename("la madre", "es-ES-ElviraNeural")]
+    assert [p.name for p in audio.glob("*.mp3")] == [tts.filename("la madre", "es-ES-ElviraNeural")]
     assert tts.filename("la madre", "es-ES-ElviraNeural").startswith("la-madre-")
+    index = json.loads((audio / tts.INDEX).read_text(encoding="utf-8"))  # what it says, with which voice
+    assert index == {
+        tts.filename("la madre", "es-ES-ElviraNeural"): {
+            "text": "la madre",
+            "voice": "es-ES-ElviraNeural",
+            "rate": "-10%",
+        }
+    }
 
     # Back corrected: the new mp3 replaces the old one
     corrected = {**export, "cards": [{"front": "la mère", "back": "la mamá"}]}
     client.post("/api/export", json=corrected)
-    assert [p.name for p in audio.iterdir()] == [tts.filename("la mamá", "es-ES-ElviraNeural")]
+    assert [p.name for p in audio.glob("*.mp3")] == [tts.filename("la mamá", "es-ES-ElviraNeural")]
+    assert list(json.loads((audio / tts.INDEX).read_text(encoding="utf-8"))) == [
+        tts.filename("la mamá", "es-ES-ElviraNeural")
+    ]
 
 
 def test_preview_then_export_reuses_the_sound(client):
@@ -299,7 +311,7 @@ def test_each_line_read_on_its_own_then_joined(tmp_path, monkeypatch):
     path = asyncio.run(tts.tts("vers\nLes bras tendus vers lui.\nvers", "fr-FR-DeniseNeural", tmp_path))
     assert read == ["vers", "Les bras tendus vers lui.", "vers"]
     assert path.read_bytes() == b"<vers><Les bras tendus vers lui.><vers>"
-    assert [p.name for p in tmp_path.iterdir()] == [path.name]  # no part left behind
+    assert sorted(p.name for p in tmp_path.iterdir()) == sorted([path.name, tts.INDEX])  # no part left behind
 
 
 def test_dictation_only(client, tmp_path):

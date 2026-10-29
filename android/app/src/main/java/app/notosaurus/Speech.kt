@@ -10,37 +10,124 @@ import kotlinx.coroutines.sync.Semaphore
 import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.sync.withPermit
 import kotlinx.coroutines.withContext
+import kotlinx.serialization.builtins.ListSerializer
 import kotlinx.serialization.json.JsonArray
+import kotlinx.serialization.json.JsonObject
+import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.jsonObject
 import java.io.File
 import java.security.MessageDigest
+import java.text.Normalizer
 
-/** The backs read aloud by the relay's voices (Google Chirp 3 HD), kept on the phone in
- * `folder`: the same text and voice aren't paid for twice (the 🔊 preview, then the cards). */
-class Speech(private val folder: File, private val prefs: Preferences, private val relay: () -> Relay) {
+/**
+ * The backs read aloud by the relay's voices (Google Chirp 3 HD). A lesson's sounds are in
+ * its own folder, as the computer keeps them (core tts.py): audio/, each mp3 named after
+ * its text and a hash of (voice, rate, text), and INDEX ("sounds.json": {file: {"text",
+ * "voice", "rate"}}) saying what each one says. A sound made elsewhere (a lesson imported from
+ * the computer: a voice the relay doesn't have) is kept as long as its card says the same.
+ * `folder`: the 🔊 previews outside a lesson; it held every sound before (moveIntoLessons).
+ */
+class Speech(
+    private val folder: File,
+    private val prefs: Preferences,
+    private val relay: () -> Relay,
+    private val lessonAudio: (String) -> File? = { null }, // a lesson's audio/ folder (Lessons.audio)
+) {
     private var voiceList: JsonArray? = null
+    private val indexing = Mutex() // the index read then written by one sound at a time
 
     /** The relay's voices ({"voice", "locale", "gender"}, as the page lists them), asked once. */
     suspend fun voices(): JsonArray = voiceList ?: relay().voices().also { voiceList = it }
 
-    /** A text read aloud: its mp3, at the lesson's `rate` ("-10%"; "": the settings'). */
-    suspend fun read(text: String, voice: String, rate: String = ""): File {
+    /** A text read aloud: its mp3, at the lesson's `rate` ("-10%"; "": the settings'), in
+     * the `lesson`'s folder (none: a preview, in `folder`). */
+    suspend fun read(text: String, voice: String, rate: String = "", lesson: String = ""): File {
+        val r = rateOf(rate)
+        val dir = lesson.takeIf { it.isNotEmpty() }?.let(lessonAudio)
+        val mp3 = File(dir ?: folder, fileName(text, voice, r))
+        if (mp3.isFile) return mp3
+        if (dir != null) {
+            madeElsewhere(dir, text)?.let { return it }
+            // Made before: the same sound previewed, or kept by an older version in `folder`
+            val before = listOf(File(folder, mp3.name), File(folder, legacyName(text, voice, r))).firstOrNull { it.isFile }
+            if (before != null) {
+                withContext(Dispatchers.IO) { dir.mkdirs(); before.copyTo(mp3, overwrite = true) }
+                record(dir, mp3, text, voice, r)
+                return mp3
+            }
+        } else {
+            File(folder, legacyName(text, voice, r)).takeIf { it.isFile }?.let { return it }
+        }
         // Each line on its own, the mp3s joined (as the computer's tts.lines): a natural voice
         // given a lone word then a sentence in one text makes up words. 200 characters a line.
-        val lines = text.lines().map { it.trim().take(200) }.filter { it.isNotEmpty() }.ifEmpty { listOf(text.trim().take(200)) }
-        val said = lines.joinToString("\n")
-        val speed = RATES[rate.ifEmpty { prefs[TTS_RATE] }] ?: Relay.SPEECH_RATE
-        val digest = MessageDigest.getInstance("SHA-1").digest("$voice|$speed|$said".toByteArray())
-        val mp3 = File(folder, digest.joinToString("") { "%02x".format(it) }.take(16) + ".mp3")
-        if (!mp3.isFile) {
-            val bytes = lines.map { relay().speak(it, voice, speed) }.reduce { all, part -> all + part }
-            withContext(Dispatchers.IO) {
-                val tmp = File(folder, mp3.name + ".tmp")
-                tmp.writeBytes(bytes)
-                tmp.renameTo(mp3)
+        val speed = RATES[r] ?: Relay.SPEECH_RATE
+        val bytes = lines(text).map { relay().speak(it, voice, speed) }.reduce { all, part -> all + part }
+        withContext(Dispatchers.IO) {
+            mp3.parentFile?.mkdirs()
+            val tmp = File(mp3.parentFile, mp3.name + ".tmp")
+            tmp.writeBytes(bytes)
+            tmp.renameTo(mp3)
+        }
+        if (dir != null) record(dir, mp3, text, voice, r)
+        return mp3
+    }
+
+    /** The rate a sound is read at: the lesson's, else the settings', else SLOWED. */
+    private fun rateOf(rate: String): String = rate.ifEmpty { prefs[TTS_RATE].orEmpty() }.takeIf { it in RATES } ?: SLOWED
+
+    /** The sound of `text` made by another device (a voice the relay doesn't have): kept. */
+    private suspend fun madeElsewhere(dir: File, text: String): File? {
+        val ours = runCatching { voices() }.getOrNull()?.map { it.jsonObject.string("voice") }?.toSet().orEmpty()
+        return index(dir).entries.firstNotNullOfOrNull { (name, said) ->
+            val entry = said as? JsonObject ?: return@firstNotNullOfOrNull null
+            File(dir, name).takeIf { entry.string("text") == text && entry.string("voice") !in ours && it.isFile }
+        }
+    }
+
+    private fun index(dir: File): JsonObject =
+        runCatching { json.parseToJsonElement(File(dir, INDEX).readText()).jsonObject }.getOrDefault(JsonObject(emptyMap()))
+
+    private suspend fun record(dir: File, mp3: File, text: String, voice: String, rate: String) = indexing.withLock {
+        val said = JsonObject(mapOf("text" to JsonPrimitive(text), "voice" to JsonPrimitive(voice), "rate" to JsonPrimitive(rate)))
+        writeIndex(dir, JsonObject(index(dir) + (mp3.name to said)))
+    }
+
+    private fun writeIndex(dir: File, index: JsonObject) = withTmp(File(dir, INDEX)) { it.writeText(index.toString()) }
+
+    /** The lesson's mp3s no card says any more (backs corrected, voice changed) deleted, and
+     * what the index says of them. */
+    suspend fun prune(lesson: String, keep: Set<File>) {
+        val dir = lesson.takeIf { it.isNotEmpty() }?.let(lessonAudio) ?: return
+        withContext(Dispatchers.IO) {
+            dir.listFiles { f -> f.name.endsWith(".mp3") && f !in keep }?.forEach { it.delete() }
+        }
+        indexing.withLock {
+            val index = index(dir)
+            val kept = JsonObject(index.filterKeys { File(dir, it).isFile })
+            if (kept != index) writeIndex(dir, kept)
+        }
+    }
+
+    /** Every lesson's sounds, kept by an older version in `folder`, moved into its own folder
+     * (no credit paid again); then `folder` holds only previews. Once (MOVED). */
+    fun moveIntoLessons(lessons: List<JsonObject>) {
+        if (prefs[MOVED] == "true") return
+        for (lesson in lessons) {
+            val dir = lessonAudio(lesson.string("id")) ?: continue
+            val voice = lesson.string("voice")
+            val r = rateOf(lesson.string("rate"))
+            fun on(option: String) = (lesson[option] as? JsonPrimitive)?.content == "true"
+            val cards = runCatching { json.decodeFromJsonElement(ListSerializer(Card.serializer()), lesson["cards"]!!) }.getOrDefault(emptyList())
+            for (text in cards.map { spoken(it, on("dictation") || on("dictation_only")) }.filter { it.isNotEmpty() }.distinct()) {
+                val old = File(folder, legacyName(text, voice, r)).takeIf { it.isFile } ?: continue
+                val mp3 = File(dir, fileName(text, voice, r))
+                dir.mkdirs()
+                old.copyTo(mp3, overwrite = true)
+                writeIndex(dir, JsonObject(index(dir) + (mp3.name to JsonObject(mapOf("text" to JsonPrimitive(text), "voice" to JsonPrimitive(voice), "rate" to JsonPrimitive(r))))))
             }
         }
-        return mp3
+        folder.listFiles { f -> LEGACY.matches(f.name) }?.forEach { it.delete() }
+        prefs[MOVED] = "true"
     }
 
     /** The backs' sound for AnkiDroid, with `voice` (none: no sound), and how many
@@ -50,6 +137,7 @@ class Speech(private val folder: File, private val prefs: Preferences, private v
         voice: String,
         dictation: Boolean = false,
         rate: String = "",
+        lesson: String = "", // its folder keeps them (none: previews')
         onSound: suspend (done: Int, total: Int) -> Unit = { _, _ -> }, // first (0, total), then as each is done
     ): Pair<Map<String, File>, Int> {
         if (!reads(voice)) return emptyMap<String, File>() to 0
@@ -64,7 +152,7 @@ class Speech(private val folder: File, private val prefs: Preferences, private v
                 async {
                     gate.withPermit {
                         val mp3 = try {
-                            read(back, voice, rate)
+                            read(back, voice, rate, lesson)
                         } catch (e: CancellationException) {
                             throw e
                         } catch (e: Exception) { // the card goes without sound, counted
@@ -108,7 +196,7 @@ class Speech(private val folder: File, private val prefs: Preferences, private v
         prefs[VOICES] = json.encodeToString(voices.filter { (locale, voice) -> locale.isNotBlank() && voice.isNotBlank() })
     }
 
-    /** What the kept sounds take on the phone. */
+    /** What the previews take on the phone (a lesson's sounds are in its folder: Lessons.bytes). */
     fun bytes(): Long = folder.walkTopDown().filter { it.isFile }.sumOf { it.length() }
 
     fun deleteAll() = folder.listFiles()?.forEach { it.delete() }
@@ -156,6 +244,36 @@ class Speech(private val folder: File, private val prefs: Preferences, private v
         const val TTS_RATE = "tts_rate" // the setting: the voice's speed, as the computer's
         const val VOICES = "voices" // the setting: the voice chosen per language variety, as the computer's
         val RATES = mapOf("-25%" to 0.75, "-10%" to Relay.SPEECH_RATE, "+0%" to 1.0)
+        const val INDEX = "sounds.json" // a lesson's audio/: what each mp3 says (core tts.INDEX)
+        private const val MOVED = "sounds_in_lessons" // the older shared sounds moved into their lessons
+        private val LEGACY = Regex("^[0-9a-f]{16}\\.mp3$") // an older version's name: a hash of (voice, speed, text)
+
+        /** A sound's file, as the computer names them (core tts.filename): "la-madre-3f2a1c9e.mp3",
+         * the same name for the same sound (core/shared-cases.json, sound_file). */
+        fun fileName(text: String, voice: String, rate: String): String =
+            "${slug(text).ifEmpty { "audio" }}-${sha1("$voice|$rate|$text").take(8)}.mp3"
+
+        /** As the core's files.slugify(text, 30): only what is ASCII once decomposed ("cœur" → "cur"). */
+        private fun slug(text: String): String = Normalizer.normalize(text, Normalizer.Form.NFKD)
+            .filter { it.code < 128 }.lowercase().replace(Regex("[^a-z0-9]+"), "-").trim('-').take(30).trimEnd('-')
+
+        /** An older version's name for it (in `folder`): a hash of (voice, speed, the lines said). */
+        private fun legacyName(text: String, voice: String, rate: String): String =
+            sha1("$voice|${RATES[rate] ?: Relay.SPEECH_RATE}|${lines(text).joinToString("\n")}").take(16) + ".mp3"
+
+        /** The lines read, each on its own (the computer's tts.lines): 200 characters a line. */
+        private fun lines(text: String): List<String> =
+            text.lines().map { it.trim().take(200) }.filter { it.isNotEmpty() }.ifEmpty { listOf(text.trim().take(200)) }
+
+        private fun sha1(text: String): String =
+            MessageDigest.getInstance("SHA-1").digest(text.toByteArray()).joinToString("") { "%02x".format(it) }
+
+        /** A file written whole or not at all. */
+        private fun withTmp(file: File, write: (File) -> Unit) {
+            val tmp = File(file.parentFile, file.name + ".tmp")
+            write(tmp)
+            tmp.renameTo(file)
+        }
         const val SLOWED = "-10%" // the setting's default
         private const val NORMAL = "+0%"
 

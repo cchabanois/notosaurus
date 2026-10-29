@@ -1,5 +1,5 @@
 {
- "_": "Cases the three implementations must agree on (Python app/exams.py, notosaurus_core/tts.py; Kotlin Exams.kt, Speech.kt; JavaScript static/app-anki.js): their tests read this file. Python's answers are the reference.",
+ "_": "Cases the three implementations must agree on (Python app/exams.py, notosaurus_core/tts.py; Kotlin Exams.kt, Speech.kt; JavaScript static/app-anki.js): their tests read this file. Python's answers are the reference; sound_file: Python and Kotlin only (the page names no file).",
  "tag_text": [
   {
    "in": "Interro SVT de lundi",
@@ -175,6 +175,50 @@
    "back": "là-bas",
    "dictation": true,
    "out": "là-bas"
+  }
+ ],
+ "sound_file": [
+  {
+   "text": "la madre",
+   "voice": "es-ES-ElviraNeural",
+   "rate": "-10%",
+   "out": "la-madre-55895502.mp3"
+  },
+  {
+   "text": "le cœur bat",
+   "voice": "es-ES-Chirp3-HD-Aoede",
+   "rate": "+0%",
+   "out": "le-cur-bat-ca75c4e9.mp3"
+  },
+  {
+   "text": "die Straße",
+   "voice": "de-DE-KatjaNeural",
+   "rate": "-10%",
+   "out": "die-strae-accb03cc.mp3"
+  },
+  {
+   "text": "кошка",
+   "voice": "ru-RU-Chirp3-HD-Aoede",
+   "rate": "-25%",
+   "out": "audio-33bc902d.mp3"
+  },
+  {
+   "text": "Le chat boit du lait.\nlait",
+   "voice": "fr-FR-DeniseNeural",
+   "rate": "-10%",
+   "out": "le-chat-boit-du-lait-lait-3690ba54.mp3"
+  },
+  {
+   "text": "Une phrase assez longue pour être coupée au trentième caractère",
+   "voice": "fr-FR-Chirp3-HD-Puck",
+   "rate": "-10%",
+   "out": "une-phrase-assez-longue-pour-e-64a7d251.mp3"
+  },
+  {
+   "text": "l'été",
+   "voice": "fr-FR-DeniseNeural",
+   "rate": "-10%",
+   "out": "l-ete-fafc0fbe.mp3"
   }
  ]
 }

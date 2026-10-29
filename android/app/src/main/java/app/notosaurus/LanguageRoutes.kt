@@ -38,8 +38,9 @@ internal fun Route.languageRoutes(server: LocalServer) {
             val text = call.request.queryParameters["text"].orEmpty()
             val voice = call.request.queryParameters["voice"].orEmpty()
             val rate = call.request.queryParameters["rate"].orEmpty().takeIf { it in Speech.RATES }.orEmpty() // the lesson's
+            val lesson = call.request.queryParameters["lesson"].orEmpty() // kept in its folder, reused when sent
             val mp3 = try {
-                speech.read(text, voice, rate)
+                speech.read(text, voice, rate, lesson)
             } catch (e: CancellationException) {
                 throw e
             } catch (e: Exception) { // said by the page (credits used up, relay unreachable…), as the computer's

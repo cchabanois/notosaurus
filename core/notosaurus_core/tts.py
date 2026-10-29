@@ -4,6 +4,11 @@ Each mp3 is named after the text plus a hash of (voice, rate, text), e.g.
 "la-madre-3f2a1c9e.mp3". Card audio lives in the lesson's audio/ folder;
 previews go to the cache (files.py, tts/) and are reused when the lesson is exported.
 
+The lesson's audio/ folder also says what each of its mp3s says, and with which voice and
+rate (INDEX, "sounds.json": {file: {"text", "voice", "rate"}}): the same on the phone
+(Speech.kt), where the voices are the relay's. A sound made elsewhere (a lesson imported
+from the phone: a voice edge-tts doesn't have) is kept as long as its card says the same.
+
 `rate`: the speed, e.g. "-10%" (slightly slower, for learners).
 """
 
@@ -115,6 +120,35 @@ NORMAL = "+0%"  # not slowed
 MAX_LINE = 200  # characters read of a line: a back's sound, not a text read out
 
 
+INDEX = "sounds.json"
+
+
+def is_edge_voice(voice: str) -> bool:
+    """A voice this computer reads with (edge-tts: "es-ES-ElviraNeural")."""
+    return voice.endswith("Neural")
+
+
+def _index(directory: Path) -> dict[str, dict]:
+    found = files.read_json(directory / INDEX, {})
+    return found if isinstance(found, dict) else {}
+
+
+def _record(directory: Path, path: Path, text: str, voice: str, rate: str) -> None:
+    """What the mp3 says, kept in its folder's index."""
+    index = _index(directory)
+    index[path.name] = {"text": text, "voice": voice, "rate": rate}
+    files.write_json(directory / INDEX, index)
+
+
+def made_elsewhere(directory: Path, text: str) -> Path | None:
+    """The sound of `text` made by another device (a voice edge-tts doesn't have): kept."""
+    for name, said in _index(directory).items():
+        path = directory / name
+        if said.get("text") == text and not is_edge_voice(said.get("voice", "")) and path.is_file():
+            return path
+    return None
+
+
 def filename(text: str, voice: str, rate: str = RATE) -> str:
     # Anki keeps all media in one folder: the hash keeps names unique across
     # voices, rates and lessons, the slug keeps them readable.
@@ -136,13 +170,18 @@ async def tts(text: str, voice: str, directory: Path | None = None, rate: str = 
     """mp3 of `text` in `directory` (default: preview cache), synthesized if missing."""
     name = filename(text, voice, rate)
     path = (directory or cache_dir()) / name
-    if not path.exists():
-        path.parent.mkdir(parents=True, exist_ok=True)
-        cached = cache_dir() / name
-        if directory and cached.exists():
-            shutil.copyfile(cached, path)
-        else:
-            await _synthesize_lines(text, voice, path, rate)
+    if path.exists():
+        return path
+    if directory and (elsewhere := made_elsewhere(directory, text)):
+        return elsewhere
+    path.parent.mkdir(parents=True, exist_ok=True)
+    cached = cache_dir() / name
+    if directory and cached.exists():
+        shutil.copyfile(cached, path)
+    else:
+        await _synthesize_lines(text, voice, path, rate)
+    if directory:
+        _record(directory, path, text, voice, rate)
     return path
 
 
@@ -193,10 +232,15 @@ async def tts_many(
 
 
 def prune(directory: Path, keep: set[Path]) -> None:
-    """Delete mp3s no card uses any more (edited backs, changed voice)."""
+    """Delete mp3s no card uses any more (edited backs, changed voice), and what the index
+    says of them."""
     for mp3 in directory.glob("*.mp3"):
         if mp3 not in keep:
             mp3.unlink()
+    index = _index(directory)
+    kept = {name: said for name, said in index.items() if (directory / name).is_file()}
+    if kept != index:
+        files.write_json(directory / INDEX, kept)
 
 
 # A natural voice per language, for prompts whose voice is "auto"
