@@ -163,6 +163,7 @@ dependencies {
     androidTestImplementation(libs.androidx.test.core)
     androidTestImplementation(libs.androidx.test.junit)
     androidTestImplementation(libs.androidx.test.uiautomator) // Android's own dialogs (a permission's)
+    androidTestImplementation(libs.androidx.test.espresso.intents) // the photo picker answered (AppTest)
     androidTestImplementation(libs.mockwebserver)
 }
 
