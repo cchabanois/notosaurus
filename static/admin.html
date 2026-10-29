@@ -332,6 +332,20 @@
         </section>
 
         <!-- Lessons: who they belong to (changes apply right away, not with "Save") -->
+        <!-- The lessons in a file (app/transfer.py): kept, or opened on another computer or in the app -->
+        <section class="panel admin-transfer" x-show="lessons">
+          <h2 x-text="$t('admin.transfer.title')"></h2>
+          <p class="hint" x-text="$t('admin.transfer.hint')"></p>
+          <div class="transfer-actions">
+            <button type="button" class="btn primary" @click="exportLessons()" :disabled="transferring !== ''"
+                    x-text="transferring === 'export' ? $t('admin.transfer.exporting') : $t('admin.transfer.export')"></button>
+            <label class="btn soft" :class="{ disabled: transferring !== '' }">
+              <span x-text="transferring === 'import' ? $t('admin.transfer.importing') : $t('admin.transfer.import')"></span>
+              <input type="file" accept=".zip,application/zip" hidden :disabled="transferring !== ''" @change="importLessons($event)">
+            </label>
+          </div>
+          <small class="muted" x-text="$t('admin.transfer.private')"></small>
+        </section>
         <section class="panel admin-lessons" x-show="lessons">
           <h2><span x-text="$t('admin.lessons.title')"></span> <a class="help-link" :href="$docs('several-children')" target="_blank" rel="noopener" :aria-label="$t('common.helpOn', { topic: $t('admin.lessons.title') })" :title="$t('common.helpOn', { topic: $t('admin.lessons.title') })">?</a></h2>
           <p class="hint" x-text="$t('admin.lessons.hint')"></p>

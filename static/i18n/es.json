@@ -682,6 +682,17 @@
       "syncOn": "✓ «{profile}» tiene la sesión iniciada en AnkiWeb.",
       "syncOff": "«{profile}» no tiene la sesión iniciada en AnkiWeb: no habrá sincronización después del envío. Para sincronizar, inicia sesión en Anki (botón Sincronizar)."
     },
+    "transfer": {
+      "title": "💾 Guardar o trasladar mis lecciones",
+      "hint": "Un solo archivo con todas las lecciones (fotos, tarjetas, imágenes, sonidos), los niños, los exámenes y sus instrucciones: para guardarlas, o abrirlas en otro ordenador o en la app de Android. Sus tarjetas que ya están en Anki se encuentran allí, sin duplicados.",
+      "export": "⬇️ Exportar mis lecciones",
+      "import": "⬆️ Importar un archivo",
+      "exporting": "Exportando…",
+      "importing": "Importando…",
+      "exported": "Lecciones exportadas en {name}.",
+      "imported": "Importación terminada: {added} lección(es) añadida(s), {replaced} sustituida(s) por una más reciente, {kept} ya al día; {children} niño(s), {exams} examen(es), {prompts} instrucción(es) añadido(s).",
+      "private": "El archivo contiene las fotos de las lecciones y los nombres de los niños: guárdelo para usted. No contiene ninguna clave ni contraseña."
+    },
     "lessons": {
       "title": "Lecciones",
       "hint": "A quién pertenece cada lección. Una lección solo se puede cambiar desde el perfil de Anki de su propietario; sin propietario, es de todos. Los cambios hechos aquí se aplican al momento.",
@@ -1087,6 +1098,11 @@
       "too_many": "Como máximo {max} hijos.",
       "not_found": "Este niño ya no existe: recargue la página.",
       "invalid": "La ficha de un hijo no es válida: un nombre (40 caracteres como máximo), una clase y mazos cortos."
+    },
+    "transfer": {
+      "not_an_export": "Este archivo no es una exportación de Notosaurus.",
+      "too_new": "Esta exportación viene de una versión más reciente de Notosaurus: actualice esta y vuelva a importarla.",
+      "too_large": "Esta exportación es demasiado grande (más de 4 GB descomprimida)."
     },
     "exams": {
       "invalid": "Este examen no es válido: un nombre de 60 caracteres como máximo, una fecha, 50 lecciones como máximo.",

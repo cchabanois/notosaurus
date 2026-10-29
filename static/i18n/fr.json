@@ -682,6 +682,17 @@
       "syncOn": "✓ « {profile} » est connecté à AnkiWeb.",
       "syncOff": "« {profile} » n'est pas connecté à AnkiWeb : pas de synchro après l'envoi. Pour synchroniser, connectez-vous dans Anki (bouton Synchroniser)."
     },
+    "transfer": {
+      "title": "💾 Sauvegarder ou déplacer mes leçons",
+      "hint": "Un seul fichier avec toutes les leçons (photos, cartes, images, sons), les enfants, les contrôles et vos consignes : pour les garder, ou les ouvrir sur un autre ordinateur ou dans l'app Android. Ses cartes déjà dans Anki y sont retrouvées, sans doublon.",
+      "export": "⬇️ Exporter mes leçons",
+      "import": "⬆️ Importer un fichier",
+      "exporting": "Export…",
+      "importing": "Import…",
+      "exported": "Leçons exportées dans {name}.",
+      "imported": "Import terminé : {added} leçon(s) ajoutée(s), {replaced} remplacée(s) par une plus récente, {kept} déjà à jour ; {children} enfant(s), {exams} contrôle(s), {prompts} consigne(s) ajouté(s).",
+      "private": "Le fichier contient les photos des leçons et les prénoms des enfants : gardez-le pour vous. Il ne contient aucune clé ni aucun mot de passe."
+    },
     "lessons": {
       "title": "Leçons",
       "hint": "À qui appartient chaque leçon. Une leçon ne se modifie que depuis le profil Anki de son propriétaire ; sans propriétaire, elle est à tout le monde. Les changements faits ici s'appliquent tout de suite.",
@@ -1087,6 +1098,11 @@
       "too_many": "Au plus {max} enfants.",
       "not_found": "Cet enfant n'existe plus : rechargez la page.",
       "invalid": "Une fiche d'enfant n'est pas valide : un prénom (40 caractères au plus), une classe et des paquets courts."
+    },
+    "transfer": {
+      "not_an_export": "Ce fichier n'est pas un export de Notosaurus.",
+      "too_new": "Cet export vient d'une version plus récente de Notosaurus : mettez celle-ci à jour, puis importez-le à nouveau.",
+      "too_large": "Cet export est trop gros (plus de 4 Go une fois décompressé)."
     },
     "exams": {
       "invalid": "Ce contrôle n'est pas valide : un nom de 60 caractères au plus, une date, 50 leçons au plus.",

@@ -925,6 +925,10 @@ html.sheet-open { overflow: hidden; overscroll-behavior: none; }
 .found-pick:hover, .found-pick:focus-visible { border-color: var(--primary); }
 .found-pick img { display: block; width: 100%; height: 100%; object-fit: cover; }
 .picture-actions label.btn { cursor: pointer; }
+/* The lessons in a file (the settings): export, import */
+.transfer-actions { display: flex; flex-wrap: wrap; gap: .5rem; margin: .5rem 0; }
+.transfer-actions label.btn { cursor: pointer; }
+.transfer-actions label.btn.disabled { opacity: .55; pointer-events: none; }
 .picture-actions .disabled { opacity: .5; pointer-events: none; }
 .flash-actions .icon-btn.active { background: var(--primary-soft); }
 .from-prompt { margin-top: .8rem; }

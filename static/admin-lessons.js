@@ -2,6 +2,43 @@
 // Methods of the settings page's Alpine component (admin.js), as `this`.
 
 const lessonsPart = {
+  // --- The lessons in a file, to keep them or move them (app/transfer.py) -------------------
+  async exportLessons() {
+    this.error = this.notice = "";
+    this.transferring = "export";
+    try {
+      const res = await this.request("/api/admin/transfer", { raw: true });
+      const name = /filename="?([^";]+)"?/.exec(res.headers.get("Content-Disposition") ?? "")?.[1] ?? "notosaurus.zip";
+      const link = Object.assign(document.createElement("a"), { href: URL.createObjectURL(await res.blob()), download: name });
+      link.click();
+      setTimeout(() => URL.revokeObjectURL(link.href), 60_000);
+      this.notice = t("admin.transfer.exported", { name });
+    } catch (e) {
+      this.error = e.message;
+    } finally {
+      this.transferring = "";
+    }
+  },
+
+  async importLessons(event) {
+    const file = event.target.files?.[0];
+    event.target.value = "";  // the same file can be chosen again
+    if (!file) return;
+    this.error = this.notice = "";
+    this.transferring = "import";
+    try {
+      const body = new FormData();
+      body.append("file", file);
+      const r = await this.request("/api/admin/transfer", { method: "POST", body });
+      this.notice = t("admin.transfer.imported", r);
+      await this.loadLessons();
+    } catch (e) {
+      this.error = e.message;
+    } finally {
+      this.transferring = "";
+    }
+  },
+
   // --- Lessons: who they belong to ------------------------------------------
   async loadLessons() {
     try {

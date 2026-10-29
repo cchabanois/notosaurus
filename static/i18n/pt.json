@@ -682,6 +682,17 @@
       "syncOn": "✓ “{profile}” está conectado ao AnkiWeb.",
       "syncOff": "“{profile}” não está conectado ao AnkiWeb: sem sincronização depois do envio. Para sincronizar, entre no Anki (botão Sincronizar)."
     },
+    "transfer": {
+      "title": "💾 Guardar ou mudar as minhas lições",
+      "hint": "Um só ficheiro com todas as lições (fotos, cartões, imagens, sons), as crianças, os testes e as suas instruções: para as guardar, ou abri-las noutro computador ou na app Android. Os cartões que já estão no Anki são lá reencontrados, nunca em duplicado.",
+      "export": "⬇️ Exportar as minhas lições",
+      "import": "⬆️ Importar um ficheiro",
+      "exporting": "A exportar…",
+      "importing": "A importar…",
+      "exported": "Lições exportadas para {name}.",
+      "imported": "Importação concluída: {added} lição(ões) adicionada(s), {replaced} substituída(s) por uma mais recente, {kept} já atualizada(s); {children} criança(s), {exams} teste(s), {prompts} instrução(ões) adicionado(s).",
+      "private": "O ficheiro contém as fotos das lições e os nomes das crianças: guarde-o para si. Não contém nenhuma chave nem palavra-passe."
+    },
     "lessons": {
       "title": "Lições",
       "hint": "A quem pertence cada lição. Uma lição só pode ser alterada pelo perfil do Anki do dono dela; sem dono, é de todos. As mudanças feitas aqui valem na hora.",
@@ -1087,6 +1098,11 @@
       "too_many": "No máximo {max} filhos.",
       "not_found": "Esta criança já não existe: recarregue a página.",
       "invalid": "A ficha de um filho não é válida: um nome (40 caracteres no máximo), uma turma e baralhos curtos."
+    },
+    "transfer": {
+      "not_an_export": "Este ficheiro não é uma exportação do Notosaurus.",
+      "too_new": "Esta exportação vem de uma versão mais recente do Notosaurus: atualize esta e importe-a de novo.",
+      "too_large": "Esta exportação é demasiado grande (mais de 4 GB descomprimida)."
     },
     "exams": {
       "invalid": "Esta prova não é válida: um nome com 60 caracteres no máximo, uma data, 50 lições no máximo.",
