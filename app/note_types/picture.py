@@ -5,7 +5,18 @@ from pathlib import Path
 
 from notosaurus_core import tts
 
-from .common import BACK_INFO, CSS, HELP_FIELDS, SOURCE_FIELD, NoteType, field_html, fix_link, typed, variant
+from .common import (
+    BACK_INFO,
+    CSS,
+    HELP_FIELDS,
+    SOURCE_FIELD,
+    NoteType,
+    field_html,
+    fix_link,
+    typed,
+    variant,
+    with_context,
+)
 
 PICTURE_CSS = """\
 .notosaurus-picture img { max-width: min(100%, 320px); max-height: 50vh; border-radius: 12px; }
@@ -36,7 +47,7 @@ def picture_note_type(voice: str, typing: bool = False, on_back: bool = False) -
     name, option = variant("Notosaurus image au verso" if on_back else "Notosaurus image", typing, False)
     option = "+".join(filter(None, ["back" if on_back else "", option]))
     name = f"{name} ({kind.removeprefix('picture ')})"
-    return NoteType(name, kind, tuple(fields), templates, css=CSS + PICTURE_CSS, key="Id", variant=option)
+    return NoteType(name, kind, tuple(fields), with_context(templates), css=CSS + PICTURE_CSS, key="Id", variant=option)
 
 
 def picture_fields(card, picture: Path, card_id: str) -> dict[str, str]:

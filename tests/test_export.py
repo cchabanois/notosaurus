@@ -8,6 +8,7 @@ import apkg
 from conftest import CLOZE, extract_lesson, synthesized
 
 from app import anki
+from app.note_types.common import CONTEXT
 from notosaurus_core import tts
 from notosaurus_core.models import Card
 
@@ -315,12 +316,32 @@ def test_dictation_only(client, tmp_path):
     (model,) = package.models.values()
     assert model["name"] == "Notosaurus dictée (audio)"
     (card,) = model["tmpls"]
-    assert card["qfmt"] == '<div class="dictation">🎧</div>{{Audio}}{{Front}}{{type:Back}}'  # the blank shown
+    assert card["qfmt"] == CONTEXT + '<div class="dictation">🎧</div>{{Audio}}{{Front}}{{type:Back}}'  # the blank shown
     assert package.cards == 2  # one a note: no front → back card
     assert anki.family(model["name"]) == "text"  # a lesson's notes can switch to it and back
     nt = anki.note_type("fr-FR-DeniseNeural", True, True, dictation=False, dictation_only=True)
     assert [t["name"] for t in nt.templates] == ["Dictée"] and not nt.reverse  # alone, whatever else is on
     assert len(anki.note_type("", False, dictation_only=True).templates) == 1  # no voice: no dictation
+
+
+def test_every_question_tells_its_deck():
+    """Every note type's question shows the card's deck (Anki's {{Deck}}: the subject, a
+    language's to answer in, and the lesson), the card alone saying neither; the answer
+    too, by its question ({{FrontSide}}) or the line itself. Nothing added to the notes."""
+    note_types = [
+        anki.note_type("", False),
+        anki.note_type("en-GB-x", True, typing=True, dictation=True),
+        anki.note_type("en-GB-x", False, dictation_only=True),
+        anki.cloze_note_type(),
+        anki.choice_note_type(),
+        anki.picture_note_type("", on_back=True),
+        anki.diagram_note_type("", typing=True),
+    ]
+    for nt in note_types:
+        assert "Deck" not in nt.fields
+        for t in nt.templates:
+            assert t["qfmt"].startswith(CONTEXT), (nt.name, t["name"])
+            assert t["afmt"].startswith(CONTEXT) or "{{FrontSide}}" in t["afmt"], (nt.name, t["name"])
 
 
 def test_typed_answer_and_dictation(client, tmp_path):
@@ -340,7 +361,7 @@ def test_typed_answer_and_dictation(client, tmp_path):
     recto, dictation = typed["tmpls"]
     assert recto["qfmt"].endswith("{{type:Back}}") and "{{type:Back}}" in recto["afmt"]
     assert "{{FrontSide}}" not in recto["afmt"]  # the box shown once
-    assert dictation["qfmt"] == '<div class="dictation">🎧</div>{{Audio}}{{type:Back}}'
+    assert dictation["qfmt"] == CONTEXT + '<div class="dictation">🎧</div>{{Audio}}{{type:Back}}'
     assert "Notosaurus recto/verso (audio)" in by_name  # the formula's note type, as before
     assert package.cards == 2 + 1
 

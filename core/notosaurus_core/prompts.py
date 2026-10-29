@@ -78,6 +78,13 @@ sentence (a letter, a sound, a group of words), put that part in square brackets
 refer to how the page shows it ("the underlined letters", "the word in red"): the card \
 doesn't show that; only the MathJax and cloze syntaxes above.
 - One idea per card; keep front and back short.
+- The front must lead to its back alone. The card shows its deck above it (the subject \
+and the lesson: "English › Character traits"), so don't repeat them; but when the front \
+still allows another right answer than its back (a word with several translations or \
+senses, a synonym the lesson lists apart, a register the back has: familiar, formal), add \
+in brackets, in the front's language, what tells it apart: the sense, the register \
+("(familiar)"), "(phrase)". A word whose answer is plain gets nothing. What is needed to \
+find the answer goes on the front, never only in "info" (shown with the answer).
 - The "info" field is optional: leave it empty when there is nothing useful to add.
 - If the lesson naturally splits into parts (vocabulary, conjugation, sentences…) and \
 the instructions don't forbid it, fill "subdeck" with the part; otherwise leave it empty \

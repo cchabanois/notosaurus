@@ -3,7 +3,7 @@ the dictation (with the other cards, or alone)."""
 
 from notosaurus_core import tts
 
-from .common import BACK_INFO, HELP_FIELDS, NoteType, fix_link, typed, variant
+from .common import BACK_INFO, HELP_FIELDS, NoteType, fix_link, typed, variant, with_context
 
 
 def note_type(
@@ -54,4 +54,4 @@ def note_type(
         name, option, reverse = "Notosaurus dictée", "dictation-only", False
     else:
         name, option = variant("Notosaurus recto/verso" + (" + inverse" if reverse else ""), typing, dictation)
-    return NoteType(f"{name} ({kind})", kind, tuple(fields), tuple(templates), variant=option, reverse=reverse)
+    return NoteType(f"{name} ({kind})", kind, tuple(fields), with_context(templates), variant=option, reverse=reverse)

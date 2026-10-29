@@ -17,6 +17,7 @@ CSS = """\
 .nightMode .notosaurus-help { color: #bbb; }
 .notosaurus-fix { margin-top: 16px; font-size: 14px; }
 .notosaurus-fix a { color: #8bb8c4; text-decoration: none; }
+.notosaurus-context { font-size: 14px; color: #888; margin-bottom: 12px; }
 """
 
 # On the back, under the info: the helps asked for at generation (why the answer is the
@@ -51,6 +52,32 @@ def fix_link(key: str) -> str:
     card ("Front": its text; "Id": its id)."""
     link = f'<a class="nfix" href="#" data-key="{{{{text:{key}}}}}" data-tags="{{{{Tags}}}}">✎ Notosaurus</a>'
     return f'<div class="notosaurus-fix">{link}</div>{FIX_SCRIPT}'
+
+
+# On the question, small: the card's deck ("Anglais › Character traits"), which the card
+# alone doesn't say: the subject (for a language, the one to answer in) and the lesson.
+# Anki's own {{Deck}} (a filtered deck's card: its home deck), so nothing to add to the
+# notes (AnkiDroid can't add a field to a note type it has): the templates only, brought
+# up to date by their signature. "::" shown as " › " where the card runs scripts.
+CONTEXT = (
+    '<div class="notosaurus-context">{{Deck}}</div>'
+    '<script>(function(){var D=document.querySelectorAll(".notosaurus-context:not([data-done])");'
+    'for(var i=0;i<D.length;i++){D[i].dataset.done="1";'
+    'D[i].textContent=D[i].textContent.split("::").join(" › ");}})();</script>'
+)
+
+
+def with_context(templates) -> tuple[dict, ...]:
+    """The templates with the card's deck on the question (CONTEXT), and on an answer that
+    doesn't repeat the question ({{FrontSide}})."""
+    return tuple(
+        {
+            **t,
+            "qfmt": CONTEXT + t["qfmt"],
+            "afmt": t["afmt"] if "{{FrontSide}}" in t["afmt"] else CONTEXT + t["afmt"],
+        }
+        for t in templates
+    )
 
 
 # Where a card's picture comes from (models.PictureSource): kept with the note, never shown

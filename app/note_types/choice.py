@@ -3,7 +3,19 @@
 import random
 from pathlib import Path
 
-from .common import BACK_INFO, CSS, HELP_FIELDS, SOURCE_FIELD, NoteType, field_html, fix_link, helps, info, stable_id
+from .common import (
+    BACK_INFO,
+    CSS,
+    HELP_FIELDS,
+    SOURCE_FIELD,
+    NoteType,
+    field_html,
+    fix_link,
+    helps,
+    info,
+    stable_id,
+    with_context,
+)
 from .picture import PICTURE_CSS, source
 
 # The options in a list (A, B, C…), the right one marked on the answer
@@ -68,7 +80,7 @@ def choice_note_type() -> NoteType:
         SOURCE_FIELD,
     )
     css = CSS + PICTURE_CSS + CHOICE_CSS
-    return NoteType("Notosaurus QCM", "choice", fields, templates, css=css, key="Id")
+    return NoteType("Notosaurus QCM", "choice", fields, with_context(templates), css=css, key="Id")
 
 
 def choice_fields(card, card_id: str, picture_file: Path | None) -> dict[str, str]:
