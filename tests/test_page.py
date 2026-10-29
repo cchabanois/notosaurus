@@ -418,6 +418,23 @@ def test_a_figures_credits_link_its_projects(page, monkeypatch):
     sync_api.expect(card.locator(".picture-source:visible")).to_contain_text("Typst + lilaq")
 
 
+def test_a_picture_on_the_back_shows_no_drawing_frame(page):
+    """A card whose picture goes on the back shows its picture alone: no "Dessin…" frame
+    under it, even once a step was told again (the bar's duration, set as the whole style,
+    wiped the frame's hiding)."""
+    generate_free(page, "Le triangle rectangle (géométrie)")
+    back = page.locator(".flash").nth(2).locator(".card-picture.on-back")
+    sync_api.expect(back.locator("img:not(.first):visible")).to_be_visible()
+    # What the bar's duration depends on changing again (a step told, then over): the style
+    # set again, the frame still hidden
+    page.evaluate(
+        "() => { const card = Alpine.$data(document.querySelector('[x-data]')).cards[2];"
+        " card._step = 'lesson'; return new Promise((done) => setTimeout(() => { card._step = ''; done(); }, 50)); }"
+    )
+    sync_api.expect(back.locator("img:not(.first):visible")).to_be_visible()
+    sync_api.expect(back.locator(".drawing:visible")).to_have_count(0)
+
+
 def test_while_waiting_what_the_ai_is_at(page, monkeypatch):
     """The waiting card says what the AI is at: slow to answer, another model asked; then the
     cards counted as they come."""
