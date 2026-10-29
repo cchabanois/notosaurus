@@ -12,7 +12,7 @@ Sem assinatura, o app é gratuito com o complemento do Anki no seu computador: v
 
 ## O teste grátis
 
-**🎁 O teu teste grátis, sem cartão, começará com a tua primeira lição.** Nada para tocar: a
+**🎁 Seu teste grátis, sem cartão, vai começar com a sua primeira lição.** Nada para tocar: a
 primeira lição que você faz o inicia. Ele dura **14 dias** e dá **300 créditos** (no máximo 150 por
 dia): o bastante para experimentar o Notosaurus em várias lições (veja [Créditos](#créditos)).
 Quando ele começa, o app diz quantos créditos dá e até quando.
@@ -28,7 +28,7 @@ Quando ele começa, o app diz quantos créditos dá e até quando.
 ## Assinar
 
 Nas configurações, **🔑 Assinatura** oferece a assinatura mensal e a anual, com o preço. O Google
-Play faz a cobrança; depois disso, o app diz **✓ Subscrito: boas revisões!**
+Play faz a cobrança; depois disso, o app diz **✓ Assinatura feita: bons estudos!**
 
 **🔑 Assinatura** mostra então o plano, até quando está pago e quando é renovado.
 
@@ -51,10 +51,10 @@ app sempre mostra os atuais.
 
 ## Em um celular novo, ou para alterá-la
 
-- **Já tenho uma subscrição** a encontra na sua conta do Google, por exemplo em um celular novo:
-  **✓ A tua subscrição foi encontrada nesta conta Google.** O celular precisa usar a conta do
+- **Já tenho uma assinatura** a encontra na sua conta do Google, por exemplo em um celular novo:
+  **✓ Sua assinatura foi encontrada nesta conta do Google.** O celular precisa usar a conta do
   Google com a qual a assinatura foi feita.
-- **Gerir a subscrição (Google Play)** abre a página do Google Play, para mudar o plano ou
+- **Gerenciar a assinatura (Google Play)** abre a página do Google Play, para mudar o plano ou
   cancelá-la.
 - **Chave de licença**: se o Notosaurus deu uma chave a você (`nts_…`), cole-a ali e toque em
   **Verificar**.
@@ -62,8 +62,8 @@ app sempre mostra os atuais.
 ## Pagamento pendente
 
 Quando o Google Play não conseguiu renovar a assinatura (um cartão vencido, por exemplo), o app diz
-**Pagamento pendente**: atualize o seu método de pagamento no Google Play (**Gerir a
-subscrição**). Assim que o Google Play o receber, a assinatura volta a ficar ativa: abra as
+**Pagamento pendente**: atualize o seu método de pagamento no Google Play (**Gerenciar a
+assinatura**). Assim que o Google Play o receber, a assinatura volta a ficar ativa: abra as
 configurações de novo.
 
 O que o serviço guarda sobre a sua assinatura: veja a [política de privacidade](../app-privacy/).

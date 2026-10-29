@@ -42,7 +42,7 @@ o Notosaurus…** no Anki (no computador: o app não tem, a assinatura dele paga
 continua gratuito, sem anúncios.
 
 **Um cartão está errado: como aviso vocês?**
-No app Android, **⋯ → ⚑ Denunciar** no cartão: isso envia o cartão como você o vê, com o seu
+No app Android, **⋯ → ⚑ Relatar** no cartão: isso envia o cartão como você o vê, com o seu
 comentário, nunca as fotos da lição nem o nome da criança. Cada relato é lido. Veja
 [Relatar um problema](../review/#relatar-um-problema).
 

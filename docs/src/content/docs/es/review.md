@@ -9,7 +9,7 @@ de enviarlas. Todo lo que cambias se guarda sobre la marcha («✓ Guardada»).
 :::tip[¿Algo no va bien? Señálalo]
 En la aplicación Android, una tarjeta que no está bien (una palabra mal leída, una respuesta
 incorrecta, una figura torcida, una imagen inadecuada, una tarjeta sin sentido): **⋯ →
-⚑ Denunciar** en ella. Leemos cada aviso, y es la mejor forma de que se corrija Notosaurus.
+⚑ Reportar** en ella. Leemos cada aviso, y es la mejor forma de que se corrija Notosaurus.
 Consulta [Señalar un problema](#señalar-un-problema).
 :::
 
@@ -39,7 +39,7 @@ verificables, nunca una convención o una simplificación, y la nota nunca va a 
 
 ## Señalar un problema
 
-En la aplicación Android, **⋯ → ⚑ Denunciar**, arriba a la derecha de una tarjeta, le dice a
+En la aplicación Android, **⋯ → ⚑ Reportar**, arriba a la derecha de una tarjeta, le dice a
 Notosaurus qué ha fallado: una palabra mal leída, una respuesta incorrecta, una figura con una
 marca mal colocada, una imagen inadecuada, una tarjeta sin sentido. No lo dudes: **leemos cada
 aviso**, y así se corrigen esos errores en Notosaurus, para todas las lecciones futuras.
@@ -51,7 +51,7 @@ aviso**, y así se corrigen esos errores en Notosaurus, para todas las lecciones
   nunca las fotos de la lección ni el nombre del niño. Consulta [Privacidad](../app-privacy/).
 - Después puedes eliminar la tarjeta o quitar su imagen.
 
-![La ventana Denunciar un contenido: por qué, un comentario y exactamente lo que se enviará](../../../assets/screenshots/en/app-report.png)
+![La ventana Reportar un contenido: por qué, un comentario y exactamente lo que se enviará](../../../assets/screenshots/en/app-report.png)
 
 ## Corregir con la IA
 

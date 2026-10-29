@@ -24,7 +24,7 @@ foi feito para ser usado por uma criança.
   usa para treinar os seus modelos.
 - **Sem anúncios, sem estatísticas, sem rastreamento**, e nada é vendido.
 - O serviço só guarda a sua **licença** (a impressão digital dela, o seu plano e os seus créditos),
-  e o que você **denuncia** com ⚑, se o fizer.
+  e o que você **relata** com ⚑, se o fizer.
 
 ## O que fica no seu celular
 
@@ -64,7 +64,7 @@ pode **ocultá-lo**: 🖍️ na foto, depois tape com o dedo. Só a foto tapada 
   créditos restantes, a data de renovação, o que foi usado naquele dia, e uma nota curta para o
   suporte (um número de pedido, por exemplo). Guardada enquanto é válida, depois **12 meses** após
   o fim (para responder a uma pergunta ou reclamação), depois apagada.
-- **O que você denuncia** com ⚑ (um cartão feito pela IA, com a explicação quando mostrada e a
+- **O que você relata** com ⚑ (um cartão feito pela IA, com a explicação quando mostrada e a
   imagem, a não ser que seja uma foto tirada por você; chocante ou errado), se o fizer: exatamente
   o que o app mostra antes do envio, o motivo, o seu comentário, as instruções da lição, o idioma
   e um identificador curto da licença. Nunca as fotos da lição nem o nome da criança. Lido pelo

@@ -43,7 +43,7 @@ Notosaurus…** en Anki (en el ordenador: la aplicación no lo tiene, la paga su
 Notosaurus sigue siendo gratis, sin publicidad.
 
 **Una tarjeta está mal: ¿cómo os lo digo?**
-En la aplicación Android, **⋯ → ⚑ Denunciar** en la tarjeta: envía la tarjeta tal como la ves, con
+En la aplicación Android, **⋯ → ⚑ Reportar** en la tarjeta: envía la tarjeta tal como la ves, con
 tu comentario, nunca las fotos de la lección ni el nombre del niño. Leemos cada aviso. Consulta
 [Señalar un problema](../review/#señalar-un-problema).
 

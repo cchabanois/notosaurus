@@ -49,7 +49,7 @@ te pide que aceptes su [política de privacidad](../app-privacy/):
    vez de escribirlas.
 4. Toca **✨ Generar las tarjetas**. La primera lección inicia la prueba gratuita.
 5. Revisa las tarjetas, corrígelas o pídeselo a la IA con tus palabras: consulta
-   [Revisar las tarjetas](../review/). Una tarjeta que no está bien: **⋯ → ⚑ Denunciar** en ella,
+   [Revisar las tarjetas](../review/). Una tarjeta que no está bien: **⋯ → ⚑ Reportar** en ella,
    leemos cada aviso.
 6. Toca **📥 Añadir a Anki**: las tarjetas van a AnkiDroid. La primera vez, AnkiDroid pregunta si
    Notosaurus puede añadirle tarjetas.
@@ -77,7 +77,7 @@ Casi todo Notosaurus es igual que en el ordenador. Lo que solo tiene la aplicaci
 
 - **🎤 Dictar**: decir una instrucción o una corrección en vez de escribirla. La aplicación pide
   el micrófono la primera vez.
-- **⚑ Denunciar**, en una tarjeta, le dice a Notosaurus qué ha fallado: una palabra mal leída,
+- **⚑ Reportar**, en una tarjeta, le dice a Notosaurus qué ha fallado: una palabra mal leída,
   una respuesta incorrecta, una figura torcida, una imagen inadecuada. Leemos cada aviso, y ayuda
   a corregir Notosaurus (consulta [Señalar un problema](../review/#señalar-un-problema)).
 - **Las voces** son de Google, a través del servicio Notosaurus; los
@@ -87,7 +87,7 @@ Casi todo Notosaurus es igual que en el ordenador. Lo que solo tiene la aplicaci
 - **Las actualizaciones** llegan por Google Play. Cuando hay una versión nueva, la aplicación dice
   **Hay una nueva versión de Notosaurus disponible.**, con un botón **Actualizar**.
 
-![La ventana Denunciar un contenido: por qué, un comentario y exactamente lo que se enviará](../../../assets/screenshots/en/app-report.png)
+![La ventana Reportar un contenido: por qué, un comentario y exactamente lo que se enviará](../../../assets/screenshots/en/app-report.png)
 
 Consulta también [Los ajustes de la aplicación](../app-settings/) y, cuando algo va mal,
 [Solucionar problemas de la aplicación](../app-troubleshooting/).

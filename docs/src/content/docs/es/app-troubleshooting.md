@@ -50,7 +50,7 @@ Consulta [Con tu ordenador](../app-with-computer/).
 precisa más las instrucciones, o corrígelas con la IA (consulta [Revisar las tarjetas](../review/)).
 
 **Señálalo.** Una tarjeta que no está bien (una palabra mal leída, una respuesta incorrecta, una
-figura torcida, una imagen inadecuada): **⋯ → ⚑ Denunciar** en ella, con unas palabras sobre lo
+figura torcida, una imagen inadecuada): **⋯ → ⚑ Reportar** en ella, con unas palabras sobre lo
 que esperabas. Leemos cada aviso, y así se corrigen esos errores. Consulta
 [Señalar un problema](../review/#señalar-un-problema).
 

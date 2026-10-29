@@ -8,7 +8,7 @@ enviá-los. Tudo o que você altera é salvo na hora ("✓ Salva").
 
 :::tip[Algo errado? Relate]
 No app Android, um cartão que não está certo (uma palavra mal lida, uma resposta errada, uma
-figura torta, uma imagem inadequada, um cartão sem sentido): **⋯ → ⚑ Denunciar** nele. Cada
+figura torta, uma imagem inadequada, um cartão sem sentido): **⋯ → ⚑ Relatar** nele. Cada
 relato é lido, e é o melhor jeito de fazer o Notosaurus ser corrigido. Veja
 [Relatar um problema](#relatar-um-problema).
 :::
@@ -38,7 +38,7 @@ simplificação, e a nota nunca vai para o Anki.
 
 ## Relatar um problema
 
-No app Android, **⋯ → ⚑ Denunciar**, no canto superior direito de um cartão, diz ao Notosaurus o
+No app Android, **⋯ → ⚑ Relatar**, no canto superior direito de um cartão, diz ao Notosaurus o
 que deu errado: uma palavra mal lida, uma resposta errada, uma figura com uma marca no lugar
 errado, uma imagem inadequada, um cartão sem sentido. Não hesite: **cada relato é lido**, e é
 assim que esses erros são corrigidos no Notosaurus, para todas as lições futuras.
@@ -50,7 +50,7 @@ assim que esses erros são corrigidos no Notosaurus, para todas as lições futu
   quê, nunca as fotos da lição nem o nome da criança. Veja [Privacidade](../app-privacy/).
 - Depois, você pode excluir o cartão ou retirar a imagem dele.
 
-![A janela Denunciar um conteúdo: por quê, um comentário e exatamente o que será enviado](../../../assets/screenshots/en/app-report.png)
+![A janela Relatar um conteúdo: por quê, um comentário e exatamente o que será enviado](../../../assets/screenshots/en/app-report.png)
 
 ## Corrigir com a IA
 

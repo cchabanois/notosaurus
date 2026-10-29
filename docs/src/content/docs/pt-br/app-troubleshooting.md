@@ -10,12 +10,12 @@ As mensagens abaixo são as que o app mostra.
 | Mensagem | O que fazer |
 |---|---|
 | "Sem créditos este mês" | Eles voltam na próxima renovação: **🔑 Assinatura**, nas configurações, diz quando. |
-| "O teu teste grátis terminou" | Assine nas Configurações (**🔑 Assinatura**) para continuar. |
-| "De momento não há novos testes grátis…" | Os novos testes grátis estão suspensos por enquanto: assine nas Configurações, ou tente de novo amanhã. Um teste já iniciado continua. |
-| "A tua subscrição terminou" | Assine de novo no app. |
-| "Pagamento pendente" | O Google Play não conseguiu renovar a assinatura: atualize o seu método de pagamento no Google Play (**Configurações → Gerir a subscrição**). |
-| "O teste grátis só é possível com a app instalada a partir do Google Play, num telemóvel real" | Instale o app pelo Google Play; o teste não é oferecido em um emulador. |
-| "Nenhuma subscrição encontrada nesta conta Google" (**Já tenho uma subscrição**) | Confira se o celular usa a conta do Google com a qual a assinatura foi feita. |
+| "Seu teste grátis terminou" | Assine nas Configurações (**🔑 Assinatura**) para continuar. |
+| "No momento não há novos testes grátis…" | Os novos testes grátis estão suspensos por enquanto: assine nas Configurações, ou tente de novo amanhã. Um teste já iniciado continua. |
+| "Sua assinatura terminou" | Assine de novo no app. |
+| "Pagamento pendente" | O Google Play não conseguiu renovar a assinatura: atualize o seu método de pagamento no Google Play (**Configurações → Gerenciar a assinatura**). |
+| "O teste grátis só é possível com o app instalado pelo Google Play, em um celular de verdade" | Instale o app pelo Google Play; o teste não é oferecido em um emulador. |
+| "Nenhuma assinatura encontrada nesta conta do Google" (**Já tenho uma assinatura**) | Confira se o celular usa a conta do Google com a qual a assinatura foi feita. |
 
 Veja [A assinatura](../app-subscription/).
 
@@ -50,7 +50,7 @@ Veja [Com o seu computador](../app-with-computer/).
 seja mais preciso nas instruções, ou corrija-os com a IA (veja [Revisar os cartões](../review/)).
 
 **Relate.** Um cartão que não está certo (uma palavra mal lida, uma resposta errada, uma figura
-torta, uma imagem inadequada): **⋯ → ⚑ Denunciar** nele, com uma palavra sobre o que você
+torta, uma imagem inadequada): **⋯ → ⚑ Relatar** nele, com uma palavra sobre o que você
 esperava. Cada relato é lido, e é assim que esses erros são corrigidos. Veja
 [Relatar um problema](../review/#relatar-um-problema).
 

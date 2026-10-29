@@ -48,7 +48,7 @@ pede que você aceite a sua [política de privacidade](../app-privacy/):
    de digitar.
 4. Toque em **✨ Gerar os cartões**. A primeira lição inicia o teste grátis.
 5. Confira os cartões, corrija-os ou peça à IA com suas palavras: veja
-   [Revisar os cartões](../review/). Um cartão que não está certo: **⋯ → ⚑ Denunciar** nele, cada
+   [Revisar os cartões](../review/). Um cartão que não está certo: **⋯ → ⚑ Relatar** nele, cada
    relato é lido.
 6. Toque em **📥 Adicionar ao Anki**: os cartões vão para o AnkiDroid. Na primeira vez, o
    AnkiDroid pergunta se o Notosaurus pode adicionar cartões a ele.
@@ -77,7 +77,7 @@ Quase todo o Notosaurus é igual ao do computador. O que só o app tem, ou não 
 
 - **🎤 Ditar**: falar uma instrução ou uma correção em vez de digitá-la. O app pede o microfone na
   primeira vez.
-- **⚑ Denunciar**, em um cartão, diz ao Notosaurus o que deu errado: uma palavra mal lida, uma
+- **⚑ Relatar**, em um cartão, diz ao Notosaurus o que deu errado: uma palavra mal lida, uma
   resposta errada, uma figura torta, uma imagem inadequada. Cada relato é lido e ajuda a corrigir
   o Notosaurus (veja [Relatar um problema](../review/#relatar-um-problema)).
 - **As vozes** são as do Google, pelo serviço Notosaurus; as
@@ -87,7 +87,7 @@ Quase todo o Notosaurus é igual ao do computador. O que só o app tem, ou não 
 - **As atualizações** chegam pelo Google Play. Quando há uma versão nova, o app diz **Uma nova
   versão do Notosaurus está disponível.**, com um botão **Atualizar**.
 
-![A janela Denunciar um conteúdo: por quê, um comentário e exatamente o que será enviado](../../../assets/screenshots/en/app-report.png)
+![A janela Relatar um conteúdo: por quê, um comentário e exatamente o que será enviado](../../../assets/screenshots/en/app-report.png)
 
 Veja também [As configurações do app](../app-settings/) e, quando algo dá errado,
 [Solução de problemas do app](../app-troubleshooting/).

@@ -24,7 +24,7 @@ hijos. La aplicación no está hecha para que la use un niño.
   para entrenar sus modelos.
 - **Sin publicidad, sin estadísticas, sin seguimiento**, y no se vende nada.
 - El servicio solo guarda tu **licencia** (su huella, tu plan y tus créditos), y lo que
-  **denuncias** con ⚑, si lo haces.
+  **reportas** con ⚑, si lo haces.
 
 ## Lo que se queda en tu móvil
 
@@ -53,7 +53,7 @@ Cuando lo pides, la aplicación envía al servicio, por HTTPS:
 
 El servicio pasa estos contenidos a los encargados del tratamiento de abajo, devuelve el
 resultado a la aplicación y **no los guarda**: ninguna foto, tarjeta, grabación o texto de lección
-se almacena ni se escribe en sus registros. Salvo una **denuncia**: ver más abajo.
+se almacena ni se escribe en sus registros. Salvo un **aviso**: ver más abajo.
 
 Una página de cuaderno suele mostrar el **nombre del niño**. Antes de enviar una foto puedes
 **ocultarlo**: 🖍️ en la foto, y luego tápalo con el dedo. Solo la foto tapada sale y se queda en la
@@ -65,7 +65,7 @@ lección.
   de renovación, lo usado ese día, y una nota breve para el soporte (un número de pedido, por
   ejemplo). Se guarda mientras es válida, luego **12 meses** después de que termine (para
   responder a una pregunta o una reclamación), y después se borra.
-- **Lo que denuncias** con ⚑ (una tarjeta hecha por la IA, con su explicación si se muestra y su
+- **Lo que reportas** con ⚑ (una tarjeta hecha por la IA, con su explicación si se muestra y su
   imagen, salvo una foto que hayas hecho tú; ofensiva o incorrecta), si lo haces: exactamente lo
   que la aplicación te muestra antes de enviarlo, el motivo, tu comentario, las instrucciones de la
   lección, el idioma y un identificador corto de licencia. Nunca las fotos de la lección ni el
@@ -109,7 +109,7 @@ empresa de la UE.
 | Comprobar tu licencia y contar tus créditos | **Ejecutar el contrato** (tu licencia) |
 | Registros técnicos, seguridad, lucha contra el abuso | El **interés legítimo** en hacer funcionar un servicio seguro |
 | La prueba gratuita una sola vez por teléfono (Play Integrity) | El **interés legítimo** en evitar el abuso de la prueba |
-| Tus denuncias del contenido de la IA | Tu **solicitud**, y el interés legítimo en una IA que haga contenido adecuado |
+| Tus avisos sobre el contenido de la IA | Tu **solicitud**, y el interés legítimo en una IA que haga contenido adecuado |
 | El micrófono | Tu **consentimiento**, pedido en el primer dictado y revocable en los ajustes del teléfono |
 | Responder a tus correos | Tu **solicitud** |
 

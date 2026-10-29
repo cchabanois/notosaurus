@@ -9,7 +9,7 @@ salvas na hora.
 ![A parte de cima das configurações do app: assinatura, AnkiDroid, onde o Notosaurus trabalha](../../../assets/screenshots/en/app-settings.png)
 
 - **🔑 Assinatura**: o teste grátis ou o plano, os créditos que restam neste mês e hoje, quando são
-  renovados; **Já tenho uma subscrição**, **Gerir a subscrição (Google Play)**, e um campo **Chave
+  renovados; **Já tenho uma assinatura**, **Gerenciar a assinatura (Google Play)**, e um campo **Chave
   de licença**. Veja [A assinatura](../app-subscription/).
 - **📥 AnkiDroid**: se o AnkiDroid está instalado e o Notosaurus pode adicionar cartões a ele, com
   **Instalar o AnkiDroid** ou **Permitir** quando necessário. Veja
@@ -19,7 +19,7 @@ salvas na hora.
 - **📝 Instruções para a IA**: as instruções para todos os filhos ("inglês britânico"),
   acrescentadas a cada lição, e **💬 Ajudas no verso dos cartões**. As de cada filho ficam na ficha
   dele, pelo botão **Filhos** (🧒) da página principal: veja [Vários filhos](../several-children/).
-- **Vozes dos cartões**: **Abrandar as línguas estrangeiras e os ditados**, e uma **Voz por
+- **Vozes dos cartões**: **Deixar mais lentos os idiomas estrangeiros e os ditados**, e uma **Voz por
   língua**, com **Ouvir**. Veja [Vozes e áudio](../voices/).
 - **🗂️ Lições neste celular**: quantas são e o tamanho delas. **Apagar todas as lições** as remove,
   com o som; os cartões que já estão no AnkiDroid ficam.
