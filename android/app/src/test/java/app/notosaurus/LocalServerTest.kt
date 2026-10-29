@@ -543,6 +543,14 @@ class LocalServerTest {
     }
 
     @Test
+    fun aPathsNumberThatIsntOneIsNotFound() = app { client ->
+        // A photo's number, a prompt's: not a number is no such thing (a 404), not a server error
+        assertEquals(HttpStatusCode.NotFound, client.get("/api/lessons/x/photos/abc") { page() }.status)
+        val prompt = client.put("/api/prompts/abc") { page(); contentType(ContentType.Application.Json); setBody("""{"name": "n", "text": "t"}""") }
+        assertEquals(HttpStatusCode.NotFound, prompt.status)
+    }
+
+    @Test
     fun theRelaysErrorsForThePage() = app { client ->
         relayAnswers("""{"code": "relay.no_credits", "params": {}}""", code = 402)
         val res = client.submitFormWithBinaryData("/api/extract", formData { append("prompt", "p") }) { page() }
@@ -802,6 +810,11 @@ class LocalServerTest {
         assertEquals("Jules", saved.single().jsonObject.string("name"))
         val twice = client.put("/api/children") { page(); contentType(ContentType.Application.Json); setBody("[$jules, $jules]") }
         assertEquals("children.same_id", twice.json().jsonObject["detail"]!!.jsonObject.string("code"))
+        // A sheet that isn't valid: its own code, not one about the relay
+        val invalid = client.put("/api/children") {
+            page(); contentType(ContentType.Application.Json); setBody("""[{"id": "c1", "name": "", "grade": ""}]""")
+        }
+        assertEquals("children.invalid", invalid.json().jsonObject["detail"]!!.jsonObject.string("code"))
 
         relayAnswers("""{"deck": {"deck": "Anglais::5ème::Food", "cards": [{"front": "le pain", "back": "bread"}]}, "turns": [], "usage": {"credits": 1, "credits_left": 99}}""")
         val lesson = client.submitFormWithBinaryData("/api/extract", formData {

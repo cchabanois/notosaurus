@@ -232,3 +232,20 @@ def test_the_schemas_within_claudes_limits():
     for base in (Extraction, Revision):
         optional, unions = counted(llm.ai_schema(base, fun_facts=True, helps=True).model_json_schema())
         assert optional <= 24 and unions <= 16, (base.__name__, optional, unions)
+
+
+def test_the_fallback_beta_withdrawn_asked_without_it(monkeypatch):
+    """Anthropic refusing the server-side fallback's beta (a 400 about it): the same request
+    without it, rather than every Anthropic key failing; another 400 is the error it is."""
+
+    class BetaGone(FakeClaude):
+        async def parse(self, **kwargs):
+            if kwargs.get("extra_headers"):
+                self.calls.append(kwargs)
+                raise status_error(anthropic_sdk.BadRequestError, 400, "Unknown anthropic-beta: server-side-fallback")
+            return await super().parse(**kwargs)
+
+    fake = BetaGone(answer={"svg": "<svg/>"})
+    assert ask(monkeypatch, fake).svg == "<svg/>"
+    assert [bool(call.get("extra_headers")) for call in fake.calls] == [True, False]
+    assert fake.calls[1]["extra_body"] is None

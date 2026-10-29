@@ -1085,7 +1085,8 @@
     "children": {
       "same_id": "Dos hijos tienen el mismo nombre.",
       "too_many": "Como máximo {max} hijos.",
-      "not_found": "Este niño ya no existe: recargue la página."
+      "not_found": "Este niño ya no existe: recargue la página.",
+      "invalid": "La ficha de un hijo no es válida: un nombre (40 caracteres como máximo), una clase y mazos cortos."
     },
     "exams": {
       "invalid": "Este examen no es válido: un nombre de 60 caracteres como máximo, una fecha, 50 lecciones como máximo.",

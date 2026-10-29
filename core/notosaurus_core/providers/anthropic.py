@@ -1,12 +1,15 @@
 """Claude, through the official Anthropic SDK (structured output)."""
 
 import base64
+import logging
 
 from pydantic import BaseModel
 
 from ..calls import ExtractionError, Image, record
 from ..config import AIConfig
 from ..prompts import SYSTEM_PROMPT
+
+log = logging.getLogger("notosaurus")
 
 
 def _anthropic_client(s: AIConfig):
@@ -15,6 +18,15 @@ def _anthropic_client(s: AIConfig):
     if not s.anthropic_api_key:
         raise ExtractionError("llm.missing_key", provider="Anthropic")
     return anthropic.AsyncAnthropic(api_key=s.anthropic_api_key)
+
+
+FALLBACK_BETA = "server-side-fallback-2026-07-01"
+
+
+def _beta_refused(e: Exception) -> bool:
+    """A 400 about the fallback beta (its header or its "fallbacks" field), not the request."""
+    said = str(getattr(e, "message", "") or e).lower()
+    return "beta" in said or "fallback" in said
 
 
 async def _anthropic[T: BaseModel](
@@ -36,18 +48,28 @@ async def _anthropic[T: BaseModel](
     ]
     content.append({"type": "text", "text": text})
 
-    try:
-        response = await client.messages.parse(
+    def ask(fallback: bool):
+        return client.messages.parse(
             model=s.model_for_provider(),
             max_tokens=16000,
             system=system,
             # Plain dicts of the API's documented shape, not the SDK's TypedDicts
             messages=[{"role": "user", "content": content}],  # pyright: ignore[reportArgumentType]
             output_format=schema,
-            # If the model refuses, the API reruns the request on a fallback model.
-            extra_headers={"anthropic-beta": "server-side-fallback-2026-07-01"},
-            extra_body={"fallbacks": "default"},
+            # If the model refuses, the API reruns the request on a fallback model (a beta)
+            extra_headers={"anthropic-beta": FALLBACK_BETA} if fallback else None,
+            extra_body={"fallbacks": "default"} if fallback else None,
         )
+
+    try:
+        try:
+            response = await ask(fallback=True)
+        except anthropic.BadRequestError as e:
+            if not _beta_refused(e):
+                raise
+            # The beta withdrawn: the request as it is without it, rather than every key failing
+            log.warning("Anthropic refused the fallback beta: asked without it")
+            response = await ask(fallback=False)
     except anthropic.AuthenticationError as e:
         raise ExtractionError("llm.invalid_key", provider="Anthropic") from e
     except anthropic.RateLimitError as e:

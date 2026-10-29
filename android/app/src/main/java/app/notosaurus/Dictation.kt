@@ -25,6 +25,8 @@ interface Recorder {
 class Dictation(private val folder: File, private val recorder: Recorder, private val relay: () -> Relay) {
     private var recording: File? = null
 
+    // Asked from Ktor's threads (two taps at once): one at a time, the recording with them
+    @Synchronized
     fun start() {
         cancel() // one left listening (the page closed meanwhile): dropped
         val file = File(folder, "dictation.aac").apply { delete() }
@@ -40,19 +42,24 @@ class Dictation(private val folder: File, private val recorder: Recorder, privat
     /** What was said, as text ("" when nothing was heard). `kind`: "prompt" or "correction";
      * `language`: the page's, its English name. */
     suspend fun stop(kind: String, language: String): String {
-        val file = recording ?: throw BadRequest("dictation.failed")
-        recording = null
-        runCatching { recorder.stop() } // too short: nothing in it, said below
+        val file = taken() ?: throw BadRequest("dictation.failed")
         val audio = withContext(Dispatchers.IO) { file.takeIf { it.isFile }?.readBytes().also { file.delete() } }
         if (audio == null || audio.size < MIN_BYTES) return ""
         return relay().transcribe(kind, language, audio)
     }
 
+    @Synchronized
     fun cancel() {
-        val file = recording ?: return
+        taken()?.delete()
+    }
+
+    /** The recording stopped and handed over, once (null: none going). */
+    @Synchronized
+    private fun taken(): File? {
+        val file = recording ?: return null
         recording = null
-        runCatching { recorder.stop() }
-        file.delete()
+        runCatching { recorder.stop() } // too short: nothing in it, said by stop
+        return file
     }
 
     companion object {

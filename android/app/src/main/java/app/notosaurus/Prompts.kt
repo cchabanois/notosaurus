@@ -43,7 +43,12 @@ class Prompts(private val file: File, private val texts: PageTexts) {
 
     private fun mine(): List<JsonElement> = if (file.isFile) json.parseToJsonElement(file.readText()).jsonArray else emptyList()
 
-    private fun write(list: List<JsonElement>) = file.writeText(JsonArray(list).toString())
+    // Written whole then put in place, as the lessons: a crash meanwhile leaves the old list
+    private fun write(list: List<JsonElement>) {
+        val tmp = file.resolveSibling(file.name + ".tmp")
+        tmp.writeText(JsonArray(list).toString())
+        moved(tmp, file)
+    }
 
     companion object {
         // Notosaurus's prompts, in order (app/prompts.py, BUILTIN)

@@ -74,7 +74,7 @@ class Lessons(private val root: File) {
             val picture = card.string("picture")
             val file = dir.resolve("images").resolve(picture)
             val renamed = if (PICTURE.matches(picture) && file.isFile) {
-                picture.replaceFirst(Regex("^picture-[a-z0-9]+-"), "picture-$fresh-").also { file.renameTo(file.resolveSibling(it)) }
+                picture.replaceFirst(Regex("^picture-[a-z0-9]+-"), "picture-$fresh-").also { moved(file, file.resolveSibling(it)) }
             } else ""
             card.with("id" to JsonPrimitive(fresh), "picture" to JsonPrimitive(renamed))
         }
@@ -196,7 +196,7 @@ class Lessons(private val root: File) {
         val dir = root.resolve(lesson.string("id"))
         val tmp = dir.resolve("lesson.json.tmp")
         tmp.writeText(lesson.toString())
-        tmp.renameTo(dir.resolve("lesson.json")) // never half a file
+        moved(tmp, dir.resolve("lesson.json")) // never half a file
     }
 
     /** The lesson's sounds' folder (Speech: its mp3s and what they say); null: no such lesson. */
@@ -252,3 +252,11 @@ fun JsonObject.cards(): MutableList<JsonObject> = (this["cards"] as? JsonArray)?
 
 /** A value as text: a string's content, else its JSON (an id may be either). */
 fun JsonElement.plain(): String = (this as? JsonPrimitive)?.content ?: toString()
+
+/** `from` moved to `to`, replacing it: renamed, else (a rename refused) copied then removed;
+ * neither: IOException, never the old file left as if it were the new one. */
+internal fun moved(from: java.io.File, to: java.io.File) {
+    if (from.renameTo(to)) return
+    from.copyTo(to, overwrite = true)
+    if (!from.delete()) from.deleteOnExit()
+}
