@@ -1,0 +1,11 @@
+blank_issues_enabled: false
+contact_links:
+  - name: ⚑ A card the AI got wrong, in the Android app
+    url: https://cchabanois.github.io/notosaurus/review/#reporting-a-problem
+    about: "⋯ → ⚑ Report on the card: quicker, and it sends what's needed without any photo."
+  - name: ❓ A question
+    url: https://cchabanois.github.io/notosaurus/faq/
+    about: The FAQ and the troubleshooting pages answer most of them.
+  - name: ✉️ No GitHub account
+    url: mailto:notosaurus.app@gmail.com
+    about: Write to notosaurus.app@gmail.com.
