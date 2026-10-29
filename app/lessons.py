@@ -13,7 +13,7 @@ import re
 import shutil
 import uuid
 from collections.abc import Awaitable, Callable, Sequence
-from datetime import date
+from datetime import date, datetime, timedelta
 from pathlib import Path
 from typing import cast
 
@@ -256,11 +256,12 @@ def _save(id: str, content: dict, exported: bool = False, share: bool | None = N
         path = folder(id)
         if not path:
             return None
-        now = storage.now()
+        old = _read(path)
+        now = storage.now() if exported else _changed_at(old)
         # Validated again (not model_copy): the cards become Card objects, not dicts
         lesson = Lesson(
             **{
-                **_read(path).model_dump(),
+                **old.model_dump(),
                 **content,
                 **({"shared": share} if share is not None else {}),
                 "updated_at": now,
@@ -297,6 +298,15 @@ async def edit[T](id: str, change: Callable[[Lesson], T | Awaitable[T]]) -> tupl
     return saved, result
 
 
+def _changed_at(old: Lesson) -> str:
+    """Now, as a change's date: after its last send, even in the same second (the dates are
+    to the second): the page says "Update in Anki" for a lesson changed since it was sent."""
+    now = storage.now()
+    if old.exported_at and now <= old.exported_at:
+        return (datetime.fromisoformat(old.exported_at) + timedelta(seconds=1)).isoformat(timespec="seconds")
+    return now
+
+
 def regenerated(id: str, g: Generated, calls: Sequence[AiCall] = ()) -> Lesson | None:
     """A new generation in place of the lesson's content: its cards, photos, frames and
     prompt replaced; its owner, sharing, dates and AI calls kept (the new ones added)."""
@@ -321,7 +331,7 @@ def regenerated(id: str, g: Generated, calls: Sequence[AiCall] = ()) -> Lesson |
                 "frames": list(g.frames),
                 "photo_count": len(g.photos),
                 "ai_calls": [*old.ai_calls, *calls],
-                "updated_at": storage.now(),
+                "updated_at": _changed_at(old),
             }
         )
         _write(path, lesson)
@@ -354,7 +364,7 @@ def completed(id: str, g: Generated, calls: Sequence[AiCall] = ()) -> Lesson | N
                 "frames": [*old.frames, *(f.model_copy(update={"page": f.page + before}) for f in g.frames)],
                 "page_texts": texts,
                 "ai_calls": [*old.ai_calls, *calls],
-                "updated_at": storage.now(),
+                "updated_at": _changed_at(old),
             }
         )
         _write(path, lesson)

@@ -115,7 +115,7 @@ class Lessons(private val root: File) {
                 "dictation_only" to either("dictation_only"),
                 "child" to JsonPrimitive(content["child"]?.jsonPrimitive?.contentOrNull?.ifEmpty { null } ?: lesson.string("child")), // still for its child
                 "photo_count" to JsonPrimitive(photos.size),
-                "updated_at" to JsonPrimitive(now()),
+                "updated_at" to JsonPrimitive(changedAt(lesson)),
             ),
         )
         write(updated)
@@ -150,7 +150,7 @@ class Lessons(private val root: File) {
                 "frames" to JsonArray((lesson["frames"] as? JsonArray).orEmpty() + frames),
                 "page_texts" to JsonArray(pageTexts),
                 "photo_count" to JsonPrimitive(before + photos.size),
-                "updated_at" to JsonPrimitive(now()),
+                "updated_at" to JsonPrimitive(changedAt(lesson)),
             ),
         )
         write(updated)
@@ -170,8 +170,9 @@ class Lessons(private val root: File) {
         val updated = JsonObject(
             lesson + kept + buildMap {
                 if ("cards" in kept) put("cards", withIds(kept["cards"]))
-                put("updated_at", JsonPrimitive(now()))
-                if (exported) put("exported_at", JsonPrimitive(now()))
+                val now = if (exported) now() else changedAt(lesson)
+                put("updated_at", JsonPrimitive(now))
+                if (exported) put("exported_at", JsonPrimitive(now))
             },
         )
         write(updated)
@@ -216,6 +217,13 @@ class Lessons(private val root: File) {
         )
 
         fun now(): String = LocalDateTime.now().truncatedTo(ChronoUnit.SECONDS).toString()
+
+        /** Now, as a change's date: after its last send, even in the same second (the dates are
+         * to the second): the page says "Update in Anki" for a lesson changed since it was sent. */
+        fun changedAt(lesson: JsonObject, now: LocalDateTime = LocalDateTime.now().truncatedTo(ChronoUnit.SECONDS)): String {
+            val sent = lesson.string("exported_at").takeIf { it.isNotEmpty() }?.let { runCatching { LocalDateTime.parse(it) }.getOrNull() }
+            return (if (sent != null && !now.isAfter(sent)) sent.plusSeconds(1) else now).toString()
+        }
 
         /** Cards from the AI, or added in the review, get their stable id (lessons.with_ids). */
         fun withIds(cards: JsonElement?): JsonArray = JsonArray(
