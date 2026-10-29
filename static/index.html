@@ -400,7 +400,7 @@
               <!-- How long it takes, roughly (a figure: the model thinks; a picture: found or drawn):
                    the bar fills over that time, slower near the end; restarts each time it shows -->
               <span class="drawing" :class="{ redrawing: firstFigureUrl(card) }" x-show="!card.picture || card._drawing"
-                    :style="`--expected: ${pictureExpected(card)}s`">
+                    :style="{ '--expected': `${pictureExpected(card)}s` }">
                 <!-- Drawn again because it was wrong: the first one, faded, with what was wrong -->
                 <template x-if="firstFigureUrl(card)"><img class="first" :src="firstFigureUrl(card)" alt=""></template>
                 <span x-text="pictureStepText(card)"></span>
@@ -492,7 +492,7 @@
                 <!-- How long it takes, roughly (a figure: the model thinks; a picture: found or drawn):
                    the bar fills over that time, slower near the end; restarts each time it shows -->
               <span class="drawing" :class="{ redrawing: firstFigureUrl(card) }" x-show="!card.picture || card._drawing"
-                    :style="`--expected: ${pictureExpected(card)}s`">
+                    :style="{ '--expected': `${pictureExpected(card)}s` }">
                 <!-- Drawn again because it was wrong: the first one, faded, with what was wrong -->
                 <template x-if="firstFigureUrl(card)"><img class="first" :src="firstFigureUrl(card)" alt=""></template>
                 <span x-text="pictureStepText(card)"></span>
