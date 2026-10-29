@@ -473,17 +473,27 @@ def test_a_use_only_of_the_figures_own_shapes():
 
 
 @pytest.mark.parametrize("family", sorted(figures_typst.FAMILIES))
-def test_each_familys_sheet_example_compiles(family):
-    """What each sheet shows the AI compiles as it is, with the packages shipped: a sheet
-    out of step with its package (a version changed) shows here."""
-    example = re.search(r"exactly so:\n(.*?)\n- ", figures_typst.FAMILIES[family].rules, re.S)
-    assert example, family
-    svg = figures.clean(figures_typst.compile_svg(family, example.group(1).replace("  ...\n", "")))
-    assert svg.startswith("<svg")
+def test_each_familys_rule_example_compiles(family):
+    """Each family's Typst (typst_rules/<family>.typ: its preamble, then the example the AI
+    is shown) compiles as it is, with the packages shipped: a rule out of step with its
+    package (a version changed) shows here."""
+    typst = (figures_typst.RULES / f"{family}.typ").read_text(encoding="utf-8")
+    example = typst.split(figures_typst.EXAMPLE)[1].replace("  ...\n", "")  # (geometry's: "and so on")
+    assert figures.clean(figures_typst.compile_svg(family, example)).startswith("<svg")
 
 
-def test_the_graph_sheets_own_fragments_compile():
-    """What the graph sheet shows besides its example (the axis's ticks, points, a line)
+def test_each_familys_rule_and_typst_in_their_files():
+    """A rule says where its example goes ({example}, once), its Typst where the AI's part
+    starts (EXAMPLE, once); the example is in the rule the AI is given."""
+    for family, made in figures_typst.FAMILIES.items():
+        rule = (figures_typst.RULES / f"{family}.md").read_text(encoding="utf-8")
+        typst = (figures_typst.RULES / f"{family}.typ").read_text(encoding="utf-8")
+        assert rule.count("{example}") == 1 and typst.count(figures_typst.EXAMPLE) == 1, family
+        assert typst.split(figures_typst.EXAMPLE)[1].strip() in made.rules and "{example}" not in made.rules
+
+
+def test_the_graph_rules_own_fragments_compile():
+    """What the graph rule shows besides its example (the axis's ticks, points, a line)
     compiles too, in that example: a fragment out of step makes every graph with it fail."""
     rules = figures_typst.FAMILIES["graph"].rules
     example = re.search(r"exactly so:\n(.*?)\n- ", rules, re.S).group(1)
