@@ -892,6 +892,9 @@
       "connect": "Conectar",
       "saved": "Computador: {address}"
     },
+    "transfer": {
+      "hint": "Um só ficheiro com todas as lições (fotos, cartões, imagens, sons), as crianças, os testes e as suas instruções: para as guardar (Drive, o cartão SD…), ou abri-las noutro telemóvel ou no computador. Os cartões que já estão no AnkiDroid são lá reencontrados, nunca em duplicado."
+    },
     "data": {
       "title": "🗂️ Lições neste celular",
       "size": "{lessons} · {size} MB",

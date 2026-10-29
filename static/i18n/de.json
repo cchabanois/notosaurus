@@ -892,6 +892,9 @@
       "connect": "Verbinden",
       "saved": "Computer: {address}"
     },
+    "transfer": {
+      "hint": "Eine Datei mit allen Lektionen (Fotos, Karten, Bilder, Töne), den Kindern, den Tests und Ihren Anweisungen: zum Aufbewahren (Drive, SD-Karte…) oder um sie auf einem anderen Telefon oder am Computer zu öffnen. Ihre Karten, die schon in AnkiDroid sind, werden dort wiedergefunden, nie doppelt."
+    },
     "data": {
       "title": "🗂️ Lektionen auf diesem Handy",
       "size": "{lessons} · {size} MB",

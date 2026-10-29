@@ -892,6 +892,9 @@
       "connect": "Collegati",
       "saved": "Computer: {address}"
     },
+    "transfer": {
+      "hint": "Un solo file con tutte le lezioni (foto, schede, immagini, suoni), i bambini, le verifiche e le sue istruzioni: per conservarle (Drive, la scheda SD…), o aprirle su un altro telefono o sul computer. Le schede già in AnkiDroid vi vengono ritrovate, mai doppie."
+    },
     "data": {
       "title": "🗂️ Lezioni su questo telefono",
       "size": "{lessons} · {size} MB",

@@ -71,6 +71,11 @@ class Speech(
     /** The rate a sound is read at: the lesson's, else the settings', else SLOWED. */
     private fun rateOf(rate: String): String = rate.ifEmpty { prefs[TTS_RATE].orEmpty() }.takeIf { it in RATES } ?: SLOWED
 
+    /** A lesson's voice the relay reads with: the computer's (edge-tts's, a lesson imported
+     * while the relay couldn't be asked) gives way to the relay's for that language. */
+    suspend fun relayVoice(voice: String): String =
+        if (voice.endsWith("Neural")) voiceFor(voice.split('-').take(2).joinToString("-")).ifEmpty { voice } else voice
+
     /** The voice of the card's sound: its own (Card.voice) when the relay reads with it or
      * its sound is in the lesson already (made on the computer), else the lesson's. */
     suspend fun cardVoice(card: Card, lessonVoice: String, text: String, rate: String = "", lesson: String = ""): String {
@@ -121,6 +126,7 @@ class Speech(
         onSound: suspend (done: Int, total: Int) -> Unit = { _, _ -> }, // first (0, total), then as each is done
     ): Pair<Map<String, File>, Int> {
         if (!reads(voice)) return emptyMap<String, File>() to 0
+        val voice = relayVoice(voice)
         // Each back in its card's voice (its own, else the lesson's: cardVoice)
         val voices = deck.cards.map { it to spoken(it, dictation) }.filter { it.second.isNotEmpty() }
             .associate { (card, back) -> back to cardVoice(card, voice, back, rate, lesson) }

@@ -892,6 +892,9 @@
       "connect": "Se connecter",
       "saved": "Ordinateur : {address}"
     },
+    "transfer": {
+      "hint": "Un seul fichier avec toutes les leçons (photos, cartes, images, sons), les enfants, les contrôles et vos consignes : pour les garder (Drive, carte SD…), ou les ouvrir sur un autre téléphone ou sur l'ordinateur. Ses cartes déjà dans AnkiDroid y sont retrouvées, sans doublon."
+    },
     "data": {
       "title": "🗂️ Leçons sur ce téléphone",
       "size": "{lessons} · {size} Mo",

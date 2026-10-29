@@ -41,7 +41,8 @@ class Prompts(private val file: File, private val texts: PageTexts) {
         }
     }
 
-    private fun mine(): List<JsonElement> = if (file.isFile) json.parseToJsonElement(file.readText()).jsonArray else emptyList()
+    /** The user's own prompts, as they are kept. */
+    fun mine(): List<JsonElement> = if (file.isFile) json.parseToJsonElement(file.readText()).jsonArray else emptyList()
 
     // Written whole then put in place, as the lessons: a crash meanwhile leaves the old list
     private fun write(list: List<JsonElement>) {

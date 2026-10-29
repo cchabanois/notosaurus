@@ -892,6 +892,9 @@
       "connect": "Connect",
       "saved": "Computer: {address}"
     },
+    "transfer": {
+      "hint": "One file with every lesson (photos, cards, pictures, sounds), the children, the tests and your prompts: to keep them (Drive, the SD card…), or to open them on another phone or on the computer. Their cards already in AnkiDroid are found there again, never added twice."
+    },
     "data": {
       "title": "🗂️ Lessons on this phone",
       "size": "{lessons} · {size} MB",

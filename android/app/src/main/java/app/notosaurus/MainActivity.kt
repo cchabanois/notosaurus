@@ -90,6 +90,23 @@ class MainActivity : ComponentActivity() {
         answer.await()
     }
 
+    // A file to write where the user chooses (Drive, the SD card…): the lessons exported
+    private var documentAnswer: CompletableDeferred<Uri?>? = null
+    private var documentType = "application/zip"
+    private val document = registerForActivityResult(object : ActivityResultContracts.CreateDocument("application/zip") {
+        override fun createIntent(context: android.content.Context, input: String) = super.createIntent(context, input).setType(documentType)
+    }) { uri -> documentAnswer?.complete(uri) }
+
+    private suspend fun createDocument(name: String, mime: String): java.io.OutputStream? {
+        val uri = withContext(Dispatchers.Main) {
+            documentType = mime
+            val answer = CompletableDeferred<Uri?>().also { documentAnswer = it }
+            document.launch(name)
+            answer.await()
+        } ?: return null
+        return contentResolver.openOutputStream(uri)
+    }
+
     /** AnkiDroid's page in Google Play (or in the browser, without Google Play). */
     private fun openAnkiDroidPage() = runOnUiThread {
         val store = Intent(Intent.ACTION_VIEW, Uri.parse("market://details?id=$ANKIDROID"))
@@ -132,6 +149,7 @@ class MainActivity : ComponentActivity() {
             requestAnkiPermission = ::askAnkiPermission,
             installAnki = ::openAnkiDroidPage,
             scan = ::scanQrCode,
+            createDocument = ::createDocument,
             modeChanged = { runOnUiThread { Shortcuts.update(this, server) } },
             requestMicPermission = ::askMicPermission,
             activity = { this.takeUnless { it.isFinishing || it.isDestroyed } },

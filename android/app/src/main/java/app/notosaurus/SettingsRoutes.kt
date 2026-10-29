@@ -15,9 +15,15 @@ import app.notosaurus.LocalServer.Companion.MODE
 import app.notosaurus.LocalServer.Companion.PHONE_MODE
 import app.notosaurus.LocalServer.Companion.RELAY
 import app.notosaurus.LocalServer.Companion.TTS_RATE
+import io.ktor.http.content.PartData
+import io.ktor.http.content.forEachPart
+import io.ktor.server.request.receiveMultipart
 import io.ktor.server.request.receiveText
+import io.ktor.utils.io.jvm.javaio.toInputStream
 import io.ktor.server.routing.Route
 import kotlinx.serialization.builtins.ListSerializer
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 import kotlinx.coroutines.withTimeout
 import kotlinx.serialization.json.JsonArray
 import kotlinx.serialization.json.JsonNull
@@ -26,6 +32,7 @@ import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.booleanOrNull
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.put
+import java.io.File
 import java.net.URI
 import java.time.OffsetDateTime
 
@@ -110,6 +117,29 @@ internal fun Route.settingsRoutes(server: LocalServer) {
             buildJsonObject {
                 put("lessons", lessons.list().size)
                 put("bytes", lessons.bytes() + speech.bytes()) // with their sound
+            }
+        }
+        // The lessons in one file (LessonsTransfer): written where the user chooses
+        api("POST", "/api/admin/transfer/export") {
+            val name = "notosaurus-${Lessons.now().take(10)}.zip"
+            val out = createDocument(name, "application/zip") ?: return@api buildJsonObject { put("cancelled", true) }
+            val count = withContext(Dispatchers.IO) { out.use { transfer.export(it) } }
+            buildJsonObject { put("lessons", count); put("name", name) }
+        }
+        // An export taken in: the page sends the file the user chose
+        api("POST", "/api/admin/transfer") {
+            val file = File(cacheDir.apply { mkdirs() }, "import-${System.nanoTime()}.zip")
+            try {
+                call.receiveMultipart(formFieldLimit = LessonsTransfer.MAX_FILE).forEachPart { part ->
+                    if (part is PartData.FileItem && part.name == "file") {
+                        withContext(Dispatchers.IO) { part.provider().toInputStream().use { input -> file.outputStream().use { input.copyTo(it) } } }
+                    }
+                    part.dispose()
+                }
+                if (!file.isFile) throw BadRequest("transfer.not_an_export")
+                transfer.import(file).json()
+            } finally {
+                file.delete()
             }
         }
         api("DELETE", "/api/admin/lessons") {

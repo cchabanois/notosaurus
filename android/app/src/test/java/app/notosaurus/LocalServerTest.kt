@@ -89,6 +89,7 @@ class LocalServerTest {
     private var storeOpened = 0
     private val computer = MockWebServer() // the add-on's Notosaurus, on the computer
     private var scanned: String? = null // what the fake QR scanner reads
+    private var document: java.io.ByteArrayOutputStream? = java.io.ByteArrayOutputStream() // where the fake document picker writes (null: cancelled)
     private var scannerMissing = false
     private var modeChanges = 0
     private var micGranted = true // the user's answer to the microphone's dialog
@@ -172,6 +173,7 @@ class LocalServerTest {
             },
             installAnki = { storeOpened++ },
             scan = { if (scannerMissing) error("module not downloaded") else scanned },
+            createDocument = { _, _ -> document },
             modeChanged = { modeChanges++ },
             turnPhoto = { data, degrees -> "turned $degrees:".toByteArray() + data }, // (Photos.turn needs Android)
             recorder = mic,
@@ -628,6 +630,131 @@ class LocalServerTest {
         assertEquals(listOf("le père"), request["others"]!!.jsonArray.map { it.jsonPrimitive.content })
         // Not saved here: the page puts it in place
         assertEquals(card.string("back"), client.get("/api/lessons/${lesson.string("id")}") { page() }.json().jsonObject["cards"]!!.jsonArray[0].jsonObject.string("back"))
+    }
+
+    private fun zipOf(files: Map<String, ByteArray>): ByteArray {
+        val out = java.io.ByteArrayOutputStream()
+        java.util.zip.ZipOutputStream(out).use { z ->
+            files.forEach { (name, data) -> z.putNextEntry(java.util.zip.ZipEntry(name)); z.write(data); z.closeEntry() }
+        }
+        return out.toByteArray()
+    }
+
+    private fun entries(zip: ByteArray): Map<String, ByteArray> = buildMap {
+        java.util.zip.ZipInputStream(zip.inputStream()).use { z -> generateSequence { z.nextEntry }.forEach { put(it.name, z.readBytes()) } }
+    }
+
+    private suspend fun HttpClient.importFile(zip: ByteArray): JsonObject = post("/api/admin/transfer") {
+        page()
+        setBody(io.ktor.client.request.forms.MultiPartFormDataContent(io.ktor.client.request.forms.formData {
+            append("file", zip, io.ktor.http.Headers.build {
+                append(HttpHeaders.ContentType, "application/zip"); append(HttpHeaders.ContentDisposition, "filename=\"export.zip\"")
+            })
+        }))
+    }.json().jsonObject
+
+    @Test
+    fun theLessonsExportedThenImportedBackOnThisPhone() = app { client ->
+        val lesson = client.extract()
+        relay.takeRequest()
+        val id = lesson.string("id")
+        folder.root.resolve("lessons/$id/audio").mkdirs()
+        folder.root.resolve("lessons/$id/audio/la-madre-55895502.mp3").writeText("mp3")
+        local.lessons.setAnkiNotes(id, mapOf(lesson["cards"]!!.jsonArray[0].jsonObject.string("id") to 42L))
+        local.children.save(listOf(Child("jules", "Jules", grade = "5e")))
+        val exported = client.post("/api/admin/transfer/export") { page() }.json().jsonObject
+        assertEquals(1, exported["lessons"]!!.jsonPrimitive.int)
+        assertTrue(exported.string("name").startsWith("notosaurus-") && exported.string("name").endsWith(".zip"))
+        val zip = document!!.toByteArray()
+        val files = entries(zip)
+        assertTrue("lessons/$id/lesson.json" in files && "lessons/$id/page-1.jpg" in files && "lessons/$id/audio/la-madre-55895502.mp3" in files)
+        assertTrue(listOf("children.json", "exams.json", "prompts.json", "manifest.json").all { it in files })
+        val manifest = json.parseToJsonElement(files.getValue("manifest.json").decodeToString()).jsonObject
+        assertEquals(listOf("notosaurus", "android"), listOf(manifest.string("app"), manifest.string("device")))
+        assertEquals("Jules", json.parseToJsonElement(files.getValue("children.json").decodeToString()).jsonObject["children"]!!.jsonArray[0].jsonObject.string("name"))
+        assertFalse(files.keys.any { "key" in it || "settings" in it }) // no licence key, no setting
+
+        // The picker cancelled: nothing written, said so
+        document = null
+        assertEquals("true", client.post("/api/admin/transfer/export") { page() }.json().jsonObject["cancelled"]!!.jsonPrimitive.content)
+
+        // Deleted, then taken in again: the same lesson, its notes in AnkiDroid still known (this phone's)
+        local.lessons.delete(id)
+        val done = client.importFile(zip)
+        assertEquals(listOf(1, 0, 0, 0), listOf("added", "replaced", "kept", "children").map { done[it]!!.jsonPrimitive.int })
+        val back = local.lessons.get(id)!!
+        assertEquals(42L, back["anki_notes"]!!.jsonObject.values.single().jsonPrimitive.content.toLong())
+        assertEquals("mp3", folder.root.resolve("lessons/$id/audio/la-madre-55895502.mp3").readText())
+        assertEquals(0, client.importFile(zip)["added"]!!.jsonPrimitive.int) // again: kept, nothing twice
+    }
+
+    @Test
+    fun aLessonFromTheComputerTakenIn() = app { client ->
+        relayAnswers(voices) // the relay's voices: the lesson's voice chosen among them
+        val lesson = """{"format": 1, "deck": "Espagnol::Leçon 5", "prompt": "FR → ES", "voice": "es-ES-ElviraNeural", "rate": "-10%",
+            "cards": [{"front": "la mère", "back": "la madre", "id": "c1"}], "owner": "Léa", "anki_notes": {"Léa": {"c1": 1234}},
+            "created_at": "2026-10-30T10:00:00", "updated_at": "2026-10-30T10:00:00"}"""
+        val zip = zipOf(
+            mapOf(
+                "manifest.json" to """{"format": 1, "app": "notosaurus", "device": "computer", "install": "the-computer"}""".toByteArray(),
+                "lessons/2026-10-30-espagnol-lecon-5/lesson.json" to lesson.toByteArray(),
+                "lessons/2026-10-30-espagnol-lecon-5/page-1.jpg" to "photo".toByteArray(),
+                "lessons/2026-10-30-espagnol-lecon-5/audio/la-madre-55895502.mp3" to "computer's la madre".toByteArray(),
+                "lessons/2026-10-30-espagnol-lecon-5/../../evil.txt" to "x".toByteArray(),
+                "lessons/../evil/lesson.json" to lesson.toByteArray(),
+                "children.json" to """{"children": [{"id": "jules", "name": "Jules", "grade": "5e", "anki_profile": "Léa"}]}""".toByteArray(),
+                "exams.json" to """{"exams": [{"id": "brevet", "name": "Brevet blanc", "lessons": [{"lesson": "2026-10-30-espagnol-lecon-5"}]}]}""".toByteArray(),
+                "prompts.json" to """{"user": [{"id": 7, "name": "Vocabulaire", "text": "Une carte par mot"}]}""".toByteArray(),
+            ),
+        )
+        val done = client.importFile(zip)
+        assertEquals(listOf(1, 1, 1, 1), listOf("added", "children", "exams", "prompts").map { done[it]!!.jsonPrimitive.int })
+        val there = local.lessons.get("2026-10-30-espagnol-lecon-5")!!
+        assertEquals(1, there["photo_count"]!!.jsonPrimitive.int) // the computer's lesson.json has none
+        assertEquals("2026-10-30-espagnol-lecon-5", there.string("id"))
+        assertEquals(JsonObject(emptyMap()), there["anki_notes"]) // the computer's Anki's
+        assertTrue(Speech.reads(there.string("voice")) && there.string("voice").contains("Chirp3-HD")) // the relay's
+        assertEquals("es-ES-ElviraNeural", there["cards"]!!.jsonArray[0].jsonObject.string("voice")) // its sound's
+        assertFalse(folder.root.resolve("evil.txt").exists() || folder.root.resolve("evil").exists())
+        assertEquals(listOf("Jules"), local.children.list().map { it.name })
+        assertEquals(listOf("Brevet blanc"), local.exams.list().map { it.name })
+
+        // Not an export: said
+        val refused = client.post("/api/admin/transfer") {
+            page()
+            setBody(io.ktor.client.request.forms.MultiPartFormDataContent(io.ktor.client.request.forms.formData {
+                append("file", "nope".toByteArray(), io.ktor.http.Headers.build { append(HttpHeaders.ContentDisposition, "filename=\"x.zip\"") })
+            }))
+        }
+        assertEquals(HttpStatusCode.BadRequest, refused.status)
+        assertTrue("transfer.not_an_export" in refused.bodyAsText())
+    }
+
+    @Test
+    fun aLessonFromTheComputerTakenInWhileTheRelayCouldntSay() = app { client ->
+        // The relay unreachable when it's taken in: the lesson's voice the computer's still
+        relayAnswers("""{"code": "relay.unavailable", "params": {}}""", 503)
+        val id = "2026-10-30-espagnol"
+        val lesson = """{"format": 1, "deck": "Espagnol", "prompt": "FR → ES", "voice": "es-ES-ElviraNeural", "rate": "-10%",
+            "cards": [{"front": "la mère", "back": "la madre", "id": "c1"}, {"front": "le père", "back": "el padre", "id": "c2"}],
+            "created_at": "2026-10-30T10:00:00", "updated_at": "2026-10-30T10:00:00"}"""
+        val zip = zipOf(
+            mapOf(
+                "manifest.json" to """{"format": 1, "app": "notosaurus", "device": "computer", "install": "the-computer"}""".toByteArray(),
+                "lessons/$id/lesson.json" to lesson.toByteArray(),
+                "lessons/$id/audio/${Speech.fileName("la madre", "es-ES-ElviraNeural", "-10%")}" to "computer's la madre".toByteArray(),
+            ),
+        )
+        assertEquals(1, client.importFile(zip)["added"]!!.jsonPrimitive.int)
+        assertEquals("es-ES-ElviraNeural", local.lessons.get(id)!!.string("voice"))
+
+        // Sent once the relay answers: el padre in the relay's voice, la madre the computer's sound
+        val speaker = Speaker(voices = listOf("es-ES-Chirp3-HD-Aoede"))
+        relay.dispatcher = speaker
+        client.sendLesson(id, voice = "es-ES-ElviraNeural")
+        assertEquals(listOf("el padre"), speaker.read)
+        assertEquals("computer's la madre", anki.sounds["la madre"]!!.readText())
+        assertTrue(folder.root.resolve("lessons/$id/audio/${Speech.fileName("el padre", "es-ES-Chirp3-HD-Aoede", "-10%")}").isFile)
     }
 
     @Test
