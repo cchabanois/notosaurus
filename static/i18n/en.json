@@ -1085,7 +1085,8 @@
     "children": {
       "same_id": "Two children have the same first name.",
       "too_many": "{max} children at most.",
-      "not_found": "This child no longer exists: reload the page."
+      "not_found": "This child no longer exists: reload the page.",
+      "invalid": "A child's sheet isn't valid: a first name (40 characters at most), a short class and decks."
     },
     "exams": {
       "invalid": "This test isn't valid: a name of 60 characters at most, a date, 50 lessons at most.",

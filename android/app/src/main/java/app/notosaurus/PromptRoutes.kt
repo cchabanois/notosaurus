@@ -12,7 +12,7 @@ internal fun Route.promptRoutes(server: LocalServer) {
         // --- Prompts: Notosaurus's (from the page's languages), then the user's
         api("GET", "/api/prompts") { JsonArray(prompts.all(lang())) }
         api("POST", "/api/prompts") { prompts.save(null, body()) }
-        api("PUT", "/api/prompts/{id}") { prompts.save(param("id").toInt(), body()) }
+        api("PUT", "/api/prompts/{id}") { prompts.save(param("id").toIntOrNull() ?: notFound(), body()) }
         api("DELETE", "/api/prompts/{id}") {
             prompts.delete(param("id"))
             JsonNull

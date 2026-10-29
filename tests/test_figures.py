@@ -431,7 +431,7 @@ def test_typst_cut_when_too_long_and_nothing_loaded(monkeypatch):
     def slow(*args, **kwargs):
         raise subprocess.TimeoutExpired("typst", figures_typst.COMPILE_S)
 
-    for bad in ('read("/etc/passwd")', 'image("x.png")', 'plugin("p.wasm")', '#include "x.typ"'):
+    for bad in ('read("/etc/passwd")', 'image("x.png")', 'plugin("p.wasm")', '#include "x.typ"', 'eval("read(1)")'):
         with pytest.raises(figures_typst.Unusable):
             figures_typst.source("geometry", bad)
     monkeypatch.setattr(subprocess, "run", slow)

@@ -102,7 +102,8 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
-        WebView.setWebContentsDebuggingEnabled(true) // prototype: chrome://inspect
+        // chrome://inspect in a debug build only: a release's page (its token, the lessons) never open to it
+        WebView.setWebContentsDebuggingEnabled(BuildConfig.DEBUG)
         web = WebView(this).apply {
             settings.javaScriptEnabled = true
             settings.domStorageEnabled = true // the page keeps a few choices in localStorage

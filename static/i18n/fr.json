@@ -1085,7 +1085,8 @@
     "children": {
       "same_id": "Deux enfants ont le même prénom.",
       "too_many": "Au plus {max} enfants.",
-      "not_found": "Cet enfant n'existe plus : rechargez la page."
+      "not_found": "Cet enfant n'existe plus : rechargez la page.",
+      "invalid": "Une fiche d'enfant n'est pas valide : un prénom (40 caractères au plus), une classe et des paquets courts."
     },
     "exams": {
       "invalid": "Ce contrôle n'est pas valide : un nom de 60 caractères au plus, une date, 50 leçons au plus.",

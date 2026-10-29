@@ -136,6 +136,7 @@ Each pull request adds a line under **Unreleased**. See [Releasing](CONTRIBUTING
 
 ### Fixed
 
+- Before release, from a full review: the phone's page no longer open to chrome://inspect in a release (only a debug build); a lesson or the prompts written whole then put in place, a refused rename copied; the Anthropic fallback's beta, if withdrawn, asked without it; a child's invalid sheet said as such (not as the relay's); a path's number that isn't one a 404; two quick taps on 🎤 no longer leave a recorder open; Typst's eval refused like read.
 - A lesson changed in the very second it was sent to Anki no longer looks **✓ Up to date in Anki** when reopened: a change is always dated after the send.
 - OpenRouter's price list unreachable: the relay's own models (Gemini's) still priced from Notosaurus's table rather than at a flat price (a figure counted 40 credits instead of 2), and the list not asked again at every call for 5 minutes (each waited 5 s for it).
 - **＋ Add a card** no longer piles up empty cards: while one is still empty, it takes you back to it; the new card's front is ready to type.

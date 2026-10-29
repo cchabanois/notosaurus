@@ -1085,7 +1085,8 @@
     "children": {
       "same_id": "Zwei Kinder haben denselben Vornamen.",
       "too_many": "Höchstens {max} Kinder.",
-      "not_found": "Dieses Kind gibt es nicht mehr: Seite neu laden."
+      "not_found": "Dieses Kind gibt es nicht mehr: Seite neu laden.",
+      "invalid": "Ein Kinderprofil ist ungültig: ein Vorname (höchstens 40 Zeichen), eine kurze Klasse und kurze Stapel."
     },
     "exams": {
       "invalid": "Dieser Test ist ungültig: ein Name mit höchstens 60 Zeichen, ein Datum, höchstens 50 Lektionen.",

@@ -296,7 +296,7 @@ class Kind(BaseModel):
 
 # What a body may not do: load anything (the packages are given), read a file
 FORBIDDEN = re.compile(
-    r"(^|[^\w-])(import|include|read|json|csv|yaml|toml|xml|cbor|image|plugin)\s*[\"(]|#\s*(import|include)"
+    r"(^|[^\w-])(import|include|read|eval|json|csv|yaml|toml|xml|cbor|image|plugin)\s*[\"(]|#\s*(import|include)"
 )
 _COLOR = re.compile(r'\b(fill|stroke)="#([0-9a-fA-F]{6})"')
 

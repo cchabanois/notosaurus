@@ -28,7 +28,7 @@ class Children(private val prefs: Preferences) {
         if (children.size > MAX) throw BadRequest("children.too_many", buildJsonObject { put("max", MAX) })
         if (children.map { it.id }.toSet().size != children.size) throw BadRequest("children.same_id")
         if (children.any { !ID.matches(it.id) || it.name.isBlank() || it.name.length > 40 || it.grade.length > 40 || it.decks.length > 200 || it.instructions.length > 4000 }) {
-            throw BadRequest("relay.invalid_request")
+            throw BadRequest("children.invalid")
         }
         prefs[KEY] = json.encodeToString(ListSerializer(Child.serializer()), children)
         return children

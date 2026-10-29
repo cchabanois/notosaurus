@@ -90,7 +90,7 @@ internal fun Route.lessonRoutes(server: LocalServer) {
         }
         get("/api/lessons/{id}/photos/{n}") {
             if (!allowed()) return@get
-            val photo = lessons.photo(param("id"), param("n").toInt())
+            val photo = param("n").toIntOrNull()?.let { lessons.photo(param("id"), it) } // not a number: none
             if (photo == null) call.respondText("", status = HttpStatusCode.NotFound)
             else call.respondBytes(photo.readBytes(), ContentType.Image.JPEG)
         }
