@@ -134,6 +134,7 @@ Each pull request adds a line under **Unreleased**. See [Releasing](CONTRIBUTING
 
 ### Fixed
 
+- OpenRouter's price list unreachable: the relay's own models (Gemini's) still priced from Notosaurus's table rather than at a flat price (a figure counted 40 credits instead of 2), and the list not asked again at every call for 5 minutes (each waited 5 s for it).
 - **＋ Add a card** no longer piles up empty cards: while one is still empty, it takes you back to it; the new card's front is ready to type.
 - A card whose picture goes on the back no longer shows an empty "🎨 Dessin… environ 15 s" frame under its picture: the bar's duration, set as the whole style, wiped the frame's hiding once the card changed.
 - Brazilian Portuguese throughout: the strings in Portugal's Portuguese ("subscrição", "Gerir", "Definições", "telemóvel", "A desenhar…", "cartas", tu) written as Brazil's (assinatura, Gerenciar, Configurações, celular, Desenhando…, cartões, você), the built-in prompts too ("friso cronológico", "parênteses retos"). ⚑ Report says "Reportar" in Spanish and "Relatar" in Portuguese ("Denunciar" sounded like a complaint). A test's guide quotes Anki's and AnkiDroid's own labels in every language ("Study by card state or tag" → "All cards in random order (don't reschedule)", "Tools → Create Filtered Deck", AnkiDroid's "Build"…), and says du / tú / tu as the rest of the page; German says du everywhere.

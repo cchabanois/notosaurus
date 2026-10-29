@@ -3,7 +3,9 @@
 The providers' APIs say how many tokens a call used, not its price (OpenRouter
 excepted: it gives the exact cost). The estimate uses OpenRouter's public model
 list, which has the prices of Google, Anthropic and OpenAI models: no table to
-keep up to date by hand. Fetched at most once a day, kept in the cache (files.py).
+keep up to date by hand. Fetched at most once a day, kept in the cache (files.py); not
+read, asked again after RETRY_AFTER only, the prices written in Notosaurus used
+meanwhile (recommended.PRICES: the relay's models among them).
 """
 
 import logging
@@ -18,6 +20,8 @@ log = logging.getLogger("notosaurus")
 
 MODELS_URL = "https://openrouter.ai/api/v1/models"
 MAX_AGE = 24 * 3600
+RETRY_AFTER = 5 * 60  # the list not read: not asked again before this (each call waited for it)
+_failed_at = 0.0
 _transport: httpx.AsyncBaseTransport | None = None  # tests plug a fake list here
 
 # Provider in the settings → prefix of its models in OpenRouter's list
@@ -31,10 +35,13 @@ def _cache_path():
 async def _prices() -> dict[str, tuple[float, ...]]:
     """Model id → (price of an input token, of an output token[, of an output image's
     token]), in US dollars: an image model draws at its own, far higher price."""
+    global _failed_at
     path = _cache_path()
     cached = files.read_json(path)
     if cached and time.time() - cached.get("at", 0) < MAX_AGE:
         return {k: tuple(v) for k, v in cached["prices"].items()}
+    if time.monotonic() - _failed_at < RETRY_AFTER and _failed_at:
+        return {k: tuple(v) for k, v in (cached or {}).get("prices", {}).items()}  # (recommended.PRICES then)
     try:
         async with httpx.AsyncClient(timeout=5, transport=_transport) as client:
             response = await client.get(MODELS_URL)
@@ -43,6 +50,7 @@ async def _prices() -> dict[str, tuple[float, ...]]:
         prices = {m["id"]: _price(m["pricing"]) for m in models if m.get("pricing", {}).get("prompt") is not None}
     except (httpx.HTTPError, ValueError, KeyError, TypeError) as e:
         log.warning("Model prices unavailable: %s", e)
+        _failed_at = time.monotonic()
         return {k: tuple(v) for k, v in (cached or {}).get("prices", {}).items()}  # older prices, or none
     files.write_json(path, {"at": time.time(), "prices": prices})
     return prices

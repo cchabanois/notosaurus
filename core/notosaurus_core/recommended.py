@@ -59,13 +59,21 @@ PICTURES: dict[str, list[Model]] = {
     ],
 }
 
-# Prices OpenRouter's list doesn't have (the costs are estimated from it): OpenAI's
-# image models, US dollars per input and per output token (economize.cloud, 2026-10).
-PRICES: dict[str, tuple[float, float]] = {
+# Prices used when OpenRouter's list doesn't have the model (OpenAI's image models) or
+# can't be read (the relay's models then still estimated, not charged a flat price):
+# US dollars per input token, per output token[, per output image's token].
+PRICES: dict[str, tuple[float, ...]] = {
+    # OpenAI's image models (economize.cloud, 2026-10)
     "gpt-image-1-mini": (2.5e-6, 8e-6),
     "gpt-image-2": (8e-6, 30e-6),
     "gpt-image-2.5-flare": (8e-6, 30e-6),
     "gpt-image-2.5-sunburst": (8e-6, 30e-6),
+    # Gemini's, the relay's (OpenRouter's list, 2026-10-29)
+    "gemini-3.8-flash": (0.825e-6, 4.125e-6),
+    "gemini-3.5-flash": (1.5e-6, 9e-6),
+    "gemini-3.5-flash-lite": (0.3e-6, 2.5e-6),
+    "gemini-3.1-flash-image": (0.5e-6, 3e-6, 60e-6),
+    "gemini-3.1-flash-lite-image": (0.25e-6, 1.5e-6, 30e-6),
 }
 
 
