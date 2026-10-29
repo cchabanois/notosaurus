@@ -135,6 +135,7 @@ Each pull request adds a line under **Unreleased**. See [Releasing](CONTRIBUTING
 
 ### Fixed
 
+- A lesson changed in the very second it was sent to Anki no longer looks **✓ Up to date in Anki** when reopened: a change is always dated after the send.
 - OpenRouter's price list unreachable: the relay's own models (Gemini's) still priced from Notosaurus's table rather than at a flat price (a figure counted 40 credits instead of 2), and the list not asked again at every call for 5 minutes (each waited 5 s for it).
 - **＋ Add a card** no longer piles up empty cards: while one is still empty, it takes you back to it; the new card's front is ready to type.
 - A card whose picture goes on the back no longer shows an empty "🎨 Dessin… environ 15 s" frame under its picture: the bar's duration, set as the whole style, wiped the frame's hiding once the card changed.

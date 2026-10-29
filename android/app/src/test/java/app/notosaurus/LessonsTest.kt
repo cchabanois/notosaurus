@@ -33,6 +33,15 @@ class LessonsTest {
     private fun lessons() = Lessons(folder.root)
 
     @Test
+    fun changedInTheSecondOfItsSendStillAfterIt() {
+        val sent = buildJsonObject { put("exported_at", "2026-10-30T10:15") } // LocalDateTime writes no ":00"
+        val now = java.time.LocalDateTime.parse("2026-10-30T10:15:00")
+        assertEquals("2026-10-30T10:15:01", Lessons.changedAt(sent, now))
+        assertEquals("2026-10-30T10:16", Lessons.changedAt(sent, now.plusMinutes(1)))
+        assertEquals("2026-10-30T10:15", Lessons.changedAt(buildJsonObject {}, now)) // never sent
+    }
+
+    @Test
     fun aNewLessonHasItsFolderPhotosAndCardIds() {
         val lessons = lessons()
         val lesson = lessons.create(

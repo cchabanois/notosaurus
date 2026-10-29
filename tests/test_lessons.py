@@ -57,6 +57,20 @@ def test_export_marks_the_lesson(client):
     assert reloaded["exported_at"] is not None
 
 
+def test_changed_in_the_second_of_its_send_still_after_it(client, monkeypatch):
+    """The dates are to the second: a change in the same second as the send still dated
+    after it (the page then says "Update in Anki", not "Up to date")."""
+    monkeypatch.setattr(storage, "now", lambda: "2026-10-30T10:15:00")
+    lesson = extract_lesson(client)
+    export = {"deck": "D", "cards": [{"front": "la mère", "back": "la madre"}], "lesson_id": lesson["id"]}
+    client.post("/api/export", json=export)
+    sent = client.get(f"/api/lessons/{lesson['id']}").json()
+    assert sent["updated_at"] == sent["exported_at"] == "2026-10-30T10:15:00"  # sent: up to date
+    client.put(f"/api/lessons/{lesson['id']}", json={"deck": "D", "cards": [{"front": "la mère", "back": "la mamá"}]})
+    changed = client.get(f"/api/lessons/{lesson['id']}").json()
+    assert changed["updated_at"] == "2026-10-30T10:15:01" and changed["exported_at"] == "2026-10-30T10:15:00"
+
+
 def test_lesson_deleted(client):
     lesson = extract_lesson(client)
     photos = lessons.folder(lesson["id"])
