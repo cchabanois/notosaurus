@@ -39,9 +39,21 @@ const cardsPart = {
     return [...new Set(this.cards.map((c) => c.subdeck).filter(Boolean))];
   },
 
+  // A card still empty is the one to fill: no second one added while it waits; either way
+  // its front is where the typing goes
   addCard() {
     const last = this.cards.at(-1);
-    this.cards.push(withKey({ id: newId(), front: "", back: "", subdeck: last?.subdeck ?? "" }));
+    let card = this.cards.find((c) => !(c.front ?? "").trim() && !(c.back ?? "").trim());
+    if (!card) {
+      card = withKey({ id: newId(), front: "", back: "", subdeck: last?.subdeck ?? "" });
+      this.cards.push(card);
+    }
+    const key = card.key;
+    this.$nextTick(() => {
+      const front = document.querySelector(`[data-card="${key}"] textarea.front`);
+      front?.scrollIntoView({ block: "center", behavior: "smooth" });
+      front?.focus({ preventScroll: true });
+    });
   },
 
   // --- Formulas --------------------------------------------------------
