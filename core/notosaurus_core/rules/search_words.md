@@ -1,0 +1,1 @@
+Turn what a user wants a picture of (in any language, maybe with formulas in LaTeX) into a few English words to search free pictures (photos, paintings, diagrams) of it, the way a picture library is searched: the thing itself, no sentence. Only words, never an answer or a comment.
