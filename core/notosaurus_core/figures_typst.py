@@ -9,15 +9,20 @@ else a light call picks it from the description (FAMILY_RULES; none of them: the
 drawn as SVG, figures.py); the AI then writes the figure's Typst with that family's
 rule (Family.rules), after its preamble (Family.preamble: its packages, the page). It is
 compiled in a process of its own, cut after COMPILE_S seconds, with the packages and the
-fonts shipped here (typst/: tools/typst_packages.py, fonts/: nothing downloaded), in an empty
-folder, nothing read or loaded but them (FORBIDDEN refused first). The SVG is then made black
-and grey (a card is black on white) and cleaned (figures.clean).
+fonts shipped here (typst/: one archive per package, unpacked once in the cache, packages();
+fonts/: nothing downloaded), in an empty folder, nothing read or loaded but them (FORBIDDEN
+refused first). The SVG is then made black and grey (a card is black on white) and cleaned
+(figures.clean).
 """
 
+import hashlib
 import importlib.util
+import os
 import re
+import shutil
 import subprocess
 import sys
+import tarfile
 import tempfile
 from dataclasses import dataclass
 from pathlib import Path
@@ -25,8 +30,10 @@ from typing import Literal
 
 from pydantic import BaseModel, Field
 
+from . import files
+
 HERE = Path(__file__).parent
-PACKAGES = HERE / "typst"  # tools/typst_packages.py
+ARCHIVES = HERE / "typst"  # <name>-<version>.tar.gz, as Typst Universe publishes them (tools/typst_packages.py)
 FONTS = HERE / "fonts"
 COMPILE_S = 15  # a figure compiles in well under a second; a loop never ends
 MEMORY = 1024 * 1024 * 1024  # bytes, where the system lets us say so
@@ -144,6 +151,31 @@ sys.stdout.buffer.write(svg)
 """
 
 
+def packages() -> Path:
+    """The packages' folder Typst reads (preview/<name>/<version>/), unpacked from the
+    archives once, in the cache: under a name made of the archives' own, so that a package
+    changed is a new folder; written aside then renamed, never seen half unpacked."""
+    archives = sorted(ARCHIVES.glob("*.tar.gz"))
+    key = hashlib.sha256("\n".join(a.name for a in archives).encode()).hexdigest()[:12]
+    folder = files.cache_dir(f"typst-{key}")
+    if folder.is_dir():
+        return folder
+    folder.parent.mkdir(parents=True, exist_ok=True)
+    aside = Path(tempfile.mkdtemp(prefix="typst-", dir=folder.parent))
+    try:
+        for archive in archives:
+            name, version = archive.name.removesuffix(".tar.gz").rsplit("-", 1)
+            with tarfile.open(archive, mode="r:gz") as tar:
+                tar.extractall(aside / "preview" / name / version, filter="data")
+        os.replace(aside, folder)
+    except OSError:
+        if not folder.is_dir():  # not another process's, unpacked meanwhile
+            raise
+    finally:
+        shutil.rmtree(aside, ignore_errors=True)
+    return folder
+
+
 def compile_svg(family: str, body: str) -> str:
     """The figure's SVG, black and grey; Unusable when Typst refuses it (its message) or
     takes too long."""
@@ -153,7 +185,7 @@ def compile_svg(family: str, body: str) -> str:
         path.write_text(document, encoding="utf-8")
         try:
             done = subprocess.run(
-                [sys.executable, "-c", _COMPILE.format(memory=MEMORY), str(path), folder, str(PACKAGES), str(FONTS)],
+                [sys.executable, "-c", _COMPILE.format(memory=MEMORY), str(path), folder, str(packages()), str(FONTS)],
                 capture_output=True,
                 timeout=COMPILE_S,
             )

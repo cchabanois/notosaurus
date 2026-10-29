@@ -21,7 +21,7 @@ Run them after changing what they read; a test checks each output is up to date.
 | `relay_openapi.py` | `core/relay-api-v1.json`, the relay's OpenAPI description, from `notosaurus_core/relay_api.py` |
 | `relay_compat.py` | nothing: checks today's relay API against those of the released apps (`core/relay-api-releases/`) |
 | `note_types.py` | `static/note-types.json`, the Anki note types for the Android app, from `app/note_types/` |
-| `typst_packages.py` | `core/notosaurus_core/typst/`: the Typst packages the figures use, at fixed versions, with their licences |
+| `typst_packages.py` | `core/notosaurus_core/typst/<name>-<version>.tar.gz`: the Typst packages the figures use, one archive each as published, at fixed versions |
 | `make_icons.py` | the logo images and the icons (home screen, browser), from `assets/notosaurus-logo.png` |
 
 ## Documentation
