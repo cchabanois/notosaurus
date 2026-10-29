@@ -52,7 +52,9 @@ an interpretation; when unsure, null. Spelling is fixed as above, never a doubt.
 - Maths: write formulas, equations and symbols plain text shows badly (fractions, \
 powers, roots, indices, Greek letters, vectors…) in MathJax, as Anki displays it: \
 \\( … \\) within a sentence, \\[ … \\] for a formula on its own (e.g. \
-"\\(\\frac{a+b}{2}\\)", "\\(x^2\\)"). Keep plain text for simple things ("2 + 3 = 5").
+"\\(\\frac{a+b}{2}\\)", "\\(x^2\\)"). Keep plain text for simple things ("2 + 3 = 5"). \
+Inside a formula a bracket is written plain, an interval too: "\\(]-\\infty ; 0[\\)", \
+"\\([0 ; 1]\\)"; "\\[" and "\\]" only open and close a formula on its own.
 - Cloze (text with gaps): when the instructions ask for gaps, fill-in-the-blanks or \
 cloze cards, the front is a sentence of the lesson with the words to learn hidden in \
 Anki's cloze syntax: "{{c1::1789}}", "{{c2::la Bastille}}", e.g. "La Révolution \
