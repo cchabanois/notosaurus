@@ -214,6 +214,27 @@ def test_generate_then_edit_saves_by_itself(page):
     assert lesson(page, summary["id"])["cards"][0]["back"] == "la mamá"
 
 
+def test_one_empty_card_at_a_time(page):
+    """"＋ Add a card": a new card, its front ready to type; again while it is still empty:
+    no second one, back to it; once it says something, another one."""
+    generate_free(page, FRONT_PROMPT)
+    cards = page.locator(".flash")
+    n = cards.count()
+    add = page.get_by_role("button", name="＋ Ajouter une carte")
+    add.click()
+    sync_api.expect(cards).to_have_count(n + 1)
+    front = cards.last.locator("textarea.front")
+    sync_api.expect(front).to_be_focused()
+    page.locator(".field.deck input").click()  # elsewhere
+    add.click()
+    sync_api.expect(cards).to_have_count(n + 1)  # still the empty one
+    sync_api.expect(front).to_be_focused()
+    front.fill("el tío")
+    add.click()
+    sync_api.expect(cards).to_have_count(n + 2)
+    sync_api.expect(cards.last.locator("textarea.front")).to_be_focused()
+
+
 def test_long_back_and_info_seen_whole(page):
     """A long answer or note grows its field, as the front: nothing cut on a phone."""
     page.set_viewport_size({"width": 360, "height": 780})
