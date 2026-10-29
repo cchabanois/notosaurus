@@ -213,3 +213,26 @@ def test_metered_calls_kept_by_a_new_lesson_counted_once(client, tmp_path):
     with pytest.raises(RuntimeError):
         asyncio.run(failed())
     assert usage.totals().failed == 0.02
+
+
+def test_the_relays_models_estimated_without_openrouters_list(client, monkeypatch, tmp_path):
+    """OpenRouter's list unreachable: the relay's models still estimated (Notosaurus's own
+    prices, not a flat price), and the list not asked again at every call meanwhile."""
+    import httpx
+
+    from notosaurus_core import files
+
+    asked = []
+
+    def unreachable(request):
+        asked.append(request.url.path)
+        raise httpx.ConnectError("down")
+
+    monkeypatch.setattr(files, "_cache_root", lambda: tmp_path / "cache")  # nothing cached
+    monkeypatch.setattr(prices, "_transport", httpx.MockTransport(unreachable))
+    monkeypatch.setattr(prices, "_failed_at", 0.0)
+    text = asyncio.run(prices.estimate("gemini", "gemini-3.8-flash", 1000, 100))
+    assert text == pytest.approx(1000 * 0.825e-6 + 100 * 4.125e-6, abs=1e-6)  # (to the micro-dollar)
+    figure = asyncio.run(prices.estimate("gemini", "gemini-3.1-flash-image", 20, 1300, image_tokens=1290))
+    assert figure == pytest.approx(20 * 0.5e-6 + 10 * 3e-6 + 1290 * 60e-6, abs=1e-6)
+    assert asked == ["/api/v1/models"]  # once: the failure remembered
