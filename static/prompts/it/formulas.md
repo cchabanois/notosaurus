@@ -1,0 +1,1 @@
+Crea una carta per ogni formula della lezione. Fronte: cosa permette di calcolare la formula (o il suo nome). Retro: la formula. Info: cosa rappresenta ogni lettera. Quando la formula riguarda una figura (area del cerchio, Pitagora…), metti quella figura, con le sue lettere.

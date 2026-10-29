@@ -1,0 +1,2 @@
+Crie um cartão para cada palavra que é preciso saber escrever, tirada da lição. Frente: uma frase curta que usa a palavra, com a palavra substituída por “…” (a definição dela se a frase não bastar para adivinhá-la). Verso: a palavra sozinha, escrita exatamente como na frase. Info: uma dica de ortografia útil (acento, s/ss/ç, x/ch, família de palavras…), senão vazio.
+Sem foto: a partir do que eu escrevo aqui (uma lista de palavras ou um tema).

@@ -1,0 +1,2 @@
+Crea carte per ripassare la geometria della lezione: figure, proprietà, termini (ipotenusa, raggio, asse di un segmento…). Metti una figura esatta quando aiuta a rispondere, senza mai scriverci la risposta.
+Senza foto: a partire dall'argomento che scrivo qui.

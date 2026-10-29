@@ -1,0 +1,1 @@
+Erstelle Richtig-/Falsch-Aussagen, um die Lektion zu lernen: genauso viele falsche wie richtige, jede falsche mit genau einem präzisen Fehler (ein Datum, ein Name, eine Zahl). Info: bei einer falschen Aussage die Berichtigung.

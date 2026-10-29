@@ -1,0 +1,2 @@
+Erstelle eine Karte pro Methode oder Fertigkeit der Lektion (eine Gleichung lösen, das Komma setzen, einen Schluss schreiben …). Vorderseite: „Wie …?“. Rückseite: die Schritte, nummeriert und kurz. Info: ein kurzes Beispiel, wenn die Lektion eins gibt.
+Ohne Foto: nach dem, was ich hier schreibe.

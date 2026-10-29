@@ -1,0 +1,2 @@
+Crie cartões do Anki com o vocabulário da lição de idioma. Uma palavra ou expressão por cartão. Frente no meu idioma, verso no idioma estudado, com o artigo para os substantivos. Em “info”, indique o gênero, o plural se for irregular e um exemplo curto se a lição tiver um.
+Sem foto: a partir do que eu escrevo aqui (uma lista de palavras ou um tema).

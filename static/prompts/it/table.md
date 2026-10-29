@@ -1,0 +1,5 @@
+Crea carte per imparare a memoria la tabella della lezione (declinazione, coniugazione, verbi irregolari, unità…).
+- Se la tabella dà le forme di una stessa parola: una carta per casella, tranne quella da cui viene la parola modello (la sua forma base). Fronte: la parola modello e le intestazioni della riga e della colonna della casella (es. «dominus — genitivo plurale»). Retro: il contenuto esatto della casella. Info: la desinenza quando la tabella la mostra, altrimenti vuoto.
+- Se ogni riga è una parola diversa (verbi irregolari…): una carta per riga. Fronte: il primo elemento della riga, seguito tra parentesi dalle intestazioni delle altre colonne (es. «nuotare (forma base, passato, participio passato)»). Retro: le altre colonne in ordine, separate da virgole (es. «swim, swam, swum»).
+- Le regole e le osservazioni intorno alla tabella: qualche domanda breve, con una risposta di poche parole (va digitata).
+Senza foto: a partire da ciò che scrivo qui (una tabella da imparare, o il suo nome).

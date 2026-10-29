@@ -1,0 +1,4 @@
+Crée une carte par exemple donné dans la leçon, pour reconnaître la notion qu'il illustre (une figure de style, une classe ou une fonction grammaticale, un type de roche…).
+Recto : une courte question qui dit ce qu'il faut reconnaître (ex. « Quel type de roche ? », « Quelle est la fonction du groupe entre crochets ? »), puis, à la ligne, l'exemple, tel que la leçon le donne (avec son auteur s'il est cité), sans ce qui nomme la notion. Si seule une partie de l'exemple compte (un mot, un groupe), mets-la entre crochets. Verso : la notion seule. Info : sa définition, courte, telle que la leçon la donne.
+Seulement les exemples de la leçon : n'en invente aucun.
+Sans photo : à partir de ce que j'écris ici (des notions avec leurs exemples).

@@ -1,0 +1,1 @@
+La photo montre un schéma ou une carte avec des légendes (des noms reliés au dessin par une flèche ou un trait). Cache le texte de chaque légende derrière un numéro et crée une carte par légende. Recto : le schéma, avec la question « Qu'est-ce que (n) ? ». Verso : le texte de la légende.

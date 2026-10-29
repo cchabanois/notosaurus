@@ -1,0 +1,5 @@
+Erstelle Karten, um die Tabelle der Lektion auswendig zu lernen (Deklination, Konjugation, unregelmäßige Verben, Einheiten…).
+- Wenn die Tabelle die Formen eines Wortes zeigt: eine Karte pro Feld, außer dem, aus dem das Musterwort stammt (seine Grundform). Vorderseite: das Musterwort und die Überschriften der Zeile und Spalte des Feldes (z. B. „dominus — Genitiv Plural“). Rückseite: der genaue Inhalt des Feldes. Info: die Endung, wenn die Tabelle sie zeigt, sonst leer.
+- Wenn jede Zeile ein anderes Wort ist (unregelmäßige Verben…): eine Karte pro Zeile. Vorderseite: das erste Element der Zeile, dahinter in Klammern die Überschriften der anderen Spalten (z. B. „schwimmen (Grundform, Simple Past, Partizip Perfekt)“). Rückseite: die anderen Spalten der Reihe nach, durch Kommas getrennt (z. B. „swim, swam, swum“).
+- Die Regeln und Hinweise rund um die Tabelle: einige kurze Fragen, deren Antwort aus wenigen Wörtern besteht (sie wird eingetippt).
+Ohne Foto: nach dem, was ich hier schreibe (eine Tabelle zum Lernen oder ihr Name).

@@ -1,0 +1,2 @@
+Create conjugation cards with the verbs of the language lesson: one verb, one tense and one person per card. Front: the verb in the infinitive in the language being learned, the tense and the person (e.g. "ser — present — we"). Back: the conjugated form in the language being learned, with its pronoun. Info: the rule or the irregularity to remember, otherwise empty.
+Without a photo: from what I write here (verbs, tenses).

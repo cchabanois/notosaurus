@@ -1154,107 +1154,89 @@
   "builtinPrompts": {
     "auto": {
       "name": "Automatique (d'après la leçon)",
-      "text": "Regarde la leçon et choisis les cartes les plus utiles pour la réviser :\n- vocabulaire d'une langue : une carte par mot ou expression, recto dans ma langue, verso dans la langue étudiée ;\n- leçon de cours (histoire, sciences, géographie…) : questions / réponses courtes, ou texte à trous pour les phrases à retenir ;\n- formules : une carte par formule (recto : ce qu'elle calcule, verso : la formule) ;\n- une notion qu'une figure fait comprendre (géométrie, ou toute figure de la leçon) : des cartes avec une figure exacte quand elle aide ;\n- schéma avec des légendes : schéma à compléter, une carte par légende ;\n- dictée à préparer (un texte ou une liste de mots à savoir écrire) : seulement des cartes de dictée, pour toute la leçon ; pour chaque mot, recto : une courte phrase qui l'utilise, le mot remplacé par « … », verso : le mot seul ; pour un texte, une carte par phrase, recto : « Phrase 1 », « Phrase 2 »…, verso : la phrase exacte, avec sa ponctuation ;\n- tableau à savoir par cœur (déclinaison, conjugaison, verbes irréguliers…) : une carte par case, sauf celle d'où vient le mot modèle (sa forme de base) (recto : le mot modèle et les en-têtes de la case, verso : la case, info : la terminaison), ou une par ligne si chaque ligne est un mot différent (recto : le premier élément et, entre parenthèses, les en-têtes des autres colonnes, verso : ces colonnes séparées par des virgules) ; réponse tapée ;\n- dates et repères (une frise, des dates à retenir) : une carte par repère, recto : l'événement, verso : sa date, info : le siècle ; avec la carte inverse ;\n- propriétés et théorèmes (un encadré « Propriété », « Théorème ») : une carte nom → énoncé complet (« Si …, alors … »), une carte hypothèses → conclusion, la réciproque à part quand la leçon la donne ; info : à quoi elle sert ;\n- notions illustrées d'exemples (figures de style, classes ou fonctions grammaticales…) : une carte par exemple de la leçon, recto : une courte question qui dit ce qu'il faut reconnaître, puis l'exemple, verso : la notion, info : sa définition ; jamais d'exemple inventé ;\n- texte à apprendre par cœur (poème, récitation, tirade ; pas une dictée) : une carte par vers à partir du deuxième, recto : le titre, le numéro du vers et les deux vers d'avant, verso : le vers , le début d'une strophe dit au recto ; une carte titre → premier vers ; le texte exact ; lu à voix haute ;\nMélange si la page contient plusieurs de ces choses, sauf une dictée à préparer : elle seule alors.\nDis en une phrase ce que tu as choisi.",
       "deck": "{matière}::{titre de la leçon}",
       "voice": "auto"
     },
     "vocabulary": {
       "name": "Langue : vocabulaire",
-      "text": "Crée des cartes Anki avec le vocabulaire de la leçon de langue. Un mot ou une expression par carte. Recto dans ma langue, verso dans la langue étudiée, avec l'article pour les noms. Dans « info », indique le genre, le pluriel s'il est irrégulier, et un court exemple si la leçon en donne un.\nSans photo : à partir de ce que j'écris ici (une liste de mots, ou un thème).",
       "deck": "{langue}::Leçon {n}",
       "voice": "auto"
     },
     "sentences": {
       "name": "Langue : phrases",
-      "text": "Crée des cartes Anki avec les phrases complètes de la leçon de langue. Recto : la phrase dans ma langue. Verso : la phrase dans la langue étudiée.",
       "deck": "{langue}::Leçon {n}::Phrases",
       "voice": "auto"
     },
     "conjugation": {
       "name": "Langue : conjugaison",
       "deck": "{langue}::Conjugaison",
-      "voice": "auto",
-      "text": "Crée des cartes de conjugaison avec les verbes de la leçon de langue : un verbe, un temps et une personne par carte. Recto : le verbe à l'infinitif dans la langue étudiée, le temps et la personne (ex. « sein — présent — nous »). Verso : la forme conjuguée dans la langue étudiée, avec son pronom. Info : la règle ou l'irrégularité à retenir, sinon vide.\nSans photo : à partir de ce que j'écris ici (des verbes, des temps)."
+      "voice": "auto"
     },
     "table": {
       "name": "Tableau à apprendre",
       "deck": "{matière}::Tableaux",
       "voice": "auto",
-      "typing": true,
-      "text": "Crée des cartes pour apprendre par cœur le tableau de la leçon (déclinaison, conjugaison, verbes irréguliers, unités…).\n- Si le tableau donne les formes d'un même mot : une carte par case, sauf celle d'où vient le mot modèle (sa forme de base). Recto : le mot modèle et les en-têtes de la ligne et de la colonne de la case (ex. « dominus — génitif pluriel »). Verso : le contenu exact de la case. Info : la terminaison quand le tableau la montre, sinon vide.\n- Si chaque ligne est un mot différent (verbes irréguliers…) : une carte par ligne. Recto : le premier élément de la ligne, suivi entre parenthèses des en-têtes des autres colonnes (ex. « nager (base verbale, prétérit, participe passé) »). Verso : les autres colonnes dans l'ordre, séparées par des virgules (ex. « swim, swam, swum »).\n- Les règles et remarques autour du tableau : quelques questions courtes, dont la réponse tient en quelques mots (elle est tapée).\nSans photo : à partir de ce que j'écris ici (un tableau à apprendre, ou son nom)."
+      "typing": true
     },
     "questions": {
       "name": "Questions / réponses",
-      "text": "Crée des cartes question → réponse pour réviser le contenu de la leçon (dates, définitions, notions clés). Questions courtes et précises, réponses brèves, dans la langue de la leçon.",
       "deck": "{matière}::{titre de la leçon}"
     },
     "dates": {
       "name": "Dates et repères",
-      "deck": "{matière}::Dates",
-      "text": "Crée une carte par date ou repère à retenir de la leçon (frise, dates à connaître), avec la carte inverse.\nRecto : l'événement, en quelques mots (ex. « Sacre de Charlemagne »). Verso : sa date, telle que la leçon la donne (ex. « 25 décembre 800 »). Info : le siècle et la période, sinon vide.\nSi deux repères ont la même date, précise-la (jour, mois) pour qu'ils ne se confondent pas.\nSans photo : à partir de ce que j'écris ici (un chapitre, une période)."
+      "deck": "{matière}::Dates"
     },
     "definitions": {
       "name": "Définitions et propriétés",
       "deck": "{matière}::{titre de la leçon}",
-      "voice": "",
-      "text": "Crée des cartes pour les définitions et les propriétés de la leçon.\n- Un mot-clé à savoir définir : une carte. Recto : le mot-clé. Verso : sa définition, courte, telle que la leçon la donne. Info : un exemple court, si la leçon en donne un.\n- Une propriété ou un théorème, encadré ou non (toute phrase de la leçon qui en énonce un) : deux cartes. L'une, recto : son nom (ex. « Théorème de Pythagore ») ; verso : l'énoncé complet, toutes ses hypothèses puis sa conclusion (« Si …, alors … »). L'autre, recto : « Si … (toutes les hypothèses), alors… ? » ; verso : la conclusion. Info : à quoi elle sert (ex. « calculer une longueur »).\n- Sa réciproque, quand la leçon la donne : ses deux cartes à elle, de la même façon (ce n'est pas la carte inverse).\n- Ce que la leçon dit de ses figures-clés (une configuration, ce qu'elle montre) : une carte, avec la figure.\nSans photo : à partir de ce que j'écris ici."
+      "voice": ""
     },
     "examples": {
       "name": "Reconnaître sur un exemple",
       "deck": "{matière}::{titre de la leçon}",
-      "voice": "",
-      "text": "Crée une carte par exemple donné dans la leçon, pour reconnaître la notion qu'il illustre (une figure de style, une classe ou une fonction grammaticale, un type de roche…).\nRecto : une courte question qui dit ce qu'il faut reconnaître (ex. « Quel type de roche ? », « Quelle est la fonction du groupe entre crochets ? »), puis, à la ligne, l'exemple, tel que la leçon le donne (avec son auteur s'il est cité), sans ce qui nomme la notion. Si seule une partie de l'exemple compte (un mot, un groupe), mets-la entre crochets. Verso : la notion seule. Info : sa définition, courte, telle que la leçon la donne.\nSeulement les exemples de la leçon : n'en invente aucun.\nSans photo : à partir de ce que j'écris ici (des notions avec leurs exemples)."
+      "voice": ""
     },
     "cloze": {
       "name": "Texte à trous",
-      "text": "Crée des cartes texte à trous avec les phrases importantes de la leçon : dans chaque phrase, cache ce qu'il faut retenir (dates, noms, mots-clés), un trou par notion, trois au plus par phrase. Verso : vide.",
       "deck": "{matière}::{titre de la leçon}",
       "voice": ""
     },
     "quiz": {
       "name": "QCM",
-      "text": "Crée un QCM pour réviser la leçon : une question par notion importante (dates, définitions, notions clés), avec la bonne réponse et trois mauvaises réponses plausibles. Questions courtes, dans la langue de la leçon. Info : une courte explication de la bonne réponse, si elle aide.",
       "deck": "{matière}::{titre de la leçon}",
       "voice": ""
     },
     "true_false": {
       "name": "Vrai / faux",
-      "text": "Crée des affirmations vrai / faux pour réviser la leçon : autant de fausses que de vraies, les fausses avec une seule erreur précise (une date, un nom, un nombre). Info : pour une affirmation fausse, la correction.",
       "deck": "{matière}::{titre de la leçon}",
       "voice": ""
     },
     "methods": {
       "name": "Méthodes (étapes)",
       "deck": "{matière}::Méthodes",
-      "voice": "",
-      "text": "Crée une carte par méthode ou savoir-faire de la leçon (résoudre une équation, accorder un participe passé, rédiger une conclusion…). Recto : « Comment … ? ». Verso : les étapes, numérotées et courtes. Info : un exemple court, si la leçon en donne un.\nSans photo : à partir de ce que j'écris ici."
+      "voice": ""
     },
     "formulas": {
       "name": "Formules (maths, physique…)",
-      "text": "Crée une carte par formule de la leçon. Recto : ce que la formule permet de calculer (ou son nom). Verso : la formule. Info : ce que représente chaque lettre. Quand la formule porte sur une figure (aire du disque, Pythagore…), mets cette figure, avec ses lettres.",
       "deck": "{matière}::Formules",
       "voice": ""
     },
     "geometry": {
       "name": "Géométrie (avec figures)",
-      "text": "Crée des cartes pour réviser la géométrie de la leçon : figures, propriétés, vocabulaire (hypoténuse, rayon, médiatrice…). Mets une figure exacte quand elle aide à répondre, sans jamais y écrire la réponse.\nSans photo : à partir du thème que j'écris ici.",
       "deck": "Maths::{titre de la leçon}",
       "voice": ""
     },
     "diagram": {
       "name": "Schéma ou carte à compléter",
-      "text": "La photo montre un schéma ou une carte avec des légendes (des noms reliés au dessin par une flèche ou un trait). Cache le texte de chaque légende derrière un numéro et crée une carte par légende. Recto : le schéma, avec la question « Qu'est-ce que (n) ? ». Verso : le texte de la légende.",
       "deck": "{matière}::{titre du schéma}"
     },
     "pictures": {
       "name": "Langue : vocabulaire en images",
-      "text": "Crée des cartes avec le vocabulaire de la leçon de langue, seulement des mots qu'une image montre clairement (objets, animaux, aliments, lieux, actions visibles). Recto : l'image du mot, avec la question « Comment dit-on ? ». Verso : le mot dans la langue étudiée, avec l'article. Info : le mot dans ma langue.\nSans photo : 10 mots courants du thème que j'écris ici.",
       "deck": "{langue}::Images",
       "voice": "auto"
     },
     "blanks": {
       "name": "Mots à trous",
-      "text": "Crée une carte par mot à savoir écrire, pris dans la leçon. Recto : une courte phrase qui utilise le mot, où le mot est remplacé par « … » (la définition si la phrase ne suffit pas à le deviner). Verso : le mot seul, écrit exactement comme dans la phrase. Info : une astuce d'orthographe utile (accord, lettre muette, famille du mot), sinon vide.\nSans photo : à partir de ce que j'écris ici (une liste de mots, ou un thème).",
       "deck": "{matière}::Mots à trous",
       "voice": "auto",
       "typing": true,
@@ -1262,7 +1244,6 @@
     },
     "dictation": {
       "name": "Dictée",
-      "text": "Crée des cartes de dictée à partir de la leçon.\nPour chaque mot à savoir écrire : Recto : une courte phrase qui utilise le mot, où le mot est remplacé par « … ». Verso : le mot seul, écrit exactement comme dans la phrase.\nPour un texte à savoir écrire (la dictée de la semaine) : une carte par phrase, et pour une longue phrase, une carte par groupe de mots qui a un sens. Recto : « Phrase 1 », « Phrase 2 »… dans l'ordre du texte. Verso : la phrase ou le groupe de mots, écrit exactement comme dans le texte, avec sa ponctuation.\nInfo : une astuce d'orthographe utile (accord, lettre muette, famille du mot), sinon vide.\nSans photo : à partir de ce que j'écris ici (une liste de mots, ou un texte).",
       "deck": "{matière}::Dictée",
       "voice": "auto",
       "typing": false,
@@ -1271,7 +1252,6 @@
     },
     "dictation_gaps": {
       "name": "Dictée à trous",
-      "text": "Crée une dictée à trous à partir du texte de la leçon : garde seulement les mots les plus difficiles à écrire (lettres muettes, accords, homophones comme a/à ou ces/ses, doubles consonnes, accents, terminaisons de verbes), une dizaine au plus, dans l'ordre du texte. Une carte par mot.\nRecto : la phrase du texte où se trouve le mot, avec le mot remplacé par « … » (pour une longue phrase, seulement la partie autour du mot). Verso : le mot seul, écrit exactement comme dans le texte.\nInfo : pourquoi il s'écrit ainsi (la règle d'accord, la famille du mot…), sinon vide.\nSans photo : à partir du texte que j'écris ici.",
       "deck": "{matière}::Dictée à trous",
       "voice": "auto",
       "typing": false,
@@ -1281,8 +1261,7 @@
     "recitation": {
       "name": "Par cœur (poème, récitation)",
       "deck": "{matière}::{titre de la leçon}",
-      "voice": "auto",
-      "text": "Crée des cartes pour apprendre par cœur le texte de la leçon (poème, récitation, tirade, citation), lu à voix haute. Recopie-le exactement, sans rien corriger ni moderniser : ponctuation, majuscules, orthographe ; un mot barré sur la page n'en fait pas partie.\n- Une carte par vers, à partir du deuxième (en prose : par phrase, ou par morceau qui se dit d'une traite). Recto : le titre et le numéro du vers (ex. « Titre, v. 5 »), puis, à la ligne, les deux vers qui le précèdent, et « … ». Quand le vers ouvre une strophe (ou un paragraphe), dis-le au recto (ex. « v. 9, début de la strophe 3 »). Verso : le vers.\n- Une carte pour le début du texte. Recto : le titre et l'auteur. Verso : le premier vers.\nSans photo : à partir de ce que j'écris ici (le texte à apprendre)."
+      "voice": "auto"
     }
   },
   "licences": {

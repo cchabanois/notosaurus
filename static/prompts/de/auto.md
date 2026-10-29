@@ -1,0 +1,14 @@
+Sieh dir die Lektion an und wähle die nützlichsten Karten, um sie zu lernen:
+- Vokabeln einer Sprache: eine Karte pro Wort oder Ausdruck, vorne in meiner Sprache, hinten in der gelernten Sprache;
+- Lernstoff eines Fachs (Geschichte, Naturwissenschaften, Erdkunde …): kurze Fragen / Antworten oder Lückentexte für die Sätze, die man sich merken muss;
+- Formeln: eine Karte pro Formel (vorne: was sie berechnet, hinten: die Formel);
+- ein Begriff, den eine Figur verständlich macht (Geometrie oder jede Figur der Lektion): Karten mit einer genauen Figur, wenn sie hilft;
+- Abbildung mit Beschriftungen: Abbildung zum Beschriften, eine Karte pro Beschriftung;
+- ein Diktat zum Vorbereiten (ein Text oder eine Liste von Wörtern, die man schreiben können muss): nur Diktatkarten, für die ganze Lektion; für jedes Wort, Vorderseite: ein kurzer Satz damit, das Wort durch „…“ ersetzt, Rückseite: das Wort allein; für einen Text eine Karte pro Satz, Vorderseite: „Satz 1“, „Satz 2“ …, Rückseite: der genaue Satz mit seinen Satzzeichen;
+- eine Tabelle zum Auswendiglernen (Deklination, Konjugation, unregelmäßige Verben…): eine Karte pro Feld, außer dem, aus dem das Musterwort stammt (seine Grundform) (Vorderseite: das Musterwort und die Überschriften des Feldes, Rückseite: das Feld, Info: die Endung), oder eine pro Zeile, wenn jede Zeile ein anderes Wort ist (Vorderseite: das erste Element und in Klammern die Überschriften der anderen Spalten, Rückseite: diese Spalten durch Kommas getrennt); Antwort eintippen;
+- Daten und Ereignisse (eine Zeitleiste, wichtige Daten): eine Karte pro Ereignis, Vorderseite: das Ereignis, Rückseite: sein Datum, Info: das Jahrhundert; mit der umgekehrten Karte;
+- Eigenschaften und Sätze (ein Kasten „Eigenschaft“, „Satz“): eine Karte Name → vollständige Aussage („Wenn …, dann …“), eine Karte Voraussetzungen → Folgerung, die Umkehrung extra, wenn die Lektion sie gibt; Info: wozu er dient;
+- Begriffe mit Beispielen (Stilmittel, Wortarten oder Satzglieder…): eine Karte pro Beispiel der Lektion, Vorderseite: eine kurze Frage, was zu erkennen ist, dann das Beispiel, Rückseite: der Begriff, Info: seine Definition; nie ein erfundenes Beispiel;
+- ein Text zum Auswendiglernen (Gedicht, Vortrag, Rede; kein Diktat): eine Karte pro Vers ab dem zweiten, Vorderseite: der Titel, die Versnummer und die zwei Verse davor, Rückseite: der Vers, der Anfang einer Strophe auf der Vorderseite gesagt; eine Karte Titel → erster Vers; der genaue Text; vorgelesen;
+Misch sie, wenn die Seite mehreres davon enthält, außer bei einem Diktat zum Vorbereiten: dann nur das Diktat.
+Sag in einem Satz, was du gewählt hast.

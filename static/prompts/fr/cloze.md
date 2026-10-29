@@ -1,0 +1,1 @@
+Crée des cartes texte à trous avec les phrases importantes de la leçon : dans chaque phrase, cache ce qu'il faut retenir (dates, noms, mots-clés), un trou par notion, trois au plus par phrase. Verso : vide.

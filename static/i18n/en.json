@@ -1154,107 +1154,89 @@
   "builtinPrompts": {
     "auto": {
       "name": "Automatic (from the lesson)",
-      "text": "Look at the lesson and choose the most useful cards to review it:\n- vocabulary of a language: one card per word or phrase, front in my language, back in the language being learned;\n- a lesson (history, science, geography…): short questions / answers, or fill in the blanks for the sentences to remember;\n- formulas: one card per formula (front: what it calculates, back: the formula);\n- a notion a figure makes clear (geometry, or any figure of the lesson): cards with an exact figure when it helps;\n- a diagram with labels: a diagram to complete, one card per label;\n- a dictation to prepare (a text or a list of words to learn to spell): dictation cards only, for the whole lesson; for each word, front: a short sentence using it, the word replaced by \"…\", back: the word alone; for a text, one card per sentence, front: \"Sentence 1\", \"Sentence 2\"…, back: the exact sentence, with its punctuation;\n- a table to know by heart (declension, conjugation, irregular verbs…): one card per cell, except the one the model word comes from (its base form) (front: the model word and the cell's headings, back: the cell, info: the ending), or one per row when each row is a different word (front: the first item and, in brackets, the other columns' headings, back: those columns separated by commas); typed answer;\n- dates and landmarks (a timeline, dates to remember): one card per landmark, front: the event, back: its date, info: the century; with the reverse card;\n- properties and theorems (a “Property”, “Theorem” box): a card name → full statement (“If …, then …”), a card hypotheses → conclusion, the converse on its own when the lesson gives it; info: what it is for;\n- notions shown with examples (figures of speech, word classes or grammatical functions…): one card per example of the lesson, front: a short question saying what to recognise, then the example, back: the notion, info: its definition; never a made-up example;\n- a text to learn by heart (a poem, a recitation, a speech; not a dictation): one card per line from the second, front: the title, the line number and the two lines before, back: the line, a stanza's start said on the front; one card title → first line; the exact text; read aloud;\nMix them if the page holds several of these, but a dictation to prepare: then it alone.\nSay in one sentence what you chose.",
       "deck": "{subject}::{lesson title}",
       "voice": "auto"
     },
     "vocabulary": {
       "name": "Language: vocabulary",
-      "text": "Create Anki cards with the vocabulary of the language lesson. One word or expression per card. Front in my language, back in the language being learned, with the article for nouns. In \"info\", give the gender, the plural when it is irregular, and a short example if the lesson has one.\nWithout a photo: from what I write here (a list of words, or a topic).",
       "deck": "{language}::Lesson {n}",
       "voice": "auto"
     },
     "sentences": {
       "name": "Language: sentences",
-      "text": "Create Anki cards with the complete sentences of the language lesson. Front: the sentence in my language. Back: the sentence in the language being learned.",
       "deck": "{language}::Lesson {n}::Sentences",
       "voice": "auto"
     },
     "conjugation": {
       "name": "Language: conjugation",
       "deck": "{language}::Conjugation",
-      "voice": "auto",
-      "text": "Create conjugation cards with the verbs of the language lesson: one verb, one tense and one person per card. Front: the verb in the infinitive in the language being learned, the tense and the person (e.g. \"ser — present — we\"). Back: the conjugated form in the language being learned, with its pronoun. Info: the rule or the irregularity to remember, otherwise empty.\nWithout a photo: from what I write here (verbs, tenses)."
+      "voice": "auto"
     },
     "table": {
       "name": "Table to learn",
       "deck": "{subject}::Tables",
       "voice": "auto",
-      "typing": true,
-      "text": "Make cards to learn the lesson's table by heart (declension, conjugation, irregular verbs, units…).\n- If the table gives the forms of one word: one card per cell, except the one the model word comes from (its base form). Front: the model word and the headings of the cell's row and column (e.g. “dominus — genitive plural”). Back: the cell's exact content. Info: the ending when the table shows it, otherwise empty.\n- If each row is a different word (irregular verbs…): one card per row. Front: the row's first item, followed in brackets by the other columns' headings (e.g. “nager (base form, past simple, past participle)”). Back: the other columns in order, separated by commas (e.g. “swim, swam, swum”).\n- The rules and notes around the table: a few short questions, each answered in a few words (it is typed).\nWithout a photo: from what I write here (a table to learn, or its name)."
+      "typing": true
     },
     "questions": {
       "name": "Questions / answers",
-      "text": "Create question → answer cards to review the content of the lesson (dates, definitions, key ideas). Short, precise questions and brief answers, in the lesson's language.",
       "deck": "{subject}::{lesson title}"
     },
     "dates": {
       "name": "Dates and landmarks",
-      "deck": "{subject}::Dates",
-      "text": "Make one card per date or landmark to remember from the lesson (timeline, dates to know), with the reverse card.\nFront: the event, in a few words (e.g. “Coronation of Charlemagne”). Back: its date, as the lesson gives it (e.g. “25 December 800”). Info: the century and the period, otherwise empty.\nIf two landmarks share a date, give it more precisely (day, month) so they aren't confused.\nWithout a photo: from what I write here (a chapter, a period)."
+      "deck": "{subject}::Dates"
     },
     "definitions": {
       "name": "Definitions and properties",
       "deck": "{subject}::{lesson title}",
-      "voice": "",
-      "text": "Create cards for the lesson's definitions and properties.\n- A key word to be able to define: one card. Front: the key word. Back: its definition, short, as the lesson gives it. Info: a short example, if the lesson gives one.\n- A property or a theorem, in a box or not (any sentence of the lesson stating one): two cards. One, front: its name (e.g. “Pythagoras' theorem”); back: the full statement, all its hypotheses then its conclusion (“If …, then …”). The other, front: “If … (all the hypotheses), then…?”; back: the conclusion. Info: what it is for (e.g. “to work out a length”).\n- Its converse, when the lesson gives it: two cards of its own, the same way (it is not the reverse card).\n- What the lesson says about its key figures (a configuration, what it shows): one card, with the figure.\nWithout a photo: from what I write here."
+      "voice": ""
     },
     "examples": {
       "name": "Recognise from an example",
       "deck": "{subject}::{lesson title}",
-      "voice": "",
-      "text": "Make one card per example given in the lesson, to recognise the notion it illustrates (a figure of speech, a word class or grammatical function, a type of rock…).\nFront: a short question saying what to recognise (e.g. “What type of rock?”, “What is the function of the phrase in brackets?”), then, on a new line, the example, as the lesson gives it (with its author if one is quoted), without what names the notion. If only part of the example matters (a word, a phrase), put it in square brackets. Back: the notion alone. Info: its definition, short, as the lesson gives it.\nOnly the lesson's examples: never make one up.\nWithout a photo: from what I write here (notions with their examples)."
+      "voice": ""
     },
     "cloze": {
       "name": "Fill in the blanks",
-      "text": "Create cloze cards with the important sentences of the lesson: in each sentence, hide what is worth remembering (dates, names, key words), one gap per idea, three at most per sentence. Back: empty.",
       "deck": "{subject}::{lesson title}",
       "voice": ""
     },
     "quiz": {
       "name": "Multiple choice",
-      "text": "Create a multiple-choice quiz to review the lesson: one question per important point (dates, definitions, key ideas), with the right answer and three plausible wrong ones. Short questions, in the lesson's language. Info: a short explanation of the right answer, when it helps.",
       "deck": "{subject}::{lesson title}",
       "voice": ""
     },
     "true_false": {
       "name": "True / false",
-      "text": "Create true / false statements to review the lesson: as many false ones as true ones, each false one with a single precise mistake (a date, a name, a number). Info: for a false statement, the correction.",
       "deck": "{subject}::{lesson title}",
       "voice": ""
     },
     "methods": {
       "name": "Methods (steps)",
       "deck": "{subject}::Methods",
-      "voice": "",
-      "text": "Create one card per method or skill of the lesson (solving an equation, using the past perfect, writing a conclusion…). Front: \"How do you …?\". Back: the steps, numbered and short. Info: a short example, if the lesson gives one.\nWithout a photo: from what I write here."
+      "voice": ""
     },
     "formulas": {
       "name": "Formulas (maths, physics…)",
-      "text": "Create one card per formula of the lesson. Front: what the formula calculates (or its name). Back: the formula. Info: what each letter stands for. When the formula is about a figure (area of a circle, Pythagoras…), add that figure, with its letters.",
       "deck": "{subject}::Formulas",
       "voice": ""
     },
     "geometry": {
       "name": "Geometry (with figures)",
-      "text": "Create cards to review the geometry of the lesson: figures, properties, vocabulary (hypotenuse, radius, perpendicular bisector…). Add an exact figure when it helps to answer, never with the answer written on it.\nWithout a photo: from the topic I write here.",
       "deck": "Maths::{lesson title}",
       "voice": ""
     },
     "diagram": {
       "name": "Diagram or map to complete",
-      "text": "The photo shows a diagram or a map with labels (names linked to the drawing by an arrow or a line). Hide the text of each label behind a number and make one card per label. Front: the diagram, with the question \"What is (n)?\". Back: the text of the label.",
       "deck": "{subject}::{diagram title}"
     },
     "pictures": {
       "name": "Language: vocabulary in pictures",
-      "text": "Create cards with the vocabulary of the language lesson, only words a picture clearly shows (objects, animals, food, places, visible actions). Front: the picture of the word, with the question \"How do you say it?\". Back: the word in the language being learned, with the article. Info: the word in my language.\nWithout a photo: 10 common words of the topic I write here.",
       "deck": "{language}::Pictures",
       "voice": "auto"
     },
     "blanks": {
       "name": "Fill in the word",
-      "text": "Create one card per word to learn to spell, from the lesson. Front: a short sentence using the word, with the word replaced by \"…\" (its definition if the sentence isn't enough to guess it). Back: the word alone, written exactly as in the sentence. Info: a useful spelling tip (silent letter, word family…), otherwise empty.\nWithout a photo: from what I write here (a list of words, or a topic).",
       "deck": "{subject}::Fill in the word",
       "voice": "auto",
       "typing": true,
@@ -1262,7 +1244,6 @@
     },
     "dictation": {
       "name": "Dictation",
-      "text": "Create dictation cards from the lesson.\nFor each word to learn to spell: Front: a short sentence using the word, with the word replaced by \"…\". Back: the word alone, written exactly as in the sentence.\nFor a text to learn to write (this week's dictation): one card per sentence, and for a long sentence, one card per meaningful group of words. Front: \"Sentence 1\", \"Sentence 2\"… in the text's order. Back: the sentence or group of words, written exactly as in the text, with its punctuation.\nInfo: a useful spelling tip (silent letter, word family…), otherwise empty.\nWithout a photo: from what I write here (a list of words, or a text).",
       "deck": "{subject}::Dictation",
       "voice": "auto",
       "typing": false,
@@ -1271,7 +1252,6 @@
     },
     "dictation_gaps": {
       "name": "Gap dictation",
-      "text": "Create a gap dictation from the lesson's text: keep only the hardest words to spell (silent letters, homophones like their/there, double letters, irregular endings), ten at most, in the text's order. One card per word.\nFront: the text's sentence the word is in, with the word replaced by \"…\" (for a long sentence, only the part around the word). Back: the word alone, written exactly as in the text.\nInfo: why it's spelt that way (a rule, the word's family…), otherwise empty.\nWithout a photo: from the text I write here.",
       "deck": "{subject}::Gap dictation",
       "voice": "auto",
       "typing": false,
@@ -1281,8 +1261,7 @@
     "recitation": {
       "name": "By heart (poem, recitation)",
       "deck": "{subject}::{lesson title}",
-      "voice": "auto",
-      "text": "Make cards to learn the lesson's text by heart (a poem, a recitation, a speech, a quotation), read aloud. Copy it exactly, correcting or modernising nothing: punctuation, capitals, spelling; a word crossed out on the page isn't part of it.\n- One card per line, from the second one (in prose: per sentence, or per part said in one go). Front: the title and the line number (e.g. “Title, l. 5”), then, on a new line, the two lines before it, and “…”. When the line opens a stanza (or a paragraph), say so on the front (e.g. “l. 9, start of stanza 3”). Back: the line.\n- One card for the start of the text. Front: the title and the author. Back: the first line.\nWithout a photo: from what I write here (the text to learn)."
+      "voice": "auto"
     }
   },
   "licences": {

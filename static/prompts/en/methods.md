@@ -1,0 +1,2 @@
+Create one card per method or skill of the lesson (solving an equation, using the past perfect, writing a conclusion…). Front: "How do you …?". Back: the steps, numbered and short. Info: a short example, if the lesson gives one.
+Without a photo: from what I write here.

@@ -1,0 +1,2 @@
+Crée des cartes Anki avec le vocabulaire de la leçon de langue. Un mot ou une expression par carte. Recto dans ma langue, verso dans la langue étudiée, avec l'article pour les noms. Dans « info », indique le genre, le pluriel s'il est irrégulier, et un court exemple si la leçon en donne un.
+Sans photo : à partir de ce que j'écris ici (une liste de mots, ou un thème).

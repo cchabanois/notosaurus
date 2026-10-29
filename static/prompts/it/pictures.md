@@ -1,0 +1,2 @@
+Crea carte con il lessico della lezione di lingua, solo parole che un'immagine mostra chiaramente (oggetti, animali, cibi, luoghi, azioni visibili). Fronte: l'immagine della parola, con la domanda “Come si dice?”. Retro: la parola nella lingua studiata, con l'articolo. Info: la parola nella mia lingua.
+Senza foto: 10 parole comuni dell'argomento che scrivo qui.

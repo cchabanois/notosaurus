@@ -1,0 +1,4 @@
+Crea una tarjeta por cada ejemplo dado en la lección, para reconocer la noción que ilustra (una figura retórica, una categoría o función gramatical, un tipo de roca…).
+Anverso: una pregunta corta que diga qué hay que reconocer (p. ej. «¿Qué tipo de roca?», «¿Qué función tiene el grupo entre corchetes?»), luego, en otra línea, el ejemplo, tal como lo da la lección (con su autor si se cita), sin lo que nombra la noción. Si solo cuenta una parte del ejemplo (una palabra, un grupo), ponla entre corchetes. Reverso: solo la noción. Info: su definición, corta, tal como la da la lección.
+Solo los ejemplos de la lección: no inventes ninguno.
+Sin foto: a partir de lo que escribo aquí (nociones con sus ejemplos).

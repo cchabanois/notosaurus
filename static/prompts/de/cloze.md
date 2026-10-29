@@ -1,0 +1,1 @@
+Erstelle Lückentext-Karten mit den wichtigen Sätzen der Lektion: Verdecke in jedem Satz, was man sich merken muss (Daten, Namen, Schlüsselwörter), eine Lücke pro Begriff, höchstens drei pro Satz. Rückseite: leer.

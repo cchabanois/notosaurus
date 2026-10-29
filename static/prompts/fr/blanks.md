@@ -1,0 +1,2 @@
+Crée une carte par mot à savoir écrire, pris dans la leçon. Recto : une courte phrase qui utilise le mot, où le mot est remplacé par « … » (la définition si la phrase ne suffit pas à le deviner). Verso : le mot seul, écrit exactement comme dans la phrase. Info : une astuce d'orthographe utile (accord, lettre muette, famille du mot), sinon vide.
+Sans photo : à partir de ce que j'écris ici (une liste de mots, ou un thème).

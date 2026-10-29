@@ -1,0 +1,1 @@
+Create cloze cards with the important sentences of the lesson: in each sentence, hide what is worth remembering (dates, names, key words), one gap per idea, three at most per sentence. Back: empty.

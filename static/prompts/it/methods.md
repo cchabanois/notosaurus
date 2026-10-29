@@ -1,0 +1,2 @@
+Crea una carta per ogni metodo o procedimento della lezione (risolvere un'equazione, fare l'analisi logica, scrivere una conclusione…). Fronte: «Come si …?». Retro: i passaggi, numerati e brevi. Info: un breve esempio, se la lezione ne dà uno.
+Senza foto: a partire da ciò che scrivo qui.

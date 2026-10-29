@@ -1,0 +1,5 @@
+Crea tarjetas para aprender de memoria la tabla de la lección (declinación, conjugación, verbos irregulares, unidades…).
+- Si la tabla da las formas de una misma palabra: una tarjeta por casilla, salvo la de la que sale la palabra modelo (su forma base). Anverso: la palabra modelo y los encabezados de la fila y la columna de la casilla (p. ej. «dominus — genitivo plural»). Reverso: el contenido exacto de la casilla. Info: la terminación cuando la tabla la muestra; si no, vacío.
+- Si cada fila es una palabra distinta (verbos irregulares…): una tarjeta por fila. Anverso: el primer elemento de la fila, seguido entre paréntesis de los encabezados de las demás columnas (p. ej. «nadar (forma base, pasado simple, participio)»). Reverso: las demás columnas en orden, separadas por comas (p. ej. «swim, swam, swum»).
+- Las reglas y observaciones alrededor de la tabla: algunas preguntas cortas, cuya respuesta cabe en pocas palabras (se escribe).
+Sin foto: a partir de lo que escribo aquí (una tabla para aprender, o su nombre).

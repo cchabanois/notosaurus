@@ -1,0 +1,5 @@
+Make cards to learn the lesson's table by heart (declension, conjugation, irregular verbs, units…).
+- If the table gives the forms of one word: one card per cell, except the one the model word comes from (its base form). Front: the model word and the headings of the cell's row and column (e.g. “dominus — genitive plural”). Back: the cell's exact content. Info: the ending when the table shows it, otherwise empty.
+- If each row is a different word (irregular verbs…): one card per row. Front: the row's first item, followed in brackets by the other columns' headings (e.g. “nager (base form, past simple, past participle)”). Back: the other columns in order, separated by commas (e.g. “swim, swam, swum”).
+- The rules and notes around the table: a few short questions, each answered in a few words (it is typed).
+Without a photo: from what I write here (a table to learn, or its name).

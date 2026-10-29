@@ -1,0 +1,1 @@
+Crée des cartes question → réponse pour réviser le contenu de la leçon (dates, définitions, notions clés). Questions courtes et précises, réponses brèves, dans la langue de la leçon.

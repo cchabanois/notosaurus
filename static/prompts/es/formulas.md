@@ -1,0 +1,1 @@
+Crea una tarjeta por cada fórmula de la lección. Anverso: lo que permite calcular la fórmula (o su nombre). Reverso: la fórmula. Info: lo que representa cada letra. Cuando la fórmula trate de una figura (área del círculo, Pitágoras…), pon esa figura, con sus letras.

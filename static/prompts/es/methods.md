@@ -1,0 +1,2 @@
+Crea una tarjeta por cada método o procedimiento de la lección (resolver una ecuación, acentuar una palabra, redactar una conclusión…). Anverso: «¿Cómo se …?». Reverso: los pasos, numerados y cortos. Info: un ejemplo corto, si la lección lo da.
+Sin foto: a partir de lo que escribo aquí.

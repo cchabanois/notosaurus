@@ -1,0 +1,1 @@
+Crea carte Anki con le frasi complete della lezione di lingua. Fronte: la frase nella mia lingua. Retro: la frase nella lingua studiata.

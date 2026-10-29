@@ -1,0 +1,4 @@
+Crie um cartão por cada exemplo dado na lição, para reconhecer a noção que ilustra (uma figura de estilo, uma classe ou função gramatical, um tipo de rocha…).
+Frente: uma pergunta curta que diga o que reconhecer (ex. «Que tipo de rocha?», «Qual é a função do grupo entre colchetes?»), depois, em outra linha, o exemplo, tal como a lição o dá (com o seu autor, se for citado), sem o que nomeia a noção. Se só uma parte do exemplo conta (uma palavra, um grupo), coloque-a entre colchetes. Verso: só a noção. Info: a sua definição, curta, como a lição a dá.
+Só os exemplos da lição: não invente nenhum.
+Sem foto: a partir do que eu escrevo aqui (noções com os seus exemplos).

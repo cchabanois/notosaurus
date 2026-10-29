@@ -1,0 +1,2 @@
+Create cards with the vocabulary of the language lesson, only words a picture clearly shows (objects, animals, food, places, visible actions). Front: the picture of the word, with the question "How do you say it?". Back: the word in the language being learned, with the article. Info: the word in my language.
+Without a photo: 10 common words of the topic I write here.

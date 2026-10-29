@@ -1,0 +1,1 @@
+Crée des affirmations vrai / faux pour réviser la leçon : autant de fausses que de vraies, les fausses avec une seule erreur précise (une date, un nom, un nombre). Info : pour une affirmation fausse, la correction.

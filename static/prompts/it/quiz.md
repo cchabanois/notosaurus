@@ -1,0 +1,1 @@
+Crea un quiz a risposta multipla per ripassare la lezione: una domanda per ogni concetto importante (date, definizioni, concetti chiave), con la risposta giusta e tre risposte sbagliate plausibili. Domande brevi, nella lingua della lezione. Info: una breve spiegazione della risposta giusta, se aiuta.

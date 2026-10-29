@@ -1,0 +1,1 @@
+Crea un test de opción múltiple para repasar la lección: una pregunta por cada concepto importante (fechas, definiciones, conceptos clave), con la respuesta correcta y tres respuestas incorrectas verosímiles. Preguntas cortas, en el idioma de la lección. Info: una breve explicación de la respuesta correcta, si ayuda.

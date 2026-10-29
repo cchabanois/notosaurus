@@ -1,0 +1,1 @@
+Crea carte con testo da completare usando le frasi importanti della lezione: in ogni frase, nascondi ciò che va ricordato (date, nomi, parole chiave), uno spazio per concetto, al massimo tre per frase. Retro: vuoto.

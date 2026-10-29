@@ -1,0 +1,1 @@
+A foto mostra um esquema ou um mapa com legendas (nomes ligados ao desenho por uma seta ou um traço). Esconda o texto de cada legenda atrás de um número e crie um cartão por legenda. Frente: o esquema, com a pergunta “O que é (n)?”. Verso: o texto da legenda.

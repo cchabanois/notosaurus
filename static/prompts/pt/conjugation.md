@@ -1,0 +1,2 @@
+Crie cartões de conjugação com os verbos da lição de idioma: um verbo, um tempo e uma pessoa por cartão. Frente: o verbo no infinitivo no idioma estudado, o tempo e a pessoa (ex.: «to be — presente — nós»). Verso: a forma conjugada no idioma estudado, com o seu pronome. Info: a regra ou a irregularidade a lembrar, senão vazio.
+Sem foto: a partir do que eu escrevo aqui (verbos, tempos).

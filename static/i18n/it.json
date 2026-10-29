@@ -1154,107 +1154,89 @@
   "builtinPrompts": {
     "auto": {
       "name": "Automatiche (secondo la lezione)",
-      "text": "Guarda la lezione e scegli le carte più utili per ripassarla:\n- lessico di una lingua: una carta per parola o espressione, fronte nella mia lingua, retro nella lingua studiata;\n- lezione di una materia (storia, scienze, geografia…): domande / risposte brevi, o testo da completare per le frasi da ricordare;\n- formule: una carta per formula (fronte: cosa calcola, retro: la formula);\n- un concetto che una figura fa capire (geometria, o qualsiasi figura della lezione): carte con una figura esatta quando aiuta;\n- schema con i nomi: schema da completare, una carta per nome;\n- un dettato da preparare (un testo o un elenco di parole da saper scrivere): solo carte di dettato, per tutta la lezione; per ogni parola, fronte: una frase breve che la usa, con la parola sostituita da “…”, retro: la parola da sola; per un testo, una carta per frase, fronte: “Frase 1”, “Frase 2”…, retro: la frase esatta, con la sua punteggiatura;\n- una tabella da sapere a memoria (declinazione, coniugazione, verbi irregolari…): una carta per casella, tranne quella da cui viene la parola modello (la sua forma base) (fronte: la parola modello e le intestazioni della casella, retro: la casella, info: la desinenza), o una per riga se ogni riga è una parola diversa (fronte: il primo elemento e, tra parentesi, le intestazioni delle altre colonne, retro: quelle colonne separate da virgole); risposta da digitare;\n- date e tappe (una linea del tempo, date da ricordare): una carta per tappa, fronte: l'evento, retro: la sua data, info: il secolo; con la carta inversa;\n- proprietà e teoremi (un riquadro «Proprietà», «Teorema»): una carta nome → enunciato completo («Se …, allora …»), una carta ipotesi → tesi, l'inverso a parte quando la lezione lo dà; info: a cosa serve;\n- nozioni illustrate da esempi (figure retoriche, categorie o funzioni grammaticali…): una carta per esempio della lezione, fronte: una breve domanda che dica cosa riconoscere, poi l'esempio, retro: la nozione, info: la sua definizione; mai un esempio inventato;\n- un testo da imparare a memoria (poesia, recita, monologo; non un dettato): una carta per verso dal secondo, fronte: il titolo, il numero del verso e i due versi prima, retro: il verso, l'inizio di una strofa detto sul fronte; una carta titolo → primo verso; il testo esatto; letto ad alta voce;\nMescolale se la pagina contiene più di queste cose, tranne un dettato da preparare: allora solo il dettato.\nDi' in una frase cosa hai scelto.",
       "deck": "{materia}::{titolo della lezione}",
       "voice": "auto"
     },
     "vocabulary": {
       "name": "Lingua: lessico",
-      "text": "Crea carte Anki con il lessico della lezione di lingua. Una parola o espressione per carta. Fronte nella mia lingua, retro nella lingua studiata, con l'articolo per i nomi. In “info”, indica il genere, il plurale se è irregolare e un breve esempio se la lezione ne dà uno.\nSenza foto: a partire da ciò che scrivo qui (un elenco di parole o un argomento).",
       "deck": "{lingua}::Lezione {n}",
       "voice": "auto"
     },
     "sentences": {
       "name": "Lingua: frasi",
-      "text": "Crea carte Anki con le frasi complete della lezione di lingua. Fronte: la frase nella mia lingua. Retro: la frase nella lingua studiata.",
       "deck": "{lingua}::Lezione {n}::Frasi",
       "voice": "auto"
     },
     "conjugation": {
       "name": "Lingua: coniugazione",
       "deck": "{lingua}::Coniugazione",
-      "voice": "auto",
-      "text": "Crea carte di coniugazione con i verbi della lezione di lingua: un verbo, un tempo e una persona per carta. Fronte: il verbo all'infinito nella lingua studiata, il tempo e la persona (es. «to be — presente — noi»). Retro: la forma coniugata nella lingua studiata, con il suo pronome. Info: la regola o l'irregolarità da ricordare, altrimenti vuoto.\nSenza foto: a partire da ciò che scrivo qui (verbi, tempi)."
+      "voice": "auto"
     },
     "table": {
       "name": "Tabella da imparare",
       "deck": "{materia}::Tabelle",
       "voice": "auto",
-      "typing": true,
-      "text": "Crea carte per imparare a memoria la tabella della lezione (declinazione, coniugazione, verbi irregolari, unità…).\n- Se la tabella dà le forme di una stessa parola: una carta per casella, tranne quella da cui viene la parola modello (la sua forma base). Fronte: la parola modello e le intestazioni della riga e della colonna della casella (es. «dominus — genitivo plurale»). Retro: il contenuto esatto della casella. Info: la desinenza quando la tabella la mostra, altrimenti vuoto.\n- Se ogni riga è una parola diversa (verbi irregolari…): una carta per riga. Fronte: il primo elemento della riga, seguito tra parentesi dalle intestazioni delle altre colonne (es. «nuotare (forma base, passato, participio passato)»). Retro: le altre colonne in ordine, separate da virgole (es. «swim, swam, swum»).\n- Le regole e le osservazioni intorno alla tabella: qualche domanda breve, con una risposta di poche parole (va digitata).\nSenza foto: a partire da ciò che scrivo qui (una tabella da imparare, o il suo nome)."
+      "typing": true
     },
     "questions": {
       "name": "Domande / risposte",
-      "text": "Crea carte domanda → risposta per ripassare il contenuto della lezione (date, definizioni, concetti chiave). Domande brevi e precise, risposte concise, nella lingua della lezione.",
       "deck": "{materia}::{titolo della lezione}"
     },
     "dates": {
       "name": "Date e tappe",
-      "deck": "{materia}::Date",
-      "text": "Crea una carta per ogni data o tappa da ricordare della lezione (linea del tempo, date da sapere), con la carta inversa.\nFronte: l'evento, in poche parole (es. «Incoronazione di Carlo Magno»). Retro: la sua data, come la dà la lezione (es. «25 dicembre 800»). Info: il secolo e il periodo, altrimenti vuoto.\nSe due tappe hanno la stessa data, precisala (giorno, mese) perché non si confondano.\nSenza foto: a partire da ciò che scrivo qui (un capitolo, un periodo)."
+      "deck": "{materia}::Date"
     },
     "definitions": {
       "name": "Definizioni e proprietà",
       "deck": "{materia}::{titolo della lezione}",
-      "voice": "",
-      "text": "Crea carte per le definizioni e le proprietà della lezione.\n- Una parola chiave da saper definire: una carta. Fronte: la parola chiave. Retro: la sua definizione, breve, come la dà la lezione. Info: un breve esempio, se la lezione ne dà uno.\n- Una proprietà o un teorema, in un riquadro o no (ogni frase della lezione che ne enuncia uno): due carte. Una, fronte: il suo nome (es. «Teorema di Pitagora»); retro: l'enunciato completo, tutte le ipotesi poi la tesi («Se …, allora …»). L'altra, fronte: «Se … (tutte le ipotesi), allora…?»; retro: la tesi. Info: a cosa serve (es. «calcolare una lunghezza»).\n- Il suo inverso, quando la lezione lo dà: due carte sue, allo stesso modo (non è la carta inversa).\n- Ciò che la lezione dice delle sue figure chiave (una configurazione, ciò che mostra): una carta, con la figura.\nSenza foto: a partire da ciò che scrivo qui."
+      "voice": ""
     },
     "examples": {
       "name": "Riconoscere da un esempio",
       "deck": "{materia}::{titolo della lezione}",
-      "voice": "",
-      "text": "Crea una carta per ogni esempio dato nella lezione, per riconoscere la nozione che illustra (una figura retorica, una categoria o funzione grammaticale, un tipo di roccia…).\nFronte: una breve domanda che dica cosa riconoscere (es. «Che tipo di roccia?», «Qual è la funzione del gruppo tra parentesi?»), poi, a capo, l'esempio, come lo dà la lezione (con il suo autore se è citato), senza ciò che nomina la nozione. Se conta solo una parte dell'esempio (una parola, un gruppo), mettila tra parentesi quadre. Retro: solo la nozione. Info: la sua definizione, breve, come la dà la lezione.\nSolo gli esempi della lezione: non inventarne nessuno.\nSenza foto: a partire da ciò che scrivo qui (nozioni con i loro esempi)."
+      "voice": ""
     },
     "cloze": {
       "name": "Testo da completare",
-      "text": "Crea carte con testo da completare usando le frasi importanti della lezione: in ogni frase, nascondi ciò che va ricordato (date, nomi, parole chiave), uno spazio per concetto, al massimo tre per frase. Retro: vuoto.",
       "deck": "{materia}::{titolo della lezione}",
       "voice": ""
     },
     "quiz": {
       "name": "Quiz a risposta multipla",
-      "text": "Crea un quiz a risposta multipla per ripassare la lezione: una domanda per ogni concetto importante (date, definizioni, concetti chiave), con la risposta giusta e tre risposte sbagliate plausibili. Domande brevi, nella lingua della lezione. Info: una breve spiegazione della risposta giusta, se aiuta.",
       "deck": "{materia}::{titolo della lezione}",
       "voice": ""
     },
     "true_false": {
       "name": "Vero / falso",
-      "text": "Crea affermazioni vero / falso per ripassare la lezione: tante false quante vere, ognuna falsa con un solo errore preciso (una data, un nome, un numero). Info: per un'affermazione falsa, la correzione.",
       "deck": "{materia}::{titolo della lezione}",
       "voice": ""
     },
     "methods": {
       "name": "Metodi (passaggi)",
       "deck": "{materia}::Metodi",
-      "voice": "",
-      "text": "Crea una carta per ogni metodo o procedimento della lezione (risolvere un'equazione, fare l'analisi logica, scrivere una conclusione…). Fronte: «Come si …?». Retro: i passaggi, numerati e brevi. Info: un breve esempio, se la lezione ne dà uno.\nSenza foto: a partire da ciò che scrivo qui."
+      "voice": ""
     },
     "formulas": {
       "name": "Formule (matematica, fisica…)",
-      "text": "Crea una carta per ogni formula della lezione. Fronte: cosa permette di calcolare la formula (o il suo nome). Retro: la formula. Info: cosa rappresenta ogni lettera. Quando la formula riguarda una figura (area del cerchio, Pitagora…), metti quella figura, con le sue lettere.",
       "deck": "{materia}::Formule",
       "voice": ""
     },
     "geometry": {
       "name": "Geometria (con figure)",
-      "text": "Crea carte per ripassare la geometria della lezione: figure, proprietà, termini (ipotenusa, raggio, asse di un segmento…). Metti una figura esatta quando aiuta a rispondere, senza mai scriverci la risposta.\nSenza foto: a partire dall'argomento che scrivo qui.",
       "deck": "Matematica::{titolo della lezione}",
       "voice": ""
     },
     "diagram": {
       "name": "Schema o carta da completare",
-      "text": "La foto mostra uno schema o una carta geografica con dei nomi (collegati al disegno da una freccia o una linea). Nascondi il testo di ogni nome dietro un numero e crea una carta per nome. Fronte: lo schema, con la domanda “Che cos'è (n)?”. Retro: il testo del nome.",
       "deck": "{materia}::{titolo dello schema}"
     },
     "pictures": {
       "name": "Lingua: lessico per immagini",
-      "text": "Crea carte con il lessico della lezione di lingua, solo parole che un'immagine mostra chiaramente (oggetti, animali, cibi, luoghi, azioni visibili). Fronte: l'immagine della parola, con la domanda “Come si dice?”. Retro: la parola nella lingua studiata, con l'articolo. Info: la parola nella mia lingua.\nSenza foto: 10 parole comuni dell'argomento che scrivo qui.",
       "deck": "{lingua}::Immagini",
       "voice": "auto"
     },
     "blanks": {
       "name": "Parole da completare",
-      "text": "Crea una carta per ogni parola da saper scrivere, presa dalla lezione. Fronte: una frase breve che usa la parola, con la parola sostituita da “…” (la sua definizione se la frase non basta a indovinarla). Retro: la parola da sola, scritta esattamente come nella frase. Info: un trucco di ortografia utile (doppie, accento, h, famiglia di parole…), altrimenti vuoto.\nSenza foto: a partire da ciò che scrivo qui (un elenco di parole o un argomento).",
       "deck": "{materia}::Parole da completare",
       "voice": "auto",
       "typing": true,
@@ -1262,7 +1244,6 @@
     },
     "dictation": {
       "name": "Dettato",
-      "text": "Crea carte di dettato a partire dalla lezione.\nPer ogni parola da saper scrivere: Fronte: una frase breve che usa la parola, con la parola sostituita da “…”. Retro: la parola da sola, scritta esattamente come nella frase.\nPer un testo da saper scrivere (il dettato della settimana): una carta per frase, e per una frase lunga, una carta per gruppo di parole che ha un senso. Fronte: “Frase 1”, “Frase 2”… nell'ordine del testo. Retro: la frase o il gruppo di parole, scritto esattamente come nel testo, con la sua punteggiatura.\nInfo: un trucco di ortografia utile (doppie, accento, h, famiglia di parole…), altrimenti vuoto.\nSenza foto: a partire da ciò che scrivo qui (un elenco di parole o un testo).",
       "deck": "{materia}::Dettato",
       "voice": "auto",
       "typing": false,
@@ -1271,7 +1252,6 @@
     },
     "dictation_gaps": {
       "name": "Dettato a buchi",
-      "text": "Crea un dettato a buchi a partire dal testo della lezione: tieni solo le parole più difficili da scrivere (doppie, accenti, h, apostrofi, omofoni come hanno/anno, desinenze verbali), dieci al massimo, nell'ordine del testo. Una carta per parola.\nFronte: la frase del testo in cui si trova la parola, con la parola sostituita da “…” (per una frase lunga, solo la parte intorno alla parola). Retro: la parola da sola, scritta esattamente come nel testo.\nInfo: perché si scrive così (una regola, la famiglia di parole…), altrimenti vuoto.\nSenza foto: a partire dal testo che scrivo qui.",
       "deck": "{materia}::Dettato a buchi",
       "voice": "auto",
       "typing": false,
@@ -1281,8 +1261,7 @@
     "recitation": {
       "name": "A memoria (poesia, recita)",
       "deck": "{materia}::{titolo della lezione}",
-      "voice": "auto",
-      "text": "Crea carte per imparare a memoria il testo della lezione (una poesia, una recita, un monologo, una citazione), letto ad alta voce. Ricopialo esattamente, senza correggere né modernizzare nulla: punteggiatura, maiuscole, ortografia; una parola cancellata sulla pagina non ne fa parte.\n- Una carta per verso, dal secondo (in prosa: per frase, o per parte che si dice d'un fiato). Fronte: il titolo e il numero del verso (es. «Titolo, v. 5»), poi, a capo, i due versi che lo precedono e «…». Quando il verso apre una strofa (o un paragrafo), dillo sul fronte (es. «v. 9, inizio della strofa 3»). Retro: il verso.\n- Una carta per l'inizio del testo. Fronte: il titolo e l'autore. Retro: il primo verso.\nSenza foto: a partire da ciò che scrivo qui (il testo da imparare)."
+      "voice": "auto"
     }
   },
   "licences": {

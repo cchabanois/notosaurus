@@ -1,0 +1,1 @@
+Erstelle eine Karte pro Formel der Lektion. Vorderseite: was die Formel berechnet (oder ihr Name). Rückseite: die Formel. Info: wofür jeder Buchstabe steht. Wenn es in der Formel um eine Figur geht (Kreisfläche, Pythagoras …), füge diese Figur mit ihren Buchstaben hinzu.

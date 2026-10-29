@@ -1,0 +1,4 @@
+Make one card per example given in the lesson, to recognise the notion it illustrates (a figure of speech, a word class or grammatical function, a type of rock…).
+Front: a short question saying what to recognise (e.g. “What type of rock?”, “What is the function of the phrase in brackets?”), then, on a new line, the example, as the lesson gives it (with its author if one is quoted), without what names the notion. If only part of the example matters (a word, a phrase), put it in square brackets. Back: the notion alone. Info: its definition, short, as the lesson gives it.
+Only the lesson's examples: never make one up.
+Without a photo: from what I write here (notions with their examples).

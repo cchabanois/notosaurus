@@ -1,0 +1,2 @@
+Crée des cartes de conjugaison avec les verbes de la leçon de langue : un verbe, un temps et une personne par carte. Recto : le verbe à l'infinitif dans la langue étudiée, le temps et la personne (ex. « sein — présent — nous »). Verso : la forme conjuguée dans la langue étudiée, avec son pronom. Info : la règle ou l'irrégularité à retenir, sinon vide.
+Sans photo : à partir de ce que j'écris ici (des verbes, des temps).

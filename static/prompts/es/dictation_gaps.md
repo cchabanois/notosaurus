@@ -1,0 +1,4 @@
+Crea un dictado con huecos a partir del texto de la lección: deja solo las palabras más difíciles de escribir (tildes, b/v, g/j, h muda, ll/y, homófonos como haya/halla, terminaciones verbales), diez como máximo, en el orden del texto. Una tarjeta por palabra.
+Anverso: la frase del texto en la que está la palabra, con la palabra sustituida por «…» (para una frase larga, solo la parte alrededor de la palabra). Reverso: la palabra sola, escrita exactamente como en el texto.
+Info: por qué se escribe así (una regla, la familia de palabras…), si no, vacío.
+Sin foto: a partir del texto que escribo aquí.

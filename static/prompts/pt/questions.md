@@ -1,0 +1,1 @@
+Crie cartões pergunta → resposta para revisar o conteúdo da lição (datas, definições, conceitos-chave). Perguntas curtas e precisas, respostas breves, no idioma da lição.

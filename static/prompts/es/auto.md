@@ -1,0 +1,14 @@
+Mira la lección y elige las tarjetas más útiles para repasarla:
+- vocabulario de un idioma: una tarjeta por palabra o expresión, anverso en mi idioma, reverso en el idioma que se estudia;
+- lección de una asignatura (historia, ciencias, geografía…): preguntas / respuestas cortas, o texto con huecos para las frases que hay que recordar;
+- fórmulas: una tarjeta por fórmula (anverso: lo que calcula, reverso: la fórmula);
+- una noción que una figura hace entender (geometría, o cualquier figura de la lección): tarjetas con una figura exacta cuando ayude;
+- esquema con rótulos: esquema mudo, una tarjeta por rótulo;
+- un dictado que preparar (un texto o una lista de palabras que hay que saber escribir): solo tarjetas de dictado, para toda la lección; para cada palabra, anverso: una frase corta que la usa, con la palabra sustituida por «…», reverso: la palabra sola; para un texto, una tarjeta por frase, anverso: «Frase 1», «Frase 2»…, reverso: la frase exacta, con su puntuación;
+- una tabla para saber de memoria (declinación, conjugación, verbos irregulares…): una tarjeta por casilla, salvo la de la que sale la palabra modelo (su forma base) (anverso: la palabra modelo y los encabezados de la casilla, reverso: la casilla, info: la terminación), o una por fila si cada fila es una palabra distinta (anverso: el primer elemento y, entre paréntesis, los encabezados de las demás columnas, reverso: esas columnas separadas por comas); respuesta escrita;
+- fechas e hitos (una cronología, fechas que recordar): una tarjeta por hito, anverso: el acontecimiento, reverso: su fecha, info: el siglo; con la tarjeta inversa;
+- propiedades y teoremas (un recuadro «Propiedad», «Teorema»): una tarjeta nombre → enunciado completo («Si …, entonces …»), una tarjeta hipótesis → conclusión, el recíproco aparte cuando la lección lo da; info: para qué sirve;
+- nociones ilustradas con ejemplos (figuras retóricas, categorías o funciones gramaticales…): una tarjeta por ejemplo de la lección, anverso: una pregunta corta que diga qué hay que reconocer, luego el ejemplo, reverso: la noción, info: su definición; nunca un ejemplo inventado;
+- un texto para aprender de memoria (poema, recitación, discurso; no un dictado): una tarjeta por verso a partir del segundo, anverso: el título, el número del verso y los dos versos anteriores, reverso: el verso, el comienzo de una estrofa dicho en el anverso; una tarjeta título → primer verso; el texto exacto; leído en voz alta;
+Mézclalas si la página contiene varias de estas cosas, salvo un dictado que preparar: entonces solo el dictado.
+Di en una frase lo que has elegido.

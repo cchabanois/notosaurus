@@ -1,0 +1,1 @@
+Crie um cartão para cada fórmula da lição. Frente: o que a fórmula permite calcular (ou o nome dela). Verso: a fórmula. Info: o que cada letra representa. Quando a fórmula tratar de uma figura (área do círculo, Pitágoras…), coloque essa figura, com as letras dela.

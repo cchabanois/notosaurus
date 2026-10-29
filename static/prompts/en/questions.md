@@ -1,0 +1,1 @@
+Create question → answer cards to review the content of the lesson (dates, definitions, key ideas). Short, precise questions and brief answers, in the lesson's language.

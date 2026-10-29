@@ -1,0 +1,1 @@
+Crie um teste de múltipla escolha para revisar a lição: uma pergunta para cada ponto importante (datas, definições, conceitos-chave), com a resposta certa e três respostas erradas plausíveis. Perguntas curtas, no idioma da lição. Info: uma breve explicação da resposta certa, se ajudar.

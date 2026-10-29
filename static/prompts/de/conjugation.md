@@ -1,0 +1,2 @@
+Erstelle Konjugationskarten mit den Verben der Sprachlektion: ein Verb, eine Zeit und eine Person pro Karte. Vorderseite: das Verb im Infinitiv in der gelernten Sprache, die Zeit und die Person (z. B. „être — Präsens — wir“). Rückseite: die konjugierte Form in der gelernten Sprache, mit ihrem Pronomen. Info: die Regel oder Unregelmäßigkeit, die man sich merken muss, sonst leer.
+Ohne Foto: nach dem, was ich hier schreibe (Verben, Zeiten).

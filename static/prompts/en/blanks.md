@@ -1,0 +1,2 @@
+Create one card per word to learn to spell, from the lesson. Front: a short sentence using the word, with the word replaced by "…" (its definition if the sentence isn't enough to guess it). Back: the word alone, written exactly as in the sentence. Info: a useful spelling tip (silent letter, word family…), otherwise empty.
+Without a photo: from what I write here (a list of words, or a topic).

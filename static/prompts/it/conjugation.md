@@ -1,0 +1,2 @@
+Crea carte di coniugazione con i verbi della lezione di lingua: un verbo, un tempo e una persona per carta. Fronte: il verbo all'infinito nella lingua studiata, il tempo e la persona (es. «to be — presente — noi»). Retro: la forma coniugata nella lingua studiata, con il suo pronome. Info: la regola o l'irregolarità da ricordare, altrimenti vuoto.
+Senza foto: a partire da ciò che scrivo qui (verbi, tempi).

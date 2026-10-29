@@ -295,11 +295,10 @@ def test_a_lesson_keeps_its_speed(client, monkeypatch):
 
 
 def test_the_automatic_prompt_knows_a_dictation():
-    import json
     from pathlib import Path
 
-    for lang in Path(__file__).resolve().parent.parent.joinpath("static/i18n").glob("*.json"):
-        auto = json.loads(lang.read_text(encoding="utf-8"))["builtinPrompts"]["auto"]["text"]
+    for lang in Path(__file__).resolve().parent.parent.joinpath("static/prompts").iterdir():
+        auto = (lang / "auto.md").read_text(encoding="utf-8")
         assert auto.count("\n- ") >= 7, lang.name  # its cases, a dictation to prepare among them
 
 
@@ -312,3 +311,20 @@ def test_every_rule_file_read():
     source = (core_prompts.RULES.parent / "prompts.py").read_text(encoding="utf-8")
     read = set(re.findall(r'_rule\("(\w+)"\)', source))
     assert {p.stem for p in core_prompts.RULES.glob("*.md")} == read
+
+
+def test_every_builtin_prompt_has_its_text_in_every_language():
+    """static/prompts/<lang>/<key>.md: one per Notosaurus prompt and page language, no
+    other (a prompt gone, its files gone too); the i18n files keep their names, no text."""
+    import json
+    from pathlib import Path
+
+    static = Path(__file__).resolve().parent.parent / "static"
+    for i18n_file in (static / "i18n").glob("*.json"):
+        lang = i18n_file.stem
+        names = json.loads(i18n_file.read_text(encoding="utf-8"))["builtinPrompts"]
+        assert all("text" not in prompt for prompt in names.values()), lang
+        assert {p.stem for p in (static / "prompts" / lang).glob("*.md")} == set(prompts.BUILTIN), lang
+        assert all(
+            (static / "prompts" / lang / f"{key}.md").read_text(encoding="utf-8").strip() for key in prompts.BUILTIN
+        )

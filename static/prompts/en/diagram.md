@@ -1,0 +1,1 @@
+The photo shows a diagram or a map with labels (names linked to the drawing by an arrow or a line). Hide the text of each label behind a number and make one card per label. Front: the diagram, with the question "What is (n)?". Back: the text of the label.

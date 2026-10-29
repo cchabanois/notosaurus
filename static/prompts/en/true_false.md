@@ -1,0 +1,1 @@
+Create true / false statements to review the lesson: as many false ones as true ones, each false one with a single precise mistake (a date, a name, a number). Info: for a false statement, the correction.

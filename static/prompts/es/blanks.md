@@ -1,0 +1,2 @@
+Crea una tarjeta por cada palabra que hay que saber escribir, tomada de la lección. Anverso: una frase corta que usa la palabra, con la palabra sustituida por «…» (su definición si la frase no basta para adivinarla). Reverso: la palabra sola, escrita exactamente como en la frase. Info: un truco de ortografía útil (tilde, b/v, h muda, familia de palabras…), si no, vacío.
+Sin foto: a partir de lo que escribo aquí (una lista de palabras o un tema).

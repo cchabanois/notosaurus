@@ -1,0 +1,14 @@
+Olhe a lição e escolha os cartões mais úteis para revisá-la:
+- vocabulário de um idioma: um cartão por palavra ou expressão, frente no meu idioma, verso no idioma estudado;
+- lição de uma matéria (história, ciências, geografia…): perguntas / respostas curtas, ou lacunas para as frases que é preciso lembrar;
+- fórmulas: um cartão por fórmula (frente: o que ela calcula, verso: a fórmula);
+- uma noção que uma figura faz entender (geometria, ou qualquer figura da lição): cartões com uma figura exata quando ajudar;
+- esquema com legendas: esquema para completar, um cartão por legenda;
+- um ditado para preparar (um texto ou uma lista de palavras que é preciso saber escrever): só cartões de ditado, para toda a lição; para cada palavra, frente: uma frase curta que a usa, com a palavra substituída por “…”, verso: a palavra sozinha; para um texto, um cartão por frase, frente: “Frase 1”, “Frase 2”…, verso: a frase exata, com a sua pontuação;
+- uma tabela para saber de cor (declinação, conjugação, verbos irregulares…): um cartão por célula, exceto aquela de onde vem a palavra modelo (a sua forma base) (frente: a palavra modelo e os cabeçalhos da célula, verso: a célula, info: a terminação), ou um por linha se cada linha é uma palavra diferente (frente: o primeiro elemento e, entre parênteses, os cabeçalhos das outras colunas, verso: essas colunas separadas por vírgulas); resposta escrita;
+- datas e marcos (uma linha do tempo, datas a lembrar): um cartão por marco, frente: o acontecimento, verso: a sua data, info: o século; com o cartão inverso;
+- propriedades e teoremas (um quadro «Propriedade», «Teorema»): um cartão nome → enunciado completo («Se …, então …»), um cartão hipóteses → conclusão, o recíproco à parte quando a lição o dá; info: para que serve;
+- noções ilustradas com exemplos (figuras de estilo, classes ou funções gramaticais…): um cartão por exemplo da lição, frente: uma pergunta curta que diga o que reconhecer, depois o exemplo, verso: a noção, info: a sua definição; nunca um exemplo inventado;
+- um texto para aprender de cor (poema, recitação, discurso; não um ditado): um cartão por verso a partir do segundo, frente: o título, o número do verso e os dois versos anteriores, verso: o verso, o início de uma estrofe dito na frente; um cartão título → primeiro verso; o texto exato; lido em voz alta;
+Misture se a página tiver várias dessas coisas, exceto um ditado para preparar: então só o ditado.
+Diga em uma frase o que você escolheu.
