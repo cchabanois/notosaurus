@@ -301,3 +301,14 @@ def test_the_automatic_prompt_knows_a_dictation():
     for lang in Path(__file__).resolve().parent.parent.joinpath("static/i18n").glob("*.json"):
         auto = json.loads(lang.read_text(encoding="utf-8"))["builtinPrompts"]["auto"]["text"]
         assert auto.count("\n- ") >= 7, lang.name  # its cases, a dictation to prepare among them
+
+
+def test_every_rule_file_read():
+    """Each file of rules/ is a rule read by prompts.py (none left behind when one goes)."""
+    import re
+
+    from notosaurus_core import prompts as core_prompts
+
+    source = (core_prompts.RULES.parent / "prompts.py").read_text(encoding="utf-8")
+    read = set(re.findall(r'_rule\("(\w+)"\)', source))
+    assert {p.stem for p in core_prompts.RULES.glob("*.md")} == read
