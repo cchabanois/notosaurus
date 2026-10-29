@@ -55,8 +55,8 @@
     },
     "hide": {
       "title": "Ocultar o que a IA não deve ver",
-      "hint": "Com o dedo, pinta de preto um nome, uma escola, tudo o que é pessoal. Só a foto tapada é guardada e enviada.",
-      "pdf": "Numa página de PDF, o texto dela não é enviado então: a IA lê a página como uma imagem.",
+      "hint": "Com o dedo, pinte de preto um nome, uma escola, tudo o que é pessoal. Só a foto tapada é salva e enviada.",
+      "pdf": "Em uma página de PDF, o texto dela não é enviado então: a IA lê a página como uma imagem.",
       "paint": "Tapar",
       "erase": "Destapar",
       "clear": "Destapar tudo",
@@ -93,8 +93,8 @@
       },
       "completeHint": "(os cartões já feitos ficam)",
       "completed": {
-        "one": "➕ {count} cartão adicionado das novas páginas: verifica-o.",
-        "other": "➕ {count} cartões adicionados das novas páginas: verifica-os."
+        "one": "➕ {count} cartão adicionado das novas páginas: confira-o.",
+        "other": "➕ {count} cartões adicionados das novas páginas: confira-os."
       },
       "completedNone": "Nada de novo nestas páginas: nenhum cartão adicionado.",
       "regenerate": "✨ Gerar de novo",
@@ -146,7 +146,7 @@
         "dictation": "🎧 Com um ditado",
         "dictationOnly": "🎧 Só ditado"
       },
-      "optionsChange": "Para mudar: diga-o na correção («num só sentido», «sem escrever a resposta»).",
+      "optionsChange": "Para mudar: diga isso na correção («num sentido só», «sem digitar a resposta»).",
       "voiceIncluded": "🔊 Voz <code>{voice}</code>, incluída no baralho.",
       "voiceDevice": "🔊 Lido em voz alta pelo aparelho em <code>{voice}</code>.",
       "badgeNew": "novo",
@@ -279,17 +279,17 @@
     "welcome": {
       "title": "Antes de começar",
       "parentTitle": "O Notosaurus é uma ferramenta para pais.",
-      "parent": "É preciso ser adulto para o usar: és tu que preparas os cartões, o teu filho revê-os no Anki.",
-      "aiTitle": "Usa a IA Gemini da Google",
-      "ai": "para ler as fotos e fazer os cartões. As fotos, instruções e ditados passam pelo serviço Notosaurus o tempo de fazer os cartões, sem lá ficarem guardados, e são tratados na União Europeia.",
-      "onPhone": "As tuas lições ficam no teu telemóvel.",
-      "google": "A Google pode guardar o que recebe até 90 dias para detetar abusos, sem o usar para treinar a sua IA.",
-      "guardTitle": "A IA tem salvaguardas adaptadas aos alunos,",
-      "guard": "mas pode enganar-se: verifica os cartões antes de os dares ao teu filho.",
+      "parent": "É preciso ser adulto para usá-lo: é você quem prepara os cartões, seu filho os revisa no Anki.",
+      "aiTitle": "Usa a IA Gemini do Google",
+      "ai": "para ler as fotos e fazer os cartões. As fotos, instruções e ditados passam pelo serviço Notosaurus enquanto os cartões são feitos, sem ficarem guardados lá, e são processados na União Europeia.",
+      "onPhone": "Suas lições ficam no seu celular.",
+      "google": "O Google pode guardar o que recebe por até 90 dias para detectar abusos, sem usar isso para treinar a IA dele.",
+      "guardTitle": "A IA tem proteções adequadas para alunos,",
+      "guard": "mas pode errar: confira os cartões antes de dá-los ao seu filho.",
       "nameTitle": "Uma página de caderno mostra muitas vezes o nome da criança:",
-      "name": "esconde-o com 🖍️ antes de enviar.",
+      "name": "oculte-o com 🖍️ antes de enviar.",
       "trialTitle": "A primeira lição inicia um teste grátis,",
-      "trial": "sem cartão, uma vez por telemóvel (o Google verifica que é um telemóvel real, a app reconhece este por uma impressão digital).",
+      "trial": "sem cartão, uma vez por celular (o Google verifica que é um celular de verdade, o app reconhece este por uma impressão digital).",
       "policy": "Política de privacidade",
       "agree": "Sou pai ou mãe (um adulto) e aceito a política de privacidade.",
       "accept": "Aceitar"
@@ -323,7 +323,7 @@
       "deleteBoth": "Excluir a lição e os {count} cartões",
       "deletedInAnki": "🗑 {count} cartões excluídos do Anki.",
       "deletedNoSync": "Cartões excluídos do Anki, mas sem sincronização com o AnkiWeb ({reason}).",
-      "cardNotFound": "Esta carta já não está na lição."
+      "cardNotFound": "Este cartão não está mais na lição."
     },
     "picker": {
       "title": "Instruções",
@@ -390,20 +390,20 @@
       "toDrawNo": "Não, obrigado",
       "costUsd": "Custo: cerca de US$ {amount}.",
       "costCredits": "Custo: cerca de {count} créditos.",
-      "drawingFigure": "📐 A desenhar a figura…",
+      "drawingFigure": "📐 Desenhando a figura…",
       "about": "cerca de {seconds} s",
       "steps": {
         "waiting": "⏳ Em espera…",
-        "deciding": "💭 A escolher uma imagem ou uma figura…",
-        "drawingFigure": "📐 A desenhar a figura…",
-        "checking": "🔎 A verificar a figura…",
+        "deciding": "💭 Escolhendo uma imagem ou uma figura…",
+        "drawingFigure": "📐 Desenhando a figura…",
+        "checking": "🔎 Verificando a figura…",
         "redrawing": "📐 Primeira versão imperfeita: novo desenho, mais cuidado…",
         "searching": "🔎 À procura de uma imagem livre…",
-        "drawing": "🎨 A desenhar a imagem…",
-        "lesson": "📖 A procurar um desenho na lição…"
+        "drawing": "🎨 Desenhando a imagem…",
+        "lesson": "📖 Procurando um desenho na lição…"
       },
       "check": "🔍 Verificar a figura",
-      "checking": "🔍 A verificar…",
+      "checking": "🔍 Verificando…",
       "checkOk": "✓ A figura parece correta.",
       "checkProblem": "A verificação indica:",
       "redraw": "📐 Redesenhar",
@@ -476,21 +476,21 @@
       "doneElsewhere": "Copiada para {name}: está nas suas lições."
     },
     "report": {
-      "button": "Denunciar",
-      "title": "Denunciar um conteúdo",
-      "why": "Porquê?",
+      "button": "Relatar",
+      "title": "Relatar um conteúdo",
+      "why": "Por quê?",
       "reasons": {
         "offensive": "Chocante ou inapropriado",
         "wrong": "Errado",
         "other": "Outro"
       },
       "comment": "Comentário (opcional)",
-      "sent": "O que será enviado à Notosaurus (nem as fotos da lição, nem o nome da criança):",
+      "sent": "O que será enviado ao Notosaurus (nem as fotos da lição, nem o nome da criança):",
       "withPicture": "A imagem também é enviada.",
       "send": "Enviar",
-      "thanks": "Obrigado, foi enviado. Lemos cada denúncia para melhorar a Notosaurus.",
+      "thanks": "Obrigado, foi enviado. Lemos cada relato para melhorar o Notosaurus.",
       "drop": {
-        "card": "Eliminar o cartão",
+        "card": "Excluir o cartão",
         "picture": "Retirar a imagem"
       }
     },
@@ -499,7 +499,7 @@
       "buttonIn": "📌 {names}",
       "title": "Provas a preparar",
       "titleFor": "Uma prova para esta lição",
-      "hint": "Uma prova reúne lições, inteiras ou algumas das suas cartas, sob uma etiqueta no Anki: revisadas juntas com o estudo personalizado do Anki e depois de volta aos seus baralhos.",
+      "hint": "Uma prova reúne lições, inteiras ou alguns dos seus cartões, sob uma etiqueta no Anki: revisadas juntas com o estudo personalizado do Anki e depois de volta aos seus baralhos.",
       "none": "Nenhuma prova prevista.",
       "noLessons": "Ainda não há lições nesta prova.",
       "new": "+ Nova prova",
@@ -515,14 +515,14 @@
       "create": "Criar",
       "add": "Adicionar",
       "inWhole": "✓ Lição inteira",
-      "inSome": "✓ {count} cartas",
+      "inSome": "✓ {count} cartões",
       "remove": "Retirar",
-      "pickCards": "Escolher as cartas",
-      "openLesson": "Abrir e escolher as cartas",
+      "pickCards": "Escolher os cartões",
+      "openLesson": "Abrir e escolher os cartões",
       "back": "‹ Provas",
       "whole": "lição inteira",
-      "some": "{count} cartas",
-      "inAnki": "{sent} de {total} cartas no Anki",
+      "some": "{count} cartões",
+      "inAnki": "{sent} de {total} cartões no Anki",
       "notSent": "Ainda não está no Anki: a etiqueta virá com a lição ao enviar.",
       "send": "📥 Enviar ao Anki",
       "sendAll": "📥 Enviar tudo ao Anki ({count} lições)",
@@ -530,11 +530,11 @@
       "tag": "Etiqueta",
       "ankiClosed": "O Anki está fechado: a etiqueta será posta no próximo envio.",
       "delete": "Excluir a prova",
-      "confirmDelete": "Excluir “{name}”? As cartas ficam no Anki, sem a sua etiqueta.",
+      "confirmDelete": "Excluir “{name}”? Os cartões ficam no Anki, sem a sua etiqueta.",
       "past": "Passada",
-      "picked": "{count} cartas para {name}.",
+      "picked": "{count} cartões para {name}.",
       "pick": {
-        "bar": "{count} cartas para {name}",
+        "bar": "{count} cartões para {name}",
         "all": "Todas",
         "done": "Concluir",
         "card": "Na prova"
@@ -544,21 +544,21 @@
         "titleDesktop": "Revisá-la no Anki",
         "step1": "Abra o baralho <strong>{deck}</strong>",
         "step2desktop": "Clique em <strong>Estudo personalizado</strong> no fim da tela do baralho",
-        "step3": "Escolha <strong>Estudar por estado do cartão ou etiqueta</strong> e depois <strong>Todas as cartas</strong>",
+        "step3": "Escolha <strong>Estudar pelo status do cartão ou etiqueta</strong> e depois <strong>Todos os cartões em ordem aleatória (não reagendar)</strong>",
         "step4": "Marque a etiqueta <strong>{tag}</strong> e confirme",
-        "after": "O Anki cria um baralho “Sessão de estudo personalizado” com estas cartas; ao terminar, elas voltam aos seus baralhos.",
+        "after": "O Anki cria um baralho “Sessão de Estudo Personalizado” com estes cartões; ao terminar, eles voltam aos seus baralhos.",
         "afterAndroid": "O AnkiDroid cria um baralho filtrado com estes cartões; no fim, voltam aos seus baralhos.",
-        "noDeck": "As lições estão em baralhos diferentes. No Anki: <strong>Criar baralho filtrado</strong>, e cole esta busca:",
+        "noDeck": "As lições estão em baralhos diferentes. No Anki: <strong>Ferramentas → Criar Baralho Filtrado</strong>, e cole esta busca:",
         "copy": "Copiar",
         "copied": "Copiado",
         "droid1": "Abra os cartões da prova no AnkiDroid",
         "droidOpen": "Abrir no AnkiDroid",
-        "droid2": "Toque em <strong>⋮</strong> e depois em <strong>Criar baralho filtrado</strong>, mesmo que a lista esteja vazia",
-        "droid3": "Toque em <strong>Gerar</strong> (mais de {limit} cartões: aumente antes <strong>Limitar a</strong>)"
+        "droid2": "Toque em <strong>⋮</strong> e depois em <strong>Criar baralho com filtros</strong>, mesmo que a lista esteja vazia",
+        "droid3": "Toque em <strong>Criar</strong> (mais de {limit} cartões: aumente antes <strong>Limitar a</strong>)"
       },
       "reviewNow": "Revisar agora no Anki",
       "reviewing": "Criando o baralho…",
-      "reviewed": "{count} cartas no baralho “{deck}”, aberto no Anki. Depois de revisadas, voltam aos seus baralhos.",
+      "reviewed": "{count} cartões no baralho “{deck}”, aberto no Anki. Depois de revisados, voltam aos seus baralhos.",
       "filteredDeck": "Prova: {name}",
       "manual": "Ou à mão, no Anki ou no AnkiDroid:"
     }
@@ -639,13 +639,13 @@
     },
     "voice": {
       "title": "Vozes dos cartões",
-      "rate": "Abrandar as línguas estrangeiras e os ditados",
+      "rate": "Deixar mais lentos os idiomas estrangeiros e os ditados",
       "rateHint": "O resto é lido à velocidade normal. Uma instrução pode dizê-lo: «leitura lenta», «velocidade normal».",
       "slow": "Muito (−25%)",
       "slower": "Um pouco (−10%)",
       "normal": "Não",
       "byLanguage": "Voz por língua",
-      "byLanguageHint": "Sem escolha, a voz habitual da língua (espanhol: Elvira). A língua do verso, a IA encontra-a na lição.",
+      "byLanguageHint": "Sem escolha, a voz habitual do idioma (espanhol: Elvira). O idioma do verso, a IA o encontra na lição.",
       "add": "+ Escolher a voz de uma língua…",
       "listen": "Ouvir",
       "female": "mulher",
@@ -744,7 +744,7 @@
       "general": "Para todas as crianças",
       "generalPlaceholder": "por ex. inglês americano; sempre o artigo com os substantivos",
       "children": "As instruções de cada criança estão na sua ficha: 🧒 na página principal.",
-      "funFacts": "💡 «Sabias que…?» nos cartões",
+      "funFacts": "💡 «Você sabia?» nos cartões",
       "funFactsHint": "(uma curiosidade curta e conhecida, onde encaixa; uma instrução pode dizer «sem curiosidades»)",
       "helps": "💬 Ajudas no verso dos cartões",
       "helpsHint": "(uma explicação, um truque para lembrar, onde ajudam; ≈ +1 a 3 ¢ de dólar por lição)",
@@ -822,23 +822,23 @@
     },
     "subscription": {
       "subscribe": {
-        "monthly": "Subscrever: {price} por mês",
-        "yearly": "Subscrever: {price} por ano"
+        "monthly": "Assinar: {price} por mês",
+        "yearly": "Assinar: {price} por ano"
       },
       "trial": {
         "monthly": "Teste grátis de {days} dias, depois {price} por mês",
         "yearly": "Teste grátis de {days} dias, depois {price} por ano"
       },
-      "trialAtFirstLesson": "🎁 O teu teste grátis, sem cartão, começará com a tua primeira lição.",
-      "subscribeShort": "Subscrever",
+      "trialAtFirstLesson": "🎁 Seu teste grátis, sem cartão, vai começar com a sua primeira lição.",
+      "subscribeShort": "Assinar",
       "trialStarted": "✓ Teste grátis: {credits} créditos até {date}. Bons estudos!",
-      "restore": "Já tenho uma subscrição",
-      "manage": "Gerir a subscrição (Google Play)",
-      "until": "Subscrição paga até {date}",
+      "restore": "Já tenho uma assinatura",
+      "manage": "Gerenciar a assinatura (Google Play)",
+      "until": "Assinatura paga até {date}",
       "trialUntil": "Teste grátis até {date}",
-      "done": "✓ Subscrito: boas revisões!",
-      "pending": "⏳ Pagamento pendente: a tua subscrição ficará ativa assim que o Google Play o receber. Volta depois a abrir as Definições.",
-      "restored": "✓ A tua subscrição foi encontrada nesta conta Google."
+      "done": "✓ Assinatura feita: bons estudos!",
+      "pending": "⏳ Pagamento pendente: sua assinatura ficará ativa assim que o Google Play o receber. Abra as Configurações de novo depois.",
+      "restored": "✓ Sua assinatura foi encontrada nesta conta do Google."
     },
     "anki": {
       "title": "📥 AnkiDroid",
@@ -909,7 +909,7 @@
       "hint": "Ela lê as fotos e prepara os cartões. Você pode trocá-la depois nas configurações.",
       "recommended": "⭐ Recomendado: o melhor custo-benefício nos nossos testes (≈ 1 centavo de dólar por lição)",
       "geminiTitle": "Obter uma chave do Gemini (2 minutos)",
-      "gemini1": "Abra <a href=\"https://aistudio.google.com/apikey\" target=\"_blank\" rel=\"noopener\">aistudio.google.com/apikey</a> e entre com uma conta Google.",
+      "gemini1": "Abra <a href=\"https://aistudio.google.com/apikey\" target=\"_blank\" rel=\"noopener\">aistudio.google.com/apikey</a> e entre com uma conta do Google.",
       "gemini2": "Clique em <b>Create API key</b> (criar chave) e copie a chave.",
       "gemini3": "Cole-a abaixo e depois verifique.",
       "billing": "Sem faturamento, a chave é gratuita, mas limitada: o Notosaurus usa então o gemini-3.5-flash (o modelo mais recente não está incluído), os limites são baixos e o Google pode usar o que você envia. Para os cadernos dos seus filhos, ative o faturamento do projeto da chave no Google AI Studio: ≈ 1 centavo de dólar por lição, o modelo mais recente, e seus dados não são usados.",
@@ -1037,12 +1037,12 @@
     "relay": {
       "invalid_key": "Chave de licença desconhecida ou expirada: verifique-a nas configurações.",
       "no_credits": "Sem créditos este mês: eles voltam na próxima renovação.",
-      "subscription_ended": "A tua subscrição terminou: subscreve de novo na app para continuar.",
-      "trial_ended": "O teu teste grátis terminou: subscreve nas Definições para continuar.",
-      "payment_pending": "Pagamento pendente: o Google Play não conseguiu renovar a tua subscrição. Atualiza o método de pagamento no Google Play (Definições → Gerir a subscrição) para continuar.",
-      "invalid_purchase": "Compra não reconhecida pelo Google Play: tenta de novo ou contacta o suporte.",
-      "trial_refused": "O teste grátis só é possível com a app instalada a partir do Google Play, num telemóvel real.",
-      "trial_closed": "De momento não há novos testes grátis: podes subscrever nas Definições ou tentar de novo amanhã.",
+      "subscription_ended": "Sua assinatura terminou: assine de novo no app para continuar.",
+      "trial_ended": "Seu teste grátis terminou: assine nas Configurações para continuar.",
+      "payment_pending": "Pagamento pendente: o Google Play não conseguiu renovar sua assinatura. Atualize o método de pagamento no Google Play (Configurações → Gerenciar a assinatura) para continuar.",
+      "invalid_purchase": "Compra não reconhecida pelo Google Play: tente de novo ou entre em contato com o suporte.",
+      "trial_refused": "O teste grátis só é possível com o app instalado pelo Google Play, em um celular de verdade.",
+      "trial_closed": "No momento não há novos testes grátis: você pode assinar nas Configurações ou tentar de novo amanhã.",
       "daily_limit": "O limite de hoje foi atingido: tente de novo amanhã.",
       "busy": "Pedidos demais ao mesmo tempo: tente de novo daqui a pouco.",
       "too_large": "Fotos demais, ou uma pesada demais.",
@@ -1063,8 +1063,8 @@
       "failed": "O microfone não conseguiu gravar: tente de novo."
     },
     "subscription": {
-      "unavailable": "O Google Play não está disponível neste telemóvel.",
-      "none": "Nenhuma subscrição encontrada nesta conta Google."
+      "unavailable": "O Google Play não está disponível neste celular.",
+      "none": "Nenhuma assinatura encontrada nesta conta do Google."
     },
     "app": {
       "feature_off": "Esta função está indisponível no momento: tente de novo mais tarde."
@@ -1078,7 +1078,7 @@
       "invalid": "Esta prova não é válida: um nome com 60 caracteres no máximo, uma data, 50 lições no máximo.",
       "not_found": "Esta prova já não existe: recarregue a página.",
       "too_many": "No máximo {max} provas.",
-      "same_name": "Outra prova já tem este nome (o Anki não distingue maiúsculas): escolhe outro."
+      "same_name": "Outra prova já tem este nome (o Anki não diferencia maiúsculas): escolha outro."
     }
   },
   "demo": {
@@ -1120,7 +1120,7 @@
   "builtinPrompts": {
     "auto": {
       "name": "Automático (conforme a lição)",
-      "text": "Olhe a lição e escolha os cartões mais úteis para revisá-la:\n- vocabulário de um idioma: um cartão por palavra ou expressão, frente no meu idioma, verso no idioma estudado;\n- lição de uma matéria (história, ciências, geografia…): perguntas / respostas curtas, ou lacunas para as frases que é preciso lembrar;\n- fórmulas: um cartão por fórmula (frente: o que ela calcula, verso: a fórmula);\n- uma noção que uma figura faz entender (geometria, ou qualquer figura da lição): cartões com uma figura exata quando ajudar;\n- esquema com legendas: esquema para completar, um cartão por legenda;\n- um ditado para preparar (um texto ou uma lista de palavras que é preciso saber escrever): só cartões de ditado, para toda a lição; para cada palavra, frente: uma frase curta que a usa, com a palavra substituída por “…”, verso: a palavra sozinha; para um texto, um cartão por frase, frente: “Frase 1”, “Frase 2”…, verso: a frase exata, com a sua pontuação;\n- uma tabela para saber de cor (declinação, conjugação, verbos irregulares…): um cartão por célula, exceto aquela de onde vem a palavra modelo (a sua forma base) (frente: a palavra modelo e os cabeçalhos da célula, verso: a célula, info: a terminação), ou um por linha se cada linha é uma palavra diferente (frente: o primeiro elemento e, entre parênteses, os cabeçalhos das outras colunas, verso: essas colunas separadas por vírgulas); resposta escrita;\n- datas e marcos (um friso cronológico, datas a lembrar): um cartão por marco, frente: o acontecimento, verso: a sua data, info: o século; com o cartão inverso;\n- propriedades e teoremas (um quadro «Propriedade», «Teorema»): um cartão nome → enunciado completo («Se …, então …»), um cartão hipóteses → conclusão, o recíproco à parte quando a lição o dá; info: para que serve;\n- noções ilustradas com exemplos (figuras de estilo, classes ou funções gramaticais…): um cartão por exemplo da lição, frente: uma pergunta curta que diga o que reconhecer, depois o exemplo, verso: a noção, info: a sua definição; nunca um exemplo inventado;\n- um texto para aprender de cor (poema, recitação, discurso; não um ditado): um cartão por verso a partir do segundo, frente: o título, o número do verso e os dois versos anteriores, verso: o verso, o início de uma estrofe dito na frente; um cartão título → primeiro verso; o texto exato; lido em voz alta;\nMisture se a página tiver várias dessas coisas, exceto um ditado para preparar: então só o ditado.\nDiga em uma frase o que você escolheu.",
+      "text": "Olhe a lição e escolha os cartões mais úteis para revisá-la:\n- vocabulário de um idioma: um cartão por palavra ou expressão, frente no meu idioma, verso no idioma estudado;\n- lição de uma matéria (história, ciências, geografia…): perguntas / respostas curtas, ou lacunas para as frases que é preciso lembrar;\n- fórmulas: um cartão por fórmula (frente: o que ela calcula, verso: a fórmula);\n- uma noção que uma figura faz entender (geometria, ou qualquer figura da lição): cartões com uma figura exata quando ajudar;\n- esquema com legendas: esquema para completar, um cartão por legenda;\n- um ditado para preparar (um texto ou uma lista de palavras que é preciso saber escrever): só cartões de ditado, para toda a lição; para cada palavra, frente: uma frase curta que a usa, com a palavra substituída por “…”, verso: a palavra sozinha; para um texto, um cartão por frase, frente: “Frase 1”, “Frase 2”…, verso: a frase exata, com a sua pontuação;\n- uma tabela para saber de cor (declinação, conjugação, verbos irregulares…): um cartão por célula, exceto aquela de onde vem a palavra modelo (a sua forma base) (frente: a palavra modelo e os cabeçalhos da célula, verso: a célula, info: a terminação), ou um por linha se cada linha é uma palavra diferente (frente: o primeiro elemento e, entre parênteses, os cabeçalhos das outras colunas, verso: essas colunas separadas por vírgulas); resposta escrita;\n- datas e marcos (uma linha do tempo, datas a lembrar): um cartão por marco, frente: o acontecimento, verso: a sua data, info: o século; com o cartão inverso;\n- propriedades e teoremas (um quadro «Propriedade», «Teorema»): um cartão nome → enunciado completo («Se …, então …»), um cartão hipóteses → conclusão, o recíproco à parte quando a lição o dá; info: para que serve;\n- noções ilustradas com exemplos (figuras de estilo, classes ou funções gramaticais…): um cartão por exemplo da lição, frente: uma pergunta curta que diga o que reconhecer, depois o exemplo, verso: a noção, info: a sua definição; nunca um exemplo inventado;\n- um texto para aprender de cor (poema, recitação, discurso; não um ditado): um cartão por verso a partir do segundo, frente: o título, o número do verso e os dois versos anteriores, verso: o verso, o início de uma estrofe dito na frente; um cartão título → primeiro verso; o texto exato; lido em voz alta;\nMisture se a página tiver várias dessas coisas, exceto um ditado para preparar: então só o ditado.\nDiga em uma frase o que você escolheu.",
       "deck": "{matéria}::{título da lição}",
       "voice": "auto"
     },
@@ -1147,7 +1147,7 @@
       "deck": "{matéria}::Tabelas",
       "voice": "auto",
       "typing": true,
-      "text": "Cria cartões para aprender de cor a tabela da lição (declinação, conjugação, verbos irregulares, unidades…).\n- Se a tabela dá as formas de uma mesma palavra: um cartão por célula, exceto aquela de onde vem a palavra modelo (a sua forma base). Frente: a palavra modelo e os cabeçalhos da linha e da coluna da célula (ex. «dominus — genitivo plural»). Verso: o conteúdo exato da célula. Info: a terminação quando a tabela a mostra, senão vazio.\n- Se cada linha é uma palavra diferente (verbos irregulares…): um cartão por linha. Frente: o primeiro elemento da linha, seguido entre parênteses dos cabeçalhos das outras colunas (ex. «nadar (forma base, pretérito, particípio passado)»). Verso: as outras colunas por ordem, separadas por vírgulas (ex. «swim, swam, swum»).\n- As regras e observações à volta da tabela: algumas perguntas curtas, com resposta em poucas palavras (é escrita).\nSem foto: a partir do que eu escrevo aqui (uma tabela para aprender, ou o seu nome)."
+      "text": "Crie cartões para aprender de cor a tabela da lição (declinação, conjugação, verbos irregulares, unidades…).\n- Se a tabela dá as formas de uma mesma palavra: um cartão por célula, exceto aquela de onde vem a palavra modelo (a sua forma base). Frente: a palavra modelo e os cabeçalhos da linha e da coluna da célula (ex. «dominus — genitivo plural»). Verso: o conteúdo exato da célula. Info: a terminação quando a tabela a mostra, senão vazio.\n- Se cada linha é uma palavra diferente (verbos irregulares…): um cartão por linha. Frente: o primeiro elemento da linha, seguido entre parênteses dos cabeçalhos das outras colunas (ex. «nadar (forma base, pretérito, particípio passado)»). Verso: as outras colunas por ordem, separadas por vírgulas (ex. «swim, swam, swum»).\n- As regras e observações à volta da tabela: algumas perguntas curtas, com resposta em poucas palavras (é escrita).\nSem foto: a partir do que eu escrevo aqui (uma tabela para aprender, ou o seu nome)."
     },
     "questions": {
       "name": "Perguntas / respostas",
@@ -1157,19 +1157,19 @@
     "dates": {
       "name": "Datas e marcos",
       "deck": "{matéria}::Datas",
-      "text": "Cria um cartão por data ou marco a lembrar da lição (friso cronológico, datas a saber), com o cartão inverso.\nFrente: o acontecimento, em poucas palavras (ex. «Coroação de Carlos Magno»). Verso: a sua data, tal como a lição a dá (ex. «25 de dezembro de 800»). Info: o século e o período, senão vazio.\nSe dois marcos têm a mesma data, precisa-a (dia, mês) para que não se confundam.\nSem foto: a partir do que eu escrevo aqui (um capítulo, um período)."
+      "text": "Crie um cartão por data ou marco a lembrar da lição (linha do tempo, datas a saber), com o cartão inverso.\nFrente: o acontecimento, em poucas palavras (ex. «Coroação de Carlos Magno»). Verso: a sua data, tal como a lição a dá (ex. «25 de dezembro de 800»). Info: o século e o período, senão vazio.\nSe dois marcos têm a mesma data, precisa-a (dia, mês) para que não se confundam.\nSem foto: a partir do que eu escrevo aqui (um capítulo, um período)."
     },
     "definitions": {
       "name": "Definições e propriedades",
       "deck": "{matéria}::{título da lição}",
       "voice": "",
-      "text": "Crie cartões para as definições e as propriedades da lição.\n- Uma palavra-chave que é preciso saber definir: um cartão. Frente: a palavra-chave. Verso: a definição, curta, como a lição a dá. Info: um exemplo curto, se a lição der um.\n- Uma propriedade ou um teorema, num quadro ou não (qualquer frase da lição que enuncie um): dois cartões. Um, frente: o seu nome (ex. «Teorema de Pitágoras»); verso: o enunciado completo, todas as hipóteses e depois a conclusão («Se …, então …»). O outro, frente: «Se … (todas as hipóteses), então…?»; verso: a conclusão. Info: para que serve (ex. «calcular um comprimento»).\n- O seu recíproco, quando a lição o dá: dois cartões próprios, da mesma forma (não é o cartão inverso).\n- O que a lição diz das suas figuras-chave (uma configuração, o que mostra): um cartão, com a figura.\nSem foto: a partir do que eu escrevo aqui."
+      "text": "Crie cartões para as definições e as propriedades da lição.\n- Uma palavra-chave que é preciso saber definir: um cartão. Frente: a palavra-chave. Verso: a definição, curta, como a lição a dá. Info: um exemplo curto, se a lição der um.\n- Uma propriedade ou um teorema, em um quadro ou não (qualquer frase da lição que enuncie um): dois cartões. Um, frente: o seu nome (ex. «Teorema de Pitágoras»); verso: o enunciado completo, todas as hipóteses e depois a conclusão («Se …, então …»). O outro, frente: «Se … (todas as hipóteses), então…?»; verso: a conclusão. Info: para que serve (ex. «calcular um comprimento»).\n- O seu recíproco, quando a lição o dá: dois cartões próprios, da mesma forma (não é o cartão inverso).\n- O que a lição diz das suas figuras-chave (uma configuração, o que mostra): um cartão, com a figura.\nSem foto: a partir do que eu escrevo aqui."
     },
     "examples": {
-      "name": "Reconhecer num exemplo",
+      "name": "Reconhecer em um exemplo",
       "deck": "{matéria}::{título da lição}",
       "voice": "",
-      "text": "Crie um cartão por cada exemplo dado na lição, para reconhecer a noção que ilustra (uma figura de estilo, uma classe ou função gramatical, um tipo de rocha…).\nFrente: uma pergunta curta que diga o que reconhecer (ex. «Que tipo de rocha?», «Qual é a função do grupo entre parênteses retos?»), depois, noutra linha, o exemplo, tal como a lição o dá (com o seu autor, se for citado), sem o que nomeia a noção. Se só uma parte do exemplo conta (uma palavra, um grupo), ponha-a entre parênteses retos. Verso: só a noção. Info: a sua definição, curta, como a lição a dá.\nSó os exemplos da lição: não invente nenhum.\nSem foto: a partir do que eu escrevo aqui (noções com os seus exemplos)."
+      "text": "Crie um cartão por cada exemplo dado na lição, para reconhecer a noção que ilustra (uma figura de estilo, uma classe ou função gramatical, um tipo de rocha…).\nFrente: uma pergunta curta que diga o que reconhecer (ex. «Que tipo de rocha?», «Qual é a função do grupo entre colchetes?»), depois, em outra linha, o exemplo, tal como a lição o dá (com o seu autor, se for citado), sem o que nomeia a noção. Se só uma parte do exemplo conta (uma palavra, um grupo), coloque-a entre colchetes. Verso: só a noção. Info: a sua definição, curta, como a lição a dá.\nSó os exemplos da lição: não invente nenhum.\nSem foto: a partir do que eu escrevo aqui (noções com os seus exemplos)."
     },
     "cloze": {
       "name": "Complete as lacunas",
@@ -1248,7 +1248,7 @@
       "name": "De cor (poema, recitação)",
       "deck": "{matéria}::{título da lição}",
       "voice": "auto",
-      "text": "Crie cartões para aprender de cor o texto da lição (um poema, uma recitação, um discurso, uma citação), lido em voz alta. Copie-o exatamente, sem corrigir nem modernizar nada: pontuação, maiúsculas, ortografia; uma palavra riscada na página não faz parte dele.\n- Um cartão por verso, a partir do segundo (em prosa: por frase, ou por parte que se diz de seguida). Frente: o título e o número do verso (ex. «Título, v. 5»), depois, noutra linha, os dois versos anteriores e «…». Quando o verso abre uma estrofe (ou um parágrafo), diga-o na frente (ex. «v. 9, início da estrofe 3»). Verso: o verso.\n- Um cartão para o início do texto. Frente: o título e o autor. Verso: o primeiro verso.\nSem foto: a partir do que eu escrevo aqui (o texto a aprender)."
+      "text": "Crie cartões para aprender de cor o texto da lição (um poema, uma recitação, um discurso, uma citação), lido em voz alta. Copie-o exatamente, sem corrigir nem modernizar nada: pontuação, maiúsculas, ortografia; uma palavra riscada na página não faz parte dele.\n- Um cartão por verso, a partir do segundo (em prosa: por frase, ou por parte que se diz de uma vez). Frente: o título e o número do verso (ex. «Título, v. 5»), depois, em outra linha, os dois versos anteriores e «…». Quando o verso abre uma estrofe (ou um parágrafo), diga-o na frente (ex. «v. 9, início da estrofe 3»). Verso: o verso.\n- Um cartão para o início do texto. Frente: o título e o autor. Verso: o primeiro verso.\nSem foto: a partir do que eu escrevo aqui (o texto a aprender)."
     }
   },
   "licences": {

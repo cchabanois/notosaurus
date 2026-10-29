@@ -132,6 +132,7 @@ Each pull request adds a line under **Unreleased**. See [Releasing](CONTRIBUTING
 
 ### Fixed
 
+- Brazilian Portuguese throughout: the strings in Portugal's Portuguese ("subscrição", "Gerir", "Definições", "telemóvel", "A desenhar…", "cartas", tu) written as Brazil's (assinatura, Gerenciar, Configurações, celular, Desenhando…, cartões, você), the built-in prompts too ("friso cronológico", "parênteses retos"). ⚑ Report says "Reportar" in Spanish and "Relatar" in Portuguese ("Denunciar" sounded like a complaint). A test's guide quotes Anki's and AnkiDroid's own labels in every language ("Study by card state or tag" → "All cards in random order (don't reschedule)", "Tools → Create Filtered Deck", AnkiDroid's "Build"…), and says du / tú / tu as the rest of the page; German says du everywhere.
 - Accents written as HTML entities by the AI ("trach&eacute;e", a deck "Sch&eacute;mas") decoded: every text of the cards, the deck's name, the AI's choice and a correction's summary.
 - A list of words for things (school things, animals) gets a picture on every card, the same each time it's made, and so does each word the lesson draws a picture for: the rule said "never on every card", and the same lesson got pictures on all its cards, then on none.
 - A lesson's photo seen in full can be turned (↻) and have a name hidden (🖍️) from there too, as from its thumbnail; the photo shown follows at once.
