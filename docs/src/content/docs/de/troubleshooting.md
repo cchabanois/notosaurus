@@ -83,6 +83,13 @@ am besten: siehe [Einstellungen und KI-Dienste](../ai-services/).
 - **Karten ohne Ton**: Der Sprachdienst hat nicht geantwortet (er braucht Internet). Sende die
   Lektion später erneut: Das fehlende Audio wird ergänzt.
 
+## Klappt es immer noch nicht?
+
+Melde den Fehler auf GitHub, mit dem [Formular „Bug“](https://github.com/cchabanois/notosaurus/issues/new?template=bug.yml) (dafür braucht es ein kostenloses
+GitHub-Konto). Füge die Zeilen aus **Extras → Notosaurus → Serverprotokoll** rund um das Problem
+ein, und die Version (unten auf der Einstellungsseite). Das Issue ist öffentlich: nie das Foto eines
+Hefts oder den Namen eines Kindes.
+
 ## Die Erweiterung deinstallieren
 
 In Anki **Extras → Erweiterungen**, wähle Notosaurus, **Löschen**. Seine Komponenten und **sein

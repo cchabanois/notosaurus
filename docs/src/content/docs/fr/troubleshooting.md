@@ -82,6 +82,13 @@ voir [Réglages et services d'IA](../ai-services/).
 - **Des cartes sans son** : le service de voix n'a pas répondu (il a besoin d'Internet). Renvoyez
   la leçon plus tard : l'audio manquant est ajouté.
 
+## Ça ne marche toujours pas ?
+
+Signalez le bug sur GitHub, avec le [formulaire Bug](https://github.com/cchabanois/notosaurus/issues/new?template=bug.yml) (il faut un compte GitHub, gratuit).
+Collez les lignes de **Outils → Notosaurus → Journal du serveur** autour du problème, et la version
+(en bas de la page des réglages). L'issue est publique : jamais de photo de cahier, ni le prénom
+d'un enfant.
+
 ## Désinstaller le greffon
 
 Dans Anki, **Outils → Greffons**, sélectionnez Notosaurus, **Supprimer**. Ses composants **et son

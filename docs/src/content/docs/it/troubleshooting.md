@@ -81,6 +81,13 @@ meglio: vedi [Impostazioni e servizi di IA](../ai-services/).
 - **Carte senza audio**: il servizio vocale non ha risposto (serve Internet). Invia di nuovo la
   lezione più tardi: l'audio mancante viene aggiunto.
 
+## Ancora non funziona?
+
+Segnala il bug su GitHub, con il [modulo Bug](https://github.com/cchabanois/notosaurus/issues/new?template=bug.yml) (serve un account GitHub, gratuito). Incolla le
+righe di **Strumenti → Notosaurus → Registro del server** attorno al problema, e la versione (in
+fondo alla pagina delle impostazioni). La issue è pubblica: mai la foto di un quaderno né il nome di
+un bambino.
+
 ## Disinstallare l'add-on
 
 In Anki, **Strumenti → Add-on**, seleziona Notosaurus, **Elimina**. I suoi componenti e **la sua

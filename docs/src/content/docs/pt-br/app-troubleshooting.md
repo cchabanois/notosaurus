@@ -63,3 +63,9 @@ esperava. Cada relato é lido, e é assim que esses erros são corrigidos. Veja
   sem a senha (ou imprima-o em um novo PDF), depois adicione-o de novo.
 - **Palavras mal lidas em um PDF**: um PDF digitalizado tem só imagens, lidas como fotos. Um PDF
   feito em um computador dá à IA o texto exato.
+
+## Ainda não funciona?
+
+Relate o bug no GitHub, com o [formulário Bug](https://github.com/cchabanois/notosaurus/issues/new?template=bug.yml) (é preciso uma conta do GitHub, gratuita), com
+a versão (**Configurações → ℹ️ Sobre**). A issue é pública: nunca a foto de um caderno nem o nome de
+uma criança. Um cartão errado: **⋯ → ⚑ Relatar** nele, no app, é mais rápido.

@@ -45,5 +45,11 @@ Nell'app Android, **⋯ → ⚑ Segnala** sulla carta: invia la carta come la ve
 mai le foto della lezione né il nome del bambino. Ogni segnalazione viene letta. Vedi
 [Segnalare un problema](../review/#segnalare-un-problema).
 
+**Qualcosa non funziona: come segnalo un bug?**
+Su GitHub, con il [modulo Bug](https://github.com/cchabanois/notosaurus/issues/new?template=bug.yml) (serve un account GitHub, gratuito): chiede dove succede, la
+versione e i passaggi. La issue è pubblica: non allegare mai la foto di un quaderno né il nome di un
+bambino. Una carta sbagliata fatta dall'IA, nell'app Android: **⋯ → ⚑ Segnala** su di essa è più
+rapido.
+
 **Come si aggiorna?**
 Vedi [Novità](../whats-new/#aggiornare-notosaurus).

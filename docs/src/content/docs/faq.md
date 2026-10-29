@@ -43,5 +43,10 @@ In the Android app, **⋯ → ⚑ Report** on the card: it sends the card as you
 comment, never the lesson's photos nor the child's name. Every report is read. See
 [Reporting a problem](../review/#reporting-a-problem).
 
+**Something doesn't work: how do I report a bug?**
+On GitHub, with the [Bug form](https://github.com/cchabanois/notosaurus/issues/new?template=bug.yml) (it needs a free GitHub account): it asks where it happens,
+the version and the steps. The issue is public: never attach a photo of a notebook, nor a child's
+name. A card the AI got wrong, in the Android app: **⋯ → ⚑ Report** on it is quicker.
+
 **How is it updated?**
 See [What's new](../whats-new/#updating-notosaurus).

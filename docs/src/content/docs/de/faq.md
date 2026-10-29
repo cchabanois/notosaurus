@@ -48,5 +48,11 @@ In der Android-App **⋯ → ⚑ Melden** auf der Karte: Das sendet die Karte, s
 deinem Kommentar, nie die Fotos der Lektion oder den Namen des Kindes. Jede Meldung wird gelesen.
 Siehe [Ein Problem melden](../review/#ein-problem-melden).
 
+**Etwas funktioniert nicht: Wie melde ich einen Fehler?**
+Auf GitHub, mit dem [Formular „Bug“](https://github.com/cchabanois/notosaurus/issues/new?template=bug.yml) (dafür braucht es ein kostenloses GitHub-Konto): Es
+fragt, wo es passiert, nach der Version und den Schritten. Das Issue ist öffentlich: Häng nie das
+Foto eines Hefts oder den Namen eines Kindes an. Eine falsche Karte der KI in der Android-App:
+**⋯ → ⚑ Melden** auf ihr geht schneller.
+
 **Wie wird es aktualisiert?**
 Siehe [Neuigkeiten](../whats-new/#notosaurus-aktualisieren).

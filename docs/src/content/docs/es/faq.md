@@ -47,5 +47,11 @@ En la aplicación Android, **⋯ → ⚑ Reportar** en la tarjeta: envía la tar
 tu comentario, nunca las fotos de la lección ni el nombre del niño. Leemos cada aviso. Consulta
 [Señalar un problema](../review/#señalar-un-problema).
 
+**Algo no funciona: ¿cómo informo de un error?**
+En GitHub, con el [formulario Bug](https://github.com/cchabanois/notosaurus/issues/new?template=bug.yml) (hace falta una cuenta de GitHub, gratuita): pregunta
+dónde pasa, la versión y los pasos. La issue es pública: nunca adjuntes la foto de un cuaderno ni
+el nombre de un niño. Una tarjeta incorrecta hecha por la IA, en la aplicación Android:
+**⋯ → ⚑ Reportar** en ella es más rápido.
+
 **¿Cómo se actualiza?**
 Consulta [Novedades](../whats-new/#actualizar-notosaurus).

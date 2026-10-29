@@ -46,5 +46,11 @@ No app Android, **⋯ → ⚑ Relatar** no cartão: isso envia o cartão como vo
 comentário, nunca as fotos da lição nem o nome da criança. Cada relato é lido. Veja
 [Relatar um problema](../review/#relatar-um-problema).
 
+**Algo não funciona: como relato um bug?**
+No GitHub, com o [formulário Bug](https://github.com/cchabanois/notosaurus/issues/new?template=bug.yml) (é preciso uma conta do GitHub, gratuita): ele pergunta
+onde acontece, a versão e os passos. A issue é pública: nunca anexe a foto de um caderno nem o nome
+de uma criança. Um cartão errado feito pela IA, no app Android: **⋯ → ⚑ Relatar** nele é mais
+rápido.
+
 **Como ele é atualizado?**
 Veja [Novidades](../whats-new/#atualizar-o-notosaurus).
