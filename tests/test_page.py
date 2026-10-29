@@ -215,7 +215,7 @@ def test_generate_then_edit_saves_by_itself(page):
 
 
 def test_one_empty_card_at_a_time(page):
-    """"＋ Add a card": a new card, its front ready to type; again while it is still empty:
+    """ "＋ Add a card": a new card, its front ready to type; again while it is still empty:
     no second one, back to it; once it says something, another one."""
     generate_free(page, FRONT_PROMPT)
     cards = page.locator(".flash")
