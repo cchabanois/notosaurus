@@ -68,5 +68,16 @@
                 android:name="android.support.FILE_PROVIDER_PATHS"
                 android:resource="@xml/photo_paths" />
         </provider>
+        <!-- The lessons exported or imported from adb (AdbTransferReceiver). DUMP: a permission only
+         the shell (adb) and the system hold, so no other app can send these. -->
+        <receiver
+            android:name=".AdbTransferReceiver"
+            android:exported="true"
+            android:permission="android.permission.DUMP">
+            <intent-filter>
+                <action android:name="app.notosaurus.adb.EXPORT" />
+                <action android:name="app.notosaurus.adb.IMPORT" />
+            </intent-filter>
+        </receiver>
     </application>
 </manifest>

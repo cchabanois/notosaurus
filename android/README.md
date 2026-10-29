@@ -117,20 +117,21 @@ On GitHub: on every pull request changing `android/` or `static/` (an emulator, 
 workflow), with AnkiDroid's latest release, 2.25.0, 2.24.1 and 2.23.3, side by side.
 Without AnkiDroid the tests are skipped.
 
-### The lessons in a file, from adb (debug builds)
+### The lessons in a file, from adb
 
-A debug build exports and imports the lessons from adb, as the settings' buttons do, in the
-app's own folder adb reads (no document picker): handy to back up a test phone's lessons
-before Gradle's tests uninstall the app, or to try a computer's export.
-`DebugTransferReceiver` (`app/src/debug`: not in a release), which only the shell can send
-to (the `DUMP` permission); `-n` is needed (no implicit broadcast reaches it):
+The app exports and imports the lessons from adb, as the settings' buttons do, in the app's
+own folder adb reads (no document picker), on any build, Google Play's included: a phone's
+lessons backed up or put back from the computer, a test phone's saved before Gradle's tests
+uninstall the app, a computer's export tried. `AdbTransferReceiver`, which only the shell
+can send to (the `DUMP` permission; adb itself needs USB debugging on and the computer
+allowed); `-n` is needed (no implicit broadcast reaches it):
 
 ```sh
-adb shell am broadcast -a app.notosaurus.debug.EXPORT -n app.notosaurus/.DebugTransferReceiver
+adb shell am broadcast -a app.notosaurus.adb.EXPORT -n app.notosaurus/.AdbTransferReceiver
 adb pull /sdcard/Android/data/app.notosaurus/files/transfer/notosaurus-<date>.zip
 
 adb push export.zip /sdcard/Android/data/app.notosaurus/files/transfer/
-adb shell am broadcast -a app.notosaurus.debug.IMPORT -n app.notosaurus/.DebugTransferReceiver --es file export.zip
+adb shell am broadcast -a app.notosaurus.adb.IMPORT -n app.notosaurus/.AdbTransferReceiver --es file export.zip
 ```
 
 The broadcast's result says what was done (the file written; what was added, replaced, kept).
