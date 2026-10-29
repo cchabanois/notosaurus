@@ -73,6 +73,10 @@ Stack:
 - decks: [genanki](https://github.com/kerrickstaley/genanki), with stable GUIDs so re-importing updates cards;
 - QR codes: [segno](https://github.com/heuer/segno).
 
+Each folder has a README with its files: [`app/`](app/README.md), [`core/`](core/README.md),
+[`static/`](static/README.md), [`anki_addon/`](anki_addon/README.md), [`android/`](android/README.md),
+[`tests/`](tests/README.md), [`tools/`](tools/README.md), [`docs/`](docs/README.md).
+
 The AI and card logic is a package of its own, `core/notosaurus_core`: it never reads
 the app's settings, lessons or data folder (the AI configuration and everything else
 come in as parameters), so that other programs can use it. A test keeps it that way.
