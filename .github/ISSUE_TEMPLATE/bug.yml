@@ -1,0 +1,62 @@
+name: 🐞 Bug
+description: Something in Notosaurus doesn't work as it should.
+labels: [bug]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thank you for taking the time! Any language is fine (English, French, German, Spanish, Italian, Portuguese).
+
+        ⚠️ **This issue is public.** Never attach a photo of a notebook or a lesson, nor a child's name: describe the page instead, or black out the name first.
+
+        A card the AI got wrong, in the Android app? **⋯ → ⚑ Report** on the card is quicker, and sends what's needed without any photo.
+  - type: dropdown
+    id: where
+    attributes:
+      label: Where
+      options:
+        - Android app (on this phone)
+        - Android app (with my computer)
+        - Anki add-on, on the computer
+        - Anki add-on, in the phone's browser
+        - Standalone or Docker
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: Version
+      description: "Android app: Settings → ℹ️ About. Add-on: at the bottom of Notosaurus's settings page (Tools → Notosaurus → Settings)."
+      placeholder: "1.4.0"
+    validations:
+      required: true
+  - type: input
+    id: ai
+    attributes:
+      label: AI service and model
+      description: "On the computer: Settings → AI service and Model. In the Android app: leave empty."
+      placeholder: "Gemini, gemini-3.8-flash"
+  - type: textarea
+    id: steps
+    attributes:
+      label: What you did
+      description: The steps, one by one, so that we can do the same.
+      placeholder: |
+        1. Took a photo of a vocabulary page
+        2. Chose "Language: vocabulary"
+        3. Tapped "Add to Anki"
+    validations:
+      required: true
+  - type: textarea
+    id: what
+    attributes:
+      label: What happened, and what you expected
+      description: The message shown, word for word, if there was one. A screenshot helps (without a child's name).
+    validations:
+      required: true
+  - type: textarea
+    id: log
+    attributes:
+      label: Server log (add-on)
+      description: "With the Anki add-on: Tools → Notosaurus → Server log, the lines around the problem."
+      render: text

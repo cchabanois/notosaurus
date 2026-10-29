@@ -44,5 +44,11 @@ Dans l'application Android, **⋯ → ⚑ Signaler** sur la carte : cela envoie 
 la voyez, avec votre commentaire, jamais les photos de la leçon ni le prénom de l'enfant. Chaque
 signalement est lu. Voir [Signaler un problème](../review/#signaler-un-problème).
 
+**Quelque chose ne marche pas : comment signaler un bug ?**
+Sur GitHub, avec le [formulaire Bug](https://github.com/cchabanois/notosaurus/issues/new?template=bug.yml) (il faut un compte GitHub, gratuit) : il demande où
+cela se produit, la version et les étapes. L'issue est publique : n'y joignez jamais la photo d'un
+cahier, ni le prénom d'un enfant. Une carte fausse faite par l'IA, dans l'application Android :
+**⋯ → ⚑ Signaler** dessus est plus rapide.
+
 **Comment le mettre à jour ?**
 Voir [Nouveautés](../whats-new/#mettre-à-jour-notosaurus).

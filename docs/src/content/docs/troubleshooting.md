@@ -79,6 +79,12 @@ best: see [Settings and AI services](../ai-services/).
 - **Cards without sound**: the voice service didn't answer (it needs the Internet). Send the
   lesson again later: the missing audio is added.
 
+## Still not working?
+
+Report the bug on GitHub, with the [Bug form](https://github.com/cchabanois/notosaurus/issues/new?template=bug.yml) (a free GitHub account is needed). Paste the
+lines of **Tools → Notosaurus → Server log** around the problem, and the version (at the bottom of
+the settings page). The issue is public: never a photo of a notebook, nor a child's name.
+
 ## Uninstalling the add-on
 
 In Anki, **Tools → Add-ons**, select Notosaurus, **Delete**. Its components and **its data

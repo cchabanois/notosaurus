@@ -64,3 +64,10 @@ attendiez. Chaque signalement est lu, et c'est ainsi que ces erreurs sont corrig
   PDF), puis ajoutez-le à nouveau.
 - **Des mots mal lus dans un PDF** : un PDF scanné ne contient que des images, lues comme des
   photos. Un PDF fait sur ordinateur donne à l'IA son texte exact.
+
+## Ça ne marche toujours pas ?
+
+Signalez le bug sur GitHub, avec le [formulaire Bug](https://github.com/cchabanois/notosaurus/issues/new?template=bug.yml) (il faut un compte GitHub, gratuit),
+avec la version (**Réglages → ℹ️ À propos**). L'issue est publique : jamais de photo de cahier, ni
+le prénom d'un enfant. Une carte fausse : **⋯ → ⚑ Signaler** dessus, dans l'application, est plus
+rapide.

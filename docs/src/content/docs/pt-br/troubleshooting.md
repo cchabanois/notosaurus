@@ -81,6 +81,13 @@ com a IA (veja [Revisar os cartões](../review/)). Com letra manuscrita, o Claud
 - **Cartões sem som**: o serviço de voz não respondeu (ele precisa de internet). Envie a lição de
   novo mais tarde: o áudio que falta é acrescentado.
 
+## Ainda não funciona?
+
+Relate o bug no GitHub, com o [formulário Bug](https://github.com/cchabanois/notosaurus/issues/new?template=bug.yml) (é preciso uma conta do GitHub, gratuita).
+Cole as linhas de **Ferramentas → Notosaurus → Log do servidor** em volta do problema, e a versão
+(no fim da página de configurações). A issue é pública: nunca a foto de um caderno nem o nome de
+uma criança.
+
 ## Desinstalar o complemento
 
 No Anki, **Ferramentas → Extensões**, selecione o Notosaurus, **Excluir**. Os componentes dele e

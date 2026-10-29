@@ -63,3 +63,9 @@ aspettavi. Ogni segnalazione viene letta, ed è così che questi errori vengono 
   salvalo senza password (o stampalo in un nuovo PDF), poi aggiungilo di nuovo.
 - **Parole lette male in un PDF**: un PDF scansionato contiene solo immagini, lette come foto. Un
   PDF creato al computer dà all'IA il suo testo esatto.
+
+## Ancora non funziona?
+
+Segnala il bug su GitHub, con il [modulo Bug](https://github.com/cchabanois/notosaurus/issues/new?template=bug.yml) (serve un account GitHub, gratuito), con la
+versione (**Impostazioni → ℹ️ Informazioni**). La issue è pubblica: mai la foto di un quaderno né il
+nome di un bambino. Una carta sbagliata: **⋯ → ⚑ Segnala** su di essa, nell'app, è più rapido.

@@ -81,6 +81,13 @@ consulta [Ajustes y servicios de IA](../ai-services/).
 - **Tarjetas sin sonido**: el servicio de voz no ha respondido (necesita Internet). Vuelve a enviar
   la lección más tarde: se añade el audio que falta.
 
+## ¿Sigue sin funcionar?
+
+Informa del error en GitHub, con el [formulario Bug](https://github.com/cchabanois/notosaurus/issues/new?template=bug.yml) (hace falta una cuenta de GitHub,
+gratuita). Pega las líneas de **Herramientas → Notosaurus → Registro del servidor** alrededor del
+problema, y la versión (al final de la página de ajustes). La issue es pública: nunca la foto de un
+cuaderno ni el nombre de un niño.
+
 ## Desinstalar el complemento
 
 En Anki, **Herramientas → Complementos**, selecciona Notosaurus, **Eliminar**. Sus componentes y

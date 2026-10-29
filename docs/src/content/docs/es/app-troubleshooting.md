@@ -63,3 +63,10 @@ que esperabas. Leemos cada aviso, y así se corrigen esos errores. Consulta
   guárdalo sin su contraseña (o imprímelo en un PDF nuevo), y vuelve a añadirlo.
 - **Palabras mal leídas en un PDF**: un PDF escaneado solo contiene imágenes, leídas como fotos.
   Un PDF hecho en un ordenador da a la IA su texto exacto.
+
+## ¿Sigue sin funcionar?
+
+Informa del error en GitHub, con el [formulario Bug](https://github.com/cchabanois/notosaurus/issues/new?template=bug.yml) (hace falta una cuenta de GitHub,
+gratuita), con la versión (**Ajustes → ℹ️ Acerca de**). La issue es pública: nunca la foto de un
+cuaderno ni el nombre de un niño. Una tarjeta incorrecta: **⋯ → ⚑ Reportar** en ella, en la
+aplicación, es más rápido.

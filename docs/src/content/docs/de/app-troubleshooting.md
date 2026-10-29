@@ -65,3 +65,10 @@ erwartet hast. Jede Meldung wird gelesen, und so werden solche Fehler behoben. S
   das PDF, speichere es ohne Passwort (oder drucke es in ein neues PDF), dann füge es erneut hinzu.
 - **Falsch gelesene Wörter in einem PDF**: Ein gescanntes PDF besteht nur aus Bildern, die wie
   Fotos gelesen werden. Ein am Computer erstelltes PDF gibt der KI seinen genauen Text.
+
+## Klappt es immer noch nicht?
+
+Melde den Fehler auf GitHub, mit dem [Formular „Bug“](https://github.com/cchabanois/notosaurus/issues/new?template=bug.yml) (dafür braucht es ein kostenloses
+GitHub-Konto), mit der Version (**Einstellungen → ℹ️ Über**). Das Issue ist öffentlich: nie das
+Foto eines Hefts oder den Namen eines Kindes. Eine falsche Karte: **⋯ → ⚑ Melden** auf ihr, in der
+App, geht schneller.

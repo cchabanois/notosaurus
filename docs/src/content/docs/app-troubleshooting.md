@@ -61,3 +61,9 @@ read, and it's how such mistakes get fixed. See [Reporting a problem](../review/
   save it without its password (or print it to a new PDF), then add it again.
 - **Words misread in a PDF**: a scanned PDF is only pictures, read like photos. A PDF made on a
   computer gives the AI its exact text.
+
+## Still not working?
+
+Report the bug on GitHub, with the [Bug form](https://github.com/cchabanois/notosaurus/issues/new?template=bug.yml) (a free GitHub account is needed), with the
+version (**Settings → ℹ️ About**). The issue is public: never a photo of a notebook, nor a child's
+name. A wrong card: **⋯ → ⚑ Report** on it, in the app, is quicker.
