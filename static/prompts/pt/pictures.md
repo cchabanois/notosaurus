@@ -1,0 +1,2 @@
+Crie cartões com o vocabulário da lição de idioma, só palavras que uma imagem mostra com clareza (objetos, animais, alimentos, lugares, ações visíveis). Frente: a imagem da palavra, com a pergunta “Como se diz?”. Verso: a palavra no idioma estudado, com o artigo. Info: a palavra no meu idioma.
+Sem foto: 10 palavras comuns do tema que eu escrevo aqui.

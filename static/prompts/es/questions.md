@@ -1,0 +1,1 @@
+Crea tarjetas pregunta → respuesta para repasar el contenido de la lección (fechas, definiciones, conceptos clave). Preguntas cortas y precisas, respuestas breves, en el idioma de la lección.

@@ -1,0 +1,2 @@
+Crea carte Anki con il lessico della lezione di lingua. Una parola o espressione per carta. Fronte nella mia lingua, retro nella lingua studiata, con l'articolo per i nomi. In “info”, indica il genere, il plurale se è irregolare e un breve esempio se la lezione ne dà uno.
+Senza foto: a partire da ciò che scrivo qui (un elenco di parole o un argomento).

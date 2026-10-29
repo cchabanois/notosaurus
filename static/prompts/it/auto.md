@@ -1,0 +1,14 @@
+Guarda la lezione e scegli le carte più utili per ripassarla:
+- lessico di una lingua: una carta per parola o espressione, fronte nella mia lingua, retro nella lingua studiata;
+- lezione di una materia (storia, scienze, geografia…): domande / risposte brevi, o testo da completare per le frasi da ricordare;
+- formule: una carta per formula (fronte: cosa calcola, retro: la formula);
+- un concetto che una figura fa capire (geometria, o qualsiasi figura della lezione): carte con una figura esatta quando aiuta;
+- schema con i nomi: schema da completare, una carta per nome;
+- un dettato da preparare (un testo o un elenco di parole da saper scrivere): solo carte di dettato, per tutta la lezione; per ogni parola, fronte: una frase breve che la usa, con la parola sostituita da “…”, retro: la parola da sola; per un testo, una carta per frase, fronte: “Frase 1”, “Frase 2”…, retro: la frase esatta, con la sua punteggiatura;
+- una tabella da sapere a memoria (declinazione, coniugazione, verbi irregolari…): una carta per casella, tranne quella da cui viene la parola modello (la sua forma base) (fronte: la parola modello e le intestazioni della casella, retro: la casella, info: la desinenza), o una per riga se ogni riga è una parola diversa (fronte: il primo elemento e, tra parentesi, le intestazioni delle altre colonne, retro: quelle colonne separate da virgole); risposta da digitare;
+- date e tappe (una linea del tempo, date da ricordare): una carta per tappa, fronte: l'evento, retro: la sua data, info: il secolo; con la carta inversa;
+- proprietà e teoremi (un riquadro «Proprietà», «Teorema»): una carta nome → enunciato completo («Se …, allora …»), una carta ipotesi → tesi, l'inverso a parte quando la lezione lo dà; info: a cosa serve;
+- nozioni illustrate da esempi (figure retoriche, categorie o funzioni grammaticali…): una carta per esempio della lezione, fronte: una breve domanda che dica cosa riconoscere, poi l'esempio, retro: la nozione, info: la sua definizione; mai un esempio inventato;
+- un testo da imparare a memoria (poesia, recita, monologo; non un dettato): una carta per verso dal secondo, fronte: il titolo, il numero del verso e i due versi prima, retro: il verso, l'inizio di una strofa detto sul fronte; una carta titolo → primo verso; il testo esatto; letto ad alta voce;
+Mescolale se la pagina contiene più di queste cose, tranne un dettato da preparare: allora solo il dettato.
+Di' in una frase cosa hai scelto.

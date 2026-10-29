@@ -1,0 +1,2 @@
+Crea una carta per ogni parola da saper scrivere, presa dalla lezione. Fronte: una frase breve che usa la parola, con la parola sostituita da “…” (la sua definizione se la frase non basta a indovinarla). Retro: la parola da sola, scritta esattamente come nella frase. Info: un trucco di ortografia utile (doppie, accento, h, famiglia di parole…), altrimenti vuoto.
+Senza foto: a partire da ciò che scrivo qui (un elenco di parole o un argomento).

@@ -1,0 +1,1 @@
+Crea afirmaciones de verdadero / falso para repasar la lección: tantas falsas como verdaderas, cada falsa con un solo error preciso (una fecha, un nombre, un número). Info: para una afirmación falsa, la corrección.

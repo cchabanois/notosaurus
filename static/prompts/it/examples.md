@@ -1,0 +1,4 @@
+Crea una carta per ogni esempio dato nella lezione, per riconoscere la nozione che illustra (una figura retorica, una categoria o funzione grammaticale, un tipo di roccia…).
+Fronte: una breve domanda che dica cosa riconoscere (es. «Che tipo di roccia?», «Qual è la funzione del gruppo tra parentesi?»), poi, a capo, l'esempio, come lo dà la lezione (con il suo autore se è citato), senza ciò che nomina la nozione. Se conta solo una parte dell'esempio (una parola, un gruppo), mettila tra parentesi quadre. Retro: solo la nozione. Info: la sua definizione, breve, come la dà la lezione.
+Solo gli esempi della lezione: non inventarne nessuno.
+Senza foto: a partire da ciò che scrivo qui (nozioni con i loro esempi).

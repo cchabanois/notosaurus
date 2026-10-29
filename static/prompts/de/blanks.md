@@ -1,0 +1,2 @@
+Erstelle eine Karte pro Wort, das man richtig schreiben können muss, aus der Lektion. Vorderseite: ein kurzer Satz mit dem Wort, in dem das Wort durch „…“ ersetzt ist (seine Bedeutung, wenn der Satz nicht reicht, um es zu erraten). Rückseite: das Wort allein, genau so geschrieben wie im Satz. Info: ein nützlicher Rechtschreibtipp (Groß- und Kleinschreibung, ss/ß, Dehnungs-h, Wortfamilie …), sonst leer.
+Ohne Foto: nach dem, was ich hier schreibe (eine Wortliste oder ein Thema).

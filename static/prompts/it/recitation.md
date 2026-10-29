@@ -1,0 +1,4 @@
+Crea carte per imparare a memoria il testo della lezione (una poesia, una recita, un monologo, una citazione), letto ad alta voce. Ricopialo esattamente, senza correggere né modernizzare nulla: punteggiatura, maiuscole, ortografia; una parola cancellata sulla pagina non ne fa parte.
+- Una carta per verso, dal secondo (in prosa: per frase, o per parte che si dice d'un fiato). Fronte: il titolo e il numero del verso (es. «Titolo, v. 5»), poi, a capo, i due versi che lo precedono e «…». Quando il verso apre una strofa (o un paragrafo), dillo sul fronte (es. «v. 9, inizio della strofa 3»). Retro: il verso.
+- Una carta per l'inizio del testo. Fronte: il titolo e l'autore. Retro: il primo verso.
+Senza foto: a partire da ciò che scrivo qui (il testo da imparare).

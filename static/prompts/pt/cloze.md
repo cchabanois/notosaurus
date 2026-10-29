@@ -1,0 +1,1 @@
+Crie cartões de lacunas com as frases importantes da lição: em cada frase, esconda o que é preciso lembrar (datas, nomes, palavras-chave), uma lacuna por ideia, no máximo três por frase. Verso: vazio.

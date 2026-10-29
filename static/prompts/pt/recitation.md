@@ -1,0 +1,4 @@
+Crie cartões para aprender de cor o texto da lição (um poema, uma recitação, um discurso, uma citação), lido em voz alta. Copie-o exatamente, sem corrigir nem modernizar nada: pontuação, maiúsculas, ortografia; uma palavra riscada na página não faz parte dele.
+- Um cartão por verso, a partir do segundo (em prosa: por frase, ou por parte que se diz de uma vez). Frente: o título e o número do verso (ex. «Título, v. 5»), depois, em outra linha, os dois versos anteriores e «…». Quando o verso abre uma estrofe (ou um parágrafo), diga-o na frente (ex. «v. 9, início da estrofe 3»). Verso: o verso.
+- Um cartão para o início do texto. Frente: o título e o autor. Verso: o primeiro verso.
+Sem foto: a partir do que eu escrevo aqui (o texto a aprender).

@@ -1,0 +1,4 @@
+Erstelle eine Karte pro Beispiel aus der Lektion, um den Begriff zu erkennen, den es zeigt (ein Stilmittel, eine Wortart oder ein Satzglied, eine Gesteinsart…).
+Vorderseite: eine kurze Frage, was zu erkennen ist (z. B. „Welche Gesteinsart?“, „Welches Satzglied steht in Klammern?“), dann, in einer neuen Zeile, das Beispiel, so wie die Lektion es gibt (mit seinem Autor, falls genannt), ohne das, was den Begriff nennt. Wenn nur ein Teil des Beispiels zählt (ein Wort, eine Wortgruppe), setze ihn in eckige Klammern. Rückseite: nur der Begriff. Info: seine Definition, kurz, so wie die Lektion sie gibt.
+Nur die Beispiele der Lektion: erfinde keines.
+Ohne Foto: nach dem, was ich hier schreibe (Begriffe mit ihren Beispielen).

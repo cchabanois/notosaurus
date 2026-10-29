@@ -1,0 +1,1 @@
+Erstelle Anki-Karten mit den vollständigen Sätzen der Sprachlektion. Vorderseite: der Satz in meiner Sprache. Rückseite: der Satz in der gelernten Sprache.

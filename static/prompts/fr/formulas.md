@@ -1,0 +1,1 @@
+Crée une carte par formule de la leçon. Recto : ce que la formule permet de calculer (ou son nom). Verso : la formule. Info : ce que représente chaque lettre. Quand la formule porte sur une figure (aire du disque, Pythagore…), mets cette figure, avec ses lettres.

@@ -1,0 +1,1 @@
+Crie cartões do Anki com as frases completas da lição de idioma. Frente: a frase no meu idioma. Verso: a frase no idioma estudado.

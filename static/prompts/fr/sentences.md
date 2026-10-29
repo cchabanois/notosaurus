@@ -1,0 +1,1 @@
+Crée des cartes Anki avec les phrases complètes de la leçon de langue. Recto : la phrase dans ma langue. Verso : la phrase dans la langue étudiée.

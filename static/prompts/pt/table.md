@@ -1,0 +1,5 @@
+Crie cartões para aprender de cor a tabela da lição (declinação, conjugação, verbos irregulares, unidades…).
+- Se a tabela dá as formas de uma mesma palavra: um cartão por célula, exceto aquela de onde vem a palavra modelo (a sua forma base). Frente: a palavra modelo e os cabeçalhos da linha e da coluna da célula (ex. «dominus — genitivo plural»). Verso: o conteúdo exato da célula. Info: a terminação quando a tabela a mostra, senão vazio.
+- Se cada linha é uma palavra diferente (verbos irregulares…): um cartão por linha. Frente: o primeiro elemento da linha, seguido entre parênteses dos cabeçalhos das outras colunas (ex. «nadar (forma base, pretérito, particípio passado)»). Verso: as outras colunas por ordem, separadas por vírgulas (ex. «swim, swam, swum»).
+- As regras e observações à volta da tabela: algumas perguntas curtas, com resposta em poucas palavras (é escrita).
+Sem foto: a partir do que eu escrevo aqui (uma tabela para aprender, ou o seu nome).

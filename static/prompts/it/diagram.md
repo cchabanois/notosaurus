@@ -1,0 +1,1 @@
+La foto mostra uno schema o una carta geografica con dei nomi (collegati al disegno da una freccia o una linea). Nascondi il testo di ogni nome dietro un numero e crea una carta per nome. Fronte: lo schema, con la domanda “Che cos'è (n)?”. Retro: il testo del nome.

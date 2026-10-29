@@ -1,0 +1,1 @@
+Erstelle Karten Frage → Antwort, um den Inhalt der Lektion zu lernen (Daten, Definitionen, Schlüsselbegriffe). Kurze, genaue Fragen und knappe Antworten, in der Sprache der Lektion.

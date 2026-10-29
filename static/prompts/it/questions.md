@@ -1,0 +1,1 @@
+Crea carte domanda → risposta per ripassare il contenuto della lezione (date, definizioni, concetti chiave). Domande brevi e precise, risposte concise, nella lingua della lezione.

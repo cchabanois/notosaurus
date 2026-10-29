@@ -1154,107 +1154,89 @@
   "builtinPrompts": {
     "auto": {
       "name": "Automático (según la lección)",
-      "text": "Mira la lección y elige las tarjetas más útiles para repasarla:\n- vocabulario de un idioma: una tarjeta por palabra o expresión, anverso en mi idioma, reverso en el idioma que se estudia;\n- lección de una asignatura (historia, ciencias, geografía…): preguntas / respuestas cortas, o texto con huecos para las frases que hay que recordar;\n- fórmulas: una tarjeta por fórmula (anverso: lo que calcula, reverso: la fórmula);\n- una noción que una figura hace entender (geometría, o cualquier figura de la lección): tarjetas con una figura exacta cuando ayude;\n- esquema con rótulos: esquema mudo, una tarjeta por rótulo;\n- un dictado que preparar (un texto o una lista de palabras que hay que saber escribir): solo tarjetas de dictado, para toda la lección; para cada palabra, anverso: una frase corta que la usa, con la palabra sustituida por «…», reverso: la palabra sola; para un texto, una tarjeta por frase, anverso: «Frase 1», «Frase 2»…, reverso: la frase exacta, con su puntuación;\n- una tabla para saber de memoria (declinación, conjugación, verbos irregulares…): una tarjeta por casilla, salvo la de la que sale la palabra modelo (su forma base) (anverso: la palabra modelo y los encabezados de la casilla, reverso: la casilla, info: la terminación), o una por fila si cada fila es una palabra distinta (anverso: el primer elemento y, entre paréntesis, los encabezados de las demás columnas, reverso: esas columnas separadas por comas); respuesta escrita;\n- fechas e hitos (una cronología, fechas que recordar): una tarjeta por hito, anverso: el acontecimiento, reverso: su fecha, info: el siglo; con la tarjeta inversa;\n- propiedades y teoremas (un recuadro «Propiedad», «Teorema»): una tarjeta nombre → enunciado completo («Si …, entonces …»), una tarjeta hipótesis → conclusión, el recíproco aparte cuando la lección lo da; info: para qué sirve;\n- nociones ilustradas con ejemplos (figuras retóricas, categorías o funciones gramaticales…): una tarjeta por ejemplo de la lección, anverso: una pregunta corta que diga qué hay que reconocer, luego el ejemplo, reverso: la noción, info: su definición; nunca un ejemplo inventado;\n- un texto para aprender de memoria (poema, recitación, discurso; no un dictado): una tarjeta por verso a partir del segundo, anverso: el título, el número del verso y los dos versos anteriores, reverso: el verso, el comienzo de una estrofa dicho en el anverso; una tarjeta título → primer verso; el texto exacto; leído en voz alta;\nMézclalas si la página contiene varias de estas cosas, salvo un dictado que preparar: entonces solo el dictado.\nDi en una frase lo que has elegido.",
       "deck": "{asignatura}::{título de la lección}",
       "voice": "auto"
     },
     "vocabulary": {
       "name": "Idioma: vocabulario",
-      "text": "Crea tarjetas de Anki con el vocabulario de la lección de idioma. Una palabra o expresión por tarjeta. Anverso en mi idioma, reverso en el idioma que se estudia, con el artículo para los sustantivos. En «info», indica el género, el plural si es irregular y un ejemplo corto si la lección lo da.\nSin foto: a partir de lo que escribo aquí (una lista de palabras o un tema).",
       "deck": "{idioma}::Lección {n}",
       "voice": "auto"
     },
     "sentences": {
       "name": "Idioma: frases",
-      "text": "Crea tarjetas de Anki con las frases completas de la lección de idioma. Anverso: la frase en mi idioma. Reverso: la frase en el idioma que se estudia.",
       "deck": "{idioma}::Lección {n}::Frases",
       "voice": "auto"
     },
     "conjugation": {
       "name": "Idioma: conjugación",
       "deck": "{idioma}::Conjugación",
-      "voice": "auto",
-      "text": "Crea tarjetas de conjugación con los verbos de la lección de idioma: un verbo, un tiempo y una persona por tarjeta. Anverso: el verbo en infinitivo en el idioma que se estudia, el tiempo y la persona (p. ej. «to be — presente — nosotros»). Reverso: la forma conjugada en el idioma que se estudia, con su pronombre. Info: la regla o la irregularidad que hay que recordar; si no, vacío.\nSin foto: a partir de lo que escribo aquí (verbos, tiempos)."
+      "voice": "auto"
     },
     "table": {
       "name": "Tabla para aprender",
       "deck": "{asignatura}::Tablas",
       "voice": "auto",
-      "typing": true,
-      "text": "Crea tarjetas para aprender de memoria la tabla de la lección (declinación, conjugación, verbos irregulares, unidades…).\n- Si la tabla da las formas de una misma palabra: una tarjeta por casilla, salvo la de la que sale la palabra modelo (su forma base). Anverso: la palabra modelo y los encabezados de la fila y la columna de la casilla (p. ej. «dominus — genitivo plural»). Reverso: el contenido exacto de la casilla. Info: la terminación cuando la tabla la muestra; si no, vacío.\n- Si cada fila es una palabra distinta (verbos irregulares…): una tarjeta por fila. Anverso: el primer elemento de la fila, seguido entre paréntesis de los encabezados de las demás columnas (p. ej. «nadar (forma base, pasado simple, participio)»). Reverso: las demás columnas en orden, separadas por comas (p. ej. «swim, swam, swum»).\n- Las reglas y observaciones alrededor de la tabla: algunas preguntas cortas, cuya respuesta cabe en pocas palabras (se escribe).\nSin foto: a partir de lo que escribo aquí (una tabla para aprender, o su nombre)."
+      "typing": true
     },
     "questions": {
       "name": "Preguntas / respuestas",
-      "text": "Crea tarjetas pregunta → respuesta para repasar el contenido de la lección (fechas, definiciones, conceptos clave). Preguntas cortas y precisas, respuestas breves, en el idioma de la lección.",
       "deck": "{asignatura}::{título de la lección}"
     },
     "dates": {
       "name": "Fechas y hitos",
-      "deck": "{asignatura}::Fechas",
-      "text": "Crea una tarjeta por fecha o hito que recordar de la lección (cronología, fechas que saber), con la tarjeta inversa.\nAnverso: el acontecimiento, en pocas palabras (p. ej. «Coronación de Carlomagno»). Reverso: su fecha, tal como la da la lección (p. ej. «25 de diciembre de 800»). Info: el siglo y el periodo; si no, vacío.\nSi dos hitos tienen la misma fecha, precísala (día, mes) para que no se confundan.\nSin foto: a partir de lo que escribo aquí (un tema, un periodo)."
+      "deck": "{asignatura}::Fechas"
     },
     "definitions": {
       "name": "Definiciones y propiedades",
       "deck": "{asignatura}::{título de la lección}",
-      "voice": "",
-      "text": "Crea tarjetas para las definiciones y las propiedades de la lección.\n- Una palabra clave que hay que saber definir: una tarjeta. Anverso: la palabra clave. Reverso: su definición, corta, tal como la da la lección. Info: un ejemplo corto, si la lección lo da.\n- Una propiedad o un teorema, en un recuadro o no (toda frase de la lección que enuncie uno): dos tarjetas. Una, anverso: su nombre (p. ej. «Teorema de Pitágoras»); reverso: el enunciado completo, todas sus hipótesis y luego su conclusión («Si …, entonces …»). La otra, anverso: «Si … (todas las hipótesis), entonces…?»; reverso: la conclusión. Info: para qué sirve (p. ej. «calcular una longitud»).\n- Su recíproco, cuando la lección lo da: sus propias dos tarjetas, de la misma forma (no es la tarjeta inversa).\n- Lo que la lección dice de sus figuras clave (una configuración, lo que muestra): una tarjeta, con la figura.\nSin foto: a partir de lo que escribo aquí."
+      "voice": ""
     },
     "examples": {
       "name": "Reconocer en un ejemplo",
       "deck": "{asignatura}::{título de la lección}",
-      "voice": "",
-      "text": "Crea una tarjeta por cada ejemplo dado en la lección, para reconocer la noción que ilustra (una figura retórica, una categoría o función gramatical, un tipo de roca…).\nAnverso: una pregunta corta que diga qué hay que reconocer (p. ej. «¿Qué tipo de roca?», «¿Qué función tiene el grupo entre corchetes?»), luego, en otra línea, el ejemplo, tal como lo da la lección (con su autor si se cita), sin lo que nombra la noción. Si solo cuenta una parte del ejemplo (una palabra, un grupo), ponla entre corchetes. Reverso: solo la noción. Info: su definición, corta, tal como la da la lección.\nSolo los ejemplos de la lección: no inventes ninguno.\nSin foto: a partir de lo que escribo aquí (nociones con sus ejemplos)."
+      "voice": ""
     },
     "cloze": {
       "name": "Texto con huecos",
-      "text": "Crea tarjetas de texto con huecos con las frases importantes de la lección: en cada frase, oculta lo que hay que recordar (fechas, nombres, palabras clave), un hueco por idea, tres como máximo por frase. Reverso: vacío.",
       "deck": "{asignatura}::{título de la lección}",
       "voice": ""
     },
     "quiz": {
       "name": "Test de opción múltiple",
-      "text": "Crea un test de opción múltiple para repasar la lección: una pregunta por cada concepto importante (fechas, definiciones, conceptos clave), con la respuesta correcta y tres respuestas incorrectas verosímiles. Preguntas cortas, en el idioma de la lección. Info: una breve explicación de la respuesta correcta, si ayuda.",
       "deck": "{asignatura}::{título de la lección}",
       "voice": ""
     },
     "true_false": {
       "name": "Verdadero / falso",
-      "text": "Crea afirmaciones de verdadero / falso para repasar la lección: tantas falsas como verdaderas, cada falsa con un solo error preciso (una fecha, un nombre, un número). Info: para una afirmación falsa, la corrección.",
       "deck": "{asignatura}::{título de la lección}",
       "voice": ""
     },
     "methods": {
       "name": "Métodos (pasos)",
       "deck": "{asignatura}::Métodos",
-      "voice": "",
-      "text": "Crea una tarjeta por cada método o procedimiento de la lección (resolver una ecuación, acentuar una palabra, redactar una conclusión…). Anverso: «¿Cómo se …?». Reverso: los pasos, numerados y cortos. Info: un ejemplo corto, si la lección lo da.\nSin foto: a partir de lo que escribo aquí."
+      "voice": ""
     },
     "formulas": {
       "name": "Fórmulas (matemáticas, física…)",
-      "text": "Crea una tarjeta por cada fórmula de la lección. Anverso: lo que permite calcular la fórmula (o su nombre). Reverso: la fórmula. Info: lo que representa cada letra. Cuando la fórmula trate de una figura (área del círculo, Pitágoras…), pon esa figura, con sus letras.",
       "deck": "{asignatura}::Fórmulas",
       "voice": ""
     },
     "geometry": {
       "name": "Geometría (con figuras)",
-      "text": "Crea tarjetas para repasar la geometría de la lección: figuras, propiedades, vocabulario (hipotenusa, radio, mediatriz…). Pon una figura exacta cuando ayude a responder, sin escribir nunca la respuesta en ella.\nSin foto: a partir del tema que escribo aquí.",
       "deck": "Matemáticas::{título de la lección}",
       "voice": ""
     },
     "diagram": {
       "name": "Esquema o mapa mudo",
-      "text": "La foto muestra un esquema o un mapa con rótulos (nombres unidos al dibujo por una flecha o una línea). Oculta el texto de cada rótulo tras un número y crea una tarjeta por rótulo. Anverso: el esquema, con la pregunta «¿Qué es (n)?». Reverso: el texto del rótulo.",
       "deck": "{asignatura}::{título del esquema}"
     },
     "pictures": {
       "name": "Idioma: vocabulario en imágenes",
-      "text": "Crea tarjetas con el vocabulario de la lección de idioma, solo palabras que una imagen muestre con claridad (objetos, animales, alimentos, lugares, acciones visibles). Anverso: la imagen de la palabra, con la pregunta «¿Cómo se dice?». Reverso: la palabra en el idioma que se estudia, con el artículo. Info: la palabra en mi idioma.\nSin foto: 10 palabras comunes del tema que escribo aquí.",
       "deck": "{idioma}::Imágenes",
       "voice": "auto"
     },
     "blanks": {
       "name": "Palabras con hueco",
-      "text": "Crea una tarjeta por cada palabra que hay que saber escribir, tomada de la lección. Anverso: una frase corta que usa la palabra, con la palabra sustituida por «…» (su definición si la frase no basta para adivinarla). Reverso: la palabra sola, escrita exactamente como en la frase. Info: un truco de ortografía útil (tilde, b/v, h muda, familia de palabras…), si no, vacío.\nSin foto: a partir de lo que escribo aquí (una lista de palabras o un tema).",
       "deck": "{asignatura}::Palabras con hueco",
       "voice": "auto",
       "typing": true,
@@ -1262,7 +1244,6 @@
     },
     "dictation": {
       "name": "Dictado",
-      "text": "Crea tarjetas de dictado a partir de la lección.\nPara cada palabra que hay que saber escribir: Anverso: una frase corta que usa la palabra, con la palabra sustituida por «…». Reverso: la palabra sola, escrita exactamente como en la frase.\nPara un texto que hay que saber escribir (el dictado de la semana): una tarjeta por frase, y para una frase larga, una tarjeta por grupo de palabras con sentido. Anverso: «Frase 1», «Frase 2»… en el orden del texto. Reverso: la frase o el grupo de palabras, escrito exactamente como en el texto, con su puntuación.\nInfo: un truco de ortografía útil (tilde, b/v, h muda, familia de palabras…), si no, vacío.\nSin foto: a partir de lo que escribo aquí (una lista de palabras o un texto).",
       "deck": "{asignatura}::Dictado",
       "voice": "auto",
       "typing": false,
@@ -1271,7 +1252,6 @@
     },
     "dictation_gaps": {
       "name": "Dictado con huecos",
-      "text": "Crea un dictado con huecos a partir del texto de la lección: deja solo las palabras más difíciles de escribir (tildes, b/v, g/j, h muda, ll/y, homófonos como haya/halla, terminaciones verbales), diez como máximo, en el orden del texto. Una tarjeta por palabra.\nAnverso: la frase del texto en la que está la palabra, con la palabra sustituida por «…» (para una frase larga, solo la parte alrededor de la palabra). Reverso: la palabra sola, escrita exactamente como en el texto.\nInfo: por qué se escribe así (una regla, la familia de palabras…), si no, vacío.\nSin foto: a partir del texto que escribo aquí.",
       "deck": "{asignatura}::Dictado con huecos",
       "voice": "auto",
       "typing": false,
@@ -1281,8 +1261,7 @@
     "recitation": {
       "name": "De memoria (poema, recitación)",
       "deck": "{asignatura}::{título de la lección}",
-      "voice": "auto",
-      "text": "Crea tarjetas para aprender de memoria el texto de la lección (un poema, una recitación, un discurso, una cita), leído en voz alta. Cópialo exactamente, sin corregir ni modernizar nada: puntuación, mayúsculas, ortografía; una palabra tachada en la página no forma parte de él.\n- Una tarjeta por verso, a partir del segundo (en prosa: por frase, o por trozo que se dice de un tirón). Anverso: el título y el número del verso (p. ej. «Título, v. 5»), luego, en otra línea, los dos versos anteriores y «…». Cuando el verso abre una estrofa (o un párrafo), dilo en el anverso (p. ej. «v. 9, comienzo de la estrofa 3»). Reverso: el verso.\n- Una tarjeta para el comienzo del texto. Anverso: el título y el autor. Reverso: el primer verso.\nSin foto: a partir de lo que escribo aquí (el texto que aprender)."
+      "voice": "auto"
     }
   },
   "licences": {

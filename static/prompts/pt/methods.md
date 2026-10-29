@@ -1,0 +1,2 @@
+Crie um cartão para cada método ou procedimento da lição (resolver uma equação, acentuar uma palavra, escrever uma conclusão…). Frente: «Como …?». Verso: as etapas, numeradas e curtas. Info: um exemplo curto, se a lição der um.
+Sem foto: a partir do que eu escrevo aqui.

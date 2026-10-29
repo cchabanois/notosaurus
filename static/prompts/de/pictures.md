@@ -1,0 +1,2 @@
+Erstelle Karten mit den Vokabeln der Sprachlektion, nur Wörter, die ein Bild eindeutig zeigt (Gegenstände, Tiere, Lebensmittel, Orte, sichtbare Handlungen). Vorderseite: das Bild des Wortes mit der Frage „Wie sagt man das?“. Rückseite: das Wort in der gelernten Sprache, mit Artikel. Info: das Wort in meiner Sprache.
+Ohne Foto: 10 häufige Wörter zu dem Thema, das ich hier schreibe.

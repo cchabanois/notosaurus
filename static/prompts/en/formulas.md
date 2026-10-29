@@ -1,0 +1,1 @@
+Create one card per formula of the lesson. Front: what the formula calculates (or its name). Back: the formula. Info: what each letter stands for. When the formula is about a figure (area of a circle, Pythagoras…), add that figure, with its letters.

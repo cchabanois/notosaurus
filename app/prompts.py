@@ -1,6 +1,7 @@
 """Prompts: Notosaurus's own, and the user's.
 
-- Notosaurus's prompts ("builtinPrompts" in static/i18n/<lang>.json): in the page's
+- Notosaurus's prompts (their names and options: "builtinPrompts" in
+  static/i18n/<lang>.json; their texts: static/prompts/<lang>/<key>.md): in the page's
   language, read-only, never deleted, improved with the app. Their ids are
   "notosaurus:<key>".
 - The user's prompts, in data/prompts.json: added, changed, deleted, or copied from
@@ -16,6 +17,8 @@ from .errors import AppError
 from .models import Prompt, PromptIn
 
 PREFIX = "notosaurus:"
+# Their texts, one file per prompt and language; their names and options in the i18n files
+PROMPTS_DIR = i18n.I18N_DIR.parent / "prompts"
 BUILTIN = (
     "auto",
     "vocabulary",
@@ -88,10 +91,25 @@ def _write(user: list[Prompt], used: dict[str, str]) -> None:
 def _builtins(lang: str, used: dict[str, str]) -> list[Prompt]:
     texts = i18n.get(lang, "builtinPrompts", {})
     return [
-        Prompt(id=PREFIX + key, builtin=True, used_at=used.get(key), **PromptIn(**texts[key]).model_dump())
+        Prompt(
+            id=PREFIX + key,
+            builtin=True,
+            used_at=used.get(key),
+            **PromptIn(**texts[key], text=text(lang, key)).model_dump(),
+        )
         for key in BUILTIN
         if key in texts
     ]
+
+
+def text(lang: str, key: str) -> str:
+    """A Notosaurus prompt's text (static/prompts/<lang>/<key>.md), in English when that
+    language has none."""
+    for code in (lang, i18n.DEFAULT):
+        path = PROMPTS_DIR / code / f"{key}.md"
+        if path.is_file():
+            return path.read_text(encoding="utf-8")
+    return ""
 
 
 def list_all(lang: str = i18n.DEFAULT) -> list[Prompt]:

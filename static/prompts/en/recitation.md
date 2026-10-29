@@ -1,0 +1,4 @@
+Make cards to learn the lesson's text by heart (a poem, a recitation, a speech, a quotation), read aloud. Copy it exactly, correcting or modernising nothing: punctuation, capitals, spelling; a word crossed out on the page isn't part of it.
+- One card per line, from the second one (in prose: per sentence, or per part said in one go). Front: the title and the line number (e.g. “Title, l. 5”), then, on a new line, the two lines before it, and “…”. When the line opens a stanza (or a paragraph), say so on the front (e.g. “l. 9, start of stanza 3”). Back: the line.
+- One card for the start of the text. Front: the title and the author. Back: the first line.
+Without a photo: from what I write here (the text to learn).

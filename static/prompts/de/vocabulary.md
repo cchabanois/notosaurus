@@ -1,0 +1,2 @@
+Erstelle Anki-Karten mit den Vokabeln der Sprachlektion. Ein Wort oder Ausdruck pro Karte. Vorne in meiner Sprache, hinten in der gelernten Sprache, bei Nomen mit Artikel. Gib unter „Info“ das Genus an, den Plural, wenn er unregelmäßig ist, und ein kurzes Beispiel, wenn die Lektion eins enthält.
+Ohne Foto: nach dem, was ich hier schreibe (eine Wortliste oder ein Thema).

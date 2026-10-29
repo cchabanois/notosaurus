@@ -1,0 +1,2 @@
+Crea tarjetas de Anki con el vocabulario de la lección de idioma. Una palabra o expresión por tarjeta. Anverso en mi idioma, reverso en el idioma que se estudia, con el artículo para los sustantivos. En «info», indica el género, el plural si es irregular y un ejemplo corto si la lección lo da.
+Sin foto: a partir de lo que escribo aquí (una lista de palabras o un tema).

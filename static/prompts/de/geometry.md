@@ -1,0 +1,2 @@
+Erstelle Karten, um die Geometrie der Lektion zu lernen: Figuren, Eigenschaften, Fachbegriffe (Hypotenuse, Radius, Mittelsenkrechte …). Füge eine genaue Figur hinzu, wenn sie beim Antworten hilft, ohne je die Antwort darauf zu schreiben.
+Ohne Foto: nach dem Thema, das ich hier schreibe.

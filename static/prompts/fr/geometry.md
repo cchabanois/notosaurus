@@ -1,0 +1,2 @@
+Crée des cartes pour réviser la géométrie de la leçon : figures, propriétés, vocabulaire (hypoténuse, rayon, médiatrice…). Mets une figure exacte quand elle aide à répondre, sans jamais y écrire la réponse.
+Sans photo : à partir du thème que j'écris ici.

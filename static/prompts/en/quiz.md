@@ -1,0 +1,1 @@
+Create a multiple-choice quiz to review the lesson: one question per important point (dates, definitions, key ideas), with the right answer and three plausible wrong ones. Short questions, in the lesson's language. Info: a short explanation of the right answer, when it helps.

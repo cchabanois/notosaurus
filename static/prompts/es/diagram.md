@@ -1,0 +1,1 @@
+La foto muestra un esquema o un mapa con rótulos (nombres unidos al dibujo por una flecha o una línea). Oculta el texto de cada rótulo tras un número y crea una tarjeta por rótulo. Anverso: el esquema, con la pregunta «¿Qué es (n)?». Reverso: el texto del rótulo.

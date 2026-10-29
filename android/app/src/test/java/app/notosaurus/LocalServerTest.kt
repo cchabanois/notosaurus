@@ -301,6 +301,10 @@ class LocalServerTest {
         assertTrue(prompts.all { it["builtin"]!!.jsonPrimitive.content == "true" })
         val french = json.parseToJsonElement(File(System.getProperty("notosaurus.web") ?: "../../static", "i18n/fr.json").readText())
         assertEquals(french.jsonObject["builtinPrompts"]!!.jsonObject["vocabulary"]!!.jsonObject.string("name"), prompts[1].string("name"))
+        // Its text from its own file (static/prompts/<lang>/<key>.md)
+        val vocabulary = File(System.getProperty("notosaurus.web") ?: "../../static", "prompts/fr/vocabulary.md").readText()
+        assertEquals(vocabulary, prompts[1].string("text"))
+        assertTrue(prompts.all { it.string("text").isNotBlank() })
 
         // The user's: added, changed, copied, deleted
         val added = client.post("/api/prompts") {

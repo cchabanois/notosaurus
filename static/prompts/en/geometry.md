@@ -1,0 +1,2 @@
+Create cards to review the geometry of the lesson: figures, properties, vocabulary (hypotenuse, radius, perpendicular bisector…). Add an exact figure when it helps to answer, never with the answer written on it.
+Without a photo: from the topic I write here.

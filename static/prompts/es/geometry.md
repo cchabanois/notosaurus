@@ -1,0 +1,2 @@
+Crea tarjetas para repasar la geometría de la lección: figuras, propiedades, vocabulario (hipotenusa, radio, mediatriz…). Pon una figura exacta cuando ayude a responder, sin escribir nunca la respuesta en ella.
+Sin foto: a partir del tema que escribo aquí.

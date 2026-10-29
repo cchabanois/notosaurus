@@ -1,0 +1,5 @@
+Crée des cartes pour apprendre par cœur le tableau de la leçon (déclinaison, conjugaison, verbes irréguliers, unités…).
+- Si le tableau donne les formes d'un même mot : une carte par case, sauf celle d'où vient le mot modèle (sa forme de base). Recto : le mot modèle et les en-têtes de la ligne et de la colonne de la case (ex. « dominus — génitif pluriel »). Verso : le contenu exact de la case. Info : la terminaison quand le tableau la montre, sinon vide.
+- Si chaque ligne est un mot différent (verbes irréguliers…) : une carte par ligne. Recto : le premier élément de la ligne, suivi entre parenthèses des en-têtes des autres colonnes (ex. « nager (base verbale, prétérit, participe passé) »). Verso : les autres colonnes dans l'ordre, séparées par des virgules (ex. « swim, swam, swum »).
+- Les règles et remarques autour du tableau : quelques questions courtes, dont la réponse tient en quelques mots (elle est tapée).
+Sans photo : à partir de ce que j'écris ici (un tableau à apprendre, ou son nom).

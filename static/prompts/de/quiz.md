@@ -1,0 +1,1 @@
+Erstelle einen Multiple-Choice-Test, um die Lektion zu lernen: eine Frage pro wichtigem Punkt (Daten, Definitionen, Schlüsselbegriffe), mit der richtigen Antwort und drei plausiblen falschen. Kurze Fragen, in der Sprache der Lektion. Info: eine kurze Erklärung der richtigen Antwort, wenn sie hilft.

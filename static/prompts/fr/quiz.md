@@ -1,0 +1,1 @@
+Crée un QCM pour réviser la leçon : une question par notion importante (dates, définitions, notions clés), avec la bonne réponse et trois mauvaises réponses plausibles. Questions courtes, dans la langue de la leçon. Info : une courte explication de la bonne réponse, si elle aide.

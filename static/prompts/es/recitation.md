@@ -1,0 +1,4 @@
+Crea tarjetas para aprender de memoria el texto de la lección (un poema, una recitación, un discurso, una cita), leído en voz alta. Cópialo exactamente, sin corregir ni modernizar nada: puntuación, mayúsculas, ortografía; una palabra tachada en la página no forma parte de él.
+- Una tarjeta por verso, a partir del segundo (en prosa: por frase, o por trozo que se dice de un tirón). Anverso: el título y el número del verso (p. ej. «Título, v. 5»), luego, en otra línea, los dos versos anteriores y «…». Cuando el verso abre una estrofa (o un párrafo), dilo en el anverso (p. ej. «v. 9, comienzo de la estrofa 3»). Reverso: el verso.
+- Una tarjeta para el comienzo del texto. Anverso: el título y el autor. Reverso: el primer verso.
+Sin foto: a partir de lo que escribo aquí (el texto que aprender).

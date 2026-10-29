@@ -1,0 +1,1 @@
+Crea tarjetas de texto con huecos con las frases importantes de la lección: en cada frase, oculta lo que hay que recordar (fechas, nombres, palabras clave), un hueco por idea, tres como máximo por frase. Reverso: vacío.

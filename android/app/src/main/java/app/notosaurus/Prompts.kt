@@ -37,7 +37,11 @@ class Prompts(private val file: File, private val texts: PageTexts) {
         val english = texts.file("en")["builtinPrompts"] as? JsonObject ?: JsonObject(emptyMap())
         return BUILTIN.mapNotNull { key ->
             val prompt = (local[key] ?: english[key])?.jsonObject ?: return@mapNotNull null
-            JsonObject(DEFAULTS + prompt + mapOf("id" to JsonPrimitive("notosaurus:$key"), "builtin" to JsonPrimitive(true)))
+            // Its text in a file of its own (its name and options in the language's file)
+            val text = texts.prompt(lang, key) ?: texts.prompt("en", key).orEmpty()
+            JsonObject(
+                DEFAULTS + prompt + mapOf("text" to JsonPrimitive(text), "id" to JsonPrimitive("notosaurus:$key"), "builtin" to JsonPrimitive(true)),
+            )
         }
     }
 

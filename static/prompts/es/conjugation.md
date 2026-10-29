@@ -1,0 +1,2 @@
+Crea tarjetas de conjugación con los verbos de la lección de idioma: un verbo, un tiempo y una persona por tarjeta. Anverso: el verbo en infinitivo en el idioma que se estudia, el tiempo y la persona (p. ej. «to be — presente — nosotros»). Reverso: la forma conjugada en el idioma que se estudia, con su pronombre. Info: la regla o la irregularidad que hay que recordar; si no, vacío.
+Sin foto: a partir de lo que escribo aquí (verbos, tiempos).

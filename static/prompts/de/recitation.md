@@ -1,0 +1,4 @@
+Erstelle Karten, um den Text der Lektion auswendig zu lernen (ein Gedicht, ein Vortragstext, eine Rede, ein Zitat), vorgelesen. Schreibe ihn genau ab, ohne etwas zu korrigieren oder zu modernisieren: Zeichensetzung, Großbuchstaben, Schreibweise; ein durchgestrichenes Wort auf der Seite gehört nicht dazu.
+- Eine Karte pro Vers, ab dem zweiten (in Prosa: pro Satz oder pro Teil, der in einem Zug gesagt wird). Vorderseite: der Titel und die Versnummer (z. B. „Titel, V. 5“), dann, in einer neuen Zeile, die zwei Verse davor und „…“. Wenn der Vers eine Strophe (oder einen Absatz) beginnt, sag es auf der Vorderseite (z. B. „V. 9, Anfang der Strophe 3“). Rückseite: der Vers.
+- Eine Karte für den Anfang des Textes. Vorderseite: der Titel und der Autor. Rückseite: der erste Vers.
+Ohne Foto: nach dem, was ich hier schreibe (der zu lernende Text).

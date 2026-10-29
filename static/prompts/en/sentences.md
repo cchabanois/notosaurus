@@ -1,0 +1,1 @@
+Create Anki cards with the complete sentences of the language lesson. Front: the sentence in my language. Back: the sentence in the language being learned.

@@ -1,0 +1,2 @@
+Create Anki cards with the vocabulary of the language lesson. One word or expression per card. Front in my language, back in the language being learned, with the article for nouns. In "info", give the gender, the plural when it is irregular, and a short example if the lesson has one.
+Without a photo: from what I write here (a list of words, or a topic).

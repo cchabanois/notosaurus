@@ -1,0 +1,4 @@
+Crée des cartes pour apprendre par cœur le texte de la leçon (poème, récitation, tirade, citation), lu à voix haute. Recopie-le exactement, sans rien corriger ni moderniser : ponctuation, majuscules, orthographe ; un mot barré sur la page n'en fait pas partie.
+- Une carte par vers, à partir du deuxième (en prose : par phrase, ou par morceau qui se dit d'une traite). Recto : le titre et le numéro du vers (ex. « Titre, v. 5 »), puis, à la ligne, les deux vers qui le précèdent, et « … ». Quand le vers ouvre une strophe (ou un paragraphe), dis-le au recto (ex. « v. 9, début de la strophe 3 »). Verso : le vers.
+- Une carte pour le début du texte. Recto : le titre et l'auteur. Verso : le premier vers.
+Sans photo : à partir de ce que j'écris ici (le texte à apprendre).

@@ -1,0 +1,2 @@
+Crée des cartes avec le vocabulaire de la leçon de langue, seulement des mots qu'une image montre clairement (objets, animaux, aliments, lieux, actions visibles). Recto : l'image du mot, avec la question « Comment dit-on ? ». Verso : le mot dans la langue étudiée, avec l'article. Info : le mot dans ma langue.
+Sans photo : 10 mots courants du thème que j'écris ici.

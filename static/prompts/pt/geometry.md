@@ -1,0 +1,2 @@
+Crie cartões para revisar a geometria da lição: figuras, propriedades, vocabulário (hipotenusa, raio, mediatriz…). Coloque uma figura exata quando ajudar a responder, sem nunca escrever a resposta nela.
+Sem foto: a partir do tema que eu escrevo aqui.

@@ -1,0 +1,2 @@
+Crea tarjetas con el vocabulario de la lección de idioma, solo palabras que una imagen muestre con claridad (objetos, animales, alimentos, lugares, acciones visibles). Anverso: la imagen de la palabra, con la pregunta «¿Cómo se dice?». Reverso: la palabra en el idioma que se estudia, con el artículo. Info: la palabra en mi idioma.
+Sin foto: 10 palabras comunes del tema que escribo aquí.

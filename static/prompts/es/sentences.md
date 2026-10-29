@@ -1,0 +1,1 @@
+Crea tarjetas de Anki con las frases completas de la lección de idioma. Anverso: la frase en mi idioma. Reverso: la frase en el idioma que se estudia.

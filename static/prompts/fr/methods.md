@@ -1,0 +1,2 @@
+Crée une carte par méthode ou savoir-faire de la leçon (résoudre une équation, accorder un participe passé, rédiger une conclusion…). Recto : « Comment … ? ». Verso : les étapes, numérotées et courtes. Info : un exemple court, si la leçon en donne un.
+Sans photo : à partir de ce que j'écris ici.

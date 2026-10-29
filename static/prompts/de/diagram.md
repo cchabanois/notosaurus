@@ -1,0 +1,1 @@
+Das Foto zeigt eine Abbildung oder eine Karte mit Beschriftungen (Namen, die durch einen Pfeil oder eine Linie mit der Zeichnung verbunden sind). Verdecke den Text jeder Beschriftung hinter einer Nummer und erstelle eine Karte pro Beschriftung. Vorderseite: die Abbildung mit der Frage „Was ist (n)?“. Rückseite: der Text der Beschriftung.

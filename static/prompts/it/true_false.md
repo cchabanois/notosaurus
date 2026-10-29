@@ -1,0 +1,1 @@
+Crea affermazioni vero / falso per ripassare la lezione: tante false quante vere, ognuna falsa con un solo errore preciso (una data, un nome, un numero). Info: per un'affermazione falsa, la correzione.
