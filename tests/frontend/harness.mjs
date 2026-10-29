@@ -101,6 +101,7 @@ function documentStub() {
     title: "",
     documentElement: { lang: "", classList: { add: () => {} } },
     addEventListener: (type, fn) => listeners.set(type, [...(listeners.get(type) ?? []), fn]),
+    removeEventListener: (type, fn) => listeners.set(type, (listeners.get(type) ?? []).filter((f) => f !== fn)),
     dispatchEvent: (event) => {
       events.push(event);
       for (const fn of listeners.get(event.type) ?? []) fn(event);
