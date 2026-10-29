@@ -80,6 +80,7 @@ Each pull request adds a line under **Unreleased**. See [Releasing](CONTRIBUTING
 
 ### Changed
 
+- 🎤 Dictation (the app): a tap anywhere else stops the listening as ⏹ does, the text written; that tap does nothing else ("Correct" tapped then sends nothing before the text is there). Scrolling doesn't stop it; the app gone to the background (a call, the home screen) does.
 - A word's picture on the front of its card ("la trousse" with the pencil case, "el estuche" to find): it shows the thing, not the word learnt, so it gives nothing of the answer; a picture that would answer the front (an event, a person, a place named in the pupil's language) stays on the back.
 - A lesson sent to Anki (or AnkiDroid) and not changed since says **✓ Up to date in Anki** (still a button, to send it again: a sound that couldn't be made, a card deleted in Anki); **🔄 Update in Anki** only once something Anki gets has changed (a card, its picture or figure, the deck, the voice, the options), reopened lessons included.
 - 🔍 A figure is no longer checked by the AI on its own: drawn at once, in one call. "🔍" under a figure has the AI look at it when you doubt it; if it finds something wrong, it says what, and you choose to keep it or to have it redrawn, told the problem: quickly first (a few seconds), then, if it's still wrong, carefully, with the model's thinking. For developers: `/v1/check-figure`; `/v1/card-picture` takes the `problem` to redraw from, and `careful`.

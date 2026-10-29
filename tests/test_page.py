@@ -1804,6 +1804,50 @@ def test_a_card_correction_dictated(page):
     assert stopped == [{"kind": "correction"}]
 
 
+def test_dictation_stopped_by_a_tap_elsewhere(page):
+    """Listening: a tap anywhere else stops it as ⏹ does, the text written, and does only
+    that (the card's ⋯ tapped then doesn't open); scrolling doesn't stop it; the app gone to
+    the background does."""
+    stopped = []
+    page.route("**/api/config", lambda route: route.fulfill(json={**route.fetch().json(), "dictation": True}))
+    page.route("**/api/dictation/start", lambda route: route.fulfill(json={"listening": True}))
+    page.route(
+        "**/api/dictation/stop",
+        lambda route: (stopped.append(route.request.post_data_json), route.fulfill(json={"text": "ajoute le frère"})),
+    )
+    generate_free(page, FRONT_PROMPT)
+    revise = page.locator(".revise")
+    field = revise.locator("textarea")
+    listening = page.get_by_text("J'écoute… appuyez sur ⏹ quand vous avez fini.").first
+
+    revise.get_by_role("button", name="Dicter").click()
+    sync_api.expect(listening).to_be_visible()
+    page.mouse.wheel(0, 400)  # scrolling: still listening
+    page.wait_for_timeout(300)
+    sync_api.expect(listening).to_be_visible()
+    assert stopped == []
+    page.locator(".count-line").click()  # elsewhere
+    sync_api.expect(field).to_have_value("ajoute le frère")
+    assert stopped == [{"kind": "correction"}]
+
+    revise.get_by_role("button", name="Dicter").click()
+    sync_api.expect(listening).to_be_visible()
+    first = page.locator(".flash").first
+    first.get_by_role("button", name="Plus d'actions").click()  # only stops it
+    sync_api.expect(listening).to_be_hidden()
+    sync_api.expect(first.locator(".card-menu-items")).to_be_hidden()
+    assert len(stopped) == 2
+
+    revise.get_by_role("button", name="Dicter").click()
+    sync_api.expect(listening).to_be_visible()
+    page.evaluate("""() => {
+        Object.defineProperty(document, "hidden", { value: true, configurable: true });
+        document.dispatchEvent(new Event("visibilitychange"));
+    }""")
+    sync_api.expect(listening).to_be_hidden()
+    assert len(stopped) == 3
+
+
 def test_tidy_up_the_instructions(page):
     """“✨ Tidy up” under the instructions (the demo AI marks them), “↩” brings them back."""
     page.goto("/")
