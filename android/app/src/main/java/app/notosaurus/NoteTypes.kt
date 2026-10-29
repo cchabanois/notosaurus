@@ -4,12 +4,10 @@ import kotlinx.serialization.Serializable
 import java.security.MessageDigest
 
 /**
- * The Anki note types, as the computer makes them: static/note-types.json, written from
- * app/anki.py by tools/note_types.py (in the app's assets with the page). AnkiDroid's
- * are made from these, with two changes of the app's own:
- * - the key first: AnkiDroid's duplicate check is on the first field;
- * - " (Android)" in the name instead of the computer's " (audio)": never one of the
- *   computer's (synced from Anki), whose fields are in another order.
+ * The Anki note types, the computer's: static/note-types.json, written from app/anki.py by
+ * tools/note_types.py (in the app's assets with the page). The same in AnkiDroid: same
+ * names, fields in the same order, same signature; a lesson's notes sent from one device
+ * are found again from the other (Anki.kt: by the lesson's tag and the key field's name).
  */
 @Serializable
 data class NoteTypes(@kotlinx.serialization.SerialName("note_types") val all: Map<String, NoteType>) {
@@ -30,22 +28,18 @@ data class NoteType(
     val cloze: Boolean,
     val cards: List<CardTemplate>,
     val css: String,
+    @kotlinx.serialization.SerialName("signature") val computerSignature: String = "", // the computer's (a test compares)
 ) {
-    /** Its name in AnkiDroid. */
-    val androidName: String get() = name.removeSuffix(" (audio)") + " (Android)"
+    /** Its name in AnkiDroid as the app's test versions made it (the key first): their notes
+     * found and updated in place still. */
+    val legacyName: String get() = name.removeSuffix(" (audio)") + " (Android)"
 
-    /** Its fields in AnkiDroid: the key first. */
-    val androidFields: List<String> get() = listOf(key) + fields.filter { it != key }
-
-    /** The field the browser sorts by: the computer's first (the question, the text). */
-    val sortField: Int get() = androidFields.indexOf(fields.first())
-
-    /** What it is made of (name, fields, card templates, style), in 12 characters: the
-     * version AnkiDroid's has, written in its style (signedCss). */
+    /** What it is made of (name, fields, card templates, style), in 12 characters, as the
+     * computer's (note_types.common.NoteType.signature): written in its style (signedCss). */
     val signature: String
         get() {
             val templates = cards.map { "${it.name}\u001e${it.front}\u001e${it.back}" }
-            val parts = listOf(androidName, cloze.toString()) + androidFields + templates + css
+            val parts = listOf(name, if (cloze) "True" else "False") + fields + templates + css
             val digest = MessageDigest.getInstance("SHA-256").digest(parts.joinToString("\u001f").toByteArray())
             return digest.joinToString("") { "%02x".format(it) }.take(12)
         }
@@ -54,8 +48,10 @@ data class NoteType(
      * today's signature was made by an older app, and is brought up to date at the next send. */
     val signedCss: String get() = "$css\n/* Notosaurus note type, version $signature: updated by Notosaurus */\n"
 
-    /** A note's values (by field name) in AnkiDroid's order; missing ones empty. */
-    fun values(fields: Map<String, String>): Array<String> = androidFields.map { fields[it].orEmpty() }.toTypedArray()
+    /** A note's values (by field name) in the order of `names` (its note type's fields in
+     * AnkiDroid); a field not given keeps its value `there` (the Source the computer wrote). */
+    fun values(names: List<String>, fields: Map<String, String>, there: Array<String>? = null): Array<String> =
+        Array(names.size) { i -> fields[names[i]] ?: there?.getOrNull(i).orEmpty() }
 }
 
 @Serializable

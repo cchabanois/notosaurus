@@ -17,26 +17,42 @@ class AnkiTest {
         assertEquals("Notosaurus::Phrases", Anki.deckName("", "Phrases"))
     }
 
-    @Test
-    fun theComputersNoteTypes() {
+    private val types by lazy {
         // static/note-types.json, as the app's assets have it
         val web = File(System.getProperty("notosaurus.web") ?: "../../static")
-        val types = NoteTypes.parse(web.resolve("note-types.json").readText())
+        NoteTypes.parse(web.resolve("note-types.json").readText())
+    }
+
+    @Test
+    fun theComputersNoteTypesAsTheyAre() {
         val text = types["text+reverse+typing+dictation"]
-        assertEquals("Notosaurus recto/verso + inverse à taper + dictée (Android)", text.androidName) // the names before
-        assertEquals(listOf("Front", "Back", "Info", "Audio", "Explanation", "Mnemonic"), text.androidFields)
+        assertEquals("Notosaurus recto/verso + inverse à taper + dictée (audio)", text.name) // the computer's name
+        assertEquals("Notosaurus recto/verso + inverse à taper + dictée (Android)", text.legacyName) // the test versions'
+        assertEquals(listOf("Front", "Back", "Info", "Audio", "Explanation", "Mnemonic"), text.fields)
         assertEquals(3, text.cards.size)
         assertTrue(text.cards[0].front.contains("{{type:Back}}"))
 
-        // The key first (AnkiDroid's duplicate check), sorted by the question
-        val diagram = types["diagram"]
-        assertEquals("Notosaurus légendes (Android)", diagram.androidName)
-        assertEquals(listOf("Id", "Front", "Back", "Info", "Audio", "Image", "Masks", "AnswerMasks", "Explanation", "Mnemonic"), diagram.androidFields)
-        assertEquals(1, diagram.sortField)
-        assertEquals("Notosaurus texte à trous (Android)", types["cloze"].androidName)
+        // The computer's order (the key where it puts it), its hidden Source too
+        val picture = types["picture"]
+        assertEquals(listOf("Front", "Back", "Info", "Audio", "Picture", "Id", "Explanation", "Mnemonic", "Source"), picture.fields)
+        assertEquals("Id", picture.key)
         assertTrue(types["cloze"].cloze)
-        assertEquals(listOf("k", "", "r", ""), types["cloze"].values(mapOf("Id" to "k", "Extra" to "r")).take(4)) // Id, Text, Extra, Info
-        assertEquals("Notosaurus image au verso à taper (Android)", types["picture+back+typing"].androidName)
+        // A note's values in its note type's order; a field not written keeps its value there (Source)
+        val names = picture.fields
+        val there = arrayOf("", "", "", "", "", "", "", "", "Wikimedia Commons")
+        assertEquals(listOf("le chat", "el gato", "", "", "", "k", "", "", "Wikimedia Commons"), picture.values(names, mapOf("Front" to "le chat", "Back" to "el gato", "Id" to "k"), there).toList())
+    }
+
+    @Test
+    fun theSameNoteTypesAsTheComputers() {
+        // Each note type made here is the computer's to the letter (name, fields in their order,
+        // card templates, style): the same signature, so neither device brings the other's "up
+        // to date", and a lesson's notes from one are found from the other
+        types.all.forEach { (variant, type) ->
+            assertTrue(variant, type.computerSignature.isNotEmpty())
+            assertEquals(variant, type.computerSignature, type.signature)
+            assertTrue(variant, "version ${type.computerSignature}:" in type.signedCss)
+        }
     }
 
     @Test

@@ -194,6 +194,32 @@ def test_deleting_a_lesson_keeps_another_lessons_notes(anki, client):
     assert client.get(f"/api/lessons/{second['id']}/anki-notes").json()["count"] == 6  # alone now
 
 
+def test_a_lessons_notes_sent_from_the_phone_found_again(anki, client):
+    """A lesson moved from the phone (its anki_notes: the phone's, not kept): its notes, synced
+    from AnkiDroid, found again by its tag and their key, not added twice; those of the app's
+    test versions (" (Android)", another field order) converted, as another option's are."""
+    from app import lessons
+
+    lesson = extract_lesson(client)
+    body = {**SEND, "lesson_id": lesson["id"]}
+    assert client.post("/api/anki/send", json=body).json()["added"] == 2  # as the phone sends them: the same note types
+    ids = sorted(anki.notes)
+    lessons.set_anki_notes(lesson["id"], "Léa", {})  # imported: no note known
+    res = client.post("/api/anki/send", json=body).json()
+    assert (res["added"], res["updated"]) == (0, 2) and sorted(anki.notes) == ids
+
+    # A test version's note type: its name, its key first
+    (name,) = anki.models
+    legacy = name.removesuffix(" (audio)") + " (Android)"
+    anki.models[legacy] = {**anki.models[name], "modelName": legacy}
+    for note in anki.notes.values():
+        note["modelName"] = legacy
+    lessons.set_anki_notes(lesson["id"], "Léa", {})
+    res = client.post("/api/anki/send", json=body).json()
+    assert (res["added"], res["converted"]) == (0, 2) and sorted(anki.notes) == ids
+    assert {n["modelName"] for n in anki.notes.values()} == {name}
+
+
 def test_options_changed_after_a_send_keep_the_notes(anki, client):
     lesson = extract_lesson(client)
     body = {"deck": "Espagnol", "cards": lesson["cards"], "voice": "es_ES", "lesson_id": lesson["id"]}

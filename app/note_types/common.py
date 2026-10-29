@@ -54,8 +54,7 @@ def fix_link(key: str) -> str:
 
 
 # Where a card's picture comes from (models.PictureSource): kept with the note, never shown
-# (no card template uses it). The computer's only: AnkiDroid can't add a field to a note
-# type it already has (tools/note_types.py leaves it out of the app's)
+# (no card template uses it). Written by the computer; the Android app keeps it as it is
 SOURCE_FIELD = "Source"
 
 
