@@ -4,10 +4,9 @@ Each mp3 is named after the text plus a hash of (voice, rate, text), e.g.
 "la-madre-3f2a1c9e.mp3". Card audio lives in the lesson's audio/ folder;
 previews go to the cache (files.py, tts/) and are reused when the lesson is exported.
 
-The lesson's audio/ folder also says what each of its mp3s says, and with which voice and
-rate (INDEX, "sounds.json": {file: {"text", "voice", "rate"}}): the same on the phone
-(Speech.kt), where the voices are the relay's. A sound made elsewhere (a lesson imported
-from the phone: a voice edge-tts doesn't have) is kept as long as its card says the same.
+A card may have a voice of its own (Card.voice), else it is the lesson's: a lesson moved
+from the phone keeps its sounds, made with the relay's voices, the names being the same on
+both (Speech.kt, core/shared-cases.json sound_file). card_voice says which one a sound is in.
 
 `rate`: the speed, e.g. "-10%" (slightly slower, for learners).
 """
@@ -103,12 +102,23 @@ def spoken_backs(cards: list[Card], dictation: bool = False) -> list[str]:
     """What the cards' sounds say (spoken). None for: a back with a formula (the voice
     would read the MathJax code), a text with gaps (its back is only an extra), a multiple
     choice (the options are read), a transcription with no example to read."""
+    return [text for _, text in _speaking(cards, dictation)]
+
+
+def _speaking(cards: list[Card], dictation: bool) -> list[tuple[Card, str]]:
     said = [
-        spoken(c, dictation)
+        (c, spoken(c, dictation))
         for c in cards
         if c.front.strip() and c.back.strip() and not has_math(c.back) and not is_cloze(c.front) and not is_choice(c)
     ]
-    return [s for s in said if s]
+    return [(c, s) for c, s in said if s]
+
+
+def spoken_voices(
+    cards: list[Card], lesson_voice: str, directory: Path | None, rate: str, dictation: bool = False
+) -> dict[str, str]:
+    """{what a card's sound says (spoken_backs): the voice it is in (card_voice)}."""
+    return {text: card_voice(c, lesson_voice, text, directory, rate) for c, text in _speaking(cards, dictation)}
 
 
 def is_anki_locale(voice: str) -> bool:
@@ -120,33 +130,20 @@ NORMAL = "+0%"  # not slowed
 MAX_LINE = 200  # characters read of a line: a back's sound, not a text read out
 
 
-INDEX = "sounds.json"
-
-
 def is_edge_voice(voice: str) -> bool:
     """A voice this computer reads with (edge-tts: "es-ES-ElviraNeural")."""
     return voice.endswith("Neural")
 
 
-def _index(directory: Path) -> dict[str, dict]:
-    found = files.read_json(directory / INDEX, {})
-    return found if isinstance(found, dict) else {}
-
-
-def _record(directory: Path, path: Path, text: str, voice: str, rate: str) -> None:
-    """What the mp3 says, kept in its folder's index."""
-    index = _index(directory)
-    index[path.name] = {"text": text, "voice": voice, "rate": rate}
-    files.write_json(directory / INDEX, index)
-
-
-def made_elsewhere(directory: Path, text: str) -> Path | None:
-    """The sound of `text` made by another device (a voice edge-tts doesn't have): kept."""
-    for name, said in _index(directory).items():
-        path = directory / name
-        if said.get("text") == text and not is_edge_voice(said.get("voice", "")) and path.is_file():
-            return path
-    return None
+def card_voice(card: Card, lesson_voice: str, text: str, directory: Path | None, rate: str = RATE) -> str:
+    """The voice of the card's sound: its own (Card.voice) when this computer can read with it
+    or its sound is there already (made on the phone), else the lesson's."""
+    own = card.voice
+    if not own or own == lesson_voice:
+        return lesson_voice
+    if is_edge_voice(own) or (directory is not None and (directory / filename(text, own, rate)).is_file()):
+        return own
+    return lesson_voice
 
 
 def filename(text: str, voice: str, rate: str = RATE) -> str:
@@ -172,16 +169,12 @@ async def tts(text: str, voice: str, directory: Path | None = None, rate: str = 
     path = (directory or cache_dir()) / name
     if path.exists():
         return path
-    if directory and (elsewhere := made_elsewhere(directory, text)):
-        return elsewhere
     path.parent.mkdir(parents=True, exist_ok=True)
     cached = cache_dir() / name
     if directory and cached.exists():
         shutil.copyfile(cached, path)
     else:
         await _synthesize_lines(text, voice, path, rate)
-    if directory:
-        _record(directory, path, text, voice, rate)
     return path
 
 
@@ -231,16 +224,22 @@ async def tts_many(
     return audio, len(results) - len(audio)
 
 
+async def tts_voices(
+    voices: Mapping[str, str], directory: Path, rate: str = RATE, on_done: Callable[[], None] | None = None
+) -> tuple[dict[str, Path], int]:
+    """tts_many for texts each in its own voice ({text: voice}, spoken_voices)."""
+    audio, failures = {}, 0
+    for voice in dict.fromkeys(voices.values()):
+        made, failed = await tts_many([t for t, v in voices.items() if v == voice], voice, directory, rate, on_done)
+        audio, failures = {**audio, **made}, failures + failed
+    return audio, failures
+
+
 def prune(directory: Path, keep: set[Path]) -> None:
-    """Delete mp3s no card uses any more (edited backs, changed voice), and what the index
-    says of them."""
+    """Delete mp3s no card uses any more (edited backs, changed voice)."""
     for mp3 in directory.glob("*.mp3"):
         if mp3 not in keep:
             mp3.unlink()
-    index = _index(directory)
-    kept = {name: said for name, said in index.items() if (directory / name).is_file()}
-    if kept != index:
-        files.write_json(directory / INDEX, kept)
 
 
 # A natural voice per language, for prompts whose voice is "auto"

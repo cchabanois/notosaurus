@@ -27,8 +27,9 @@ async def card_audio(
     if directory is None:
         directory = Path(tempfile.mkdtemp(prefix="notosaurus-audio-"))
         background.add_task(shutil.rmtree, directory, ignore_errors=True)
-    said = tts.spoken_backs(req.cards, req.dictation or req.dictation_only)
-    total, done = len(dict.fromkeys(said)), 0
+    rate = req.rate or settings.current().tts_rate
+    voices = tts.spoken_voices(req.cards, req.voice, directory, rate, req.dictation or req.dictation_only)
+    total, done = len(voices), 0
 
     def one_done() -> None:
         nonlocal done
@@ -38,8 +39,7 @@ async def card_audio(
 
     if on_sound and total:
         on_sound(0, total)
-    rate = req.rate or settings.current().tts_rate
-    audio, failures = await tts.tts_many(said, req.voice, directory, rate, on_done=one_done)
+    audio, failures = await tts.tts_voices(voices, directory, rate, on_done=one_done)
     tts.prune(directory, set(audio.values()))
     return audio, failures
 

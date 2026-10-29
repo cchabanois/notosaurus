@@ -79,10 +79,11 @@ async def _make(lesson_id: str) -> None:
     directory = lessons.audio_dir(lesson_id)
     if lesson is None or directory is None or not wanted(lesson.voice):
         return
-    said = tts.spoken_backs(lesson.cards, lesson.dictation or lesson.dictation_only)
-    if not said:
+    rate = lesson.rate or settings.current().tts_rate
+    voices = tts.spoken_voices(lesson.cards, lesson.voice, directory, rate, lesson.dictation or lesson.dictation_only)
+    if not voices:
         return
     try:
-        await tts.tts_many(said, lesson.voice, directory, lesson.rate or settings.current().tts_rate)
+        await tts.tts_voices(voices, directory, rate)
     except Exception as e:  # silent: the send tries again
         log.warning("Sounds ahead failed: %s", loggable(e))

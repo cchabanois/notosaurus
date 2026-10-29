@@ -43,8 +43,10 @@ def test_it_stays_the_same_card(monkeypatch):
     mask = Mask(page=1, n=2, box=[0.1, 0.1, 0.2, 0.2])
     answering(monkeypatch, {"front": "What is (2)? (the organ)", "back": "the heart"})
     card = Card(id="c2", front="What is (2)?", back="the hart", mask=mask, picture="p.jpg", picture_prompt="a heart")
+    card.voice = "en-GB-Chirp3-HD-Aoede"  # its sound's, made on the phone
     fixed = fix(card, "the spelling of heart").card
     assert (fixed.id, fixed.mask, fixed.picture, fixed.picture_prompt) == ("c2", mask, "p.jpg", "a heart")
+    assert fixed.voice == card.voice
 
 
 def test_a_figure_corrected_is_drawn_again(monkeypatch):

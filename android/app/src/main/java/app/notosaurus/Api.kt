@@ -46,6 +46,7 @@ data class Card(
     @SerialName("fun_fact") val funFact: String = "", // "did you know", with the info
     val explanation: String = "", // the helps on the back
     val mnemonic: String = "",
+    val voice: String = "", // its sound's voice, when not the lesson's (Speech.cardVoice)
 )
 
 @Serializable

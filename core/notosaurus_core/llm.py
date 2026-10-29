@@ -93,7 +93,7 @@ SLOW_THINKING_S = 45  # the same when the model thinks (a careful lesson): longe
 # schema with too many optional fields ("Schema is too complex"): the fields Notosaurus
 # sets itself are left out, and the ones only some requests ask for (fun facts, helps)
 # are there only then.
-SET_BY_NOTOSAURUS = {"picture", "picture_source", "id"}
+SET_BY_NOTOSAURUS = {"picture", "picture_source", "id", "voice"}
 
 
 @cache
@@ -495,7 +495,8 @@ async def revise_cards(
         if card.mask:
             labels.setdefault(card.mask.page, []).append(card.mask.n)
     plain = Deck(
-        deck=deck.deck, cards=[c.model_copy(update={"mask": None, "picture": "", "id": ""}) for c in deck.cards]
+        deck=deck.deck,
+        cards=[c.model_copy(update={"mask": None, "picture": "", "id": "", "voice": ""}) for c in deck.cards],
     )
     text = instructions + _revision_text(prompt, plain, instruction, language, len(images), sizes, fmt, labels)
     # The fun facts and helps already there are kept: the AI sees them
@@ -568,8 +569,8 @@ def _keep_ids(revised: list[Card], before: list[Card]) -> None:
 
 
 def _same_card(card: Card, before: Card) -> None:
-    """`card` is `before` changed: its id, and its picture unless what to draw changed."""
-    card.id = before.id
+    """`card` is `before` changed: its id and voice, and its picture unless what to draw changed."""
+    card.id, card.voice = before.id, before.voice
     unchanged = (card.picture_prompt, card.figure) == (before.picture_prompt, before.figure)
     if unchanged or not (card.picture_prompt or card.figure):
         card.picture, card.picture_prompt, card.figure = before.picture, before.picture_prompt, before.figure

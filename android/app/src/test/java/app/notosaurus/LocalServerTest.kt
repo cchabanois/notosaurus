@@ -2107,15 +2107,13 @@ class LocalServerTest {
 
     private fun audioOf(id: String) = folder.root.resolve("lessons/$id/audio")
 
-    private fun indexOf(id: String) = json.parseToJsonElement(audioOf(id).resolve(Speech.INDEX).readText()).jsonObject
-
     private suspend fun HttpClient.sendLesson(id: String, voice: String = "es-ES-Chirp3-HD-Aoede") {
         val saved = get("/api/lessons/$id") { page() }.json().jsonObject
         sendSteps("""{"deck": "Espagnol", "cards": ${saved["cards"]}, "voice": "$voice", "rate": "${saved.string("rate")}", "lesson_id": "$id"}""")
     }
 
     @Test
-    fun aLessonsSoundsInItsOwnFolderWithWhatTheySay() = app { client ->
+    fun aLessonsSoundsInItsOwnFolder() = app { client ->
         val id = client.extract(voice = "").string("id")
         relay.takeRequest(5, TimeUnit.SECONDS) // the extraction
         val speaker = Speaker(voices = listOf("es-ES-Chirp3-HD-Aoede", "es-ES-Chirp3-HD-Puck"))
@@ -2130,17 +2128,14 @@ class LocalServerTest {
         val name = Speech.fileName("la madre", "es-ES-Chirp3-HD-Aoede", r)
         assertTrue(name.startsWith("la-madre-"))
         assertEquals(listOf(name), audioOf(id).list()!!.filter { it.endsWith(".mp3") })
-        val said = indexOf(id)[name]!!.jsonObject
-        assertEquals(listOf("la madre", "es-ES-Chirp3-HD-Aoede", r), listOf("text", "voice", "rate").map { said.string(it) })
         assertFalse(folder.root.resolve("audio").list()!!.any { it.endsWith(".mp3") }) // not among the previews
 
-        // Its back corrected: sent, the old sound gone with what the index said of it
+        // Its back corrected: sent, the old sound gone
         client.saveLesson(id, listOf("la mamá"))
         client.sendLesson(id)
         assertEquals(listOf(Speech.fileName("la mamá", "es-ES-Chirp3-HD-Aoede", r)), audioOf(id).list()!!.filter { it.endsWith(".mp3") })
-        assertEquals(setOf(Speech.fileName("la mamá", "es-ES-Chirp3-HD-Aoede", r)), indexOf(id).keys)
 
-        // Its voice changed for another of the relay's: read again with it (not kept as made elsewhere)
+        // Its voice changed for another of the relay's: read again with it
         client.saveLesson(id, listOf("la mamá"), voice = "es-ES-Chirp3-HD-Puck")
         client.sendLesson(id, voice = "es-ES-Chirp3-HD-Puck")
         assertEquals(listOf("la madre", "la mamá", "la mamá"), speaker.read)
@@ -2151,20 +2146,30 @@ class LocalServerTest {
     }
 
     @Test
-    fun aSoundMadeOnTheComputerKeptWhileItsCardSaysTheSame() = app { client ->
+    fun aCardsOwnVoiceKeepsItsSoundMadeOnTheComputer() = app { client ->
         val id = client.extract(voice = "").string("id")
         relay.takeRequest(5, TimeUnit.SECONDS)
         val speaker = Speaker(voices = listOf("es-ES-Chirp3-HD-Aoede"))
         relay.dispatcher = speaker
-        client.saveLesson(id, listOf("la madre", "el padre"))
-        // As an import from the computer leaves it: its voice, edge-tts's
+        // As a lesson moved from the computer: each card's voice, edge-tts's; the lesson's, the relay's
+        val cards = """[{"front": "la mère", "back": "la madre", "voice": "es-ES-ElviraNeural"},
+            {"front": "le père", "back": "el padre", "voice": "es-ES-ElviraNeural"}, {"front": "le fils", "back": "el hijo"}]"""
+        client.put("/api/lessons/$id") {
+            page(); contentType(ContentType.Application.Json)
+            setBody("""{"deck": "Espagnol", "cards": $cards, "voice": "es-ES-Chirp3-HD-Aoede", "rate": "-10%"}""")
+        }
         audioOf(id).mkdirs()
-        audioOf(id).resolve("la-madre-3f2a1c9e.mp3").writeText("computer's la madre")
-        audioOf(id).resolve(Speech.INDEX).writeText("""{"la-madre-3f2a1c9e.mp3": {"text": "la madre", "voice": "es-ES-ElviraNeural", "rate": "-10%"}}""")
+        val madre = audioOf(id).resolve(Speech.fileName("la madre", "es-ES-ElviraNeural", "-10%")) // the same name there
+        madre.writeText("computer's la madre")
         client.sendLesson(id)
-        assertEquals(listOf("el padre"), speaker.read) // la madre not paid for
+        // la madre: the computer's, no credit; el padre (its sound not come) and el hijo: the lesson's voice
+        assertEquals(setOf("el padre", "el hijo"), speaker.read.toSet())
         assertEquals("computer's la madre", anki.sounds["la madre"]!!.readText())
-        assertTrue(audioOf(id).resolve("la-madre-3f2a1c9e.mp3").isFile) // still used: kept
+        assertTrue(madre.isFile) // still used: kept
+        assertTrue(audioOf(id).resolve(Speech.fileName("el padre", "es-ES-Chirp3-HD-Aoede", "-10%")).isFile)
+        // 🔊 on its card, its voice said by the page: the computer's sound
+        val heard = client.get("/api/tts?text=la%20madre&voice=es-ES-ElviraNeural&lesson=$id&rate=-10%25") { page() }
+        assertEquals("computer's la madre", heard.bodyAsText())
     }
 
     @Test
@@ -2183,7 +2188,6 @@ class LocalServerTest {
         speech.moveIntoLessons(Lessons(folder.root.resolve("lessons")).list())
         val moved = audioOf(id).resolve(Speech.fileName("la madre", "es-ES-Chirp3-HD-Aoede", "-10%"))
         assertEquals("older la madre", moved.readText())
-        assertEquals("la madre", indexOf(id)[moved.name]!!.jsonObject.string("text"))
         assertFalse(legacy.exists()) // audio/ keeps only previews now
         legacy.writeText("again")
         speech.moveIntoLessons(emptyList()) // once
