@@ -35,6 +35,7 @@ from .calls import (  # noqa: F401 (llm's API)
     tell,
     telling,
 )
+from .cards import plain as plain_text
 from .cards import plain_cards
 from .config import AIConfig
 from .errors import loggable
@@ -181,11 +182,11 @@ async def extract_cards(
     diagrams.normalize(result.cards, sizes, fmt)
     await _complete_figures(s, images, result.cards)
     return Extracted(
-        deck=Deck(deck=result.deck, cards=result.cards),
+        deck=Deck(deck=plain_text(result.deck), cards=result.cards),
         turns=diagrams.turns(result.text_lines, sizes, fmt),
         frames=diagrams.frames(result.frames, sizes, fmt),
         back_language=result.back_language.strip(),
-        choice=result.choice.strip(),
+        choice=plain_text(result.choice).strip(),
         dictation=result.dictation,
         dictation_card=result.dictation_card,
         typing=result.typing,
@@ -505,6 +506,7 @@ async def revise_cards(
     )
     revision = Revision.model_validate(_accepted(answer).model_dump())
     plain_cards(revision.cards)
+    revision.summary = plain_text(revision.summary)
     _keep_masks(revision.cards, deck.cards, sizes, fmt)
     return revision
 
