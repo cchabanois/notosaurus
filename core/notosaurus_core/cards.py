@@ -29,6 +29,12 @@ ESCAPES = {"\t": "\\t", "\f": "\\f", "\b": "\\b", "\r": "\\r", "\n": "\\n"}
 # its backslash): a group in plain parentheses opening on a command, in a text without
 # any formula, is the formula it meant, "(\text{m})" for "\(\text{m}\)".
 BARE_FORMULA = re.compile(r"\((\\[a-zA-Z][^()]*)\)")
+# A bracket the AI "escaped" (a French interval, "]-\infty ; +\infty[" written
+# "\]-\infty ; +\infty\["): "\[" and "\]" open and close a formula on its own, so one
+# out of that order is a bracket. Put back as one, the part it bounds a formula when it
+# holds a command and no formula already: "\(]-\infty ; +\infty[\)".
+DISPLAY = re.compile(r"\\[\[\]]")
+INLINE = re.compile(r"\\\(.*?\\\)", re.DOTALL)
 TEXT_FIELDS = ("front", "back", "info", "fun_fact", "explanation", "mnemonic")
 
 
@@ -54,9 +60,39 @@ def formulas(text: str) -> str:
     text = LOST_ESCAPE.sub(lambda m: ESCAPES[m.group()], text)
     if "\\" not in text:
         return text
+    text = brackets(text)
     if not FORMULA.search(text):
         return BARE_FORMULA.sub(r"\\(\1\\)", text)
     return FORMULA.sub(lambda m: LOST_NEWLINE.sub("\\\\n", m.group()), text)
+
+
+def brackets(text: str) -> str:
+    """The text with its brackets the AI wrote as display delimiters put back (DISPLAY): a
+    "\\[" closed by the next "\\]" is a formula; any other is a bracket."""
+    marks = list(DISPLAY.finditer(text))
+    stray, i = [], 0
+    while i < len(marks):
+        if marks[i].group() == "\\[" and i + 1 < len(marks) and marks[i + 1].group() == "\\]":
+            i += 2  # a formula on its own
+            continue
+        stray.append(marks[i])
+        i += 1
+    if not stray:
+        return text
+    inline = [m.span() for m in INLINE.finditer(text)]
+    parts, at = [], 0
+    for first, last in zip(stray[0::2], stray[1::2], strict=False):
+        start, end = first.start(), last.end()
+        bounded = text[first.end() : last.start()]
+        inside = any(a <= start and end <= b for a, b in inline)
+        piece = first.group()[1] + bounded + last.group()[1]
+        parts += [text[at:start], piece if inside or "\\" not in bounded else f"\\({piece}\\)"]
+        at = end
+    if len(stray) % 2:  # one alone: a bracket, as it is
+        last = stray[-1]
+        parts += [text[at : last.start()], last.group()[1]]
+        at = last.end()
+    return "".join(parts) + text[at:]
 
 
 def plain_cards(cards: list[Card]) -> None:

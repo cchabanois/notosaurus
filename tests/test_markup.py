@@ -111,3 +111,16 @@ def test_extraction_and_revision_texts_decoded(monkeypatch):
     )
     revised = asyncio.run(llm.revise_cards(s, [], "p", Deck(deck="D", cards=[Card(front="a", back="b")]), "fix"))
     assert revised.summary == "Carte modifiée"
+
+
+def test_brackets_written_as_display_delimiters():
+    """A French interval's brackets "escaped" ("\\]-\\infty ; +\\infty\\["): "\\[" and "\\]"
+    open and close a formula on its own, so one out of that order is a bracket, put back;
+    the part it bounds a formula when it holds a command. A real formula on its own stays."""
+    written = r"\]-\infty ; +\infty\[ (soit \(\mathbb{R}\))"
+    assert cards.formulas(written) == r"\(]-\infty ; +\infty[\) (soit \(\mathbb{R}\))"
+    assert cards.formulas(r"\(\]0 ; 1\[\)") == r"\(]0 ; 1[\)"  # within a formula already
+    assert cards.formulas(r"on a \]0 ; 1\] ici") == "on a ]0 ; 1] ici"  # no command: plain text
+    assert cards.formulas(r"\[0 ; 1\[ et \[x^2\]") == r"[0 ; 1[ et \[x^2\]"
+    for kept in (r"\[x^2 + 1\]", r"\(]-\infty ; 0[\)", "]0 ; 1[", r"\[a\] puis \[b\]"):
+        assert cards.formulas(kept) == kept
