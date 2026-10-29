@@ -150,6 +150,50 @@ def test_a_lesson_from_the_phone_gets_a_voice_of_this_computer(lesson, tmp_path,
     assert {c.voice for c in there.cards} == {PHONE}
 
 
+def test_a_lesson_from_the_phone_taken_in(client, tmp_path, monkeypatch):
+    """The phone's lesson.json: its id and photos' count in it, its notes by card (not by
+    Anki profile), the relay's voice: taken in as this computer keeps lessons."""
+
+    async def voice_for(language, chosen=None):
+        return "es-ES-ElviraNeural"
+
+    monkeypatch.setattr(tts, "voice_for", voice_for)
+    phone = {
+        "id": "2026-10-30-espagnol",
+        "photo_count": 1,
+        "deck": "Espagnol",
+        "prompt": "FR → ES",
+        "voice": PHONE,
+        "cards": [{"front": "la mère", "back": "la madre", "id": "c1"}],
+        "anki_notes": {"c1": 1234},
+        "created_at": "2026-10-30T10:15",  # as the phone writes them: no ":00"
+        "updated_at": "2026-10-30T10:15",
+    }
+    path = tmp_path / "phone.zip"
+    manifest = {"format": 1, "app": "notosaurus", "device": "android", "install": "the-phone"}
+    path.write_bytes(
+        zip_of(
+            {
+                "manifest.json": json.dumps(manifest).encode(),
+                "lessons/2026-10-30-espagnol/lesson.json": json.dumps(phone).encode(),
+                "lessons/2026-10-30-espagnol/page-1.jpg": b"photo",
+                "prompts.json": json.dumps({"user": [{"id": 3, "name": "Dictée", "text": "Une dictée"}]}).encode(),
+            }
+        )
+    )
+    assert run(transfer.import_(path)).dict() == {
+        "added": 1,
+        "replaced": 0,
+        "kept": 0,
+        "children": 0,
+        "exams": 0,
+        "prompts": 1,
+    }
+    there = lessons.get("2026-10-30-espagnol")
+    assert (there.photo_count, there.anki_notes, there.voice) == (1, {}, "es-ES-ElviraNeural")
+    assert there.cards[0].voice == PHONE
+
+
 def zip_of(files: dict[str, bytes]) -> bytes:
     buffer = io.BytesIO()
     with zipfile.ZipFile(buffer, "w") as z:

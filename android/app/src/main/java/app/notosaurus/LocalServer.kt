@@ -69,6 +69,9 @@ class LocalServer(
     internal val requestAnkiPermission: suspend () -> Boolean = { false }, // AnkiDroid's permission dialog: granted?
     internal val installAnki: () -> Unit = {}, // AnkiDroid's Play Store page
     internal val scan: suspend () -> String? = { null }, // a QR code read by the camera (null: cancelled)
+    // A file to write, where the user chooses it (Android's document picker: Drive, the SD
+    // card…), suggested `name`; null: cancelled
+    internal val createDocument: suspend (name: String, mime: String) -> java.io.OutputStream? = { _, _ -> null },
     internal val modeChanged: () -> Unit = {}, // the app's shortcuts follow
     internal val turnPhoto: (ByteArray, Int) -> ByteArray = { data, _ -> data }, // a JPEG turned clockwise (Photos.turn)
     internal val cardSize: (ByteArray) -> ByteArray = { it }, // a picture as a card shows it (Photos.cardSize)
@@ -90,6 +93,9 @@ class LocalServer(
     internal val prompts = Prompts(File(dataDir, "prompts.json"), texts)
     // The backs read aloud, kept in each lesson's folder (the previews' in audio/)
     internal val speech = Speech(File(dataDir, "audio").apply { mkdirs() }, prefs, ::relay, lessons::audio)
+    // The lessons in one file, to keep them or move them (the computer's app/transfer.py's format)
+    internal val transfer = LessonsTransfer(File(dataDir, "lessons"), lessons, prefs, children, exams, prompts, speech, version)
+    internal val cacheDir = File(dataDir, "cache") // a file being imported
     internal val pictures = Pictures(lessons, ::relay, cardSize)
     internal val generation = Generation(lessons, prefs, ::relay, speech, turnPhoto, children)
     internal val computer = Computer(prefs, modeChanged)
@@ -366,6 +372,7 @@ class LocalServer(
             requestAnkiPermission: suspend () -> Boolean,
             installAnki: () -> Unit,
             scan: suspend () -> String?,
+            createDocument: suspend (String, String) -> java.io.OutputStream?,
             modeChanged: () -> Unit,
             requestMicPermission: suspend () -> Boolean,
             activity: () -> android.app.Activity?, // Google Play's purchase screen shows over it
@@ -381,6 +388,7 @@ class LocalServer(
             requestAnkiPermission = requestAnkiPermission,
             installAnki = installAnki,
             scan = scan,
+            createDocument = createDocument,
             modeChanged = modeChanged,
             turnPhoto = Photos::turn,
             cardSize = Photos::cardSize,

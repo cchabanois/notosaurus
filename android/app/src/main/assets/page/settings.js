@@ -29,6 +29,7 @@ document.addEventListener("alpine:init", () => {
     buying: false,
     anki: null,       // { installed, permitted }
     data: null,       // { lessons, bytes }
+    transferring: "",  // "export" or "import" while the lessons' file is made or taken in
     newKey: "",
     checking: false,
     computerAddress: "",
@@ -252,6 +253,38 @@ document.addEventListener("alpine:init", () => {
         this.loadAnki();
       } catch (e) {
         this.error = e.message;
+      }
+    },
+
+    // The lessons in one file (LessonsTransfer): written where the user chooses, or taken in
+    async exportLessons() {
+      this.error = this.notice = "";
+      this.transferring = "export";
+      try {
+        const r = await api("/api/admin/transfer/export", { method: "POST" });
+        if (!r.cancelled) this.notice = t("admin.transfer.exported", { name: r.name });
+      } catch (e) {
+        this.error = e.message;
+      } finally {
+        this.transferring = "";
+      }
+    },
+
+    async importLessons(event) {
+      const file = event.target.files?.[0];
+      event.target.value = "";  // the same file can be chosen again
+      if (!file) return;
+      this.error = this.notice = "";
+      this.transferring = "import";
+      try {
+        const body = new FormData();
+        body.append("file", file);
+        this.notice = t("admin.transfer.imported", await api("/api/admin/transfer", { method: "POST", body }));
+        this.loadData();
+      } catch (e) {
+        this.error = e.message;
+      } finally {
+        this.transferring = "";
       }
     },
 

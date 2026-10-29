@@ -87,6 +87,8 @@ def _read(path: Path) -> Lesson:
     if raw is None:  # deleted meanwhile (another request, between a look and this reading)
         raise FileNotFoundError(path / "lesson.json")
     data = storage.migrate(raw, "lesson", FORMAT, {0: dict})
+    # Its id and photos' count are its folder's (the phone's lesson.json has them too: imported)
+    data = {k: v for k, v in data.items() if k not in ("id", "photo_count")}
     lesson = Lesson(id=path.name, photo_count=_count_photos(path), **data)
     # Cards saved before cards had ids: the same id at every reading, until it's saved
     for n, card in enumerate(lesson.cards):

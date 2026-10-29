@@ -892,6 +892,9 @@
       "connect": "Conectar",
       "saved": "Ordenador: {address}"
     },
+    "transfer": {
+      "hint": "Un solo archivo con todas las lecciones (fotos, tarjetas, imágenes, sonidos), los niños, los exámenes y sus instrucciones: para guardarlas (Drive, la tarjeta SD…), o abrirlas en otro teléfono o en el ordenador. Sus tarjetas que ya están en AnkiDroid se encuentran allí, sin duplicados."
+    },
     "data": {
       "title": "🗂️ Lecciones en este teléfono",
       "size": "{lessons} · {size} MB",

@@ -161,12 +161,15 @@ async def _lesson(z: zipfile.ZipFile, id: str, members: list, here: bool) -> str
             target.parent.mkdir(parents=True, exist_ok=True)
             with z.open(info) as source, target.open("wb") as out:
                 shutil.copyfileobj(source, out)
+        if not here:  # another collection's notes (the phone's, by card: not the computer's shape) forgotten first
+            raw = storage.read_json(staging / "lesson.json", {}) or {}
+            storage.write_json(staging / "lesson.json", {**raw, "anki_notes": {}})
         incoming = lessons._read(staging)
         with storage.lock:
             existing = lessons.folder(id)
             if existing and not _newer(incoming.updated_at, lessons._read(existing).updated_at):
                 return "kept"
-        await _arrived(staging, incoming, here)
+        await _arrived(staging, incoming)
         with storage.lock:
             existing = lessons.folder(id)
             if existing:
@@ -188,12 +191,10 @@ def _newer(incoming: str, existing: str) -> bool:
         return incoming > existing
 
 
-async def _arrived(folder: Path, lesson: lessons.Lesson, here: bool) -> None:
-    """The lesson as this computer keeps it: another collection's notes forgotten, its
-    voice one of this computer's (each card keeping the phone's own: its sound)."""
+async def _arrived(folder: Path, lesson: lessons.Lesson) -> None:
+    """The lesson as this computer keeps it: its voice one of this computer's (each card
+    keeping the phone's own: its sound)."""
     changes: dict = {}
-    if not here:
-        changes["anki_notes"] = {}
     voice = lesson.voice
     if voice and not tts.is_edge_voice(voice) and not tts.is_anki_locale(voice):
         locale = "-".join(voice.split("-")[:2])
