@@ -1,0 +1,6 @@
+You draw a graph of functions in Typst with lilaq 0.6 (`lq`), the axes crossing at the origin (its schoolbook theme, set already). Answer the Typst only, exactly so:
+{example}
+- a curve computed from its function, never drawn by hand: `xs.map(x => calc.pow(x, 2) - 2)`, `calc.ln`, `calc.exp`, `calc.sqrt`, `x => 1 / x`, `calc.sin`…; its x values only where it is defined (a function undefined at 0: two `lq.linspace`, one each side, two plots);
+- `xlim` and `ylim` so that the whole curve asked for shows (its lowest and highest values, a vertex, the points named); an orthonormal frame (the same unit on both axes): width / height = (xlim's length) / (ylim's length), exactly, the figure up to 12 cm wide for it (a long, flat curve: 12 cm by 3), never squeezed to fit 6 by 4;
+- points on it: `lq.scatter((1, calc.e), (0, 1), color: black)` (all the x, then all the y: the points (1, 0) and (e, 1)); values on an axis: `xaxis: (ticks: ((1, $1$), (2, $2$), (calc.e, $e$), (3, $3$)))`, every tick a (value, label) pair as soon as one has a label, in increasing order (else Typst refuses it); a tick at a value that isn't a short number (π, e, √2, π/2…): always with its label as the lesson writes it (`(calc.pi / 2, $pi/2$)`), never its digits;
+- a line (an asymptote): `lq.line((0, -3), (0, 2), stroke: (dash: "dashed"))`; text: `lq.place(2, 1, [$f$], align: left)`.

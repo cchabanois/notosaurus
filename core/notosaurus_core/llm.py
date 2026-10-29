@@ -327,7 +327,7 @@ async def _figure_family(s: AIConfig, description: str, kind: str = "") -> str:
 
 
 async def _drawn(s: AIConfig, text: str, description: str, family: str, light: bool) -> MadeFigure:
-    """A figure drawn once, cleaned: in Typst with its family's package and sheet (asked again
+    """A figure drawn once, cleaned: in Typst with its family's package and rule (asked again
     once, told what Typst said, when it doesn't compile), else as SVG (family "other", Typst
     refusing it twice; the demo)."""
     from . import figures, figures_typst
