@@ -32,7 +32,8 @@ figures, simple diagrams. Rules:
 label or measure it doesn't ask to write (the figure goes on a flashcard: one word too \
 many may give the answer away); what it names to say what to draw (a function, a shape, \
 a theorem, an object) is not a label: written only when the description asks for it;
-- black strokes, font-family="sans-serif", font-size 14 to 16;
+- black strokes, font-family="sans-serif", font-size 14 to 16; the colours the description \
+gives (a colour code: atoms, a legend), as it says;
 - labels never overlap lines or each other; leave margins inside the viewBox;
 - exact geometry: right angles really right (marked with a small square), \
 proportions and measures as described;

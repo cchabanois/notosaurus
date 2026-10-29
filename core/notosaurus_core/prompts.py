@@ -123,7 +123,8 @@ food), also fill "picture_search": a short English search for a free picture of 
 drawing. Leave it empty for what must be drawn. Leave "picture" and "id" empty.
 - Figures: when a card is about a figure, fill "figure" with a precise description of \
 it, in the language of the instructions: the shapes, their proportions, which angles \
-are right, and every label with its exact text. A card is about a figure when it is \
+are right, every label with its exact text, and the colours when they mean something (a \
+colour code: each atom's, a legend's). A card is about a figure when it is \
 about geometry: a formula of a figure (the area of a triangle: the triangle with its \
 base b and height h drawn), a theorem (Pythagoras: the right triangle with its sides \
 a, b, c), a notion (a tangent, a perpendicular bisector), a figure with measures, a \

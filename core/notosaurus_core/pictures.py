@@ -361,7 +361,7 @@ async def card_picture(
             source="drawn",
             model=s.model_for_provider(),
             engine=made.engine,
-            made_with=figures_typst.made_with(made.family) if made.engine == "typst" else [],
+            made_with=figures_typst.made_with(made.family, made.typst) if made.engine == "typst" else [],
             careful=made.careful,
         )
         return CardPicture(card, figures.clean(made.svg).encode(), "svg")
