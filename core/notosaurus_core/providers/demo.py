@@ -16,6 +16,7 @@ from ..config import AIConfig
 from ..figures import Drawing
 from ..models import (
     Card,
+    CardFix,
     Deck,
     Dictation,
     Doubt,
@@ -241,7 +242,12 @@ def _fake_diagram() -> Deck:
     )
 
 
-DEMO = {"removed": "Last card removed (demo).", "added": "One card added (demo).", "addedFront": "(demo addition)"}
+DEMO = {
+    "removed": "Last card removed (demo).",
+    "added": "One card added (demo).",
+    "addedFront": "(demo addition)",
+    "fixed": "Card corrected (demo).",
+}
 
 
 def revision(deck: Deck, instruction: str, texts: dict[str, str]) -> Revision:
@@ -250,6 +256,11 @@ def revision(deck: Deck, instruction: str, texts: dict[str, str]) -> Revision:
         return Revision(deck=deck.deck, cards=deck.cards[:-1], summary=texts["removed"])
     added = Card(front=texts["addedFront"], back=instruction[:60], subdeck="Demo")
     return Revision(deck=deck.deck, cards=[*deck.cards, added], summary=texts["added"])
+
+
+def fixed_card(card: Card, instruction: str, texts: dict[str, str]) -> CardFix:
+    """Demo mode: the card's back becomes what was asked."""
+    return CardFix(cards=[card.model_copy(update={"back": instruction.strip()[:80]})], summary=texts["fixed"])
 
 
 def _fake_dictation(kind: str) -> str:

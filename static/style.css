@@ -530,6 +530,13 @@ h2 {
 .flash .explain-block { margin: 0 0 .4rem; }
 .flash .explain-actions { display: flex; flex-wrap: wrap; align-items: center; gap: .4rem; }
 .flash .explain-actions .icon-btn { margin-left: auto; width: 2rem; height: 2rem; }
+/* ✨ A card corrected by the AI as asked: its field, then what changed (↩ to undo) */
+.flash.has-fix { flex-wrap: wrap; }  /* under the card, full width */
+.flash .card-fix { flex: 1 0 100%; margin-top: .6rem; padding: .6rem .7rem; border-radius: var(--radius-sm); background: var(--surface-2); display: grid; gap: .4rem; }
+.flash .card-fix textarea { width: 100%; min-height: 3.2rem; font-size: .92rem; }
+.flash .card-fix .hint { margin: 0; }
+.flash .card-fix-actions { display: flex; justify-content: flex-end; gap: .4rem; }
+.flash .card-fixed { flex: 1 0 100%; margin-top: .5rem; display: flex; flex-wrap: wrap; align-items: baseline; gap: .2rem .6rem; font-size: .9rem; color: var(--muted); }
 .flash.has-doubt { flex-wrap: wrap; }  /* the doubt above the card, full width */
 .card-doubt { flex: 1 0 100%; display: grid; gap: .3rem; margin: 0 0 .4rem; padding: .6rem .8rem; border-radius: var(--radius-sm);
   background: var(--danger-soft); border-left: 3px solid var(--danger); }

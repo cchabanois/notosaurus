@@ -277,7 +277,7 @@ class Relay(
 
         // The AI's routes: the first one called without a key starts the free trial (not reading
         // aloud, the voices, the free pictures, a report: they come after a lesson, or need none)
-        val AI_ROUTES = setOf("extract", "revise", "explain", "rephrase", "figure", "check-figure", "picture", "card-picture", "plan-picture", "transcribe")
+        val AI_ROUTES = setOf("extract", "revise", "fix-card", "explain", "rephrase", "figure", "check-figure", "picture", "card-picture", "plan-picture", "transcribe")
 
         // The relay's answers for a subscription past its end: ended, on hold, or the free trial over
         val LAPSED = setOf("relay.subscription_ended", "relay.payment_pending", "relay.trial_ended")

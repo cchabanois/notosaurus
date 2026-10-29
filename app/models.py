@@ -118,6 +118,14 @@ class RevisionRequest(LessonIn):
     instruction: str = Field(min_length=1, max_length=2000)
 
 
+class FixCardRequest(BaseModel):
+    """A card as shown (possibly edited, not saved yet), the correction asked for it."""
+
+    card: Card
+    instruction: str = Field(min_length=1, max_length=2000)
+    others: list[str] = Field(default_factory=list, max_length=500)  # the other cards' fronts
+
+
 class ExportRequest(LessonIn):
     lesson_id: str | None = None  # saved lesson to update and mark as exported
 

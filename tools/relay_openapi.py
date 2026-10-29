@@ -155,6 +155,15 @@ def build() -> dict:
         """A natural-language correction of the cards (llm.revise_cards)."""
 
     @app.post(
+        f"{api.PREFIX}/fix-card",
+        response_model=api.FixCardResponse,
+        responses=errors(*PHOTOS),
+        openapi_extra=multipart(api.FixCardRequest),
+    )
+    def fix_card(x_notosaurus_version: str = client):
+        """One card corrected by the user's request (llm.fix_card)."""
+
+    @app.post(
         f"{api.PREFIX}/lesson-drawings",
         response_model=api.LessonDrawingsResponse,
         responses=errors(*PHOTOS),
@@ -354,6 +363,7 @@ def build() -> dict:
         [
             (api.ExtractRequest, "validation"),
             (api.ReviseRequest, "validation"),
+            (api.FixCardRequest, "validation"),
             (api.LessonDrawingsRequest, "validation"),
             (api.TranscribeRequest, "validation"),
             (api.ExtractLine, "serialization"),

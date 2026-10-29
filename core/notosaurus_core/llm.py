@@ -41,12 +41,14 @@ from .config import AIConfig
 from .errors import loggable
 from .models import (
     Card,
+    CardFix,
     Deck,
     Dictation,
     Drawings,
     Explanation,
     Extraction,
     Figures,
+    FixedCard,
     Frame,
     Picked,
     PicturePlan,
@@ -71,6 +73,7 @@ from .prompts import (
     _drawings_text,
     _explain_text,
     _figures_text,
+    _fix_text,
     _pick_text,
     _plan_text,
     _rephrase_text,
@@ -511,6 +514,43 @@ async def revise_cards(
     return revision
 
 
+async def fix_card(
+    s: AIConfig,
+    images: list[Image],
+    prompt: str,
+    deck: str,
+    card: Card,
+    instruction: str,
+    others: Sequence[str] = (),
+    language: str = "English",
+    instructions: str = "",
+    demo: dict[str, str] | None = None,
+) -> FixedCard:
+    """One card corrected by a natural-language request ("the answer is 1789"), seeing the
+    lesson's photos: the only card the AI writes, so no other changes. `others`: the other
+    cards' fronts (not to repeat one); `language`, `instructions`, `demo`: as revise_cards.
+    It stays the same card: its id (Anki updates its note) and its diagram label; its
+    picture too, unless what to draw changed."""
+    images, _ = _prepare(images)
+    text = instructions + _fix_text(prompt, deck, card, others, instruction, language, len(images))
+    texts = {**demo_ai.DEMO, **(demo or {})}
+    answer = await _ask_provider(
+        s,
+        images,
+        text,
+        ai_schema(CardFix, fun_facts=True, helps=True),
+        demo=lambda: demo_ai.fixed_card(card, instruction, texts),
+    )
+    fix = CardFix.model_validate(_accepted(answer).model_dump())
+    if not fix.cards:
+        raise ExtractionError("llm.invalid_answer")
+    fixed = fix.cards[0]
+    plain_cards([fixed])
+    fixed.mask = card.mask
+    _same_card(fixed, card)
+    return FixedCard(card=fixed, summary=plain_text(fix.summary))
+
+
 def _keep_ids(revised: list[Card], before: list[Card]) -> None:
     """A revised card keeps the id and the picture of the card it was (same front and
     back, else same back, else same front): Anki updates its note, the picture stays —
@@ -521,14 +561,19 @@ def _keep_ids(revised: list[Card], before: list[Card]) -> None:
         match = match or next((c for c in left if c.back == card.back), None)
         match = match or next((c for c in left if c.front == card.front and c.front), None)
         if match:
-            card.id = match.id
-            unchanged = (card.picture_prompt, card.figure) == (match.picture_prompt, match.figure)
-            if unchanged or not (card.picture_prompt or card.figure):
-                card.picture, card.picture_prompt, card.figure = match.picture, match.picture_prompt, match.figure
-                card.picture_on_back = card.picture_on_back if unchanged else match.picture_on_back
+            _same_card(card, match)
             left.remove(match)
         else:
             card.id, card.picture = "", ""  # a new card: its id comes when saved
+
+
+def _same_card(card: Card, before: Card) -> None:
+    """`card` is `before` changed: its id, and its picture unless what to draw changed."""
+    card.id = before.id
+    unchanged = (card.picture_prompt, card.figure) == (before.picture_prompt, before.figure)
+    if unchanged or not (card.picture_prompt or card.figure):
+        card.picture, card.picture_prompt, card.figure = before.picture, before.picture_prompt, before.figure
+        card.picture_on_back = card.picture_on_back if unchanged else before.picture_on_back
 
 
 def _keep_masks(

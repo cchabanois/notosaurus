@@ -184,6 +184,19 @@
         "why": "Por que está certo?"
       }
     },
+    "fix": {
+      "button": "Corrigir este cartão",
+      "label": "O que está errado?",
+      "placeholder": "«a resposta é 1789», «mais curto»…",
+      "submit": "Corrigir",
+      "busy": "Corrigindo…",
+      "undo": "↩ Desfazer",
+      "write": "Escrever com a IA",
+      "labelBlank": "O que este cartão deve perguntar?",
+      "placeholderBlank": "«o pretérito de ir», «a data da tomada da Bastilha»…",
+      "submitBlank": "Escrever",
+      "busyBlank": "Escrevendo…"
+    },
     "revise": {
       "label": "Corrigir os cartões com a IA",
       "placeholder": "✨ Corrigir com a IA: “tire o cartão sobre o pai”, “você esqueceu as cores”…",
@@ -1084,7 +1097,8 @@
   "demo": {
     "removed": "Último cartão removido (demonstração).",
     "added": "Um cartão adicionado (demonstração).",
-    "addedFront": "(adicionado pela demonstração)"
+    "addedFront": "(adicionado pela demonstração)",
+    "fixed": "Cartão corrigido (demo)."
   },
   "addon": {
     "menuOpen": "Abrir o Notosaurus",

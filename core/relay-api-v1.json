@@ -3,7 +3,7 @@
   "info": {
     "title": "Notosaurus relay",
     "summary": "notosaurus_core behind a licence key",
-    "description": "The Notosaurus relay's API, version 1: what its client (the Notosaurus app with a\nlicence, later the Android app) and the relay itself both import, so that they\ncan't drift apart.\n\nThe relay is notosaurus_core behind a licence key: each route is the remote form\nof a core function (/v1/extract → llm.extract_cards…), takes what that function\ntakes but the AI configuration (the relay's own), and keeps nothing.\n\n- Authentication: \"Authorization: Bearer <licence key>\".\n- The client says its version in CLIENT_HEADER (\"1.1.0\"); a client too old for\n  the relay gets \"relay.client_outdated\".\n- The routes with photos (extract, revise) take multipart/form-data: a \"request\"\n  part holding the JSON request and one \"images\" part per photo (binary, as\n  diagrams.prepare makes them: JPEG, at most 1568 px). The other routes take JSON.\n- Errors: HTTP status of ERRORS, body {\"code\", \"params\"} (errors.AppError), the\n  AI's own errors (\"llm.*\") passed on as they are.\n- /v1/extract asked with \"Accept: application/x-ndjson\" (STREAM_TYPE) answers as the\n  AI writes: one JSON object per line, each card as it comes, then the answer or\n  the error (ExtractLine). A client going away stops the AI.\n- /v1/transcribe turns a dictation (the app's 🎤) into the text its speaker meant to\n  type: multipart/form-data, a \"request\" part (TranscribeRequest) and an \"audio\" part\n  (AUDIO_TYPES, at most MAX_AUDIO_BYTES).\n- /v1/pictures/search finds free pictures of a subject to choose from (stock.search: public\n  domain, CC0, Pixabay), their previews as data; /v1/pictures/found gives the one chosen,\n  card size (JPEG), looked up again by its source and id. Both free: no AI, unless the\n  search is asked `sort`ed (the AI keeps the pictures that show the subject: 1 credit);\n  asked so with \"Accept: application/x-ndjson\", each source's pictures come as it\n  answers (PictureSearchLine). Their pictures (and /v1/picture's) say where they come\n  from in PICTURE_SOURCE_HEADER: kept with the card.\n- /v1/revise asked with \"Accept: application/x-ndjson\" says what the AI is at (slow, the\n  fallback model), then the answer or the error (ReviseLine).\n- /v1/card-picture asked with \"Accept: application/x-ndjson\" says each step as it begins\n  (deciding, drawing, checking, redrawing with the first figure, searching), then the\n  answer or the error (CardPictureLine).\n- /v1/report: content the AI made, reported by the user (shocking, wrong…: Google Play's\n  policy on generated content). The only thing the relay keeps of a lesson: what the user\n  saw and sent, for REPORT_DAYS, read by Notosaurus. Free, REPORTS_PER_DAY a licence.\n- /v1/speak reads a card's back aloud with one of /v1/voices (natural voices, the\n  same on every device): an mp3, for the app that has no voices of its own.\n- Each answer says the credits it used and those left (Usage; for /v1/picture and\n  /v1/speak, the CREDITS_HEADER and CREDITS_LEFT_HEADER headers). A credit is a share of the\n  call's real AI cost, at least 1 per call: the relay counts them, not the client.\n\nThe OpenAPI description (core/relay-api-v1.json) is generated from these models\nby tools/relay_openapi.py. Apps already released keep calling the relay: within /v1 the\nAPI only grows (new routes, optional request fields, answer fields more), checked against\nthe API each released app speaks (core/relay-api-releases/, tools/relay_compat.py).\n",
+    "description": "The Notosaurus relay's API, version 1: what its client (the Notosaurus app with a\nlicence, later the Android app) and the relay itself both import, so that they\ncan't drift apart.\n\nThe relay is notosaurus_core behind a licence key: each route is the remote form\nof a core function (/v1/extract → llm.extract_cards…), takes what that function\ntakes but the AI configuration (the relay's own), and keeps nothing.\n\n- Authentication: \"Authorization: Bearer <licence key>\".\n- The client says its version in CLIENT_HEADER (\"1.1.0\"); a client too old for\n  the relay gets \"relay.client_outdated\".\n- The routes with photos (extract, revise, fix-card) take multipart/form-data: a \"request\"\n  part holding the JSON request and one \"images\" part per photo (binary, as\n  diagrams.prepare makes them: JPEG, at most 1568 px). The other routes take JSON.\n- Errors: HTTP status of ERRORS, body {\"code\", \"params\"} (errors.AppError), the\n  AI's own errors (\"llm.*\") passed on as they are.\n- /v1/extract asked with \"Accept: application/x-ndjson\" (STREAM_TYPE) answers as the\n  AI writes: one JSON object per line, each card as it comes, then the answer or\n  the error (ExtractLine). A client going away stops the AI.\n- /v1/transcribe turns a dictation (the app's 🎤) into the text its speaker meant to\n  type: multipart/form-data, a \"request\" part (TranscribeRequest) and an \"audio\" part\n  (AUDIO_TYPES, at most MAX_AUDIO_BYTES).\n- /v1/pictures/search finds free pictures of a subject to choose from (stock.search: public\n  domain, CC0, Pixabay), their previews as data; /v1/pictures/found gives the one chosen,\n  card size (JPEG), looked up again by its source and id. Both free: no AI, unless the\n  search is asked `sort`ed (the AI keeps the pictures that show the subject: 1 credit);\n  asked so with \"Accept: application/x-ndjson\", each source's pictures come as it\n  answers (PictureSearchLine). Their pictures (and /v1/picture's) say where they come\n  from in PICTURE_SOURCE_HEADER: kept with the card.\n- /v1/revise asked with \"Accept: application/x-ndjson\" says what the AI is at (slow, the\n  fallback model), then the answer or the error (ReviseLine).\n- /v1/fix-card: one card corrected by the user's request (\"the answer is 1789\"), seeing\n  the lesson's photos: the AI writes that card alone (llm.fix_card).\n- /v1/card-picture asked with \"Accept: application/x-ndjson\" says each step as it begins\n  (deciding, drawing, checking, redrawing with the first figure, searching), then the\n  answer or the error (CardPictureLine).\n- /v1/report: content the AI made, reported by the user (shocking, wrong…: Google Play's\n  policy on generated content). The only thing the relay keeps of a lesson: what the user\n  saw and sent, for REPORT_DAYS, read by Notosaurus. Free, REPORTS_PER_DAY a licence.\n- /v1/speak reads a card's back aloud with one of /v1/voices (natural voices, the\n  same on every device): an mp3, for the app that has no voices of its own.\n- Each answer says the credits it used and those left (Usage; for /v1/picture and\n  /v1/speak, the CREDITS_HEADER and CREDITS_LEFT_HEADER headers). A credit is a share of the\n  call's real AI cost, at least 1 per call: the relay counts them, not the client.\n\nThe OpenAPI description (core/relay-api-v1.json) is generated from these models\nby tools/relay_openapi.py. Apps already released keep calling the relay: within /v1 the\nAPI only grows (new routes, optional request fields, answer fields more), checked against\nthe API each released app speaks (core/relay-api-releases/, tools/relay_compat.py).\n",
     "version": "1"
   },
   "paths": {
@@ -286,6 +286,153 @@
                 "properties": {
                   "request": {
                     "$ref": "#/components/schemas/ReviseRequest"
+                  },
+                  "images": {
+                    "type": "array",
+                    "maxItems": 10,
+                    "items": {
+                      "type": "string",
+                      "format": "binary"
+                    },
+                    "description": "The photos, in order: image/jpeg, image/png, image/webp, image/gif, at most 4 MB each."
+                  }
+                }
+              },
+              "encoding": {
+                "request": {
+                  "contentType": "application/json"
+                },
+                "images": {
+                  "contentType": "image/jpeg, image/png, image/webp, image/gif"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/fix-card": {
+      "post": {
+        "summary": "Fix Card",
+        "description": "One card corrected by the user's request (llm.fix_card).",
+        "operationId": "fix_card_v1_fix_card_post",
+        "parameters": [
+          {
+            "name": "X-Notosaurus-Version",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "The client's version (\"1.1.0\").",
+              "title": "X-Notosaurus-Version"
+            },
+            "description": "The client's version (\"1.1.0\")."
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FixCardResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Codes: `relay.invalid_key`",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "402": {
+            "description": "Codes: `relay.no_credits`, `relay.subscription_ended`, `relay.payment_pending`, `relay.trial_ended`",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "413": {
+            "description": "Codes: `relay.too_large`",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "415": {
+            "description": "Codes: `relay.bad_image`",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Codes: `relay.invalid_request`",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "426": {
+            "description": "Codes: `relay.client_outdated`",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Codes: `relay.daily_limit`, `relay.busy`",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Codes: `relay.unavailable`",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "request"
+                ],
+                "properties": {
+                  "request": {
+                    "$ref": "#/components/schemas/FixCardRequest"
                   },
                   "images": {
                     "type": "array",
@@ -2963,6 +3110,83 @@
           "usage"
         ],
         "title": "FigureResponse"
+      },
+      "FixCardRequest": {
+        "description": "One card corrected by a natural-language request, with the lesson's photos (the\n\"images\" parts, possibly none).",
+        "properties": {
+          "prompt": {
+            "description": "What the cards were made with.",
+            "maxLength": 8000,
+            "title": "Prompt",
+            "type": "string"
+          },
+          "deck": {
+            "maxLength": 300,
+            "title": "Deck",
+            "type": "string"
+          },
+          "card": {
+            "$ref": "#/components/schemas/Card"
+          },
+          "instruction": {
+            "maxLength": 2000,
+            "minLength": 1,
+            "title": "Instruction",
+            "type": "string"
+          },
+          "others": {
+            "description": "The lesson's other cards' fronts.",
+            "items": {
+              "type": "string"
+            },
+            "maxItems": 500,
+            "title": "Others",
+            "type": "array"
+          },
+          "language": {
+            "default": "English",
+            "description": "English name of the language to answer in (\"French\").",
+            "maxLength": 50,
+            "title": "Language",
+            "type": "string"
+          },
+          "instructions": {
+            "default": "",
+            "description": "The user's standing instructions, put before the request (never replacing the rules).",
+            "maxLength": 10000,
+            "title": "Instructions",
+            "type": "string"
+          }
+        },
+        "required": [
+          "prompt",
+          "deck",
+          "card",
+          "instruction"
+        ],
+        "title": "FixCardRequest",
+        "type": "object"
+      },
+      "FixCardResponse": {
+        "properties": {
+          "card": {
+            "$ref": "#/components/schemas/Card"
+          },
+          "summary": {
+            "type": "string",
+            "title": "Summary"
+          },
+          "usage": {
+            "$ref": "#/components/schemas/Usage"
+          }
+        },
+        "type": "object",
+        "required": [
+          "card",
+          "summary",
+          "usage"
+        ],
+        "title": "FixCardResponse"
       },
       "Found": {
         "properties": {

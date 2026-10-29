@@ -374,6 +374,42 @@ are, in the same order. {add} In "summary", describe in one short sentence, in \
 {language}, what you changed."""
 
 
+def _fix_text(
+    prompt: str, deck: str, card: Card, others: Sequence[str], instruction: str, language: str, photos: int
+) -> str:
+    """One card corrected, or written when it is still empty (a card just added): the
+    others' fronts shown, not to repeat one of them."""
+    source = "these photos with these instructions" if photos else "these instructions (no photo)"
+    listed = "\n".join(f"- {front.strip()}" for front in others if front.strip()) or "(none)"
+    if not (card.front.strip() or card.back.strip()):
+        asked = f"""\
+A card to write for this lesson (still empty): {instruction.strip()}
+
+Write this card, as the one card in "cards", from the request and the lesson (the photos, \
+the instructions): what the request asks for, not one of the other cards above."""
+        done = "what the card asks"
+    else:
+        current = json.dumps(card.model_dump(exclude={"id", "picture", "mask"}), ensure_ascii=False, indent=1)
+        asked = f"""\
+The card to correct (JSON):
+{current}
+
+Requested correction for this card: {instruction.strip()}
+
+Apply this request to this card only and return it, as the one card in "cards". Only change \
+what the request is about; keep the rest of the card as it is."""
+        done = "what you changed"
+    return f"""\
+The lesson "{deck}" was made from {source}:
+{prompt.strip()}
+
+Its other cards (their fronts):
+{listed}
+
+{asked} What the card says comes from the lesson, unless the request itself gives it. In \
+"summary", describe in one short sentence, in {language}, {done}."""
+
+
 DICTATION_RULES = """\
 You turn a short voice recording into the text its speaker meant to type, in a \
 flashcard app for pupils. Write what they said, in the language they spoke, with \
