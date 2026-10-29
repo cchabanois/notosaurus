@@ -190,7 +190,12 @@
       "placeholder": "«la respuesta es 1789», «más corto»…",
       "submit": "Corregir",
       "busy": "Corrigiendo…",
-      "undo": "↩ Deshacer"
+      "undo": "↩ Deshacer",
+      "write": "Escribir con la IA",
+      "labelBlank": "¿Qué debe preguntar esta tarjeta?",
+      "placeholderBlank": "«el pretérito de ir», «la fecha de la toma de la Bastilla»…",
+      "submitBlank": "Escribir",
+      "busyBlank": "Escribiendo…"
     },
     "revise": {
       "label": "Corregir las tarjetas con la IA",

@@ -43,11 +43,11 @@ const revisionPart = {
   },
 
   // --- One card corrected by the AI ("✨ Correct this card") ----------------
-  // card._fix: its field ({ text, busy }); card._fixed: what changed ({ summary, before }),
-  // until undone or corrected again
+  // card._fix: its field ({ text, busy, blank }); card._fixed: what changed ({ summary,
+  // before }), until undone or corrected again. A card still empty (just added) is written.
   openFix(card) {
     card._menu = false;
-    card._fix = { text: "", busy: false };
+    card._fix = { text: "", busy: false, blank: this.blankCard(card) };
     this.$nextTick(() => document.querySelector(`[data-card="${card.key}"] .card-fix textarea`)?.focus());
   },
 
@@ -75,6 +75,11 @@ const revisionPart = {
       this.error = e.message;
       fix.busy = false;
     }
+  },
+
+  // Nothing written on it yet: the AI writes it ("✨ Write with the AI")
+  blankCard(card) {
+    return !(card.front ?? "").trim() && !(card.back ?? "").trim();
   },
 
   undoFix(card) {

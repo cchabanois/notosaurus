@@ -190,7 +190,12 @@
       "placeholder": "„die Antwort ist 1789“, „kürzer“…",
       "submit": "Korrigieren",
       "busy": "Wird korrigiert…",
-      "undo": "↩ Rückgängig"
+      "undo": "↩ Rückgängig",
+      "write": "Mit der KI schreiben",
+      "labelBlank": "Was soll diese Karte abfragen?",
+      "placeholderBlank": "„das Perfekt von gehen“, „das Datum des Sturms auf die Bastille“…",
+      "submitBlank": "Schreiben",
+      "busyBlank": "Wird geschrieben…"
     },
     "revise": {
       "label": "Karten mit KI korrigieren",

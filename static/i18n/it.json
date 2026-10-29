@@ -190,7 +190,12 @@
       "placeholder": "«la risposta è 1789», «più breve»…",
       "submit": "Correggi",
       "busy": "Correzione…",
-      "undo": "↩ Annulla"
+      "undo": "↩ Annulla",
+      "write": "Scrivi con l'IA",
+      "labelBlank": "Cosa deve chiedere questa scheda?",
+      "placeholderBlank": "«il passato prossimo di andare», «la data della presa della Bastiglia»…",
+      "submitBlank": "Scrivi",
+      "busyBlank": "Scrittura…"
     },
     "revise": {
       "label": "Correggi le carte con l'IA",

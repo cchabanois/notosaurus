@@ -1730,6 +1730,22 @@ def test_one_card_corrected_by_the_ai(page):
     page.wait_for_function(f"() => {saved}")  # the card as it was, saved again
 
 
+def test_a_card_just_added_written_by_the_ai(page):
+    """A card just added (empty): ⋯ → "✨ Write with the AI", asked what it should ask; the
+    demo AI writes its back from that. Filled, it is corrected again, no more written."""
+    generate_free(page, FRONT_PROMPT)
+    page.get_by_role("button", name="＋ Ajouter une carte").click()
+    added = page.locator(".flash").last
+    added.get_by_role("button", name="Plus d'actions").click()
+    added.get_by_role("button", name="✨ Écrire avec l'IA").click()
+    field = added.get_by_role("textbox", name="Que doit demander cette carte ?")
+    field.fill("le grand-père en espagnol")
+    added.get_by_role("button", name="Écrire", exact=True).click()
+    sync_api.expect(added.locator("textarea").nth(1)).to_have_value("le grand-père en espagnol")
+    added.get_by_role("button", name="Plus d'actions").click()
+    sync_api.expect(added.get_by_role("button", name="✨ Corriger cette carte")).to_be_visible()
+
+
 def test_a_card_correction_dictated(page):
     """The Android app's page: the card's field has its 🎤, heard as a correction."""
     stopped = []

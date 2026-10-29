@@ -190,7 +190,12 @@
       "placeholder": "\"the answer is 1789\", \"shorter\"…",
       "submit": "Correct",
       "busy": "Correcting…",
-      "undo": "↩ Undo"
+      "undo": "↩ Undo",
+      "write": "Write with the AI",
+      "labelBlank": "What should this card ask?",
+      "placeholderBlank": "\"the past tense of go\", \"the date of the storming of the Bastille\"…",
+      "submitBlank": "Write",
+      "busyBlank": "Writing…"
     },
     "revise": {
       "label": "Correct the cards with AI",

@@ -190,7 +190,12 @@
       "placeholder": "« la réponse c'est 1789 », « plus court »…",
       "submit": "Corriger",
       "busy": "Correction…",
-      "undo": "↩ Annuler"
+      "undo": "↩ Annuler",
+      "write": "Écrire avec l'IA",
+      "labelBlank": "Que doit demander cette carte ?",
+      "placeholderBlank": "« le passé composé d'aller », « la date de la prise de la Bastille »…",
+      "submitBlank": "Écrire",
+      "busyBlank": "Écriture…"
     },
     "revise": {
       "label": "Corriger les cartes avec l'IA",

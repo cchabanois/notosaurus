@@ -54,6 +54,16 @@ def test_a_figure_corrected_is_drawn_again(monkeypatch):
     assert (fixed.figure, fixed.picture) == ("ABC, right-angled at B", "")  # to draw again
 
 
+def test_a_card_just_added_written(monkeypatch):
+    """Still empty (just added): asked to write it from the lesson, not to correct it."""
+    sent = answering(monkeypatch, {"front": "Le passé composé d'aller ?", "back": "je suis allé"})
+    fixed = fix(Card(id="new", front="", back=""), "le passé composé d'aller").card
+    assert (fixed.id, fixed.back) == ("new", "je suis allé")
+    (text,) = sent
+    assert "A card to write for this lesson (still empty): le passé composé d'aller" in text
+    assert "The card to correct" not in text
+
+
 @pytest.mark.parametrize(("cards", "refused", "code"), [((), False, "llm.invalid_answer"), ((), True, "llm.refused")])
 def test_no_card_back(monkeypatch, cards, refused, code):
     answering(monkeypatch, *cards, refused=refused)
