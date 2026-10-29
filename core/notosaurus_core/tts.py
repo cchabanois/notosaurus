@@ -4,6 +4,10 @@ Each mp3 is named after the text plus a hash of (voice, rate, text), e.g.
 "la-madre-3f2a1c9e.mp3". Card audio lives in the lesson's audio/ folder;
 previews go to the cache (files.py, tts/) and are reused when the lesson is exported.
 
+A card may have a voice of its own (Card.voice), else it is the lesson's: a lesson moved
+from the phone keeps its sounds, made with the relay's voices, the names being the same on
+both (Speech.kt, core/shared-cases.json sound_file). card_voice says which one a sound is in.
+
 `rate`: the speed, e.g. "-10%" (slightly slower, for learners).
 """
 
@@ -98,12 +102,23 @@ def spoken_backs(cards: list[Card], dictation: bool = False) -> list[str]:
     """What the cards' sounds say (spoken). None for: a back with a formula (the voice
     would read the MathJax code), a text with gaps (its back is only an extra), a multiple
     choice (the options are read), a transcription with no example to read."""
+    return [text for _, text in _speaking(cards, dictation)]
+
+
+def _speaking(cards: list[Card], dictation: bool) -> list[tuple[Card, str]]:
     said = [
-        spoken(c, dictation)
+        (c, spoken(c, dictation))
         for c in cards
         if c.front.strip() and c.back.strip() and not has_math(c.back) and not is_cloze(c.front) and not is_choice(c)
     ]
-    return [s for s in said if s]
+    return [(c, s) for c, s in said if s]
+
+
+def spoken_voices(
+    cards: list[Card], lesson_voice: str, directory: Path | None, rate: str, dictation: bool = False
+) -> dict[str, str]:
+    """{what a card's sound says (spoken_backs): the voice it is in (card_voice)}."""
+    return {text: card_voice(c, lesson_voice, text, directory, rate) for c, text in _speaking(cards, dictation)}
 
 
 def is_anki_locale(voice: str) -> bool:
@@ -113,6 +128,22 @@ def is_anki_locale(voice: str) -> bool:
 RATE = "-10%"
 NORMAL = "+0%"  # not slowed
 MAX_LINE = 200  # characters read of a line: a back's sound, not a text read out
+
+
+def is_edge_voice(voice: str) -> bool:
+    """A voice this computer reads with (edge-tts: "es-ES-ElviraNeural")."""
+    return voice.endswith("Neural")
+
+
+def card_voice(card: Card, lesson_voice: str, text: str, directory: Path | None, rate: str = RATE) -> str:
+    """The voice of the card's sound: its own (Card.voice) when this computer can read with it
+    or its sound is there already (made on the phone), else the lesson's."""
+    own = card.voice
+    if not own or own == lesson_voice:
+        return lesson_voice
+    if is_edge_voice(own) or (directory is not None and (directory / filename(text, own, rate)).is_file()):
+        return own
+    return lesson_voice
 
 
 def filename(text: str, voice: str, rate: str = RATE) -> str:
@@ -136,13 +167,14 @@ async def tts(text: str, voice: str, directory: Path | None = None, rate: str = 
     """mp3 of `text` in `directory` (default: preview cache), synthesized if missing."""
     name = filename(text, voice, rate)
     path = (directory or cache_dir()) / name
-    if not path.exists():
-        path.parent.mkdir(parents=True, exist_ok=True)
-        cached = cache_dir() / name
-        if directory and cached.exists():
-            shutil.copyfile(cached, path)
-        else:
-            await _synthesize_lines(text, voice, path, rate)
+    if path.exists():
+        return path
+    path.parent.mkdir(parents=True, exist_ok=True)
+    cached = cache_dir() / name
+    if directory and cached.exists():
+        shutil.copyfile(cached, path)
+    else:
+        await _synthesize_lines(text, voice, path, rate)
     return path
 
 
@@ -190,6 +222,17 @@ async def tts_many(
     results = await asyncio.gather(*(one(t) for t in dict.fromkeys(texts)))
     audio = {t: p for t, p in results if p}
     return audio, len(results) - len(audio)
+
+
+async def tts_voices(
+    voices: Mapping[str, str], directory: Path, rate: str = RATE, on_done: Callable[[], None] | None = None
+) -> tuple[dict[str, Path], int]:
+    """tts_many for texts each in its own voice ({text: voice}, spoken_voices)."""
+    audio, failures = {}, 0
+    for voice in dict.fromkeys(voices.values()):
+        made, failed = await tts_many([t for t, v in voices.items() if v == voice], voice, directory, rate, on_done)
+        audio, failures = {**audio, **made}, failures + failed
+    return audio, failures
 
 
 def prune(directory: Path, keep: set[Path]) -> None:

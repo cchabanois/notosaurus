@@ -34,6 +34,11 @@ class SharedCasesTest {
     }
 
     @Test
+    fun aSoundsFile() = cases("sound_file").forEach { c ->
+        assertEquals(c.string("text"), c.string("out"), Speech.fileName(c.string("text"), c.string("voice"), c.string("rate")))
+    }
+
+    @Test
     fun aCardsSound() = cases("spoken").forEach { c ->
         val card = Card(c.string("front"), c.string("back"))
         assertEquals("${c.string("front")} | ${c.string("back")}", c.string("out"), Speech.spoken(card, c["dictation"]!!.jsonPrimitive.boolean))

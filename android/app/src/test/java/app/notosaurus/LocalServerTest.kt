@@ -18,6 +18,7 @@ import io.ktor.http.Headers
 import io.ktor.http.HttpHeaders
 import io.ktor.http.HttpStatusCode
 import io.ktor.http.contentType
+import io.ktor.http.encodeURLParameter
 import io.ktor.server.testing.ApplicationTestBuilder
 import io.ktor.server.testing.testApplication
 import kotlinx.coroutines.CoroutineScope
@@ -2037,11 +2038,15 @@ class LocalServerTest {
 
     /** The relay reading aloud (/v1/speak): "mp3 <text>", `slowMs` each; what it read, and the
      * most it read at once. */
-    private class Speaker(private val slowMs: Long = 0) : mockwebserver3.Dispatcher() {
+    private class Speaker(private val slowMs: Long = 0, private val voices: List<String> = emptyList()) : mockwebserver3.Dispatcher() {
         val read: MutableList<String> = java.util.Collections.synchronizedList(mutableListOf())
         private val now = java.util.concurrent.atomic.AtomicInteger()
         val most = java.util.concurrent.atomic.AtomicInteger()
         override fun dispatch(request: RecordedRequest): MockResponse {
+            if (request.url.encodedPath == "/v1/voices" && voices.isNotEmpty()) {
+                val listed = voices.joinToString(",") { """{"voice": "$it", "locale": "${it.take(5)}", "gender": "Female"}""" }
+                return MockResponse.Builder().setHeader("Content-Type", "application/json").body("[$listed]").build()
+            }
             if (request.url.encodedPath != "/v1/speak") return MockResponse.Builder().code(404).build()
             val text = json.parseToJsonElement(request.body!!.utf8()).jsonObject.string("text")
             most.accumulateAndGet(now.incrementAndGet(), ::maxOf)
@@ -2098,6 +2103,95 @@ class LocalServerTest {
         anki.installed = false
         val refused = client.sendSteps("""{"deck": "Espagnol", "cards": $cards, "voice": "", "lesson_id": ""}""")
         assertEquals("anki.android_missing", refused.single()["error"]!!.jsonObject.string("code"))
+    }
+
+    private fun audioOf(id: String) = folder.root.resolve("lessons/$id/audio")
+
+    private suspend fun HttpClient.sendLesson(id: String, voice: String = "es-ES-Chirp3-HD-Aoede") {
+        val saved = get("/api/lessons/$id") { page() }.json().jsonObject
+        sendSteps("""{"deck": "Espagnol", "cards": ${saved["cards"]}, "voice": "$voice", "rate": "${saved.string("rate")}", "lesson_id": "$id"}""")
+    }
+
+    @Test
+    fun aLessonsSoundsInItsOwnFolder() = app { client ->
+        val id = client.extract(voice = "").string("id")
+        relay.takeRequest(5, TimeUnit.SECONDS) // the extraction
+        val speaker = Speaker(voices = listOf("es-ES-Chirp3-HD-Aoede", "es-ES-Chirp3-HD-Puck"))
+        relay.dispatcher = speaker
+        client.saveLesson(id, listOf("la madre"))
+        // 🔊 on its card (the page says its lesson): kept in the lesson, then sent without paying again
+        val rate = client.get("/api/lessons/$id") { page() }.json().jsonObject.string("rate") // as the page sends it
+        client.get("/api/tts?text=la%20madre&voice=es-ES-Chirp3-HD-Aoede&lesson=$id&rate=${rate.encodeURLParameter()}") { page() }
+        client.sendLesson(id)
+        assertEquals(listOf("la madre"), speaker.read)
+        val r = rate.ifEmpty { "-10%" }
+        val name = Speech.fileName("la madre", "es-ES-Chirp3-HD-Aoede", r)
+        assertTrue(name.startsWith("la-madre-"))
+        assertEquals(listOf(name), audioOf(id).list()!!.filter { it.endsWith(".mp3") })
+        assertFalse(folder.root.resolve("audio").list()!!.any { it.endsWith(".mp3") }) // not among the previews
+
+        // Its back corrected: sent, the old sound gone
+        client.saveLesson(id, listOf("la mamá"))
+        client.sendLesson(id)
+        assertEquals(listOf(Speech.fileName("la mamá", "es-ES-Chirp3-HD-Aoede", r)), audioOf(id).list()!!.filter { it.endsWith(".mp3") })
+
+        // Its voice changed for another of the relay's: read again with it
+        client.saveLesson(id, listOf("la mamá"), voice = "es-ES-Chirp3-HD-Puck")
+        client.sendLesson(id, voice = "es-ES-Chirp3-HD-Puck")
+        assertEquals(listOf("la madre", "la mamá", "la mamá"), speaker.read)
+
+        // Deleted: its sounds with it
+        client.delete("/api/lessons/$id") { page() }
+        assertFalse(audioOf(id).exists())
+    }
+
+    @Test
+    fun aCardsOwnVoiceKeepsItsSoundMadeOnTheComputer() = app { client ->
+        val id = client.extract(voice = "").string("id")
+        relay.takeRequest(5, TimeUnit.SECONDS)
+        val speaker = Speaker(voices = listOf("es-ES-Chirp3-HD-Aoede"))
+        relay.dispatcher = speaker
+        // As a lesson moved from the computer: each card's voice, edge-tts's; the lesson's, the relay's
+        val cards = """[{"front": "la mère", "back": "la madre", "voice": "es-ES-ElviraNeural"},
+            {"front": "le père", "back": "el padre", "voice": "es-ES-ElviraNeural"}, {"front": "le fils", "back": "el hijo"}]"""
+        client.put("/api/lessons/$id") {
+            page(); contentType(ContentType.Application.Json)
+            setBody("""{"deck": "Espagnol", "cards": $cards, "voice": "es-ES-Chirp3-HD-Aoede", "rate": "-10%"}""")
+        }
+        audioOf(id).mkdirs()
+        val madre = audioOf(id).resolve(Speech.fileName("la madre", "es-ES-ElviraNeural", "-10%")) // the same name there
+        madre.writeText("computer's la madre")
+        client.sendLesson(id)
+        // la madre: the computer's, no credit; el padre (its sound not come) and el hijo: the lesson's voice
+        assertEquals(setOf("el padre", "el hijo"), speaker.read.toSet())
+        assertEquals("computer's la madre", anki.sounds["la madre"]!!.readText())
+        assertTrue(madre.isFile) // still used: kept
+        assertTrue(audioOf(id).resolve(Speech.fileName("el padre", "es-ES-Chirp3-HD-Aoede", "-10%")).isFile)
+        // 🔊 on its card, its voice said by the page: the computer's sound
+        val heard = client.get("/api/tts?text=la%20madre&voice=es-ES-ElviraNeural&lesson=$id&rate=-10%25") { page() }
+        assertEquals("computer's la madre", heard.bodyAsText())
+    }
+
+    @Test
+    fun anOlderVersionsSoundsMovedIntoTheirLessons() {
+        // As an older version kept them: in audio/, named after (voice, speed, text)
+        val id = "espagnol-lecon-5-abc123"
+        folder.root.resolve("lessons/$id").mkdirs()
+        folder.root.resolve("lessons/$id/lesson.json").writeText(
+            """{"id": "$id", "deck": "Espagnol", "voice": "es-ES-Chirp3-HD-Aoede", "rate": "", "cards": [{"front": "la mère", "back": "la madre"}]}""",
+        )
+        val sha = java.security.MessageDigest.getInstance("SHA-1").digest("es-ES-Chirp3-HD-Aoede|${Relay.SPEECH_RATE}|la madre".toByteArray())
+        val legacy = folder.root.resolve("audio/" + sha.joinToString("") { "%02x".format(it) }.take(16) + ".mp3")
+        legacy.writeText("older la madre")
+        val prefs = MemoryPreferences()
+        val speech = Speech(folder.root.resolve("audio"), prefs, { error("no relay") }) { folder.root.resolve("lessons/$it/audio") }
+        speech.moveIntoLessons(Lessons(folder.root.resolve("lessons")).list())
+        val moved = audioOf(id).resolve(Speech.fileName("la madre", "es-ES-Chirp3-HD-Aoede", "-10%"))
+        assertEquals("older la madre", moved.readText())
+        assertFalse(legacy.exists()) // audio/ keeps only previews now
+        legacy.writeText("again")
+        speech.moveIntoLessons(emptyList()) // once
+        assertTrue(legacy.exists())
     }
 
     @Test

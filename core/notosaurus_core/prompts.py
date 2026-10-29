@@ -389,7 +389,7 @@ Write this card, as the one card in "cards", from the request and the lesson (th
 the instructions): what the request asks for, not one of the other cards above."""
         done = "what the card asks"
     else:
-        current = json.dumps(card.model_dump(exclude={"id", "picture", "mask"}), ensure_ascii=False, indent=1)
+        current = json.dumps(card.model_dump(exclude={"id", "picture", "mask", "voice"}), ensure_ascii=False, indent=1)
         asked = f"""\
 The card to correct (JSON):
 {current}

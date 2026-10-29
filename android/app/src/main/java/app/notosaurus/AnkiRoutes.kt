@@ -44,7 +44,7 @@ internal fun Route.ankiRoutes(server: LocalServer) {
             val dictation = on("dictation") || on("dictation_only")
             val lessonId = req.string("lesson_id")
             soundsAhead.settle(lessonId) // the sounds being read ahead: read here instead
-            val (sounds, failures) = speech.sounds(deck, req.string("voice"), dictation, req.string("rate")) { done, total ->
+            val (sounds, failures) = speech.sounds(deck, req.string("voice"), dictation, req.string("rate"), lessonId) { done, total ->
                 step(buildJsonObject { put("step", "sounds"); put("done", done); put("total", total) })
             }
             step(buildJsonObject { put("step", "cards") })
@@ -72,6 +72,7 @@ internal fun Route.ankiRoutes(server: LocalServer) {
                 throw BadRequest("anki.android_failed", buildJsonObject { put("detail", e.message ?: e.javaClass.simpleName) })
             }
             if (lessonId.isNotEmpty()) lessons.setAnkiNotes(lessonId, sent.notes)
+            speech.prune(lessonId, sounds.values.toSet()) // the sounds no card says any more (AnkiDroid has its own copy)
             // Its notes no card updated (cards deleted, or remade): the page offers to delete them
             val leftovers = if (lessonId.isEmpty() || switches.off("anki.delete")) emptyList() else withContext(Dispatchers.IO) { anki.leftovers(lessonId, sent.notes.values.toSet()) }
             buildJsonObject {

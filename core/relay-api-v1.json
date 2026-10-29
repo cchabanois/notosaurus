@@ -2499,6 +2499,12 @@
             "title": "Id",
             "description": "Leave empty.",
             "default": ""
+          },
+          "voice": {
+            "type": "string",
+            "title": "Voice",
+            "description": "Leave empty.",
+            "default": ""
           }
         },
         "type": "object",

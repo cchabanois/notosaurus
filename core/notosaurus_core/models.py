@@ -110,6 +110,8 @@ class Card(BaseModel):
     picture: str = Field(default="", description="Leave empty.")  # file in the lesson's images/ folder
     picture_source: PictureSource | None = Field(default=None, description="Leave empty.")
     id: str = Field(default="", description="Leave empty.")  # stable: tells Anki which note a card is
+    # Its sound's voice when not the lesson's (a lesson moved from the other device: tts.card_voice)
+    voice: str = Field(default="", description="Leave empty.")
 
 
 class Deck(BaseModel):
