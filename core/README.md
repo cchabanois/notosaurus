@@ -21,7 +21,7 @@ It **never reads the app's settings, lessons or data folder**: the AI configurat
 | `notosaurus_core/diagrams.py` | diagram labels hidden on the photo (image occlusion) |
 | `notosaurus_core/pictures.py`, `stock.py` | pictures drawn by an image model; free pictures found instead (Wikimedia Commons, Openverse, Pixabay) |
 | `notosaurus_core/figures.py`, `figures_typst.py` | figures (geometry, graphs, sets, timelines…) written in Typst, one package per kind, compiled offline; their check |
-| `notosaurus_core/typst/`, `fonts/` | the Typst packages (`tools/typst_packages.py`) and the font the figures use, shipped so nothing is downloaded, their licences with them |
+| `notosaurus_core/typst/`, `fonts/` | the Typst packages, one archive each as Typst Universe publishes it (`tools/typst_packages.py`), unpacked once in the cache; the font the figures use: shipped so nothing is downloaded, their licences with them |
 | `notosaurus_core/tts.py` | the backs' audio (edge-tts) |
 | `notosaurus_core/images.py` | photos opened safely (no decompression bomb) |
 | `notosaurus_core/recommended.py`, `prices.py` | the models recommended per service (the only list written by hand); a call's estimated cost |

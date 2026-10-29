@@ -399,6 +399,20 @@ def test_a_figure_drawn_in_typst_compiled_offline():
     assert figures.to_png(svg)
 
 
+def test_typst_packages_unpacked_once_from_their_archives():
+    """One archive per package (tools/typst_packages.py), each where Typst looks for it
+    (preview/<name>/<version>/typst.toml), unpacked once: drawn again, the same folder."""
+    archives = sorted(figures_typst.ARCHIVES.glob("*.tar.gz"))
+    assert archives and not (figures_typst.ARCHIVES / "preview").exists()
+    folder = figures_typst.packages()
+    for archive in archives:
+        name, version = archive.name.removesuffix(".tar.gz").rsplit("-", 1)
+        assert (folder / "preview" / name / version / "typst.toml").is_file()
+    stamp = (folder / "preview").stat().st_mtime_ns
+    assert figures_typst.packages() == folder and (folder / "preview").stat().st_mtime_ns == stamp
+    assert [p.name for p in folder.parent.iterdir() if p.name.startswith("typst-")] == [folder.name]
+
+
 def test_typst_asked_again_with_its_error_then_used(monkeypatch):
     svg, calls = typst_drawing(monkeypatch, ["#ctz-canvas({ ctz-init(", TRIANGLE])
     assert "<use" in svg  # Typst's, its letter
