@@ -24,11 +24,12 @@ def spec(nt: anki.NoteType) -> dict:
     return {
         "name": nt.name,
         "family": nt.family,
-        "fields": [f for f in nt.fields if f != anki.SOURCE_FIELD],  # AnkiDroid can't add it to its note types
+        "fields": nt.fields,  # in the computer's order: the same note types on both
         "key": nt.key,  # which note an update is for
         "cloze": nt.cloze,
         "cards": [{"name": t["name"], "front": t["qfmt"], "back": t["afmt"]} for t in nt.templates],
         "css": nt.css,
+        "signature": nt.signature,  # the app's must be the same: neither brings the other's "up to date"
     }
 
 

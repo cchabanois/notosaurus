@@ -42,10 +42,11 @@ class AnkiDroidTest {
         val again = anki.send(deck, Media(lesson = "a-$run"))
         assertEquals(listOf(0, 0, 0), listOf(again.added, again.updated, again.duplicates))
 
-        // Another lesson with the same words: lesson A's notes left as they are (its text
-        // with gaps is its own: a note of its own)
+        // Another lesson with the same words: notes of its own, lesson A's left as they are (as
+        // the computer: the same front in another lesson is fine)
         val other = anki.send(deck, Media(lesson = "b-$run"))
-        assertEquals(listOf(1, 0, 2), listOf(other.added, other.updated, other.duplicates))
+        assertEquals(listOf(3, 0, 0), listOf(other.added, other.updated, other.duplicates))
+        assertEquals(3, anki.lessonNotes("a-$run")!!.size)
     }
 
     @Test
@@ -54,7 +55,7 @@ class AnkiDroidTest {
         anki.send(Deck("Notosaurus test $run", listOf(Card("soleil $run", "sol"))))
         val type = types["text"]
         val api = AddContentApi(Device.context)
-        val model = Uri.withAppendedPath(FlashCardsContract.Model.CONTENT_URI, api.modelList!!.entries.first { it.value == type.androidName }.key.toString())
+        val model = Uri.withAppendedPath(FlashCardsContract.Model.CONTENT_URI, api.modelList!!.entries.first { it.value == type.name }.key.toString())
         val resolver = Device.context.contentResolver
 
         // As an older app made it: another template, another style (no signature)
@@ -72,7 +73,7 @@ class AnkiDroidTest {
         assertEquals(type.cards[0].front to type.cards[0].back, template)
         val css = resolver.query(model, arrayOf(FlashCardsContract.Model.CSS), null, null, null)!!.use { c -> c.moveToFirst(); c.getString(0) }
         assertTrue(css, "version ${type.signature}:" in css)
-        assertEquals(1, api.findDuplicateNotes(api.modelList!!.entries.first { it.value == type.androidName }.key, "soleil $run").size)
+        assertEquals(1, api.findDuplicateNotes(api.modelList!!.entries.first { it.value == type.name }.key, "soleil $run").size)
     }
 
     @Test
@@ -107,7 +108,7 @@ class AnkiDroidTest {
         Anki(Device.context).send(Deck("Notosaurus test $run", listOf(Card("Le {{c1::soleil}} brille $run", ""))))
         val type = types["cloze"]
         val api = AddContentApi(Device.context)
-        val model = Uri.withAppendedPath(FlashCardsContract.Model.CONTENT_URI, api.modelList!!.entries.first { it.value == type.androidName }.key.toString())
+        val model = Uri.withAppendedPath(FlashCardsContract.Model.CONTENT_URI, api.modelList!!.entries.first { it.value == type.name }.key.toString())
         val resolver = Device.context.contentResolver
         resolver.update(model, android.content.ContentValues().apply { put(FlashCardsContract.Model.CSS, ".card { color: red; }") }, null, null)
 
@@ -186,7 +187,7 @@ class AnkiDroidTest {
 
         // Its note type: front → back and back → front, each typed; its helps and "did you know"
         val api = AddContentApi(Device.context)
-        val name = types["text+reverse+typing"].androidName
+        val name = types["text+reverse+typing"].name
         val model = api.modelList!!.entries.first { it.value == name }.key
         val note = api.findDuplicateNotes(model, card.front).single()
         assertEquals(listOf("Mère se dit madre.", "maternelle"), note.fields.takeLast(2))
@@ -286,7 +287,7 @@ class AnkiDroidTest {
         val first = anki.send(deck, Media(pictures = mapOf(picture.name to picture), lesson = lesson))
         assertEquals(1, first.added)
         val note = AddContentApi(Device.context).getNote(first.notes.getValue("p-$run"))!!
-        assertEquals(types["picture"].androidName, AddContentApi(Device.context).modelList!![noteModel(note.id)])
+        assertEquals(types["picture"].name, AddContentApi(Device.context).modelList!![noteModel(note.id)])
 
         // Sent again with the last send's notes: nothing updated, the picture not copied again
         val again = anki.send(deck, Media(pictures = mapOf(picture.name to picture), lesson = lesson, sentBefore = first.notes))
@@ -306,7 +307,7 @@ class AnkiDroidTest {
             Media(pictures = mapOf(missing.name to missing), lesson = "refused-$run"),
         )
         assertEquals(1, picture.added)
-        assertEquals(types["text"].androidName, api.modelList!![noteModel(picture.notes.getValue("r-$run"))])
+        assertEquals(types["text"].name, api.modelList!![noteModel(picture.notes.getValue("r-$run"))])
 
         val dictation = anki.send(
             Deck("Notosaurus test $run", listOf(Card("le hibou $run", "el búho", id = "d-$run"))),
@@ -315,11 +316,72 @@ class AnkiDroidTest {
         )
         assertEquals(1, dictation.added)
         val note = api.getNote(dictation.notes.getValue("d-$run"))!!
-        assertEquals(types["text"].androidName, api.modelList!![noteModel(note.id)])
+        assertEquals(types["text"].name, api.modelList!![noteModel(note.id)])
         assertFalse(note.fields.toList().toString(), note.fields.any { "[sound:" in it || "\uE000" in it })
     }
 
     /** A note's note type. */
+    /** A note's field, by its name in the note type (the computer's order). */
+    private fun field(model: Long, fields: Array<String>, name: String): String =
+        fields[AddContentApi(Device.context).getFieldList(model)!!.indexOf(name)]
+
+    /** The lesson's note (its tag) of note type `model` whose field `name` says `value`. */
+    private fun lessonNote(model: Long, lesson: String, name: String, value: String): com.ichi2.anki.api.NoteInfo {
+        val api = AddContentApi(Device.context)
+        return Anki(Device.context).lessonNotes(lesson)!!.mapNotNull { api.getNote(it) }
+            .single { noteModel(it.id) == model && field(model, it.fields, name) == value }
+    }
+
+    @Test
+    fun aLessonsNotesSentFromTheComputerUpdatedNotAddedAgain() {
+        // The computer's notes, synced from Anki: its note types (the same names and fields),
+        // the lesson's tag; their keys read by name
+        val anki = Anki(Device.context)
+        val lesson = "computer-$run"
+        val photo = File(Device.context.filesDir, "lessons/$lesson/images/picture-c-$run.jpg").apply {
+            parentFile!!.mkdirs()
+            outputStream().use { Bitmap.createBitmap(20, 20, Bitmap.Config.ARGB_8888).compress(Bitmap.CompressFormat.JPEG, 80, it) }
+        }
+        val made = Card("x $run", "y", id = "x-$run", picture = photo.name) // the picture note type there
+        anki.send(Deck("Notosaurus test $run", listOf(made)), Media(pictures = mapOf(photo.name to photo), lesson = "made-$run"))
+        val api = AddContentApi(Device.context)
+        val picture = types["picture"]
+        val model = api.modelList!!.entries.first { it.value == picture.name }.key
+        val did = api.deckList!!.entries.first { it.value == "Notosaurus test $run" }.key
+        val names = api.getFieldList(model)!!.toList()
+        assertEquals(picture.fields, names) // the computer's order, Source included
+        val fields = picture.values(names, mapOf("Front" to "le chat $run", "Back" to "el gato", "Id" to "p-$run", "Source" to "Wikimedia Commons"))
+        val computers = api.addNote(model, did, fields, setOf("notosaurus", Anki.lessonTag(lesson)))!!
+
+        // Sent from the phone, the lesson without its notes (anki_notes: another device's): updated
+        val card = Card("le chat $run", "el gato !", id = "p-$run", picture = photo.name)
+        val sent = anki.send(Deck("Notosaurus test $run", listOf(card)), Media(pictures = mapOf(photo.name to photo), lesson = lesson))
+        assertEquals(listOf(0, 1), listOf(sent.added, sent.updated))
+        assertEquals(mapOf("p-$run" to computers), sent.notes)
+        val note = api.getNote(computers)!!
+        assertEquals("el gato !", field(model, note.fields, "Back"))
+        assertEquals("Wikimedia Commons", field(model, note.fields, "Source")) // the computer's, kept
+    }
+
+    @Test
+    fun aTestVersionsNotesUpdatedInPlace() {
+        // A test version's note type: " (Android)", the key first
+        val anki = Anki(Device.context)
+        val lesson = "older-$run"
+        val api = AddContentApi(Device.context)
+        val text = types["text"]
+        val legacy = api.modelList!!.entries.firstOrNull { it.value == text.legacyName }?.key ?: api.addNewCustomModel(
+            text.legacyName, (listOf(text.key) + text.fields.filter { it != text.key }).toTypedArray(), arrayOf(text.cards[0].name),
+            arrayOf(text.cards[0].front), arrayOf(text.cards[0].back), text.css, null, 0,
+        )!!
+        anki.send(Deck("Notosaurus test $run", listOf(Card("y $run", "z"))), Media(lesson = "made-$run")) // its deck there
+        val did = api.deckList!!.entries.first { it.value == "Notosaurus test $run" }.key
+        val older = api.addNote(legacy, did, text.values(api.getFieldList(legacy)!!.toList(), mapOf("Front" to "bleu $run", "Back" to "azul")), setOf(Anki.lessonTag(lesson)))!!
+        val sent = anki.send(Deck("Notosaurus test $run", listOf(Card("bleu $run", "azul claro", id = "b-$run"))), Media(lesson = lesson))
+        assertEquals(listOf(0, 1), listOf(sent.added, sent.updated))
+        assertEquals("azul claro", field(legacy, api.getNote(older)!!.fields, "Back"))
+    }
+
     private fun noteModel(note: Long): Long = Device.context.contentResolver.query(
         Uri.withAppendedPath(FlashCardsContract.Note.CONTENT_URI, note.toString()), arrayOf(FlashCardsContract.Note.MID), null, null, null,
     )!!.use { c -> c.moveToFirst(); c.getLong(0) }
@@ -359,11 +421,11 @@ class AnkiDroidTest {
         val deck = Deck("Notosaurus test $run", listOf(Card(question, "1789", choices = listOf("1715", "1799"), id = "c$run")))
         assertEquals(1, anki.send(deck).added)
         val api = AddContentApi(Device.context)
-        val model = api.modelList!!.entries.first { it.value == types["choice"].androidName }.key
-        val note = api.findDuplicateNotes(model, "c$run").single() // "Id" first: told apart by the card's own id
-        assertEquals(question, note.fields[1])
-        assertTrue(note.fields[3], note.fields[3].startsWith("<ol class=\"notosaurus-choices\">"))
-        assertTrue(note.fields[4].contains("<li class=\"right\">1789</li>"))
+        val model = api.modelList!!.entries.first { it.value == types["choice"].name }.key
+        val note = api.findDuplicateNotes(model, question).single() // no lesson: its first field, the computer's
+        assertEquals("c$run", field(model, note.fields, "Id"))
+        assertTrue(field(model, note.fields, "Choices").startsWith("<ol class=\"notosaurus-choices\">"))
+        assertTrue(field(model, note.fields, "AnswerChoices").contains("<li class=\"right\">1789</li>"))
         assertEquals(0, anki.send(deck).added) // not twice
     }
 
@@ -391,8 +453,8 @@ class AnkiDroidTest {
 
         // The gaps: Anki's own cloze, a card per gap number
         val api = AddContentApi(Device.context)
-        val cloze = api.modelList!!.entries.first { it.value == types["cloze"].androidName }.key
-        val note = api.findDuplicateNotes(cloze, "test-$run:2").single() // "Id" first: the lesson and the card's place
+        val cloze = api.modelList!!.entries.first { it.value == types["cloze"].name }.key
+        val note = lessonNote(cloze, "test-$run", "Id", "test-$run:2") // the lesson and the card's place
         val cards = Device.context.contentResolver.query(
             Uri.withAppendedPath(Uri.withAppendedPath(FlashCardsContract.Note.CONTENT_URI, note.id.toString()), "cards"),
             null, null, null, null,
@@ -400,10 +462,11 @@ class AnkiDroidTest {
         assertEquals(2, cards)
 
         // The diagram's questions repeat ("What is (1)?"): told apart by lesson, photo and label
-        val diagram = api.modelList!!.entries.first { it.value == types["diagram"].androidName }.key
-        val label = api.findDuplicateNotes(diagram, "test-$run:1:1").single()
-        assertTrue(label.fields[5], label.fields[5].startsWith("<img"))
-        assertTrue(label.fields[6].contains("notosaurus-mask target"))
+        val diagram = api.modelList!!.entries.first { it.value == types["diagram"].name }.key
+        val label = lessonNote(diagram, "test-$run", "Id", "test-$run:1:1")
+        val image = field(diagram, label.fields, "Image")
+        assertTrue(image, image.startsWith("<img"))
+        assertTrue(field(diagram, label.fields, "Masks").contains("notosaurus-mask target"))
         // Cropped to the diagram's frame (stretched to hold the labels): smaller than the photo
         val cropped = File(photo.parentFile, "images").listFiles()!!.single { it.name.startsWith("diagram-page-1-") }
         val size = BitmapFactory.decodeFile(cropped.path)
@@ -411,6 +474,6 @@ class AnkiDroidTest {
         // Sent again: not twice, the diagram's image not copied into AnkiDroid again
         val again = anki.send(deck, Media(photos = mapOf(1 to photo), lesson = "test-$run", frames = mapOf(1 to listOf(0.0, 0.0, 0.5, 0.5))))
         assertEquals(listOf(0, 0), listOf(again.added, again.updated))
-        assertEquals(label.fields[5], api.findDuplicateNotes(diagram, "test-$run:1:1").single().fields[5])
+        assertEquals(image, field(diagram, lessonNote(diagram, "test-$run", "Id", "test-$run:1:1").fields, "Image"))
     }
 }

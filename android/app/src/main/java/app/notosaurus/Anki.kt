@@ -220,9 +220,50 @@ class Anki(private val context: Context) : AnkiTarget {
         return request()
     }
 
-    /** A note to send: its note type, deck, fields (the first: its key, what tells it's
-     * there already), tags. */
-    private class Note(val model: Long, val deck: String, val fields: Array<String>, val tags: Set<String>, val card: String)
+    /** A note to send: its note type, deck, fields by name, tags; `key`: its key field's value
+     * (NoteType.key), what tells it's there already. */
+    private class Note(
+        val type: NoteType,
+        val model: Long,
+        val deck: String,
+        val values: Map<String, String>,
+        val tags: Set<String>,
+        val card: String,
+    ) {
+        val key: String get() = values[type.key].orEmpty()
+    }
+
+    /** A note in AnkiDroid: its note type, fields (in its note type's order), tags. */
+    private class There(val id: Long, val model: Long, val fields: Array<String>, val tags: Set<String>)
+
+    private val fieldNames = mutableMapOf<Long, List<String>>() // a note type's fields in AnkiDroid, asked once
+
+    private fun names(model: Long, type: NoteType): List<String> =
+        fieldNames.getOrPut(model) { api.getFieldList(model)?.toList() ?: type.fields }
+
+    /** The lesson's notes (its tag), as they are in AnkiDroid. */
+    private fun lessonThere(lesson: String): List<There> = context.contentResolver.query(
+        FlashCardsContract.Note.CONTENT_URI,
+        arrayOf(FlashCardsContract.Note._ID, FlashCardsContract.Note.MID, FlashCardsContract.Note.FLDS, FlashCardsContract.Note.TAGS),
+        "tag:${lessonTag(lesson)}", null, null,
+    )?.use { c ->
+        buildList {
+            while (c.moveToNext()) {
+                val tags = c.getString(3).orEmpty().split(' ').filter { it.isNotEmpty() }.toSet()
+                add(There(c.getLong(0), c.getLong(1), c.getString(2).orEmpty().split('\u001f').toTypedArray(), tags))
+            }
+        }
+    }.orEmpty()
+
+    /** The lesson's notes of note type `type` (its name, or a test version's: legacyName),
+     * by their key field's value, read by its name: whichever device sent them. */
+    private fun lessonNotesOf(lesson: String, type: NoteType): Map<String, There> {
+        val models = api.modelList.orEmpty()
+        return lessonThere(lesson).filter { models[it.model] == type.name || models[it.model] == type.legacyName }
+            .mapNotNull { there -> names(there.model, type).indexOf(type.key).takeIf { it >= 0 }?.let { there.fields.getOrNull(it) to there } }
+            .mapNotNull { (key, there) -> key?.let { it to there } }
+            .toMap()
+    }
 
     private fun add(deck: Deck, media: Media, options: Options): Sent {
         everyCurrent()
@@ -258,7 +299,7 @@ class Anki(private val context: Context) : AnkiTarget {
             val sound by lazy { media.audio[Speech.spoken(card, options.dictation)]?.let { if (options.dictation) deciding(it, "audio", key) else file(it, "audio") }.orEmpty() }
             fun note(variant: String, fields: Map<String, String>): Note {
                 val type = noteTypes[variant]
-                return Note(model(type) ?: error("AnkiDroid refused the note type ${type.androidName}"), name, type.values(common + fields), tags, key)
+                return Note(type, model(type) ?: error("AnkiDroid refused the note type ${type.name}"), name, common + fields, tags, key)
             }
             // Only for the cards showing them (lazy): no file into AnkiDroid that no note shows
             val picture by lazy { media.pictures[card.picture]?.let { if (card.isChoice()) file(it, "image") else deciding(it, "image", key) }.orEmpty() }
@@ -316,7 +357,7 @@ class Anki(private val context: Context) : AnkiTarget {
                 val id = media.sentBefore[note.card] ?: return@filter true
                 val there = api.getNote(id)?.takeIf { noteModel(id) == model } ?: return@filter true
                 if (there.tags.any { it.startsWith(TAG_PREFIX) && it !in own }) return@filter true
-                val fields = withFiles(note.fields, there.fields)
+                val fields = withFiles(note.type.values(names(model, note.type), note.values, there.fields), there.fields)
                 if (!there.fields.contentEquals(fields) || !there.tags.containsAll(note.tags)) {
                     api.updateNoteFields(id, fields)
                     api.updateNoteTags(id, there.tags + note.tags)
@@ -327,36 +368,36 @@ class Anki(private val context: Context) : AnkiTarget {
                 false
             }
             if (rest.isEmpty()) return@forEach
-            // There already: the same key (first field) in that note type. This lesson's (its
-            // tag), or one sent before the lessons had tags: updated; another lesson's: left
-            val known = api.findDuplicateNotes(model, rest.map { it.fields[0] })
+            val type = rest.first().type
             val fresh = mutableListOf<Note>()
-            rest.forEachIndexed { i, note ->
-                val found = known?.get(i).orEmpty()
-                val mine = found.firstOrNull { info -> own.any { it in info.tags } || info.tags.none { it.startsWith(TAG_PREFIX) } }
-                when {
-                    found.isEmpty() -> fresh += note
-                    mine == null -> duplicates++
-                    else -> {
-                        val fields = withFiles(note.fields, mine.fields)
-                        if (!mine.fields.contentEquals(fields) || !mine.tags.containsAll(note.tags)) {
-                            api.updateNoteFields(mine.id, fields)
-                            api.updateNoteTags(mine.id, mine.tags + note.tags)
-                            updated++
-                        }
-                        // The lesson's deck (or the card's part) changed: its cards follow, history kept
-                        if (options.move && moveCards(mine.id, did)) moved++
-                        sent[note.card] = mine.id
+            if (media.lesson.isNotEmpty()) {
+                // There already: the lesson's note (its tag) with the same key, read by the key
+                // field's name, in this note type: whichever device sent it (the computer's)
+                val there = lessonNotesOf(media.lesson, type)
+                rest.forEach { note ->
+                    val mine = there[note.key] ?: return@forEach run { fresh += note }
+                    val fields = withFiles(type.values(names(mine.model, type), note.values, mine.fields), mine.fields)
+                    if (!mine.fields.contentEquals(fields) || !mine.tags.containsAll(note.tags)) {
+                        api.updateNoteFields(mine.id, fields)
+                        api.updateNoteTags(mine.id, mine.tags + note.tags)
+                        updated++
                     }
+                    // The lesson's deck (or the card's part) changed: its cards follow, history kept
+                    if (options.move && moveCards(mine.id, did)) moved++
+                    sent[note.card] = mine.id
                 }
+            } else {
+                // No lesson (cards not saved): the same first field in that note type is there already
+                val firsts = rest.map { type.values(names(model, type), it.values)[0] }
+                val known = api.findDuplicateNotes(model, firsts)
+                rest.forEachIndexed { i, note -> if (known?.get(i).isNullOrEmpty()) fresh += note else duplicates++ }
             }
             if (fresh.isEmpty()) return@forEach
-            count += maxOf(0, api.addNotes(model, did, fresh.map { withFiles(it.fields, null) }, fresh.map { it.tags }))
+            count += maxOf(0, api.addNotes(model, did, fresh.map { withFiles(type.values(names(model, type), it.values), null) }, fresh.map { it.tags }))
             // Their ids (addNotes gives only how many): this lesson's notes with their keys
-            api.findDuplicateNotes(model, fresh.map { it.fields[0] })?.let { added ->
-                fresh.forEachIndexed { i, note ->
-                    added.get(i)?.firstOrNull { info -> own.any { it in info.tags } }?.let { sent[note.card] = it.id }
-                }
+            if (media.lesson.isNotEmpty()) {
+                val there = lessonNotesOf(media.lesson, type)
+                fresh.forEach { note -> there[note.key]?.let { sent[note.card] = it.id } }
             }
         }
         return Sent(count, duplicates, deck.cards.size - notes.size, deck.deck, updated, moved, sent)
@@ -431,24 +472,25 @@ class Anki(private val context: Context) : AnkiTarget {
      * name), else brought up to date (current). A cloze note type through AnkiDroid's
      * provider, as its API makes the others, with its type: the API makes standard ones only. */
     private fun model(type: NoteType): Long? {
-        api.modelList?.entries?.firstOrNull { it.value == type.androidName }?.key?.let { id ->
+        // The computer's, synced from Anki, or made here before: the same (name, fields, look)
+        api.modelList?.entries?.firstOrNull { it.value == type.name }?.key?.let { id ->
             // its look an older one's: the cards still go in, the failure said in the log
-            runCatching { current(id, type) }.onFailure { Log.w(TAG, "note type ${type.androidName} not brought up to date", it) }
+            runCatching { current(id, type) }.onFailure { Log.w(TAG, "note type ${type.name} not brought up to date", it) }
             return id
         }
         val cards = type.cards
         if (!type.cloze) {
             return api.addNewCustomModel(
-                type.androidName, type.androidFields.toTypedArray(), cards.map { it.name }.toTypedArray(),
-                cards.map { it.front }.toTypedArray(), cards.map { it.back }.toTypedArray(), type.signedCss, null, type.sortField,
+                type.name, type.fields.toTypedArray(), cards.map { it.name }.toTypedArray(),
+                cards.map { it.front }.toTypedArray(), cards.map { it.back }.toTypedArray(), type.signedCss, null, 0, // sorted by the first field, as the computer's
             )
         }
         val values = ContentValues().apply {
-            put(FlashCardsContract.Model.NAME, type.androidName)
-            put(FlashCardsContract.Model.FIELD_NAMES, type.androidFields.joinToString("\u001f"))
+            put(FlashCardsContract.Model.NAME, type.name)
+            put(FlashCardsContract.Model.FIELD_NAMES, type.fields.joinToString("\u001f"))
             put(FlashCardsContract.Model.NUM_CARDS, 1)
             put(FlashCardsContract.Model.CSS, type.signedCss)
-            put(FlashCardsContract.Model.SORT_FIELD_INDEX, type.sortField)
+            put(FlashCardsContract.Model.SORT_FIELD_INDEX, 0)
             put(FlashCardsContract.Model.TYPE, 1) // cloze
         }
         val resolver = context.contentResolver
@@ -468,9 +510,9 @@ class Anki(private val context: Context) : AnkiTarget {
      * lesson's: an older lesson's cards (pictures, diagrams…) get the change too, sent or not. */
     private fun everyCurrent() {
         val there = api.modelList ?: return
-        noteTypes.all.values.distinctBy { it.androidName }.forEach { type ->
-            val id = there.entries.firstOrNull { it.value == type.androidName }?.key ?: return@forEach
-            runCatching { current(id, type) }.onFailure { Log.w(TAG, "note type ${type.androidName} not brought up to date", it) }
+        noteTypes.all.values.distinctBy { it.name }.forEach { type ->
+            val id = there.entries.firstOrNull { it.value == type.name }?.key ?: return@forEach
+            runCatching { current(id, type) }.onFailure { Log.w(TAG, "note type ${type.name} not brought up to date", it) }
         }
     }
 
@@ -484,10 +526,10 @@ class Anki(private val context: Context) : AnkiTarget {
         val (css, count) = resolver.query(model, arrayOf(FlashCardsContract.Model.CSS, FlashCardsContract.Model.NUM_CARDS), null, null, null)
             ?.use { c -> if (c.moveToFirst()) c.getString(0).orEmpty() to c.getInt(1) else null } ?: return
         if ("version ${type.signature}:" in css || count != type.cards.size) {
-            Log.i(TAG, "note type ${type.androidName}: kept (${if (count != type.cards.size) "$count cards" else "up to date"})")
+            Log.i(TAG, "note type ${type.name}: kept (${if (count != type.cards.size) "$count cards" else "up to date"})")
             return
         }
-        Log.i(TAG, "note type ${type.androidName}: bringing it up to date")
+        Log.i(TAG, "note type ${type.name}: bringing it up to date")
         type.cards.forEachIndexed { ord, card ->
             val template = ContentValues().apply {
                 put(FlashCardsContract.CardTemplate.NAME, card.name)
