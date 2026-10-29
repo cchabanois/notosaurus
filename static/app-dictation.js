@@ -5,6 +5,12 @@
 
 const DICTATION_MAX = 120_000;  // ms: the recording stops by itself after 2 minutes
 
+// While listening, a tap anywhere else stops it as ⏹ does (the text written), and does only
+// that: "Correct" tapped then doesn't send a request whose text isn't there yet. A "click",
+// not a touch: none comes after a finger scrolling the page. The app gone to the background
+// (a call, the home screen) stops it too.
+let stopElsewhere = null;
+
 // Said after what was already there, on a line of its own
 const joinDictated = (before, text) => (before.trim() ? `${before.trimEnd()}\n${text}` : text);
 
@@ -21,14 +27,33 @@ const dictationPart = {
       await api("/api/dictation/start", { method: "POST" });
       this.mic.listening = kind;
       this.mic.timer = setTimeout(() => this.stopDictation(), DICTATION_MAX);
+      this.watchElsewhere();
     } catch (e) {
       this.error = e.message;
     }
   },
 
+  watchElsewhere() {
+    const tapped = (e) => {
+      if (e.target.closest?.(".mic")) return;  // ⏹ itself
+      e.preventDefault();
+      e.stopPropagation();
+      this.stopDictation();
+    };
+    const hidden = () => document.hidden && this.stopDictation();
+    document.addEventListener("click", tapped, true);
+    document.addEventListener("visibilitychange", hidden);
+    stopElsewhere = () => {
+      document.removeEventListener("click", tapped, true);
+      document.removeEventListener("visibilitychange", hidden);
+    };
+  },
+
   async stopDictation() {
     const kind = this.mic.listening;
     if (!kind) return;
+    stopElsewhere?.();
+    stopElsewhere = null;
     clearTimeout(this.mic.timer);
     this.mic.listening = "";
     this.mic.busy = kind;
