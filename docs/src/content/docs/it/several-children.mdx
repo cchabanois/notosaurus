@@ -1,0 +1,135 @@
+---
+title: Più figli
+description: "Una scheda per figlio (classe, mazzi, istruzioni), un profilo Anki e un account AnkiWeb ciascuno; oppure, su un tablet condiviso, un mazzo per figlio."
+---
+
+import { Tabs, TabItem } from '@astrojs/starlight/components';
+
+Ogni figlio ha una **scheda** in Notosaurus: il suo nome, la sua classe, i mazzi in cui vanno le
+sue lezioni, e le tue istruzioni per lui. Ogni lezione è per un figlio. Dove vanno le sue carte in
+Anki dipende da dove gira Notosaurus: vedi
+[Dove vanno le carte di ogni figlio](#dove-vanno-le-carte-di-ogni-figlio).
+
+## Le schede dei figli
+
+Il pulsante **Figli** (🧒), in cima alla pagina, apre **Figli**. **+ Aggiungi un figlio** crea una
+scheda:
+
+- **Nome**: per distinguerli. **Non viene mai inviato all'IA**.
+- **Classe**: detta all'IA, perché le carte siano adatte al livello dell'alunno.
+- **Mazzi in**: dove vanno le sue lezioni in Anki, vuoto all'inizio (il mazzo della lezione come
+  al solito). Sotto, un tocco su un suggerimento lo riempie: il suo nome (`Jules`), o il suo nome e
+  la sua classe (`Jules::1ª media`), che si aggiorna quando cambia la classe. Il mazzo della
+  lezione viene poi dopo: `Jules::1ª media::Inglese::Unit 3`. Scritto a mano, anche `{classe}`
+  diventa la sua classe.
+- **Istruzioni per l'IA (senza il nome)**: aggiunte a ogni lezione di quel figlio ("legge ancora
+  lentamente: frasi brevi", "prepara una verifica: insisti su date e definizioni").
+
+**Per chi è la prossima lezione? Tocca il suo nome**: il figlio scelto compare su quel pulsante, e
+le prossime lezioni sono per lui. **Modifica** (✏️), accanto a un nome, modifica la sua scheda.
+
+![Figli: per chi è la prossima lezione](../../../assets/screenshots/en/children.png)
+
+![La scheda di un figlio: nome, classe, mazzi, istruzioni](../../../assets/screenshots/en/child-card.png)
+
+Le istruzioni per tutti i figli ("inglese britannico") sono nelle impostazioni: vedi
+[Istruzioni](../instructions/#istruzioni-permanenti).
+
+## Le lezioni appartengono a un figlio
+
+- Una lezione è per il figlio scelto quando viene fatta. La sua revisione dice di chi è: **🧒
+  Lezione di Paul**.
+- **📚 Le mie lezioni** mostra le lezioni del figlio scelto. Con più figli, il selettore sopra
+  l'elenco mostra **Le lezioni di tutti i figli**.
+- Sul computer, se Anki è aperto sul profilo di un altro figlio, la lezione lo dice prima
+  dell'invio: ⚠️ *Anki è aperto per Léa: apri il profilo di Paul in Anki per inviargli le sue
+  carte.*
+
+### La stessa lezione per due figli
+
+Due figli hanno la stessa lezione? **⧉ Copia per…**, nella revisione della lezione, fa una copia
+per un altro figlio: i suoi mazzi, le sue carte in Anki, la sua cronologia di ripasso. È gratis:
+all'IA non viene chiesto nulla. La copia si apre se quel figlio è nel profilo aperto; altrimenti
+aspetta nelle sue lezioni.
+
+![Copia per…: gli altri figli](../../../assets/screenshots/en/copy-for.png)
+
+Sul computer, le lezioni condivise con tutti i profili da una versione precedente restano visibili
+a ogni profilo, in sola lettura tranne che dal profilo del loro proprietario: **⧉ Copia per…** dà
+a ogni figlio la sua.
+
+## Dove vanno le carte di ogni figlio
+
+<Tabs syncKey="mode">
+<TabItem label="App Android">
+
+L'app scrive in **AnkiDroid**, che non ha profili: una raccolta sul telefono, collegata a un
+account AnkiWeb. Quindi ogni figlio ha i suoi mazzi:
+
+- compila il suo **Mazzi in** con un tocco sul suggerimento (`Léa::5ª elementare`,
+  `Paul::2ª media`): le sue lezioni vanno nei suoi mazzi;
+- per ripassare, ogni figlio apre **il proprio** mazzo (Léa, Paul): AnkiDroid prende allora solo
+  le sue carte. Non il pulsante che ripassa tutto.
+
+Notosaurus tiene separati i figli in quella raccolta:
+
+- l'elenco delle lezioni mostra quelle del figlio scelto, raggruppate per materia (senza nome né
+  classe);
+- i mazzi suggeriti sono i suoi, mai quelli di un altro figlio.
+
+Ogni figlio vede comunque i mazzi degli altri in AnkiDroid, e le statistiche sono condivise.
+
+</TabItem>
+<TabItem label="Computer">
+
+**Un profilo per figlio.** Le carte vanno nel profilo aperto in Anki. Perché ogni figlio abbia le
+sue carte e i suoi progressi, dai a ciascuno un profilo:
+
+1. In Anki, **File → Cambia profilo → Aggiungi**, e crea un profilo per figlio (Léa, Paul…).
+2. Per ogni profilo, crea un **account AnkiWeb** e accedi in quel profilo (**Strumenti →
+   Preferenze → Sincronizzazione**). Un account AnkiWeb contiene una raccolta, quindi ogni figlio
+   ha bisogno del suo.
+3. Sul telefono di ogni figlio, accedi ad **AnkiDroid** o **AnkiMobile** con l'account AnkiWeb di
+   quel figlio.
+4. Apri il profilo di ogni figlio in Anki, poi **🧒** in Notosaurus, e crea la sua scheda.
+
+:::tip[Niente casella di posta per figlio]
+Molti servizi di posta accettano alias con un `+`: `genitore+lea@example.com` e
+`genitore+paul@example.com` arrivano nella tua casella, ma contano come due indirizzi.
+:::
+
+La scheda di un figlio appartiene al **profilo Anki aperto quando è stata creata**. Notosaurus
+propone solo le schede del profilo aperto in Anki: apri il profilo di Paul, e Paul è scelto.
+
+Dopo **Aggiungi ad Anki**, Notosaurus sincronizza il profilo aperto con AnkiWeb. Le carte arrivano
+sul telefono del figlio alla sua prossima sincronizzazione.
+
+**Un tablet per più figli.** **AnkiDroid non ha profili**: un'installazione contiene una raccolta,
+collegata a un account AnkiWeb. Nemmeno AnkiMobile cambia account senza disconnettersi. Se i figli
+condividono un telefono o un tablet, la cosa più semplice è **un solo profilo Anki, con un mazzo
+per figlio**:
+
+1. Tieni un solo profilo in Anki, collegato a un solo account AnkiWeb, e collega AnkiDroid a
+   quell'account.
+2. Crea una scheda per ogni figlio, e compila il suo **Mazzi in** con un tocco sul suggerimento
+   (`Léa::5ª elementare`, `Paul::2ª media`). Le sue lezioni vanno allora nei suoi mazzi, senza
+   riscrivere il nome.
+3. Per ripassare, ogni figlio apre **il proprio** mazzo (Léa, Paul): Anki prende allora solo le
+   sue carte. Non il pulsante che ripassa tutto.
+
+Notosaurus tiene allora separati i figli nello stesso profilo:
+
+- l'elenco delle lezioni mostra quelle del figlio scelto, raggruppate per materia (senza nome né
+  classe);
+- i mazzi suggeriti sono i suoi, mai quelli di un altro figlio.
+
+Cosa perdi rispetto a un profilo per figlio: ogni figlio vede i mazzi degli altri in Anki, e le
+statistiche di Anki sono condivise.
+
+Se ogni figlio ha il suo dispositivo, meglio **un profilo per figlio**. Per i più esperti:
+AnkiDroid si può installare più volte sullo stesso dispositivo, una per figlio, ciascuna con il
+suo account AnkiWeb (le "parallel builds", vedi le
+[FAQ di AnkiDroid](https://github.com/ankidroid/Anki-Android/wiki/FAQ)).
+
+</TabItem>
+</Tabs>

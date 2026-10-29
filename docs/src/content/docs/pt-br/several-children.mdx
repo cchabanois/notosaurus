@@ -1,0 +1,132 @@
+---
+title: Vários filhos
+description: "Uma ficha por filho (série, baralhos, instruções), um perfil do Anki e uma conta do AnkiWeb para cada um; ou, em um tablet compartilhado, um baralho por filho."
+---
+
+import { Tabs, TabItem } from '@astrojs/starlight/components';
+
+Cada filho ganha uma **ficha** no Notosaurus: o nome, a série, os baralhos para onde vão as lições
+dele, e as suas instruções para ele. Cada lição é para um filho. Para onde vão os cartões dele no
+Anki depende de onde o Notosaurus roda: veja
+[Para onde vão os cartões de cada filho](#para-onde-vão-os-cartões-de-cada-filho).
+
+## As fichas dos filhos
+
+O botão **Filhos** (🧒), no alto da página, abre **Filhos**. **+ Adicionar um filho** cria uma
+ficha:
+
+- **Nome**: para diferenciá-los. Ele **nunca é enviado à IA**.
+- **Série**: informada à IA, para que os cartões combinem com o nível do aluno.
+- **Baralhos em**: para onde vão as lições dele no Anki, vazio no começo (o baralho da lição,
+  como sempre). Embaixo, um toque em uma sugestão o preenche: o nome (`Jules`), ou o nome e a
+  série (`Jules::6º ano`), que acompanha quando a série muda. O baralho da lição vem depois:
+  `Jules::6º ano::Inglês::Unit 3`. Digitado à mão, `{ano}` também vira a série dele.
+- **Instruções para a IA (sem o nome)**: acrescentadas a cada lição desse filho ("ainda lê
+  devagar: frases curtas", "está estudando para uma prova: insista em datas e definições").
+
+**Para quem é a próxima lição? Toque no nome**: o filho escolhido aparece nesse botão, e as
+próximas lições são para ele. **Editar** (✏️), ao lado de um nome, edita a ficha dele.
+
+![Filhos: para quem é a próxima lição](../../../assets/screenshots/en/children.png)
+
+![A ficha de um filho: nome, série, baralhos, instruções](../../../assets/screenshots/en/child-card.png)
+
+As instruções para todos os filhos ("inglês britânico") ficam nas configurações: veja
+[Instruções](../instructions/#instruções-permanentes).
+
+## As lições pertencem a um filho
+
+- Uma lição é para o filho escolhido quando ela é feita. A revisão dela diz de quem é: **🧒 Lição
+  de Paul**.
+- **📚 Minhas lições** mostra as lições do filho escolhido. Com mais de um filho, a chave acima da
+  lista mostra **As lições de todos os filhos**.
+- No computador, se o Anki estiver aberto no perfil de outro filho, a lição avisa antes do envio:
+  ⚠️ *O Anki está aberto para Léa: abra o perfil de Paul no Anki para lhe enviar os cartões.*
+
+### A mesma lição para dois filhos
+
+Dois filhos têm a mesma lição? **⧉ Copiar para…**, na revisão da lição, faz uma cópia para outro
+filho: os baralhos dele, os próprios cartões dele no Anki, o próprio histórico de revisão. É
+grátis: nada é pedido à IA. A cópia abre se esse filho estiver no perfil aberto; senão, ela espera
+nas lições dele.
+
+![Copiar para…: os outros filhos](../../../assets/screenshots/en/copy-for.png)
+
+No computador, as lições compartilhadas com todos os perfis por uma versão anterior continuam
+visíveis para todos os perfis, em somente leitura a não ser pelo perfil do dono: **⧉ Copiar
+para…** dá a cada filho a sua.
+
+## Para onde vão os cartões de cada filho
+
+<Tabs syncKey="mode">
+<TabItem label="App Android">
+
+O app escreve no **AnkiDroid**, que não tem perfis: uma coleção no celular, conectada a uma conta
+do AnkiWeb. Então cada filho ganha os seus próprios baralhos:
+
+- preencha o **Baralhos em** dele com um toque na sugestão (`Léa::4º ano`, `Paul::7º ano`): as
+  lições dele vão para os baralhos dele;
+- para revisar, cada filho abre **o próprio** baralho (Léa, Paul): o AnkiDroid pega então só os
+  cartões dele. Não o botão que revisa tudo.
+
+O Notosaurus mantém os filhos separados nessa coleção:
+
+- a lista de lições mostra as do filho escolhido, agrupadas por matéria (sem o nome nem a série);
+- os baralhos sugeridos são os dele, nunca os de outro filho.
+
+Mesmo assim, cada filho vê os baralhos dos outros no AnkiDroid, e as estatísticas são
+compartilhadas.
+
+</TabItem>
+<TabItem label="Computador">
+
+**Um perfil por filho.** Os cartões vão para o perfil aberto no Anki. Para que cada filho tenha os
+próprios cartões e o próprio progresso, dê um perfil a cada um:
+
+1. No Anki, **Arquivo → Mudar perfil → Adicionar**, e crie um perfil por filho (Léa, Paul…).
+2. Para cada perfil, crie uma **conta do AnkiWeb** e entre com ela nesse perfil (**Ferramentas →
+   Preferências → Rede**). Uma conta do AnkiWeb guarda uma coleção, então cada filho precisa da
+   sua.
+3. No celular de cada filho, entre no **AnkiDroid** ou no **AnkiMobile** com a conta do AnkiWeb
+   desse filho.
+4. Abra o perfil de cada filho no Anki, depois **🧒** no Notosaurus, e crie a ficha dele.
+
+:::tip[Sem uma caixa de e-mail por filho]
+Muitos serviços de e-mail aceitam apelidos com um `+`: `pais+lea@example.com` e
+`pais+paul@example.com` chegam na sua caixa, mas contam como dois endereços.
+:::
+
+A ficha de um filho pertence ao **perfil do Anki aberto quando ela foi criada**. O Notosaurus só
+oferece as fichas do perfil aberto no Anki: abra o perfil de Paul, e Paul fica escolhido.
+
+Depois de **Adicionar ao Anki**, o Notosaurus sincroniza o perfil aberto com o AnkiWeb. Os cartões
+chegam ao celular do filho na próxima sincronização dele.
+
+**Um tablet para vários filhos.** **O AnkiDroid não tem perfis**: uma instalação guarda uma
+coleção, conectada a uma conta do AnkiWeb. O AnkiMobile também não troca de conta sem sair. Se os
+filhos dividem um celular ou um tablet, o mais simples é **um único perfil do Anki, com um baralho
+por filho**:
+
+1. Mantenha um único perfil no Anki, conectado a uma única conta do AnkiWeb, e entre no AnkiDroid
+   com essa conta.
+2. Crie uma ficha para cada filho, e preencha o **Baralhos em** dele com um toque na sugestão
+   (`Léa::4º ano`, `Paul::7º ano`). As lições dele vão então para os baralhos dele, sem digitar o
+   nome de novo.
+3. Para revisar, cada filho abre **o próprio** baralho (Léa, Paul): o Anki pega então só os
+   cartões dele. Não o botão que revisa tudo.
+
+O Notosaurus mantém então os filhos separados no mesmo perfil:
+
+- a lista de lições mostra as do filho escolhido, agrupadas por matéria (sem o nome nem a série);
+- os baralhos sugeridos são os dele, nunca os de outro filho.
+
+O que você perde em relação a um perfil por filho: cada filho vê os baralhos dos outros no Anki, e
+as estatísticas do Anki são compartilhadas.
+
+Se cada filho tem o próprio aparelho, prefira **um perfil por filho**. Para quem gosta de
+tecnologia: o AnkiDroid pode ser instalado várias vezes no mesmo aparelho, uma por filho, cada uma
+com a própria conta do AnkiWeb (as "parallel builds", veja as
+[perguntas frequentes do AnkiDroid](https://github.com/ankidroid/Anki-Android/wiki/FAQ)).
+
+</TabItem>
+</Tabs>

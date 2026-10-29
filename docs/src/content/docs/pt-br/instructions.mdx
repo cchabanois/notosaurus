@@ -1,0 +1,149 @@
+---
+title: Instruções
+description: "Dizer à IA quais cartões fazer: as instruções do Notosaurus, as suas, instruções só para desta vez, e instruções permanentes."
+---
+
+import { Tabs, TabItem } from '@astrojs/starlight/components';
+
+As **instruções** (ou prompt) dizem à IA o que fazer com a lição: quais cartões, em que sentido,
+em quais idiomas. A foto diz *o que* aprender; as instruções dizem *como*.
+
+## Escolher as instruções
+
+Em **Instruções**, as mais recentes aparecem como botões. **Todas** abre a lista completa, com
+uma busca.
+
+![Todas as instruções](../../../assets/screenshots/en/prompt-picker.png)
+
+O texto das instruções escolhidas aparece abaixo dos botões. Você pode alterá-lo **só para desta
+vez** ("Alteradas só para desta vez"), por exemplo para acrescentar "só os verbos": a sua
+alteração fica com a lição, as instruções salvas não mudam. No app, o botão **Ditar** (🎤) ao
+lado do texto o dita: diga o que você quer, a IA escreve.
+
+**✨ Passar a limpo**, abaixo do texto, faz a IA reescrever instruções digitadas às pressas ou
+ditadas: claras e curtas, no próprio idioma, com cada intenção mantida (quantos cartões, quais
+idiomas e sentido, que tipo de cartões) e nada acrescentado. **↩ Desfazer** traz de volta o seu
+texto, enquanto você não tiver alterado o texto passado a limpo. Não é oferecido para as
+instruções do próprio Notosaurus: elas já estão limpas.
+
+## Rápido ou caprichado
+
+**Criação dos cartões**, abaixo das instruções, define quanto a IA pensa:
+
+- **⚡ Rápido** (o padrão): alguns segundos. Ideal para vocabulário ou uma lição simples.
+- **🎯 Caprichado**: mais demorado (até 30 s), mais pensado: para uma lição rica (um esquema,
+  matemática).
+
+A escolha fica salva no aparelho. Uma lição feita no modo rápido diz isso na revisão ("Criados no
+modo rápido."), com **🎯 Refazer no modo caprichado**.
+
+![Instruções alteradas para desta vez: Passar a limpo, Rápido ou Caprichado](../../../assets/screenshots/en/prompt-options.png)
+
+## As instruções do Notosaurus
+
+As instruções marcadas com ⭐ vêm com o Notosaurus e melhoram a cada versão. Não podem ser
+alteradas, mas podem ser **duplicadas** para você fazer a sua versão.
+
+| Instruções | O que fazem |
+|---|---|
+| Automático (conforme a lição) | A IA olha a lição e escolhe os cartões mais úteis. |
+| Idioma: vocabulário | Um cartão por palavra ou expressão, com o artigo, o gênero e o plural na info; sem foto, a partir de uma lista ou de um tema. |
+| Idioma: frases | Um cartão por frase, no seu idioma e no idioma estudado. |
+| Idioma: conjugação | Um verbo, um tempo e uma pessoa por cartão; a forma conjugada no verso. |
+| Tabela para aprender | Uma tabela para saber de cor (declinação, verbos irregulares…): um cartão por célula, ou por linha quando cada linha é uma palavra; a resposta digitada. |
+| Perguntas / respostas | Perguntas curtas sobre o conteúdo: datas, definições, ideias-chave. |
+| Datas e marcos | Um cartão por data a lembrar (uma linha do tempo, um quadro): o acontecimento na frente, a data no verso, o século na info; com o cartão invertido, para aprender nos dois sentidos. |
+| Definições e propriedades | Um cartão por palavra-chave a definir; para uma propriedade ou um teorema, o nome → o enunciado completo ("Se …, então …") e as hipóteses → a conclusão, a recíproca à parte, para que serve na info. |
+| Reconhecer em um exemplo | Um cartão por exemplo da lição (uma figura de linguagem, uma classe gramatical…): o exemplo na frente, a noção no verso, a definição na info. Nunca um exemplo inventado. |
+| Complete as lacunas | Frases com lacunas (cloze): um cartão por número de lacuna. |
+| Múltipla escolha | Uma pergunta, a resposta certa e três erradas plausíveis. |
+| Verdadeiro / falso | Afirmações, metade delas falsas com um erro preciso. |
+| Métodos (etapas) | Um cartão por habilidade: "Como se …?", as etapas no verso. |
+| Fórmulas (matemática, física…) | Um cartão por fórmula, com o que cada letra representa. |
+| Geometria (com figuras) | Figuras, propriedades e vocabulário, com uma figura exata desenhada nos cartões. |
+| Esquema ou mapa para completar | As legendas de um esquema ou de um mapa escondidas atrás de números: um cartão por legenda. |
+| Idioma: vocabulário em imagens | A imagem de cada palavra na frente (encontrada ou desenhada); a palavra no idioma estudado no verso. |
+| Palavras com lacuna | Um cartão por palavra a escrever: uma frase sem a palavra na frente, a palavra no verso (digitada), uma dica de ortografia. |
+| Ditado | Só cartões de ditado: as palavras cuja grafia se aprende, e o texto do ditado frase por frase, ouvido e depois digitado. |
+| Ditado com lacunas | As palavras mais difíceis do texto do ditado, uma por cartão: a frase com a lacuna, ouvida, a palavra digitada. |
+| De cor (poema, recitação) | O texto copiado exatamente, lido em voz alta: um cartão título → primeiro verso, depois um cartão por verso (na frente o título, o número e os dois versos anteriores, o início de uma estrofe indicado). |
+
+## As suas instruções
+
+**Novas** cria instruções que você vai usar de novo, por exemplo para um idioma que o seu filho
+estuda toda semana. **Duplicar** parte de instruções do Notosaurus.
+
+![Instruções: nome, texto e nome do baralho](../../../assets/screenshots/en/prompt-editor.png)
+
+- **Nome**: o que o botão mostra.
+- **Instruções**: o que a IA deve fazer, em palavras simples ("um cartão por data, na frente o
+  acontecimento, no verso a data").
+- **Nome de baralho sugerido**: o baralho do Anki, com `::` para os subbaralhos. As partes entre
+  chaves são preenchidas a partir da lição: `Inglês::Lição {n}` vira `Inglês::Lição 5`.
+
+Como os cartões são perguntados e ouvidos também se diz no texto, e a IA lê ali: "com a resposta
+digitada" (o Anki compara letra por letra), "nos dois sentidos" (o cartão invertido), "lido em voz
+alta", "com um ditado" (ouvir o verso, escrevê-lo) ou "só ditado". Os versos em um idioma
+estudado são lidos em voz alta de qualquer forma, com a voz escolhida para esse idioma (veja
+[Vozes e áudio](../voices/)).
+
+**✏️ Livre** escreve instruções só para desta vez: ficam com a lição, mas não são adicionadas à
+sua lista. **Salvar como novas instruções** as guarda se funcionaram bem.
+
+## "Você sabia?"
+
+A IA acrescenta um fato curto e conhecido aos cartões onde ele cabe (no máximo um a cada três).
+Aparece no verso no Anki.
+
+## Ajudas no verso
+
+A IA acrescenta, **só nos cartões em que realmente ajudam**:
+
+- **uma explicação**: por que a resposta é a resposta, quando entender ajuda a lembrar (uma causa
+  em história, uma regra, uma fórmula); nunca para uma palavra simples ou uma data isolada;
+- **um jeito de lembrar**: a origem ou a família da palavra (*hipopótamo*: "o cavalo do rio"),
+  uma imagem simples, um macete escolar conhecido, uma regra de ortografia de verdade. Nunca um
+  inventado.
+
+Assim, uma lição de história recebe sobretudo explicações, uma de vocabulário alguns macetes e
+nenhuma explicação. Elas aparecem no verso no Anki, abaixo da info (💬 e 🧠), e podem ser editadas
+ou apagadas na revisão. No computador, acrescentam de 1 a 3 centavos de dólar a uma lição com o
+Claude Sonnet.
+
+As duas vêm ligadas, para cada lição: para tirá-las, veja [Desativar](#desativar). Só para
+certas instruções, diga isso no texto delas: "sem curiosidades", "sem ajudas".
+
+## Imagens
+
+A IA acrescenta uma imagem aos cartões em que ela realmente ajuda a lembrar, sejam quais forem as
+instruções: uma obra de arte, uma pessoa, um lugar, um monumento, um animal. Nunca para uma noção
+abstrata, nem em todos os cartões. Primeiro se procura uma imagem livre; pedir à IA que desenhe
+uma é sempre perguntado. Vem ligado (veja [Desativar](#desativar)). Só para certas instruções,
+diga isso no texto delas: "sem imagens".
+
+## Desativar
+
+<Tabs syncKey="mode">
+<TabItem label="App Android">
+
+**Configurações** (⚙️) **→ 📝 Instruções para a IA → 💬 Ajudas no verso dos cartões** desliga as
+ajudas. Os "Você sabia?" e as imagens não têm botão no app: diga isso no texto das instruções, ou
+nas instruções permanentes abaixo.
+
+</TabItem>
+<TabItem label="Computador">
+
+**Configurações → 📝 Instruções para a IA** tem um botão para cada um: **💡 «Você sabia?» nos
+cartões**, **💬 Ajudas no verso dos cartões** e **🖼️ Imagens nos cartões**.
+
+</TabItem>
+</Tabs>
+
+## Instruções permanentes
+
+Algumas instruções valem para todas as lições: "inglês britânico", "sempre o artigo com os
+substantivos". Escreva-as uma vez nas configurações: **Configurações** (⚙️) **→ 📝 Instruções
+para a IA** no app, **Configurações → 📝 Instruções para a IA → Para todas as crianças** no
+computador. As de cada filho (a série, "ainda lê devagar") ficam na ficha dele, pelo botão
+**Filhos** (🧒) da página principal: veja
+[Vários filhos](../several-children/#as-fichas-dos-filhos).

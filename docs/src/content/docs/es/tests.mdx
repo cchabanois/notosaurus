@@ -1,0 +1,67 @@
+---
+title: "Preparar un examen"
+description: "Un examen el lunes abarca tres lecciones: reunirlas, o algunas de sus tarjetas, bajo una etiqueta en Anki, y repasarlas juntas."
+---
+
+import { Tabs, TabItem } from '@astrojs/starlight/components';
+
+¿Un examen el lunes abarca tres lecciones? Un **examen que preparar** las reúne, enteras o solo
+algunas de sus tarjetas, para que el niño las repase juntas, estén en el mazo que estén. Una vez
+repasadas, las tarjetas vuelven a sus mazos.
+
+## Crear un examen
+
+- Desde una lección: **📝 Preparar un examen…**, en su revisión, la añade a un examen (un nombre,
+  una fecha), entera o **solo algunas de sus tarjetas** (una marca en cada tarjeta). Cuando la
+  lección está en un examen, el botón muestra el nombre del examen (**📌 …**).
+- Desde la lista: los exámenes están arriba de **Mis lecciones**, donde **＋ Nuevo examen** crea
+  uno. Su ventana añade luego lecciones (**＋ Añadir lecciones**, enteras) y envía a Anki las que
+  aún no están.
+
+![Un examen que preparar: sus lecciones, y cómo repasarlo en Anki](../../../assets/screenshots/en/exam.png)
+
+## En Anki: una etiqueta
+
+Cada tarjeta de un examen recibe una etiqueta en Anki, `Exam::<nombre>`. Se pone en sus notas en
+el acto si ya están en Anki, o con ellas cuando se envía la lección.
+
+Eliminar un examen (**Eliminar el examen**, en su ventana) quita la etiqueta. Las tarjetas se
+quedan en Anki, con su historial de repaso.
+
+## Repasarlo
+
+La ventana del examen explica cómo, paso a paso. Con el **estudio personalizado** de Anki, a mano:
+
+1. Abre el mazo que contiene las lecciones.
+2. **Estudio personalizado** → **Estudiar según estado o etiqueta de la tarjeta**, y luego
+   **Todas las tarjetas en orden aleatorio**.
+3. Marca la etiqueta `Exam::<nombre>` y confirma.
+
+Anki crea una sesión con esas tarjetas; al terminar, vuelven a sus mazos. Cuando las lecciones
+están en mazos distintos, la ventana da una búsqueda para pegar en **Crear mazo filtrado**, con un
+botón **Copiar**.
+
+Un mazo filtrado las reúne más rápido:
+
+<Tabs syncKey="mode">
+<TabItem label="Aplicación Android">
+
+1. En la ventana del examen, **Abrir en AnkiDroid**: el explorador de tarjetas de AnkiDroid se abre
+   con las tarjetas del examen, estén en el mazo que estén.
+2. Toca **⋮** y luego **Crear mazo filtrado**, aunque la lista parezca vacía.
+3. Toca **Construir**. Con más de 100 tarjetas, sube antes **Limitar a**.
+
+AnkiDroid no deja que otra aplicación cree por sí sola un mazo filtrado: hacen falta estos tres
+toques. Consulta [La aplicación y AnkiDroid](../app-ankidroid/).
+
+</TabItem>
+<TabItem label="Ordenador">
+
+Con Anki abierto, **Repasar ahora en Anki** lo hace con un clic: un mazo filtrado «Examen: …» con
+las tarjetas del examen, abierto en Anki. Se vuelve a crear cada vez, y se elimina con el examen.
+
+</TabItem>
+</Tabs>
+
+Con varios hijos, un examen se hace con las lecciones del hijo elegido: consulta
+[Varios hijos](../several-children/).

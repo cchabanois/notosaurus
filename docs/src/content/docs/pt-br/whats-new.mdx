@@ -1,0 +1,40 @@
+---
+title: "Novidades"
+description: "As versões do Notosaurus e o que cada uma muda."
+---
+
+import { Tabs, TabItem } from '@astrojs/starlight/components';
+
+Cada mudança no Notosaurus está no registro de alterações dele, e cada versão é publicada no
+GitHub (com o arquivo do complemento para baixar):
+
+- **[Versões](https://github.com/cchabanois/notosaurus/releases)**: as versões, com as notas e o
+  arquivo `notosaurus-<version>.ankiaddon`.
+- **[Registro de alterações](https://github.com/cchabanois/notosaurus/blob/main/CHANGELOG.md)**:
+  tudo o que mudou, incluindo o que vem na próxima versão (**Unreleased**).
+
+## Atualizar o Notosaurus
+
+<Tabs syncKey="mode">
+<TabItem label="App Android">
+
+O **[app Android](../android-app/)** é atualizado pelo Google Play, como qualquer app. Quando há
+uma versão nova, o app avisa, com um botão **Atualizar**. As lições e as configurações são
+mantidas.
+
+</TabItem>
+<TabItem label="Computador">
+
+- **Instalado pelo AnkiWeb**: o Anki procura atualizações das extensões ao iniciar, e oferece
+  instalá-las. Você também pode verificar em **Ferramentas → Extensões → Verificar se há
+  atualizações**.
+- **Instalado a partir de um arquivo**: baixe o novo `.ankiaddon` da
+  [versão mais recente](https://github.com/cchabanois/notosaurus/releases/latest) e abra-o, como na
+  primeira instalação.
+
+Depois **reinicie o Anki**. As lições, as instruções e as configurações são mantidas. Quando uma
+versão nova precisa de novos componentes, o Notosaurus pergunta de novo antes de instalá-los (um
+ou dois minutos).
+
+</TabItem>
+</Tabs>

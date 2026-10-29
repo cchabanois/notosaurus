@@ -1,0 +1,79 @@
+---
+title: "Stimmen und Audio"
+description: "Die Stimme wählen, die die Rückseiten der Karten liest, sie anhören, ihre Geschwindigkeit einstellen, und was ohne Ton passiert."
+---
+
+import { Tabs, TabItem } from '@astrojs/starlight/components';
+
+Notosaurus kann die Rückseite jeder Karte vorlesen: praktisch für Sprachen, um die richtige
+Aussprache zu hören. Das Audio ist **im Stapel enthalten**, spielt also überall in Anki, am
+Computer und auf dem Handy, auch offline.
+
+## Welche Karten vorgelesen werden
+
+Notosaurus liest die Rückseiten **in einer Lernsprache** vor: Die KI erkennt diese Sprache in der
+Lektion (Spanisch aus Spanien, britisches Englisch…). Eine Lektion in der eigenen Sprache des
+Kindes (Geschichte, Grammatik…) hat keinen Ton, außer ihre Karten sind zum Aufschreiben des
+Gehörten da (eine eingetippte Antwort, ein Diktat) oder ihre Anweisungen verlangen es
+(„vorgelesen“, wie bei **Auswendig**). Die Anweisungen von Notosaurus für Fragen, Quiz, Formeln
+oder Abbildungen haben keinen Ton.
+
+Unten in einer Lektion sagt eine Zeile, welche Stimme ihre Rückseiten liest.
+
+## Die Stimme wählen
+
+Ohne Wahl hat jede Sprache ihre übliche Stimme (am Computer: Spanisch → Elvira, britisches
+Englisch → Sonia…). Für eine andere: **Einstellungen → Stimmen der Karten → Stimme pro Sprache**,
+dann **+ Stimme einer Sprache wählen…**: Wähle die Sprache, dann eine ihrer Stimmen, weiblich
+oder männlich, und **Anhören**. Die Wahl gilt für die nächsten Lektionen in dieser Sprache. Die
+Einstellungen der App haben denselben Abschnitt, mit ihren eigenen Stimmen.
+
+## Anhören
+
+Bei der Durchsicht spielt die Schaltfläche **Rückseite anhören** (🔊) einer Karte ihre Rückseite
+mit der Stimme der Lektion ab: Prüfe die Aussprache, bevor du die Karten sendest.
+
+## Geschwindigkeit
+
+Eine Lektion wird verlangsamt, wo es hilft: die Rückseiten in einer Lernsprache und Diktate (Zeit
+zum Schreiben). Eine Lektion in der eigenen Sprache des Kindes (Geschichte, Deutsch…) wird in
+normalem Tempo gelesen.
+
+**Einstellungen → Stimmen der Karten → Fremdsprachen und Diktate langsamer lesen**: **Deutlich
+(−25 %)**, **Etwas (−10 %)** (Standard) oder **Nein**. Anweisungen können es auch für ihre
+Lektionen sagen: „langsam lesen“, „in normalem Tempo“.
+
+Die Geschwindigkeit wird beim Erstellen der Lektion gewählt und mit ihr gespeichert: Ihre Töne
+bleiben gleich, auch wenn sich die Einstellung später ändert.
+
+![Einstellungen: die Sprechgeschwindigkeit](../../../assets/screenshots/en/settings-voice.png)
+
+## Diktat
+
+Bei einer Diktatkarte wird die Rückseite gehört und dann geschrieben. Die Anweisungen **Diktat**
+und **Lückendiktat** machen nur solche Karten; bei anderen sag es in ihrem Text: „mit Diktat“
+oder „nur Diktat“. **Automatisch** macht Diktatkarten, wenn die Seite ein vorzubereitendes Diktat
+ist. Siehe [Anweisungen](../instructions/).
+
+## Karten ohne Ton
+
+Das Audio zu erstellen braucht Internet:
+
+<Tabs syncKey="mode">
+<TabItem label="Android-App">
+
+Die Stimmen sind die von Google, über den Notosaurus-Dienst. Was gesendet wird, steht in der
+[Datenschutzerklärung der App](../app-privacy/).
+
+</TabItem>
+<TabItem label="Computer">
+
+Die Stimmen kommen vom Sprachausgabe-Dienst von Microsoft, über
+[edge-tts](https://github.com/rany2/edge-tts), ein inoffizielles Werkzeug. Was gesendet wird,
+steht unter [Datenschutz und Sicherheit am Computer](../privacy/).
+
+</TabItem>
+</Tabs>
+
+Antworten die Stimmen nicht, werden die Karten ohne Ton gesendet, und die Meldung sagt, wie viele.
+Sende die Lektion später erneut: Das fehlende Audio wird ergänzt.

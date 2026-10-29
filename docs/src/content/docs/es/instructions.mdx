@@ -1,0 +1,153 @@
+---
+title: Instrucciones
+description: "Decirle a la IA qué tarjetas hacer: las instrucciones de Notosaurus, las tuyas, unas instrucciones solo para esta vez, e instrucciones permanentes."
+---
+
+import { Tabs, TabItem } from '@astrojs/starlight/components';
+
+Las **instrucciones** (o prompt) le dicen a la IA qué hacer con la lección: qué tarjetas, en qué
+sentido, en qué idiomas. La foto dice *qué* aprender; las instrucciones dicen *cómo*.
+
+## Elegir las instrucciones
+
+En **Instrucciones**, las más recientes aparecen como botones. **Todas** abre la lista completa,
+con un buscador.
+
+![Todas las instrucciones](../../../assets/screenshots/en/prompt-picker.png)
+
+El texto de las instrucciones elegidas aparece bajo los botones. Puedes cambiarlo **solo para
+esta vez** («Cambiadas solo para esta vez»), por ejemplo para añadir «solo los verbos»: tu cambio
+se queda con la lección, las instrucciones guardadas no cambian. En la aplicación, el botón
+**Dictar** (🎤) junto al texto lo dicta: di lo que quieres, la IA lo escribe.
+
+**✨ Poner en limpio**, bajo el texto, hace que la IA reescriba unas instrucciones escritas
+deprisa o dictadas: claras y cortas, en su propio idioma, con todas las intenciones conservadas
+(cuántas tarjetas, qué idiomas y sentido, qué tipo de tarjetas) y nada añadido. **↩ Deshacer**
+recupera tu texto, mientras no hayas cambiado el puesto en limpio. No se ofrece para las
+instrucciones de Notosaurus tal cual: ya están limpias.
+
+## Rápido o con cuidado
+
+**Creación de las tarjetas**, bajo las instrucciones, fija cuánto piensa la IA:
+
+- **⚡ Rápido** (por defecto): unos segundos. Ideal para vocabulario o una lección sencilla.
+- **🎯 Cuidado**: más largo (hasta 30 s), más pensado: para una lección completa (un esquema,
+  matemáticas).
+
+La elección se guarda en el dispositivo. Una lección hecha en modo rápido lo dice en la revisión
+(«Creadas en modo rápido.»), con **🎯 Rehacer en modo cuidado**.
+
+![Instrucciones cambiadas para esta vez: Poner en limpio, Rápido o Cuidado](../../../assets/screenshots/en/prompt-options.png)
+
+## Las instrucciones de Notosaurus
+
+Las instrucciones marcadas con ⭐ vienen con Notosaurus y mejoran en cada versión. No se pueden
+cambiar, pero se pueden **duplicar** para hacer tu propia versión.
+
+| Instrucciones | Lo que hacen |
+|---|---|
+| Automático (según la lección) | La IA mira la lección y elige las tarjetas más útiles. |
+| Idioma: vocabulario | Una tarjeta por palabra o expresión, con el artículo, el género y el plural en la info; sin foto, a partir de una lista o de un tema. |
+| Idioma: frases | Una tarjeta por frase, en tu idioma y en el idioma que se aprende. |
+| Idioma: conjugación | Un verbo, un tiempo y una persona por tarjeta; la forma conjugada en el reverso. |
+| Tabla para aprender | Una tabla que saberse de memoria (declinación, verbos irregulares…): una tarjeta por casilla, o por fila cuando cada fila es una palabra; la respuesta escrita. |
+| Preguntas / respuestas | Preguntas cortas sobre el contenido: fechas, definiciones, ideas clave. |
+| Fechas y hitos | Una tarjeta por fecha que recordar (una cronología, un recuadro): el acontecimiento en el anverso, su fecha en el reverso, el siglo en la info; con la tarjeta inversa, para aprenderla en los dos sentidos. |
+| Definiciones y propiedades | Una tarjeta por palabra clave que definir; para una propiedad o un teorema, su nombre → el enunciado completo («Si …, entonces …») y las hipótesis → la conclusión, el recíproco aparte, para qué sirve en la info. |
+| Reconocer en un ejemplo | Una tarjeta por ejemplo de la lección (una figura retórica, una categoría gramatical…): el ejemplo en el anverso, la noción en el reverso, su definición en la info. Nunca un ejemplo inventado. |
+| Texto con huecos | Frases con huecos (cloze): una tarjeta por número de hueco. |
+| Test de opción múltiple | Una pregunta, la respuesta correcta y tres incorrectas creíbles. |
+| Verdadero / falso | Afirmaciones, la mitad falsas con un error preciso. |
+| Métodos (pasos) | Una tarjeta por destreza: «¿Cómo se …?», los pasos en el reverso. |
+| Fórmulas (matemáticas, física…) | Una tarjeta por fórmula, con lo que representa cada letra. |
+| Geometría (con figuras) | Figuras, propiedades y vocabulario, con una figura exacta dibujada en las tarjetas. |
+| Esquema o mapa mudo | Los rótulos de un esquema o un mapa ocultos tras números: una tarjeta por rótulo. |
+| Idioma: vocabulario en imágenes | La imagen de cada palabra en el anverso (encontrada o dibujada); la palabra en el idioma que se aprende en el reverso. |
+| Palabras con hueco | Una tarjeta por palabra que escribir: una frase sin la palabra en el anverso, la palabra en el reverso (escrita), un truco de ortografía. |
+| Dictado | Solo tarjetas de dictado: las palabras cuya ortografía se aprende, y el texto del dictado frase a frase, oído y luego escrito. |
+| Dictado con huecos | Las palabras más difíciles del texto del dictado, una por tarjeta: su frase con el hueco, oída, la palabra escrita. |
+| De memoria (poema, recitación) | El texto copiado tal cual, leído en voz alta: una tarjeta título → primer verso, y luego una tarjeta por verso (en el anverso el título, su número y los dos versos anteriores, el inicio de una estrofa indicado). |
+
+## Tus propias instrucciones
+
+**Nuevas** crea instrucciones que volverás a usar, por ejemplo para un idioma que tu hijo aprende
+cada semana. **Duplicar** parte de unas instrucciones de Notosaurus.
+
+![Instrucciones: nombre, texto y nombre del mazo](../../../assets/screenshots/en/prompt-editor.png)
+
+- **Nombre**: lo que muestra el botón.
+- **Instrucciones**: lo que debe hacer la IA, con palabras sencillas («una tarjeta por fecha, en
+  el anverso el acontecimiento, en el reverso la fecha»).
+- **Nombre de mazo propuesto**: el mazo de Anki, con `::` para los submazos. Las partes entre
+  llaves se rellenan a partir de la lección: `Inglés::Lección {n}` se convierte en
+  `Inglés::Lección 5`.
+
+Cómo se preguntan y se oyen las tarjetas también se dice en el texto, y la IA lo lee ahí: «con la
+respuesta escrita» (Anki compara letra a letra), «en los dos sentidos» (la tarjeta inversa),
+«leído en voz alta», «con un dictado» (oír el reverso, escribirlo) o «solo dictado». Los reversos
+en un idioma que se aprende se leen en voz alta de todos modos, con la voz elegida para ese idioma
+(consulta [Voces y audio](../voices/)).
+
+**✏️ Libre** escribe unas instrucciones solo para esta vez: se quedan con la lección pero no se
+añaden a tu lista. **Guardar como nuevas instrucciones** las conserva si han funcionado bien.
+
+## «¿Sabías que…?»
+
+La IA añade un dato corto y conocido a las tarjetas en las que encaja (una de cada tres como
+máximo). Aparece en el reverso en Anki.
+
+## Ayudas en el reverso
+
+La IA añade, **solo en las tarjetas en las que de verdad ayudan**:
+
+- **una explicación**: por qué la respuesta es la respuesta, cuando entender ayuda a recordar
+  (una causa en historia, una regla, una fórmula); nunca para una palabra simple o una fecha
+  aislada;
+- **una forma de recordarlo**: el origen o la familia de la palabra (*hipopótamo*: «el caballo de
+  río»), una imagen sencilla, una regla mnemotécnica escolar conocida, una regla de ortografía
+  real. Nunca una inventada.
+
+Así, una lección de historia recibe sobre todo explicaciones, una de vocabulario algunos trucos
+de memoria y ninguna explicación. Aparecen en el reverso en Anki, bajo la info (💬 y 🧠), y se
+pueden editar o borrar en la revisión. En el ordenador, añaden de 1 a 3 céntimos de dólar a una
+lección con Claude Sonnet.
+
+Las dos están activadas al principio, para cada lección: para quitarlas, consulta
+[Desactivarlos](#desactivarlos). Para unas instrucciones concretas, dilo en su texto: «sin datos
+curiosos», «sin ayudas».
+
+## Imágenes
+
+La IA añade una imagen a las tarjetas en las que de verdad ayuda a recordar, sean cuales sean las
+instrucciones: una obra de arte, una persona, un lugar, un monumento, un animal. Nunca para una
+noción abstracta, ni en todas las tarjetas. Primero se busca una imagen libre; que la IA dibuje
+una siempre se pregunta. Está activado al principio (consulta [Desactivarlos](#desactivarlos)).
+Para unas instrucciones concretas, dilo en su texto: «sin imágenes».
+
+## Desactivarlos
+
+<Tabs syncKey="mode">
+<TabItem label="Aplicación Android">
+
+**Ajustes** (⚙️) **→ 📝 Instrucciones para la IA → 💬 Ayudas en el reverso de las tarjetas**
+desactiva las ayudas. Los «¿Sabías que…?» y las imágenes no tienen interruptor en la aplicación:
+dilo en el texto de las instrucciones, o en las instrucciones permanentes de abajo.
+
+</TabItem>
+<TabItem label="Ordenador">
+
+**Ajustes → 📝 Instrucciones para la IA** tiene un interruptor para cada uno: **💡 «¿Sabías
+que…?» en las tarjetas**, **💬 Ayudas en el reverso de las tarjetas** y **🖼️ Imágenes en las
+tarjetas**.
+
+</TabItem>
+</Tabs>
+
+## Instrucciones permanentes
+
+Algunas instrucciones valen para todas las lecciones: «inglés británico», «siempre el artículo
+con los sustantivos». Escríbelas una vez en los ajustes: **Ajustes** (⚙️) **→ 📝 Instrucciones
+para la IA** en la aplicación, **Ajustes → 📝 Instrucciones para la IA → Para todos los niños** en
+el ordenador. Las propias de cada hijo (su curso, «aún lee despacio») están en su ficha, desde el
+botón **Hijos** (🧒) de la página principal: consulta
+[Varios hijos](../several-children/#las-fichas-de-los-hijos).

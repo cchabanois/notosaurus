@@ -1,0 +1,54 @@
+---
+title: Notosaurus
+description: "Fotografiere eine Lektion mit dem Handy und erhalte Anki-Karten. Eine Android-App oder eine freie, kostenlose Anki-Erweiterung."
+template: splash
+hero:
+  tagline: Fotografiere eine Lektion mit dem Handy. In Sekunden hast du Anki-Karten, bereit zum Lernen.
+  image:
+    file: ../../../assets/logo.webp
+  actions:
+    - text: Erste Schritte
+      link: which-notosaurus/
+      icon: right-arrow
+    - text: Demo ansehen
+      link: https://www.youtube.com/shorts/Q7bUTMEj6Kk
+      icon: external
+      variant: secondary
+    - text: Auf GitHub ansehen
+      link: https://github.com/cchabanois/notosaurus
+      icon: external
+      variant: minimal
+---
+
+import { Card, CardGrid } from '@astrojs/starlight/components';
+import demo from '../../../assets/demo.gif';
+
+<img class="demo" src={demo.src} alt="Notosaurus auf einem Handy: Eine Vokabelseite wird zu Karten, die Beschriftungen einer Abbildung werden verdeckt, Geometriekarten erhalten exakte Figuren" />
+
+<CardGrid stagger>
+	<Card title="Aus einem Foto oder einem PDF" icon="seti:image">
+		Fotografiere eine Heft- oder Buchseite oder füge ein PDF hinzu. Eine KI liest sie, auch
+		Handschrift, und entwirft die Karten.
+	</Card>
+	<Card title="Du behältst die Kontrolle" icon="pencil">
+		Prüfe jede Karte oder bitte einfach in eigenen Worten: „füge den Plural auf der Rückseite
+		hinzu“, „du hast die Farben vergessen“.
+	</Card>
+	<Card title="Abbildungen, Formeln, Figuren" icon="puzzle">
+		Die Beschriftungen einer Abbildung hinter Nummern verdeckt, Formeln in MathJax, exakte
+		Geometriefiguren, Lückentexte und Multiple Choice.
+	</Card>
+	<Card title="Direkt in Anki, bereit für den Test" icon="rocket">
+		Ein Tippen schickt den Stapel nach Anki oder AnkiDroid, mit Audio. Am Montag ein Test?
+		<a href="tests/">Sammle seine Lektionen</a> und lerne sie zusammen.
+	</Card>
+	<Card title="Für Familien gemacht" icon="star">
+		Ein Eintrag pro Kind: seine Klasse, seine Stapel, seine eigenen Anweisungen und seine
+		Lektionen. Sein Vorname geht nie an die KI.
+	</Card>
+	<Card title="Auf dem Handy oder dem Computer" icon="github">
+		Die Android-App für sich allein, im Abo: kein Computer, kein KI-Schlüssel. Oder die freie,
+		kostenlose Anki-Erweiterung, mit deinem eigenen KI-Schlüssel (Gemini, Claude, OpenAI,
+		OpenRouter oder ein Modell zu Hause).
+	</Card>
+</CardGrid>

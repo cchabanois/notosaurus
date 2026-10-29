@@ -1,0 +1,64 @@
+---
+title: "Deine Lektionen"
+description: "Jede Lektion wird gespeichert: sie wiederfinden, wieder öffnen, um sie zu korrigieren oder erneut zu senden, und sie löschen."
+---
+
+import { Tabs, TabItem } from '@astrojs/starlight/components';
+
+Jede Erzeugung erstellt eine **Lektion**: ihre Fotos, ihre Anweisungen und ihre Karten,
+gespeichert dort, wo Notosaurus läuft (auf dem Handy in der App, auf dem Computer mit der
+Erweiterung). Du kannst jederzeit zu ihr zurückkehren, um sie zu korrigieren, neu zu erzeugen
+oder erneut an Anki zu senden.
+
+## Die Liste der Lektionen
+
+Die Schaltfläche **Lektionen** (📚), oben auf der Seite, öffnet **Meine Lektionen**: die Lektionen
+des **gewählten Kindes** (und am Computer des **in Anki geöffneten Benutzerprofils**), die neuesten
+zuerst. Bei mehreren Kindern zeigt der Schalter über der Liste **Die Lektionen aller Kinder**.
+
+![Die Liste der Lektionen](../../../assets/screenshots/en/lessons.png)
+
+- Die Lektionen sind **nach Fach gruppiert**: der erste Teil des Stapelnamens (`Spanisch`,
+  `Bio`…), das zuletzt bearbeitete Fach zuerst.
+- **exportiert** kennzeichnet eine Lektion, die schon an Anki gesendet oder heruntergeladen wurde.
+- Bei vielen Lektionen (mehr als 8) erscheint eine **Suche** (Groß-/Kleinschreibung und Akzente
+  egal), die 3 neuesten Lektionen stehen oben, und die Fächer sind zugeklappt, außer dem der
+  offenen Lektion. Ein von Hand auf- oder zugeklapptes Fach bleibt auf diesem Gerät so.
+
+Tippe auf eine Lektion, um sie wieder zu öffnen: Ihre Fotos und Karten kommen zurück, bereit zum
+Korrigieren oder erneuten Senden. **＋ Neu** beginnt eine neue Lektion.
+
+## Lektionen und Kinder
+
+Eine Lektion gehört zu dem Kind, das beim Erstellen gewählt war (die Schaltfläche **Kinder**, 🧒,
+oben auf der Seite), und am Computer zu dem damals in Anki geöffneten Benutzerprofil. **⧉ Kopieren
+für…**, bei ihrer Durchsicht, macht eine kostenlose Kopie für ein anderes Kind. Siehe
+[Mehrere Kinder](../several-children/).
+
+## Tests vorbereiten
+
+Ein Test umfasst mehrere Lektionen? Sammle sie, oder einige ihrer Karten, und lerne sie zusammen:
+siehe [Einen Test vorbereiten](../tests/). Die Tests stehen oben in **Meine Lektionen**.
+
+## Eine Lektion löschen
+
+Die Schaltfläche **Lektion löschen** (🗑), neben einer Lektion, löscht sie samt ihren Fotos. Sind
+ihre Karten in Anki, sucht Notosaurus sie und bietet an, **sie auch zu löschen**: Ihr
+Lernverlauf geht dann verloren. Sonst bleiben die schon gesendeten Karten in Anki.
+
+<Tabs syncKey="mode">
+<TabItem label="Android-App">
+
+**Einstellungen** (⚙️) → **🗂️ Lektionen auf diesem Handy** sagt, wie viele Lektionen das Handy
+speichert und wie groß sie sind, und **Alle Lektionen löschen** löscht sie alle, samt Ton. Die
+Karten, die schon in AnkiDroid sind, bleiben, mit ihrem Ton.
+
+</TabItem>
+<TabItem label="Computer">
+
+Die Lektionen lassen sich auch unter **Einstellungen → Lektionen** verwalten: zu welchem
+Anki-Benutzerprofil jede gehört (das lässt sich dort ändern), was sie gekostet hat, und sie
+löschen.
+
+</TabItem>
+</Tabs>

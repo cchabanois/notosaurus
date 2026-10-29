@@ -1,0 +1,54 @@
+---
+title: Notosaurus
+description: "Fotografe uma lição com o celular e receba cartões do Anki. Um app Android, ou um complemento do Anki livre e gratuito."
+template: splash
+hero:
+  tagline: Fotografe uma lição com o celular. Receba cartões do Anki em segundos, prontos para revisar.
+  image:
+    file: ../../../assets/logo.webp
+  actions:
+    - text: Para começar
+      link: which-notosaurus/
+      icon: right-arrow
+    - text: Ver a demonstração
+      link: https://www.youtube.com/shorts/Q7bUTMEj6Kk
+      icon: external
+      variant: secondary
+    - text: Ver no GitHub
+      link: https://github.com/cchabanois/notosaurus
+      icon: external
+      variant: minimal
+---
+
+import { Card, CardGrid } from '@astrojs/starlight/components';
+import demo from '../../../assets/demo.gif';
+
+<img class="demo" src={demo.src} alt="O Notosaurus em um celular: uma página de vocabulário vira cartões, um esquema tem as legendas escondidas, cartões de geometria recebem figuras exatas" />
+
+<CardGrid stagger>
+	<Card title="A partir de uma foto ou de um PDF" icon="seti:image">
+		Fotografe uma página do caderno ou do livro, ou adicione um PDF. Uma IA a lê, letra
+		manuscrita incluída, e prepara os cartões.
+	</Card>
+	<Card title="Você no controle" icon="pencil">
+		Revise cada cartão, ou peça com suas palavras: “coloque o plural no verso”, “você esqueceu
+		as cores”.
+	</Card>
+	<Card title="Esquemas, fórmulas, figuras" icon="puzzle">
+		As legendas de um esquema escondidas atrás de números, as fórmulas em MathJax, figuras de
+		geometria exatas, textos com lacunas e questões de múltipla escolha.
+	</Card>
+	<Card title="Direto no Anki, pronto para a prova" icon="rocket">
+		Um toque envia o baralho para o Anki ou o AnkiDroid, com áudio. Uma prova na segunda?
+		<a href="tests/">Junte as lições dela</a> e revise tudo junto.
+	</Card>
+	<Card title="Feito para as famílias" icon="star">
+		Uma ficha por filho: a série, os baralhos, as instruções próprias e as lições. O nome
+		dele nunca vai para a IA.
+	</Card>
+	<Card title="No celular ou no computador" icon="github">
+		O app Android sozinho, por assinatura: sem computador, sem chave de IA. Ou o complemento
+		do Anki livre e gratuito, com a sua própria chave de IA (Gemini, Claude, OpenAI,
+		OpenRouter ou um modelo em casa).
+	</Card>
+</CardGrid>

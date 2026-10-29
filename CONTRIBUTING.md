@@ -156,7 +156,10 @@ npm run build    # what the workflow publishes, in docs/dist
 
 - Pages are Markdown files in `docs/src/content/docs/`: English at the root, the other
   languages in a folder named after their code (`fr/`, `es/`, `de/`, `it/`, `pt-br/`), with
-  the same file names. A page not translated yet shows the English one, with a notice.
+  the same file names. A page not translated yet shows the English one, with a notice. A
+  change to a page goes into every language that has it.
+- A language without screenshots of its own uses the English ones
+  (`../../../assets/screenshots/en/…`), its alt texts translated.
 - The sidebar, the languages and the site's settings are in `docs/astro.config.mjs`.
 - Use the interface's own words, in each language (`static/i18n/<lang>.json`), and Anki's.
 - The app links to pages of the site with `$docs('page')` (the "?" at the end of some section

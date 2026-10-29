@@ -1,0 +1,157 @@
+---
+title: "Tipos de tarjetas"
+description: "Pregunta y respuesta, texto con huecos, opción múltiple, verdadero o falso, esquemas, fórmulas, figuras e imágenes: qué hace cada tipo de tarjeta en Notosaurus y en Anki."
+---
+
+import { Tabs, TabItem } from '@astrojs/starlight/components';
+
+Las instrucciones deciden qué tipo de tarjetas hace la IA (consulta [Instrucciones](../instructions/)).
+Cada tipo se convierte en su propio **tipo de nota** en Anki, cuyo nombre empieza por
+«Notosaurus».
+
+## Pregunta y respuesta
+
+La tarjeta clásica: un **anverso** (la pregunta, una palabra en tu idioma) y un **reverso** (la
+respuesta, la palabra en el idioma que se aprende), con una **info** opcional bajo la respuesta.
+Es lo que hacen las instrucciones de vocabulario, frases y preguntas.
+
+Cuando las instrucciones lo piden, Anki añade la **tarjeta inversa** (reverso → anverso), hace
+**escribir** la respuesta (comparada letra a letra) o hace un **dictado** (oír el reverso,
+escribirlo). Consulta [Instrucciones](../instructions/).
+
+## Texto con huecos
+
+Las instrucciones **Texto con huecos** hacen frases con huecos:
+
+> El Sol calienta el agua de los mares y los lagos: es la `{{c1::evaporación}}`.
+
+Lo que está entre `{{c1::` y `}}` se oculta. **Cada número crea una tarjeta** en Anki; el mismo
+número usado dos veces oculta dos huecos a la vez. En la revisión, los huecos se muestran
+numerados: puedes cambiar su texto, añadir o quitar huecos editando las llaves.
+
+![Tarjetas con huecos](../../../assets/screenshots/en/cloze.png)
+
+## Opción múltiple y verdadero o falso
+
+Las tarjetas de **opción múltiple** tienen una pregunta, la **respuesta correcta** y **respuestas
+incorrectas** (tres creíbles): cámbialas en la revisión, o añade una con **+ respuesta
+incorrecta**. **Verdadero / falso** hace afirmaciones, la mitad falsas con un error preciso.
+
+![Una tarjeta de opción múltiple](../../../assets/screenshots/en/quiz.png)
+
+En Anki, la pregunta muestra las opciones (A, B, C…, siempre en el mismo orden) y la respuesta
+marca la correcta. Es HTML sencillo: se ve igual en todas las aplicaciones de Anki.
+
+## Esquemas
+
+Con las instrucciones **Esquema o mapa mudo**, la IA encuentra cada rótulo de un esquema y lo
+oculta tras un número. Cada tarjeta pregunta «¿Qué es (2)?» y muestra la respuesta en el esquema.
+
+![Un esquema con los rótulos ocultos](../../../assets/screenshots/en/diagram.png)
+
+En la revisión:
+
+- arrastra una **máscara roja** para moverla, y su **esquina redonda** para cambiar su tamaño, de
+  modo que oculte todo el rótulo;
+- el **marco discontinuo** es la parte de la foto que muestra Anki: arrastra sus esquinas azules
+  para recortarla.
+
+Gemini y GPT colocan las máscaras con más precisión. Con Claude, comprueba que las máscaras
+ocultan todo el rótulo en la letra manuscrita.
+
+## Fórmulas
+
+Las fórmulas se escriben en **MathJax**, que Anki muestra: `\( \frac{a+b}{2} \)`, `\( x^2 \)`.
+La revisión las muestra dibujadas bajo el texto. Los cálculos sencillos se quedan en texto.
+
+## Figuras
+
+Para la geometría y las figuras sencillas con rótulos (un triángulo rectángulo con su hipotenusa,
+un círculo con su radio, un rectángulo con sus medidas), la IA **dibuja una figura exacta** en la
+tarjeta, en lugar de un modelo de imágenes que dibujaría mal el texto y las medidas. La figura
+nunca muestra la respuesta. En cualquier asignatura, una noción que una figura aclara también
+recibe una, sobre todo cuando la página de la lección muestra una figura para ella (conjuntos con
+su intersección rayada, una recta numérica, una gráfica…): redibujada limpia en la tarjeta.
+
+![Tarjetas de geometría con sus figuras](../../../assets/screenshots/en/figures.png)
+
+El botón **Imagen** (🖼️) de una tarjeta abre su figura: cambia su descripción y vuelve a
+dibujarla, o pásala al reverso cuando forma parte de la respuesta. Las instrucciones **Geometría
+(con figuras)** hacen este tipo de tarjetas, igual que **Automático** y las instrucciones de
+fórmulas cuando ayuda.
+
+Las figuras se dibujan con [Typst](https://typst.app), cada tipo con un paquete hecho para él
+(geometría, gráficas de funciones, conjuntos, diagramas, circuitos eléctricos, química,
+cronologías): una curva se calcula a partir de su función, una marca queda sobre su segmento. Bajo
+la figura, una línea dice qué la ha dibujado («📐 Dibujada por gemini-… con Typst + ctz-euclide»,
+cada uno con un enlace a su página). ¿Dudas de una figura? **🔍 Comprobar la figura** hace que la
+IA la mire; si encuentra algo mal, dice qué, y eliges **Conservarla** o **📐 Volver a dibujarla**
+(y luego, si hace falta, **📐 Volver a dibujarla con cuidado**).
+
+## Imágenes
+
+Las instrucciones **Idioma: vocabulario en imágenes** ponen una imagen de cada palabra en el
+anverso, encontrada libre o dibujada por un modelo de imágenes.
+
+<Tabs syncKey="mode">
+<TabItem label="Aplicación Android">
+
+El servicio Notosaurus dibuja las imágenes: no hay nada que elegir. Un dibujo cuesta créditos,
+indicados antes de hacerlo.
+
+</TabItem>
+<TabItem label="Ordenador">
+
+Un dibujo cuesta de menos de un céntimo a unos céntimos. Las imágenes las dibuja el servicio de
+IA de las tarjetas cuando sabe dibujar (Gemini, OpenAI, OpenRouter); si no, otro elegido en
+**Ajustes → Imágenes de las tarjetas** (Claude y los modelos locales no dibujan). Esa sección
+también elige el modelo de imagen, o **Sin imágenes**:
+
+- **Recomendados, según nuestras pruebas** lista los modelos de imagen que aconsejamos para el
+  servicio, con lo que cuesta una imagen; el de ⭐ es el predeterminado. Comparamos sus dibujos a
+  ojo: con OpenAI, GPT Image 2 (unos 0,6 céntimos de dólar por imagen); con Gemini u OpenRouter,
+  Gemini 3.1 Flash-Lite Image (unos 3 céntimos de dólar).
+- El campo también ofrece **todos los modelos de imagen del servicio**, incluidos los nuevos:
+  escribe para filtrarlos.
+- **🖼️ Probar: dibujar una jirafa** dibuja una imagen real con el servicio y el modelo elegidos,
+  y la muestra como lo haría una tarjeta, con el tiempo y el coste.
+
+</TabItem>
+</Tabs>
+
+![Tarjetas con imágenes](../../../assets/screenshots/en/pictures.png)
+
+El botón **Imagen** (🖼️) de una tarjeta abre su panel **Imagen**:
+
+- **Lo que debe mostrar la imagen**, en tu propio idioma: vacío, la IA decide según la tarjeta; o
+  escribe lo que quieres («dos conjuntos que se cruzan, su unión rayada», «una manzana roja»);
+- **✨ Imagen** (o **✨ Cambiar la imagen**) la hace, lo más barato primero: una figura se dibuja
+  enseguida; para una imagen se buscan imágenes libres (si una encaja, va a la tarjeta; si hay
+  varias, tocas la que sirva, la de ⭐ es la elección de la IA); si ninguna encaja, Notosaurus
+  pregunta si la IA debe dibujar una (**🎨 Dibujar**): cuesta créditos en la aplicación, de menos
+  de un céntimo a unos céntimos de dólar en el ordenador;
+- **📷 Mi foto**: pon tu propia foto en su lugar, gratis;
+- **✕ Sin imagen**: la quita;
+- **En el reverso (con la respuesta)**: cuando la imagen revela la respuesta.
+
+![El panel Imagen de una tarjeta](../../../assets/screenshots/en/picture-panel.png)
+
+### Imágenes libres, encontradas en vez de dibujadas
+
+Para una cosa real (una persona, un lugar, un monumento, una obra de arte, un animal, un
+alimento), la IA escribe, con la tarjeta, unas palabras en inglés para buscarla («Storming of the
+Bastille painting», «dog»). Notosaurus busca entonces una **imagen libre** antes de dibujar una:
+una foto o un cuadro de dominio público o con licencia CC0 (**Wikimedia Commons**,
+**Openverse**; en la aplicación Android, también **Pixabay**), así que no hay nada que acreditar
+en las tarjetas. La IA de las tarjetas mira las imágenes encontradas y se queda con la que
+encaja; si ninguna encaja, la imagen se dibuja. Es gratis (solo cuesta la elección de la IA: muy
+por debajo de un céntimo) y exacto: el cuadro real de la toma de la Bastilla, el retrato real de
+un presidente.
+
+Las imágenes encontradas vienen filtradas para alumnos (sin contenido para adultos).
+
+Cada tarjeta guarda de dónde viene su imagen: su panel lo dice («Fuente: Wikimedia Commons ·
+Dominio público», con un enlace a la página de la imagen; «Dibujada por la IA»; «Tu foto»). En el
+ordenador, la nota de Anki también lo guarda, en un campo oculto **Source**: no aparece en ninguna
+tarjeta, pero va con el mazo si lo compartes. Para una figura, nombra también el modelo y los
+paquetes de Typst que la dibujaron.
