@@ -476,8 +476,8 @@
       "doneElsewhere": "Copiada para {name}: está en sus lecciones."
     },
     "report": {
-      "button": "Denunciar",
-      "title": "Denunciar un contenido",
+      "button": "Reportar",
+      "title": "Reportar un contenido",
       "why": "¿Por qué?",
       "reasons": {
         "offensive": "Ofensivo o inapropiado",
@@ -488,7 +488,7 @@
       "sent": "Lo que se enviará a Notosaurus (ni las fotos de la lección ni el nombre del niño):",
       "withPicture": "También se envía la imagen.",
       "send": "Enviar",
-      "thanks": "Gracias, se ha enviado. Leemos cada denuncia para mejorar Notosaurus.",
+      "thanks": "Gracias, se ha enviado. Leemos cada aviso para mejorar Notosaurus.",
       "drop": {
         "card": "Eliminar la tarjeta",
         "picture": "Quitar la imagen"
@@ -542,19 +542,19 @@
       "guide": {
         "titleAndroid": "Repasarlo en AnkiDroid",
         "titleDesktop": "Repasarlo en Anki",
-        "step1": "Abra el mazo <strong>{deck}</strong>",
-        "step2desktop": "Haga clic en <strong>Estudio personalizado</strong> al pie de la pantalla del mazo",
-        "step3": "Elija <strong>Estudiar por estado o etiqueta</strong> y luego <strong>Todas las tarjetas</strong>",
-        "step4": "Marque la etiqueta <strong>{tag}</strong> y confirme",
-        "after": "Anki crea un mazo «Sesión de estudio personalizado» con estas tarjetas; al terminar, vuelven a sus mazos.",
+        "step1": "Abre el mazo <strong>{deck}</strong>",
+        "step2desktop": "Haz clic en <strong>Estudio personalizado</strong> al pie de la pantalla del mazo",
+        "step3": "Elige <strong>Estudiar según estado o etiqueta de la tarjeta</strong> y luego <strong>Todas las tarjetas en orden aleatorio (sin reprogramar)</strong>",
+        "step4": "Marca la etiqueta <strong>{tag}</strong> y confirma",
+        "after": "Anki crea un mazo «Sesión de estudio personalizada» con estas tarjetas; al terminar, vuelven a sus mazos.",
         "afterAndroid": "AnkiDroid crea un mazo filtrado con estas tarjetas; al terminar, vuelven a sus mazos.",
-        "noDeck": "Las lecciones están en mazos distintos. En Anki: <strong>Crear mazo filtrado</strong>, y pegue esta búsqueda:",
+        "noDeck": "Las lecciones están en mazos distintos. En Anki: <strong>Herramientas → Crear mazo filtrado</strong>, y pega esta búsqueda:",
         "copy": "Copiar",
         "copied": "Copiado",
-        "droid1": "Abra las tarjetas del examen en AnkiDroid",
+        "droid1": "Abre las tarjetas del examen en AnkiDroid",
         "droidOpen": "Abrir en AnkiDroid",
-        "droid2": "Toque <strong>⋮</strong> y luego <strong>Crear mazo filtrado</strong>, aunque la lista esté vacía",
-        "droid3": "Toque <strong>Generar</strong> (más de {limit} tarjetas: aumente antes <strong>Limitar a</strong>)"
+        "droid2": "Toca <strong>⋮</strong> y luego <strong>Crear mazo filtrado</strong>, aunque la lista esté vacía",
+        "droid3": "Toca <strong>Construir</strong> (más de {limit} tarjetas: aumenta antes <strong>Limitar a</strong>)"
       },
       "reviewNow": "Repasar ahora en Anki",
       "reviewing": "Creando el mazo…",
