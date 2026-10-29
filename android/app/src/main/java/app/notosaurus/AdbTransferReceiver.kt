@@ -10,23 +10,26 @@ import kotlinx.coroutines.launch
 import java.io.File
 
 /**
- * Debug builds only: the lessons exported or imported from adb, as the settings' buttons do
- * (LessonsTransfer), in the app's own folder adb can read (no document picker):
+ * The lessons exported or imported from adb, as the settings' buttons do (LessonsTransfer), in
+ * the app's own folder adb can read (no document picker): a phone's lessons backed up, or put
+ * back, from the computer, on any build. Only the shell (and the system) can send these: the
+ * receiver asks for the DUMP permission (AndroidManifest.xml); adb needs USB debugging on and
+ * this computer allowed.
  *
- *     adb shell am broadcast -a app.notosaurus.debug.EXPORT -n app.notosaurus/.DebugTransferReceiver
+ *     adb shell am broadcast -a app.notosaurus.adb.EXPORT -n app.notosaurus/.AdbTransferReceiver
  *     adb pull /sdcard/Android/data/app.notosaurus/files/transfer/notosaurus-<date>.zip
  *
  *     adb push export.zip /sdcard/Android/data/app.notosaurus/files/transfer/
- *     adb shell am broadcast -a app.notosaurus.debug.IMPORT -n app.notosaurus/.DebugTransferReceiver --es file export.zip
+ *     adb shell am broadcast -a app.notosaurus.adb.IMPORT -n app.notosaurus/.AdbTransferReceiver --es file export.zip
  *
  * What was done is in the broadcast's result (and the log, tag Notosaurus).
  */
-class DebugTransferReceiver : BroadcastReceiver() {
+class AdbTransferReceiver : BroadcastReceiver() {
     override fun onReceive(context: Context, intent: Intent) {
         val pending = goAsync()
         CoroutineScope(Dispatchers.IO).launch {
             val said = runCatching { run(context.applicationContext, intent) }.getOrElse { "failed: ${it.message ?: it.javaClass.simpleName}" }
-            Log.i(TAG, "debug transfer: $said")
+            Log.i(TAG, "adb transfer: $said")
             pending.resultData = said
             pending.finish()
         }
@@ -65,7 +68,7 @@ class DebugTransferReceiver : BroadcastReceiver() {
 
     companion object {
         private const val TAG = "Notosaurus"
-        const val EXPORT = "app.notosaurus.debug.EXPORT"
-        const val IMPORT = "app.notosaurus.debug.IMPORT"
+        const val EXPORT = "app.notosaurus.adb.EXPORT"
+        const val IMPORT = "app.notosaurus.adb.IMPORT"
     }
 }
