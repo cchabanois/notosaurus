@@ -511,6 +511,17 @@ def test_each_familys_rule_and_typst_in_their_files():
         assert typst.split(figures_typst.EXAMPLE)[1].strip() in made.rules and "{example}" not in made.rules
 
 
+def test_the_graph_rules_example_is_orthonormal():
+    """The graph rule asks for an orthonormal frame, width / height = xlim's length / ylim's,
+    exactly: its example does so (the model copies the example before it reads the rule)."""
+    typst = (figures_typst.RULES / "graph.typ").read_text(encoding="utf-8")
+    width, height = (float(n) for n in re.search(r"width: ([\d.]+)cm, height: ([\d.]+)cm", typst).groups())
+    x0, x1, y0, y1 = (
+        float(n) for n in re.search(r"xlim: \(([-\d.]+), ([-\d.]+)\), ylim: \(([-\d.]+), ([-\d.]+)\)", typst).groups()
+    )
+    assert width / height == pytest.approx((x1 - x0) / (y1 - y0))
+
+
 def test_the_graph_rules_own_fragments_compile():
     """What the graph rule shows besides its example (the axis's ticks, points, a line)
     compiles too, in that example: a fragment out of step makes every graph with it fail."""
