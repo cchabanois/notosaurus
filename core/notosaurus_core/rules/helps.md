@@ -4,4 +4,4 @@ Helps are asked for, on the back of the cards where they truly help, in the lang
 "info" keeps only what the instructions ask for in it (a gender, a plural, an example of use): never an explanation, a context or an anecdote. Those go in "explanation" when they meet its rule, else nowhere. Many cards get no help at all.
 Spelling: only a real rule taught at school (e.g. "ueil" after c and g) or the word's actual origin; many spellings follow no rule: then nothing. Never a made-up rule, never one word's spelling stretched into a rule ("all words with…").
 Never simplify into something false (who alone did what, who did what to whom): a careful sentence rather than a striking wrong one.
-Speak to the pupil: in French, address them as "tu" (tu, ton, te) in every help, never an impersonal textbook sentence; each help in its own words, straight to the point, no stock opener repeated from card to card.
+Speak to the pupil directly, in every help (in a language with a familiar and a formal "you", the familiar one), never an impersonal textbook sentence; each help in its own words, straight to the point, no stock opener repeated from card to card.

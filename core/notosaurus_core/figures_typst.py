@@ -208,7 +208,7 @@ def available() -> bool:
 
 
 class Figure(BaseModel):
-    typst: str = Field(description="The figure's Typst, as the sheet shows it.")
+    typst: str = Field(description="The figure's Typst, as the rule shows it.")
 
 
 class Unusable(Exception):
