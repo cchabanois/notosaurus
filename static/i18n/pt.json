@@ -1169,12 +1169,12 @@
     },
     "conjugation": {
       "name": "Idioma: conjugação",
-      "deck": "{idioma}::Conjugação",
+      "deck": "{idioma}::Conjugação::{título da lição}",
       "voice": "auto"
     },
     "table": {
       "name": "Tabela para aprender",
-      "deck": "{matéria}::Tabelas",
+      "deck": "{matéria}::{título da lição}",
       "voice": "auto",
       "typing": true
     },
@@ -1184,7 +1184,7 @@
     },
     "dates": {
       "name": "Datas e marcos",
-      "deck": "{matéria}::Datas"
+      "deck": "{matéria}::{título da lição}"
     },
     "definitions": {
       "name": "Definições e propriedades",
@@ -1213,12 +1213,12 @@
     },
     "methods": {
       "name": "Métodos (etapas)",
-      "deck": "{matéria}::Métodos",
+      "deck": "{matéria}::{título da lição}",
       "voice": ""
     },
     "formulas": {
       "name": "Fórmulas (matemática, física…)",
-      "deck": "{matéria}::Fórmulas",
+      "deck": "{matéria}::{título da lição}",
       "voice": ""
     },
     "geometry": {
@@ -1232,19 +1232,19 @@
     },
     "pictures": {
       "name": "Idioma: vocabulário em imagens",
-      "deck": "{idioma}::Imagens",
+      "deck": "{idioma}::Lição {n}::Imagens",
       "voice": "auto"
     },
     "blanks": {
       "name": "Palavras com lacuna",
-      "deck": "{matéria}::Palavras com lacuna",
+      "deck": "{matéria}::{título da lição}",
       "voice": "auto",
       "typing": true,
       "dictation": false
     },
     "dictation": {
       "name": "Ditado",
-      "deck": "{matéria}::Ditado",
+      "deck": "{matéria}::Ditados::{título do ditado}",
       "voice": "auto",
       "typing": false,
       "dictation": true,
@@ -1252,7 +1252,7 @@
     },
     "dictation_gaps": {
       "name": "Ditado com lacunas",
-      "deck": "{matéria}::Ditado com lacunas",
+      "deck": "{matéria}::Ditados::{título do ditado}",
       "voice": "auto",
       "typing": false,
       "dictation": true,

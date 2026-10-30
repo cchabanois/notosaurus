@@ -1169,12 +1169,12 @@
     },
     "conjugation": {
       "name": "Lingua: coniugazione",
-      "deck": "{lingua}::Coniugazione",
+      "deck": "{lingua}::Coniugazione::{titolo della lezione}",
       "voice": "auto"
     },
     "table": {
       "name": "Tabella da imparare",
-      "deck": "{materia}::Tabelle",
+      "deck": "{materia}::{titolo della lezione}",
       "voice": "auto",
       "typing": true
     },
@@ -1184,7 +1184,7 @@
     },
     "dates": {
       "name": "Date e tappe",
-      "deck": "{materia}::Date"
+      "deck": "{materia}::{titolo della lezione}"
     },
     "definitions": {
       "name": "Definizioni e proprietà",
@@ -1213,12 +1213,12 @@
     },
     "methods": {
       "name": "Metodi (passaggi)",
-      "deck": "{materia}::Metodi",
+      "deck": "{materia}::{titolo della lezione}",
       "voice": ""
     },
     "formulas": {
       "name": "Formule (matematica, fisica…)",
-      "deck": "{materia}::Formule",
+      "deck": "{materia}::{titolo della lezione}",
       "voice": ""
     },
     "geometry": {
@@ -1232,19 +1232,19 @@
     },
     "pictures": {
       "name": "Lingua: lessico per immagini",
-      "deck": "{lingua}::Immagini",
+      "deck": "{lingua}::Lezione {n}::Immagini",
       "voice": "auto"
     },
     "blanks": {
       "name": "Parole da completare",
-      "deck": "{materia}::Parole da completare",
+      "deck": "{materia}::{titolo della lezione}",
       "voice": "auto",
       "typing": true,
       "dictation": false
     },
     "dictation": {
       "name": "Dettato",
-      "deck": "{materia}::Dettato",
+      "deck": "{materia}::Dettati::{titolo del dettato}",
       "voice": "auto",
       "typing": false,
       "dictation": true,
@@ -1252,7 +1252,7 @@
     },
     "dictation_gaps": {
       "name": "Dettato a buchi",
-      "deck": "{materia}::Dettato a buchi",
+      "deck": "{materia}::Dettati::{titolo del dettato}",
       "voice": "auto",
       "typing": false,
       "dictation": true,

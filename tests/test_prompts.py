@@ -328,3 +328,16 @@ def test_every_builtin_prompt_has_its_text_in_every_language():
         assert all(
             (static / "prompts" / lang / f"{key}.md").read_text(encoding="utf-8").strip() for key in prompts.BUILTIN
         )
+
+
+def test_every_builtin_prompts_deck_names_its_own_lesson():
+    """Each lesson has a deck of its own (rules/system.md): a Notosaurus prompt's deck
+    template has, after its subject or language, a part in braces (the lesson's title,
+    its number), never a fixed name two lessons would share ("Spanish::Conjugation")."""
+    import json
+    from pathlib import Path
+
+    for i18n_file in (Path(__file__).resolve().parent.parent / "static" / "i18n").glob("*.json"):
+        for key, prompt in json.loads(i18n_file.read_text(encoding="utf-8"))["builtinPrompts"].items():
+            lesson = "::".join(prompt["deck"].split("::")[1:])  # after the subject or the language
+            assert re.search(r"\{[^}]+\}", lesson), (i18n_file.stem, key, prompt["deck"])

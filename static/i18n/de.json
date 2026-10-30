@@ -1169,12 +1169,12 @@
     },
     "conjugation": {
       "name": "Sprache: Konjugation",
-      "deck": "{Sprache}::Konjugation",
+      "deck": "{Sprache}::Konjugation::{Titel der Lektion}",
       "voice": "auto"
     },
     "table": {
       "name": "Tabelle lernen",
-      "deck": "{Fach}::Tabellen",
+      "deck": "{Fach}::{Titel der Lektion}",
       "voice": "auto",
       "typing": true
     },
@@ -1184,7 +1184,7 @@
     },
     "dates": {
       "name": "Daten und Ereignisse",
-      "deck": "{Fach}::Daten"
+      "deck": "{Fach}::{Titel der Lektion}"
     },
     "definitions": {
       "name": "Definitionen und Eigenschaften",
@@ -1213,12 +1213,12 @@
     },
     "methods": {
       "name": "Methoden (Schritte)",
-      "deck": "{Fach}::Methoden",
+      "deck": "{Fach}::{Titel der Lektion}",
       "voice": ""
     },
     "formulas": {
       "name": "Formeln (Mathe, Physik …)",
-      "deck": "{Fach}::Formeln",
+      "deck": "{Fach}::{Titel der Lektion}",
       "voice": ""
     },
     "geometry": {
@@ -1232,19 +1232,19 @@
     },
     "pictures": {
       "name": "Sprache: Vokabeln in Bildern",
-      "deck": "{Sprache}::Bilder",
+      "deck": "{Sprache}::Lektion {n}::Bilder",
       "voice": "auto"
     },
     "blanks": {
       "name": "Lückenwörter",
-      "deck": "{Fach}::Lückenwörter",
+      "deck": "{Fach}::{Titel der Lektion}",
       "voice": "auto",
       "typing": true,
       "dictation": false
     },
     "dictation": {
       "name": "Diktat",
-      "deck": "{Fach}::Diktat",
+      "deck": "{Fach}::Diktate::{Titel des Diktats}",
       "voice": "auto",
       "typing": false,
       "dictation": true,
@@ -1252,7 +1252,7 @@
     },
     "dictation_gaps": {
       "name": "Lückendiktat",
-      "deck": "{Fach}::Lückendiktat",
+      "deck": "{Fach}::Diktate::{Titel des Diktats}",
       "voice": "auto",
       "typing": false,
       "dictation": true,
