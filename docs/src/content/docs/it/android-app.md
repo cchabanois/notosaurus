@@ -41,7 +41,7 @@ accettare la sua [informativa sulla privacy](../app-privacy/):
 1. **🧒** in cima alla pagina: aggiungi la scheda di tuo figlio (nome, classe), perché le carte
    siano adatte al suo livello. Vedi [Più figli](../several-children/).
 2. In **Foto della lezione**, fotografa la pagina (o più pagine), oppure aggiungi un PDF.
-3. In **Istruzioni**, scegli cosa fare, oppure tieni **Automatiche (secondo la lezione)**: vedi
+3. In **Istruzioni**, scegli cosa fare, oppure tieni **Automatico (secondo la lezione)**: vedi
    [Istruzioni](../instructions/). Il pulsante **Detta** (🎤) accanto al campo ti permette di
    dirle invece di scriverle.
 4. Tocca **✨ Genera le carte**. La prima lezione avvia la prova gratuita.

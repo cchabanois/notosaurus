@@ -71,7 +71,7 @@ viene perso o prestato: **Impostazioni → Telefoni → Disconnetti tutti i tele
 1. In **Foto della lezione**, fotografa la pagina (o più pagine), oppure aggiungi un PDF: vedi
    [Foto e PDF](../photos/).
 2. In **Istruzioni**, scegli cosa fare: vocabolario, domande, testo da completare, uno schema da
-   completare… **Automatiche** sceglie in base alla lezione. Vedi [Istruzioni](../instructions/).
+   completare… **Automatico** sceglie in base alla lezione. Vedi [Istruzioni](../instructions/).
 
    ![Una foto della lezione e le istruzioni](../../../assets/screenshots/en/instructions.png)
 

@@ -1153,7 +1153,7 @@
   },
   "builtinPrompts": {
     "auto": {
-      "name": "Automatiche (secondo la lezione)",
+      "name": "Automatico (secondo la lezione)",
       "deck": "{materia}::{titolo della lezione}",
       "voice": "auto"
     },
