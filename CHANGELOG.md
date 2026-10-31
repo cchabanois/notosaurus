@@ -147,6 +147,7 @@ Each pull request adds a line under **Unreleased**. See [Releasing](CONTRIBUTING
 
 ### Fixed
 
+- With TalkBack, a choice shown as a card ("Where does Notosaurus work?", the AI service…) is said with its state: a finger anywhere on the card is on its radio button, no longer on its text alone. In the Android app's settings, the card shown chosen and the one said selected are the same while connecting a computer.
 - For developers: the figures' property test (`tests/test_properties.py`) no longer fails on a `<use href="#id">`, a figure's own shape that `figures.clean` keeps on purpose (Typst's letters): any other `href` or `src` still fails it.
 - A figure whose Typst imports its family's package again (the preamble gives it already) is drawn at once: the line dropped, no longer the figure refused and asked again. A file's import, an include, a read stay refused.
 - Each lesson gets a deck of its own with every Notosaurus prompt: nine of them named a fixed deck two lessons shared ("Espagnol::Conjugaison", "Histoire::Dates", "Français::Dictée"…); now their lesson's title or number in it ("Espagnol::Conjugaison::{titre de la leçon}", "Français::Dictées::{titre de la dictée}"), in the six languages.

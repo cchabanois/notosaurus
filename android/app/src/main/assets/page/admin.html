@@ -128,12 +128,12 @@
       <h2 x-text="$t('android.where.title')"></h2>
       <div class="options">
         <label class="option" :class="{ active: onPhone() && !pairing }">
-          <input type="radio" name="where" :checked="onPhone()" @change="choosePhone()">
+          <input type="radio" name="where" :checked="onPhone() && !pairing" @change="choosePhone()">
           <strong x-text="$t('android.where.phone')"></strong>
           <small x-text="$t('android.where.phoneHint')"></small>
         </label>
         <label class="option" :class="{ active: !onPhone() || pairing }">
-          <input type="radio" name="where" :checked="!onPhone()" @change="chooseComputer()">
+          <input type="radio" name="where" :checked="!onPhone() || pairing" @change="chooseComputer()">
           <strong x-text="$t('android.where.computer')"></strong>
           <small x-text="$t('android.where.computerHint')"></small>
         </label>
