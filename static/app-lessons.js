@@ -35,7 +35,7 @@ const lessonsPart = {
   // `careful`: made again carefully ("Careful, again"), whatever the choice above.
   // `complete`: the new pages only, their cards added after the lesson's (canComplete)
   async extract({ careful = false, complete = false } = {}) {
-    const quick = this.quick && !careful;
+    const quick = (this.quick && !careful) || this.off("ai.careful");
     this.error = "";
     this.loading = true;
     this.loadingQuick = quick;

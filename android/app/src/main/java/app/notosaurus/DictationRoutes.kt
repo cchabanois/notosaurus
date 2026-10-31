@@ -10,6 +10,7 @@ internal fun Route.dictationRoutes(server: LocalServer) {
         // --- Dictation (🎤): recorded here, written by the relay's AI as the user meant to type it
         api("POST", "/api/dictation/start") {
             val dictation = dictation ?: notFound()
+            switches.check("speech.transcribe")
             if (!requestMicPermission()) throw BadRequest("dictation.refused")
             dictation.start()
             buildJsonObject { put("listening", true) }

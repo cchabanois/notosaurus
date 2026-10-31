@@ -51,11 +51,12 @@ internal fun Route.pictureRoutes(server: LocalServer) {
             val i = cardIndex(lesson)
             if (lesson.cards()[i].string("figure").isBlank()) switches.check("pictures.draw")
             val problem = req["problem"]?.takeIf { it !is JsonNull }?.jsonPrimitive?.content.orEmpty()
-            val careful = req["careful"]?.jsonPrimitive?.booleanOrNull == true
+            val careful = req["careful"]?.jsonPrimitive?.booleanOrNull == true && !switches.off("ai.careful")
             pictures.draw(lesson, i, problem, careful) { step(buildJsonObject { put("step", it) }) }
         }
         // "🔍 Check": the card's figure looked at by the AI, nothing changed ({"ok", "problem"})
         stepping("/api/lessons/{id}/cards/{card}/picture/check") { _, _ ->
+            switches.check("figures.check")
             val lesson = lesson()
             pictures.check(lesson, cardIndex(lesson))
         }

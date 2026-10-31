@@ -308,11 +308,11 @@ async def check_figure(s: AIConfig, description: str, svg: str) -> str:
 
 async def _figure_family(s: AIConfig, description: str, kind: str = "") -> str:
     """Which family of figures_typst draws it: `kind` when given (the AI that described it
-    said it), else a light call; "other" (drawn as SVG): none of them, Typst not installed,
-    the demo, or not told."""
+    said it), else a light call; "other" (drawn as SVG): none of them, Typst not installed or
+    not used (s.typst), the demo, or not told."""
     from . import figures_typst
 
-    if s.llm == "fake" or not figures_typst.available():
+    if s.llm == "fake" or not s.typst or not figures_typst.available():
         return "other"
     if kind in figures_typst.FAMILIES or kind == "other":
         return kind

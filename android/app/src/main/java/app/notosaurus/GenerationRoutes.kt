@@ -116,6 +116,7 @@ internal fun Route.generationRoutes(server: LocalServer) {
         // Content the AI made, reported (Google Play's policy on generated content): what the
         // page showed the user and they sent, the lesson's instructions; no photo, no child's name
         api("POST", "/api/lessons/{id}/report") {
+            switches.check("reports.send")
             val lesson = lesson()
             val req = body()
             val request = buildJsonObject {

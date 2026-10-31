@@ -287,6 +287,14 @@ def test_an_unusable_light_figure_drawn_again_with_thinking(monkeypatch):
     assert ">B<" in svg and [c["light"] for c in calls] == [True, False]
 
 
+def test_typst_turned_off_figures_drawn_as_svg(monkeypatch):
+    """The relay's figures.typst switch (AIConfig.typst): no Typst, even with its kind said."""
+    monkeypatch.setattr(figures_typst, "available", lambda: True)
+    family = lambda s: asyncio.run(llm._figure_family(s, "un triangle ABC", "geometry"))  # noqa: E731
+    assert family(AIConfig(llm="gemini")) == "geometry"
+    assert family(AIConfig(llm="gemini", typst=False)) == "other"
+
+
 def test_a_figure_checked_when_asked(client, monkeypatch):
     """ "🔍 Check": what the AI sees wrong said, nothing changed; drawn again with the problem
     when the user says so, with the model's thinking."""

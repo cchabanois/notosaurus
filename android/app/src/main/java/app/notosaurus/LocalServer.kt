@@ -118,13 +118,14 @@ class LocalServer(
     }
 
     /** The lesson's backs' sounds read in a moment (SoundsAhead), when the send would read
-     * them: a relay voice, a licence for the relay, sending to AnkiDroid not turned off. */
+     * them: a relay voice, a licence for the relay, sending to AnkiDroid and reading aloud not
+     * turned off. */
     internal fun soundsSoon(lesson: JsonObject) {
         if (readsAhead(lesson)) soundsAhead.soon(lesson.string("id"))
     }
 
     private fun readsAhead(lesson: JsonObject) =
-        Speech.reads(lesson.string("voice")) && licence().isNotEmpty() && !switches.off("anki.send")
+        Speech.reads(lesson.string("voice")) && licence().isNotEmpty() && !switches.off("anki.send") && !switches.off("speech.speak")
 
     /** The lesson's missing sounds, as the send reads them (same texts, voice, rate: same files). */
     private suspend fun makeSounds(id: String) {

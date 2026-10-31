@@ -167,6 +167,25 @@ def test_the_free_trial_started_said_after_the_first_lesson(page):
     sync_api.expect(page.locator(".toast.ok")).to_contain_text("Essai gratuit : 300 crédits jusqu'au 7 novembre")
 
 
+def test_features_turned_off_hidden(page):
+    """Features turned off by the relay (relay_api.FEATURES): their buttons hidden."""
+    shown = page.locator(".speed")
+    pdf = page.locator("label.add-tile", has_text="PDF")
+
+    def switches(disabled):
+        body = {"notice": None, "disabled": disabled, "update": False, "store": "", "trial": None}
+        page.route("**/api/switches", lambda route: route.fulfill(json=body))
+        page.goto("/")
+
+    switches([])
+    sync_api.expect(shown).to_be_visible()
+    sync_api.expect(pdf).to_be_visible()
+    page.unroute("**/api/switches")
+    switches(["ai.careful", "lesson.pdf"])
+    sync_api.expect(shown).to_be_hidden()
+    sync_api.expect(pdf).to_be_hidden()
+
+
 def test_touch_targets_and_an_off_button_readable(page):
     """Every small control a finger hits is 44 px at least (its invisible layer), its look
     unchanged; a main button off reads plainly (not a paler teal, 2.2:1 before)."""

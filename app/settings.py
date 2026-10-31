@@ -74,6 +74,8 @@ SPECS: dict[str, Spec] = {
     "picture_model": Spec(env="NOTOSAURUS_PICTURE_MODEL"),
     # No longer a setting: a free picture is always looked for first (drawing one is asked)
     "picture_find": Spec(editable=False),
+    # The relay's switch (figures.typst): here Typst is used whenever installed
+    "typst": Spec(editable=False),
     "tts_rate": Spec(env="NOTOSAURUS_TTS_RATE"),
     "voices": Spec(),
     "ankiconnect_url": Spec(env="NOTOSAURUS_ANKICONNECT_URL"),

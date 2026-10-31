@@ -25,7 +25,7 @@ const ankiPart = {
   },
 
   hasAudio() {
-    return this.isVoice(this.voice);
+    return this.isVoice(this.voice) && !this.off("speech.speak");
   },
 
   // What a card's sound says (as tts.spoken): its back; a dictation's sentence with a blank:

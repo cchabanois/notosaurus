@@ -93,6 +93,7 @@ ERRORS = {
     "relay.payment_pending": 402,  # its subscription on hold: a renewal's payment failed, to fix in Google Play
     "relay.invalid_purchase": 400,  # a purchase Google Play doesn't know, or not of this app
     "relay.trial_closed": 403,  # no new free trial for now (turned off, or today's all given): subscribe
+    "relay.feature_off": 403,  # turned off for now (FEATURES, Account.disabled): params "feature"
     "relay.trial_refused": 403,  # no free trial: not the app from Google Play, or not a real phone (Play Integrity)
     "relay.daily_limit": 429,  # too many credits used today: tomorrow, or wait
     "relay.busy": 429,  # too many calls at once for this licence: retry in a moment
@@ -489,18 +490,28 @@ class Voice(BaseModel):
 
 
 # What the app can be told to turn off (Account.disabled) while a fix of it waits for the
-# store: the actions that change the user's data on the phone (AnkiDroid, the lessons),
-# which the relay doesn't see, and the costly ones. Each with what the app does without it,
-# said where they are set (the relay's config, its command line)
+# store, or a flaw is closed: the actions that change the user's data on the phone
+# (AnkiDroid, the lessons), which the relay doesn't see, what reads the user's files on the
+# phone (a PDF), and the relay's own (its routes refused: relay.feature_off; or done
+# without, figures.typst, ai.careful). Each with what the app does without it, said where
+# they are set (the relay's config, its command line)
 FEATURES = {
     "anki.send": 'no "Add to Anki" (nor a test\'s lessons sent), no sounds made ahead',
     "anki.move": "a lesson's cards no longer moved to its new deck when sent",
     "anki.delete": "notes left in AnkiDroid no longer offered for deletion (after a send, or with the lesson)",
     "lesson.complete": "no pages added to a lesson",
     "lesson.regenerate": "no lesson made again in its place",
-    "pictures.search": "no free pictures found",
-    "pictures.draw": "no picture drawn by the AI",
-    "trial": "no new free trial (a phone that has one keeps it)",
+    "lesson.pdf": "no PDF read: photos only",
+    "pictures.search": "no free pictures found: drawn by the image model",
+    "pictures.draw": "no picture drawn by the image model: free pictures only",
+    "pictures.lesson": "no picture cut out of the lesson's photos: found or drawn instead",
+    "figures.typst": "figures drawn as SVG by the AI, not with Typst",
+    "figures.check": 'no "🔍 Check" of a figure',
+    "speech.transcribe": "no dictation: typed only",
+    "speech.speak": "nothing read aloud, no sounds made ahead",
+    "reports.send": "no content reported",
+    "ai.careful": "everything made quickly, the AI never thinking long (lessons, figures drawn again)",
+    "billing.trial": "no new free trial (a phone that has one keeps it)",
 }
 
 
@@ -534,7 +545,9 @@ class Account(BaseModel):
     )
     notice: Notice | None = Field(default=None, description="A message for every user, if any.")
     disabled: list[str] = Field(
-        default_factory=list, description="FEATURES turned off for now: the app hides them and refuses them."
+        default_factory=list,
+        description="FEATURES turned off for now: the app hides them; it refuses them, "
+        "or the relay its own (relay.feature_off).",
     )
     latest: str = Field(default="", description='The latest version of the app ("1.2.0"); "" when not said.')
     drawing_credits: int | None = Field(

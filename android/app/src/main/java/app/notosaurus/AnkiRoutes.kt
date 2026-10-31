@@ -44,7 +44,8 @@ internal fun Route.ankiRoutes(server: LocalServer) {
             val dictation = on("dictation") || on("dictation_only")
             val lessonId = req.string("lesson_id")
             soundsAhead.settle(lessonId) // the sounds being read ahead: read here instead
-            val (sounds, failures) = speech.sounds(deck, req.string("voice"), dictation, req.string("rate"), lessonId) { done, total ->
+            val voice = req.string("voice").takeUnless { switches.off("speech.speak") }.orEmpty() // off: no sounds
+            val (sounds, failures) = speech.sounds(deck, voice, dictation, req.string("rate"), lessonId) { done, total ->
                 step(buildJsonObject { put("step", "sounds"); put("done", done); put("total", total) })
             }
             step(buildJsonObject { put("step", "cards") })

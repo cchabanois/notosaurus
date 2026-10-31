@@ -298,6 +298,16 @@ document.addEventListener("alpine:init", () => {
       return this.switches.disabled.includes(feature);
     },
 
+    // Dictation offered: the host records, and it isn't turned off
+    micOn() {
+      return this.mic.available && !this.off("speech.transcribe");
+    },
+
+    // Content reported: the host relays it, and it isn't turned off
+    canReport() {
+      return this.reportable && !this.off("reports.send");
+    },
+
     // The free trial just started (the first lesson): what it gives, until when
     trialText() {
       Alpine.store("i18n").version;

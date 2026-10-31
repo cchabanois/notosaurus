@@ -1068,6 +1068,7 @@
       "trial_ended": "Tu prueba gratuita ha terminado: suscríbete en los Ajustes para continuar.",
       "payment_pending": "Pago pendiente: Google Play no pudo renovar tu suscripción. Actualiza tu método de pago en Google Play (Ajustes → Gestionar la suscripción) para continuar.",
       "invalid_purchase": "Compra no reconocida por Google Play: inténtalo de nuevo o contacta con el soporte.",
+      "feature_off": "Esta función no está disponible por el momento. Vuelve a intentarlo más tarde.",
       "trial_refused": "La prueba gratuita solo es posible con la app instalada desde Google Play, en un teléfono real.",
       "trial_closed": "Ahora no hay nuevas pruebas gratuitas: puedes suscribirte en los Ajustes o volver a intentarlo mañana.",
       "daily_limit": "Se alcanzó el límite de hoy: inténtalo mañana.",
