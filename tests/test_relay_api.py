@@ -176,3 +176,10 @@ def test_photos_and_request_in_one_multipart():
     assert response.status_code == 200
     answer = api.ExtractResponse.model_validate_json(response.content)
     assert answer.deck.cards and answer.turns == [0, 0] and answer.usage.credits_left == 99
+
+
+def test_each_feature_says_what_the_app_does_without_it():
+    """The relay's config and command line show it next to the switch."""
+    assert api.FEATURES
+    for name, without in api.FEATURES.items():
+        assert name and without.strip(), name

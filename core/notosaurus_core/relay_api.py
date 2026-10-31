@@ -490,17 +490,18 @@ class Voice(BaseModel):
 
 # What the app can be told to turn off (Account.disabled) while a fix of it waits for the
 # store: the actions that change the user's data on the phone (AnkiDroid, the lessons),
-# which the relay doesn't see, and the costly ones
-FEATURES = (
-    "anki.send",  # cards sent to AnkiDroid
-    "anki.move",  # a lesson's cards moved to its new deck when sent
-    "anki.delete",  # its notes deleted from AnkiDroid (after a send, or with the lesson)
-    "lesson.complete",  # its next pages added
-    "lesson.regenerate",  # made again in its place
-    "pictures.search",  # free pictures found
-    "pictures.draw",  # pictures drawn
-    "trial",  # new free trials (a phone that has one keeps it)
-)
+# which the relay doesn't see, and the costly ones. Each with what the app does without it,
+# said where they are set (the relay's config, its command line)
+FEATURES = {
+    "anki.send": 'no "Add to Anki" (nor a test\'s lessons sent), no sounds made ahead',
+    "anki.move": "a lesson's cards no longer moved to its new deck when sent",
+    "anki.delete": "notes left in AnkiDroid no longer offered for deletion (after a send, or with the lesson)",
+    "lesson.complete": "no pages added to a lesson",
+    "lesson.regenerate": "no lesson made again in its place",
+    "pictures.search": "no free pictures found",
+    "pictures.draw": "no picture drawn by the AI",
+    "trial": "no new free trial (a phone that has one keeps it)",
+}
 
 
 class Notice(BaseModel):
