@@ -216,11 +216,14 @@ def cleaned(svg: str) -> str | None:
 def assert_harmless(svg: str) -> None:
     assert "<script" not in svg.lower()
     for node in ElementTree.fromstring(svg).iter():
-        assert node.tag.rsplit("}", 1)[-1] in figures.ELEMENTS, node.tag
+        tag = node.tag.rsplit("}", 1)[-1]
+        assert tag in figures.ELEMENTS, node.tag
         for name, value in node.attrib.items():
             local = name.rsplit("}", 1)[-1]
             assert not local.lower().startswith("on"), (local, value)
-            assert local not in ("href", "src"), (local, value)
+            # Only a <use> of the figure's own shape ("#g1": Typst's letters), nothing loaded
+            internal = tag == "use" and local == "href" and figures.INTERNAL_HREF.match(value.strip())
+            assert local not in ("href", "src") or internal, (local, value)
             assert "javascript" not in value.lower(), (local, value)
             assert not EXTERNAL.search(value), (local, value)
 
