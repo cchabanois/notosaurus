@@ -145,6 +145,7 @@ Each pull request adds a line under **Unreleased**. See [Releasing](CONTRIBUTING
 
 ### Fixed
 
+- A figure whose Typst imports its family's package again (the preamble gives it already) is drawn at once: the line dropped, no longer the figure refused and asked again. A file's import, an include, a read stay refused.
 - Each lesson gets a deck of its own with every Notosaurus prompt: nine of them named a fixed deck two lessons shared ("Espagnol::Conjugaison", "Histoire::Dates", "Français::Dictée"…); now their lesson's title or number in it ("Espagnol::Conjugaison::{titre de la leçon}", "Français::Dictées::{titre de la dictée}"), in the six languages.
 - The rules the AI draws figures with, read more surely: the graph's example in the orthonormal frame its rule asks for (a test checks it), its points unmistakable (three, not two read as two points), the geometry rule's long line in three, plain wording ("far from the figure", "a fraction you compute yourself"); the helps and explanations address the pupil familiarly in any language with a familiar "you", not only French and German.
 - Notosaurus's own prompts, as each language writes it: Italian's "Automatico" (it was "Automatiche"), German's "Mische sie", the French recitation's comma, English's "square brackets" (US English reads "brackets" as parentheses), Brazilian Portuguese throughout ("na ordem", "em torno da tabela", "especifique-a").
