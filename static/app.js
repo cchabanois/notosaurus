@@ -320,7 +320,7 @@ document.addEventListener("alpine:init", () => {
     // "Subscribe" on it, to the settings
     aiError(e) {
       this.error = e.message;
-      const lapsed = ["relay.trial_ended", "relay.trial_closed", "relay.subscription_ended", "relay.payment_pending"];
+      const lapsed = ["relay.trial_ended", "relay.trial_closed", "relay.trial_refused", "relay.subscription_ended", "relay.payment_pending"];
       if (this.switches.store && lapsed.includes(e.detail?.code)) this.errorAction = { for: e.message, kind: "subscribe" };
     },
 

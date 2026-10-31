@@ -67,6 +67,18 @@ const childrenPart = {
     return this.children.find((c) => c.id === this.childId) ?? null;
   },
 
+  // A child's name as the header says it: with its class when another child has the same
+  // name (allowed: twins, a cousin…), else its rank among them ("Léa 2")
+  childLabel(child) {
+    if (!child) return "";
+    const key = (c) => fold(c.name.trim());
+    const same = this.children.filter((c) => key(c) === key(child));
+    if (same.length < 2) return child.name;
+    const grade = (child.grade ?? "").trim();
+    if (grade && same.filter((c) => (c.grade ?? "").trim() === grade).length === 1) return `${child.name} · ${grade}`;
+    return `${child.name} ${same.indexOf(child) + 1}`;
+  },
+
   chooseChild(id) {
     this.childId = id;
     storage("set", id, CHILD);
@@ -138,6 +150,8 @@ const childrenPart = {
   },
 
   async removeChild(i) {
+    const name = this.childrenSheet.list[i].name;
+    if (!(await this.askConfirm(t("app.children.confirmRemove", { name }), { ok: t("app.children.remove") }))) return;
     this.childrenSheet.list.splice(i, 1);
     await this.saveChildren();
   },
