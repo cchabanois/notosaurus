@@ -987,6 +987,10 @@
     "host": {
       "not_allowed": "Notosaurus ne répond qu'à l'adresse IP de l'ordinateur ou à localhost : ouvrez-le ainsi, ou indiquez {host} dans NOTOSAURUS_PUBLIC_URL."
     },
+    "draft": {
+      "too_large": "La leçon en cours est trop lourde pour être gardée.",
+      "invalid": "La leçon en cours n'a pas pu être gardée."
+    },
     "photo": {
       "not_found": "Photo introuvable."
     },

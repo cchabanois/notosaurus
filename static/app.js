@@ -285,9 +285,12 @@ document.addEventListener("alpine:init", () => {
       this.$watch("quick", (on) => storage("set", on ? "0" : "1", CAREFUL));
       await Promise.all([this.loadPrompts(storage("get"), true), this.loadLessons(), this.loadChildren(), this.loadExams()]);
       this.checkAnki();
-      // "✎ Notosaurus" on a card in Anki: the page opened on that lesson and card
+      // "✎ Notosaurus" on a card in Anki: the page opened on that lesson and card; else the
+      // lesson left in progress (app-draft.js), then kept as it changes
       const linked = new URLSearchParams(location.search);
-      if (linked.get("lesson")) this.openLinkedCard(linked.get("lesson"), linked.get("key") || "");
+      if (linked.get("lesson")) await this.openLinkedCard(linked.get("lesson"), linked.get("key") || "");
+      else await this.restoreDraft();
+      this.keepDraft();
       // Anki may be started later: check again when coming back to the app.
       document.addEventListener("visibilitychange", () => {
         if (document.visibilityState === "visible") this.checkAnki();
@@ -350,7 +353,7 @@ document.addEventListener("alpine:init", () => {
 
     // The methods, by topic: app-photos.js, app-prompts.js, app-lessons.js, app-cards.js,
     // app-revision.js, app-diagram.js, app-pictures.js, app-anki.js, app-dictation.js,
-    // app-children.js, app-report.js, ask-confirm.js (loaded before this file)
+    // app-children.js, app-report.js, app-draft.js, ask-confirm.js (loaded before this file)
     ...photosPart,
     ...promptsPart,
     ...lessonsPart,
@@ -360,6 +363,7 @@ document.addEventListener("alpine:init", () => {
     ...picturesPart,
     ...ankiPart,
     ...dictationPart,
+    ...draftPart,
     ...childrenPart,
     ...examsPart,
     ...reportPart,

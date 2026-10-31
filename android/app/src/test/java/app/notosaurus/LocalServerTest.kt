@@ -16,6 +16,7 @@ import io.ktor.client.statement.bodyAsText
 import io.ktor.http.ContentType
 import io.ktor.http.Headers
 import io.ktor.http.HttpHeaders
+import io.ktor.http.HttpMethod
 import io.ktor.http.HttpStatusCode
 import io.ktor.http.contentType
 import io.ktor.http.encodeURLParameter
@@ -257,6 +258,39 @@ class LocalServerTest {
                 if (quick) append("quick", "true")
             },
         ) { page() }.json().jsonObject
+    }
+
+    @Test
+    fun theLessonInProgressKeptByTheApp() = app { client ->
+        // As the page keeps it (app-draft.js): found again after the settings or Android closing the app
+        assertEquals("{}", client.get("/api/draft") { page() }.bodyAsText())
+        val draft = """{"lesson":null,"prompt":{"selected":null,"chosen":true,"form":{"text":"Une carte par capitale"}}}"""
+        suspend fun send(text: String, photos: List<String>?) = client.submitFormWithBinaryData(
+            "/api/draft",
+            formData {
+                append("draft", text)
+                if (photos != null) append("photos_sent", "true")
+                photos?.forEachIndexed { i, photo ->
+                    append("photos", photo.toByteArray(), Headers.build {
+                        append(HttpHeaders.ContentType, "image/jpeg")
+                        append(HttpHeaders.ContentDisposition, "filename=\"photo-${i + 1}.jpg\"")
+                    })
+                }
+            },
+        ) { method = HttpMethod.Put; page() }
+        assertEquals(HttpStatusCode.OK, send(draft, listOf("one", "two")).status)
+        val kept = client.get("/api/draft") { page() }.json().jsonObject
+        assertEquals(2, kept["photos"]!!.jsonPrimitive.int)
+        assertEquals("Une carte par capitale", kept["prompt"]!!.jsonObject["form"]!!.jsonObject.string("text"))
+        assertEquals("two", client.get("/api/draft/photos/2") { page() }.bodyAsText())
+        send(draft.replace("capitale", "fleuve"), null) // the prompt alone: its photos kept
+        assertEquals(2, client.get("/api/draft") { page() }.json().jsonObject["photos"]!!.jsonPrimitive.int)
+        send("""{"lesson":"abc"}""", emptyList()) // made: the lesson open, no photo
+        assertEquals("""{"lesson":"abc","photos":0}""", client.get("/api/draft") { page() }.bodyAsText())
+        assertEquals(HttpStatusCode.BadRequest, send("[1]", null).status)
+        client.delete("/api/draft") { page() }
+        assertEquals("{}", client.get("/api/draft") { page() }.bodyAsText())
+        assertEquals(HttpStatusCode.Unauthorized, client.get("/api/draft").status) // never without the WebView's cookie
     }
 
     @Test

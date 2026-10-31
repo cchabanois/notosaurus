@@ -80,6 +80,12 @@ def page(browser, server, tmp_path, monkeypatch):
     errors = []
     page.on("pageerror", lambda e: errors.append(str(e)))
     yield page
+    # The lesson in progress kept now (app-draft.js keeps it a moment after a change): else
+    # kept in the next test's data, which then finds it again
+    page.evaluate(
+        "async () => { const root = document.querySelector('[x-data]');"
+        " const data = root && window.Alpine && Alpine.$data(root); if (data?.saveDraft) await data.saveDraft(); }"
+    )
     # The page's requests done first (a lesson still being saved, its pictures): else one
     # lands after NOTOSAURUS_DATA is the next test's, a lesson made there (a flaky count)
     page.wait_for_load_state("networkidle")
@@ -107,9 +113,18 @@ def lesson(page, id: str) -> dict:
     return page.request.get(f"/api/lessons/{id}").json()
 
 
+def started(page) -> None:
+    """The page started: the lesson left in progress found again (app-draft.js), if any."""
+    page.wait_for_function("window.Alpine && Alpine.$data(document.querySelector('[x-data]')).draftKept")
+
+
 def generate_free(page, prompt: str) -> None:
-    """A lesson from a prompt written for this time (no photo)."""
+    """A new lesson from a prompt written for this time (no photo): the last one, open again
+    when the page opens (app-draft.js), set aside first."""
     page.goto("/")
+    started(page)
+    if page.evaluate("Alpine.$data(document.querySelector('[x-data]')).lessonId"):
+        page.get_by_role("button", name="Nouvelle leçon").click()
     page.get_by_role("radio", name="✏️ Libre").click()
     page.locator("textarea[x-ref=promptText]").fill(prompt)
     page.get_by_role("button", name="✨ Générer à partir de la consigne seule").click()
@@ -1068,11 +1083,12 @@ def test_pdf_text_kept_with_its_page(page, browser):
     (text,) = lesson(page, summary["id"])["page_texts"]
     assert text == "La Révolution française\nEn 1789, le peuple de Paris prend la Bastille."
 
-    # Reopened, then generated again: the text goes with its page again
+    # The page opened again (the lesson open again by itself), then generated again: the
+    # text goes with its page again
     page.reload()
-    page.locator(".chip-btn").first.click()
-    page.locator(".lesson").first.click()
+    started(page)
     sync_api.expect(page.locator(".thumb img")).to_have_count(1)
+    sync_api.expect(page.locator("textarea[x-ref=promptText]")).to_have_value("Une carte par date")
     page.locator("textarea[x-ref=promptText]").fill("Une carte par lieu")
     page.get_by_role("button", name="✨ Régénérer").click()
     sync_api.expect(page.get_by_text("Cartes régénérées")).to_be_visible()
@@ -1085,6 +1101,56 @@ def add_photo(page, buffer: bytes) -> None:
         {"name": "page.png", "mimeType": "image/png", "buffer": buffer}
     )
     sync_api.expect(page.locator(".thumb img")).to_have_count(1)
+
+
+def test_the_lesson_in_progress_found_again(page):
+    """Left before it is made (the settings, a link, the phone closing the app): its photos
+    and its prompt found again when the page opens again; once made, the lesson open again;
+    a new lesson, nothing."""
+    page.goto("/")
+    page.get_by_role("radio", name="✏️ Libre").click()
+    page.locator("textarea[x-ref=promptText]").fill("Une carte par capitale")
+    add_photo(page, plain_image(400, 300, "red"))
+    page.get_by_role("link", name="Réglages").click()  # kept before the page is left
+    page.wait_for_url("**/admin.html")
+    page.goto("/")
+    sync_api.expect(page.locator(".thumb img")).to_have_count(1)
+    sync_api.expect(page.locator("textarea[x-ref=promptText]")).to_have_value("Une carte par capitale")
+    sync_api.expect(page.get_by_role("radio", name="✏️ Libre")).to_be_checked()
+
+    page.get_by_role("button", name="✨ Générer les cartes").click()
+    page.locator(".flash").first.wait_for()
+    deck = page.locator("input[list=decks]").input_value()
+    page.wait_for_timeout(800)  # (kept a moment after the change)
+    page.reload()
+    sync_api.expect(page.locator("input[list=decks]")).to_have_value(deck)  # the lesson made, open again
+    sync_api.expect(page.locator(".flash").first).to_be_visible()
+
+    page.get_by_role("button", name="Nouvelle leçon").click()
+    page.wait_for_timeout(800)
+    page.reload()
+    sync_api.expect(page.locator(".flash")).to_have_count(0)
+    sync_api.expect(page.locator(".thumb img")).to_have_count(0)
+
+
+def test_what_the_user_began_kept_over_the_lesson_left(page):
+    """A photo added while the lesson left in progress is still being read: theirs kept,
+    never replaced by the one found again."""
+    page.goto("/")
+    page.get_by_role("radio", name="✏️ Libre").click()
+    page.locator("textarea[x-ref=promptText]").fill("La leçon d'avant")
+    page.evaluate("Alpine.$data(document.querySelector('[x-data]')).saveDraft()")
+    page.wait_for_function("Alpine.$data(document.querySelector('[x-data]')).draftSent.includes('avant')")
+    held = []
+    page.route("**/api/draft", lambda route: held.append(route) if route.request.method == "GET" else route.continue_())
+    page.reload()
+    add_photo(page, plain_image(400, 300, "blue"))  # begun while it is read
+    while not held:
+        page.wait_for_timeout(50)
+    held[0].continue_()
+    started(page)
+    sync_api.expect(page.locator(".thumb img")).to_have_count(1)
+    assert page.locator("textarea[x-ref=promptText]").input_value() != "La leçon d'avant"
 
 
 def add_text_pdf(page, browser) -> None:

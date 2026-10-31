@@ -37,18 +37,27 @@ object Device {
     }
 
     /** The app's settings as they were before the test, put back after it: the device
-     * (a phone in use) keeps its relay, key and mode. */
+     * (a phone in use) keeps its relay, key and mode. Its lesson in progress (Draft) too, set
+     * aside meanwhile: each test starts on a new lesson, not on the last one's. */
     class KeepSettings : ExternalResource() {
         private val prefs get() = context.getSharedPreferences("settings", Context.MODE_PRIVATE)
         private var saved: Map<String, *> = emptyMap<String, Any>()
+        private val draft get() = java.io.File(context.filesDir, "draft")
+        private val draftAside get() = java.io.File(context.cacheDir, "draft-kept-by-tests")
 
         override fun before() {
             saved = prefs.all.toMap()
+            draftAside.deleteRecursively()
+            if (draft.exists()) draft.renameTo(draftAside)
         }
 
-        override fun after() = prefs.edit {
-            clear()
-            saved.forEach { (name, value) -> putString(name, value as String) }
+        override fun after() {
+            prefs.edit {
+                clear()
+                saved.forEach { (name, value) -> putString(name, value as String) }
+            }
+            draft.deleteRecursively()
+            if (draftAside.exists()) draftAside.renameTo(draft)
         }
     }
 

@@ -3,6 +3,7 @@
 data/
   prompts.json
   lessons/<yyyy-mm-dd-deck-slug>/lesson.json, page-N.jpg, audio/*.mp3
+  draft/                the lesson in progress, as the page left it (draft.py)
   install.json          this installation's id: an export says where it comes from (transfer.py)
   cache/                model prices, pictures, voice previews (notosaurus_core's), safe to delete
 """
