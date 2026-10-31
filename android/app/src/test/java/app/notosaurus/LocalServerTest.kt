@@ -1434,10 +1434,11 @@ class LocalServerTest {
         assertEquals("/v1/rephrase" to "Bearer nts_trial", call.url.encodedPath to call.headers["Authorization"])
         assertEquals("nts_trial", prefs[LocalServer.keyOf(local.relayUrl())])
 
-        // Told once to the page (its notice), with what it gives
+        // Told once to the page (its notice): its end, and its credits as they are now (the call's spent)
         relayAnswers("""{"plan": "free_trial", "credits_left": 290, "daily_left": 140}""")
         val told = client.get("/api/switches") { page() }.json().jsonObject["trial"]!!.jsonObject
-        assertEquals(300, told["credits_left"]!!.jsonPrimitive.int)
+        assertEquals(290, told["credits_left"]!!.jsonPrimitive.int)
+        assertEquals("2026-11-04T10:00:00+00:00", told.string("ends_at"))
         relayAnswers("""{"plan": "free_trial", "credits_left": 290, "daily_left": 140}""")
         assertEquals(JsonNull, client.get("/api/switches") { page() }.json().jsonObject["trial"])
     }

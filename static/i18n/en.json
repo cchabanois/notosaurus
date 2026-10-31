@@ -839,7 +839,15 @@
       "check": "Check",
       "refused": "Unknown or expired licence key: it was not kept.",
       "plan": "Plan: {plan}",
-      "credits": "{credits} credits left this month, {today} today",
+      "credits": "{credits} credits left this month",
+      "creditsTrial": "{credits} credits left for the trial",
+      "today": "{today} of them usable today",
+      "plans": {
+        "free_trial": "Free trial",
+        "trial": "Free trial (Google Play)",
+        "monthly": "Monthly",
+        "yearly": "Yearly"
+      },
       "renews": "Renewed on {date}",
       "none": "No licence key yet: it comes with the subscription.",
       "free": "No subscription? With the Anki add-on on your computer, the app is free: see “Where does Notosaurus work?”.",
