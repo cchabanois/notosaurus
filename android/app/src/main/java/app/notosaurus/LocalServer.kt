@@ -100,6 +100,7 @@ class LocalServer(
     internal val generation = Generation(lessons, prefs, ::relay, speech, turnPhoto, children)
     internal val computer = Computer(prefs, modeChanged)
     internal val switches = Switches(prefs, version)
+    internal val saved = Saved(prefs) // what the page keeps on this phone (the child chosen…)
     internal val dictation = recorder?.let { Dictation(File(dataDir, "dictation").apply { mkdirs() }, it, ::relay) }
     internal val soundsAhead = SoundsAhead(::makeSounds) // the backs' sounds read once a lesson is saved
     private lateinit var server: EmbeddedServer<*, *>
@@ -149,7 +150,7 @@ class LocalServer(
     }
 
     /** The relay, with its licence key. */
-    internal fun relay() = Relay(relayUrl(), licence(), lost = relays::refreshSoon, lapsed = licensing::recheckSoon, noKey = licensing::trialKey)
+    internal fun relay() = Relay(relayUrl(), licence(), lost = relays::refreshSoon, lapsed = licensing::recheckSoon, rejected = licensing::forget, noKey = licensing::trialKey)
 
     /** The licence: its key, the free trial, Google Play's purchases (Licensing). */
     internal val licensing = Licensing(prefs, ::relayUrl, subscriptions)
@@ -168,6 +169,7 @@ class LocalServer(
     fun Application.module() = routing {
         settingsRoutes(this@LocalServer)
         languageRoutes(this@LocalServer)
+        savedRoutes(this@LocalServer)
         promptRoutes(this@LocalServer)
         lessonRoutes(this@LocalServer)
         generationRoutes(this@LocalServer)

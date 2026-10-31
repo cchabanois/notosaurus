@@ -85,11 +85,10 @@ function sharedStart(texts) {
   return first.slice(0, end).join("");
 }
 
+// What the page keeps on this device (i18n.js's kept/keep: the Android app's, else localStorage)
 function storage(action, value, key = LAST_PROMPT) {
-  try {
-    if (action === "get") return localStorage.getItem(key);
-    localStorage.setItem(key, value);
-  } catch {}
+  if (action === "get") return kept(key);
+  keep(key, value);
 }
 const NOTICE_CLOSED = "notosaurus.noticeClosed";  // the id of the last notice closed on this device
 const CAREFUL = "notosaurus.careful";  // "Careful" chosen over "Quick" (the default), kept on this device
@@ -321,7 +320,7 @@ document.addEventListener("alpine:init", () => {
     // "Subscribe" on it, to the settings
     aiError(e) {
       this.error = e.message;
-      const lapsed = ["relay.trial_ended", "relay.trial_closed", "relay.subscription_ended", "relay.payment_pending"];
+      const lapsed = ["relay.trial_ended", "relay.trial_closed", "relay.trial_refused", "relay.subscription_ended", "relay.payment_pending"];
       if (this.switches.store && lapsed.includes(e.detail?.code)) this.errorAction = { for: e.message, kind: "subscribe" };
     },
 

@@ -33,6 +33,13 @@ class Licensing(
         prefs[LocalServer.keyOf(relayUrl())] = key.trim()
     }
 
+    /** The relay said this key is unknown or ended (one mistyped): no longer kept, unless
+     * another took its place meanwhile. Without one, the settings offer subscribing again
+     * and the next lesson starts the free trial. */
+    @Synchronized fun forget(key: String) {
+        if (key() == key.trim()) setKey("")
+    }
+
     // --- The free trial
 
     private val trialStarting = Mutex()
@@ -50,10 +57,22 @@ class Licensing(
     suspend fun trialKey(): String = trialStarting.withLock {
         key().ifEmpty {
             val store = store ?: return@withLock ""
-            trialStarted = startTrial(store)
+            trialStarted = try {
+                startTrial(store)
+            } catch (e: Exception) {
+                if (e.code() == TRIAL_REFUSED) prefs[TRIAL_REFUSED] = "true"
+                throw e
+            }
+            prefs[TRIAL_REFUSED] = ""
             key()
         }
     }
+
+    /** The free trial refused on this phone (not the app from Google Play, or not a real
+     * phone): the settings no longer say the first lesson starts it. */
+    val trialRefused: Boolean get() = prefs[TRIAL_REFUSED] == "true"
+
+    private fun Exception.code() = (this as? BadRequest)?.code ?: (this as? RelayException)?.code
 
     /** Once per phone (Play Integrity says it is the app from Google Play on a real one): the
      * relay answers its key, kept as a purchase's is; its account. */
@@ -127,5 +146,6 @@ class Licensing(
         private const val RECHECK_S = 600L
         private const val PURCHASE_PENDING = "purchase_pending" // since when (ms)
         private const val PENDING_DAYS = 7L
+        private const val TRIAL_REFUSED = "relay.trial_refused" // the relay's code, and since then (pref)
     }
 }

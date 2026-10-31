@@ -17,6 +17,7 @@
   <!-- KaTeX: preview of the formulas (MathJax syntax, as Anki shows them) in the review -->
   <link rel="stylesheet" href="vendor/katex/katex.min.css">
   <script defer src="vendor/katex/katex.min.js"></script>
+  <script defer src="saved.js"></script>
   <script defer src="i18n.js"></script>
   <script defer src="app-photos.js"></script>
   <script defer src="app-prompts.js"></script>
@@ -66,7 +67,7 @@
       <!-- The child the next lesson is for (app-children.js): its card, the others -->
       <button class="chip-btn" @click="openChildren()" :aria-label="$t('app.children.title')" :title="$t('app.children.title')">
         <!-- A lesson open on a narrow screen: the icons alone (the lesson says whose it is below) -->
-        <span aria-hidden="true">🧒</span><span class="wide-or-home" x-text="currentChild()?.name ?? $t('app.children.who')"></span>
+        <span aria-hidden="true">🧒</span><span class="wide-or-home" x-text="currentChild() ? childLabel(currentChild()) : $t('app.children.who')"></span>
       </button>
       <button class="chip-btn" x-show="lessonId" @click="newLesson()"
               :aria-label="$t('app.newLesson')" :title="$t('app.newLessonHint')">
@@ -768,7 +769,7 @@
     <label class="switch profile-filter" x-show="children.length > 1">
       <input type="checkbox" x-model="allChildren">
       <span class="track"><span class="knob"></span></span>
-      <span x-text="allChildren ? $t('app.children.allLessons') : $t('app.children.lessonsOf', { name: currentChild()?.name ?? '' })"></span>
+      <span x-text="allChildren ? $t('app.children.allLessons') : $t('app.children.lessonsOf', { name: childLabel(currentChild()) })"></span>
     </label>
     <input type="search" class="lesson-search" x-show="manyLessons()" x-model="lessonQuery"
            :placeholder="$t('app.lessons.search')" :aria-label="$t('app.lessons.search')">
@@ -965,7 +966,7 @@
 
   <!-- The children (app-children.js): the one the next lesson is for, their cards -->
   <div class="sheet-backdrop" x-cloak x-show="childrenSheet.open" x-transition.opacity @click="childrenSheet.open = false"></div>
-  <aside class="sheet" x-cloak x-show="childrenSheet.open" @keydown.escape.window="childrenSheet.open = false"
+  <aside class="sheet" x-cloak x-show="childrenSheet.open" @keydown.escape.window="asking.open || (childrenSheet.open = false)"
          role="dialog" :aria-label="$t('app.children.title')">
     <div class="sheet-handle"></div>
     <div class="sheet-head">

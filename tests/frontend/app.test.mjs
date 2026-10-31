@@ -62,7 +62,7 @@ test("withKey fills the card defaults and gives each card its own key", () => {
 
 test("blocked storage: last prompt and options degrade silently", async () => {
   const blocked = await loadScripts("app.js", { throwingStorage: true });
-  assert.equal(blocked.run("storage('get')"), undefined);
+  assert.equal(blocked.run("storage('get')"), null);  // nothing kept: null, as localStorage says it
   blocked.run("storage('set', 'x')");
   assert.equal(blocked.component().quick, true);  // quick by default
   assert.deepEqual(plain(blocked.component().openSubjects), {});

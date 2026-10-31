@@ -56,6 +56,24 @@ class AppTest {
 
     @After fun tearDown() = relay.close()
 
+    /** What the page keeps (the child chosen, the language…) still there when the app is opened
+     * again: its page then on another port (another origin: its localStorage empty), kept by the
+     * app's preferences (Saved), served as saved.js. */
+    @Test
+    fun whatThePageKeepsSurvivesAnotherLaunch() {
+        ActivityScenario.launch(MainActivity::class.java).use { app ->
+            Device.waitFor(app, "typeof keep === 'function' && window.SAVED", "the page and what the app keeps")
+            Device.js(app, "keep('notosaurus.test', 'kept $run')")
+            // Told the app meanwhile (nothing waits for it): there once it has it
+            val told = "for (let i = 0; i < 40; i++) { if ((await (await fetch('/saved.js')).text()).includes('kept $run')) return true; " +
+                "await new Promise((r) => setTimeout(r, 250)); } return false"
+            assertEquals("true", Device.run(app, told))
+        }
+        ActivityScenario.launch(MainActivity::class.java).use { app ->
+            Device.waitFor(app, "typeof kept === 'function' && kept('notosaurus.test') === 'kept $run'", "the value kept, read again")
+        }
+    }
+
     @Test
     fun aLessonFromThePageIntoAnkiDroid() {
         // The relay answers by route: the page also asks for its voices when it opens

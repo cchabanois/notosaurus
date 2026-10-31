@@ -9,6 +9,7 @@ to use the system's). The pages load Alpine.js and KaTeX from a CDN: network nee
 
 import base64
 import io
+import json
 import os
 import re
 import socket
@@ -1385,6 +1386,49 @@ def test_an_option_card_is_its_radio_all_over(page):
         x, y = box["x"] + box["width"] / 2, box["y"] + box["height"] / 2
         assert page.evaluate("([x, y]) => document.elementFromPoint(x, y).tagName", [x, y]) == "INPUT", part
     sync_api.expect(page.get_by_role("radio", name="Ici Le détail")).to_be_checked()
+
+
+def test_what_the_page_keeps_kept_by_the_android_app(page):
+    """The Android app serves saved.js (its preferences): read from it, not localStorage,
+    each change told to it (PUT /api/saved)."""
+    page.request.put("/api/children", data=[{"id": "jules", "name": "Jules"}, {"id": "lea", "name": "Léa"}])
+    saved = {"notosaurus.child": "lea", "notosaurus.careful": "1"}
+    told = []
+    page.route(
+        "**/saved.js",
+        lambda route: route.fulfill(body=f"window.SAVED = {json.dumps(saved)};", content_type="text/javascript"),
+    )
+    page.route("**/api/saved", lambda route: (told.append(route.request.post_data_json), route.fulfill(json={})))
+    page.goto("/")
+    sync_api.expect(page.get_by_role("button", name="Enfants")).to_have_text(re.compile("Léa"))
+    sync_api.expect(page.get_by_role("radio", name="Soigné")).to_be_checked()
+    page.evaluate("document.querySelector('[x-data]')._x_dataStack[0].chooseChild('jules')")
+    sync_api.expect(page.get_by_role("button", name="Enfants")).to_have_text(re.compile("Jules"))
+    page.wait_for_timeout(200)  # the PUT sent meanwhile
+    assert {"notosaurus.child": "jules"} in told
+    assert page.evaluate("localStorage.length") == 0  # the app keeps them
+
+
+def test_children_of_the_same_name_told_apart_and_removed_once_confirmed(page):
+    ce1 = {"id": "lea-ce1", "name": "Léa", "grade": "CE1"}
+    cm2 = {"id": "lea-cm2", "name": "Léa", "grade": "CM2"}
+    page.request.put("/api/children", data=[ce1, cm2])
+    page.goto("/")
+    header = page.get_by_role("button", name="Enfants")
+    page.evaluate("document.querySelector('[x-data]')._x_dataStack[0].chooseChild('lea-cm2')")
+    sync_api.expect(header).to_have_text(re.compile("Léa · CM2"))
+    header.click()
+    page.get_by_role("button", name="Modifier Léa").first.click()
+    page.get_by_role("button", name="Retirer", exact=True).click()
+    asked = page.get_by_role("alertdialog", name="Retirer Léa ? Ses leçons sont gardées.")
+    asked.get_by_role("button", name="Annuler").click()
+    sync_api.expect(asked).to_be_hidden()
+    assert len(page.request.get("/api/children").json()) == 2  # cancelled: kept
+    page.get_by_role("button", name="Retirer", exact=True).click()
+    asked.get_by_role("button", name="Retirer").click()
+    sync_api.expect(asked).to_be_hidden()
+    sync_api.expect(header).to_have_text(re.compile(r"Léa\s*$"))  # the only Léa now
+    assert [c["id"] for c in page.request.get("/api/children").json()] == ["lea-cm2"]
 
 
 def test_helps_as_the_settings_say(page):
