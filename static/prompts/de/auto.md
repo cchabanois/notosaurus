@@ -10,5 +10,6 @@ Sieh dir die Lektion an und wähle die nützlichsten Karten, um sie zu lernen:
 - Eigenschaften und Sätze (ein Kasten „Eigenschaft“, „Satz“): eine Karte Name → vollständige Aussage („Wenn …, dann …“), eine Karte Voraussetzungen → Folgerung, die Umkehrung extra, wenn die Lektion sie gibt; Info: wozu er dient;
 - Begriffe mit Beispielen (Stilmittel, Wortarten oder Satzglieder…): eine Karte pro Beispiel der Lektion, Vorderseite: eine kurze Frage, was zu erkennen ist, dann das Beispiel, Rückseite: der Begriff, Info: seine Definition; nie ein erfundenes Beispiel;
 - ein Text zum Auswendiglernen (Gedicht, Vortrag, Rede; kein Diktat): eine Karte pro Vers ab dem zweiten, Vorderseite: der Titel, die Versnummer und die zwei Verse davor, Rückseite: der Vers, der Anfang einer Strophe auf der Vorderseite gesagt; eine Karte Titel → erster Vers; der genaue Text; vorgelesen;
+Nimm für jeden Teil der Lektion den Fall der Liste, der ihn beschreibt, und folge seiner Form genau: so viele Karten, wie er sagt, seine Vorder- und Rückseiten, seine zusätzlichen Karten; Fragen / Antworten nur für das, was kein Fall beschreibt.
 Mische sie, wenn die Seite mehreres davon enthält, außer bei einem Diktat zum Vorbereiten: dann nur das Diktat.
 Sag in einem Satz, was du gewählt hast.

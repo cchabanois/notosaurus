@@ -308,6 +308,24 @@ def test_a_formula_shown_once_its_text_while_edited(page):
     sync_api.expect(page.locator(".save-pill")).to_have_class(SAVED)
 
 
+def test_formulas_drawn_in_the_helps_and_the_doubt(page):
+    """A help's formulas drawn as the back's (its text a click away), the doubt's too."""
+    generate_free(page, FRONT_PROMPT)
+    page.evaluate(
+        r"""Object.assign(document.querySelector('[x-data]')._x_dataStack[0].cards[0], {
+            explanation: String.raw`Pour tout \(x\) de \(\mathbb{R}\)`,
+            doubt: { reason: String.raw`La limite est \(+\infty\)`, front: "f", back: String.raw`\(-\infty\)` },
+        })"""
+    )
+    card = page.locator(".flash").first
+    help_shown = card.locator(".card-help .math-preview.shown:visible")
+    sync_api.expect(help_shown.locator(".katex")).to_have_count(2)
+    sync_api.expect(card.locator("textarea.explanation")).to_be_hidden()
+    help_shown.click()
+    sync_api.expect(card.locator("textarea.explanation")).to_be_focused()
+    sync_api.expect(card.locator(".card-doubt .katex")).to_have_count(2)  # the reason's, the corrected back's
+
+
 def test_generate_again_in_place_then_undo(page):
     generate_free(page, FRONT_PROMPT)
     (first,) = lessons(page)
@@ -2035,6 +2053,25 @@ def test_a_card_correction_dictated(page):
     fix.get_by_role("button", name="Arrêter et écrire le texte").click()
     sync_api.expect(fix.get_by_role("textbox", name="Qu'est-ce qui ne va pas ?")).to_have_value("plutôt la mamá")
     assert stopped == [{"kind": "correction"}]
+
+
+def test_subscribe_offered_whatever_call_said_the_licence_lapsed(page):
+    """The Android app, its subscription ended: "Subscribe" on the message, whether a lesson
+    or a dictation (or a picture, a correction…) said it."""
+    switches = {"notice": None, "disabled": [], "update": False, "store": "https://play.google.com/x", "trial": None}
+    page.route("**/api/switches", lambda route: route.fulfill(json=switches))
+    page.route("**/api/config", lambda route: route.fulfill(json={**route.fetch().json(), "dictation": True}))
+    page.route("**/api/dictation/start", lambda route: route.fulfill(json={"listening": True}))
+    ended = {"detail": {"code": "relay.subscription_ended", "params": {}}}
+    page.route("**/api/dictation/stop", lambda route: route.fulfill(status=402, json=ended))
+    page.goto("/")
+    page.get_by_role("button", name="Dicter").first.click()
+    page.get_by_role("button", name="Arrêter et écrire le texte").click()
+    toast = page.get_by_role("alert")
+    sync_api.expect(toast).to_contain_text("Votre abonnement est terminé")
+    sync_api.expect(toast.get_by_role("link", name="S'abonner")).to_be_visible()
+    page.evaluate("document.querySelector('[x-data]')._x_dataStack[0].error = 'Autre erreur.'")
+    sync_api.expect(toast.get_by_role("link", name="S'abonner")).to_be_hidden()  # another error: none
 
 
 def test_dictation_stopped_by_a_tap_elsewhere(page):

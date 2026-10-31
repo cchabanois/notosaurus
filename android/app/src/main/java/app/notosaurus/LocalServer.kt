@@ -71,7 +71,7 @@ class LocalServer(
     internal val scan: suspend () -> String? = { null }, // a QR code read by the camera (null: cancelled)
     // A file to write, where the user chooses it (Android's document picker: Drive, the SD
     // card…), suggested `name`; null: cancelled
-    internal val createDocument: suspend (name: String, mime: String) -> java.io.OutputStream? = { _, _ -> null },
+    internal val createDocument: suspend (name: String, mime: String) -> Document? = { _, _ -> null },
     internal val modeChanged: () -> Unit = {}, // the app's shortcuts follow
     internal val turnPhoto: (ByteArray, Int) -> ByteArray = { data, _ -> data }, // a JPEG turned clockwise (Photos.turn)
     internal val cardSize: (ByteArray) -> ByteArray = { it }, // a picture as a card shows it (Photos.cardSize)
@@ -377,7 +377,7 @@ class LocalServer(
             requestAnkiPermission: suspend () -> Boolean,
             installAnki: () -> Unit,
             scan: suspend () -> String?,
-            createDocument: suspend (String, String) -> java.io.OutputStream?,
+            createDocument: suspend (String, String) -> Document?,
             modeChanged: () -> Unit,
             requestMicPermission: suspend () -> Boolean,
             activity: () -> android.app.Activity?, // Google Play's purchase screen shows over it
@@ -407,3 +407,7 @@ class LocalServer(
             runCatching { context.assets.open(path).use { it.readBytes() } }.getOrNull()
     }
 }
+
+/** A file the user chose to write: its name as created (the suggested one, or Android's
+ * "… (1).zip" when one of that name was there), and where to write it. */
+class Document(val name: String, val out: java.io.OutputStream)

@@ -10,5 +10,6 @@ Olhe a lição e escolha os cartões mais úteis para revisá-la:
 - propriedades e teoremas (um quadro «Propriedade», «Teorema»): um cartão nome → enunciado completo («Se …, então …»), um cartão hipóteses → conclusão, o recíproco à parte quando a lição o dá; info: para que serve;
 - noções ilustradas com exemplos (figuras de estilo, classes ou funções gramaticais…): um cartão por exemplo da lição, frente: uma pergunta curta que diga o que reconhecer, depois o exemplo, verso: a noção, info: a sua definição; nunca um exemplo inventado;
 - um texto para aprender de cor (poema, recitação, discurso; não um ditado): um cartão por verso a partir do segundo, frente: o título, o número do verso e os dois versos anteriores, verso: o verso, o início de uma estrofe dito na frente; um cartão título → primeiro verso; o texto exato; lido em voz alta;
+Para cada parte da lição, pegue o caso da lista que a descreve e siga a sua forma à risca: tantos cartões quantos ele diz, as suas frentes e versos, os seus cartões a mais; perguntas / respostas só para o que nenhum caso descreve.
 Misture se a página tiver várias dessas coisas, exceto um ditado para preparar: então só o ditado.
 Diga em uma frase o que você escolheu.

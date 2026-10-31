@@ -87,10 +87,10 @@
     <span x-text="error"></span>
     <button @click="error = ''" :aria-label="$t('common.close')">✕</button>
     <!-- What to do about it, when there is something (the app: install AnkiDroid) -->
-    <div class="toast-actions" x-show="errorAction.for === error">
-      <button class="toast-action" x-show="errorAction.kind === 'installAnki'" @click="installAnki()"
+    <div class="toast-actions" x-show="errorKind()">
+      <button class="toast-action" x-show="errorKind() === 'installAnki'" @click="installAnki()"
               x-text="$t('android.anki.install')"></button>
-      <a class="toast-action" x-show="errorAction.kind === 'subscribe'" href="admin.html"
+      <a class="toast-action" x-show="errorKind() === 'subscribe'" href="admin.html"
          x-text="$t('android.subscription.subscribeShort')"></a>
     </div>
   </div>
@@ -369,8 +369,9 @@
             <!-- The lesson looks wrong on this card (a pupil's notes, a copy mistake): the card says
                  what the lesson says; the parent corrects it, or keeps it. Never sent to Anki -->
             <div class="card-doubt" role="note" x-show="card.doubt">
-              <p><span aria-hidden="true">⚠️</span> <span x-text="card.doubt?.reason"></span></p>
-              <p class="muted" x-text="$t('app.review.doubt.fix', { front: card.doubt?.front, back: card.doubt?.back })"></p>
+              <!-- Its formulas drawn, as the card shows them -->
+              <p><span aria-hidden="true">⚠️</span> <span x-html="previewHtml(card.doubt?.reason)"></span></p>
+              <p class="muted" x-html="$t('app.review.doubt.fix', { front: previewHtml(card.doubt?.front), back: previewHtml(card.doubt?.back) })"></p>
               <div class="picture-actions" x-show="!readOnly()">
                 <button type="button" class="btn primary" @click="fixDoubt(card)" x-text="$t('app.review.doubt.correct')"></button>
                 <button type="button" class="btn soft" @click="card.doubt = null" x-text="$t('app.review.doubt.keep')"></button>
@@ -521,14 +522,21 @@
                           :aria-label="$t('app.review.funFact')"
                           x-init="watchHeight($el)" x-effect="card.fun_fact; fitHeight($el)"></textarea>
               </div>
-              <!-- The helps written at generation: on the back in Anki; cleared, they're gone -->
+              <!-- The helps written at generation: on the back in Anki; cleared, they're gone. Their
+                   formulas drawn, as the back's (their text a click away) -->
               <div class="card-help" x-show="card.explanation">
                 <span aria-hidden="true">💬</span>
-                <textarea rows="2" x-model="card.explanation" :readonly="readOnly()" :aria-label="$t('app.review.explanation')"></textarea>
+                <div class="math-preview shown" x-show="renderedOnly(card, 'explanation')" x-html="previewHtml(card.explanation)"
+                     @click="editField(card, 'explanation', $el)" :title="readOnly() ? '' : $t('app.review.editFormula')"></div>
+                <textarea class="explanation" rows="2" x-model="card.explanation" :readonly="readOnly()" :aria-label="$t('app.review.explanation')"
+                          x-show="!renderedOnly(card, 'explanation')" @focus="card._editing = 'explanation'" @blur="card._editing = ''"></textarea>
               </div>
               <div class="card-help" x-show="card.mnemonic">
                 <span aria-hidden="true">🧠</span>
-                <textarea rows="2" x-model="card.mnemonic" :readonly="readOnly()" :aria-label="$t('app.review.mnemonic')"></textarea>
+                <div class="math-preview shown" x-show="renderedOnly(card, 'mnemonic')" x-html="previewHtml(card.mnemonic)"
+                     @click="editField(card, 'mnemonic', $el)" :title="readOnly() ? '' : $t('app.review.editFormula')"></div>
+                <textarea class="mnemonic" rows="2" x-model="card.mnemonic" :readonly="readOnly()" :aria-label="$t('app.review.mnemonic')"
+                          x-show="!renderedOnly(card, 'mnemonic')" @focus="card._editing = 'mnemonic'" @blur="card._editing = ''"></textarea>
               </div>
             </div>
             <!-- ✨ This card corrected by the AI as asked (typed or 🎤), the others untouched -->
