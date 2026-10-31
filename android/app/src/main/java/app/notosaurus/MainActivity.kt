@@ -8,6 +8,7 @@ import android.content.pm.PackageManager
 import android.net.Uri
 import android.os.Bundle
 import android.provider.MediaStore
+import android.provider.OpenableColumns
 import android.webkit.CookieManager
 import android.webkit.ValueCallback
 import android.webkit.WebChromeClient
@@ -97,14 +98,19 @@ class MainActivity : ComponentActivity() {
         override fun createIntent(context: android.content.Context, input: String) = super.createIntent(context, input).setType(documentType)
     }) { uri -> documentAnswer?.complete(uri) }
 
-    private suspend fun createDocument(name: String, mime: String): java.io.OutputStream? {
+    private suspend fun createDocument(name: String, mime: String): Document? {
         val uri = withContext(Dispatchers.Main) {
             documentType = mime
             val answer = CompletableDeferred<Uri?>().also { documentAnswer = it }
             document.launch(name)
             answer.await()
         } ?: return null
-        return contentResolver.openOutputStream(uri)
+        val out = contentResolver.openOutputStream(uri) ?: return null
+        // Its name as created: Android adds " (1)" when the folder has one of that name
+        val created = runCatching {
+            contentResolver.query(uri, arrayOf(OpenableColumns.DISPLAY_NAME), null, null, null)?.use { if (it.moveToFirst()) it.getString(0) else null }
+        }.getOrNull()
+        return Document(created?.takeIf { it.isNotBlank() } ?: name, out)
     }
 
     /** AnkiDroid's page in Google Play (or in the browser, without Google Play). */

@@ -127,9 +127,9 @@ internal fun Route.settingsRoutes(server: LocalServer) {
         // The lessons in one file (LessonsTransfer): written where the user chooses
         api("POST", "/api/admin/transfer/export") {
             val name = "notosaurus-${Lessons.now().take(10)}.zip"
-            val out = createDocument(name, "application/zip") ?: return@api buildJsonObject { put("cancelled", true) }
-            val count = withContext(Dispatchers.IO) { out.use { transfer.export(it) } }
-            buildJsonObject { put("lessons", count); put("name", name) }
+            val document = createDocument(name, "application/zip") ?: return@api buildJsonObject { put("cancelled", true) }
+            val count = withContext(Dispatchers.IO) { document.out.use { transfer.export(it) } }
+            buildJsonObject { put("lessons", count); put("name", document.name) } // as created
         }
         // An export taken in: the page sends the file the user chose
         api("POST", "/api/admin/transfer") {

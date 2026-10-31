@@ -173,7 +173,7 @@ class LocalServerTest {
             },
             installAnki = { storeOpened++ },
             scan = { if (scannerMissing) error("module not downloaded") else scanned },
-            createDocument = { _, _ -> document },
+            createDocument = { name, _ -> document?.let { Document(name.replace(".zip", " (1).zip"), it) } }, // one of that name there
             modeChanged = { modeChanges++ },
             turnPhoto = { data, degrees -> "turned $degrees:".toByteArray() + data }, // (Photos.turn needs Android)
             recorder = mic,
@@ -668,7 +668,7 @@ class LocalServerTest {
         local.children.save(listOf(Child("jules", "Jules", grade = "5e")))
         val exported = client.post("/api/admin/transfer/export") { page() }.json().jsonObject
         assertEquals(1, exported["lessons"]!!.jsonPrimitive.int)
-        assertTrue(exported.string("name").startsWith("notosaurus-") && exported.string("name").endsWith(".zip"))
+        assertTrue(exported.string("name").startsWith("notosaurus-") && exported.string("name").endsWith(" (1).zip")) // the name as created
         val zip = document!!.toByteArray()
         val files = entries(zip)
         assertTrue("lessons/$id/lesson.json" in files && "lessons/$id/page-1.jpg" in files && "lessons/$id/audio/la-madre-55895502.mp3" in files)
