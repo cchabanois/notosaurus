@@ -61,6 +61,7 @@ class Relay(
     private val key: String,
     private val lost: () -> Unit = {}, // not reached, or nothing there: where the relays are, asked again (RelayDirectory)
     private val lapsed: () -> Unit = {}, // the subscription ended or on hold: Google Play's purchases checked again
+    private val rejected: (String) -> Unit = {}, // the key sent, unknown or ended at the relay: no longer kept
     // No key yet, an AI call: the free trial's key (started then), or an error thrown (null: none, the call without it)
     private val noKey: (suspend () -> String)? = null,
 ) {
@@ -247,6 +248,7 @@ class Relay(
             val error = runCatching { json.decodeFromString<ApiError>(text) }.getOrNull()
             if (error == null && response.code == 404) lost() // not a relay's answer: a service gone
             if (error?.code in LAPSED) lapsed()
+            if (error?.code == INVALID_KEY && key.isNotEmpty()) rejected(key)
             throw RelayException(error?.code ?: "relay.http_${response.code}", error?.params ?: JsonObject(emptyMap()))
         }
         return response
@@ -280,6 +282,7 @@ class Relay(
         val AI_ROUTES = setOf("extract", "revise", "fix-card", "explain", "rephrase", "figure", "check-figure", "picture", "card-picture", "plan-picture", "transcribe")
 
         // The relay's answers for a subscription past its end: ended, on hold, or the free trial over
+        const val INVALID_KEY = "relay.invalid_key"
         val LAPSED = setOf("relay.subscription_ended", "relay.payment_pending", "relay.trial_ended")
 
         // A little slower than normal, for learners (the computer's "-10%")

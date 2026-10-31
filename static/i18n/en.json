@@ -837,6 +837,7 @@
       "keyPlaceholder": "nts_…",
       "keySet": "Key: {key}",
       "check": "Check",
+      "refused": "Unknown or expired licence key: it was not kept.",
       "plan": "Plan: {plan}",
       "credits": "{credits} credits left this month, {today} today",
       "renews": "Renewed on {date}",

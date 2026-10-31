@@ -837,6 +837,7 @@
       "keyPlaceholder": "nts_…",
       "keySet": "Clave: {key}",
       "check": "Comprobar",
+      "refused": "Clave de licencia desconocida o caducada: no se ha guardado.",
       "plan": "Plan: {plan}",
       "credits": "{credits} créditos restantes este mes, {today} hoy",
       "renews": "Se renuevan el {date}",

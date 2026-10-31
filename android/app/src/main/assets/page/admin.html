@@ -85,7 +85,7 @@
       <template x-if="account">
         <div>
           <p x-text="$t('android.licence.plan', { plan: account.plan })"></p>
-          <p x-text="$t('android.licence.credits', { credits: account.credits_left, today: account.daily_left })"></p>
+          <p x-show="!lapsed" x-text="$t('android.licence.credits', { credits: account.credits_left, today: account.daily_left })"></p>
           <p class="hint" x-show="account.renews_at && !account.ends_at"
              x-text="$t('android.licence.renews', { date: formatDate(account.renews_at) })"></p>
           <p class="hint" x-show="account.ends_at && !lapsed"

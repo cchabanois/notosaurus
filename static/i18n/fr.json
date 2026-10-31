@@ -837,6 +837,7 @@
       "keyPlaceholder": "nts_…",
       "keySet": "Clé : {key}",
       "check": "Vérifier",
+      "refused": "Clé de licence inconnue ou expirée : elle n'a pas été gardée.",
       "plan": "Formule : {plan}",
       "credits": "{credits} crédits restants ce mois-ci, {today} aujourd'hui",
       "renews": "Renouvelés le {date}",
