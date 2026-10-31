@@ -1068,6 +1068,7 @@
       "trial_ended": "Seu teste grátis terminou: assine nas Configurações para continuar.",
       "payment_pending": "Pagamento pendente: o Google Play não conseguiu renovar sua assinatura. Atualize o método de pagamento no Google Play (Configurações → Gerenciar a assinatura) para continuar.",
       "invalid_purchase": "Compra não reconhecida pelo Google Play: tente de novo ou entre em contato com o suporte.",
+      "feature_off": "Esta função está indisponível no momento: tente de novo mais tarde.",
       "trial_refused": "O teste grátis só é possível com o app instalado pelo Google Play, em um celular de verdade.",
       "trial_closed": "No momento não há novos testes grátis: você pode assinar nas Configurações ou tentar de novo amanhã.",
       "daily_limit": "O limite de hoje foi atingido: tente de novo amanhã.",

@@ -97,7 +97,7 @@ const picturesPart = {
   // again; the figure it replaces shown faded meanwhile
   async redrawFigure(card) {
     const problem = card._check?.problem ?? "";
-    const careful = Boolean(card._triedQuick);
+    const careful = Boolean(card._triedQuick) && !this.off("ai.careful");
     Object.assign(card, { _check: null, _replacing: this.pictureUrl(card) });
     try {
       const res = await this.pictureAction(card, {

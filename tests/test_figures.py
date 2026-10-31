@@ -12,6 +12,7 @@ from helpers import plain_image
 from app import lessons
 from notosaurus_core import figures, figures_typst, llm, pictures
 from notosaurus_core.config import AIConfig
+from notosaurus_core.errors import AppError
 
 TRAPPED = """<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 300" width="9999" onload="alert(1)">
 <script>alert(1)</script><rect width="400" height="300" fill="white"/>
@@ -285,6 +286,21 @@ def test_a_figure_found_wrong_drawn_again_told_why(monkeypatch):
 def test_an_unusable_light_figure_drawn_again_with_thinking(monkeypatch):
     svg, calls = drawing_with(monkeypatch, light_svg="no figure")
     assert ">B<" in svg and [c["light"] for c in calls] == [True, False]
+
+
+def test_typst_turned_off_figures_drawn_as_svg(monkeypatch):
+    """The relay's figures.typst switch (AIConfig.typst): no Typst, even with its kind said."""
+    monkeypatch.setattr(figures_typst, "available", lambda: True)
+    family = lambda s: asyncio.run(llm._figure_family(s, "un triangle ABC", "geometry"))  # noqa: E731
+    assert family(AIConfig(llm="gemini")) == "geometry"
+    assert family(AIConfig(llm="gemini", typst=False)) == "other"
+
+
+def test_figures_turned_off_refused():
+    """The relay's figures.draw switch (AIConfig.figures): refused before any AI call."""
+    with pytest.raises(AppError) as refused:
+        asyncio.run(llm.made_figure(AIConfig(llm="gemini", figures=False), "un triangle ABC"))
+    assert (refused.value.code, refused.value.params) == ("relay.feature_off", {"feature": "figures.draw"})
 
 
 def test_a_figure_checked_when_asked(client, monkeypatch):

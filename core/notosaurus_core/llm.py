@@ -38,7 +38,7 @@ from .calls import (  # noqa: F401 (llm's API)
 from .cards import plain as plain_text
 from .cards import plain_cards
 from .config import AIConfig
-from .errors import loggable
+from .errors import AppError, loggable
 from .models import (
     Card,
     CardFix,
@@ -264,9 +264,11 @@ async def made_figure(
     10 with thinking, four times slower), with the model's thinking when `careful` (the user
     asks it again after a quick one still wrong). `step`: told each step as it
     begins (relay_api.PictureStep). `kind`: its family, when the AI that described it said it
-    (Card.figure_kind): not asked again."""
+    (Card.figure_kind): not asked again. Refused when figures are turned off (s.figures)."""
     from . import figures
 
+    if not s.figures:
+        raise AppError("relay.feature_off", 403, feature="figures.draw")
     tell = step or (lambda _: None)
     text = f"Figure to draw: {description.strip()}"
     family = await _figure_family(s, description, kind)
@@ -308,11 +310,11 @@ async def check_figure(s: AIConfig, description: str, svg: str) -> str:
 
 async def _figure_family(s: AIConfig, description: str, kind: str = "") -> str:
     """Which family of figures_typst draws it: `kind` when given (the AI that described it
-    said it), else a light call; "other" (drawn as SVG): none of them, Typst not installed,
-    the demo, or not told."""
+    said it), else a light call; "other" (drawn as SVG): none of them, Typst not installed or
+    not used (s.typst), the demo, or not told."""
     from . import figures_typst
 
-    if s.llm == "fake" or not figures_typst.available():
+    if s.llm == "fake" or not s.typst or not figures_typst.available():
         return "other"
     if kind in figures_typst.FAMILIES or kind == "other":
         return kind

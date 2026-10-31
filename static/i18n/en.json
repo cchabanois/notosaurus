@@ -1068,6 +1068,7 @@
       "trial_ended": "Your free trial is over: subscribe in the Settings to go on.",
       "payment_pending": "Payment pending: Google Play couldn't renew your subscription. Update your payment method in Google Play (Settings → Manage the subscription) to go on.",
       "invalid_purchase": "Purchase not recognised by Google Play: try again, or contact support.",
+      "feature_off": "This feature is unavailable for the moment. Try again later.",
       "trial_refused": "The free trial is only possible with the app installed from Google Play, on a real phone.",
       "trial_closed": "No new free trial for now: you can subscribe in the Settings, or try again tomorrow.",
       "daily_limit": "Today's limit is reached: try again tomorrow.",

@@ -507,6 +507,16 @@
               }
             }
           },
+          "403": {
+            "description": "Codes: `relay.feature_off`",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
           "413": {
             "description": "Codes: `relay.too_large`",
             "content": {
@@ -868,6 +878,16 @@
               }
             }
           },
+          "403": {
+            "description": "Codes: `relay.feature_off`",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
           "422": {
             "description": "Codes: `relay.invalid_request`",
             "content": {
@@ -970,6 +990,16 @@
               }
             }
           },
+          "403": {
+            "description": "Codes: `relay.feature_off`",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
           "422": {
             "description": "Codes: `relay.invalid_request`",
             "content": {
@@ -1054,6 +1084,16 @@
           },
           "402": {
             "description": "Codes: `relay.no_credits`, `relay.subscription_ended`, `relay.payment_pending`, `relay.trial_ended`",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Codes: `relay.feature_off`",
             "content": {
               "application/json": {
                 "schema": {
@@ -1344,6 +1384,16 @@
               }
             }
           },
+          "403": {
+            "description": "Codes: `relay.feature_off`",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
           "422": {
             "description": "Codes: `relay.invalid_request`",
             "content": {
@@ -1553,6 +1603,16 @@
               }
             }
           },
+          "403": {
+            "description": "Codes: `relay.feature_off`",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
           "422": {
             "description": "Codes: `relay.invalid_request`",
             "content": {
@@ -1656,6 +1716,16 @@
           },
           "402": {
             "description": "Codes: `relay.no_credits`, `relay.subscription_ended`, `relay.payment_pending`, `relay.trial_ended`",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Codes: `relay.feature_off`",
             "content": {
               "application/json": {
                 "schema": {
@@ -1781,6 +1851,16 @@
               }
             }
           },
+          "403": {
+            "description": "Codes: `relay.feature_off`",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
           "422": {
             "description": "Codes: `relay.invalid_request`",
             "content": {
@@ -1865,6 +1945,16 @@
           },
           "401": {
             "description": "Codes: `relay.invalid_key`",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Codes: `relay.feature_off`",
             "content": {
               "application/json": {
                 "schema": {
@@ -2307,7 +2397,7 @@
             },
             "type": "array",
             "title": "Disabled",
-            "description": "FEATURES turned off for now: the app hides them and refuses them."
+            "description": "FEATURES turned off for now: the app hides them; it refuses them, or the relay its own (relay.feature_off)."
           },
           "latest": {
             "type": "string",

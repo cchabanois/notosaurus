@@ -49,6 +49,7 @@ COMMON = (
 )
 PHOTOS = (*COMMON, "relay.too_large", "relay.bad_image")
 AUDIO = (*COMMON, "relay.too_large", "relay.bad_audio")
+OFF = "relay.feature_off"  # a route a switch turns off (relay_api.FEATURES)
 
 
 def multipart(request: type) -> dict:
@@ -166,7 +167,7 @@ def build() -> dict:
     @app.post(
         f"{api.PREFIX}/lesson-drawings",
         response_model=api.LessonDrawingsResponse,
-        responses=errors(*PHOTOS),
+        responses=errors(*PHOTOS, OFF),
         openapi_extra=multipart(api.LessonDrawingsRequest),
     )
     def lesson_drawings(x_notosaurus_version: str = client):
@@ -180,18 +181,18 @@ def build() -> dict:
     def rephrase(request: api.RephraseRequest, x_notosaurus_version: str = client):
         """A lesson's instructions tidied up (llm.rephrase)."""
 
-    @app.post(f"{api.PREFIX}/figure", response_model=api.FigureResponse, responses=errors(*COMMON))
+    @app.post(f"{api.PREFIX}/figure", response_model=api.FigureResponse, responses=errors(*COMMON, OFF))
     def figure(request: api.FigureRequest, x_notosaurus_version: str = client):
         """An exact figure as SVG (llm.draw_figure)."""
 
-    @app.post(f"{api.PREFIX}/check-figure", response_model=api.CheckFigureResponse, responses=errors(*COMMON))
+    @app.post(f"{api.PREFIX}/check-figure", response_model=api.CheckFigureResponse, responses=errors(*COMMON, OFF))
     def check_figure(request: api.CheckFigureRequest, x_notosaurus_version: str = client):
         """A figure looked at against its description, what is wrong said (llm.check_figure)."""
 
     @app.post(
         f"{api.PREFIX}/transcribe",
         response_model=api.TranscribeResponse,
-        responses=errors(*AUDIO),
+        responses=errors(*AUDIO, OFF),
         openapi_extra=audio(api.TranscribeRequest),
     )
     def transcribe(x_notosaurus_version: str = client):
@@ -232,7 +233,7 @@ def build() -> dict:
                 "begins, then the answer, one CardPictureLine per line.",
                 "content": {api.STREAM_TYPE: {"schema": {"$ref": REF.format(model="CardPictureLine")}}},
             },
-            **errors(*COMMON),
+            **errors(*COMMON, OFF),
         },
     )
     def card_picture(request: api.CardPictureRequest, x_notosaurus_version: str = client):
@@ -251,7 +252,7 @@ def build() -> dict:
                 "source's as it answers, one PictureSearchLine per line.",
                 "content": {api.STREAM_TYPE: {"schema": {"$ref": REF.format(model="PictureSearchLine")}}},
             },
-            **errors(*COMMON),
+            **errors(*COMMON, OFF),
         },
     )
     def search_pictures(request: api.PictureSearchRequest, x_notosaurus_version: str = client):
@@ -267,7 +268,7 @@ def build() -> dict:
                 "content": {"image/jpeg": {"schema": {"type": "string", "format": "binary"}}},
                 "headers": source_header,
             },
-            **errors(*COMMON),
+            **errors(*COMMON, OFF),
         },
     )
     def found_picture(request: api.FoundPictureRequest, x_notosaurus_version: str = client):
@@ -282,7 +283,7 @@ def build() -> dict:
                 "content": {"audio/mpeg": {"schema": {"type": "string", "format": "binary"}}},
                 "headers": credit_headers,
             },
-            **errors(*COMMON),
+            **errors(*COMMON, OFF),
         },
     )
     def speak(request: api.SpeakRequest, x_notosaurus_version: str = client):
@@ -298,6 +299,7 @@ def build() -> dict:
             "relay.busy",
             "relay.client_outdated",
             "relay.unavailable",
+            OFF,
         ),
     )
     def report(request: api.ReportRequest, x_notosaurus_version: str = client):

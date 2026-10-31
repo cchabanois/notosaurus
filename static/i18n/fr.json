@@ -1068,6 +1068,7 @@
       "trial_ended": "Votre essai gratuit est terminé : abonnez-vous dans les Réglages pour continuer.",
       "payment_pending": "Paiement en attente : Google Play n'a pas pu renouveler votre abonnement. Mettez à jour votre moyen de paiement dans Google Play (Réglages → Gérer l'abonnement) pour continuer.",
       "invalid_purchase": "Achat non reconnu par Google Play : réessayez, ou contactez le support.",
+      "feature_off": "Cette fonction est momentanément indisponible. Réessayez plus tard.",
       "trial_refused": "L'essai gratuit n'est possible qu'avec l'app installée depuis Google Play, sur un vrai téléphone.",
       "trial_closed": "Pas de nouvel essai gratuit pour le moment : vous pouvez vous abonner dans les Réglages, ou réessayer demain.",
       "daily_limit": "Limite du jour atteinte : réessayez demain.",

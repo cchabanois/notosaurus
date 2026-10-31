@@ -139,7 +139,8 @@ const photosPart = {
     this.error = "";
     for (const file of files) {
       if (isPdf(file)) {
-        await this.addPdf(file);
+        if (this.off("lesson.pdf")) this.error = t("errors.app.feature_off");  // (dropped: its tile hidden)
+        else await this.addPdf(file);
         continue;
       }
       try {

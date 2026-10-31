@@ -96,7 +96,7 @@ class LocalServer(
     // The lessons in one file, to keep them or move them (the computer's app/transfer.py's format)
     internal val transfer = LessonsTransfer(File(dataDir, "lessons"), lessons, prefs, children, exams, prompts, speech, version)
     internal val cacheDir = File(dataDir, "cache") // a file being imported
-    internal val pictures = Pictures(lessons, ::relay, cardSize)
+    internal val pictures = Pictures(lessons, ::relay, cardSize) { switches.off(it) }
     internal val generation = Generation(lessons, prefs, ::relay, speech, turnPhoto, children)
     internal val computer = Computer(prefs, modeChanged)
     internal val switches = Switches(prefs, version)
@@ -118,13 +118,14 @@ class LocalServer(
     }
 
     /** The lesson's backs' sounds read in a moment (SoundsAhead), when the send would read
-     * them: a relay voice, a licence for the relay, sending to AnkiDroid not turned off. */
+     * them: a relay voice, a licence for the relay, sending to AnkiDroid and reading aloud not
+     * turned off. */
     internal fun soundsSoon(lesson: JsonObject) {
         if (readsAhead(lesson)) soundsAhead.soon(lesson.string("id"))
     }
 
     private fun readsAhead(lesson: JsonObject) =
-        Speech.reads(lesson.string("voice")) && licence().isNotEmpty() && !switches.off("anki.send")
+        Speech.reads(lesson.string("voice")) && licence().isNotEmpty() && !switches.off("anki.send") && !switches.off("speech.speak")
 
     /** The lesson's missing sounds, as the send reads them (same texts, voice, rate: same files). */
     private suspend fun makeSounds(id: String) {
