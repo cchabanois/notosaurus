@@ -418,8 +418,8 @@ def test_typst_asked_again_with_its_error_then_used(monkeypatch):
     assert "<use" in svg  # Typst's, its letter
     assert [c["schema"] for c in calls] == ["Kind", "Figure", "Figure"]
     assert "Typst said:" in calls[2]["text"] and "ctz-init(" in calls[2]["text"]
-    # Refused twice (an import, then unclosed): the SVG drawing, as before
-    svg, calls = typst_drawing(monkeypatch, ['#import "@preview/other:1.0.0"', "#ctz-canvas({"])
+    # Refused twice (a file's import, then unclosed): the SVG drawing, as before
+    svg, calls = typst_drawing(monkeypatch, ['#import "other.typ"', "#ctz-canvas({"])
     assert ">A<" in svg and [c["schema"] for c in calls] == ["Kind", "Figure", "Figure", "Drawing"]
     assert "no import" in calls[2]["text"]
 
@@ -499,6 +499,19 @@ def test_each_familys_rule_example_compiles(family):
     typst = (figures_typst.RULES / f"{family}.typ").read_text(encoding="utf-8")
     example = typst.split(figures_typst.EXAMPLE)[1].replace("  ...\n", "")  # (geometry's: "and so on")
     assert figures.clean(figures_typst.compile_svg(family, example)).startswith("<svg")
+
+
+def test_a_package_import_dropped_not_refused():
+    """The AI imports its family's package again (the preamble gives it): the line dropped, the
+    figure compiled at once, no call lost. A file's import or include still refused."""
+    typst = (figures_typst.RULES / "graph.typ").read_text(encoding="utf-8")
+    example = typst.split(figures_typst.EXAMPLE)[1]
+    again = '#import "@preview/lilaq:0.6.0" as lq\n' + example
+    assert figures_typst.source("graph", again).count('#import "@preview/lilaq') == 1  # the preamble's
+    assert figures.clean(figures_typst.compile_svg("graph", again)).startswith("<svg")
+    for refused in ('#import "rules.typ"\n', '#include "x.typ"\n', '#import "/etc/x.typ": *\n'):
+        with pytest.raises(figures_typst.Unusable):
+            figures_typst.source("graph", refused + example)
 
 
 def test_each_familys_rule_and_typst_in_their_files():

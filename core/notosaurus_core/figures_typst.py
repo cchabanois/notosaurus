@@ -96,6 +96,10 @@ class Kind(BaseModel):
     family: FigureKind
 
 
+# A package imported by the AI though its family's preamble gives it ("#import
+# "@preview/lilaq:0.6.0" as lq" again): the line dropped rather than the figure refused, an AI
+# call saved; a package the preamble doesn't give then fails as any unknown name (Typst says so)
+PACKAGE_IMPORT = re.compile(r'^[ \t]*#import[ \t]+"@preview/[^"\n]+"[^\n]*\n?', re.M)
 # What a body may not do: load anything (the packages are given), read a file
 FORBIDDEN = re.compile(
     r"(^|[^\w-])(import|include|read|eval|json|csv|yaml|toml|xml|cbor|image|plugin)\s*[\"(]|#\s*(import|include)"
@@ -217,6 +221,7 @@ class Unusable(Exception):
 
 def source(family: str, body: str) -> str:
     """The Typst document of a figure of `family`: its preamble, then what the AI wrote."""
+    body = PACKAGE_IMPORT.sub("", body)
     if FORBIDDEN.search(body):
         raise Unusable("Only drawing commands: no import, include, file or plugin.")
     return FAMILIES[family].preamble + body.strip() + "\n"
