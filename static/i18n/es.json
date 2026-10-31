@@ -839,7 +839,15 @@
       "check": "Comprobar",
       "refused": "Clave de licencia desconocida o caducada: no se ha guardado.",
       "plan": "Plan: {plan}",
-      "credits": "{credits} créditos restantes este mes, {today} hoy",
+      "credits": "{credits} créditos restantes este mes",
+      "creditsTrial": "{credits} créditos restantes para la prueba",
+      "today": "De ellos, {today} utilizables hoy",
+      "plans": {
+        "free_trial": "Prueba gratuita",
+        "trial": "Prueba gratuita (Google Play)",
+        "monthly": "Mensual",
+        "yearly": "Anual"
+      },
       "renews": "Se renuevan el {date}",
       "none": "Todavía no hay clave de licencia: llega con la suscripción.",
       "free": "¿Sin suscripción? Con el complemento de Anki en tu ordenador, la aplicación es gratuita: mira «¿Dónde trabaja Notosaurus?».",

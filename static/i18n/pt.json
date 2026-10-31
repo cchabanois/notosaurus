@@ -839,7 +839,15 @@
       "check": "Verificar",
       "refused": "Chave de licença desconhecida ou expirada: não foi guardada.",
       "plan": "Plano: {plan}",
-      "credits": "{credits} créditos restantes este mês, {today} hoje",
+      "credits": "{credits} créditos restantes este mês",
+      "creditsTrial": "{credits} créditos restantes para o teste",
+      "today": "Destes, {today} utilizáveis hoje",
+      "plans": {
+        "free_trial": "Teste grátis",
+        "trial": "Teste grátis (Google Play)",
+        "monthly": "Mensal",
+        "yearly": "Anual"
+      },
       "renews": "Renovados em {date}",
       "none": "Ainda sem chave de licença: ela vem com a assinatura.",
       "free": "Sem assinatura? Com o complemento do Anki no seu computador, o app é gratuito: veja “Onde o Notosaurus trabalha?”.",
