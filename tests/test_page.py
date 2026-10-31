@@ -1388,6 +1388,22 @@ def test_the_decks_offered_are_the_chosen_childs_and_no_ones(page):
     assert offered() == ["Mathilde::SVT", "Maths::Fractions"]
 
 
+def test_an_option_card_is_its_radio_all_over(page):
+    """A finger anywhere on a choice's card (TalkBack's explore by touch) is on its radio,
+    said with its state, not on its text alone."""
+    page.goto("/")
+    card = (
+        '<label class="option" id="zz"><input type="radio" name="zz" checked>'
+        "<strong>Ici</strong><small>Le détail</small></label>"
+    )
+    page.evaluate("(html) => document.body.insertAdjacentHTML('afterbegin', html)", card)
+    for part in ("#zz strong", "#zz small", "#zz"):
+        box = page.locator(part).bounding_box()
+        x, y = box["x"] + box["width"] / 2, box["y"] + box["height"] / 2
+        assert page.evaluate("([x, y]) => document.elementFromPoint(x, y).tagName", [x, y]) == "INPUT", part
+    sync_api.expect(page.get_by_role("radio", name="Ici Le détail")).to_be_checked()
+
+
 def android_settings(page, account):
     """The Android app's settings page (its own files, then static/), its account as given."""
     roots = [Path("android/app/src/main/assets/page"), Path("static")]

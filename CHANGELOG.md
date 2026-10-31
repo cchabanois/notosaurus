@@ -147,6 +147,7 @@ Each pull request adds a line under **Unreleased**. See [Releasing](CONTRIBUTING
 
 ### Fixed
 
+- With TalkBack, a choice shown as a card ("Where does Notosaurus work?", the AI service…) is said with its state: a finger anywhere on the card is on its radio button, no longer on its text alone. In the Android app's settings, the card shown chosen and the one said selected are the same while connecting a computer.
 - In the Android app, the back button closes the open sheet or window (the lessons, a picture, a test…) instead of closing the app and losing what was being typed; with none open, it goes back or closes the app as before. For developers: `window.notosaurusBack()` (static/app.js), called by `MainActivity`.
 - For developers: the device tests (`AppTest`) tap the page's buttons where the page says they are, no longer found through Android's accessibility tree of the WebView, which a slow emulator builds late ("not shown: ✨ Generate cards" now and then in CI).
 - The Android app's settings say the plan in your language ("Free trial", "Monthly"…, no longer `free_trial`), the trial's credits as the trial's (no longer "this month"), and what today still allows only when it is less than what is left (no more "94 this month, 119 today"). The free trial's notice after the first lesson gives the credits left after it, no longer those it started with.
