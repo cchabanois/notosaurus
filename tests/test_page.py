@@ -1971,6 +1971,25 @@ def test_a_card_correction_dictated(page):
     assert stopped == [{"kind": "correction"}]
 
 
+def test_subscribe_offered_whatever_call_said_the_licence_lapsed(page):
+    """The Android app, its subscription ended: "Subscribe" on the message, whether a lesson
+    or a dictation (or a picture, a correction…) said it."""
+    switches = {"notice": None, "disabled": [], "update": False, "store": "https://play.google.com/x", "trial": None}
+    page.route("**/api/switches", lambda route: route.fulfill(json=switches))
+    page.route("**/api/config", lambda route: route.fulfill(json={**route.fetch().json(), "dictation": True}))
+    page.route("**/api/dictation/start", lambda route: route.fulfill(json={"listening": True}))
+    ended = {"detail": {"code": "relay.subscription_ended", "params": {}}}
+    page.route("**/api/dictation/stop", lambda route: route.fulfill(status=402, json=ended))
+    page.goto("/")
+    page.get_by_role("button", name="Dicter").first.click()
+    page.get_by_role("button", name="Arrêter et écrire le texte").click()
+    toast = page.get_by_role("alert")
+    sync_api.expect(toast).to_contain_text("Votre abonnement est terminé")
+    sync_api.expect(toast.get_by_role("link", name="S'abonner")).to_be_visible()
+    page.evaluate("document.querySelector('[x-data]')._x_dataStack[0].error = 'Autre erreur.'")
+    sync_api.expect(toast.get_by_role("link", name="S'abonner")).to_be_hidden()  # another error: none
+
+
 def test_dictation_stopped_by_a_tap_elsewhere(page):
     """Listening: a tap anywhere else stops it as ⏹ does, the text written, and does only
     that (the card's ⋯ tapped then doesn't open); scrolling doesn't stop it; the app gone to
