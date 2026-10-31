@@ -56,6 +56,22 @@ class AppTest {
 
     @After fun tearDown() = relay.close()
 
+    /** The app's icon touched again after another app (the app still open): the page as it was,
+     * a lesson in progress (its photos, its prompt) kept, not loaded again. */
+    @Test
+    fun theIconBringsTheLessonInProgressBack() {
+        ActivityScenario.launch(MainActivity::class.java).use { app ->
+            Device.waitFor(app, "typeof api === 'function'", "the page")
+            Device.js(app, "window.inProgress = 'photos and prompt'")
+            ui.pressHome()
+            val icon = Device.context.packageManager.getLaunchIntentForPackage(Device.context.packageName)!!
+            Device.context.startActivity(icon.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK))
+            ui.wait(Until.hasObject(By.pkg(Device.context.packageName).depth(0)), 10_000)
+            Thread.sleep(1500) // (a page loaded again would have dropped it by now)
+            assertEquals("\"photos and prompt\"", Device.js(app, "window.inProgress ?? null"))
+        }
+    }
+
     /** What the page keeps (the child chosen, the language…) still there when the app is opened
      * again: its page then on another port (another origin: its localStorage empty), kept by the
      * app's preferences (Saved), served as saved.js. */

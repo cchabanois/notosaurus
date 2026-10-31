@@ -147,6 +147,9 @@ Each pull request adds a line under **Unreleased**. See [Releasing](CONTRIBUTING
 
 ### Fixed
 
+- A PDF opens on phones whose Android WebView isn't the latest (124 and others): it stayed on "Reading…" forever, with no message. Notosaurus now ships pdf.js's build for older browsers, and a PDF that can't be opened within a minute is said unreadable.
+- In the Android app, coming back by its icon (after AnkiDroid or a message) no longer loses the lesson in progress: its photos and prompt stay. Only a shortcut to the other mode, or a card's "✎" link, opens another page.
+- An ordinary lesson (a history course on the First World War) is no longer refused now and then in Careful mode: the AI decides whether to refuse before writing any card, no longer after having written some.
 - "✨ Image" on a card no longer gives its answer away: a picture or figure showing the answer (a map naming the countries asked for) goes on the back, with the answer; one that only shows what the question is about stays on the front. For developers: `PicturePlan.on_back` (`/v1/plan-picture`), the card's `picture_on_back` set when the picture is decided.
 - In the Android app, a licence key the relay refuses (mistyped, unknown or ended) is no longer kept: subscribing and restoring show again in the settings, and the next lesson starts the free trial. The settings no longer promise the free trial once it was refused on this phone, the refusal's message has "Subscribe", a subscription past its end no longer shows its credits, and a link to a section ("Where does Notosaurus work?") lands with its title below the top bar.
 - With TalkBack, a choice shown as a card ("Where does Notosaurus work?", the AI service…) is said with its state: a finger anywhere on the card is on its radio button, no longer on its text alone. In the Android app's settings, the card shown chosen and the one said selected are the same while connecting a computer.

@@ -114,9 +114,18 @@ def ai_schema(base: type[BaseModel], fun_facts: bool = False, helps: bool = Fals
     config = ConfigDict(json_schema_extra=required)  # pyright: ignore[reportArgumentType]
     card = create_model("Card", __doc__=Card.__doc__, __config__=config, **card_fields)
     fields: dict[str, Any] = {k: (f.annotation, f) for k, f in base.model_fields.items() if k != "cards"}
-    refused = (bool, Field(default=False, description="True when the request must be refused (see the rules)."))
+    # Decided first, before any card: last, a model that wrote cards of an ordinary lesson
+    # (a history course's war) could still turn back on them and refuse
+    refused = (
+        bool,
+        Field(
+            default=False,
+            description="Decide this first, from the rules: true when the request must be refused (then no "
+            "cards); false for any genuine lesson, whatever its topic.",
+        ),
+    )
     cards: Any = (list[card], Field())  # Any: a model built at run time, not a type pyright can check
-    return create_model(base.__name__, __doc__=base.__doc__, cards=cards, **fields, refused=refused)
+    return create_model(base.__name__, __doc__=base.__doc__, refused=refused, cards=cards, **fields)
 
 
 def _box_format(s: AIConfig) -> str:
