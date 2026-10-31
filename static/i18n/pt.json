@@ -51,7 +51,11 @@
       "takePhoto": "Tirar uma foto",
       "nextPage": "Próxima página",
       "gallery": "Galeria",
-      "unreadable": "Não foi possível ler “{name}”."
+      "unreadable": "Não foi possível ler “{name}”.",
+      "full": {
+        "one": "Uma lição cabe em {max} páginas: {count} foto não foi adicionada.",
+        "other": "Uma lição cabe em {max} páginas: {count} fotos não foram adicionadas."
+      }
     },
     "hide": {
       "title": "Ocultar o que a IA não deve ver",

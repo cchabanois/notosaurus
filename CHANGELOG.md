@@ -148,6 +148,7 @@ Each pull request adds a line under **Unreleased**. See [Releasing](CONTRIBUTING
 
 ### Fixed
 
+- A lesson's 10 pages are kept to: the gallery and the camera add no photo past them and say how many were left out (only a PDF did); the Android app refuses more at once, no longer after sending them for about two minutes with a vague message.
 - Cards follow the "Automatic" prompt's cases to the letter: each part of the lesson gets the form of the case that describes it (a theorem's statement and converse, a diagram to complete on the photo, one card per line of a poem, one card per example), questions and answers only for what no case describes. A card's front never shows what it asks to write or find (a dictation's word). A question about a part in brackets calls it so, no longer "in bold". A spelling help compares only with words that share the point. Formulas are drawn in the helps and in the "Suggested correction" banner, and never written outside \( … \).
 - In the Android app, "Lessons exported to …" gives the file's name as Android created it, "notosaurus-… (1).zip" when one of that name was already there, no longer the name suggested.
 - "Subscribe" is offered on the message of a lapsed licence (the subscription ended, the trial over…) whatever said it: a dictation, a picture or a correction as much as a lesson. The waiting card's "Usually 10 to 30 seconds" no longer shows as `app.loading.duration` when a lesson is made right after the page opens.

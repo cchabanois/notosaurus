@@ -147,10 +147,15 @@ const photosPart = {
 
   async addFiles(files) {
     this.error = "";
+    let left = 0;  // photos past the lesson's pages: not added, said
     for (const file of files) {
       if (isPdf(file)) {
         if (this.off("lesson.pdf")) this.error = t("errors.app.feature_off");  // (dropped: its tile hidden)
         else await this.addPdf(file);
+        continue;
+      }
+      if (this.photos.length >= this.maxPhotos) {
+        left++;
         continue;
       }
       try {
@@ -161,6 +166,7 @@ const photosPart = {
         this.error = t("app.photos.unreadable", { name: file.name });
       }
     }
+    if (left) this.error = t("app.photos.full", { max: this.maxPhotos, count: left });
   },
 
   // A PDF: its pages as photos. More pages than places left: the user picks them

@@ -51,7 +51,11 @@
       "takePhoto": "Foto aufnehmen",
       "nextPage": "Nächste Seite",
       "gallery": "Galerie",
-      "unreadable": "„{name}“ kann nicht gelesen werden."
+      "unreadable": "„{name}“ kann nicht gelesen werden.",
+      "full": {
+        "one": "Eine Lektion hat höchstens {max} Seiten: {count} Foto wurde nicht hinzugefügt.",
+        "other": "Eine Lektion hat höchstens {max} Seiten: {count} Fotos wurden nicht hinzugefügt."
+      }
     },
     "hide": {
       "title": "Verdecken, was die KI nicht sehen soll",
