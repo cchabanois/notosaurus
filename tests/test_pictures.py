@@ -12,7 +12,7 @@ from app.settings import Settings
 from notosaurus_core import diagrams, llm, pictures, tts
 from notosaurus_core.config import AIConfig
 from notosaurus_core.errors import AppError
-from notosaurus_core.models import Card
+from notosaurus_core.models import Card, PicturePlan
 from notosaurus_core.relay_api import MAX_IMAGE_BYTES
 
 
@@ -388,3 +388,18 @@ def test_failing_pictures_and_sounds_log_nothing_of_the_lesson(monkeypatch, capl
     assert len(caplog.records) == 3 and "picture.failed" in caplog.text and "RuntimeError" in caplog.text
     for content in ("volcano", "water cycle", "volcán"):
         assert not any(content in r.getMessage() for r in caplog.records)
+
+
+def test_a_picture_showing_the_answer_goes_on_the_back(monkeypatch):
+    """ "✨ Image" on a card: a picture naming its answer (the countries of an alliance on a
+    map) goes with the answer, never giving it away on the front; one that only shows what the
+    question is about stays on the front."""
+    for on_back in (True, False):
+
+        async def plan(s, front, back, asked="", language="English", on_back=on_back):
+            return PicturePlan(kind="figure", description="Carte de l'Europe", on_back=on_back)
+
+        monkeypatch.setattr(llm, "plan_picture", plan)
+        card = Card(front="Quels pays forment la Triple-Alliance ?", back="Allemagne, Autriche-Hongrie, Italie")
+        decided = run(pictures.decided(AIConfig(llm="gemini"), card))
+        assert decided.picture_on_back is on_back and decided.figure == "Carte de l'Europe"

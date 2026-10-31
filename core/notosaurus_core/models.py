@@ -332,6 +332,12 @@ class PicturePlan(BaseModel):
         description="A picture of a real, specific thing: a short English search for a free picture of it. "
         "Empty otherwise.",
     )
+    on_back: bool = Field(
+        default=False,
+        description="True when it shows the card's answer (a label naming it, the answer drawn): it then goes "
+        "with the answer, on the back, never giving it away. False when it is needed to answer or only shows "
+        "what the question is about.",
+    )
 
 
 class SearchWords(BaseModel):

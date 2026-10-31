@@ -233,7 +233,7 @@ class Pictures(
         private val PHOTO = buildJsonObject { put("source", "photo") }
         private val LESSON = buildJsonObject { put("source", "lesson") } // its own pages' drawing
         // What the relay decides of a card's picture (Card's fields): taken into the card
-        private val PICTURE_FIELDS = listOf("figure", "figure_kind", "picture_prompt", "picture_search", "picture_source")
+        private val PICTURE_FIELDS = listOf("figure", "figure_kind", "picture_prompt", "picture_search", "picture_source", "picture_on_back")
         // A card's picture fields, told with "ready" (drawMissing) the moment it has them (core's pictures.READY)
         private val READY = PICTURE_FIELDS + "picture"
         private val CLOZE = Regex("""\{\{c\d+::""") // a gap, as core/notosaurus_core/cards.py
