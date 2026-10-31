@@ -64,7 +64,10 @@ class AppTest {
         ActivityScenario.launch(MainActivity::class.java).use { app ->
             Device.waitFor(app, "typeof keep === 'function' && window.SAVED", "the page and what the app keeps")
             Device.js(app, "keep('notosaurus.test', 'kept $run')")
-            assertEquals("true", Device.run(app, "return String((await (await fetch('/saved.js')).text()).includes('kept $run'))"))
+            // Told the app meanwhile (nothing waits for it): there once it has it
+            val told = "for (let i = 0; i < 40; i++) { if ((await (await fetch('/saved.js')).text()).includes('kept $run')) return true; " +
+                "await new Promise((r) => setTimeout(r, 250)); } return false"
+            assertEquals("true", Device.run(app, told))
         }
         ActivityScenario.launch(MainActivity::class.java).use { app ->
             Device.waitFor(app, "typeof kept === 'function' && kept('notosaurus.test') === 'kept $run'", "the value kept, read again")
