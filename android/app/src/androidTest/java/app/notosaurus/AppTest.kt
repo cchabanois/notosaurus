@@ -72,6 +72,32 @@ class AppTest {
         }
     }
 
+    /** A lesson in progress (a photo, a prompt), not made yet: still there back from the settings,
+     * and when the app is opened again after being closed (another port: kept by the app, Draft). */
+    @Test
+    fun theLessonInProgressSurvivesTheSettingsAndTheAppClosed() {
+        val page = "Alpine.\$data(document.querySelector('[x-data]'))"
+        val prompt = "Une carte par capitale $run"
+        val there = "$page.photos.length === 1 && $page.form.text === '$prompt'"
+        ActivityScenario.launch(MainActivity::class.java).use { app ->
+            Device.waitFor(app, "typeof api === 'function' && $page.draftKept", "the page, keeping its lesson in progress")
+            Device.run(
+                app,
+                "const c = document.createElement('canvas'); c.width = 40; c.height = 30; c.getContext('2d').fillRect(0, 0, 40, 30); " +
+                    "const blob = await new Promise((r) => c.toBlob(r, 'image/jpeg')); " +
+                    "$page.chooseFree(); $page.form.text = '$prompt'; $page.photos.push({ blob, url: URL.createObjectURL(blob), text: '' }); return true",
+            )
+            Device.js(app, "document.querySelector('a[href=\"admin.html\"]').click()") // ⚙️: kept before the page is left
+            Device.waitFor(app, "location.pathname.endsWith('admin.html')", "the settings")
+            Device.js(app, "location.href = './'") // ← back
+            Device.waitFor(app, "typeof api === 'function' && $page.draftKept && $there", "the lesson in progress, back from the settings")
+        }
+        ActivityScenario.launch(MainActivity::class.java).use { app ->
+            Device.waitFor(app, "typeof api === 'function' && $page.draftKept && $there", "the lesson in progress, the app opened again")
+            Device.js(app, "$page.newLesson()") // done with it: nothing found again next time
+        }
+    }
+
     /** What the page keeps (the child chosen, the language…) still there when the app is opened
      * again: its page then on another port (another origin: its localStorage empty), kept by the
      * app's preferences (Saved), served as saved.js. */

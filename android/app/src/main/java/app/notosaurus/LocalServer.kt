@@ -87,6 +87,7 @@ class LocalServer(
 ) {
     internal val relays = RelayDirectory(prefs, relayDirectory)
     internal val lessons = Lessons(File(dataDir, "lessons").apply { mkdirs() })
+    internal val draft = Draft(File(dataDir, "draft")) // the lesson in progress, as the page left it
     internal val children = Children(prefs) // the children the lessons are for (the page's "For: …")
     internal val exams = Exams(prefs, lessons) // the tests to prepare: lessons under one tag in AnkiDroid
     internal val texts = PageTexts(web, languages)
@@ -169,6 +170,7 @@ class LocalServer(
     fun Application.module() = routing {
         settingsRoutes(this@LocalServer)
         languageRoutes(this@LocalServer)
+        draftRoutes(this@LocalServer)
         savedRoutes(this@LocalServer)
         promptRoutes(this@LocalServer)
         lessonRoutes(this@LocalServer)

@@ -987,6 +987,10 @@
     "host": {
       "not_allowed": "O Notosaurus só responde ao endereço IP do computador ou a localhost: abra-o assim, ou defina {host} em NOTOSAURUS_PUBLIC_URL."
     },
+    "draft": {
+      "too_large": "A lição em andamento é grande demais para ser guardada.",
+      "invalid": "Não foi possível guardar a lição em andamento."
+    },
     "photo": {
       "not_found": "Foto não encontrada."
     },
