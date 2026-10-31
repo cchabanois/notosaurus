@@ -1451,6 +1451,8 @@ class LocalServerTest {
         assertEquals(HttpStatusCode.BadRequest, refused.status)
         assertEquals("relay.trial_refused", refused.json().jsonObject["detail"]!!.jsonObject.string("code"))
         assertEquals(null, relay.takeRequest(200, TimeUnit.MILLISECONDS))
+        // The settings no longer say the first lesson starts it
+        assertEquals("false", client.get("/api/admin/subscription") { page() }.json().jsonObject["trial"]!!.jsonPrimitive.content)
     }
 
     @Test
@@ -1842,6 +1844,27 @@ class LocalServerTest {
         relayAnswers("""{"code": "relay.invalid_key", "params": {}}""", code = 401)
         val res = client.get("/api/admin/account") { page() }
         assertEquals("relay.invalid_key", res.json().jsonObject["detail"]!!.jsonObject.string("code"))
+    }
+
+    @Test
+    fun aKeyTheRelayRefusesIsNotKept() = app { client ->
+        // Mistyped: refused, then no longer kept (subscribing offered again, the trial possible)
+        client.put("/api/admin/settings") { page(); contentType(ContentType.Application.Json); setBody("""{"key": "nts_typo"}""") }
+        relayAnswers("""{"code": "relay.invalid_key", "params": {}}""", code = 401)
+        client.get("/api/admin/account") { page() }
+        assertEquals("Bearer nts_typo", relay.takeRequest(5, TimeUnit.SECONDS)!!.headers["Authorization"])
+        val settings = client.get("/api/admin/settings") { page() }.json().jsonObject
+        assertEquals(false, settings["has_key"]!!.jsonPrimitive.content.toBoolean())
+
+        // Another key typed meanwhile: the refusal of the old one leaves it
+        local.licensing.setKey("nts_good")
+        local.licensing.forget("nts_typo")
+        assertEquals("nts_good", local.licence())
+
+        // Not a refusal of the key (credits used up): kept
+        relayAnswers("""{"code": "relay.no_credits", "params": {}}""", code = 402)
+        client.get("/api/admin/account") { page() }
+        assertEquals("nts_good", local.licence())
     }
 
     @Test

@@ -1386,6 +1386,28 @@ def test_the_decks_offered_are_the_chosen_childs_and_no_ones(page):
     assert offered() == ["Mathilde::SVT", "Maths::Fractions"]
 
 
+def test_children_of_the_same_name_told_apart_and_removed_once_confirmed(page):
+    ce1 = {"id": "lea-ce1", "name": "Léa", "grade": "CE1"}
+    cm2 = {"id": "lea-cm2", "name": "Léa", "grade": "CM2"}
+    page.request.put("/api/children", data=[ce1, cm2])
+    page.goto("/")
+    header = page.get_by_role("button", name="Enfants")
+    page.evaluate("document.querySelector('[x-data]')._x_dataStack[0].chooseChild('lea-cm2')")
+    sync_api.expect(header).to_have_text(re.compile("Léa · CM2"))
+    header.click()
+    page.get_by_role("button", name="Modifier Léa").first.click()
+    page.get_by_role("button", name="Retirer", exact=True).click()
+    asked = page.get_by_role("alertdialog", name="Retirer Léa ? Ses leçons sont gardées.")
+    asked.get_by_role("button", name="Annuler").click()
+    sync_api.expect(asked).to_be_hidden()
+    assert len(page.request.get("/api/children").json()) == 2  # cancelled: kept
+    page.get_by_role("button", name="Retirer", exact=True).click()
+    asked.get_by_role("button", name="Retirer").click()
+    sync_api.expect(asked).to_be_hidden()
+    sync_api.expect(header).to_have_text(re.compile(r"Léa\s*$"))  # the only Léa now
+    assert [c["id"] for c in page.request.get("/api/children").json()] == ["lea-cm2"]
+
+
 def test_helps_as_the_settings_say(page):
     """No switch under the prompt: the helps come as the settings say (on at first)."""
     page.goto("/")
