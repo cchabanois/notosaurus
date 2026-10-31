@@ -147,6 +147,7 @@ Each pull request adds a line under **Unreleased**. See [Releasing](CONTRIBUTING
 
 ### Fixed
 
+- 🎤 What you dictate is now seen: added at the end of a long prompt (the automatic one), the field scrolls to it, without opening the keyboard. The same for a correction and a card's correction.
 - A PDF opens on phones whose Android WebView isn't the latest (124 and others): it stayed on "Reading…" forever, with no message. Notosaurus now ships pdf.js's build for older browsers, and a PDF that can't be opened within a minute is said unreadable.
 - In the Android app, coming back by its icon (after AnkiDroid or a message) no longer loses the lesson in progress: its photos and prompt stay. Only a shortcut to the other mode, or a card's "✎" link, opens another page.
 - An ordinary lesson (a history course on the First World War) is no longer refused now and then in Careful mode: the AI decides whether to refuse before writing any card, no longer after having written some.

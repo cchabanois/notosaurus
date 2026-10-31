@@ -14,6 +14,13 @@ let stopElsewhere = null;
 // Said after what was already there, on a line of its own
 const joinDictated = (before, text) => (before.trim() ? `${before.trimEnd()}\n${text}` : text);
 
+// The dictated text shown: the field scrolled to its end, where it was added (a long prompt
+// kept it out of sight). Not focused: no keyboard opened over it.
+function showDictated(kind) {
+  const field = document.querySelector(`textarea[data-dictated="${CSS.escape(kind)}"]`);
+  if (field) field.scrollTop = field.scrollHeight;
+}
+
 const dictationPart = {
   // `kind`: "prompt" (the instructions), "correction" (the AI correction's field) or
   // "card:<key>" (a card's own correction, heard as a correction).
@@ -74,6 +81,7 @@ const dictationPart = {
       } else {
         this.revision.text = joinDictated(this.revision.text, text);
       }
+      if (text) this.$nextTick(() => showDictated(kind));
     } catch (e) {
       this.error = e.message;
     } finally {

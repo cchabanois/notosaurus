@@ -193,7 +193,7 @@
         <button class="chip add" @click="openEditor('new')" x-text="$t('app.prompt.new')" :title="$t('app.prompt.newHint')"></button>
       </div>
       <div class="dictated" :class="{ 'with-mic': micOn() }">
-        <textarea x-model="form.text" rows="4" x-ref="promptText" :aria-label="$t('app.prompt.text')"
+        <textarea x-model="form.text" rows="4" x-ref="promptText" data-dictated="prompt" :aria-label="$t('app.prompt.text')"
                   :disabled="dictating('prompt') || tidy.busy"
                   :placeholder="selectedId === null ? $t('app.prompt.freePlaceholder') : ''"></textarea>
         <button type="button" class="mic" x-show="micOn()" x-cloak
@@ -292,7 +292,7 @@
 
       <form class="revise" x-show="!readOnly()" @submit.prevent="revise()">
         <div class="dictated" :class="{ 'with-mic': micOn() }">
-          <textarea x-model="revision.text" rows="2" :aria-label="$t('app.revise.label')" :disabled="dictating('correction')"
+          <textarea x-model="revision.text" rows="2" data-dictated="correction" :aria-label="$t('app.revise.label')" :disabled="dictating('correction')"
                     :placeholder="$t('app.revise.placeholder')"
                     @keydown.ctrl.enter.prevent="revise()" @keydown.meta.enter.prevent="revise()"></textarea>
           <button type="button" class="mic" x-show="micOn()" x-cloak
@@ -534,7 +534,7 @@
             <template x-if="card._fix">
               <form class="card-fix" @submit.prevent="fixCard(card)" @keydown.escape="card._fix.busy || (card._fix = null)">
                 <div class="dictated" :class="{ 'with-mic': micOn() }">
-                  <textarea x-model="card._fix.text" rows="2" :aria-label="$t(card._fix.blank ? 'app.fix.labelBlank' : 'app.fix.label')"
+                  <textarea :data-dictated="'card:' + card.key" x-model="card._fix.text" rows="2" :aria-label="$t(card._fix.blank ? 'app.fix.labelBlank' : 'app.fix.label')"
                             :placeholder="$t(card._fix.blank ? 'app.fix.placeholderBlank' : 'app.fix.placeholder')"
                             :disabled="card._fix.busy || dictating('card:' + card.key)"
                             @keydown.enter="if (!$event.shiftKey) { $event.preventDefault(); fixCard(card) }"></textarea>
