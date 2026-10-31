@@ -2410,7 +2410,7 @@
           "picture_prompt": {
             "type": "string",
             "title": "Picture Prompt",
-            "description": "Only when the instructions ask for a picture on the card (see the rules): what to draw, in English. Empty otherwise.",
+            "description": "When the card gets a picture, as the rules and the request say: what to draw, in English. Empty otherwise.",
             "default": ""
           },
           "picture_search": {

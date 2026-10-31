@@ -64,8 +64,8 @@ class Card(BaseModel):
     mask: Mask | None = Field(default=None, description="Only for a diagram label (see the rules); otherwise null.")
     picture_prompt: str = Field(
         default="",
-        description="Only when the instructions ask for a picture on the card (see the rules): what to draw, "
-        "in English. Empty otherwise.",
+        description="When the card gets a picture, as the rules and the request say: what to draw, in English. "
+        "Empty otherwise.",
     )
     picture_search: str = Field(
         default="",
