@@ -1444,6 +1444,28 @@ class LocalServerTest {
     }
 
     @Test
+    fun moreThanALessonsPagesRefusedAtOnce() = app { client ->
+        // Eleven photos: refused before anything is sent to the relay, with the limit said
+        val refused = client.submitFormWithBinaryData(
+            "/api/extract",
+            formData {
+                repeat(11) { i ->
+                    append("images", "photo $i".toByteArray(), Headers.build {
+                        append(HttpHeaders.ContentType, "image/jpeg")
+                        append(HttpHeaders.ContentDisposition, "filename=\"p$i.jpg\"")
+                    })
+                }
+                append("prompt", "FR → ES")
+            },
+        ) { page() }
+        assertEquals(HttpStatusCode.BadRequest, refused.status)
+        val detail = refused.json().jsonObject["detail"]!!.jsonObject
+        assertEquals("extract.too_many", detail.string("code"))
+        assertEquals(10, detail["params"]!!.jsonObject["max"]!!.jsonPrimitive.int)
+        assertEquals(null, relay.takeRequest(200, TimeUnit.MILLISECONDS))
+    }
+
+    @Test
     fun aFreeTrialRefusedSaysSo() = app { client ->
         prefs[LocalServer.keyOf(local.relayUrl())] = "" // a new user: no key yet
         // Play Integrity giving no token: the AI call refused with why, the relay never asked

@@ -43,6 +43,8 @@ class Generation(
     /** `existing`: the lesson's cards made already ("front [part]"), when the photos are its
      * next pages (/v1/extract's "existing"): not made again. */
     suspend fun make(form: GenerationForm, onCard: OnCard, existing: List<String> = emptyList()): Made {
+        // A lesson's pages: more refused at once, not after sending them (the relay's limit too)
+        if (form.images.size > LocalServer.MAX_PHOTOS) throw BadRequest("extract.too_many", buildJsonObject { put("max", LocalServer.MAX_PHOTOS) })
         val fields = form.fields
         val texts = pageTexts(fields["page_texts"], form.images.size)
         val every = children.list()

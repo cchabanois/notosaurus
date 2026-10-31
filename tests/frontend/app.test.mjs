@@ -829,3 +829,14 @@ test("Add to Anki: an error as the last line is said", async () => {
   assert.equal(c.sending, false);
   assert.equal(c.lessonExported, false);
 });
+
+test("photos past the lesson's pages: not added, said", async () => {
+  const page = await loadScripts("app.js");
+  page.run("resize = async (file) => file; URL.createObjectURL = () => 'blob:'");  // no canvas here
+  const c = page.component();
+  c.maxPhotos = 10;
+  c.photos = Array.from({ length: 9 }, () => ({ url: "p" }));
+  await c.addFiles([{ name: "a.jpg", type: "image/jpeg" }, { name: "b.jpg", type: "image/jpeg" }, { name: "c.jpg", type: "image/jpeg" }]);
+  assert.equal(c.photos.length, 10);
+  assert.equal(c.error, "A lesson holds 10 pages: 2 photos were not added.");
+});

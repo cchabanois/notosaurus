@@ -51,7 +51,11 @@
       "takePhoto": "Prendre une photo",
       "nextPage": "Page suivante",
       "gallery": "Galerie",
-      "unreadable": "Impossible de lire « {name} »."
+      "unreadable": "Impossible de lire « {name} ».",
+      "full": {
+        "one": "Une leçon tient en {max} pages : {count} photo n'a pas été ajoutée.",
+        "other": "Une leçon tient en {max} pages : {count} photos n'ont pas été ajoutées."
+      }
     },
     "hide": {
       "title": "Cacher ce que l'IA ne doit pas voir",

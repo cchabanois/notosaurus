@@ -51,7 +51,11 @@
       "takePhoto": "Take a photo",
       "nextPage": "Next page",
       "gallery": "Gallery",
-      "unreadable": "Can't read “{name}”."
+      "unreadable": "Can't read “{name}”.",
+      "full": {
+        "one": "A lesson holds {max} pages: {count} photo was not added.",
+        "other": "A lesson holds {max} pages: {count} photos were not added."
+      }
     },
     "hide": {
       "title": "Hide what the AI shouldn't see",
