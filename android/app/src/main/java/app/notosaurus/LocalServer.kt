@@ -40,6 +40,8 @@ import kotlinx.serialization.json.jsonPrimitive
 import kotlinx.serialization.json.put
 import java.io.File
 import kotlin.concurrent.thread
+import java.net.InetAddress
+import java.net.ServerSocket
 import java.net.URI
 import java.util.UUID
 
@@ -111,10 +113,13 @@ class LocalServer(
      * phone, would be served to the WebView). */
     fun start(): Int {
         val last = prefs[PORT]?.toIntOrNull()?.takeIf { it in 1024..65535 }
-        val port = last?.let { runCatching { listen(it) }.getOrNull() } ?: listen(0)
+        // Tried first: a port taken fails inside the server's own coroutines, not here
+        val port = last?.takeIf(::free)?.let { runCatching { listen(it) }.getOrNull() } ?: listen(0)
         prefs[PORT] = port.toString()
         return port
     }
+
+    private fun free(port: Int) = runCatching { ServerSocket(port, 1, InetAddress.getByName("127.0.0.1")).close() }.isSuccess
 
     private fun listen(port: Int): Int {
         val started = embeddedServer(CIO, port = port, host = "127.0.0.1") { module() }
