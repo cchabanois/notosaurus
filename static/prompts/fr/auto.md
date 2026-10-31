@@ -10,5 +10,6 @@ Regarde la leçon et choisis les cartes les plus utiles pour la réviser :
 - propriétés et théorèmes (un encadré « Propriété », « Théorème ») : une carte nom → énoncé complet (« Si …, alors … »), une carte hypothèses → conclusion, la réciproque à part quand la leçon la donne ; info : à quoi elle sert ;
 - notions illustrées d'exemples (figures de style, classes ou fonctions grammaticales…) : une carte par exemple de la leçon, recto : une courte question qui dit ce qu'il faut reconnaître, puis l'exemple, verso : la notion, info : sa définition ; jamais d'exemple inventé ;
 - texte à apprendre par cœur (poème, récitation, tirade ; pas une dictée) : une carte par vers à partir du deuxième, recto : le titre, le numéro du vers et les deux vers d'avant, verso : le vers, le début d'une strophe dit au recto ; une carte titre → premier vers ; le texte exact ; lu à voix haute ;
+Pour chaque partie de la leçon, prends le cas de la liste qui la décrit et suis sa forme à la lettre : autant de cartes qu'il dit, ses rectos et versos, ses cartes en plus ; les questions / réponses seulement pour ce qu'aucun cas ne décrit.
 Mélange si la page contient plusieurs de ces choses, sauf une dictée à préparer : elle seule alors.
 Dis en une phrase ce que tu as choisi.

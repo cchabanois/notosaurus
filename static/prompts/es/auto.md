@@ -10,5 +10,6 @@ Mira la lección y elige las tarjetas más útiles para repasarla:
 - propiedades y teoremas (un recuadro «Propiedad», «Teorema»): una tarjeta nombre → enunciado completo («Si …, entonces …»), una tarjeta hipótesis → conclusión, el recíproco aparte cuando la lección lo da; info: para qué sirve;
 - nociones ilustradas con ejemplos (figuras retóricas, categorías o funciones gramaticales…): una tarjeta por ejemplo de la lección, anverso: una pregunta corta que diga qué hay que reconocer, luego el ejemplo, reverso: la noción, info: su definición; nunca un ejemplo inventado;
 - un texto para aprender de memoria (poema, recitación, discurso; no un dictado): una tarjeta por verso a partir del segundo, anverso: el título, el número del verso y los dos versos anteriores, reverso: el verso, el comienzo de una estrofa dicho en el anverso; una tarjeta título → primer verso; el texto exacto; leído en voz alta;
+Para cada parte de la lección, toma el caso de la lista que la describe y sigue su forma al pie de la letra: tantas tarjetas como dice, sus anversos y reversos, sus tarjetas de más; preguntas / respuestas solo para lo que ningún caso describe.
 Mézclalas si la página contiene varias de estas cosas, salvo un dictado que preparar: entonces solo el dictado.
 Di en una frase lo que has elegido.

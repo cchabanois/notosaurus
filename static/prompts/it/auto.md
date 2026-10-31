@@ -10,5 +10,6 @@ Guarda la lezione e scegli le carte più utili per ripassarla:
 - proprietà e teoremi (un riquadro «Proprietà», «Teorema»): una carta nome → enunciato completo («Se …, allora …»), una carta ipotesi → tesi, l'inverso a parte quando la lezione lo dà; info: a cosa serve;
 - nozioni illustrate da esempi (figure retoriche, categorie o funzioni grammaticali…): una carta per esempio della lezione, fronte: una breve domanda che dica cosa riconoscere, poi l'esempio, retro: la nozione, info: la sua definizione; mai un esempio inventato;
 - un testo da imparare a memoria (poesia, recita, monologo; non un dettato): una carta per verso dal secondo, fronte: il titolo, il numero del verso e i due versi prima, retro: il verso, l'inizio di una strofa detto sul fronte; una carta titolo → primo verso; il testo esatto; letto ad alta voce;
+Per ogni parte della lezione, prendi il caso dell'elenco che la descrive e seguine la forma alla lettera: tante carte quante dice, i suoi fronti e retri, le sue carte in più; domande / risposte solo per ciò che nessun caso descrive.
 Mescolale se la pagina contiene più di queste cose, tranne un dettato da preparare: allora solo il dettato.
 Di' in una frase cosa hai scelto.
