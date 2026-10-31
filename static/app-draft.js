@@ -75,14 +75,18 @@ const draftPart = {
     });
   },
 
-  // The page opening: the lesson left in progress, as it was
+  // The page opening: the lesson left in progress, as it was. Unless the user has already
+  // begun another while it was being read (a photo added, the prompt changed): theirs is
+  // kept, never replaced, and kept in its place from now on
   async restoreDraft() {
+    const untouched = this.draftText();
     let draft = {};
     try {
       draft = await (await api("/api/draft")).json();
     } catch {
       return;
     }
+    if (this.photos.length || this.draftText() !== untouched) return;
     if (draft.lesson) {
       if (this.lessons.some((l) => l.id === draft.lesson)) await this.openLesson(draft.lesson);
     } else if (draft.prompt || draft.photos) {

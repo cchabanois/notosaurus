@@ -1115,6 +1115,26 @@ def test_the_lesson_in_progress_found_again(page):
     sync_api.expect(page.locator(".thumb img")).to_have_count(0)
 
 
+def test_what_the_user_began_kept_over_the_lesson_left(page):
+    """A photo added while the lesson left in progress is still being read: theirs kept,
+    never replaced by the one found again."""
+    page.goto("/")
+    page.get_by_role("radio", name="✏️ Libre").click()
+    page.locator("textarea[x-ref=promptText]").fill("La leçon d'avant")
+    page.evaluate("Alpine.$data(document.querySelector('[x-data]')).saveDraft()")
+    page.wait_for_function("Alpine.$data(document.querySelector('[x-data]')).draftSent.includes('avant')")
+    held = []
+    page.route("**/api/draft", lambda route: held.append(route) if route.request.method == "GET" else route.continue_())
+    page.reload()
+    add_photo(page, plain_image(400, 300, "blue"))  # begun while it is read
+    while not held:
+        page.wait_for_timeout(50)
+    held[0].continue_()
+    started(page)
+    sync_api.expect(page.locator(".thumb img")).to_have_count(1)
+    assert page.locator("textarea[x-ref=promptText]").input_value() != "La leçon d'avant"
+
+
 def add_text_pdf(page, browser) -> None:
     page.locator("input[type=file][accept*=pdf]").set_input_files(
         {"name": "cours.pdf", "mimeType": "application/pdf", "buffer": text_pdf(browser)}
