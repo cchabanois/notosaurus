@@ -181,7 +181,7 @@ def build() -> dict:
     def rephrase(request: api.RephraseRequest, x_notosaurus_version: str = client):
         """A lesson's instructions tidied up (llm.rephrase)."""
 
-    @app.post(f"{api.PREFIX}/figure", response_model=api.FigureResponse, responses=errors(*COMMON))
+    @app.post(f"{api.PREFIX}/figure", response_model=api.FigureResponse, responses=errors(*COMMON, OFF))
     def figure(request: api.FigureRequest, x_notosaurus_version: str = client):
         """An exact figure as SVG (llm.draw_figure)."""
 
@@ -233,7 +233,7 @@ def build() -> dict:
                 "begins, then the answer, one CardPictureLine per line.",
                 "content": {api.STREAM_TYPE: {"schema": {"$ref": REF.format(model="CardPictureLine")}}},
             },
-            **errors(*COMMON),
+            **errors(*COMMON, OFF),
         },
     )
     def card_picture(request: api.CardPictureRequest, x_notosaurus_version: str = client):

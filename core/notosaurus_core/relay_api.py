@@ -505,6 +505,7 @@ FEATURES = {
     "pictures.search": "no free pictures found: drawn by the image model",
     "pictures.draw": "no picture drawn by the image model: free pictures only",
     "pictures.lesson": "no picture cut out of the lesson's photos: found or drawn instead",
+    "figures.draw": "no figure drawn: a card that wants one keeps its description, without a picture",
     "figures.typst": "figures drawn as SVG by the AI, not with Typst",
     "figures.check": 'no "🔍 Check" of a figure',
     "speech.transcribe": "no dictation: typed only",

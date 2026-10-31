@@ -26,6 +26,7 @@ class Pictures(
     private val lessons: Lessons,
     private val relay: () -> Relay,
     private val cardSize: (ByteArray) -> ByteArray = { it }, // the user's photo as a card shows it (Photos.cardSize)
+    private val off: (String) -> Boolean = { false }, // a feature turned off for now (Switches.off)
 ) {
     /** The missing pictures, a few at a time: figures drawn, free pictures found; those no
      * free one fits drawn by the image model only when `draw` (the user said yes), else in
@@ -33,7 +34,8 @@ class Pictures(
      * still a card: counted, not fatal. `step`: each card's steps as they begin, {"card": its
      * id, "step"…} (what the page shows on it meanwhile, as the computer's), then {"card", "step":
      * "ready", its picture's fields (READY)} as soon as it has it. The lesson's own drawings
-     * first (fromTheLesson), for the cards whose thing its photos show. */
+     * first (fromTheLesson), for the cards whose thing its photos show. Figures turned off
+     * (figures.draw): their cards left without, not counted as failures. */
     suspend fun drawMissing(lesson: JsonObject, draw: Boolean = false, step: Step = {}): JsonObject {
         val id = lesson.string("id")
         val cards = lesson.cards()
@@ -42,7 +44,8 @@ class Pictures(
         val toDraw = mutableListOf<String>()
         val few = Semaphore(AT_ONCE)
         coroutineScope {
-            cards.indices.filter { i -> cards[i].missingPicture() }.map { i ->
+            val figuresOff = off("figures.draw")
+            cards.indices.filter { i -> cards[i].missingPicture() && !(figuresOff && cards[i].string("figure").isNotBlank()) }.map { i ->
                 async {
                     few.withPermit {
                         try {

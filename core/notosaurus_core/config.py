@@ -50,6 +50,9 @@ class AIConfig(BaseModel):
     # Figures drawn with Typst when it is installed (figures_typst). False: as SVG by the AI
     # (the relay's figures.typst switch)
     typst: bool = True
+    # Figures drawn at all (llm.made_figure). False: refused, relay.feature_off (the relay's
+    # figures.draw switch)
+    figures: bool = True
 
     def model_for_provider(self) -> str:
         return self.model.strip() or DEFAULT_MODELS.get(self.llm, "")

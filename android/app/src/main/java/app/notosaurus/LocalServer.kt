@@ -96,7 +96,7 @@ class LocalServer(
     // The lessons in one file, to keep them or move them (the computer's app/transfer.py's format)
     internal val transfer = LessonsTransfer(File(dataDir, "lessons"), lessons, prefs, children, exams, prompts, speech, version)
     internal val cacheDir = File(dataDir, "cache") // a file being imported
-    internal val pictures = Pictures(lessons, ::relay, cardSize)
+    internal val pictures = Pictures(lessons, ::relay, cardSize) { switches.off(it) }
     internal val generation = Generation(lessons, prefs, ::relay, speech, turnPhoto, children)
     internal val computer = Computer(prefs, modeChanged)
     internal val switches = Switches(prefs, version)
