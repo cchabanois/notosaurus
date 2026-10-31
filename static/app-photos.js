@@ -58,8 +58,12 @@ function hardenMask(mask) {
 
 // PDFs: each page drawn as a photo (pdf.js, loaded the first time a PDF is chosen),
 // so masks, frames, thumbnails and every AI service work the same as with photos.
-// pdf.js 6.4.299, shipped with the page (vendor/pdfjs/README.md): a blocked CDN made PDFs unreadable
+// pdf.js 6.4.299, its legacy build (older WebViews too), shipped with the page
+// (vendor/pdfjs/README.md): a blocked CDN made PDFs unreadable
 const PDFJS = "vendor/pdfjs/";  // next to the page
+// A PDF opens in seconds: past this, said unreadable rather than "Reading…" forever (pdf.js
+// failing inside its worker, on a browser missing what it needs, says nothing)
+const PDF_OPEN_MS = 60_000;
 const PDF_THUMB = 240;  // px: the page picker's thumbnails
 let pdfjs = null;
 let pdfTask = null;  // loading it (destroyed when done: frees the worker's memory)
@@ -75,7 +79,13 @@ async function loadPdf(file) {
     pdfjs.GlobalWorkerOptions.workerSrc = `${base}pdf.worker.min.mjs`;
   }
   pdfTask = pdfjs.getDocument({ data: new Uint8Array(await file.arrayBuffer()) });
-  return pdfTask.promise;
+  let timer;
+  const late = new Promise((_, reject) => { timer = setTimeout(() => reject(new Error("pdf.timeout")), PDF_OPEN_MS); });
+  try {
+    return await Promise.race([pdfTask.promise, late]);
+  } finally {
+    clearTimeout(timer);
+  }
 }
 
 // A page as a JPEG at most `side` px, on white (a PDF page may be transparent).
