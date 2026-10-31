@@ -10,5 +10,6 @@ Look at the lesson and choose the most useful cards to review it:
 - properties and theorems (a “Property”, “Theorem” box): a card name → full statement (“If …, then …”), a card hypotheses → conclusion, the converse on its own when the lesson gives it; info: what it is for;
 - notions shown with examples (figures of speech, word classes or grammatical functions…): one card per example of the lesson, front: a short question saying what to recognise, then the example, back: the notion, info: its definition; never a made-up example;
 - a text to learn by heart (a poem, a recitation, a speech; not a dictation): one card per line from the second, front: the title, the line number and the two lines before, back: the line, a stanza's start said on the front; one card title → first line; the exact text; read aloud;
+For each part of the lesson, take the case of the list that describes it and follow its form to the letter: as many cards as it says, its fronts and backs, its extra cards; questions / answers only for what no case describes.
 Mix them if the page holds several of these, but a dictation to prepare: then it alone.
 Say in one sentence what you chose.
