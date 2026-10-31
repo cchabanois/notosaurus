@@ -147,6 +147,7 @@ Each pull request adds a line under **Unreleased**. See [Releasing](CONTRIBUTING
 
 ### Fixed
 
+- In the Android app, a licence key the relay refuses (mistyped, unknown or ended) is no longer kept: subscribing and restoring show again in the settings, and the next lesson starts the free trial. The settings no longer promise the free trial once it was refused on this phone, the refusal's message has "Subscribe", a subscription past its end no longer shows its credits, and a link to a section ("Where does Notosaurus work?") lands with its title below the top bar.
 - With TalkBack, a choice shown as a card ("Where does Notosaurus work?", the AI service…) is said with its state: a finger anywhere on the card is on its radio button, no longer on its text alone. In the Android app's settings, the card shown chosen and the one said selected are the same while connecting a computer.
 - In the Android app, the back button closes the open sheet or window (the lessons, a picture, a test…) instead of closing the app and losing what was being typed; with none open, it goes back or closes the app as before. For developers: `window.notosaurusBack()` (static/app.js), called by `MainActivity`.
 - For developers: the device tests (`AppTest`) tap the page's buttons where the page says they are, no longer found through Android's accessibility tree of the WebView, which a slow emulator builds late ("not shown: ✨ Generate cards" now and then in CI).
