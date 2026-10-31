@@ -61,14 +61,19 @@ internal fun Route.settingsRoutes(server: LocalServer) {
         }
         // What the relay tells the app for now (Switches): read again, the last known when it can't be
         api("GET", "/api/switches") {
-            runCatching { withTimeout(SWITCHES_WAIT_MS) { relay().account() } }.getOrNull()?.let(switches::keep)
+            val account = runCatching { withTimeout(SWITCHES_WAIT_MS) { relay().account() } }.getOrNull()
+            account?.let(switches::keep)
             buildJsonObject {
                 put("notice", switches.notice(lang()) ?: JsonNull)
                 put("disabled", JsonArray(switches.disabled().map(::JsonPrimitive)))
                 put("update", switches.updateAvailable())
                 put("store", "https://play.google.com/store/apps/details?id=${BuildConfig.APPLICATION_ID}")
-                // The free trial just started (the first lesson): its credits and end, told once
-                put("trial", licensing.takeTrialStarted() ?: JsonNull)
+                // The free trial just started (the first lesson): its end, told once; its credits as
+                // the account says now, the first lesson's spent (those it started with else)
+                val trial = licensing.takeTrialStarted()?.let { started ->
+                    account?.let { JsonObject(started + mapOf("credits_left" to JsonPrimitive(it.creditsLeft), "daily_left" to JsonPrimitive(it.dailyLeft))) } ?: started
+                }
+                put("trial", trial ?: JsonNull)
             }
         }
         // The children's cards (Children): listed, saved by the page's "For: …" sheet

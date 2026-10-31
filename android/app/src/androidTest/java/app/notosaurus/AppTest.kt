@@ -179,23 +179,26 @@ class AppTest {
     }
 
     /** Taps what shows `key`'s text in the page's language, as a finger would (a real touch:
-     * the photo picker opens only on one). */
+     * the photo picker opens only on one), where the page itself says it is: not found
+     * through Android's accessibility tree of the WebView, which Chrome builds when it can
+     * (on a slow CI emulator, after the 10 s this waited: "not shown"). */
     private fun tap(app: ActivityScenario<MainActivity>, key: String) {
         Device.waitFor(app, "t('$key') !== '$key'", "the page's texts") // its language file read (after its prompts)
         val label = kotlinx.serialization.json.Json.decodeFromString<String>(Device.js(app, "t('$key')"))
         val text = label.dropWhile { !it.isLetterOrDigit() }.trim() // the emoji before it read apart
-        // Brought into view first (below the screen, it isn't there to touch), as a finger scrolls
         val quoted = kotlinx.serialization.json.Json.encodeToString(kotlinx.serialization.json.JsonPrimitive(text))
-        Device.js(
-            app,
-            "[...document.querySelectorAll('button, label, a')].find(e => e.offsetParent && e.textContent.includes($quoted))" +
-                "?.scrollIntoView({ block: 'center' })",
-        )
+        val shown = "[...document.querySelectorAll('button, label, a')].find(e => e.offsetParent && e.textContent.includes($quoted))"
+        Device.waitFor(app, shown, "shown: $label")
+        // Brought into view first (below the screen, it isn't there to touch), as a finger scrolls
+        Device.js(app, "$shown.scrollIntoView({ block: 'center' })")
         Thread.sleep(400) // (scrolled)
-        // A button's text is its description for Android's accessibility, a label's its text
-        val found = (ui.wait(Until.findObject(By.textContains(text)), 5_000) ?: ui.wait(Until.findObject(By.descContains(text)), 5_000))
-            ?: run { ui.executeShellCommand("screencap -p /data/local/tmp/fail-$key.png"); error("not shown: $label") }
-        found.click()
+        val (x, y, ratio) = kotlinx.serialization.json.Json.decodeFromString<List<Double>>(
+            Device.js(app, "(() => { const r = $shown.getBoundingClientRect(); return [r.left + r.width / 2, r.top + r.height / 2, devicePixelRatio]; })()"),
+        )
+        val web = Device.webView(app)
+        val origin = IntArray(2)
+        app.onActivity { web.getLocationOnScreen(origin) }
+        check(ui.click(origin[0] + (x * ratio).toInt(), origin[1] + (y * ratio).toInt())) { "not tapped: $label" }
     }
 
     /** The cards shown, "Add to Anki" tapped: the lesson's two notes in AnkiDroid. */
