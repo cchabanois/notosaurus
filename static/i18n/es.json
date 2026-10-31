@@ -461,6 +461,7 @@
       "choose": "Elegir",
       "chosen": "✓ Elegido",
       "remove": "Quitar",
+      "confirmRemove": "¿Quitar a {name}? Sus lecciones se conservan.",
       "grade": "Curso",
       "gradePlaceholder": "Elige o escribe: 1.º ESO, 5.º grado…",
       "grades": "1.º Primaria|2.º Primaria|3.º Primaria|4.º Primaria|5.º Primaria|6.º Primaria|1.º ESO|2.º ESO|3.º ESO|4.º ESO|1.º Bachillerato|2.º Bachillerato|Universidad",
