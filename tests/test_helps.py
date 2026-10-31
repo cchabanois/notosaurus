@@ -7,6 +7,7 @@ from conftest import ADMIN
 from app import anki, settings
 from notosaurus_core import llm, prompts
 from notosaurus_core.config import AIConfig
+from notosaurus_core.models import Extraction, Revision
 from notosaurus_core.prompts import ExtractOptions
 
 
@@ -78,3 +79,10 @@ def test_what_the_ai_fills(monkeypatch):
     from notosaurus_core.models import Card
 
     assert isinstance(card, Card) and (card.explanation, card.id, card.picture) == ("c", "", "")  # Notosaurus's own
+
+
+def test_the_refusal_decided_before_any_card():
+    """First in the schema: a model refusing after cards of an ordinary lesson (a history
+    course's war, written then turned back on) had a genuine lesson refused."""
+    for base in (Extraction, Revision):
+        assert next(iter(llm.ai_schema(base).model_json_schema()["properties"])) == "refused"
