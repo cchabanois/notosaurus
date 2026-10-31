@@ -405,6 +405,7 @@ async def decided(
         card.figure = plan.description if figure else ""
         card.figure_kind = plan.figure_kind if figure else ""
         card.picture_prompt, card.picture_search = ("", "") if figure else (plan.description, plan.search)
+        card.picture_on_back = plan.on_back  # showing the answer: with it, never giving it away
     return card
 
 
@@ -426,7 +427,7 @@ async def figure_or_picture(
     made = await card_picture(
         s, card, asked, language, fresh, find, draw=draw, step=step, problem=problem, careful=careful
     )
-    for field in ("figure", "figure_kind", "picture_prompt", "picture_search", "picture_source"):
+    for field in ("figure", "figure_kind", "picture_prompt", "picture_search", "picture_source", "picture_on_back"):
         setattr(card, field, getattr(made.card, field))
     if made.extension == "svg":
         return figures.save(folder, card, made.data.decode())
@@ -487,7 +488,7 @@ class Drawn(NamedTuple):
 
 
 # A card's picture fields, told with "ready" (draw_all) the moment it has them
-READY = {"picture", "picture_source", "figure", "figure_kind", "picture_prompt", "picture_search"}
+READY = {"picture", "picture_source", "figure", "figure_kind", "picture_prompt", "picture_search", "picture_on_back"}
 
 
 async def draw_all(

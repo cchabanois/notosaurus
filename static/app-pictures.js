@@ -34,6 +34,7 @@ const picturesPart = {
       card.picture_search = res.card.picture_search ?? "";
       card.figure = res.card.figure;
       card.figure_kind = res.card.figure_kind ?? "";
+      card.picture_on_back = res.card.picture_on_back ?? card.picture_on_back;  // showing the answer: with it
       return res;
     } catch (e) {
       this.error = e.message;
