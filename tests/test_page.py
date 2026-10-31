@@ -9,6 +9,7 @@ to use the system's). The pages load Alpine.js and KaTeX from a CDN: network nee
 
 import base64
 import io
+import json
 import os
 import re
 import socket
@@ -1419,6 +1420,27 @@ def test_android_credits_said_as_the_plan_is(page):
     sync_api.expect(page.get_by_text("Dont 50 utilisables aujourd'hui", exact=True)).to_be_visible()
     android_settings(page, {"plan": "beta", "credits_left": 10, "daily_left": 10})
     sync_api.expect(page.get_by_text("Formule : beta", exact=True)).to_be_visible()  # one given by hand: as it is
+
+
+def test_what_the_page_keeps_kept_by_the_android_app(page):
+    """The Android app serves saved.js (its preferences): read from it, not localStorage,
+    each change told to it (PUT /api/saved)."""
+    page.request.put("/api/children", data=[{"id": "jules", "name": "Jules"}, {"id": "lea", "name": "Léa"}])
+    saved = {"notosaurus.child": "lea", "notosaurus.careful": "1"}
+    told = []
+    page.route(
+        "**/saved.js",
+        lambda route: route.fulfill(body=f"window.SAVED = {json.dumps(saved)};", content_type="text/javascript"),
+    )
+    page.route("**/api/saved", lambda route: (told.append(route.request.post_data_json), route.fulfill(json={})))
+    page.goto("/")
+    sync_api.expect(page.get_by_role("button", name="Enfants")).to_have_text(re.compile("Léa"))
+    sync_api.expect(page.get_by_role("radio", name="Soigné")).to_be_checked()
+    page.evaluate("document.querySelector('[x-data]')._x_dataStack[0].chooseChild('jules')")
+    sync_api.expect(page.get_by_role("button", name="Enfants")).to_have_text(re.compile("Jules"))
+    page.wait_for_timeout(200)  # the PUT sent meanwhile
+    assert {"notosaurus.child": "jules"} in told
+    assert page.evaluate("localStorage.length") == 0  # the app keeps them
 
 
 def test_children_of_the_same_name_told_apart_and_removed_once_confirmed(page):

@@ -94,12 +94,38 @@ async function loadMessages(lang) {
   }
 }
 
-function storedChoice() {
+// What the page keeps on this device (the language, the child chosen, the last prompt…):
+// the Android app's, from saved.js (window.SAVED: its preferences, whatever the page's
+// address), else the browser's localStorage. null: nothing kept.
+function kept(key) {
+  if (window.SAVED) return window.SAVED[key] ?? null;
   try {
-    return localStorage.getItem(LANG_KEY) ?? "";
+    return localStorage.getItem(key);
   } catch {
-    return "";  // private browsing, blocked storage: automatic
+    return null;  // private browsing, blocked storage
   }
+}
+
+// `value` null: removed. The app's: told it at once (nothing waits for it)
+function keep(key, value) {
+  if (window.SAVED) {
+    if (value == null) delete window.SAVED[key];
+    else window.SAVED[key] = String(value);
+    fetch("/api/saved", {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ [key]: value == null ? null : String(value) }),
+    }).catch(() => {});
+    return;
+  }
+  try {
+    if (value == null) localStorage.removeItem(key);
+    else localStorage.setItem(key, value);
+  } catch {}
+}
+
+function storedChoice() {
+  return kept(LANG_KEY) ?? "";  // none, or blocked storage: automatic
 }
 
 async function useLanguage(lang) {
@@ -125,10 +151,7 @@ const i18nReady = (async () => {
 // Language picked on the page ("" = automatic): applied right away, without
 // reloading (nothing typed is lost), and remembered on this device.
 async function setLanguage(choice) {
-  try {
-    if (choice) localStorage.setItem(LANG_KEY, choice);
-    else localStorage.removeItem(LANG_KEY);
-  } catch {}
+  keep(LANG_KEY, choice || null);
   I18N.choice = choice;
   await useLanguage(choice || I18N.auto);
   const store = Alpine.store("i18n");
