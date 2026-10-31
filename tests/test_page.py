@@ -793,6 +793,21 @@ def test_the_page_stays_still_under_an_open_sheet(page, clock):
     page.wait_for_function(f"scrollY !== {before}")
 
 
+def test_android_back_closes_the_open_sheet_first(page):
+    """Android's back button (MainActivity) asks the page first: an open sheet closed, as
+    Escape closes it (true); none open: false, the app goes back or closes."""
+    page.goto("/")
+    made = page.request.post("/api/extract", multipart={"prompt": FRONT_PROMPT}).json()
+    page.request.put(f"/api/lessons/{made['id']}", data={"deck": "Maths::Leçon", "cards": made["cards"]})
+    page.reload()
+    assert page.evaluate("notosaurusBack()") is False
+    page.get_by_role("button", name="Leçons").click()
+    sync_api.expect(page.locator(".lesson-list")).to_be_visible()
+    assert page.evaluate("notosaurusBack()") is True
+    sync_api.expect(page.locator(".lesson-list")).to_be_hidden()
+    assert page.evaluate("notosaurusBack()") is False
+
+
 def test_many_lessons_recent_folded_and_searched(page, clock):
     page.goto("/")
     decks = [f"Espagnol::Leçon {n}" for n in range(1, 7)] + ["Maths::Fractions", "Maths::Pythagore", "Anglais::Unit 1"]
