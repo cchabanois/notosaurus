@@ -86,10 +86,10 @@
     <span x-text="error"></span>
     <button @click="error = ''" :aria-label="$t('common.close')">✕</button>
     <!-- What to do about it, when there is something (the app: install AnkiDroid) -->
-    <div class="toast-actions" x-show="errorAction.for === error">
-      <button class="toast-action" x-show="errorAction.kind === 'installAnki'" @click="installAnki()"
+    <div class="toast-actions" x-show="errorKind()">
+      <button class="toast-action" x-show="errorKind() === 'installAnki'" @click="installAnki()"
               x-text="$t('android.anki.install')"></button>
-      <a class="toast-action" x-show="errorAction.kind === 'subscribe'" href="admin.html"
+      <a class="toast-action" x-show="errorKind() === 'subscribe'" href="admin.html"
          x-text="$t('android.subscription.subscribeShort')"></a>
     </div>
   </div>

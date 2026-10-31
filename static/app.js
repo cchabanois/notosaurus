@@ -100,6 +100,8 @@ function storage(action, value, key = LAST_PROMPT) {
   if (action === "get") return kept(key);
   keep(key, value);
 }
+// The licence lapsed: subscribing (again) is what to do (the toast's "Subscribe": errorKind)
+const LAPSED = ["relay.trial_ended", "relay.trial_closed", "relay.trial_refused", "relay.subscription_ended", "relay.payment_pending"];
 const NOTICE_CLOSED = "notosaurus.noticeClosed";  // the id of the last notice closed on this device
 const CAREFUL = "notosaurus.careful";  // "Careful" chosen over "Quick" (the default), kept on this device
 const OPEN_SUBJECTS = "notosaurus.openSubjects";  // subjects opened or closed in the lessons, on this device
@@ -326,12 +328,19 @@ document.addEventListener("alpine:init", () => {
       return t("android.subscription.trialStarted", { credits: trial.credits_left, date });
     },
 
-    // The AI's error; the free trial over, or the subscription lapsed (the Android app):
-    // "Subscribe" on it, to the settings
+    // The AI's error (its "Subscribe": errorKind)
     aiError(e) {
       this.error = e.message;
-      const lapsed = ["relay.trial_ended", "relay.trial_closed", "relay.trial_refused", "relay.subscription_ended", "relay.payment_pending"];
-      if (this.switches.store && lapsed.includes(e.detail?.code)) this.errorAction = { for: e.message, kind: "subscribe" };
+    },
+
+    // The button on the error shown: its own (installAnki), or "Subscribe" (the Android app)
+    // whatever call said the licence lapsed (the trial over, the subscription ended…): a
+    // dictation, a picture, a correction as much as a lesson
+    errorKind() {
+      Alpine.store("i18n").version;
+      if (this.errorAction.for === this.error) return this.errorAction.kind;
+      if (!this.switches.store || !this.error) return "";
+      return LAPSED.some((code) => errorMessage({ code }) === this.error) ? "subscribe" : "";
     },
 
     closeNotice() {

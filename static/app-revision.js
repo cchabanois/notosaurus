@@ -89,6 +89,7 @@ const revisionPart = {
 
   // The waiting card's title: what is being done, now (the cards counted as they come)
   loadingTitle() {
+    Alpine.store("i18n").version;  // computed again once the texts are read
     if (this.revision.busy) return t("app.loading.revising");
     if (this.aiStep === "figures") return t("app.loading.figures");
     if (this.coming.length) return t("app.loading.writingCards", { count: this.coming.length });
@@ -97,6 +98,7 @@ const revisionPart = {
 
   // Under it: how long it usually takes; the AI slow to answer, or another model asked
   loadingNote() {
+    Alpine.store("i18n").version;  // (else "app.loading.duration" when made before the texts came)
     if (this.aiStep === "fallback") return t("app.loading.fallback");
     if (this.aiStep === "slow" && !this.coming.length) return t("app.loading.slow");
     return t(!this.revision.busy && this.loadingQuick ? "app.loading.durationQuick" : "app.loading.duration");
