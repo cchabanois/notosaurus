@@ -557,6 +557,7 @@ h2 {
 @keyframes arrive { from { opacity: 0; transform: translateY(.3rem); } }
 .careful-again { display: flex; flex-wrap: wrap; align-items: center; gap: .5rem; margin: .5rem 0; }
 .flash .card-help { display: flex; gap: .3rem; align-items: flex-start; margin-top: .25rem; font-size: .85rem; }
+.flash .card-help .math-preview { flex: 1; min-width: 0; margin: 0; font-size: inherit; }
 .flash .card-help textarea {
   flex: 1; min-width: 0; min-height: 0; padding: .2rem .35rem; resize: vertical;
   color: var(--muted); font: inherit; line-height: 1.35; field-sizing: content;

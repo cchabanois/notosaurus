@@ -293,6 +293,24 @@ def test_a_formula_shown_once_its_text_while_edited(page):
     sync_api.expect(page.locator(".save-pill")).to_have_class(SAVED)
 
 
+def test_formulas_drawn_in_the_helps_and_the_doubt(page):
+    """A help's formulas drawn as the back's (its text a click away), the doubt's too."""
+    generate_free(page, FRONT_PROMPT)
+    page.evaluate(
+        r"""Object.assign(document.querySelector('[x-data]')._x_dataStack[0].cards[0], {
+            explanation: String.raw`Pour tout \(x\) de \(\mathbb{R}\)`,
+            doubt: { reason: String.raw`La limite est \(+\infty\)`, front: "f", back: String.raw`\(-\infty\)` },
+        })"""
+    )
+    card = page.locator(".flash").first
+    help_shown = card.locator(".card-help .math-preview.shown:visible")
+    sync_api.expect(help_shown.locator(".katex")).to_have_count(2)
+    sync_api.expect(card.locator("textarea.explanation")).to_be_hidden()
+    help_shown.click()
+    sync_api.expect(card.locator("textarea.explanation")).to_be_focused()
+    sync_api.expect(card.locator(".card-doubt .katex")).to_have_count(2)  # the reason's, the corrected back's
+
+
 def test_generate_again_in_place_then_undo(page):
     generate_free(page, FRONT_PROMPT)
     (first,) = lessons(page)

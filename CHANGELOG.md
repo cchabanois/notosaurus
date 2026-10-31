@@ -147,6 +147,7 @@ Each pull request adds a line under **Unreleased**. See [Releasing](CONTRIBUTING
 
 ### Fixed
 
+- Cards follow the "Automatic" prompt's cases to the letter: each part of the lesson gets the form of the case that describes it (a theorem's statement and converse, a diagram to complete on the photo, one card per line of a poem, one card per example), questions and answers only for what no case describes. A card's front never shows what it asks to write or find (a dictation's word). A question about a part in brackets calls it so, no longer "in bold". A spelling help compares only with words that share the point. Formulas are drawn in the helps and in the "Suggested correction" banner, and never written outside \( … \).
 - "Subscribe" is offered on the message of a lapsed licence (the subscription ended, the trial over…) whatever said it: a dictation, a picture or a correction as much as a lesson. The waiting card's "Usually 10 to 30 seconds" no longer shows as `app.loading.duration` when a lesson is made right after the page opens.
 - 🎤 What you dictate is now seen: added at the end of a long prompt (the automatic one), the field scrolls to it, without opening the keyboard. The same for a correction and a card's correction.
 - A PDF opens on phones whose Android WebView isn't the latest (124 and others): it stayed on "Reading…" forever, with no message. Notosaurus now ships pdf.js's build for older browsers, and a PDF that can't be opened within a minute is said unreadable.
