@@ -837,7 +837,15 @@
       "keySet": "Chiave: {key}",
       "check": "Verifica",
       "plan": "Piano: {plan}",
-      "credits": "{credits} crediti rimasti questo mese, {today} oggi",
+      "credits": "{credits} crediti rimasti questo mese",
+      "creditsTrial": "{credits} crediti rimasti per la prova",
+      "today": "Di cui {today} utilizzabili oggi",
+      "plans": {
+        "free_trial": "Prova gratuita",
+        "trial": "Prova gratuita (Google Play)",
+        "monthly": "Mensile",
+        "yearly": "Annuale"
+      },
       "renews": "Rinnovati il {date}",
       "none": "Ancora nessuna chiave di licenza: arriva con l'abbonamento.",
       "free": "Nessun abbonamento? Con l'add-on di Anki sul tuo computer, l'app è gratuita: vedi «Dove lavora Notosaurus?».",

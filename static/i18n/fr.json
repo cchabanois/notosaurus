@@ -837,7 +837,15 @@
       "keySet": "Clé : {key}",
       "check": "Vérifier",
       "plan": "Formule : {plan}",
-      "credits": "{credits} crédits restants ce mois-ci, {today} aujourd'hui",
+      "credits": "{credits} crédits restants ce mois-ci",
+      "creditsTrial": "{credits} crédits restants pour l'essai",
+      "today": "Dont {today} utilisables aujourd'hui",
+      "plans": {
+        "free_trial": "Essai gratuit",
+        "trial": "Essai gratuit (Google Play)",
+        "monthly": "Mensuel",
+        "yearly": "Annuel"
+      },
       "renews": "Renouvelés le {date}",
       "none": "Pas encore de clé de licence : elle vient avec l'abonnement.",
       "free": "Pas d'abonnement ? Avec le greffon Anki sur votre ordinateur, l'application est gratuite : voir « Où travaille Notosaurus ? ».",

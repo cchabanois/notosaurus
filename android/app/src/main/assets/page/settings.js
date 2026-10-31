@@ -69,6 +69,22 @@ document.addEventListener("alpine:init", () => {
     },
 
     // What an ended subscription, or one on hold, asks of the parent (in the page's language)
+    // The plan as said in the page's language; one it doesn't know (a key given by hand): as it is
+    planName(plan) {
+      Alpine.store("i18n").version;
+      const key = `android.licence.plans.${plan}`;
+      const name = t(key);
+      return name === key ? plan : name;
+    },
+
+    // Its credits: for the trial (days, not a month) or this month; what today still allows
+    // only when it is less (the day's limit), never more than what is left
+    creditsText() {
+      Alpine.store("i18n").version;
+      const trial = ["free_trial", "trial"].includes(this.account.plan);
+      return t(trial ? "android.licence.creditsTrial" : "android.licence.credits", { credits: this.account.credits_left });
+    },
+
     lapsedText() {
       Alpine.store("i18n").version;
       return this.lapsed ? errorMessage({ code: this.lapsed }) : "";

@@ -14,6 +14,7 @@ import re
 import socket
 import threading
 import time
+from pathlib import Path
 
 import pytest
 from conftest import fake_synthesize
@@ -1369,6 +1370,55 @@ def test_the_decks_offered_are_the_chosen_childs_and_no_ones(page):
     page.evaluate("document.querySelector('[x-data]')._x_dataStack[0].chooseChild('mathilde')")
     sync_api.expect(page.locator("#decks option")).to_have_count(2)
     assert offered() == ["Mathilde::SVT", "Maths::Fractions"]
+
+
+def android_settings(page, account):
+    """The Android app's settings page (its own files, then static/), its account as given."""
+    roots = [Path("android/app/src/main/assets/page"), Path("static")]
+
+    def files(route):
+        name = route.request.url.split("/android/", 1)[1].split("?")[0]
+        found = next((root / name for root in roots if (root / name).is_file()), None)
+        if found:
+            route.fulfill(path=found)
+        else:
+            route.fulfill(status=404)
+
+    page.route("**/android/**", files)
+    page.route("**/api/admin/**", lambda route: route.fulfill(json={}))
+    settings = {
+        "relay": "",
+        "relays": {"real": ""},
+        "key": "nts_…abcd",
+        "has_key": True,
+        "instructions": "",
+        "fun_facts": True,
+    }
+    settings |= {"helps": True, "pictures": True, "tts_rate": "-10%", "voices": {}, "version": "1.1.0", "mode": "phone"}
+    page.route("**/api/admin/settings", lambda route: route.fulfill(json=settings))
+    page.route("**/api/admin/subscription", lambda route: route.fulfill(json={"offers": [], "trial": False}))
+    page.route("**/api/admin/account", lambda route: route.fulfill(json=account))
+    page.goto("/android/admin.html")
+
+
+def test_android_credits_said_as_the_plan_is(page):
+    """The plan in the page's language; the trial's credits not "this month"; today's only
+    when fewer than what is left."""
+    android_settings(
+        page, {"plan": "free_trial", "credits_left": 94, "daily_left": 119, "ends_at": "2026-11-07T10:00:00Z"}
+    )
+    sync_api.expect(page.get_by_text("Formule : Essai gratuit", exact=True)).to_be_visible()
+    sync_api.expect(page.get_by_text("94 crédits restants pour l'essai", exact=True)).to_be_visible()
+    sync_api.expect(page.locator("textarea[x-model='form.instructions']")).to_be_visible()  # once the settings came
+    sync_api.expect(page.get_by_text("utilisables aujourd'hui")).to_be_hidden()
+    android_settings(
+        page, {"plan": "monthly", "credits_left": 2000, "daily_left": 50, "renews_at": "2026-11-30T10:00:00Z"}
+    )
+    sync_api.expect(page.get_by_text("Formule : Mensuel", exact=True)).to_be_visible()
+    sync_api.expect(page.get_by_text("2000 crédits restants ce mois-ci", exact=True)).to_be_visible()
+    sync_api.expect(page.get_by_text("Dont 50 utilisables aujourd'hui", exact=True)).to_be_visible()
+    android_settings(page, {"plan": "beta", "credits_left": 10, "daily_left": 10})
+    sync_api.expect(page.get_by_text("Formule : beta", exact=True)).to_be_visible()  # one given by hand: as it is
 
 
 def test_helps_as_the_settings_say(page):

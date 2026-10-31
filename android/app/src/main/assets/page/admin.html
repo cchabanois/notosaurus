@@ -84,8 +84,9 @@
       <p x-show="form?.has_key" x-text="$t('android.licence.keySet', { key: form?.key })"></p>
       <template x-if="account">
         <div>
-          <p x-text="$t('android.licence.plan', { plan: account.plan })"></p>
-          <p x-text="$t('android.licence.credits', { credits: account.credits_left, today: account.daily_left })"></p>
+          <p x-text="$t('android.licence.plan', { plan: planName(account.plan) })"></p>
+          <p x-text="creditsText()"></p>
+          <p class="hint" x-show="account.daily_left < account.credits_left" x-text="$t('android.licence.today', { today: account.daily_left })"></p>
           <p class="hint" x-show="account.renews_at && !account.ends_at"
              x-text="$t('android.licence.renews', { date: formatDate(account.renews_at) })"></p>
           <p class="hint" x-show="account.ends_at && !lapsed"
@@ -165,7 +166,7 @@
     </section>
 
     <!-- Standing instructions for the AI, as on the computer (no Anki profiles here) -->
-    <section class="panel" x-show="onPhone()">
+    <template x-if="form"><section class="panel" x-show="onPhone()">
       <h2 x-text="$t('admin.instructions.title')"></h2>
       <p class="hint" x-text="$t('admin.instructions.hint')"></p>
       <label class="field">
@@ -177,10 +178,10 @@
         <span class="track"><span class="knob"></span></span>
         <span><span x-text="$t('admin.instructions.helps')"></span></span>
       </label>
-    </section>
+    </section></template>
 
     <!-- The voice reading the backs (the relay's), as on the computer -->
-    <section class="panel" x-show="onPhone()">
+    <template x-if="form"><section class="panel" x-show="onPhone()">
       <h2 x-text="$t('admin.voice.title')"></h2>
       <label class="field">
         <span x-text="$t('admin.voice.rate')"></span>
@@ -215,7 +216,7 @@
         </select>
         <small x-text="$t('admin.voice.byLanguageHint')"></small>
       </div>
-    </section>
+    </section></template>
 
     <!-- Lessons kept on the phone -->
     <section class="panel" x-show="onPhone()">
@@ -253,13 +254,13 @@
         <li><a href="licences.html" x-text="$t('admin.about.libraries')"></a></li>
       </ul>
       <!-- A debug or staging build only (as the relays' chips): a release talks to the real relay -->
-      <details x-show="onPhone() && form?.relays?.test">
+      <template x-if="form"><details x-show="onPhone() && form?.relays?.test">
         <summary x-text="$t('android.advanced.title')"></summary>
         <label class="field"><span x-text="$t('android.advanced.relay')"></span>
           <input type="url" x-model="form.relay" @change="saveNow()" autocomplete="off">
         </label>
         <p class="hint" x-text="$t('android.advanced.relayHint')"></p>
-      </details>
+      </details></template>
     </section>
 
     <footer class="page-footer">
