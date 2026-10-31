@@ -95,11 +95,10 @@ window.notosaurusBack = () => {
   return closable.length > 0;
 };
 
+// What the page keeps on this device (i18n.js's kept/keep: the Android app's, else localStorage)
 function storage(action, value, key = LAST_PROMPT) {
-  try {
-    if (action === "get") return localStorage.getItem(key);
-    localStorage.setItem(key, value);
-  } catch {}
+  if (action === "get") return kept(key);
+  keep(key, value);
 }
 const NOTICE_CLOSED = "notosaurus.noticeClosed";  // the id of the last notice closed on this device
 const CAREFUL = "notosaurus.careful";  // "Careful" chosen over "Quick" (the default), kept on this device

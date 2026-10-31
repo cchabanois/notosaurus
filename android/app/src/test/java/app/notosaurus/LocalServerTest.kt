@@ -1773,6 +1773,22 @@ class LocalServerTest {
     }
 
     @Test
+    fun whatThePageKeepsKeptByTheApp() = app { client ->
+        // In the preferences, whatever the page's address: the child chosen, the language…
+        assertEquals("window.SAVED = {};\n", client.get("/saved.js") { page() }.bodyAsText())
+        client.put("/api/saved") {
+            page(); contentType(ContentType.Application.Json)
+            setBody("""{"notosaurus.child": "lea", "notosaurus.lang": "fr", "other": "x"}""")
+        }
+        client.put("/api/saved") { page(); contentType(ContentType.Application.Json); setBody("""{"notosaurus.lang": null}""") }
+        val script = client.get("/saved.js") { page() }
+        assertEquals("no-store", script.headers[HttpHeaders.CacheControl])
+        assertEquals("""window.SAVED = {"notosaurus.child":"lea"};""" + "\n", script.bodyAsText()) // not another key; removed
+        assertEquals(mapOf("notosaurus.child" to "lea"), Saved(prefs).all()) // the next launch's too
+        assertEquals(HttpStatusCode.Unauthorized, client.get("/saved.js").status) // never without the WebView's cookie
+    }
+
+    @Test
     fun aReleaseTalksToTheRealRelayOnly() {
         // Saved before (an older version, the settings' "Advanced"): ignored, and none taken
         val release = LocalServer(folder.newFolder(), { null }, { listOf("en") }, anki, prefs, relayChoosable = false)
