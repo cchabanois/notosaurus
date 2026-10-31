@@ -85,6 +85,16 @@ function sharedStart(texts) {
   return first.slice(0, end).join("");
 }
 
+// Android's back button (MainActivity): what Escape closes, closed (an open sheet, a dialog,
+// the viewer: those listening for it on the window, shown); false when none is open, the app
+// then going back or closing
+window.notosaurusBack = () => {
+  const closable = [...document.querySelectorAll("*")].filter((e) =>
+    [...e.attributes].some((a) => /^(@|x-on:)keydown\.escape\b.*\.window/.test(a.name)) && e.getClientRects().length > 0);
+  if (closable.length) window.dispatchEvent(new KeyboardEvent("keydown", { key: "Escape" }));
+  return closable.length > 0;
+};
+
 function storage(action, value, key = LAST_PROMPT) {
   try {
     if (action === "get") return localStorage.getItem(key);
