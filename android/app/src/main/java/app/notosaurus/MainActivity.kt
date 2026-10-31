@@ -173,10 +173,22 @@ class MainActivity : ComponentActivity() {
         super.onDestroy()
     }
 
-    // A shortcut of the app's icon, the app already open
+    // The app already open: a shortcut of its icon to the other mode, or a card's "✎" link,
+    // opened; the icon itself (or a shortcut to the mode shown), the page as it was: a lesson
+    // in progress (its photos, its prompt) never lost by coming back
     override fun onNewIntent(intent: Intent) {
         super.onNewIntent(intent)
-        if (origin != null) useMode(intent)
+        if (origin != null && asksAnotherPage(intent)) useMode(intent)
+    }
+
+    private fun asksAnotherPage(intent: Intent): Boolean {
+        val mode = prefs[LocalServer.MODE] ?: LocalServer.PHONE_MODE
+        return when (intent.action) {
+            Shortcuts.PHONE -> mode != LocalServer.PHONE_MODE
+            Shortcuts.COMPUTER -> mode != LocalServer.COMPUTER_MODE && prefs[LocalServer.COMPUTER] != null
+            Intent.ACTION_VIEW -> intent.data?.let(::isFixLink) == true
+            else -> false
+        }
     }
 
     /** The mode a shortcut asks for, else the last one: the page of the phone or of the computer. */
