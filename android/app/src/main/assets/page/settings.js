@@ -90,6 +90,7 @@ document.addEventListener("alpine:init", () => {
         if (["relay.subscription_ended", "relay.payment_pending", "relay.trial_ended"].includes(e.code)) this.lapsed = e.code;
         // Unknown or ended (one mistyped): the app no longer keeps it, subscribing offered again
         if (e.code === "relay.invalid_key") {
+          this.error = t("android.licence.refused");  // not "check it in the settings": they are open
           try { this.form = await api("/api/admin/settings"); } catch {}
         }
       }

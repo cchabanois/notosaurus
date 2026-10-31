@@ -26,7 +26,7 @@ internal fun Route.subscriptionRoutes(server: LocalServer) {
             buildJsonObject {
                 put("offers", JsonArray(offers.map { buildJsonObject { put("plan", it.plan); put("price", it.price); put("trial_days", it.trialDays) } }))
                 put("restored", restored)
-                put("trial", store != null) // the free trial (no card), offered without a key
+                put("trial", store != null && !licensing.trialRefused) // the free trial (no card), offered without a key
             }
         }
         // Google Play's purchase screen for a base plan, then the relay's licence for the purchase

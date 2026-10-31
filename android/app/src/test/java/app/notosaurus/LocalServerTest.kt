@@ -1451,6 +1451,8 @@ class LocalServerTest {
         assertEquals(HttpStatusCode.BadRequest, refused.status)
         assertEquals("relay.trial_refused", refused.json().jsonObject["detail"]!!.jsonObject.string("code"))
         assertEquals(null, relay.takeRequest(200, TimeUnit.MILLISECONDS))
+        // The settings no longer say the first lesson starts it
+        assertEquals("false", client.get("/api/admin/subscription") { page() }.json().jsonObject["trial"]!!.jsonPrimitive.content)
     }
 
     @Test

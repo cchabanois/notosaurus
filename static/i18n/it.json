@@ -836,6 +836,7 @@
       "keyPlaceholder": "nts_…",
       "keySet": "Chiave: {key}",
       "check": "Verifica",
+      "refused": "Chiave di licenza sconosciuta o scaduta: non è stata salvata.",
       "plan": "Piano: {plan}",
       "credits": "{credits} crediti rimasti questo mese, {today} oggi",
       "renews": "Rinnovati il {date}",
