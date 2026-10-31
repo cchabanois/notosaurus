@@ -33,6 +33,13 @@ class Licensing(
         prefs[LocalServer.keyOf(relayUrl())] = key.trim()
     }
 
+    /** The relay said this key is unknown or ended (one mistyped): no longer kept, unless
+     * another took its place meanwhile. Without one, the settings offer subscribing again
+     * and the next lesson starts the free trial. */
+    @Synchronized fun forget(key: String) {
+        if (key() == key.trim()) setKey("")
+    }
+
     // --- The free trial
 
     private val trialStarting = Mutex()

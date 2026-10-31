@@ -149,7 +149,7 @@ class LocalServer(
     }
 
     /** The relay, with its licence key. */
-    internal fun relay() = Relay(relayUrl(), licence(), lost = relays::refreshSoon, lapsed = licensing::recheckSoon, noKey = licensing::trialKey)
+    internal fun relay() = Relay(relayUrl(), licence(), lost = relays::refreshSoon, lapsed = licensing::recheckSoon, rejected = licensing::forget, noKey = licensing::trialKey)
 
     /** The licence: its key, the free trial, Google Play's purchases (Licensing). */
     internal val licensing = Licensing(prefs, ::relayUrl, subscriptions)

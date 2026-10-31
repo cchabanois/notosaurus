@@ -88,6 +88,10 @@ document.addEventListener("alpine:init", () => {
         this.error = e.message;
         // Ended: subscribing again; on hold: Google Play's page, where the payment is fixed
         if (["relay.subscription_ended", "relay.payment_pending", "relay.trial_ended"].includes(e.code)) this.lapsed = e.code;
+        // Unknown or ended (one mistyped): the app no longer keeps it, subscribing offered again
+        if (e.code === "relay.invalid_key") {
+          try { this.form = await api("/api/admin/settings"); } catch {}
+        }
       }
     },
 
