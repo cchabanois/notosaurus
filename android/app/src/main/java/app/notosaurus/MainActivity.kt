@@ -137,7 +137,10 @@ class MainActivity : ComponentActivity() {
         }
         setContentView(frame)
         onBackPressedDispatcher.addCallback(this, object : OnBackPressedCallback(true) {
-            override fun handleOnBackPressed() = if (web.canGoBack()) web.goBack() else finish()
+            // A sheet open in the page closed first (its typing kept), as Escape closes it
+            override fun handleOnBackPressed() = web.evaluateJavascript("window.notosaurusBack?.() === true") { closed ->
+                if (closed != "true") if (web.canGoBack()) web.goBack() else finish()
+            }
         })
 
         val version = packageManager.getPackageInfo(packageName, 0).versionName.orEmpty()
