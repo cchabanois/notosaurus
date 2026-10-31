@@ -44,9 +44,11 @@ import mockwebserver3.MockResponse
 import mockwebserver3.MockWebServer
 import mockwebserver3.RecordedRequest
 import org.junit.After
+import java.net.ServerSocket
 import org.junit.Assert.assertArrayEquals
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
+import org.junit.Assert.assertNotEquals
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertTrue
 import org.junit.Before
@@ -1768,6 +1770,24 @@ class LocalServerTest {
         client.put("/api/admin/settings") { page(); contentType(ContentType.Application.Json); setBody("""{"helps": true}""") }
         assertEquals("Léa est en 5e", prefs[LocalServer.INSTRUCTIONS])
         assertEquals("nts_new_licence_key", prefs[LocalServer.keyOf("http://192.168.1.10:8080")])
+    }
+
+    @Test
+    fun theSamePortEachTimeWhenFree() {
+        // Its page's origin, and so its localStorage (the child chosen…), kept across launches
+        fun started(): Int {
+            val server = LocalServer(folder.newFolder(), { null }, { listOf("en") }, anki, prefs)
+            return server.start().also { server.stop() }
+        }
+        val first = started()
+        assertEquals(first.toString(), prefs[LocalServer.PORT])
+        assertEquals(first, started())
+        // Taken meanwhile (another app): another one, never that app's, kept for next time
+        ServerSocket(first, 50, java.net.InetAddress.getByName("127.0.0.1")).use {
+            val second = started()
+            assertNotEquals(first, second)
+            assertEquals(second.toString(), prefs[LocalServer.PORT])
+        }
     }
 
     @Test

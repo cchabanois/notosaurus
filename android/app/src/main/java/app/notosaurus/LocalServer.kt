@@ -104,11 +104,27 @@ class LocalServer(
     internal val soundsAhead = SoundsAhead(::makeSounds) // the backs' sounds read once a lesson is saved
     private lateinit var server: EmbeddedServer<*, *>
 
-    /** Starts it; returns its port. */
+    /** Starts it; returns its port: the last one when it is free, else another, kept for next
+     * time. The page's address stays the same, and so does what it keeps in localStorage (the
+     * child chosen, the language, the last prompt, quick or careful…): a new port is a new
+     * origin, its localStorage empty. Never a port it didn't open (another app's, on the same
+     * phone, would be served to the WebView). */
     fun start(): Int {
-        server = embeddedServer(CIO, port = 0, host = "127.0.0.1") { module() }
-        server.start(wait = false)
-        return runBlocking { server.engine.resolvedConnectors().first().port }
+        val last = prefs[PORT]?.toIntOrNull()?.takeIf { it in 1024..65535 }
+        val port = last?.let { runCatching { listen(it) }.getOrNull() } ?: listen(0)
+        prefs[PORT] = port.toString()
+        return port
+    }
+
+    private fun listen(port: Int): Int {
+        val started = embeddedServer(CIO, port = port, host = "127.0.0.1") { module() }
+        try {
+            started.start(wait = false)
+            return runBlocking { started.engine.resolvedConnectors().first().port }.also { server = started }
+        } catch (e: Exception) {
+            started.stop(gracePeriodMillis = 0, timeoutMillis = 1000)
+            throw e
+        }
     }
 
     fun stop() {
@@ -355,6 +371,7 @@ class LocalServer(
 
         // Which Notosaurus the app shows: its own (phone) or the computer's (the add-on's)
         const val MODE = "mode"
+        const val PORT = "server_port" // the page's last port (LocalServer.start): the same origin, its localStorage kept
         const val PHONE_MODE = "phone"
         const val COMPUTER_MODE = "computer"
         const val COMPUTER = "computer" // the computer's address, as its QR code gives it (with its token)
