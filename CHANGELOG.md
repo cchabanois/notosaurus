@@ -150,7 +150,6 @@ Each pull request's entries (the `## Changelog` of its description) are put unde
 
 ### Fixed
 
-- The computer's address to type in the Android app instead of scanning (no scanner on the phone) is the one under the QR code, its token included: the address alone reached Notosaurus but never let the phone in. Under the QR code of Tools → Notosaurus → Open on the phone, of the settings and of the setup assistant; selected whole in one tap.
 - A theorem or a property the lesson names ("Théorème de Thalès"), not only one in a box, gets its card name → full statement ("If …, then …"), written with what the lesson says; its converse only when the lesson gives it. Measured on the Thalès page: 6 times out of 6 (quick and careful), against 1 out of 6 before; no change on a lesson of formulas (the exponential).
 - A drawing taken from the lesson's page keeps its colours: a yellow sun stays yellow (it came out orange, its rays brown). Only the paper is made white, from its colour at the cut-out's edge.
 - A card's info and its "did you know" show their formulas drawn, as the helps do, no longer their LaTeX ("\(\frac{BC}{BD}\)"); a click shows the text to change it.
