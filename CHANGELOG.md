@@ -148,6 +148,7 @@ Each pull request adds a line under **Unreleased**. See [Releasing](CONTRIBUTING
 
 ### Fixed
 
+- For developers: a device test (`AppTest.aPdfReadByTheAppsWebView`) opens a PDF in the app's WebView, an older one on the emulator (124): pdf.js's modern build put back would fail it.
 - A lesson's 10 pages are kept to: the gallery and the camera add no photo past them and say how many were left out (only a PDF did); the Android app refuses more at once, no longer after sending them for about two minutes with a vague message.
 - Cards follow the "Automatic" prompt's cases to the letter: each part of the lesson gets the form of the case that describes it (a theorem's statement and converse, a diagram to complete on the photo, one card per line of a poem, one card per example), questions and answers only for what no case describes. A card's front never shows what it asks to write or find (a dictation's word). A question about a part in brackets calls it so, no longer "in bold". A spelling help compares only with words that share the point. Formulas are drawn in the helps and in the "Suggested correction" banner, and never written outside \( … \).
 - In the Android app, "Lessons exported to …" gives the file's name as Android created it, "notosaurus-… (1).zip" when one of that name was already there, no longer the name suggested.
