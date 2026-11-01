@@ -1,0 +1,33 @@
+name: Changelog check
+
+# A pull request says what it changes under a "## Changelog" heading of its description
+# (### Added, ### Fixed…: tools/changelog_add.py), which the Changelog workflow puts in
+# CHANGELOG.md once merged; or it is labelled "no changelog". Checked again when the
+# description or the labels change, on its own: the tests don't run again for that.
+
+on:
+  pull_request:
+    types: [opened, edited, synchronize, reopened, labeled, unlabeled]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: changelog-check-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  changelog:
+    runs-on: ubuntu-latest
+    timeout-minutes: 2
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - name: The description has its entries, or the label
+        env:
+          BODY: ${{ github.event.pull_request.body }}
+          LABELS: ${{ join(github.event.pull_request.labels.*.name, ',') }}
+          AUTHOR: ${{ github.event.pull_request.user.login }}
+        run: |
+          case ",$LABELS," in *",no changelog,"*) echo "Labelled 'no changelog'."; exit 0;; esac
+          case "$AUTHOR" in dependabot*) echo "A dependency update: no changelog."; exit 0;; esac
+          printf '%s\n' "$BODY" | python3 tools/changelog_add.py --check

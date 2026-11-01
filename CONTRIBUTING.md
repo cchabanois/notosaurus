@@ -197,8 +197,29 @@ its entries in `LESSONS`, `INSTRUCTIONS` and `CORRECTION_TYPED` in the script, a
 
 ## Pull requests
 
-`main` is protected: every change goes through a pull request. Each pull request adds a
-line under **Unreleased** in [CHANGELOG.md](CHANGELOG.md).
+`main` is protected: every change goes through a pull request. Each pull request says what
+it changes under a `## Changelog` heading of its description, in
+[Keep a Changelog](https://keepachangelog.com/en/1.1.0/)'s subsections, one bullet per
+entry:
+
+```markdown
+## Changelog
+### Added
+- 💾 **Back up or move my lessons** (the settings): every lesson in one file…
+### Fixed
+- A licence key refused is no longer kept.
+```
+
+Once the pull request is merged, the *Changelog* workflow puts these entries under
+**Unreleased** in [CHANGELOG.md](CHANGELOG.md) (`tools/changelog_add.py`, from the squash
+commit's message) and pushes them. No pull request edits `CHANGELOG.md` itself: two of them
+never conflict on it, and none is rebased, nor tested again, for a line of changelog. A pull
+request that changes nothing worth telling (a dependency update, a typo) is labelled
+`no changelog`; the *Changelog check* workflow asks for one or the other.
+
+The workflow pushes to `main` with a deploy key: a key pair whose public key is a deploy key
+of the repository with write access, whose private key is the secret `CHANGELOG_DEPLOY_KEY`,
+and with *Deploy keys* among the bypass actors of `main`'s ruleset.
 
 ## Contributor License Agreement
 
@@ -229,7 +250,8 @@ Anki's add-on list, and the Android app takes it as its own (`versionName`, and 
 *Draft release* workflow keeps a draft GitHub release `vX.Y.Z` up to date: the add-on
 built from `main`, and the **Unreleased** section of [CHANGELOG.md](CHANGELOG.md) as notes.
 
-1. Every pull request adds a line under **Unreleased**.
+1. Every pull request's entries land under **Unreleased** once merged (see
+   [Pull requests](#pull-requests)).
 2. To release, open a pull request that renames **Unreleased** to `[X.Y.Z] - yyyy-mm-dd`
    (keep an empty **Unreleased** above it, and update the links at the bottom), and
    freezes the relay's API this version's Android app speaks:

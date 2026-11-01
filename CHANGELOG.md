@@ -3,7 +3,7 @@
 All notable changes to Notosaurus. The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/)
 and versions follow [Semantic Versioning](https://semver.org/).
 
-Each pull request adds a line under **Unreleased**. See [Releasing](CONTRIBUTING.md#releasing) for how a version is published.
+Each pull request's entries (the `## Changelog` of its description) are put under **Unreleased** once it is merged, by the *Changelog* workflow: see [Pull requests](CONTRIBUTING.md#pull-requests), and [Releasing](CONTRIBUTING.md#releasing) for how a version is published.
 
 ## [Unreleased]
 
