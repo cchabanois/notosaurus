@@ -1117,7 +1117,9 @@ a.btn { text-decoration: none; }
 .exam-head .chip-btn { text-transform: none; letter-spacing: normal; }
 /* Not the text fields' width and padding (global input rule): a box, its row the touch target */
 .exam-add input[type=checkbox] { width: 1.25rem; height: 1.25rem; padding: 0; flex: none; margin: 0; accent-color: var(--primary); }
-.exam-add .child-row { display: flex; align-items: center; gap: .6rem; cursor: pointer; }
+.exam-add .child-row { display: flex; flex-wrap: nowrap; align-items: center; gap: .6rem; cursor: pointer; }  /* a long title wraps beside its box */
+.exam-add .child-row strong { min-width: 0; overflow-wrap: anywhere; }
+.exam-add-actions { position: sticky; bottom: 0; padding: .5rem 0; background: var(--surface); }
 .exam-rows li, .exam-lessons li { display: flex; flex-direction: column; gap: .35rem; }
 .exam-actions { display: flex; flex-wrap: wrap; gap: .4rem; padding: 0 .2rem .4rem; }
 .child-row .exam-actions { flex-basis: 100%; padding: .3rem 0 0; }  /* in the lesson's card: whose they are is seen */
