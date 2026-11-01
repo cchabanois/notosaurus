@@ -508,8 +508,12 @@
               </span>
               </div>
               <div class="meta">
+                <!-- Its formulas drawn, as the helps' (its text a click away) -->
+                <div class="math-preview shown info" x-show="renderedOnly(card, 'info')" x-html="previewHtml(card.info)"
+                     @click="editField(card, 'info', $el)" :title="readOnly() ? '' : $t('app.review.editFormula')"></div>
                 <textarea class="info" rows="1" x-model="card.info" :readonly="readOnly()" @keydown.enter.prevent
                           :placeholder="$t('app.review.info')" :aria-label="$t('app.review.infoLabel')"
+                          x-show="!renderedOnly(card, 'info')" @focus="card._editing = 'info'" @blur="card._editing = ''"
                           x-init="watchHeight($el)" x-effect="card.info; fitHeight($el)"></textarea>
                 <input class="subdeck" x-model="card.subdeck" :readonly="readOnly()" :placeholder="$t('app.review.subdeck')"
                        :aria-label="$t('app.review.subdeckLabel')"
@@ -518,8 +522,11 @@
               <!-- Shown under the info on the back, in Anki; cleared, it's gone -->
               <div class="fun-fact" x-show="card.fun_fact">
                 <span aria-hidden="true">💡</span>
-                <textarea class="grow" rows="1" x-model="card.fun_fact" :readonly="readOnly()" @keydown.enter.prevent
+                <div class="math-preview shown" x-show="renderedOnly(card, 'fun_fact')" x-html="previewHtml(card.fun_fact)"
+                     @click="editField(card, 'fun_fact', $el)" :title="readOnly() ? '' : $t('app.review.editFormula')"></div>
+                <textarea class="grow fun_fact" rows="1" x-model="card.fun_fact" :readonly="readOnly()" @keydown.enter.prevent
                           :aria-label="$t('app.review.funFact')"
+                          x-show="!renderedOnly(card, 'fun_fact')" @focus="card._editing = 'fun_fact'" @blur="card._editing = ''"
                           x-init="watchHeight($el)" x-effect="card.fun_fact; fitHeight($el)"></textarea>
               </div>
               <!-- The helps written at generation: on the back in Anki; cleared, they're gone. Their

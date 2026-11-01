@@ -336,6 +336,28 @@ def test_formulas_drawn_in_the_helps_and_the_doubt(page):
     sync_api.expect(card.locator(".card-doubt .katex")).to_have_count(2)  # the reason's, the corrected back's
 
 
+def test_formulas_drawn_in_the_info_and_the_fun_fact(page):
+    """TYP-02: the info's formulas, the "did you know"'s too, drawn as the helps' (their text a
+    click away), never their LaTeX shown as it is."""
+    generate_free(page, FRONT_PROMPT)
+    page.evaluate(
+        r"""Object.assign(document.querySelector('[x-data]')._x_dataStack[0].cards[0], {
+            info: String.raw`Exemple : si \(\frac{BC}{BD} = \frac{BE}{BA}\)`,
+            fun_fact: String.raw`Il vaut \(\pi\) environ`,
+        })"""
+    )
+    card = page.locator(".flash").first
+    info = card.locator(".meta .math-preview.shown:visible")
+    sync_api.expect(info.locator(".katex")).to_have_count(1)
+    sync_api.expect(card.locator("textarea.info")).to_be_hidden()
+    sync_api.expect(card.locator(".fun-fact .math-preview.shown:visible .katex")).to_have_count(1)
+    if shots := os.environ.get("NOTOSAURUS_SHOTS"):  # to look at it: a folder for the screenshot
+        card.screenshot(path=f"{shots}/info-formula.png")
+    info.click()
+    sync_api.expect(card.locator("textarea.info")).to_be_focused()
+    sync_api.expect(card.locator("textarea.info")).to_have_value(r"Exemple : si \(\frac{BC}{BD} = \frac{BE}{BA}\)")
+
+
 def test_generate_again_in_place_then_undo(page):
     generate_free(page, FRONT_PROMPT)
     (first,) = lessons(page)
