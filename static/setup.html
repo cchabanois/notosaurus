@@ -145,6 +145,8 @@
           <h2 tabindex="-1" x-text="$t('setup.phone.title')"></h2>
           <p class="hint" x-text="$t('setup.phone.hint')"></p>
           <img class="qr" x-show="phone" :src="phone && '/api/qr?' + new URLSearchParams({ text: phone.url })" :alt="$t('admin.phones.qr')" width="200" height="200">
+          <!-- Its address with its token, to type instead of scanning (no scanner on the phone) -->
+          <p class="qr-address" x-show="phone"><code x-text="phone?.url"></code></p>
           <p class="setup-waiting" x-show="!phonePaired" role="status">
             <span class="spinner" aria-hidden="true"></span> <span x-text="$t('setup.phone.waiting')"></span>
           </p>
