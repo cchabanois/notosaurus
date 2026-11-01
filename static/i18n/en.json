@@ -1169,7 +1169,7 @@
     "menuSetup": "Getting started",
     "menuSettings": "Settings",
     "phoneTitle": "Open Notosaurus on the phone",
-    "phoneSteps": "1. Connect the phone to the same Wi-Fi as this computer.\n2. Scan this QR code with the phone's camera.\n3. In the browser: menu → “Add to Home screen”, to use it like an app.\n\nSettings (AI keys…) open here, on the computer: Tools → Notosaurus → Settings.",
+    "phoneSteps": "1. Connect the phone to the same Wi-Fi as this computer.\n2. Scan this QR code with the phone's camera.\n3. In the browser: menu → “Add to Home screen”, to use it like an app.\n\nOn Android, the Notosaurus app can show it too, for free: in its settings, “📍 Where does Notosaurus work?” → “💻 On my computer”, then scan this QR code.\n\nSettings (AI keys…) open here, on the computer: Tools → Notosaurus → Settings.",
     "phoneHelp": "Help: {url}",
     "localOnly": "⚠ The server only listens on this computer (“host” set to 127.0.0.1): set “0.0.0.0” in the add-on config to reach it from the phone.",
     "notRunningYet": "Notosaurus is starting: try again in a few seconds.",

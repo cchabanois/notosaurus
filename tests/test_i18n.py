@@ -107,3 +107,12 @@ def test_help_links_go_to_pages_that_exist():
     linked |= set(re.findall(r'docs_url\("([\w-]+)"\)', addon))
     pages = {p.stem for p in Path("docs/src/content/docs").glob("*.md*")}
     assert linked - {""} <= pages, linked - pages
+
+
+def test_the_addons_phone_window_tells_of_the_android_app():
+    """Anki → Tools → Notosaurus → Open on the phone: besides the phone's browser, the
+    Android app shows the computer's page too (free), its settings' own words to get there."""
+    for lang in i18n.available():
+        steps = i18n.get(lang, "addon.phoneSteps")
+        where = i18n.get(lang, "android.where")
+        assert "Android" in steps and where["title"] in steps and where["computer"] in steps, lang

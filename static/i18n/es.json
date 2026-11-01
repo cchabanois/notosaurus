@@ -1169,7 +1169,7 @@
     "menuSetup": "Asistente de inicio",
     "menuSettings": "Ajustes",
     "phoneTitle": "Abrir Notosaurus en el móvil",
-    "phoneSteps": "1. Conecta el móvil a la misma wifi que este ordenador.\n2. Escanea este código QR con la cámara del móvil.\n3. En el navegador: menú → «Añadir a pantalla de inicio», para usarlo como una aplicación.\n\nLos ajustes (claves de IA…) se abren aquí, en el ordenador: Herramientas → Notosaurus → Ajustes.",
+    "phoneSteps": "1. Conecta el móvil a la misma wifi que este ordenador.\n2. Escanea este código QR con la cámara del móvil.\n3. En el navegador: menú → «Añadir a pantalla de inicio», para usarlo como una aplicación.\n\nEn Android, la app Notosaurus también puede mostrarlo, gratis: en sus ajustes, «📍 ¿Dónde trabaja Notosaurus?» → «💻 En mi ordenador», y escanea este código QR.\n\nLos ajustes (claves de IA…) se abren aquí, en el ordenador: Herramientas → Notosaurus → Ajustes.",
     "phoneHelp": "Ayuda: {url}",
     "localOnly": "⚠ El servidor solo escucha en este ordenador («host» en 127.0.0.1): pon «0.0.0.0» en la configuración del complemento para acceder desde el móvil.",
     "notRunningYet": "Notosaurus está arrancando: vuelve a intentarlo dentro de unos segundos.",
