@@ -109,10 +109,14 @@ def test_help_links_go_to_pages_that_exist():
     assert linked - {""} <= pages, linked - pages
 
 
-def test_the_addons_phone_window_tells_of_the_android_app():
-    """Anki → Tools → Notosaurus → Open on the phone: besides the phone's browser, the
-    Android app shows the computer's page too (free), its settings' own words to get there."""
+def test_the_phone_qr_code_tells_of_the_android_app():
+    """Anki → Tools → Notosaurus → Open on the phone, and the setup assistant's phone step:
+    besides the phone's browser, the Android app shows the computer's page too (free), its
+    settings' own words to get there."""
+    setup = (i18n.I18N_DIR.parent / "setup.html").read_text(encoding="utf-8")
+    assert "setup.phone.androidApp" in setup
     for lang in i18n.available():
-        steps = i18n.get(lang, "addon.phoneSteps")
         where = i18n.get(lang, "android.where")
-        assert "Android" in steps and where["title"] in steps and where["computer"] in steps, lang
+        for key in ("addon.phoneSteps", "setup.phone.androidApp"):
+            text = i18n.get(lang, key)
+            assert "Android" in text and where["title"] in text and where["computer"] in text, (lang, key)

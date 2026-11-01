@@ -973,6 +973,7 @@
       "waiting": "Esperando al móvil…",
       "paired": "✓ El móvil está conectado.",
       "sameWifi": "El móvil debe estar en la misma wifi que este ordenador.",
+      "androidApp": "En Android, la app Notosaurus también puede abrirlo, gratis: en sus ajustes, «📍 ¿Dónde trabaja Notosaurus?» → «💻 En mi ordenador», y escanea este código QR.",
       "later": "Más tarde"
     },
     "done": {

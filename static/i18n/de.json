@@ -973,6 +973,7 @@
       "waiting": "Warte auf das Handy…",
       "paired": "✓ Das Handy ist verbunden.",
       "sameWifi": "Das Handy muss im selben WLAN sein wie dieser Computer.",
+      "androidApp": "Unter Android kann es auch die Notosaurus-App öffnen, kostenlos: in ihren Einstellungen „📍 Wo arbeitet Notosaurus?“ → „💻 Auf meinem Computer“, dann diesen QR-Code scannen.",
       "later": "Später"
     },
     "done": {

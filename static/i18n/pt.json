@@ -973,6 +973,7 @@
       "waiting": "Aguardando o celular…",
       "paired": "✓ O celular está conectado.",
       "sameWifi": "O celular precisa estar no mesmo Wi-Fi que este computador.",
+      "androidApp": "No Android, o app Notosaurus também pode abri-lo, de graça: nas configurações dele, “📍 Onde o Notosaurus trabalha?” → “💻 No meu computador”, depois leia este QR code.",
       "later": "Mais tarde"
     },
     "done": {

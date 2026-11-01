@@ -973,6 +973,7 @@
       "waiting": "In attesa del telefono…",
       "paired": "✓ Il telefono è connesso.",
       "sameWifi": "Il telefono deve essere sulla stessa rete Wi-Fi di questo computer.",
+      "androidApp": "Su Android, anche l'app Notosaurus può aprirlo, gratis: nelle sue impostazioni, “📍 Dove lavora Notosaurus?” → “💻 Sul mio computer”, poi scansiona questo codice QR.",
       "later": "Più tardi"
     },
     "done": {

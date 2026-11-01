@@ -152,6 +152,8 @@
           </p>
           <p class="test-result ok" x-show="phonePaired" role="status" x-text="$t('setup.phone.paired')"></p>
           <p class="hint" x-text="$t('setup.phone.sameWifi')"></p>
+          <!-- The Android app shows this computer's page too (its mode "On my computer"): the same QR code -->
+          <p class="hint" x-text="$t('setup.phone.androidApp')"></p>
           <div class="setup-nav">
             <button type="button" class="btn soft" @click="go('ai')" x-text="$t('setup.back')"></button>
             <button type="button" class="btn primary" @click="go('done')" x-text="phonePaired ? $t('setup.next') : $t('setup.phone.later')"></button>
