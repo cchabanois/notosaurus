@@ -215,7 +215,11 @@ Once the pull request is merged, the *Changelog* workflow puts these entries und
 commit's message) and pushes them. No pull request edits `CHANGELOG.md` itself: two of them
 never conflict on it, and none is rebased, nor tested again, for a line of changelog. A pull
 request that changes nothing worth telling (a dependency update, a typo) is labelled
-`no changelog`; the *Changelog check* workflow asks for one or the other.
+`no changelog`; the *Changelog check* workflow asks for one or the other, and refuses entries
+edited by hand under **Unreleased**. To rework them anyway (too long, two to merge, a wording),
+a pull request labelled `changelog` may: it is the one case where two pull requests can meet
+on the file, so keep it short-lived. The release pull request, labelled `release`, renames
+**Unreleased** and is the natural moment to tidy a version's entries as a whole.
 
 The workflow pushes to `main` with a deploy key: a key pair whose public key is a deploy key
 of the repository with write access, whose private key is the secret `CHANGELOG_DEPLOY_KEY`,

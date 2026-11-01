@@ -28,8 +28,9 @@ jobs:
       # The entries are written after the merge, from the description: a pull request editing
       # them by hand would conflict with every other one again. Only when the file is among
       # its changes: its Unreleased compared with the one it started from (the merge base, not
-      # main's tip, where other merges' entries land meanwhile). The release pull request,
-      # which renames Unreleased, is labelled "release".
+      # main's tip, where other merges' entries land meanwhile). Two exceptions, by label:
+      # "release" (the pull request renaming Unreleased) and "changelog" (one that reworks
+      # the entries: shortened, merged, reworded), which needs no entry of its own either.
       - name: The Unreleased entries are not edited by hand
         env:
           GH_TOKEN: ${{ github.token }}
@@ -37,7 +38,10 @@ jobs:
           FILES: repos/${{ github.repository }}/pulls/${{ github.event.number }}/files
           BASE: ${{ github.event.pull_request.base.ref }}
         run: |
-          case ",$LABELS," in *",release,"*) echo "A release: Unreleased may change."; exit 0;; esac
+          case ",$LABELS," in
+            *",release,"*) echo "A release: Unreleased may change."; exit 0;;
+            *",changelog,"*) echo "Labelled 'changelog': the entries are reworked on purpose."; exit 0;;
+          esac
           if ! gh api "$FILES" --paginate --jq '.[].filename' | grep -qx 'CHANGELOG.md'; then
             echo "CHANGELOG.md untouched."
             exit 0
@@ -51,6 +55,9 @@ jobs:
           LABELS: ${{ join(github.event.pull_request.labels.*.name, ',') }}
           AUTHOR: ${{ github.event.pull_request.user.login }}
         run: |
-          case ",$LABELS," in *",no changelog,"*) echo "Labelled 'no changelog'."; exit 0;; esac
+          case ",$LABELS," in
+            *",no changelog,"*) echo "Labelled 'no changelog'."; exit 0;;
+            *",changelog,"*|*",release,"*) echo "The changelog itself: no entry needed."; exit 0;;
+          esac
           case "$AUTHOR" in dependabot*) echo "A dependency update: no changelog."; exit 0;; esac
           printf '%s\n' "$BODY" | python3 tools/changelog_add.py --check
