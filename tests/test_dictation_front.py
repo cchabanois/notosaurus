@@ -19,6 +19,17 @@ def test_the_word_written_on_the_front_blanked():
     assert blanked("Il habite une Maison bleue.", "maison") == "Il habite une … bleue."
 
 
+def test_an_empty_front_gets_its_blank():
+    """ANK-08: no front written, no note in Anki (its first field): the blank alone."""
+    assert blanked("", "chaton") == "…" and blanked("  ", "Le chat dort.") == "…"
+    assert blanked("", "") == ""  # nothing to write: left as it is
+    # Its sound the word once, as with no front: a lesson's sounds made before found again
+    from notosaurus_core import tts
+
+    assert tts.spoken(Card(front="…", back="chaton"), dictation=True) == "chaton"
+    assert tts.spoken(Card(front="", back="chaton"), dictation=True) == "chaton"
+
+
 def test_a_front_with_its_blank_or_ambiguous_kept():
     assert blanked("la maison de … poupée", "la") == "la maison de … poupée"  # the other "la" isn't it
     assert blanked("la maison de la poupée", "la") == "la maison de la poupée"  # which one?

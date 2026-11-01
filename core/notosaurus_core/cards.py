@@ -110,6 +110,8 @@ def plain_cards(cards: list[Card]) -> None:
 # A dictation's blank, where the word to write goes ("…", "...", "___"): its sound reads the
 # sentence with the word put back (tts.spoken)
 BLANK = re.compile(r"…|\.{3}|_{3,}")
+# The front of a dictation's card that has none: its blank alone, the word heard to write
+DICTATION_FRONT = "…"
 
 
 def blank_dictations(cards: list[Card]) -> None:
@@ -117,9 +119,14 @@ def blank_dictations(cards: list[Card]) -> None:
     blank, it wrote "Write the word: maison"): in place, a front without a blank that holds
     its back exactly once, as a whole word (emphasised: "[maison]" too), gets "…" there. A
     front with its blank already ("la maison de … poupée" → "la": the other "la" isn't it),
-    or holding its back more than once (which one?), stays as it is."""
+    or holding its back more than once (which one?), stays as it is. An empty front (ANK-08:
+    the AI wrote none) gets the blank alone, "…": the word heard, to write; without it, no
+    note in Anki (its first field)."""
     for card in cards:
         back = card.back.strip()
+        if back and not card.front.strip():
+            card.front = DICTATION_FRONT
+            continue
         if not back or "\n" in back or BLANK.search(card.front):
             continue
         word = re.escape(back)

@@ -78,7 +78,8 @@ def spoken(card: Card, dictation: bool = False) -> str:
     is only a transcription ("/ɜː/"): the examples quoted on the front, the only way to hear
     the sound ("bird"), each read on its own; none: nothing. A dictation's card whose front
     is a sentence with a blank: the sentence with the word, then the word (alone, "vers"
-    could be "verre" or "vert"); each on its line, read on its own (lines)."""
+    could be "verre" or "vert"); each on its line, read on its own (lines). A front that is
+    the blank alone ("…", cards.DICTATION_FRONT): the word, once."""
     back = speakable(card.back.strip())
     if not LETTER.search(back):
         examples = [speakable(a or b) for a, b in QUOTED.findall(card.front)]
@@ -87,6 +88,8 @@ def spoken(card: Card, dictation: bool = False) -> str:
     if not dictation or "\n" in back or not BLANK.search(sentence):
         return back
     said = BLANK.sub(lambda _: back, sentence, count=1)
+    if said == back:
+        return back
     return f"{said}{'' if said[-1] in '.!?' else '.'}\n{back}"
 
 

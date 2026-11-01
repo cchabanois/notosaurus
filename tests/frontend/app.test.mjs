@@ -823,6 +823,14 @@ test("Add to Anki: its steps said on the button as they come, then its answer", 
   assert.equal(c.lessonExported, true);
 });
 
+test("Add to Anki: cards not sent are said, never \"nothing to change\" alone", async () => {
+  // ANK-08: a dictation whose cards had no front, none sent: "✓ In Anki: nothing to change"
+  const { c } = await sendWith([{ result: { added: 0, updated: 0, skipped: 2, audio_failures: 0, leftovers: [] } }]);
+  assert.match(c.error, /2/);
+  const sent = await sendWith([{ result: { added: 2, updated: 0, skipped: 0, audio_failures: 0, leftovers: [] } }]);
+  assert.equal(sent.c.error, "");
+});
+
 test("Add to Anki: an error as the last line is said", async () => {
   const { c } = await sendWith([{ step: "cards" }, { error: { code: "anki.unreachable", params: {} } }]);
   assert.ok(c.error);

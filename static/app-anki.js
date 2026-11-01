@@ -156,6 +156,8 @@ const ankiPart = {
       const warnings = [];
       if (r.sync_error) warnings.push(t("app.send.noSync", { reason: errorMessage(r.sync_error) }));
       if (r.audio_failures) warnings.push(t("app.send.noSound", { count: r.audio_failures }));
+      // Cards with nothing to ask or to answer: no note in Anki, said (never "nothing to change")
+      if (r.skipped) warnings.push(t("app.send.skipped", { count: r.skipped }));
       if (r.conversion_unsupported) warnings.push(t("app.send.oldAnkiConnect"));
       // A note type gained a field or a card: Anki asks which side to keep at the next sync
       if (r.restructured?.length) warnings.push(t("app.send.restructured", { names: r.restructured.join(", ") }));

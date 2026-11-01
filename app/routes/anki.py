@@ -61,7 +61,8 @@ async def _send(req: ExportRequest, background: BackgroundTasks, step: Step | No
     tags = await asyncio.to_thread(exams.card_tags, lesson.id, [c.id for c in req.cards]) if lesson else {}
     sent = notes(req, audio, media.diagram_images(req, lesson), media.card_pictures(req, lesson), tags)
     result = await ankiconnect.send(sent, known)
-    answer = {**result.__dict__, "audio_failures": failures}
+    # Cards with nothing to ask or to answer: no note, said to the page (not "nothing to change")
+    answer = {**result.__dict__, "audio_failures": failures, "skipped": len(req.cards) - len(sent)}
     answer.pop("note_ids")  # the lesson keeps them, the page needn't
     if saved:
         await asyncio.to_thread(lessons.update, saved.id, req, exported=True)

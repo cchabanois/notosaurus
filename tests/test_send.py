@@ -39,6 +39,7 @@ def test_direct_send_to_anki(anki, client):
         "note_types_updated": 0,
         "restructured": [],
         "audio_failures": 0,
+        "skipped": 0,
         "leftovers": [],
     }
 

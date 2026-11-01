@@ -265,6 +265,10 @@
         "one": "{count} cartão sem som",
         "other": "{count} cartões sem som"
       },
+      "skipped": {
+        "one": "{count} cartão não enviado: nada na frente ou no verso",
+        "other": "{count} cartões não enviados: nada na frente ou no verso"
+      },
       "converted": {
         "one": "{count} deles passou para as novas opções (histórico mantido)",
         "other": "{count} deles passaram para as novas opções (histórico mantido)"
