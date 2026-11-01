@@ -148,6 +148,7 @@ Each pull request adds a line under **Unreleased**. See [Releasing](CONTRIBUTING
 
 ### Fixed
 
+- A figure's labels all seen: one drawn under a shape that covers it (a ring's name at the centre, under the inner rings: only "Ville-centre" left of three) is found by looking at the figure, and the figure drawn again, told so. For developers: `figures.hidden_labels`.
 - In the Android app, a test ("Contrôle") that takes only some of a lesson's cards shows them so ("5 cards"), and choosing them again starts from them: it showed "whole lesson" and started from every card, though only the chosen ones were tagged in AnkiDroid.
 - The Android app follows the phone's dark mode: its theme is dark when the phone is, so the page is too (it stayed light). With the phone's text at its largest, the steps' numbers and the "?" grow with their text, and the photo tiles hold theirs.
 - For developers: a device test (`AppTest.aPdfReadByTheAppsWebView`) opens a PDF in the app's WebView, an older one on the emulator (124): pdf.js's modern build put back would fail it.

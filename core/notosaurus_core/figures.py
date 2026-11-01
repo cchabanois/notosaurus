@@ -217,6 +217,42 @@ def to_png(svg: str) -> bytes | None:
         return None
 
 
+# Where a text is only defined, drawn elsewhere or not at all: not a label of the picture
+_NOT_DRAWN = {"defs", "symbol", "marker", "pattern", "clipPath", "mask"}
+
+
+def _labels(element: ElementTree.Element, parent: ElementTree.Element | None = None):
+    """The figure's labels, each with its parent: a <text>, or a run of Typst's letters (a
+    group of <use> only)."""
+    tag = _local(element.tag) if isinstance(element.tag, str) else ""
+    if tag in _NOT_DRAWN:
+        return
+    if parent is not None and (
+        tag == "text" or (tag == "g" and len(element) and all(_local(c.tag) == "use" for c in element))
+    ):
+        yield element, parent
+        return
+    for child in element:
+        yield from _labels(child, element)
+
+
+def hidden_labels(svg: str) -> int:
+    """How many of a cleaned figure's labels can't be seen: taken out, not a pixel changes
+    (under a filled shape drawn after it, or outside the picture). 0 when it can't be told
+    (no resvg)."""
+    seen = to_png(svg)
+    if seen is None:
+        return 0
+    root = ElementTree.fromstring(svg)
+    hidden = 0
+    for label, parent in list(_labels(root)):
+        at = list(parent).index(label)
+        parent.remove(label)
+        hidden += to_png(ElementTree.tostring(root, encoding="unicode")) == seen
+        parent.insert(at, label)
+    return hidden
+
+
 def save(folder: Path, card: Card, svg: str) -> str:
     """The cleaned figure in the lesson's images/ folder; returns its file name (a card
     picture: shown, exported and pruned like the others)."""

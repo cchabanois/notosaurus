@@ -440,6 +440,39 @@ def test_typst_asked_again_with_its_error_then_used(monkeypatch):
     assert "no import" in calls[2]["text"]
 
 
+# Rings drawn as nested nodes, each label at its centre (TYP-09h): the inner fills cover
+# the outer ones' labels
+RINGS = """#diagram(node-stroke: 0.8pt,
+  node((0, 0), [Couronne périurbaine], shape: circle, fill: luma(245), radius: 3cm),
+  node((0, 0), [Banlieue], shape: circle, fill: luma(225), radius: 2cm),
+  node((0, 0), [Ville], shape: circle, fill: rgb("#ffe066"), radius: 1cm),
+)"""
+
+
+def test_labels_that_cant_be_seen_counted():
+    """A label under a filled shape drawn after it, or outside the picture: counted; seen,
+    not (the rules' examples: none hidden)."""
+    assert figures.hidden_labels(figures.clean(figures_typst.compile_svg("diagram", RINGS))) == 2
+    covered = SQUARE.replace("</svg>", '<rect width="400" height="300" fill="white"/></svg>')
+    assert figures.hidden_labels(figures.clean(SQUARE)) == 0 and figures.hidden_labels(figures.clean(covered)) == 1
+    outside = SQUARE.replace("</svg>", '<text x="900" y="40">B</text></svg>')
+    assert figures.hidden_labels(figures.clean(outside)) == 1
+    for family in figures_typst.FAMILIES:
+        typst = (figures_typst.RULES / f"{family}.typ").read_text(encoding="utf-8")
+        example = typst.split(figures_typst.EXAMPLE)[1].replace("  ...\n", "")
+        assert figures.hidden_labels(figures.clean(figures_typst.compile_svg(family, example))) == 0, family
+
+
+def test_typst_with_hidden_labels_asked_again(monkeypatch):
+    """Compiled, but labels hidden: asked again, told so; hidden twice, drawn as SVG."""
+    seen = RINGS.replace("[Couronne périurbaine]", "[]").replace("[Banlieue]", "[]")  # the centre's only
+    svg, calls = typst_drawing(monkeypatch, [RINGS, seen], kind="diagram")
+    assert [c["schema"] for c in calls] == ["Figure", "Figure"] and "<use" in svg
+    assert "2 of its labels can't be seen" in calls[1]["text"] and "Banlieue" in calls[1]["text"]
+    svg, calls = typst_drawing(monkeypatch, [RINGS, RINGS], kind="diagram")
+    assert ">A<" in svg and [c["schema"] for c in calls] == ["Figure", "Figure", "Drawing"]
+
+
 def test_a_figures_kind_given_is_not_asked_again(monkeypatch):
     """Its kind said with its description (Card.figure_kind): one call fewer. Not one of
     the families (an old or a wrong one): asked."""
