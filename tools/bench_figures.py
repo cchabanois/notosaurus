@@ -1,6 +1,6 @@
 """A bench of figures: each case's description drawn by the test relay (/v1/figure, as the
 Android app asks), a few times, then judged: by code (a figure that renders, fills its
-picture, has its labels) and by the AI looking at it, with its thinking (stricter than the
+picture, has its labels, none of them hidden) and by the AI looking at it, with its thinking (stricter than the
 light check of the "🔍 Check" button). A sheet of every figure to look at, its
 verdicts, time and credits; compared with the run before.
 
@@ -27,6 +27,7 @@ import time
 from concurrent.futures import ThreadPoolExecutor
 from datetime import datetime
 from pathlib import Path
+from xml.etree import ElementTree
 
 import httpx
 
@@ -40,6 +41,8 @@ from notosaurus_core.calls import Image  # noqa: E402
 from notosaurus_core.config import AIConfig  # noqa: E402
 
 FILLS = 0.4  # the drawing spans at least this share of the picture's width or height
+# Where a text is only defined, drawn elsewhere or not at all: not a label of the picture
+NOT_DRAWN = {"defs", "symbol", "marker", "pattern", "clipPath", "mask"}
 
 
 def draw(url: str, key: str, description: str) -> dict:
@@ -58,9 +61,41 @@ def draw(url: str, key: str, description: str) -> dict:
     return {"svg": answer["svg"], "seconds": seconds, "credits": answer["usage"]["credits"]}
 
 
+def _local(tag: object) -> str:
+    return tag.rsplit("}", 1)[-1] if isinstance(tag, str) else ""
+
+
+def _labels(element: ElementTree.Element, parent: ElementTree.Element | None = None):
+    """The figure's labels, each with its parent: a <text>, or a run of Typst's letters (a
+    group of <use> only)."""
+    tag = _local(element.tag)
+    if tag in NOT_DRAWN:
+        return
+    if parent is not None and (
+        tag == "text" or (tag == "g" and len(element) and all(_local(c.tag) == "use" for c in element))
+    ):
+        yield element, parent
+        return
+    for child in element:
+        yield from _labels(child, element)
+
+
+def hidden_labels(svg: str, png: bytes) -> int:
+    """How many of a figure's labels can't be seen (`png`: the figure seen): taken out, not a
+    pixel changes (under a filled shape drawn after it, or outside the picture)."""
+    root = ElementTree.fromstring(svg)
+    hidden = 0
+    for label, parent in list(_labels(root)):
+        at = list(parent).index(label)
+        parent.remove(label)
+        hidden += figures.to_png(ElementTree.tostring(root, encoding="unicode")) == png
+        parent.insert(at, label)
+    return hidden
+
+
 def by_code(svg: str) -> tuple[bool, str, bytes | None]:
     """Right by what code can see: it renders, its drawing fills the picture (not a speck in
-    a corner), it has text when it has labels to show."""
+    a corner), it has text when it has labels to show, none of them hidden."""
     from PIL import Image as Picture
 
     png = figures.to_png(svg)
@@ -73,6 +108,9 @@ def by_code(svg: str) -> tuple[bool, str, bytes | None]:
     width, height = (box[2] - box[0]) / grey.width, (box[3] - box[1]) / grey.height
     if max(width, height) < FILLS:
         return False, f"too small ({max(width, height):.0%} of the picture)", png
+    hidden = hidden_labels(svg, png)
+    if hidden:
+        return False, f"{hidden} label(s) hidden (under a shape, or outside the picture)", png
     return True, "", png
 
 

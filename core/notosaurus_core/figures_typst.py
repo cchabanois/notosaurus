@@ -82,11 +82,12 @@ FAMILIES: dict[str, Family] = {
 KINDS = (
     '"geometry": points, segments, lines, circles, polygons, angles, their marks (a theorem, a '
     'construction); "graph": the graph of one or more functions in a frame; "sets": a Venn diagram of '
-    'two or three sets; "diagram": boxes and arrows (a flowchart, a cycle, a chain, a classification); '
+    'two or three sets; "diagram": boxes side by side joined by arrows (a flowchart, a cycle, a chain, a '
+    "classification), never shapes inside one another; "
     '"circuit": an electric circuit; "chemistry": a molecule\'s formula written with its atoms\' '
     "symbols and bonds (developed, semi-developed, skeletal, a ring), never a model of balls; "
-    '"timeline": dates on a line; "other": anything else (a table, a labelled drawing, a solid in '
-    "perspective, a map, a molecular model of coloured balls…)"
+    '"timeline": dates on a line; "other": anything else (a table, a labelled drawing, zones nested '
+    "or overlapping, a solid in perspective, a map, a molecular model of coloured balls…)"
 )
 FAMILY_RULES = f"A figure for a pupil's flashcard is described below. Which kind of figure is it? {KINDS}."
 FigureKind = Literal["geometry", "graph", "sets", "diagram", "circuit", "chemistry", "timeline", "other"]

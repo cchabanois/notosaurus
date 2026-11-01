@@ -441,6 +441,40 @@ def test_typst_asked_again_with_its_error_then_used(monkeypatch):
     assert "no import" in calls[2]["text"]
 
 
+# Rings drawn as nested nodes, each label at its centre (TYP-09h): the inner fills cover
+# the outer ones' labels
+RINGS = """#diagram(node-stroke: 0.8pt,
+  node((0, 0), [Couronne périurbaine], shape: circle, fill: luma(245), radius: 3cm),
+  node((0, 0), [Banlieue], shape: circle, fill: luma(225), radius: 2cm),
+  node((0, 0), [Ville], shape: circle, fill: rgb("#ffe066"), radius: 1cm),
+)"""
+
+
+def test_the_figures_bench_sees_hidden_labels():
+    """tools/bench_figures.py: a label under a filled shape drawn after it, or outside the
+    picture, counted and the figure judged wrong; seen, not (the rules' examples: none hidden)."""
+    import sys
+
+    sys.path.insert(0, str(figures_typst.HERE.parent.parent / "tools"))
+    import bench_figures
+
+    def hidden(svg):
+        svg = figures.clean(svg)
+        return bench_figures.hidden_labels(svg, figures.to_png(svg))
+
+    rings = figures.clean(figures_typst.compile_svg("diagram", RINGS))
+    assert hidden(rings) == 2
+    assert bench_figures.by_code(rings)[:2] == (False, "2 label(s) hidden (under a shape, or outside the picture)")
+    assert hidden(SQUARE) == 0
+    assert hidden(SQUARE.replace("</svg>", '<rect width="400" height="300" fill="white"/></svg>')) == 1
+    assert hidden(SQUARE.replace("</svg>", '<text x="900" y="40">B</text></svg>')) == 1
+    assert hidden(SQUARE.replace(">A<", ' font-size="4">i<')) == 0  # tiny, but seen
+    for family in figures_typst.FAMILIES:
+        typst = (figures_typst.RULES / f"{family}.typ").read_text(encoding="utf-8")
+        example = typst.split(figures_typst.EXAMPLE)[1].replace("  ...\n", "")
+        assert hidden(figures_typst.compile_svg(family, example)) == 0, family
+
+
 def test_a_figures_kind_given_is_not_asked_again(monkeypatch):
     """Its kind said with its description (Card.figure_kind): one call fewer. Not one of
     the families (an old or a wrong one): asked."""
@@ -490,6 +524,13 @@ def test_credited_with_what_its_typst_uses():
     timeline = "#timeline(start: 1914, end: 1918, events: ((1916, [Verdun]),))"  # our function: what it uses
     assert figures_typst.made_with("timeline", timeline)[1:] == ["cetz 0.5.2"]
     assert figures_typst.made_with("other", balls) == []
+
+
+def test_nested_zones_are_no_diagram():
+    """fletcher writes a node's text at its centre and draws its boxes side by side: zones
+    inside one another (rings, layers) drawn with it hide or pile up their labels (TYP-09h)."""
+    assert "never shapes inside one another" in figures_typst.KINDS
+    assert "zones nested or overlapping" in figures_typst.KINDS.split('"other"')[1]
 
 
 def test_a_model_of_balls_is_no_chemistry():
