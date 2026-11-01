@@ -408,6 +408,28 @@ def _page_with_a_drawing() -> bytes:
     return out.getvalue()
 
 
+def test_a_lesson_drawing_keeps_its_colours_its_paper_made_white():
+    """A drawing cut out keeps its colours (a yellow sun stays yellow, not orange); a grey or
+    yellow paper is made white."""
+    import io
+
+    from PIL import Image as Picture
+    from PIL import ImageDraw
+
+    def page(paper):
+        drawn = Picture.new("RGB", (600, 400), paper)
+        ImageDraw.Draw(drawn).ellipse((200, 100, 400, 300), fill=(247, 198, 0))
+        out = io.BytesIO()
+        drawn.save(out, "PNG")
+        return out.getvalue()
+
+    for paper, sun in (((255, 255, 255), (247, 198, 0)), ((220, 210, 180), (255, 236, 0))):
+        cut = Picture.open(io.BytesIO(pictures.cut_out(page(paper), [0.25, 0.1, 0.75, 0.9]))).convert("RGB")
+        middle, corner = cut.getpixel((cut.width // 2, cut.height // 2)), cut.getpixel((2, 2))
+        assert all(abs(a - b) <= 12 for a, b in zip(middle, sun, strict=True)), (paper, middle)
+        assert min(corner) >= 245, (paper, corner)  # the paper white
+
+
 def test_a_lesson_drawing_cut_out_and_taken_first(monkeypatch, tmp_path):
     """The lesson's own drawing of a card's thing: cut out of its page (a margin, its paper
     made white), the card's picture at once, no search; the other cards looked for as before."""

@@ -149,6 +149,7 @@ Each pull request adds a line under **Unreleased**. See [Releasing](CONTRIBUTING
 
 ### Fixed
 
+- A drawing taken from the lesson's page keeps its colours: a yellow sun stays yellow (it came out orange, its rays brown). Only the paper is made white, from its colour at the cut-out's edge.
 - A figure of zones inside one another (rings, layers) keeps all its labels: it is no longer drawn as a diagram of boxes, which wrote each ring's name at the centre, under the inner rings (only "Ville-centre" was left of three). For developers: `figures_typst.KINDS`; the figures bench (`tools/bench_figures.py`) judges a figure with a hidden label wrong.
 - A lesson whose answers are typed asks only the short ones typed (a form, a word or two, at most 4 words): a definition or a sentence is said in one's own words, no longer typed again letter by letter. The Android app no longer asks a formula typed either.
 - "🔊 Voice …, included in the deck" is said only when a card is read: a lesson of texts with gaps (a poem's), formulas or multiple choices has no sound, and no longer announces one.
