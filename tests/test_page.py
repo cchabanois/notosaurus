@@ -1011,7 +1011,7 @@ def test_every_language_fits_a_narrow_phone(page, browser, server, lang):
         other.wait_for_function("document.documentElement.classList.contains('i18n-ready')")
         other.locator(".chip").first.click()  # the free prompt
         other.locator("textarea[x-ref=promptText]").fill("QCM sur la Révolution")
-        other.locator(".from-prompt button").click()
+        other.locator(".bottom-bar button.btn.primary.wide").first.click()  # from the prompt alone (nextAction)
         other.locator(".flash").first.wait_for()
         assert other.evaluate(CUT) == []
         other.goto("/admin.html")

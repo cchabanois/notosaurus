@@ -156,6 +156,7 @@
       "badgeNew": "nouvelle",
       "badgeModified": "modifiée",
       "noCards": "Aucune carte trouvée : vérifiez les photos ou la consigne.",
+      "noCardsWithoutPhoto": "Il n'y a pas de photo : la consigne doit dire quoi apprendre, une liste de mots ou un thème.",
       "owner": "🧒 Leçon de <strong>{owner}</strong>",
       "choice": "🤖 {choice}",
       "promptUsed": "📝 Consigne utilisée pour cette leçon",

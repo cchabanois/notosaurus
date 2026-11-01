@@ -90,7 +90,8 @@ const lessonsPart = {
       }
       this.loadLessons();
       if (this.switches.store) this.loadSwitches();  // the Android app: the free trial maybe just started
-      if (!this.cards.length) this.error = t("app.review.noCards");
+      // No card: without a photo, the prompt said nothing to learn (no words, no topic)
+      if (!this.cards.length) this.error = t(this.photos.length ? "app.review.noCards" : "app.review.noCardsWithoutPhoto");
       this.drawPictures();  // the cards show now, their pictures when drawn
     } catch (e) {
       if (!this.cancelling) this.aiError(e);  // cancelled: no error to show
