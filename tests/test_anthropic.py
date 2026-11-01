@@ -211,9 +211,11 @@ def test_chosen_by_the_settings(monkeypatch):
 
 
 def test_the_schemas_within_claudes_limits():
-    """Claude's structured outputs refuse a schema past 24 optional fields or 16 with a
-    union (a nullable one), all nested ones counted: the largest schemas asked stay within."""
-    from notosaurus_core.models import Extraction, Revision
+    """Claude's structured outputs refuse a schema past 20 optional fields ("Schema is too
+    complex": 21 refused, 2026-11-01) or 16 with a union (a nullable one), all nested ones
+    counted: the largest schemas asked of Claude stay within; the others keep every field
+    optional (CLAUDE_REQUIRED only for Claude)."""
+    from notosaurus_core.models import CardFix, Extraction, Revision
 
     def counted(schema: dict) -> tuple[int, int]:
         optional = unions = 0
@@ -229,9 +231,22 @@ def test_the_schemas_within_claudes_limits():
             optional, unions = optional + more[0], unions + more[1]
         return optional, unions
 
-    for base in (Extraction, Revision):
-        optional, unions = counted(llm.ai_schema(base, fun_facts=True, helps=True).model_json_schema())
-        assert optional <= 24 and unions <= 16, (base.__name__, optional, unions)
+    for base in (Extraction, Revision, CardFix):
+        optional, unions = counted(llm.ai_schema(base, fun_facts=True, helps=True, claude=True).model_json_schema())
+        assert optional <= 20 and unions <= 16, (base.__name__, optional, unions)
+        other = llm.ai_schema(base, fun_facts=True, helps=True).model_json_schema()["$defs"]["Card"]
+        assert not set(llm.CLAUDE_REQUIRED) & set(other["required"]), base.__name__
+
+
+def test_claude_known_through_openrouter_too():
+    """The schema within Claude's limit: for Anthropic's API, and for Claude through
+    OpenRouter; not for another model there."""
+    from notosaurus_core.config import AIConfig
+
+    assert llm.for_claude(AIConfig(llm="anthropic"))
+    assert llm.for_claude(AIConfig(llm="openrouter", model="anthropic/claude-sonnet-5.5"))
+    assert not llm.for_claude(AIConfig(llm="openrouter", model="google/gemini-3.8-flash"))
+    assert not llm.for_claude(AIConfig(llm="openai", model="gpt-6.1-sol"))
 
 
 def test_the_fallback_beta_withdrawn_asked_without_it(monkeypatch):
