@@ -96,10 +96,27 @@ SLOW_THINKING_S = 45  # the same when the model thinks (a careful lesson): longe
 SET_BY_NOTOSAURUS = {"picture", "picture_source", "id", "voice"}
 
 
+# Claude's structured outputs refuse a schema past 20 optional fields ("Schema is too
+# complex"): for Claude, these card fields are required, written empty ("", false) when
+# they don't apply, as they read when left out. Not the helps and the fun fact: required,
+# a model would write one on every card.
+CLAUDE_REQUIRED = ("subdeck", "info", "figure", "picture_search", "picture_on_back")
+
+
+def for_claude(s: AIConfig) -> bool:
+    """A Claude model answers: Anthropic's API, or Claude through OpenRouter."""
+    return s.llm == "anthropic" or (
+        s.llm in config.OPENAI_LIKE and s.model_for_provider().lstrip("~").startswith("anthropic/")
+    )
+
+
 @cache
-def ai_schema(base: type[BaseModel], fun_facts: bool = False, helps: bool = False) -> type[BaseModel]:
+def ai_schema(
+    base: type[BaseModel], fun_facts: bool = False, helps: bool = False, claude: bool = False
+) -> type[BaseModel]:
     """`base` (Extraction, Revision) as the AI fills it: another model, turned back into
-    `base` with `base.model_validate(answer.model_dump())`."""
+    `base` with `base.model_validate(answer.model_dump())`. `claude`: within Claude's limit
+    (CLAUDE_REQUIRED)."""
     left_out = set(SET_BY_NOTOSAURUS)
     left_out |= set() if fun_facts else {"fun_fact"}
     left_out |= set() if helps else {"explanation", "mnemonic"}
@@ -110,6 +127,8 @@ def ai_schema(base: type[BaseModel], fun_facts: bool = False, helps: bool = Fals
     # field more would pass Claude's limit; an answer without it still read (its default)
     def required(schema: dict[str, Any]) -> None:
         schema.setdefault("required", []).append("figure_kind")
+        if claude:
+            schema["required"] += [k for k in CLAUDE_REQUIRED if k in card_fields]
 
     config = ConfigDict(json_schema_extra=required)  # pyright: ignore[reportArgumentType]
     card = create_model("Card", __doc__=Card.__doc__, __config__=config, **card_fields)
@@ -181,7 +200,7 @@ async def extract_cards(
     images, sizes = _prepare(images)
     text = options.instructions + _user_text(prompt, options, len(images), sizes, fmt)
     fun_facts, helps = options.fun_facts, options.helps
-    schema = ai_schema(Extraction, fun_facts, helps)
+    schema = ai_schema(Extraction, fun_facts, helps, for_claude(s))
     answer = await _ask_provider(
         s,
         images,
@@ -521,7 +540,7 @@ async def revise_cards(
         s,
         images,
         text,
-        ai_schema(Revision, fun_facts=True, helps=True),
+        ai_schema(Revision, fun_facts=True, helps=True, claude=for_claude(s)),
         demo=lambda: demo_ai.revision(deck, instruction, texts),
     )
     revision = Revision.model_validate(_accepted(answer).model_dump())
@@ -555,7 +574,7 @@ async def fix_card(
         s,
         images,
         text,
-        ai_schema(CardFix, fun_facts=True, helps=True),
+        ai_schema(CardFix, fun_facts=True, helps=True, claude=for_claude(s)),
         demo=lambda: demo_ai.fixed_card(card, instruction, texts),
     )
     fix = CardFix.model_validate(_accepted(answer).model_dump())

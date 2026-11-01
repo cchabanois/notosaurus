@@ -102,6 +102,39 @@ def test_openrouter_gives_the_exact_cost(client, monkeypatch):
     assert completions.kwargs["extra_body"] == {"usage": {"include": True}}  # asked for the cost
 
 
+def test_claude_through_openrouter_asked_its_own_schema(client, monkeypatch):
+    """Claude through OpenRouter: the card's schema within Claude's limit (CLAUDE_REQUIRED
+    required), as with Anthropic's API."""
+    monkeypatch.setenv("NOTOSAURUS_LLM", "openrouter")
+    monkeypatch.setenv("NOTOSAURUS_MODEL", "anthropic/claude-sonnet-5.5")
+    fake, completions = fake_completion(cost=0.01)
+    monkeypatch.setattr(openai_like, "_openai_client", lambda s: fake)
+    assert client.post("/api/extract", data={"prompt": "words: le chat"}).status_code == 201
+    card = completions.kwargs["response_format"]["json_schema"]["schema"]["$defs"]["Card"]
+    assert {"subdeck", "info", "figure", "picture_search", "picture_on_back"} <= set(card["required"])
+
+
+def test_an_error_inside_a_200_said_not_crashed(client, monkeypatch):
+    """OpenRouter answering 200 with an error and no choices (the model failed behind it):
+    the service's message, not an internal error."""
+    monkeypatch.setenv("NOTOSAURUS_LLM", "openrouter")
+    monkeypatch.setenv("NOTOSAURUS_MODEL", "anthropic/claude-sonnet-5.5")
+    fake, _ = fake_completion()
+    failed = types.SimpleNamespace(
+        usage=None, model=None, choices=None, model_extra={"error": {"message": "Schema is too complex.", "code": 400}}
+    )
+
+    async def create(**kwargs):
+        return failed
+
+    fake.chat.completions.create = create
+    monkeypatch.setattr(openai_like, "_openai_client", lambda s: fake)
+    res = client.post("/api/extract", data={"prompt": "words: le chat"})
+    assert res.status_code == 502
+    assert res.json()["detail"]["code"] == "llm.api_error"
+    assert res.json()["detail"]["params"]["detail"] == "Schema is too complex."
+
+
 def test_other_services_get_an_estimate(client, monkeypatch):
     monkeypatch.setenv("NOTOSAURUS_LLM", "openai")
     monkeypatch.setenv("NOTOSAURUS_MODEL", "gpt-6.1-sol")

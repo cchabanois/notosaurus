@@ -226,6 +226,13 @@ async def _openai[T: BaseModel](
             cost = (usage.model_extra or {}).get("cost")
             model = response.model or s.model_for_provider()
             await record(s, service, model, usage.prompt_tokens, usage.completion_tokens, cost)
+        if not response.choices:  # an error in a 200 (OpenRouter: the model's own failure)
+            raise ExtractionError(
+                "llm.api_error",
+                provider=service,
+                status="",
+                detail=_error_message((response.model_extra or {}).get("error")) or "no answer",
+            )
         choice = response.choices[0]
         message = choice.message
         if getattr(message, "refusal", None) or getattr(choice, "finish_reason", "") == "content_filter":
