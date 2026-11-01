@@ -287,6 +287,16 @@ def test_long_back_and_info_seen_whole(page):
         assert box.input_value() == long
 
 
+def test_no_voice_said_when_no_card_is_read(page):
+    """The voice comes with the cards only when one is read: a text with gaps has no sound
+    (its back is only an extra), so no voice is said for it."""
+    voice = page.locator(".export-options p", has_text="Voix")
+    generate_free(page, FRONT_PROMPT)
+    sync_api.expect(voice).to_be_visible()
+    generate_free(page, CLOZE_PROMPT)
+    sync_api.expect(voice).to_be_hidden()
+
+
 def test_a_formula_shown_once_its_text_while_edited(page):
     """A formula: only as the card shows it; a click shows its text to edit, the preview under
     it as it's typed; out of it, the formula alone again."""
