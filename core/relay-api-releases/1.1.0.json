@@ -3,7 +3,7 @@
   "info": {
     "title": "Notosaurus relay",
     "summary": "notosaurus_core behind a licence key",
-    "description": "The Notosaurus relay's API, version 1: what its client (the Notosaurus app with a\nlicence, later the Android app) and the relay itself both import, so that they\ncan't drift apart.\n\nThe relay is notosaurus_core behind a licence key: each route is the remote form\nof a core function (/v1/extract → llm.extract_cards…), takes what that function\ntakes but the AI configuration (the relay's own), and keeps nothing.\n\n- Authentication: \"Authorization: Bearer <licence key>\".\n- The client says its version in CLIENT_HEADER (\"1.1.0\"); a client too old for\n  the relay gets \"relay.client_outdated\".\n- The routes with photos (extract, revise) take multipart/form-data: a \"request\"\n  part holding the JSON request and one \"images\" part per photo (binary, as\n  diagrams.prepare makes them: JPEG, at most 1568 px). The other routes take JSON.\n- Errors: HTTP status of ERRORS, body {\"code\", \"params\"} (errors.AppError), the\n  AI's own errors (\"llm.*\") passed on as they are.\n- /v1/extract asked with \"Accept: application/x-ndjson\" (STREAM_TYPE) answers as the\n  AI writes: one JSON object per line, each card as it comes, then the answer or\n  the error (ExtractLine). A client going away stops the AI.\n- /v1/speak reads a card's back aloud with one of /v1/voices (natural voices, the\n  same on every device): an mp3, for the app that has no voices of its own.\n- Each answer says the credits it used and those left (Usage; for /v1/picture and\n  /v1/speak, the CREDITS_HEADER and CREDITS_LEFT_HEADER headers). A credit is a share of the\n  call's real AI cost, at least 1 per call: the relay counts them, not the client.\n\nThe OpenAPI description (core/relay-api-v1.json) is generated from these models\nby tools/relay_openapi.py. Apps already released keep calling the relay: within /v1 the\nAPI only grows (new routes, optional request fields, answer fields more), checked against\nthe API each released app speaks (core/relay-api-releases/, tools/relay_compat.py).\n",
+    "description": "The Notosaurus relay's API, version 1: what its client (the Notosaurus app with a\nlicence, later the Android app) and the relay itself both import, so that they\ncan't drift apart.\n\nThe relay is notosaurus_core behind a licence key: each route is the remote form\nof a core function (/v1/extract → llm.extract_cards…), takes what that function\ntakes but the AI configuration (the relay's own), and keeps nothing.\n\n- Authentication: \"Authorization: Bearer <licence key>\".\n- The client says its version in CLIENT_HEADER (\"1.1.0\"); a client too old for\n  the relay gets \"relay.client_outdated\".\n- The routes with photos (extract, revise, fix-card) take multipart/form-data: a \"request\"\n  part holding the JSON request and one \"images\" part per photo (binary, as\n  diagrams.prepare makes them: JPEG, at most 1568 px). The other routes take JSON.\n- Errors: HTTP status of ERRORS, body {\"code\", \"params\"} (errors.AppError), the\n  AI's own errors (\"llm.*\") passed on as they are.\n- /v1/extract asked with \"Accept: application/x-ndjson\" (STREAM_TYPE) answers as the\n  AI writes: one JSON object per line, each card as it comes, then the answer or\n  the error (ExtractLine). A client going away stops the AI.\n- /v1/transcribe turns a dictation (the app's 🎤) into the text its speaker meant to\n  type: multipart/form-data, a \"request\" part (TranscribeRequest) and an \"audio\" part\n  (AUDIO_TYPES, at most MAX_AUDIO_BYTES).\n- /v1/pictures/search finds free pictures of a subject to choose from (stock.search: public\n  domain, CC0, Pixabay), their previews as data; /v1/pictures/found gives the one chosen,\n  card size (JPEG), looked up again by its source and id. Both free: no AI, unless the\n  search is asked `sort`ed (the AI keeps the pictures that show the subject: 1 credit);\n  asked so with \"Accept: application/x-ndjson\", each source's pictures come as it\n  answers (PictureSearchLine). Their pictures (and /v1/picture's) say where they come\n  from in PICTURE_SOURCE_HEADER: kept with the card.\n- /v1/revise asked with \"Accept: application/x-ndjson\" says what the AI is at (slow, the\n  fallback model), then the answer or the error (ReviseLine).\n- /v1/fix-card: one card corrected by the user's request (\"the answer is 1789\"), seeing\n  the lesson's photos: the AI writes that card alone (llm.fix_card).\n- /v1/card-picture asked with \"Accept: application/x-ndjson\" says each step as it begins\n  (deciding, drawing, checking, redrawing with the first figure, searching), then the\n  answer or the error (CardPictureLine).\n- /v1/report: content the AI made, reported by the user (shocking, wrong…: Google Play's\n  policy on generated content). The only thing the relay keeps of a lesson: what the user\n  saw and sent, for REPORT_DAYS, read by Notosaurus. Free, REPORTS_PER_DAY a licence.\n- /v1/speak reads a card's back aloud with one of /v1/voices (natural voices, the\n  same on every device): an mp3, for the app that has no voices of its own.\n- Each answer says the credits it used and those left (Usage; for /v1/picture and\n  /v1/speak, the CREDITS_HEADER and CREDITS_LEFT_HEADER headers). A credit is a share of the\n  call's real AI cost, at least 1 per call: the relay counts them, not the client.\n\nThe OpenAPI description (core/relay-api-v1.json) is generated from these models\nby tools/relay_openapi.py. Apps already released keep calling the relay: within /v1 the\nAPI only grows (new routes, optional request fields, answer fields more), checked against\nthe API each released app speaks (core/relay-api-releases/, tools/relay_compat.py).\n",
     "version": "1"
   },
   "paths": {
@@ -52,7 +52,7 @@
             }
           },
           "402": {
-            "description": "Codes: `relay.no_credits`",
+            "description": "Codes: `relay.no_credits`, `relay.subscription_ended`, `relay.payment_pending`, `relay.trial_ended`",
             "content": {
               "application/json": {
                 "schema": {
@@ -102,7 +102,7 @@
             }
           },
           "429": {
-            "description": "Codes: `relay.daily_limit`",
+            "description": "Codes: `relay.daily_limit`, `relay.busy`",
             "content": {
               "application/json": {
                 "schema": {
@@ -179,11 +179,16 @@
         ],
         "responses": {
           "200": {
-            "description": "Successful Response",
+            "description": "The cards corrected; asked with \"Accept: application/x-ndjson\": what the AI is at, then the answer, one ReviseLine per line.",
             "content": {
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/ReviseResponse"
+                }
+              },
+              "application/x-ndjson": {
+                "schema": {
+                  "$ref": "#/components/schemas/ReviseLine"
                 }
               }
             }
@@ -199,7 +204,7 @@
             }
           },
           "402": {
-            "description": "Codes: `relay.no_credits`",
+            "description": "Codes: `relay.no_credits`, `relay.subscription_ended`, `relay.payment_pending`, `relay.trial_ended`",
             "content": {
               "application/json": {
                 "schema": {
@@ -249,7 +254,7 @@
             }
           },
           "429": {
-            "description": "Codes: `relay.daily_limit`",
+            "description": "Codes: `relay.daily_limit`, `relay.busy`",
             "content": {
               "application/json": {
                 "schema": {
@@ -281,6 +286,310 @@
                 "properties": {
                   "request": {
                     "$ref": "#/components/schemas/ReviseRequest"
+                  },
+                  "images": {
+                    "type": "array",
+                    "maxItems": 10,
+                    "items": {
+                      "type": "string",
+                      "format": "binary"
+                    },
+                    "description": "The photos, in order: image/jpeg, image/png, image/webp, image/gif, at most 4 MB each."
+                  }
+                }
+              },
+              "encoding": {
+                "request": {
+                  "contentType": "application/json"
+                },
+                "images": {
+                  "contentType": "image/jpeg, image/png, image/webp, image/gif"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/fix-card": {
+      "post": {
+        "summary": "Fix Card",
+        "description": "One card corrected by the user's request (llm.fix_card).",
+        "operationId": "fix_card_v1_fix_card_post",
+        "parameters": [
+          {
+            "name": "X-Notosaurus-Version",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "The client's version (\"1.1.0\").",
+              "title": "X-Notosaurus-Version"
+            },
+            "description": "The client's version (\"1.1.0\")."
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FixCardResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Codes: `relay.invalid_key`",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "402": {
+            "description": "Codes: `relay.no_credits`, `relay.subscription_ended`, `relay.payment_pending`, `relay.trial_ended`",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "413": {
+            "description": "Codes: `relay.too_large`",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "415": {
+            "description": "Codes: `relay.bad_image`",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Codes: `relay.invalid_request`",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "426": {
+            "description": "Codes: `relay.client_outdated`",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Codes: `relay.daily_limit`, `relay.busy`",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Codes: `relay.unavailable`",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "request"
+                ],
+                "properties": {
+                  "request": {
+                    "$ref": "#/components/schemas/FixCardRequest"
+                  },
+                  "images": {
+                    "type": "array",
+                    "maxItems": 10,
+                    "items": {
+                      "type": "string",
+                      "format": "binary"
+                    },
+                    "description": "The photos, in order: image/jpeg, image/png, image/webp, image/gif, at most 4 MB each."
+                  }
+                }
+              },
+              "encoding": {
+                "request": {
+                  "contentType": "application/json"
+                },
+                "images": {
+                  "contentType": "image/jpeg, image/png, image/webp, image/gif"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/lesson-drawings": {
+      "post": {
+        "summary": "Lesson Drawings",
+        "description": "The lesson's own drawings for its cards, cut out of its photos (pictures.lesson_drawings).",
+        "operationId": "lesson_drawings_v1_lesson_drawings_post",
+        "parameters": [
+          {
+            "name": "X-Notosaurus-Version",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "The client's version (\"1.1.0\").",
+              "title": "X-Notosaurus-Version"
+            },
+            "description": "The client's version (\"1.1.0\")."
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LessonDrawingsResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Codes: `relay.invalid_key`",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "402": {
+            "description": "Codes: `relay.no_credits`, `relay.subscription_ended`, `relay.payment_pending`, `relay.trial_ended`",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Codes: `relay.feature_off`",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "413": {
+            "description": "Codes: `relay.too_large`",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "415": {
+            "description": "Codes: `relay.bad_image`",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Codes: `relay.invalid_request`",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "426": {
+            "description": "Codes: `relay.client_outdated`",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Codes: `relay.daily_limit`, `relay.busy`",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Codes: `relay.unavailable`",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "request"
+                ],
+                "properties": {
+                  "request": {
+                    "$ref": "#/components/schemas/LessonDrawingsRequest"
                   },
                   "images": {
                     "type": "array",
@@ -356,7 +665,7 @@
             }
           },
           "402": {
-            "description": "Codes: `relay.no_credits`",
+            "description": "Codes: `relay.no_credits`, `relay.subscription_ended`, `relay.payment_pending`, `relay.trial_ended`",
             "content": {
               "application/json": {
                 "schema": {
@@ -386,7 +695,109 @@
             }
           },
           "429": {
-            "description": "Codes: `relay.daily_limit`",
+            "description": "Codes: `relay.daily_limit`, `relay.busy`",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Codes: `relay.unavailable`",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/rephrase": {
+      "post": {
+        "summary": "Rephrase",
+        "description": "A lesson's instructions tidied up (llm.rephrase).",
+        "operationId": "rephrase_v1_rephrase_post",
+        "parameters": [
+          {
+            "name": "X-Notosaurus-Version",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "The client's version (\"1.1.0\").",
+              "title": "X-Notosaurus-Version"
+            },
+            "description": "The client's version (\"1.1.0\")."
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RephraseRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RephraseResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Codes: `relay.invalid_key`",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "402": {
+            "description": "Codes: `relay.no_credits`, `relay.subscription_ended`, `relay.payment_pending`, `relay.trial_ended`",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Codes: `relay.invalid_request`",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "426": {
+            "description": "Codes: `relay.client_outdated`",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Codes: `relay.daily_limit`, `relay.busy`",
             "content": {
               "application/json": {
                 "schema": {
@@ -458,7 +869,17 @@
             }
           },
           "402": {
-            "description": "Codes: `relay.no_credits`",
+            "description": "Codes: `relay.no_credits`, `relay.subscription_ended`, `relay.payment_pending`, `relay.trial_ended`",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Codes: `relay.feature_off`",
             "content": {
               "application/json": {
                 "schema": {
@@ -488,7 +909,7 @@
             }
           },
           "429": {
-            "description": "Codes: `relay.daily_limit`",
+            "description": "Codes: `relay.daily_limit`, `relay.busy`",
             "content": {
               "application/json": {
                 "schema": {
@@ -503,6 +924,272 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/check-figure": {
+      "post": {
+        "summary": "Check Figure",
+        "description": "A figure looked at against its description, what is wrong said (llm.check_figure).",
+        "operationId": "check_figure_v1_check_figure_post",
+        "parameters": [
+          {
+            "name": "X-Notosaurus-Version",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "The client's version (\"1.1.0\").",
+              "title": "X-Notosaurus-Version"
+            },
+            "description": "The client's version (\"1.1.0\")."
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CheckFigureRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CheckFigureResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Codes: `relay.invalid_key`",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "402": {
+            "description": "Codes: `relay.no_credits`, `relay.subscription_ended`, `relay.payment_pending`, `relay.trial_ended`",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Codes: `relay.feature_off`",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Codes: `relay.invalid_request`",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "426": {
+            "description": "Codes: `relay.client_outdated`",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Codes: `relay.daily_limit`, `relay.busy`",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Codes: `relay.unavailable`",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/transcribe": {
+      "post": {
+        "summary": "Transcribe",
+        "description": "A dictation as the text its speaker meant to type (llm.transcribe).",
+        "operationId": "transcribe_v1_transcribe_post",
+        "parameters": [
+          {
+            "name": "X-Notosaurus-Version",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "The client's version (\"1.1.0\").",
+              "title": "X-Notosaurus-Version"
+            },
+            "description": "The client's version (\"1.1.0\")."
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TranscribeResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Codes: `relay.invalid_key`",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "402": {
+            "description": "Codes: `relay.no_credits`, `relay.subscription_ended`, `relay.payment_pending`, `relay.trial_ended`",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Codes: `relay.feature_off`",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "413": {
+            "description": "Codes: `relay.too_large`",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "415": {
+            "description": "Codes: `relay.bad_audio`",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Codes: `relay.invalid_request`",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "426": {
+            "description": "Codes: `relay.client_outdated`",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Codes: `relay.daily_limit`, `relay.busy`",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Codes: `relay.unavailable`",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "request",
+                  "audio"
+                ],
+                "properties": {
+                  "request": {
+                    "$ref": "#/components/schemas/TranscribeRequest"
+                  },
+                  "audio": {
+                    "type": "string",
+                    "format": "binary",
+                    "description": "The recording: audio/aac, audio/ogg, audio/mpeg, audio/wav, audio/flac, at most 3 MB."
+                  }
+                }
+              },
+              "encoding": {
+                "request": {
+                  "contentType": "application/json"
+                },
+                "audio": {
+                  "contentType": "audio/aac, audio/ogg, audio/mpeg, audio/wav, audio/flac"
                 }
               }
             }
@@ -561,6 +1248,12 @@
                 "schema": {
                   "type": "integer"
                 }
+              },
+              "X-Notosaurus-Picture-Source": {
+                "description": "Where the picture comes from: a PictureSource, as JSON.",
+                "schema": {
+                  "type": "string"
+                }
               }
             }
           },
@@ -575,7 +1268,7 @@
             }
           },
           "402": {
-            "description": "Codes: `relay.no_credits`",
+            "description": "Codes: `relay.no_credits`, `relay.subscription_ended`, `relay.payment_pending`, `relay.trial_ended`",
             "content": {
               "application/json": {
                 "schema": {
@@ -605,7 +1298,464 @@
             }
           },
           "429": {
-            "description": "Codes: `relay.daily_limit`",
+            "description": "Codes: `relay.daily_limit`, `relay.busy`",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Codes: `relay.unavailable`",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/card-picture": {
+      "post": {
+        "summary": "Card Picture",
+        "description": "A card's figure or picture, the AI deciding which when needed (pictures.card_picture).",
+        "operationId": "card_picture_v1_card_picture_post",
+        "parameters": [
+          {
+            "name": "X-Notosaurus-Version",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "The client's version (\"1.1.0\").",
+              "title": "X-Notosaurus-Version"
+            },
+            "description": "The client's version (\"1.1.0\")."
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CardPictureRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "The card's picture; asked with \"Accept: application/x-ndjson\": each step as it begins, then the answer, one CardPictureLine per line.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CardPictureResponse"
+                }
+              },
+              "application/x-ndjson": {
+                "schema": {
+                  "$ref": "#/components/schemas/CardPictureLine"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Codes: `relay.invalid_key`",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "402": {
+            "description": "Codes: `relay.no_credits`, `relay.subscription_ended`, `relay.payment_pending`, `relay.trial_ended`",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Codes: `relay.feature_off`",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Codes: `relay.invalid_request`",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "426": {
+            "description": "Codes: `relay.client_outdated`",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Codes: `relay.daily_limit`, `relay.busy`",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Codes: `relay.unavailable`",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/plan-picture": {
+      "post": {
+        "summary": "Plan Picture",
+        "description": "What a card's picture should be: a figure or a picture, described (llm.plan_picture).",
+        "operationId": "plan_picture_v1_plan_picture_post",
+        "parameters": [
+          {
+            "name": "X-Notosaurus-Version",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "The client's version (\"1.1.0\").",
+              "title": "X-Notosaurus-Version"
+            },
+            "description": "The client's version (\"1.1.0\")."
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PlanPictureRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PlanPictureResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Codes: `relay.invalid_key`",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "402": {
+            "description": "Codes: `relay.no_credits`, `relay.subscription_ended`, `relay.payment_pending`, `relay.trial_ended`",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Codes: `relay.invalid_request`",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "426": {
+            "description": "Codes: `relay.client_outdated`",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Codes: `relay.daily_limit`, `relay.busy`",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Codes: `relay.unavailable`",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/pictures/search": {
+      "post": {
+        "summary": "Search Pictures",
+        "description": "Free pictures of a subject to choose from (stock.search). Free, unless `sort`ed by the AI\n(stock.sorted_as_found): 1 credit.",
+        "operationId": "search_pictures_v1_pictures_search_post",
+        "parameters": [
+          {
+            "name": "X-Notosaurus-Version",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "The client's version (\"1.1.0\").",
+              "title": "X-Notosaurus-Version"
+            },
+            "description": "The client's version (\"1.1.0\")."
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PictureSearchRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "The pictures found; `sort`ed and asked with \"Accept: application/x-ndjson\": each source's as it answers, one PictureSearchLine per line.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PictureSearchResponse"
+                }
+              },
+              "application/x-ndjson": {
+                "schema": {
+                  "$ref": "#/components/schemas/PictureSearchLine"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Codes: `relay.invalid_key`",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "402": {
+            "description": "Codes: `relay.no_credits`, `relay.subscription_ended`, `relay.payment_pending`, `relay.trial_ended`",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Codes: `relay.feature_off`",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Codes: `relay.invalid_request`",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "426": {
+            "description": "Codes: `relay.client_outdated`",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Codes: `relay.daily_limit`, `relay.busy`",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Codes: `relay.unavailable`",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/pictures/found": {
+      "post": {
+        "summary": "Found Picture",
+        "description": "One of the pictures found (stock.fetch). Free.",
+        "operationId": "found_picture_v1_pictures_found_post",
+        "parameters": [
+          {
+            "name": "X-Notosaurus-Version",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "The client's version (\"1.1.0\").",
+              "title": "X-Notosaurus-Version"
+            },
+            "description": "The client's version (\"1.1.0\")."
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/FoundPictureRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "The picture chosen, card size.",
+            "content": {
+              "image/jpeg": {
+                "schema": {
+                  "type": "string",
+                  "format": "binary"
+                }
+              }
+            },
+            "headers": {
+              "X-Notosaurus-Picture-Source": {
+                "description": "Where the picture comes from: a PictureSource, as JSON.",
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Codes: `relay.invalid_key`",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "402": {
+            "description": "Codes: `relay.no_credits`, `relay.subscription_ended`, `relay.payment_pending`, `relay.trial_ended`",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Codes: `relay.feature_off`",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Codes: `relay.invalid_request`",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "426": {
+            "description": "Codes: `relay.client_outdated`",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Codes: `relay.daily_limit`, `relay.busy`",
             "content": {
               "application/json": {
                 "schema": {
@@ -692,7 +1842,17 @@
             }
           },
           "402": {
-            "description": "Codes: `relay.no_credits`",
+            "description": "Codes: `relay.no_credits`, `relay.subscription_ended`, `relay.payment_pending`, `relay.trial_ended`",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Codes: `relay.feature_off`",
             "content": {
               "application/json": {
                 "schema": {
@@ -722,7 +1882,109 @@
             }
           },
           "429": {
-            "description": "Codes: `relay.daily_limit`",
+            "description": "Codes: `relay.daily_limit`, `relay.busy`",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Codes: `relay.unavailable`",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/report": {
+      "post": {
+        "summary": "Report",
+        "description": "Content the AI made, reported by the user: kept REPORT_DAYS days, read by Notosaurus.",
+        "operationId": "report_v1_report_post",
+        "parameters": [
+          {
+            "name": "X-Notosaurus-Version",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "The client's version (\"1.1.0\").",
+              "title": "X-Notosaurus-Version"
+            },
+            "description": "The client's version (\"1.1.0\")."
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ReportRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ReportResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Codes: `relay.invalid_key`",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Codes: `relay.feature_off`",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Codes: `relay.invalid_request`",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "426": {
+            "description": "Codes: `relay.client_outdated`",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Codes: `relay.daily_limit`, `relay.busy`",
             "content": {
               "application/json": {
                 "schema": {
@@ -891,6 +2153,180 @@
           }
         }
       }
+    },
+    "/v1/subscribe": {
+      "post": {
+        "summary": "Subscribe",
+        "description": "A Google Play subscription's licence: checked with Google Play; no key needed.",
+        "operationId": "subscribe_v1_subscribe_post",
+        "parameters": [
+          {
+            "name": "X-Notosaurus-Version",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "The client's version (\"1.1.0\").",
+              "title": "X-Notosaurus-Version"
+            },
+            "description": "The client's version (\"1.1.0\")."
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SubscribeRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SubscribeResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Codes: `relay.invalid_purchase`",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "402": {
+            "description": "Codes: `relay.subscription_ended`, `relay.payment_pending`",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Codes: `relay.invalid_request`",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "426": {
+            "description": "Codes: `relay.client_outdated`",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Codes: `relay.unavailable`",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/trial": {
+      "post": {
+        "summary": "Trial",
+        "description": "The free trial's licence (no card), once per phone: checked with Play Integrity; no key needed.",
+        "operationId": "trial_v1_trial_post",
+        "parameters": [
+          {
+            "name": "X-Notosaurus-Version",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "The client's version (\"1.1.0\").",
+              "title": "X-Notosaurus-Version"
+            },
+            "description": "The client's version (\"1.1.0\")."
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/TrialRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SubscribeResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Codes: `relay.trial_refused`, `relay.trial_closed`",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Codes: `relay.invalid_request`",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "426": {
+            "description": "Codes: `relay.client_outdated`",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Codes: `relay.unavailable`",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
     }
   },
   "components": {
@@ -925,6 +2361,61 @@
             ],
             "title": "Renews At",
             "description": "When the credits are renewed (ISO 8601)."
+          },
+          "ends_at": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Ends At",
+            "description": "A subscription: when it ends unless renewed (ISO 8601); none for a licence without end."
+          },
+          "on_hold": {
+            "type": "boolean",
+            "title": "On Hold",
+            "description": "Past its end because a renewal's payment failed (Google Play's account hold): a payment to fix in Google Play, not a subscription ended.",
+            "default": false
+          },
+          "notice": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Notice"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "A message for every user, if any."
+          },
+          "disabled": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Disabled",
+            "description": "FEATURES turned off for now: the app hides them; it refuses them, or the relay its own (relay.feature_off)."
+          },
+          "latest": {
+            "type": "string",
+            "title": "Latest",
+            "description": "The latest version of the app (\"1.2.0\"); \"\" when not said.",
+            "default": ""
+          },
+          "drawing_credits": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Drawing Credits",
+            "description": "About what a picture drawn by the image model costs, in credits (told to the user)."
           }
         },
         "type": "object",
@@ -934,7 +2425,27 @@
           "daily_left"
         ],
         "title": "Account",
-        "description": "GET /v1/account: what the licence gives; also the client's connection test."
+        "description": "GET /v1/account: what the licence gives; also the client's connection test. And what\nthe app is told for now (set on the relay, no app update): a notice, the FEATURES\nturned off, the latest version."
+      },
+      "AiStep": {
+        "description": "What the AI is at, for the user waiting (calls.tell).",
+        "properties": {
+          "step": {
+            "description": "\"slow\": no answer yet after a while (the model busy); \"fallback\": the model not answering, the fallback one asked; \"figures\": the cards written, their figures being described.",
+            "enum": [
+              "slow",
+              "fallback",
+              "figures"
+            ],
+            "title": "Step",
+            "type": "string"
+          }
+        },
+        "required": [
+          "step"
+        ],
+        "title": "AiStep",
+        "type": "object"
       },
       "Card": {
         "properties": {
@@ -989,13 +2500,36 @@
           "picture_prompt": {
             "type": "string",
             "title": "Picture Prompt",
-            "description": "Only when the instructions ask for a picture on the card (see the rules): what to draw, in English. Empty otherwise.",
+            "description": "When the card gets a picture, as the rules and the request say: what to draw, in English. Empty otherwise.",
+            "default": ""
+          },
+          "picture_search": {
+            "type": "string",
+            "title": "Picture Search",
+            "description": "Only with a picture_prompt, when the picture shows a real, specific thing that photos or paintings show (a person, a place, a monument, a work of art, an animal, an object, a food): a short search, in English, for a free picture of it (\"Storming of the Bastille painting\", \"dog\"). Empty when it must be drawn (an abstract word, an action, a scene made up for the card).",
             "default": ""
           },
           "figure": {
             "type": "string",
             "title": "Figure",
-            "description": "Only when the card needs an exact figure (see the rules): what to draw, every label with its exact text. Empty otherwise.",
+            "description": "When an exact figure makes the card clearer (see the rules: geometry, or a notion the lesson's page shows a figure for): what to draw, every label with its exact text. Empty otherwise.",
+            "default": ""
+          },
+          "figure_kind": {
+            "type": "string",
+            "enum": [
+              "",
+              "geometry",
+              "graph",
+              "sets",
+              "diagram",
+              "circuit",
+              "chemistry",
+              "timeline",
+              "other"
+            ],
+            "title": "Figure Kind",
+            "description": "With a figure, which kind it is: \"geometry\": points, segments, lines, circles, polygons, angles, their marks (a theorem, a construction); \"graph\": the graph of one or more functions in a frame; \"sets\": a Venn diagram of two or three sets; \"diagram\": boxes side by side joined by arrows (a flowchart, a cycle, a chain, a classification), never shapes inside one another; \"circuit\": an electric circuit; \"chemistry\": a molecule's formula written with its atoms' symbols and bonds (developed, semi-developed, skeletal, a ring), never a model of balls; \"timeline\": dates on a line; \"other\": anything else (a table, a labelled drawing, zones nested or overlapping, a solid in perspective, a map, a molecular model of coloured balls…). Empty otherwise.",
             "default": ""
           },
           "fun_fact": {
@@ -1022,15 +2556,43 @@
             "description": "True when the picture or figure belongs to the answer (see the rules); false when it is needed to answer.",
             "default": false
           },
+          "doubt": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Doubt"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Only when the lesson itself is clearly wrong on this card (see the rules); otherwise null."
+          },
           "picture": {
             "type": "string",
             "title": "Picture",
             "description": "Leave empty.",
             "default": ""
           },
+          "picture_source": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/PictureSource"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Leave empty."
+          },
           "id": {
             "type": "string",
             "title": "Id",
+            "description": "Leave empty.",
+            "default": ""
+          },
+          "voice": {
+            "type": "string",
+            "title": "Voice",
             "description": "Leave empty.",
             "default": ""
           }
@@ -1041,6 +2603,191 @@
           "back"
         ],
         "title": "Card"
+      },
+      "CardPictureLine": {
+        "description": "A line of /v1/card-picture asked as STREAM_TYPE, one of: {\"step\"} as each begins;\nlast, {\"result\"} or {\"error\"} (the HTTP status is 200 once a line is sent).",
+        "properties": {
+          "step": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/PictureStep"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null
+          },
+          "result": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/CardPictureResponse"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null
+          },
+          "error": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Error"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null
+          }
+        },
+        "title": "CardPictureLine",
+        "type": "object"
+      },
+      "CardPictureRequest": {
+        "properties": {
+          "card": {
+            "$ref": "#/components/schemas/Card"
+          },
+          "asked": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 1000
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Asked",
+            "description": "What the user wrote; null: none."
+          },
+          "language": {
+            "type": "string",
+            "maxLength": 50,
+            "title": "Language",
+            "description": "English name of the language to answer in (\"French\").",
+            "default": "English"
+          },
+          "fresh": {
+            "type": "boolean",
+            "title": "Fresh",
+            "description": "Draw it again rather than take it from the cache.",
+            "default": false
+          },
+          "find": {
+            "type": "boolean",
+            "title": "Find",
+            "description": "A free picture looked for first, for a real thing.",
+            "default": true
+          },
+          "draw": {
+            "type": "boolean",
+            "title": "Draw",
+            "description": "A picture no free one fits drawn by the image model (it costs: the user said yes). False: 409 picture.needs_drawing instead, its params what was decided (description, search).",
+            "default": true
+          },
+          "problem": {
+            "type": "string",
+            "maxLength": 1000,
+            "title": "Problem",
+            "description": "What /v1/check-figure found wrong in the card's figure: drawn again, told it (the user asked it). Empty: drawn as usual.",
+            "default": ""
+          },
+          "careful": {
+            "type": "boolean",
+            "title": "Careful",
+            "description": "With a problem: drawn with the model's thinking (slower), not quickly.",
+            "default": false
+          }
+        },
+        "type": "object",
+        "required": [
+          "card"
+        ],
+        "title": "CardPictureRequest",
+        "description": "A card's figure or picture (pictures.card_picture): its own, drawn as it is; or\nwhat was written for it (any language), the AI deciding a figure or a picture. JSON."
+      },
+      "CardPictureResponse": {
+        "properties": {
+          "card": {
+            "$ref": "#/components/schemas/Card",
+            "description": "The card, its picture's fields as decided (figure, picture_prompt…, picture_source)."
+          },
+          "data": {
+            "type": "string",
+            "title": "Data",
+            "description": "The figure's SVG or the picture's JPEG, base64."
+          },
+          "media_type": {
+            "type": "string",
+            "enum": [
+              "image/svg+xml",
+              "image/jpeg"
+            ],
+            "title": "Media Type"
+          },
+          "usage": {
+            "$ref": "#/components/schemas/Usage"
+          }
+        },
+        "type": "object",
+        "required": [
+          "card",
+          "data",
+          "media_type",
+          "usage"
+        ],
+        "title": "CardPictureResponse"
+      },
+      "CheckFigureRequest": {
+        "properties": {
+          "description": {
+            "type": "string",
+            "maxLength": 1000,
+            "minLength": 1,
+            "title": "Description",
+            "description": "What it should show."
+          },
+          "svg": {
+            "type": "string",
+            "maxLength": 1000000,
+            "minLength": 1,
+            "title": "Svg",
+            "description": "The figure, as drawn."
+          }
+        },
+        "type": "object",
+        "required": [
+          "description",
+          "svg"
+        ],
+        "title": "CheckFigureRequest",
+        "description": "POST /v1/check-figure: a figure looked at against its description (the user asked it:\nthe \"🔍 Check\" button), as llm.check_figure. JSON."
+      },
+      "CheckFigureResponse": {
+        "properties": {
+          "ok": {
+            "type": "boolean",
+            "title": "Ok",
+            "description": "It looks right."
+          },
+          "problem": {
+            "type": "string",
+            "title": "Problem",
+            "description": "What is wrong, in the cards' language; empty when it looks right."
+          },
+          "usage": {
+            "$ref": "#/components/schemas/Usage"
+          }
+        },
+        "type": "object",
+        "required": [
+          "ok",
+          "problem",
+          "usage"
+        ],
+        "title": "CheckFigureResponse"
       },
       "Deck": {
         "properties": {
@@ -1063,6 +2810,33 @@
           "cards"
         ],
         "title": "Deck"
+      },
+      "Doubt": {
+        "properties": {
+          "reason": {
+            "type": "string",
+            "title": "Reason",
+            "description": "One short sentence: what the lesson says, and what is right."
+          },
+          "front": {
+            "type": "string",
+            "title": "Front",
+            "description": "The card's front, corrected."
+          },
+          "back": {
+            "type": "string",
+            "title": "Back",
+            "description": "The card's back, corrected."
+          }
+        },
+        "type": "object",
+        "required": [
+          "reason",
+          "front",
+          "back"
+        ],
+        "title": "Doubt",
+        "description": "A card whose lesson is clearly wrong (a pupil's notes, a copy mistake): the card says\nwhat the lesson says, this what is right; the parent chooses."
       },
       "Error": {
         "properties": {
@@ -1181,7 +2955,7 @@
         "title": "ExplainResponse"
       },
       "ExtractLine": {
-        "description": "A line of /v1/extract's answer as the AI writes it (STREAM_TYPE), one of:\n{\"card\"} as soon as a card is written; {\"restart\": true}: the cards sent so far\nare dropped (another model starts again); last, {\"result\"} or {\"error\"} (the\nHTTP status is 200 once a line is sent: an error comes as the last line). A\nclient going away stops the AI: what it used is charged, at least 1 credit.",
+        "description": "A line of /v1/extract's answer as the AI writes it (STREAM_TYPE), one of:\n{\"card\"} as soon as a card is written; {\"restart\": true}: the cards sent so far\nare dropped (another model starts again); {\"step\"}: what the AI is at; last,\n{\"result\"} or {\"error\"} (the HTTP status is 200 once a line is sent: an error\ncomes as the last line). A client going away stops the AI: what it used is\ncharged, at least 1 credit.",
         "properties": {
           "card": {
             "anyOf": [
@@ -1208,6 +2982,17 @@
             ],
             "default": null,
             "title": "Restart"
+          },
+          "step": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/AiStep"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null
           },
           "result": {
             "anyOf": [
@@ -1271,6 +3056,12 @@
             "title": "Helps",
             "type": "boolean"
           },
+          "pictures": {
+            "default": false,
+            "description": "Pictures where they truly help, even unasked by the prompt.",
+            "title": "Pictures",
+            "type": "boolean"
+          },
           "page_texts": {
             "description": "One per photo: the text of a PDF page, as the PDF holds it (\"\" for a photo).",
             "items": {
@@ -1292,6 +3083,15 @@
             "description": "Made fast: the AI thinks little (2 to 4 times faster, a little less careful).",
             "title": "Quick",
             "type": "boolean"
+          },
+          "existing": {
+            "description": "The photos are a lesson's next pages: its cards made already (\"front [part]\"), not made again.",
+            "items": {
+              "type": "string"
+            },
+            "maxItems": 500,
+            "title": "Existing",
+            "type": "array"
           }
         },
         "required": [
@@ -1327,6 +3127,36 @@
           "choice": {
             "type": "string",
             "title": "Choice",
+            "default": ""
+          },
+          "dictation": {
+            "type": "boolean",
+            "title": "Dictation",
+            "default": false
+          },
+          "dictation_card": {
+            "type": "boolean",
+            "title": "Dictation Card",
+            "default": false
+          },
+          "typing": {
+            "type": "boolean",
+            "title": "Typing",
+            "default": false
+          },
+          "reverse": {
+            "type": "boolean",
+            "title": "Reverse",
+            "default": false
+          },
+          "read_aloud": {
+            "type": "boolean",
+            "title": "Read Aloud",
+            "default": false
+          },
+          "speed": {
+            "type": "string",
+            "title": "Speed",
             "default": ""
           },
           "usage": {
@@ -1377,6 +3207,153 @@
         ],
         "title": "FigureResponse"
       },
+      "FixCardRequest": {
+        "description": "One card corrected by a natural-language request, with the lesson's photos (the\n\"images\" parts, possibly none).",
+        "properties": {
+          "prompt": {
+            "description": "What the cards were made with.",
+            "maxLength": 8000,
+            "title": "Prompt",
+            "type": "string"
+          },
+          "deck": {
+            "maxLength": 300,
+            "title": "Deck",
+            "type": "string"
+          },
+          "card": {
+            "$ref": "#/components/schemas/Card"
+          },
+          "instruction": {
+            "maxLength": 2000,
+            "minLength": 1,
+            "title": "Instruction",
+            "type": "string"
+          },
+          "others": {
+            "description": "The lesson's other cards' fronts.",
+            "items": {
+              "type": "string"
+            },
+            "maxItems": 500,
+            "title": "Others",
+            "type": "array"
+          },
+          "language": {
+            "default": "English",
+            "description": "English name of the language to answer in (\"French\").",
+            "maxLength": 50,
+            "title": "Language",
+            "type": "string"
+          },
+          "instructions": {
+            "default": "",
+            "description": "The user's standing instructions, put before the request (never replacing the rules).",
+            "maxLength": 10000,
+            "title": "Instructions",
+            "type": "string"
+          }
+        },
+        "required": [
+          "prompt",
+          "deck",
+          "card",
+          "instruction"
+        ],
+        "title": "FixCardRequest",
+        "type": "object"
+      },
+      "FixCardResponse": {
+        "properties": {
+          "card": {
+            "$ref": "#/components/schemas/Card"
+          },
+          "summary": {
+            "type": "string",
+            "title": "Summary"
+          },
+          "usage": {
+            "$ref": "#/components/schemas/Usage"
+          }
+        },
+        "type": "object",
+        "required": [
+          "card",
+          "summary",
+          "usage"
+        ],
+        "title": "FixCardResponse"
+      },
+      "Found": {
+        "properties": {
+          "source": {
+            "type": "string",
+            "enum": [
+              "commons",
+              "openverse",
+              "pixabay"
+            ],
+            "title": "Source"
+          },
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "title": {
+            "type": "string",
+            "title": "Title"
+          },
+          "preview": {
+            "type": "string",
+            "title": "Preview"
+          },
+          "licence": {
+            "type": "string",
+            "title": "Licence"
+          },
+          "page": {
+            "type": "string",
+            "title": "Page",
+            "default": ""
+          }
+        },
+        "type": "object",
+        "required": [
+          "source",
+          "id",
+          "title",
+          "preview",
+          "licence"
+        ],
+        "title": "Found"
+      },
+      "FoundPictureRequest": {
+        "properties": {
+          "source": {
+            "type": "string",
+            "enum": [
+              "commons",
+              "openverse",
+              "pixabay"
+            ],
+            "title": "Source"
+          },
+          "id": {
+            "type": "string",
+            "maxLength": 300,
+            "minLength": 1,
+            "title": "Id",
+            "description": "Found.id, as /v1/pictures/search gave it."
+          }
+        },
+        "type": "object",
+        "required": [
+          "source",
+          "id"
+        ],
+        "title": "FoundPictureRequest",
+        "description": "POST /v1/pictures/found: one of the pictures found, as the card's. Answer: the JPEG\nitself, card size."
+      },
       "Frame": {
         "properties": {
           "page": {
@@ -1400,6 +3377,66 @@
         ],
         "title": "Frame",
         "description": "Where a diagram is on a photo: the image Anki gets is cropped to it."
+      },
+      "LessonDrawing": {
+        "properties": {
+          "card": {
+            "type": "integer",
+            "title": "Card",
+            "description": "The card's index in the request."
+          },
+          "data": {
+            "type": "string",
+            "title": "Data",
+            "description": "The drawing, cut out of its page: a JPEG, card size, base64."
+          }
+        },
+        "type": "object",
+        "required": [
+          "card",
+          "data"
+        ],
+        "title": "LessonDrawing"
+      },
+      "LessonDrawingsRequest": {
+        "description": "The drawings of their own the lesson's photos (the \"images\" parts) show for these\ncards, cut out (pictures.lesson_drawings): the cards' pictures, before any is looked\nfor or drawn.",
+        "properties": {
+          "cards": {
+            "description": "The cards wanting a picture.",
+            "items": {
+              "$ref": "#/components/schemas/Card"
+            },
+            "maxItems": 200,
+            "title": "Cards",
+            "type": "array"
+          }
+        },
+        "required": [
+          "cards"
+        ],
+        "title": "LessonDrawingsRequest",
+        "type": "object"
+      },
+      "LessonDrawingsResponse": {
+        "properties": {
+          "drawings": {
+            "items": {
+              "$ref": "#/components/schemas/LessonDrawing"
+            },
+            "type": "array",
+            "title": "Drawings",
+            "description": "Those found; the other cards none (look for theirs)."
+          },
+          "usage": {
+            "$ref": "#/components/schemas/Usage"
+          }
+        },
+        "type": "object",
+        "required": [
+          "drawings",
+          "usage"
+        ],
+        "title": "LessonDrawingsResponse"
       },
       "Mask": {
         "properties": {
@@ -1431,6 +3468,42 @@
         "title": "Mask",
         "description": "Where a diagram label is, to hide it on the photo (image occlusion).\n\nFrom the AI, `box` is in the format its instructions give (depends on the model);\nonce saved, it is [x_min, y_min, x_max, y_max] as fractions of the photo's size."
       },
+      "Notice": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "maxLength": 100,
+            "minLength": 1,
+            "title": "Id",
+            "description": "Another id: shown again, even once closed."
+          },
+          "level": {
+            "type": "string",
+            "enum": [
+              "info",
+              "warning"
+            ],
+            "title": "Level",
+            "default": "info"
+          },
+          "texts": {
+            "additionalProperties": {
+              "type": "string"
+            },
+            "type": "object",
+            "minProperties": 1,
+            "title": "Texts",
+            "description": "By language (\"fr\", \"en\"…): the app shows its own, else English, else any."
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "texts"
+        ],
+        "title": "Notice",
+        "description": "A message for every user of the app, shown until closed (a problem being fixed…)."
+      },
       "PictureRequest": {
         "properties": {
           "subject": {
@@ -1445,6 +3518,20 @@
             "title": "Fresh",
             "description": "Draw it again rather than reuse the last drawing.",
             "default": false
+          },
+          "search": {
+            "type": "string",
+            "maxLength": 1000,
+            "title": "Search",
+            "description": "Card.picture_search: a free picture looked for first.",
+            "default": ""
+          },
+          "context": {
+            "type": "string",
+            "maxLength": 8000,
+            "title": "Context",
+            "description": "The card, \"front → back\": to choose the picture found.",
+            "default": ""
           }
         },
         "type": "object",
@@ -1452,7 +3539,473 @@
           "subject"
         ],
         "title": "PictureRequest",
-        "description": "A picture for a card, drawn by an image model. JSON; the answer is the JPEG itself."
+        "description": "A picture for a card: a free one found when `search` is given and one fits (chosen\nby the AI), else drawn by an image model. JSON; the answer is the JPEG itself."
+      },
+      "PictureSearchLine": {
+        "description": "A line of a sorted /v1/pictures/search asked as STREAM_TYPE, one of: {\"found\"},\nthe pictures a source gave that the AI kept, the best first, as each source answers;\nlast, {\"done\"} (its `results` empty: they came as \"found\") or {\"error\"} (the HTTP\nstatus is 200 once a line is sent).",
+        "properties": {
+          "found": {
+            "anyOf": [
+              {
+                "items": {
+                  "$ref": "#/components/schemas/Found"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Found"
+          },
+          "done": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/PictureSearchResponse"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null
+          },
+          "error": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Error"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null
+          }
+        },
+        "title": "PictureSearchLine",
+        "type": "object"
+      },
+      "PictureSearchRequest": {
+        "properties": {
+          "subject": {
+            "type": "string",
+            "maxLength": 200,
+            "minLength": 1,
+            "title": "Subject",
+            "description": "What to find (English, unless `translate`)."
+          },
+          "context": {
+            "type": "string",
+            "maxLength": 8000,
+            "title": "Context",
+            "description": "The card, \"front → back\".",
+            "default": ""
+          },
+          "translate": {
+            "type": "boolean",
+            "title": "Translate",
+            "description": "Written in any language: turned into English search words by the AI first.",
+            "default": false
+          },
+          "sort": {
+            "type": "boolean",
+            "title": "Sort",
+            "description": "The AI keeps only the pictures that show the subject, the best first (it sees them): 1 credit, unless it couldn't sort them. Else free. Asked as STREAM_TYPE: PictureSearchLine.",
+            "default": false
+          }
+        },
+        "type": "object",
+        "required": [
+          "subject"
+        ],
+        "title": "PictureSearchRequest",
+        "description": "Free pictures of a subject to choose from. JSON."
+      },
+      "PictureSearchResponse": {
+        "properties": {
+          "results": {
+            "items": {
+              "$ref": "#/components/schemas/Found"
+            },
+            "type": "array",
+            "title": "Results",
+            "description": "The pictures found, at most 8, the sources taking turns."
+          },
+          "words": {
+            "type": "string",
+            "title": "Words",
+            "description": "What was searched for (the translation, when asked).",
+            "default": ""
+          },
+          "usage": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Usage"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "The credits charged: sorted by the AI only."
+          }
+        },
+        "type": "object",
+        "required": [
+          "results"
+        ],
+        "title": "PictureSearchResponse"
+      },
+      "PictureSource": {
+        "properties": {
+          "source": {
+            "type": "string",
+            "enum": [
+              "commons",
+              "openverse",
+              "pixabay",
+              "drawn",
+              "photo",
+              "lesson"
+            ],
+            "title": "Source"
+          },
+          "licence": {
+            "type": "string",
+            "title": "Licence",
+            "default": ""
+          },
+          "page": {
+            "type": "string",
+            "title": "Page",
+            "default": ""
+          },
+          "title": {
+            "type": "string",
+            "title": "Title",
+            "default": ""
+          },
+          "model": {
+            "type": "string",
+            "title": "Model",
+            "default": ""
+          },
+          "engine": {
+            "type": "string",
+            "enum": [
+              "",
+              "typst",
+              "svg"
+            ],
+            "title": "Engine",
+            "default": ""
+          },
+          "made_with": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Made With",
+            "default": []
+          },
+          "careful": {
+            "type": "boolean",
+            "title": "Careful",
+            "default": false
+          }
+        },
+        "type": "object",
+        "required": [
+          "source"
+        ],
+        "title": "PictureSource",
+        "description": "Where a card's picture comes from, kept with the card (and, on the computer, in its\nAnki note's hidden Source field): to check a free picture's page later, or find the\ncards using one that must go."
+      },
+      "PictureStep": {
+        "description": "What a card's picture is being made by, now (pictures.card_picture's steps).",
+        "properties": {
+          "step": {
+            "description": "\"deciding\": a figure or a picture; \"drawing\": a figure drawn, or a picture by the image model; \"checking\": the figure looked at; \"redrawing\": it was wrong, drawn again with the model's thinking; \"searching\": a free picture looked for.",
+            "enum": [
+              "deciding",
+              "drawing",
+              "checking",
+              "redrawing",
+              "searching"
+            ],
+            "title": "Step",
+            "type": "string"
+          },
+          "problem": {
+            "default": "",
+            "description": "\"redrawing\": what was wrong.",
+            "title": "Problem",
+            "type": "string"
+          },
+          "first": {
+            "default": "",
+            "description": "\"redrawing\": the first figure, its SVG (never kept).",
+            "title": "First",
+            "type": "string"
+          }
+        },
+        "required": [
+          "step"
+        ],
+        "title": "PictureStep",
+        "type": "object"
+      },
+      "PlanPictureRequest": {
+        "properties": {
+          "front": {
+            "type": "string",
+            "maxLength": 8000,
+            "title": "Front"
+          },
+          "back": {
+            "type": "string",
+            "maxLength": 8000,
+            "title": "Back"
+          },
+          "asked": {
+            "type": "string",
+            "maxLength": 1000,
+            "title": "Asked",
+            "description": "What the user wrote, any language.",
+            "default": ""
+          },
+          "language": {
+            "type": "string",
+            "maxLength": 50,
+            "title": "Language",
+            "description": "English name of the language to answer in (\"French\").",
+            "default": "English"
+          }
+        },
+        "type": "object",
+        "required": [
+          "front",
+          "back"
+        ],
+        "title": "PlanPictureRequest",
+        "description": "What a card's picture should be (\"🎨 Draw\"): an exact figure or an image model's\npicture, described from the card and what the user wrote. JSON."
+      },
+      "PlanPictureResponse": {
+        "properties": {
+          "kind": {
+            "type": "string",
+            "enum": [
+              "figure",
+              "picture"
+            ],
+            "title": "Kind",
+            "description": "\"figure\": something exact a clean drawing shows (geometry, a diagram, sets, a graph, a table, labels); \"picture\": a thing, an animal, a place, a person, a scene."
+          },
+          "description": {
+            "type": "string",
+            "title": "Description",
+            "description": "A figure: what to draw, in the cards' language, every label with its exact text. A picture: what to draw, in English, one concrete subject a child recognises at once."
+          },
+          "figure_kind": {
+            "type": "string",
+            "enum": [
+              "",
+              "geometry",
+              "graph",
+              "sets",
+              "diagram",
+              "circuit",
+              "chemistry",
+              "timeline",
+              "other"
+            ],
+            "title": "Figure Kind",
+            "description": "A figure: which kind it is, \"geometry\": points, segments, lines, circles, polygons, angles, their marks (a theorem, a construction); \"graph\": the graph of one or more functions in a frame; \"sets\": a Venn diagram of two or three sets; \"diagram\": boxes side by side joined by arrows (a flowchart, a cycle, a chain, a classification), never shapes inside one another; \"circuit\": an electric circuit; \"chemistry\": a molecule's formula written with its atoms' symbols and bonds (developed, semi-developed, skeletal, a ring), never a model of balls; \"timeline\": dates on a line; \"other\": anything else (a table, a labelled drawing, zones nested or overlapping, a solid in perspective, a map, a molecular model of coloured balls…). Empty for a picture.",
+            "default": ""
+          },
+          "search": {
+            "type": "string",
+            "title": "Search",
+            "description": "A picture of a real, specific thing: a short English search for a free picture of it. Empty otherwise.",
+            "default": ""
+          },
+          "on_back": {
+            "type": "boolean",
+            "title": "On Back",
+            "description": "True when it shows the card's answer (a label naming it, the answer drawn): it then goes with the answer, on the back, never giving it away. False when it is needed to answer or only shows what the question is about.",
+            "default": false
+          },
+          "usage": {
+            "$ref": "#/components/schemas/Usage"
+          }
+        },
+        "type": "object",
+        "required": [
+          "kind",
+          "description",
+          "usage"
+        ],
+        "title": "PlanPictureResponse"
+      },
+      "RephraseRequest": {
+        "properties": {
+          "text": {
+            "type": "string",
+            "maxLength": 8000,
+            "minLength": 1,
+            "title": "Text",
+            "description": "The instructions as written (or dictated)."
+          },
+          "language": {
+            "type": "string",
+            "maxLength": 50,
+            "title": "Language",
+            "description": "English name of the language to answer in (\"French\").",
+            "default": "English"
+          }
+        },
+        "type": "object",
+        "required": [
+          "text"
+        ],
+        "title": "RephraseRequest",
+        "description": "A lesson's instructions tidied up: clear and short, every intention kept, none added. JSON."
+      },
+      "RephraseResponse": {
+        "properties": {
+          "text": {
+            "type": "string",
+            "title": "Text",
+            "description": "The instructions, tidied up."
+          },
+          "usage": {
+            "$ref": "#/components/schemas/Usage"
+          }
+        },
+        "type": "object",
+        "required": [
+          "text",
+          "usage"
+        ],
+        "title": "RephraseResponse"
+      },
+      "ReportRequest": {
+        "properties": {
+          "kind": {
+            "type": "string",
+            "enum": [
+              "card",
+              "explanation",
+              "picture"
+            ],
+            "title": "Kind",
+            "description": "What is reported."
+          },
+          "reason": {
+            "type": "string",
+            "enum": [
+              "offensive",
+              "wrong",
+              "other"
+            ],
+            "title": "Reason",
+            "description": "Shocking or inappropriate, wrong, other."
+          },
+          "comment": {
+            "type": "string",
+            "maxLength": 1000,
+            "title": "Comment",
+            "description": "The user's words, if any.",
+            "default": ""
+          },
+          "content": {
+            "type": "string",
+            "maxLength": 6000,
+            "minLength": 1,
+            "title": "Content",
+            "description": "The content, as text: the card, its explanation, its picture's subject."
+          },
+          "picture": {
+            "type": "string",
+            "maxLength": 700000,
+            "pattern": "^(data:image/(jpeg|png|webp|svg\\+xml);base64,[A-Za-z0-9+/=]+)?$",
+            "title": "Picture",
+            "description": "The card's picture, the AI's or a free one (never the user's photo): as a data URL; else empty.",
+            "default": ""
+          },
+          "prompt": {
+            "type": "string",
+            "maxLength": 8000,
+            "title": "Prompt",
+            "description": "The instructions the lesson was made with.",
+            "default": ""
+          },
+          "language": {
+            "type": "string",
+            "maxLength": 50,
+            "title": "Language",
+            "description": "English name of the language to answer in (\"French\").",
+            "default": "English"
+          }
+        },
+        "type": "object",
+        "required": [
+          "kind",
+          "reason",
+          "content"
+        ],
+        "title": "ReportRequest",
+        "description": "POST /v1/report: content the AI made, reported by the user. Only what they saw and\nsent: never the lesson's photos, nor the child's name. JSON."
+      },
+      "ReportResponse": {
+        "properties": {
+          "received": {
+            "type": "boolean",
+            "title": "Received",
+            "default": true
+          }
+        },
+        "type": "object",
+        "title": "ReportResponse"
+      },
+      "ReviseLine": {
+        "description": "A line of /v1/revise asked as STREAM_TYPE, one of: {\"step\"}, what the AI is at;\nlast, {\"result\"} or {\"error\"} (the HTTP status is 200 once a line is sent).",
+        "properties": {
+          "step": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/AiStep"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null
+          },
+          "result": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ReviseResponse"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null
+          },
+          "error": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Error"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null
+          }
+        },
+        "title": "ReviseLine",
+        "type": "object"
       },
       "ReviseRequest": {
         "description": "A natural-language correction of the cards, with the lesson's photos (the\n\"images\" parts, possibly none).",
@@ -1514,6 +4067,39 @@
             "title": "Summary",
             "description": "One short sentence describing what changed, in the requested language."
           },
+          "reverse": {
+            "type": "string",
+            "enum": [
+              "",
+              "on",
+              "off"
+            ],
+            "title": "Reverse",
+            "description": "\"on\" when the correction asks for the reverse card too (each card asked both ways), \"off\" when it asks for one way only; otherwise empty. Anki makes that card: never write it yourself.",
+            "default": ""
+          },
+          "typing": {
+            "type": "string",
+            "enum": [
+              "",
+              "on",
+              "off"
+            ],
+            "title": "Typing",
+            "description": "\"on\" when the correction asks for the answers to be typed, \"off\" when it asks for them not to be; otherwise empty.",
+            "default": ""
+          },
+          "dictation": {
+            "type": "string",
+            "enum": [
+              "",
+              "on",
+              "off"
+            ],
+            "title": "Dictation",
+            "description": "\"on\" when the correction asks for a dictation of each card (hear the back, write it), \"off\" when it asks for none; otherwise empty. Anki makes that card: never write it yourself.",
+            "default": ""
+          },
           "usage": {
             "$ref": "#/components/schemas/Usage"
           }
@@ -1557,6 +4143,117 @@
         ],
         "title": "SpeakRequest",
         "description": "POST /v1/speak: a text read aloud. Answer: the mp3 (audio/mpeg), its credits in\nCREDITS_HEADER and CREDITS_LEFT_HEADER (a share of the characters' real cost, at\nleast 1)."
+      },
+      "SubscribeRequest": {
+        "properties": {
+          "purchase_token": {
+            "type": "string",
+            "maxLength": 1000,
+            "minLength": 1,
+            "title": "Purchase Token",
+            "description": "The purchase's token (Google Play Billing)."
+          },
+          "product_id": {
+            "type": "string",
+            "maxLength": 200,
+            "minLength": 1,
+            "title": "Product Id",
+            "description": "The subscription's product id."
+          }
+        },
+        "type": "object",
+        "required": [
+          "purchase_token",
+          "product_id"
+        ],
+        "title": "SubscribeRequest",
+        "description": "POST /v1/subscribe: a Google Play subscription bought (or restored, on another phone)\nin the app; the relay checks it with Google Play and answers its licence key. The same\npurchase always gives the same key: the phones of one subscription share its credits."
+      },
+      "SubscribeResponse": {
+        "properties": {
+          "key": {
+            "type": "string",
+            "title": "Key",
+            "description": "The licence key, for the requests' Authorization header."
+          },
+          "account": {
+            "$ref": "#/components/schemas/Account"
+          }
+        },
+        "type": "object",
+        "required": [
+          "key",
+          "account"
+        ],
+        "title": "SubscribeResponse"
+      },
+      "TranscribeRequest": {
+        "description": "A dictation (the \"audio\" part) as the text its speaker meant to type: their words,\nhesitations out, their own corrections applied, a lesson's foreign words spelled right.",
+        "properties": {
+          "kind": {
+            "description": "What it is for: a lesson's instructions, or a correction of its cards.",
+            "enum": [
+              "prompt",
+              "correction"
+            ],
+            "title": "Kind",
+            "type": "string"
+          },
+          "language": {
+            "default": "English",
+            "description": "English name of the language to answer in (\"French\").",
+            "maxLength": 50,
+            "title": "Language",
+            "type": "string"
+          }
+        },
+        "required": [
+          "kind"
+        ],
+        "title": "TranscribeRequest",
+        "type": "object"
+      },
+      "TranscribeResponse": {
+        "properties": {
+          "text": {
+            "type": "string",
+            "title": "Text",
+            "description": "What was said, as written text (\"\" when nothing was understood)."
+          },
+          "usage": {
+            "$ref": "#/components/schemas/Usage"
+          }
+        },
+        "type": "object",
+        "required": [
+          "text",
+          "usage"
+        ],
+        "title": "TranscribeResponse"
+      },
+      "TrialRequest": {
+        "properties": {
+          "integrity_token": {
+            "type": "string",
+            "maxLength": 10000,
+            "minLength": 1,
+            "title": "Integrity Token",
+            "description": "Play Integrity's token (its standard request)."
+          },
+          "device": {
+            "type": "string",
+            "pattern": "^[0-9a-f]{64}$",
+            "title": "Device",
+            "description": "The phone, as the app knows it (a SHA-256, in hex): the token's request hash is its own."
+          }
+        },
+        "type": "object",
+        "required": [
+          "integrity_token",
+          "device"
+        ],
+        "title": "TrialRequest",
+        "description": "POST /v1/trial: the free trial, without a card: a few credits for a while, once per\nphone. Play Integrity's token says it is the app from Google Play on a real phone; the\nsame phone always gets the same key (reinstalled: the trial's credits left, not new ones)."
       },
       "Usage": {
         "properties": {
