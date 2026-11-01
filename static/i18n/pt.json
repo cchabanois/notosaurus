@@ -945,6 +945,10 @@
     "working": {
       "channel": "Criação dos cartões",
       "title": "O Notosaurus está preparando seus cartões…"
+    },
+    "downloads": {
+      "saved": "{name}: salvo em Downloads.",
+      "failed": "{name}: não foi possível salvar no celular."
     }
   },
   "setup": {

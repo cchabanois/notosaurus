@@ -36,6 +36,7 @@ the `.apkg` download (the cards go to AnkiDroid) and Ko-fi (the subscription pay
 | `Lessons.kt` | lessons on the phone, as the computer keeps them (lesson.json, page-N.jpg) |
 | `Relay.kt`, `Api.kt` | the relay's client (`/v1`), its errors |
 | `Working.kt` | the app kept running while the AI works (a short foreground service): left in the background, Android 15+ would cut its network, its call to the relay with it |
+| `PageDownloads.kt` | a file the page downloads (the computer's "⬇️ .apkg": a `blob:` link the WebView would drop), read by the page and saved in the phone's Downloads |
 | `Anki.kt` | AnkiDroid's API: note type, decks and sub-decks, notes, duplicates. Asked for at the first "Add to Anki": its Play Store page when it's missing, its permission dialog when it isn't allowed yet |
 | `*Routes.kt` | the `/api` routes by subject (lessons, generation, pictures, AnkiDroid, tests, settings, subscription…) |
 | `Generation.kt`, `Pictures.kt`, `Speech.kt`, `Dictation.kt` | a lesson made by the relay; the cards' pictures; the backs read aloud (the relay's voices); 🎤 |

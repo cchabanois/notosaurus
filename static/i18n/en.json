@@ -945,6 +945,10 @@
     "working": {
       "channel": "Making the cards",
       "title": "Notosaurus is making your cards…"
+    },
+    "downloads": {
+      "saved": "{name}: saved in Downloads.",
+      "failed": "{name}: couldn't be saved on the phone."
     }
   },
   "setup": {
