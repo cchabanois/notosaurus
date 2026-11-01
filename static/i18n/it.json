@@ -796,6 +796,7 @@
       "service": "Servizio che le disegna",
       "sameAsCards": "Lo stesso delle carte",
       "noneChip": "Nessuna immagine",
+      "optional": "Facoltativo: il servizio che disegna un'immagine quando nessuna immagine libera va bene (viene sempre chiesto prima, perché costa). Senza, le carte hanno comunque i disegni della lezione, le immagini libere, le figure e le sue foto.",
       "noKey": "Chiave mancante (sezione Accesso)",
       "drawnBySame": "Disegnate da {service}, il servizio delle carte.",
       "drawnBy": "Disegnate da {service}.",
