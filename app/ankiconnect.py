@@ -15,7 +15,7 @@ from dataclasses import dataclass, field
 import httpx
 
 from . import settings
-from .anki import TAG_PREFIX, Note, family, guids, model_id
+from .anki import TAG_PREFIX, Note, family, guids, key_of, model_id
 from .errors import AppError
 
 TIMEOUT = 30.0
@@ -207,7 +207,7 @@ async def _move_to_their_decks(client: httpx.AsyncClient, notes: list[Note]) -> 
     if len(tags) != 1:
         return 0, set()
     (tag,) = tags
-    key_field = {n.nt.family: n.nt.key for n in notes}  # a note type's family: which field tells it
+    note_types = {n.nt.family: n.nt for n in notes}  # a note type's family: which field tells it (key_of)
     target = {(n.nt.family, n.key): n.deck for n in notes}
     ids = await _invoke(client, "findNotes", query=f'"tag:{_search(tag)}"')
     infos = await _invoke(client, "notesInfo", notes=ids) if ids else []
@@ -216,7 +216,7 @@ async def _move_to_their_decks(client: httpx.AsyncClient, notes: list[Note]) -> 
         if any(t.startswith(TAG_PREFIX) and t != tag for t in info["tags"]):
             continue
         kind = family(info["modelName"])
-        deck = target.get((kind, info["fields"].get(key_field.get(kind, ""), {}).get("value")))
+        deck = target.get((kind, key_of(note_types[kind], _values(info)))) if kind in note_types else None
         going.update(dict.fromkeys(info.get("cards", []), deck) if deck else {})
     cards = await _invoke(client, "cardsInfo", cards=list(going)) if going else []
     moving = [c for c in cards if c["deckName"] != going[c["cardId"]]]
@@ -295,8 +295,8 @@ class _Sending:
         infos = await _invoke(self.client, "notesInfo", notes=ids) if ids else []
         existing: dict[str, list[int]] = {}
         for info in infos:
-            if nt.key in info["fields"]:
-                existing.setdefault(info["fields"][nt.key]["value"], []).append(info["noteId"])
+            if key := key_of(nt, _values(info)):
+                existing.setdefault(key, []).append(info["noteId"])
         return existing
 
     async def _by_card(self, deck: str, nt, note: Note, existing: dict[str, list[int]]) -> bool:
@@ -350,11 +350,11 @@ class _Sending:
         note moves to the new note type, keeping its review history."""
         if deck not in self.others:
             self.others[deck] = await _other_notosaurus_notes(self.client, deck)
-        candidates = [i for i in self.others[deck].get((nt.family, nt.key, note.key), []) if i["modelName"] != nt.name]
+        candidates = [i for i in self.others[deck].get((nt.family, note.key), []) if i["modelName"] != nt.name]
         old = candidates[0] if candidates else None
         if not old or not await self._change_type(old, nt, note):
             return False
-        self.others[deck][(nt.family, nt.key, note.key)].remove(old)
+        self.others[deck][(nt.family, note.key)].remove(old)
         return True
 
     async def _add(self, deck: str, nt, note: Note) -> None:
@@ -413,16 +413,21 @@ async def _bring_up_to_date(client: httpx.AsyncClient, note_types: list) -> tupl
     return changed, restructured
 
 
+def _values(info: dict) -> dict[str, str]:
+    """A note's fields as notesInfo gives them, by name."""
+    return {name: field["value"] for name, field in info["fields"].items()}
+
+
 async def _other_notosaurus_notes(client: httpx.AsyncClient, deck: str) -> dict[tuple, list[dict]]:
-    """The deck's Notosaurus notes (not its subdecks'), by (family, key field, key value)."""
+    """The deck's Notosaurus notes (not its subdecks'), by (family, key): a front or a card id."""
     name = _search(deck)
     ids = await _invoke(client, "findNotes", query=f'"deck:{name}" -"deck:{name}::*" "note:Notosaurus*"')
     found = {}
     for info in await _invoke(client, "notesInfo", notes=ids) if ids else []:
         kind = family(info.get("modelName", ""))
         for key in ("Front", "Id"):
-            if kind and key in info["fields"]:
-                found.setdefault((kind, key, info["fields"][key]["value"]), []).append(info)
+            if kind and info["fields"].get(key, {}).get("value"):
+                found.setdefault((kind, info["fields"][key]["value"]), []).append(info)
     return found
 
 
@@ -466,7 +471,7 @@ async def find_lesson_notes(
             query = f'"note:{_search(nt.name)}" "deck:{name}" -"deck:{name}::*" -"tag:{_search(TAG_PREFIX)}*"'
             ids = await _invoke(client, "findNotes", query=query)  # this deck (not its subdecks), untagged
             infos = await _invoke(client, "notesInfo", notes=ids) if ids else []
-            found.update(i["noteId"] for i in infos if i["fields"].get(nt.key, {}).get("value") in keys)
+            found.update(i["noteId"] for i in infos if key_of(nt, _values(i)) in keys)
         return sorted(found)
 
 

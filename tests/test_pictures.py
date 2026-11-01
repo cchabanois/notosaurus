@@ -83,19 +83,11 @@ def test_picture_cards_in_anki(client, drawn, tmp_path):
 
     first = package(cards)
     names = first.models
-    assert sorted(names[mid]["name"] for _, mid, _ in first.notes) == [
-        "Notosaurus image (audio)",
-        "Notosaurus image (audio)",
-        "Notosaurus recto/verso (audio)",  # the umbrella without its picture: a text card
-        "Notosaurus recto/verso (audio)",  # "tomorrow"
-    ]
-    picture_fields = [
-        first.fields(note) for note in first.notes if names[note[1]]["name"].startswith("Notosaurus image")
-    ]
-    assert picture_fields[0][0] == "Comment dit-on en anglais ?"
-    assert (
-        picture_fields[0][-5] == f'<img src="{cards[0]["picture"]}">' and picture_fields[0][-4] == cards[0]["id"]
-    )  # then the helps, and where the picture comes from (hidden)
+    # A picture is any card's: the same note type as the umbrella without its, and "tomorrow"
+    assert {names[mid]["name"] for _, mid, _ in first.notes} == {"Notosaurus recto/verso (audio)"}
+    pictured = [first.fields_by_name(note) for note in first.notes if first.fields_by_name(note)["Picture"]]
+    assert len(pictured) == 2 and pictured[0]["Front"] == "Comment dit-on en anglais ?"
+    assert (pictured[0]["Picture"], pictured[0]["Id"]) == (f'<img src="{cards[0]["picture"]}">', cards[0]["id"])
     assert first.media == sorted([cards[0]["picture"], cards[1]["picture"]])
 
     # Same front on every picture card, then a new picture: the same notes (GUID from the id)

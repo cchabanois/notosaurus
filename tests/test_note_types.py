@@ -22,7 +22,7 @@ def test_up_to_date():
 
 def test_every_variant_the_app_uses():
     note_types = json.loads((ROOT / "static" / "note-types.json").read_text(encoding="utf-8"))["note_types"]
-    assert {nt["family"] for nt in note_types.values()} == {"text", "diagram", "picture", "cloze", "choice"}
+    assert {nt["family"] for nt in note_types.values()} == {"text", "diagram", "cloze", "choice"}  # a picture: any
     assert len(note_types["text+reverse+typing+dictation"]["cards"]) == 3  # front → back, back → front, dictation
     for key, nt in note_types.items():
         assert nt["key"] in nt["fields"], key

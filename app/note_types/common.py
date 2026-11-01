@@ -3,6 +3,7 @@ NoteType itself, and the field values all cards fill the same way."""
 
 import hashlib
 import html
+from collections.abc import Mapping
 from dataclasses import dataclass
 
 CSS = """\
@@ -47,10 +48,14 @@ var q="lesson="+encodeURIComponent(m[1])+"&key="+encodeURIComponent(a.dataset.ke
 a.href=(android?"{FIX_PAGE}?":"http://localhost:8000/?")+q;}}}})();</script>"""
 
 
-def fix_link(key: str) -> str:
-    """The back's "✎ Notosaurus" link (FIX_SCRIPT): `key`, the note's key field, tells the
-    card ("Front": its text; "Id": its id)."""
-    link = f'<a class="nfix" href="#" data-key="{{{{text:{key}}}}}" data-tags="{{{{Tags}}}}">✎ Notosaurus</a>'
+def fix_link(key: str, fallback: str = "") -> str:
+    """The back's "✎ Notosaurus" link (FIX_SCRIPT): `key`, the note's field telling the card
+    ("Front": its text; "Id": its id); `fallback`, the field when that one is empty (a note
+    sent before it had an "Id")."""
+    told = f"{{{{text:{key}}}}}"
+    if fallback:
+        told = f"{{{{#{key}}}}}{told}{{{{/{key}}}}}{{{{^{key}}}}}{{{{text:{fallback}}}}}{{{{/{key}}}}}"
+    link = f'<a class="nfix" href="#" data-key="{told}" data-tags="{{{{Tags}}}}">✎ Notosaurus</a>'
     return f'<div class="notosaurus-fix">{link}</div>{FIX_SCRIPT}'
 
 
@@ -84,6 +89,14 @@ def with_context(templates) -> tuple[dict, ...]:
 # (no card template uses it). Written by the computer; the Android app keeps it as it is
 SOURCE_FIELD = "Source"
 
+# A card's picture or figure, if any: on the question ("Picture") or with the answer
+# ("BackPicture"), whatever the card's kind (text, typed, reverse, dictation, multiple choice)
+PICTURE = '{{#Picture}}<div class="notosaurus-picture">{{Picture}}</div>{{/Picture}}'
+BACK_PICTURE = '{{#BackPicture}}<div class="notosaurus-picture">{{BackPicture}}</div>{{/BackPicture}}'
+PICTURE_CSS = """\
+.notosaurus-picture img { max-width: min(100%, 320px); max-height: 50vh; border-radius: 12px; }
+"""
+
 
 def stable_id(*parts: str) -> int:
     """Deterministic id that fits in the 31 bits Anki expects."""
@@ -99,6 +112,9 @@ class NoteType:
     templates: tuple[dict, ...]  # {"name", "qfmt", "afmt"}
     css: str = CSS
     key: str = "Front"  # field telling which note an update is for
+    # A note with a picture: this field tells it instead ("Id": their fronts are often all the
+    # same, "What is it?"), its key's own (key_of); "": the key field always
+    picture_key: str = ""
     cloze: bool = False  # Anki makes one card per gap number
     variant: str = ""  # typed answer, dictation: part of the note type's id
     reverse: bool = False  # with the reverse card: part of the note type's id
@@ -140,6 +156,14 @@ FAMILIES = {
 def family(note_type_name: str) -> str:
     """ "text", "diagram", "picture", "cloze", "choice", or "" for a note type not Notosaurus's."""
     return next((f for prefix, f in FAMILIES.items() if note_type_name.startswith(prefix)), "")
+
+
+def key_of(nt: NoteType, values: Mapping[str, str]) -> str:
+    """The note's key, as its fields' `values` give it: its card's id when it has a picture
+    (nt.picture_key), else its note type's key field (the front: a note without a picture
+    keeps the key, so the GUID, it was sent with before any card could have one)."""
+    pictured = nt.picture_key and (values.get("Picture") or values.get("BackPicture"))
+    return values.get(nt.picture_key if pictured else nt.key, "")
 
 
 def model_id(nt: NoteType) -> int:

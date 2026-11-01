@@ -35,8 +35,8 @@ from .calls import (  # noqa: F401 (llm's API)
     tell,
     telling,
 )
+from .cards import blank_dictations, plain_cards
 from .cards import plain as plain_text
-from .cards import plain_cards
 from .config import AIConfig
 from .errors import AppError, loggable
 from .models import (
@@ -191,6 +191,8 @@ async def extract_cards(
     )
     result = Extraction.model_validate(_accepted(answer).model_dump())
     plain_cards(result.cards)  # a tag the AI wrote all the same would show as it is
+    if result.dictation:  # a dictation alone: no front giving its answer away
+        blank_dictations(result.cards)
     diagrams.normalize(result.cards, sizes, fmt)
     await _complete_figures(s, images, result.cards)
     return Extracted(

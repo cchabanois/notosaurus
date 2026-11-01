@@ -107,6 +107,27 @@ def plain_cards(cards: list[Card]) -> None:
                 setattr(card.doubt, name, plain(getattr(card.doubt, name)))
 
 
+# A dictation's blank, where the word to write goes ("…", "...", "___"): its sound reads the
+# sentence with the word put back (tts.spoken)
+BLANK = re.compile(r"…|\.{3}|_{3,}")
+
+
+def blank_dictations(cards: list[Card]) -> None:
+    """A dictation's cards never show their answer, whatever the AI wrote (its rule said a
+    blank, it wrote "Write the word: maison"): in place, a front without a blank that holds
+    its back exactly once, as a whole word (emphasised: "[maison]" too), gets "…" there. A
+    front with its blank already ("la maison de … poupée" → "la": the other "la" isn't it),
+    or holding its back more than once (which one?), stays as it is."""
+    for card in cards:
+        back = card.back.strip()
+        if not back or "\n" in back or BLANK.search(card.front):
+            continue
+        word = re.escape(back)
+        found = list(re.finditer(rf"\[{word}\]|(?<!\w){word}(?!\w)", card.front, re.IGNORECASE))
+        if len(found) == 1:
+            card.front = card.front[: found[0].start()] + "…" + card.front[found[0].end() :]
+
+
 def is_cloze(text: str) -> bool:
     """A text with gaps: a cloze card, one Anki card per gap number."""
     return bool(CLOZE.search(text))

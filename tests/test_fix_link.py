@@ -18,20 +18,21 @@ def _answers(nt) -> list[str]:
 
 
 def test_every_note_type_links_back_with_its_key():
+    # A text card: its id ("Id"), else its front (a note sent before it had one)
+    by_id_else_front = "{{#Id}}{{text:Id}}{{/Id}}{{^Id}}{{text:Front}}{{/Id}}"
     keyed = {
-        anki.note_type("es-ES-ElviraNeural", reverse=True, typing=True, dictation=True): "Front",
-        anki.note_type("es_ES", reverse=False): "Front",
-        anki.diagram_note_type("es-ES-ElviraNeural"): "Id",  # "lesson:page:n": the question repeats
-        anki.picture_note_type("es-ES-ElviraNeural", on_back=True): "Id",
-        anki.cloze_note_type(): "Id",
-        anki.choice_note_type(): "Id",
+        anki.note_type("es-ES-ElviraNeural", reverse=True, typing=True, dictation=True): by_id_else_front,
+        anki.note_type("es_ES", reverse=False): by_id_else_front,
+        anki.diagram_note_type("es-ES-ElviraNeural"): "{{text:Id}}",  # "lesson:page:n": the question repeats
+        anki.cloze_note_type(): "{{text:Id}}",
+        anki.choice_note_type(): "{{text:Id}}",
     }
     for nt, key in keyed.items():
         for answer in _answers(nt):
-            assert f'data-key="{{{{text:{key}}}}}"' in answer and 'data-tags="{{Tags}}"' in answer, nt.name
+            assert f'data-key="{key}"' in answer and 'data-tags="{{Tags}}"' in answer, nt.name
             assert answer.count("✎ Notosaurus") == 1 and answer.count(common.FIX_SCRIPT) == 1, nt.name
             assert answer.index("{{/Mnemonic}}") < answer.index("✎ Notosaurus")  # last, under the helps
-        assert key in nt.fields and all("nfix" not in t["qfmt"] for t in nt.templates), nt.name  # never on the front
+        assert "Id" in nt.fields and all("nfix" not in t["qfmt"] for t in nt.templates), nt.name  # never on the front
 
 
 def test_the_link_opens_the_app_or_the_computers_page_nowhere_else():

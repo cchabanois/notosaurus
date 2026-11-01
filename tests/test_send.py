@@ -43,7 +43,18 @@ def test_direct_send_to_anki(anki, client):
     }
 
     (model,) = anki.models.values()
-    assert model["inOrderFields"] == ["Front", "Back", "Info", "Audio", "Explanation", "Mnemonic"]
+    assert model["inOrderFields"] == [
+        "Front",
+        "Back",
+        "Info",
+        "Audio",
+        "Explanation",
+        "Mnemonic",
+        "Picture",
+        "BackPicture",
+        "Id",
+        "Source",
+    ]
     assert set(anki.decks) == {"Espagnol::Leçon 5::Vocabulaire", "Espagnol::Leçon 5"}
     mother = anki.notes[1]
     assert mother["fields"]["Audio"] == f"[sound:{tts.filename('la madre', 'es-ES-ElviraNeural')}]"
