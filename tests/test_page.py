@@ -1029,6 +1029,31 @@ def test_every_language_fits_a_narrow_phone(page, browser, server, lang):
         context.close()
 
 
+@pytest.mark.parametrize("width", [360, 1280])
+def test_the_lessons_bar_keeps_its_buttons_inside(page, width):
+    """A lesson's bottom bar once sent: ".apkg" beside "✓ Up to date in Anki", both inside
+    the row, on a phone as on a tablet (the soft Anki button kept a full row's width)."""
+    page.set_viewport_size({"width": width, "height": 800})
+    page.route("**/api/anki/status", lambda route: route.fulfill(json={"available": True, "profile": None}))
+    page.route(
+        "**/api/anki/send",
+        lambda route: route.fulfill(json={"added": 2, "updated": 0, "leftovers": [], "synced": False}),
+    )
+    page.goto("/")
+    page.wait_for_function("document.documentElement.classList.contains('i18n-ready')")
+    page.locator(".chip").first.click()  # the free prompt
+    page.locator("textarea[x-ref=promptText]").fill(FRONT_PROMPT)
+    page.locator(".bottom-bar button.btn.primary.wide").first.click()
+    row = page.locator(".bottom-bar .bar-row").last
+    row.get_by_role("button", name="Ajouter à Anki").click()  # sent: now soft, as wide
+    sync_api.expect(row.get_by_role("button", name="✓ À jour dans Anki")).to_be_visible()
+    sync_api.expect(row.get_by_role("button", name="Télécharger le fichier .apkg")).to_be_visible()
+    box = row.bounding_box()
+    for button in row.locator("button:visible").all():
+        b = button.bounding_box()
+        assert box["x"] - 1 <= b["x"] and b["x"] + b["width"] <= box["x"] + box["width"] + 1, button.inner_text()
+
+
 def test_prompts_follow_the_language(page):
     page.goto("/")
     text = page.locator("textarea[x-ref=promptText]")

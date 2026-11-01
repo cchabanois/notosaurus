@@ -627,7 +627,8 @@ h2 {
 .bottom-bar .btn { display: flex; max-width: 608px; min-height: 3.3rem; margin: 0 auto; font-size: 1.02rem; }
 .bar-row { display: flex; gap: .5rem; max-width: 608px; margin: 0 auto; }
 .bar-row .btn.soft { flex: 0 0 auto; margin: 0; box-shadow: 0 6px 18px rgb(0 0 0 / .08); }
-.bar-row .btn.wide { margin: 0; }
+/* The row's main button takes what is left beside the others, soft (sent, up to date) or not */
+.bar-row .btn.wide { flex: 1 1 0; width: auto; min-width: 0; margin: 0; }
 
 /* ---- Toast ------------------------------------------------------------- */
 .toast {
