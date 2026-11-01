@@ -231,12 +231,6 @@ async def _complete_figures(s: AIConfig, images: list[Image], cards: list[Card])
 
 # A light drawing that can't be used: drawn again with the model's thinking
 _UNUSABLE = {"llm.invalid_answer", "llm.truncated", "llm.empty_answer", "figure.invalid"}
-# A figure compiled whose labels can't all be seen (figures.hidden_labels): told, drawn again
-HIDDEN_LABELS = (
-    "In its picture, {n} of its labels can't be seen: covered by a filled shape drawn after them, or "
-    "outside the figure. Answer it again with every label where it can be seen, drawn after the "
-    "shapes it lies on."
-)
 
 
 class MadeFigure(NamedTuple):
@@ -346,8 +340,8 @@ async def _figure_family(s: AIConfig, description: str, kind: str = "") -> str:
 
 async def _drawn(s: AIConfig, text: str, description: str, family: str, light: bool) -> MadeFigure:
     """A figure drawn once, cleaned: in Typst with its family's package and rule (asked again
-    once, told what Typst said, when it doesn't compile, or that labels can't be seen), else
-    as SVG (family "other", Typst refusing it twice; the demo)."""
+    once, told what Typst said, when it doesn't compile), else as SVG (family "other", Typst
+    refusing it twice; the demo)."""
     from . import figures, figures_typst
 
     if family in figures_typst.FAMILIES:
@@ -362,18 +356,14 @@ async def _drawn(s: AIConfig, text: str, description: str, family: str, light: b
                 break
             try:
                 svg = figures.clean(await asyncio.to_thread(figures_typst.compile_svg, family, body))
+                return MadeFigure(svg, "typst", family, not light, body)
             except (figures_typst.Unusable, figures.FigureError) as e:
                 said = str(e) if isinstance(e, figures_typst.Unusable) else "its SVG was unusable"
                 asked = (
                     f"{text}\n\nYour previous answer didn't compile:\n{body}\n\n"
                     f"Typst said: {said}\n\nAnswer it again, corrected."
                 )
-                continue
-            hidden = await asyncio.to_thread(figures.hidden_labels, svg)
-            if not hidden:
-                return MadeFigure(svg, "typst", family, not light, body)
-            asked = f"{text}\n\nYour previous answer:\n{body}\n\n{HIDDEN_LABELS.format(n=hidden)}"
-        log.warning("Figure drawn as SVG: Typst refused it, or its labels hidden")
+        log.warning("Figure drawn as SVG: Typst refused it")
     demo = lambda: demo_ai.figure(description)  # noqa: E731
     drawing = await _ask_provider(s, [], text, figures.Drawing, figures.RULES, light=light, demo=demo)
     return MadeFigure(figures.clean(drawing.svg), "svg", family, not light)

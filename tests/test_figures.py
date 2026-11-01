@@ -449,30 +449,29 @@ RINGS = """#diagram(node-stroke: 0.8pt,
 )"""
 
 
-def test_labels_that_cant_be_seen_counted():
-    """A label under a filled shape drawn after it, or outside the picture: counted; seen,
-    not (the rules' examples: none hidden)."""
-    assert figures.hidden_labels(figures.clean(figures_typst.compile_svg("diagram", RINGS))) == 2
-    covered = SQUARE.replace("</svg>", '<rect width="400" height="300" fill="white"/></svg>')
-    assert figures.hidden_labels(figures.clean(SQUARE)) == 0 and figures.hidden_labels(figures.clean(covered)) == 1
-    outside = SQUARE.replace("</svg>", '<text x="900" y="40">B</text></svg>')
-    assert figures.hidden_labels(figures.clean(outside)) == 1
-    tiny = SQUARE.replace(">A<", ' font-size="4">i<')  # smaller than a pixel where it's told
-    assert figures.hidden_labels(figures.clean(tiny)) == 0
+def test_the_figures_bench_sees_hidden_labels():
+    """tools/bench_figures.py: a label under a filled shape drawn after it, or outside the
+    picture, counted and the figure judged wrong; seen, not (the rules' examples: none hidden)."""
+    import sys
+
+    sys.path.insert(0, str(figures_typst.HERE.parent.parent / "tools"))
+    import bench_figures
+
+    def hidden(svg):
+        svg = figures.clean(svg)
+        return bench_figures.hidden_labels(svg, figures.to_png(svg))
+
+    rings = figures.clean(figures_typst.compile_svg("diagram", RINGS))
+    assert hidden(rings) == 2
+    assert bench_figures.by_code(rings)[:2] == (False, "2 label(s) hidden (under a shape, or outside the picture)")
+    assert hidden(SQUARE) == 0
+    assert hidden(SQUARE.replace("</svg>", '<rect width="400" height="300" fill="white"/></svg>')) == 1
+    assert hidden(SQUARE.replace("</svg>", '<text x="900" y="40">B</text></svg>')) == 1
+    assert hidden(SQUARE.replace(">A<", ' font-size="4">i<')) == 0  # tiny, but seen
     for family in figures_typst.FAMILIES:
         typst = (figures_typst.RULES / f"{family}.typ").read_text(encoding="utf-8")
         example = typst.split(figures_typst.EXAMPLE)[1].replace("  ...\n", "")
-        assert figures.hidden_labels(figures.clean(figures_typst.compile_svg(family, example))) == 0, family
-
-
-def test_typst_with_hidden_labels_asked_again(monkeypatch):
-    """Compiled, but labels hidden: asked again, told so; hidden twice, drawn as SVG."""
-    seen = RINGS.replace("[Couronne périurbaine]", "[]").replace("[Banlieue]", "[]")  # the centre's only
-    svg, calls = typst_drawing(monkeypatch, [RINGS, seen], kind="diagram")
-    assert [c["schema"] for c in calls] == ["Figure", "Figure"] and "<use" in svg
-    assert "2 of its labels can't be seen" in calls[1]["text"] and "Banlieue" in calls[1]["text"]
-    svg, calls = typst_drawing(monkeypatch, [RINGS, RINGS], kind="diagram")
-    assert ">A<" in svg and [c["schema"] for c in calls] == ["Figure", "Figure", "Drawing"]
+        assert hidden(figures_typst.compile_svg(family, example)) == 0, family
 
 
 def test_a_figures_kind_given_is_not_asked_again(monkeypatch):
