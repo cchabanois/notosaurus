@@ -15,6 +15,7 @@ just another way to launch it.
 from __future__ import annotations
 
 import atexit
+import html
 import json
 import socket
 import urllib.parse
@@ -221,7 +222,10 @@ def show_phone() -> None:
     dialog = QDialog(mw)
     dialog.setWindowTitle(t("addon.phoneTitle"))
     layout_ = QVBoxLayout(dialog)
-    png = qr_png(phone_link() or lan)
+    # The QR code's address, its token too: typed instead of scanned (no Google scanner, a
+    # broken camera), the address alone would reach Notosaurus but not let the phone in
+    link = phone_link() or lan
+    png = qr_png(link)
     if png:
         image = QLabel()
         pixmap = QPixmap()
@@ -229,7 +233,7 @@ def show_phone() -> None:
         image.setPixmap(pixmap)
         image.setAlignment(Qt.AlignmentFlag.AlignCenter)
         layout_.addWidget(image)
-    address = QLabel(f"<p style='font-size:15px'><b>{lan}</b></p>")
+    address = QLabel(f"<p style='font-size:15px'><b>{html.escape(link)}</b></p>")
     address.setAlignment(Qt.AlignmentFlag.AlignCenter)
     address.setTextInteractionFlags(Qt.TextInteractionFlag.TextSelectableByMouse)
     layout_.addWidget(address)

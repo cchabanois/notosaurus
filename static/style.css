@@ -999,6 +999,9 @@ html.sheet-open { overflow: hidden; overscroll-behavior: none; }
 /* Pairing: a device without the token; the phones' QR code in the settings */
 .pairing p { line-height: 1.5; }
 .phones .qr { display: block; margin: .5rem auto 1rem; border-radius: var(--radius-sm); background: #fff; padding: .5rem; }
+/* Under it, the address with its token: selected whole in one tap, to copy or type */
+.phones .qr-address { margin: -.5rem auto 1rem; text-align: center; overflow-wrap: anywhere; }
+.phones .qr-address code { user-select: all; font-size: .85rem; }
 
 .picture-summary { margin: 0 0 .75rem; font-weight: 700; }
 

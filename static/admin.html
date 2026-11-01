@@ -288,6 +288,8 @@
           <h2><span x-text="$t('admin.phones.title')"></span> <a class="help-link" :href="$docs('privacy')" target="_blank" rel="noopener" :aria-label="$t('common.helpOn', { topic: $t('admin.phones.title') })" :title="$t('common.helpOn', { topic: $t('admin.phones.title') })">?</a></h2>
           <p class="hint" x-text="$t('admin.phones.hint')"></p>
           <img class="qr" :src="phone && '/api/qr?' + new URLSearchParams({ text: phone.url })" :alt="$t('admin.phones.qr')" width="200" height="200">
+          <!-- Its address with its token, to type instead of scanning (no scanner on the phone) -->
+          <p class="qr-address" x-show="phone"><code x-text="phone?.url"></code></p>
           <p class="hint"><a :href="phone?.url" x-text="$t('admin.phones.thisDevice')"></a></p>
           <p class="hint" x-text="$t('admin.phones.security')"></p>
           <button type="button" class="btn danger-soft" @click="unpairPhones()" x-text="$t('admin.phones.unpair')"></button>

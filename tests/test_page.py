@@ -611,6 +611,18 @@ def test_a_voice_chosen_per_language(page):
     assert settings.current().voices == {"es-ES": "es-ES-AlvaroNeural"}
 
 
+def test_the_phones_address_with_its_token_under_the_qr_code(page):
+    """Typed instead of scanned (no scanner on the phone), the address under the QR code is
+    the QR code's own, its token too: the address alone reaches Notosaurus, not letting the
+    phone in."""
+    page.goto("/admin.html")
+    new_password(page)
+    page.get_by_role("button", name="Créer et continuer").click()
+    shown = page.locator(".phones .qr-address code")
+    sync_api.expect(shown).to_have_text(re.compile(r"^http://.+/\?k=\S+$"))
+    assert shown.inner_text() == page.locator(".phones p.hint a").get_attribute("href")  # the QR code's link
+
+
 def test_a_voice_that_cant_be_heard_says_why(page):
     """Settings → Voices → ▶: a sound that can't be made (the relay's credits used up…) is
     said with its reason, not left silent."""
