@@ -12,7 +12,7 @@ from fastapi import APIRouter, BackgroundTasks, Depends, File, Form, Header, Upl
 from fastapi.encoders import jsonable_encoder
 from fastapi.responses import FileResponse, JSONResponse, StreamingResponse
 
-from notosaurus_core import diagrams, llm, tts
+from notosaurus_core import llm, tts
 from notosaurus_core.errors import loggable
 from notosaurus_core.images import refuse_bomb
 from notosaurus_core.llm import ExtractOptions, Image, extract_cards
@@ -107,8 +107,7 @@ async def _generate(
     found = await extract_cards(s, data, form.prompt, options, on_card=on_card)
     if form.prompt_id is not None:
         await asyncio.to_thread(prompts.mark_used, form.prompt_id)
-    # Photos taken sideways are saved upright (masks and diagram frames turn with them)
-    photos = diagrams.straighten([i.data for i in data], found.deck.cards, found.turns, found.frames)
+    photos = [i.data for i in data]  # as taken: a photo sideways is turned with ↻ (no turn guessed)
     content = await _content(form, found, s, lang, child)
     # In the child's decks ("Jules::{classe}"), its own: never one that exists already
     # (another lesson's, or the user's in Anki)

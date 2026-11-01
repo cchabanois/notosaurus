@@ -98,7 +98,7 @@ class LocalServer(
     internal val transfer = LessonsTransfer(File(dataDir, "lessons"), lessons, prefs, children, exams, prompts, speech, version)
     internal val cacheDir = File(dataDir, "cache") // a file being imported
     internal val pictures = Pictures(lessons, ::relay, cardSize) { switches.off(it) }
-    internal val generation = Generation(lessons, prefs, ::relay, speech, turnPhoto, children)
+    internal val generation = Generation(lessons, prefs, ::relay, speech, children)
     internal val computer = Computer(prefs, modeChanged)
     internal val switches = Switches(prefs, version)
     internal val saved = Saved(prefs) // what the page keeps on this phone (the child chosen…)

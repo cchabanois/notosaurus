@@ -138,8 +138,8 @@ def test_diagram_lesson_exported(client, tmp_path):
 
 
 @pytest.mark.parametrize("degrees", [90, 180, 270])
-def test_photos_turned_upright_with_their_masks(degrees):
-    """A red spot under a mask stays under it once the photo is turned."""
+def test_photos_turned_with_their_masks(degrees):
+    """↻: a red spot under a mask stays under it once the photo is turned."""
     image = Image.new("RGB", (1000, 500), "white")
     box = [0.1, 0.2, 0.3, 0.4]  # x0, y0, x1, y1
     image.paste((255, 0, 0), (100, 100, 300, 200))
@@ -147,7 +147,7 @@ def test_photos_turned_upright_with_their_masks(degrees):
     image.save(out, "PNG")
     cards = [Card(front="What is (1)?", back="spot", mask=Mask(page=1, n=1, box=box)), Card(front="a", back="b")]
 
-    (turned,) = diagrams.straighten([out.getvalue()], cards, [degrees])
+    turned = diagrams.turn(out.getvalue(), diagrams.boxes_on(1, cards, []), degrees)
     result = Image.open(io.BytesIO(turned))
     assert result.size == ((500, 1000) if degrees in (90, 270) else (1000, 500))
     x0, y0, x1, y1 = cards[0].mask.box
@@ -160,54 +160,31 @@ def test_photos_turned_upright_with_their_masks(degrees):
 
 def test_rotation_ignored_when_unknown_or_unreadable():
     cards = [Card(front="a", back="b", mask=Mask(page=1, n=1, box=[0.1, 0.2, 0.3, 0.4]))]
-    assert diagrams.straighten([photo()], cards, [45]) == [photo()]  # not a right angle
-    assert diagrams.straighten([b"not an image"], cards, [90]) == [b"not an image"]
-    assert diagrams.straighten([photo()], cards, []) == [photo()]  # no answer for that photo
+    assert diagrams.turn(photo(), diagrams.boxes_on(1, cards, []), 45) == photo()  # not a right angle
+    assert diagrams.turn(b"not an image", diagrams.boxes_on(1, cards, []), 90) == b"not an image"
     assert cards[0].mask.box == [0.1, 0.2, 0.3, 0.4]
 
 
-def test_sideways_photo_saved_upright(client, monkeypatch):
+def test_no_turn_guessed_the_photo_saved_as_taken(client, monkeypatch):
+    """SCH-04: no turn guessed from a line of text any more (the AI named its direction wrongly,
+    a photo turned upside down with its masks); the AI isn't asked for one, a photo is saved as
+    taken, ↻ turns it. /v1/extract's turns: 0 (the apps 1.1.0 read them)."""
     from app.routes import generation
-    from notosaurus_core.models import Deck
+    from notosaurus_core.models import Deck, Extraction
 
-    async def sideways(s, images, prompt, deck="", decks=(), **options):
+    assert "text_lines" not in llm.ai_schema(Extraction).model_fields
+
+    async def made(s, images, prompt, deck="", decks=(), **options):
         mask = Mask(page=1, n=1, box=[0.1, 0.2, 0.3, 0.4])
         deck = Deck(deck="D", cards=[Card(front="What is (1)?", back="x", mask=mask)])
-        return llm.Extracted(deck=deck, turns=[90], frames=[Frame(page=1, box=[0.05, 0.1, 0.5, 0.6])])
+        return llm.Extracted(deck=deck, turns=[0], frames=[Frame(page=1, box=[0.05, 0.1, 0.5, 0.6])])
 
-    monkeypatch.setattr(generation, "extract_cards", sideways)
+    monkeypatch.setattr(generation, "extract_cards", made)
     files = [("images", ("p.jpg", photo(1000, 500), "image/jpeg"))]
     lesson = client.post("/api/extract", files=files, data={"prompt": "p"}).json()
-    assert lesson["cards"][0]["mask"]["box"] == pytest.approx([0.6, 0.1, 0.8, 0.3])
-    assert lesson["frames"] == [{"page": 1, "box": pytest.approx([0.4, 0.05, 0.9, 0.5])}]  # turned too
+    assert lesson["cards"][0]["mask"]["box"] == pytest.approx([0.1, 0.2, 0.3, 0.4])
     saved = Image.open(io.BytesIO(client.get(f"/api/lessons/{lesson['id']}/photos/1").content))
-    assert saved.size == (500, 1000)
-
-
-@pytest.mark.parametrize(
-    ("first", "last", "turn"),
-    [
-        ([100, 400, 150, 450], [100, 600, 150, 650], 0),  # left to right: upright
-        ([100, 600, 150, 650], [100, 400, 150, 450], 180),  # right to left: upside down
-        ([100, 400, 150, 450], [700, 400, 750, 450], 270),  # down the photo: its top is on the right
-        ([700, 400, 750, 450], [100, 400, 150, 450], 90),  # up the photo: its top is on the left
-    ],
-)
-def test_turn_from_the_reading_direction(first, last, turn):
-    from notosaurus_core.models import TextLine
-
-    line = TextLine(page=1, first_word=first, last_word=last)  # gemini boxes: y, x, y, x on 0-1000
-    assert diagrams.turns([line], [(1000, 800)], "gemini") == [turn]
-
-
-def test_turn_unknown_without_a_usable_line():
-    from notosaurus_core.models import TextLine
-
-    lines = [
-        TextLine(page=2, first_word=[1, 2, 3, 4], last_word=[5, 6, 7, 8]),
-        TextLine(page=1, first_word=[1], last_word=[]),
-    ]
-    assert diagrams.turns(lines, [(100, 100)], "pixels") == [0]
+    assert saved.size == (1000, 500)
 
 
 def test_turn_a_photo_by_hand(client):

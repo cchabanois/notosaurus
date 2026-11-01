@@ -28,14 +28,13 @@ class Made(val content: Map<String, JsonElement>, val photos: List<ByteArray>)
 /**
  * A lesson made by the relay from the page's form, as the computer makes it (app/main.py,
  * _generate): the cards (each told as it is written), an "auto" voice in the language
- * learned, photos taken sideways saved upright. "Cancel" (the page's job id) stops it.
+ * learned, the photos as taken (↻ turns one). "Cancel" (the page's job id) stops it.
  */
 class Generation(
     private val lessons: Lessons,
     private val prefs: Preferences,
     private val relay: () -> Relay,
     private val speech: Speech,
-    private val turnPhoto: (ByteArray, Int) -> ByteArray,
     private val children: Children = Children(prefs),
 ) {
     private val running = ConcurrentHashMap<String, Job>() // by the page's id for each
@@ -76,17 +75,11 @@ class Generation(
             if (!it.equals("auto", ignoreCase = true)) it
             else speech.voiceFor(Speech.learned(found.string("back_language"), form.lang, typing || dictation || said("read_aloud"))) // heard in their own language too
         }
-        // Photos taken sideways saved upright: their masks and frames turn with them
-        val turns = found["turns"]?.jsonArray?.map { it.jsonPrimitive.content.toInt() }.orEmpty()
-        var cards = found["deck"]!!.jsonObject["cards"]!!.jsonArray.map { it.jsonObject }
-        var frames = (found["frames"] as? JsonArray)?.map { it.jsonObject }.orEmpty()
-        val photos = form.images.mapIndexed { i, data ->
-            val degrees = turns.getOrElse(i) { 0 }
-            if (degrees == 0) return@mapIndexed data
-            cards = cards.map { Diagrams.turnedMask(it, i + 1, degrees) }
-            frames = frames.map { Diagrams.turnedFrame(it, i + 1, degrees) }
-            turnPhoto(data, degrees)
-        }
+        // The photos as taken: one sideways is turned with ↻ (no turn guessed: the AI named a
+        // line's direction wrongly, a photo turned upside down)
+        val cards = found["deck"]!!.jsonObject["cards"]!!.jsonArray.map { it.jsonObject }
+        val frames = (found["frames"] as? JsonArray)?.map { it.jsonObject }.orEmpty()
+        val photos = form.images
         val content = mapOf(
             "deck" to JsonPrimitive(Children.deckFor(child, found["deck"]!!.jsonObject.string("deck"))), // in the child's decks
             "child" to JsonPrimitive(child?.id ?: ""),

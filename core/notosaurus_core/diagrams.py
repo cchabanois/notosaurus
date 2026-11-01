@@ -15,7 +15,7 @@ from pathlib import Path
 from PIL import Image
 
 from . import images
-from .models import Card, Frame, Mask, TextLine
+from .models import Card, Frame, Mask
 
 MAX_SIDE = 1568  # larger images get downsized by some models: pixel boxes refer to what they see
 CARD_SIDE = 1000  # the diagram in Anki: enough to read it, light to sync
@@ -122,28 +122,6 @@ def crop(frame: list[float] | None, masks: list[Mask]) -> list[float] | None:
     return _clamp([x0, y0, x1, y1])
 
 
-def turns(lines: list[TextLine], sizes: list[tuple[int, int] | None], fmt: str) -> list[int]:
-    """The clockwise turn that puts each photo upright, from the reading direction of
-    a line of text on it: from its first word to its last. Text going down the photo
-    means its top is on the right (270°), going up: on the left (90°), going left:
-    upside down (180°). Unknown: 0."""
-    result = [0] * len(sizes)
-    for line in lines:
-        size = sizes[line.page - 1] if 1 <= line.page <= len(sizes) else None
-        first = fractions(line.first_word, size, fmt) if size else None
-        last = fractions(line.last_word, size, fmt) if size else None
-        if size is None or first is None or last is None:
-            continue
-        width, height = size
-        dx = ((last[0] + last[2]) - (first[0] + first[2])) / 2 * width
-        dy = ((last[1] + last[3]) - (first[1] + first[3])) / 2 * height
-        if abs(dx) >= abs(dy):
-            result[line.page - 1] = 0 if dx >= 0 else 180
-        else:
-            result[line.page - 1] = 270 if dy > 0 else 90
-    return result
-
-
 ROTATIONS = {90: Image.Transpose.ROTATE_270, 180: Image.Transpose.ROTATE_180, 270: Image.Transpose.ROTATE_90}
 
 
@@ -173,17 +151,6 @@ def turn(data: bytes, masks: list[Mask | Frame], degrees: int) -> bytes:
     for mask in masks:
         mask.box = rotate_box(mask.box, degrees)
     return out.getvalue()
-
-
-def straighten(
-    photos: list[bytes], cards: list[Card], rotations: list[int], frames: Sequence[Frame] = ()
-) -> list[bytes]:
-    """Turn the photos the AI found sideways or upside down, their masks and diagram
-    frames with them."""
-    return [
-        turn(data, boxes_on(page, cards, frames), rotations[page - 1]) if page <= len(rotations) else data
-        for page, data in enumerate(photos, start=1)
-    ]
 
 
 def boxes_on(page: int, cards: list[Card], frames: Sequence[Frame]) -> list[Mask | Frame]:
