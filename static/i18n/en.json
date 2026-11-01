@@ -156,6 +156,7 @@
       "badgeNew": "new",
       "badgeModified": "changed",
       "noCards": "No cards found: check the photos or the instructions.",
+      "noCardsWithoutPhoto": "There is no photo: the prompt must say what to learn, a list of words or a topic.",
       "owner": "🧒 <strong>{owner}</strong>'s lesson",
       "choice": "🤖 {choice}",
       "promptUsed": "📝 Instructions used for this lesson",

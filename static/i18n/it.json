@@ -156,6 +156,7 @@
       "badgeNew": "nuova",
       "badgeModified": "modificata",
       "noCards": "Nessuna carta trovata: controlla le foto o le istruzioni.",
+      "noCardsWithoutPhoto": "Non c'è nessuna foto: la consegna deve dire cosa imparare, un elenco di parole o un argomento.",
       "owner": "🧒 Lezione di <strong>{owner}</strong>",
       "choice": "🤖 {choice}",
       "promptUsed": "📝 Istruzioni usate per questa lezione",

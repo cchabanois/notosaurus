@@ -257,6 +257,26 @@ test("the most recently used prompts, never-used ones in the server's order", ()
   assert.deepEqual(plain(many.recentPrompts().map((p) => p.id)), [1, 2, 3, 6]);
 });
 
+test("the big button: the cards from the photos, from the prompt when it says what to learn, else a photo", () => {
+  const page = app.component();
+  const vocabulary = "Crée des cartes de vocabulaire.\nSans photo : à partir de ce que j'écris ici (une liste de mots).";
+  page.prompts = [{ id: "notosaurus:vocabulary", builtin: true, text: vocabulary }, { id: 1, text: "Mes cartes" }];
+  const when = (selectedId, text) => {
+    Object.assign(page, { selectedId, form: { ...page.form, text } });
+    return page.nextAction();
+  };
+  assert.equal(when("notosaurus:vocabulary", vocabulary), "photo");  // as it is: meant for photos
+  assert.equal(when("notosaurus:vocabulary", vocabulary.replace(" (une", ", (une")), "photo");  // a comma
+  assert.equal(when("notosaurus:vocabulary", vocabulary.replace("vocabulaire", "verbes")), "photo");  // a word changed
+  assert.equal(when("notosaurus:vocabulary", `${vocabulary}\nchat, chien`), "photo");  // two words: not yet
+  assert.equal(when("notosaurus:vocabulary", `${vocabulary}\nla mère, le père, la sœur`), "prompt");
+  assert.equal(when(null, "Les capitales de l'Europe"), "prompt");  // the free prompt, written
+  assert.equal(when(null, "  "), "photo");  // the free prompt, empty
+  assert.equal(when(1, "Mes cartes"), "prompt");  // the user's own
+  page.photos = [{ url: "blob:1" }];
+  assert.equal(when("notosaurus:vocabulary", vocabulary), "generate");  // a photo: the cards from it
+});
+
 test("deleting a prompt is asked in the app's own sheet, not the browser's confirm()", async () => {
   const calls = [];
   const page = await loadScripts("app.js", {

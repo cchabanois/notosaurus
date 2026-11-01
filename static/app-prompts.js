@@ -1,6 +1,23 @@
 // The prompts: chosen, edited, saved, copied, deleted.
 // Methods of the page's Alpine component (app.js), as `this`.
 
+// A Notosaurus prompt works without a photo once something to learn is written in it (a list
+// of words, a topic): words added to its own text, a few at least; a comma put right, a word
+// changed, isn't that. In any language: words counted, never their meaning.
+const WORDS_WITHOUT_PHOTO = 3;
+
+function addedWords(original, text) {
+  const words = (t) => t.toLocaleLowerCase().match(/[\p{L}\p{N}]+/gu) ?? [];
+  const left = new Map();
+  for (const w of words(original)) left.set(w, (left.get(w) ?? 0) + 1);
+  let added = 0;
+  for (const w of words(text)) {
+    if (left.get(w)) left.set(w, left.get(w) - 1);
+    else added++;
+  }
+  return added;
+}
+
 const promptsPart = {
   // --- Prompts ---------------------------------------------------------
   // `initial`: the page's first load, which comes after the settings: a prompt chosen or
@@ -42,7 +59,14 @@ const promptsPart = {
   worksWithoutPhoto() {
     const prompt = this.current();
     if (!prompt) return this.form.text.trim() !== "";
-    return !prompt.builtin || this.isModified();
+    return !prompt.builtin || addedWords(prompt.text, this.form.text) >= WORDS_WITHOUT_PHOTO;
+  },
+
+  // What the big button at the bottom does now: make the cards from the photos, from the
+  // prompt alone (it says what to learn), or take the lesson's photo first
+  nextAction() {
+    if (this.photos.length) return "generate";
+    return this.worksWithoutPhoto() ? "prompt" : "photo";
   },
 
   // Most recently used prompts first (never used: oldest first), always
