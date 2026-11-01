@@ -32,7 +32,8 @@ def test_helps_on_the_back_in_anki(client, tmp_path):
     ]
     package = apkg.export(client, {"deck": "D", "cards": cards}, tmp_path)
     for model in package.models.values():  # every note type: the two fields, shown on the back only
-        assert [f["name"] for f in model["flds"]][-2:] == ["Explanation", "Mnemonic"]
+        names = [f["name"] for f in model["flds"]]
+        assert names.index("Mnemonic") == names.index("Explanation") + 1
         assert all("{{Explanation}}" in t["afmt"] and "{{Explanation}}" not in t["qfmt"] for t in model["tmpls"])
     fields = {package.fields(n)[0]: package.fields_by_name(n) for n in package.notes}
     assert fields["le parapluie"]["Mnemonic"] == "para + agua: <qui arrête l'eau>"

@@ -28,19 +28,25 @@ class AnkiTest {
         val text = types["text+reverse+typing+dictation"]
         assertEquals("Notosaurus recto/verso + inverse à taper + dictée (audio)", text.name) // the computer's name
         assertEquals("Notosaurus recto/verso + inverse à taper + dictée (Android)", text.legacyName) // the test versions'
-        assertEquals(listOf("Front", "Back", "Info", "Audio", "Explanation", "Mnemonic"), text.fields)
+        // The computer's order: a picture's fields after the others (where it adds them to an older note type)
+        val fields = listOf("Front", "Back", "Info", "Audio", "Explanation", "Mnemonic", "Picture", "BackPicture", "Id", "Source")
+        assertEquals(fields, text.fields)
         assertEquals(3, text.cards.size)
         assertTrue(text.cards[0].front.contains("{{type:Back}}"))
-
-        // The computer's order (the key where it puts it), its hidden Source too
-        val picture = types["picture"]
-        assertEquals(listOf("Front", "Back", "Info", "Audio", "Picture", "Id", "Explanation", "Mnemonic", "Source"), picture.fields)
-        assertEquals("Id", picture.key)
         assertTrue(types["cloze"].cloze)
+        assertFalse(types.all.keys.any { it.startsWith("picture") }) // a picture is any card's
+
+        // Its key: the front, its card's id with a picture (their fronts are often all the same)
+        assertEquals(("Front" to "Id"), text.key to text.pictureKey)
+        assertEquals("le chat", text.keyOf(mapOf("Front" to "le chat", "Id" to "k")))
+        assertEquals("k", text.keyOf(mapOf("Front" to "Comment dit-on ?", "Id" to "k", "Picture" to "<img src=\"p.jpg\">")))
+        assertEquals("k", text.keyOf(mapOf("Front" to "Comment dit-on ?", "Id" to "k", "BackPicture" to "<img src=\"p.jpg\">")))
         // A note's values in its note type's order; a field not written keeps its value there (Source)
-        val names = picture.fields
-        val there = arrayOf("", "", "", "", "", "", "", "", "Wikimedia Commons")
-        assertEquals(listOf("le chat", "el gato", "", "", "", "k", "", "", "Wikimedia Commons"), picture.values(names, mapOf("Front" to "le chat", "Back" to "el gato", "Id" to "k"), there).toList())
+        val there = Array(fields.size) { if (fields[it] == "Source") "Wikimedia Commons" else "" }
+        assertEquals(
+            listOf("le chat", "el gato", "", "", "", "", "", "", "k", "Wikimedia Commons"),
+            text.values(fields, mapOf("Front" to "le chat", "Back" to "el gato", "Id" to "k"), there).toList(),
+        )
     }
 
     @Test

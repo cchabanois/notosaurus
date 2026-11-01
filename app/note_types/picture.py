@@ -1,58 +1,24 @@
-"""Picture cards: a picture on the question, or with the answer; where it comes from."""
+"""A card's picture (any card's: note_types/common.PICTURE): its fields, where it comes from."""
 
 import html
 from pathlib import Path
 
-from notosaurus_core import tts
+from .common import SOURCE_FIELD, field_html
 
-from .common import (
-    BACK_INFO,
-    CSS,
-    HELP_FIELDS,
-    SOURCE_FIELD,
-    NoteType,
-    field_html,
-    fix_link,
-    typed,
-    variant,
-    with_context,
-)
-
-PICTURE_CSS = """\
-.notosaurus-picture img { max-width: min(100%, 320px); max-height: 50vh; border-radius: 12px; }
-"""
 SOURCE_NAMES = {"commons": "Wikimedia Commons", "openverse": "Openverse", "pixabay": "Pixabay"}
 
 
-def picture_note_type(voice: str, typing: bool = False, on_back: bool = False) -> NoteType:
-    """A picture card: the picture and the front text (e.g. "How do you say it in
-    English?"), then the answer. "Id" (the card's own id) tells which note an update
-    is for: the fronts are often all the same. `on_back`: the picture belongs to the
-    answer ("What is a tangent?"): shown with it only. Same fields and card name: a note
-    moves from one to the other keeping its history."""
-    anki_tts = tts.is_anki_locale(voice)
-    sound = f"{{{{tts {voice}:Back}}}}" if anki_tts else "{{Audio}}"
-    info = BACK_INFO + fix_link("Id")
-    picture = '<div class="notosaurus-picture">{{Picture}}</div>'
-    if on_back:
-        question, answer = "{{Front}}", f'{{{{FrontSide}}}}<hr id="answer">{{{{Back}}}}{sound}{picture}{info}'
-    else:
-        question = picture + "{{#Front}}<div>{{Front}}</div>{{/Front}}"
-        answer = f'{{{{FrontSide}}}}<hr id="answer">{{{{Back}}}}{sound}{info}'
-    templates = ({"name": "Image", "qfmt": question, "afmt": answer},)
-    if typing:
-        templates = (typed(templates[0], "Back"),)
-    fields = ["Front", "Back", "Info"] + ([] if anki_tts else ["Audio"]) + ["Picture", "Id", *HELP_FIELDS, SOURCE_FIELD]
-    kind = f"picture TTS Anki {voice}" if anki_tts else "picture audio"
-    name, option = variant("Notosaurus image au verso" if on_back else "Notosaurus image", typing, False)
-    option = "+".join(filter(None, ["back" if on_back else "", option]))
-    name = f"{name} ({kind.removeprefix('picture ')})"
-    return NoteType(name, kind, tuple(fields), with_context(templates), css=CSS + PICTURE_CSS, key="Id", variant=option)
-
-
 def picture_fields(card, picture: Path, card_id: str) -> dict[str, str]:
-    """A picture card's own fields: its picture, where it comes from, its id."""
-    return {"Picture": f'<img src="{picture.name}">', SOURCE_FIELD: source(card), "Id": card_id}
+    """A card's picture, on its question ("Picture") or with its answer ("BackPicture":
+    picture_on_back), where it comes from, its id (its note's key then: key_of)."""
+    shown = f'<img src="{picture.name}">'
+    on_back = card.picture_on_back
+    return {
+        "Picture": "" if on_back else shown,
+        "BackPicture": shown if on_back else "",
+        SOURCE_FIELD: source(card),
+        "Id": card_id,
+    }
 
 
 def source(card) -> str:

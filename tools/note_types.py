@@ -26,6 +26,7 @@ def spec(nt: anki.NoteType) -> dict:
         "family": nt.family,
         "fields": nt.fields,  # in the computer's order: the same note types on both
         "key": nt.key,  # which note an update is for
+        "picture_key": nt.picture_key,  # instead, for a note with a picture (anki.key_of)
         "cloze": nt.cloze,
         "cards": [{"name": t["name"], "front": t["qfmt"], "back": t["afmt"]} for t in nt.templates],
         "css": nt.css,
@@ -34,7 +35,7 @@ def spec(nt: anki.NoteType) -> dict:
 
 
 def variants() -> dict[str, anki.NoteType]:
-    """Each note type by its family and options ("text+reverse+typing", "picture+back")."""
+    """Each note type by its family and options ("text+reverse+typing", "diagram+typing")."""
     found = {}
     for reverse in (False, True):
         for typing in (False, True):
@@ -44,9 +45,6 @@ def variants() -> dict[str, anki.NoteType]:
     found["text+dictation-only"] = anki.note_type(VOICE, False, dictation=True, dictation_only=True)
     for typing in (False, True):
         found["diagram" + ("+typing" if typing else "")] = anki.diagram_note_type(VOICE, typing)
-        for on_back in (False, True):
-            options = [o for o, on in (("back", on_back), ("typing", typing)) if on]
-            found["+".join(["picture", *options])] = anki.picture_note_type(VOICE, typing, on_back)
     found["cloze"] = anki.cloze_note_type()
     found["choice"] = anki.choice_note_type()
     return found
