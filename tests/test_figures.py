@@ -457,6 +457,8 @@ def test_labels_that_cant_be_seen_counted():
     assert figures.hidden_labels(figures.clean(SQUARE)) == 0 and figures.hidden_labels(figures.clean(covered)) == 1
     outside = SQUARE.replace("</svg>", '<text x="900" y="40">B</text></svg>')
     assert figures.hidden_labels(figures.clean(outside)) == 1
+    tiny = SQUARE.replace(">A<", ' font-size="4">i<')  # smaller than a pixel where it's told
+    assert figures.hidden_labels(figures.clean(tiny)) == 0
     for family in figures_typst.FAMILIES:
         typst = (figures_typst.RULES / f"{family}.typ").read_text(encoding="utf-8")
         example = typst.split(figures_typst.EXAMPLE)[1].replace("  ...\n", "")

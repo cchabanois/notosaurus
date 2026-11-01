@@ -62,6 +62,9 @@ on a line (an axis's numbers that a curve passes over are fine: axes crossing at
 put them there); the figure fills the picture, readable. Answer "ok" true only when everything is \
 right; else false, with the problem in one short sentence, in the description's language."""
 PNG_WIDTH = 600  # pixels: what the check sees
+# Pixels, to tell a hidden label (hidden_labels): smaller, rendered once per label (3 times
+# faster); a label seen, however small, still changes a pixel (its edges, anti-aliased)
+HIDDEN_WIDTH = 300
 FONT = Path(__file__).parent / "fonts" / "DejaVuSans.ttf"  # its licence beside it
 
 
@@ -189,7 +192,7 @@ def clean(svg: str) -> str:
     return ElementTree.tostring(root, encoding="unicode")
 
 
-def to_png(svg: str) -> bytes | None:
+def to_png(svg: str, width: int = PNG_WIDTH) -> bytes | None:
     """The cleaned figure as a PNG on white, as the check sees it; None when it can't be
     made (resvg not installed, or it fails on this figure)."""
     try:
@@ -205,7 +208,7 @@ def to_png(svg: str) -> bytes | None:
             resvg_py.svg_to_bytes(
                 svg_string=svg,
                 background="#ffffff",
-                width=PNG_WIDTH,
+                width=width,
                 font_files=[font],
                 font_family="DejaVu Sans",
                 sans_serif_family="DejaVu Sans",
@@ -240,7 +243,7 @@ def hidden_labels(svg: str) -> int:
     """How many of a cleaned figure's labels can't be seen: taken out, not a pixel changes
     (under a filled shape drawn after it, or outside the picture). 0 when it can't be told
     (no resvg)."""
-    seen = to_png(svg)
+    seen = to_png(svg, HIDDEN_WIDTH)
     if seen is None:
         return 0
     root = ElementTree.fromstring(svg)
@@ -248,7 +251,7 @@ def hidden_labels(svg: str) -> int:
     for label, parent in list(_labels(root)):
         at = list(parent).index(label)
         parent.remove(label)
-        hidden += to_png(ElementTree.tostring(root, encoding="unicode")) == seen
+        hidden += to_png(ElementTree.tostring(root, encoding="unicode"), HIDDEN_WIDTH) == seen
         parent.insert(at, label)
     return hidden
 
