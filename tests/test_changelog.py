@@ -57,6 +57,24 @@ def test_the_entries_read_from_the_description():
     assert changelog_add.entries("## changelog\n### Notes\n- x\n### FIXED\n- y") == [("Fixed", "y")]
 
 
+def test_an_entry_ends_at_a_blank_line():
+    """The squash commit's message wraps a bullet over unindented lines, then ends with the
+    description's footer and GitHub's trailers: those, after a blank line, are no entry's."""
+    message = (
+        "## Changelog\n### Fixed\n- Without a photo, an unchanged prompt no longer makes cards on a\n"
+        "made-up subject\n\n🤖 Generated with [Claude Code](https://claude.com/claude-code)\n\n"
+        "---------\n\nCo-authored-by: Someone <someone@example.org>\n"
+    )
+    assert changelog_add.entries(message) == [
+        ("Fixed", "Without a photo, an unchanged prompt no longer makes cards on a made-up subject")
+    ]
+    # Bullets a blank line apart are each read, and an indented line goes on its bullet
+    assert changelog_add.entries("## Changelog\n### Added\n- a\n\n- b\n\n  more of b\n") == [
+        ("Added", "a"),
+        ("Added", "b more of b"),
+    ]
+
+
 def test_the_entries_put_first_in_their_subsection():
     text, done = changelog_add.added(CHANGELOG, changelog_add.entries(BODY))
     assert done == changelog_add.entries(BODY)

@@ -44,7 +44,9 @@ def entries(message: str) -> list[tuple[str, str]]:
         return []
     found: list[tuple[str, str]] = []
     section = None
+    blank = False  # the line before: a bullet goes on over the lines right under it, or indented ones
     for line in message[heading.end() :].splitlines():
+        follows_blank, blank = blank, not line.strip()
         title = _HEADING.match(line)
         if title and len(title.group(1)) <= 2:
             break  # the description's next part
@@ -55,9 +57,13 @@ def entries(message: str) -> list[tuple[str, str]]:
         bullet = _BULLET.match(line)
         if bullet and section:
             found.append((section, bullet.group(1).strip()))
-        elif line.strip() and found and section and not line.startswith("#"):
+        elif (
+            line.strip() and found and section and not line.startswith("#") and (not follows_blank or line[0].isspace())
+        ):
             kind, text = found[-1]
             found[-1] = (kind, f"{text} {line.strip()}")  # a bullet wrapped over several lines
+        elif line.strip() and not line[0].isspace():
+            section = None  # a paragraph after the entries (the footer, the commit's trailers)
     return found
 
 
