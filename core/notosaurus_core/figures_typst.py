@@ -46,8 +46,6 @@ COMMON = """\
 - draw exactly what the description asks for, nothing more: no title, no caption; write only \
 the labels it asks to write (what it names to say what to draw, a function, a shape, a \
 theorem, an object, is not a label): one word too many may give the card's answer away;
-- every label seen whole: drawn after the filled shapes it lies on (a filled shape hides what \
-is drawn before it), never on another label;
 - black on white, a shaded part light grey (`luma(225)`); the colours the description gives \
 (a colour code: atoms, a legend, a set by its colour), as it says; about 6 by 4 cm;
 - only drawing: no import (the packages are imported already), include, read, image, plugin, \
@@ -84,11 +82,12 @@ FAMILIES: dict[str, Family] = {
 KINDS = (
     '"geometry": points, segments, lines, circles, polygons, angles, their marks (a theorem, a '
     'construction); "graph": the graph of one or more functions in a frame; "sets": a Venn diagram of '
-    'two or three sets; "diagram": boxes and arrows (a flowchart, a cycle, a chain, a classification); '
+    'two or three sets; "diagram": boxes side by side joined by arrows (a flowchart, a cycle, a chain, a '
+    "classification), never shapes inside one another; "
     '"circuit": an electric circuit; "chemistry": a molecule\'s formula written with its atoms\' '
     "symbols and bonds (developed, semi-developed, skeletal, a ring), never a model of balls; "
-    '"timeline": dates on a line; "other": anything else (a table, a labelled drawing, a solid in '
-    "perspective, a map, a molecular model of coloured balls…)"
+    '"timeline": dates on a line; "other": anything else (a table, a labelled drawing, zones nested '
+    "or overlapping, a solid in perspective, a map, a molecular model of coloured balls…)"
 )
 FAMILY_RULES = f"A figure for a pupil's flashcard is described below. Which kind of figure is it? {KINDS}."
 FigureKind = Literal["geometry", "graph", "sets", "diagram", "circuit", "chemistry", "timeline", "other"]

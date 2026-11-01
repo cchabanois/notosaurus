@@ -526,6 +526,13 @@ def test_credited_with_what_its_typst_uses():
     assert figures_typst.made_with("other", balls) == []
 
 
+def test_nested_zones_are_no_diagram():
+    """fletcher writes a node's text at its centre and draws its boxes side by side: zones
+    inside one another (rings, layers) drawn with it hide or pile up their labels (TYP-09h)."""
+    assert "never shapes inside one another" in figures_typst.KINDS
+    assert "zones nested or overlapping" in figures_typst.KINDS.split('"other"')[1]
+
+
 def test_a_model_of_balls_is_no_chemistry():
     """The chemistry family draws formulas (its package's): a molecular model of coloured
     balls is "other", said to the AI that picks a figure's kind."""
