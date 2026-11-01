@@ -474,9 +474,9 @@ def test_figure_lesson_on_a_real_collection(bridged, col):
     assert client.post("/api/anki/send", json=body).json()["added"] == 3
     svg = Path(col.media.dir()) / cards[0]["picture"]
     assert svg.suffix == ".svg" and svg.read_text(encoding="utf-8").startswith("<svg")  # in Anki's media, as sent
-    (note_type,) = [m for m in col.models.all_names_and_ids() if m.name.startswith("Notosaurus image (")]
-    question = col.get_note(sorted(col.find_notes(f'"note:{note_type.name}"'))[0]).cards()[0].question()
-    assert f'<img src="{cards[0]["picture"]}">' in question
+    (note_id,) = col.find_notes(f'"Id:{cards[0]["id"]}"')  # a text card, as any: its figure on the question
+    assert col.models.get(col.get_note(note_id).mid)["name"].startswith("Notosaurus recto/verso")
+    assert f'<img src="{cards[0]["picture"]}">' in col.get_note(note_id).cards()[0].question()
 
     # The tangent: its figure with the answer only
     tangent = next(c for c in cards if c["picture_on_back"])
@@ -484,10 +484,10 @@ def test_figure_lesson_on_a_real_collection(bridged, col):
     card = col.get_note(note_id).cards()[0]
     image = f'<img src="{tangent["picture"]}">'
     assert image not in card.question() and image in card.answer()
-    # Moved to the front in the review, sent again: the same note, its type changed
+    # Moved to the front in the review, sent again: the same note, its fields only (one note type)
     moved = [{**c, "picture_on_back": False} if c["id"] == tangent["id"] else c for c in cards]
     res = client.post("/api/anki/send", json={**body, "cards": moved}).json()
-    assert (res["added"], res["converted"]) == (0, 1)
+    assert (res["added"], res["converted"]) == (0, 0)
     assert image in col.get_note(note_id).cards()[0].question()
 
 
@@ -526,18 +526,21 @@ def test_multiple_choice_lesson_on_a_real_collection(bridged, col, tmp_path):
 
 
 def test_note_types_brought_up_to_date_on_a_real_collection(bridged, col, tmp_path):
-    """A note type an older Notosaurus made: its templates and CSS replaced, the field
-    it lacked added, its notes kept, at the next send (the add-on's bridge)."""
+    """A note type an older Notosaurus made (the 1.0.0's: no picture's fields): its templates
+    and CSS replaced, the fields it lacked added at the end, its notes kept, at the next send
+    (the add-on's bridge)."""
     client, _ = bridged
     lesson = extract(client)
     body = {"deck": lesson["deck"], "cards": lesson["cards"], "voice": VOICE, "lesson_id": lesson["id"]}
     client.post("/api/anki/send", json=body)
     (note_type,) = [m for m in col.models.all_names_and_ids() if m.name.startswith("Notosaurus")]
-    # As an older Notosaurus left it: other CSS, another answer, no "Info" field
+    # As an older Notosaurus left it: other CSS, another answer, no "Info" field, and none of a
+    # picture's (the 1.0.0's)
     model = col.models.get(note_type.id)
     model["css"] = ".card { font-size: 20px; }"
     model["tmpls"][0]["afmt"] = "{{FrontSide}}<hr id=answer>{{Back}}"
-    col.models.remove_field(model, next(f for f in model["flds"] if f["name"] == "Info"))
+    for name in ("Info", "Picture", "BackPicture", "Id", "Source"):
+        col.models.remove_field(model, next(f for f in model["flds"] if f["name"] == name))
     col.models.update_dict(model)
     count = len(col.find_notes(f'"note:{note_type.name}"'))
 
@@ -552,7 +555,11 @@ def test_note_types_brought_up_to_date_on_a_real_collection(bridged, col, tmp_pa
         "Explanation",
         "Mnemonic",
         "Info",
-    ]  # added at the end
+        "Picture",
+        "BackPicture",
+        "Id",
+        "Source",
+    ]  # added at the end, in the note type's order
     assert len(col.find_notes(f'"note:{note_type.name}"')) == count  # the notes kept, none added
     assert client.post("/api/anki/send", json=body).json()["note_types_updated"] == 0  # up to date now
 
