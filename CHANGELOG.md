@@ -148,6 +148,7 @@ Each pull request adds a line under **Unreleased**. See [Releasing](CONTRIBUTING
 
 ### Fixed
 
+- A dictation's card no longer gives its word away: when the AI writes it on the front all the same ("Write the word: maison"), it becomes "…". A front with its blank already, or holding the word more than once, stays as it is. For developers: `cards.blank_dictations`, applied to a dictation-only extraction.
 - The Android app follows the phone's dark mode: its theme is dark when the phone is, so the page is too (it stayed light). With the phone's text at its largest, the steps' numbers and the "?" grow with their text, and the photo tiles hold theirs.
 - For developers: a device test (`AppTest.aPdfReadByTheAppsWebView`) opens a PDF in the app's WebView, an older one on the emulator (124): pdf.js's modern build put back would fail it.
 - A lesson's 10 pages are kept to: the gallery and the camera add no photo past them and say how many were left out (only a PDF did); the Android app refuses more at once, no longer after sending them for about two minutes with a vague message.
