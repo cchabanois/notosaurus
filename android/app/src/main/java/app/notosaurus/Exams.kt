@@ -147,7 +147,8 @@ class Exams(private val prefs: Preferences, private val lessons: Lessons) {
             val notes = (lesson["anki_notes"] as? JsonObject)?.keys.orEmpty()
             buildJsonObject {
                 put("lesson", part.lesson)
-                part.cards?.let { put("cards", JsonArray(it.map(::JsonPrimitive))) } ?: put("cards", JsonNull)
+                // (not `?.let { put } ?: put`: put answers the key's previous value, null here)
+                put("cards", part.cards?.let { JsonArray(it.map(::JsonPrimitive)) } ?: JsonNull)
                 put("deck", lesson.string("deck"))
                 put("total", chosen.size)
                 put("in_anki", chosen.count { it in notes })
