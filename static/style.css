@@ -159,8 +159,11 @@ h2 {
   place-items: center;
   flex: none;
   margin-left: auto;
-  width: 1.5rem;
-  height: 1.5rem;
+  /* At least this size, and as big as its "?" asks: a larger text (Android's font size) grows it */
+  min-width: 1.5rem;
+  aspect-ratio: 1;
+  padding: .15em;
+  line-height: 1;
   border-radius: 50%;
   border: 1.5px solid var(--border);
   color: var(--muted);
@@ -175,8 +178,12 @@ h2 {
 .step {
   display: inline-grid;
   place-items: center;
-  width: 1.7rem;
-  height: 1.7rem;
+  flex: none;
+  /* At least this size, and as big as its number asks: a larger text (Android's font size) grows it */
+  min-width: 1.7rem;
+  aspect-ratio: 1;
+  padding: .25em;
+  line-height: 1;
   border-radius: 50%;
   background: var(--primary-soft);
   color: var(--primary);
@@ -276,7 +283,7 @@ h2 {
 .add-stack .add-tile { flex: 1; gap: .1rem; font-size: .78rem; }
 .add-stack .add-icon { font-size: 1.3rem; }
 /* …and take the whole row, side by side, before the first photo. */
-.strip:not(:has(.thumb)) .add-stack { grid-column: 1 / -1; flex-direction: row; aspect-ratio: auto; height: 8rem; }
+.strip:not(:has(.thumb)) .add-stack { grid-column: 1 / -1; flex-direction: row; aspect-ratio: auto; min-height: 8rem; }  /* taller with a larger text */
 .strip:not(:has(.thumb)) .add-tile { font-size: .9rem; gap: .35rem; }
 .strip:not(:has(.thumb)) .add-icon { font-size: 1.7rem; }
 .thumb { position: relative; margin: 0; overflow: hidden; background: var(--surface-2); }
