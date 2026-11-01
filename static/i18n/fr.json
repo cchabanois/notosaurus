@@ -973,6 +973,7 @@
       "waiting": "En attente du téléphone…",
       "paired": "✓ Le téléphone est connecté.",
       "sameWifi": "Le téléphone doit être sur le même Wi-Fi que cet ordinateur.",
+      "androidApp": "Sur Android, l'application Notosaurus peut aussi l'ouvrir, gratuitement : dans ses réglages, « 📍 Où travaille Notosaurus ? » → « 💻 Sur mon ordinateur », puis scannez ce QR code.",
       "later": "Plus tard"
     },
     "done": {
@@ -1169,7 +1170,7 @@
     "menuSetup": "Assistant de démarrage",
     "menuSettings": "Réglages",
     "phoneTitle": "Ouvrir Notosaurus sur le téléphone",
-    "phoneSteps": "1. Connectez le téléphone au même Wi-Fi que cet ordinateur.\n2. Scannez ce QR code avec l'appareil photo du téléphone.\n3. Dans le navigateur : menu → « Ajouter à l'écran d'accueil », pour l'avoir comme une appli.\n\nLes réglages (clés d'IA…) s'ouvrent ici, sur l'ordinateur : Outils → Notosaurus → Réglages.",
+    "phoneSteps": "1. Connectez le téléphone au même Wi-Fi que cet ordinateur.\n2. Scannez ce QR code avec l'appareil photo du téléphone.\n3. Dans le navigateur : menu → « Ajouter à l'écran d'accueil », pour l'avoir comme une appli.\n\nSur Android, l'application Notosaurus peut aussi l'afficher, gratuitement : dans ses réglages, « 📍 Où travaille Notosaurus ? » → « 💻 Sur mon ordinateur », puis scannez ce QR code.\n\nLes réglages (clés d'IA…) s'ouvrent ici, sur l'ordinateur : Outils → Notosaurus → Réglages.",
     "phoneHelp": "Aide : {url}",
     "localOnly": "⚠ Le serveur n'écoute que sur cet ordinateur (réglage « host » à 127.0.0.1) : mettez « 0.0.0.0 » dans la config du greffon pour y accéder depuis le téléphone.",
     "notRunningYet": "Notosaurus démarre : réessayez dans quelques secondes.",

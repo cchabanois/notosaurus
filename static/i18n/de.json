@@ -973,6 +973,7 @@
       "waiting": "Warte auf das Handy…",
       "paired": "✓ Das Handy ist verbunden.",
       "sameWifi": "Das Handy muss im selben WLAN sein wie dieser Computer.",
+      "androidApp": "Unter Android kann es auch die Notosaurus-App öffnen, kostenlos: in ihren Einstellungen „📍 Wo arbeitet Notosaurus?“ → „💻 Auf meinem Computer“, dann diesen QR-Code scannen.",
       "later": "Später"
     },
     "done": {
@@ -1169,7 +1170,7 @@
     "menuSetup": "Einrichtungsassistent",
     "menuSettings": "Einstellungen",
     "phoneTitle": "Notosaurus auf dem Handy öffnen",
-    "phoneSteps": "1. Verbinde das Handy mit demselben WLAN wie diesen Computer.\n2. Scanne diesen QR-Code mit der Kamera des Handys.\n3. Im Browser: Menü → „Zum Startbildschirm hinzufügen“, um es wie eine App zu nutzen.\n\nDie Einstellungen (KI-Schlüssel …) öffnest du hier, auf dem Computer: Extras → Notosaurus → Einstellungen.",
+    "phoneSteps": "1. Verbinde das Handy mit demselben WLAN wie diesen Computer.\n2. Scanne diesen QR-Code mit der Kamera des Handys.\n3. Im Browser: Menü → „Zum Startbildschirm hinzufügen“, um es wie eine App zu nutzen.\n\nUnter Android kann es auch die Notosaurus-App zeigen, kostenlos: in ihren Einstellungen „📍 Wo arbeitet Notosaurus?“ → „💻 Auf meinem Computer“, dann diesen QR-Code scannen.\n\nDie Einstellungen (KI-Schlüssel …) öffnest du hier, auf dem Computer: Extras → Notosaurus → Einstellungen.",
     "phoneHelp": "Hilfe: {url}",
     "localOnly": "⚠ Der Server hört nur auf diesem Computer („host“ auf 127.0.0.1): Setze „0.0.0.0“ in der Konfiguration der Erweiterung, um ihn vom Handy aus zu erreichen.",
     "notRunningYet": "Notosaurus startet: Versuch es in ein paar Sekunden noch einmal.",

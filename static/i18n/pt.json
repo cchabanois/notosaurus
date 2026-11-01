@@ -973,6 +973,7 @@
       "waiting": "Aguardando o celular…",
       "paired": "✓ O celular está conectado.",
       "sameWifi": "O celular precisa estar no mesmo Wi-Fi que este computador.",
+      "androidApp": "No Android, o app Notosaurus também pode abri-lo, de graça: nas configurações dele, “📍 Onde o Notosaurus trabalha?” → “💻 No meu computador”, depois leia este QR code.",
       "later": "Mais tarde"
     },
     "done": {
@@ -1169,7 +1170,7 @@
     "menuSetup": "Assistente de configuração",
     "menuSettings": "Configurações",
     "phoneTitle": "Abrir o Notosaurus no celular",
-    "phoneSteps": "1. Conecte o celular ao mesmo Wi-Fi deste computador.\n2. Leia este QR code com a câmera do celular.\n3. No navegador: menu → “Adicionar à tela inicial”, para usá-lo como um app.\n\nAs configurações (chaves de IA…) são abertas aqui, no computador: Ferramentas → Notosaurus → Configurações.",
+    "phoneSteps": "1. Conecte o celular ao mesmo Wi-Fi deste computador.\n2. Leia este QR code com a câmera do celular.\n3. No navegador: menu → “Adicionar à tela inicial”, para usá-lo como um app.\n\nNo Android, o app Notosaurus também pode mostrá-lo, de graça: nas configurações dele, “📍 Onde o Notosaurus trabalha?” → “💻 No meu computador”, depois leia este QR code.\n\nAs configurações (chaves de IA…) são abertas aqui, no computador: Ferramentas → Notosaurus → Configurações.",
     "phoneHelp": "Ajuda: {url}",
     "localOnly": "⚠ O servidor só escuta neste computador (“host” em 127.0.0.1): coloque “0.0.0.0” na configuração da extensão para acessá-lo pelo celular.",
     "notRunningYet": "O Notosaurus está iniciando: tente de novo daqui a alguns segundos.",
