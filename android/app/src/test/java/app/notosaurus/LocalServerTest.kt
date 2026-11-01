@@ -1391,7 +1391,9 @@ class LocalServerTest {
     }
 
     @Test
-    fun sidewaysPhotosSavedUprightThenTurnedByHand() = app { client ->
+    fun photosSavedAsTakenThenTurnedByHand() = app { client ->
+        // No turn guessed (SCH-04: the AI named a line's direction wrongly, a photo upside down):
+        // the photo as taken, its mask and frame as the AI put them, whatever turn an older relay says
         relayAnswers("""{"deck": {"deck": "SVT", "cards": [{"front": "(1) ?", "back": "la bouche", "mask": {"page": 1, "n": 1, "box": [0.1, 0.2, 0.3, 0.5]}}]},
             "turns": [90], "frames": [{"page": 1, "box": [0.1, 0.2, 0.3, 0.5]}], "usage": {"credits": 1, "credits_left": 99}}""")
         val lesson = client.submitFormWithBinaryData("/api/extract", formData {
@@ -1402,16 +1404,15 @@ class LocalServerTest {
             })
         }) { page() }.json().jsonObject
         val id = lesson.string("id")
-        // The AI found it turned a quarter: saved upright, its mask and frame with it
-        assertEquals("turned 90:photo 1", client.get("/api/lessons/$id/photos/1") { page() }.bodyAsText())
+        assertEquals("photo 1", client.get("/api/lessons/$id/photos/1") { page() }.bodyAsText())
         fun box(of: JsonObject?) = of!!["box"]!!.jsonArray.map { it.jsonPrimitive.content.toDouble() }
-        assertEquals(listOf(0.5, 0.1, 0.8, 0.3), box(lesson["cards"]!!.jsonArray[0].jsonObject["mask"]?.jsonObject))
-        assertEquals(listOf(0.5, 0.1, 0.8, 0.3), box(lesson["frames"]!!.jsonArray[0].jsonObject))
+        assertEquals(listOf(0.1, 0.2, 0.3, 0.5), box(lesson["cards"]!!.jsonArray[0].jsonObject["mask"]?.jsonObject))
+        assertEquals(listOf(0.1, 0.2, 0.3, 0.5), box(lesson["frames"]!!.jsonArray[0].jsonObject))
 
-        // ↻ in the review: a quarter more, by hand
+        // ↻ in the review: a quarter, by hand, its mask with it
         val turned = client.post("/api/lessons/$id/photos/1/rotate") { page() }.json().jsonObject
-        assertEquals("turned 90:turned 90:photo 1", client.get("/api/lessons/$id/photos/1") { page() }.bodyAsText())
-        assertEquals(Diagrams.rotateBox(listOf(0.5, 0.1, 0.8, 0.3), 90), box(turned["cards"]!!.jsonArray[0].jsonObject["mask"]?.jsonObject))
+        assertEquals("turned 90:photo 1", client.get("/api/lessons/$id/photos/1") { page() }.bodyAsText())
+        assertEquals(Diagrams.rotateBox(listOf(0.1, 0.2, 0.3, 0.5), 90), box(turned["cards"]!!.jsonArray[0].jsonObject["mask"]?.jsonObject))
         assertEquals(HttpStatusCode.NotFound, client.post("/api/lessons/$id/photos/9/rotate") { page() }.status)
     }
 

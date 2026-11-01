@@ -1,0 +1,63 @@
+name: Changelog check
+
+# A pull request says what it changes under a "## Changelog" heading of its description
+# (### Added, ### Fixed…: tools/changelog_add.py), which the Changelog workflow puts in
+# CHANGELOG.md once merged; or it is labelled "no changelog". Checked again when the
+# description or the labels change, on its own: the tests don't run again for that.
+
+on:
+  pull_request:
+    types: [opened, edited, synchronize, reopened, labeled, unlabeled]
+
+permissions:
+  contents: read
+  pull-requests: read
+
+concurrency:
+  group: changelog-check-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  changelog:
+    runs-on: ubuntu-latest
+    timeout-minutes: 2
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+      # The entries are written after the merge, from the description: a pull request editing
+      # them by hand would conflict with every other one again. Only when the file is among
+      # its changes: its Unreleased compared with the one it started from (the merge base, not
+      # main's tip, where other merges' entries land meanwhile). Two exceptions, by label:
+      # "release" (the pull request renaming Unreleased) and "changelog" (one that reworks
+      # the entries: shortened, merged, reworded), which needs no entry of its own either.
+      - name: The Unreleased entries are not edited by hand
+        env:
+          GH_TOKEN: ${{ github.token }}
+          LABELS: ${{ join(github.event.pull_request.labels.*.name, ',') }}
+          FILES: repos/${{ github.repository }}/pulls/${{ github.event.number }}/files
+          BASE: ${{ github.event.pull_request.base.ref }}
+        run: |
+          case ",$LABELS," in
+            *",release,"*) echo "A release: Unreleased may change."; exit 0;;
+            *",changelog,"*) echo "Labelled 'changelog': the entries are reworked on purpose."; exit 0;;
+          esac
+          if ! gh api "$FILES" --paginate --jq '.[].filename' | grep -qx 'CHANGELOG.md'; then
+            echo "CHANGELOG.md untouched."
+            exit 0
+          fi
+          git fetch -q --unshallow origin "$BASE"
+          git show "$(git merge-base "origin/$BASE" HEAD):CHANGELOG.md" > /tmp/base-CHANGELOG.md
+          python3 tools/changelog_add.py --unreleased-unchanged /tmp/base-CHANGELOG.md
+      - name: The description has its entries, or the label
+        env:
+          BODY: ${{ github.event.pull_request.body }}
+          LABELS: ${{ join(github.event.pull_request.labels.*.name, ',') }}
+          AUTHOR: ${{ github.event.pull_request.user.login }}
+        run: |
+          case ",$LABELS," in
+            *",no changelog,"*) echo "Labelled 'no changelog'."; exit 0;;
+            *",changelog,"*|*",release,"*) echo "The changelog itself: no entry needed."; exit 0;;
+          esac
+          case "$AUTHOR" in dependabot*) echo "A dependency update: no changelog."; exit 0;; esac
+          printf '%s\n' "$BODY" | python3 tools/changelog_add.py --check

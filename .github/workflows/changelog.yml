@@ -1,0 +1,58 @@
+name: Changelog
+
+# After each merge on main: the pull request's changelog entries (the "## Changelog" of its
+# description, which is the squash commit's message) put under Unreleased in CHANGELOG.md
+# by tools/changelog_add.py, and pushed. No pull request touches CHANGELOG.md: two of them
+# never conflict on it, and none is rebased, nor tested again, for a line of changelog.
+#
+# The push to main goes through the deploy key in CHANGELOG_DEPLOY_KEY (write access), listed
+# in main's ruleset as a bypass actor ("Deploy keys"); see CONTRIBUTING.md, Pull requests.
+# "[skip ci]" in the commit: no workflow runs for it, this one included.
+
+on:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: changelog
+  cancel-in-progress: false # merges in a row: each one's entries added in turn
+
+jobs:
+  add:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ssh-key: ${{ secrets.CHANGELOG_DEPLOY_KEY }}
+          fetch-depth: 0
+      - uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7.1.0
+        with:
+          python-version: "3.13"
+      # The entries of the commit just pushed, added on main as it is now (another merge's
+      # changelog commit may have landed meanwhile)
+      - name: Add the merged pull request's entries
+        id: add
+        env:
+          KEY_SET: ${{ secrets.CHANGELOG_DEPLOY_KEY != '' }}
+        run: |
+          if [ "$KEY_SET" != true ]; then
+            echo "CHANGELOG_DEPLOY_KEY is not set: nothing done (CONTRIBUTING.md, Pull requests)."
+            echo "changed=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          message=$(git log -1 --format=%B "$GITHUB_SHA")
+          git checkout -q --detach origin/main
+          printf '%s\n' "$message" | python tools/changelog_add.py
+          if git diff --quiet -- CHANGELOG.md; then echo "changed=false" >> "$GITHUB_OUTPUT"; else echo "changed=true" >> "$GITHUB_OUTPUT"; fi
+      - name: Push
+        if: steps.add.outputs.changed == 'true'
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add CHANGELOG.md
+          git commit -q -m "📝 Changelog: $(git log -1 --format=%s "$GITHUB_SHA")" -m "[skip ci]"
+          git push origin HEAD:main

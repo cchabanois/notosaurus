@@ -3,7 +3,7 @@
 All notable changes to Notosaurus. The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/)
 and versions follow [Semantic Versioning](https://semver.org/).
 
-Each pull request adds a line under **Unreleased**. See [Releasing](CONTRIBUTING.md#releasing) for how a version is published.
+Each pull request's entries (the `## Changelog` of its description) are put under **Unreleased** once it is merged, by the *Changelog* workflow: see [Pull requests](CONTRIBUTING.md#pull-requests), and [Releasing](CONTRIBUTING.md#releasing) for how a version is published.
 
 ## [Unreleased]
 
@@ -85,6 +85,7 @@ Each pull request adds a line under **Unreleased**. See [Releasing](CONTRIBUTING
 
 ### Changed
 
+- A photo is kept as taken, no longer turned upright by guess: the guess (from the direction of a line of text the AI named) was right only now and then, and sometimes turned a sideways page upside down, its masks with it. **Turn** (↻) puts a page upright, its hidden parts and frame with it. For developers: the AI isn't asked for a line of text any more (`TextLine`, `diagrams.turns`, `straighten` gone); `/v1/extract`'s `turns` are all 0 (kept for the 1.1.0 apps).
 - A picture is any card's in Anki, no longer a card of its own: a dictation with its picture is still a dictation (heard on its question, typed), a reversed or typed card keeps its picture, on the question or with the answer. Anki asks for a full sync once, the note types getting their picture's fields. Picture cards sent by 1.0.0 are sent again as new notes (the old ones offered for deletion: their review history isn't kept). For developers: every text note type has `Picture`, `BackPicture`, `Id` and `Source`, after its other fields; the "Notosaurus image" note types are gone; a note's key is its card's id when it has a picture, its front otherwise (`note_types.key_of`, Android's `NoteType.keyOf`: a card without a picture keeps its GUID); AnkiDroid keeps as it is a note type lacking fields.
 - The card's picture field no longer tells the AI "only when the instructions ask for a picture" while the "Pictures on cards" setting says "even when they don't": it now refers to the rules and the request. Measured twice each: with the setting on, school things 12/12 and school subjects 11/11 pictured; off, none; irregular verbs none either way.
 - For developers: Notosaurus's prompts' texts in files of their own, `static/prompts/<lang>/<key>.md` (a line per line, no escaped \n); their names and options stay in the i18n files; the computer and the phone read them, the texts unchanged.
@@ -149,7 +150,7 @@ Each pull request adds a line under **Unreleased**. See [Releasing](CONTRIBUTING
 
 ### Fixed
 
-- In the Android app, a lesson being made goes on when the app is left (home, another app, the screen off): after a few seconds in the background, Android 15 and later cut its network, and the lesson failed with "Can't reach the Notosaurus service", no card. A short foreground service keeps it running while the AI works (no permission asked; its notification shows only where notifications are allowed). For developers: `Working.kt`, `Relay.Busy`.
+- A theorem or a property the lesson names ("Théorème de Thalès"), not only one in a box, gets its card name → full statement ("If …, then …"), written with what the lesson says; its converse only when the lesson gives it. Measured on the Thalès page: 6 times out of 6 (quick and careful), against 1 out of 6 before; no change on a lesson of formulas (the exponential).
 - A drawing taken from the lesson's page keeps its colours: a yellow sun stays yellow (it came out orange, its rays brown). Only the paper is made white, from its colour at the cut-out's edge.
 - A card's info and its "did you know" show their formulas drawn, as the helps do, no longer their LaTeX ("\(\frac{BC}{BD}\)"); a click shows the text to change it.
 - A figure of zones inside one another (rings, layers) keeps all its labels: it is no longer drawn as a diagram of boxes, which wrote each ring's name at the centre, under the inner rings (only "Ville-centre" was left of three). For developers: `figures_typst.KINDS`; the figures bench (`tools/bench_figures.py`) judges a figure with a hidden label wrong.
