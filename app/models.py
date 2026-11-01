@@ -17,7 +17,6 @@ from notosaurus_core.models import (  # noqa: F401
     Frame,
     Mask,
     Revision,
-    TextLine,
 )
 
 CARD_ID = re.compile(r"[a-z0-9]{0,40}")  # Notosaurus, the page and the Android app give 12 hex

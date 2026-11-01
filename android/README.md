@@ -19,7 +19,7 @@ Notosaurus page (static/) ──/api──▶ LocalServer (Ktor, 127.0.0.1) ─�
 
 What the computer does, the app does too: every prompt and card type (diagrams,
 figures, pictures found or drawn, voices), correcting and explaining, completing or
-regenerating a lesson, photos turned upright, children, ⧉ Copy for…, tests to prepare,
+regenerating a lesson, photos turned by hand (↻), children, ⧉ Copy for…, tests to prepare,
 cards updated in AnkiDroid when a lesson is sent again. Its own: the subscription and the
 free trial (Google Play), 🎤 dictating an instruction or a correction, ⚑ reporting the AI's
 content, what the service tells for now (a notice, features off, an update). Left out:

@@ -152,7 +152,9 @@ def _prepare(images: list[Image]) -> tuple[list[Image], list[tuple[int, int] | N
 
 class Extracted(BaseModel):
     deck: Deck
-    turns: list[int]  # clockwise turn that puts each photo upright
+    # Always 0 now: no turn guessed (the AI named a line's direction wrongly, a photo turned
+    # upside down; ↻ turns one). Kept for the apps reading /v1/extract's (1.1.0)
+    turns: list[int]
     frames: list[Frame]  # diagram frames, as fractions of the photos (not turned yet)
     back_language: str = ""  # "es-ES": for a prompt whose voice is "auto"
     choice: str = ""  # what the AI chose to make (prompt "Automatic")
@@ -197,7 +199,7 @@ async def extract_cards(
     await _complete_figures(s, images, result.cards)
     return Extracted(
         deck=Deck(deck=plain_text(result.deck), cards=result.cards),
-        turns=diagrams.turns(result.text_lines, sizes, fmt),
+        turns=[0] * len(images),
         frames=diagrams.frames(result.frames, sizes, fmt),
         back_language=result.back_language.strip(),
         choice=plain_text(result.choice).strip(),

@@ -119,15 +119,6 @@ class Deck(BaseModel):
     cards: list[Card]
 
 
-class TextLine(BaseModel):
-    """A line of text on a photo, by its first and last words: its reading direction
-    tells how the photo is turned (models place words well, but name directions badly)."""
-
-    page: int = Field(description="Number of the photo (1 = first photo).")
-    first_word: list[float] = Field(description="Box of the line's first word, in the format of the instructions.")
-    last_word: list[float] = Field(description="Box of the line's last word, in the format of the instructions.")
-
-
 class Frame(BaseModel):
     """Where a diagram is on a photo: the image Anki gets is cropped to it."""
 
@@ -138,13 +129,8 @@ class Frame(BaseModel):
 
 
 class Extraction(Deck):
-    """Cards read from the photos, a line of text on each photo (to save sideways
-    photos upright) and the frame of each diagram."""
+    """Cards read from the photos, and the frame of each diagram."""
 
-    text_lines: list[TextLine] = Field(
-        default_factory=list,
-        description="For each photo: its longest line of printed text (a title, a sentence).",
-    )
     frames: list[Frame] = Field(
         default_factory=list, description="For each photo with diagram cards: the frame of the diagram."
     )
