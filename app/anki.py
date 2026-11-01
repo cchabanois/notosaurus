@@ -28,10 +28,10 @@ from .note_types import (
     diagram_fields,
     diagram_note_type,
     family,
+    key_of,
     model_id,
     note_type,
     picture_fields,
-    picture_note_type,
 )
 from .note_types.common import field_html, helps, info
 from .note_types.common import stable_id as _stable_id
@@ -54,12 +54,12 @@ __all__ = [
     "guids",
     "is_choice",
     "is_cloze",
+    "key_of",
     "lesson_notes",
     "lesson_tag",
     "model_id",
     "note_type",
     "notes",
-    "picture_note_type",
 ]
 
 
@@ -74,7 +74,7 @@ class Note:
 
     @property
     def key(self) -> str:
-        return self.fields[self.nt.key]
+        return key_of(self.nt, self.fields)
 
 
 @dataclass
@@ -93,8 +93,6 @@ class _Export:
         self.typing = req.typing or req.dictation or req.dictation_only
         self.text_nt = note_type(req.voice, req.reverse, req.typing, req.dictation, req.dictation_only)
         self.diagram_nt = diagram_note_type(req.voice, req.typing)
-        self.picture_nt = picture_note_type(req.voice, req.typing)
-        self.answer_picture_nt = picture_note_type(req.voice, req.typing, on_back=True)
         # A formula isn't typed (its code would be) nor heard
         self.math_nt = note_type(req.voice, req.reverse)
         self.cloze_nt, self.choice_nt = cloze_note_type(), choice_note_type()
@@ -143,8 +141,9 @@ def notes(
 
 
 def _two_sided_note(export: _Export, i: int, card) -> Note | None:
-    """A front and a back: text, a diagram's label, or a picture (on the front or the
-    back). None for a card with nothing to ask or to answer."""
+    """A front and a back: text (its picture, if any, on the question or with the answer:
+    still the card it is, typed, reversed, a dictation), or a diagram's label. None for a
+    card with nothing to ask or to answer."""
     req, images, pictures = export.req, export.images, export.pictures
     front, back = card.front.strip(), card.back.strip()
     on_back = i in pictures and card.picture_on_back
@@ -152,11 +151,11 @@ def _two_sided_note(export: _Export, i: int, card) -> Note | None:
         return None
     if i in images:
         nt = export.diagram_nt
-    elif i in pictures:
-        nt = export.answer_picture_nt if on_back else export.picture_nt
     else:
         nt = export.math_nt if export.typing and tts.has_math(back) else export.text_nt
     values = {"Front": field_html(front), "Back": field_html(back), "Info": info(card), **helps(card)}
+    if "Id" in nt.fields and i not in images:  # what "✎ Notosaurus" finds the card by; its key with a picture
+        values |= {"Id": export.card_id(i, card), "Picture": "", "BackPicture": "", SOURCE_FIELD: ""}
     media = []
     if "Audio" in nt.fields:
         mp3 = export.audio.get(tts.spoken(card, req.dictation or req.dictation_only))

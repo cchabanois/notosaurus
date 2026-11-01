@@ -160,10 +160,11 @@ def test_a_figure_with_the_answer_goes_on_the_back(client, tmp_path):
     assert tangent["front"].startswith("Qu'est-ce qu'une tangente")
     body = {"deck": lesson["deck"], "cards": cards, "lesson_id": lesson["id"]}
     package = apkg.export(client, body, tmp_path)
-    on_back = next(m for m in package.models.values() if m["name"].startswith("Notosaurus image au verso"))
-    (template,) = on_back["tmpls"]
-    assert "{{Picture}}" not in template["qfmt"] and "{{Picture}}" in template["afmt"]
-    assert template["name"] == "Image"  # as on the front: a note moves between them keeping its card
+    note = next(n for n in package.notes if package.fields_by_name(n)["Front"].startswith("Qu'est-ce qu'une tangente"))
+    fields = package.fields_by_name(note)
+    assert fields["Picture"] == "" and fields["BackPicture"].startswith("<img")  # with the answer only
+    (template,) = package.models[note[1]]["tmpls"]  # a text card, as any: its picture with the answer
+    assert "{{BackPicture}}" not in template["qfmt"] and "{{BackPicture}}" in template["afmt"]
 
 
 def test_shaded_and_shared_areas_kept_inside_the_figure():

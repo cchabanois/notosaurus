@@ -220,8 +220,8 @@ class Anki(private val context: Context) : AnkiTarget {
         return request()
     }
 
-    /** A note to send: its note type, deck, fields by name, tags; `key`: its key field's value
-     * (NoteType.key), what tells it's there already. */
+    /** A note to send: its note type, deck, fields by name, tags; `key`: its key (NoteType.keyOf:
+     * the key field's value, its card's id with a picture), what tells it's there already. */
     private class Note(
         val type: NoteType,
         val model: Long,
@@ -230,7 +230,7 @@ class Anki(private val context: Context) : AnkiTarget {
         val tags: Set<String>,
         val card: String,
     ) {
-        val key: String get() = values[type.key].orEmpty()
+        val key: String get() = type.keyOf(values)
     }
 
     /** A note in AnkiDroid: its note type, fields (in its note type's order), tags. */
@@ -260,8 +260,8 @@ class Anki(private val context: Context) : AnkiTarget {
     private fun lessonNotesOf(lesson: String, type: NoteType): Map<String, There> {
         val models = api.modelList.orEmpty()
         return lessonThere(lesson).filter { models[it.model] == type.name || models[it.model] == type.legacyName }
-            .mapNotNull { there -> names(there.model, type).indexOf(type.key).takeIf { it >= 0 }?.let { there.fields.getOrNull(it) to there } }
-            .mapNotNull { (key, there) -> key?.let { it to there } }
+            .map { there -> type.keyOf(names(there.model, type).zip(there.fields).toMap()) to there }
+            .filter { (key, _) -> key.isNotEmpty() }
             .toMap()
     }
 
@@ -274,7 +274,7 @@ class Anki(private val context: Context) : AnkiTarget {
         val diagrams = mutableMapOf<Int, File>() // a photo's diagram image, made once
         fun index(f: File, kind: String) = files.indexOf(f to kind).takeIf { it >= 0 } ?: files.size.also { files += f to kind }
         fun file(f: File, kind: String) = "$FILE_MARK${index(f, kind)}$FILE_MARK"
-        // A file deciding the note's type (a picture card's, a dictation's sound): into AnkiDroid
+        // A file deciding the note's type or key (a dictation's sound, a picture): into AnkiDroid
         // now unless the card's note from the last send shows it, so that one AnkiDroid refuses
         // makes the card it would be without it (text, not heard): ""
         fun deciding(f: File, kind: String, key: String): String {
@@ -303,6 +303,10 @@ class Anki(private val context: Context) : AnkiTarget {
             }
             // Only for the cards showing them (lazy): no file into AnkiDroid that no note shows
             val picture by lazy { media.pictures[card.picture]?.let { if (card.isChoice()) file(it, "image") else deciding(it, "image", key) }.orEmpty() }
+            // Any card's picture (not a card of its own): on its question, or with its answer
+            val pictures = mapOf(
+                "Picture" to (if (card.pictureOnBack) "" else picture), "BackPicture" to (if (card.pictureOnBack) picture else ""),
+            )
             when {
                 card.isChoice() -> note( // not heard: the options are read
                     "choice",
@@ -330,16 +334,13 @@ class Anki(private val context: Context) : AnkiTarget {
                     )
                 }
                 card.back.isBlank() -> null
-                // A picture card: the picture on the question, or with the answer; not reversed nor heard
-                picture.isNotEmpty() -> note(
-                    "picture" + (if (card.pictureOnBack) "+back" else "") + (if (options.typing) "+typing" else ""),
-                    mapOf("Id" to key, "Front" to html(card.front), "Back" to html(card.back), "Audio" to sound, "Picture" to picture),
-                )
+                // Text, its picture if any on the question or with the answer: still the card it is
+                // (typed, reversed, heard: a dictation with its picture stays one)
                 else -> {
                     val heard = options.dictation && sound.isNotEmpty() // nothing to hear without a voice
                     val variant = if (heard && options.dictationOnly) listOf("text", "dictation-only")
                     else listOf("text") + listOfNotNull("reverse".takeIf { options.reverse }, "typing".takeIf { options.typing }, "dictation".takeIf { heard })
-                    note(variant.joinToString("+"), mapOf("Front" to html(card.front), "Back" to html(card.back), "Audio" to sound))
+                    note(variant.joinToString("+"), mapOf("Id" to key, "Front" to html(card.front), "Back" to html(card.back), "Audio" to sound) + pictures)
                 }
             }
         }
@@ -527,6 +528,14 @@ class Anki(private val context: Context) : AnkiTarget {
             ?.use { c -> if (c.moveToFirst()) c.getString(0).orEmpty() to c.getInt(1) else null } ?: return
         if ("version ${type.signature}:" in css || count != type.cards.size) {
             Log.i(TAG, "note type ${type.name}: kept (${if (count != type.cards.size) "$count cards" else "up to date"})")
+            return
+        }
+        // Fields it lacks (made by an older Notosaurus, before a picture was any card's): AnkiDroid
+        // can't add them, and templates naming them would show an error on every card. Kept as it
+        // is: the computer adds them (ankiconnect._bring_up_to_date), then a sync brings them here
+        val missing = type.fields - api.getFieldList(id).orEmpty().toSet()
+        if (missing.isNotEmpty()) {
+            Log.w(TAG, "note type ${type.name}: kept, it lacks $missing (the computer adds them)")
             return
         }
         Log.i(TAG, "note type ${type.name}: bringing it up to date")

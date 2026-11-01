@@ -9,6 +9,7 @@ import com.ichi2.anki.api.AddContentApi
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
+import org.junit.Assume.assumeTrue
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -74,6 +75,28 @@ class AnkiDroidTest {
         val css = resolver.query(model, arrayOf(FlashCardsContract.Model.CSS), null, null, null)!!.use { c -> c.moveToFirst(); c.getString(0) }
         assertTrue(css, "version ${type.signature}:" in css)
         assertEquals(1, api.findDuplicateNotes(api.modelList!!.entries.first { it.value == type.name }.key, "soleil $run").size)
+    }
+
+    /** A note type an older Notosaurus made (synced from the computer's 1.0.0), without a picture's
+     * fields: AnkiDroid can't add them, and templates naming them would show an error on every
+     * card. Kept as it is (the computer adds them, then a sync brings them), its cards still sent. */
+    @Test
+    fun aNoteTypeLackingFieldsKeptAsItIs() {
+        val type = types["text+reverse+typing+dictation"]
+        val api = AddContentApi(Device.context)
+        assumeTrue("made already on this device", api.modelList!!.values.none { it == type.name })
+        val old = listOf("Front", "Back", "Info", "Audio", "Explanation", "Mnemonic") // the 1.0.0's
+        api.addNewCustomModel(type.name, old.toTypedArray(), arrayOf("Recto → Verso"), arrayOf("{{Front}} (old)"), arrayOf("{{Back}} (old)"), ".card {}", null, 0)
+        val sent = Anki(Device.context).send(
+            Deck("Notosaurus test $run", listOf(Card("nuage $run", "nube", id = "n-$run"))), Media(), Options(reverse = true, typing = true, dictation = true),
+        )
+        assertEquals(1, sent.added)
+        val model = api.modelList!!.entries.first { it.value == type.name }.key
+        val front = Device.context.contentResolver.query(
+            Uri.withAppendedPath(Uri.withAppendedPath(Uri.withAppendedPath(FlashCardsContract.Model.CONTENT_URI, model.toString()), "templates"), "0"),
+            arrayOf(FlashCardsContract.CardTemplate.QUESTION_FORMAT), null, null, null,
+        )!!.use { c -> c.moveToFirst(); c.getString(0) }
+        assertEquals("{{Front}} (old)", front) // never a template naming a field it lacks
     }
 
     @Test
@@ -190,7 +213,7 @@ class AnkiDroidTest {
         val name = types["text+reverse+typing"].name
         val model = api.modelList!!.entries.first { it.value == name }.key
         val note = api.findDuplicateNotes(model, card.front).single()
-        assertEquals(listOf("Mère se dit madre.", "maternelle"), note.fields.takeLast(2))
+        assertEquals(listOf("Mère se dit madre.", "maternelle"), listOf("Explanation", "Mnemonic").map { field(model, note.fields, it) })
         assertTrue(note.fields[2], note.fields[2].contains("💡 Du latin mater."))
         assertTrue(Anki.lessonTag(lesson) in note.tags)
         assertEquals(2, api.previewNewNote(model, note.fields)!!.size) // two cards
@@ -287,12 +310,43 @@ class AnkiDroidTest {
         val first = anki.send(deck, Media(pictures = mapOf(picture.name to picture), lesson = lesson))
         assertEquals(1, first.added)
         val note = AddContentApi(Device.context).getNote(first.notes.getValue("p-$run"))!!
-        assertEquals(types["picture"].name, AddContentApi(Device.context).modelList!![noteModel(note.id)])
+        val model = noteModel(note.id)
+        assertEquals(types["text"].name, AddContentApi(Device.context).modelList!![model]) // a picture is any card's
+        assertTrue(field(model, note.fields, "Picture").startsWith("<img"))
 
         // Sent again with the last send's notes: nothing updated, the picture not copied again
         val again = anki.send(deck, Media(pictures = mapOf(picture.name to picture), lesson = lesson, sentBefore = first.notes))
         assertEquals(listOf(0, 0), listOf(again.added, again.updated))
         assertEquals(1, media().count { it.startsWith("picture-p-$run") })
+    }
+
+    /** TYP-07: a dictation's card with its picture was sent as a picture card (the sound with the
+     * answer, no dictation). Still the dictation now: heard then typed, its picture on the question. */
+    @Test
+    fun aDictationWithItsPictureStaysADictation() {
+        val anki = Anki(Device.context)
+        val api = AddContentApi(Device.context)
+        val lesson = "dict-pic-$run"
+        val picture = File(Device.context.filesDir, "lessons/$lesson/images/picture-m-$run.jpg").apply {
+            parentFile!!.mkdirs()
+            outputStream().use { Bitmap.createBitmap(20, 20, Bitmap.Config.ARGB_8888).compress(Bitmap.CompressFormat.JPEG, 80, it) }
+        }
+        val sound = File(Device.context.filesDir, "audio/maison-$run.mp3").apply {
+            parentFile!!.mkdirs()
+            writeBytes(ByteArray(64) { it.toByte() }) // AnkiDroid doesn't read it: any bytes
+        }
+        val card = Card("Il habite une …", "maison", id = "m-$run", picture = picture.name)
+        val sent = anki.send(
+            Deck("Notosaurus test $run", listOf(card)),
+            Media(audio = mapOf(Speech.spoken(card, true) to sound), pictures = mapOf(picture.name to picture), lesson = lesson),
+            Options(dictation = true, dictationOnly = true),
+        )
+        assertEquals(1, sent.added)
+        val note = api.getNote(sent.notes.getValue("m-$run"))!!
+        val model = noteModel(note.id)
+        assertEquals(types["text+dictation-only"].name, api.modelList!![model])
+        assertTrue(field(model, note.fields, "Picture").startsWith("<img"))
+        assertTrue(field(model, note.fields, "Audio").startsWith("[sound:"))
     }
 
     @Test
@@ -342,15 +396,17 @@ class AnkiDroidTest {
             parentFile!!.mkdirs()
             outputStream().use { Bitmap.createBitmap(20, 20, Bitmap.Config.ARGB_8888).compress(Bitmap.CompressFormat.JPEG, 80, it) }
         }
-        val made = Card("x $run", "y", id = "x-$run", picture = photo.name) // the picture note type there
+        val made = Card("x $run", "y", id = "x-$run", picture = photo.name) // the note type there
         anki.send(Deck("Notosaurus test $run", listOf(made)), Media(pictures = mapOf(photo.name to photo), lesson = "made-$run"))
         val api = AddContentApi(Device.context)
-        val picture = types["picture"]
-        val model = api.modelList!!.entries.first { it.value == picture.name }.key
+        val text = types["text"] // a picture is any card's
+        val model = api.modelList!!.entries.first { it.value == text.name }.key
         val did = api.deckList!!.entries.first { it.value == "Notosaurus test $run" }.key
         val names = api.getFieldList(model)!!.toList()
-        assertEquals(picture.fields, names) // the computer's order, Source included
-        val fields = picture.values(names, mapOf("Front" to "le chat $run", "Back" to "el gato", "Id" to "p-$run", "Source" to "Wikimedia Commons"))
+        assertEquals(text.fields, names) // the computer's order, Source included
+        val shown = "<img src=\"picture-c-$run.jpg\">" // with a picture: found by its id (keyOf)
+        val values = mapOf("Front" to "le chat $run", "Back" to "el gato", "Id" to "p-$run", "Picture" to shown, "Source" to "Wikimedia Commons")
+        val fields = text.values(names, values)
         val computers = api.addNote(model, did, fields, setOf("notosaurus", Anki.lessonTag(lesson)))!!
 
         // Sent from the phone, the lesson without its notes (anki_notes: another device's): updated

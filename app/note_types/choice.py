@@ -5,8 +5,11 @@ from pathlib import Path
 
 from .common import (
     BACK_INFO,
+    BACK_PICTURE,
     CSS,
     HELP_FIELDS,
+    PICTURE,
+    PICTURE_CSS,
     SOURCE_FIELD,
     NoteType,
     field_html,
@@ -16,7 +19,7 @@ from .common import (
     stable_id,
     with_context,
 )
-from .picture import PICTURE_CSS, source
+from .picture import source
 
 # The options in a list (A, B, C…), the right one marked on the answer
 CHOICE_CSS = """\
@@ -57,14 +60,12 @@ def choice_note_type() -> NoteType:
     or figure, if any, goes on the question ("Picture") or with the answer
     ("BackPicture"). "Id" (the card's own id) tells which note an update is for."""
     info = BACK_INFO + fix_link("Id")
-    picture = '{{#Picture}}<div class="notosaurus-picture">{{Picture}}</div>{{/Picture}}'
-    back_picture = '{{#BackPicture}}<div class="notosaurus-picture">{{BackPicture}}</div>{{/BackPicture}}'
-    question = f"{picture}<div>{{{{Question}}}}</div>"
+    question = f"{PICTURE}<div>{{{{Question}}}}</div>"
     templates = (
         {
             "name": "QCM",
             "qfmt": f"{question}{{{{Choices}}}}",
-            "afmt": f'{question}<hr id="answer">{{{{AnswerChoices}}}}{back_picture}{info}',
+            "afmt": f'{question}<hr id="answer">{{{{AnswerChoices}}}}{BACK_PICTURE}{info}',
         },
     )
     fields = (

@@ -8,7 +8,7 @@ import apkg
 from conftest import CLOZE, extract_lesson, synthesized
 
 from app import anki
-from app.note_types.common import CONTEXT
+from app.note_types.common import CONTEXT, PICTURE
 from notosaurus_core import tts
 from notosaurus_core.models import Card
 
@@ -78,7 +78,18 @@ def test_export_audio_edge_tts(client, tmp_path):
 
     package = apkg.Apkg(res.content, tmp_path)
     (model,) = package.models.values()
-    assert [f["name"] for f in model["flds"]] == ["Front", "Back", "Info", "Audio", "Explanation", "Mnemonic"]
+    assert [f["name"] for f in model["flds"]] == [
+        "Front",
+        "Back",
+        "Info",
+        "Audio",
+        "Explanation",
+        "Mnemonic",
+        "Picture",
+        "BackPicture",
+        "Id",
+        "Source",
+    ]
     assert "{{Audio}}" in model["tmpls"][0]["afmt"]
     sounds = [note[2].split("\x1f")[3] for note in package.notes]
     assert sounds.count(f"[sound:{tts.filename('la madre', 'es-ES-ElviraNeural')}]") == 2
@@ -316,7 +327,9 @@ def test_dictation_only(client, tmp_path):
     (model,) = package.models.values()
     assert model["name"] == "Notosaurus dictée (audio)"
     (card,) = model["tmpls"]
-    assert card["qfmt"] == CONTEXT + '<div class="dictation">🎧</div>{{Audio}}{{Front}}{{type:Back}}'  # the blank shown
+    assert (
+        card["qfmt"] == CONTEXT + f'<div class="dictation">🎧</div>{{{{Audio}}}}{PICTURE}{{{{Front}}}}{{{{type:Back}}}}'
+    )  # the blank shown
     assert package.cards == 2  # one a note: no front → back card
     assert anki.family(model["name"]) == "text"  # a lesson's notes can switch to it and back
     nt = anki.note_type("fr-FR-DeniseNeural", True, True, dictation=False, dictation_only=True)
@@ -334,7 +347,6 @@ def test_every_question_tells_its_deck():
         anki.note_type("en-GB-x", False, dictation_only=True),
         anki.cloze_note_type(),
         anki.choice_note_type(),
-        anki.picture_note_type("", on_back=True),
         anki.diagram_note_type("", typing=True),
     ]
     for nt in note_types:
@@ -361,7 +373,7 @@ def test_typed_answer_and_dictation(client, tmp_path):
     recto, dictation = typed["tmpls"]
     assert recto["qfmt"].endswith("{{type:Back}}") and "{{type:Back}}" in recto["afmt"]
     assert "{{FrontSide}}" not in recto["afmt"]  # the box shown once
-    assert dictation["qfmt"] == CONTEXT + '<div class="dictation">🎧</div>{{Audio}}{{type:Back}}'
+    assert dictation["qfmt"] == CONTEXT + f'<div class="dictation">🎧</div>{{{{Audio}}}}{PICTURE}{{{{type:Back}}}}'
     assert "Notosaurus recto/verso (audio)" in by_name  # the formula's note type, as before
     assert package.cards == 2 + 1
 
@@ -387,9 +399,6 @@ def test_note_type_ids_are_unique():
         nt = anki.note_type(voice, reverse, typing, dictation)
         names.setdefault(anki._model(nt).model_id, set()).add(nt.name)
     for nt in (anki.diagram_note_type("", t) for t in (False, True)):
-        names.setdefault(anki._model(nt).model_id, set()).add(nt.name)
-    for voice, typing, on_back in product(["", "es_ES"], [False, True], [False, True]):
-        nt = anki.picture_note_type(voice, typing, on_back)
         names.setdefault(anki._model(nt).model_id, set()).add(nt.name)
     assert all(len(n) == 1 for n in names.values())
 
@@ -505,3 +514,43 @@ def test_where_a_picture_comes_from_kept_hidden(tmp_path):
     assert notes[3].fields["Source"] == "Drawn by gemini-x with Typst 0.15.0, ctz-euclide 0.3.0, carefully"
     for note in notes:
         assert all("Source" not in t["qfmt"] + t["afmt"] for t in note.nt.templates)  # never shown
+
+
+def test_a_picture_on_a_dictation_keeps_it_a_dictation():
+    """TYP-07: a dictation's card with a picture was sent as a picture card (not heard on its
+    question, the sound with the answer). A picture is any card's: still the dictation, heard
+    then typed, its picture on the question (what the word is, never how it is written)."""
+    from pathlib import Path
+
+    from app.models import ExportRequest
+
+    req = ExportRequest(
+        deck="Dictée",
+        voice="fr-FR-DeniseNeural",
+        dictation=True,
+        dictation_only=True,
+        cards=[Card(id="c1", front="Il habite une …", back="maison", picture="maison.jpg")],
+    )
+    (note,) = anki.notes(req, audio={}, pictures={0: Path("maison.jpg")})
+    assert note.nt.name == "Notosaurus dictée (audio)"
+    (template,) = note.nt.templates
+    assert (
+        template["qfmt"].index("{{Audio}}")
+        < template["qfmt"].index("{{Picture}}")
+        < template["qfmt"].index("{{type:Back}}")
+    )
+    assert (note.fields["Picture"], note.fields["BackPicture"]) == ('<img src="maison.jpg">', "")
+    assert note.key == "c1"  # with a picture: its id (their fronts are often all the same)
+
+
+def test_a_card_without_a_picture_keeps_its_guid():
+    """The 1.0.0's notes: a text card without a picture keyed by its front, as then (its GUID
+    the same: never a duplicate at the next send), though its note type has an "Id" now."""
+    import genanki
+
+    from app.models import ExportRequest
+
+    req = ExportRequest(deck="Espagnol", cards=[Card(id="c1", front="la mère", back="la madre")])
+    (note,) = anki.notes(req)
+    assert note.key == "la mère" and note.fields["Id"] == "c1"
+    assert anki.guids([note]) == [genanki.guid_for("Espagnol", "la mère")]
