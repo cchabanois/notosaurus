@@ -1242,7 +1242,8 @@ class LocalServerTest {
             append("prompt", "p")
         }) { page() }.json().jsonObject
         val id = lesson.string("id")
-        val asked = mutableListOf<String>()
+        // Written from the fake relay's threads: the other cards' pictures are asked at once (Pictures.AT_ONCE)
+        val asked: MutableList<String> = java.util.Collections.synchronizedList(mutableListOf())
         relay.dispatcher = object : mockwebserver3.Dispatcher() {
             override fun dispatch(request: RecordedRequest): MockResponse = when (request.url.encodedPath) {
                 "/v1/lesson-drawings" -> {
