@@ -85,6 +85,7 @@ Each pull request's entries (the `## Changelog` of its description) are put unde
 
 ### Changed
 
+- The big button at the bottom always shows the next action: generate the cards, generate from the prompt when it says what to learn, or photograph the lesson
 - The add-on's settings say that "Images des cartes" (the service that draws a picture) is optional, and what the cards get without it: the lesson's drawings, free pictures, figures and your photos. 🤖 Generated with [Claude Code](https://claude.com/claude-code) Co-authored-by: Claude Opus 5.5 <noreply@anthropic.com>
 - The add-on's **Open on the phone** window (Anki → Tools → Notosaurus) and the setup assistant's phone step say that the Notosaurus app on Android can show the computer's page too, for free: in its settings, "📍 Where does Notosaurus work?" → "💻 On my computer", then scan the same QR code. 🤖 Generated with [Claude Code](https://claude.com/claude-code) --------- Co-authored-by: Claude Opus 5.5 <noreply@anthropic.com>
 - A photo is kept as taken, no longer turned upright by guess: the guess (from the direction of a line of text the AI named) was right only now and then, and sometimes turned a sideways page upside down, its masks with it. **Turn** (↻) puts a page upright, its hidden parts and frame with it. For developers: the AI isn't asked for a line of text any more (`TextLine`, `diagrams.turns`, `straighten` gone); `/v1/extract`'s `turns` are all 0 (kept for the 1.1.0 apps).
@@ -152,6 +153,7 @@ Each pull request's entries (the `## Changelog` of its description) are put unde
 
 ### Fixed
 
+- Without a photo, an unchanged prompt no longer makes cards on a made-up subject: the page says to write what to learn 🤖 Generated with [Claude Code](https://claude.com/claude-code) Co-authored-by: Claude Opus 5.5 <noreply@anthropic.com>
 - Claude (Anthropic's API, or Claude through OpenRouter) makes lessons again with the helps or the fun facts on, and corrects cards: it refused the card's schema ("Schema is too complex") after about two minutes. An error OpenRouter returns inside an answer is now said, no longer an "unexpected error". 🤖 Generated with [Claude Code](https://claude.com/claude-code) --------- Co-authored-by: Claude Opus 5.5 <noreply@anthropic.com>
 - The computer's address to type in the Android app instead of scanning (no scanner on the phone) is the one under the QR code, its token included: the address alone reached Notosaurus but never let the phone in. Under the QR code of Tools → Notosaurus → Open on the phone, of the settings and of the setup assistant; selected whole in one tap. 🤖 Generated with [Claude Code](https://claude.com/claude-code) --------- Co-authored-by: Claude Opus 5.5 <noreply@anthropic.com>
 - A dictation whose cards have no sentence on their front goes into Anki all the same, each card showing "…" (the word heard, to write): it was left out, and the page said "nothing to change". A card left out because it has nothing to ask or to answer is now said ("2 cards not sent: nothing on their front or their back"). 🤖 Generated with [Claude Code](https://claude.com/claude-code) Co-authored-by: Claude Opus 5.5 <noreply@anthropic.com>
