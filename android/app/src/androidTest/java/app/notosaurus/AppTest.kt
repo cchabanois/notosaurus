@@ -98,6 +98,30 @@ class AppTest {
         }
     }
 
+    /** A PDF opened and its page drawn by the app's WebView, whatever its version: pdf.js's modern
+     * build needs a recent one (Promise.try, Chrome 128; Uint8Array.toHex, Chrome 140) and never
+     * answered on an older (124, this API level's emulator): "Reading…" forever. Its legacy build does. */
+    @Test
+    fun aPdfReadByTheAppsWebView() {
+        ActivityScenario.launch(MainActivity::class.java).use { app ->
+            Device.waitFor(app, "typeof loadPdf === 'function'", "the page")
+            val pdf = listOf(
+                "%PDF-1.4", "1 0 obj<</Type/Catalog/Pages 2 0 R>>endobj", "2 0 obj<</Type/Pages/Kids[3 0 R]/Count 1>>endobj",
+                "3 0 obj<</Type/Page/Parent 2 0 R/MediaBox[0 0 200 200]/Contents 4 0 R/Resources<<>>>>endobj",
+                "4 0 obj<</Length 21>>stream", "0 0 m 100 100 l S", "endstream endobj", "trailer<</Root 1 0 R>>", "%%EOF",
+            ).joinToString("\\n")
+            // Within 15 s (loadPdf's own limit is a minute; Device.run waits 20)
+            val read = Device.run(
+                app,
+                "const late = new Promise((_, no) => setTimeout(() => no(new Error('no answer in 15 s')), 15000)); " +
+                    "const doc = await Promise.race([loadPdf(new File(['$pdf'], 'x.pdf', { type: 'application/pdf' })), late]); " +
+                    "const page = await Promise.race([renderPdfPage(doc, 1), late]); " +
+                    "return doc.numPages + ' page, ' + (page.size > 0 ? 'drawn' : 'empty')",
+            )
+            assertEquals("\"1 page, drawn\"", read) // (as JSON)
+        }
+    }
+
     /** What the page keeps (the child chosen, the language…) still there when the app is opened
      * again: its page then on another port (another origin: its localStorage empty), kept by the
      * app's preferences (Saved), served as saved.js. */
