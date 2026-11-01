@@ -84,6 +84,7 @@ class LocalServer(
     // would send the lessons elsewhere)
     internal val relayChoosable: Boolean = TEST_RELAY.isNotEmpty(),
     val token: String = UUID.randomUUID().toString(),
+    private val busy: Relay.Busy = Relay.Busy.NONE, // told while the AI works (the app kept running: Working)
 ) {
     internal val relays = RelayDirectory(prefs, relayDirectory)
     internal val lessons = Lessons(File(dataDir, "lessons").apply { mkdirs() })
@@ -151,7 +152,7 @@ class LocalServer(
     }
 
     /** The relay, with its licence key. */
-    internal fun relay() = Relay(relayUrl(), licence(), lost = relays::refreshSoon, lapsed = licensing::recheckSoon, rejected = licensing::forget, noKey = licensing::trialKey)
+    internal fun relay() = Relay(relayUrl(), licence(), lost = relays::refreshSoon, lapsed = licensing::recheckSoon, rejected = licensing::forget, noKey = licensing::trialKey, busy = busy)
 
     /** The licence: its key, the free trial, Google Play's purchases (Licensing). */
     internal val licensing = Licensing(prefs, ::relayUrl, subscriptions)
@@ -381,27 +382,36 @@ class LocalServer(
             modeChanged: () -> Unit,
             requestMicPermission: suspend () -> Boolean,
             activity: () -> android.app.Activity?, // Google Play's purchase screen shows over it
-        ) = LocalServer(
-            dataDir = context.filesDir,
-            web = { path -> asset(context, "page/$path") ?: asset(context, "web/$path") },
-            languages = {
-                context.assets.list("web/i18n").orEmpty().filter { it.endsWith(".json") }.map { it.removeSuffix(".json") }
-            },
-            anki = Anki(context),
-            prefs = SharedPreferencesStore(context),
-            version = version,
-            requestAnkiPermission = requestAnkiPermission,
-            installAnki = installAnki,
-            scan = scan,
-            createDocument = createDocument,
-            modeChanged = modeChanged,
-            turnPhoto = Photos::turn,
-            cardSize = Photos::cardSize,
-            recorder = MicRecorder(context),
-            requestMicPermission = requestMicPermission,
-            relayDirectory = RelayDirectory.URL,
-            subscriptions = PlayStore(context, activity),
-        )
+        ): LocalServer {
+            lateinit var server: LocalServer
+            val working = Working(context.applicationContext) { key ->
+                server.text(java.util.Locale.getDefault().language, "android", "working", key) ?: "Notosaurus"
+            }
+            Working.current = working
+            server = LocalServer(
+                dataDir = context.filesDir,
+                web = { path -> asset(context, "page/$path") ?: asset(context, "web/$path") },
+                languages = {
+                    context.assets.list("web/i18n").orEmpty().filter { it.endsWith(".json") }.map { it.removeSuffix(".json") }
+                },
+                anki = Anki(context),
+                prefs = SharedPreferencesStore(context),
+                version = version,
+                requestAnkiPermission = requestAnkiPermission,
+                installAnki = installAnki,
+                scan = scan,
+                createDocument = createDocument,
+                modeChanged = modeChanged,
+                turnPhoto = Photos::turn,
+                cardSize = Photos::cardSize,
+                recorder = MicRecorder(context),
+                requestMicPermission = requestMicPermission,
+                relayDirectory = RelayDirectory.URL,
+                subscriptions = PlayStore(context, activity),
+                busy = working,
+            )
+            return server
+        }
 
         private fun asset(context: Context, path: String) =
             runCatching { context.assets.open(path).use { it.readBytes() } }.getOrNull()

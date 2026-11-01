@@ -4,6 +4,9 @@
     <uses-permission android:name="android.permission.INTERNET" />
     <!-- The 🎤 of the instructions and the correction: asked the first time it's used -->
     <uses-permission android:name="android.permission.RECORD_AUDIO" />
+    <!-- Working: the app kept running while the AI makes a lesson, its network kept (Android 15+
+         cuts a cached app's); a short service, no permission asked of the user -->
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
 
     <!-- AnkiDroid: its content provider, visible to us (Android 11+) -->
     <queries>
@@ -57,6 +60,11 @@
                 <data android:scheme="https" android:host="cchabanois.github.io" android:pathPrefix="/notosaurus/fix" />
             </intent-filter>
         </activity>
+
+        <service
+            android:name=".WorkingService"
+            android:exported="false"
+            android:foregroundServiceType="shortService" />
 
         <!-- The camera writes its photos here; AnkiDroid reads the cards' sound from here -->
         <provider
