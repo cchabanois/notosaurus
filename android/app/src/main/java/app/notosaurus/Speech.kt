@@ -224,6 +224,7 @@ class Speech(
             val sentence = card.front.replace(BRACKETS, "").trim()
             if (!dictation || '\n' in back || !BLANK.containsMatchIn(sentence)) return back
             val said = BLANK.replaceFirst(sentence, Regex.escapeReplacement(back))
+            if (said == back) return back // the blank alone ("…"): the word, once
             return "$said${if (said.last() in ".!?") "" else "."}\n$back"
         }
 

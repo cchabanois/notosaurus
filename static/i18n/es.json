@@ -265,6 +265,10 @@
         "one": "{count} tarjeta sin sonido",
         "other": "{count} tarjetas sin sonido"
       },
+      "skipped": {
+        "one": "{count} tarjeta no enviada: nada en el anverso o el reverso",
+        "other": "{count} tarjetas no enviadas: nada en el anverso o el reverso"
+      },
       "converted": {
         "one": "{count} de ellas ha pasado a las nuevas opciones (historial conservado)",
         "other": "{count} de ellas han pasado a las nuevas opciones (historial conservado)"

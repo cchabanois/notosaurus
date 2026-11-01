@@ -290,7 +290,12 @@ class Anki(private val context: Context) : AnkiTarget {
             }
         }
         val own = listOfNotNull(media.lesson.takeIf { it.isNotEmpty() }?.let(::lessonTag)) // to find the lesson's notes again
-        val notes = deck.cards.withIndex().filter { it.value.front.isNotBlank() }.mapNotNull { (i, card) ->
+        // A dictation alone's card with no front (the AI wrote none: ANK-08) gets its blank, the word
+        // heard to write: else no note (AnkiDroid adds none whose first field is empty)
+        val cards = if (!options.dictationOnly) deck.cards else deck.cards.map {
+            if (it.front.isBlank() && it.back.isNotBlank()) it.copy(front = DICTATION_FRONT) else it
+        }
+        val notes = cards.withIndex().filter { it.value.front.isNotBlank() }.mapNotNull { (i, card) ->
             val name = deckName(deck.deck, card.subdeck)
             val tags = (card.tags.map { it.trim().replace(' ', '_') }.filter { it.isNotEmpty() } + "notosaurus" + own + media.extraTags[card.id].orEmpty()).toSet()
             val common = mapOf("Info" to info(card), "Explanation" to html(card.explanation), "Mnemonic" to html(card.mnemonic))
@@ -602,6 +607,8 @@ class Anki(private val context: Context) : AnkiTarget {
 
         /** An answer asked typed when the lesson's are: short, no formula (as the computer's). */
         fun typed(back: String) = back.trim().split(Regex("\\s+")).size <= TYPED_WORDS && !MATH.containsMatchIn(back)
+        const val DICTATION_FRONT = "…" // core's cards.DICTATION_FRONT
+
         /** A multiple-choice or true/false card, as the computer's (cards.is_choice): a
          * right answer (its back) and wrong ones; a gap text or a diagram label stays one. */
         fun Card.isChoice() = front.isNotBlank() && back.isNotBlank() && choices.any { it.isNotBlank() } &&

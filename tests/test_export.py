@@ -568,3 +568,33 @@ def test_a_card_without_a_picture_keeps_its_guid():
     (note,) = anki.notes(req)
     assert note.key == "la mère" and note.fields["Id"] == "c1"
     assert anki.guids([note]) == [genanki.guid_for("Espagnol", "la mère")]
+
+
+def test_a_dictation_card_without_front_still_sent():
+    """ANK-08: a dictation alone whose cards have no front (the AI wrote none; a lesson made
+    before cards.blank_dictations gave one) was never in Anki, the page saying "nothing to
+    change". Sent with its blank, "…", heard with the sound made for it (the word, once)."""
+    from pathlib import Path
+
+    from app.models import ExportRequest
+
+    req = ExportRequest(
+        deck="Dictée",
+        voice="fr-FR-DeniseNeural",
+        dictation=True,
+        dictation_only=True,
+        cards=[Card(id="c1", front="", back="chaton"), Card(id="c2", front="", back="")],
+    )
+    sound = Path("chaton.mp3")
+    (note,) = anki.notes(req, audio={tts.spoken(req.cards[0], True): sound})
+    assert note.nt.name == "Notosaurus dictée (audio)"
+    assert note.fields["Front"] == "…" and note.fields["Audio"] == "[sound:chaton.mp3]"
+    assert req.cards[0].front == ""  # the lesson's card as it is
+
+
+def test_cards_not_sent_are_counted(client, anki):
+    """A card with nothing to ask or to answer: no note, and the send says how many (the
+    page warns of them: never "nothing to change" when cards were left out)."""
+    cards = [{"front": "la mère", "back": "la madre"}, {"front": "le père", "back": ""}]
+    res = client.post("/api/anki/send", json={"deck": "Espagnol", "cards": cards}).json()
+    assert (res["added"], res["skipped"]) == (1, 1)

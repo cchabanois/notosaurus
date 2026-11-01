@@ -10,7 +10,7 @@ from pathlib import Path
 import genanki
 
 from notosaurus_core import tts
-from notosaurus_core.cards import is_choice, is_cloze
+from notosaurus_core.cards import DICTATION_FRONT, is_choice, is_cloze
 
 from .errors import AppError
 from .models import ExportRequest
@@ -122,10 +122,13 @@ def notes(
     """The notes to send, in both output formats. `audio` maps a card back to its mp3;
     `images` maps the index of a diagram card to its diagram's image and crop;
     `pictures`, the index of a picture card to its picture; `extra_tags`, a card's id to
-    the tags of the tests it is in (exams.card_tags)."""
+    the tags of the tests it is in (exams.card_tags). A dictation alone's card with no front
+    (a lesson made before cards.blank_dictations gave one) gets its blank: else no note."""
     export = _Export(req, audio or {}, images or {}, pictures or {}, extra_tags)
     result = []
     for i, card in enumerate(req.cards):
+        if req.dictation_only and card.back.strip() and not card.front.strip():
+            card = card.model_copy(update={"front": DICTATION_FRONT})
         if is_cloze(card.front.strip()):
             note = export.note(card, export.cloze_nt, cloze_fields(card, export.card_id(i, card)), [])
         elif is_choice(card):

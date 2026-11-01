@@ -265,6 +265,10 @@
         "one": "{count} carte sans son",
         "other": "{count} cartes sans son"
       },
+      "skipped": {
+        "one": "{count} carte non envoyée : rien au recto ou au verso",
+        "other": "{count} cartes non envoyées : rien au recto ou au verso"
+      },
       "converted": {
         "one": "dont {count} passée aux nouvelles options (historique gardé)",
         "other": "dont {count} passées aux nouvelles options (historique gardé)"

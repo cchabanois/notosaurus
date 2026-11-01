@@ -265,6 +265,10 @@
         "one": "{count} card without sound",
         "other": "{count} cards without sound"
       },
+      "skipped": {
+        "one": "{count} card not sent: nothing on its front or its back",
+        "other": "{count} cards not sent: nothing on their front or their back"
+      },
       "converted": {
         "one": "{count} of them moved to the new options (history kept)",
         "other": "{count} of them moved to the new options (history kept)"

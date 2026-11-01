@@ -81,6 +81,7 @@ internal fun Route.ankiRoutes(server: LocalServer) {
                 put("added", sent.added)
                 put("updated", sent.updated) // the lesson's notes sent before, changed since
                 put("moved", sent.moved) // and moved, the lesson's deck having changed
+                put("skipped", sent.skipped) // nothing to ask or to answer: no note (the page says so)
                 put("synced", false)
                 if (failures > 0) put("audio_failures", failures) // the page says some have no sound
             }

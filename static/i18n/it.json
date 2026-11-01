@@ -265,6 +265,10 @@
         "one": "{count} carta senza suono",
         "other": "{count} carte senza suono"
       },
+      "skipped": {
+        "one": "{count} carta non inviata: niente sul fronte o sul retro",
+        "other": "{count} carte non inviate: niente sul fronte o sul retro"
+      },
       "converted": {
         "one": "{count} di esse è passata alle nuove opzioni (cronologia conservata)",
         "other": "{count} di esse sono passate alle nuove opzioni (cronologia conservata)"

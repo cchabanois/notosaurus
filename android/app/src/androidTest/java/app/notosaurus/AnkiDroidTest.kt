@@ -349,6 +349,32 @@ class AnkiDroidTest {
         assertTrue(field(model, note.fields, "Audio").startsWith("[sound:"))
     }
 
+    /** ANK-08: a dictation alone whose cards have no front (the AI wrote none) was never in
+     * AnkiDroid ("✓ In Anki: nothing to change"). Sent with its blank, "…", heard with the sound
+     * made for it; a card with nothing to write still left out, and counted. */
+    @Test
+    fun aDictationCardWithoutFrontStillSent() {
+        val anki = Anki(Device.context)
+        val api = AddContentApi(Device.context)
+        val sound = File(Device.context.filesDir, "audio/chaton-$run.mp3").apply {
+            parentFile!!.mkdirs()
+            writeBytes(ByteArray(64) { it.toByte() }) // AnkiDroid doesn't read it: any bytes
+        }
+        val card = Card("", "chaton", id = "c-$run")
+        val sent = anki.send(
+            Deck("Notosaurus test $run", listOf(card, Card("", "", id = "e-$run"))),
+            Media(audio = mapOf(Speech.spoken(card, true) to sound), lesson = "dict-empty-$run"),
+            Options(dictation = true, dictationOnly = true),
+        )
+        assertEquals(1, sent.added)
+        assertEquals(1, sent.skipped)
+        val note = api.getNote(sent.notes.getValue("c-$run"))!!
+        val model = noteModel(note.id)
+        assertEquals(types["text+dictation-only"].name, api.modelList!![model])
+        assertEquals("…", field(model, note.fields, "Front"))
+        assertTrue(field(model, note.fields, "Audio").startsWith("[sound:"))
+    }
+
     @Test
     fun aFileAnkiDroidRefusesMakesTheCardItWouldBeWithoutIt() {
         val anki = Anki(Device.context)

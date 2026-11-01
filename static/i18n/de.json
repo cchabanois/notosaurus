@@ -265,6 +265,10 @@
         "one": "{count} Karte ohne Ton",
         "other": "{count} Karten ohne Ton"
       },
+      "skipped": {
+        "one": "{count} Karte nicht gesendet: nichts auf der Vorder- oder Rückseite",
+        "other": "{count} Karten nicht gesendet: nichts auf der Vorder- oder Rückseite"
+      },
       "converted": {
         "one": "{count} davon auf die neuen Optionen umgestellt (Verlauf bleibt erhalten)",
         "other": "{count} davon auf die neuen Optionen umgestellt (Verlauf bleibt erhalten)"
