@@ -150,6 +150,7 @@ Each pull request's entries (the `## Changelog` of its description) are put unde
 
 ### Fixed
 
+- In the Android app, a lesson being made goes on when the app is left (home, another app, the screen off): after a few seconds in the background, Android 15 and later cut its network, and the lesson failed with "Can't reach the Notosaurus service", no card. A short foreground service keeps it running while the AI works (no permission asked; its notification shows only where notifications are allowed). For developers: `Working.kt`, `Relay.Busy`. 🤖 Generated with [Claude Code](https://claude.com/claude-code) Co-authored-by: Claude Opus 5.5 <noreply@anthropic.com>
 - A theorem or a property the lesson names ("Théorème de Thalès"), not only one in a box, gets its card name → full statement ("If …, then …"), written with what the lesson says; its converse only when the lesson gives it. Measured on the Thalès page: 6 times out of 6 (quick and careful), against 1 out of 6 before; no change on a lesson of formulas (the exponential).
 - A drawing taken from the lesson's page keeps its colours: a yellow sun stays yellow (it came out orange, its rays brown). Only the paper is made white, from its colour at the cut-out's edge.
 - A card's info and its "did you know" show their formulas drawn, as the helps do, no longer their LaTeX ("\(\frac{BC}{BD}\)"); a click shows the text to change it.
