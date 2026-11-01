@@ -11,6 +11,7 @@ on:
 
 permissions:
   contents: read
+  pull-requests: read
 
 concurrency:
   group: changelog-check-${{ github.ref }}
@@ -22,6 +23,28 @@ jobs:
     timeout-minutes: 2
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+      # The entries are written after the merge, from the description: a pull request editing
+      # them by hand would conflict with every other one again. Only when the file is among
+      # its changes: its Unreleased compared with the one it started from (the merge base, not
+      # main's tip, where other merges' entries land meanwhile). The release pull request,
+      # which renames Unreleased, is labelled "release".
+      - name: The Unreleased entries are not edited by hand
+        env:
+          GH_TOKEN: ${{ github.token }}
+          LABELS: ${{ join(github.event.pull_request.labels.*.name, ',') }}
+          FILES: repos/${{ github.repository }}/pulls/${{ github.event.number }}/files
+          BASE: ${{ github.event.pull_request.base.ref }}
+        run: |
+          case ",$LABELS," in *",release,"*) echo "A release: Unreleased may change."; exit 0;; esac
+          if ! gh api "$FILES" --paginate --jq '.[].filename' | grep -qx 'CHANGELOG.md'; then
+            echo "CHANGELOG.md untouched."
+            exit 0
+          fi
+          git fetch -q --unshallow origin "$BASE"
+          git show "$(git merge-base "origin/$BASE" HEAD):CHANGELOG.md" > /tmp/base-CHANGELOG.md
+          python3 tools/changelog_add.py --unreleased-unchanged /tmp/base-CHANGELOG.md
       - name: The description has its entries, or the label
         env:
           BODY: ${{ github.event.pull_request.body }}

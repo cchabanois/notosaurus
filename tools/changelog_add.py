@@ -17,6 +17,9 @@ tested again, for a line of changelog. The release pull request still renames Un
 Usage:
   python tools/changelog_add.py < message         the entries added under Unreleased, each said
   python tools/changelog_add.py --check < body    parsed only: fails when there is no entry
+  python tools/changelog_add.py --unreleased-unchanged <base CHANGELOG.md>
+                                                  fails when Unreleased differs from the base's (a pull
+                                                  request editing the entries by hand; a release does)
 """
 
 import re
@@ -58,22 +61,28 @@ def entries(message: str) -> list[tuple[str, str]]:
     return found
 
 
-def added(text: str, new: list[tuple[str, str]]) -> tuple[str, list[tuple[str, str]]]:
-    """The changelog with `new` under Unreleased, each entry first in its subsection (the
-    newest on top, as the file is kept), a missing subsection made at its place; an entry
-    already there is not added twice. Returns the text and what was added."""
+def unreleased(text: str) -> tuple[int, int]:
+    """Where the Unreleased section's body is in the changelog: after its heading, up to the
+    next version's heading or the links at the end."""
     start = re.search(r"^## \[Unreleased\][^\n]*\n", text, re.M)
     if start is None:
         raise SystemExit("CHANGELOG.md has no '## [Unreleased]' section")
     end = re.compile(r"^## |^\[[^\]]+\]: ", re.M).search(text, start.end())
-    stop = end.start() if end else len(text)
-    block = text[start.end() : stop]
+    return start.end(), end.start() if end else len(text)
+
+
+def added(text: str, new: list[tuple[str, str]]) -> tuple[str, list[tuple[str, str]]]:
+    """The changelog with `new` under Unreleased, each entry first in its subsection (the
+    newest on top, as the file is kept), a missing subsection made at its place; an entry
+    already there is not added twice. Returns the text and what was added."""
+    begin, stop = unreleased(text)
+    block = text[begin:stop]
     done = [(section, entry) for section, entry in new if f"- {entry}" not in block]
     for section in SECTIONS:
         lines = [entry for kind, entry in done if kind == section]
         if lines:
             block = _with(block, section, lines)
-    return text[: start.end()] + block + text[stop:], done
+    return text[:begin] + block + text[stop:], done
 
 
 def _with(block: str, section: str, lines: list[str]) -> str:
@@ -93,6 +102,17 @@ def _with(block: str, section: str, lines: list[str]) -> str:
 
 
 def main(argv: list[str]) -> None:
+    if "--unreleased-unchanged" in argv:
+        base = Path(argv[argv.index("--unreleased-unchanged") + 1]).read_text(encoding="utf-8")
+        ours = CHANGELOG.read_text(encoding="utf-8")
+        if ours[slice(*unreleased(ours))].strip() != base[slice(*unreleased(base))].strip():
+            raise SystemExit(
+                "This pull request changes CHANGELOG.md's Unreleased section. Write its entries under a '## Changelog'"
+                " heading of its description instead: they are put in the file once merged (CONTRIBUTING.md, Pull"
+                " requests). A release, which renames Unreleased, is labelled 'release'."
+            )
+        print("Unreleased unchanged.")
+        return
     message = sys.stdin.read()
     found = entries(message)
     if "--check" in argv:

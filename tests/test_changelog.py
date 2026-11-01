@@ -100,6 +100,20 @@ def test_the_file_written_and_said(tmp_path, monkeypatch, capsys):
     assert "Added under Fixed: A key refused is not kept." in capsys.readouterr().out
 
 
+def test_unreleased_compared_with_the_base(tmp_path, monkeypatch, capsys):
+    base = tmp_path / "base.md"
+    base.write_text(CHANGELOG, encoding="utf-8")
+    ours = tmp_path / "CHANGELOG.md"
+    monkeypatch.setattr(changelog_add, "CHANGELOG", ours)
+    # The intro reworded, a released version touched: not the entries
+    ours.write_text(CHANGELOG.replace("Intro.", "Another intro.").replace("- First.", "- First!"), encoding="utf-8")
+    changelog_add.main(["--unreleased-unchanged", str(base)])
+    assert "Unreleased unchanged." in capsys.readouterr().out
+    ours.write_text(CHANGELOG.replace("- Older fix.", "- Older fix.\n- A line by hand."), encoding="utf-8")
+    with pytest.raises(SystemExit, match="Unreleased section"):
+        changelog_add.main(["--unreleased-unchanged", str(base)])
+
+
 def test_check_refuses_a_description_without_entries(monkeypatch):
     monkeypatch.setattr("sys.stdin", __import__("io").StringIO("Just words."))
     with pytest.raises(SystemExit, match="No changelog entry"):
