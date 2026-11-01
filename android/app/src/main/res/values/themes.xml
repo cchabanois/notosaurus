@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- The app's theme: light, dark when the phone is (values-night). The page's WebView follows
+     it for prefers-color-scheme (style.css), not the phone's setting directly -->
+<resources>
+    <style name="Theme.Notosaurus" parent="@android:style/Theme.Material.Light.NoActionBar" />
+</resources>
