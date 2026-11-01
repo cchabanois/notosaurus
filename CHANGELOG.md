@@ -148,6 +148,9 @@ Each pull request adds a line under **Unreleased**. See [Releasing](CONTRIBUTING
 
 ### Fixed
 
+- "🔊 Voice …, included in the deck" is said only when a card is read: a lesson of texts with gaps (a poem's), formulas or multiple choices has no sound, and no longer announces one.
+- Adding lessons to a test: the "Add N lessons" button stays in view at the sheet's foot (it was at the end of the list), and a lesson's long title wraps beside its box, no longer under it.
+- In the Android app, a test ("Contrôle") that takes only some of a lesson's cards shows them so ("5 cards"), and choosing them again starts from them: it showed "whole lesson" and started from every card, though only the chosen ones were tagged in AnkiDroid.
 - A dictation's card no longer gives its word away: when the AI writes it on the front all the same ("Write the word: maison"), it becomes "…". A front with its blank already, or holding the word more than once, stays as it is. For developers: `cards.blank_dictations`, applied to a dictation-only extraction.
 - The Android app follows the phone's dark mode: its theme is dark when the phone is, so the page is too (it stayed light). With the phone's text at its largest, the steps' numbers and the "?" grow with their text, and the photo tiles hold theirs.
 - For developers: a device test (`AppTest.aPdfReadByTheAppsWebView`) opens a PDF in the app's WebView, an older one on the emulator (124): pdf.js's modern build put back would fail it.
