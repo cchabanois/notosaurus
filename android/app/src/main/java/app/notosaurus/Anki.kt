@@ -339,7 +339,7 @@ class Anki(private val context: Context) : AnkiTarget {
                 else -> {
                     val heard = options.dictation && sound.isNotEmpty() // nothing to hear without a voice
                     val variant = if (heard && options.dictationOnly) listOf("text", "dictation-only")
-                    else listOf("text") + listOfNotNull("reverse".takeIf { options.reverse }, "typing".takeIf { options.typing }, "dictation".takeIf { heard })
+                    else listOf("text") + listOfNotNull("reverse".takeIf { options.reverse }, "typing".takeIf { options.typing && typed(card.back) }, "dictation".takeIf { heard })
                     note(variant.joinToString("+"), mapOf("Id" to key, "Front" to html(card.front), "Back" to html(card.back), "Audio" to sound) + pictures)
                 }
             }
@@ -595,6 +595,13 @@ class Anki(private val context: Context) : AnkiTarget {
             return html(card.info) + if (fact.isEmpty()) "" else """<div style="margin-top:8px;font-style:italic">💡 ${html(fact)}</div>"""
         }
         private val GAP = Regex("""\{\{c\d+::""")
+        private val MATH = Regex("""\\\(|\\\[""")
+        // Typed answers: at most this many words; a longer one (a sentence, a definition) is said
+        // in one's own words, not typed again (app/anki.py: TYPED_WORDS). A formula: its code would be
+        private const val TYPED_WORDS = 4
+
+        /** An answer asked typed when the lesson's are: short, no formula (as the computer's). */
+        fun typed(back: String) = back.trim().split(Regex("\\s+")).size <= TYPED_WORDS && !MATH.containsMatchIn(back)
         /** A multiple-choice or true/false card, as the computer's (cards.is_choice): a
          * right answer (its back) and wrong ones; a gap text or a diagram label stays one. */
         fun Card.isChoice() = front.isNotBlank() && back.isNotBlank() && choices.any { it.isNotBlank() } &&

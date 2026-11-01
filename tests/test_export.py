@@ -414,6 +414,20 @@ def test_same_front_twice_one_note_each(anki, client, tmp_path):
     assert len(set(package.guids)) == 2
 
 
+def test_typed_answers_short_ones_only(client, tmp_path):
+    """A lesson's answers typed: a conjugated form is, a definition (a sentence) isn't: it is
+    said in one's own words, not typed again letter by letter."""
+    cards = [
+        {"front": "estar (présent du subjonctif, yo)", "back": "que yo esté"},
+        {"front": "À quoi sert le subjonctif ?", "back": "À exprimer un souhait, une hypothèse"},
+    ]
+    package = apkg.export(client, {"deck": "D", "cards": cards, "typing": True}, tmp_path)
+    names = {package.fields(n)[0]: package.models[n[1]]["name"] for n in package.notes}
+    assert "à taper" in names["estar (présent du subjonctif, yo)"]
+    assert "à taper" not in names["À quoi sert le subjonctif ?"]
+    assert anki.typed("nous nous serions levés") and not anki.typed("À exprimer un souhait, une hypothèse")
+
+
 def test_multiple_choice_and_true_false(client, tmp_path):
     lesson = client.post("/api/extract", data={"prompt": "QCM sur la Révolution"}).json()
     assert [len(c["choices"]) for c in lesson["cards"]] == [3, 3, 1, 1]

@@ -95,6 +95,8 @@ class _Export:
         self.diagram_nt = diagram_note_type(req.voice, req.typing)
         # A formula isn't typed (its code would be) nor heard
         self.math_nt = note_type(req.voice, req.reverse)
+        # An answer too long to type (typed): heard and asked as the others, not typed
+        self.untyped_nt = note_type(req.voice, req.reverse, False, req.dictation, req.dictation_only)
         self.cloze_nt, self.choice_nt = cloze_note_type(), choice_note_type()
 
     def note(self, card, nt: NoteType, fields: dict[str, str], media: list[Path]) -> Note:
@@ -152,7 +154,12 @@ def _two_sided_note(export: _Export, i: int, card) -> Note | None:
     if i in images:
         nt = export.diagram_nt
     else:
-        nt = export.math_nt if export.typing and tts.has_math(back) else export.text_nt
+        if export.typing and tts.has_math(back):
+            nt = export.math_nt
+        elif req.typing and not typed(back):
+            nt = export.untyped_nt
+        else:
+            nt = export.text_nt
     values = {"Front": field_html(front), "Back": field_html(back), "Info": info(card), **helps(card)}
     if "Id" in nt.fields and i not in images:  # what "✎ Notosaurus" finds the card by; its key with a picture
         values |= {"Id": export.card_id(i, card), "Picture": "", "BackPicture": "", SOURCE_FIELD: ""}
@@ -169,6 +176,16 @@ def _two_sided_note(export: _Export, i: int, card) -> Note | None:
         values |= picture_fields(card, pictures[i], export.card_id(i, card))
         media.append(pictures[i])
     return export.note(card, nt, values, media)
+
+
+# Typed answers ("typing"): at most this many words. A longer one (a sentence, a definition)
+# is said in one's own words, not typed again letter by letter (Anki.kt: TYPED_WORDS)
+TYPED_WORDS = 4
+
+
+def typed(back: str) -> bool:
+    """An answer asked typed when the lesson's are: short (a form, a word or two)."""
+    return len(back.split()) <= TYPED_WORDS
 
 
 TAG_PREFIX = "notosaurus::"

@@ -73,6 +73,13 @@ class AnkiTest {
     }
 
     @Test
+    fun aShortAnswerTypedNotADefinition() {
+        // A lesson's answers typed: a form, a word or two; a definition said in one's own words
+        for (back in listOf("esté", "que yo esté", "nous nous serions levés", "la madre")) assertTrue(back, Anki.typed(back))
+        for (back in listOf("À exprimer un souhait, une hypothèse", "\\(x^2\\)")) assertFalse(back, Anki.typed(back))
+    }
+
+    @Test
     fun multipleChoicesInAFixedOrder() {
         val card = Card("La Révolution commence en ?", "1789", choices = listOf("1715", "1799", "1804"))
         with(Anki) { assertTrue(card.isChoice()) }
