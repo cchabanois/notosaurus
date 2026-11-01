@@ -458,14 +458,20 @@ def test_a_figure_checked_on_demand_then_redrawn(page, monkeypatch):
     sync_api.expect(found).to_contain_text("La vérification signale : L'angle est en B.")
     found.get_by_role("button", name="Garder").click()
     sync_api.expect(found).to_be_hidden()
+
+    def redraw(name):
+        """Drawn again, until its drawing is over: the old figure stays in view meanwhile, and a
+        check clicked before the drawing starts would be cleared by it."""
+        with page.expect_response(lambda r: r.url.endswith("/picture/draw")) as drawn:
+            found.get_by_role("button", name=name, exact=True).click()
+        drawn.value.finished()
+        sync_api.expect(found).to_be_hidden()
+        sync_api.expect(card.locator(".card-picture.figure img:not(.first):visible")).to_be_visible()
+
     card.get_by_role("button", name="🔍 Vérifier la figure").first.click()
-    found.get_by_role("button", name="📐 Redessiner", exact=True).click()  # quickly, told the problem
-    sync_api.expect(found).to_be_hidden()
-    sync_api.expect(card.locator(".card-picture.figure img:not(.first):visible")).to_be_visible()
+    redraw("📐 Redessiner")  # quickly, told the problem
     card.get_by_role("button", name="🔍 Vérifier la figure").first.click()  # still wrong: with care now
-    found.get_by_role("button", name="📐 Redessiner avec soin").click()
-    sync_api.expect(found).to_be_hidden()
-    sync_api.expect(card.locator(".card-picture.figure img:not(.first):visible")).to_be_visible()
+    redraw("📐 Redessiner avec soin")
     card.get_by_role("button", name="🔍 Vérifier la figure").first.click()  # wrong again: still with care
     sync_api.expect(found.get_by_role("button", name="📐 Redessiner avec soin")).to_be_visible()
 
