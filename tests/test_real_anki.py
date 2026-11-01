@@ -136,7 +136,18 @@ def test_bridge_on_a_real_collection(bridged, col):
     # What landed in the collection
     (note_type,) = [m for m in col.models.all_names_and_ids() if m.name.startswith("Notosaurus")]
     model = col.models.get(note_type.id)
-    assert [f["name"] for f in model["flds"]] == ["Front", "Back", "Info", "Audio", "Explanation", "Mnemonic"]
+    assert [f["name"] for f in model["flds"]] == [
+        "Front",
+        "Back",
+        "Info",
+        "Audio",
+        "Explanation",
+        "Mnemonic",
+        "Picture",
+        "BackPicture",
+        "Id",
+        "Source",
+    ]
     note_ids = col.find_notes(f'"note:{note_type.name}"')
     assert len(note_ids) == len(cards)
     decks = {col.decks.name(col.get_note(n).cards()[0].did) for n in note_ids}
@@ -268,10 +279,12 @@ def test_picture_lesson_on_a_real_collection(bridged, col, monkeypatch):
     body = {"deck": "Anglais", "cards": cards, "lesson_id": lesson["id"]}
     assert client.post("/api/anki/send", json=body).json()["added"] == 4
 
-    (note_type,) = [m for m in col.models.all_names_and_ids() if m.name.startswith("Notosaurus image")]
+    # A picture is any card's: the four in the text note type, three with their picture
+    (note_type,) = [m for m in col.models.all_names_and_ids() if m.name.startswith("Notosaurus recto/verso")]
     note_ids = sorted(col.find_notes(f'"note:{note_type.name}"'))
-    assert len(note_ids) == 3  # the apple, the dog, the umbrella; "tomorrow" is a text card
-    first = fields(col, note_ids[0])
+    pictured = [n for n in note_ids if fields(col, n)["Picture"]]
+    assert (len(note_ids), len(pictured)) == (4, 3)  # the apple, the dog, the umbrella; "tomorrow" without
+    first = fields(col, pictured[0])
     assert first["Id"] == cards[0]["id"] and first["Front"] == "Comment dit-on en anglais ?"
     assert (Path(col.media.dir()) / cards[0]["picture"]).is_file()
 
