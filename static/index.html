@@ -1195,7 +1195,8 @@
         </template>
       </ul>
       <p class="empty" x-show="!addable(examSheet.exam).length" x-text="$t('app.lessons.none')"></p>
-      <div class="sheet-actions">
+      <!-- Kept in view at the sheet's foot: many lessons, no scrolling to find it -->
+      <div class="sheet-actions exam-add-actions">
         <button type="button" class="btn primary" @click="finishAdding()" :disabled="examSheet.busy || !examSheet.adding.chosen.length"
                 x-text="examSheet.adding.chosen.length ? $t('app.exams.addChosen', { count: examSheet.adding.chosen.length }) : $t('app.exams.add')"></button>
       </div>

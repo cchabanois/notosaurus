@@ -2268,6 +2268,30 @@ def test_a_test_made_from_my_lessons_then_its_lessons_ticked(page):
     assert [p["lesson"] for p in exam["lessons"]] in ([made[0]["id"]], [made[1]["id"]])
 
 
+def test_many_lessons_to_add_their_button_in_view_a_long_title_beside_its_box(page):
+    """Adding lessons to a test with many of them: the button stays in view, and a lesson's
+    title on two lines wraps beside its box, not under it."""
+    page.goto("/")
+    for n in range(12):
+        prompt = "Jules › 5e › Anglais › Twinkle Twinkle Little Star, une très longue leçon" if n == 0 else FRONT_PROMPT
+        page.request.post("/api/extract", multipart={"prompt": prompt})
+    page.request.put("/api/exams/interro", data={"name": "Interro", "date": "", "lessons": []})
+    page.reload()
+    page.wait_for_function("document.documentElement.classList.contains('i18n-ready')")
+    page.evaluate(
+        "(async () => { const app = document.querySelector('[x-data]')._x_dataStack[0];"
+        " await app.loadExams(); app.openExams(app.exams[0]); })()"
+    )
+    page.get_by_role("button", name="＋ Ajouter des leçons").click()
+    rows = page.locator(".exam-add .child-row")
+    sync_api.expect(rows).to_have_count(12)
+    rows.first.locator("input").check()
+    sync_api.expect(page.get_by_role("button", name="Ajouter 1 leçon")).to_be_in_viewport()
+    for row in rows.all():  # the box and the title on the same line, however long the title
+        box, title = row.locator("input").bounding_box(), row.locator("strong").bounding_box()
+        assert box["y"] >= title["y"] - 2 and box["y"] + box["height"] <= title["y"] + title["height"] + 2
+
+
 def test_a_lesson_that_looks_wrong_corrected_or_kept(page):
     """A pupil's notes with a wrong date: the card says what the lesson says, with why it
     looks wrong; "Correct" takes the AI's correction, "Keep" keeps the lesson."""
