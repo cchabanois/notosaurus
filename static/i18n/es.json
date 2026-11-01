@@ -796,6 +796,7 @@
       "service": "Servicio que las dibuja",
       "sameAsCards": "El mismo que las tarjetas",
       "noneChip": "Sin imágenes",
+      "optional": "Opcional: el servicio que dibuja una imagen cuando ninguna imagen libre encaja (siempre se pregunta antes, porque cuesta). Sin él, las tarjetas tienen igualmente los dibujos de la lección, imágenes libres, figuras y sus fotos.",
       "noKey": "Falta la clave (sección Acceso)",
       "drawnBySame": "Las dibuja {service}, el servicio de las tarjetas.",
       "drawnBy": "Las dibuja {service}.",

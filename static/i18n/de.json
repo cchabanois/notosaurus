@@ -796,6 +796,7 @@
       "service": "Dienst, der sie zeichnet",
       "sameAsCards": "Derselbe wie für die Karten",
       "noneChip": "Keine Bilder",
+      "optional": "Optional: der Dienst, der ein Bild zeichnet, wenn kein freies Bild passt (es wird immer vorher gefragt, da es Geld kostet). Ohne ihn bekommen die Karten trotzdem die Zeichnungen der Lektion, freie Bilder, Figuren und Ihre Fotos.",
       "noKey": "Schlüssel fehlt (Abschnitt Zugang)",
       "drawnBySame": "Gezeichnet von {service}, dem Dienst der Karten.",
       "drawnBy": "Gezeichnet von {service}.",

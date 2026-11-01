@@ -796,6 +796,7 @@
       "service": "Service drawing them",
       "sameAsCards": "Same as the cards",
       "noneChip": "No pictures",
+      "optional": "Optional: the service that draws a picture when no free picture fits (always asked first, as it costs). Without it, cards still get the lesson's own drawings, free pictures, figures and your photos.",
       "noKey": "Missing key (Access section)",
       "drawnBySame": "Drawn by {service}, the cards' own service.",
       "drawnBy": "Drawn by {service}.",
