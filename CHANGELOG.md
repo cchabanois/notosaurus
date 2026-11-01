@@ -149,6 +149,7 @@ Each pull request adds a line under **Unreleased**. See [Releasing](CONTRIBUTING
 
 ### Fixed
 
+- In the Android app, a lesson being made goes on when the app is left (home, another app, the screen off): after a few seconds in the background, Android 15 and later cut its network, and the lesson failed with "Can't reach the Notosaurus service", no card. A short foreground service keeps it running while the AI works (no permission asked; its notification shows only where notifications are allowed). For developers: `Working.kt`, `Relay.Busy`.
 - A drawing taken from the lesson's page keeps its colours: a yellow sun stays yellow (it came out orange, its rays brown). Only the paper is made white, from its colour at the cut-out's edge.
 - A card's info and its "did you know" show their formulas drawn, as the helps do, no longer their LaTeX ("\(\frac{BC}{BD}\)"); a click shows the text to change it.
 - A figure of zones inside one another (rings, layers) keeps all its labels: it is no longer drawn as a diagram of boxes, which wrote each ring's name at the centre, under the inner rings (only "Ville-centre" was left of three). For developers: `figures_typst.KINDS`; the figures bench (`tools/bench_figures.py`) judges a figure with a hidden label wrong.

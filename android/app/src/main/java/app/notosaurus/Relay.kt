@@ -64,7 +64,32 @@ class Relay(
     private val rejected: (String) -> Unit = {}, // the key sent, unknown or ended at the relay: no longer kept
     // No key yet, an AI call: the free trial's key (started then), or an error thrown (null: none, the call without it)
     private val noKey: (suspend () -> String)? = null,
+    private val busy: Busy = Busy.NONE, // told while the AI works (the app kept running meanwhile: Working)
 ) {
+    /** Told when an AI call begins and when it ends, overlapping ones each. */
+    interface Busy {
+        fun begin()
+        fun end()
+
+        companion object {
+            val NONE = object : Busy {
+                override fun begin() = Unit
+                override fun end() = Unit
+            }
+        }
+    }
+
+    /** `work`, `busy` told around it when `route` makes the AI work. */
+    private suspend fun <T> working(route: String, work: suspend () -> T): T {
+        if (route !in AI_ROUTES) return work()
+        busy.begin()
+        try {
+            return work()
+        } finally {
+            busy.end()
+        }
+    }
+
     private val base = baseUrl.trimEnd('/')
 
     suspend fun account(): Account = json.decodeFromJsonElement(Account.serializer(), call("account", null))
@@ -75,18 +100,19 @@ class Relay(
 
     /** /v1/revise asked as it goes (relay_api.ReviseLine): what the AI is at told (Telling),
      * then the answer. */
-    suspend fun revise(request: JsonObject, photos: List<ByteArray>): JsonObject =
+    suspend fun revise(request: JsonObject, photos: List<ByteArray>): JsonObject = working("revise") {
         open("revise", multipart(request, photos), stream = true).use { response ->
             streamed(response, "result") { line -> line["step"]?.jsonObject?.let { tell(it) } }
         }
+    }
 
     /**
      * /v1/extract as the AI writes (STREAM_TYPE, relay_api.ExtractLine): each card told
      * to `onCard` as it comes (null: start again), then the answer. A relay answering
      * all at once (an older one): its answer. Cancelled, the request stops: so does the AI.
      */
-    suspend fun extract(request: JsonObject, photos: List<ByteArray>, onCard: OnCard): JsonObject {
-        return open("extract", multipart(request, photos), stream = true).use { response ->
+    suspend fun extract(request: JsonObject, photos: List<ByteArray>, onCard: OnCard): JsonObject = working("extract") {
+        open("extract", multipart(request, photos), stream = true).use { response ->
             streamed(response, "result") { line ->
                 val step = line["step"]?.jsonObject
                 if (step != null) tell(step) else onCard(line["card"]?.jsonObject)
@@ -97,8 +123,8 @@ class Relay(
     /** A card's figure or picture (/v1/card-picture, relay_api.CardPictureLine): each step told
      * to `onStep` as it begins ({"step", "problem", "first"}: what the page shows on the card
      * meanwhile), then the answer (relay_api.CardPictureResponse). */
-    suspend fun cardPicture(request: JsonObject, onStep: Step): JsonObject {
-        return open("card-picture", request.toString().toRequestBody(JSON), stream = true).use { response ->
+    suspend fun cardPicture(request: JsonObject, onStep: Step): JsonObject = working("card-picture") {
+        open("card-picture", request.toString().toRequestBody(JSON), stream = true).use { response ->
             streamed(response, "result") { line -> line["step"]?.jsonObject?.let { onStep(it) } }
         }
     }
@@ -225,8 +251,9 @@ class Relay(
     /** A JSON route (explain, figure). */
     suspend fun post(route: String, request: JsonObject): JsonObject = call(route, request.toString().toRequestBody(JSON))
 
-    private suspend fun call(route: String, body: RequestBody?): JsonObject =
+    private suspend fun call(route: String, body: RequestBody?): JsonObject = working(route) {
         open(route, body).use { json.parseToJsonElement(it.body.string()).jsonObject }
+    }
 
     /** The relay's answer, when it is one (its errors thrown); `stream`: asked as it comes. */
     private suspend fun open(route: String, body: RequestBody?, stream: Boolean = false): Response {

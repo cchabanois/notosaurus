@@ -935,6 +935,10 @@
     "shortcuts": {
       "phone": "Ohne Computer",
       "computer": "Mit meinem Computer"
+    },
+    "working": {
+      "channel": "Karten erstellen",
+      "title": "Notosaurus erstellt deine Karten …"
     }
   },
   "setup": {

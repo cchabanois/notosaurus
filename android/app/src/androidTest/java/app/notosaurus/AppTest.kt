@@ -28,6 +28,7 @@ import org.junit.Test
 import org.junit.runner.RunWith
 import org.hamcrest.Matchers.not
 import java.io.File
+import java.util.concurrent.TimeUnit
 
 /**
  * The whole app on the phone: the activity, its WebView showing the page, the page's
@@ -55,6 +56,10 @@ class AppTest {
     }
 
     @After fun tearDown() = relay.close()
+
+    private companion object {
+        const val LEFT_S = 30L // the relay's answer, seconds: the app left meanwhile
+    }
 
     /** The app's icon touched again after another app (the app still open): the page as it was,
      * a lesson in progress (its photos, its prompt) kept, not loaded again. */
@@ -178,6 +183,48 @@ class AppTest {
         val request = extracts.single()
         assertEquals("Bearer nts_test", request.headers["Authorization"])
         assertTrue(Anki(Device.context).deckNames().contains("Notosaurus app test $run"))
+    }
+
+    /** A lesson being made while the app is left (home, the screen off: INT-01, INT-02): kept
+     * running by a short foreground service (Working) while the relay works, ended with it, the
+     * cards there back in the app. Android 15+ cuts a cached app's network, its call to the relay
+     * with it ("can't reach the service", no card); not seen here: a test's process is kept at a
+     * foreground service's level by its instrumentation, so the service itself is what's checked. */
+    @Test
+    fun aLessonMadeWhileTheAppIsLeft() {
+        val lesson = """{"deck": {"deck": "Notosaurus app test $run", "cards": [{"front": "la mère $run", "back": "la madre"}]},
+            "turns": [], "usage": {"credits": 1, "credits_left": 99}}"""
+        relay.dispatcher = object : Dispatcher() {
+            override fun dispatch(request: RecordedRequest) = when (request.url.encodedPath) {
+                "/v1/extract" -> MockResponse.Builder().headersDelay(LEFT_S, TimeUnit.SECONDS).body(lesson).build()
+                "/v1/voices" -> MockResponse.Builder().body("[]").build()
+                else -> MockResponse.Builder().code(404).body("""{"code": "relay.invalid_request", "params": {}}""").build()
+            }
+        }
+        fun kept() = "isForeground=true" in ui.executeShellCommand("dumpsys activity services ${Device.context.packageName}/.WorkingService")
+        ActivityScenario.launch(MainActivity::class.java).use { app ->
+            Device.waitFor(app, "typeof api === 'function' && document.querySelectorAll('.chip').length > 3", "the page and its prompts")
+            assertTrue("kept before any lesson", !kept())
+            Device.js(
+                app,
+                "(() => { const form = new FormData(); form.append('prompt', 'FR → ES'); window.made = null; " +
+                    "api('/api/extract', { method: 'POST', body: form }).then((r) => r.json()).then((j) => { window.made = j; }, " +
+                    "(e) => { window.made = { error: String(e) }; }); return true; })()",
+            )
+            Thread.sleep(1000) // (asked)
+            ui.pressHome()
+            Thread.sleep((LEFT_S / 2) * 1000)
+            assertTrue("the app kept running while the lesson is made", kept())
+            val icon = Device.context.packageManager.getLaunchIntentForPackage(Device.context.packageName)!!
+            Device.context.startActivity(icon.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK))
+            ui.wait(Until.hasObject(By.pkg(Device.context.packageName).depth(0)), 10_000)
+            Thread.sleep((LEFT_S / 2) * 1000)
+            Device.waitFor(app, "window.made", "the lesson made")
+            val made = Device.js(app, "JSON.stringify(window.made)")
+            assertTrue(made, "la mère $run" in made)
+            Thread.sleep(1000) // (ended)
+            assertTrue("kept after the lesson was made", !kept())
+        }
     }
 
     /** The page's main road, as a parent goes it: a photo from the gallery (the photo picker
