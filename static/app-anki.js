@@ -28,6 +28,13 @@ const ankiPart = {
     return this.isVoice(this.voice) && !this.off("speech.speak");
   },
 
+  // Some card the voice reads (as tts.spoken_backs: not a text with gaps, a back with a
+  // formula, a multiple choice): else no voice is said to come with the cards
+  anyRead() {
+    return this.cards.some((c) => (c.front ?? "").trim() && (c.back ?? "").trim() && !this.hasMath(c.back)
+      && !this.isCloze(c.front) && !c.choices?.length && this.spokenText(c));
+  },
+
   // What a card's sound says (as tts.spoken): its back; a dictation's sentence with a blank:
   // the sentence with the word, then the word, each on its line
   // (read on its own: tts.lines)
