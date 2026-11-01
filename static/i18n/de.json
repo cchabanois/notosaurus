@@ -945,6 +945,10 @@
     "working": {
       "channel": "Karten erstellen",
       "title": "Notosaurus erstellt deine Karten …"
+    },
+    "downloads": {
+      "saved": "{name}: in „Downloads“ gespeichert.",
+      "failed": "{name}: konnte nicht auf dem Handy gespeichert werden."
     }
   },
   "setup": {

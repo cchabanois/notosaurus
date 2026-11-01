@@ -227,6 +227,37 @@ class AppTest {
         }
     }
 
+    /** ORD-11: a file the page downloads (the computer's "⬇️ .apkg": a blob: link clicked by its
+     * script, never added to the page) was dropped by the WebView without a word. Now in the
+     * phone's Downloads, under the name the page gave it, its bytes as they were. */
+    @Test
+    fun aFileThePageDownloadsIsInTheDownloads() {
+        if (android.os.Build.VERSION.SDK_INT < android.os.Build.VERSION_CODES.Q) return // Android 9: the user chooses where
+        val name = "Notosaurus test $run.apkg"
+        val resolver = Device.context.contentResolver
+        val downloads = android.provider.MediaStore.Downloads.EXTERNAL_CONTENT_URI
+        fun found(): ByteArray? = resolver.query(
+            downloads, arrayOf(android.provider.MediaStore.Downloads._ID),
+            "${android.provider.MediaStore.Downloads.DISPLAY_NAME} = ?", arrayOf(name), null,
+        )?.use { if (it.moveToFirst()) android.content.ContentUris.withAppendedId(downloads, it.getLong(0)) else null }
+            ?.let { uri -> resolver.openInputStream(uri)?.use { it.readBytes() }.also { resolver.delete(uri, null, null) } }
+        ActivityScenario.launch(MainActivity::class.java).use { app ->
+            Device.waitFor(app, "typeof api === 'function'", "the page")
+            Device.js(
+                app,
+                "(() => { const url = URL.createObjectURL(new Blob(['a package $run'], { type: 'application/apkg' })); " +
+                    "const a = document.createElement('a'); a.href = url; a.download = '$name'; a.click(); return true; })()",
+            )
+            val deadline = System.currentTimeMillis() + 15_000
+            var bytes: ByteArray? = null
+            while (bytes == null && System.currentTimeMillis() < deadline) {
+                Thread.sleep(500)
+                bytes = found()
+            }
+            assertEquals("a package $run", bytes?.decodeToString())
+        }
+    }
+
     /** The page's main road, as a parent goes it: a photo from the gallery (the photo picker
      * answered in the test's place), "Generate cards", the cards shown, "Add to Anki". */
     @Test

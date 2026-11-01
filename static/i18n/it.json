@@ -945,6 +945,10 @@
     "working": {
       "channel": "Creazione delle carte",
       "title": "Notosaurus sta preparando le tue carte…"
+    },
+    "downloads": {
+      "saved": "{name}: salvato in Download.",
+      "failed": "{name}: impossibile salvarlo sul telefono."
     }
   },
   "setup": {

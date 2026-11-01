@@ -16,6 +16,7 @@ import android.webkit.WebResourceError
 import android.webkit.WebResourceRequest
 import android.webkit.WebView
 import android.webkit.WebViewClient
+import android.widget.Toast
 import android.widget.FrameLayout
 import androidx.activity.ComponentActivity
 import androidx.activity.OnBackPressedCallback
@@ -27,6 +28,8 @@ import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.updatePadding
 import androidx.lifecycle.lifecycleScope
+import androidx.webkit.WebViewCompat
+import androidx.webkit.WebViewFeature
 import com.google.mlkit.vision.barcode.common.Barcode
 import com.google.mlkit.vision.codescanner.GmsBarcodeScannerOptions
 import com.google.mlkit.vision.codescanner.GmsBarcodeScanning
@@ -132,6 +135,13 @@ class MainActivity : ComponentActivity() {
             settings.domStorageEnabled = true // the page keeps a few choices in localStorage
             webChromeClient = Chooser()
             webViewClient = Links()
+            // A file the page downloads (the computer's "⬇️ .apkg"): into the phone's Downloads
+            addJavascriptInterface(downloads, PageDownloads.BRIDGE)
+            setDownloadListener { url, _, _, mime, _ -> downloads.take(this, url, mime) }
+            // The names its download links give, kept before the page's own scripts run (else as it loads)
+            if (WebViewFeature.isFeatureSupported(WebViewFeature.DOCUMENT_START_SCRIPT)) {
+                WebViewCompat.addDocumentStartJavaScript(this, PageDownloads.NAMES, setOf("*"))
+            }
         }
         // The page below the status bar, above the navigation bar and the keyboard (a
         // WebView ignores its own padding: its frame takes it)
@@ -226,6 +236,25 @@ class MainActivity : ComponentActivity() {
 
     private fun computerHost(): String? = prefs[LocalServer.COMPUTER]?.let { Uri.parse(it).host }
 
+    // Downloads only from our page or the computer's (the bridge is the WebView's, whatever it shows)
+    private val downloads = PageDownloads(
+        allowed = { url -> url?.let { Uri.parse(it).host }.let { it == "127.0.0.1" || (it != null && it == computerHost()) } },
+        save = { name, mime, data -> lifecycleScope.launch { saveDownload(name, mime, data) } },
+    )
+
+    /** A file the page downloaded, in the phone's Downloads (Android 9: where the user chooses),
+     * said in a toast. */
+    private suspend fun saveDownload(name: String, mime: String, data: ByteArray) {
+        val lang = java.util.Locale.getDefault().language
+        val saved = runCatching {
+            withContext(Dispatchers.IO) { PageDownloads.intoDownloads(this@MainActivity, name, mime, data) }
+                ?: createDocument(name, mime)?.let { document -> withContext(Dispatchers.IO) { document.out.use { it.write(data) } }; document.name }
+        }.getOrNull()
+        val text = if (saved != null) server.text(lang, "android", "downloads", "saved")?.replace("{name}", saved)
+        else server.text(lang, "android", "downloads", "failed")?.replace("{name}", name)
+        Toast.makeText(this, text ?: saved ?: name, Toast.LENGTH_LONG).show()
+    }
+
     /** "✎ Notosaurus" on a card: notosaurus://fix?… (the documentation page's button), or that
      * page's own https address when Android gives it to the app. */
     private fun isFixLink(uri: Uri): Boolean =
@@ -240,6 +269,14 @@ class MainActivity : ComponentActivity() {
     /** The page's links: ours and the computer's stay in the app; others (help, Play Store)
      * go to the browser or the app they're for. The computer not answering: our page saying so. */
     private inner class Links : WebViewClient() {
+        override fun onPageStarted(view: WebView, url: String?, favicon: android.graphics.Bitmap?) {
+            downloads.shown(url)
+        }
+
+        override fun onPageFinished(view: WebView, url: String?) {
+            view.evaluateJavascript(PageDownloads.NAMES, null) // kept once (an older WebView: from now on)
+        }
+
         override fun shouldOverrideUrlLoading(view: WebView, request: WebResourceRequest): Boolean {
             if (request.url.scheme == APP_LINKS) { // from the computer's page: "notosaurus-app:settings"
                 if (request.url.schemeSpecificPart == "settings") view.loadUrl("$origin/admin.html")

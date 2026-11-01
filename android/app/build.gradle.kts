@@ -145,6 +145,7 @@ dependencies {
     // Not used directly: the version the ActivityResult APIs need (an older one comes with the libraries)
     implementation(libs.androidx.fragment)
     implementation(libs.androidx.activity)
+    implementation(libs.androidx.webkit) // the page's download names kept from its start (PageDownloads)
     implementation(libs.okhttp)
     implementation(libs.kotlinx.serialization.json)
     implementation(libs.kotlinx.coroutines.android)
