@@ -890,6 +890,10 @@ class LocalServerTest {
             setBody("""{"name": "Interro SVT de lundi", "date": "2026-10-20", "lessons": [{"lesson": "$id", "cards": ["${ids[0]}"]}]}""")
         }
         assertEquals(emptyMap<String, Set<Long>>() to mapOf("Exam::Interro_SVT_de_lundi" to setOf(12L)), anki.retagged.last())
+        // The page shown those cards, not the whole lesson
+        val part = client.get("/api/exams") { page() }.json().jsonArray.single().jsonObject["lessons"]!!.jsonArray.single().jsonObject
+        assertEquals(listOf(ids[0]), part["cards"]!!.jsonArray.map { it.jsonPrimitive.content })
+        assertEquals(1, part["total"]!!.jsonPrimitive.int)
         client.put("/api/exams/interro-svt") {
             page(); contentType(ContentType.Application.Json)
             setBody("""{"name": "Brevet blanc", "lessons": [{"lesson": "$id"}]}""")
