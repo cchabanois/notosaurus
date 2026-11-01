@@ -437,13 +437,28 @@ async def figure_or_picture(
 # --- The lesson's own drawings: a card's thing drawn on its pages, cut out ---------
 
 DRAWING_MARGIN = 0.04  # of the drawing's width and height, each side: nothing of it cut off
+PAPER_DARKEST = 128  # a darker edge isn't paper (a drawing to the edge): not lightened beyond twice
+
+
+def whiter_paper(drawing):
+    """The paper made white (a photo's is grey or yellow), the drawing's colours kept: each
+    channel scaled so the paper's colour becomes white. The paper's colour: the median of
+    the cut-out's edge (its margin, DRAWING_MARGIN, is paper). Not autocontrast: stretching
+    each channel down to black turns a yellow sun orange, its rays brown."""
+    from statistics import median
+
+    width, height = drawing.size
+    edge = [(x, y) for x in range(width) for y in (0, height - 1)] + [
+        (x, y) for y in range(height) for x in (0, width - 1)
+    ]
+    pixels = [drawing.getpixel(point) for point in edge]
+    paper = [max(PAPER_DARKEST, median(p[band] for p in pixels)) for band in range(3)]
+    return drawing.point([min(255, round(v * 255 / paper[band])) for band in range(3) for v in range(256)])
 
 
 def cut_out(photo: bytes, box: list[float]) -> bytes:
     """A drawing cut out of its page (`box`: fractions of the page, a margin added), its
-    paper made white (a photo's is grey or yellow), card size."""
-    from PIL import ImageOps
-
+    paper made white (whiter_paper), card size."""
     page = images.upright(photo)
     x0, y0, x1, y1 = box
     dx, dy = (x1 - x0) * DRAWING_MARGIN, (y1 - y0) * DRAWING_MARGIN
@@ -454,9 +469,7 @@ def cut_out(photo: bytes, box: list[float]) -> bytes:
         min(1.0, x1 + dx) * width,
         min(1.0, y1 + dy) * height,
     )
-    drawing = ImageOps.autocontrast(
-        page.crop((round(area[0]), round(area[1]), round(area[2]), round(area[3]))), cutoff=1
-    )
+    drawing = whiter_paper(page.crop((round(area[0]), round(area[1]), round(area[2]), round(area[3]))).convert("RGB"))
     drawing.thumbnail((SIDE, SIDE))
     out = io.BytesIO()
     drawing.save(out, "JPEG", quality=QUALITY, optimize=True)
