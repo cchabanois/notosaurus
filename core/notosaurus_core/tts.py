@@ -22,7 +22,7 @@ from pathlib import Path
 import edge_tts
 
 from . import files
-from .cards import is_choice, is_cloze
+from .cards import BLANK, is_choice, is_cloze
 from .errors import loggable
 from .models import Card
 
@@ -50,8 +50,7 @@ def has_math(text: str) -> bool:
     return bool(MATH.search(text))
 
 
-# A sentence's blank for the word to write ("Le chat boit du …"), and what it says in brackets
-BLANK = re.compile(r"…|\.{3}|_{3,}")
+# What a sentence with a blank (cards.BLANK: "Le chat boit du …") says in brackets
 BRACKETS = re.compile(r"\s*\([^)]*\)")
 # A phonetic transcription, between slashes or square brackets ("/ɜː/", "[ˈtaɪɡə]"): a voice
 # would read the slashes and guess at the symbols. Between slashes: no space, no digit (a
