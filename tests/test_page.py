@@ -1405,6 +1405,42 @@ def test_a_photo_turned_turns_what_it_hides(page):
     assert original.getextrema()[0] > 215
 
 
+def test_a_photo_put_in_place_of_another_turns_itself(page):
+    """A saved lesson's photo removed, another chosen from the gallery, then turned: that one
+    turned, in the page. It turned the lesson's old photo at the server, by its number, and
+    showed it in place of the new one (the page's photos no longer the server's)."""
+    page.goto("/")
+    gallery = page.locator('input[type=file][accept="image/*"][multiple]')
+    gallery.set_input_files({"name": "p1.png", "mimeType": "image/png", "buffer": png("white")})
+    page.locator(".chip").first.click()  # the free prompt
+    page.locator("textarea[x-ref=promptText]").fill(FRONT_PROMPT)
+    page.get_by_role("button", name="✨ Générer les cartes").click()
+    page.locator(".flash").first.wait_for()
+    (summary,) = lessons(page)
+
+    page.locator(".thumb-remove").first.click()
+    gallery.set_input_files({"name": "p2.png", "mimeType": "image/png", "buffer": png("blue")})
+    sync_api.expect(page.locator(".thumb-rotate")).to_have_count(1)
+    shown = "Alpine.$data(document.querySelector('[x-data]')).photos[0].blob"
+    page.evaluate(f"window.before = {shown}")
+    page.locator(".thumb-rotate").first.click()
+    page.wait_for_function(f"{shown} !== window.before")  # turned, wherever it was
+    data = page.evaluate(
+        """async () => {
+            const blob = Alpine.$data(document.querySelector('[x-data]')).photos[0].blob;
+            const bytes = new Uint8Array(await blob.arrayBuffer());
+            let s = "";
+            for (const b of bytes) s += String.fromCharCode(b);
+            return btoa(s);
+        }"""
+    )
+    shown = PILImage.open(io.BytesIO(base64.b64decode(data))).convert("RGB")
+    assert shown.size == (800, 600)  # turned: 600 × 800 before
+    red, green, blue = shown.getpixel((400, 300))
+    assert blue > 200 and red < 60, (red, green, blue)  # the new photo, not the lesson's white one
+    assert lesson(page, summary["id"])["photo_count"] == 1  # the lesson's own untouched until sent
+
+
 def test_the_next_page_added_days_later(page):
     """A lesson reopened, a page added: "Add the new page's cards" reads it alone, its cards
     come after the lesson's (marked new), the ones made already stay."""
