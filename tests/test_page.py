@@ -131,6 +131,45 @@ def generate_free(page, prompt: str) -> None:
     page.locator(".flash").first.wait_for()
 
 
+def test_the_prompt_folds_once_the_cards_are_made(page):
+    """Once the lesson has cards, step 2 is one line (its prompt, its speed): the cards come
+    first. Its buttons stay; "✏️ Modifier" opens it; a prompt changed since says it isn't
+    applied until made again, then folds again."""
+    generate_free(page, "Les capitales d'Europe")
+    folded = page.locator(".prompt-folded")
+    sync_api.expect(folded).to_be_visible()
+    sync_api.expect(folded).to_contain_text("✏️ Libre")
+    sync_api.expect(folded).to_contain_text("Les capitales d'Europe")
+    sync_api.expect(page.locator("textarea[x-ref=promptText]")).to_be_hidden()
+    sync_api.expect(page.get_by_role("radio", name="✏️ Libre")).to_be_hidden()
+    regenerate = page.get_by_role("button", name="✨ Régénérer")
+    sync_api.expect(regenerate).to_be_visible()  # its button in view, folded
+    not_applied = page.get_by_text("Modifiée depuis la création des cartes")
+    sync_api.expect(not_applied).to_be_hidden()
+
+    folded.get_by_role("button", name="✏️ Modifier").click()
+    sync_api.expect(folded).to_be_hidden()
+    page.locator("textarea[x-ref=promptText]").fill("Les capitales d'Europe et leurs pays")
+    sync_api.expect(not_applied).to_be_visible()
+
+    regenerate.click()
+    sync_api.expect(folded).to_be_visible()  # made again: folded again
+    sync_api.expect(folded).to_contain_text("et leurs pays")
+    sync_api.expect(not_applied).to_be_hidden()
+
+    page.get_by_role("button", name="Nouvelle leçon").click()  # no cards: open, as before
+    sync_api.expect(page.locator("textarea[x-ref=promptText]")).to_be_visible()
+    sync_api.expect(folded).to_be_hidden()
+
+
+def open_prompt(page) -> None:
+    """Step 2 opened, as a parent does once the lesson has cards (folded then)."""
+    folded = page.locator(".prompt-folded")
+    if folded.is_visible():
+        folded.get_by_role("button", name="✏️ Modifier").click()
+    sync_api.expect(page.locator("textarea[x-ref=promptText]")).to_be_visible()
+
+
 def test_the_main_button_takes_the_first_photo(page):
     """No photo yet: "📷 Photographiez la leçon" is not a dead button, it opens the camera."""
     page.goto("/")
@@ -361,6 +400,7 @@ def test_formulas_drawn_in_the_info_and_the_fun_fact(page):
 def test_generate_again_in_place_then_undo(page):
     generate_free(page, FRONT_PROMPT)
     (first,) = lessons(page)
+    open_prompt(page)
     page.locator("textarea[x-ref=promptText]").fill(CLOZE_PROMPT)
     page.get_by_role("button", name="✨ Régénérer").click()
     sync_api.expect(page.locator(".math-preview .gap").first).to_be_visible()  # the gaps, numbered
@@ -777,10 +817,14 @@ def test_quick_by_default_then_again_carefully(page):
     body = next(b for u, b in sent if "/regenerate" in u)
     assert 'name="quick"' not in body
     assert len(lessons(page)) == 1  # in its place
-    sync_api.expect(quick).to_have_attribute("aria-checked", "true")  # the choice above stays
+    sync_api.expect(page.locator(".prompt-folded")).to_contain_text("⚡ Rapide")  # the choice above stays
+    open_prompt(page)
+    sync_api.expect(quick).to_have_attribute("aria-checked", "true")
 
     page.get_by_role("radio", name="🎯 Soigné").click()
     page.reload()  # kept on the device
+    started(page)
+    open_prompt(page)
     sync_api.expect(page.get_by_role("radio", name="🎯 Soigné")).to_have_attribute("aria-checked", "true")
 
 
@@ -1163,6 +1207,7 @@ def test_pdf_text_kept_with_its_page(page, browser):
     page.reload()
     started(page)
     sync_api.expect(page.locator(".thumb img")).to_have_count(1)
+    open_prompt(page)
     sync_api.expect(page.locator("textarea[x-ref=promptText]")).to_have_value("Une carte par date")
     page.locator("textarea[x-ref=promptText]").fill("Une carte par lieu")
     page.get_by_role("button", name="✨ Régénérer").click()
@@ -2052,8 +2097,9 @@ def test_dictation_in_the_app(page):
     page.locator("textarea[x-ref=promptText]").fill(FRONT_PROMPT)
     page.get_by_role("button", name="✨ Générer à partir de la consigne seule").click()
     page.locator(".flash").first.wait_for()
-    sync_api.expect(page.get_by_role("button", name="Dicter")).to_have_count(2)
     sync_api.expect(page.locator(".revise").get_by_role("button", name="Dicter")).to_be_visible()
+    open_prompt(page)  # folded once the cards are made: its 🎤 with it
+    sync_api.expect(page.get_by_role("button", name="Dicter")).to_have_count(2)
     sync_api.expect(page.locator(".save-pill")).not_to_have_class(re.compile(r"\berror\b"))
     sync_api.expect(page.get_by_role("button", name="Dicter").first).to_be_enabled()
 

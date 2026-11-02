@@ -89,6 +89,8 @@
       "newHint": "Crea istruzioni salvate, da riutilizzare",
       "text": "Testo delle istruzioni",
       "modified": "✏️ Modificate solo per questa volta.",
+      "unfold": "✏️ Modifica",
+      "notApplied": "✏️ Modificata da quando le carte sono state create: “✨ Genera di nuovo” la applica.",
       "edit": "✏️ Modifica le istruzioni",
       "saveAsNew": "💾 Salva come nuove istruzioni",
       "complete": {
@@ -159,7 +161,6 @@
       "noCardsWithoutPhoto": "Non c'è nessuna foto: la consegna deve dire cosa imparare, un elenco di parole o un argomento.",
       "owner": "🧒 Lezione di <strong>{owner}</strong>",
       "choice": "🤖 {choice}",
-      "promptUsed": "📝 Istruzioni usate per questa lezione",
       "clozeHint": "Testo da completare (cloze in Anki): {{c1::…}} nasconde ciò che sta tra le graffe. Ogni numero dà una carta in Anki; lo stesso numero nasconde più spazi insieme.",
       "diagramHint": "Schema: trascina una maschera rossa per spostarla e il suo angolo tondo per ridimensionarla, in modo che nasconda tutto il nome. La cornice tratteggiata è ciò che Anki mostra della foto: trascina i suoi angoli blu per ritagliarla.",
       "diagramWarning": "Con questo modello di IA (Claude), sulla scrittura a mano le maschere a volte sono troppo piccole: controlla che nascondano tutto il nome.",

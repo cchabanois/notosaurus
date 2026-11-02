@@ -27,6 +27,24 @@ const lessonsPart = {
     return this.lessonId ? this.photos.filter((p) => !p.sent) : [];
   },
 
+  // Step 2 once the lesson has cards: folded to one line (its prompt, its speed), the cards
+  // first; "✏️ Change" opens it. Its buttons (made again, the new pages) stay in view
+  promptFolded() {
+    return this.cards.length > 0 && !this.promptOpen;
+  },
+
+  promptSummary() {
+    const chosen = this.current();
+    const name = chosen ? (chosen.builtin ? "⭐ " : "") + chosen.name : t("app.prompt.free");
+    if (this.off("ai.careful")) return name;
+    return `${name} · ${t(this.quick ? "app.prompt.quick" : "app.prompt.careful")}`;
+  },
+
+  // The prompt changed since the lesson's cards were made: not applied until made again
+  promptNotApplied() {
+    return Boolean(this.lessonId && this.lessonPrompt.trim()) && this.form.text.trim() !== this.lessonPrompt.trim();
+  },
+
   // "Add the new pages' cards": only they are read, the lesson's cards stay as they are
   canComplete() {
     return this.regeneratesInPlace() && this.cards.length > 0 && this.newPages().length > 0 && !this.off("lesson.complete");
@@ -213,6 +231,7 @@ const lessonsPart = {
     this.lessonShared = lesson.shared ?? false;
     this.lessonChild = lesson.child ?? "";
     this.lessonPrompt = lesson.prompt ?? "";
+    this.promptOpen = false;  // made or reopened: the cards first, its prompt in one line
     this.lessonChoice = lesson.choice ?? "";
     this.lessonExported = Boolean(lesson.exported_at);
     this.photosEdited = false;

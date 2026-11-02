@@ -225,6 +225,7 @@ document.addEventListener("alpine:init", () => {
     examSheet: { open: false, view: "list", exam: null, draft: { name: "", date: "" }, busy: false, error: "", copied: false, reviewed: "", sendingLeft: 0, alone: false, adding: { query: "", chosen: [] } },
     examPick: null,  // choosing the open lesson's cards for a test: { id, name, selected: Set }
     lessonPrompt: "",            // prompt text the open lesson was generated with
+    promptOpen: false,           // step 2 unfolded ("✏️ Change") though the lesson has cards
     frames: [],                  // diagram frames of the open lesson: what Anki shows of each photo
     sending: false,
     sendStep: "",                // what the send is doing (its sounds, its cards), on its button

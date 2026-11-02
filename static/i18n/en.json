@@ -89,6 +89,8 @@
       "newHint": "Create a saved prompt, to use again",
       "text": "Instructions text",
       "modified": "✏️ Changed for this time only.",
+      "unfold": "✏️ Change",
+      "notApplied": "✏️ Changed since the cards were made: “✨ Generate again” applies it.",
       "edit": "✏️ Edit instructions",
       "saveAsNew": "💾 Save as new instructions",
       "complete": {
@@ -159,7 +161,6 @@
       "noCardsWithoutPhoto": "There is no photo: the prompt must say what to learn, a list of words or a topic.",
       "owner": "🧒 <strong>{owner}</strong>'s lesson",
       "choice": "🤖 {choice}",
-      "promptUsed": "📝 Instructions used for this lesson",
       "clozeHint": "Cloze: {{c1::…}} hides what is between the braces. Each number makes one card in Anki; the same number hides several gaps together.",
       "diagramHint": "Diagram: drag a red mask to move it, its round corner to resize it, so it hides the whole label. The dashed frame is what Anki shows of the photo: drag its blue corners to crop it.",
       "diagramWarning": "With this AI model (Claude), masks are sometimes too small on handwriting: check that they hide the whole label.",

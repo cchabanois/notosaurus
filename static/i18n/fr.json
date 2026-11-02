@@ -89,6 +89,8 @@
       "newHint": "Créer une consigne enregistrée, à réutiliser",
       "text": "Texte de la consigne",
       "modified": "✏️ Modifiée pour cette fois seulement.",
+      "unfold": "✏️ Modifier",
+      "notApplied": "✏️ Modifiée depuis la création des cartes : « ✨ Régénérer » l'applique.",
       "edit": "✏️ Modifier la consigne",
       "saveAsNew": "💾 Enregistrer comme nouvelle consigne",
       "complete": {
@@ -159,7 +161,6 @@
       "noCardsWithoutPhoto": "Il n'y a pas de photo : la consigne doit dire quoi apprendre, une liste de mots ou un thème.",
       "owner": "🧒 Leçon de <strong>{owner}</strong>",
       "choice": "🤖 {choice}",
-      "promptUsed": "📝 Consigne utilisée pour cette leçon",
       "clozeHint": "Texte à trous : {{c1::…}} cache ce qui est entre les accolades. Chaque numéro donne une carte dans Anki ; le même numéro cache plusieurs trous ensemble.",
       "diagramHint": "Schéma : faites glisser un masque rouge pour le déplacer, et son coin rond pour l'agrandir, afin qu'il cache tout le nom. Le cadre en pointillés est ce qu'Anki montrera de la photo : faites glisser ses coins bleus pour le recadrer.",
       "diagramWarning": "Avec ce modèle d'IA (Claude), les masques sont parfois trop petits sur l'écriture manuscrite : vérifiez qu'ils cachent bien tout le nom.",
