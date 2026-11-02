@@ -1178,6 +1178,25 @@ def add_photo(page, buffer: bytes) -> None:
     sync_api.expect(page.locator(".thumb img")).to_have_count(1)
 
 
+def test_the_add_buttons_fit_beside_the_pages_on_a_phone(page):
+    """Pages taken: the camera, gallery and PDF buttons side by side on a row under them, no
+    taller than a page (three in one page's cell, stacked, made it twice as tall)."""
+    page.set_viewport_size({"width": 411, "height": 860})
+    page.goto("/")
+    page.locator('input[type=file][accept="image/*"][multiple]').set_input_files(
+        [
+            {"name": f"page-{n}.png", "mimeType": "image/png", "buffer": plain_image(300, 400, color)}
+            for n, color in enumerate(("red", "blue", "green"))
+        ]
+    )
+    sync_api.expect(page.locator(".thumb img")).to_have_count(3)
+    thumb = page.locator(".thumb").first.bounding_box()
+    tiles = [t.bounding_box() for t in page.locator(".add-tile:visible").all()]
+    assert len(tiles) == 3
+    assert len({round(t["y"]) for t in tiles}) == 1, tiles  # one row
+    assert all(t["height"] <= thumb["height"] for t in tiles), (thumb, tiles)
+
+
 def test_the_lesson_in_progress_found_again(page):
     """Left before it is made (the settings, a link, the phone closing the app): its photos
     and its prompt found again when the page opens again; once made, the lesson open again;

@@ -275,15 +275,16 @@ h2 {
   gap: .6rem;
 }
 
-.thumb, .add-stack { aspect-ratio: 3 / 4; }
+.thumb { aspect-ratio: 3 / 4; }
 .thumb, .add-tile { border-radius: var(--radius-sm); }
 
-/* Both "add" buttons share one cell next to the pages… */
-.add-stack { display: flex; flex-direction: column; gap: .5rem; }
+/* The "add" buttons side by side on a row of their own, under the pages (three in one page's
+   cell grew it twice as tall)… */
+.add-stack { grid-column: 1 / -1; display: flex; gap: .5rem; min-height: 4.5rem; }  /* taller with a larger text */
 .add-stack .add-tile { flex: 1; gap: .1rem; font-size: .78rem; }
 .add-stack .add-icon { font-size: 1.3rem; }
-/* …and take the whole row, side by side, before the first photo. */
-.strip:not(:has(.thumb)) .add-stack { grid-column: 1 / -1; flex-direction: row; aspect-ratio: auto; min-height: 8rem; }  /* taller with a larger text */
+/* …larger before the first photo. */
+.strip:not(:has(.thumb)) .add-stack { min-height: 8rem; }
 .strip:not(:has(.thumb)) .add-tile { font-size: .9rem; gap: .35rem; }
 .strip:not(:has(.thumb)) .add-icon { font-size: 1.7rem; }
 .thumb { position: relative; margin: 0; overflow: hidden; background: var(--surface-2); }
