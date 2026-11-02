@@ -1179,22 +1179,21 @@ def add_photo(page, buffer: bytes) -> None:
 
 
 def test_the_add_buttons_fit_beside_the_pages_on_a_phone(page):
-    """Pages taken: the camera, gallery and PDF buttons side by side on a row under them, no
-    taller than a page (three in one page's cell, stacked, made it twice as tall)."""
+    """Pages taken: the camera, gallery and PDF buttons share the next page's cell, no taller
+    than a page, their names whole (three stacked as they were made it half as tall again)."""
     page.set_viewport_size({"width": 411, "height": 860})
     page.goto("/")
-    page.locator('input[type=file][accept="image/*"][multiple]').set_input_files(
-        [
+    for n, color in enumerate(("red", "blue", "green"), start=1):
+        page.locator('input[type=file][accept="image/*"][multiple]').set_input_files(
             {"name": f"page-{n}.png", "mimeType": "image/png", "buffer": plain_image(300, 400, color)}
-            for n, color in enumerate(("red", "blue", "green"))
-        ]
-    )
-    sync_api.expect(page.locator(".thumb img")).to_have_count(3)
-    thumb = page.locator(".thumb").first.bounding_box()
-    tiles = [t.bounding_box() for t in page.locator(".add-tile:visible").all()]
-    assert len(tiles) == 3
-    assert len({round(t["y"]) for t in tiles}) == 1, tiles  # one row
-    assert all(t["height"] <= thumb["height"] for t in tiles), (thumb, tiles)
+        )
+        sync_api.expect(page.locator(".thumb img")).to_have_count(n)
+        thumb = page.locator(".thumb").first.bounding_box()
+        stack = page.locator(".add-stack").bounding_box()
+        assert stack["height"] <= thumb["height"] + 1, (n, thumb, stack)
+        assert stack["width"] <= thumb["width"] + 1, (n, thumb, stack)  # a page's cell, not a row
+        cut = "[...document.querySelectorAll('.add-stack .add-tile')].some(e => e.scrollWidth > e.clientWidth + 1)"
+        assert not page.evaluate(cut), n
 
 
 def test_the_lesson_in_progress_found_again(page):
