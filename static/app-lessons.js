@@ -14,6 +14,10 @@ function findLinkedCard(cards, key) {
   );
 }
 
+// A prompt's text as written, whatever its line ends: a form sends them as \r\n (HTML's rule),
+// kept so in the lesson, where the page's own text has \n
+const samePrompt = (a, b) => (a ?? "").replace(/\r\n?/g, "\n").trim() === (b ?? "").replace(/\r\n?/g, "\n").trim();
+
 const lessonsPart = {
   // --- Extraction -----------------------------------------------------
   // A lesson open and ours: generating again replaces its cards (no second lesson).
@@ -42,7 +46,7 @@ const lessonsPart = {
 
   // The prompt changed since the lesson's cards were made: not applied until made again
   promptNotApplied() {
-    return Boolean(this.lessonId && this.lessonPrompt.trim()) && this.form.text.trim() !== this.lessonPrompt.trim();
+    return Boolean(this.lessonId && this.lessonPrompt.trim()) && !samePrompt(this.form.text, this.lessonPrompt);
   },
 
   // "Add the new pages' cards": only they are read, the lesson's cards stay as they are
@@ -288,7 +292,7 @@ const lessonsPart = {
   // again" starts from it; the saved prompt with that exact text is selected, if any.
   usePromptOf(lesson) {
     if (!lesson.prompt) return;
-    const saved = this.prompts.find((c) => c.text === lesson.prompt);
+    const saved = this.prompts.find((c) => samePrompt(c.text, lesson.prompt));
     this.selectedId = saved?.id ?? null;
     this.form = saved
       ? { name: saved.name, text: saved.text, deck: saved.deck, voice: saved.voice, typing: saved.typing, dictation: saved.dictation,
