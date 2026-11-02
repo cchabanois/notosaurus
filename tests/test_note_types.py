@@ -80,3 +80,15 @@ def test_fields_changed_only_with_a_new_version():
         version = common.VERSIONS[nt.family]
         assert [f for f in nt.fields if f != "Audio"] == FIELDS[(nt.family, version)], key
         assert nt.name.endswith(f" v{version}") == (version > 1), key
+
+
+def test_a_new_version_a_new_id():
+    """Anki tells note types apart by id (a package's note type with an id the collection has
+    is taken for it): a version's id is never another's, nor 1.0.0's for the same family and
+    options (genanki writes it in every .apkg). Version 1's ids as they were."""
+    variants = tool().variants()
+    ids = [common.model_id(nt) for nt in variants.values()]
+    assert len(set(ids)) == len(ids)
+    for key, nt in variants.items():
+        first = common.stable_id("model", nt.kind, str(nt.reverse), *([nt.variant] if nt.variant else []))  # 1.0.0's
+        assert (common.model_id(nt) == first) == (common.VERSIONS[nt.family] == 1), key

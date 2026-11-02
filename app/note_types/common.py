@@ -201,8 +201,17 @@ def model_id(nt: NoteType) -> int:
     """The note type's id, the same in every package and in a direct send (through the
     add-on): Anki tells note types apart by id, so they never come twice. Reverse card
     or not, then the options: unique per note type. (Before the dictation card, "two
-    templates" meant the reverse card: same ids as then.)"""
-    return stable_id("model", nt.kind, str(nt.reverse), *([nt.variant] if nt.variant else []))
+    templates" meant the reverse card: same ids as then.) Its version past the first: a new
+    version is a new note type, another id (else a package's, with other fields, is taken for
+    the one of that id the collection has)."""
+    version = VERSIONS[nt.family]
+    return stable_id(
+        "model",
+        nt.kind,
+        str(nt.reverse),
+        *([nt.variant] if nt.variant else []),
+        *([f"v{version}"] if version > 1 else []),
+    )
 
 
 def typed(template: dict, field: str) -> dict:
