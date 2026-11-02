@@ -42,6 +42,37 @@ class RelayTest {
         assertTrue("Content-Type: image/jpeg" in body)
     }
 
+    /** The app kept running (Busy) around the relay's calls whose work a lesson waits for: the
+     * AI's, the lesson's own drawings, its sounds, the free pictures; not the voices nor the
+     * account. Only the AI's start the free trial (a call without a key). */
+    @Test
+    fun theAppKeptRunningAroundALessonsWork() = runBlocking {
+        val told = mutableListOf<String>()
+        val busy = object : Relay.Busy {
+            override fun begin() { told += "begin" }
+            override fun end() { told += "end" }
+        }
+        var trials = 0
+        val relay = Relay(server.url("/").toString(), "", noKey = { trials++; "nts_trial" }, busy = busy)
+        fun kept(what: String, answer: String = "{}", call: suspend () -> Unit) {
+            told.clear()
+            server.enqueue(MockResponse.Builder().body(answer).build())
+            runBlocking { call() }
+            assertEquals(what, listOf("begin", "end"), told)
+        }
+        kept("the lesson's drawings") { relay.withPhotos("lesson-drawings", buildJsonObject {}, listOf("photo".toByteArray())) }
+        kept("a sound") { relay.speak("la madre", "es-ES-Chirp3-HD-Puck") }
+        kept("free pictures", """{"done": true, "results": []}""") { relay.searchPictures("une trousse") }
+        kept("a free picture") { relay.foundPicture("openverse", "1") }
+        assertEquals("not the AI's: no trial", 0, trials)
+        told.clear()
+        server.enqueue(MockResponse.Builder().body("[]").build())
+        relay.voices()
+        assertEquals("the voices", emptyList<String>(), told)
+        kept("the AI's", """{"text": "bonjour"}""") { relay.post("rephrase", buildJsonObject {}) }
+        assertEquals("the AI's: the trial", 1, trials)
+    }
+
     @Test
     fun aSubscriptionPastItsEndTold() = runBlocking {
         var lapsed = 0

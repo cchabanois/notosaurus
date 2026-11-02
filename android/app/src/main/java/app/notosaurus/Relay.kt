@@ -64,9 +64,9 @@ class Relay(
     private val rejected: (String) -> Unit = {}, // the key sent, unknown or ended at the relay: no longer kept
     // No key yet, an AI call: the free trial's key (started then), or an error thrown (null: none, the call without it)
     private val noKey: (suspend () -> String)? = null,
-    private val busy: Busy = Busy.NONE, // told while the AI works (the app kept running meanwhile: Working)
+    private val busy: Busy = Busy.NONE, // told while a lesson waits for the relay (the app kept running meanwhile: Working)
 ) {
-    /** Told when an AI call begins and when it ends, overlapping ones each. */
+    /** Told when a kept call (KEPT_ROUTES) begins and when it ends, overlapping ones each. */
     interface Busy {
         fun begin()
         fun end()
@@ -79,9 +79,9 @@ class Relay(
         }
     }
 
-    /** `work`, `busy` told around it when `route` makes the AI work. */
+    /** `work`, `busy` told around it when a lesson waits for `route`'s work (KEPT_ROUTES). */
     private suspend fun <T> working(route: String, work: suspend () -> T): T {
-        if (route !in AI_ROUTES) return work()
+        if (route !in KEPT_ROUTES) return work()
         busy.begin()
         try {
             return work()
@@ -206,7 +206,7 @@ class Relay(
             put("voice", voice)
             put("rate", rate)
         }
-        return open("speak", request.toString().toRequestBody(JSON)).use { it.body.bytes() }
+        return working("speak") { open("speak", request.toString().toRequestBody(JSON)).use { it.body.bytes() } }
     }
 
     /** A picture answer: the JPEG, and where it comes from (PICTURE_SOURCE_HEADER; null from an older relay). */
@@ -232,10 +232,12 @@ class Relay(
             put("translate", words.isBlank()) // what the user wrote, any language
             put("sort", true)
         }
-        return open("pictures/search", request.toString().toRequestBody(JSON), stream = true).use { response ->
-            val answer = streamed(response, "done") { line -> line["found"]?.jsonArray?.let { onFound(it) } }
-            answer["results"]?.jsonArray?.takeIf { it.isNotEmpty() }?.let { onFound(it) } // all at once
-            answer
+        return working("pictures/search") {
+            open("pictures/search", request.toString().toRequestBody(JSON), stream = true).use { response ->
+                val answer = streamed(response, "done") { line -> line["found"]?.jsonArray?.let { onFound(it) } }
+                answer["results"]?.jsonArray?.takeIf { it.isNotEmpty() }?.let { onFound(it) } // all at once
+                answer
+            }
         }
     }
 
@@ -245,7 +247,7 @@ class Relay(
             put("source", source)
             put("id", id)
         }
-        return open("pictures/found", request.toString().toRequestBody(JSON)).use(::picture)
+        return working("pictures/found") { open("pictures/found", request.toString().toRequestBody(JSON)).use(::picture) }
     }
 
     /** A JSON route (explain, figure). */
@@ -307,6 +309,11 @@ class Relay(
         // The AI's routes: the first one called without a key starts the free trial (not reading
         // aloud, the voices, the free pictures, a report: they come after a lesson, or need none)
         val AI_ROUTES = setOf("extract", "revise", "fix-card", "explain", "rephrase", "figure", "check-figure", "picture", "card-picture", "plan-picture", "transcribe")
+
+        // The app kept running around them (Busy, Working): a lesson waits for their work, left
+        // in the background too. The AI's, and what comes with a lesson: its own drawings (just
+        // after it is made), its sounds (sent to AnkiDroid), the free pictures
+        val KEPT_ROUTES = AI_ROUTES + setOf("lesson-drawings", "speak", "pictures/search", "pictures/found")
 
         // The relay's answers for a subscription past its end: ended, on hold, or the free trial over
         const val INVALID_KEY = "relay.invalid_key"

@@ -9,10 +9,13 @@ import android.content.Context
 import android.content.Intent
 import android.content.pm.ServiceInfo
 import android.os.Build
+import android.os.Handler
 import android.os.IBinder
+import android.os.Looper
 
 /**
- * The app kept running while the AI works for it (a lesson made, a picture drawn, Relay.Busy).
+ * The app kept running while a lesson waits for the relay (Relay.Busy, KEPT_ROUTES): made, its
+ * drawings and pictures, its sounds sent to AnkiDroid; and while it is sent (AnkiRoutes).
  * Left in the background, Android soon caches the app and, since Android 15, cuts its network:
  * its call to the relay with it (INT-01: home or the screen off a minute during a careful lesson,
  * no card and "can't reach the Notosaurus service"). A short foreground service while at least
@@ -26,6 +29,7 @@ class Working(private val context: Context, private val text: (String) -> String
 
     override fun begin() = synchronized(this) {
         calls++
+        main.removeCallbacks(idle)
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.UPSIDE_DOWN_CAKE || service != null || starting) return@synchronized
         try {
             context.startForegroundService(Intent(context, WorkingService::class.java))
@@ -35,16 +39,23 @@ class Working(private val context: Context, private val text: (String) -> String
         }
     }
 
+    // Stopped a moment after the last call: the next one, begun in the background meanwhile (the
+    // lesson's drawings after it is made, the next sounds), could start no service of its own
+    private val main = Handler(Looper.getMainLooper())
+    // Only the app's current one: an activity made again makes a new Working, the same service
+    // handed over to it (one stopping it would stop the new one's calls)
+    private val idle = Runnable { synchronized(this) { if (calls == 0 && current === this) service?.let { stopping(it) } } }
+
     override fun end() = synchronized(this) {
         calls--
-        if (calls == 0) service?.let { stopping(it) }
+        if (calls == 0) main.postDelayed(idle, GRACE_MS)
     }
 
-    /** The service started (it is in the foreground now): false when no call runs any more. */
+    /** The service started (it is in the foreground now): kept, a moment more when no call runs any more. */
     internal fun started(started: WorkingService): Boolean = synchronized(this) {
         starting = false
-        if (calls == 0) return@synchronized false
         service = started
+        if (calls == 0) main.postDelayed(idle, GRACE_MS)
         true
     }
 
@@ -66,6 +77,7 @@ class Working(private val context: Context, private val text: (String) -> String
 
     companion object {
         private const val CHANNEL = "working"
+        internal const val GRACE_MS = 10_000L // a pause between two calls of the same work
         @SuppressLint("StaticFieldLeak") // the application's context, not an activity's
         internal var current: Working? = null // the app's, for its service
     }
