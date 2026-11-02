@@ -77,9 +77,9 @@ class AnkiDroidTest {
         assertEquals(1, api.findDuplicateNotes(api.modelList!!.entries.first { it.value == type.name }.key, "soleil $run").size)
     }
 
-    /** A note type an older Notosaurus made (synced from the computer's 1.0.0), without a picture's
-     * fields: AnkiDroid can't add them, and templates naming them would show an error on every
-     * card. Kept as it is (the computer adds them, then a sync brings them), its cards still sent. */
+    /** A note type lacking fields under today's name (never made so since note types have
+     * versions: kept for safety): AnkiDroid can't add them, and templates naming them would show
+     * an error on every card. Kept as it is, its cards still sent. */
     @Test
     fun aNoteTypeLackingFieldsKeptAsItIs() {
         val type = types["text+reverse+typing+dictation"]
@@ -296,6 +296,38 @@ class AnkiDroidTest {
         assertEquals(listOf(0, 1), listOf(fixed.added, fixed.updated))
         val now = soundOf(api.getNote(note)!!.fields)
         assertTrue(now, now.startsWith("gata-$run") && now in media())
+    }
+
+    /** Release test (build 425): AnkiDroid holds the note types of an older Notosaurus (the
+     * computer's 1.0.0, synced; a test build), the same names, without a picture's fields
+     * (Picture, BackPicture, Id, Source). A lesson with a picture sent from the phone alone: its
+     * cards in today's version of the note type ("… v2", made here), the picture there, and its
+     * notes just added never offered as leftovers (found by their key, an Id the old one lacks:
+     * "delete the 5 from Anki" deleted the lesson just sent). */
+    @Test
+    fun aPictureSentWhereAnOlderNoteTypeLacksItsFields() {
+        val anki = Anki(Device.context)
+        val api = AddContentApi(Device.context)
+        val type = types["text"]
+        val older = type.name.removeSuffix(" v2")
+        assertTrue("today's has a version", older != type.name)
+        if (api.modelList!!.values.none { it == older }) {
+            val fields = listOf("Front", "Back", "Info", "Audio", "Explanation", "Mnemonic") // the 1.0.0's
+            api.addNewCustomModel(older, fields.toTypedArray(), arrayOf("Recto → Verso"), arrayOf("{{Front}}"), arrayOf("{{Back}}"), ".card {}", null, 0)
+        }
+        val lesson = "older-$run"
+        val picture = File(Device.context.filesDir, "lessons/$lesson/images/picture-o-$run.jpg").apply {
+            parentFile!!.mkdirs()
+            outputStream().use { Bitmap.createBitmap(20, 20, Bitmap.Config.ARGB_8888).compress(Bitmap.CompressFormat.JPEG, 80, it) }
+        }
+        val cards = listOf(Card("le hibou $run", "el búho", id = "o-$run", picture = picture.name), Card("la chouette $run", "la lechuza", id = "c-$run"))
+        val sent = anki.send(Deck("Notosaurus test $run", cards), Media(pictures = mapOf(picture.name to picture), lesson = lesson))
+        assertEquals(2, sent.added)
+        val note = api.getNote(sent.notes.getValue("o-$run"))!!
+        val model = noteModel(note.id)
+        assertEquals(type.name, api.modelList!![model])
+        assertTrue(field(model, note.fields, "Picture").startsWith("<img"))
+        assertEquals(emptyList<Leftover>(), anki.leftovers(lesson, sent.notes.values.toSet() + sent.fresh))
     }
 
     @Test

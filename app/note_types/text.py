@@ -15,6 +15,7 @@ from .common import (
     fix_link,
     typed,
     variant,
+    versioned,
     with_context,
 )
 
@@ -78,7 +79,7 @@ def note_type(
         name, option = variant("Notosaurus recto/verso" + (" + inverse" if reverse else ""), typing, dictation)
     templates = with_context(templates)
     return NoteType(
-        f"{name} ({kind})",
+        versioned(f"{name} ({kind})"),
         kind,
         tuple(fields),
         templates,

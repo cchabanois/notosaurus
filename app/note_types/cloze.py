@@ -1,6 +1,6 @@
 """Cloze cards: a text with gaps, one card per gap number."""
 
-from .common import BACK_INFO, CSS, HELP_FIELDS, NoteType, field_html, fix_link, helps, info, with_context
+from .common import BACK_INFO, CSS, HELP_FIELDS, NoteType, field_html, fix_link, helps, info, versioned, with_context
 
 CLOZE_CSS = """\
 .cloze { font-weight: 700; color: #0b5cad; }
@@ -23,7 +23,9 @@ def cloze_note_type() -> NoteType:
     )
     fields = ("Text", "Extra", "Info", "Id", *HELP_FIELDS)
     templates = with_context(templates)
-    return NoteType("Notosaurus texte à trous", "cloze", fields, templates, css=CSS + CLOZE_CSS, key="Id", cloze=True)
+    return NoteType(
+        versioned("Notosaurus texte à trous"), "cloze", fields, templates, css=CSS + CLOZE_CSS, key="Id", cloze=True
+    )
 
 
 def cloze_fields(card, card_id: str) -> dict[str, str]:

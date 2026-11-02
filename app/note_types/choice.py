@@ -17,6 +17,7 @@ from .common import (
     helps,
     info,
     stable_id,
+    versioned,
     with_context,
 )
 from .picture import source
@@ -81,7 +82,7 @@ def choice_note_type() -> NoteType:
         SOURCE_FIELD,
     )
     css = CSS + PICTURE_CSS + CHOICE_CSS
-    return NoteType("Notosaurus QCM", "choice", fields, with_context(templates), css=css, key="Id")
+    return NoteType(versioned("Notosaurus QCM"), "choice", fields, with_context(templates), css=css, key="Id")
 
 
 def choice_fields(card, card_id: str, picture_file: Path | None) -> dict[str, str]:

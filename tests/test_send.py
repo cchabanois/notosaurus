@@ -244,12 +244,30 @@ def test_options_changed_after_a_send_keep_the_notes(anki, client):
     assert (res["added"], res["updated"], res["converted"]) == (0, 6, 6)
     assert sorted(anki.notes) == ids
     converted = {n["modelName"] for n in anki.notes.values()}
-    assert converted == {"Notosaurus recto/verso + inverse à taper (TTS Anki es_ES)"}
+    assert converted == {"Notosaurus recto/verso + inverse à taper (TTS Anki es_ES) v2"}
     assert all(f"notosaurus::{lesson['id']}" in n["tags"] for n in anki.notes.values())
 
     # Sent again unchanged: plain updates
     res = client.post("/api/anki/send", json={**body, "typing": True, "reverse": True}).json()
     assert (res["added"], res["updated"], res["converted"]) == (0, 6, 0)
+
+
+def test_notes_of_an_older_note_type_version_moved_to_the_new_one(anki, client):
+    """Sent by a Notosaurus whose note type had fewer fields (its name without " v2"): sent
+    again, the same notes move to today's version (the phone can't add the fields: a new note
+    type), their history kept, none added beside them."""
+    lesson = extract_lesson(client)
+    body = {"deck": "Espagnol", "cards": lesson["cards"], "voice": "es_ES", "lesson_id": lesson["id"]}
+    assert client.post("/api/anki/send", json=body).json()["added"] == 6
+    ids = sorted(anki.notes)
+    for note in anki.notes.values():  # as an older version made them
+        note["modelName"] = note["modelName"].removesuffix(" v2")
+    anki.models = {name.removesuffix(" v2"): model for name, model in anki.models.items()}
+
+    res = client.post("/api/anki/send", json=body).json()
+    assert (res["added"], res["converted"]) == (0, 6)
+    assert sorted(anki.notes) == ids
+    assert {n["modelName"] for n in anki.notes.values()} == {"Notosaurus recto/verso (TTS Anki es_ES) v2"}
 
 
 def test_options_changed_with_an_old_ankiconnect(client, monkeypatch):

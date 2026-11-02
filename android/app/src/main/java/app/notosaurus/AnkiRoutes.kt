@@ -78,7 +78,7 @@ internal fun Route.ankiRoutes(server: LocalServer) {
                 if (lessonId.isNotEmpty()) lessons.setAnkiNotes(lessonId, sent.notes)
                 speech.prune(lessonId, sounds.values.toSet()) // the sounds no card says any more (AnkiDroid has its own copy)
                 // Its notes no card updated (cards deleted, or remade): the page offers to delete them
-                val leftovers = if (lessonId.isEmpty() || switches.off("anki.delete")) emptyList() else withContext(Dispatchers.IO) { anki.leftovers(lessonId, sent.notes.values.toSet()) }
+                val leftovers = if (lessonId.isEmpty() || switches.off("anki.delete")) emptyList() else withContext(Dispatchers.IO) { anki.leftovers(lessonId, sent.notes.values.toSet() + sent.fresh) }
                 buildJsonObject {
                     put("leftovers", JsonArray(leftovers.map { buildJsonObject { put("id", it.id); put("text", it.text); put("deck", it.deck) } }))
                     put("added", sent.added)

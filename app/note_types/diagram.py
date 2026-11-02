@@ -4,7 +4,7 @@ from pathlib import Path
 
 from notosaurus_core import diagrams, tts
 
-from .common import BACK_INFO, CSS, HELP_FIELDS, NoteType, fix_link, typed, variant, with_context
+from .common import BACK_INFO, CSS, HELP_FIELDS, NoteType, fix_link, typed, variant, versioned, with_context
 
 # The masks are HTML over the image, placed in % of its size.
 DIAGRAM_CSS = """\
@@ -42,7 +42,7 @@ def diagram_note_type(voice: str, typing: bool = False) -> NoteType:
     fields += HELP_FIELDS
     kind = f"labels TTS Anki {voice}" if anki_tts else "labels audio"
     name, option = variant("Notosaurus légendes", typing, False)
-    name = f"{name} ({kind.removeprefix('labels ')})"
+    name = versioned(f"{name} ({kind.removeprefix('labels ')})")
     return NoteType(name, kind, tuple(fields), with_context(templates), css=CSS + DIAGRAM_CSS, key="Id", variant=option)
 
 

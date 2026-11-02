@@ -99,7 +99,7 @@ come in as parameters), so that other programs can use it. A test keeps it that 
 | `app/routes/` | the API's routes, one module per topic (prompts, generation, lessons, pictures, Anki, voices, admin, pages); `common.py` their shared helpers, `devices.py` the pairing check |
 | `app/lessons.py` | saved lessons, one folder each |
 | `app/anki.py` | the notes a lesson gives and the `.apkg` builder (genanki) |
-| `app/note_types/` | the Anki note types, one module per family (text with its reverse, typed and dictation variants, diagram, picture, cloze, choice); `common.py` what they share |
+| `app/note_types/` | the Anki note types, one module per family (text with its reverse, typed and dictation variants, diagram, picture, cloze, choice); `common.py` what they share. A note type's fields never change under its name (AnkiDroid can't add a field): changing a family's fields, raise its version in `common.VERSIONS` (its names get " v2", " v3"…) and give its fields in `tests/test_note_types.py` |
 | `app/ankiconnect.py` | direct send through AnkiConnect or the add-on's bridge |
 | `app/prompts.py` | saved prompts |
 | `app/settings.py` | settings (the AI configuration and the app's own), API keys, admin password |

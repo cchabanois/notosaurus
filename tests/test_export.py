@@ -325,7 +325,7 @@ def test_dictation_only(client, tmp_path):
     }
     package = apkg.export(client, export, tmp_path)
     (model,) = package.models.values()
-    assert model["name"] == "Notosaurus dictée (audio)"
+    assert model["name"] == "Notosaurus dictée (audio) v2"
     (card,) = model["tmpls"]
     assert (
         card["qfmt"] == CONTEXT + f'<div class="dictation">🎧</div>{{{{Audio}}}}{PICTURE}{{{{Front}}}}{{{{type:Back}}}}'
@@ -369,17 +369,17 @@ def test_typed_answer_and_dictation(client, tmp_path):
     }
     package = apkg.export(client, export, tmp_path)
     by_name = {m["name"]: m for m in package.models.values()}
-    typed = by_name["Notosaurus recto/verso à taper + dictée (audio)"]
+    typed = by_name["Notosaurus recto/verso à taper + dictée (audio) v2"]
     recto, dictation = typed["tmpls"]
     assert recto["qfmt"].endswith("{{type:Back}}") and "{{type:Back}}" in recto["afmt"]
     assert "{{FrontSide}}" not in recto["afmt"]  # the box shown once
     assert dictation["qfmt"] == CONTEXT + f'<div class="dictation">🎧</div>{{{{Audio}}}}{PICTURE}{{{{type:Back}}}}'
-    assert "Notosaurus recto/verso (audio)" in by_name  # the formula's note type, as before
+    assert "Notosaurus recto/verso (audio) v2" in by_name  # the formula's note type, as before
     assert package.cards == 2 + 1
 
     # Without a voice, nothing to hear: no dictation card
     package = apkg.export(client, {**export, "voice": "", "cards": export["cards"][:1]}, tmp_path)
-    assert [m["name"] for m in package.models.values()] == ["Notosaurus recto/verso à taper (audio)"]
+    assert [m["name"] for m in package.models.values()] == ["Notosaurus recto/verso à taper (audio) v2"]
 
 
 def test_plain_note_types_keep_their_ids(client):
@@ -442,7 +442,7 @@ def test_multiple_choice_and_true_false(client, tmp_path):
     package = apkg.export(client, body, tmp_path)
     assert synthesized == []  # the options are read, not heard
     (model,) = package.models.values()  # neither typed nor with a sound: the same note type
-    assert model["name"] == "Notosaurus QCM"
+    assert model["name"] == "Notosaurus QCM v2"
     fields = [f["name"] for f in model["flds"]]
     first = dict(zip(fields, package.fields(package.notes[0]), strict=True))
     assert first["Answer"] == "1789"
@@ -546,7 +546,7 @@ def test_a_picture_on_a_dictation_keeps_it_a_dictation():
         cards=[Card(id="c1", front="Il habite une …", back="maison", picture="maison.jpg")],
     )
     (note,) = anki.notes(req, audio={}, pictures={0: Path("maison.jpg")})
-    assert note.nt.name == "Notosaurus dictée (audio)"
+    assert note.nt.name == "Notosaurus dictée (audio) v2"
     (template,) = note.nt.templates
     assert (
         template["qfmt"].index("{{Audio}}")
@@ -602,7 +602,7 @@ def test_a_dictation_card_without_front_still_sent():
     )
     sound = Path("chaton.mp3")
     (note,) = anki.notes(req, audio={tts.spoken(req.cards[0], True): sound})
-    assert note.nt.name == "Notosaurus dictée (audio)"
+    assert note.nt.name == "Notosaurus dictée (audio) v2"
     assert note.fields["Front"] == "…" and note.fields["Audio"] == "[sound:chaton.mp3]"
     assert req.cards[0].front == ""  # the lesson's card as it is
 

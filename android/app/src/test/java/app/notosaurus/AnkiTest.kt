@@ -26,7 +26,7 @@ class AnkiTest {
     @Test
     fun theComputersNoteTypesAsTheyAre() {
         val text = types["text+reverse+typing+dictation"]
-        assertEquals("Notosaurus recto/verso + inverse à taper + dictée (audio)", text.name) // the computer's name
+        assertEquals("Notosaurus recto/verso + inverse à taper + dictée (audio) v2", text.name) // the computer's name
         assertEquals("Notosaurus recto/verso + inverse à taper + dictée (Android)", text.legacyName) // the test versions'
         // The computer's order: a picture's fields after the others (where it adds them to an older note type)
         val fields = listOf("Front", "Back", "Info", "Audio", "Explanation", "Mnemonic", "Picture", "BackPicture", "Id", "Source")
