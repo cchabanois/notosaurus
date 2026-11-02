@@ -89,6 +89,8 @@
       "newHint": "Gespeicherte Anweisungen anlegen, um sie wiederzuverwenden",
       "text": "Text der Anweisungen",
       "modified": "✏️ Nur für dieses Mal geändert.",
+      "unfold": "✏️ Ändern",
+      "notApplied": "✏️ Geändert, seit die Karten erstellt wurden: „✨ Neu erzeugen“ wendet sie an.",
       "edit": "✏️ Anweisungen bearbeiten",
       "saveAsNew": "💾 Als neue Anweisungen speichern",
       "complete": {
@@ -159,7 +161,6 @@
       "noCardsWithoutPhoto": "Es gibt kein Foto: Die Anweisung muss sagen, was gelernt werden soll, eine Liste von Wörtern oder ein Thema.",
       "owner": "🧒 Lektion von <strong>{owner}</strong>",
       "choice": "🤖 {choice}",
-      "promptUsed": "📝 Für diese Lektion verwendete Anweisungen",
       "clozeHint": "Lückentext: {{c1::…}} verdeckt, was zwischen den Klammern steht. Jede Nummer ergibt eine Karte in Anki; dieselbe Nummer verdeckt mehrere Lücken gleichzeitig.",
       "diagramHint": "Abbildung: Zieh eine rote Maske, um sie zu verschieben, und ihre runde Ecke, um ihre Größe zu ändern, sodass sie die ganze Beschriftung verdeckt. Der gestrichelte Rahmen ist das, was Anki vom Foto zeigt: Zieh an seinen blauen Ecken, um es zuzuschneiden.",
       "diagramWarning": "Mit diesem KI-Modell (Claude) sind die Masken auf Handschrift manchmal zu klein: Prüfe, ob sie die ganze Beschriftung verdecken.",

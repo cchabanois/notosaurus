@@ -860,9 +860,11 @@ html.sheet-open { overflow: hidden; overscroll-behavior: none; }
 .owner-pick { display: inline-flex; align-items: center; gap: .4rem; font-size: .88rem; color: var(--muted); }
 .owner-pick { min-width: 0; max-width: 100%; }
 .owner-pick select { width: auto; min-width: 0; max-width: 100%; padding: .3rem 1.8rem .3rem .7rem; border-radius: 999px; font-size: .88rem; }
-.lesson-prompt { margin: .2rem 0 .6rem; font-size: .88rem; color: var(--muted); }
-.lesson-prompt summary { cursor: pointer; font-weight: 700; }
-.lesson-prompt p { margin: .4rem 0 0; padding: .6rem .8rem; border-radius: var(--radius-sm); background: var(--primary-soft); color: var(--text); white-space: pre-wrap; }
+.prompt-folded { margin: .2rem 0 .6rem; }
+.prompt-folded-head { display: flex; align-items: baseline; justify-content: space-between; gap: .6rem; flex-wrap: wrap; }
+/* The prompt's text on the whole width, two lines at most: what the cards were made with */
+.prompt-folded-text { margin: .25rem 0 0; font-size: .9rem; color: var(--muted); white-space: pre-line;
+  display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; line-clamp: 2; overflow: hidden; }
 .flash.has-diagram { flex-wrap: wrap; }
 .diagram { position: relative; flex: 1 0 100%; margin-bottom: .6rem; border-radius: var(--radius-sm); overflow: hidden; user-select: none; }
 .diagram img { display: block; width: 100%; height: auto; pointer-events: none; }
