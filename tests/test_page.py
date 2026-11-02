@@ -1116,6 +1116,25 @@ def test_prompts_follow_the_language(page):
     sync_api.expect(text).to_have_value("Lo mío")
 
 
+def test_the_prompts_button_says_what_it_does(page):
+    """Under the prompt: one of Notosaurus's is seen (it can't be changed); one of yours,
+    edited (its name, deck); its text changed in the field, those changes saved into it."""
+    page.request.post("/api/prompts", data={"name": "Definitions", "text": "Les définitions de la leçon"})
+    page.goto("/")
+    actions = page.locator(".prompt-actions")
+    page.get_by_role("radio", name="⭐ Automatique (d'après la leçon)").click()
+    sync_api.expect(actions.get_by_role("button", name="👁️ Voir la consigne")).to_be_visible()
+
+    page.locator(".chip.more").click()
+    page.locator(".picker-item", has_text="Definitions").click()
+    sync_api.expect(actions.get_by_role("button", name="✏️ Modifier la consigne")).to_be_visible()
+    page.locator("textarea[x-ref=promptText]").fill("Les définitions et les exemples de la leçon")
+    actions.get_by_role("button", name="💾 Enregistrer les changements").click()
+    sync_api.expect(actions.get_by_role("button", name="✏️ Modifier la consigne")).to_be_visible()
+    (mine,) = [p for p in page.request.get("/api/prompts").json() if not p["builtin"]]
+    assert (mine["name"], mine["text"]) == ("Definitions", "Les définitions et les exemples de la leçon")
+
+
 def test_deleting_a_prompt_is_asked_in_the_app(page):
     """The app's own sheet, not the browser's confirm() (which shows the page's address)."""
     page.request.post("/api/prompts", data={"name": "Definitions", "text": "Les définitions de la leçon"})

@@ -93,6 +93,8 @@
       "unfold": "✏️ Cambiar",
       "notApplied": "✏️ Cambiada desde que se hicieron las tarjetas: «✨ Volver a generar» la aplica.",
       "edit": "✏️ Editar las instrucciones",
+      "view": "👁️ Ver las instrucciones",
+      "saveChanges": "💾 Guardar los cambios",
       "saveAsNew": "💾 Guardar como nuevas instrucciones",
       "complete": {
         "one": "➕ Añadir las tarjetas de la nueva página",

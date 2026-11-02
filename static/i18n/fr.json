@@ -93,6 +93,8 @@
       "unfold": "✏️ Modifier",
       "notApplied": "✏️ Modifiée depuis la création des cartes : « ✨ Régénérer » l'applique.",
       "edit": "✏️ Modifier la consigne",
+      "view": "👁️ Voir la consigne",
+      "saveChanges": "💾 Enregistrer les changements",
       "saveAsNew": "💾 Enregistrer comme nouvelle consigne",
       "complete": {
         "one": "➕ Ajouter les cartes de la nouvelle page",

@@ -128,6 +128,32 @@ const promptsPart = {
     return this.form.text.trim() !== "" && (!c || c.text !== this.form.text);
   },
 
+  // The button under the prompt: "view" (Notosaurus's), "save" (yours, its text changed in the
+  // field) or "edit" (yours, as it is)
+  promptAction() {
+    const c = this.current();
+    if (c?.builtin) return "view";
+    return this.isModified() && this.form.text.trim() ? "save" : "edit";
+  },
+
+  // The text changed in the field saved into the user's prompt, its name and deck kept
+  async savePromptChanges() {
+    const c = this.current();
+    try {
+      await api(`/api/prompts/${c.id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          name: c.name, text: this.form.text.trim(), deck: c.deck ?? "", voice: "auto",
+          typing: false, dictation: false, dictation_only: false,
+        }),
+      });
+      await this.loadPrompts(c.id);
+    } catch (e) {
+      this.error = t("common.failed", { message: e.message });
+    }
+  },
+
   isModified() {
     const c = this.current();
     return c && c.text !== this.form.text;
