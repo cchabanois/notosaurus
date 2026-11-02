@@ -93,6 +93,8 @@
       "unfold": "✏️ Modifica",
       "notApplied": "✏️ Modificata da quando le carte sono state create: “✨ Genera di nuovo” la applica.",
       "edit": "✏️ Modifica le istruzioni",
+      "view": "👁️ Vedi le istruzioni",
+      "saveChanges": "💾 Salva le modifiche",
       "saveAsNew": "💾 Salva come nuove istruzioni",
       "complete": {
         "one": "➕ Aggiungi le carte della nuova pagina",

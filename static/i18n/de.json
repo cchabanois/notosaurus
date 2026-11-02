@@ -93,6 +93,8 @@
       "unfold": "✏️ Ändern",
       "notApplied": "✏️ Geändert, seit die Karten erstellt wurden: „✨ Neu erzeugen“ wendet sie an.",
       "edit": "✏️ Anweisungen bearbeiten",
+      "view": "👁️ Anweisungen ansehen",
+      "saveChanges": "💾 Änderungen speichern",
       "saveAsNew": "💾 Als neue Anweisungen speichern",
       "complete": {
         "one": "➕ Karten der neuen Seite hinzufügen",
