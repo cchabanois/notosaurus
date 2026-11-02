@@ -86,6 +86,7 @@ Each pull request's entries (the `## Changelog` of its description) are put unde
 
 ### Fixed
 
+- In a lesson already made, a photo put in place of another (removed, then chosen from the gallery) turns itself when turned: the lesson's old photo came back, turned, in its place.
 - A card corrected after a send updates its own note in Anki (its review history kept) instead of adding a second one; a lesson whose deck changed moves its cards there. A part named like the deck's last level no longer makes a second deck inside it.
 - A formula shows as meant when the AI wrote it with a single backslash or with brackets for an interval; formulas in the info and "Did you know?" are drawn, no longer shown as LaTeX.
 - Accents written as HTML entities ("trach&eacute;e"), tags or Markdown the AI wrote in a card: made plain text.
