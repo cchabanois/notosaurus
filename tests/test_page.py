@@ -1208,6 +1208,43 @@ def test_the_lesson_in_progress_found_again(page):
     sync_api.expect(page.locator(".thumb img")).to_have_count(0)
 
 
+def test_a_lesson_made_open_again_in_the_same_session_only(page, browser, server):
+    """A lesson made, the page opened again: in the same session (back from the settings),
+    the lesson open again on its cards, in view; in a new one (the app launched again, a new
+    tab), a new lesson, the one made in the lessons. A lesson not made yet: found again."""
+    page.set_viewport_size({"width": 360, "height": 780})  # a phone: the photos and prompt fill it
+    page.goto("/")
+    page.get_by_role("radio", name="✏️ Libre").click()
+    page.locator("textarea[x-ref=promptText]").fill("Une carte par capitale")
+    add_photo(page, plain_image(400, 300, "red"))
+    page.get_by_role("button", name="✨ Générer les cartes").click()
+    page.locator(".flash").first.wait_for()
+    page.wait_for_timeout(800)  # (kept a moment after the change)
+    page.get_by_role("link", name="Réglages").click()
+    page.wait_for_url("**/admin.html")
+    page.goto("/")
+    sync_api.expect(page.locator(".flash").first).to_be_in_viewport()  # its cards, not the photos above
+
+    other = browser.new_context(locale="fr-FR", base_url=server).new_page()
+    try:
+        other.goto("/")
+        started(other)
+        sync_api.expect(other.locator(".flash")).to_have_count(0)
+        sync_api.expect(other.locator(".thumb img")).to_have_count(0)
+        other.locator("textarea[x-ref=promptText]").fill("Une autre leçon")
+        add_photo(other, plain_image(400, 300, "blue"))
+        other.wait_for_timeout(800)
+    finally:
+        other.context.close()
+    again = browser.new_context(locale="fr-FR", base_url=server).new_page()
+    try:
+        again.goto("/")
+        sync_api.expect(again.locator(".thumb img")).to_have_count(1)  # not made yet: found again
+        sync_api.expect(again.locator("textarea[x-ref=promptText]")).to_have_value("Une autre leçon")
+    finally:
+        again.context.close()
+
+
 def test_what_the_user_began_kept_over_the_lesson_left(page):
     """A photo added while the lesson left in progress is still being read: theirs kept,
     never replaced by the one found again."""

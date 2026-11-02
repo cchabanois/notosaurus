@@ -4,6 +4,19 @@
 // its prompt; once made (saved with its photos): which lesson is open.
 
 const DRAFT_WAIT_MS = 500;  // a pause in the typing: sent then (on the same machine: quick)
+const DRAFT_SESSION_KEY = "notosaurus.session";
+
+// The page opened before in this session (back from the settings, reloaded), not anew (the
+// app launched again: its address changes, so does its storage; a new tab); marked for the next
+function sessionGoesOn() {
+  try {
+    const on = sessionStorage.getItem(DRAFT_SESSION_KEY) === "1";
+    sessionStorage.setItem(DRAFT_SESSION_KEY, "1");
+    return on;
+  } catch {
+    return false;
+  }
+}
 
 const draftPart = {
   draftTimer: null,
@@ -77,8 +90,11 @@ const draftPart = {
 
   // The page opening: the lesson left in progress, as it was. Unless the user has already
   // begun another while it was being read (a photo added, the prompt changed): theirs is
-  // kept, never replaced, and kept in its place from now on
+  // kept, never replaced, and kept in its place from now on. A lesson made (it is in the
+  // lessons) only in the same session, open on its cards: opened anew, it looked like a new
+  // lesson, its photos and prompt at the top
   async restoreDraft() {
+    const goesOn = sessionGoesOn();
     const untouched = this.draftText();
     let draft = {};
     try {
@@ -88,7 +104,11 @@ const draftPart = {
     }
     if (this.photos.length || this.draftText() !== untouched) return;
     if (draft.lesson) {
-      if (this.lessons.some((l) => l.id === draft.lesson)) await this.openLesson(draft.lesson);
+      if (goesOn && this.lessons.some((l) => l.id === draft.lesson)) {
+        await this.openLesson(draft.lesson);
+        await this.$nextTick();
+        this.$refs.review?.scrollIntoView({ behavior: "instant" });  // at once: the page is still settling
+      }
     } else if (draft.prompt || draft.photos) {
       if (draft.prompt) {
         this.selectedId = draft.prompt.selected ?? null;

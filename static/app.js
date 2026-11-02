@@ -288,8 +288,10 @@ document.addEventListener("alpine:init", () => {
       // "✎ Notosaurus" on a card in Anki: the page opened on that lesson and card; else the
       // lesson left in progress (app-draft.js), then kept as it changes
       const linked = new URLSearchParams(location.search);
-      if (linked.get("lesson")) await this.openLinkedCard(linked.get("lesson"), linked.get("key") || "");
-      else await this.restoreDraft();
+      if (linked.get("lesson")) {
+        sessionGoesOn();  // marked: back from the settings, that lesson found again
+        await this.openLinkedCard(linked.get("lesson"), linked.get("key") || "");
+      } else await this.restoreDraft();
       this.keepDraft();
       // Anki may be started later: check again when coming back to the app.
       document.addEventListener("visibilitychange", () => {
