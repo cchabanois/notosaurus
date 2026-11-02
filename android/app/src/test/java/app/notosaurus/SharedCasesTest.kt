@@ -34,6 +34,12 @@ class SharedCasesTest {
     }
 
     @Test
+    fun aCardMadeAgainKeepsItsId() = cases("kept_ids").forEach { c ->
+        val ids = Lessons.keptIds(c["made"], c["before"]).map { it.jsonObject["id"]?.jsonPrimitive?.content.orEmpty() }
+        assertEquals(c["name"]!!.jsonPrimitive.content, c["out"]!!.jsonArray.map { it.jsonPrimitive.content }, ids)
+    }
+
+    @Test
     fun aSoundsFile() = cases("sound_file").forEach { c ->
         assertEquals(c.string("text"), c.string("out"), Speech.fileName(c.string("text"), c.string("voice"), c.string("rate")))
     }

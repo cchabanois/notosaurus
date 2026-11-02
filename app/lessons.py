@@ -18,6 +18,7 @@ from pathlib import Path
 from typing import cast
 
 from notosaurus_core import pictures
+from notosaurus_core.cards import kept_ids
 
 from . import storage
 from .errors import AppError
@@ -321,6 +322,9 @@ def regenerated(id: str, g: Generated, calls: Sequence[AiCall] = ()) -> Lesson |
             photo.unlink()
         for n, data in enumerate(g.photos, start=1):
             (path / f"page-{n}.jpg").write_bytes(data)
+        # A card made again keeps its id, so its note in Anki and its history (cards.kept_ids)
+        for card, kept in zip(g.content.cards, kept_ids(g.content.cards, old.cards), strict=True):
+            card.id = card.id or kept
         # images/ is kept: "Undo" brings back the old cards with their pictures (pruned at export)
         lesson = Lesson(
             **{

@@ -9,6 +9,7 @@ from pathlib import Path
 import pytest
 
 from app.exams import common_deck, tag_text
+from notosaurus_core.cards import kept_ids
 from notosaurus_core.models import Card
 from notosaurus_core.tts import filename, speakable, spoken
 
@@ -39,3 +40,11 @@ def test_a_cards_sound(case):
 def test_a_sounds_file(case):
     """The same name on the phone (Speech.fileName): a lesson's sounds go from one to the other."""
     assert filename(case["text"], case["voice"], case["rate"]) == case["out"]
+
+
+@pytest.mark.parametrize("case", CASES["kept_ids"], ids=lambda c: c["name"])
+def test_a_card_made_again_keeps_its_id(case):
+    """A lesson made again in its place (Lessons.regenerated on the phone): the same cards keep
+    their ids, so their notes and history in Anki."""
+    made, before = [Card(**c) for c in case["made"]], [Card(**c) for c in case["before"]]
+    assert kept_ids(made, before) == case["out"]

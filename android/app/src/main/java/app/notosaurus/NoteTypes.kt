@@ -25,8 +25,6 @@ data class NoteType(
     val family: String,
     val fields: List<String>,
     val key: String,
-    // A note with a picture: this field tells it instead ("Id"), as the computer's key_of
-    @kotlinx.serialization.SerialName("picture_key") val pictureKey: String = "",
     val cloze: Boolean,
     val cards: List<CardTemplate>,
     val css: String,
@@ -50,13 +48,10 @@ data class NoteType(
      * today's signature was made by an older app, and is brought up to date at the next send. */
     val signedCss: String get() = "$css\n/* Notosaurus note type, version $signature: updated by Notosaurus */\n"
 
-    /** A note's key, as its field `values` give it (the computer's key_of): its card's id when
-     * it has a picture (their fronts are often all the same), else the key field (the front:
-     * a note without a picture keeps the key it was sent with before). */
-    fun keyOf(values: Map<String, String>): String {
-        val pictured = pictureKey.isNotEmpty() && (!values["Picture"].isNullOrEmpty() || !values["BackPicture"].isNullOrEmpty())
-        return values[if (pictured) pictureKey else key].orEmpty()
-    }
+    /** A note's key, as its field `values` give it (the computer's key_of): its key field, the
+     * card's id, never its front (a corrected front, two cards of the same front, dictations
+     * whose fronts are all the blank stay their own notes). */
+    fun keyOf(values: Map<String, String>): String = values[key].orEmpty()
 
     /** A note's values (by field name) in the order of `names` (its note type's fields in
      * AnkiDroid); a field not given keeps its value `there` (the Source the computer wrote). */

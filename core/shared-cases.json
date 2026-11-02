@@ -1,5 +1,5 @@
 {
- "_": "Cases the three implementations must agree on (Python app/exams.py, notosaurus_core/tts.py; Kotlin Exams.kt, Speech.kt; JavaScript static/app-anki.js): their tests read this file. Python's answers are the reference; sound_file: Python and Kotlin only (the page names no file).",
+ "_": "Cases the three implementations must agree on (Python app/exams.py, notosaurus_core/tts.py, notosaurus_core/cards.py; Kotlin Exams.kt, Speech.kt, Lessons.kt; JavaScript static/app-anki.js): their tests read this file. Python's answers are the reference; sound_file, kept_ids: Python and Kotlin only (the page names no file, makes no lesson).",
  "tag_text": [
   {
    "in": "Interro SVT de lundi",
@@ -219,6 +219,187 @@
    "voice": "fr-FR-DeniseNeural",
    "rate": "-10%",
    "out": "l-ete-fafc0fbe.mp3"
+  }
+ ],
+ "kept_ids": [
+  {
+   "name": "a card made again, the same: its id",
+   "before": [
+    {
+     "id": "a",
+     "front": "la mère",
+     "back": "la madre"
+    }
+   ],
+   "made": [
+    {
+     "front": "la mère",
+     "back": "la madre"
+    }
+   ],
+   "out": [
+    "a"
+   ]
+  },
+  {
+   "name": "its back corrected: its id by its front",
+   "before": [
+    {
+     "id": "a",
+     "front": "la mère",
+     "back": "la madre"
+    }
+   ],
+   "made": [
+    {
+     "front": "la mère",
+     "back": "la mamá"
+    }
+   ],
+   "out": [
+    "a"
+   ]
+  },
+  {
+   "name": "its front changed: a new card",
+   "before": [
+    {
+     "id": "a",
+     "front": "la mère",
+     "back": "la madre"
+    }
+   ],
+   "made": [
+    {
+     "front": "la maman",
+     "back": "la madre"
+    }
+   ],
+   "out": [
+    ""
+   ]
+  },
+  {
+   "name": "the same front twice: each its own, the same back first",
+   "before": [
+    {
+     "id": "a",
+     "front": "le vol",
+     "back": "el vuelo"
+    },
+    {
+     "id": "b",
+     "front": "le vol",
+     "back": "el robo"
+    }
+   ],
+   "made": [
+    {
+     "front": "le vol",
+     "back": "el robo"
+    },
+    {
+     "front": "le vol",
+     "back": "el vuelo"
+    }
+   ],
+   "out": [
+    "b",
+    "a"
+   ]
+  },
+  {
+   "name": "another part of the deck: a new card",
+   "before": [
+    {
+     "id": "a",
+     "front": "la mère",
+     "back": "la madre",
+     "subdeck": "Famille"
+    }
+   ],
+   "made": [
+    {
+     "front": "la mère",
+     "back": "la madre",
+     "subdeck": "Vocabulaire"
+    }
+   ],
+   "out": [
+    ""
+   ]
+  },
+  {
+   "name": "dictations without a sentence: by their word only",
+   "before": [
+    {
+     "id": "a",
+     "front": "…",
+     "back": "chaton"
+    },
+    {
+     "id": "b",
+     "front": "…",
+     "back": "bateau"
+    }
+   ],
+   "made": [
+    {
+     "front": "…",
+     "back": "bateau"
+    },
+    {
+     "front": "…",
+     "back": "maison"
+    }
+   ],
+   "out": [
+    "b",
+    ""
+   ]
+  },
+  {
+   "name": "an empty front: by its back only",
+   "before": [
+    {
+     "id": "a",
+     "front": "",
+     "back": "chaton"
+    }
+   ],
+   "made": [
+    {
+     "front": "",
+     "back": "chat"
+    }
+   ],
+   "out": [
+    ""
+   ]
+  },
+  {
+   "name": "an old card given once",
+   "before": [
+    {
+     "id": "a",
+     "front": "la mère",
+     "back": "la madre"
+    }
+   ],
+   "made": [
+    {
+     "front": "la mère",
+     "back": "la madre"
+    },
+    {
+     "front": "la mère",
+     "back": "la madre"
+    }
+   ],
+   "out": [
+    "a",
+    ""
+   ]
   }
  ]
 }

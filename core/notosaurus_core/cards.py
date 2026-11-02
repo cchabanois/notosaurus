@@ -150,3 +150,30 @@ def is_choice(card: Card) -> bool:
         and not card.mask
         and not is_cloze(card.front)
     )
+
+
+def kept_ids(made: list[Card], before: list[Card]) -> list[str]:
+    """A lesson made again in its place: each new card's id, the lesson's card it is (its id
+    is its note's key in Anki: its note updated, its history kept), else "" (a new card).
+    The same front and back, else the same front, in the same part of the deck (subdeck),
+    each old card given once; never by a front empty or the blank alone ("…": the same for
+    every dictation without a sentence), only with the same back then."""
+    left = [c for c in before if c.id]
+
+    def same(a: Card, b: Card, back: bool) -> bool:
+        front = a.front.strip()
+        return (
+            a.subdeck.strip() == b.subdeck.strip()
+            and front == b.front.strip()
+            and (a.back.strip() == b.back.strip() if back else front not in ("", DICTATION_FRONT))
+        )
+
+    ids = []
+    for card in made:
+        match = next((c for c in left if same(card, c, back=True)), None) or next(
+            (c for c in left if same(card, c, back=False)), None
+        )
+        if match:
+            left.remove(match)
+        ids.append(match.id if match else "")
+    return ids

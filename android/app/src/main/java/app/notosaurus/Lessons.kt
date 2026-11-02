@@ -108,7 +108,7 @@ class Lessons(private val root: File) {
         )
         val updated = JsonObject(
             lesson + content + mapOf(
-                "cards" to withIds(content["cards"]),
+                "cards" to withIds(keptIds(content["cards"], lesson["cards"])), // the same cards: their ids, their notes
                 "reverse" to either("reverse"),
                 "typing" to either("typing"),
                 "dictation" to either("dictation"),
@@ -236,6 +236,27 @@ class Lessons(private val root: File) {
                 else JsonObject(c + ("id" to JsonPrimitive(UUID.randomUUID().toString().replace("-", "").take(12))))
             },
         )
+
+        /** A lesson made again in its place (core's cards.kept_ids): each new card with the id of
+         * the lesson's card it is, so its note and history in AnkiDroid; none, a new card. The same
+         * front and back, else the same front, in the same part of the deck, each old card given
+         * once; never by a front empty or the blank alone (every dictation without a sentence). */
+        fun keptIds(made: JsonElement?, before: JsonElement?): JsonArray {
+            val left = (before as? JsonArray).orEmpty().map { it.jsonObject }.filter { it.string("id").isNotEmpty() }.toMutableList()
+            fun same(a: JsonObject, b: JsonObject, back: Boolean): Boolean {
+                val front = a.string("front").trim()
+                return a.string("subdeck").trim() == b.string("subdeck").trim() && front == b.string("front").trim() &&
+                    (if (back) a.string("back").trim() == b.string("back").trim() else front.isNotEmpty() && front != Anki.DICTATION_FRONT)
+            }
+            return JsonArray(
+                (made as? JsonArray).orEmpty().map { card ->
+                    val c = card.jsonObject
+                    if (c.string("id").isNotEmpty()) return@map c
+                    val match = left.firstOrNull { same(c, it, back = true) } ?: left.firstOrNull { same(c, it, back = false) }
+                    if (match == null) c else JsonObject(c + ("id" to JsonPrimitive(match.string("id")))).also { left.remove(match) }
+                },
+            )
+        }
 
         fun slug(text: String): String = Normalizer.normalize(text, Normalizer.Form.NFKD)
             .replace(Regex("\\p{M}"), "").lowercase().replace(Regex("[^a-z0-9]+"), "-").trim('-').take(40).trimEnd('-')

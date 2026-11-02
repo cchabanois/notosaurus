@@ -85,5 +85,4 @@ def note_type(
         css=CSS + PICTURE_CSS,
         variant=option,
         reverse=reverse,
-        picture_key="Id",
     )

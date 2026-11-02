@@ -111,10 +111,7 @@ class NoteType:
     fields: tuple[str, ...]
     templates: tuple[dict, ...]  # {"name", "qfmt", "afmt"}
     css: str = CSS
-    key: str = "Front"  # field telling which note an update is for
-    # A note with a picture: this field tells it instead ("Id": their fronts are often all the
-    # same, "What is it?"), its key's own (key_of); "": the key field always
-    picture_key: str = ""
+    key: str = "Id"  # field telling which note an update is for: the card's id (Export.card_id)
     cloze: bool = False  # Anki makes one card per gap number
     variant: str = ""  # typed answer, dictation: part of the note type's id
     reverse: bool = False  # with the reverse card: part of the note type's id
@@ -159,11 +156,11 @@ def family(note_type_name: str) -> str:
 
 
 def key_of(nt: NoteType, values: Mapping[str, str]) -> str:
-    """The note's key, as its fields' `values` give it: its card's id when it has a picture
-    (nt.picture_key), else its note type's key field (the front: a note without a picture
-    keeps the key, so the GUID, it was sent with before any card could have one)."""
-    pictured = nt.picture_key and (values.get("Picture") or values.get("BackPicture"))
-    return values.get(nt.picture_key if pictured else nt.key, "")
+    """The note's key, as its fields' `values` give it: its note type's key field, the card's
+    id (never its front: a corrected front, two cards of the same front, dictations whose
+    fronts are all the blank, "…", stay their own notes). Notes sent with 1.0.0 were keyed
+    by their front: sent again, they come anew (1.1.0's notes)."""
+    return values.get(nt.key, "")
 
 
 def model_id(nt: NoteType) -> int:

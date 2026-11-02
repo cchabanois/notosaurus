@@ -26,7 +26,6 @@ def spec(nt: anki.NoteType) -> dict:
         "family": nt.family,
         "fields": nt.fields,  # in the computer's order: the same note types on both
         "key": nt.key,  # which note an update is for
-        "picture_key": nt.picture_key,  # instead, for a note with a picture (anki.key_of)
         "cloze": nt.cloze,
         "cards": [{"name": t["name"], "front": t["qfmt"], "back": t["afmt"]} for t in nt.templates],
         "css": nt.css,
