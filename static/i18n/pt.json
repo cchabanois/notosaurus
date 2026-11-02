@@ -93,6 +93,8 @@
       "unfold": "✏️ Alterar",
       "notApplied": "✏️ Alterada desde que os cartões foram criados: “✨ Gerar de novo” a aplica.",
       "edit": "✏️ Editar as instruções",
+      "view": "👁️ Ver as instruções",
+      "saveChanges": "💾 Salvar as alterações",
       "saveAsNew": "💾 Salvar como novas instruções",
       "complete": {
         "one": "➕ Adicionar os cartões da nova página",

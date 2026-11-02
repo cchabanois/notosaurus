@@ -234,7 +234,11 @@
         </div>
 
         <div class="prompt-actions">
-          <button class="link-btn" x-show="selectedId" @click="openEditor('edit')" x-text="$t('app.prompt.edit')"></button>
+          <!-- Says what it does: Notosaurus's seen (not changeable); yours, its text changed in the
+               field, those changes saved into it; else its sheet (name, deck, delete) -->
+          <button class="link-btn" :class="{ strong: promptAction() === 'save' }" x-show="selectedId"
+                  @click="promptAction() === 'save' ? savePromptChanges() : openEditor('edit')"
+                  x-text="$t({ view: 'app.prompt.view', save: 'app.prompt.saveChanges', edit: 'app.prompt.edit' }[promptAction()])"></button>
           <button class="link-btn strong" x-show="canSaveAsNew()" @click="openEditor('copy')"
                   x-text="$t('app.prompt.saveAsNew')"></button>
         </div>

@@ -93,6 +93,8 @@
       "unfold": "✏️ Change",
       "notApplied": "✏️ Changed since the cards were made: “✨ Generate again” applies it.",
       "edit": "✏️ Edit instructions",
+      "view": "👁️ See the instructions",
+      "saveChanges": "💾 Save the changes",
       "saveAsNew": "💾 Save as new instructions",
       "complete": {
         "one": "➕ Add the new page's cards",
