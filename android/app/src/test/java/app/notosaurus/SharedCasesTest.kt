@@ -40,6 +40,12 @@ class SharedCasesTest {
     }
 
     @Test
+    fun twoTextsTheSame() = cases("same_text").forEach { c ->
+        val (a, b) = c.string("a") to c.string("b")
+        assertEquals("$a | $b", c.string("key") to c["out"]!!.jsonPrimitive.boolean, Lessons.textKey(a) to Lessons.sameText(a, b))
+    }
+
+    @Test
     fun aSoundsFile() = cases("sound_file").forEach { c ->
         assertEquals(c.string("text"), c.string("out"), Speech.fileName(c.string("text"), c.string("voice"), c.string("rate")))
     }

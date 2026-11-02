@@ -532,3 +532,19 @@ def test_a_figure_meant_but_left_undescribed_is_described(monkeypatch):
     ]
     assert [name for name, _, _ in calls][1] == "Figures" and len(calls) == 2
     assert "0. L'intersection de A et B ? → Les éléments communs" in calls[1][1]  # only the card left undescribed
+
+
+def test_a_revised_card_keeps_its_id_whatever_a_capital():
+    """The AI's correction writes the cards again: a capital, a final full stop, a typographic
+    apostrophe changed, still the same card (cards.same_text), its id, so its note in Anki;
+    an accent changed, another card."""
+    from notosaurus_core import llm
+    from notosaurus_core.models import Card
+
+    revised = [Card(front="La mère.", back="La madre"), Card(front="Comment t’appelles-tu ?", back="¿Cómo?")]
+    before = [Card(id="a", front="la mère", back="la madre"), Card(id="b", front="Comment t'appelles-tu", back="x")]
+    llm._keep_ids(revised, before)
+    assert [c.id for c in revised] == ["a", "b"]
+    other = [Card(front="à", back="préposition")]
+    llm._keep_ids(other, [Card(id="c", front="a", back="avoir")])
+    assert other[0].id == ""

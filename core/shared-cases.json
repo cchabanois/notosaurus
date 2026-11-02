@@ -1,5 +1,5 @@
 {
- "_": "Cases the three implementations must agree on (Python app/exams.py, notosaurus_core/tts.py, notosaurus_core/cards.py; Kotlin Exams.kt, Speech.kt, Lessons.kt; JavaScript static/app-anki.js): their tests read this file. Python's answers are the reference; sound_file, kept_ids: Python and Kotlin only (the page names no file, makes no lesson).",
+ "_": "Cases the three implementations must agree on (Python app/exams.py, notosaurus_core/tts.py, notosaurus_core/cards.py; Kotlin Exams.kt, Speech.kt, Lessons.kt; JavaScript static/app-anki.js): their tests read this file. Python's answers are the reference; sound_file, kept_ids, same_text: Python and Kotlin only (the page names no file, makes no lesson).",
  "tag_text": [
   {
    "in": "Interro SVT de lundi",
@@ -425,6 +425,168 @@
      "a",
      ""
     ]
+   },
+  {
+    "name": "a capital, a final full stop: the same card",
+    "before": [
+     {
+      "id": "a",
+      "front": "la mère",
+      "back": "la madre"
+     }
+    ],
+    "made": [
+     {
+      "front": "La mère.",
+      "back": "La madre"
+     }
+    ],
+    "out": [
+     "a"
+    ]
+   },
+  {
+    "name": "a typographic apostrophe: the same card",
+    "before": [
+     {
+      "id": "a",
+      "front": "Comment t'appelles-tu ?",
+      "back": "¿Cómo te llamas?"
+     }
+    ],
+    "made": [
+     {
+      "front": "Comment t’appelles-tu ?",
+      "back": "¿Cómo te llamas?"
+     }
+    ],
+    "out": [
+     "a"
+    ]
+   },
+  {
+    "name": "an accent: another card",
+    "before": [
+     {
+      "id": "a",
+      "front": "a",
+      "back": "avoir"
+     }
+    ],
+    "made": [
+     {
+      "front": "à",
+      "back": "préposition"
+     }
+    ],
+    "out": [
+     ""
+    ]
+   },
+  {
+    "name": "another year: another card",
+    "before": [
+     {
+      "id": "a",
+      "front": "1789",
+      "back": "la Révolution"
+     }
+    ],
+    "made": [
+     {
+      "front": "1798",
+      "back": "l'Égypte"
+     }
+    ],
+    "out": [
+     ""
+    ]
+   }
+ ],
+ "same_text": [
+  {
+    "a": "La mère",
+    "b": "la mère",
+    "key": "la mère",
+    "out": true
+   },
+  {
+    "a": "la mère.",
+    "b": "la mère",
+    "key": "la mère",
+    "out": true
+   },
+  {
+    "a": "Comment t'appelles-tu ?",
+    "b": "comment t’appelles-tu",
+    "key": "comment t'appelles-tu",
+    "out": true
+   },
+  {
+    "a": "« oui »",
+    "b": "\"oui\"",
+    "key": "\"oui\"",
+    "out": true
+   },
+  {
+    "a": "la mère",
+    "b": "la  mère ",
+    "key": "la mère",
+    "out": true
+   },
+  {
+    "a": "été",
+    "b": "été",
+    "key": "été",
+    "out": true
+   },
+  {
+    "a": "a",
+    "b": "à",
+    "key": "a",
+    "out": false
+   },
+  {
+    "a": "ou",
+    "b": "où",
+    "key": "ou",
+    "out": false
+   },
+  {
+    "a": "tache",
+    "b": "tâche",
+    "key": "tache",
+    "out": false
+   },
+  {
+    "a": "1789",
+    "b": "1798",
+    "key": "1789",
+    "out": false
+   },
+  {
+    "a": "3,5",
+    "b": "3.5",
+    "key": "3,5",
+    "out": false
+   },
+  {
+    "a": "la mère",
+    "b": "la mere",
+    "key": "la mère",
+    "out": false
+   },
+  {
+    "a": "…",
+    "b": "",
+    "key": "",
+    "out": true
+   },
+  {
+    "a": "Pourquoi ?!",
+    "b": "pourquoi ?",
+    "key": "pourquoi ?",
+    "out": false
    }
  ]
 }

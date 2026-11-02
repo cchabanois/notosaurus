@@ -9,7 +9,7 @@ from pathlib import Path
 import pytest
 
 from app.exams import common_deck, tag_text
-from notosaurus_core.cards import kept_ids
+from notosaurus_core.cards import kept_ids, same_text, text_key
 from notosaurus_core.models import Card
 from notosaurus_core.tts import filename, speakable, spoken
 
@@ -48,3 +48,10 @@ def test_a_card_made_again_keeps_its_id(case):
     their ids, so their notes and history in Anki."""
     made, before = [Card(**c) for c in case["made"]], [Card(**c) for c in case["before"]]
     assert kept_ids(made, before) == case["out"]
+
+
+@pytest.mark.parametrize("case", CASES["same_text"], ids=lambda c: f"{c['a']}|{c['b']}")
+def test_two_texts_the_same(case):
+    """What a card made again may differ by (a capital, a final full stop, a typographic
+    quote) and what it may not (an accent, a digit): Lessons.textKey on the phone."""
+    assert (text_key(case["a"]), same_text(case["a"], case["b"])) == (case["key"], case["out"])

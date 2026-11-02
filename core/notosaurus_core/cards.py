@@ -2,6 +2,7 @@
 
 import html
 import re
+import unicodedata
 
 from .models import Card
 
@@ -152,10 +153,45 @@ def is_choice(card: Card) -> bool:
     )
 
 
+# What two texts of a card may differ by and still be the same text (same_text): the AI writes
+# a lesson again as it likes. Never the accents ("a"/"à"), nor the punctuation inside, nor
+# digits ("1789"/"1798"): nothing fuzzy (a wrong match gives a card another's history)
+_SPACES = re.compile("[ \t\n\r\x0b\x0c\u00a0\u2007\u202f]+")
+_QUOTES = str.maketrans(
+    {
+        "\u2019": "'",
+        "\u2018": "'",
+        "\u201b": "'",
+        "\u02bc": "'",
+        "\u201c": '"',
+        "\u201d": '"',
+        "\u201e": '"',
+        "\u00ab": '"',
+        "\u00bb": '"',
+    }
+)
+_GUILLEMETS = re.compile("(?<=\u00ab)[ \u00a0\u202f]+|[ \u00a0\u202f]+(?=\u00bb)")  # « oui » as "oui"
+_FINAL = ".!?\u2026:;"
+
+
+def text_key(text: str) -> str:
+    """A card's text as same_text compares it (Lessons.textKey on the phone): NFC, lower case,
+    typographic quotes made straight (« oui » as "oui"), spaces (non-breaking too) as one, one
+    final . ! ? … : ; taken off. The blank alone ("…") gives "": no text."""
+    text = _GUILLEMETS.sub("", unicodedata.normalize("NFC", text).lower())
+    text = _SPACES.sub(" ", text.translate(_QUOTES)).strip()
+    return text[:-1].rstrip() if text and text[-1] in _FINAL else text
+
+
+def same_text(a: str, b: str) -> bool:
+    return text_key(a) == text_key(b)
+
+
 def kept_ids(made: list[Card], before: list[Card]) -> list[str]:
     """A lesson made again in its place: each new card's id, the lesson's card it is (its id
     is its note's key in Anki: its note updated, its history kept), else "" (a new card).
-    The same front and back, else the same front, in the same part of the deck (subdeck),
+    The same front and back, else the same front (same_text: a capital, a final full stop…),
+    in the same part of the deck (subdeck),
     each old card given once; never by a front empty or the blank alone ("…": the same for
     every dictation without a sentence), only with the same back then. A new card with an id
     keeps it; an old card whose id one of them has is given to no other (an id never twice)."""
@@ -163,11 +199,10 @@ def kept_ids(made: list[Card], before: list[Card]) -> list[str]:
     left = [c for c in before if c.id and c.id not in taken]
 
     def same(a: Card, b: Card, back: bool) -> bool:
-        front = a.front.strip()
         return (
-            a.subdeck.strip() == b.subdeck.strip()
-            and front == b.front.strip()
-            and (a.back.strip() == b.back.strip() if back else front not in ("", DICTATION_FRONT))
+            same_text(a.subdeck, b.subdeck)
+            and same_text(a.front, b.front)
+            and (same_text(a.back, b.back) if back else text_key(a.front) != "")  # "…" too: ""
         )
 
     ids = []
