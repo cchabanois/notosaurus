@@ -109,7 +109,11 @@ class _Export:
         )
 
     def card_id(self, i: int, card) -> str:
-        return card.id or f"{self.req.lesson_id or ''}:{i}"
+        """The card's id, its notes' key (key_of): its own; else its place in the lesson; no
+        lesson, its front (as the Android app's): ":0" would be every lesson's first card."""
+        if card.id:
+            return card.id
+        return f"{self.req.lesson_id}:{i}" if self.req.lesson_id else field_html(card.front.strip())
 
 
 def notes(
@@ -217,8 +221,8 @@ def guids(notes: list[Note]) -> list[str]:
     """Each note's GUID, the same in every package and in a direct send (through the
     add-on): Anki tells notes apart by GUID, so re-importing a corrected lesson, or a
     package after a direct send, updates the notes instead of duplicating them (as long
-    as the front, or a label's place, and the deck stay the same). The same key twice in
-    a deck ("le vol": vuelo, robo): numbered."""
+    as the card, by its id, and the deck stay the same: its front may change). The same
+    key twice in a deck (cards without a lesson nor an id, keyed by their front): numbered."""
     seen: dict[tuple[str, str], int] = {}
     result = []
     for note in notes:

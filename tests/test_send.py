@@ -69,7 +69,8 @@ def test_direct_send_to_anki(anki, client):
     assert client.get(f"/api/lessons/{lesson['id']}").json()["exported_at"] is not None
 
     # Sent again after a correction: notes are updated, not duplicated
-    corrected = {**SEND, "cards": [{**SEND["cards"][0], "back": "la mamá"}, SEND["cards"][1]]}
+    cards = [{**SEND["cards"][0], "back": "la mamá"}, SEND["cards"][1]]
+    corrected = {**SEND, "cards": cards, "lesson_id": lesson["id"]}
     res = client.post("/api/anki/send", json=corrected).json()
     assert (res["added"], res["updated"]) == (0, 2)
     assert len(anki.notes) == 2
@@ -197,12 +198,12 @@ def test_deleting_a_lesson_keeps_another_lessons_notes(anki, client):
         body = {"deck": "Espagnol::Leçon 7", "cards": lesson["cards"], "lesson_id": lesson["id"]}
         client.post("/api/anki/send", json=body)
         client.put(f"/api/lessons/{lesson['id']}", json=body)
-    # Same fronts: the second send updated the first's notes, which carry both tags now
-    assert len(anki.notes) == 6
+    # Each lesson's cards their own notes (keyed by card id), even with the same fronts
+    assert len(anki.notes) == 12
     url = f"/api/lessons/{first['id']}"
-    assert client.get(f"{url}/anki-notes").json()["count"] == 0  # all shared with the other lesson
+    assert client.get(f"{url}/anki-notes").json()["count"] == 6
     client.delete(f"{url}?anki=true")
-    assert len(anki.notes) == 6
+    assert len(anki.notes) == 6  # the other lesson's stay
     assert client.get(f"/api/lessons/{second['id']}/anki-notes").json()["count"] == 6  # alone now
 
 
@@ -347,17 +348,19 @@ def test_the_lessons_deck_changed_its_cards_move(anki, client):
 
 
 def test_a_note_another_lesson_uses_doesnt_move(anki, client):
-    """A note both lessons use (tagged for each) stays where it is."""
-    first, second = extract_lesson(client), extract_lesson(client)
-    for lesson in (first, second):
-        client.post(
-            "/api/anki/send", json={"deck": "Espagnol::Leçon 7", "cards": lesson["cards"], "lesson_id": lesson["id"]}
-        )
-    shared = len(anki.notes)
-    body = {"deck": "Ailleurs", "cards": first["cards"], "lesson_id": first["id"]}
-    r = client.post("/api/anki/send", json=body).json()
-    assert r["moved"] == 0
-    assert all(n["deckName"].startswith("Espagnol::Leçon 7") for i, n in anki.notes.items() if i <= shared)
+    """A note another lesson uses too (tagged for each: two lessons' cards of the same front,
+    keyed by their front before 1.1.0) stays where it is when one lesson's deck changes."""
+    from app.anki import lesson_tag
+
+    first = extract_lesson(client)
+    body = {"deck": "Espagnol::Leçon 7", "cards": first["cards"], "lesson_id": first["id"]}
+    client.post("/api/anki/send", json=body)
+    shared, *own = sorted(anki.notes)
+    anki.notes[shared]["tags"].append(lesson_tag("2026-10-01-another-lesson"))
+    r = client.post("/api/anki/send", json={**body, "deck": "Ailleurs"}).json()
+    assert r["moved"] == len(own)
+    assert anki.notes[shared]["deckName"].startswith("Espagnol::Leçon 7")
+    assert all(anki.notes[i]["deckName"].startswith("Ailleurs") for i in own)
 
 
 def test_a_corrected_front_updates_its_own_note(anki, client):

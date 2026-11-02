@@ -412,6 +412,28 @@ class AnkiDroidTest {
             .single { noteModel(it.id) == model && field(model, it.fields, name) == value }
     }
 
+    /** Dictations without a sentence (their fronts all "…") sent from the computer, then the
+     * lesson sent from the phone without its notes known: each card finds its own note, by its
+     * id (keyOf). Keyed by their front, all were one note: each card updated that one. */
+    @Test
+    fun dictationsWithoutASentenceEachTheirOwnNote() {
+        val anki = Anki(Device.context)
+        val lesson = "dictation-$run"
+        val api = AddContentApi(Device.context)
+        val options = Options(dictation = true, dictationOnly = true)
+        val cards = listOf(Card("", "chaton $run", id = "a-$run"), Card("", "bateau $run", id = "b-$run"))
+        val first = anki.send(Deck("Notosaurus test $run", cards), Media(lesson = lesson), options)
+        assertEquals(2, first.added)
+        // Sent again without its notes known (another device's lesson): found by their keys
+        val corrected = listOf(cards[0].copy(back = "chaton ! $run"), cards[1].copy(back = "bateau ! $run"))
+        val again = anki.send(Deck("Notosaurus test $run", corrected), Media(lesson = lesson), options)
+        assertEquals(listOf(0, 2), listOf(again.added, again.updated))
+        assertEquals(first.notes, again.notes) // each card its own note
+        val model = noteModel(first.notes.getValue("a-$run"))
+        assertEquals("chaton ! $run", field(model, api.getNote(first.notes.getValue("a-$run"))!!.fields, "Back"))
+        assertEquals("bateau ! $run", field(model, api.getNote(first.notes.getValue("b-$run"))!!.fields, "Back"))
+    }
+
     @Test
     fun aLessonsNotesSentFromTheComputerUpdatedNotAddedAgain() {
         // The computer's notes, synced from Anki: its note types (the same names and fields),
@@ -447,18 +469,19 @@ class AnkiDroidTest {
 
     @Test
     fun aTestVersionsNotesUpdatedInPlace() {
-        // A test version's note type: " (Android)", the key first
+        // A test version's note type: " (Android)", the front first (its key then); its notes had
+        // their card's id too, which finds them now
         val anki = Anki(Device.context)
         val lesson = "older-$run"
         val api = AddContentApi(Device.context)
         val text = types["text"]
         val legacy = api.modelList!!.entries.firstOrNull { it.value == text.legacyName }?.key ?: api.addNewCustomModel(
-            text.legacyName, (listOf(text.key) + text.fields.filter { it != text.key }).toTypedArray(), arrayOf(text.cards[0].name),
+            text.legacyName, (listOf("Front") + text.fields.filter { it != "Front" }).toTypedArray(), arrayOf(text.cards[0].name),
             arrayOf(text.cards[0].front), arrayOf(text.cards[0].back), text.css, null, 0,
         )!!
         anki.send(Deck("Notosaurus test $run", listOf(Card("y $run", "z"))), Media(lesson = "made-$run")) // its deck there
         val did = api.deckList!!.entries.first { it.value == "Notosaurus test $run" }.key
-        val older = api.addNote(legacy, did, text.values(api.getFieldList(legacy)!!.toList(), mapOf("Front" to "bleu $run", "Back" to "azul")), setOf(Anki.lessonTag(lesson)))!!
+        val older = api.addNote(legacy, did, text.values(api.getFieldList(legacy)!!.toList(), mapOf("Front" to "bleu $run", "Back" to "azul", "Id" to "b-$run")), setOf(Anki.lessonTag(lesson)))!!
         val sent = anki.send(Deck("Notosaurus test $run", listOf(Card("bleu $run", "azul claro", id = "b-$run"))), Media(lesson = lesson))
         assertEquals(listOf(0, 1), listOf(sent.added, sent.updated))
         assertEquals("azul claro", field(legacy, api.getNote(older)!!.fields, "Back"))

@@ -557,17 +557,32 @@ def test_a_picture_on_a_dictation_keeps_it_a_dictation():
     assert note.key == "c1"  # with a picture: its id (their fronts are often all the same)
 
 
-def test_a_card_without_a_picture_keeps_its_guid():
-    """The 1.0.0's notes: a text card without a picture keyed by its front, as then (its GUID
-    the same: never a duplicate at the next send), though its note type has an "Id" now."""
+def test_a_note_is_its_cards_own_whatever_its_front():
+    """A note's key, so its GUID, is its card's id, never its front: a corrected front stays
+    the same note (a package imported again updates it), two cards of the same front ("le
+    vol": vuelo, robo) and dictations whose fronts are all the blank are notes of their own.
+    No lesson, no card id: the front (as the Android app's), never ":0" (every lesson's first)."""
     import genanki
 
     from app.models import ExportRequest
 
-    req = ExportRequest(deck="Espagnol", cards=[Card(id="c1", front="la mère", back="la madre")])
-    (note,) = anki.notes(req)
-    assert note.key == "la mère" and note.fields["Id"] == "c1"
-    assert anki.guids([note]) == [genanki.guid_for("Espagnol", "la mère")]
+    def keyed(*cards, lesson="L1"):
+        notes = anki.notes(ExportRequest(deck="Espagnol", lesson_id=lesson, cards=list(cards)))
+        return [n.key for n in notes], anki.guids(notes)
+
+    keys, guids = keyed(Card(id="c1", front="la mère", back="la madre"))
+    assert keys == ["c1"] and guids == [genanki.guid_for("Espagnol", "c1")]
+    assert keyed(Card(id="c1", front="la maman", back="la madre"))[1] == guids  # its front corrected
+    vuelo, robo = Card(id="a", front="le vol", back="el vuelo"), Card(id="b", front="le vol", back="el robo")
+    assert keyed(vuelo, robo)[0] == ["a", "b"]
+    dictation = ExportRequest(
+        deck="Dictée",
+        lesson_id="L1",
+        dictation_only=True,
+        cards=[Card(front="", back="chaton"), Card(front="", back="bateau")],
+    )
+    assert [n.key for n in anki.notes(dictation)] == ["L1:0", "L1:1"]  # both "…": their places
+    assert keyed(Card(front="la mère", back="la madre"), lesson="")[0] == ["la mère"]
 
 
 def test_a_dictation_card_without_front_still_sent():

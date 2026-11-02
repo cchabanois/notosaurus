@@ -425,9 +425,10 @@ async def _other_notosaurus_notes(client: httpx.AsyncClient, deck: str) -> dict[
     found = {}
     for info in await _invoke(client, "notesInfo", notes=ids) if ids else []:
         kind = family(info.get("modelName", ""))
-        for key in ("Front", "Id"):
-            if kind and info["fields"].get(key, {}).get("value"):
-                found.setdefault((kind, info["fields"][key]["value"]), []).append(info)
+        # Once per value: a card without a lesson has its front for its id (Export.card_id)
+        for key in {info["fields"].get(k, {}).get("value") for k in ("Front", "Id")} - {"", None}:
+            if kind:
+                found.setdefault((kind, key), []).append(info)
     return found
 
 

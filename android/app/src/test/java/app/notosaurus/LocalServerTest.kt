@@ -370,6 +370,9 @@ class LocalServerTest {
         val again = client.extract(path = "/api/lessons/$id/regenerate", photos = listOf("photo 3"))
         assertEquals("false", relay.takeRequest().multipartRequest()["quick"]!!.jsonPrimitive.content)
         assertEquals(id, again.string("id"))
+        // The same cards made again: their ids, so their notes and history in AnkiDroid (Lessons.keptIds)
+        val ids = { l: JsonObject -> l["cards"]!!.jsonArray.map { it.jsonObject.string("id") } }
+        assertEquals(ids(lesson), ids(again))
         assertEquals(1, again["photo_count"]!!.jsonPrimitive.int)
         assertTrue(again["reverse"]!!.jsonPrimitive.content.toBoolean())
         assertArrayEquals("photo 3".toByteArray(), client.get("/api/lessons/$id/photos/1") { page() }.bodyAsBytes())

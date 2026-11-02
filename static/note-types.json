@@ -15,8 +15,7 @@
     "Id",
     "Source"
    ],
-   "key": "Front",
-   "picture_key": "Id",
+   "key": "Id",
    "cloze": false,
    "cards": [
     {
@@ -43,8 +42,7 @@
     "Id",
     "Source"
    ],
-   "key": "Front",
-   "picture_key": "Id",
+   "key": "Id",
    "cloze": false,
    "cards": [
     {
@@ -76,8 +74,7 @@
     "Id",
     "Source"
    ],
-   "key": "Front",
-   "picture_key": "Id",
+   "key": "Id",
    "cloze": false,
    "cards": [
     {
@@ -104,8 +101,7 @@
     "Id",
     "Source"
    ],
-   "key": "Front",
-   "picture_key": "Id",
+   "key": "Id",
    "cloze": false,
    "cards": [
     {
@@ -137,8 +133,7 @@
     "Id",
     "Source"
    ],
-   "key": "Front",
-   "picture_key": "Id",
+   "key": "Id",
    "cloze": false,
    "cards": [
     {
@@ -170,8 +165,7 @@
     "Id",
     "Source"
    ],
-   "key": "Front",
-   "picture_key": "Id",
+   "key": "Id",
    "cloze": false,
    "cards": [
     {
@@ -208,8 +202,7 @@
     "Id",
     "Source"
    ],
-   "key": "Front",
-   "picture_key": "Id",
+   "key": "Id",
    "cloze": false,
    "cards": [
     {
@@ -241,8 +234,7 @@
     "Id",
     "Source"
    ],
-   "key": "Front",
-   "picture_key": "Id",
+   "key": "Id",
    "cloze": false,
    "cards": [
     {
@@ -279,8 +271,7 @@
     "Id",
     "Source"
    ],
-   "key": "Front",
-   "picture_key": "Id",
+   "key": "Id",
    "cloze": false,
    "cards": [
     {
@@ -308,7 +299,6 @@
     "Mnemonic"
    ],
    "key": "Id",
-   "picture_key": "",
    "cloze": false,
    "cards": [
     {
@@ -336,7 +326,6 @@
     "Mnemonic"
    ],
    "key": "Id",
-   "picture_key": "",
    "cloze": false,
    "cards": [
     {
@@ -360,7 +349,6 @@
     "Mnemonic"
    ],
    "key": "Id",
-   "picture_key": "",
    "cloze": true,
    "cards": [
     {
@@ -389,7 +377,6 @@
     "Source"
    ],
    "key": "Id",
-   "picture_key": "",
    "cloze": false,
    "cards": [
     {
