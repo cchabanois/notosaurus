@@ -1178,24 +1178,26 @@ def add_photo(page, buffer: bytes) -> None:
     sync_api.expect(page.locator(".thumb img")).to_have_count(1)
 
 
-def test_the_add_buttons_fit_beside_the_pages_on_a_phone(page):
-    """Pages taken: the camera, gallery and PDF buttons share a page's cell, first (always in
-    the same place), no taller than a page, their names whole (three stacked as they were
-    made it half as tall again)."""
+def test_the_add_buttons_beside_the_pages_on_a_phone(page):
+    """Pages taken: the camera, gallery and PDF buttons first (always in the same place), at
+    most two pages high, each a finger's size, their names whole; four pages beside them, then
+    under them (three stacked in a page's cell made it half as tall again as the pages)."""
     page.set_viewport_size({"width": 411, "height": 860})
     page.goto("/")
-    for n, color in enumerate(("red", "blue", "green"), start=1):
+    for n, color in enumerate(("red", "blue", "green", "orange", "purple"), start=1):
         page.locator('input[type=file][accept="image/*"][multiple]').set_input_files(
             {"name": f"page-{n}.png", "mimeType": "image/png", "buffer": plain_image(300, 400, color)}
         )
         sync_api.expect(page.locator(".thumb img")).to_have_count(n)
-        thumb = page.locator(".thumb").first.bounding_box()
+        thumbs = [t.bounding_box() for t in page.locator(".thumb").all()]
         stack = page.locator(".add-stack").bounding_box()
-        assert stack["height"] <= thumb["height"] + 1, (n, thumb, stack)
-        assert stack["width"] <= thumb["width"] + 1, (n, thumb, stack)  # a page's cell, not a row
-        assert stack["x"] < thumb["x"] and stack["y"] == thumb["y"], (n, thumb, stack)  # first, the pages after
+        assert stack["x"] < thumbs[0]["x"] and stack["y"] == thumbs[0]["y"], (n, thumbs, stack)  # first
+        assert stack["width"] <= thumbs[0]["width"] + 1, (n, thumbs, stack)  # a page's column
+        assert stack["height"] <= 2 * thumbs[0]["height"] + 16, (n, thumbs, stack)
+        assert all(t.bounding_box()["height"] >= 44 for t in page.locator(".add-tile:visible").all()), n
         cut = "[...document.querySelectorAll('.add-stack .add-tile')].some(e => e.scrollWidth > e.clientWidth + 1)"
         assert not page.evaluate(cut), n
+    assert thumbs[4]["x"] == stack["x"] and thumbs[4]["y"] > stack["y"] + stack["height"]  # the fifth under them
 
 
 def test_the_lesson_in_progress_found_again(page):
