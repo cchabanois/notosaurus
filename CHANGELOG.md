@@ -69,6 +69,7 @@ Each pull request's entries (the `## Changelog` of its description) are put unde
 
 ### Changed
 
+- A card's note in Anki is found by the card itself, never by its front: a corrected front, two cards with the same front, or dictations without a sentence each keep their own note, and a package imported again after a correction updates the card instead of duplicating it. A lesson made again keeps the notes of the cards that stay the same. Lessons sent with 1.0.0 come into Anki anew, once, the next time they are sent.
 - The button under the prompt says what it does: "See the instructions" for Notosaurus's own, "Save the changes" for one of yours once its text is changed (saved into it at once), "Edit instructions" otherwise.
 - Once a lesson's cards are made, step 2 (the prompt) folds to one line, its prompt and speed, so the cards come first; **✏️ Change** opens it. Its buttons stay in view, and a prompt changed since the cards were made says it isn't applied until they are made again. Step 3's "Prompt used for this lesson" is gone: the folded line says it.
 - A picture can be on any card in Anki, no longer on a card of its own: a dictation, a reversed or typed card keeps its picture. **Anki asks for a full sync once.** The picture cards sent by 1.0.0 are sent again as new notes; the old ones are offered for deletion (their review history isn't kept).
