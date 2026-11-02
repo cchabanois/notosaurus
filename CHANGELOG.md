@@ -69,6 +69,7 @@ Each pull request's entries (the `## Changelog` of its description) are put unde
 
 ### Changed
 
+- Once a lesson's cards are made, step 2 (the prompt) folds to one line, its prompt and speed, so the cards come first; **✏️ Change** opens it. Its buttons stay in view, and a prompt changed since the cards were made says it isn't applied until they are made again. Step 3's "Prompt used for this lesson" is gone: the folded line says it.
 - A picture can be on any card in Anki, no longer on a card of its own: a dictation, a reversed or typed card keeps its picture. **Anki asks for a full sync once.** The picture cards sent by 1.0.0 are sent again as new notes; the old ones are offered for deletion (their review history isn't kept).
 - A photo is kept as taken, no longer turned upright by guess (sometimes upside down): **↻** turns it.
 - Pictures where they truly help (a work of art, a person, a place, an animal), never on every card; a picture that would give the answer away goes on the back. **Settings → Instructions for the AI → 🖼️ Pictures on the cards** turns them off.
