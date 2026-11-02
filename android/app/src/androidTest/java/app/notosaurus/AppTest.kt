@@ -186,7 +186,7 @@ class AppTest {
     }
 
     /** A lesson being made while the app is left (home, the screen off: INT-01, INT-02): kept
-     * running by a short foreground service (Working) while the relay works, ended with it, the
+     * running by a short foreground service (Working) while the relay works, ended a moment after, the
      * cards there back in the app. Android 15+ cuts a cached app's network, its call to the relay
      * with it ("can't reach the service", no card); not seen here: a test's process is kept at a
      * foreground service's level by its instrumentation, so the service itself is what's checked. */
@@ -222,8 +222,52 @@ class AppTest {
             Device.waitFor(app, "window.made", "the lesson made")
             val made = Device.js(app, "JSON.stringify(window.made)")
             assertTrue(made, "la mère $run" in made)
-            Thread.sleep(1000) // (ended)
+            Thread.sleep(Working.GRACE_MS + 2000) // (ended, a moment after: Working.GRACE_MS)
             assertTrue("kept after the lesson was made", !kept())
+        }
+    }
+
+    /** A lesson sent to AnkiDroid while the app is left ("In Anki: sounds…", the screen off):
+     * kept running all along, its sounds read by the relay then its cards written, none left
+     * mute; a moment more after (Working.GRACE_MS: the next call, begun in the background,
+     * could start no service of its own), then ended. */
+    @Test
+    fun aLessonSentWhileTheAppIsLeft() {
+        val paths = java.util.concurrent.CopyOnWriteArrayList<String>()
+        relay.dispatcher = object : Dispatcher() {
+            override fun dispatch(request: RecordedRequest) = when (request.url.encodedPath.also { paths += it }) {
+                "/v1/speak" -> MockResponse.Builder().headersDelay(LEFT_S, TimeUnit.SECONDS)
+                    .addHeader("Content-Type", "audio/mpeg").body("ID3 a sound").build()
+                "/v1/voices" -> MockResponse.Builder().body("[]").build()
+                else -> MockResponse.Builder().code(404).body("""{"code": "relay.invalid_request", "params": {}}""").build()
+            }
+        }
+        fun kept() = "isForeground=true" in ui.executeShellCommand("dumpsys activity services ${Device.context.packageName}/.WorkingService")
+        ActivityScenario.launch(MainActivity::class.java).use { app ->
+            Device.waitFor(app, "typeof api === 'function' && document.querySelectorAll('.chip').length > 3", "the page and its prompts")
+            Device.js(
+                app,
+                "(() => { const deck = 'Notosaurus app test $run'; window.sent = null; " +
+                    "const cards = [{ id: 'a', front: 'la mère $run', back: 'la madre $run' }, { id: 'b', front: 'le père $run', back: 'el padre $run' }]; " + // (no sound kept from before)
+                    "api('/api/anki/send', { method: 'POST', headers: { 'Content-Type': 'application/json' }, " +
+                    "body: JSON.stringify({ deck, cards, voice: 'es-ES-Chirp3-HD-Puck', lesson_id: '' }) })" +
+                    ".then((r) => r.json()).then((j) => { window.sent = j; }, (e) => { window.sent = { error: String(e) }; }); return true; })()",
+            )
+            Thread.sleep(1000) // (asked)
+            ui.pressHome()
+            Thread.sleep((LEFT_S / 2) * 1000)
+            assertTrue("the app kept running while the sounds are read", kept())
+            val icon = Device.context.packageManager.getLaunchIntentForPackage(Device.context.packageName)!!
+            Device.context.startActivity(icon.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK))
+            ui.wait(Until.hasObject(By.pkg(Device.context.packageName).depth(0)), 10_000)
+            Device.waitFor(app, "window.sent", "the lesson sent")
+            val sent = Device.js(app, "JSON.stringify(window.sent)")
+            assertEquals(sent, "2", Device.js(app, "window.sent.added"))
+            assertEquals(sent, "0", Device.js(app, "window.sent.audio_failures ?? 0")) // none mute
+            assertEquals("its sounds read by the relay", 2, paths.count { it == "/v1/speak" })
+            assertTrue("kept a moment after", kept())
+            Thread.sleep(Working.GRACE_MS + 2000)
+            assertTrue("ended after", !kept())
         }
     }
 

@@ -84,7 +84,7 @@ class LocalServer(
     // would send the lessons elsewhere)
     internal val relayChoosable: Boolean = TEST_RELAY.isNotEmpty(),
     val token: String = UUID.randomUUID().toString(),
-    private val busy: Relay.Busy = Relay.Busy.NONE, // told while the AI works (the app kept running: Working)
+    private val busy: Relay.Busy = Relay.Busy.NONE, // told while a lesson waits for the relay or is sent (the app kept running: Working)
 ) {
     internal val relays = RelayDirectory(prefs, relayDirectory)
     internal val lessons = Lessons(File(dataDir, "lessons").apply { mkdirs() })
@@ -152,6 +152,16 @@ class LocalServer(
     }
 
     /** The relay, with its licence key. */
+    /** `work` with the app kept running (Working), left in the background too: a lesson sent to AnkiDroid. */
+    internal suspend fun <T> kept(work: suspend () -> T): T {
+        busy.begin()
+        try {
+            return work()
+        } finally {
+            busy.end()
+        }
+    }
+
     internal fun relay() = Relay(relayUrl(), licence(), lost = relays::refreshSoon, lapsed = licensing::recheckSoon, rejected = licensing::forget, noKey = licensing::trialKey, busy = busy)
 
     /** The licence: its key, the free trial, Google Play's purchases (Licensing). */
