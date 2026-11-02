@@ -64,7 +64,7 @@ def choice_note_type() -> NoteType:
     question = f"{PICTURE}<div>{{{{Question}}}}</div>"
     templates = (
         {
-            "name": "QCM",
+            "name": "Multiple choice",
             "qfmt": f"{question}{{{{Choices}}}}",
             "afmt": f'{question}<hr id="answer">{{{{AnswerChoices}}}}{BACK_PICTURE}{info}',
         },
@@ -82,7 +82,9 @@ def choice_note_type() -> NoteType:
         SOURCE_FIELD,
     )
     css = CSS + PICTURE_CSS + CHOICE_CSS
-    return NoteType(versioned("Notosaurus QCM"), "choice", fields, with_context(templates), css=css, key="Id")
+    return NoteType(
+        versioned("Notosaurus multiple choice"), "choice", fields, with_context(templates), css=css, key="Id"
+    )
 
 
 def choice_fields(card, card_id: str, picture_file: Path | None) -> dict[str, str]:

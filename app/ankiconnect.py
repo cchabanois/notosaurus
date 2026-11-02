@@ -17,6 +17,7 @@ import httpx
 from . import settings
 from .anki import TAG_PREFIX, Note, family, guids, key_of, model_id
 from .errors import AppError
+from .note_types.common import FORMER_TEMPLATES
 
 TIMEOUT = 30.0
 _transport: httpx.AsyncBaseTransport | None = None  # tests plug a fake AnkiConnect here
@@ -274,6 +275,7 @@ class _Sending:
     known: dict[str, dict] = field(default_factory=dict)  # card id → its note at the last send (_known_notes)
     sent: dict[str, int] = field(default_factory=dict)  # card id → its note now
     moved: int = 0  # known notes moved to the deck they go to now
+    renamed: set[str] = field(default_factory=set)  # note types whose former cards were renamed
 
     async def send(self, deck: str, nt, notes: list[Note]) -> None:
         existing = await self._existing(deck, nt)
@@ -325,6 +327,7 @@ class _Sending:
         if self.unsupported:
             return False
         try:
+            await self._former_templates_renamed(old["modelName"])
             tags = sorted({*old["tags"], *note.tags})
             changed = {"id": old["noteId"], "modelName": nt.name, "fields": note.fields, "tags": tags}
             await _invoke(self.client, "updateNoteModel", note=changed)
@@ -337,6 +340,19 @@ class _Sending:
         self.updated += 1
         self.converted += 1
         return True
+
+    async def _former_templates_renamed(self, model: str) -> None:
+        """A note type from before 1.1.0 (named in French), its cards renamed as today's
+        (FORMER_TEMPLATES), once: a note moved from it then keeps each card and its history,
+        cards going to those of the same name."""
+        if model in self.renamed:
+            return
+        self.renamed.add(model)
+        for former in await _invoke(self.client, "modelTemplates", modelName=model):
+            if new := FORMER_TEMPLATES.get(former):
+                await _invoke(
+                    self.client, "modelTemplateRename", modelName=model, oldTemplateName=former, newTemplateName=new
+                )
 
     async def _update(self, note_id: int, note: Note) -> None:
         await _invoke(self.client, "updateNoteFields", note={"id": note_id, "fields": note.fields})

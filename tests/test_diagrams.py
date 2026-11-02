@@ -121,7 +121,7 @@ def test_diagram_lesson_exported(client, tmp_path):
 
     first = package(cards)
     (model,) = first.models.values()
-    assert model["name"] == "Notosaurus légendes (audio)"
+    assert model["name"] == "Notosaurus labels (audio) v2"
     fields = first.fields_by_name(first.notes[0])
     assert (fields["Front"], fields["Back"]) == ("Qu'est-ce que (1) ?", "la bouche")
     assert fields["Id"] == f"{lesson['id']}:1:1"  # lesson, photo, label number

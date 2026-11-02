@@ -256,11 +256,11 @@ class Anki(private val context: Context) : AnkiTarget {
         }
     }.orEmpty()
 
-    /** The lesson's notes of note type `type` (its name, or a test version's: legacyName),
-     * by their key field's value, read by its name: whichever device sent them. */
+    /** The lesson's notes of note type `type` (its name), by their key field's value, read by
+     * its name: whichever device sent them. */
     private fun lessonNotesOf(lesson: String, type: NoteType): Map<String, There> {
         val models = api.modelList.orEmpty()
-        return lessonThere(lesson).filter { models[it.model] == type.name || models[it.model] == type.legacyName }
+        return lessonThere(lesson).filter { models[it.model] == type.name }
             .map { there -> type.keyOf(names(there.model, type).zip(there.fields).toMap()) to there }
             .filter { (key, _) -> key.isNotEmpty() }
             .toMap()

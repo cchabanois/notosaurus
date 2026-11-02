@@ -152,6 +152,14 @@ def _model_template_add(p: dict) -> None:
     _save_model(model)
 
 
+def _model_template_rename(p: dict) -> None:
+    model = _model(p["modelName"])
+    for template in model["tmpls"]:
+        if template["name"] == p["oldTemplateName"]:
+            template["name"] = p["newTemplateName"]  # its cards stay: they keep its index
+    _save_model(model)
+
+
 def _update_model_templates(p: dict) -> None:
     model = _model(p["model"]["name"])
     for template in model["tmpls"]:
@@ -368,6 +376,7 @@ ACTIONS: dict[str, Callable[[dict], Any]] = {
     "modelTemplates": _model_templates,
     "modelFieldAdd": _model_field_add,
     "modelTemplateAdd": _model_template_add,
+    "modelTemplateRename": _model_template_rename,
     "updateModelTemplates": _update_model_templates,
     "updateModelStyling": _update_model_styling,
     "deckNames": _deck_names,

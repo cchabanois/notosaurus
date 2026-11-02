@@ -86,7 +86,7 @@ class AnkiDroidTest {
         val api = AddContentApi(Device.context)
         assumeTrue("made already on this device", api.modelList!!.values.none { it == type.name })
         val old = listOf("Front", "Back", "Info", "Audio", "Explanation", "Mnemonic") // the 1.0.0's
-        api.addNewCustomModel(type.name, old.toTypedArray(), arrayOf("Recto → Verso"), arrayOf("{{Front}} (old)"), arrayOf("{{Back}} (old)"), ".card {}", null, 0)
+        api.addNewCustomModel(type.name, old.toTypedArray(), arrayOf("Front → Back"), arrayOf("{{Front}} (old)"), arrayOf("{{Back}} (old)"), ".card {}", null, 0)
         val sent = Anki(Device.context).send(
             Deck("Notosaurus test $run", listOf(Card("nuage $run", "nube", id = "n-$run"))), Media(), Options(reverse = true, typing = true, dictation = true),
         )
@@ -301,7 +301,7 @@ class AnkiDroidTest {
     /** Release test (build 425): AnkiDroid holds the note types of an older Notosaurus (the
      * computer's 1.0.0, synced; a test build), the same names, without a picture's fields
      * (Picture, BackPicture, Id, Source). A lesson with a picture sent from the phone alone: its
-     * cards in today's version of the note type ("… v2", made here), the picture there, and its
+     * cards in today's version of the note type (in English, "… v2", made here), the picture there, and its
      * notes just added never offered as leftovers (found by their key, an Id the old one lacks:
      * "delete the 5 from Anki" deleted the lesson just sent). */
     @Test
@@ -309,8 +309,8 @@ class AnkiDroidTest {
         val anki = Anki(Device.context)
         val api = AddContentApi(Device.context)
         val type = types["text"]
-        val older = type.name.removeSuffix(" v2")
-        assertTrue("today's has a version", older != type.name)
+        val older = "Notosaurus recto/verso (audio)" // as 1.0.0 named it
+        assertTrue("today's another name", older != type.name)
         if (api.modelList!!.values.none { it == older }) {
             val fields = listOf("Front", "Back", "Info", "Audio", "Explanation", "Mnemonic") // the 1.0.0's
             api.addNewCustomModel(older, fields.toTypedArray(), arrayOf("Recto → Verso"), arrayOf("{{Front}}"), arrayOf("{{Back}}"), ".card {}", null, 0)
@@ -497,26 +497,6 @@ class AnkiDroidTest {
         val note = api.getNote(computers)!!
         assertEquals("el gato !", field(model, note.fields, "Back"))
         assertEquals("Wikimedia Commons", field(model, note.fields, "Source")) // the computer's, kept
-    }
-
-    @Test
-    fun aTestVersionsNotesUpdatedInPlace() {
-        // A test version's note type: " (Android)", the front first (its key then); its notes had
-        // their card's id too, which finds them now
-        val anki = Anki(Device.context)
-        val lesson = "older-$run"
-        val api = AddContentApi(Device.context)
-        val text = types["text"]
-        val legacy = api.modelList!!.entries.firstOrNull { it.value == text.legacyName }?.key ?: api.addNewCustomModel(
-            text.legacyName, (listOf("Front") + text.fields.filter { it != "Front" }).toTypedArray(), arrayOf(text.cards[0].name),
-            arrayOf(text.cards[0].front), arrayOf(text.cards[0].back), text.css, null, 0,
-        )!!
-        anki.send(Deck("Notosaurus test $run", listOf(Card("y $run", "z"))), Media(lesson = "made-$run")) // its deck there
-        val did = api.deckList!!.entries.first { it.value == "Notosaurus test $run" }.key
-        val older = api.addNote(legacy, did, text.values(api.getFieldList(legacy)!!.toList(), mapOf("Front" to "bleu $run", "Back" to "azul", "Id" to "b-$run")), setOf(Anki.lessonTag(lesson)))!!
-        val sent = anki.send(Deck("Notosaurus test $run", listOf(Card("bleu $run", "azul claro", id = "b-$run"))), Media(lesson = lesson))
-        assertEquals(listOf(0, 1), listOf(sent.added, sent.updated))
-        assertEquals("azul claro", field(legacy, api.getNote(older)!!.fields, "Back"))
     }
 
     private fun noteModel(note: Long): Long = Device.context.contentResolver.query(

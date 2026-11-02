@@ -248,7 +248,7 @@ def test_diagram_lesson_on_a_real_collection(bridged, col):
     body = {"deck": lesson["deck"], "cards": lesson["cards"], "lesson_id": lesson["id"]}
     assert client.post("/api/anki/send", json=body).json()["added"] == 3
 
-    (note_type,) = [m for m in col.models.all_names_and_ids() if m.name.startswith("Notosaurus légendes")]
+    (note_type,) = [m for m in col.models.all_names_and_ids() if m.name.startswith("Notosaurus labels")]
     note_ids = col.find_notes(f'"note:{note_type.name}"')
     first = fields(col, min(note_ids))
     image = first["Image"].split('"')[1]
@@ -280,7 +280,7 @@ def test_picture_lesson_on_a_real_collection(bridged, col, monkeypatch):
     assert client.post("/api/anki/send", json=body).json()["added"] == 4
 
     # A picture is any card's: the four in the text note type, three with their picture
-    (note_type,) = [m for m in col.models.all_names_and_ids() if m.name.startswith("Notosaurus recto/verso")]
+    (note_type,) = [m for m in col.models.all_names_and_ids() if m.name.startswith("Notosaurus front/back")]
     note_ids = sorted(col.find_notes(f'"note:{note_type.name}"'))
     pictured = [n for n in note_ids if fields(col, n)["Picture"]]
     assert (len(note_ids), len(pictured)) == (4, 3)  # the apple, the dog, the umbrella; "tomorrow" without
@@ -300,7 +300,7 @@ def test_cloze_lesson_on_a_real_collection(bridged, col, tmp_path):
     body = {"deck": lesson["deck"], "cards": lesson["cards"], "lesson_id": lesson["id"]}
     assert client.post("/api/anki/send", json=body).json()["added"] == 3
 
-    (note_type,) = [m for m in col.models.all_names_and_ids() if m.name == "Notosaurus texte à trous"]
+    (note_type,) = [m for m in col.models.all_names_and_ids() if m.name == "Notosaurus cloze v2"]
     assert col.models.get(note_type.id)["type"] == 1  # a real cloze note type
     note_ids = sorted(col.find_notes(f'"note:{note_type.name}"'))
     # Anki makes one card per gap number: c1 and c2, c1 and c2, c1 (twice)
@@ -336,7 +336,7 @@ def test_typed_answer_and_dictation_on_a_real_collection(bridged, col):
     assert res["added"] == len(cards)
 
     (note_type,) = [m for m in col.models.all_names_and_ids() if m.name.startswith("Notosaurus")]
-    assert note_type.name == "Notosaurus recto/verso à taper + dictée (audio) v2"
+    assert note_type.name == "Notosaurus front/back typed + dictation (audio) v2"
     mother = col.find_notes('"Front:la mère"')
     recto, dictation = col.get_note(mother[0]).cards()  # a dictation card on top of the usual one
     assert "[[type:Back]]" in recto.question() and "[[type:Back]]" in recto.answer()  # Anki's box, then its check
@@ -405,26 +405,26 @@ def test_options_changed_after_a_send_keep_the_review_history(bridged, col):
     assert (res["added"], res["converted"]) == (0, 6)
     assert sorted(col.find_notes("")) == notes_before
     name, by_template = cards()
-    assert name == "Notosaurus recto/verso + inverse + dictée (audio) v2"
-    assert set(by_template) == {"Recto → Verso", "Verso → Recto", "Dictée"}
-    recto = by_template["Recto → Verso"]
+    assert name == "Notosaurus front/back + reverse + dictation (audio) v2"
+    assert set(by_template) == {"Front → Back", "Back → Front", "Dictation"}
+    recto = by_template["Front → Back"]
     assert (recto.id, recto.ivl, recto.reps) == (card.id, 12, 5)
-    dictation_id = by_template["Dictée"].id
+    dictation_id = by_template["Dictation"].id
 
     # Reverse card switched off again: only that card goes, the others stay as they were
     res = client.post("/api/anki/send", json={**body, "dictation": True}).json()
     assert res["converted"] == 6
     name, by_template = cards()
-    assert name == "Notosaurus recto/verso + dictée (audio) v2"
-    assert set(by_template) == {"Recto → Verso", "Dictée"}  # matched by name, not by position
-    assert (by_template["Recto → Verso"].id, by_template["Recto → Verso"].ivl) == (card.id, 12)
-    assert by_template["Dictée"].id == dictation_id
+    assert name == "Notosaurus front/back + dictation (audio) v2"
+    assert set(by_template) == {"Front → Back", "Dictation"}  # matched by name, not by position
+    assert (by_template["Front → Back"].id, by_template["Front → Back"].ivl) == (card.id, 12)
+    assert by_template["Dictation"].id == dictation_id
 
 
 def test_notes_of_an_older_note_type_version_moved_with_their_history(bridged, col):
-    """A lesson's notes in the note type as an older Notosaurus named it (without " v2"):
-    sent again, the same notes move to today's version, their cards and review history kept
-    (the phone, which can't add a field, makes today's version: both devices meet there)."""
+    """A lesson's notes in the note type as 1.0.0 named it (in French, its card "Recto →
+    Verso"): sent again, the same notes move to today's version, their cards and review
+    history kept (the phone, which can't add a field, makes today's version: both meet there)."""
     client, _ = bridged
     lesson = extract(client)
     body = {"deck": lesson["deck"], "cards": lesson["cards"], "voice": VOICE, "lesson_id": lesson["id"]}
@@ -435,9 +435,10 @@ def test_notes_of_an_older_note_type_version_moved_with_their_history(bridged, c
     card.ivl, card.reps, card.due = 12, 5, col.sched.today + 12
     col.update_card(card)
     today = col.get_note(mother).note_type()
-    older = today["name"].removesuffix(" v2")
-    assert older != today["name"]
-    today["name"] = older  # as the older Notosaurus made it
+    name = today["name"]
+    today["name"] = "Notosaurus recto/verso (audio)"  # as 1.0.0 made it
+    (template,) = today["tmpls"]
+    template["name"] = "Recto → Verso"
     col.models.update_dict(today)
     notes_before = sorted(col.find_notes(""))
 
@@ -445,9 +446,9 @@ def test_notes_of_an_older_note_type_version_moved_with_their_history(bridged, c
     assert (res["added"], res["converted"]) == (0, 6)
     assert sorted(col.find_notes("")) == notes_before
     note = col.get_note(mother)
-    assert note.note_type()["name"] == older + " v2"
+    assert note.note_type()["name"] == name == "Notosaurus front/back (audio) v2"
     (moved,) = note.cards()
-    assert (moved.id, moved.ivl, moved.reps) == (card.id, 12, 5)
+    assert (moved.id, moved.ivl, moved.reps, moved.template()["name"]) == (card.id, 12, 5, "Front → Back")
 
 
 def test_the_lessons_deck_changed_on_a_real_collection(bridged, col):
@@ -504,7 +505,7 @@ def test_figure_lesson_on_a_real_collection(bridged, col):
     svg = Path(col.media.dir()) / cards[0]["picture"]
     assert svg.suffix == ".svg" and svg.read_text(encoding="utf-8").startswith("<svg")  # in Anki's media, as sent
     (note_id,) = col.find_notes(f'"Id:{cards[0]["id"]}"')  # a text card, as any: its figure on the question
-    assert col.models.get(col.get_note(note_id).mid)["name"].startswith("Notosaurus recto/verso")
+    assert col.models.get(col.get_note(note_id).mid)["name"].startswith("Notosaurus front/back")
     assert f'<img src="{cards[0]["picture"]}">' in col.get_note(note_id).cards()[0].question()
 
     # The tangent: its figure with the answer only
@@ -526,7 +527,7 @@ def test_multiple_choice_lesson_on_a_real_collection(bridged, col, tmp_path):
     body = {"deck": lesson["deck"], "cards": lesson["cards"], "lesson_id": lesson["id"]}
     assert client.post("/api/anki/send", json=body).json()["added"] == 4
 
-    note_ids = sorted(col.find_notes('"note:Notosaurus QCM v2"'))
+    note_ids = sorted(col.find_notes('"note:Notosaurus multiple choice v2"'))
     card = col.get_note(note_ids[0]).cards()[0]
     assert "<li>1789</li>" in card.question() and 'class="right"' not in card.question()  # none marked
     assert '<li class="right">1789</li>' in card.answer()

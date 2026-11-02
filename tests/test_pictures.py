@@ -84,7 +84,7 @@ def test_picture_cards_in_anki(client, drawn, tmp_path):
     first = package(cards)
     names = first.models
     # A picture is any card's: the same note type as the umbrella without its, and "tomorrow"
-    assert {names[mid]["name"] for _, mid, _ in first.notes} == {"Notosaurus recto/verso (audio) v2"}
+    assert {names[mid]["name"] for _, mid, _ in first.notes} == {"Notosaurus front/back (audio) v2"}
     pictured = [first.fields_by_name(note) for note in first.notes if first.fields_by_name(note)["Picture"]]
     assert len(pictured) == 2 and pictured[0]["Front"] == "Comment dit-on en anglais ?"
     assert (pictured[0]["Picture"], pictured[0]["Id"]) == (f'<img src="{cards[0]["picture"]}">', cards[0]["id"])

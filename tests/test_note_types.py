@@ -64,7 +64,9 @@ FIELDS = {
         "Source",
     ],
     ("diagram", 1): ["Front", "Back", "Info", "Image", "Masks", "AnswerMasks", "Id", "Explanation", "Mnemonic"],
+    ("diagram", 2): ["Front", "Back", "Info", "Image", "Masks", "AnswerMasks", "Id", "Explanation", "Mnemonic"],
     ("cloze", 1): ["Text", "Extra", "Info", "Id", "Explanation", "Mnemonic"],
+    ("cloze", 2): ["Text", "Extra", "Info", "Id", "Explanation", "Mnemonic"],  # 2: named in English
 }
 
 
