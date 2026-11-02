@@ -1179,11 +1179,13 @@ def add_photo(page, buffer: bytes) -> None:
 
 
 def test_the_add_buttons_beside_the_pages_on_a_phone(page):
-    """Pages taken: the camera, gallery and PDF buttons first (always in the same place), at
-    most two pages high, each a finger's size, their names whole; four pages beside them, then
+    """Pages taken: the camera, gallery and PDF buttons first (always in the same place), two
+    pages high from the first page, each a finger's size and the same as pages come, their
+    names whole; four pages beside them, then
     under them (three stacked in a page's cell made it half as tall again as the pages)."""
     page.set_viewport_size({"width": 411, "height": 860})
     page.goto("/")
+    heights = []
     for n, color in enumerate(("red", "blue", "green", "orange", "purple"), start=1):
         page.locator('input[type=file][accept="image/*"][multiple]').set_input_files(
             {"name": f"page-{n}.png", "mimeType": "image/png", "buffer": plain_image(300, 400, color)}
@@ -1194,7 +1196,9 @@ def test_the_add_buttons_beside_the_pages_on_a_phone(page):
         assert stack["x"] < thumbs[0]["x"] and stack["y"] == thumbs[0]["y"], (n, thumbs, stack)  # first
         assert stack["width"] <= thumbs[0]["width"] + 1, (n, thumbs, stack)  # a page's column
         assert stack["height"] <= 2 * thumbs[0]["height"] + 16, (n, thumbs, stack)
-        assert all(t.bounding_box()["height"] >= 44 for t in page.locator(".add-tile:visible").all()), n
+        heights.append([t.bounding_box()["height"] for t in page.locator(".add-tile:visible").all()])
+        assert min(heights[-1]) >= 44, n  # a finger's size
+        assert max(heights[-1]) - min(heights[0]) <= 3, heights  # the same as pages come
         cut = "[...document.querySelectorAll('.add-stack .add-tile')].some(e => e.scrollWidth > e.clientWidth + 1)"
         assert not page.evaluate(cut), n
     assert thumbs[4]["x"] == stack["x"] and thumbs[4]["y"] > stack["y"] + stack["height"]  # the fifth under them
