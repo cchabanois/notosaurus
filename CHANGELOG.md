@@ -87,6 +87,8 @@ Each pull request's entries (the `## Changelog` of its description) are put unde
 
 ### Fixed
 
+- With pages taken, the "Next page", "Gallery" and "PDF" buttons come first, always in the same place, two pages high: no longer a column taller than the pages, alone under them. A lesson of one page shows it large beside them.
+- Once a lesson has its 10 pages, the add buttons are greyed out and say so ("10 pages at most"), instead of refusing the next photo.
 - In a lesson already made, a photo put in place of another (removed, then chosen from the gallery) turns itself when turned: the lesson's old photo came back, turned, in its place.
 - A card corrected after a send updates its own note in Anki (its review history kept) instead of adding a second one; a lesson whose deck changed moves its cards there. A part named like the deck's last level no longer makes a second deck inside it.
 - A formula shows as meant when the AI wrote it with a single backslash or with brackets for an interval; formulas in the info and "Did you know?" are drawn, no longer shown as LaTeX.
