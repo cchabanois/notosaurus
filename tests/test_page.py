@@ -120,11 +120,14 @@ def started(page) -> None:
 
 def generate_free(page, prompt: str) -> None:
     """A new lesson from a prompt written for this time (no photo): the last one, open again
-    when the page opens (app-draft.js), set aside first."""
+    when the page opens (app-draft.js), set aside first; photos left in progress (kept by the
+    page as soon as it saves its draft: before the page opens again, or not) removed."""
     page.goto("/")
     started(page)
     if page.evaluate("Alpine.$data(document.querySelector('[x-data]')).lessonId"):
         page.get_by_role("button", name="Nouvelle leçon").click()
+    while page.locator(".thumb-remove").count():
+        page.locator(".thumb-remove").first.click()
     page.get_by_role("radio", name="✏️ Libre").click()
     page.locator("textarea[x-ref=promptText]").fill(prompt)
     page.get_by_role("button", name="✨ Générer à partir de la consigne seule").click()
