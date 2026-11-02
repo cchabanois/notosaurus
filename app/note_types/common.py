@@ -140,13 +140,32 @@ class NoteType:
 
 # Note types of a family hold the same kind of card; their options (voice, reverse,
 # typed answer, dictation) differ. A note can change type within its family.
+# Their names in English, the same on every device whatever its language (two names, two
+# note types: a lesson sent from both would make its notes twice). In French before 1.1.0:
+# those still known, their notes moved to today's (FORMER_TEMPLATES their cards).
 FAMILIES = {
+    "Notosaurus front/back": "text",
+    "Notosaurus dictation": "text",  # the dictation card alone: the same notes
+    "Notosaurus labels": "diagram",
+    "Notosaurus cloze": "cloze",
+    "Notosaurus multiple choice": "choice",
     "Notosaurus recto/verso": "text",
-    "Notosaurus dictée": "text",  # the dictation card alone: the same notes
+    "Notosaurus dictée": "text",
     "Notosaurus légendes": "diagram",
     "Notosaurus image": "picture",
     "Notosaurus texte à trous": "cloze",
     "Notosaurus QCM": "choice",
+}
+
+# The cards of the note types before 1.1.0, by their name then: a note moved to today's keeps
+# each card (its review history) when its name is the same; renamed first (ankiconnect)
+FORMER_TEMPLATES = {
+    "Recto → Verso": "Front → Back",
+    "Verso → Recto": "Back → Front",
+    "Dictée": "Dictation",
+    "Schéma": "Diagram",
+    "Texte à trous": "Cloze",
+    "QCM": "Multiple choice",
 }
 
 
@@ -156,11 +175,11 @@ FAMILIES = {
 # type on every device; the computer moves its notes there (its family's: _change_type), their
 # history kept. Without a suffix: version 1, 1.0.0's. tests/test_note_types.py keeps each
 # version's fields: changing them without a new version fails it.
-VERSIONS = {"text": 2, "choice": 2, "diagram": 1, "cloze": 1}
+VERSIONS = {"text": 2, "choice": 2, "diagram": 2, "cloze": 2}  # 2: named in English, and text's, choice's fields
 
 
 def versioned(name: str) -> str:
-    """The note type's name with its family's version: "Notosaurus QCM v2" ("" for 1)."""
+    """The note type's name with its family's version: "Notosaurus multiple choice v2" ("" for 1)."""
     version = VERSIONS[family(name)]
     return name if version == 1 else f"{name} v{version}"
 
@@ -198,7 +217,7 @@ def typed(template: dict, field: str) -> dict:
 def variant(name: str, typing: bool, dictation: bool) -> tuple[str, str]:
     """The note type's name and variant ("" for the plain one: its id is unchanged)."""
     parts = [p for p, on in (("typing", typing), ("dictation", dictation)) if on]
-    name += (" à taper" if typing else "") + (" + dictée" if dictation else "")
+    name += (" typed" if typing else "") + (" + dictation" if dictation else "")
     return name, "+".join(parts)
 
 

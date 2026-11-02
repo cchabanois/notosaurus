@@ -144,7 +144,7 @@ def test_addon_mode(client, monkeypatch):
 def test_cloze_sent_to_anki(anki, client):
     res = client.post("/api/anki/send", json=CLOZE).json()
     assert (res["added"], res["updated"]) == (3, 0)
-    cloze_model = anki.models["Notosaurus texte à trous"]
+    cloze_model = anki.models["Notosaurus cloze v2"]
     assert cloze_model["isCloze"] is True and cloze_model["inOrderFields"] == [
         "Text",
         "Extra",
@@ -153,7 +153,7 @@ def test_cloze_sent_to_anki(anki, client):
         "Explanation",
         "Mnemonic",
     ]
-    assert anki.models[next(m for m in anki.models if m.startswith("Notosaurus recto"))]["isCloze"] is False
+    assert anki.models[next(m for m in anki.models if m.startswith("Notosaurus front/back"))]["isCloze"] is False
     assert anki.notes[2]["fields"]["Extra"] == "place de la Révolution"
 
     # The text corrected (a gap moved): the same note, found by the card's id
@@ -244,7 +244,7 @@ def test_options_changed_after_a_send_keep_the_notes(anki, client):
     assert (res["added"], res["updated"], res["converted"]) == (0, 6, 6)
     assert sorted(anki.notes) == ids
     converted = {n["modelName"] for n in anki.notes.values()}
-    assert converted == {"Notosaurus recto/verso + inverse à taper (TTS Anki es_ES) v2"}
+    assert converted == {"Notosaurus front/back + reverse typed (TTS Anki es_ES) v2"}
     assert all(f"notosaurus::{lesson['id']}" in n["tags"] for n in anki.notes.values())
 
     # Sent again unchanged: plain updates
@@ -253,21 +253,26 @@ def test_options_changed_after_a_send_keep_the_notes(anki, client):
 
 
 def test_notes_of_an_older_note_type_version_moved_to_the_new_one(anki, client):
-    """Sent by a Notosaurus whose note type had fewer fields (its name without " v2"): sent
-    again, the same notes move to today's version (the phone can't add the fields: a new note
-    type), their history kept, none added beside them."""
+    """Sent by 1.0.0 (its note type named in French, its cards "Recto → Verso"): sent again,
+    the same notes move to today's version, its cards renamed first (each kept by its name),
+    none added beside them."""
     lesson = extract_lesson(client)
     body = {"deck": "Espagnol", "cards": lesson["cards"], "voice": "es_ES", "lesson_id": lesson["id"]}
     assert client.post("/api/anki/send", json=body).json()["added"] == 6
     ids = sorted(anki.notes)
-    for note in anki.notes.values():  # as an older version made them
-        note["modelName"] = note["modelName"].removesuffix(" v2")
-    anki.models = {name.removesuffix(" v2"): model for name, model in anki.models.items()}
+    older = "Notosaurus recto/verso (TTS Anki es_ES)"
+    for note in anki.notes.values():  # as 1.0.0 made them
+        note["modelName"] = older
+    (model,) = anki.models.values()
+    anki.models = {older: model}
+    for template in model["cardTemplates"]:
+        template["Name"] = {"Front → Back": "Recto → Verso"}[template["Name"]]
 
     res = client.post("/api/anki/send", json=body).json()
     assert (res["added"], res["converted"]) == (0, 6)
     assert sorted(anki.notes) == ids
-    assert {n["modelName"] for n in anki.notes.values()} == {"Notosaurus recto/verso (TTS Anki es_ES) v2"}
+    assert {n["modelName"] for n in anki.notes.values()} == {"Notosaurus front/back (TTS Anki es_ES) v2"}
+    assert [t["Name"] for t in anki.models[older]["cardTemplates"]] == ["Front → Back"]  # renamed first
 
 
 def test_options_changed_with_an_old_ankiconnect(client, monkeypatch):

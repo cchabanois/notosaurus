@@ -125,7 +125,7 @@ CLOZE = {
 
 # Bringing a note type up to date: AnkiConnect's actions, missing from an old one
 MODEL_ACTIONS = {"modelStyling", "modelFieldNames", "modelTemplates", "modelFieldAdd", "modelTemplateAdd",
-                 "updateModelTemplates", "updateModelStyling"}  # fmt: skip
+                 "modelTemplateRename", "updateModelTemplates", "updateModelStyling"}  # fmt: skip
 
 
 class FakeAnki:
@@ -169,6 +169,10 @@ class FakeAnki:
             self.models[p["modelName"]]["inOrderFields"].append(p["fieldName"])
         elif action == "modelTemplateAdd":
             self.models[p["modelName"]]["cardTemplates"].append(p["template"])
+        elif action == "modelTemplateRename":
+            for t in self.models[p["modelName"]]["cardTemplates"]:
+                if t["Name"] == p["oldTemplateName"]:
+                    t["Name"] = p["newTemplateName"]
         elif action == "updateModelTemplates":
             for t in self.models[p["model"]["name"]]["cardTemplates"]:
                 t.update(p["model"]["templates"].get(t["Name"], {}))

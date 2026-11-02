@@ -1,7 +1,7 @@
 {
  "note_types": {
   "text": {
-   "name": "Notosaurus recto/verso (audio) v2",
+   "name": "Notosaurus front/back (audio) v2",
    "family": "text",
    "fields": [
     "Front",
@@ -19,16 +19,16 @@
    "cloze": false,
    "cards": [
     {
-     "name": "Recto → Verso",
+     "name": "Front → Back",
      "front": "<div class=\"notosaurus-context\">{{Deck}}</div><script>(function(){var D=document.querySelectorAll(\".notosaurus-context:not([data-done])\");for(var i=0;i<D.length;i++){D[i].dataset.done=\"1\";D[i].textContent=D[i].textContent.split(\"::\").join(\" › \");}})();</script>{{#Picture}}<div class=\"notosaurus-picture\">{{Picture}}</div>{{/Picture}}{{Front}}",
      "back": "{{FrontSide}}<hr id=\"answer\">{{Back}}{{Audio}}{{#BackPicture}}<div class=\"notosaurus-picture\">{{BackPicture}}</div>{{/BackPicture}}{{#Info}}<div class=\"info\">{{Info}}</div>{{/Info}}{{#Explanation}}<div class=\"notosaurus-help\">💬 {{Explanation}}</div>{{/Explanation}}{{#Mnemonic}}<div class=\"notosaurus-help\">🧠 {{Mnemonic}}</div>{{/Mnemonic}}<div class=\"notosaurus-fix\"><a class=\"nfix\" href=\"#\" data-key=\"{{#Id}}{{text:Id}}{{/Id}}{{^Id}}{{text:Front}}{{/Id}}\" data-tags=\"{{Tags}}\">✎ Notosaurus</a></div><script>(function(){var A=document.querySelectorAll(\"a.nfix:not([data-done])\");for(var i=0;i<A.length;i++){var a=A[i];a.dataset.done=\"1\";var m=/(?:^|\\s)notosaurus::(\\S+)/.exec(a.dataset.tags||\"\");var c=document.documentElement.className+\" \"+document.body.className,android=/\\bandroid\\b/.test(c)||/Android/.test(navigator.userAgent),desktop=typeof pycmd===\"function\"||/\\b(win|mac|linux)\\b/.test(c);if(!m||!(android||desktop)){a.parentNode.style.display=\"none\";continue;}var q=\"lesson=\"+encodeURIComponent(m[1])+\"&key=\"+encodeURIComponent(a.dataset.key||\"\");a.href=(android?\"https://cchabanois.github.io/notosaurus/fix/?\":\"http://localhost:8000/?\")+q;}})();</script>"
     }
    ],
    "css": ".card { font-family: system-ui, sans-serif; font-size: 26px; text-align: center; }\n.info { font-size: 18px; color: #777; margin-top: 12px; }\n.card img { max-width: 100%; height: auto; }\n.dictation { font-size: 40px; }\n.notosaurus-help {\n  max-width: 32em; margin: 10px auto 0; padding: 4px 10px; border-left: 3px solid #8bb8c4;\n  font-size: 18px; color: #555; text-align: left;\n}\n.nightMode .notosaurus-help { color: #bbb; }\n.notosaurus-fix { margin-top: 16px; font-size: 14px; }\n.notosaurus-fix a { color: #8bb8c4; text-decoration: none; }\n.notosaurus-context { font-size: 14px; color: #888; margin-bottom: 12px; }\n.notosaurus-picture img { max-width: min(100%, 320px); max-height: 50vh; border-radius: 12px; }\n",
-   "signature": "1c2354316b68"
+   "signature": "ff6ca578faff"
   },
   "text+dictation": {
-   "name": "Notosaurus recto/verso + dictée (audio) v2",
+   "name": "Notosaurus front/back + dictation (audio) v2",
    "family": "text",
    "fields": [
     "Front",
@@ -46,21 +46,21 @@
    "cloze": false,
    "cards": [
     {
-     "name": "Recto → Verso",
+     "name": "Front → Back",
      "front": "<div class=\"notosaurus-context\">{{Deck}}</div><script>(function(){var D=document.querySelectorAll(\".notosaurus-context:not([data-done])\");for(var i=0;i<D.length;i++){D[i].dataset.done=\"1\";D[i].textContent=D[i].textContent.split(\"::\").join(\" › \");}})();</script>{{#Picture}}<div class=\"notosaurus-picture\">{{Picture}}</div>{{/Picture}}{{Front}}",
      "back": "{{FrontSide}}<hr id=\"answer\">{{Back}}{{Audio}}{{#BackPicture}}<div class=\"notosaurus-picture\">{{BackPicture}}</div>{{/BackPicture}}{{#Info}}<div class=\"info\">{{Info}}</div>{{/Info}}{{#Explanation}}<div class=\"notosaurus-help\">💬 {{Explanation}}</div>{{/Explanation}}{{#Mnemonic}}<div class=\"notosaurus-help\">🧠 {{Mnemonic}}</div>{{/Mnemonic}}<div class=\"notosaurus-fix\"><a class=\"nfix\" href=\"#\" data-key=\"{{#Id}}{{text:Id}}{{/Id}}{{^Id}}{{text:Front}}{{/Id}}\" data-tags=\"{{Tags}}\">✎ Notosaurus</a></div><script>(function(){var A=document.querySelectorAll(\"a.nfix:not([data-done])\");for(var i=0;i<A.length;i++){var a=A[i];a.dataset.done=\"1\";var m=/(?:^|\\s)notosaurus::(\\S+)/.exec(a.dataset.tags||\"\");var c=document.documentElement.className+\" \"+document.body.className,android=/\\bandroid\\b/.test(c)||/Android/.test(navigator.userAgent),desktop=typeof pycmd===\"function\"||/\\b(win|mac|linux)\\b/.test(c);if(!m||!(android||desktop)){a.parentNode.style.display=\"none\";continue;}var q=\"lesson=\"+encodeURIComponent(m[1])+\"&key=\"+encodeURIComponent(a.dataset.key||\"\");a.href=(android?\"https://cchabanois.github.io/notosaurus/fix/?\":\"http://localhost:8000/?\")+q;}})();</script>"
     },
     {
-     "name": "Dictée",
+     "name": "Dictation",
      "front": "<div class=\"notosaurus-context\">{{Deck}}</div><script>(function(){var D=document.querySelectorAll(\".notosaurus-context:not([data-done])\");for(var i=0;i<D.length;i++){D[i].dataset.done=\"1\";D[i].textContent=D[i].textContent.split(\"::\").join(\" › \");}})();</script><div class=\"dictation\">🎧</div>{{Audio}}{{#Picture}}<div class=\"notosaurus-picture\">{{Picture}}</div>{{/Picture}}{{type:Back}}",
      "back": "<div class=\"notosaurus-context\">{{Deck}}</div><script>(function(){var D=document.querySelectorAll(\".notosaurus-context:not([data-done])\");for(var i=0;i<D.length;i++){D[i].dataset.done=\"1\";D[i].textContent=D[i].textContent.split(\"::\").join(\" › \");}})();</script><div class=\"dictation\">🎧</div>{{Audio}}{{#Picture}}<div class=\"notosaurus-picture\">{{Picture}}</div>{{/Picture}}{{type:Back}}<hr id=\"answer\">{{Front}}{{#BackPicture}}<div class=\"notosaurus-picture\">{{BackPicture}}</div>{{/BackPicture}}{{#Info}}<div class=\"info\">{{Info}}</div>{{/Info}}{{#Explanation}}<div class=\"notosaurus-help\">💬 {{Explanation}}</div>{{/Explanation}}{{#Mnemonic}}<div class=\"notosaurus-help\">🧠 {{Mnemonic}}</div>{{/Mnemonic}}<div class=\"notosaurus-fix\"><a class=\"nfix\" href=\"#\" data-key=\"{{#Id}}{{text:Id}}{{/Id}}{{^Id}}{{text:Front}}{{/Id}}\" data-tags=\"{{Tags}}\">✎ Notosaurus</a></div><script>(function(){var A=document.querySelectorAll(\"a.nfix:not([data-done])\");for(var i=0;i<A.length;i++){var a=A[i];a.dataset.done=\"1\";var m=/(?:^|\\s)notosaurus::(\\S+)/.exec(a.dataset.tags||\"\");var c=document.documentElement.className+\" \"+document.body.className,android=/\\bandroid\\b/.test(c)||/Android/.test(navigator.userAgent),desktop=typeof pycmd===\"function\"||/\\b(win|mac|linux)\\b/.test(c);if(!m||!(android||desktop)){a.parentNode.style.display=\"none\";continue;}var q=\"lesson=\"+encodeURIComponent(m[1])+\"&key=\"+encodeURIComponent(a.dataset.key||\"\");a.href=(android?\"https://cchabanois.github.io/notosaurus/fix/?\":\"http://localhost:8000/?\")+q;}})();</script>"
     }
    ],
    "css": ".card { font-family: system-ui, sans-serif; font-size: 26px; text-align: center; }\n.info { font-size: 18px; color: #777; margin-top: 12px; }\n.card img { max-width: 100%; height: auto; }\n.dictation { font-size: 40px; }\n.notosaurus-help {\n  max-width: 32em; margin: 10px auto 0; padding: 4px 10px; border-left: 3px solid #8bb8c4;\n  font-size: 18px; color: #555; text-align: left;\n}\n.nightMode .notosaurus-help { color: #bbb; }\n.notosaurus-fix { margin-top: 16px; font-size: 14px; }\n.notosaurus-fix a { color: #8bb8c4; text-decoration: none; }\n.notosaurus-context { font-size: 14px; color: #888; margin-bottom: 12px; }\n.notosaurus-picture img { max-width: min(100%, 320px); max-height: 50vh; border-radius: 12px; }\n",
-   "signature": "f35ae2e32dba"
+   "signature": "0226120afb97"
   },
   "text+typing": {
-   "name": "Notosaurus recto/verso à taper (audio) v2",
+   "name": "Notosaurus front/back typed (audio) v2",
    "family": "text",
    "fields": [
     "Front",
@@ -78,16 +78,16 @@
    "cloze": false,
    "cards": [
     {
-     "name": "Recto → Verso",
+     "name": "Front → Back",
      "front": "<div class=\"notosaurus-context\">{{Deck}}</div><script>(function(){var D=document.querySelectorAll(\".notosaurus-context:not([data-done])\");for(var i=0;i<D.length;i++){D[i].dataset.done=\"1\";D[i].textContent=D[i].textContent.split(\"::\").join(\" › \");}})();</script>{{#Picture}}<div class=\"notosaurus-picture\">{{Picture}}</div>{{/Picture}}{{Front}}{{type:Back}}",
      "back": "<div class=\"notosaurus-context\">{{Deck}}</div><script>(function(){var D=document.querySelectorAll(\".notosaurus-context:not([data-done])\");for(var i=0;i<D.length;i++){D[i].dataset.done=\"1\";D[i].textContent=D[i].textContent.split(\"::\").join(\" › \");}})();</script>{{#Picture}}<div class=\"notosaurus-picture\">{{Picture}}</div>{{/Picture}}{{Front}}<hr id=\"answer\">{{type:Back}}{{Audio}}{{#BackPicture}}<div class=\"notosaurus-picture\">{{BackPicture}}</div>{{/BackPicture}}{{#Info}}<div class=\"info\">{{Info}}</div>{{/Info}}{{#Explanation}}<div class=\"notosaurus-help\">💬 {{Explanation}}</div>{{/Explanation}}{{#Mnemonic}}<div class=\"notosaurus-help\">🧠 {{Mnemonic}}</div>{{/Mnemonic}}<div class=\"notosaurus-fix\"><a class=\"nfix\" href=\"#\" data-key=\"{{#Id}}{{text:Id}}{{/Id}}{{^Id}}{{text:Front}}{{/Id}}\" data-tags=\"{{Tags}}\">✎ Notosaurus</a></div><script>(function(){var A=document.querySelectorAll(\"a.nfix:not([data-done])\");for(var i=0;i<A.length;i++){var a=A[i];a.dataset.done=\"1\";var m=/(?:^|\\s)notosaurus::(\\S+)/.exec(a.dataset.tags||\"\");var c=document.documentElement.className+\" \"+document.body.className,android=/\\bandroid\\b/.test(c)||/Android/.test(navigator.userAgent),desktop=typeof pycmd===\"function\"||/\\b(win|mac|linux)\\b/.test(c);if(!m||!(android||desktop)){a.parentNode.style.display=\"none\";continue;}var q=\"lesson=\"+encodeURIComponent(m[1])+\"&key=\"+encodeURIComponent(a.dataset.key||\"\");a.href=(android?\"https://cchabanois.github.io/notosaurus/fix/?\":\"http://localhost:8000/?\")+q;}})();</script>"
     }
    ],
    "css": ".card { font-family: system-ui, sans-serif; font-size: 26px; text-align: center; }\n.info { font-size: 18px; color: #777; margin-top: 12px; }\n.card img { max-width: 100%; height: auto; }\n.dictation { font-size: 40px; }\n.notosaurus-help {\n  max-width: 32em; margin: 10px auto 0; padding: 4px 10px; border-left: 3px solid #8bb8c4;\n  font-size: 18px; color: #555; text-align: left;\n}\n.nightMode .notosaurus-help { color: #bbb; }\n.notosaurus-fix { margin-top: 16px; font-size: 14px; }\n.notosaurus-fix a { color: #8bb8c4; text-decoration: none; }\n.notosaurus-context { font-size: 14px; color: #888; margin-bottom: 12px; }\n.notosaurus-picture img { max-width: min(100%, 320px); max-height: 50vh; border-radius: 12px; }\n",
-   "signature": "530ca3538e55"
+   "signature": "af795d93386d"
   },
   "text+typing+dictation": {
-   "name": "Notosaurus recto/verso à taper + dictée (audio) v2",
+   "name": "Notosaurus front/back typed + dictation (audio) v2",
    "family": "text",
    "fields": [
     "Front",
@@ -105,21 +105,21 @@
    "cloze": false,
    "cards": [
     {
-     "name": "Recto → Verso",
+     "name": "Front → Back",
      "front": "<div class=\"notosaurus-context\">{{Deck}}</div><script>(function(){var D=document.querySelectorAll(\".notosaurus-context:not([data-done])\");for(var i=0;i<D.length;i++){D[i].dataset.done=\"1\";D[i].textContent=D[i].textContent.split(\"::\").join(\" › \");}})();</script>{{#Picture}}<div class=\"notosaurus-picture\">{{Picture}}</div>{{/Picture}}{{Front}}{{type:Back}}",
      "back": "<div class=\"notosaurus-context\">{{Deck}}</div><script>(function(){var D=document.querySelectorAll(\".notosaurus-context:not([data-done])\");for(var i=0;i<D.length;i++){D[i].dataset.done=\"1\";D[i].textContent=D[i].textContent.split(\"::\").join(\" › \");}})();</script>{{#Picture}}<div class=\"notosaurus-picture\">{{Picture}}</div>{{/Picture}}{{Front}}<hr id=\"answer\">{{type:Back}}{{Audio}}{{#BackPicture}}<div class=\"notosaurus-picture\">{{BackPicture}}</div>{{/BackPicture}}{{#Info}}<div class=\"info\">{{Info}}</div>{{/Info}}{{#Explanation}}<div class=\"notosaurus-help\">💬 {{Explanation}}</div>{{/Explanation}}{{#Mnemonic}}<div class=\"notosaurus-help\">🧠 {{Mnemonic}}</div>{{/Mnemonic}}<div class=\"notosaurus-fix\"><a class=\"nfix\" href=\"#\" data-key=\"{{#Id}}{{text:Id}}{{/Id}}{{^Id}}{{text:Front}}{{/Id}}\" data-tags=\"{{Tags}}\">✎ Notosaurus</a></div><script>(function(){var A=document.querySelectorAll(\"a.nfix:not([data-done])\");for(var i=0;i<A.length;i++){var a=A[i];a.dataset.done=\"1\";var m=/(?:^|\\s)notosaurus::(\\S+)/.exec(a.dataset.tags||\"\");var c=document.documentElement.className+\" \"+document.body.className,android=/\\bandroid\\b/.test(c)||/Android/.test(navigator.userAgent),desktop=typeof pycmd===\"function\"||/\\b(win|mac|linux)\\b/.test(c);if(!m||!(android||desktop)){a.parentNode.style.display=\"none\";continue;}var q=\"lesson=\"+encodeURIComponent(m[1])+\"&key=\"+encodeURIComponent(a.dataset.key||\"\");a.href=(android?\"https://cchabanois.github.io/notosaurus/fix/?\":\"http://localhost:8000/?\")+q;}})();</script>"
     },
     {
-     "name": "Dictée",
+     "name": "Dictation",
      "front": "<div class=\"notosaurus-context\">{{Deck}}</div><script>(function(){var D=document.querySelectorAll(\".notosaurus-context:not([data-done])\");for(var i=0;i<D.length;i++){D[i].dataset.done=\"1\";D[i].textContent=D[i].textContent.split(\"::\").join(\" › \");}})();</script><div class=\"dictation\">🎧</div>{{Audio}}{{#Picture}}<div class=\"notosaurus-picture\">{{Picture}}</div>{{/Picture}}{{type:Back}}",
      "back": "<div class=\"notosaurus-context\">{{Deck}}</div><script>(function(){var D=document.querySelectorAll(\".notosaurus-context:not([data-done])\");for(var i=0;i<D.length;i++){D[i].dataset.done=\"1\";D[i].textContent=D[i].textContent.split(\"::\").join(\" › \");}})();</script><div class=\"dictation\">🎧</div>{{Audio}}{{#Picture}}<div class=\"notosaurus-picture\">{{Picture}}</div>{{/Picture}}{{type:Back}}<hr id=\"answer\">{{Front}}{{#BackPicture}}<div class=\"notosaurus-picture\">{{BackPicture}}</div>{{/BackPicture}}{{#Info}}<div class=\"info\">{{Info}}</div>{{/Info}}{{#Explanation}}<div class=\"notosaurus-help\">💬 {{Explanation}}</div>{{/Explanation}}{{#Mnemonic}}<div class=\"notosaurus-help\">🧠 {{Mnemonic}}</div>{{/Mnemonic}}<div class=\"notosaurus-fix\"><a class=\"nfix\" href=\"#\" data-key=\"{{#Id}}{{text:Id}}{{/Id}}{{^Id}}{{text:Front}}{{/Id}}\" data-tags=\"{{Tags}}\">✎ Notosaurus</a></div><script>(function(){var A=document.querySelectorAll(\"a.nfix:not([data-done])\");for(var i=0;i<A.length;i++){var a=A[i];a.dataset.done=\"1\";var m=/(?:^|\\s)notosaurus::(\\S+)/.exec(a.dataset.tags||\"\");var c=document.documentElement.className+\" \"+document.body.className,android=/\\bandroid\\b/.test(c)||/Android/.test(navigator.userAgent),desktop=typeof pycmd===\"function\"||/\\b(win|mac|linux)\\b/.test(c);if(!m||!(android||desktop)){a.parentNode.style.display=\"none\";continue;}var q=\"lesson=\"+encodeURIComponent(m[1])+\"&key=\"+encodeURIComponent(a.dataset.key||\"\");a.href=(android?\"https://cchabanois.github.io/notosaurus/fix/?\":\"http://localhost:8000/?\")+q;}})();</script>"
     }
    ],
    "css": ".card { font-family: system-ui, sans-serif; font-size: 26px; text-align: center; }\n.info { font-size: 18px; color: #777; margin-top: 12px; }\n.card img { max-width: 100%; height: auto; }\n.dictation { font-size: 40px; }\n.notosaurus-help {\n  max-width: 32em; margin: 10px auto 0; padding: 4px 10px; border-left: 3px solid #8bb8c4;\n  font-size: 18px; color: #555; text-align: left;\n}\n.nightMode .notosaurus-help { color: #bbb; }\n.notosaurus-fix { margin-top: 16px; font-size: 14px; }\n.notosaurus-fix a { color: #8bb8c4; text-decoration: none; }\n.notosaurus-context { font-size: 14px; color: #888; margin-bottom: 12px; }\n.notosaurus-picture img { max-width: min(100%, 320px); max-height: 50vh; border-radius: 12px; }\n",
-   "signature": "d29014fcc6a2"
+   "signature": "6cd0ebed7138"
   },
   "text+reverse": {
-   "name": "Notosaurus recto/verso + inverse (audio) v2",
+   "name": "Notosaurus front/back + reverse (audio) v2",
    "family": "text",
    "fields": [
     "Front",
@@ -137,21 +137,21 @@
    "cloze": false,
    "cards": [
     {
-     "name": "Recto → Verso",
+     "name": "Front → Back",
      "front": "<div class=\"notosaurus-context\">{{Deck}}</div><script>(function(){var D=document.querySelectorAll(\".notosaurus-context:not([data-done])\");for(var i=0;i<D.length;i++){D[i].dataset.done=\"1\";D[i].textContent=D[i].textContent.split(\"::\").join(\" › \");}})();</script>{{#Picture}}<div class=\"notosaurus-picture\">{{Picture}}</div>{{/Picture}}{{Front}}",
      "back": "{{FrontSide}}<hr id=\"answer\">{{Back}}{{Audio}}{{#BackPicture}}<div class=\"notosaurus-picture\">{{BackPicture}}</div>{{/BackPicture}}{{#Info}}<div class=\"info\">{{Info}}</div>{{/Info}}{{#Explanation}}<div class=\"notosaurus-help\">💬 {{Explanation}}</div>{{/Explanation}}{{#Mnemonic}}<div class=\"notosaurus-help\">🧠 {{Mnemonic}}</div>{{/Mnemonic}}<div class=\"notosaurus-fix\"><a class=\"nfix\" href=\"#\" data-key=\"{{#Id}}{{text:Id}}{{/Id}}{{^Id}}{{text:Front}}{{/Id}}\" data-tags=\"{{Tags}}\">✎ Notosaurus</a></div><script>(function(){var A=document.querySelectorAll(\"a.nfix:not([data-done])\");for(var i=0;i<A.length;i++){var a=A[i];a.dataset.done=\"1\";var m=/(?:^|\\s)notosaurus::(\\S+)/.exec(a.dataset.tags||\"\");var c=document.documentElement.className+\" \"+document.body.className,android=/\\bandroid\\b/.test(c)||/Android/.test(navigator.userAgent),desktop=typeof pycmd===\"function\"||/\\b(win|mac|linux)\\b/.test(c);if(!m||!(android||desktop)){a.parentNode.style.display=\"none\";continue;}var q=\"lesson=\"+encodeURIComponent(m[1])+\"&key=\"+encodeURIComponent(a.dataset.key||\"\");a.href=(android?\"https://cchabanois.github.io/notosaurus/fix/?\":\"http://localhost:8000/?\")+q;}})();</script>"
     },
     {
-     "name": "Verso → Recto",
+     "name": "Back → Front",
      "front": "<div class=\"notosaurus-context\">{{Deck}}</div><script>(function(){var D=document.querySelectorAll(\".notosaurus-context:not([data-done])\");for(var i=0;i<D.length;i++){D[i].dataset.done=\"1\";D[i].textContent=D[i].textContent.split(\"::\").join(\" › \");}})();</script>{{Back}}{{Audio}}",
      "back": "{{FrontSide}}<hr id=\"answer\">{{#Picture}}<div class=\"notosaurus-picture\">{{Picture}}</div>{{/Picture}}{{Front}}{{#BackPicture}}<div class=\"notosaurus-picture\">{{BackPicture}}</div>{{/BackPicture}}{{#Info}}<div class=\"info\">{{Info}}</div>{{/Info}}{{#Explanation}}<div class=\"notosaurus-help\">💬 {{Explanation}}</div>{{/Explanation}}{{#Mnemonic}}<div class=\"notosaurus-help\">🧠 {{Mnemonic}}</div>{{/Mnemonic}}<div class=\"notosaurus-fix\"><a class=\"nfix\" href=\"#\" data-key=\"{{#Id}}{{text:Id}}{{/Id}}{{^Id}}{{text:Front}}{{/Id}}\" data-tags=\"{{Tags}}\">✎ Notosaurus</a></div><script>(function(){var A=document.querySelectorAll(\"a.nfix:not([data-done])\");for(var i=0;i<A.length;i++){var a=A[i];a.dataset.done=\"1\";var m=/(?:^|\\s)notosaurus::(\\S+)/.exec(a.dataset.tags||\"\");var c=document.documentElement.className+\" \"+document.body.className,android=/\\bandroid\\b/.test(c)||/Android/.test(navigator.userAgent),desktop=typeof pycmd===\"function\"||/\\b(win|mac|linux)\\b/.test(c);if(!m||!(android||desktop)){a.parentNode.style.display=\"none\";continue;}var q=\"lesson=\"+encodeURIComponent(m[1])+\"&key=\"+encodeURIComponent(a.dataset.key||\"\");a.href=(android?\"https://cchabanois.github.io/notosaurus/fix/?\":\"http://localhost:8000/?\")+q;}})();</script>"
     }
    ],
    "css": ".card { font-family: system-ui, sans-serif; font-size: 26px; text-align: center; }\n.info { font-size: 18px; color: #777; margin-top: 12px; }\n.card img { max-width: 100%; height: auto; }\n.dictation { font-size: 40px; }\n.notosaurus-help {\n  max-width: 32em; margin: 10px auto 0; padding: 4px 10px; border-left: 3px solid #8bb8c4;\n  font-size: 18px; color: #555; text-align: left;\n}\n.nightMode .notosaurus-help { color: #bbb; }\n.notosaurus-fix { margin-top: 16px; font-size: 14px; }\n.notosaurus-fix a { color: #8bb8c4; text-decoration: none; }\n.notosaurus-context { font-size: 14px; color: #888; margin-bottom: 12px; }\n.notosaurus-picture img { max-width: min(100%, 320px); max-height: 50vh; border-radius: 12px; }\n",
-   "signature": "a4d189548cae"
+   "signature": "13626e47fd31"
   },
   "text+reverse+dictation": {
-   "name": "Notosaurus recto/verso + inverse + dictée (audio) v2",
+   "name": "Notosaurus front/back + reverse + dictation (audio) v2",
    "family": "text",
    "fields": [
     "Front",
@@ -169,26 +169,26 @@
    "cloze": false,
    "cards": [
     {
-     "name": "Recto → Verso",
+     "name": "Front → Back",
      "front": "<div class=\"notosaurus-context\">{{Deck}}</div><script>(function(){var D=document.querySelectorAll(\".notosaurus-context:not([data-done])\");for(var i=0;i<D.length;i++){D[i].dataset.done=\"1\";D[i].textContent=D[i].textContent.split(\"::\").join(\" › \");}})();</script>{{#Picture}}<div class=\"notosaurus-picture\">{{Picture}}</div>{{/Picture}}{{Front}}",
      "back": "{{FrontSide}}<hr id=\"answer\">{{Back}}{{Audio}}{{#BackPicture}}<div class=\"notosaurus-picture\">{{BackPicture}}</div>{{/BackPicture}}{{#Info}}<div class=\"info\">{{Info}}</div>{{/Info}}{{#Explanation}}<div class=\"notosaurus-help\">💬 {{Explanation}}</div>{{/Explanation}}{{#Mnemonic}}<div class=\"notosaurus-help\">🧠 {{Mnemonic}}</div>{{/Mnemonic}}<div class=\"notosaurus-fix\"><a class=\"nfix\" href=\"#\" data-key=\"{{#Id}}{{text:Id}}{{/Id}}{{^Id}}{{text:Front}}{{/Id}}\" data-tags=\"{{Tags}}\">✎ Notosaurus</a></div><script>(function(){var A=document.querySelectorAll(\"a.nfix:not([data-done])\");for(var i=0;i<A.length;i++){var a=A[i];a.dataset.done=\"1\";var m=/(?:^|\\s)notosaurus::(\\S+)/.exec(a.dataset.tags||\"\");var c=document.documentElement.className+\" \"+document.body.className,android=/\\bandroid\\b/.test(c)||/Android/.test(navigator.userAgent),desktop=typeof pycmd===\"function\"||/\\b(win|mac|linux)\\b/.test(c);if(!m||!(android||desktop)){a.parentNode.style.display=\"none\";continue;}var q=\"lesson=\"+encodeURIComponent(m[1])+\"&key=\"+encodeURIComponent(a.dataset.key||\"\");a.href=(android?\"https://cchabanois.github.io/notosaurus/fix/?\":\"http://localhost:8000/?\")+q;}})();</script>"
     },
     {
-     "name": "Verso → Recto",
+     "name": "Back → Front",
      "front": "<div class=\"notosaurus-context\">{{Deck}}</div><script>(function(){var D=document.querySelectorAll(\".notosaurus-context:not([data-done])\");for(var i=0;i<D.length;i++){D[i].dataset.done=\"1\";D[i].textContent=D[i].textContent.split(\"::\").join(\" › \");}})();</script>{{Back}}{{Audio}}",
      "back": "{{FrontSide}}<hr id=\"answer\">{{#Picture}}<div class=\"notosaurus-picture\">{{Picture}}</div>{{/Picture}}{{Front}}{{#BackPicture}}<div class=\"notosaurus-picture\">{{BackPicture}}</div>{{/BackPicture}}{{#Info}}<div class=\"info\">{{Info}}</div>{{/Info}}{{#Explanation}}<div class=\"notosaurus-help\">💬 {{Explanation}}</div>{{/Explanation}}{{#Mnemonic}}<div class=\"notosaurus-help\">🧠 {{Mnemonic}}</div>{{/Mnemonic}}<div class=\"notosaurus-fix\"><a class=\"nfix\" href=\"#\" data-key=\"{{#Id}}{{text:Id}}{{/Id}}{{^Id}}{{text:Front}}{{/Id}}\" data-tags=\"{{Tags}}\">✎ Notosaurus</a></div><script>(function(){var A=document.querySelectorAll(\"a.nfix:not([data-done])\");for(var i=0;i<A.length;i++){var a=A[i];a.dataset.done=\"1\";var m=/(?:^|\\s)notosaurus::(\\S+)/.exec(a.dataset.tags||\"\");var c=document.documentElement.className+\" \"+document.body.className,android=/\\bandroid\\b/.test(c)||/Android/.test(navigator.userAgent),desktop=typeof pycmd===\"function\"||/\\b(win|mac|linux)\\b/.test(c);if(!m||!(android||desktop)){a.parentNode.style.display=\"none\";continue;}var q=\"lesson=\"+encodeURIComponent(m[1])+\"&key=\"+encodeURIComponent(a.dataset.key||\"\");a.href=(android?\"https://cchabanois.github.io/notosaurus/fix/?\":\"http://localhost:8000/?\")+q;}})();</script>"
     },
     {
-     "name": "Dictée",
+     "name": "Dictation",
      "front": "<div class=\"notosaurus-context\">{{Deck}}</div><script>(function(){var D=document.querySelectorAll(\".notosaurus-context:not([data-done])\");for(var i=0;i<D.length;i++){D[i].dataset.done=\"1\";D[i].textContent=D[i].textContent.split(\"::\").join(\" › \");}})();</script><div class=\"dictation\">🎧</div>{{Audio}}{{#Picture}}<div class=\"notosaurus-picture\">{{Picture}}</div>{{/Picture}}{{type:Back}}",
      "back": "<div class=\"notosaurus-context\">{{Deck}}</div><script>(function(){var D=document.querySelectorAll(\".notosaurus-context:not([data-done])\");for(var i=0;i<D.length;i++){D[i].dataset.done=\"1\";D[i].textContent=D[i].textContent.split(\"::\").join(\" › \");}})();</script><div class=\"dictation\">🎧</div>{{Audio}}{{#Picture}}<div class=\"notosaurus-picture\">{{Picture}}</div>{{/Picture}}{{type:Back}}<hr id=\"answer\">{{Front}}{{#BackPicture}}<div class=\"notosaurus-picture\">{{BackPicture}}</div>{{/BackPicture}}{{#Info}}<div class=\"info\">{{Info}}</div>{{/Info}}{{#Explanation}}<div class=\"notosaurus-help\">💬 {{Explanation}}</div>{{/Explanation}}{{#Mnemonic}}<div class=\"notosaurus-help\">🧠 {{Mnemonic}}</div>{{/Mnemonic}}<div class=\"notosaurus-fix\"><a class=\"nfix\" href=\"#\" data-key=\"{{#Id}}{{text:Id}}{{/Id}}{{^Id}}{{text:Front}}{{/Id}}\" data-tags=\"{{Tags}}\">✎ Notosaurus</a></div><script>(function(){var A=document.querySelectorAll(\"a.nfix:not([data-done])\");for(var i=0;i<A.length;i++){var a=A[i];a.dataset.done=\"1\";var m=/(?:^|\\s)notosaurus::(\\S+)/.exec(a.dataset.tags||\"\");var c=document.documentElement.className+\" \"+document.body.className,android=/\\bandroid\\b/.test(c)||/Android/.test(navigator.userAgent),desktop=typeof pycmd===\"function\"||/\\b(win|mac|linux)\\b/.test(c);if(!m||!(android||desktop)){a.parentNode.style.display=\"none\";continue;}var q=\"lesson=\"+encodeURIComponent(m[1])+\"&key=\"+encodeURIComponent(a.dataset.key||\"\");a.href=(android?\"https://cchabanois.github.io/notosaurus/fix/?\":\"http://localhost:8000/?\")+q;}})();</script>"
     }
    ],
    "css": ".card { font-family: system-ui, sans-serif; font-size: 26px; text-align: center; }\n.info { font-size: 18px; color: #777; margin-top: 12px; }\n.card img { max-width: 100%; height: auto; }\n.dictation { font-size: 40px; }\n.notosaurus-help {\n  max-width: 32em; margin: 10px auto 0; padding: 4px 10px; border-left: 3px solid #8bb8c4;\n  font-size: 18px; color: #555; text-align: left;\n}\n.nightMode .notosaurus-help { color: #bbb; }\n.notosaurus-fix { margin-top: 16px; font-size: 14px; }\n.notosaurus-fix a { color: #8bb8c4; text-decoration: none; }\n.notosaurus-context { font-size: 14px; color: #888; margin-bottom: 12px; }\n.notosaurus-picture img { max-width: min(100%, 320px); max-height: 50vh; border-radius: 12px; }\n",
-   "signature": "7270f277e476"
+   "signature": "fc41deec59f3"
   },
   "text+reverse+typing": {
-   "name": "Notosaurus recto/verso + inverse à taper (audio) v2",
+   "name": "Notosaurus front/back + reverse typed (audio) v2",
    "family": "text",
    "fields": [
     "Front",
@@ -206,21 +206,21 @@
    "cloze": false,
    "cards": [
     {
-     "name": "Recto → Verso",
+     "name": "Front → Back",
      "front": "<div class=\"notosaurus-context\">{{Deck}}</div><script>(function(){var D=document.querySelectorAll(\".notosaurus-context:not([data-done])\");for(var i=0;i<D.length;i++){D[i].dataset.done=\"1\";D[i].textContent=D[i].textContent.split(\"::\").join(\" › \");}})();</script>{{#Picture}}<div class=\"notosaurus-picture\">{{Picture}}</div>{{/Picture}}{{Front}}{{type:Back}}",
      "back": "<div class=\"notosaurus-context\">{{Deck}}</div><script>(function(){var D=document.querySelectorAll(\".notosaurus-context:not([data-done])\");for(var i=0;i<D.length;i++){D[i].dataset.done=\"1\";D[i].textContent=D[i].textContent.split(\"::\").join(\" › \");}})();</script>{{#Picture}}<div class=\"notosaurus-picture\">{{Picture}}</div>{{/Picture}}{{Front}}<hr id=\"answer\">{{type:Back}}{{Audio}}{{#BackPicture}}<div class=\"notosaurus-picture\">{{BackPicture}}</div>{{/BackPicture}}{{#Info}}<div class=\"info\">{{Info}}</div>{{/Info}}{{#Explanation}}<div class=\"notosaurus-help\">💬 {{Explanation}}</div>{{/Explanation}}{{#Mnemonic}}<div class=\"notosaurus-help\">🧠 {{Mnemonic}}</div>{{/Mnemonic}}<div class=\"notosaurus-fix\"><a class=\"nfix\" href=\"#\" data-key=\"{{#Id}}{{text:Id}}{{/Id}}{{^Id}}{{text:Front}}{{/Id}}\" data-tags=\"{{Tags}}\">✎ Notosaurus</a></div><script>(function(){var A=document.querySelectorAll(\"a.nfix:not([data-done])\");for(var i=0;i<A.length;i++){var a=A[i];a.dataset.done=\"1\";var m=/(?:^|\\s)notosaurus::(\\S+)/.exec(a.dataset.tags||\"\");var c=document.documentElement.className+\" \"+document.body.className,android=/\\bandroid\\b/.test(c)||/Android/.test(navigator.userAgent),desktop=typeof pycmd===\"function\"||/\\b(win|mac|linux)\\b/.test(c);if(!m||!(android||desktop)){a.parentNode.style.display=\"none\";continue;}var q=\"lesson=\"+encodeURIComponent(m[1])+\"&key=\"+encodeURIComponent(a.dataset.key||\"\");a.href=(android?\"https://cchabanois.github.io/notosaurus/fix/?\":\"http://localhost:8000/?\")+q;}})();</script>"
     },
     {
-     "name": "Verso → Recto",
+     "name": "Back → Front",
      "front": "<div class=\"notosaurus-context\">{{Deck}}</div><script>(function(){var D=document.querySelectorAll(\".notosaurus-context:not([data-done])\");for(var i=0;i<D.length;i++){D[i].dataset.done=\"1\";D[i].textContent=D[i].textContent.split(\"::\").join(\" › \");}})();</script>{{Back}}{{Audio}}{{type:Front}}",
      "back": "<div class=\"notosaurus-context\">{{Deck}}</div><script>(function(){var D=document.querySelectorAll(\".notosaurus-context:not([data-done])\");for(var i=0;i<D.length;i++){D[i].dataset.done=\"1\";D[i].textContent=D[i].textContent.split(\"::\").join(\" › \");}})();</script>{{Back}}{{Audio}}<hr id=\"answer\">{{#Picture}}<div class=\"notosaurus-picture\">{{Picture}}</div>{{/Picture}}{{type:Front}}{{#BackPicture}}<div class=\"notosaurus-picture\">{{BackPicture}}</div>{{/BackPicture}}{{#Info}}<div class=\"info\">{{Info}}</div>{{/Info}}{{#Explanation}}<div class=\"notosaurus-help\">💬 {{Explanation}}</div>{{/Explanation}}{{#Mnemonic}}<div class=\"notosaurus-help\">🧠 {{Mnemonic}}</div>{{/Mnemonic}}<div class=\"notosaurus-fix\"><a class=\"nfix\" href=\"#\" data-key=\"{{#Id}}{{text:Id}}{{/Id}}{{^Id}}{{text:Front}}{{/Id}}\" data-tags=\"{{Tags}}\">✎ Notosaurus</a></div><script>(function(){var A=document.querySelectorAll(\"a.nfix:not([data-done])\");for(var i=0;i<A.length;i++){var a=A[i];a.dataset.done=\"1\";var m=/(?:^|\\s)notosaurus::(\\S+)/.exec(a.dataset.tags||\"\");var c=document.documentElement.className+\" \"+document.body.className,android=/\\bandroid\\b/.test(c)||/Android/.test(navigator.userAgent),desktop=typeof pycmd===\"function\"||/\\b(win|mac|linux)\\b/.test(c);if(!m||!(android||desktop)){a.parentNode.style.display=\"none\";continue;}var q=\"lesson=\"+encodeURIComponent(m[1])+\"&key=\"+encodeURIComponent(a.dataset.key||\"\");a.href=(android?\"https://cchabanois.github.io/notosaurus/fix/?\":\"http://localhost:8000/?\")+q;}})();</script>"
     }
    ],
    "css": ".card { font-family: system-ui, sans-serif; font-size: 26px; text-align: center; }\n.info { font-size: 18px; color: #777; margin-top: 12px; }\n.card img { max-width: 100%; height: auto; }\n.dictation { font-size: 40px; }\n.notosaurus-help {\n  max-width: 32em; margin: 10px auto 0; padding: 4px 10px; border-left: 3px solid #8bb8c4;\n  font-size: 18px; color: #555; text-align: left;\n}\n.nightMode .notosaurus-help { color: #bbb; }\n.notosaurus-fix { margin-top: 16px; font-size: 14px; }\n.notosaurus-fix a { color: #8bb8c4; text-decoration: none; }\n.notosaurus-context { font-size: 14px; color: #888; margin-bottom: 12px; }\n.notosaurus-picture img { max-width: min(100%, 320px); max-height: 50vh; border-radius: 12px; }\n",
-   "signature": "78ca380bd752"
+   "signature": "44d86f02fecd"
   },
   "text+reverse+typing+dictation": {
-   "name": "Notosaurus recto/verso + inverse à taper + dictée (audio) v2",
+   "name": "Notosaurus front/back + reverse typed + dictation (audio) v2",
    "family": "text",
    "fields": [
     "Front",
@@ -238,26 +238,26 @@
    "cloze": false,
    "cards": [
     {
-     "name": "Recto → Verso",
+     "name": "Front → Back",
      "front": "<div class=\"notosaurus-context\">{{Deck}}</div><script>(function(){var D=document.querySelectorAll(\".notosaurus-context:not([data-done])\");for(var i=0;i<D.length;i++){D[i].dataset.done=\"1\";D[i].textContent=D[i].textContent.split(\"::\").join(\" › \");}})();</script>{{#Picture}}<div class=\"notosaurus-picture\">{{Picture}}</div>{{/Picture}}{{Front}}{{type:Back}}",
      "back": "<div class=\"notosaurus-context\">{{Deck}}</div><script>(function(){var D=document.querySelectorAll(\".notosaurus-context:not([data-done])\");for(var i=0;i<D.length;i++){D[i].dataset.done=\"1\";D[i].textContent=D[i].textContent.split(\"::\").join(\" › \");}})();</script>{{#Picture}}<div class=\"notosaurus-picture\">{{Picture}}</div>{{/Picture}}{{Front}}<hr id=\"answer\">{{type:Back}}{{Audio}}{{#BackPicture}}<div class=\"notosaurus-picture\">{{BackPicture}}</div>{{/BackPicture}}{{#Info}}<div class=\"info\">{{Info}}</div>{{/Info}}{{#Explanation}}<div class=\"notosaurus-help\">💬 {{Explanation}}</div>{{/Explanation}}{{#Mnemonic}}<div class=\"notosaurus-help\">🧠 {{Mnemonic}}</div>{{/Mnemonic}}<div class=\"notosaurus-fix\"><a class=\"nfix\" href=\"#\" data-key=\"{{#Id}}{{text:Id}}{{/Id}}{{^Id}}{{text:Front}}{{/Id}}\" data-tags=\"{{Tags}}\">✎ Notosaurus</a></div><script>(function(){var A=document.querySelectorAll(\"a.nfix:not([data-done])\");for(var i=0;i<A.length;i++){var a=A[i];a.dataset.done=\"1\";var m=/(?:^|\\s)notosaurus::(\\S+)/.exec(a.dataset.tags||\"\");var c=document.documentElement.className+\" \"+document.body.className,android=/\\bandroid\\b/.test(c)||/Android/.test(navigator.userAgent),desktop=typeof pycmd===\"function\"||/\\b(win|mac|linux)\\b/.test(c);if(!m||!(android||desktop)){a.parentNode.style.display=\"none\";continue;}var q=\"lesson=\"+encodeURIComponent(m[1])+\"&key=\"+encodeURIComponent(a.dataset.key||\"\");a.href=(android?\"https://cchabanois.github.io/notosaurus/fix/?\":\"http://localhost:8000/?\")+q;}})();</script>"
     },
     {
-     "name": "Verso → Recto",
+     "name": "Back → Front",
      "front": "<div class=\"notosaurus-context\">{{Deck}}</div><script>(function(){var D=document.querySelectorAll(\".notosaurus-context:not([data-done])\");for(var i=0;i<D.length;i++){D[i].dataset.done=\"1\";D[i].textContent=D[i].textContent.split(\"::\").join(\" › \");}})();</script>{{Back}}{{Audio}}{{type:Front}}",
      "back": "<div class=\"notosaurus-context\">{{Deck}}</div><script>(function(){var D=document.querySelectorAll(\".notosaurus-context:not([data-done])\");for(var i=0;i<D.length;i++){D[i].dataset.done=\"1\";D[i].textContent=D[i].textContent.split(\"::\").join(\" › \");}})();</script>{{Back}}{{Audio}}<hr id=\"answer\">{{#Picture}}<div class=\"notosaurus-picture\">{{Picture}}</div>{{/Picture}}{{type:Front}}{{#BackPicture}}<div class=\"notosaurus-picture\">{{BackPicture}}</div>{{/BackPicture}}{{#Info}}<div class=\"info\">{{Info}}</div>{{/Info}}{{#Explanation}}<div class=\"notosaurus-help\">💬 {{Explanation}}</div>{{/Explanation}}{{#Mnemonic}}<div class=\"notosaurus-help\">🧠 {{Mnemonic}}</div>{{/Mnemonic}}<div class=\"notosaurus-fix\"><a class=\"nfix\" href=\"#\" data-key=\"{{#Id}}{{text:Id}}{{/Id}}{{^Id}}{{text:Front}}{{/Id}}\" data-tags=\"{{Tags}}\">✎ Notosaurus</a></div><script>(function(){var A=document.querySelectorAll(\"a.nfix:not([data-done])\");for(var i=0;i<A.length;i++){var a=A[i];a.dataset.done=\"1\";var m=/(?:^|\\s)notosaurus::(\\S+)/.exec(a.dataset.tags||\"\");var c=document.documentElement.className+\" \"+document.body.className,android=/\\bandroid\\b/.test(c)||/Android/.test(navigator.userAgent),desktop=typeof pycmd===\"function\"||/\\b(win|mac|linux)\\b/.test(c);if(!m||!(android||desktop)){a.parentNode.style.display=\"none\";continue;}var q=\"lesson=\"+encodeURIComponent(m[1])+\"&key=\"+encodeURIComponent(a.dataset.key||\"\");a.href=(android?\"https://cchabanois.github.io/notosaurus/fix/?\":\"http://localhost:8000/?\")+q;}})();</script>"
     },
     {
-     "name": "Dictée",
+     "name": "Dictation",
      "front": "<div class=\"notosaurus-context\">{{Deck}}</div><script>(function(){var D=document.querySelectorAll(\".notosaurus-context:not([data-done])\");for(var i=0;i<D.length;i++){D[i].dataset.done=\"1\";D[i].textContent=D[i].textContent.split(\"::\").join(\" › \");}})();</script><div class=\"dictation\">🎧</div>{{Audio}}{{#Picture}}<div class=\"notosaurus-picture\">{{Picture}}</div>{{/Picture}}{{type:Back}}",
      "back": "<div class=\"notosaurus-context\">{{Deck}}</div><script>(function(){var D=document.querySelectorAll(\".notosaurus-context:not([data-done])\");for(var i=0;i<D.length;i++){D[i].dataset.done=\"1\";D[i].textContent=D[i].textContent.split(\"::\").join(\" › \");}})();</script><div class=\"dictation\">🎧</div>{{Audio}}{{#Picture}}<div class=\"notosaurus-picture\">{{Picture}}</div>{{/Picture}}{{type:Back}}<hr id=\"answer\">{{Front}}{{#BackPicture}}<div class=\"notosaurus-picture\">{{BackPicture}}</div>{{/BackPicture}}{{#Info}}<div class=\"info\">{{Info}}</div>{{/Info}}{{#Explanation}}<div class=\"notosaurus-help\">💬 {{Explanation}}</div>{{/Explanation}}{{#Mnemonic}}<div class=\"notosaurus-help\">🧠 {{Mnemonic}}</div>{{/Mnemonic}}<div class=\"notosaurus-fix\"><a class=\"nfix\" href=\"#\" data-key=\"{{#Id}}{{text:Id}}{{/Id}}{{^Id}}{{text:Front}}{{/Id}}\" data-tags=\"{{Tags}}\">✎ Notosaurus</a></div><script>(function(){var A=document.querySelectorAll(\"a.nfix:not([data-done])\");for(var i=0;i<A.length;i++){var a=A[i];a.dataset.done=\"1\";var m=/(?:^|\\s)notosaurus::(\\S+)/.exec(a.dataset.tags||\"\");var c=document.documentElement.className+\" \"+document.body.className,android=/\\bandroid\\b/.test(c)||/Android/.test(navigator.userAgent),desktop=typeof pycmd===\"function\"||/\\b(win|mac|linux)\\b/.test(c);if(!m||!(android||desktop)){a.parentNode.style.display=\"none\";continue;}var q=\"lesson=\"+encodeURIComponent(m[1])+\"&key=\"+encodeURIComponent(a.dataset.key||\"\");a.href=(android?\"https://cchabanois.github.io/notosaurus/fix/?\":\"http://localhost:8000/?\")+q;}})();</script>"
     }
    ],
    "css": ".card { font-family: system-ui, sans-serif; font-size: 26px; text-align: center; }\n.info { font-size: 18px; color: #777; margin-top: 12px; }\n.card img { max-width: 100%; height: auto; }\n.dictation { font-size: 40px; }\n.notosaurus-help {\n  max-width: 32em; margin: 10px auto 0; padding: 4px 10px; border-left: 3px solid #8bb8c4;\n  font-size: 18px; color: #555; text-align: left;\n}\n.nightMode .notosaurus-help { color: #bbb; }\n.notosaurus-fix { margin-top: 16px; font-size: 14px; }\n.notosaurus-fix a { color: #8bb8c4; text-decoration: none; }\n.notosaurus-context { font-size: 14px; color: #888; margin-bottom: 12px; }\n.notosaurus-picture img { max-width: min(100%, 320px); max-height: 50vh; border-radius: 12px; }\n",
-   "signature": "2ed9d33917cc"
+   "signature": "ddcb2ceb805e"
   },
   "text+dictation-only": {
-   "name": "Notosaurus dictée (audio) v2",
+   "name": "Notosaurus dictation (audio) v2",
    "family": "text",
    "fields": [
     "Front",
@@ -275,16 +275,16 @@
    "cloze": false,
    "cards": [
     {
-     "name": "Dictée",
+     "name": "Dictation",
      "front": "<div class=\"notosaurus-context\">{{Deck}}</div><script>(function(){var D=document.querySelectorAll(\".notosaurus-context:not([data-done])\");for(var i=0;i<D.length;i++){D[i].dataset.done=\"1\";D[i].textContent=D[i].textContent.split(\"::\").join(\" › \");}})();</script><div class=\"dictation\">🎧</div>{{Audio}}{{#Picture}}<div class=\"notosaurus-picture\">{{Picture}}</div>{{/Picture}}{{Front}}{{type:Back}}",
      "back": "<div class=\"notosaurus-context\">{{Deck}}</div><script>(function(){var D=document.querySelectorAll(\".notosaurus-context:not([data-done])\");for(var i=0;i<D.length;i++){D[i].dataset.done=\"1\";D[i].textContent=D[i].textContent.split(\"::\").join(\" › \");}})();</script><div class=\"dictation\">🎧</div>{{Audio}}{{#Picture}}<div class=\"notosaurus-picture\">{{Picture}}</div>{{/Picture}}{{Front}}{{type:Back}}<hr id=\"answer\">{{#BackPicture}}<div class=\"notosaurus-picture\">{{BackPicture}}</div>{{/BackPicture}}{{#Info}}<div class=\"info\">{{Info}}</div>{{/Info}}{{#Explanation}}<div class=\"notosaurus-help\">💬 {{Explanation}}</div>{{/Explanation}}{{#Mnemonic}}<div class=\"notosaurus-help\">🧠 {{Mnemonic}}</div>{{/Mnemonic}}<div class=\"notosaurus-fix\"><a class=\"nfix\" href=\"#\" data-key=\"{{#Id}}{{text:Id}}{{/Id}}{{^Id}}{{text:Front}}{{/Id}}\" data-tags=\"{{Tags}}\">✎ Notosaurus</a></div><script>(function(){var A=document.querySelectorAll(\"a.nfix:not([data-done])\");for(var i=0;i<A.length;i++){var a=A[i];a.dataset.done=\"1\";var m=/(?:^|\\s)notosaurus::(\\S+)/.exec(a.dataset.tags||\"\");var c=document.documentElement.className+\" \"+document.body.className,android=/\\bandroid\\b/.test(c)||/Android/.test(navigator.userAgent),desktop=typeof pycmd===\"function\"||/\\b(win|mac|linux)\\b/.test(c);if(!m||!(android||desktop)){a.parentNode.style.display=\"none\";continue;}var q=\"lesson=\"+encodeURIComponent(m[1])+\"&key=\"+encodeURIComponent(a.dataset.key||\"\");a.href=(android?\"https://cchabanois.github.io/notosaurus/fix/?\":\"http://localhost:8000/?\")+q;}})();</script>"
     }
    ],
    "css": ".card { font-family: system-ui, sans-serif; font-size: 26px; text-align: center; }\n.info { font-size: 18px; color: #777; margin-top: 12px; }\n.card img { max-width: 100%; height: auto; }\n.dictation { font-size: 40px; }\n.notosaurus-help {\n  max-width: 32em; margin: 10px auto 0; padding: 4px 10px; border-left: 3px solid #8bb8c4;\n  font-size: 18px; color: #555; text-align: left;\n}\n.nightMode .notosaurus-help { color: #bbb; }\n.notosaurus-fix { margin-top: 16px; font-size: 14px; }\n.notosaurus-fix a { color: #8bb8c4; text-decoration: none; }\n.notosaurus-context { font-size: 14px; color: #888; margin-bottom: 12px; }\n.notosaurus-picture img { max-width: min(100%, 320px); max-height: 50vh; border-radius: 12px; }\n",
-   "signature": "f39c525572d0"
+   "signature": "78fe9c20305c"
   },
   "diagram": {
-   "name": "Notosaurus légendes (audio)",
+   "name": "Notosaurus labels (audio) v2",
    "family": "diagram",
    "fields": [
     "Front",
@@ -302,16 +302,16 @@
    "cloze": false,
    "cards": [
     {
-     "name": "Schéma",
+     "name": "Diagram",
      "front": "<div class=\"notosaurus-context\">{{Deck}}</div><script>(function(){var D=document.querySelectorAll(\".notosaurus-context:not([data-done])\");for(var i=0;i<D.length;i++){D[i].dataset.done=\"1\";D[i].textContent=D[i].textContent.split(\"::\").join(\" › \");}})();</script><div class=\"notosaurus-diagram\">{{Image}}{{Masks}}</div><div>{{Front}}</div>",
      "back": "<div class=\"notosaurus-context\">{{Deck}}</div><script>(function(){var D=document.querySelectorAll(\".notosaurus-context:not([data-done])\");for(var i=0;i<D.length;i++){D[i].dataset.done=\"1\";D[i].textContent=D[i].textContent.split(\"::\").join(\" › \");}})();</script><div class=\"notosaurus-diagram\">{{Image}}{{AnswerMasks}}</div><div>{{Front}}</div><hr id=\"answer\">{{Back}}{{Audio}}{{#Info}}<div class=\"info\">{{Info}}</div>{{/Info}}{{#Explanation}}<div class=\"notosaurus-help\">💬 {{Explanation}}</div>{{/Explanation}}{{#Mnemonic}}<div class=\"notosaurus-help\">🧠 {{Mnemonic}}</div>{{/Mnemonic}}<div class=\"notosaurus-fix\"><a class=\"nfix\" href=\"#\" data-key=\"{{text:Id}}\" data-tags=\"{{Tags}}\">✎ Notosaurus</a></div><script>(function(){var A=document.querySelectorAll(\"a.nfix:not([data-done])\");for(var i=0;i<A.length;i++){var a=A[i];a.dataset.done=\"1\";var m=/(?:^|\\s)notosaurus::(\\S+)/.exec(a.dataset.tags||\"\");var c=document.documentElement.className+\" \"+document.body.className,android=/\\bandroid\\b/.test(c)||/Android/.test(navigator.userAgent),desktop=typeof pycmd===\"function\"||/\\b(win|mac|linux)\\b/.test(c);if(!m||!(android||desktop)){a.parentNode.style.display=\"none\";continue;}var q=\"lesson=\"+encodeURIComponent(m[1])+\"&key=\"+encodeURIComponent(a.dataset.key||\"\");a.href=(android?\"https://cchabanois.github.io/notosaurus/fix/?\":\"http://localhost:8000/?\")+q;}})();</script>"
     }
    ],
    "css": ".card { font-family: system-ui, sans-serif; font-size: 26px; text-align: center; }\n.info { font-size: 18px; color: #777; margin-top: 12px; }\n.card img { max-width: 100%; height: auto; }\n.dictation { font-size: 40px; }\n.notosaurus-help {\n  max-width: 32em; margin: 10px auto 0; padding: 4px 10px; border-left: 3px solid #8bb8c4;\n  font-size: 18px; color: #555; text-align: left;\n}\n.nightMode .notosaurus-help { color: #bbb; }\n.notosaurus-fix { margin-top: 16px; font-size: 14px; }\n.notosaurus-fix a { color: #8bb8c4; text-decoration: none; }\n.notosaurus-context { font-size: 14px; color: #888; margin-bottom: 12px; }\n.notosaurus-diagram { position: relative; display: inline-block; max-width: 100%; line-height: 0; }\n.notosaurus-diagram img { display: block; }\n.notosaurus-mask {\n  position: absolute; box-sizing: border-box; display: flex; align-items: center; justify-content: center;\n  overflow: hidden; line-height: 1; font-size: 13px; font-weight: 700;\n  background: #ffe08a; border: 2px solid #c77700; border-radius: 3px; color: #3d2b00;\n}\n.notosaurus-mask.target { background: #ff7a59; border-color: #b3261e; color: #fff; }\n.notosaurus-mask.revealed { background: transparent; border: 3px solid #1b873f; }\n",
-   "signature": "98f42b58101e"
+   "signature": "3aebdfadc4e2"
   },
   "diagram+typing": {
-   "name": "Notosaurus légendes à taper (audio)",
+   "name": "Notosaurus labels typed (audio) v2",
    "family": "diagram",
    "fields": [
     "Front",
@@ -329,16 +329,16 @@
    "cloze": false,
    "cards": [
     {
-     "name": "Schéma",
+     "name": "Diagram",
      "front": "<div class=\"notosaurus-context\">{{Deck}}</div><script>(function(){var D=document.querySelectorAll(\".notosaurus-context:not([data-done])\");for(var i=0;i<D.length;i++){D[i].dataset.done=\"1\";D[i].textContent=D[i].textContent.split(\"::\").join(\" › \");}})();</script><div class=\"notosaurus-diagram\">{{Image}}{{Masks}}</div><div>{{Front}}</div>{{type:Back}}",
      "back": "<div class=\"notosaurus-context\">{{Deck}}</div><script>(function(){var D=document.querySelectorAll(\".notosaurus-context:not([data-done])\");for(var i=0;i<D.length;i++){D[i].dataset.done=\"1\";D[i].textContent=D[i].textContent.split(\"::\").join(\" › \");}})();</script><div class=\"notosaurus-diagram\">{{Image}}{{AnswerMasks}}</div><div>{{Front}}</div><hr id=\"answer\">{{type:Back}}{{Audio}}{{#Info}}<div class=\"info\">{{Info}}</div>{{/Info}}{{#Explanation}}<div class=\"notosaurus-help\">💬 {{Explanation}}</div>{{/Explanation}}{{#Mnemonic}}<div class=\"notosaurus-help\">🧠 {{Mnemonic}}</div>{{/Mnemonic}}<div class=\"notosaurus-fix\"><a class=\"nfix\" href=\"#\" data-key=\"{{text:Id}}\" data-tags=\"{{Tags}}\">✎ Notosaurus</a></div><script>(function(){var A=document.querySelectorAll(\"a.nfix:not([data-done])\");for(var i=0;i<A.length;i++){var a=A[i];a.dataset.done=\"1\";var m=/(?:^|\\s)notosaurus::(\\S+)/.exec(a.dataset.tags||\"\");var c=document.documentElement.className+\" \"+document.body.className,android=/\\bandroid\\b/.test(c)||/Android/.test(navigator.userAgent),desktop=typeof pycmd===\"function\"||/\\b(win|mac|linux)\\b/.test(c);if(!m||!(android||desktop)){a.parentNode.style.display=\"none\";continue;}var q=\"lesson=\"+encodeURIComponent(m[1])+\"&key=\"+encodeURIComponent(a.dataset.key||\"\");a.href=(android?\"https://cchabanois.github.io/notosaurus/fix/?\":\"http://localhost:8000/?\")+q;}})();</script>"
     }
    ],
    "css": ".card { font-family: system-ui, sans-serif; font-size: 26px; text-align: center; }\n.info { font-size: 18px; color: #777; margin-top: 12px; }\n.card img { max-width: 100%; height: auto; }\n.dictation { font-size: 40px; }\n.notosaurus-help {\n  max-width: 32em; margin: 10px auto 0; padding: 4px 10px; border-left: 3px solid #8bb8c4;\n  font-size: 18px; color: #555; text-align: left;\n}\n.nightMode .notosaurus-help { color: #bbb; }\n.notosaurus-fix { margin-top: 16px; font-size: 14px; }\n.notosaurus-fix a { color: #8bb8c4; text-decoration: none; }\n.notosaurus-context { font-size: 14px; color: #888; margin-bottom: 12px; }\n.notosaurus-diagram { position: relative; display: inline-block; max-width: 100%; line-height: 0; }\n.notosaurus-diagram img { display: block; }\n.notosaurus-mask {\n  position: absolute; box-sizing: border-box; display: flex; align-items: center; justify-content: center;\n  overflow: hidden; line-height: 1; font-size: 13px; font-weight: 700;\n  background: #ffe08a; border: 2px solid #c77700; border-radius: 3px; color: #3d2b00;\n}\n.notosaurus-mask.target { background: #ff7a59; border-color: #b3261e; color: #fff; }\n.notosaurus-mask.revealed { background: transparent; border: 3px solid #1b873f; }\n",
-   "signature": "f3f2bda06718"
+   "signature": "22bb5be3f42b"
   },
   "cloze": {
-   "name": "Notosaurus texte à trous",
+   "name": "Notosaurus cloze v2",
    "family": "cloze",
    "fields": [
     "Text",
@@ -352,16 +352,16 @@
    "cloze": true,
    "cards": [
     {
-     "name": "Texte à trous",
+     "name": "Cloze",
      "front": "<div class=\"notosaurus-context\">{{Deck}}</div><script>(function(){var D=document.querySelectorAll(\".notosaurus-context:not([data-done])\");for(var i=0;i<D.length;i++){D[i].dataset.done=\"1\";D[i].textContent=D[i].textContent.split(\"::\").join(\" › \");}})();</script>{{cloze:Text}}",
      "back": "<div class=\"notosaurus-context\">{{Deck}}</div><script>(function(){var D=document.querySelectorAll(\".notosaurus-context:not([data-done])\");for(var i=0;i<D.length;i++){D[i].dataset.done=\"1\";D[i].textContent=D[i].textContent.split(\"::\").join(\" › \");}})();</script>{{cloze:Text}}{{#Extra}}<div class=\"extra\">{{Extra}}</div>{{/Extra}}{{#Info}}<div class=\"info\">{{Info}}</div>{{/Info}}{{#Explanation}}<div class=\"notosaurus-help\">💬 {{Explanation}}</div>{{/Explanation}}{{#Mnemonic}}<div class=\"notosaurus-help\">🧠 {{Mnemonic}}</div>{{/Mnemonic}}<div class=\"notosaurus-fix\"><a class=\"nfix\" href=\"#\" data-key=\"{{text:Id}}\" data-tags=\"{{Tags}}\">✎ Notosaurus</a></div><script>(function(){var A=document.querySelectorAll(\"a.nfix:not([data-done])\");for(var i=0;i<A.length;i++){var a=A[i];a.dataset.done=\"1\";var m=/(?:^|\\s)notosaurus::(\\S+)/.exec(a.dataset.tags||\"\");var c=document.documentElement.className+\" \"+document.body.className,android=/\\bandroid\\b/.test(c)||/Android/.test(navigator.userAgent),desktop=typeof pycmd===\"function\"||/\\b(win|mac|linux)\\b/.test(c);if(!m||!(android||desktop)){a.parentNode.style.display=\"none\";continue;}var q=\"lesson=\"+encodeURIComponent(m[1])+\"&key=\"+encodeURIComponent(a.dataset.key||\"\");a.href=(android?\"https://cchabanois.github.io/notosaurus/fix/?\":\"http://localhost:8000/?\")+q;}})();</script>"
     }
    ],
    "css": ".card { font-family: system-ui, sans-serif; font-size: 26px; text-align: center; }\n.info { font-size: 18px; color: #777; margin-top: 12px; }\n.card img { max-width: 100%; height: auto; }\n.dictation { font-size: 40px; }\n.notosaurus-help {\n  max-width: 32em; margin: 10px auto 0; padding: 4px 10px; border-left: 3px solid #8bb8c4;\n  font-size: 18px; color: #555; text-align: left;\n}\n.nightMode .notosaurus-help { color: #bbb; }\n.notosaurus-fix { margin-top: 16px; font-size: 14px; }\n.notosaurus-fix a { color: #8bb8c4; text-decoration: none; }\n.notosaurus-context { font-size: 14px; color: #888; margin-bottom: 12px; }\n.cloze { font-weight: 700; color: #0b5cad; }\n.extra { margin-top: 12px; }\n",
-   "signature": "3d7d26bf11e2"
+   "signature": "223bc94585c5"
   },
   "choice": {
-   "name": "Notosaurus QCM v2",
+   "name": "Notosaurus multiple choice v2",
    "family": "choice",
    "fields": [
     "Question",
@@ -380,13 +380,13 @@
    "cloze": false,
    "cards": [
     {
-     "name": "QCM",
+     "name": "Multiple choice",
      "front": "<div class=\"notosaurus-context\">{{Deck}}</div><script>(function(){var D=document.querySelectorAll(\".notosaurus-context:not([data-done])\");for(var i=0;i<D.length;i++){D[i].dataset.done=\"1\";D[i].textContent=D[i].textContent.split(\"::\").join(\" › \");}})();</script>{{#Picture}}<div class=\"notosaurus-picture\">{{Picture}}</div>{{/Picture}}<div>{{Question}}</div>{{Choices}}",
      "back": "<div class=\"notosaurus-context\">{{Deck}}</div><script>(function(){var D=document.querySelectorAll(\".notosaurus-context:not([data-done])\");for(var i=0;i<D.length;i++){D[i].dataset.done=\"1\";D[i].textContent=D[i].textContent.split(\"::\").join(\" › \");}})();</script>{{#Picture}}<div class=\"notosaurus-picture\">{{Picture}}</div>{{/Picture}}<div>{{Question}}</div><hr id=\"answer\">{{AnswerChoices}}{{#BackPicture}}<div class=\"notosaurus-picture\">{{BackPicture}}</div>{{/BackPicture}}{{#Info}}<div class=\"info\">{{Info}}</div>{{/Info}}{{#Explanation}}<div class=\"notosaurus-help\">💬 {{Explanation}}</div>{{/Explanation}}{{#Mnemonic}}<div class=\"notosaurus-help\">🧠 {{Mnemonic}}</div>{{/Mnemonic}}<div class=\"notosaurus-fix\"><a class=\"nfix\" href=\"#\" data-key=\"{{text:Id}}\" data-tags=\"{{Tags}}\">✎ Notosaurus</a></div><script>(function(){var A=document.querySelectorAll(\"a.nfix:not([data-done])\");for(var i=0;i<A.length;i++){var a=A[i];a.dataset.done=\"1\";var m=/(?:^|\\s)notosaurus::(\\S+)/.exec(a.dataset.tags||\"\");var c=document.documentElement.className+\" \"+document.body.className,android=/\\bandroid\\b/.test(c)||/Android/.test(navigator.userAgent),desktop=typeof pycmd===\"function\"||/\\b(win|mac|linux)\\b/.test(c);if(!m||!(android||desktop)){a.parentNode.style.display=\"none\";continue;}var q=\"lesson=\"+encodeURIComponent(m[1])+\"&key=\"+encodeURIComponent(a.dataset.key||\"\");a.href=(android?\"https://cchabanois.github.io/notosaurus/fix/?\":\"http://localhost:8000/?\")+q;}})();</script>"
     }
    ],
    "css": ".card { font-family: system-ui, sans-serif; font-size: 26px; text-align: center; }\n.info { font-size: 18px; color: #777; margin-top: 12px; }\n.card img { max-width: 100%; height: auto; }\n.dictation { font-size: 40px; }\n.notosaurus-help {\n  max-width: 32em; margin: 10px auto 0; padding: 4px 10px; border-left: 3px solid #8bb8c4;\n  font-size: 18px; color: #555; text-align: left;\n}\n.nightMode .notosaurus-help { color: #bbb; }\n.notosaurus-fix { margin-top: 16px; font-size: 14px; }\n.notosaurus-fix a { color: #8bb8c4; text-decoration: none; }\n.notosaurus-context { font-size: 14px; color: #888; margin-bottom: 12px; }\n.notosaurus-picture img { max-width: min(100%, 320px); max-height: 50vh; border-radius: 12px; }\n.notosaurus-choices {\n  display: inline-block; margin: 12px auto 0; padding-left: 1.8em; text-align: left; list-style: upper-alpha;\n}\n.notosaurus-choices li { margin: 6px 0; }\n.notosaurus-choices li.right { color: #1b873f; font-weight: 700; }\n.notosaurus-choices li.right::after { content: \" ✔\"; }\n.notosaurus-choices li.wrong { opacity: .5; }\n",
-   "signature": "a5ca1c4d198b"
+   "signature": "94db6ea0b3c3"
   }
  }
 }

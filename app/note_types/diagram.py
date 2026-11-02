@@ -30,7 +30,7 @@ def diagram_note_type(voice: str, typing: bool = False) -> NoteType:
     info = BACK_INFO + fix_link("Id")
     templates = (
         {
-            "name": "Schéma",
+            "name": "Diagram",
             "qfmt": '<div class="notosaurus-diagram">{{Image}}{{Masks}}</div><div>{{Front}}</div>',
             "afmt": '<div class="notosaurus-diagram">{{Image}}{{AnswerMasks}}</div><div>{{Front}}</div>'
             f'<hr id="answer">{{{{Back}}}}{sound}{info}',
@@ -41,7 +41,7 @@ def diagram_note_type(voice: str, typing: bool = False) -> NoteType:
     fields = ["Front", "Back", "Info"] + ([] if anki_tts else ["Audio"]) + ["Image", "Masks", "AnswerMasks", "Id"]
     fields += HELP_FIELDS
     kind = f"labels TTS Anki {voice}" if anki_tts else "labels audio"
-    name, option = variant("Notosaurus légendes", typing, False)
+    name, option = variant("Notosaurus labels", typing, False)
     name = versioned(f"{name} ({kind.removeprefix('labels ')})")
     return NoteType(name, kind, tuple(fields), with_context(templates), css=CSS + DIAGRAM_CSS, key="Id", variant=option)
 

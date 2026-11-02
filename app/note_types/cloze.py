@@ -16,7 +16,7 @@ def cloze_note_type() -> NoteType:
     info = BACK_INFO + fix_link("Id")
     templates = (
         {
-            "name": "Texte à trous",
+            "name": "Cloze",
             "qfmt": "{{cloze:Text}}",
             "afmt": '{{cloze:Text}}{{#Extra}}<div class="extra">{{Extra}}</div>{{/Extra}}' + info,
         },
@@ -24,7 +24,7 @@ def cloze_note_type() -> NoteType:
     fields = ("Text", "Extra", "Info", "Id", *HELP_FIELDS)
     templates = with_context(templates)
     return NoteType(
-        versioned("Notosaurus texte à trous"), "cloze", fields, templates, css=CSS + CLOZE_CSS, key="Id", cloze=True
+        versioned("Notosaurus cloze"), "cloze", fields, templates, css=CSS + CLOZE_CSS, key="Id", cloze=True
     )
 
 

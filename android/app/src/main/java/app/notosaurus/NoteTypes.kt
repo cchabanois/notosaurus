@@ -30,10 +30,6 @@ data class NoteType(
     val css: String,
     @kotlinx.serialization.SerialName("signature") val computerSignature: String = "", // the computer's (a test compares)
 ) {
-    /** Its name in AnkiDroid as the app's test versions made it (the key first): their notes
-     * found and updated in place still. */
-    val legacyName: String get() = name.replace(VERSION, "").removeSuffix(" (audio)") + " (Android)"
-
     /** What it is made of (name, fields, card templates, style), in 12 characters, as the
      * computer's (note_types.common.NoteType.signature): written in its style (signedCss). */
     val signature: String
@@ -58,8 +54,6 @@ data class NoteType(
     fun values(names: List<String>, fields: Map<String, String>, there: Array<String>? = null): Array<String> =
         Array(names.size) { i -> fields[names[i]] ?: there?.getOrNull(i).orEmpty() }
 }
-
-private val VERSION = Regex(" v\\d+$") // a note type's version in its name (note_types.common.versioned)
 
 @Serializable
 data class CardTemplate(val name: String, val front: String, val back: String)

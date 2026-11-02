@@ -35,7 +35,7 @@ def note_type(
     info = BACK_INFO + fix_link("Id", fallback="Front")
     templates = [
         {
-            "name": "Recto → Verso",
+            "name": "Front → Back",
             "qfmt": f"{PICTURE}{{{{Front}}}}",
             "afmt": f'{{{{FrontSide}}}}<hr id="answer">{{{{Back}}}}{sound}{BACK_PICTURE}{info}',
         }
@@ -43,7 +43,7 @@ def note_type(
     if reverse:
         templates.append(
             {
-                "name": "Verso → Recto",
+                "name": "Back → Front",
                 "qfmt": f"{{{{Back}}}}{sound}",
                 "afmt": f'{{{{FrontSide}}}}<hr id="answer">{PICTURE}{{{{Front}}}}{BACK_PICTURE}{info}',
             }
@@ -56,13 +56,13 @@ def note_type(
         # picture on the question: what the word is, never how it is written
         heard = f'<div class="dictation">🎧</div>{sound}{PICTURE}{{{{type:Back}}}}'
         dictated = {
-            "name": "Dictée",
+            "name": "Dictation",
             "qfmt": heard,
             "afmt": f'{heard}<hr id="answer">{{{{Front}}}}{BACK_PICTURE}{info}',
         }
         if dictation_only:  # alone, its front shown too: the sentence with its blank (or "Sentence 3")
             heard = f'<div class="dictation">🎧</div>{sound}{PICTURE}{{{{Front}}}}{{{{type:Back}}}}'
-            dictated = {"name": "Dictée", "qfmt": heard, "afmt": f'{heard}<hr id="answer">{BACK_PICTURE}{info}'}
+            dictated = {"name": "Dictation", "qfmt": heard, "afmt": f'{heard}<hr id="answer">{BACK_PICTURE}{info}'}
         templates = [dictated] if dictation_only else [*templates, dictated]
     fields = ["Front", "Back", "Info"]
     if anki_tts:
@@ -74,9 +74,9 @@ def note_type(
     # (ankiconnect._bring_up_to_date adds a field at the end), the same order everywhere
     fields += [*HELP_FIELDS, "Picture", "BackPicture", "Id", SOURCE_FIELD]
     if dictation and dictation_only:  # its own note type: the dictation card alone, whatever else is on
-        name, option, reverse = "Notosaurus dictée", "dictation-only", False
+        name, option, reverse = "Notosaurus dictation", "dictation-only", False
     else:
-        name, option = variant("Notosaurus recto/verso" + (" + inverse" if reverse else ""), typing, dictation)
+        name, option = variant("Notosaurus front/back" + (" + reverse" if reverse else ""), typing, dictation)
     templates = with_context(templates)
     return NoteType(
         versioned(f"{name} ({kind})"),
