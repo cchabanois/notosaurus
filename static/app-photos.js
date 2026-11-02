@@ -231,12 +231,14 @@ const photosPart = {
     this.pdf = { open: false, name: "", free: 0, pages: [] };
   },
 
-  // A quarter turn clockwise, when a photo (or the AI's guess) is sideways. In a saved
-  // lesson the server turns the photo and its diagram masks; before, just the photo here.
+  // A quarter turn clockwise, when a photo (or the AI's guess) is sideways. A saved lesson's
+  // photo, its photos as the server has them: the server turns it and its diagram masks.
+  // Else just the photo here: one not sent yet, or the photos changed here (one removed,
+  // another added: the server's photo at that number isn't this one), sent with them.
   async rotatePhoto(i) {
     this.error = "";
     try {
-      if (!this.lessonId) {
+      if (!this.lessonId || this.photosEdited || !this.photos[i].sent) {
         const photo = this.photos[i];
         const turned = { ...photo, blob: await rotateBlob(photo.blob) };  // its text kept
         if (photo.original) {  // what it hides turns with it
