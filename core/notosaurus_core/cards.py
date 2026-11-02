@@ -3,6 +3,7 @@
 import html
 import re
 import unicodedata
+from collections import Counter
 
 from .models import Card
 
@@ -191,12 +192,21 @@ def kept_ids(made: list[Card], before: list[Card]) -> list[str]:
     """A lesson made again in its place: each new card's id, the lesson's card it is (its id
     is its note's key in Anki: its note updated, its history kept), else "" (a new card).
     The same front and back, else the same front (same_text: a capital, a final full stop…),
-    in the same part of the deck (subdeck),
-    each old card given once; never by a front empty or the blank alone ("…": the same for
-    every dictation without a sentence), only with the same back then. A new card with an id
-    keeps it; an old card whose id one of them has is given to no other (an id never twice)."""
+    in the same part of the deck (subdeck), each old card given once; never by a front empty
+    or the blank alone ("…": the same for every dictation without a sentence). Else its front
+    written otherwise (the AI's own words, a picture now: ID-02), the same back where that
+    back tells one card: not empty, the lesson's only one, no choices on either side ("Vrai",
+    "Faux", an option: any card's). A new card with an id keeps it; an old card whose id one
+    of them has is given to no other (an id never twice)."""
     taken = {c.id for c in made if c.id}
     left = [c for c in before if c.id and c.id not in taken]
+    backs = Counter(text_key(c.back) for c in before)
+
+    def by_back(a: Card, b: Card) -> bool:
+        key = text_key(a.back)
+        unique = bool(key) and key == text_key(b.back) and backs[key] == 1
+        choices = any(c.strip() for c in a.choices) or any(c.strip() for c in b.choices)
+        return unique and not choices and same_text(a.subdeck, b.subdeck)
 
     def same(a: Card, b: Card, back: bool) -> bool:
         return (
@@ -210,8 +220,10 @@ def kept_ids(made: list[Card], before: list[Card]) -> list[str]:
         if card.id:
             ids.append(card.id)
             continue
-        match = next((c for c in left if same(card, c, back=True)), None) or next(
-            (c for c in left if same(card, c, back=False)), None
+        match = (
+            next((c for c in left if same(card, c, back=True)), None)
+            or next((c for c in left if same(card, c, back=False)), None)
+            or next((c for c in left if by_back(card, c)), None)
         )
         if match:
             left.remove(match)

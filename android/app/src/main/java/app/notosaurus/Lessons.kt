@@ -261,12 +261,22 @@ class Lessons(private val root: File) {
         /** A lesson made again in its place (core's cards.kept_ids): each new card with the id of
          * the lesson's card it is, so its note and history in AnkiDroid; none, a new card. The same
          * front and back, else the same front, in the same part of the deck, each old card given
-         * once; never by a front empty or the blank alone (every dictation without a sentence). A
-         * new card with an id keeps it; an old card whose id one of them has goes to no other. */
+         * once; never by a front empty or the blank alone (every dictation without a sentence). Else
+         * its front written otherwise (ID-02), the same back where it tells one card: not empty, the
+         * lesson's only one, no choices on either side. A new card with an id keeps it; an old card
+         * whose id one of them has goes to no other. */
         fun keptIds(made: JsonElement?, before: JsonElement?): JsonArray {
             val taken = (made as? JsonArray).orEmpty().map { it.jsonObject.string("id") }.filter { it.isNotEmpty() }.toSet()
             val left = (before as? JsonArray).orEmpty().map { it.jsonObject }
                 .filter { it.string("id").isNotEmpty() && it.string("id") !in taken }.toMutableList()
+            val backs = (before as? JsonArray).orEmpty().groupingBy { textKey(it.jsonObject.string("back")) }.eachCount()
+            fun choices(c: JsonObject) = (c["choices"] as? JsonArray).orEmpty().any { it.jsonPrimitive.content.isNotBlank() }
+            // Its front written otherwise (ID-02): the same back where it tells one card, no choices
+            fun byBack(a: JsonObject, b: JsonObject): Boolean {
+                val key = textKey(a.string("back"))
+                return key.isNotEmpty() && key == textKey(b.string("back")) && backs[key] == 1 && !choices(a) && !choices(b) &&
+                    sameText(a.string("subdeck"), b.string("subdeck"))
+            }
             fun same(a: JsonObject, b: JsonObject, back: Boolean): Boolean =
                 sameText(a.string("subdeck"), b.string("subdeck")) && sameText(a.string("front"), b.string("front")) &&
                     (if (back) sameText(a.string("back"), b.string("back")) else textKey(a.string("front")).isNotEmpty()) // "…" too: ""
@@ -275,6 +285,7 @@ class Lessons(private val root: File) {
                     val c = card.jsonObject
                     if (c.string("id").isNotEmpty()) return@map c
                     val match = left.firstOrNull { same(c, it, back = true) } ?: left.firstOrNull { same(c, it, back = false) }
+                        ?: left.firstOrNull { byBack(c, it) }
                     if (match == null) c else JsonObject(c + ("id" to JsonPrimitive(match.string("id")))).also { left.remove(match) }
                 },
             )

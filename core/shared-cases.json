@@ -261,7 +261,7 @@
    ]
   },
   {
-   "name": "its front changed: a new card",
+   "name": "its front changed, its back the lesson's only one: the same card",
    "before": [
     {
      "id": "a",
@@ -276,7 +276,7 @@
     }
    ],
    "out": [
-    ""
+    "a"
    ]
   },
   {
@@ -496,6 +496,115 @@
      {
       "front": "1798",
       "back": "l'Égypte"
+     }
+    ],
+    "out": [
+     ""
+    ]
+   },
+  {
+    "name": "ID-02: a dictation made again, its fronts written otherwise: by its word",
+    "before": [
+     {
+      "id": "a",
+      "front": "Écris le mot dicté :",
+      "back": "chaton"
+     },
+     {
+      "id": "b",
+      "front": "Écris le mot dicté :",
+      "back": "bateaux"
+     },
+     {
+      "id": "c",
+      "front": "Écris le mot dicté :",
+      "back": "crayon"
+     }
+    ],
+    "made": [
+     {
+      "front": "",
+      "back": "chaton"
+     },
+     {
+      "front": "",
+      "back": "bateau"
+     },
+     {
+      "front": "",
+      "back": "crayon"
+     }
+    ],
+    "out": [
+     "a",
+     "",
+     "c"
+    ]
+   },
+  {
+    "name": "a true or false card rewritten: no other's id by its answer",
+    "before": [
+     {
+      "id": "a",
+      "front": "La Bastille est prise en 1789.",
+      "back": "Vrai",
+      "choices": [
+       "Faux"
+      ]
+     }
+    ],
+    "made": [
+     {
+      "front": "Napoléon est sacré empereur en 1804.",
+      "back": "vrai.",
+      "choices": [
+       "Faux"
+      ]
+     }
+    ],
+    "out": [
+     ""
+    ]
+   },
+  {
+    "name": "an answer two cards share: neither",
+    "before": [
+     {
+      "id": "a",
+      "front": "Q1",
+      "back": "oui"
+     },
+     {
+      "id": "b",
+      "front": "Q2",
+      "back": "oui"
+     }
+    ],
+    "made": [
+     {
+      "front": "Q3",
+      "back": "oui"
+     }
+    ],
+    "out": [
+     ""
+    ]
+   },
+  {
+    "name": "its back the only one, in another part of the deck: a new card",
+    "before": [
+     {
+      "id": "a",
+      "front": "la mère",
+      "back": "la madre",
+      "subdeck": "Famille"
+     }
+    ],
+    "made": [
+     {
+      "front": "maman",
+      "back": "la madre",
+      "subdeck": "Vocabulaire"
      }
     ],
     "out": [
