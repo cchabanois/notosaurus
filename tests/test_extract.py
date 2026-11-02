@@ -548,3 +548,27 @@ def test_a_revised_card_keeps_its_id_whatever_a_capital():
     other = [Card(front="à", back="préposition")]
     llm._keep_ids(other, [Card(id="c", front="a", back="avoir")])
     assert other[0].id == ""
+
+
+def test_a_true_false_card_rewritten_takes_no_others_note():
+    """A revised card matched by its back alone only where that back tells one card: true or
+    false cards all answer "Vrai" or "Faux" (and "vrai." is the same text now), a card of
+    choices is never matched so; a question reworded, its back the lesson's only one, still is."""
+    from notosaurus_core import llm
+    from notosaurus_core.models import Card
+
+    before = [
+        Card(id="a", front="La Bastille est prise en 1789.", back="Vrai", choices=["Faux"]),
+        Card(id="b", front="Louis XVI est sacré en 1789.", back="Faux", choices=["Vrai"]),
+        Card(id="c", front="Qui prend la Bastille ?", back="le peuple de Paris"),
+    ]
+    revised = [
+        Card(front="Napoléon est sacré empereur en 1804.", back="vrai.", choices=["Faux"]),  # a new one
+        Card(front="Par qui la Bastille est-elle prise ?", back="Le peuple de Paris"),  # reworded
+    ]
+    llm._keep_ids(revised, before)
+    assert [c.id for c in revised] == ["", "c"]
+    twice = [Card(id="d", front="Q1", back="oui"), Card(id="e", front="Q2", back="oui")]
+    other = [Card(front="Q3", back="oui")]
+    llm._keep_ids(other, twice)
+    assert other[0].id == ""  # "oui" answers two cards: which one?
