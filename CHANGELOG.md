@@ -89,6 +89,7 @@ Each pull request's entries (the `## Changelog` of its description) are put unde
 
 ### Fixed
 
+- In the Android app, a lesson's pictures reach AnkiDroid even where an older Notosaurus made the note types (synced from the computer's 1.0.0), and the cards just sent are never offered for deletion as leftovers. The note types now carry a version ("Notosaurus QCM v2"); on the computer, the notes of an older one move to it with their review history.
 - A lesson made again, or corrected by the AI, keeps the review history of its cards in Anki when the AI only changes a capital, a final full stop or a quote mark ("la mère" / "La mère."): such a card was taken for a new one. An accent or a digit changed still makes another card.
 - In the Android app, a lesson's pictures and sounds are made too when the app is left (home, the screen off), and its send to AnkiDroid goes on: turning the screen off during "In Anki: sounds…" left the cards without sound.
 - A topic of one word written in one of Notosaurus's prompts ("Automatic" and "The capitals") makes the cards without a photo again: the button below stayed on "Take a photo of the lesson" until three words were written. The hint under the prompt says what to write for the button to make the cards.
