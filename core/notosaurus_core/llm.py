@@ -35,7 +35,7 @@ from .calls import (  # noqa: F401 (llm's API)
     tell,
     telling,
 )
-from .cards import blank_dictations, plain_cards
+from .cards import blank_dictations, plain_cards, same_text, text_key
 from .cards import plain as plain_text
 from .config import AIConfig
 from .errors import AppError, loggable
@@ -592,10 +592,10 @@ def _keep_ids(revised: list[Card], before: list[Card]) -> None:
     back, else same back, else same front): Anki updates its note, the picture stays —
     unless what to draw changed (the picture's subject, the figure's description)."""
     left = list(before)
-    for card in revised:
-        match = next((c for c in left if (c.front, c.back) == (card.front, card.back)), None)
-        match = match or next((c for c in left if c.back == card.back), None)
-        match = match or next((c for c in left if c.front == card.front and c.front), None)
+    for card in revised:  # the texts compared as cards.same_text does (a capital, a full stop…)
+        match = next((c for c in left if same_text(c.front, card.front) and same_text(c.back, card.back)), None)
+        match = match or next((c for c in left if same_text(c.back, card.back)), None)
+        match = match or next((c for c in left if same_text(c.front, card.front) and text_key(c.front)), None)
         if match:
             _same_card(card, match)
             left.remove(match)

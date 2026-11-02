@@ -237,17 +237,39 @@ class Lessons(private val root: File) {
             },
         )
 
+        // What two texts of a card may differ by and still be the same (core's cards.same_text): never
+        // the accents, the punctuation inside, the digits; nothing fuzzy
+        private val SPACES = Regex("[ \\t\\n\\r\\u000B\\u000C\\u00A0\\u2007\\u202F]+")
+        private val GUILLEMETS = Regex("(?<=\\u00AB)[ \\u00A0\\u202F]+|[ \\u00A0\\u202F]+(?=\\u00BB)")
+        private val QUOTES = mapOf(
+            '\u2019' to '\'', '\u2018' to '\'', '\u201B' to '\'', '\u02BC' to '\'',
+            '\u201C' to '"', '\u201D' to '"', '\u201E' to '"', '\u00AB' to '"', '\u00BB' to '"',
+        )
+        private const val FINAL = ".!?\u2026:;"
+
+        /** A card's text as sameText compares it (core's cards.text_key): NFC, lower case, typographic
+         * quotes made straight (« oui » as "oui"), spaces (non-breaking too) as one, one final
+         * . ! ? … : ; taken off. The blank alone ("…") gives "". */
+        fun textKey(text: String): String {
+            val lower = GUILLEMETS.replace(Normalizer.normalize(text, Normalizer.Form.NFC).lowercase(java.util.Locale.ROOT), "")
+            val plain = SPACES.replace(lower.map { QUOTES[it] ?: it }.joinToString(""), " ").trim()
+            return if (plain.isNotEmpty() && plain.last() in FINAL) plain.dropLast(1).trimEnd() else plain
+        }
+
+        fun sameText(a: String, b: String): Boolean = textKey(a) == textKey(b)
+
         /** A lesson made again in its place (core's cards.kept_ids): each new card with the id of
          * the lesson's card it is, so its note and history in AnkiDroid; none, a new card. The same
          * front and back, else the same front, in the same part of the deck, each old card given
-         * once; never by a front empty or the blank alone (every dictation without a sentence). */
+         * once; never by a front empty or the blank alone (every dictation without a sentence). A
+         * new card with an id keeps it; an old card whose id one of them has goes to no other. */
         fun keptIds(made: JsonElement?, before: JsonElement?): JsonArray {
-            val left = (before as? JsonArray).orEmpty().map { it.jsonObject }.filter { it.string("id").isNotEmpty() }.toMutableList()
-            fun same(a: JsonObject, b: JsonObject, back: Boolean): Boolean {
-                val front = a.string("front").trim()
-                return a.string("subdeck").trim() == b.string("subdeck").trim() && front == b.string("front").trim() &&
-                    (if (back) a.string("back").trim() == b.string("back").trim() else front.isNotEmpty() && front != Anki.DICTATION_FRONT)
-            }
+            val taken = (made as? JsonArray).orEmpty().map { it.jsonObject.string("id") }.filter { it.isNotEmpty() }.toSet()
+            val left = (before as? JsonArray).orEmpty().map { it.jsonObject }
+                .filter { it.string("id").isNotEmpty() && it.string("id") !in taken }.toMutableList()
+            fun same(a: JsonObject, b: JsonObject, back: Boolean): Boolean =
+                sameText(a.string("subdeck"), b.string("subdeck")) && sameText(a.string("front"), b.string("front")) &&
+                    (if (back) sameText(a.string("back"), b.string("back")) else textKey(a.string("front")).isNotEmpty()) // "…" too: ""
             return JsonArray(
                 (made as? JsonArray).orEmpty().map { card ->
                     val c = card.jsonObject
