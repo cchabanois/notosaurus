@@ -278,8 +278,9 @@ h2 {
 .thumb, .add-stack { aspect-ratio: 3 / 4; }
 .thumb, .add-tile { border-radius: var(--radius-sm); }
 
-/* Both "add" buttons share one cell next to the pages… */
-.add-stack { display: flex; flex-direction: column; gap: .5rem; }
+/* The "add" buttons share one cell, a page's, first: always in the same place, the pages after
+   them (the camera found again page after page)… */
+.add-stack { order: -1; display: flex; flex-direction: column; gap: .5rem; }
 /* Three in a page's height: each its icon beside its name (above it when a larger text needs the room) */
 .add-stack .add-tile { flex: 1 1 0; flex-flow: row wrap; align-content: center; gap: 0 .3rem; padding: .25rem; font-size: .74rem; line-height: 1.15; }
 .add-stack .add-icon { font-size: 1.1rem; }

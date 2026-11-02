@@ -1179,8 +1179,9 @@ def add_photo(page, buffer: bytes) -> None:
 
 
 def test_the_add_buttons_fit_beside_the_pages_on_a_phone(page):
-    """Pages taken: the camera, gallery and PDF buttons share the next page's cell, no taller
-    than a page, their names whole (three stacked as they were made it half as tall again)."""
+    """Pages taken: the camera, gallery and PDF buttons share a page's cell, first (always in
+    the same place), no taller than a page, their names whole (three stacked as they were
+    made it half as tall again)."""
     page.set_viewport_size({"width": 411, "height": 860})
     page.goto("/")
     for n, color in enumerate(("red", "blue", "green"), start=1):
@@ -1192,6 +1193,7 @@ def test_the_add_buttons_fit_beside_the_pages_on_a_phone(page):
         stack = page.locator(".add-stack").bounding_box()
         assert stack["height"] <= thumb["height"] + 1, (n, thumb, stack)
         assert stack["width"] <= thumb["width"] + 1, (n, thumb, stack)  # a page's cell, not a row
+        assert stack["x"] < thumb["x"] and stack["y"] == thumb["y"], (n, thumb, stack)  # first, the pages after
         cut = "[...document.querySelectorAll('.add-stack .add-tile')].some(e => e.scrollWidth > e.clientWidth + 1)"
         assert not page.evaluate(cut), n
 
