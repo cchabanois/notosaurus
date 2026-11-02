@@ -382,10 +382,13 @@ def test_typed_answer_and_dictation(client, tmp_path):
     assert [m["name"] for m in package.models.values()] == ["Notosaurus front/back typed (audio) v2"]
 
 
-def test_plain_note_types_keep_their_ids(client):
-    """Users already have these note types in Anki: the new options mustn't change them."""
-    assert anki._model(anki.note_type("es_ES", False)).model_id == anki._stable_id("model", "TTS Anki es_ES", "False")
-    assert anki._model(anki.note_type("", True)).model_id == anki._stable_id("model", "audio", "True")
+def test_plain_note_types_ids_from_their_options_and_version(client):
+    """An id per note type, the same everywhere: from its options, and its version past the
+    first (1.0.0's ids were the first's: test_note_types.test_a_new_version_a_new_id)."""
+    assert anki._model(anki.note_type("es_ES", False)).model_id == anki._stable_id(
+        "model", "TTS Anki es_ES", "False", "v2"
+    )
+    assert anki._model(anki.note_type("", True)).model_id == anki._stable_id("model", "audio", "True", "v2")
     typed = anki._model(anki.note_type("", False, typing=True)).model_id
     assert typed != anki._model(anki.note_type("", False)).model_id
 
