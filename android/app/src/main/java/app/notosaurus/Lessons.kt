@@ -240,9 +240,12 @@ class Lessons(private val root: File) {
         /** A lesson made again in its place (core's cards.kept_ids): each new card with the id of
          * the lesson's card it is, so its note and history in AnkiDroid; none, a new card. The same
          * front and back, else the same front, in the same part of the deck, each old card given
-         * once; never by a front empty or the blank alone (every dictation without a sentence). */
+         * once; never by a front empty or the blank alone (every dictation without a sentence). A
+         * new card with an id keeps it; an old card whose id one of them has goes to no other. */
         fun keptIds(made: JsonElement?, before: JsonElement?): JsonArray {
-            val left = (before as? JsonArray).orEmpty().map { it.jsonObject }.filter { it.string("id").isNotEmpty() }.toMutableList()
+            val taken = (made as? JsonArray).orEmpty().map { it.jsonObject.string("id") }.filter { it.isNotEmpty() }.toSet()
+            val left = (before as? JsonArray).orEmpty().map { it.jsonObject }
+                .filter { it.string("id").isNotEmpty() && it.string("id") !in taken }.toMutableList()
             fun same(a: JsonObject, b: JsonObject, back: Boolean): Boolean {
                 val front = a.string("front").trim()
                 return a.string("subdeck").trim() == b.string("subdeck").trim() && front == b.string("front").trim() &&

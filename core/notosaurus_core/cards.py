@@ -157,8 +157,10 @@ def kept_ids(made: list[Card], before: list[Card]) -> list[str]:
     is its note's key in Anki: its note updated, its history kept), else "" (a new card).
     The same front and back, else the same front, in the same part of the deck (subdeck),
     each old card given once; never by a front empty or the blank alone ("…": the same for
-    every dictation without a sentence), only with the same back then."""
-    left = [c for c in before if c.id]
+    every dictation without a sentence), only with the same back then. A new card with an id
+    keeps it; an old card whose id one of them has is given to no other (an id never twice)."""
+    taken = {c.id for c in made if c.id}
+    left = [c for c in before if c.id and c.id not in taken]
 
     def same(a: Card, b: Card, back: bool) -> bool:
         front = a.front.strip()
@@ -170,6 +172,9 @@ def kept_ids(made: list[Card], before: list[Card]) -> list[str]:
 
     ids = []
     for card in made:
+        if card.id:
+            ids.append(card.id)
+            continue
         match = next((c for c in left if same(card, c, back=True)), None) or next(
             (c for c in left if same(card, c, back=False)), None
         )

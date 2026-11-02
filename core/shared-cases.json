@@ -400,6 +400,31 @@
     "a",
     ""
    ]
-  }
+  },
+  {
+    "name": "a card rewritten keeps its id, a new one of its old front: never that id twice",
+    "before": [
+     {
+      "id": "a",
+      "front": "la mère",
+      "back": "la madre"
+     }
+    ],
+    "made": [
+     {
+      "id": "a",
+      "front": "la maman",
+      "back": "la madre"
+     },
+     {
+      "front": "la mère",
+      "back": "la madre"
+     }
+    ],
+    "out": [
+     "a",
+     ""
+    ]
+   }
  ]
 }
