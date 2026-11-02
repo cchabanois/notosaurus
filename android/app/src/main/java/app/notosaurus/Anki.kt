@@ -29,6 +29,7 @@ data class Sent(
     val updated: Int = 0,
     val moved: Int = 0, // the lesson's notes moved to the deck they go to now (its deck changed)
     val notes: Map<String, Long> = emptyMap(), // a card's id → its note: kept with the lesson
+    val fresh: Set<Long> = emptySet(), // the notes this send added, by their ids: never a leftover
 )
 
 /** The lesson's options, as the computer's note types have them. */
@@ -354,6 +355,7 @@ class Anki(private val context: Context) : AnkiTarget {
         var moved = 0
         var duplicates = 0
         val sent = mutableMapOf<String, Long>()
+        val addedNotes = mutableSetOf<Long>() // the notes added, by their ids (Sent.fresh)
         notes.groupBy { it.model to it.deck }.forEach { (key, group) ->
             val (model, name) = key
             val did by lazy { deckId(name) ?: error("AnkiDroid refused the deck $name") }
@@ -399,14 +401,18 @@ class Anki(private val context: Context) : AnkiTarget {
                 rest.forEachIndexed { i, note -> if (known?.get(i).isNullOrEmpty()) fresh += note else duplicates++ }
             }
             if (fresh.isEmpty()) return@forEach
+            val before = if (media.lesson.isEmpty()) emptySet() else lessonThere(media.lesson).map { it.id }.toSet()
             count += maxOf(0, api.addNotes(model, did, fresh.map { withFiles(type.values(names(model, type), it.values), null) }, fresh.map { it.tags }))
-            // Their ids (addNotes gives only how many): this lesson's notes with their keys
+            // Their ids (addNotes gives only how many): this lesson's notes with their keys; and
+            // whichever its key couldn't be read from, as the lesson's notes new since (never
+            // offered as leftovers: those just added were, their note type lacking its key field)
             if (media.lesson.isNotEmpty()) {
                 val there = lessonNotesOf(media.lesson, type)
                 fresh.forEach { note -> there[note.key]?.let { sent[note.card] = it.id } }
+                addedNotes += lessonThere(media.lesson).map { it.id }.filter { it !in before }
             }
         }
-        return Sent(count, duplicates, deck.cards.size - notes.size, deck.deck, updated, moved, sent)
+        return Sent(count, duplicates, deck.cards.size - notes.size, deck.deck, updated, moved, sent, addedNotes)
     }
 
     /** The note type of a note; null when it isn't in AnkiDroid any more. */
@@ -535,12 +541,12 @@ class Anki(private val context: Context) : AnkiTarget {
             Log.i(TAG, "note type ${type.name}: kept (${if (count != type.cards.size) "$count cards" else "up to date"})")
             return
         }
-        // Fields it lacks (made by an older Notosaurus, before a picture was any card's): AnkiDroid
-        // can't add them, and templates naming them would show an error on every card. Kept as it
-        // is: the computer adds them (ankiconnect._bring_up_to_date), then a sync brings them here
+        // Fields it lacks: never under today's name (a note type's fields change only with its
+        // version, its name with it: note_types.common.VERSIONS). AnkiDroid can't add them, and
+        // templates naming them would show an error on every card: kept as it is, said
         val missing = type.fields - api.getFieldList(id).orEmpty().toSet()
         if (missing.isNotEmpty()) {
-            Log.w(TAG, "note type ${type.name}: kept, it lacks $missing (the computer adds them)")
+            Log.w(TAG, "note type ${type.name}: kept, it lacks $missing")
             return
         }
         Log.i(TAG, "note type ${type.name}: bringing it up to date")

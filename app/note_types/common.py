@@ -150,6 +150,21 @@ FAMILIES = {
 }
 
 
+# A note type's fields never change under its name: AnkiDroid can't add one to a note type it
+# has (a phone alone would keep it lacking them for good, its cards without their pictures).
+# Its family's fields changed, its version goes up and its name with it ("… v2"), a new note
+# type on every device; the computer moves its notes there (its family's: _change_type), their
+# history kept. Without a suffix: version 1, 1.0.0's. tests/test_note_types.py keeps each
+# version's fields: changing them without a new version fails it.
+VERSIONS = {"text": 2, "choice": 2, "diagram": 1, "cloze": 1}
+
+
+def versioned(name: str) -> str:
+    """The note type's name with its family's version: "Notosaurus QCM v2" ("" for 1)."""
+    version = VERSIONS[family(name)]
+    return name if version == 1 else f"{name} v{version}"
+
+
 def family(note_type_name: str) -> str:
     """ "text", "diagram", "picture", "cloze", "choice", or "" for a note type not Notosaurus's."""
     return next((f for prefix, f in FAMILIES.items() if note_type_name.startswith(prefix)), "")

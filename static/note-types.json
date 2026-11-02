@@ -1,7 +1,7 @@
 {
  "note_types": {
   "text": {
-   "name": "Notosaurus recto/verso (audio)",
+   "name": "Notosaurus recto/verso (audio) v2",
    "family": "text",
    "fields": [
     "Front",
@@ -25,10 +25,10 @@
     }
    ],
    "css": ".card { font-family: system-ui, sans-serif; font-size: 26px; text-align: center; }\n.info { font-size: 18px; color: #777; margin-top: 12px; }\n.card img { max-width: 100%; height: auto; }\n.dictation { font-size: 40px; }\n.notosaurus-help {\n  max-width: 32em; margin: 10px auto 0; padding: 4px 10px; border-left: 3px solid #8bb8c4;\n  font-size: 18px; color: #555; text-align: left;\n}\n.nightMode .notosaurus-help { color: #bbb; }\n.notosaurus-fix { margin-top: 16px; font-size: 14px; }\n.notosaurus-fix a { color: #8bb8c4; text-decoration: none; }\n.notosaurus-context { font-size: 14px; color: #888; margin-bottom: 12px; }\n.notosaurus-picture img { max-width: min(100%, 320px); max-height: 50vh; border-radius: 12px; }\n",
-   "signature": "4b26853e7e5e"
+   "signature": "1c2354316b68"
   },
   "text+dictation": {
-   "name": "Notosaurus recto/verso + dictée (audio)",
+   "name": "Notosaurus recto/verso + dictée (audio) v2",
    "family": "text",
    "fields": [
     "Front",
@@ -57,10 +57,10 @@
     }
    ],
    "css": ".card { font-family: system-ui, sans-serif; font-size: 26px; text-align: center; }\n.info { font-size: 18px; color: #777; margin-top: 12px; }\n.card img { max-width: 100%; height: auto; }\n.dictation { font-size: 40px; }\n.notosaurus-help {\n  max-width: 32em; margin: 10px auto 0; padding: 4px 10px; border-left: 3px solid #8bb8c4;\n  font-size: 18px; color: #555; text-align: left;\n}\n.nightMode .notosaurus-help { color: #bbb; }\n.notosaurus-fix { margin-top: 16px; font-size: 14px; }\n.notosaurus-fix a { color: #8bb8c4; text-decoration: none; }\n.notosaurus-context { font-size: 14px; color: #888; margin-bottom: 12px; }\n.notosaurus-picture img { max-width: min(100%, 320px); max-height: 50vh; border-radius: 12px; }\n",
-   "signature": "6be67c2540b0"
+   "signature": "f35ae2e32dba"
   },
   "text+typing": {
-   "name": "Notosaurus recto/verso à taper (audio)",
+   "name": "Notosaurus recto/verso à taper (audio) v2",
    "family": "text",
    "fields": [
     "Front",
@@ -84,10 +84,10 @@
     }
    ],
    "css": ".card { font-family: system-ui, sans-serif; font-size: 26px; text-align: center; }\n.info { font-size: 18px; color: #777; margin-top: 12px; }\n.card img { max-width: 100%; height: auto; }\n.dictation { font-size: 40px; }\n.notosaurus-help {\n  max-width: 32em; margin: 10px auto 0; padding: 4px 10px; border-left: 3px solid #8bb8c4;\n  font-size: 18px; color: #555; text-align: left;\n}\n.nightMode .notosaurus-help { color: #bbb; }\n.notosaurus-fix { margin-top: 16px; font-size: 14px; }\n.notosaurus-fix a { color: #8bb8c4; text-decoration: none; }\n.notosaurus-context { font-size: 14px; color: #888; margin-bottom: 12px; }\n.notosaurus-picture img { max-width: min(100%, 320px); max-height: 50vh; border-radius: 12px; }\n",
-   "signature": "0ecc26e67c16"
+   "signature": "530ca3538e55"
   },
   "text+typing+dictation": {
-   "name": "Notosaurus recto/verso à taper + dictée (audio)",
+   "name": "Notosaurus recto/verso à taper + dictée (audio) v2",
    "family": "text",
    "fields": [
     "Front",
@@ -116,10 +116,10 @@
     }
    ],
    "css": ".card { font-family: system-ui, sans-serif; font-size: 26px; text-align: center; }\n.info { font-size: 18px; color: #777; margin-top: 12px; }\n.card img { max-width: 100%; height: auto; }\n.dictation { font-size: 40px; }\n.notosaurus-help {\n  max-width: 32em; margin: 10px auto 0; padding: 4px 10px; border-left: 3px solid #8bb8c4;\n  font-size: 18px; color: #555; text-align: left;\n}\n.nightMode .notosaurus-help { color: #bbb; }\n.notosaurus-fix { margin-top: 16px; font-size: 14px; }\n.notosaurus-fix a { color: #8bb8c4; text-decoration: none; }\n.notosaurus-context { font-size: 14px; color: #888; margin-bottom: 12px; }\n.notosaurus-picture img { max-width: min(100%, 320px); max-height: 50vh; border-radius: 12px; }\n",
-   "signature": "b441697576e2"
+   "signature": "d29014fcc6a2"
   },
   "text+reverse": {
-   "name": "Notosaurus recto/verso + inverse (audio)",
+   "name": "Notosaurus recto/verso + inverse (audio) v2",
    "family": "text",
    "fields": [
     "Front",
@@ -148,10 +148,10 @@
     }
    ],
    "css": ".card { font-family: system-ui, sans-serif; font-size: 26px; text-align: center; }\n.info { font-size: 18px; color: #777; margin-top: 12px; }\n.card img { max-width: 100%; height: auto; }\n.dictation { font-size: 40px; }\n.notosaurus-help {\n  max-width: 32em; margin: 10px auto 0; padding: 4px 10px; border-left: 3px solid #8bb8c4;\n  font-size: 18px; color: #555; text-align: left;\n}\n.nightMode .notosaurus-help { color: #bbb; }\n.notosaurus-fix { margin-top: 16px; font-size: 14px; }\n.notosaurus-fix a { color: #8bb8c4; text-decoration: none; }\n.notosaurus-context { font-size: 14px; color: #888; margin-bottom: 12px; }\n.notosaurus-picture img { max-width: min(100%, 320px); max-height: 50vh; border-radius: 12px; }\n",
-   "signature": "c0e04e705036"
+   "signature": "a4d189548cae"
   },
   "text+reverse+dictation": {
-   "name": "Notosaurus recto/verso + inverse + dictée (audio)",
+   "name": "Notosaurus recto/verso + inverse + dictée (audio) v2",
    "family": "text",
    "fields": [
     "Front",
@@ -185,10 +185,10 @@
     }
    ],
    "css": ".card { font-family: system-ui, sans-serif; font-size: 26px; text-align: center; }\n.info { font-size: 18px; color: #777; margin-top: 12px; }\n.card img { max-width: 100%; height: auto; }\n.dictation { font-size: 40px; }\n.notosaurus-help {\n  max-width: 32em; margin: 10px auto 0; padding: 4px 10px; border-left: 3px solid #8bb8c4;\n  font-size: 18px; color: #555; text-align: left;\n}\n.nightMode .notosaurus-help { color: #bbb; }\n.notosaurus-fix { margin-top: 16px; font-size: 14px; }\n.notosaurus-fix a { color: #8bb8c4; text-decoration: none; }\n.notosaurus-context { font-size: 14px; color: #888; margin-bottom: 12px; }\n.notosaurus-picture img { max-width: min(100%, 320px); max-height: 50vh; border-radius: 12px; }\n",
-   "signature": "d4b14592d1bb"
+   "signature": "7270f277e476"
   },
   "text+reverse+typing": {
-   "name": "Notosaurus recto/verso + inverse à taper (audio)",
+   "name": "Notosaurus recto/verso + inverse à taper (audio) v2",
    "family": "text",
    "fields": [
     "Front",
@@ -217,10 +217,10 @@
     }
    ],
    "css": ".card { font-family: system-ui, sans-serif; font-size: 26px; text-align: center; }\n.info { font-size: 18px; color: #777; margin-top: 12px; }\n.card img { max-width: 100%; height: auto; }\n.dictation { font-size: 40px; }\n.notosaurus-help {\n  max-width: 32em; margin: 10px auto 0; padding: 4px 10px; border-left: 3px solid #8bb8c4;\n  font-size: 18px; color: #555; text-align: left;\n}\n.nightMode .notosaurus-help { color: #bbb; }\n.notosaurus-fix { margin-top: 16px; font-size: 14px; }\n.notosaurus-fix a { color: #8bb8c4; text-decoration: none; }\n.notosaurus-context { font-size: 14px; color: #888; margin-bottom: 12px; }\n.notosaurus-picture img { max-width: min(100%, 320px); max-height: 50vh; border-radius: 12px; }\n",
-   "signature": "c41ebef26703"
+   "signature": "78ca380bd752"
   },
   "text+reverse+typing+dictation": {
-   "name": "Notosaurus recto/verso + inverse à taper + dictée (audio)",
+   "name": "Notosaurus recto/verso + inverse à taper + dictée (audio) v2",
    "family": "text",
    "fields": [
     "Front",
@@ -254,10 +254,10 @@
     }
    ],
    "css": ".card { font-family: system-ui, sans-serif; font-size: 26px; text-align: center; }\n.info { font-size: 18px; color: #777; margin-top: 12px; }\n.card img { max-width: 100%; height: auto; }\n.dictation { font-size: 40px; }\n.notosaurus-help {\n  max-width: 32em; margin: 10px auto 0; padding: 4px 10px; border-left: 3px solid #8bb8c4;\n  font-size: 18px; color: #555; text-align: left;\n}\n.nightMode .notosaurus-help { color: #bbb; }\n.notosaurus-fix { margin-top: 16px; font-size: 14px; }\n.notosaurus-fix a { color: #8bb8c4; text-decoration: none; }\n.notosaurus-context { font-size: 14px; color: #888; margin-bottom: 12px; }\n.notosaurus-picture img { max-width: min(100%, 320px); max-height: 50vh; border-radius: 12px; }\n",
-   "signature": "551958a7246a"
+   "signature": "2ed9d33917cc"
   },
   "text+dictation-only": {
-   "name": "Notosaurus dictée (audio)",
+   "name": "Notosaurus dictée (audio) v2",
    "family": "text",
    "fields": [
     "Front",
@@ -281,7 +281,7 @@
     }
    ],
    "css": ".card { font-family: system-ui, sans-serif; font-size: 26px; text-align: center; }\n.info { font-size: 18px; color: #777; margin-top: 12px; }\n.card img { max-width: 100%; height: auto; }\n.dictation { font-size: 40px; }\n.notosaurus-help {\n  max-width: 32em; margin: 10px auto 0; padding: 4px 10px; border-left: 3px solid #8bb8c4;\n  font-size: 18px; color: #555; text-align: left;\n}\n.nightMode .notosaurus-help { color: #bbb; }\n.notosaurus-fix { margin-top: 16px; font-size: 14px; }\n.notosaurus-fix a { color: #8bb8c4; text-decoration: none; }\n.notosaurus-context { font-size: 14px; color: #888; margin-bottom: 12px; }\n.notosaurus-picture img { max-width: min(100%, 320px); max-height: 50vh; border-radius: 12px; }\n",
-   "signature": "1de47cc5f642"
+   "signature": "f39c525572d0"
   },
   "diagram": {
    "name": "Notosaurus légendes (audio)",
@@ -361,7 +361,7 @@
    "signature": "3d7d26bf11e2"
   },
   "choice": {
-   "name": "Notosaurus QCM",
+   "name": "Notosaurus QCM v2",
    "family": "choice",
    "fields": [
     "Question",
@@ -386,7 +386,7 @@
     }
    ],
    "css": ".card { font-family: system-ui, sans-serif; font-size: 26px; text-align: center; }\n.info { font-size: 18px; color: #777; margin-top: 12px; }\n.card img { max-width: 100%; height: auto; }\n.dictation { font-size: 40px; }\n.notosaurus-help {\n  max-width: 32em; margin: 10px auto 0; padding: 4px 10px; border-left: 3px solid #8bb8c4;\n  font-size: 18px; color: #555; text-align: left;\n}\n.nightMode .notosaurus-help { color: #bbb; }\n.notosaurus-fix { margin-top: 16px; font-size: 14px; }\n.notosaurus-fix a { color: #8bb8c4; text-decoration: none; }\n.notosaurus-context { font-size: 14px; color: #888; margin-bottom: 12px; }\n.notosaurus-picture img { max-width: min(100%, 320px); max-height: 50vh; border-radius: 12px; }\n.notosaurus-choices {\n  display: inline-block; margin: 12px auto 0; padding-left: 1.8em; text-align: left; list-style: upper-alpha;\n}\n.notosaurus-choices li { margin: 6px 0; }\n.notosaurus-choices li.right { color: #1b873f; font-weight: 700; }\n.notosaurus-choices li.right::after { content: \" ✔\"; }\n.notosaurus-choices li.wrong { opacity: .5; }\n",
-   "signature": "907c1daa82ac"
+   "signature": "a5ca1c4d198b"
   }
  }
 }
