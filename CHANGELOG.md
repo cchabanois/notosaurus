@@ -88,6 +88,7 @@ Each pull request's entries (the `## Changelog` of its description) are put unde
 
 ### Fixed
 
+- A lesson made with a prompt of several lines ("⭐ Automatic"…) no longer says "Changed since the cards were made" at once, and opened again it shows its prompt, no longer "✏️ Free".
 - With pages taken, the "Next page", "Gallery" and "PDF" buttons come first, always in the same place, two pages high: no longer a column taller than the pages, alone under them. A lesson of one page shows it large beside them.
 - Once a lesson has its 10 pages, the add buttons are greyed out and say so ("10 pages at most"), instead of refusing the next photo.
 - In a lesson already made, a photo put in place of another (removed, then chosen from the gallery) turns itself when turned: the lesson's old photo came back, turned, in its place.
