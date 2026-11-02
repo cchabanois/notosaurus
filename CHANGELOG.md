@@ -89,6 +89,7 @@ Each pull request's entries (the `## Changelog` of its description) are put unde
 
 ### Fixed
 
+- A topic of one word written in one of Notosaurus's prompts ("Automatic" and "The capitals") makes the cards without a photo again: the button below stayed on "Take a photo of the lesson" until three words were written. The hint under the prompt says what to write for the button to make the cards.
 - A lesson made with a prompt of several lines ("⭐ Automatic"…) no longer says "Changed since the cards were made" at once, and opened again it shows its prompt, no longer "✏️ Free".
 - With pages taken, the "Next page", "Gallery" and "PDF" buttons come first, always in the same place, two pages high: no longer a column taller than the pages, alone under them. A lesson of one page shows it large beside them.
 - Once a lesson has its 10 pages, the add buttons are greyed out and say so ("10 pages at most"), instead of refusing the next photo.
