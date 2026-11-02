@@ -120,11 +120,14 @@ def started(page) -> None:
 
 def generate_free(page, prompt: str) -> None:
     """A new lesson from a prompt written for this time (no photo): the last one, open again
-    when the page opens (app-draft.js), set aside first."""
+    when the page opens (app-draft.js), set aside first; photos left in progress (kept by the
+    page as soon as it saves its draft: before the page opens again, or not) removed."""
     page.goto("/")
     started(page)
     if page.evaluate("Alpine.$data(document.querySelector('[x-data]')).lessonId"):
         page.get_by_role("button", name="Nouvelle leçon").click()
+    while page.locator(".thumb-remove").count():
+        page.locator(".thumb-remove").first.click()
     page.get_by_role("radio", name="✏️ Libre").click()
     page.locator("textarea[x-ref=promptText]").fill(prompt)
     page.get_by_role("button", name="✨ Générer à partir de la consigne seule").click()
@@ -168,6 +171,28 @@ def open_prompt(page) -> None:
     if folded.is_visible():
         folded.get_by_role("button", name="✏️ Modifier").click()
     sync_api.expect(page.locator("textarea[x-ref=promptText]")).to_be_visible()
+
+
+def test_a_prompt_of_several_lines_is_the_lessons_own(page):
+    """A form sends its line ends as \\r\\n, kept in the lesson: a prompt of several lines (the
+    Automatic one) was "changed since the cards were made" at once, and the lesson opened
+    again said "✏️ Libre" instead of its prompt."""
+    page.goto("/")
+    started(page)
+    gallery = page.locator('input[type=file][accept="image/*"][multiple]')
+    gallery.set_input_files({"name": "p1.png", "mimeType": "image/png", "buffer": png("white")})
+    page.get_by_role("radio", name="⭐ Automatique (d'après la leçon)").click()
+    page.get_by_role("button", name="✨ Générer les cartes").click()
+    page.locator(".flash").first.wait_for()
+    folded = page.locator(".prompt-folded")
+    sync_api.expect(folded).to_contain_text("⭐ Automatique")
+    sync_api.expect(page.get_by_text("Modifiée depuis la création des cartes")).to_be_hidden()
+
+    page.reload()  # the lesson open again
+    started(page)
+    page.locator(".flash").first.wait_for()
+    sync_api.expect(folded).to_contain_text("⭐ Automatique")
+    sync_api.expect(page.get_by_text("Modifiée depuis la création des cartes")).to_be_hidden()
 
 
 def test_the_main_button_takes_the_first_photo(page):
