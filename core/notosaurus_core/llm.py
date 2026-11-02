@@ -18,6 +18,7 @@ calls recorded, the cards streamed) in calls.py.
 
 import asyncio
 import logging
+from collections import Counter
 from collections.abc import Callable, Sequence
 from functools import cache
 from typing import Any, Literal, NamedTuple
@@ -35,7 +36,7 @@ from .calls import (  # noqa: F401 (llm's API)
     tell,
     telling,
 )
-from .cards import blank_dictations, plain_cards, same_text, text_key
+from .cards import blank_dictations, is_choice, plain_cards, same_text, text_key
 from .cards import plain as plain_text
 from .config import AIConfig
 from .errors import AppError, loggable
@@ -588,14 +589,23 @@ async def fix_card(
 
 
 def _keep_ids(revised: list[Card], before: list[Card]) -> None:
-    """A revised card keeps the id and the picture of the card it was (same front and
-    back, else same back, else same front): Anki updates its note, the picture stays —
-    unless what to draw changed (the picture's subject, the figure's description)."""
+    """A revised card keeps the id and the picture of the card it was: Anki updates its note,
+    the picture stays — unless what to draw changed (the picture's subject, the figure's
+    description). The same front and back, else the same front, as cards.kept_ids; else its
+    question reworded, the same back, only where that back tells one card: unique among the
+    lesson's, and no card of choices on either side ("Vrai", "Faux", an option: any card's)."""
     left = list(before)
+    backs = Counter(text_key(c.back) for c in before)
+
+    def by_back(old: Card, card: Card) -> bool:
+        key = text_key(card.back)
+        unique = bool(key) and key == text_key(old.back) and backs[key] == 1
+        return unique and not is_choice(old) and not is_choice(card)
+
     for card in revised:  # the texts compared as cards.same_text does (a capital, a full stop…)
         match = next((c for c in left if same_text(c.front, card.front) and same_text(c.back, card.back)), None)
-        match = match or next((c for c in left if same_text(c.back, card.back)), None)
         match = match or next((c for c in left if same_text(c.front, card.front) and text_key(c.front)), None)
+        match = match or next((c for c in left if by_back(c, card)), None)
         if match:
             _same_card(card, match)
             left.remove(match)
