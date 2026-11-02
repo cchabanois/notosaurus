@@ -288,6 +288,8 @@ h2 {
 .strip:not(:has(.thumb)) .add-tile { font-size: .9rem; gap: .35rem; }
 .strip:not(:has(.thumb)) .add-icon { font-size: 1.7rem; }
 .thumb { position: relative; margin: 0; overflow: hidden; background: var(--surface-2); }
+/* A lesson of one page (the most): that page large, beside the buttons, as tall as them */
+.thumb:only-of-type { grid-column: span 2; grid-row: span 2; }
 .thumb img { width: 100%; height: 100%; object-fit: cover; display: block; }
 .thumb figcaption {
   position: absolute;
