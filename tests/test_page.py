@@ -1223,6 +1223,52 @@ def add_photo(page, buffer: bytes) -> None:
     sync_api.expect(page.locator(".thumb img")).to_have_count(1)
 
 
+def test_the_add_buttons_beside_the_pages_on_a_phone(page):
+    """Pages taken: the camera, gallery and PDF buttons first (always in the same place), two
+    pages high, each a finger's size and the same as pages come, their names whole. One page
+    (the most) shown large beside them; more, four beside them, then under them. (Three
+    stacked in a page's cell made it half as tall again as the pages.)"""
+    page.set_viewport_size({"width": 411, "height": 860})
+    page.goto("/")
+    heights = []
+    for n, color in enumerate(("red", "blue", "green", "orange", "purple"), start=1):
+        page.locator('input[type=file][accept="image/*"][multiple]').set_input_files(
+            {"name": f"page-{n}.png", "mimeType": "image/png", "buffer": plain_image(300, 400, color)}
+        )
+        sync_api.expect(page.locator(".thumb img")).to_have_count(n)
+        thumbs = [t.bounding_box() for t in page.locator(".thumb").all()]
+        stack = page.locator(".add-stack").bounding_box()
+        assert stack["x"] < thumbs[0]["x"] and stack["y"] == thumbs[0]["y"], (n, thumbs, stack)  # first
+        if n == 1:  # two columns wide, as tall as the buttons
+            assert thumbs[0]["width"] > 2 * stack["width"] and abs(thumbs[0]["height"] - stack["height"]) <= 1
+        else:  # a page's column, two pages high
+            assert abs(stack["width"] - thumbs[0]["width"]) <= 1, (n, thumbs, stack)
+            assert stack["height"] <= 2 * thumbs[0]["height"] + 16, (n, thumbs, stack)
+        heights.append([t.bounding_box()["height"] for t in page.locator(".add-tile:visible").all()])
+        assert min(heights[-1]) >= 44, n  # a finger's size
+        assert max(heights[-1]) - min(heights[0]) <= 3, heights  # the same as pages come
+        cut = "[...document.querySelectorAll('.add-stack .add-tile')].some(e => e.scrollWidth > e.clientWidth + 1)"
+        assert not page.evaluate(cut), n
+    assert thumbs[4]["x"] == stack["x"] and thumbs[4]["y"] > stack["y"] + stack["height"]  # the fifth under them
+
+
+def test_the_add_buttons_off_once_the_lesson_has_its_ten_pages(page):
+    """Ten pages, a lesson's most: the add buttons off, the camera's saying so; a page
+    removed, on again."""
+    page.goto("/")
+    page.locator('input[type=file][accept="image/*"][multiple]').set_input_files(
+        [{"name": f"page-{n}.png", "mimeType": "image/png", "buffer": plain_image(300, 400, "red")} for n in range(10)]
+    )
+    sync_api.expect(page.locator(".thumb img")).to_have_count(10)
+    sync_api.expect(page.locator(".add-tile.primary")).to_contain_text("10 pages au plus")
+    for chooser in page.locator(".add-stack input[type=file]").all():
+        sync_api.expect(chooser).to_be_disabled()
+    page.locator(".thumb-remove").first.click()
+    sync_api.expect(page.locator(".add-tile.primary")).to_contain_text("Page suivante")
+    for chooser in page.locator(".add-stack input[type=file]").all():
+        sync_api.expect(chooser).to_be_enabled()
+
+
 def test_the_lesson_in_progress_found_again(page):
     """Left before it is made (the settings, a link, the phone closing the app): its photos
     and its prompt found again when the page opens again; once made, the lesson open again;

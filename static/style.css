@@ -275,18 +275,21 @@ h2 {
   gap: .6rem;
 }
 
-.thumb, .add-stack { aspect-ratio: 3 / 4; }
+.thumb { aspect-ratio: 3 / 4; }
 .thumb, .add-tile { border-radius: var(--radius-sm); }
 
-/* Both "add" buttons share one cell next to the pages… */
-.add-stack { display: flex; flex-direction: column; gap: .5rem; }
+/* The "add" buttons first, always in the same place, two pages high (each a finger's size,
+   three of them): the pages beside them, then under them (the camera found again page after page)… */
+.add-stack { order: -1; grid-row: span 2; aspect-ratio: 3 / 8; place-self: stretch; display: flex; flex-direction: column; gap: .5rem; }  /* two pages high from the first one: the same buttons as pages come */
 .add-stack .add-tile { flex: 1; gap: .1rem; font-size: .78rem; }
 .add-stack .add-icon { font-size: 1.3rem; }
 /* …and take the whole row, side by side, before the first photo. */
-.strip:not(:has(.thumb)) .add-stack { grid-column: 1 / -1; flex-direction: row; aspect-ratio: auto; min-height: 8rem; }  /* taller with a larger text */
+.strip:not(:has(.thumb)) .add-stack { grid-column: 1 / -1; grid-row: auto; aspect-ratio: auto; flex-direction: row; min-height: 8rem; }  /* taller with a larger text */
 .strip:not(:has(.thumb)) .add-tile { font-size: .9rem; gap: .35rem; }
 .strip:not(:has(.thumb)) .add-icon { font-size: 1.7rem; }
 .thumb { position: relative; margin: 0; overflow: hidden; background: var(--surface-2); }
+/* A lesson of one page (the most): that page large, beside the buttons, as tall as them */
+.thumb:only-of-type { grid-column: span 2; grid-row: span 2; }
 .thumb img { width: 100%; height: 100%; object-fit: cover; display: block; }
 .thumb figcaption {
   position: absolute;
@@ -332,6 +335,7 @@ h2 {
   cursor: pointer;
 }
 .add-tile.busy { opacity: .6; pointer-events: none; }
+.add-stack.full .add-tile { opacity: .45; pointer-events: none; }  /* a lesson's pages all there */
 .add-tile.dropping { border-color: var(--primary); background: var(--primary-soft); color: var(--primary); }
 .pdf-pages {
   display: grid; grid-template-columns: repeat(auto-fill, minmax(5.5rem, 1fr)); gap: .5rem;
