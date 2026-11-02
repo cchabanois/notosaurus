@@ -108,7 +108,7 @@
       "completedNone": "Rien de nouveau sur ces pages : aucune carte ajoutée.",
       "regenerate": "✨ Régénérer",
       "fromPrompt": "✨ Générer à partir de la consigne seule",
-      "fromPromptHint": "Pas de photo ? L'IA crée les cartes à partir de votre consigne : mettez-y les mots, ou demandez un thème. Vérifiez bien les cartes.",
+      "fromPromptHint": "Pas de photo ? Écrivez dans la consigne ce qu'il faut apprendre, un thème ou des mots : le bouton du bas crée alors les cartes (tant qu'elle n'en dit rien, il propose la photo). Vérifiez bien les cartes.",
       "regenerateHint": "(remplace les cartes)",
       "unavailable": "Consignes indisponibles : {message}",
       "builtin": "Consigne Notosaurus : en lecture seule, améliorée avec l'appli",

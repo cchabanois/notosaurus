@@ -108,7 +108,7 @@
       "completedNone": "Nothing new on these pages: no card added.",
       "regenerate": "✨ Generate again",
       "fromPrompt": "✨ Generate from the prompt alone",
-      "fromPromptHint": "No photo? The AI creates the cards from your prompt: put the words in it, or ask for a topic. Check the cards carefully.",
+      "fromPromptHint": "No photo? Write in the prompt what to learn, a topic or the words: the button below then makes the cards (until it says what, the button offers the photo). Check the cards carefully.",
       "regenerateHint": "(replaces the cards)",
       "unavailable": "Instructions unavailable: {message}",
       "builtin": "Notosaurus's prompt: read-only, improved with the app",

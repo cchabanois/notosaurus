@@ -108,7 +108,7 @@
       "completedNone": "Nichts Neues auf diesen Seiten: keine Karte hinzugefügt.",
       "regenerate": "✨ Neu erzeugen",
       "fromPrompt": "✨ Nur aus den Anweisungen erzeugen",
-      "fromPromptHint": "Kein Foto? Die KI erstellt die Karten aus deinen Anweisungen: Schreib die Wörter hinein oder nenne ein Thema. Prüfe die Karten gut.",
+      "fromPromptHint": "Kein Foto? Schreib in die Anweisungen, was zu lernen ist, ein Thema oder die Wörter: Der Knopf unten erstellt dann die Karten (solange sie es nicht sagen, bietet er das Foto an). Prüfe die Karten gut.",
       "regenerateHint": "(ersetzt die Karten)",
       "unavailable": "Anweisungen nicht verfügbar: {message}",
       "builtin": "Anweisungen von Notosaurus: schreibgeschützt, werden mit der App verbessert",

@@ -108,7 +108,7 @@
       "completedNone": "Niente di nuovo in queste pagine: nessuna carta aggiunta.",
       "regenerate": "✨ Genera di nuovo",
       "fromPrompt": "✨ Genera solo dalle istruzioni",
-      "fromPromptHint": "Nessuna foto? L'IA crea le carte dalle tue istruzioni: scrivici le parole o chiedi un argomento. Controlla bene le carte.",
+      "fromPromptHint": "Nessuna foto? Scrivi nelle istruzioni cosa imparare, un argomento o le parole: il pulsante in basso crea allora le carte (finché non lo dicono, propone la foto). Controlla bene le carte.",
       "regenerateHint": "(sostituisce le carte)",
       "unavailable": "Istruzioni non disponibili: {message}",
       "builtin": "Istruzioni di Notosaurus: sola lettura, migliorate insieme all'app",

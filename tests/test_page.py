@@ -195,6 +195,20 @@ def test_a_prompt_of_several_lines_is_the_lessons_own(page):
     sync_api.expect(page.get_by_text("Modifiée depuis la création des cartes")).to_be_hidden()
 
 
+def test_a_short_topic_without_photo(page):
+    """Automatic chosen, a topic of one word written in it ("Les capitales"): the button
+    below makes the cards from it, no photo asked (it took three words: it stayed on the photo)."""
+    page.goto("/")
+    started(page)
+    page.get_by_role("radio", name="⭐ Automatique (d'après la leçon)").click()
+    field = page.locator("textarea[x-ref=promptText]")
+    field.fill(field.input_value() + "\nLes capitales")
+    button = page.locator(".bottom-bar button.btn.primary.wide").first
+    sync_api.expect(button).to_have_text("✨ Générer à partir de la consigne seule")
+    button.click()
+    page.locator(".flash").first.wait_for()
+
+
 def test_the_main_button_takes_the_first_photo(page):
     """No photo yet: "📷 Photographiez la leçon" is not a dead button, it opens the camera."""
     page.goto("/")

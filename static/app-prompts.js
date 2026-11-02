@@ -2,9 +2,9 @@
 // Methods of the page's Alpine component (app.js), as `this`.
 
 // A Notosaurus prompt works without a photo once something to learn is written in it (a list
-// of words, a topic): words added to its own text, a few at least; a comma put right, a word
-// changed, isn't that. In any language: words counted, never their meaning.
-const WORDS_WITHOUT_PHOTO = 3;
+// of words, a topic): a word added to its own text is enough, a topic often holds in one ("Les
+// capitales"); a comma put right isn't one. In any language: words counted, never their meaning.
+const WORDS_WITHOUT_PHOTO = 1;
 
 function addedWords(original, text) {
   const words = (t) => t.toLocaleLowerCase().match(/[\p{L}\p{N}]+/gu) ?? [];

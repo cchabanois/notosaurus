@@ -267,8 +267,9 @@ test("the big button: the cards from the photos, from the prompt when it says wh
   };
   assert.equal(when("notosaurus:vocabulary", vocabulary), "photo");  // as it is: meant for photos
   assert.equal(when("notosaurus:vocabulary", vocabulary.replace(" (une", ", (une")), "photo");  // a comma
-  assert.equal(when("notosaurus:vocabulary", vocabulary.replace("vocabulaire", "verbes")), "photo");  // a word changed
-  assert.equal(when("notosaurus:vocabulary", `${vocabulary}\nchat, chien`), "photo");  // two words: not yet
+  assert.equal(when("notosaurus:vocabulary", vocabulary.replace("Crée", "Crée,")), "photo");  // punctuation: no word
+  assert.equal(when("notosaurus:vocabulary", `${vocabulary}\nLes capitales`), "prompt");  // a topic in one word ("les" there)
+  assert.equal(when("notosaurus:vocabulary", "Les capitales"), "prompt");  // its text replaced by a topic
   assert.equal(when("notosaurus:vocabulary", `${vocabulary}\nla mère, le père, la sœur`), "prompt");
   assert.equal(when(null, "Les capitales de l'Europe"), "prompt");  // the free prompt, written
   assert.equal(when(null, "  "), "photo");  // the free prompt, empty
