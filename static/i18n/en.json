@@ -51,6 +51,7 @@
       "takePhoto": "Take a photo",
       "nextPage": "Next page",
       "gallery": "Gallery",
+      "max": "{max} pages at most",
       "unreadable": "Can't read “{name}”.",
       "full": {
         "one": "A lesson holds {max} pages: {count} photo was not added.",

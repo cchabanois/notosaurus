@@ -152,24 +152,25 @@
                     :disabled="loading" :aria-label="$t('app.photos.hide')" :title="$t('app.photos.hide')">🖍️</button>
           </figure>
         </template>
-        <div class="add-stack">
+        <!-- A lesson's pages all there (maxPhotos): nothing more to add, said on the camera's tile -->
+        <div class="add-stack" :class="{ full: photos.length >= maxPhotos }">
           <label class="add-tile primary">
             <span class="add-icon">📷</span>
-            <span x-text="photos.length ? $t('app.photos.nextPage') : $t('app.photos.takePhoto')"></span>
-            <input type="file" accept="image/*" capture="environment" hidden x-ref="camera" @change="addPhotos($event)">
+            <span x-text="photos.length >= maxPhotos ? $t('app.photos.max', { max: maxPhotos }) : photos.length ? $t('app.photos.nextPage') : $t('app.photos.takePhoto')"></span>
+            <input type="file" accept="image/*" capture="environment" hidden x-ref="camera" :disabled="photos.length >= maxPhotos" @change="addPhotos($event)">
           </label>
           <label class="add-tile" :class="{ dropping: dropTile === 'gallery' }" @dragover="dragOver($event, 'gallery')"
                  @dragleave="dropTile = ''" @drop="dropFiles($event)">
             <span class="add-icon">🖼️</span>
             <span x-text="$t('app.photos.gallery')"></span>
-            <input type="file" accept="image/*" multiple hidden @change="addPhotos($event)">
+            <input type="file" accept="image/*" multiple hidden :disabled="photos.length >= maxPhotos" @change="addPhotos($event)">
           </label>
           <!-- Its own picker: the gallery keeps the phone's photo picker -->
           <label class="add-tile" x-show="!off('lesson.pdf')" :class="{ busy: pdfBusy, dropping: dropTile === 'pdf' }" @dragover="dragOver($event, 'pdf')"
                  @dragleave="dropTile = ''" @drop="dropFiles($event)">
             <span class="add-icon">📄</span>
             <span x-text="pdfBusy ? $t('app.pdf.reading') : $t('app.pdf.button')"></span>
-            <input type="file" accept="application/pdf,.pdf" multiple hidden :disabled="pdfBusy" @change="addPhotos($event)">
+            <input type="file" accept="application/pdf,.pdf" multiple hidden :disabled="pdfBusy || photos.length >= maxPhotos" @change="addPhotos($event)">
           </label>
         </div>
       </div>

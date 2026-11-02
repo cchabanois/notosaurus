@@ -335,6 +335,7 @@ h2 {
   cursor: pointer;
 }
 .add-tile.busy { opacity: .6; pointer-events: none; }
+.add-stack.full .add-tile { opacity: .45; pointer-events: none; }  /* a lesson's pages all there */
 .add-tile.dropping { border-color: var(--primary); background: var(--primary-soft); color: var(--primary); }
 .pdf-pages {
   display: grid; grid-template-columns: repeat(auto-fill, minmax(5.5rem, 1fr)); gap: .5rem;

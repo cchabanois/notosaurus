@@ -1207,6 +1207,23 @@ def test_the_add_buttons_beside_the_pages_on_a_phone(page):
     assert thumbs[4]["x"] == stack["x"] and thumbs[4]["y"] > stack["y"] + stack["height"]  # the fifth under them
 
 
+def test_the_add_buttons_off_once_the_lesson_has_its_ten_pages(page):
+    """Ten pages, a lesson's most: the add buttons off, the camera's saying so; a page
+    removed, on again."""
+    page.goto("/")
+    page.locator('input[type=file][accept="image/*"][multiple]').set_input_files(
+        [{"name": f"page-{n}.png", "mimeType": "image/png", "buffer": plain_image(300, 400, "red")} for n in range(10)]
+    )
+    sync_api.expect(page.locator(".thumb img")).to_have_count(10)
+    sync_api.expect(page.locator(".add-tile.primary")).to_contain_text("10 pages au plus")
+    for chooser in page.locator(".add-stack input[type=file]").all():
+        sync_api.expect(chooser).to_be_disabled()
+    page.locator(".thumb-remove").first.click()
+    sync_api.expect(page.locator(".add-tile.primary")).to_contain_text("Page suivante")
+    for chooser in page.locator(".add-stack input[type=file]").all():
+        sync_api.expect(chooser).to_be_enabled()
+
+
 def test_the_lesson_in_progress_found_again(page):
     """Left before it is made (the settings, a link, the phone closing the app): its photos
     and its prompt found again when the page opens again; once made, the lesson open again;

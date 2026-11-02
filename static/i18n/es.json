@@ -51,6 +51,7 @@
       "takePhoto": "Hacer una foto",
       "nextPage": "Página siguiente",
       "gallery": "Galería",
+      "max": "{max} páginas como máximo",
       "unreadable": "No se puede leer «{name}».",
       "full": {
         "one": "Una lección cabe en {max} páginas: {count} foto no se ha añadido.",
