@@ -4,6 +4,12 @@ on:
   pull_request:
   push:
     branches: [main]
+  workflow_dispatch:  # every job, on any branch: macOS's before a merge, when it matters
+
+# macOS on main only (and on demand): its runners are few (5 at a time), a pull request
+# waited for them. Windows and ARM on a pull request only when it changes what they run
+# (changes, below). Those jobs, required by main's ruleset, are jobs of their own, not
+# matrix entries: skipped by their `if`, a job counts as passed, under its own name.
 
 permissions:
   contents: read
@@ -13,6 +19,30 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  changes:
+    # Whether the pull request changes what Windows and ARM run: the server, the add-on,
+    # the core, the tools, the tests, the dependencies, this workflow. Not the page alone,
+    # nor Android, nor the docs. Anything else than a pull request: everything.
+    runs-on: ubuntu-latest
+    timeout-minutes: 2
+    outputs:
+      platforms: ${{ steps.diff.outputs.platforms }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+      - id: diff
+        env:
+          BASE: ${{ github.base_ref }}
+        run: |
+          if [ "${{ github.event_name }}" != pull_request ]; then
+            echo "platforms=true" >> "$GITHUB_OUTPUT"
+          elif git diff --name-only "origin/$BASE...HEAD" | grep -qE '^(app|anki_addon|core|tools|tests)/|^requirements.*\.txt$|^pyproject\.toml$|^\.github/workflows/tests\.yml$'; then
+            echo "platforms=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "platforms=false" >> "$GITHUB_OUTPUT"
+          fi
+
   lint:
     runs-on: ubuntu-latest
     timeout-minutes: 5
@@ -44,10 +74,9 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          # 3.13: what users run (the add-on installs it with uv; the Docker image)
+          # 3.13: what users run (the add-on installs it with uv; the Docker image); Windows
+          # and macOS: tests-windows, tests-macos
           - { os: ubuntu-latest, python: "3.13" }
-          - { os: windows-latest, python: "3.13" }
-          - { os: macos-latest, python: "3.13" }
           # the next version, to see breakages early
           - { os: ubuntu-latest, python: "3.14" }
     steps:
@@ -65,6 +94,43 @@ jobs:
       - name: Unit-test the page scripts
         if: matrix.os == 'ubuntu-latest' && matrix.python == '3.13'
         run: node --test tests/frontend/*.test.mjs  # files, not the folder: older Node can't take one
+
+  tests-windows:
+    name: tests (windows-latest, 3.13)
+    needs: changes
+    if: needs.changes.outputs.platforms == 'true'
+    runs-on: windows-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7.1.0
+        with:
+          python-version: "3.13"
+          cache: pip
+          cache-dependency-path: requirements*.txt
+      - run: pip install -r requirements-dev.txt
+      - run: pytest -q
+      - name: Check the page scripts parse
+        shell: bash
+        run: for f in static/*.js; do node --check "$f"; done
+
+  tests-macos:
+    name: tests (macos-latest, 3.13)
+    if: github.event_name != 'pull_request'
+    runs-on: macos-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7.1.0
+        with:
+          python-version: "3.13"
+          cache: pip
+          cache-dependency-path: requirements*.txt
+      - run: pip install -r requirements-dev.txt
+      - run: pytest -q
+      - name: Check the page scripts parse
+        shell: bash
+        run: for f in static/*.js; do node --check "$f"; done
 
   docker:
     # The Docker image (README, "Or with Docker"): it builds, starts, and makes a
@@ -141,19 +207,66 @@ jobs:
 
   addon-install:
     # The packaged add-on, unpacked as Anki would: downloads uv, installs Python
-    # and the dependencies, starts the server (see tools/check_addon_install.py).
-    name: addon install (${{ matrix.os }})
-    runs-on: ${{ matrix.os }}
+    # and the dependencies, starts the server (see tools/check_addon_install.py). On each
+    # system Anki runs on: Linux here, the others below (each its own job, as said above).
+    name: addon install (ubuntu-latest)
+    runs-on: ubuntu-latest
     timeout-minutes: 10
-    strategy:
-      fail-fast: false
-      matrix:
-        os: [ubuntu-latest, ubuntu-24.04-arm, windows-latest, macos-latest, macos-15-intel]
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7.1.0
         with:
           python-version: "3.13"  # stands for Anki's Python, which runs the launcher
+      - run: python tools/check_addon_install.py
+
+  addon-install-arm:
+    name: addon install (ubuntu-24.04-arm)
+    needs: changes
+    if: needs.changes.outputs.platforms == 'true'
+    runs-on: ubuntu-24.04-arm
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7.1.0
+        with:
+          python-version: "3.13"
+      - run: python tools/check_addon_install.py
+
+  addon-install-windows:
+    name: addon install (windows-latest)
+    needs: changes
+    if: needs.changes.outputs.platforms == 'true'
+    runs-on: windows-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7.1.0
+        with:
+          python-version: "3.13"
+      - run: python tools/check_addon_install.py
+
+  addon-install-macos:
+    name: addon install (macos-latest)
+    if: github.event_name != 'pull_request'
+    runs-on: macos-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7.1.0
+        with:
+          python-version: "3.13"
+      - run: python tools/check_addon_install.py
+
+  addon-install-macos-intel:
+    name: addon install (macos-15-intel)
+    if: github.event_name != 'pull_request'
+    runs-on: macos-15-intel
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7.1.0
+        with:
+          python-version: "3.13"
       - run: python tools/check_addon_install.py
 
   addon:
