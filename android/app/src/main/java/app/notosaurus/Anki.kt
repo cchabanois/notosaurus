@@ -371,6 +371,7 @@ class Anki(private val context: Context) : AnkiTarget {
             }
         }
         var count = 0
+        val claimed = mutableSetOf<Long>() // older notes given to a card: never to another, whatever its group
         var updated = 0
         var moved = 0
         var duplicates = 0
@@ -424,10 +425,11 @@ class Anki(private val context: Context) : AnkiTarget {
             // version before, the computer's 1.0.0) updated in its own type, its history kept, no
             // second note beside it (ANK-11); its fields the older type lacks (a picture) left out
             if (media.lesson.isNotEmpty() && fresh.isNotEmpty()) {
-                val older = olderNotesOf(media.lesson, type).toMutableList()
+                val older = olderNotesOf(media.lesson, type)
                 fresh.removeAll { note ->
-                    val old = older.firstOrNull { sameCard(it, note, type) } ?: return@removeAll false
-                    older.remove(old)
+                    val old = older.firstOrNull { it.id !in claimed && it.id !in sent.values && sameCard(it, note, type) }
+                        ?: return@removeAll false
+                    claimed += old.id
                     val fields = withFiles(type.values(names(old.model, type), note.values, old.fields), old.fields)
                     if (!old.fields.contentEquals(fields) || !old.tags.containsAll(note.tags)) {
                         api.updateNoteFields(old.id, fields)
@@ -684,8 +686,9 @@ class Anki(private val context: Context) : AnkiTarget {
             ENTITY.replace(text) { m ->
                 val (hex, dec, name) = m.destructured
                 when {
-                    hex.isNotEmpty() -> hex.toIntOrNull(16)?.let { String(Character.toChars(it)) } ?: m.value
-                    dec.isNotEmpty() -> dec.toIntOrNull()?.let { String(Character.toChars(it)) } ?: m.value
+                    // Past Unicode (&#x110000;): as it is, never an exception failing the whole send
+                    hex.isNotEmpty() -> hex.toIntOrNull(16)?.takeIf(Character::isValidCodePoint)?.let { String(Character.toChars(it)) } ?: m.value
+                    dec.isNotEmpty() -> dec.toIntOrNull()?.takeIf(Character::isValidCodePoint)?.let { String(Character.toChars(it)) } ?: m.value
                     else -> NAMED[name] ?: m.value
                 }
             }

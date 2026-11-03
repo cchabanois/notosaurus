@@ -535,6 +535,32 @@ class AnkiDroidTest {
         assertEquals(emptyList<Leftover>(), anki.leftovers(lesson, sent.notes.values.toSet()))
     }
 
+    /** One older note without an Id, two cards of its front in two parts of the deck (each sent
+     * in its own group): one takes it, the other gets a note of its own, never the same note twice
+     * (the second overwrote the first). */
+    @Test
+    fun anOlderNoteGivenToOneCardOnly() {
+        val anki = Anki(Device.context)
+        val api = AddContentApi(Device.context)
+        val lesson = "older-once-$run"
+        anki.send(Deck("Notosaurus test $run", listOf(Card("y $run", "z"))), Media(lesson = "made-$run")) // its deck there
+        val did = api.deckList!!.entries.first { it.value == "Notosaurus test $run" }.key
+        val noId = api.addNewCustomModel(
+            "Notosaurus recto/verso once $run (audio)", arrayOf("Front", "Back", "Info", "Audio", "Explanation", "Mnemonic"),
+            arrayOf("Recto → Verso"), arrayOf("{{Front}}"), arrayOf("{{Back}}"), types["text"].css, null, 0,
+        )!!
+        val old = api.addNote(noId, did, arrayOf("le vol $run", "el vuelo", "", "", "", ""), setOf("notosaurus", Anki.lessonTag(lesson)))!!
+        val cards = listOf(
+            Card("le vol $run", "el vuelo", id = "a-$run", subdeck = "Avion"),
+            Card("Le vol $run", "el robo", id = "b-$run", subdeck = "Police"), // the same front once normalised
+        )
+        val sent = anki.send(Deck("Notosaurus test $run", cards), Media(lesson = lesson))
+        assertEquals(1, sent.added)
+        assertEquals(2, sent.notes.values.toSet().size) // a note each
+        assertEquals(old, sent.notes["a-$run"])
+        assertEquals("el vuelo", field(noId, api.getNote(old)!!.fields, "Back")) // not overwritten by the other card
+    }
+
     private fun noteModel(note: Long): Long = Device.context.contentResolver.query(
         Uri.withAppendedPath(FlashCardsContract.Note.CONTENT_URI, note.toString()), arrayOf(FlashCardsContract.Note.MID), null, null, null,
     )!!.use { c -> c.moveToFirst(); c.getLong(0) }

@@ -148,5 +148,6 @@ class AnkiTest {
         assertEquals("l'école\n(le lieu)", Anki.fieldText("l'école<br/>(le lieu)"))
         assertEquals("&#x27;", Anki.fieldText("&amp;#x27;")) // decoded once
         assertEquals("l'été", Anki.fieldText("l&#39;été"))
+        assertEquals("a&#x110000;b &#9999999999;", Anki.fieldText("a&#x110000;b &#9999999999;")) // past Unicode: as it is
     }
 }
