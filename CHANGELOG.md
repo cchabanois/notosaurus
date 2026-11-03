@@ -90,6 +90,7 @@ Each pull request's entries (the `## Changelog` of its description) are put unde
 
 ### Fixed
 
+- In the Android app, a lesson whose cards were sent to AnkiDroid with an older Notosaurus note type updates those notes, their review history kept, instead of adding each card again and offering the old ones for deletion. AnkiDroid can't change a note's type, so they keep theirs.
 - A lesson made again keeps the notes and review history of its cards in Anki when the AI writes a card's question otherwise but its answer is the same and the lesson's only one, a dictation's word for instance: they became new cards, the old ones offered for deletion.
 - An Anki package (.apkg) made by 1.1.0 imports beside 1.0.0's note types, where Anki 2.1.4x refused its notes ("the note type changed").
 - A card the AI corrects no longer takes another card's history in Anki because they share an answer ("True", "False", a multiple choice's option): it is matched by its answer alone only when that answer belongs to one card of the lesson.
