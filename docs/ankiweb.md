@@ -23,6 +23,10 @@ without a `-` (a `-` would block newer Ankis from downloading it).
 notebook or textbook page with AI (handwriting included) and makes the cards: you review them,
 then send them to Anki in one tap.</p>
 
+<p><b>New in 1.1.0</b>: tests to prepare, a card per child, correct a card in plain words, the
+lesson's own drawings and free pictures on the cards, figures drawn exactly, and an Android app.
+<a href="https://github.com/cchabanois/notosaurus/releases/tag/v1.1.0">What's new</a></p>
+
 <p><a href="https://www.youtube.com/shorts/Q7bUTMEj6Kk"><img
 src="https://raw.githubusercontent.com/cchabanois/notosaurus/main/docs/src/assets/demo.gif"
 alt="Notosaurus demo" width="280"></a><br>
@@ -34,16 +38,23 @@ alt="Notosaurus demo" width="280"></a><br>
 true or false, formulas.</li>
 <li>🌱 <b>Diagrams</b>: labels hidden automatically, one card per label.</li>
 <li>📐 <b>Exact figures</b> for geometry, formulas in MathJax.</li>
-<li>🖼️ <b>Pictures on the cards</b> (“front: the picture of the word”), and spelling
-dictations: hear the word, type it.</li>
+<li>🖼️ <b>Pictures on the cards</b>: the lesson's own drawings cut out of the photo, free
+pictures (Wikimedia Commons, Openverse), or drawn by the AI when you say yes.</li>
+<li>✍️ <b>Dictations, poems, dates, tables to learn</b>: hear the word and type it, a poem line
+by line, a timeline both ways, a conjugation cell by cell.</li>
 <li>💡 <b>Helps on the back</b> where they help: why the answer is right, a genuine way to
 remember it. And 💬 ask for an explanation of any card while reviewing.</li>
 <li>✏️ <b>Fix the cards in plain words</b>: “add the plural on the back”, “you forgot the
-colours”.</li>
+colours”, for the whole lesson or a single card.</li>
+<li>📌 <b>Tests to prepare</b>: put a lesson, or some of its cards, in a test with a date, then
+revise them all in one filtered deck.</li>
 <li>🔊 <b>Natural audio</b> in the deck, plays everywhere, even offline.</li>
-<li>👨‍👩‍👧 <b>Made for families</b>: one Anki profile per child, each with their own lessons.</li>
+<li>👨‍👩‍👧 <b>Made for families</b>: a card per child (their class, their decks, instructions for
+the AI; never their first name sent), each with their own lessons.</li>
 <li>📥 <b>Straight into Anki</b>, updated without duplicates; review on AnkiDroid or
-AnkiMobile.</li>
+AnkiMobile. ✎ under each answer opens the card in Notosaurus to correct it.</li>
+<li>📱 <b>The Notosaurus app for Android</b> shows this computer's page for free (scan the same
+QR code), or works on its own with its subscription, no computer needed.</li>
 </ul>
 
 <p><b>Getting started</b></p>
