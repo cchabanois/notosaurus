@@ -164,6 +164,22 @@ Todos los intercambios con el servicio usan **HTTPS**. El servicio solo guarda l
 clave de licencia. En tu móvil, la clave se queda en el almacenamiento privado de la aplicación, y
 los ajustes solo muestran sus últimos caracteres.
 
+## Eliminar tus datos
+
+Para que el servicio Notosaurus elimine lo que guarda de ti:
+
+1. Escribe a **notosaurus.app@gmail.com**, asunto «Eliminar mis datos».
+2. Indica los últimos caracteres de tu clave de licencia (⚙️ → 🔑 Suscripción los muestra), o tu
+   número de pedido de Google Play si estás suscrito. Si estás suscrito, cancela primero la
+   suscripción en Google Play.
+3. Los eliminamos y te lo confirmamos, en un mes como máximo.
+
+**Eliminados**: tu licencia (la huella de su clave, tu plan, tus créditos), lo que reportaste con
+⚑ y nuestros correos. **Nunca guardados por el servicio**: tus lecciones, fotos, grabaciones y
+tarjetas. Sus registros técnicos se borran solos a los 30 días. Google Play conserva los registros
+de tus pagos según sus propias condiciones. Tus lecciones en el móvil las eliminas tú, en la
+aplicación o desinstalándola.
+
 ## Cambios
 
 Si esta política cambia, la fecha de arriba de la página también cambia.

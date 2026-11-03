@@ -163,6 +163,22 @@ Tous les échanges avec le service passent en **HTTPS**. Seule l'empreinte de vo
 licence est gardée côté service. Sur votre téléphone, la clé reste dans l'espace privé de l'application,
 et les réglages n'en montrent que les derniers caractères.
 
+## Supprimer vos données
+
+Pour que le service Notosaurus supprime ce qu'il garde de vous :
+
+1. Écrivez à **notosaurus.app@gmail.com**, objet « Supprimer mes données ».
+2. Indiquez les derniers caractères de votre clé de licence (⚙️ → 🔑 Abonnement les affiche), ou
+   votre numéro de commande Google Play si vous êtes abonné. Si vous êtes abonné, résiliez
+   d'abord l'abonnement dans Google Play.
+3. Nous les supprimons et vous le confirmons, sous un mois.
+
+**Supprimés** : votre licence (l'empreinte de sa clé, votre formule, vos crédits), ce que vous
+avez signalé avec ⚑, et nos échanges par e-mail. **Jamais gardés par le service** : vos leçons,
+photos, enregistrements et cartes. Ses journaux techniques s'effacent d'eux-mêmes au bout de
+30 jours. Google Play conserve les traces de vos paiements selon ses propres conditions. Vos
+leçons sur le téléphone, vous les supprimez vous-même, dans l'application ou en la désinstallant.
+
 ## Changements
 
 Si cette politique change, la date en haut de la page change aussi.

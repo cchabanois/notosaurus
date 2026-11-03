@@ -157,6 +157,22 @@ Every exchange with the service uses **HTTPS**. Only your licence key's fingerpr
 the service. On your phone, the key stays in the app's private storage, and the settings show
 only its last characters.
 
+## Deleting your data
+
+To have Notosaurus's service delete what it keeps of you:
+
+1. Write to **notosaurus.app@gmail.com**, subject "Delete my data".
+2. Give the last characters of your licence key (⚙️ → 🔑 Subscription shows them), or your
+   Google Play order number if you subscribed. If you're subscribed, cancel the subscription in
+   Google Play first.
+3. We delete it and tell you, within a month.
+
+**Deleted**: your licence (its key's fingerprint, your plan, your credits), what you reported
+with ⚑, and our emails with you. **Not kept by the service**: your lessons, photos, recordings
+and cards, which never stay there. Its technical logs are deleted by themselves after 30 days.
+Google Play keeps your payments' records under its own terms. Your lessons on the phone you
+delete yourself, in the app or by uninstalling it.
+
 ## Changes
 
 If this policy changes, the date at the top of the page changes too.
