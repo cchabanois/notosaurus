@@ -10,7 +10,9 @@ Run again after changing the logo (and the crop boxes below, in its pixels):
   a PNG, an iPhone wants a 180 px PNG). The "maskable" one keeps the head in the
   middle 80%: Android crops it to its own shape;
 - android/play/icon-512.png: the Google Play listing's icon, 512 px, a 32-bit PNG as Play
-  Console asks (not quantized), Google Play rounding its corners itself.
+  Console asks (not quantized), Google Play rounding its corners itself. From the head drawn
+  on its own (assets/notosaurus-head.jpg, 1407 × 768): the logo's head is 160 px, blurred at
+  512.
 """
 
 from pathlib import Path
@@ -19,6 +21,7 @@ from PIL import Image
 
 ROOT = Path(__file__).resolve().parent.parent
 SOURCE = ROOT / "assets" / "notosaurus-logo.png"
+HEAD_SOURCE = ROOT / "assets" / "notosaurus-head.jpg"  # the head alone, large: the Play icon's
 STATIC = ROOT / "static"
 PLAY = ROOT / "android" / "play"  # the Google Play listing's graphics
 WHOLE = (253, 30, 764, 495)  # the drawing and the name, with a margin
@@ -54,7 +57,17 @@ def main() -> None:
     save_png(square(head, 180, 0.92), STATIC / "notosaurus-touch-180.png")  # iOS rounds the corners
     save_png(square(head, 64, 0.95), STATIC / "notosaurus-64.png")
     PLAY.mkdir(exist_ok=True)
-    square(head, 512, 0.92).convert("RGBA").save(PLAY / "icon-512.png", optimize=True)
+    play_icon().save(PLAY / "icon-512.png", optimize=True)
+
+
+def play_icon() -> Image.Image:
+    """The head, its snout 50 px from the right edge, its neck down to the bottom and the left
+    edges (cut there in the drawing), in a white square: 512 px, RGBA."""
+    drawn = Image.open(HEAD_SOURCE).convert("RGB")
+    right, side = 1330, 860
+    canvas = Image.new("RGB", (side, side), "white")
+    canvas.paste(drawn.crop((right - side, 0, right, drawn.height)), (0, side - drawn.height))
+    return canvas.resize((512, 512), Image.LANCZOS).convert("RGBA")
 
 
 if __name__ == "__main__":

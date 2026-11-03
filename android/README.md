@@ -83,7 +83,7 @@ number), always growing and new for each upload as Google Play wants, and the ve
 the relay is told.
 
 The Google Play listing's graphics are in `play/`: `icon-512.png`, the 512 px icon
-Play Console asks for (a 32-bit PNG), made from the logo with the app's other icons by
+Play Console asks for (a 32-bit PNG), made from the head drawn on its own (`assets/notosaurus-head.jpg`) by
 `tools/make_icons.py`.
 
 ```sh
