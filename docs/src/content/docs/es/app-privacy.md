@@ -3,7 +3,7 @@ title: "Política de privacidad de la aplicación Android"
 description: "Los datos que tratan la aplicación Android de Notosaurus y su servicio, por qué, dónde, durante cuánto tiempo, y tus derechos."
 ---
 
-*Última actualización: 21 de octubre de 2026.*
+*Última actualización: 3 de noviembre de 2026.*
 
 Esta página trata de **la aplicación Notosaurus para Android** y del **servicio Notosaurus** que
 usa para leer las fotos y hacer las tarjetas y las voces. Notosaurus en un ordenador (el
@@ -36,13 +36,18 @@ ellos. Se borran cuando eliminas una lección, o la aplicación.
 Las tarjetas enviadas a **AnkiDroid** se escriben en él en tu móvil. Su sincronización con AnkiWeb
 depende de AnkiDroid y de tu cuenta de AnkiWeb, no de Notosaurus.
 
+Las fichas de tus hijos (nombre, curso, mazos, instrucciones) también se quedan en tu móvil: solo el curso y las instrucciones de un niño viajan con sus lecciones, nunca su nombre.
+
+Cuando **guardas una copia de tus lecciones** (💾 en los ajustes), el archivo va donde tú elijas (Drive, la tarjeta SD, Descargas…) y sigue entonces las reglas de ese lugar.
+
 ## Lo que pasa por el servicio Notosaurus
 
 Cuando lo pides, la aplicación envía al servicio, por HTTPS:
 
 | Qué | Para qué |
 |---|---|
-| Las **fotos** de las páginas y su texto (PDF), la **instrucción**, tus instrucciones permanentes, tus nombres de mazo | Hacer o completar las tarjetas de la lección |
+| Las **fotos** de las páginas y su texto (PDF), la **instrucción**, tus instrucciones permanentes, tus nombres de mazo | Crear o completar las tarjetas de la lección, y recortar los dibujos de sus páginas |
+| El **curso** del niño al que va destinada la lección, y las instrucciones que diste para él (nunca su nombre) | Tarjetas adaptadas a su nivel |
 | Las **tarjetas** de una lección y tu corrección | Corregirlas, explicar una tarjeta, poner en limpio una instrucción |
 | Una **grabación de tu voz** (🎤) | Escribirla como texto (dictar una instrucción o una corrección) |
 | El **reverso** de una tarjeta | Leerlo en voz alta (las voces de las tarjetas) |
@@ -130,6 +135,8 @@ Notosaurus. Se aplica la página [Privacidad y seguridad](../privacy/).
 - **AnkiDroid**, para añadirle las tarjetas, pedido en el primer envío.
 - Las fotos se hacen con la cámara del móvil o se eligen en la galería, cuando tú lo haces. La
   aplicación no necesita acceso a todas tus fotos.
+- **Notificaciones**: no se pide ningún permiso. Mientras se crea o se envía una lección, la aplicación puede seguir unos minutos en segundo plano; donde las notificaciones están permitidas, muestra una mientras tanto.
+- El **código QR** del ordenador lo lee el lector de códigos de los servicios de Google Play, en el móvil: la aplicación solo recibe la dirección leída, nunca la imagen de la cámara.
 
 ## Los niños
 

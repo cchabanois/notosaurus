@@ -3,7 +3,7 @@ title: "Política de privacidade do app Android"
 description: "Os dados que o app Android do Notosaurus e o seu serviço tratam, por quê, onde, por quanto tempo, e os seus direitos."
 ---
 
-*Última atualização: 21 de outubro de 2026.*
+*Última atualização: 3 de novembro de 2026.*
 
 Esta página trata do **app Notosaurus para Android** e do **serviço Notosaurus** que ele usa para
 ler as fotos e fazer os cartões e as vozes. O Notosaurus em um computador (o complemento do Anki)
@@ -36,13 +36,18 @@ você exclui uma lição, ou o app.
 Os cartões enviados ao **AnkiDroid** são escritos nele, no seu celular. A sincronização deles com
 o AnkiWeb depende do AnkiDroid e da sua conta do AnkiWeb, não do Notosaurus.
 
+As fichas dos seus filhos (nome, série, baralhos, instruções) também ficam no seu celular: só a série e as instruções de uma criança vão com as lições dela, nunca o nome.
+
+Quando você **faz um backup das suas lições** (💾 nas configurações), o arquivo vai para onde você escolher (Drive, o cartão SD, Downloads…) e segue então as regras desse lugar.
+
 ## O que passa pelo serviço Notosaurus
 
 Quando você pede, o app envia ao serviço, por HTTPS:
 
 | O quê | Para quê |
 |---|---|
-| As **fotos** das páginas e o texto delas (PDF), a **instrução**, as suas instruções permanentes, os seus nomes de baralho | Fazer ou completar os cartões da lição |
+| As **fotos** das páginas e o texto delas (PDF), a **instrução**, as suas instruções permanentes, os seus nomes de baralho | Criar ou completar os cartões da lição, e recortar os desenhos das páginas dela |
+| A **série** da criança a quem a lição se destina, e as instruções dadas para ela (nunca o nome dela) | Cartões adequados ao nível dela |
 | Os **cartões** de uma lição e a sua correção | Corrigi-los, explicar um cartão, passar uma instrução a limpo |
 | Uma **gravação da sua voz** (🎤) | Escrevê-la como texto (ditar uma instrução ou uma correção) |
 | O **verso** de um cartão | Lê-lo em voz alta (as vozes dos cartões) |
@@ -126,6 +131,8 @@ página [Privacidade e segurança](../privacy/).
 - **AnkiDroid**, para adicionar os cartões a ele, pedido no primeiro envio.
 - As fotos são tiradas pela câmera do celular ou escolhidas na galeria, quando você faz isso. O
   app não precisa de acesso a todas as suas fotos.
+- **Notificações**: nenhuma permissão pedida. Enquanto uma lição é criada ou enviada, o app pode continuar alguns minutos em segundo plano; onde as notificações são permitidas, mostra uma enquanto isso.
+- O **QR code** do computador é lido pelo leitor de códigos dos serviços do Google Play, no celular: o app recebe só o endereço lido, nunca a imagem da câmera.
 
 ## As crianças
 

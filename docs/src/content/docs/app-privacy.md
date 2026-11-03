@@ -3,7 +3,7 @@ title: "Privacy policy of the Android app"
 description: "The data the Notosaurus Android app and its service process, why, where, for how long, and your rights."
 ---
 
-*Last updated: 21 October 2026.*
+*Last updated: 3 November 2026.*
 
 This page is about **the Notosaurus app for Android** and **the Notosaurus service** it uses to
 read the photos, make the cards and the voices. Notosaurus on a computer (the Anki add-on) works
@@ -35,13 +35,18 @@ phone. Other apps can't reach them. They are deleted when you delete a lesson, o
 The cards sent to **AnkiDroid** are written into it on your phone. Their sync with AnkiWeb is
 up to AnkiDroid and your AnkiWeb account, not Notosaurus.
 
+Your children's cards (first name, class, decks, instructions) are kept on your phone too: only a child's class and instructions are sent with their lessons, never their first name.
+
+When you **back up your lessons** (💾 in the settings), the file goes where you choose (Drive, the SD card, Downloads…) and then follows that place's rules.
+
 ## What goes through the Notosaurus service
 
 When you ask for it, the app sends the service, over HTTPS:
 
 | What | What for |
 |---|---|
-| The pages' **photos** and their text (PDF), the **instruction**, your standing instructions, your deck names | Making or completing the lesson's cards |
+| The pages' **photos** and their text (PDF), the **instruction**, your standing instructions, your deck names | Making or completing the lesson's cards, and cutting out the drawings on its pages |
+| The **class** of the child the lesson is for, and the instructions you gave for them (never their first name) | Cards suited to their level |
 | A lesson's **cards** and your correction | Correcting them, explaining a card, tidying up an instruction |
 | A **recording of your voice** (🎤) | Writing it as text (dictating an instruction or a correction) |
 | A card's **back** | Reading it aloud (the cards' voices) |
@@ -125,6 +130,8 @@ the computer, on the home Wi-Fi: nothing goes through the Notosaurus service the
 - **AnkiDroid**, to add the cards to it, asked at the first send.
 - Photos are taken by the phone's camera or picked in the gallery, when you do it. The app
   doesn't need access to all your photos.
+- **Notifications**: none asked. While a lesson is being made or sent, the app may run in the background a few minutes; where notifications are allowed, it shows one meanwhile.
+- The computer's **QR code** is read by Google Play services' code scanner, on the phone: the app gets only the address read, never the camera's image.
 
 ## Children
 
