@@ -58,7 +58,8 @@ class AppTest {
     @After fun tearDown() = relay.close()
 
     private companion object {
-        const val LEFT_S = 30L // the relay's answer, seconds: the app left meanwhile
+        const val LEFT_S = 8L // the relay's answer, seconds: the app left meanwhile
+        const val GRACE_MS = 1_000L // Working's pause before it stops, here (Working.grace)
     }
 
     /** The app's icon touched again after another app (the app still open): the page as it was,
@@ -204,6 +205,7 @@ class AppTest {
         fun kept() = "isForeground=true" in ui.executeShellCommand("dumpsys activity services ${Device.context.packageName}/.WorkingService")
         ActivityScenario.launch(MainActivity::class.java).use { app ->
             Device.waitFor(app, "typeof api === 'function' && document.querySelectorAll('.chip').length > 3", "the page and its prompts")
+            Working.current!!.grace = GRACE_MS // its pause waited out below, shorter
             assertTrue("kept before any lesson", !kept())
             Device.js(
                 app,
@@ -222,14 +224,14 @@ class AppTest {
             Device.waitFor(app, "window.made", "the lesson made")
             val made = Device.js(app, "JSON.stringify(window.made)")
             assertTrue(made, "la mère $run" in made)
-            Thread.sleep(Working.GRACE_MS + 2000) // (ended, a moment after: Working.GRACE_MS)
+            Thread.sleep(GRACE_MS + 2000) // (ended, a moment after: Working.grace)
             assertTrue("kept after the lesson was made", !kept())
         }
     }
 
     /** A lesson sent to AnkiDroid while the app is left ("In Anki: sounds…", the screen off):
      * kept running all along, its sounds read by the relay then its cards written, none left
-     * mute; a moment more after (Working.GRACE_MS: the next call, begun in the background,
+     * mute; a moment more after (Working.grace: the next call, begun in the background,
      * could start no service of its own), then ended. */
     @Test
     fun aLessonSentWhileTheAppIsLeft() {
@@ -245,6 +247,7 @@ class AppTest {
         fun kept() = "isForeground=true" in ui.executeShellCommand("dumpsys activity services ${Device.context.packageName}/.WorkingService")
         ActivityScenario.launch(MainActivity::class.java).use { app ->
             Device.waitFor(app, "typeof api === 'function' && document.querySelectorAll('.chip').length > 3", "the page and its prompts")
+            Working.current!!.grace = GRACE_MS // its pause waited out below, shorter
             Device.js(
                 app,
                 "(() => { const deck = 'Notosaurus app test $run'; window.sent = null; " +
@@ -266,7 +269,7 @@ class AppTest {
             assertEquals(sent, "0", Device.js(app, "window.sent.audio_failures ?? 0")) // none mute
             assertEquals("its sounds read by the relay", 2, paths.count { it == "/v1/speak" })
             assertTrue("kept a moment after", kept())
-            Thread.sleep(Working.GRACE_MS + 2000)
+            Thread.sleep(GRACE_MS + 2000)
             assertTrue("ended after", !kept())
         }
     }

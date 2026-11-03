@@ -42,20 +42,21 @@ class Working(private val context: Context, private val text: (String) -> String
     // Stopped a moment after the last call: the next one, begun in the background meanwhile (the
     // lesson's drawings after it is made, the next sounds), could start no service of its own
     private val main = Handler(Looper.getMainLooper())
+    @Volatile internal var grace = GRACE_MS // shorter in the device tests (AppTest), which wait it out
     // Only the app's current one: an activity made again makes a new Working, the same service
     // handed over to it (one stopping it would stop the new one's calls)
     private val idle = Runnable { synchronized(this) { if (calls == 0 && current === this) service?.let { stopping(it) } } }
 
     override fun end() = synchronized(this) {
         calls--
-        if (calls == 0) main.postDelayed(idle, GRACE_MS)
+        if (calls == 0) main.postDelayed(idle, grace)
     }
 
     /** The service started (it is in the foreground now): kept, a moment more when no call runs any more. */
     internal fun started(started: WorkingService): Boolean = synchronized(this) {
         starting = false
         service = started
-        if (calls == 0) main.postDelayed(idle, GRACE_MS)
+        if (calls == 0) main.postDelayed(idle, grace)
         true
     }
 

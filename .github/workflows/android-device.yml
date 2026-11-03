@@ -63,18 +63,40 @@ jobs:
         with:
           distribution: temurin
           java-version: "21"
-          cache: gradle
-          cache-dependency-path: android/**/*.gradle*
+      # Gradle's home kept (its dependencies, and its build cache: org.gradle.caching), written
+      # from main only, read by the pull requests: a task whose inputs haven't changed isn't run
+      - uses: gradle/actions/setup-gradle@8da46b539cd8fe6ab27ca75128919a18d757604c # v6.4.1
       # AnkiDroid as people get it (the "play" build: no all-files permission at start)
       - name: Download AnkiDroid ${{ matrix.ankidroid }}
         env:
           VERSION: ${{ matrix.ankidroid }}
         run: curl -sSfL -o ankidroid.apk "https://github.com/ankidroid/Anki-Android/releases/download/v$VERSION/dev-AnkiDroid-$VERSION-play-universal.apk"
+      # The emulator kept, booted (its snapshot): made once, then started from it in seconds
+      - uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        id: avd
+        with:
+          path: |
+            ~/.android/avd/*
+            ~/.android/adb*
+          key: avd-35-google_apis-x86_64
+      - if: steps.avd.outputs.cache-hit != 'true'
+        uses: reactivecircus/android-emulator-runner@a421e43855164a8197daf9d8d40fe71c6996bb0d # v2.38.0
+        with:
+          api-level: 35
+          arch: x86_64
+          target: google_apis
+          force-avd-creation: false
+          emulator-options: -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -camera-back none
+          disable-animations: false
+          script: echo "The emulator's snapshot made, to be kept."
       - uses: reactivecircus/android-emulator-runner@a421e43855164a8197daf9d8d40fe71c6996bb0d # v2.38.0
         with:
           api-level: 35
           arch: x86_64
           target: google_apis
+          force-avd-creation: false
+          # From the kept snapshot, never written back: each run starts from the same one
+          emulator-options: -no-snapshot-save -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -camera-back none
           disable-animations: true
           working-directory: android
           # Then the FreshInstall tests (PermissionTest) on their own, the app installed again (Gradle
