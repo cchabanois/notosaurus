@@ -190,21 +190,18 @@ def test_each_lesson_has_a_deck_of_its_own(anki, client):
 
 def test_a_card_made_again_keeps_its_note(anki, client):
     """A lesson made again in its place: each card the same keeps its id (cards.kept_ids), its
-    note's key: sent again, its note is updated, its history kept; a card changed is a new
-    note, the old one offered for deletion."""
+    note's key: sent again, its note is updated, its history kept. The demo's last card says how
+    many photos came: its front written otherwise, its back the lesson's only one, still the
+    same card (ID-02's dictation, its words)."""
     lesson = extract_lesson(client)
     body = {"deck": lesson["deck"], "cards": lesson["cards"], "lesson_id": lesson["id"]}
     client.post("/api/anki/send", json=body)
     notes = set(anki.notes)
     again = client.post(f"/api/lessons/{lesson['id']}/regenerate", data={"prompt": "FR → ES"}).json()
-    pairs = list(zip(lesson["cards"], again["cards"], strict=True))
-    same = [(a["id"], b["id"]) for a, b in pairs if a["front"] == b["front"]]
-    changed = [b["id"] for a, b in pairs if a["front"] != b["front"]]
-    assert len(same) == 5 and all(a == b for a, b in same)  # the demo's last card says how many photos
-    assert len(changed) == 1 and changed[0] not in {c["id"] for c in lesson["cards"]}  # a new card: its own
+    assert lesson["cards"][-1]["front"] != again["cards"][-1]["front"]  # "(2 photo(s)…" / "(0 photo(s)…"
+    assert [c["id"] for c in again["cards"]] == [c["id"] for c in lesson["cards"]]
     r = client.post("/api/anki/send", json={**body, "cards": again["cards"]}).json()
-    assert r["added"] == 1 and len(r["leftovers"]) == 1  # the changed one: a new note, the old offered
-    assert len(set(anki.notes) & notes) == 6  # the five updated, history kept (and the old one there)
+    assert r["added"] == 0 and r["leftovers"] == [] and set(anki.notes) == notes
 
 
 def test_regenerate_replaces_the_lesson(client, tmp_path):
