@@ -74,6 +74,11 @@ android {
             it.systemProperty("notosaurus.web", layout.projectDirectory.dir(webPage).get().asFile.absolutePath)
             // The cases the computer's code, the page's and the app's must agree on (SharedCasesTest)
             it.systemProperty("notosaurus.cases", rootProject.layout.projectDirectory.file("../core/shared-cases.json").asFile.absolutePath)
+            // Both read by the tests, so their inputs: changed, the tests run again (never
+            // taken from the build cache as they were)
+            it.inputs.dir(layout.projectDirectory.dir(webPage)).withPathSensitivity(PathSensitivity.RELATIVE).withPropertyName("webPage")
+            it.inputs.file(rootProject.layout.projectDirectory.file("../core/shared-cases.json")).withPathSensitivity(PathSensitivity.NONE)
+                .withPropertyName("sharedCases")
         }
     }
     packaging {
