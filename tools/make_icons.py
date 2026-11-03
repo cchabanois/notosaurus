@@ -8,7 +8,9 @@ Run again after changing the logo (and the crop boxes below, in its pixels):
   icon by its address, so a new logo needs new names to be seen at all. Phones don't
   use an SVG for the home screen (Chrome on Android makes a plain letter icon without
   a PNG, an iPhone wants a 180 px PNG). The "maskable" one keeps the head in the
-  middle 80%: Android crops it to its own shape.
+  middle 80%: Android crops it to its own shape;
+- android/play/icon-512.png: the Google Play listing's icon, 512 px, a 32-bit PNG as Play
+  Console asks (not quantized), Google Play rounding its corners itself.
 """
 
 from pathlib import Path
@@ -18,6 +20,7 @@ from PIL import Image
 ROOT = Path(__file__).resolve().parent.parent
 SOURCE = ROOT / "assets" / "notosaurus-logo.png"
 STATIC = ROOT / "static"
+PLAY = ROOT / "android" / "play"  # the Google Play listing's graphics
 WHOLE = (253, 30, 764, 495)  # the drawing and the name, with a margin
 HEAD = (590, 85, 750, 245)  # the head and the top of the neck
 
@@ -50,6 +53,8 @@ def main() -> None:
     save_png(square(head, 512, 0.72), STATIC / "notosaurus-maskable-512.png")
     save_png(square(head, 180, 0.92), STATIC / "notosaurus-touch-180.png")  # iOS rounds the corners
     save_png(square(head, 64, 0.95), STATIC / "notosaurus-64.png")
+    PLAY.mkdir(exist_ok=True)
+    square(head, 512, 0.92).convert("RGBA").save(PLAY / "icon-512.png", optimize=True)
 
 
 if __name__ == "__main__":

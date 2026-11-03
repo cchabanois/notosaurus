@@ -82,6 +82,10 @@ change it): `versionName` "1.1.0", `versionCode` (major × 10000 + minor × 100 
 number), always growing and new for each upload as Google Play wants, and the version
 the relay is told.
 
+The Google Play listing's graphics are in `play/`: `icon-512.png`, the 512 px icon
+Play Console asks for (a 32-bit PNG), made from the logo with the app's other icons by
+`tools/make_icons.py`.
+
 ```sh
 ./gradlew testDebugUnitTest   # the tests (JVM: no phone needed)
 ./gradlew assembleDebug       # app/build/outputs/apk/debug/app-debug.apk
