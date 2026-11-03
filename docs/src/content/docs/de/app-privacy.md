@@ -170,6 +170,21 @@ Jeder Austausch mit dem Dienst nutzt **HTTPS**. Vom Dienst wird nur der Fingerab
 Lizenzschlüssels gespeichert. Auf deinem Handy bleibt der Schlüssel im privaten Speicher der App,
 und die Einstellungen zeigen nur seine letzten Zeichen.
 
+## Deine Daten löschen
+
+Damit der Notosaurus-Dienst löscht, was er von dir speichert:
+
+1. Schreib an **notosaurus.app@gmail.com**, Betreff „Meine Daten löschen“.
+2. Gib die letzten Zeichen deines Lizenzschlüssels an (⚙️ → 🔑 Abo zeigt sie) oder deine
+   Google-Play-Bestellnummer, wenn du ein Abo hast. Mit Abo kündige es zuerst in Google Play.
+3. Wir löschen sie und bestätigen es dir, innerhalb eines Monats.
+
+**Gelöscht**: deine Lizenz (der Fingerabdruck ihres Schlüssels, dein Tarif, deine Credits), was
+du mit ⚑ gemeldet hast, und unsere E-Mails. **Nie vom Dienst gespeichert**: deine Lektionen,
+Fotos, Aufnahmen und Karten. Seine technischen Logs löschen sich nach 30 Tagen von selbst.
+Google Play bewahrt deine Zahlungsbelege nach seinen eigenen Bedingungen auf. Deine Lektionen auf
+dem Handy löschst du selbst, in der App oder indem du sie deinstallierst.
+
 ## Änderungen
 
 Ändert sich diese Erklärung, ändert sich auch das Datum oben auf der Seite.

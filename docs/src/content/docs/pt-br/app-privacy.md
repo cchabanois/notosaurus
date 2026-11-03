@@ -160,6 +160,22 @@ Toda troca com o serviço usa **HTTPS**. O serviço só guarda a impressão digi
 licença. No seu celular, a chave fica no armazenamento privado do app, e as configurações só
 mostram os últimos caracteres dela.
 
+## Excluir os seus dados
+
+Para que o serviço Notosaurus exclua o que guarda de você:
+
+1. Escreva para **notosaurus.app@gmail.com**, assunto "Excluir meus dados".
+2. Informe os últimos caracteres da sua chave de licença (⚙️ → 🔑 Assinatura os mostra), ou o
+   número do seu pedido no Google Play se você for assinante. Se for assinante, cancele antes a
+   assinatura no Google Play.
+3. Nós os excluímos e confirmamos para você, em até um mês.
+
+**Excluídos**: a sua licença (a impressão digital da chave, o seu plano, os seus créditos), o que
+você relatou com ⚑ e os nossos e-mails. **Nunca guardados pelo serviço**: as suas lições, fotos,
+gravações e cartões. Os registros técnicos dele se apagam sozinhos após 30 dias. O Google Play
+guarda os registros dos seus pagamentos segundo os próprios termos. As suas lições no celular você
+mesmo exclui, no app ou desinstalando-o.
+
 ## Alterações
 
 Se esta política mudar, a data no alto da página também muda.
