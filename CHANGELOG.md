@@ -9,6 +9,7 @@ Each pull request's entries (the `## Changelog` of its description) are put unde
 
 ### Changed
 
+- The Android app's privacy policy says how to have your data deleted, step by step, and what is deleted or kept.
 - The Android app's privacy policy says what this version does: the lesson's drawings cut out of its photos, a child's class sent with their lessons (never their first name), backups, the background notification, the QR code read by Google Play services.
 
 ## [1.1.0] - 2026-11-03
