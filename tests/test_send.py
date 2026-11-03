@@ -275,6 +275,35 @@ def test_notes_of_an_older_note_type_version_moved_to_the_new_one(anki, client):
     assert [t["Name"] for t in anki.models[older]["cardTemplates"]] == ["Front → Back"]  # renamed first
 
 
+def test_notes_of_1_0_0_without_an_id_found_by_their_front(anki, client):
+    """MIG-01: 1.0.0's front/back notes had no Id field, found then by their front. Sent again
+    (the lesson's notes unknown to it: 1.0.0 kept none), each is found as then, by its front
+    among the deck's notes of an older type, and moves to today's type: its history kept,
+    none added, none offered as left over."""
+    from app import lessons
+
+    lesson = extract_lesson(client)
+    body = {"deck": "Espagnol", "cards": lesson["cards"], "voice": "es_ES", "lesson_id": lesson["id"]}
+    client.post("/api/anki/send", json=body)
+    ids = sorted(anki.notes)
+    older = "Notosaurus recto/verso (TTS Anki es_ES)"
+    later = ("Id", "Picture", "BackPicture", "Source")  # fields 1.0.0's note types didn't have
+    for note in anki.notes.values():  # as 1.0.0 made them
+        note["modelName"] = older
+        note["fields"] = {k: v for k, v in note["fields"].items() if k not in later}
+    (model,) = anki.models.values()
+    model["inOrderFields"] = [f for f in model["inOrderFields"] if f not in later]
+    anki.models = {older: model}
+    for template in model["cardTemplates"]:
+        template["Name"] = {"Front → Back": "Recto → Verso"}[template["Name"]]
+    lessons.set_anki_notes(lesson["id"], anki.profile, {})  # 1.0.0 kept no note ids
+
+    res = client.post("/api/anki/send", json=body).json()
+    assert (res["added"], res["converted"], res["leftovers"]) == (0, 6, [])
+    assert sorted(anki.notes) == ids
+    assert all(n["fields"]["Id"] for n in anki.notes.values())  # today's notes now
+
+
 def test_options_changed_with_an_old_ankiconnect(client, monkeypatch):
     fake = FakeAnki(note_model=False)
     monkeypatch.setattr(ankiconnect, "_transport", httpx.MockTransport(fake.handle))

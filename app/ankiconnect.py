@@ -362,15 +362,25 @@ class _Sending:
         self.updated += 1
 
     async def _convert(self, deck: str, nt, note: Note) -> bool:
-        """Sent before with other options (voice, reverse, typing, dictation): the same
-        note moves to the new note type, keeping its review history."""
+        """Sent before with other options (voice, reverse, typing, dictation), or by 1.0.0: the
+        same note moves to the new note type, keeping its review history. 1.0.0's front/back
+        notes had no Id field (MIG-01): found as 1.0.0 found them, by their front, among the
+        deck's notes of an older type without an Id."""
         if deck not in self.others:
             self.others[deck] = await _other_notosaurus_notes(self.client, deck)
-        candidates = [i for i in self.others[deck].get((nt.family, note.key), []) if i["modelName"] != nt.name]
+        key = (nt.family, note.key)
+        candidates = [i for i in self.others[deck].get(key, []) if i["modelName"] != nt.name]
+        if not candidates and note.fields.get("Front"):
+            key = (nt.family, note.fields["Front"])
+            candidates = [
+                i
+                for i in self.others[deck].get(key, [])
+                if i["modelName"] != nt.name and not i["fields"].get("Id", {}).get("value")
+            ]
         old = candidates[0] if candidates else None
         if not old or not await self._change_type(old, nt, note):
             return False
-        self.others[deck][(nt.family, note.key)].remove(old)
+        self.others[deck][key].remove(old)
         return True
 
     async def _add(self, deck: str, nt, note: Note) -> None:
