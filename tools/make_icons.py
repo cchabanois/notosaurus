@@ -61,8 +61,11 @@ def main() -> None:
 
 
 def play_icon() -> Image.Image:
-    """The icon drawn large, at 512 px, RGBA."""
-    return Image.open(ICON_SOURCE).convert("RGB").resize((512, 512), Image.LANCZOS).convert("RGBA")
+    """The icon drawn large, at 512 px, RGBA: full bleed, as Google Play wants an illustration,
+    its white frame cut off (the drawing within 39 to 985 px); Play rounds the corners itself
+    (a radius of 30 %), the head well inside."""
+    drawn = Image.open(ICON_SOURCE).convert("RGB").crop((39, 39, 985, 985))
+    return drawn.resize((512, 512), Image.LANCZOS).convert("RGBA")
 
 
 if __name__ == "__main__":
