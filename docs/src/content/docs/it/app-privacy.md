@@ -3,7 +3,7 @@ title: "Informativa sulla privacy dell'app Android"
 description: "I dati che l'app Android di Notosaurus e il suo servizio trattano, perché, dove, per quanto tempo, e i tuoi diritti."
 ---
 
-*Ultimo aggiornamento: 21 ottobre 2026.*
+*Ultimo aggiornamento: 3 novembre 2026.*
 
 Questa pagina riguarda **l'app Notosaurus per Android** e **il servizio Notosaurus** che usa per
 leggere le foto e fare le carte e le voci. Notosaurus su un computer (l'add-on di Anki) funziona
@@ -36,13 +36,18 @@ elimini una lezione, o l'app.
 Le carte inviate ad **AnkiDroid** vi sono scritte sul tuo telefono. La loro sincronizzazione con
 AnkiWeb dipende da AnkiDroid e dal tuo account AnkiWeb, non da Notosaurus.
 
+Le schede dei tuoi figli (nome, classe, mazzi, istruzioni) restano anch'esse sul tuo telefono: solo la classe e le istruzioni di un bambino partono con le sue lezioni, mai il suo nome.
+
+Quando **salvi una copia delle tue lezioni** (💾 nelle impostazioni), il file va dove scegli tu (Drive, la scheda SD, Download…) e segue poi le regole di quel posto.
+
 ## Cosa passa dal servizio Notosaurus
 
 Quando lo chiedi, l'app invia al servizio, tramite HTTPS:
 
 | Cosa | Per cosa |
 |---|---|
-| Le **foto** delle pagine e il loro testo (PDF), l'**istruzione**, le tue istruzioni permanenti, i tuoi nomi di mazzo | Fare o completare le carte della lezione |
+| Le **foto** delle pagine e il loro testo (PDF), l'**istruzione**, le tue istruzioni permanenti, i tuoi nomi di mazzo | Creare o completare le carte della lezione, e ritagliare i disegni delle sue pagine |
+| La **classe** del bambino a cui è destinata la lezione, e le istruzioni date per lui (mai il suo nome) | Carte adatte al suo livello |
 | Le **carte** di una lezione e la tua correzione | Correggerle, spiegare una carta, mettere in ordine un'istruzione |
 | Una **registrazione della tua voce** (🎤) | Scriverla come testo (dettare un'istruzione o una correzione) |
 | Il **retro** di una carta | Leggerlo ad alta voce (le voci delle carte) |
@@ -128,6 +133,8 @@ con il computer, sulla Wi-Fi di casa: allora niente passa dal servizio Notosauru
 - **AnkiDroid**, per aggiungervi le carte, chiesto al primo invio.
 - Le foto vengono scattate con la fotocamera del telefono o scelte nella galleria, quando lo fai
   tu. L'app non ha bisogno di accedere a tutte le tue foto.
+- **Notifiche**: nessuna autorizzazione richiesta. Mentre una lezione viene creata o inviata, l'app può continuare qualche minuto in background; dove le notifiche sono consentite, ne mostra una nel frattempo.
+- Il **codice QR** del computer viene letto dal lettore di codici dei servizi Google Play, sul telefono: l'app riceve solo l'indirizzo letto, mai l'immagine della fotocamera.
 
 ## I bambini
 

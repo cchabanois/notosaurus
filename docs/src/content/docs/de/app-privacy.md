@@ -3,7 +3,7 @@ title: "Datenschutzerklärung der Android-App"
 description: "Die Daten, die die Android-App von Notosaurus und ihr Dienst verarbeiten, warum, wo, wie lange, und deine Rechte."
 ---
 
-*Zuletzt aktualisiert: 21. Oktober 2026.*
+*Zuletzt aktualisiert: 3. November 2026.*
 
 Diese Seite betrifft **die Notosaurus-App für Android** und **den Notosaurus-Dienst**, den sie
 nutzt, um die Fotos zu lesen und die Karten und Stimmen zu erstellen. Notosaurus auf einem
@@ -37,13 +37,18 @@ Die an **AnkiDroid** gesendeten Karten werden auf deinem Handy dort hineingeschr
 Synchronisierung mit AnkiWeb ist Sache von AnkiDroid und deinem AnkiWeb-Konto, nicht von
 Notosaurus.
 
+Die Karten deiner Kinder (Vorname, Klasse, Stapel, Anweisungen) bleiben ebenfalls auf deinem Handy: Nur die Klasse und die Anweisungen eines Kindes gehen mit seinen Lektionen mit, nie sein Vorname.
+
+Wenn du **deine Lektionen sicherst** (💾 in den Einstellungen), geht die Datei dorthin, wo du sie ablegst (Drive, SD-Karte, Downloads…), und unterliegt dann den Regeln dieses Ortes.
+
 ## Was über den Notosaurus-Dienst geht
 
 Wenn du darum bittest, schickt die App dem Dienst über HTTPS:
 
 | Was | Wofür |
 |---|---|
-| Die **Fotos** der Seiten und ihr Text (PDF), die **Anweisung**, deine festen Anweisungen, deine Stapelnamen | Die Karten der Lektion erstellen oder ergänzen |
+| Die **Fotos** der Seiten und ihr Text (PDF), die **Anweisung**, deine festen Anweisungen, deine Stapelnamen | Die Karten der Lektion erstellen oder ergänzen und die Zeichnungen ihrer Seiten ausschneiden |
+| Die **Klasse** des Kindes, für das die Lektion ist, und die Anweisungen für es (nie sein Vorname) | Karten passend zu seinem Niveau |
 | Die **Karten** einer Lektion und deine Korrektur | Sie korrigieren, eine Karte erklären, eine Anweisung aufräumen |
 | Eine **Aufnahme deiner Stimme** (🎤) | Sie als Text schreiben (eine Anweisung oder eine Korrektur diktieren) |
 | Die **Rückseite** einer Karte | Sie vorlesen (die Stimmen der Karten) |
@@ -135,6 +140,8 @@ die Seite [Datenschutz und Sicherheit](../privacy/).
 - **AnkiDroid**, um Karten hinzuzufügen, beim ersten Senden erbeten.
 - Fotos werden mit der Kamera des Handys gemacht oder in der Galerie ausgewählt, wenn du es tust.
   Die App braucht keinen Zugriff auf alle deine Fotos.
+- **Benachrichtigungen**: keine Berechtigung angefragt. Während eine Lektion erstellt oder gesendet wird, kann die App einige Minuten im Hintergrund weiterlaufen; wo Benachrichtigungen erlaubt sind, zeigt sie währenddessen eine an.
+- Der **QR-Code** des Computers wird vom Code-Scanner der Google-Play-Dienste auf dem Handy gelesen: Die App erhält nur die gelesene Adresse, nie das Bild der Kamera.
 
 ## Kinder
 
