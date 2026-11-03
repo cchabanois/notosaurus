@@ -61,12 +61,20 @@ def main() -> None:
 
 
 def play_icon() -> Image.Image:
-    """The head, its snout 50 px from the right edge, its neck down to the bottom and the left
-    edges (cut there in the drawing), in a white square: 512 px, RGBA."""
+    """The whole head (its outline's leftmost point at x 234), the snout 50 px from the right
+    edge, in a white square: 512 px, RGBA. The drawing is wider than tall, and its neck cut at
+    its bottom edge: the neck, straight there, carried on down to the square's by its last row
+    (its near-white made white: a JPEG's noise, repeated, would streak)."""
     drawn = Image.open(HEAD_SOURCE).convert("RGB")
-    right, side = 1330, 860
+    left, right, top = 200, 1330, 110
+    side = right - left
+    crop = drawn.crop((left, 0, right, drawn.height))
     canvas = Image.new("RGB", (side, side), "white")
-    canvas.paste(drawn.crop((right - side, 0, right, drawn.height)), (0, side - drawn.height))
+    canvas.paste(crop, (0, top))
+    row = crop.crop((0, crop.height - 1, side, crop.height))
+    row = Image.eval(row, lambda v: 255 if v > 235 else v)
+    for y in range(top + crop.height, side):
+        canvas.paste(row, (0, y))
     return canvas.resize((512, 512), Image.LANCZOS).convert("RGBA")
 
 
