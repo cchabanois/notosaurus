@@ -499,6 +499,36 @@ class AnkiDroidTest {
         assertEquals("Wikimedia Commons", field(model, note.fields, "Source")) // the computer's, kept
     }
 
+    /** ANK-11: AnkiDroid can't change a note's type. A lesson's notes of an older Notosaurus type
+     * (the computer's 1.0.0, without an Id: found by its front; one with an Id: by it, its front
+     * corrected since) are updated in their own type: their history kept, none added beside
+     * them, none offered as left over. */
+    @Test
+    fun notesOfAnOlderTypeUpdatedInTheirOwnType() {
+        val anki = Anki(Device.context)
+        val api = AddContentApi(Device.context)
+        val lesson = "older-type-$run"
+        val text = types["text"]
+        anki.send(Deck("Notosaurus test $run", listOf(Card("y $run", "z"))), Media(lesson = "made-$run")) // its deck there
+        val did = api.deckList!!.entries.first { it.value == "Notosaurus test $run" }.key
+        fun older(name: String, fields: List<String>) = api.addNewCustomModel(
+            name, fields.toTypedArray(), arrayOf("Recto → Verso"), arrayOf("{{Front}}"), arrayOf("{{Back}}"), text.css, null, 0,
+        )!!
+        val noId = older("Notosaurus recto/verso test $run (audio)", listOf("Front", "Back", "Info", "Audio", "Explanation", "Mnemonic"))
+        val withId = older("Notosaurus recto/verso test $run + Id (audio)", listOf("Front", "Back", "Info", "Audio", "Explanation", "Mnemonic", "Id"))
+        val tags = setOf("notosaurus", Anki.lessonTag(lesson))
+        val mother = api.addNote(noId, did, arrayOf("la mère $run", "la madre", "", "", "", ""), tags)!!
+        val father = api.addNote(withId, did, arrayOf("le père $run", "el padre", "", "", "", "", "p-$run"), tags)!!
+
+        val cards = listOf(Card("la mère $run", "la madre !", id = "m-$run"), Card("le papa $run", "el padre !", id = "p-$run"))
+        val sent = anki.send(Deck("Notosaurus test $run", cards), Media(lesson = lesson))
+        assertEquals(listOf(0, 2), listOf(sent.added, sent.updated))
+        assertEquals(mapOf("m-$run" to mother, "p-$run" to father), sent.notes)
+        assertEquals("la madre !", field(noId, api.getNote(mother)!!.fields, "Back"))
+        assertEquals("le papa $run", field(withId, api.getNote(father)!!.fields, "Front")) // its front corrected
+        assertEquals(emptyList<Leftover>(), anki.leftovers(lesson, sent.notes.values.toSet()))
+    }
+
     private fun noteModel(note: Long): Long = Device.context.contentResolver.query(
         Uri.withAppendedPath(FlashCardsContract.Note.CONTENT_URI, note.toString()), arrayOf(FlashCardsContract.Note.MID), null, null, null,
     )!!.use { c -> c.moveToFirst(); c.getLong(0) }

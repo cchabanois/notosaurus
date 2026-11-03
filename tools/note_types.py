@@ -15,6 +15,7 @@ sys.path.insert(0, str(ROOT))
 sys.path.insert(0, str(ROOT / "core"))
 
 from app import anki  # noqa: E402
+from app.note_types.common import FAMILIES  # noqa: E402
 
 OUT = ROOT / "static" / "note-types.json"
 VOICE = "es-ES-ElviraNeural"  # any edge-tts voice: the sound is a field (not Anki's {{tts}})
@@ -51,7 +52,10 @@ def variants() -> dict[str, anki.NoteType]:
 
 def text() -> str:
     note_types = {key: spec(nt) for key, nt in variants().items()}
-    return json.dumps({"note_types": note_types}, ensure_ascii=False, indent=1) + "\n"
+    # Every Notosaurus note type's family by its name's start, older ones too (anki.family): the
+    # app finds a note of an older type for the same card, which AnkiDroid can't change
+    families = dict(FAMILIES)
+    return json.dumps({"note_types": note_types, "families": families}, ensure_ascii=False, indent=1) + "\n"
 
 
 if __name__ == "__main__":

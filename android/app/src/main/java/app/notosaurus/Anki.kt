@@ -242,6 +242,23 @@ class Anki(private val context: Context) : AnkiTarget {
     private fun names(model: Long, type: NoteType): List<String> =
         fieldNames.getOrPut(model) { api.getFieldList(model)?.toList() ?: type.fields }
 
+    /** The lesson's notes of an older Notosaurus note type of `type`'s family (not today's). */
+    private fun olderNotesOf(lesson: String, type: NoteType): List<There> {
+        val models = api.modelList.orEmpty()
+        return lessonThere(lesson).filter { there ->
+            val name = models[there.model].orEmpty()
+            name != type.name && noteTypes.familyOf(name) == type.family
+        }
+    }
+
+    /** `old` is `note`'s card: by its card id when its note type has one, else by its front (1.0.0's
+     * front/back notes had no Id: found by their front then). */
+    private fun sameCard(old: There, note: Note, type: NoteType): Boolean {
+        val fields = names(old.model, type).zip(old.fields).toMap()
+        val id = fields["Id"].orEmpty()
+        return if (id.isNotEmpty()) id == note.key else fields["Front"].orEmpty().let { it.isNotEmpty() && it == note.values["Front"] }
+    }
+
     /** The lesson's notes (its tag), as they are in AnkiDroid. */
     private fun lessonThere(lesson: String): List<There> = context.contentResolver.query(
         FlashCardsContract.Note.CONTENT_URI,
@@ -399,6 +416,25 @@ class Anki(private val context: Context) : AnkiTarget {
                 val firsts = rest.map { type.values(names(model, type), it.values)[0] }
                 val known = api.findDuplicateNotes(model, firsts)
                 rest.forEachIndexed { i, note -> if (known?.get(i).isNullOrEmpty()) fresh += note else duplicates++ }
+            }
+            // AnkiDroid can't change a note's type: the card's note of an older Notosaurus type (a
+            // version before, the computer's 1.0.0) updated in its own type, its history kept, no
+            // second note beside it (ANK-11); its fields the older type lacks (a picture) left out
+            if (media.lesson.isNotEmpty() && fresh.isNotEmpty()) {
+                val older = olderNotesOf(media.lesson, type).toMutableList()
+                fresh.removeAll { note ->
+                    val old = older.firstOrNull { sameCard(it, note, type) } ?: return@removeAll false
+                    older.remove(old)
+                    val fields = withFiles(type.values(names(old.model, type), note.values, old.fields), old.fields)
+                    if (!old.fields.contentEquals(fields) || !old.tags.containsAll(note.tags)) {
+                        api.updateNoteFields(old.id, fields)
+                        api.updateNoteTags(old.id, old.tags + note.tags)
+                        updated++
+                    }
+                    if (options.move && moveCards(old.id, did)) moved++
+                    sent[note.card] = old.id
+                    true
+                }
             }
             if (fresh.isEmpty()) return@forEach
             val before = if (media.lesson.isEmpty()) emptySet() else lessonThere(media.lesson).map { it.id }.toSet()

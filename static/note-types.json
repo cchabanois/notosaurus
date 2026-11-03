@@ -388,5 +388,18 @@
    "css": ".card { font-family: system-ui, sans-serif; font-size: 26px; text-align: center; }\n.info { font-size: 18px; color: #777; margin-top: 12px; }\n.card img { max-width: 100%; height: auto; }\n.dictation { font-size: 40px; }\n.notosaurus-help {\n  max-width: 32em; margin: 10px auto 0; padding: 4px 10px; border-left: 3px solid #8bb8c4;\n  font-size: 18px; color: #555; text-align: left;\n}\n.nightMode .notosaurus-help { color: #bbb; }\n.notosaurus-fix { margin-top: 16px; font-size: 14px; }\n.notosaurus-fix a { color: #8bb8c4; text-decoration: none; }\n.notosaurus-context { font-size: 14px; color: #888; margin-bottom: 12px; }\n.notosaurus-picture img { max-width: min(100%, 320px); max-height: 50vh; border-radius: 12px; }\n.notosaurus-choices {\n  display: inline-block; margin: 12px auto 0; padding-left: 1.8em; text-align: left; list-style: upper-alpha;\n}\n.notosaurus-choices li { margin: 6px 0; }\n.notosaurus-choices li.right { color: #1b873f; font-weight: 700; }\n.notosaurus-choices li.right::after { content: \" ✔\"; }\n.notosaurus-choices li.wrong { opacity: .5; }\n",
    "signature": "94db6ea0b3c3"
   }
+ },
+ "families": {
+  "Notosaurus front/back": "text",
+  "Notosaurus dictation": "text",
+  "Notosaurus labels": "diagram",
+  "Notosaurus cloze": "cloze",
+  "Notosaurus multiple choice": "choice",
+  "Notosaurus recto/verso": "text",
+  "Notosaurus dictée": "text",
+  "Notosaurus légendes": "diagram",
+  "Notosaurus image": "picture",
+  "Notosaurus texte à trous": "cloze",
+  "Notosaurus QCM": "choice"
  }
 }

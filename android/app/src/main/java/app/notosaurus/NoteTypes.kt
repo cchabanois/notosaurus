@@ -10,9 +10,16 @@ import java.security.MessageDigest
  * are found again from the other (Anki.kt: by the lesson's tag and the key field's name).
  */
 @Serializable
-data class NoteTypes(@kotlinx.serialization.SerialName("note_types") val all: Map<String, NoteType>) {
+data class NoteTypes(
+    @kotlinx.serialization.SerialName("note_types") val all: Map<String, NoteType>,
+    // Every Notosaurus note type's family by its name's start, older ones too (the computer's FAMILIES)
+    val families: Map<String, String> = emptyMap(),
+) {
     /** A note type by its family and options ("text+reverse+typing", "diagram+typing"). */
     operator fun get(variant: String): NoteType = all[variant] ?: error("No note type $variant")
+
+    /** A note type's family by its name ("text", "cloze"…), an older one's too; "": not Notosaurus's. */
+    fun familyOf(name: String): String = families.entries.firstOrNull { name.startsWith(it.key) }?.value.orEmpty()
 
     companion object {
         fun parse(text: String): NoteTypes = json.decodeFromString(serializer(), text)
