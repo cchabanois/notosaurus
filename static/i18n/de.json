@@ -851,6 +851,8 @@
       "keyPlaceholder": "nts_…",
       "keySet": "Schlüssel: {key}",
       "check": "Prüfen",
+      "checking": "Wird geprüft …",
+      "checked": "✓ Schlüssel geprüft: aktuell.",
       "refused": "Unbekannter oder abgelaufener Lizenzschlüssel: Er wurde nicht gespeichert.",
       "plan": "Tarif: {plan}",
       "credits": "Noch {credits} Credits diesen Monat",

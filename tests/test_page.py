@@ -1834,6 +1834,29 @@ def test_android_credits_said_as_the_plan_is(page):
     sync_api.expect(page.get_by_text("Formule : beta", exact=True)).to_be_visible()  # one given by hand: as it is
 
 
+def test_android_check_says_it_checked(page):
+    """ "Vérifier" in the subscription: nothing typed, the key kept is checked again (it did
+    nothing, not a word); a key typed, saved then checked; both said. No key: nothing to check."""
+    android_settings(page, {"plan": "monthly", "credits_left": 2000, "daily_left": 2000})
+    asked = []
+    page.on("request", lambda r: asked.append(r.url) if r.url.endswith("/api/admin/account") else None)
+    sync_api.expect(page.get_by_text("Formule : Mensuel", exact=True)).to_be_visible()
+    asked.clear()
+    check = page.get_by_role("button", name="Vérifier")
+    check.click()  # nothing typed
+    sync_api.expect(page.get_by_text("✓ Clé vérifiée : à jour.")).to_be_visible()
+    assert len(asked) == 1
+
+    page.locator(".toast.ok button").click()
+    page.get_by_label("Clé de licence").fill("nts_new")
+    check.click()
+    sync_api.expect(page.get_by_text("✓ Clé vérifiée : à jour.")).to_be_visible()
+    sync_api.expect(page.get_by_label("Clé de licence")).to_have_value("")  # saved
+
+    page.evaluate("Alpine.$data(document.querySelector('[x-data]')).form.has_key = false")
+    sync_api.expect(check).to_be_disabled()
+
+
 def test_what_the_page_keeps_kept_by_the_android_app(page):
     """The Android app serves saved.js (its preferences): read from it, not localStorage,
     each change told to it (PUT /api/saved)."""

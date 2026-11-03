@@ -162,14 +162,21 @@ document.addEventListener("alpine:init", () => {
       try { this.data = await api("/api/admin/data"); } catch {}
     },
 
-    // A new key: saved, then checked with the relay
+    // "Check": a key typed, saved then checked with the relay; none typed, the one kept checked
+    // again (its plan, its credits, its end). Said either way: the account's lines alone often
+    // look as before (the button seemed to do nothing)
     async saveKey() {
-      if (!this.newKey.trim()) return;
+      const typed = this.newKey.trim();
+      if (!typed && !this.form?.has_key) return;
       this.checking = true;
+      this.error = this.notice = "";
       try {
-        this.form = await api("/api/admin/settings", json("PUT", { key: this.newKey.trim() }));
-        this.newKey = "";
+        if (typed) {
+          this.form = await api("/api/admin/settings", json("PUT", { key: typed }));
+          this.newKey = "";
+        }
         await this.loadAccount();
+        if (this.account) this.notice = t("android.licence.checked");
       } catch (e) {
         this.error = e.message;
       } finally {

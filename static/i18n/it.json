@@ -851,6 +851,8 @@
       "keyPlaceholder": "nts_…",
       "keySet": "Chiave: {key}",
       "check": "Verifica",
+      "checking": "Verifica in corso…",
+      "checked": "✓ Chiave verificata: aggiornata.",
       "refused": "Chiave di licenza sconosciuta o scaduta: non è stata salvata.",
       "plan": "Piano: {plan}",
       "credits": "{credits} crediti rimasti questo mese",
