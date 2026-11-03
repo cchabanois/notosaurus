@@ -242,6 +242,26 @@ class Anki(private val context: Context) : AnkiTarget {
     private fun names(model: Long, type: NoteType): List<String> =
         fieldNames.getOrPut(model) { api.getFieldList(model)?.toList() ?: type.fields }
 
+    /** The lesson's notes of an older Notosaurus note type of `type`'s family (not today's). */
+    private fun olderNotesOf(lesson: String, type: NoteType): List<There> {
+        val models = api.modelList.orEmpty()
+        return lessonThere(lesson).filter { there ->
+            val name = models[there.model].orEmpty()
+            name != type.name && noteTypes.familyOf(name) == type.family
+        }
+    }
+
+    /** `old` is `note`'s card: by its card id when its note type has one, else by its front (1.0.0's
+     * front/back notes had no Id: found by their front then), as text: the computer escaped "'" as
+     * "&#x27;", the phone doesn't (fieldText), then as same_text compares (Lessons.textKey). */
+    private fun sameCard(old: There, note: Note, type: NoteType): Boolean {
+        val fields = names(old.model, type).zip(old.fields).toMap()
+        val id = fields["Id"].orEmpty()
+        if (id.isNotEmpty()) return id == note.key
+        val front = Lessons.textKey(fieldText(fields["Front"].orEmpty()))
+        return front.isNotEmpty() && front == Lessons.textKey(fieldText(note.values["Front"].orEmpty()))
+    }
+
     /** The lesson's notes (its tag), as they are in AnkiDroid. */
     private fun lessonThere(lesson: String): List<There> = context.contentResolver.query(
         FlashCardsContract.Note.CONTENT_URI,
@@ -351,6 +371,7 @@ class Anki(private val context: Context) : AnkiTarget {
             }
         }
         var count = 0
+        val claimed = mutableSetOf<Long>() // older notes given to a card: never to another, whatever its group
         var updated = 0
         var moved = 0
         var duplicates = 0
@@ -399,6 +420,26 @@ class Anki(private val context: Context) : AnkiTarget {
                 val firsts = rest.map { type.values(names(model, type), it.values)[0] }
                 val known = api.findDuplicateNotes(model, firsts)
                 rest.forEachIndexed { i, note -> if (known?.get(i).isNullOrEmpty()) fresh += note else duplicates++ }
+            }
+            // AnkiDroid can't change a note's type: the card's note of an older Notosaurus type (a
+            // version before, the computer's 1.0.0) updated in its own type, its history kept, no
+            // second note beside it (ANK-11); its fields the older type lacks (a picture) left out
+            if (media.lesson.isNotEmpty() && fresh.isNotEmpty()) {
+                val older = olderNotesOf(media.lesson, type)
+                fresh.removeAll { note ->
+                    val old = older.firstOrNull { it.id !in claimed && it.id !in sent.values && sameCard(it, note, type) }
+                        ?: return@removeAll false
+                    claimed += old.id
+                    val fields = withFiles(type.values(names(old.model, type), note.values, old.fields), old.fields)
+                    if (!old.fields.contentEquals(fields) || !old.tags.containsAll(note.tags)) {
+                        api.updateNoteFields(old.id, fields)
+                        api.updateNoteTags(old.id, old.tags + note.tags)
+                        updated++
+                    }
+                    if (options.move && moveCards(old.id, did)) moved++
+                    sent[note.card] = old.id
+                    true
+                }
             }
             if (fresh.isEmpty()) return@forEach
             val before = if (media.lesson.isEmpty()) emptySet() else lessonThere(media.lesson).map { it.id }.toSet()
@@ -638,6 +679,23 @@ class Anki(private val context: Context) : AnkiTarget {
             }
             return "<ol class=\"notosaurus-choices\">$items</ol>"
         }
+
+        /** A field's text, as written before it was escaped (by the phone's escape or the computer's
+         * html.escape, which also writes "'" as "&#x27;"): line breaks back, entities decoded. */
+        fun fieldText(html: String): String = BREAK.replace(html, "\n").let { text ->
+            ENTITY.replace(text) { m ->
+                val (hex, dec, name) = m.destructured
+                when {
+                    // Past Unicode (&#x110000;): as it is, never an exception failing the whole send
+                    hex.isNotEmpty() -> hex.toIntOrNull(16)?.takeIf(Character::isValidCodePoint)?.let { String(Character.toChars(it)) } ?: m.value
+                    dec.isNotEmpty() -> dec.toIntOrNull()?.takeIf(Character::isValidCodePoint)?.let { String(Character.toChars(it)) } ?: m.value
+                    else -> NAMED[name] ?: m.value
+                }
+            }
+        }
+        private val BREAK = Regex("<br\\s*/?>", RegexOption.IGNORE_CASE)
+        private val ENTITY = Regex("&(?:#[xX]([0-9a-fA-F]+)|#([0-9]+)|([a-zA-Z]+));")
+        private val NAMED = mapOf("amp" to "&", "lt" to "<", "gt" to ">", "quot" to "\"", "apos" to "'", "nbsp" to "\u00A0")
 
         private fun escape(text: String) =
             text.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;").replace("\"", "&quot;").replace("\n", "<br>")

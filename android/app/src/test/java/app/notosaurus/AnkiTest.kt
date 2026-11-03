@@ -140,4 +140,14 @@ class AnkiTest {
         assertEquals("anki://x-callback-url/browser?search=deck%3A*%20tag%3AExam%3A%3AInterro&at=1", Anki.browserLink("tag:Exam::Interro", 1))
         assertEquals("anki://x-callback-url/browser?search=deck%3AEspagnol%20tag%3Ax&at=2", Anki.browserLink("deck:Espagnol tag:x", 2))
     }
+
+    @Test
+    fun aFieldsTextAsWrittenWhoeverEscapedIt() {
+        // The computer's html.escape writes "'" as "&#x27;"; the phone's doesn't: the same text
+        assertEquals("l'école \"oui\"\na&b <x>", Anki.fieldText("l&#x27;école &quot;oui&quot;<br>a&amp;b &lt;x&gt;"))
+        assertEquals("l'école\n(le lieu)", Anki.fieldText("l'école<br/>(le lieu)"))
+        assertEquals("&#x27;", Anki.fieldText("&amp;#x27;")) // decoded once
+        assertEquals("l'été", Anki.fieldText("l&#39;été"))
+        assertEquals("a&#x110000;b &#9999999999;", Anki.fieldText("a&#x110000;b &#9999999999;")) // past Unicode: as it is
+    }
 }
