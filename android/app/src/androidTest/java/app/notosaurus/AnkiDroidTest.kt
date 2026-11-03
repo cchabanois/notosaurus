@@ -519,11 +519,17 @@ class AnkiDroidTest {
         val tags = setOf("notosaurus", Anki.lessonTag(lesson))
         val mother = api.addNote(noId, did, arrayOf("la mère $run", "la madre", "", "", "", ""), tags)!!
         val father = api.addNote(withId, did, arrayOf("le père $run", "el padre", "", "", "", "", "p-$run"), tags)!!
+        // As the computer's 1.0.0 wrote it: "'" as "&#x27;" (html.escape), a line break as <br>
+        val school = api.addNote(noId, did, arrayOf("l&#x27;école $run<br>(le lieu)", "la escuela", "", "", "", ""), tags)!!
 
-        val cards = listOf(Card("la mère $run", "la madre !", id = "m-$run"), Card("le papa $run", "el padre !", id = "p-$run"))
+        val cards = listOf(
+            Card("la mère $run", "la madre !", id = "m-$run"),
+            Card("le papa $run", "el padre !", id = "p-$run"),
+            Card("l'école $run\n(le lieu)", "la escuela !", id = "e-$run"),
+        )
         val sent = anki.send(Deck("Notosaurus test $run", cards), Media(lesson = lesson))
-        assertEquals(listOf(0, 2), listOf(sent.added, sent.updated))
-        assertEquals(mapOf("m-$run" to mother, "p-$run" to father), sent.notes)
+        assertEquals(listOf(0, 3), listOf(sent.added, sent.updated))
+        assertEquals(mapOf("m-$run" to mother, "p-$run" to father, "e-$run" to school), sent.notes)
         assertEquals("la madre !", field(noId, api.getNote(mother)!!.fields, "Back"))
         assertEquals("le papa $run", field(withId, api.getNote(father)!!.fields, "Front")) // its front corrected
         assertEquals(emptyList<Leftover>(), anki.leftovers(lesson, sent.notes.values.toSet()))

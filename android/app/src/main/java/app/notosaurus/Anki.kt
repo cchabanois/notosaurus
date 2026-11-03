@@ -252,11 +252,14 @@ class Anki(private val context: Context) : AnkiTarget {
     }
 
     /** `old` is `note`'s card: by its card id when its note type has one, else by its front (1.0.0's
-     * front/back notes had no Id: found by their front then). */
+     * front/back notes had no Id: found by their front then), as text: the computer escaped "'" as
+     * "&#x27;", the phone doesn't (fieldText), then as same_text compares (Lessons.textKey). */
     private fun sameCard(old: There, note: Note, type: NoteType): Boolean {
         val fields = names(old.model, type).zip(old.fields).toMap()
         val id = fields["Id"].orEmpty()
-        return if (id.isNotEmpty()) id == note.key else fields["Front"].orEmpty().let { it.isNotEmpty() && it == note.values["Front"] }
+        if (id.isNotEmpty()) return id == note.key
+        val front = Lessons.textKey(fieldText(fields["Front"].orEmpty()))
+        return front.isNotEmpty() && front == Lessons.textKey(fieldText(note.values["Front"].orEmpty()))
     }
 
     /** The lesson's notes (its tag), as they are in AnkiDroid. */
@@ -674,6 +677,22 @@ class Anki(private val context: Context) : AnkiTarget {
             }
             return "<ol class=\"notosaurus-choices\">$items</ol>"
         }
+
+        /** A field's text, as written before it was escaped (by the phone's escape or the computer's
+         * html.escape, which also writes "'" as "&#x27;"): line breaks back, entities decoded. */
+        fun fieldText(html: String): String = BREAK.replace(html, "\n").let { text ->
+            ENTITY.replace(text) { m ->
+                val (hex, dec, name) = m.destructured
+                when {
+                    hex.isNotEmpty() -> hex.toIntOrNull(16)?.let { String(Character.toChars(it)) } ?: m.value
+                    dec.isNotEmpty() -> dec.toIntOrNull()?.let { String(Character.toChars(it)) } ?: m.value
+                    else -> NAMED[name] ?: m.value
+                }
+            }
+        }
+        private val BREAK = Regex("<br\\s*/?>", RegexOption.IGNORE_CASE)
+        private val ENTITY = Regex("&(?:#[xX]([0-9a-fA-F]+)|#([0-9]+)|([a-zA-Z]+));")
+        private val NAMED = mapOf("amp" to "&", "lt" to "<", "gt" to ">", "quot" to "\"", "apos" to "'", "nbsp" to "\u00A0")
 
         private fun escape(text: String) =
             text.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;").replace("\"", "&quot;").replace("\n", "<br>")
