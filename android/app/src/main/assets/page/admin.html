@@ -100,7 +100,9 @@
         <label class="field"><span x-text="$t('android.licence.key')"></span>
           <input type="password" x-model="newKey" autocomplete="off" :placeholder="$t('android.licence.keyPlaceholder')">
         </label>
-        <button class="btn primary" :disabled="checking" x-text="$t('android.licence.check')"></button>
+        <!-- Nothing typed: the key kept checked again; no key at all: nothing to check -->
+        <button class="btn primary" :disabled="checking || (!newKey.trim() && !form?.has_key)"
+                x-text="checking ? $t('android.licence.checking') : $t('android.licence.check')"></button>
       </form>
     </section>
 
