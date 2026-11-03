@@ -9,14 +9,17 @@ on:
 # macOS on main only (and on demand): its runners are few (5 at a time), a pull request
 # waited for them. Windows and ARM on a pull request only when it changes what they run
 # (changes, below). Those jobs, required by main's ruleset, are jobs of their own, not
-# matrix entries: skipped by their `if`, a job counts as passed, under its own name.
+# matrix entries: skipped by their `if`, a job counts as passed, under its own name. So
+# when changes itself fails, they run (!cancelled()): never a pass for nothing having run.
 
 permissions:
   contents: read
 
 concurrency:
   group: tests-${{ github.ref }}
-  cancel-in-progress: true
+  # A pull request's older run stopped by its next push; main's never (macOS runs only there:
+  # a merge right after another would cancel the first's, and its macOS check with it)
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 jobs:
   changes:
@@ -98,7 +101,7 @@ jobs:
   tests-windows:
     name: tests (windows-latest, 3.13)
     needs: changes
-    if: needs.changes.outputs.platforms == 'true'
+    if: ${{ !cancelled() && (needs.changes.result != 'success' || needs.changes.outputs.platforms == 'true') }}
     runs-on: windows-latest
     timeout-minutes: 10
     steps:
@@ -222,7 +225,7 @@ jobs:
   addon-install-arm:
     name: addon install (ubuntu-24.04-arm)
     needs: changes
-    if: needs.changes.outputs.platforms == 'true'
+    if: ${{ !cancelled() && (needs.changes.result != 'success' || needs.changes.outputs.platforms == 'true') }}
     runs-on: ubuntu-24.04-arm
     timeout-minutes: 10
     steps:
@@ -235,7 +238,7 @@ jobs:
   addon-install-windows:
     name: addon install (windows-latest)
     needs: changes
-    if: needs.changes.outputs.platforms == 'true'
+    if: ${{ !cancelled() && (needs.changes.result != 'success' || needs.changes.outputs.platforms == 'true') }}
     runs-on: windows-latest
     timeout-minutes: 10
     steps:
