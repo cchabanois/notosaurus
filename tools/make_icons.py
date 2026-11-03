@@ -10,9 +10,9 @@ Run again after changing the logo (and the crop boxes below, in its pixels):
   a PNG, an iPhone wants a 180 px PNG). The "maskable" one keeps the head in the
   middle 80%: Android crops it to its own shape;
 - android/play/icon-512.png: the Google Play listing's icon, 512 px, a 32-bit PNG as Play
-  Console asks (not quantized), Google Play rounding its corners itself. From the head drawn
-  on its own (assets/notosaurus-head.jpg, 1407 × 768): the logo's head is 160 px, blurred at
-  512.
+  Console asks (not quantized), Google Play rounding its corners itself. From the icon drawn
+  large (assets/notosaurus-icon-1024.jpg: the same head, star and sparkles as the logo's,
+  1024 px): the logo's head is 160 px, blurred at 512.
 """
 
 from pathlib import Path
@@ -21,7 +21,7 @@ from PIL import Image
 
 ROOT = Path(__file__).resolve().parent.parent
 SOURCE = ROOT / "assets" / "notosaurus-logo.png"
-HEAD_SOURCE = ROOT / "assets" / "notosaurus-head.jpg"  # the head alone, large: the Play icon's
+ICON_SOURCE = ROOT / "assets" / "notosaurus-icon-1024.jpg"  # the icon drawn large: the Play icon's
 STATIC = ROOT / "static"
 PLAY = ROOT / "android" / "play"  # the Google Play listing's graphics
 WHOLE = (253, 30, 764, 495)  # the drawing and the name, with a margin
@@ -61,21 +61,8 @@ def main() -> None:
 
 
 def play_icon() -> Image.Image:
-    """The whole head (its outline's leftmost point at x 234), the snout 50 px from the right
-    edge, in a white square: 512 px, RGBA. The drawing is wider than tall, and its neck cut at
-    its bottom edge: the neck, straight there, carried on down to the square's by its last row
-    (its near-white made white: a JPEG's noise, repeated, would streak)."""
-    drawn = Image.open(HEAD_SOURCE).convert("RGB")
-    left, right, top = 200, 1330, 110
-    side = right - left
-    crop = drawn.crop((left, 0, right, drawn.height))
-    canvas = Image.new("RGB", (side, side), "white")
-    canvas.paste(crop, (0, top))
-    row = crop.crop((0, crop.height - 1, side, crop.height))
-    row = Image.eval(row, lambda v: 255 if v > 235 else v)
-    for y in range(top + crop.height, side):
-        canvas.paste(row, (0, y))
-    return canvas.resize((512, 512), Image.LANCZOS).convert("RGBA")
+    """The icon drawn large, at 512 px, RGBA."""
+    return Image.open(ICON_SOURCE).convert("RGB").resize((512, 512), Image.LANCZOS).convert("RGBA")
 
 
 if __name__ == "__main__":
