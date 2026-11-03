@@ -86,8 +86,9 @@ The Google Play listing's graphics are in `play/`: `icon-512.png`, the 512 px ic
 Play Console asks for (a 32-bit PNG), made from the icon drawn large (`assets/notosaurus-icon-1024.jpg`) by
 `tools/make_icons.py`.
 `feature-en-1024x500.png` and `feature-fr-1024x500.png` are the listing's feature graphic
-(English, the default listing; French, its fr-FR translation): the logo, and who it is for
-first ("For parents."), as the target audience declared is 18 and over.
+(English, the default listing; French, its fr-FR translation): the logo, "Snap a lesson.
+Get flashcards.", and who it is for in plain words, "Your child's revision, ready in
+AnkiDroid." (the target audience declared is 18 and over).
 
 ```sh
 ./gradlew testDebugUnitTest   # the tests (JVM: no phone needed)
