@@ -92,6 +92,8 @@ AnkiDroid." (the target audience declared is 18 and over). `screenshots/en/` and
 `screenshots/fr/`: the phone screenshots, 1080 × 1920 (9:16), of the app itself on the dev
 emulator, with the documentation's demo lessons (`tools/docs_screenshots.py`) exported from the
 computer and imported by adb, the screen set to 1080 × 1920 at 420 dpi (411 dp wide).
+`screenshots-tablet/en/` and `screenshots-tablet/fr/`: the same screens for the 7- and 10-inch
+tablets, 1440 × 2560 (9:16, within both sizes' limits), the screen set to 320 dpi (720 dp wide).
 
 ```sh
 ./gradlew testDebugUnitTest   # the tests (JVM: no phone needed)
