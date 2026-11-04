@@ -1281,12 +1281,14 @@ def add_photo(page, buffer: bytes) -> None:
     sync_api.expect(page.locator(".thumb img")).to_have_count(1)
 
 
-def test_the_add_buttons_beside_the_pages_on_a_phone(page):
+@pytest.mark.parametrize("width", [360, 411])
+def test_the_add_buttons_beside_the_pages_on_a_phone(page, width):
     """Pages taken: the camera, gallery and PDF buttons first (always in the same place), two
     pages high, each a finger's size and the same as pages come, their names whole. One page
-    (the most) shown large beside them; more, four beside them, then under them. (Three
-    stacked in a page's cell made it half as tall again as the pages.)"""
-    page.set_viewport_size({"width": 411, "height": 860})
+    (the most) shown large beside them (a narrow phone's 360 dp: in the one column left, it
+    went under them); more, four beside them, then under them. (Three stacked in a page's
+    cell made it half as tall again as the pages.)"""
+    page.set_viewport_size({"width": width, "height": 860})
     page.goto("/")
     heights = []
     for n, color in enumerate(("red", "blue", "green", "orange", "purple"), start=1):
@@ -1297,8 +1299,10 @@ def test_the_add_buttons_beside_the_pages_on_a_phone(page):
         thumbs = [t.bounding_box() for t in page.locator(".thumb").all()]
         stack = page.locator(".add-stack").bounding_box()
         assert stack["x"] < thumbs[0]["x"] and stack["y"] == thumbs[0]["y"], (n, thumbs, stack)  # first
-        if n == 1:  # two columns wide, as tall as the buttons
+        if n == 1 and width > 360:  # two columns wide, as tall as the buttons
             assert thumbs[0]["width"] > 2 * stack["width"] and abs(thumbs[0]["height"] - stack["height"]) <= 1
+        elif n == 1:  # the one column left beside them
+            assert abs(stack["width"] - thumbs[0]["width"]) <= 1, (n, thumbs, stack)
         else:  # a page's column, two pages high
             assert abs(stack["width"] - thumbs[0]["width"]) <= 1, (n, thumbs, stack)
             assert stack["height"] <= 2 * thumbs[0]["height"] + 16, (n, thumbs, stack)
@@ -1308,6 +1312,22 @@ def test_the_add_buttons_beside_the_pages_on_a_phone(page):
         cut = "[...document.querySelectorAll('.add-stack .add-tile')].some(e => e.scrollWidth > e.clientWidth + 1)"
         assert not page.evaluate(cut), n
     assert thumbs[4]["x"] == stack["x"] and thumbs[4]["y"] > stack["y"] + stack["height"]  # the fifth under them
+
+
+@pytest.mark.parametrize("width", [360, 380, 400, 420, 440, 460])
+def test_the_one_page_beside_the_add_buttons_with_the_text_twice_as_large(page, width):
+    """The phone's text twice as large (Android's font size): a lesson's one page beside the
+    buttons still, whatever columns the strip has. (A gap in rem moved two columns' width
+    from the query's, and the page went under them again.)"""
+    page.set_viewport_size({"width": width, "height": 860})
+    page.goto("/")
+    page.add_style_tag(content="html { font-size: 200%; }")
+    page.locator('input[type=file][accept="image/*"][multiple]').set_input_files(
+        {"name": "page-1.png", "mimeType": "image/png", "buffer": plain_image(300, 400, "red")}
+    )
+    sync_api.expect(page.locator(".thumb img")).to_have_count(1)
+    thumb, stack = page.locator(".thumb").bounding_box(), page.locator(".add-stack").bounding_box()
+    assert thumb["x"] > stack["x"] + stack["width"] and thumb["y"] == stack["y"], (thumb, stack)
 
 
 def test_the_add_buttons_off_once_the_lesson_has_its_ten_pages(page):
