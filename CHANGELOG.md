@@ -7,6 +7,8 @@ Each pull request's entries (the `## Changelog` of its description) are put unde
 
 ## [Unreleased]
 
+## [1.1.1] - 2026-11-04
+
 ### Changed
 
 - The Android app's privacy policy says how to have your data deleted, step by step, and what is deleted or kept.
@@ -164,6 +166,7 @@ The first version.
 - Recommended models for each service, from our tests on real notebook pages, with what a lesson or a picture costs; a test for the AI and for the pictures. A free Gemini key works, with an older model.
 - The app, its instructions and the add-on in English, French, Spanish, German, Italian and Portuguese (Brazil); the documentation in English and French (https://cchabanois.github.io/notosaurus/).
 
-[Unreleased]: https://github.com/cchabanois/notosaurus/compare/v1.1.0...HEAD
+[Unreleased]: https://github.com/cchabanois/notosaurus/compare/v1.1.1...HEAD
+[1.1.1]: https://github.com/cchabanois/notosaurus/compare/v1.1.0...v1.1.1
 [1.1.0]: https://github.com/cchabanois/notosaurus/compare/v1.0.0...v1.1.0
 [1.0.0]: https://github.com/cchabanois/notosaurus/releases/tag/v1.0.0
