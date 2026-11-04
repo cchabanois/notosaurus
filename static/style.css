@@ -273,6 +273,7 @@ h2 {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(92px, 1fr));
   gap: .6rem;
+  container: strip / inline-size;
 }
 
 .thumb { aspect-ratio: 3 / 4; }
@@ -290,6 +291,9 @@ h2 {
 .thumb { position: relative; margin: 0; overflow: hidden; background: var(--surface-2); }
 /* A lesson of one page (the most): that page large, beside the buttons, as tall as them */
 .thumb:only-of-type { grid-column: span 2; grid-row: span 2; }
+/* Two columns only (under three of 92px and their gaps: a 360 dp phone): a page's cell beside
+   them, or it went under them */
+@container strip (width < 296px) { .thumb:only-of-type { grid-column: auto; grid-row: auto; } }
 .thumb img { width: 100%; height: 100%; object-fit: cover; display: block; }
 .thumb figcaption {
   position: absolute;
