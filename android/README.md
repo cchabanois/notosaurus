@@ -82,6 +82,17 @@ change it): `versionName` "1.1.1", `versionCode` (major × 10000 + minor × 100 
 number), always growing and new for each upload as Google Play wants, and the version
 the relay is told.
 
+The Google Play listing's graphics are in `play/`: `icon-512.png`, the 512 px icon
+Play Console asks for (a 32-bit PNG), made from the icon drawn large (`assets/notosaurus-icon-1024.jpg`) by
+`tools/make_icons.py`.
+`feature-en-1024x500.png` and `feature-fr-1024x500.png` are the listing's feature graphic
+(English, the default listing; French, its fr-FR translation): the logo, "Snap a lesson.
+Get flashcards.", and who it is for in plain words, "Your child's revision, ready in
+AnkiDroid." (the target audience declared is 18 and over). `screenshots/en/` and
+`screenshots/fr/`: the phone screenshots, 1080 × 1920 (9:16), of the app itself on the dev
+emulator, with the documentation's demo lessons (`tools/docs_screenshots.py`) exported from the
+computer and imported by adb, the screen set to 1080 × 1920 at 420 dpi (411 dp wide).
+
 ```sh
 ./gradlew testDebugUnitTest   # the tests (JVM: no phone needed)
 ./gradlew assembleDebug       # app/build/outputs/apk/debug/app-debug.apk

@@ -8,7 +8,11 @@ Run again after changing the logo (and the crop boxes below, in its pixels):
   icon by its address, so a new logo needs new names to be seen at all. Phones don't
   use an SVG for the home screen (Chrome on Android makes a plain letter icon without
   a PNG, an iPhone wants a 180 px PNG). The "maskable" one keeps the head in the
-  middle 80%: Android crops it to its own shape.
+  middle 80%: Android crops it to its own shape;
+- android/play/icon-512.png: the Google Play listing's icon, 512 px, a 32-bit PNG as Play
+  Console asks (not quantized), Google Play rounding its corners itself. From the icon drawn
+  large (assets/notosaurus-icon-1024.jpg: the same head, star and sparkles as the logo's,
+  1024 px): the logo's head is 160 px, blurred at 512.
 """
 
 from pathlib import Path
@@ -17,7 +21,9 @@ from PIL import Image
 
 ROOT = Path(__file__).resolve().parent.parent
 SOURCE = ROOT / "assets" / "notosaurus-logo.png"
+ICON_SOURCE = ROOT / "assets" / "notosaurus-icon-1024.jpg"  # the icon drawn large: the Play icon's
 STATIC = ROOT / "static"
+PLAY = ROOT / "android" / "play"  # the Google Play listing's graphics
 WHOLE = (253, 30, 764, 495)  # the drawing and the name, with a margin
 HEAD = (590, 85, 750, 245)  # the head and the top of the neck
 
@@ -50,6 +56,16 @@ def main() -> None:
     save_png(square(head, 512, 0.72), STATIC / "notosaurus-maskable-512.png")
     save_png(square(head, 180, 0.92), STATIC / "notosaurus-touch-180.png")  # iOS rounds the corners
     save_png(square(head, 64, 0.95), STATIC / "notosaurus-64.png")
+    PLAY.mkdir(exist_ok=True)
+    play_icon().save(PLAY / "icon-512.png", optimize=True)
+
+
+def play_icon() -> Image.Image:
+    """The icon drawn large, at 512 px, RGBA: full bleed, as Google Play wants an illustration,
+    its white frame cut off (the drawing within 39 to 985 px); Play rounds the corners itself
+    (a radius of 30 %), the head well inside."""
+    drawn = Image.open(ICON_SOURCE).convert("RGB").crop((39, 39, 985, 985))
+    return drawn.resize((512, 512), Image.LANCZOS).convert("RGBA")
 
 
 if __name__ == "__main__":
