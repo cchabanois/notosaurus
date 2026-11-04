@@ -116,6 +116,11 @@ android {
         }
         release {
             signingConfig = signingConfigs.findByName("upload")
+            // R8: the code shrunk and obfuscated, the resources unused removed (Google Play
+            // wants the DEX optimised); its mapping goes in the bundle, for the crashes' traces
+            isMinifyEnabled = true
+            isShrinkResources = true
+            proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
             buildConfigField("String", "DEFAULT_RELAY", realRelay)
             buildConfigField("String", "REAL_RELAY", realRelay)
             buildConfigField("String", "TEST_RELAY", "\"\"")
@@ -129,7 +134,20 @@ android {
             buildConfigField("String", "DEFAULT_RELAY", testRelay)
             buildConfigField("String", "TEST_RELAY", testRelay)
         }
+        // The release's code as R8 makes it, signed with the debug key so that the device tests
+        // can install it: -Pnotosaurus.minified runs them on it (what R8 removes or renames by
+        // mistake only shows when the code runs)
+        create("minified") {
+            initWith(getByName("release"))
+            signingConfig = signingConfigs.getByName("debug")
+            proguardFile("proguard-minified-rules.pro")
+            testProguardFiles("proguard-test-rules.pro")
+            matchingFallbacks += "release"
+            buildConfigField("String", "DEFAULT_RELAY", testRelay)
+            buildConfigField("String", "TEST_RELAY", testRelay)
+        }
     }
+    if (providers.gradleProperty("notosaurus.minified").isPresent) testBuildType = "minified"
     // The device tests read the cases the computer, the page and the app must agree on
     // (core/shared-cases.json, RegexOnDeviceTest): in the test APK only
     sourceSets.getByName("androidTest").assets.directories += rootProject.layout.projectDirectory.dir("../core").asFile.path
