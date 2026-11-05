@@ -77,7 +77,7 @@ language and "About": the AI's instructions and the rest are the computer's own.
 Android SDK with platform 37 (`sdkmanager "platforms;android-37.0"`), JDK 17+.
 
 The app's version is Notosaurus's, the root `pyproject.toml`'s (the only place to
-change it): `versionName` "1.1.1", `versionCode` (major × 10000 + minor × 100 + patch)
+change it): `versionName` "1.1.2", `versionCode` (major × 10000 + minor × 100 + patch)
 × 10000 + the build (`-Pnotosaurus.build=N`, 0 without it; Draft release passes its run's
 number), always growing and new for each upload as Google Play wants, and the version
 the relay is told.
