@@ -124,6 +124,19 @@ refused for good, granted: Android's own dialog), which needs the app never gran
 second runs it (and any test marked `@FreshInstall`) on its own, Gradle installing the app
 again; revoking the permission instead would kill the tests' process.
 
+```sh
+./gradlew connectedMinifiedAndroidTest -Pnotosaurus.minified
+```
+
+runs them on the release's code as R8 makes it (shrunk and obfuscated, `proguard-rules.pro`;
+the build type `minified`, signed with the debug key): what R8 removes or renames by mistake
+only shows when the code runs. The tests' APK is minified too (`proguard-test-rules.pro`), and
+shares its libraries with the app's: those, and the app's own code the tests reach into, are kept
+in that build only (`proguard-minified-rules.pro`), so what it checks is R8 on the other
+libraries (Ktor, Play Billing and Integrity, the QR code scanner). The release itself is all
+minified (its mapping goes in the bundle, for Google Play's crash traces): the app's own code
+minified is checked by hand, the build `minified` without that file of rules installed and used.
+
 ⚠️ Gradle installs the app for the tests and **uninstalls it afterwards**: its lessons
 and settings on that device are gone. Use an emulator, not your own phone.
 
