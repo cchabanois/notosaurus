@@ -59,7 +59,7 @@ genanki==0.13.1
     # via -r requirements.in
 google-auth==2.62.0
     # via google-genai
-google-genai==2.33.0
+google-genai==2.34.0
     # via -r requirements.in
 h11==0.16.0
     # via
@@ -97,7 +97,7 @@ multidict==7.1.0
     # via
     #   aiohttp
     #   yarl
-openai==3.40.0
+openai==3.46.0
     # via -r requirements.in
 opentelemetry-api==1.45.1
     # via
@@ -127,7 +127,7 @@ python-dotenv==1.2.4
     # via
     #   -r requirements.in
     #   uvicorn
-python-multipart==0.0.32
+python-multipart==0.0.33
     # via -r requirements.in
 pyyaml==6.0.3
     # via
