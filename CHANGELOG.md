@@ -7,6 +7,10 @@ Each pull request's entries (the `## Changelog` of its description) are put unde
 
 ## [Unreleased]
 
+### Changed
+
+- The Android app is about a third smaller.
+
 ## [1.1.1] - 2026-11-04
 
 ### Changed
