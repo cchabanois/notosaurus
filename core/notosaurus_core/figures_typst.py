@@ -1,7 +1,8 @@
 """Figures drawn in Typst, each family with the package made for it (FAMILIES): geometry
 with ctz-euclide (marks at their segment's middle, angles between their rays), graphs with
 lilaq (a curve computed from its function), sets with cetz-venn, diagrams with fletcher,
-circuits with zap, chemistry with alchemist, timelines with cetz (our timeline function).
+circuits with zap, chemistry with alchemist, timelines with cetz (our timeline function),
+maps with our atlas (notosaurus-atlas: Natural Earth's countries and cities, tools/atlas.py).
 What can be computed is, never placed by eye. Each family's rule and Typst: typst_rules/.
 
 The family is the one the AI gave with the figure's description (models.Card.figure_kind),
@@ -74,7 +75,7 @@ def _family(name: str) -> Family:
 
 
 FAMILIES: dict[str, Family] = {
-    name: _family(name) for name in ("geometry", "graph", "sets", "diagram", "circuit", "chemistry", "timeline")
+    name: _family(name) for name in ("geometry", "graph", "sets", "diagram", "circuit", "chemistry", "timeline", "map")
 }
 
 # The kinds of figures, said to the AI that describes a figure (models.Card.figure_kind) or
@@ -86,11 +87,12 @@ KINDS = (
     "classification), never shapes inside one another; "
     '"circuit": an electric circuit; "chemistry": a molecule\'s formula written with its atoms\' '
     "symbols and bonds (developed, semi-developed, skeletal, a ring), never a model of balls; "
-    '"timeline": dates on a line; "other": anything else (a table, a labelled drawing, zones nested '
-    "or overlapping, a solid in perspective, a map, a molecular model of coloured balls…)"
+    '"timeline": dates on a line; "map": a geographic map of countries and their cities (where a '
+    'country or a city is); "other": anything else (a table, a labelled drawing, zones nested '
+    "or overlapping, a solid in perspective, a molecular model of coloured balls…)"
 )
 FAMILY_RULES = f"A figure for a pupil's flashcard is described below. Which kind of figure is it? {KINDS}."
-FigureKind = Literal["geometry", "graph", "sets", "diagram", "circuit", "chemistry", "timeline", "other"]
+FigureKind = Literal["geometry", "graph", "sets", "diagram", "circuit", "chemistry", "timeline", "map", "other"]
 
 
 class Kind(BaseModel):
@@ -288,4 +290,19 @@ def compile_svg(family: str, body: str) -> str:
     if done.returncode != 0 or not done.stdout:
         said = done.stderr.decode("utf-8", "replace").strip()
         raise Unusable(said[:800].replace(str(path), "figure.typ") or "It didn't compile.")
-    return done.stdout.decode("utf-8")
+    svg = done.stdout.decode("utf-8")
+    # A map's outlines: thousands of points, each written to the billionth of a point by
+    # Typst: kept to the tenth (nothing seen changes), the figure several times lighter
+    return _rounded_paths(svg) if family == "map" else svg
+
+
+_NUMBER = re.compile(r"-?\d+\.\d{2,}")
+
+
+def _rounded_paths(svg: str) -> str:
+    """Each path's numbers (its d) to one decimal."""
+
+    def one(m: re.Match) -> str:
+        return m.group(1) + _NUMBER.sub(lambda n: f"{float(n.group()):.1f}", m.group(2)) + m.group(3)
+
+    return re.sub(r'( d=")([^"]*)(")', one, svg)
