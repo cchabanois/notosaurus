@@ -92,8 +92,8 @@ KINDS = (
     '"circuit": an electric circuit; "chemistry": a molecule\'s formula written with its atoms\' '
     "symbols and bonds (developed, semi-developed, skeletal, a ring), never a model of balls; "
     '"timeline": dates on a line; "map": a geographic map of countries, their cities, regions, '
-    'rivers, reliefs and seas (where a place is); "clock": a clock\'s face showing a time (reading the time); "solid": a '
-    'polyhedron in perspective (a cube, a cuboid, a prism, a pyramid); "other": anything else (a '
+    'rivers, reliefs and seas (where a place is); "clock": a clock\'s face showing a time (reading '
+    'the time); "solid": a polyhedron in perspective (a cube, a cuboid, a prism, a pyramid); "other": anything else (a '
     "table, a labelled drawing, zones nested or overlapping, a cylinder, a cone or a sphere in "
     "perspective, a molecular model of coloured balls…)"
 )
