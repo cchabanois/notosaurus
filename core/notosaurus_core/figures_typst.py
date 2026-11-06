@@ -3,8 +3,9 @@ with ctz-euclide (marks at their segment's middle, angles between their rays), g
 lilaq (a curve computed from its function), sets with cetz-venn, diagrams with fletcher,
 circuits with zap, chemistry with alchemist, timelines with cetz (our timeline function),
 maps with our atlas (notosaurus-atlas: Natural Earth's countries and cities, tools/atlas.py),
-clocks with cetz (our clock function: its hands placed by the time), polyhedra with cetz (our
-cuboid, prism and pyramid: in cavalier perspective, their hidden edges computed).
+clocks with cetz (our clock function: its hands placed by the time), solids with cetz (our
+cuboid, prism, pyramid in cavalier perspective, their hidden edges computed; cylinder, cone,
+sphere as textbooks draw them, in proportion).
 What can be computed is, never placed by eye. Each family's rule and Typst: typst_rules/.
 
 The family is the one the AI gave with the figure's description (models.Card.figure_kind),
@@ -94,9 +95,9 @@ KINDS = (
     "symbols and bonds (developed, semi-developed, skeletal, a ring), never a model of balls; "
     '"timeline": dates on a line; "map": a geographic map of countries, their cities, regions, '
     'rivers, reliefs and seas (where a place is); "clock": a clock\'s face showing a time (reading '
-    'the time); "solid": a polyhedron in perspective (a cube, a cuboid, a prism, a pyramid); "other": anything else (a '
-    "table, a labelled drawing, zones nested or overlapping, a cylinder, a cone or a sphere in "
-    "perspective, a molecular model of coloured balls…)"
+    'the time); "solid": a solid in perspective (a cube, a cuboid, a prism, a pyramid, a cylinder, a '
+    'cone, a sphere, a half-ball); "other": anything else (a table, a labelled drawing, zones nested '
+    "or overlapping, a molecular model of coloured balls…)"
 )
 FAMILY_RULES = f"A figure for a pupil's flashcard is described below. Which kind of figure is it? {KINDS}."
 FigureKind = Literal[
