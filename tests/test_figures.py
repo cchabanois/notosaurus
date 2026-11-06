@@ -808,6 +808,40 @@ def test_a_solids_hidden_edges_computed(body, hidden):
     assert svg.count("stroke-dasharray") == hidden
 
 
+def test_a_charts_angles_and_heights_come_from_its_counts():
+    """A chart's sectors are its counts' shares (1, 1 and 2, 2 the same half pie), computed,
+    never given; large counts and a zero drawn too (the bars' graduation by 20s)."""
+    semi = '#chart(kind: "semi", values: (("A", {}), ("B", {})))'
+    halves = {figures_typst.compile_svg("chart", semi.format(n, n)) for n in (1, 2)}
+    assert len(halves) == 1
+    pie = figures_typst.compile_svg("chart", '#chart(kind: "pie", values: (("A", 1), ("B", 3)))')
+    assert pie != figures_typst.compile_svg("chart", '#chart(kind: "pie", values: (("A", 3), ("B", 1)))')
+    for kind in ("bars", "pie", "semi"):
+        figures_typst.compile_svg("chart", f'#chart(kind: "{kind}", values: (("A", 230), ("B", 5), ("C", 0)))')
+
+
+def test_a_charts_counts_written_only_when_asked():
+    """None by default (a card asking a count, a frequency or an angle never shows it on its
+    chart); "all", or the labels given."""
+    for kind in ("bars", "pie", "semi"):
+        body = f'#chart(kind: "{kind}", values: (("Chat", 12), ("Chien", 10), ("Lapin", 5)){{}})'
+        bare = figures_typst.compile_svg("chart", body.format(""))
+        assert bare == figures_typst.compile_svg("chart", body.format(", written: ()")), kind
+        some = figures_typst.compile_svg("chart", body.format(', written: ("Chien",)'))
+        every = figures_typst.compile_svg("chart", body.format(', written: "all"'))
+        assert len({bare, some, every}) == 3, kind
+
+
+def test_a_chart_refuses_what_it_cant_draw():
+    for body, said in (
+        ('#chart(kind: "line", values: (("A", 1),))', "kind is"),
+        ('#chart(kind: "pie", values: (("A", 0), ("B", 0)))', "add up to more than 0"),
+        ('#chart(kind: "pie", values: ("A", "B"))', "pairs"),
+    ):
+        with pytest.raises(figures_typst.Unusable, match=said):
+            figures_typst.compile_svg("chart", body)
+
+
 def test_a_solid_drawn_the_same_whatever_its_unit():
     """Lengths in any unit: only their ratio shows (a cuboid 5 × 3 × 2 as 50 × 30 × 20)."""
     small = figures_typst.compile_svg("solid", "#cuboid(5, 3, 2)")

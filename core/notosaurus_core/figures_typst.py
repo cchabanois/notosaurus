@@ -79,7 +79,19 @@ def _family(name: str) -> Family:
 
 FAMILIES: dict[str, Family] = {
     name: _family(name)
-    for name in ("geometry", "graph", "sets", "diagram", "circuit", "chemistry", "timeline", "map", "clock", "solid")
+    for name in (
+        "geometry",
+        "graph",
+        "sets",
+        "diagram",
+        "circuit",
+        "chemistry",
+        "timeline",
+        "map",
+        "clock",
+        "solid",
+        "chart",
+    )
 }
 
 # The kinds of figures, said to the AI that describes a figure (models.Card.figure_kind) or
@@ -96,12 +108,24 @@ KINDS = (
     '"timeline": dates on a line; "map": a geographic map of countries, their cities, regions, '
     'rivers, reliefs and seas (where a place is); "clock": a clock\'s face showing a time (reading '
     'the time); "solid": a solid in perspective (a cube, a cuboid, a prism, a pyramid, a cylinder, a '
-    'cone, a sphere, a half-ball); "other": anything else (a table, a labelled drawing, zones nested '
+    'cone, a sphere, a half-ball); "chart": a statistics chart from counts (bars, a pie chart, a half '
+    'pie chart); "other": anything else (a table, a labelled drawing, zones nested '
     "or overlapping, a molecular model of coloured balls…)"
 )
 FAMILY_RULES = f"A figure for a pupil's flashcard is described below. Which kind of figure is it? {KINDS}."
 FigureKind = Literal[
-    "geometry", "graph", "sets", "diagram", "circuit", "chemistry", "timeline", "map", "clock", "solid", "other"
+    "geometry",
+    "graph",
+    "sets",
+    "diagram",
+    "circuit",
+    "chemistry",
+    "timeline",
+    "map",
+    "clock",
+    "solid",
+    "chart",
+    "other",
 ]
 
 
