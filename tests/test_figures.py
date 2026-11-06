@@ -574,6 +574,27 @@ def test_a_package_import_dropped_not_refused():
             figures_typst.source("graph", refused + example)
 
 
+def test_an_arrow_written_with_html_entities_drawn():
+    """The AI writes an arrow's ">" as HTML does ("-|&gt;"): Typst refused it twice, the
+    figure drawn as SVG instead; read as ">" (Typst has no such entity)."""
+    body = '#diagram(node((0, 0), [A]), edge("-|&gt;"), node((1, 0), [B]), edge("&lt;|-"), node((2, 0), [C]))'
+    assert figures_typst.compile_svg("diagram", body).startswith("<svg")
+
+
+def test_a_drawing_past_its_page_kept_whole():
+    """A graph's axis names, written by lilaq past the diagram's ends: the page grown to them
+    ("temps (min)", not "te"); a figure within its page the same as Typst made it."""
+    body = (
+        "#lq.diagram(width: 6cm, height: 4cm, xlim: (0, 15), ylim: (-10, 25),\n"
+        "  xaxis: (position: 0, label: [temps (min)]), yaxis: (position: 0, label: [température (°C)]),\n"
+        "  lq.plot((0, 4, 10, 14), (20, 0, 0, -10), mark: none))"
+    )
+    width = float(re.search(r'viewBox="[-\d.]+ [-\d.]+ ([\d.]+)', figures_typst.compile_svg("graph", body)).group(1))
+    assert width > 6 * 28.35 + 12 + 40  # the diagram, its margins, and "temps (min)" past its end
+    cuboid = figures_typst.compile_svg("solid", "#cuboid(5, 3, 2)")
+    assert "<rect" not in cuboid.split(">", 1)[1][:200]  # within its page: no ground of ours
+
+
 def test_each_familys_rule_and_typst_in_their_files():
     """A rule says where its example goes ({example}, once), its Typst where the AI's part
     starts (EXAMPLE, once); the example is in the rule the AI is given."""
@@ -715,6 +736,29 @@ def test_the_geometry_rules_number_line_compiles():
         f'  ctz-draw-segment("L", "R")\n  {loop}\n  ctz-draw-text(0, -0.5, {decimal})\n}})'
     )
     assert figures.clean(figures_typst.compile_svg("geometry", body)).startswith("<svg")
+
+
+def test_the_circuit_rules_current_arrow_compiles():
+    """The current's arrow the circuit rule shows (said by where the current goes, whatever way
+    a component was drawn: the AI's own, from components' `i:`, went up a branch 2 times in 3),
+    in the rule's example."""
+    rules = figures_typst.FAMILIES["circuit"].rules
+    (arrow,) = re.findall(r"`(current-arrow\([^`]*\))`", rules)
+    example = re.search(r"exactly so:\n(.*?)\n- ", rules, re.S).group(1)
+    body = example.replace("\n})", f"\n  {arrow}\n}})")
+    assert arrow in body and figures.clean(figures_typst.compile_svg("circuit", body)).startswith("<svg")
+
+
+def test_the_diagram_rules_edges_compile():
+    """Every edge the diagram rule shows (its line styles, a label on its arrow, two arrows
+    side by side) compiles between two nodes: a fragment out of step with fletcher (a "bend"
+    inside the marks: refused 3 times) would make every diagram with it fail."""
+    rules = figures_typst.FAMILIES["diagram"].rules
+    edges = re.findall(r"`(edge\([^`]*\))`", rules)
+    assert len(edges) >= 2
+    for edge in edges:
+        body = f"#diagram(node((0, 0), [A]), node((1, 0), [B]), node((0, 1), [C]), {edge})"
+        assert figures_typst.compile_svg("diagram", body).startswith("<svg"), edge
 
 
 def test_a_closed_switch_is_seen():
