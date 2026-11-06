@@ -275,6 +275,17 @@
     for code in shown {
       for points in atlas.countries.at(code).r { ring(points, none, 0.7pt + black) }
     }
+    // A region asked too small to see at this scale (Hawaii beside the United States): a
+    // circle around it
+    for a in areas {
+      let largest = region(a).r.first()  // its largest part (an archipelago's main island)
+      let b = (calc.min(..largest.map(p => p.at(0))), calc.min(..largest.map(p => p.at(1))),
+               calc.max(..largest.map(p => p.at(0))), calc.max(..largest.map(p => p.at(1))))
+      if near-frame(b) and calc.max((b.at(2) - b.at(0)) * k * unit, (b.at(3) - b.at(1)) * unit) < 10pt {
+        let (x, y) = (px((b.at(0) + b.at(2)) / 2), py((b.at(1) + b.at(3)) / 2))
+        place(dx: x - 9pt, dy: y - 9pt, circle(radius: 9pt, stroke: 1.2pt + rgb("#d9822b")))
+      }
+    }
     for l in lands {
       for points in l.item.r { ring(points, tints.at(l.item.c), none) }
     }

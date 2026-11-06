@@ -648,6 +648,14 @@ def test_a_region_needs_its_country_and_a_name_the_atlas_has():
         figures_typst.compile_svg("map", '#map(countries: ("France",), rivers: ("Trifouille",))')
 
 
+def test_a_region_too_small_to_see_is_circled():
+    """Rhode Island, or Hawaii's islands beside the whole United States: a circle around it
+    (its colour alone wouldn't show); Texas, seen, has none."""
+    for state, circled in (("Rhode Island", True), ("Hawaï", True), ("Texas", False)):
+        svg = figures_typst.compile_svg("map", f'#map(countries: ("USA",), regions: ("{state}",), labels: false)')
+        assert ("#d9822b" in svg) == circled, state
+
+
 def test_a_map_with_everything_stays_within_a_figures_size():
     """Rivers, reliefs, waters and regions drawn as the countries are (cut to the frame, thinned):
     a full map of France, or the world's oceans, within a figure's size."""

@@ -433,7 +433,9 @@ def regions(admin1: dict) -> dict[str, dict]:
     out = {}
     for code, features in by_country.items():
         shapes = [shapely.make_valid(shape(f["geometry"])) for f in features]
-        detail = tolerance(*shapes)
+        # Drawn as the country's largest part can show (the United States' lower 48, not
+        # Alaska and the Aleutians across the Pacific: Rhode Island stays itself)
+        detail = tolerance(max((g for shape_ in shapes for g in parts(shape_)), key=lambda g: g.area))
         units = []
         for f, g in zip(features, shapely.coverage_simplify(shapes, detail), strict=True):
             p = f["properties"]
