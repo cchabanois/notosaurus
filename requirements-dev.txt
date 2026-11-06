@@ -3,3 +3,4 @@ pytest
 ruff
 httpx
 hypothesis
+shapely>=2.1  # tools/atlas.py: regions simplified together

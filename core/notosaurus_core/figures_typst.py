@@ -87,16 +87,17 @@ FAMILIES: dict[str, Family] = {
 KINDS = (
     '"geometry": points, segments, lines, circles, polygons, angles, their marks (a theorem, a '
     'construction), a number line with its points; "graph": the graph of one or more functions in a '
-    'frame; "sets": a Venn diagram of '
+    'frame, or points in a coordinate frame (reading or placing their coordinates); "sets": a Venn '
+    "diagram of "
     'two or three sets; "diagram": boxes side by side joined by arrows (a flowchart, a cycle, a chain, a '
     "classification), never shapes inside one another; "
     '"circuit": an electric circuit; "chemistry": a molecule\'s formula written with its atoms\' '
     "symbols and bonds (developed, semi-developed, skeletal, a ring), never a model of balls; "
-    '"timeline": dates on a line; "map": a geographic map of countries and their cities (where a '
-    'country or a city is); "clock": a clock\'s face showing a time (reading the time); "solid": a '
-    "solid in perspective (a cube, a cuboid, a prism, a pyramid, a cylinder, a cone, a sphere, a "
-    'half-ball); "other": anything else (a table, a labelled drawing, zones nested or overlapping, a '
-    "molecular model of coloured balls…)"
+    '"timeline": dates on a line; "map": a geographic map of countries, their cities, regions, '
+    'rivers, reliefs and seas (where a place is); "clock": a clock\'s face showing a time (reading '
+    'the time); "solid": a solid in perspective (a cube, a cuboid, a prism, a pyramid, a cylinder, a '
+    'cone, a sphere, a half-ball); "other": anything else (a table, a labelled drawing, zones nested '
+    "or overlapping, a molecular model of coloured balls…)"
 )
 FAMILY_RULES = f"A figure for a pupil's flashcard is described below. Which kind of figure is it? {KINDS}."
 FigureKind = Literal[
