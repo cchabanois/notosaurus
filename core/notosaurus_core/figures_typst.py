@@ -82,7 +82,8 @@ FAMILIES: dict[str, Family] = {
 # picks its family (FAMILY_RULES)
 KINDS = (
     '"geometry": points, segments, lines, circles, polygons, angles, their marks (a theorem, a '
-    'construction); "graph": the graph of one or more functions in a frame; "sets": a Venn diagram of '
+    'construction), a number line with its points; "graph": the graph of one or more functions in a '
+    'frame; "sets": a Venn diagram of '
     'two or three sets; "diagram": boxes side by side joined by arrows (a flowchart, a cycle, a chain, a '
     "classification), never shapes inside one another; "
     '"circuit": an electric circuit; "chemistry": a molecule\'s formula written with its atoms\' '

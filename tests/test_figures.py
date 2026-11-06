@@ -644,6 +644,21 @@ def test_the_graph_rules_own_fragments_compile():
         assert figures_typst.compile_svg("graph", body).startswith("<svg"), fragment
 
 
+def test_the_geometry_rules_number_line_compiles():
+    """A number line as the geometry rule shows it: its ticks in a loop, their points named by
+    `..` (a name computed in a named argument doesn't compile: the AI's loop refused twice,
+    the line drawn as SVG), a decimal as text (`$2{,}3$`, `$2Comma 3$` refused, `$2,3$`
+    written "2, 3"): each fragment compiles in a canvas."""
+    rules = figures_typst.FAMILIES["geometry"].rules
+    (loop,) = re.findall(r"`(for i in range[^`]*)`", rules)
+    (decimal,) = re.findall(r"`(\[\d+,\d+\])`", rules)
+    body = (
+        "#ctz-canvas({\n  ctz-init()\n  ctz-def-points(L: (-0.5, 0), R: (10.5, 0))\n"
+        f'  ctz-draw-segment("L", "R")\n  {loop}\n  ctz-draw-text(0, -0.5, {decimal})\n}})'
+    )
+    assert figures.clean(figures_typst.compile_svg("geometry", body)).startswith("<svg")
+
+
 def test_a_closed_switch_is_seen():
     """zap's closed switch is a mere wire: ours keeps its two contacts, closed or open."""
     circuit = '#circuit({{ battery("g", (0, 0), (0, 3)); {} lamp("l", (3, 3), (3, 0)); wire((3, 0), (0, 0)) }})'
