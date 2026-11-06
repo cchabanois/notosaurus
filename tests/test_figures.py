@@ -623,6 +623,21 @@ def test_the_atlas_folds_names_as_typst_does():
         assert a == b, written
 
 
+def test_a_coordinate_frame_as_the_graph_rule_writes_it():
+    """Points in a coordinate frame (reading or placing coordinates), each call as the graph
+    rule gives it: drawn, its grid with it (a line per unit: more lines than without it)."""
+    lines = figures_typst.FAMILIES["graph"].rules.splitlines()
+    rule = next(line for line in lines if line.startswith("- a coordinate frame"))
+    calls = re.findall(r"`((?:#show: lq\.set-grid|lq\.scatter|lq\.place)[^`]*)`", rule)
+    assert len(calls) == 4, calls  # the grid, a point, its name, the origin's
+    grid, point, name, origin = calls
+    axes = "xlim: (-4.5, 4.5), ylim: (-4.5, 4.5), xaxis: (tick-distance: 1, subticks: none), yaxis: (tick-distance: 1)"
+    frame = f"#lq.diagram(width: 6cm, height: 6cm, {axes}, {point}, {name}, {origin})"
+    with_grid = figures_typst.compile_svg("graph", f"{grid}\n{frame}")
+    without = figures_typst.compile_svg("graph", frame)
+    assert with_grid.count("<path") > without.count("<path") + 10
+
+
 def test_the_graph_rules_example_is_orthonormal():
     """The graph rule asks for an orthonormal frame, width / height = xlim's length / ylim's,
     exactly: its example does so (the model copies the example before it reads the rule)."""
