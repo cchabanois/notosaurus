@@ -524,6 +524,7 @@ def test_credited_with_what_its_typst_uses():
     timeline = "#timeline(start: 1914, end: 1918, events: ((1916, [Verdun]),))"  # our function: what it uses
     assert figures_typst.made_with("timeline", timeline)[1:] == ["cetz 0.5.2"]
     assert figures_typst.made_with("clock", "#clock(10, 25)")[1:] == ["cetz 0.5.2"]
+    assert figures_typst.made_with("solid", "#cuboid(3, 3, 3)")[1:] == ["cetz 0.5.2"]
     assert figures_typst.made_with("other", balls) == []
 
 
@@ -700,6 +701,31 @@ def test_a_clock_at_an_impossible_time_refused():
         with pytest.raises(figures_typst.Unusable, match="whole number"):
             figures_typst.compile_svg("clock", body)
     assert figures_typst.compile_svg("clock", "#clock(15, 30)") == figures_typst.compile_svg("clock", "#clock(3, 30)")
+
+
+@pytest.mark.parametrize(
+    ("body", "hidden"),
+    [
+        ("#cuboid(5, 3, 2)", 3),  # the three edges at the back bottom left corner
+        ("#cuboid(30, 30, 30)", 3),  # a cube, in centimetres: the same, drawn as large
+        ("#pyramid(side: 4, height: 5)", 3),  # the base's two back sides, the back edge to the apex
+        ('#pyramid(side: 4, height: 5, foot: "O")', 4),  # and its height, inside
+        ("#prism(((0, 0), (4, 0), (1, 3)), 4)", 3),  # the base's two back sides, the back edge
+        ("#prism(((0, 0), (4, 0), (2, 3)), 6, lying: true)", 3),
+    ],
+)
+def test_a_solids_hidden_edges_computed(body, hidden):
+    """A polyhedron's hidden edges (dashed) are those whose two faces turn their back to the
+    viewer, computed from the solid: never chosen by the AI (an edge dashed in front of a
+    cuboid, a hidden one missing: 5 of 8 polyhedra drawn wrong as SVG)."""
+    svg = figures.clean(figures_typst.compile_svg("solid", body))
+    assert svg.count("stroke-dasharray") == hidden
+
+
+def test_a_solid_drawn_the_same_whatever_its_unit():
+    """Lengths in any unit: only their ratio shows (a cuboid 5 × 3 × 2 as 50 × 30 × 20)."""
+    small = figures_typst.compile_svg("solid", "#cuboid(5, 3, 2)")
+    assert figures_typst.compile_svg("solid", "#cuboid(50, 30, 20)") == small
 
 
 def test_a_figure_of_no_family_drawn_as_svg(monkeypatch):
