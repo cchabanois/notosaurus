@@ -26,7 +26,7 @@ const FIGURE_LIBRARIES = [
   { name: "zap", version: "0.6.0", licence: "MIT", url: "https://typst.app/universe/package/zap" },
   { name: "zero", version: "0.6.1", licence: "MIT", url: "https://typst.app/universe/package/zero" },
   // The maps' (notosaurus-atlas, tools/atlas.py): our map function, Natural Earth's data
-  { name: "notosaurus-atlas", version: "0.1.0", licence: "AGPL-3.0-or-later", url: "https://github.com/cchabanois/notosaurus/blob/main/tools/atlas.py" },
+  { name: "notosaurus-atlas", version: "0.2.0", licence: "AGPL-3.0-or-later", url: "https://github.com/cchabanois/notosaurus/blob/main/tools/atlas.py" },
   { name: "Natural Earth", version: "5.1.2", licence: "public-domain", url: "https://www.naturalearthdata.com/about/terms-of-use/" },
 ];
 

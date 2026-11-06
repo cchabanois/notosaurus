@@ -611,6 +611,54 @@ def test_a_map_stays_light():
         assert len(svg) < figures.MAX_SIZE / 2, country
 
 
+def test_a_map_finds_rivers_reliefs_waters_and_regions_by_any_name():
+    """A river, a relief, a water and a region by their names in the page's languages (the
+    rivers Natural Earth names in English only too: "Rhin"), drawn the same."""
+    cases = {
+        "rivers": ("Rhin", "Rhine", "Rhein"),
+        "reliefs": ("Alpes", "Alps", "Alpi"),
+        "waters": ("Manche", "English Channel"),
+        "regions": ("Californie", "California"),
+    }
+    for layer, written in cases.items():
+        country = "États-Unis" if layer == "regions" else "France"
+        maps = {
+            figures_typst.compile_svg("map", f'#map(countries: ("{country}",), {layer}: ("{w}",), labels: false)')
+            for w in written
+        }
+        assert len(maps) == 1, layer
+
+
+def test_a_map_frames_what_it_is_asked_and_names_it():
+    """Without a country, a river is the map (the Danube, Germany to the Black Sea); a sea
+    beside the countries framed is named in the frame (the Atlantic beside France)."""
+    danube = figures_typst.compile_svg("map", '#map(rivers: ("Danube",))')
+    france = figures_typst.compile_svg("map", '#map(countries: ("France",))')
+    assert danube != france
+    with_sea = figures_typst.compile_svg("map", '#map(countries: ("France",), waters: ("océan Atlantique",))')
+    assert len(re.findall(r"<use|<path", with_sea)) > len(re.findall(r"<use|<path", france))  # its name's glyphs
+
+
+def test_a_region_needs_its_country_and_a_name_the_atlas_has():
+    with pytest.raises(figures_typst.Unusable, match=r"put it in countries"):
+        figures_typst.compile_svg("map", '#map(regions: ("Bretagne",))')
+    with pytest.raises(figures_typst.Unusable, match=r"no region called .Atlantis."):
+        figures_typst.compile_svg("map", '#map(countries: ("France",), regions: ("Atlantis",))')
+    with pytest.raises(figures_typst.Unusable, match=r"no river called .Trifouille."):
+        figures_typst.compile_svg("map", '#map(countries: ("France",), rivers: ("Trifouille",))')
+
+
+def test_a_map_with_everything_stays_within_a_figures_size():
+    """Rivers, reliefs, waters and regions drawn as the countries are (cut to the frame, thinned):
+    a full map of France, or the world's oceans, within a figure's size."""
+    for body in (
+        '#map(countries: ("France",), regions: ("Bretagne", "Occitanie"), rivers: ("Loire", "Seine", "Rhône"), '
+        'reliefs: ("Alpes", "Pyrénées"), waters: ("Manche", "mer Méditerranée"), cities: ("Paris", "Lyon"))',
+        '#map(waters: ("océan Pacifique", "océan Atlantique", "océan Indien"))',
+    ):
+        assert len(figures.clean(figures_typst.compile_svg("map", body))) < figures.MAX_SIZE, body
+
+
 def test_the_atlas_folds_names_as_typst_does():
     """tools/atlas.py and the map function fold a name the same way (one table of marked
     letters, in the atlas): a city found with its marks and ligatures, or without."""
