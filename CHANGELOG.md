@@ -9,6 +9,7 @@ Each pull request's entries (the `## Changelog` of its description) are put unde
 
 ### Added
 
+- Geography maps show regions, rivers, mountains and seas too.
 - Solids in perspective (a cube, a cuboid, a prism, a pyramid): drawn exactly, their hidden edges dashed where they should be, their vertices and lengths named.
 - Reading the time, and saying it in a language ("It's a quarter to nine", "Es ist halb elf"): a card asks "What time is it?" with a real clock, its hands exactly at the time.
 - Geography cards show a real map: the country, its neighbours, its cities.
