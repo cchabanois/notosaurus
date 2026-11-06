@@ -9,6 +9,7 @@ Each pull request's entries (the `## Changelog` of its description) are put unde
 
 ### Added
 
+- Reading the time, and saying it in a language ("It's a quarter to nine", "Es ist halb elf"): a card asks "What time is it?" with a real clock, its hands exactly at the time.
 - Geography cards show a real map: the country, its neighbours, its cities.
 
 ### Changed
