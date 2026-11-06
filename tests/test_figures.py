@@ -297,6 +297,33 @@ def test_typst_turned_off_figures_drawn_as_svg(monkeypatch):
     assert family(AIConfig(llm="gemini", typst=False)) == "other"
 
 
+def test_a_figure_on_the_front_is_told_its_cards_answer(monkeypatch):
+    """A figure goes on the front: drawn knowing the card's question and answer, so that it
+    writes nothing giving the answer away, even where its description (shared by the cards
+    of one chart: "each sector with its count") writes it. On the back: told nothing."""
+    from notosaurus_core.models import Card
+
+    told = {}
+
+    async def drawn(s, text, description, family, light):
+        told["text"] = text
+        return llm.MadeFigure("<svg/>", "svg", family, False)
+
+    monkeypatch.setattr(llm, "_drawn", drawn)
+    description = "Diagramme circulaire : Bus 20, À pied 10, chaque secteur avec son effectif"
+    for on_back in (False, True):
+        card = Card(
+            front="Combien d'élèves viennent à pied ?",
+            back="10",
+            figure=description,
+            figure_kind="chart",
+            picture_on_back=on_back,
+        )
+        asyncio.run(pictures.card_picture(AIConfig(llm="gemini"), card))
+        assert ("Combien d'élèves viennent à pied ? → 10" in told["text"]) != on_back
+        assert ("gives this answer away" in told["text"]) != on_back
+
+
 def test_figures_turned_off_refused():
     """The relay's figures.draw switch (AIConfig.figures): refused before any AI call."""
     with pytest.raises(AppError) as refused:
