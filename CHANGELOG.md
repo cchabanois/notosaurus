@@ -7,6 +7,10 @@ Each pull request's entries (the `## Changelog` of its description) are put unde
 
 ## [Unreleased]
 
+### Added
+
+- Geography cards show a real map: the country, its neighbours, its cities.
+
 ### Changed
 
 - The Android app is about a third smaller.
