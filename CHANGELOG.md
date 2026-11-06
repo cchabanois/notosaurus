@@ -17,6 +17,10 @@ Each pull request's entries (the `## Changelog` of its description) are put unde
 
 - The Android app is about a third smaller.
 
+### Fixed
+
+- Number lines drawn cleaner: the line ends at its last graduation, decimals written with their comma, nothing written that the card didn't ask for.
+
 ## [1.1.1] - 2026-11-04
 
 ### Changed
