@@ -2527,10 +2527,11 @@
               "chemistry",
               "timeline",
               "map",
+              "clock",
               "other"
             ],
             "title": "Figure Kind",
-            "description": "With a figure, which kind it is: \"geometry\": points, segments, lines, circles, polygons, angles, their marks (a theorem, a construction), a number line with its points; \"graph\": the graph of one or more functions in a frame; \"sets\": a Venn diagram of two or three sets; \"diagram\": boxes side by side joined by arrows (a flowchart, a cycle, a chain, a classification), never shapes inside one another; \"circuit\": an electric circuit; \"chemistry\": a molecule's formula written with its atoms' symbols and bonds (developed, semi-developed, skeletal, a ring), never a model of balls; \"timeline\": dates on a line; \"map\": a geographic map of countries and their cities (where a country or a city is); \"other\": anything else (a table, a labelled drawing, zones nested or overlapping, a solid in perspective, a molecular model of coloured balls…). Empty otherwise.",
+            "description": "With a figure, which kind it is: \"geometry\": points, segments, lines, circles, polygons, angles, their marks (a theorem, a construction), a number line with its points; \"graph\": the graph of one or more functions in a frame; \"sets\": a Venn diagram of two or three sets; \"diagram\": boxes side by side joined by arrows (a flowchart, a cycle, a chain, a classification), never shapes inside one another; \"circuit\": an electric circuit; \"chemistry\": a molecule's formula written with its atoms' symbols and bonds (developed, semi-developed, skeletal, a ring), never a model of balls; \"timeline\": dates on a line; \"map\": a geographic map of countries and their cities (where a country or a city is); \"clock\": a clock's face showing a time (reading the time); \"other\": anything else (a table, a labelled drawing, zones nested or overlapping, a solid in perspective, a molecular model of coloured balls…). Empty otherwise.",
             "default": ""
           },
           "fun_fact": {
@@ -3818,10 +3819,11 @@
               "chemistry",
               "timeline",
               "map",
+              "clock",
               "other"
             ],
             "title": "Figure Kind",
-            "description": "A figure: which kind it is, \"geometry\": points, segments, lines, circles, polygons, angles, their marks (a theorem, a construction), a number line with its points; \"graph\": the graph of one or more functions in a frame; \"sets\": a Venn diagram of two or three sets; \"diagram\": boxes side by side joined by arrows (a flowchart, a cycle, a chain, a classification), never shapes inside one another; \"circuit\": an electric circuit; \"chemistry\": a molecule's formula written with its atoms' symbols and bonds (developed, semi-developed, skeletal, a ring), never a model of balls; \"timeline\": dates on a line; \"map\": a geographic map of countries and their cities (where a country or a city is); \"other\": anything else (a table, a labelled drawing, zones nested or overlapping, a solid in perspective, a molecular model of coloured balls…). Empty for a picture.",
+            "description": "A figure: which kind it is, \"geometry\": points, segments, lines, circles, polygons, angles, their marks (a theorem, a construction), a number line with its points; \"graph\": the graph of one or more functions in a frame; \"sets\": a Venn diagram of two or three sets; \"diagram\": boxes side by side joined by arrows (a flowchart, a cycle, a chain, a classification), never shapes inside one another; \"circuit\": an electric circuit; \"chemistry\": a molecule's formula written with its atoms' symbols and bonds (developed, semi-developed, skeletal, a ring), never a model of balls; \"timeline\": dates on a line; \"map\": a geographic map of countries and their cities (where a country or a city is); \"clock\": a clock's face showing a time (reading the time); \"other\": anything else (a table, a labelled drawing, zones nested or overlapping, a solid in perspective, a molecular model of coloured balls…). Empty for a picture.",
             "default": ""
           },
           "search": {

@@ -523,6 +523,7 @@ def test_credited_with_what_its_typst_uses():
     assert figures_typst.made_with("graph", "#lq.diagram(lq.plot((0, 1), (0, 1)))")[1:] == ["lilaq 0.6.0"]
     timeline = "#timeline(start: 1914, end: 1918, events: ((1916, [Verdun]),))"  # our function: what it uses
     assert figures_typst.made_with("timeline", timeline)[1:] == ["cetz 0.5.2"]
+    assert figures_typst.made_with("clock", "#clock(10, 25)")[1:] == ["cetz 0.5.2"]
     assert figures_typst.made_with("other", balls) == []
 
 
@@ -680,6 +681,40 @@ def test_a_timelines_texts_never_on_one_another():
     )
     height = lambda svg: float(re.search(r'height="([\d.]+)', svg).group(1))  # noqa: E731
     assert height(crowded) > height(one) * 1.5
+
+
+def hand_angle(png: bytes, colour: tuple[int, int, int]) -> float:
+    """Where a clock's hand of that colour points: degrees from twelve o'clock, clockwise."""
+    import io
+    import math
+
+    from PIL import Image
+
+    image = Image.open(io.BytesIO(png)).convert("RGB")
+    near = lambda p: sum(abs(a - b) for a, b in zip(p, colour, strict=True)) < 120  # noqa: E731
+    points = [(x, y) for y in range(image.height) for x in range(image.width) if near(image.getpixel((x, y)))]
+    dx = sum(x for x, _ in points) / len(points) - image.width / 2
+    dy = sum(y for _, y in points) / len(points) - image.height / 2
+    return math.degrees(math.atan2(dx, -dy)) % 360
+
+
+@pytest.mark.parametrize(("hour", "minute"), [(10, 30), (3, 0), (8, 45), (15, 20)])
+def test_a_clocks_hands_placed_by_the_time(hour, minute):
+    """The hands where the time puts them, the hour hand between its hours as the minutes go
+    by (half past ten: halfway from 10 to 11), never by eye."""
+    body = f"#clock({hour}, {minute}, numbers: false, hour-color: rgb(255, 0, 0), minute-color: rgb(0, 0, 255))"
+    png = figures.to_png(figures.clean(figures_typst.compile_svg("clock", body)))
+    assert abs(hand_angle(png, (255, 0, 0)) - (hour % 12 + minute / 60) * 30) < 3
+    assert abs(hand_angle(png, (0, 0, 255)) - minute * 6) % 360 < 3
+
+
+def test_a_clock_at_an_impossible_time_refused():
+    """A time that isn't one (25 h, 60 min, a half hour as 10.5): refused, saying why, for the
+    AI to write it again; never a face drawn at a guess. 15 h is 3 o'clock's face."""
+    for body in ("#clock(25, 0)", "#clock(10, 60)", "#clock(10.5, 0)"):
+        with pytest.raises(figures_typst.Unusable, match="whole number"):
+            figures_typst.compile_svg("clock", body)
+    assert figures_typst.compile_svg("clock", "#clock(15, 30)") == figures_typst.compile_svg("clock", "#clock(3, 30)")
 
 
 def test_a_figure_of_no_family_drawn_as_svg(monkeypatch):
