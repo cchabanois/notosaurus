@@ -582,6 +582,45 @@ def test_each_familys_rule_and_typst_in_their_files():
         assert typst.split(figures_typst.EXAMPLE)[1].strip() in made.rules and "{example}" not in made.rules
 
 
+def test_a_map_finds_its_places_by_any_name():
+    """A country by its name in any of the page's languages, or its code: the same map; a city
+    as the lesson writes it ("Séville", "Seville"): the same dot."""
+    maps = {
+        figures_typst.compile_svg("map", f'#map(countries: ("{country}",), cities: ("{city}",), labels: false)')
+        for country, city in (("Espagne", "Séville"), ("Spain", "Seville"), ("ESP", "SEVILLE"))
+    }
+    assert len(maps) == 1
+
+
+def test_a_place_the_atlas_lacks_said_never_guessed():
+    """A city the atlas doesn't have (not a capital nor among its country's largest): the
+    figure stops, saying so, for the AI to leave it out; never a dot placed by guess."""
+    with pytest.raises(figures_typst.Unusable, match=r"no city called .Trifouilly."):
+        figures_typst.compile_svg("map", '#map(countries: ("France",), cities: ("Trifouilly",))')
+    with pytest.raises(figures_typst.Unusable, match=r"no country called .Atlantide."):
+        figures_typst.compile_svg("map", '#map(countries: ("Atlantide",))')
+
+
+def test_a_map_stays_light():
+    """Only what the frame shows is drawn (the countries cut to it, a point the eye wouldn't
+    see skipped), its numbers to the tenth: well within a figure's size, Russia included."""
+    for country in ("France", "United States of America", "Russia"):
+        svg = figures.clean(figures_typst.compile_svg("map", f'#map(countries: ("{country}",))'))
+        assert len(svg) < figures.MAX_SIZE / 2, country
+
+
+def test_the_atlas_folds_names_as_typst_does():
+    """tools/atlas.py and the map function fold a name the same way (one table of marked
+    letters, in the atlas): a city found with its marks and ligatures, or without."""
+    for written, plain in (("Łódź", "Lodz"), ("Saint-Pétersbourg", "saint petersbourg"), ("Kraków", "KRAKOW")):
+        country = "Russie" if written.startswith("Saint") else "Pologne"
+        a, b = (
+            figures_typst.compile_svg("map", f'#map(countries: ("{country}",), cities: ("{w}",), labels: false)')
+            for w in (written, plain)
+        )
+        assert a == b, written
+
+
 def test_the_graph_rules_example_is_orthonormal():
     """The graph rule asks for an orthonormal frame, width / height = xlim's length / ylim's,
     exactly: its example does so (the model copies the example before it reads the rule)."""

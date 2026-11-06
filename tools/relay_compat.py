@@ -23,6 +23,9 @@ RELEASES = ROOT / "core" / "relay-api-releases"
 # Request limits an old app may reach: they may grow, not shrink (and the minimums the other way)
 LIMITS_UP = ("maxLength", "maxItems", "maximum", "exclusiveMaximum")
 LIMITS_DOWN = ("minLength", "minItems", "minimum", "exclusiveMinimum")
+# Answer fields whose values the apps never read, only keep and send back to the relay that
+# wrote them (static/app-pictures.js, Pictures.kt): a new value breaks no old app
+CARRIED = ("figure_kind",)
 
 
 def problems(old: dict, new: dict) -> list[str]:
@@ -122,7 +125,7 @@ def _compare(old_doc, new_doc, old, new, where, reads, found, seen=None):
         before, after = set(old.get("enum", [])), set(new.get("enum", []))
         if not reads and "enum" in new and before - after:
             found.append(f"{where}: values no longer taken {sorted(before - after)}")
-        if reads and after - before and "enum" in old:
+        if reads and after - before and "enum" in old and not where.endswith(tuple(f".{f}" for f in CARRIED)):
             found.append(f"{where}: new values an old app doesn't know {sorted(after - before)}")
     if not reads:
         for limit in LIMITS_UP:
