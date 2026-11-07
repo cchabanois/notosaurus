@@ -55,9 +55,10 @@
     rgb("#8fd3c9"), rgb("#e8b48f"),
   )
   let txt(body) = text(10pt, font: "DejaVu Sans", body)
-  // a number as the figure's language writes it: whole, or with its decimal separator
-  let num(x) = {
-    let r = calc.round(x, digits: 1)
+  // a number as the figure's language writes it: whole, or with its decimal separator; to
+  // the thousandth (a probability, 0,078), an angle to the tenth
+  let num(x, digits: 3) = {
+    let r = calc.round(x, digits: digits)
     if calc.fract(r) == 0 { str(int(r)) } else { str(r).replace(".", decimal-separator) }
   }
   // A graduation's step: a round one giving at most `most` steps over `span`
@@ -171,17 +172,22 @@
       }
     } else if kind == "bars" {
       let top = calc.max(..values.map(v => v.at(1)))
-      let step = if step != auto { step } else {
+      // counts by whole steps; values under 1 or with decimals (a probability law) by tenths,
+      // hundredths…: never a graduation 0 and 1 alone
+      let whole = values.all(v => calc.fract(v.at(1)) == 0)
+      let step = if step != auto { step } else if whole {
         (1, 2, 5, 10, 20, 25, 50, 100, 200, 250, 500, 1000).find(s => top / s <= 12)
+      } else {
+        (0.01, 0.02, 0.05, 0.1, 0.2, 0.25, 0.5, 1, 2, 5, 10, 20, 25, 50, 100, 200, 250, 500, 1000).find(s => top / s < 10)
       }
-      let ymax = calc.ceil(top / step) * step
+      let ymax = calc.ceil(top / step - 1e-9) * step
       let h = 4.0
       let unit = h / ymax
       // each bar's room: its label's width at least, so that long names never overlap
       let slot = calc.max(1.5, ..values.map(v => measure(txt(v.at(0))).width / 1cm + 0.3))
       let w = slot * values.len()
       // the graduation: a tick and a light line at each step, so that a count is read, not guessed
-      for k in range(1, int(ymax / step) + 1) {
+      for k in range(1, int(calc.round(ymax / step)) + 1) {
         let y = k * step * unit
         line((0, y), (w, y), stroke: 0.4pt + luma(205))
         line((-0.08, y), (0, y), stroke: 0.6pt)
@@ -224,7 +230,7 @@
           if shown(t.label) {
             linebreak()
             num(t.count)
-            if degrees { " (" + num(t.angle / 1deg) + "°)" }
+            if degrees { " (" + num(t.angle / 1deg, digits: 1) + "°)" }
           }
         }))
         let size = measure(body)

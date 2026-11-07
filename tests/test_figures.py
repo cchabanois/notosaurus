@@ -1140,6 +1140,21 @@ def test_a_graphs_x_axis_name_clear_of_its_last_number():
     assert name[0] - last > 9  # pt: a digit's width and a gap, at least
 
 
+@pytest.mark.parametrize("name", ["lambda", "pi", "Delta"])
+def test_a_variable_named_like_a_symbol_leaves_the_symbol_in_formulas(name):
+    """`#let lambda = 1.5`, then `$lambda$` for the arrow's name: Typst read the variable,
+    "1.5" written where λ was meant (a wavelength). The variable renamed where code reads it:
+    the formula's name is the symbol again; `#lambda` in it, and the code, keep its value."""
+    with_variable = f"#let {name} = 1.5\n$x = {name}$ #box(width: {name} * 1cm)"
+    meant = f"#let other = 1.5\n$x = {name}$ #box(width: other * 1cm)"
+    assert figures_typst.compile_svg("graph", with_variable) == figures_typst.compile_svg("graph", meant)
+    value = f"#let {name} = 1.5\n$#{name}$"
+    assert figures_typst.compile_svg("graph", value) == figures_typst.compile_svg("graph", "$1.5$")
+    # a word in a text, a field (calc.pi) and a longer name untouched
+    text = f"#let {name} = 1\n#text[le mot {name}] #calc.pi #let {name}-max = 2"
+    assert f"le mot {name}]" in figures_typst.source("graph", text) and "calc.pi" in figures_typst.source("graph", text)
+
+
 def test_the_diagram_rules_edges_compile():
     """Every edge the diagram rule shows (its line styles, a label on its arrow, two arrows
     side by side) compiles between two nodes: a fragment out of step with fletcher (a "bend"
@@ -1271,6 +1286,25 @@ def test_a_solids_hidden_edges_computed(body, hidden):
     assert svg.count("stroke-dasharray") == hidden
 
 
+def test_a_coordinate_frame_drawn_as_the_geometry_rule_says():
+    """A circle or a line in a coordinate frame: the rule's own calls compile (the AI wrote
+    ctz-draw-axes(-2, 6, -3, 5), positional, refused by Typst 3 times in 3: no frame was
+    described), the axes' arrows past the grid's last numbers."""
+    rule = (figures_typst.RULES / "geometry.md").read_text(encoding="utf-8")
+    calls = re.findall(r"`(ctz-draw-(?:grid|axes)\(xmin:[^`]*\))`", rule)
+    assert len(calls) == 2
+    body = '#ctz-canvas({{\n  ctz-init()\n  {}\n  {}\n  ctz-def-points(Ω: (2, 1))\n  ctz-draw-circle-r("Ω", 3)\n}})'
+    assert figures.clean(figures_typst.compile_svg("geometry", body.format(*calls))).startswith("<svg")
+
+
+def test_a_trigonometric_circle_with_one_angle():
+    """One angle written without its trailing comma, ((60, $M$)) (the AI's, refused 3 times in
+    3: Typst reads a pair, not a list of one): the same circle as ((60, $M$),)."""
+    circle = "#ctz-canvas({{ ctz-init()\n ctz-draw-unit-circle(angles: {}, project: (60, $1/2$, $sqrt(3)/2$)) }})"
+    one = figures_typst.compile_svg("geometry", circle.format("((60, $M$),)"))
+    assert figures_typst.compile_svg("geometry", circle.format("((60, $M$))")) == one
+
+
 def test_a_section_outside_its_solid_refused():
     """A section's plane outside the solid, or parallel to a face it hasn't: refused, saying
     why, for the AI to write it again; never a solid drawn without it."""
@@ -1295,6 +1329,21 @@ def test_a_charts_angles_and_heights_come_from_its_counts():
     assert pie != figures_typst.compile_svg("chart", '#chart(kind: "pie", values: (("A", 3), ("B", 1)))')
     for kind in ("bars", "pie", "semi"):
         figures_typst.compile_svg("chart", f'#chart(kind: "{kind}", values: (("A", 230), ("B", 5), ("C", 0)))')
+
+
+@pytest.mark.parametrize(
+    ("values", "lines"),
+    [
+        ('(("0", 0.2), ("1", 0.5), ("2", 0.3))', 5),  # by tenths up to 0.5
+        ('(("0", 0.078), ("1", 0.259), ("2", 0.346), ("3", 0.23))', 7),  # by 0.05 up to 0.35
+        ('(("A", 12), ("B", 7), ("C", 3))', 12),  # counts: by units, as before
+    ],
+)
+def test_a_bar_charts_graduation_reads_its_values(values, lines):
+    """A probability law's bars (values under 1) graduated by tenths or hundredths, a light
+    line at each: never 0 and 1 alone, where no value can be read (6 drawings in 6)."""
+    svg = figures_typst.compile_svg("chart", f'#chart(kind: "bars", values: {values})')
+    assert svg.count('stroke="#cdcdcd"') == lines
 
 
 def test_a_charts_counts_written_only_when_asked():
