@@ -22,6 +22,7 @@ Each pull request's entries (the `## Changelog` of its description) are put unde
 
 ### Changed
 
+- Figures drawn with Typst 0.15.1 (bug fixes; no figure changes).
 - Algorithm flowcharts are drawn with their usual shapes: rounded start and end, a diamond for each test.
 - Figures drawn in Typst use the same plain font as the other figures, and timelines' text is larger.
 - The automatic instruction makes cards that read a lesson's charts and curves (its tables of counts or of measures), the chart or the curve redrawn on the front.
