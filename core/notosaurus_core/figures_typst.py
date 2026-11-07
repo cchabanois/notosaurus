@@ -492,6 +492,11 @@ def _no_fractions(body: str) -> str:
     return TRACKS.sub(lambda m: f"{m.group(1)}: {FRACTION.sub('auto', m.group(2))}", body)
 
 
+# A diagram drawn by the preamble's own `diagram-apart` where it has one (graph: the ticks'
+# names kept apart, computed), the AI writing lilaq's `lq.diagram(…)` as lilaq documents it
+LQ_DIAGRAM = re.compile(r"(?<![\w.-])lq\.diagram(?=\s*\()")
+
+
 def source(family: str, body: str) -> str:
     """The Typst document of a figure of `family`: its preamble, then what the AI wrote."""
     # "<" and ">" written as HTML's entities (an arrow "-|&gt;"): Typst has none of them
@@ -504,6 +509,8 @@ def source(family: str, body: str) -> str:
     separator = decimal_separator(body)
     body = _decimal_commas(body, separator == ",")
     preamble = FAMILIES[family].preamble.replace(SEPARATOR, f'#let decimal-separator = "{separator}"')
+    if "#let diagram-apart(" in preamble:
+        body = LQ_DIAGRAM.sub("diagram-apart", body)
     return FONT + preamble + body.strip() + "\n"
 
 

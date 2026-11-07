@@ -36,8 +36,10 @@
 // The trigonometric circle: its axes through O, the circle of radius 1 (drawn `r` long),
 // a point at each angle given in degrees, named outside the circle along its radius; an
 // angle `project`ed: its radius drawn, its cosine and sine dotted down to the axes and
-// written there. Angles placed by their values, never by eye.
-#let ctz-draw-unit-circle(angles: (), project: none, r: 3) = {
+// written there; `join: true`, its points joined in their order, the polygon closed (a
+// regular polygon inscribed: the n-th roots of unity). Angles placed by their values, never
+// by eye.
+#let ctz-draw-unit-circle(angles: (), project: none, join: false, r: 3) = {
   import cetz.draw: *
   // one angle written without its trailing comma, ((60, $M$)): Typst's pair, not a list of one
   let angles = if angles.len() > 0 and type(angles.at(0)) != array { (angles,) } else { angles }
@@ -57,11 +59,37 @@
     content((p.at(0), if p.at(1) >= 0 { -0.25 } else { 0.25 }), cos-label, anchor: if p.at(1) >= 0 { "north" } else { "south" })
     content((if p.at(0) >= 0 { -0.25 } else { 0.25 }, p.at(1)), sin-label, anchor: if p.at(0) >= 0 { "east" } else { "west" })
   }
+  if join and angles.len() > 1 {
+    line(..angles.map(((a, _)) => at(a, r)), close: angles.len() > 2)
+  }
   for (a, label) in angles {
     circle(at(a, r), radius: 0.07, fill: black)
     // on an axis, its name turned a little off it (on the axis, the line ran through it)
     let off = if calc.rem(calc.abs(a), 90) == 0 { 10 } else { 0 }
     content(at(a + off, r + 0.5), label)
+  }
+}
+// A coordinate frame's axes graduated and numbered at the step's multiples only (ctz-euclide
+// counts its steps from the axis's start: from −1.5, "−1.5, −0.5, 0.5", numbers between the
+// units, on the points and the circle), each number a little smaller, clear of its axis.
+#let ctz-axes-drawn = ctz-draw-axes
+#let ctz-draw-axes(xmin: -5, xmax: 5, ymin: -5, ymax: 5, xstep: 1, ystep: 1, stroke: black + 1pt, tick-size: 0.1, ticks: true, labels: true, x-label: $x$, y-label: $y$, origin-label: $O$, arrow: true) = {
+  let (line, content) = (cetz.draw.line, cetz.draw.content)
+  ctz-axes-drawn(xmin: xmin, xmax: xmax, ymin: ymin, ymax: ymax, stroke: stroke, ticks: false, labels: false, arrow: arrow)
+  let multiples(low, high, step) = range(int(calc.ceil(low / step - 1e-9)), int(calc.floor(high / step + 1e-9)) + 1).map(i => i * step).filter(v => calc.abs(v) > 1e-9 and v < high - step / 4)
+  let written(v) = if calc.fract(v) == 0 { if v < 0 [−#str(int(-v))] else [#str(int(v))] } else { str(v) }
+  for x in multiples(xmin, xmax, xstep) {
+    if ticks { line((x, -tick-size), (x, tick-size), stroke: stroke) }
+    if labels { content((x, -tick-size - 0.08), text(size: 8pt, written(x)), anchor: "north") }
+  }
+  for y in multiples(ymin, ymax, ystep) {
+    if ticks { line((-tick-size, y), (tick-size, y), stroke: stroke) }
+    if labels { content((-tick-size - 0.08, y), text(size: 8pt, written(y)), anchor: "east") }
+  }
+  if labels {
+    content((xmax + 0.3, 0), x-label)
+    content((0, ymax + 0.3), y-label)
+    if origin-label != none { content((-0.3, -0.3), origin-label) }
   }
 }
 // ---- What the AI writes, from here (the rule's example: everything above is given)
