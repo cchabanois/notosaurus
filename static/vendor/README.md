@@ -8,7 +8,7 @@ licence next to it.
 | Folder | What | npm package | Licence |
 |---|---|---|---|
 | `alpinejs/` | the pages' framework (`cdn.min.js`) | `alpinejs@3.14.9`, `dist/cdn.min.js` | MIT |
-| `katex/` | formulas drawn on the cards' previews: script, style, fonts (WOFF2 only) | `katex@0.19.0`, `dist/` | MIT |
+| `katex/` | formulas drawn on the cards' previews: script, style, fonts (WOFF2 only), `mhchem.min.js` (chemistry: `\ce{…}`) | `katex@0.19.0`, `dist/` (`contrib/mhchem.min.js`) | MIT |
 | `pdfjs/` | PDFs read in the page (see its README) | `pdfjs-dist@6.4.299`, `build/` | Apache-2.0 |
 
 To update one: take the same files from a newer version of its package the same way, check its
