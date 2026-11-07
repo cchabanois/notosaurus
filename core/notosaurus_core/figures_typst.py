@@ -5,7 +5,8 @@ circuits with zap, chemistry with alchemist, timelines with cetz (our timeline f
 maps with our atlas (notosaurus-atlas: Natural Earth's countries and cities, tools/atlas.py),
 clocks with cetz (our clock function: its hands placed by the time), solids with cetz (our
 cuboid, prism, pyramid in cavalier perspective, their hidden edges computed; cylinder, cone,
-sphere as textbooks draw them, in proportion).
+sphere as textbooks draw them, in proportion), sequences aligned in Typst (our sequences
+function: letters in columns, their differences framed, computed).
 What can be computed is, never placed by eye. Each family's rule and Typst: typst_rules/.
 
 The family is the one the AI gave with the figure's description (models.Card.figure_kind),
@@ -89,6 +90,7 @@ FAMILIES: dict[str, Family] = {
         "clock",
         "solid",
         "chart",
+        "sequence",
     )
 }
 
@@ -108,6 +110,7 @@ FigureKind = Literal[
     "clock",
     "solid",
     "chart",
+    "sequence",
     "other",
 ]
 
