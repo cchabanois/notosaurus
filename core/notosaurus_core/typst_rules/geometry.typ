@@ -39,6 +39,8 @@
 // written there. Angles placed by their values, never by eye.
 #let ctz-draw-unit-circle(angles: (), project: none, r: 3) = {
   import cetz.draw: *
+  // one angle written without its trailing comma, ((60, $M$)): Typst's pair, not a list of one
+  let angles = if angles.len() > 0 and type(angles.at(0)) != array { (angles,) } else { angles }
   let at(a, d) = (d * calc.cos(a * 1deg), d * calc.sin(a * 1deg))
   line((-r - 0.6, 0), (r + 0.8, 0), mark: (end: "stealth", fill: black))
   line((0, -r - 0.6), (0, r + 0.8), mark: (end: "stealth", fill: black))

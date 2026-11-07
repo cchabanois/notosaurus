@@ -9,6 +9,7 @@ Each pull request's entries (the `## Changelog` of its description) are put unde
 
 ### Added
 
+- Additive and subtractive colour synthesis drawn exactly: each overlap's colour computed; the colour a card asks for left as a question mark.
 - Charts mark an event or a period on a curve, and draw a second measure with its own unit on a right axis.
 - Solids cut by a plane (a cuboid, a prism, a pyramid, a cylinder, a cone, a ball): the section drawn where it is, its hidden sides dashed.
 - Maps for history lessons: their places (Constantinople, Aix-la-Chapelle, Cordoue, Troie, Verdun…) and cities' former names (Leningrad, Saïgon, Pékin), in every language of the page.
@@ -31,6 +32,10 @@ Each pull request's entries (the `## Changelog` of its description) are put unde
 
 ### Fixed
 
+- Figures: a Greek letter in a figure's formula (λ, π, α) is no longer replaced by a number the AI named after it.
+- A circle or points in a coordinate frame drawn with their graduated axes, instead of a rough drawing.
+- A trigonometric circle with a single angle is drawn.
+- A probability law's bar chart is graduated by tenths or hundredths, its values readable.
 - Figures: numbers written as the lesson's language writes them (a decimal comma in French, German…, a point in English), never LaTeX's `{,}`.
 - The trigonometric circle: its points at their angles, its cosine and sine projected, no stray names.
 - Number lines: an interval's brackets are turned the right way ([2 ; +∞[, ]2 ; 7[).
