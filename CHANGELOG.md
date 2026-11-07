@@ -31,6 +31,8 @@ Each pull request's entries (the `## Changelog` of its description) are put unde
 
 ### Fixed
 
+- The trigonometric circle: its points at their angles, its cosine and sine projected, no stray names.
+- Number lines: an interval's brackets are turned the right way ([2 ; +∞[, ]2 ; 7[).
 - Sets inside one another (ℕ ⊂ ℤ ⊂ ℝ, a classification's groups): each element drawn in its own ring.
 - Lewis structures show their atoms' non-bonding pairs.
 - A chart's long category names no longer overlap, and a curve shows only the values the lesson gives.
