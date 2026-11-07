@@ -153,8 +153,8 @@ a pull request documents its feature with its code, and the page goes online wit
 A pull request only builds the site, to check it. Two exceptions: `docs/public/relay.json`
 (where the relays are, read by every installed app) is always `main`'s, published as soon as
 it changes there; and a fix that can't wait for the next release is published by running the
-workflow by hand (from `main`, the tag or branch to build as its input). It needs Node.js only to build the site; Notosaurus
-itself doesn't use it.
+workflow by hand (from `main`, the tag or branch to build as its input). It needs Node.js
+only to build the site; Notosaurus itself doesn't use it.
 
 ```sh
 cd docs
