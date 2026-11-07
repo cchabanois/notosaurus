@@ -1160,12 +1160,11 @@ def test_a_line_marks_its_events_and_stretches():
     """An event at an x (a dashed line, its label under the axis) and a stretch of x
     (shaded), placed by the chart from their values: each changes the drawing."""
     line = '#chart(kind: "line", values: ((0, 2), (10, 8), (20, 4)), axes: ("t", "y"){})'
-    bare, marked, spanned = (
+    drawn = {
         figures_typst.compile_svg("chart", line.format(extra))
         for extra in ("", ', marks: ((10, "arrêt"),)', ', spans: ((2, 6, "effort"),)')
-    )
-    assert len({bare, marked, spanned}) == 3
-    assert "arrêt" in figures.clean(marked) or marked != bare
+    }
+    assert len(drawn) == 3
 
 
 def test_a_second_measure_on_its_own_axis():
@@ -1191,12 +1190,11 @@ def test_a_line_without_values_shows_no_numbers_on_its_y_axis():
 
 def test_a_bar_charts_long_names_never_overlap():
     """Each bar has its name's width at least: long names widen the chart, never overlap."""
-    from PIL import Image
 
     def width(names):
         values = ", ".join(f'("{n}", {i + 1})' for i, n in enumerate(names))
         svg = figures_typst.compile_svg("chart", f'#chart(kind: "bars", values: ({values},))')
-        return Image.open(io.BytesIO(figures.to_png(figures.clean(svg)))).width
+        return float(re.search(r'<svg[^>]*\swidth="([\d.]+)', svg).group(1))
 
     short = width(["A", "B", "C", "D", "E"])
     assert width(["Réfrigérateurs", "Congélateurs", "Lave-vaisselle", "Téléviseurs", "Aspirateurs"]) > 1.5 * short

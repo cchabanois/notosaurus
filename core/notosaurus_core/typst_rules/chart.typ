@@ -8,8 +8,14 @@
 // "line" some x), none by default: a card asking a count or a measure never shows it;
 // degrees: a sector's angle written with its count; axis: the bars' axis title (the
 // lesson's: "Effectif"); axes: a line's (x title, y title), their units with them; step:
-// the bars' graduation (auto: every unit up to 12, then 2, 5, 10…), a line's (x, y)
-#let chart(kind: "bars", values: (), written: (), degrees: false, axis: none, axes: (none, none), step: auto) = context {
+// the bars' graduation (auto: every unit up to 12, then 2, 5, 10…), a line's (x, y).
+// A line only: marks, events at an x ((x, label): a dashed line across, its label under the
+// axis); spans, stretches of x ((from, to, label): shaded); second, another measure with
+// its own unit on a right axis ((values: ((x, y), …), axis: title)), in another colour;
+// numbered: false when the description gives no value for y (only how it varies): the
+// line's shape without numbers on its axis
+#let chart(kind: "bars", values: (), written: (), degrees: false, axis: none, axes: (none, none), step: auto,
+  marks: (), spans: (), second: none, numbered: true) = context {
   assert(kind in ("bars", "pie", "semi", "line"), message: "kind is \"bars\", \"pie\", \"semi\" or \"line\"")
   let number(x) = type(x) in (int, float)
   if kind == "line" {
@@ -17,7 +23,21 @@
       values.len() > 1 and values.all(v => type(v) == array and v.len() == 2 and number(v.at(0)) and number(v.at(1))),
       message: "a line's values are (x, y) measures, two at least, each a number",
     )
+    assert(
+      marks.all(m => type(m) == array and m.len() == 2 and number(m.at(0))),
+      message: "marks are (x, label) pairs, x a number",
+    )
+    assert(
+      spans.all(s => type(s) == array and s.len() == 3 and number(s.at(0)) and number(s.at(1)) and s.at(0) < s.at(1)),
+      message: "spans are (from, to, label), from < to, both numbers",
+    )
+    assert(
+      second == none or (type(second) == dictionary and "values" in second and second.values.len() > 1
+        and second.values.all(v => type(v) == array and v.len() == 2 and number(v.at(0)) and number(v.at(1)))),
+      message: "second is (values: ((x, y), …), axis: title), two measures at least",
+    )
   } else {
+    assert(marks == () and spans == () and second == none, message: "marks, spans and second are a line's only")
     assert(
       values.len() > 0 and values.all(v => type(v) == array and v.len() == 2 and number(v.at(1)) and v.at(1) >= 0),
       message: "values are (label, count) pairs, each count a number",
@@ -45,12 +65,15 @@
     if kind == "line" {
       let xs = values.map(v => v.at(0))
       let ys = values.map(v => v.at(1))
+      // what else stands on the x axis: the events, the stretches, the second measure
+      let others = marks.map(m => m.at(0)) + spans.map(s => s.at(0)) + spans.map(s => s.at(1))
+      if second != none { others += second.values.map(v => v.at(0)) }
       // an axis's graduation (start, end, step): from 0, unless its values are far from it
       // (a heart rate: from the graduation under the lowest, the axes still meeting at the
       // bottom left; years: around them)
       // (x, measures taken at a round interval: that interval, every 2 minutes, every 5 years)
-      let graduation(vals, given, at-interval) = {
-        let (lo, hi) = (calc.min(..vals), calc.max(..vals))
+      let graduation(vals, given, at-interval, also: ()) = {
+        let (lo, hi) = (calc.min(..vals, ..also), calc.max(..vals, ..also))
         let from0 = lo <= 0 or lo <= 3 * nice(hi - calc.min(0, lo), 10)
         let first = if from0 { calc.min(0, lo) } else { lo }
         let sorted = vals.dedup().sorted()
@@ -63,7 +86,7 @@
         (calc.floor(first / s) * s, calc.ceil(hi / s) * s, s)
       }
       let (gx, gy) = if step == auto { (auto, auto) } else { step }
-      let (x0, x1, sx) = graduation(xs, gx, true)
+      let (x0, x1, sx) = graduation(xs, gx, true, also: others)
       let (y0, y1, sy) = graduation(ys, gy, false)
       let (w, h) = (8.0, 5.0)
       let px(x) = (x - x0) / (x1 - x0) * w
@@ -75,23 +98,73 @@
         line((x, 0), (x, -0.08), stroke: 0.6pt)
         content((x, -0.16), txt(num(x0 + k * sx)), anchor: "north")
       }
+      let (red, blue) = (rgb("#b03a2e"), rgb("#1f5fa8"))
+      // the stretches first, under everything
+      for (a, b, _) in spans {
+        rect((px(a), 0), (px(b), h), fill: rgb("#f6c76b").transparentize(55%), stroke: none)
+      }
       let m = int(calc.round((y1 - y0) / sy))
       for k in range(m + 1) {
         let y = py(y0 + k * sy)
         if k > 0 { line((0, y), (w, y), stroke: 0.4pt + luma(210)) }
-        line((0, y), (-0.08, y), stroke: 0.6pt)
-        content((-0.16, y), txt(num(y0 + k * sy)), anchor: "east")
+        if numbered {
+          line((0, y), (-0.08, y), stroke: 0.6pt)
+          content((-0.16, y), txt(num(y0 + k * sy)), anchor: "east")
+        }
       }
-      line((0, 0), (w + 0.35, 0), stroke: 0.8pt, mark: (end: ">", fill: black))
+      // a right axis: the x axis ends on it, its own numbers taking the room beyond
+      line((0, 0), (if second == none { w + 0.35 } else { w }, 0), stroke: 0.8pt,
+        mark: if second == none { (end: ">", fill: black) } else { none })
       line((0, 0), (0, h + 0.45), stroke: 0.8pt, mark: (end: ">", fill: black))
       let (xt, yt) = axes
-      if yt != none { content((0.12, h + 0.45), txt(yt), anchor: "west") }
-      if xt != none { content((w + 0.35, -0.55), txt(xt), anchor: "north-east") }
+      // two measures: each axis's title in its line's colour
+      let titled(body, paint) = text(fill: if second == none { black } else { paint }, txt(body))
+      if yt != none { content((0.12, h + 0.45), titled(yt, red), anchor: "west") }
+      // the x title under the axis's end; with events under the axis, at its arrow's tip
+      // instead (their labels' arrows would cross it)
+      if xt != none and (marks != () or spans != ()) and second == none {
+        content((w + 0.45, 0), txt(xt), anchor: "west")
+      } else if xt != none { content((w + 0.35, -0.55), txt(xt), anchor: "north-east") }
+      if second != none {
+        let zs = second.values.map(v => v.at(1))
+        let (z0, z1, sz) = graduation(zs, auto, false)
+        let pz(z) = (z - z0) / (z1 - z0) * h
+        for k in range(int(calc.round((z1 - z0) / sz)) + 1) {
+          let y = pz(z0 + k * sz)
+          line((w, y), (w + 0.08, y), stroke: 0.6pt)
+          content((w + 0.16, y), text(fill: blue, txt(num(z0 + k * sz))), anchor: "west")
+        }
+        line((w, 0), (w, h + 0.45), stroke: 0.8pt, mark: (end: ">", fill: black))
+        // its title at the right, a row higher when both titles don't fit side by side
+        if second.at("axis", default: none) != none {
+          let wide(body) = measure(txt(body)).width / 1cm
+          let both = (if yt == none { 0 } else { wide(yt) }) + wide(second.axis) + 0.5
+          let y = if both > w { h + 0.95 } else { h + 0.45 }
+          content((w + 0.12, y), titled(second.axis, blue), anchor: "east")
+        }
+        let points = second.values.map(((x, z)) => (px(x), pz(z)))
+        line(..points, stroke: (paint: blue, thickness: 1.3pt, join: "round", dash: "dashed"))
+        for p in points { rect((p.at(0) - 0.06, p.at(1) - 0.06), (p.at(0) + 0.06, p.at(1) + 0.06), fill: blue, stroke: none) }
+      }
       let points = values.map(((x, y)) => (px(x), py(y)))
-      line(..points, stroke: (paint: rgb("#b03a2e"), thickness: 1.3pt, join: "round"))
+      line(..points, stroke: (paint: red, thickness: 1.3pt, join: "round"))
       for (i, (x, y)) in values.enumerate() {
-        circle(points.at(i), radius: 0.06, fill: rgb("#b03a2e"), stroke: none)
+        circle(points.at(i), radius: 0.06, fill: red, stroke: none)
         if written == "all" or x in written { content((points.at(i).at(0), points.at(i).at(1) + 0.12), txt(num(y)), anchor: "south") }
+      }
+      // The events' and the stretches' labels under the axis, under its title's row, each
+      // at its x; one too close to the one before goes a row lower
+      let events = marks.map(((x, label)) => (x: px(x), label: label, mark: true))
+      events += spans.map(((a, b, label)) => (x: (px(a) + px(b)) / 2, label: label, mark: false))
+      let rows = ()  // each row's right edge so far
+      for e in events.sorted(key: e => e.x) {
+        let half = measure(txt(e.label)).width / 1cm / 2
+        let row = rows.position(r => r + 0.15 < e.x - half)
+        if row == none { rows.push(e.x + half); row = rows.len() - 1 } else { rows.at(row) = e.x + half }
+        let y = -0.75 - row * 0.45
+        if e.mark { line((e.x, h), (e.x, 0), stroke: (paint: luma(90), thickness: 0.8pt, dash: "dashed")) }
+        line((e.x, y + 0.05), (e.x, -0.48), stroke: 0.6pt + luma(90), mark: (end: ">", fill: luma(90), scale: 0.6))
+        content((e.x, y), txt(e.label), anchor: "north")
       }
     } else if kind == "bars" {
       let top = calc.max(..values.map(v => v.at(1)))
@@ -101,7 +174,8 @@
       let ymax = calc.ceil(top / step) * step
       let h = 4.0
       let unit = h / ymax
-      let slot = 1.5
+      // each bar's room: its label's width at least, so that long names never overlap
+      let slot = calc.max(1.5, ..values.map(v => measure(txt(v.at(0))).width / 1cm + 0.3))
       let w = slot * values.len()
       // the graduation: a tick and a light line at each step, so that a count is read, not guessed
       for k in range(1, int(ymax / step) + 1) {
