@@ -67,9 +67,15 @@
       let best = spots.sorted(key: q => -calc.min(..segments.map(((a, b)) => _gap(q, a, b)))).first()
       content(best, text(11pt, name))
     }
+    // each length beside its edge, outwards: held by its side facing the solid, so that a
+    // long one ("10 mm") reaches away from the edge, never across it
     for (i, j, label) in edge-labels {
       let m = _mean((_proj(points.at(i)), _proj(points.at(j))))
-      content(_away(m, middle, 0.35), text(11pt, label))
+      let out = _sub(m, middle)
+      let angle = calc.atan2(out.at(0), out.at(1))
+      let k = calc.rem(int(calc.round(angle / 45deg)) + 8, 8)
+      let side = ("west", "south-west", "south", "south-east", "east", "north-east", "north", "north-west").at(k)
+      content(_away(m, middle, 0.15), text(11pt, label), anchor: side)
     }
   })
 }

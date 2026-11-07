@@ -238,13 +238,34 @@ class Unusable(Exception):
     """Not compiled: what Typst said (for the AI to correct it), or why it was refused."""
 
 
+# An edge's string with a bar in it ("-|>", "-|-", "-|->"): fletcher's marks
+EDGE_MARKS = re.compile(r'"([-<>|.=~]*\|[-<>|.=~]*)"')
+
+
+def _unbarred(marks: re.Match) -> str:
+    """An edge's bars kept only as part of a head ("<|", "|>"): one elsewhere ("-|-", "-|->")
+    draws a bar across the line, which no school diagram asks for; the AI's "-||" (two bars)
+    meant an arrow, "-|>"."""
+    s = marks.group(1)
+    if s == "-||":
+        return '"-|>"'
+    kept, i = "", 0
+    while i < len(s):
+        c, i = s[i], i + 1
+        if c != "|" or s[i - 2 : i - 1] == "<" or s[i : i + 1] == ">":
+            kept += c
+        elif kept[-1:] in ("-", ".", "=", "~"):  # the bar out, the line it cut whole again:
+            while s[i : i + 1] == kept[-1]:  # "-|-" a plain line, never "--" dashed
+                i += 1
+    return f'"{kept or "-"}"'
+
+
 def source(family: str, body: str) -> str:
     """The Typst document of a figure of `family`: its preamble, then what the AI wrote."""
     # "<" and ">" written as HTML's entities (an arrow "-|&gt;"): Typst has none of them
     body = PACKAGE_IMPORT.sub("", body).replace("&gt;", ">").replace("&lt;", "<")
-    if family == "diagram":  # the AI's "-||" (two bars) meant an arrow, "-|>" (never asked for);
-        # its "-|-" (a bar across the middle) a plain line
-        body = body.replace('"-||"', '"-|>"').replace('"-|-"', '"-"')
+    if family == "diagram":
+        body = EDGE_MARKS.sub(_unbarred, body)
     if FORBIDDEN.search(body):
         raise Unusable("Only drawing commands: no import, include, file or plugin.")
     return FONT + FAMILIES[family].preamble + body.strip() + "\n"
