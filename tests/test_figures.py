@@ -1329,6 +1329,44 @@ def test_a_trigonometric_circle_with_one_angle():
     assert figures_typst.compile_svg("geometry", circle.format("((60, $M$))")) == one
 
 
+CUBE_FACES = ", ".join(
+    "(" + ", ".join(f'"{v}"' for v in face) + ")" for face in ("ABCD", "EFGH", "ABFE", "BCGF", "CDHG", "DAEH")
+)
+CUBE_POINTS = (
+    "A: (0, 0, 0), B: (1, 0, 0), C: (1, 1, 0), D: (0, 1, 0), E: (0, 0, 1), F: (1, 0, 1), G: (1, 1, 1), H: (0, 1, 1)"
+)
+
+
+@pytest.mark.parametrize(
+    ("body", "hidden"),
+    [
+        ("#space(points: (A: (2, 0, 0), B: (0, 3, 0), C: (0, 0, 1)))", 0),
+        # the plane ABC hides the axes from O to where it meets them: three dashed runs
+        ('#space(points: (A: (2, 0, 0), B: (0, 3, 0), C: (0, 0, 1)), planes: (("A", "B", "C"),))', 3),
+        # a cube by its faces: its three hidden edges
+        (f"#space(origin: none, axes: none, units: none, points: ({CUBE_POINTS}), faces: ({CUBE_FACES}))", 3),
+    ],
+)
+def test_a_frame_of_space_computes_what_is_hidden(body, hidden):
+    """A frame of space (O ; i, j, k) was drawn as SVG by hand (no family had one): its points
+    placed from their coordinates, what a plane or a solid's faces hide dashed, computed."""
+    svg = figures.clean(figures_typst.compile_svg("solid", body))
+    assert len(re.findall(r'stroke-dasharray="[^"]+"', svg)) == hidden
+
+
+def test_a_frame_of_space_drawn_as_the_rule_says():
+    """The rule's own call compiles; a point's coordinates other than three numbers, or a
+    point named but not given, refused saying which."""
+    rule = (figures_typst.RULES / "solid.md").read_text(encoding="utf-8")
+    call = re.search(r"`(space\(points: [^`]*\))`", rule)
+    assert call
+    assert figures.clean(figures_typst.compile_svg("solid", "#" + call[1])).startswith("<svg")
+    with pytest.raises(figures_typst.Unusable, match="three coordinates"):
+        figures_typst.compile_svg("solid", "#space(points: (A: (2, 0),))")
+    with pytest.raises(figures_typst.Unusable, match="not in points"):
+        figures_typst.compile_svg("solid", '#space(points: (A: (2, 0, 0),), segments: (("A", "B"),))')
+
+
 def test_a_section_outside_its_solid_refused():
     """A section's plane outside the solid, or parallel to a face it hasn't: refused, saying
     why, for the AI to write it again; never a solid drawn without it."""
