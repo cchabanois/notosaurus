@@ -1108,6 +1108,18 @@ def test_a_variable_named_like_a_symbol_leaves_the_symbol_in_formulas(name):
     assert f"le mot {name}]" in figures_typst.source("graph", text) and "calc.pi" in figures_typst.source("graph", text)
 
 
+def test_a_grids_fractional_columns_sized_by_their_content():
+    """Four molecules in a grid of `1fr` columns: a figure's page is as wide as what it holds,
+    so the columns had no width, the molecules drawn one on another. Sized by their content:
+    the same figure as `auto` columns; a fraction elsewhere (`h(1fr)`) left as written."""
+    molecule = '[#skeletize({{ fragment("CH_3"); single(); fragment("{}") }}) \\ {}]'
+    cells = ", ".join(molecule.format(g, n) for g, n in (("OH", "Éthanol"), ("CHO", "Éthanal")))
+    grid = "#grid(columns: COLUMNS, column-gutter: 2em, " + cells + ")"
+    fractions = figures_typst.compile_svg("chemistry", grid.replace("COLUMNS", "(1fr, 1fr)"))
+    assert fractions == figures_typst.compile_svg("chemistry", grid.replace("COLUMNS", "(auto, auto)"))
+    assert "#h(1fr)" in figures_typst.source("chemistry", "#h(1fr)")
+
+
 def test_the_diagram_rules_edges_compile():
     """Every edge the diagram rule shows (its line styles, a label on its arrow, two arrows
     side by side) compiles between two nodes: a fragment out of step with fletcher (a "bend"
