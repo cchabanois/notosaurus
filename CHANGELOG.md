@@ -9,6 +9,7 @@ Each pull request's entries (the `## Changelog` of its description) are put unde
 
 ### Added
 
+- Maps for history lessons: their places (Constantinople, Aix-la-Chapelle, Cordoue, Troie, Verdun…) and cities' former names (Leningrad, Saïgon, Pékin), in every language of the page.
 - Curves of measures (a heart rate over time): drawn from the lesson's measures, their axes starting where the measures are.
 - Statistics charts (bars, pie, half pie): drawn from the lesson's counts, their angles computed.
 - Cylinders, cones, spheres and half-balls drawn in proportion to their lengths, their hidden parts dashed; several solids side by side at one scale to compare them.
@@ -25,6 +26,7 @@ Each pull request's entries (the `## Changelog` of its description) are put unde
 
 ### Fixed
 
+- Maps: countries and seas found by their usual names in every language of the page ("Chine", "Stati Uniti", "Méditerranée", "Atlantik").
 - Graphs of data (a population over the years, a temperature over time): drawn at a readable size, their axes at the frame's start.
 - Graphs: the axes' names no longer cut off at the edge; a curve with a plateau drawn in one piece; a period's double arrow.
 - Electric circuits: the current's direction drawn when asked, the right way in every branch; a short circuit named.
