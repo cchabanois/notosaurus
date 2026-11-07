@@ -377,6 +377,19 @@ class Anki(private val context: Context) : AnkiTarget {
         var duplicates = 0
         val sent = mutableMapOf<String, Long>()
         val addedNotes = mutableSetOf<Long>() // the notes added, by their ids (Sent.fresh)
+        // A note already in AnkiDroid that a card is (its last send's, the lesson's, an older
+        // type's): its fields and tags brought up to date when they differ, its cards moved to
+        // the card's deck if asked, its id the card's
+        fun kept(note: Note, type: NoteType, id: Long, model: Long, fields: Array<String>, tags: Set<String>, did: () -> Long) {
+            val wanted = withFiles(type.values(names(model, type), note.values, fields), fields)
+            if (!fields.contentEquals(wanted) || !tags.containsAll(note.tags)) {
+                api.updateNoteFields(id, wanted)
+                api.updateNoteTags(id, tags + note.tags)
+                updated++
+            }
+            if (options.move && moveCards(id, did())) moved++
+            sent[note.card] = id
+        }
         notes.groupBy { it.model to it.deck }.forEach { (key, group) ->
             val (model, name) = key
             val did by lazy { deckId(name) ?: error("AnkiDroid refused the deck $name") }
@@ -386,14 +399,7 @@ class Anki(private val context: Context) : AnkiTarget {
                 val id = media.sentBefore[note.card] ?: return@filter true
                 val there = api.getNote(id)?.takeIf { noteModel(id) == model } ?: return@filter true
                 if (there.tags.any { it.startsWith(TAG_PREFIX) && it !in own }) return@filter true
-                val fields = withFiles(note.type.values(names(model, note.type), note.values, there.fields), there.fields)
-                if (!there.fields.contentEquals(fields) || !there.tags.containsAll(note.tags)) {
-                    api.updateNoteFields(id, fields)
-                    api.updateNoteTags(id, there.tags + note.tags)
-                    updated++
-                }
-                if (options.move && moveCards(id, did)) moved++
-                sent[note.card] = id
+                kept(note, note.type, id, model, there.fields, there.tags, { did })
                 false
             }
             if (rest.isEmpty()) return@forEach
@@ -405,15 +411,8 @@ class Anki(private val context: Context) : AnkiTarget {
                 val there = lessonNotesOf(media.lesson, type)
                 rest.forEach { note ->
                     val mine = there[note.key] ?: return@forEach run { fresh += note }
-                    val fields = withFiles(type.values(names(mine.model, type), note.values, mine.fields), mine.fields)
-                    if (!mine.fields.contentEquals(fields) || !mine.tags.containsAll(note.tags)) {
-                        api.updateNoteFields(mine.id, fields)
-                        api.updateNoteTags(mine.id, mine.tags + note.tags)
-                        updated++
-                    }
                     // The lesson's deck (or the card's part) changed: its cards follow, history kept
-                    if (options.move && moveCards(mine.id, did)) moved++
-                    sent[note.card] = mine.id
+                    kept(note, type, mine.id, mine.model, mine.fields, mine.tags, { did })
                 }
             } else {
                 // No lesson (cards not saved): the same first field in that note type is there already
@@ -430,14 +429,7 @@ class Anki(private val context: Context) : AnkiTarget {
                     val old = older.firstOrNull { it.id !in claimed && it.id !in sent.values && sameCard(it, note, type) }
                         ?: return@removeAll false
                     claimed += old.id
-                    val fields = withFiles(type.values(names(old.model, type), note.values, old.fields), old.fields)
-                    if (!old.fields.contentEquals(fields) || !old.tags.containsAll(note.tags)) {
-                        api.updateNoteFields(old.id, fields)
-                        api.updateNoteTags(old.id, old.tags + note.tags)
-                        updated++
-                    }
-                    if (options.move && moveCards(old.id, did)) moved++
-                    sent[note.card] = old.id
+                    kept(note, type, old.id, old.model, old.fields, old.tags, { did })
                     true
                 }
             }
