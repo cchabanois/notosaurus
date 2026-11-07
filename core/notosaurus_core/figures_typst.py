@@ -386,6 +386,94 @@ def _decimal_commas(body: str, comma: bool) -> str:
     return MATH.sub(tight, body)
 
 
+# Math symbols an AI also names its variables after (`#let lambda = 1.5`): in a formula,
+# Typst reads a name as the variable in scope before the symbol, so `$lambda$` wrote "1.5"
+GREEK = [
+    "alpha",
+    "beta",
+    "gamma",
+    "delta",
+    "epsilon",
+    "zeta",
+    "eta",
+    "theta",
+    "iota",
+    "kappa",
+    "lambda",
+    "mu",
+    "nu",
+    "xi",
+    "omicron",
+    "pi",
+    "rho",
+    "sigma",
+    "tau",
+    "upsilon",
+    "phi",
+    "chi",
+    "psi",
+    "omega",
+]
+SYMBOL_NAMES = frozenset(GREEK + [g.capitalize() for g in GREEK])
+LET_NAME = re.compile(r"\blet\s+([A-Za-z]+)\b")
+
+
+def _segments(body: str) -> list[tuple[str, str]]:
+    """The body cut into pieces, each "code", "text" (within [ ]) or "math" (between two `$`,
+    in a text or straight in the code: `place(1, 2, $lambda$)`), with what it holds. A `$`
+    escaped or in a string of the code is no formula; a quote in a text is a character."""
+    pieces: list[tuple[str, str]] = []
+    start, depth, math, string, i = 0, 0, False, False, 0
+
+    def kind() -> str:
+        return "math" if math else "text" if depth else "code"
+
+    while i < len(body):
+        c = body[i]
+        if c == "\\":
+            i += 2
+            continue
+        if string:
+            string = c != '"'
+        elif c == '"' and depth == 0 and not math:
+            string = True
+        elif c in "[]$" and not (math and c != "$") and not (c == "]" and not depth):
+            pieces.append((kind(), body[start:i]))
+            start = i
+            if c == "$":
+                math = not math
+            else:
+                depth += 1 if c == "[" else -1
+        i += 1
+    pieces.append((kind(), body[start:]))
+    return pieces
+
+
+def _unshadowed(body: str) -> str:
+    """A variable named after a math symbol (`lambda`, `pi`) renamed wherever code reads it,
+    so that the same name in a formula is the symbol again, as the AI meant it: in the code,
+    the name alone (not a field, `calc.pi`, nor part of a longer name); in a text or a
+    formula, only where code is embedded (`#lambda`, `#str(lambda)`)."""
+    names = {n for n in LET_NAME.findall(body) if n in SYMBOL_NAMES}
+    if not names:
+        return body
+    alone = re.compile(rf"(?<![\w.-])({'|'.join(sorted(names))})(?![\w]|-[A-Za-z])")
+
+    def renamed(code: str) -> str:
+        return alone.sub(r"\1-value", code)
+
+    def embedded(text: str) -> str:
+        # `#name`, or a `#call(…)`'s arguments: code within a text or a formula
+        out, i = [], 0
+        for m in re.finditer(r"#[\w.-]+(\((?:[^()]|\([^()]*\))*\))?", text):
+            out.append(text[i : m.start()])
+            out.append(renamed(m.group(0)))
+            i = m.end()
+        return "".join(out) + text[i:]
+
+    return "".join(renamed(s) if k == "code" else embedded(s) for k, s in _segments(body))
+
+
 def source(family: str, body: str) -> str:
     """The Typst document of a figure of `family`: its preamble, then what the AI wrote."""
     # "<" and ">" written as HTML's entities (an arrow "-|&gt;"): Typst has none of them
@@ -394,6 +482,7 @@ def source(family: str, body: str) -> str:
         body = _broken_lines(EDGE_MARKS.sub(_unbarred, body))
     if FORBIDDEN.search(body):
         raise Unusable("Only drawing commands: no import, include, file or plugin.")
+    body = _unshadowed(body)
     separator = decimal_separator(body)
     body = _decimal_commas(body, separator == ",")
     preamble = FAMILIES[family].preamble.replace(SEPARATOR, f'#let decimal-separator = "{separator}"')

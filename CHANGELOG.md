@@ -32,6 +32,10 @@ Each pull request's entries (the `## Changelog` of its description) are put unde
 
 ### Fixed
 
+- Figures: a Greek letter in a figure's formula (λ, π, α) is no longer replaced by a number the AI named after it.
+- A circle or points in a coordinate frame drawn with their graduated axes, instead of a rough drawing.
+- A trigonometric circle with a single angle is drawn.
+- A probability law's bar chart is graduated by tenths or hundredths, its values readable.
 - Figures: numbers written as the lesson's language writes them (a decimal comma in French, German…, a point in English), never LaTeX's `{,}`.
 - The trigonometric circle: its points at their angles, its cosine and sine projected, no stray names.
 - Number lines: an interval's brackets are turned the right way ([2 ; +∞[, ]2 ; 7[).
