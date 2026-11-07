@@ -61,7 +61,8 @@ def note_type(
             "afmt": f'{heard}<hr id="answer">{{{{Front}}}}{BACK_PICTURE}{info}',
         }
         if dictation_only:  # alone, its front shown too: the sentence with its blank (or "Sentence 3")
-            heard = f'<div class="dictation">🎧</div>{sound}{PICTURE}{{{{Front}}}}{{{{type:Back}}}}'
+            # its front a block of its own: the answer's comparison never glued to it (TYP-10)
+            heard = f'<div class="dictation">🎧</div>{sound}{PICTURE}<div>{{{{Front}}}}</div>{{{{type:Back}}}}'
             dictated = {"name": "Dictation", "qfmt": heard, "afmt": f'{heard}<hr id="answer">{BACK_PICTURE}{info}'}
         templates = [dictated] if dictation_only else [*templates, dictated]
     fields = ["Front", "Back", "Info"]

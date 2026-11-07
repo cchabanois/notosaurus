@@ -328,8 +328,9 @@ def test_dictation_only(client, tmp_path):
     assert model["name"] == "Notosaurus dictation (audio) v2"
     (card,) = model["tmpls"]
     assert (
-        card["qfmt"] == CONTEXT + f'<div class="dictation">🎧</div>{{{{Audio}}}}{PICTURE}{{{{Front}}}}{{{{type:Back}}}}'
-    )  # the blank shown
+        card["qfmt"]
+        == CONTEXT + f'<div class="dictation">🎧</div>{{{{Audio}}}}{PICTURE}<div>{{{{Front}}}}</div>{{{{type:Back}}}}'
+    )  # the blank shown, a block of its own: the answer's comparison never glued to it (TYP-10)
     assert package.cards == 2  # one a note: no front → back card
     assert anki.family(model["name"]) == "text"  # a lesson's notes can switch to it and back
     nt = anki.note_type("fr-FR-DeniseNeural", True, True, dictation=False, dictation_only=True)

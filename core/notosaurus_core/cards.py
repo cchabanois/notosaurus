@@ -27,6 +27,10 @@ LOST_ESCAPE = re.compile(r"[\t\f\b\r](?=[a-zA-Z])")
 FORMULA = re.compile(r"\\\(.*?\\\)|\\\[.*?\\\]", re.DOTALL)
 LOST_NEWLINE = re.compile(r"\n(?=[a-zA-Z])")
 ESCAPES = {"\t": "\\t", "\f": "\\f", "\b": "\\b", "\r": "\\r", "\n": "\\n"}
+# A line break the AI wrote as the two characters "\n" (its JSON escaped twice: TXT-01,
+# "Complète l'équivalence :\n\(e^a…"), outside a formula: a break. Never before a small
+# letter: LaTeX's commands (\neq, \nu, \nabla, \not…) start so
+LITERAL_NEWLINE = re.compile(r"\\n(?![a-z])")
 # The formula's own delimiters lost the same way ("\(" isn't a JSON escape: the AI drops
 # its backslash): a group in plain parentheses opening on a command, in a text without
 # any formula, is the formula it meant, "(\text{m})" for "\(\text{m}\)".
@@ -46,7 +50,7 @@ def plain(text: str) -> str:
     commands whose backslash JSON read as an escape put back."""
     if "&" in text:
         text = html.unescape(text)
-    text = formulas(text)
+    text = breaks(formulas(text))
     if "<" not in text and "**" not in text:
         return text
     for _ in range(3):  # nested emphasis, inside out
@@ -54,6 +58,17 @@ def plain(text: str) -> str:
     text = BOLD_MARKDOWN.sub(lambda m: f"[{m.group(1)}]", text)
     text = LINE_BREAK.sub("\n", text)
     return TAG.sub("", text)
+
+
+def breaks(text: str) -> str:
+    """The text with its line breaks written "\\n" made breaks, outside its formulas."""
+    if "\\n" not in text:
+        return text
+    kept, end = [], 0
+    for formula in FORMULA.finditer(text):
+        kept += [LITERAL_NEWLINE.sub("\n", text[end : formula.start()]), formula.group()]
+        end = formula.end()
+    return "".join([*kept, LITERAL_NEWLINE.sub("\n", text[end:])])
 
 
 def formulas(text: str) -> str:
