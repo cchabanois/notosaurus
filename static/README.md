@@ -29,7 +29,7 @@ the component in `app.js` (`this`). The server tells a page what it can do throu
 
 ```sh
 node --test tests/frontend/*.test.mjs   # the scripts in a Node vm, no dependency
-.venv/bin/pytest tests/test_page.py     # the pages in a real browser (Playwright)
+.venv/bin/pytest tests/page/            # the pages in a real browser (Playwright)
 ```
 
 See [CONTRIBUTING.md](../CONTRIBUTING.md#tests-and-checks) and
