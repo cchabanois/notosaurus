@@ -1224,6 +1224,18 @@ def test_a_solids_hidden_edges_computed(body, hidden):
     assert svg.count("stroke-dasharray") == hidden
 
 
+def test_a_probability_tree_as_wide_as_it_is_high():
+    """A tree's places computed (three Bernoulli trials, eight leaves: placed by the AI, a strip
+    three times as high as wide, unreadable once fitted, 3 drawings in 3): about as wide as high.
+    A branch not (name, label) or (name, label, branches): refused, saying how."""
+    two = "(($S$, [0,3]{0}), ($E$, [0,7]{0}))"
+    body = "#tree" + two.format(", " + two.format(", " + two.format("")))
+    width, height = drawn_size("diagram", body)
+    assert 0.6 < width / height < 1.6
+    with pytest.raises(figures_typst.Unusable, match="each branch"):
+        figures_typst.compile_svg("diagram", '#tree(("A", [0,4], "B"), "C")')
+
+
 def test_a_section_outside_its_solid_refused():
     """A section's plane outside the solid, or parallel to a face it hasn't: refused, saying
     why, for the AI to write it again; never a solid drawn without it."""

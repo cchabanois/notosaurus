@@ -71,6 +71,57 @@
   for i in slanting { items.at(i) = metadata((..at(i), label-angle: auto)) }
   fletcher.diagram(..items, ..args.named(), spacing: (need-x, need-y))
 }
+// A tree (a probability tree): its places computed, never the AI's: each leaf on a row of
+// its own, each node halfway between its first and its last child, each level a column, the
+// rows close (a wide gap made 8 leaves a tall, narrow strip, unreadable once fitted); a
+// branch's label (its probability) beside it, above the upper branch, below the lower.
+// branches: (name, label, children) each, its children the same, none at a leaf; root: the
+// root's name (none: the branches start from a point)
+#let _tree-branch(b) = {
+  if type(b) != array or b.len() not in (2, 3) {
+    panic("tree: each branch (name, label) or (name, label, (its branches…)), not " + repr(b))
+  }
+  b
+}
+#let _tree-place(b, depth, row) = {
+  let (name, label, ..rest) = _tree-branch(b)
+  let children = rest.at(0, default: ())
+  if children.len() == 0 { return (nodes: (((depth, row), name),), edges: (), row: row + 1, y: row) }
+  let (nodes, edges, r, ys) = ((), (), row, ())
+  for c in children {
+    let placed = _tree-place(c, depth + 1, r)
+    nodes += placed.nodes
+    edges += placed.edges
+    r = placed.row
+    ys.push(placed.y)
+  }
+  let y = (ys.first() + ys.last()) / 2
+  for (k, c) in children.enumerate() {
+    // the first branch's label above it, the last's below; a middle one's above, farther along
+    // (between its branch and the one above, the gap widens towards the children)
+    let last = k == children.len() - 1 and k > 0
+    let middle = k > 0 and not last
+    edges.push(((depth, y), (depth + 1, ys.at(k)), c.at(1), if last { right } else { left }, if middle { 0.85 } else { 0.65 }))
+  }
+  (nodes: nodes + (((depth, y), name),), edges: edges, row: r, y: y)
+}
+#let tree(..branches, root: none) = context {
+  let placed = _tree-place((root, none, branches.pos()), 0, 0)
+  // the columns as wide as the widest label and more; the rows as far apart as a label is
+  // high (two leaves' labels, one below a branch, one above the next, between them)
+  let sizes = placed.edges.map(e => measure(e.at(2)))
+  let widest = calc.max(0pt, ..sizes.map(z => z.width))
+  let highest = calc.max(0pt, ..sizes.map(z => z.height))
+  fletcher.diagram(
+    spacing: (widest + 2.5em, 1.5 * highest),
+    node-inset: 5pt,
+    ..placed.nodes.map(((at, name)) => fletcher.node(at, if name == none { [] } else { name })),
+    // each label near the branch's end, where branches are farthest apart
+    ..placed.edges.map(((from, to, label, side, along)) => fletcher.edge(
+      from, to, "-", label, label-side: side, label-sep: 2pt, label-pos: along,
+    )),
+  )
+}
 // ---- What the AI writes, from here (the rule's example: everything above is given)
 #diagram(node-stroke: 0.8pt, spacing: 2em,
   node((0, 0), [Évaporation]), edge("-|>"),
