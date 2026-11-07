@@ -124,3 +124,15 @@ def test_brackets_written_as_display_delimiters():
     assert cards.formulas(r"\[0 ; 1\[ et \[x^2\]") == r"[0 ; 1[ et \[x^2\]"
     for kept in (r"\[x^2 + 1\]", r"\(]-\infty ; 0[\)", "]0 ; 1[", r"\[a\] puis \[b\]"):
         assert cards.formulas(kept) == kept
+
+
+def test_a_line_break_written_as_two_characters_is_a_break():
+    """TXT-01: the AI wrote "\\n" (its JSON escaped twice), shown as is on the card and in
+    Anki. Outside a formula it is a break; LaTeX's commands that start so (\\neq, \\nu…: a
+    small letter after) and anything inside a formula are kept."""
+    assert cards.plain("Complète l'équivalence :\\n\\(e^a = e^b \\iff \\dots\\)") == (
+        "Complète l'équivalence :\n\\(e^a = e^b \\iff \\dots\\)"
+    )
+    assert cards.plain("Phrase 1\\n2 mots") == "Phrase 1\n2 mots"
+    assert cards.plain("x \\neq y et \\(a \\neq b\\)") == "x \\neq y et \\(a \\neq b\\)"
+    assert cards.plain("\\(a\\n b\\)") == "\\(a\\n b\\)"
