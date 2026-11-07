@@ -100,6 +100,18 @@ def test_a_formula_shown_once_its_text_while_edited(page):
     sync_api.expect(page.locator(".save-pill")).to_have_class(SAVED)
 
 
+def test_a_chemical_equation_shown_as_anki_shows_it(page):
+    """A reaction's equation in mhchem (\\ce), which Anki's MathJax draws: drawn, not an error."""
+    generate_free(page, FRONT_PROMPT)
+    card = page.locator(".flash").first
+    card.locator("textarea.back").fill(r"\(\ce{2H2 + O2 -> 2H2O}\)")
+    card.locator("textarea.front").click()  # out of the back
+    shown = card.locator(".math-preview.back.shown")
+    # an unknown command is no error: KaTeX writes it, in red, among what it draws
+    sync_api.expect(shown.locator(".katex-html")).to_be_visible()
+    sync_api.expect(shown.locator(".katex-html")).not_to_contain_text("ce")
+
+
 def test_formulas_drawn_in_the_helps_and_the_doubt(page):
     """A help's formulas drawn as the back's (its text a click away), the doubt's too."""
     generate_free(page, FRONT_PROMPT)
