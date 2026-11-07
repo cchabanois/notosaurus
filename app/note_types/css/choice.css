@@ -1,0 +1,7 @@
+.notosaurus-choices {
+  display: inline-block; margin: 12px auto 0; padding-left: 1.8em; text-align: left; list-style: upper-alpha;
+}
+.notosaurus-choices li { margin: 6px 0; }
+.notosaurus-choices li.right { color: #1b873f; font-weight: 700; }
+.notosaurus-choices li.right::after { content: " ✔"; }
+.notosaurus-choices li.wrong { opacity: .5; }

@@ -23,15 +23,7 @@ from .common import (
 from .picture import source
 
 # The options in a list (A, B, C…), the right one marked on the answer
-CHOICE_CSS = """\
-.notosaurus-choices {
-  display: inline-block; margin: 12px auto 0; padding-left: 1.8em; text-align: left; list-style: upper-alpha;
-}
-.notosaurus-choices li { margin: 6px 0; }
-.notosaurus-choices li.right { color: #1b873f; font-weight: 700; }
-.notosaurus-choices li.right::after { content: " ✔"; }
-.notosaurus-choices li.wrong { opacity: .5; }
-"""
+CHOICE_CSS = (Path(__file__).parent / "css" / "choice.css").read_text(encoding="utf-8")
 
 
 def choice_order(card) -> list[str]:

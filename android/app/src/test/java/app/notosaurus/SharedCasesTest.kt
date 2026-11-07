@@ -40,6 +40,12 @@ class SharedCasesTest {
     }
 
     @Test
+    fun aCardsInfoField() = cases("info_field").forEach { c ->
+        val card = Card(front = "f", back = "b", info = c.string("info"), funFact = c.string("fun_fact"))
+        assertEquals(c.string("name"), c.string("out"), Anki.info(card))
+    }
+
+    @Test
     fun twoTextsTheSame() = cases("same_text").forEach { c ->
         val (a, b) = c.string("a") to c.string("b")
         assertEquals("$a | $b", c.string("key") to c["out"]!!.jsonPrimitive.boolean, Lessons.textKey(a) to Lessons.sameText(a, b))

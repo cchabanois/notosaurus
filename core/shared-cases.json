@@ -1,5 +1,5 @@
 {
- "_": "Cases the three implementations must agree on (Python app/exams.py, notosaurus_core/tts.py, notosaurus_core/cards.py; Kotlin Exams.kt, Speech.kt, Lessons.kt; JavaScript static/app-anki.js): their tests read this file. Python's answers are the reference; sound_file, kept_ids, same_text: Python and Kotlin only (the page names no file, makes no lesson).",
+ "_": "Cases the three implementations must agree on (Python app/exams.py, notosaurus_core/tts.py, notosaurus_core/cards.py; Kotlin Exams.kt, Speech.kt, Lessons.kt; JavaScript static/app-anki.js): their tests read this file. Python's answers are the reference; sound_file, kept_ids, same_text, info_field: Python and Kotlin only (the page names no file, makes no lesson).",
  "tag_text": [
   {
    "in": "Interro SVT de lundi",
@@ -697,5 +697,31 @@
     "key": "pourquoi ?",
     "out": false
    }
+ ],
+ "info_field": [
+  {
+   "name": "info alone",
+   "info": "nom féminin",
+   "fun_fact": "",
+   "out": "nom féminin"
+  },
+  {
+   "name": "its did-you-know in italics",
+   "info": "XXe siècle",
+   "fun_fact": "Elle a duré 4 ans.",
+   "out": "XXe siècle<div style=\"margin-top:8px;font-style:italic\">💡 Elle a duré 4 ans.</div>"
+  },
+  {
+   "name": "no info, a did-you-know",
+   "info": "",
+   "fun_fact": "Le mot vient du latin.",
+   "out": "<div style=\"margin-top:8px;font-style:italic\">💡 Le mot vient du latin.</div>"
+  },
+  {
+   "name": "escaped, line breaks kept, trimmed",
+   "info": " a < b & \"c\"\nd ",
+   "fun_fact": " x > y ",
+   "out": "a &lt; b &amp; &quot;c&quot;<br>d<div style=\"margin-top:8px;font-style:italic\">💡 x &gt; y</div>"
+  }
  ]
 }

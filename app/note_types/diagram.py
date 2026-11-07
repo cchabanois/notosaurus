@@ -7,17 +7,7 @@ from notosaurus_core import diagrams, tts
 from .common import BACK_INFO, CSS, HELP_FIELDS, NoteType, fix_link, typed, variant, versioned, with_context
 
 # The masks are HTML over the image, placed in % of its size.
-DIAGRAM_CSS = """\
-.notosaurus-diagram { position: relative; display: inline-block; max-width: 100%; line-height: 0; }
-.notosaurus-diagram img { display: block; }
-.notosaurus-mask {
-  position: absolute; box-sizing: border-box; display: flex; align-items: center; justify-content: center;
-  overflow: hidden; line-height: 1; font-size: 13px; font-weight: 700;
-  background: #ffe08a; border: 2px solid #c77700; border-radius: 3px; color: #3d2b00;
-}
-.notosaurus-mask.target { background: #ff7a59; border-color: #b3261e; color: #fff; }
-.notosaurus-mask.revealed { background: transparent; border: 3px solid #1b873f; }
-"""
+DIAGRAM_CSS = (Path(__file__).parent / "css" / "diagram.css").read_text(encoding="utf-8")
 
 
 def diagram_note_type(voice: str, typing: bool = False) -> NoteType:

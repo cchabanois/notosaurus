@@ -71,3 +71,12 @@ def test_a_card_corrected_by_the_ai_is_the_card_made_again(case):
     revised, before = [Card(**c) for c in case["made"]], [Card(**c) for c in case["before"]]
     llm._keep_ids(revised, before)
     assert [c.id for c in revised] == case["out"]
+
+
+@pytest.mark.parametrize("case", CASES["info_field"], ids=lambda c: c["name"])
+def test_a_cards_info_field(case):
+    """The Info field as the computer writes it (note_types.common.info), the phone the same
+    (Anki.info): a note sent from one device is up to date from the other."""
+    from app.note_types.common import info
+
+    assert info(Card(front="f", back="b", info=case["info"], fun_fact=case["fun_fact"])) == case["out"]

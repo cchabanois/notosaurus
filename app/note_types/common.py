@@ -5,21 +5,9 @@ import hashlib
 import html
 from collections.abc import Mapping
 from dataclasses import dataclass
+from pathlib import Path
 
-CSS = """\
-.card { font-family: system-ui, sans-serif; font-size: 26px; text-align: center; }
-.info { font-size: 18px; color: #777; margin-top: 12px; }
-.card img { max-width: 100%; height: auto; }
-.dictation { font-size: 40px; }
-.notosaurus-help {
-  max-width: 32em; margin: 10px auto 0; padding: 4px 10px; border-left: 3px solid #8bb8c4;
-  font-size: 18px; color: #555; text-align: left;
-}
-.nightMode .notosaurus-help { color: #bbb; }
-.notosaurus-fix { margin-top: 16px; font-size: 14px; }
-.notosaurus-fix a { color: #8bb8c4; text-decoration: none; }
-.notosaurus-context { font-size: 14px; color: #888; margin-bottom: 12px; }
-"""
+CSS = (Path(__file__).parent / "css" / "common.css").read_text(encoding="utf-8")
 
 # On the back, under the info: the helps asked for at generation (why the answer is the
 # answer, a way to remember it), each only when the AI wrote one
@@ -93,9 +81,7 @@ SOURCE_FIELD = "Source"
 # ("BackPicture"), whatever the card's kind (text, typed, reverse, dictation, multiple choice)
 PICTURE = '{{#Picture}}<div class="notosaurus-picture">{{Picture}}</div>{{/Picture}}'
 BACK_PICTURE = '{{#BackPicture}}<div class="notosaurus-picture">{{BackPicture}}</div>{{/BackPicture}}'
-PICTURE_CSS = """\
-.notosaurus-picture img { max-width: min(100%, 320px); max-height: 50vh; border-radius: 12px; }
-"""
+PICTURE_CSS = (Path(__file__).parent / "css" / "picture.css").read_text(encoding="utf-8")
 
 
 def stable_id(*parts: str) -> int:

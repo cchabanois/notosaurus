@@ -46,15 +46,7 @@ COMPILE_S = 15  # a figure compiles in well under a second; a loop never ends
 MEMORY = 1024 * 1024 * 1024  # bytes, where the system lets us say so
 
 # For every family: what to draw exactly, and nothing that loads
-COMMON = """\
-- draw exactly what the description asks for, nothing more: no title, no caption; write only \
-the labels it asks to write (what it names to say what to draw, a function, a shape, a \
-theorem, an object, is not a label): one word too many may give the card's answer away;
-- black on white, a shaded part light grey (`luma(225)`); the colours the description gives \
-(a colour code: atoms, a legend, a set by its colour), as it says; about 6 by 4 cm;
-- only drawing: no import (the packages are imported already), include, read, image, plugin, \
-no file.
-A figure is for a pupil's lesson: for anything else, answer an empty answer."""
+COMMON = (HERE / "typst_rules" / "common.md").read_text(encoding="utf-8").removesuffix("\n")
 
 
 @dataclass(frozen=True)
@@ -96,22 +88,7 @@ FAMILIES: dict[str, Family] = {
 
 # The kinds of figures, said to the AI that describes a figure (models.Card.figure_kind) or
 # picks its family (FAMILY_RULES)
-KINDS = (
-    '"geometry": points, segments, lines, circles, polygons, angles, their marks (a theorem, a '
-    'construction), a number line with its points; "graph": the graph of one or more functions in a '
-    'frame, or points in a coordinate frame (reading or placing their coordinates); "sets": a Venn '
-    "diagram of "
-    'two or three sets; "diagram": boxes side by side joined by arrows (a flowchart, a cycle, a chain, a '
-    "classification), never shapes inside one another; "
-    '"circuit": an electric circuit; "chemistry": a molecule\'s formula written with its atoms\' '
-    "symbols and bonds (developed, semi-developed, skeletal, a ring), never a model of balls; "
-    '"timeline": dates on a line; "map": a geographic map of countries, their cities, regions, '
-    'rivers, reliefs and seas (where a place is); "clock": a clock\'s face showing a time (reading '
-    'the time); "solid": a solid in perspective (a cube, a cuboid, a prism, a pyramid, a cylinder, a '
-    'cone, a sphere, a half-ball); "chart": a statistics chart from counts (bars, a pie chart, a half '
-    'pie chart), or measures joined by a line (a heart rate over time); "other": anything else (a '
-    "table, a labelled drawing, zones nested or overlapping, a molecular model of coloured balls…)"
-)
+KINDS = (HERE / "typst_rules" / "kinds.md").read_text(encoding="utf-8").removesuffix("\n")
 FAMILY_RULES = f"A figure for a pupil's flashcard is described below. Which kind of figure is it? {KINDS}."
 FigureKind = Literal[
     "geometry",
@@ -267,21 +244,7 @@ def source(family: str, body: str) -> str:
     return FAMILIES[family].preamble + body.strip() + "\n"
 
 
-_COMPILE = """\
-import sys, typst
-try:  # the memory it may take, where the system lets us say so (not on Windows: no resource)
-    import resource
-    resource.setrlimit(resource.RLIMIT_AS, ({memory}, {memory}))
-except Exception:
-    pass
-try:
-    svg = typst.compile(sys.argv[1], format="svg", root=sys.argv[2], package_path=sys.argv[3],
-                        package_cache_path=sys.argv[2], font_paths=[sys.argv[4]], ignore_system_fonts=True)
-except Exception as e:
-    sys.stderr.write(str(e))
-    sys.exit(1)
-sys.stdout.buffer.write(svg)
-"""
+COMPILER = HERE / "typst_compile.py"  # run apart: a figure that loops never stops the server
 
 
 def packages() -> Path:
@@ -318,7 +281,7 @@ def compile_svg(family: str, body: str) -> str:
         path.write_text(document, encoding="utf-8")
         try:
             done = subprocess.run(
-                [sys.executable, "-c", _COMPILE.format(memory=MEMORY), str(path), folder, str(packages()), str(FONTS)],
+                [sys.executable, "-P", str(COMPILER), str(MEMORY), str(path), folder, str(packages()), str(FONTS)],
                 capture_output=True,
                 timeout=COMPILE_S,
             )
