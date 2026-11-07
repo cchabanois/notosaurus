@@ -1,7 +1,7 @@
 """The demo AI (provider "fake"): canned cards, explanations and corrections, to work on
 the page without a key or any cost.
 
-A provider like the others, behind llm._ask_provider: it gets the same request, and
+A provider like the others, behind ai._ask_provider: it gets the same request, and
 answers what the entry point asking passes it (`answer`), built from what the request
 was made of (the prompt, the card, the correction…). Its answers are in Notosaurus's own
 terms: its models whole (ids and pictures kept on a correction), its boxes as fractions

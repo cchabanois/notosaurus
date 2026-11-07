@@ -8,7 +8,7 @@ from helpers import run
 
 from app import settings
 from app.models import Generated, LessonIn
-from notosaurus_core import llm, prompts
+from notosaurus_core import ai, llm, prompts
 from notosaurus_core.models import Mask
 from notosaurus_core.prompts import ExtractOptions
 
@@ -26,7 +26,7 @@ def test_extract_fake(client):
 
 
 def test_the_demo_ai_is_a_provider_like_the_others():
-    """The demo answers through llm._ask_provider, as the services do: a free call
+    """The demo answers through ai._ask_provider, as the services do: a free call
     recorded, its cards told one by one, its diagram boxes kept exactly (already
     fractions of the photo, even an unreadable one). No answer for a request: said."""
     import pytest
@@ -56,7 +56,7 @@ def test_the_demo_ai_is_a_provider_like_the_others():
     assert run(llm.check(demo)) == {"vision": True, "json": True, "answer": "red"}
     assert run(llm.pick_picture(demo, [], "x", "y")) is None
     with pytest.raises(llm.ExtractionError) as e:
-        run(llm._ask_provider(demo, [], "x", Drawing))
+        run(ai._ask_provider(demo, [], "x", Drawing))
     assert e.value.code == "llm.empty_answer"
 
 
@@ -511,7 +511,7 @@ def test_a_figure_meant_but_left_undescribed_is_described(monkeypatch):
         ]
         return schema.model_validate({"deck": "Maths", "cards": cards})
 
-    monkeypatch.setattr(llm, "_ask_provider", generate)
+    monkeypatch.setattr("notosaurus_core.ai._ask_provider", generate)
     s = AIConfig(llm="gemini", gemini_api_key="k")
     told = []
 

@@ -58,7 +58,7 @@ def test_extraction_and_revision_come_out_plain(monkeypatch):
             return schema.model_validate({"deck": "D", "cards": [{"front": "**x**", "back": "y"}], "summary": "s"})
         return schema.model_validate({"deck": "D", "cards": [{"front": "t<u>i</u>ger", "back": "<b>i</b>"}]})
 
-    monkeypatch.setattr(llm, "_ask_provider", answer)
+    monkeypatch.setattr("notosaurus_core.ai._ask_provider", answer)
     s = AIConfig(llm="gemini", gemini_api_key="k")
     found = asyncio.run(llm.extract_cards(s, [], "p"))
     assert (found.deck.cards[0].front, found.deck.cards[0].back) == ("t[i]ger", "[i]")
@@ -101,7 +101,7 @@ def test_extraction_and_revision_texts_decoded(monkeypatch):
             }
         )
 
-    monkeypatch.setattr(llm, "_ask_provider", answer)
+    monkeypatch.setattr("notosaurus_core.ai._ask_provider", answer)
     s = AIConfig(llm="gemini", gemini_api_key="k")
     found = asyncio.run(llm.extract_cards(s, [], "p"))
     assert (found.deck.deck, found.choice, found.deck.cards[0].front) == (

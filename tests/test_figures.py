@@ -262,7 +262,7 @@ def drawing_with(monkeypatch, light_svg=SQUARE, problem="", careful=False):
         calls.append({"schema": schema.__name__, "light": light, "text": text, "images": len(images)})
         return schema(svg=light_svg if light else SQUARE.replace(">A<", ">B<"))
 
-    monkeypatch.setattr(llm, "_ask_provider", answer)
+    monkeypatch.setattr("notosaurus_core.ai._ask_provider", answer)
     monkeypatch.setattr(figures_typst, "available", lambda: False)  # the circuit, as SVG (Typst: below)
     svg = asyncio.run(llm.draw_figure(AIConfig(llm="gemini"), "un triangle ABC", problem=problem, careful=careful))
     return svg, calls
@@ -310,7 +310,7 @@ def test_a_figure_on_the_front_is_told_its_cards_answer(monkeypatch):
         told["text"] = text
         return llm.MadeFigure("<svg/>", "svg", family, False)
 
-    monkeypatch.setattr(llm, "_drawn", drawn)
+    monkeypatch.setattr("notosaurus_core.figure_making._drawn", drawn)
     description = "Diagramme circulaire : Bus 20, À pied 10, chaque secteur avec son effectif"
     for on_back in (False, True):
         card = Card(
@@ -407,7 +407,7 @@ def typst_drawing(monkeypatch, bodies, kind="", problem="", careful=False):
             return schema(typst=next(written))
         return schema(svg=SQUARE)
 
-    monkeypatch.setattr(llm, "_ask_provider", answer)
+    monkeypatch.setattr("notosaurus_core.ai._ask_provider", answer)
     description = "un triangle ABC, l'angle en A marqué"
     svg = asyncio.run(llm.draw_figure(AIConfig(llm="gemini"), description, kind=kind, problem=problem, careful=careful))
     return svg, calls
@@ -423,7 +423,7 @@ def test_a_figures_source_says_what_drew_it(monkeypatch):
     async def answer(s, images, text, schema, system=None, light=False, **options):
         return schema(typst=next(written)) if schema is figures_typst.Figure else schema(svg=SQUARE)
 
-    monkeypatch.setattr(llm, "_ask_provider", answer)
+    monkeypatch.setattr("notosaurus_core.ai._ask_provider", answer)
     card = Card(front="Ce triangle ?", back="rectangle", figure="un triangle", figure_kind="geometry")
     made = asyncio.run(pictures.card_picture(AIConfig(llm="gemini"), card))
     origin = made.card.picture_source
@@ -1128,6 +1128,6 @@ def test_a_figure_of_no_family_drawn_as_svg(monkeypatch):
             return schema(family="other")
         return schema(svg=SQUARE)
 
-    monkeypatch.setattr(llm, "_ask_provider", answer)
+    monkeypatch.setattr("notosaurus_core.ai._ask_provider", answer)
     svg = asyncio.run(llm.draw_figure(AIConfig(llm="gemini"), "un tableau de valeurs"))
     assert ">A<" in svg and calls == ["Kind", "Drawing"]

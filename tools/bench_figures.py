@@ -36,7 +36,7 @@ sys.path[:0] = [str(ROOT), str(ROOT / "core"), str(ROOT / "tools")]
 
 from bench import CLIENT, relay  # noqa: E402
 
-from notosaurus_core import figures, llm  # noqa: E402
+from notosaurus_core import ai, figures  # noqa: E402
 from notosaurus_core.calls import Image  # noqa: E402
 from notosaurus_core.config import AIConfig  # noqa: E402
 
@@ -116,7 +116,7 @@ def by_code(svg: str) -> tuple[bool, str, bytes | None]:
 
 async def by_ai(judge: AIConfig, description: str, png: bytes) -> tuple[bool, str]:
     """The AI looking at it, with its thinking: the light check's rules, stricter."""
-    checked = await llm._ask_provider(
+    checked = await ai._ask_provider(
         judge, [Image(png, "image/png")], f"Description: {description}", figures.Checked, figures.CHECK_RULES
     )
     return checked.ok, checked.problem.strip()

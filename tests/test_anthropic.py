@@ -9,7 +9,7 @@ import httpx
 import pytest
 from helpers import plain_image, run
 
-from notosaurus_core import llm
+from notosaurus_core import ai, llm
 from notosaurus_core.calls import ExtractionError, Image, recording
 from notosaurus_core.config import AIConfig
 from notosaurus_core.figures import Drawing
@@ -203,10 +203,10 @@ def test_service_errors_become_codes(client, monkeypatch, error, code, params):
 
 
 def test_chosen_by_the_settings(monkeypatch):
-    """llm._ask_provider sends to Claude when the settings say "anthropic"."""
+    """ai._ask_provider sends to Claude when the settings say "anthropic"."""
     fake = FakeClaude(answer={"svg": "<svg/>"})
     monkeypatch.setattr(anthropic, "_anthropic_client", lambda s: fake)
-    assert run(llm._ask_provider(CONFIG, [], "x", Drawing, "rules", light=True)).svg == "<svg/>"
+    assert run(ai._ask_provider(CONFIG, [], "x", Drawing, "rules", light=True)).svg == "<svg/>"
     assert len(fake.calls) == 1
 
 
