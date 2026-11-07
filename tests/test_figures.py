@@ -1093,6 +1093,21 @@ def test_nested_sets_elements_each_in_its_own_ring():
     assert figures_typst.compile_svg("sets", check.replace("LEVELS", levels)).startswith("<svg")
 
 
+@pytest.mark.parametrize("name", ["lambda", "pi", "Delta"])
+def test_a_variable_named_like_a_symbol_leaves_the_symbol_in_formulas(name):
+    """`#let lambda = 1.5`, then `$lambda$` for the arrow's name: Typst read the variable,
+    "1.5" written where λ was meant (a wavelength). The variable renamed where code reads it:
+    the formula's name is the symbol again; `#lambda` in it, and the code, keep its value."""
+    with_variable = f"#let {name} = 1.5\n$x = {name}$ #box(width: {name} * 1cm)"
+    meant = f"#let other = 1.5\n$x = {name}$ #box(width: other * 1cm)"
+    assert figures_typst.compile_svg("graph", with_variable) == figures_typst.compile_svg("graph", meant)
+    value = f"#let {name} = 1.5\n$#{name}$"
+    assert figures_typst.compile_svg("graph", value) == figures_typst.compile_svg("graph", "$1.5$")
+    # a word in a text, a field (calc.pi) and a longer name untouched
+    text = f"#let {name} = 1\n#text[le mot {name}] #calc.pi #let {name}-max = 2"
+    assert f"le mot {name}]" in figures_typst.source("graph", text) and "calc.pi" in figures_typst.source("graph", text)
+
+
 def test_the_diagram_rules_edges_compile():
     """Every edge the diagram rule shows (its line styles, a label on its arrow, two arrows
     side by side) compiles between two nodes: a fragment out of step with fletcher (a "bend"
