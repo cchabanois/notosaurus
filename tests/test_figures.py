@@ -1765,6 +1765,33 @@ def test_the_chemistry_rule_says_how_to_draw_a_lewis_structures_pairs():
         assert figures_typst.compile_svg("chemistry", "#skeletize({ " + call + " })").startswith("<svg")
 
 
+def test_sequences_differences_are_computed_and_framed():
+    """Aligned sequences: the letters where variants of the same kind differ are framed,
+    computed from the letters, never placed; a strand and its transcript or its complement
+    (different everywhere) are no variants, never framed; a protein under its codons."""
+    seq = lambda rows, extra="": figures_typst.compile_svg("sequence", f"#sequences({extra}rows: ({rows}))")  # noqa: E731
+    alleles = '("1", "ATG GCA TTC"), ("2", "ATG GCG TTC")'
+    assert seq(alleles) != seq(alleles, "framed: false, ")
+    assert seq(alleles) != seq('("1", "ATG GCA TTC"), ("2", "ATG GGA TTC")')  # elsewhere, framed elsewhere
+    same = '("1", "ATG GCA TTC"), ("2", "ATG GCA TTC")'
+    assert seq(same) == seq(same, "framed: false, ")
+    strand = '("ADN", "TAC GGA CTT"), '
+    for unlike in (strand + '("ARNm", "AUG CCU GAA")', strand + '("Brin", "ATG CCT GAA")'):
+        assert seq(unlike) == seq(unlike, "framed: false, ")
+    codons = '("ARNm", "AUG CCU GAA"), ("Protéine", {})'
+    assert seq(codons.format('"Met-Pro-Glu"')) == seq(codons.format('("Met", "Pro", "Glu")'))
+    with pytest.raises(figures_typst.Unusable, match="aligned"):
+        seq('("1", "ATG GCA TTC"), ("2", "ATG GA TTC")')
+
+
+def test_a_sequences_asked_letter_is_not_shown():
+    """A card asking which letter: written "?", whatever it was."""
+    body = '#sequences(ask: (("2", 6),), rows: (("1", "ATG GCA TTC"), ("2", "ATG GC{} TTC")))'
+    asked = figures_typst.compile_svg("sequence", body.format("G"))
+    assert asked == figures_typst.compile_svg("sequence", body.format("T"))
+    assert asked != figures_typst.compile_svg("sequence", body.format("G").replace('ask: (("2", 6),), ', ""))
+
+
 def test_a_phylogenetic_tree_is_built_from_what_each_species_has():
     """The groups sharing a character are the tree's groups, computed: the order the
     characters are listed in changes nothing, a lone character written without its comma
