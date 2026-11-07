@@ -1588,6 +1588,33 @@ def test_a_figure_credits_the_typst_that_drew_it():
     assert figures_typst.made_with("clock", "#clock(10, 25)")[0] == f"Typst {engine}"
 
 
+def test_colours_mixed_are_computed():
+    """Additive synthesis adds the lights (red and green yellow, the three white, on black);
+    subtractive multiplies the filters (cyan and magenta blue, the three black, on white):
+    each part's colour computed, the synthesis' pure colours ("green" isn't Typst's #2ecc40)."""
+
+    def fills(body: str) -> set[str]:
+        return set(re.findall(r'fill="(#[0-9a-f]{6})"', figures.clean(figures_typst.compile_svg("sets", body))))
+
+    added = fills('#colour-mix(kind: "additive", colours: ("red", "green", "blue"))')
+    assert {"#ff0000", "#00ff00", "#0000ff", "#ffff00", "#ff00ff", "#00ffff", "#ffffff", "#000000"} <= added
+    taken = fills('#colour-mix(kind: "subtractive", colours: ("cyan", "magenta", "yellow"))')
+    assert {"#00ffff", "#ff00ff", "#ffff00", "#0000ff", "#00ff00", "#ff0000", "#000000"} <= taken
+    assert fills('#colour-mix(colours: ("red", "green"))') >= {"#ff0000", "#00ff00", "#ffff00"}
+    with pytest.raises(figures_typst.Unusable, match="a colour is one of"):
+        figures_typst.compile_svg("sets", '#colour-mix(colours: ("rouge", "vert"))')
+
+
+def test_a_mixed_colour_a_card_asks_is_not_shown():
+    """ "Which colour at the centre?": the centre left grey with a question mark, its white not
+    drawn (it would give the answer on the front)."""
+    body = '#colour-mix(kind: "additive", colours: ("red", "green", "blue"){})'
+    shown = figures.clean(figures_typst.compile_svg("sets", body.format("")))
+    asked = figures.clean(figures_typst.compile_svg("sets", body.format(', ask: ("abc",)')))
+    assert "#8c8c8c" in asked and "#8c8c8c" not in shown  # the centre grey, not white
+    assert asked.count('fill="#ffffff"') <= shown.count('fill="#ffffff"')
+
+
 def test_the_chemistry_rule_says_how_to_draw_a_lewis_structures_pairs():
     """Without it the AI drew a Lewis structure's non-bonding pairs as bonds to no atom, or
     left them out (0 of 12 right): the rule's Lewis call, as it gives it, draws them."""
