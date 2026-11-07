@@ -1039,6 +1039,26 @@ def test_the_trigonometric_circles_points_placed_by_their_angles():
     assert figures_typst.compile_svg("geometry", draw.format(90, 150)).startswith("<svg")  # on an axis, past it
 
 
+def test_nested_sets_elements_each_in_its_own_ring():
+    """Sets inside one another (ℕ ⊂ ℤ ⊂ … ⊂ ℝ), drawn by the AI by eye: −5 in ℕ, 0,25 in ℤ.
+    Laid out by the preamble: each text (its middle) inside its set's ellipse and outside the
+    next smaller one, checked by Typst itself (an assert failing, the figure isn't made)."""
+    check = """#context {
+      let inside(s, p) = { let (cy, a, b) = s; calc.pow(p.at(0) / a, 2) + calc.pow((p.at(1) - cy) / b, 2) < 1 }
+      let (shapes, placed) = _nested-layout(LEVELS)
+      for (k, p, c) in placed {
+        assert(inside(shapes.at(k), p), message: "outside its set")
+        if k > 0 { assert(not inside(shapes.at(k - 1), p), message: "inside a smaller set") }
+      }
+      nested-sets(..LEVELS)
+    }"""
+    levels = (
+        "(([N], ([3],)), ([Z], ([-5],)), ([D], ([0,25],)), ([Q], ([1/3],)),"
+        " ([R], ([racine de 2], [pi], [un nombre long])))"
+    )
+    assert figures_typst.compile_svg("sets", check.replace("LEVELS", levels)).startswith("<svg")
+
+
 def test_the_diagram_rules_edges_compile():
     """Every edge the diagram rule shows (its line styles, a label on its arrow, two arrows
     side by side) compiles between two nodes: a fragment out of step with fletcher (a "bend"
@@ -1532,3 +1552,13 @@ def test_a_figure_credits_the_typst_that_drew_it():
 
     engine = json.loads(typst.query(b"#metadata(str(sys.version)) <v>", "<v>", field="value"))[0]
     assert figures_typst.made_with("clock", "#clock(10, 25)")[0] == f"Typst {engine}"
+
+
+def test_the_chemistry_rule_says_how_to_draw_a_lewis_structures_pairs():
+    """Without it the AI drew a Lewis structure's non-bonding pairs as bonds to no atom, or
+    left them out (0 of 12 right): the rule's Lewis call, as it gives it, draws them."""
+    rule = figures_typst.FAMILIES["chemistry"].rules
+    calls = re.findall(r"`(fragment\([^`]*lewis-line[^`]*)`", rule)
+    assert calls, "the chemistry rule shows a Lewis structure's pairs"
+    for call in calls:
+        assert figures_typst.compile_svg("chemistry", "#skeletize({ " + call + " })").startswith("<svg")
