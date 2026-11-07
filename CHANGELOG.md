@@ -21,12 +21,15 @@ Each pull request's entries (the `## Changelog` of its description) are put unde
 
 ### Changed
 
+- Algorithm flowcharts are drawn with their usual shapes: rounded start and end, a diamond for each test.
 - Figures drawn in Typst use the same plain font as the other figures, and timelines' text is larger.
 - The automatic instruction makes cards that read a lesson's charts and curves (its tables of counts or of measures), the chart or the curve redrawn on the front.
 - The Android app is about a third smaller.
 
 ### Fixed
 
+- A solid's lengths are written beside its edges, no longer across them.
+- Diagrams' lines are no longer drawn with a bar across them.
 - Diagrams whose boxes hold long texts are no longer drawn tiny, and links between boxes are no longer drawn with a bar across them.
 - Every sheet is announced as a dialog by screen readers (TalkBack), and every sheet slides in from the bottom.
 - A card no longer shows "\n" where the AI meant a line break.
