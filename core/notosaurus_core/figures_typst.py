@@ -311,6 +311,81 @@ def _broken_lines(body: str) -> str:
     return "".join(out)
 
 
+# The language the AI says its figure is in (its first line, `#set text(lang: "fr")`, the
+# description's): numbers written as that language writes them. A decimal comma in these
+# (ISO 639-1); a point in the others (English, Chinese, Japanese…) and when none is said.
+LANGUAGE = re.compile(r'#set\s+text\([^)]*\blang:\s*"([a-zA-Z]{2,3})"')
+DECIMAL_COMMA = frozenset(
+    [
+        "fr",
+        "de",
+        "es",
+        "it",
+        "pt",
+        "nl",
+        "ca",
+        "eu",
+        "gl",
+        "ro",
+        "pl",
+        "cs",
+        "sk",
+        "sl",
+        "hr",
+        "sr",
+        "bs",
+        "bg",
+        "ru",
+        "uk",
+        "be",
+        "lt",
+        "lv",
+        "et",
+        "fi",
+        "sv",
+        "da",
+        "no",
+        "nb",
+        "nn",
+        "is",
+        "tr",
+        "el",
+        "hu",
+        "sq",
+        "mk",
+        "az",
+        "kk",
+        "ka",
+        "hy",
+        "id",
+        "vi",
+        "af",
+    ]
+)
+# The preambles' (graph, chart): the separator their own numbers are written with, set here
+SEPARATOR = '#let decimal-separator = "."'
+MATH = re.compile(r"\$[^$]*\$")
+
+
+def decimal_separator(body: str) -> str:
+    """ "," when the figure's language (its `#set text(lang: …)`) writes a decimal comma, else "."."""
+    said = LANGUAGE.search(body)
+    return "," if said and said.group(1).lower() in DECIMAL_COMMA else "."
+
+
+def _decimal_commas(body: str, comma: bool) -> str:
+    """A decimal comma in maths as the language writes it: Typst's maths spaces a comma out
+    ("0, 3"), a quoted one stays tight ("0,3"). LaTeX's own (`0{,}3`, the AI writing LaTeX)
+    meant one whatever the language; a comma between digits only in a language writing one
+    (a list "1,2" in English stays as it was)."""
+
+    def tight(math: re.Match) -> str:
+        m = re.sub(r"(\d)\s*\{,\}\s*(?=\d)", r'\1","', math.group(0))
+        return re.sub(r"(\d),(?=\d)", r'\1","', m) if comma else m
+
+    return MATH.sub(tight, body)
+
+
 def source(family: str, body: str) -> str:
     """The Typst document of a figure of `family`: its preamble, then what the AI wrote."""
     # "<" and ">" written as HTML's entities (an arrow "-|&gt;"): Typst has none of them
@@ -319,7 +394,10 @@ def source(family: str, body: str) -> str:
         body = _broken_lines(EDGE_MARKS.sub(_unbarred, body))
     if FORBIDDEN.search(body):
         raise Unusable("Only drawing commands: no import, include, file or plugin.")
-    return FONT + FAMILIES[family].preamble + body.strip() + "\n"
+    separator = decimal_separator(body)
+    body = _decimal_commas(body, separator == ",")
+    preamble = FAMILIES[family].preamble.replace(SEPARATOR, f'#let decimal-separator = "{separator}"')
+    return FONT + preamble + body.strip() + "\n"
 
 
 COMPILER = HERE / "typst_compile.py"  # run apart: a figure that loops never stops the server

@@ -713,6 +713,40 @@ def test_a_diagrams_strings_and_maths_left_as_written():
     assert figures_typst.source("diagram", body).endswith(body + "\n")
 
 
+@pytest.mark.parametrize(
+    ("family", "body"),
+    [
+        (
+            "graph",
+            "#let xs = lq.linspace(0, 0.25, num: 20)\n"
+            "#lq.diagram(width: 6cm, height: 4cm, xlim: (0, 0.26), ylim: (0, 12), lq.plot(xs, xs.map(x => 50 * x)))",
+        ),
+        ("chart", '#chart(kind: "line", values: ((0, 0.5), (1, 1.5), (2, 2.5)), written: (1,))'),
+    ],
+)
+def test_a_figures_numbers_written_as_its_language_writes_them(family, body):
+    """The numbers a preamble writes itself (an axis's, a chart's values): with the decimal
+    separator of the language the AI says the figure is in (a comma in French, German…), a
+    point in English and when it says none, never one for every language."""
+    said = lambda lang: f'#set text(lang: "{lang}")\n{body}'  # noqa: E731
+    assert '#let decimal-separator = ","' in figures_typst.source(family, said("fr"))
+    assert '#let decimal-separator = "."' in figures_typst.source(family, said("en"))
+    french, german = (figures_typst.compile_svg(family, said(lang)) for lang in ("fr", "de"))
+    english, unsaid = figures_typst.compile_svg(family, said("en")), figures_typst.compile_svg(family, body)
+    assert french == german != english == unsaid
+
+
+def test_a_decimal_comma_in_maths_drawn_tight():
+    """Typst's maths spaces a comma out ("0, 3"): a decimal one quoted, tight; LaTeX's `0{,}3`
+    (the AI writing LaTeX) whatever the language, a comma between digits only in a language
+    writing a decimal comma (an English list "1,2" left as written)."""
+    body = '#diagram(node((0, 0), [A]), edge("-", [$0{,}3$ et $0,7$]), node((1, 0), [B]))'
+    french = figures_typst.source("diagram", '#set text(lang: "fr")\n' + body)
+    english = figures_typst.source("diagram", '#set text(lang: "en")\n' + body)
+    assert '$0","3$ et $0","7$' in french
+    assert '$0","3$ et $0,7$' in english
+
+
 def test_an_arrow_written_with_html_entities_drawn():
     """The AI writes an arrow's ">" as HTML does ("-|&gt;"): Typst refused it twice, the
     figure drawn as SVG instead; read as ">" (Typst has no such entity)."""
@@ -1008,6 +1042,55 @@ def test_the_circuit_rules_current_arrow_compiles():
     example = re.search(r"exactly so:\n(.*?)\n- ", rules, re.S).group(1)
     body = example.replace("\n})", f"\n  {arrow}\n}})")
     assert arrow in body and figures.clean(figures_typst.compile_svg("circuit", body)).startswith("<svg")
+
+
+def test_an_intervals_brackets_turned_by_its_bounds():
+    """An interval on a number line: its brackets drawn by the preamble from whether each bound
+    is closed, open or infinite (by hand, the AI turned one the wrong way half the time)."""
+    draw = "#ctz-canvas({{ ctz-init(); ctz-draw-interval({}, first: -3, last: 5) }})"
+    shapes = {
+        closed: figures_typst.compile_svg("geometry", draw.format(f"-1, 3, closed: {closed}"))
+        for closed in ("(true, true)", "(true, false)", "(false, true)", "(false, false)")
+    }
+    assert len(set(shapes.values())) == 4  # each bound's bracket turned its own way
+    figures_typst.compile_svg("geometry", draw.format("2, none, closed: (true, false)"))  # [2 ; +∞[
+    figures_typst.compile_svg("geometry", draw.format("none, 1"))  # ]−∞ ; 1]
+    # the line drawn by the preamble too: its ticks where the interval's bounds are placed
+    line = "#ctz-canvas({ ctz-init(); ctz-draw-number-line(-2, 6, scale: 0.8, arrow: true) })"
+    assert figures_typst.compile_svg("geometry", line).startswith("<svg")
+
+
+def test_the_trigonometric_circles_points_placed_by_their_angles():
+    """The trigonometric circle drawn by the preamble from the angles' values (by eye, the AI
+    placed them wrongly and wrote its points' names, "Ppi_2"): an angle changed, the drawing
+    changes; the names given are the only ones written."""
+    draw = (
+        "#ctz-canvas({{ ctz-init();"
+        " ctz-draw-unit-circle(angles: (({}, $pi/3$),), project: ({}, $1/2$, $sqrt(3)/2$)) }})"
+    )
+    sixty = figures_typst.compile_svg("geometry", draw.format(60, 60))
+    assert sixty != figures_typst.compile_svg("geometry", draw.format(45, 45))
+    assert figures_typst.compile_svg("geometry", draw.format(90, 150)).startswith("<svg")  # on an axis, past it
+
+
+def test_nested_sets_elements_each_in_its_own_ring():
+    """Sets inside one another (ℕ ⊂ ℤ ⊂ … ⊂ ℝ), drawn by the AI by eye: −5 in ℕ, 0,25 in ℤ.
+    Laid out by the preamble: each text (its middle) inside its set's ellipse and outside the
+    next smaller one, checked by Typst itself (an assert failing, the figure isn't made)."""
+    check = """#context {
+      let inside(s, p) = { let (cy, a, b) = s; calc.pow(p.at(0) / a, 2) + calc.pow((p.at(1) - cy) / b, 2) < 1 }
+      let (shapes, placed) = _nested-layout(LEVELS)
+      for (k, p, c) in placed {
+        assert(inside(shapes.at(k), p), message: "outside its set")
+        if k > 0 { assert(not inside(shapes.at(k - 1), p), message: "inside a smaller set") }
+      }
+      nested-sets(..LEVELS)
+    }"""
+    levels = (
+        "(([N], ([3],)), ([Z], ([-5],)), ([D], ([0,25],)), ([Q], ([1/3],)),"
+        " ([R], ([racine de 2], [pi], [un nombre long])))"
+    )
+    assert figures_typst.compile_svg("sets", check.replace("LEVELS", levels)).startswith("<svg")
 
 
 def test_the_diagram_rules_edges_compile():
@@ -1530,3 +1613,13 @@ def test_a_mixed_colour_a_card_asks_is_not_shown():
     asked = figures.clean(figures_typst.compile_svg("sets", body.format(', ask: ("abc",)')))
     assert "#8c8c8c" in asked and "#8c8c8c" not in shown  # the centre grey, not white
     assert asked.count('fill="#ffffff"') <= shown.count('fill="#ffffff"')
+
+
+def test_the_chemistry_rule_says_how_to_draw_a_lewis_structures_pairs():
+    """Without it the AI drew a Lewis structure's non-bonding pairs as bonds to no atom, or
+    left them out (0 of 12 right): the rule's Lewis call, as it gives it, draws them."""
+    rule = figures_typst.FAMILIES["chemistry"].rules
+    calls = re.findall(r"`(fragment\([^`]*lewis-line[^`]*)`", rule)
+    assert calls, "the chemistry rule shows a Lewis structure's pairs"
+    for call in calls:
+        assert figures_typst.compile_svg("chemistry", "#skeletize({ " + call + " })").startswith("<svg")

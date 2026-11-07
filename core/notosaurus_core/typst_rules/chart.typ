@@ -1,5 +1,8 @@
 #set page(width: auto, height: auto, margin: 6pt)
 #import "@preview/cetz:0.5.2"
+// Numbers written as the figure's language writes them: its decimal separator, set by
+// figures_typst.source from the AI's `#set text(lang: …)` (a point when none is said)
+#let decimal-separator = "."
 // A statistics chart from counts: "bars" (a bar per value, as high as its count: a
 // diagramme en bâtons), "pie" (a circle, each sector count / total × 360°), "semi" (a half
 // circle, × 180°): the angles computed, never given; or "line", measures joined (a heart
@@ -52,10 +55,10 @@
     rgb("#8fd3c9"), rgb("#e8b48f"),
   )
   let txt(body) = text(10pt, font: "DejaVu Sans", body)
-  // a number as the lesson writes it: whole, or with a decimal comma
+  // a number as the figure's language writes it: whole, or with its decimal separator
   let num(x) = {
     let r = calc.round(x, digits: 1)
-    if calc.fract(r) == 0 { str(int(r)) } else { str(r).replace(".", ",") }
+    if calc.fract(r) == 0 { str(int(r)) } else { str(r).replace(".", decimal-separator) }
   }
   // A graduation's step: a round one giving at most `most` steps over `span`
   let nice(span, most) = (0.1, 0.2, 0.5, 1, 2, 2.5, 5, 10, 20, 25, 50, 100, 200, 250, 500, 1000, 2000, 2500, 5000, 10000)
