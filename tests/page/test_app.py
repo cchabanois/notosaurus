@@ -3,6 +3,7 @@ subscription, help links."""
 
 import json
 import re
+from datetime import UTC, datetime, timedelta
 
 import pytest
 
@@ -92,9 +93,9 @@ def test_every_language_fits_a_narrow_phone(page, browser, server, lang):
 def test_android_credits_said_as_the_plan_is(page):
     """The plan in the page's language; the trial's credits not "this month"; today's only
     when fewer than what is left."""
-    android_settings(
-        page, {"plan": "free_trial", "credits_left": 94, "daily_left": 119, "ends_at": "2026-11-07T10:00:00Z"}
-    )
+    # a trial still running: one whose end is past is over (relay.trial_ended), whatever today is
+    ends_at = (datetime.now(UTC) + timedelta(days=10)).isoformat()
+    android_settings(page, {"plan": "free_trial", "credits_left": 94, "daily_left": 119, "ends_at": ends_at})
     sync_api.expect(page.get_by_text("Formule : Essai gratuit", exact=True)).to_be_visible()
     sync_api.expect(page.get_by_text("94 crédits restants pour l'essai", exact=True)).to_be_visible()
     sync_api.expect(page.locator("textarea[x-model='form.instructions']")).to_be_visible()  # once the settings came
