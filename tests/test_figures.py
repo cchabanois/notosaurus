@@ -713,6 +713,40 @@ def test_a_diagrams_strings_and_maths_left_as_written():
     assert figures_typst.source("diagram", body).endswith(body + "\n")
 
 
+@pytest.mark.parametrize(
+    ("family", "body"),
+    [
+        (
+            "graph",
+            "#let xs = lq.linspace(0, 0.25, num: 20)\n"
+            "#lq.diagram(width: 6cm, height: 4cm, xlim: (0, 0.26), ylim: (0, 12), lq.plot(xs, xs.map(x => 50 * x)))",
+        ),
+        ("chart", '#chart(kind: "line", values: ((0, 0.5), (1, 1.5), (2, 2.5)), written: (1,))'),
+    ],
+)
+def test_a_figures_numbers_written_as_its_language_writes_them(family, body):
+    """The numbers a preamble writes itself (an axis's, a chart's values): with the decimal
+    separator of the language the AI says the figure is in (a comma in French, German…), a
+    point in English and when it says none, never one for every language."""
+    said = lambda lang: f'#set text(lang: "{lang}")\n{body}'  # noqa: E731
+    assert '#let decimal-separator = ","' in figures_typst.source(family, said("fr"))
+    assert '#let decimal-separator = "."' in figures_typst.source(family, said("en"))
+    french, german = (figures_typst.compile_svg(family, said(lang)) for lang in ("fr", "de"))
+    english, unsaid = figures_typst.compile_svg(family, said("en")), figures_typst.compile_svg(family, body)
+    assert french == german != english == unsaid
+
+
+def test_a_decimal_comma_in_maths_drawn_tight():
+    """Typst's maths spaces a comma out ("0, 3"): a decimal one quoted, tight; LaTeX's `0{,}3`
+    (the AI writing LaTeX) whatever the language, a comma between digits only in a language
+    writing a decimal comma (an English list "1,2" left as written)."""
+    body = '#diagram(node((0, 0), [A]), edge("-", [$0{,}3$ et $0,7$]), node((1, 0), [B]))'
+    french = figures_typst.source("diagram", '#set text(lang: "fr")\n' + body)
+    english = figures_typst.source("diagram", '#set text(lang: "en")\n' + body)
+    assert '$0","3$ et $0","7$' in french
+    assert '$0","3$ et $0,7$' in english
+
+
 def test_an_arrow_written_with_html_entities_drawn():
     """The AI writes an arrow's ">" as HTML does ("-|&gt;"): Typst refused it twice, the
     figure drawn as SVG instead; read as ">" (Typst has no such entity)."""
