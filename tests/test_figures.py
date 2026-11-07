@@ -1763,3 +1763,28 @@ def test_the_chemistry_rule_says_how_to_draw_a_lewis_structures_pairs():
     assert calls, "the chemistry rule shows a Lewis structure's pairs"
     for call in calls:
         assert figures_typst.compile_svg("chemistry", "#skeletize({ " + call + " })").startswith("<svg")
+
+
+def test_a_phylogenetic_tree_is_built_from_what_each_species_has():
+    """The groups sharing a character are the tree's groups, computed: the order the
+    characters are listed in changes nothing, a lone character written without its comma
+    neither; characters whose groups overlap without nesting are refused (no tree has both),
+    never drawn at a guess."""
+    tree = '#phylogeny(species: (("Truite", ()), ("Grenouille", {}), ("Chat", {})))'
+    ladder = figures_typst.compile_svg("phylogeny", tree.format('("membres",)', '("membres", "poils")'))
+    assert ladder == figures_typst.compile_svg("phylogeny", tree.format('("membres")', '("poils", "membres")'))
+    assert ladder != figures_typst.compile_svg("phylogeny", tree.format('("membres",)', '("membres",)'))
+    overlapping = tree.format('("membres", "poils")', '("membres",)').replace("()", '("poils",)')
+    with pytest.raises(figures_typst.Unusable, match="overlap without nesting"):
+        figures_typst.compile_svg("phylogeny", overlapping)
+
+
+def test_a_phylogenetic_trees_hidden_names_are_not_shown():
+    """A card asking which species or which innovation: written "?", not its name."""
+    tree = '#phylogeny({}species: (("Truite", ()), ("Grenouille", ("membres",)), ("Chat", ("membres", "poils"))))'
+    bare = figures_typst.compile_svg("phylogeny", tree.format(""))
+    for hidden in ('"poils"', '"Chat"'):
+        body = tree.format(f"hidden: ({hidden},), ")
+        asked = figures_typst.compile_svg("phylogeny", body)
+        assert asked != bare
+        assert asked == figures_typst.compile_svg("phylogeny", body.replace(hidden, '"x"'))
