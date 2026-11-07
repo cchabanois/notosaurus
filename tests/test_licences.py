@@ -31,3 +31,4 @@ def test_every_figure_package_shipped_is_listed():
     shipped = {re.fullmatch(r"(.+)-([\d.]+)\.tar\.gz", a.name).groups() for a in archives}
     assert shipped <= listed, shipped - listed
     assert ("Natural Earth", "5.1.2") in listed  # notosaurus-atlas's data (tools/atlas.py)
+    assert {("Unicode CLDR", "46.0"), ("Wikidata", "2026-11")} <= listed  # its names, its places of history
