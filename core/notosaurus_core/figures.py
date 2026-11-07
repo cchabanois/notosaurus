@@ -18,50 +18,20 @@ from pydantic import BaseModel, Field
 
 from .errors import AppError
 from .models import Card
+from .prompts import FIGURE_CHECK_RULES, SVG_FIGURE_RULES
 
 SVG_NS = "http://www.w3.org/2000/svg"
 ElementTree.register_namespace("", SVG_NS)
 MAX_SIZE = 200_000  # characters: a figure is a few kilobytes
 VIEWBOX = "0 0 400 300"
 
-RULES = """\
-You draw figures for a pupil's flashcards, as SVG: geometry, labelled or measured \
-figures, simple diagrams. Rules:
-- one <svg> element with viewBox="0 0 400 300", no width or height attributes;
-- a white background first: <rect width="400" height="300" fill="white"/>;
-- draw exactly what the description asks for, nothing more: no title, no caption, no \
-label or measure it doesn't ask to write (the figure goes on a flashcard: one word too \
-many may give the answer away); what it names to say what to draw (a function, a shape, \
-a theorem, an object) is not a label: written only when the description asks for it;
-- black strokes, font-family="sans-serif", font-size 14 to 16; the colours the description \
-gives (a colour code: atoms, a legend), as it says;
-- labels never overlap lines or each other; leave margins inside the viewBox;
-- exact geometry: right angles really right (marked with a small square), \
-proportions and measures as described;
-- plain text and Unicode only (√, ², π, α, °), no LaTeX; the labels in the \
-description's language, written exactly as given;
-- a shaded area: a hatching (<pattern>) or a light grey fill, its outline kept; an \
-area shared by shapes (an intersection) cut with <clipPath>; all inside the SVG \
-(references "url(#id)" only);
-- only shapes, text, arrow markers, patterns, clip paths and gradients: no script, no \
-image, no link, no external reference, no animation.
-Answer in "svg" with the SVG document only.
-A figure is for a pupil's lesson: for anything else (or anything unsuited to a \
-child), answer an empty figure, the white background alone."""
+RULES = SVG_FIGURE_RULES
 
 
 # The figure seen as a picture, against its description: what a light drawing gets wrong
 # is placing by eye what belongs to another element (a mark off its segment, an angle's
 # arc on the other side of its line); looking at it tells, where its coordinates don't
-CHECK_RULES = """\
-You check a figure drawn for a pupil's flashcard against its description, as a strict \
-maths teacher. Look at every element the description asks for: each mark is on the \
-segment or at the angle it belongs to; each angle mark covers the angle described, on the \
-side described (left or right of a line, above or below), not the other angle at the same \
-vertex nor a reflex angle; equal things marked the same way; labels present, readable, not \
-on a line (an axis's numbers that a curve passes over are fine: axes crossing at the origin \
-put them there); the figure fills the picture, readable. Answer "ok" true only when everything is \
-right; else false, with the problem in one short sentence, in the description's language."""
+CHECK_RULES = FIGURE_CHECK_RULES
 PNG_WIDTH = 600  # pixels: what the check sees
 FONT = Path(__file__).parent / "fonts" / "DejaVuSans.ttf"  # its licence beside it
 

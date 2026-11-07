@@ -1,11 +1,10 @@
 """Cloze cards: a text with gaps, one card per gap number."""
 
+from pathlib import Path
+
 from .common import BACK_INFO, CSS, HELP_FIELDS, NoteType, field_html, fix_link, helps, info, versioned, with_context
 
-CLOZE_CSS = """\
-.cloze { font-weight: 700; color: #0b5cad; }
-.extra { margin-top: 12px; }
-"""
+CLOZE_CSS = (Path(__file__).parent / "css" / "cloze.css").read_text(encoding="utf-8")
 
 
 def cloze_note_type() -> NoteType:
