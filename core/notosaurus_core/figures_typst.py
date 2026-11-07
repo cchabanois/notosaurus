@@ -45,6 +45,11 @@ FONTS = HERE / "fonts"
 COMPILE_S = 15  # a figure compiles in well under a second; a loop never ends
 MEMORY = 1024 * 1024 * 1024  # bytes, where the system lets us say so
 
+# Every family's text in the font the SVG figures are drawn in (fonts/, shipped): a figure
+# reads the same whichever way it was drawn, plainer for a child than Typst's own serif;
+# formulas keep their mathematical font
+FONT = '#set text(font: "DejaVu Sans")\n'
+
 # For every family: what to draw exactly, and nothing that loads
 COMMON = """\
 - draw exactly what the description asks for, nothing more: no title, no caption; write only \
@@ -264,7 +269,7 @@ def source(family: str, body: str) -> str:
         body = body.replace('"-||"', '"-|>"')
     if FORBIDDEN.search(body):
         raise Unusable("Only drawing commands: no import, include, file or plugin.")
-    return FAMILIES[family].preamble + body.strip() + "\n"
+    return FONT + FAMILIES[family].preamble + body.strip() + "\n"
 
 
 _COMPILE = """\

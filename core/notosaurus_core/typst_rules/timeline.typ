@@ -8,8 +8,8 @@
   } else { (date - start) * unit }
   let gap = 0.25
   let shown(body) = {
-    let t = text(9pt, body)
-    if measure(t).width > 3cm { block(width: 3cm, t) } else { t }
+    let t = text(11pt, body)
+    if measure(t).width > 3.7cm { block(width: 3.7cm, t) } else { t }
   }
   let items = (
     events.map(e => (x: at(e.at(0)), body: shown(e.at(1))))
@@ -37,7 +37,7 @@
     let year = start
     while year <= end {
       line((at(year), -0.1), (at(year), 0.1), stroke: 0.6pt)
-      content((at(year), -0.2), text(8pt, if year < 0 { "−" + str(-year) } else { str(year) }), anchor: "north")
+      content((at(year), -0.2), text(10pt, if year < 0 { "−" + str(-year) } else { str(year) }), anchor: "north")
       year += step
     }
     for p in placed {

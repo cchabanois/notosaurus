@@ -472,7 +472,7 @@ def test_typst_asked_again_with_its_error_then_used(monkeypatch):
 # Rings drawn as nested nodes, each label at its centre (TYP-09h): the inner fills cover
 # the outer ones' labels
 RINGS = """#diagram(node-stroke: 0.8pt,
-  node((0, 0), [Couronne périurbaine], shape: circle, fill: luma(245), radius: 3cm),
+  node((0, 0), [Périurbain], shape: circle, fill: luma(245), radius: 3cm),
   node((0, 0), [Banlieue], shape: circle, fill: luma(225), radius: 2cm),
   node((0, 0), [Ville], shape: circle, fill: rgb("#ffe066"), radius: 1cm),
 )"""
@@ -1131,3 +1131,11 @@ def test_a_figure_of_no_family_drawn_as_svg(monkeypatch):
     monkeypatch.setattr(llm, "_ask_provider", answer)
     svg = asyncio.run(llm.draw_figure(AIConfig(llm="gemini"), "un tableau de valeurs"))
     assert ">A<" in svg and calls == ["Kind", "Drawing"]
+
+
+@pytest.mark.parametrize("family", sorted(figures_typst.FAMILIES))
+def test_every_familys_text_in_the_svg_figures_font(family):
+    """A figure's text in DejaVu Sans, whichever family draws it: not Typst's own serif."""
+    plain = figures_typst.compile_svg(family, '#text("Mi 12")')
+    sans = figures_typst.compile_svg(family, '#text(font: "DejaVu Sans", "Mi 12")')
+    assert plain == sans
