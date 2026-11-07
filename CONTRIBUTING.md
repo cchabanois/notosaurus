@@ -42,7 +42,7 @@ ship: the scripts run in a Node `vm` context with the browser globals stubbed an
 the real translation files, so the fallback chain, the card preview's escaping,
 the settings page's diffing and the like are checked without a browser.
 
-`tests/test_page.py` drives the pages in a real browser (Playwright, headless
+`tests/page/` drives the pages in a real browser (Playwright, headless
 Chromium): the page saving as it goes, generating again and undoing, deleting a
 lesson, the settings. It is skipped unless Playwright is installed:
 `.venv/bin/pip install -r requirements-page.txt`, then

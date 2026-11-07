@@ -287,9 +287,9 @@ def pytest_terminal_summary(terminalreporter):
     """The page tests skipped (no Playwright, no Chromium) say so at the end, where it is
     read: a skip is no pass (static/ changed, they had to run)."""
     skipped = terminalreporter.stats.get("skipped", [])
-    if any("test_page.py" in str(getattr(r, "fspath", "") or r.nodeid) for r in skipped):
+    if any("tests/page/" in str(getattr(r, "fspath", "") or r.nodeid) for r in skipped):
         terminalreporter.write_line(
-            "⚠️  tests/test_page.py was skipped: no Playwright or Chromium (CONTRIBUTING.md). "
+            "⚠️  tests/page/ was skipped: no Playwright or Chromium (CONTRIBUTING.md). "
             "Install them before changing static/.",
             yellow=True,
             bold=True,

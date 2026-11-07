@@ -26,11 +26,11 @@ What a coding agent most often gets wrong here. The rest is in
 ```sh
 .venv/bin/ruff check . && .venv/bin/ruff format --check .
 .venv/bin/pyright                      # CI's "types" job: a type error fails the pull request
-.venv/bin/pytest                       # tests/test_page.py too when static/ changes (CONTRIBUTING.md)
+.venv/bin/pytest                       # tests/page/ too when static/ changes (CONTRIBUTING.md)
 node --test tests/frontend/*.test.mjs  # when static/*.js changes
 ```
 
-`tests/test_page.py` is skipped, without failing, when Playwright isn't installed: check
+`tests/page/` is skipped, without failing, when Playwright isn't installed: check
 that it ran.
 
 Android (`android/`): its unit tests (`./gradlew testDebugUnitTest`), and its device tests on

@@ -190,7 +190,7 @@ jobs:
 
   page:
     # The pages in a real browser (Playwright, headless Chromium): saving as they go,
-    # generating again and undoing, deleting a lesson, the settings (tests/test_page.py).
+    # generating again and undoing, deleting a lesson, the settings (tests/page/).
     name: page (browser)
     runs-on: ubuntu-latest
     timeout-minutes: 10
@@ -204,7 +204,7 @@ jobs:
       - run: pip install -r requirements-page.txt
       # The runner's own Chrome, not Playwright's download: its system packages (--with-deps,
       # apt) once took the job's 10 minutes. Checked first: without it the tests are skipped.
-      - run: test -x /usr/bin/google-chrome && pytest -q tests/test_page.py
+      - run: test -x /usr/bin/google-chrome && pytest -q tests/page
         env:
           NOTOSAURUS_TEST_CHROMIUM: /usr/bin/google-chrome
 
