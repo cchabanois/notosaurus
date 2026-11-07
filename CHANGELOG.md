@@ -28,6 +28,7 @@ Each pull request's entries (the `## Changelog` of its description) are put unde
 
 ### Fixed
 
+- A figure whose colours are written as rgb(…) or hsl(…) no longer comes out black.
 - A figure whose colours are mixed (a pH scale's band from red to blue) no longer comes out black.
 - In geometry figures, a transformed figure's points are named with a prime (A', B', C'), and the lengths a figure is given are written on it.
 - A cone's height is written beside it, no longer across its side.
