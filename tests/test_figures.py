@@ -1417,3 +1417,14 @@ def test_a_text_along_the_figures_own_curve_kept():
         '<text><textPath href="#p" startOffset="10%">Arc</textPath><textPath href="https://example.com">X</textPath></text>'
     )
     assert '<textPath href="#p" startOffset="10%">Arc</textPath>' in kept and "example.com" not in kept
+
+
+def test_a_figure_credits_the_typst_that_drew_it():
+    """Typst's own version, the compiler typst-py ships: typst-py 0.15.2 ships Typst 0.15.1,
+    there is no Typst 0.15.2 to credit."""
+    import json
+
+    import typst
+
+    engine = json.loads(typst.query(b"#metadata(str(sys.version)) <v>", "<v>", field="value"))[0]
+    assert figures_typst.made_with("clock", "#clock(10, 25)")[0] == f"Typst {engine}"

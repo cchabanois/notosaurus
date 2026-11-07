@@ -212,17 +212,31 @@ def used_packages(family: str, body: str) -> list[tuple[str, str]]:
     return used
 
 
+@functools.cache
+def typst_version() -> str:
+    """Typst's own version, the compiler typst-py ships (Typst 0.15.1 in typst-py 0.15.2): its
+    sys.version, else the Python package's; "" without Typst."""
+    try:
+        import json
+
+        import typst
+
+        return json.loads(typst.query(b"#metadata(str(sys.version)) <v>", "<v>", field="value"))[0]
+    except Exception:  # an older typst-py, or none
+        from importlib.metadata import PackageNotFoundError, version
+
+        try:
+            return version("typst")
+        except PackageNotFoundError:
+            return ""
+
+
 def made_with(family: str, body: str) -> list[str]:
     """What a figure was drawn with, to credit them: Typst, then the packages its Typst
     really uses ("ctz-euclide 0.3.0"); [] for no family of ours."""
     if family not in FAMILIES:
         return []
-    from importlib.metadata import PackageNotFoundError, version
-
-    try:
-        typst = f"Typst {version('typst')}"
-    except PackageNotFoundError:
-        typst = "Typst"
+    typst = f"Typst {typst_version()}".strip()
     return [typst] + [f"{name} {at}" for name, at in used_packages(family, body)]
 
 
