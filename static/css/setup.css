@@ -1,0 +1,118 @@
+/* --- Setup assistant (setup.html) ------------------------------------------- */
+.setup-progress { display: flex; justify-content: center; gap: .4rem 1rem; flex-wrap: wrap; list-style: none; padding: 0; margin: 0 0 1rem; }
+.setup-progress li { display: inline-flex; align-items: center; gap: .4rem; color: var(--muted); font-weight: 700; font-size: .9rem; }
+.setup-progress li .step { background: var(--surface-2); color: var(--muted); }
+.setup-progress li.active { color: var(--primary); }
+.setup-progress li.active .step { background: var(--primary); color: var(--surface); }
+.setup-progress li.done .step { background: var(--ok); color: var(--surface); }
+.setup-step h2:focus { outline: none; }
+.option .recommended { color: var(--ok); font-weight: 700; }
+.setup-guide { margin: 1rem 0; padding: .75rem 1rem; border-radius: var(--radius-sm); background: var(--surface-2); }
+.setup-guide h3 { margin: 0 0 .25rem; font-size: 1rem; }
+.setup-guide ol { margin: 0; padding-left: 1.25rem; display: grid; gap: .3rem; }
+.setup-nav { display: flex; gap: .6rem; justify-content: flex-end; flex-wrap: wrap; margin-top: 1rem; }
+.setup-nav .btn.wide { flex: 1; }
+.setup-waiting { display: flex; align-items: center; justify-content: center; gap: .5rem; color: var(--muted); font-weight: 700; }
+.setup-done { text-align: center; }
+.setup-done-mark {
+  width: 3.5rem; height: 3.5rem; margin: 0 auto .5rem; border-radius: 50%; display: grid; place-items: center;
+  background: var(--primary-soft); color: var(--primary); font-size: 1.8rem; font-weight: 700;
+}
+.setup-done .setup-nav { justify-content: center; }
+.setup-banner { display: grid; gap: .5rem; border-color: var(--primary); }
+.about-links, .licences { margin: .5rem 0 0; padding-left: 1.2rem; display: grid; gap: .35rem; }
+.licences li { overflow-wrap: anywhere; }
+.notice-bar { display: flex; align-items: center; gap: .75rem; margin: 0 0 1rem; padding: .75rem 1rem;
+  border-radius: var(--radius-sm); background: var(--primary-soft); color: var(--text); }
+.notice-bar > span { flex: 1; }
+.notice-bar small { display: block; color: var(--muted); }
+.notice-bar.ask { flex-wrap: wrap; }
+.children .child-card { display: grid; gap: .5rem; }
+.children .child-name { font-weight: 700; }
+.child-rows { list-style: none; margin: 0 0 .75rem; padding: 0; display: grid; gap: .5rem; }
+.child-rows li { display: flex; align-items: center; gap: .5rem; }
+.child-row { flex: 1; display: flex; align-items: baseline; gap: .6rem; padding: .85rem 1rem; border: 1px solid var(--border); border-radius: var(--radius-sm); background: var(--surface); color: var(--text); font: inherit; text-align: left; cursor: pointer; }
+.child-row:disabled { opacity: .55; cursor: not-allowed; }
+.child-rows li.current .child-row { border-color: var(--primary); background: var(--primary-soft); }
+.child-check { width: 1.1em; color: var(--primary); font-weight: 800; }
+.notice-bar.ask > span { flex-basis: 100%; }
+.found-pick { position: relative; }
+.found-best { position: absolute; top: .2rem; left: .2rem; font-size: 1rem; }
+.draw-ask { display: grid; gap: .4rem; margin-top: .6rem; padding: .6rem .8rem; border-radius: var(--radius-sm); background: var(--primary-soft); }
+.draw-ask p { margin: 0; }
+.notice-bar.warning { background: var(--danger-soft); }
+.setup-banner p { margin: 0; }
+.setup-waiting .spinner { width: 1.2rem; height: 1.2rem; margin: 0; border-width: 3px; }
+a.btn { text-decoration: none; }
+.picture-test { display: block; margin: .5rem auto 0; width: 200px; height: auto; max-width: 100%; border-radius: var(--radius-sm); }
+
+/* The lesson's notes in Anki no card has any more: what they say, before deleting them */
+.leftovers { margin: .25rem 0 .75rem; padding-left: 1.2rem; max-height: 12rem; overflow-y: auto; }
+.leftovers li { overflow-wrap: anywhere; }
+
+/* The app's welcome: read, ticked, accepted */
+.welcome .sheet-body p { margin: 0 0 .7rem; line-height: 1.45; }
+.welcome-agree { display: flex; gap: .6rem; align-items: flex-start; margin: .5rem 0 1rem; font-weight: 700; }
+.welcome-agree input { width: 1.3rem; height: 1.3rem; flex: none; margin-top: .1rem; }
+
+/* A card, its explanation or its picture reported (app-report.js) */
+.report .chips { margin-bottom: .75rem; }
+.report-reasons { border: 0; padding: 0; margin: 0 0 .75rem; display: grid; gap: .4rem; }
+.report-reasons legend { font-weight: 600; margin-bottom: .4rem; }
+.radio { display: flex; align-items: center; gap: .6rem; cursor: pointer; }
+.radio input { width: auto; margin: 0; accent-color: var(--primary); }
+.report-preview {
+  white-space: pre-wrap; overflow-wrap: anywhere; max-height: 10rem; overflow: auto; margin: .25rem 0 .75rem;
+  padding: .6rem .75rem; border-radius: 10px; background: var(--surface-2); font-size: .85rem;
+}
+.report textarea { min-height: 3.5rem; }
+
+/* The voice chosen per language (the settings, voice-choice.js) */
+/* The language whole on its line, then its voice (whole width) with ▶ and ✕: on a phone,
+   both on one line cut them ("espagnol d'Es…", "Puck · ho…") */
+.voice-row { display: grid; grid-template-columns: minmax(0, 1fr) auto auto; align-items: center; gap: .2rem .4rem; margin-bottom: .7rem; }
+.voice-row .voice-locale { grid-column: 1 / -1; font-weight: 600; }
+.voice-row .voice-locale::first-letter { text-transform: uppercase; }
+.voice-choice .voice-add { margin-top: .2rem; }
+
+/* ---- Tests to prepare (app-exams.js) ------------------------------------ */
+.exam-list { margin-bottom: 1rem; }
+.exam-head { display: flex; align-items: center; justify-content: space-between; gap: .5rem; margin: 0 0 .4rem; font-size: .8rem; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); }
+.exam-head .chip-btn { text-transform: none; letter-spacing: normal; }
+/* Not the text fields' width and padding (global input rule): a box, its row the touch target */
+.exam-add input[type=checkbox] { width: 1.25rem; height: 1.25rem; padding: 0; flex: none; margin: 0; accent-color: var(--primary); }
+.exam-add .child-row { display: flex; flex-wrap: nowrap; align-items: center; gap: .6rem; cursor: pointer; }  /* a long title wraps beside its box */
+.exam-add .child-row strong { min-width: 0; overflow-wrap: anywhere; }
+.exam-add-actions { position: sticky; bottom: 0; padding: .5rem 0; background: var(--surface); }
+.exam-rows li, .exam-lessons li { display: flex; flex-direction: column; gap: .35rem; }
+.exam-actions { display: flex; flex-wrap: wrap; gap: .4rem; padding: 0 .2rem .4rem; }
+.child-row .exam-actions { flex-basis: 100%; padding: .3rem 0 0; }  /* in the lesson's card: whose they are is seen */
+.chip-btn.on { border-color: var(--primary); background: var(--primary-soft); color: var(--primary); }
+.child-row.static { cursor: default; flex-wrap: wrap; }
+.child-row .warn { flex-basis: 100%; color: var(--danger); }
+.exam-new { display: grid; gap: .6rem; margin-top: 1rem; padding-top: .8rem; border-top: 1px solid var(--border); }
+.exam-new h3 { margin: 0; font-size: 1rem; }
+.exam-new label { display: grid; gap: .25rem; font-size: .9rem; font-weight: 700; }
+.exam-new input { font: inherit; font-weight: 400; padding: .55rem .7rem; border: 1px solid var(--border); border-radius: var(--radius-sm); background: var(--surface); color: var(--text); }
+.exam-guide { margin: .4rem 0 1rem; padding: .7rem .9rem; border-radius: var(--radius-sm); background: var(--primary-soft); }
+.exam-guide h3 { margin: 0 0 .4rem; font-size: 1rem; }
+.exam-guide ol { margin: 0; padding-left: 1.3rem; display: grid; gap: .35rem; }
+.exam-guide li .chip-btn { margin-left: .4rem; vertical-align: middle; }
+.exam-search { display: flex; flex-wrap: wrap; align-items: center; gap: .5rem; }
+.exam-search code { padding: .25rem .5rem; border-radius: var(--radius-sm); background: var(--surface); word-break: break-all; }
+.sheet-head .link.back { background: none; border: 0; padding: 0; font: inherit; font-weight: 700; color: var(--primary); cursor: pointer; }
+.flash .pick { display: flex; align-items: flex-start; padding: .15rem .35rem 0 0; }
+.flash .pick input { width: 1.35rem; height: 1.35rem; accent-color: var(--primary); cursor: pointer; }
+.pick-bar { flex-wrap: wrap; align-items: center; justify-content: flex-end; }
+.pick-bar .pick-count { flex-basis: 100%; min-width: 0; font-weight: 700; color: var(--text); text-align: center; }
+.pick-bar .btn { min-height: 2.8rem; margin: 0; font-size: .95rem; }
+.pick-bar .btn.primary { flex: 1; }
+.exam-review { display: grid; gap: .4rem; margin-bottom: .6rem; }
+.exam-review .btn { margin: 0; }
+.exam-review .hint.ok { color: var(--primary); font-weight: 700; }
+.anki-link { display: inline-flex; align-items: center; gap: .35rem; background: none; border: 0; padding: 0; font: inherit; font-size: .9rem; color: var(--muted); cursor: pointer; }
+.anki-icon { width: 1.3em; height: 1.3em; border-radius: 5px; vertical-align: middle; }  /* AnkiDroid's own icon, from the phone */
+.anki-link:hover, .anki-link:focus-visible { color: var(--primary); text-decoration: underline; }
+/* "✎ Notosaurus" on a card in Anki: the card the page was opened on */
+.flash.linked { border-color: var(--primary); box-shadow: 0 0 0 3px var(--primary-soft); }
+

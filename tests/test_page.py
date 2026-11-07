@@ -659,7 +659,7 @@ def test_while_waiting_what_the_ai_is_at(page, monkeypatch):
 def test_delete_the_open_lesson(page):
     generate_free(page, FRONT_PROMPT)
     page.locator(".review-head").get_by_role("button", name="Supprimer la leçon").click()
-    sheet = page.get_by_role("complementary", name="Supprimer la leçon")
+    sheet = page.get_by_role("dialog", name="Supprimer la leçon")
     sync_api.expect(sheet).to_contain_text("Anki n'est pas ouvert")  # Anki closed: the lesson alone
     sheet.get_by_role("button", name="Supprimer la leçon").click()
     sync_api.expect(page.locator(".flash")).to_have_count(0)
@@ -2653,3 +2653,16 @@ def test_a_lesson_that_looks_wrong_corrected_or_kept(page):
     wrong.get_by_role("button", name="Garder la leçon").click()
     sync_api.expect(wrong.locator(".card-doubt")).to_be_hidden()
     sync_api.expect(wrong.locator("textarea.back")).to_have_value("1915")
+
+
+def test_every_sheet_slides_in_as_a_dialog(page):
+    """The sheets share their slide from the bottom (Alpine.bind "sheet", app.js): the
+    children's, which had none, slides in too; each is a dialog for screen readers (four
+    had no role), the confirmation keeping its own (alertdialog)."""
+    page.goto("/")
+    page.get_by_role("button", name="Enfants").click()
+    sheet = page.get_by_role("dialog", name="Enfants")
+    sync_api.expect(sheet).to_be_visible()
+    assert page.evaluate("document.querySelector('aside.sheet[x-bind=sheet]')._x_transition !== undefined")
+    roles = page.evaluate("[...document.querySelectorAll('aside.sheet')].map(a => a.getAttribute('role'))")
+    assert roles and all(r in ("dialog", "alertdialog") for r in roles) and "alertdialog" in roles

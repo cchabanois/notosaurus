@@ -1,0 +1,37 @@
+/* ---- Prompts ----------------------------------------------------------- */
+/* At most a few recent prompts + "Toutes" + "Nouvelle": wrap, so all stay visible. */
+.chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: .45rem;
+  margin-bottom: .75rem;
+}
+.chip {
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  border: 1.5px solid var(--border);
+  background: var(--surface);
+  border-radius: 999px;
+  padding: .45rem .9rem;
+  font-weight: 700;
+  font-size: .9rem;
+  white-space: nowrap;
+}
+.chip.active { background: var(--primary); border-color: var(--primary); color: var(--on-primary); }
+.chip.add { border-style: dashed; color: var(--primary); background: transparent; }
+.chip.more { display: inline-flex; align-items: center; gap: .35rem; }
+/* A recommended model says why: its whole label, on two lines if need be */
+.chip.recommended { white-space: normal; text-align: left; border-radius: 1.2rem; }
+
+.prompt-actions { display: flex; flex-wrap: wrap; column-gap: 1.2rem; }
+.prompt-actions.tidy .link-btn { margin-top: .35rem; }
+.link-btn.strong { color: var(--primary); }
+
+
+.field { display: block; margin-bottom: .85rem; }
+.field > span, .field-label { display: block; margin-bottom: .3rem; font-weight: 700; font-size: .88rem; }
+.field > small { display: block; margin-top: .3rem; color: var(--muted); }
+.with-action { display: flex; gap: .4rem; align-items: center; }
+.with-action .icon-btn { flex: 0 0 auto; background: var(--primary-soft); color: var(--primary); }
+

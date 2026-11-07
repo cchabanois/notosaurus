@@ -765,8 +765,7 @@
 
   <!-- Lessons sheet -->
   <div class="sheet-backdrop" x-cloak x-show="lessonsOpen" x-transition.opacity @click="lessonsOpen = false"></div>
-  <aside class="sheet" x-cloak x-show="lessonsOpen" x-transition:enter="sheet-anim" x-transition:enter-start="sheet-down"
-         x-transition:leave="sheet-anim" x-transition:leave-end="sheet-down"
+  <aside class="sheet" x-cloak x-show="lessonsOpen" x-bind="sheet" role="dialog"
          @keydown.escape.window="lessonsOpen = false" :aria-label="$t('app.lessons.title')">
     <div class="sheet-handle"></div>
     <div class="sheet-head">
@@ -837,8 +836,7 @@
 
   <!-- PDF page picker: more pages than places left -->
   <div class="sheet-backdrop" x-cloak x-show="pdf.open" x-transition.opacity @click="donePdfPicker(false)"></div>
-  <aside class="sheet" x-cloak x-show="pdf.open" x-transition:enter="sheet-anim" x-transition:enter-start="sheet-down"
-         x-transition:leave="sheet-anim" x-transition:leave-end="sheet-down"
+  <aside class="sheet" x-cloak x-show="pdf.open" x-bind="sheet" role="dialog"
          @keydown.escape.window="pdf.open && donePdfPicker(false)" :aria-label="$t('app.pdf.title')">
     <div class="sheet-handle"></div>
     <div class="sheet-head">
@@ -862,9 +860,7 @@
 
   <!-- Prompt picker sheet -->
   <div class="sheet-backdrop" x-cloak x-show="picker.open" x-transition.opacity @click="picker.open = false"></div>
-  <aside class="sheet" x-cloak x-show="picker.open"
-         x-transition:enter="sheet-anim" x-transition:enter-start="sheet-down"
-         x-transition:leave="sheet-anim" x-transition:leave-end="sheet-down"
+  <aside class="sheet" x-cloak x-show="picker.open" x-bind="sheet" role="dialog"
          @keydown.escape.window="asking.open || (picker.open = false)" :aria-label="$t('app.picker.label')">
     <div class="sheet-handle"></div>
     <div class="sheet-head">
@@ -893,9 +889,7 @@
 
   <!-- Prompt editor sheet -->
   <div class="sheet-backdrop" x-cloak x-show="editor.open" x-transition.opacity @click="editor.open = false"></div>
-  <aside class="sheet" x-cloak x-show="editor.open"
-         x-transition:enter="sheet-anim" x-transition:enter-start="sheet-down"
-         x-transition:leave="sheet-anim" x-transition:leave-end="sheet-down"
+  <aside class="sheet" x-cloak x-show="editor.open" x-bind="sheet" role="dialog"
          @keydown.escape.window="asking.open || (editor.open = false)" :aria-label="$t('app.prompt.title')">
     <div class="sheet-handle"></div>
     <div class="sheet-head">
@@ -992,8 +986,8 @@
 
   <!-- The children (app-children.js): the one the next lesson is for, their cards -->
   <div class="sheet-backdrop" x-cloak x-show="childrenSheet.open" x-transition.opacity @click="childrenSheet.open = false"></div>
-  <aside class="sheet" x-cloak x-show="childrenSheet.open" @keydown.escape.window="asking.open || (childrenSheet.open = false)"
-         role="dialog" :aria-label="$t('app.children.title')">
+  <aside class="sheet" x-cloak x-show="childrenSheet.open" x-bind="sheet" role="dialog" @keydown.escape.window="asking.open || (childrenSheet.open = false)"
+         :aria-label="$t('app.children.title')">
     <div class="sheet-handle"></div>
     <div class="sheet-head">
       <h2 x-text="$t('app.children.title')"></h2>
@@ -1069,8 +1063,8 @@
   <!-- The tests to prepare (app-exams.js): the list, with the open lesson's place in each;
        one test: how to revise it in Anki, its lessons -->
   <div class="sheet-backdrop" x-cloak x-show="examSheet.open" x-transition.opacity @click="examSheet.open = false"></div>
-  <aside class="sheet" x-cloak x-show="examSheet.open" @keydown.escape.window="asking.open || (examSheet.open = false)"
-         role="dialog" :aria-label="$t('app.exams.title')">
+  <aside class="sheet" x-cloak x-show="examSheet.open" x-bind="sheet" role="dialog" @keydown.escape.window="asking.open || (examSheet.open = false)"
+         :aria-label="$t('app.exams.title')">
     <div class="sheet-handle"></div>
     <div class="sheet-head">
       <button type="button" class="link back" x-show="examSheet.view === 'detail'" @click="backToExams()" x-text="$t('app.exams.back')"></button>
@@ -1224,8 +1218,8 @@
 
   <!-- The open lesson copied for another child (app-children.js) -->
   <div class="sheet-backdrop" x-cloak x-show="copySheet.open" x-transition.opacity @click="copySheet.open = false"></div>
-  <aside class="sheet" x-cloak x-show="copySheet.open" @keydown.escape.window="copySheet.open = false"
-         role="dialog" :aria-label="$t('app.copy.title')">
+  <aside class="sheet" x-cloak x-show="copySheet.open" x-bind="sheet" role="dialog" @keydown.escape.window="copySheet.open = false"
+         :aria-label="$t('app.copy.title')">
     <div class="sheet-handle"></div>
     <div class="sheet-head">
       <h2 x-text="$t('app.copy.title')"></h2>
@@ -1250,8 +1244,8 @@
 
   <!-- Content the AI made, reported (app-report.js): what, why, exactly what is sent -->
   <div class="sheet-backdrop" x-cloak x-show="report.open" x-transition.opacity @click="report.open = false"></div>
-  <aside class="sheet" x-cloak x-show="report.open" @keydown.escape.window="report.open = false"
-         role="dialog" :aria-label="$t('app.report.title')">
+  <aside class="sheet" x-cloak x-show="report.open" x-bind="sheet" role="dialog" @keydown.escape.window="report.open = false"
+         :aria-label="$t('app.report.title')">
     <div class="sheet-handle"></div>
     <div class="sheet-head">
       <h2 x-text="$t('app.report.title')"></h2>
@@ -1329,9 +1323,7 @@
   <!-- After a send: the lesson's notes in Anki no card has any more (cards deleted, or remade
        with another front): deleted only when asked -->
   <div class="sheet-backdrop top" x-cloak x-show="leftovers.open" x-transition.opacity @click="leftovers.open = false"></div>
-  <aside class="sheet top" x-cloak x-show="leftovers.open"
-         x-transition:enter="sheet-anim" x-transition:enter-start="sheet-down"
-         x-transition:leave="sheet-anim" x-transition:leave-end="sheet-down"
+  <aside class="sheet top" x-cloak x-show="leftovers.open" x-bind="sheet" role="dialog"
          @keydown.escape.window="leftovers.open = false" :aria-label="$t('app.leftovers.title')">
     <div class="sheet-handle"></div>
     <div class="sheet-head">
@@ -1355,9 +1347,7 @@
 
   <!-- A yes/no asked in the page (ask-confirm.js), above the sheet it comes from -->
   <div class="sheet-backdrop top" x-cloak x-show="asking.open" x-transition.opacity @click="answerConfirm(false)"></div>
-  <aside class="sheet top" x-cloak x-show="asking.open"
-         x-transition:enter="sheet-anim" x-transition:enter-start="sheet-down"
-         x-transition:leave="sheet-anim" x-transition:leave-end="sheet-down"
+  <aside class="sheet top" x-cloak x-show="asking.open" x-bind="sheet"
          @keydown.escape.window="asking.open && answerConfirm(false)" role="alertdialog" aria-modal="true" :aria-label="asking.message">
     <div class="sheet-handle"></div>
     <div class="sheet-head">
@@ -1374,9 +1364,7 @@
 
   <!-- Deleting a lesson: its cards in Anki too? (asked, never by default) -->
   <div class="sheet-backdrop top" x-cloak x-show="removal.open" x-transition.opacity @click="removal.open = false"></div>
-  <aside class="sheet top" x-cloak x-show="removal.open"
-         x-transition:enter="sheet-anim" x-transition:enter-start="sheet-down"
-         x-transition:leave="sheet-anim" x-transition:leave-end="sheet-down"
+  <aside class="sheet top" x-cloak x-show="removal.open" x-bind="sheet" role="dialog"
          @keydown.escape.window="removal.open = false" :aria-label="$t('app.lessons.delete')">
     <div class="sheet-handle"></div>
     <div class="sheet-head">

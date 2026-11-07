@@ -137,6 +137,14 @@ const withKey = (card) =>
 const newId = () => [...crypto.getRandomValues(new Uint8Array(6))].map((b) => b.toString(16).padStart(2, "0")).join("");
 
 document.addEventListener("alpine:init", () => {
+  // Every sheet slides in and out from the bottom (<aside class="sheet" x-bind="sheet">,
+  // css/sheets.css: .sheet-anim, .sheet-down)
+  Alpine.bind("sheet", () => ({
+    "x-transition:enter": "sheet-anim",
+    "x-transition:enter-start": "sheet-down",
+    "x-transition:leave": "sheet-anim",
+    "x-transition:leave-end": "sheet-down",
+  }));
   Alpine.data("notosaurus", () => ({
     photos: [],          // { blob, url, text, sent; when partly hidden: original, mask, pdfText }
     // What the service tells for now (the Android app, loadSwitches): a notice, features off, an update

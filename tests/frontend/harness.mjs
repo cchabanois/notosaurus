@@ -77,7 +77,7 @@ async function i18nFetch(url) {
 }
 
 // Alpine, as far as the scripts use it: data() captures the component factories,
-// store() keeps one store object, magic() does nothing (tests call t() directly).
+// store() keeps one store object, magic() and bind() do nothing (tests call t() directly).
 function alpineStub() {
   const factories = {};
   const stores = {};
@@ -87,6 +87,7 @@ function alpineStub() {
     data: (name, factory) => { factories[name] = factory; },
     store: (name, value) => (value ? Object.assign(stores[name] ??= {}, value) : (stores[name] ??= {})),
     magic: () => {},
+    bind: () => {},
     effect: () => {},
   };
 }

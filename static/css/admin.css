@@ -1,0 +1,28 @@
+/* ---- Admin ------------------------------------------------------------- */
+.options { display: grid; gap: .5rem; margin-bottom: 1rem; }
+.option {
+  position: relative;
+  display: grid;
+  gap: .1rem;
+  padding: .7rem .9rem;
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+}
+/* Unseen, over the whole card: a finger on it (TalkBack's explore by touch) is on the radio
+   itself, said with its state ("selected"), not on its text alone */
+.option input { position: absolute; inset: 0; width: 100%; height: 100%; margin: 0; opacity: 0; cursor: pointer; }
+.option small { color: var(--muted); }
+.option.active { border-color: var(--primary); background: var(--primary-soft); }
+.option.active strong { color: var(--primary); }
+.option:focus-within { box-shadow: 0 0 0 3px var(--primary-soft); }
+
+.field > label > span { display: block; margin-bottom: .3rem; font-weight: 700; font-size: .88rem; }
+.field > small.warn { color: var(--danger); font-weight: 700; }
+
+.test-result { margin: .75rem 0 0; font-weight: 700; }
+.test-result.ok { color: var(--ok); }
+.test-result.ko { color: var(--danger); }
+
+.toast.ok { background: var(--ok); }
+
