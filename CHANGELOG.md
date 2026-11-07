@@ -9,6 +9,7 @@ Each pull request's entries (the `## Changelog` of its description) are put unde
 
 ### Added
 
+- 🧬 Aligned sequences (alleles, mutations, proteins compared): each letter in its column, the differences framed automatically.
 - 🌳 Phylogenetic trees drawn from the species and the innovations they share, each innovation on its branch.
 - 📈 Line charts compare several groups on one axis, with a legend (two populations, two people, two conditions).
 - Additive and subtractive colour synthesis drawn exactly: each overlap's colour computed; the colour a card asks for left as a question mark.
