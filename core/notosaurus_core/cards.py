@@ -188,37 +188,42 @@ def same_text(a: str, b: str) -> bool:
     return text_key(a) == text_key(b)
 
 
-def kept_ids(made: list[Card], before: list[Card]) -> list[str]:
-    """A lesson made again in its place: each new card's id, the lesson's card it is (its id
-    is its note's key in Anki: its note updated, its history kept), else "" (a new card).
-    The same front and back, else the same front (same_text: a capital, a final full stop…),
-    in the same part of the deck (subdeck), each old card given once; never by a front empty
-    or the blank alone ("…": the same for every dictation without a sentence). Else its front
-    written otherwise (the AI's own words, a picture now: ID-02), the same back where that
-    back tells one card: not empty, the lesson's only one, no choices on either side ("Vrai",
-    "Faux", an option: any card's). A new card with an id keeps it; an old card whose id one
-    of them has is given to no other (an id never twice)."""
+def matching(made: list[Card], before: list[Card], *, any_part: bool = False) -> list[Card | None]:
+    """Each new card's card of `before`, the one it is (its id, its note in Anki, its picture,
+    its place on a diagram), else None (a new card): the one rule for a lesson made again
+    (kept_ids) and the AI's correction (llm). The same front and back, else the same front
+    (same_text: a capital, a final full stop…), each old card given once; never by a front
+    empty or the blank alone ("…": the same for every dictation without a sentence). Else its
+    front written otherwise (the AI's own words, a picture now: ID-02), the same back where
+    that back tells one card: not empty, the lesson's only one, no choices on either side
+    ("Vrai", "Faux", an option: any card's). In the same part of the deck (subdeck), unless
+    `any_part` (a correction may move a card). A new card with an id is the card of that id,
+    if any; an old card whose id a new card has is given to no other (an id never twice)."""
     taken = {c.id for c in made if c.id}
-    left = [c for c in before if c.id and c.id not in taken]
+    by_id = {c.id: c for c in before if c.id}
+    left = [c for c in before if not (c.id and c.id in taken)]
     backs = Counter(text_key(c.back) for c in before)
+
+    def part(a: Card, b: Card) -> bool:
+        return any_part or same_text(a.subdeck, b.subdeck)
 
     def by_back(a: Card, b: Card) -> bool:
         key = text_key(a.back)
         unique = bool(key) and key == text_key(b.back) and backs[key] == 1
         choices = any(c.strip() for c in a.choices) or any(c.strip() for c in b.choices)
-        return unique and not choices and same_text(a.subdeck, b.subdeck)
+        return unique and not choices and part(a, b)
 
     def same(a: Card, b: Card, back: bool) -> bool:
         return (
-            same_text(a.subdeck, b.subdeck)
+            part(a, b)
             and same_text(a.front, b.front)
             and (same_text(a.back, b.back) if back else text_key(a.front) != "")  # "…" too: ""
         )
 
-    ids = []
+    found: list[Card | None] = []
     for card in made:
         if card.id:
-            ids.append(card.id)
+            found.append(by_id.get(card.id))
             continue
         match = (
             next((c for c in left if same(card, c, back=True)), None)
@@ -227,5 +232,13 @@ def kept_ids(made: list[Card], before: list[Card]) -> list[str]:
         )
         if match:
             left.remove(match)
-        ids.append(match.id if match else "")
-    return ids
+        found.append(match)
+    return found
+
+
+def kept_ids(made: list[Card], before: list[Card]) -> list[str]:
+    """A lesson made again in its place: each new card's id, the lesson's card it is (its id
+    is its note's key in Anki: its note updated, its history kept), else "" (a new card); see
+    matching. A new card with an id keeps it."""
+    old = matching(made, [c for c in before if c.id])
+    return [card.id or (match.id if match else "") for card, match in zip(made, old, strict=True)]

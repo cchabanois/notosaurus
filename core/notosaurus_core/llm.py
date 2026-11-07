@@ -18,7 +18,6 @@ calls recorded, the cards streamed) in calls.py.
 
 import asyncio
 import logging
-from collections import Counter
 from collections.abc import Callable, Sequence
 from functools import cache
 from typing import Any, Literal, NamedTuple
@@ -36,7 +35,7 @@ from .calls import (  # noqa: F401 (llm's API)
     tell,
     telling,
 )
-from .cards import blank_dictations, is_choice, plain_cards, same_text, text_key
+from .cards import blank_dictations, matching, plain_cards
 from .cards import plain as plain_text
 from .config import AIConfig
 from .errors import AppError, loggable
@@ -598,26 +597,12 @@ async def fix_card(
 
 
 def _keep_ids(revised: list[Card], before: list[Card]) -> None:
-    """A revised card keeps the id and the picture of the card it was: Anki updates its note,
-    the picture stays — unless what to draw changed (the picture's subject, the figure's
-    description). The same front and back, else the same front, as cards.kept_ids; else its
-    question reworded, the same back, only where that back tells one card: unique among the
-    lesson's, and no card of choices on either side ("Vrai", "Faux", an option: any card's)."""
-    left = list(before)
-    backs = Counter(text_key(c.back) for c in before)
-
-    def by_back(old: Card, card: Card) -> bool:
-        key = text_key(card.back)
-        unique = bool(key) and key == text_key(old.back) and backs[key] == 1
-        return unique and not is_choice(old) and not is_choice(card)
-
-    for card in revised:  # the texts compared as cards.same_text does (a capital, a full stop…)
-        match = next((c for c in left if same_text(c.front, card.front) and same_text(c.back, card.back)), None)
-        match = match or next((c for c in left if same_text(c.front, card.front) and text_key(c.front)), None)
-        match = match or next((c for c in left if by_back(c, card)), None)
+    """A revised card keeps the id and the picture of the card it was (cards.matching, in any
+    part of the deck: a correction may move it): Anki updates its note, the picture stays,
+    unless what to draw changed (the picture's subject, the figure's description)."""
+    for card, match in zip(revised, matching(revised, before, any_part=True), strict=True):
         if match:
             _same_card(card, match)
-            left.remove(match)
         else:
             card.id, card.picture = "", ""  # a new card: its id comes when saved
 
@@ -634,18 +619,14 @@ def _same_card(card: Card, before: Card) -> None:
 def _keep_masks(
     revised: list[Card], before: list[Card], sizes: Sequence[tuple[int, int] | None] = (), fmt: str = "pixels"
 ) -> None:
-    """Give each revised card the mask of the same card before (same front and back,
-    else same front; a changed answer keeps its place on the diagram). Other cards keep
-    the mask the model gave (a label added by the correction), placed like at
-    extraction, with a number not used yet on its photo."""
-    masked = [c for c in before if c.mask]
+    """Give each revised card the mask of the card it was (cards.matching, as its id: a
+    changed answer keeps its place on the diagram). Other cards keep the mask the model gave
+    (a label added by the correction), placed like at extraction, with a number not used yet
+    on its photo."""
     added = []
-    for card in revised:
-        match = next((c for c in masked if (c.front, c.back) == (card.front, card.back)), None)
-        match = match or next((c for c in masked if c.front == card.front), None)
-        if match:
+    for card, match in zip(revised, matching(revised, before, any_part=True), strict=True):
+        if match and match.mask:
             card.mask = match.mask
-            masked.remove(match)
         elif card.mask:
             added.append(card)
     _keep_ids(revised, before)
