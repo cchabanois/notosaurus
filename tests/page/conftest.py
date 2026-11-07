@@ -4,7 +4,7 @@ lesson, the cloze preview, the settings' order.
 
 Skipped unless Playwright is installed: `pip install -r requirements-page.txt`, then
 `python -m playwright install chromium` (or NOTOSAURUS_TEST_CHROMIUM=/usr/bin/chromium
-to use the system's). The pages load Alpine.js and KaTeX from a CDN: network needed.
+to use the system's). The pages' Alpine.js and MathJax are shipped (static/vendor): no network needed.
 
 This folder: one file per screen; conftest.py the fixtures (a server, a browser, a
 phone-sized page on fresh data), support.py what the tests share."""

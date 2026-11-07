@@ -243,7 +243,7 @@ document.addEventListener("alpine:init", () => {
     toDraw: [],                  // the cards whose picture no free one fits: drawn if the user says yes
     drawingUsd: null,            // about what a picture drawn by the image model costs: the computer's (US $)
     drawingCredits: null,        // the app's (credits)
-    katexReady: false,           // the formula previews can be drawn (KaTeX loaded)
+    mathReady: false,            // the formula previews can be drawn (MathJax started)
     unpaired: false,             // this device has no token yet: it must scan the QR code
 
     async init() {
@@ -259,10 +259,10 @@ document.addEventListener("alpine:init", () => {
         if (document.visibilityState === "hidden" && this.saveTimer) this.saveNow(true);
       });
 
-      // KaTeX loads after the page (deferred): the previews redraw once it's there
-      const katexLoaded = () => { this.katexReady = typeof katex !== "undefined"; };
-      if (document.readyState === "complete") katexLoaded();
-      else window.addEventListener("load", katexLoaded);
+      // MathJax loads after the page (deferred), then starts: the previews redraw once it has
+      const mathLoaded = () => window.MathJax?.startup?.promise?.then(() => { this.mathReady = true; });
+      if (document.readyState === "complete") mathLoaded();
+      else window.addEventListener("load", mathLoaded);
 
       await i18nReady;  // the language is needed for the first default prompts
       try {

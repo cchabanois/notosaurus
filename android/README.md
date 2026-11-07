@@ -53,7 +53,7 @@ changed in the settings ("Advanced"); the licence key is entered there too.
 
 The page tells the app's differences from `/api/config` (`apkg`, `donations`,
 `profiles`, `report`, `dictation`…): no Anki profile badge, no `.apkg` button, no Ko-fi;
-Alpine.js and KaTeX come with the page (`static/vendor/`), so it works offline.
+Alpine.js and MathJax come with the page (`static/vendor/`), so it works offline.
 
 ## Two modes
 
