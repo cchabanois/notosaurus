@@ -9,6 +9,7 @@ Each pull request's entries (the `## Changelog` of its description) are put unde
 
 ### Added
 
+- Statistics charts (bars, pie, half pie): drawn from the lesson's counts, their angles computed.
 - Cylinders, cones, spheres and half-balls drawn in proportion to their lengths, their hidden parts dashed; several solids side by side at one scale to compare them.
 - Coordinates of points in a frame (5e): a gridded frame, a tick at each unit.
 - Geography maps show regions, rivers, mountains and seas too.
@@ -22,6 +23,7 @@ Each pull request's entries (the `## Changelog` of its description) are put unde
 
 ### Fixed
 
+- A figure on a card's front no longer writes the answer the card asks (a count, a measure), even when its description says so.
 - Number lines drawn cleaner: the line ends at its last graduation, decimals written with their comma, nothing written that the card didn't ask for.
 
 ## [1.1.1] - 2026-11-04
