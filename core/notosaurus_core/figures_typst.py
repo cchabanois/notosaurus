@@ -321,20 +321,20 @@ def _fitted(svg: str) -> str:
     from . import figures
 
     box = _VIEWBOX.search(svg)
-    png = None
-    if box:
-        x, y, w, h = map(float, box.groups())
-        wide = _framed(svg, box.group(0), x - OVERFLOW, y - OVERFLOW, w + 2 * OVERFLOW, h + 2 * OVERFLOW)
-        try:
-            png = figures.to_png(figures.clean(wide))  # resvg reads it cleaned, as the check does
-        except figures.FigureError:
-            png = None
-    if not box or png is None:
+    if box is None:
+        return svg
+    x, y, w, h = map(float, box.groups())
+    wide = _framed(svg, box.group(0), x - OVERFLOW, y - OVERFLOW, w + 2 * OVERFLOW, h + 2 * OVERFLOW)
+    try:
+        png = figures.to_png(figures.clean(wide))  # resvg reads it cleaned, as the check does
+    except figures.FigureError:
+        png = None
+    if png is None:
         return svg
     from PIL import Image, ImageOps
 
     image = Image.open(io.BytesIO(png)).convert("L")
-    drawn = ImageOps.invert(image).point(lambda v: 255 if v > 24 else 0).getbbox()  # not white
+    drawn = ImageOps.invert(image).point([0] * 25 + [255] * 231).getbbox()  # what isn't white
     if drawn is None:
         return svg
     k = (w + 2 * OVERFLOW) / image.width  # pt per pixel
@@ -348,6 +348,8 @@ def _fitted(svg: str) -> str:
     svg = _framed(svg, box.group(0), nx, ny, nw, nh)
     # its white ground under it all, the page's own covering its page only
     opening = re.search(r"<svg[^>]*>", svg)
+    if opening is None:
+        return svg
     ground = f'<rect x="{nx:.3f}" y="{ny:.3f}" width="{nw:.3f}" height="{nh:.3f}" fill="#ffffff"/>'
     return svg[: opening.end()] + ground + svg[opening.end() :]
 
