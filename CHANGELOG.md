@@ -9,6 +9,7 @@ Each pull request's entries (the `## Changelog` of its description) are put unde
 
 ### Added
 
+- Curves of measures (a heart rate over time): drawn from the lesson's measures, their axes starting where the measures are.
 - Statistics charts (bars, pie, half pie): drawn from the lesson's counts, their angles computed.
 - Cylinders, cones, spheres and half-balls drawn in proportion to their lengths, their hidden parts dashed; several solids side by side at one scale to compare them.
 - Coordinates of points in a frame (5e): a gridded frame, a tick at each unit.
