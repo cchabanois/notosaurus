@@ -807,7 +807,7 @@
           <h3>
             <button type="button" class="group-head" :disabled="!g.foldable" @click="toggleSubject(g)"
                     :aria-expanded="g.foldable ? String(g.open) : null">
-              <span class="fold" x-show="g.foldable" x-text="g.open ? '▾' : '▸'" aria-hidden="true"></span>
+              <span class="fold" x-show="g.foldable" x-text="g.foldable ? (g.open ? '▾' : '▸') : ''" aria-hidden="true"></span>
               <span x-text="g.name"></span>
               <span class="count" x-show="g.count !== undefined" x-text="g.count"></span>
             </button>
