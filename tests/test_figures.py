@@ -1332,6 +1332,26 @@ def test_a_line_starts_its_axes_where_its_measures_are():
     assert bare != written
 
 
+def test_lines_of_the_same_measure_share_one_axis():
+    """Several lines of one measure (an allele's frequency in two populations) on the same
+    graduation, each its colour and a legend: one twice as high as the other is drawn twice
+    as high, never stretched to its own axis; `second` (another unit) is a single line's."""
+    from PIL import Image
+
+    body = '#chart(kind: "line", values: (("A", ((0, 0), (10, 5))), ("B", ((0, 0), (10, 10)))), axes: ("x", "y"))'
+    image = Image.open(io.BytesIO(figures.to_png(figures.clean(figures_typst.compile_svg("chart", body)))))
+    image = image.convert("RGB")
+    plot = image.crop((0, 0, int(image.width * 0.7), image.height))  # the legend at the right left out
+
+    def height(colour):
+        ys = [y for y in range(plot.height) for x in range(0, plot.width, 2) if plot.getpixel((x, y)) == colour]
+        return max(ys) - min(ys)
+
+    assert height((31, 95, 168)) == pytest.approx(2 * height((176, 58, 46)), rel=0.1)
+    with pytest.raises(figures_typst.Unusable, match="single line"):
+        figures_typst.compile_svg("chart", body[:-1] + ', second: (values: ((0, 1), (1, 2)), axis: "z"))')
+
+
 def test_a_line_marks_its_events_and_stretches():
     """An event at an x (a dashed line, its label under the axis) and a stretch of x
     (shaded), placed by the chart from their values: each changes the drawing."""
