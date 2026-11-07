@@ -667,6 +667,33 @@ def test_a_diagrams_long_text_goes_on_the_next_line():
     assert width(short) < 80
 
 
+def _svg_width(svg: str) -> float:
+    return float(re.search(r'width="([\d.]+)', svg).group(1))
+
+
+def test_a_diagrams_arrow_labels_clear_of_its_boxes():
+    """An arrow's label longer than the gap the AI gave its two boxes lay on them: the gap
+    widened to the label (its width along a row, beside an arrow going down, and both for a
+    slanting one in the middle of a cycle); a short label leaves the gap as given."""
+    label = "énergie lumineuse utile"
+    alone = _svg_width(figures_typst.compile_svg("diagram", f"#diagram(node((0, 0), [{label}]))"))
+    chain = '#diagram(spacing: 1em, node((0, 0), [Pile]), edge("-|>", {}), node((1, 0), [Lampe]))'
+    bare = _svg_width(figures_typst.compile_svg("diagram", chain.format("")))
+    labelled = _svg_width(figures_typst.compile_svg("diagram", chain.format(f"[{label}]")))
+    assert labelled - bare > alone - 20  # pt: the label's width (the node's alone, its inset and stroke)
+    wide = chain.replace("1em", "3em")  # wide enough for a short label: as given
+    assert _svg_width(figures_typst.compile_svg("diagram", wide.format("[a]"))) == _svg_width(
+        figures_typst.compile_svg("diagram", wide.format(""))
+    )
+    # a cycle: a label beside an arrow going down and one on the slanting arrow, the same gap
+    cycle = (
+        "#diagram(spacing: 1em, node((0, 0), [A]), node((1, 0), [B]), node((0, 1), [C]),"
+        ' edge((0, 1), (0, 0), "-|>", [Évaporation]), edge((1, 0), (0, 1), "-|>", [Ruissellement]))'
+    )
+    word = _svg_width(figures_typst.compile_svg("diagram", "#diagram(node((0, 0), [Ruissellement]))"))
+    assert _svg_width(figures_typst.compile_svg("diagram", cycle)) > 2 * word
+
+
 @pytest.mark.parametrize(
     ("written", "meant"),
     [(r"[Accord avec\nle sujet]", r"[Accord avec\ le sujet]"), (r"[avant\le verbe]", r"[avant\ le verbe]")],
