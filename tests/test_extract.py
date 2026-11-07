@@ -569,3 +569,22 @@ def test_a_true_false_card_rewritten_takes_no_others_note():
     other = [Card(front="Q3", back="oui")]
     llm._keep_ids(other, twice)
     assert other[0].id == ""  # "oui" answers two cards: which one?
+
+
+def test_a_diagram_label_reworded_keeps_its_place():
+    """A diagram label the AI's correction writes again (a capital, a final full stop, its
+    question reworded, its answer the lesson's only one) keeps its mask, as it keeps its id
+    (cards.matching): it stays on the diagram, not a new label placed by the model."""
+    from notosaurus_core.models import Card
+
+    mask1, mask2 = Mask(page=1, n=1, box=[0.1, 0.1, 0.2, 0.2]), Mask(page=1, n=2, box=[0.3, 0.3, 0.4, 0.4])
+    before = [
+        Card(id="a", front="Que désigne le numéro (1) ?", back="Ville-centre", mask=mask1),
+        Card(id="b", front="Que désigne le numéro (2) ?", back="Banlieue", mask=mask2),
+    ]
+    revised = [
+        Card(front="que désigne le numéro (1) ?", back="Ville-centre."),
+        Card(front="Quel nom porte la zone (2) ?", back="Banlieue"),
+    ]
+    llm._keep_masks(revised, before)
+    assert [(c.id, c.mask) for c in revised] == [("a", mask1), ("b", mask2)]
