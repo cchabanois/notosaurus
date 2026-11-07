@@ -1139,3 +1139,19 @@ def test_every_familys_text_in_the_svg_figures_font(family):
     plain = figures_typst.compile_svg(family, '#text("Mi 12")')
     sans = figures_typst.compile_svg(family, '#text(font: "DejaVu Sans", "Mi 12")')
     assert plain == sans
+
+
+def test_the_figures_bench_compiles_a_run_again(tmp_path):
+    """tools/bench_figures.py --recompile: a drawing's Typst compiled again with today's
+    preamble, an SVG drawing kept as it was, one not drawn said so."""
+    import sys
+
+    sys.path.insert(0, str(figures_typst.HERE.parent.parent / "tools"))
+    import bench_figures
+
+    (tmp_path / "a-1.typ").write_text('#timeline(start: 1780, end: 1800, events: ((1789, "Bastille"),))')
+    (tmp_path / "b-1.svg").write_text(SQUARE)
+    typst = bench_figures.recompiled(tmp_path, {"family": "timeline", "typst_file": "a-1.typ", "file": "a-1.svg"})
+    assert typst["engine"] == "typst" and typst["svg"].startswith("<svg") and "Bastille" in typst["typst"]
+    assert bench_figures.recompiled(tmp_path, {"family": "diagram", "file": "b-1.svg"})["svg"] == SQUARE
+    assert bench_figures.recompiled(tmp_path, {"problem": "500 Internal"}) == {"error": "500 Internal"}
