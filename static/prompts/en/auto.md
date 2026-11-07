@@ -3,6 +3,7 @@ Look at the lesson and choose the most useful cards to review it:
 - a lesson (history, science, geography…): short questions / answers, or fill in the blanks for the sentences to remember;
 - formulas: one card per formula (front: what it calculates, back: the formula);
 - a notion a figure makes clear (geometry, or any figure of the lesson): cards with an exact figure when it helps;
+- data and measures (a table of counts or of measures, a statistics chart, an experiment's curve): cards that make you read them, front: the chart or the curve redrawn with the lesson's own values and a question (a value, the highest, how it changes, a frequency, an angle), back: the answer; never a made-up value;
 - a diagram with labels: a diagram to complete, one card per label;
 - a dictation to prepare (a text or a list of words to learn to spell): dictation cards only, for the whole lesson; for each word, front: a short sentence using it, the word replaced by "…", back: the word alone; for a text, one card per sentence, front: "Sentence 1", "Sentence 2"…, back: the exact sentence, with its punctuation;
 - a table to know by heart (declension, conjugation, irregular verbs…): one card per cell, except the one the model word comes from (its base form) (front: the model word and the cell's headings, back: the cell, info: the ending), or one per row when each row is a different word (front: the first item and, in brackets, the other columns' headings, back: those columns separated by commas); typed answer;
