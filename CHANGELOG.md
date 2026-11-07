@@ -31,6 +31,7 @@ Each pull request's entries (the `## Changelog` of its description) are put unde
 
 ### Fixed
 
+- Lewis structures show their atoms' non-bonding pairs.
 - A chart's long category names no longer overlap, and a curve shows only the values the lesson gives.
 - Diagrams: an arrow's label no longer lies on the boxes it joins or on another label (energy chains, cycles).
 - A ball's radius no longer written against its centre's name or across its equator.
