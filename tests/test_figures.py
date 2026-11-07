@@ -1018,6 +1018,31 @@ def test_the_graph_rules_own_fragments_compile():
         assert figures_typst.compile_svg("graph", body).startswith("<svg"), fragment
 
 
+def test_a_graphs_surface_filled_as_the_rule_says():
+    """An area (an integral, between two curves, under a density): the AI invented its own
+    filling (`lq.area-between`, `lq.polygon`, `lq.area`), refused twice, the figure drawn as
+    SVG by eye 8 times in 8. The rule's calls compile and fill between the bounds, computed
+    from the functions; the name placed inside, at the surface's centre."""
+    rules = figures_typst.FAMILIES["graph"].rules
+    example = re.search(r"exactly so:\n(.*?)\n- ", rules, re.S).group(1)
+    calls = re.findall(r"`(area(?:-name)?\([^`]*\))`", rules)
+    assert len(calls) == 3
+    for call in calls:
+        body = example.replace("  lq.plot(", f"  {call},\n  lq.plot(")
+        assert figures_typst.compile_svg("graph", body).startswith("<svg"), call
+    square = "#lq.diagram(xlim: (-1, 3), ylim: (-1, 5), {})"
+    xs = "lq.linspace(0, 2, num: 200)"
+    ours = figures_typst.compile_svg("graph", square.format("area(x => x * x, 0, 2, fill: red)"))
+    lilaqs = f"lq.fill-between({xs}, {xs}.map(x => x * x), y2: {xs}.map(x => 0), fill: red)"
+    assert ours == figures_typst.compile_svg("graph", square.format(lilaqs))
+    named = figures_typst.compile_svg("graph", square.format("area-name(x => x * x, 0, 2, [A])"))
+    # its centre: x = ∫x·x² / ∫x², y = ∫x⁴/2 / ∫x²
+    centre = "lq.place(1.5, 1.2, box(fill: white, inset: 0.15em, radius: 2pt)[A], align: center + horizon)"
+    there, meant = _glyphs(named), _glyphs(figures_typst.compile_svg("graph", square.format(centre)))
+    assert len(there) == len(meant)
+    assert all(a == pytest.approx(b, abs=0.5) for a, b in zip(sorted(there), sorted(meant), strict=True))  # pt
+
+
 def test_the_geometry_rules_number_line_compiles():
     """A number line as the geometry rule shows it: its ticks in a loop, their points named by
     `..` (a name computed in a named argument doesn't compile: the AI's loop refused twice,
