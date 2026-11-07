@@ -297,6 +297,33 @@ def test_typst_turned_off_figures_drawn_as_svg(monkeypatch):
     assert family(AIConfig(llm="gemini", typst=False)) == "other"
 
 
+def test_a_figure_on_the_front_is_told_its_cards_answer(monkeypatch):
+    """A figure goes on the front: drawn knowing the card's question and answer, so that it
+    writes nothing giving the answer away, even where its description (shared by the cards
+    of one chart: "each sector with its count") writes it. On the back: told nothing."""
+    from notosaurus_core.models import Card
+
+    told = {}
+
+    async def drawn(s, text, description, family, light):
+        told["text"] = text
+        return llm.MadeFigure("<svg/>", "svg", family, False)
+
+    monkeypatch.setattr(llm, "_drawn", drawn)
+    description = "Diagramme circulaire : Bus 20, À pied 10, chaque secteur avec son effectif"
+    for on_back in (False, True):
+        card = Card(
+            front="Combien d'élèves viennent à pied ?",
+            back="10",
+            figure=description,
+            figure_kind="chart",
+            picture_on_back=on_back,
+        )
+        asyncio.run(pictures.card_picture(AIConfig(llm="gemini"), card))
+        assert ("Combien d'élèves viennent à pied ? → 10" in told["text"]) != on_back
+        assert ("gives this answer away" in told["text"]) != on_back
+
+
 def test_figures_turned_off_refused():
     """The relay's figures.draw switch (AIConfig.figures): refused before any AI call."""
     with pytest.raises(AppError) as refused:
@@ -324,9 +351,9 @@ def test_a_figure_checked_when_asked(client, monkeypatch):
     asked = []
     real = llm.made_figure
 
-    async def draw(s, description, step=None, kind="", problem="", careful=False):
+    async def draw(s, description, step=None, kind="", problem="", careful=False, front=""):
         asked.append((problem, careful))
-        return await real(s, description, step, kind, problem, careful)
+        return await real(s, description, step, kind, problem, careful, front)
 
     monkeypatch.setattr(llm, "made_figure", draw)
     told = {False: [{"step": "drawing"}], True: [{"step": "redrawing", "problem": "The angle is at B."}]}
@@ -806,6 +833,40 @@ def test_a_solids_hidden_edges_computed(body, hidden):
     cuboid, a hidden one missing: 5 of 8 polyhedra drawn wrong as SVG)."""
     svg = figures.clean(figures_typst.compile_svg("solid", body))
     assert svg.count("stroke-dasharray") == hidden
+
+
+def test_a_charts_angles_and_heights_come_from_its_counts():
+    """A chart's sectors are its counts' shares (1, 1 and 2, 2 the same half pie), computed,
+    never given; large counts and a zero drawn too (the bars' graduation by 20s)."""
+    semi = '#chart(kind: "semi", values: (("A", {}), ("B", {})))'
+    halves = {figures_typst.compile_svg("chart", semi.format(n, n)) for n in (1, 2)}
+    assert len(halves) == 1
+    pie = figures_typst.compile_svg("chart", '#chart(kind: "pie", values: (("A", 1), ("B", 3)))')
+    assert pie != figures_typst.compile_svg("chart", '#chart(kind: "pie", values: (("A", 3), ("B", 1)))')
+    for kind in ("bars", "pie", "semi"):
+        figures_typst.compile_svg("chart", f'#chart(kind: "{kind}", values: (("A", 230), ("B", 5), ("C", 0)))')
+
+
+def test_a_charts_counts_written_only_when_asked():
+    """None by default (a card asking a count, a frequency or an angle never shows it on its
+    chart); "all", or the labels given."""
+    for kind in ("bars", "pie", "semi"):
+        body = f'#chart(kind: "{kind}", values: (("Chat", 12), ("Chien", 10), ("Lapin", 5)){{}})'
+        bare = figures_typst.compile_svg("chart", body.format(""))
+        assert bare == figures_typst.compile_svg("chart", body.format(", written: ()")), kind
+        some = figures_typst.compile_svg("chart", body.format(', written: ("Chien",)'))
+        every = figures_typst.compile_svg("chart", body.format(', written: "all"'))
+        assert len({bare, some, every}) == 3, kind
+
+
+def test_a_chart_refuses_what_it_cant_draw():
+    for body, said in (
+        ('#chart(kind: "line", values: (("A", 1),))', "kind is"),
+        ('#chart(kind: "pie", values: (("A", 0), ("B", 0)))', "add up to more than 0"),
+        ('#chart(kind: "pie", values: ("A", "B"))', "pairs"),
+    ):
+        with pytest.raises(figures_typst.Unusable, match=said):
+            figures_typst.compile_svg("chart", body)
 
 
 def test_a_solid_drawn_the_same_whatever_its_unit():

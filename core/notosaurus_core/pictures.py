@@ -356,7 +356,8 @@ async def card_picture(
     model's thinking when `careful`."""
     card = await decided(s, card, asked, language, step)
     if card.figure.strip():
-        made = await llm.made_figure(s, card.figure, step, card.figure_kind, problem, careful)
+        front = "" if card.picture_on_back else f"{card.front.strip()} → {card.back.strip()}"
+        made = await llm.made_figure(s, card.figure, step, card.figure_kind, problem, careful, front)
         card.picture_source = PictureSource(
             source="drawn",
             model=s.model_for_provider(),

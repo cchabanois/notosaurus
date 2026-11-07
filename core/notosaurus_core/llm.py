@@ -287,6 +287,7 @@ async def made_figure(
     kind: str = "",
     problem: str = "",
     careful: bool = False,
+    front: str = "",
 ) -> MadeFigure:
     """A figure, its SVG cleaned (figures.clean) and how it was made, drawn by the cards' AI: in Typst
     (figures_typst.py: a curve computed from its function, marks from their points, angles
@@ -297,13 +298,21 @@ async def made_figure(
     10 with thinking, four times slower), with the model's thinking when `careful` (the user
     asks it again after a quick one still wrong). `step`: told each step as it
     begins (relay_api.PictureStep). `kind`: its family, when the AI that described it said it
-    (Card.figure_kind): not asked again. Refused when figures are turned off (s.figures)."""
+    (Card.figure_kind): not asked again. `front`: the card it goes on the front of, "question →
+    answer": told, nothing written on it gives the answer away (its description, written once
+    for cards that share it, may write it). Refused when figures are turned off (s.figures)."""
     from . import figures
 
     if not s.figures:
         raise AppError("relay.feature_off", 403, feature="figures.draw")
     tell = step or (lambda _: None)
     text = f"Figure to draw: {description.strip()}"
+    if front.strip():
+        text += (
+            f"\n\nIt goes on the front of a card, with its question; the answer is on the back: {front.strip()}. "
+            "Write nothing on the figure that gives this answer away (a name, a count, a measure), "
+            "even where the description writes it."
+        )
     family = await _figure_family(s, description, kind)
     if problem.strip():
         text += f"\n\nA first drawing had this problem: {problem.strip()} Draw it right."
