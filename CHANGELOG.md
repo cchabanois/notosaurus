@@ -26,6 +26,8 @@ Each pull request's entries (the `## Changelog` of its description) are put unde
 
 ### Fixed
 
+- A card no longer shows "\n" where the AI meant a line break.
+- On a dictation card's back, the sentence to write is no longer glued to its instruction.
 - Labelled drawings (an organ, a cell): their labels no longer cut off at the edge.
 - Diagrams of boxes and arrows: several things carried between two boxes in one labelled arrow, long chains on two rows, arrows always drawn as arrows.
 - A diagram label corrected by the AI keeps its place on the diagram when its question is only reworded.
