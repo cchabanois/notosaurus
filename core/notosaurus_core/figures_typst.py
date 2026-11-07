@@ -245,7 +245,8 @@ EDGE_MARKS = re.compile(r'"([-<>|.=~]*\|[-<>|.=~]*)"')
 def _unbarred(marks: re.Match) -> str:
     """An edge's bars kept only as part of a head ("<|", "|>"): one elsewhere ("-|-", "-|->")
     draws a bar across the line, which no school diagram asks for; the AI's "-||" (two bars)
-    meant an arrow, "-|>"."""
+    meant an arrow, "-|>". Its bar out, an arrow's head is the filled one ("-|->" → "-|>") as
+    every other arrow's: the AI writes "-|->" whatever the rule says of fletcher's marks."""
     s = marks.group(1)
     if s == "-||":
         return '"-|>"'
@@ -257,6 +258,8 @@ def _unbarred(marks: re.Match) -> str:
         elif kept[-1:] in ("-", ".", "=", "~"):  # the bar out, the line it cut whole again:
             while s[i : i + 1] == kept[-1]:  # "-|-" a plain line, never "--" dashed
                 i += 1
+    if kept != s:
+        kept = re.sub(r"(?<!\|)>$", "|>", re.sub(r"^<(?!\|)", "<|", kept))
     return f'"{kept or "-"}"'
 
 

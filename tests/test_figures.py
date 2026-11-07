@@ -629,12 +629,13 @@ def test_a_diagrams_two_bars_drawn_as_an_arrow():
 
 
 @pytest.mark.parametrize(
-    ("written", "meant"), [("-|-", "-"), ("-|->", "->"), ("<-|-", "<-"), ("--|--", "--"), ("<|-|>", "<|-|>")]
+    ("written", "meant"),
+    [("-|-", "-"), ("-|->", "-|>"), ("<-|-", "<|-"), ("<-|->", "<|-|>"), ("--|--", "--"), ("<|-|>", "<|-|>")],
 )
 def test_a_diagrams_barred_line_drawn_plain(written, meant):
     """The AI writes a bar across a line ("-|-" between two characters, "-|->" a flowchart's
     "oui"), which no school diagram asks for: drawn as the line it meant, never dashed by
-    the bar's removal; a head's bar ("<|", "|>") kept."""
+    the bar's removal, its head the filled one as every arrow's; a head's bar ("<|", "|>") kept."""
     link = '#diagram(node((0, 0), [A]), edge("{}"), node((1, 0), [B]))'
     assert figures_typst.compile_svg("diagram", link.format(written)) == figures_typst.compile_svg(
         "diagram", link.format(meant)
