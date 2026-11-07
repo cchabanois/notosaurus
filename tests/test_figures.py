@@ -1026,6 +1026,19 @@ def test_an_intervals_brackets_turned_by_its_bounds():
     assert figures_typst.compile_svg("geometry", line).startswith("<svg")
 
 
+def test_the_trigonometric_circles_points_placed_by_their_angles():
+    """The trigonometric circle drawn by the preamble from the angles' values (by eye, the AI
+    placed them wrongly and wrote its points' names, "Ppi_2"): an angle changed, the drawing
+    changes; the names given are the only ones written."""
+    draw = (
+        "#ctz-canvas({{ ctz-init();"
+        " ctz-draw-unit-circle(angles: (({}, $pi/3$),), project: ({}, $1/2$, $sqrt(3)/2$)) }})"
+    )
+    sixty = figures_typst.compile_svg("geometry", draw.format(60, 60))
+    assert sixty != figures_typst.compile_svg("geometry", draw.format(45, 45))
+    assert figures_typst.compile_svg("geometry", draw.format(90, 150)).startswith("<svg")  # on an axis, past it
+
+
 def test_the_diagram_rules_edges_compile():
     """Every edge the diagram rule shows (its line styles, a label on its arrow, two arrows
     side by side) compiles between two nodes: a fragment out of step with fletcher (a "bend"
