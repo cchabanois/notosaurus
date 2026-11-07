@@ -652,6 +652,25 @@ def test_a_diagrams_long_text_goes_on_the_next_line():
     assert width(short) < 80
 
 
+@pytest.mark.parametrize(
+    ("written", "meant"),
+    [(r"[Accord avec\nle sujet]", r"[Accord avec\ le sujet]"), (r"[avant\le verbe]", r"[avant\ le verbe]")],
+)
+def test_a_diagrams_new_line_written_as_a_strings_drawn(written, meant):
+    """The AI writes a node's new line as a string's ("\\n") or glues the "\\" to the next word:
+    Typst's markup only escaped the letter ("avecnle sujet"); drawn as the line break meant."""
+    node = "#diagram(node((0, 0), {}))"
+    assert figures_typst.compile_svg("diagram", node.format(written)) == figures_typst.compile_svg(
+        "diagram", node.format(meant)
+    )
+
+
+def test_a_diagrams_strings_and_maths_left_as_written():
+    """A string's "\\n" (a new line already), a code's escape and a text's maths untouched."""
+    body = r'#diagram(node((0, 0), "A\nB"), edge("-|>", [$\u{3b1}$ et \#1]), node((1, 0), [B]))'
+    assert figures_typst.source("diagram", body).endswith(body + "\n")
+
+
 def test_an_arrow_written_with_html_entities_drawn():
     """The AI writes an arrow's ">" as HTML does ("-|&gt;"): Typst refused it twice, the
     figure drawn as SVG instead; read as ">" (Typst has no such entity)."""
