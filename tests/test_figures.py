@@ -1010,6 +1010,22 @@ def test_the_circuit_rules_current_arrow_compiles():
     assert arrow in body and figures.clean(figures_typst.compile_svg("circuit", body)).startswith("<svg")
 
 
+def test_an_intervals_brackets_turned_by_its_bounds():
+    """An interval on a number line: its brackets drawn by the preamble from whether each bound
+    is closed, open or infinite (by hand, the AI turned one the wrong way half the time)."""
+    draw = "#ctz-canvas({{ ctz-init(); ctz-draw-interval({}, first: -3, last: 5) }})"
+    shapes = {
+        closed: figures_typst.compile_svg("geometry", draw.format(f"-1, 3, closed: {closed}"))
+        for closed in ("(true, true)", "(true, false)", "(false, true)", "(false, false)")
+    }
+    assert len(set(shapes.values())) == 4  # each bound's bracket turned its own way
+    figures_typst.compile_svg("geometry", draw.format("2, none, closed: (true, false)"))  # [2 ; +∞[
+    figures_typst.compile_svg("geometry", draw.format("none, 1"))  # ]−∞ ; 1]
+    # the line drawn by the preamble too: its ticks where the interval's bounds are placed
+    line = "#ctz-canvas({ ctz-init(); ctz-draw-number-line(-2, 6, scale: 0.8, arrow: true) })"
+    assert figures_typst.compile_svg("geometry", line).startswith("<svg")
+
+
 def test_the_diagram_rules_edges_compile():
     """Every edge the diagram rule shows (its line styles, a label on its arrow, two arrows
     side by side) compiles between two nodes: a fragment out of step with fletcher (a "bend"
