@@ -602,6 +602,32 @@ def test_a_package_import_dropped_not_refused():
             figures_typst.source("graph", refused + example)
 
 
+def test_an_svgs_labels_past_its_frame_kept_whole():
+    """A figure the AI drew as SVG, a label written past its viewBox ("Diaphragme" at x = 380
+    in 400): its frame grown to it, a white ground under it all; one within its frame the
+    same as the AI wrote it."""
+    past = figures.clean(
+        '<svg viewBox="0 0 400 300"><rect width="400" height="300" fill="white"/>'
+        '<line x1="200" y1="150" x2="370" y2="150" stroke="black"/>'
+        '<text x="380" y="155" font-size="16">Diaphragme</text></svg>'
+    )
+    grown = figures.fitted(past)
+    width = float(re.search(r'viewBox="[-\d.]+ [-\d.]+ ([\d.]+)', grown).group(1))
+    assert width > 400 + 60  # the word's 70 or so units past the frame, kept
+    assert '<rect x="' in grown  # its white ground under the part added
+    within = figures.clean(SQUARE)
+    assert figures.fitted(within) == within
+
+
+def test_a_diagrams_two_bars_drawn_as_an_arrow():
+    """The AI writes "-||" for an arrow (two bars, which no school diagram asks for): drawn as
+    "-|>", the arrow it meant."""
+    arrow = '#diagram(node((0, 0), [A]), edge("{}"), node((1, 0), [B]))'
+    assert figures_typst.compile_svg("diagram", arrow.format("-||")) == figures_typst.compile_svg(
+        "diagram", arrow.format("-|>")
+    )
+
+
 def test_an_arrow_written_with_html_entities_drawn():
     """The AI writes an arrow's ">" as HTML does ("-|&gt;"): Typst refused it twice, the
     figure drawn as SVG instead; read as ">" (Typst has no such entity)."""

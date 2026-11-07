@@ -398,7 +398,7 @@ async def _drawn(s: AIConfig, text: str, description: str, family: str, light: b
         log.warning("Figure drawn as SVG: Typst refused it")
     demo = lambda: demo_ai.figure(description)  # noqa: E731
     drawing = await _ask_provider(s, [], text, figures.Drawing, figures.RULES, light=light, demo=demo)
-    return MadeFigure(figures.clean(drawing.svg), "svg", family, not light)
+    return MadeFigure(figures.fitted(figures.clean(drawing.svg)), "svg", family, not light)
 
 
 async def explain_card(

@@ -8,6 +8,7 @@ text: nothing that runs or loads anything) and saved next to the card pictures.
 """
 
 import hashlib
+import io
 import math
 import re
 from pathlib import Path
@@ -187,6 +188,58 @@ def clean(svg: str) -> str:
     root.set("width", f"{width:g}")
     root.set("height", f"{height:g}")
     return ElementTree.tostring(root, encoding="unicode")
+
+
+OVERFLOW = 150  # in the figure's units (Typst's pt): how far past its frame its drawing is looked for
+MARGIN = 6  # around what is drawn, as the Typst families' pages have it
+_VIEWBOX = re.compile(r'viewBox="(-?[\d.]+) (-?[\d.]+) ([\d.]+) ([\d.]+)"')
+
+
+def fitted(svg: str) -> str:
+    """The figure's frame grown to what is drawn past it: drawn in the SVG, but cut off by its
+    frame (an axis's name lilaq writes past the diagram's end: "temps (mi"; an organ's label
+    the AI wrote past its viewBox: "Diaphragm"). Found by drawing the figure once in a frame
+    wider by OVERFLOW; the same SVG when nothing passes its frame; as it is without resvg."""
+    box = _VIEWBOX.search(svg)
+    if box is None:
+        return svg
+    x, y, w, h = map(float, box.groups())
+    wide = _framed(svg, box.group(0), x - OVERFLOW, y - OVERFLOW, w + 2 * OVERFLOW, h + 2 * OVERFLOW)
+    try:
+        png = to_png(clean(wide))  # resvg reads it cleaned, as the check does
+    except FigureError:
+        png = None
+    if png is None:
+        return svg
+    from PIL import Image, ImageOps
+
+    image = Image.open(io.BytesIO(png)).convert("L")
+    drawn = ImageOps.invert(image).point([0] * 25 + [255] * 231).getbbox()  # what isn't white
+    if drawn is None:
+        return svg
+    k = (w + 2 * OVERFLOW) / image.width  # the figure's units per pixel
+    left, top = x - OVERFLOW + drawn[0] * k - MARGIN, y - OVERFLOW + drawn[1] * k - MARGIN
+    right, bottom = x - OVERFLOW + drawn[2] * k + MARGIN, y - OVERFLOW + drawn[3] * k + MARGIN
+    slack = 2 * k + 1  # a pixel or two of rounding, a stroke's edge
+    if left >= x - slack and top >= y - slack and right <= x + w + slack and bottom <= y + h + slack:
+        return svg  # within its frame: untouched
+    nx, ny = min(x, left), min(y, top)
+    nw, nh = max(x + w, right) - nx, max(y + h, bottom) - ny
+    svg = _framed(svg, box.group(0), nx, ny, nw, nh)
+    # its white ground under it all, its own (Typst's page, the AI's rect) covering its frame only
+    opening = re.search(r"<svg[^>]*>", svg)
+    if opening is None:
+        return svg
+    ground = f'<rect x="{nx:.3f}" y="{ny:.3f}" width="{nw:.3f}" height="{nh:.3f}" fill="#ffffff"/>'
+    return svg[: opening.end()] + ground + svg[opening.end() :]
+
+
+def _framed(svg: str, viewbox: str, x: float, y: float, w: float, h: float) -> str:
+    """The SVG's frame (its viewBox, and its size with it: the same scale, in its unit) set to
+    x, y, w, h."""
+    svg = svg.replace(viewbox, f'viewBox="{x:.3f} {y:.3f} {w:.3f} {h:.3f}"', 1)
+    svg = re.sub(r'(<svg[^>]*?\swidth=")[\d.]+((?:pt)?")', rf"\g<1>{w:.3f}\g<2>", svg, count=1)
+    return re.sub(r'(<svg[^>]*?\sheight=")[\d.]+((?:pt)?")', rf"\g<1>{h:.3f}\g<2>", svg, count=1)
 
 
 def to_png(svg: str) -> bytes | None:
