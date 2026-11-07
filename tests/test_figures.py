@@ -1093,6 +1093,53 @@ def test_nested_sets_elements_each_in_its_own_ring():
     assert figures_typst.compile_svg("sets", check.replace("LEVELS", levels)).startswith("<svg")
 
 
+def test_a_graphs_axes_never_written_with_a_factor():
+    """Large values: lilaq wrote "× 10⁵" at the axis's end, on the axis's name ("Ec (J)"). The
+    ticks written in full, whatever the AI gives its axis (its own `yaxis`, its position)."""
+    graph = (
+        "#lq.diagram(width: 8cm, height: 5cm, xlim: (0, 30), ylim: (0, 450000), {}"
+        " xlabel: [v (m/s)], ylabel: [Ec (J)], lq.plot((0, 30), (0, 450000), mark: none))"
+    )
+    own = figures_typst.compile_svg("graph", graph.format("yaxis: (position: 0),"))
+    whole = figures_typst.compile_svg("graph", graph.format("yaxis: (position: 0, exponent: none),"))
+    assert own == whole
+    assert figures_typst.compile_svg("graph", graph.format("")) == figures_typst.compile_svg(
+        "graph", graph.format("yaxis: (exponent: none), xaxis: (exponent: none),")
+    )
+
+
+def _glyphs(svg: str) -> list[tuple[float, float]]:
+    """Where each text run of a Typst SVG is drawn (x, its baseline's y), its groups' moves added."""
+    stack, glyphs = [(0.0, 0.0)], []
+    for tag in re.findall(r"<g(?:\s[^>]*)?>|</g>", svg):
+        if tag == "</g>":
+            stack.pop()
+            continue
+        x, y = stack[-1]
+        if moved := re.search(r'transform="translate\(([-\d.]+)(?:[ ,]([-\d.]+))?\)"', tag):
+            x, y = x + float(moved[1]), y + float(moved[2] or 0)
+        elif text := re.search(r'transform="matrix\(1 0 0 -1 ([-\d.]+) ([-\d.]+)\)"', tag):
+            x, y = x + float(text[1]), y + float(text[2])
+            glyphs.append((x, y))
+        stack.append((x, y))
+    return glyphs
+
+
+def test_a_graphs_x_axis_name_clear_of_its_last_number():
+    """The x axis's name, set by the theme below the axis's end, touched the last tick's number
+    ("0,25" against "I (A)"): placed past the arrow, a little apart, it starts well after it."""
+    svg = figures_typst.compile_svg(
+        "graph",
+        "#lq.diagram(width: 6cm, height: 4cm, xlim: (0, 0.26), ylim: (0, 12), xlabel: [I (A)],"
+        " lq.plot((0, 0.25), (0, 12.5), mark: none))",
+    )
+    glyphs = sorted(_glyphs(svg))
+    name, numbers = glyphs[-1], glyphs[:-1]
+    row = max({y for _, y in numbers}, key=lambda y: sum(g[1] == y for g in numbers))  # the tick numbers' row
+    last = max(x for x, y in numbers if y == row)  # the last number's last glyph
+    assert name[0] - last > 9  # pt: a digit's width and a gap, at least
+
+
 @pytest.mark.parametrize("name", ["lambda", "pi", "Delta"])
 def test_a_variable_named_like_a_symbol_leaves_the_symbol_in_formulas(name):
     """`#let lambda = 1.5`, then `$lambda$` for the arrow's name: Typst read the variable,
