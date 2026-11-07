@@ -28,6 +28,7 @@ Each pull request's entries (the `## Changelog` of its description) are put unde
 
 ### Fixed
 
+- A figure the AI drew empty (a map of plates, volcanoes or earthquakes) is drawn again instead of going on the card blank.
 - Figures drawn as SVG keep their colours, fonts and labels when they style them with classes, the font shorthand or a halo, or put a label in a link or along a curve.
 - A figure whose colours are written as rgb(…) or hsl(…) no longer comes out black.
 - A figure whose colours are mixed (a pH scale's band from red to blue) no longer comes out black.
