@@ -1,0 +1,106 @@
+/* ---- Layout ------------------------------------------------------------ */
+.app { min-height: 100dvh; }
+
+main {
+  max-width: 640px;
+  margin: 0 auto;
+  padding: 1rem 1rem 2rem;
+}
+.app.has-bar main { padding-bottom: calc(6rem + env(safe-area-inset-bottom)); }
+
+.appbar {
+  position: sticky;
+  top: 0;
+  z-index: 20;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: .5rem;
+  padding: calc(.6rem + env(safe-area-inset-top)) 1rem .6rem;
+  background: color-mix(in srgb, var(--bg) 85%, transparent);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+}
+/* A section reached by its link (#where): its title below the bar, not under it */
+.panel[id] { scroll-margin-top: calc(5rem + env(safe-area-inset-top)); }
+.brand { display: flex; flex: 0 1 auto; min-width: 0; align-items: center; gap: .55rem; font-weight: 800; font-size: 1.3rem; }
+.brand span, .brand small { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.brand-text { display: flex; flex-direction: column; min-width: 0; line-height: 1.1; }
+.brand-profile { font-size: .78rem; font-weight: 700; color: var(--primary); }
+.brand-profile.none { color: var(--muted); }
+.brand img { border-radius: 9px; }
+a.brand { color: inherit; text-decoration: none; }
+.back { font-size: 1.2rem; color: var(--muted); }
+a { color: var(--primary); }
+.appbar-actions { display: flex; flex: 0 0 auto; gap: .4rem; }
+/* Small phones: the lessons button keeps its icon and count, the brand keeps its room */
+@media (max-width: 440px) {
+  .appbar .wide-only { display: none; }
+  .appbar.in-lesson .wide-or-home { display: none; }  /* six chips: the icons alone while a lesson is open */
+  .appbar .brand-name { display: none; }  /* the logo says it; the home screen shows the name in full */
+}
+@media (max-width: 370px) {
+  .appbar { padding-left: .75rem; padding-right: .75rem; }
+  .brand { font-size: 1.15rem; gap: .4rem; }
+  .appbar-actions { gap: .3rem; }
+  .appbar .chip-btn { padding: .4rem .6rem; }
+}
+
+.tagline { margin: .25rem .25rem 1rem; color: var(--muted); font-size: 1.05rem; }
+
+.panel {
+  background: var(--surface);
+  border: 1px solid var(--panel-border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  padding: 1.1rem 1rem 1.2rem;
+  margin-bottom: 1rem;
+}
+
+h2 {
+  display: flex;
+  align-items: center;
+  gap: .6rem;
+  margin: 0 0 .9rem;
+  font-size: 1.12rem;
+  font-weight: 800;
+}
+/* "?" at the end of a section title: the matching page of the user documentation */
+.help-link {
+  display: inline-grid;
+  place-items: center;
+  flex: none;
+  margin-left: auto;
+  /* At least this size, and as big as its "?" asks: a larger text (Android's font size) grows it */
+  min-width: 1.5rem;
+  aspect-ratio: 1;
+  padding: .15em;
+  line-height: 1;
+  border-radius: 50%;
+  border: 1.5px solid var(--border);
+  color: var(--muted);
+  font-size: .85rem;
+  font-weight: 800;
+  text-decoration: none;
+}
+.help-link:hover, .help-link:focus-visible { color: var(--primary); border-color: var(--primary); }
+.docs-link, .support-link { color: var(--muted); font-size: .9rem; text-decoration: none; }
+.docs-link:hover, .docs-link:focus-visible, .support-link:hover, .support-link:focus-visible { color: var(--primary); text-decoration: underline; }
+
+.step {
+  display: inline-grid;
+  place-items: center;
+  flex: none;
+  /* At least this size, and as big as its number asks: a larger text (Android's font size) grows it */
+  min-width: 1.7rem;
+  aspect-ratio: 1;
+  padding: .25em;
+  line-height: 1;
+  border-radius: 50%;
+  background: var(--primary-soft);
+  color: var(--primary);
+  font-size: .9rem;
+}
+
+.hint { margin: .5rem 0 0; color: var(--muted); font-size: .88rem; }
+

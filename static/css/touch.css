@@ -1,0 +1,15 @@
+/* ---- Touch targets ------------------------------------------------------ */
+/* 44 px at least for a finger (WCAG 2.5.5, Android's 48 dp), the look unchanged: an invisible
+   layer around the small ones (a card's icons, the bar's chips, a photo's corner buttons, a
+   card's tick box when picking, a message's ✕) */
+.icon-btn, .chip-btn.icon-only, .flash .pick, .toast > button { position: relative; }
+.icon-btn::after, .chip-btn.icon-only::after, .thumb-remove::after, .thumb-rotate::after, .thumb-hide::after,
+.flash .pick::after, .toast > button::after {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: max(100%, 44px);
+  height: max(100%, 44px);
+  transform: translate(-50%, -50%);
+}
