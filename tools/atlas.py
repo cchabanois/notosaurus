@@ -58,6 +58,7 @@ LANGUAGES = ("FR", "EN", "DE", "ES", "IT", "PT")  # the page's languages
 # sometimes the official ones, "République populaire de Chine"), Brazil's Portuguese as CLDR's pt
 CLDR = "https://cdn.jsdelivr.net/npm/cldr-localenames-full@46.0.0/main/{}/territories.json"
 CLDR_LANGUAGES = ("fr", "en", "de", "es", "it", "pt")
+CLDR_LICENCE = "https://cdn.jsdelivr.net/npm/cldr-localenames-full@46.0.0/LICENSE"  # shipped with them, as it asks
 # The places of history lessons Natural Earth lacks or names otherwise (Aix-la-Chapelle,
 # Cordoue, Lutèce, Constantinople, Troie): from Wikidata (CC0), each by its English Wikipedia
 # article (never ambiguous), its names in the page's languages and its coordinates there, plus
@@ -240,6 +241,15 @@ def download(name: str, folder: Path | None = None, url: str | None = None) -> d
     request = urllib.request.Request(url or SOURCE + name, headers={"User-Agent": "notosaurus-atlas (tools/atlas.py)"})
     with urllib.request.urlopen(request, timeout=120) as response:
         return json.loads(response.read())
+
+
+def download_text(name: str, folder: Path | None, url: str) -> str:
+    """A text file, from `folder` when it has it (by that name), else from its URL."""
+    if folder and (folder / name).is_file():
+        return (folder / name).read_text(encoding="utf-8")
+    request = urllib.request.Request(url, headers={"User-Agent": "notosaurus-atlas (tools/atlas.py)"})
+    with urllib.request.urlopen(request, timeout=120) as response:
+        return response.read().decode("utf-8")
 
 
 def usual_names(folder: Path | None = None) -> dict[str, list[str]]:
@@ -716,8 +726,9 @@ NOTICE = """The map function (lib.typ) is Notosaurus's (AGPL-3.0-or-later). The 
 files) is made from Natural Earth (https://www.naturalearthdata.com/), public domain: 1:50m
 countries and lakes; 1:10m populated places, rivers, geographic regions, marine areas and
 first-level divisions; simplified by tools/atlas.py. The countries' usual names in each
-language from Unicode CLDR (https://cldr.unicode.org/, Unicode License v3); the places of
-history from Wikidata (https://www.wikidata.org/, CC0).
+language from Unicode CLDR 46 (https://cldr.unicode.org/), under the Unicode License v3: its
+copyright and permission notice in LICENSE-CLDR, beside this file. The places of history from
+Wikidata (https://www.wikidata.org/, CC0).
 """
 
 
@@ -738,6 +749,7 @@ def build(folder: Path | None = None, refresh_history: bool = False) -> None:
         "typst.toml": TOML,
         "lib.typ": LIB.read_text(encoding="utf-8"),
         "NOTICE": NOTICE,
+        "LICENSE-CLDR": download_text("cldr-LICENSE", folder, CLDR_LICENCE),
         "atlas.json": text(world),
         "rivers.json": text(rivers(main_rivers, europe)),
         "reliefs.json": text(reliefs(relief)),

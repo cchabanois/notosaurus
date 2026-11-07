@@ -32,3 +32,15 @@ def test_every_figure_package_shipped_is_listed():
     assert shipped <= listed, shipped - listed
     assert ("Natural Earth", "5.1.2") in listed  # notosaurus-atlas's data (tools/atlas.py)
     assert {("Unicode CLDR", "46.0"), ("Wikidata", "2026-11")} <= listed  # its names, its places of history
+
+
+def test_the_atlas_ships_cldrs_licence():
+    """The atlas's names from Unicode CLDR: its licence's copyright and permission notice goes
+    with every copy of them (as it asks), in the archive the add-on and the app ship."""
+    import tarfile
+
+    (archive,) = (STATIC.parent / "core" / "notosaurus_core" / "typst").glob("notosaurus-atlas-*.tar.gz")
+    with tarfile.open(archive) as tar:
+        notice = tar.extractfile("LICENSE-CLDR").read().decode()
+        assert "LICENSE-CLDR" in tar.extractfile("NOTICE").read().decode()
+    assert "UNICODE LICENSE V3" in notice and "Copyright © 2004-2024 Unicode, Inc." in notice
