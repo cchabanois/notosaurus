@@ -23,6 +23,9 @@ Each pull request's entries (the `## Changelog` of its description) are put unde
 
 ### Fixed
 
+- Graphs: the axes' names no longer cut off at the edge; a curve with a plateau drawn in one piece; a period's double arrow.
+- Electric circuits: the current's direction drawn when asked, the right way in every branch; a short circuit named.
+- Diagrams of boxes and arrows: plain and dashed lines told apart (contact, action at a distance); the labels of arrows going both ways no longer on top of each other.
 - A figure on a card's front no longer writes the answer the card asks (a count, a measure), even when its description says so.
 - Number lines drawn cleaner: the line ends at its last graduation, decimals written with their comma, nothing written that the card didn't ask for.
 
