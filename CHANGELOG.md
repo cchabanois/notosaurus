@@ -9,6 +9,7 @@ Each pull request's entries (the `## Changelog` of its description) are put unde
 
 ### Added
 
+- 📈 Line charts compare several groups on one axis, with a legend (two populations, two people, two conditions).
 - Additive and subtractive colour synthesis drawn exactly: each overlap's colour computed; the colour a card asks for left as a question mark.
 - Charts mark an event or a period on a curve, and draw a second measure with its own unit on a right axis.
 - Solids cut by a plane (a cuboid, a prism, a pyramid, a cylinder, a cone, a ball): the section drawn where it is, its hidden sides dashed.
@@ -32,6 +33,8 @@ Each pull request's entries (the `## Changelog` of its description) are put unde
 
 ### Fixed
 
+- Chemistry: several molecules in one figure are drawn side by side, each with its name, no longer one on another; a hydrogen bond is drawn dotted.
+- 📈 Two curves of the same measure are no longer drawn on two different axes, which made a small change look as large as a big one.
 - Figures: a Greek letter in a figure's formula (λ, π, α) is no longer replaced by a number the AI named after it.
 - A circle or points in a coordinate frame drawn with their graduated axes, instead of a rough drawing.
 - A trigonometric circle with a single angle is drawn.

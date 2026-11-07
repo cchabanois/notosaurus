@@ -2,6 +2,12 @@
 #import "@preview/lilaq:0.6.0" as lq
 #import "@preview/tiptoe:0.4.0"
 #show: lq.theme.schoolbook
+// An axis never written with a factor of its own: a "× 10³" lilaq puts at the axis's end lay
+// on the axis's name; its ticks written in full instead ("2 000"), as school writes them
+#show: lq.set-diagram(xaxis: (exponent: none), yaxis: (exponent: none))
+// The x axis's name past the arrow, a little apart and level with the axis (the theme set it
+// below the axis's end, on the row of the tick numbers: the last one, "0,25", touched "I (A)")
+#show: lq.show_(lq.label.with(kind: "x"), it => place(left + horizon, dx: 100% + .8em, dy: -.15em, it))
 // Numbers on the axes written as the figure's language writes them: its decimal separator,
 // set by figures_typst.source from the AI's `#set text(lang: …)` (a point when none is said)
 #let decimal-separator = "."

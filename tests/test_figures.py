@@ -1093,6 +1093,53 @@ def test_nested_sets_elements_each_in_its_own_ring():
     assert figures_typst.compile_svg("sets", check.replace("LEVELS", levels)).startswith("<svg")
 
 
+def test_a_graphs_axes_never_written_with_a_factor():
+    """Large values: lilaq wrote "× 10⁵" at the axis's end, on the axis's name ("Ec (J)"). The
+    ticks written in full, whatever the AI gives its axis (its own `yaxis`, its position)."""
+    graph = (
+        "#lq.diagram(width: 8cm, height: 5cm, xlim: (0, 30), ylim: (0, 450000), {}"
+        " xlabel: [v (m/s)], ylabel: [Ec (J)], lq.plot((0, 30), (0, 450000), mark: none))"
+    )
+    own = figures_typst.compile_svg("graph", graph.format("yaxis: (position: 0),"))
+    whole = figures_typst.compile_svg("graph", graph.format("yaxis: (position: 0, exponent: none),"))
+    assert own == whole
+    assert figures_typst.compile_svg("graph", graph.format("")) == figures_typst.compile_svg(
+        "graph", graph.format("yaxis: (exponent: none), xaxis: (exponent: none),")
+    )
+
+
+def _glyphs(svg: str) -> list[tuple[float, float]]:
+    """Where each text run of a Typst SVG is drawn (x, its baseline's y), its groups' moves added."""
+    stack, glyphs = [(0.0, 0.0)], []
+    for tag in re.findall(r"<g(?:\s[^>]*)?>|</g>", svg):
+        if tag == "</g>":
+            stack.pop()
+            continue
+        x, y = stack[-1]
+        if moved := re.search(r'transform="translate\(([-\d.]+)(?:[ ,]([-\d.]+))?\)"', tag):
+            x, y = x + float(moved[1]), y + float(moved[2] or 0)
+        elif text := re.search(r'transform="matrix\(1 0 0 -1 ([-\d.]+) ([-\d.]+)\)"', tag):
+            x, y = x + float(text[1]), y + float(text[2])
+            glyphs.append((x, y))
+        stack.append((x, y))
+    return glyphs
+
+
+def test_a_graphs_x_axis_name_clear_of_its_last_number():
+    """The x axis's name, set by the theme below the axis's end, touched the last tick's number
+    ("0,25" against "I (A)"): placed past the arrow, a little apart, it starts well after it."""
+    svg = figures_typst.compile_svg(
+        "graph",
+        "#lq.diagram(width: 6cm, height: 4cm, xlim: (0, 0.26), ylim: (0, 12), xlabel: [I (A)],"
+        " lq.plot((0, 0.25), (0, 12.5), mark: none))",
+    )
+    glyphs = sorted(_glyphs(svg))
+    name, numbers = glyphs[-1], glyphs[:-1]
+    row = max({y for _, y in numbers}, key=lambda y: sum(g[1] == y for g in numbers))  # the tick numbers' row
+    last = max(x for x, y in numbers if y == row)  # the last number's last glyph
+    assert name[0] - last > 9  # pt: a digit's width and a gap, at least
+
+
 @pytest.mark.parametrize("name", ["lambda", "pi", "Delta"])
 def test_a_variable_named_like_a_symbol_leaves_the_symbol_in_formulas(name):
     """`#let lambda = 1.5`, then `$lambda$` for the arrow's name: Typst read the variable,
@@ -1106,6 +1153,18 @@ def test_a_variable_named_like_a_symbol_leaves_the_symbol_in_formulas(name):
     # a word in a text, a field (calc.pi) and a longer name untouched
     text = f"#let {name} = 1\n#text[le mot {name}] #calc.pi #let {name}-max = 2"
     assert f"le mot {name}]" in figures_typst.source("graph", text) and "calc.pi" in figures_typst.source("graph", text)
+
+
+def test_a_grids_fractional_columns_sized_by_their_content():
+    """Four molecules in a grid of `1fr` columns: a figure's page is as wide as what it holds,
+    so the columns had no width, the molecules drawn one on another. Sized by their content:
+    the same figure as `auto` columns; a fraction elsewhere (`h(1fr)`) left as written."""
+    molecule = '[#skeletize({{ fragment("CH_3"); single(); fragment("{}") }}) \\ {}]'
+    cells = ", ".join(molecule.format(g, n) for g, n in (("OH", "Éthanol"), ("CHO", "Éthanal")))
+    grid = "#grid(columns: COLUMNS, column-gutter: 2em, " + cells + ")"
+    fractions = figures_typst.compile_svg("chemistry", grid.replace("COLUMNS", "(1fr, 1fr)"))
+    assert fractions == figures_typst.compile_svg("chemistry", grid.replace("COLUMNS", "(auto, auto)"))
+    assert "#h(1fr)" in figures_typst.source("chemistry", "#h(1fr)")
 
 
 def test_the_diagram_rules_edges_compile():
@@ -1239,6 +1298,18 @@ def test_a_solids_hidden_edges_computed(body, hidden):
     assert svg.count("stroke-dasharray") == hidden
 
 
+def test_a_probability_tree_as_wide_as_it_is_high():
+    """A tree's places computed (three Bernoulli trials, eight leaves: placed by the AI, a strip
+    three times as high as wide, unreadable once fitted, 3 drawings in 3): about as wide as high.
+    A branch not (name, label) or (name, label, branches): refused, saying how."""
+    two = "(($S$, [0,3]{0}), ($E$, [0,7]{0}))"
+    body = "#tree" + two.format(", " + two.format(", " + two.format("")))
+    width, height = drawn_size("diagram", body)
+    assert 0.6 < width / height < 1.6
+    with pytest.raises(figures_typst.Unusable, match="each branch"):
+        figures_typst.compile_svg("diagram", '#tree(("A", [0,4], "B"), "C")')
+
+
 def test_a_coordinate_frame_drawn_as_the_geometry_rule_says():
     """A circle or a line in a coordinate frame: the rule's own calls compile (the AI wrote
     ctz-draw-axes(-2, 6, -3, 5), positional, refused by Typst 3 times in 3: no frame was
@@ -1330,6 +1401,26 @@ def test_a_line_starts_its_axes_where_its_measures_are():
     line = '#chart(kind: "line", values: ((0, 21), (1, 20.4), (2, 19.6)), axes: ("Temps (min)", "Dioxygène (%)"){})'
     bare, written = (figures_typst.compile_svg("chart", line.format(w)) for w in ("", ", written: (2,)"))
     assert bare != written
+
+
+def test_lines_of_the_same_measure_share_one_axis():
+    """Several lines of one measure (an allele's frequency in two populations) on the same
+    graduation, each its colour and a legend: one twice as high as the other is drawn twice
+    as high, never stretched to its own axis; `second` (another unit) is a single line's."""
+    from PIL import Image
+
+    body = '#chart(kind: "line", values: (("A", ((0, 0), (10, 5))), ("B", ((0, 0), (10, 10)))), axes: ("x", "y"))'
+    image = Image.open(io.BytesIO(figures.to_png(figures.clean(figures_typst.compile_svg("chart", body)))))
+    image = image.convert("RGB")
+    plot = image.crop((0, 0, int(image.width * 0.7), image.height))  # the legend at the right left out
+
+    def height(colour):
+        ys = [y for y in range(plot.height) for x in range(0, plot.width, 2) if plot.getpixel((x, y)) == colour]
+        return max(ys) - min(ys)
+
+    assert height((31, 95, 168)) == pytest.approx(2 * height((176, 58, 46)), rel=0.1)
+    with pytest.raises(figures_typst.Unusable, match="single line"):
+        figures_typst.compile_svg("chart", body[:-1] + ', second: (values: ((0, 1), (1, 2)), axis: "z"))')
 
 
 def test_a_line_marks_its_events_and_stretches():
@@ -1699,3 +1790,28 @@ def test_a_sequences_asked_letter_is_not_shown():
     asked = figures_typst.compile_svg("sequence", body.format("G"))
     assert asked == figures_typst.compile_svg("sequence", body.format("T"))
     assert asked != figures_typst.compile_svg("sequence", body.format("G").replace('ask: (("2", 6),), ', ""))
+
+
+def test_a_phylogenetic_tree_is_built_from_what_each_species_has():
+    """The groups sharing a character are the tree's groups, computed: the order the
+    characters are listed in changes nothing, a lone character written without its comma
+    neither; characters whose groups overlap without nesting are refused (no tree has both),
+    never drawn at a guess."""
+    tree = '#phylogeny(species: (("Truite", ()), ("Grenouille", {}), ("Chat", {})))'
+    ladder = figures_typst.compile_svg("phylogeny", tree.format('("membres",)', '("membres", "poils")'))
+    assert ladder == figures_typst.compile_svg("phylogeny", tree.format('("membres")', '("poils", "membres")'))
+    assert ladder != figures_typst.compile_svg("phylogeny", tree.format('("membres",)', '("membres",)'))
+    overlapping = tree.format('("membres", "poils")', '("membres",)').replace("()", '("poils",)')
+    with pytest.raises(figures_typst.Unusable, match="overlap without nesting"):
+        figures_typst.compile_svg("phylogeny", overlapping)
+
+
+def test_a_phylogenetic_trees_hidden_names_are_not_shown():
+    """A card asking which species or which innovation: written "?", not its name."""
+    tree = '#phylogeny({}species: (("Truite", ()), ("Grenouille", ("membres",)), ("Chat", ("membres", "poils"))))'
+    bare = figures_typst.compile_svg("phylogeny", tree.format(""))
+    for hidden in ('"poils"', '"Chat"'):
+        body = tree.format(f"hidden: ({hidden},), ")
+        asked = figures_typst.compile_svg("phylogeny", body)
+        assert asked != bare
+        assert asked == figures_typst.compile_svg("phylogeny", body.replace(hidden, '"x"'))
