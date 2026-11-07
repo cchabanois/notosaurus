@@ -15,7 +15,11 @@ times, judges each drawing by code (it renders, fills its picture, no label hidd
 A JSON list of `{"id": "v10", "description": "…"}`, the descriptions written as the cards'
 AI writes them (a sentence saying what to draw, its labels and values): the figures that
 went wrong, or a syllabus's figures (one or two per chapter, the kinds it calls for). Ids
-short and stable: the runs are compared by id. Keep the file outside git (your scratch
+short and stable: the runs are compared by id. A case may also say its `"kind"` (a family,
+as the cards' AI gives it: not asked again; the same description under two kinds compares
+two families) and its `"front"` (`"question → answer"`, the card the figure goes on the
+front of: nothing on it may give the answer away). Both with `--local` only: the relay's
+`/v1/figure` takes a description alone. Keep the file outside git (your scratch
 folder, or the maintainer's private bench folder), and nothing from a user's lesson in it.
 
 ## 2. Before
@@ -26,8 +30,11 @@ folder, or the maintainer's private bench folder), and nothing from a user's les
 
 - `--local`: drawn in this checkout with the AI of the app's settings (`--app <checkout>`
   for the one holding `data/` and `.env`; a worktree has neither), so a rule is judged
-  before it is deployed. Without it, drawn by the test relay: what the apps get today.
+  before it is deployed. Without it, drawn by the test relay: what the apps get today, that
+  is the core version the relay pins, often several pull requests behind `main`.
 - `--times 3` at least: one drawing says little; a family is right when every drawing is.
+- `--local` spends real credits on the app's keys: cases × times calls, and more for the
+  drawings drawn again; keep the cases to what the change touches.
 - Several cases run at once (`--jobs`); keep the default unless the provider allows more.
 
 ## 3. Look at every drawing
@@ -61,6 +68,17 @@ cases of other families too when a shared piece changed: `figures_typst.source`,
 
 ## 6. Report
 
-Results as a page the maintainer can look at: each case with its description, its drawings
-before and after, the counts (`24/26`), what was fixed and what still fails. In the pull
-request's description: the counts before and after, in a line or two.
+Results as a page the maintainer can look at, published (a claude.ai artifact when you can
+publish one) rather than a local `sheet.html`: each case with its description, its drawings
+before and after, the counts (`24/26`), what was fixed and what still fails. Update it after
+each fix. In the pull request's description: the counts before and after, in a line or two.
+
+## When the problem is upstream
+
+The bench starts from a description. What it doesn't see is decided before: which cards get
+a figure, what their description says (one description shared by two cards, the counts the
+question asks for written on it), a photo where a map was needed, front or back. When the
+drawings are right but the cards are not, judge whole lessons instead, in a test Anki of
+your own (CLAUDE.md): `POST /api/extract` with the page, `PUT /api/lessons/<id>`, `POST
+/api/lessons/<id>/pictures`; the same pages before and after, plus a page or two the change
+should leave alone.

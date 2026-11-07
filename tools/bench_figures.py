@@ -12,6 +12,9 @@ figures users reported and the hard ones, a list of
       [--cases other.json] [--local [--app ~/git/notosaurus]] [--recompile <run>]
 
 --cases: another list of cases (a syllabus's figures, say), the runs still in <bench>/runs.
+A case may say its "kind" (a family: two families compared on the same description) and
+its "front" ("question → answer", the card it goes on the front of): --local only, the
+relay's /v1/figure takes a description alone.
 --local: drawn here, by the AI of the app's settings (<app>/data, its keys in <app>/.env;
 the checkout by default), with this checkout's rules: a rule judged before it is deployed.
 Every Typst drawing keeps its Typst beside its SVG (<case>-<n>.typ).
@@ -69,14 +72,17 @@ def draw(url: str, key: str, description: str) -> dict:
     return {"svg": answer["svg"], "seconds": seconds, "credits": answer["usage"]["credits"]}
 
 
-def draw_local(description: str) -> dict:
+def draw_local(case: dict) -> dict:
     """This checkout's figure, drawn by the AI of the app's settings: its SVG, seconds, how it
-    was drawn (its family, its Typst); or its error."""
+    was drawn (its family, its Typst); or its error. The case's "kind" (its family, as the
+    cards' AI says it: not asked) and "front" (the card it goes on the front of, "question →
+    answer": nothing on it may give the answer away), when it has them."""
     from app import settings
 
     start = time.monotonic()
     try:
-        made = asyncio.run(figure_making.made_figure(settings.current(), description))
+        description, kind, front = case["description"], case.get("kind", ""), case.get("front", "")
+        made = asyncio.run(figure_making.made_figure(settings.current(), description, kind=kind, front=front))
     except Exception as e:
         return {"error": f"{type(e).__name__}: {str(e)[:200]}", "seconds": round(time.monotonic() - start, 1)}
     seconds = round(time.monotonic() - start, 1)
@@ -249,7 +255,7 @@ def main() -> int:
             app = Path(args.app).expanduser()
             load_dotenv(app / ".env")
             os.environ.setdefault("NOTOSAURUS_DATA", str(app / "data"))
-            drawing = lambda case, d: draw_local(case["description"])  # noqa: E731
+            drawing = lambda case, d: draw_local(case)  # noqa: E731
             where = "drawn here"
         else:
             url, key = relay()
