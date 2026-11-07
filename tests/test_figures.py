@@ -1283,3 +1283,50 @@ def test_an_svg_figures_colours_kept_whatever_their_notation():
     assert re.findall(r'fill="([^"]*)"', kept) == ["#ff0000", "#ff000080"]
     assert "fill:#008000" in kept and "stroke:#0000ff80" in kept
     assert "<text>rgb(1, 2, 3)</text>" in kept
+
+
+def _kept(body: str) -> str:
+    return figures.clean(f'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 10 10">{body}</svg>')
+
+
+def test_a_stylesheets_simple_rules_written_on_their_shapes():
+    """An SVG styled by its <style> (".a { fill: red }", class="a"): clean drops <style> and
+    class (a stylesheet may load or restyle the page), the shapes were painted black. Its
+    simple rules are written on the elements they style, as CSS would (an element's own style
+    last, it wins); what loads or isn't simple is left out."""
+    kept = _kept(
+        "<style>.a { fill: #ff0000; stroke: rgb(0, 0, 255) } rect { stroke-width: 2 } #t { font-size: 20px }"
+        " @import url(https://example.com/a.css); @font-face { src: url(https://example.com/f.woff) }"
+        " .b { fill: url(https://example.com/x) } svg > .c { fill: #00ff00 }</style>"
+        '<rect class="a" width="5" height="5"/><rect class="a" style="fill:#123456" width="1" height="1"/>'
+        '<rect class="b" width="1" height="1"/><text id="t">T</text>'
+    )
+    assert 'style="stroke-width:2;fill:#ff0000;stroke:#0000ff"' in kept
+    assert re.search(r'style="[^"]*fill:#ff0000[^"]*;fill:#123456"', kept)  # its own style last: it wins
+    assert 'id="t" style="font-size:20px"' in kept
+    assert "example.com" not in kept and "@" not in kept and "#00ff00" not in kept and "<style" not in kept
+
+
+def test_a_style_font_shorthand_kept_as_its_properties():
+    kept = _kept('<text style="font: italic bold 12px/1.2 DejaVu Sans">A</text>')
+    assert 'style="font-size:12px;font-style:italic;font-weight:bold;font-family:DejaVu Sans"' in kept
+
+
+def test_a_labels_halo_painted_under_it_and_current_colour_kept():
+    """paint-order (a label's white halo under its letters, not over them) and color (what
+    currentColor takes): plain keywords and colours, kept."""
+    kept = _kept('<g color="#ff0000"><text paint-order="stroke" stroke="#fff">A</text></g>')
+    assert 'color="#ff0000"' in kept and 'paint-order="stroke"' in kept
+
+
+def test_a_links_content_kept_without_the_link():
+    kept = _kept('<text x="1">Avant <a href="https://example.com"><tspan>Lien</tspan> suite</a> après</text>')
+    assert '<text x="1">Avant <tspan>Lien</tspan> suite après</text>' in kept and "example.com" not in kept
+
+
+def test_a_text_along_the_figures_own_curve_kept():
+    kept = _kept(
+        '<defs><path id="p" d="M0 5 H10"/></defs>'
+        '<text><textPath href="#p" startOffset="10%">Arc</textPath><textPath href="https://example.com">X</textPath></text>'
+    )
+    assert '<textPath href="#p" startOffset="10%">Arc</textPath>' in kept and "example.com" not in kept

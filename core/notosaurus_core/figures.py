@@ -58,13 +58,15 @@ ELEMENTS = {
     "pattern", "clipPath", "mask", "linearGradient", "radialGradient", "stop",
     # A shape drawn again where it is used (Typst's letters): the figure's own, by its id only
     "symbol", "use",
+    # A text along one of the figure's own curves (an arc's label), by its id only
+    "textPath",
 }  # fmt: skip
 GEOMETRY = {
     "x", "y", "x1", "y1", "x2", "y2", "cx", "cy", "r", "rx", "ry", "width", "height", "d", "points",
     "dx", "dy", "rotate", "transform", "viewBox", "preserveAspectRatio", "id",
     "refX", "refY", "markerWidth", "markerHeight", "orient", "markerUnits", "textLength", "lengthAdjust",
     "patternUnits", "patternContentUnits", "patternTransform", "clipPathUnits", "maskUnits", "maskContentUnits",
-    "gradientUnits", "gradientTransform", "spreadMethod", "offset", "fx", "fy",
+    "gradientUnits", "gradientTransform", "spreadMethod", "offset", "fx", "fy", "startOffset",
 }  # fmt: skip
 PRESENTATION = {
     "fill", "stroke", "stroke-width", "stroke-dasharray", "stroke-dashoffset", "stroke-linecap",
@@ -73,6 +75,8 @@ PRESENTATION = {
     "alignment-baseline", "baseline-shift", "letter-spacing", "word-spacing", "text-decoration",
     "marker-start", "marker-mid", "marker-end", "visibility", "display", "overflow",
     "clip-path", "clip-rule", "mask", "stop-color", "stop-opacity",
+    # A label's halo painted under its letters, not over them; the colour currentColor takes
+    "paint-order", "color",
 }  # fmt: skip
 # Attributes that may point at a part of the figure itself ("url(#hatch)"), never elsewhere
 REFERENCES = {"marker-start", "marker-mid", "marker-end", "clip-path", "mask", "fill", "stroke"}
@@ -97,14 +101,122 @@ def _safe_value(name: str, value: str) -> bool:
     return bool(SAFE_VALUE.match(value)) and "javascript" not in value.lower()
 
 
+_FONT_SIZE = re.compile(r"^[\d.]+(px|pt|em|rem|%)?(/\S+)?$|^(xx?-)?(small|large)$|^medium$")
+
+
+def _font(value: str) -> list[tuple[str, str]]:
+    """CSS's font shorthand ("italic bold 12px sans-serif") as the properties it sets."""
+    words = value.split()
+    at = next((i for i, w in enumerate(words) if _FONT_SIZE.match(w.lower())), None)
+    if at is None:
+        return []
+    parts = [("font-size", words[at].split("/")[0])]
+    for word in (w.lower() for w in words[:at]):
+        if word in ("italic", "oblique"):
+            parts.append(("font-style", word))
+        elif word in ("bold", "bolder", "lighter") or re.fullmatch(r"[1-9]00", word):
+            parts.append(("font-weight", word))
+    if words[at + 1 :]:
+        parts.append(("font-family", " ".join(words[at + 1 :])))
+    return parts
+
+
 def _clean_style(style: str) -> str:
     kept = []
     for declaration in style.split(";"):
         name, _, value = declaration.partition(":")
-        name, value = name.strip().lower(), value.strip()
-        if name in PRESENTATION and value and _safe_value(name, value):
-            kept.append(f"{name}:{value}")
+        name, value = name.strip().lower(), value.strip().removesuffix("!important").strip()
+        for part, part_value in _font(value) if name == "font" else [(name, value)]:
+            if part in PRESENTATION and part_value and _safe_value(part, part_value):
+                kept.append(f"{part}:{part_value}")
     return ";".join(kept)
+
+
+# A stylesheet's simple selectors: an element, its classes, or an id ("text.label", ".a", "#t")
+_SELECTOR = re.compile(r"^([A-Za-z][\w-]*)?((?:\.[\w-]+)*)$|^#([\w-]+)$")
+
+
+def _without_at_rules(css: str) -> str:
+    """A stylesheet without its comments and at-rules (@import, @font-face, @media…: what
+    loads, or what applies only sometimes)."""
+    css = re.sub(r"/\*.*?\*/", "", css, flags=re.DOTALL)
+    out, i = [], 0
+    while i < len(css):
+        if css[i] != "@":
+            out.append(css[i])
+            i += 1
+            continue
+        end = re.search(r"[;{]", css[i:])
+        if end is None:
+            break
+        i += end.end()
+        if end.group() == "{":  # its block, nested ones too
+            depth = 1
+            while i < len(css) and depth:
+                depth += {"{": 1, "}": -1}.get(css[i], 0)
+                i += 1
+    return "".join(out)
+
+
+def _inline_stylesheets(root: ElementTree.Element) -> None:
+    """The figure's <style> rules written on the elements they style, before clean drops
+    <style> and class (a stylesheet may load or style what isn't the figure). Only simple
+    selectors; their declarations then cleaned as any style is (_clean_style): a shape
+    styled by class keeps its colours, never painted black."""
+    css = "".join(e.text or "" for e in root.iter() if isinstance(e.tag, str) and _local(e.tag) == "style")
+    if not css.strip():
+        return
+    rules = []  # (specificity, order, element, classes, id, declarations)
+    for order, (selectors, declarations) in enumerate(re.findall(r"([^{}]+)\{([^{}]*)\}", _without_at_rules(css))):
+        for selector in selectors.split(","):
+            matched = _SELECTOR.match(selector.strip())
+            if matched is None or not selector.strip():
+                continue  # a selector it doesn't read: its rule left out
+            tag, classes, ident = (
+                matched.group(1),
+                [c for c in (matched.group(2) or "").split(".") if c],
+                matched.group(3),
+            )
+            specificity = (1 if ident else 0, len(classes), 1 if tag else 0)
+            rules.append((specificity, order, tag, set(classes), ident, declarations))
+    rules.sort(key=lambda r: (r[0], r[1]))
+    for element in root.iter():
+        if not isinstance(element.tag, str):
+            continue
+        local, own = _local(element.tag), set(element.get("class", "").split())
+        applied = [
+            d for _, _, tag, classes, ident, d in rules
+            if (ident is None or element.get("id") == ident) and (tag is None or tag == local) and classes <= own
+        ]  # fmt: skip
+        if applied:
+            element.set("style", ";".join([*applied, element.get("style", "")]))  # its own style last: it wins
+
+
+def _unwrap_links(element: ElementTree.Element) -> None:
+    """A link's content kept in its place, the link dropped (a label in an <a>: still shown)."""
+    for child in list(element):
+        if isinstance(child.tag, str) and _local(child.tag) == "a":
+            at = list(element).index(child)
+            text, tail = child.text or "", child.tail or ""
+            if at == 0:
+                element.text = (element.text or "") + text
+            else:
+                previous = element[at - 1]
+                previous.tail = (previous.tail or "") + text
+            inner = list(child)
+            element.remove(child)
+            for k, grandchild in enumerate(inner):
+                element.insert(at + k, grandchild)
+            if inner:
+                inner[-1].tail = (inner[-1].tail or "") + tail
+            elif at == 0:
+                element.text = (element.text or "") + tail
+            else:
+                previous = element[at - 1]
+                previous.tail = (previous.tail or "") + tail
+            _unwrap_links(element)
+            return
+        _unwrap_links(child)
 
 
 def _clean(element: ElementTree.Element) -> None:
@@ -123,8 +235,8 @@ def _clean(element: ElementTree.Element) -> None:
                 element.attrib[name] = cleaned
             else:
                 del element.attrib[name]
-        elif local == "href" and _local(element.tag) == "use" and INTERNAL_HREF.match(value.strip()):
-            continue  # one of the figure's own shapes ("#g1"): nothing loaded
+        elif local == "href" and _local(element.tag) in ("use", "textPath") and INTERNAL_HREF.match(value.strip()):
+            continue  # one of the figure's own shapes or curves ("#g1"): nothing loaded
         elif local not in GEOMETRY | PRESENTATION or not _safe_value(local, value):
             del element.attrib[name]  # on…, href, xlink:href, anything unknown or unsafe
 
@@ -221,6 +333,8 @@ def clean(svg: str) -> str:
         for element in root.iter():
             if isinstance(element.tag, str) and not element.tag.startswith("{"):
                 element.tag = f"{{{SVG_NS}}}{element.tag}"
+    _inline_stylesheets(root)
+    _unwrap_links(root)
     _clean(root)
     viewbox = root.get("viewBox") or VIEWBOX
     root.set("viewBox", viewbox)
