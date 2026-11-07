@@ -30,6 +30,7 @@ Each pull request's entries (the `## Changelog` of its description) are put unde
 
 ### Fixed
 
+- Diagrams: an arrow's label no longer lies on the boxes it joins or on another label (energy chains, cycles).
 - A ball's radius no longer written against its centre's name or across its equator.
 - Chemical formulas and reaction equations are written as chemistry (\(\ce{2H2 + O2 -> 2H2O}\)) and shown as such in the cards' preview, as in Anki.
 - A figure the AI drew empty (a map of plates, volcanoes or earthquakes) is drawn again instead of going on the card blank.
