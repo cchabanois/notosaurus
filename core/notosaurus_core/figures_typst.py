@@ -242,8 +242,9 @@ def source(family: str, body: str) -> str:
     """The Typst document of a figure of `family`: its preamble, then what the AI wrote."""
     # "<" and ">" written as HTML's entities (an arrow "-|&gt;"): Typst has none of them
     body = PACKAGE_IMPORT.sub("", body).replace("&gt;", ">").replace("&lt;", "<")
-    if family == "diagram":  # the AI's "-||" (two bars) meant an arrow, "-|>" (never asked for)
-        body = body.replace('"-||"', '"-|>"')
+    if family == "diagram":  # the AI's "-||" (two bars) meant an arrow, "-|>" (never asked for);
+        # its "-|-" (a bar across the middle) a plain line
+        body = body.replace('"-||"', '"-|>"').replace('"-|-"', '"-"')
     if FORBIDDEN.search(body):
         raise Unusable("Only drawing commands: no import, include, file or plugin.")
     return FONT + FAMILIES[family].preamble + body.strip() + "\n"

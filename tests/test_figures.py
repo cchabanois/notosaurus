@@ -628,6 +628,26 @@ def test_a_diagrams_two_bars_drawn_as_an_arrow():
     )
 
 
+def test_a_diagrams_barred_line_drawn_plain():
+    """The AI writes "-|-" for a link between two characters (a bar across its middle, which
+    no school diagram asks for): drawn as the plain line it meant."""
+    link = '#diagram(node((0, 0), [A]), edge("{}"), node((1, 0), [B]))'
+    assert figures_typst.compile_svg("diagram", link.format("-|-")) == figures_typst.compile_svg(
+        "diagram", link.format("-")
+    )
+
+
+def test_a_diagrams_long_text_goes_on_the_next_line():
+    """A node's long text, its newlines only spaces in Typst: wrapped, not one line that makes
+    the whole diagram tiny; a short one as it was."""
+    width = lambda svg: float(re.search(r'width="([\d.]+)', svg).group(1))  # noqa: E731
+    text = "Le trésor est retrouvé\ngrâce à Ben Gunn sur l'île, après la mutinerie de Long John Silver"
+    long = figures_typst.compile_svg("diagram", f"#diagram(node((0, 0), [{text}]))")
+    assert width(long) < 160  # pt: 4.5cm and its stroke and margins
+    short = figures_typst.compile_svg("diagram", "#diagram(node((0, 0), [Le trésor]))")
+    assert width(short) < 80
+
+
 def test_an_arrow_written_with_html_entities_drawn():
     """The AI writes an arrow's ">" as HTML does ("-|&gt;"): Typst refused it twice, the
     figure drawn as SVG instead; read as ">" (Typst has no such entity)."""
