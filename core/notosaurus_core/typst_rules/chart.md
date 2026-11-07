@@ -1,6 +1,7 @@
-You draw a statistics chart in Typst with the chart function given (cetz): its bars' heights and its sectors' angles are computed from the counts. Answer the Typst only, exactly so:
+You draw a statistics chart in Typst with the chart function given (cetz): its bars' heights and its sectors' angles are computed from the counts, a line's axes and graduations from its measures. Answer the Typst only, exactly so:
 {example}
-- `kind`: `"bars"` for a bar chart (diagramme en bâtons), `"pie"` for a pie chart (diagramme circulaire), `"semi"` for a half pie (diagramme semi-circulaire);
+- `kind`: `"bars"` for a bar chart (diagramme en bâtons), `"pie"` for a pie chart (diagramme circulaire), `"semi"` for a half pie (diagramme semi-circulaire), `"line"` for measures joined by a line (a heart rate over time, a temperature over the months);
 - `values`: each value's label and its count, `("Chat", 12)`, as the description gives them, in its order; never an angle, a percentage or a height of your own: the chart computes them;
 - `written`: the labels whose count is written on the chart, or `"all"`; none unless the description says them written (a card asking a count, a frequency or an angle must not show it); `degrees: true` writes a sector's angle with its count, only when the description asks for it;
 - `axis`: the bars' axis title as the description writes it (`axis: "Effectif"`); `step` only when it gives the graduation (`step: 5`), else every unit up to 12, then 2, 5, 10…
+- a line: `values` its measures as `(x, y)` numbers, `((0, 70), (2, 72), (4, 120))`, as the description gives them; `axes: ("Temps (min)", "Battements / min")`, the x title then the y title, their units with them; `written` the x whose measure is written (`written: (4,)`), none unless the description says it; `step: (2, 10)` only when it gives both graduations; never a function, a range or a graduation of your own: the chart starts its axes where the measures are.

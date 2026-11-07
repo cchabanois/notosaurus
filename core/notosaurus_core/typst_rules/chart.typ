@@ -2,18 +2,28 @@
 #import "@preview/cetz:0.5.2"
 // A statistics chart from counts: "bars" (a bar per value, as high as its count: a
 // diagramme en bâtons), "pie" (a circle, each sector count / total × 360°), "semi" (a half
-// circle, × 180°): the angles computed, never given. values: (label, count) pairs in the
-// lesson's order; written: the values whose count is written on the chart ("all", or some
-// labels), none by default: a card asking a count never shows it; degrees: a sector's angle
-// written with its count; axis: the bars' axis title (the lesson's: "Effectif"); step: the
-// bars' graduation (auto: every unit up to 12, then 2, 5, 10…)
-#let chart(kind: "bars", values: (), written: (), degrees: false, axis: none, step: auto) = context {
-  assert(kind in ("bars", "pie", "semi"), message: "kind is \"bars\", \"pie\" or \"semi\"")
-  assert(
-    values.len() > 0 and values.all(v => type(v) == array and v.len() == 2 and type(v.at(1)) in (int, float) and v.at(1) >= 0),
-    message: "values are (label, count) pairs, each count a number",
-  )
-  let total = values.map(v => v.at(1)).sum()
+// circle, × 180°): the angles computed, never given; or "line", measures joined (a heart
+// rate over time). values: (label, count) pairs in the lesson's order, for "line" the
+// measures as (x, y); written: the values written on the chart ("all", or some labels; for
+// "line" some x), none by default: a card asking a count or a measure never shows it;
+// degrees: a sector's angle written with its count; axis: the bars' axis title (the
+// lesson's: "Effectif"); axes: a line's (x title, y title), their units with them; step:
+// the bars' graduation (auto: every unit up to 12, then 2, 5, 10…), a line's (x, y)
+#let chart(kind: "bars", values: (), written: (), degrees: false, axis: none, axes: (none, none), step: auto) = context {
+  assert(kind in ("bars", "pie", "semi", "line"), message: "kind is \"bars\", \"pie\", \"semi\" or \"line\"")
+  let number(x) = type(x) in (int, float)
+  if kind == "line" {
+    assert(
+      values.len() > 1 and values.all(v => type(v) == array and v.len() == 2 and number(v.at(0)) and number(v.at(1))),
+      message: "a line's values are (x, y) measures, two at least, each a number",
+    )
+  } else {
+    assert(
+      values.len() > 0 and values.all(v => type(v) == array and v.len() == 2 and number(v.at(1)) and v.at(1) >= 0),
+      message: "values are (label, count) pairs, each count a number",
+    )
+  }
+  let total = if kind == "line" { 1 } else { values.map(v => v.at(1)).sum() }
   assert(total > 0, message: "the counts add up to more than 0")
   assert(written == "all" or type(written) == array, message: "written is \"all\" or a list of labels")
   let shown(label) = written == "all" or label in written
@@ -27,9 +37,63 @@
     let r = calc.round(x, digits: 1)
     if calc.fract(r) == 0 { str(int(r)) } else { str(r).replace(".", ",") }
   }
+  // A graduation's step: a round one giving at most `most` steps over `span`
+  let nice(span, most) = (0.1, 0.2, 0.5, 1, 2, 2.5, 5, 10, 20, 25, 50, 100, 200, 250, 500, 1000, 2000, 2500, 5000, 10000)
+    .find(s => span / s <= most)
   cetz.canvas({
     import cetz.draw: *
-    if kind == "bars" {
+    if kind == "line" {
+      let xs = values.map(v => v.at(0))
+      let ys = values.map(v => v.at(1))
+      // an axis's graduation (start, end, step): from 0, unless its values are far from it
+      // (a heart rate: from the graduation under the lowest, the axes still meeting at the
+      // bottom left; years: around them)
+      // (x, measures taken at a round interval: that interval, every 2 minutes, every 5 years)
+      let graduation(vals, given, at-interval) = {
+        let (lo, hi) = (calc.min(..vals), calc.max(..vals))
+        let from0 = lo <= 0 or lo <= 3 * nice(hi - calc.min(0, lo), 10)
+        let first = if from0 { calc.min(0, lo) } else { lo }
+        let sorted = vals.dedup().sorted()
+        let gaps = sorted.slice(1).zip(sorted).map(((a, b)) => a - b)
+        let even = gaps.len() > 0 and gaps.all(g => calc.abs(g - gaps.first()) < 1e-9)
+        let s = if given != auto { given } else {
+          let s = nice(hi - first, 8)
+          if at-interval and even and gaps.first() > s and nice(gaps.first(), 1) == gaps.first() { gaps.first() } else { s }
+        }
+        (calc.floor(first / s) * s, calc.ceil(hi / s) * s, s)
+      }
+      let (gx, gy) = if step == auto { (auto, auto) } else { step }
+      let (x0, x1, sx) = graduation(xs, gx, true)
+      let (y0, y1, sy) = graduation(ys, gy, false)
+      let (w, h) = (8.0, 5.0)
+      let px(x) = (x - x0) / (x1 - x0) * w
+      let py(y) = (y - y0) / (y1 - y0) * h
+      let n = int(calc.round((x1 - x0) / sx))
+      for k in range(n + 1) {
+        let x = px(x0 + k * sx)
+        if k > 0 { line((x, 0), (x, h), stroke: 0.4pt + luma(210)) }
+        line((x, 0), (x, -0.08), stroke: 0.6pt)
+        content((x, -0.16), txt(num(x0 + k * sx)), anchor: "north")
+      }
+      let m = int(calc.round((y1 - y0) / sy))
+      for k in range(m + 1) {
+        let y = py(y0 + k * sy)
+        if k > 0 { line((0, y), (w, y), stroke: 0.4pt + luma(210)) }
+        line((0, y), (-0.08, y), stroke: 0.6pt)
+        content((-0.16, y), txt(num(y0 + k * sy)), anchor: "east")
+      }
+      line((0, 0), (w + 0.35, 0), stroke: 0.8pt, mark: (end: ">", fill: black))
+      line((0, 0), (0, h + 0.45), stroke: 0.8pt, mark: (end: ">", fill: black))
+      let (xt, yt) = axes
+      if yt != none { content((0.12, h + 0.45), txt(yt), anchor: "west") }
+      if xt != none { content((w + 0.35, -0.55), txt(xt), anchor: "north-east") }
+      let points = values.map(((x, y)) => (px(x), py(y)))
+      line(..points, stroke: (paint: rgb("#b03a2e"), thickness: 1.3pt, join: "round"))
+      for (i, (x, y)) in values.enumerate() {
+        circle(points.at(i), radius: 0.06, fill: rgb("#b03a2e"), stroke: none)
+        if written == "all" or x in written { content((points.at(i).at(0), points.at(i).at(1) + 0.12), txt(num(y)), anchor: "south") }
+      }
+    } else if kind == "bars" {
       let top = calc.max(..values.map(v => v.at(1)))
       let step = if step != auto { step } else {
         (1, 2, 5, 10, 20, 25, 50, 100, 200, 250, 500, 1000).find(s => top / s <= 12)

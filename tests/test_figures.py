@@ -1,6 +1,7 @@
 """Figures on cards: SVG drawn by the AI, cleaned, saved and sent like the pictures."""
 
 import asyncio
+import io
 import json
 import re
 from xml.etree import ElementTree
@@ -917,9 +918,32 @@ def test_a_charts_counts_written_only_when_asked():
         assert len({bare, some, every}) == 3, kind
 
 
+def test_a_line_starts_its_axes_where_its_measures_are():
+    """A line's axes meet at its bottom left, from 0 for measures near it, else from the
+    graduation under the lowest (a heart rate from 70, years around them): the measures
+    fill the frame. Its graduations every round interval they were taken at."""
+    from PIL import Image
+
+    heart = "((0, 70), (2, 72), (4, 120), (6, 145), (8, 150), (10, 150), (12, 110), (14, 85), (16, 75))"
+    for values in (heart, "((2000, 6.1), (2005, 6.5), (2010, 6.9), (2015, 7.3), (2020, 7.8))"):
+        svg = figures_typst.compile_svg("chart", f'#chart(kind: "line", values: {values}, axes: ("x", "y"))')
+        image = Image.open(io.BytesIO(figures.to_png(figures.clean(svg)))).convert("RGB")
+        red = [
+            y for y in range(image.height) for x in range(0, image.width, 2) if image.getpixel((x, y)) == (176, 58, 46)
+        ]
+        top, bottom = min(red), max(red)
+        # its lowest measure on its x axis, its highest at its top: they fill the frame
+        assert bottom - top > image.height * 0.6, values
+    line = '#chart(kind: "line", values: ((0, 21), (1, 20.4), (2, 19.6)), axes: ("Temps (min)", "Dioxygène (%)"){})'
+    bare, written = (figures_typst.compile_svg("chart", line.format(w)) for w in ("", ", written: (2,)"))
+    assert bare != written
+
+
 def test_a_chart_refuses_what_it_cant_draw():
     for body, said in (
-        ('#chart(kind: "line", values: (("A", 1),))', "kind is"),
+        ('#chart(kind: "line", values: ((0, 1),))', "two at least"),
+        ('#chart(kind: "line", values: (("lundi", 1), ("mardi", 2)))', "each a number"),
+        ('#chart(kind: "area", values: (("A", 1),))', "kind is"),
         ('#chart(kind: "pie", values: (("A", 0), ("B", 0)))', "add up to more than 0"),
         ('#chart(kind: "pie", values: ("A", "B"))', "pairs"),
     ):
