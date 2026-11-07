@@ -820,6 +820,20 @@ def test_the_atlas_folds_names_as_typst_does():
         assert a == b, written
 
 
+def test_the_places_of_history_kept_as_listed():
+    """tools/atlas-history.json (what Wikidata gave, kept: the same atlas whatever day it is
+    made) holds tools/atlas.py's HISTORY, in its order: a place added or removed without
+    --refresh-history shows here, not at the next build."""
+    import sys
+
+    sys.path.insert(0, str(figures_typst.HERE.parent.parent / "tools"))
+    import atlas
+
+    kept = json.loads(atlas.HISTORY_FILE.read_text(encoding="utf-8"))
+    assert [p["title"] for p in kept] == [title for title, _ in atlas.HISTORY]
+    assert all(p["n"] and len(p["xy"]) == 2 for p in kept)
+
+
 def test_a_coordinate_frame_as_the_graph_rule_writes_it():
     """Points in a coordinate frame (reading or placing coordinates), each call as the graph
     rule gives it: drawn, its grid with it (a line per unit: more lines than without it)."""

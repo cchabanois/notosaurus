@@ -10,11 +10,18 @@ when it asks for them: rivers.json, reliefs.json (mountains, deserts, plains, pe
 islands), waters.json (oceans, seas, gulfs, straits, lakes: their short names too), regions/<country code>.json
 (its first-level divisions, and the groups Natural Earth gives them: France's régions).
 
-  .venv/bin/python tools/atlas.py [folder]  (the Natural Earth files read there when it has them)
+  .venv/bin/python tools/atlas.py [folder] [--refresh-history]
+
+The sources read from `folder` when it has them (by their names), else downloaded: Natural
+Earth's and CLDR's at a fixed version. The places of history (HISTORY) are read from
+tools/atlas-history.json, committed: the same atlas whatever day it is made; Wikidata is asked
+only with --refresh-history (HISTORY changed, or its data refreshed), which writes that file
+again.
 
 Needs shapely (requirements-dev.txt): regions simplified together, their borders shared.
 """
 
+import gzip
 import io
 import json
 import math
@@ -56,6 +63,7 @@ CLDR_LANGUAGES = ("fr", "en", "de", "es", "it", "pt")
 # article (never ambiguous), its names in the page's languages and its coordinates there, plus
 # names Wikidata lacks; preferred among places of the same name when no country tells them apart
 WIKIDATA = "https://www.wikidata.org/w/api.php"
+HISTORY_FILE = ROOT / "tools" / "atlas-history.json"  # what Wikidata gave for HISTORY, kept
 HISTORY = [
     # Antiquity
     *[(t, ()) for t in ("Ur", "Uruk", "Babylon", "Nineveh", "Memphis, Egypt", "Thebes, Egypt", "Giza", "Jericho")],
@@ -247,7 +255,21 @@ def usual_names(folder: Path | None = None) -> dict[str, list[str]]:
     return found
 
 
-def history(folder: Path | None = None) -> list[dict]:
+def history(folder: Path | None = None, refresh: bool = False) -> list[dict]:
+    """HISTORY's places, as HISTORY_FILE keeps them; from Wikidata when `refresh` (then kept)."""
+    titles = [t for t, _ in HISTORY]
+    if not refresh:
+        kept = json.loads(HISTORY_FILE.read_text(encoding="utf-8"))
+        if [p["title"] for p in kept] != titles:
+            raise SystemExit(f"HISTORY changed since {HISTORY_FILE.name} was written: run with --refresh-history")
+        return [{"n": p["n"], "xy": tuple(p["xy"])} for p in kept]
+    places = wikidata_places(folder)
+    kept = [{"title": t, "n": p["n"], "xy": list(p["xy"])} for t, p in zip(titles, places, strict=True)]
+    HISTORY_FILE.write_text(json.dumps(kept, ensure_ascii=False, indent=1) + "\n", encoding="utf-8")
+    return places
+
+
+def wikidata_places(folder: Path | None = None) -> list[dict]:
     """HISTORY's places from Wikidata: (names, (longitude, latitude)) each, the names it
     gives in the page's languages then HISTORY's own."""
     titles = [t for t, _ in HISTORY]
@@ -699,13 +721,15 @@ history from Wikidata (https://www.wikidata.org/, CC0).
 """
 
 
-def build(folder: Path | None = None) -> None:
+def build(folder: Path | None = None, refresh_history: bool = False) -> None:
     files = (COUNTRIES, PLACES, RIVERS, RIVERS_EUROPE, RELIEFS, WATERS, LAKES, REGIONS)
     with ThreadPoolExecutor() as pool:  # all at once
         countries, places, main_rivers, europe, relief, marine, lakes, admin1 = pool.map(
             lambda name: download(name, folder), files
         )
-    world = atlas(countries, places, usual_names(folder), history(folder)) | {"lakes": lake_rings(lakes)}
+    world = atlas(countries, places, usual_names(folder), history(folder, refresh_history)) | {
+        "lakes": lake_rings(lakes)
+    }
 
     def text(data) -> str:
         return json.dumps(data, ensure_ascii=False, separators=(",", ":"))
@@ -722,7 +746,12 @@ def build(folder: Path | None = None) -> None:
     for old in TARGET.glob(f"{NAME}-*.tar.gz"):
         old.unlink()
     archive = TARGET / f"{NAME}-{VERSION}.tar.gz"
-    with tarfile.open(archive, "w:gz") as tar:
+    # gzip's header without a date (mtime=0), as the files': the same sources, the same archive
+    with (
+        archive.open("wb") as raw,
+        gzip.GzipFile(fileobj=raw, mode="wb", mtime=0) as packed,
+        tarfile.open(fileobj=packed, mode="w") as tar,
+    ):
         for name, content in contents.items():
             raw = content.encode()
             info = tarfile.TarInfo(name)
@@ -734,4 +763,5 @@ def build(folder: Path | None = None) -> None:
 
 
 if __name__ == "__main__":
-    build(Path(sys.argv[1]) if len(sys.argv) > 1 else None)
+    arguments = [a for a in sys.argv[1:] if a != "--refresh-history"]
+    build(Path(arguments[0]) if arguments else None, "--refresh-history" in sys.argv[1:])
