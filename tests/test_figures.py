@@ -1156,8 +1156,58 @@ def test_a_line_starts_its_axes_where_its_measures_are():
     assert bare != written
 
 
+def test_a_line_marks_its_events_and_stretches():
+    """An event at an x (a dashed line, its label under the axis) and a stretch of x
+    (shaded), placed by the chart from their values: each changes the drawing."""
+    line = '#chart(kind: "line", values: ((0, 2), (10, 8), (20, 4)), axes: ("t", "y"){})'
+    bare, marked, spanned = (
+        figures_typst.compile_svg("chart", line.format(extra))
+        for extra in ("", ', marks: ((10, "arrêt"),)', ', spans: ((2, 6, "effort"),)')
+    )
+    assert len({bare, marked, spanned}) == 3
+    assert "arrêt" in figures.clean(marked) or marked != bare
+
+
+def test_a_second_measure_on_its_own_axis():
+    """Two measures of different units over the same x: the second on a right axis of its
+    own, in another colour, never left out."""
+    from PIL import Image
+
+    body = (
+        '#chart(kind: "line", values: ((1960, 317), (2020, 414)), axes: ("Année", "A (ppm)"),'
+        ' second: (values: ((1960, 0), (2020, 1.0)), axis: "B (°C)"))'
+    )
+    image = Image.open(io.BytesIO(figures.to_png(figures.clean(figures_typst.compile_svg("chart", body)))))
+    blue = sum(1 for p in image.convert("RGB").getdata() if p == (31, 95, 168))
+    assert blue > 50  # its line, its numbers
+
+
+def test_a_line_without_values_shows_no_numbers_on_its_y_axis():
+    """numbered: false, the description giving no value for y: its shape only."""
+    line = '#chart(kind: "line", values: ((1, 1), (5, 1), (28, 5)), axes: ("Jours", "y"){})'
+    numbered, bare = (figures_typst.compile_svg("chart", line.format(n)) for n in ("", ", numbered: false"))
+    assert len(bare) < len(numbered)
+
+
+def test_a_bar_charts_long_names_never_overlap():
+    """Each bar has its name's width at least: long names widen the chart, never overlap."""
+    from PIL import Image
+
+    def width(names):
+        values = ", ".join(f'("{n}", {i + 1})' for i, n in enumerate(names))
+        svg = figures_typst.compile_svg("chart", f'#chart(kind: "bars", values: ({values},))')
+        return Image.open(io.BytesIO(figures.to_png(figures.clean(svg)))).width
+
+    short = width(["A", "B", "C", "D", "E"])
+    assert width(["Réfrigérateurs", "Congélateurs", "Lave-vaisselle", "Téléviseurs", "Aspirateurs"]) > 1.5 * short
+
+
 def test_a_chart_refuses_what_it_cant_draw():
     for body, said in (
+        ('#chart(kind: "bars", values: (("A", 1),), marks: ((1, "x"),))', "a line's only"),
+        ('#chart(kind: "line", values: ((0, 1), (1, 2)), spans: ((3, 2, "x"),))', "from < to"),
+        ('#chart(kind: "line", values: ((0, 1), (1, 2)), marks: (("a", "x"),))', "x a number"),
+        ('#chart(kind: "line", values: ((0, 1), (1, 2)), second: (values: ((0, 1),)))', "two measures at least"),
         ('#chart(kind: "line", values: ((0, 1),))', "two at least"),
         ('#chart(kind: "line", values: (("lundi", 1), ("mardi", 2)))', "each a number"),
         ('#chart(kind: "area", values: (("A", 1),))', "kind is"),
