@@ -9,6 +9,7 @@ Each pull request's entries (the `## Changelog` of its description) are put unde
 
 ### Added
 
+- Solids cut by a plane (a cuboid, a prism, a pyramid, a cylinder, a cone, a ball): the section drawn where it is, its hidden sides dashed.
 - Maps for history lessons: their places (Constantinople, Aix-la-Chapelle, Cordoue, Troie, Verdun…) and cities' former names (Leningrad, Saïgon, Pékin), in every language of the page.
 - Curves of measures (a heart rate over time): drawn from the lesson's measures, their axes starting where the measures are.
 - Statistics charts (bars, pie, half pie): drawn from the lesson's counts, their angles computed.
@@ -28,6 +29,7 @@ Each pull request's entries (the `## Changelog` of its description) are put unde
 
 ### Fixed
 
+- A ball's radius no longer written against its centre's name or across its equator.
 - Chemical formulas and reaction equations are written as chemistry (\(\ce{2H2 + O2 -> 2H2O}\)) and shown as such in the cards' preview, as in Anki.
 - A figure the AI drew empty (a map of plates, volcanoes or earthquakes) is drawn again instead of going on the card blank.
 - Figures drawn as SVG keep their colours, fonts and labels when they style them with classes, the font shorthand or a halo, or put a label in a link or along a curve.
