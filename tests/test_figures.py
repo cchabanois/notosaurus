@@ -803,6 +803,20 @@ def test_the_diagram_rules_edges_compile():
         assert figures_typst.compile_svg("diagram", body).startswith("<svg"), edge
 
 
+def test_a_data_graphs_axis_at_its_frames_start():
+    """Data far from 0 (years): the schoolbook theme draws the vertical axis at x = 0, the
+    figure then grown to it, the curve a speck (the world's population, 1800 to 2020); placed
+    at the frame's start as the rule says, the figure keeps its 8 cm."""
+    body = (
+        "#lq.diagram(width: 8cm, height: 5cm, xlim: (1780, 2040), ylim: (0, 9),{axis}\n"
+        "  lq.plot((1800, 1927, 1960, 1999, 2022), (1, 2, 3, 6, 8), mark: none))"
+    )
+    width = lambda body: drawn_size("graph", body)[0] / 28.35  # noqa: E731  (cm)
+    assert width(body.format(axis="")) > 30  # the axis at year 0
+    assert "yaxis: (position: 1780)" in figures_typst.FAMILIES["graph"].rules
+    assert width(body.format(axis=" yaxis: (position: 1780),")) < 10
+
+
 def test_a_closed_switch_is_seen():
     """zap's closed switch is a mere wire: ours keeps its two contacts, closed or open."""
     circuit = '#circuit({{ battery("g", (0, 0), (0, 3)); {} lamp("l", (3, 3), (3, 0)); wire((3, 0), (0, 0)) }})'
