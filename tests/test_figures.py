@@ -628,12 +628,16 @@ def test_a_diagrams_two_bars_drawn_as_an_arrow():
     )
 
 
-def test_a_diagrams_barred_line_drawn_plain():
-    """The AI writes "-|-" for a link between two characters (a bar across its middle, which
-    no school diagram asks for): drawn as the plain line it meant."""
+@pytest.mark.parametrize(
+    ("written", "meant"), [("-|-", "-"), ("-|->", "->"), ("<-|-", "<-"), ("--|--", "--"), ("<|-|>", "<|-|>")]
+)
+def test_a_diagrams_barred_line_drawn_plain(written, meant):
+    """The AI writes a bar across a line ("-|-" between two characters, "-|->" a flowchart's
+    "oui"), which no school diagram asks for: drawn as the line it meant, never dashed by
+    the bar's removal; a head's bar ("<|", "|>") kept."""
     link = '#diagram(node((0, 0), [A]), edge("{}"), node((1, 0), [B]))'
-    assert figures_typst.compile_svg("diagram", link.format("-|-")) == figures_typst.compile_svg(
-        "diagram", link.format("-")
+    assert figures_typst.compile_svg("diagram", link.format(written)) == figures_typst.compile_svg(
+        "diagram", link.format(meant)
     )
 
 
@@ -1175,3 +1179,22 @@ def test_the_figures_bench_compiles_a_run_again(tmp_path):
     assert typst["engine"] == "typst" and typst["svg"].startswith("<svg") and "Bastille" in typst["typst"]
     assert bench_figures.recompiled(tmp_path, {"family": "diagram", "file": "b-1.svg"})["svg"] == SQUARE
     assert bench_figures.recompiled(tmp_path, {"problem": "500 Internal"}) == {"error": "500 Internal"}
+
+
+def test_a_solids_lengths_beside_its_edges():
+    """A cuboid's lengths ("10 mm") beside their edges, outwards, never across an edge: the
+    labels drawn red, no edge's pixel under them."""
+    from PIL import Image
+
+    def png(labels: str) -> Image.Image:
+        svg = figures.clean(figures_typst.compile_svg("solid", f"#cuboid(40, 20, 10{labels})"))
+        return Image.open(io.BytesIO(figures.to_png(svg))).convert("RGB")
+
+    labels = ", length-label: {}[40 mm], width-label: {}[20 mm], height-label: {}[10 mm]"
+    bare = png(labels.replace("{}", "hide"))  # the same place taken, nothing drawn
+    labelled = png(labels.replace("{}", "text(fill: rgb(255, 0, 0))"))
+    assert bare.size == labelled.size
+    edges = {(x, y) for y in range(bare.height) for x in range(bare.width) if sum(bare.getpixel((x, y))) < 300}
+    reddish = lambda p: p[0] > 200 and p[1] < 140  # noqa: E731
+    reds = {(x, y) for y in range(labelled.height) for x in range(labelled.width) if reddish(labelled.getpixel((x, y)))}
+    assert reds and not edges & reds
