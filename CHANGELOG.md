@@ -9,6 +9,7 @@ Each pull request's entries (the `## Changelog` of its description) are put unde
 
 ### Added
 
+- Charts mark an event or a period on a curve, and draw a second measure with its own unit on a right axis.
 - Solids cut by a plane (a cuboid, a prism, a pyramid, a cylinder, a cone, a ball): the section drawn where it is, its hidden sides dashed.
 - Maps for history lessons: their places (Constantinople, Aix-la-Chapelle, Cordoue, Troie, Verdun…) and cities' former names (Leningrad, Saïgon, Pékin), in every language of the page.
 - Curves of measures (a heart rate over time): drawn from the lesson's measures, their axes starting where the measures are.
@@ -30,6 +31,7 @@ Each pull request's entries (the `## Changelog` of its description) are put unde
 
 ### Fixed
 
+- A chart's long category names no longer overlap, and a curve shows only the values the lesson gives.
 - Diagrams: an arrow's label no longer lies on the boxes it joins or on another label (energy chains, cycles).
 - A ball's radius no longer written against its centre's name or across its equator.
 - Chemical formulas and reaction equations are written as chemistry (\(\ce{2H2 + O2 -> 2H2O}\)) and shown as such in the cards' preview, as in Anki.
