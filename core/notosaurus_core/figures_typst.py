@@ -245,7 +245,8 @@ EDGE_MARKS = re.compile(r'"([-<>|.=~]*\|[-<>|.=~]*)"')
 def _unbarred(marks: re.Match) -> str:
     """An edge's bars kept only as part of a head ("<|", "|>"): one elsewhere ("-|-", "-|->")
     draws a bar across the line, which no school diagram asks for; the AI's "-||" (two bars)
-    meant an arrow, "-|>"."""
+    meant an arrow, "-|>". Its bar out, an arrow's head is the filled one ("-|->" → "-|>") as
+    every other arrow's: the AI writes "-|->" whatever the rule says of fletcher's marks."""
     s = marks.group(1)
     if s == "-||":
         return '"-|>"'
@@ -257,7 +258,42 @@ def _unbarred(marks: re.Match) -> str:
         elif kept[-1:] in ("-", ".", "=", "~"):  # the bar out, the line it cut whole again:
             while s[i : i + 1] == kept[-1]:  # "-|-" a plain line, never "--" dashed
                 i += 1
+    if kept != s:
+        kept = re.sub(r"(?<!\|)>$", "|>", re.sub(r"^<(?!\|)", "<|", kept))
     return f'"{kept or "-"}"'
+
+
+def _broken_lines(body: str) -> str:
+    """A text's new line written as a string's ("Accord avec\\nle sujet") or a "\\" glued to
+    the next word ("avant\\le verbe"): in Typst's markup a backslash before a letter only
+    escapes it ("avecnle", "avantle"), so it becomes the line break meant ("\\ "). Only in a
+    text (within [ ]), outside its maths; a string of the code ("…\\n…") is one already."""
+    out: list[str] = []
+    depth, math, string, i = 0, False, False, 0
+    while i < len(body):
+        c = body[i]
+        if c == "\\" and i + 1 < len(body):
+            after = body[i + 1]
+            if depth and not math and after.isalpha() and body[i + 1 : i + 3] != "u{":
+                out.append("\\ " if after == "n" else "\\ " + after)
+            else:
+                out.append(c + after)
+            i += 2
+            continue
+        if string:
+            string = c != '"'
+        elif depth == 0 and c == '"':
+            string = True
+        elif c == "[":
+            depth += 1
+        elif c == "]" and depth:
+            depth -= 1
+            math = math and depth > 0
+        elif c == "$" and depth:
+            math = not math
+        out.append(c)
+        i += 1
+    return "".join(out)
 
 
 def source(family: str, body: str) -> str:
@@ -265,7 +301,7 @@ def source(family: str, body: str) -> str:
     # "<" and ">" written as HTML's entities (an arrow "-|&gt;"): Typst has none of them
     body = PACKAGE_IMPORT.sub("", body).replace("&gt;", ">").replace("&lt;", "<")
     if family == "diagram":
-        body = EDGE_MARKS.sub(_unbarred, body)
+        body = _broken_lines(EDGE_MARKS.sub(_unbarred, body))
     if FORBIDDEN.search(body):
         raise Unusable("Only drawing commands: no import, include, file or plugin.")
     return FONT + FAMILIES[family].preamble + body.strip() + "\n"

@@ -629,12 +629,13 @@ def test_a_diagrams_two_bars_drawn_as_an_arrow():
 
 
 @pytest.mark.parametrize(
-    ("written", "meant"), [("-|-", "-"), ("-|->", "->"), ("<-|-", "<-"), ("--|--", "--"), ("<|-|>", "<|-|>")]
+    ("written", "meant"),
+    [("-|-", "-"), ("-|->", "-|>"), ("<-|-", "<|-"), ("<-|->", "<|-|>"), ("--|--", "--"), ("<|-|>", "<|-|>")],
 )
 def test_a_diagrams_barred_line_drawn_plain(written, meant):
     """The AI writes a bar across a line ("-|-" between two characters, "-|->" a flowchart's
     "oui"), which no school diagram asks for: drawn as the line it meant, never dashed by
-    the bar's removal; a head's bar ("<|", "|>") kept."""
+    the bar's removal, its head the filled one as every arrow's; a head's bar ("<|", "|>") kept."""
     link = '#diagram(node((0, 0), [A]), edge("{}"), node((1, 0), [B]))'
     assert figures_typst.compile_svg("diagram", link.format(written)) == figures_typst.compile_svg(
         "diagram", link.format(meant)
@@ -650,6 +651,25 @@ def test_a_diagrams_long_text_goes_on_the_next_line():
     assert width(long) < 160  # pt: 4.5cm and its stroke and margins
     short = figures_typst.compile_svg("diagram", "#diagram(node((0, 0), [Le trésor]))")
     assert width(short) < 80
+
+
+@pytest.mark.parametrize(
+    ("written", "meant"),
+    [(r"[Accord avec\nle sujet]", r"[Accord avec\ le sujet]"), (r"[avant\le verbe]", r"[avant\ le verbe]")],
+)
+def test_a_diagrams_new_line_written_as_a_strings_drawn(written, meant):
+    """The AI writes a node's new line as a string's ("\\n") or glues the "\\" to the next word:
+    Typst's markup only escaped the letter ("avecnle sujet"); drawn as the line break meant."""
+    node = "#diagram(node((0, 0), {}))"
+    assert figures_typst.compile_svg("diagram", node.format(written)) == figures_typst.compile_svg(
+        "diagram", node.format(meant)
+    )
+
+
+def test_a_diagrams_strings_and_maths_left_as_written():
+    """A string's "\\n" (a new line already), a code's escape and a text's maths untouched."""
+    body = r'#diagram(node((0, 0), "A\nB"), edge("-|>", [$\u{3b1}$ et \#1]), node((1, 0), [B]))'
+    assert figures_typst.source("diagram", body).endswith(body + "\n")
 
 
 def test_an_arrow_written_with_html_entities_drawn():
