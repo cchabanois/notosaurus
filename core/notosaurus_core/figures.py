@@ -115,6 +115,8 @@ def _clean(element: ElementTree.Element) -> None:
             _clean(child)
     for name in list(element.attrib):
         local, value = _local(name), element.attrib[name]
+        if local == "style" or local in PRESENTATION:
+            value = element.attrib[name] = plain_colours(value)  # its colours #rrggbb, kept
         if local == "style":
             cleaned = _clean_style(value)
             if cleaned:
@@ -125,6 +127,79 @@ def _clean(element: ElementTree.Element) -> None:
             continue  # one of the figure's own shapes ("#g1"): nothing loaded
         elif local not in GEOMETRY | PRESENTATION or not _safe_value(local, value):
             del element.attrib[name]  # on…, href, xlink:href, anything unknown or unsafe
+
+
+# Colours written as functions: CSS's (rgb(…), hsl(…), as the AI writes an SVG) and its newer
+# ones (oklab(…), oklch(…), color(srgb-linear …): Typst's mixed colours). A value with
+# brackets isn't kept (SAFE_VALUE), the shape then painted black: written #rrggbb(aa) first
+_COLOUR = re.compile(r"\b(rgba?|hsla?|oklab|oklch|color)\(([^()]*)\)", re.IGNORECASE)
+
+
+def _srgb(linear: float) -> int:
+    """A linear-light channel as an sRGB byte."""
+    x = max(0.0, min(1.0, linear))
+    return round(255 * (12.92 * x if x <= 0.0031308 else 1.055 * x ** (1 / 2.4) - 0.055))
+
+
+def _hex(name: str, arguments: str) -> str | None:
+    """That colour as #rrggbb (#rrggbbaa below full opacity); None, one it doesn't read."""
+    name = name.lower()
+    main, _, alpha = arguments.partition("/")
+    parts = [p for p in re.split(r"[\s,]+", main.strip()) if p]
+    if name == "color":
+        if not parts or parts[0].lower() != "srgb-linear":
+            return None
+        parts = parts[1:]
+    if len(parts) == 4 and not alpha.strip():
+        alpha = parts.pop()
+
+    def number(text: str, percent: float = 1.0) -> float:
+        """A value, a percentage of `percent`; an angle in degrees."""
+        text = text.strip().lower().removesuffix("deg")
+        return float(text[:-1]) * percent / 100 if text.endswith("%") else float(text)
+
+    try:
+        if len(parts) != 3:
+            return None
+        opacity = number(alpha, 1) if alpha.strip() else 1.0
+        if name in ("rgb", "rgba"):
+            channels = [round(number(p, 255)) for p in parts]
+        elif name in ("hsl", "hsla"):
+            hue = number(parts[0]) % 360
+            saturation, light = (float(p.strip().rstrip("%")) / 100 for p in parts[1:])
+            chroma = (1 - abs(2 * light - 1)) * saturation
+            x = chroma * (1 - abs((hue / 60) % 2 - 1))
+            sextant = [(chroma, x, 0), (x, chroma, 0), (0, chroma, x), (0, x, chroma), (x, 0, chroma), (chroma, 0, x)]
+            channels = [round(255 * (v + light - chroma / 2)) for v in sextant[int(hue // 60) % 6]]
+        elif name in ("oklab", "oklch"):
+            lightness = number(parts[0], 1)
+            a, b = number(parts[1], 0.4), number(parts[2], 0.4) if name == "oklab" else number(parts[2])
+            if name == "oklch":
+                a, b = a * math.cos(math.radians(b)), a * math.sin(math.radians(b))
+            lms = [
+                (lightness + 0.3963377774 * a + 0.2158037573 * b) ** 3,
+                (lightness - 0.1055613458 * a - 0.0638541728 * b) ** 3,
+                (lightness - 0.0894841775 * a - 1.2914855480 * b) ** 3,
+            ]
+            rows = (
+                (4.0767416621, -3.3077115913, 0.2309699292),
+                (-1.2684380046, 2.6097574011, -0.3413193965),
+                (-0.0041960863, -0.7034186147, 1.7076147010),
+            )
+            channels = [_srgb(sum(k * c for k, c in zip(row, lms, strict=True))) for row in rows]
+        else:  # color(srgb-linear …)
+            channels = [_srgb(number(p, 1)) for p in parts]
+    except ValueError:
+        return None
+    tail = f"{round(255 * max(0.0, opacity)):02x}" if opacity < 1 else ""
+    return "#" + "".join(f"{max(0, min(255, c)):02x}" for c in channels) + tail
+
+
+def plain_colours(value: str) -> str:
+    """An attribute's or a style's colours written as functions, written #rrggbb(aa): the
+    same colours, kept by clean (no brackets) and shown by every renderer (AnkiDroid's
+    WebView, resvg); the figure's text left as it is."""
+    return _COLOUR.sub(lambda m: _hex(m.group(1), m.group(2)) or m.group(0), value)
 
 
 def clean(svg: str) -> str:

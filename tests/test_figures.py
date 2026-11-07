@@ -1246,3 +1246,20 @@ def test_a_typst_colour_kept_as_typst_makes_it(colour):
     png = figures.to_png(figures.clean(figures_typst.compile_svg("geometry", rect.format(colour))))
     middle = Image.open(io.BytesIO(png)).convert("RGB")
     assert middle.getpixel((middle.width // 2, middle.height // 2)) != (0, 0, 0)
+
+
+def test_an_svg_figures_colours_kept_whatever_their_notation():
+    """An SVG the AI writes (the figures not drawn in Typst) colours with rgb(…), rgba(…),
+    hsl(…) as often as with #rrggbb: kept, the same colours, in an attribute or a style; a
+    text that reads like one left as it is."""
+    svg = (
+        '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 10 10">'
+        '<rect width="4" height="4" fill="rgb(255, 0, 0)"/>'
+        '<rect width="4" height="4" fill="rgba(255,0,0,0.5)"/>'
+        '<circle r="2" cx="5" cy="5" style="fill: hsl(120, 100%, 25%); stroke: rgb(0 0 255 / 50%)"/>'
+        "<text>rgb(1, 2, 3)</text></svg>"
+    )
+    kept = figures.clean(svg)
+    assert re.findall(r'fill="([^"]*)"', kept) == ["#ff0000", "#ff000080"]
+    assert "fill:#008000" in kept and "stroke:#0000ff80" in kept
+    assert "<text>rgb(1, 2, 3)</text>" in kept

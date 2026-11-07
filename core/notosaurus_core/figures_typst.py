@@ -22,7 +22,6 @@ refused first). The SVG keeps its colours (a lesson's colour code: atoms, a lege
 import functools
 import hashlib
 import importlib.util
-import math
 import os
 import posixpath
 import re
@@ -318,7 +317,7 @@ def compile_svg(family: str, body: str) -> str:
     if done.returncode != 0 or not done.stdout:
         said = done.stderr.decode("utf-8", "replace").strip()
         raise Unusable(said[:800].replace(str(path), "figure.typ") or "It didn't compile.")
-    svg = _plain_colours(_fitted(done.stdout.decode("utf-8")))
+    svg = _fitted(done.stdout.decode("utf-8"))
     # A map's outlines: thousands of points, each written to the billionth of a point by
     # Typst: kept to the tenth (nothing seen changes), the figure several times lighter
     return _rounded_paths(svg) if family == "map" else svg
@@ -333,62 +332,6 @@ def _fitted(svg: str) -> str:
 
 
 _NUMBER = re.compile(r"-?\d+\.\d{2,}")
-
-
-# Colours Typst writes as CSS's newer functions (a color.mix, oklab by default; an oklch, an
-# hsl, a linear RGB): figures.clean keeps no value with brackets, the shape then black
-_COLOUR = re.compile(r"\b(oklab|oklch|hsl|color)\(([^()]*)\)")
-
-
-def _srgb(linear: float) -> int:
-    """A linear-light channel as an sRGB byte."""
-    x = max(0.0, min(1.0, linear))
-    return round(255 * (12.92 * x if x <= 0.0031308 else 1.055 * x ** (1 / 2.4) - 0.055))
-
-
-def _hex(space: str, arguments: str) -> str | None:
-    """That colour as #rrggbb (#rrggbbaa with an alpha below 1); None, one it doesn't know."""
-    values, _, alpha = arguments.partition("/")
-    numbers = [float(v.rstrip("%deg")) for v in values.split()[-3:]]
-    if len(numbers) != 3:
-        return None
-    if space in ("oklab", "oklch"):
-        lightness, a, b = numbers
-        if space == "oklch":
-            a, b = a * math.cos(math.radians(b)), a * math.sin(math.radians(b))
-        lightness /= 100  # Typst writes it in percent
-        lms = [
-            (lightness + 0.3963377774 * a + 0.2158037573 * b) ** 3,
-            (lightness - 0.1055613458 * a - 0.0638541728 * b) ** 3,
-            (lightness - 0.0894841775 * a - 1.2914855480 * b) ** 3,
-        ]
-        rows = (
-            (4.0767416621, -3.3077115913, 0.2309699292),
-            (-1.2684380046, 2.6097574011, -0.3413193965),
-            (-0.0041960863, -0.7034186147, 1.7076147010),
-        )
-        channels = [_srgb(sum(k * c for k, c in zip(row, lms, strict=True))) for row in rows]
-    elif space == "hsl":
-        hue, saturation, light = numbers[0] % 360, numbers[1] / 100, numbers[2] / 100
-        chroma = (1 - abs(2 * light - 1)) * saturation
-        x = chroma * (1 - abs((hue / 60) % 2 - 1))
-        r, g, b = [(chroma, x, 0), (x, chroma, 0), (0, chroma, x), (0, x, chroma), (x, 0, chroma), (chroma, 0, x)][
-            int(hue // 60) % 6
-        ]
-        channels = [round(255 * (v + light - chroma / 2)) for v in (r, g, b)]
-    elif values.split()[0] == "srgb-linear":
-        channels = [_srgb(v) for v in numbers]
-    else:
-        return None
-    opacity = float(alpha.strip().rstrip("%")) / (100 if "%" in alpha else 1) if alpha.strip() else 1.0
-    tail = f"{round(255 * opacity):02x}" if opacity < 1 else ""
-    return "#" + "".join(f"{max(0, min(255, c)):02x}" for c in channels) + tail
-
-
-def _plain_colours(svg: str) -> str:
-    """Typst's oklab(…), oklch(…), hsl(…) and color(srgb-linear …) written #rrggbb(aa): the
-    same colours, kept by figures.clean, shown by every renderer (AnkiDroid's WebView, resvg)."""
-    return _COLOUR.sub(lambda m: _hex(m.group(1), m.group(2)) or m.group(0), svg)
 
 
 def _rounded_paths(svg: str) -> str:
