@@ -1,6 +1,11 @@
 #set page(width: auto, height: auto, margin: 6pt)
 #import "@preview/cetz:0.5.2"
-#let timeline(start: 0, end: 10, step: 1, width: 12, events: (), periods: ()) = context {
+// A line of moments without dates (a verb's tenses), 0 the present: `step: none` writes no
+// year; `now` the present's text, under its mark across the line at 0; `past` and `future`
+// written under the line's two ends
+#let timeline(
+  start: 0, end: 10, step: 1, width: 12, events: (), periods: (), now: none, past: none, future: none,
+) = context {
   let unit = width / (end - start)
   // a date: its year, or (year, month, day): placed within its year
   let at(date) = if type(date) == array {
@@ -35,11 +40,17 @@
     }
     line((-0.3, 0), (width + 0.6, 0), stroke: 0.8pt, mark: (end: ">", fill: black))
     let year = start
-    while year <= end {
+    while step != none and year <= end {
       line((at(year), -0.1), (at(year), 0.1), stroke: 0.6pt)
       content((at(year), -0.2), text(10pt, if year < 0 { "−" + str(-year) } else { str(year) }), anchor: "north")
       year += step
     }
+    if now != none {
+      line((at(0), -0.3), (at(0), 0.3), stroke: 1.6pt)
+      content((at(0), -0.4), text(11pt, now), anchor: "north")
+    }
+    if past != none { content((-0.3, -0.4), text(11pt, past), anchor: "north-west") }
+    if future != none { content((width + 0.6, -0.4), text(11pt, future), anchor: "north-east") }
     for p in placed {
       line((p.x, 0.14), (p.x, y(p.row) + p.h), stroke: 0.4pt)
       content((p.x + 0.1, y(p.row)), p.body, anchor: "south-west")

@@ -1032,6 +1032,23 @@ def test_a_timelines_texts_never_on_one_another():
     assert height(crowded) > height(one) * 1.5
 
 
+def test_a_line_of_moments_writes_no_number():
+    """A verb's tenses placed by their order (-1, 0 the present): `step: none` writes no number
+    under the line (it wrote "−3", "−2"…), only the texts' letters; `now` marks the present
+    across the line, its text under it, `past` and `future` written at the line's ends."""
+    texts = '((-1, "Passé"), (0, "Présent"))'
+    tenses = f"#timeline(start: -2, end: 2, step: none, events: {texts})"
+    svg = figures_typst.compile_svg("timeline", tenses)
+    assert svg.count("<use") == len("PasséPrésent")  # a glyph each, no number's
+    numbered = figures_typst.compile_svg("timeline", tenses.replace("step: none", "step: 1"))
+    assert numbered.count("<use") > svg.count("<use")
+    now = figures_typst.compile_svg("timeline", tenses.replace("step: none", 'step: none, now: "Nu"'))
+    drawn = lambda svg: svg.split("<defs")[0].count("<path")  # noqa: E731 (the glyphs' are in defs)
+    assert drawn(now) > drawn(svg) and now.count("<use") == svg.count("<use") + 2
+    ends = figures_typst.compile_svg("timeline", tenses.replace("step: none", 'step: none, past: "P", future: "F"'))
+    assert ends.count("<use") == svg.count("<use") + 2
+
+
 def hand_angle(png: bytes, colour: tuple[int, int, int]) -> float:
     """Where a clock's hand of that colour points: degrees from twelve o'clock, clockwise."""
     import io
