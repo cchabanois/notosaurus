@@ -13,6 +13,18 @@
     cetz.draw.circle((w, 0), radius: 0.06, fill: black)
   })
 }
+// The current's direction on a wire, said by where it goes: an arrow head halfway from a to
+// b, pointing to b, its name beside it (whatever way the components were drawn)
+#let current-arrow(a, b, label) = {
+  let m = ((a.at(0) + b.at(0)) / 2, (a.at(1) + b.at(1)) / 2)
+  cetz.draw.mark(m, b, symbol: ">", fill: black, anchor: "center", scale: 0.9)
+  let vertical = calc.abs(b.at(0) - a.at(0)) < calc.abs(b.at(1) - a.at(1))
+  if vertical {
+    cetz.draw.content((m.at(0) + 0.2, m.at(1)), label, anchor: "west")
+  } else {
+    cetz.draw.content((m.at(0), m.at(1) + 0.2), label, anchor: "south")
+  }
+}
 // ---- What the AI writes, from here (the rule's example: everything above is given)
 #circuit({
   battery("g", (0, 0), (0, 3), label: $G$)

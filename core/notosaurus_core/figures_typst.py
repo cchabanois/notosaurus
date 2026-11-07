@@ -22,6 +22,7 @@ refused first). The SVG keeps its colours (a lesson's colour code: atoms, a lege
 import functools
 import hashlib
 import importlib.util
+import io
 import os
 import posixpath
 import re
@@ -258,7 +259,8 @@ class Unusable(Exception):
 
 def source(family: str, body: str) -> str:
     """The Typst document of a figure of `family`: its preamble, then what the AI wrote."""
-    body = PACKAGE_IMPORT.sub("", body)
+    # "<" and ">" written as HTML's entities (an arrow "-|&gt;"): Typst has none of them
+    body = PACKAGE_IMPORT.sub("", body).replace("&gt;", ">").replace("&lt;", "<")
     if FORBIDDEN.search(body):
         raise Unusable("Only drawing commands: no import, include, file or plugin.")
     return FAMILIES[family].preamble + body.strip() + "\n"
@@ -324,10 +326,62 @@ def compile_svg(family: str, body: str) -> str:
     if done.returncode != 0 or not done.stdout:
         said = done.stderr.decode("utf-8", "replace").strip()
         raise Unusable(said[:800].replace(str(path), "figure.typ") or "It didn't compile.")
-    svg = done.stdout.decode("utf-8")
+    svg = _fitted(done.stdout.decode("utf-8"))
     # A map's outlines: thousands of points, each written to the billionth of a point by
     # Typst: kept to the tenth (nothing seen changes), the figure several times lighter
     return _rounded_paths(svg) if family == "map" else svg
+
+
+OVERFLOW = 150  # pt: how far past its page a figure's drawing is looked for
+MARGIN = 6  # pt: around what is drawn, as the families' pages have it
+_VIEWBOX = re.compile(r'viewBox="(-?[\d.]+) (-?[\d.]+) ([\d.]+) ([\d.]+)"')
+
+
+def _fitted(svg: str) -> str:
+    """The page grown to what is drawn past it: Typst writes it in the SVG, but the page cuts
+    it off (an axis's name lilaq writes past the diagram's end, a label beside the figure's
+    edge: "temps (mi"). Found by drawing the figure once in a frame wider by OVERFLOW; the
+    same SVG when nothing passes its page; as it is without resvg."""
+    from . import figures
+
+    box = _VIEWBOX.search(svg)
+    if box is None:
+        return svg
+    x, y, w, h = map(float, box.groups())
+    wide = _framed(svg, box.group(0), x - OVERFLOW, y - OVERFLOW, w + 2 * OVERFLOW, h + 2 * OVERFLOW)
+    try:
+        png = figures.to_png(figures.clean(wide))  # resvg reads it cleaned, as the check does
+    except figures.FigureError:
+        png = None
+    if png is None:
+        return svg
+    from PIL import Image, ImageOps
+
+    image = Image.open(io.BytesIO(png)).convert("L")
+    drawn = ImageOps.invert(image).point([0] * 25 + [255] * 231).getbbox()  # what isn't white
+    if drawn is None:
+        return svg
+    k = (w + 2 * OVERFLOW) / image.width  # pt per pixel
+    left, top = x - OVERFLOW + drawn[0] * k - MARGIN, y - OVERFLOW + drawn[1] * k - MARGIN
+    right, bottom = x - OVERFLOW + drawn[2] * k + MARGIN, y - OVERFLOW + drawn[3] * k + MARGIN
+    slack = 2 * k + 1  # a pixel or two of rounding, a stroke's edge
+    if left >= x - slack and top >= y - slack and right <= x + w + slack and bottom <= y + h + slack:
+        return svg  # within its page: untouched
+    nx, ny = min(x, left), min(y, top)
+    nw, nh = max(x + w, right) - nx, max(y + h, bottom) - ny
+    svg = _framed(svg, box.group(0), nx, ny, nw, nh)
+    # its white ground under it all, the page's own covering its page only
+    opening = re.search(r"<svg[^>]*>", svg)
+    if opening is None:
+        return svg
+    ground = f'<rect x="{nx:.3f}" y="{ny:.3f}" width="{nw:.3f}" height="{nh:.3f}" fill="#ffffff"/>'
+    return svg[: opening.end()] + ground + svg[opening.end() :]
+
+
+def _framed(svg: str, viewbox: str, x: float, y: float, w: float, h: float) -> str:
+    """The SVG's frame (its viewBox, and its size with it: the same scale) set to x, y, w, h."""
+    svg = svg.replace(viewbox, f'viewBox="{x:.3f} {y:.3f} {w:.3f} {h:.3f}"', 1)
+    return re.sub(r'width="[\d.]+pt" height="[\d.]+pt"', f'width="{w:.3f}pt" height="{h:.3f}pt"', svg, count=1)
 
 
 _NUMBER = re.compile(r"-?\d+\.\d{2,}")
