@@ -33,6 +33,7 @@ Each pull request's entries (the `## Changelog` of its description) are put unde
 
 ### Fixed
 
+- Chemistry: several molecules in one figure are drawn side by side, each with its name, no longer one on another; a hydrogen bond is drawn dotted.
 - 📈 Two curves of the same measure are no longer drawn on two different axes, which made a small change look as large as a big one.
 - Figures: a Greek letter in a figure's formula (λ, π, α) is no longer replaced by a number the AI named after it.
 - A circle or points in a coordinate frame drawn with their graduated axes, instead of a rough drawing.
