@@ -27,6 +27,7 @@ Each pull request's entries (the `## Changelog` of its description) are put unde
 
 ### Fixed
 
+- Every sheet is announced as a dialog by screen readers (TalkBack), and every sheet slides in from the bottom.
 - A card no longer shows "\n" where the AI meant a line break.
 - On a dictation card's back, the sentence to write is no longer glued to its instruction.
 - Labelled drawings (an organ, a cell): their labels no longer cut off at the edge.
