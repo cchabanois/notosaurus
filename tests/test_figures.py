@@ -1250,6 +1250,21 @@ def test_a_charts_angles_and_heights_come_from_its_counts():
         figures_typst.compile_svg("chart", f'#chart(kind: "{kind}", values: (("A", 230), ("B", 5), ("C", 0)))')
 
 
+@pytest.mark.parametrize(
+    ("values", "lines"),
+    [
+        ('(("0", 0.2), ("1", 0.5), ("2", 0.3))', 5),  # by tenths up to 0.5
+        ('(("0", 0.078), ("1", 0.259), ("2", 0.346), ("3", 0.23))', 7),  # by 0.05 up to 0.35
+        ('(("A", 12), ("B", 7), ("C", 3))', 12),  # counts: by units, as before
+    ],
+)
+def test_a_bar_charts_graduation_reads_its_values(values, lines):
+    """A probability law's bars (values under 1) graduated by tenths or hundredths, a light
+    line at each: never 0 and 1 alone, where no value can be read (6 drawings in 6)."""
+    svg = figures_typst.compile_svg("chart", f'#chart(kind: "bars", values: {values})')
+    assert svg.count('stroke="#cdcdcd"') == lines
+
+
 def test_a_charts_counts_written_only_when_asked():
     """None by default (a card asking a count, a frequency or an angle never shows it on its
     chart); "all", or the labels given."""
