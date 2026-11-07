@@ -39,6 +39,6 @@ Run them before changing a prompt, a rule or a model.
 | Script | |
 |---|---|
 | `bench.py` | real lessons made again and checked: each card's note type, the voice and its side, the diagrams' masks, the lesson's `expect.json`; the lessons are private (`notes/bench/lessons`, never committed); `--reuse <run>` checks again for free |
-| `bench_figures.py` | figures drawn a few times from their descriptions, then judged by code and by the AI looking at them |
+| `bench_figures.py` | figures drawn a few times from their descriptions (by the test relay, or `--local` with this checkout's rules), then judged by code and by the AI looking at them; `--recompile <run>` compiles a run's Typst again with today's preambles (`.claude/skills/figure-bench`) |
 
 See also [CONTRIBUTING.md](../CONTRIBUTING.md).

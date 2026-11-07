@@ -76,8 +76,12 @@ another `port` in its config when 8000 is taken. `NOTOSAURUS_LLM=fake` (or the s
   the rule, `<family>.typ` its preamble and example; `figures_typst.FAMILIES`). What can be
   computed (a clock's hands, a solid's hidden edges, a current's arrow) is done by a function
   of the preamble, the AI giving only the values: never placed by the AI's eye.
+- A new family: its `<family>.md` and `<family>.typ` (the example after the `EXAMPLE` marker,
+  compiled by the tests), its name in `FAMILIES` and `FigureKind`, its kind described in
+  `typst_rules/kinds.md` (what picks it, what doesn't), its packages credited.
 - Judge a change to a figure family by drawing real descriptions with the real AI, before
-  and after, several times each, and looking at every drawing.
+  and after, several times each, and looking at every drawing: the `figure-bench` skill
+  (`tools/bench_figures.py`).
 - The maps' atlas is a Typst package of ours, its data in its archive
   (`core/notosaurus_core/typst/notosaurus-atlas-<version>.tar.gz`), made by `tools/atlas.py`
   (its docstring: sources, `--refresh-history`). Any change to it raises its `VERSION` (and

@@ -9,6 +9,17 @@ figures users reported and the hard ones, a list of
   {"id": "parallelogram-marks", "description": "Un parallélogramme ABCD…", "why": "reported 2026-10-25"}
 
   .venv/bin/python tools/bench_figures.py [--only angles] [--times 3] [--jobs 3] [--bench notes/bench]
+      [--cases other.json] [--local [--app ~/git/notosaurus]] [--recompile <run>]
+
+--cases: another list of cases (a syllabus's figures, say), the runs still in <bench>/runs.
+A case may say its "kind" (a family: two families compared on the same description) and
+its "front" ("question → answer", the card it goes on the front of): --local only, the
+relay's /v1/figure takes a description alone.
+--local: drawn here, by the AI of the app's settings (<app>/data, its keys in <app>/.env;
+the checkout by default), with this checkout's rules: a rule judged before it is deployed.
+Every Typst drawing keeps its Typst beside its SVG (<case>-<n>.typ).
+--recompile <run>: that run's Typst compiled again with this checkout's preambles, no AI
+drawing: a preamble's change (a font, a size, a function) judged on the same drawings.
 
 The AI judge: Gemini on Vertex AI, the project in BENCH_JUDGE_PROJECT (application default
 credentials, `gcloud auth application-default login`); none: judged by code only. The test
@@ -36,7 +47,7 @@ sys.path[:0] = [str(ROOT), str(ROOT / "core"), str(ROOT / "tools")]
 
 from bench import CLIENT, relay  # noqa: E402
 
-from notosaurus_core import ai, figures  # noqa: E402
+from notosaurus_core import ai, figure_making, figures, figures_typst  # noqa: E402
 from notosaurus_core.calls import Image  # noqa: E402
 from notosaurus_core.config import AIConfig  # noqa: E402
 
@@ -59,6 +70,39 @@ def draw(url: str, key: str, description: str) -> dict:
         return {"error": f"{res.status_code} {res.text[:200]}", "seconds": seconds}
     answer = res.json()
     return {"svg": answer["svg"], "seconds": seconds, "credits": answer["usage"]["credits"]}
+
+
+def draw_local(case: dict) -> dict:
+    """This checkout's figure, drawn by the AI of the app's settings: its SVG, seconds, how it
+    was drawn (its family, its Typst); or its error. The case's "kind" (its family, as the
+    cards' AI says it: not asked) and "front" (the card it goes on the front of, "question →
+    answer": nothing on it may give the answer away), when it has them."""
+    from app import settings
+
+    start = time.monotonic()
+    try:
+        description, kind, front = case["description"], case.get("kind", ""), case.get("front", "")
+        made = asyncio.run(figure_making.made_figure(settings.current(), description, kind=kind, front=front))
+    except Exception as e:
+        return {"error": f"{type(e).__name__}: {str(e)[:200]}", "seconds": round(time.monotonic() - start, 1)}
+    seconds = round(time.monotonic() - start, 1)
+    return {"svg": made.svg, "seconds": seconds, "engine": made.engine, "family": made.family, "typst": made.typst}
+
+
+def recompiled(run: Path, drawing: dict) -> dict:
+    """A drawing of an earlier run: its Typst compiled again with this checkout's preambles;
+    drawn as SVG, as it was."""
+    family = drawing.get("family", "")
+    if drawing.get("typst_file"):
+        body = (run / drawing["typst_file"]).read_text()
+        try:
+            svg = figures.clean(figures_typst.compile_svg(family, body))
+        except Exception as e:
+            return {"error": f"{type(e).__name__}: {str(e)[:200]}", "family": family, "typst": body}
+        return {"svg": svg, "seconds": 0, "engine": "typst", "family": family, "typst": body}
+    if drawing.get("file"):
+        return {"svg": (run / drawing["file"]).read_text(), "seconds": 0, "engine": "svg", "family": family}
+    return {"error": drawing.get("problem", "not drawn")}
 
 
 def _local(tag: object) -> str:
@@ -145,7 +189,8 @@ def sheet(path: Path, rows: list[tuple[str, str, list[dict]]]) -> None:
         for n, d in enumerate(drawings, 1):
             mark = "✓" if d.get("right") else "?" if d.get("right") is None else "✗"
             image = f'<img src="{d["file"]}">' if d.get("file") else ""
-            facts = f"{d.get('seconds', '?')} s · {d.get('credits', '?')} cr."
+            how = d.get("family") or d.get("engine", "")
+            facts = f"{how} · {d.get('seconds', '?')} s · {d.get('credits', '?')} cr."
             problem = html.escape(d.get("problem", ""))
             cells.append(f"<figure>{image}<figcaption>{mark} #{n} · {facts}<br>{problem}</figcaption></figure>")
         parts.append(
@@ -173,7 +218,7 @@ def summary(drawings: list[dict]) -> dict:
     return {
         "right": sum(d.get("right") is True for d in drawings),
         "judged": sum(d.get("right") is not None for d in drawings),
-        "median_s": statistics.median(seconds) if seconds else None,
+        "median_s": round(statistics.median(seconds), 1) if seconds else None,
         "credits": round(statistics.mean(credits), 1) if credits else None,
     }
 
@@ -184,31 +229,64 @@ def main() -> int:
     parser.add_argument("--only", default="", help="cases whose id holds this")
     parser.add_argument("--times", type=int, default=3, help="drawings of each case")
     parser.add_argument("--jobs", type=int, default=3)
+    parser.add_argument("--cases", default="", help="the cases' file (<bench>/figures.json by default)")
+    parser.add_argument("--local", action="store_true", help="drawn here, by the app's AI, not by the relay")
+    parser.add_argument("--app", default=str(ROOT), help="--local: the checkout whose data/ and .env give the AI")
+    parser.add_argument("--recompile", default="", help="a run whose Typst is compiled again, not drawn")
     args = parser.parse_args()
     bench = Path(args.bench)
-    cases = [c for c in json.loads((bench / "figures.json").read_text()) if args.only in c["id"]]
-    url, key = relay()
     judge = judge_config()
     at = datetime.now().isoformat(timespec="seconds").replace(":", "-")
+    if args.recompile:
+        old = Path(args.recompile)
+        before = json.loads((old / "run.json").read_text())
+        descriptions = before.get("descriptions", {})
+        cases = [{"id": i, "description": descriptions.get(i, "")} for i in before["cases"] if args.only in i]
+        jobs = [(c, n, d) for c in cases for n, d in enumerate(before["cases"][c["id"]], 1)]
+        drawing = lambda case, d: recompiled(old, d)  # noqa: E731
+        where = f"compiled again from {old}"
+    else:
+        listed = Path(args.cases) if args.cases else bench / "figures.json"
+        cases = [c for c in json.loads(listed.read_text()) if args.only in c["id"]]
+        jobs = [(c, n, {}) for c in cases for n in range(1, args.times + 1)]
+        if args.local:
+            from dotenv import load_dotenv
+
+            app = Path(args.app).expanduser()
+            load_dotenv(app / ".env")
+            os.environ.setdefault("NOTOSAURUS_DATA", str(app / "data"))
+            drawing = lambda case, d: draw_local(case)  # noqa: E731
+            where = "drawn here"
+        else:
+            url, key = relay()
+            drawing = lambda case, d: draw(url, key, case["description"])  # noqa: E731
+            where = f"drawn on {url}"
     out = bench / "runs" / f"{at}-figures"
     out.mkdir(parents=True)
-    print(f"{len(cases)} cases × {args.times}, drawn on {url}, judged by {'the AI and ' if judge else ''}code…")
+    print(f"{len(cases)} cases, {len(jobs)} figures {where}, judged by {'the AI and ' if judge else ''}code…")
 
-    def one(job: tuple[dict, int]) -> tuple[str, dict]:
-        case, n = job
-        drawn = draw(url, key, case["description"])
-        verdict = judged(judge, case["description"], drawn)
+    def one(job: tuple[dict, int, dict]) -> tuple[str, dict]:
+        case, n, earlier = job
+        verdict = judged(judge, case["description"], drawing(case, earlier))
         if "svg" in verdict:
             name = f"{case['id']}-{n}.svg"
             (out / name).write_text(verdict.pop("svg"))
             verdict["file"] = name
+        if verdict.get("typst"):
+            name = f"{case['id']}-{n}.typ"
+            (out / name).write_text(verdict.pop("typst"))
+            verdict["typst_file"] = name
+        verdict.pop("typst", None)
         verdict.pop("png", None)
         return case["id"], verdict
 
-    jobs = [(c, n) for c in cases for n in range(1, args.times + 1)]
     with ThreadPoolExecutor(args.jobs) as pool:
         done = list(pool.map(one, jobs))
-    run = {"at": at, "cases": {c["id"]: [v for i, v in done if i == c["id"]] for c in cases}}
+    run = {
+        "at": at,
+        "descriptions": {c["id"]: c["description"] for c in cases},
+        "cases": {c["id"]: [v for i, v in done if i == c["id"]] for c in cases},
+    }
     sheet(out / "sheet.html", [(c["id"], c["description"], run["cases"][c["id"]]) for c in cases])
     (out / "run.json").write_text(json.dumps(run, ensure_ascii=False, indent=1))
 
