@@ -32,6 +32,7 @@ Each pull request's entries (the `## Changelog` of its description) are put unde
 
 ### Fixed
 
+- A probability law's bar chart is graduated by tenths or hundredths, its values readable.
 - Figures: numbers written as the lesson's language writes them (a decimal comma in French, German…, a point in English), never LaTeX's `{,}`.
 - The trigonometric circle: its points at their angles, its cosine and sine projected, no stray names.
 - Number lines: an interval's brackets are turned the right way ([2 ; +∞[, ]2 ; 7[).
