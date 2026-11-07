@@ -1075,6 +1075,18 @@ def test_a_clock_at_an_impossible_time_refused():
         ('#pyramid(side: 4, height: 5, foot: "O")', 4),  # and its height, inside
         ("#prism(((0, 0), (4, 0), (1, 3)), 4)", 3),  # the base's two back sides, the back edge
         ("#prism(((0, 0), (4, 0), (2, 3)), 6, lying: true)", 3),
+        # a section's sides on hidden faces too: the cuboid's back and left, the pyramid's and
+        # the prism's two back faces; parallel to the front, its sides on the left and the base
+        ("#cuboid(5, 3, 4, section: 2)", 5),
+        ('#cuboid(5, 3, 4, names: ("A", "B", "C", "D", "E", "F", "G", "H"), section: (parallel: "ABFE", at: 1))', 5),
+        ('#cuboid(5, 3, 4, section: (parallel: "left", at: 1))', 5),
+        ("#pyramid(side: 4, height: 6, section: 3)", 5),
+        ("#prism(((0, 0), (4, 0), (1, 3)), 4, section: 1)", 5),
+        # a round section's back half: with the base's, the sphere's alone (no equator then)
+        ("#cylinder(2, 5, section: 2)", 2),
+        ("#cone(3, 6, section: 2)", 2),
+        ("#sphere(5, section: 3)", 1),
+        ('#sphere(5, section: 3, section-centre: "H")', 2),  # and [OH], inside
     ],
 )
 def test_a_solids_hidden_edges_computed(body, hidden):
@@ -1083,6 +1095,20 @@ def test_a_solids_hidden_edges_computed(body, hidden):
     cuboid, a hidden one missing: 5 of 8 polyhedra drawn wrong as SVG)."""
     svg = figures.clean(figures_typst.compile_svg("solid", body))
     assert svg.count("stroke-dasharray") == hidden
+
+
+def test_a_section_outside_its_solid_refused():
+    """A section's plane outside the solid, or parallel to a face it hasn't: refused, saying
+    why, for the AI to write it again; never a solid drawn without it."""
+    for body, said in (
+        ("#cuboid(5, 3, 4, section: 4)", "between 0 and 4"),
+        ("#pyramid(side: 4, height: 6, section: -1)", "between 0 and 6"),
+        ('#cuboid(5, 3, 4, section: (parallel: "ABFE", at: 1))', "names given"),
+        ("#cone(3, 6, section: 6)", "between 0 and 6"),
+        ("#sphere(5, section: 5)", "between -5 and 5"),
+    ):
+        with pytest.raises(figures_typst.Unusable, match=said):
+            figures_typst.compile_svg("solid", body)
 
 
 def test_a_charts_angles_and_heights_come_from_its_counts():
@@ -1249,6 +1275,35 @@ def test_a_solids_lengths_beside_its_edges():
     reddish = lambda p: p[0] > 200 and p[1] < 140  # noqa: E731
     reds = {(x, y) for y in range(labelled.height) for x in range(labelled.width) if reddish(labelled.getpixel((x, y)))}
     assert reds and not edges & reds
+
+
+@pytest.mark.parametrize(
+    "body",
+    [
+        '#sphere(3, centre-name: "O", radius-label: {}[$R = 3$ cm])',  # too long above: beyond its end
+        '#sphere(3, centre-name: "O", radius-label: {}[$R$])',
+        '#sphere(5, centre-name: "O", section: 3, section-centre: "H", section-label: {}[$r$], radius-label: {}[5 cm], distance-label: {}[3 cm])',
+        '#sphere(5, centre-name: "O", section: 4, section-centre: "H", section-label: {}[3 cm])',
+    ],
+)
+def test_a_spheres_lengths_clear_of_its_lines(body):
+    """A sphere's lengths (its radius, a section's) beside their segments, clear of every line,
+    the equator's or the section's dashed half, and of the centre's name (the radius's label
+    against "O", on the equator: 3 drawings in 3). The labels drawn red, no line within 3
+    pixels of them."""
+    from PIL import Image
+
+    def png(label: str) -> Image.Image:
+        svg = figures.clean(figures_typst.compile_svg("solid", body.replace("{}", label)))
+        return Image.open(io.BytesIO(figures.to_png(svg))).convert("RGB")
+
+    bare, labelled = png("hide"), png("text(fill: rgb(255, 0, 0))")
+    assert bare.size == labelled.size
+    lines = {(x, y) for y in range(bare.height) for x in range(bare.width) if sum(bare.getpixel((x, y))) < 300}
+    near = {(x + dx, y + dy) for x, y in lines for dx in range(-3, 4) for dy in range(-3, 4)}
+    reddish = lambda p: p[0] > 200 and p[1] < 140  # noqa: E731
+    reds = {(x, y) for y in range(labelled.height) for x in range(labelled.width) if reddish(labelled.getpixel((x, y)))}
+    assert reds and not near & reds
 
 
 @pytest.mark.parametrize(
