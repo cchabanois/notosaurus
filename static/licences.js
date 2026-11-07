@@ -8,7 +8,7 @@ const PAGE_LIBRARIES = [
 
 // The figures' (core figures_typst.py): Typst and its packages, shipped with Notosaurus
 const FIGURE_LIBRARIES = [
-  { name: "Typst", version: "0.15.0", licence: "Apache-2.0", url: "https://github.com/typst/typst" },
+  { name: "Typst", version: "0.15.1", licence: "Apache-2.0", url: "https://github.com/typst/typst" },
   { name: "alchemist", version: "0.2.0", licence: "MIT", url: "https://typst.app/universe/package/alchemist" },
   { name: "cetz", version: "0.3.4", licence: "LGPL-3.0-or-later", url: "https://typst.app/universe/package/cetz" },
   { name: "cetz", version: "0.5.2", licence: "LGPL-3.0-or-later", url: "https://typst.app/universe/package/cetz" },
