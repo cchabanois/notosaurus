@@ -110,8 +110,8 @@ KINDS = (
     'rivers, reliefs and seas (where a place is); "clock": a clock\'s face showing a time (reading '
     'the time); "solid": a solid in perspective (a cube, a cuboid, a prism, a pyramid, a cylinder, a '
     'cone, a sphere, a half-ball); "chart": a statistics chart from counts (bars, a pie chart, a half '
-    'pie chart); "other": anything else (a table, a labelled drawing, zones nested '
-    "or overlapping, a molecular model of coloured balls…)"
+    'pie chart), or measures joined by a line (a heart rate over time); "other": anything else (a '
+    "table, a labelled drawing, zones nested or overlapping, a molecular model of coloured balls…)"
 )
 FAMILY_RULES = f"A figure for a pupil's flashcard is described below. Which kind of figure is it? {KINDS}."
 FigureKind = Literal[
