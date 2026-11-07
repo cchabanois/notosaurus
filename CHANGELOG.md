@@ -19,6 +19,7 @@ Each pull request's entries (the `## Changelog` of its description) are put unde
 
 ### Changed
 
+- The automatic instruction makes cards that read a lesson's charts and curves (its tables of counts or of measures), the chart or the curve redrawn on the front.
 - The Android app is about a third smaller.
 
 ### Fixed
