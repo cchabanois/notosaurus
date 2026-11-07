@@ -1503,3 +1503,13 @@ def test_a_figure_credits_the_typst_that_drew_it():
 
     engine = json.loads(typst.query(b"#metadata(str(sys.version)) <v>", "<v>", field="value"))[0]
     assert figures_typst.made_with("clock", "#clock(10, 25)")[0] == f"Typst {engine}"
+
+
+def test_the_chemistry_rule_says_how_to_draw_a_lewis_structures_pairs():
+    """Without it the AI drew a Lewis structure's non-bonding pairs as bonds to no atom, or
+    left them out (0 of 12 right): the rule's Lewis call, as it gives it, draws them."""
+    rule = figures_typst.FAMILIES["chemistry"].rules
+    calls = re.findall(r"`(fragment\([^`]*lewis-line[^`]*)`", rule)
+    assert calls, "the chemistry rule shows a Lewis structure's pairs"
+    for call in calls:
+        assert figures_typst.compile_svg("chemistry", "#skeletize({ " + call + " })").startswith("<svg")
