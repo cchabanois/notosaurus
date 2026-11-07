@@ -1215,3 +1215,34 @@ def test_a_solids_lengths_beside_its_edges():
     reddish = lambda p: p[0] > 200 and p[1] < 140  # noqa: E731
     reds = {(x, y) for y in range(labelled.height) for x in range(labelled.width) if reddish(labelled.getpixel((x, y)))}
     assert reds and not edges & reds
+
+
+@pytest.mark.parametrize(
+    "colour",
+    [
+        "color.mix(red, blue)",
+        "color.mix(green, red, blue)",
+        "oklch(60%, 0.15, 200deg)",
+        "color.hsl(200deg, 50%, 50%)",
+        "color.linear-rgb(20%, 40%, 60%)",
+        "color.mix(red, blue).transparentize(40%)",
+    ],
+)
+def test_a_typst_colour_kept_as_typst_makes_it(colour):
+    """Typst writes a mixed colour (oklab by default), an oklch, an hsl or a linear RGB as
+    CSS's newer functions, which figures.clean drops (a value with brackets): a pH scale's
+    bands came out black. Written #rrggbb(aa) instead, Typst's own colour (to-hex), kept by
+    the clean and painted."""
+    import io
+
+    from PIL import Image
+
+    def filled(body: str) -> list[str]:
+        svg = figures.clean(figures_typst.compile_svg("geometry", body))
+        return [v for v in re.findall(r'fill="([^"]*)"', svg) if v not in ("#ffffff", "none")]
+
+    rect = "#rect(width: 2cm, height: 1cm, fill: {})"
+    assert filled(rect.format(colour)) == filled(rect.format(f"rgb(({colour}).to-hex())")) != []
+    png = figures.to_png(figures.clean(figures_typst.compile_svg("geometry", rect.format(colour))))
+    middle = Image.open(io.BytesIO(png)).convert("RGB")
+    assert middle.getpixel((middle.width // 2, middle.height // 2)) != (0, 0, 0)
