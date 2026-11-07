@@ -9,6 +9,8 @@ Each pull request's entries (the `## Changelog` of its description) are put unde
 
 ### Added
 
+- Cylinders, cones, spheres and half-balls drawn in proportion to their lengths, their hidden parts dashed; several solids side by side at one scale to compare them.
+- Coordinates of points in a frame (5e): a gridded frame, a tick at each unit.
 - Geography maps show regions, rivers, mountains and seas too.
 - Solids in perspective (a cube, a cuboid, a prism, a pyramid): drawn exactly, their hidden edges dashed where they should be, their vertices and lengths named.
 - Reading the time, and saying it in a language ("It's a quarter to nine", "Es ist halb elf"): a card asks "What time is it?" with a real clock, its hands exactly at the time.

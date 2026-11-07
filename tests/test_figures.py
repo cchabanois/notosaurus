@@ -700,6 +700,21 @@ def test_the_atlas_folds_names_as_typst_does():
         assert a == b, written
 
 
+def test_a_coordinate_frame_as_the_graph_rule_writes_it():
+    """Points in a coordinate frame (reading or placing coordinates), each call as the graph
+    rule gives it: drawn, its grid with it (a line per unit: more lines than without it)."""
+    lines = figures_typst.FAMILIES["graph"].rules.splitlines()
+    rule = next(line for line in lines if line.startswith("- a coordinate frame"))
+    calls = re.findall(r"`((?:#show: lq\.set-grid|lq\.scatter|lq\.place)[^`]*)`", rule)
+    assert len(calls) == 4, calls  # the grid, a point, its name, the origin's
+    grid, point, name, origin = calls
+    axes = "xlim: (-4.5, 4.5), ylim: (-4.5, 4.5), xaxis: (tick-distance: 1, subticks: none), yaxis: (tick-distance: 1)"
+    frame = f"#lq.diagram(width: 6cm, height: 6cm, {axes}, {point}, {name}, {origin})"
+    with_grid = figures_typst.compile_svg("graph", f"{grid}\n{frame}")
+    without = figures_typst.compile_svg("graph", frame)
+    assert with_grid.count("<path") > without.count("<path") + 10
+
+
 def test_the_graph_rules_example_is_orthonormal():
     """The graph rule asks for an orthonormal frame, width / height = xlim's length / ylim's,
     exactly: its example does so (the model copies the example before it reads the rule)."""
@@ -841,6 +856,35 @@ def test_a_solid_drawn_the_same_whatever_its_unit():
     """Lengths in any unit: only their ratio shows (a cuboid 5 × 3 × 2 as 50 × 30 × 20)."""
     small = figures_typst.compile_svg("solid", "#cuboid(5, 3, 2)")
     assert figures_typst.compile_svg("solid", "#cuboid(50, 30, 20)") == small
+
+
+def drawn_size(family: str, body: str) -> tuple[float, float]:
+    """A figure's drawing, its page's margins (6 pt each side) left out: width, height in pt."""
+    box = re.search(r'viewBox="0 0 ([\d.]+) ([\d.]+)"', figures_typst.compile_svg(family, body))
+    return float(box.group(1)) - 12, float(box.group(2)) - 12
+
+
+@pytest.mark.parametrize(
+    ("body", "ratio"),
+    [
+        ("#cone(3, 4)", 6 / (4 + 3 * 0.35)),  # its diameter over its height and the base's front half
+        ("#cylinder(2, 6)", 4 / (6 + 2 * 2 * 0.35)),  # its diameter over its height and both bases' halves
+        ("#sphere(2)", 1),
+    ],
+)
+def test_a_round_solids_proportions_computed(body, ratio):
+    """A round solid in proportion to the lengths given: a cone of radius 3 and height 4 wider
+    than tall (drawn as SVG by eye: taller, twice in two; a cylinder 2 by 6 almost square)."""
+    width, height = drawn_size("solid", body)
+    assert width / height == pytest.approx(ratio, rel=0.01)
+
+
+def test_solids_compared_at_one_scale():
+    """Two cylinders of radius 1 and 3 drawn with the same largest: the second three times as
+    wide (each alone would be drawn about 4 cm)."""
+    thin = drawn_size("solid", "#cylinder(1, 5, largest: 6)")[0]
+    wide = drawn_size("solid", "#cylinder(3, 1, largest: 6)")[0]
+    assert wide / thin == pytest.approx(3, rel=0.01)
 
 
 def test_a_figure_of_no_family_drawn_as_svg(monkeypatch):
