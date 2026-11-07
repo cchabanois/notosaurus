@@ -26,6 +26,7 @@ Each pull request's entries (the `## Changelog` of its description) are put unde
 
 ### Fixed
 
+- A diagram label corrected by the AI keeps its place on the diagram when its question is only reworded.
 - Maps: countries and seas found by their usual names in every language of the page ("Chine", "Stati Uniti", "Méditerranée", "Atlantik").
 - Graphs of data (a population over the years, a temperature over time): drawn at a readable size, their axes at the frame's start.
 - Graphs: the axes' names no longer cut off at the edge; a curve with a plateau drawn in one piece; a period's double arrow.
