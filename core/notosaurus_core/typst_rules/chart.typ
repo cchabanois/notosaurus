@@ -7,7 +7,8 @@
 // diagramme en bâtons), "pie" (a circle, each sector count / total × 360°), "semi" (a half
 // circle, × 180°): the angles computed, never given; or "line", measures joined (a heart
 // rate over time). values: (label, count) pairs in the lesson's order, for "line" the
-// measures as (x, y); written: the values written on the chart ("all", or some labels; for
+// measures as (x, y), or several lines of the same measure, each named with its measures
+// ((name, ((x, y), …)), …: on the same axis, each its colour and dash, a legend); written: the values written on the chart ("all", or some labels; for
 // "line" some x), none by default: a card asking a count or a measure never shows it;
 // degrees: a sector's angle written with its count; axis: the bars' axis title (the
 // lesson's: "Effectif"); axes: a line's (x title, y title), their units with them; step:
@@ -21,11 +22,18 @@
   marks: (), spans: (), second: none, numbered: true) = context {
   assert(kind in ("bars", "pie", "semi", "line"), message: "kind is \"bars\", \"pie\", \"semi\" or \"line\"")
   let number(x) = type(x) in (int, float)
+  let measures(vs) = (
+    type(vs) == array and vs.len() > 1 and vs.all(v => type(v) == array and v.len() == 2 and number(v.at(0)) and number(v.at(1)))
+  )
+  // a line's values: one line's measures, or lines named, each with its measures
+  let named = kind == "line" and values.len() > 0 and values.all(v => type(v) == array and v.len() == 2 and type(v.at(1)) == array)
+  let lines = if named { values } else { ((none, values),) }
   if kind == "line" {
     assert(
-      values.len() > 1 and values.all(v => type(v) == array and v.len() == 2 and number(v.at(0)) and number(v.at(1))),
-      message: "a line's values are (x, y) measures, two at least, each a number",
+      lines.all(l => measures(l.at(1))),
+      message: "a line's values are (x, y) measures, two at least, each a number; several lines: (name, ((x, y), …)) each",
     )
+    assert(not named or second == none, message: "second is for a single line: several lines of the same measure share its axis")
     assert(
       marks.all(m => type(m) == array and m.len() == 2 and number(m.at(0))),
       message: "marks are (x, label) pairs, x a number",
@@ -66,8 +74,8 @@
   cetz.canvas({
     import cetz.draw: *
     if kind == "line" {
-      let xs = values.map(v => v.at(0))
-      let ys = values.map(v => v.at(1))
+      let xs = lines.map(l => l.at(1).map(v => v.at(0))).flatten()
+      let ys = lines.map(l => l.at(1).map(v => v.at(1))).flatten()
       // what else stands on the x axis: the events, the stretches, the second measure
       let others = marks.map(m => m.at(0)) + spans.map(s => s.at(0)) + spans.map(s => s.at(1))
       if second != none { others += second.values.map(v => v.at(0)) }
@@ -102,6 +110,21 @@
         content((x, -0.16), txt(num(x0 + k * sx)), anchor: "north")
       }
       let (red, blue) = (rgb("#b03a2e"), rgb("#1f5fa8"))
+      // each line's look: a colour, a dash and a point of its own (told apart in grey too)
+      let looks = (
+        (paint: red, dash: none, point: "circle"),
+        (paint: blue, dash: "dashed", point: "square"),
+        (paint: rgb("#2e7d32"), dash: "dotted", point: "triangle"),
+        (paint: rgb("#7b3fa0"), dash: "dash-dotted", point: "circle"),
+        (paint: rgb("#c77700"), dash: "densely-dashed", point: "square"),
+        (paint: luma(40), dash: "loosely-dotted", point: "triangle"),
+      )
+      let point(p, look) = {
+        let (x, y) = p
+        if look.point == "circle" { circle(p, radius: 0.06, fill: look.paint, stroke: none) }
+        else if look.point == "square" { rect((x - 0.06, y - 0.06), (x + 0.06, y + 0.06), fill: look.paint, stroke: none) }
+        else { line((x - 0.075, y - 0.06), (x + 0.075, y - 0.06), (x, y + 0.07), close: true, fill: look.paint, stroke: none) }
+      }
       // the stretches first, under everything
       for (a, b, _) in spans {
         rect((px(a), 0), (px(b), h), fill: rgb("#f6c76b").transparentize(55%), stroke: none)
@@ -149,11 +172,26 @@
         line(..points, stroke: (paint: blue, thickness: 1.3pt, join: "round", dash: "dashed"))
         for p in points { rect((p.at(0) - 0.06, p.at(1) - 0.06), (p.at(0) + 0.06, p.at(1) + 0.06), fill: blue, stroke: none) }
       }
-      let points = values.map(((x, y)) => (px(x), py(y)))
-      line(..points, stroke: (paint: red, thickness: 1.3pt, join: "round"))
-      for (i, (x, y)) in values.enumerate() {
-        circle(points.at(i), radius: 0.06, fill: red, stroke: none)
-        if written == "all" or x in written { content((points.at(i).at(0), points.at(i).at(1) + 0.12), txt(num(y)), anchor: "south") }
+      for (k, (name, vs)) in lines.enumerate() {
+        let look = looks.at(calc.rem(k, looks.len()))
+        let points = vs.map(((x, y)) => (px(x), py(y)))
+        line(..points, stroke: (paint: look.paint, thickness: 1.3pt, join: "round", dash: look.dash))
+        for (i, (x, y)) in vs.enumerate() {
+          point(points.at(i), look)
+          if written == "all" or x in written {
+            content((points.at(i).at(0), points.at(i).at(1) + 0.12), text(fill: if named { look.paint } else { black }, txt(num(y))), anchor: "south")
+          }
+        }
+      }
+      // the lines' names: a legend at the right, each with its line's look
+      if named {
+        for (k, (name, _)) in lines.enumerate() {
+          let look = looks.at(calc.rem(k, looks.len()))
+          let y = h - k * 0.5
+          line((w + 0.55, y), (w + 1.25, y), stroke: (paint: look.paint, thickness: 1.3pt, dash: look.dash))
+          point((w + 0.9, y), look)
+          content((w + 1.4, y), txt(name), anchor: "west")
+        }
       }
       // The events' and the stretches' labels under the axis, under its title's row, each
       // at its x; one too close to the one before goes a row lower
