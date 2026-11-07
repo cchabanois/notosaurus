@@ -1010,6 +1010,26 @@ def test_the_circuit_rules_current_arrow_compiles():
     assert arrow in body and figures.clean(figures_typst.compile_svg("circuit", body)).startswith("<svg")
 
 
+def test_nested_sets_elements_each_in_its_own_ring():
+    """Sets inside one another (ℕ ⊂ ℤ ⊂ … ⊂ ℝ), drawn by the AI by eye: −5 in ℕ, 0,25 in ℤ.
+    Laid out by the preamble: each text (its middle) inside its set's ellipse and outside the
+    next smaller one, checked by Typst itself (an assert failing, the figure isn't made)."""
+    check = """#context {
+      let inside(s, p) = { let (cy, a, b) = s; calc.pow(p.at(0) / a, 2) + calc.pow((p.at(1) - cy) / b, 2) < 1 }
+      let (shapes, placed) = _nested-layout(LEVELS)
+      for (k, p, c) in placed {
+        assert(inside(shapes.at(k), p), message: "outside its set")
+        if k > 0 { assert(not inside(shapes.at(k - 1), p), message: "inside a smaller set") }
+      }
+      nested-sets(..LEVELS)
+    }"""
+    levels = (
+        "(([N], ([3],)), ([Z], ([-5],)), ([D], ([0,25],)), ([Q], ([1/3],)),"
+        " ([R], ([racine de 2], [pi], [un nombre long])))"
+    )
+    assert figures_typst.compile_svg("sets", check.replace("LEVELS", levels)).startswith("<svg")
+
+
 def test_the_diagram_rules_edges_compile():
     """Every edge the diagram rule shows (its line styles, a label on its arrow, two arrows
     side by side) compiles between two nodes: a fragment out of step with fletcher (a "bend"
