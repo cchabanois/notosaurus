@@ -1,14 +1,24 @@
 name: Documentation site
 
 # Builds the user documentation (docs/, Astro Starlight) on every pull request that
-# touches it, and publishes it to GitHub Pages from main.
+# touches it, and publishes it to GitHub Pages when a release is published: the site
+# describes the version users have, not main's features still unreleased.
+# docs/public/relay.json is read by the installed apps (where the relays are), whatever
+# their version: it is always main's, published as soon as it changes on main.
 on:
+  release:
+    types: [published]
   push:
     branches: [main]
-    paths: [docs/**, .github/workflows/docs.yml]
+    paths: [docs/public/relay.json]
   pull_request:
     paths: [docs/**, .github/workflows/docs.yml]
   workflow_dispatch:
+    inputs:
+      ref:
+        description: "Build the pages from this tag or branch (empty: the latest release)"
+        required: false
+        default: ""
 
 permissions:
   contents: read
@@ -21,7 +31,34 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
+      - name: Choose the pages' version
+        id: version
+        env:
+          GH_TOKEN: ${{ github.token }}
+          EVENT: ${{ github.event_name }}
+          RELEASE_TAG: ${{ github.event.release.tag_name }}
+          INPUT_REF: ${{ inputs.ref }}
+        run: |
+          case "$EVENT" in
+            pull_request) ref="" ;;  # the pull request's own
+            release) ref="$RELEASE_TAG" ;;
+            *) ref="${INPUT_REF:-$(gh release view --repo "$GITHUB_REPOSITORY" --json tagName -q .tagName)}" ;;
+          esac
+          echo "ref=$ref" >> "$GITHUB_OUTPUT"
+          echo "::notice::Pages built from ${ref:-the pull request}"
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ steps.version.outputs.ref }}
+      - name: Take main's relay.json
+        if: github.event_name != 'pull_request'
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: main
+          path: main
+          sparse-checkout: docs/public/relay.json
+          sparse-checkout-cone-mode: false
+      - if: github.event_name != 'pull_request'
+        run: cp main/docs/public/relay.json docs/public/relay.json && rm -rf main
       - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         with:
           node-version: 24

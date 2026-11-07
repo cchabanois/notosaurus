@@ -147,9 +147,14 @@ The server never builds sentences: its errors are codes (`llm.overloaded`,
 
 The user documentation is a website in `docs/`, built with
 [Astro Starlight](https://starlight.astro.build) and published on GitHub Pages
-(https://cchabanois.github.io/notosaurus/) by the *Documentation site* workflow, on every
-merge on `main` that changes it. It needs Node.js only to build the site; Notosaurus itself
-doesn't use it.
+(https://cchabanois.github.io/notosaurus/) by the *Documentation site* workflow when a
+release is published, from that release's tag: the site describes the version users have, so
+a pull request documents its feature with its code, and the page goes online with the release.
+A pull request only builds the site, to check it. Two exceptions: `docs/public/relay.json`
+(where the relays are, read by every installed app) is always `main`'s, published as soon as
+it changes there; and a fix that can't wait for the next release is published by running the
+workflow by hand (from `main`, the tag or branch to build as its input). It needs Node.js
+only to build the site; Notosaurus itself doesn't use it.
 
 ```sh
 cd docs
