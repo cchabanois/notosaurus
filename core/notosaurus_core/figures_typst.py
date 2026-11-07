@@ -474,6 +474,18 @@ def _unshadowed(body: str) -> str:
     return "".join(renamed(s) if k == "code" else embedded(s) for k, s in _segments(body))
 
 
+# A grid's or a table's columns (rows) given as fractions of the page (`columns: (1fr, 1fr)`):
+# a figure's page is as wide as what it holds, so a fraction of it is nothing, every column
+# drawn on the others (four molecules one on another). Each such size made `auto`.
+TRACKS = re.compile(r"\b(columns|rows)\s*:\s*(\((?:[^()]|\([^()]*\))*\)|[\d.]+fr\b)")
+FRACTION = re.compile(r"(?<![\w.])[\d.]*\d\s*fr\b")
+
+
+def _no_fractions(body: str) -> str:
+    """Grids' and tables' fractional tracks sized by their content instead (TRACKS)."""
+    return TRACKS.sub(lambda m: f"{m.group(1)}: {FRACTION.sub('auto', m.group(2))}", body)
+
+
 def source(family: str, body: str) -> str:
     """The Typst document of a figure of `family`: its preamble, then what the AI wrote."""
     # "<" and ">" written as HTML's entities (an arrow "-|&gt;"): Typst has none of them
@@ -482,7 +494,7 @@ def source(family: str, body: str) -> str:
         body = _broken_lines(EDGE_MARKS.sub(_unbarred, body))
     if FORBIDDEN.search(body):
         raise Unusable("Only drawing commands: no import, include, file or plugin.")
-    body = _unshadowed(body)
+    body = _no_fractions(_unshadowed(body))
     separator = decimal_separator(body)
     body = _decimal_commas(body, separator == ",")
     preamble = FAMILIES[family].preamble.replace(SEPARATOR, f'#let decimal-separator = "{separator}"')
