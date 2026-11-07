@@ -1282,7 +1282,8 @@ def test_a_solids_lengths_beside_its_edges():
     [
         '#sphere(3, centre-name: "O", radius-label: {}[$R = 3$ cm])',  # too long above: beyond its end
         '#sphere(3, centre-name: "O", radius-label: {}[$R$])',
-        '#sphere(5, centre-name: "O", section: 3, section-centre: "H", section-label: {}[$r$], radius-label: {}[5 cm], distance-label: {}[3 cm])',
+        '#sphere(5, centre-name: "O", section: 3, section-centre: "H", section-label: {}[$r$], '
+        "radius-label: {}[5 cm], distance-label: {}[3 cm])",
         '#sphere(5, centre-name: "O", section: 4, section-centre: "H", section-label: {}[3 cm])',
     ],
 )
