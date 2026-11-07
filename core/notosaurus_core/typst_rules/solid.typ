@@ -200,7 +200,7 @@
 
 // A cone on its base, its apex above the centre; its contour the two tangents from the
 // apex to the base's ellipse (computed), the base's hidden arc dashed
-#let cone(radius, height, apex-name: none, centre-name: none, base-name: none, radius-label: none, height-label: none, slant-label: none, largest: none) = _round(
+#let cone(radius, height, apex-name: none, centre-name: none, base-name: none, radius-label: none, height-label: none, slant-label: none, largest: none) = context _round(
   calc.max(2 * radius, height), largest, s => {
     import cetz.draw: *
     let (r, h, ry) = (radius * s, height * s, radius * s * _flat)
@@ -220,7 +220,16 @@
     if apex-name != none { _label((0, h + 0.25), apex-name) }
     if base-name != none { _label((tx + 0.25, ty), base-name) }
     if radius-label != none { line(o, (r, 0), stroke: _hidden); _label((r / 2, -0.25), radius-label) }
-    if height-label != none { _label((-0.12, h * 0.45), height-label, anchor: "east") }
+    // the height's length beside [SO], on its left, as high as it fits inside the cone (the
+    // slant line nearer the axis as it rises; the base's hidden arc below): else beside the cone
+    if height-label != none {
+      let w = measure(text(11pt, height-label)).width / 1cm
+      let top = h - (w + 0.4) * (h - ty) / tx - 0.25  // the label's top, nearer the slant, clear of it
+      let y = calc.min(h * 0.45, top)
+      if y >= ry + 0.25 { _label((-0.12, y), height-label, anchor: "east") } else {
+        _dimension((-r - 0.4, 0), (-r - 0.4, h), height-label, (-0.15 - w / 2, 0))
+      }
+    }
     if slant-label != none { _label((tx / 2 + 0.3, (ty + h) / 2 + 0.1), slant-label, anchor: "west") }
   },
 )
