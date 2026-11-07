@@ -17,6 +17,9 @@ What a coding agent most often gets wrong here. The rest is in
   with success, and only when the maintainer says so.
 - Commit only what the change needs. Folders that are local or private stay out of git
   (`data/`, `.env`, and any folder a maintainer keeps for their own notes).
+- Stacked pull requests: merging the parent deletes its branch and closes the child; retarget
+  the child to `main` first. Once a pull request is merged, remove its worktree and its local
+  branch.
 
 ## Before pushing
 
@@ -27,8 +30,20 @@ What a coding agent most often gets wrong here. The rest is in
 node --test tests/frontend/*.test.mjs  # when static/*.js changes
 ```
 
+`tests/test_page.py` is skipped, without failing, when Playwright isn't installed: check
+that it ran.
+
 Android (`android/`): its unit tests (`./gradlew testDebugUnitTest`), and its device tests on
-an emulator, never on a personal phone (they uninstall the app and its lessons).
+an emulator, never on a personal phone (they uninstall the app and its lessons). Use an
+emulator of your own (`ANDROID_SERIAL`), never one another session drives, and timeouts near
+a run's normal duration (about 180 s for the device tests) so a hang fails fast.
+
+Testing with Anki on the computer: Anki runs once per user. `anki -b <dir>` starts no second
+instance while another Anki is open ("Already running"), and the add-on answering on port
+8000 may be another session's. Test in an Anki base of your own, never the maintainer's
+profiles; check `GET /api/anki/status` (its profile) before sending, and give your add-on
+another `port` in its config when 8000 is taken. `NOTOSAURUS_LLM=fake` (or the settings'
+`fake` provider) makes lessons at no cost.
 
 ## Conventions
 
@@ -43,6 +58,14 @@ an emulator, never on a personal phone (they uninstall the app and its lessons).
 - `requirements.txt` is compiled for every system: `uv pip compile requirements.in --universal
   --python-version 3.13 -o requirements.txt`. Dependabot's own compile drops the platform
   markers (`test_compiled_for_every_system` fails): redo its pull request that way.
+- `static/` runs in Android's WebView from version 124 (Chrome 124): no JavaScript, CSS or
+  web API newer than that.
+- What the app meets was often made by an older version: notes and note types sent by 1.0.0
+  (its front/back notes have no `Id`), the computer's page served by an older add-on, an app
+  already released talking to today's relay (its API only grows within `/v1`:
+  `tests/test_relay_compat.py`). A change to how notes are found, keyed or typed is tried on
+  notes as 1.0.0 made them (`git archive v1.0.0`, its add-on in a test Anki), not only on
+  today's.
 
 ## The AI's rules and figures
 
