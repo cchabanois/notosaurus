@@ -21,6 +21,7 @@ Each pull request's entries (the `## Changelog` of its description) are put unde
 
 ### Changed
 
+- Figures drawn in Typst use the same plain font as the other figures, and timelines' text is larger.
 - The automatic instruction makes cards that read a lesson's charts and curves (its tables of counts or of measures), the chart or the curve redrawn on the front.
 - The Android app is about a third smaller.
 
