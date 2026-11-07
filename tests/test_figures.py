@@ -1181,6 +1181,23 @@ def test_the_figures_bench_compiles_a_run_again(tmp_path):
     assert bench_figures.recompiled(tmp_path, {"problem": "500 Internal"}) == {"error": "500 Internal"}
 
 
+@pytest.mark.parametrize("cone", ["cone(3, 4", "cone(2, 5", "cone(4, 1.5"])
+def test_a_cones_height_beside_it(cone):
+    """A cone's height ("4 cm") where it fits, never across its slant or its base: the label
+    drawn red, no line's pixel under it."""
+    from PIL import Image
+
+    def png(label: str) -> Image.Image:
+        svg = figures.clean(figures_typst.compile_svg("solid", f"#{cone}, height-label: {label}[4 cm])"))
+        return Image.open(io.BytesIO(figures.to_png(svg))).convert("RGB")
+
+    bare, labelled = png("hide"), png("text(fill: rgb(255, 0, 0))")
+    lines = {(x, y) for y in range(bare.height) for x in range(bare.width) if sum(bare.getpixel((x, y))) < 300}
+    reddish = lambda p: p[0] > 200 and p[1] < 140  # noqa: E731
+    reds = {(x, y) for y in range(labelled.height) for x in range(labelled.width) if reddish(labelled.getpixel((x, y)))}
+    assert reds and not lines & reds
+
+
 def test_a_solids_lengths_beside_its_edges():
     """A cuboid's lengths ("10 mm") beside their edges, outwards, never across an edge: the
     labels drawn red, no edge's pixel under them."""
