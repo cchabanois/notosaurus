@@ -12,7 +12,11 @@ It **never reads the app's settings, lessons or data folder**: the AI configurat
 
 | Path | |
 |---|---|
-| `notosaurus_core/llm.py` | the entry points: cards from photos (`extract_cards`), corrections, explanations, a prompt tidied up, one interface over the services |
+| `notosaurus_core/llm.py` | the entry points: cards from photos (`extract_cards`), and every other task under one name (`llm.fix_card`, `llm.made_figure`…) |
+| `notosaurus_core/ai.py` | what every call to the AI shares: the schema the AI fills, the photos as the model sees them, the provider asked (`_ask_provider`), the model's check |
+| `notosaurus_core/correction.py` | the cards corrected by the AI (the lesson's, one card's), each staying the card it was |
+| `notosaurus_core/figure_making.py` | a card's exact figure drawn by the AI (Typst, else SVG) and checked ("🔍 Check") |
+| `notosaurus_core/tasks.py` | the small tasks: a card explained, a dictation transcribed, instructions tidied up, pictures picked or planned |
 | `notosaurus_core/providers/` | one module per AI service: `gemini.py` (key or Vertex AI, fallback models), `anthropic.py`, `openai_like.py` (OpenAI, OpenRouter, any compatible service: Ollama, LM Studio…), `demo.py` (the demo AI, provider `fake`: canned cards, no key) |
 | `notosaurus_core/prompts.py` | what the AI is told: each task's rules, the pupils' safety rules, the requests built from the user's prompt |
 | `notosaurus_core/calls.py` | what every call shares: the photos sent, the errors, each call recorded with its model, tokens and cost, the cards read as the AI writes them |

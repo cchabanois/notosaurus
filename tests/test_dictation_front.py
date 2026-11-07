@@ -45,6 +45,6 @@ def test_extraction_of_a_dictation_never_gives_its_answer(monkeypatch):
             card = {"front": "Écris le mot : <b>maison</b>", "back": "maison", "figure_kind": ""}
             return schema.model_validate({"deck": "Dictée", "cards": [card], "dictation": dictation})
 
-        monkeypatch.setattr(llm, "_ask_provider", answer)
+        monkeypatch.setattr("notosaurus_core.ai._ask_provider", answer)
         found = asyncio.run(llm.extract_cards(AIConfig(llm="gemini"), [], "Dictée : maison"))
         assert found.deck.cards[0].front == front

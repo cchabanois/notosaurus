@@ -495,22 +495,24 @@ def test_test_image_and_json(admin, monkeypatch):
     async def answer(color):
         return llm._CheckAnswer(color=color)
 
-    monkeypatch.setattr(llm, "_ask_provider", lambda s, images, text, schema, **_: answer("Red"))
+    monkeypatch.setattr("notosaurus_core.ai._ask_provider", lambda s, images, text, schema, **_: answer("Red"))
     assert (test().json()["vision"], test().json()["json"]) == (True, True)
 
-    monkeypatch.setattr(llm, "_ask_provider", lambda s, images, text, schema, **_: answer("I see no image"))
+    monkeypatch.setattr(
+        "notosaurus_core.ai._ask_provider", lambda s, images, text, schema, **_: answer("I see no image")
+    )
     assert (test().json()["vision"], test().json()["json"]) == (False, True)
 
     async def not_json(*_, **__):
         raise llm.ExtractionError("llm.invalid_answer")
 
-    monkeypatch.setattr(llm, "_ask_provider", not_json)
+    monkeypatch.setattr("notosaurus_core.ai._ask_provider", not_json)
     assert test().json()["json"] is False
 
     async def bad_key(*_, **__):
         raise llm.ExtractionError("llm.invalid_key", provider="Gemini")
 
-    monkeypatch.setattr(llm, "_ask_provider", bad_key)
+    monkeypatch.setattr("notosaurus_core.ai._ask_provider", bad_key)
     assert test().status_code == 502 and test().json()["detail"]["code"] == "llm.invalid_key"
 
 
@@ -528,7 +530,7 @@ def test_model_without_vision_refuses_image(admin, monkeypatch):
             detail="Multimodal data provided, but model does not support multimodal requests.",
         )
 
-    monkeypatch.setattr(llm, "_ask_provider", refuse)
+    monkeypatch.setattr("notosaurus_core.ai._ask_provider", refuse)
     r = admin.post("/api/admin/test", headers=ADMIN).json()
     assert (r["vision"], r["json"]) == (False, None)
     assert "multimodal" in r["refused"]

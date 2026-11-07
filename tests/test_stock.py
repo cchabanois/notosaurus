@@ -399,7 +399,7 @@ def test_sorting_keeps_the_indexes_that_exist_once(monkeypatch):
         assert schema is Sorted and "The card:" not in text  # no card: not said
         return Sorted(fitting=[1, 5, -1, 1, 0])
 
-    monkeypatch.setattr(llm, "_ask_provider", ask)
+    monkeypatch.setattr("notosaurus_core.ai._ask_provider", ask)
     assert run(llm.sort_pictures(AIConfig(llm="gemini"), [llm.Image(jpeg(), "image/jpeg")] * 3, "dog")) == [1, 0]
 
 

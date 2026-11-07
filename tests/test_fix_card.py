@@ -20,7 +20,7 @@ def answering(monkeypatch, *cards: dict, refused: bool = False) -> list[str]:
         sent.append(text)
         return schema.model_validate({"cards": list(cards), "summary": "<b>Date</b> fixed", "refused": refused})
 
-    monkeypatch.setattr(llm, "_ask_provider", answer)
+    monkeypatch.setattr("notosaurus_core.ai._ask_provider", answer)
     return sent
 
 

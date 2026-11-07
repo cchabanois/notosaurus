@@ -453,7 +453,7 @@ def test_a_lesson_drawing_cut_out_and_taken_first(monkeypatch, tmp_path):
     async def draw(s, subject):
         return PNG
 
-    monkeypatch.setattr(llm, "_ask_provider", answer)
+    monkeypatch.setattr("notosaurus_core.ai._ask_provider", answer)
     monkeypatch.setattr(pictures, "draw", draw)
     cards = [
         Card(front="le chat", back="the cat", picture_prompt="a cat", id="c"),
@@ -476,7 +476,7 @@ def test_no_lesson_drawing_when_the_call_fails(monkeypatch, tmp_path):
     async def answer(s, images, text, schema, system=None, light=False, **options):
         raise llm.ExtractionError("llm.overloaded", provider="Gemini")
 
-    monkeypatch.setattr(llm, "_ask_provider", answer)
+    monkeypatch.setattr("notosaurus_core.ai._ask_provider", answer)
     cards = [Card(front="le chat", back="the cat", picture_prompt="a cat", id="c")]
     photo = llm.Image(_page_with_a_drawing(), "image/jpeg")
     assert run(pictures.lesson_drawings(AIConfig(llm="gemini", gemini_api_key="k"), [photo], cards)) == {}

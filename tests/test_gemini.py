@@ -9,7 +9,7 @@ from google.genai import errors, types
 from helpers import run
 
 from app import settings
-from notosaurus_core import llm
+from notosaurus_core import ai, llm
 from notosaurus_core.config import AIConfig
 from notosaurus_core.figures import Drawing
 from notosaurus_core.providers import gemini
@@ -43,7 +43,7 @@ def test_light_tasks_think_as_little_as_each_model_allows(client, monkeypatch):
     s = settings.current()
 
     def draw():
-        return asyncio.run(llm._ask_provider(s, [], "a triangle", Drawing, "rules", light=True))
+        return asyncio.run(ai._ask_provider(s, [], "a triangle", Drawing, "rules", light=True))
 
     assert draw().svg == "<svg/>"  # refused "minimal": "low", at once
     assert fake.levels == [
@@ -59,7 +59,7 @@ def test_light_tasks_think_as_little_as_each_model_allows(client, monkeypatch):
     s = settings.current()
     fake.levels.clear()
     draw()
-    asyncio.run(llm._ask_provider(s, [], "cards", Drawing, "rules"))
+    asyncio.run(ai._ask_provider(s, [], "cards", Drawing, "rules"))
     assert fake.levels == [("gemini-3.5-flash-lite", types.ThinkingLevel.MINIMAL), ("gemini-3.5-flash-lite", None)]
 
 
@@ -77,7 +77,7 @@ def test_other_refusals_are_still_errors(client, monkeypatch):
     fake = Refusing()
     monkeypatch.setattr(gemini, "_gemini_client", lambda s: fake)
     try:
-        asyncio.run(llm._ask_provider(settings.current(), [], "x", Drawing, "rules", light=True))
+        asyncio.run(ai._ask_provider(settings.current(), [], "x", Drawing, "rules", light=True))
     except llm.ExtractionError as e:
         assert e.code == "llm.api_error" and fake.levels == ["gemini-3.8-flash"]  # no second try
     else:
@@ -118,7 +118,7 @@ def test_no_quota_left_the_fallback_answers(client, monkeypatch):
 
     async def asked():
         with llm.telling(told.append):  # the user told another model is asked
-            return await llm._ask_provider(s, [], "cards", Drawing, "rules")
+            return await ai._ask_provider(s, [], "cards", Drawing, "rules")
 
     assert asyncio.run(asked()).svg == "<svg/>"
     assert [m for m, _ in fake.levels] == ["gemini-3.8-flash", "gemini-3.5-flash"]
@@ -130,7 +130,7 @@ def test_no_quota_left_the_fallback_answers(client, monkeypatch):
 
     # No quota anywhere: said, with what to do (not "try again in a moment")
     fake.without_quota.add("gemini-3.5-flash")
-    for call in (lambda: llm._ask_provider(s, [], "cards", Drawing, "rules"), lambda: llm.check(s)):
+    for call in (lambda: ai._ask_provider(s, [], "cards", Drawing, "rules"), lambda: llm.check(s)):
         try:
             asyncio.run(call())
         except llm.ExtractionError as e:
@@ -164,8 +164,8 @@ def test_quick_lessons_think_little(monkeypatch):
     fake = FakeGemini()
     monkeypatch.setattr(gemini, "_gemini_client", lambda s: fake)
     s = AIConfig(gemini_api_key="k", model="gemini-3.8-flash")
-    asyncio.run(llm._ask_provider(s, [], "cards", Drawing, "rules", quick=True))
-    asyncio.run(llm._ask_provider(s, [], "cards", Drawing, "rules"))
+    asyncio.run(ai._ask_provider(s, [], "cards", Drawing, "rules", quick=True))
+    asyncio.run(ai._ask_provider(s, [], "cards", Drawing, "rules"))
     assert fake.levels == [("gemini-3.8-flash", types.ThinkingLevel.LOW), ("gemini-3.8-flash", None)]
 
 
@@ -430,7 +430,7 @@ def test_the_answer_read():
 
 
 def test_an_ai_slow_to_answer_said(monkeypatch):
-    """No answer after a while: the user told (llm.SLOW_S, longer when the model thinks);
+    """No answer after a while: the user told (ai.SLOW_S, longer when the model thinks);
     an answer in time: nothing said."""
 
     async def answer_after(seconds):
@@ -438,13 +438,13 @@ def test_an_ai_slow_to_answer_said(monkeypatch):
             await asyncio.sleep(seconds)
             return Drawing(svg="<svg/>")
 
-        monkeypatch.setattr(llm, "_provider", provider)
+        monkeypatch.setattr("notosaurus_core.ai._provider", provider)
         told = []
         with llm.telling(told.append):
-            await llm._ask_provider(AIConfig(llm="gemini"), [], "t", Drawing, "rules", light=True)
+            await ai._ask_provider(AIConfig(llm="gemini"), [], "t", Drawing, "rules", light=True)
         return told
 
-    monkeypatch.setattr(llm, "SLOW_S", 0.05)
+    monkeypatch.setattr("notosaurus_core.ai.SLOW_S", 0.05)
     assert asyncio.run(answer_after(0.2)) == [{"step": "slow"}]
     assert asyncio.run(answer_after(0.0)) == []
 
