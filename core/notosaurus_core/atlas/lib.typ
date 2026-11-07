@@ -22,15 +22,16 @@
   panic("no country called \"" + name + "\" in the atlas: its usual name, or its three-letter code (\"ESP\")")
 }
 
-// A city: among those of the countries shown first, else the most populated of that name
+// A city: among those of the countries shown first, else a place of history lessons (h:
+// Cordoue, Spain's, not Argentina's), else the most populated of that name
 #let find-city(name, shown) = {
   let key = fold(name)
   let found = atlas.cities.filter(c => key in c.k)
   if found.len() == 0 {
-    panic("no city called \"" + name + "\" in the atlas (a country's capital and its largest cities): leave it out")
+    panic("no city called \"" + name + "\" in the atlas (a country's capital, its largest cities, the places of history lessons): leave it out")
   }
   let theirs = found.filter(c => c.c in shown)
-  (if theirs.len() > 0 { theirs } else { found }).sorted(key: c => -c.p).first()
+  (if theirs.len() > 0 { theirs } else { found }).sorted(key: c => (-c.at("h", default: 0), -c.p)).first()
 }
 
 #let size(b) = (b.at(2) - b.at(0)) * (b.at(3) - b.at(1))

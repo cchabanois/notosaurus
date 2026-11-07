@@ -7,14 +7,21 @@ the data or the function (VERSION raised with it), then commit what it wrote.
 
 Besides atlas.json (countries, cities, lakes: every map reads it), files a map reads only
 when it asks for them: rivers.json, reliefs.json (mountains, deserts, plains, peninsulas,
-islands), waters.json (oceans, seas, gulfs, straits, lakes), regions/<country code>.json
+islands), waters.json (oceans, seas, gulfs, straits, lakes: their short names too), regions/<country code>.json
 (its first-level divisions, and the groups Natural Earth gives them: France's régions).
 
-  .venv/bin/python tools/atlas.py [folder]  (the Natural Earth files read there when it has them)
+  .venv/bin/python tools/atlas.py [folder] [--refresh-history]
+
+The sources read from `folder` when it has them (by their names), else downloaded: Natural
+Earth's and CLDR's at a fixed version. The places of history (HISTORY) are read from
+tools/atlas-history.json, committed: the same atlas whatever day it is made; Wikidata is asked
+only with --refresh-history (HISTORY changed, or its data refreshed), which writes that file
+again.
 
 Needs shapely (requirements-dev.txt): regions simplified together, their borders shared.
 """
 
+import gzip
 import io
 import json
 import math
@@ -22,6 +29,7 @@ import re
 import sys
 import tarfile
 import unicodedata
+import urllib.parse
 import urllib.request
 from collections import defaultdict
 from concurrent.futures import ThreadPoolExecutor
@@ -35,7 +43,7 @@ ROOT = Path(__file__).resolve().parent.parent
 CORE = ROOT / "core" / "notosaurus_core"
 LIB = CORE / "atlas" / "lib.typ"
 TARGET = CORE / "typst"
-NAME, VERSION = "notosaurus-atlas", "0.2.0"
+NAME, VERSION = "notosaurus-atlas", "0.3.0"
 SOURCE = "https://raw.githubusercontent.com/nvkelso/natural-earth-vector/v5.1.2/geojson/"
 COUNTRIES = "ne_50m_admin_0_countries.geojson"  # 1:50m: a country's shape, light enough
 PLACES = "ne_10m_populated_places.geojson"  # 1:10m: the cities, their names in many languages
@@ -46,6 +54,77 @@ WATERS = "ne_10m_geography_marine_polys.geojson"  # oceans, seas, gulfs, straits
 LAKES = "ne_50m_lakes.geojson"
 REGIONS = "ne_10m_admin_1_states_provinces.geojson"  # each country's first-level divisions
 LANGUAGES = ("FR", "EN", "DE", "ES", "IT", "PT")  # the page's languages
+# Countries' usual names (Unicode CLDR: "Chine", "Stati Uniti", "Vietnã"; Natural Earth's are
+# sometimes the official ones, "République populaire de Chine"), Brazil's Portuguese as CLDR's pt
+CLDR = "https://cdn.jsdelivr.net/npm/cldr-localenames-full@46.0.0/main/{}/territories.json"
+CLDR_LANGUAGES = ("fr", "en", "de", "es", "it", "pt")
+CLDR_LICENCE = "https://cdn.jsdelivr.net/npm/cldr-localenames-full@46.0.0/LICENSE"  # shipped with them, as it asks
+# The places of history lessons Natural Earth lacks or names otherwise (Aix-la-Chapelle,
+# Cordoue, Lutèce, Constantinople, Troie): from Wikidata (CC0), each by its English Wikipedia
+# article (never ambiguous), its names in the page's languages and its coordinates there, plus
+# names Wikidata lacks; preferred among places of the same name when no country tells them apart
+WIKIDATA = "https://www.wikidata.org/w/api.php"
+HISTORY_FILE = ROOT / "tools" / "atlas-history.json"  # what Wikidata gave for HISTORY, kept
+HISTORY = [
+    # Antiquity
+    *[(t, ()) for t in ("Ur", "Uruk", "Babylon", "Nineveh", "Memphis, Egypt", "Thebes, Egypt", "Giza", "Jericho")],
+    *[
+        (t, ())
+        for t in ("Byblos", "Tyre, Lebanon", "Sidon", "Persepolis", "Troy", "Athens", "Sparta", "Olympia, Greece")
+    ],
+    *[(t, ()) for t in ("Delphi", "Marathon, Greece", "Alexandria", "Carthage", "Pompeii", "Ostia Antica")],
+    *[(t, ()) for t in ("Alesia (city)", "Lutetia", "Lugdunum", "Massalia", "Bibracte", "Gergovia", "Antioch")],
+    ("Ancient Corinth", ("Corinthe", "Corinth", "Korinth", "Corinto")),
+    *[(t, ()) for t in ("Constantinople", "Byzantium", "Ctesiphon", "Chang'an", "Luoyang", "Pataliputra")],
+    # The Middle Ages
+    *[(t, ()) for t in ("Aachen", "Ravenna", "Córdoba, Spain", "Toledo, Spain", "Granada", "Kairouan", "Fez, Morocco")],
+    *[(t, ()) for t in ("Venice", "Genoa", "Pisa", "Florence", "Bruges", "Ghent", "Lübeck", "Veliky Novgorod")],
+    *[(t, ()) for t in ("Reims", "Chartres", "Cluny", "Avignon", "Poitiers", "Tours", "Orléans", "Bouvines")],
+    *[(t, ()) for t in ("Crécy-en-Ponthieu", "Azincourt", "Rouen", "Troyes", "Saint-Denis, Seine-Saint-Denis")],
+    *[(t, ()) for t in ("Carcassonne", "Aigues-Mortes", "Canterbury", "Hastings", "Santiago de Compostela")],
+    *[(t, ()) for t in ("Timbuktu", "Samarkand", "Mecca")],
+    # Modern times
+    *[(t, ()) for t in ("Palos de la Frontera", "Cádiz", "Kozhikode", "Goa", "Malacca City", "Cusco", "Tenochtitlan")],
+    *[(t, ()) for t in ("Santo Domingo", "Wittenberg", "Worms, Germany", "Augsburg", "Geneva", "Trento")],
+    *[(t, ()) for t in ("La Rochelle", "Versailles, Yvelines", "Saint-Malo", "Quebec City", "Antwerp", "Edo")],
+    # The 18th to 20th centuries
+    *[(t, ()) for t in ("Valmy", "Varennes-en-Argonne", "Slavkov u Brna", "Waterloo, Belgium", "Sedan, Ardennes")],
+    *[(t, ()) for t in ("Verdun", "Sarajevo", "Hiroshima", "Nagasaki", "Oradour-sur-Glane", "Vichy", "Yalta")],
+    ("Điện Biên Phủ", ("Diên Biên Phu", "Dien Bien Phu", "Ðiện Biên Phủ", "Điện Biên Phủ")),
+    *[(t, ()) for t in ("Nuremberg", "Potsdam", "Gettysburg, Pennsylvania")],
+]
+# Cities Natural Earth has under their name of today, by their country and that name (folded):
+# their former names, in the page's languages (Leningrad, Saïgon, Bombay, Pékin)
+OLD_NAMES = {
+    ("RUS", "st petersburg"): (
+        "Petrograd",
+        "Pétrograd",
+        "Pietrogrado",
+        "Petrogrado",
+        "Leningrad",
+        "Léningrad",
+        "Leningrado",
+    ),
+    ("RUS", "volgograd"): ("Stalingrad", "Stalingrado", "Tsaritsyne", "Tsaritsyn", "Zarizyn"),
+    ("VNM", "ho chi minh city"): ("Saïgon", "Saigon", "Saigón"),
+    ("IND", "mumbai"): ("Bombay", "Bombaim"),
+    ("IND", "chennai"): ("Madras",),
+    ("IND", "kolkata"): ("Calcutta", "Calcutá", "Kalkutta"),
+    ("CHN", "beijing"): ("Pékin", "Peking", "Pequim", "Pechino", "Pekín"),
+    ("CHN", "guangzhou"): ("Canton", "Kanton", "Cantão", "Cantón"),
+    ("CHN", "nanjing"): ("Nankin", "Nanking", "Nanquim", "Nanchino"),
+    ("COD", "kinshasa"): ("Léopoldville", "Leopoldville"),
+    ("ZWE", "harare"): ("Salisbury",),
+    ("MMR", "yangon"): ("Rangoun", "Rangoon", "Rangun"),
+    ("POL", "gdansk"): ("Dantzig", "Danzig", "Dánzig", "Danzica"),
+    ("POL", "wroclaw"): ("Breslau", "Breslavia"),
+    ("RUS", "kaliningrad"): ("Königsberg", "Kœnigsberg", "Konigsberg"),
+    ("SVK", "bratislava"): ("Presbourg", "Pressburg", "Presburgo"),
+    ("UKR", "lviv"): ("Lemberg", "Lwów", "Lvov", "Léopol"),
+    ("UKR", "kyiv"): ("Kiev", "Kiew", "Kíev"),
+    ("KAZ", "almaty"): ("Alma-Ata",),
+    ("MOZ", "maputo"): ("Lourenço Marques",),
+}
 CITIES = 15  # per country, the most populated, its capital too
 NOTABLE = 3  # and the cities Natural Earth ranks this notable or more (Vladivostok), wherever they are
 TOLERANCE = 0.03  # degrees: a point closer than this to the line it would cut away goes
@@ -154,14 +233,97 @@ def names(properties: dict, own: str, *more: str) -> list[str]:
     return list(dict.fromkeys(n.strip() for n in [*found, own, *more] if n and n.strip()))
 
 
-def download(name: str, folder: Path | None = None) -> dict:
+def download(name: str, folder: Path | None = None, url: str | None = None) -> dict:
+    """A JSON file, from `folder` when it has it (by that name), else from its URL (Natural
+    Earth's, by default)."""
     if folder and (folder / name).is_file():
         return json.loads((folder / name).read_text(encoding="utf-8"))
-    with urllib.request.urlopen(SOURCE + name, timeout=120) as response:
+    request = urllib.request.Request(url or SOURCE + name, headers={"User-Agent": "notosaurus-atlas (tools/atlas.py)"})
+    with urllib.request.urlopen(request, timeout=120) as response:
         return json.loads(response.read())
 
 
-def atlas(countries: dict, places: dict) -> dict:
+def download_text(name: str, folder: Path | None, url: str) -> str:
+    """A text file, from `folder` when it has it (by that name), else from its URL."""
+    if folder and (folder / name).is_file():
+        return (folder / name).read_text(encoding="utf-8")
+    request = urllib.request.Request(url, headers={"User-Agent": "notosaurus-atlas (tools/atlas.py)"})
+    with urllib.request.urlopen(request, timeout=120) as response:
+        return response.read().decode("utf-8")
+
+
+def usual_names(folder: Path | None = None) -> dict[str, list[str]]:
+    """Each country's usual names in the page's languages, by its two-letter code (CLDR):
+    its short and variant ones too ("UK", "Birmanie")."""
+    found: dict[str, list[str]] = defaultdict(list)
+    for lang in CLDR_LANGUAGES:
+        data = download(f"cldr-{lang}.json", folder, CLDR.format(lang))
+        for key, name in data["main"][lang]["localeDisplayNames"]["territories"].items():
+            code = key.split("-alt-")[0]
+            if len(code) == 2 and code.isalpha():
+                found[code].append(name)
+    return found
+
+
+def history(folder: Path | None = None, refresh: bool = False) -> list[dict]:
+    """HISTORY's places, as HISTORY_FILE keeps them; from Wikidata when `refresh` (then kept)."""
+    titles = [t for t, _ in HISTORY]
+    if not refresh:
+        kept = json.loads(HISTORY_FILE.read_text(encoding="utf-8"))
+        if [p["title"] for p in kept] != titles:
+            raise SystemExit(f"HISTORY changed since {HISTORY_FILE.name} was written: run with --refresh-history")
+        return [{"n": p["n"], "xy": tuple(p["xy"])} for p in kept]
+    places = wikidata_places(folder)
+    kept = [{"title": t, "n": p["n"], "xy": list(p["xy"])} for t, p in zip(titles, places, strict=True)]
+    HISTORY_FILE.write_text(json.dumps(kept, ensure_ascii=False, indent=1) + "\n", encoding="utf-8")
+    return places
+
+
+def wikidata_places(folder: Path | None = None) -> list[dict]:
+    """HISTORY's places from Wikidata: (names, (longitude, latitude)) each, the names it
+    gives in the page's languages then HISTORY's own."""
+    titles = [t for t, _ in HISTORY]
+    entities: dict[str, dict] = {}
+    for start in range(0, len(titles), 45):  # the API's most per call: 50
+        batch = titles[start : start + 45]
+        query = urllib.parse.urlencode(
+            {
+                "action": "wbgetentities",
+                "sites": "enwiki",
+                "titles": "|".join(batch),
+                "props": "labels|claims|sitelinks",
+                "languages": "fr|en|de|es|it|pt|pt-br",
+                "sitefilter": "enwiki",
+                "redirects": "yes",
+                "format": "json",
+            }
+        )
+        data = download(f"wikidata-{start}.json", folder, f"{WIKIDATA}?{query}")
+        for entity in data["entities"].values():
+            if "missing" not in entity:
+                entities[entity["sitelinks"]["enwiki"]["title"]] = entity
+    places = []
+    for title, more in HISTORY:
+        entity = entities.get(title)
+        if entity is None:
+            raise SystemExit(f"Wikidata has no place for the article {title!r}")
+        point = entity["claims"]["P625"][0]["mainsnak"]["datavalue"]["value"]
+        labels = [
+            entity["labels"][lang]["value"]
+            for lang in ("fr", "en", "de", "es", "it", "pt-br", "pt")
+            if lang in entity["labels"]
+        ]
+        places.append({"n": list(dict.fromkeys([*labels, *more])), "xy": (point["longitude"], point["latitude"])})
+    return places
+
+
+def two_letters(properties: dict) -> str:
+    """A country's two-letter code (ISO 3166-1), Natural Earth's own when it gives none."""
+    code = properties.get("ISO_A2")
+    return properties.get("ISO_A2_EH") or "" if code in (None, "-99") else code
+
+
+def atlas(countries: dict, places: dict, usual: dict | None = None, past: list | None = None) -> dict:
     out_countries, codes = {}, {}
     for feature in countries["features"]:
         p = feature["properties"]
@@ -178,6 +340,26 @@ def atlas(countries: dict, places: dict) -> dict:
             "r": rings,
         }
         codes[code] = True
+    # The usual names (CLDR) of a two-letter code only one country has (the Australian
+    # territories have Australia's), and never a name another country already goes by
+    holders: dict[str, list[str]] = defaultdict(list)
+    for feature in countries["features"]:
+        if feature["properties"]["ADM0_A3"] in out_countries:
+            holders[two_letters(feature["properties"])].append(feature["properties"]["ADM0_A3"])
+    taken = defaultdict(set)
+    for code, country in out_countries.items():
+        for key in country["k"]:
+            taken[key].add(code)
+    added: dict[str, set[str]] = defaultdict(set)
+    for two, held in holders.items():
+        if two and len(held) == 1:
+            for name in (usual or {}).get(two, []):
+                if not taken[fold(name)] - {held[0]}:
+                    added[fold(name)].add(held[0])
+    for key, held in added.items():
+        if len(held) == 1:
+            (code,) = held
+            out_countries[code]["k"] = sorted(set(out_countries[code]["k"]) | {key})
     by_country: dict[str, list] = {}
     for feature in places["features"]:
         p = feature["properties"]
@@ -209,7 +391,45 @@ def atlas(countries: dict, places: dict) -> dict:
                     "cap": p.get("ADM0CAP") == 1,
                 }
             )
+    for city in cities:  # their former names (Leningrad, Saïgon)
+        for key in city["k"]:
+            for old in OLD_NAMES.get((city["c"], key), ()):
+                city["k"] = sorted(set(city["k"]) | {fold(old)})
+    for place in past or []:
+        add_place(place, cities, countries)
     return {"scale": SCALE, "letters": LETTERS, "countries": out_countries, "cities": cities}
+
+
+def add_place(place: dict, cities: list[dict], countries: dict) -> None:
+    """A place of history: its names added to Natural Earth's city when it is the same (one of
+    its names, within 0.3°), else a city of its own, in the country it lies in (or the nearest:
+    a coast); preferred ("h") among places of the same name when no country tells them apart."""
+    x, y = place["xy"]
+    keys = {fold(n) for n in place["n"]}
+    for city in cities:
+        if (
+            keys & set(city["k"])
+            and abs(city["x"] - x * SCALE) <= 0.3 * SCALE
+            and abs(city["y"] - y * SCALE) <= 0.3 * SCALE
+        ):
+            city["k"] = sorted(set(city["k"]) | keys)
+            city["h"] = 1
+            return
+    point = shapely.Point(x, y)
+    shapes = [(f["properties"]["ADM0_A3"], shape(f["geometry"])) for f in countries["features"]]
+    code = min(shapes, key=lambda item: item[1].distance(point))[0]
+    cities.append(
+        {
+            "c": code,
+            "n": place["n"],
+            "k": sorted(keys),
+            "x": round(x * SCALE),
+            "y": round(y * SCALE),
+            "p": 0,
+            "cap": False,
+            "h": 1,
+        }
+    )
 
 
 # Rivers Natural Earth names in English or locally only, or in parts named apart (the
@@ -405,6 +625,39 @@ def reliefs(regions: dict) -> list:
     return out
 
 
+# Seas' and oceans' short names that their long ones don't give (water_keys does the rest:
+# "Méditerranée", "Atlantic"), by Natural Earth's English name
+WATER_NAMES = {
+    "Atlantic Ocean": ("Atlantik",),
+    "Pacific Ocean": ("Pazifik",),
+    "Indian Ocean": ("Indik",),
+    "Adriatic Sea": ("Adria",),
+    "Aegean Sea": ("Ägäis",),
+    "Caribbean Sea": ("Caraïbes", "Karibik", "Caribe", "mar do Caribe", "Caraibi", "mar dei Caraibi"),
+    "English Channel": ("Manica", "Mancha"),
+}
+_GENERIC = ("mer ", "ocean ", "oceano ", "mar ", "mare ", "la ")  # folded, before a sea's own name
+_LINKS = {"du", "de", "des", "d", "of", "del", "dei", "della", "do", "da", "das", "dos", "di", "degli"}
+
+
+def water_keys(all_names: list[str]) -> set[str]:
+    """A sea's names as a lesson writes them, short: without "mer", "océan", "mar", "oceano"
+    ahead or "Sea", "Ocean" behind ("Méditerranée", "Atlantique", "Pacific"), unless what is
+    left starts with a link ("mer du Nord"), and WATER_NAMES'."""
+    keys = set()
+    for name in all_names:
+        key = fold(name)
+        for generic in _GENERIC:
+            rest = key.removeprefix(generic)
+            if rest != key and rest and rest.split()[0] not in _LINKS:
+                keys.add(rest)
+        for generic in (" ocean", " sea"):
+            if key.endswith(generic) and key != generic.strip():
+                keys.add(key.removesuffix(generic))
+        keys |= {fold(n) for n in WATER_NAMES.get(name, ())}
+    return keys
+
+
 def waters(marine: dict, lakes: dict) -> list:
     out = []
     for feature in marine["features"] + lakes["features"]:
@@ -413,7 +666,9 @@ def waters(marine: dict, lakes: dict) -> list:
         drawn = area_of(shape(feature["geometry"])) if own and feature["geometry"] else {}
         if drawn:
             lake = feature in lakes["features"]  # drawn over the land, not under it
-            out.append(named(names(p, own, p.get("namealt") or "", p.get("name_alt") or ""), drawn | {"lake": lake}))
+            water = named(names(p, own, p.get("namealt") or "", p.get("name_alt") or ""), drawn | {"lake": lake})
+            water["k"] = sorted(set(water["k"]) | water_keys(water["n"]))
+            out.append(water)
     return out
 
 
@@ -470,17 +725,22 @@ description = "School maps: countries, cities, regions, rivers, reliefs, seas, f
 NOTICE = """The map function (lib.typ) is Notosaurus's (AGPL-3.0-or-later). The data (the .json
 files) is made from Natural Earth (https://www.naturalearthdata.com/), public domain: 1:50m
 countries and lakes; 1:10m populated places, rivers, geographic regions, marine areas and
-first-level divisions; simplified by tools/atlas.py.
+first-level divisions; simplified by tools/atlas.py. The countries' usual names in each
+language from Unicode CLDR 46 (https://cldr.unicode.org/), under the Unicode License v3: its
+copyright and permission notice in LICENSE-CLDR, beside this file. The places of history from
+Wikidata (https://www.wikidata.org/, CC0).
 """
 
 
-def build(folder: Path | None = None) -> None:
+def build(folder: Path | None = None, refresh_history: bool = False) -> None:
     files = (COUNTRIES, PLACES, RIVERS, RIVERS_EUROPE, RELIEFS, WATERS, LAKES, REGIONS)
     with ThreadPoolExecutor() as pool:  # all at once
         countries, places, main_rivers, europe, relief, marine, lakes, admin1 = pool.map(
             lambda name: download(name, folder), files
         )
-    world = atlas(countries, places) | {"lakes": lake_rings(lakes)}
+    world = atlas(countries, places, usual_names(folder), history(folder, refresh_history)) | {
+        "lakes": lake_rings(lakes)
+    }
 
     def text(data) -> str:
         return json.dumps(data, ensure_ascii=False, separators=(",", ":"))
@@ -489,6 +749,7 @@ def build(folder: Path | None = None) -> None:
         "typst.toml": TOML,
         "lib.typ": LIB.read_text(encoding="utf-8"),
         "NOTICE": NOTICE,
+        "LICENSE-CLDR": download_text("cldr-LICENSE", folder, CLDR_LICENCE),
         "atlas.json": text(world),
         "rivers.json": text(rivers(main_rivers, europe)),
         "reliefs.json": text(reliefs(relief)),
@@ -497,7 +758,12 @@ def build(folder: Path | None = None) -> None:
     for old in TARGET.glob(f"{NAME}-*.tar.gz"):
         old.unlink()
     archive = TARGET / f"{NAME}-{VERSION}.tar.gz"
-    with tarfile.open(archive, "w:gz") as tar:
+    # gzip's header without a date (mtime=0), as the files': the same sources, the same archive
+    with (
+        archive.open("wb") as raw,
+        gzip.GzipFile(fileobj=raw, mode="wb", mtime=0) as packed,
+        tarfile.open(fileobj=packed, mode="w") as tar,
+    ):
         for name, content in contents.items():
             raw = content.encode()
             info = tarfile.TarInfo(name)
@@ -509,4 +775,5 @@ def build(folder: Path | None = None) -> None:
 
 
 if __name__ == "__main__":
-    build(Path(sys.argv[1]) if len(sys.argv) > 1 else None)
+    arguments = [a for a in sys.argv[1:] if a != "--refresh-history"]
+    build(Path(arguments[0]) if arguments else None, "--refresh-history" in sys.argv[1:])

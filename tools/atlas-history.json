@@ -1,0 +1,1274 @@
+[
+ {
+  "title": "Ur",
+  "n": [
+   "Ur"
+  ],
+  "xy": [
+   46.104444,
+   30.962222
+  ]
+ },
+ {
+  "title": "Uruk",
+  "n": [
+   "Uruk",
+   "Uruque"
+  ],
+  "xy": [
+   45.6374,
+   31.3259
+  ]
+ },
+ {
+  "title": "Babylon",
+  "n": [
+   "Babylone",
+   "Babylon",
+   "Babilonia",
+   "Babilônia",
+   "Babilónia"
+  ],
+  "xy": [
+   44.42111111111111,
+   32.5425
+  ]
+ },
+ {
+  "title": "Nineveh",
+  "n": [
+   "Ninive",
+   "Nineveh",
+   "Nínive"
+  ],
+  "xy": [
+   43.15,
+   36.366667
+  ]
+ },
+ {
+  "title": "Memphis, Egypt",
+  "n": [
+   "Memphis",
+   "Menfis",
+   "Menfi",
+   "Mênfis"
+  ],
+  "xy": [
+   31.250917,
+   29.844667
+  ]
+ },
+ {
+  "title": "Thebes, Egypt",
+  "n": [
+   "Thèbes",
+   "Thebes",
+   "Theben",
+   "Tebas",
+   "Tebe"
+  ],
+  "xy": [
+   32.610277777777775,
+   25.720555555555556
+  ]
+ },
+ {
+  "title": "Giza",
+  "n": [
+   "Gizeh",
+   "Giza",
+   "Guiza",
+   "Gizé"
+  ],
+  "xy": [
+   31.2118,
+   29.987
+  ]
+ },
+ {
+  "title": "Jericho",
+  "n": [
+   "Jéricho",
+   "Jericho",
+   "Jericó",
+   "Gerico"
+  ],
+  "xy": [
+   35.463055555556,
+   31.856111111111
+  ]
+ },
+ {
+  "title": "Byblos",
+  "n": [
+   "Byblos",
+   "Biblos",
+   "Biblo"
+  ],
+  "xy": [
+   35.65,
+   34.116666666667
+  ]
+ },
+ {
+  "title": "Tyre, Lebanon",
+  "n": [
+   "Tyr",
+   "Tyre",
+   "Tyros",
+   "Tiro"
+  ],
+  "xy": [
+   35.2,
+   33.266666666667
+  ]
+ },
+ {
+  "title": "Sidon",
+  "n": [
+   "Sidon",
+   "Sidón",
+   "Sidone",
+   "Sídon"
+  ],
+  "xy": [
+   35.37583333333333,
+   33.56055555555555
+  ]
+ },
+ {
+  "title": "Persepolis",
+  "n": [
+   "Persépolis",
+   "Persepolis",
+   "Persepoli"
+  ],
+  "xy": [
+   52.89,
+   29.935
+  ]
+ },
+ {
+  "title": "Troy",
+  "n": [
+   "Troie",
+   "Troy",
+   "Troja",
+   "Troya",
+   "Troia"
+  ],
+  "xy": [
+   26.238888888889,
+   39.9575
+  ]
+ },
+ {
+  "title": "Athens",
+  "n": [
+   "Athènes",
+   "Athens",
+   "Athen",
+   "Atenas",
+   "Atene"
+  ],
+  "xy": [
+   23.728055555555557,
+   37.98416666666667
+  ]
+ },
+ {
+  "title": "Sparta",
+  "n": [
+   "Sparte",
+   "Sparta",
+   "Esparta"
+  ],
+  "xy": [
+   22.423611111111,
+   37.081944444444
+  ]
+ },
+ {
+  "title": "Olympia, Greece",
+  "n": [
+   "Olympie",
+   "Olympia",
+   "Olimpia",
+   "Olímpia"
+  ],
+  "xy": [
+   21.63,
+   37.638333333333335
+  ]
+ },
+ {
+  "title": "Delphi",
+  "n": [
+   "Delphes",
+   "Delphi",
+   "Delfos",
+   "Delfi"
+  ],
+  "xy": [
+   22.5,
+   38.483333333333
+  ]
+ },
+ {
+  "title": "Marathon, Greece",
+  "n": [
+   "Marathon",
+   "Maratón",
+   "Maratona"
+  ],
+  "xy": [
+   23.961944444444445,
+   38.153333333333336
+  ]
+ },
+ {
+  "title": "Alexandria",
+  "n": [
+   "Alexandrie",
+   "Alexandria",
+   "Alejandría",
+   "Alessandria d'Egitto"
+  ],
+  "xy": [
+   29.8925,
+   31.1975
+  ]
+ },
+ {
+  "title": "Carthage",
+  "n": [
+   "Carthage",
+   "Karthago",
+   "Cartago",
+   "Cartagine"
+  ],
+  "xy": [
+   10.323461,
+   36.852558
+  ]
+ },
+ {
+  "title": "Pompeii",
+  "n": [
+   "Pompéi",
+   "Pompeii",
+   "Pompeji",
+   "Pompeya",
+   "Pompei",
+   "Pompeia"
+  ],
+  "xy": [
+   14.489722222222222,
+   40.75055555555556
+  ]
+ },
+ {
+  "title": "Ostia Antica",
+  "n": [
+   "Ostie",
+   "Ostia",
+   "Ostia Antica",
+   "Óstia"
+  ],
+  "xy": [
+   12.2875,
+   41.75416666666667
+  ]
+ },
+ {
+  "title": "Alesia (city)",
+  "n": [
+   "site archéologique d'Alésia",
+   "Alesia",
+   "Alésia"
+  ],
+  "xy": [
+   4.500555555555556,
+   47.53916666666667
+  ]
+ },
+ {
+  "title": "Lutetia",
+  "n": [
+   "Lutèce",
+   "Lutetia",
+   "Lutecia",
+   "Lutezia",
+   "Lutécia"
+  ],
+  "xy": [
+   2.3475,
+   48.85472222222222
+  ]
+ },
+ {
+  "title": "Lugdunum",
+  "n": [
+   "Lugdunum"
+  ],
+  "xy": [
+   4.8194444444444,
+   45.759722222222
+  ]
+ },
+ {
+  "title": "Massalia",
+  "n": [
+   "Massalia",
+   "Massália (Grécia Antiga)"
+  ],
+  "xy": [
+   5.369889,
+   43.296346
+  ]
+ },
+ {
+  "title": "Bibracte",
+  "n": [
+   "Bibracte"
+  ],
+  "xy": [
+   4.0375,
+   46.923055555556
+  ]
+ },
+ {
+  "title": "Gergovia",
+  "n": [
+   "Gergovie",
+   "Gergovia"
+  ],
+  "xy": [
+   3.125,
+   45.708333333333336
+  ]
+ },
+ {
+  "title": "Antioch",
+  "n": [
+   "Antioche",
+   "Antioch",
+   "Antiochia am Orontes",
+   "Antioquía del Orontes",
+   "Antiochia di Siria",
+   "Antioquia"
+  ],
+  "xy": [
+   36.181666666666665,
+   36.20472222222222
+  ]
+ },
+ {
+  "title": "Ancient Corinth",
+  "n": [
+   "Corinthe antique",
+   "Ancient Corinth",
+   "Antikes Korinth",
+   "Antigua Corinto",
+   "Corinto",
+   "Corinthe",
+   "Corinth",
+   "Korinth"
+  ],
+  "xy": [
+   22.878741,
+   37.905785
+  ]
+ },
+ {
+  "title": "Constantinople",
+  "n": [
+   "Constantinople",
+   "Konstantinopel",
+   "Constantinopla",
+   "Costantinopoli"
+  ],
+  "xy": [
+   28.976018,
+   41.01224
+  ]
+ },
+ {
+  "title": "Byzantium",
+  "n": [
+   "Byzance",
+   "Byzantium",
+   "Byzantion",
+   "Bizancio",
+   "Bisanzio",
+   "Bizâncio"
+  ],
+  "xy": [
+   28.98363888888889,
+   41.013416666666664
+  ]
+ },
+ {
+  "title": "Ctesiphon",
+  "n": [
+   "Ctésiphon",
+   "Ctesiphon",
+   "Seleukia-Ktesiphon",
+   "Ctesifonte"
+  ],
+  "xy": [
+   44.580833,
+   33.093611
+  ]
+ },
+ {
+  "title": "Chang'an",
+  "n": [
+   "Chang'an",
+   "Chang’an",
+   "Changan"
+  ],
+  "xy": [
+   108.85833333333333,
+   34.30833333333333
+  ]
+ },
+ {
+  "title": "Luoyang",
+  "n": [
+   "Luoyang"
+  ],
+  "xy": [
+   112.42447,
+   34.65867
+  ]
+ },
+ {
+  "title": "Pataliputra",
+  "n": [
+   "Pataliputra"
+  ],
+  "xy": [
+   85.144,
+   25.611
+  ]
+ },
+ {
+  "title": "Aachen",
+  "n": [
+   "Aix-la-Chapelle",
+   "Aachen",
+   "Aquisgrán",
+   "Aquisgrana"
+  ],
+  "xy": [
+   6.083788,
+   50.776207
+  ]
+ },
+ {
+  "title": "Ravenna",
+  "n": [
+   "Ravenne",
+   "Ravenna",
+   "Ravena"
+  ],
+  "xy": [
+   12.201666666666666,
+   44.416111111111114
+  ]
+ },
+ {
+  "title": "Córdoba, Spain",
+  "n": [
+   "Cordoue",
+   "Córdoba",
+   "Cordova",
+   "Córdova"
+  ],
+  "xy": [
+   -4.78,
+   37.89
+  ]
+ },
+ {
+  "title": "Toledo, Spain",
+  "n": [
+   "Tolède",
+   "Toledo"
+  ],
+  "xy": [
+   -4.0333333333333,
+   39.866666666667
+  ]
+ },
+ {
+  "title": "Granada",
+  "n": [
+   "Grenade",
+   "Granada"
+  ],
+  "xy": [
+   -3.6,
+   37.175
+  ]
+ },
+ {
+  "title": "Kairouan",
+  "n": [
+   "Kairouan",
+   "Keruán",
+   "Qayrawan"
+  ],
+  "xy": [
+   10.1,
+   35.68333333333333
+  ]
+ },
+ {
+  "title": "Fez, Morocco",
+  "n": [
+   "Fès",
+   "Fez"
+  ],
+  "xy": [
+   -5.003333333333333,
+   34.04333333333334
+  ]
+ },
+ {
+  "title": "Venice",
+  "n": [
+   "Venise",
+   "Venice",
+   "Venedig",
+   "Venecia",
+   "Venezia",
+   "Veneza"
+  ],
+  "xy": [
+   12.331944444444,
+   45.439722222222
+  ]
+ },
+ {
+  "title": "Genoa",
+  "n": [
+   "Gênes",
+   "Genoa",
+   "Genua",
+   "Génova",
+   "Genova",
+   "Gênova"
+  ],
+  "xy": [
+   8.93388888888889,
+   44.407222222222224
+  ]
+ },
+ {
+  "title": "Pisa",
+  "n": [
+   "Pise",
+   "Pisa"
+  ],
+  "xy": [
+   10.4,
+   43.716666666667
+  ]
+ },
+ {
+  "title": "Florence",
+  "n": [
+   "Florence",
+   "Florenz",
+   "Florencia",
+   "Firenze",
+   "Florença"
+  ],
+  "xy": [
+   11.254166666667,
+   43.771388888889
+  ]
+ },
+ {
+  "title": "Bruges",
+  "n": [
+   "Bruges",
+   "Brügge",
+   "Brujas"
+  ],
+  "xy": [
+   3.2241666666666666,
+   51.208888888888886
+  ]
+ },
+ {
+  "title": "Ghent",
+  "n": [
+   "Gand",
+   "Ghent",
+   "Gent",
+   "Gante"
+  ],
+  "xy": [
+   3.725277777777778,
+   51.05361111111111
+  ]
+ },
+ {
+  "title": "Lübeck",
+  "n": [
+   "Lübeck",
+   "Lubecca"
+  ],
+  "xy": [
+   10.686388888889,
+   53.869722222222
+  ]
+ },
+ {
+  "title": "Veliky Novgorod",
+  "n": [
+   "Novgorod",
+   "Veliky Novgorod",
+   "Weliki Nowgorod",
+   "Nóvgorod",
+   "Velikij Novgorod"
+  ],
+  "xy": [
+   31.27579,
+   58.52099
+  ]
+ },
+ {
+  "title": "Reims",
+  "n": [
+   "Reims"
+  ],
+  "xy": [
+   4.0286111111111,
+   49.265277777778
+  ]
+ },
+ {
+  "title": "Chartres",
+  "n": [
+   "Chartres"
+  ],
+  "xy": [
+   1.4883333333333,
+   48.446666666667
+  ]
+ },
+ {
+  "title": "Cluny",
+  "n": [
+   "Cluny"
+  ],
+  "xy": [
+   4.6591666666667,
+   46.434444444444
+  ]
+ },
+ {
+  "title": "Avignon",
+  "n": [
+   "Avignon",
+   "Aviñón",
+   "Avignone",
+   "Avinhão"
+  ],
+  "xy": [
+   4.8083333333333,
+   43.948611111111
+  ]
+ },
+ {
+  "title": "Poitiers",
+  "n": [
+   "Poitiers"
+  ],
+  "xy": [
+   0.33527777777778,
+   46.581111111111
+  ]
+ },
+ {
+  "title": "Tours",
+  "n": [
+   "Tours"
+  ],
+  "xy": [
+   0.68833333333333,
+   47.392777777778
+  ]
+ },
+ {
+  "title": "Orléans",
+  "n": [
+   "Orléans",
+   "Orleans",
+   "Orleães"
+  ],
+  "xy": [
+   1.9041666666667,
+   47.902222222222
+  ]
+ },
+ {
+  "title": "Bouvines",
+  "n": [
+   "Bouvines"
+  ],
+  "xy": [
+   3.1863888888889,
+   50.578888888889
+  ]
+ },
+ {
+  "title": "Crécy-en-Ponthieu",
+  "n": [
+   "Crécy-en-Ponthieu"
+  ],
+  "xy": [
+   1.8830555555556,
+   50.252222222222
+  ]
+ },
+ {
+  "title": "Azincourt",
+  "n": [
+   "Azincourt"
+  ],
+  "xy": [
+   2.1280555555556,
+   50.463055555556
+  ]
+ },
+ {
+  "title": "Rouen",
+  "n": [
+   "Rouen",
+   "Ruan",
+   "Ruão"
+  ],
+  "xy": [
+   1.1025,
+   49.443055555556
+  ]
+ },
+ {
+  "title": "Troyes",
+  "n": [
+   "Troyes"
+  ],
+  "xy": [
+   4.0780555555556,
+   48.298888888889
+  ]
+ },
+ {
+  "title": "Saint-Denis, Seine-Saint-Denis",
+  "n": [
+   "Saint-Denis"
+  ],
+  "xy": [
+   2.353888888888889,
+   48.93555555555555
+  ]
+ },
+ {
+  "title": "Carcassonne",
+  "n": [
+   "Carcassonne",
+   "Carcasona"
+  ],
+  "xy": [
+   2.3513888888889,
+   43.215833333333
+  ]
+ },
+ {
+  "title": "Aigues-Mortes",
+  "n": [
+   "Aigues-Mortes"
+  ],
+  "xy": [
+   4.1925,
+   43.566666666667
+  ]
+ },
+ {
+  "title": "Canterbury",
+  "n": [
+   "Canterbury",
+   "Cantuária"
+  ],
+  "xy": [
+   1.0775,
+   51.278333333333
+  ]
+ },
+ {
+  "title": "Hastings",
+  "n": [
+   "Hastings"
+  ],
+  "xy": [
+   0.5833333333333334,
+   50.855
+  ]
+ },
+ {
+  "title": "Santiago de Compostela",
+  "n": [
+   "Saint-Jacques-de-Compostelle",
+   "Santiago de Compostela",
+   "Santiago di Compostela"
+  ],
+  "xy": [
+   -8.5333333333333,
+   42.883333333333
+  ]
+ },
+ {
+  "title": "Timbuktu",
+  "n": [
+   "Tombouctou",
+   "Timbuktu",
+   "Tombuctú",
+   "Timbuctù",
+   "Tombuctu"
+  ],
+  "xy": [
+   -2.9994438888889,
+   16.773333055556
+  ]
+ },
+ {
+  "title": "Samarkand",
+  "n": [
+   "Samarcande",
+   "Samarkand",
+   "Samarqand",
+   "Samarcanda"
+  ],
+  "xy": [
+   66.97583333333333,
+   39.65472222222222
+  ]
+ },
+ {
+  "title": "Mecca",
+  "n": [
+   "La Mecque",
+   "Mecca",
+   "Mekka",
+   "La Meca",
+   "La Mecca",
+   "Meca"
+  ],
+  "xy": [
+   39.826111111111,
+   21.4225
+  ]
+ },
+ {
+  "title": "Palos de la Frontera",
+  "n": [
+   "Palos de la Frontera"
+  ],
+  "xy": [
+   -6.8932258,
+   37.2277697
+  ]
+ },
+ {
+  "title": "Cádiz",
+  "n": [
+   "Cadix",
+   "Cádiz",
+   "Cadice",
+   "Cádis"
+  ],
+  "xy": [
+   -6.2975,
+   36.535
+  ]
+ },
+ {
+  "title": "Kozhikode",
+  "n": [
+   "Calicut",
+   "Kozhikode",
+   "Calecute"
+  ],
+  "xy": [
+   75.78027777777778,
+   11.247777777777777
+  ]
+ },
+ {
+  "title": "Goa",
+  "n": [
+   "Goa"
+  ],
+  "xy": [
+   74.04333333333334,
+   15.401944444444444
+  ]
+ },
+ {
+  "title": "Malacca City",
+  "n": [
+   "Malacca",
+   "Malakka",
+   "Malaca"
+  ],
+  "xy": [
+   102.25111111111,
+   2.1888888888889
+  ]
+ },
+ {
+  "title": "Cusco",
+  "n": [
+   "Cuzco",
+   "Cusco"
+  ],
+  "xy": [
+   -71.9786111111111,
+   -13.516944444444444
+  ]
+ },
+ {
+  "title": "Tenochtitlan",
+  "n": [
+   "Mexico-Tenochtitlan",
+   "Tenochtitlan",
+   "Tenochtitlán"
+  ],
+  "xy": [
+   -99.13138889,
+   19.435
+  ]
+ },
+ {
+  "title": "Santo Domingo",
+  "n": [
+   "Saint-Domingue",
+   "Santo Domingo",
+   "São Domingos"
+  ],
+  "xy": [
+   -69.93611111111112,
+   18.4625
+  ]
+ },
+ {
+  "title": "Wittenberg",
+  "n": [
+   "Wittemberg",
+   "Lutherstadt Wittenberg",
+   "Wittenberg"
+  ],
+  "xy": [
+   12.6484,
+   51.8671
+  ]
+ },
+ {
+  "title": "Worms, Germany",
+  "n": [
+   "Worms"
+  ],
+  "xy": [
+   8.3620898,
+   49.6302618
+  ]
+ },
+ {
+  "title": "Augsburg",
+  "n": [
+   "Augsbourg",
+   "Augsburg",
+   "Augsburgo",
+   "Augusta"
+  ],
+  "xy": [
+   10.897777777777778,
+   48.36888888888889
+  ]
+ },
+ {
+  "title": "Geneva",
+  "n": [
+   "Genève",
+   "Geneva",
+   "Genf",
+   "Ginebra",
+   "Ginevra",
+   "Genebra"
+  ],
+  "xy": [
+   6.15,
+   46.2
+  ]
+ },
+ {
+  "title": "Trento",
+  "n": [
+   "Trente",
+   "Trento",
+   "Trient"
+  ],
+  "xy": [
+   11.11666667,
+   46.06666667
+  ]
+ },
+ {
+  "title": "La Rochelle",
+  "n": [
+   "La Rochelle",
+   "La Rochela"
+  ],
+  "xy": [
+   -1.1513888888889,
+   46.159444444444
+  ]
+ },
+ {
+  "title": "Versailles, Yvelines",
+  "n": [
+   "Versailles",
+   "Versalles",
+   "Versalhes"
+  ],
+  "xy": [
+   2.135,
+   48.805
+  ]
+ },
+ {
+  "title": "Saint-Malo",
+  "n": [
+   "Saint-Malo"
+  ],
+  "xy": [
+   -2.026111111111111,
+   48.64944444444444
+  ]
+ },
+ {
+  "title": "Quebec City",
+  "n": [
+   "Québec",
+   "Quebec City",
+   "Quebec"
+  ],
+  "xy": [
+   -71.224167,
+   46.816111
+  ]
+ },
+ {
+  "title": "Antwerp",
+  "n": [
+   "Anvers",
+   "Antwerp",
+   "Antwerpen",
+   "Amberes",
+   "Anversa",
+   "Antuérpia"
+  ],
+  "xy": [
+   4.3997222222222225,
+   51.221111111111114
+  ]
+ },
+ {
+  "title": "Edo",
+  "n": [
+   "Edo"
+  ],
+  "xy": [
+   139.77444444444444,
+   35.68388888888889
+  ]
+ },
+ {
+  "title": "Valmy",
+  "n": [
+   "Valmy"
+  ],
+  "xy": [
+   4.7736111111111,
+   49.084444444444
+  ]
+ },
+ {
+  "title": "Varennes-en-Argonne",
+  "n": [
+   "Varennes-en-Argonne"
+  ],
+  "xy": [
+   5.0358333333333,
+   49.228055555556
+  ]
+ },
+ {
+  "title": "Slavkov u Brna",
+  "n": [
+   "Austerlitz",
+   "Slavkov u Brna"
+  ],
+  "xy": [
+   16.876504369244,
+   49.153275386094
+  ]
+ },
+ {
+  "title": "Waterloo, Belgium",
+  "n": [
+   "Waterloo"
+  ],
+  "xy": [
+   4.3833333333333,
+   50.716666666667
+  ]
+ },
+ {
+  "title": "Sedan, Ardennes",
+  "n": [
+   "Sedan",
+   "Sedán"
+  ],
+  "xy": [
+   4.9402777777778,
+   49.701944444444
+  ]
+ },
+ {
+  "title": "Verdun",
+  "n": [
+   "Verdun",
+   "Verdún"
+  ],
+  "xy": [
+   5.3827777777778,
+   49.159722222222
+  ]
+ },
+ {
+  "title": "Sarajevo",
+  "n": [
+   "Sarajevo"
+  ],
+  "xy": [
+   18.413055555555555,
+   43.85638888888889
+  ]
+ },
+ {
+  "title": "Hiroshima",
+  "n": [
+   "Hiroshima"
+  ],
+  "xy": [
+   132.45194444444445,
+   34.39138888888889
+  ]
+ },
+ {
+  "title": "Nagasaki",
+  "n": [
+   "Nagasaki"
+  ],
+  "xy": [
+   129.87963888888888,
+   32.74952777777778
+  ]
+ },
+ {
+  "title": "Oradour-sur-Glane",
+  "n": [
+   "Oradour-sur-Glane"
+  ],
+  "xy": [
+   1.0316666666667,
+   45.931944444444
+  ]
+ },
+ {
+  "title": "Vichy",
+  "n": [
+   "Vichy"
+  ],
+  "xy": [
+   3.4258333333333,
+   46.126944444444
+  ]
+ },
+ {
+  "title": "Yalta",
+  "n": [
+   "Yalta",
+   "Jalta",
+   "Ialta"
+  ],
+  "xy": [
+   34.155277777778,
+   44.499444444444
+  ]
+ },
+ {
+  "title": "Điện Biên Phủ",
+  "n": [
+   "Điện Biên Phủ",
+   "Diên Biên Phu",
+   "Dien Bien Phu",
+   "Ðiện Biên Phủ"
+  ],
+  "xy": [
+   103.03083333333333,
+   21.4025
+  ]
+ },
+ {
+  "title": "Nuremberg",
+  "n": [
+   "Nuremberg",
+   "Nürnberg",
+   "Núremberg",
+   "Norimberga",
+   "Nuremberga"
+  ],
+  "xy": [
+   11.0775,
+   49.45388888888889
+  ]
+ },
+ {
+  "title": "Potsdam",
+  "n": [
+   "Potsdam"
+  ],
+  "xy": [
+   13.0591397,
+   52.4009309
+  ]
+ },
+ {
+  "title": "Gettysburg, Pennsylvania",
+  "n": [
+   "Gettysburg"
+  ],
+  "xy": [
+   -77.2322,
+   39.8283
+  ]
+ }
+]
