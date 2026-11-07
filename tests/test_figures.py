@@ -1224,6 +1224,25 @@ def test_a_solids_hidden_edges_computed(body, hidden):
     assert svg.count("stroke-dasharray") == hidden
 
 
+def test_a_coordinate_frame_drawn_as_the_geometry_rule_says():
+    """A circle or a line in a coordinate frame: the rule's own calls compile (the AI wrote
+    ctz-draw-axes(-2, 6, -3, 5), positional, refused by Typst 3 times in 3: no frame was
+    described), the axes' arrows past the grid's last numbers."""
+    rule = (figures_typst.RULES / "geometry.md").read_text(encoding="utf-8")
+    calls = re.findall(r"`(ctz-draw-(?:grid|axes)\(xmin:[^`]*\))`", rule)
+    assert len(calls) == 2
+    body = '#ctz-canvas({{\n  ctz-init()\n  {}\n  {}\n  ctz-def-points(Ω: (2, 1))\n  ctz-draw-circle-r("Ω", 3)\n}})'
+    assert figures.clean(figures_typst.compile_svg("geometry", body.format(*calls))).startswith("<svg")
+
+
+def test_a_trigonometric_circle_with_one_angle():
+    """One angle written without its trailing comma, ((60, $M$)) (the AI's, refused 3 times in
+    3: Typst reads a pair, not a list of one): the same circle as ((60, $M$),)."""
+    circle = "#ctz-canvas({{ ctz-init()\n ctz-draw-unit-circle(angles: {}, project: (60, $1/2$, $sqrt(3)/2$)) }})"
+    one = figures_typst.compile_svg("geometry", circle.format("((60, $M$),)"))
+    assert figures_typst.compile_svg("geometry", circle.format("((60, $M$))")) == one
+
+
 def test_a_section_outside_its_solid_refused():
     """A section's plane outside the solid, or parallel to a face it hasn't: refused, saying
     why, for the AI to write it again; never a solid drawn without it."""
