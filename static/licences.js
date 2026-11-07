@@ -2,7 +2,7 @@
 // then the Android app's when it is that app (web/licences-android.json, written at its build)
 const PAGE_LIBRARIES = [
   { name: "Alpine.js", version: "3.14.9", licence: "MIT", file: "vendor/alpinejs/LICENSE" },
-  { name: "KaTeX", version: "0.19.0", licence: "MIT", file: "vendor/katex/LICENSE" },
+  { name: "MathJax", version: "3.2.2", licence: "Apache-2.0", file: "vendor/mathjax/LICENSE" },
   { name: "PDF.js", version: "6.4.299", licence: "Apache-2.0", file: "vendor/pdfjs/LICENSE" },
 ];
 

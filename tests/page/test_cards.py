@@ -90,7 +90,7 @@ def test_a_formula_shown_once_its_text_while_edited(page):
     shown = card.locator(".math-preview.back.shown")
     sync_api.expect(shown).to_be_visible()
     sync_api.expect(back).to_be_hidden()
-    sync_api.expect(shown.locator(".katex")).to_be_visible()
+    sync_api.expect(shown.locator("mjx-container")).to_be_visible()
     shown.click()
     sync_api.expect(back).to_be_focused()
     sync_api.expect(back).to_have_value(r"\(x^2\)")
@@ -100,16 +100,28 @@ def test_a_formula_shown_once_its_text_while_edited(page):
     sync_api.expect(page.locator(".save-pill")).to_have_class(SAVED)
 
 
-def test_a_chemical_equation_shown_as_anki_shows_it(page):
-    """A reaction's equation in mhchem (\\ce), which Anki's MathJax draws: drawn, not an error."""
+# Whether a drawn formula holds a command MathJax doesn't know: written in red, as in Anki
+UNKNOWN_IN_RED = "e => [...e.querySelectorAll('*')].some((n) => getComputedStyle(n).color === 'rgb(255, 0, 0)')"
+
+
+def test_a_formula_previewed_as_anki_shows_it(page):
+    """The preview draws as Anki's MathJax does: what Anki draws (chemistry, its units, an
+    arc), drawn; what it doesn't know (\\R, Anki has only \\mathbb{R}), in red as there."""
     generate_free(page, FRONT_PROMPT)
     card = page.locator(".flash").first
-    card.locator("textarea.back").fill(r"\(\ce{2H2 + O2 -> 2H2O}\)")
-    card.locator("textarea.front").click()  # out of the back
+    back = card.locator("textarea.back")
     shown = card.locator(".math-preview.back.shown")
-    # an unknown command is no error: KaTeX writes it, in red, among what it draws
-    sync_api.expect(shown.locator(".katex-html")).to_be_visible()
-    sync_api.expect(shown.locator(".katex-html")).not_to_contain_text("ce")
+    for formula, unknown in [
+        (r"\(\ce{2H2 + O2 -> 2H2O}\)", False),
+        (r"\(R = 220\,\ohm\) et l'arc \(\overparen{AB}\)", False),
+        (r"\(x \in \R\)", True),
+    ]:
+        if back.is_hidden():
+            shown.click()
+        back.fill(formula)
+        card.locator("textarea.front").click()  # out of the back
+        sync_api.expect(shown.locator("mjx-container").first).to_be_visible()
+        assert shown.evaluate(UNKNOWN_IN_RED) is unknown, formula
 
 
 def test_formulas_drawn_in_the_helps_and_the_doubt(page):
@@ -123,11 +135,11 @@ def test_formulas_drawn_in_the_helps_and_the_doubt(page):
     )
     card = page.locator(".flash").first
     help_shown = card.locator(".card-help .math-preview.shown:visible")
-    sync_api.expect(help_shown.locator(".katex")).to_have_count(2)
+    sync_api.expect(help_shown.locator("mjx-container")).to_have_count(2)
     sync_api.expect(card.locator("textarea.explanation")).to_be_hidden()
     help_shown.click()
     sync_api.expect(card.locator("textarea.explanation")).to_be_focused()
-    sync_api.expect(card.locator(".card-doubt .katex")).to_have_count(2)  # the reason's, the corrected back's
+    sync_api.expect(card.locator(".card-doubt mjx-container")).to_have_count(2)  # the reason's, the corrected back's
 
 
 def test_formulas_drawn_in_the_info_and_the_fun_fact(page):
@@ -142,9 +154,9 @@ def test_formulas_drawn_in_the_info_and_the_fun_fact(page):
     )
     card = page.locator(".flash").first
     info = card.locator(".meta .math-preview.shown:visible")
-    sync_api.expect(info.locator(".katex")).to_have_count(1)
+    sync_api.expect(info.locator("mjx-container")).to_have_count(1)
     sync_api.expect(card.locator("textarea.info")).to_be_hidden()
-    sync_api.expect(card.locator(".fun-fact .math-preview.shown:visible .katex")).to_have_count(1)
+    sync_api.expect(card.locator(".fun-fact .math-preview.shown:visible mjx-container")).to_have_count(1)
     if shots := os.environ.get("NOTOSAURUS_SHOTS"):  # to look at it: a folder for the screenshot
         card.screenshot(path=f"{shots}/info-formula.png")
     info.click()

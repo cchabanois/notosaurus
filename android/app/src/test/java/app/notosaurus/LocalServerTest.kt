@@ -106,9 +106,9 @@ class LocalServerTest : LocalServerTestBase() {
         val pdfjs = client.get("/vendor/pdfjs/pdf.min.mjs")
         assertEquals(HttpStatusCode.OK, pdfjs.status)
         assertTrue(pdfjs.headers[HttpHeaders.ContentType]!!, "javascript" in pdfjs.headers[HttpHeaders.ContentType]!!)
-        // Alpine and KaTeX, shipped too (static/vendor): nothing from elsewhere
+        // Alpine and MathJax, shipped too (static/vendor): nothing from elsewhere
         assertEquals(HttpStatusCode.OK, client.get("/vendor/alpinejs/cdn.min.js").status)
-        assertEquals(HttpStatusCode.OK, client.get("/vendor/katex/katex.min.css").status)
+        assertEquals(HttpStatusCode.OK, client.get("/vendor/mathjax/tex-chtml-full.js").status)
     }
 
     @Test

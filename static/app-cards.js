@@ -90,7 +90,7 @@ const cardsPart = {
     return CLOZE.test(text ?? "");
   },
 
-  // The text as Anki will show it: formulas drawn (KaTeX), gaps marked with their
+  // The text as Anki will show it: formulas drawn (MathJax, as Anki), gaps marked with their
   // number (each number is a card), line breaks kept, the rest escaped.
   previewHtml(text) {
     text = text ?? "";
@@ -99,13 +99,18 @@ const cardsPart = {
         .replace(GAP_START, (_, n) => `<span class="gap"><sup>${n}</sup>`)
         .replace(GAP_END, "</span>")
         .replaceAll("\n", "<br>");
-    if (!this.katexReady) return plain(text);
-    let html = "", last = 0;
+    if (!this.mathReady) return plain(text);
+    let html = "", last = 0, drawn = false;
     for (const m of text.matchAll(MATH)) {
       html += plain(text.slice(last, m.index));
-      const display = m[2] !== undefined;
-      html += katex.renderToString(m[1] ?? m[2], { displayMode: display, throwOnError: false });
+      html += MathJax.tex2chtml(m[1] ?? m[2], { display: m[2] !== undefined }).outerHTML;
       last = m.index + m[0].length;
+      drawn = true;
+    }
+    // the styles of what was just drawn (its characters' fonts), added to the page's
+    if (drawn) {
+      MathJax.startup.document.clear();
+      MathJax.startup.document.updateDocument();
     }
     return html + plain(text.slice(last));
   },

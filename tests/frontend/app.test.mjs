@@ -87,7 +87,7 @@ test("api(): a server error becomes a translated message, with its code kept", a
 const review = app.component();
 
 test("the card preview: escaped, gaps numbered, line breaks kept", () => {
-  review.katexReady = false;
+  review.mathReady = false;
   assert.equal(
     review.previewHtml("a < b\nc {{c1::1789}} and {{c2::la Bastille::lieu}} end"),
     "a &lt; b<br>c <span class=\"gap\"><sup>1</sup>1789</span> and <span class=\"gap\"><sup>2</sup>la Bastille</span> end",
@@ -96,10 +96,10 @@ test("the card preview: escaped, gaps numbered, line breaks kept", () => {
 });
 
 test("the card preview: formulas drawn, the rest escaped around them", () => {
-  review.katexReady = true;
+  review.mathReady = true;
   const html = review.previewHtml(String.raw`aire : \(\pi r^2\) et \[x = y\] & <`);
-  assert.ok(html.includes('<span class="katex">\\pi r^2</span>'), html);
-  assert.ok(html.includes('<span class="katex-display">x = y</span>'), html);
+  assert.ok(html.includes('<mjx-container display="false">\\pi r^2</mjx-container>'), html);
+  assert.ok(html.includes('<mjx-container display="true">x = y</mjx-container>'), html);
   assert.ok(html.endsWith(" &amp; &lt;"), html);
 });
 

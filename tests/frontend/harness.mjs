@@ -120,7 +120,7 @@ export class CustomEvent {
 async function pageScripts(script) {
   const page = script === "admin.js" ? "admin.html" : "index.html";
   const html = await readFile(path.join(ROOT, "static", page), "utf8");
-  // Notosaurus's own: the third-party ones (static/vendor: Alpine, KaTeX) are the stubs below
+  // Notosaurus's own: the third-party ones (static/vendor: Alpine, MathJax) are the stubs below
   const scripts = [...html.matchAll(/<script[^>]*\ssrc="([^"]+)"/g)].map((m) => m[1])
     .filter((src) => !/^https?:/.test(src) && !src.startsWith("vendor/"));
   if (!scripts.includes(script)) throw new Error(`${page} doesn't load ${script}`);
@@ -145,9 +145,9 @@ export async function loadScripts(
   const { document, events } = documentStub();
   const storage = memoryStorage(throwingStorage);
   const session = memoryStorage(throwingStorage);
-  const katex = {
-    renderToString: (tex, { displayMode } = {}) =>
-      (displayMode ? `<span class="katex-display">` : '<span class="katex">') + tex + "</span>",
+  const MathJax = {
+    tex2chtml: (tex, { display } = {}) => ({ outerHTML: `<mjx-container display="${Boolean(display)}">${tex}</mjx-container>` }),
+    startup: { document: { clear: () => {}, updateDocument: () => {} } },
   };
   const sandbox = {
     console,
@@ -159,7 +159,7 @@ export async function loadScripts(
     localStorage: storage,
     sessionStorage: session,
     Alpine: alpine,
-    katex,
+    MathJax,
     CustomEvent,
     crypto: globalThis.crypto,
     URL, URLSearchParams, Blob, FormData, TextDecoder, Uint8Array,
