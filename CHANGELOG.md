@@ -28,6 +28,7 @@ Each pull request's entries (the `## Changelog` of its description) are put unde
 
 ### Fixed
 
+- Chemical formulas and reaction equations are written as chemistry (\(\ce{2H2 + O2 -> 2H2O}\)) and shown as such in the cards' preview, as in Anki.
 - A figure the AI drew empty (a map of plates, volcanoes or earthquakes) is drawn again instead of going on the card blank.
 - Figures drawn as SVG keep their colours, fonts and labels when they style them with classes, the font shorthand or a halo, or put a label in a link or along a curve.
 - A figure whose colours are written as rgb(…) or hsl(…) no longer comes out black.
