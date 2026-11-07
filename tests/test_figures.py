@@ -469,6 +469,17 @@ def test_typst_asked_again_with_its_error_then_used(monkeypatch):
     assert "no import" in calls[2]["text"]
 
 
+def test_typst_drawing_nothing_asked_again_then_drawn_as_svg(monkeypatch):
+    """An empty answer (a map of what its atlas lacks: the AI leaves it all out) compiles
+    to a blank page: refused, asked again, then drawn as SVG, never a blank card."""
+    for blank in ("", "#diagram()", "#ctz-canvas({ ctz-init() })"):
+        with pytest.raises(figures_typst.Unusable, match="nothing"):
+            figures_typst.compile_svg("diagram" if "diagram" in blank else "geometry", blank)
+    svg, calls = typst_drawing(monkeypatch, ["", ""])
+    assert ">A<" in svg and [c["schema"] for c in calls] == ["Kind", "Figure", "Figure", "Drawing"]
+    assert "draws nothing" in calls[2]["text"]
+
+
 # Rings drawn as nested nodes, each label at its centre (TYP-09h): the inner fills cover
 # the outer ones' labels
 RINGS = """#diagram(node-stroke: 0.8pt,
@@ -476,6 +487,13 @@ RINGS = """#diagram(node-stroke: 0.8pt,
   node((0, 0), [Banlieue], shape: circle, fill: luma(225), radius: 2cm),
   node((0, 0), [Ville], shape: circle, fill: rgb("#ffe066"), radius: 1cm),
 )"""
+
+
+def rule_example(family):
+    """The example a family's rule shows the AI (typst_rules/<family>.typ), as it compiles:
+    geometry's "and so on" a triangle drawn, its points alone drawing nothing."""
+    typst = (figures_typst.RULES / f"{family}.typ").read_text(encoding="utf-8")
+    return typst.split(figures_typst.EXAMPLE)[1].replace("  ...\n", '  ctz-draw-polygon("A", "B", "C")\n')
 
 
 def test_the_figures_bench_sees_hidden_labels():
@@ -498,9 +516,7 @@ def test_the_figures_bench_sees_hidden_labels():
     assert hidden(SQUARE.replace("</svg>", '<text x="900" y="40">B</text></svg>')) == 1
     assert hidden(SQUARE.replace(">A<", ' font-size="4">i<')) == 0  # tiny, but seen
     for family in figures_typst.FAMILIES:
-        typst = (figures_typst.RULES / f"{family}.typ").read_text(encoding="utf-8")
-        example = typst.split(figures_typst.EXAMPLE)[1].replace("  ...\n", "")
-        assert hidden(figures_typst.compile_svg(family, example)) == 0, family
+        assert hidden(figures_typst.compile_svg(family, rule_example(family))) == 0, family
 
 
 def test_a_figures_kind_given_is_not_asked_again(monkeypatch):
@@ -584,9 +600,7 @@ def test_each_familys_rule_example_compiles(family):
     """Each family's Typst (typst_rules/<family>.typ: its preamble, then the example the AI
     is shown) compiles as it is, with the packages shipped: a rule out of step with its
     package (a version changed) shows here."""
-    typst = (figures_typst.RULES / f"{family}.typ").read_text(encoding="utf-8")
-    example = typst.split(figures_typst.EXAMPLE)[1].replace("  ...\n", "")  # (geometry's: "and so on")
-    assert figures.clean(figures_typst.compile_svg(family, example)).startswith("<svg")
+    assert figures.clean(figures_typst.compile_svg(family, rule_example(family))).startswith("<svg")
 
 
 def test_a_package_import_dropped_not_refused():

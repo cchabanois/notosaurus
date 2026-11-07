@@ -34,6 +34,7 @@ import tomllib
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Literal
+from xml.etree import ElementTree
 
 from pydantic import BaseModel, Field
 
@@ -300,8 +301,8 @@ def packages() -> Path:
 
 
 def compile_svg(family: str, body: str) -> str:
-    """The figure's SVG, its colours as drawn; Unusable when Typst refuses it (its message) or
-    takes too long."""
+    """The figure's SVG, its colours as drawn; Unusable when Typst refuses it (its message),
+    takes too long or draws nothing (an empty answer: a blank page on the card, never redrawn)."""
     document = source(family, body)
     with tempfile.TemporaryDirectory(prefix="notosaurus-figure-") as folder:
         path = Path(folder) / "figure.typ"
@@ -317,10 +318,23 @@ def compile_svg(family: str, body: str) -> str:
     if done.returncode != 0 or not done.stdout:
         said = done.stderr.decode("utf-8", "replace").strip()
         raise Unusable(said[:800].replace(str(path), "figure.typ") or "It didn't compile.")
-    svg = _fitted(done.stdout.decode("utf-8"))
+    svg = done.stdout.decode("utf-8")
+    if _blank(svg):
+        raise Unusable("It draws nothing: the page is blank.")
+    svg = _fitted(svg)
     # A map's outlines: thousands of points, each written to the billionth of a point by
     # Typst: kept to the tenth (nothing seen changes), the figure several times lighter
     return _rounded_paths(svg) if family == "map" else svg
+
+
+# What draws something in Typst's SVG: its page's background is one path, the first
+_DRAWING = {"path", "use", "image", "text", "rect", "circle", "ellipse", "line", "polyline", "polygon"}
+
+
+def _blank(svg: str) -> bool:
+    """Typst's page with nothing on it but its background."""
+    drawn = [e for e in ElementTree.fromstring(svg).iter() if str(e.tag).rsplit("}", 1)[-1] in _DRAWING]
+    return len(drawn) <= 1
 
 
 def _fitted(svg: str) -> str:
