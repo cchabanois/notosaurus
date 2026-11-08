@@ -75,6 +75,59 @@
   let y = top.zip(bottom, heights).map(((t, u, h)) => (t + u) / 2 * h).sum() / total
   lq.place(x, y, box(fill: white, inset: 0.15em, radius: 2pt, name), align: center + horizon)
 }
+// Where two curves meet (two lines, a parabola and a line): computed, never by eye: each
+// change of sign of f − g between `from` and `to`, refined by bisection; a dot there, seen
+// at any size; its coordinates written when `label` is `auto` ("(1 ; 1)": the figure's
+// decimal separator, " ; " between them where the decimal separator is a comma), or the
+// label given, or nothing (`none`); `lines: true` the dotted lines down to the axes
+#let _number(v) = {
+  let r = calc.round(v, digits: 2)
+  let s = if calc.abs(r - calc.round(r)) < 1e-9 { str(int(calc.round(r))) } else { str(r) }
+  s.replace(".", decimal-separator).replace("-", "−")
+}
+#let _meet-points(f, g, from, to) = {
+  let h(x) = f(x) - g(x)
+  let n = 400
+  let xs = range(n + 1).map(i => from + (to - from) * i / n)
+  let roots = ()
+  for i in range(n) {
+    let (a, b) = (xs.at(i), xs.at(i + 1))
+    let (ha, hb) = (h(a), h(b))
+    if ha == 0 { roots.push(a); continue }
+    if ha * hb < 0 {
+      for _ in range(60) {
+        let m = (a + b) / 2
+        if h(a) * h(m) <= 0 { b = m } else { a = m }
+      }
+      roots.push((a + b) / 2)
+    }
+  }
+  if h(to) == 0 { roots.push(to) }
+  roots.map(x => (x, f(x)))
+}
+#let meet(f, g, from, to, label: none, lines: false, side: right) = {
+  let sep = if decimal-separator == "," { " ; " } else { ", " }
+  let parts = ()
+  for (x, y) in _meet-points(f, g, from, to) {
+    if lines {
+      parts.push(lq.line((x, 0), (x, y), stroke: (dash: "dotted", paint: luma(90))))
+      parts.push(lq.line((0, y), (x, y), stroke: (dash: "dotted", paint: luma(90))))
+    }
+    parts.push(lq.place(x, y, circle(radius: 2.2pt, fill: black), align: center + horizon))
+    let text = if label == auto { [(#_number(x)#sep#_number(y))] } else { label }
+    if text != none {
+      parts.push(lq.place(x, y, pad(left: 0.45em, right: 0.45em, bottom: 0.35em, text),
+        align: bottom + if side == right { left } else { right }))
+    }
+  }
+  // one element of the diagram (its children are dictionaries: several would merge into
+  // the last), drawing each of its parts
+  (
+    plot: (self, transform) => { for p in parts { (p.plot)(p, transform) } },
+    id: "meet", xlimits: () => none, ylimits: () => none, datetime: (:), label: none,
+    clip: true, z-index: 22,
+  )
+}
 // ---- What the AI writes, from here (the rule's example: everything above is given)
 #let xs = lq.linspace(0.05, 6, num: 300)
 #lq.diagram(
