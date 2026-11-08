@@ -92,6 +92,45 @@
     if origin-label != none { content((-0.3, -0.3), origin-label) }
   }
 }
+// A length written on its segment, never on its line: beside its middle, on the side away
+// from the point `away` (the figure's other vertex), the text's near edge clear of the line
+// (anchored by the side it faces). `level: 2` (a segment holding another one already
+// labelled, [AB] around [AM]): a dimension line beside the segment, its two arrows at its
+// ends, the length beside that line's middle.
+// A content's text, to size a label without measuring it (no context inside a canvas)
+#let _plain(c) = if type(c) == str { c } else if c.has("text") { c.text } else if c.has("children") { c.children.map(_plain).join() } else if c.has("body") { _plain(c.body) } else { " " }
+#let ctz-draw-length(a, b, label, away: none, level: 1) = cetz.draw.get-ctx(ctx => {
+  import cetz.draw: *
+  let at(n) = cetz.coordinate.resolve(ctx, "ctz:" + n).at(1)
+  let (pa, pb) = (at(a), at(b))
+  let (dx, dy) = (pb.at(0) - pa.at(0), pb.at(1) - pa.at(1))
+  let len = calc.sqrt(dx * dx + dy * dy)
+  if len < 0.001 { return }
+  let (nx, ny) = (-dy / len, dx / len)
+  if away != none {
+    let pc = at(away)
+    let (mx, my) = ((pa.at(0) + pb.at(0)) / 2, (pa.at(1) + pb.at(1)) / 2)
+    if (pc.at(0) - mx) * nx + (pc.at(1) - my) * ny > 0 { (nx, ny) = (-nx, -ny) }
+  }
+  let anchor = {
+    let h = if nx > 0.38 { "west" } else if nx < -0.38 { "east" } else { none }
+    let v = if ny > 0.38 { "south" } else if ny < -0.38 { "north" } else { none }
+    if h == none { v } else if v == none { h } else { v + "-" + h }
+  }
+  // a label's depth across its line (its box seen along the normal), in the canvas's cm:
+  // a dimension line goes past the labels of the segments it holds (as deep as its own)
+  let depth = calc.abs(nx) * 0.25 * _plain(label).clusters().len() + calc.abs(ny) * 0.45
+  let off = if level > 1 { 0.15 + (level - 1) * (depth + 0.3) } else { 0.15 }
+  let shift(p, d) = (p.at(0) + nx * d, p.at(1) + ny * d)
+  if level > 1 {
+    let (qa, qb) = (shift(pa, off), shift(pb, off))
+    line(shift(pa, 0.08), shift(pa, off + 0.12), stroke: 0.4pt)
+    line(shift(pb, 0.08), shift(pb, off + 0.12), stroke: 0.4pt)
+    line(qa, qb, stroke: 0.5pt, mark: (start: "straight", end: "straight", scale: 0.6))
+  }
+  let mid = ((pa.at(0) + pb.at(0)) / 2, (pa.at(1) + pb.at(1)) / 2)
+  content(shift(mid, off + if level > 1 { 0.1 } else { 0 }), label, anchor: anchor)
+})
 // ---- What the AI writes, from here (the rule's example: everything above is given)
 #ctz-canvas({
   ctz-init()
