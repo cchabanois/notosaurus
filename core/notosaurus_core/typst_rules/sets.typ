@@ -135,6 +135,37 @@
     for (k, at, c) in placed { content(at, c) }
   })
 }
+// A part's name (`"v.ab"`): in it when it fits, else under the diagram, joined to the part by
+// a thin line (a lens is narrower than "A ∩ B"). Its width estimated from its text (no
+// `measure` inside a canvas); `room`: the part's width, about a lens's.
+#let _plain(c) = if type(c) == str { c } else if c.has("text") { c.text } else if c.has("children") { c.children.map(_plain).join() } else if c.has("body") { _plain(c.body) } else { " " }
+#let part-label(part, label, room: auto) = cetz.draw.get-ctx(ctx => {
+  import cetz.draw: *
+  let p = cetz.coordinate.resolve(ctx, part).at(1)
+  // a set's own part ("v.a") is wide, its name at its anchor: the elements under the name;
+  // a part shared by sets (a lens) is narrow
+  let own = part.split(".").last().len() == 1
+  let room = if room == auto { if own { 1.3 } else { 0.7 } } else { room }
+  if own { p = (p.at(0), p.at(1) - 0.4) }
+  // outside every set ("v.not-ab"): beside the universe's name written at that anchor
+  if part.split(".").last().starts-with("not") { p = (p.at(0) + 0.6, p.at(1)) }
+  if 0.24 * _plain(label).clusters().len() <= room {
+    content(p, label)
+  } else {
+    let bottom = cetz.coordinate.resolve(ctx, part.split(".").first() + ".south").at(1).at(1)
+    // slanting: straight down it ran over a set's name drawn under the centre (C)
+    let q = (p.at(0) + 0.9, bottom - 0.35)
+    circle(p, radius: 0.035, fill: black, stroke: none)
+    line(p, q, stroke: 0.5pt)
+    content(q, label, anchor: "north-west", padding: 0.05)
+  }
+})
+// A region made of several parts (a union, a complement): its name under the diagram,
+// centred, clear of the universe's name and of the parts' own.
+#let region-label(diagram, label) = cetz.draw.get-ctx(ctx => {
+  let s = cetz.coordinate.resolve(ctx, diagram + ".south").at(1)
+  cetz.draw.content((s.at(0), s.at(1) - 0.3), label, anchor: "north")
+})
 // ---- What the AI writes, from here (the rule's example: everything above is given)
 #cetz.canvas({
   import cetz.draw: *
