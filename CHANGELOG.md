@@ -9,6 +9,7 @@ Each pull request's entries (the `## Changelog` of its description) are put unde
 
 ### Added
 
+- 🛰️ Forces and velocities drawn on a body (an orbit and its Frenet frame, a block on the ground or a slope, a pendulum), each arrow in the right direction and every name readable.
 - 🧊 Figures: a coordinate frame of space, its points, lines, planes and vectors placed from their coordinates, what a plane or a solid hides dashed.
 - 🧬 Aligned sequences (alleles, mutations, proteins compared): each letter in its column, the differences framed automatically.
 - 🌳 Phylogenetic trees drawn from the species and the innovations they share, each innovation on its branch.
