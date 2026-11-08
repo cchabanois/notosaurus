@@ -9,6 +9,7 @@ Each pull request's entries (the `## Changelog` of its description) are put unde
 
 ### Added
 
+- 〰️ Curves through measures (a reaction's progress, a growth, a cooling) drawn smooth, through every measure and never beyond them.
 - 🛰️ Forces and velocities drawn on a body (an orbit and its Frenet frame, a block on the ground or a slope, a pendulum), each arrow in the right direction and every name readable.
 - 🧊 Figures: a coordinate frame of space, its points, lines, planes and vectors placed from their coordinates, what a plane or a solid hides dashed.
 - 🧬 Aligned sequences (alleles, mutations, proteins compared): each letter in its column, the differences framed automatically.
@@ -37,6 +38,8 @@ Each pull request's entries (the `## Changelog` of its description) are put unde
 
 ### Fixed
 
+- Geometry figures: vectors are drawn with their arrow and their name, never as plain segments.
+- 〰️ A curve given by its measures is no longer replaced by a function of the AI's own that misses some of them.
 - Geometry figures: lengths are written beside their segments, never on them; Thales' configuration keeps the lengths given, its points placed from them.
 - Figures: names on a graph's axis that would touch are set on two rows; a frame's axes numbered at whole units only; roots of unity drawn on the unit circle, named as the lesson names them.
 - Chemistry: several molecules in one figure are drawn side by side, each with its name, no longer one on another; a hydrogen bond is drawn dotted.

@@ -1254,6 +1254,34 @@ def test_a_fractions_coloured_parts_counted_by_the_preamble(shape, parts, colour
     assert len(re.findall(r'fill="#9fc3e7"', figures_typst.compile_svg("geometry", two))) == 5
 
 
+def test_a_venn_parts_name_wider_than_it_goes_outside():
+    """ "A ∩ B" written in a two-set lens (0.75 wide) lay on both circles, three drawings out
+    of three. A part's name that fits stays in it; a wider one goes under the diagram, a line
+    joining it to its part."""
+    venn = '#cetz.canvas({{ cetz-venn.venn2(name: "v"); part-label("v.ab", {}) }})'
+    svg = figures_typst.compile_svg
+    short = svg("sets", venn.format("[$x$]"))
+    long = svg("sets", venn.format("[$A inter B$]"))
+    bare = svg("sets", '#cetz.canvas({ cetz-venn.venn2(name: "v") })')
+    height = lambda s: float(re.search(r'height="([\d.]+)', s).group(1))  # noqa: E731
+    assert height(short) == height(bare)  # in the lens
+    assert height(long) > height(bare) + 10  # under the diagram
+    assert "part-label" in figures_typst.FAMILIES["sets"].rules
+
+
+def test_a_vector_drawn_with_its_arrow():
+    """A scalar product's vectors drawn as plain segments (0/3): the rule had no vector. Drawn
+    by the preamble: its arrow's head at its end (a segment more than the plain one), its name
+    toward the head, clear of a point in its middle (a projection H)."""
+    figure = "#ctz-canvas({{ ctz-init(); ctz-def-points(A: (0, 0), B: (4, 0), C: (2, 2)); {} }})"
+    segment = figures_typst.compile_svg("geometry", figure.format('ctz-draw-segment("A", "B")'))
+    vector = figures_typst.compile_svg("geometry", figure.format('ctz-draw-vector("A", "B")'))
+    assert vector.count("<path") > segment.count("<path")  # the head
+    named = figure.format('ctz-draw-vector("A", "B", label: $arrow(A B)$, away: "C")')
+    assert figures_typst.compile_svg("geometry", named) != vector
+    assert "ctz-draw-vector" in figures_typst.FAMILIES["geometry"].rules
+
+
 def test_the_diagram_rules_edges_compile():
     """Every edge the diagram rule shows (its line styles, a label on its arrow, two arrows
     side by side) compiles between two nodes: a fragment out of step with fletcher (a "bend"
@@ -1609,6 +1637,28 @@ def test_lines_of_the_same_measure_share_one_axis():
     assert height((31, 95, 168)) == pytest.approx(2 * height((176, 58, 46)), rel=0.1)
     with pytest.raises(figures_typst.Unusable, match="single line"):
         figures_typst.compile_svg("chart", body[:-1] + ', second: (values: ((0, 1), (1, 2)), axis: "z"))')
+
+
+def test_a_smooth_line_goes_through_its_measures_and_never_beyond():
+    """A curve through measures (a concentration over time): through every one, never above
+    the highest nor below the lowest between two (a plateau stays flat), drawn by the chart,
+    never a function the AI fits to them."""
+    from PIL import Image
+
+    body = '#chart(kind: "line", values: ((0, 0), (1, 5), (2, 5), (3, 5), (4, 1)), axes: ("t", "y"){})'
+
+    def reach(extra):
+        image = Image.open(
+            io.BytesIO(figures.to_png(figures.clean(figures_typst.compile_svg("chart", body.format(extra)))))
+        )
+        image = image.convert("RGB")
+        red = [y for y in range(image.height) for x in range(image.width) if image.getpixel((x, y)) == (176, 58, 46)]
+        return min(red), max(red)
+
+    straight, smooth = reach(""), reach(", smooth: true")
+    drawn = {figures_typst.compile_svg("chart", body.format(extra)) for extra in ("", ", smooth: true")}
+    assert len(drawn) == 2  # a curve, not the straight lines
+    assert abs(smooth[0] - straight[0]) <= 1 and abs(smooth[1] - straight[1]) <= 1
 
 
 def test_a_line_marks_its_events_and_stretches():
