@@ -1211,6 +1211,33 @@ def test_a_grids_fractional_columns_sized_by_their_content():
     assert "#h(1fr)" in figures_typst.source("chemistry", "#h(1fr)")
 
 
+def test_a_length_written_beside_its_segment_never_on_it():
+    """Lengths were written on their segment's line ("4 cm" cut by the side), and a segment
+    holding a labelled one got another's length instead of its own (AB = 5 cm written MB =
+    3 cm). Drawn by the preamble: beside the segment, away from the figure; [AB] around [AM]
+    on a dimension line past [AM]'s label; a point at AM/AB of [AB], computed."""
+    figure = """#ctz-canvas({{
+      ctz-init()
+      ctz-def-points(A: (0, 3.5), B: (-2.5, 0), C: (3.5, 0))
+      ctz-def-linear("M", "A", "B", 2/5)
+      ctz-draw-polygon("A", "B", "C")
+      {}
+    }})"""
+    svg = figures_typst.compile_svg
+    bare = svg("geometry", figure.format(""))
+    # its label leaves the segment's line as it is: written beside it, the line not crossed
+    one = svg("geometry", figure.format('ctz-draw-length("A", "M", [2 cm], away: "C")'))
+    assert one != bare
+    both = figure.format(
+        'ctz-draw-length("A", "M", [2 cm], away: "C"); ctz-draw-length("A", "B", [5 cm], away: "C", level: 2)'
+    )
+    assert svg("geometry", both).startswith("<svg")
+    # the dimension line: farther from [AB] than [AM]'s label reaches, whatever the label
+    longer = both.replace("[2 cm]", "[2,25 cm]")
+    assert svg("geometry", longer) != svg("geometry", both)
+    assert "ctz-draw-length" in figures_typst.FAMILIES["geometry"].rules
+
+
 def test_the_diagram_rules_edges_compile():
     """Every edge the diagram rule shows (its line styles, a label on its arrow, two arrows
     side by side) compiles between two nodes: a fragment out of step with fletcher (a "bend"
