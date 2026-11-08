@@ -99,7 +99,7 @@
 // ends, the length beside that line's middle.
 // A content's text, to size a label without measuring it (no context inside a canvas)
 #let _plain(c) = if type(c) == str { c } else if c.has("text") { c.text } else if c.has("children") { c.children.map(_plain).join() } else if c.has("body") { _plain(c.body) } else { " " }
-#let ctz-draw-length(a, b, label, away: none, level: 1) = cetz.draw.get-ctx(ctx => {
+#let ctz-draw-length(a, b, label, away: none, level: 1, pos: 0.5) = cetz.draw.get-ctx(ctx => {
   import cetz.draw: *
   let at(n) = cetz.coordinate.resolve(ctx, "ctz:" + n).at(1)
   let (pa, pb) = (at(a), at(b))
@@ -128,9 +128,19 @@
     line(shift(pb, 0.08), shift(pb, off + 0.12), stroke: 0.4pt)
     line(qa, qb, stroke: 0.5pt, mark: (start: "straight", end: "straight", scale: 0.6))
   }
-  let mid = ((pa.at(0) + pb.at(0)) / 2, (pa.at(1) + pb.at(1)) / 2)
+  let mid = (pa.at(0) + pos * dx, pa.at(1) + pos * dy)
   content(shift(mid, off + if level > 1 { 0.1 } else { 0 }), label, anchor: anchor)
 })
+// A vector: its arrow from its origin to its end, its head at the end, its name beside it
+// toward its head (`pos` of the way: its middle often holds a point, a projection), away from
+// the figure's point `away`, as a length is written; never a plain segment.
+#let ctz-draw-vector(a, b, label: none, away: none, stroke: 1pt, pos: 0.75) = {
+  cetz.draw.get-ctx(ctx => {
+    let at(n) = cetz.coordinate.resolve(ctx, "ctz:" + n).at(1)
+    cetz.draw.line(at(a), at(b), stroke: stroke, mark: (end: "stealth", fill: black, scale: 1.2))
+  })
+  if label != none { ctz-draw-length(a, b, label, away: away, pos: pos) }
+}
 // ---- What the AI writes, from here (the rule's example: everything above is given)
 #ctz-canvas({
   ctz-init()

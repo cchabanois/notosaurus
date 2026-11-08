@@ -1253,6 +1253,19 @@ def test_a_venn_parts_name_wider_than_it_goes_outside():
     assert "part-label" in figures_typst.FAMILIES["sets"].rules
 
 
+def test_a_vector_drawn_with_its_arrow():
+    """A scalar product's vectors drawn as plain segments (0/3): the rule had no vector. Drawn
+    by the preamble: its arrow's head at its end (a segment more than the plain one), its name
+    toward the head, clear of a point in its middle (a projection H)."""
+    figure = "#ctz-canvas({{ ctz-init(); ctz-def-points(A: (0, 0), B: (4, 0), C: (2, 2)); {} }})"
+    segment = figures_typst.compile_svg("geometry", figure.format('ctz-draw-segment("A", "B")'))
+    vector = figures_typst.compile_svg("geometry", figure.format('ctz-draw-vector("A", "B")'))
+    assert vector.count("<path") > segment.count("<path")  # the head
+    named = figure.format('ctz-draw-vector("A", "B", label: $arrow(A B)$, away: "C")')
+    assert figures_typst.compile_svg("geometry", named) != vector
+    assert "ctz-draw-vector" in figures_typst.FAMILIES["geometry"].rules
+
+
 def test_the_diagram_rules_edges_compile():
     """Every edge the diagram rule shows (its line styles, a label on its arrow, two arrows
     side by side) compiles between two nodes: a fragment out of step with fletcher (a "bend"

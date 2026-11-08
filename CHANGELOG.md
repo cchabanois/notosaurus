@@ -38,6 +38,7 @@ Each pull request's entries (the `## Changelog` of its description) are put unde
 
 ### Fixed
 
+- Geometry figures: vectors are drawn with their arrow and their name, never as plain segments.
 - 〰️ A curve given by its measures is no longer replaced by a function of the AI's own that misses some of them.
 - Geometry figures: lengths are written beside their segments, never on them; Thales' configuration keeps the lengths given, its points placed from them.
 - Figures: names on a graph's axis that would touch are set on two rows; a frame's axes numbered at whole units only; roots of unity drawn on the unit circle, named as the lesson names them.
