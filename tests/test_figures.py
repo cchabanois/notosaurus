@@ -1595,6 +1595,28 @@ def test_lines_of_the_same_measure_share_one_axis():
         figures_typst.compile_svg("chart", body[:-1] + ', second: (values: ((0, 1), (1, 2)), axis: "z"))')
 
 
+def test_a_smooth_line_goes_through_its_measures_and_never_beyond():
+    """A curve through measures (a concentration over time): through every one, never above
+    the highest nor below the lowest between two (a plateau stays flat), drawn by the chart,
+    never a function the AI fits to them."""
+    from PIL import Image
+
+    body = '#chart(kind: "line", values: ((0, 0), (1, 5), (2, 5), (3, 5), (4, 1)), axes: ("t", "y"){})'
+
+    def reach(extra):
+        image = Image.open(
+            io.BytesIO(figures.to_png(figures.clean(figures_typst.compile_svg("chart", body.format(extra)))))
+        )
+        image = image.convert("RGB")
+        red = [y for y in range(image.height) for x in range(image.width) if image.getpixel((x, y)) == (176, 58, 46)]
+        return min(red), max(red)
+
+    straight, smooth = reach(""), reach(", smooth: true")
+    drawn = {figures_typst.compile_svg("chart", body.format(extra)) for extra in ("", ", smooth: true")}
+    assert len(drawn) == 2  # a curve, not the straight lines
+    assert abs(smooth[0] - straight[0]) <= 1 and abs(smooth[1] - straight[1]) <= 1
+
+
 def test_a_line_marks_its_events_and_stretches():
     """An event at an x (a dashed line, its label under the axis) and a stretch of x
     (shaded), placed by the chart from their values: each changes the drawing."""
