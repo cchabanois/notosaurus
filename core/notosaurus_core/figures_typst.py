@@ -8,7 +8,8 @@ cuboid, prism, pyramid in cavalier perspective, their hidden edges computed; cyl
 sphere as textbooks draw them, in proportion), charts and phylogenetic trees with cetz (our
 chart and phylogeny functions: a tree built from what each species has), sequences aligned
 in Typst (our sequences function: letters in columns, their differences framed, computed), a body's vectors with cetz
-(our mechanics function: each given by its direction, on an orbit, a plane, a slope).
+(our mechanics function: each given by its direction, on an orbit, a plane, a slope), tables of
+values in Typst (our value-table function: cells measured, totals summed, arrows beside it).
 What can be computed is, never placed by eye. Each family's rule and Typst: typst_rules/.
 
 The family is the one the AI gave with the figure's description (models.Card.figure_kind),
@@ -95,6 +96,7 @@ FAMILIES: dict[str, Family] = {
         "sequence",
         "phylogeny",
         "mechanics",
+        "table",
     )
 }
 
@@ -117,6 +119,7 @@ FigureKind = Literal[
     "sequence",
     "phylogeny",
     "mechanics",
+    "table",
     "other",
 ]
 
@@ -388,9 +391,15 @@ def _decimal_commas(body: str, comma: bool) -> str:
     meant one whatever the language; a comma between digits only in a language writing one
     (a list "1,2" in English stays as it was)."""
 
-    def tight(math: re.Match) -> str:
-        m = re.sub(r"(\d)\s*\{,\}\s*(?=\d)", r'\1","', math.group(0))
+    def tight_outside_strings(math: str) -> str:
+        m = re.sub(r"(\d)\s*\{,\}\s*(?=\d)", r'\1","', math)
         return re.sub(r"(\d),(?=\d)", r'\1","', m) if comma else m
+
+    def tight(math: re.Match) -> str:
+        # a number quoted in the formula (`$times "1,5"$`) is text, written as it is: its
+        # comma left alone, never cut in two strings ("1", "5": "1, 5")
+        pieces = re.split(r'("[^"]*")', math.group(0))
+        return "".join(p if i % 2 else tight_outside_strings(p) for i, p in enumerate(pieces))
 
     return MATH.sub(tight, body)
 

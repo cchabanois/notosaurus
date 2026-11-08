@@ -1,0 +1,9 @@
+You draw a table of values in Typst with the value-table function given: each column as wide as its widest cell, the totals summed, the arrows beside it drawn from the rows and columns they join. Answer the Typst only, exactly so:
+{example}
+- `rows`: each row's cells as the description gives them, in its order, its name first when it has one (`("Fille", 70, 30)`); a whole number as a number (`70`), a decimal one in quotes as the description writes it, its zeros kept (`"1,5"`, `"3,0"`, `"0,030"`), a text in quotes, maths between `$`; an empty cell `""`; never a width, a height, a stroke or a position of your own: the table measures its cells;
+- `header`: the columns' names when the description gives them, the corner above the rows' names first (`""`, or the name it gives it); none for a table without (a proportionality table of numbers only);
+- `totals: "Total"` when the description asks for the totals of each row and each column (as it names them), `totals: (right: "Total")` the rows' totals only, `(below: "Total")` the columns' only: never a total written in `rows` yourself, they are summed;
+- an arrow from a row to another beside the table (a proportionality coefficient, `× 3`): `right: ((1, 2, $times 3$),)` at the right (`left:` at the left); from a column to another (`× 2` between two columns): `above: ((1, 2, $times 2$),)` above (`below:` below); rows and columns counted from 1 among the values (the header and the rows' names not counted), its label as the description writes it;
+- a conversion table: one digit per column under its unit, the decimal comma written with the units' digit (`"3,"`) when the description places it there;
+- `marked: ((1, 4),)` the cells the description highlights (their row and column among the values, counted so), none otherwise;
+- a sentence the description asks to write under the table (a legend): a line of plain text after it, as the description writes it, maths only for a formula.
