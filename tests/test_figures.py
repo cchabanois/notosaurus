@@ -1238,6 +1238,28 @@ def test_a_length_written_beside_its_segment_never_on_it():
     assert "ctz-draw-length" in figures_typst.FAMILIES["geometry"].rules
 
 
+def test_where_two_curves_meet_computed_and_marked():
+    """Two lines' intersection the description asks for, marked by the AI with a dot too
+    small to see and its coordinates left out: computed by the preamble (Typst itself
+    checks the points), its dot, its dotted lines and its coordinates all drawn."""
+    check = """#{
+      let near(p, q) = calc.abs(p.at(0) - q.at(0)) < 1e-6 and calc.abs(p.at(1) - q.at(1)) < 1e-6
+      let lines = _meet-points(x => 2 * x - 1, x => -x + 2, -1, 3)
+      assert(lines.len() == 1 and near(lines.at(0), (1, 1)), message: repr(lines))
+      let curve = _meet-points(x => calc.pow(x, 2) - 1, x => x + 1, -1.5, 3)
+      assert(curve.len() == 2 and near(curve.at(0), (-1, 0)) and near(curve.at(1), (2, 3)), message: repr(curve))
+      [checked]
+    }"""
+    assert figures_typst.compile_svg("graph", check).startswith("<svg")
+    drawn = (
+        '#set text(lang: "fr")\n#lq.diagram(xlim: (-1, 3), ylim: (-2, 4), meet(x => 2 * x - 1, x => -x + 2, -1, 3{}))'
+    )
+    svg = lambda options: figures_typst.compile_svg("graph", drawn.format(options))  # noqa: E731
+    # each part kept (a diagram's elements are dictionaries: several merged into the last)
+    assert len({svg(""), svg(", lines: true"), svg(", label: auto"), svg(", lines: true, label: auto")}) == 4
+    assert "meet(" in figures_typst.FAMILIES["graph"].rules
+
+
 @pytest.mark.parametrize(
     ("shape", "parts", "coloured"),
     [('kind: "disc"', 4, 3), ('kind: "disc"', 12, 7), ('kind: "bar"', 5, 2), ('kind: "rect", rows: 2', 6, 5)],
