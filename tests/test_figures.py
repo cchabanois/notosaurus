@@ -1238,6 +1238,22 @@ def test_a_length_written_beside_its_segment_never_on_it():
     assert "ctz-draw-length" in figures_typst.FAMILIES["geometry"].rules
 
 
+@pytest.mark.parametrize(
+    ("shape", "parts", "coloured"),
+    [('kind: "disc"', 4, 3), ('kind: "disc"', 12, 7), ('kind: "bar"', 5, 2), ('kind: "rect", rows: 2', 6, 5)],
+)
+def test_a_fractions_coloured_parts_counted_by_the_preamble(shape, parts, coloured):
+    """A fraction on a shape: the AI coloured 1 part of 4 for 3/4, or a triangle across the
+    parts. Drawn by the preamble: the shape cut into `parts` equal parts, exactly `coloured`
+    filled whole (counted in the SVG: the parts filled with the fraction's colour)."""
+    svg = figures_typst.compile_svg("geometry", f"#fraction-shape({shape}, parts: {parts}, coloured: {coloured})")
+    filled = len(re.findall(r'fill="#9fc3e7"', svg))
+    assert filled == coloured, svg[:300]
+    # several shapes side by side: five thirds over two discs
+    two = '#fraction-shapes((kind: "disc", parts: 3, coloured: 3), (kind: "disc", parts: 3, coloured: 2))'
+    assert len(re.findall(r'fill="#9fc3e7"', figures_typst.compile_svg("geometry", two))) == 5
+
+
 def test_the_diagram_rules_edges_compile():
     """Every edge the diagram rule shows (its line styles, a label on its arrow, two arrows
     side by side) compiles between two nodes: a fragment out of step with fletcher (a "bend"
