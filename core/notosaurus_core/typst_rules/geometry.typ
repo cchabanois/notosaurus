@@ -1,6 +1,48 @@
 #set page(width: auto, height: auto, margin: 6pt)
 #import "@preview/ctz-euclide:0.3.0": *
 #import "@preview/cetz:0.5.2"
+// A fraction shown on a shape: a disc, a bar or a rectangle (`rows` rows) cut into `parts`
+// equal parts, exactly `coloured` of them filled whole (a disc's from the top, clockwise; a
+// bar's or a rectangle's from the left, row by row), every bar or rectangle the same outside:
+// the count drawn by the preamble, never a part filled by hand. `caption` written under it. Alone, a figure of its own (no canvas).
+#let fraction-shape(kind: "disc", parts: 4, coloured: 0, rows: 1, size: 3, caption: none, colour: rgb("#9fc3e7")) = {
+  assert(kind in ("disc", "bar", "rect"), message: "kind is \"disc\", \"bar\" or \"rect\"")
+  assert(type(parts) == int and parts >= 1, message: "parts is a whole number of parts")
+  assert(type(coloured) == int and 0 <= coloured and coloured <= parts, message: "coloured is between 0 and parts")
+  let drawing = cetz.canvas({
+    import cetz.draw: *
+    if kind == "disc" {
+      let r = size / 2
+      for i in range(parts) {
+        let start = 90deg - i * 360deg / parts
+        if parts == 1 {
+          circle((0, 0), radius: r, fill: if coloured == 1 { colour } else { white }, stroke: 0.9pt)
+        } else {
+          arc((0, 0), start: start, delta: -360deg / parts, radius: r, mode: "PIE", anchor: "origin",
+            fill: if i < coloured { colour } else { white }, stroke: 0.9pt)
+        }
+      }
+    } else {
+      let r = if kind == "bar" { 1 } else { rows }
+      assert(calc.rem(parts, r) == 0, message: "a rectangle's parts fill its rows: parts a multiple of rows")
+      let cols = int(parts / r)
+      // every bar, every rectangle the same outside, however cut: two compared side by side
+      // (3/10 and 3/5) are the same whole
+      let w = size * 1.6 / cols
+      let h = (if kind == "bar" { size / 4 } else { size * 0.8 }) / r
+      for i in range(parts) {
+        let (row, col) = (calc.floor(i / cols), calc.rem(i, cols))
+        rect((col * w, -row * h), ((col + 1) * w, -(row + 1) * h),
+          fill: if i < coloured { colour } else { white }, stroke: 0.9pt)
+      }
+    }
+  })
+  if caption == none { drawing } else { stack(dir: ttb, spacing: 0.6em, drawing, align(center, caption)) }
+}
+// Several fraction shapes side by side (an improper fraction over several shapes, two
+// fractions compared): each a dictionary of fraction-shape's arguments, all the same size.
+#let fraction-shapes(..shapes, gap: 1cm) = stack(dir: ltr, spacing: gap,
+  ..shapes.pos().map(s => align(bottom, fraction-shape(..s))))
 // A number line: its line from half a step before its first tick to half a step after its
 // last, a tick each `step` at (value − first) × scale, its whole numbers written under them
 // (`numbers: false`: none, the description's own written by hand); `arrow: true` an arrow
