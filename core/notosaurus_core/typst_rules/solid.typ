@@ -440,5 +440,163 @@
     if radius-label != none { line((0, 0), (r, 0), stroke: 0.7pt); _label((r / 2, 0.22), radius-label) }
   },
 )
+// A coordinate frame of space (O ; i, j, k) as textbooks draw it: x towards the viewer (down
+// to the left, halved), y to the right, z up; each point placed from its coordinates, each
+// segment, line and plane from its points' names, what a plane hides dashed and each name set
+// where no line is: computed, never placed by eye. The frame scaled to about 5 cm.
+#let _frame-proj(p) = _proj((p.at(1), -p.at(0), p.at(2)))
+#let _frame-view = (1, _k * calc.cos(45deg), _k * calc.sin(45deg)) // towards the viewer
+// whether a point lies behind a plane's polygon (each a list of 3D points), seen from the
+// viewer: its projection inside the polygon's, the polygon between it and the viewer
+#let _behind(p, polygons) = polygons.any(poly => {
+  let q = _frame-proj(p)
+  let ps = poly.map(_frame-proj)
+  let signs = range(ps.len()).map(i => {
+    let (a, b) = (ps.at(i), ps.at(calc.rem(i + 1, ps.len())))
+    (b.at(0) - a.at(0)) * (q.at(1) - a.at(1)) - (b.at(1) - a.at(1)) * (q.at(0) - a.at(0))
+  })
+  let inside = signs.all(x => x > 1e-6) or signs.all(x => x < -1e-6)
+  let n = _cross(_sub(poly.at(1), poly.at(0)), _sub(poly.at(2), poly.at(0)))
+  let towards = _dot(n, _frame-view)
+  inside and calc.abs(towards) > 1e-9 and _dot(n, _sub(poly.at(0), p)) / towards > 1e-6
+})
+#let space(
+  points: (:), segments: (), lines: (), planes: (), vectors: (), guides: (), faces: (),
+  origin: "O", units: ($arrow(i)$, $arrow(j)$, $arrow(k)$), axes: ($x$, $y$, $z$),
+) = {
+  for (name, p) in points {
+    if type(p) != array or p.len() != 3 or p.any(x => type(x) not in (int, float)) {
+      panic("points: " + name + ": its three coordinates (x, y, z), numbers, not " + repr(p))
+    }
+  }
+  let all = points
+  if origin != none and origin not in all { all.insert(origin, (0, 0, 0)) }
+  let at(name) = {
+    if name not in all { panic("a point not in points: " + repr(name) + " (points: " + all.keys().join(", ") + ")") }
+    all.at(name)
+  }
+  let coords = all.values() + ((1, 1, 1),)
+  let lo = range(3).map(i => calc.min(0, ..coords.map(p => p.at(i))))
+  let hi = range(3).map(i => calc.max(..coords.map(p => p.at(i))))
+  let reach = calc.max(..range(3).map(i => (hi.at(i) - lo.at(i)) * if i == 0 { _k } else { 1 }))
+  let s = calc.min(if faces.len() > 0 { 4 } else { 1.5 }, 4.5 / reach) // a unit at most 1.5 cm, a solid's 4 cm
+  let to(p) = _frame-proj(p).map(x => x * s)
+  // a solid's faces (a cube's, by its vertices' names): those turned to the viewer hide
+  // what is behind them, as a plane does
+  let solid = faces.map(names => names.map(at))
+  let centre = if solid.len() > 0 { _mean(solid.flatten().chunks(3)) } else { none }
+  let front = solid.filter(f => {
+    let n = _cross(_sub(f.at(1), f.at(0)), _sub(f.at(2), f.at(0)))
+    if _dot(n, _sub(_mean(f), centre)) < 0 { n = n.map(x => -x) }
+    _dot(n, _frame-view) > 1e-9
+  })
+  let corners = faces.flatten()
+  let fills = planes.map(names => names.map(at))
+  let polys = fills + front
+  // a segment cut where it goes behind a plane or comes out: its runs, each seen or hidden
+  let pieces(a, b) = {
+    let n = 60
+    let point(t) = a.zip(b).map(((u, v)) => u + t * (v - u))
+    let runs = ()
+    for i in range(n) {
+      let hidden = _behind(point((i + 0.5) / n), polys)
+      if runs.len() > 0 and runs.last().at(2) == hidden {
+        runs.last().at(1) = point((i + 1) / n)
+      } else {
+        runs.push((point(i / n), point((i + 1) / n), hidden))
+      }
+    }
+    runs
+  }
+  let drawn = () // the page's segments, for the names
+  let named = () // (where, name, a point's dot): set once every line is drawn
+  cetz.canvas({
+    import cetz.draw: *
+    let stroked(a, b, width, mark: none) = {
+      let ps = pieces(a, b)
+      for (i, (u, v, hidden)) in ps.enumerate() {
+        line(to(u), to(v), stroke: if hidden { (thickness: width, dash: "dashed") } else { width },
+          mark: if mark != none and i == ps.len() - 1 { mark } else { none })
+      }
+    }
+    for poly in fills {
+      line(..poly.map(to), close: true, fill: luma(230), stroke: none)
+    }
+    // the axes, a unit past the farthest point (and past 0 below), their unit vectors
+    for i in range(3) {
+      let e = range(3).map(j => if j == i { 1 } else { 0 })
+      let (a, b) = (e.map(x => x * (lo.at(i) - 0.6)), e.map(x => x * (hi.at(i) + 0.9)))
+      if axes == none {
+        if units != none {
+          line(to((0, 0, 0)), to(e), stroke: 1.3pt, mark: (end: ">", fill: black, scale: 0.7))
+          named.push((to(e.map(x => x / 2)), units.at(i), false))
+        }
+        continue
+      }
+      stroked(a, b, 0.6pt, mark: (end: ">", fill: black, scale: 0.6))
+      drawn.push((to(a), to(b)))
+      for t in range(int(calc.ceil(lo.at(i))), int(calc.floor(hi.at(i))) + 1).filter(t => t != 0) {
+        // a tick across its axis, on the page
+        let (c, d) = (to(e.map(x => x * t)), _sub(to(e), to((0, 0, 0))))
+        let n = (-d.at(1), d.at(0)).map(x => x / calc.sqrt(_dot(d, d)) * 0.07)
+        line(_sub(c, n), c.zip(n).map(((x, y)) => x + y), stroke: 0.5pt)
+      }
+      content(to(e.map(x => x * (hi.at(i) + 0.9))), text(11pt, axes.at(i)), anchor: ("north-east", "west", "south").at(i), padding: 0.08)
+      if units != none {
+        line(to((0, 0, 0)), to(e), stroke: 1.3pt, mark: (end: ">", fill: black, scale: 0.7))
+        named.push((to(e.map(x => x / 2)), units.at(i), false))
+      }
+    }
+    // a solid's edges, each once, dashed where a face hides it
+    let edges = (:)
+    for f in faces {
+      for j in range(f.len()) {
+        let (u, v) = (f.at(j), f.at(calc.rem(j + 1, f.len())))
+        edges.insert(if u < v { u + "-" + v } else { v + "-" + u }, (u, v))
+      }
+    }
+    for (u, v) in edges.values() { stroked(at(u), at(v), 1pt); drawn.push((to(at(u)), to(at(v)))) }
+    for poly in fills {
+      for j in range(poly.len()) { stroked(poly.at(j), poly.at(calc.rem(j + 1, poly.len())), 0.9pt); drawn.push((to(poly.at(j)), to(poly.at(calc.rem(j + 1, poly.len()))))) }
+    }
+    for (a, b) in segments { stroked(at(a), at(b), 1pt); drawn.push((to(at(a)), to(at(b)))) }
+    for (a, b) in lines {
+      let (p, q) = (at(a), at(b))
+      // a line goes on 1 cm past its two points, on the page
+      let d = _sub(q, p)
+      let page = _sub(to(q), to(p))
+      let past = 1 / calc.max(calc.sqrt(_dot(page, page)), 1e-9)
+      let (u, v) = (p.zip(d).map(((x, y)) => x - past * y), q.zip(d).map(((x, y)) => x + past * y))
+      stroked(u, v, 1pt)
+      drawn.push((to(u), to(v)))
+    }
+    for vector in vectors {
+      let (a, b) = (at(vector.at(0)), at(vector.at(1)))
+      stroked(a, b, 1.2pt, mark: (end: ">", fill: black, scale: 0.7))
+      drawn.push((to(a), to(b)))
+      if vector.len() > 2 { named.push((_mean((to(a), to(b))), vector.at(2), false)) }
+    }
+    for name in guides {
+      let (x, y, z) = at(name)
+      let foot = (x, y, 0)
+      for (a, b) in ((at(name), foot), (foot, (x, 0, 0)), (foot, (0, y, 0))) {
+        line(to(a), to(b), stroke: (thickness: 0.5pt, dash: "dotted"))
+        drawn.push((to(a), to(b)))
+      }
+    }
+    // each name in the one of 8 directions around its place farthest from every line drawn
+    // and every name already set
+    named += all.pairs().map(((name, p)) => (to(p), eval(name, mode: "math"), name not in corners))
+    let placed = ()
+    for (c, body, dot) in named {
+      if dot { circle(c, radius: 0.045, fill: black, stroke: none) }
+      let around = range(8).map(k => (c.at(0) + 0.3 * calc.cos(k * 45deg), c.at(1) + 0.3 * calc.sin(k * 45deg)))
+      let room(q) = calc.min(..drawn.map(((a, b)) => _gap(q, a, b)), ..placed.map(o => calc.sqrt(_dot(_sub(q, o), _sub(q, o))) / 2))
+      let best = around.sorted(key: q => -room(q)).first()
+      placed.push(best)
+      content(best, text(11pt, body))
+    }
+  })
+}
 // ---- What the AI writes, from here (the rule's example: everything above is given)
 #cuboid(5, 3, 2, length-label: $L$, width-label: $l$, height-label: $h$)
