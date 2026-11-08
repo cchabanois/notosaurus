@@ -38,6 +38,7 @@ Each pull request's entries (the `## Changelog` of its description) are put unde
 
 ### Fixed
 
+- Fractions shown on a disc, a bar or a rectangle: exactly the parts asked for are coloured, whole.
 - Venn diagrams: a part's name (A ∩ B) no longer lies on the circles; elements sit in their parts, a union or a complement is named beside the diagram, and an event alone is drawn with its own circle only.
 - Geometry figures: vectors are drawn with their arrow and their name, never as plain segments.
 - 〰️ A curve given by its measures is no longer replaced by a function of the AI's own that misses some of them.
