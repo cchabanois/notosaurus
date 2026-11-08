@@ -1238,6 +1238,21 @@ def test_a_length_written_beside_its_segment_never_on_it():
     assert "ctz-draw-length" in figures_typst.FAMILIES["geometry"].rules
 
 
+def test_a_venn_parts_name_wider_than_it_goes_outside():
+    """ "A ∩ B" written in a two-set lens (0.75 wide) lay on both circles, three drawings out
+    of three. A part's name that fits stays in it; a wider one goes under the diagram, a line
+    joining it to its part."""
+    venn = '#cetz.canvas({{ cetz-venn.venn2(name: "v"); part-label("v.ab", {}) }})'
+    svg = figures_typst.compile_svg
+    short = svg("sets", venn.format("[$x$]"))
+    long = svg("sets", venn.format("[$A inter B$]"))
+    bare = svg("sets", '#cetz.canvas({ cetz-venn.venn2(name: "v") })')
+    height = lambda s: float(re.search(r'height="([\d.]+)', s).group(1))  # noqa: E731
+    assert height(short) == height(bare)  # in the lens
+    assert height(long) > height(bare) + 10  # under the diagram
+    assert "part-label" in figures_typst.FAMILIES["sets"].rules
+
+
 def test_a_vector_drawn_with_its_arrow():
     """A scalar product's vectors drawn as plain segments (0/3): the rule had no vector. Drawn
     by the preamble: its arrow's head at its end (a segment more than the plain one), its name
