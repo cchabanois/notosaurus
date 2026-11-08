@@ -1239,14 +1239,14 @@ def test_a_length_written_beside_its_segment_never_on_it():
 
 
 def test_a_venn_parts_name_wider_than_it_goes_outside():
-    """"A ∩ B" written in a two-set lens (0.75 wide) lay on both circles, three drawings out
+    """ "A ∩ B" written in a two-set lens (0.75 wide) lay on both circles, three drawings out
     of three. A part's name that fits stays in it; a wider one goes under the diagram, a line
     joining it to its part."""
-    venn = "#cetz.canvas({{ cetz-venn.venn2(name: \"v\"); part-label(\"v.ab\", {}) }})"
+    venn = '#cetz.canvas({{ cetz-venn.venn2(name: "v"); part-label("v.ab", {}) }})'
     svg = figures_typst.compile_svg
     short = svg("sets", venn.format("[$x$]"))
     long = svg("sets", venn.format("[$A inter B$]"))
-    bare = svg("sets", "#cetz.canvas({ cetz-venn.venn2(name: \"v\") })")
+    bare = svg("sets", '#cetz.canvas({ cetz-venn.venn2(name: "v") })')
     height = lambda s: float(re.search(r'height="([\d.]+)', s).group(1))  # noqa: E731
     assert height(short) == height(bare)  # in the lens
     assert height(long) > height(bare) + 10  # under the diagram
