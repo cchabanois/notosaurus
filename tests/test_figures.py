@@ -1166,6 +1166,24 @@ def test_a_graphs_x_axis_name_clear_of_its_last_number():
     assert name[0] - last > 9  # pt: a digit's width and a gap, at least
 
 
+def test_a_graphs_close_ticks_names_kept_apart():
+    """Ticks the AI names whose values are close ("a = 1" against α, u₂ against u₃: written
+    one on the other): the one that would touch goes on a second row, computed; names far
+    apart stay on one row."""
+    graph = (
+        "#lq.diagram(width: 6cm, height: 4cm, xlim: (0, 2), ylim: (0, 1),"
+        " xaxis: (ticks: ((1, [aaa]), ({}, [bbb]))), lq.plot((0, 2), (0, 1), mark: none))"
+    )
+
+    def rows(second: float) -> int:
+        glyphs = _glyphs(figures_typst.compile_svg("graph", graph.format(second)))
+        below = max(y for _, y in glyphs) - 20  # the x axis's names, under it
+        return len({y for x, y in glyphs if x > 20 and y < below})
+
+    assert rows(1.1) == 2
+    assert rows(1.8) == 1
+
+
 @pytest.mark.parametrize("name", ["lambda", "pi", "Delta"])
 def test_a_variable_named_like_a_symbol_leaves_the_symbol_in_formulas(name):
     """`#let lambda = 1.5`, then `$lambda$` for the arrow's name: Typst read the variable,
@@ -1392,6 +1410,30 @@ def test_a_trigonometric_circle_with_one_angle():
     circle = "#ctz-canvas({{ ctz-init()\n ctz-draw-unit-circle(angles: {}, project: (60, $1/2$, $sqrt(3)/2$)) }})"
     one = figures_typst.compile_svg("geometry", circle.format("((60, $M$),)"))
     assert figures_typst.compile_svg("geometry", circle.format("((60, $M$))")) == one
+
+
+def test_a_frames_axes_numbered_at_whole_steps():
+    """Axes starting half a unit out (−1.5, as the rule asks): ctz-euclide counted its steps
+    from there, "−1.5, −0.5, 0.5" written between the units, on the points and the circle.
+    Numbered at the step's multiples, the same numbers wherever the axis starts."""
+    frame = "#ctz-canvas({{ ctz-init()\n ctz-draw-axes(xmin: {0}, xmax: 1.5, ymin: {0}, ymax: 1.5) }})"
+    numbers = [len(_glyphs(figures_typst.compile_svg("geometry", frame.format(start)))) for start in ("-1.5", "-1")]
+    assert numbers[0] == numbers[1]
+
+
+def test_points_on_the_unit_circle_joined_and_named_as_the_rule_says():
+    """Roots of unity drawn in a frame of the AI's own, their names written by hand beside
+    letters it added (B and j, C and j² one on the other, 3 times in 3): the unit circle joins
+    its points (`join: true`); a point named otherwise than by a letter gets its text from the
+    labels, as the rule writes it."""
+    circle = "#ctz-canvas({{ ctz-init()\n ctz-draw-unit-circle(angles: ((0, $1$), (120, $j$), (240, $j^2$)){}) }})"
+    joined = figures_typst.compile_svg("geometry", circle.format(", join: true"))
+    assert joined != figures_typst.compile_svg("geometry", circle.format(""))
+    rule = (figures_typst.RULES / "geometry.md").read_text(encoding="utf-8")
+    call = re.search(r"`(ctz-draw-labels\(B: \(pos: [^`]*label: [^`]*\)\))`", rule)
+    assert call
+    body = f"#ctz-canvas({{ ctz-init()\n ctz-def-points(A: (0, 0), B: (2, 1))\n {call[1]} }})"
+    assert figures_typst.compile_svg("geometry", body).startswith("<svg")
 
 
 CUBE_FACES = ", ".join(

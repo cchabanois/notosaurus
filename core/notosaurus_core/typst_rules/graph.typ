@@ -13,6 +13,47 @@
 #let decimal-separator = "."
 #import "@preview/zero:0.6.1"
 #zero.set-num(decimal-separator: decimal-separator)
+// Ticks named by the AI (`xaxis: (ticks: ((1, $a$), (calc.pow(2, 1/3), $alpha$)))`) whose
+// names would touch, their values close ("a" against "α", "u₂" against "u₃"): each name that
+// would touch the one before goes on a second row, below it (an x axis) or left of it (a y
+// axis). Computed from the limits, the size and the names' own widths, never placed by eye:
+// the AI's `lq.diagram(…)` drawn by `diagram-apart(…)` (figures_typst.source).
+#let staggered(ticks, low, high, size, horizontal) = {
+  if type(ticks) != array or ticks.any(t => type(t) != array or t.len() != 2) { return ticks }
+  if ticks.any(t => type(t.at(0)) not in (int, float)) { return ticks }
+  let gap = 0.8em.to-absolute() // about a letter apart, at least
+  let at(v) = (v - low) / (high - low) * size
+  let extent(name) = { let m = measure(name); if horizontal { m.width } else { m.height } }
+  let ends = (-1e9pt, -1e9pt) // where each row's last name ends
+  let out = ()
+  for (value, name) in ticks.sorted(key: t => t.at(0)) {
+    let (start, end) = (at(value) - extent(name) / 2, at(value) + extent(name) / 2)
+    let row = if start >= ends.at(0) + gap { 0 } else if start >= ends.at(1) + gap { 1 } else { 0 }
+    ends.at(row) = end
+    let moved = if row == 0 { name } else if horizontal {
+      box(inset: (top: measure(name).height + 0.3em), name)
+    } else {
+      box(inset: (right: measure(name).width + 0.5em), name)
+    }
+    out.push((value, moved))
+  }
+  out
+}
+#let apart(args) = {
+  let named = args.named()
+  for (key, lim, size, horizontal) in (("xaxis", "xlim", "width", true), ("yaxis", "ylim", "height", false)) {
+    let axis = named.at(key, default: none)
+    let limits = named.at(lim, default: none)
+    if type(axis) != dictionary or "ticks" not in axis or type(limits) != array or limits.len() != 2 { continue }
+    if limits.any(v => type(v) not in (int, float)) { continue }
+    let span = named.at(size, default: if horizontal { 6cm } else { 4cm })
+    if type(span) != length { continue }
+    axis.ticks = staggered(axis.ticks, limits.at(0), limits.at(1), span.to-absolute(), horizontal)
+    named.insert(key, axis)
+  }
+  arguments(..args.pos(), ..named)
+}
+#let diagram-apart(..args) = context lq.diagram(..apart(args))
 // A surface filled (an integral, the area under a curve or between two, a probability under a
 // density): its edge computed from the functions between the bounds, never drawn by hand; the
 // x axis below it, or a second curve's function (`below`). Its name at the surface's centre
