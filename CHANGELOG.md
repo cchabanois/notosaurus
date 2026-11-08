@@ -36,6 +36,7 @@ Each pull request's entries (the `## Changelog` of its description) are put unde
 
 ### Fixed
 
+- Geometry figures: lengths are written beside their segments, never on them; Thales' configuration keeps the lengths given, its points placed from them.
 - Figures: names on a graph's axis that would touch are set on two rows; a frame's axes numbered at whole units only; roots of unity drawn on the unit circle, named as the lesson names them.
 - Chemistry: several molecules in one figure are drawn side by side, each with its name, no longer one on another; a hydrogen bond is drawn dotted.
 - 📈 Two curves of the same measure are no longer drawn on two different axes, which made a small change look as large as a big one.
