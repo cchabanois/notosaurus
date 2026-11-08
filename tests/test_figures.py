@@ -3,6 +3,7 @@
 import asyncio
 import io
 import json
+import math
 import re
 from xml.etree import ElementTree
 
@@ -1333,6 +1334,45 @@ def test_a_probability_tree_as_wide_as_it_is_high():
     assert 0.6 < width / height < 1.6
     with pytest.raises(figures_typst.Unusable, match="each branch"):
         figures_typst.compile_svg("diagram", '#tree(("A", [0,4], "B"), "C")')
+
+
+def test_a_networks_vertices_placed_so_that_no_edges_cross():
+    """A graph of graph theory: its vertices placed by the AI's eye (drawn by hand 2 times in 3),
+    now on a circle in the order that crosses the fewest edges, not the order they are listed
+    in (A, B, C, D, E around it crosses three times here; A, B, D, E, C none). The rule's own
+    call compiles; an edge naming no vertex is refused, saying which."""
+    rule = (figures_typst.RULES / "diagram.md").read_text(encoding="utf-8")
+    call = re.search(r"`(#network\(.*?\))`", rule)
+    assert call and figures_typst.compile_svg("diagram", call[1]).startswith("<svg")
+    edges = [("A", "B"), ("A", "C"), ("B", "C"), ("B", "D"), ("C", "D"), ("C", "E"), ("D", "E")]
+    body = '#network(vertices: ("A", "B", "C", "D", "E"), edges: ({}))'.format(
+        ", ".join(f'("{a}", "{b}")' for a, b in edges)
+    )
+    names = _glyphs(figures_typst.compile_svg("diagram", body))  # the vertices' names, A to E
+    assert len(names) == 5
+    cx, cy = sum(x for x, _ in names) / 5, sum(y for _, y in names) / 5
+    around = sorted(range(5), key=lambda i: math.atan2(names[i][1] - cy, names[i][0] - cx))
+    at = {"ABCDE"[v]: around.index(v) for v in range(5)}
+    chords = [tuple(sorted((at[a], at[b]))) for a, b in edges]
+    crossing = [
+        (p, q)
+        for i, p in enumerate(chords)
+        for q in chords[i + 1 :]
+        if len({*p, *q}) == 4 and (p[0] < q[0] < p[1]) != (p[0] < q[1] < p[1])
+    ]
+    assert crossing == []
+    with pytest.raises(figures_typst.Unusable, match="not one of the vertices"):
+        figures_typst.compile_svg("diagram", '#network(vertices: ("A", "B"), edges: (("A", "C"),))')
+
+
+def test_a_networks_weights_never_on_one_another():
+    """Two edges crossing in their middles (a complete graph's diagonals): their weights moved
+    along them, apart, never written one on the other."""
+    edges = '("A", "B", [1]), ("A", "C", [2]), ("A", "D", [3]), ("B", "C", [4]), ("B", "D", [5]), ("C", "D", [6])'
+    svg = figures_typst.compile_svg("diagram", f'#network(vertices: ("A", "B", "C", "D"), edges: ({edges}))')
+    weights = _glyphs(svg)[4:]
+    assert len(weights) == 6
+    assert min(math.dist(p, q) for i, p in enumerate(weights) for q in weights[i + 1 :]) > 10  # pt
 
 
 def test_a_coordinate_frame_drawn_as_the_geometry_rule_says():

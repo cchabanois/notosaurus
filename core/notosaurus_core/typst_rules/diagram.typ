@@ -1,5 +1,6 @@
 #set page(width: auto, height: auto, margin: 6pt)
 #import "@preview/fletcher:0.5.8" as fletcher: diagram, edge
+#import "@preview/cetz:0.5.2"
 // A node's text wider than a column goes on to the next line by itself: a newline typed in
 // it is only a space, and a long text on one line makes the whole diagram tiny
 #let node(..args) = {
@@ -121,6 +122,166 @@
       from, to, "-", label, label-side: side, label-sep: 2pt, label-pos: along,
     )),
   )
+}
+// A graph of graph theory (vertices joined by edges, weighted, directed): its vertices'
+// places computed, never the AI's: on a circle, in the order around it that crosses the
+// fewest edges (then joins the most neighbours), the order given when it's as good. Each
+// weight on its edge, in a white box, moved along it when another weight is there; two
+// edges between the same vertices bent apart; a loop outside its vertex, away from the others.
+// vertices: their names; edges: (from, to) or (from, to, weight) each, from and to as the
+// vertices are named; directed: arrows
+#let _net-key(v) = {
+  if type(v) == str { v.trim() }
+  else if type(v) == content and v.has("text") { v.text.trim() }
+  else if type(v) == content and v.has("body") { _net-key(v.body) }
+  else if type(v) == content and v.has("children") { v.children.map(_net-key).join() }
+  else { repr(v) }
+}
+#let _net-orders(rest) = {
+  if rest.len() <= 1 { return (rest,) }
+  let all = ()
+  for (k, first) in rest.enumerate() {
+    let others = rest.slice(0, k) + rest.slice(k + 1)
+    for o in _net-orders(others) { all.push((first,) + o) }
+  }
+  all
+}
+// crossings of the edges (pairs of indices) with the vertices in `order` around a circle, and
+// the edges joining two neighbours on it
+#let _net-score(order, pairs, n) = {
+  let at = range(n).map(i => order.position(v => v == i))
+  let chords = pairs.filter(((a, b)) => a != b).map(((a, b)) => {
+    let (p, q) = (at.at(a), at.at(b))
+    if p < q { (p, q) } else { (q, p) }
+  })
+  let crossings = 0
+  for (i, (a, b)) in chords.enumerate() {
+    for (c, d) in chords.slice(i + 1) {
+      if a != c and a != d and b != c and b != d and ((a < c and c < b) != (a < d and d < b)) { crossings += 1 }
+    }
+  }
+  let sides = chords.filter(((a, b)) => b - a == 1 or (a == 0 and b == n - 1)).len()
+  (crossings, -sides)
+}
+#let network(vertices: (), edges: (), directed: false) = context {
+  import cetz.draw: *
+  let n = vertices.len()
+  if n == 0 { panic("network: no vertices: vertices: (\"A\", \"B\", …)") }
+  let keys = vertices.map(_net-key)
+  let index(v) = {
+    let i = keys.position(k => k == _net-key(v))
+    if i == none { panic("network: an edge names " + repr(v) + ", not one of the vertices " + repr(keys)) }
+    i
+  }
+  let edges = edges.map(e => {
+    if type(e) != array or e.len() not in (2, 3) {
+      panic("network: each edge (from, to) or (from, to, weight), not " + repr(e))
+    }
+    (index(e.at(0)), index(e.at(1)), e.at(2, default: none))
+  })
+  let pairs = edges.map(e => (e.at(0), e.at(1)))
+  // the order around the circle: every order tried, up to 7 vertices
+  let order = range(n)
+  if n >= 4 and n <= 7 {
+    let best = _net-score(order, pairs, n)
+    for o in _net-orders(range(1, n)) {
+      let s = _net-score((0,) + o, pairs, n)
+      if s.at(0) < best.at(0) or (s.at(0) == best.at(0) and s.at(1) < best.at(1)) { (best, order) = (s, (0,) + o) }
+    }
+  }
+  let names = vertices.map(v => if type(v) == str { [#v] } else { v })
+  let size = calc.max(..names.map(m => calc.max(measure(m).width, measure(m).height)))
+  let r = (size / 2 + 4pt) / 1cm
+  // neighbours on the circle 2.4 cm apart (edge to edge), the circle 1.2 cm across at least
+  let radius = if n == 1 { 0 } else { calc.max(0.9, (2 * r + 1.6) / (2 * calc.sin(180deg / n))) }
+  let start = if n == 2 { 180deg } else if calc.even(n) { 90deg + 180deg / n } else { 90deg }
+  let place = range(n).map(i => {
+    let a = start - order.position(v => v == i) * 360deg / n
+    (radius * calc.cos(a), radius * calc.sin(a))
+  })
+  let add((x, y), (u, v), k) = (x + k * u, y + k * v)
+  let unit((x, y)) = {
+    let l = calc.sqrt(x * x + y * y)
+    if l == 0 { (0, 1) } else { (x / l, y / l) }
+  }
+  let mark = if directed { (end: "straight", scale: 0.9) } else { none }
+  let labels = ()
+  let placed = ()
+  cetz.canvas({
+    set-style(stroke: 0.8pt)
+    for (k, (a, b, w)) in edges.enumerate() {
+      let (p, q) = (place.at(a), place.at(b))
+      if a == b {
+        // a loop: outside its vertex, away from the circle's middle
+        let out = if n == 1 { (0, 1) } else { unit(p) }
+        let side = (-out.at(1), out.at(0))
+        let from = add(add(p, out, r * 0.8), side, r * 0.6)
+        let to = add(add(p, out, r * 0.8), side, -r * 0.6)
+        let top = add(p, out, r + 0.75)
+        bezier(from, to, add(top, side, 0.55), add(top, side, -0.55), mark: mark)
+        if w != none { labels.push((add(p, out, r + 0.62), w, "loop", out)) }
+        continue
+      }
+      // bent when another edge joins the same two vertices (either way): each to its own left
+      let twins = pairs.enumerate().filter(((j, (c, d))) => (c == a and d == b) or (c == b and d == a))
+      let bend = if twins.len() > 1 {
+        let rank = twins.position(((j, _)) => j == k)
+        let lefts = twins.slice(0, rank).filter(((j, (c, d))) => c == a).len()
+        let (c0, d0) = twins.at(0).at(1)
+        // the same way as the first: alternately each side; the other way: its left is the other side
+        let s = if c0 == a { 1 } else { -1 }
+        0.45 * s * (if calc.even(rank) { 1 } else { -1 }) * (calc.floor(rank / 2) + 1)
+      } else { 0 }
+      let d = unit((q.at(0) - p.at(0), q.at(1) - p.at(1)))
+      let normal = (-d.at(1), d.at(0))
+      let mid = add(((p.at(0) + q.at(0)) / 2, (p.at(1) + q.at(1)) / 2), normal, bend)
+      // ends on the vertices' circles, towards the curve's middle
+      let from = add(p, unit((mid.at(0) - p.at(0), mid.at(1) - p.at(1))), r)
+      let to = add(q, unit((mid.at(0) - q.at(0), mid.at(1) - q.at(1))), r)
+      if bend == 0 { line(from, to, mark: mark) } else {
+        // through mid: a quadratic curve's control point twice as far out
+        let ctrl = add(((p.at(0) + q.at(0)) / 2, (p.at(1) + q.at(1)) / 2), normal, 2 * bend)
+        bezier(from, to, ctrl, mark: mark)
+      }
+      if w != none {
+        // along the edge: its middle, or farther along when another weight is near there
+        let at(t) = {
+          let (x0, y0) = from
+          let (x1, y1) = to
+          if bend == 0 { (x0 + t * (x1 - x0), y0 + t * (y1 - y0)) } else {
+            let ctrl = add(((p.at(0) + q.at(0)) / 2, (p.at(1) + q.at(1)) / 2), normal, 2 * bend)
+            let s = 1 - t
+            (s * s * x0 + 2 * s * t * ctrl.at(0) + t * t * x1, s * s * y0 + 2 * s * t * ctrl.at(1) + t * t * y1)
+          }
+        }
+        let box = measure(w)
+        let room = (calc.max(box.width, box.height) + 6pt) / 1cm
+        let spot = none
+        for t in (0.5, 0.35, 0.65, 0.25, 0.75) {
+          let c = at(t)
+          if placed.all(o => calc.sqrt(calc.pow(o.at(0) - c.at(0), 2) + calc.pow(o.at(1) - c.at(1), 2)) > room) {
+            spot = c
+            break
+          }
+        }
+        if spot == none { spot = at(0.5) }
+        placed.push(spot)
+        labels.push((spot, w, "edge", none))
+      }
+    }
+    for (i, at) in place.enumerate() {
+      circle(at, radius: r, fill: white)
+      content(at, names.at(i))
+    }
+    for (at, w, kind, out) in labels {
+      if kind == "loop" {
+        let anchor = if calc.abs(out.at(0)) > calc.abs(out.at(1)) { if out.at(0) > 0 { "west" } else { "east" } } else { if out.at(1) > 0 { "south" } else { "north" } }
+        content(at, w, anchor: anchor, padding: 0.05)
+      } else {
+        content(at, box(fill: white, inset: 1.5pt, w))
+      }
+    }
+  })
 }
 // ---- What the AI writes, from here (the rule's example: everything above is given)
 #diagram(node-stroke: 0.8pt, spacing: 2em,
