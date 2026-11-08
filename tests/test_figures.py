@@ -1987,3 +1987,32 @@ def test_a_phylogenetic_trees_hidden_names_are_not_shown():
         asked = figures_typst.compile_svg("phylogeny", body)
         assert asked != bare
         assert asked == figures_typst.compile_svg("phylogeny", body.replace(hidden, '"x"'))
+
+
+def test_a_bodys_vectors_point_where_their_support_says():
+    """A vector given by its direction, computed from the support: on a circle "along" is the
+    tangent the body turns along and "centre" towards the centre, on a slope "normal" is
+    out of it, on the ground "back" against the motion; never an angle of the AI's."""
+    drawn = lambda body: figures_typst.compile_svg("mechanics", f"#mechanics({body})")  # noqa: E731
+    circle = 'support: "circle", at: 0, vectors: (("v", {}),)'
+    assert drawn(circle.format('"along"')) == drawn(circle.format("90"))
+    assert drawn(circle.format('"centre"')) == drawn(circle.format("180"))
+    assert drawn("clockwise: true, " + circle.format('"along"')) == drawn(circle.format("270"))
+    slope = 'support: "slope", angle: 30, vectors: (("R", {}),)'
+    assert drawn(slope.format('"normal"')) == drawn(slope.format("120"))
+    assert drawn(slope.format('"downhill"')) == drawn(slope.format("210"))
+    plane = 'support: "plane", vectors: (("f", {}),)'
+    pendulum = 'support: "pendulum", angle: 30, vectors: (("T", {}),)'  # its string at 300°
+    assert drawn(pendulum.format('"centre"')) == drawn(pendulum.format("120"))
+    assert drawn(plane.format('"back"')) == drawn(plane.format("180"))
+    for wrong, said in (('vectors: (("F", "centre"),)', "circle's"), ('vectors: (("F", "sideways"),)', "direction")):
+        with pytest.raises(figures_typst.Unusable, match=said):
+            drawn(wrong)
+
+
+def test_a_bodys_hidden_vector_name_is_not_shown():
+    """A card asking which force: its name written "?", whatever it was."""
+    body = '#mechanics(hidden: ("{0}",), vectors: (("P", "down"), ("{0}", "up")))'
+    asked = figures_typst.compile_svg("mechanics", body.format("R"))
+    assert asked == figures_typst.compile_svg("mechanics", body.format("T"))
+    assert asked != figures_typst.compile_svg("mechanics", body.format("R").replace('hidden: ("R",), ', ""))

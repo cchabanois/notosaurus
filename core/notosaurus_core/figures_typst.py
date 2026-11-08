@@ -7,7 +7,8 @@ clocks with cetz (our clock function: its hands placed by the time), solids with
 cuboid, prism, pyramid in cavalier perspective, their hidden edges computed; cylinder, cone,
 sphere as textbooks draw them, in proportion), charts and phylogenetic trees with cetz (our
 chart and phylogeny functions: a tree built from what each species has), sequences aligned
-in Typst (our sequences function: letters in columns, their differences framed, computed).
+in Typst (our sequences function: letters in columns, their differences framed, computed), a body's vectors with cetz
+(our mechanics function: each given by its direction, on an orbit, a plane, a slope).
 What can be computed is, never placed by eye. Each family's rule and Typst: typst_rules/.
 
 The family is the one the AI gave with the figure's description (models.Card.figure_kind),
@@ -93,6 +94,7 @@ FAMILIES: dict[str, Family] = {
         "chart",
         "sequence",
         "phylogeny",
+        "mechanics",
     )
 }
 
@@ -114,6 +116,7 @@ FigureKind = Literal[
     "chart",
     "sequence",
     "phylogeny",
+    "mechanics",
     "other",
 ]
 
