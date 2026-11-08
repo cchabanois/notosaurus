@@ -1018,6 +1018,31 @@ def test_the_graph_rules_own_fragments_compile():
         assert figures_typst.compile_svg("graph", body).startswith("<svg"), fragment
 
 
+def test_a_graphs_surface_filled_as_the_rule_says():
+    """An area (an integral, between two curves, under a density): the AI invented its own
+    filling (`lq.area-between`, `lq.polygon`, `lq.area`), refused twice, the figure drawn as
+    SVG by eye 8 times in 8. The rule's calls compile and fill between the bounds, computed
+    from the functions; the name placed inside, at the surface's centre."""
+    rules = figures_typst.FAMILIES["graph"].rules
+    example = re.search(r"exactly so:\n(.*?)\n- ", rules, re.S).group(1)
+    calls = re.findall(r"`(area(?:-name)?\([^`]*\))`", rules)
+    assert len(calls) == 3
+    for call in calls:
+        body = example.replace("  lq.plot(", f"  {call},\n  lq.plot(")
+        assert figures_typst.compile_svg("graph", body).startswith("<svg"), call
+    square = "#lq.diagram(xlim: (-1, 3), ylim: (-1, 5), {})"
+    xs = "lq.linspace(0, 2, num: 200)"
+    ours = figures_typst.compile_svg("graph", square.format("area(x => x * x, 0, 2, fill: red)"))
+    lilaqs = f"lq.fill-between({xs}, {xs}.map(x => x * x), y2: {xs}.map(x => 0), fill: red)"
+    assert ours == figures_typst.compile_svg("graph", square.format(lilaqs))
+    named = figures_typst.compile_svg("graph", square.format("area-name(x => x * x, 0, 2, [A])"))
+    # its centre: x = ∫x·x² / ∫x², y = ∫x⁴/2 / ∫x²
+    centre = "lq.place(1.5, 1.2, box(fill: white, inset: 0.15em, radius: 2pt)[A], align: center + horizon)"
+    there, meant = _glyphs(named), _glyphs(figures_typst.compile_svg("graph", square.format(centre)))
+    assert len(there) == len(meant)
+    assert all(a == pytest.approx(b, abs=0.5) for a, b in zip(sorted(there), sorted(meant), strict=True))  # pt
+
+
 def test_the_geometry_rules_number_line_compiles():
     """A number line as the geometry rule shows it: its ticks in a loop, their points named by
     `..` (a name computed in a named argument doesn't compile: the AI's loop refused twice,
@@ -1369,6 +1394,44 @@ def test_points_on_the_unit_circle_joined_and_named_as_the_rule_says():
     assert call
     body = f"#ctz-canvas({{ ctz-init()\n ctz-def-points(A: (0, 0), B: (2, 1))\n {call[1]} }})"
     assert figures_typst.compile_svg("geometry", body).startswith("<svg")
+
+
+CUBE_FACES = ", ".join(
+    "(" + ", ".join(f'"{v}"' for v in face) + ")" for face in ("ABCD", "EFGH", "ABFE", "BCGF", "CDHG", "DAEH")
+)
+CUBE_POINTS = (
+    "A: (0, 0, 0), B: (1, 0, 0), C: (1, 1, 0), D: (0, 1, 0), E: (0, 0, 1), F: (1, 0, 1), G: (1, 1, 1), H: (0, 1, 1)"
+)
+
+
+@pytest.mark.parametrize(
+    ("body", "hidden"),
+    [
+        ("#space(points: (A: (2, 0, 0), B: (0, 3, 0), C: (0, 0, 1)))", 0),
+        # the plane ABC hides the axes from O to where it meets them: three dashed runs
+        ('#space(points: (A: (2, 0, 0), B: (0, 3, 0), C: (0, 0, 1)), planes: (("A", "B", "C"),))', 3),
+        # a cube by its faces: its three hidden edges
+        (f"#space(origin: none, axes: none, units: none, points: ({CUBE_POINTS}), faces: ({CUBE_FACES}))", 3),
+    ],
+)
+def test_a_frame_of_space_computes_what_is_hidden(body, hidden):
+    """A frame of space (O ; i, j, k) was drawn as SVG by hand (no family had one): its points
+    placed from their coordinates, what a plane or a solid's faces hide dashed, computed."""
+    svg = figures.clean(figures_typst.compile_svg("solid", body))
+    assert len(re.findall(r'stroke-dasharray="[^"]+"', svg)) == hidden
+
+
+def test_a_frame_of_space_drawn_as_the_rule_says():
+    """The rule's own call compiles; a point's coordinates other than three numbers, or a
+    point named but not given, refused saying which."""
+    rule = (figures_typst.RULES / "solid.md").read_text(encoding="utf-8")
+    call = re.search(r"`(space\(points: [^`]*\))`", rule)
+    assert call
+    assert figures.clean(figures_typst.compile_svg("solid", "#" + call[1])).startswith("<svg")
+    with pytest.raises(figures_typst.Unusable, match="three coordinates"):
+        figures_typst.compile_svg("solid", "#space(points: (A: (2, 0),))")
+    with pytest.raises(figures_typst.Unusable, match="not in points"):
+        figures_typst.compile_svg("solid", '#space(points: (A: (2, 0, 0),), segments: (("A", "B"),))')
 
 
 def test_a_section_outside_its_solid_refused():

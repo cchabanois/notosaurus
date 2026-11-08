@@ -54,6 +54,27 @@
   arguments(..args.pos(), ..named)
 }
 #let diagram-apart(..args) = context lq.diagram(..apart(args))
+// A surface filled (an integral, the area under a curve or between two, a probability under a
+// density): its edge computed from the functions between the bounds, never drawn by hand; the
+// x axis below it, or a second curve's function (`below`). Its name at the surface's centre
+// (the centroid of its slices), inside it, never on a curve; on a ground of its own, an axis
+// or its numbers crossing that centre (a surface on both sides of 0) never drawn over it
+#let _slices(f, a, b, below) = {
+  let xs = lq.linspace(a, b, num: 200)
+  (xs, xs.map(f), if below == none { xs.map(x => 0) } else { xs.map(below) })
+}
+#let area(f, a, b, below: none, fill: rgb(200, 215, 240)) = {
+  let (xs, top, bottom) = _slices(f, a, b, below)
+  lq.fill-between(xs, top, y2: bottom, fill: fill)
+}
+#let area-name(f, a, b, name, below: none) = {
+  let (xs, top, bottom) = _slices(f, a, b, below)
+  let heights = top.zip(bottom).map(((t, u)) => calc.abs(t - u))
+  let total = calc.max(heights.sum(), 1e-9)
+  let x = xs.zip(heights).map(((x, h)) => x * h).sum() / total
+  let y = top.zip(bottom, heights).map(((t, u, h)) => (t + u) / 2 * h).sum() / total
+  lq.place(x, y, box(fill: white, inset: 0.15em, radius: 2pt, name), align: center + horizon)
+}
 // ---- What the AI writes, from here (the rule's example: everything above is given)
 #let xs = lq.linspace(0.05, 6, num: 300)
 #lq.diagram(
