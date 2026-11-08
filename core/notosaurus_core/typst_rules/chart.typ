@@ -17,9 +17,40 @@
 // axis); spans, stretches of x ((from, to, label): shaded); second, another measure with
 // its own unit on a right axis ((values: ((x, y), …), axis: title)), in another colour;
 // numbered: false when the description gives no value for y (only how it varies): the
-// line's shape without numbers on its axis
+// line's shape without numbers on its axis; smooth: a curve through the measures instead of
+// straight lines, never above nor below them between two (monotone: Fritsch–Carlson)
+// A curve through measures (x, y) sorted by x, sampled: each stretch a cubic passing through
+// its two ends, with slopes that never let it overshoot them (a rise stays a rise, a flat
+// stays flat), so that the curve says nothing the measures don't
+#let monotone(vs, per: 16) = {
+  let vs = vs.sorted(key: v => v.at(0))
+  let n = vs.len()
+  let (xs, ys) = (vs.map(v => v.at(0)), vs.map(v => v.at(1)))
+  let d = range(n - 1).map(k => (ys.at(k + 1) - ys.at(k)) / (xs.at(k + 1) - xs.at(k)))
+  let m = range(n).map(k => if k == 0 { d.first() } else if k == n - 1 { d.last() } else if d.at(k - 1) * d.at(k) <= 0 { 0 } else { (d.at(k - 1) + d.at(k)) / 2 })
+  for k in range(n - 1) {
+    if d.at(k) == 0 { m.at(k) = 0; m.at(k + 1) = 0 } else {
+      let (a, b) = (m.at(k) / d.at(k), m.at(k + 1) / d.at(k))
+      if a * a + b * b > 9 {
+        let t = 3 / calc.sqrt(a * a + b * b)
+        m.at(k) = t * a * d.at(k)
+        m.at(k + 1) = t * b * d.at(k)
+      }
+    }
+  }
+  let out = ((xs.first(), ys.first()),)
+  for k in range(n - 1) {
+    let h = xs.at(k + 1) - xs.at(k)
+    for j in range(1, per + 1) {
+      let t = j / per
+      let y = (2 * t * t * t - 3 * t * t + 1) * ys.at(k) + (t * t * t - 2 * t * t + t) * h * m.at(k) + (-2 * t * t * t + 3 * t * t) * ys.at(k + 1) + (t * t * t - t * t) * h * m.at(k + 1)
+      out.push((xs.at(k) + t * h, y))
+    }
+  }
+  out
+}
 #let chart(kind: "bars", values: (), written: (), degrees: false, axis: none, axes: (none, none), step: auto,
-  marks: (), spans: (), second: none, numbered: true) = context {
+  marks: (), spans: (), second: none, numbered: true, smooth: false) = context {
   assert(kind in ("bars", "pie", "semi", "line"), message: "kind is \"bars\", \"pie\", \"semi\" or \"line\"")
   let number(x) = type(x) in (int, float)
   let measures(vs) = (
@@ -48,7 +79,7 @@
       message: "second is (values: ((x, y), …), axis: title), two measures at least",
     )
   } else {
-    assert(marks == () and spans == () and second == none, message: "marks, spans and second are a line's only")
+    assert(marks == () and spans == () and second == none and not smooth, message: "marks, spans, second and smooth are a line's only")
     assert(
       values.len() > 0 and values.all(v => type(v) == array and v.len() == 2 and number(v.at(1)) and v.at(1) >= 0),
       message: "values are (label, count) pairs, each count a number",
@@ -170,13 +201,15 @@
           content((w + 0.12, y), titled(second.axis, blue), anchor: "east")
         }
         let points = second.values.map(((x, z)) => (px(x), pz(z)))
-        line(..points, stroke: (paint: blue, thickness: 1.3pt, join: "round", dash: "dashed"))
+        let path = if smooth { monotone(second.values).map(((x, z)) => (px(x), pz(z))) } else { points }
+        line(..path, stroke: (paint: blue, thickness: 1.3pt, join: "round", dash: "dashed"))
         for p in points { rect((p.at(0) - 0.06, p.at(1) - 0.06), (p.at(0) + 0.06, p.at(1) + 0.06), fill: blue, stroke: none) }
       }
       for (k, (name, vs)) in lines.enumerate() {
         let look = looks.at(calc.rem(k, looks.len()))
         let points = vs.map(((x, y)) => (px(x), py(y)))
-        line(..points, stroke: (paint: look.paint, thickness: 1.3pt, join: "round", dash: look.dash))
+        let path = if smooth { monotone(vs).map(((x, y)) => (px(x), py(y))) } else { points }
+        line(..path, stroke: (paint: look.paint, thickness: 1.3pt, join: "round", dash: look.dash))
         for (i, (x, y)) in vs.enumerate() {
           point(points.at(i), look)
           if written == "all" or x in written {
