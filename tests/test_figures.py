@@ -1048,19 +1048,36 @@ def test_a_graphs_surface_filled_as_the_rule_says():
     assert all(a == pytest.approx(b, abs=0.5) for a, b in zip(sorted(there), sorted(meant), strict=True))  # pt
 
 
-def test_the_geometry_rules_number_line_compiles():
-    """A number line as the geometry rule shows it: its ticks in a loop, their points named by
-    `..` (a name computed in a named argument doesn't compile: the AI's loop refused twice,
-    the line drawn as SVG), a decimal as text (`$2{,}3$`, `$2Comma 3$` refused, `$2,3$`
-    written "2, 3"): each fragment compiles in a canvas."""
-    rules = figures_typst.FAMILIES["geometry"].rules
-    (loop,) = re.findall(r"`(for i in range[^`]*)`", rules)
-    (decimal,) = re.findall(r"`(\[\d+,\d+\])`", rules)
-    body = (
-        "#ctz-canvas({\n  ctz-init()\n  ctz-def-points(L: (-0.5, 0), R: (10.5, 0))\n"
-        f'  ctz-draw-segment("L", "R")\n  {loop}\n  ctz-draw-text(0, -0.5, {decimal})\n}})'
+def test_a_number_lines_points_and_numbers_placed_from_their_values():
+    """A number line draws its points and its numbers from their values (the AI put A at its
+    value as a coordinate, -3, on a line starting at -5: off the line, B on the wrong tick):
+    a point is placed from the line's first value, a point off the line is refused, the
+    numbers the description writes are written with the language's comma."""
+    draw = "#ctz-canvas({{ ctz-init(); ctz-draw-number-line({}) }})"
+    line = lambda args: figures_typst.compile_svg("geometry", draw.format(args))  # noqa: E731
+    assert line("-5, 5, numbers: false, points: (A: -3)") == line("0, 10, numbers: false, points: (A: 2)")
+    assert line("-5, 5, points: (A: -3)") != line("-5, 5, points: (A: 2)")
+    with pytest.raises(figures_typst.Unusable, match="outside the line"):
+        line("-5, 5, points: (A: 7)")
+    # a fraction's value as a division, its letter written; its value as a name refused
+    assert line("0, 2, step: 0.25, points: (B: 3/4)") == line("0, 2, step: 0.25, points: (B: 0.75)")
+    with pytest.raises(figures_typst.Unusable, match="never its value written as its name"):
+        line("0, 2, step: 0.25, points: (B: (3/4, $3/4$))")
+    decimals = draw.format("2.3, 2.4, step: 0.01, scale: 100, numbers: (2.3, 2.4), points: (F: 2.35)")
+    french, english = (
+        figures_typst.compile_svg("geometry", f'#set text(lang: "{lang}")\n{decimals}') for lang in ("fr", "en")
     )
-    assert figures.clean(figures_typst.compile_svg("geometry", body)).startswith("<svg")
+    assert french != english
+
+
+def test_the_geometry_rules_number_lines_compile():
+    """Every number line the geometry rule shows compiles in a canvas, as the AI copies them."""
+    rules = figures_typst.FAMILIES["geometry"].rules
+    rule = next(line for line in rules.splitlines() if line.startswith("- a number line"))
+    calls = re.findall(r"`(ctz-draw-number-line\([^`]*\))`", rule)
+    assert calls
+    for call in calls:
+        assert figures_typst.compile_svg("geometry", f"#ctz-canvas({{ ctz-init(); {call} }})").startswith("<svg")
 
 
 def test_the_circuit_rules_current_arrow_compiles():
@@ -1370,6 +1387,39 @@ def test_two_arrows_each_way_have_their_labels_apart():
     apart = figures_typst.compile_svg("diagram", pair.format("left", "left"))
     assert figures_typst.compile_svg("diagram", pair.format("right", "right")) == apart
     assert "label-side: right" in figures_typst.source("diagram", pair.replace("4pt", "-4pt").format("left", "left"))
+
+
+def test_a_current_arrow_between_two_wires_closes_the_circuit():
+    """The AI writes the arrow as one more stretch of wire (a wire, the arrow, a wire): drawn
+    with its wire, the circuit as closed as when the arrow is put on a wire."""
+    circuit = (
+        '#circuit({{ battery("g", (0, 0), (0, 3)); wire((0, 3), (1, 3)); {} wire((2, 3), (3, 3)); '
+        'lamp("l", (3, 3), (3, 0)); wire((3, 0), (0, 0)) }})'
+    )
+
+    from PIL import Image
+
+    def dark(body: str) -> int:
+        png = figures.to_png(figures.clean(figures_typst.compile_svg("circuit", body)))
+        return sum(Image.open(io.BytesIO(png)).convert("L").histogram()[:128])
+
+    alone = dark(circuit.format("current-arrow((1, 3), (2, 3), $I$);"))
+    on_a_wire = dark(circuit.format("wire((1, 3), (2, 3)); current-arrow((1, 3), (2, 3), $I$);"))
+    assert alone == on_a_wire
+
+
+def test_a_circuits_ends_a_hair_apart_meet():
+    """An arrow written 0.1 short of the switch and the lamp it goes between: the wire cut there,
+    the circuit open. Its ends moved onto theirs, drawn as when they meet; a shape drawn with
+    cetz near the circuit left where it is."""
+    circuit = (
+        '#circuit({{ battery("g", (0, 0), (0, 4)); wire((0, 4), (2, 4)); '
+        'switch("k", (2, 4), (2, 2.5), closed: true); {} lamp("l", (2, 1.7), (2, 0)); wire((2, 0), (0, 0)); '
+        "cetz.draw.circle((2.1, 0.5), radius: 0.05) }})"
+    )
+    apart = figures_typst.source("circuit", circuit.format("current-arrow((2, 2.4), (2, 1.8), $I$);"))
+    meeting = figures_typst.source("circuit", circuit.format("current-arrow((2, 2.5), (2, 1.7), $I$);"))
+    assert apart == meeting and "(2.1, 0.5)" in apart
 
 
 def test_a_timelines_texts_never_on_one_another():

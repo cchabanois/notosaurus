@@ -39,6 +39,8 @@ Each pull request's entries (the `## Changelog` of its description) are put unde
 
 ### Fixed
 
+- Circuits: the wire no longer cut around a current's arrow, the circuit no longer drawn open.
+- 📏 Points on a number line placed at their value, never beside the line or on the wrong graduation; its numbers written once.
 - A decimal number quoted in a figure's formula no longer drawn with a space after its comma ("1, 5").
 - Graphs: the point where two curves meet is computed and clearly marked, with its coordinates when the card asks for them.
 - Fractions shown on a disc, a bar or a rectangle: exactly the parts asked for are coloured, whole.

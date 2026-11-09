@@ -43,20 +43,50 @@
 // fractions compared): each a dictionary of fraction-shape's arguments, all the same size.
 #let fraction-shapes(..shapes, gap: 1cm) = stack(dir: ltr, spacing: gap,
   ..shapes.pos().map(s => align(bottom, fraction-shape(..s))))
-// A number line: its line from half a step before its first tick to half a step after its
-// last, a tick each `step` at (value − first) × scale, its whole numbers written under them
-// (`numbers: false`: none, the description's own written by hand); `arrow: true` an arrow
-// at its right end.
-#let ctz-draw-number-line(first, last, step: 1, scale: 1, numbers: true, arrow: false) = {
+// Numbers written as the figure's language writes them: its decimal separator, set by
+// figures_typst.source from the AI's `#set text(lang: …)` (a point when none is said)
+#let decimal-separator = "."
+// A number line, everything on it placed from its values: its line from half a step before
+// its first tick to half a step after its last, a tick each `step`, each value v at
+// (v − first) × scale. numbers: true its whole numbers written under their ticks, false
+// none, or the numbers the description writes, `(2.3, 2.4)` (with the language's decimal
+// separator) or `((0.75, $3/4$), …)` (a value and its text); points: each point named at
+// its value, `(A: -3, B: 3/4)`, its letter above (a point the description names by no letter:
+// `(P: (at: 0.75, name: $j$))`, that name written instead);
+// `arrow: true` an arrow at its right end. Never a point, a tick or a number placed by hand.
+#let ctz-draw-number-line(first, last, step: 1, scale: 1, numbers: true, points: (:), arrow: false) = {
+  let number(v) = type(v) in (int, float)
+  assert(number(first) and number(last) and first < last, message: "a number line goes from its first value to a larger last one")
+  assert(number(step) and step > 0 and number(scale) and scale > 0, message: "step and scale are numbers above 0")
+  assert(type(points) == dictionary, message: "points are named by their values: (A: -3, B: 2)")
   let x(v) = (v - first) * scale
+  let written(v) = {
+    let r = calc.round(v, digits: 6)
+    let t = if calc.fract(r) == 0 { str(int(calc.abs(r))) } else { str(calc.abs(r)).replace(".", decimal-separator) }
+    if r < 0 [−#t] else [#t]
+  }
   cetz.draw.line((x(first) - step * scale / 2, 0), (x(last) + step * scale / 2, 0), mark: if arrow { (end: "stealth", fill: black) } else { none })
   let n = int(calc.round((last - first) / step))
   for i in range(n + 1) {
     let v = first + i * step
     cetz.draw.line((x(v), -0.15), (x(v), 0.15))
-    if numbers and calc.fract(v) == 0 {
-      cetz.draw.content((x(v), -0.45), if v < 0 [−#str(int(-v))] else [#str(int(v))])
+    if numbers == true and calc.abs(calc.fract(calc.round(v, digits: 6))) == 0 {
+      cetz.draw.content((x(v), -0.25), written(v), anchor: "north")
     }
+  }
+  if type(numbers) == array {
+    for w in numbers {
+      let (v, body) = if type(w) == array { (w.at(0), w.at(1)) } else { (w, written(w)) }
+      assert(number(v), message: "numbers are values, or (value, text) pairs")
+      cetz.draw.content((x(v), -0.25), body, anchor: "north")
+    }
+  }
+  for (name, p) in points {
+    let (v, body) = if type(p) == dictionary and "at" in p and "name" in p { (p.at, p.name) } else { (p, math.equation(math.italic(name))) }
+    assert(number(v), message: "a point is its letter at its value, a number (A: -3, B: 3/4): never its value written as its name")
+    assert(first - step / 2 <= v and v <= last + step / 2, message: "the point " + name + " is outside the line, from " + str(first) + " to " + str(last))
+    cetz.draw.circle((x(v), 0), radius: 0.06, fill: black)
+    cetz.draw.content((x(v), 0.3), body, anchor: "south")
   }
 }
 // An interval on a number line: its stretch thick and coloured, a bracket at each bound
