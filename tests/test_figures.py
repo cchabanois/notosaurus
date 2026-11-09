@@ -1048,19 +1048,36 @@ def test_a_graphs_surface_filled_as_the_rule_says():
     assert all(a == pytest.approx(b, abs=0.5) for a, b in zip(sorted(there), sorted(meant), strict=True))  # pt
 
 
-def test_the_geometry_rules_number_line_compiles():
-    """A number line as the geometry rule shows it: its ticks in a loop, their points named by
-    `..` (a name computed in a named argument doesn't compile: the AI's loop refused twice,
-    the line drawn as SVG), a decimal as text (`$2{,}3$`, `$2Comma 3$` refused, `$2,3$`
-    written "2, 3"): each fragment compiles in a canvas."""
-    rules = figures_typst.FAMILIES["geometry"].rules
-    (loop,) = re.findall(r"`(for i in range[^`]*)`", rules)
-    (decimal,) = re.findall(r"`(\[\d+,\d+\])`", rules)
-    body = (
-        "#ctz-canvas({\n  ctz-init()\n  ctz-def-points(L: (-0.5, 0), R: (10.5, 0))\n"
-        f'  ctz-draw-segment("L", "R")\n  {loop}\n  ctz-draw-text(0, -0.5, {decimal})\n}})'
+def test_a_number_lines_points_and_numbers_placed_from_their_values():
+    """A number line draws its points and its numbers from their values (the AI put A at its
+    value as a coordinate, -3, on a line starting at -5: off the line, B on the wrong tick):
+    a point is placed from the line's first value, a point off the line is refused, the
+    numbers the description writes are written with the language's comma."""
+    draw = "#ctz-canvas({{ ctz-init(); ctz-draw-number-line({}) }})"
+    line = lambda args: figures_typst.compile_svg("geometry", draw.format(args))  # noqa: E731
+    assert line("-5, 5, numbers: false, points: (A: -3)") == line("0, 10, numbers: false, points: (A: 2)")
+    assert line("-5, 5, points: (A: -3)") != line("-5, 5, points: (A: 2)")
+    with pytest.raises(figures_typst.Unusable, match="outside the line"):
+        line("-5, 5, points: (A: 7)")
+    # a fraction's value as a division, its letter written; its value as a name refused
+    assert line("0, 2, step: 0.25, points: (B: 3/4)") == line("0, 2, step: 0.25, points: (B: 0.75)")
+    with pytest.raises(figures_typst.Unusable, match="never its value written as its name"):
+        line("0, 2, step: 0.25, points: (B: (3/4, $3/4$))")
+    decimals = draw.format("2.3, 2.4, step: 0.01, scale: 100, numbers: (2.3, 2.4), points: (F: 2.35)")
+    french, english = (
+        figures_typst.compile_svg("geometry", f'#set text(lang: "{lang}")\n{decimals}') for lang in ("fr", "en")
     )
-    assert figures.clean(figures_typst.compile_svg("geometry", body)).startswith("<svg")
+    assert french != english
+
+
+def test_the_geometry_rules_number_lines_compile():
+    """Every number line the geometry rule shows compiles in a canvas, as the AI copies them."""
+    rules = figures_typst.FAMILIES["geometry"].rules
+    rule = next(line for line in rules.splitlines() if line.startswith("- a number line"))
+    calls = re.findall(r"`(ctz-draw-number-line\([^`]*\))`", rule)
+    assert calls
+    for call in calls:
+        assert figures_typst.compile_svg("geometry", f"#ctz-canvas({{ ctz-init(); {call} }})").startswith("<svg")
 
 
 def test_the_circuit_rules_current_arrow_compiles():
