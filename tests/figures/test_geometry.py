@@ -171,12 +171,12 @@ def test_points_on_the_unit_circle_joined_and_named_as_the_rule_says():
 
 def test_the_rule_says_where_a_perpendiculars_points_are():
     """The rule said the points of ctz-def-perp and ctz-def-para were far from the figure (only
-    ctz-def-mediator's and ctz-def-bisect's are): the AI carried a tangent's points twice as far,
+    ctz-def-bisect's are): the AI carried a tangent's points twice as far,
     a line 13 units long on a circle of 6, the circle shrunk (1 drawing in 3). They are at the
     reference segment's length on each side of the point: a tangent at A to a circle of radius
     3, drawn through them, as high as the circle."""
     rule = (figures_typst.RULES / "geometry.md").read_text(encoding="utf-8")
-    assert "ctz-def-perp and ctz-def-para give are near" in rule
+    assert "ctz-def-perp, ctz-def-para and ctz-def-mediator give are near" in rule
     tangent = """#ctz-canvas({
   ctz-init()
   ctz-def-points(O: (0, 0), A: (3, 0))
@@ -246,3 +246,33 @@ def test_a_rotations_arrowed_arc_drawn_from_its_points():
     rule = figures_typst.FAMILIES["geometry"].rules
     (call,) = re.findall(r"`(ctz-draw-rotation-arc\([^`]*\))`", rule)
     assert figures_typst.compile_svg("geometry", draw.format(call)).startswith("<svg")
+
+
+@pytest.mark.parametrize("add", ["", ", add: (0.2, 0.2)", ", add: (0.5, 0.5)", ", add: 2"])
+def test_a_whole_line_goes_little_past_its_points(add):
+    """A line past its two points by 15 % of the figure at most, whatever `add` asks: the
+    tangent to a circle of radius 3, `add: (0.5, 0.5)` on its points 6 apart, ran 3 past
+    each, the figure 12.4 cm tall (the circle 6): shrunk on a card, its text with it."""
+    tangent = """#ctz-canvas({{
+  ctz-init()
+  ctz-def-points(O: (0, 0), A: (3, 0))
+  ctz-def-perp("T1", "T2", ("O", "A"), "A")
+  ctz-draw-circle-r("O", 3)
+  ctz-draw-line-add("T1", "T2"{})
+}})"""
+    _, height = drawn_size("geometry", tangent.format(add))
+    assert height <= (6 + 2 * 0.9) * 28.35 + 1
+    # nor does the rule show an `add` carrying a line farther (it did, beside its own bullet
+    # saying never)
+    assert "add: (0.5, 0.5)" not in (figures_typst.RULES / "geometry.md").read_text(encoding="utf-8")
+
+
+def test_a_half_line_stays_one():
+    """`add: (0, …)`: nothing past its first point (a half-line from it)."""
+    ray = """#ctz-canvas({{
+  ctz-init()
+  ctz-def-points(O: (0, 0), A: (2, 0), B: (0, 2))
+  ctz-draw-segment("O", "B")
+  ctz-draw-line-add("O", "A", add: ({}, 0.5))
+}})"""
+    assert drawn_size("geometry", ray.format(0))[0] < drawn_size("geometry", ray.format(0.2))[0]

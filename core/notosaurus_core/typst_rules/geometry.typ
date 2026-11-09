@@ -276,6 +276,25 @@
   })
   if label != none { ctz-draw-length(a, b, label, away: away, pos: pos) }
 }
+// A whole line through two of its points, past each a little: `add` (a share of the two
+// points' distance, as ctz-euclide takes it) kept to 15 % of the figure's size at most (the
+// box of its named points), never less than 0.3: a line belongs to its figure, as long as it
+// is; carried farther (two points far apart, an `add` of half their distance), the figure
+// around it shrank on the card. `add: (0, …)` still a half-line from its first point.
+#let _ctz-line-add = ctz-draw-line-add
+#let ctz-draw-line-add(a, b, add: (0.2, 0.2), ..opts) = cetz.draw.get-ctx(ctx => {
+  let at(n) = cetz.coordinate.resolve(ctx, "ctz:" + n).at(1)
+  let (pa, pb) = (at(a), at(b))
+  let d = calc.sqrt(calc.pow(pb.at(0) - pa.at(0), 2) + calc.pow(pb.at(1) - pa.at(1), 2))
+  let pts = _get-points(ctx).values()
+  let xs = pts.map(q => q.at(0))
+  let ys = pts.map(q => q.at(1))
+  let size = calc.max(calc.max(..xs) - calc.min(..xs), calc.max(..ys) - calc.min(..ys))
+  let most = calc.max(0.3, 0.15 * size)
+  let (before, after) = if type(add) == array { add } else { (add, add) }
+  let kept(k) = if d < 1e-9 { k } else { calc.min(k, most / d) }
+  _ctz-line-add(a, b, add: (kept(before), kept(after)), ..opts)
+})
 // ---- What the AI writes, from here (the rule's example: everything above is given)
 #ctz-canvas({
   ctz-init()
