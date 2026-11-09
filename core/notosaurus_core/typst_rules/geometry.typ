@@ -248,6 +248,24 @@
     (ctx: _set-points(ctx, points))
   },)
 }
+// A rotation's direction: an arc around its centre `o` from the direction of `a` to that of
+// its image `b`, the way the rotation turns (anticlockwise, `clockwise: true` the other
+// way), its arrow at the image's end; `label` (its angle, [90°]) written at its middle,
+// outside it. Computed from the points, never an arc's angles or arrow given by hand.
+#let ctz-draw-rotation-arc(a, o, b, label: none, radius: 0.9, clockwise: false) = cetz.draw.get-ctx(ctx => {
+  let at(n) = cetz.coordinate.resolve(ctx, "ctz:" + n).at(1)
+  let (pa, po, pb) = (at(a), at(o), at(b))
+  let angle(p) = calc.atan2(p.at(0) - po.at(0), p.at(1) - po.at(1)) / 1deg
+  let (from, to) = (angle(pa), angle(pb))
+  let delta = if clockwise { -calc.rem-euclid(from - to, 360) } else { calc.rem-euclid(to - from, 360) }
+  assert(calc.abs(delta) > 0.5, message: "a rotation's arc goes from a point to its image, apart from it")
+  cetz.draw.arc(po, start: from * 1deg, delta: delta * 1deg, radius: radius, anchor: "origin",
+    stroke: 0.8pt, mark: (end: "stealth", fill: black, scale: 0.8))
+  if label != none {
+    let mid = (from + delta / 2) * 1deg
+    cetz.draw.content((po.at(0) + (radius + 0.4) * calc.cos(mid), po.at(1) + (radius + 0.4) * calc.sin(mid)), label)
+  }
+})
 // A vector: its arrow from its origin to its end, its head at the end, its name beside it
 // toward its head (`pos` of the way: its middle often holds a point, a projection), away from
 // the figure's point `away`, as a length is written; never a plain segment.
