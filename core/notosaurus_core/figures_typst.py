@@ -284,6 +284,8 @@ def source(family: str, body: str) -> str:
     preamble = FAMILIES[family].preamble.replace(SEPARATOR, f'#let decimal-separator = "{separator}"')
     if "#let diagram-apart(" in preamble:
         body = typst_source.LQ_DIAGRAM.sub("diagram-apart", body)
+    if "#let line-kept(" in preamble:
+        body = typst_source.LQ_LINE.sub("line-kept", body)
     return FONT + preamble + body.strip() + "\n"
 
 

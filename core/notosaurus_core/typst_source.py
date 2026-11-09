@@ -4,7 +4,7 @@ reads them (a bar across a line taken out, marks it can't read made the rule's a
 edge's label on its side) and its texts' new lines as breaks; a circuit's ends a hair apart made
 to meet; a variable named after a math symbol renamed where code reads it; a grid's fractional
 columns sized by their content; decimal commas as the figure's language writes them; lilaq's
-diagram drawn by the preamble's own where it has one (LQ_DIAGRAM).
+diagram and lines drawn by the preamble's own where it has them (LQ_DIAGRAM, LQ_LINE).
 """
 
 import math
@@ -383,3 +383,6 @@ def joined_ends(body: str) -> str:
 # A diagram drawn by the preamble's own `diagram-apart` where it has one (graph: the ticks'
 # names kept apart, computed), the AI writing lilaq's `lq.diagram(…)` as lilaq documents it
 LQ_DIAGRAM = re.compile(r"(?<![\w.-])lq\.diagram(?=\s*\()")
+# A line drawn by the preamble's `line-kept` where it has one (graph: lilaq's `lq.line` keeps
+# its ends in a closure; kept in sight, the names set along the curves stay clear of it)
+LQ_LINE = re.compile(r"(?<![\w.-])lq\.line(?=\s*\()")

@@ -40,7 +40,7 @@ def test_the_graph_rules_own_fragments_compile():
     compiles too, in that example: a fragment out of step makes every graph with it fail."""
     rules = figures_typst.FAMILIES["graph"].rules
     example = re.search(r"exactly so:\n(.*?)\n- ", rules, re.S).group(1)
-    fragments = re.findall(r"`((?:xaxis: |lq\.scatter|lq\.line|lq\.place)[^`]*)`", rules)
+    fragments = re.findall(r"`((?:xaxis: |lq\.scatter|lq\.line|lq\.place|named\(|asymptote\()[^`]*)`", rules)
     assert len(fragments) >= 4
     for fragment in fragments:
         body = example.replace("  lq.plot(", f"  {fragment},\n  lq.plot(")
@@ -224,3 +224,38 @@ def test_an_asymptote_named_by_its_equation_where_no_curve_is():
     under, over = name("1 / x + 1.5", ""), name("1.5 - 1 / x", "")
     assert under and over and all(x > 150 for x, _ in under | over)  # pt: the right end
     assert min(y for _, y in under) > max(y for _, y in over) + 10  # pt: either side of the line
+
+
+def test_a_curves_name_set_along_it_clear_of_what_is_drawn():
+    """The names of the curves and lines (𝒞f, y = x, y = 0,5x + 2) were placed by the AI's eye
+    with `lq.place`: on the other line, on each other. `named(…)` sets the name along its own
+    curve, computed, clear of the other curves and of the segments drawn (`lq.line`, the
+    cobweb's dotted steps)."""
+    frame = (
+        "#lq.diagram(width: 6cm, height: 6cm, xlim: (-3, 3), ylim: (-3, 3), {},"
+        " lq.place(-2.5, -2.5, [O]), lq.place(2.5, 2.5, [O]))"
+    )
+
+    def name(body: str) -> tuple[float, float]:
+        """Where "A" is drawn, in the data: from two "O" placed at (−2.5, −2.5) and (2.5, 2.5)."""
+        glyphs = _glyphs(figures_typst.compile_svg("graph", frame.format(body)))
+        bare = _glyphs(figures_typst.compile_svg("graph", frame.format(body.replace("[A]", "none"))))
+        ((x, y),) = set(glyphs) - set(bare)
+        o = _glyphs(figures_typst.compile_svg("graph", frame.format(body.replace("[A]", "none")).replace("[O]", "[]")))
+        (low, high) = sorted(set(bare) - set(o))
+        (ax, ay), (bx, by) = (low, high) if low[1] > high[1] else (high, low)  # (−2.5, −2.5) lower
+        return -2.5 + 5 * (x - ax) / (bx - ax), -2.5 + 5 * (y - ay) / (by - ay)
+
+    line = "named(lq.plot((-3, 3), (-3, 3), mark: none), [A])"
+    alone = name(line)
+    assert 0.1 < abs(alone[0] - alone[1]) / 2**0.5 < 1.2  # beside y = x, near it
+    # another line through that place: the name elsewhere along y = x, clear of it
+    cx, cy = alone[0] + 0.2, alone[1] + 0.1
+    other = f"lq.plot(({cx - 2}, {cx + 2}), ({cy + 2}, {cy - 2}), mark: none)"
+    moved = name(f"{other}, {line}")
+    assert abs(moved[0] + moved[1] - cx - cy) / 2**0.5 > 0.5  # units from y = −x + c
+    # a segment (`lq.line`, its ends kept by line-kept) through it: the name moved too
+    segment = f"lq.line(({cx}, {cy - 1}), ({cx}, {cy + 1}))"
+    assert abs(name(f"{segment}, {line}")[0] - cx) > 0.3
+    assert "named(" in figures_typst.FAMILIES["graph"].rules
+    assert "line-kept(" in figures_typst.source("graph", "#lq.diagram(lq.line((0, 0), (1, 1)))")

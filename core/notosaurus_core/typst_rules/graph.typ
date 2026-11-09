@@ -39,33 +39,6 @@
   }
   out
 }
-#let apart(args) = {
-  let named = args.named()
-  for (key, lim, size, horizontal) in (("xaxis", "xlim", "width", true), ("yaxis", "ylim", "height", false)) {
-    let axis = named.at(key, default: none)
-    let limits = named.at(lim, default: none)
-    if type(axis) != dictionary or "ticks" not in axis or type(limits) != array or limits.len() != 2 { continue }
-    if limits.any(v => type(v) not in (int, float)) { continue }
-    let span = named.at(size, default: if horizontal { 6cm } else { 4cm })
-    if type(span) != length { continue }
-    axis.ticks = staggered(axis.ticks, limits.at(0), limits.at(1), span.to-absolute(), horizontal)
-    named.insert(key, axis)
-  }
-  // An asymptote (`asymptote(y: 3)`) given what it can't see from inside the frame: the axes
-  // as the AI set them (their position, their ticks: where their numbers are) and the points
-  // of the other plots (where its name would lie on a curve)
-  let others = args.pos().filter(p => type(p) == dictionary and type(p.at("x", default: none)) == array
-    and type(p.at("y", default: none)) == array)
-  let seen = (
-    xaxis: named.at("xaxis", default: none), yaxis: named.at("yaxis", default: none),
-    curves: others.map(p => (p.x, p.y)),
-  )
-  let pos = args.pos().map(p => if type(p) == dictionary and p.at("id", default: none) == "asymptote" {
-    p + (seen: seen)
-  } else { p })
-  arguments(..pos, ..named)
-}
-#let diagram-apart(..args) = context lq.diagram(..apart(args))
 // A surface filled (an integral, the area under a curve or between two, a probability under a
 // density): its edge computed from the functions between the bounds, never drawn by hand; the
 // x axis below it, or a second curve's function (`below`). Its name at the surface's centre
@@ -143,8 +116,9 @@
 // An asymptote, a limit, a line y = c or x = a: dashed across the whole frame, on both sides
 // of the other axis; broken only where it would cross that axis's numbers (their places and
 // widths computed as lilaq writes them: the AI's ticks, or lilaq's own from the limits and the
-// size), resumed past the axis; its name ("y = 3" by default, the figure's decimal separator)
-// at one of its ends, inside the frame, on the side farthest from the curves and the axes
+// size), resumed past the axis. A curve or a line named (`named(lq.plot(…), [$cal(C)_f$])`):
+// its name set along it. Every name (an asymptote's, "y = 3" by default, the figure's decimal
+// separator; a curve's) placed by the preamble where nothing else is, never by eye
 #let _numbers(axis, low, high, size, horizontal) = {
   // the numbers an axis writes: (value, its label), as lilaq locates and formats them
   let ticks = if type(axis) == dictionary { axis.at("ticks", default: auto) } else { auto }
@@ -169,19 +143,19 @@
   else if position == right or position == top { high }
   else { none }
 }
-#let _render-asymptote(self, transform) = layout(size => {
+#let _unseen = (xaxis: none, yaxis: none, curves: (), places: (), asymptotes: ())
+// The frame as an element sees it (in its own lengths, from its top left): its size, its
+// limits, where each axis is (none when off the frame) and the boxes (x, y, width, height) of
+// their numbers as the theme writes them: left of the vertical axis, under the horizontal one,
+// none at 0 nor within 5pt of the frame's edge
+#let _frame(seen, transform, size) = {
   let (w, h) = (size.width, size.height)
-  let seen = self.at("seen", default: (xaxis: none, yaxis: none, curves: ()))
   let (ox, oy) = transform(0, 0)
   let (ux, uy) = transform(1, 1)
   let (sx, sy) = (ux - ox, uy - oy) // a unit, in the frame
   let (x0, x1) = ((0pt - ox) / sx, (w - ox) / sx)
   let (y0, y1) = ((h - oy) / sy, (0pt - oy) / sy)
-  let clear = 0.3em.to-absolute() // the line's ends kept that far from the numbers
-  let (tick-in, tick-out, tick-pad) = (1.5pt, 1.5pt, 0.4em.to-absolute()) // the theme's ticks
-  // the axes, where each crosses the other (none when off the frame), and the boxes of their
-  // numbers (x, y, width, height), as the theme writes them: left of the vertical axis, under
-  // the horizontal one, none at 0 nor within 5pt of the frame's edge
+  let (tick-out, tick-pad) = (1.5pt, 0.4em.to-absolute()) // the theme's ticks
   let ya = _axis-at(seen.yaxis, x0, x1)
   let px = if ya != none { transform(ya, 0).at(0) }
   if px != none and (px < -0.5pt or px > w + 0.5pt) { px = none }
@@ -205,18 +179,23 @@
       boxes.x.push((c - m.width / 2, py + tick-out + tick-pad, m.width, m.height))
     }
   }
-  let horizontal = self.ay != none
-  // the line, along its own direction (from 0 to its length), broken where it would cross the
-  // other axis's numbers: from before them to past the axis
-  let (at, length, across) = if horizontal { (transform(0, self.ay).at(1), w, h) } else { (transform(self.ax, 0).at(0), h, w) }
+  (w: w, h: h, px: px, py: py, boxes: boxes)
+}
+// An asymptote's line: where it is across the frame (`at`), and its pieces along it, broken
+// where it would cross the other axis's numbers, from before them to past the axis
+#let _asymptote-line(a, fr, transform) = {
+  let horizontal = a.ay != none
+  let clear = 0.3em.to-absolute() // the line's ends kept that far from the numbers
+  let tick-in = 1.5pt
+  let (at, length, across) = if horizontal { (transform(0, a.ay).at(1), fr.w, fr.h) } else { (transform(a.ax, 0).at(0), fr.h, fr.w) }
   let gaps = ()
   if horizontal {
-    for (bx, by, bw, bh) in boxes.y {
-      if at > by - clear and at < by + bh + clear { gaps.push((bx - clear, px + tick-in + clear)) }
+    for (bx, by, bw, bh) in fr.boxes.y {
+      if at > by - clear and at < by + bh + clear { gaps.push((bx - clear, fr.px + tick-in + clear)) }
     }
   } else {
-    for (bx, by, bw, bh) in boxes.x {
-      if at > bx - clear and at < bx + bw + clear { gaps.push((py - tick-in - clear, by + bh + clear)) }
+    for (bx, by, bw, bh) in fr.boxes.x {
+      if at > bx - clear and at < bx + bw + clear { gaps.push((fr.py - tick-in - clear, by + bh + clear)) }
     }
   }
   let pieces = if gaps.len() == 0 { ((0pt, length),) } else {
@@ -224,70 +203,150 @@
     // a piece shorter than a dash or two left out: by a number, it would read as a minus
     ((0pt, a), (b, length)).filter(((s, e)) => e - s > 0.8em.to-absolute())
   }
-  if at < -0.5pt or at > across + 0.5pt { return }
   // on an axis (y = 0, x = 0): the axis drawn already, the dashes over it would only blur it
-  let own = if horizontal { py } else { px }
-  if own != none and calc.abs(at - own) < 0.5pt { pieces = () }
-  for (s, e) in pieces {
-    let (start, end) = if horizontal { ((s, at), (e, at)) } else { ((at, s), (at, e)) }
+  let own = if horizontal { fr.py } else { fr.px }
+  let on-axis = own != none and calc.abs(at - own) < 0.5pt
+  if on-axis { pieces = () }
+  let inside = at >= -0.5pt and at <= across + 0.5pt
+  (horizontal: horizontal, at: at, inside: inside, on-axis: on-axis, pieces: if inside { pieces } else { () })
+}
+#let _render-asymptote(self, transform) = layout(size => {
+  let fr = _frame(self.at("seen", default: _unseen), transform, size)
+  let l = _asymptote-line(self, fr, transform)
+  for (s, e) in l.pieces {
+    let (start, end) = if l.horizontal { ((s, l.at), (e, l.at)) } else { ((l.at, s), (l.at, e)) }
     place(line(start: start, end: end, stroke: self.stroke))
   }
-  // its name, at an end of it, inside the frame, on the side farthest from what is drawn
-  let name = if self.name == auto {
-    if horizontal { $y = #_number(self.ay)$ } else { $x = #_number(self.ax)$ }
-  } else { self.name }
-  if name == none { return }
-  let m = measure(name)
-  // each end, each side, close to the line, then a little farther (points along the line,
-  // a sequence's terms, would touch it)
-  let pad = 0.3em.to-absolute()
-  let candidates = ()
-  for off in (0.3em, 0.8em).map(o => o.to-absolute()) {
-    candidates += if horizontal {
-      let (r, l) = (w - pad - m.width, pad)
-      ((r, at - off - m.height), (r, at + off), (l, at - off - m.height), (l, at + off))
-    } else {
-      let (t, b) = (pad, h - pad - m.height)
-      ((at + off, t), (at - off - m.width, t), (at + off, b), (at - off - m.width, b))
-    }
-  }
-  candidates = candidates.filter(((x, y)) => x >= 0pt and y >= 0pt and x + m.width <= w and y + m.height <= h)
-  if candidates.len() == 0 { return }
-  // what it stays clear of: the curves (each segment sampled along its length), the axes and
-  // their numbers
+})
+// A curve's points in the frame, every 3pt at most along it (a line of two points sampled)
+#let _sampled(xs, ys, transform) = {
+  let drawn = xs.zip(ys).filter(((x, y)) => type(x) in (int, float) and type(y) in (int, float)
+    and x == x and y == y and calc.abs(x) < 1e300 and calc.abs(y) < 1e300).map(((x, y)) => transform(x, y))
   let points = ()
-  for (xs, ys) in seen.curves {
-    let drawn = xs.zip(ys).filter(((x, y)) => type(x) in (int, float) and type(y) in (int, float)
-      and x == x and y == y and calc.abs(x) < 1e300 and calc.abs(y) < 1e300).map(((x, y)) => transform(x, y))
-    for i in range(drawn.len()) {
-      let (a, b) = (drawn.at(i), drawn.at(calc.min(i + 1, drawn.len() - 1)))
-      let steps = calc.max(1, calc.min(200, int(calc.max(calc.abs(b.at(0) - a.at(0)), calc.abs(b.at(1) - a.at(1))) / 3pt)))
-      for k in range(steps) {
-        let t = k / steps
-        points.push((a.at(0) + (b.at(0) - a.at(0)) * t, a.at(1) + (b.at(1) - a.at(1)) * t))
-      }
+  for i in range(drawn.len()) {
+    let (a, b) = (drawn.at(i), drawn.at(calc.min(i + 1, drawn.len() - 1)))
+    let steps = calc.max(1, calc.min(400, int(calc.max(calc.abs(b.at(0) - a.at(0)), calc.abs(b.at(1) - a.at(1))) / 3pt)))
+    for k in range(steps) {
+      let t = k / steps
+      points.push((a.at(0) + (b.at(0) - a.at(0)) * t, a.at(1) + (b.at(1) - a.at(1)) * t))
     }
   }
-  // (the axis it lies on, if it does, being the line itself)
-  if py != none and not (horizontal and pieces == ()) { for k in range(101) { points.push((w * k / 100, py)) } }
-  if px != none and not (not horizontal and pieces == ()) { for k in range(101) { points.push((px, h * k / 100)) } }
-  for (bx, by, bw, bh) in boxes.x + boxes.y {
-    for i in range(5) { for j in range(3) { points.push((bx + bw * i / 4, by + bh * j / 2)) } }
+  points
+}
+#let _box-points((bx, by, bw, bh)) = range(5).map(i => range(3).map(j => (bx + bw * i / 4, by + bh * j / 2))).flatten().chunks(2)
+// Every name: the asymptotes' first (at an end of their line), then the curves' (along each),
+// each on the side farthest from what is drawn and from the names placed before it
+#let _render-names(self, transform) = layout(size => {
+  let seen = self.seen
+  let fr = _frame(seen, transform, size)
+  let (w, h) = (fr.w, fr.h)
+  let in-frame((x, y)) = x >= -5pt and x <= w + 5pt and y >= -5pt and y <= h + 5pt
+  // what is drawn, each point with its owner: a curve (its index), "axis-x", "axis-y", an
+  // asymptote ("a" + its index), "text"
+  let points = ()
+  let curves = seen.curves.map(c => _sampled(c.xs, c.ys, transform))
+  for (i, c) in curves.enumerate() { points += c.filter(in-frame).map(p => (p, i)) }
+  if fr.py != none { points += range(101).map(k => ((w * k / 100, fr.py), "axis-x")) }
+  if fr.px != none { points += range(101).map(k => ((fr.px, h * k / 100), "axis-y")) }
+  for b in fr.boxes.x + fr.boxes.y { points += _box-points(b).map(p => (p, "text")) }
+  for (x, y, body, align) in seen.places {
+    let (qx, qy) = transform(x, y)
+    let m = measure(body)
+    let (ax, ay) = if type(align) == alignment and align.axis() == none { (align.x, align.y) }
+      else if type(align) == alignment and align.axis() == "horizontal" { (align, horizon) }
+      else if type(align) == alignment { (center, align) } else { (center, horizon) }
+    let bx = if ax == left { qx } else if ax == right { qx - m.width } else { qx - m.width / 2 }
+    let by = if ay == top { qy } else if ay == bottom { qy - m.height } else { qy - m.height / 2 }
+    points += _box-points((bx, by, m.width, m.height)).map(p => (p, "text"))
   }
-  points = points.filter(((x, y)) => x >= -5pt and x <= w + 5pt and y >= -5pt and y <= h + 5pt)
-  let apart((x, y)) = {
-    let d = 1e6pt
-    for (qx, qy) in points {
+  let lines = seen.asymptotes.map(a => _asymptote-line(a, fr, transform))
+  for (i, l) in lines.enumerate() {
+    for (s, e) in l.pieces {
+      let n = calc.max(1, int((e - s) / 3pt))
+      points += range(n + 1).map(k => {
+        let along = s + (e - s) * k / n
+        (if l.horizontal { (along, l.at) } else { (l.at, along) }, "a" + str(i))
+      })
+    }
+  }
+  // how far a box is from what is drawn: (from its own, from the rest)
+  let apart((x, y), m, own) = {
+    let (near, far) = (1e6pt, 1e6pt)
+    for ((qx, qy), owner) in points {
       let dx = calc.max(x - qx, qx - x - m.width, 0pt)
       let dy = calc.max(y - qy, qy - y - m.height, 0pt)
-      d = calc.min(d, calc.max(dx, dy))
+      let d = calc.max(dx, dy)
+      if owner in own { near = calc.min(near, d) } else { far = calc.min(far, d) }
     }
-    d
+    (near, far)
   }
-  let scored = candidates.map(c => (c, apart(c)))
-  let free = scored.filter(((c, d)) => d >= 0.6em.to-absolute())
-  let (x, y) = if free.len() > 0 { free.first().at(0) } else { scored.sorted(key: ((c, d)) => d).last().at(0) }
-  place(dx: x, dy: y, name)
+  let fits((x, y), m) = x >= 0pt and y >= 0pt and x + m.width <= w and y + m.height <= h
+  let free = 0.6em.to-absolute()
+  let placed = ()
+  let pad = 0.3em.to-absolute()
+  for (i, a) in seen.asymptotes.enumerate() {
+    let l = lines.at(i)
+    if not l.inside { continue }
+    let name = if a.name == auto {
+      if l.horizontal { $y = #_number(a.ay)$ } else { $x = #_number(a.ax)$ }
+    } else { a.name }
+    if name == none { continue }
+    let m = measure(name)
+    let at = l.at
+    // each end, each side, close to the line, then a little farther (points along the line,
+    // a sequence's terms, would touch it)
+    let candidates = ()
+    for off in (0.3em, 0.8em).map(o => o.to-absolute()) {
+      candidates += if l.horizontal {
+        let (r, le) = (w - pad - m.width, pad)
+        ((r, at - off - m.height), (r, at + off), (le, at - off - m.height), (le, at + off))
+      } else {
+        let (t, b) = (pad, h - pad - m.height)
+        ((at + off, t), (at - off - m.width, t), (at + off, b), (at - off - m.width, b))
+      }
+    }
+    candidates = candidates.filter(c => fits(c, m))
+    if candidates.len() == 0 { continue }
+    // its own line apart, and the axis it lies on (the line itself)
+    let own = ("a" + str(i),) + if l.on-axis { (if l.horizontal { "axis-x" } else { "axis-y" },) } else { () }
+    let scored = candidates.map(c => (c, apart(c, m, own).at(1)))
+    let good = scored.filter(((c, d)) => d >= free)
+    let (x, y) = if good.len() > 0 { good.first().at(0) } else { scored.sorted(key: ((c, d)) => d).last().at(0) }
+    place(dx: x, dy: y, name)
+    points += _box-points((x, y, m.width, m.height)).map(p => (p, "text"))
+  }
+  for (i, c) in seen.curves.enumerate() {
+    if c.name == none { continue }
+    let mine = curves.at(i).filter(((x, y)) => x >= 0pt and x <= w and y >= 0pt and y <= h)
+    if mine.len() == 0 { continue }
+    let m = measure(c.name)
+    let g = 0.3em.to-absolute()
+    // along it from its end, each point with the name above left, below right, above right
+    // or below left of it
+    let candidates = ()
+    for f in (0.92, 0.8, 0.68, 0.56, 0.44, 0.32, 0.2, 0.08) {
+      let (ax, ay) = mine.at(int(f * (mine.len() - 1)))
+      candidates += (
+        (ax - g - m.width, ay - g - m.height), (ax + g, ay + g),
+        (ax + g, ay - g - m.height), (ax - g - m.width, ay + g),
+      )
+    }
+    candidates = candidates.filter(p => fits(p, m))
+    if candidates.len() == 0 { continue }
+    let scored = candidates.map(p => (p, apart(p, m, (i,))))
+    // the first one well clear of the rest (read as its own curve's, not a neighbour's), else
+    // the first one clear, else the clearest
+    let chosen = none
+    for clear in (1.2em, 0.5em).map(c => c.to-absolute()) {
+      let good = scored.filter(((p, (near, far))) => near >= 0.2em.to-absolute() and far >= clear)
+      if good.len() > 0 { chosen = good.first().at(0); break }
+    }
+    let (x, y) = if chosen != none { chosen } else {
+      scored.sorted(key: ((p, (near, far))) => calc.min(far, near * 2)).last().at(0)
+    }
+    place(dx: x, dy: y, c.name)
+    points += _box-points((x, y, m.width, m.height)).map(p => (p, "text"))
+  }
 })
 #let asymptote(x: none, y: none, label: auto, stroke: (paint: black, thickness: 0.8pt, dash: "dashed")) = {
   assert((x == none) != (y == none), message: "asymptote: give x (a vertical line) or y (a horizontal one)")
@@ -296,6 +355,55 @@
     xlimits: () => none, ylimits: () => none, datetime: (:), label: none, clip: true, z-index: 3,
   )
 }
+// A curve or a line named: the AI's `lq.plot(…)` or `lq.line(…)` with its name, set along it
+#let named(curve, name) = curve + (curve-name: name)
+// The AI's `lq.line(…)`, keeping its ends (lilaq's own keeps them in a closure): a name kept
+// clear of it (figures_typst.source)
+#let line-kept(start, end, ..args) = lq.line(start, end, ..args) + (vertices: (start, end))
+// The AI's diagram, its ticks' names kept apart and its asymptotes and names given what
+// they need (figures_typst.source draws `lq.diagram(…)` so)
+#let apart(args) = {
+  let named = args.named()
+  for (key, lim, size, horizontal) in (("xaxis", "xlim", "width", true), ("yaxis", "ylim", "height", false)) {
+    let axis = named.at(key, default: none)
+    let limits = named.at(lim, default: none)
+    if type(axis) != dictionary or "ticks" not in axis or type(limits) != array or limits.len() != 2 { continue }
+    if limits.any(v => type(v) not in (int, float)) { continue }
+    let span = named.at(size, default: if horizontal { 6cm } else { 4cm })
+    if type(span) != length { continue }
+    axis.ticks = staggered(axis.ticks, limits.at(0), limits.at(1), span.to-absolute(), horizontal)
+    named.insert(key, axis)
+  }
+  // The asymptotes (`asymptote(y: 3)`) and the names of the curves and lines (`named(…)`)
+  // given what they can't see from inside the frame: the axes as the AI set them (their
+  // position, their ticks: where their numbers are), the other plots' points, the texts
+  // placed; every name placed by one element of its own, after the plots
+  let pos = args.pos()
+  let curves = pos.filter(p => type(p) == dictionary and (
+    (type(p.at("x", default: none)) == array and type(p.at("y", default: none)) == array)
+    or type(p.at("vertices", default: none)) == array))
+  let asymptotes = pos.filter(p => type(p) == dictionary and p.at("id", default: none) == "asymptote")
+  if asymptotes.len() == 0 and not curves.any(c => c.at("curve-name", default: none) != none) {
+    return arguments(..pos, ..named)
+  }
+  let seen = (
+    xaxis: named.at("xaxis", default: none), yaxis: named.at("yaxis", default: none),
+    curves: curves.map(p => {
+      let (xs, ys) = if "vertices" in p { (p.vertices.map(v => v.at(0)), p.vertices.map(v => v.at(1))) } else { (p.x, p.y) }
+      (xs: xs, ys: ys, name: p.at("curve-name", default: none))
+    }),
+    places: pos.filter(p => type(p) == dictionary and p.at("id", default: none) == "place"
+      and type(p.x) in (int, float) and type(p.y) in (int, float)).map(p => (p.x, p.y, p.body, p.align)),
+    asymptotes: asymptotes.map(a => (ax: a.ax, ay: a.ay, name: a.name)),
+  )
+  let names = (
+    plot: _render-names, id: "names", seen: seen,
+    xlimits: () => none, ylimits: () => none, datetime: (:), label: none, clip: true, z-index: 23,
+  )
+  pos = pos.map(p => if type(p) == dictionary and p.at("id", default: none) == "asymptote" { p + (seen: seen) } else { p })
+  arguments(..pos, names, ..named)
+}
+#let diagram-apart(..args) = context lq.diagram(..apart(args))
 // ---- What the AI writes, from here (the rule's example: everything above is given)
 #let xs = lq.linspace(0.05, 6, num: 300)
 #lq.diagram(
