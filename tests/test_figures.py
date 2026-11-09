@@ -1339,6 +1339,25 @@ def test_a_closed_switch_is_seen():
     assert closed != wired and closed != opened
 
 
+def test_a_current_arrow_between_two_wires_closes_the_circuit():
+    """The AI writes the arrow as one more stretch of wire (a wire, the arrow, a wire): drawn
+    with its wire, the circuit as closed as when the arrow is put on a wire."""
+    circuit = (
+        '#circuit({{ battery("g", (0, 0), (0, 3)); wire((0, 3), (1, 3)); {} wire((2, 3), (3, 3)); '
+        'lamp("l", (3, 3), (3, 0)); wire((3, 0), (0, 0)) }})'
+    )
+
+    from PIL import Image
+
+    def dark(body: str) -> int:
+        png = figures.to_png(figures.clean(figures_typst.compile_svg("circuit", body)))
+        return sum(Image.open(io.BytesIO(png)).convert("L").histogram()[:128])
+
+    alone = dark(circuit.format("current-arrow((1, 3), (2, 3), $I$);"))
+    on_a_wire = dark(circuit.format("wire((1, 3), (2, 3)); current-arrow((1, 3), (2, 3), $I$);"))
+    assert alone == on_a_wire
+
+
 def test_a_timelines_texts_never_on_one_another():
     """Events a year apart, long texts: each on its own row, the figure taller for it."""
     one = figures_typst.compile_svg(

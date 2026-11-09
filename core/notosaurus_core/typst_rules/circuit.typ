@@ -14,8 +14,11 @@
   })
 }
 // The current's direction on a wire, said by where it goes: an arrow head halfway from a to
-// b, pointing to b, its name beside it (whatever way the components were drawn)
+// b, pointing to b, its name beside it (whatever way the components were drawn). The wire
+// from a to b drawn too: an arrow written between two wires, as one more stretch of the
+// circuit, never leaves it open
 #let current-arrow(a, b, label) = {
+  wire(a, b)
   let m = ((a.at(0) + b.at(0)) / 2, (a.at(1) + b.at(1)) / 2)
   cetz.draw.mark(m, b, symbol: ">", fill: black, anchor: "center", scale: 0.9)
   let vertical = calc.abs(b.at(0) - a.at(0)) < calc.abs(b.at(1) - a.at(1))
