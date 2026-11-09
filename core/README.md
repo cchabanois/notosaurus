@@ -40,5 +40,5 @@ It **never reads the app's settings, lessons or data folder**: the AI configurat
 In the repository, `app/__init__.py` puts `core/` on the path; the add-on and the Docker image
 ship `notosaurus_core` next to `app/`. Instructions sent to the AI are in English, the AI's
 answers are always forced with a JSON schema. Tests: `tests/test_core.py`, `test_extract.py`,
-`test_figures.py`, `test_gemini.py`, `test_relay_api.py`… See
+`figures/`, `test_gemini.py`, `test_relay_api.py`… See
 [CONTRIBUTING.md](../CONTRIBUTING.md#architecture).
