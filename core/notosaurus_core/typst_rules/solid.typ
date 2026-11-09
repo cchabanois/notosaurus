@@ -87,7 +87,14 @@
 // section, sides: _section's, its points named section-names (one per vertex of the face it
 // is parallel to, each the point on the edge from that vertex), filled grey, each side
 // dashed when the face it lies on is hidden
-#let _polyhedron(points, faces, names: (), edge-labels: (), extra: none, largest: none, section: none, section-names: (), sides: (:)) = {
+#let _label(at, body, anchor: "center") = cetz.draw.content(at, text(11pt, body), anchor: anchor)
+// a length's double arrow beside the solid, its label beside it
+#let _dimension(a, b, body, side) = {
+  import cetz.draw: *
+  line(a, b, stroke: 0.5pt, mark: (start: ">", end: ">", fill: black, scale: 0.6))
+  _label(((a.at(0) + b.at(0)) / 2 + side.at(0), (a.at(1) + b.at(1)) / 2 + side.at(1)), body)
+}
+#let _polyhedron(points, faces, names: (), edge-labels: (), extra: none, largest: none, section: none, section-names: (), sides: (:), lines: (), marks: ()) = {
   let cut = if section == none { none } else { _section(points, faces, names, sides, section) }
   let size = calc.max(..range(3).map(i => calc.max(..points.map(p => p.at(i))) - calc.min(..points.map(p => p.at(i)))))
   let scale = 4 / if largest == none { size } else { largest }
@@ -113,6 +120,7 @@
   let spots = if cut == none { (:) } else { cut.points.pairs().map(((k, q)) => (k, at(q.p))).to-dict() }
   let segments = edges.values().map(e => (_proj(points.at(e.u)), _proj(points.at(e.v))))
   if cut != none { segments += cut.sides.map(l => (spots.at(l.a), spots.at(l.b))) }
+  segments += lines.map(((a, b)) => (at(a), at(b)))
   cetz.canvas({
     import cetz.draw: *
     if cut != none and spots.len() >= 3 {
@@ -130,17 +138,22 @@
       }
     }
     if extra != none { extra(at) }
-    // each name in the one of 8 directions around its point farthest from every edge
-    let named = names.enumerate().map(((i, name)) => (_proj(points.at(i)), name))
+    // each name in the one of 8 directions around its point farthest from every edge and
+    // from the names already placed (a mark inside the solid, a height's foot, first)
+    let named = marks.map(((q, name)) => (at(q), name)) + names.enumerate().map(((i, name)) => (_proj(points.at(i)), name))
     if cut != none {
       for (k, name) in section-names.enumerate() {
         let found = cut.points.pairs().find(((_, q)) => q.foot == cut.face.at(k, default: -1))
         if found != none { named.push((spots.at(found.at(0)), name)) }
       }
     }
+    // a mark's right angle (a height's foot) up and right of it: kept clear too
+    let placed = marks.map(((q, _)) => at(q).map(x => x + 0.11))
     for (p, name) in named {
       let around = range(8).map(k => (p.at(0) + 0.3 * calc.cos(k * 45deg), p.at(1) + 0.3 * calc.sin(k * 45deg)))
-      let best = around.sorted(key: q => -calc.min(..segments.map(((a, b)) => _gap(q, a, b)))).first()
+      let room(q) = calc.min(..segments.map(((a, b)) => _gap(q, a, b)), ..placed.map(c => _gap(q, c, c) - 0.3))
+      let best = around.sorted(key: q => -room(q)).first()
+      placed.push(best)
       content(best, text(11pt, name))
     }
     // each length beside its edge, outwards: held by its side facing the solid, so that a
@@ -202,12 +215,42 @@
       line(o, s, stroke: (thickness: 0.7pt, dash: "dashed"))
       let r = 0.22
       line((o.at(0) + r, o.at(1)), (o.at(0) + r, o.at(1) + r), (o.at(0), o.at(1) + r), stroke: 0.6pt)
-      if foot != none { content((o.at(0) - 0.2, o.at(1) - 0.2), text(11pt, foot)) }
-      // left of the height, low: away from the apex's edges
-      if height-label != none { content((o.at(0) - 0.12, o.at(1) + (s.at(1) - o.at(1)) * 0.35), text(11pt, height-label), anchor: "east") }
+      // what the height's length must keep clear of: the edges, the vertices (their names)
+      let corners = points.map(at)
+      let edges = ()
+      for f in faces { for j in range(f.len()) { edges.push((corners.at(f.at(j)), corners.at(f.at(calc.rem(j + 1, f.len()))))) } }
+      // the height's length beside [SO], on the side and as high as it crosses no edge and
+      // touches no vertex (a slim or a low pyramid's edges close to it): else beside the
+      // pyramid, a double arrow as high as it
+      if height-label != none {
+        let (w, t) = (measure(text(11pt, height-label)).width / 1cm, measure(text(11pt, height-label)).height / 1cm)
+        let clear(x0, y0) = {
+          let (x1, y1) = (x0 + w + 0.1, y0 + t + 0.1)
+          let inside(q) = q.at(0) > x0 - 0.05 and q.at(0) < x1 + 0.05 and q.at(1) > y0 - 0.05 and q.at(1) < y1 + 0.05
+          (
+            not edges.any(((a, b)) => range(21).any(i => inside(a.zip(b).map(((u, v)) => u + (v - u) * i / 20))))
+              and not corners.any(c => c.at(0) > x0 - 0.4 and c.at(0) < x1 + 0.4 and c.at(1) > y0 - 0.4 and c.at(1) < y1 + 0.4)
+          )
+        }
+        let spots = ()
+        for k in range(3, 14) {
+          let y = o.at(1) + (s.at(1) - o.at(1)) * k / 20 - t / 2 - 0.05
+          spots.push((o.at(0) - 0.12 - w - 0.1, y, "left"))
+          spots.push((o.at(0) + 0.12, y, "right"))
+        }
+        let found = spots.find(((x, y, _)) => clear(x, y))
+        if found != none {
+          content((found.at(0), found.at(1)), text(11pt, height-label), anchor: "south-west")
+        } else {
+          let x = calc.min(..corners.map(c => c.at(0))) - 0.4
+          _dimension((x, o.at(1)), (x, s.at(1)), height-label, (-0.15 - w / 2, 0))
+        }
+      }
     }
   }
-  _polyhedron(points, faces, names: names, edge-labels: labels, extra: extra, largest: largest, section: section, section-names: section-names, sides: (base: 0))
+  let height-line = if foot == none and height-label == none { () } else { (((cx, cy, 0), (cx, cy, height)),) }
+  let marks = if foot == none { () } else { (((cx, cy, 0), foot),) }
+  context _polyhedron(points, faces, names: names, edge-labels: labels, extra: extra, largest: largest, section: section, section-names: section-names, sides: (base: 0), lines: height-line, marks: marks)
 }
 // Round solids as textbooks draw them: their circles as horizontal ellipses (half as deep:
 // _flat), the hidden half dashed; their sizes in proportion, scaled as polyhedra
@@ -225,13 +268,6 @@
     import cetz.draw: *
     body(s)
   })
-}
-#let _label(at, body, anchor: "center") = cetz.draw.content(at, text(11pt, body), anchor: anchor)
-// a length's double arrow beside the solid, its label beside it
-#let _dimension(a, b, body, side) = {
-  import cetz.draw: *
-  line(a, b, stroke: 0.5pt, mark: (start: ">", end: ">", fill: black, scale: 0.6))
-  _label(((a.at(0) + b.at(0)) / 2 + side.at(0), (a.at(1) + b.at(1)) / 2 + side.at(1)), body)
 }
 // A round solid's section by a plane parallel to its base: its disc filled grey, its front
 // half drawn, its back half dashed (upright: a lying cylinder's, its left half in front)
