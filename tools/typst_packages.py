@@ -29,6 +29,11 @@ PACKAGES = {
     "blockst": "0.4.1",  # Scratch scripts: its blocks drawn from their text
 }
 
+# Imported only inside a function the figures never call: not shipped (Typst reads an import
+# when it runs it). Blockst's stage (`scratch-run`, a script's pen drawing) imports its own
+# cetz; its blocks don't.
+UNUSED = {("cetz", "0.4.2")}
+
 IMPORT = re.compile(r"@preview/([\w-]+):(\d+\.\d+\.\d+)")
 COMMENT = re.compile(r"^\s*//.*", re.M)  # an import in a comment line (its docs): not imported
 
@@ -38,7 +43,7 @@ def main() -> None:
     todo, done = list(PACKAGES.items()), set()
     while todo:
         name, version = todo.pop()
-        if (name, version) in done:
+        if (name, version) in done or (name, version) in UNUSED:
             continue
         done.add((name, version))
         todo += fetch(name, version)

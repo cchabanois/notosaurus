@@ -87,3 +87,10 @@ def test_an_if_blocks_foot_drawn_whole_without_a_loops_arrow():
     drawn = float(re.search(r'viewBox="[-\d.]+ [-\d.]+ [\d.]+ ([\d.]+)"', svg)[1])
     image = float(re.search(r'<image[^>]* height="([\d.]+)"', svg)[1])
     assert drawn > image + 12 + 5  # grown past the image blockst gave (its margins, 6 pt each)
+
+
+def test_blockst_shipped_without_the_cetz_of_its_stage():
+    """Blockst's stage (`scratch-run`, never called by the figures) imports a cetz of its own,
+    0.4.2: shipped, it was a third cetz for nothing. Not shipped, the blocks drawn as before."""
+    assert not (figures_typst.ARCHIVES / "cetz-0.4.2.tar.gz").exists()
+    assert "<svg" in _script("quand le drapeau vert est cliqué\nrépéter (4) fois\navancer de (100) pas\nfin")

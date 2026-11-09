@@ -12,7 +12,6 @@ const FIGURE_LIBRARIES = [
   { name: "alchemist", version: "0.2.0", licence: "MIT", url: "https://typst.app/universe/package/alchemist" },
   { name: "blockst", version: "0.4.1", licence: "MIT", url: "https://typst.app/universe/package/blockst" },
   { name: "cetz", version: "0.3.4", licence: "LGPL-3.0-or-later", url: "https://typst.app/universe/package/cetz" },
-  { name: "cetz", version: "0.4.2", licence: "LGPL-3.0-or-later", url: "https://typst.app/universe/package/cetz" },
   { name: "cetz", version: "0.5.2", licence: "LGPL-3.0-or-later", url: "https://typst.app/universe/package/cetz" },
   { name: "cetz-venn", version: "0.2.0", licence: "Apache-2.0", url: "https://typst.app/universe/package/cetz-venn" },
   { name: "ctz-euclide", version: "0.3.0", licence: "MIT", url: "https://typst.app/universe/package/ctz-euclide" },
