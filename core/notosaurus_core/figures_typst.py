@@ -25,6 +25,7 @@ refused first). The SVG keeps its colours (a lesson's colour code: atoms, a lege
 import functools
 import hashlib
 import importlib.util
+import math
 import os
 import posixpath
 import re
@@ -495,6 +496,55 @@ def _no_fractions(body: str) -> str:
     return TRACKS.sub(lambda m: f"{m.group(1)}: {FRACTION.sub('auto', m.group(2))}", body)
 
 
+# A circuit's ends meant to meet, the AI leaving them a hair apart (an arrow ending 0.1 short of
+# a lamp): the wire cut there, the circuit drawn open. A wire's or a current's arrow's end closer
+# than JOIN to a point of the circuit's (zap's elements, not shapes drawn with cetz) is moved
+# onto it, a component's point first: never two of a circuit's points, at least 0.5 apart.
+POINT = re.compile(r"\(\s*(-?\d+(?:\.\d+)?)\s*,\s*(-?\d+(?:\.\d+)?)\s*\)")
+CALLER = re.compile(r"([\w.-]+)\s*$")
+CONNECTORS = {"wire", "current-arrow"}
+JOIN = 0.15
+
+
+def _caller(body: str, at: int) -> str:
+    """The name of the call whose parentheses hold position `at` ("" for none)."""
+    depth = 0
+    for i in range(at - 1, -1, -1):
+        if body[i] == ")":
+            depth += 1
+        elif body[i] == "(":
+            if depth == 0:
+                m = CALLER.search(body, 0, i)
+                return m.group(1) if m else ""
+            depth -= 1
+    return ""
+
+
+def _joined_ends(body: str) -> str:
+    """A circuit's wires and current's arrows ending a hair from a point of it made to meet it."""
+    points = []
+    for m in POINT.finditer(body):
+        name = _caller(body, m.start())
+        if name and "." not in name:  # zap's, not a shape drawn with cetz
+            points.append((m, (float(m[1]), float(m[2])), name in CONNECTORS))
+    targets = sorted({p for _, p, _ in points}, key=lambda p: min(c for _, q, c in points if q == p))
+    moved: dict[int, tuple[float, float]] = {}
+    for m, point, connector in points:
+        if connector:
+            near = [t for t in targets if 0 < math.dist(point, t) < JOIN]
+            if near:
+                moved[m.start()] = near[0]
+    if not moved:
+        return body
+    out, i = [], 0
+    for m in POINT.finditer(body):
+        if m.start() in moved:
+            x, y = moved[m.start()]
+            out.append(body[i : m.start()] + f"({x:g}, {y:g})")
+            i = m.end()
+    return "".join(out) + body[i:]
+
+
 # A diagram drawn by the preamble's own `diagram-apart` where it has one (graph: the ticks'
 # names kept apart, computed), the AI writing lilaq's `lq.diagram(…)` as lilaq documents it
 LQ_DIAGRAM = re.compile(r"(?<![\w.-])lq\.diagram(?=\s*\()")
@@ -506,6 +556,8 @@ def source(family: str, body: str) -> str:
     body = PACKAGE_IMPORT.sub("", body).replace("&gt;", ">").replace("&lt;", "<")
     if family == "diagram":
         body = _broken_lines(EDGE_MARKS.sub(_unbarred, body))
+    if family == "circuit":
+        body = _joined_ends(body)
     if FORBIDDEN.search(body):
         raise Unusable("Only drawing commands: no import, include, file or plugin.")
     body = _no_fractions(_unshadowed(body))
