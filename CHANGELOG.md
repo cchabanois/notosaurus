@@ -39,6 +39,7 @@ Each pull request's entries (the `## Changelog` of its description) are put unde
 
 ### Fixed
 
+- ↗️ A translation's image no longer drawn on its figure nor its arrow along a side, when the lesson gives no vector.
 - A tangent to a circle is no longer drawn so long that the figure shrinks to nothing.
 - 🔺 A pyramid's height written beside it, never on an edge; its foot's and vertices' names clear of one another.
 - Diagrams: two arrows each way between two boxes (the states of matter) drawn as a diagram again, never as a drawing with labels on one another.
