@@ -26,6 +26,7 @@ PACKAGES = {
     "fletcher": "0.5.8",  # diagrams: nodes and arrows
     "zap": "0.6.0",  # electric circuits
     "alchemist": "0.2.0",  # chemistry: skeletal formulas
+    "blockst": "0.4.1",  # Scratch scripts: its blocks drawn from their text
 }
 
 IMPORT = re.compile(r"@preview/([\w-]+):(\d+\.\d+\.\d+)")
