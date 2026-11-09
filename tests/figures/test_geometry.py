@@ -186,3 +186,42 @@ def test_the_rule_says_where_a_perpendiculars_points_are():
 })"""
     width, height = drawn_size("geometry", tangent)
     assert height == pytest.approx(width, rel=0.05)
+
+
+def test_a_translations_image_placed_clear_of_its_figure():
+    """A translation whose vector the description doesn't give (only A to A'): its vector
+    computed from the figure, never chosen by eye (by eye, the AI took A' along [AB] half
+    the time: the arrow on a side, the image on the figure). For triangles of every shape:
+    the image clear of the figure by the gap, the vector 15° at least from every side and
+    out of the figure's angle at A, the rightmost of the nearly as good."""
+    body = """#let triangles = (
+  ((0, 0), (3, 0.5), (1, 2.5)), ((0, 0), (4, 0), (0, 3)), ((0, 0), (3, 1), (2, 3)),
+  ((1, 0), (0, 2), (3, 3)), ((0, 0), (5, 0), (2.5, 0.5)), ((0, 0), (1, 4), (-1, 3)),
+)
+#for pts in triangles {
+  let (dx, dy) = _translation-vector(pts, pts.first(), 0, 1)
+  let length = calc.sqrt(dx * dx + dy * dy)
+  let u = (dx / length, dy / length)
+  let along = pts.map(q => q.at(0) * u.at(0) + q.at(1) * u.at(1))
+  // the image's projection starts a gap after the figure's ends: they never touch
+  assert(calc.min(..along) + length >= calc.max(..along) + 1 - 1e-9, message: "touches")
+  for i in range(3) {
+    let (a, b) = (pts.at(i), pts.at(calc.rem(i + 1, 3)))
+    let s = calc.atan2(b.at(0) - a.at(0), b.at(1) - a.at(1)) / 1deg
+    let t = calc.atan2(dx, dy) / 1deg
+    let d = calc.rem-euclid(t - s, 180)
+    assert(calc.min(d, 180 - d) >= 15, message: "along a side")
+  }
+}
+#ctz-canvas({
+  ctz-init()
+  ctz-def-points(A: (0, 0), B: (3, 0.5), C: (1, 2.5))
+  ctz-def-translation-image("A'", "A", ("A", "B", "C"))
+  ctz-draw-vector("A", "A'")
+})"""
+    figures_typst.compile_svg("geometry", body)
+    rule = figures_typst.FAMILIES["geometry"].rules
+    (call,) = re.findall(r"`(ctz-def-translation-image\([^`]*\))`", rule)
+    points = "ctz-def-points(A: (0, 0), B: (3, 0.5), C: (1, 2.5))"
+    example = f'#ctz-canvas({{ ctz-init(); {points}; {call}; ctz-draw-vector("A", "A\'") }})'
+    assert figures_typst.compile_svg("geometry", example).startswith("<svg")
