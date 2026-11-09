@@ -7,10 +7,12 @@ by a short call of its own with the drawing rules below, checked by looking at i
 text: nothing that runs or loads anything) and saved next to the card pictures.
 """
 
+import base64
 import hashlib
 import io
 import math
 import re
+import urllib.parse
 from pathlib import Path
 from xml.etree import ElementTree
 
@@ -107,7 +109,9 @@ _FONT_SIZE = re.compile(r"^[\d.]+(px|pt|em|rem|%)?(/\S+)?$|^(xx?-)?(small|large)
 def _font(value: str) -> list[tuple[str, str]]:
     """CSS's font shorthand ("italic bold 12px sans-serif") as the properties it sets."""
     words = value.split()
-    at = next((i for i, w in enumerate(words) if _FONT_SIZE.match(w.lower())), None)
+    # the size, the first word read as one; a weight's bare number ("500 12pt") before it isn't
+    sizes = [i for i, w in enumerate(words) if _FONT_SIZE.match(w.lower())]
+    at = next((i for i in sizes if not (re.fullmatch(r"[1-9]00", words[i]) and i + 1 in sizes)), None)
     if at is None:
         return []
     parts = [("font-size", words[at].split("/")[0])]
@@ -121,6 +125,13 @@ def _font(value: str) -> list[tuple[str, str]]:
     return parts
 
 
+def _in_px(size: str) -> str:
+    """A font size in points ("12pt", as blockst writes its labels) in pixels, the same size:
+    resvg, which draws the figure for its check, draws no letter at a size in points."""
+    points = re.fullmatch(r"\s*([\d.]+)pt\s*", size)
+    return f"{float(points[1]) * 4 / 3:g}px" if points else size
+
+
 def _clean_style(style: str) -> str:
     kept = []
     for declaration in style.split(";"):
@@ -128,7 +139,7 @@ def _clean_style(style: str) -> str:
         name, value = name.strip().lower(), value.strip().removesuffix("!important").strip()
         for part, part_value in _font(value) if name == "font" else [(name, value)]:
             if part in PRESENTATION and part_value and _safe_value(part, part_value):
-                kept.append(f"{part}:{part_value}")
+                kept.append(f"{part}:{_in_px(part_value) if part == 'font-size' else part_value}")
     return ";".join(kept)
 
 
@@ -192,6 +203,50 @@ def _inline_stylesheets(root: ElementTree.Element) -> None:
             element.set("style", ";".join([*applied, element.get("style", "")]))  # its own style last: it wins
 
 
+_SVG_DATA = re.compile(r"^data:image/svg\+xml(;charset=[\w-]+)?(;base64)?,(.*)$", re.DOTALL)
+
+
+def _inline_svg_images(element: ElementTree.Element, depth: int = 0) -> None:
+    """An SVG image held as data (a Typst package drawing its own SVG: blockst's Scratch
+    blocks) drawn in its place, its shapes and text cleaned as the figure's own: an <img>
+    shows no image within an image's SVG, and the cleaning would drop it."""
+    for at, child in enumerate(list(element)):
+        if not isinstance(child.tag, str):
+            continue
+        if _local(child.tag) != "image":
+            _inline_svg_images(child, depth)
+            continue
+        href = next((v for k, v in child.attrib.items() if _local(k) == "href"), "")
+        data = _SVG_DATA.match(href.strip())
+        if data is None or depth > 2:
+            continue  # a picture, a file, a page: dropped by the cleaning
+        try:
+            text = base64.b64decode(data[3]).decode("utf-8") if data[2] else urllib.parse.unquote(data[3])
+            if re.search(r"<!(DOCTYPE|ENTITY)", text, re.IGNORECASE):
+                continue
+            inner = ElementTree.fromstring(text)
+        except (ValueError, ElementTree.ParseError):
+            continue
+        if _local(inner.tag) != "svg":
+            continue
+        for part in inner.iter():
+            if isinstance(part.tag, str) and not part.tag.startswith("{"):
+                part.tag = f"{{{SVG_NS}}}{part.tag}"
+        _inline_svg_images(inner, depth + 1)
+        group = ElementTree.Element(f"{{{SVG_NS}}}g")
+        if child.get("transform"):
+            group.set("transform", child.get("transform", ""))
+        for name in ("x", "y", "width", "height", "preserveAspectRatio"):
+            if child.get(name) is not None:
+                inner.set(name, child.get(name, ""))
+        inner.attrib.pop("version", None)
+        inner.set("overflow", "visible")  # what it draws past its frame (blockst's last arm) shown, fitted
+        group.append(inner)
+        group.tail = child.tail
+        element.remove(child)
+        element.insert(at, group)
+
+
 def _unwrap_links(element: ElementTree.Element) -> None:
     """A link's content kept in its place, the link dropped (a label in an <a>: still shown)."""
     for child in list(element):
@@ -229,6 +284,8 @@ def _clean(element: ElementTree.Element) -> None:
         local, value = _local(name), element.attrib[name]
         if local == "style" or local in PRESENTATION:
             value = element.attrib[name] = plain_colours(value)  # its colours #rrggbb, kept
+        if local == "font-size":
+            value = element.attrib[name] = _in_px(value)
         if local == "style":
             cleaned = _clean_style(value)
             if cleaned:
@@ -333,6 +390,7 @@ def clean(svg: str) -> str:
         for element in root.iter():
             if isinstance(element.tag, str) and not element.tag.startswith("{"):
                 element.tag = f"{{{SVG_NS}}}{element.tag}"
+    _inline_svg_images(root)
     _inline_stylesheets(root)
     _unwrap_links(root)
     _clean(root)

@@ -1,10 +1,12 @@
 """The figures drawn as SVG (figures.py): cleaned (only shapes and text, nothing that runs or
 loads), sized, fitted to their labels, their colours kept, seen as a PNG."""
 
+import io
 import re
 from xml.etree import ElementTree
 
 import pytest
+from PIL import Image
 
 from figures.support import SQUARE
 from notosaurus_core import figures
@@ -211,3 +213,40 @@ def test_a_text_along_the_figures_own_curve_kept():
         '<text><textPath href="#p" startOffset="10%">Arc</textPath><textPath href="https://example.com">X</textPath></text>'
     )
     assert '<textPath href="#p" startOffset="10%">Arc</textPath>' in kept and "example.com" not in kept
+
+
+def test_a_font_shorthands_weight_as_a_number_and_its_size_in_points():
+    """blockst's labels, "font:500 12pt …": 500 read as the size (a 500 px letter), and a size
+    in points, which resvg draws no letter at (the check saw blocks without their words).
+    The weight kept as one, the size in pixels, the same size."""
+    kept = _kept(
+        '<text style="font:500 12pt &quot;DejaVu Sans&quot;, sans-serif">A</text><text font-size="9pt">B</text>'
+    )
+    assert "font-size:16px;font-weight:500;font-family:" in kept and 'font-size="12px"' in kept
+    for size in ("12pt", "16px"):
+        png = figures.to_png(figures.clean(SQUARE.replace(">A<", f' style="font-size:{size}">A∩B<')))
+        assert png and min(Image.open(io.BytesIO(png)).convert("L").getdata()) < 100, size
+
+
+def test_an_svg_image_held_as_data_drawn_in_its_place():
+    """A Typst package drawing its own SVG (blockst) gives an <image> of it, as data: the
+    cleaning dropped it, a blank figure. Its SVG drawn in its place, at its place and size,
+    cleaned as the figure's own (its script gone); an image from elsewhere still dropped."""
+    import base64
+
+    inner = (
+        '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 50 20"><style>.l{fill:#ffffff}</style>'
+        '<rect width="50" height="20" fill="#ffbf00"/>'
+        '<text class="l" textLength="30" lengthAdjust="spacingAndGlyphs">quand</text>'
+        "<script>alert(1)</script></svg>"
+    )
+    data = base64.b64encode(inner.encode()).decode()
+    outer = (
+        '<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 100 40">'
+        f'<image transform="translate(6 6)" xlink:href="data:image/svg+xml;base64,{data}" width="50" height="20"/>'
+        '<image href="http://evil.test/x.svg"/></svg>'
+    )
+    svg = figures.clean(outer)
+    assert '<g transform="translate(6 6)"><svg' in svg and 'viewBox="0 0 50 20"' in svg and 'width="50"' in svg
+    assert 'fill="#ffbf00"' in svg and ">quand</text>" in svg and 'textLength="30"' in svg and "fill:#ffffff" in svg
+    assert "<image" not in svg and "script" not in svg and "evil" not in svg
