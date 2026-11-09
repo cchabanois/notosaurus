@@ -1360,6 +1360,39 @@ def test_a_closed_switch_is_seen():
     assert closed != wired and closed != opened
 
 
+def test_a_current_arrow_between_two_wires_closes_the_circuit():
+    """The AI writes the arrow as one more stretch of wire (a wire, the arrow, a wire): drawn
+    with its wire, the circuit as closed as when the arrow is put on a wire."""
+    circuit = (
+        '#circuit({{ battery("g", (0, 0), (0, 3)); wire((0, 3), (1, 3)); {} wire((2, 3), (3, 3)); '
+        'lamp("l", (3, 3), (3, 0)); wire((3, 0), (0, 0)) }})'
+    )
+
+    from PIL import Image
+
+    def dark(body: str) -> int:
+        png = figures.to_png(figures.clean(figures_typst.compile_svg("circuit", body)))
+        return sum(Image.open(io.BytesIO(png)).convert("L").histogram()[:128])
+
+    alone = dark(circuit.format("current-arrow((1, 3), (2, 3), $I$);"))
+    on_a_wire = dark(circuit.format("wire((1, 3), (2, 3)); current-arrow((1, 3), (2, 3), $I$);"))
+    assert alone == on_a_wire
+
+
+def test_a_circuits_ends_a_hair_apart_meet():
+    """An arrow written 0.1 short of the switch and the lamp it goes between: the wire cut there,
+    the circuit open. Its ends moved onto theirs, drawn as when they meet; a shape drawn with
+    cetz near the circuit left where it is."""
+    circuit = (
+        '#circuit({{ battery("g", (0, 0), (0, 4)); wire((0, 4), (2, 4)); '
+        'switch("k", (2, 4), (2, 2.5), closed: true); {} lamp("l", (2, 1.7), (2, 0)); wire((2, 0), (0, 0)); '
+        "cetz.draw.circle((2.1, 0.5), radius: 0.05) }})"
+    )
+    apart = figures_typst.source("circuit", circuit.format("current-arrow((2, 2.4), (2, 1.8), $I$);"))
+    meeting = figures_typst.source("circuit", circuit.format("current-arrow((2, 2.5), (2, 1.7), $I$);"))
+    assert apart == meeting and "(2.1, 0.5)" in apart
+
+
 def test_a_timelines_texts_never_on_one_another():
     """Events a year apart, long texts: each on its own row, the figure taller for it."""
     one = figures_typst.compile_svg(
