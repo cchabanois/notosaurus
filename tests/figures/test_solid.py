@@ -2,11 +2,12 @@
 proportions, lengths beside their lines."""
 
 import io
+import math
 import re
 
 import pytest
 
-from figures.support import drawn_size
+from figures.support import _glyphs, drawn_size
 from notosaurus_core import figures, figures_typst
 
 
@@ -188,3 +189,23 @@ def test_a_spheres_lengths_clear_of_its_lines(body):
     reddish = lambda p: p[0] > 200 and p[1] < 140  # noqa: E731
     reds = {(x, y) for y in range(labelled.height) for x in range(labelled.width) if reddish(labelled.getpixel((x, y)))}
     assert reds and not near & reds
+
+
+def test_a_pyramids_height_length_clear_of_its_edges():
+    """The height's length was written left of [SO] whatever the pyramid: on the hidden edge
+    [SD], read as [SA]'s ("6 cm"). Beside [SO] only where it crosses no edge, else beside the
+    pyramid on a double arrow as high as it (as the cone's): there, the drawing wider."""
+    pyramid = '#pyramid(side: 4, height: 6, names: ("A", "B", "C", "D", "S"), foot: "O"{})'
+    with_length = drawn_size("solid", pyramid.format(", height-label: [6 cm]"))[0]
+    assert with_length > drawn_size("solid", pyramid.format(""))[0] + 20
+
+
+def test_a_pyramids_names_clear_of_one_another():
+    """A slim pyramid: its foot's name O was set at a fixed place, on D's. Each name now keeps
+    clear of the edges, the height, and the names placed before it."""
+    svg = figures_typst.compile_svg(
+        "solid", '#pyramid(side: 2, height: 6, names: ("A", "B", "C", "D", "S"), foot: "O", side-label: [2 cm])'
+    )
+    spots = sorted(set(_glyphs(svg)))
+    assert len(spots) >= 6
+    assert all(math.dist(p, q) > 10 for i, p in enumerate(spots) for q in spots[i + 1 :])
