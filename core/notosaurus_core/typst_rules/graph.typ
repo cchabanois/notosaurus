@@ -128,6 +128,43 @@
     clip: true, z-index: 22,
   )
 }
+// A curve known by its points (a table of variations, "passing through" points, no formula):
+// the function through them, computed, never a polynomial the AI solves for by hand (one
+// drawing in six missed a point it marked, two came flat into their ends). Monotone cubic
+// interpolation (Fritsch–Carlson): through each point exactly, rising or falling between two
+// of them without a bump of its own, level at a minimum or a maximum, at its ends sloping as
+// it goes (never flat there). points: ((x, y), …), two at least, their x all different.
+#let through(points) = {
+  if type(points) != array or points.len() < 2 or not points.all(p => type(p) == array and p.len() == 2 and p.all(v => type(v) in (int, float))) {
+    panic("through: the points ((x, y), …), two at least, numbers, not " + repr(points))
+  }
+  let ps = points.sorted(key: p => p.at(0))
+  let n = ps.len()
+  let (xs, ys) = (ps.map(p => p.at(0)), ps.map(p => p.at(1)))
+  let h = range(n - 1).map(k => xs.at(k + 1) - xs.at(k))
+  if h.any(v => v == 0) { panic("through: two points with the same x: " + repr(points)) }
+  let d = range(n - 1).map(k => (ys.at(k + 1) - ys.at(k)) / h.at(k))
+  let sign(v) = if v > 0 { 1 } else if v < 0 { -1 } else { 0 }
+  // an end's slope: three points' estimate, kept on its side and not too steep
+  let end(h0, h1, d0, d1) = {
+    let m = ((2 * h0 + h1) * d0 - h0 * d1) / (h0 + h1)
+    if sign(m) != sign(d0) { 0 } else if sign(d0) != sign(d1) and calc.abs(m) > 3 * calc.abs(d0) { 3 * d0 } else { m }
+  }
+  let m = if n == 2 { (d.at(0), d.at(0)) } else {
+    let inner = range(1, n - 1).map(k => {
+      let (d0, d1, h0, h1) = (d.at(k - 1), d.at(k), h.at(k - 1), h.at(k))
+      // a turn (or a flat stretch): level there; else a weighted harmonic mean, no overshoot
+      if d0 * d1 <= 0 { 0 } else { 3 * (h0 + h1) / ((2 * h1 + h0) / d0 + (h1 + 2 * h0) / d1) }
+    })
+    (end(h.at(0), h.at(1), d.at(0), d.at(1)),) + inner + (end(h.at(n - 2), h.at(n - 3), d.at(n - 2), d.at(n - 3)),)
+  }
+  x => {
+    let k = calc.min(calc.max(xs.filter(v => v <= x).len() - 1, 0), n - 2)
+    let t = (x - xs.at(k)) / h.at(k)
+    let (t2, t3) = (t * t, t * t * t)
+    (2 * t3 - 3 * t2 + 1) * ys.at(k) + (t3 - 2 * t2 + t) * h.at(k) * m.at(k) + (-2 * t3 + 3 * t2) * ys.at(k + 1) + (t3 - t2) * h.at(k) * m.at(k + 1)
+  }
+}
 // ---- What the AI writes, from here (the rule's example: everything above is given)
 #let xs = lq.linspace(0.05, 6, num: 300)
 #lq.diagram(

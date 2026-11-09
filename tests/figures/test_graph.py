@@ -154,3 +154,28 @@ def test_a_data_graphs_axis_at_its_frames_start():
     assert width(body.format(axis="")) > 30  # the axis at year 0
     assert "yaxis: (position: 1780)" in figures_typst.FAMILIES["graph"].rules
     assert width(body.format(axis=" yaxis: (position: 1780),")) < 10
+
+
+def test_a_curve_through_its_points():
+    """A curve known by its points (no formula): computed through each of them exactly, falling
+    then rising then falling as they do, level at its minimum and maximum, sloping at its ends
+    (the AI's own polynomials missed a marked point 1 drawing in 6, came flat into their ends 2
+    in 6). Points not (x, y) numbers, or two with one x: refused, saying why."""
+    body = """#let f = through(((-3, 2), (-1, -2), (2, 3), (4, 0)))
+#for (x, y) in ((-3, 2), (-1, -2), (2, 3), (4, 0)) { assert(calc.abs(f(x) - y) < 1e-9, message: "misses a point") }
+#let xs = range(0, 701).map(i => -3 + i / 100)
+#let ys = xs.map(f)
+#for i in range(700) {
+  let (x, dy) = (xs.at(i), ys.at(i + 1) - ys.at(i))
+  let rising = x >= -1 and x < 2
+  if rising { assert(dy >= -1e-9, message: "not rising") } else { assert(dy <= 1e-9, message: "not falling") }
+}
+#let slope(x) = (f(x + 1e-4) - f(x - 1e-4)) / 2e-4
+#assert(calc.abs(slope(-1)) < 1e-3 and calc.abs(slope(2)) < 1e-3, message: "not level")
+#assert((f(-3 + 1e-3) - f(-3)) / 1e-3 < -0.5 and (f(4) - f(4 - 1e-3)) / 1e-3 < -0.5, message: "flat at an end")
+#lq.diagram(lq.plot(xs, ys, mark: none))"""
+    assert figures_typst.compile_svg("graph", body).startswith("<svg")
+    refused = (("((0, 1),)", "two at least"), ("((0, 1), (0, 2))", "the same x"), ('(("a", 1), (2, 3))', "numbers"))
+    for bad, said in refused:
+        with pytest.raises(figures_typst.Unusable, match=said):
+            figures_typst.compile_svg("graph", f"#let f = through({bad})\n#f(1)")
