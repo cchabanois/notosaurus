@@ -5,7 +5,7 @@ import re
 
 import pytest
 
-from figures.support import _glyphs
+from figures.support import _glyphs, drawn_size
 from notosaurus_core import figures, figures_typst
 
 
@@ -167,3 +167,22 @@ def test_points_on_the_unit_circle_joined_and_named_as_the_rule_says():
     assert call
     body = f"#ctz-canvas({{ ctz-init()\n ctz-def-points(A: (0, 0), B: (2, 1))\n {call[1]} }})"
     assert figures_typst.compile_svg("geometry", body).startswith("<svg")
+
+
+def test_the_rule_says_where_a_perpendiculars_points_are():
+    """The rule said the points of ctz-def-perp and ctz-def-para were far from the figure (only
+    ctz-def-mediator's and ctz-def-bisect's are): the AI carried a tangent's points twice as far,
+    a line 13 units long on a circle of 6, the circle shrunk (1 drawing in 3). They are at the
+    reference segment's length on each side of the point: a tangent at A to a circle of radius
+    3, drawn through them, as high as the circle."""
+    rule = (figures_typst.RULES / "geometry.md").read_text(encoding="utf-8")
+    assert "ctz-def-perp and ctz-def-para give are near" in rule
+    tangent = """#ctz-canvas({
+  ctz-init()
+  ctz-def-points(O: (0, 0), A: (3, 0))
+  ctz-draw-circle-through("O", "A")
+  ctz-def-perp("T1", "T2", ("O", "A"), "A")
+  ctz-draw-segment("T1", "T2")
+})"""
+    width, height = drawn_size("geometry", tangent)
+    assert height == pytest.approx(width, rel=0.05)
