@@ -1,4 +1,4 @@
-"""What source() makes of the AI's Typst before compiling it: imports dropped, a diagram's
+"""What source() makes of the AI's Typst (typst_source.py) before compiling it: imports dropped, a diagram's
 marks and new lines as meant, numbers as the figure's language writes them, symbols left
 symbols, fractional columns sized, a circuit's ends made to meet."""
 
