@@ -1360,6 +1360,35 @@ def test_a_closed_switch_is_seen():
     assert closed != wired and closed != opened
 
 
+def test_an_edges_unreadable_marks_still_an_arrow():
+    """The AI writes the arrow as marks fletcher can't read ("-|Side", "-|_", "-|/"), the whole
+    figure refused. Drawn as the rule's arrow, or left out where the edge has its marks
+    already; fletcher's own marks kept."""
+    edge = "#diagram(node((0, 0), [Solide]), node((2, 0), [Liquide]), edge((0, 0), (2, 0), {}, [fusion]))"
+    arrow = figures_typst.compile_svg("diagram", edge.format('"-|>"'))
+    for slip in ('"-|Side"', '"-|_"', '"-| >"', '"-|/"'):
+        assert figures_typst.compile_svg("diagram", edge.format(slip)) == arrow
+    assert figures_typst.compile_svg("diagram", edge.format('"-|Side-shift", "-|>"')) == arrow
+    both = figures_typst.compile_svg("diagram", edge.format('"<|-|>"'))
+    assert figures_typst.compile_svg("diagram", edge.format('"<|-Cli"')) == both
+    marked = figures_typst.compile_svg("diagram", edge.format('marks: (none, "head")'))
+    assert figures_typst.compile_svg("diagram", edge.format('"-|Side-shift:none", marks: (none, "head")')) == marked
+    assert '"-hook->"' in figures_typst.source("diagram", edge.format('"-hook->"'))
+
+
+def test_two_arrows_each_way_have_their_labels_apart():
+    """Two arrows each way between two nodes, shifted aside: each label on its shift's side,
+    away from the other arrow, whatever side the AI wrote (its two labels meeting between them)."""
+    pair = (
+        "#diagram(node((0, 0), [Solide]), node((1, 1), [Gaz]), "
+        'edge((0, 0), (1, 1), "-|>", [sublimation], shift: 4pt, label-side: {}), '
+        'edge((1, 1), (0, 0), "-|>", [condensation], shift: 4pt, label-side: {}))'
+    )
+    apart = figures_typst.compile_svg("diagram", pair.format("left", "left"))
+    assert figures_typst.compile_svg("diagram", pair.format("right", "right")) == apart
+    assert "label-side: right" in figures_typst.source("diagram", pair.replace("4pt", "-4pt").format("left", "left"))
+
+
 def test_a_current_arrow_between_two_wires_closes_the_circuit():
     """The AI writes the arrow as one more stretch of wire (a wire, the arrow, a wire): drawn
     with its wire, the circuit as closed as when the arrow is put on a wire."""

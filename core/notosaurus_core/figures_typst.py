@@ -36,6 +36,7 @@ import sys
 import tarfile
 import tempfile
 import tomllib
+from collections.abc import Callable
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Literal
@@ -289,6 +290,83 @@ def _unbarred(marks: re.Match) -> str:
     if kept != s:
         kept = re.sub(r"(?<!\|)>$", "|>", re.sub(r"^<(?!\|)", "<|", kept))
     return f'"{kept or "-"}"'
+
+
+# An edge's marks string fletcher can't read: the AI's light model writes the arrow "-|>" as
+# "-|Side", "-|Cli", "-|_", "-| >" or "-|/", the more as two arrows each way are shifted aside,
+# Typst refusing the whole figure. Read: a line ("-", "--", "..", "=", "~") with a head at
+# either end or none, as the rule and fletcher write them; or a mark named (its
+# default-marks.typ). Anything else a slip, its bars already dropped (_unbarred).
+HEAD = r"(?:<\||\|>|<<|>>|<|>|\||[xXoO*@])"
+READABLE_MARKS = re.compile(rf"{HEAD}?(?:--|-|\.\.|\.|==|=|~){HEAD}?")
+MARK_NAMES = {
+    "head", "doublehead", "triplehead", "harpoon", "straight", "solid", "stealth", "latex", "cone", "circle",
+    "square", "diamond", "bar", "cross", "bracket", "parenthesis", "hook", "hooks", "crowfoot",
+}  # fmt: skip
+EDGE_CALL = re.compile(r"(?<![\w.-])edge\(")
+STRING = re.compile(r'"(?:[^"\\]|\\.)*"')
+
+
+def _marks_string(args: str, string: re.Match[str]) -> bool:
+    """A string of an edge's that is its marks: an argument of its own (not part of an
+    expression), a line or a head first ("-", "<", ".", "=", "~")."""
+    text = string.group(0)
+    alone = args[: string.start()].rstrip()[-1:] in ("", ",") and args[string.end() :].lstrip()[:1] in ("", ",")
+    return alone and (text[1:2] in ("-", "<", ".", "=", "~") or text[1:3] == "|>")
+
+
+def _edges(body: str, fix: Callable[[str], str]) -> str:
+    """Each `edge(…)`'s arguments made `fix(arguments)`."""
+    out, i = [], 0
+    for m in EDGE_CALL.finditer(body):
+        if m.start() < i:
+            continue
+        depth, j = 1, m.end()
+        while j < len(body) and depth:
+            depth += {"(": 1, ")": -1}.get(body[j], 0)
+            j += 1
+        out.append(body[i : m.end()] + fix(body[m.end() : j - 1]) + ")")
+        i = j
+    return "".join(out) + body[i:]
+
+
+def _readable_marks(marks: str) -> bool:
+    """Marks fletcher reads (READABLE_MARKS, MARK_NAMES)."""
+    return bool(READABLE_MARKS.fullmatch(marks)) or any(name in marks for name in MARK_NAMES)
+
+
+def _unworded(args: str) -> str:
+    """An edge's marks string fletcher can't read (READABLE_MARKS, MARK_NAMES) made the rule's
+    arrow ("-|>", "<|-|>" when it began with a head), or dropped where the edge has its marks
+    already (another marks string, `marks:`)."""
+    strings = [x for x in STRING.finditer(args) if _marks_string(args, x)]
+    bad = [x for x in strings if not _readable_marks(x.group(0)[1:-1])]
+    marked = len(strings) > len(bad) or re.search(r"(?<![\w-])marks\s*:", args)
+    for x in reversed(bad):
+        if marked or x is not bad[0]:
+            comma = re.match(r"\s*,?", args[x.end() :])
+            args = args[: x.start()] + args[x.end() + (comma.end() if comma else 0) :]
+        else:
+            args = args[: x.start()] + ('"<|-|>"' if x.group(0).startswith('"<') else '"-|>"') + args[x.end() :]
+    return args
+
+
+# An edge shifted aside (one of two arrows each way between two nodes): its label on the side
+# it is shifted to, away from its twin (fletcher: a positive shift to the left), whatever side
+# the AI wrote: on the other side, the two arrows' labels meet between them.
+SHIFT = re.compile(r"(?<![\w-])shift\s*:\s*(-?)\s*\d*\.?\d+\s*(pt|em|mm|cm)?(?=\s*[,)]|\s*$)")
+LABEL_SIDE = re.compile(r"(?<![\w-])label-side\s*:\s*(left|right|center)")
+
+
+def _labels_aside(args: str) -> str:
+    """A shifted edge's label on its shift's side (SHIFT)."""
+    shift = SHIFT.search(args)
+    if not shift or not re.search(r"\d*\.?\d*[1-9]", shift.group(0)):
+        return args
+    side = "right" if shift.group(1) else "left"
+    if LABEL_SIDE.search(args):
+        return LABEL_SIDE.sub(f"label-side: {side}", args)
+    return args + f", label-side: {side}" if "[" in args else args
 
 
 def _broken_lines(body: str) -> str:
@@ -564,7 +642,7 @@ def source(family: str, body: str) -> str:
     # "<" and ">" written as HTML's entities (an arrow "-|&gt;"): Typst has none of them
     body = PACKAGE_IMPORT.sub("", body).replace("&gt;", ">").replace("&lt;", "<")
     if family == "diagram":
-        body = _broken_lines(EDGE_MARKS.sub(_unbarred, body))
+        body = _broken_lines(_edges(EDGE_MARKS.sub(_unbarred, body), lambda a: _labels_aside(_unworded(a))))
     if family == "circuit":
         body = _joined_ends(body)
     if FORBIDDEN.search(body):
