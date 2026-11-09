@@ -40,7 +40,7 @@ def test_the_graph_rules_own_fragments_compile():
     compiles too, in that example: a fragment out of step makes every graph with it fail."""
     rules = figures_typst.FAMILIES["graph"].rules
     example = re.search(r"exactly so:\n(.*?)\n- ", rules, re.S).group(1)
-    fragments = re.findall(r"`((?:xaxis: |lq\.scatter|lq\.line|lq\.place)[^`]*)`", rules)
+    fragments = re.findall(r"`((?:xaxis: |lq\.scatter|lq\.line|lq\.place|named\(|asymptote\()[^`]*)`", rules)
     assert len(fragments) >= 4
     for fragment in fragments:
         body = example.replace("  lq.plot(", f"  {fragment},\n  lq.plot(")
@@ -154,6 +154,111 @@ def test_a_data_graphs_axis_at_its_frames_start():
     assert width(body.format(axis="")) > 30  # the axis at year 0
     assert "yaxis: (position: 1780)" in figures_typst.FAMILIES["graph"].rules
     assert width(body.format(axis=" yaxis: (position: 1780),")) < 10
+
+
+def _dashes(svg: str) -> list[tuple[float, float, float, float]]:
+    """A Typst SVG's dashed lines, (x, y) of their start and their end, in their frame's own
+    coordinates (an asymptote's pieces are drawn in the frame)."""
+    lines = []
+    for tag in re.findall(r"<path [^>]*stroke-dasharray[^>]*>", svg):
+        moved = re.search(r"translate\(([-\d.]+)(?: ([-\d.]+))?\)", tag)
+        x, y = float(moved[1]), float(moved[2] or 0)
+        way, length = re.search(r'd="M 0 0([hv]) ([-\d.]+)"', tag).groups()
+        dx, dy = (float(length), 0.0) if way == "h" else (0.0, float(length))
+        lines.append((x, y, x + dx, y + dy))
+    return sorted(lines)
+
+
+def test_an_asymptote_across_the_frame_broken_at_the_axis_numbers():
+    """The limit y = 3 drawn by the AI with `lq.line` from the frame's edge ran into the y
+    axis's number 3, read "−3". `asymptote(y: 3)` spans the whole frame, both sides of the
+    axis, broken only over the number's column and the axis (computed from the size, the
+    limits and the number's width), resumed past it; the same for x = 2 and the x axis."""
+    frame = "#lq.diagram(width: 8cm, height: 5cm, xlim: (-3, 5), ylim: (-2, 3.5), {})"
+    width, height = 8 / 2.54 * 72, 5 / 2.54 * 72  # pt
+    axis_x, axis_y = 3 / 8 * width, 3.5 / 5.5 * height
+    left, right = _dashes(figures_typst.compile_svg("graph", frame.format("asymptote(y: 3, label: none)")))
+    assert left[0] == pytest.approx(0) and right[2] == pytest.approx(width)
+    assert left[2] < axis_x - 9  # pt: the ticks' pad and the number's width before it
+    assert axis_x < right[0] < axis_x + 6
+    vertical = _dashes(figures_typst.compile_svg("graph", frame.format("asymptote(x: 2, label: none)")))
+    top, bottom = sorted(vertical, key=lambda d: d[1])
+    assert top[1] == pytest.approx(0) and bottom[3] == pytest.approx(height)
+    assert axis_y - 6 < top[3] < axis_y
+    assert bottom[1] > axis_y + 12  # pt: the ticks' pad and the number's height below it
+    # the frame starting just before the axis: no stub of a dash left before the number (it
+    # would read as a minus sign)
+    for start in (-0.45, -0.5, -0.55, -0.6, -0.65):
+        near = (
+            f"#lq.diagram(width: 8cm, height: 5cm, xlim: ({start}, 6.8), ylim: (-0.3, 3.5),"
+            " yaxis: (tick-distance: 1), asymptote(y: 3, label: none))"
+        )
+        pieces = _dashes(figures_typst.compile_svg("graph", near))
+        assert all(end - begin > 8 for begin, _, end, _ in pieces), (start, pieces)  # pt
+    # on an axis (y = 0 at −∞): the axis itself, no dashes blurring it
+    assert _dashes(figures_typst.compile_svg("graph", frame.format("asymptote(y: 0, label: none)"))) == []
+    # away from the numbers, a line drawn whole
+    assert len(_dashes(figures_typst.compile_svg("graph", frame.format("asymptote(y: 2.5, label: none)")))) == 1
+    assert "asymptote(" in figures_typst.FAMILIES["graph"].rules
+
+
+def test_an_asymptote_named_by_its_equation_where_no_curve_is():
+    """The line's name was written 1 time in 3: written by default ("y = 1,5", the figure's
+    decimal separator), at its end on the side the curve leaves free."""
+    body = (
+        '#set text(lang: "fr")\n#let xs = lq.linspace(0.2, 4, num: 100)\n'
+        "#lq.diagram(width: 8cm, height: 7cm, xlim: (-4, 4), ylim: (-2, 5),"
+        " lq.plot(xs, xs.map(x => 1 / x + 1.5), mark: none), asymptote(y: 1.5{}))"
+    )
+    svg = lambda label: figures_typst.compile_svg("graph", body.format(label))  # noqa: E731
+    named, bare = svg(""), svg(", label: none")
+    assert named != bare
+    assert named == svg(', label: $y = #"1,5"$')
+
+    # its name at the right end, below the line where the curve comes from above, above it
+    # where the curve comes from below
+    def name(curve: str, label: str) -> set[tuple[float, float]]:
+        drawn = lambda more: figures_typst.compile_svg("graph", body.replace("1 / x + 1.5", curve).format(more))  # noqa: E731
+        return set(_glyphs(drawn(label))) - set(_glyphs(drawn(", label: none")))
+
+    under, over = name("1 / x + 1.5", ""), name("1.5 - 1 / x", "")
+    assert under and over and all(x > 150 for x, _ in under | over)  # pt: the right end
+    assert min(y for _, y in under) > max(y for _, y in over) + 10  # pt: either side of the line
+
+
+def test_a_curves_name_set_along_it_clear_of_what_is_drawn():
+    """The names of the curves and lines (𝒞f, y = x, y = 0,5x + 2) were placed by the AI's eye
+    with `lq.place`: on the other line, on each other. `named(…)` sets the name along its own
+    curve, computed, clear of the other curves and of the segments drawn (`lq.line`, the
+    cobweb's dotted steps)."""
+    frame = (
+        "#lq.diagram(width: 6cm, height: 6cm, xlim: (-3, 3), ylim: (-3, 3), {},"
+        " lq.place(-2.5, -2.5, [O]), lq.place(2.5, 2.5, [O]))"
+    )
+
+    def name(body: str) -> tuple[float, float]:
+        """Where "A" is drawn, in the data: from two "O" placed at (−2.5, −2.5) and (2.5, 2.5)."""
+        glyphs = _glyphs(figures_typst.compile_svg("graph", frame.format(body)))
+        bare = _glyphs(figures_typst.compile_svg("graph", frame.format(body.replace("[A]", "none"))))
+        ((x, y),) = set(glyphs) - set(bare)
+        o = _glyphs(figures_typst.compile_svg("graph", frame.format(body.replace("[A]", "none")).replace("[O]", "[]")))
+        (low, high) = sorted(set(bare) - set(o))
+        (ax, ay), (bx, by) = (low, high) if low[1] > high[1] else (high, low)  # (−2.5, −2.5) lower
+        return -2.5 + 5 * (x - ax) / (bx - ax), -2.5 + 5 * (y - ay) / (by - ay)
+
+    line = "named(lq.plot((-3, 3), (-3, 3), mark: none), [A])"
+    alone = name(line)
+    assert 0.1 < abs(alone[0] - alone[1]) / 2**0.5 < 1.2  # beside y = x, near it
+    # another line through that place: the name elsewhere along y = x, clear of it
+    cx, cy = alone[0] + 0.2, alone[1] + 0.1
+    other = f"lq.plot(({cx - 2}, {cx + 2}), ({cy + 2}, {cy - 2}), mark: none)"
+    moved = name(f"{other}, {line}")
+    assert abs(moved[0] + moved[1] - cx - cy) / 2**0.5 > 0.5  # units from y = −x + c
+    # a segment (`lq.line`, its ends kept by line-kept) through it: the name moved too
+    segment = f"lq.line(({cx}, {cy - 1}), ({cx}, {cy + 1}))"
+    assert abs(name(f"{segment}, {line}")[0] - cx) > 0.3
+    assert "named(" in figures_typst.FAMILIES["graph"].rules
+    assert "line-kept(" in figures_typst.source("graph", "#lq.diagram(lq.line((0, 0), (1, 1)))")
 
 
 def test_a_curve_through_its_points():

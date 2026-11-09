@@ -203,6 +203,69 @@
   let mid = (pa.at(0) + pos * dx, pa.at(1) + pos * dy)
   content(shift(mid, off + if level > 1 { 0.1 } else { 0 }), label, anchor: anchor)
 })
+// A translation's image of `point` when the description gives no vector, placed by the
+// preamble, never by eye: the vector in the direction furthest from every side of `figure`
+// (its vertices, in order: the arrow runs along none), never into the figure nor into its
+// image at `point` (the arrow crosses neither), the rightmost of the nearly as good; as long
+// as the figure is wide that way plus `gap`, so that the image stands clear of it. Then the
+// figure's other points by ctz-def-translate((point, name)), as for a given vector.
+#let _translation-vector(pts, p, k, gap) = {
+  let angle(v) = calc.atan2(v.at(0), v.at(1)) / 1deg
+  let n = pts.len()
+  let side(i) = { let (a, b) = (pts.at(i), pts.at(calc.rem(i + 1, n))); angle((b.at(0) - a.at(0), b.at(1) - a.at(1))) }
+  let sides = range(if n == 2 { 1 } else { n }).map(side)
+  // how far a direction is from a side's line (0 to 90 degrees)
+  let off(t, s) = { let d = calc.rem-euclid(t - s, 180); calc.min(d, 180 - d) }
+  // the figure's angle at its vertex `k`, 10° wider: no arrow into it
+  let inside(t) = if k == none or n < 3 { false } else {
+    let (prev, next) = (pts.at(calc.rem-euclid(k - 1, n)), pts.at(calc.rem(k + 1, n)))
+    let (a1, a2) = (angle((prev.at(0) - p.at(0), prev.at(1) - p.at(1))), angle((next.at(0) - p.at(0), next.at(1) - p.at(1))))
+    let span = calc.rem-euclid(a2 - a1, 360)
+    let (from, width) = if span > 180 { (a2, 360 - span) } else { (a1, span) }
+    let d = calc.rem-euclid(t - from, 360)
+    d < width + 10 or d > 350
+  }
+  // the directions that leave both figures clear, each with how far it is from every side
+  let ok = range(24).map(i => i * 15).filter(t => not inside(t) and not inside(t + 180))
+  assert(ok.len() > 0, message: "no direction leaves the figure clear")
+  let scored = ok.map(t => (t: t, score: calc.min(..sides.map(s => off(t, s))), right: calc.cos(t * 1deg)))
+  // among those nearly as far from the sides as the best, the rightmost (a card is wide)
+  let top = calc.max(..scored.map(c => c.score))
+  let best = scored.filter(c => c.score >= top - 10).sorted(key: c => -c.right).first()
+  let u = (calc.cos(best.t * 1deg), calc.sin(best.t * 1deg))
+  let along = pts.map(q => q.at(0) * u.at(0) + q.at(1) * u.at(1))
+  let length = calc.max(..along) - calc.min(..along) + gap
+  (length * u.at(0), length * u.at(1))
+}
+#let ctz-def-translation-image(name, point, figure, gap: 1) = {
+  assert(type(figure) == array and figure.len() >= 2, message: "the figure is its vertices' names, in order: (\"A\", \"B\", \"C\")")
+  (ctx => {
+    let at(n) = { let q = _resolve-point(ctx, n); (q.at(0), q.at(1)) }
+    let p = at(point)
+    let (dx, dy) = _translation-vector(figure.map(at), p, figure.position(f => f == point), gap)
+    let points = _get-points(ctx)
+    points.insert(name, (p.at(0) + dx, p.at(1) + dy))
+    (ctx: _set-points(ctx, points))
+  },)
+}
+// A rotation's direction: an arc around its centre `o` from the direction of `a` to that of
+// its image `b`, the way the rotation turns (anticlockwise, `clockwise: true` the other
+// way), its arrow at the image's end; `label` (its angle, [90°]) written at its middle,
+// outside it. Computed from the points, never an arc's angles or arrow given by hand.
+#let ctz-draw-rotation-arc(a, o, b, label: none, radius: 0.9, clockwise: false) = cetz.draw.get-ctx(ctx => {
+  let at(n) = cetz.coordinate.resolve(ctx, "ctz:" + n).at(1)
+  let (pa, po, pb) = (at(a), at(o), at(b))
+  let angle(p) = calc.atan2(p.at(0) - po.at(0), p.at(1) - po.at(1)) / 1deg
+  let (from, to) = (angle(pa), angle(pb))
+  let delta = if clockwise { -calc.rem-euclid(from - to, 360) } else { calc.rem-euclid(to - from, 360) }
+  assert(calc.abs(delta) > 0.5, message: "a rotation's arc goes from a point to its image, apart from it")
+  cetz.draw.arc(po, start: from * 1deg, delta: delta * 1deg, radius: radius, anchor: "origin",
+    stroke: 0.8pt, mark: (end: "stealth", fill: black, scale: 0.8))
+  if label != none {
+    let mid = (from + delta / 2) * 1deg
+    cetz.draw.content((po.at(0) + (radius + 0.4) * calc.cos(mid), po.at(1) + (radius + 0.4) * calc.sin(mid)), label)
+  }
+})
 // A vector: its arrow from its origin to its end, its head at the end, its name beside it
 // toward its head (`pos` of the way: its middle often holds a point, a projection), away from
 // the figure's point `away`, as a length is written; never a plain segment.
