@@ -222,7 +222,7 @@ def test_draw_figure_with_gemini(monkeypatch):
     from notosaurus_core import figures, figures_typst
     from notosaurus_core.calls import recording
 
-    monkeypatch.setattr(figures_typst, "available", lambda: False)  # its SVG drawing (Typst: test_figures)
+    monkeypatch.setattr(figures_typst, "available", lambda: False)  # its SVG drawing (Typst: tests/figures/)
     fake = Recording('{"svg": "<svg viewBox=\\"0 0 400 300\\"/>"}')
     monkeypatch.setattr(gemini, "_gemini_client", lambda s: fake)
     monkeypatch.setattr(gemini, "_NO_MINIMAL_THINKING", set())
