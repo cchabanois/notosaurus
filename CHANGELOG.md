@@ -39,6 +39,7 @@ Each pull request's entries (the `## Changelog` of its description) are put unde
 
 ### Fixed
 
+- A tangent to a circle is no longer drawn so long that the figure shrinks to nothing.
 - 🔺 A pyramid's height written beside it, never on an edge; its foot's and vertices' names clear of one another.
 - Diagrams: two arrows each way between two boxes (the states of matter) drawn as a diagram again, never as a drawing with labels on one another.
 - Circuits: the wire no longer cut around a current's arrow, the circuit no longer drawn open.
