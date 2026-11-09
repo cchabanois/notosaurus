@@ -39,6 +39,7 @@ Each pull request's entries (the `## Changelog` of its description) are put unde
 
 ### Fixed
 
+- A curve given by its points or its table of variations passes through every point, level at its minimum and maximum.
 - 🔄 A rotation's direction drawn as an arc with its arrow, the right way, instead of a figure sometimes drawn without it.
 - 📈 A graph's asymptote or limit line is drawn across the whole frame, broken where it would cross the axis's numbers (no more "3" read as "−3"), and always named ("y = 3").
 - 📈 The names of a graph's curves and lines (𝒞f, y = x) are set along each one, clear of the other lines and of each other.
