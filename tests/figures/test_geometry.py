@@ -225,3 +225,24 @@ def test_a_translations_image_placed_clear_of_its_figure():
     points = "ctz-def-points(A: (0, 0), B: (3, 0.5), C: (1, 2.5))"
     example = f'#ctz-canvas({{ ctz-init(); {points}; {call}; ctz-draw-vector("A", "A\'") }})'
     assert figures_typst.compile_svg("geometry", example).startswith("<svg")
+
+
+def test_a_rotations_arrowed_arc_drawn_from_its_points():
+    """A rotation's direction shown by an arrowed arc the preamble draws from the point, the
+    centre and the image (the AI guessed ctz-draw-arc's arguments, `mark:`, `radius:`,
+    `start:`, refused twice: the figure drawn as SVG): the way it turns given, the arc from
+    the point to its image; a point onto itself refused; the rule's call compiles."""
+    draw = (
+        '#ctz-canvas({{ ctz-init(); ctz-def-points(O: (0, 0), A: (2, 0)); ctz-def-rotation("A\'", "A", "O", 90); {} }})'
+    )
+
+    def arc(args: str) -> str:
+        return figures_typst.compile_svg("geometry", draw.format(f'ctz-draw-rotation-arc("A", "O", "A\'"{args})'))
+
+    assert arc("") != arc(", clockwise: true")  # a quarter turn one way, three the other
+    assert arc("") != arc(", label: [90°]")
+    with pytest.raises(figures_typst.Unusable, match="apart from it"):
+        figures_typst.compile_svg("geometry", draw.format('ctz-draw-rotation-arc("A", "O", "A")'))
+    rule = figures_typst.FAMILIES["geometry"].rules
+    (call,) = re.findall(r"`(ctz-draw-rotation-arc\([^`]*\))`", rule)
+    assert figures_typst.compile_svg("geometry", draw.format(call)).startswith("<svg")
