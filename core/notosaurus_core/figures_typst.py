@@ -9,7 +9,8 @@ sphere as textbooks draw them, in proportion), charts and phylogenetic trees wit
 chart and phylogeny functions: a tree built from what each species has), sequences aligned
 in Typst (our sequences function: letters in columns, their differences framed, computed), a body's vectors with cetz
 (our mechanics function: each given by its direction, on an orbit, a plane, a slope), tables of
-values in Typst (our value-table function: cells measured, totals summed, arrows beside it).
+values in Typst (our value-table function: cells measured, totals summed, arrows beside it),
+Scratch scripts with blockst (each block drawn from its text, one Scratch doesn't have refused).
 What can be computed is, never placed by eye. Each family's rule and Typst: typst_rules/.
 
 The family is the one the AI gave with the figure's description (models.Card.figure_kind),
@@ -24,8 +25,10 @@ The SVG keeps its colours (a lesson's colour code: atoms, a legend) and is clean
 (figures.clean).
 """
 
+import base64
 import functools
 import hashlib
+import html
 import importlib.util
 import os
 import posixpath
@@ -98,6 +101,7 @@ FAMILIES: dict[str, Family] = {
         "phylogeny",
         "mechanics",
         "table",
+        "scratch",
     )
 }
 
@@ -121,6 +125,7 @@ FigureKind = Literal[
     "phylogeny",
     "mechanics",
     "table",
+    "scratch",
     "other",
 ]
 
@@ -317,6 +322,52 @@ def packages() -> Path:
     return folder
 
 
+_SVG_IMAGE = re.compile(r'href="data:image/svg\+xml;base64,([A-Za-z0-9+/=]+)"')
+_UNKNOWN_BLOCK = re.compile(r'<path[^>]*fill="#bfbfbf"[^>]*/>((?:(?!<path).)*)', re.IGNORECASE | re.DOTALL)
+
+
+def _unknown_blocks(svg: str) -> list[str]:
+    """The blocks blockst drew grey in a Scratch script, as their words read: the ones Scratch
+    doesn't have in that language (a block's words of the AI's own, "tourner à droite de"),
+    drawn without an error."""
+    found = []
+    for data in _SVG_IMAGE.findall(svg):
+        inner = base64.b64decode(data).decode("utf-8", "replace")
+        for after in _UNKNOWN_BLOCK.findall(inner):
+            words = re.findall(r"<text[^>]*>([^<]*)</text>", after)
+            found.append(html.unescape(" ".join(w.strip() for w in words if w.strip())))
+    return found
+
+
+@functools.cache
+def _if_words() -> frozenset[str]:
+    """The first word of Scratch's "if" block in each language blockst has ("si", "if",
+    "falls"…), read from its own translations (its plugin)."""
+    plugins = packages().glob("preview/blockst/*/libs/scratch/plugins/scratchblocks_wasm.wasm")
+    text = "".join(p.read_bytes().decode("utf-8", "replace") for p in plugins)
+    return frozenset(m.split()[0] for m in re.findall(r'CONTROL_IF = "([^"%]+)%1', text) if m.split())
+
+
+def _without_if_arrows(svg: str) -> str:
+    """blockst draws a loop's arrow at the foot of an "if" block too, as if it looped: the
+    arrow kept for loops only (repeat, forever), an "if"'s dropped (its first word its
+    language's, _if_words)."""
+
+    def inner(m: re.Match) -> str:
+        drawn = ElementTree.fromstring(base64.b64decode(m.group(1)).decode("utf-8"))
+        for block in drawn.iter():
+            arrows = [c for c in block if c.tag.endswith("use") and c.get("href") == "#sb-loopArrow"]
+            first = next((c.text or "" for c in block if c.tag.endswith("text") and (c.text or "").strip()), "")
+            if arrows and first.strip() in _if_words():
+                for arrow in arrows:
+                    block.remove(arrow)
+        ElementTree.register_namespace("", "http://www.w3.org/2000/svg")
+        out = ElementTree.tostring(drawn, encoding="unicode")
+        return f'href="data:image/svg+xml;base64,{base64.b64encode(out.encode()).decode()}"'
+
+    return _SVG_IMAGE.sub(inner, svg)
+
+
 def compile_svg(family: str, body: str) -> str:
     """The figure's SVG, its colours as drawn; Unusable when Typst refuses it (its message),
     takes too long or draws nothing (an empty answer: a blank page on the card, never redrawn)."""
@@ -338,6 +389,15 @@ def compile_svg(family: str, body: str) -> str:
     svg = done.stdout.decode("utf-8")
     if _blank(svg):
         raise Unusable("It draws nothing: the page is blank.")
+    if family == "scratch" and (unknown := _unknown_blocks(svg)):
+        raise Unusable(
+            "Scratch has no block "
+            + ", ".join(f'"{block}"' for block in unknown)
+            + " (drawn grey): write each block in the words Scratch shows in the language given,"
+            " a block of your own defined by Scratch's define block and used with call."
+        )
+    if family == "scratch":
+        svg = _without_if_arrows(svg)
     svg = _fitted(svg)
     # A map's outlines: thousands of points, each written to the billionth of a point by
     # Typst: kept to the tenth (nothing seen changes), the figure several times lighter

@@ -9,6 +9,7 @@ Each pull request's entries (the `## Changelog` of its description) are put unde
 
 ### Added
 
+- 🧩 Scratch scripts drawn block by block as Scratch draws them (blockst), their words never cut.
 - 📊 Tables of values (two-way tables with totals, proportionality tables with their arrows, conversion and frequency tables): each column as wide as its content, totals computed.
 - 〰️ Curves through measures (a reaction's progress, a growth, a cooling) drawn smooth, through every measure and never beyond them.
 - 🛰️ Forces and velocities drawn on a body (an orbit and its Frenet frame, a block on the ground or a slope, a pendulum), each arrow in the right direction and every name readable.

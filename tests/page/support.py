@@ -41,6 +41,13 @@ def started(page) -> None:
     page.wait_for_function("window.Alpine && Alpine.$data(document.querySelector('[x-data]')).draftKept")
 
 
+def draft_kept(page) -> None:
+    """What the page changed, kept by the host (app-draft.js sends it a moment after the
+    change, or as the page is left: a request the reload may cut short): before the page is
+    loaded again, else the lesson it had open isn't found again."""
+    page.wait_for_function("(d => d.draftSent === d.draftText())(Alpine.$data(document.querySelector('[x-data]')))")
+
+
 def generate_free(page, prompt: str) -> None:
     """A new lesson from a prompt written for this time (no photo): the last one, open again
     when the page opens (app-draft.js), set aside first; photos left in progress (kept by the

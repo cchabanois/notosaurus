@@ -16,6 +16,7 @@ from page.support import (  # noqa: E402
     PDF_NOTICE,
     add_photo,
     add_text_pdf,
+    draft_kept,
     drop,
     editor_pixel,
     generate_free,
@@ -131,6 +132,7 @@ def test_pdf_text_kept_with_its_page(page, browser):
 
     # The page opened again (the lesson open again by itself), then generated again: the
     # text goes with its page again
+    draft_kept(page)
     page.reload()
     started(page)
     sync_api.expect(page.locator(".thumb img")).to_have_count(1)

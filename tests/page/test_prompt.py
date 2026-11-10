@@ -10,6 +10,7 @@ sync_api = pytest.importorskip("playwright.sync_api")
 
 from page.support import (  # noqa: E402
     FRONT_PROMPT,
+    draft_kept,
     generate_free,
     lessons,
     open_prompt,
@@ -64,6 +65,7 @@ def test_a_prompt_of_several_lines_is_the_lessons_own(page):
     sync_api.expect(folded).to_contain_text("⭐ Automatique")
     sync_api.expect(page.get_by_text("Modifiée depuis la création des cartes")).to_be_hidden()
 
+    draft_kept(page)
     page.reload()  # the lesson open again
     started(page)
     page.locator(".flash").first.wait_for()
