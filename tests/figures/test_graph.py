@@ -120,6 +120,23 @@ def test_a_graphs_close_ticks_names_kept_apart():
     assert rows(1.8) == 1
 
 
+def test_a_plain_number_touching_a_named_value_not_written():
+    """The axis numbered 1, 2, 3 and the terms u₂ (1.93) and u₃ (1.98) named on it: u₃ went on
+    the second row, "2" fell back on the first, against u₂ ("u₂2"). A plain number touching a
+    value named otherwise isn't written (its tick stays); far from any, it is."""
+    graph = (
+        "#lq.diagram(width: 7cm, height: 4cm, xlim: (0, 3.2), ylim: (0, 3),"
+        " xaxis: (ticks: ({})), lq.plot((0, 3), (0, 3), mark: none))"
+    )
+
+    def drawn(ticks: str) -> list[tuple[float, float]]:
+        return _glyphs(figures_typst.compile_svg("graph", graph.format(ticks)))
+
+    terms = "(1.93, $u_2$), (1.98, $u_3$)"
+    assert drawn(f"(1, $1$), (2, $2$), (3, $3$), {terms}") == drawn(f"(1, $1$), (2, []), (3, $3$), {terms}")
+    assert drawn("(1, $1$), (2, $2$), (3, $3$)") != drawn("(1, $1$), (2, []), (3, $3$)")
+
+
 def test_where_two_curves_meet_computed_and_marked():
     """Two lines' intersection the description asks for, marked by the AI with a dot too
     small to see and its coordinates left out: computed by the preamble (Typst itself

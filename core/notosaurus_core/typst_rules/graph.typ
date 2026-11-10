@@ -24,9 +24,18 @@
   let gap = 0.8em.to-absolute() // about a letter apart, at least
   let at(v) = (v - low) / (high - low) * size
   let extent(name) = { let m = measure(name); if horizontal { m.width } else { m.height } }
+  // A plain number ("2") that would touch a value named otherwise ("u₂" at 1.93, "α"): not
+  // written (its tick stays), the named value being what the figure is about
+  let flat(c) = if type(c) in (str, int, float) { str(c) } else if type(c) != content { "?" } else if c.has("text") { c.text } else if c.has("body") { flat(c.body) } else if c.has("children") { c.children.map(flat).join(default: "") } else if c.func() == [ ].func() { "" } else { "?" }
+  let plain(name) = flat(name).trim().match(regex("^[−-]?[0-9][0-9.,\u{202F} ]*$")) != none
+  let span(value, name) = (at(value) - extent(name) / 2, at(value) + extent(name) / 2)
+  let touch(a, b) = a.at(0) < b.at(1) + gap and b.at(0) < a.at(1) + gap
+  let others = ticks.filter(((v, n)) => not plain(n))
+  let ticks = ticks.map(((v, n)) => if plain(n) and others.any(((w, m)) => touch(span(v, n), span(w, m))) { (v, []) } else { (v, n) })
   let ends = (-1e9pt, -1e9pt) // where each row's last name ends
   let out = ()
   for (value, name) in ticks.sorted(key: t => t.at(0)) {
+    if name == [] { out.push((value, name)); continue }
     let (start, end) = (at(value) - extent(name) / 2, at(value) + extent(name) / 2)
     let row = if start >= ends.at(0) + gap { 0 } else if start >= ends.at(1) + gap { 1 } else { 0 }
     ends.at(row) = end
