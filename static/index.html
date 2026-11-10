@@ -539,20 +539,23 @@
                           x-init="watchHeight($el)" x-effect="card.fun_fact; fitHeight($el)"></textarea>
               </div>
               <!-- The helps written at generation: on the back in Anki; cleared, they're gone. Their
-                   formulas drawn, as the back's (their text a click away) -->
+                   formulas drawn, as the back's (their text a click away); as tall as their text,
+                   never a handle to drag (a scroll on a phone caught it), Enter a new line -->
               <div class="card-help" x-show="card.explanation">
                 <span aria-hidden="true">💬</span>
                 <div class="math-preview shown" x-show="renderedOnly(card, 'explanation')" x-html="previewHtml(card.explanation)"
                      @click="editField(card, 'explanation', $el)" :title="readOnly() ? '' : $t('app.review.editFormula')"></div>
-                <textarea class="explanation" rows="2" x-model="card.explanation" :readonly="readOnly()" :aria-label="$t('app.review.explanation')"
-                          x-show="!renderedOnly(card, 'explanation')" @focus="card._editing = 'explanation'" @blur="card._editing = ''"></textarea>
+                <textarea class="grow explanation" rows="1" x-model="card.explanation" :readonly="readOnly()" :aria-label="$t('app.review.explanation')"
+                          x-show="!renderedOnly(card, 'explanation')" @focus="card._editing = 'explanation'" @blur="card._editing = ''"
+                          x-init="watchHeight($el)" x-effect="card.explanation; fitHeight($el)"></textarea>
               </div>
               <div class="card-help" x-show="card.mnemonic">
                 <span aria-hidden="true">🧠</span>
                 <div class="math-preview shown" x-show="renderedOnly(card, 'mnemonic')" x-html="previewHtml(card.mnemonic)"
                      @click="editField(card, 'mnemonic', $el)" :title="readOnly() ? '' : $t('app.review.editFormula')"></div>
-                <textarea class="mnemonic" rows="2" x-model="card.mnemonic" :readonly="readOnly()" :aria-label="$t('app.review.mnemonic')"
-                          x-show="!renderedOnly(card, 'mnemonic')" @focus="card._editing = 'mnemonic'" @blur="card._editing = ''"></textarea>
+                <textarea class="grow mnemonic" rows="1" x-model="card.mnemonic" :readonly="readOnly()" :aria-label="$t('app.review.mnemonic')"
+                          x-show="!renderedOnly(card, 'mnemonic')" @focus="card._editing = 'mnemonic'" @blur="card._editing = ''"
+                          x-init="watchHeight($el)" x-effect="card.mnemonic; fitHeight($el)"></textarea>
               </div>
             </div>
             <!-- ✨ This card corrected by the AI as asked (typed or 🎤), the others untouched -->

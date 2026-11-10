@@ -384,6 +384,24 @@ def test_an_option_card_is_its_radio_all_over(page):
     sync_api.expect(page.get_by_role("radio", name="Ici Le détail")).to_be_checked()
 
 
+def test_helps_as_tall_as_their_text_never_dragged(page):
+    """The explanation and the mnemonic as tall as their text, its lines kept (Enter a new line,
+    a <br> in Anki), with no handle to drag: a scroll on a phone caught it, the field grew."""
+    page.set_viewport_size({"width": 360, "height": 780})
+    generate_free(page, FRONT_PROMPT)
+    for field in ("textarea.explanation", "textarea.mnemonic"):
+        box = page.locator(f".card-help:visible {field}").first
+        assert box.evaluate("el => getComputedStyle(el).resize") == "none", field
+        one_line = box.bounding_box()["height"]
+        box.fill("Une première ligne")
+        box.press("End")
+        box.press("Enter")
+        box.type("puis une seconde, assez longue pour ne pas tenir sur une ligne d'un téléphone")
+        assert "\n" in box.input_value(), field  # its line break kept
+        assert box.bounding_box()["height"] > 2.5 * one_line, field  # several lines
+        assert box.evaluate("el => el.scrollHeight <= el.clientHeight + 1"), field  # all of it shown
+
+
 def test_helps_as_the_settings_say(page):
     """No switch under the prompt: the helps come as the settings say (on at first)."""
     page.goto("/")
