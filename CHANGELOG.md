@@ -9,6 +9,7 @@ Each pull request's entries (the `## Changelog` of its description) are put unde
 
 ### Added
 
+- 📦 Box plots drawn by the statistics chart: boxes on one shared axis at a readable size, their graduation computed.
 - 🧩 Scratch scripts drawn block by block as Scratch draws them (blockst), their words never cut.
 - 📊 Tables of values (two-way tables with totals, proportionality tables with their arrows, conversion and frequency tables): each column as wide as its content, totals computed.
 - 〰️ Curves through measures (a reaction's progress, a growth, a cooling) drawn smooth, through every measure and never beyond them.
@@ -40,6 +41,8 @@ Each pull request's entries (the `## Changelog` of its description) are put unde
 
 ### Fixed
 
+- 📏 Lines in geometry figures no longer run far past their figure, so the figure keeps a readable size on the card.
+- 📈 A graph's frame larger than 9 cm is drawn smaller as a whole (an orthonormal frame stays orthonormal), so the card no longer shrinks its text.
 - A curve given by its points or its table of variations passes through every point, level at its minimum and maximum.
 - 🔄 A rotation's direction drawn as an arc with its arrow, the right way, instead of a figure sometimes drawn without it.
 - 📈 A graph's asymptote or limit line is drawn across the whole frame, broken where it would cross the axis's numbers (no more "3" read as "−3"), and always named ("y = 3").
