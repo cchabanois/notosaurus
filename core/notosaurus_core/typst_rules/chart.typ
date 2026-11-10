@@ -16,6 +16,7 @@
 // A line only: marks, events at an x ((x, label): a dashed line across, its label under the
 // axis); spans, stretches of x ((from, to, label): shaded); second, another measure with
 // its own unit on a right axis ((values: ((x, y), …), axis: title)), in another colour;
+// kind "box": box plots, each (name, (min, q1, median, q3, max)), on one axis (_box-plots).
 // numbered: false when the description gives no value for y (only how it varies): the
 // line's shape without numbers on its axis; smooth: a curve through the measures instead of
 // straight lines, never above nor below them between two (monotone: Fritsch–Carlson)
@@ -49,9 +50,115 @@
   }
   out
 }
+// Box plots (boîtes à moustaches): each box from its five values (minimum, first quartile,
+// median, third quartile, maximum), all on one shared axis, the first box at the top, each
+// named at its left. The axis's length fixed (about 8 cm with the names, whatever the data's
+// range: never the values taken as centimetres), its graduation computed (a round step, at
+// most 10 of them, a finer tick between two numbers), from `limits` when the description
+// gives the axis's ends, else around the values. written: the boxes whose five values are
+// written ("all", or names), none by default (a card asking a quartile never shows it).
+#let _box-plots(values, written: (), axis: none, step: auto, limits: auto) = context {
+  let number(x) = type(x) in (int, float)
+  let five(v) = type(v) == array and v.len() == 5 and v.all(number)
+  // one box alone: its five values, no name; else (name, (min, q1, median, q3, max)) each
+  let boxes = if five(values) { ((none, values),) } else { values }
+  assert(
+    type(boxes) == array and boxes.len() > 0 and boxes.all(b => type(b) == array and b.len() == 2 and five(b.at(1))),
+    message: "a box plot's values are (name, (min, q1, median, q3, max)) each, or one box's five numbers",
+  )
+  assert(
+    boxes.all(b => range(4).all(k => b.at(1).at(k) <= b.at(1).at(k + 1))),
+    message: "a box's five values go up: min ≤ q1 ≤ median ≤ q3 ≤ max",
+  )
+  assert(written == "all" or type(written) == array, message: "written is \"all\" or a list of the boxes' names")
+  assert(limits == auto or (type(limits) == array and limits.len() == 2 and limits.all(number) and limits.at(0) < limits.at(1)),
+    message: "limits is the axis's (first, last) value")
+  let txt(body) = text(10pt, font: "DejaVu Sans", body)
+  let num(x) = {
+    let r = calc.round(x, digits: 3)
+    if calc.fract(r) == 0 { str(int(r)) } else { str(r).replace(".", decimal-separator) }
+  }
+  let all = boxes.map(b => b.at(1)).flatten()
+  let (lo, hi) = if limits == auto { (calc.min(..all), calc.max(..all)) } else { limits }
+  let span = calc.max(hi - lo, 1e-9)
+  let names = boxes.map(b => b.at(0)).filter(n => n != none)
+  let left = if names.len() == 0 { 0 } else { calc.max(..names.map(n => measure(txt(n)).width / 1cm)) + 0.3 }
+  let w = calc.max(6, 7.8 - left)
+  // the axis's ends for a step: the description's, else the round values around the data
+  let ends(s) = if limits == auto { (calc.floor(lo / s + 1e-9) * s, calc.ceil(hi / s - 1e-9) * s) } else { limits }
+  let ticks(s) = { let (a0, a1) = ends(s); range(calc.ceil(a0 / s - 1e-9), calc.floor(a1 / s + 1e-9) + 1).map(k => k * s) }
+  // the step: the description's, else the finest round one giving at most 10 steps whose
+  // numbers stand apart along the axis
+  let s = if step != auto { step } else {
+    let found = (0.001, 0.002, 0.005, 0.01, 0.02, 0.05, 0.1, 0.2, 0.5, 1, 2, 5, 10, 20, 25, 50, 100, 200, 250, 500, 1000, 2000, 2500, 5000, 10000)
+      .filter(c => span / c <= 10 + 1e-9)
+      .find(c => {
+        let (a0, a1) = ends(c)
+        let widest = calc.max(..ticks(c).map(t => measure(txt(num(t))).width / 1cm))
+        c / (a1 - a0) * w >= widest + 0.15
+      })
+    if found == none { calc.pow(10, calc.ceil(calc.log(span, base: 10))) } else { found }
+  }
+  let (a0, a1) = ends(s)
+  let px(v) = (v - a0) / (a1 - a0) * w
+  let shown(name) = written == "all" or (name != none and name in written)
+  let pitch = if boxes.any(b => shown(b.at(0))) { 1.7 } else { 1.0 }
+  let half = 0.3
+  let n = boxes.len()
+  cetz.canvas({
+    import cetz.draw: *
+    // the numbered ticks, then a finer tick between two (a value read between them): a
+    // tenth, a fifth or a half of the step, the finest that stays apart
+    let top = n * pitch + 0.1
+    for t in ticks(s) {
+      line((px(t), 0), (px(t), top), stroke: 0.4pt + luma(215))
+      line((px(t), 0.1), (px(t), -0.1), stroke: 0.6pt)
+      content((px(t), -0.18), txt(num(t)), anchor: "north")
+    }
+    let lead = calc.round(s / calc.pow(10, calc.floor(calc.log(s, base: 10) + 1e-9)), digits: 3)
+    let parts = (10, 5, 2).filter(k => k == 10 or (k == 5 and lead in (1, 5)) or (k == 2 and lead in (1, 2, 5)))
+    let fine = parts.map(k => s / k).find(f => f / (a1 - a0) * w >= 0.18)
+    if fine != none {
+      for k in range(calc.ceil(a0 / fine - 1e-9), calc.floor(a1 / fine + 1e-9) + 1) {
+        let v = k * fine
+        if ticks(s).all(t => calc.abs(t - v) > fine / 10) { line((px(v), 0.06), (px(v), -0.06), stroke: 0.5pt) }
+      }
+    }
+    line((0, 0), (w, 0), stroke: 0.8pt)
+    if axis != none { content((w, -0.7), txt(axis), anchor: "north-east") }
+    for (i, (name, (mn, q1, me, q3, mx))) in boxes.enumerate() {
+      let y = (n - i) * pitch - pitch / 2 + 0.35
+      line((px(mn), y), (px(q1), y), stroke: 0.9pt)
+      line((px(q3), y), (px(mx), y), stroke: 0.9pt)
+      for v in (mn, mx) { line((px(v), y - half / 2), (px(v), y + half / 2), stroke: 0.9pt) }
+      rect((px(q1), y - half), (px(q3), y + half), fill: luma(225), stroke: 0.9pt)
+      line((px(me), y - half), (px(me), y + half), stroke: 2pt)
+      if name != none { content((-0.3, y), txt(name), anchor: "east") }
+      if shown(name) {
+        // each value at its x, above the box; one that would touch another goes below
+        let placed = ()
+        for v in (me, q1, q3, mn, mx) {
+          let width = measure(txt(num(v))).width / 1cm
+          let (from, to) = (px(v) - width / 2 - 0.06, px(v) + width / 2 + 0.06)
+          let above = placed.filter(p => p.at(0) and p.at(1) < to and from < p.at(2)).len() == 0
+          placed.push((above, from, to))
+          let body = txt(num(v))
+          if above { content((px(v), y + half + 0.06), body, anchor: "south") }
+          else { content((px(v), y - half - 0.06), body, anchor: "north") }
+        }
+      }
+    }
+  })
+}
 #let chart(kind: "bars", values: (), written: (), degrees: false, axis: none, axes: (none, none), step: auto,
-  marks: (), spans: (), second: none, numbered: true, smooth: false) = context {
-  assert(kind in ("bars", "pie", "semi", "line"), message: "kind is \"bars\", \"pie\", \"semi\" or \"line\"")
+  marks: (), spans: (), second: none, numbered: true, smooth: false, limits: auto) = context {
+  assert(kind in ("bars", "pie", "semi", "line", "box"), message: "kind is \"bars\", \"pie\", \"semi\", \"line\" or \"box\"")
+  if kind == "box" {
+    assert(marks == () and spans == () and second == none and not smooth and axes == (none, none) and not degrees,
+      message: "box plots take values, axis, step, limits and written only")
+    return _box-plots(values, written: written, axis: axis, step: step, limits: limits)
+  }
+  assert(limits == auto, message: "limits is for box plots only")
   let number(x) = type(x) in (int, float)
   let measures(vs) = (
     type(vs) == array and vs.len() > 1 and vs.all(v => type(v) == array and v.len() == 2 and number(v.at(0)) and number(v.at(1)))

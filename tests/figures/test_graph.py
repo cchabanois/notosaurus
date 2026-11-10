@@ -284,3 +284,15 @@ def test_a_curve_through_its_points():
     for bad, said in refused:
         with pytest.raises(figures_typst.Unusable, match=said):
             figures_typst.compile_svg("graph", f"#let f = through({bad})\n#f(1)")
+
+
+@pytest.mark.parametrize(
+    ("big", "kept"), [("6cm, height: 12cm", "4.5cm, height: 9cm"), ("12cm, height: 3cm", "9cm, height: 2.25cm")]
+)
+def test_a_frame_too_large_for_a_card_shrunk_whole(big, kept):
+    """A frame taller or wider than 9 cm (x² up to 9 against x from −3 to 3, orthonormal: 7 by
+    13 cm) drawn smaller, both sides by the same factor (still orthonormal), its text kept:
+    a card shows a figure at most 320 px wide and half the screen tall."""
+    body = """#let xs = lq.linspace(-3, 3)
+#lq.diagram(width: {}, xlim: (-3.5, 3.5), ylim: (-1, 10), lq.plot(xs, xs.map(x => x * x), mark: none))"""
+    assert figures_typst.compile_svg("graph", body.format(big)) == figures_typst.compile_svg("graph", body.format(kept))

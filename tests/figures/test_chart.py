@@ -6,6 +6,7 @@ import re
 
 import pytest
 
+from figures.support import _glyphs, drawn_size
 from notosaurus_core import figures, figures_typst
 
 
@@ -169,3 +170,56 @@ def test_a_chart_refuses_what_it_cant_draw():
     ):
         with pytest.raises(figures_typst.Unusable, match=said):
             figures_typst.compile_svg("chart", body)
+
+
+@pytest.mark.parametrize(
+    "values",
+    [
+        '(("Classe A", (5, 9, 11, 14, 18)), ("Classe B", (2, 8, 12, 16, 20))), limits: (0, 20)',
+        "(12, 35, 48, 62, 95), limits: (0, 100)",
+        '(("Groupe 1", (140, 148, 153, 158, 170)), ("Groupe 2", (145, 152, 160, 165, 185)))',
+        "(0.21, 0.28, 0.32, 0.37, 0.52)",
+        "(1520, 1810, 2050, 2300, 2990)",
+    ],
+)
+def test_box_plots_keep_a_readable_size_whatever_their_values(values):
+    """Box plots on one axis about 8 cm long with their names, whatever the values' range:
+    the AI, drawing them itself, took the values as centimetres (4 drawings in 6 were 23 cm
+    wide, their text shrunk to a third on a card 320 px wide)."""
+    width, height = drawn_size("chart", f'#chart(kind: "box", values: {values})')
+    assert 7 * 28.35 < width < 9.2 * 28.35
+    assert height < 4 * 28.35
+
+
+def test_box_plots_graduation_is_computed():
+    """A round step, at most 10 of them, its numbers apart (0 to 20 by 2s; 0 to 100 by 20s:
+    by 10s, "100" would touch "90"); the step the description gives kept; a box's values
+    written only when asked."""
+
+    def numbers(body):
+        svg = figures_typst.compile_svg("chart", f'#set text(lang: "fr")\n#chart(kind: "box", {body})')
+        return len(_glyphs(svg))
+
+    assert numbers("values: (4, 9, 12, 15, 19), limits: (0, 20)") == 11
+    assert numbers("values: (12, 35, 48, 62, 95), limits: (0, 100)") == 6
+    assert numbers("values: (4, 9, 12, 15, 19), limits: (0, 20), step: 5") == 5
+    assert numbers('values: (4, 9, 12, 15, 19), limits: (0, 20), written: "all"') == 16
+
+
+def test_box_plots_refuse_what_they_cant_draw():
+    for body, said in (
+        ('#chart(kind: "box", values: (("A", (5, 9, 8, 14, 18)),))', "go up"),
+        ('#chart(kind: "box", values: (("A", (5, 9, 14, 18)),))', "five numbers"),
+        ('#chart(kind: "box", values: (1, 2, 3, 4, 5), limits: (20, 0))', "limits"),
+        ('#chart(kind: "bars", values: (("A", 1),), limits: (0, 2))', "box plots only"),
+    ):
+        with pytest.raises(figures_typst.Unusable, match=said):
+            figures_typst.compile_svg("chart", body)
+
+
+def test_box_plots_are_charts():
+    """The kinds say box plots are charts (no family had them: the AI drew them in a canvas of
+    its own, the values taken as centimetres), and never a graph nor "other"."""
+    kinds = dict(re.findall(r'"(\w+)": (.*?)(?=; "\w+": |$)', figures_typst.KINDS))
+    assert "box plot" in kinds["chart"]
+    assert all("never a box plot" in kinds[k] or "nor a box plot" in kinds[k] for k in ("graph", "other"))

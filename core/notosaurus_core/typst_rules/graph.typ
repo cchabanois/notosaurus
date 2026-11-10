@@ -360,10 +360,23 @@
 // The AI's `lq.line(…)`, keeping its ends (lilaq's own keeps them in a closure): a name kept
 // clear of it (figures_typst.source)
 #let line-kept(start, end, ..args) = lq.line(start, end, ..args) + (vertices: (start, end))
+#let frame-most = 9cm
 // The AI's diagram, its ticks' names kept apart and its asymptotes and names given what
 // they need (figures_typst.source draws `lq.diagram(…)` so)
 #let apart(args) = {
   let named = args.named()
+  // A frame never wider nor taller than `frame-most`: one larger (an orthonormal frame over a
+  // tall range, x² up to 9 against x from −3 to 3: 7 by 13 cm) has both its sides shrunk by
+  // the same factor (its unit smaller, the frame still orthonormal), its text kept: a card
+  // shows a figure at most 320 px wide and half the screen tall, shrinking it whole else
+  let (wide, tall) = (named.at("width", default: none), named.at("height", default: none))
+  if type(wide) == length and type(tall) == length and wide.to-absolute() > 0pt and tall.to-absolute() > 0pt {
+    let k = calc.min(1, frame-most / wide.to-absolute(), frame-most / tall.to-absolute())
+    if k < 1 {
+      named.insert("width", wide.to-absolute() * k)
+      named.insert("height", tall.to-absolute() * k)
+    }
+  }
   for (key, lim, size, horizontal) in (("xaxis", "xlim", "width", true), ("yaxis", "ylim", "height", false)) {
     let axis = named.at(key, default: none)
     let limits = named.at(lim, default: none)
