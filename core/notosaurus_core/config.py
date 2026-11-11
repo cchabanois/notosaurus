@@ -23,6 +23,35 @@ HEARS_AUDIO = ("gemini", "fake")
 DEFAULT_MODELS = {provider: recommended.default(recommended.CARDS, provider) for provider in PROVIDERS}
 
 
+class GeminiRouting(BaseModel):
+    """How Gemini's answer is waited for, and where else it is asked when a route stalls.
+    A route: a Vertex AI location ("eu", "global"…) or "key" (the Gemini API, with
+    gemini_api_key). The main one is `first`, else the config's own; `routes` are tried after it, the same
+    model, before the fallback models (a busy region is often busy for every model).
+    A route stalling `stalls` times within `window_s` rests `rest_s` seconds (every call
+    goes to the next one), then one call tries it again. No `routes`: as before, the
+    fallback models on the config's own route."""
+
+    first: str = ""  # the route tried first ("": the config's own): the relay's switch to "key", Vertex AI kept behind
+    routes: str = ""  # comma-separated, in order: e.g. "key" or "global,key"
+    # The answer's first part (a lesson's first card): it comes once the model has thought,
+    # whatever the number of pages (2026-11-11: 4-6 s quick, 9-14 s careful, 1 to 10
+    # pages); then the stream silent this long: given up on. None: the provider's own
+    # (providers/gemini.py's FIRST_PART_S, NEXT_PART_S)
+    first_part_s: float | None = None
+    first_part_quick_s: float | None = None
+    next_part_s: float | None = None
+    stalls: int = 3
+    window_s: float = 300
+    rest_s: float = 900
+    # Another route is tried only this long after the call began: past it, the fallback
+    # models answer (the wait never longer than with one route)
+    budget_s: float = 90
+
+    def route_names(self) -> list[str]:
+        return [r.strip() for r in self.routes.split(",") if r.strip()]
+
+
 class AIConfig(BaseModel):
     llm: str = "gemini"
     model: str = ""  # empty = the provider's default model
@@ -35,6 +64,7 @@ class AIConfig(BaseModel):
     # Google Cloud, `gcloud auth application-default login` elsewhere)
     gemini_vertex_project: str = ""
     gemini_vertex_location: str = "global"
+    gemini_routing: GeminiRouting = GeminiRouting()
     anthropic_api_key: str = ""
     openai_api_key: str = ""  # OpenAI itself
     openrouter_api_key: str = ""
@@ -71,6 +101,23 @@ class AIConfig(BaseModel):
             project, location = self.gemini_vertex_project.strip(), self.gemini_vertex_location.strip() or "global"
             return {"vertexai": True, "project": project, "location": location}
         return {"api_key": self.gemini_api_key}
+
+    def gemini_route(self) -> str:
+        """The config's own Gemini route: its Vertex AI location, or "key"."""
+        if self.gemini_vertex_project.strip():
+            return self.gemini_vertex_location.strip() or "global"
+        return "key"
+
+    def on_gemini_route(self, route: str) -> "AIConfig | None":
+        """The config sent through another route (GeminiRouting); None when it can't be:
+        "key" without a key, a location without a Vertex AI project."""
+        if route == "key":
+            if not self.gemini_api_key.strip():
+                return None
+            return self.model_copy(update={"gemini_vertex_project": ""})
+        if not self.gemini_vertex_project.strip():
+            return None
+        return self.model_copy(update={"gemini_vertex_location": route})
 
     def api_key(self) -> str:
         """Key of the OpenAI-like provider in use."""

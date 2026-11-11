@@ -195,6 +195,34 @@ def test_deleting_a_prompt_is_asked_in_the_app(page):
     assert not dialogs
 
 
+def test_dictation_heard_by_the_phone_as_it_comes(page):
+    """The phone's own speech recognition ("live"): the text shows in the field while it
+    listens, after what was there, then the whole of it at stop; the 🎤 offered even with the
+    relay's dictation turned off (it isn't used)."""
+    heard = iter(["Douze", "Douze cartes sur el", "Douze cartes sur el abuelo"])
+    texts = []
+
+    live = {"dictation": True, "dictation_live": True}
+    page.route("**/api/config", lambda route: route.fulfill(json={**route.fetch().json(), **live}))
+    page.route("**/api/switches", lambda route: route.fulfill(json={"disabled": ["speech.transcribe"]}))
+    page.route("**/api/dictation/start", lambda route: route.fulfill(json={"listening": True, "live": True}))
+    last = "Douze cartes sur el abuelo"
+    page.route("**/api/dictation/heard", lambda route: route.fulfill(json={"text": next(heard, last)}))
+    page.route(
+        "**/api/dictation/stop",
+        lambda route: (texts.append(1), route.fulfill(json={"text": "Douze cartes sur el abuelo et la abuela"})),
+    )
+    page.goto("/")
+    field = page.get_by_role("textbox", name="Texte de la consigne")
+    field.fill("Vocabulaire espagnol")
+    page.get_by_role("button", name="Dicter").first.click()
+    sync_api.expect(field).to_have_value("Vocabulaire espagnol\nDouze cartes sur el abuelo")  # as it comes
+    page.get_by_role("button", name="Arrêter et écrire le texte").click()
+    sync_api.expect(field).to_have_value("Vocabulaire espagnol\nDouze cartes sur el abuelo et la abuela")
+    sync_api.expect(field).to_be_enabled()
+    assert texts == [1]
+
+
 def test_dictation_in_the_app(page):
     """The Android app's page (dictation): 🎤 in the instructions' corner; once to listen,
     again to stop, the text said then in the field. On the computer: no 🎤."""
@@ -214,8 +242,16 @@ def test_dictation_in_the_app(page):
         ),
     )
     page.goto("/")
+    # Material's microphone, as Android apps draw it (vendor/material): outlined, then filled
+    # while it listens; no emoji in it (its name is its label)
+    mic = page.locator("button.mic").first
+    icon = "e => getComputedStyle(e, '::before').maskImage"
+    sync_api.expect(mic).to_have_text("")
+    assert "vendor/material/mic.svg" in mic.evaluate(icon)
+    assert page.request.get("/vendor/material/mic.svg").headers["content-type"].startswith("image/svg+xml")
     page.get_by_role("button", name="Dicter").first.click()
-    sync_api.expect(page.get_by_text("J'écoute… appuyez sur ⏹ quand vous avez fini.").first).to_be_visible()
+    sync_api.expect(page.get_by_text("J'écoute… appuyez sur le micro quand vous avez fini.").first).to_be_visible()
+    assert "vendor/material/mic-fill.svg" in mic.evaluate(icon)
     sync_api.expect(page.get_by_role("textbox", name="Texte de la consigne")).to_be_disabled()  # waits for its text
     if shots := os.environ.get("NOTOSAURUS_SHOTS"):  # to look at it: a folder for the screenshot
         page.screenshot(path=f"{shots}/dictation.png")
@@ -257,7 +293,7 @@ def test_dictation_stopped_by_a_tap_elsewhere(page):
     generate_free(page, FRONT_PROMPT)
     revise = page.locator(".revise")
     field = revise.locator("textarea")
-    listening = page.get_by_text("J'écoute… appuyez sur ⏹ quand vous avez fini.").first
+    listening = page.get_by_text("J'écoute… appuyez sur le micro quand vous avez fini.").first
 
     revise.get_by_role("button", name="Dicter").click()
     sync_api.expect(listening).to_be_visible()

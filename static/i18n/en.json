@@ -253,7 +253,7 @@
       "figures": "Describing the figures…",
       "writingCards": "Writing the cards: {count}…",
       "slow": "The AI is taking longer than usual to answer…",
-      "fallback": "The AI isn't answering: switching to another model…",
+      "fallback": "The AI isn't answering: trying another way…",
       "batch": "Pages {from} to {to} of {total}…"
     },
     "send": {
@@ -463,7 +463,7 @@
       "start": "Dictate",
       "stop": "Stop and write the text",
       "busy": "Writing down what you said…",
-      "listening": "Listening… tap ⏹ when you're done.",
+      "listening": "Listening… tap the mic when you're done.",
       "nothing": "Nothing heard: try again, closer to the microphone."
     },
     "update": {
@@ -1131,7 +1131,8 @@
     },
     "dictation": {
       "refused": "Notosaurus can't use the microphone: allow it in Android's settings to dictate.",
-      "failed": "The microphone couldn't record: try again."
+      "failed": "The microphone couldn't record: try again.",
+      "recognizer": "The phone's speech recognition isn't answering: try again, or check in Android's settings that it is installed for your language."
     },
     "subscription": {
       "unavailable": "Google Play isn't available on this phone.",

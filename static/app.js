@@ -203,7 +203,7 @@ document.addEventListener("alpine:init", () => {
     // "✨ Tidy up" the instructions: the text before kept for "↩", while the tidied one is unchanged
     tidy: { busy: false, before: null, after: "" },
     // The 🎤 of the instructions and the correction (the app): the field listening, or being written
-    mic: { available: false, listening: "", busy: "", timer: null },
+    mic: { available: false, live: false, listening: "", busy: "", timer: null, heard: null, before: null },
     openSubjects: (() => { try { return JSON.parse(storage("get", undefined, OPEN_SUBJECTS)) ?? {}; } catch { return {}; } })(),
     picker: { open: false, query: "" },
     // Natural-language correction of the cards; `undo` holds the previous version.
@@ -291,6 +291,7 @@ document.addEventListener("alpine:init", () => {
         this.reviewInAnki = config.review_in_anki ?? false;
         this.reportable = config.report ?? false;
         this.mic.available = config.dictation ?? false;
+        this.mic.live = config.dictation_live ?? false;
         this.drawingUsd = config.drawing_usd ?? null;
         this.drawingCredits = config.drawing_credits ?? null;
         // The app (its own service, Gemini): until its welcome is accepted, it shows first
@@ -330,9 +331,10 @@ document.addEventListener("alpine:init", () => {
       return this.switches.disabled.includes(feature);
     },
 
-    // Dictation offered: the host records, and it isn't turned off
+    // Dictation offered: the host listens, and the relay's AI isn't turned off when it is
+    // what writes it (the phone's own recognition doesn't need it)
     micOn() {
-      return this.mic.available && !this.off("speech.transcribe");
+      return this.mic.available && (this.mic.live || !this.off("speech.transcribe"));
     },
 
     // Content reported: the host relays it, and it isn't turned off

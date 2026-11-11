@@ -253,7 +253,7 @@
       "figures": "Descrizione delle figure…",
       "writingCards": "Scrittura delle carte: {count}…",
       "slow": "L'IA impiega più del solito a rispondere…",
-      "fallback": "L'IA non risponde: passaggio a un altro modello…",
+      "fallback": "L'IA non risponde: nuovo tentativo per un'altra via…",
       "batch": "Pagine da {from} a {to} di {total}…"
     },
     "send": {
@@ -463,7 +463,7 @@
       "start": "Detta",
       "stop": "Ferma e scrivi il testo",
       "busy": "Scrivo quello che hai detto…",
-      "listening": "Ti ascolto… tocca ⏹ quando hai finito.",
+      "listening": "Ti ascolto… tocca il microfono quando hai finito.",
       "nothing": "Non ho sentito nulla: riprova, più vicino al microfono."
     },
     "update": {
@@ -1131,7 +1131,8 @@
     },
     "dictation": {
       "refused": "Notosaurus non ha accesso al microfono: consentilo nelle impostazioni di Android per dettare.",
-      "failed": "Il microfono non è riuscito a registrare: riprova."
+      "failed": "Il microfono non è riuscito a registrare: riprova.",
+      "recognizer": "Il riconoscimento vocale del telefono non risponde: riprova, o controlla nelle impostazioni di Android che sia installato per la tua lingua."
     },
     "subscription": {
       "unavailable": "Google Play non è disponibile su questo telefono.",

@@ -18,8 +18,10 @@ hijos. La aplicación no está hecha para que la use un niño.
 ## En resumen
 
 - Tus **lecciones se quedan en tu móvil**: fotos, tarjetas, instrucciones, sonidos.
-- Lo que la IA debe leer (fotos, instrucciones, dictados) **pasa por el servicio** mientras se
+- Lo que la IA debe leer (fotos, instrucciones) **pasa por el servicio** mientras se
   hacen las tarjetas, **y no se guarda allí**.
+- Un **dictado** (🎤) lo oye **el reconocimiento de voz de tu móvil** (el elegido en los ajustes
+  de Android, normalmente el de Google): tu voz no pasa por el servicio.
 - La IA (**Gemini de Google**) se procesa en los servidores de Google, **que pueden estar fuera de
   la Unión Europea**; las voces se procesan en la Unión Europea. Google no los usa para entrenar
   sus modelos.
@@ -50,7 +52,7 @@ Cuando lo pides, la aplicación envía al servicio, por HTTPS:
 | Las **fotos** de las páginas y su texto (PDF), la **instrucción**, tus instrucciones permanentes, tus nombres de mazo | Crear o completar las tarjetas de la lección, y recortar los dibujos de sus páginas |
 | El **curso** del niño al que va destinada la lección, y las instrucciones que diste para él (nunca su nombre) | Tarjetas adaptadas a su nivel |
 | Las **tarjetas** de una lección y tu corrección | Corregirlas, explicar una tarjeta, poner en limpio una instrucción |
-| Una **grabación de tu voz** (🎤) | Escribirla como texto (dictar una instrucción o una corrección) |
+| Una **grabación de tu voz** (🎤), solo en un móvil sin reconocimiento de voz | Escribirla como texto (dictar una instrucción o una corrección) |
 | El **reverso** de una tarjeta | Leerlo en voz alta (las voces de las tarjetas) |
 | La **descripción** de una imagen, o unas **palabras clave** | Dibujar la imagen de una tarjeta, o buscar una libre |
 | Tu **clave de licencia** | Comprobar tu licencia y contar tus créditos |
@@ -133,7 +135,9 @@ Notosaurus. Se aplica la página [Privacidad y seguridad](../privacy/).
 ## Los permisos de la aplicación
 
 - **Internet**: para llegar al servicio.
-- **Micrófono**, pedido la primera vez que tocas 🎤, y usado solo mientras dictas.
+- **Micrófono**, pedido la primera vez que tocas 🎤, y usado solo mientras dictas: tu voz la oye
+  el reconocimiento de voz del móvil (el de Android, normalmente el de Google, en el móvil o en sus
+  servidores, según sus ajustes) o, en un móvil sin él, la escribe la IA del servicio.
 - **AnkiDroid**, para añadirle las tarjetas, pedido en el primer envío.
 - Las fotos se hacen con la cámara del móvil o se eligen en la galería, cuando tú lo haces. La
   aplicación no necesita acceso a todas tus fotos.

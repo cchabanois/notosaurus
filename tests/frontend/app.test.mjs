@@ -415,6 +415,30 @@ test("dictation: listen, then the text said comes after what was written", async
   assert.equal(c.error, "Nothing heard: try again, closer to the microphone.");
 });
 
+test("dictation heard by the phone: its text in the field as it comes, then the whole of it", async () => {
+  let heard = "Douze cartes";
+  const page = await loadScripts("app.js", {
+    routes: (url) => new Response(
+      url === "/api/dictation/start" ? { listening: true, live: true }
+        : url === "/api/dictation/heard" ? { text: heard }
+          : url === "/api/dictation/stop" ? { text: "Douze cartes sur el abuelo" } : {},
+    ),
+  });
+  const c = page.component();
+  c.form.text = "Vocabulaire";
+  await c.dictate("prompt");
+  await new Promise((done) => setTimeout(done, 450));  // the phone asked what it heard
+  assert.equal(c.form.text, "Vocabulaire\nDouze cartes");
+  heard = "Douze cartes sur el";
+  await new Promise((done) => setTimeout(done, 350));
+  assert.equal(c.form.text, "Vocabulaire\nDouze cartes sur el");  // replaced, not added again
+  await c.dictate("prompt");
+  assert.equal(c.form.text, "Vocabulaire\nDouze cartes sur el abuelo");
+  heard = "late";
+  await new Promise((done) => setTimeout(done, 350));
+  assert.equal(c.form.text, "Vocabulaire\nDouze cartes sur el abuelo");  // stopped: no longer asked
+});
+
 test("dictation: refused microphone, the field doesn't listen", async () => {
   const page = await loadScripts("app.js", {
     routes: () => new Response({ detail: { code: "dictation.refused", params: {} } }, { status: 400 }),

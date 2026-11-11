@@ -34,6 +34,8 @@ Each pull request's entries (the `## Changelog` of its description) are put unde
 
 ### Changed
 
+- 🎙️ Dictation shows your words as you speak: the phone's own speech recognition writes them, at once and with no credits used; your voice no longer goes through the Notosaurus service.
+- 🎙️ The dictation button shows the microphone Android apps use, filled on a pulsing circle while it listens.
 - 📸 Photos: a lesson with more pages than fit beside the add buttons shows a "+N" in the last place; it opens all the pages in a sheet. A page's thumbnail now shows only its number and ✕, plus a 🖍️ mark when part of it is hidden. A tap on a page opens it full screen, where it is turned (↻), partly hidden (🖍️) or removed (🗑️).
 - 📜 The figures' credits on the licences page come from the Notosaurus service: a drawing tool added is credited without updating the app.
 - The AI (Gemini) may now process the lessons' photos outside the European Union, on Google's servers; the privacy policy says so.
@@ -45,6 +47,8 @@ Each pull request's entries (the `## Changelog` of its description) are put unde
 
 ### Fixed
 
+- 🔌 **Circuit figures**: a branch's components are spaced and wired by the drawing itself, so they are never drawn on one another, a branch is never left open, and each current's arrow sits on its own branch, its name apart from the components'.
+- In the app's settings, « Vérifier » on a subscription that has ended no longer says « Clé vérifiée : à jour » next to « Votre abonnement est terminé ».
 - 🔌 **Figures: a house installation** drawn the way a textbook draws it: the socket with its phase, neutral and earth terminals, the earth wire green-and-yellow going to the earth symbol and never to the neutral, the general breaker on both the phase and the neutral.
 - Chronophotographies (a ball thrown, a fall, a uniform or accelerated motion, a circular one) drawn with their positions computed: on their trajectory, the velocity vectors along it, the change of velocity where it is.
 - A graph described by conditions only (the intermediate value theorem's f(a) < 0 < f(b), a function decreasing past a value k, a maximum M, two zeros): its curve drawn through points that satisfy them, varied as a textbook draws a function unless the description says it is monotone, crossing the axis only as often as the description says, the point c where f(c) = 0 or k computed exactly at the crossing, and the signs never reversed.

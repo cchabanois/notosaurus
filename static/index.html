@@ -218,7 +218,7 @@
                   :class="{ listening: mic.listening === 'prompt', busy: mic.busy === 'prompt' }"
                   :disabled="mic.busy !== '' || (mic.listening !== '' && mic.listening !== 'prompt')"
                   @click="dictate('prompt')" :aria-label="$t(micKey('prompt'))" :title="$t(micKey('prompt'))"
-                  x-text="mic.listening === 'prompt' ? '⏹' : mic.busy === 'prompt' ? '…' : '🎤'"></button>
+                  ></button>
         </div>
         <p class="hint" x-cloak x-show="dictationStep('prompt')" x-text="$t(dictationStep('prompt') || 'app.mic.busy')"></p>
         <div class="prompt-actions tidy" x-show="canTidy() || canUntidy()">
@@ -315,7 +315,7 @@
                 :class="{ listening: mic.listening === 'correction', busy: mic.busy === 'correction' }"
                 :disabled="mic.busy !== '' || (mic.listening !== '' && mic.listening !== 'correction')"
                 @click="dictate('correction')" :aria-label="$t(micKey('correction'))" :title="$t(micKey('correction'))"
-                x-text="mic.listening === 'correction' ? '⏹' : mic.busy === 'correction' ? '…' : '🎤'"></button>
+                ></button>
         </div>
         <button class="btn primary" :disabled="!revision.text.trim() || revision.busy || dictating('correction')"
                 x-text="$t('app.revise.button')"></button>
@@ -564,7 +564,7 @@
                           x-init="watchHeight($el)" x-effect="card.mnemonic; fitHeight($el)"></textarea>
               </div>
             </div>
-            <!-- ✨ This card corrected by the AI as asked (typed or 🎤), the others untouched -->
+            <!-- ✨ This card corrected by the AI as asked (typed or dictated), the others untouched -->
             <template x-if="card._fix">
               <form class="card-fix" @submit.prevent="fixCard(card)" @keydown.escape="card._fix.busy || (card._fix = null)">
                 <div class="dictated" :class="{ 'with-mic': micOn() }">
@@ -576,7 +576,7 @@
                           :class="{ listening: mic.listening === 'card:' + card.key, busy: mic.busy === 'card:' + card.key }"
                           :disabled="mic.busy !== '' || (mic.listening !== '' && mic.listening !== 'card:' + card.key)"
                           @click="dictate('card:' + card.key)" :aria-label="$t(micKey('card:' + card.key))" :title="$t(micKey('card:' + card.key))"
-                          x-text="mic.listening === 'card:' + card.key ? '⏹' : mic.busy === 'card:' + card.key ? '…' : '🎤'"></button>
+                          ></button>
                 </div>
                 <p class="hint" x-show="dictationStep('card:' + card.key)" x-text="$t(dictationStep('card:' + card.key) || 'app.mic.busy')"></p>
                 <div class="card-fix-actions">

@@ -61,6 +61,60 @@ import java.util.concurrent.TimeUnit
 /** The local server: DictationRoutes.kt's routes. */
 class DictationRoutesTest : LocalServerTestBase() {
     @Test
+    fun heardByThePhoneAsItComes() = app { client ->
+        // The phone's speech recognition: in the page's language, the text as it comes, all of it
+        // at stop; no recording, no relay, whatever the relay's switch for its AI
+        ears.on = true
+        assertTrue(client.get("/api/config") { page() }.json().jsonObject["dictation_live"]!!.jsonPrimitive.boolean)
+        val started = client.post("/api/dictation/start") { page("fr") }.json().jsonObject
+        assertTrue(started["live"]!!.jsonPrimitive.boolean)
+        assertEquals(java.util.Locale.getDefault().let { if (it.language == "fr") it.toLanguageTag() else "fr" }, ears.language)
+        assertFalse(mic.listening)
+        fun heard() = runBlocking { client.get("/api/dictation/heard") { page() }.json().jsonObject }
+        assertEquals("", heard().string("text"))
+        ears.say("douze cartes")
+        assertEquals("douze cartes", heard().string("text"))
+        ears.say("sur el abuelo")
+        assertEquals("douze cartes sur el abuelo", heard().string("text"))
+        ears.lastWords = "et la abuela"
+        val stopped = client.post("/api/dictation/stop") { page("fr"); contentType(ContentType.Application.Json); setBody("""{"kind": "prompt"}""") }
+        assertEquals("douze cartes sur el abuelo et la abuela", stopped.json().jsonObject.string("text"))
+        assertEquals(0, relay.requestCount)
+    }
+
+    @Test
+    fun thePhonesRecognitionFailing() = app { client ->
+        // Gone wrong while listening (not installed for this language, no network): said at stop
+        ears.on = true
+        client.post("/api/dictation/start") { page("fr") }
+        ears.say("douze")
+        ears.fail("dictation.recognizer")
+        assertEquals("dictation.recognizer", client.get("/api/dictation/heard") { page() }.json().jsonObject.string("error"))
+        val stopped = client.post("/api/dictation/stop") { page("fr"); contentType(ContentType.Application.Json); setBody("""{"kind": "prompt"}""") }
+        assertEquals(HttpStatusCode.BadRequest, stopped.status)
+        assertEquals("dictation.recognizer", stopped.json().jsonObject["detail"]!!.jsonObject.string("code"))
+    }
+
+    @Test
+    fun noRecognitionOnThePhoneTheRelaysAi() = app { client ->
+        // None on this phone: recorded and written by the relay's AI, as before
+        assertFalse(client.get("/api/config") { page() }.json().jsonObject["dictation_live"]!!.jsonPrimitive.boolean)
+        relay.enqueue(MockResponse.Builder().body("""{"text": "Douze cartes.", "usage": {"credits": 1, "credits_left": 99}}""").build())
+        val started = client.post("/api/dictation/start") { page("fr") }.json().jsonObject
+        assertFalse(started["live"]!!.jsonPrimitive.boolean)
+        assertTrue(mic.listening)
+        val stopped = client.post("/api/dictation/stop") { page("fr"); contentType(ContentType.Application.Json); setBody("""{"kind": "prompt"}""") }
+        assertEquals("Douze cartes.", stopped.json().jsonObject.string("text"))
+        assertEquals("/v1/transcribe", relay.takeRequest().url.encodedPath)
+    }
+
+    @Test
+    fun theSpokenLanguage() {
+        assertEquals("fr-CA", spokenLanguage("fr", java.util.Locale.CANADA_FRENCH))
+        assertEquals("es", spokenLanguage("es", java.util.Locale.FRANCE))
+    }
+
+    @Test
     fun dictationNothingSaid() = app { client ->
         mic.said = ByteArray(10) // a tap on start then stop: nothing for the relay
         val res = client.dictate()
