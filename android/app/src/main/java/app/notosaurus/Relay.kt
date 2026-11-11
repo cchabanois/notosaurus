@@ -199,6 +199,9 @@ class Relay(
     /** The voices /v1/speak reads with: {"voice", "locale", "gender"}, as the page lists them. */
     suspend fun voices(): JsonArray = open("voices", null).use { json.parseToJsonElement(it.body.string()).jsonArray }
 
+    /** What the figures are drawn with ({"name", "version", "licence", "url"}): no licence key needed. */
+    suspend fun credits(): JsonArray = open("credits", null).use { json.parseToJsonElement(it.body.string()).jsonArray }
+
     /** A text read aloud (/v1/speak): the mp3. */
     suspend fun speak(text: String, voice: String, rate: Double = SPEECH_RATE): ByteArray {
         val request = buildJsonObject {

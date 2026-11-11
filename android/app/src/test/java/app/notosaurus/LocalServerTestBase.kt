@@ -162,11 +162,15 @@ abstract class LocalServerTestBase {
         relay.start()
         val web = File(System.getProperty("notosaurus.web") ?: "../../static")
         val page = File("src/main/assets/page") // the app's own files, first (as forApp)
+        val credits = File(System.getProperty("notosaurus.credits") ?: "../../core/notosaurus_core/figure_credits.json")
         prefs[LocalServer.RELAY] = relay.url("/").toString()
         prefs[LocalServer.KEY] = "nts_key"
         local = LocalServer(
             dataDir = folder.root,
-            web = { path -> listOf(page, web).map { it.resolve(path) }.firstOrNull { it.isFile }?.readBytes() },
+            web = { path ->
+                if (path == "figure-credits.json") credits.readBytes() // copied next to the page at the build (copyWebPage)
+                else listOf(page, web).map { it.resolve(path) }.firstOrNull { it.isFile }?.readBytes()
+            },
             languages = { web.resolve("i18n").list().orEmpty().filter { it.endsWith(".json") }.map { it.removeSuffix(".json") } },
             anki = anki,
             prefs = prefs,

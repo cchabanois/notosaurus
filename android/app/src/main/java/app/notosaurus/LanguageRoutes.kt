@@ -14,7 +14,7 @@ import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.put
 
-/** The page's languages, and the relay's voices (🔊). */
+/** The page's languages, the relay's voices (🔊), the figures' credits (the licences page). */
 internal fun Route.languageRoutes(server: LocalServer) {
     with(server) {
         api("GET", "/api/lang") {
@@ -25,6 +25,7 @@ internal fun Route.languageRoutes(server: LocalServer) {
                 put("names", JsonObject(codes.associateWith { JsonPrimitive(texts.get(it, "meta", "name") ?: it) }))
             }
         }
+        api("GET", "/api/credits") { credits.list() }
         api("GET", "/api/voices") {
             try {
                 speech.voices()

@@ -1,0 +1,134 @@
+[
+ {
+  "name": "Typst",
+  "version": "0.15.1",
+  "licence": "Apache-2.0",
+  "url": "https://github.com/typst/typst"
+ },
+ {
+  "name": "alchemist",
+  "version": "0.2.0",
+  "licence": "MIT",
+  "url": "https://typst.app/universe/package/alchemist"
+ },
+ {
+  "name": "blockst",
+  "version": "0.4.1",
+  "licence": "MIT",
+  "url": "https://typst.app/universe/package/blockst"
+ },
+ {
+  "name": "cetz",
+  "version": "0.3.4",
+  "licence": "LGPL-3.0-or-later",
+  "url": "https://typst.app/universe/package/cetz"
+ },
+ {
+  "name": "cetz",
+  "version": "0.5.2",
+  "licence": "LGPL-3.0-or-later",
+  "url": "https://typst.app/universe/package/cetz"
+ },
+ {
+  "name": "cetz-venn",
+  "version": "0.2.0",
+  "licence": "Apache-2.0",
+  "url": "https://typst.app/universe/package/cetz-venn"
+ },
+ {
+  "name": "ctz-euclide",
+  "version": "0.3.0",
+  "licence": "MIT",
+  "url": "https://typst.app/universe/package/ctz-euclide"
+ },
+ {
+  "name": "elembic",
+  "version": "1.1.1",
+  "licence": "MIT OR Apache-2.0",
+  "url": "https://typst.app/universe/package/elembic"
+ },
+ {
+  "name": "fletcher",
+  "version": "0.5.8",
+  "licence": "MIT",
+  "url": "https://typst.app/universe/package/fletcher"
+ },
+ {
+  "name": "komet",
+  "version": "0.1.0",
+  "licence": "MIT",
+  "url": "https://typst.app/universe/package/komet"
+ },
+ {
+  "name": "komet",
+  "version": "0.2.0",
+  "licence": "MIT",
+  "url": "https://typst.app/universe/package/komet"
+ },
+ {
+  "name": "lilaq",
+  "version": "0.6.0",
+  "licence": "MIT",
+  "url": "https://typst.app/universe/package/lilaq"
+ },
+ {
+  "name": "oxifmt",
+  "version": "0.2.1",
+  "licence": "MIT-0",
+  "url": "https://typst.app/universe/package/oxifmt"
+ },
+ {
+  "name": "oxifmt",
+  "version": "1.0.0",
+  "licence": "MIT OR Apache-2.0",
+  "url": "https://typst.app/universe/package/oxifmt"
+ },
+ {
+  "name": "suiji",
+  "version": "0.5.1",
+  "licence": "MIT",
+  "url": "https://typst.app/universe/package/suiji"
+ },
+ {
+  "name": "tiptoe",
+  "version": "0.4.0",
+  "licence": "MIT",
+  "url": "https://typst.app/universe/package/tiptoe"
+ },
+ {
+  "name": "zap",
+  "version": "0.6.0",
+  "licence": "MIT",
+  "url": "https://typst.app/universe/package/zap"
+ },
+ {
+  "name": "zero",
+  "version": "0.6.1",
+  "licence": "MIT",
+  "url": "https://typst.app/universe/package/zero"
+ },
+ {
+  "name": "notosaurus-atlas",
+  "version": "0.3.0",
+  "licence": "AGPL-3.0-or-later",
+  "url": "https://github.com/cchabanois/notosaurus/blob/main/tools/atlas.py"
+ },
+ {
+  "name": "Natural Earth",
+  "version": "5.1.2",
+  "licence": "public-domain",
+  "url": "https://www.naturalearthdata.com/about/terms-of-use/"
+ },
+ {
+  "name": "Unicode CLDR",
+  "version": "46.0",
+  "licence": "Unicode-3.0",
+  "url": "https://www.unicode.org/license.txt"
+ },
+ {
+  "name": "Wikidata",
+  "version": "2026-11",
+  "licence": "CC0-1.0",
+  "url": "https://www.wikidata.org/wiki/Wikidata:Licensing"
+ }
+]

@@ -30,6 +30,7 @@ import functools
 import hashlib
 import html
 import importlib.util
+import json
 import os
 import posixpath
 import re
@@ -58,6 +59,12 @@ MEMORY = 1024 * 1024 * 1024  # bytes, where the system lets us say so
 # reads the same whichever way it was drawn, plainer for a child than Typst's own serif;
 # formulas keep their mathematical font
 FONT = '#set text(font: "DejaVu Sans")\n'
+
+# What a figure is drawn with, credited with its licence and its page (the licences page:
+# Typst, its packages, the maps' data), in figure_credits.json: one list, served to the
+# apps by the relay (/v1/credits) and by the computer (/api/credits), so that a package
+# added here is credited without a new app (tests/test_licences.py: every one shipped)
+CREDITS: list[dict[str, str]] = json.loads((HERE / "figure_credits.json").read_text(encoding="utf-8"))
 
 # For every family: what to draw exactly, and nothing that loads
 COMMON = (HERE / "typst_rules" / "common.md").read_text(encoding="utf-8").removesuffix("\n")

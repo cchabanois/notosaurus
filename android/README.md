@@ -45,7 +45,9 @@ the `.apkg` download (the cards go to AnkiDroid) and Ko-fi (the subscription pay
 | `Children.kt`, `Exams.kt` | the children's cards, the tests to prepare |
 
 The page is copied at build time from this revision's `static/` (another with
-`-Pnotosaurus.web=<path>`): a change to the page and the app goes in one pull request,
+`-Pnotosaurus.web=<path>`), with the figures' credits (core's `figure_credits.json`, as
+`web/figure-credits.json`: the licences page's when the relay can't give its own,
+`Credits.kt`): a change to the page and the app goes in one pull request,
 and a build always ships the page it was tested with. The app's own files
 (`assets/page/`) are served first, then the web page's: its `admin.html` replaces the
 computer's. The relay's address is the emulator's by default (`LocalServer.DEFAULT_RELAY`),

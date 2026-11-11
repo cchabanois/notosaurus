@@ -85,9 +85,10 @@ another `port` in its config when 8000 is taken. `NOTOSAURUS_LLM=fake` (or the s
 - The maps' atlas is a Typst package of ours, its data in its archive
   (`core/notosaurus_core/typst/notosaurus-atlas-<version>.tar.gz`), made by `tools/atlas.py`
   (its docstring: sources, `--refresh-history`). Any change to it raises its `VERSION` (and
-  the version `typst_rules/map.typ` imports, and `static/licences.js`): the packages are
+  the version `typst_rules/map.typ` imports, and `core/notosaurus_core/figure_credits.json`): the packages are
   unpacked once into a cache named after the archives, so an archive rebuilt under the same
   name is never read again.
-- Every Typst package or data source shipped is credited in `static/licences.js` with its
-  licence, and its licence's notice ships with it when the licence asks
-  (`tests/test_licences.py`).
+- Every Typst package or data source shipped is credited in
+  `core/notosaurus_core/figure_credits.json` with its licence and its page (served to the
+  apps by the relay, `/v1/credits`: no new app needed), and its licence's notice ships with it
+  when the licence asks (`tests/test_licences.py`).

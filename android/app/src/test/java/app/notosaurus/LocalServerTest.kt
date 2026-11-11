@@ -61,6 +61,23 @@ import java.util.concurrent.TimeUnit
 /** The local server: the page's files, the draft, versions: what no routes file serves. */
 class LocalServerTest : LocalServerTestBase() {
     @Test
+    fun theFiguresCreditsAsTheRelayDrawsThem() = app { client ->
+        // The relay's list (a package it added, credited without a new app), kept
+        relayAnswers("""[{"name": "newpkg", "version": "1.0.0", "licence": "MIT", "url": "https://example.org/newpkg"}]""")
+        val told = client.get("/api/credits") { page() }.json().jsonArray
+        assertEquals("/v1/credits", relay.takeRequest().url.encodedPath)
+        assertEquals("newpkg", told.single().jsonObject["name"]!!.jsonPrimitive.content)
+        // A relay too old to say: the last it said
+        relayAnswers("""{"detail": "Not Found"}""", 404)
+        assertEquals(told, client.get("/api/credits") { page() }.json().jsonArray)
+        // Never told (a fresh install), a relay too old: the list shipped with the page, core's
+        prefs[Credits.KEPT] = ""
+        relayAnswers("""{"detail": "Not Found"}""", 404)
+        val shipped = client.get("/api/credits") { page() }.json().jsonArray.map { it.jsonObject["name"]!!.jsonPrimitive.content }
+        assertTrue("cetz" in shipped && "Natural Earth" in shipped)
+    }
+
+    @Test
     fun theLessonInProgressKeptByTheApp() = app { client ->
         // As the page keeps it (app-draft.js): found again after the settings or Android closing the app
         assertEquals("{}", client.get("/api/draft") { page() }.bodyAsText())

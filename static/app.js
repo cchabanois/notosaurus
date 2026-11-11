@@ -243,6 +243,7 @@ document.addEventListener("alpine:init", () => {
     toDraw: [],                  // the cards whose picture no free one fits: drawn if the user says yes
     drawingUsd: null,            // about what a picture drawn by the image model costs: the computer's (US $)
     drawingCredits: null,        // the app's (credits)
+    credits: [],                 // what the figures are drawn with, their pages (/api/credits)
     mathReady: false,            // the formula previews can be drawn (MathJax started)
     unpaired: false,             // this device has no token yet: it must scan the QR code
 
@@ -291,6 +292,7 @@ document.addEventListener("alpine:init", () => {
         this.welcome.open = Boolean(config.welcome) && !config.welcome_accepted;
       } catch {}
       this.loadSwitches();  // not waited for: the relay may be starting
+      this.loadCredits();   // nor this: the figures' credits keep their default links until then
       this.$watch("quick", (on) => storage("set", on ? "0" : "1", CAREFUL));
       await Promise.all([this.loadPrompts(storage("get"), true), this.loadLessons(), this.loadChildren(), this.loadExams()]);
       this.checkAnki();
