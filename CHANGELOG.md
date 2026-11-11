@@ -45,6 +45,7 @@ Each pull request's entries (the `## Changelog` of its description) are put unde
 
 ### Fixed
 
+- 🔌 **Figures: a house installation** drawn the way a textbook draws it: the socket with its phase, neutral and earth terminals, the earth wire green-and-yellow going to the earth symbol and never to the neutral, the general breaker on both the phase and the neutral.
 - Chronophotographies (a ball thrown, a fall, a uniform or accelerated motion, a circular one) drawn with their positions computed: on their trajectory, the velocity vectors along it, the change of velocity where it is.
 - A graph described by conditions only (the intermediate value theorem's f(a) < 0 < f(b), a function decreasing past a value k, a maximum M, two zeros): its curve drawn through points that satisfy them, varied as a textbook draws a function unless the description says it is monotone, crossing the axis only as often as the description says, the point c where f(c) = 0 or k computed exactly at the crossing, and the signs never reversed.
 - A function given by its two ends drawn as a curve, no longer as a straight segment.
