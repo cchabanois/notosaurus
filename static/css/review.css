@@ -172,7 +172,7 @@
 }
 .flash .fun-fact .math-preview { font-style: italic; color: var(--muted); }
 .flash .card-help textarea {
-  flex: 1; min-width: 0; min-height: 0; padding: .2rem .35rem; resize: vertical;
+  flex: 1; min-width: 0; min-height: 0; padding: .2rem .35rem; resize: none; overflow: hidden;
   color: var(--muted); font: inherit; line-height: 1.35; field-sizing: content;
 }
 .flash .subdeck {
