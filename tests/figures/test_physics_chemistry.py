@@ -97,6 +97,100 @@ def test_an_earth_wire_is_green_and_yellow():
     assert not colours("#circuit({ wire((0, 1), (1, 1)) })")
 
 
+def test_a_branch_spaces_its_components_evenly():
+    """Every component and wire placed by the AI's eye: an ammeter drawn over a resistor of its
+    branch (4 drawings in 6). A branch's components spaced evenly along it, wire between each
+    two, none on another, even when the branch is too short for them (drawn smaller then)."""
+    body = """#let parts = (lamp("a"), resistor("b"), ammeter("c"))
+#for length in (6, 3) {
+  let spans = branch-layout(length, parts).parts
+  let ends = (0,) + spans.flatten() + (length,)
+  let gaps = range(0, ends.len(), step: 2).map(i => ends.at(i + 1) - ends.at(i))
+  assert(spans.all(((s, e)) => e > s))
+  assert(gaps.all(g => g >= 0.4 - 1e-9), message: repr(gaps))
+  assert(gaps.all(g => calc.abs(g - gaps.first()) < 1e-9), message: repr(gaps))
+}
+#circuit({ branch((0, 0), (6, 0), ..parts) })"""
+    assert figures_typst.compile_svg("circuit", body).startswith("<svg")
+
+
+def test_a_branch_is_wired_end_to_end():
+    """A branch's top wire missing, a wire dangling (the circuit open): a branch drawn by the
+    preamble is wire from end to end, broken only inside its components (a resistor's
+    rectangle, white within: one white stretch each along the wire)."""
+    from PIL import Image
+
+    body = '#circuit({ branch((0, 0), (8, 0), resistor("a"), resistor("b"), resistor("c")) })'
+    png = figures.to_png(figures.clean(figures_typst.compile_svg("circuit", body)))
+    image = Image.open(io.BytesIO(png)).convert("L")
+    width, height = image.size
+    pixels = image.load()
+    assert pixels is not None
+    # the wire's row: where its first end is
+    row = next(y for x in range(width) for y in range(height) if pixels[x, y] < 128)
+    line = "".join("#" if pixels[x, row] < 128 else "." for x in range(width)).strip(".")
+    assert line.startswith("#") and len(re.findall(r"\.+", line)) == 3, line
+
+
+def test_a_branchs_current_arrow_is_on_its_wire_leaving_the_generator():
+    """The current's arrow drawn too far from its branch to be joined to it (2 in 6), on a
+    switch (1 in 6): a branch's current goes on a stretch of its own wire, after the generator
+    (the current leaving its +), else on the first, pointing to the branch's second end."""
+    body = """#for (parts, after) in (((lamp("l"), battery("g"), ammeter("a")), 1), ((lamp("l"), ammeter("a")), none)) {
+  let layout = branch-layout(6, parts, current: true)
+  let (s, e) = layout.arrow
+  assert(e > s)
+  // on wire: in no component's span
+  assert(layout.parts.all(((a, b)) => e <= a or b <= s), message: repr(layout))
+  // after the generator, before what follows it; else before the first component
+  let before = if after == none { 0 } else { layout.parts.at(after).at(1) }
+  let next = if after == none { 0 } else { after + 1 }
+  assert(before <= s and e <= layout.parts.at(next).at(0), message: repr(layout))
+}
+#circuit({ branch((0, 0), (0, 4), battery("g"), ammeter("a"), current: $I$) })"""
+    assert figures_typst.compile_svg("circuit", body).startswith("<svg")
+
+
+def test_a_branchs_names_and_its_currents_are_on_opposite_sides():
+    """I₁ written on K₁: a branch's components' names on one side of it, its current's name on
+    the other, whichever way it goes."""
+    from PIL import Image
+
+    def sides(start: str, end: str) -> tuple[float, float, float, float]:
+        body = (
+            f'#circuit({{ branch({start}, {end}, lamp("l", label: text(fill: rgb("#ff0000"))[L]), '
+            'resistor("r", label: text(fill: rgb("#ff0000"))[R]), current: text(fill: rgb("#0000ff"))[I]) })'
+        )
+        png = figures.to_png(figures.clean(figures_typst.compile_svg("circuit", body)))
+        image = Image.open(io.BytesIO(png)).convert("RGB")
+        red, blue = [], []
+        for y in range(image.height):
+            for x in range(image.width):
+                r, g, b = image.getpixel((x, y))  # type: ignore[misc]
+                if r > 180 and g < 90 and b < 90:
+                    red.append((x, y))
+                if b > 180 and r < 90 and g < 90:
+                    blue.append((x, y))
+        assert red and blue
+        mean = lambda points, i: sum(p[i] for p in points) / len(points)  # noqa: E731
+        return mean(red, 0), mean(red, 1), mean(blue, 0), mean(blue, 1)
+
+    rx, _, bx, _ = sides("(0, 4)", "(0, 0)")  # down: the names on the right, the current's on the left
+    assert rx > bx
+    rx, _, bx, _ = sides("(0, 0)", "(0, 4)")
+    assert rx < bx
+    _, ry, _, by = sides("(0, 0)", "(5, 0)")  # rightwards: the names above
+    assert ry < by
+
+
+def test_the_circuit_rules_branch_compiles():
+    """The branch the circuit rule shows, between two rails, compiles."""
+    rules = figures_typst.FAMILIES["circuit"].rules
+    (call,) = re.findall(r"`(branch\([^`]*\))`", rules)
+    body = f"#circuit({{ wire((0, 4), (3, 4)); wire((0, 0), (3, 0)); {call} }})"
+    assert figures.clean(figures_typst.compile_svg("circuit", body)).startswith("<svg")
+
+
 def test_the_chemistry_rule_says_how_to_draw_a_lewis_structures_pairs():
     """Without it the AI drew a Lewis structure's non-bonding pairs as bonds to no atom, or
     left them out (0 of 12 right): the rule's Lewis call, as it gives it, draws them."""

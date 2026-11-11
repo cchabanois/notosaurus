@@ -18,8 +18,10 @@ vorbereitet. Die App ist nicht dafür gemacht, von einem Kind benutzt zu werden.
 ## Kurz gesagt
 
 - Deine **Lektionen bleiben auf deinem Handy**: Fotos, Karten, Anweisungen, Töne.
-- Was die KI lesen muss (Fotos, Anweisungen, Diktate), **geht beim Erstellen der Karten über den
+- Was die KI lesen muss (Fotos, Anweisungen), **geht beim Erstellen der Karten über den
   Dienst** **und wird dort nicht gespeichert**.
+- Ein **Diktat** (🎤) hört **die Spracherkennung deines Handys** (die in den Android-Einstellungen
+  gewählte, meist die von Google): deine Stimme geht nicht über den Dienst.
 - Die KI (**Gemini von Google**) wird auf den Servern von Google verarbeitet, **die auch außerhalb
   der Europäischen Union liegen können**; die Stimmen werden in der Europäischen Union verarbeitet.
   Google nutzt sie nicht, um seine Modelle zu trainieren.
@@ -51,7 +53,7 @@ Wenn du darum bittest, schickt die App dem Dienst über HTTPS:
 | Die **Fotos** der Seiten und ihr Text (PDF), die **Anweisung**, deine festen Anweisungen, deine Stapelnamen | Die Karten der Lektion erstellen oder ergänzen und die Zeichnungen ihrer Seiten ausschneiden |
 | Die **Klasse** des Kindes, für das die Lektion ist, und die Anweisungen für es (nie sein Vorname) | Karten passend zu seinem Niveau |
 | Die **Karten** einer Lektion und deine Korrektur | Sie korrigieren, eine Karte erklären, eine Anweisung aufräumen |
-| Eine **Aufnahme deiner Stimme** (🎤) | Sie als Text schreiben (eine Anweisung oder eine Korrektur diktieren) |
+| Eine **Aufnahme deiner Stimme** (🎤), nur auf einem Handy ohne Spracherkennung | Sie als Text schreiben (eine Anweisung oder eine Korrektur diktieren) |
 | Die **Rückseite** einer Karte | Sie vorlesen (die Stimmen der Karten) |
 | Die **Beschreibung** eines Bildes oder ein paar **Stichwörter** | Das Bild einer Karte zeichnen oder ein freies suchen |
 | Dein **Lizenzschlüssel** | Deine Lizenz prüfen und deine Credits zählen |
@@ -138,7 +140,10 @@ die Seite [Datenschutz und Sicherheit](../privacy/).
 ## Die Berechtigungen der App
 
 - **Internet**: um den Dienst zu erreichen.
-- **Mikrofon**, beim ersten Tippen auf 🎤 erbeten und nur beim Diktieren benutzt.
+- **Mikrofon**, beim ersten Tippen auf 🎤 erbeten und nur beim Diktieren benutzt: Deine Stimme
+  hört die Spracherkennung des Handys (die von Android, meist die von Google, auf dem Handy oder
+  auf ihren Servern, je nach Einstellung), oder, auf einem Handy ohne sie, schreibt sie die KI des
+  Dienstes.
 - **AnkiDroid**, um Karten hinzuzufügen, beim ersten Senden erbeten.
 - Fotos werden mit der Kamera des Handys gemacht oder in der Galerie ausgewählt, wenn du es tust.
   Die App braucht keinen Zugriff auf alle deine Fotos.

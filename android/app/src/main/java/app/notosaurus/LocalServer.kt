@@ -76,6 +76,7 @@ class LocalServer(
     internal val turnPhoto: (ByteArray, Int) -> ByteArray = { data, _ -> data }, // a JPEG turned clockwise (Photos.turn)
     internal val cardSize: (ByteArray) -> ByteArray = { it }, // a picture as a card shows it (Photos.cardSize)
     recorder: Recorder? = null, // the microphone, for the page's 🎤 (none: no 🎤)
+    listener: Listener? = null, // the phone's speech recognition: the 🎤's text as it comes (none: the relay's AI)
     internal val requestMicPermission: suspend () -> Boolean = { false }, // the microphone's permission dialog: granted?
     relayDirectory: String? = null, // where the relays are listed (RelayDirectory.URL); null: the built-in ones
     internal val subscriptions: SubscriptionStore? = null, // Google Play's subscription (none: a licence key only)
@@ -104,7 +105,7 @@ class LocalServer(
     internal val switches = Switches(prefs, version)
     internal val saved = Saved(prefs) // what the page keeps on this phone (the child chosen…)
     internal val credits = Credits(prefs, ::relay) { web("figure-credits.json") } // the figures' (licences page)
-    internal val dictation = recorder?.let { Dictation(File(dataDir, "dictation").apply { mkdirs() }, it, ::relay) }
+    internal val dictation = recorder?.let { Dictation(File(dataDir, "dictation").apply { mkdirs() }, it, ::relay, listener) }
     internal val soundsAhead = SoundsAhead(::makeSounds) // the backs' sounds read once a lesson is saved
     private lateinit var server: EmbeddedServer<*, *>
 
@@ -419,6 +420,7 @@ class LocalServer(
                 turnPhoto = Photos::turn,
                 cardSize = Photos::cardSize,
                 recorder = MicRecorder(context),
+                listener = PhoneListener(context),
                 requestMicPermission = requestMicPermission,
                 relayDirectory = RelayDirectory.URL,
                 subscriptions = PlayStore(context, activity),

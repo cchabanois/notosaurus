@@ -28,7 +28,7 @@ pede que você aceite a sua [política de privacidade](../app-privacy/):
 
 - O Notosaurus é uma **ferramenta para pais**: você prepara os cartões, seu filho os revisa no
   Anki.
-- Ele usa a **IA Gemini do Google**. As fotos, as instruções e os ditados passam pelo serviço
+- Ele usa a **IA Gemini do Google**. As fotos e as instruções passam pelo serviço
   Notosaurus enquanto os cartões são feitos, sem ficarem guardados lá, e são processados nos servidores
   do Google, que podem ficar fora da União Europeia. Suas lições ficam no seu celular.
 - A IA tem proteções adequadas para alunos, mas pode errar: confira os cartões antes de dá-los ao
@@ -75,8 +75,9 @@ Nas configurações, **📍 Onde o Notosaurus trabalha?** escolhe **📱 Neste c
 
 Quase todo o Notosaurus é igual ao do computador. O que só o app tem, ou não tem:
 
-- **🎤 Ditar**: falar uma instrução ou uma correção em vez de digitá-la. O app pede o microfone na
-  primeira vez.
+- **🎤 Ditar**: falar uma instrução ou uma correção em vez de digitá-la. Suas palavras aparecem
+  enquanto você fala, escritas pelo reconhecimento de voz do celular; **✨ Passar a limpo** limpa
+  depois uma instrução. O app pede o microfone na primeira vez.
 - **⚑ Relatar**, em um cartão, diz ao Notosaurus o que deu errado: uma palavra mal lida, uma
   resposta errada, uma figura torta, uma imagem inadequada. Cada relato é lido e ajuda a corrigir
   o Notosaurus (veja [Relatar um problema](../review/#relatar-um-problema)).
