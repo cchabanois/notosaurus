@@ -258,6 +258,72 @@ def test_cancel_while_the_cards_are_being_made(page):
     assert page.locator("textarea[x-ref=promptText]").input_value() == FRONT_PROMPT
 
 
+def test_cancel_while_the_lesson_is_corrected(page):
+    """ "Cancel" in the waiting card while the AI corrects the lesson: the server asked to
+    stop this correction (its job), the cards as they were, the instruction kept, no error."""
+    generate_free(page, FRONT_PROMPT)
+    before = [c.input_value() for c in page.locator(".flash textarea").all()]
+    held, cancelled = [], []
+
+    def cancel_asked(route):
+        cancelled.append(route.request.url)
+        route.fulfill(json={"cancelled": True})
+
+    page.route("**/api/lessons/*/revise*", lambda route: held.append(route))  # the AI still correcting
+    page.route("**/api/generations/*/cancel", cancel_asked)
+    field = page.locator(".revise textarea")
+    field.fill("supprime la dernière carte")
+    page.locator(".revise .btn.primary").click()
+    cancel = page.locator(".loading-card .btn")
+    sync_api.expect(cancel).to_have_text("Annuler")
+    cancel.click()
+    sync_api.expect(cancel).to_have_text("Annulation…")
+    (route,) = held
+    job = re.search(r"[?&]job=(\w+)", route.request.url).group(1)
+    assert cancelled == [f"{page.url.split('#')[0].rstrip('/')}/api/generations/{job}/cancel"]
+    route.fulfill(content_type="application/x-ndjson", body='{"cancelled": true}\n')
+    sync_api.expect(page.locator(".loading-card")).to_be_hidden()
+    sync_api.expect(page.locator(".error")).to_be_hidden()
+    assert [c.input_value() for c in page.locator(".flash textarea").all()] == before
+    assert field.input_value() == "supprime la dernière carte"
+
+
+def test_cancel_while_a_card_is_corrected(page):
+    """The card's "Cancel" while the AI corrects it: the server asked to stop it (its job),
+    the card as it was, its field open with the instruction, no error."""
+    generate_free(page, FRONT_PROMPT)
+    first = page.locator(".flash").first
+    back = first.locator("textarea").nth(1)
+    before = back.input_value()
+    held, cancelled = [], []
+
+    def cancel_asked(route):
+        cancelled.append(route.request.url)
+        route.fulfill(json={"cancelled": True})
+
+    page.route("**/api/lessons/*/fix-card*", lambda route: held.append(route))
+    page.route("**/api/generations/*/cancel", cancel_asked)
+    first.get_by_role("button", name="Plus d'actions").click()
+    first.get_by_role("button", name="✨ Corriger cette carte").click()
+    field = first.get_by_role("textbox", name="Qu'est-ce qui ne va pas ?")
+    field.fill("la mamá")
+    field.press("Enter")
+    cancel = first.locator(".card-fix .btn.soft")
+    sync_api.expect(cancel).to_be_enabled()  # while the AI writes too
+    cancel.click()
+    sync_api.expect(cancel).to_have_text("Annulation…")
+    (route,) = held
+    job = re.search(r"[?&]job=(\w+)", route.request.url).group(1)
+    assert cancelled == [f"{page.url.split('#')[0].rstrip('/')}/api/generations/{job}/cancel"]
+    route.fulfill(status=409, json={"detail": {"code": "extract.cancelled", "params": {}}})
+    sync_api.expect(cancel).to_have_text("Annuler")
+    sync_api.expect(field).to_be_enabled()
+    assert field.input_value() == "la mamá" and back.input_value() == before
+    sync_api.expect(page.locator(".error")).to_be_hidden()
+    cancel.click()  # not busy: closes the field
+    sync_api.expect(field).to_be_hidden()
+
+
 def test_multiple_choice_wrong_answers_edited(page):
     generate_free(page, "QCM sur la Révolution")
     first = page.locator(".flash").first

@@ -580,7 +580,8 @@
                 </div>
                 <p class="hint" x-show="dictationStep('card:' + card.key)" x-text="$t(dictationStep('card:' + card.key) || 'app.mic.busy')"></p>
                 <div class="card-fix-actions">
-                  <button type="button" class="btn soft" @click="card._fix = null" :disabled="card._fix.busy" x-text="$t('common.cancel')"></button>
+                  <button type="button" class="btn soft" @click="cancelFix(card)" :disabled="card._fix.cancelling"
+                          x-text="card._fix.cancelling ? $t('app.loading.cancelling') : $t('common.cancel')"></button>
                   <button class="btn primary" :disabled="!card._fix.text.trim() || card._fix.busy || dictating('card:' + card.key)"
                           x-text="$t(card._fix.busy ? (card._fix.blank ? 'app.fix.busyBlank' : 'app.fix.busy') : (card._fix.blank ? 'app.fix.submitBlank' : 'app.fix.submit'))"></button>
                 </div>
@@ -767,7 +768,7 @@
           <li><strong x-text="comingFront(card)"></strong> <span x-text="card.back"></span></li>
         </template>
       </ul>
-      <button class="btn soft" x-show="loading && generating" @click="cancelGeneration()" :disabled="cancelling"
+      <button class="btn soft" x-show="(loading || revision.busy) && generating" @click="cancelGeneration()" :disabled="cancelling"
               x-text="cancelling ? $t('app.loading.cancelling') : $t('common.cancel')"></button>
     </div>
   </div>

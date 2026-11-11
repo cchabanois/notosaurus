@@ -47,7 +47,8 @@ internal fun Route.generationRoutes(server: LocalServer) {
             val made = generation.make(asked, onCard, existing)
             (lessons.completed(old.string("id"), made.content, made.photos) ?: notFound()).also(::soundsSoon)
         }
-        // Asked as Relay.STREAM_TYPE: what the AI is at ({"step"}), then the answer
+        // Asked as Relay.STREAM_TYPE: what the AI is at ({"step"}), then the answer; "Cancel"
+        // (?job=) stops it, the lesson as it was ({"cancelled": true}, 409 asked at once)
         stepping("/api/lessons/{id}/revise") { req, step ->
             val lesson = lesson()
             val every = children.list()
@@ -61,7 +62,7 @@ internal fun Route.generationRoutes(server: LocalServer) {
                 put("instructions", generation.instructions(children.get(lesson.string("child"))))
             }
             val revised = withContext(Telling { said -> step(buildJsonObject { put("step", said) }) }) {
-                relay().revise(request, lessons.photos(lesson.string("id")))
+                generation.cancellable(call.request.queryParameters["job"]) { relay().revise(request, lessons.photos(lesson.string("id"))) }
             }
             val revisedDeck = listOf(private, revised.string("deck")).filter { it.isNotEmpty() }.joinToString("::")
             // How the cards are asked: as they were, unless the correction said otherwise ("on",
@@ -84,7 +85,8 @@ internal fun Route.generationRoutes(server: LocalServer) {
             }
         }
         // One card corrected as asked, seeing the lesson's photos (relay_api.FixCardRequest): the
-        // card answered, not saved here (the page puts it in place, and can undo it)
+        // card answered, not saved here (the page puts it in place, and can undo it); "Cancel"
+        // (?job=) stops it: 409 extract.cancelled
         api("POST", "/api/lessons/{id}/fix-card") {
             val lesson = lesson()
             val req = body()
@@ -97,7 +99,10 @@ internal fun Route.generationRoutes(server: LocalServer) {
                 put("language", languageName())
                 put("instructions", generation.instructions(children.get(lesson.string("child"))))
             }
-            JsonObject(relay().withPhotos("fix-card", request, lessons.photos(lesson.string("id"))) - "usage")
+            val fixed = generation.cancellable(call.request.queryParameters["job"]) {
+                relay().withPhotos("fix-card", request, lessons.photos(lesson.string("id")))
+            }
+            JsonObject(fixed - "usage")
         }
         api("POST", "/api/lessons/{id}/explain") {
             val lesson = lesson()
