@@ -184,8 +184,8 @@ def test_generate_again_in_place_then_undo(page):
 
 
 def test_while_waiting_what_the_ai_is_at(page, monkeypatch):
-    """The waiting card says what the AI is at: slow to answer, another model asked; then the
-    cards counted as they come."""
+    """The waiting card says what the AI is at: slow to answer, asked again elsewhere
+    (another route or model); then the cards counted as they come."""
     import asyncio
 
     from notosaurus_core import llm
@@ -207,7 +207,7 @@ def test_while_waiting_what_the_ai_is_at(page, monkeypatch):
     page.get_by_role("button", name="✨ Générer à partir de la consigne seule").click()
     waiting = page.locator(".loading-card")
     sync_api.expect(waiting).to_contain_text("L'IA met plus de temps que d'habitude à répondre")
-    sync_api.expect(waiting).to_contain_text("L'IA ne répond pas : passage à un autre modèle")
+    sync_api.expect(waiting).to_contain_text("L'IA ne répond pas : nouvel essai par un autre chemin")
     go_on.set()
     page.locator(".flash").first.wait_for()
 

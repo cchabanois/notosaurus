@@ -253,7 +253,7 @@
       "figures": "Descrizione delle figure…",
       "writingCards": "Scrittura delle carte: {count}…",
       "slow": "L'IA impiega più del solito a rispondere…",
-      "fallback": "L'IA non risponde: passaggio a un altro modello…"
+      "fallback": "L'IA non risponde: nuovo tentativo per un'altra via…"
     },
     "send": {
       "added": {
