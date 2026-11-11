@@ -852,7 +852,7 @@
       <h2><span x-text="$t('app.pdf.title')"></span> <a class="help-link" :href="$docs('photos')" target="_blank" rel="noopener" :aria-label="$t('common.helpOn', { topic: $t('app.pdf.title') })" :title="$t('common.helpOn', { topic: $t('app.pdf.title') })">?</a></h2>
       <button class="icon-btn" @click="donePdfPicker(false)" :aria-label="$t('common.close')">✕</button>
     </div>
-    <p class="hint" x-text="$t('app.pdf.hint', { name: pdf.name, count: pdf.pages.length, free: pdf.free })"></p>
+    <p class="hint" x-text="$t('app.pdf.hint', { name: pdf.name, count: pdf.pages.length, free: pdf.free, max: maxPhotos })"></p>
     <div class="pdf-pages">
       <template x-for="p in pdf.pages" :key="p.n">
         <button type="button" class="pdf-page" :class="{ chosen: p.chosen }" :aria-pressed="String(p.chosen)"

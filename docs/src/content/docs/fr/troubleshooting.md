@@ -61,7 +61,7 @@ voir [Réglages et services d'IA](../ai-services/).
 
 ## Un PDF ne s'ajoute pas
 
-- **« Déjà 10 pages : retirez-en avant d'ajouter un PDF. »** Une leçon tient en 10 pages : retirez
+- **« Déjà 30 pages : retirez-en avant d'ajouter un PDF. »** Une leçon tient en 30 pages : retirez
   les photos inutiles (le bouton **Retirer cette page**, ✕, sur chacune), ou faites deux leçons.
 - **« … est protégé par un mot de passe : enregistrez-le sans mot de passe, puis ajoutez-le à
   nouveau. »** Ouvrez le PDF, enregistrez-le sans mot de passe (ou imprimez-le dans un nouveau

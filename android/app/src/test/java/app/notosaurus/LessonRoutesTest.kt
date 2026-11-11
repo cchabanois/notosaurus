@@ -123,6 +123,33 @@ class LessonRoutesTest : LocalServerTestBase() {
     }
 
     @Test
+    fun aLessonHoldsThirtyPagesReadTenAtATime() = app { client ->
+        val lesson = client.extract() // 2 pages
+        relay.takeRequest()
+        val id = lesson.string("id")
+        suspend fun next(pages: Int) = client.submitFormWithBinaryData("/api/lessons/$id/complete", formData {
+            repeat(pages) { i ->
+                append("images", "page $i".toByteArray(), Headers.build {
+                    append(HttpHeaders.ContentType, "image/jpeg")
+                    append(HttpHeaders.ContentDisposition, "filename=\"p$i.jpg\"")
+                })
+            }
+            append("prompt", "FR → ES")
+        }) { page() }
+        for ((pages, count) in listOf(10 to 12, 10 to 22, 8 to 30)) {
+            relayAnswers("""{"deck": {"deck": "Autre", "cards": [{"front": "f$count", "back": "b"}]}, "turns": [],
+                "usage": {"credits": 2, "credits_left": 95}}""")
+            assertEquals(count, next(pages).json().jsonObject["photo_count"]!!.jsonPrimitive.int)
+            relay.takeRequest()
+        }
+        // Past its 30 pages: refused before the relay (more than one call reads: GenerationRoutesTest)
+        val refused = next(1)
+        assertEquals(HttpStatusCode.BadRequest, refused.status)
+        assertEquals(30, refused.json().jsonObject["detail"]!!.jsonObject["params"]!!.jsonObject["max"]!!.jsonPrimitive.int)
+        assertEquals(null, relay.takeRequest(200, TimeUnit.MILLISECONDS))
+    }
+
+    @Test
     fun aLessonsNextPagesKeepTheirDiagramAndTexts() = app { client ->
         val lesson = client.extract() // 2 photos, no text kept
         relay.takeRequest()

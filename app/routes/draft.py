@@ -7,7 +7,7 @@ from fastapi.responses import FileResponse
 
 from .. import draft
 from ..errors import AppError
-from .common import MAX_IMAGES
+from .common import MAX_PAGES
 
 router = APIRouter()
 
@@ -33,7 +33,7 @@ async def save_draft(
 ) -> dict:
     """`photos`: all of them, when `photos_sent` (none: no photo); else those kept stay."""
     sent = [await photo.read() for photo in photos] if photos_sent else None
-    await asyncio.to_thread(draft.save, text, sent, MAX_IMAGES)
+    await asyncio.to_thread(draft.save, text, sent, MAX_PAGES)
     return {}
 
 

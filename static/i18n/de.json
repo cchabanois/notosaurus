@@ -74,7 +74,7 @@
       "button": "PDF",
       "reading": "Wird gelesen …",
       "title": "Seiten hinzufügen",
-      "hint": "„{name}“ hat {count} Seiten: Wähle höchstens {free} (eine Lektion fasst 10 Seiten; jede gesendete Seite kostet wie ein Foto).",
+      "hint": "„{name}“ hat {count} Seiten: Wähle höchstens {free} (eine Lektion fasst {max} Seiten; jede gesendete Seite kostet wie ein Foto).",
       "add": {
         "one": "{count} Seite hinzufügen",
         "other": "{count} Seiten hinzufügen"
@@ -253,7 +253,8 @@
       "figures": "Figuren werden beschrieben…",
       "writingCards": "Karten werden geschrieben: {count}…",
       "slow": "Die KI braucht länger als sonst für die Antwort…",
-      "fallback": "Die KI antwortet nicht: Wechsel zu einem anderen Modell…"
+      "fallback": "Die KI antwortet nicht: Wechsel zu einem anderen Modell…",
+      "batch": "Seiten {from} bis {to} von {total}…"
     },
     "send": {
       "added": {

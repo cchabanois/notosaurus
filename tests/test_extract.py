@@ -279,23 +279,33 @@ def test_complete_adds_the_next_pages_cards(client, monkeypatch):
 
 
 def test_complete_counts_the_pages_and_needs_one(client):
+    """A lesson holds 30 pages, read 10 at a time: 10, then 10 more twice, completing it,
+    then one page more refused (the lesson's limit, told)."""
     lesson = extract_lesson(client, n_photos=10)
     url = f"/api/lessons/{lesson['id']}"
     assert client.post(f"{url}/complete", data={"prompt": "p"}).json()["detail"]["code"] == "extract.no_input"
+    ten = [("images", (f"p{n}.jpg", f"page {n}".encode(), "image/jpeg")) for n in range(10)]
+    for count in (20, 30):
+        assert client.post(f"{url}/complete", files=ten, data={"prompt": "p"}).json()["photo_count"] == count
     files = [("images", ("p.jpg", b"one more", "image/jpeg"))]
-    assert (
-        client.post(f"{url}/complete", files=files, data={"prompt": "p"}).json()["detail"]["code"] == "extract.too_many"
-    )
+    assert client.post(f"{url}/complete", files=files, data={"prompt": "p"}).json()["detail"] == {
+        "code": "extract.too_many",
+        "params": {"max": 30},
+    }
 
 
 def test_more_than_ten_photos_are_refused_before_any_ai_call(client, monkeypatch):
-    """Eleven photos: refused at once (none read by the AI, nothing saved), for a new
-    lesson, one generated again, or the next pages of one (counted with its own)."""
+    """Eleven photos in one call: refused at once (none read by the AI, nothing saved),
+    for a new lesson, one generated again, or the next pages of one (the page sends more in
+    several calls); the next pages past the lesson's 30 too."""
     from app import lessons
     from app.routes import generation
 
     lesson = extract_lesson(client)
     nine = extract_lesson(client, n_photos=9)
+    ten = [("images", (f"p{n}.jpg", b"photo", "image/jpeg")) for n in range(10)]
+    for _ in range(2):  # 29 pages
+        nine = client.post(f"/api/lessons/{nine['id']}/complete", files=ten, data={"prompt": "FR → ES"}).json()
     calls = []
 
     async def extract_cards(*args, **kwargs):
@@ -308,20 +318,21 @@ def test_more_than_ten_photos_are_refused_before_any_ai_call(client, monkeypatch
     for url, files in (
         ("/api/extract", eleven),
         (f"/api/lessons/{lesson['id']}/regenerate", eleven),
-        (f"/api/lessons/{nine['id']}/complete", eleven[:2]),  # 9 + 2
+        (f"/api/lessons/{lesson['id']}/complete", eleven),
+        (f"/api/lessons/{nine['id']}/complete", eleven[:2]),  # 29 + 2
     ):
         for accept in ("application/json", "application/x-ndjson"):  # streamed: refused before it starts
             res = client.post(url, files=files, data={"prompt": "FR → ES"}, headers={"Accept": accept})
             assert (res.status_code, res.json()["detail"]) == (
                 400,
-                {"code": "extract.too_many", "params": {"max": 10}},
+                {"code": "extract.too_many", "params": {"max": 30 if files == eleven[:2] else 10}},
             ), url
     assert calls == []
     assert client.get("/api/lessons").json() == before  # no lesson made
     assert client.get(f"/api/lessons/{lesson['id']}").json() == lesson  # nor changed
     assert client.get(f"/api/lessons/{nine['id']}").json() == nine
     assert not (lessons.folder(lesson["id"]) / "page-3.jpg").exists()
-    assert not (lessons.folder(nine["id"]) / "page-10.jpg").exists()
+    assert not (lessons.folder(nine["id"]) / "page-30.jpg").exists()
 
 
 def _a_diagram_on_the_next_pages(monkeypatch):
@@ -588,3 +599,9 @@ def test_a_diagram_label_reworded_keeps_its_place():
     ]
     llm._keep_masks(revised, before)
     assert [(c.id, c.mask) for c in revised] == [("a", mask1), ("b", mask2)]
+
+
+def test_the_page_told_a_lessons_pages_and_those_of_one_call(client):
+    """30 pages a lesson, 10 read in one call: the page sends more in several."""
+    config = client.get("/api/config").json()
+    assert (config["max_photos"], config["max_per_call"]) == (30, 10)

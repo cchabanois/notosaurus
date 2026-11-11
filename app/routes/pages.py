@@ -10,7 +10,7 @@ from notosaurus_core import figures_typst, pictures
 from .. import i18n, settings
 from ..access import is_local, paired
 from ..version import VERSION
-from .common import MAX_IMAGES, STATIC_DIR
+from .common import MAX_IMAGES, MAX_PAGES, STATIC_DIR
 
 router = APIRouter()
 
@@ -43,7 +43,8 @@ def config() -> dict:
     return {
         "version": VERSION,
         "diagram_warning": loose_boxes,
-        "max_photos": MAX_IMAGES,
+        "max_photos": MAX_PAGES,  # a lesson's pages
+        "max_per_call": MAX_IMAGES,  # read in one call: the page sends more in several
         "configured": settings.configured(s),
         "computer_name": socket.gethostname(),  # the Android app names the computer it uses
         "drawing_usd": pictures.drawing_usd(s),  # a picture drawn by the image model: told before

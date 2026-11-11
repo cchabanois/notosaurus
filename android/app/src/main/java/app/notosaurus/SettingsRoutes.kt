@@ -2,6 +2,7 @@ package app.notosaurus
 
 import app.notosaurus.LocalServer.Companion.WELCOME_VERSION
 import app.notosaurus.LocalServer.Companion.WELCOME
+import app.notosaurus.LocalServer.Companion.MAX_PER_CALL
 import app.notosaurus.LocalServer.Companion.MAX_PHOTOS
 import app.notosaurus.LocalServer.Companion.FUN_FACTS
 import app.notosaurus.LocalServer.Companion.HELPS
@@ -45,7 +46,8 @@ internal fun Route.settingsRoutes(server: LocalServer) {
             buildJsonObject {
                 put("version", version)
                 put("diagram_warning", false)
-                put("max_photos", MAX_PHOTOS)
+                put("max_photos", MAX_PHOTOS) // a lesson's pages
+                put("max_per_call", MAX_PER_CALL) // read in one call: the page sends more in several
                 put("profiles", false) // AnkiDroid doesn't say its profile: no Anki profile badge
                 put("configured", true)
                 put("donations", false) // paid for by the subscription: no "Support Notosaurus" (Ko-fi)

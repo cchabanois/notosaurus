@@ -101,6 +101,7 @@ const revisionPart = {
     Alpine.store("i18n").version;  // (else "app.loading.duration" when made before the texts came)
     if (this.aiStep === "fallback") return t("app.loading.fallback");
     if (this.aiStep === "slow" && !this.coming.length) return t("app.loading.slow");
+    if (this.batch && !this.revision.busy) return t("app.loading.batch", this.batch);  // pages 11 to 20 of 30
     return t(!this.revision.busy && this.loadingQuick ? "app.loading.durationQuick" : "app.loading.duration");
   },
 

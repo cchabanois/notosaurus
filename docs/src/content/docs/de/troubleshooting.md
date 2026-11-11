@@ -61,7 +61,7 @@ am besten: siehe [Einstellungen und KI-Dienste](../ai-services/).
 
 ## Ein PDF lässt sich nicht hinzufügen
 
-- **„Schon 10 Seiten: Entferne welche, bevor du ein PDF hinzufügst.“** Eine Lektion fasst 10
+- **„Schon 30 Seiten: Entferne welche, bevor du ein PDF hinzufügst.“** Eine Lektion fasst 30
   Seiten: Entferne die Fotos, die du nicht brauchst (die Schaltfläche **Diese Seite entfernen**, ✕,
   auf jedem), oder mach zwei Lektionen.
 - **„… ist passwortgeschützt: Speichere es ohne Passwort und füge es dann erneut hinzu.“** Öffne

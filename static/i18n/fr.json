@@ -74,7 +74,7 @@
       "button": "PDF",
       "reading": "Lecture…",
       "title": "Pages à ajouter",
-      "hint": "« {name} » a {count} pages : choisissez-en {free} au plus (une leçon tient en 10 pages ; chaque page envoyée coûte comme une photo).",
+      "hint": "« {name} » a {count} pages : choisissez-en {free} au plus (une leçon tient en {max} pages ; chaque page envoyée coûte comme une photo).",
       "add": {
         "one": "Ajouter {count} page",
         "other": "Ajouter {count} pages"
@@ -253,7 +253,8 @@
       "figures": "Description des figures…",
       "writingCards": "Écriture des cartes : {count}…",
       "slow": "L'IA met plus de temps que d'habitude à répondre…",
-      "fallback": "L'IA ne répond pas : passage à un autre modèle…"
+      "fallback": "L'IA ne répond pas : passage à un autre modèle…",
+      "batch": "Pages {from} à {to} sur {total}…"
     },
     "send": {
       "added": {
