@@ -347,6 +347,141 @@
     }
   })
 }
+// A chronophotography's motion: its place and its velocity at a time t in [0, 1], unscaled
+#let chrono-motion(motion, angle) = {
+  let a = angle * 1deg
+  if motion == "thrown" {
+    let (vx, vy) = (calc.cos(a), calc.sin(a))
+    let T = 2 * vy
+    (t => (vx * t * T, vy * t * T - calc.pow(t * T, 2) / 2), t => (vx, vy - t * T))
+  } else if motion == "falling" {
+    (t => (0, -t * t), t => (0, -2 * t))
+  } else if motion == "uniform" {
+    (t => (t, 0), t => (1, 0))
+  } else if motion == "accelerated" {
+    // already moving: its first two positions apart, the gaps still growing
+    (t => (t + t * t, 0), t => (1 + 2 * t, 0))
+  } else {
+    (t => (calc.cos(t * 360deg), calc.sin(t * 360deg)), t => (-calc.sin(t * 360deg), calc.cos(t * 360deg)))
+  }
+}
+// its positions' times (from 0 to 1, a circle's last one step before its first), its scale
+// (7 cm wide, 6 cm high for a fall, a circle 5 cm across) and its positions, in cm
+#let chrono-places(motion, n, angle: 60) = {
+  let (place, speed) = chrono-motion(motion, angle)
+  let times = range(n).map(i => i / if motion == "circle" { n } else { n - 1 })
+  let raw = times.map(place)
+  let xs = raw.map(p => p.at(0))
+  let ys = raw.map(p => p.at(1))
+  let (w, h) = (calc.max(..xs) - calc.min(..xs), calc.max(..ys) - calc.min(..ys))
+  let k = if motion == "falling" { 6 / h } else if motion == "circle" { 2.5 } else { 7 / w }
+  (times, k, raw.map(p => (k * p.at(0), k * p.at(1))))
+}
+// A chronophotography: a body's positions at equal times, computed from its motion, never
+// placed by eye. motion: "thrown" (a parabola launched at `angle` degrees, from its launch to
+// its landing), "falling" (from rest, straight down), "uniform" or "accelerated" (along a
+// straight line to the right, its gaps equal or growing), "circle" (uniform, counterclockwise
+// from the right, on a circle of centre `centre`). n: the positions' count; names: their letter
+// ("M": M0, M1…, counted from `first`), numbered: their numbers instead; trajectory: the curve
+// through them, dashed; label: its name beside it; velocity: the positions (their numbers, as
+// named) where the velocity is drawn, along the trajectory, as long as its speed; change: where
+// the change of velocity is drawn (between the positions around it); arrows: false, the
+// vectors' names without an arrow over them.
+#let chronophotography(motion: "thrown", n: 7, names: none, first: 0, numbered: false, angle: 60,
+  trajectory: true, label: none, velocity: (), change: (), centre: none, arrows: true) = context {
+  let motions = ("thrown", "falling", "uniform", "accelerated", "circle")
+  assert(motion in motions, message: "motion is one of " + motions.join(", "))
+  assert(type(n) == int and n >= 2 and n <= 20, message: "n is the positions' count, 2 to 20")
+  let numbers = range(first, first + n)
+  for k in velocity + change {
+    assert(k in numbers, message: "velocity and change are positions' numbers, from " + str(first) + " to "
+      + str(first + n - 1) + " (" + repr(k) + ")")
+  }
+  for k in change {
+    assert(k != first and k != first + n - 1, message: "a change of velocity is drawn between the positions around it: never at the first or the last")
+  }
+  let txt(body) = text(11pt, body)
+  let (place, speed) = chrono-motion(motion, angle)
+  let (times, k, pts) = chrono-places(motion, n, angle: angle)
+  let off(q, d, l) = (q.at(0) + l * calc.cos(d), q.at(1) + l * calc.sin(d))
+  let way(t) = { let v = speed(t); calc.atan2(v.at(0), v.at(1)) }
+  // the side a name goes: away from the curve's hollow, else below a line, right of a fall
+  let side(i) = if motion == "thrown" { way(times.at(i)) + 90deg } else if motion == "circle" {
+    calc.atan2(pts.at(i).at(0), pts.at(i).at(1))
+  } else if motion == "falling" { 0deg } else { -90deg }
+  // two names closer than they are wide: every other one on the other side
+  let gaps = range(n - 1).map(i => calc.sqrt(calc.pow(pts.at(i + 1).at(0) - pts.at(i).at(0), 2)
+    + calc.pow(pts.at(i + 1).at(1) - pts.at(i).at(1), 2)))
+  let tight = gaps.len() > 0 and calc.min(..gaps) < (if motion in ("uniform", "accelerated") { 0.75 } else { 0.45 })
+  let name(i) = if numbered { str(first + i) } else if names != none {
+    math.equation(math.attach(math.upright(names), br: str(first + i)))
+  } else { none }
+  let vec(letter, i, delta: false) = {
+    let base = if arrows { math.arrow(letter) } else { letter }
+    math.equation(math.attach(if delta { $Delta$ + base } else { base }, br: str(i)))
+  }
+  let top = calc.max(..velocity.map(i => {
+    let v = speed(times.at(i - first)); calc.sqrt(v.at(0) * v.at(0) + v.at(1) * v.at(1))
+  }), 0)
+  cetz.canvas({
+    import cetz.draw: *
+    if trajectory {
+      let fine = if motion == "circle" { range(121).map(j => j / 120) } else { range(121).map(j => j / 120 * times.last()) }
+      let curve = fine.map(t => { let p = place(t); (k * p.at(0), k * p.at(1)) })
+      line(..curve, stroke: (thickness: 0.7pt, dash: "dashed", paint: luma(110)))
+      if label != none {
+        // between two positions, clear of their names
+        let j = calc.min(n - 2, int(calc.round(0.75 * (n - 1))))
+        let t = if motion == "circle" { (calc.floor(n / 8) + 0.5) / n } else { (times.at(j) + times.at(j + 1)) / 2 }
+        let p = place(t)
+        let q = (k * p.at(0), k * p.at(1))
+        let d = if motion == "thrown" { way(t) + 90deg } else if motion == "circle" { calc.atan2(p.at(0), p.at(1)) } else if (
+          motion == "falling") { 180deg } else { 90deg }
+        let e = off(q, d, 0.8)
+        line(off(q, d, 0.1), e, stroke: 0.5pt)
+        let (c, s) = (calc.cos(d), calc.sin(d))
+        content(e, txt(label), anchor: if calc.abs(c) > 0.4 { if c > 0 { "west" } else { "east" } } else if s > 0 { "south" } else { "north" })
+      }
+    }
+    if motion == "circle" {
+      circle((0, 0), radius: 0.05, fill: black)
+      if centre != none { content((0.12, -0.12), txt(centre), anchor: "north-west") }
+    }
+    for (i, p) in pts.enumerate() {
+      circle(p, radius: 0.08, fill: black)
+      let l = name(i)
+      if l != none {
+        let d = side(i) + if tight and calc.odd(i) { 180deg } else { 0deg }
+        let (c, s) = (calc.cos(d), calc.sin(d))
+        content(off(p, d, 0.2), txt(l), anchor: if calc.abs(c) > 0.4 { if c > 0 { "west" } else { "east" } } else if s > 0 { "south" } else { "north" })
+      }
+    }
+    // the velocities along the trajectory, as long as their speeds; a change of velocity
+    // between the positions around it, 1 cm long
+    for i in velocity {
+      let v = speed(times.at(i - first))
+      // the fastest as long as most of the shortest step: clear of the next position
+      let l = calc.min(1.4, 0.75 * calc.min(..gaps)) * calc.sqrt(v.at(0) * v.at(0) + v.at(1) * v.at(1)) / top
+      let d = calc.atan2(v.at(0), v.at(1))
+      let p = pts.at(i - first)
+      let t = off(p, d, l)
+      line(p, t, stroke: 1.1pt + rgb("#1f5fbf"), mark: (end: "stealth", fill: rgb("#1f5fbf"), scale: 0.8))
+      // its name beside its middle, on the side the position's name isn't
+      let m = ((p.at(0) + t.at(0)) / 2, (p.at(1) + t.at(1)) / 2)
+      let away = side(i - first) + if tight and calc.odd(i - first) { 180deg } else { 0deg }
+      let across = if calc.cos(d + 90deg - away) > 0 { d - 90deg } else { d + 90deg }
+      content(off(m, across, 0.32), text(fill: rgb("#1f5fbf"), txt(vec($v$, i))))
+    }
+    for i in change {
+      let (u, w) = (speed(times.at(i - first + 1)), speed(times.at(i - first - 1)))
+      let d = calc.atan2(u.at(0) - w.at(0), u.at(1) - w.at(1))
+      let p = pts.at(i - first)
+      let t = off(p, d, 1)
+      line(p, t, stroke: 1.1pt + rgb("#b3261e"), mark: (end: "stealth", fill: rgb("#b3261e"), scale: 0.8))
+      content(off(off(t, d, 0.1), d + 90deg, 0.35), text(fill: rgb("#b3261e"), txt(vec($v$, i, delta: true))))
+    }
+  })
+}
 // ---- What the AI writes, from here (the rule's example: everything above is given)
 #mechanics(support: "circle", centre: [Terre], at: 60, radius: $r$, body: [S], vectors: (
   ("v", "along"),
