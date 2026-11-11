@@ -132,3 +132,48 @@ def test_vectors_going_the_same_way_are_side_by_side():
     assert both != drawn('vectors: (("F", "up"), ("G", 90.5))')
     hung = 'support: "liquid", string: true, vectors: (("F", "up"), ("Pi", "up"))'
     assert drawn(hung).startswith("<svg")
+
+
+def test_a_chronophotographys_positions_are_computed_from_its_motion():
+    """A ball thrown drawn in SVG: its points set apart from the curve drawn through them (a
+    Bézier whose top isn't the points', 0 of 3), a fall's first positions on one another.
+    Computed: a throw's positions equally spaced across, rising less and less then falling
+    more and more, symmetric; a fall's gaps growing; a circle's on it, equally spaced."""
+    check = """#let (times, k, pts) = chrono-places("thrown", 7)
+#let dx = range(6).map(i => pts.at(i + 1).at(0) - pts.at(i).at(0))
+#assert(dx.all(d => calc.abs(d - dx.first()) < 1e-9))
+#let dy = range(6).map(i => pts.at(i + 1).at(1) - pts.at(i).at(1))
+#assert(range(5).all(i => dy.at(i + 1) < dy.at(i)))
+#assert(calc.abs(pts.first().at(1) - pts.last().at(1)) < 1e-9 and calc.abs(dy.at(2) + dy.at(3)) < 1e-9)
+#let (times, k, fall) = chrono-places("falling", 6)
+#let gaps = range(5).map(i => fall.at(i).at(1) - fall.at(i + 1).at(1))
+#assert(range(4).all(i => gaps.at(i + 1) > gaps.at(i)) and gaps.first() > 0.16)
+#let (times, k, round) = chrono-places("circle", 8)
+#assert(round.all(p => calc.abs(calc.sqrt(p.at(0) * p.at(0) + p.at(1) * p.at(1)) - k) < 1e-9))
+#chronophotography(n: 7, names: "M", velocity: (2, 4), change: (3,))"""
+    assert figures_typst.compile_svg("mechanics", check).startswith("<svg")
+
+
+def test_a_chronophotographys_change_of_velocity_is_computed():
+    """Δv between the positions around it: down for a throw, wherever it is drawn; never at
+    the first or the last position, nor at a position that isn't."""
+    drawn = lambda body: figures_typst.compile_svg("mechanics", f"#chronophotography({body})")  # noqa: E731
+    assert drawn('names: "M", change: (3,)') != drawn('names: "M"')
+    for wrong, said in (
+        ("change: (0,)", "never at the first"),
+        ("velocity: (9,)", "positions' numbers"),
+        ('motion: "orbit"', "motion is one of"),
+    ):
+        with pytest.raises(figures_typst.Unusable, match=said):
+            drawn(wrong)
+
+
+def test_an_accelerated_chronophotographys_first_positions_stand_apart():
+    """Two motions compared: the accelerated one's first two positions drawn on one another
+    (from rest, a gap a sixth of the others'). Already moving: its gaps growing, the first
+    wider than a position."""
+    check = """#let (times, k, pts) = chrono-places("accelerated", 7)
+#let gaps = range(6).map(i => pts.at(i + 1).at(0) - pts.at(i).at(0))
+#assert(range(5).all(i => gaps.at(i + 1) > gaps.at(i)) and gaps.first() > 0.5)
+#chronophotography(motion: "accelerated")"""
+    assert figures_typst.compile_svg("mechanics", check).startswith("<svg")
