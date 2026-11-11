@@ -44,6 +44,9 @@ Each pull request's entries (the `## Changelog` of its description) are put unde
 
 ### Fixed
 
+- A graph described by conditions only (the intermediate value theorem's f(a) < 0 < f(b), a function decreasing past a value k, a maximum M, two zeros): its curve drawn through points that satisfy them, varied as a textbook draws a function unless the description says it is monotone, crossing the axis only as often as the description says, the point c where f(c) = 0 or k computed exactly at the crossing, and the signs never reversed.
+- A function given by its two ends drawn as a curve, no longer as a straight segment.
+- A graph naming a single value on an axis (a maximum M), two values at the same height, or no value on an axis no longer fails to draw.
 - Tables drawn with their formulas, chemical formulas (H₂O, Cu²⁺) and arrows instead of the code that wrote them, and with the sentence under them.
 - Physics figures keep their scene: the body in its liquid, both bodies with their two forces, the marked angle and the displacement, the scale; a solid on an inclined plane rests on it.
 - 📜 A map's credit links to the atlas and its data's pages, no longer to Typst's package site.
