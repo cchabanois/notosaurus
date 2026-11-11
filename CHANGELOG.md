@@ -9,6 +9,7 @@ Each pull request's entries (the `## Changelog` of its description) are put unde
 
 ### Added
 
+- 📤 On Android, share photos, a PDF or a text from any app to Notosaurus: they become the pages of a lesson, ready to make its cards (a web page's address alone is not taken: share a screenshot or the page as a PDF).
 - ✋ "Cancel" while the AI corrects the lesson or a card: it stops, the cards stay as they were.
 - Pictures seen in full can be zoomed with two fingers and moved with one; a tap zooms in where it touches.
 - 📦 Box plots drawn by the statistics chart: boxes on one shared axis at a readable size, their graduation computed.
