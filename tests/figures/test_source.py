@@ -188,3 +188,11 @@ def test_a_decimal_comma_in_maths_written_in_a_string_keeps_the_string_whole():
     assert figures_typst.compile_svg("table", body) == figures_typst.compile_svg(
         "table", body.replace('"$3,45 m = 345 cm$"', '[$3","45 m = 345 "cm"$]')
     )
+
+
+def test_the_common_rule_leaves_a_title_the_description_asks_for():
+    """« no title, no caption »: a graph whose description asks for its title (« titre "loi
+    d'Ohm U = R × I" ») drawn without it, 5 times out of 6. A title of the AI's own still
+    left out, one the description asks for written."""
+    assert "no title, no caption" not in figures_typst.COMMON
+    assert "no title or caption of your own (one the description asks for" in figures_typst.COMMON
