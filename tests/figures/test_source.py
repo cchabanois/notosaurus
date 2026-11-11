@@ -175,3 +175,16 @@ def test_a_circuits_ends_a_hair_apart_meet():
     apart = figures_typst.source("circuit", circuit.format("current-arrow((2, 2.4), (2, 1.8), $I$);"))
     meeting = figures_typst.source("circuit", circuit.format("current-arrow((2, 2.5), (2, 1.7), $I$);"))
     assert apart == meeting and "(2.1, 0.5)" in apart
+
+
+def test_a_decimal_comma_in_maths_written_in_a_string_keeps_the_string_whole():
+    """A table's legend written `"$3,45 m = 345 cm$"`: its comma made tight with quotes cut
+    the string in two (`"$3","45 …`), Typst refused the figure (« unexpected argument ») and
+    it was drawn as SVG. In a string, the tight comma's quotes escaped."""
+    body = '#set text(lang: "fr")\n#value-table(rows: (("a", 1),), legend: "$3,45 m = 345 cm$")\n$0,5$'
+    written = figures_typst.source("table", body)
+    assert 'legend: "$3\\",\\"45 m = 345 cm$")' in written
+    assert '$0","5$' in written
+    assert figures_typst.compile_svg("table", body) == figures_typst.compile_svg(
+        "table", body.replace('"$3,45 m = 345 cm$"', '[$3","45 m = 345 "cm"$]')
+    )

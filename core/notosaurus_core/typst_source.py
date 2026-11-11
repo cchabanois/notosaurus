@@ -218,15 +218,22 @@ def decimal_commas(body: str, comma: bool) -> str:
     meant one whatever the language; a comma between digits only in a language writing one
     (a list "1,2" in English stays as it was)."""
 
-    def tight_outside_strings(math: str) -> str:
-        m = re.sub(r"(\d)\s*\{,\}\s*(?=\d)", r'\1","', math)
-        return re.sub(r"(\d),(?=\d)", r'\1","', m) if comma else m
+    def tight_outside_strings(math: str, quote: str) -> str:
+        def tight_comma(digit: re.Match) -> str:
+            return f"{digit.group(1)}{quote},{quote}"
+
+        m = re.sub(r"(\d)\s*\{,\}\s*(?=\d)", tight_comma, math)
+        return re.sub(r"(\d),(?=\d)", tight_comma, m) if comma else m
 
     def tight(math: re.Match) -> str:
+        # maths written in a string (a table's cell, `"$x = 2,5$"`, set as maths by its
+        # function): its quotes escaped, the string never cut in two (Typst refused it)
+        line = body[body.rfind("\n", 0, math.start()) + 1 : math.start()]
+        quote = '\\"' if len(re.findall(r'(?<!\\)"', line)) % 2 else '"'
         # a number quoted in the formula (`$times "1,5"$`) is text, written as it is: its
         # comma left alone, never cut in two strings ("1", "5": "1, 5")
-        pieces = re.split(r'("[^"]*")', math.group(0))
-        return "".join(p if i % 2 else tight_outside_strings(p) for i, p in enumerate(pieces))
+        pieces = re.split(r'(\\?"[^"]*\\?")', math.group(0))
+        return "".join(p if i % 2 else tight_outside_strings(p, quote) for i, p in enumerate(pieces))
 
     return MATH.sub(tight, body)
 

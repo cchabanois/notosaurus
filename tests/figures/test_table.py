@@ -70,3 +70,21 @@ def test_a_tables_arrows_join_the_rows_and_columns_given():
         assert _table(f"rows: ((2, 5, 7), (6, 15, 21)), {side}: ((1, 2, $times 2$),)") != plain
         with pytest.raises(figures_typst.Unusable, match="columns"):
             _table(f"rows: ((2, 5, 7), (6, 15, 21)), {side}: ((1, 4, $times 2$),)")
+
+
+def test_a_tables_text_cells_are_shown_as_meant():
+    """An advancement table's cells drawn raw (2 of 3): « $x = 0$ », « H_2 », « -> » shown as
+    written, the maths in quotes being text. A text cell's maths between `$` set as maths (a
+    word maths doesn't know, mol, as text in it), an index or an exponent after `_` or `^`
+    and an arrow drawn; the legend under the table alike."""
+    assert _table('rows: (("a", "$x = 0$"),)') == _table('rows: (("a", [$x = 0$]),)')
+    assert _table('rows: (("a", "$x_max = 2 mol$"),)') == _table('rows: (("a", [$x_max = 2 "mol"$]),)')
+    assert _table('rows: (("a", "2 H_2O"),)') == _table('rows: (("a", [2 H#sub[2]O]),)')
+    assert _table('rows: (("a", "x_(max)"),)') == _table('rows: (("a", [x#sub[max]]),)')
+    assert _table('rows: (("a", "Cu^2+"),)') == _table('rows: (("a", [Cu#super[2+]]),)')
+    assert _table('rows: (("a", "->"),)') == _table('rows: (("a", [→]),)')
+    # LaTeX's text in a formula, its \t read as a tab in the string: the word as text
+    latex = _table(r'rows: (("a", "$345 \text{ cm}$"),)')
+    assert latex == _table('rows: (("a", [$345 " cm"$]),)') == _table(r'rows: (("a", "$345 \\text{ cm}$"),)')
+    assert _table('rows: (("a", 1),), legend: "H_2 limite"') == _table('rows: (("a", 1),), legend: [H#sub[2] limite]')
+    assert _table('rows: (("a", 1),), legend: "H_2 limite"') != _table('rows: (("a", 1),)')

@@ -15,7 +15,40 @@
 // "Total") the row only, all summed; right / left: ((row, row, label), …) curved arrows
 // from a row to another at that side; above / below: ((column, column, label), …) from a
 // column to another; marked: ((row, column), …) cells highlighted. Rows and columns are
-// counted from 1 among the values: the header and the names not counted.
+// counted from 1 among the values: the header and the names not counted. legend: a sentence
+// under the table, written as a text cell is.
+// A text cell as the AI writes it in quotes, shown as meant: its maths between `$` set as
+// maths (a word math doesn't know, mol, written as text in it, LaTeX's \text{mol} too), and in its text an index or
+// an exponent after a sign (H_2, x_(max), Cu^2+) and an arrow (->) drawn, never shown raw
+#let math-words = dictionary(sym).keys() + dictionary(math).keys()
+#let math-part(s) = eval(
+  // LaTeX's text in a formula (\text{m}, its \t a tab once in a string) as Typst's: "m"
+  s.replace(regex("(?:\\\\text|\\\\mathrm|\text)\{([^}]*)\}"), m => "\"" + m.captures.first() + "\"")
+  .replace(regex("\"[^\"]*\"|\.?[A-Za-z]{2,}"), m => if m.text.starts-with("\"") or m.text.starts-with(".")
+    or m.text in math-words { m.text } else { "\"" + m.text + "\"" }),
+  mode: "math",
+)
+#let text-part(s) = {
+  let s = s.replace("->", "→").replace("<-", "←")
+  let out = ()
+  let last = 0
+  for m in s.matches(regex("(\S)([_^])(\([^)]*\)|\{[^}]*\}|\d+[+−-]?|[+−-]|[A-Za-z]+)")) {
+    out.push(s.slice(last, m.start) + m.captures.at(0))
+    let v = m.captures.at(2)
+    if v.starts-with("(") or v.starts-with("{") { v = v.slice(1, -1) }
+    out.push(if m.captures.at(1) == "_" { sub(v) } else { super(v) })
+    last = m.end
+  }
+  out.push(s.slice(last))
+  out.join()
+}
+#let rich(s) = {
+  let parts = s.split("$")
+  if parts.len() < 3 or calc.rem(parts.len(), 2) == 0 { return text-part(s) }
+  // no empty text around a cell's maths: set alone, as a formula is
+  parts.enumerate().filter(((k, p)) => p != "").map(((k, p)) => if calc.odd(k) { math.equation(math-part(p)) }
+  else { text-part(p) }).join()
+}
 #let value-table(
   rows: (),
   header: none,
@@ -26,6 +59,7 @@
   above: (),
   below: (),
   marked: (),
+  legend: none,
 ) = {
   assert(
     type(rows) == array and rows.len() > 0 and rows.all(r => type(r) == array),
@@ -107,7 +141,7 @@
     c.trim().first() + place(std.right + std.horizon, dx: 2pt, dy: -1pt, text(weight: "bold", decimal-separator))
   } else if type(c) in (int, float) { num(c) } else if type(c) == str and c.match(numeric) != none {
     num(value(c), digits: decimals(c)) // as written, the language's separator
-  } else { c }
+  } else if type(c) == str { rich(c) } else { c }
   let txt(body, strong: false) = text(11pt, weight: if strong { "bold" } else { "regular" }, body)
   let rows-n = rows.len()
   let check(pairs, count, what) = for p in pairs {
@@ -181,7 +215,7 @@
       ))
     }
     let put(content, x, y) = place(corner, dx: x, dy: y, content)
-    block(width: pl + W + pr, height: pt + H + pb, {
+    let drawn = block(width: pl + W + pr, height: pt + H + pb, {
       put(body, pl, pt)
       for (a, b, l) in right {
         let x = pl + W + gap
@@ -216,6 +250,9 @@
         put(label(l), (x0 + x1) / 2 - s.width / 2, y + k * 0.75 + gap)
       }
     })
+    if legend == none { drawn } else {
+      stack(spacing: 8pt, drawn, txt(if type(legend) == str { rich(legend) } else { legend }))
+    }
   }
 }
 // ---- What the AI writes, from here (the rule's example: everything above is given)
