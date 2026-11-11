@@ -62,7 +62,7 @@ guarda**: nenhuma foto, cartão, gravação ou texto de lição é armazenado ou
 Exceto um **relato**: veja abaixo.
 
 Uma página de caderno muitas vezes mostra o **nome da criança**. Antes de enviar uma foto você
-pode **ocultá-lo**: 🖍️ na foto, depois tape com o dedo. Só a foto tapada sai e fica na lição.
+pode **ocultá-lo**: 🖍️ na foto em tela cheia, depois tape com o dedo. Só a foto tapada sai e fica na lição.
 
 ## O que o serviço guarda
 

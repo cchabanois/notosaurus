@@ -3,7 +3,7 @@
    layer around the small ones (a card's icons, the bar's chips, a photo's corner buttons, a
    card's tick box when picking, a message's ✕) */
 .icon-btn, .chip-btn.icon-only, .flash .pick, .toast > button { position: relative; }
-.icon-btn::after, .chip-btn.icon-only::after, .thumb-remove::after, .thumb-rotate::after, .thumb-hide::after,
+.icon-btn::after, .chip-btn.icon-only::after, .thumb-remove::after,
 .flash .pick::after, .toast > button::after {
   content: "";
   position: absolute;

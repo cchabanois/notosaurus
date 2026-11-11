@@ -62,7 +62,7 @@ resultado a la aplicación y **no los guarda**: ninguna foto, tarjeta, grabació
 se almacena ni se escribe en sus registros. Salvo un **aviso**: ver más abajo.
 
 Una página de cuaderno suele mostrar el **nombre del niño**. Antes de enviar una foto puedes
-**ocultarlo**: 🖍️ en la foto, y luego tápalo con el dedo. Solo la foto tapada sale y se queda en la
+**ocultarlo**: 🖍️ en la foto a pantalla completa, y luego tápalo con el dedo. Solo la foto tapada sale y se queda en la
 lección.
 
 ## Lo que guarda el servicio

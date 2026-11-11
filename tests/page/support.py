@@ -98,7 +98,7 @@ CUT = """() => {
   const width = document.documentElement.clientWidth, found = [];
   if (document.documentElement.scrollWidth > width) found.push(`page: ${document.documentElement.scrollWidth}px`);
   // An icon's button: no text to cut, its touch layer (::after, 44 px) wider than it on purpose
-  const icon = [".icon-btn", ".chip-btn.icon-only", ".thumb-remove", ".thumb-rotate", ".thumb-hide",
+  const icon = [".icon-btn", ".chip-btn.icon-only", ".thumb-remove",
     ".toast > button", ".flash .pick"].join(", ");
   for (const el of document.querySelectorAll("button, .chip, .badge, summary, h2, h3, label")) {
     if (el.matches(icon)) continue;
@@ -154,11 +154,21 @@ def add_text_pdf(page, browser) -> None:
 
 
 def open_hide(page):
-    """The first photo's 🖍️ editor, open."""
-    page.get_by_role("button", name="Cacher une partie de la page (un nom…)").click()
+    """The first photo's 🖍️ editor, open: from the viewer (a tap on the page; the viewer left
+    open under it, close_viewer then)."""
+    viewer = page.locator(".viewer")
+    if not viewer.is_visible():
+        page.locator(".strip .thumb img").first.click()
+    viewer.get_by_role("button", name="Cacher une partie de la page (un nom…)").click()
     editor = page.locator(".hide-editor")
     sync_api.expect(editor).to_be_visible()
     return editor
+
+
+def close_viewer(page):
+    """The viewer (and the page shown in it) closed: the page under it reachable again."""
+    page.locator(".viewer").get_by_role("button", name="Fermer").click()
+    sync_api.expect(page.locator(".viewer")).to_be_hidden()
 
 
 def stroke(page, y: float) -> None:
