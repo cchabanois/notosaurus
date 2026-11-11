@@ -65,6 +65,7 @@ SPECS: dict[str, Spec] = {
     # here Gemini takes a key, so neither the settings page nor the environment sets them
     "gemini_vertex_project": Spec(editable=False),
     "gemini_vertex_location": Spec(editable=False),
+    "gemini_routing": Spec(editable=False),  # the relay's other routes (config.GeminiRouting): here one key
     "anthropic_api_key": Spec(env="ANTHROPIC_API_KEY", secret=True),
     "openai_api_key": Spec(env="OPENAI_API_KEY", secret=True),
     "openrouter_api_key": Spec(env="OPENROUTER_API_KEY", secret=True),

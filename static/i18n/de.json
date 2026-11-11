@@ -253,7 +253,7 @@
       "figures": "Figuren werden beschrieben…",
       "writingCards": "Karten werden geschrieben: {count}…",
       "slow": "Die KI braucht länger als sonst für die Antwort…",
-      "fallback": "Die KI antwortet nicht: Wechsel zu einem anderen Modell…"
+      "fallback": "Die KI antwortet nicht: neuer Versuch auf anderem Weg…"
     },
     "send": {
       "added": {

@@ -1,18 +1,21 @@
 """Gemini, through the official google-genai SDK (a key, or Vertex AI): stricter safety
 filters, the fallback models when one is overloaded, has no quota or stops answering, "light" and
-"quick" thinking, the answer streamed card by card when asked."""
+"quick" thinking, the answer streamed card by card when asked; other routes (another Vertex AI
+location, the Gemini API) tried first when one stalls, a route stalling again and again left
+to rest (config.GeminiRouting)."""
 
 import asyncio
 import logging
+import time
 from contextlib import suppress
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from types import SimpleNamespace
 from typing import TYPE_CHECKING, Any
 
 from pydantic import BaseModel
 
 from ..calls import CardStream, ExtractionError, Image, OnCard, record, tell
-from ..config import AIConfig
+from ..config import AIConfig, GeminiRouting
 from ..prompts import SYSTEM_PROMPT
 
 if TYPE_CHECKING:
@@ -108,6 +111,100 @@ class _Request:
     quick: bool = False
     on_card: OnCard | None = None
     told: int = 0
+    routing: GeminiRouting = field(default_factory=GeminiRouting)
+    spare: Any = None  # another route's client: a light call left waiting is asked again there
+
+
+@dataclass
+class _Route:
+    """Where Gemini is asked: `name` a Vertex AI location or "key" ("": the request's own
+    client, no other route); its client made when first used."""
+
+    name: str
+    s: AIConfig | None = None
+    client: Any = None
+
+    def made(self, request: _Request):
+        if self.client is None:
+            self.client = _gemini_client(self.s) if self.s is not None else request.client
+        return self.client
+
+
+@dataclass
+class _Health:
+    """A route's recent stalls (monotonic times), and whether it rests: until `rest_until`,
+    then `trying` while one call tries it again."""
+
+    stalled: list[float] = field(default_factory=list)
+    rest_until: float = 0.0
+    trying: bool = False
+
+
+# Each route's health in this process (a relay's instance): shared by its calls
+_HEALTH: dict[str, _Health] = {}
+_NO_CONTENT = {"no_content": True}  # a log line with nothing of a lesson: its values kept (the relay's filter)
+
+
+def _routes(s: AIConfig) -> list[_Route]:
+    """The config's own route, then the GeminiRouting's others that can be used."""
+    routes, names = [_Route(s.gemini_route(), s)], {s.gemini_route()}
+    for name in s.gemini_routing.route_names():
+        other = s.on_gemini_route(name)
+        if other is not None and name not in names:
+            routes.append(_Route(name, other))
+            names.add(name)
+    return routes
+
+
+def _order(routes: list[_Route], claimed: list[_Route]) -> list[_Route]:
+    """The routes to try, in order, the resting ones left out; one whose rest is over is
+    tried again by this call alone (`claimed`, until it answers or fails). All resting: the
+    first, as with one route."""
+    if len(routes) == 1:
+        return routes
+    now, order = time.monotonic(), []
+    for route in routes:
+        health = _HEALTH.setdefault(route.name, _Health())
+        if not health.rest_until:
+            order.append(route)
+        elif now >= health.rest_until and not health.trying:
+            health.trying = True
+            claimed.append(route)
+            order.append(route)
+    return order or routes[:1]
+
+
+def _answered(route: _Route, claimed: list[_Route]) -> None:
+    health = _HEALTH.get(route.name)
+    if health is None:
+        return
+    if health.rest_until:
+        log.warning("Gemini route %s answers again", route.name, extra=_NO_CONTENT)
+    health.stalled, health.rest_until, health.trying = [], 0.0, False
+    if route in claimed:
+        claimed.remove(route)
+
+
+def _failed(route: _Route, routing: GeminiRouting, claimed: list[_Route]) -> None:
+    """A route stalled or failed: counted; `stalls` within `window_s` (or its one call
+    trying it again failing) and it rests `rest_s`."""
+    health, now = _HEALTH.setdefault(route.name, _Health()), time.monotonic()
+    if route in claimed:
+        claimed.remove(route)
+        health.trying, health.rest_until = False, now + routing.rest_s
+        log.warning("Gemini route %s still failing: rests %d s more", route.name, routing.rest_s, extra=_NO_CONTENT)
+        return
+    health.stalled = [t for t in health.stalled if t > now - routing.window_s] + [now]
+    if len(health.stalled) >= routing.stalls and not health.rest_until:
+        health.stalled, health.rest_until = [], now + routing.rest_s
+        log.warning(
+            "Gemini route %s failed %d times in %d s: rests %d s",
+            route.name,
+            routing.stalls,
+            routing.window_s,
+            routing.rest_s,
+            extra=_NO_CONTENT,
+        )
 
 
 async def _gemini[T: BaseModel](
@@ -122,7 +219,8 @@ async def _gemini[T: BaseModel](
 ) -> T:
     from google.genai import types
 
-    client = _gemini_client(s)
+    routes = _routes(s)
+    client = routes[0].client = _gemini_client(s)  # its own: made at once (a missing key said now)
     # The photos then the text (the SDK's PartUnion is a variable, not usable as a type)
     contents: list[Any] = [types.Part.from_bytes(data=img.data, mime_type=img.media_type) for img in images]
     contents.append(text)
@@ -135,24 +233,58 @@ async def _gemini[T: BaseModel](
     )
     models = [s.model_for_provider()]
     models += [m.strip() for m in s.fallback_models.split(",") if m.strip()]
-    response = await _fallback(_Request(client, s, contents, config, light, quick, on_card), models)
+    request = _Request(client, s, contents, config, light, quick, on_card, routing=s.gemini_routing)
+    response = await _fallback(request, models, routes)
     return _read_answer(response, schema)
 
 
-async def _fallback(request: _Request, models: list[str]):
-    """The answer of the first model that gives one, in order (the configured model, then
-    the fallback ones): overloaded, without quota or stalled, the next one is tried; any
-    other error stops, as does the last model's."""
-    for model in models:
-        try:
-            return await _call_one_model(request, model)
-        except ExtractionError as e:
-            if e.code not in _NEXT_MODEL or model == models[-1]:
-                raise
-            quota = e.code == "llm.gemini_quota"
-            log.warning("Quota exceeded: falling back to the next model" if quota else "Falling back to the next model")
-            tell({"step": "fallback"})
-    raise ExtractionError("llm.empty_answer", provider="Gemini")  # no model at all
+async def _fallback(request: _Request, models: list[str], routes: list[_Route] | None = None):
+    """The answer of the first try that gives one: the configured model on each route
+    (resting ones left out), then the fallback models on the first. Overloaded, without
+    quota or stalled, the next try; any other error stops, as does the last try's, except
+    on another route than the config's own (its key, its credits: the next try may work).
+    Another route is tried only within the routing's budget."""
+    if not models:
+        raise ExtractionError("llm.empty_answer", provider="Gemini")  # no model at all
+    routes = routes or [_Route("")]
+    claimed: list[_Route] = []
+    order = _order(routes, claimed)
+    tries = [(route, models[0]) for route in order] + [(order[0], model) for model in models[1:]]
+    started = time.monotonic()
+    try:
+        for n, (route, model) in enumerate(tries):
+            last = n == len(tries) - 1
+            late = time.monotonic() - started >= request.routing.budget_s
+            if model == models[0] and route is not order[0] and late and not last:
+                continue  # past the budget: the fallback models, not another route's wait
+            request.client = route.made(request)
+            others = [r for r in order if r is not route]
+            request.spare = others[0].made(request) if others else None
+            try:
+                response = await _call_one_model(request, model)
+            except ExtractionError as e:
+                elsewhere = route is not routes[0]  # another route's own failure (its key, its credits)
+                if len(routes) > 1 and (e.code in _NEXT_MODEL or elsewhere):
+                    _failed(route, request.routing, claimed)
+                if last or not (e.code in _NEXT_MODEL or elsewhere):
+                    raise
+                if len(routes) > 1 and tries[n + 1][0] is not route:
+                    log.warning(
+                        "Gemini route %s: %s, %s tried", route.name, e.code, tries[n + 1][0].name, extra=_NO_CONTENT
+                    )
+                elif e.code == "llm.gemini_quota":
+                    log.warning("Quota exceeded: falling back to the next model")
+                else:
+                    log.warning("Falling back to the next model")
+                tell({"step": "fallback"})
+                continue
+            if len(routes) > 1:
+                _answered(route, claimed)
+            return response
+    finally:
+        for route in claimed:  # claimed but never tried: another call tries it again
+            _HEALTH[route.name].trying = False
+    raise ExtractionError("llm.empty_answer", provider="Gemini")
 
 
 async def _call_one_model(request: _Request, model: str):
@@ -226,21 +358,27 @@ async def _generate(request: _Request, model: str):
                 model=model, contents=request.contents, config=request.config
             )
 
+        def call_elsewhere():
+            return (request.spare or request.client).aio.models.generate_content(
+                model=model, contents=request.contents, config=request.config
+            )
+
         if request.light:
-            return await _within(LIGHT_ANSWER_S, _asked_again(call))
+            return await _within(LIGHT_ANSWER_S, _asked_again(call, call_elsewhere))
         return await _within(WHOLE_ANSWER_S, call())
     return await _streamed(request, model, request.on_card)
 
 
-async def _asked_again(call):
-    """`call`'s answer; not there after ASK_AGAIN_S, the same asked again beside it: the
-    first answer that comes, the other cancelled. Both failing: the last one's error."""
+async def _asked_again(call, again=None):
+    """`call`'s answer; not there after ASK_AGAIN_S, the same asked again beside it (by
+    `again`: on another route when there is one): the first answer that comes, the other
+    cancelled. Both failing: the last one's error."""
     first = asyncio.ensure_future(call())
     done, _ = await asyncio.wait({first}, timeout=ASK_AGAIN_S)
     if done:
         return first.result()
     log.info("Gemini slow to answer: asked again")
-    running = {first, asyncio.ensure_future(call())}
+    running = {first, asyncio.ensure_future((again or call)())}
     try:
         while True:
             done, running = await asyncio.wait(running, return_when=asyncio.FIRST_COMPLETED)
@@ -264,15 +402,17 @@ async def _streamed(request: _Request, model: str, on_card: OnCard):
     call = request.client.aio.models.generate_content_stream(
         model=model, contents=request.contents, config=request.config
     )
-    stream = await _within(FIRST_PART_S, call)
-    parts, wait = aiter(stream), FIRST_PART_S
+    routing = request.routing
+    first = (routing.first_part_quick_s if request.quick else routing.first_part_s) or FIRST_PART_S
+    stream = await _within(first, call)
+    parts, wait = aiter(stream), first
     try:
         while True:
             try:
                 chunk = await _within(wait, anext(parts))
             except StopAsyncIteration:
                 break
-            wait = NEXT_PART_S
+            wait = routing.next_part_s or NEXT_PART_S
             chunks.append(chunk)
             for card in cards.feed(chunk.text or ""):
                 await on_card(card)
