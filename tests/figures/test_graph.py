@@ -303,6 +303,54 @@ def test_a_curve_through_its_points():
             figures_typst.compile_svg("graph", f"#let f = through({bad})\n#f(1)")
 
 
+def test_a_curve_by_conditions_and_the_point_it_defines():
+    """A curve given by conditions only (f(a) < 0 < f(b), and c where f(c) = 0): the AI's own
+    formula reversed the signs 1 drawing in 6 and its c, written by eye, lay off the crossing.
+    Through points chosen to hold every condition, the crossing's x computed by `meet-x` (the
+    one in the range; none there, or several: refused, saying so), its tick and its dot exactly there.
+    The rule's own fragments for it compile together."""
+    check = """#{
+      let f = through(((-1, -2), (1, 0.5), (3, 2)))
+      let c = meet-x(f, x => 0, -1, 3)
+      assert(calc.abs(f(c)) < 1e-9 and c > -1 and c < 1, message: repr(c))
+      let k = meet-x(x => calc.pow(x, 2), x => 2, 0, 3)
+      assert(calc.abs(k - calc.sqrt(2)) < 1e-9, message: repr(k))
+      let right = meet-x(x => calc.pow(x, 2) - 1, x => 0, 0, 3)
+      assert(calc.abs(right - 1) < 1e-9, message: repr(right))
+      [checked]
+    }"""
+    assert figures_typst.compile_svg("graph", check).startswith("<svg")
+    with pytest.raises(figures_typst.Unusable, match="don't meet"):
+        figures_typst.compile_svg("graph", "#meet-x(x => x, x => 5, 0, 1)")
+    with pytest.raises(figures_typst.Unusable, match="2 times"):
+        figures_typst.compile_svg("graph", "#meet-x(x => calc.pow(x, 2) - 1, x => 0, -3, 3)")
+    lines = figures_typst.FAMILIES["graph"].rules.splitlines()
+    starts = ("- a curve the description gives by conditions", "- a point the curve defines")
+    rule = "\n".join(line for line in lines if line.startswith(starts))
+    lets = re.findall(r"`(#let [^`]*)`", rule)
+    assert len(lets) == 3, lets  # the letters, the curve, the point
+    tick, dot = re.search(r"`(\(c, \$c\$\))`", rule).group(1), re.search(r"`(meet\(f, [^`]*)`", rule).group(1)
+    # k: a value the curve reaches, halfway between its ends' (above its minimum)
+    lets.insert(2, "#let k = (f(a) + f(b)) / 2")
+    body = (
+        "\n".join(lets)
+        + f"""
+#let xs = lq.linspace(a, b, num: 100)
+#lq.diagram(xaxis: (ticks: ((a, $a$), {tick}, (b, $b$))), yaxis: (ticks: ((f(a), $f(a)$),)),
+  lq.plot(xs, xs.map(f), mark: none), {dot})"""
+    )
+    assert figures_typst.compile_svg("graph", body).startswith("<svg")
+
+
+def test_a_single_tick_without_its_trailing_comma():
+    """One value named on an axis, `ticks: ((4, $M$))`: Typst reads the pair itself, not a list
+    of one pair, and lilaq refused it (a maximum M named alone, Typst refusing it twice, the
+    figure drawn as SVG instead): taken as the one tick it means, drawn as with the comma."""
+    body = "#lq.diagram(xlim: (0, 5), ylim: (0, 5), yaxis: (ticks: {}), lq.plot((0, 5), (1, 4)))"
+    alone = figures_typst.compile_svg("graph", body.format("((4, $M$))"))
+    assert alone == figures_typst.compile_svg("graph", body.format("((4, $M$),)"))
+
+
 @pytest.mark.parametrize(
     ("big", "kept"), [("6cm, height: 12cm", "4.5cm, height: 9cm"), ("12cm, height: 3cm", "9cm, height: 2.25cm")]
 )

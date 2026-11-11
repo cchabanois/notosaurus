@@ -122,6 +122,21 @@
     clip: true, z-index: 22,
   )
 }
+// The x where two curves meet (f(c) = 0: `meet-x(f, x => 0, a, b)`; f(c) = k; two curves),
+// computed as `meet` finds it, for a tick or a dotted line at it: never a number the AI writes
+// by eye. One point named, so one crossing between `from` and `to`: none there, or several (a
+// curve of the AI's own crossing again where the description names one point; `meet` would
+// mark them all), refused, saying where they are
+#let meet-x(f, g, from, to) = {
+  let found = _meet-points(f, g, from, to)
+  if found.len() == 0 { panic("meet-x: the curves don't meet between " + repr(from) + " and " + repr(to)) }
+  if found.len() > 1 {
+    panic("meet-x: the curves meet " + str(found.len()) + " times between " + repr(from) + " and " + repr(to)
+      + " (x = " + found.map(p => str(calc.round(p.at(0), digits: 2))).join(", ")
+      + "), not once: a point the description names alone is the curve's only crossing there (a curve of your own: crossing once), else the range of the one named")
+  }
+  found.first().at(0)
+}
 // An asymptote, a limit, a line y = c or x = a: dashed across the whole frame, on both sides
 // of the other axis; broken only where it would cross that axis's numbers (their places and
 // widths computed as lilaq writes them: the AI's ticks, or lilaq's own from the limits and the
@@ -384,6 +399,18 @@
     if k < 1 {
       named.insert("width", wide.to-absolute() * k)
       named.insert("height", tall.to-absolute() * k)
+    }
+  }
+  // A single tick written `ticks: ((4, $M$))`: Typst reads it as the pair itself, not a list
+  // of one pair (no trailing comma), and lilaq refused it ("cannot compare integer and
+  // content"); taken as the one tick it means
+  for key in ("xaxis", "yaxis") {
+    let axis = named.at(key, default: none)
+    if type(axis) != dictionary { continue }
+    let ticks = axis.at("ticks", default: none)
+    if type(ticks) == array and ticks.len() == 2 and type(ticks.at(0)) in (int, float) and type(ticks.at(1)) in (content, str, symbol) {
+      axis.ticks = (ticks,)
+      named.insert(key, axis)
     }
   }
   for (key, lim, size, horizontal) in (("xaxis", "xlim", "width", true), ("yaxis", "ylim", "height", false)) {
