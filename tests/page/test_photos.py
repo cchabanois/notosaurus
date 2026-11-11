@@ -124,8 +124,12 @@ def test_a_photo_seen_in_full_turned_and_a_name_hidden(page):
     shown = viewer.locator(".viewer-frame img")
     shown.wait_for()
     page.wait_for_function("() => document.querySelector('.viewer-frame img').naturalWidth === 600")
+    shown.click()  # zoomed in: turned, the photo is seen whole again (the old zoom means nothing on it)
+    sync_api.expect(viewer.locator(".viewer-frame")).to_have_class(re.compile(r"\bzoomed\b"))
     viewer.get_by_role("button", name="Tourner la photo d'un quart de tour").click()
     page.wait_for_function("() => document.querySelector('.viewer-frame img').naturalWidth === 800")
+    sync_api.expect(viewer.locator(".viewer-frame")).not_to_have_class(re.compile(r"\bzoomed\b"))
+    assert shown.evaluate("el => el.style.transform") == "translate(0px, 0px) scale(1)"
     viewer.get_by_role("button", name="Cacher une partie de la page (un nom…)").click()
     sync_api.expect(page.get_by_role("dialog", name="Cacher ce que l'IA ne doit pas voir")).to_be_visible()
     page.keyboard.press("Escape")  # the editor closes, the viewer stays

@@ -965,7 +965,7 @@
       <img :src="viewerList()[viewer.index]" :alt="$t('app.photos.page', { n: viewer.index + 1 })"
            :style="`transform: translate(${viewer.x}px, ${viewer.y}px) scale(${viewer.scale})`" draggable="false"
            @pointerdown="viewerDown($event)" @pointermove="viewerMove($event)" @pointerup="viewerUp($event)"
-           @pointercancel="viewerUp($event)" @click="viewerTap($event)">
+           @pointercancel="viewerUp($event)" @click="viewerTap($event)" @load="unzoomViewer()">
     </div>
     <!-- A figure's credits: what drew it, each project linked -->
     <p class="viewer-credit" x-show="figureCredits(viewer.card).length" @click.stop>

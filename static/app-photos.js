@@ -447,6 +447,12 @@ const photosPart = {
     this.setViewerView(scale === 1 ? { ...UNZOOMED } : zoomedAbout(this.viewerView(), scale, at, at));
   },
 
+  // A picture shown anew (another page, the photo turned, a name hidden from it): seen whole,
+  // the zoom of the one before meaningless on it
+  unzoomViewer() {
+    Object.assign(this.viewer, UNZOOMED);
+  },
+
   viewerView() {
     const frame = document.querySelector(".viewer-frame").getBoundingClientRect();
     const img = document.querySelector(".viewer-frame img");
