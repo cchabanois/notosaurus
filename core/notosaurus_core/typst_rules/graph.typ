@@ -99,7 +99,17 @@
   if h(to) == 0 { roots.push(to) }
   roots.map(x => (x, f(x)))
 }
-#let meet(f, g, from, to, label: none, lines: false, side: right) = {
+#let _crossings(found) = "x = " + found.map(p => str(calc.round(p.at(0), digits: 2))).join(", ")
+#let meet(f, g, from, to, label: none, lines: false, side: right, some: false, n: none) = {
+  // `n`: as many crossings there as the description names (as `meet-x`), else refused
+  if n != none {
+    let found = _meet-points(f, g, from, to)
+    if found.len() != n {
+      panic("meet: the curves meet " + str(found.len()) + " times between " + repr(from) + " and " + repr(to)
+        + (if found.len() > 0 { " (" + _crossings(found) + ")" } else { "" }) + ", not " + str(n)
+        + ": a curve of your own crosses as many times as the description says, no more (its points chosen so)")
+    }
+  }
   let sep = if decimal-separator == "," { " ; " } else { ", " }
   let parts = ()
   for (x, y) in _meet-points(f, g, from, to) {
@@ -119,8 +129,22 @@
   (
     plot: (self, transform) => { for p in parts { (p.plot)(p, transform) } },
     id: "meet", xlimits: () => none, ylimits: () => none, datetime: (:), label: none,
-    clip: true, z-index: 22,
+    clip: true, z-index: 22, meets: (f: f, g: g, from: from, to: to, some: some),
   )
+}
+// The x where two curves meet (f(c) = 0: `meet-x(f, x => 0, a, b)`; f(c) = k; two curves),
+// computed as `meet` finds it, for a tick or a dotted line at it: never a number the AI writes
+// by eye. One point named, one crossing between `from` and `to`; `n: 2` the description's two
+// (c₁, c₂: an array of their x, in order). Another count there (none; a curve of the AI's own
+// crossing again where the description names one point): refused, saying where they are
+#let meet-x(f, g, from, to, n: 1) = {
+  let found = _meet-points(f, g, from, to)
+  if found.len() == 0 { panic("meet-x: the curves don't meet between " + repr(from) + " and " + repr(to)) }
+  if found.len() != n {
+    panic("meet-x: the curves meet " + str(found.len()) + " times between " + repr(from) + " and " + repr(to)
+      + " (" + _crossings(found) + "), not " + str(n) + ": a curve of your own crosses as many times as the description says, no more (its points chosen so), its range the description's bounds")
+  }
+  if n == 1 { found.first().at(0) } else { found.map(p => p.at(0)) }
 }
 // An asymptote, a limit, a line y = c or x = a: dashed across the whole frame, on both sides
 // of the other axis; broken only where it would cross that axis's numbers (their places and
@@ -386,6 +410,39 @@
       named.insert("height", tall.to-absolute() * k)
     }
   }
+  // A single tick written `ticks: ((4, $M$))`: Typst reads it as the pair itself, not a list
+  // of one pair (no trailing comma), and lilaq refused it ("cannot compare integer and
+  // content"); taken as the one tick it means
+  for key in ("xaxis", "yaxis") {
+    let axis = named.at(key, default: none)
+    if type(axis) != dictionary { continue }
+    let ticks = axis.at("ticks", default: none)
+    // No tick at all, written `ticks: ()` (or `(none,)`): lilaq refused it ("expected at least
+    // one value"); taken as `ticks: none`, the axis without numbers it means
+    if type(ticks) == array and ticks.all(t => t == none) {
+      axis.ticks = none
+      named.insert(key, axis)
+      continue
+    }
+    if type(ticks) == array and ticks.len() == 2 and type(ticks.at(0)) in (int, float) and type(ticks.at(1)) in (content, str, symbol) {
+      axis.ticks = (ticks,)
+      named.insert(key, axis)
+    }
+    // Two values named at one place (f(a) and f(b) chosen equal): lilaq refused ticks at the
+    // same value ("value must be strictly positive"); one tick there, its names joined by " = "
+    let ticks = axis.at("ticks", default: none)
+    if type(ticks) == array and ticks.all(t => type(t) == array and t.len() == 2 and type(t.at(0)) in (int, float)) {
+      let merged = ()
+      for (v, name) in ticks {
+        let i = merged.position(((w, m)) => calc.abs(w - v) < 1e-9)
+        if i == none { merged.push((v, name)) } else { merged.at(i) = (merged.at(i).at(0), [#merged.at(i).at(1) $=$ #name]) }
+      }
+      if merged.len() < ticks.len() {
+        axis.ticks = merged
+        named.insert(key, axis)
+      }
+    }
+  }
   for (key, lim, size, horizontal) in (("xaxis", "xlim", "width", true), ("yaxis", "ylim", "height", false)) {
     let axis = named.at(key, default: none)
     let limits = named.at(lim, default: none)
@@ -401,6 +458,50 @@
   // position, their ticks: where their numbers are), the other plots' points, the texts
   // placed; every name placed by one element of its own, after the plots
   let pos = args.pos()
+  // Where two curves meet (`meet(f, g, from, to)`): checked over the whole of the curves drawn
+  // (each plot whose points are f's, or g's), not only its range: a range narrowed to leave out
+  // crossings the curve has (a curve of the AI's own waving across the axis, one point marked)
+  // refused, saying where they are; `some: true` when the description asks for those only
+  let plots = pos.filter(p => type(p) == dictionary and type(p.at("x", default: none)) == array
+    and type(p.at("y", default: none)) == array and p.x.len() > 1 and p.x.len() == p.y.len()
+    and p.x.all(v => type(v) in (int, float)))
+  // a function's plot: the one plot whose points within the range (where the function is
+  // known to be defined: meet computes it there) are its own; its xs' span. None, or several
+  // (a curve in two pieces, undefined between): not checked
+  let span-of(h, from, to) = {
+    let mine = plots.filter(p => {
+      let k = range(0, p.x.len(), step: calc.max(1, int(p.x.len() / 20))).filter(i => p.x.at(i) >= from and p.x.at(i) <= to)
+      k.len() >= 2 and k.all(i => { let y = p.y.at(i); type(y) in (int, float) and calc.abs(h(p.x.at(i)) - y) <= 1e-9 * (1 + calc.abs(y)) })
+    })
+    if mine.len() != 1 { none } else { (calc.min(..mine.first().x), calc.max(..mine.first().x)) }
+  }
+  // a function with no plot of its own: checked only as a line y = k (the axis, a level),
+  // known everywhere
+  let level(h, from, to) = h(from) == h(to) and h(from) == h((from + to) / 2)
+  // each meet: the crossings of the curves drawn, and those it marks; every crossing marked by
+  // one meet or another (two meets, one crossing each, mark both)
+  let checks = ()
+  for m in pos.filter(p => type(p) == dictionary and p.at("id", default: none) == "meet" and "meets" in p) {
+    let (f, g, from, to, some) = m.meets
+    if some or type(from) not in (int, float) or type(to) not in (int, float) { continue }
+    let (from, to) = (calc.min(from, to), calc.max(from, to))
+    let (sf, sg) = (span-of(f, from, to), span-of(g, from, to))
+    if sf == none and sg == none { continue }
+    if (sf == none and not level(f, from, to)) or (sg == none and not level(g, from, to)) { continue }
+    let spans = (sf, sg).filter(s => s != none)
+    let (lo, hi) = (calc.max(..spans.map(s => s.at(0))), calc.min(..spans.map(s => s.at(1))))
+    if hi <= lo { continue }
+    let all = _meet-points(f, g, lo, hi)
+    let marked = _meet-points(f, g, from, to)
+    checks.push((all, marked, from, to))
+  }
+  let marked-all = checks.map(c => c.at(1)).flatten().chunks(2).map(p => p.at(0))
+  for (all, marked, from, to) in checks {
+    if all.any(p => not marked-all.any(x => calc.abs(x - p.at(0)) < 1e-6)) {
+      panic("meet: the curves drawn meet " + str(all.len()) + " times (" + _crossings(all) + "), the range from "
+        + repr(from) + " to " + repr(to) + " marking " + str(marked.len()) + ": a curve of your own crosses only where the description says (its points chosen so), else the range the whole curve, or `some: true` when the description asks for those only")
+    }
+  }
   let curves = pos.filter(p => type(p) == dictionary and (
     (type(p.at("x", default: none)) == array and type(p.at("y", default: none)) == array)
     or type(p.at("vertices", default: none)) == array))
@@ -432,7 +533,7 @@
 // interpolation (Fritsch–Carlson): through each point exactly, rising or falling between two
 // of them without a bump of its own, level at a minimum or a maximum, at its ends sloping as
 // it goes (never flat there). points: ((x, y), …), two at least, their x all different.
-#let through(points) = {
+#let through(points, straight: false, monotone: false) = {
   if type(points) != array or points.len() < 2 or not points.all(p => type(p) == array and p.len() == 2 and p.all(v => type(v) in (int, float))) {
     panic("through: the points ((x, y), …), two at least, numbers, not " + repr(points))
   }
@@ -442,13 +543,25 @@
   let h = range(n - 1).map(k => xs.at(k + 1) - xs.at(k))
   if h.any(v => v == 0) { panic("through: two points with the same x: " + repr(points)) }
   let d = range(n - 1).map(k => (ys.at(k + 1) - ys.at(k)) / h.at(k))
+  // Values that only rise, or only fall: a monotone function, said so (`monotone: true`: the
+  // description says it increasing, decreasing, monotone, or gives such points), else refused,
+  // saying why: a function the description gives no variations of is drawn with a turn (its
+  // monotone curves, all the AI drew for one, read as an increasing function it never said)
+  if not monotone and not straight and (d.all(v => v >= 0) or d.all(v => v <= 0)) {
+    panic("through: the values " + repr(ys) + " only " + (if d.all(v => v >= 0) { "rise" } else { "fall" })
+      + ": a function the description says increasing, decreasing or monotone (or whose points it gives so): `monotone: true`; any other function: a turn of your own, one value going back against the others, on the same side of the level as its neighbours")
+  }
   let sign(v) = if v > 0 { 1 } else if v < 0 { -1 } else { 0 }
   // an end's slope: three points' estimate, kept on its side and not too steep
   let end(h0, h1, d0, d1) = {
     let m = ((2 * h0 + h1) * d0 - h0 * d1) / (h0 + h1)
     if sign(m) != sign(d0) { 0 } else if sign(d0) != sign(d1) and calc.abs(m) > 3 * calc.abs(d0) { 3 * d0 } else { m }
   }
-  let m = if n == 2 { (d.at(0), d.at(0)) } else {
+  // Two points alone (a function given by its ends): a gentle curve between them, steep then
+  // levelling off, rising or falling all the way (end slopes 1.6 and 0.4 times the chord's:
+  // monotone, Fritsch–Carlson), never the straight segment of an affine function, unless
+  // `straight: true` (the description says a line, an affine function)
+  let m = if n == 2 { if straight { (d.at(0), d.at(0)) } else { (1.6 * d.at(0), 0.4 * d.at(0)) } } else {
     let inner = range(1, n - 1).map(k => {
       let (d0, d1, h0, h1) = (d.at(k - 1), d.at(k), h.at(k - 1), h.at(k))
       // a turn (or a flat stretch): level there; else a weighted harmonic mean, no overshoot
