@@ -9,6 +9,7 @@ Each pull request's entries (the `## Changelog` of its description) are put unde
 
 ### Added
 
+- Pictures seen in full can be zoomed with two fingers and moved with one; a tap zooms in where it touches.
 - 📦 Box plots drawn by the statistics chart: boxes on one shared axis at a readable size, their graduation computed.
 - 🧩 Scratch scripts drawn block by block as Scratch draws them (blockst), their words never cut.
 - 📊 Tables of values (two-way tables with totals, proportionality tables with their arrows, conversion and frequency tables): each column as wide as its content, totals computed.
