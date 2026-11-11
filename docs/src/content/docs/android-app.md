@@ -28,7 +28,7 @@ you to accept its [privacy policy](../app-privacy/):
 - Notosaurus is a **tool for parents**: you prepare the cards, your child revises them in Anki.
 - It uses **Google's Gemini AI**. The photos, instructions and dictations go through the
   Notosaurus service while the cards are made, without being stored there, and are processed
-  in the European Union. Your lessons stay on your phone.
+  on Google's servers, which may be outside the European Union. Your lessons stay on your phone.
 - The AI has safeguards suited to pupils, but it can make mistakes: check the cards before
   giving them to your child.
 - A notebook page often shows the child's name: hide it with the **Hide** button (🖍️) before sending (see

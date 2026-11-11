@@ -307,7 +307,7 @@
       "parentTitle": "Notosaurus ist ein Werkzeug für Eltern.",
       "parent": "Du musst erwachsen sein, um es zu nutzen: Du bereitest die Karten vor, dein Kind lernt sie in Anki.",
       "aiTitle": "Es nutzt die KI Gemini von Google,",
-      "ai": "um die Fotos zu lesen und die Karten zu erstellen. Fotos, Anweisungen und Diktate gehen über den Notosaurus-Dienst, solange die Karten entstehen, ohne dort gespeichert zu werden, und werden in der Europäischen Union verarbeitet.",
+      "ai": "um die Fotos zu lesen und die Karten zu erstellen. Fotos, Anweisungen und Diktate gehen über den Notosaurus-Dienst, solange die Karten entstehen, ohne dort gespeichert zu werden, und werden auf den Servern von Google verarbeitet, die auch außerhalb der Europäischen Union liegen können.",
       "onPhone": "Deine Lektionen bleiben auf deinem Handy.",
       "google": "Google kann das Gesendete bis zu 90 Tage aufbewahren, um Missbrauch zu erkennen, ohne damit seine KI zu trainieren.",
       "guardTitle": "Die KI hat für Schüler passende Schutzregeln,",

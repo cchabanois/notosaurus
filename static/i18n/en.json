@@ -307,7 +307,7 @@
       "parentTitle": "Notosaurus is a tool for parents.",
       "parent": "You must be an adult to use it: you prepare the cards, your child revises them in Anki.",
       "aiTitle": "It uses Google's Gemini AI",
-      "ai": "to read the photos and make the cards. Photos, instructions and dictations go through the Notosaurus service while the cards are made, without being stored there, and are processed in the European Union.",
+      "ai": "to read the photos and make the cards. Photos, instructions and dictations go through the Notosaurus service while the cards are made, without being stored there, and are processed on Google's servers, which may be outside the European Union.",
       "onPhone": "Your lessons stay on your phone.",
       "google": "Google may keep what it is sent for up to 90 days to detect abuse, without using it to train its AI.",
       "guardTitle": "The AI has safeguards suited to pupils,",

@@ -3,7 +3,7 @@ title: "Privacy policy of the Android app"
 description: "The data the Notosaurus Android app and its service process, why, where, for how long, and your rights."
 ---
 
-*Last updated: 3 November 2026.*
+*Last updated: 11 November 2026.*
 
 This page is about **the Notosaurus app for Android** and **the Notosaurus service** it uses to
 read the photos, make the cards and the voices. Notosaurus on a computer (the Anki add-on) works
@@ -20,8 +20,9 @@ isn't made to be used by a child.
 - Your **lessons stay on your phone**: photos, cards, instructions, sounds.
 - What the AI must read (photos, instructions, dictations) **goes through the service** while
   the cards are made, **and isn't kept there**.
-- The AI (**Google's Gemini**) and the voices are **processed in the European Union**. Google
-  doesn't use them to train its models.
+- The AI (**Google's Gemini**) is processed on Google's servers, **which may be outside the
+  European Union**; the voices are processed in the European Union. Google doesn't use them to
+  train its models.
 - **No ads, no statistics, no tracking**, and nothing is sold.
 - The service keeps only your **licence** (its fingerprint, your plan and your credits), and
   what you **report** with ⚑, if you do.
@@ -84,7 +85,7 @@ in the lesson.
 
 | Service | What it receives | Where |
 |---|---|---|
-| **Google Cloud**: Vertex AI (Gemini) | Photos, instructions, cards, dictations, picture descriptions | European Union |
+| **Google Cloud**: Vertex AI (Gemini) | Photos, instructions, cards, dictations, picture descriptions | Its servers, worldwide (outside the European Union too) |
 | **Google Cloud**: Cloud Run, Firestore, logs | The service itself, the licences, the logs | Belgium (europe-west1) |
 | **Google Cloud**: Text-to-Speech | The text to read (a card's back) | European Union |
 | **Wikimedia Commons**, **Openverse**, **Pixabay** | A few English keywords ("dog"), never a photo | Their servers |
@@ -97,8 +98,9 @@ days**, under its terms, using them for nothing else.
 
 ### Transfers outside the European Union
 
-Processing happens in the European Union, but Google, GitHub, the Wikimedia Foundation and
-Openverse are US organisations, which may access it. These transfers are covered by the
+The AI (Gemini) may process your photos, instructions and dictations outside the European
+Union, on Google's servers; the rest happens in the European Union, but Google, GitHub, the
+Wikimedia Foundation and Openverse are US organisations, which may access it. These transfers are covered by the
 European Commission's **standard contractual clauses** and, for certified companies such as
 Google, by the **EU–US Data Privacy Framework**. Pixabay is an EU company.
 
