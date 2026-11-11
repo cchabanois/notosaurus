@@ -3,7 +3,7 @@ title: "Política de privacidad de la aplicación Android"
 description: "Los datos que tratan la aplicación Android de Notosaurus y su servicio, por qué, dónde, durante cuánto tiempo, y tus derechos."
 ---
 
-*Última actualización: 3 de noviembre de 2026.*
+*Última actualización: 11 de noviembre de 2026.*
 
 Esta página trata de **la aplicación Notosaurus para Android** y del **servicio Notosaurus** que
 usa para leer las fotos y hacer las tarjetas y las voces. Notosaurus en un ordenador (el
@@ -20,8 +20,9 @@ hijos. La aplicación no está hecha para que la use un niño.
 - Tus **lecciones se quedan en tu móvil**: fotos, tarjetas, instrucciones, sonidos.
 - Lo que la IA debe leer (fotos, instrucciones, dictados) **pasa por el servicio** mientras se
   hacen las tarjetas, **y no se guarda allí**.
-- La IA (**Gemini de Google**) y las voces se **procesan en la Unión Europea**. Google no los usa
-  para entrenar sus modelos.
+- La IA (**Gemini de Google**) se procesa en los servidores de Google, **que pueden estar fuera de
+  la Unión Europea**; las voces se procesan en la Unión Europea. Google no los usa para entrenar
+  sus modelos.
 - **Sin publicidad, sin estadísticas, sin seguimiento**, y no se vende nada.
 - El servicio solo guarda tu **licencia** (su huella, tu plan y tus créditos), y lo que
   **reportas** con ⚑, si lo haces.
@@ -87,7 +88,7 @@ lección.
 
 | Servicio | Lo que recibe | Dónde |
 |---|---|---|
-| **Google Cloud**: Vertex AI (Gemini) | Fotos, instrucciones, tarjetas, dictados, descripciones de imágenes | Unión Europea |
+| **Google Cloud**: Vertex AI (Gemini) | Fotos, instrucciones, tarjetas, dictados, descripciones de imágenes | Sus servidores, en todo el mundo (también fuera de la Unión Europea) |
 | **Google Cloud**: Cloud Run, Firestore, registros | El servicio en sí, las licencias, los registros | Bélgica (europe-west1) |
 | **Google Cloud**: Text-to-Speech | El texto que leer (el reverso de una tarjeta) | Unión Europea |
 | **Wikimedia Commons**, **Openverse**, **Pixabay** | Unas palabras clave en inglés («dog»), nunca una foto | Sus servidores |
@@ -100,8 +101,9 @@ peticiones enviadas a Gemini **hasta 90 días**, según sus condiciones, sin usa
 
 ### Transferencias fuera de la Unión Europea
 
-El tratamiento se hace en la Unión Europea, pero Google, GitHub, la Fundación Wikimedia y
-Openverse son organizaciones estadounidenses, que pueden acceder a él. Estas transferencias están
+La IA (Gemini) puede procesar tus fotos, instrucciones y dictados fuera de la Unión Europea, en
+los servidores de Google; el resto se hace en la Unión Europea, pero Google, GitHub, la Fundación
+Wikimedia y Openverse son organizaciones estadounidenses, que pueden acceder a él. Estas transferencias están
 cubiertas por las **cláusulas contractuales tipo** de la Comisión Europea y, para las empresas
 certificadas como Google, por el **Marco de Privacidad de Datos UE-EE. UU.**. Pixabay es una
 empresa de la UE.

@@ -30,8 +30,8 @@ leçons, puis vous demande d'accepter sa [politique de confidentialité](../app-
 - Notosaurus est un **outil pour les parents** : c'est vous qui préparez les cartes, votre
   enfant les révise dans Anki.
 - Il utilise l'**IA Gemini de Google**. Les photos, consignes et dictées passent par le service
-  Notosaurus le temps de faire les cartes, sans y être enregistrées, et sont traitées dans
-  l'Union européenne. Vos leçons restent sur votre téléphone.
+  Notosaurus le temps de faire les cartes, sans y être enregistrées, et sont traitées sur
+  les serveurs de Google, qui peuvent être hors de l'Union européenne. Vos leçons restent sur votre téléphone.
 - L'IA a des garde-fous adaptés aux élèves, mais elle peut se tromper : vérifiez les cartes avant
   de les donner à votre enfant.
 - Une page de cahier montre souvent le nom de l'enfant : cachez-le avec le bouton **Cacher** (🖍️) avant l'envoi

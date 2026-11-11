@@ -3,7 +3,7 @@ title: "Datenschutzerklärung der Android-App"
 description: "Die Daten, die die Android-App von Notosaurus und ihr Dienst verarbeiten, warum, wo, wie lange, und deine Rechte."
 ---
 
-*Zuletzt aktualisiert: 3. November 2026.*
+*Zuletzt aktualisiert: 11. November 2026.*
 
 Diese Seite betrifft **die Notosaurus-App für Android** und **den Notosaurus-Dienst**, den sie
 nutzt, um die Fotos zu lesen und die Karten und Stimmen zu erstellen. Notosaurus auf einem
@@ -20,7 +20,8 @@ vorbereitet. Die App ist nicht dafür gemacht, von einem Kind benutzt zu werden.
 - Deine **Lektionen bleiben auf deinem Handy**: Fotos, Karten, Anweisungen, Töne.
 - Was die KI lesen muss (Fotos, Anweisungen, Diktate), **geht beim Erstellen der Karten über den
   Dienst** **und wird dort nicht gespeichert**.
-- Die KI (**Gemini von Google**) und die Stimmen werden **in der Europäischen Union verarbeitet**.
+- Die KI (**Gemini von Google**) wird auf den Servern von Google verarbeitet, **die auch außerhalb
+  der Europäischen Union liegen können**; die Stimmen werden in der Europäischen Union verarbeitet.
   Google nutzt sie nicht, um seine Modelle zu trainieren.
 - **Keine Werbung, keine Statistik, kein Tracking**, und nichts wird verkauft.
 - Der Dienst speichert nur deine **Lizenz** (ihren Fingerabdruck, deinen Tarif und deine Credits)
@@ -91,7 +92,7 @@ hinaus und bleibt in der Lektion.
 
 | Dienst | Was er erhält | Wo |
 |---|---|---|
-| **Google Cloud**: Vertex AI (Gemini) | Fotos, Anweisungen, Karten, Diktate, Bildbeschreibungen | Europäische Union |
+| **Google Cloud**: Vertex AI (Gemini) | Fotos, Anweisungen, Karten, Diktate, Bildbeschreibungen | Seine Server, weltweit (auch außerhalb der Europäischen Union) |
 | **Google Cloud**: Cloud Run, Firestore, Protokolle | Der Dienst selbst, die Lizenzen, die Protokolle | Belgien (europe-west1) |
 | **Google Cloud**: Text-to-Speech | Der vorzulesende Text (die Rückseite einer Karte) | Europäische Union |
 | **Wikimedia Commons**, **Openverse**, **Pixabay** | Ein paar englische Stichwörter („dog“), nie ein Foto | Ihre Server |
@@ -105,8 +106,9 @@ etwas anderes zu nutzen.
 
 ### Übermittlungen außerhalb der Europäischen Union
 
-Die Verarbeitung findet in der Europäischen Union statt, aber Google, GitHub, die Wikimedia
-Foundation und Openverse sind US-Organisationen, die darauf zugreifen können. Diese Übermittlungen
+Die KI (Gemini) kann deine Fotos, Anweisungen und Diktate außerhalb der Europäischen Union auf den
+Servern von Google verarbeiten; der Rest findet in der Europäischen Union statt, aber Google, GitHub,
+die Wikimedia Foundation und Openverse sind US-Organisationen, die darauf zugreifen können. Diese Übermittlungen
 sind durch die **Standardvertragsklauseln** der Europäischen Kommission abgedeckt und, für
 zertifizierte Unternehmen wie Google, durch das **EU-US Data Privacy Framework**. Pixabay ist ein
 Unternehmen aus der EU.
