@@ -51,14 +51,15 @@ class RotationTest {
     @Test
     fun theLessonKeptWhenThePhoneIsTurned() {
         ActivityScenario.launch(MainActivity::class.java).use { app ->
-            Device.waitFor(app, "typeof api === 'function' && document.querySelectorAll('.chip').length > 3", "the page and its prompts")
+            // Started (draftKept: its lesson in progress looked for, which a photo added before would race)
+            Device.waitFor(app, "typeof api === 'function' && $PAGE.draftKept && document.querySelectorAll('.chip').length > 3", "the page and its prompts")
 
             // What only the page holds: a prompt typed, a photo added (as the camera's are),
             // and a mark gone if the page is loaded again
-            Device.run(
+            val added = Device.run(
                 app,
                 """
-                const page = Alpine.${'$'}data(document.querySelector('.app'));
+                const page = $PAGE;
                 const canvas = document.createElement('canvas');
                 canvas.width = 40;
                 canvas.height = 30;
@@ -69,8 +70,11 @@ class RotationTest {
                 prompt.value = 'Turned, still here';
                 prompt.dispatchEvent(new Event('input'));
                 window.notReloaded = true;
+                return { photos: page.photos.length, error: page.error };
                 """,
             )
+            // The photo not added: why (the page's error, the photos it has), not only a wait timed out
+            assertEquals("the photo added: $added", "{\"photos\":1,\"error\":\"\"}", added)
             Device.waitFor(app, "document.querySelectorAll('.thumb img').length === 1", "the photo's thumbnail")
             val before = activity(app)
 
@@ -92,6 +96,10 @@ class RotationTest {
             assertSame(before, activity(app))
             assertEquals("true", Device.js(app, "window.notReloaded === true"))
         }
+    }
+
+    private companion object {
+        const val PAGE = "Alpine.\$data(document.querySelector('.app'))"
     }
 
     private fun activity(scenario: ActivityScenario<out Activity>): Activity {
