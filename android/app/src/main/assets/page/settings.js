@@ -176,7 +176,8 @@ document.addEventListener("alpine:init", () => {
           this.newKey = "";
         }
         await this.loadAccount();
-        if (this.account) this.notice = t("android.licence.checked");
+        // Up to date only when it still gives credits: lapsed, what to do is said instead
+        if (this.account && !this.lapsed) this.notice = t("android.licence.checked");
       } catch (e) {
         this.error = e.message;
       } finally {
