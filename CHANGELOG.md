@@ -34,6 +34,7 @@ Each pull request's entries (the `## Changelog` of its description) are put unde
 
 ### Changed
 
+- 🎙️ Dictation shows your words as you speak: the phone's own speech recognition writes them, at once and with no credits used; your voice no longer goes through the Notosaurus service.
 - 🎙️ The dictation button shows the microphone Android apps use, filled on a pulsing circle while it listens.
 - 📸 Photos: a lesson with more pages than fit beside the add buttons shows a "+N" in the last place; it opens all the pages in a sheet. A page's thumbnail now shows only its number and ✕, plus a 🖍️ mark when part of it is hidden. A tap on a page opens it full screen, where it is turned (↻), partly hidden (🖍️) or removed (🗑️).
 - 📜 The figures' credits on the licences page come from the Notosaurus service: a drawing tool added is credited without updating the app.
