@@ -26,7 +26,7 @@ At the first launch, the app says in a few lines what it is and where the lesson
 you to accept its [privacy policy](../app-privacy/):
 
 - Notosaurus is a **tool for parents**: you prepare the cards, your child revises them in Anki.
-- It uses **Google's Gemini AI**. The photos, instructions and dictations go through the
+- It uses **Google's Gemini AI**. The photos and instructions go through the
   Notosaurus service while the cards are made, without being stored there, and are processed
   on Google's servers, which may be outside the European Union. Your lessons stay on your phone.
 - The AI has safeguards suited to pupils, but it can make mistakes: check the cards before
@@ -71,8 +71,9 @@ In the settings, **📍 Where does Notosaurus work?** chooses **📱 On this pho
 
 Most of Notosaurus is the same as on the computer. What only the app has, or doesn't have:
 
-- **🎤 Dictate**: say an instruction or a correction instead of typing it. The app asks for the
-  microphone the first time.
+- **🎤 Dictate**: say an instruction or a correction instead of typing it. Your words show as you
+  speak, written by the phone's own speech recognition; **✨ Tidy up** cleans instructions after. The app
+  asks for the microphone the first time.
 - **⚑ Report**, on a card, tells Notosaurus what went wrong: a word misread, a wrong answer, a
   figure off, an unsuitable picture. Every report is read and helps fix Notosaurus (see
   [Reporting a problem](../review/#reporting-a-problem)).

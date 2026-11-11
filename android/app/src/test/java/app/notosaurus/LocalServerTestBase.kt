@@ -99,6 +99,7 @@ abstract class LocalServerTestBase {
     protected var modeChanges = 0
     protected var micGranted = true // the user's answer to the microphone's dialog
     protected val mic = FakeMic()
+    protected val ears = FakeListener()
     protected lateinit var local: LocalServer
 
     protected class FakeAnki : AnkiTarget {
@@ -141,6 +142,34 @@ abstract class LocalServerTestBase {
     }
 
     /** A microphone that "records" what it's told to: ADTS frames, as the phone's would. */
+    /** The phone's speech recognition: off unless a test turns it on; what it hears, told as
+     * the test says it (`say`), its last words at stop. */
+    protected class FakeListener : Listener {
+        var on = false
+        var language = ""
+        var lastWords = ""
+        private var heard: ((String) -> Unit)? = null
+        private var failed: ((String) -> Unit)? = null
+        private var text = ""
+        override fun available() = on
+        override fun start(language: String, heard: (String) -> Unit, failed: (String) -> Unit) {
+            this.language = language
+            this.heard = heard
+            this.failed = failed
+            text = ""
+        }
+        fun say(words: String) {
+            text = PhoneListener.joined(text, words)
+            heard?.invoke(text)
+        }
+        fun fail(code: String) = failed?.invoke(code)
+        override fun stop(done: () -> Unit) {
+            if (lastWords.isNotEmpty()) say(lastWords)
+            heard = null
+            done()
+        }
+    }
+
     protected class FakeMic : Recorder {
         var said = ByteArray(4000) { 0x55 }
         var busy = false // another app holds the microphone
@@ -186,6 +215,7 @@ abstract class LocalServerTestBase {
             modeChanged = { modeChanges++ },
             turnPhoto = { data, degrees -> "turned $degrees:".toByteArray() + data }, // (Photos.turn needs Android)
             recorder = mic,
+            listener = ears,
             requestMicPermission = { micGranted },
             subscriptions = play,
         )

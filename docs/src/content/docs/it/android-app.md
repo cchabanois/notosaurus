@@ -26,7 +26,7 @@ Al primo avvio, l'app dice in poche righe cos'è e dove vanno le lezioni, poi ti
 accettare la sua [informativa sulla privacy](../app-privacy/):
 
 - Notosaurus è uno **strumento per genitori**: tu prepari le carte, tuo figlio le ripassa in Anki.
-- Usa l'**IA Gemini di Google**. Le foto, le istruzioni e i dettati passano dal servizio
+- Usa l'**IA Gemini di Google**. Le foto e le istruzioni passano dal servizio
   Notosaurus mentre si fanno le carte, senza esservi conservati, e sono trattati sui server
   di Google, che possono trovarsi fuori dall'Unione europea. Le tue lezioni restano sul tuo telefono.
 - L'IA ha protezioni adatte agli alunni, ma può sbagliare: controlla le carte prima di darle a tuo
@@ -73,8 +73,9 @@ Nelle impostazioni, **📍 Dove lavora Notosaurus?** sceglie **📱 Su questo te
 
 Quasi tutto Notosaurus è uguale al computer. Ciò che solo l'app ha, o non ha:
 
-- **🎤 Detta**: di' un'istruzione o una correzione invece di scriverla. L'app chiede il microfono
-  la prima volta.
+- **🎤 Detta**: di' un'istruzione o una correzione invece di scriverla. Le tue parole appaiono
+  mentre parli, scritte dal riconoscimento vocale del telefono; **✨ Metti in ordine** ripulisce
+  poi un'istruzione. L'app chiede il microfono la prima volta.
 - **⚑ Segnala**, su una carta, dice a Notosaurus cosa è andato storto: una parola letta male, una
   risposta sbagliata, una figura storta, un'immagine inadatta. Ogni segnalazione viene letta e
   aiuta a migliorare Notosaurus (vedi [Segnalare un problema](../review/#segnalare-un-problema)).

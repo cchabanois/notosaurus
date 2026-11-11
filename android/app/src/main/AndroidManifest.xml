@@ -8,9 +8,13 @@
          cuts a cached app's); a short service, no permission asked of the user -->
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
 
-    <!-- AnkiDroid: its content provider, visible to us (Android 11+) -->
+    <!-- AnkiDroid: its content provider, visible to us (Android 11+); the phone's speech
+         recognition service (the 🎤's text as it comes: PhoneListener), else not found -->
     <queries>
         <package android:name="com.ichi2.anki" />
+        <intent>
+            <action android:name="android.speech.RecognitionService" />
+        </intent>
     </queries>
 
     <application
