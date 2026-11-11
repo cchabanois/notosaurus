@@ -85,3 +85,50 @@ def test_a_bodys_hidden_vector_name_is_not_shown():
     asked = figures_typst.compile_svg("mechanics", body.format("R"))
     assert asked == figures_typst.compile_svg("mechanics", body.format("T"))
     assert asked != figures_typst.compile_svg("mechanics", body.format("R").replace('hidden: ("R",), ', ""))
+
+
+def test_a_body_on_a_slope_rests_on_it():
+    """The block's underside on the slope's line, never sunk into it: the body's foot (its
+    point less its half height, across the slope) on the line from the slope's foot."""
+    for angle in (20, 30, 45):
+        figures_typst.compile_svg(
+            "mechanics",
+            f"""#let (fx, fy) = slope-foot({angle})
+#let (px, py) = on-slope({angle}, 0.45)
+#let (bx, by) = (px + 0.45 * calc.sin({angle} * 1deg), py - 0.45 * calc.cos({angle} * 1deg))
+#assert(calc.abs((bx - fx) * calc.sin({angle} * 1deg) - (by - fy) * calc.cos({angle} * 1deg)) < 1e-9)
+#mechanics(support: "slope", angle: {angle})""",
+        )
+
+
+def test_a_bodys_scene_is_drawn_from_its_values():
+    """Two bodies acting on each other, a vector's index and Greek letter as the AI writes
+    them, an angle's value: computed by the function, never written by the AI."""
+    drawn = lambda body: figures_typst.compile_svg("mechanics", f"#mechanics({body})")  # noqa: E731
+    pair = 'body: [Terre], other: [Lune], vectors: (("F", "towards"),), others: (("G", {}),)'
+    assert drawn(pair.format('"towards"')) == drawn(pair.format("180"))
+    assert drawn(pair.format('"away"')) == drawn(pair.format("0"))
+    named = 'vectors: (("{}", "up"),)'
+    assert drawn(named.format("F_(T/L)")) == drawn(named.format(r"F_(text(T)\\/L)"))
+    assert drawn(named.format("F_(T/L)")) == drawn(named.format("F_(T slash L)"))
+    assert drawn(named.format("Pi")) == drawn(named.format("Π"))
+    pulled = 'support: "plane", vectors: (("F", 30),), marked: {}'
+    assert drawn(pulled.format('("F",)')) == drawn(pulled.format("(F: [30°])"))
+    assert drawn(pulled.format('("F",)')) != drawn(pulled.format("()"))
+    for wrong, said in (
+        ('support: "slope", other: [B], vectors: (("F", "towards"),)', "stand alone"),
+        ('vectors: (("F", "towards"),)', "other body"),
+        ('support: "slope", path: ([A], [B]), vectors: ()', "plane"),
+    ):
+        with pytest.raises(figures_typst.Unusable, match=said):
+            drawn(wrong)
+
+
+def test_vectors_going_the_same_way_are_side_by_side():
+    """Archimedes' thrust and the string's pull both up: two arrows, never one over the
+    other (and the string between them)."""
+    drawn = lambda body: figures_typst.compile_svg("mechanics", f"#mechanics({body})")  # noqa: E731
+    both = drawn('vectors: (("F", "up"), ("G", "up"))')
+    assert both != drawn('vectors: (("F", "up"), ("G", 90.5))')
+    hung = 'support: "liquid", string: true, vectors: (("F", "up"), ("Pi", "up"))'
+    assert drawn(hung).startswith("<svg")
