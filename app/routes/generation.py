@@ -21,7 +21,7 @@ from .. import access, ankiconnect, children, decks, exams, lessons, media, prom
 from ..anki import build_apkg
 from ..errors import AppError
 from ..models import ExportRequest, Generated, Lesson, LessonIn
-from .common import IMAGE_TYPES, MAX_IMAGES, pupil_lang, read_photo
+from .common import IMAGE_TYPES, MAX_IMAGES, jobs, pupil_lang, read_photo, tracked
 
 log = logging.getLogger("notosaurus")
 
@@ -191,7 +191,6 @@ def _learned(back_language: str, lang: str, spelling: bool) -> str:
 
 NDJSON = "application/x-ndjson"
 _streaming: set[asyncio.Task] = set()  # generations under way, kept until done
-_generating: dict[str, asyncio.Task] = {}  # by the page's id for each one: what "Cancel" stops
 
 
 def _streamed(work, job: str = "") -> StreamingResponse:
@@ -227,9 +226,7 @@ def _streamed(work, job: str = "") -> StreamingResponse:
     task = asyncio.create_task(run())
     _streaming.add(task)
     task.add_done_callback(_streaming.discard)
-    if job:
-        _generating[job] = task
-        task.add_done_callback(lambda _: _generating.pop(job, None))
+    tracked(task, job)
 
     async def lines():
         while (item := await queue.get()) is not None:
@@ -240,10 +237,10 @@ def _streamed(work, job: str = "") -> StreamingResponse:
 
 @router.post("/api/generations/{job}/cancel")
 async def cancel_generation(job: str) -> dict:
-    """Stop a lesson being made ("Cancel" while waiting): the AI stops writing, no
-    lesson is saved (generated again: the old one stays as it was). What the AI wrote
-    already is paid for."""
-    task = _generating.get(job)
+    """Stop the AI's work ("Cancel" while waiting): a lesson being made, corrected, a card
+    corrected (common.jobs). The AI stops writing, nothing is saved (generated again or
+    corrected: the lesson stays as it was). What the AI wrote already is paid for."""
+    task = jobs.get(job)
     if task:
         task.cancel()
     return {"cancelled": task is not None}

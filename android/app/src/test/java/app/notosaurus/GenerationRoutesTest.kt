@@ -88,6 +88,40 @@ class GenerationRoutesTest : LocalServerTestBase() {
     }
 
     @Test
+    fun aCorrectionCancelledWhileTheRelayWorks() = app { client ->
+        // "Cancel" while the AI corrects the lesson, or a card: the relay call stops, the lesson
+        // as it was; told in the stream ({"cancelled"}), or 409 asked at once (a card's)
+        val lesson = client.extract()
+        relay.takeRequest()
+        val id = lesson.string("id")
+        val body = """{"deck": "Espagnol::Leçon 5", "cards": ${lesson["cards"]}, "instruction": "x"}"""
+        val fixBody = """{"card": ${lesson["cards"]!!.jsonArray[0]}, "instruction": "x", "others": []}"""
+        for ((path, job, streamed) in listOf(Triple("revise", "r1", true), Triple("revise", "r2", false), Triple("fix-card", "f1", false))) {
+            relay.enqueue(MockResponse.Builder().headersDelay(10, TimeUnit.SECONDS).body("{}").build())
+            coroutineScope {
+                val asked = async {
+                    client.post("/api/lessons/$id/$path?job=$job") {
+                        page(); contentType(ContentType.Application.Json)
+                        if (streamed) header(HttpHeaders.Accept, Relay.STREAM_TYPE)
+                        setBody(if (path == "revise") body else fixBody)
+                    }
+                }
+                assertNotNull(withContext(Dispatchers.IO) { relay.takeRequest(5, TimeUnit.SECONDS) }) // the relay at work
+                val cancel = client.post("/api/generations/$job/cancel") { page() }.json().jsonObject
+                assertTrue(cancel["cancelled"]!!.jsonPrimitive.content.toBoolean())
+                val answer = withTimeout(5_000) { asked.await() } // at once, not when the relay is done
+                if (streamed) {
+                    assertEquals("""{"cancelled":true}""", answer.bodyAsText().trim())
+                } else {
+                    assertEquals(HttpStatusCode.Conflict, answer.status)
+                    assertEquals("extract.cancelled", answer.json().jsonObject["detail"]!!.jsonObject.string("code"))
+                }
+            }
+        }
+        assertEquals(lesson["cards"], client.get("/api/lessons/$id") { page() }.json().jsonObject["cards"]) // as it was
+    }
+
+    @Test
     fun theCardsAsTheyComeThenTheLesson() = app { client ->
         val lines = listOf(
             """{"step": {"step": "slow"}}""", // what the AI is at: passed on to the page
