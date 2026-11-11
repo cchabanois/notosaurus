@@ -10,11 +10,12 @@ annotated-doc==0.0.5
     # via fastapi
 annotated-types==0.8.0
     # via pydantic
-anthropic==2.3.0
+anthropic==2.8.0
     # via -r requirements.in
 anyio==4.15.1
     # via
     #   anthropic
+    #   fastapi
     #   google-genai
     #   httpx
     #   httpx2
@@ -47,7 +48,7 @@ docstring-parser==0.18.0
     # via anthropic
 edge-tts==7.3.1
     # via -r requirements.in
-fastapi==0.162.0
+fastapi==0.162.4
     # via -r requirements.in
 frozendict==2.4.7
     # via genanki
@@ -59,7 +60,7 @@ genanki==0.13.1
     # via -r requirements.in
 google-auth==2.62.0
     # via google-genai
-google-genai==2.34.0
+google-genai==3.1.0
     # via -r requirements.in
 h11==0.16.0
     # via
@@ -73,12 +74,11 @@ httpcore2==2.15.1 ; sys_platform != 'emscripten'
 httptools==0.9.0
     # via uvicorn
 httpx==0.28.1
-    # via
-    #   -r requirements.in
-    #   google-genai
+    # via -r requirements.in
 httpx2==2.15.1
     # via
     #   anthropic
+    #   google-genai
     #   openai
 httpx2-jsfetch==1.0 ; sys_platform == 'emscripten'
     # via httpx2
