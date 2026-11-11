@@ -462,7 +462,7 @@
       "start": "Dicter",
       "stop": "Arrêter et écrire le texte",
       "busy": "J'écris ce que vous avez dit…",
-      "listening": "J'écoute… appuyez sur ⏹ quand vous avez fini.",
+      "listening": "J'écoute… appuyez sur le micro quand vous avez fini.",
       "nothing": "Rien entendu : réessayez, plus près du micro."
     },
     "update": {
