@@ -68,7 +68,8 @@
 // phase's pole
 #let breaker(name, a, b, c, d, label: none) = {
   cetz.draw.group(name: name, {
-    breaker-pole("phase", a, b, label: label)
+    // its name clear of the open blade, which rises above the contact's bounds
+    breaker-pole("phase", a, b, label: if label == none { none } else { (content: label, distance: 12pt) })
     breaker-pole("neutre", c, d)
     // the blades' middles, where the dashed link joins them
     let blade(p, q) = {
