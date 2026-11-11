@@ -44,6 +44,7 @@ Each pull request's entries (the `## Changelog` of its description) are put unde
 
 ### Fixed
 
+- Tables drawn with their formulas, chemical formulas (H₂O, Cu²⁺) and arrows instead of the code that wrote them, and with the sentence under them.
 - Physics figures keep their scene: the body in its liquid, both bodies with their two forces, the marked angle and the displacement, the scale; a solid on an inclined plane rests on it.
 - 📜 A map's credit links to the atlas and its data's pages, no longer to Typst's package site.
 - Cards: the explanation and the memory tip no longer grow by themselves when scrolling on a phone; they are as tall as their text.
