@@ -48,6 +48,55 @@ def test_a_current_arrow_between_two_wires_closes_the_circuit():
     assert alone == on_a_wire
 
 
+def test_the_circuit_rules_house_installation_compiles():
+    """A house installation drawn by hand (a breaker as dots on the wires, a socket a circle,
+    a square or cetz's shapes, its earth wired to the neutral 3 times in 4): the rule's
+    breaker, socket and earth wire, as it gives them, compile together with a fuse."""
+    rules = figures_typst.FAMILIES["circuit"].rules
+    calls = [re.search(rf"`({name}\([^`]*\))`", rules) for name in ("breaker", "socket", "earth-wire")]
+    assert all(calls), "the circuit rule shows a house installation's parts"
+    body = (
+        "#circuit({ wire((0, 3), (1, 3)); wire((0, 0), (1, 0)); "
+        + "; ".join(c.group(1) for c in calls if c)
+        + '; wire((2.5, 3), (7, 3)); wire((2.5, 0), (7, 0)); fuse("f", (7, 3), (7, 2)) })'
+    )
+    assert figures.clean(figures_typst.compile_svg("circuit", body)).startswith("<svg")
+
+
+def test_a_sockets_three_terminals_are_apart():
+    """The earth was joined to the neutral at the socket (3 drawings in 4): the socket's phase,
+    neutral and earth are three terminals of its own, apart from one another (Typst's assert
+    stops the compiling otherwise)."""
+    body = """#circuit({
+  socket("p", (0, 2), (0, 0))
+  cetz.draw.get-ctx(ctx => {
+    let (_, a, b, c) = cetz.coordinate.resolve(ctx, "p.phase", "p.neutre", "p.terre")
+    for (u, v) in ((a, b), (a, c), (b, c)) { assert(cetz.vector.dist(u, v) > 0.3) }
+    // the phase and the neutral where the branch's wires end, above and below
+    assert(a.at(1) > c.at(1) and c.at(1) > b.at(1) and c.at(0) > a.at(0))
+  })
+})"""
+    assert figures_typst.compile_svg("circuit", body).startswith("<svg")
+
+
+def test_an_earth_wire_is_green_and_yellow():
+    """Drawn plain green 3 times in 4: the earth wire is striped green and yellow, both seen."""
+    from PIL import Image
+
+    def colours(body: str) -> set[str]:
+        png = figures.to_png(figures.clean(figures_typst.compile_svg("circuit", body)))
+        seen = set()
+        for _, (r, g, b) in Image.open(io.BytesIO(png)).convert("RGB").getcolors(1 << 24) or []:
+            if g > 120 and b < 90 and r < 90:
+                seen.add("green")
+            if r > 200 and g > 170 and b < 90:
+                seen.add("yellow")
+        return seen
+
+    assert colours('#circuit({ socket("p", (0, 2), (0, 0)); earth-wire("p.terre", (1, 1)) })') == {"green", "yellow"}
+    assert not colours("#circuit({ wire((0, 1), (1, 1)) })")
+
+
 def test_the_chemistry_rule_says_how_to_draw_a_lewis_structures_pairs():
     """Without it the AI drew a Lewis structure's non-bonding pairs as bonds to no atom, or
     left them out (0 of 12 right): the rule's Lewis call, as it gives it, draws them."""
