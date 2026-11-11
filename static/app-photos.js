@@ -153,6 +153,64 @@ async function pdfPageText(doc, n) {
     .trim();
 }
 
+// A text shared to the app (Android's "Share": copied from a site, written elsewhere): lesson
+// pages, the text drawn on them and given with them as a PDF page's text is, its exact words
+// (the AI makes the cards from it as from a page, never from the text as instructions).
+const TEXT_PAGE = { width: 1240, height: 1754, margin: 90, font: 30, line: 44 };  // A4 at 150 dpi
+const TEXT_PAGE_LINES = Math.floor((TEXT_PAGE.height - 2 * TEXT_PAGE.margin) / TEXT_PAGE.line);
+
+// The text in lines that `fits` (a line's width on the page), its words never cut but one
+// longer than a line; each line `end` when its paragraph ends there. Pure: drawn below.
+function textLines(text, fits) {
+  const lines = [];
+  for (const paragraph of text.replace(/\r\n?/g, "\n").split("\n")) {
+    let line = "";
+    for (let word of paragraph.split(/\s+/).filter(Boolean)) {
+      while (!fits(word)) {  // a word wider than a line (a link): cut where it fills one
+        let cut = 1;
+        while (cut < word.length && fits(word.slice(0, cut + 1))) cut++;
+        if (line) lines.push({ text: line, end: false });
+        lines.push({ text: word.slice(0, cut), end: false });
+        line = "";
+        word = word.slice(cut);
+      }
+      if (line && !fits(`${line} ${word}`)) {
+        lines.push({ text: line, end: false });
+        line = word;
+      } else line = line ? `${line} ${word}` : word;
+    }
+    lines.push({ text: line, end: true });  // an empty paragraph: an empty line, as written
+  }
+  while (lines.length && !lines.at(-1).text) lines.pop();
+  return lines;
+}
+
+// The lines in pages of `perPage`; each page's text, its paragraphs as the text had them.
+function textPages(lines, perPage) {
+  const pages = [];
+  for (let i = 0; i < lines.length; i += perPage) {
+    const page = lines.slice(i, i + perPage);
+    const text = page.map((l) => l.text + (l.end ? "\n" : " ")).join("").replace(/ \n/g, "\n").trim();
+    if (text) pages.push({ lines: page.map((l) => l.text), text });
+  }
+  return pages;
+}
+
+function drawTextPage(lines) {
+  const { width, height, margin, font, line } = TEXT_PAGE;
+  const canvas = document.createElement("canvas");
+  canvas.width = width;
+  canvas.height = height;
+  const ctx = canvas.getContext("2d");
+  ctx.fillStyle = "#fff";
+  ctx.fillRect(0, 0, width, height);
+  ctx.fillStyle = "#111";
+  ctx.font = `${font}px sans-serif`;
+  ctx.textBaseline = "top";
+  lines.forEach((text, i) => ctx.fillText(text, margin, margin + i * line));
+  return canvasBlob(canvas);
+}
+
 const photosPart = {
   // --- Photos ---------------------------------------------------------
   async addPhotos(event) {
@@ -205,6 +263,61 @@ const photosPart = {
       }
     }
     if (left) this.error = t("app.photos.full", { max: this.maxPhotos, count: left });
+  },
+
+  // A text shared to the app: pages of the lesson (textLines), as many as there are places
+  async addText(text) {
+    const ctx = document.createElement("canvas").getContext("2d");
+    ctx.font = `${TEXT_PAGE.font}px sans-serif`;
+    const room = TEXT_PAGE.width - 2 * TEXT_PAGE.margin;
+    const pages = textPages(textLines(text, (s) => ctx.measureText(s).width <= room), TEXT_PAGE_LINES);
+    const free = Math.max(0, this.maxPhotos - this.photos.length);
+    for (const page of pages.slice(0, free)) {
+      const blob = drawTextPage(page.lines);
+      this.photos.push({ blob, url: URL.createObjectURL(blob), text: page.text });
+      this.photosEdited = Boolean(this.lessonId);
+    }
+    if (pages.length > free) this.error = t("app.photos.full", { max: this.maxPhotos, count: pages.length - free });
+  },
+
+  // What was shared to the app (Android's "Share": photos, PDFs, a text), kept by the host
+  // until the page takes it. A lesson made and open: kept in My lessons, what was shared
+  // starts a new one; a lesson not made yet (its photos, its prompt): added to it, nothing
+  // of it lost. A host that has no sharing (the computer's): nothing.
+  async takeShared() {
+    let shared;
+    try {
+      shared = await (await api("/api/shared")).json();
+    } catch {
+      return;
+    }
+    const files = shared.files ?? [];
+    const text = (shared.text ?? "").trim();
+    const skipped = shared.skipped ?? [];
+    const why = shared.error ?? "";  // a code: a web page's address alone (share.link_only)
+    if (!files.length && !text && !skipped.length && !why) return;
+    if (!files.length && !text) {  // nothing to add: the lesson as it is, said why
+      if (why) this.error = t(`errors.${why}`);
+      if (skipped.length) this.error = t("app.share.skipped", { names: skipped.join(", ") });
+      api("/api/shared", { method: "DELETE" }).catch(() => {});
+      return;
+    }
+    if (this.lessonId) await this.newLesson();
+    const read = [];
+    let unreadable = "";
+    for (const file of files) {
+      try {
+        read.push(new File([await (await api(`/api/shared/${file.n}`)).blob()], file.name, { type: file.type }));
+      } catch {
+        unreadable = file.name;
+      }
+    }
+    await this.addFiles(read);
+    if (text) await this.addText(text);
+    if (unreadable) this.error = t("app.photos.unreadable", { name: unreadable });
+    if (why) this.error = t(`errors.${why}`);
+    if (skipped.length) this.error = t("app.share.skipped", { names: skipped.join(", ") });
+    api("/api/shared", { method: "DELETE" }).catch(() => {});
   },
 
   // A PDF: its pages as photos. More pages than places left: the user picks them

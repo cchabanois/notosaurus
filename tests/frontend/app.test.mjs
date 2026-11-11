@@ -906,3 +906,72 @@ test("photos past the lesson's pages: not added, said", async () => {
   assert.equal(c.photos.length, 10);
   assert.equal(c.error, "A lesson holds 10 pages: 2 photos were not added.");
 });
+
+test("a shared text in a lesson's pages: its words never cut, its paragraphs kept, as many pages as it needs", () => {
+  const fits = "(s) => s.length <= 12";  // a line holds 12 characters
+  const lines = plain(app.run(`textLines("La Bastille est prise.\\n\\nEn 1789.\\r\\nhttps://example.org/longue", ${fits})`));
+  assert.deepEqual(lines.map((l) => l.text), ["La Bastille", "est prise.", "", "En 1789.", "https://exam", "ple.org/long", "ue"]);
+  assert.deepEqual(lines.map((l) => l.end), [false, true, true, true, false, false, true]);
+  const pages = plain(app.run(`textPages(textLines("La Bastille est prise.\\n\\nEn 1789.", ${fits}), 3)`));
+  assert.deepEqual(pages.map((p) => p.text), ["La Bastille est prise.", "En 1789."]);  // a page's text: its words, its paragraphs
+  assert.deepEqual(pages[0].lines, ["La Bastille", "est prise.", ""]);
+  assert.deepEqual(plain(app.run(`textPages(textLines("  \\n ", ${fits}), 3)`)), []);  // blank: no page
+});
+
+test("what was shared to the app: a lesson made kept and a new one started, a lesson in progress added to", async () => {
+  const calls = [];
+  let shared = { files: [{ n: 1, name: "cahier.jpg", type: "image/jpeg" }, { n: 2, name: "Leçon.pdf", type: "application/pdf" }], text: "La Bastille.", skipped: ["archive.zip"] };
+  const page = await loadScripts("app.js", {
+    routes: (url, options) => {
+      calls.push(`${options?.method ?? "GET"} ${url}`);
+      if (url === "/api/shared" && !options?.method) return new Response(shared);
+      return new Response(new Blob(["x"]));
+    },
+  });
+  const c = page.component();
+  const added = [];
+  c.addFiles = async (files) => added.push(...files.map((f) => `${f.name} ${f.type}`));
+  c.addText = async (text) => added.push(`text: ${text}`);
+  let fresh = 0;
+  c.newLesson = async () => { fresh++; c.lessonId = null; };
+
+  c.lessonId = "abc";  // a lesson made, open: kept, what was shared starts a new one
+  await c.takeShared();
+  assert.equal(fresh, 1);
+  assert.deepEqual(added, ["cahier.jpg image/jpeg", "Leçon.pdf application/pdf", "text: La Bastille."]);
+  assert.equal(c.error, "Notosaurus takes photos, PDFs and text: “archive.zip” was not added.");
+  assert.deepEqual(calls.filter((call) => call.includes("shared")), ["GET /api/shared", "GET /api/shared/1", "GET /api/shared/2", "DELETE /api/shared"]);
+
+  added.length = 0;
+  c.error = "";
+  shared = { files: [{ n: 1, name: "p2.jpg", type: "image/jpeg" }], text: "", skipped: [] };
+  c.photos = [{ url: "p1" }];  // a lesson in progress, not made: added to, nothing replaced
+  await c.takeShared();
+  assert.equal(fresh, 1);
+  assert.deepEqual(added, ["p2.jpg image/jpeg"]);
+  assert.equal(c.error, "");
+
+  shared = { files: [], text: "", skipped: [] };  // nothing waiting (opened again): nothing done
+  await c.takeShared();
+  assert.deepEqual(added, ["p2.jpg image/jpeg"]);
+});
+
+test("a web page's address alone shared: nothing added, the lesson as it is, said what to share instead", async () => {
+  const calls = [];
+  const page = await loadScripts("app.js", {
+    languages: ["fr-FR"],
+    routes: (url, options) => {
+      calls.push(`${options?.method ?? "GET"} ${url}`);
+      return new Response({ files: [], text: "", skipped: [], error: "share.link_only" });
+    },
+  });
+  const c = page.component();
+  let fresh = 0;
+  c.newLesson = async () => { fresh++; };
+  c.addText = async () => { throw new Error("no page for a link"); };
+  c.lessonId = "abc";  // a lesson open: left as it is
+  await c.takeShared();
+  assert.equal(fresh, 0);
+  assert.equal(c.error, "Ce partage ne contient que l'adresse d'une page web. Partagez plutôt une capture d'écran de la page, ou la page enregistrée en PDF depuis Chrome.");
+  assert.deepEqual(calls.filter((call) => call.includes("shared")), ["GET /api/shared", "DELETE /api/shared"]);
+});

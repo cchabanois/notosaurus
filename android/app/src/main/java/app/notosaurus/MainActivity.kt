@@ -24,6 +24,7 @@ import androidx.activity.enableEdgeToEdge
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.core.content.ContextCompat
 import androidx.core.content.FileProvider
+import androidx.core.content.IntentCompat
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.updatePadding
@@ -203,6 +204,7 @@ class MainActivity : ComponentActivity() {
             Shortcuts.PHONE -> mode != LocalServer.PHONE_MODE
             Shortcuts.COMPUTER -> mode != LocalServer.COMPUTER_MODE && prefs[LocalServer.COMPUTER] != null
             Intent.ACTION_VIEW -> intent.data?.let(::isFixLink) == true
+            Intent.ACTION_SEND, Intent.ACTION_SEND_MULTIPLE -> true
             else -> false
         }
     }
@@ -218,9 +220,55 @@ class MainActivity : ComponentActivity() {
                 web.loadUrl("$origin/?${link.encodedQuery.orEmpty()}")
                 return
             }
+            Intent.ACTION_SEND, Intent.ACTION_SEND_MULTIPLE -> {
+                shareReceived(intent)
+                return
+            }
         }
         val computer = prefs[LocalServer.COMPUTER]
         web.loadUrl(if (prefs[LocalServer.MODE] == LocalServer.COMPUTER_MODE && computer != null) computer else "$origin/")
+    }
+
+    /** Something shared to Notosaurus ("Share" in another app): copied at once (reading it is
+     * granted with this intent only), then the phone's page told to take it (Shared.kt,
+     * app-photos.js takeShared). With my computer: its page can't read the phone's files, said;
+     * its page shown as it was. */
+    private fun shareReceived(intent: Intent) {
+        val items = sharedUris(intent).map { uri -> sharedItem(uri, intent.type) }
+        val text = intent.getCharSequenceExtra(Intent.EXTRA_TEXT)?.toString()
+        lifecycleScope.launch {
+            withContext(Dispatchers.IO) { server.shared.take(items, text) }
+            if (prefs[LocalServer.MODE] == LocalServer.COMPUTER_MODE && prefs[LocalServer.COMPUTER] != null) {
+                server.shared.clear()
+                val lang = java.util.Locale.getDefault().language
+                server.text(lang, "android", "share", "computer")?.let { Toast.makeText(this@MainActivity, it, Toast.LENGTH_LONG).show() }
+                if (web.url == null) useMode(null) // opened by the share: the computer's page
+                return@launch
+            }
+            // The page open and started: it takes them, as it is (a lesson in progress whose last
+            // change isn't kept yet stays); else opened to take them
+            web.evaluateJavascript("window.notosaurusShared?.() === true") { taken ->
+                if (taken != "true") web.loadUrl("$origin/?shared=1")
+            }
+        }
+    }
+
+    /** The files shared: content:// only (a file:// one could name the app's own files). */
+    private fun sharedUris(intent: Intent): List<Uri> {
+        val extra = when (intent.action) {
+            Intent.ACTION_SEND -> listOfNotNull(IntentCompat.getParcelableExtra(intent, Intent.EXTRA_STREAM, Uri::class.java))
+            else -> IntentCompat.getParcelableArrayListExtra(intent, Intent.EXTRA_STREAM, Uri::class.java).orEmpty()
+        }
+        val clip = intent.clipData?.let { clip -> (0 until clip.itemCount).mapNotNull { clip.getItemAt(it).uri } }.orEmpty()
+        return (extra.ifEmpty { clip }).filter { it.scheme == "content" }.distinct()
+    }
+
+    private fun sharedItem(uri: Uri, intentType: String?): Shared.Item {
+        val name = runCatching {
+            contentResolver.query(uri, arrayOf(OpenableColumns.DISPLAY_NAME), null, null, null)?.use { if (it.moveToFirst()) it.getString(0) else null }
+        }.getOrNull()?.takeIf { it.isNotBlank() } ?: uri.lastPathSegment.orEmpty()
+        val type = runCatching { contentResolver.getType(uri) }.getOrNull() ?: intentType?.takeUnless { "*" in it }
+        return Shared.Item(name, type) { contentResolver.openInputStream(uri) }
     }
 
     /** A QR code read by Google's scanner (no camera permission for the app); null: cancelled.

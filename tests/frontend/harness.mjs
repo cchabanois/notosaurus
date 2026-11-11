@@ -164,7 +164,7 @@ export async function loadScripts(
     CustomEvent,
     crypto: globalThis.crypto,
     CSS: { escape: (text) => String(text).replace(/["\\]/g, "\\$&") },  // a selector's value, as browsers escape it
-    URL, URLSearchParams, Blob, FormData, TextDecoder, Uint8Array,
+    URL, URLSearchParams, Blob, File, FormData, TextDecoder, Uint8Array,
     structuredClone,
     confirm: () => true,
     window: { scrollTo: () => {}, addEventListener: () => {}, removeEventListener: () => {} },
