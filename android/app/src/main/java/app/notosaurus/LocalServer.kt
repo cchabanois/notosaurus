@@ -277,8 +277,9 @@ class LocalServer(
     /**
      * A JSON route told as it goes when the page asks Relay.STREAM_TYPE, as the computer's
      * (app/routes/anki.py, _steps): the `step` lines the work tells ({"step": "sounds",
-     * "done", "total"}, {"step": "cards"}), then {"result"} or {"error"}. Without it: its
-     * answer, as `api`. The body is read first (none: {}): the answer then outlives the request.
+     * "done", "total"}, {"step": "cards"}), then {"result"}, {"error"} or {"cancelled"} ("Cancel":
+     * Generation.cancellable). Without it: its answer, as `api`. The body is read first (none:
+     * {}): the answer then outlives the request.
      */
     internal fun Route.stepping(path: String, work: suspend RoutingContext.(JsonObject, Step) -> JsonObject) {
         post(path) {
@@ -307,6 +308,8 @@ class LocalServer(
                     buildJsonObject { put("result", routing.work(req) { line(it) }) }
                 } catch (e: CancellationException) {
                     throw e
+                } catch (e: Cancelled) {
+                    buildJsonObject { put("cancelled", true) }
                 } catch (e: Exception) {
                     val detail = failure(e)?.second?.get("detail") ?: error("internal", JsonObject(emptyMap()))["detail"]!!
                     buildJsonObject { put("error", detail) }

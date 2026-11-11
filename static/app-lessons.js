@@ -63,8 +63,7 @@ const lessonsPart = {
     this.loadingQuick = quick;
     this.coming = [];
     this.aiStep = "";
-    // Its id, for "Cancel" (not crypto.randomUUID: a phone opens the page over plain http)
-    const job = Math.random().toString(36).slice(2) + Date.now().toString(36);
+    const job = newJob();
     this.generating = job;
     this.cancelling = false;
     if (this.saveTimer) await this.saveNow();
@@ -132,13 +131,12 @@ const lessonsPart = {
     return start ? `…${card.front.slice(start.length)}` : card.front;
   },
 
-  // "Cancel" while waiting: the AI stops, no lesson is saved (generated again: the old one stays)
+  // "Cancel" while waiting: the AI stops, nothing is saved (generated again or corrected:
+  // the lesson stays as it was)
   async cancelGeneration() {
     if (!this.generating || this.cancelling) return;
     this.cancelling = true;
-    try {
-      await api(`/api/generations/${encodeURIComponent(this.generating)}/cancel`, { method: "POST" });
-    } catch {}  // gone already: its answer comes anyway
+    await cancelJob(this.generating);
   },
 
   // Decks that already exist (Anki's, the lessons'), offered when the deck is edited

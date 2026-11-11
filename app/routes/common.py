@@ -1,5 +1,6 @@
 """What the routers share: the page's files, the photos they accept, the language of
-the page asking, and the work told as it goes (stepped)."""
+the page asking, the work told as it goes (stepped), and the AI's work "Cancel" stops
+(jobs)."""
 
 import asyncio
 import json
@@ -44,13 +45,38 @@ def pupil_lang(x_notosaurus_lang: str | None = Header(None)) -> str:
 
 Step = Callable[[dict], None]
 _working: set[asyncio.Task] = set()  # stepped work under way, kept until done
+# The AI's work under way, by the page's id for each ("job"): what "Cancel" stops (a
+# lesson being made, corrected, a card corrected)
+jobs: dict[str, asyncio.Task] = {}
 
 
-def stepped(work: Callable[[Step], Awaitable[dict]], what: str) -> StreamingResponse:
+def tracked(task: asyncio.Task, job: str) -> None:
+    """`task` stopped by "Cancel" for `job` (none: not cancellable) until it is done."""
+    if job:
+        jobs[job] = task
+        task.add_done_callback(lambda _: jobs.pop(job, None) if jobs.get(job) is task else None)
+
+
+async def cancellable[T](job: str, work: Awaitable[T]) -> T:
+    """`work`'s answer; stopped by "Cancel": AppError extract.cancelled (409), as the
+    Android app answers. The request itself going away still cancels it as before."""
+    task = asyncio.ensure_future(work)
+    tracked(task, job)
+    try:
+        return await task
+    except asyncio.CancelledError:
+        current = asyncio.current_task()
+        if task.cancelled() and not (current and current.cancelling()):
+            raise AppError("extract.cancelled", 409) from None
+        raise
+
+
+def stepped(work: Callable[[Step], Awaitable[dict]], what: str, job: str = "") -> StreamingResponse:
     """Work told as it goes, one JSON per line: each step `work` tells (a send's
     {"step": "sounds", "done", "total"}, a picture's {"card", "step"…}), then {"result": …}
     (the answer without the stream) or {"error": {"code", "params"}}. It goes on if the
-    page goes away meanwhile. `what`: the work, for the log ("Sending")."""
+    page goes away meanwhile; `job`: "Cancel" stops it, ending with {"cancelled": true}.
+    `what`: the work, for the log ("Sending")."""
     queue: asyncio.Queue = asyncio.Queue()
 
     async def run() -> None:
@@ -58,6 +84,8 @@ def stepped(work: Callable[[Step], Awaitable[dict]], what: str) -> StreamingResp
             queue.put_nowait({"result": await work(queue.put_nowait)})
         except AppError as e:
             queue.put_nowait({"error": e.detail()})
+        except asyncio.CancelledError:  # "Cancel": stopped here
+            queue.put_nowait({"cancelled": True})
         except Exception as e:
             log.error("%s failed: %s", what, loggable(e))
             queue.put_nowait({"error": {"code": "internal", "params": {}}})
@@ -67,6 +95,7 @@ def stepped(work: Callable[[Step], Awaitable[dict]], what: str) -> StreamingResp
     task = asyncio.create_task(run())
     _working.add(task)
     task.add_done_callback(_working.discard)
+    tracked(task, job)
 
     async def lines():
         while (item := await queue.get()) is not None:

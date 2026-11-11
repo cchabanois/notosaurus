@@ -22,7 +22,7 @@ from ..models import (
     LessonSummary,
     RevisionRequest,
 )
-from .common import Step, page_lang, stepped
+from .common import Step, cancellable, page_lang, stepped
 
 router = APIRouter()
 
@@ -111,18 +111,23 @@ async def delete_lesson(id: str, in_anki: bool = Query(False, alias="anki")) -> 
 
 @router.post("/api/lessons/{id}/revise")
 async def revise_lesson(
-    id: str, req: RevisionRequest, lang: str = Depends(page_lang), accept: str | None = Header(None)
+    id: str,
+    req: RevisionRequest,
+    lang: str = Depends(page_lang),
+    accept: str | None = Header(None),
+    job: str = Query(""),
 ):
     """Apply a natural-language correction to the cards, using the lesson photos. Asked as
-    application/x-ndjson: what the AI is at ({"step": relay_api.AiStep}), then the answer."""
+    application/x-ndjson: what the AI is at ({"step": relay_api.AiStep}), then the answer.
+    `job`: "Cancel" stops it (/api/generations/{job}/cancel), the lesson as it was."""
     if STREAM_TYPE in (accept or ""):
 
         async def told(step: Step) -> dict:
             with llm.telling(lambda said: step({"step": said})):
                 return jsonable_encoder(await _revised(id, req, lang))
 
-        return stepped(told, "Correcting")
-    return await _revised(id, req, lang)
+        return stepped(told, "Correcting", job)
+    return await cancellable(job, _revised(id, req, lang))
 
 
 async def _revised(id: str, req: RevisionRequest, lang: str) -> dict:
@@ -165,9 +170,14 @@ async def _revised(id: str, req: RevisionRequest, lang: str) -> dict:
 
 
 @router.post("/api/lessons/{id}/fix-card")
-async def fix_card(id: str, req: FixCardRequest, lang: str = Depends(page_lang)) -> llm.FixedCard:
+async def fix_card(id: str, req: FixCardRequest, lang: str = Depends(page_lang), job: str = Query("")) -> llm.FixedCard:
     """One card corrected by the AI as asked ("the answer is 1789"), seeing the lesson's
-    photos; the lesson isn't saved here: the page puts the card in place (and can undo it)."""
+    photos; the lesson isn't saved here: the page puts the card in place (and can undo it).
+    `job`: "Cancel" stops it (409 extract.cancelled)."""
+    return await cancellable(job, _fixed(id, req, lang))
+
+
+async def _fixed(id: str, req: FixCardRequest, lang: str) -> llm.FixedCard:
     lesson = await access.editable(id)
     photos = [Image(lessons.photo(id, n), "image/jpeg") for n in range(1, lesson.photo_count + 1)]
     every = await asyncio.to_thread(children.list_all)
