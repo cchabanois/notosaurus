@@ -74,7 +74,7 @@
       "button": "PDF",
       "reading": "Reading…",
       "title": "Pages to add",
-      "hint": "“{name}” has {count} pages: choose up to {free} (a lesson holds 10 pages; each page sent costs like a photo).",
+      "hint": "“{name}” has {count} pages: choose up to {free} (a lesson holds {max} pages; each page sent costs like a photo).",
       "add": {
         "one": "Add {count} page",
         "other": "Add {count} pages"
@@ -253,7 +253,8 @@
       "figures": "Describing the figures…",
       "writingCards": "Writing the cards: {count}…",
       "slow": "The AI is taking longer than usual to answer…",
-      "fallback": "The AI isn't answering: trying another way…"
+      "fallback": "The AI isn't answering: trying another way…",
+      "batch": "Pages {from} to {to} of {total}…"
     },
     "send": {
       "added": {

@@ -348,7 +348,8 @@ class LocalServer(
 
     companion object {
         const val COOKIE = "notosaurus_app"
-        const val MAX_PHOTOS = 10 // a lesson's pages, as on the computer (MAX_IMAGES)
+        const val MAX_PHOTOS = 30 // a lesson's pages, as on the computer (MAX_PAGES)
+        const val MAX_PER_CALL = 10 // read in one call (the relay's cap): the page sends more in several
 
         // The welcome accepted (its version): raised when what it says changes a lot, so it shows again
         const val WELCOME = "welcome"

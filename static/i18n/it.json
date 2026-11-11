@@ -74,7 +74,7 @@
       "button": "PDF",
       "reading": "Lettura…",
       "title": "Pagine da aggiungere",
-      "hint": "“{name}” ha {count} pagine: scegline al massimo {free} (una lezione contiene 10 pagine; ogni pagina inviata costa come una foto).",
+      "hint": "“{name}” ha {count} pagine: scegline al massimo {free} (una lezione contiene {max} pagine; ogni pagina inviata costa come una foto).",
       "add": {
         "one": "Aggiungi {count} pagina",
         "other": "Aggiungi {count} pagine"
@@ -253,7 +253,8 @@
       "figures": "Descrizione delle figure…",
       "writingCards": "Scrittura delle carte: {count}…",
       "slow": "L'IA impiega più del solito a rispondere…",
-      "fallback": "L'IA non risponde: nuovo tentativo per un'altra via…"
+      "fallback": "L'IA non risponde: nuovo tentativo per un'altra via…",
+      "batch": "Pagine da {from} a {to} di {total}…"
     },
     "send": {
       "added": {

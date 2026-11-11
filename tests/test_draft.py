@@ -2,7 +2,7 @@
 
 import json
 
-from app.routes.common import MAX_IMAGES
+from app.routes.common import MAX_PAGES
 
 
 def test_kept_found_again_cleared(client):
@@ -28,7 +28,7 @@ def test_kept_found_again_cleared(client):
 def test_what_isnt_a_draft_refused(client):
     assert client.put("/api/draft", data={"draft": "not json"}).json()["detail"]["code"] == "draft.invalid"
     assert client.put("/api/draft", data={"draft": "[1]"}).json()["detail"]["code"] == "draft.invalid"
-    many = [("photos", (f"p{n}.jpg", b"x", "image/jpeg")) for n in range(MAX_IMAGES + 1)]
+    many = [("photos", (f"p{n}.jpg", b"x", "image/jpeg")) for n in range(MAX_PAGES + 1)]
     refused = client.put("/api/draft", data={"draft": "{}", "photos_sent": "true"}, files=many)
     assert (refused.status_code, refused.json()["detail"]["code"]) == (413, "draft.too_large")
     assert client.get("/api/draft").json() == {}

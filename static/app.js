@@ -205,6 +205,8 @@ document.addEventListener("alpine:init", () => {
     exporting: false,
     lessonsOpen: false,
     maxPhotos: 10,       // pages per lesson (the server's limit, from /api/config)
+    perCall: 10,         // pages read in one call to the AI: more sent in several (extract)
+    batch: null,         // the pages being read, when sent in several calls: { from, to, total }
     stripColumns: 3,     // the photos' grid's columns, the add buttons' one with them (watchStrip)
     allPages: false,     // the sheet of all the lesson's pages ("+N" on the strip)
     configured: true,    // an AI service with its key: until then, the setup assistant is offered
@@ -296,6 +298,7 @@ document.addEventListener("alpine:init", () => {
         this.diagramWarning = config.diagram_warning;
         this.profiles = config.profiles ?? true;
         this.maxPhotos = config.max_photos ?? this.maxPhotos;
+        this.perCall = config.max_per_call ?? this.perCall;
         this.configured = config.configured ?? true;
         this.donations = config.donations ?? true;
         this.apkg = config.apkg ?? true;

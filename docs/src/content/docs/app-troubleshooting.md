@@ -55,7 +55,7 @@ read, and it's how such mistakes get fixed. See [Reporting a problem](../review/
 
 ## A PDF can't be added
 
-- **“Already 10 pages: remove some before adding a PDF.”** A lesson holds 10 pages: remove the
+- **“Already 30 pages: remove some before adding a PDF.”** A lesson holds 30 pages: remove the
   photos you don't need (the **Remove this page** button, ✕, on each), or make two lessons.
 - **“… is password-protected: save it without a password, then add it again.”** Open the PDF,
   save it without its password (or print it to a new PDF), then add it again.

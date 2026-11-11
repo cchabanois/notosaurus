@@ -55,8 +55,11 @@ const lessonsPart = {
   },
 
   // `careful`: made again carefully ("Careful, again"), whatever the choice above.
-  // `complete`: the new pages only, their cards added after the lesson's (canComplete)
-  async extract({ careful = false, complete = false } = {}) {
+  // `complete`: the new pages only, their cards added after the lesson's (canComplete).
+  // More pages than one call reads (perCall): the first ones make the lesson (or make it
+  // again, or complete it), the next ones complete it, a call each; `batch`: the call this
+  // one goes on from (what the user asked, the cards before it, its undo).
+  async extract({ careful = false, complete = false, batch = null } = {}) {
     const quick = (this.quick && !careful) || this.off("ai.careful");
     this.error = "";
     this.loading = true;
@@ -69,9 +72,14 @@ const lessonsPart = {
     if (this.saveTimer) await this.saveNow();
     const inPlace = this.regeneratesInPlace();
     // What "Undo" brings back; not when the photos changed (the old ones are gone)
-    const before = inPlace && !this.photosEdited && !complete ? this.undoState() : null;
-    const made = new Set(this.cards.map((c) => c.id));  // completed: the cards there already
-    const sent = complete ? this.newPages() : this.photos;
+    const before = batch ? batch.before : inPlace && !this.photosEdited && !complete ? this.undoState() : null;
+    const made = batch ? batch.made : new Set(this.cards.map((c) => c.id));  // completed: the cards there already
+    const asked = batch ? batch.asked : complete ? "complete" : inPlace ? "regenerate" : "extract";
+    const pages = complete ? this.newPages() : this.photos;
+    const sent = pages.slice(0, this.perCall);
+    const rest = pages.slice(this.perCall);  // sent next, completing the lesson
+    const first = complete ? this.photos.length - pages.length + 1 : 1;
+    this.batch = batch || rest.length ? { from: first, to: first + sent.length - 1, total: this.photos.length } : null;
     const body = new FormData();
     sent.forEach((p, i) => body.append("images", p.blob, `page-${i + 1}.jpg`));
     body.append("prompt", this.form.text);
@@ -99,14 +107,16 @@ const lessonsPart = {
       const used = this.current();
       if (used) used.used_at = new Date().toISOString();  // moves it to the front of the chips
       await this.loadPhotos(lesson);  // as saved: the server turns sideways photos upright
+      // the pages still to send, after the lesson's (their URLs revoked with the old photos)
+      this.photos.push(...rest.map((p) => ({ ...p, url: URL.createObjectURL(p.blob), sent: false })));
       this.show(lesson);
       this.madeQuick = quick;
-      if (complete) {  // the new cards marked, to be checked
+      if (asked === "complete") {  // the new cards marked, to be checked
         const added = this.cards.filter((c) => !made.has(c.id));
         added.forEach((c) => { c._state = "new"; });
         const summary = added.length ? t("app.prompt.completed", { count: added.length }) : t("app.prompt.completedNone");
         this.revision = { text: "", busy: false, summary, stats: "", undo: null };
-      } else if (inPlace) {
+      } else if (asked === "regenerate") {
         this.revision = { text: "", busy: false, summary: t("app.prompt.regenerated"), stats: "", undo: before };
       }
       this.loadLessons();
@@ -114,6 +124,12 @@ const lessonsPart = {
       // No card: without a photo, the prompt said nothing to learn (no words, no topic)
       if (!this.cards.length) this.error = t(this.photos.length ? "app.review.noCards" : "app.review.noCardsWithoutPhoto");
       this.drawPictures();  // the cards show now, their pictures when drawn
+      // the next pages: the lesson completed with them (its loading kept on); unless the relay
+      // turned completing off: they stay, new pages to add later
+      if (rest.length && !this.off("lesson.complete")) {
+        this.error = "";
+        await this.extract({ careful, complete: true, batch: { asked, made, before } });
+      }
     } catch (e) {
       if (!this.cancelling) this.aiError(e);  // cancelled: no error to show
     } finally {
@@ -121,6 +137,7 @@ const lessonsPart = {
       this.generating = "";
       this.cancelling = false;
       this.aiStep = "";
+      this.batch = null;
     }
   },
 

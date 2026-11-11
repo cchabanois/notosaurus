@@ -68,6 +68,9 @@ class SettingsRoutesTest : LocalServerTestBase() {
         val config = client.get("/api/config") { page() }
         assertEquals(HttpStatusCode.OK, config.status)
         assertEquals("false", config.json().jsonObject["profiles"]!!.jsonPrimitive.content) // no Anki profile badge
+        // 30 pages a lesson, 10 read in one call: the page sends more in several
+        assertEquals("30", config.json().jsonObject["max_photos"]!!.jsonPrimitive.content)
+        assertEquals("10", config.json().jsonObject["max_per_call"]!!.jsonPrimitive.content)
     }
 
     @Test

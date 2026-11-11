@@ -21,7 +21,10 @@ log = logging.getLogger("notosaurus")
 
 STATIC_DIR = Path(__file__).parent.parent.parent / "static"
 IMAGE_TYPES = {"image/jpeg", "image/png", "image/webp", "image/gif"}
+# The pages read in one call to the AI (the relay's cap, relay_api.MAX_IMAGES), and a
+# lesson's: more pages are sent in several calls, its next ones completing it
 MAX_IMAGES = 10
+MAX_PAGES = 30
 
 
 async def read_photo(photo: UploadFile) -> bytes:

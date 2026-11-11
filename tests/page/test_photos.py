@@ -145,25 +145,52 @@ def test_pdf_pages_become_photos(page):
     sync_api.expect(page.locator(".thumb img")).to_have_count(3)  # every page, no question
     assert page.evaluate("img => img.naturalHeight", page.locator(".thumb img").first.element_handle()) == 1600
 
-    # More pages than places left (10 − 3): the user picks them
-    pdf_input.set_input_files({"name": "manuel.pdf", "mimeType": "application/pdf", "buffer": pdf(12)})
+    # More pages than places left (30 − 3): the user picks them
+    pdf_input.set_input_files({"name": "manuel.pdf", "mimeType": "application/pdf", "buffer": pdf(28)})
     sheet = page.locator(".sheet", has=page.locator(".pdf-pages"))
     sync_api.expect(sheet).to_be_visible()
-    sync_api.expect(sheet).to_contain_text("« manuel.pdf » a 12 pages : choisissez-en 7 au plus")
+    said = "« manuel.pdf » a 28 pages : choisissez-en 27 au plus (une leçon tient en 30 pages"
+    sync_api.expect(sheet).to_contain_text(said)
     sync_api.expect(sheet.locator(".pdf-page img").first).to_be_visible()  # thumbnails drawn
-    for n in range(1, 8):
+    for n in range(1, 28):
         sheet.get_by_role("button", name=f"Page {n}", exact=True).click()
-    sync_api.expect(sheet.get_by_role("button", name="Page 8", exact=True)).to_be_disabled()
-    sheet.get_by_role("button", name="Page 7", exact=True).click()  # one less
-    sheet.get_by_role("button", name="Page 12", exact=True).click()
-    sheet.get_by_role("button", name="Ajouter 7 pages").click()
-    sync_api.expect(page.locator("figure.thumb img")).to_have_count(10)
+    sync_api.expect(sheet.get_by_role("button", name="Page 28", exact=True)).to_be_disabled()
+    sheet.get_by_role("button", name="Page 27", exact=True).click()  # one less
+    sheet.get_by_role("button", name="Page 28", exact=True).click()
+    sheet.get_by_role("button", name="Ajouter 27 pages").click()
+    sync_api.expect(page.locator("figure.thumb img")).to_have_count(30)
     sync_api.expect(sheet).to_be_hidden()
 
     # Full: said, not added
     pdf_input.set_input_files({"name": "encore.pdf", "mimeType": "application/pdf", "buffer": pdf(1)})
-    sync_api.expect(page.get_by_text("Déjà 10 pages")).to_be_visible()
-    sync_api.expect(page.locator("figure.thumb img")).to_have_count(10)
+    sync_api.expect(page.get_by_text("Déjà 30 pages")).to_be_visible()
+    sync_api.expect(page.locator("figure.thumb img")).to_have_count(30)
+
+
+def test_more_pages_than_one_call_reads_are_sent_in_several(page):
+    """A PDF of 12 pages: the AI reads 10 at a time. The first 10 make the lesson, the next 2
+    complete it, at one click; every page in the lesson, none left to send."""
+    calls = []
+    page.on(
+        "request",
+        lambda r: (
+            calls.append(r.url.split("/")[-1])
+            if r.method == "POST" and ("/api/extract" in r.url or r.url.endswith("/complete"))
+            else None
+        ),
+    )
+    page.goto("/")
+    page.locator("input[type=file][accept*=pdf]").set_input_files(
+        {"name": "cours.pdf", "mimeType": "application/pdf", "buffer": pdf(12)}
+    )
+    sync_api.expect(page.locator("figure.thumb img")).to_have_count(12)
+    made = generate_from_photos(page, "FR → ES")
+    page.wait_for_function("() => !document.querySelector('[x-data]')._x_dataStack[0].loading")  # every call made
+    made = lesson(page, made["id"])
+    # the server reads 10 pages a call at most: 12 pages in two calls, the second completing
+    assert (made["photo_count"], len(made["ai_calls"])) == (12, 2)
+    assert calls == ["extract", "complete"]
+    assert page.evaluate("() => document.querySelector('[x-data]')._x_dataStack[0].newPages().length") == 0
 
 
 def test_pdf_text_kept_with_its_page(page, browser):
@@ -246,19 +273,19 @@ def test_the_one_page_beside_the_add_buttons_with_the_text_twice_as_large(page, 
     assert thumb["x"] > stack["x"] + stack["width"] and thumb["y"] == stack["y"], (thumb, stack)
 
 
-def test_the_add_buttons_off_once_the_lesson_has_its_ten_pages(page):
-    """Ten pages, a lesson's most: the add buttons off, the camera's saying so; a page
+def test_the_add_buttons_off_once_the_lesson_has_its_thirty_pages(page):
+    """Thirty pages, a lesson's most: the add buttons off, the camera's saying so; a page
     removed, on again."""
     page.goto("/")
     page.locator('input[type=file][accept="image/*"][multiple]').set_input_files(
-        [{"name": f"page-{n}.png", "mimeType": "image/png", "buffer": plain_image(300, 400, "red")} for n in range(10)]
+        [{"name": f"page-{n}.png", "mimeType": "image/png", "buffer": plain_image(300, 400, "red")} for n in range(30)]
     )
-    sync_api.expect(page.locator("figure.thumb img")).to_have_count(10)
-    sync_api.expect(page.locator(".add-tile.primary")).to_contain_text("10 pages au plus")
+    sync_api.expect(page.locator("figure.thumb img")).to_have_count(30)
+    sync_api.expect(page.locator(".add-tile.primary")).to_contain_text("30 pages au plus")
     for chooser in page.locator(".add-stack input[type=file]").all():
         sync_api.expect(chooser).to_be_disabled()
     page.locator(".thumb-remove").first.click()
-    sync_api.expect(page.locator(".thumb-more")).to_have_text("+6")  # nine pages: three, then "+6"
+    sync_api.expect(page.locator(".thumb-more")).to_have_text("+26")  # 29 pages: three, then "+26"
     sync_api.expect(page.locator(".add-tile.primary")).to_contain_text("Page suivante")
     for chooser in page.locator(".add-stack input[type=file]").all():
         sync_api.expect(chooser).to_be_enabled()

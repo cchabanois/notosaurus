@@ -56,7 +56,7 @@ esperava. Cada relato é lido, e é assim que esses erros são corrigidos. Veja
 
 ## Um PDF não pode ser adicionado
 
-- **"Já há 10 páginas: remova algumas antes de adicionar um PDF."** Uma lição comporta 10 páginas:
+- **"Já há 30 páginas: remova algumas antes de adicionar um PDF."** Uma lição comporta 30 páginas:
   remova as fotos de que não precisa (o botão **Remover esta página**, ✕, em cada uma), ou faça
   duas lições.
 - **"… está protegido por senha: salve-o sem senha e adicione-o de novo."** Abra o PDF, salve-o

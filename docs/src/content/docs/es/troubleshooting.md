@@ -60,7 +60,7 @@ consulta [Ajustes y servicios de IA](../ai-services/).
 
 ## No se puede añadir un PDF
 
-- **«Ya hay 10 páginas: quita alguna antes de añadir un PDF.»** Una lección admite 10 páginas:
+- **«Ya hay 30 páginas: quita alguna antes de añadir un PDF.»** Una lección admite 30 páginas:
   quita las fotos que no necesites (el botón **Quitar esta página**, ✕, en cada una), o haz dos
   lecciones.
 - **«… está protegido con contraseña: guárdalo sin contraseña y vuelve a añadirlo.»** Abre el PDF,

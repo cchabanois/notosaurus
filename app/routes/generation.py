@@ -21,7 +21,7 @@ from .. import access, ankiconnect, children, decks, exams, lessons, media, prom
 from ..anki import build_apkg
 from ..errors import AppError
 from ..models import ExportRequest, Generated, Lesson, LessonIn
-from .common import IMAGE_TYPES, MAX_IMAGES, jobs, pupil_lang, read_photo, tracked
+from .common import IMAGE_TYPES, MAX_IMAGES, MAX_PAGES, jobs, pupil_lang, read_photo, tracked
 
 log = logging.getLogger("notosaurus")
 
@@ -289,8 +289,8 @@ async def complete(
     photos = await _photos(form.images)
     if not photos:
         raise AppError("extract.no_input")
-    if old.photo_count + len(photos) > MAX_IMAGES:
-        raise AppError("extract.too_many", max=MAX_IMAGES)
+    if old.photo_count + len(photos) > MAX_PAGES:
+        raise AppError("extract.too_many", max=MAX_PAGES)
     existing = [c.front.strip() + (f" [{c.subdeck.strip()}]" if c.subdeck.strip() else "") for c in old.cards]
     # Its deck and voice are the lesson's: only the cards, photos and frames are taken
     form = replace(form, deck=old.deck, voice="")

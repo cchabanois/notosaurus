@@ -60,7 +60,7 @@ meglio: vedi [Impostazioni e servizi di IA](../ai-services/).
 
 ## Un PDF non si aggiunge
 
-- **"Ci sono già 10 pagine: togline qualcuna prima di aggiungere un PDF."** Una lezione contiene 10
+- **"Ci sono già 30 pagine: togline qualcuna prima di aggiungere un PDF."** Una lezione contiene 30
   pagine: togli le foto che non ti servono (il pulsante **Togli questa pagina**, ✕, su ciascuna),
   oppure fai due lezioni.
 - **"… è protetto da password: salvalo senza password, poi aggiungilo di nuovo."** Apri il PDF,
