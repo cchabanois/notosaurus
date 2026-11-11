@@ -18,8 +18,10 @@ foi feito para ser usado por uma criança.
 ## Em resumo
 
 - As suas **lições ficam no seu celular**: fotos, cartões, instruções, sons.
-- O que a IA precisa ler (fotos, instruções, ditados) **passa pelo serviço** enquanto os cartões
+- O que a IA precisa ler (fotos, instruções) **passa pelo serviço** enquanto os cartões
   são feitos, **e não fica guardado lá**.
+- Um **ditado** (🎤) é ouvido pelo **reconhecimento de voz do seu celular** (o escolhido nas
+  configurações do Android, em geral o do Google): a sua voz não passa pelo serviço.
 - A IA (**o Gemini do Google**) é processada nos servidores do Google, **que podem ficar fora da
   União Europeia**; as vozes são processadas na União Europeia. O Google não as usa para treinar
   os seus modelos.
@@ -50,7 +52,7 @@ Quando você pede, o app envia ao serviço, por HTTPS:
 | As **fotos** das páginas e o texto delas (PDF), a **instrução**, as suas instruções permanentes, os seus nomes de baralho | Criar ou completar os cartões da lição, e recortar os desenhos das páginas dela |
 | A **série** da criança a quem a lição se destina, e as instruções dadas para ela (nunca o nome dela) | Cartões adequados ao nível dela |
 | Os **cartões** de uma lição e a sua correção | Corrigi-los, explicar um cartão, passar uma instrução a limpo |
-| Uma **gravação da sua voz** (🎤) | Escrevê-la como texto (ditar uma instrução ou uma correção) |
+| Uma **gravação da sua voz** (🎤), só num celular sem reconhecimento de voz | Escrevê-la como texto (ditar uma instrução ou uma correção) |
 | O **verso** de um cartão | Lê-lo em voz alta (as vozes dos cartões) |
 | A **descrição** de uma imagem, ou algumas **palavras-chave** | Desenhar a imagem de um cartão, ou procurar uma livre |
 | A sua **chave de licença** | Verificar a sua licença e contar os seus créditos |
@@ -129,7 +131,10 @@ página [Privacidade e segurança](../privacy/).
 ## As permissões do app
 
 - **Internet**: para chegar ao serviço.
-- **Microfone**, pedido na primeira vez que você toca em 🎤, e usado só durante o ditado.
+- **Microfone**, pedido na primeira vez que você toca em 🎤, e usado só durante o ditado: a sua
+  voz é ouvida pelo reconhecimento de voz do celular (o do Android, em geral o do Google, no
+  celular ou nos servidores dele, conforme as configurações) ou, num celular sem ele, escrita
+  pela IA do serviço.
 - **AnkiDroid**, para adicionar os cartões a ele, pedido no primeiro envio.
 - As fotos são tiradas pela câmera do celular ou escolhidas na galeria, quando você faz isso. O
   app não precisa de acesso a todas as suas fotos.

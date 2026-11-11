@@ -18,8 +18,10 @@ isn't made to be used by a child.
 ## In short
 
 - Your **lessons stay on your phone**: photos, cards, instructions, sounds.
-- What the AI must read (photos, instructions, dictations) **goes through the service** while
+- What the AI must read (photos, instructions) **goes through the service** while
   the cards are made, **and isn't kept there**.
+- A **dictation** (🎤) is heard by **your phone's own speech recognition** (the one set in
+  Android's settings, usually Google's): your voice doesn't go through the service.
 - The AI (**Google's Gemini**) is processed on Google's servers, **which may be outside the
   European Union**; the voices are processed in the European Union. Google doesn't use them to
   train its models.
@@ -49,7 +51,7 @@ When you ask for it, the app sends the service, over HTTPS:
 | The pages' **photos** and their text (PDF), the **instruction**, your standing instructions, your deck names | Making or completing the lesson's cards, and cutting out the drawings on its pages |
 | The **class** of the child the lesson is for, and the instructions you gave for them (never their first name) | Cards suited to their level |
 | A lesson's **cards** and your correction | Correcting them, explaining a card, tidying up an instruction |
-| A **recording of your voice** (🎤) | Writing it as text (dictating an instruction or a correction) |
+| A **recording of your voice** (🎤), only on a phone without speech recognition | Writing it as text (dictating an instruction or a correction) |
 | A card's **back** | Reading it aloud (the cards' voices) |
 | A picture's **description**, or a few **keywords** | Drawing a card's picture, or looking for a free one |
 | Your **licence key** | Checking your licence and counting your credits |
@@ -128,7 +130,9 @@ the computer, on the home Wi-Fi: nothing goes through the Notosaurus service the
 ## The app's permissions
 
 - **Internet**: to reach the service.
-- **Microphone**, asked the first time you tap 🎤, and used only while dictating.
+- **Microphone**, asked the first time you tap 🎤, and used only while dictating: your voice is
+  heard by the phone's speech recognition (Android's, usually Google's, on the phone or on its
+  servers, as its settings say), or, on a phone without one, written by the service's AI.
 - **AnkiDroid**, to add the cards to it, asked at the first send.
 - Photos are taken by the phone's camera or picked in the gallery, when you do it. The app
   doesn't need access to all your photos.

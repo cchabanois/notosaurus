@@ -53,6 +53,7 @@ internal fun Route.settingsRoutes(server: LocalServer) {
                 put("review_in_anki", true) // a lesson sent: reviewed in AnkiDroid from here
                 put("report", true) // the AI's content reported to Notosaurus (the relay): ⚑ on the cards
                 put("dictation", dictation != null) // the 🎤 of the instructions and the correction
+                put("dictation_live", dictation?.live == true) // heard by the phone: its text as it comes, no relay
                 put("drawing_credits", switches.drawingCredits()?.let(::JsonPrimitive) ?: JsonNull) // told before drawing
                 // The welcome (a parent's tool, Gemini, the privacy policy): until this version is accepted
                 put("welcome", WELCOME_VERSION)

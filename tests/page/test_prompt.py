@@ -195,6 +195,34 @@ def test_deleting_a_prompt_is_asked_in_the_app(page):
     assert not dialogs
 
 
+def test_dictation_heard_by_the_phone_as_it_comes(page):
+    """The phone's own speech recognition ("live"): the text shows in the field while it
+    listens, after what was there, then the whole of it at stop; the 🎤 offered even with the
+    relay's dictation turned off (it isn't used)."""
+    heard = iter(["Douze", "Douze cartes sur el", "Douze cartes sur el abuelo"])
+    texts = []
+
+    live = {"dictation": True, "dictation_live": True}
+    page.route("**/api/config", lambda route: route.fulfill(json={**route.fetch().json(), **live}))
+    page.route("**/api/switches", lambda route: route.fulfill(json={"disabled": ["speech.transcribe"]}))
+    page.route("**/api/dictation/start", lambda route: route.fulfill(json={"listening": True, "live": True}))
+    last = "Douze cartes sur el abuelo"
+    page.route("**/api/dictation/heard", lambda route: route.fulfill(json={"text": next(heard, last)}))
+    page.route(
+        "**/api/dictation/stop",
+        lambda route: (texts.append(1), route.fulfill(json={"text": "Douze cartes sur el abuelo et la abuela"})),
+    )
+    page.goto("/")
+    field = page.get_by_role("textbox", name="Texte de la consigne")
+    field.fill("Vocabulaire espagnol")
+    page.get_by_role("button", name="Dicter").first.click()
+    sync_api.expect(field).to_have_value("Vocabulaire espagnol\nDouze cartes sur el abuelo")  # as it comes
+    page.get_by_role("button", name="Arrêter et écrire le texte").click()
+    sync_api.expect(field).to_have_value("Vocabulaire espagnol\nDouze cartes sur el abuelo et la abuela")
+    sync_api.expect(field).to_be_enabled()
+    assert texts == [1]
+
+
 def test_dictation_in_the_app(page):
     """The Android app's page (dictation): 🎤 in the instructions' corner; once to listen,
     again to stop, the text said then in the field. On the computer: no 🎤."""

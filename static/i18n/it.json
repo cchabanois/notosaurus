@@ -1130,7 +1130,8 @@
     },
     "dictation": {
       "refused": "Notosaurus non ha accesso al microfono: consentilo nelle impostazioni di Android per dettare.",
-      "failed": "Il microfono non è riuscito a registrare: riprova."
+      "failed": "Il microfono non è riuscito a registrare: riprova.",
+      "recognizer": "Il riconoscimento vocale del telefono non risponde: riprova, o controlla nelle impostazioni di Android che sia installato per la tua lingua."
     },
     "subscription": {
       "unavailable": "Google Play non è disponibile su questo telefono.",

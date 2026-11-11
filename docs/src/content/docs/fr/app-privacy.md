@@ -18,8 +18,11 @@ L'application n'est pas faite pour être utilisée par un enfant.
 ## En bref
 
 - Vos **leçons restent sur votre téléphone** : photos, cartes, consignes, sons.
-- Ce que l'IA doit lire (photos, consignes, dictées) **passe par le service** le temps de faire
+- Ce que l'IA doit lire (photos, consignes) **passe par le service** le temps de faire
   les cartes, **et n'y est pas gardé**.
+- Une **dictée** (🎤) est entendue par **la reconnaissance vocale de votre téléphone** (celle
+  choisie dans les réglages d'Android, en général celle de Google) : votre voix ne passe pas par
+  le service.
 - L'IA (**Gemini de Google**) est traitée sur les serveurs de Google, **qui peuvent être hors de
   l'Union européenne** ; les voix sont traitées dans l'Union européenne. Google ne s'en sert pas
   pour entraîner ses modèles.
@@ -50,7 +53,7 @@ Quand vous le demandez, l'application envoie au service, en HTTPS :
 | Les **photos** des pages et leur texte (PDF), la **consigne**, vos consignes permanentes, les noms de vos paquets | Créer ou compléter les cartes de la leçon, et découper les dessins de ses pages |
 | La **classe** de l'enfant à qui est destinée la leçon, et les consignes données pour lui (jamais son prénom) | Des cartes adaptées à son niveau |
 | Les **cartes** d'une leçon et votre demande de correction | Corriger, expliquer une carte, mettre une consigne au propre |
-| Un **enregistrement de votre voix** (🎤) | L'écrire en texte (dictée d'une consigne ou d'une correction) |
+| Un **enregistrement de votre voix** (🎤), seulement sur un téléphone sans reconnaissance vocale | L'écrire en texte (dictée d'une consigne ou d'une correction) |
 | Le **verso** d'une carte | Le lire à voix haute (voix des cartes) |
 | La **description** d'une image, ou quelques **mots-clés** | Dessiner l'image d'une carte, ou chercher une image libre |
 | Votre **clé de licence** | Vérifier votre licence et compter vos crédits |
@@ -133,7 +136,10 @@ Notosaurus. C'est la page [Confidentialité et sécurité](../privacy/) qui s'ap
 ## Les autorisations de l'application
 
 - **Internet** : pour joindre le service.
-- **Micro**, demandé la première fois que vous touchez 🎤, et utilisé seulement pendant la dictée.
+- **Micro**, demandé la première fois que vous touchez 🎤, et utilisé seulement pendant la dictée :
+  votre voix est entendue par la reconnaissance vocale du téléphone (celle d'Android, en général
+  celle de Google, sur le téléphone ou sur ses serveurs, selon ses réglages), ou, sur un téléphone
+  qui n'en a pas, écrite par l'IA du service.
 - **AnkiDroid**, pour y ajouter les cartes, demandé au premier envoi.
 - Les photos sont prises par l'appareil photo du téléphone ou choisies dans la galerie, au
   moment où vous le faites. L'application n'a pas besoin d'accéder à toutes vos photos.
