@@ -462,7 +462,7 @@
       "start": "Diktieren",
       "stop": "Stoppen und Text schreiben",
       "busy": "Ich schreibe auf, was du gesagt hast…",
-      "listening": "Ich höre zu… tippe auf ⏹, wenn du fertig bist.",
+      "listening": "Ich höre zu… tippe auf das Mikrofon, wenn du fertig bist.",
       "nothing": "Nichts gehört: versuch es noch einmal, näher am Mikrofon."
     },
     "update": {

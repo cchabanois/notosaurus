@@ -462,7 +462,7 @@
       "start": "Detta",
       "stop": "Ferma e scrivi il testo",
       "busy": "Scrivo quello che hai detto…",
-      "listening": "Ti ascolto… tocca ⏹ quando hai finito.",
+      "listening": "Ti ascolto… tocca il microfono quando hai finito.",
       "nothing": "Non ho sentito nulla: riprova, più vicino al microfono."
     },
     "update": {
