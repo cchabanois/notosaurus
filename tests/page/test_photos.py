@@ -561,3 +561,67 @@ def test_a_page_removed_from_the_viewer(page):
     remove.click()
     sync_api.expect(viewer).to_be_hidden()
     sync_api.expect(page.locator(".thumb")).to_have_count(0)
+
+
+def test_what_was_shared_to_the_app_becomes_the_lessons_pages(page):
+    """Android's "Share" to Notosaurus (a photo, the school's PDF, a text): the app keeps them
+    and opens the page with ?shared; the page takes them as a new lesson's pages, the text
+    drawn on a page of its own and given with it as a PDF page's text is (its exact words)."""
+    taken = []
+    files = {"1": ("image/png", png("white")), "2": ("application/pdf", pdf(2))}
+    text = "La Révolution française\n\nEn 1789, le peuple de Paris prend la Bastille."
+    listed = [
+        {"n": 1, "name": "cahier.png", "type": "image/png"},
+        {"n": 2, "name": "Leçon.pdf", "type": "application/pdf"},
+    ]
+    waiting = [{"files": listed, "text": text, "skipped": []}]
+
+    def host(route):  # the app's LocalServer (Shared.kt), as the page calls it
+        request = route.request
+        if request.method == "DELETE":
+            taken.append("deleted")
+            route.fulfill(json={})
+        elif request.url.endswith("/api/shared"):
+            route.fulfill(json=waiting.pop(0) if waiting else {"files": [], "text": "", "skipped": []})
+        else:
+            kind, body = files[request.url.rsplit("/", 1)[1]]
+            route.fulfill(body=body, content_type=kind)
+
+    page.route("**/api/shared**", host)
+    page.goto("/?shared=1")
+    started(page)
+    sync_api.expect(page.locator(".thumb img")).to_have_count(4)  # the photo, the PDF's 2 pages, the text
+    texts = page.evaluate("Alpine.$data(document.querySelector('[x-data]')).photos.map((p) => p.text ?? '')")
+    assert texts[0] == "" and texts[3] == text
+    assert taken == ["deleted"]  # taken once
+    assert "shared" not in page.url  # opened again (the settings, a reload): not taken again
+
+    # Shared again, the page open (the lesson in progress, not made yet): told by the app, added
+    waiting.append({"files": [listed[0]], "text": "", "skipped": ["archive.zip"]})
+    assert page.evaluate("window.notosaurusShared()") is True
+    page.wait_for_function("Alpine.$data(document.querySelector('[x-data]')).photos.length === 5")
+    sync_api.expect(page.get_by_text("« archive.zip » n'a pas été ajouté")).to_be_visible()
+
+
+def test_a_host_without_sharing_leaves_the_page_as_it_is(page):
+    """The computer's host has no /api/shared: ?shared there changes nothing."""
+    page.goto("/?shared=1")
+    started(page)
+    sync_api.expect(page.locator(".thumb img")).to_have_count(0)
+    assert page.evaluate("Alpine.$data(document.querySelector('[x-data]')).error") == ""
+
+
+def test_a_web_pages_address_alone_shared_adds_nothing_and_says_what_to_share(page):
+    """A browser shares a page as its address: no lesson page holding a link, said instead."""
+
+    def host(route):
+        if route.request.method == "DELETE":
+            route.fulfill(json={})
+        else:
+            route.fulfill(json={"files": [], "text": "", "skipped": [], "error": "share.link_only"})
+
+    page.route("**/api/shared**", host)
+    page.goto("/?shared=1")
+    started(page)
+    sync_api.expect(page.get_by_text("Ce partage ne contient que l'adresse d'une page web.")).to_be_visible()
+    assert page.evaluate("Alpine.$data(document.querySelector('[x-data]')).photos.length") == 0

@@ -344,6 +344,42 @@ class AppTest {
         assertTrue(extracts.single().body!!.utf8().contains("la mère, le père"))
     }
 
+    /** "Share" to Notosaurus from another app: a photo and a PDF opening the app, a lesson's pages;
+     * then a text shared with the app open, added to them as a page of its own (its words with it). */
+    @Test
+    fun whatIsSharedBecomesTheLessonsPages() {
+        val pdf = File(Device.context.cacheDir, "photos/shared-$run.pdf").apply {
+            parentFile!!.mkdirs()
+            writeText(
+                listOf(
+                    "%PDF-1.4", "1 0 obj<</Type/Catalog/Pages 2 0 R>>endobj", "2 0 obj<</Type/Pages/Kids[3 0 R]/Count 1>>endobj",
+                    "3 0 obj<</Type/Page/Parent 2 0 R/MediaBox[0 0 200 200]/Contents 4 0 R/Resources<<>>>>endobj",
+                    "4 0 obj<</Length 21>>stream", "0 0 m 100 100 l S", "endstream endobj", "trailer<</Root 1 0 R>>", "%%EOF",
+                ).joinToString("\n"),
+            )
+        }
+        val pdfUri = FileProvider.getUriForFile(Device.context, "${Device.context.packageName}.photos", pdf)
+        val share = Intent(Intent.ACTION_SEND_MULTIPLE).setClass(Device.context, MainActivity::class.java)
+            .setType("image/*")
+            .putParcelableArrayListExtra(Intent.EXTRA_STREAM, arrayListOf(galleryPhoto(), pdfUri))
+            .addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+        val photos = "Alpine.\$data(document.querySelector('[x-data]')).photos"
+        ActivityScenario.launch<MainActivity>(share).use { app ->
+            Device.waitFor(app, "typeof Alpine === 'object' && $photos.length === 2", "the photo and the PDF's page")
+            Device.context.startActivity(
+                Intent(Intent.ACTION_SEND).setClass(Device.context, MainActivity::class.java).setType("text/plain")
+                    .putExtra(Intent.EXTRA_TEXT, "La Bastille, $run").addFlags(Intent.FLAG_ACTIVITY_NEW_TASK),
+            )
+            Device.waitFor(app, "$photos.length === 3 && $photos[2].text === 'La Bastille, $run'", "the text's page, the others kept")
+            // A web page shared from a browser (its title, its address): no page, said why
+            Device.context.startActivity(
+                Intent(Intent.ACTION_SEND).setClass(Device.context, MainActivity::class.java).setType("text/plain")
+                    .putExtra(Intent.EXTRA_TEXT, "Cours $run\nhttps://example.org/cours").addFlags(Intent.FLAG_ACTIVITY_NEW_TASK),
+            )
+            Device.waitFor(app, "Alpine.\$data(document.querySelector('[x-data]')).error === t('errors.share.link_only') && $photos.length === 3", "the address refused, said")
+        }
+    }
+
     /** The fake relay: a lesson of two cards, the voices, the sounds; the extracts asked. */
     private fun answering(): MutableList<RecordedRequest> {
         val lesson = """{"deck": {"deck": "Notosaurus app test $run", "cards": [

@@ -321,6 +321,16 @@ document.addEventListener("alpine:init", () => {
         await this.openLinkedCard(linked.get("lesson"), linked.get("key") || "");
       } else await this.restoreDraft();
       this.keepDraft();
+      // Something shared to the app (Android's "Share"): taken once, then out of the address.
+      // Shared again with the page open: the app says so (MainActivity), nothing reloaded
+      window.notosaurusShared = () => {
+        this.takeShared();
+        return true;
+      };
+      if (linked.has("shared")) {
+        history.replaceState(null, "", location.pathname);
+        await this.takeShared();
+      }
       // Anki may be started later: check again when coming back to the app.
       document.addEventListener("visibilitychange", () => {
         if (document.visibilityState === "visible") this.checkAnki();

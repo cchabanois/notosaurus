@@ -591,6 +591,9 @@
       "reviewed": "{count} cards in the deck “{deck}”, open in Anki. Once revised, they go back to their decks.",
       "filteredDeck": "Test: {name}",
       "manual": "Or by hand, in Anki or AnkiDroid:"
+    },
+    "share": {
+      "skipped": "Notosaurus takes photos, PDFs and text: “{names}” was not added."
     }
   },
   "admin": {
@@ -958,6 +961,9 @@
     "downloads": {
       "saved": "{name}: saved in Downloads.",
       "failed": "{name}: couldn't be saved on the phone."
+    },
+    "share": {
+      "computer": "Sharing to Notosaurus works without a computer. With your computer, add the file from its page."
     }
   },
   "setup": {
@@ -1156,6 +1162,9 @@
       "not_found": "This test no longer exists: reload the page.",
       "too_many": "At most {max} tests.",
       "same_name": "Another test already has this name (Anki doesn't tell capitals apart): choose another one."
+    },
+    "share": {
+      "link_only": "This share only holds a web page's address. Share a screenshot of the page instead, or the page saved as a PDF from Chrome."
     }
   },
   "demo": {

@@ -591,6 +591,9 @@
       "reviewed": "{count} tarjetas en el mazo «{deck}», abierto en Anki. Una vez repasadas, vuelven a sus mazos.",
       "filteredDeck": "Examen: {name}",
       "manual": "O a mano, en Anki o AnkiDroid:"
+    },
+    "share": {
+      "skipped": "Notosaurus acepta fotos, PDF y texto: «{names}» no se ha añadido."
     }
   },
   "admin": {
@@ -958,6 +961,9 @@
     "downloads": {
       "saved": "{name}: guardado en Descargas.",
       "failed": "{name}: no se pudo guardar en el móvil."
+    },
+    "share": {
+      "computer": "Compartir con Notosaurus funciona sin ordenador. Con tu ordenador, añade el archivo desde su página."
     }
   },
   "setup": {
@@ -1156,6 +1162,9 @@
       "not_found": "Este examen ya no existe: recargue la página.",
       "too_many": "Como máximo {max} exámenes.",
       "same_name": "Otro examen ya tiene este nombre (Anki no distingue mayúsculas): elige otro."
+    },
+    "share": {
+      "link_only": "Lo compartido solo contiene la dirección de una página web. Comparte mejor una captura de pantalla de la página, o la página guardada en PDF desde Chrome."
     }
   },
   "demo": {
