@@ -46,6 +46,7 @@ Each pull request's entries (the `## Changelog` of its description) are put unde
 
 ### Fixed
 
+- 🔌 **Circuit figures**: a branch's components are spaced and wired by the drawing itself, so they are never drawn on one another, a branch is never left open, and each current's arrow sits on its own branch, its name apart from the components'.
 - In the app's settings, « Vérifier » on a subscription that has ended no longer says « Clé vérifiée : à jour » next to « Votre abonnement est terminé ».
 - 🔌 **Figures: a house installation** drawn the way a textbook draws it: the socket with its phase, neutral and earth terminals, the earth wire green-and-yellow going to the earth symbol and never to the neutral, the general breaker on both the phase and the neutral.
 - Chronophotographies (a ball thrown, a fall, a uniform or accelerated motion, a circular one) drawn with their positions computed: on their trajectory, the velocity vectors along it, the change of velocity where it is.
