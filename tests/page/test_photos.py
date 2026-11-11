@@ -16,6 +16,7 @@ from page.support import (  # noqa: E402
     PDF_NOTICE,
     add_photo,
     add_text_pdf,
+    close_viewer,
     draft_kept,
     drop,
     editor_pixel,
@@ -114,7 +115,7 @@ def test_a_picture_zoomed_with_two_fingers_then_moved(page):
 
 def test_a_photo_seen_in_full_turned_and_a_name_hidden(page):
     """A lesson's photo seen in full: turned from there (the photo shown follows), a name
-    hidden from there (its editor above the viewer), as from its thumbnail."""
+    hidden from there (its editor above the viewer): from there only, the thumbnail has ✕ alone."""
     page.goto("/")
     page.locator('input[type=file][accept="image/*"][multiple]').set_input_files(
         [{"name": "page-1.png", "mimeType": "image/png", "buffer": png("red")}]
@@ -275,7 +276,11 @@ def test_a_name_hidden_before_the_photo_is_sent(page):
     stroke(page, 0.5)  # …un-blacked
     editor.get_by_role("button", name="Terminé").click()
     sync_api.expect(editor).to_be_hidden()
-    sync_api.expect(page.locator(".thumb-hide.used")).to_have_count(1)
+    close_viewer(page)
+    sync_api.expect(page.locator(".thumb-masked:visible")).to_have_count(1)
+    # On the page: its number, ✕, and the mark of what it hides (turned, hidden from the viewer)
+    sync_api.expect(page.locator(".strip figure.thumb button")).to_have_count(1)
+    sync_api.expect(page.locator(".strip figure.thumb button")).to_have_text("✕")
 
     saved = generate_from_photos(page, "Une carte par mot")
     sent = PILImage.open(io.BytesIO(page.request.get(f"/api/lessons/{saved['id']}/photos/1").body())).convert("L")
@@ -283,7 +288,9 @@ def test_a_name_hidden_before_the_photo_is_sent(page):
     assert sent.getpixel((width // 2, height // 10)) < 40  # black: the name
     assert sent.getpixel((width // 2, height // 2)) > 215  # white: un-blacked
     assert sent.getpixel((width // 2, height * 8 // 10)) > 215  # never touched
-    sync_api.expect(page.locator(".thumb-hide")).to_be_hidden()  # sent: nothing left to hide
+    page.locator(".strip .thumb img").first.click()
+    hide = page.locator(".viewer").get_by_role("button", name="Cacher une partie de la page (un nom…)")
+    sync_api.expect(hide).to_be_hidden()  # sent: nothing left to hide
 
 
 def test_a_pdf_page_with_a_hidden_part_goes_without_its_text(page, browser):
@@ -295,6 +302,7 @@ def test_a_pdf_page_with_a_hidden_part_goes_without_its_text(page, browser):
     stroke(page, 0.1)
     editor.get_by_role("button", name="Terminé").click()
     sync_api.expect(editor).to_be_hidden()
+    close_viewer(page)
 
     sent = []
     page.on("request", lambda r: sent.append(r.post_data_buffer or b""))
@@ -310,14 +318,15 @@ def test_un_black_all_gives_the_original_and_its_text_back(page, browser):
     editor = open_hide(page)
     stroke(page, 0.1)
     editor.get_by_role("button", name="Terminé").click()
-    sync_api.expect(page.locator(".thumb-hide.used")).to_have_count(1)
+    sync_api.expect(page.locator(".thumb-masked:visible")).to_have_count(1)
 
     open_hide(page)
     editor.get_by_role("button", name="Tout dénoircir").click()
     editor.get_by_role("button", name="Terminé").click()
     sync_api.expect(editor).to_be_hidden()
-    sync_api.expect(page.locator(".thumb-hide.used")).to_have_count(0)
+    sync_api.expect(page.locator(".thumb-masked:visible")).to_have_count(0)
     assert photo_not_sent(page).tobytes() == original.tobytes()
+    close_viewer(page)
 
     saved = generate_from_photos(page, "Une carte par date")
     assert saved["page_texts"] == ["La Révolution française\nEn 1789, le peuple de Paris prend la Bastille."]
@@ -330,7 +339,7 @@ def test_hidden_parts_seen_again_and_cancel_changes_nothing(page):
     editor = open_hide(page)
     stroke(page, 0.1)
     editor.get_by_role("button", name="Terminé").click()
-    sync_api.expect(page.locator(".thumb-hide.used")).to_have_count(1)  # done: the photo blacked out
+    sync_api.expect(page.locator(".thumb-masked:visible")).to_have_count(1)  # done: the photo blacked out
     hidden = photo_not_sent(page)
 
     open_hide(page)
@@ -340,7 +349,7 @@ def test_hidden_parts_seen_again_and_cancel_changes_nothing(page):
     stroke(page, 0.5)
     editor.get_by_role("button", name="Annuler").click()
     sync_api.expect(editor).to_be_hidden()
-    sync_api.expect(page.locator(".thumb-hide.used")).to_have_count(1)
+    sync_api.expect(page.locator(".thumb-masked:visible")).to_have_count(1)
     assert photo_not_sent(page).tobytes() == hidden.tobytes()
 
     open_hide(page)
@@ -355,8 +364,8 @@ def test_a_photo_turned_turns_what_it_hides(page):
     editor = open_hide(page)
     stroke(page, 0.1)
     editor.get_by_role("button", name="Terminé").click()
-    sync_api.expect(page.locator(".thumb-hide.used")).to_have_count(1)
-    page.get_by_role("button", name="Tourner la photo d'un quart de tour").click()
+    sync_api.expect(page.locator(".thumb-masked:visible")).to_have_count(1)
+    page.locator(".viewer").get_by_role("button", name="Tourner la photo d'un quart de tour").click()
     page.wait_for_function("document.querySelector('.thumb img').naturalWidth === 800")  # landscape now
     turned = photo_not_sent(page)
     assert turned.size == (800, 600)
@@ -369,7 +378,7 @@ def test_a_photo_turned_turns_what_it_hides(page):
     assert editor_pixel(page, 0.1, 0.5) > 215
     editor.get_by_role("button", name="Tout dénoircir").click()
     editor.get_by_role("button", name="Terminé").click()
-    sync_api.expect(page.locator(".thumb-hide.used")).to_have_count(0)
+    sync_api.expect(page.locator(".thumb-masked:visible")).to_have_count(0)
     original = photo_not_sent(page)  # the turned original, all white
     assert original.size == (800, 600)
     assert original.getextrema()[0] > 215
@@ -390,10 +399,11 @@ def test_a_photo_put_in_place_of_another_turns_itself(page):
 
     page.locator(".thumb-remove").first.click()
     gallery.set_input_files({"name": "p2.png", "mimeType": "image/png", "buffer": png("blue")})
-    sync_api.expect(page.locator(".thumb-rotate")).to_have_count(1)
+    sync_api.expect(page.locator(".thumb img")).to_have_count(1)
     shown = "Alpine.$data(document.querySelector('[x-data]')).photos[0].blob"
     page.evaluate(f"window.before = {shown}")
-    page.locator(".thumb-rotate").first.click()
+    page.locator(".thumb img").first.click()  # turned from the viewer
+    page.locator(".viewer").get_by_role("button", name="Tourner la photo d'un quart de tour").click()
     page.wait_for_function(f"{shown} !== window.before")  # turned, wherever it was
     data = page.evaluate(
         """async () => {
@@ -467,7 +477,7 @@ def test_more_pages_than_the_strip_holds(page, width):
     """More pages than the strip's two rows hold beside the add buttons (four on a narrow phone,
     as many as its columns give on a wider screen): the section no taller than with four, its
     last place the next page veiled, "+N" (the pages not shown, itself with them), opening
-    them all in a sheet, in order, each with its buttons; a tap there shows one in full."""
+    them all in a sheet, in order, each with its ✕; a tap there shows one in full."""
     page.set_viewport_size({"width": width, "height": 780})
     page.goto("/")
     gallery = page.locator('input[type=file][accept="image/*"][multiple]')
@@ -508,6 +518,7 @@ def test_more_pages_than_the_strip_holds(page, width):
     pages = sheet.locator("figure.thumb img")
     sync_api.expect(pages).to_have_count(10)
     assert [img.get_attribute("src") for img in pages.all()] == urls  # all of them, in order
+    sync_api.expect(sheet.locator("figure.thumb button")).to_have_count(10)  # ✕ alone on each
     sheet.locator("figure.thumb").nth(1).get_by_role("button", name="Retirer cette page").click()
     sync_api.expect(pages).to_have_count(9)
     urls.pop(1)

@@ -50,6 +50,7 @@
       "seeAll": "See all {count} pages",
       "rotate": "Turn the photo a quarter turn",
       "hide": "Hide part of this page (a name…)",
+      "hidden": "Part of this page is hidden",
       "takePhoto": "Take a photo",
       "nextPage": "Next page",
       "gallery": "Gallery",

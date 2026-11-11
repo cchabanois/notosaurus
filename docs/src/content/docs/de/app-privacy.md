@@ -64,7 +64,7 @@ kein Lektionstext wird gespeichert oder in seine Protokolle geschrieben. Außer 
 siehe unten.
 
 Eine Heftseite zeigt oft den **Namen des Kindes**. Vor dem Senden eines Fotos kannst du ihn
-**verdecken**: 🖍️ auf dem Foto, dann mit dem Finger schwärzen. Nur das geschwärzte Foto geht
+**verdecken**: 🖍️ auf dem Foto im Vollbild, dann mit dem Finger schwärzen. Nur das geschwärzte Foto geht
 hinaus und bleibt in der Lektion.
 
 ## Was der Dienst speichert

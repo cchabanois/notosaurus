@@ -61,7 +61,7 @@ and **doesn't keep them**: no photo, card, recording or lesson text is stored or
 its logs. Except a **report**: see below.
 
 A notebook page often shows the **child's name**. Before sending a photo you can **hide** it:
-🖍️ on the photo, then black it out with your finger. Only the blacked-out photo leaves and stays
+🖍️ on the photo shown full screen, then black it out with your finger. Only the blacked-out photo leaves and stays
 in the lesson.
 
 ## What the service keeps

@@ -62,7 +62,7 @@ et **ne les garde pas** : ni photo, ni carte, ni enregistrement, ni texte de le�
 enregistré, ni écrit dans ses journaux. Sauf un **signalement** : voir plus bas.
 
 Une page de cahier montre souvent le **nom de l'enfant**. Avant d'envoyer une photo, vous pouvez
-le **cacher** : 🖍️ sur la photo, puis noircissez-le du doigt. Seule la photo noircie part et
+le **cacher** : 🖍️ sur la photo en plein écran, puis noircissez-le du doigt. Seule la photo noircie part et
 reste dans la leçon.
 
 ## Ce que le service garde

@@ -50,6 +50,7 @@
       "seeAll": "Ver las {count} páginas",
       "rotate": "Girar la foto un cuarto de vuelta",
       "hide": "Ocultar parte de la página (un nombre…)",
+      "hidden": "Parte de esta página está oculta",
       "takePhoto": "Hacer una foto",
       "nextPage": "Página siguiente",
       "gallery": "Galería",

@@ -62,7 +62,7 @@ all'app e **non li conserva**: nessuna foto, carta, registrazione o testo di lez
 memorizzato o scritto nei suoi registri. Tranne una **segnalazione**: vedi sotto.
 
 Una pagina di quaderno mostra spesso il **nome del bambino**. Prima di inviare una foto puoi
-**nasconderlo**: 🖍️ sulla foto, poi anneriscilo con il dito. Solo la foto annerita esce e resta
+**nasconderlo**: 🖍️ sulla foto a schermo intero, poi anneriscilo con il dito. Solo la foto annerita esce e resta
 nella lezione.
 
 ## Cosa conserva il servizio
