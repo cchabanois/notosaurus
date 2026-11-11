@@ -33,6 +33,7 @@ Each pull request's entries (the `## Changelog` of its description) are put unde
 
 ### Changed
 
+- The AI (Gemini) may now process the lessons' photos outside the European Union, on Google's servers; the privacy policy says so.
 - Figures drawn with Typst 0.15.1 (bug fixes; no figure changes).
 - Algorithm flowcharts are drawn with their usual shapes: rounded start and end, a diamond for each test.
 - Figures drawn in Typst use the same plain font as the other figures, and timelines' text is larger.
