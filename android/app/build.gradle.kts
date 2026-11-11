@@ -9,9 +9,12 @@ plugins {
 }
 
 /** The Notosaurus web page (the repository's static/), shipped in the app's
- * assets under web/: the app shows the same page as the computer. */
+ * assets under web/: the app shows the same page as the computer. With it, the figures'
+ * credits (core's figure_credits.json, as web/figure-credits.json): the licences page's
+ * when the relay can't say (Credits). */
 abstract class CopyWebPage : DefaultTask() {
     @get:InputDirectory abstract val source: DirectoryProperty
+    @get:InputFile abstract val credits: RegularFileProperty
     @get:OutputDirectory abstract val outputDir: DirectoryProperty
     @get:Inject abstract val files: FileSystemOperations
 
@@ -19,6 +22,7 @@ abstract class CopyWebPage : DefaultTask() {
     fun copy() {
         files.sync {
             from(source)
+            from(credits) { rename { "figure-credits.json" } }
             into(outputDir.dir("web"))
         }
     }
@@ -47,8 +51,10 @@ val uploadKey: Properties? = providers.environmentVariable("NOTOSAURUS_KEYSTORE_
     ?.let { found -> Properties().apply { found.inputStream().use(::load) } }
 
 val webPage = providers.gradleProperty("notosaurus.web").orElse("../../static")
+val figureCredits = rootProject.layout.projectDirectory.file("../core/notosaurus_core/figure_credits.json")
 val copyWebPage = tasks.register<CopyWebPage>("copyWebPage") {
     source.set(layout.projectDirectory.dir(webPage))
+    credits.set(figureCredits)
 }
 
 android {
@@ -74,11 +80,14 @@ android {
             it.systemProperty("notosaurus.web", layout.projectDirectory.dir(webPage).get().asFile.absolutePath)
             // The cases the computer's code, the page's and the app's must agree on (SharedCasesTest)
             it.systemProperty("notosaurus.cases", rootProject.layout.projectDirectory.file("../core/shared-cases.json").asFile.absolutePath)
+            // The figures' credits shipped with the page (web/figure-credits.json, as copyWebPage)
+            it.systemProperty("notosaurus.credits", figureCredits.asFile.absolutePath)
             // Both read by the tests, so their inputs: changed, the tests run again (never
             // taken from the build cache as they were)
             it.inputs.dir(layout.projectDirectory.dir(webPage)).withPathSensitivity(PathSensitivity.RELATIVE).withPropertyName("webPage")
             it.inputs.file(rootProject.layout.projectDirectory.file("../core/shared-cases.json")).withPathSensitivity(PathSensitivity.NONE)
                 .withPropertyName("sharedCases")
+            it.inputs.file(figureCredits).withPathSensitivity(PathSensitivity.NONE).withPropertyName("figureCredits")
         }
     }
     packaging {

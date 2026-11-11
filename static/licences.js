@@ -1,36 +1,11 @@
 // The libraries' licences page (licences.html): the page's own (static/vendor, see its README),
-// then the Android app's when it is that app (web/licences-android.json, written at its build)
+// the figures' (Typst, its packages, the maps' data: /api/credits, the relay's on the phone,
+// the computer's own there, so that a package added is credited without a new app), then
+// the Android app's when it is that app (web/licences-android.json, written at its build)
 const PAGE_LIBRARIES = [
   { name: "Alpine.js", version: "3.14.9", licence: "MIT", file: "vendor/alpinejs/LICENSE" },
   { name: "MathJax", version: "3.2.2", licence: "Apache-2.0", file: "vendor/mathjax/LICENSE" },
   { name: "PDF.js", version: "6.4.299", licence: "Apache-2.0", file: "vendor/pdfjs/LICENSE" },
-];
-
-// The figures' (core figures_typst.py): Typst and its packages, shipped with Notosaurus
-const FIGURE_LIBRARIES = [
-  { name: "Typst", version: "0.15.1", licence: "Apache-2.0", url: "https://github.com/typst/typst" },
-  { name: "alchemist", version: "0.2.0", licence: "MIT", url: "https://typst.app/universe/package/alchemist" },
-  { name: "blockst", version: "0.4.1", licence: "MIT", url: "https://typst.app/universe/package/blockst" },
-  { name: "cetz", version: "0.3.4", licence: "LGPL-3.0-or-later", url: "https://typst.app/universe/package/cetz" },
-  { name: "cetz", version: "0.5.2", licence: "LGPL-3.0-or-later", url: "https://typst.app/universe/package/cetz" },
-  { name: "cetz-venn", version: "0.2.0", licence: "Apache-2.0", url: "https://typst.app/universe/package/cetz-venn" },
-  { name: "ctz-euclide", version: "0.3.0", licence: "MIT", url: "https://typst.app/universe/package/ctz-euclide" },
-  { name: "elembic", version: "1.1.1", licence: "MIT OR Apache-2.0", url: "https://typst.app/universe/package/elembic" },
-  { name: "fletcher", version: "0.5.8", licence: "MIT", url: "https://typst.app/universe/package/fletcher" },
-  { name: "komet", version: "0.1.0", licence: "MIT", url: "https://typst.app/universe/package/komet" },
-  { name: "komet", version: "0.2.0", licence: "MIT", url: "https://typst.app/universe/package/komet" },
-  { name: "lilaq", version: "0.6.0", licence: "MIT", url: "https://typst.app/universe/package/lilaq" },
-  { name: "oxifmt", version: "0.2.1", licence: "MIT-0", url: "https://typst.app/universe/package/oxifmt" },
-  { name: "oxifmt", version: "1.0.0", licence: "MIT OR Apache-2.0", url: "https://typst.app/universe/package/oxifmt" },
-  { name: "suiji", version: "0.5.1", licence: "MIT", url: "https://typst.app/universe/package/suiji" },
-  { name: "tiptoe", version: "0.4.0", licence: "MIT", url: "https://typst.app/universe/package/tiptoe" },
-  { name: "zap", version: "0.6.0", licence: "MIT", url: "https://typst.app/universe/package/zap" },
-  { name: "zero", version: "0.6.1", licence: "MIT", url: "https://typst.app/universe/package/zero" },
-  // The maps' (notosaurus-atlas, tools/atlas.py): our map function, Natural Earth's data
-  { name: "notosaurus-atlas", version: "0.3.0", licence: "AGPL-3.0-or-later", url: "https://github.com/cchabanois/notosaurus/blob/main/tools/atlas.py" },
-  { name: "Natural Earth", version: "5.1.2", licence: "public-domain", url: "https://www.naturalearthdata.com/about/terms-of-use/" },
-  { name: "Unicode CLDR", version: "46.0", licence: "Unicode-3.0", url: "https://www.unicode.org/license.txt" },
-  { name: "Wikidata", version: "2026-11", licence: "CC0-1.0", url: "https://www.wikidata.org/wiki/Wikidata:Licensing" },
 ];
 
 function libraryItem(name, detail, licences) {
@@ -57,7 +32,12 @@ async function showLicences() {
   const page = document.getElementById("page-libraries");
   for (const lib of PAGE_LIBRARIES) page.append(libraryItem(lib.name, lib.version, [{ label: lib.licence, href: lib.file }]));
   const figures = document.getElementById("figure-libraries");
-  for (const lib of FIGURE_LIBRARIES) {
+  let credits = [];
+  try {
+    const res = await fetch("/api/credits");
+    if (res.ok) credits = await res.json();
+  } catch {}
+  for (const lib of credits) {
     const label = lib.licence === "public-domain" ? t("licences.publicDomain") : lib.licence;  // no licence: said in words
     figures.append(libraryItem(lib.name, lib.version, [{ label, href: lib.url }]));
   }

@@ -5,7 +5,7 @@ import socket
 from fastapi import APIRouter, Request
 from fastapi.responses import JSONResponse, Response
 
-from notosaurus_core import pictures
+from notosaurus_core import figures_typst, pictures
 
 from .. import i18n, settings
 from ..access import is_local, paired
@@ -25,6 +25,13 @@ def lang() -> dict:
         "available": i18n.available(),
         "names": {code: i18n.get(code, "meta.name", code) for code in i18n.available()},
     }
+
+
+@router.get("/api/credits")
+def credits() -> list[dict[str, str]]:
+    """What the figures are drawn with, credited on the licences page: this computer's own
+    (it draws them), as the relay gives the phone its (/v1/credits)."""
+    return figures_typst.CREDITS
 
 
 @router.get("/api/config")

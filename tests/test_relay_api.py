@@ -116,11 +116,14 @@ def test_openapi_description():
         "pictures/found",
         "report",
         "voices",
+        "credits",
         "account",
         "subscribe",
         "trial",
     )
     assert set(spec["paths"]) == {f"/v1/{route}" for route in routes}
+    # the figures' credits: public, the licences page shows them before any licence
+    assert spec["paths"]["/v1/credits"]["get"]["security"] == []
     multipart = {
         "extract": "ExtractRequest",
         "revise": "ReviseRequest",

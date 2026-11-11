@@ -103,6 +103,7 @@ class LocalServer(
     internal val computer = Computer(prefs, modeChanged)
     internal val switches = Switches(prefs, version)
     internal val saved = Saved(prefs) // what the page keeps on this phone (the child chosen…)
+    internal val credits = Credits(prefs, ::relay) { web("figure-credits.json") } // the figures' (licences page)
     internal val dictation = recorder?.let { Dictation(File(dataDir, "dictation").apply { mkdirs() }, it, ::relay) }
     internal val soundsAhead = SoundsAhead(::makeSounds) // the backs' sounds read once a lesson is saved
     private lateinit var server: EmbeddedServer<*, *>

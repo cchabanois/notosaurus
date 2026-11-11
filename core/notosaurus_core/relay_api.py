@@ -37,6 +37,9 @@ takes but the AI configuration (the relay's own), and keeps nothing.
 - /v1/report: content the AI made, reported by the user (shocking, wrong…: Google Play's
   policy on generated content). The only thing the relay keeps of a lesson: what the user
   saw and sent, for REPORT_DAYS, read by Notosaurus. Free, REPORTS_PER_DAY a licence.
+- /v1/credits: what the figures are drawn with (Typst, its packages, the maps' data), each
+  with its licence and its page: the app's licences page lists what the relay uses, a
+  package added credited without a new app. Free, no licence key needed.
 - /v1/speak reads a card's back aloud with one of /v1/voices (natural voices, the
   same on every device): an mp3, for the app that has no voices of its own.
 - Each answer says the credits it used and those left (Usage; for /v1/picture and
@@ -479,6 +482,15 @@ class ReportRequest(BaseModel):
 
 class ReportResponse(BaseModel):
     received: bool = True
+
+
+class Credit(BaseModel):
+    """GET /v1/credits gives a list of them: what the figures are drawn with."""
+
+    name: str = Field(description='The project ("cetz", "Natural Earth").')
+    version: str = Field(description='Its version ("0.5.2").')
+    licence: str = Field(description='Its licence, an SPDX identifier ("MIT"), or "public-domain".')
+    url: str = Field(description="Its page, or its licence's.")
 
 
 class Voice(BaseModel):

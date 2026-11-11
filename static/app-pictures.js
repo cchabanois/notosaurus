@@ -170,12 +170,24 @@ const picturesPart = {
     return t("app.pictures.sourceFound", { source: names[origin.source] ?? origin.source, licence: origin.licence });
   },
 
+  // What the figures are drawn with, each with its licence and its page: the relay's on the
+  // phone, the computer's own there (/api/credits); a package added is credited without a
+  // new app
+  async loadCredits() {
+    try {
+      this.credits = await (await api("/api/credits")).json();
+    } catch {}  // the default links below
+  },
+
   // What a figure was drawn with, credited with a link to each project's page: Typst and
-  // its packages (picture_source.made_with: "ctz-euclide 0.3.0"); [] for an SVG one
+  // its packages (picture_source.made_with: "ctz-euclide 0.3.0"), their pages as the credits
+  // give them (the maps' data is no Typst package); [] for an SVG one
   figureCredits(card) {
     return (card?.picture_source?.made_with ?? []).map((item) => {
       const [name, version = ""] = item.split(" ");
-      const url = name === "Typst" ? "https://typst.app" : `https://typst.app/universe/package/${name}`;
+      const known = this.credits.find((c) => c.name === name && c.version === version)
+        ?? this.credits.find((c) => c.name === name);
+      const url = known?.url ?? (name === "Typst" ? "https://typst.app" : `https://typst.app/universe/package/${name}`);
       return { name, version, url };
     });
   },

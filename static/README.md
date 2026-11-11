@@ -12,7 +12,7 @@ build time, by the Android app (`android/`). The pages load nothing from elsewhe
 | `app-*.js` | that component's methods by topic: `app-photos` (photos, PDFs, hiding a name), `app-prompts`, `app-lessons` (a lesson made, saved, opened), `app-cards` (the review), `app-revision` (the AI's correction), `app-diagram` (labels' masks), `app-pictures`, `app-anki` (audio, send, `.apkg`, an explanation), `app-children`, `app-exams` (tests to prepare), `app-dictation` (🎤), `app-report` (⚑) |
 | `admin.html`, `admin.js`, `admin-*.js` | the settings page, on the computer: its component, and its methods by section (`service`, `pictures`, `saving`, `anki`, `lessons`, `phones`, `password`) |
 | `setup.html` | the setup assistant (the AI and its key, then the phone), on the computer |
-| `licences.html`, `licences.js` | the libraries' licences (and the Android app's, in the app) |
+| `licences.html`, `licences.js` | the libraries' licences: the page's own, the figures' (`/api/credits`: core's `figure_credits.json`, given by the relay on the phone, so that a package added is credited without a new app), and the Android app's in the app |
 | `i18n.js`, `i18n/<lang>.json` | the translations: one file per language, English as fallback; the same files give the server's prompts and the add-on's menu |
 | `ask-confirm.js`, `voice-choice.js` | a yes/no in the page's own sheet; the voice chosen per language variety |
 | `style.css` | the pages' style (light and dark) |

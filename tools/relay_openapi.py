@@ -314,6 +314,15 @@ def build() -> dict:
         """The voices /v1/speak reads with."""
 
     @app.get(
+        f"{api.PREFIX}/credits",
+        response_model=list[api.Credit],
+        responses=errors("relay.client_outdated", "relay.unavailable"),
+        openapi_extra={"security": []},  # public: the licences page, before any licence
+    )
+    def credits(x_notosaurus_version: str = client):
+        """What the figures are drawn with, each with its licence and its page (no licence key needed)."""
+
+    @app.get(
         f"{api.PREFIX}/account",
         response_model=api.Account,
         responses=errors("relay.invalid_key", "relay.client_outdated", "relay.unavailable"),

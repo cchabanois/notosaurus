@@ -540,6 +540,19 @@ test("a picture's source: said in its panel, kept when the pictures come", async
   assert.equal(c.pictureSourceText({}), "");
 });
 
+test("a figure's credits link each project to its page as the credits give it (the maps' data is no Typst package)", async () => {
+  const credits = [{ name: "notosaurus-atlas", version: "0.3.0", licence: "AGPL-3.0-or-later", url: "https://example.org/atlas" }];
+  const page = await loadScripts("app.js", { routes: () => new Response(credits) });
+  const c = page.component();
+  const card = { picture_source: { made_with: ["Typst 0.15.1", "notosaurus-atlas 0.3.0", "cetz 0.5.2"] } };
+  // Before the credits come (or without them): Typst's site, Typst Universe's pages
+  assert.deepEqual(plain(c.figureCredits(card).map((p) => p.url)),
+    ["https://typst.app", "https://typst.app/universe/package/notosaurus-atlas", "https://typst.app/universe/package/cetz"]);
+  await c.loadCredits();
+  assert.deepEqual(plain(c.figureCredits(card).map((p) => p.url)),
+    ["https://typst.app", "https://example.org/atlas", "https://typst.app/universe/package/cetz"]);
+});
+
 test("the 🎤 stays when a lesson is shown, and the lesson's dictation option stays a yes/no", async () => {
   // Both were called "dictation": showing a lesson replaced the 🎤's state by its option
   const page = await loadScripts("app.js", { routes: () => new Response({}) });
