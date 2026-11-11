@@ -1161,6 +1161,9 @@
       "not_found": "Esta prova já não existe: recarregue a página.",
       "too_many": "No máximo {max} provas.",
       "same_name": "Outra prova já tem este nome (o Anki não diferencia maiúsculas): escolha outro."
+    },
+    "share": {
+      "link_only": "O compartilhamento contém só o endereço de uma página da web. Compartilhe uma captura de tela da página, ou a página salva em PDF pelo Chrome."
     }
   },
   "demo": {

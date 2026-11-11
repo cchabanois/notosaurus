@@ -1161,6 +1161,9 @@
       "not_found": "Este examen ya no existe: recargue la página.",
       "too_many": "Como máximo {max} exámenes.",
       "same_name": "Otro examen ya tiene este nombre (Anki no distingue mayúsculas): elige otro."
+    },
+    "share": {
+      "link_only": "Lo compartido solo contiene la dirección de una página web. Comparte mejor una captura de pantalla de la página, o la página guardada en PDF desde Chrome."
     }
   },
   "demo": {

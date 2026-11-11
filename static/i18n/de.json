@@ -1161,6 +1161,9 @@
       "not_found": "Diesen Test gibt es nicht mehr: Lade die Seite neu.",
       "too_many": "Höchstens {max} Tests.",
       "same_name": "Ein anderer Test hat schon diesen Namen (Anki unterscheidet keine Großbuchstaben): Wähle einen anderen."
+    },
+    "share": {
+      "link_only": "Dieses Teilen enthält nur die Adresse einer Webseite. Teile stattdessen einen Screenshot der Seite oder die Seite, in Chrome als PDF gespeichert."
     }
   },
   "demo": {

@@ -1161,6 +1161,9 @@
       "not_found": "Questa verifica non esiste più: ricaricate la pagina.",
       "too_many": "Al massimo {max} verifiche.",
       "same_name": "Un'altra verifica ha già questo nome (Anki non distingue le maiuscole): scegline un altro."
+    },
+    "share": {
+      "link_only": "La condivisione contiene solo l'indirizzo di una pagina web. Condividi piuttosto uno screenshot della pagina, o la pagina salvata in PDF da Chrome."
     }
   },
   "demo": {

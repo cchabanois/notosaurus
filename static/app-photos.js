@@ -294,7 +294,14 @@ const photosPart = {
     const files = shared.files ?? [];
     const text = (shared.text ?? "").trim();
     const skipped = shared.skipped ?? [];
-    if (!files.length && !text && !skipped.length) return;
+    const why = shared.error ?? "";  // a code: a web page's address alone (share.link_only)
+    if (!files.length && !text && !skipped.length && !why) return;
+    if (!files.length && !text) {  // nothing to add: the lesson as it is, said why
+      if (why) this.error = t(`errors.${why}`);
+      if (skipped.length) this.error = t("app.share.skipped", { names: skipped.join(", ") });
+      api("/api/shared", { method: "DELETE" }).catch(() => {});
+      return;
+    }
     if (this.lessonId) await this.newLesson();
     const read = [];
     let unreadable = "";
@@ -308,6 +315,7 @@ const photosPart = {
     await this.addFiles(read);
     if (text) await this.addText(text);
     if (unreadable) this.error = t("app.photos.unreadable", { name: unreadable });
+    if (why) this.error = t(`errors.${why}`);
     if (skipped.length) this.error = t("app.share.skipped", { names: skipped.join(", ") });
     api("/api/shared", { method: "DELETE" }).catch(() => {});
   },

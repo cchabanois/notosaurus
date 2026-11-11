@@ -1161,6 +1161,9 @@
       "not_found": "Ce contrôle n'existe plus : rechargez la page.",
       "too_many": "Au plus {max} contrôles.",
       "same_name": "Un autre contrôle porte déjà ce nom (Anki ne distingue pas les majuscules) : choisissez-en un autre."
+    },
+    "share": {
+      "link_only": "Ce partage ne contient que l'adresse d'une page web. Partagez plutôt une capture d'écran de la page, ou la page enregistrée en PDF depuis Chrome."
     }
   },
   "demo": {

@@ -931,3 +931,23 @@ test("what was shared to the app: a lesson made kept and a new one started, a le
   await c.takeShared();
   assert.deepEqual(added, ["p2.jpg image/jpeg"]);
 });
+
+test("a web page's address alone shared: nothing added, the lesson as it is, said what to share instead", async () => {
+  const calls = [];
+  const page = await loadScripts("app.js", {
+    languages: ["fr-FR"],
+    routes: (url, options) => {
+      calls.push(`${options?.method ?? "GET"} ${url}`);
+      return new Response({ files: [], text: "", skipped: [], error: "share.link_only" });
+    },
+  });
+  const c = page.component();
+  let fresh = 0;
+  c.newLesson = async () => { fresh++; };
+  c.addText = async () => { throw new Error("no page for a link"); };
+  c.lessonId = "abc";  // a lesson open: left as it is
+  await c.takeShared();
+  assert.equal(fresh, 0);
+  assert.equal(c.error, "Ce partage ne contient que l'adresse d'une page web. Partagez plutôt une capture d'écran de la page, ou la page enregistrée en PDF depuis Chrome.");
+  assert.deepEqual(calls.filter((call) => call.includes("shared")), ["GET /api/shared", "DELETE /api/shared"]);
+});

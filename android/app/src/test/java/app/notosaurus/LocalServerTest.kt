@@ -148,6 +148,32 @@ class LocalServerTest : LocalServerTestBase() {
     }
 
     @Test
+    fun aWebPagesAddressAloneIsNoLessonText() = app { client ->
+        // What a browser shares of a page: its address, maybe its title on a line of its own
+        for (link in listOf("https://example.org/cours/revolution", "  http://example.org/a?b=1  \n", "La Révolution française - Cours\nhttps://example.org/rev", "https://example.org/rev\nLa Révolution")) {
+            assertTrue(link, Shared.isLinkOnly(link))
+        }
+        // An address among sentences, two addresses, a long text: a text, as shared
+        for (text in listOf(
+            "La Bastille est prise en 1789. Voir https://example.org/rev pour la suite.",
+            "https://example.org/a\nhttps://example.org/b",
+            "Titre\nhttps://example.org/rev\nEn 1789, le peuple prend la Bastille.",
+            "La Révolution française", "x".repeat(Shared.TITLE_MAX + 1) + "\nhttps://example.org/rev",
+        )) {
+            assertFalse(text, Shared.isLinkOnly(text))
+        }
+        // Kept so: no text, the page told why (a code), the photos shared with it kept
+        local.shared.take(listOf(Shared.Item("p.jpg", "image/jpeg") { "p".byteInputStream() }), "Cours\nhttps://example.org/rev")
+        val shared = client.get("/api/shared") { page() }.json().jsonObject
+        assertEquals("", shared.string("text"))
+        assertEquals(Shared.LINK_ONLY, shared.string("error"))
+        assertEquals(1, shared["files"]!!.jsonArray.size)
+        // A text after it: no error left over
+        local.shared.take(emptyList(), "En 1789, le peuple prend la Bastille.")
+        assertEquals(null, client.get("/api/shared") { page() }.json().jsonObject["error"])
+    }
+
+    @Test
     fun thePagesFiles() = app { client ->
         val index = client.get("/")
         assertEquals(HttpStatusCode.OK, index.status)

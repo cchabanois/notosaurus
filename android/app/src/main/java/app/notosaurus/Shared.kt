@@ -36,7 +36,14 @@ class Shared(private val dir: File) {
         val files = mutableListOf<JsonObject>()
         val skipped = mutableListOf<String>()
         val texts = mutableListOf<String>()
-        text?.trim()?.takeIf { it.isNotEmpty() }?.let(texts::add)
+        var linkOnly = false
+        // A text that is only a web page's address (a browser shares its page so): no lesson in
+        // it, never a page holding a link; the page says what to share instead
+        fun addText(found: String?) {
+            val t = found?.trim()?.takeIf { it.isNotEmpty() } ?: return
+            if (isLinkOnly(t)) linkOnly = true else texts += t
+        }
+        addText(text)
         for (item in items.take(MAX_ITEMS)) {
             val type = item.type?.lowercase().orEmpty()
             val kind = when {
@@ -52,7 +59,7 @@ class Shared(private val dir: File) {
             val bytes = runCatching { item.open()?.use { it.readAtMost(MAX_BYTES) } }.getOrNull()
             when {
                 bytes == null -> skipped += item.name // unreadable, or too large
-                kind == "text" -> bytes.decodeToString().trim().takeIf { it.isNotEmpty() }?.let(texts::add)
+                kind == "text" -> addText(bytes.decodeToString())
                 else -> {
                     val n = files.size + 1
                     File(dir, "file-$n").writeBytes(bytes)
@@ -67,6 +74,7 @@ class Shared(private val dir: File) {
         File(dir, FILES).writeText(JsonArray(files).toString())
         File(dir, TEXT).writeText(texts.joinToString("\n\n").take(MAX_TEXT))
         File(dir, SKIPPED).writeText(JsonArray(skipped.map(::JsonPrimitive)).toString())
+        File(dir, ERROR).apply { if (linkOnly) writeText(LINK_ONLY) else delete() }
     }
 
     /** What the page may take: {files: [{n, name, type}], text, skipped: [names]}; empty when nothing waits. */
@@ -78,6 +86,7 @@ class Shared(private val dir: File) {
             put("files", files)
             put("text", File(dir, TEXT).takeIf { it.isFile }?.readText().orEmpty())
             put("skipped", skipped)
+            File(dir, ERROR).takeIf { it.isFile }?.let { put("error", it.readText()) } // a code, the page's texts say it
         }
     }
 
@@ -96,6 +105,21 @@ class Shared(private val dir: File) {
         private const val FILES = "files.json"
         private const val TEXT = "text.txt"
         private const val SKIPPED = "skipped.json"
+        private const val ERROR = "error.txt"
+        const val LINK_ONLY = "share.link_only"
+        const val TITLE_MAX = 200 // a page's title, on its own line before or after its address
+
+        private val URL = Regex("""https?://\S+""", RegexOption.IGNORE_CASE)
+
+        /** Only a web page's address: one http(s) address alone on its line, and at most one other
+         * line, short, with no address (the page's title). An address among sentences is a text. */
+        fun isLinkOnly(text: String): Boolean {
+            val lines = text.lines().map { it.trim() }.filter { it.isNotEmpty() }
+            val links = lines.filter { URL.matches(it) }
+            if (links.size != 1 || lines.size > 2) return false
+            val other = lines.singleOrNull { it !in links } ?: return true
+            return other.length <= TITLE_MAX && !URL.containsMatchIn(other)
+        }
 
         /** The stream's bytes, null when it holds more than `max`. */
         internal fun InputStream.readAtMost(max: Long): ByteArray? {

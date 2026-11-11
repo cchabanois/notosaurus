@@ -609,3 +609,19 @@ def test_a_host_without_sharing_leaves_the_page_as_it_is(page):
     started(page)
     sync_api.expect(page.locator(".thumb img")).to_have_count(0)
     assert page.evaluate("Alpine.$data(document.querySelector('[x-data]')).error") == ""
+
+
+def test_a_web_pages_address_alone_shared_adds_nothing_and_says_what_to_share(page):
+    """A browser shares a page as its address: no lesson page holding a link, said instead."""
+
+    def host(route):
+        if route.request.method == "DELETE":
+            route.fulfill(json={})
+        else:
+            route.fulfill(json={"files": [], "text": "", "skipped": [], "error": "share.link_only"})
+
+    page.route("**/api/shared**", host)
+    page.goto("/?shared=1")
+    started(page)
+    sync_api.expect(page.get_by_text("Ce partage ne contient que l'adresse d'une page web.")).to_be_visible()
+    assert page.evaluate("Alpine.$data(document.querySelector('[x-data]')).photos.length") == 0

@@ -371,6 +371,12 @@ class AppTest {
                     .putExtra(Intent.EXTRA_TEXT, "La Bastille, $run").addFlags(Intent.FLAG_ACTIVITY_NEW_TASK),
             )
             Device.waitFor(app, "$photos.length === 3 && $photos[2].text === 'La Bastille, $run'", "the text's page, the others kept")
+            // A web page shared from a browser (its title, its address): no page, said why
+            Device.context.startActivity(
+                Intent(Intent.ACTION_SEND).setClass(Device.context, MainActivity::class.java).setType("text/plain")
+                    .putExtra(Intent.EXTRA_TEXT, "Cours $run\nhttps://example.org/cours").addFlags(Intent.FLAG_ACTIVITY_NEW_TASK),
+            )
+            Device.waitFor(app, "Alpine.\$data(document.querySelector('[x-data]')).error === t('errors.share.link_only') && $photos.length === 3", "the address refused, said")
         }
     }
 
