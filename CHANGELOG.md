@@ -33,6 +33,7 @@ Each pull request's entries (the `## Changelog` of its description) are put unde
 
 ### Changed
 
+- 📜 The figures' credits on the licences page come from the Notosaurus service: a drawing tool added is credited without updating the app.
 - The AI (Gemini) may now process the lessons' photos outside the European Union, on Google's servers; the privacy policy says so.
 - Figures drawn with Typst 0.15.1 (bug fixes; no figure changes).
 - Algorithm flowcharts are drawn with their usual shapes: rounded start and end, a diamond for each test.
@@ -42,6 +43,7 @@ Each pull request's entries (the `## Changelog` of its description) are put unde
 
 ### Fixed
 
+- 📜 A map's credit links to the atlas and its data's pages, no longer to Typst's package site.
 - Cards: the explanation and the memory tip no longer grow by themselves when scrolling on a phone; they are as tall as their text.
 - 🔢 A graph's axis no longer writes a plain number on top of a value named next to it (u₂ against 2).
 - 📏 Lines in geometry figures no longer run far past their figure, so the figure keeps a readable size on the card.
