@@ -41,6 +41,7 @@ Each pull request's entries (the `## Changelog` of its description) are put unde
 
 ### Fixed
 
+- Cards: the explanation and the memory tip no longer grow by themselves when scrolling on a phone; they are as tall as their text.
 - 🔢 A graph's axis no longer writes a plain number on top of a value named next to it (u₂ against 2).
 - 📏 Lines in geometry figures no longer run far past their figure, so the figure keeps a readable size on the card.
 - 📈 A graph's frame larger than 9 cm is drawn smaller as a whole (an orthonormal frame stays orthonormal), so the card no longer shrinks its text.
