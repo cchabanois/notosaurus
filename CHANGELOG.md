@@ -44,6 +44,7 @@ Each pull request's entries (the `## Changelog` of its description) are put unde
 
 ### Fixed
 
+- Physics figures keep their scene: the body in its liquid, both bodies with their two forces, the marked angle and the displacement, the scale; a solid on an inclined plane rests on it.
 - 📜 A map's credit links to the atlas and its data's pages, no longer to Typst's package site.
 - Cards: the explanation and the memory tip no longer grow by themselves when scrolling on a phone; they are as tall as their text.
 - 🔢 A graph's axis no longer writes a plain number on top of a value named next to it (u₂ against 2).
