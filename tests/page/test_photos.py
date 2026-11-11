@@ -55,7 +55,7 @@ def test_photos_and_pictures_seen_in_full(page):
     sync_api.expect(viewer.locator(".viewer-count")).to_have_text("1 / 2")
     viewer.get_by_role("button", name="Photo suivante").click()
     sync_api.expect(viewer.locator(".viewer-count")).to_have_text("2 / 2")
-    viewer.locator(".viewer-frame img").click()  # its real size, to pan
+    viewer.locator(".viewer-frame img").click()  # zoomed in where it's touched
     sync_api.expect(viewer.locator(".viewer-frame")).to_have_class(re.compile(r"\bzoomed\b"))
     page.keyboard.press("Escape")
     sync_api.expect(viewer).to_be_hidden()
@@ -65,6 +65,51 @@ def test_photos_and_pictures_seen_in_full(page):
     page.locator(".card-picture img").first.click()
     sync_api.expect(viewer).to_be_visible()
     sync_api.expect(viewer.locator(".viewer-nav")).to_have_count(0)
+
+
+def test_a_picture_zoomed_with_two_fingers_then_moved(page):
+    """In full, a picture zoomed with two fingers about the point between them, moved with one,
+    never off the screen; zoomed in, a swipe turns no page; pinched back, the whole picture."""
+    page.set_viewport_size({"width": 360, "height": 780})
+    page.goto("/")
+    page.locator('input[type=file][accept="image/*"][multiple]').set_input_files(
+        [{"name": f"page-{n}.png", "mimeType": "image/png", "buffer": png(c)} for n, c in ((1, "red"), (2, "blue"))]
+    )
+    page.locator(".thumb img").first.click()
+    viewer = page.locator(".viewer")
+    img = viewer.locator(".viewer-frame img")
+    sync_api.expect(img).to_be_visible()
+    box = img.bounding_box()
+    cx, cy = box["x"] + box["width"] / 2, box["y"] + box["height"] / 2
+
+    def fingers(kind, *points):
+        for n, (x, y) in enumerate(points, 1):
+            event = {"pointerId": n, "pointerType": "touch", "isPrimary": n == 1, "clientX": x, "clientY": y}
+            img.dispatch_event(kind, event)
+
+    fingers("pointerdown", (cx - 20, cy), (cx + 20, cy))
+    fingers("pointermove", (cx - 60, cy), (cx + 60, cy))  # three times as far apart
+    fingers("pointerup", (cx - 60, cy), (cx + 60, cy))
+    zoomed = img.bounding_box()
+    assert 2.8 < zoomed["width"] / box["width"] < 3.2
+    assert abs(zoomed["x"] + zoomed["width"] / 2 - cx) < 2  # about the point between the fingers
+    sync_api.expect(viewer.locator(".viewer-frame")).to_have_class(re.compile(r"\bzoomed\b"))
+
+    fingers("pointerdown", (cx, cy))
+    fingers("pointermove", (cx + 2000, cy))  # far past the picture's edge
+    fingers("pointerup", (cx + 2000, cy))
+    moved = img.bounding_box()
+    assert moved["x"] > zoomed["x"] and moved["x"] <= 1  # moved, its left edge never inside the screen
+    viewer.dispatch_event("touchstart", {"touches": [{"identifier": 1, "clientX": cx, "clientY": cy}]})
+    lifted = [{"identifier": 1, "clientX": cx - 200, "clientY": cy}]  # a swipe to the left
+    viewer.dispatch_event("touchend", {"touches": [], "changedTouches": lifted})
+    sync_api.expect(viewer.locator(".viewer-count")).to_have_text("1 / 2")  # zoomed in: no page turned
+
+    fingers("pointerdown", (cx - 90, cy), (cx + 90, cy))
+    fingers("pointermove", (cx - 10, cy), (cx + 10, cy))
+    fingers("pointerup", (cx - 10, cy), (cx + 10, cy))
+    sync_api.expect(viewer.locator(".viewer-frame")).not_to_have_class(re.compile(r"\bzoomed\b"))
+    assert abs(img.bounding_box()["width"] - box["width"]) < 1  # the whole picture again
 
 
 def test_a_photo_seen_in_full_turned_and_a_name_hidden(page):

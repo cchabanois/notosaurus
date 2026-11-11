@@ -1,6 +1,40 @@
 // The photos of a lesson: added (a PDF's pages picked), turned, partly hidden, removed, seen in full.
 // Methods of the page's Alpine component (app.js), as `this`.
 
+// The viewer's zoom: none at first, a tap's, the most two fingers give
+const UNZOOMED = { scale: 1, x: 0, y: 0 };
+const TAP_ZOOM = 2.5;
+const MAX_ZOOM = 6;
+// The fingers on the picture now, and the view as they first touched it
+const pinching = { points: new Map(), from: null, moved: false };
+
+// A view zoomed to `scale` so that the picture's point under `before` (on the screen) comes
+// under `after`: a pinch's middle, or a tap's point both times. A view: the picture moved by
+// (x, y) then scaled from its top left corner; `box` where it is laid out, unmoved.
+function zoomedAbout(view, scale, before, after) {
+  const s = Math.min(MAX_ZOOM, Math.max(1, scale));
+  const px = (before.x - view.box.left - view.x) / view.scale;
+  const py = (before.y - view.box.top - view.y) / view.scale;
+  return { ...view, scale: s, x: after.x - view.box.left - s * px, y: after.y - view.box.top - s * py };
+}
+
+// The view moved back so that the picture never leaves the frame: smaller than the frame,
+// centred in it; larger, its edges never inside it.
+function keptOnScreen(view) {
+  const { box, frame, scale } = view;
+  const axis = (moved, start, size, frameStart, frameSize) => {
+    const left = start + moved;  // where the picture starts on the screen
+    const scaled = size * scale;
+    if (scaled <= frameSize) return frameStart + (frameSize - scaled) / 2 - start;
+    return Math.min(frameStart, Math.max(frameStart + frameSize - scaled, left)) - start;
+  };
+  return {
+    scale,
+    x: axis(view.x, box.left, box.width, frame.left, frame.width),
+    y: axis(view.y, box.top, box.height, frame.top, frame.height),
+  };
+}
+
 // A canvas as a file (JPEG, or a PNG mask). Not canvas.toBlob: in Android's WebView it
 // waits for idle time, 4 to 13 s for a photo; toDataURL does the same in ~0.2 s.
 function canvasBlob(canvas, type = "image/jpeg") {
@@ -353,7 +387,7 @@ const photosPart = {
   // `card`: a card's picture, its credits shown under it (a figure's: what drew it).
   // `photos`: the lesson's photos, followed as they change (turned, a name hidden from it)
   openViewer(list, index, card = null, photos = false) {
-    this.viewer = { open: true, list, index, zoomed: false, touchX: 0, card, photos };
+    this.viewer = { open: true, list, index, touchX: 0, card, photos, ...UNZOOMED };
   },
 
   viewerList() {
@@ -363,12 +397,67 @@ const photosPart = {
   moveViewer(step) {
     const n = this.viewerList().length;
     this.viewer.index = (this.viewer.index + step + n) % n;
-    this.viewer.zoomed = false;
+    Object.assign(this.viewer, UNZOOMED);
   },
 
   swipeViewer(x) {
     const dx = x - this.viewer.touchX;
+    if (this.viewer.scale > 1 || pinching.moved) return;  // zoomed in, or two fingers: never a page turned
     if (Math.abs(dx) > 50 && this.viewerList().length > 1) this.moveViewer(dx < 0 ? 1 : -1);
+  },
+
+  // Zoomed with two fingers about the point between them, then moved with one; a tap zooms
+  // in where it touches, or back to the whole picture. The picture never leaves the screen.
+  viewerDown(event) {
+    try {
+      event.target.setPointerCapture(event.pointerId);  // its moves followed past the picture's edge
+    } catch {}  // a pointer the browser no longer knows (gone meanwhile): followed while on it
+    pinching.points.set(event.pointerId, { x: event.clientX, y: event.clientY });
+    if (pinching.points.size === 1) pinching.moved = false;
+    pinching.from = { ...this.viewerView(), points: new Map(pinching.points) };
+  },
+
+  viewerMove(event) {
+    if (!pinching.points.has(event.pointerId)) return;
+    pinching.points.set(event.pointerId, { x: event.clientX, y: event.clientY });
+    const [a, b] = [...pinching.from.points.values()];
+    const [c, d] = [...pinching.points.values()];
+    if (pinching.points.size >= 2 && b && d) {
+      const scale = pinching.from.scale * Math.hypot(d.x - c.x, d.y - c.y) / Math.max(1, Math.hypot(b.x - a.x, b.y - a.y));
+      const before = { x: (a.x + b.x) / 2, y: (a.y + b.y) / 2 };
+      const after = { x: (c.x + d.x) / 2, y: (c.y + d.y) / 2 };
+      this.setViewerView(zoomedAbout(pinching.from, scale, before, after));
+      pinching.moved = true;
+    } else if (this.viewer.scale > 1 && Math.hypot(c.x - a.x, c.y - a.y) > 4) {
+      this.setViewerView({ ...pinching.from, x: pinching.from.x + c.x - a.x, y: pinching.from.y + c.y - a.y });
+      pinching.moved = true;
+    }
+  },
+
+  viewerUp(event) {
+    pinching.points.delete(event.pointerId);
+    pinching.from = { ...this.viewerView(), points: new Map(pinching.points) };
+    if (!pinching.points.size && this.viewer.scale < 1.05) Object.assign(this.viewer, UNZOOMED);
+  },
+
+  viewerTap(event) {
+    if (pinching.moved) return;  // the end of a pinch or of a move: no tap
+    const scale = this.viewer.scale > 1 ? 1 : TAP_ZOOM;
+    const at = { x: event.clientX, y: event.clientY };
+    this.setViewerView(scale === 1 ? { ...UNZOOMED } : zoomedAbout(this.viewerView(), scale, at, at));
+  },
+
+  viewerView() {
+    const frame = document.querySelector(".viewer-frame").getBoundingClientRect();
+    const img = document.querySelector(".viewer-frame img");
+    // The picture's own place in the frame, as laid out (a transform moves none of it)
+    const box = { left: frame.left + img.offsetLeft, top: frame.top + img.offsetTop, width: img.offsetWidth, height: img.offsetHeight };
+    return { scale: this.viewer.scale, x: this.viewer.x, y: this.viewer.y, box, frame };
+  },
+
+  setViewerView(view) {
+    const { scale, x, y } = view.box ? keptOnScreen(view) : view;
+    Object.assign(this.viewer, { scale, x, y });
   },
 
   removePhoto(i) {
