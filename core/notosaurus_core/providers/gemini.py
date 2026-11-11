@@ -146,8 +146,11 @@ _NO_CONTENT = {"no_content": True}  # a log line with nothing of a lesson: its v
 
 
 def _routes(s: AIConfig) -> list[_Route]:
-    """The config's own route, then the GeminiRouting's others that can be used."""
-    routes, names = [_Route(s.gemini_route(), s)], {s.gemini_route()}
+    """The routing's first route (else the config's own), then its others that can be used."""
+    first = s.gemini_routing.first.strip()
+    main = s.on_gemini_route(first) if first else None
+    main = main or s
+    routes, names = [_Route(main.gemini_route(), main)], {main.gemini_route()}
     for name in s.gemini_routing.route_names():
         other = s.on_gemini_route(name)
         if other is not None and name not in names:
@@ -220,7 +223,7 @@ async def _gemini[T: BaseModel](
     from google.genai import types
 
     routes = _routes(s)
-    client = routes[0].client = _gemini_client(s)  # its own: made at once (a missing key said now)
+    client = routes[0].client = _gemini_client(routes[0].s or s)  # made at once: a missing key said now
     # The photos then the text (the SDK's PartUnion is a variable, not usable as a type)
     contents: list[Any] = [types.Part.from_bytes(data=img.data, mime_type=img.media_type) for img in images]
     contents.append(text)

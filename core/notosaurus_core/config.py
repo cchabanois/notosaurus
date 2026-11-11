@@ -26,12 +26,13 @@ DEFAULT_MODELS = {provider: recommended.default(recommended.CARDS, provider) for
 class GeminiRouting(BaseModel):
     """How Gemini's answer is waited for, and where else it is asked when a route stalls.
     A route: a Vertex AI location ("eu", "global"…) or "key" (the Gemini API, with
-    gemini_api_key). The main one is the config's own; `routes` are tried after it, the same
+    gemini_api_key). The main one is `first`, else the config's own; `routes` are tried after it, the same
     model, before the fallback models (a busy region is often busy for every model).
     A route stalling `stalls` times within `window_s` rests `rest_s` seconds (every call
     goes to the next one), then one call tries it again. No `routes`: as before, the
     fallback models on the config's own route."""
 
+    first: str = ""  # the route tried first ("": the config's own): the relay's switch to "key", Vertex AI kept behind
     routes: str = ""  # comma-separated, in order: e.g. "key" or "global,key"
     # The answer's first part (a lesson's first card): it comes once the model has thought,
     # whatever the number of pages (2026-11-11: 4-6 s quick, 9-14 s careful, 1 to 10

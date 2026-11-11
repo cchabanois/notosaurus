@@ -152,6 +152,14 @@ def test_route_changes_logged_with_their_values(monkeypatch, caplog):
 
 def test_routes_from_the_config():
     assert [r.name for r in gemini._routes(ROUTED)] == ["eu", "key"]
+    key_first = GeminiRouting(first="key", routes="eu, global")  # the relay's switch to the Gemini API
+    assert [r.name for r in gemini._routes(ROUTED.model_copy(update={"gemini_routing": key_first}))] == [
+        "key",
+        "eu",
+        "global",
+    ]
+    no_key = GeminiRouting(first="key", routes="global")
+    assert [r.name for r in gemini._routes(AIConfig(gemini_vertex_project="p", gemini_routing=no_key))] == ["global"]
     both = ROUTED.model_copy(update={"gemini_routing": GeminiRouting(routes="global, key, eu")})
     assert [r.name for r in gemini._routes(both)] == ["eu", "global", "key"]  # its own not twice
     no_key = ROUTED.model_copy(update={"gemini_api_key": ""})
