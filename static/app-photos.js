@@ -1,6 +1,8 @@
 // The photos of a lesson: added (a PDF's pages picked), turned, partly hidden, removed, seen in full.
 // Methods of the page's Alpine component (app.js), as `this`.
 
+// Up to this many pages: a grid beside the add buttons; more, one row scrolling sideways
+const GRID_PAGES = 4;
 // The viewer's zoom: none at first, a tap's, the most two fingers give
 const UNZOOMED = { scale: 1, x: 0, y: 0 };
 const TAP_ZOOM = 2.5;
@@ -201,6 +203,20 @@ const photosPart = {
       }
     }
     if (left) this.error = t("app.photos.full", { max: this.maxPhotos, count: left });
+    this.showLastPage();
+  },
+
+  // More pages than the grid holds: one row of small pages (index.html's .strip.compact)
+  compactStrip() {
+    return this.photos.length > GRID_PAGES;
+  },
+
+  // The row scrolled to its end: the pages just added seen
+  showLastPage() {
+    this.$nextTick(() => {
+      const pages = this.$refs.pages;
+      if (this.compactStrip() && pages) pages.scrollLeft = pages.scrollWidth;
+    });
   },
 
   // A PDF: its pages as photos. More pages than places left: the user picks them
@@ -470,5 +486,17 @@ const photosPart = {
     URL.revokeObjectURL(this.photos[i].url);
     this.photos.splice(i, 1);
     this.photosEdited = Boolean(this.lessonId);
+  },
+
+  // The page shown in the viewer removed: the next one shown (the one before, the last
+  // removed); none left, the viewer closed
+  removeShownPhoto() {
+    this.removePhoto(this.viewer.index);
+    if (!this.photos.length) {
+      this.viewer.open = false;
+      return;
+    }
+    this.viewer.index = Math.min(this.viewer.index, this.photos.length - 1);
+    this.unzoomViewer();
   },
 };

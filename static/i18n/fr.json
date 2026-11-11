@@ -46,6 +46,12 @@
       "title": "Photos de la leçon",
       "page": "Page {n}",
       "remove": "Retirer cette page",
+      "count": {
+        "one": "{count} page",
+        "other": "{count} pages"
+      },
+      "seeAll": "📖 Tout voir",
+      "hidden": "Une partie cachée sur cette page",
       "rotate": "Tourner la photo d'un quart de tour",
       "hide": "Cacher une partie de la page (un nom…)",
       "takePhoto": "Prendre une photo",

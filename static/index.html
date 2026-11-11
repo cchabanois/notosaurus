@@ -139,11 +139,15 @@
     <!-- 1. Photos -->
     <section class="panel">
       <h2><span class="step">1</span> <span x-text="$t('app.photos.title')"></span> <a class="help-link" :href="$docs('photos')" target="_blank" rel="noopener" :aria-label="$t('common.helpOn', { topic: $t('app.photos.title') })" :title="$t('common.helpOn', { topic: $t('app.photos.title') })">?</a></h2>
-      <div class="strip">
+      <!-- More pages than a grid holds (compactStrip): one row of small pages scrolling sideways,
+           the section as tall whatever their number; each page's buttons then in the viewer -->
+      <div class="strip" :class="{ compact: compactStrip() }">
+        <div class="pages" x-ref="pages">
         <template x-for="(p, i) in photos" :key="p.url">
           <figure class="thumb">
             <img :src="p.url" :alt="$t('app.photos.page', { n: i + 1 })" @click="openViewer([], i, null, true)">
             <figcaption x-text="i + 1"></figcaption>
+            <span class="thumb-masked" x-show="p.mask" :title="$t('app.photos.hidden')">🖍️</span>
             <button class="thumb-remove" @click="removePhoto(i)" :aria-label="$t('app.photos.remove')">✕</button>
             <button class="thumb-rotate" x-show="!readOnly()" @click="rotatePhoto(i)" :disabled="loading"
                     :aria-label="$t('app.photos.rotate')">↻</button>
@@ -152,6 +156,7 @@
                     :disabled="loading" :aria-label="$t('app.photos.hide')" :title="$t('app.photos.hide')">🖍️</button>
           </figure>
         </template>
+        </div>
         <!-- A lesson's pages all there (maxPhotos): nothing more to add, said on the camera's tile -->
         <div class="add-stack" :class="{ full: photos.length >= maxPhotos }">
           <label class="add-tile primary">
@@ -174,6 +179,11 @@
           </label>
         </div>
       </div>
+      <!-- The row's pages: how many (the most, once there), all of them seen in the viewer -->
+      <p class="strip-info" x-show="compactStrip()">
+        <span x-text="photos.length >= maxPhotos ? $t('app.photos.max', { max: maxPhotos }) : $t('app.photos.count', { count: photos.length })"></span>
+        · <button class="link-btn strong" @click="openViewer([], 0, null, true)" x-text="$t('app.photos.seeAll')"></button>
+      </p>
     </section>
 
     <!-- 2. Prompt -->
@@ -974,8 +984,10 @@
       <span x-text="viewer.card?.picture_source?.careful ? ' · ' + $t('app.pictures.carefully') : ''"></span>
     </p>
     <button class="viewer-close" @click="viewer.open = false" :aria-label="$t('common.close')">✕</button>
-    <!-- A lesson's photo: turned, a name hidden, from here too (as on its thumbnail) -->
+    <!-- A lesson's photo: removed, turned, a name hidden, from here too (as on its thumbnail) -->
     <div class="viewer-actions" x-show="viewer.photos && !readOnly()">
+      <button @click="removeShownPhoto()" :disabled="loading" :aria-label="$t('app.photos.remove')"
+              :title="$t('app.photos.remove')">✕</button>
       <button @click="rotatePhoto(viewer.index)" :disabled="loading" :aria-label="$t('app.photos.rotate')"
               :title="$t('app.photos.rotate')">↻</button>
       <button :class="{ used: photos[viewer.index]?.mask }" x-show="!photos[viewer.index]?.sent" @click="openHide(viewer.index)"
