@@ -417,9 +417,30 @@
     let axis = named.at(key, default: none)
     if type(axis) != dictionary { continue }
     let ticks = axis.at("ticks", default: none)
+    // No tick at all, written `ticks: ()` (or `(none,)`): lilaq refused it ("expected at least
+    // one value"); taken as `ticks: none`, the axis without numbers it means
+    if type(ticks) == array and ticks.all(t => t == none) {
+      axis.ticks = none
+      named.insert(key, axis)
+      continue
+    }
     if type(ticks) == array and ticks.len() == 2 and type(ticks.at(0)) in (int, float) and type(ticks.at(1)) in (content, str, symbol) {
       axis.ticks = (ticks,)
       named.insert(key, axis)
+    }
+    // Two values named at one place (f(a) and f(b) chosen equal): lilaq refused ticks at the
+    // same value ("value must be strictly positive"); one tick there, its names joined by " = "
+    let ticks = axis.at("ticks", default: none)
+    if type(ticks) == array and ticks.all(t => type(t) == array and t.len() == 2 and type(t.at(0)) in (int, float)) {
+      let merged = ()
+      for (v, name) in ticks {
+        let i = merged.position(((w, m)) => calc.abs(w - v) < 1e-9)
+        if i == none { merged.push((v, name)) } else { merged.at(i) = (merged.at(i).at(0), [#merged.at(i).at(1) $=$ #name]) }
+      }
+      if merged.len() < ticks.len() {
+        axis.ticks = merged
+        named.insert(key, axis)
+      }
     }
   }
   for (key, lim, size, horizontal) in (("xaxis", "xlim", "width", true), ("yaxis", "ylim", "height", false)) {
@@ -512,7 +533,7 @@
 // interpolation (Fritsch–Carlson): through each point exactly, rising or falling between two
 // of them without a bump of its own, level at a minimum or a maximum, at its ends sloping as
 // it goes (never flat there). points: ((x, y), …), two at least, their x all different.
-#let through(points, straight: false) = {
+#let through(points, straight: false, monotone: false) = {
   if type(points) != array or points.len() < 2 or not points.all(p => type(p) == array and p.len() == 2 and p.all(v => type(v) in (int, float))) {
     panic("through: the points ((x, y), …), two at least, numbers, not " + repr(points))
   }
@@ -522,6 +543,14 @@
   let h = range(n - 1).map(k => xs.at(k + 1) - xs.at(k))
   if h.any(v => v == 0) { panic("through: two points with the same x: " + repr(points)) }
   let d = range(n - 1).map(k => (ys.at(k + 1) - ys.at(k)) / h.at(k))
+  // Values that only rise, or only fall: a monotone function, said so (`monotone: true`: the
+  // description says it increasing, decreasing, monotone, or gives such points), else refused,
+  // saying why: a function the description gives no variations of is drawn with a turn (its
+  // monotone curves, all the AI drew for one, read as an increasing function it never said)
+  if not monotone and not straight and (d.all(v => v >= 0) or d.all(v => v <= 0)) {
+    panic("through: the values " + repr(ys) + " only " + (if d.all(v => v >= 0) { "rise" } else { "fall" })
+      + ": a function the description says increasing, decreasing or monotone (or whose points it gives so): `monotone: true`; any other function: a turn of your own, one value going back against the others, on the same side of the level as its neighbours")
+  }
   let sign(v) = if v > 0 { 1 } else if v < 0 { -1 } else { 0 }
   // an end's slope: three points' estimate, kept on its side and not too steep
   let end(h0, h1, d0, d1) = {
