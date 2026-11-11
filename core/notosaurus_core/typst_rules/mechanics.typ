@@ -1,31 +1,54 @@
 #set page(width: auto, height: auto, margin: 6pt)
 #import "@preview/cetz:0.5.2"
 // A body and the vectors at it (forces, a velocity, an acceleration, a Frenet frame), each
-// given by its direction, never placed by eye: on a circle (an orbit: the body at `at`
-// degrees, the centre's body named `centre`), on a horizontal plane, on a slope rising at
-// `angle` degrees, on a pendulum (hanging from `centre` by a string named `radius`, at
-// `angle` degrees from the vertical, `theta` the angle's name), or alone. A direction is "up", "down", "left", "right", "normal" (out
-// of the support), "along" (the way the body moves: the circle's tangent, the plane's or
-// the slope's way up), "back" (against it), "uphill", "downhill" (a slope's, whichever way
-// the body moves), "centre", "outward", or a number of degrees
-// counterclockwise from the right; its length a factor (1 by default). Each vector's name
-// at its tip, written with an arrow over it (arrows: false: plain), "?" when hidden;
-// radius: the circle's radius drawn and named; body: the body's name;
+// given by its direction, never placed by eye, in its scene: on a circle (an orbit: the body
+// at `at` degrees, the centre's body named `centre`), on a horizontal plane, on a slope rising
+// at `angle` degrees, on a pendulum (hanging from `centre` by a string named `radius`, at
+// `angle` degrees from the vertical, `theta` the angle's name), in a liquid, or alone; with
+// `other`, a second body facing it (two bodies acting on each other), `others` the vectors
+// at it, `distance` the distance between them. A direction is "up", "down", "left", "right",
+// "normal" (out of the support), "along" (the way the body moves: the circle's tangent, the
+// plane's or the slope's way up), "back" (against it), "uphill", "downhill" (a slope's,
+// whichever way the body moves), "centre", "outward", "towards", "away" (the other body), or
+// a number of degrees counterclockwise from the right; its length a factor (1 by default),
+// or with `scale: (2, "N")` (1 cm for 2 N) the vector's value. Vectors going the same way are
+// drawn side by side. Each vector's name at its tip, written with an arrow over it (arrows:
+// false: plain), "?" when hidden; radius: the circle's radius drawn and named; body: the
+// body's name, a name of one letter the name of its point (G); shape: "block", "ball" or
+// "point"; string: the body hangs from a string; marked: the vectors whose angle with the
+// support's way is marked (its value, or the name given: (F: $alpha$)); path: the body's
+// displacement on the plane, from its first point to its second ((A, B), or (A, B, its length));
 // clockwise: the body turning clockwise on its circle
+// a slope rising at `angle` degrees: its foot, the body's foot at the origin on it
+#let slope-foot(angle) = (-2.5 * calc.cos(angle * 1deg), -2.5 * calc.sin(angle * 1deg))
+// the point of a body resting on that slope, `half` its half height
+#let on-slope(angle, half) = (-half * calc.sin(angle * 1deg), half * calc.cos(angle * 1deg))
 #let mechanics(support: none, vectors: (), at: 60, centre: none, radius: none, angle: 30, body: none,
-  clockwise: false, arrows: true, hidden: (), theta: none) = context {
+  clockwise: false, arrows: true, hidden: (), theta: none, other: none, others: (), distance: none,
+  shape: auto, string: false, marked: (), path: none, scale: none) = context {
   assert(
-    support in (none, "circle", "plane", "slope", "pendulum"),
-    message: "support is none, \"circle\", \"plane\", \"slope\" or \"pendulum\"",
+    support in (none, "circle", "plane", "slope", "pendulum", "liquid"),
+    message: "support is none, \"circle\", \"plane\", \"slope\", \"pendulum\" or \"liquid\"",
   )
-  let words = ("up", "down", "left", "right", "normal", "along", "back", "centre", "outward", "uphill", "downhill")
+  assert(shape in (auto, "block", "ball", "point"), message: "shape is \"block\", \"ball\" or \"point\"")
   assert(
-    vectors.all(v => type(v) == array and v.len() in (2, 3) and (v.at(1) in words or type(v.at(1)) in (int, float))
-      and (v.len() == 2 or type(v.at(2)) in (int, float))),
-    message: "vectors are (name, direction) or (name, direction, length): a direction is one of " + words.join(", ")
-      + ", or a number of degrees",
+    other == none or support == none,
+    message: "two bodies facing each other stand alone: no support",
   )
-  for v in vectors {
+  assert(path == none or support == "plane", message: "a path is the body's displacement on a plane")
+  assert(
+    scale == none or (type(scale) == array and scale.len() == 2 and type(scale.at(0)) in (int, float)),
+    message: "scale is (the value for 1 cm, its unit): (2, \"N\")",
+  )
+  let words = ("up", "down", "left", "right", "normal", "along", "back", "centre", "outward", "uphill",
+    "downhill", "towards", "away")
+  for v in vectors + others {
+    assert(
+      type(v) == array and v.len() in (2, 3) and (v.at(1) in words or type(v.at(1)) in (int, float))
+        and (v.len() == 2 or type(v.at(2)) in (int, float)),
+      message: "vectors are (name, direction) or (name, direction, length): a direction is one of "
+        + words.join(", ") + ", or a number of degrees",
+    )
     assert(
       not (v.at(1) in ("uphill", "downhill") and support != "slope"),
       message: "\"uphill\" and \"downhill\" are a slope's directions",
@@ -34,17 +57,46 @@
       not (v.at(1) in ("centre", "outward") and support not in ("circle", "pendulum")),
       message: "\"centre\" and \"outward\" are a circle's or a pendulum's directions",
     )
+    assert(
+      not (v.at(1) in ("towards", "away") and other == none),
+      message: "\"towards\" and \"away\" point to the other body: give it with other",
+    )
   }
+  assert(others.len() == 0 or other != none, message: "others are the vectors at the other body: give it with other")
+  // the vectors' names as the AI writes them: their marked angles by name
+  let marks = if type(marked) == dictionary { marked } else if type(marked) == array {
+    marked.map(m => (str(m), none)).to-dict()
+  } else { (str(marked): none) }
   let txt(body) = text(11pt, body)
-  // a vector's name: its letter with an arrow over it, what follows _ under it (u_t)
+  let greek = ("alpha", "beta", "gamma", "Gamma", "delta", "Delta", "theta", "lambda", "mu", "pi", "Pi",
+    "rho", "sigma", "tau", "phi", "omega", "Omega")
+  // what the AI wraps a vector's index in, written plainly: F_(text(T)\/L) is F, T/L under it
+  let plain(sub) = {
+    let s = sub.trim()
+    if s.starts-with("(") and s.ends-with(")") { s = s.slice(1, -1) }
+    s = s.replace(regex("(text|upright|italic)\(([^()]*)\)"), m => m.captures.at(1))
+    s.replace("\\/", "/").replace(regex("\s*\bslash\b\s*"), "/").replace("\"", "")
+  }
+  // a vector's name: its letter with an arrow over it (Pi: Π), what follows _ under it (u_t)
   let named(name) = {
     if name in hidden { return txt[?] }
     if type(name) != str or not arrows { return txt(name) }
     // a little larger than the text: the arrow over the letter stays readable
     let (base, ..sub) = name.split("_")
-    let letter = math.arrow(math.italic(base))
-    text(13pt, if sub.len() > 0 { math.equation(math.attach(letter, br: sub.join("_"))) } else { math.equation(letter) })
+    let base = base.trim()
+    // one letter as math sets it (F italic, Π upright), a Greek letter by its name
+    let letter = math.arrow(if base in greek or base.match(regex("^\p{L}$")) != none { eval(base, mode: "math") }
+    else { math.italic(base) })
+    text(13pt, if sub.len() > 0 { math.equation(math.attach(letter, br: math.upright(plain(sub.join("_"))))) }
+    else { math.equation(letter) })
   }
+  // a body's name of one letter names its point (G, M), a longer one the body itself
+  let point-name(n) = n != none and (if type(n) == str { n } else { n.at("text", default: "") }).clusters().len() == 1
+  let shape = if shape != auto { shape } else if support in ("plane", "slope", "liquid") { "block" } else if (
+    other != none
+  ) { "ball" } else { "point" }
+  // the body's half height above its support
+  let half = if shape == "ball" { 0.5 } else { 0.45 }
   let r = 3.2  // the circle's radius
   let l = 3.4  // the pendulum's string
   // a pendulum: its string's angle from its pivot, the body at its end
@@ -54,24 +106,57 @@
     ((r * calc.cos(at * 1deg), r * calc.sin(at * 1deg)), at + if clockwise { -90 } else { 90 })
   } else if support == "pendulum" {
     ((l * calc.cos(hang * 1deg), l * calc.sin(hang * 1deg)), hang + if clockwise { -90 } else { 90 })
-  } else if support == "plane" { ((0, 0.45), 0) } else if support == "slope" {
-    ((-0.45 * calc.sin(angle * 1deg), 0.45 * calc.cos(angle * 1deg)), angle)
-  } else { ((0, 0), 0) }
+  } else if support == "plane" { ((0, half), 0) } else if support == "slope" {
+    (on-slope(angle, half), angle)
+  } else if support == "liquid" { ((0, -0.6), 0) } else { ((0, 0), 0) }
+  // the other body, facing it on the right: far enough for the names over the arrows between them
+  let wide(vs) = calc.max(0, ..vs.map(v => measure(named(v.at(0))).width / 1cm))
+  let q = (p.at(0) + calc.max(5.5, 1.9 + wide(vectors) + wide(others)), p.at(1))
   // out of the support: a circle's outward, a pendulum's string away from its pivot
   let at = if support == "pendulum" { hang } else { at }
   let normal = if support in ("circle", "pendulum") { at } else { way + 90 }
-  let degrees(d) = if type(d) != str { d } else {
+  let degrees(d, from: p) = if type(d) != str { d } else {
     (up: 90, down: 270, left: 180, right: 0, normal: normal, along: way, back: way + 180,
-      centre: at + 180, outward: at, uphill: way, downhill: way + 180).at(d)
+      centre: at + 180, outward: at, uphill: way, downhill: way + 180,
+      towards: if from == p { 0 } else { 180 }, away: if from == p { 180 } else { 0 }).at(d)
   }
+  // cetz.draw has a scale of its own
+  let per-cm = scale
   let unit = 1.5
-  let tip(v) = {
-    let a = degrees(v.at(1)) * 1deg
-    let l = unit * if v.len() == 3 { v.at(2) } else { 1 }
-    (p.at(0) + l * calc.cos(a), p.at(1) + l * calc.sin(a))
+  let length(v) = if scale != none { if v.len() == 3 { v.at(2) / scale.at(0) } else { unit } } else {
+    unit * if v.len() == 3 { v.at(2) } else { 1 }
   }
+  let off(q, a, d) = (q.at(0) + d * calc.cos(a), q.at(1) + d * calc.sin(a))
+  // each vector's start and tip: vectors going the same way from one point side by side
+  let arrows-at(from, vs) = {
+    let ways = vs.map(v => calc.rem-euclid(degrees(v.at(1), from: from), 360))
+    vs.enumerate().map(((i, v)) => {
+      let a = ways.at(i)
+      let same = ways.enumerate().filter(((j, w)) => calc.abs(w - a) < 1).map(((j, w)) => j)
+      let k = same.position(j => j == i)
+      // several up along the string the body hangs from: on either side of it (one alone on it)
+      let side = if string and from == p and calc.abs(a - 90) < 1 and same.len() > 1 {
+        0.3 * (calc.quo(k, 2) + 1) * if calc.rem(k, 2) == 0 { -1 } else { 1 }
+      } else { 0.28 * (k - (same.len() - 1) / 2) }
+      let s = off(from, (a + 90) * 1deg, side)
+      (v, a, s, off(s, a * 1deg, length(v)))
+    })
+  }
+  let drawn = arrows-at(p, vectors) + arrows-at(q, others)
+  // where nothing but the scene may go: the lines a name must stay clear of
+  let lines = ()
+  let ceiling = p.at(1) + 3.2
+  // the string from the body's top, from the point itself when the body is one
+  let hook = p.at(1) + if shape == "point" { 0 } else { half }
+  let hung = string or support == "pendulum"
+  if string { lines.push(((p.at(0), hook), (p.at(0), ceiling))) }
+  if support == "pendulum" { lines.push(((0, 0), p)) }
   cetz.canvas({
     import cetz.draw: *
+    let hatch(y, from, to) = {
+      line((from, y), (to, y), stroke: 1pt)
+      for k in range(int((to - from) / 0.4)) { line((from + 0.1 + k * 0.4, y), (from + 0.3 + k * 0.4, y + 0.2), stroke: 0.5pt) }
+    }
     if support == "circle" {
       circle((0, 0), radius: r, stroke: (thickness: 0.8pt, dash: "dashed"))
       if radius != none {
@@ -81,10 +166,14 @@
         content((r / 2 * calc.cos(a) + 0.25 * calc.cos(a + 90deg), r / 2 * calc.sin(a) + 0.25 * calc.sin(a + 90deg)),
           txt(radius))
       }
-      if centre != none {
+      // a centre named by one letter is a point (O), else a body (the Earth)
+      if centre != none and not point-name(centre) {
         circle((0, 0), radius: 0.65, fill: luma(225), stroke: 0.8pt)
         content((0, 0), txt(centre))
-      } else { circle((0, 0), radius: 0.04, fill: black) }
+      } else {
+        circle((0, 0), radius: 0.06, fill: black)
+        if centre != none { content(off((0, 0), (at + 180 + 90) * 1deg, 0.3), txt(centre)) }
+      }
     } else if support == "pendulum" {
       // the pivot under a hatched ceiling, the vertical dashed, the string, its angle
       line((-1, 0), (1, 0), stroke: 1pt)
@@ -110,31 +199,71 @@
         }
       }
     } else if support == "plane" {
-      line((-2.8, 0), (2.8, 0), stroke: 1pt)
-      for k in range(14) { line((-2.7 + k * 0.4, 0), (-2.9 + k * 0.4, -0.2), stroke: 0.5pt) }
+      let right = if path != none { 4.2 } else if other != none { q.at(0) + 2.8 } else { 2.8 }
+      hatch(0, -2.8, right)
     } else if support == "slope" {
       let a = angle * 1deg
       let (c, s) = (calc.cos(a), calc.sin(a))
-      // the slope from its foot at the left, the ground under it
-      let foot = (-2.2 * c - 1.4, -2.2 * s)
+      // the slope from its foot at the left, through the body's foot (the origin)
+      let foot = slope-foot(angle)
       let top = (foot.at(0) + 5 * c, foot.at(1) + 5 * s)
       line(foot, top, (top.at(0), foot.at(1)), close: true, stroke: 1pt, fill: luma(240))
       arc(foot, start: 0deg, stop: a, radius: 0.9, anchor: "origin", stroke: 0.6pt)
       content((foot.at(0) + 1.25 * calc.cos(a / 2), foot.at(1) + 1.25 * calc.sin(a / 2)),
         txt(math.equation(math.alpha)))
+    } else if support == "liquid" {
+      // a container, the liquid up to near its brim, the body in it
+      rect((-2, -1.5), (2, 0.4), fill: rgb("#dceefb"), stroke: none)
+      line((-2, 1.0), (-2, -1.5), (2, -1.5), (2, 1.0), stroke: 1pt)
+      line((-2, 0.4), (2, 0.4), stroke: 0.6pt + rgb("#3a7bc8"))
     }
-    // the body: a block on a plane or a slope, a point otherwise
-    if support in ("plane", "slope") {
+    if string {
+      line((p.at(0), hook), (p.at(0), ceiling), stroke: 0.8pt)
+      hatch(ceiling, p.at(0) - 1, p.at(0) + 1)
+    }
+    if path != none {
+      // the displacement under the ground, from the body's point to the second one
+      let (a, b) = (path.at(0), path.at(1))
+      let y = -0.6
+      line((0, y), (3.4, y), stroke: 1pt, mark: (end: "stealth", fill: black, scale: 0.8))
+      for x in (0, 3.4) { line((x, y - 0.1), (x, y + 0.1), stroke: 0.8pt) }
+      content((-0.15, y), txt(a), anchor: "east")
+      content((3.55, y), txt(b), anchor: "west")
+      if path.len() > 2 { content((1.7, y - 0.15), txt(path.at(2)), anchor: "north") }
+    }
+    // the bodies: a block, a ball or a point
+    let draw-body(c, name, size) = {
       let a = (if support == "slope" { angle } else { 0 }) * 1deg
-      let corner(u, v) = (p.at(0) + u * calc.cos(a) - v * calc.sin(a), p.at(1) + u * calc.sin(a) + v * calc.cos(a))
-      line(corner(-0.6, -0.45), corner(0.6, -0.45), corner(0.6, 0.45), corner(-0.6, 0.45), close: true,
-        fill: luma(215), stroke: 0.8pt)
+      if shape == "block" {
+        let corner(u, v) = (c.at(0) + size * (u * calc.cos(a) - v * calc.sin(a)),
+          c.at(1) + size * (u * calc.sin(a) + v * calc.cos(a)))
+        line(corner(-0.6, -0.45), corner(0.6, -0.45), corner(0.6, 0.45), corner(-0.6, 0.45), close: true,
+          fill: luma(215), stroke: 0.8pt)
+      } else if shape == "ball" {
+        circle(c, radius: half * size, fill: luma(225), stroke: 0.8pt)
+      }
+      circle(c, radius: if support == "pendulum" { 0.16 } else { 0.07 },
+        fill: if support == "pendulum" { luma(120) } else { black })
     }
-    circle(p, radius: if support == "pendulum" { 0.16 } else { 0.07 }, fill: if support == "pendulum" { luma(120) } else { black })
+    draw-body(p, body, 1)
+    if other != none { draw-body(q, other, 1) }
+    // the marked angles: from the support's way to the vector, its value or its name
+    for (v, a, s, t) in drawn {
+      let name = if type(v.at(0)) == str { v.at(0) } else { repr(v.at(0)) }
+      if name in marks {
+        let w = calc.rem-euclid(way, 360)
+        let d = calc.rem-euclid(a - w + 180, 360) - 180
+        line(s, off(s, w * 1deg, 1.4), stroke: (thickness: 0.6pt, dash: "dashed"))
+        arc(s, start: w * 1deg, delta: d * 1deg, radius: 0.95, anchor: "origin", stroke: 0.6pt)
+        let label = marks.at(name)
+        content(off(s, (w + d / 2) * 1deg, 1.35),
+          txt(if label != none { label } else { str(calc.round(calc.abs(d), digits: 1)) + "°" }))
+      }
+    }
     // the arrows, then their names: each beyond its tip, else beside its tip, else beside its
-    // middle, the first spot clear of every arrow and of the names already placed
-    let segments = vectors.map(v => (p, tip(v)))
-    let off(q, a, d) = (q.at(0) + d * calc.cos(a), q.at(1) + d * calc.sin(a))
+    // middle, the first spot clear of every arrow, of the scene's lines and of the names
+    // already placed
+    let segments = drawn.map(((v, a, s, t)) => (s, t))
     // how far a point is from a segment
     let gap(q, (a, b)) = {
       let (dx, dy) = (b.at(0) - a.at(0), b.at(1) - a.at(1))
@@ -142,31 +271,39 @@
       calc.sqrt(calc.pow(q.at(0) - a.at(0) - k * dx, 2) + calc.pow(q.at(1) - a.at(1) - k * dy, 2))
     }
     let placed = ()
-    for (i, v) in vectors.enumerate() {
-      let a = degrees(v.at(1)) * 1deg
-      let t = tip(v)
-      line(p, t, stroke: 1.1pt, mark: (end: "stealth", fill: black, scale: 0.8))
-      let m = ((p.at(0) + t.at(0)) / 2, (p.at(1) + t.at(1)) / 2)
+    for (i, (v, a, s, t)) in drawn.enumerate() {
+      let a = a * 1deg
+      line(s, t, stroke: 1.1pt, mark: (end: "stealth", fill: black, scale: 0.8))
+      let m = ((s.at(0) + t.at(0)) / 2, (s.at(1) + t.at(1)) / 2)
+      // two bodies facing each other: each name over its arrow, from its middle towards the
+      // space between the bodies (shared by the two names)
+      if other != none {
+        content((m.at(0), m.at(1) + 0.3), named(v.at(0)), anchor: if calc.cos(a) >= 0 { "south-west" } else { "south-east" })
+        continue
+      }
       let spots = (off(t, a, 0.34), off(t, a + 90deg, 0.4), off(t, a - 90deg, 0.4), off(m, a + 90deg, 0.4),
         off(m, a - 90deg, 0.4))
       let clear(q) = (
         segments.enumerate().all(((j, sg)) => j == i or gap(q, sg) > 0.36)
-          and (support != "pendulum" or gap(q, ((0, 0), p)) > 0.36)
+          and lines.all(sg => gap(q, sg) > 0.36)
           and placed.all(o => calc.abs(o.at(0) - q.at(0)) > 0.5 or calc.abs(o.at(1) - q.at(1)) > 0.4)
-          and (support != "circle" or centre == none or calc.sqrt(q.at(0) * q.at(0) + q.at(1) * q.at(1)) > 0.95)
+          and (support != "circle" or centre == none or point-name(centre)
+            or calc.sqrt(q.at(0) * q.at(0) + q.at(1) * q.at(1)) > 0.95)
       )
       let spot = spots.find(clear)
       if spot == none { spot = spots.first() }
       placed.push(spot)
       content(spot, named(v.at(0)))
     }
-    // the body's name in the widest gap between its vectors (and the support), clear of them
-    if body != none {
-      let taken = vectors.map(v => calc.rem-euclid(degrees(v.at(1)), 360)).sorted()
-      if support in ("plane", "slope") { taken = (taken + (calc.rem-euclid(way + 180, 360), calc.rem-euclid(way, 360), calc.rem-euclid(normal + 180, 360))).sorted() }
-      if support == "circle" and centre != none or support == "pendulum" {
-        taken = (taken + (calc.rem-euclid(at + 180, 360),)).sorted()
+    // a body's name in the widest gap between its vectors (and the support), clear of them:
+    // a point's name close to it, a body's beyond its shape
+    let name-body(c, name, vs) = {
+      let taken = vs.map(((v, a, s, t)) => a).sorted()
+      if support in ("plane", "slope") {
+        taken = (taken + (calc.rem-euclid(way + 180, 360), calc.rem-euclid(way, 360), calc.rem-euclid(normal + 180, 360))).sorted()
       }
+      if support == "circle" and centre != none or hung { taken = (taken + (calc.rem-euclid(at + 180, 360),)).sorted() }
+      if string { taken = (taken + (90,)).sorted() }
       let a = if taken.len() == 0 { -90 } else {
         let gaps = taken.enumerate().map(((k, d)) => {
           let next = if k + 1 < taken.len() { taken.at(k + 1) } else { taken.first() + 360 }
@@ -174,11 +311,39 @@
         })
         gaps.sorted(key: g => -g.at(0)).first().at(1)
       }
-      let d = if support in ("plane", "slope") { 1.15 } else if support == "pendulum" { 0.55 } else { 0.5 }
-      let q = off(p, a * 1deg, d)
-      let (c, sn) = (calc.cos(a * 1deg), calc.sin(a * 1deg))
-      let anchor = if calc.abs(c) > 0.4 { if c > 0 { "west" } else { "east" } } else if sn > 0 { "south" } else { "north" }
-      content(q, txt(body), anchor: anchor)
+      let d = if point-name(name) { 0.1 } else if shape == "block" { 1.15 } else if shape == "ball" { 0.75 } else if (
+        support == "pendulum"
+      ) { 0.55 } else { 0.5 }
+      let n = off(c, a * 1deg, d)
+      let (cs, sn) = (calc.cos(a * 1deg), calc.sin(a * 1deg))
+      // a point's name in the gap's quarter, off the point; a body's beyond it
+      let anchor = if point-name(name) { (if sn >= 0 { "south-" } else { "north-" }) + if cs >= 0 { "west" } else { "east" } } else if (
+        calc.abs(cs) > 0.4
+      ) { if cs > 0 { "west" } else { "east" } } else if sn > 0 { "south" } else { "north" }
+      content(n, txt(name), anchor: anchor)
+    }
+    if other != none {
+      // two bodies: each name under it, then the distance between their centres
+      let low = p.at(1) - half - if shape == "point" { 0.3 } else { 0.2 }
+      for (c, name) in ((p, body), (q, other)) {
+        if name != none { content((c.at(0), low), txt(name), anchor: "north") }
+      }
+      if distance != none {
+        let y = low - 0.75
+        line((p.at(0), y), (q.at(0), y), stroke: 0.6pt, mark: (start: "stealth", end: "stealth", fill: black, scale: 0.6))
+        for c in (p, q) { line((c.at(0), y - 0.12), (c.at(0), y + 0.12), stroke: 0.6pt) }
+        content(((p.at(0) + q.at(0)) / 2, y - 0.1), txt(distance), anchor: "north")
+      }
+    } else if body != none {
+      name-body(p, body, drawn)
+    }
+    if per-cm != none {
+      // the scale: 1 cm, under the scene on the right, its value over it
+      let (x, y) = (if other != none { q.at(0) + 1.2 } else { p.at(0) + 2.2 }, p.at(1) - 1.4)
+      line((x, y), (x + 1, y), stroke: 1pt)
+      for e in (x, x + 1) { line((e, y - 0.08), (e, y + 0.08), stroke: 1pt) }
+      content((x + 0.5, y + 0.1), txt[#per-cm.at(0) #per-cm.at(1)], anchor: "south")
+      content((x + 0.5, y - 0.1), txt[1 cm], anchor: "north")
     }
   })
 }
