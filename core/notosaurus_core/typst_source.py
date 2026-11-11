@@ -339,12 +339,12 @@ def no_fractions(body: str) -> str:
 
 
 # A circuit's ends meant to meet, the AI leaving them a hair apart (an arrow ending 0.1 short of
-# a lamp): the wire cut there, the circuit drawn open. A wire's or a current's arrow's end closer
+# a lamp): the wire cut there, the circuit drawn open. A wire's, a current's arrow's or a branch's end closer
 # than JOIN to a point of the circuit's (zap's elements, not shapes drawn with cetz) is moved
 # onto it, a component's point first: never two of a circuit's points, at least 0.5 apart.
 POINT = re.compile(r"\(\s*(-?\d+(?:\.\d+)?)\s*,\s*(-?\d+(?:\.\d+)?)\s*\)")
 CALLER = re.compile(r"([\w.-]+)\s*$")
-CONNECTORS = {"wire", "current-arrow"}
+CONNECTORS = {"wire", "current-arrow", "branch"}
 JOIN = 0.15
 
 

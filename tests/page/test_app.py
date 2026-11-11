@@ -133,6 +133,18 @@ def test_android_check_says_it_checked(page):
     sync_api.expect(check).to_be_disabled()
 
 
+def test_android_check_of_a_lapsed_subscription_says_it_ended(page):
+    """A subscription past its end: "Vérifier" said "✓ Clé vérifiée : à jour." beside "Votre
+    abonnement est terminé…", one or the other untrue. Only that it ended, then."""
+    ended = (datetime.now(UTC) - timedelta(days=2)).isoformat()
+    android_settings(page, {"plan": "monthly", "credits_left": 0, "daily_left": 0, "ends_at": ended})
+    sync_api.expect(page.get_by_text("Votre abonnement est terminé", exact=False).first).to_be_visible()
+    page.get_by_role("button", name="Vérifier").click()
+    sync_api.expect(page.get_by_text("Votre abonnement est terminé", exact=False).first).to_be_visible()
+    page.wait_for_function("!Alpine.$data(document.querySelector('[x-data]')).checking")
+    sync_api.expect(page.get_by_text("✓ Clé vérifiée : à jour.")).to_have_count(0)
+
+
 def test_what_the_page_keeps_kept_by_the_android_app(page):
     """The Android app serves saved.js (its preferences): read from it, not localStorage,
     each change told to it (PUT /api/saved)."""

@@ -253,7 +253,7 @@
       "figures": "Figuren werden beschrieben…",
       "writingCards": "Karten werden geschrieben: {count}…",
       "slow": "Die KI braucht länger als sonst für die Antwort…",
-      "fallback": "Die KI antwortet nicht: Wechsel zu einem anderen Modell…"
+      "fallback": "Die KI antwortet nicht: neuer Versuch auf anderem Weg…"
     },
     "send": {
       "added": {
@@ -462,7 +462,7 @@
       "start": "Diktieren",
       "stop": "Stoppen und Text schreiben",
       "busy": "Ich schreibe auf, was du gesagt hast…",
-      "listening": "Ich höre zu… tippe auf ⏹, wenn du fertig bist.",
+      "listening": "Ich höre zu… tippe auf das Mikrofon, wenn du fertig bist.",
       "nothing": "Nichts gehört: versuch es noch einmal, näher am Mikrofon."
     },
     "update": {
@@ -1136,7 +1136,8 @@
     },
     "dictation": {
       "refused": "Notosaurus hat keinen Zugriff auf das Mikrofon: erlaube es in den Android-Einstellungen, um zu diktieren.",
-      "failed": "Das Mikrofon konnte nicht aufnehmen: versuch es noch einmal."
+      "failed": "Das Mikrofon konnte nicht aufnehmen: versuch es noch einmal.",
+      "recognizer": "Die Spracherkennung des Telefons antwortet nicht: Versuche es noch einmal oder prüfe in den Android-Einstellungen, ob sie für deine Sprache installiert ist."
     },
     "subscription": {
       "unavailable": "Google Play ist auf diesem Handy nicht verfügbar.",

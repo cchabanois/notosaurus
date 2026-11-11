@@ -3,8 +3,10 @@ package app.notosaurus
 import android.content.Context
 import android.media.MediaRecorder
 import android.os.Build
+import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import kotlinx.coroutines.withTimeoutOrNull
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.put
 import java.io.File
@@ -19,11 +21,58 @@ interface Recorder {
 }
 
 /**
- * The page's 🎤 (the instructions, a correction): recorded on the phone, then written
- * by the relay's AI as the user meant to type it (/v1/transcribe). One at a time.
+ * The page's 🎤 (the instructions, a correction): heard by the phone's own speech
+ * recognition (`listener`), its text shown as it comes ("✨ Tidy up" cleans it after); a phone
+ * without one: recorded, then written by the relay's AI as the user meant to type it
+ * (/v1/transcribe). One at a time.
  */
-class Dictation(private val folder: File, private val recorder: Recorder, private val relay: () -> Relay) {
+class Dictation(
+    private val folder: File,
+    private val recorder: Recorder,
+    private val relay: () -> Relay,
+    private val listener: Listener? = null,
+) {
     private var recording: File? = null
+
+    /** The phone hears it: the text as it comes, no relay. */
+    val live: Boolean get() = listener?.available() == true
+
+    @Volatile private var heard = ""
+    @Volatile private var failure: String? = null
+    @Volatile private var listening = false
+
+    /** Started by listen(), until stopped (a failure too: said when stopped). */
+    @Volatile var listeningLive = false
+        private set
+
+    /** Listens with the phone's recognition, in `language` (a BCP 47 tag). */
+    @Synchronized
+    fun listen(language: String) {
+        val phone = listener ?: throw BadRequest("dictation.recognizer")
+        cancel()
+        heard = ""
+        failure = null
+        listening = true
+        listeningLive = true
+        phone.start(language, { heard = it }, { failure = it; listening = false })
+    }
+
+    /** What was heard so far, and the error that stopped it (null: none). */
+    fun heard(): Pair<String, String?> = heard to failure
+
+    /** Stopped: everything heard ("" when nothing). */
+    suspend fun stopListening(): String {
+        val phone = listener ?: return ""
+        listeningLive = false
+        if (listening) {
+            listening = false
+            val stopped = CompletableDeferred<Unit>()
+            phone.stop { stopped.complete(Unit) }
+            withTimeoutOrNull(STOP_MS) { stopped.await() }
+        }
+        failure?.let { throw BadRequest(it) }
+        return heard.trim()
+    }
 
     // Asked from Ktor's threads (two taps at once): one at a time, the recording with them
     @Synchronized
@@ -51,6 +100,11 @@ class Dictation(private val folder: File, private val recorder: Recorder, privat
     @Synchronized
     fun cancel() {
         taken()?.delete()
+        listeningLive = false
+        if (listening) {
+            listening = false
+            listener?.stop {}
+        }
     }
 
     /** The recording stopped and handed over, once (null: none going). */
@@ -64,6 +118,7 @@ class Dictation(private val folder: File, private val recorder: Recorder, privat
 
     companion object {
         const val MIN_BYTES = 1000 // a quarter of a second at 32 kb/s: less is nothing said
+        const val STOP_MS = 5000L // stopped: the recognition's last words waited for this long at most
         val KINDS = setOf("prompt", "correction")
     }
 }

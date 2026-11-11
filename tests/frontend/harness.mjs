@@ -107,6 +107,7 @@ function documentStub() {
       events.push(event);
       for (const fn of listeners.get(event.type) ?? []) fn(event);
     },
+    querySelector: () => null,  // no element: what the page looks for isn't there
   };
   return { document, events };
 }
@@ -162,6 +163,7 @@ export async function loadScripts(
     MathJax,
     CustomEvent,
     crypto: globalThis.crypto,
+    CSS: { escape: (text) => String(text).replace(/["\\]/g, "\\$&") },  // a selector's value, as browsers escape it
     URL, URLSearchParams, Blob, File, FormData, TextDecoder, Uint8Array,
     structuredClone,
     confirm: () => true,
