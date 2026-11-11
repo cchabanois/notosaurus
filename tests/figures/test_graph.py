@@ -328,7 +328,8 @@ def test_a_curve_by_conditions_and_the_point_it_defines():
     starts = ("- a curve the description gives by conditions", "- a point the curve defines")
     rule = "\n".join(line for line in lines if line.startswith(starts))
     lets = re.findall(r"`(#let [^`]*)`", rule)
-    assert len(lets) == 3, lets  # the letters, the curve, the point
+    assert len(lets) == 4, lets  # the letters, the curve, the point, two points
+    *lets, two = lets
     tick, dot = re.search(r"`(\(c, \$c\$\))`", rule).group(1), re.search(r"`(meet\(f, [^`]*)`", rule).group(1)
     # k: a value the curve reaches, halfway between its ends' (above its minimum)
     lets.insert(2, "#let k = (f(a) + f(b)) / 2")
@@ -340,6 +341,62 @@ def test_a_curve_by_conditions_and_the_point_it_defines():
   lq.plot(xs, xs.map(f), mark: none), {dot})"""
     )
     assert figures_typst.compile_svg("graph", body).startswith("<svg")
+    # two points named (c₁, c₂): a level the curve crosses twice, both marked
+    twice = body.replace("#let k = (f(a) + f(b)) / 2", "#let k = 1.5").replace("#let c = ", f"{two}\n#let c = c1 // ")
+    assert figures_typst.compile_svg("graph", twice).startswith("<svg")
+
+
+def test_a_curve_through_two_points_alone_curved():
+    """A function given by its two ends only (decreasing from f(a) to f(b)): through two points it
+    was a straight segment, read as an affine function (6 drawings in 6). Now a gentle curve,
+    through both exactly, falling all the way; straight only when asked (`straight: true`)."""
+    body = """#let f = through(((1, 4), (5, 1)))
+#assert(calc.abs(f(1) - 4) < 1e-9 and calc.abs(f(5) - 1) < 1e-9, message: "misses an end")
+#let xs = range(0, 401).map(i => 1 + i / 100)
+#for i in range(400) { assert(f(xs.at(i + 1)) < f(xs.at(i)), message: "not falling") }
+#assert(calc.abs(f(3) - 2.5) > 0.3, message: "straight: " + repr(f(3)))
+#let g = through(((1, 4), (5, 1)), straight: true)
+#assert(calc.abs(g(3) - 2.5) < 1e-9, message: "not straight")
+#let h = through(((0, -1), (2, 3)))
+#for i in range(200) { assert(h((i + 1) / 100) > h(i / 100), message: "not rising") }
+#lq.diagram(lq.plot(xs, xs.map(f), mark: none))"""
+    assert figures_typst.compile_svg("graph", body).startswith("<svg")
+
+
+def test_a_crossing_left_out_of_its_range_refused():
+    """A curve of the AI's own crossing the axis three times, one c named: `meet-x` and `meet`
+    given a range narrowed to hold one crossing (5 drawings in 6). `meet` checks the whole curve
+    drawn and refuses, saying where its crossings are; over the whole curve, or with `some: true`
+    (the description asking for those only), it draws. `meet-x` counts as asked (`n`). A curve
+    undefined past its plot (ln) and a line drawn wider: checked without failing."""
+    wave = """#let f = through(((1, -2), (3, 1.5), (4.5, -0.8), (6, 2.5)))
+#let xs = lq.linspace(1, 6, num: 200)
+#lq.diagram(lq.plot(xs, xs.map(f), mark: none), meet(f, x => 0, {}))"""
+    with pytest.raises(figures_typst.Unusable, match="meet 3 times"):
+        figures_typst.compile_svg("graph", wave.format("1.5, 3.5"))
+    assert figures_typst.compile_svg("graph", wave.format("1, 6")).startswith("<svg")
+    assert figures_typst.compile_svg("graph", wave.format("1.5, 3.5, some: true")).startswith("<svg")
+    counted = """#let f = through(((1, -2), (3, 1.5), (4.5, -0.8), (6, 2.5)))
+#let xs = meet-x(f, x => 0, 1, 6, n: 3)
+#assert(xs.len() == 3 and xs.all(x => calc.abs(f(x)) < 1e-9), message: repr(xs))
+#lq.diagram(lq.plot(xs, xs.map(f)))"""
+    assert figures_typst.compile_svg("graph", counted).startswith("<svg")
+    with pytest.raises(figures_typst.Unusable, match="3 times"):
+        figures_typst.compile_svg("graph", counted.replace(", n: 3", ""))
+    # `meet` told how many: as many there, else refused
+    assert figures_typst.compile_svg("graph", wave.format("1, 6, n: 3")).startswith("<svg")
+    with pytest.raises(figures_typst.Unusable, match="not 2"):
+        figures_typst.compile_svg("graph", wave.format("1, 6, n: 2"))
+    # two meets marking one crossing each: both marked, drawn
+    two = """#let xs = lq.linspace(-3, 3, num: 200)
+#lq.diagram(lq.plot(xs, xs.map(x => calc.pow(x, 2)), mark: none), lq.plot(xs, xs.map(x => x + 2), mark: none),
+  meet(x => calc.pow(x, 2), x => x + 2, -2, 0), meet(x => calc.pow(x, 2), x => x + 2, 1, 3))"""
+    assert figures_typst.compile_svg("graph", two).startswith("<svg")
+    ln = """#let xs = lq.linspace(0.2, 5, num: 100)
+#let ts = lq.linspace(-1, 5, num: 50)
+#lq.diagram(lq.plot(xs, xs.map(calc.ln), mark: none), lq.plot(ts, ts.map(x => x / 2), mark: none),
+  meet(calc.ln, x => x / 2, 0.5, 3))"""
+    assert figures_typst.compile_svg("graph", ln).startswith("<svg")
 
 
 def test_a_single_tick_without_its_trailing_comma():
