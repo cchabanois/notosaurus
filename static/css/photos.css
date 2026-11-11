@@ -20,10 +20,10 @@
 .strip:not(:has(.thumb)) .add-icon { font-size: 1.7rem; }
 .thumb { position: relative; margin: 0; overflow: hidden; background: var(--surface-2); }
 /* A lesson of one page (the most): that page large, beside the buttons, as tall as them */
-.thumb:only-of-type { grid-column: span 2; grid-row: span 2; }
+figure.thumb:only-of-type { grid-column: span 2; grid-row: span 2; }
 /* Two columns only (under three of 92px and their two gaps: a 360 dp phone): a page's cell beside
    them, or it went under them */
-@container strip (width < 296px) { .thumb:only-of-type { grid-column: auto; grid-row: auto; } }
+@container strip (width < 296px) { figure.thumb:only-of-type { grid-column: auto; grid-row: auto; } }
 .thumb img { width: 100%; height: 100%; object-fit: cover; display: block; }
 .thumb figcaption {
   position: absolute;
@@ -53,32 +53,17 @@
 .thumb-rotate { position: absolute; top: .3rem; left: .3rem; width: 1.6rem; height: 1.6rem; border: none; border-radius: 50%; background: rgb(0 0 0 / .6); color: #fff; font-size: .95rem; line-height: 1; }
 .thumb-hide { position: absolute; bottom: .3rem; right: .3rem; width: 1.6rem; height: 1.6rem; border: none; border-radius: 50%; background: rgb(0 0 0 / .6); font-size: .85rem; line-height: 1; }
 .thumb-hide.used { background: var(--primary); }  /* something hidden on this page */
-.pages { display: contents; }  /* the grid's cells, beside the add buttons */
-.thumb-masked { display: none; }  /* the grid's thumbnails say it with their 🖍️ */
-
-/* More pages than the grid holds (compactStrip): one row of small pages, the same height
-   whatever their number, scrolling sideways beside the add buttons (as many fingers wide, as
-   tall as a page: only their icons, their names read aloud); each page's buttons in the viewer */
-.strip.compact { display: flex; gap: 8px; align-items: stretch; }
-.strip.compact .add-stack { flex: none; flex-direction: row; aspect-ratio: auto; gap: 6px; }
-.strip.compact .add-tile { flex: none; width: 44px; padding: 0; }  /* a finger, in px: the row keeps its room with a larger text */
-.strip.compact .add-tile > span:not(.add-icon) {  /* hidden, still its name */
-  position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap;
+/* More pages than the strip holds: its last place the next page veiled, "+N", opening them all */
+.thumb-more { padding: 0; border: none; cursor: pointer; }
+.thumb-more img { filter: brightness(.45); }
+.thumb-more span {
+  position: absolute; inset: 0; display: flex; align-items: center; justify-content: center;
+  color: #fff; font-size: 1.6rem; font-weight: 800;
 }
-.strip.compact .add-tile { position: relative; }
-.strip.compact .pages {
-  display: flex; flex: 1 1 auto; min-width: 0; gap: 6px; padding-bottom: 4px;
-  overflow-x: auto; overscroll-behavior-x: contain; scroll-snap-type: x proximity;
-}
-.strip.compact .thumb { flex: none; width: 60px; scroll-snap-align: start; cursor: pointer; }
-.strip.compact .thumb > button { display: none; }  /* too small for a finger: in the viewer */
-.strip.compact .thumb figcaption { left: .2rem; bottom: .2rem; min-width: 1.2rem; padding: 0 .25rem; font-size: .7rem; }
-.strip.compact .thumb-masked {
-  display: block; position: absolute; top: .2rem; right: .2rem; width: 1.1rem; height: 1.1rem; border-radius: 50%;
-  background: var(--primary); font-size: .6rem; line-height: 1.1rem; text-align: center;
-}
-.strip-info { display: flex; align-items: center; flex-wrap: wrap; gap: .4rem; margin: .4rem 0 0; color: var(--muted); font-size: .88rem; font-weight: 700; }
-.strip-info .link-btn { margin: 0; min-height: 2.75rem; }  /* a finger's size */
+/* All of them, in a sheet the whole screen high: the pages as on the strip, with their buttons */
+.sheet.all-pages { height: 100dvh; max-height: 100dvh; border-radius: 0; padding-top: calc(.5rem + env(safe-area-inset-top)); }
+.sheet.all-pages .sheet-body { flex: 1 1 auto; min-height: 0; }
+.pages-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(92px, 1fr)); gap: 10px; padding-bottom: .5rem; }
 
 .add-tile {
   display: flex;

@@ -46,12 +46,8 @@
       "title": "Fotos der Lektion",
       "page": "Seite {n}",
       "remove": "Diese Seite entfernen",
-      "count": {
-        "one": "{count} Seite",
-        "other": "{count} Seiten"
-      },
-      "seeAll": "📖 Alle ansehen",
-      "hidden": "Ein Teil dieser Seite ist verdeckt",
+      "allPages": "Alle Seiten",
+      "seeAll": "Alle {count} Seiten ansehen",
       "rotate": "Foto um eine Vierteldrehung drehen",
       "hide": "Einen Teil der Seite verdecken (einen Namen…)",
       "takePhoto": "Foto aufnehmen",

@@ -1,8 +1,10 @@
 // The photos of a lesson: added (a PDF's pages picked), turned, partly hidden, removed, seen in full.
 // Methods of the page's Alpine component (app.js), as `this`.
 
-// Up to this many pages: a grid beside the add buttons; more, one row scrolling sideways
-const GRID_PAGES = 4;
+// The pages shown beside the add buttons: two rows of the strip's columns (one is the buttons'),
+// never fewer than four (a narrow phone's two columns: four pages, as when there were no more)
+const STRIP_ROWS = 2;
+const STRIP_PAGES = 4;
 // The viewer's zoom: none at first, a tap's, the most two fingers give
 const UNZOOMED = { scale: 1, x: 0, y: 0 };
 const TAP_ZOOM = 2.5;
@@ -203,20 +205,6 @@ const photosPart = {
       }
     }
     if (left) this.error = t("app.photos.full", { max: this.maxPhotos, count: left });
-    this.showLastPage();
-  },
-
-  // More pages than the grid holds: one row of small pages (index.html's .strip.compact)
-  compactStrip() {
-    return this.photos.length > GRID_PAGES;
-  },
-
-  // The row scrolled to its end: the pages just added seen
-  showLastPage() {
-    this.$nextTick(() => {
-      const pages = this.$refs.pages;
-      if (this.compactStrip() && pages) pages.scrollLeft = pages.scrollWidth;
-    });
   },
 
   // A PDF: its pages as photos. More pages than places left: the user picks them
@@ -486,6 +474,7 @@ const photosPart = {
     URL.revokeObjectURL(this.photos[i].url);
     this.photos.splice(i, 1);
     this.photosEdited = Boolean(this.lessonId);
+    if (!this.photos.length) this.allPages = false;
   },
 
   // The page shown in the viewer removed: the next one shown (the one before, the last
@@ -498,5 +487,28 @@ const photosPart = {
     }
     this.viewer.index = Math.min(this.viewer.index, this.photos.length - 1);
     this.unzoomViewer();
+  },
+
+  // --- The strip: the pages beside the add buttons -----------------------
+  // Its columns counted as its width changes (a phone turned, a window widened)
+  watchStrip(strip) {
+    const count = () => {
+      const columns = getComputedStyle(strip).gridTemplateColumns.split(" ").filter(Boolean).length;
+      if (columns && columns !== this.stripColumns) this.stripColumns = columns;
+    };
+    count();
+    new ResizeObserver(count).observe(strip);
+  },
+
+  // How many pages the strip holds: its two rows beside the buttons
+  stripCapacity() {
+    return Math.max(STRIP_PAGES, STRIP_ROWS * (this.stripColumns - 1));
+  },
+
+  // The pages shown on it: all of them, or the last place left to "+N" (that page veiled,
+  // N the pages it stands for, itself with them, as messaging apps do)
+  stripShown() {
+    const capacity = this.stripCapacity();
+    return this.photos.length > capacity ? capacity - 1 : this.photos.length;
   },
 };

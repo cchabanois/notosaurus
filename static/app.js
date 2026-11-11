@@ -191,6 +191,8 @@ document.addEventListener("alpine:init", () => {
     exporting: false,
     lessonsOpen: false,
     maxPhotos: 10,       // pages per lesson (the server's limit, from /api/config)
+    stripColumns: 3,     // the photos' grid's columns, the add buttons' one with them (watchStrip)
+    allPages: false,     // the sheet of all the lesson's pages ("+N" on the strip)
     configured: true,    // an AI service with its key: until then, the setup assistant is offered
     pdfBusy: false,      // a PDF's pages being drawn
     dropTile: "",        // "gallery" or "pdf": a file dragged over it (the computer)

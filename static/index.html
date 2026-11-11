@@ -139,15 +139,13 @@
     <!-- 1. Photos -->
     <section class="panel">
       <h2><span class="step">1</span> <span x-text="$t('app.photos.title')"></span> <a class="help-link" :href="$docs('photos')" target="_blank" rel="noopener" :aria-label="$t('common.helpOn', { topic: $t('app.photos.title') })" :title="$t('common.helpOn', { topic: $t('app.photos.title') })">?</a></h2>
-      <!-- More pages than a grid holds (compactStrip): one row of small pages scrolling sideways,
-           the section as tall whatever their number; each page's buttons then in the viewer -->
-      <div class="strip" :class="{ compact: compactStrip() }">
-        <div class="pages" x-ref="pages">
+      <!-- The pages two high beside the add buttons (as many as stripCapacity, the grid's columns
+           counted); more: the last place a "+N" opening them all (the sheet "All pages") -->
+      <div class="strip" x-init="watchStrip($el)">
         <template x-for="(p, i) in photos" :key="p.url">
-          <figure class="thumb">
+          <figure class="thumb" x-show="i < stripShown()">
             <img :src="p.url" :alt="$t('app.photos.page', { n: i + 1 })" @click="openViewer([], i, null, true)">
             <figcaption x-text="i + 1"></figcaption>
-            <span class="thumb-masked" x-show="p.mask" :title="$t('app.photos.hidden')">🖍️</span>
             <button class="thumb-remove" @click="removePhoto(i)" :aria-label="$t('app.photos.remove')">✕</button>
             <button class="thumb-rotate" x-show="!readOnly()" @click="rotatePhoto(i)" :disabled="loading"
                     :aria-label="$t('app.photos.rotate')">↻</button>
@@ -156,7 +154,13 @@
                     :disabled="loading" :aria-label="$t('app.photos.hide')" :title="$t('app.photos.hide')">🖍️</button>
           </figure>
         </template>
-        </div>
+        <template x-if="photos.length > stripCapacity()">
+          <button type="button" class="thumb thumb-more" @click="allPages = true"
+                  :aria-label="$t('app.photos.seeAll', { count: photos.length })" :title="$t('app.photos.seeAll', { count: photos.length })">
+            <img :src="photos[stripShown()]?.url" alt="">
+            <span x-text="`+${photos.length - stripShown()}`"></span>
+          </button>
+        </template>
         <!-- A lesson's pages all there (maxPhotos): nothing more to add, said on the camera's tile -->
         <div class="add-stack" :class="{ full: photos.length >= maxPhotos }">
           <label class="add-tile primary">
@@ -179,11 +183,6 @@
           </label>
         </div>
       </div>
-      <!-- The row's pages: how many (the most, once there), all of them seen in the viewer -->
-      <p class="strip-info" x-show="compactStrip()">
-        <span x-text="photos.length >= maxPhotos ? $t('app.photos.max', { max: maxPhotos }) : $t('app.photos.count', { count: photos.length })"></span>
-        · <button class="link-btn strong" @click="openViewer([], 0, null, true)" x-text="$t('app.photos.seeAll')"></button>
-      </p>
     </section>
 
     <!-- 2. Prompt -->
@@ -871,6 +870,37 @@
             x-text="$t('app.pdf.add', { count: pdfChosen().length, free: pdf.free })"></button>
   </aside>
 
+  <!-- All the lesson's pages ("+N" on the strip): each with its buttons, a tap shows it in full.
+       Before the hide editor and the viewer: Escape closes them first, this sheet only then -->
+  <div class="sheet-backdrop" x-cloak x-show="allPages" x-transition.opacity @click="allPages = false"></div>
+  <aside class="sheet all-pages" x-cloak x-show="allPages" x-bind="sheet" role="dialog" :aria-label="$t('app.photos.allPages')"
+         @keydown.escape.window="allPages && !viewer.open && !hiding.open && (allPages = false)">
+    <div class="sheet-handle"></div>
+    <div class="sheet-head">
+      <h2 x-text="$t('app.photos.allPages')"></h2>
+      <button class="icon-btn" @click="allPages = false" :aria-label="$t('common.close')">✕</button>
+    </div>
+    <div class="sheet-body">
+      <!-- Only while open: the page's other .thumb are the strip's alone -->
+      <template x-if="allPages">
+        <div class="pages-grid">
+          <template x-for="(p, i) in photos" :key="p.url">
+            <figure class="thumb">
+              <img :src="p.url" :alt="$t('app.photos.page', { n: i + 1 })" @click="openViewer([], i, null, true)">
+              <figcaption x-text="i + 1"></figcaption>
+              <button class="thumb-remove" @click="removePhoto(i)" :aria-label="$t('app.photos.remove')">✕</button>
+              <button class="thumb-rotate" x-show="!readOnly()" @click="rotatePhoto(i)" :disabled="loading"
+                      :aria-label="$t('app.photos.rotate')">↻</button>
+              <!-- Before it is sent: a name blacked out (sent photos: already read by the AI) -->
+              <button class="thumb-hide" :class="{ used: p.mask }" x-show="!readOnly() && !p.sent" @click="openHide(i)"
+                      :disabled="loading" :aria-label="$t('app.photos.hide')" :title="$t('app.photos.hide')">🖍️</button>
+            </figure>
+          </template>
+        </div>
+      </template>
+    </div>
+  </aside>
+
   <!-- Prompt picker sheet -->
   <div class="sheet-backdrop" x-cloak x-show="picker.open" x-transition.opacity @click="picker.open = false"></div>
   <aside class="sheet" x-cloak x-show="picker.open" x-bind="sheet" role="dialog"
@@ -986,8 +1016,7 @@
     <button class="viewer-close" @click="viewer.open = false" :aria-label="$t('common.close')">✕</button>
     <!-- A lesson's photo: removed, turned, a name hidden, from here too (as on its thumbnail) -->
     <div class="viewer-actions" x-show="viewer.photos && !readOnly()">
-      <button @click="removeShownPhoto()" :disabled="loading" :aria-label="$t('app.photos.remove')"
-              :title="$t('app.photos.remove')">✕</button>
+      <button @click="removeShownPhoto()" :aria-label="$t('app.photos.remove')" :title="$t('app.photos.remove')">🗑️</button>
       <button @click="rotatePhoto(viewer.index)" :disabled="loading" :aria-label="$t('app.photos.rotate')"
               :title="$t('app.photos.rotate')">↻</button>
       <button :class="{ used: photos[viewer.index]?.mask }" x-show="!photos[viewer.index]?.sent" @click="openHide(viewer.index)"

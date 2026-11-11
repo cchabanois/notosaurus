@@ -46,12 +46,8 @@
       "title": "Fotos da lição",
       "page": "Página {n}",
       "remove": "Remover esta página",
-      "count": {
-        "one": "{count} página",
-        "other": "{count} páginas"
-      },
-      "seeAll": "📖 Ver tudo",
-      "hidden": "Parte desta página escondida",
+      "allPages": "Todas as páginas",
+      "seeAll": "Ver as {count} páginas",
       "rotate": "Girar a foto um quarto de volta",
       "hide": "Ocultar parte da página (um nome…)",
       "takePhoto": "Tirar uma foto",

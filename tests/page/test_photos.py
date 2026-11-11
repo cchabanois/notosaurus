@@ -156,13 +156,13 @@ def test_pdf_pages_become_photos(page):
     sheet.get_by_role("button", name="Page 7", exact=True).click()  # one less
     sheet.get_by_role("button", name="Page 12", exact=True).click()
     sheet.get_by_role("button", name="Ajouter 7 pages").click()
-    sync_api.expect(page.locator(".thumb img")).to_have_count(10)
+    sync_api.expect(page.locator("figure.thumb img")).to_have_count(10)
     sync_api.expect(sheet).to_be_hidden()
 
     # Full: said, not added
     pdf_input.set_input_files({"name": "encore.pdf", "mimeType": "application/pdf", "buffer": pdf(1)})
     sync_api.expect(page.get_by_text("Déjà 10 pages")).to_be_visible()
-    sync_api.expect(page.locator(".thumb img")).to_have_count(10)
+    sync_api.expect(page.locator("figure.thumb img")).to_have_count(10)
 
 
 def test_pdf_text_kept_with_its_page(page, browser):
@@ -199,9 +199,9 @@ def test_the_add_buttons_beside_the_pages_on_a_phone(page, width):
     """Pages taken: the camera, gallery and PDF buttons first (always in the same place), two
     pages high, each a finger's size and the same as pages come, their names whole. One page
     (the most) shown large beside them (a narrow phone's 360 dp: in the one column left, it
-    went under them); more, beside them, then under them, up to four (more: one row,
-    test_many_pages_in_one_row_scrolling_sideways). (Three stacked in a page's cell made it half
-    as tall again as the pages.)"""
+    went under them); more, beside them, then under them on a narrow phone (more than four:
+    test_more_pages_than_the_strip_holds). (Three stacked in a page's
+    cell made it half as tall again as the pages.)"""
     page.set_viewport_size({"width": width, "height": 860})
     page.goto("/")
     heights = []
@@ -225,6 +225,8 @@ def test_the_add_buttons_beside_the_pages_on_a_phone(page, width):
         assert max(heights[-1]) - min(heights[0]) <= 3, heights  # the same as pages come
         cut = "[...document.querySelectorAll('.add-stack .add-tile')].some(e => e.scrollWidth > e.clientWidth + 1)"
         assert not page.evaluate(cut), n
+    if width == 360:  # two columns: the third and fourth under them
+        assert thumbs[2]["x"] == stack["x"] and thumbs[2]["y"] > stack["y"] + stack["height"]
 
 
 @pytest.mark.parametrize("width", [360, 380, 400, 420, 440, 460])
@@ -250,14 +252,12 @@ def test_the_add_buttons_off_once_the_lesson_has_its_ten_pages(page):
     page.locator('input[type=file][accept="image/*"][multiple]').set_input_files(
         [{"name": f"page-{n}.png", "mimeType": "image/png", "buffer": plain_image(300, 400, "red")} for n in range(10)]
     )
-    sync_api.expect(page.locator(".thumb img")).to_have_count(10)
+    sync_api.expect(page.locator("figure.thumb img")).to_have_count(10)
     sync_api.expect(page.locator(".add-tile.primary")).to_contain_text("10 pages au plus")
     for chooser in page.locator(".add-stack input[type=file]").all():
         sync_api.expect(chooser).to_be_disabled()
-    sync_api.expect(page.locator(".strip-info")).to_contain_text("10 pages au plus")
-    page.locator(".thumb img").first.click()
-    page.locator(".viewer").get_by_role("button", name="Retirer cette page").click()
-    sync_api.expect(page.locator(".thumb img")).to_have_count(9)
+    page.locator(".thumb-remove").first.click()
+    sync_api.expect(page.locator(".thumb-more")).to_have_text("+6")  # nine pages: three, then "+6"
     sync_api.expect(page.locator(".add-tile.primary")).to_contain_text("Page suivante")
     for chooser in page.locator(".add-stack input[type=file]").all():
         sync_api.expect(chooser).to_be_enabled()
@@ -459,65 +459,78 @@ def test_photos_and_pdfs_dropped_on_their_tiles(page):
     assert prevented and page.locator(".thumb img").count() == 4
 
 
-COLORS = ("red", "blue", "green", "orange", "purple", "yellow", "navy", "teal", "maroon", "olive", "pink", "gray")
+COLORS = ("red", "blue", "green", "orange", "purple", "yellow", "navy", "teal", "maroon", "olive")
 
 
-def test_many_pages_in_one_row_scrolling_sideways(page, monkeypatch):
-    """More than four pages: one row of small pages beside the add buttons, scrolling sideways,
-    the section no taller than with four (a lesson of 30 pages was 4 to 8 rows of large ones);
-    the page just added scrolled into view, a page's buttons in the viewer only; a page tapped
-    opens it in full, "See all" the first one."""
-    page.set_viewport_size({"width": 360, "height": 780})
-    for routes in ("pages", "draft"):  # lessons of 30 pages (the page and its draft)
-        monkeypatch.setattr(f"app.routes.{routes}.MAX_IMAGES", 30)
+@pytest.mark.parametrize("width", [360, 1280])
+def test_more_pages_than_the_strip_holds(page, width):
+    """More pages than the strip's two rows hold beside the add buttons (four on a narrow phone,
+    as many as its columns give on a wider screen): the section no taller than with four, its
+    last place the next page veiled, "+N" (the pages not shown, itself with them), opening
+    them all in a sheet, in order, each with its buttons; a tap there shows one in full."""
+    page.set_viewport_size({"width": width, "height": 780})
     page.goto("/")
     gallery = page.locator('input[type=file][accept="image/*"][multiple]')
 
     def add(colors, start):
-        gallery.set_input_files(
-            [
-                {"name": f"page-{n}.png", "mimeType": "image/png", "buffer": plain_image(300, 400, color)}
-                for n, color in enumerate(colors, start=start)
-            ]
-        )
+        files = [
+            {"name": f"page-{n}.png", "mimeType": "image/png", "buffer": plain_image(300, 400, color)}
+            for n, color in enumerate(colors, start=start)
+        ]
+        gallery.set_input_files(files)
 
     add(COLORS[:4], 1)
-    sync_api.expect(page.locator(".thumb img")).to_have_count(4)
+    sync_api.expect(page.locator(".strip figure.thumb img")).to_have_count(4)
     section = page.locator("section.panel").filter(has=page.locator(".strip"))
     four = section.bounding_box()["height"]
-    sync_api.expect(page.locator(".strip-info")).to_be_hidden()  # the grid as before
+    sync_api.expect(page.locator(".thumb-more")).to_have_count(0)
 
     add(COLORS[4:], 5)
-    sync_api.expect(page.locator(".thumb img")).to_have_count(12)
-    thumbs = [t.bounding_box() for t in page.locator(".thumb").all()]
-    assert len({t["y"] for t in thumbs}) == 1, thumbs  # one row
-    assert all(50 <= t["width"] <= 70 for t in thumbs), thumbs  # small pages
-    assert section.bounding_box()["height"] <= four  # no taller than with four
-    assert page.evaluate("document.documentElement.scrollWidth") <= 360  # the page itself never wider
-    row = page.locator(".strip .pages")
-    assert row.evaluate("(e) => e.scrollWidth > e.clientWidth + 100")  # scrolls sideways
-    box, last = row.bounding_box(), thumbs[-1]
-    assert box["x"] <= last["x"] and last["x"] + last["width"] <= box["x"] + box["width"] + 1  # the last one seen
-    stack = page.locator(".add-stack").bounding_box()
-    assert stack["x"] < box["x"] and all(t["height"] >= 44 for t in [*thumbs[:1], stack])  # the buttons beside
-    for tile in page.locator(".add-tile:visible").all():
-        tile_box = tile.bounding_box()
-        assert tile_box["width"] >= 40 and tile_box["height"] >= 44, tile_box  # a finger's size
-    sync_api.expect(page.locator(".thumb button:visible")).to_have_count(0)  # in the viewer
-    sync_api.expect(page.locator(".strip-info")).to_contain_text("12 pages")
+    sync_api.expect(page.locator(".strip figure.thumb")).to_have_count(10)
+    columns = page.locator(".strip").evaluate("(e) => getComputedStyle(e).gridTemplateColumns.split(' ').length")
+    capacity = max(4, 2 * (columns - 1))
+    assert capacity == (4 if width == 360 else 2 * (columns - 1)) and (width == 360 or capacity > 4), columns
+    shown = page.locator(".strip figure.thumb:visible")
+    sync_api.expect(shown).to_have_count(capacity - 1)
+    more = page.locator(".strip .thumb-more")
+    sync_api.expect(more).to_have_text(f"+{10 - capacity + 1}")
+    sync_api.expect(more.locator("button")).to_have_count(0)  # no buttons on it
+    # As tall as with four (the buttons' 3:8 and two pages with their gap: a few px apart)
+    assert abs(section.bounding_box()["height"] - four) <= 6
+    last, tile = shown.last.bounding_box(), more.bounding_box()
+    assert abs(tile["width"] - last["width"]) <= 1 and abs(tile["height"] - last["height"]) <= 1  # a page's place
+    urls = [img.get_attribute("src") for img in page.locator(".strip figure.thumb img").all()]
+    assert more.locator("img").get_attribute("src") == urls[capacity - 1]  # the next page, veiled
 
-    row.evaluate("(e) => { e.scrollLeft = 0; }")
+    more.click()
+    sheet = page.get_by_role("dialog", name="Toutes les pages")
+    sync_api.expect(sheet).to_be_visible()
+    pages = sheet.locator("figure.thumb img")
+    sync_api.expect(pages).to_have_count(10)
+    assert [img.get_attribute("src") for img in pages.all()] == urls  # all of them, in order
+    sheet.locator("figure.thumb").nth(1).get_by_role("button", name="Retirer cette page").click()
+    sync_api.expect(pages).to_have_count(9)
+    urls.pop(1)
+    assert [img.get_attribute("src") for img in pages.all()] == urls
+
+    pages.nth(2).click()
     viewer = page.locator(".viewer")
-    page.locator(".thumb img").nth(2).click()
-    sync_api.expect(viewer.locator(".viewer-count")).to_have_text("3 / 12")
+    sync_api.expect(viewer.locator(".viewer-count")).to_have_text("3 / 9")
+    sync_api.expect(viewer.locator(".viewer-frame img")).to_have_attribute("src", urls[2])
+    viewer.get_by_role("button", name="Retirer cette page").click()  # 🗑️
+    sync_api.expect(pages).to_have_count(8)
+    sync_api.expect(viewer.locator(".viewer-frame img")).to_have_attribute("src", urls[3])
+    page.keyboard.press("Escape")  # the viewer closed, the sheet still there
+    sync_api.expect(viewer).to_be_hidden()
+    sync_api.expect(sheet).to_be_visible()
     page.keyboard.press("Escape")
-    page.get_by_role("button", name="📖 Tout voir").click()
-    sync_api.expect(viewer.locator(".viewer-count")).to_have_text("1 / 12")
+    sync_api.expect(sheet).to_be_hidden()
 
 
 def test_a_page_removed_from_the_viewer(page):
-    """The viewer's ✕: the page shown removed, the next one shown in its place (the one before
-    when it was the last); the last page removed, the viewer closed."""
+    """The viewer's 🗑️ (not a second ✕: the viewer's close): the page shown removed, the next
+    one shown in its place (the one before when it was the last); the last page removed, the
+    viewer closed."""
     page.goto("/")
     page.locator('input[type=file][accept="image/*"][multiple]').set_input_files(
         [{"name": f"page-{n}.png", "mimeType": "image/png", "buffer": png(c)} for n, c in enumerate(COLORS[:3])]
@@ -527,8 +540,8 @@ def test_a_page_removed_from_the_viewer(page):
     page.locator(".thumb img").nth(1).click()
     viewer = page.locator(".viewer")
     remove = viewer.get_by_role("button", name="Retirer cette page")
+    sync_api.expect(remove).to_have_text("🗑️")
     remove.click()
-    sync_api.expect(page.locator(".thumb img")).to_have_count(2)
     assert [img.get_attribute("src") for img in page.locator(".thumb img").all()] == [urls[0], urls[2]]
     sync_api.expect(viewer.locator(".viewer-count")).to_have_text("2 / 2")
     sync_api.expect(viewer.locator(".viewer-frame img")).to_have_attribute("src", urls[2])  # the next one
