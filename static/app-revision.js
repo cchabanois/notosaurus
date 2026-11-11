@@ -13,12 +13,19 @@ const revisionPart = {
       reverse: this.reverse, typing: this.typing, dictation: this.dictation, dictationOnly: this.dictationOnly,
     };
     this.aiStep = "";
+    const job = newJob();  // "Cancel" in the waiting card stops it
+    this.generating = job;
+    this.cancelling = false;
     try {
-      const res = await resultAsItComes(await api(`/api/lessons/${this.lessonId}/revise`, {
+      const res = await resultAsItComes(await api(`/api/lessons/${this.lessonId}/revise?job=${job}`, {
         method: "POST",
         headers: { "Content-Type": "application/json", Accept: "application/x-ndjson" },
         body: JSON.stringify({ ...this.payload(), instruction }),
       }), (step) => { this.aiStep = step.step; });
+      if (!res) {  // cancelled: the cards as they were, the instruction kept to change it
+        this.revision.busy = false;
+        return;
+      }
       const { cards, stats } = this.compareCards(before.cards, res.lesson.cards);
       clearTimeout(this.saveTimer);
       this.saveTimer = null;
@@ -35,10 +42,12 @@ const revisionPart = {
       this.loadLessons();
       this.drawPictures();  // a card added by the correction may ask for one
     } catch (e) {
-      this.error = e.message;
+      if (!this.cancelling) this.error = e.message;
       this.revision.busy = false;
     } finally {
       this.aiStep = "";
+      this.generating = "";
+      this.cancelling = false;
     }
   },
 
@@ -57,10 +66,12 @@ const revisionPart = {
     if (!instruction || fix.busy || !this.lessonId || this.readOnly()) return;
     this.error = "";
     fix.busy = true;
+    fix.job = newJob();  // its "Cancel" stops it while the AI writes
+    fix.cancelling = false;
     const plain = (c) => Object.fromEntries(Object.entries(c).filter(([k]) => k !== "key" && !k.startsWith("_")));
     const lessonId = this.lessonId;
     try {
-      const res = await (await api(`/api/lessons/${lessonId}/fix-card`, {
+      const res = await (await api(`/api/lessons/${lessonId}/fix-card?job=${fix.job}`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ card: plain(card), instruction, others: this.cards.filter((c) => c !== card).map((c) => c.front) }),
@@ -72,9 +83,22 @@ const revisionPart = {
       await this.saveNow();  // its picture is drawn from the saved lesson
       if ((fixed.figure || fixed.picture_prompt) && !fixed.picture) this.drawPictures();
     } catch (e) {
-      this.error = e.message;
+      if (!fix.cancelling) this.error = e.message;  // cancelled: the card as it was, the instruction kept
       fix.busy = false;
+      fix.cancelling = false;
     }
+  },
+
+  // The card's "Cancel": closes its field; while the AI writes, stops it (the card as it was)
+  cancelFix(card) {
+    const fix = card._fix;
+    if (!fix?.busy) {
+      card._fix = null;
+      return;
+    }
+    if (fix.cancelling) return;
+    fix.cancelling = true;
+    cancelJob(fix.job);
   },
 
   // Nothing written on it yet: the AI writes it ("✨ Write with the AI")

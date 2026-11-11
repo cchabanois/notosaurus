@@ -57,15 +57,29 @@ async function lessonAsItComes(res, onCard, onStep = () => {}) {
 }
 
 // An answer told as it comes (application/x-ndjson): what the AI is at to `onStep`, then
-// its {"result"}; a server answering all at once (an older one): its answer
+// its {"result"}; null when it was cancelled. A server answering all at once (an older
+// one): its answer
 async function resultAsItComes(res, onStep) {
   if (!(res.headers.get("Content-Type") ?? "").includes("ndjson")) return res.json();
   for await (const item of ndjsonItems(res)) {
     if (item.result) return item.result;
+    if (item.cancelled) return null;
     if (item.error) throw itemError(item.error);
     if (item.step) onStep(item.step);
   }
   throw new Error(t("errors.unreachable"));
+}
+
+// The id of the AI's work the page may cancel ("Cancel": /api/generations/{job}/cancel); not
+// crypto.randomUUID: a phone opens the page over plain http
+function newJob() {
+  return Math.random().toString(36).slice(2) + Date.now().toString(36);
+}
+
+async function cancelJob(job) {
+  try {
+    await api(`/api/generations/${encodeURIComponent(job)}/cancel`, { method: "POST" });
+  } catch {}  // gone already: its answer comes anyway
 }
 
 // A card's text as it shows while it is being made: the gaps' words, not their syntax

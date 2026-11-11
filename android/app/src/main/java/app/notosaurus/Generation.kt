@@ -116,7 +116,8 @@ class Generation(
         }
     }
 
-    /** "Cancel": the lesson with that id stops being made; false when it isn't (done, unknown). */
+    /** "Cancel": the AI's work with that id (a lesson being made, corrected, a card corrected)
+     * stops; false when it isn't running (done, unknown). */
     fun cancel(job: String): Boolean = running[job]?.also { it.cancel() } != null
 
     /** The settings' standing instructions and the child's (its class, instructions: never its
@@ -132,7 +133,7 @@ class Generation(
     }
 
     /** `work`, stopped by "Cancel" (`job`: the page's id for it): Cancelled then. */
-    private suspend fun <T> cancellable(job: String?, work: suspend () -> T): T = coroutineScope {
+    internal suspend fun <T> cancellable(job: String?, work: suspend () -> T): T = coroutineScope {
         val task = async { work() }
         if (!job.isNullOrBlank()) running[job] = task
         try {
