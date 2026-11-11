@@ -591,6 +591,9 @@
       "reviewed": "{count} cartes dans le paquet « {deck} », ouvert dans Anki. Une fois révisées, elles retournent dans leurs paquets.",
       "filteredDeck": "Contrôle : {name}",
       "manual": "Ou à la main, dans Anki ou AnkiDroid :"
+    },
+    "share": {
+      "skipped": "Notosaurus prend les photos, les PDF et le texte : « {names} » n'a pas été ajouté."
     }
   },
   "admin": {
@@ -958,6 +961,9 @@
     "downloads": {
       "saved": "{name} : enregistré dans Téléchargements.",
       "failed": "{name} : impossible de l'enregistrer sur le téléphone."
+    },
+    "share": {
+      "computer": "Partager vers Notosaurus marche sans ordinateur. Avec votre ordinateur, ajoutez le fichier depuis sa page."
     }
   },
   "setup": {

@@ -162,7 +162,7 @@ export async function loadScripts(
     MathJax,
     CustomEvent,
     crypto: globalThis.crypto,
-    URL, URLSearchParams, Blob, FormData, TextDecoder, Uint8Array,
+    URL, URLSearchParams, Blob, File, FormData, TextDecoder, Uint8Array,
     structuredClone,
     confirm: () => true,
     window: { scrollTo: () => {}, addEventListener: () => {}, removeEventListener: () => {} },

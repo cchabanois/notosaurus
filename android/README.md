@@ -31,6 +31,7 @@ the `.apkg` download (the cards go to AnkiDroid) and Ko-fi (the subscription pay
 | `LocalServer.kt` | the page's `/api` routes, and its files (assets/web/) |
 | `assets/page/admin.html`, `settings.js` | the app's settings page (the page's ⚙️): licence and its credits, AnkiDroid, standing instructions, lessons on the phone, relay address (advanced); texts under `android` in the web page's i18n files |
 | `assets/page/unreachable.html` | "With my computer", the computer not answering: try again, scan again, use without computer |
+| `Shared.kt` | "Share" to Notosaurus from another app (photos, PDFs, a text): kept until the page takes them as a new lesson's pages (`/api/shared`) |
 | `Shortcuts.kt` | the icon's shortcuts ("Without computer", "With my computer"), once a computer is connected |
 | `Preferences.kt` | the settings, kept on the phone |
 | `Lessons.kt` | lessons on the phone, as the computer keeps them (lesson.json, page-N.jpg) |

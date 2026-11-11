@@ -591,6 +591,9 @@
       "reviewed": "{count} Karten im Stapel „{deck}“, in Anki geöffnet. Danach kehren sie in ihre Stapel zurück.",
       "filteredDeck": "Test: {name}",
       "manual": "Oder von Hand, in Anki oder AnkiDroid:"
+    },
+    "share": {
+      "skipped": "Notosaurus nimmt Fotos, PDFs und Text: „{names}“ wurde nicht hinzugefügt."
     }
   },
   "admin": {
@@ -958,6 +961,9 @@
     "downloads": {
       "saved": "{name}: in „Downloads“ gespeichert.",
       "failed": "{name}: konnte nicht auf dem Handy gespeichert werden."
+    },
+    "share": {
+      "computer": "Teilen mit Notosaurus funktioniert ohne Computer. Mit deinem Computer fügst du die Datei auf seiner Seite hinzu."
     }
   },
   "setup": {

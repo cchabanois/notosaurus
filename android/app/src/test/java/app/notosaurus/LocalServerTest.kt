@@ -111,6 +111,43 @@ class LocalServerTest : LocalServerTestBase() {
     }
 
     @Test
+    fun whatWasSharedKeptUntilThePageTakesIt() = app { client ->
+        // Nothing shared: nothing to take
+        val none = client.get("/api/shared") { page() }.json().jsonObject
+        assertEquals(0, none["files"]!!.jsonArray.size)
+        assertEquals("", none.string("text"))
+        // "Share" in another app (MainActivity): a photo, a PDF, a text file, a ZIP, the text shared
+        val pdf = "%PDF-1.4 a school's PDF".toByteArray()
+        local.shared.take(
+            listOf(
+                Shared.Item("cahier.jpg", "image/jpeg") { "photo".byteInputStream() },
+                Shared.Item("Leçon 5.pdf", null) { pdf.inputStream() }, // its type unknown: its name says
+                Shared.Item("notes.txt", "text/plain") { "La Révolution française".byteInputStream() },
+                Shared.Item("archive.zip", "application/zip") { "zip".byteInputStream() },
+                Shared.Item("huge.jpg", "image/jpeg") { java.io.ByteArrayInputStream(ByteArray((Shared.MAX_BYTES + 1).toInt())) },
+            ),
+            "En 1789, le peuple de Paris prend la Bastille.",
+        )
+        val shared = client.get("/api/shared") { page() }.json().jsonObject
+        val files = shared["files"]!!.jsonArray.map { it.jsonObject }
+        assertEquals(listOf("cahier.jpg", "Leçon 5.pdf"), files.map { it.string("name") })
+        assertEquals(listOf("image/jpeg", Shared.PDF), files.map { it.string("type") })
+        assertEquals("En 1789, le peuple de Paris prend la Bastille.\n\nLa Révolution française", shared.string("text"))
+        assertEquals(listOf("archive.zip", "huge.jpg"), shared["skipped"]!!.jsonArray.map { it.jsonPrimitive.content })
+        assertArrayEquals(pdf, client.get("/api/shared/2") { page() }.bodyAsBytes())
+        assertEquals(HttpStatusCode.NotFound, client.get("/api/shared/3") { page() }.status)
+        assertEquals(HttpStatusCode.Unauthorized, client.get("/api/shared").status) // never without the WebView's cookie
+        assertEquals(HttpStatusCode.Unauthorized, client.get("/api/shared/1").status)
+        // Taken by the page: gone
+        client.delete("/api/shared") { page() }
+        assertEquals(0, client.get("/api/shared") { page() }.json().jsonObject["files"]!!.jsonArray.size)
+        // A new share replaces what the page hadn't taken
+        local.shared.take(listOf(Shared.Item("a.jpg", "image/jpeg") { "a".byteInputStream() }), null)
+        local.shared.take(listOf(Shared.Item("b.png", "image/png") { "b".byteInputStream() }), null)
+        assertEquals(listOf("b.png"), client.get("/api/shared") { page() }.json().jsonObject["files"]!!.jsonArray.map { it.jsonObject.string("name") })
+    }
+
+    @Test
     fun thePagesFiles() = app { client ->
         val index = client.get("/")
         assertEquals(HttpStatusCode.OK, index.status)

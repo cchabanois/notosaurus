@@ -591,6 +591,9 @@
       "reviewed": "{count} cartões no baralho “{deck}”, aberto no Anki. Depois de revisados, voltam aos seus baralhos.",
       "filteredDeck": "Prova: {name}",
       "manual": "Ou à mão, no Anki ou no AnkiDroid:"
+    },
+    "share": {
+      "skipped": "O Notosaurus aceita fotos, PDFs e texto: “{names}” não foi adicionado."
     }
   },
   "admin": {
@@ -958,6 +961,9 @@
     "downloads": {
       "saved": "{name}: salvo em Downloads.",
       "failed": "{name}: não foi possível salvar no celular."
+    },
+    "share": {
+      "computer": "Compartilhar com o Notosaurus funciona sem computador. Com o seu computador, adicione o arquivo pela página dele."
     }
   },
   "setup": {

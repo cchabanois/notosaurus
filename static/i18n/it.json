@@ -591,6 +591,9 @@
       "reviewed": "{count} carte nel mazzo «{deck}», aperto in Anki. Una volta ripassate, tornano nei loro mazzi.",
       "filteredDeck": "Verifica: {name}",
       "manual": "Oppure a mano, in Anki o AnkiDroid:"
+    },
+    "share": {
+      "skipped": "Notosaurus accetta foto, PDF e testo: «{names}» non è stato aggiunto."
     }
   },
   "admin": {
@@ -958,6 +961,9 @@
     "downloads": {
       "saved": "{name}: salvato in Download.",
       "failed": "{name}: impossibile salvarlo sul telefono."
+    },
+    "share": {
+      "computer": "La condivisione con Notosaurus funziona senza computer. Con il tuo computer, aggiungi il file dalla sua pagina."
     }
   },
   "setup": {
