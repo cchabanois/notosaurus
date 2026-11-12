@@ -36,6 +36,8 @@ data class NoteType(
     val cards: List<CardTemplate>,
     val css: String,
     @kotlinx.serialization.SerialName("signature") val computerSignature: String = "", // the computer's (a test compares)
+    // The note type as a package holds it (genanki's: its id, "req", templates): the app's .apkg (Apkg.kt)
+    val model: kotlinx.serialization.json.JsonObject? = null,
 ) {
     /** What it is made of (name, fields, card templates, style), in 12 characters, as the
      * computer's (note_types.common.NoteType.signature): written in its style (signedCss). */

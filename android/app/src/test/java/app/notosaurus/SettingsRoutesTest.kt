@@ -235,8 +235,9 @@ class SettingsRoutesTest : LocalServerTestBase() {
     }
 
     @Test
-    fun theVoicesSpeedAndNoApkg() = app { client ->
-        assertEquals("false", client.get("/api/config") { page() }.json().jsonObject["apkg"]!!.jsonPrimitive.content)
+    fun theVoicesSpeedAndApkg() = app { client ->
+        // The cards shared as an .apkg (ExportRoutes): the page shows "📤 Partager"
+        assertEquals("true", client.get("/api/config") { page() }.json().jsonObject["apkg"]!!.jsonPrimitive.content)
         assertEquals("-10%", client.get("/api/admin/settings") { page() }.json().jsonObject.string("tts_rate"))
         client.put("/api/admin/settings") { page(); contentType(ContentType.Application.Json); setBody("""{"tts_rate": "-25%"}""") }
         client.put("/api/admin/settings") { page(); contentType(ContentType.Application.Json); setBody("""{"tts_rate": "+90%"}""") } // not one: ignored

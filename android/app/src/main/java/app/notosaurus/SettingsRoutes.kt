@@ -51,7 +51,7 @@ internal fun Route.settingsRoutes(server: LocalServer) {
                 put("profiles", false) // AnkiDroid doesn't say its profile: no Anki profile badge
                 put("configured", true)
                 put("donations", false) // paid for by the subscription: no "Support Notosaurus" (Ko-fi)
-                put("apkg", false) // the cards go to AnkiDroid: no .apkg to download
+                put("apkg", true) // the cards shared as an .apkg (ExportRoutes), through Android's share sheet; "anki.share" off: hidden
                 put("review_in_anki", true) // a lesson sent: reviewed in AnkiDroid from here
                 put("report", true) // the AI's content reported to Notosaurus (the relay): ⚑ on the cards
                 put("dictation", dictation != null) // the 🎤 of the instructions and the correction

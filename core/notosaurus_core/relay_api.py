@@ -511,6 +511,7 @@ FEATURES = {
     "anki.send": 'no "Add to Anki" (nor a test\'s lessons sent), no sounds made ahead',
     "anki.move": "a lesson's cards no longer moved to its new deck when sent",
     "anki.delete": "notes left in AnkiDroid no longer offered for deletion (after a send, or with the lesson)",
+    "anki.share": "no .apkg made to share a lesson, a test or lessons: the cards go to AnkiDroid only",
     "lesson.complete": "no pages added to a lesson",
     "lesson.regenerate": "no lesson made again in its place",
     "lesson.pdf": "no PDF read: photos only",

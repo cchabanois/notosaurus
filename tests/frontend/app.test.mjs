@@ -996,3 +996,15 @@ test("lessons ticked to share: a whole subject at once, the deck they share as t
   c.togglePickedGroup(group);  // whole: taken off together
   assert.deepEqual(plain(c.lessonPick), []);
 });
+
+test("sharing the cards: offered where the host makes .apkg, hidden while the relay turns it off", () => {
+  const c = app.component();
+  c.apkg = true;
+  c.switches = { ...c.switches, disabled: [] };
+  assert.equal(c.canShare(), true);
+  c.switches = { ...c.switches, disabled: ["anki.share"] };
+  assert.equal(c.canShare(), false);
+  c.switches = { ...c.switches, disabled: [] };
+  c.apkg = false;  // a host without .apkg (an older app's page)
+  assert.equal(c.canShare(), false);
+});

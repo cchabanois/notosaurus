@@ -9,6 +9,7 @@ import androidx.core.content.FileProvider
 import androidx.test.core.app.ActivityScenario
 import androidx.test.espresso.intent.Intents
 import androidx.test.espresso.intent.Intents.intending
+import androidx.test.espresso.intent.matcher.IntentMatchers.hasAction
 import androidx.test.espresso.intent.matcher.IntentMatchers.isInternal
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry
@@ -378,6 +379,58 @@ class AppTest {
             )
             Device.waitFor(app, "Alpine.\$data(document.querySelector('[x-data]')).error === t('errors.share.link_only') && $photos.length === 3", "the address refused, said")
         }
+    }
+
+    /** A test's cards shared from the phone (no computer): its package made here (Apkg, Android's
+     * SQLite), handed to Android's share sheet as an .apkg; opened, the collection AnkiDroid imports:
+     * the test's deck, its notes and cards, new, no review history. */
+    @Test
+    fun aTestsCardsSharedThroughAndroidsShareSheet() {
+        answering()
+        val outgoing = File(Device.context.cacheDir, "outgoing").apply { deleteRecursively() }
+        var made = ""
+        Intents.init()
+        try {
+            intending(hasAction(Intent.ACTION_CHOOSER)).respondWith(Instrumentation.ActivityResult(Activity.RESULT_OK, null))
+            ActivityScenario.launch(MainActivity::class.java).use { app ->
+                val page = "Alpine.\$data(document.querySelector('[x-data]'))"
+                Device.waitFor(app, "typeof api === 'function' && $page.apkg && !$page.off('anki.share')", "the page, sharing on")
+                made = Device.run(
+                    app,
+                    "const form = new FormData(); form.append('prompt', 'FR → ES'); " +
+                        "const lesson = await (await api('/api/extract', { method: 'POST', body: form })).json(); " +
+                        "await api('/api/exams/share-$run', { method: 'PUT', headers: { 'Content-Type': 'application/json' }, " +
+                        "body: JSON.stringify({ name: 'Interro $run', date: '', lessons: [{ lesson: lesson.id }] }) }); " +
+                        "$page.openShare({ exam: { id: 'share-$run', name: 'Interro $run', lessons: [{ lesson: lesson.id }] } }); " +
+                        "await $page.makeShared(); return lesson.id + ' ' + $page.shareSheet.error + ' ' + $page.error",
+                )
+                val deadline = System.currentTimeMillis() + 20_000
+                while (System.currentTimeMillis() < deadline && outgoing.listFiles().isNullOrEmpty()) Thread.sleep(300)
+            }
+            val chooser = Intents.getIntents().singleOrNull { it.action == Intent.ACTION_CHOOSER }
+                ?: error("no share sheet; the page: $made; intents: " + Intents.getIntents().map { it.action })
+            @Suppress("DEPRECATION") val send = chooser.getParcelableExtra<Intent>(Intent.EXTRA_INTENT)!!
+            assertEquals(Intent.ACTION_SEND, send.action)
+            assertEquals("application/apkg", send.type)
+        } finally {
+            Intents.release()
+        }
+        val file = outgoing.listFiles()!!.single()
+        assertEquals("Interro $run.apkg", file.name)
+        val collection = File(Device.context.cacheDir, "opened-$run.anki2")
+        java.util.zip.ZipInputStream(file.inputStream()).use { zip ->
+            generateSequence { zip.nextEntry }.first { it.name == "collection.anki2" }
+            collection.outputStream().use { zip.copyTo(it) }
+        }
+        android.database.sqlite.SQLiteDatabase.openDatabase(collection.path, null, android.database.sqlite.SQLiteDatabase.OPEN_READONLY).use { db ->
+            fun count(sql: String) = db.rawQuery(sql, null).use { it.moveToFirst(); it.getInt(0) }
+            assertEquals(2, count("SELECT count(*) FROM notes"))
+            assertEquals(2, count("SELECT count(*) FROM cards WHERE type = 0 AND queue = 0")) // new cards
+            assertEquals(0, count("SELECT count(*) FROM revlog")) // no review history
+            val decks = db.rawQuery("SELECT decks FROM col", null).use { it.moveToFirst(); it.getString(0) }
+            assertTrue(decks, "\"Interro $run\"" in decks)
+        }
+        collection.delete()
     }
 
     /** The fake relay: a lesson of two cards, the voices, the sounds; the extracts asked. */

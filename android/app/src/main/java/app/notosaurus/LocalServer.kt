@@ -67,6 +67,7 @@ class LocalServer(
     internal val prefs: Preferences,
     internal val version: String = "",
     internal val requestAnkiPermission: suspend () -> Boolean = { false }, // AnkiDroid's permission dialog: granted?
+    internal val apkgDb: (File) -> ApkgDb = ::AndroidApkgDb, // a package's database (the JVM tests: their own SQLite)
     internal val installAnki: () -> Unit = {}, // AnkiDroid's Play Store page
     internal val scan: suspend () -> String? = { null }, // a QR code read by the camera (null: cancelled)
     // A file to write, where the user chooses it (Android's document picker: Drive, the SD
@@ -107,6 +108,8 @@ class LocalServer(
     internal val saved = Saved(prefs) // what the page keeps on this phone (the child chosen…)
     internal val credits = Credits(prefs, ::relay) { web("figure-credits.json") } // the figures' (licences page)
     internal val dictation = recorder?.let { Dictation(File(dataDir, "dictation").apply { mkdirs() }, it, ::relay, listener) }
+    // The note types, the computer's (note-types.json, beside the page): the packages' (ExportRoutes)
+    internal val noteTypes by lazy { NoteTypes.parse(web("note-types.json")!!.decodeToString()) }
     internal val soundsAhead = SoundsAhead(::makeSounds) // the backs' sounds read once a lesson is saved
     private lateinit var server: EmbeddedServer<*, *>
 
@@ -193,6 +196,7 @@ class LocalServer(
         dictationRoutes(this@LocalServer)
         pictureRoutes(this@LocalServer)
         ankiRoutes(this@LocalServer)
+        exportRoutes(this@LocalServer)
         examRoutes(this@LocalServer)
         subscriptionRoutes(this@LocalServer)
 
