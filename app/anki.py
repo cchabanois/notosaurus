@@ -12,6 +12,7 @@ import genanki
 from notosaurus_core import tts
 from notosaurus_core.cards import DICTATION_FRONT, is_choice, is_cloze
 
+from . import exams
 from .errors import AppError
 from .models import ExportRequest
 from .note_types import (
@@ -46,6 +47,7 @@ __all__ = [
     "Note",
     "NoteType",
     "build_apkg",
+    "build_shared_apkg",
     "choice_note_type",
     "choice_order",
     "cloze_note_type",
@@ -268,9 +270,43 @@ def build_apkg(
     `audio` maps a card back to its mp3 (edge-tts voice); backs missing from it get no
     sound. `images`: see `notes`.
     """
+    return _package(notes(req, audio, images, pictures, extra_tags))
+
+
+@dataclass
+class SharedLesson:
+    """A lesson in a package shared with another family: its request (its deck the one it
+    takes in the package), its media, and the cards kept (their ids; None: every card)."""
+
+    req: ExportRequest
+    audio: dict[str, Path]
+    images: dict[int, tuple[Path, list[float] | None]]
+    pictures: dict[int, Path]
+    cards: set[str] | None = None
+
+
+def build_shared_apkg(lessons: list[SharedLesson]) -> str:
+    """One package of several lessons' cards (a test's, or lessons ticked), for another
+    family: new cards (no review history), without the tags that are this home's own (a
+    lesson's, a test's): another Notosaurus would take them for its lessons and tests."""
+    kept = []
+    for part in lessons:
+        try:
+            found = notes(part.req, part.audio, part.images, part.pictures)
+        except AppError:  # a lesson without a card to send
+            continue
+        for note in found:
+            if part.cards is None or note.card_id in part.cards:
+                note.tags = [t for t in note.tags if not t.startswith((TAG_PREFIX, exams.TAG_PREFIX))]
+                kept.append(note)
+    if not kept:
+        raise AppError("export.no_cards")
+    return _package(kept)
+
+
+def _package(all_notes: list[Note]) -> str:
     decks: dict[str, genanki.Deck] = {}
     models: dict[NoteType, genanki.Model] = {}
-    all_notes = notes(req, audio, images, pictures, extra_tags)
     for note, guid in zip(all_notes, guids(all_notes), strict=True):
         deck = decks.setdefault(note.deck, genanki.Deck(_stable_id("deck", note.deck), note.deck))
         deck.add_note(

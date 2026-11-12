@@ -78,6 +78,11 @@ html.sheet-open { overflow: hidden; overscroll-behavior: none; }
 .group-head:not(:disabled) { min-height: 2.25rem; }  /* a finger's size */
 .group-head .fold { width: 1em; }
 .lesson-search { margin-top: .5rem; }
+/* The lessons ticked to share their cards (app-anki.js): a box before each, and before a subject */
+.lesson-share { margin-top: .5rem; }
+.lesson-group h3 { display: flex; align-items: center; gap: .4rem; }
+.pick-group, .pick-lesson { flex: 0 0 auto; width: 1.35rem; height: 1.35rem; margin: 0 0 0 .35rem; accent-color: var(--primary); }
+.lesson-share-bar { position: sticky; bottom: 0; background: var(--surface); padding-top: .5rem; }
 .lesson-list li {
   display: flex;
   align-items: center;

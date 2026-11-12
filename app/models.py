@@ -129,6 +129,15 @@ class ExportRequest(LessonIn):
     lesson_id: str | None = None  # saved lesson to update and mark as exported
 
 
+class ShareRequest(BaseModel):
+    """A package of several lessons' cards for another family: a test's (its chosen cards),
+    or lessons ticked; `name`: its deck ("": the test's name, or the deck they share)."""
+
+    exam: str | None = Field(default=None, pattern=r"^[a-z0-9-]{1,40}$")
+    lessons: list[str] = Field(default_factory=list, max_length=50)
+    name: str = Field(default="", max_length=100)
+
+
 class PromptIn(BaseModel):
     name: str
     text: str

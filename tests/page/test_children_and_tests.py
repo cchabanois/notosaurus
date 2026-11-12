@@ -121,3 +121,21 @@ def test_many_lessons_to_add_their_button_in_view_a_long_title_beside_its_box(pa
     for row in rows.all():  # the box and the title on the same line, however long the title
         box, title = row.locator("input").bounding_box(), row.locator("strong").bounding_box()
         assert box["y"] >= title["y"] - 2 and box["y"] + box["height"] <= title["y"] + title["height"] + 2
+
+
+def test_a_tests_cards_shared_from_its_sheet(page):
+    """A test's sheet: "Share the test's cards" opens the sheet with the test's name as the
+    package's, the file made from the test's own cards."""
+    page.goto("/")
+    made = page.request.post("/api/extract", multipart={"prompt": FRONT_PROMPT}).json()
+    exam = {"name": "Interro lundi", "date": "", "lessons": [{"lesson": made["id"]}]}
+    page.request.put("/api/exams/interro", data=exam)
+    page.reload()
+    page.get_by_role("button", name="Leçons").click()
+    page.get_by_role("button", name=re.compile("Interro lundi")).click()
+    page.get_by_role("button", name="📤 Partager les cartes du contrôle").click()
+    sheet = page.get_by_role("dialog", name="Partager les cartes")
+    sync_api.expect(sheet.get_by_label("Nom du paquet")).to_have_value("Interro lundi")
+    with page.expect_download() as download:
+        sheet.get_by_role("button", name="📤 Créer le fichier").click()
+    assert download.value.suggested_filename == "Interro lundi.apkg"

@@ -328,4 +328,89 @@ const ankiPart = {
       this.sendStep = "";
     }
   },
+
+  // --- Sharing the cards with another family (a .apkg) -------------------
+  // From 📚 Mes leçons (lessons ticked), the open lesson, or a test: a sheet says what goes
+  // with the cards (the photos and diagrams) and how the other family imports them, then
+  // the file is made. Not where the cards go straight to AnkiDroid, nor turned off.
+  canShare() {
+    return this.apkg && !this.off("anki.share");
+  },
+
+  // 📚 Mes leçons: lessons ticked, one by one or a subject at once
+  startLessonPick() {
+    this.lessonPick = [];
+  },
+
+  togglePickedLesson(lesson) {
+    const picked = this.lessonPick;
+    this.lessonPick = picked.includes(lesson.id) ? picked.filter((id) => id !== lesson.id) : [...picked, lesson.id];
+  },
+
+  groupPicked(group) {
+    return group.lessons.length > 0 && group.lessons.every((l) => this.lessonPick?.includes(l.id));
+  },
+
+  togglePickedGroup(group) {
+    const ids = group.lessons.map((l) => l.id);
+    const others = (this.lessonPick ?? []).filter((id) => !ids.includes(id));
+    this.lessonPick = this.groupPicked(group) ? others : [...others, ...ids];
+  },
+
+  // The deck the lessons share, the child's levels left out: the package's own name
+  sharedDeck(ids) {
+    const decks = this.lessons.filter((l) => ids.includes(l.id)).map((l) => this.withoutChildLevels(deckParts(l.deck)));
+    const common = [];
+    for (let n = 0; decks.length && decks.every((d) => d.length > n && fold(d[n]) === fold(decks[0][n])); n++) {
+      common.push(decks[0][n]);
+    }
+    return common.join(" - ");  // one deck in the package (the server makes a hierarchy one level)
+  },
+
+  openShare(what) {
+    const name = what.exam ? what.exam.name : what.lessons ? this.sharedDeck(what.lessons) : "";
+    this.shareSheet = {
+      open: true, exam: what.exam?.id ?? null, lessons: what.lessons ?? [], lesson: Boolean(what.lesson),
+      count: what.exam ? what.exam.lessons.length : (what.lessons ?? []).length, name, busy: false, error: "",
+    };
+    this.lessonsOpen = false;
+    this.examSheet.open = false;
+  },
+
+  shareLessons() {
+    const ids = this.lessonPick ?? [];
+    this.lessonPick = null;
+    this.openShare({ lessons: ids });
+  },
+
+  async makeShared() {
+    const sheet = this.shareSheet;
+    if (sheet.lesson) {  // the open lesson: its own export, as it always was
+      this.shareSheet.open = false;
+      return this.exportApkg();
+    }
+    sheet.busy = true;
+    sheet.error = "";
+    try {
+      const res = await api("/api/export/shared", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ exam: sheet.exam, lessons: sheet.lessons, name: sheet.name.trim() }),
+      });
+      const url = URL.createObjectURL(new Blob([await res.blob()], { type: "application/apkg" }));
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `${(sheet.name.trim() || "notosaurus").replace(/[\\/:*?"<>|]+/g, " - ")}.apkg`;
+      a.click();
+      setTimeout(() => URL.revokeObjectURL(url), 10_000);
+      sheet.open = false;
+      const failures = Number(res.headers.get("X-Notosaurus-Audio-Failures") || 0);
+      if (failures) this.error = t("app.export.noSound", { count: failures });
+      else this.notify(t("app.share.cards.done"), true);
+    } catch (e) {
+      sheet.error = e.message;
+    } finally {
+      sheet.busy = false;
+    }
+  },
 };

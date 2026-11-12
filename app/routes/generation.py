@@ -1,4 +1,5 @@
 import asyncio
+import hashlib
 import json
 import logging
 import os
@@ -18,9 +19,10 @@ from notosaurus_core.images import refuse_bomb
 from notosaurus_core.llm import ExtractOptions, Image, extract_cards
 
 from .. import access, ankiconnect, children, decks, exams, lessons, media, prompts, settings, sounds, usage
-from ..anki import build_apkg
+from ..anki import SharedLesson, build_apkg, build_shared_apkg
 from ..errors import AppError
-from ..models import ExportRequest, Generated, Lesson, LessonIn
+from ..lesson_notes import export_request
+from ..models import ExportRequest, Generated, Lesson, LessonIn, ShareRequest
 from .common import IMAGE_TYPES, MAX_IMAGES, MAX_PAGES, jobs, pupil_lang, read_photo, tracked
 
 log = logging.getLogger("notosaurus")
@@ -364,5 +366,68 @@ async def export(req: ExportRequest, background: BackgroundTasks) -> FileRespons
         path,
         media_type=APKG_TYPE,
         filename=_filename(req.deck),
+        headers={"X-Notosaurus-Audio-Failures": str(failures)},
+    )
+
+
+def _shared_deck(top: str, rest: str, common: str) -> str:
+    """A lesson's deck in a shared package: under the package's own deck, the levels its
+    deck has after those every lesson shares ("Histoire::Révolution", the lessons all in
+    "Histoire": "<top>::Révolution"); the same deck as every other: the package's deck."""
+    levels = [p.strip() for p in rest.split("::") if p.strip()]
+    shared = [p.strip() for p in common.split("::") if p.strip()]
+    if [p.casefold() for p in levels[: len(shared)]] == [p.casefold() for p in shared]:
+        levels = levels[len(shared) :]
+    return "::".join([top, *levels])
+
+
+def _shared_id(lesson_id: str) -> str:
+    """A lesson's id as a shared package carries it (in its diagrams' and cards' keys): not
+    its own, made from its deck, which may name the child."""
+    return "shared-" + hashlib.sha1(lesson_id.encode()).hexdigest()[:12]
+
+
+@router.post("/api/export/shared")
+async def export_shared(req: ShareRequest, background: BackgroundTasks) -> FileResponse:
+    """A test's cards (those chosen of each lesson), or the lessons ticked, in one package
+    for another family: a deck named as asked (the test's name, or the deck the lessons
+    share), a subdeck per lesson, without the child's levels nor its name, nor review history."""
+    if req.exam:
+        exam = await asyncio.to_thread(exams.get, req.exam)
+        if exam is None:
+            raise AppError("exams.not_found", 404)
+        wanted = [(part.lesson, part.cards) for part in exam.lessons]
+        default = exam.name
+    else:
+        wanted = [(id, None) for id in dict.fromkeys(req.lessons)]
+        default = ""
+    found = []
+    for id, cards in wanted:
+        try:
+            found.append((await access.seen(id), cards))
+        except AppError:  # deleted since, or not this profile's to see: left out
+            continue
+    if not found:
+        raise AppError("export.no_cards")
+    every = await asyncio.to_thread(children.list_all)
+    rests = {lesson.id: children.split_deck(lesson.deck, every)[1] for lesson, _ in found}
+    common = exams.common_deck(list(rests.values()))
+    top = " ".join((req.name or default or common).replace("::", " - ").split()) or "Notosaurus"
+    parts, failures = [], 0
+    for lesson, cards in found:
+        own = export_request(lesson)
+        audio, failed = await media.card_audio(own, background)
+        failures += failed
+        images, pictures = media.diagram_images(own, lesson), media.card_pictures(own, lesson)
+        shared = own.model_copy(
+            update={"deck": _shared_deck(top, rests[lesson.id], common), "lesson_id": _shared_id(lesson.id)}
+        )
+        parts.append(SharedLesson(shared, audio, images, pictures, None if cards is None else set(cards)))
+    path = build_shared_apkg(parts)
+    background.add_task(os.remove, path)
+    return FileResponse(
+        path,
+        media_type=APKG_TYPE,
+        filename=_filename(top),
         headers={"X-Notosaurus-Audio-Failures": str(failures)},
     )
