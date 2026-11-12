@@ -197,6 +197,7 @@
 }
 .flash .subdeck {
   width: auto;
+  field-sizing: content;  /* as wide as its text, or its placeholder ("sous-paquet"): its size="10" let a newer Chrome cut it */
   flex: 0 1 auto;
   max-width: 45%;
   margin-left: 0;
