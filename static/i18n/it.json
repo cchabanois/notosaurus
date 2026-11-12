@@ -47,6 +47,15 @@
       "page": "Pagina {n}",
       "remove": "Togli questa pagina",
       "allPages": "Tutte le pagine",
+      "select": "Seleziona",
+      "chosen": {
+        "one": "{count} pagina scelta",
+        "other": "{count} pagine scelte"
+      },
+      "removeChosen": {
+        "one": "🗑️ Togli {count} pagina",
+        "other": "🗑️ Togli {count} pagine"
+      },
       "seeAll": "Vedi tutte le {count} pagine",
       "rotate": "Ruota la foto di un quarto di giro",
       "hide": "Nascondi una parte della pagina (un nome…)",
