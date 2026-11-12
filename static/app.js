@@ -209,6 +209,7 @@ document.addEventListener("alpine:init", () => {
     batch: null,         // the pages being read, when sent in several calls: { from, to, total }
     stripColumns: 3,     // the photos' grid's columns, the add buttons' one with them (watchStrip)
     allPages: false,     // the sheet of all the lesson's pages ("+N" on the strip)
+    pagesChosen: null,   // in it, the pages chosen to be removed together (their urls); null: a tap shows a page
     configured: true,    // an AI service with its key: until then, the setup assistant is offered
     pdfBusy: false,      // a PDF's pages being drawn
     dropTile: "",        // "gallery" or "pdf": a file dragged over it (the computer)

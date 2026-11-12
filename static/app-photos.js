@@ -583,6 +583,24 @@ const photosPart = {
     Object.assign(this.viewer, { scale, x, y });
   },
 
+  // "All pages": pages chosen, then removed together (none removed by a stray tap: a tap
+  // shows the page until "Select"); a long press chooses its page at once
+  choosePages(url = null) {
+    this.pagesChosen = url ? [url] : [];
+  },
+
+  togglePage(p) {
+    const i = this.pagesChosen.indexOf(p.url);
+    if (i === -1) this.pagesChosen.push(p.url);
+    else this.pagesChosen.splice(i, 1);
+  },
+
+  removeChosenPages() {
+    const chosen = this.pagesChosen ?? [];
+    for (let i = this.photos.length - 1; i >= 0; i--) if (chosen.includes(this.photos[i].url)) this.removePhoto(i);
+    this.pagesChosen = null;
+  },
+
   removePhoto(i) {
     URL.revokeObjectURL(this.photos[i].url);
     this.photos.splice(i, 1);
