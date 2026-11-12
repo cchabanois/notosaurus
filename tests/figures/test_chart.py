@@ -156,6 +156,37 @@ def test_a_bar_charts_long_names_never_overlap():
     assert width(["Réfrigérateurs", "Congélateurs", "Lave-vaisselle", "Téléviseurs", "Aspirateurs"]) > 1.5 * short
 
 
+def test_a_bar_charts_very_long_name_goes_on_lines_of_its_own():
+    """« Vide (pas de propagation) » made every bar's room 5 cm, the whole chart 2.6 times as
+    wide, its text small on the card (2 drawings in 3): a name longer than 2.4 cm goes on two
+    lines."""
+
+    def width(last):
+        values = f'(("Air", 340), ("Eau", 1500), ("{last}", 0))'
+        svg = figures_typst.compile_svg("chart", f'#chart(kind: "bars", values: {values})')
+        return float(re.search(r'<svg[^>]*\swidth="([\d.]+)', svg).group(1))
+
+    # each bar as wide as the widest name: 2.7 cm instead of 1.5 (5 cm before, the chart 2.6 times as wide)
+    assert width("Vide (pas de propagation)") < 2 * width("Vide")
+
+
+def test_bars_lying_when_asked():
+    """Horizontal bars asked (the speed of sound in three media, 0 of 3: always standing):
+    their names one under the other, the graduation's numbers apart (a step they fit),
+    counts of millions graduated too; for bars only."""
+    lying = '#chart(kind: "bars", horizontal: true, values: (("Air", 340), ("Eau", 1500), ("Acier", 5900)))'
+    standing = lying.replace("horizontal: true, ", "")
+    assert figures_typst.compile_svg("chart", lying) != figures_typst.compile_svg("chart", standing)
+    # by 2000s (0, 2000, 4000, 6000): 3 lines, never 12 numbers side by side
+    assert figures_typst.compile_svg("chart", lying).count('stroke="#cdcdcd"') == 3
+    for kind in ("bars", "lying"):
+        flag = "horizontal: true, " if kind == "lying" else ""
+        cities = '(("Paris", 2100000), ("Lyon", 520000))'
+        figures_typst.compile_svg("chart", f'#chart(kind: "bars", {flag}values: {cities})')
+    with pytest.raises(figures_typst.Unusable, match="bars only"):
+        figures_typst.compile_svg("chart", '#chart(kind: "pie", horizontal: true, values: (("A", 1), ("B", 2)))')
+
+
 def test_a_chart_refuses_what_it_cant_draw():
     for body, said in (
         ('#chart(kind: "bars", values: (("A", 1),), marks: ((1, "x"),))', "a line's only"),

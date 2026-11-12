@@ -19,7 +19,8 @@
 // kind "box": box plots, each (name, (min, q1, median, q3, max)), on one axis (_box-plots).
 // numbered: false when the description gives no value for y (only how it varies): the
 // line's shape without numbers on its axis; smooth: a curve through the measures instead of
-// straight lines, never above nor below them between two (monotone: Fritsch–Carlson)
+// straight lines, never above nor below them between two (monotone: Fritsch–Carlson).
+// horizontal: bars lying, their names one under the other at the left, the first at the top
 // A curve through measures (x, y) sorted by x, sampled: each stretch a cubic passing through
 // its two ends, with slopes that never let it overshoot them (a rise stays a rise, a flat
 // stays flat), so that the curve says nothing the measures don't
@@ -151,7 +152,7 @@
   })
 }
 #let chart(kind: "bars", values: (), written: (), degrees: false, axis: none, axes: (none, none), step: auto,
-  marks: (), spans: (), second: none, numbered: true, smooth: false, limits: auto) = context {
+  marks: (), spans: (), second: none, numbered: true, smooth: false, limits: auto, horizontal: false) = context {
   assert(kind in ("bars", "pie", "semi", "line", "box"), message: "kind is \"bars\", \"pie\", \"semi\", \"line\" or \"box\"")
   if kind == "box" {
     assert(marks == () and spans == () and second == none and not smooth and axes == (none, none) and not degrees,
@@ -159,6 +160,7 @@
     return _box-plots(values, written: written, axis: axis, step: step, limits: limits)
   }
   assert(limits == auto, message: "limits is for box plots only")
+  assert(not horizontal or kind == "bars", message: "horizontal is for bars only")
   let number(x) = type(x) in (int, float)
   let measures(vs) = (
     type(vs) == array and vs.len() > 1 and vs.all(v => type(v) == array and v.len() == 2 and number(v.at(0)) and number(v.at(1)))
@@ -353,19 +355,62 @@
       // counts by whole steps; values under 1 or with decimals (a probability law) by tenths,
       // hundredths…: never a graduation 0 and 1 alone
       let whole = values.all(v => calc.fract(v.at(1)) == 0)
+      let given-step = step != auto
+      // round steps: 1, 2, 5 times a power of ten, and 25, 250, 2500…, 0.25 for decimals (as
+      // many as counts can need: a city's inhabitants); whole counts from 1 up
+      let rounds = (range(0, 10).map(e => (1, 2, 5, 25).map(b => b * calc.pow(10, e))).flatten()
+        + if whole { () } else { (0.01, 0.02, 0.05, 0.1, 0.2, 0.25, 0.5) }).sorted()
       let step = if step != auto { step } else if whole {
-        (1, 2, 5, 10, 20, 25, 50, 100, 200, 250, 500, 1000).find(s => top / s <= 12)
+        rounds.find(s => top / s <= 12)
       } else {
-        (0.01, 0.02, 0.05, 0.1, 0.2, 0.25, 0.5, 1, 2, 5, 10, 20, 25, 50, 100, 200, 250, 500, 1000).find(s => top / s < 10)
+        rounds.find(s => top / s < 10)
       }
+      // lying, the numbers side by side: a step whose numbers fit between two marks
+      let w = 6.5
+      let step = if horizontal and not given-step {
+        let fits = rounds.filter(s => s >= step).find(s => {
+          let end = calc.ceil(top / s - 1e-9) * s
+          s * w / end >= measure(txt(num(end))).width / 1cm + 0.2
+        })
+        if fits == none { step } else { fits }
+      } else { step }
       let ymax = calc.ceil(top / step - 1e-9) * step
+      let marks-n = int(calc.round(ymax / step))
+      if horizontal {
+        // the bars lying: each name at the left of its bar, the graduation under them
+        let unit = w / ymax
+        // a name longer than 3.2 cm on two lines or more, at the right of its column; each row
+        // as high as the highest name, so that a name on two lines never meets the next
+        let name(label) = if measure(txt(label)).width / 1cm > 3.2 { box(width: 3.2cm, align(right, txt(label))) } else { txt(label) }
+        let row = calc.max(0.75, ..values.map(v => measure(name(v.at(0))).height / 1cm + 0.3))
+        let h = row * values.len()
+        for k in range(1, marks-n + 1) {
+          let x = k * step * unit
+          line((x, 0), (x, h), stroke: 0.4pt + luma(205))
+          line((x, 0), (x, -0.08), stroke: 0.6pt)
+          content((x, -0.16), txt(num(k * step)), anchor: "north")
+        }
+        content((0, -0.16), txt("0"), anchor: "north")
+        line((0, 0), (0, h + 0.2), stroke: 0.8pt)
+        line((0, 0), (w + 0.45, 0), stroke: 0.8pt, mark: (end: ">", fill: black))
+        if axis != none { content((w + 0.45, -0.62), txt(axis), anchor: "north-east") }
+        for (i, (label, count)) in values.enumerate() {
+          let y = h - row * (i + 0.5)
+          if count > 0 { rect((0, y - 0.13), (count * unit, y + 0.13), fill: luma(55), stroke: none) }
+          content((-0.16, y), name(label), anchor: "east")
+          if shown(label) { content((count * unit + 0.1, y), txt(num(count)), anchor: "west") }
+        }
+      } else {
       let h = 4.0
       let unit = h / ymax
-      // each bar's room: its label's width at least, so that long names never overlap
-      let slot = calc.max(1.5, ..values.map(v => measure(txt(v.at(0))).width / 1cm + 0.3))
+      // each bar's room: its label's width at least, so that long names never overlap; a
+      // name longer than 2.4 cm on two lines or more, never widening the whole chart
+      let wide = 2.4
+      let name(label) = if measure(txt(label)).width / 1cm > wide { box(width: wide * 1cm, align(center, txt(label))) } else { txt(label) }
+      let slot = calc.max(1.5, ..values.map(v => measure(name(v.at(0))).width / 1cm + 0.3))
       let w = slot * values.len()
       // the graduation: a tick and a light line at each step, so that a count is read, not guessed
-      for k in range(1, int(calc.round(ymax / step)) + 1) {
+      for k in range(1, marks-n + 1) {
         let y = k * step * unit
         line((0, y), (w, y), stroke: 0.4pt + luma(205))
         line((-0.08, y), (0, y), stroke: 0.6pt)
@@ -378,8 +423,9 @@
       for (i, (label, count)) in values.enumerate() {
         let x = slot * (i + 0.5)
         if count > 0 { rect((x - 0.11, 0), (x + 0.11, count * unit), fill: luma(55), stroke: none) }
-        content((x, -0.14), txt(label), anchor: "north")
+        content((x, -0.14), name(label), anchor: "north")
         if shown(label) { content((x, count * unit + 0.08), txt(num(count)), anchor: "south") }
+      }
       }
     } else {
       let r = if kind == "pie" { 2 } else { 2.4 }
