@@ -100,6 +100,11 @@ def test_a_number_lines_names_too_close_raised_those_apart_left():
     assert rows("((x: 3.1, w: 2.6), (x: 4.5, w: 2.2))") == [0, 1]
     assert rows("((x: 0, w: 1), (x: 0.3, w: 1), (x: 0.6, w: 1))") == [0, 1, 2]
     assert rows("((x: 0.6, w: 1), (x: 0, w: 1), (x: 5, w: 1))") == [1, 0, 0]  # left to right
+    # a name a raised name's line would go up through: moved aside, clear of it, its own point
+    # still under it; the others not moved
+    shifts = _measured("_name-shifts(((x: 9.9, w: 5.8), (x: 11.5, w: 4.6), (x: 2, w: 1)), (1, 2, 0))")
+    assert -5.8 / 2 < shifts[0] < 0 and 9.9 + shifts[0] + 5.8 / 2 < 11.5
+    assert shifts[1:] == [0, 0]
     draw = "#ctz-canvas({{ ctz-init(); ctz-draw-number-line(0, 10, numbers: false, points: {}) }})"
     line = lambda points: figures_typst.compile_svg("geometry", draw.format(points))  # noqa: E731
     apart = _glyphs(line("(P: (at: 1, name: [Voie lactée]), Q: (at: 8, name: [Andromède]))"))
@@ -134,9 +139,10 @@ def test_a_number_lines_numbers_too_close_lowered_and_zones_named():
         "geometry", zones.format("").replace("closed: none", "closed: (true, true)")
     ).count("<path")  # no bracket
     # zones side by side: each its colour, their names a row apart when they would touch
+    zone = " ctz-draw-interval({}, {}, closed: none, label: [{{}}], first: 0, last: 10);"
     three = (
         "#ctz-canvas({{ ctz-init(); ctz-draw-number-line(0, 10);"
-        + "".join(f" ctz-draw-interval({a}, {b}, closed: none, label: [{{}}], first: 0, last: 10);" for a, b in ((1, 2), (2, 3), (3, 8)))
+        + "".join(zone.format(a, b) for a, b in ((1, 2), (2, 3), (3, 8)))
         + " }})"
     )
     named = figures_typst.compile_svg("geometry", three.format("first zone", "second zone", "third"))

@@ -86,6 +86,23 @@
   }
   rows
 }
+// Each name's shift along its line: a name a line goes up through (a name raised above it,
+// its point under this one) moved aside, clear of that line, as far as its own point stays
+// under it and it clears its row's other names; 0 for every other name.
+#let _name-shifts(placed, rows) = {
+  let n = placed.len()
+  range(n).map(i => {
+    let p = placed.at(i)
+    let through = range(n).filter(j => rows.at(j) > rows.at(i) and calc.abs(placed.at(j).x - p.x) < p.w / 2 + 0.1)
+    if through.len() == 0 { return 0 }
+    let xs = through.map(j => placed.at(j).x)
+    // away from them all, if they are all on one side of its point
+    let d = if xs.all(x => x >= p.x) { calc.min(..xs) - 0.1 - (p.x + p.w / 2) } else if xs.all(x => x < p.x) { calc.max(..xs) + 0.1 - (p.x - p.w / 2) } else { 0 }
+    let moved = (x: p.x + d, w: p.w)
+    let fits = calc.abs(d) < p.w / 2 - 0.1 and range(n).all(j => j == i or rows.at(j) != rows.at(i) or calc.abs(placed.at(j).x - moved.x) >= (placed.at(j).w + p.w) / 2 + 0.1)
+    if fits { d } else { 0 }
+  })
+}
 // A logarithmic line's measure: its first and last decades (around its first and last values
 // `given`, if any, and its `values`), a decade's length, `step`
 #let _log-measure(given, values, step, scale) = {
@@ -176,16 +193,18 @@
     ctx.shared-state.insert("number-line", (log: if log { (lo: m.lo, hi: m.hi, scale: m.scale, reach: reach) }, low: low, zones: ()))
     ctx
   })
-  let rows = _name-rows(named.map(((_, v, body)) => (x: x(v), w: 0.24 * _name-chars(body))))
-  for ((name, v, body), row) in named.zip(rows) {
+  let placed = named.map(((_, v, body)) => (x: x(v), w: 0.24 * _name-chars(body)))
+  let rows = _name-rows(placed)
+  let shifts = _name-shifts(placed, rows)
+  for ((name, v, body), row, shift) in named.zip(rows, shifts) {
     cetz.draw.circle((x(v), 0), radius: 0.06, fill: black)
     if row == 0 {
-      cetz.draw.content((x(v), 0.3), body, anchor: "south")
+      cetz.draw.content((x(v) + shift, 0.3), body, anchor: "south")
     } else {
       // raised a row, a thin line down to its point
       let y = 0.3 + row * 0.55
       cetz.draw.line((x(v), 0.12), (x(v), y - 0.05), stroke: 0.4pt + luma(110))
-      cetz.draw.content((x(v), y), body, anchor: "south")
+      cetz.draw.content((x(v) + shift, y), body, anchor: "south")
     }
   }
 }
