@@ -36,6 +36,7 @@ Each pull request's entries (the `## Changelog` of its description) are put unde
 
 ### Changed
 
+- « Toutes les pages »: no more ✕ on each page. « Sélectionner » (or a long press on a page) chooses pages, then « Retirer » removes them together; a tap still shows a page in full.
 - A lesson holds 30 pages (10 before): a PDF of a chapter or a long course at one click, its pages read 10 at a time, the page saying which ones it reads.
 - 🎙️ Dictation shows your words as you speak: the phone's own speech recognition writes them, at once and with no credits used; your voice no longer goes through the Notosaurus service.
 - 🎙️ The dictation button shows the microphone Android apps use, filled on a pulsing circle while it listens.
