@@ -40,7 +40,8 @@ def test_the_graph_rules_own_fragments_compile():
     compiles too, in that example: a fragment out of step makes every graph with it fail."""
     rules = figures_typst.FAMILIES["graph"].rules
     example = re.search(r"exactly so:\n(.*?)\n- ", rules, re.S).group(1)
-    fragments = re.findall(r"`((?:xaxis: |lq\.scatter|lq\.line|lq\.place|named\(|asymptote\()[^`]*)`", rules)
+    starts = r"xaxis: |lq\.scatter|lq\.line|lq\.place|named\(|asymptote\(|dimension\("
+    fragments = re.findall(rf"`((?:{starts})[^`]*)`", rules)
     assert len(fragments) >= 4
     for fragment in fragments:
         body = example.replace("  lq.plot(", f"  {fragment},\n  lq.plot(")
@@ -440,3 +441,30 @@ def test_a_frame_too_large_for_a_card_shrunk_whole(big, kept):
     body = """#let xs = lq.linspace(-3, 3)
 #lq.diagram(width: {}, xlim: (-3.5, 3.5), ylim: (-1, 10), lq.plot(xs, xs.map(x => x * x), mark: none))"""
     assert figures_typst.compile_svg("graph", body.format(big)) == figures_typst.compile_svg("graph", body.format(kept))
+
+
+@pytest.mark.parametrize("crest", [0.5, 2.5, 4.5])
+def test_a_dimensions_name_set_clear_of_the_curve(crest):
+    """« Amplitude » placed by hand right of its double arrow: the sinusoid falling from the
+    crest through the word (2 drawings in 3). A dimension's name set by the preamble: where
+    it is (the pixels it adds), the figure without it is blank: no curve, axis nor arrow."""
+    import io
+
+    from PIL import Image, ImageChops
+
+    from notosaurus_core import figures
+
+    body = """#let xs = lq.linspace(0, 5, num: 500)
+#lq.diagram(width: 8cm, height: 5cm, xlim: (-0.3, 5.3), ylim: (-3.8, 4.2), xlabel: [$t$ (ms)], ylabel: [$U$ (V)],
+  lq.plot(xs, xs.map(t => 3 * calc.sin(calc.pi * t)), mark: none, stroke: black + 1pt),
+  dimension((0.5, 3.4), (2.5, 3.4), [$T$]),
+  dimension((CREST, 0), (CREST, 3), NAME))""".replace("CREST", str(crest))
+
+    def drawn(name):
+        svg = figures.clean(figures_typst.compile_svg("graph", body.replace("NAME", name)))
+        return Image.open(io.BytesIO(figures.to_png(svg))).convert("L")
+
+    named, bare = drawn("[Amplitude]"), drawn("none")
+    box = ImageChops.difference(named, bare).point(lambda v: 255 if v > 60 else 0).getbbox()
+    assert box is not None
+    assert bare.crop(box).getextrema()[0] > 200, (crest, box)  # nothing dark where the name is

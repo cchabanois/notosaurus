@@ -348,15 +348,73 @@
     place(dx: x, dy: y, name)
     points += _box-points((x, y, m.width, m.height)).map(p => (p, "text"))
   }
-  for (i, c) in seen.curves.enumerate() {
+  // a dimension's spots for its name (a period, an amplitude): beside it, either side, a little
+  // farther each time, then past its ends; those within the frame
+  let dimension-spots(i, m) = {
+    let g = 0.3em.to-absolute()
+    let mine = curves.at(i).filter(((x, y)) => x >= 0pt and x <= w and y >= 0pt and y <= h)
+    if mine.len() == 0 { return () }
+    let (sx, sy) = mine.first()
+    let (ex, ey) = mine.last()
+    let upright = calc.abs(ex - sx) < calc.abs(ey - sy)
+    let at(t) = (sx + (ex - sx) * t, sy + (ey - sy) * t)
+    let spots = ()
+    // beside it at its middle, quarters and ends, a little farther each time when the
+    // curves leave no room close to it (between two arches)
+    for d in (0, 0.5, 1, 1.5, 2.5).map(k => g + k * 1em.to-absolute()) {
+      for t in (0.5, 0.25, 0.75, 0.1, 0.9) {
+        let (px, py) = at(t)
+        spots += if upright {
+          ((px + d, py - m.height / 2), (px - d - m.width, py - m.height / 2))
+        } else {
+          ((px - m.width / 2, py - d - m.height), (px - m.width / 2, py + d))
+        }
+      }
+      if d == g {
+        // past each end, along it
+        let (top, bottom) = if sy < ey { ((sx, sy), (ex, ey)) } else { ((ex, ey), (sx, sy)) }
+        let (lefter, righter) = if sx < ex { ((sx, sy), (ex, ey)) } else { ((ex, ey), (sx, sy)) }
+        spots += if upright {
+          ((top.at(0) - m.width / 2, top.at(1) - g - m.height), (bottom.at(0) - m.width / 2, bottom.at(1) + g))
+        } else {
+          ((righter.at(0) + g, righter.at(1) - m.height / 2), (lefter.at(0) - g - m.width, lefter.at(1) - m.height / 2))
+        }
+      }
+    }
+    // over the frame's top too, in the margin left empty above it (a period at the crests'
+    // height in a frame that stops just above them)
+    spots.filter(((x, y)) => x >= 0pt and x + m.width <= w and y >= -m.height - 0.4em.to-absolute() and y + m.height <= h)
+  }
+  // the dimensions first, the one with the fewest clear spots first (written in any order: a
+  // period's name has no room but under its arrow, an amplitude's has more), then the curves
+  let clear-spots(i) = {
+    let m = measure(seen.curves.at(i).name)
+    dimension-spots(i, m).filter(p => apart(p, m, (i,)).at(1) >= 0.4em.to-absolute()).len()
+  }
+  let named-dims = range(seen.curves.len()).filter(i => seen.curves.at(i).name != none and seen.curves.at(i).at("dimension", default: false))
+  let order = named-dims.sorted(key: clear-spots) + range(seen.curves.len()).filter(i => i not in named-dims)
+  for i in order {
+    let c = seen.curves.at(i)
     if c.name == none { continue }
     let mine = curves.at(i).filter(((x, y)) => x >= 0pt and x <= w and y >= 0pt and y <= h)
     if mine.len() == 0 { continue }
     let m = measure(c.name)
     let g = 0.3em.to-absolute()
+    // a dimension: its first spot clear of all the rest, else the clearest
+    if c.at("dimension", default: false) {
+      let spots = dimension-spots(i, m)
+      let scored = spots.map(p => (p, apart(p, m, (i,)).at(1)))
+      if scored.len() > 0 {
+        let good = scored.filter(((p, far)) => far >= 0.4em.to-absolute())
+        let (x, y) = if good.len() > 0 { good.first().at(0) } else { scored.sorted(key: ((p, far)) => far).last().at(0) }
+        place(dx: x, dy: y, c.name)
+        points += _box-points((x, y, m.width, m.height)).map(p => (p, "text"))
+        continue
+      }
+    }
+    let candidates = ()
     // along it from its end, each point with the name above left, below right, above right
     // or below left of it
-    let candidates = ()
     for f in (0.92, 0.8, 0.68, 0.56, 0.44, 0.32, 0.2, 0.08) {
       let (ax, ay) = mine.at(int(f * (mine.len() - 1)))
       candidates += (
@@ -390,6 +448,12 @@
 }
 // A curve or a line named: the AI's `lq.plot(…)` or `lq.line(…)` with its name, set along it
 #let named(curve, name) = curve + (curve-name: name)
+// A dimension: a double arrow between two points (a period, an amplitude, a length), its
+// name beside its middle on the side clear of the curves, the axes and the texts, never placed
+// by hand (set by _render-names, as a curve's)
+#let dimension(start, end, name) = lq.line(start, end, tip: tiptoe.stealth, toe: tiptoe.stealth) + (
+  vertices: (start, end), curve-name: name, dimension: true,
+)
 // The AI's `lq.line(…)`, keeping its ends (lilaq's own keeps them in a closure): a name kept
 // clear of it (figures_typst.source)
 #let line-kept(start, end, ..args) = lq.line(start, end, ..args) + (vertices: (start, end))
@@ -513,7 +577,7 @@
     xaxis: named.at("xaxis", default: none), yaxis: named.at("yaxis", default: none),
     curves: curves.map(p => {
       let (xs, ys) = if "vertices" in p { (p.vertices.map(v => v.at(0)), p.vertices.map(v => v.at(1))) } else { (p.x, p.y) }
-      (xs: xs, ys: ys, name: p.at("curve-name", default: none))
+      (xs: xs, ys: ys, name: p.at("curve-name", default: none), dimension: p.at("dimension", default: false))
     }),
     places: pos.filter(p => type(p) == dictionary and p.at("id", default: none) == "place"
       and type(p.x) in (int, float) and type(p.y) in (int, float)).map(p => (p.x, p.y, p.body, p.align)),
@@ -521,7 +585,8 @@
   )
   let names = (
     plot: _render-names, id: "names", seen: seen,
-    xlimits: () => none, ylimits: () => none, datetime: (:), label: none, clip: true, z-index: 23,
+    // not clipped: a dimension's name may stand over the frame's top (_render-names)
+    xlimits: () => none, ylimits: () => none, datetime: (:), label: none, clip: false, z-index: 23,
   )
   pos = pos.map(p => if type(p) == dictionary and p.at("id", default: none) == "asymptote" { p + (seen: seen) } else { p })
   arguments(..pos, names, ..named)
