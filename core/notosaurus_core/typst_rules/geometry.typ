@@ -52,58 +52,218 @@
 // none, or the numbers the description writes, `(2.3, 2.4)` (with the language's decimal
 // separator) or `((0.75, $3/4$), …)` (a value and its text); points: each point named at
 // its value, `(A: -3, B: 3/4)`, its letter above (a point the description names by no letter:
-// `(P: (at: 0.75, name: $j$))`, that name written instead);
+// `(P: (at: 0.75, name: $j$))`, that name written instead); names too close to stand side by
+// side (their widths guessed from their letters) raised a row, a short line down to their
+// point, only those: names that fit are written as ever.
 // `arrow: true` an arrow at its right end. Never a point, a tick or a number placed by hand.
-#let ctz-draw-number-line(first, last, step: 1, scale: 1, numbers: true, points: (:), arrow: false) = {
+// `log: true`, a logarithmic line: its values (above 0, as the description gives them,
+// 2 / 1000 for 2 mm in metres) each at its log10, (log10 v − its first
+// decade) × scale; its first and last values left out (the decades around its points and
+// numbers) or given as values (1e-8, never the exponent −8); a tick at each power of ten, 10ⁿ
+// written every `step` decades (by default as few as keep them apart), or the numbers given
+// instead, each on a tick of its own; `scale` a decade's length (by default the line about 12).
+// A name's width in letters, guessed (no context inside a canvas): a fraction its wider part,
+// an exponent smaller
+#let _name-chars(c) = if type(c) == str { c.clusters().len() } else if c.func() == math.frac { calc.max(_name-chars(c.num), _name-chars(c.denom)) } else if c.func() == math.attach { _name-chars(c.base) + 0.6 * ("t", "b").filter(k => c.has(k)).map(k => _name-chars(c.at(k))).sum(default: 0) } else if c.has("text") { c.text.clusters().len() } else if c.has("children") { c.children.map(_name-chars).sum(default: 0) } else if c.has("body") { _name-chars(c.body) } else { 1 }
+// Each name's row above its line (0 the first), from the names' places and widths, left to
+// right: the lowest row where it clears the names already in it, its line down to its point
+// clear of the names below it and its own name clear of the lines going up past it (when a
+// row allows it; else the lowest row where it clears the names). The same for a line's
+// numbers, rows going down.
+#let _name-rows(placed, gap: 0.15) = {
+  let apart(a, b) = calc.abs(a.x - b.x) >= (a.w + b.w) / 2 + gap
+  let crosses(name, x) = calc.abs(name.x - x) < name.w / 2 + 0.05
+  let rows = placed.map(_ => 0)
+  let done = ()
+  for i in range(placed.len()).sorted(key: i => placed.at(i).x) {
+    let p = placed.at(i)
+    let free(r) = done.all(j => rows.at(j) != r or apart(placed.at(j), p))
+    let clear(r) = done.all(j => (rows.at(j) >= r or not crosses(placed.at(j), p.x)) and (rows.at(j) <= r or not crosses(p, placed.at(j).x)))
+    let top = done.fold(0, (m, j) => calc.max(m, rows.at(j))) + 1
+    let r = range(top + 1).find(r => free(r) and clear(r))
+    rows.at(i) = if r == none { range(top + 1).find(free) } else { r }
+    done.push(i)
+  }
+  rows
+}
+// Each name's shift along its line: a name a line goes up through (a name raised above it,
+// its point under this one) moved aside, clear of that line, as far as its own point stays
+// under it and it clears its row's other names; 0 for every other name.
+#let _name-shifts(placed, rows) = {
+  let n = placed.len()
+  range(n).map(i => {
+    let p = placed.at(i)
+    let through = range(n).filter(j => rows.at(j) > rows.at(i) and calc.abs(placed.at(j).x - p.x) < p.w / 2 + 0.1)
+    if through.len() == 0 { return 0 }
+    let xs = through.map(j => placed.at(j).x)
+    // away from them all, if they are all on one side of its point
+    let d = if xs.all(x => x >= p.x) { calc.min(..xs) - 0.1 - (p.x + p.w / 2) } else if xs.all(x => x < p.x) { calc.max(..xs) + 0.1 - (p.x - p.w / 2) } else { 0 }
+    let moved = (x: p.x + d, w: p.w)
+    let fits = calc.abs(d) < p.w / 2 - 0.1 and range(n).all(j => j == i or rows.at(j) != rows.at(i) or calc.abs(placed.at(j).x - moved.x) >= (placed.at(j).w + p.w) / 2 + 0.1)
+    if fits { d } else { 0 }
+  })
+}
+// A logarithmic line's measure: its first and last decades (around its first and last values
+// `given`, if any, and its `values`), a decade's length, `step`
+#let _log-measure(given, values, step, scale) = {
   let number(v) = type(v) in (int, float)
-  assert(number(first) and number(last) and first < last, message: "a number line goes from its first value to a larger last one")
-  assert(number(step) and step > 0 and number(scale) and scale > 0, message: "step and scale are numbers above 0")
+  assert(given.len() in (0, 2) and given.all(v => number(v) and v > 0), message: "a logarithmic line's first and last are values above 0 (1e-8, never the exponent -8), or left out")
+  let values = given + values
+  assert(values.len() > 0 and values.all(v => number(v) and v > 0), message: "a logarithmic line holds values above 0, as the description gives them (2 / 1000), never their logarithm")
+  let lg(v) = calc.log(v, base: 10)
+  let lo = calc.floor(calc.min(..values.map(lg)) + 1e-9)
+  let hi = calc.max(lo + 1, calc.ceil(calc.max(..values.map(lg)) - 1e-9))
+  let scale = if scale == auto { calc.min(2, 12 / (hi - lo)) } else { scale }
+  assert(number(scale) and scale > 0, message: "scale is a number above 0: a decade's length")
+  // 10ⁿ written every `step` decades (1, 2, 3, 5, 10…), at its multiples: about a centimetre and
+  // a half apart
+  let step = if step == auto { (1, 2, 3, 5, 10, 20, 50, 100).find(k => k * scale >= 1.4) } else { step }
+  assert(type(step) == int and step >= 1, message: "a logarithmic line's step is a whole number of decades")
+  (lo: lo, hi: hi, scale: scale, step: step)
+}
+#let ctz-draw-number-line(..bounds, step: auto, scale: auto, numbers: true, points: (:), arrow: false, log: false) = {
+  let number(v) = type(v) in (int, float)
+  assert(bounds.named().len() == 0, message: "unexpected argument: " + bounds.named().keys().join(", "))
   assert(type(points) == dictionary, message: "points are named by their values: (A: -3, B: 2)")
-  let x(v) = (v - first) * scale
+  // each point: its name, its value, its text
+  let named = points.pairs().map(((name, p)) => if type(p) == dictionary and "at" in p and "name" in p { (name, p.at, p.name) } else { (name, p, math.equation(math.italic(name))) })
+  for (name, v, _) in named {
+    assert(number(v), message: "a point is its letter at its value, a number (A: -3, B: 3/4): never its value written as its name")
+  }
+  // a number as the language writes it: its decimal separator, its thousands apart from
+  // 10 000 on (a narrow space)
   let written(v) = {
     let r = calc.round(v, digits: 6)
     let t = if calc.fract(r) == 0 { str(int(calc.abs(r))) } else { str(calc.abs(r)).replace(".", decimal-separator) }
+    let whole = t.split(decimal-separator).first()
+    if whole.len() > 4 {
+      let n = whole.len()
+      t = range(n).map(i => (if i > 0 and calc.rem(n - i, 3) == 0 { "\u{202F}" } else { "" }) + whole.at(i)).join() + t.slice(n)
+    }
     if r < 0 [−#t] else [#t]
   }
-  cetz.draw.line((x(first) - step * scale / 2, 0), (x(last) + step * scale / 2, 0), mark: if arrow { (end: "stealth", fill: black) } else { none })
-  let n = int(calc.round((last - first) / step))
-  for i in range(n + 1) {
-    let v = first + i * step
+  let (step, scale) = if log { (step, scale) } else { (if step == auto { 1 } else { step }, if scale == auto { 1 } else { scale }) }
+  let given = if type(numbers) == array { numbers.map(w => if type(w) == array { w } else { (w, written(w)) }) } else { () }
+  for (v, _) in given { assert(number(v), message: "numbers are values, or (value, text) pairs") }
+  let m = if log { _log-measure(bounds.pos(), named.map(p => p.at(1)) + given.map(w => w.at(0)), step, scale) }
+  if not log {
+    assert(bounds.pos().len() == 2, message: "a number line goes from its first value to its last: ctz-draw-number-line(-5, 5)")
+    let (first, last) = bounds.pos()
+    assert(number(first) and number(last) and first < last, message: "a number line goes from its first value to a larger last one")
+    assert(number(step) and step > 0 and number(scale) and scale > 0, message: "step and scale are numbers above 0")
+    for (name, v, _) in named {
+      assert(first - step / 2 <= v and v <= last + step / 2, message: "the point " + name + " is outside the line, from " + str(first) + " to " + str(last))
+    }
+  }
+  let x(v) = if log { (calc.log(v, base: 10) - m.lo) * m.scale } else { (v - bounds.pos().first()) * scale }
+  // its ticks' values, and those written under them by default (whole numbers; 10ⁿ every
+  // `step` decades), then the numbers given
+  let ticks = if log { range(m.lo, m.hi + 1).map(n => calc.pow(10.0, n)) } else {
+    let first = bounds.pos().first()
+    range(int(calc.round((bounds.pos().last() - first) / step)) + 1).map(i => first + i * step)
+  }
+  let numbered = if numbers != true { () } else if log {
+    range(ticks.len()).filter(i => calc.rem-euclid(m.lo + i, m.step) == 0)
+  } else { range(ticks.len()).filter(i => calc.abs(calc.fract(calc.round(ticks.at(i), digits: 6))) == 0) }
+  let shown = numbered.map(i => (ticks.at(i), if log { $10^#(m.lo + i)$ } else { written(ticks.at(i)) })) + given
+  let rows = _name-rows(shown.map(((v, body)) => (x: x(v), w: 0.24 * _name-chars(body))), gap: 0.1)
+  // the k-th number shown under its tick, a row lower when too close to stand beside another
+  let number-at(k) = {
+    let (v, body) = shown.at(k)
+    let y = -0.25 - rows.at(k) * 0.5
+    if rows.at(k) > 0 { cetz.draw.line((x(v), -0.17), (x(v), y + 0.05), stroke: 0.4pt + luma(110)) }
+    cetz.draw.content((x(v), y), body, anchor: "north")
+  }
+  let (a, b) = if log { (x(ticks.first()), x(ticks.last())) } else { (x(bounds.pos().first()), x(bounds.pos().last())) }
+  let reach = if log { calc.min(0.5, (b - a) / 10) } else { step * scale / 2 }
+  cetz.draw.line((a - reach, 0), (b + reach, 0), mark: if arrow { (end: "stealth", fill: black) } else { none })
+  for (i, v) in ticks.enumerate() {
     cetz.draw.line((x(v), -0.15), (x(v), 0.15))
-    if numbers == true and calc.abs(calc.fract(calc.round(v, digits: 6))) == 0 {
-      cetz.draw.content((x(v), -0.25), written(v), anchor: "north")
-    }
+    if i in numbered { number-at(numbered.position(j => j == i)) }
   }
-  if type(numbers) == array {
-    for w in numbers {
-      let (v, body) = if type(w) == array { (w.at(0), w.at(1)) } else { (w, written(w)) }
-      assert(number(v), message: "numbers are values, or (value, text) pairs")
-      cetz.draw.content((x(v), -0.25), body, anchor: "north")
-    }
+  for k in range(numbered.len(), shown.len()) {
+    // a number given on a logarithmic line: on a tick of its own
+    if log { cetz.draw.line((x(shown.at(k).at(0)), -0.15), (x(shown.at(k).at(0)), 0.15)) }
+    number-at(k)
   }
-  for (name, p) in points {
-    let (v, body) = if type(p) == dictionary and "at" in p and "name" in p { (p.at, p.name) } else { (p, math.equation(math.italic(name))) }
-    assert(number(v), message: "a point is its letter at its value, a number (A: -3, B: 3/4): never its value written as its name")
-    assert(first - step / 2 <= v and v <= last + step / 2, message: "the point " + name + " is outside the line, from " + str(first) + " to " + str(last))
+  // where it ends, kept for an interval drawn on it: its measure (a logarithmic line's
+  // values placed again), the bottom of its numbers (a zone's name written under them)
+  let low = -0.25 - rows.fold(0, calc.max) * 0.5 - 0.5
+  cetz.draw.set-ctx(ctx => {
+    ctx.shared-state.insert("number-line", (log: if log { (lo: m.lo, hi: m.hi, scale: m.scale, reach: reach) }, low: low, zones: ()))
+    ctx
+  })
+  let placed = named.map(((_, v, body)) => (x: x(v), w: 0.24 * _name-chars(body)))
+  let rows = _name-rows(placed)
+  let shifts = _name-shifts(placed, rows)
+  for ((name, v, body), row, shift) in named.zip(rows, shifts) {
     cetz.draw.circle((x(v), 0), radius: 0.06, fill: black)
-    cetz.draw.content((x(v), 0.3), body, anchor: "south")
+    if row == 0 {
+      cetz.draw.content((x(v) + shift, 0.3), body, anchor: "south")
+    } else {
+      // raised a row, a thin line down to its point
+      let y = 0.3 + row * 0.55
+      cetz.draw.line((x(v), 0.12), (x(v), y - 0.05), stroke: 0.4pt + luma(110))
+      cetz.draw.content((x(v) + shift, y), body, anchor: "south")
+    }
   }
 }
 // An interval on a number line: its stretch thick and coloured, a bracket at each bound
 // turned as school writes it (closed: towards the inside, `[` on the left; open: away from
-// it), an infinite end (`none`) going on to the line's end with no bracket. Its bounds are
-// the description's values, placed as the line's ticks: (value − first) × scale.
-#let ctz-draw-interval(a, b, closed: (true, true), first: 0, last: none, scale: 1, color: rgb("#0072d6")) = {
-  let x(v) = (v - first) * scale
-  let end = if last == none { calc.max(..(a, b).filter(v => v != none)) + 1 } else { last }
-  let (xa, xb) = (if a == none { x(first) - 0.5 * scale } else { x(a) }, if b == none { x(end) + 0.5 * scale } else { x(b) })
+// it; `closed: none` no bracket), an infinite end (`none`) going on to the line's end with no
+// bracket. Its bounds are the description's values, placed as the line's ticks:
+// (value − first) × scale; on a logarithmic line, `log: true` and its bounds alone, placed
+// where that line put them. `label`, a stretch's name (a zone of a scale): written under its
+// middle, below the line's numbers, a row lower when it would touch another zone's name;
+// zones side by side coloured apart (each the next colour, unless given).
+#let _interval(xa, xb, a, b, closed, color) = {
   let (h, w) = (0.3, 0.15)
   let stroke = (paint: color, thickness: 1.5pt)
   cetz.draw.line((xa, 0), (xb, 0), stroke: (paint: color, thickness: 3pt))
   // a bracket at x, its two short strokes towards `side` (+1 right, −1 left)
   let bracket(x, side) = cetz.draw.line((x + side * w, h), (x, h), (x, -h), (x + side * w, -h), stroke: stroke)
-  if a != none { bracket(xa, if closed.at(0) { 1 } else { -1 }) }
-  if b != none { bracket(xb, if closed.at(1) { -1 } else { 1 }) }
+  if closed != none {
+    if a != none { bracket(xa, if closed.at(0) { 1 } else { -1 }) }
+    if b != none { bracket(xb, if closed.at(1) { -1 } else { 1 }) }
+  }
+}
+#let _zone-colours = (rgb("#0072d6"), rgb("#e07b00"), rgb("#2e9e44"), rgb("#8a4fd0"), rgb("#c8323c"), rgb("#00949a"))
+#let ctz-draw-interval(a, b, closed: (true, true), first: 0, last: none, scale: 1, log: false, label: none, color: auto) = {
+  assert(closed == none or (type(closed) == array and closed.len() == 2), message: "closed is (true, false), each bound's, or none (no bracket)")
+  let x(v) = (v - first) * scale
+  let end = if last == none { calc.max(..(a, b).filter(v => v != none)) + 1 } else { last }
+  if not log and label == none {
+    let (xa, xb) = (if a == none { x(first) - 0.5 * scale } else { x(a) }, if b == none { x(end) + 0.5 * scale } else { x(b) })
+    return _interval(xa, xb, a, b, closed, if color == auto { _zone-colours.first() } else { color })
+  }
+  cetz.draw.get-ctx(ctx => {
+    let line = ctx.shared-state.at("number-line", default: none)
+    let (xa, xb) = if log {
+      assert(line != none and line.log != none, message: "an interval on a logarithmic line is drawn after its line, ctz-draw-number-line(log: true, …)")
+      assert((a, b).all(v => v == none or (type(v) in (int, float) and v > 0)), message: "a logarithmic line's bounds are values above 0, or none")
+      let m = line.log
+      let x(v) = (calc.log(v, base: 10) - m.lo) * m.scale
+      // an infinite end to the line's, short of its arrow
+      (if a == none { -m.reach } else { x(a) }, if b == none { (m.hi - m.lo) * m.scale + 0.6 * m.reach } else { x(b) })
+    } else { (if a == none { x(first) - 0.5 * scale } else { x(a) }, if b == none { x(end) + 0.5 * scale } else { x(b) }) }
+    let zones = if line == none { () } else { line.zones }
+    let color = if color != auto { color } else if label == none { _zone-colours.first() } else { _zone-colours.at(calc.rem(zones.len(), _zone-colours.len())) }
+    _interval(xa, xb, a, b, closed, color)
+    if label != none {
+      let (cx, w) = ((xa + xb) / 2, 0.24 * _name-chars(label))
+      // the first row where it clears the names of the zones drawn before it
+      let row = range(zones.len() + 1).find(r => zones.all(z => z.row != r or calc.abs(z.x - cx) >= (z.w + w) / 2 + 0.2))
+      let here = (x: cx, w: w, row: row)
+      let low = (if line == none { -0.75 } else { line.low }) - row * 0.5
+      cetz.draw.content((here.x, low), text(fill: color.darken(35%), label), anchor: "north")
+      if line != none {
+        cetz.draw.set-ctx(ctx => {
+          ctx.shared-state.number-line.zones.push(here)
+          ctx
+        })
+      }
+    }
+  })
 }
 // The trigonometric circle: its axes through O, the circle of radius 1 (drawn `r` long),
 // a point at each angle given in degrees, named outside the circle along its radius; an

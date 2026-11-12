@@ -1,9 +1,13 @@
 """The geometry family (ctz-euclide and our functions): number lines, intervals, the
 trigonometric circle, lengths, fractions, vectors, coordinate frames."""
 
+import json
 import re
+import tempfile
+from pathlib import Path
 
 import pytest
+import typst
 
 from figures.support import _glyphs, drawn_size
 from notosaurus_core import figures, figures_typst
@@ -39,6 +43,112 @@ def test_the_geometry_rules_number_lines_compile():
     assert calls
     for call in calls:
         assert figures_typst.compile_svg("geometry", f"#ctz-canvas({{ ctz-init(); {call} }})").startswith("<svg")
+
+
+def _measured(expression: str):
+    """What a Typst expression of the geometry preamble gives (its functions' arithmetic)."""
+    document = figures_typst.FAMILIES["geometry"].preamble.split(figures_typst.EXAMPLE)[0]
+    with tempfile.TemporaryDirectory() as folder:
+        path = Path(folder) / "measure.typ"
+        path.write_text(f"{document}\n#metadata({expression}) <measured>\n", encoding="utf-8")
+        found = typst.query(
+            str(path), "<measured>", field="value", one=True, root=folder, package_path=str(figures_typst.packages())
+        )
+    return json.loads(found)
+
+
+def test_a_logarithmic_lines_values_placed_at_their_log10():
+    """A logarithmic scale (the AI computed each log10 by hand in comments, or placed its
+    points with ctz-def-points from the line's start: off the axis): its values given as they
+    are, the preamble places each at its log10, its decades and its 10ⁿ ticks computed."""
+    # 4.1e-8 to 2.5e6: the decades 10⁻⁸ to 10⁷, the line about 12 long, 10ⁿ every other
+    # decade (0.8 a decade: 1.6 apart)
+    m = _measured("_log-measure((), (1.3 / 31557600, 480 / 31557600, 4.2, 26000, 2.5e6), auto, auto)")
+    assert (m["lo"], m["hi"], m["step"]) == (-8, 7, 2)
+    assert m["scale"] == pytest.approx(12 / 15)
+    assert _measured("_log-measure((), (20, 40000, 100000), auto, auto)")["step"] == 1  # 10¹ to 10⁵: 2.4 a decade
+    assert _measured("_log-measure((1e-3, 1e3), (5,), auto, 1)")["lo"] == -3  # its first and last as values
+    draw = "#ctz-canvas({{ ctz-init(); ctz-draw-number-line({}) }})"
+    line = lambda args: figures_typst.compile_svg("geometry", draw.format(args))  # noqa: E731
+    # a value lands at its log10, whatever expression gives it; moved, its point moves
+    assert line("log: true, points: (A: 1e-3, B: 10 * 10)") == line("log: true, points: (A: 1 / 1000, B: 100)")
+    assert line("log: true, points: (A: 1e-3, B: 100)") != line("log: true, points: (A: 1e-3, B: 300)")
+    # a whole number of decades further, the same drawing (its ticks written 10ⁿ: none here)
+    assert line("log: true, numbers: false, points: (A: 2, B: 20000)") == line(
+        "log: true, numbers: false, points: (A: 200, B: 2000000)"
+    )
+    # its numbers the powers of ten, under its ticks
+    numbered = line("log: true, points: (A: 1e-3, B: 1000)")
+    assert len(_glyphs(numbered)) > len(_glyphs(line("log: true, numbers: false, points: (A: 1e-3, B: 1000)")))
+    with pytest.raises(figures_typst.Unusable, match="never the exponent"):
+        line("-3, 2, log: true, points: (A: 1e-3)")
+    with pytest.raises(figures_typst.Unusable, match="above 0"):
+        line("log: true, points: (A: 0, B: 10)")
+    # an interval on it, its bounds where the line put them
+    interval = "#ctz-canvas({ ctz-init(); ctz-draw-number-line(log: true, points: (A: 1, B: 1e5)); "
+    assert figures_typst.compile_svg("geometry", interval + "ctz-draw-interval(20, none, log: true) })")
+    with pytest.raises(figures_typst.Unusable, match="drawn after its line"):
+        figures_typst.compile_svg("geometry", "#ctz-canvas({ ctz-init(); ctz-draw-interval(20, 200, log: true) })")
+
+
+def test_a_number_lines_names_too_close_raised_those_apart_left():
+    """Two names written on each other (a log scale's "Voie lactée" and "Andromède", two units
+    apart): raised a row, a line down to their point; names that fit stay side by side as
+    they were, on one row."""
+    rows = lambda placed: _measured(f"_name-rows({placed})")  # noqa: E731
+    assert rows("((x: 0, w: 0.3), (x: 1, w: 0.3), (x: 2, w: 0.3))") == [0, 0, 0]
+    assert rows("((x: 3.1, w: 2.6), (x: 4.5, w: 2.2))") == [0, 1]
+    assert rows("((x: 0, w: 1), (x: 0.3, w: 1), (x: 0.6, w: 1))") == [0, 1, 2]
+    assert rows("((x: 0.6, w: 1), (x: 0, w: 1), (x: 5, w: 1))") == [1, 0, 0]  # left to right
+    # a name a raised name's line would go up through: moved aside, clear of it, its own point
+    # still under it; the others not moved
+    shifts = _measured("_name-shifts(((x: 9.9, w: 5.8), (x: 11.5, w: 4.6), (x: 2, w: 1)), (1, 2, 0))")
+    assert -5.8 / 2 < shifts[0] < 0 and 9.9 + shifts[0] + 5.8 / 2 < 11.5
+    assert shifts[1:] == [0, 0]
+    draw = "#ctz-canvas({{ ctz-init(); ctz-draw-number-line(0, 10, numbers: false, points: {}) }})"
+    line = lambda points: figures_typst.compile_svg("geometry", draw.format(points))  # noqa: E731
+    apart = _glyphs(line("(P: (at: 1, name: [Voie lactée]), Q: (at: 8, name: [Andromède]))"))
+    close = _glyphs(line("(P: (at: 5, name: [Voie lactée]), Q: (at: 7, name: [Andromède]))"))
+    assert len({round(y, 1) for _, y in apart}) == 1  # one row
+    assert len({round(y, 1) for _, y in close}) == 2  # the second raised
+
+
+def test_a_number_lines_numbers_too_close_lowered_and_zones_named():
+    """A scale's numbers given close together (20 000, 40 000 and 100 000 Hz on a logarithmic
+    line, written on each other): a row lower, a line up to their tick; a large number's
+    thousands apart; a stretch the description names (infrasons, ultrasons: the AI made
+    points of them) an interval with no bracket, its name under the numbers."""
+    draw = "#ctz-canvas({{ ctz-init(); ctz-draw-number-line(log: true, numbers: {}) }})"
+    line = lambda numbers: figures_typst.compile_svg("geometry", draw.format(numbers))  # noqa: E731
+    assert len({round(y, 1) for _, y in _glyphs(line("(20, 20000)"))}) == 1
+    assert len({round(y, 1) for _, y in _glyphs(line("(20, 20000, 40000, 100000)"))}) >= 2
+    thousands = "#ctz-canvas({{ ctz-init(); ctz-draw-number-line(0, 20000, step: 10000, scale: 0.0004{}) }})"
+    grouped, plain = (
+        figures_typst.compile_svg("geometry", thousands.format(numbers))
+        for numbers in ("", ", numbers: ((0, [0]), (10000, [10000]), (20000, [20000]))")
+    )
+    assert grouped != plain  # 10 000, 20 000
+    zones = (
+        "#ctz-canvas({{ ctz-init(); ctz-draw-number-line(log: true, numbers: (20, 20000));"
+        " ctz-draw-interval(20, 20000, log: true, closed: none{}) }})"
+    )
+    named, bare = (figures_typst.compile_svg("geometry", zones.format(label)) for label in (", label: [audible]", ""))
+    below = min(y for _, y in _glyphs(bare))
+    assert any(y > below + 5 for _, y in _glyphs(named))  # its name under the numbers (SVG's y down)
+    assert "<path" in bare and bare.count("<path") < figures_typst.compile_svg(
+        "geometry", zones.format("").replace("closed: none", "closed: (true, true)")
+    ).count("<path")  # no bracket
+    # zones side by side: each its colour, their names a row apart when they would touch
+    zone = " ctz-draw-interval({}, {}, closed: none, label: [{{}}], first: 0, last: 10);"
+    three = (
+        "#ctz-canvas({{ ctz-init(); ctz-draw-number-line(0, 10);"
+        + "".join(zone.format(a, b) for a, b in ((1, 2), (2, 3), (3, 8)))
+        + " }})"
+    )
+    named = figures_typst.compile_svg("geometry", three.format("first zone", "second zone", "third"))
+    assert len(set(re.findall(r'stroke="(#[0-9a-f]{6})"', named))) >= 4  # black and three colours
+    short = figures_typst.compile_svg("geometry", three.format("a", "b", "c"))
+    assert len({round(y, 1) for _, y in _glyphs(named)}) == len({round(y, 1) for _, y in _glyphs(short)}) + 1
 
 
 def test_an_intervals_brackets_turned_by_its_bounds():
