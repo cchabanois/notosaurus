@@ -70,3 +70,34 @@ def test_a_clock_at_an_impossible_time_refused():
         with pytest.raises(figures_typst.Unusable, match="whole number"):
             figures_typst.compile_svg("clock", body)
     assert figures_typst.compile_svg("clock", "#clock(15, 30)") == figures_typst.compile_svg("clock", "#clock(3, 30)")
+
+
+@pytest.mark.parametrize(
+    "items",
+    [
+        'events: ((1789, "Prise de la Bastille"))',
+        'events: (((1789, 7, 14), "Prise de la Bastille"))',
+        'periods: ((1793, 1794, "La Terreur"))',
+    ],
+)
+def test_a_timelines_single_item_without_its_comma_drawn(items):
+    """One event or period written without its trailing comma, ((1789, "…")): Typst's pair,
+    not a list of one ("integer has no method at"). Taken as the one item it means."""
+    with_comma = items[:-1] + ",)"
+    alone = figures_typst.compile_svg("timeline", f"#timeline(start: 1780, end: 1800, step: 5, {items})")
+    assert alone == figures_typst.compile_svg("timeline", f"#timeline(start: 1780, end: 1800, step: 5, {with_comma})")
+
+
+@pytest.mark.parametrize(
+    ("body", "said"),
+    [
+        ("#timeline(start: 1780, end: 1800, step: 0)", "step is the years between two numbers"),
+        ("#timeline(start: 1780, end: 1800, step: -5)", "step is the years between two numbers"),
+        ("#timeline(start: 1789, end: 1789)", "end is after start"),
+    ],
+)
+def test_a_timelines_line_refused_saying_why(body, said):
+    """A step of 0 looped without end, a line from a year to the same one divided by zero:
+    refused, saying what a line takes."""
+    with pytest.raises(figures_typst.Unusable, match=said):
+        figures_typst.compile_svg("timeline", body)

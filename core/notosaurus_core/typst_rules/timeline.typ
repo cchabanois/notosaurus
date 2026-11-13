@@ -6,6 +6,12 @@
 #let timeline(
   start: 0, end: 10, step: 1, width: 12, events: (), periods: (), now: none, past: none, future: none,
 ) = context {
+  assert(type(start) in (int, float) and type(end) in (int, float) and end > start, message: "end is after start: the line's two years, end greater than start")
+  assert(step == none or (type(step) in (int, float) and step > 0), message: "step is the years between two numbers written, a positive number, or none")
+  // one event or period written without its trailing comma, ((1789, "…")): Typst's pair, not
+  // a list of one (its last item its text, a list's last item an event)
+  let events = if events.len() > 0 and type(events.last()) != array { (events,) } else { events }
+  let periods = if periods.len() > 0 and type(periods.last()) != array { (periods,) } else { periods }
   let unit = width / (end - start)
   // a date: its year, or (year, month, day): placed within its year
   let at(date) = if type(date) == array {

@@ -427,13 +427,38 @@
         let (w, top) = (size.width / 1cm, 0.06 + size.height / 1cm + 0.05)
         let right = k / 2 + w / 2
         let fits = right < k and k * _flat * calc.sqrt(1 - calc.pow(right / k, 2)) > top
-        if fits { _label((k / 2, y + 0.06), section-label, anchor: "south") } else { _label((k + 0.1, y + 0.05), section-label, anchor: "south-west") }
+        // (below the centre: under [HA], over the circle's front half, [OA] rising from A
+        // above it; beyond A, under it: the ball's outline rises from A, close above it)
+        if fits and y < 0 { _label((k / 2, y - 0.06), section-label, anchor: "north") } else if fits {
+          _label((k / 2, y + 0.06), section-label, anchor: "south")
+        } else if y < 0 {
+          _label((k + 0.1, y - 0.05), section-label, anchor: "north-west")
+        } else { _label((k + 0.1, y + 0.05), section-label, anchor: "south-west") }
       }
       if radius-label != none {
         line(o, a, stroke: 0.7pt)
         drawn.push((o, a))
-        // right of [OA] at its top, the line rising to the right
-        _label((k * (under + 0.2) / y + 0.1, under), radius-label, anchor: "west")
+        // right of [OA] at the height `under` (the section below the centre: a third of the
+        // way down, the ball still wide there); [OA] too flat for it (a section through the
+        // centre or near it) or no room there: beyond A, outside the ball, on the side the
+        // section's own label isn't
+        let (at, up) = if y > 0 { (under, 0.2) } else { (y / 3, -0.2) }
+        let size = measure(text(11pt, radius-label))
+        let (w, half) = (size.width / 1cm, size.height / 2cm)
+        let x = if y != 0 { k * (at + up) / y + 0.1 } else { k }
+        // below the centre: inside the ball, over the section's back half (dashed)
+        let inside = y != 0 and (at + up) / y < 0.7 and (y > 0 or (
+          x + w < calc.sqrt(r * r - calc.pow(calc.abs(at) + half, 2)) - 0.2
+          and at - half > y + k * _flat * calc.sqrt(calc.max(0, 1 - calc.pow(calc.min(1, x / k), 2))) + 0.05))
+        if inside {
+          _label((x, at), radius-label, anchor: "west")
+        } else {
+          // beside the outline, wider towards the equator (the side the label is on)
+          let clear = calc.sqrt(r * r - calc.pow(calc.max(0, calc.abs(y) - 0.05 - 2 * half), 2)) + 0.1
+          if y < 0 { _label((clear, y + 0.05), radius-label, anchor: "south-west") } else {
+            _label((clear, y - 0.05), radius-label, anchor: "north-west")
+          }
+        }
       }
     }
     circle(o, radius: r, stroke: _solid)
@@ -855,7 +880,7 @@
     }
     // the legend: each species' ball, its size in proportion, and its name, right of the block
     let names = species.enumerate().filter(((_, x)) => x.name != none)
-    if legend != none and names.len() > 0 {
+    if legend not in (none, false) and names.len() > 0 {
       let right = at((cells, cells, 0)).at(0) + out + 0.7
       let top = at((0, cells, cells)).at(1) / 2 + (names.len() - 1) * 0.45
       for (k, (sp, x)) in names.enumerate() {

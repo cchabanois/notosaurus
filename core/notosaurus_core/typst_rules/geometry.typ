@@ -9,6 +9,7 @@
   assert(kind in ("disc", "bar", "rect"), message: "kind is \"disc\", \"bar\" or \"rect\"")
   assert(type(parts) == int and parts >= 1, message: "parts is a whole number of parts")
   assert(type(coloured) == int and 0 <= coloured and coloured <= parts, message: "coloured is between 0 and parts")
+  assert(type(rows) == int and rows >= 1, message: "rows is a rectangle's number of rows, a whole number from 1")
   let drawing = cetz.canvas({
     import cetz.draw: *
     if kind == "disc" {
@@ -231,7 +232,9 @@
 #let ctz-draw-interval(a, b, closed: (true, true), first: 0, last: none, scale: 1, log: false, label: none, color: auto) = {
   assert(closed == none or (type(closed) == array and closed.len() == 2), message: "closed is (true, false), each bound's, or none (no bracket)")
   let x(v) = (v - first) * scale
-  let end = if last == none { calc.max(..(a, b).filter(v => v != none)) + 1 } else { last }
+  assert(a != none or b != none or last != none or log, message: "an interval has a bound, a or b a value; both none (the whole line): give the line's first and last")
+  // its line's end (a logarithmic line's its own)
+  let end = if last != none { last } else if a != none or b != none { calc.max(..(a, b).filter(v => v != none)) + 1 }
   if not log and label == none {
     let (xa, xb) = (if a == none { x(first) - 0.5 * scale } else { x(a) }, if b == none { x(end) + 0.5 * scale } else { x(b) })
     return _interval(xa, xb, a, b, closed, if color == auto { _zone-colours.first() } else { color })

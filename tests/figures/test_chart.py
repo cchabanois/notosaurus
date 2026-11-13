@@ -254,3 +254,12 @@ def test_box_plots_are_charts():
     kinds = dict(re.findall(r'"(\w+)": (.*?)(?=; "\w+": |$)', figures_typst.KINDS))
     assert "box plot" in kinds["chart"]
     assert all("never a box plot" in kinds[k] or "nor a box plot" in kinds[k] for k in ("graph", "other"))
+
+
+def test_a_smooth_line_with_two_measures_at_one_x_refused():
+    """Two measures at the same x and `smooth: true`: the curve's slope divided by zero.
+    Refused, saying a curve has one value at each x (straight lines still drawn)."""
+    values = "((0, 1), (1, 2), (1, 3), (2, 2))"
+    with pytest.raises(figures_typst.Unusable, match="two measures with the same x"):
+        figures_typst.compile_svg("chart", f'#chart(kind: "line", values: {values}, smooth: true)')
+    figures_typst.compile_svg("chart", f'#chart(kind: "line", values: {values})')
