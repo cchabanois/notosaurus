@@ -569,3 +569,50 @@ def test_a_tracks_texts_clear_of_the_track_and_of_one_another():
 }
 #track(points: ("A", "B"), at: "A")"""
     assert figures_typst.compile_svg("mechanics", check).startswith("<svg")
+
+
+PLAIN_WATER = 'fragment("H"); single(angle: 1); fragment("O", lewis: pairs(2)); single(angle: -1); fragment("H")'
+
+
+@pytest.mark.parametrize(
+    ("body", "said"),
+    [
+        # the dots from O to N, no H between them (1 drawing in 3)
+        (
+            'fragment("H"); single(angle: -1); fragment("O", lewis: pairs(2)); branch({ single(angle: 1); '
+            'fragment("H") }); single(stroke: (dash: "dotted")); fragment("N", lewis: pairs(1)); '
+            'single(); fragment("H")',
+            "not O…N",
+        ),
+        # water given a third H, by a branch written before its O (2 drawings in 3): H3O, not water
+        (
+            'branch({ single(absolute: 135deg); fragment("H") }); branch({ single(absolute: 225deg); fragment("H") }); '
+            'fragment("O", lewis: pairs(2)); single(absolute: -30deg); fragment("H")',
+            "O has 3 bonds",
+        ),
+        ('fragment("C"); double(); fragment("C"); triple(); fragment("C")', "C has 5 bonds"),
+    ],
+)
+def test_a_molecule_wrong_in_its_atoms_refused_saying_why(body, said):
+    """A hydrogen bond between two heavy atoms, an O with three H: drawn as written, a wrong
+    molecule. Refused, saying what is wrong, so that the AI writes it again."""
+    with pytest.raises(figures_typst.Unusable, match=said):
+        figures_typst.compile_svg("chemistry", "#skeletize({ " + body + " })")
+
+
+@pytest.mark.parametrize(
+    "body",
+    [
+        PLAIN_WATER,
+        PLAIN_WATER + '; single(stroke: (dash: "dotted")); fragment("O", lewis: pairs(2)); single(); fragment("H")',
+        # ions written with their charge: H3O+, NH4+
+        'fragment("H"); single(angle: 1); fragment("O^+", lewis: pairs(1)); branch({ single(angle: -2); '
+        'fragment("H") }); single(angle: -1); fragment("H")',
+        'fragment("H"); single(); fragment("N^+"); branch({ single(angle: 2); fragment("H") }); '
+        'branch({ single(angle: -2); fragment("H") }); single(); fragment("H")',
+        'fragment("O", lewis: pairs(2)); double(); fragment("C"); double(); fragment("O", lewis: pairs(2))',
+        'fragment("OH"); single(); cycle(6, { single(); double(); single(); double(); single(); double() })',
+    ],
+)
+def test_a_right_molecule_drawn(body):
+    assert figures_typst.compile_svg("chemistry", "#skeletize({ " + body + " })").startswith("<svg")

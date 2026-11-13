@@ -508,14 +508,127 @@
   if l.zero != none { content(_centre(l.zero.rect), _tight(l.zero.label)) }
 })
 
-// alchemist's skeletize: each atom's Lewis pairs set in its free directions first (above),
-// then the polarity marks in its body laid out once the molecule is drawn, seeing those pairs
+// A molecule checked before it is drawn, its atoms and links as alchemist joins them (a link
+// from the last atom to the next, a branch from the last atom, one written before any atom from
+// the first): a hydrogen bond (a dashed or dotted link) goes from an H, bonded to N, O or F, to
+// an atom with non-bonding pairs (N, O, F, or one written with `lewis:`), never between two
+// other atoms; an atom written alone, without a charge, has no more bonds than its valence
+// (H 1, O 2, N 3, C 4, F, Cl, Br, I 1: S and P, whose valence varies, unchecked; a double bond
+// counts 2, a triple 3, a hydrogen bond 0). Groups ("OH", "CH_3"), ions ("O^+", "H_3O^+") and
+// atoms of a ring left as written. Refused with what is wrong: the figure is asked again.
+#let double(..args) = _alchemist.double(..args).map(e => (..e, bond-order: 2))
+#let triple(..args) = _alchemist.triple(..args).map(e => (..e, bond-order: 3))
+#let _VALENCE = (H: 1, O: 2, N: 3, C: 4, F: 1, Cl: 1, Br: 1, I: 1)
+#let _ACCEPTORS = ("N", "O", "F")
+// a fragment's atoms: (symbol, charged) each, from the content alchemist made of its text
+#let _atom-of(c) = {
+  if type(c) == array { c = c.at(0) }
+  if type(c) != content { return ("", false) }
+  if c.func() == math.equation { return _atom-of(c.body) }
+  if c.func() == math.attach { return (_atom-of(c.base).at(0), c.has("t") or c.has("tr")) }
+  if c.has("text") { return (c.text, false) }
+  if c.has("children") { return (c.children.map(x => _atom-of(x).at(0)).join(), false) }
+  ("", false)
+}
+// the molecule's atoms (symbols, charged, pairs, ring) and links (a, b, order, dashed)
+#let _graph(body, atoms, links, cur, pend) = {
+  if type(body) != array { body = (body,) }
+  let blank = (symbols: (), charged: false, pairs: false, ring: false)  // a place, no atom written
+  for el in body {
+    let kind = if type(el) == dictionary { el.at("type", default: none) } else { none }
+    if kind == "link" {
+      if cur == none {
+        atoms.push(blank)
+        cur = atoms.len() - 1
+      }
+      if pend != none {
+        atoms.push(blank)
+        links.push((pend.from, atoms.len() - 1, pend.order, pend.dashed))
+        cur = atoms.len() - 1
+      }
+      pend = (from: cur, order: el.at("bond-order", default: 1), dashed: _dashed(el))
+    } else if kind == "fragment" {
+      let found = el.at("atoms", default: ()).map(_atom-of)
+      let atom = (
+        symbols: found.map(f => f.at(0)),
+        charged: found.any(f => f.at(1)),
+        pairs: el.at("lewis", default: ()).len() > 0,
+        ring: false,
+      )
+      if pend != none {
+        atoms.push(atom)
+        links.push((pend.from, atoms.len() - 1, pend.order, pend.dashed))
+        pend = none
+        cur = atoms.len() - 1
+      } else if cur != none and atoms.at(cur).symbols.len() == 0 and not atoms.at(cur).ring {
+        atoms.at(cur) = atom  // the atom its branches, written first, start from
+      } else {
+        atoms.push(atom)
+        cur = atoms.len() - 1
+      }
+    } else if kind == "branch" {
+      if cur == none {
+        atoms.push(blank)
+        cur = atoms.len() - 1
+      }
+      let (a, l, _, _) = _graph(el.body, atoms, links, cur, none)
+      atoms = a
+      links = l
+    } else if kind == "cycle" {
+      if cur == none {
+        atoms.push(blank)
+        cur = atoms.len() - 1
+      }
+      atoms.at(cur).ring = true
+    }
+  }
+  (atoms, links, cur, pend)
+}
+#let _checked(body) = {
+  let (atoms, links, _, _) = _graph(body, (), (), none, none)
+  let alone(i) = {
+    let a = atoms.at(i)
+    if a.symbols.len() == 1 and not a.charged and not a.ring { a.symbols.at(0) } else { none }
+  }
+  for (a, b, _, dashed) in links {
+    if not dashed { continue }
+    let (sa, sb) = (atoms.at(a).symbols, atoms.at(b).symbols)
+    if sa.len() == 0 or sb.len() == 0 { continue }
+    let donor(i) = {
+      let s = atoms.at(i).symbols
+      if s == ("H",) {
+        // the H's own bond: to N, O or F
+        let next = links.filter(l => not l.at(3) and (l.at(0) == i or l.at(1) == i)).map(l => if l.at(0) == i { l.at(1) } else { l.at(0) })
+        next.all(j => alone(j) == none or alone(j) in _ACCEPTORS)
+      } else { "H" in s and s.any(x => x in _ACCEPTORS) }
+    }
+    let acceptor(i) = atoms.at(i).pairs or atoms.at(i).symbols.any(x => x in _ACCEPTORS)
+    assert(
+      (donor(a) and acceptor(b)) or (donor(b) and acceptor(a)),
+      message: "a hydrogen bond (a dashed or dotted link) goes from an H bonded to N, O or F to another atom's non-bonding pair (N, O, F), not " + sa.join() + "…" + sb.join(),
+    )
+  }
+  for i in range(atoms.len()) {
+    let s = alone(i)
+    if s == none or s not in _VALENCE { continue }
+    let n = links.filter(l => not l.at(3) and (l.at(0) == i or l.at(1) == i)).map(l => l.at(2)).sum(default: 0)
+    assert(
+      n <= _VALENCE.at(s),
+      message: s + " has " + str(n) + " bonds, " + str(_VALENCE.at(s)) + " at most: each atom as many bonds as its valence (an ion written with its charge, \"O^+\")",
+    )
+  }
+  body
+}
+
+// alchemist's skeletize: the molecule checked, each atom's Lewis pairs set in its free
+// directions (above), then the polarity marks in its body laid out once the molecule is drawn,
+// seeing those pairs
 #let skeletize(..args) = {
-  let (kept, marks, frags, _) = _split(_with-pairs(args.pos().at(0), 0, 0))
+  let (kept, marks, frags, _) = _split(_with-pairs(_checked(args.pos().at(0)), 0, 0))
   if marks.len() > 0 { kept += _draw(marks, frags) }
   _alchemist.skeletize(..args.named(), kept)
 }
-#let draw-skeleton(..args) = _alchemist.draw-skeleton(..args.named(), _with-pairs(args.pos().at(0), 0, 0))
+#let draw-skeleton(..args) = _alchemist.draw-skeleton(..args.named(), _with-pairs(_checked(args.pos().at(0)), 0, 0))
 // ---- What the AI writes, from here (the rule's example: everything above is given)
 #skeletize({
   fragment("CH_3")
