@@ -5,7 +5,7 @@ description: "Notosaurus on its own on an Android phone, without a computer or a
 
 The **Notosaurus app for Android** makes the cards on the phone itself: photograph the lesson,
 check the cards, and they go straight into **AnkiDroid**. No computer, no AI key to get. It is
-coming to Google Play.
+on [Google Play](https://play.google.com/store/apps/details?id=app.notosaurus).
 
 It is the same Notosaurus as on the computer: the same page, instructions, card types, review,
 children and tests to prepare. Everything in [Photos and PDFs](../photos/),

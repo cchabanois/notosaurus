@@ -5,7 +5,7 @@ description: "O Notosaurus sozinho em um celular Android, sem computador nem cha
 
 O **app Notosaurus para Android** faz os cartões no próprio celular: fotografe a lição, confira os
 cartões, e eles vão direto para o **AnkiDroid**. Sem computador, sem chave de IA para conseguir.
-Ele chega em breve ao Google Play.
+Ele está no [Google Play](https://play.google.com/store/apps/details?id=app.notosaurus).
 
 É o mesmo Notosaurus do computador: a mesma página, instruções, tipos de cartão, revisão, filhos e
 provas a preparar. Tudo o que está em [Fotos e PDFs](../photos/), [Instruções](../instructions/) e

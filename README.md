@@ -50,7 +50,7 @@ The [documentation](https://cchabanois.github.io/notosaurus/) explains each of t
 
 ### The Android app (recommended)
 
-Coming soon to Google Play. Notosaurus on its own, on the phone: no computer, no AI key. Photograph the lesson, check the cards, and they go straight into AnkiDroid.
+**[Get it on Google Play](https://play.google.com/store/apps/details?id=app.notosaurus)**. Notosaurus on its own, on the phone: no computer, no AI key. Photograph the lesson, check the cards, and they go straight into AnkiDroid.
 
 - **The same Notosaurus** as on the computer: the same page, instructions, card types, review and languages, with pictures, voices, diagrams, figures, children and tests to prepare. Only the `.apkg` download is left out: the cards go into AnkiDroid.
 - **The Notosaurus service does the work**: the AI (Google's Gemini), the voices and the pictures (drawn, or found free on Wikimedia Commons, Openverse and Pixabay). The voices are made in the European Union; the AI runs on Google's servers, outside it too. It keeps neither the photos nor the cards.
