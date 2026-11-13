@@ -10,7 +10,9 @@ chart and phylogeny functions: a tree built from what each species has), sequenc
 in Typst (our sequences function: letters in columns, their differences framed, computed), a body's vectors with cetz
 (our mechanics function: each given by its direction, on an orbit, a plane, a slope), tables of
 values in Typst (our value-table function: cells measured, totals summed, arrows beside it),
-Scratch scripts with blockst (each block drawn from its text, one Scratch doesn't have refused).
+Scratch scripts with blockst (each block drawn from its text, one Scratch doesn't have refused),
+light's rays with cetz (our refraction and lens functions: the Snell-Descartes angle, the image
+and its rays computed).
 What can be computed is, never placed by eye. Each family's rule and Typst: typst_rules/.
 
 The family is the one the AI gave with the figure's description (models.Card.figure_kind),
@@ -109,6 +111,7 @@ FAMILIES: dict[str, Family] = {
         "mechanics",
         "table",
         "scratch",
+        "optics",
     )
 }
 
@@ -133,6 +136,7 @@ FigureKind = Literal[
     "mechanics",
     "table",
     "scratch",
+    "optics",
     "other",
 ]
 
