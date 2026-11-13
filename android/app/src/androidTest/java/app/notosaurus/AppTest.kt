@@ -281,7 +281,9 @@ class AppTest {
     @Test
     fun aFileThePageDownloadsIsInTheDownloads() {
         if (android.os.Build.VERSION.SDK_INT < android.os.Build.VERSION_CODES.Q) return // Android 9: the user chooses where
-        val name = "Notosaurus test $run.apkg"
+        // A plain file (a PDF): a package of cards made by the app's own page goes to Android's
+        // share sheet instead (aTestsCardsSharedThroughAndroidsShareSheet)
+        val name = "Notosaurus test $run.pdf"
         val resolver = Device.context.contentResolver
         val downloads = android.provider.MediaStore.Downloads.EXTERNAL_CONTENT_URI
         fun found(): ByteArray? = resolver.query(
@@ -293,7 +295,7 @@ class AppTest {
             Device.waitFor(app, "typeof api === 'function'", "the page")
             Device.js(
                 app,
-                "(() => { const url = URL.createObjectURL(new Blob(['a package $run'], { type: 'application/apkg' })); " +
+                "(() => { const url = URL.createObjectURL(new Blob(['a file $run'], { type: 'application/pdf' })); " +
                     "const a = document.createElement('a'); a.href = url; a.download = '$name'; a.click(); return true; })()",
             )
             val deadline = System.currentTimeMillis() + 15_000
@@ -302,7 +304,7 @@ class AppTest {
                 Thread.sleep(500)
                 bytes = found()
             }
-            assertEquals("a package $run", bytes?.decodeToString())
+            assertEquals("a file $run", bytes?.decodeToString())
         }
     }
 
