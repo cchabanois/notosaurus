@@ -61,6 +61,8 @@ def test_credited_with_what_its_typst_uses():
     formula = '#skeletize({ fragment("CH_3"); single(); fragment("OH") })'
     assert figures_typst.made_with("chemistry", balls)[1:] == ["cetz 0.5.2"]
     assert figures_typst.made_with("chemistry", formula)[1:] == ["alchemist 0.2.0"]
+    polar = formula.replace("})", '; charge("fragment-0", "δ+") })')  # our charges, drawn with cetz
+    assert sorted(figures_typst.made_with("chemistry", polar)[1:]) == ["alchemist 0.2.0", "cetz 0.5.2"]
     assert figures_typst.made_with("geometry", TRIANGLE)[1:] == ["ctz-euclide 0.3.0"]
     assert figures_typst.made_with("graph", "#lq.diagram(lq.plot((0, 1), (0, 1)))")[1:] == ["lilaq 0.6.0"]
     timeline = "#timeline(start: 1914, end: 1918, events: ((1916, [Verdun]),))"  # our function: what it uses

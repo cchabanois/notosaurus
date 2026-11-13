@@ -211,7 +211,13 @@ def used_packages(family: str, body: str) -> list[tuple[str, str]]:
     (timeline, switch) count with what they use."""
     preamble = FAMILIES[family].preamble if family in FAMILIES else ""
     code = body
-    if any(_calls(body, own) for own in _LET.findall(preamble)):
+    # a package's own function the preamble wraps (chemistry's skeletize) stays the package's
+    wrapped: set[str] = set()
+    for source, _, listed in _IMPORT.findall(preamble):
+        if source.startswith("@preview/") and listed.strip() == "*":
+            package, _, at = source.removeprefix("@preview/").partition(":")
+            wrapped |= _exports(package, at)[0]
+    if any(_calls(body, own) for own in _LET.findall(preamble) if own not in wrapped):
         code += "\n" + preamble.split("\n", 2)[-1]  # what our functions call too
     used: list[tuple[str, str]] = []
     for source, alias, listed in _IMPORT.findall(preamble):
