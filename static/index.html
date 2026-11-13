@@ -532,7 +532,7 @@
                           x-init="watchHeight($el)" x-effect="card.info; fitHeight($el)"></textarea>
                 <input class="subdeck" x-model="card.subdeck" :readonly="readOnly()" :placeholder="$t('app.review.subdeck')"
                        :aria-label="$t('app.review.subdeckLabel')"
-                       list="subdecks" :size="Math.max(card.subdeck.length, 10)">
+                       list="subdecks" :size="Math.max(card.subdeck.length, $t('app.review.subdeck').length) + 2">
               </div>
               <!-- Shown under the info on the back, in Anki; cleared, it's gone -->
               <div class="fun-fact" x-show="card.fun_fact">

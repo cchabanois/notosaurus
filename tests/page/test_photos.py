@@ -269,8 +269,15 @@ def test_the_one_page_beside_the_add_buttons_with_the_text_twice_as_large(page, 
         {"name": "page-1.png", "mimeType": "image/png", "buffer": plain_image(300, 400, "red")}
     )
     sync_api.expect(page.locator(".thumb img")).to_have_count(1)
-    thumb, stack = page.locator(".thumb").bounding_box(), page.locator(".add-stack").bounding_box()
-    assert thumb["x"] > stack["x"] + stack["width"] and thumb["y"] == stack["y"], (thumb, stack)
+    # Once laid out (the larger text and the page's image come after the page): measured then
+    page.wait_for_function(
+        """() => {
+          const t = document.querySelector('.thumb').getBoundingClientRect();
+          const s = document.querySelector('.add-stack').getBoundingClientRect();
+          return t.x > s.x + s.width && Math.abs(t.y - s.y) < 0.5;
+        }""",
+        timeout=5000,
+    )
 
 
 def test_the_add_buttons_off_once_the_lesson_has_its_thirty_pages(page):
