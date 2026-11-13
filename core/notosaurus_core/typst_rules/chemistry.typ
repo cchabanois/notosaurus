@@ -9,6 +9,9 @@
 // pairs in the widest gaps they leave, evenly (water's O at the bottom: down-left and
 // down-right). A mark written with an angle keeps it, unless it lies on a bond (then it is
 // placed as a pair). An atom in a ring is left as written (its bonds' angles are the ring's).
+// A link drawn dashed or dotted (a hydrogen bond, an interaction) is no bond its pairs avoid:
+// they face it, centred on it, 60° apart (the H of a hydrogen bond arriving between the O's two
+// pairs, as textbooks draw it), within the gap its bonds leave there.
 #let pairs(n, kind: lewis-line) = range(n).map(_ => kind())
 
 #let _deg(a) = if type(a) == angle { a.deg() } else { a }
@@ -46,13 +49,33 @@
   out
 }
 
-// The atom's marks placed: those without an angle, or on a bond, in the free directions
-#let _placed(fragment, bonds) = {
+// A link drawn dashed or dotted: an interaction, not a bond
+#let _dashed(link) = {
+  let s = link.at("stroke", default: none)
+  if type(s) == dictionary { s.at("dash", default: none) not in (none, "solid") } else if type(s) == stroke {
+    s.dash not in (none, auto, "solid")
+  } else { false }
+}
+
+// n directions centred on t, 60° apart, within the gap the bonds leave around t
+#let _facing(t, bonds, n) = {
+  let t = _turn(t)
+  let cw = bonds.map(b => _turn(t - b)).fold(360, calc.min)  // room on the clockwise side
+  let ccw = bonds.map(b => _turn(b - t)).fold(360, calc.min)
+  let room = calc.min(cw, ccw)
+  let step = if n < 2 { 0 } else { calc.min(60, 2 * (room - 30) / (n - 1)) }
+  range(n).map(j => _turn(t + (j - (n - 1) / 2) * step))
+}
+
+// The atom's marks placed: those without an angle, or on a bond, in the free directions;
+// facing an interaction when one arrives (`toward`)
+#let _placed(fragment, bonds, toward: ()) = {
   let marks = fragment.at("lewis", default: ())
   if marks.len() == 0 { return fragment }
   let fixed = marks.map(m => m.angle != none and bonds.all(b => _apart(_deg(m.angle), b) >= 30))
   let taken = bonds + marks.zip(fixed).filter(((m, f)) => f).map(((m, _)) => _deg(m.angle))
-  let free = _free(taken, fixed.filter(f => not f).len())
+  let loose = fixed.filter(f => not f).len()
+  let free = if toward.len() > 0 { _facing(toward.at(0), taken, loose) } else { _free(taken, loose) }
   let i = 0
   let out = ()
   for (m, f) in marks.zip(fixed) {
@@ -69,6 +92,7 @@
 #let _with-pairs(body, rel, default) = {
   if type(body) != array { return body }
   let angles = ()  // a bond's angle; a branch's first bond's; none otherwise
+  let dashed = ()  // whether that bond is an interaction (dashed, dotted)
   let out = ()
   for el in body {
     let kind = if type(el) == dictionary { el.at("type", default: none) } else { none }
@@ -76,14 +100,17 @@
       let a = _link-angle(el, rel, default)
       rel = a
       angles.push(a)
+      dashed.push(_dashed(el))
       out.push(el)
     } else if kind == "branch" {
       let ba = _link-angle(el.args, rel, default)
       let first = el.body.find(e => type(e) == dictionary and e.at("type", default: none) == "link")
       angles.push(if first == none { none } else { _link-angle(first, rel, ba) })
+      dashed.push(first != none and _dashed(first))
       out.push((..el, body: _with-pairs(el.body, rel, ba)))
     } else {
       angles.push(none)
+      dashed.push(false)
       out.push(el)
     }
   }
@@ -91,20 +118,22 @@
     let el = out.at(i)
     if type(el) != dictionary or el.at("type", default: none) != "fragment" { continue }
     if el.at("lewis", default: ()).len() == 0 { continue }
-    let bonds = ()
-    if i > 0 and out.at(i - 1).at("type", default: none) == "link" { bonds.push(angles.at(i - 1) + 180) }
+    let around = ()  // (angle, dashed) of each link at the atom
+    if i > 0 and out.at(i - 1).at("type", default: none) == "link" { around.push((angles.at(i - 1) + 180, dashed.at(i - 1))) }
     let j = i + 1
     while j < out.len() {
       let kind = out.at(j).at("type", default: none)
       if kind == "branch" {
-        if angles.at(j) != none { bonds.push(angles.at(j)) }
+        if angles.at(j) != none { around.push((angles.at(j), dashed.at(j))) }
       } else if kind == "link" {
-        bonds.push(angles.at(j))
+        around.push((angles.at(j), dashed.at(j)))
         break
       } else if kind == "fragment" or kind == "cycle" { break }
       j += 1
     }
-    out.at(i) = _placed(el, bonds)
+    let bonds = around.filter(((_, d)) => not d).map(((a, _)) => a)
+    let toward = around.filter(((_, d)) => d).map(((a, _)) => a)
+    out.at(i) = _placed(el, bonds, toward: toward)
   }
   out
 }
@@ -479,14 +508,127 @@
   if l.zero != none { content(_centre(l.zero.rect), _tight(l.zero.label)) }
 })
 
-// alchemist's skeletize: each atom's Lewis pairs set in its free directions first (above),
-// then the polarity marks in its body laid out once the molecule is drawn, seeing those pairs
+// A molecule checked before it is drawn, its atoms and links as alchemist joins them (a link
+// from the last atom to the next, a branch from the last atom, one written before any atom from
+// the first): a hydrogen bond (a dashed or dotted link) goes from an H, bonded to N, O or F, to
+// an atom with non-bonding pairs (N, O, F, or one written with `lewis:`), never between two
+// other atoms; an atom written alone, without a charge, has no more bonds than its valence
+// (H 1, O 2, N 3, C 4, F, Cl, Br, I 1: S and P, whose valence varies, unchecked; a double bond
+// counts 2, a triple 3, a hydrogen bond 0). Groups ("OH", "CH_3"), ions ("O^+", "H_3O^+") and
+// atoms of a ring left as written. Refused with what is wrong: the figure is asked again.
+#let double(..args) = _alchemist.double(..args).map(e => (..e, bond-order: 2))
+#let triple(..args) = _alchemist.triple(..args).map(e => (..e, bond-order: 3))
+#let _VALENCE = (H: 1, O: 2, N: 3, C: 4, F: 1, Cl: 1, Br: 1, I: 1)
+#let _ACCEPTORS = ("N", "O", "F")
+// a fragment's atoms: (symbol, charged) each, from the content alchemist made of its text
+#let _atom-of(c) = {
+  if type(c) == array { c = c.at(0) }
+  if type(c) != content { return ("", false) }
+  if c.func() == math.equation { return _atom-of(c.body) }
+  if c.func() == math.attach { return (_atom-of(c.base).at(0), c.has("t") or c.has("tr")) }
+  if c.has("text") { return (c.text, false) }
+  if c.has("children") { return (c.children.map(x => _atom-of(x).at(0)).join(), false) }
+  ("", false)
+}
+// the molecule's atoms (symbols, charged, pairs, ring) and links (a, b, order, dashed)
+#let _graph(body, atoms, links, cur, pend) = {
+  if type(body) != array { body = (body,) }
+  let blank = (symbols: (), charged: false, pairs: false, ring: false)  // a place, no atom written
+  for el in body {
+    let kind = if type(el) == dictionary { el.at("type", default: none) } else { none }
+    if kind == "link" {
+      if cur == none {
+        atoms.push(blank)
+        cur = atoms.len() - 1
+      }
+      if pend != none {
+        atoms.push(blank)
+        links.push((pend.from, atoms.len() - 1, pend.order, pend.dashed))
+        cur = atoms.len() - 1
+      }
+      pend = (from: cur, order: el.at("bond-order", default: 1), dashed: _dashed(el))
+    } else if kind == "fragment" {
+      let found = el.at("atoms", default: ()).map(_atom-of)
+      let atom = (
+        symbols: found.map(f => f.at(0)),
+        charged: found.any(f => f.at(1)),
+        pairs: el.at("lewis", default: ()).len() > 0,
+        ring: false,
+      )
+      if pend != none {
+        atoms.push(atom)
+        links.push((pend.from, atoms.len() - 1, pend.order, pend.dashed))
+        pend = none
+        cur = atoms.len() - 1
+      } else if cur != none and atoms.at(cur).symbols.len() == 0 and not atoms.at(cur).ring {
+        atoms.at(cur) = atom  // the atom its branches, written first, start from
+      } else {
+        atoms.push(atom)
+        cur = atoms.len() - 1
+      }
+    } else if kind == "branch" {
+      if cur == none {
+        atoms.push(blank)
+        cur = atoms.len() - 1
+      }
+      let (a, l, _, _) = _graph(el.body, atoms, links, cur, none)
+      atoms = a
+      links = l
+    } else if kind == "cycle" {
+      if cur == none {
+        atoms.push(blank)
+        cur = atoms.len() - 1
+      }
+      atoms.at(cur).ring = true
+    }
+  }
+  (atoms, links, cur, pend)
+}
+#let _checked(body) = {
+  let (atoms, links, _, _) = _graph(body, (), (), none, none)
+  let alone(i) = {
+    let a = atoms.at(i)
+    if a.symbols.len() == 1 and not a.charged and not a.ring { a.symbols.at(0) } else { none }
+  }
+  for (a, b, _, dashed) in links {
+    if not dashed { continue }
+    let (sa, sb) = (atoms.at(a).symbols, atoms.at(b).symbols)
+    if sa.len() == 0 or sb.len() == 0 { continue }
+    let donor(i) = {
+      let s = atoms.at(i).symbols
+      if s == ("H",) {
+        // the H's own bond: to N, O or F
+        let next = links.filter(l => not l.at(3) and (l.at(0) == i or l.at(1) == i)).map(l => if l.at(0) == i { l.at(1) } else { l.at(0) })
+        next.all(j => alone(j) == none or alone(j) in _ACCEPTORS)
+      } else { "H" in s and s.any(x => x in _ACCEPTORS) }
+    }
+    let acceptor(i) = atoms.at(i).pairs or atoms.at(i).symbols.any(x => x in _ACCEPTORS)
+    assert(
+      (donor(a) and acceptor(b)) or (donor(b) and acceptor(a)),
+      message: "a hydrogen bond (a dashed or dotted link) goes from an H bonded to N, O or F to another atom's non-bonding pair (N, O, F), not " + sa.join() + "…" + sb.join(),
+    )
+  }
+  for i in range(atoms.len()) {
+    let s = alone(i)
+    if s == none or s not in _VALENCE { continue }
+    let n = links.filter(l => not l.at(3) and (l.at(0) == i or l.at(1) == i)).map(l => l.at(2)).sum(default: 0)
+    assert(
+      n <= _VALENCE.at(s),
+      message: s + " has " + str(n) + " bonds, " + str(_VALENCE.at(s)) + " at most: each atom as many bonds as its valence (an ion written with its charge, \"O^+\")",
+    )
+  }
+  body
+}
+
+// alchemist's skeletize: the molecule checked, each atom's Lewis pairs set in its free
+// directions (above), then the polarity marks in its body laid out once the molecule is drawn,
+// seeing those pairs
 #let skeletize(..args) = {
-  let (kept, marks, frags, _) = _split(_with-pairs(args.pos().at(0), 0, 0))
+  let (kept, marks, frags, _) = _split(_with-pairs(_checked(args.pos().at(0)), 0, 0))
   if marks.len() > 0 { kept += _draw(marks, frags) }
   _alchemist.skeletize(..args.named(), kept)
 }
-#let draw-skeleton(..args) = _alchemist.draw-skeleton(..args.named(), _with-pairs(args.pos().at(0), 0, 0))
+#let draw-skeleton(..args) = _alchemist.draw-skeleton(..args.named(), _with-pairs(_checked(args.pos().at(0)), 0, 0))
 // ---- What the AI writes, from here (the rule's example: everything above is given)
 #skeletize({
   fragment("CH_3")

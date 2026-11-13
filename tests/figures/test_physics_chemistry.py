@@ -203,6 +203,24 @@ def test_the_chemistry_rule_says_how_to_draw_a_lewis_structures_pairs():
         assert figures_typst.compile_svg("chemistry", "#skeletize({ " + call + " })").startswith("<svg")
 
 
+FACED = "(lewis-line(angle: 150deg), lewis-line(angle: 210deg))"  # the H-bond from the left
+
+
+# dotted, or dashed: an interaction either way
+@pytest.mark.parametrize("arrives", ['single(stroke: (dash: "dotted"))', 'single(stroke: (dash: "dashed"))'])
+def test_a_lewis_structures_pairs_face_a_hydrogen_bond(arrives):
+    """A hydrogen bond (a dotted link) to the second water's O, its bonds up and down-right:
+    #592 counted the dots as a bond and turned both pairs away from the H (1 drawing in 3).
+    An interaction is no bond: the pairs face it, the H arriving between them."""
+    body = (
+        '#skeletize({ fragment("H"); single(angle: 1); fragment("O", lewis: pairs(2)); single(angle: -1); '
+        'fragment("H"); ARRIVES; fragment("O", lewis: LEWIS); branch({ single(angle: 2); fragment("H") }); '
+        'single(angle: -1); fragment("H") })'
+    ).replace("ARRIVES", arrives)
+    drawn = lambda lewis: figures_typst.compile_svg("chemistry", body.replace("LEWIS", lewis))  # noqa: E731
+    assert drawn("pairs(2)") == drawn(FACED)
+
+
 @pytest.mark.parametrize("down", [True, False])
 def test_a_lewis_structures_pairs_set_where_its_bonds_leave_room(down):
     """Water's O at the bottom, its bonds going up at 45° and 135°: the AI set its two pairs at
@@ -553,6 +571,9 @@ def test_a_tracks_texts_clear_of_the_track_and_of_one_another():
     assert figures_typst.compile_svg("mechanics", check).startswith("<svg")
 
 
+PLAIN_WATER = 'fragment("H"); single(angle: 1); fragment("O", lewis: pairs(2)); single(angle: -1); fragment("H")'
+
+
 @pytest.mark.parametrize("angle", [0, 90, -10])
 def test_a_throw_at_no_angle_refused(angle):
     """A throw at 0° (no flight: every position at the launch, its width 0 divided by) or at 90°
@@ -569,6 +590,50 @@ def test_a_velocity_at_rest_drawn_as_none():
     assert rest == bare
     moving = figures_typst.compile_svg("mechanics", '#chronophotography(motion: "falling", n: 4, velocity: (0, 3))')
     assert "1f5fbf" in moving.lower()
+
+
+@pytest.mark.parametrize(
+    ("body", "said"),
+    [
+        # the dots from O to N, no H between them (1 drawing in 3)
+        (
+            'fragment("H"); single(angle: -1); fragment("O", lewis: pairs(2)); branch({ single(angle: 1); '
+            'fragment("H") }); single(stroke: (dash: "dotted")); fragment("N", lewis: pairs(1)); '
+            'single(); fragment("H")',
+            "not O…N",
+        ),
+        # water given a third H, by a branch written before its O (2 drawings in 3): H3O, not water
+        (
+            'branch({ single(absolute: 135deg); fragment("H") }); branch({ single(absolute: 225deg); fragment("H") }); '
+            'fragment("O", lewis: pairs(2)); single(absolute: -30deg); fragment("H")',
+            "O has 3 bonds",
+        ),
+        ('fragment("C"); double(); fragment("C"); triple(); fragment("C")', "C has 5 bonds"),
+    ],
+)
+def test_a_molecule_wrong_in_its_atoms_refused_saying_why(body, said):
+    """A hydrogen bond between two heavy atoms, an O with three H: drawn as written, a wrong
+    molecule. Refused, saying what is wrong, so that the AI writes it again."""
+    with pytest.raises(figures_typst.Unusable, match=said):
+        figures_typst.compile_svg("chemistry", "#skeletize({ " + body + " })")
+
+
+@pytest.mark.parametrize(
+    "body",
+    [
+        PLAIN_WATER,
+        PLAIN_WATER + '; single(stroke: (dash: "dotted")); fragment("O", lewis: pairs(2)); single(); fragment("H")',
+        # ions written with their charge: H3O+, NH4+
+        'fragment("H"); single(angle: 1); fragment("O^+", lewis: pairs(1)); branch({ single(angle: -2); '
+        'fragment("H") }); single(angle: -1); fragment("H")',
+        'fragment("H"); single(); fragment("N^+"); branch({ single(angle: 2); fragment("H") }); '
+        'branch({ single(angle: -2); fragment("H") }); single(); fragment("H")',
+        'fragment("O", lewis: pairs(2)); double(); fragment("C"); double(); fragment("O", lewis: pairs(2))',
+        'fragment("OH"); single(); cycle(6, { single(); double(); single(); double(); single(); double() })',
+    ],
+)
+def test_a_right_molecule_drawn(body):
+    assert figures_typst.compile_svg("chemistry", "#skeletize({ " + body + " })").startswith("<svg")
 
 
 @pytest.mark.parametrize(
