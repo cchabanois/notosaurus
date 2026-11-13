@@ -386,3 +386,110 @@ def test_a_half_line_stays_one():
   ctz-draw-line-add("O", "A", add: ({}, 0.5))
 }})"""
     assert drawn_size("geometry", ray.format(0))[0] < drawn_size("geometry", ray.format(0.2))[0]
+
+
+def _distance_to_line(point, a, b):
+    """The distance from a point to the line through a and b."""
+    (px, py), (ax, ay), (bx, by) = point, a, b
+    return abs((bx - ax) * (py - ay) - (by - ay) * (px - ax)) / ((bx - ax) ** 2 + (by - ay) ** 2) ** 0.5
+
+
+def _crossing(first, second):
+    """Where the line through first's two points crosses the line through second's."""
+    (x1, y1), (x2, y2) = first
+    (x3, y3), (x4, y4) = second
+    d = (x1 - x2) * (y3 - y4) - (y1 - y2) * (x3 - x4)
+    t = ((x1 - x3) * (y3 - y4) - (y1 - y3) * (x3 - x4)) / d
+    return (x1 + t * (x2 - x1), y1 + t * (y2 - y1))
+
+
+SUN = "(centre: (0, 0), r: 2)"
+
+
+def test_a_shadows_rays_tangent_to_the_source_and_the_body():
+    """An eclipse's rays were drawn by the AI's eye, as SVG (none touching the Earth, meeting
+    anywhere): the preamble computes them, the external common tangents of the source and the
+    body (each at a radius from both centres), meeting at the cone's apex on the axis; the
+    penumbra's, the internal ones, crossing between them; from a point source, its tangents
+    to the body."""
+    layout = f"_shadow-layout({SUN}, (centre: (8, 1), r: 0.8), penumbra: true)"
+    ext, inner = _measured(f"{layout}.ext"), _measured(f"{layout}.inner-rays")
+    for ray in ext + inner:
+        assert _distance_to_line((0, 0), *ray) == pytest.approx(2)
+        assert _distance_to_line((8, 1), *ray) == pytest.approx(0.8)
+    # the cone's apex: where the limiting rays meet, on the axis, D × R / (R − r) from the source
+    apex = _measured(f"{layout}.apex")
+    assert _crossing(*ext) == pytest.approx(apex)
+    d = (8**2 + 1**2) ** 0.5
+    assert apex == pytest.approx([8 / d * d * 2 / 1.2, 1 / d * d * 2 / 1.2])
+    # the penumbra's rays cross between the source and the body
+    x, _ = _crossing(*inner)
+    assert 0 < x < 8
+    # each ray stops at the apex
+    assert _measured(f"{layout}.ext-ends") == [pytest.approx(apex)] * 2
+    # a point source: its rays from it, tangent to the body, no apex (the shadow widens)
+    point = "_shadow-layout((centre: (0, 0), r: 0), (centre: (4, 0), r: 1))"
+    for start, contact in _measured(f"{point}.ext"):
+        assert start == pytest.approx([0, 0])
+        assert _distance_to_line((4, 0), start, contact) == pytest.approx(1)
+    assert _measured(f"{point}.apex") is None
+
+
+def test_a_shadow_behind_its_body_cast_on_its_screen():
+    """The shade was drawn between the source and the body (the lit side): the shadow cone is
+    behind the body, from its contacts to the rays' ends beyond it; a screen's cast shadow is
+    where the rays meet it, between them, a planet's on its surface."""
+    point = "_shadow-layout((centre: (0, 0), r: 0), (centre: (4, 0), r: 1), screen: (at: 9))"
+    ext, ends = _measured(f"{point}.ext"), _measured(f"{point}.ext-ends")
+    for (_, contact), end in zip(ext, ends, strict=True):
+        assert contact[0] > 3 and end[0] > contact[0]
+    cast = _measured(f"{point}.cast-umbra")
+    assert [p[0] for p in cast] == pytest.approx([9, 9])
+    # on the screen, between the rays: wider than the body, the source a point
+    assert sorted(p[1] for p in cast)[0] < -1 < 1 < sorted(p[1] for p in cast)[1]
+    for (start, contact), p in zip(ext, cast, strict=True):
+        assert _distance_to_line(p, start, contact) == pytest.approx(0, abs=1e-6)
+    # the source wider than the body: a screen beyond the apex is reached by the penumbra only
+    wide = f"_shadow-layout({SUN}, (centre: (8, 0), r: 0.8), screen: (at: 20), penumbra: true)"
+    assert _measured(f"{wide}.cast-umbra") is None
+    assert _measured(f"{wide}.cast-penumbra") is not None
+    # a planet the shadow reaches (a solar eclipse): the apex inside it, the shadow cast on its
+    # surface
+    planet = f"_shadow-layout({SUN}, (centre: (7, 0), r: 0.6), screen: (r: 1.5))"
+    centre, apex = _measured(f"{planet}.sc"), _measured(f"{planet}.apex")
+    assert ((apex[0] - centre[0]) ** 2 + apex[1] ** 2) ** 0.5 < 1.5
+    for p in _measured(f"{planet}.cast-umbra"):
+        assert ((p[0] - centre[0]) ** 2 + p[1] ** 2) ** 0.5 == pytest.approx(1.5)
+        assert p[0] < centre[0]  # on the side facing the body
+    with pytest.raises(Exception, match="behind the body"):
+        _measured("_shadow-layout((centre: (0, 0), r: 0), (centre: (4, 0), r: 1), screen: (at: 3))")
+
+
+def test_a_body_inside_the_shadow_fits_its_cone():
+    """The Moon in the Earth's shadow was placed and sized by eye (outside the cone, or the
+    cone ending short of it): it is on the axis, past the Earth, its whole disc inside the
+    cone, whatever `along`."""
+    for along in (0.2, 0.5, 0.8):
+        layout = f"_shadow-layout({SUN}, (centre: (8, 0), r: 0.8), inside: (along: {along}))"
+        inner, ext = _measured(f"{layout}.inner"), _measured(f"{layout}.ext")
+        (x, y), r = inner["centre"], inner["r"]
+        assert y == pytest.approx(0) and x - r > 8.8
+        for ray in ext:
+            assert _distance_to_line((x, y), *ray) > r
+
+
+def test_the_geometry_rules_shadows_compile():
+    """Every shadow the geometry rule shows compiles, as the AI copies it, and draws its own
+    shadow and its penumbra when asked."""
+    rules = figures_typst.FAMILIES["geometry"].rules
+    rule = next(line for line in rules.splitlines() if line.startswith("- a shadow"))
+    calls = re.findall(r"`(ctz-draw-shadow\([^`]*\))`", rule)
+    assert calls
+    draw = lambda call: figures_typst.compile_svg("geometry", f"#ctz-canvas({{ ctz-init(); {call} }})")  # noqa: E731
+    for call in calls:
+        assert draw(call).startswith("<svg")
+    ball = "source: (centre: (0, 0), r: 1, name: [lampe]), body: (centre: (5, 0), r: 0.7), screen: (name: [écran])"
+    plain = draw(f"ctz-draw-shadow({ball})")
+    assert draw(f"ctz-draw-shadow({ball}, own: true)") != plain
+    assert draw(f"ctz-draw-shadow({ball}, penumbra: true)") != plain
+    assert draw(f"ctz-draw-shadow({ball}, labels: (cast: [ombre portée]))") != plain

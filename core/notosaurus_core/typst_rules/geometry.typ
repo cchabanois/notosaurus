@@ -455,6 +455,347 @@
   let kept(k) = if d < 1e-9 { k } else { calc.min(k, most / d) }
   _ctz-line-add(a, b, add: (kept(before), kept(after)), ..opts)
 })
+// A shadow (a shadow cone, a cast shadow, an eclipse), everything computed from the circles
+// given, never placed by eye: the light `source` and the lit `body`, each a circle
+// `(centre: (x, y), r: …, name: […], fill: …)` (a point source `r: 0`; an opaque flat object
+// seen edge on, `shape: "segment"`: a bar across the axis, `r` its half-length). The axis
+// runs from the source's centre to the body's. The rays limiting the shadow are the source's
+// and the body's external common tangents (from a point source, its tangents to the body),
+// an arrow on each; the shadow cone behind the body, between them, shaded up to their apex
+// (a source larger than the body) or to the `screen`; `penumbra: true` (an extended source)
+// the internal common tangents too, dashed, the penumbra between them lighter; `own: true`
+// each lit circle's own shadow, its part beyond its tangent points (facing away from the
+// source), darkened. `screen`: what the shadow falls on, across the axis at `at` from the
+// source's centre (`auto`: where the cone shows; a wall, a sheet of paper:
+// `(name: [écran])`; a planet the shadow reaches: `(r: 1.5, name: [Terre])`, its centre at
+// `at`, `auto` the cone's apex just inside it), the shadow cast on it marked dark (the
+// penumbra's grey). `inside`: a body in the shadow (the Moon in the Earth's shadow),
+// `(name: [Lune], along: 0.5)`, on the axis at `along` of the cone's length past the body,
+// its size fitting the cone, darkened. `labels`: the zones' names the description writes,
+// `(umbra: […], penumbra: […], cast: […], own: […])`, each under the figure, a thin line up
+// to its zone. Each body's name beside it, clear of the rays.
+#let _sh-add(p, q) = (p.at(0) + q.at(0), p.at(1) + q.at(1))
+#let _sh-sub(p, q) = (p.at(0) - q.at(0), p.at(1) - q.at(1))
+#let _sh-mul(p, k) = (p.at(0) * k, p.at(1) * k)
+#let _sh-dot(p, q) = p.at(0) * q.at(0) + p.at(1) * q.at(1)
+#let _sh-len(p) = calc.sqrt(_sh-dot(p, p))
+// A circle of the shadow, from what the AI gives: its centre (a number: on the x axis), its
+// radius, its name, its fill
+#let _shadow-circle(c, what, fill: luma(235)) = {
+  assert(type(c) == dictionary, message: what + " is a circle: (centre: (x, y), r: …, name: […])")
+  let known = ("centre", "center", "r", "name", "fill", "shape")
+  let unknown = c.keys().filter(k => k not in known)
+  assert(unknown.len() == 0, message: what + " takes centre, r, name, fill, shape: not " + unknown.join(", "))
+  let centre = c.at("centre", default: c.at("center", default: none))
+  assert(centre != none, message: what + " has a centre: (centre: (x, y), r: …)")
+  let centre = if type(centre) in (int, float) { (centre, 0) } else { centre }
+  assert(type(centre) == array and centre.len() == 2, message: what + "'s centre is (x, y)")
+  let r = c.at("r", default: none)
+  assert(type(r) in (int, float) and r >= 0, message: what + "'s r is its radius, a number (0: a point)")
+  let shape = c.at("shape", default: "disc")
+  assert(shape in ("disc", "segment"), message: what + "'s shape is \"disc\" or \"segment\"")
+  (centre: centre.map(float), r: float(r), name: c.at("name", default: none), fill: c.at("fill", default: fill), shape: shape)
+}
+// The two lines tangent to circles 1 and 2, external (both circles on one side) or internal
+// (between them): each its points of contact (on 1, on 2), the one whose contact on 2 is on
+// the axis's left (+v) first
+#let _shadow-tangents(c1, r1, c2, r2, internal: false) = {
+  let d = _sh-len(_sh-sub(c2, c1))
+  let u = _sh-mul(_sh-sub(c2, c1), 1 / d)
+  let v = (-u.at(1), u.at(0))
+  let a = if internal { -(r1 + r2) / d } else { (r2 - r1) / d }
+  let b = calc.sqrt(calc.max(0, 1 - a * a))
+  let lines = (1, -1).map(side => {
+    let n = _sh-add(_sh-mul(u, a), _sh-mul(v, side * b))
+    (_sh-sub(c1, _sh-mul(n, r1)), if internal { _sh-add(c2, _sh-mul(n, r2)) } else { _sh-sub(c2, _sh-mul(n, r2)) })
+  })
+  lines.sorted(key: l => -_sh-dot(_sh-sub(l.at(1), c2), v))
+}
+// The line tangent to circle (c, r) through the point p, touching it on the axis's side
+// `side` (+1 left, −1 right): its point of contact
+#let _shadow-tangent-through(c, r, p, side, v) = {
+  if r == 0 { return c }
+  let w = _sh-sub(p, c)
+  let d = _sh-len(w)
+  let beta = calc.acos(calc.min(1, r / d))
+  let base = calc.atan2(w.at(0), w.at(1))
+  let points = (base + beta, base - beta).map(t => _sh-add(c, (r * calc.cos(t), r * calc.sin(t))))
+  points.sorted(key: q => -side * _sh-dot(_sh-sub(q, c), v)).first()
+}
+// Where the line from p along w first meets the circle (c, r) ahead of p, or none
+#let _shadow-hit(p, w, c, r) = {
+  let q = _sh-sub(p, c)
+  let b = _sh-dot(w, q)
+  let disc = b * b - (_sh-dot(q, q) - r * r)
+  if disc < 0 { return none }
+  let t = -b - calc.sqrt(disc)
+  if t <= 1e-6 { none } else { _sh-add(p, _sh-mul(w, t)) }
+}
+// Points along a circle's arc, from angle a to angle b (degrees, b − a signed)
+#let _shadow-arc(c, r, a, b, n: 36) = range(n + 1).map(i => {
+  let t = (a + (b - a) * i / n) * 1deg
+  (c.at(0) + r * calc.cos(t), c.at(1) + r * calc.sin(t))
+})
+// A circle's part beyond the chord between its points of contact p and q, on the side of the
+// direction `far`: its outline
+#let _shadow-cap(c, r, p, q, far) = {
+  let ang(x) = calc.atan2(x.at(0) - c.at(0), x.at(1) - c.at(1)) / 1deg
+  let (a, b, f) = (ang(p), ang(q), calc.atan2(far.at(0), far.at(1)) / 1deg)
+  let ccw = calc.rem-euclid(b - a, 360)
+  let delta = if calc.rem-euclid(f - a, 360) <= ccw { ccw } else { ccw - 360 }
+  _shadow-arc(c, r, a, a + delta)
+}
+// Everything a shadow computes from what the AI gives: its rays (each its contact on the
+// source, on the body, and where it stops), the cone's apex, the screen, the body inside the
+// shadow, the shadow cast on the screen
+#let _shadow-layout(source, body, screen: none, inside: none, penumbra: false) = {
+  let src = _shadow-circle(source, "the source", fill: rgb("#ffd23f"))
+  let bod = _shadow-circle(body, "the body")
+  assert(src.shape == "disc", message: "the source is a disc (r: 0 a point)")
+  let (c1, r1, c2, r2) = (src.centre, src.r, bod.centre, bod.r)
+  let D = _sh-len(_sh-sub(c2, c1))
+  assert(D > r1 + r2 + 0.2, message: "the body stands apart from the source: their centres further apart than their radii")
+  let u = _sh-mul(_sh-sub(c2, c1), 1 / D)
+  let v = (-u.at(1), u.at(0))
+  let ax(p) = _sh-dot(_sh-sub(p, c1), u) // a point's place along the axis
+  let at-ax(s) = _sh-add(c1, _sh-mul(u, s))
+  let segment = bod.shape == "segment"
+  let ends = (_sh-add(c2, _sh-mul(v, r2)), _sh-sub(c2, _sh-mul(v, r2)))
+  // the limiting rays: (contact on the source, contact on the body), the left one first
+  let ext = if segment { (0, 1).map(i => (_shadow-tangent-through(c1, r1, ends.at(i), if i == 0 { 1 } else { -1 }, v), ends.at(i))) } else { _shadow-tangents(c1, r1, c2, r2) }
+  let pen = penumbra and r1 > 0
+  let inner-rays = if not pen { none } else if segment { (0, 1).map(i => (_shadow-tangent-through(c1, r1, ends.at(i), if i == 0 { -1 } else { 1 }, v), ends.at(i))) } else { _shadow-tangents(c1, r1, c2, r2, internal: true) }
+  // the cone's apex along the axis, a source larger than the body
+  let apex = if r1 > r2 + 1e-6 { D * r1 / (r1 - r2) } else { none }
+  let back = D + r2 // the body's far side
+  let free = if apex != none { apex } else { back + calc.max(0.8 * D, 4 * r2, 2) }
+  // the screen: a line across the axis, or a circle (a planet)
+  let scr = if screen == none { none } else {
+    assert(type(screen) == dictionary and screen.keys().all(k => k in ("at", "r", "name", "fill")), message: "the screen is (at: …, name: […]), a planet's (r: …) too")
+    let R = screen.at("r", default: none)
+    let at = screen.at("at", default: auto)
+    let at = if at != auto { at } else if R != none {
+      // its centre: the cone's apex just inside it, its near side clear of the body
+      if apex != none { calc.max(apex + 0.6 * R, back + R + 0.5) } else { back + R + calc.max(0.6 * D, 3 * r2) }
+    } else if apex != none { back + 0.6 * (apex - back) } else { back + calc.max(0.6 * D, 3 * r2) }
+    assert(type(at) in (int, float), message: "the screen's at is its distance from the source's centre along the axis")
+    assert(at - (if R == none { 0 } else { R }) > back + 0.05, message: "the screen stands behind the body, further from the source")
+    (at: float(at), r: R, name: screen.at("name", default: none), fill: screen.at("fill", default: luma(235)))
+  }
+  let round = scr != none and scr.r != none
+  let sc = if round { at-ax(scr.at) } else { none }
+  // where a ray from p (towards q) stops: an external one at the apex at most
+  let stop(p, q, external) = {
+    let w = _sh-sub(q, p)
+    let w = _sh-mul(w, 1 / _sh-len(w))
+    let limit = if external and apex != none { apex } else { free }
+    let along(s) = _sh-add(q, _sh-mul(w, (s - ax(q)) / _sh-dot(w, u)))
+    if scr == none { along(limit) } else if not round {
+      along(if external and apex != none { calc.min(apex, scr.at) } else { scr.at })
+    } else {
+      let h = _shadow-hit(q, w, sc, scr.r)
+      if h != none and (not external or apex == none or ax(h) <= apex + 1e-6) { h } else if external { along(limit) } else { along(calc.max(limit, scr.at - scr.r)) }
+    }
+  }
+  let ext-ends = ext.map(((p, q)) => stop(p, q, true))
+  let inner-ends = if pen { inner-rays.map(((p, q)) => stop(p, q, false)) } else { none }
+  let inside-fill = if inside != none and type(inside) == dictionary { inside.at("fill", default: luma(235)) } else { none }
+  let inner = none
+  if inside != none {
+    assert(type(inside) == dictionary and inside.keys().all(k => k in ("along", "name", "fill")), message: "inside is (name: […], along: 0.5): its place along the cone, its size the cone's")
+    let along = inside.at("along", default: 0.5)
+    assert(type(along) in (int, float) and 0 < along and along < 1, message: "inside's along is between 0 and 1: its place from the body to the cone's end")
+    let end = calc.max(..ext-ends.map(ax))
+    // the cone's half-width at s, from its edge's line
+    let half(s) = {
+      let (p, q) = ext.at(0)
+      let w = _sh-sub(q, p)
+      let w = _sh-mul(w, 1 / _sh-len(w))
+      let x = at-ax(s)
+      calc.abs(_sh-dot(_sh-sub(x, p), (-w.at(1), w.at(0))))
+    }
+    let s = back + along * (end - back)
+    let rr = calc.min(0.75 * half(s), 0.8 * r2)
+    // clear of the body
+    for _ in range(8) {
+      if s - rr < back + 0.1 { s = back + 0.1 + rr; rr = calc.min(0.75 * half(s), 0.8 * r2) }
+    }
+    assert(rr > 0.05, message: "no room in the cone there: inside's along nearer the body")
+    inner = (centre: at-ax(s), r: rr, name: inside.at("name", default: none))
+    inner.insert("fill", inside-fill)
+  }
+  // the shadow cast on the screen: where the rays stop on it
+  let on(e) = if scr == none { false } else if round { calc.abs(_sh-len(_sh-sub(e, sc)) - scr.r) < 1e-4 } else { calc.abs(ax(e) - scr.at) < 1e-6 }
+  let cast-umbra = if ext-ends.all(on) { ext-ends } else { none }
+  let cast-penumbra = if pen and inner-ends.all(on) { inner-ends } else { none }
+  (src: src, bod: bod, c1: c1, r1: r1, c2: c2, r2: r2, u: u, v: v, segment: segment, ends: ends, ext: ext, pen: pen, inner-rays: inner-rays, apex: if apex == none { none } else { at-ax(apex) }, back: back, scr: scr, round: round, sc: sc, ext-ends: ext-ends, inner-ends: inner-ends, inner: inner, cast-umbra: cast-umbra, cast-penumbra: cast-penumbra)
+}
+#let ctz-draw-shadow(source: none, body: none, screen: none, inside: none, penumbra: false, own: false, labels: (:), ray-colour: rgb("#e07b00")) = {
+  import cetz.draw: *
+  assert(type(labels) == dictionary and labels.keys().all(k => k in ("umbra", "penumbra", "cast", "own")), message: "labels are (umbra: …, penumbra: …, cast: …, own: …)")
+  let (src, bod, c1, r1, c2, r2, u, v, segment, ends, ext, pen, inner-rays, back, scr, round, sc, ext-ends, inner-ends, inner, ..) = _shadow-layout(source, body, screen: screen, inside: inside, penumbra: penumbra)
+  let ax(p) = _sh-dot(_sh-sub(p, c1), u)
+  let at-ax(s) = _sh-add(c1, _sh-mul(u, s))
+  // the penumbra, then the shadow cone
+  let pen-colour = luma(228)
+  let umbra-colour = luma(170)
+  if pen {
+    line(inner-rays.at(0).at(1), inner-ends.at(0), inner-ends.at(1), inner-rays.at(1).at(1), close: true, fill: pen-colour, stroke: none)
+  }
+  line(ext.at(0).at(1), ext-ends.at(0), ext-ends.at(1), ext.at(1).at(1), close: true, fill: umbra-colour, stroke: none)
+  // the screen and what is cast on it
+  let cast = ()
+  if scr != none and not round {
+    let ys = ext-ends.map(e => _sh-dot(_sh-sub(e, c1), v)) + if pen { inner-ends.map(e => _sh-dot(_sh-sub(e, c1), v)) } else { () }
+    let half = calc.max(..ys.map(calc.abs), r2) + 0.6
+    let (top, bottom) = (_sh-add(at-ax(scr.at), _sh-mul(v, half)), _sh-sub(at-ax(scr.at), _sh-mul(v, half)))
+    line(top, bottom, stroke: 1.2pt)
+    let on = e => calc.abs(ax(e) - scr.at) < 1e-6
+    if pen { line(..inner-ends, stroke: 3pt + luma(160)) }
+    if ext-ends.all(on) { line(..ext-ends, stroke: 3pt + luma(40)) ; cast = (_sh-mul(_sh-add(..ext-ends), 0.5),) }
+    else if pen { cast = (_sh-mul(_sh-add(..inner-ends), 0.5),) }
+  }
+  // the rays, an arrow halfway between the source and the body
+  let ray(p, q, e, dashed) = {
+    let style = (paint: ray-colour, thickness: 0.8pt, dash: if dashed { "dashed" } else { none })
+    line(p, e, stroke: style)
+    let w = _sh-sub(q, p)
+    let w = _sh-mul(w, 1 / _sh-len(w))
+    let m = _sh-mul(_sh-add(p, q), 0.5)
+    line(_sh-sub(m, _sh-mul(w, 0.3)), m, stroke: (paint: ray-colour, thickness: 0.8pt), mark: (end: "stealth", fill: ray-colour, scale: 0.9))
+  }
+  // the circles lit, their own shadow: beyond the contacts of the source's external tangents
+  let darken = black.transparentize(45%)
+  let own-at = none
+  if round {
+    circle(sc, radius: scr.r, fill: scr.fill, stroke: 0.9pt)
+    if own {
+      let (l0, l1) = _shadow-tangents(c1, r1, sc, scr.r)
+      line(.._shadow-cap(sc, scr.r, l0.at(1), l1.at(1), u), close: true, fill: darken, stroke: none)
+    }
+    // the shadow cast on it: the arc between the rays' hits, its penumbra's grey around it
+    let arc-between(p, q, colour) = {
+      let ang(x) = calc.atan2(x.at(0) - sc.at(0), x.at(1) - sc.at(1)) / 1deg
+      let (a, b) = (ang(p), ang(q))
+      let d = calc.rem-euclid(b - a + 180, 360) - 180
+      line(.._shadow-arc(sc, scr.r, a, a + d, n: 24), stroke: 3pt + colour)
+    }
+    let on(e) = calc.abs(_sh-len(_sh-sub(e, sc)) - scr.r) < 1e-4
+    if pen and inner-ends.all(on) { arc-between(..inner-ends, luma(160)); cast = (_sh-mul(_sh-add(..inner-ends), 0.5),) }
+    if ext-ends.all(on) { arc-between(..ext-ends, luma(40)); cast = (_sh-mul(_sh-add(..ext-ends), 0.5),) }
+  }
+  for (i, (p, q)) in ext.enumerate() { ray(p, q, ext-ends.at(i), false) }
+  if pen { for (i, (p, q)) in inner-rays.enumerate() { ray(p, q, inner-ends.at(i), true) } }
+  if r1 == 0 { circle(c1, radius: 0.12, fill: src.fill, stroke: 0.8pt) } else { circle(c1, radius: r1, fill: src.fill, stroke: 0.9pt + rgb("#c98a00")) }
+  if segment {
+    line(..ends, stroke: 3pt)
+  } else {
+    circle(c2, radius: r2, fill: bod.fill, stroke: 0.9pt)
+    if own {
+      let cap = _shadow-cap(c2, r2, ext.at(0).at(1), ext.at(1).at(1), u)
+      line(..cap, close: true, fill: darken, stroke: none)
+      own-at = _sh-add(c2, _sh-mul(u, 0.6 * r2))
+    }
+  }
+  // a body in the shadow, on the axis, as large as the cone lets it be there
+  if inner != none {
+    circle(inner.centre, radius: inner.r, fill: inner.fill, stroke: 0.9pt)
+    circle(inner.centre, radius: inner.r, fill: black.transparentize(68%), stroke: none)
+  }
+  // the names: each beside its body, above it or below, clear of the rays, the screen,
+  // the bodies and the names already placed
+  let segs = ext.enumerate().map(((i, l)) => (l.at(0), ext-ends.at(i))) + if pen { inner-rays.enumerate().map(((i, l)) => (l.at(0), inner-ends.at(i))) } else { () }
+  let discs = ((c1, calc.max(r1, 0.12)),) + if segment { () } else { ((c2, r2),) } + if round { ((sc, scr.r),) } else { () } + if inner != none { ((inner.centre, inner.r),) } else { () }
+  let width(name) = 0.24 * _name-chars(name) + 0.1
+  let hits(b, boxes) = {
+    let (x0, y0, x1, y1) = b
+    let inbox(p) = x0 - 0.06 <= p.at(0) and p.at(0) <= x1 + 0.06 and y0 - 0.06 <= p.at(1) and p.at(1) <= y1 + 0.06
+    segs.any(((p, q)) => range(41).any(i => inbox(_sh-add(p, _sh-mul(_sh-sub(q, p), i / 40))))) or discs.any(((c, r)) => {
+      let nx = calc.clamp(c.at(0), x0, x1)
+      let ny = calc.clamp(c.at(1), y0, y1)
+      _sh-len(_sh-sub((nx, ny), c)) < r + 0.06
+    }) or boxes.any(o => not (x1 < o.at(0) or o.at(2) < x0 or y1 < o.at(1) or o.at(3) < y0))
+  }
+  let name-at(c, r, name, boxes) = {
+    let w = width(name)
+    let h = 0.5
+    let tries = range(16).map(k => (c.at(1) + r + 0.12 + k * 0.15, true)).zip(range(16).map(k => (c.at(1) - r - 0.12 - k * 0.15, false))).flatten()
+    let found = none
+    for i in range(16 * 2) {
+      if found != none { break }
+      let (y, up) = (tries.at(2 * i), tries.at(2 * i + 1))
+      let b = if up { (c.at(0) - w / 2, y, c.at(0) + w / 2, y + h) } else { (c.at(0) - w / 2, y - h, c.at(0) + w / 2, y) }
+      if not hits(b, boxes) { found = b }
+    }
+    if found == none { found = (c.at(0) - w / 2, c.at(1) + r + 0.12, c.at(0) + w / 2, c.at(1) + r + 0.62) }
+    found
+  }
+  let boxes = ()
+  let named = ((c1, calc.max(r1, 0.12), src.name), (c2, r2, bod.name))
+  if round { named.push((sc, scr.r, scr.name)) }
+  if inner != none { named.push((inner.centre, inner.r, inner.name)) }
+  for (c, r, name) in named {
+    if name != none {
+      let b = name-at(c, r, name, boxes)
+      boxes.push(b)
+      content(((b.at(0) + b.at(2)) / 2, (b.at(1) + b.at(3)) / 2), name)
+    }
+  }
+  if scr != none and not round and scr.name != none {
+    let ys = ext-ends.map(e => _sh-dot(_sh-sub(e, c1), v)) + if pen { inner-ends.map(e => _sh-dot(_sh-sub(e, c1), v)) } else { () }
+    let half = calc.max(..ys.map(calc.abs), r2) + 0.6
+    let top = _sh-add(at-ax(scr.at), _sh-mul(v, half))
+    content(_sh-add(top, (0, 0.1)), scr.name, anchor: "south")
+    boxes.push((top.at(0) - width(scr.name) / 2, top.at(1) + 0.1, top.at(0) + width(scr.name) / 2, top.at(1) + 0.6))
+  }
+  // the zones' names, in a row under the figure, a thin line up to each zone
+  let targets = ()
+  let cone-at(s, k) = {
+    // a point of the shadow cone at s along the axis, k of the way from the axis to its right edge
+    let (p, q) = ext.at(1)
+    let w = _sh-sub(q, p)
+    let e = _sh-add(q, _sh-mul(w, (s - ax(q)) / _sh-dot(w, u)))
+    _sh-add(at-ax(s), _sh-mul(_sh-sub(e, at-ax(s)), k))
+  }
+  let cone-end = calc.min(..ext-ends.map(ax))
+  if "umbra" in labels {
+    let s = if inner != none { (back + ax(inner.centre) - inner.r) / 2 } else { back + 0.45 * (cone-end - back) }
+    targets.push((cone-at(s, 0.5), labels.umbra))
+  }
+  if "penumbra" in labels and pen {
+    let s = back + 0.5 * (calc.min(..inner-ends.map(ax)) - back)
+    let (p, q) = inner-rays.at(1)
+    let w = _sh-sub(q, p)
+    let e = _sh-add(q, _sh-mul(w, (s - ax(q)) / _sh-dot(w, u)))
+    targets.push((_sh-mul(_sh-add(e, cone-at(s, 1)), 0.5), labels.penumbra))
+  }
+  if "own" in labels and own-at != none { targets.push((_sh-sub(own-at, _sh-mul(v, 0.3 * r2)), labels.own)) }
+  if "cast" in labels and cast.len() > 0 {
+    if round { targets.push((cast.first(), labels.cast)) } else {
+      // beside the screen, behind it, at the shadow cast on it
+      let p = _sh-add(cast.first(), _sh-mul(u, 0.15))
+      content(p, labels.cast, anchor: "west")
+    }
+  }
+  if targets.len() > 0 {
+    let ys = discs.map(((c, r)) => c.at(1) - r) + segs.map(((p, q)) => calc.min(p.at(1), q.at(1))) + boxes.map(b => b.at(1)) + targets.map(t => t.at(0).at(1))
+    if scr != none and not round {
+      let ys2 = ext-ends.map(e => _sh-dot(_sh-sub(e, c1), v)) + if pen { inner-ends.map(e => _sh-dot(_sh-sub(e, c1), v)) } else { () }
+      ys.push(at-ax(scr.at).at(1) - calc.max(..ys2.map(calc.abs), r2) - 0.6)
+    }
+    let row = calc.min(..ys) - 0.5
+    let placed = ()
+    for (t, name) in targets.sorted(key: t => t.at(0).at(0)) {
+      let w = width(name)
+      let x = t.at(0)
+      if placed.len() > 0 { x = calc.max(x, placed.last() + 0.25 + w / 2) }
+      placed.push(x + w / 2)
+      line((x, row), t, stroke: 0.4pt + luma(90))
+      circle(t, radius: 0.04, fill: luma(60), stroke: none)
+      content((x, row - 0.05), name, anchor: "north")
+    }
+  }
+}
 // ---- What the AI writes, from here (the rule's example: everything above is given)
 #ctz-canvas({
   ctz-init()
