@@ -60,6 +60,8 @@ Each pull request's entries (the `## Changelog` of its description) are put unde
 
 ### Fixed
 
+- Numbers on a figure's axes and on a mechanics figure's marked angles are written with the language's decimal comma, without rounding noise.
+- A line chart of large values (a population in millions) is drawn instead of failing.
 - Sequences written in lowercase letters (atg gca) are aligned letter by letter, and amino acids written in capitals (MET-PRO-GLU) one per codon.
 - A line tangent to a curve is found where it touches it, instead of being refused as not meeting it.
 - ⚗️ A Lewis structure's non-bonding pairs drawn where its bonds leave room, never on a bond, whichever way the molecule is turned.
