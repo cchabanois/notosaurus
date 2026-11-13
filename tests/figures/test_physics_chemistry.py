@@ -195,10 +195,35 @@ def test_the_chemistry_rule_says_how_to_draw_a_lewis_structures_pairs():
     """Without it the AI drew a Lewis structure's non-bonding pairs as bonds to no atom, or
     left them out (0 of 12 right): the rule's Lewis call, as it gives it, draws them."""
     rule = figures_typst.FAMILIES["chemistry"].rules
-    calls = re.findall(r"`(fragment\([^`]*lewis-line[^`]*)`", rule)
+    calls = re.findall(r"`(fragment\([^`]*lewis:[^`]*\))`", rule)
     assert calls, "the chemistry rule shows a Lewis structure's pairs"
     for call in calls:
         assert figures_typst.compile_svg("chemistry", "#skeletize({ " + call + " })").startswith("<svg")
+
+
+@pytest.mark.parametrize("down", [True, False])
+def test_a_lewis_structures_pairs_set_where_its_bonds_leave_room(down):
+    """Water's O at the bottom, its bonds going up at 45° and 135°: the AI set its two pairs at
+    45° and 135°, on the bonds (the rule's example's angles, copied, 2 times in 3). Their
+    directions computed from the atom's bonds: `pairs(2)` draws them in the widest gaps, as
+    written by hand there (down-left, down-right; up, the molecule turned), and a pair written
+    on a bond is moved there too."""
+    to_o = -1 if down else 1  # the bond from the first H to O: down to an O at the bottom
+    water = f'#skeletize({{ fragment("H"); single(angle: {to_o}); fragment("O", lewis: LEWIS); '
+    water += f'single(angle: {-to_o}); fragment("H") }})'
+    drawn = lambda lewis: figures_typst.compile_svg("chemistry", water.replace("LEWIS", lewis))  # noqa: E731
+    free = (
+        "(lewis-line(angle: 225deg), lewis-line(angle: 315deg))"
+        if down
+        else "(lewis-line(angle: 45deg), lewis-line(angle: 135deg))"
+    )
+    on_bonds = (
+        "(lewis-line(angle: 45deg), lewis-line(angle: 135deg))"
+        if down
+        else "(lewis-line(angle: 225deg), lewis-line(angle: 315deg))"
+    )
+    assert drawn("pairs(2)") == drawn(free)
+    assert drawn(on_bonds) == drawn(free)
 
 
 def test_a_bodys_vectors_point_where_their_support_says():
@@ -319,4 +344,52 @@ def test_an_accelerated_chronophotographys_first_positions_stand_apart():
 #let gaps = range(6).map(i => pts.at(i + 1).at(0) - pts.at(i).at(0))
 #assert(range(5).all(i => gaps.at(i + 1) > gaps.at(i)) and gaps.first() > 0.5)
 #chronophotography(motion: "accelerated")"""
+    assert figures_typst.compile_svg("mechanics", check).startswith("<svg")
+
+
+def test_a_body_on_a_track_drawn_as_the_rule_says():
+    """A skater on a U ramp drawn as SVG by hand: a stick figure at a random tilt, once at B
+    instead of A, its texts placed by eye. The rule's own track compiles; a point that isn't
+    the track's refused, saying which are."""
+    rule = figures_typst.FAMILIES["mechanics"].rules
+    (call,) = re.findall(r"`(#track\([^`]*\))`", rule)
+    assert figures.clean(figures_typst.compile_svg("mechanics", call)).startswith("<svg")
+    with pytest.raises(figures_typst.Unusable, match="no point of the track"):
+        figures_typst.compile_svg("mechanics", '#track(points: ("A", "B"), at: "C")')
+
+
+def test_a_tracks_profile_and_body_computed():
+    """The profile through its key points, flat at each (a top, a hollow), the body on it at
+    its point: never placed by eye."""
+    check = """#let (knots, w) = track-places((3, 0, 2))
+#assert(knots.at(0).at(1) > knots.at(2).at(1) and knots.at(2).at(1) > knots.at(1).at(1))
+#for k in knots {
+  let (p, slope) = track-at(knots, w, k.at(0))
+  assert(calc.abs(p.at(1) - k.at(1)) < 1e-9 and calc.abs(slope) < 1e-9)
+}
+#context {
+  let l = track-layout(heights: (3, 0, 2), points: ("A", "B", "C"), at: "B")
+  let b = l.knots.at(1)
+  assert(calc.abs(l.centre.at(0) - b.at(0)) < 1e-9 and l.centre.at(1) > b.at(1))
+}
+#track(heights: (3, 0, 2), points: ("A", "B", "C"), at: "B")"""
+    assert figures_typst.compile_svg("mechanics", check).startswith("<svg")
+
+
+def test_a_tracks_texts_clear_of_the_track_and_of_one_another():
+    """Each point's name and note, the body's name, the vectors' names: none on the track, the
+    ground or another text (the skater's note written in the middle of the ramp before)."""
+    check = """#context {
+  let l = track-layout(heights: (3, 0, 3), points: ("A", "B", ""), at: "A", body: [skateur],
+    notes: (A: [énergie potentielle maximale, vitesse nulle], B: [énergie cinétique maximale]),
+    vectors: (("P", "down"), ("R", "normal")))
+  let inside(p, ((x0, y0), (x1, y1))) = p.at(0) > x0 and p.at(0) < x1 and p.at(1) > y0 and p.at(1) < y1
+  let meets(((a0, b0), (a1, b1)), ((x0, y0), (x1, y1))) = a0 < x1 and x0 < a1 and b0 < y1 and y0 < b1
+  assert(l.texts.len() == 7)  // 2 vectors, A and B, the body, 2 notes
+  for (i, (c, q, anchor, b)) in l.texts.enumerate() {
+    assert(not (l.fine + l.ground).any(p => inside(p, b)), message: "a text on the track: " + repr(c))
+    for (j, t) in l.texts.enumerate() { assert(i == j or not meets(b, t.at(3)), message: "two texts on one another") }
+  }
+}
+#track(points: ("A", "B"), at: "A")"""
     assert figures_typst.compile_svg("mechanics", check).startswith("<svg")
