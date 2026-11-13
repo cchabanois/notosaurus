@@ -9,6 +9,7 @@ Each pull request's entries (the `## Changelog` of its description) are put unde
 
 ### Added
 
+- 🌗 Shadows and eclipses (a source, a lit body, its shadow cone, the shadow cast on a screen or on the Earth, the Moon in the Earth's shadow, a body's own shadow) drawn with rays tangent to the bodies, the shadow behind the body and every body named.
 - Chemistry figures: a molecule's partial charges, a bond angle, its dipole moment and a bond's polarisation, placed by computation on the molecule (each charge beside its atom, the angle inside, the dipole moment from the charges, beside the molecule).
 - 🔦 Refraction, reflection and a lens's image drawn with their rays computed: the refracted angle by Snell-Descartes, the image and its three rays.
 - 🛹 Skate ramps, roller coasters and marble tracks drawn exactly: the track's shape computed, the body at its point, each label clear of the track.
