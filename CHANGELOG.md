@@ -9,6 +9,8 @@ Each pull request's entries (the `## Changelog` of its description) are put unde
 
 ### Added
 
+- 📤 Share the cards of several lessons, or of a test, with another family in one file to open with Anki or AnkiDroid: from 📚 My lessons (lessons ticked), a test's sheet, or the open lesson. Without the child's name nor its review history.
+- Figures: logarithmic scales (distances in the Universe, sizes from the atom to the galaxy, sound frequencies) drawn with each object at its place and powers of ten as graduations; named zones on a scale (infrasons, audible sounds, ultrasons), each its colour.
 - 📤 On Android, share photos, a PDF or a text from any app to Notosaurus: they become the pages of a lesson, ready to make its cards (a web page's address alone is not taken: share a screenshot or the page as a PDF).
 - ✋ "Cancel" while the AI corrects the lesson or a card: it stops, the cards stay as they were.
 - Pictures seen in full can be zoomed with two fingers and moved with one; a tap zooms in where it touches.
@@ -36,6 +38,7 @@ Each pull request's entries (the `## Changelog` of its description) are put unde
 
 ### Changed
 
+- « Toutes les pages »: no more ✕ on each page. « Sélectionner » (or a long press on a page) chooses pages, then « Retirer » removes them together; a tap still shows a page in full.
 - A lesson holds 30 pages (10 before): a PDF of a chapter or a long course at one click, its pages read 10 at a time, the page saying which ones it reads.
 - 🎙️ Dictation shows your words as you speak: the phone's own speech recognition writes them, at once and with no credits used; your voice no longer goes through the Notosaurus service.
 - 🎙️ The dictation button shows the microphone Android apps use, filled on a pulsing circle while it listens.
@@ -50,6 +53,10 @@ Each pull request's entries (the `## Changelog` of its description) are put unde
 
 ### Fixed
 
+- Graphs: a period's or an amplitude's name (a double arrow) set clear of the curve, never written across the sinusoid.
+- 🏷️ A card's sub-deck field no longer cuts its placeholder on newer phones' browsers.
+- Figures: on a number line, names or numbers too close together no longer written on each other; large numbers written with their thousands apart (20 000).
+- Bar charts drawn as horizontal bars when the description asks for them; a long name on two lines instead of making the whole chart wide and its text tiny; counts in the millions graduated.
 - 🔌 **Circuit figures**: a branch's components are spaced and wired by the drawing itself, so they are never drawn on one another, a branch is never left open, and each current's arrow sits on its own branch, its name apart from the components'.
 - In the app's settings, « Vérifier » on a subscription that has ended no longer says « Clé vérifiée : à jour » next to « Votre abonnement est terminé ».
 - 🔌 **Figures: a house installation** drawn the way a textbook draws it: the socket with its phase, neutral and earth terminals, the earth wire green-and-yellow going to the earth symbol and never to the neutral, the general breaker on both the phase and the neutral.

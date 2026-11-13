@@ -66,6 +66,17 @@ figure.thumb:only-of-type { grid-column: span 2; grid-row: span 2; }
 .sheet.all-pages { height: 100dvh; max-height: 100dvh; border-radius: 0; padding-top: calc(.5rem + env(safe-area-inset-top)); }
 .sheet.all-pages .sheet-body { flex: 1 1 auto; min-height: 0; }
 .pages-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(92px, 1fr)); gap: 10px; padding-bottom: .5rem; }
+.sheet-head-tools { display: flex; align-items: center; gap: .4rem; }
+.sheet-head-tools .btn { min-height: 0; padding: .4rem .8rem; }
+.sheet.all-pages > .btn.wide { margin-top: .5rem; }
+/* Pages being chosen: each a box to tick, the chosen ones framed */
+.pages-grid .thumb.chosen img { outline: 3px solid var(--primary); outline-offset: -3px; }
+.thumb-check {
+  position: absolute; top: .3rem; right: .3rem; width: 1.6rem; height: 1.6rem; border-radius: 50%;
+  border: 2px solid var(--surface); background: rgb(0 0 0 / .35); color: var(--on-primary);
+  font-weight: 700; line-height: 1.4rem; text-align: center; pointer-events: none;
+}
+.thumb.chosen .thumb-check { background: var(--primary); }
 
 .add-tile {
   display: flex;

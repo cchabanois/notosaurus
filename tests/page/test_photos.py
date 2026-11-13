@@ -269,8 +269,15 @@ def test_the_one_page_beside_the_add_buttons_with_the_text_twice_as_large(page, 
         {"name": "page-1.png", "mimeType": "image/png", "buffer": plain_image(300, 400, "red")}
     )
     sync_api.expect(page.locator(".thumb img")).to_have_count(1)
-    thumb, stack = page.locator(".thumb").bounding_box(), page.locator(".add-stack").bounding_box()
-    assert thumb["x"] > stack["x"] + stack["width"] and thumb["y"] == stack["y"], (thumb, stack)
+    # Once laid out (the larger text and the page's image come after the page): measured then
+    page.wait_for_function(
+        """() => {
+          const t = document.querySelector('.thumb').getBoundingClientRect();
+          const s = document.querySelector('.add-stack').getBoundingClientRect();
+          return t.x > s.x + s.width && Math.abs(t.y - s.y) < 0.5;
+        }""",
+        timeout=5000,
+    )
 
 
 def test_the_add_buttons_off_once_the_lesson_has_its_thirty_pages(page):
@@ -545,18 +552,38 @@ def test_more_pages_than_the_strip_holds(page, width):
     pages = sheet.locator("figure.thumb img")
     sync_api.expect(pages).to_have_count(10)
     assert [img.get_attribute("src") for img in pages.all()] == urls  # all of them, in order
-    sync_api.expect(sheet.locator("figure.thumb button")).to_have_count(10)  # ✕ alone on each
-    sheet.locator("figure.thumb").nth(1).get_by_role("button", name="Retirer cette page").click()
-    sync_api.expect(pages).to_have_count(9)
-    urls.pop(1)
+    # No ✕ on its pages: a page removed by a stray tap no more; chosen, then removed together
+    sync_api.expect(sheet.locator("figure.thumb button")).to_have_count(0)
+    sheet.get_by_role("button", name="Sélectionner").click()
+    sync_api.expect(sheet.get_by_role("heading")).to_have_text("0 page choisie")
+    remove = sheet.get_by_role("button", name="🗑️ Retirer")
+    sync_api.expect(remove).to_be_disabled()
+    pages.nth(1).click()
+    pages.nth(3).click()
+    pages.nth(5).click()
+    pages.nth(5).click()  # chosen, then not
+    sync_api.expect(sheet.get_by_role("heading")).to_have_text("2 pages choisies")
+    sync_api.expect(sheet.locator("figure.thumb.chosen")).to_have_count(2)
+    sync_api.expect(page.locator(".viewer")).to_be_hidden()  # a tap chooses, it shows nothing
+    remove.click()
+    sync_api.expect(pages).to_have_count(8)
+    del urls[3], urls[1]
     assert [img.get_attribute("src") for img in pages.all()] == urls
+    sync_api.expect(sheet.get_by_role("heading")).to_have_text("Toutes les pages")
+
+    # A long press chooses its page at once; "Annuler": none removed
+    pages.nth(0).click(button="right")
+    sync_api.expect(sheet.get_by_role("heading")).to_have_text("1 page choisie")
+    sheet.get_by_role("button", name="Annuler").click()
+    sync_api.expect(sheet.get_by_role("heading")).to_have_text("Toutes les pages")
+    sync_api.expect(pages).to_have_count(8)
 
     pages.nth(2).click()
     viewer = page.locator(".viewer")
-    sync_api.expect(viewer.locator(".viewer-count")).to_have_text("3 / 9")
+    sync_api.expect(viewer.locator(".viewer-count")).to_have_text("3 / 8")
     sync_api.expect(viewer.locator(".viewer-frame img")).to_have_attribute("src", urls[2])
     viewer.get_by_role("button", name="Retirer cette page").click()  # 🗑️
-    sync_api.expect(pages).to_have_count(8)
+    sync_api.expect(pages).to_have_count(7)
     sync_api.expect(viewer.locator(".viewer-frame img")).to_have_attribute("src", urls[3])
     page.keyboard.press("Escape")  # the viewer closed, the sheet still there
     sync_api.expect(viewer).to_be_hidden()

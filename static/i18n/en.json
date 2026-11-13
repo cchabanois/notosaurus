@@ -47,6 +47,15 @@
       "page": "Page {n}",
       "remove": "Remove this page",
       "allPages": "All pages",
+      "select": "Select",
+      "chosen": {
+        "one": "{count} page chosen",
+        "other": "{count} pages chosen"
+      },
+      "removeChosen": {
+        "one": "🗑️ Remove {count} page",
+        "other": "🗑️ Remove {count} pages"
+      },
       "seeAll": "See all {count} pages",
       "rotate": "Turn the photo a quarter turn",
       "hide": "Hide part of this page (a name…)",

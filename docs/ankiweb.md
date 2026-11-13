@@ -54,7 +54,8 @@ the AI; never their first name sent), each with their own lessons.</li>
 <li>📥 <b>Straight into Anki</b>, updated without duplicates; review on AnkiDroid or
 AnkiMobile. ✎ under each answer opens the card in Notosaurus to correct it.</li>
 <li>📱 <b>The Notosaurus app for Android</b> shows this computer's page for free (scan the same
-QR code), or works on its own with its subscription, no computer needed.</li>
+QR code), or works on its own with its subscription, no computer needed:
+<a href="https://play.google.com/store/apps/details?id=app.notosaurus">get it on Google Play</a>.</li>
 </ul>
 
 <p><b>Getting started</b></p>

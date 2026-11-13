@@ -532,7 +532,7 @@
                           x-init="watchHeight($el)" x-effect="card.info; fitHeight($el)"></textarea>
                 <input class="subdeck" x-model="card.subdeck" :readonly="readOnly()" :placeholder="$t('app.review.subdeck')"
                        :aria-label="$t('app.review.subdeckLabel')"
-                       list="subdecks" :size="Math.max(card.subdeck.length, 10)">
+                       list="subdecks" :size="Math.max(card.subdeck.length, $t('app.review.subdeck').length) + 2">
               </div>
               <!-- Shown under the info on the back, in Anki; cleared, it's gone -->
               <div class="fun-fact" x-show="card.fun_fact">
@@ -909,25 +909,33 @@
             x-text="$t('app.pdf.add', { count: pdfChosen().length, free: pdf.free })"></button>
   </aside>
 
-  <!-- All the lesson's pages ("+N" on the strip): each with its buttons, a tap shows it in full.
-       Before the hide editor and the viewer: Escape closes them first, this sheet only then -->
+  <!-- All the lesson's pages ("+N" on the strip): a tap shows one in full; "Select" (or a long
+       press) chooses pages, removed together. Before the hide editor and the viewer: Escape
+       closes them first, this sheet only then -->
   <div class="sheet-backdrop" x-cloak x-show="allPages" x-transition.opacity @click="allPages = false"></div>
   <aside class="sheet all-pages" x-cloak x-show="allPages" x-bind="sheet" role="dialog" :aria-label="$t('app.photos.allPages')"
+         x-effect="allPages || (pagesChosen = null)"
          @keydown.escape.window="allPages && !viewer.open && !hiding.open && (allPages = false)">
     <div class="sheet-handle"></div>
     <div class="sheet-head">
-      <h2 x-text="$t('app.photos.allPages')"></h2>
-      <button class="icon-btn" @click="allPages = false" :aria-label="$t('common.close')">✕</button>
+      <h2 x-text="pagesChosen ? $t('app.photos.chosen', { count: pagesChosen.length }) : $t('app.photos.allPages')"></h2>
+      <span class="sheet-head-tools">
+        <button type="button" class="btn soft" x-show="!pagesChosen" @click="choosePages()" x-text="$t('app.photos.select')"></button>
+        <button type="button" class="btn soft" x-show="pagesChosen" @click="pagesChosen = null" x-text="$t('common.cancel')"></button>
+        <button class="icon-btn" @click="allPages = false" :aria-label="$t('common.close')">✕</button>
+      </span>
     </div>
     <div class="sheet-body">
       <!-- Only while open: the page's other .thumb are the strip's alone -->
       <template x-if="allPages">
         <div class="pages-grid">
           <template x-for="(p, i) in photos" :key="p.url">
-            <figure class="thumb">
-              <img :src="p.url" :alt="$t('app.photos.page', { n: i + 1 })" @click="openViewer([], i, null, true)">
+            <figure class="thumb" :class="{ chosen: pagesChosen?.includes(p.url) }">
+              <img :src="p.url" :alt="$t('app.photos.page', { n: i + 1 })" :aria-pressed="pagesChosen ? String(pagesChosen.includes(p.url)) : null"
+                   @click="pagesChosen ? togglePage(p) : openViewer([], i, null, true)"
+                   @contextmenu.prevent="pagesChosen ? togglePage(p) : choosePages(p.url)">
               <figcaption x-text="i + 1"></figcaption>
-              <button class="thumb-remove" @click="removePhoto(i)" :aria-label="$t('app.photos.remove')">✕</button>
+              <span class="thumb-check" x-show="pagesChosen" aria-hidden="true" x-text="pagesChosen?.includes(p.url) ? '✓' : ''"></span>
               <!-- A part hidden: said, not a button (turned, hidden from the viewer: a tap on the page) -->
               <span class="thumb-masked" x-show="p.mask" role="img" :aria-label="$t('app.photos.hidden')" :title="$t('app.photos.hidden')">🖍️</span>
             </figure>
@@ -935,6 +943,8 @@
         </div>
       </template>
     </div>
+    <button type="button" class="btn danger-soft wide" x-show="pagesChosen" :disabled="!pagesChosen?.length" @click="removeChosenPages()"
+            x-text="$t('app.photos.removeChosen', { count: pagesChosen?.length ?? 0 })"></button>
   </aside>
 
   <!-- Prompt picker sheet -->

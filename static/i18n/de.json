@@ -47,6 +47,15 @@
       "page": "Seite {n}",
       "remove": "Diese Seite entfernen",
       "allPages": "Alle Seiten",
+      "select": "Auswählen",
+      "chosen": {
+        "one": "{count} Seite ausgewählt",
+        "other": "{count} Seiten ausgewählt"
+      },
+      "removeChosen": {
+        "one": "🗑️ {count} Seite entfernen",
+        "other": "🗑️ {count} Seiten entfernen"
+      },
       "seeAll": "Alle {count} Seiten ansehen",
       "rotate": "Foto um eine Vierteldrehung drehen",
       "hide": "Einen Teil der Seite verdecken (einen Namen…)",
