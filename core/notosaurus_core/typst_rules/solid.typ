@@ -634,5 +634,238 @@
     }
   })
 }
+// A crystal: balls on a cubic lattice in perspective, every place computed, never placed by
+// eye. lattice: "simple" (balls at the cube's nodes; two species alternating, a node's
+// species by the parity of i + j + k: NaCl), "body-centred" (and one at each cell's centre),
+// "face-centred" (and one at each face's centre); cells: the cells along each edge (cells + 1
+// balls along it); species: one or two (name, fill, size: relative), the second at the
+// centres or the faces' centres; compact: the balls touching (the compact model); cut: each
+// ball cut by the block's faces (only what lies inside it: a corner's eighth, a face's half);
+// edge-label: the block's edge, a double arrow below it. Drawn back to front: a ball in front
+// hides those behind it, the lattice's lines between them; the legend beside it.
+// The receding edges at 24°, 0.55 of their length: the nodes of these lattices (simple,
+// centred, up to 3 cells) kept farthest from each other on the page (at 45°, halved, a node
+// behind another's diagonal neighbour lands on it)
+#let _crystal-angle = 24deg
+#let _crystal-k = 0.55
+#let _crystal-proj(p) = (p.at(0) + _crystal-k * calc.cos(_crystal-angle) * p.at(1), p.at(2) + _crystal-k * calc.sin(_crystal-angle) * p.at(1))
+#let _crystal-view = (_crystal-k * calc.cos(_crystal-angle), -1, _crystal-k * calc.sin(_crystal-angle)) // towards the viewer
+#let _lattices = (
+  simple: "simple", "simple cubic": "simple", sc: "simple", cubic: "simple",
+  "body-centred": "body", "body-centered": "body", bcc: "body", centred: "body", centered: "body",
+  "face-centred": "face", "face-centered": "face", fcc: "face",
+)
+// The nodes of `cells`³ cells, in half-cells (integers): (p, species), the second species'
+// nodes those of the centres or the faces' centres (or the odd ones of a simple lattice)
+#let _crystal-nodes(lattice, cells, two) = {
+  let nodes = ()
+  for i in range(2 * cells + 1) {
+    for j in range(2 * cells + 1) {
+      for k in range(2 * cells + 1) {
+        let odd = (i, j, k).filter(x => calc.odd(x)).len()
+        if odd == 0 {
+          let parity = calc.rem(calc.quo(i + j + k, 2), 2)
+          nodes.push(((i, j, k), if lattice == "simple" and two { parity } else { 0 }))
+        } else if (lattice == "body" and odd == 3) or (lattice == "face" and odd == 2) {
+          nodes.push(((i, j, k), if two { 1 } else { 0 }))
+        }
+      }
+    }
+  }
+  nodes
+}
+// What a ball cut by the box [0, n]³ keeps, as points of its surface and its flat faces (a
+// convex body: its outline on the page their hull), and its flat faces (each a plane's
+// points, its outward normal)
+#let _hull(ps) = {
+  let ps = ps.sorted(key: p => (p.at(0), p.at(1)))
+  let turn(o, a, b) = (a.at(0) - o.at(0)) * (b.at(1) - o.at(1)) - (a.at(1) - o.at(1)) * (b.at(0) - o.at(0))
+  let half(ps) = {
+    let h = ()
+    for p in ps {
+      while h.len() >= 2 and turn(h.at(-2), h.at(-1), p) <= 1e-12 { let _ = h.pop() }
+      h.push(p)
+    }
+    h
+  }
+  let (lo, hi) = (half(ps), half(ps.rev()))
+  lo.slice(0, -1) + hi.slice(0, -1)
+}
+#let _cut-ball(c, r, n) = {
+  let inside(p) = p.all(x => x >= -1e-9 and x <= n + 1e-9)
+  let surface = ()
+  for a in range(0, 360, step: 12) {
+    for b in range(-84, 90, step: 12) {
+      let (t, u) = (a * 1deg, b * 1deg)
+      surface.push((c.at(0) + r * calc.cos(u) * calc.cos(t), c.at(1) + r * calc.cos(u) * calc.sin(t), c.at(2) + r * calc.sin(u)))
+    }
+  }
+  surface += ((c.at(0), c.at(1), c.at(2) + r), (c.at(0), c.at(1), c.at(2) - r))
+  let points = surface.filter(inside)
+  let faces = ()
+  for axis in range(3) {
+    for (wall, out) in ((0, -1), (n, 1)) {
+      let d = calc.abs(c.at(axis) - wall)
+      if d >= r - 1e-9 { continue }
+      // the disc where the wall cuts the ball, kept inside the box: its circle, its centre,
+      // the box's edges across it (sampled)
+      let rho = calc.sqrt(r * r - d * d)
+      let (u, v) = range(3).filter(x => x != axis)
+      let flat = ()
+      for s in range(0, 360, step: 6) {
+        let q = c.map(x => x)
+        q.at(axis) = wall
+        q.at(u) = c.at(u) + rho * calc.cos(s * 1deg)
+        q.at(v) = c.at(v) + rho * calc.sin(s * 1deg)
+        flat.push(q)
+        for f in range(1, 8) {
+          let m = c.map(x => x)
+          m.at(axis) = wall
+          m.at(u) = c.at(u) + rho * f / 8 * calc.cos(s * 1deg)
+          m.at(v) = c.at(v) + rho * f / 8 * calc.sin(s * 1deg)
+          flat.push(m)
+        }
+      }
+      let centre = c.map(x => x)
+      centre.at(axis) = wall
+      flat = (flat + (centre,)).filter(inside)
+      // the box's corners on this wall within the disc: the cut's own corners
+      for (a, b) in ((0, 0), (0, n), (n, 0), (n, n)) {
+        let q = c.map(x => x)
+        q.at(axis) = wall
+        q.at(u) = a
+        q.at(v) = b
+        if _dot(_sub(q, c), _sub(q, c)) <= r * r { flat.push(q) }
+      }
+      if flat.len() >= 3 {
+        let normal = range(3).map(x => if x == axis { out } else { 0 })
+        faces.push((points: flat, normal: normal))
+        points += flat
+      }
+    }
+  }
+  (points: points, faces: faces)
+}
+#let _colours = (
+  black: black, gray: gray, grey: gray, silver: silver, white: white, navy: navy, blue: blue,
+  aqua: aqua, teal: teal, eastern: eastern, purple: purple, fuchsia: fuchsia, maroon: maroon,
+  red: red, orange: orange, yellow: yellow, olive: olive, green: green, lime: lime,
+)
+#let crystal(lattice: "simple", cells: 1, species: ((name: none, fill: gray, size: 1),), compact: false, cut: false, edge-label: none, legend: auto) = {
+  if lattice not in _lattices {
+    panic("lattice: \"simple\", \"body-centred\" or \"face-centred\", not " + repr(lattice))
+  }
+  let lattice = _lattices.at(lattice)
+  if type(cells) != int or cells < 1 or cells > 4 { panic("cells: the cells along each edge, 1 to 4, not " + repr(cells)) }
+  let species = if type(species) == dictionary { (species,) } else { species }
+  if species.len() not in (1, 2) { panic("species: one or two, each (name: …, fill: …, size: …)") }
+  let species = species.map(s => {
+    if type(s) != dictionary { panic("species: each (name: …, fill: …, size: …), not " + repr(s)) }
+    let fill = s.at("fill", default: s.at("colour", default: s.at("color", default: gray)))
+    // a colour written as its name ("purple"): Typst's own
+    if type(fill) == str {
+      if fill not in _colours { panic("fill: a colour (" + _colours.keys().join(", ") + ", rgb(\"#…\")), not " + repr(fill)) }
+      fill = _colours.at(fill)
+    }
+    if type(fill) != color { panic("fill: a colour, not " + repr(fill)) }
+    let size = s.at("size", default: 1)
+    if type(size) not in (int, float) or size <= 0 { panic("size: a number, the ball's size relative to the other's, not " + repr(size)) }
+    (name: s.at("name", default: none), fill: fill, size: size)
+  })
+  let two = species.len() == 2
+  let nodes = _crystal-nodes(lattice, cells, two).map(((p, sp)) => (p.map(x => x / 2), sp))
+  // the balls' radii: their sizes' ratio kept, nearest neighbours (in cells: 1, √3/2, √2/2)
+  // filling 0.45 of the gap between them (two of a kind each 0.225 of it), touching when compact
+  let near = (simple: 1, body: calc.sqrt(3) / 2, face: calc.sqrt(2) / 2).at(lattice)
+  let pairs = if lattice == "simple" { if two { ((0, 1),) } else { ((0, 0),) } } else if not two { ((0, 0),) } else if lattice == "body" { ((0, 1),) } else { ((0, 1), (1, 1)) }
+  let widest = calc.max(..pairs.map(((a, b)) => species.at(a).size + species.at(b).size))
+  let radius(sp) = species.at(sp).size / widest * near * if compact { 1 } else { 0.45 }
+  let s = 4 / cells // cm per cell: the block about 4 cm
+  let at(p) = _crystal-proj(p).map(x => x * s)
+  let depth(p) = _dot(p, _crystal-view)
+  // a ball: its colour, a lighter spot up left (no gradient: every viewer draws it alike)
+  let ball(c, r, colour) = {
+    cetz.draw.circle(c, radius: r, fill: colour, stroke: (paint: colour.darken(50%), thickness: 0.5pt))
+    cetz.draw.circle((c.at(0) - 0.32 * r, c.at(1) + 0.32 * r), radius: 0.3 * r, fill: colour.lighten(60%), stroke: none)
+  }
+  // what is drawn, each at its depth: the balls, the lattice's lines in short pieces (a line
+  // passes in front of a ball and behind the next)
+  let items = ()
+  for (p, sp) in nodes {
+    items.push((depth: depth(p), ball: (p, sp)))
+  }
+  let lines = ()
+  for (p, sp) in nodes.filter(((p, _)) => p.all(x => calc.fract(x) == 0)) {
+    for axis in range(3) {
+      if p.at(axis) < cells {
+        let q = p.map(x => x)
+        q.at(axis) += 1
+        lines.push((p, q))
+      }
+    }
+  }
+  // a line cut where it passes a ball's depth, that ball over it on the page: each piece then
+  // wholly in front of it or behind it
+  // each line from a ball's surface to the other's (a stick going into the balls)
+  let kind = nodes.map(((p, sp)) => (repr(p), sp)).to-dict()
+  for (a, b) in lines {
+    let (da, db) = (depth(a), depth(b))
+    let cuts = (radius(kind.at(repr(a))), 1 - radius(kind.at(repr(b))))
+    for (p, sp) in nodes {
+      let t = (depth(p) - da) / (db - da)
+      if t > cuts.at(0) and t < cuts.at(1) and _gap(at(p), at(a), at(b)) < radius(sp) * s { cuts.push(t) }
+    }
+    let cuts = cuts.sorted()
+    let point(t) = a.zip(b).map(((x, y)) => x + (y - x) * t)
+    for i in range(cuts.len() - 1) {
+      let (u, v) = (point(cuts.at(i)), point(cuts.at(i + 1)))
+      items.push((depth: depth(_mean((u, v))), line: (u, v)))
+    }
+  }
+  let items = items.sorted(key: it => it.depth)
+  let largest = calc.max(..species.map(x => x.size))
+  cetz.canvas({
+    import cetz.draw: *
+    for it in items {
+      if "line" in it {
+        line(at(it.line.at(0)), at(it.line.at(1)), stroke: (paint: luma(110), thickness: 0.6pt, cap: "round"))
+      } else {
+        let (p, sp) = it.ball
+        let r = radius(sp)
+        let fill = species.at(sp).fill
+        let edge = (paint: fill.darken(50%), thickness: 0.5pt)
+        if cut and p.any(x => x < r - 1e-9 or x > cells - r + 1e-9) {
+          let piece = _cut-ball(p, r, cells)
+          let outline = _hull(piece.points.map(at))
+          line(..outline, close: true, fill: fill, stroke: edge)
+          for f in piece.faces.filter(f => _dot(f.normal, _crystal-view) > 1e-9) {
+            line(.._hull(f.points.map(at)), close: true, fill: fill.lighten(25%), stroke: edge)
+          }
+        } else {
+          ball(at(p), r * s, fill)
+        }
+      }
+    }
+    // the block's edge: a double arrow below its front lower edge, clear of the balls
+    let out = if cut { 0 } else { calc.max(..nodes.map(((_, sp)) => radius(sp))) * s } // past the block
+    let below = out + 0.35
+    if edge-label != none {
+      let (a, b) = (at((0, 0, 0)), at((cells, 0, 0)))
+      _dimension((a.at(0), a.at(1) - below), (b.at(0), b.at(1) - below), edge-label, (0, -0.3))
+    }
+    // the legend: each species' ball, its size in proportion, and its name, right of the block
+    let names = species.enumerate().filter(((_, x)) => x.name != none)
+    if legend != none and names.len() > 0 {
+      let right = at((cells, cells, 0)).at(0) + out + 0.7
+      let top = at((0, cells, cells)).at(1) / 2 + (names.len() - 1) * 0.45
+      for (k, (sp, x)) in names.enumerate() {
+        let y = top - k * 0.9
+        let r = 0.28 * x.size / largest
+        ball((right, y), r, x.fill)
+        content((right + 0.45, y), text(11pt, x.name), anchor: "west")
+      }
+    }
+  })
+}
 // ---- What the AI writes, from here (the rule's example: everything above is given)
 #cuboid(5, 3, 2, length-label: $L$, width-label: $l$, height-label: $h$)

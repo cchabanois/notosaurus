@@ -209,3 +209,101 @@ def test_a_pyramids_names_clear_of_one_another():
     spots = sorted(set(_glyphs(svg)))
     assert len(spots) >= 6
     assert all(math.dist(p, q) > 10 for i, p in enumerate(spots) for q in spots[i + 1 :])
+
+
+def _ball_fills(svg: str) -> list[str]:
+    """The colours of a crystal's balls in the order they are drawn: each ball one circle of its
+    colour, its lighter spot after it (left out, as black: the edge's arrows)."""
+    fills = re.findall(r'fill="(#[0-9a-f]{6})"', figures.clean(svg).lower())
+    return [f for f in fills if f in ("#0074d9", "#ff4136")]
+
+
+@pytest.mark.parametrize(
+    ("body", "blue", "red"),
+    [
+        ('#crystal(lattice: "simple", cells: 1, species: ((fill: blue), (fill: red)))', 4, 4),
+        # a block of 3 × 3 × 3 ions: its corners all of the first species
+        ('#crystal(lattice: "simple", cells: 2, species: ((fill: blue), (fill: red)))', 14, 13),
+        ('#crystal(lattice: "body-centred", species: (fill: blue))', 9, 0),
+        ('#crystal(lattice: "face-centred", species: (fill: blue))', 14, 0),
+        ('#crystal(lattice: "body-centred", species: ((fill: blue), (fill: red)))', 8, 1),
+        ('#crystal(lattice: "face-centred", species: ((fill: blue), (fill: red)))', 8, 6),
+        ('#crystal(lattice: "body-centred", cells: 2, species: (fill: blue))', 27 + 8, 0),
+        ('#crystal(lattice: "face-centred", cells: 2, species: (fill: blue))', 27 + 36, 0),
+    ],
+)
+def test_a_crystals_balls_computed(body, blue, red):
+    """A crystal's balls were placed by the AI's eye, as SVG (NaCl's 27 ions: 1 drawing in 4
+    right): every ball placed and given its species by the lattice, computed."""
+    fills = _ball_fills(figures_typst.compile_svg("solid", body))
+    assert (fills.count("#0074d9"), fills.count("#ff4136")) == (blue, red)
+
+
+def test_a_simple_crystals_two_species_alternate():
+    """On a simple lattice two species alternate along every line (an ionic crystal): each
+    ball's neighbours of the other species, the corners of a block of 3 × 3 × 3 the first's."""
+    check = """
+#let nodes = _crystal-nodes("simple", 2, true)
+#let kind = nodes.map(((p, s)) => (repr(p), s)).to-dict()
+#for (p, s) in nodes {
+  for axis in range(3) {
+    let q = p.map(x => x)
+    q.at(axis) += 2
+    if repr(q) in kind { assert(kind.at(repr(q)) != s, message: "neighbours alike") }
+  }
+}
+#assert(nodes.filter(((p, _)) => p.all(x => x in (0, 4))).all(((_, s)) => s == 0), message: "a corner")
+#crystal()
+"""
+    figures_typst.compile_svg("solid", check)
+
+
+def test_a_crystal_drawn_back_to_front():
+    """A ball in front hides those behind it: drawn from the farthest to the nearest (balls of
+    different planes overlapping the wrong way, as SVG). A body-centred cell: its four back
+    corners, then its centre, then its four front corners."""
+    body = '#crystal(lattice: "body-centred", species: ((fill: blue), (fill: red)))'
+    fills = _ball_fills(figures_typst.compile_svg("solid", body))
+    assert fills == ["#0074d9"] * 4 + ["#ff4136"] + ["#0074d9"] * 4
+
+
+def test_a_crystals_legend_and_edge():
+    """Its legend (each species' ball and name) beside the block, its edge's length a double
+    arrow below it: the drawing wider and taller, the names and the label written."""
+    bare = '#crystal(lattice: "face-centred", species: ((fill: blue), (fill: red)))'
+    species = "((name: [A], fill: blue), (name: [B], fill: red))"
+    named = f'#crystal(lattice: "face-centred", species: {species}, edge-label: $a$)'
+    svg = figures_typst.compile_svg("solid", named)
+    assert len(_glyphs(svg)) == 3
+    assert _ball_fills(svg)[-2:] == ["#0074d9", "#ff4136"]  # the legend's balls, last
+    (w0, h0), (w1, h1) = drawn_size("solid", bare), drawn_size("solid", named)
+    assert w1 > w0 + 20 and h1 > h0 + 15
+
+
+def test_a_crystals_balls_cut_by_its_cube():
+    """cut: true, each ball cut by the cube's faces (a corner's eighth, a face's half): nothing
+    drawn beyond the cube, the drawing as wide as the cube's projection (4 cm and its depth)."""
+    cut = drawn_size("solid", '#crystal(lattice: "face-centred", compact: true, cut: true, species: (fill: blue))')
+    whole = drawn_size("solid", '#crystal(lattice: "face-centred", compact: true, species: (fill: blue))')
+    cube = 4 / 2.54 * 72 * (1 + 0.55 * math.cos(math.radians(24)))
+    assert cut[0] == pytest.approx(cube, abs=2)
+    assert whole[0] > cut[0] + 40
+
+
+def test_a_crystal_refused_saying_why():
+    """A lattice it hasn't, or a colour it doesn't know: refused, saying what it takes."""
+    for body, said in (
+        ('#crystal(lattice: "hexagonal")', "face-centred"),
+        ('#crystal(species: (fill: "violet"))', "a colour"),
+        ("#crystal(cells: 0)", "cells"),
+    ):
+        with pytest.raises(figures_typst.Unusable, match=said):
+            figures_typst.compile_svg("solid", body)
+
+
+def test_a_crystal_drawn_as_the_rule_says():
+    """The rule's own crystal call compiles."""
+    rule = (figures_typst.RULES / "solid.md").read_text(encoding="utf-8")
+    call = re.search(r"`(crystal\([^`]*\))`", rule)
+    assert call
+    assert _ball_fills(figures_typst.compile_svg("solid", "#" + call[1]))
