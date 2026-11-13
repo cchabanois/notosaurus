@@ -134,13 +134,130 @@
   }
   (shapes: shapes, placed: placed)
 }
+// A group of a classification as a tree: its name, then its members, each an element (a text)
+// or a group inside it (another `nest`), in any order: nest([Tétrapodes], [lézard],
+// nest([Mammifères], [chat]), nest([Oiseaux], [pigeon]))
+#let nest(name, ..members) = {
+  assert(members.named().len() == 0, message: "a group is nest(its name, its elements and groups…): nest([Tétrapodes], [lézard], nest([Mammifères], [chat]))")
+  let is-group(m) = type(m) == dictionary and m.at("nest", default: false)
+  let (items, groups) = ((), ())
+  // its elements given as a list too, ([chat], [chien]): each an element
+  for m in members.pos().map(m => if type(m) == array { m } else { (m,) }).flatten() {
+    if is-group(m) { groups.push(m) } else { items.push(if type(m) == content { m } else { [#m] }) }
+  }
+  (nest: true, name: if type(name) == content { name } else { [#name] }, items: items, groups: groups)
+}
+// A group's box laid out from the inside out (within a context: texts measured), in cm, y down
+// from its top-left corner: its sub-groups side by side under its name (more rows when too wide,
+// boxes of a row as tall as the tallest), its own elements under them, in their own rows. Each
+// box (its corners, its depth, its path: "0.1" the second sub-group of the first) and each text
+// (its centre, its size, the path of the box it belongs to)
+#let _nest-box(g, path, depth) = {
+  let size(c) = { let m = measure(c); (m.width / 1cm, m.height / 1cm) }
+  let fit(c, width) = if measure(c).width > width * 1cm { block(width: width * 1cm, align(center, c)) } else { c }
+  let (pad, gap, spread, widest) = (0.3, 0.35, 0.45, 11.0)
+  let move(b, dx, dy) = (
+    boxes: b.boxes.map(r => r + (x0: r.x0 + dx, x1: r.x1 + dx, y0: r.y0 + dy, y1: r.y1 + dy, rule: r.rule + dy)),
+    texts: b.texts.map(t => t + (x: t.x + dx, y: t.y + dy)),
+    w: b.w, h: b.h,
+  )
+  // in rows no wider than `room`: each row its members and its width
+  let rows(widths, room, space) = {
+    let out = ()
+    for (i, w) in widths.enumerate() {
+      if out.len() > 0 and out.last().width + space + w <= room {
+        out.last().members.push(i)
+        out.last().width += space + w
+      } else { out.push((members: (i,), width: w)) }
+    }
+    out
+  }
+  let kids = g.groups.enumerate().map(((i, k)) => _nest-box(k, path + "." + str(i), depth + 1))
+  let kid-rows = rows(kids.map(k => k.w), widest, gap)
+  let block-w = calc.max(0, ..kid-rows.map(r => r.width))
+  // its name on one line as wide as its sub-groups, a rule under it: told from its elements
+  let name = fit(g.name, calc.max(4.5, block-w))
+  let (nw, nh) = size(name)
+  let items = g.items.map(c => fit(c, 3.6))
+  let item-sizes = items.map(size)
+  let item-rows = rows(item-sizes.map(s => s.at(0)), calc.max(block-w, nw, 4.0), spread)
+  let inner = calc.max(nw, block-w, ..item-rows.map(r => r.width))
+  let w = inner + 2 * pad
+  let (boxes, texts) = ((), ())
+  let y = pad
+  texts.push((x: w / 2, y: y + nh / 2, w: nw, h: nh, body: name, box: path, kind: "name"))
+  y += nh + gap / 2
+  let rule = y
+  y += gap / 2
+  for row in kid-rows {
+    let tall = calc.max(..row.members.map(i => kids.at(i).h))
+    let x = (w - row.width) / 2
+    for i in row.members {
+      let k = move(kids.at(i), x, y)
+      // a row's boxes as tall as the tallest: its own box only, its contents where they were
+      k.boxes.at(0).y1 = y + tall
+      boxes += k.boxes
+      texts += k.texts
+      x += k.w + gap
+    }
+    y += tall + gap
+  }
+  for row in item-rows {
+    let tall = calc.max(..row.members.map(i => item-sizes.at(i).at(1)))
+    let x = (w - row.width) / 2
+    for i in row.members {
+      let (iw, ih) = item-sizes.at(i)
+      texts.push((x: x + iw / 2, y: y + tall / 2, w: iw, h: ih, body: items.at(i), box: path, kind: "item"))
+      x += iw + spread
+    }
+    y += tall + 0.2
+  }
+  if item-rows.len() > 0 { y -= 0.2 } else if kid-rows.len() > 0 { y -= gap } else { y -= gap }
+  let h = y + pad
+  (boxes: ((x0: 0, y0: 0, x1: w, y1: h, rule: rule, depth: depth, path: path),) + boxes, texts: texts, w: w, h: h)
+}
+// A tree whose every group holds one sub-group at most is a chain: its sets from the smallest
+#let _nest-chain(g) = {
+  let levels = ()
+  let g = g
+  while true {
+    levels.insert(0, (g.name, g.items))
+    if g.groups.len() == 0 { break }
+    g = g.groups.first()
+  }
+  levels
+}
+#let _nest-is-chain(g) = g.groups.len() == 0 or (g.groups.len() == 1 and _nest-is-chain(g.groups.first()))
 #let nested-sets(..sets) = context {
-  let (shapes, placed) = _nested-layout(sets.pos())
-  cetz.canvas({
-    import cetz.draw: *
-    for (cy, a, b) in shapes.rev() { circle((0, cy), radius: (a, b), stroke: 0.8pt, fill: white) }
-    for (k, at, c) in placed { content(at, c) }
-  })
+  let sets = sets.pos()
+  // the chain's sets given as one list, ((name, (elements,)), …) or (name, (elements,), name,
+  // …): each set its own, as when given one by one
+  if sets.len() == 1 and type(sets.first()) == array and sets.first().len() > 0 {
+    let one = sets.first()
+    if one.all(s => type(s) == array) { sets = one } else if (
+      one.len() >= 4 and calc.even(one.len()) and one.chunks(2).all(((n, e)) => type(n) != array and type(e) == array)
+    ) { sets = one.chunks(2) }
+  }
+  let tree = sets.len() == 1 and type(sets.first()) == dictionary and sets.first().at("nest", default: false)
+  if tree and not _nest-is-chain(sets.first()) {
+    // groups side by side in one: boxes, each from its contents
+    let (boxes, texts) = _nest-box(sets.first(), "0", 0)
+    cetz.canvas({
+      import cetz.draw: *
+      for r in boxes {
+        rect((r.x0, -r.y0), (r.x1, -r.y1), radius: 0.2, stroke: 0.8pt, fill: white)
+        line((r.x0, -r.rule), (r.x1, -r.rule), stroke: 0.4pt + luma(120))
+      }
+      for t in texts { content((t.x, -t.y), t.body) }
+    })
+  } else {
+    let (shapes, placed) = _nested-layout(if tree { _nest-chain(sets.first()) } else { sets })
+    cetz.canvas({
+      import cetz.draw: *
+      for (cy, a, b) in shapes.rev() { circle((0, cy), radius: (a, b), stroke: 0.8pt, fill: white) }
+      for (k, at, c) in placed { content(at, c) }
+    })
+  }
 }
 // A part's name (`"v.ab"`): in it when it fits, else under the diagram, joined to the part by
 // a thin line (a lens is narrower than "A ∩ B"). Its width estimated from its text (no
