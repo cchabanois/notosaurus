@@ -142,6 +142,97 @@
     for (k, at, c) in placed { content(at, c) }
   })
 }
+// Groups inside groups as a tree (a classification: two groups side by side in a third, the
+// mammals and the birds in the tetrapods): each group a box, its name in a band at its top,
+// its own members (those of no smaller group) in a column at its right, the groups it holds
+// side by side under its name. Every size measured, every place computed: no name cut by a
+// box nor on another name, no member on an edge. Each group `(id: "t", name: [Tétrapodes],
+// inside: "v", members: ([Lézard],))`, `inside` the id of the group holding it (none: the largest).
+// The layout (within a context: texts measured): each box (x, top, width, height), each
+// text (its place, its content, its rectangle)
+#let _groups-layout(gs) = {
+  for g in gs {
+    assert(type(g) == dictionary and "id" in g and "name" in g, message: "each group is (id: \"v\", name: [Vertébrés], inside: \"…\", members: (…))")
+  }
+  let ids = gs.map(g => g.id)
+  for g in gs {
+    let up = g.at("inside", default: none)
+    assert(up == none or up in ids, message: "a group's inside is another group's id: " + repr(up) + " is none of " + ids.join(", "))
+    assert(up != g.id, message: "a group is not in itself: " + g.id)
+  }
+  assert(ids.dedup().len() == ids.len(), message: "each group its own id")
+  let wrap(c) = if measure(c).width > 4.5cm { block(width: 4.5cm, c) } else { c }
+  let members(g) = { let m = g.at("members", default: ()); if type(m) == array { m } else { (m,) } }
+  let byid = gs.map(g => (g.id, g)).to-dict()
+  let kids(id) = gs.filter(g => g.at("inside", default: none) == id).map(g => g.id)
+  let dim(c) = { let m = measure(c); (m.width / 1cm, m.height / 1cm) }
+  let (pad, gap) = (0.25, 0.3)
+  // each group's (width, height), from the smallest up (a loop, no recursion: deepest first)
+  let depth(id) = { let d = 0; let up = byid.at(id).at("inside", default: none); while up != none { d += 1; up = byid.at(up).at("inside", default: none) }; d }
+  let order = ids.sorted(key: id => -depth(id))
+  let size = (:)
+  let names = (:)
+  for id in order {
+    let g = byid.at(id)
+    let ms = members(g).map(c => dim(wrap(c)))
+    let ks = kids(id).map(k => size.at(k))
+    let kw = if ks.len() > 0 { ks.map(k => k.at(0)).sum() + gap * (ks.len() - 1) } else { 0 }
+    let kh = if ks.len() > 0 { calc.max(..ks.map(k => k.at(1))) } else { 0 }
+    let mw = if ms.len() > 0 { calc.max(..ms.map(m => m.at(0))) } else { 0 }
+    let mh = if ms.len() > 0 { ms.map(m => m.at(1)).sum() + gap * (ms.len() - 1) } else { 0 }
+    let bw = kw + mw + if ks.len() > 0 and ms.len() > 0 { gap } else { 0 }
+    let bh = calc.max(kh, mh)
+    // its name on one line when the box is that wide anyway, else on two or more (4.5 cm at least)
+    let room = calc.max(4.5, bw) * 1cm
+    let name = if measure(g.name).width > room { block(width: room, g.name) } else { g.name }
+    let (nw, nh) = dim(name)
+    names.insert(id, name)
+    size.insert(id, (calc.max(nw, bw) + 2 * pad, pad + nh + (if bh > 0 { gap + bh } else { 0 }) + pad, nh))
+  }
+  // where each box goes: (x, top), from the largest down
+  let at = (:)
+  let roots = ids.filter(id => byid.at(id).at("inside", default: none) == none)
+  let x = 0
+  for r in roots { at.insert(r, (x, 0)); x += size.at(r).at(0) + gap }
+  for id in order.rev() {
+    let (x0, top) = at.at(id)
+    let cx = x0 + pad
+    for k in kids(id) {
+      at.insert(k, (cx, top - pad - size.at(id).at(2) - gap))
+      cx += size.at(k).at(0) + gap
+    }
+  }
+  let texts = ()
+  for id in order.rev() {
+    let g = byid.at(id)
+    let (x0, top) = at.at(id)
+    let (w, h, nh) = size.at(id)
+    let (tw, th) = dim(names.at(id))
+    texts.push((id: id, kind: "name", at: (x0 + pad, top - pad), body: names.at(id), rect: (x0 + pad, top - pad - th, x0 + pad + tw, top - pad)))
+    let ks = kids(id)
+    let mx = if ks.len() > 0 { at.at(ks.last()).at(0) + size.at(ks.last()).at(0) + gap } else { x0 + pad }
+    let y = top - pad - nh - gap
+    for c in members(g) {
+      let c = wrap(c)
+      let (cw, ch) = dim(c)
+      texts.push((id: id, kind: "member", at: (mx, y), body: c, rect: (mx, y - ch, mx + cw, y)))
+      y -= ch + gap
+    }
+  }
+  let boxes = order.rev().map(id => { let (x0, top) = at.at(id); let (w, h, _) = size.at(id); (id: id, inside: byid.at(id).at("inside", default: none), rect: (x0, top - h, x0 + w, top)) })
+  (boxes: boxes, texts: texts)
+}
+#let nested-groups(..groups) = context {
+  let (boxes, texts) = _groups-layout(groups.pos())
+  cetz.canvas({
+    import cetz.draw: *
+    for b in boxes {
+      let (x0, y0, x1, y1) = b.rect
+      rect((x0, y0), (x1, y1), radius: 0.2, stroke: 0.8pt, fill: white)
+    }
+    for t in texts { content(t.at, t.body, anchor: "north-west") }
+  })
+}
 // A part's name (`"v.ab"`): in it when it fits, else under the diagram, joined to the part by
 // a thin line (a lens is narrower than "A ∩ B"). Its width estimated from its text (no
 // `measure` inside a canvas); `room`: the part's width, about a lens's.
