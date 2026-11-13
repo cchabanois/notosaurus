@@ -487,6 +487,100 @@ def to_png(svg: str) -> bytes | None:
         return None
 
 
+# A label's ink must stand this many pixels (at PNG_WIDTH) inside another's to say they touch:
+# two lines of one label, or a word and its exponent, merely meeting at an edge, apart
+TOUCHING = 2
+# Two phrases on one line (side by side) closer than this, times their height: a gap hardly
+# wider than a space between words, read as one phrase (« Fe²⁺ + soude Cl⁻ + nitrate… »)
+APART = 0.8
+_DEFS = {"defs", "symbol", "marker", "pattern", "clipPath", "mask"}
+
+
+def _texts(element: ElementTree.Element, parent: ElementTree.Element | None = None):
+    """The figure's texts drawn (not in its definitions), each with its parent."""
+    if _local(element.tag) in _DEFS:
+        return
+    for child in list(element):
+        if _local(child.tag) == "text":
+            yield child, element
+        else:
+            yield from _texts(child, element)
+
+
+def label_words(svg: str) -> list[str]:
+    """The words of the figure's texts, as written (in its drawing, not its definitions)."""
+    try:
+        root = ElementTree.fromstring(svg)
+    except ElementTree.ParseError:
+        return []
+    return [w for t, _ in _texts(root) for w in "".join(t.itertext()).split()]
+
+
+def _label_boxes(svg: str) -> tuple[list[tuple[str, tuple[int, int, int, int]]], float, float, float]:
+    """Each text's ink as a box in pixels (at PNG_WIDTH), found by drawing the figure with it
+    alone among the texts (the rest of the drawing as it is); and the viewBox's left, top and
+    units per pixel, to tell them in the figure's units. ([], 0, 0, 1) without resvg."""
+    from PIL import Image, ImageChops
+
+    nothing: tuple[list[tuple[str, tuple[int, int, int, int]]], float, float, float] = ([], 0.0, 0.0, 1.0)
+    try:
+        root = ElementTree.fromstring(svg)
+    except ElementTree.ParseError:
+        return nothing
+    texts = list(_texts(root))
+    if not texts:
+        return nothing
+    for text, parent in texts:
+        parent.remove(text)
+    bare = to_png(ElementTree.tostring(root, encoding="unicode"))
+    if bare is None:
+        return nothing
+    base = Image.open(io.BytesIO(bare)).convert("L")
+    boxes = []
+    for text, parent in texts:
+        parent.append(text)
+        png = to_png(ElementTree.tostring(root, encoding="unicode"))
+        parent.remove(text)
+        if png is None:
+            continue
+        drawn = Image.open(io.BytesIO(png)).convert("L")
+        ink = ImageChops.difference(drawn, base).point([0] * 41 + [255] * 215)  # more than 40 apart
+        box = ink.getbbox()
+        if box is not None:
+            boxes.append(("".join(text.itertext()).strip(), box))
+    view = _VIEWBOX.search(svg)
+    x, y, w = (float(view.group(1)), float(view.group(2)), float(view.group(3))) if view else (0.0, 0.0, base.width)
+    return boxes, x, y, w / base.width
+
+
+def touching_labels(svg: str) -> list[tuple[str, str]]:
+    """The figure's texts written on one another, as pairs of their words: the pairs whose
+    inks' boxes (_label_boxes) overlap, or two phrases on one line closer than APART times
+    their height. The AI writes SVG without measuring its words: two labels centred on tubes
+    120 px apart, one 150 px wide (« soudeCl⁻ »). [] without resvg."""
+    boxes = _label_boxes(svg)[0]
+    touching = []
+    for i, (a, (ax0, ay0, ax1, ay1)) in enumerate(boxes):
+        for b, (bx0, by0, bx1, by1) in boxes[i + 1 :]:
+            across = min(ax1, bx1) - max(ax0, bx0)  # < 0: the gap between them
+            down = min(ay1, by1) - max(ay0, by0)
+            # two phrases on one line (sharing most of the smaller one's height), too close to read
+            # apart (numbers along a scale, a word's letters coloured one by one: never phrases)
+            height = min(ay1 - ay0, by1 - by0)
+            phrases = " " in a or " " in b
+            side_by_side = phrases and down > 0.5 * height and across > -APART * height
+            if (across > TOUCHING and down > TOUCHING) or side_by_side:
+                touching.append((a, b))
+    return touching
+
+
+def label_extents(svg: str) -> dict[str, tuple[float, float]]:
+    """Each text's ink from left to right, in the figure's own units (its viewBox's): what the
+    AI can't measure, told to it when its labels touch."""
+    boxes, x, _, k = _label_boxes(svg)
+    return {text: (round(x + x0 * k), round(x + x1 * k)) for text, (x0, _, x1, _) in boxes}
+
+
 def save(folder: Path, card: Card, svg: str) -> str:
     """The cleaned figure in the lesson's images/ folder; returns its file name (a card
     picture: shown, exported and pruned like the others)."""
