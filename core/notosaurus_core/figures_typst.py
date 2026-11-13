@@ -112,6 +112,7 @@ FAMILIES: dict[str, Family] = {
         "table",
         "scratch",
         "optics",
+        "field",
     )
 }
 
@@ -137,6 +138,7 @@ FigureKind = Literal[
     "table",
     "scratch",
     "optics",
+    "field",
     "other",
 ]
 
