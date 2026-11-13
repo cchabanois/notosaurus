@@ -1,5 +1,6 @@
 #set page(width: auto, height: auto, margin: 6pt)
 #import "@preview/cetz:0.5.2"
+#import "common.typ": *
 // Polyhedra in cavalier perspective (the receding edges at 45°, halved): each vertex
 // projected, each edge hidden when both faces along it turn their back to the viewer
 // (dashed), computed: never placed or chosen by eye. x to the right, y away from the
@@ -7,8 +8,6 @@
 #let _k = 0.5
 #let _proj(p) = (p.at(0) + _k * calc.cos(45deg) * p.at(1), p.at(2) + _k * calc.sin(45deg) * p.at(1))
 #let _view = (_k * calc.cos(45deg), -1, _k * calc.sin(45deg)) // towards the viewer
-#let _sub(a, b) = a.zip(b).map(((x, y)) => x - y)
-#let _dot(a, b) = a.zip(b).map(((x, y)) => x * y).sum()
 #let _cross(a, b) = (
   a.at(1) * b.at(2) - a.at(2) * b.at(1),
   a.at(2) * b.at(0) - a.at(0) * b.at(2),
@@ -21,13 +20,6 @@
   if n < 1e-9 { p } else { p.zip(d).map(((x, y)) => x + y / n * by) }
 }
 
-// How far a point is from a segment (on the page)
-#let _gap(p, a, b) = {
-  let (ab, ap) = (_sub(b, a), _sub(p, a))
-  let t = calc.clamp(_dot(ap, ab) / calc.max(_dot(ab, ab), 1e-9), 0, 1)
-  let d = _sub(p, a.zip(ab).map(((x, y)) => x + t * y))
-  calc.sqrt(_dot(d, d))
-}
 
 // The section of a polyhedron by a plane parallel to one of its faces, `at` from it (in the
 // solid's lengths): where the plane cuts its edges, computed. section: a number (parallel to

@@ -41,3 +41,25 @@
 }
 // The smallest round step giving at most `most` steps over `span`
 #let round-step(span, most) = if span <= 0 { 1 } else { round-steps(span / most, 10 * span / most).first() }
+
+// Vectors: points and directions as their coordinates, (x, y), or (x, y, z) in a solid
+#let _add(a, b) = a.zip(b).map(((x, y)) => x + y)
+#let _sub(a, b) = a.zip(b).map(((x, y)) => x - y)
+#let _mul(a, k) = a.map(x => x * k)
+#let _dot(a, b) = a.zip(b).map(((x, y)) => x * y).sum()
+#let _len(a) = calc.sqrt(_dot(a, a))
+#let _unit(a) = { let n = _len(a); if n < 1e-9 { a.map(_ => 0) } else { _mul(a, 1 / n) } }
+// in the plane: the way at angle t, a vector's angle, the point at distance d from p at angle a
+#let _dir(t) = (calc.cos(t), calc.sin(t))
+#let _angle(v) = calc.atan2(v.at(0), v.at(1))
+#let _off(p, a, d) = (p.at(0) + d * calc.cos(a), p.at(1) + d * calc.sin(a))
+// How far a point is from a segment
+#let _gap(p, a, b) = {
+  let (ab, ap) = (_sub(b, a), _sub(p, a))
+  let t = calc.clamp(_dot(ap, ab) / calc.max(_dot(ab, ab), 1e-9), 0, 1)
+  let d = _sub(p, a.zip(ab).map(((x, y)) => x + t * y))
+  calc.sqrt(_dot(d, d))
+}
+
+// A text's characters, to measure or compare it: a name's letters, a space for what has none
+#let _plain(c) = if type(c) == str { c } else if c.has("text") { c.text } else if c.has("children") { c.children.map(_plain).join() } else if c.has("body") { _plain(c.body) } else { " " }

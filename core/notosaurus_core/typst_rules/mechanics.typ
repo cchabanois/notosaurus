@@ -127,7 +127,6 @@
   let length(v) = if scale != none { if v.len() == 3 { v.at(2) / scale.at(0) } else { unit } } else {
     unit * if v.len() == 3 { v.at(2) } else { 1 }
   }
-  let off(q, a, d) = (q.at(0) + d * calc.cos(a), q.at(1) + d * calc.sin(a))
   // each vector's start and tip: vectors going the same way from one point side by side
   let arrows-at(from, vs) = {
     let ways = vs.map(v => calc.rem-euclid(degrees(v.at(1), from: from), 360))
@@ -139,8 +138,8 @@
       let side = if string and from == p and calc.abs(a - 90) < 1 and same.len() > 1 {
         0.3 * (calc.quo(k, 2) + 1) * if calc.rem(k, 2) == 0 { -1 } else { 1 }
       } else { 0.28 * (k - (same.len() - 1) / 2) }
-      let s = off(from, (a + 90) * 1deg, side)
-      (v, a, s, off(s, a * 1deg, length(v)))
+      let s = _off(from, (a + 90) * 1deg, side)
+      (v, a, s, _off(s, a * 1deg, length(v)))
     })
   }
   let drawn = arrows-at(p, vectors) + arrows-at(q, others)
@@ -173,7 +172,7 @@
         content((0, 0), txt(centre))
       } else {
         circle((0, 0), radius: 0.06, fill: black)
-        if centre != none { content(off((0, 0), (at + 180 + 90) * 1deg, 0.3), txt(centre)) }
+        if centre != none { content(_off((0, 0), (at + 180 + 90) * 1deg, 0.3), txt(centre)) }
       }
     } else if support == "pendulum" {
       // the pivot under a hatched ceiling, the vertical dashed, the string, its angle
@@ -254,10 +253,10 @@
       if name in marks {
         let w = calc.rem-euclid(way, 360)
         let d = calc.rem-euclid(a - w + 180, 360) - 180
-        line(s, off(s, w * 1deg, 1.4), stroke: (thickness: 0.6pt, dash: "dashed"))
+        line(s, _off(s, w * 1deg, 1.4), stroke: (thickness: 0.6pt, dash: "dashed"))
         arc(s, start: w * 1deg, delta: d * 1deg, radius: 0.95, anchor: "origin", stroke: 0.6pt)
         let label = marks.at(name)
-        content(off(s, (w + d / 2) * 1deg, 1.35),
+        content(_off(s, (w + d / 2) * 1deg, 1.35),
           txt(if label != none { label } else { written-number(calc.abs(d), digits: 1) + "°" }))
       }
     }
@@ -266,11 +265,7 @@
     // already placed
     let segments = drawn.map(((v, a, s, t)) => (s, t))
     // how far a point is from a segment
-    let gap(q, (a, b)) = {
-      let (dx, dy) = (b.at(0) - a.at(0), b.at(1) - a.at(1))
-      let k = calc.clamp(((q.at(0) - a.at(0)) * dx + (q.at(1) - a.at(1)) * dy) / (dx * dx + dy * dy), 0, 1)
-      calc.sqrt(calc.pow(q.at(0) - a.at(0) - k * dx, 2) + calc.pow(q.at(1) - a.at(1) - k * dy, 2))
-    }
+    let gap(q, (a, b)) = _gap(q, a, b)
     let placed = ()
     for (i, (v, a, s, t)) in drawn.enumerate() {
       let a = a * 1deg
@@ -282,8 +277,8 @@
         content((m.at(0), m.at(1) + 0.3), named(v.at(0)), anchor: if calc.cos(a) >= 0 { "south-west" } else { "south-east" })
         continue
       }
-      let spots = (off(t, a, 0.34), off(t, a + 90deg, 0.4), off(t, a - 90deg, 0.4), off(m, a + 90deg, 0.4),
-        off(m, a - 90deg, 0.4))
+      let spots = (_off(t, a, 0.34), _off(t, a + 90deg, 0.4), _off(t, a - 90deg, 0.4), _off(m, a + 90deg, 0.4),
+        _off(m, a - 90deg, 0.4))
       let clear(q) = (
         segments.enumerate().all(((j, sg)) => j == i or gap(q, sg) > 0.36)
           and lines.all(sg => gap(q, sg) > 0.36)
@@ -315,7 +310,7 @@
       let d = if point-name(name) { 0.1 } else if shape == "block" { 1.15 } else if shape == "ball" { 0.75 } else if (
         support == "pendulum"
       ) { 0.55 } else { 0.5 }
-      let n = off(c, a * 1deg, d)
+      let n = _off(c, a * 1deg, d)
       let (cs, sn) = (calc.cos(a * 1deg), calc.sin(a * 1deg))
       // a point's name in the gap's quarter, off the point; a body's beyond it
       let anchor = if point-name(name) { (if sn >= 0 { "south-" } else { "north-" }) + if cs >= 0 { "west" } else { "east" } } else if (
@@ -406,7 +401,6 @@
   let txt(body) = text(11pt, body)
   let (place, speed) = chrono-motion(motion, angle)
   let (times, k, pts) = chrono-places(motion, n, angle: angle)
-  let off(q, d, l) = (q.at(0) + l * calc.cos(d), q.at(1) + l * calc.sin(d))
   let way(t) = { let v = speed(t); calc.atan2(v.at(0), v.at(1)) }
   // the side a name goes: away from the curve's hollow, else below a line, right of a fall
   let side(i) = if motion == "thrown" { way(times.at(i)) + 90deg } else if motion == "circle" {
@@ -440,8 +434,8 @@
         let q = (k * p.at(0), k * p.at(1))
         let d = if motion == "thrown" { way(t) + 90deg } else if motion == "circle" { calc.atan2(p.at(0), p.at(1)) } else if (
           motion == "falling") { 180deg } else { 90deg }
-        let e = off(q, d, 0.8)
-        line(off(q, d, 0.1), e, stroke: 0.5pt)
+        let e = _off(q, d, 0.8)
+        line(_off(q, d, 0.1), e, stroke: 0.5pt)
         let (c, s) = (calc.cos(d), calc.sin(d))
         content(e, txt(label), anchor: if calc.abs(c) > 0.4 { if c > 0 { "west" } else { "east" } } else if s > 0 { "south" } else { "north" })
       }
@@ -456,7 +450,7 @@
       if l != none {
         let d = side(i) + if tight and calc.odd(i) { 180deg } else { 0deg }
         let (c, s) = (calc.cos(d), calc.sin(d))
-        content(off(p, d, 0.2), txt(l), anchor: if calc.abs(c) > 0.4 { if c > 0 { "west" } else { "east" } } else if s > 0 { "south" } else { "north" })
+        content(_off(p, d, 0.2), txt(l), anchor: if calc.abs(c) > 0.4 { if c > 0 { "west" } else { "east" } } else if s > 0 { "south" } else { "north" })
       }
     }
     // the velocities along the trajectory, as long as their speeds; a change of velocity
@@ -468,21 +462,21 @@
       let l = calc.min(1.4, 0.75 * calc.min(..gaps)) * calc.sqrt(v.at(0) * v.at(0) + v.at(1) * v.at(1)) / top
       let d = calc.atan2(v.at(0), v.at(1))
       let p = pts.at(i - first)
-      let t = off(p, d, l)
+      let t = _off(p, d, l)
       line(p, t, stroke: 1.1pt + rgb("#1f5fbf"), mark: (end: "stealth", fill: rgb("#1f5fbf"), scale: 0.8))
       // its name beside its middle, on the side the position's name isn't
       let m = ((p.at(0) + t.at(0)) / 2, (p.at(1) + t.at(1)) / 2)
       let away = side(i - first) + if tight and calc.odd(i - first) { 180deg } else { 0deg }
       let across = if calc.cos(d + 90deg - away) > 0 { d - 90deg } else { d + 90deg }
-      content(off(m, across, 0.32), text(fill: rgb("#1f5fbf"), txt(vec($v$, i))))
+      content(_off(m, across, 0.32), text(fill: rgb("#1f5fbf"), txt(vec($v$, i))))
     }
     for i in change {
       let (u, w) = (speed(times.at(i - first + 1)), speed(times.at(i - first - 1)))
       let d = calc.atan2(u.at(0) - w.at(0), u.at(1) - w.at(1))
       let p = pts.at(i - first)
-      let t = off(p, d, 1)
+      let t = _off(p, d, 1)
       line(p, t, stroke: 1.1pt + rgb("#b3261e"), mark: (end: "stealth", fill: rgb("#b3261e"), scale: 0.8))
-      content(off(off(t, d, 0.1), d + 90deg, 0.35), text(fill: rgb("#b3261e"), txt(vec($v$, i, delta: true))))
+      content(_off(_off(t, d, 0.1), d + 90deg, 0.35), text(fill: rgb("#b3261e"), txt(vec($v$, i, delta: true))))
     }
   })
 }
@@ -543,7 +537,6 @@
   let (knots, w) = track-places(heights)
   let width = w * (heights.len() - 1)
   let txt(body) = text(11pt, body)
-  let off(q, a, d) = (q.at(0) + d * calc.cos(a), q.at(1) + d * calc.sin(a))
   // the profile, finely: what every text keeps clear of
   let fine = range(161).map(j => track-at(knots, w, j / 160 * width).at(0))
   // and the ground under it
@@ -558,7 +551,7 @@
   let half = if shape == "ball" { 0.32 } else { 0.3 }
   let (bp, slope) = if at != none { track-at(knots, w, knots.at(index(at)).at(0)) } else { ((0, 0), 0) }
   let tilt = calc.atan(slope)
-  let centre = off(bp, tilt + 90deg, half)
+  let centre = _off(bp, tilt + 90deg, half)
   let way = tilt + if moving == "right" { 0deg } else { 180deg }
   let degrees(d) = if type(d) != str { d * 1deg } else {
     (up: 90deg, down: -90deg, normal: tilt + 90deg, along: way, back: way + 180deg).at(d)
@@ -572,7 +565,7 @@
   }
   let drawn = vectors.map(v => {
     let a = degrees(v.at(1))
-    (v, a, centre, off(centre, a, 1.4 * if v.len() == 3 { v.at(2) } else { 1 }))
+    (v, a, centre, _off(centre, a, 1.4 * if v.len() == 3 { v.at(2) } else { 1 }))
   })
   // a text's box (lower left, upper right, in cm) placed with `anchor` at q
   let size(c) = { let m = measure(c); (m.width / 1cm + 0.1, m.height / 1cm + 0.1) }
@@ -609,7 +602,7 @@
         let v = if sn > 0.38 { "south" } else if sn < -0.38 { "north" } else { "" }
         let h = if c > 0.38 { "west" } else if c < -0.38 { "east" } else { "" }
         let anchor = if v == "" and h == "" { "center" } else if v == "" { h } else if h == "" { v } else { v + "-" + h }
-        out.push((off(q, a * 1deg, d), anchor))
+        out.push((_off(q, a * 1deg, d), anchor))
       }
     }
     out
@@ -636,7 +629,7 @@
   }
   for (v, a, s, t) in drawn {
     let c = named(v.at(0))
-    let (q, anchor, b) = place(c, ((off(t, a, 0.3), "center"),) + around(t, (0.2, 0.45, 0.75), first: (calc.round(a / 1deg) + 90, calc.round(a / 1deg) - 90)), placed)
+    let (q, anchor, b) = place(c, ((_off(t, a, 0.3), "center"),) + around(t, (0.2, 0.45, 0.75), first: (calc.round(a / 1deg) + 90, calc.round(a / 1deg) - 90)), placed)
     placed.push(b)
     texts.push((c, q, anchor, b))
   }
@@ -678,7 +671,6 @@
     l.tilt, l.half, l.shape, l.at, l.drawn, l.names)
   let height = args.named().at("height", default: none)
   let txt(body) = text(11pt, body)
-  let off(q, a, d) = (q.at(0) + d * calc.cos(a), q.at(1) + d * calc.sin(a))
   let index(name) = names.position(n => n == name)
   cetz.canvas({
     import cetz.draw: *
@@ -697,7 +689,7 @@
       if shape == "ball" {
         circle(centre, radius: half, fill: luma(200), stroke: 0.8pt)
       } else {
-        let corner(u, v) = off(off(centre, tilt, u), tilt + 90deg, v)
+        let corner(u, v) = _off(_off(centre, tilt, u), tilt + 90deg, v)
         line(corner(-0.45, -half), corner(0.45, -half), corner(0.45, half), corner(-0.45, half), close: true,
           fill: luma(200), stroke: 0.8pt)
       }

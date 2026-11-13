@@ -1,6 +1,7 @@
 #set page(width: auto, height: auto, margin: 6pt)
 #import "@preview/cetz:0.5.2"
 #import "@preview/cetz-venn:0.2.0"
+#import "common.typ": *
 #let hatch = tiling(size: (5pt, 5pt), std.line(start: (0pt, 5pt), end: (5pt, 0pt), stroke: 0.6pt))
 // Colours mixed: lights added (additive synthesis, on black: red + green = yellow, the three
 // white) or filters and pigments taken away (subtractive, on white: cyan and magenta = blue,
@@ -144,7 +145,6 @@
 // A part's name (`"v.ab"`): in it when it fits, else under the diagram, joined to the part by
 // a thin line (a lens is narrower than "A ∩ B"). Its width estimated from its text (no
 // `measure` inside a canvas); `room`: the part's width, about a lens's.
-#let _plain(c) = if type(c) == str { c } else if c.has("text") { c.text } else if c.has("children") { c.children.map(_plain).join() } else if c.has("body") { _plain(c.body) } else { " " }
 #let part-label(part, label, room: auto) = cetz.draw.get-ctx(ctx => {
   import cetz.draw: *
   let p = cetz.coordinate.resolve(ctx, part).at(1)
