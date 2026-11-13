@@ -251,6 +251,8 @@ document.addEventListener("alpine:init", () => {
     exams: [],  // the tests to prepare (app-exams.js): lessons under one tag in Anki
     examSheet: { open: false, view: "list", exam: null, draft: { name: "", date: "" }, busy: false, error: "", copied: false, reviewed: "", sendingLeft: 0, alone: false, adding: { query: "", chosen: [] } },
     examPick: null,  // choosing the open lesson's cards for a test: { id, name, selected: Set }
+    lessonPick: null,  // 📚 Mes leçons: the lessons ticked to share their cards (app-anki.js); null: not ticking
+    shareSheet: { open: false, exam: null, lessons: [], lesson: false, count: 0, name: "", busy: false, error: "" },
     lessonPrompt: "",            // prompt text the open lesson was generated with
     promptOpen: false,           // step 2 unfolded ("✏️ Change") though the lesson has cards
     frames: [],                  // diagram frames of the open lesson: what Anki shows of each photo

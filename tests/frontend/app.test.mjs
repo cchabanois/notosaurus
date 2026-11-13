@@ -975,3 +975,24 @@ test("a web page's address alone shared: nothing added, the lesson as it is, sai
   assert.equal(c.error, "Ce partage ne contient que l'adresse d'une page web. Partagez plutôt une capture d'écran de la page, ou la page enregistrée en PDF depuis Chrome.");
   assert.deepEqual(calls.filter((call) => call.includes("shared")), ["GET /api/shared", "DELETE /api/shared"]);
 });
+
+test("lessons ticked to share: a whole subject at once, the deck they share as the package's name", () => {
+  const c = app.component();
+  c.lessons = [
+    { id: "a", deck: "Histoire::Révolution" },
+    { id: "b", deck: "histoire::Napoléon" },
+    { id: "c", deck: "Anglais::Unit 1" },
+  ];
+  c.startLessonPick();
+  const group = { lessons: [{ id: "a" }, { id: "b" }] };
+  c.togglePickedGroup(group);
+  assert.deepEqual(plain(c.lessonPick), ["a", "b"]);
+  assert.equal(c.groupPicked(group), true);
+  c.togglePickedLesson({ id: "b" });  // one taken off: the subject no longer whole
+  assert.equal(c.groupPicked(group), false);
+  c.togglePickedGroup(group);
+  assert.equal(c.sharedDeck(c.lessonPick), "Histoire");
+  assert.equal(c.sharedDeck(["a", "c"]), "");
+  c.togglePickedGroup(group);  // whole: taken off together
+  assert.deepEqual(plain(c.lessonPick), []);
+});

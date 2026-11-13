@@ -241,7 +241,6 @@
     "actions": {
       "generate": "✨ Generate cards",
       "startWithPhoto": "📷 Photograph the lesson",
-      "downloadApkg": "Download the .apkg file",
       "addToAnki": "📥 Add to Anki",
       "updateInAnki": "🔄 Update in Anki",
       "upToDateInAnki": "✓ Up to date in Anki",
@@ -603,7 +602,33 @@
       "manual": "Or by hand, in Anki or AnkiDroid:"
     },
     "share": {
-      "skipped": "Notosaurus takes photos, PDFs and text: “{names}” was not added."
+      "skipped": "Notosaurus takes photos, PDFs and text: “{names}” was not added.",
+      "cards": {
+        "lessons": "📤 Share lessons",
+        "pickHint": "Tick the lessons whose cards you want to share, one by one or a whole subject.",
+        "pickGroup": "The whole subject: {name}",
+        "pickLesson": "Share this lesson",
+        "pickDone": {
+          "one": "📤 Share ({count} lesson)",
+          "other": "📤 Share ({count} lessons)"
+        },
+        "lesson": "📤 Share",
+        "lessonLabel": "Share the cards",
+        "exam": "📤 Share the test's cards",
+        "title": "Share the cards",
+        "intro": {
+          "one": "The cards of {count} lesson, in a file to send to another family (by email, messaging…).",
+          "other": "The cards of {count} lessons, in a file to send to another family (by email, messaging…)."
+        },
+        "introLesson": "This lesson's cards, in a file to send (by email, messaging…).",
+        "photos": "The lessons' photos and diagrams go with the cards: check they can be shared.",
+        "private": "Neither your child's name nor their review history goes with them.",
+        "format": "It is an .apkg file, to import into Anki or AnkiDroid: just open it.",
+        "name": "Deck name",
+        "make": "📤 Make the file",
+        "making": "Making the file…",
+        "done": "✓ File ready: send it to the other family, who open it with Anki or AnkiDroid."
+      }
     }
   },
   "admin": {

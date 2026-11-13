@@ -37,16 +37,22 @@ def test_the_decks_offered_are_the_chosen_childs_and_no_ones(page):
 
 
 def test_no_apkg_where_the_cards_go_straight_to_ankidroid(page, anki):
-    """The Android app's own page says apkg: false: "Add to Anki" alone."""
+    """The Android app's own page says apkg: false: "Add to Anki" alone. Elsewhere the open
+    lesson's cards shared: what goes with them said first, then its file, as it always was."""
     generate_free(page, FRONT_PROMPT)
-    sync_api.expect(page.get_by_role("button", name="Télécharger le fichier .apkg")).to_be_visible()
+    page.get_by_role("button", name="Partager les cartes").click()
+    sheet = page.get_by_role("dialog", name="Partager les cartes")
+    sync_api.expect(sheet).to_contain_text("Les photos et schémas des leçons partent avec les cartes")
+    with page.expect_download() as download:
+        sheet.get_by_role("button", name="📤 Créer le fichier").click()
+    assert download.value.suggested_filename.endswith(".apkg")
 
     def app(route):
         route.fulfill(json={**route.fetch().json(), "apkg": False})
 
     page.route("**/api/config", app)
     generate_free(page, FRONT_PROMPT)
-    sync_api.expect(page.get_by_role("button", name="Télécharger le fichier .apkg")).to_be_hidden()
+    sync_api.expect(page.get_by_role("button", name="Partager les cartes")).to_be_hidden()
     sync_api.expect(page.get_by_role("button", name=re.compile("Anki"))).not_to_have_count(0)
 
 

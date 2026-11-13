@@ -241,7 +241,6 @@
     "actions": {
       "generate": "✨ Genera le carte",
       "startWithPhoto": "📷 Fotografa la lezione",
-      "downloadApkg": "Scarica il file .apkg",
       "addToAnki": "📥 Aggiungi ad Anki",
       "updateInAnki": "🔄 Aggiorna in Anki",
       "upToDateInAnki": "✓ Aggiornato in Anki",
@@ -603,7 +602,33 @@
       "manual": "Oppure a mano, in Anki o AnkiDroid:"
     },
     "share": {
-      "skipped": "Notosaurus accetta foto, PDF e testo: «{names}» non è stato aggiunto."
+      "skipped": "Notosaurus accetta foto, PDF e testo: «{names}» non è stato aggiunto.",
+      "cards": {
+        "lessons": "📤 Condividi lezioni",
+        "pickHint": "Spunti le lezioni di cui vuole condividere le schede, una alla volta o una materia intera.",
+        "pickGroup": "Tutta la materia: {name}",
+        "pickLesson": "Condividi questa lezione",
+        "pickDone": {
+          "one": "📤 Condividi ({count} lezione)",
+          "other": "📤 Condividi ({count} lezioni)"
+        },
+        "lesson": "📤 Condividi",
+        "lessonLabel": "Condividi le schede",
+        "exam": "📤 Condividi le schede della verifica",
+        "title": "Condividi le schede",
+        "intro": {
+          "one": "Le schede di {count} lezione, in un file da inviare a un'altra famiglia (per email, messaggi…).",
+          "other": "Le schede di {count} lezioni, in un file da inviare a un'altra famiglia (per email, messaggi…)."
+        },
+        "introLesson": "Le schede di questa lezione, in un file da inviare (per email, messaggi…).",
+        "photos": "Le foto e gli schemi delle lezioni partono con le schede: verifichi che si possano condividere.",
+        "private": "Non partono né il nome di suo figlio né la cronologia dei suoi ripassi.",
+        "format": "È un file .apkg, da importare in Anki o AnkiDroid: basta aprirlo.",
+        "name": "Nome del mazzo",
+        "make": "📤 Crea il file",
+        "making": "Preparazione del file…",
+        "done": "✓ File pronto: lo invii all'altra famiglia, che lo apre con Anki o AnkiDroid."
+      }
     }
   },
   "admin": {

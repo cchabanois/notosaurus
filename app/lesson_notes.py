@@ -8,13 +8,14 @@ from .errors import AppError
 from .models import ExportRequest, Lesson, LessonIn
 
 
-def _export_request(lesson: Lesson) -> ExportRequest:
+def export_request(lesson: Lesson) -> ExportRequest:
+    """The saved lesson as an export asks for it: its cards, deck, options."""
     return ExportRequest(**lesson.model_dump(include=set(LessonIn.model_fields)), lesson_id=lesson.id)
 
 
 def decks(lesson: Lesson) -> list[str]:
     """The decks the lesson's cards go to: its own and its subdecks."""
-    return sorted({lesson.deck.strip()} | {n.deck for n in anki.lesson_notes(_export_request(lesson))})
+    return sorted({lesson.deck.strip()} | {n.deck for n in anki.lesson_notes(export_request(lesson))})
 
 
 def _decks_meet(a: str, b: str) -> bool:
@@ -37,10 +38,10 @@ async def find(lesson: Lesson) -> dict:
     summaries = [s for s in lessons.list_all() if s.id != lesson.id]
     other_tags = {anki.lesson_tag(s.id) for s in summaries}
     nearby = [o for s in summaries if _decks_meet(s.deck, lesson.deck) and (o := lessons.get(s.id))]
-    others = {(n.deck, n.key) for o in nearby for n in anki.lesson_notes(_export_request(o))}
+    others = {(n.deck, n.key) for o in nearby for n in anki.lesson_notes(export_request(o))}
     try:
         ids = await ankiconnect.find_lesson_notes(
-            lesson.id, anki.lesson_notes(_export_request(lesson)), others, other_tags
+            lesson.id, anki.lesson_notes(export_request(lesson)), others, other_tags
         )
     except ankiconnect.AnkiConnectError:
         return {"available": False, "count": 0, "ids": []}

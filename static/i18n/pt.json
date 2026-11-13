@@ -241,7 +241,6 @@
     "actions": {
       "generate": "✨ Gerar os cartões",
       "startWithPhoto": "📷 Fotografe a lição",
-      "downloadApkg": "Baixar o arquivo .apkg",
       "addToAnki": "📥 Adicionar ao Anki",
       "updateInAnki": "🔄 Atualizar no Anki",
       "upToDateInAnki": "✓ Atualizado no Anki",
@@ -603,7 +602,33 @@
       "manual": "Ou à mão, no Anki ou no AnkiDroid:"
     },
     "share": {
-      "skipped": "O Notosaurus aceita fotos, PDFs e texto: “{names}” não foi adicionado."
+      "skipped": "O Notosaurus aceita fotos, PDFs e texto: “{names}” não foi adicionado.",
+      "cards": {
+        "lessons": "📤 Partilhar lições",
+        "pickHint": "Marque as lições cujos cartões quer partilhar, uma a uma ou uma disciplina inteira.",
+        "pickGroup": "Toda a disciplina: {name}",
+        "pickLesson": "Partilhar esta lição",
+        "pickDone": {
+          "one": "📤 Partilhar ({count} lição)",
+          "other": "📤 Partilhar ({count} lições)"
+        },
+        "lesson": "📤 Partilhar",
+        "lessonLabel": "Partilhar os cartões",
+        "exam": "📤 Partilhar os cartões do teste",
+        "title": "Partilhar os cartões",
+        "intro": {
+          "one": "Os cartões de {count} lição, num ficheiro para enviar a outra família (por email, mensagens…).",
+          "other": "Os cartões de {count} lições, num ficheiro para enviar a outra família (por email, mensagens…)."
+        },
+        "introLesson": "Os cartões desta lição, num ficheiro para enviar (por email, mensagens…).",
+        "photos": "As fotos e os esquemas das lições vão com os cartões: verifique que podem ser partilhados.",
+        "private": "Não vão nem o nome do seu filho nem o seu histórico de revisões.",
+        "format": "É um ficheiro .apkg, para importar no Anki ou AnkiDroid: basta abri-lo.",
+        "name": "Nome do baralho",
+        "make": "📤 Criar o ficheiro",
+        "making": "A preparar o ficheiro…",
+        "done": "✓ Ficheiro pronto: envie-o à outra família, que o abre com o Anki ou AnkiDroid."
+      }
     }
   },
   "admin": {

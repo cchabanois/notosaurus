@@ -241,7 +241,6 @@
     "actions": {
       "generate": "✨ Générer les cartes",
       "startWithPhoto": "📷 Photographiez la leçon",
-      "downloadApkg": "Télécharger le fichier .apkg",
       "addToAnki": "📥 Ajouter à Anki",
       "updateInAnki": "🔄 Mettre à jour dans Anki",
       "upToDateInAnki": "✓ À jour dans Anki",
@@ -603,7 +602,33 @@
       "manual": "Ou à la main, dans Anki ou AnkiDroid :"
     },
     "share": {
-      "skipped": "Notosaurus prend les photos, les PDF et le texte : « {names} » n'a pas été ajouté."
+      "skipped": "Notosaurus prend les photos, les PDF et le texte : « {names} » n'a pas été ajouté.",
+      "cards": {
+        "lessons": "📤 Partager des leçons",
+        "pickHint": "Cochez les leçons dont vous voulez partager les cartes, une à une ou toute une matière.",
+        "pickGroup": "Toute la matière : {name}",
+        "pickLesson": "Partager cette leçon",
+        "pickDone": {
+          "one": "📤 Partager ({count} leçon)",
+          "other": "📤 Partager ({count} leçons)"
+        },
+        "lesson": "📤 Partager",
+        "lessonLabel": "Partager les cartes",
+        "exam": "📤 Partager les cartes du contrôle",
+        "title": "Partager les cartes",
+        "intro": {
+          "one": "Les cartes de {count} leçon, dans un fichier à envoyer à une autre famille (par mail, messagerie…).",
+          "other": "Les cartes de {count} leçons, dans un fichier à envoyer à une autre famille (par mail, messagerie…)."
+        },
+        "introLesson": "Les cartes de cette leçon, dans un fichier à envoyer (par mail, messagerie…).",
+        "photos": "Les photos et schémas des leçons partent avec les cartes : vérifiez qu'ils peuvent être partagés.",
+        "private": "Ni le prénom de votre enfant ni l'historique de ses révisions ne partent avec.",
+        "format": "C'est un fichier .apkg, à importer dans Anki ou AnkiDroid : il suffit de l'ouvrir.",
+        "name": "Nom du paquet",
+        "make": "📤 Créer le fichier",
+        "making": "Préparation du fichier…",
+        "done": "✓ Fichier prêt : envoyez-le à l'autre famille, qui l'ouvre avec Anki ou AnkiDroid."
+      }
     }
   },
   "admin": {

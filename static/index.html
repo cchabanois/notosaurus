@@ -738,9 +738,9 @@
             :disabled="nextAction() === 'photo' ? loading : !canGenerate()"
             x-text="$t({ generate: 'app.actions.generate', prompt: 'app.prompt.fromPrompt', photo: 'app.actions.startWithPhoto' }[nextAction()])"></button>
     <div class="bar-row" x-show="cards.length">
-      <!-- Anki reachable: send directly, keep the file as a secondary option -->
-      <button class="btn soft" x-show="anki.available && apkg" @click="exportApkg()" :disabled="exporting || sending"
-              :aria-label="$t('app.actions.downloadApkg')">⬇️ .apkg</button>
+      <!-- Anki reachable: send directly; the cards shared as a file, a secondary option (app-anki.js) -->
+      <button class="btn soft" x-show="anki.available && canShare()" @click="openShare({ lesson: true })" :disabled="exporting || sending"
+              :aria-label="$t('app.share.cards.lessonLabel')" x-text="$t('app.share.cards.lesson')"></button>
       <!-- Sent already (the app): reviewed in AnkiDroid from here -->
       <button class="btn soft" x-show="reviewInAnki && lessonExported" @click="reviewLesson()" :disabled="sending"
               x-text="$t('app.reviewInAnki')"></button>
@@ -808,12 +808,19 @@
     </label>
     <input type="search" class="lesson-search" x-show="manyLessons()" x-model="lessonQuery"
            :placeholder="$t('app.lessons.search')" :aria-label="$t('app.lessons.search')">
+    <!-- The cards of lessons shared with another family: ticked here, one by one or a subject (app-anki.js) -->
+    <div class="lesson-share" x-show="canShare() && visibleLessons().length">
+      <button type="button" class="chip-btn" x-show="!lessonPick" @click="startLessonPick()" x-text="$t('app.share.cards.lessons')"></button>
+      <p class="hint" x-show="lessonPick" x-text="$t('app.share.cards.pickHint')"></p>
+    </div>
     <!-- By subject (the deck's first level), the most recent first; see lessonSections() -->
     <div class="lesson-list">
       <p class="empty" x-show="!visibleLessons().length" x-text="$t('app.lessons.none')"></p>
       <template x-for="g in lessonSections()" :key="g.key">
         <section class="lesson-group">
           <h3>
+            <input type="checkbox" class="pick-group" x-show="lessonPick && g.key !== 'recent'" :checked="lessonPick && groupPicked(g)"
+                   @change="togglePickedGroup(g)" :aria-label="$t('app.share.cards.pickGroup', { name: g.name })">
             <button type="button" class="group-head" :disabled="!g.foldable" @click="toggleSubject(g)"
                     :aria-expanded="g.foldable ? String(g.open) : null">
               <span class="fold" x-show="g.foldable" x-text="g.foldable ? (g.open ? '▾' : '▸') : ''" aria-hidden="true"></span>
@@ -825,7 +832,9 @@
           <ul x-show="g.open">
             <template x-for="l in g.lessons" :key="l.id">
               <li :class="{ current: l.id === lessonId }">
-                <button class="lesson" @click="openLesson(l.id); lessonsOpen = false" :title="l.deck">
+                <input type="checkbox" class="pick-lesson" x-show="lessonPick" :checked="lessonPick?.includes(l.id)"
+                       @change="togglePickedLesson(l)" :aria-label="$t('app.share.cards.pickLesson')">
+                <button class="lesson" @click="lessonPick ? togglePickedLesson(l) : (openLesson(l.id), lessonsOpen = false)" :title="l.deck">
                   <strong x-text="l.title"></strong>
                   <small>
                     <span x-text="formatDate(l.updated_at)"></span> ·
@@ -835,12 +844,44 @@
                 </button>
                 <span class="badge shared" x-show="l.shared" x-text="$t('app.lessons.sharedBadge')"></span>
                 <span class="badge" x-show="l.exported_at" x-text="$t('app.lessons.exported')"></span>
-                <button class="icon-btn muted" x-show="canDelete(l)" @click="deleteLesson(l)" :aria-label="$t('app.lessons.delete')">🗑</button>
+                <button class="icon-btn muted" x-show="canDelete(l) && !lessonPick" @click="deleteLesson(l)" :aria-label="$t('app.lessons.delete')">🗑</button>
               </li>
             </template>
           </ul>
         </section>
       </template>
+    </div>
+    <div class="sheet-actions lesson-share-bar" x-show="lessonPick">
+      <button type="button" class="btn soft" @click="lessonPick = null" x-text="$t('common.cancel')"></button>
+      <button type="button" class="btn primary" @click="shareLessons()" :disabled="!lessonPick?.length"
+              x-text="$t('app.share.cards.pickDone', { count: lessonPick?.length ?? 0 })"></button>
+    </div>
+  </aside>
+
+  <!-- The cards shared with another family: what goes with them, then the file (app-anki.js) -->
+  <div class="sheet-backdrop" x-cloak x-show="shareSheet.open" x-transition.opacity @click="shareSheet.open = false"></div>
+  <aside class="sheet" x-cloak x-show="shareSheet.open" x-bind="sheet" role="dialog"
+         @keydown.escape.window="shareSheet.open = false" :aria-label="$t('app.share.cards.title')">
+    <div class="sheet-handle"></div>
+    <div class="sheet-head">
+      <h2 x-text="$t('app.share.cards.title')"></h2>
+      <button class="icon-btn" @click="shareSheet.open = false" :aria-label="$t('common.close')">✕</button>
+    </div>
+    <div class="sheet-body children">
+      <p x-text="shareSheet.lesson ? $t('app.share.cards.introLesson') : $t('app.share.cards.intro', { count: shareSheet.count })"></p>
+      <p class="hint warn" x-text="$t('app.share.cards.photos')"></p>
+      <p class="hint" x-show="!shareSheet.lesson" x-text="$t('app.share.cards.private')"></p>
+      <p class="hint" x-text="$t('app.share.cards.format')"></p>
+      <label class="field" x-show="!shareSheet.lesson">
+        <span x-text="$t('app.share.cards.name')"></span>
+        <input type="text" x-model="shareSheet.name" maxlength="100">
+      </label>
+      <div class="sheet-actions">
+        <button type="button" class="btn soft" @click="shareSheet.open = false" x-text="$t('common.cancel')"></button>
+        <button type="button" class="btn primary" @click="makeShared()" :disabled="shareSheet.busy || exporting"
+                x-text="shareSheet.busy || exporting ? $t('app.share.cards.making') : $t('app.share.cards.make')"></button>
+      </div>
+      <p class="hint error-text" x-show="shareSheet.error" x-text="shareSheet.error"></p>
     </div>
   </aside>
 
@@ -1232,6 +1273,8 @@
             </template>
           </ul>
           <p class="hint" x-show="!examSheet.exam.lessons.length" x-text="$t('app.exams.noLessons')"></p>
+          <button type="button" class="btn soft" x-show="canShare() && examSheet.exam.lessons.length"
+                  @click="openShare({ exam: examSheet.exam })" :disabled="examSheet.busy" x-text="$t('app.share.cards.exam')"></button>
           <button type="button" class="btn soft" @click="startAdding()" :disabled="examSheet.busy" x-text="$t('app.exams.addLessons')"></button>
           <p class="hint"><span x-text="$t('app.exams.tag')"></span> : <code x-text="examSheet.exam.tag"></code></p>
           <div class="sheet-actions">

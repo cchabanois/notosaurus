@@ -151,7 +151,7 @@ def test_the_lessons_bar_keeps_its_buttons_inside(page, width):
     row = page.locator(".bottom-bar .bar-row").last
     row.get_by_role("button", name="Ajouter à Anki").click()  # sent: now soft, as wide
     sync_api.expect(row.get_by_role("button", name="✓ À jour dans Anki")).to_be_visible()
-    sync_api.expect(row.get_by_role("button", name="Télécharger le fichier .apkg")).to_be_visible()
+    sync_api.expect(row.get_by_role("button", name="Partager les cartes")).to_be_visible()
     box = row.bounding_box()
     for button in row.locator("button:visible").all():
         b = button.bounding_box()
@@ -276,3 +276,29 @@ def test_every_sheet_slides_in_as_a_dialog(page):
     assert page.evaluate("document.querySelector('aside.sheet[x-bind=sheet]')._x_transition !== undefined")
     roles = page.evaluate("[...document.querySelectorAll('aside.sheet')].map(a => a.getAttribute('role'))")
     assert roles and all(r in ("dialog", "alertdialog") for r in roles) and "alertdialog" in roles
+
+
+def test_lessons_shared_ticked_from_my_lessons_no_test_needed(page, tmp_path):
+    """📚 Mes leçons → "Partager des leçons": lessons ticked one by one or a whole subject,
+    then a sheet says what goes with the cards before the file is made; no test needed."""
+    page.goto("/")
+    for deck in ("Histoire::Révolution", "Histoire::Napoléon", "Anglais::Leçon 1"):
+        made = page.request.post("/api/extract", multipart={"prompt": FRONT_PROMPT}).json()
+        page.request.put(f"/api/lessons/{made['id']}", data={"deck": deck, "cards": made["cards"]})
+    assert page.request.get("/api/exams").json() == []
+    page.reload()
+    page.get_by_role("button", name="Leçons").click()
+    page.get_by_role("button", name="📤 Partager des leçons").click()
+    page.get_by_role("checkbox", name="Toute la matière : Histoire").check()
+    done = page.get_by_role("button", name="📤 Partager (2 leçons)")
+    sync_api.expect(done).to_be_enabled()
+    done.click()
+
+    sheet = page.get_by_role("dialog", name="Partager les cartes")
+    sync_api.expect(sheet).to_contain_text("Les photos et schémas des leçons partent avec les cartes")
+    sync_api.expect(sheet).to_contain_text("importer dans Anki ou AnkiDroid")
+    sync_api.expect(sheet.get_by_label("Nom du paquet")).to_have_value("Histoire")
+    with page.expect_download() as download:
+        sheet.get_by_role("button", name="📤 Créer le fichier").click()
+    assert download.value.suggested_filename == "Histoire.apkg"
+    sync_api.expect(sheet).to_be_hidden()

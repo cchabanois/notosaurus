@@ -241,7 +241,6 @@
     "actions": {
       "generate": "✨ Karten erzeugen",
       "startWithPhoto": "📷 Fotografiere die Lektion",
-      "downloadApkg": "Die .apkg-Datei herunterladen",
       "addToAnki": "📥 Zu Anki hinzufügen",
       "updateInAnki": "🔄 In Anki aktualisieren",
       "upToDateInAnki": "✓ In Anki aktuell",
@@ -603,7 +602,33 @@
       "manual": "Oder von Hand, in Anki oder AnkiDroid:"
     },
     "share": {
-      "skipped": "Notosaurus nimmt Fotos, PDFs und Text: „{names}“ wurde nicht hinzugefügt."
+      "skipped": "Notosaurus nimmt Fotos, PDFs und Text: „{names}“ wurde nicht hinzugefügt.",
+      "cards": {
+        "lessons": "📤 Lektionen teilen",
+        "pickHint": "Haken Sie die Lektionen an, deren Karten Sie teilen möchten, einzeln oder ein ganzes Fach.",
+        "pickGroup": "Das ganze Fach: {name}",
+        "pickLesson": "Diese Lektion teilen",
+        "pickDone": {
+          "one": "📤 Teilen ({count} Lektion)",
+          "other": "📤 Teilen ({count} Lektionen)"
+        },
+        "lesson": "📤 Teilen",
+        "lessonLabel": "Die Karten teilen",
+        "exam": "📤 Die Karten der Klassenarbeit teilen",
+        "title": "Die Karten teilen",
+        "intro": {
+          "one": "Die Karten von {count} Lektion, in einer Datei für eine andere Familie (per E-Mail, Messenger…).",
+          "other": "Die Karten von {count} Lektionen, in einer Datei für eine andere Familie (per E-Mail, Messenger…)."
+        },
+        "introLesson": "Die Karten dieser Lektion, in einer Datei zum Verschicken (per E-Mail, Messenger…).",
+        "photos": "Die Fotos und Schaubilder der Lektionen gehen mit den Karten mit: Prüfen Sie, ob sie geteilt werden dürfen.",
+        "private": "Weder der Name Ihres Kindes noch sein Lernverlauf gehen mit.",
+        "format": "Es ist eine .apkg-Datei zum Importieren in Anki oder AnkiDroid: einfach öffnen.",
+        "name": "Name des Stapels",
+        "make": "📤 Datei erstellen",
+        "making": "Datei wird erstellt…",
+        "done": "✓ Datei fertig: Schicken Sie sie der anderen Familie, die sie mit Anki oder AnkiDroid öffnet."
+      }
     }
   },
   "admin": {

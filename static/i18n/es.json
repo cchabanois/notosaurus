@@ -241,7 +241,6 @@
     "actions": {
       "generate": "✨ Generar las tarjetas",
       "startWithPhoto": "📷 Fotografía la lección",
-      "downloadApkg": "Descargar el archivo .apkg",
       "addToAnki": "📥 Añadir a Anki",
       "updateInAnki": "🔄 Actualizar en Anki",
       "upToDateInAnki": "✓ Al día en Anki",
@@ -603,7 +602,33 @@
       "manual": "O a mano, en Anki o AnkiDroid:"
     },
     "share": {
-      "skipped": "Notosaurus acepta fotos, PDF y texto: «{names}» no se ha añadido."
+      "skipped": "Notosaurus acepta fotos, PDF y texto: «{names}» no se ha añadido.",
+      "cards": {
+        "lessons": "📤 Compartir lecciones",
+        "pickHint": "Marque las lecciones cuyas tarjetas quiere compartir, una a una o una asignatura entera.",
+        "pickGroup": "Toda la asignatura: {name}",
+        "pickLesson": "Compartir esta lección",
+        "pickDone": {
+          "one": "📤 Compartir ({count} lección)",
+          "other": "📤 Compartir ({count} lecciones)"
+        },
+        "lesson": "📤 Compartir",
+        "lessonLabel": "Compartir las tarjetas",
+        "exam": "📤 Compartir las tarjetas del examen",
+        "title": "Compartir las tarjetas",
+        "intro": {
+          "one": "Las tarjetas de {count} lección, en un archivo para enviar a otra familia (por correo, mensajería…).",
+          "other": "Las tarjetas de {count} lecciones, en un archivo para enviar a otra familia (por correo, mensajería…)."
+        },
+        "introLesson": "Las tarjetas de esta lección, en un archivo para enviar (por correo, mensajería…).",
+        "photos": "Las fotos y los esquemas de las lecciones van con las tarjetas: compruebe que se pueden compartir.",
+        "private": "No van ni el nombre de su hijo ni su historial de repasos.",
+        "format": "Es un archivo .apkg, para importar en Anki o AnkiDroid: basta con abrirlo.",
+        "name": "Nombre del mazo",
+        "make": "📤 Crear el archivo",
+        "making": "Preparando el archivo…",
+        "done": "✓ Archivo listo: envíelo a la otra familia, que lo abre con Anki o AnkiDroid."
+      }
     }
   },
   "admin": {
