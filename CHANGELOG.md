@@ -9,6 +9,7 @@ Each pull request's entries (the `## Changelog` of its description) are put unde
 
 ### Added
 
+- 🛹 Skate ramps, roller coasters and marble tracks drawn exactly: the track's shape computed, the body at its point, each label clear of the track.
 - 🧂 Crystals on a cubic lattice (an ionic crystal's alternating ions, a metal's simple, body-centred or face-centred cell) drawn regular in perspective, each ball in its place and in front of those behind it, with their legend and the cell's edge.
 - 📤 On the phone without a computer: a lesson's cards, several lessons' or a test's, shared as a file through Android's share menu (a message, a mail, a drive), to open with Anki or AnkiDroid.
 - 📤 Share the cards of several lessons, or of a test, with another family in one file to open with Anki or AnkiDroid: from 📚 My lessons (lessons ticked), a test's sheet, or the open lesson. Without the child's name nor its review history.
@@ -55,6 +56,7 @@ Each pull request's entries (the `## Changelog` of its description) are put unde
 
 ### Fixed
 
+- ⚗️ A Lewis structure's non-bonding pairs drawn where its bonds leave room, never on a bond, whichever way the molecule is turned.
 - Graphs: a period's or an amplitude's name (a double arrow) set clear of the curve, never written across the sinusoid.
 - 🏷️ A card's sub-deck field no longer cuts its placeholder on newer phones' browsers.
 - Figures: on a number line, names or numbers too close together no longer written on each other; large numbers written with their thousands apart (20 000).
