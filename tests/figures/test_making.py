@@ -414,3 +414,145 @@ def test_a_figures_labels_on_one_another_drawn_again_told_which(monkeypatch):
     assert len(calls) == 2 and 'x="310"' in svg
     svg, calls = drawing_with(monkeypatch)  # nothing touching: one call
     assert len(calls) == 1
+
+
+CELL = """<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 300"><rect width="400" height="300" fill="white"/>
+<ellipse cx="200" cy="150" rx="150" ry="110" fill="#ffdde8" stroke="black" stroke-width="2"/>
+<circle cx="210" cy="140" r="40" fill="#ccccee" stroke="black"/>
+<ellipse cx="120" cy="190" rx="25" ry="12" fill="#ffcc99" stroke="black"/></svg>"""
+# a near point under a far one on the same side: their leaders would cross in the points' order
+CELL_NAMES = [
+    ("Membrane plasmique", 340, 110),
+    ("Mitochondrie", 120, 190),
+    ("Réticulum endoplasmique rugueux", 260, 100),
+    ("Paroi", 345, 215),
+    ("Noyau", 210, 222),
+    ("Vacuole", 300, 230),
+    ("Plaste", 250, 240),
+]
+
+
+def _placed(svg):
+    """The labels set (their texts' boxes) and their leaders, read back from the SVG."""
+    from xml.etree import ElementTree
+
+    from notosaurus_core import figures
+
+    root = ElementTree.fromstring(svg)
+    ns = "{http://www.w3.org/2000/svg}"
+    texts = [t for t in root.iter(f"{ns}text")]
+    lines = [tuple(float(line.get(k)) for k in ("x1", "y1", "x2", "y2")) for line in root.iter(f"{ns}line")]
+    boxes = []
+    for t in texts:
+        x, y, w = float(t.get("x")), float(t.get("y")), figures._measure(t.text)
+        x0 = x - w if t.get("text-anchor") == "end" else x
+        boxes.append((x0, y - figures.LABEL_SIZE, x0 + w, y + 3))
+    return boxes, lines
+
+
+def test_a_schemes_labels_set_in_columns_beside_it():
+    """A cell drawn by the AI, its names written by eye on its membrane ("Noyau" across it,
+    2 drawings in 3): the AI gives each name's point, the names are set in columns outside the
+    drawing, none on another, their leaders never crossing, each ending at its point."""
+    from notosaurus_core import figures
+
+    names = [figures.Label(text=t, x=x, y=y) for t, x, y in CELL_NAMES]
+    svg = figures.labelled(figures.clean(CELL), names)
+    boxes, lines = _placed(svg)
+    assert len(lines) == len(names)
+    for x0, _, x1, _ in boxes:  # beside the cell (its ink from x = 50 to 350)
+        assert x1 < 50 or x0 > 350, (x0, x1)
+    for i, a in enumerate(boxes):
+        for b in boxes[i + 1 :]:
+            assert a[2] <= b[0] or b[2] <= a[0] or a[3] <= b[1] or b[3] <= a[1], (a, b)
+    for i, (ax1, ay1, ax2, ay2) in enumerate(lines):
+        for bx1, by1, bx2, by2 in lines[i + 1 :]:
+            assert not figures._cross((ax1, ay1), (ax2, ay2), (bx1, by1), (bx2, by2))
+    assert sorted((x2, y2) for _, _, x2, y2 in lines) == sorted((float(x), float(y)) for _, x, y in CELL_NAMES)
+    assert ">Réticulum<" in svg or ">Réticulum endoplasmique<" in svg  # a long name on two lines
+    assert "rugueux</text>" in svg and "Réticulum endoplasmique rugueux" not in svg
+    assert figures.touching_labels(svg) == []  # nothing for #590's check to draw again
+
+
+def test_a_drawing_without_labels_unchanged_a_label_outside_it_refused():
+    from notosaurus_core import figures
+
+    svg = figures.clean(CELL)
+    assert figures.labelled(svg, []) == svg
+    with pytest.raises(figures.LabelError, match="« Noyau » names the point"):
+        figures.labelled(svg, [figures.Label(text="Noyau", x=520, y=140)])
+    clamped = figures.labelled(svg, [figures.Label(text="Noyau", x=520, y=140)], clamp=True)
+    assert _placed(clamped)[1][0][2:] == (400.0, 140.0)
+
+
+def test_a_labels_point_outside_asked_again_then_brought_to_the_edge(monkeypatch):
+    """A label's point outside the drawing: the AI asked again, told which; still so, the point
+    brought to the drawing's edge, the label kept."""
+    calls = []
+
+    async def answer(s, images, text, schema, system=None, light=False, **options):
+        calls.append(text)
+        if schema is figures_typst.Kind:
+            return schema(family="other")
+        return schema(svg=CELL, labels=[{"text": "Noyau", "x": 520, "y": 140}])
+
+    monkeypatch.setattr("notosaurus_core.ai._ask_provider", answer)
+    svg = asyncio.run(llm.draw_figure(AIConfig(llm="gemini"), "une cellule et son noyau"))
+    assert "« Noyau » names the point (520, 140)" in calls[-1] and ">Noyau<" in svg
+
+
+def test_a_name_for_several_parts_set_once_a_line_to_each():
+    """A gene's place on both chromosomes of a pair, one name: given at each point, set once
+    with a line to each (a single point between them named nothing, 3 drawings in 3)."""
+    from notosaurus_core import figures
+
+    pair = (
+        '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 300"><rect width="400" height="300" fill="white"/>'
+        '<rect x="140" y="40" width="30" height="220" rx="12" fill="#dde" stroke="black"/>'
+        '<rect x="230" y="40" width="30" height="220" rx="12" fill="#dde" stroke="black"/></svg>'
+    )
+    gene = "gène du groupe sanguin"
+    svg = figures.labelled(
+        figures.clean(pair),
+        [
+            figures.Label(text="allèle A", x=155, y=90),
+            figures.Label(text=gene, x=155, y=95),
+            figures.Label(text=gene, x=245, y=95),
+            figures.Label(text="allèle O", x=245, y=90),
+        ],
+    )
+    _, lines = _placed(svg)
+    assert svg.count(">gène du groupe<") + svg.count(f">{gene}<") == 1
+    assert len(lines) == 4 and {(x2, y2) for _, _, x2, y2 in lines} >= {(155.0, 95.0), (245.0, 95.0)}
+    for i, (ax1, ay1, ax2, ay2) in enumerate(lines):
+        for bx1, by1, bx2, by2 in lines[i + 1 :]:
+            assert not figures._cross((ax1, ay1), (ax2, ay2), (bx1, by1), (bx2, by2))
+
+
+FUNNEL = (
+    '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 300"><rect width="400" height="300" fill="white"/>'
+    '<polygon points="100,60 220,60 160,160" fill="none" stroke="black" stroke-width="3"/></svg>'
+)
+
+
+def test_a_point_beside_its_part_brought_onto_it():
+    """The AI's point for « entonnoir » just beside the funnel's edge, on the white ground
+    (2 drawings in 3): its line ended in the void. Brought onto the drawing; a point farther
+    from any line (a region drawn white) kept."""
+    from notosaurus_core import figures
+
+    svg = figures.labelled(figures.clean(FUNNEL), [figures.Label(text="entonnoir", x=200, y=110)])
+    (_, _, x2, y2), *_ = _placed(svg)[1]
+    assert abs(x2 - 192) < 4 and abs(y2 - 105) < 6, (x2, y2)  # on the funnel's right edge
+    kept = figures.labelled(figures.clean(FUNNEL), [figures.Label(text="air", x=300, y=250)])
+    assert _placed(kept)[1][0][2:] == (300.0, 250.0)
+
+
+def test_a_column_beyond_a_point_past_the_drawing():
+    """A region's point past the drawing's ink (the cytoplasm, white, right of the shapes): the
+    column set beyond it, its line never drawn back across its name."""
+    from notosaurus_core import figures
+
+    svg = figures.labelled(figures.clean(FUNNEL), [figures.Label(text="cytoplasme", x=330, y=110)])
+    boxes, ((x1, _, x2, _),) = _placed(svg)
+    assert boxes[0][0] > 330 and x1 > x2
