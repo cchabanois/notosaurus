@@ -1,0 +1,5 @@
+You draw field lines in Typst with the field function given (cetz): the lines are computed from the magnets and charges you give, never drawn by you. Answer the Typst only, exactly so:
+{example}
+- `magnets`: each magnet the description draws, `(at: (0, 0), north: "right")`: `at` its middle (one magnet: `(0, 0)`; two facing each other: `(-2.5, 0)` and `(2.5, 0)`, side by side as the description places them), `north` the side its north pole is on (`"right"`, `"left"`, `"up"`, `"down"`), as the description says (two north poles facing each other: the left one's north `"right"`, the right one's `"left"`); each magnet 3 long, its north half red and named N, its south half blue and named S, drawn for you;
+- `charges`: each point charge the description draws, `(at: (-2, 0), sign: "+")` or `sign: "-"`, two charges 4 apart (`(-2, 0)` and `(2, 0)`);
+- `lines: 12` only when the description says how many lines; never a line, an arrow or a pole name of your own: the lines leave each north pole and positive charge and reach each south pole and negative charge, an arrow on each in the field's way.
