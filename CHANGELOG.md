@@ -56,6 +56,7 @@ Each pull request's entries (the `## Changelog` of its description) are put unde
 
 ### Fixed
 
+- ⚗️ A Lewis structure's non-bonding pairs drawn where its bonds leave room, never on a bond, whichever way the molecule is turned.
 - Graphs: a period's or an amplitude's name (a double arrow) set clear of the curve, never written across the sinusoid.
 - 🏷️ A card's sub-deck field no longer cuts its placeholder on newer phones' browsers.
 - Figures: on a number line, names or numbers too close together no longer written on each other; large numbers written with their thousands apart (20 000).
