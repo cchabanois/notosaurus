@@ -482,6 +482,229 @@
     }
   })
 }
+// A body on a track (a skate ramp, a roller coaster, a marble's track), its profile computed,
+// never drawn by eye: `heights` the track's heights at its key points, left to right, equally
+// spaced (a U ramp (3, 0, 3), a roller coaster (3, 0, 2)), the profile smooth through them,
+// flat at each (a top, a hollow); `points` their names, one per key point ("" for none);
+// `notes` what is written at a point ((A: [vitesse nulle])), each beside its point, clear of
+// the track, of the body and of the other texts; `at` the point the body is at, `body` its
+// name, `shape` "block" (a skater, a wagon, a sledge) or "ball" (a marble); `vectors` at the
+// body as the mechanics function takes them ("along" the way it moves, `moving` "right" or
+// "left"; "down" its weight; "normal" the track's reaction; "back"); `height: ("A", "B", $h$)`
+// the height between two points marked, its name beside it.
+#let track-places(heights, width: 8, high: 3.5) = {
+  let n = heights.len()
+  let low = calc.min(..heights)
+  let span = calc.max(..heights) - low
+  let k = if span > 0 { high / span } else { 1 }
+  let w = width / (n - 1)
+  (range(n).map(i => (i * w, k * (heights.at(i) - low))), w)
+}
+// a point of the profile at x, and its slope (between two key points: a half cosine, flat at both)
+#let track-at(knots, w, x) = {
+  let n = knots.len()
+  let i = calc.min(n - 2, calc.max(0, int(calc.floor(x / w))))
+  let t = calc.clamp((x - i * w) / w, 0, 1)
+  let (y0, y1) = (knots.at(i).at(1), knots.at(i + 1).at(1))
+  ((x, y0 + (y1 - y0) * (1 - calc.cos(t * 180deg)) / 2), (y1 - y0) * calc.pi / 2 * calc.sin(t * 180deg) / w)
+}
+#let track-layout(heights: (3, 0, 3), points: (), notes: (:), at: none, body: none, shape: "block",
+  vectors: (), moving: "right", height: none, arrows: true, hidden: ()) = {
+  assert(
+    type(heights) == array and heights.len() >= 2 and heights.len() <= 7 and heights.all(h => type(h) in (int, float)),
+    message: "heights are the track's heights at its key points, 2 to 7 numbers: (3, 0, 3)",
+  )
+  assert(type(points) == array and points.len() <= heights.len(),
+    message: "points are the key points' names, one per height: (\"A\", \"B\", \"C\")")
+  let names = points.map(p => if type(p) == str { p } else { p.text })
+  let index(name) = {
+    let i = names.position(n => n == name)
+    assert(i != none, message: repr(name) + " is no point of the track: its points are " + names.filter(n => n != "").join(", "))
+    i
+  }
+  assert(type(notes) == dictionary, message: "notes are written at points: (A: [vitesse nulle])")
+  for name in notes.keys() { let _ = index(name) }
+  assert(shape in ("block", "ball"), message: "shape is \"block\" or \"ball\"")
+  assert(moving in ("right", "left"), message: "moving is \"right\" or \"left\"")
+  assert(height == none or (type(height) == array and height.len() in (2, 3)),
+    message: "height is (the upper point, the lower one, its name): (\"A\", \"B\", $h$)")
+  let words = ("up", "down", "normal", "along", "back")
+  for v in vectors {
+    assert(
+      type(v) == array and v.len() in (2, 3) and (v.at(1) in words or type(v.at(1)) in (int, float)),
+      message: "vectors are (name, direction): a direction is one of " + words.join(", ") + ", or a number of degrees",
+    )
+  }
+  assert(vectors.len() == 0 or at != none, message: "the vectors are at the body: say where it is with at")
+  let (knots, w) = track-places(heights)
+  let width = w * (heights.len() - 1)
+  let txt(body) = text(11pt, body)
+  let off(q, a, d) = (q.at(0) + d * calc.cos(a), q.at(1) + d * calc.sin(a))
+  // the profile, finely: what every text keeps clear of
+  let fine = range(161).map(j => track-at(knots, w, j / 160 * width).at(0))
+  // and the ground under it
+  let ground = range(41).map(j => (-0.3 + j / 40 * (width + 0.6), -0.4))
+  // a key point is a top or a hollow (its texts over or under it), an end as its neighbour says
+  let top(i) = {
+    let y = knots.at(i).at(1)
+    let near = (i - 1, i + 1).filter(j => j >= 0 and j < knots.len()).map(j => knots.at(j).at(1))
+    near.all(z => z <= y)
+  }
+  // the body: on the track at its point, along the track's way there
+  let half = if shape == "ball" { 0.32 } else { 0.3 }
+  let (bp, slope) = if at != none { track-at(knots, w, knots.at(index(at)).at(0)) } else { ((0, 0), 0) }
+  let tilt = calc.atan(slope)
+  let centre = off(bp, tilt + 90deg, half)
+  let way = tilt + if moving == "right" { 0deg } else { 180deg }
+  let degrees(d) = if type(d) != str { d * 1deg } else {
+    (up: 90deg, down: -90deg, normal: tilt + 90deg, along: way, back: way + 180deg).at(d)
+  }
+  let named(name) = {
+    if name in hidden { return txt[?] }
+    if type(name) != str or not arrows { return txt(name) }
+    let (base, ..sub) = name.split("_")
+    let letter = math.arrow(math.italic(base.trim()))
+    text(13pt, math.equation(if sub.len() > 0 { math.attach(letter, br: math.upright(sub.join("_"))) } else { letter }))
+  }
+  let drawn = vectors.map(v => {
+    let a = degrees(v.at(1))
+    (v, a, centre, off(centre, a, 1.4 * if v.len() == 3 { v.at(2) } else { 1 }))
+  })
+  // a text's box (lower left, upper right, in cm) placed with `anchor` at q
+  let size(c) = { let m = measure(c); (m.width / 1cm + 0.1, m.height / 1cm + 0.1) }
+  let box-at(q, c, anchor) = {
+    let (bw, bh) = size(c)
+    let x = if anchor.ends-with("east") { q.at(0) - bw } else if anchor.ends-with("west") { q.at(0) } else { q.at(0) - bw / 2 }
+    let y = if anchor.starts-with("north") { q.at(1) - bh } else if anchor.starts-with("south") { q.at(1) } else { q.at(1) - bh / 2 }
+    ((x, y), (x + bw, y + bh))
+  }
+  let inside(p, b) = p.at(0) > b.at(0).at(0) and p.at(0) < b.at(1).at(0) and p.at(1) > b.at(0).at(1) and p.at(1) < b.at(1).at(1)
+  let meets(a, b) = a.at(0).at(0) < b.at(1).at(0) and b.at(0).at(0) < a.at(1).at(0) and a.at(0).at(1) < b.at(1).at(1) and b.at(0).at(1) < a.at(1).at(1)
+  let body-box = ((centre.at(0) - 0.55, centre.at(1) - 0.45), (centre.at(0) + 0.55, centre.at(1) + 0.45))
+  let marks = drawn.map(((v, a, s, t)) => range(9).map(j => (s.at(0) + (t.at(0) - s.at(0)) * j / 8, s.at(1) + (t.at(1) - s.at(1)) * j / 8))).flatten().chunks(2)
+  // the height marked: its double arrow beside the upper point, outside the track, and its
+  // name beside it, kept clear too
+  let rise = if height == none { none } else {
+    let (i, j) = (index(height.at(0)), index(height.at(1)))
+    let (pi, pj) = (knots.at(i), knots.at(j))
+    let x = if i == 0 or pi.at(0) <= width / 2 { -0.5 } else { width + 0.5 }
+    (pi: pi, pj: pj, x: x)
+  }
+  if rise != none {
+    marks += range(11).map(j => (rise.x, rise.pj.at(1) + (rise.pi.at(1) - rise.pj.at(1)) * j / 10))
+    marks += range(11).map(j => (rise.x + (rise.pi.at(0) - rise.x) * j / 10, rise.pi.at(1)))
+  }
+  // spots around q at each distance, in the directions given first, then all around: each
+  // text anchored on the side facing q
+  let around(q, dists, first: ()) = {
+    let ways = first + (90, 270, 0, 180, 45, 135, 315, 225).filter(a => a not in first)
+    let out = ()
+    for d in dists {
+      for a in ways {
+        let (c, sn) = (calc.cos(a * 1deg), calc.sin(a * 1deg))
+        let v = if sn > 0.38 { "south" } else if sn < -0.38 { "north" } else { "" }
+        let h = if c > 0.38 { "west" } else if c < -0.38 { "east" } else { "" }
+        let anchor = if v == "" and h == "" { "center" } else if v == "" { h } else if h == "" { v } else { v + "-" + h }
+        out.push((off(q, a * 1deg, d), anchor))
+      }
+    }
+    out
+  }
+  // the first spot clear of the track, the body, the arrows and the texts already placed
+  let place(c, spots, placed) = {
+    for (q, anchor) in spots {
+      let b = box-at(q, c, anchor)
+      if (not fine.any(p => inside(p, b)) and not ground.any(p => inside(p, b)) and not marks.any(p => inside(p, b))
+        and (at == none or not meets(b, body-box)) and not placed.any(o => meets(o, b))) { return (q, anchor, b) }
+    }
+    let (q, anchor) = spots.first()
+    (q, anchor, box-at(q, c, anchor))
+  }
+  let placed = ()
+  let texts = ()
+  if rise != none and height.len() > 2 {
+    let c = txt(height.at(2))
+    let q = (rise.x + if rise.x < 0 { -0.15 } else { 0.15 }, (rise.pi.at(1) + rise.pj.at(1)) / 2)
+    let anchor = if rise.x < 0 { "east" } else { "west" }
+    let b = box-at(q, c, anchor)
+    placed.push(b)
+    texts.push((c, q, anchor, b))
+  }
+  for (v, a, s, t) in drawn {
+    let c = named(v.at(0))
+    let (q, anchor, b) = place(c, ((off(t, a, 0.3), "center"),) + around(t, (0.2, 0.45, 0.75), first: (calc.round(a / 1deg) + 90, calc.round(a / 1deg) - 90)), placed)
+    placed.push(b)
+    texts.push((c, q, anchor, b))
+  }
+  // each point: its dot, its name, then its note, away from the track (over a top, under a hollow)
+  for (i, name) in names.enumerate() {
+    if name == "" { continue }
+    let k = knots.at(i)
+    let up = top(i)
+    let c = txt(strong(name))
+    // an end's name on its outer side, a top's over it, a hollow's under it
+    let first = if i == 0 { (180, 135, 90) } else if i == names.len() - 1 and i == knots.len() - 1 { (0, 45, 90) } else if up { (90, 135, 45) } else { (270, 225, 315) }
+    let (q, anchor, b) = place(c, around(k, (0.15, 0.4, 0.7, 1.0), first: first), placed)
+    placed.push(b)
+    texts.push((c, q, anchor, b))
+  }
+  if at != none and body != none {
+    let c = txt(body)
+    let (q, anchor, b) = place(c, around(centre, (half + 0.25, 0.8, 1.2, 1.6, 2.0), first: (90, 135, 45)), placed)
+    placed.push(b)
+    texts.push((c, q, anchor, b))
+  }
+  for (name, note) in notes.pairs() {
+    let i = index(name)
+    let k = knots.at(i)
+    let c = txt(block(width: calc.min(4.2cm, measure(txt(note)).width + 1pt), align(center, note)))
+    let up = top(i)
+    // over its point (the sky over a top, the hollow's room over its bottom), else around
+    let first = (90, 135, 45, 180, 0)
+    let (q, anchor, b) = place(c, around(k, (0.5, 0.9, 1.3, 1.7, 2.1, 2.5), first: first), placed)
+    placed.push(b)
+    texts.push((c, q, anchor, b))
+  }
+  (knots: knots, width: width, fine: fine, ground: ground, centre: centre, tilt: tilt, half: half,
+    shape: shape, at: at, drawn: drawn, names: names, texts: texts, rise: rise)
+}
+#let track(..args) = context {
+  let l = track-layout(..args)
+  let (knots, width, fine, centre, tilt, half, shape, at, drawn, names) = (l.knots, l.width, l.fine, l.centre,
+    l.tilt, l.half, l.shape, l.at, l.drawn, l.names)
+  let height = args.named().at("height", default: none)
+  let txt(body) = text(11pt, body)
+  let off(q, a, d) = (q.at(0) + d * calc.cos(a), q.at(1) + d * calc.sin(a))
+  let index(name) = names.position(n => n == name)
+  cetz.canvas({
+    import cetz.draw: *
+    // the track, the ground under it
+    line((0, -0.4), ..fine, (width, -0.4), close: true, fill: luma(238), stroke: none)
+    line(..fine, stroke: 1.6pt)
+    line((-0.3, -0.4), (width + 0.3, -0.4), stroke: 0.6pt)
+    if height != none {
+      // between the two points' levels, beside the upper one, outside the track
+      let (pi, pj, x) = (l.rise.pi, l.rise.pj, l.rise.x)
+      line(pi, (x, pi.at(1)), stroke: (thickness: 0.5pt, dash: "dashed"))
+      line(pj, (x, pj.at(1)), stroke: (thickness: 0.5pt, dash: "dashed"))
+      line((x, pj.at(1)), (x, pi.at(1)), stroke: 0.7pt, mark: (start: "stealth", end: "stealth", fill: black, scale: 0.6))
+    }
+    if at != none {
+      if shape == "ball" {
+        circle(centre, radius: half, fill: luma(200), stroke: 0.8pt)
+      } else {
+        let corner(u, v) = off(off(centre, tilt, u), tilt + 90deg, v)
+        line(corner(-0.45, -half), corner(0.45, -half), corner(0.45, half), corner(-0.45, half), close: true,
+          fill: luma(200), stroke: 0.8pt)
+      }
+    }
+    for (v, a, s, t) in drawn {
+      line(s, t, stroke: 1.1pt, mark: (end: "stealth", fill: black, scale: 0.8))
+    }
+    for (i, name) in names.enumerate() { if name != "" { circle(knots.at(i), radius: 0.07, fill: black) } }
+    for (c, q, anchor, b) in l.texts { content(q, c, anchor: anchor) }
+  })
+}
 // ---- What the AI writes, from here (the rule's example: everything above is given)
 #mechanics(support: "circle", centre: [Terre], at: 60, radius: $r$, body: [S], vectors: (
   ("v", "along"),
