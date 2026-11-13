@@ -221,8 +221,9 @@ def assert_harmless(svg: str) -> None:
         for name, value in node.attrib.items():
             local = name.rsplit("}", 1)[-1]
             assert not local.lower().startswith("on"), (local, value)
-            # Only a <use> of the figure's own shape ("#g1": Typst's letters), nothing loaded
-            internal = tag == "use" and local == "href" and figures.INTERNAL_HREF.match(value.strip())
+            # Only a <use> of the figure's own shape ("#g1": Typst's letters) or a <textPath> on
+            # one of its curves (#504: text on a curve), nothing loaded
+            internal = tag in ("use", "textPath") and local == "href" and figures.INTERNAL_HREF.match(value.strip())
             assert local not in ("href", "src") or internal, (local, value)
             assert "javascript" not in value.lower(), (local, value)
             assert not EXTERNAL.search(value), (local, value)
@@ -275,3 +276,12 @@ def test_any_deck_gives_a_lesson_folder_inside_the_lessons(deck):
             path = lessons.folder(lesson.id)
             assert path is not None and path.resolve().parent == root
             assert lessons.get(lesson.id).deck == deck
+
+
+def test_a_text_on_a_curve_kept_by_the_cleaning_is_harmless():
+    """#504 keeps a <textPath>'s link to one of the figure's own curves; the property above
+    took it for a loaded one (Hypothesis drew it now and then: a random failure)."""
+    svg = '<svg viewBox="0 0 400 300"><textPath href="#fff"></textPath></svg>'
+    out = cleaned(svg)
+    assert out is not None and 'href="#fff"' in out
+    assert_harmless(out)
