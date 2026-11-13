@@ -137,7 +137,7 @@ async def _figure_family(s: AIConfig, description: str, kind: str = "") -> str:
 async def _drawn(s: AIConfig, text: str, description: str, family: str, light: bool) -> MadeFigure:
     """A figure drawn once, cleaned: in Typst with its family's package and rule (asked again
     once, told what Typst said, when it doesn't compile), else as SVG (family "other", Typst
-    refusing it twice; the demo)."""
+    refusing it twice; the demo), drawn once again when its labels touch (figures.touching_labels)."""
     from . import figures, figures_typst
 
     if family in figures_typst.FAMILIES:
@@ -162,4 +162,33 @@ async def _drawn(s: AIConfig, text: str, description: str, family: str, light: b
         log.warning("Figure drawn as SVG: Typst refused it")
     demo = lambda: demo_ai.figure(description)  # noqa: E731
     drawing = await ai._ask_provider(s, [], text, figures.Drawing, figures.RULES, light=light, demo=demo)
-    return MadeFigure(figures.fitted(figures.clean(drawing.svg)), "svg", family, not light)
+    svg = figures.fitted(figures.clean(drawing.svg))
+    # Its labels written on one another (the AI places its words without measuring them: two
+    # tubes' labels « soudeCl⁻ »): drawn once again, told which; kept if fewer touch and none
+    # left out (told to make room, the AI dropped the tubes' labels, 3 drawings in 3)
+    touching = await asyncio.to_thread(figures.touching_labels, svg)
+    if touching:
+        log.warning("Figure drawn again: %d of its labels touch", len(touching))
+        extents = await asyncio.to_thread(figures.label_extents, svg)
+
+        def told(label: str) -> str:
+            left, right = extents.get(label, (0, 0))
+            return f"« {label} » (drawn from x = {left} to x = {right}, {right - left} wide)"
+
+        said = "; ".join(f"{told(a)} and {told(b)}" for a, b in touching[:4])
+        asked = (
+            f"{text}\n\nYour drawing wrote labels on one another, or with no room between them, "
+            f"as measured in your SVG's units: {said}. "
+            "Draw it again with every label it has, the same words, each clear of the others: more room "
+            "between them, a smaller font, or a label on two lines; never a label left out."
+        )
+        try:
+            again = await ai._ask_provider(s, [], asked, figures.Drawing, figures.RULES, light=light, demo=demo)
+            other = figures.fitted(figures.clean(again.svg))
+            kept = sorted(figures.label_words(svg)) == sorted(figures.label_words(other))
+            if kept and len(await asyncio.to_thread(figures.touching_labels, other)) < len(touching):
+                svg = other
+        except (ExtractionError, figures.FigureError) as e:
+            if e.code not in _UNUSABLE:
+                raise
+    return MadeFigure(svg, "svg", family, not light)

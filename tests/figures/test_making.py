@@ -3,6 +3,7 @@ asked, shown, exported; a figure or a picture decided."""
 
 import asyncio
 import json
+import re
 
 import apkg
 import pytest
@@ -356,3 +357,60 @@ def test_a_figure_of_no_family_drawn_as_svg(monkeypatch):
     monkeypatch.setattr("notosaurus_core.ai._ask_provider", answer)
     svg = asyncio.run(llm.draw_figure(AIConfig(llm="gemini"), "un tableau de valeurs"))
     assert ">A<" in svg and calls == ["Kind", "Drawing"]
+
+
+TUBES = """<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 200" width="400" height="200">
+<rect x="70" y="60" width="20" height="100" fill="none" stroke="black"/>
+<rect x="190" y="60" width="20" height="100" fill="none" stroke="black"/>
+<rect x="310" y="60" width="20" height="100" fill="none" stroke="black"/>
+<text x="80" y="40" font-size="14" text-anchor="middle">Cu²⁺ + soude</text>
+<text x="200" y="40" font-size="14" text-anchor="middle">Fe²⁺ + soude</text>
+<text x="{x}" y="40" font-size="14" text-anchor="middle">Cl⁻ + nitrate d'argent</text>
+</svg>"""
+SCALE = """<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 300 60" width="300" height="60">
+<line x1="10" y1="20" x2="290" y2="20" stroke="black"/>
+"""
+SCALE += "".join(f'<text x="{20 + 18 * n}" y="40" font-size="12" text-anchor="middle">{n}</text>' for n in range(15))
+SCALE += "</svg>"
+
+
+def test_labels_written_on_one_another_found():
+    """The tubes' labels centred 120 px apart, one 150 px wide: on « Fe²⁺ + soude » (« soudeCl⁻ »),
+    or so close beside it that they read as one phrase; 160 px apart, clear. A scale's numbers
+    close together, or a word's letters coloured one by one, never phrases: not found."""
+    from notosaurus_core import figures
+
+    pair = [("Fe²⁺ + soude", "Cl⁻ + nitrate d'argent")]
+    assert figures.touching_labels(TUBES.format(x=310)) == pair  # on it
+    assert figures.touching_labels(TUBES.format(x=325)) == pair  # a space's width apart
+    assert figures.touching_labels(TUBES.format(x=360)) == []
+    assert figures.touching_labels(SCALE) == []
+
+
+def test_a_figures_labels_on_one_another_drawn_again_told_which(monkeypatch):
+    """SVG with labels touching: drawn once again, told which, the new one kept when fewer
+    touch and none is left out; else the first."""
+
+    def drawn(second):
+        calls = []
+
+        async def answer(s, images, text, schema, system=None, light=False, **options):
+            calls.append(text)
+            return schema(svg=TUBES.format(x=310) if len(calls) == 1 else second)
+
+        monkeypatch.setattr("notosaurus_core.ai._ask_provider", answer)
+        monkeypatch.setattr(figures_typst, "available", lambda: False)
+        svg = asyncio.run(llm.draw_figure(AIConfig(llm="gemini"), "trois tubes à essais"))
+        return svg, calls
+
+    svg, calls = drawn(TUBES.format(x=360))
+    assert len(calls) == 2 and "« Fe²⁺ + soude » (drawn from x = " in calls[1]
+    assert re.search(r"« Cl⁻ \+ nitrate d'argent » \(drawn from x = 2\d\d to x = 3\d\d, 1\d\d wide\)", calls[1])
+    assert 'x="360"' in svg
+    svg, calls = drawn(TUBES.format(x=312))  # no better: the first kept
+    assert len(calls) == 2 and 'x="310"' in svg
+    # A label left out (the tubes' reagents dropped to make room): the first kept
+    svg, calls = drawn(TUBES.format(x=360).replace("Cu²⁺ + soude", ""))
+    assert len(calls) == 2 and 'x="310"' in svg
+    svg, calls = drawing_with(monkeypatch)  # nothing touching: one call
+    assert len(calls) == 1
