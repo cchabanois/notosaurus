@@ -92,6 +92,8 @@
     assert(type(c) == dictionary and "at" in c and c.at("sign", default: "+") in ("+", "-"),
       message: "a charge is (at: (x, y), sign: \"+\") or sign: \"-\"")
   }
+  assert(lines == auto or (type(lines) == int and lines >= 2),
+    message: "lines is how many lines leave each north pole or + charge: a whole number, 2 or more")
   let sources = _sources(magnets, charges)
   // the frame: what is drawn, and room around it for the lines
   let xs = sources.map(s => s.pos.at(0))

@@ -66,6 +66,8 @@ def test_the_rules_example_and_two_magnets_compile():
         ('#field(magnets: ((at: (0, 0), north: "east"),))', "north one of"),
         ('#field(charges: ((at: (0, 0), sign: "±"),))', "a charge is"),
         ("#field()", "needs a magnet or a charge"),
+        ('#field(magnets: ((at: (0, 0), north: "right"),), lines: 1)', "2 or more"),
+        ('#field(charges: ((at: (0, 0), sign: "+"),), lines: 2.5)', "a whole number"),
     ],
 )
 def test_a_field_refuses_what_it_cant_draw(body, said):
