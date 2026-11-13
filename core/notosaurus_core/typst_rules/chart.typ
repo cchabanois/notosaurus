@@ -28,6 +28,7 @@
   let vs = vs.sorted(key: v => v.at(0))
   let n = vs.len()
   let (xs, ys) = (vs.map(v => v.at(0)), vs.map(v => v.at(1)))
+  assert(range(n - 1).all(k => xs.at(k + 1) != xs.at(k)), message: "smooth: two measures with the same x, a curve has one value at each x: " + repr(vs))
   let d = range(n - 1).map(k => (ys.at(k + 1) - ys.at(k)) / (xs.at(k + 1) - xs.at(k)))
   let m = range(n).map(k => if k == 0 { d.first() } else if k == n - 1 { d.last() } else if d.at(k - 1) * d.at(k) <= 0 { 0 } else { (d.at(k - 1) + d.at(k)) / 2 })
   for k in range(n - 1) {

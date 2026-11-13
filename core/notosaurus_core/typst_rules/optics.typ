@@ -180,6 +180,11 @@
     key == "F2" and "F'" in hidden) { [?] } else { names.at(key) }
   let (f, xa, h) = (focal, object, height)
   let (xi, hi, hits) = lens-image(f, xa, h)  // OA', A'B' = γ AB, where the rays meet the lens
+  // an object near F: its image so far that the lens, F and the object shrink to nothing
+  // (the scale set by OA'): refused beyond 10 f' (an object at OA = −10/9 f' or −10/11 f')
+  let r(x) = str(calc.round(x, digits: 2))
+  assert(calc.abs(xi) <= 10 * f * (1 + 1e-9), message: "the image is too far to draw (OA' = " + r(xi) + ", beyond 10 f'): the "
+    + "object farther from F, OA at most " + r(-10 * f / 9) + " (a real image) or between " + r(-10 * f / 11) + " and 0 (a virtual one)")
   let real = xi > 0
   // one scale for both directions: the figure about 11 cm wide
   let lo = calc.min(xa, -f, xi) - 1.2

@@ -393,6 +393,8 @@
   let motions = ("thrown", "falling", "uniform", "accelerated", "circle")
   assert(motion in motions, message: "motion is one of " + motions.join(", "))
   assert(type(n) == int and n >= 2 and n <= 20, message: "n is the positions' count, 2 to 20")
+  assert(motion != "thrown" or (type(angle) in (int, float) and angle > 0 and angle < 90),
+    message: "angle is a throw's angle above the horizontal, in degrees, between 0 and 90 (both excluded): a body falling from rest is motion: \"falling\"")
   let numbers = range(first, first + n)
   for k in velocity + change {
     assert(k in numbers, message: "velocity and change are positions' numbers, from " + str(first) + " to "
@@ -459,7 +461,8 @@
     }
     // the velocities along the trajectory, as long as their speeds; a change of velocity
     // between the positions around it, 1 cm long
-    for i in velocity {
+    // a body at rest there (a fall's start): no arrow, its velocity zero
+    for i in velocity.filter(i => speed(times.at(i - first)) != (0, 0)) {
       let v = speed(times.at(i - first))
       // the fastest as long as most of the shortest step: clear of the next position
       let l = calc.min(1.4, 0.75 * calc.min(..gaps)) * calc.sqrt(v.at(0) * v.at(0) + v.at(1) * v.at(1)) / top

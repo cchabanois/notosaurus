@@ -85,3 +85,14 @@ def test_a_virtual_image_and_hidden_names_compile():
     assert plain.startswith("<svg") and hidden != plain
     with pytest.raises(figures_typst.Unusable, match="has no image"):
         figures_typst.compile_svg("optics", "#lens(focal: 4, object: -4, height: 1)")
+
+
+@pytest.mark.parametrize("object", [-4.1, -3.9])
+def test_a_lens_image_too_far_refused(object):
+    """An object near F: its image so far (OA' = 164 for OA = −4.1, f' = 4) that the lens, F and
+    the object shrank to a dot. Refused beyond 10 f', saying where the object can be; at the
+    bound, drawn."""
+    with pytest.raises(figures_typst.Unusable, match="too far to draw"):
+        figures_typst.compile_svg("optics", f"#lens(focal: 4, object: {object}, height: 1)")
+    for near in ("(-40 / 9)", "(-40 / 11)"):
+        figures_typst.compile_svg("optics", f"#lens(focal: 4, object: {near}, height: 1)")
