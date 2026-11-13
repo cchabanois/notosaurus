@@ -5,7 +5,7 @@ description: "Notosaurus por sí solo en un móvil Android, sin ordenador ni cla
 
 La **aplicación Notosaurus para Android** hace las tarjetas en el propio móvil: fotografía la
 lección, revisa las tarjetas, y van directas a **AnkiDroid**. Sin ordenador ni clave de IA que
-conseguir. Llega pronto a Google Play.
+conseguir. Está en [Google Play](https://play.google.com/store/apps/details?id=app.notosaurus).
 
 Es el mismo Notosaurus que en el ordenador: la misma página, instrucciones, tipos de tarjeta,
 revisión, hijos y exámenes que preparar. Todo lo de [Fotos y PDF](../photos/),
