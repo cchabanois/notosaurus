@@ -94,6 +94,92 @@
   set text(font: "DejaVu Sans")
   grid(columns: columns, rows: 0.75cm, align: center + horizon, row-gutter: 3pt, ..cells)
 }
+// A double strand, its two strands face to face and each base joined to its pair: the top
+// strand's bases as given, the bottom strand computed (A–T, G–C; A–U against RNA), or given
+// and checked (a pair that isn't complementary refused, saying where); "-" a base not there
+// yet (a strand being made), drawn empty, joined to nothing. Each strand's backbone a line;
+// names: the strands' names, as the description gives them; ends: their 5' and 3' ends
+// written, the two strands running opposite ways; bonds: the hydrogen bonds counted (two
+// between A and T, three between G and C), else one link a pair; ask: ((strand, position),
+// …) the bases written "?", the strand "top" or "bottom" (or its name), its position from 1
+#let strands(top: "", bottom: auto, rna: false, names: (), ends: false, bonds: false, ask: ()) = {
+  let bases(s) = s.clusters().filter(c => c.trim() != "").map(upper)
+  assert(type(top) == str and bases(top).len() > 0, message: "strands' top is a strand's bases, \"ATG CCA\"")
+  let up = bases(top)
+  let pair = (A: if rna { "U" } else { "T" }, T: "A", U: "A", G: "C", C: "G")
+  for (i, b) in up.enumerate() {
+    assert(b in pair or b == "-", message: "a base is A, T, G, C or U, not " + b + " (top, position " + str(i + 1) + ")")
+  }
+  let down = if bottom == auto { up.map(b => if b == "-" { "-" } else { pair.at(b) }) } else {
+    assert(type(bottom) == str, message: "strands' bottom is the other strand's bases, or left out (computed)")
+    bases(bottom)
+  }
+  assert(
+    down.len() == up.len(),
+    message: "the two strands face to face have as many bases, a base not there yet written -: top "
+      + str(up.len()) + ", bottom " + str(down.len()),
+  )
+  // U is RNA's: only against an RNA (rna: true), a DNA strand being made has T
+  for (k, list) in ((0, up), (1, down)) {
+    let at = list.position(b => b == "U")
+    assert(
+      rna or at == none,
+      message: "U is an RNA's base: rna: true for an RNA facing the DNA (a transcription), else T ("
+        + ("top", "bottom").at(k) + ", position " + str(if at == none { 0 } else { at + 1 }) + ")",
+    )
+  }
+  for i in range(up.len()) {
+    let (a, b) = (up.at(i), down.at(i))
+    if a != "-" and b != "-" {
+      assert(
+        b in pair and (pair.at(a) == b or (a == "A" and b == "U") or (a == "U" and b == "A")),
+        message: "position " + str(i + 1) + ": " + a + " faces " + b + ", no pair (A–T or A–U, G–C)",
+      )
+    }
+  }
+  assert(type(names) == array and names.len() in (0, 2), message: "names are the two strands' names, (top, bottom)")
+  let label(k) = if names.len() == 2 { names.at(k) } else { none }
+  let asked(k, i) = ask.any(a => (a.at(0) == ("top", "bottom").at(k) or a.at(0) == label(k)) and a.at(1) == i + 1)
+  let n = up.len()
+  let w = 0.6cm
+  let link(a, b) = {
+    if a == "-" or b == "-" { return none }
+    let count = if not bonds { 1 } else if a in ("G", "C") { 3 } else { 2 }
+    let stroke = if bonds { (paint: luma(40), thickness: 1.1pt, dash: (2pt, 1.5pt)) } else { 0.9pt + luma(60) }
+    stack(dir: ltr, spacing: 3pt, ..range(count).map(_ => line(length: 0.5cm, angle: 90deg, stroke: stroke)))
+  }
+  let letter(k, i, b) = text(13pt, if asked(k, i) { "?" } else if b == "-" { "" } else { b })
+  let end(t) = text(9pt, fill: luma(80), t)
+  let cells = ()
+  // columns: the name, an end, the bases, an end
+  for (k, row) in ((0, 1), (1, 3)) {
+    if label(k) != none { cells.push(grid.cell(x: 0, y: row, align: right + horizon, inset: (right: 8pt), text(10pt, label(k)))) }
+    if ends {
+      cells.push(grid.cell(x: 1, y: row, end(if k == 0 { "5'" } else { "3'" })))
+      cells.push(grid.cell(x: n + 2, y: row, end(if k == 0 { "3'" } else { "5'" })))
+    }
+    for i in range(n) { cells.push(grid.cell(x: i + 2, y: row, letter(k, i, (up, down).at(k).at(i)))) }
+  }
+  for i in range(n) {
+    let l = link(up.at(i), down.at(i))
+    if l != none { cells.push(grid.cell(x: i + 2, y: 2, l)) }
+  }
+  // the backbones: above the top strand, under the bottom one, along the bases there
+  let along(y, list) = {
+    let present = range(n).filter(i => list.at(i) != "-")
+    if present.len() == 0 { return () }
+    (grid.hline(y: y, start: present.first() + 2, end: present.last() + 3, stroke: 2pt + luma(40)),)
+  }
+  set text(font: "DejaVu Sans")
+  grid(
+    columns: (auto, auto) + range(n).map(_ => w) + (auto,),
+    rows: (4pt, 0.7cm, 0.6cm, 0.7cm, 4pt),
+    align: center + horizon,
+    ..cells,
+    ..along(1, up),
+    ..along(4, down),
+  )
+}
 // ---- What the AI writes, from here (the rule's example: everything above is given)
 #sequences(rows: (
   ("Allèle 1", "ATG GCA TTC"),
