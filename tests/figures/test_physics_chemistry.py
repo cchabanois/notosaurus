@@ -195,10 +195,35 @@ def test_the_chemistry_rule_says_how_to_draw_a_lewis_structures_pairs():
     """Without it the AI drew a Lewis structure's non-bonding pairs as bonds to no atom, or
     left them out (0 of 12 right): the rule's Lewis call, as it gives it, draws them."""
     rule = figures_typst.FAMILIES["chemistry"].rules
-    calls = re.findall(r"`(fragment\([^`]*lewis-line[^`]*)`", rule)
+    calls = re.findall(r"`(fragment\([^`]*lewis:[^`]*\))`", rule)
     assert calls, "the chemistry rule shows a Lewis structure's pairs"
     for call in calls:
         assert figures_typst.compile_svg("chemistry", "#skeletize({ " + call + " })").startswith("<svg")
+
+
+@pytest.mark.parametrize("down", [True, False])
+def test_a_lewis_structures_pairs_set_where_its_bonds_leave_room(down):
+    """Water's O at the bottom, its bonds going up at 45° and 135°: the AI set its two pairs at
+    45° and 135°, on the bonds (the rule's example's angles, copied, 2 times in 3). Their
+    directions computed from the atom's bonds: `pairs(2)` draws them in the widest gaps, as
+    written by hand there (down-left, down-right; up, the molecule turned), and a pair written
+    on a bond is moved there too."""
+    to_o = -1 if down else 1  # the bond from the first H to O: down to an O at the bottom
+    water = f'#skeletize({{ fragment("H"); single(angle: {to_o}); fragment("O", lewis: LEWIS); '
+    water += f'single(angle: {-to_o}); fragment("H") }})'
+    drawn = lambda lewis: figures_typst.compile_svg("chemistry", water.replace("LEWIS", lewis))  # noqa: E731
+    free = (
+        "(lewis-line(angle: 225deg), lewis-line(angle: 315deg))"
+        if down
+        else "(lewis-line(angle: 45deg), lewis-line(angle: 135deg))"
+    )
+    on_bonds = (
+        "(lewis-line(angle: 45deg), lewis-line(angle: 135deg))"
+        if down
+        else "(lewis-line(angle: 225deg), lewis-line(angle: 315deg))"
+    )
+    assert drawn("pairs(2)") == drawn(free)
+    assert drawn(on_bonds) == drawn(free)
 
 
 def test_a_bodys_vectors_point_where_their_support_says():
