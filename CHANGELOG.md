@@ -60,6 +60,8 @@ Each pull request's entries (the `## Changelog` of its description) are put unde
 
 ### Fixed
 
+- Sequences written in lowercase letters (atg gca) are aligned letter by letter, and amino acids written in capitals (MET-PRO-GLU) one per codon.
+- A line tangent to a curve is found where it touches it, instead of being refused as not meeting it.
 - ⚗️ A Lewis structure's non-bonding pairs drawn where its bonds leave room, never on a bond, whichever way the molecule is turned.
 - Graphs: a period's or an amplitude's name (a double arrow) set clear of the curve, never written across the sinusoid.
 - 🏷️ A card's sub-deck field no longer cuts its placeholder on newer phones' browsers.
