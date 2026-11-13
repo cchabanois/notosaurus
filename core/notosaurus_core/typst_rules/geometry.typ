@@ -45,7 +45,7 @@
   ..shapes.pos().map(s => align(bottom, fraction-shape(..s))))
 // Numbers written as the figure's language writes them: its decimal separator, set by
 // figures_typst.source from the AI's `#set text(lang: …)` (a point when none is said)
-#let decimal-separator = "."
+#import "common.typ": *
 // A number line, everything on it placed from its values: its line from half a step before
 // its first tick to half a step after its last, a tick each `step`, each value v at
 // (v − first) × scale. numbers: true its whole numbers written under their ticks, false
@@ -132,16 +132,7 @@
   }
   // a number as the language writes it: its decimal separator, its thousands apart from
   // 10 000 on (a narrow space)
-  let written(v) = {
-    let r = calc.round(v, digits: 6)
-    let t = if calc.fract(r) == 0 { str(int(calc.abs(r))) } else { str(calc.abs(r)).replace(".", decimal-separator) }
-    let whole = t.split(decimal-separator).first()
-    if whole.len() > 4 {
-      let n = whole.len()
-      t = range(n).map(i => (if i > 0 and calc.rem(n - i, 3) == 0 { "\u{202F}" } else { "" }) + whole.at(i)).join() + t.slice(n)
-    }
-    if r < 0 [−#t] else [#t]
-  }
+  let written = written-number
   let (step, scale) = if log { (step, scale) } else { (if step == auto { 1 } else { step }, if scale == auto { 1 } else { scale }) }
   let given = if type(numbers) == array { numbers.map(w => if type(w) == array { w } else { (w, written(w)) }) } else { () }
   for (v, _) in given { assert(number(v), message: "numbers are values, or (value, text) pairs") }
@@ -309,7 +300,7 @@
   let (line, content) = (cetz.draw.line, cetz.draw.content)
   ctz-axes-drawn(xmin: xmin, xmax: xmax, ymin: ymin, ymax: ymax, stroke: stroke, ticks: false, labels: false, arrow: arrow)
   let multiples(low, high, step) = range(int(calc.ceil(low / step - 1e-9)), int(calc.floor(high / step + 1e-9)) + 1).map(i => i * step).filter(v => calc.abs(v) > 1e-9 and v < high - step / 4)
-  let written(v) = if calc.fract(v) == 0 { if v < 0 [−#str(int(-v))] else [#str(int(v))] } else { str(v) }
+  let written = written-number
   for x in multiples(xmin, xmax, xstep) {
     if ticks { line((x, -tick-size), (x, tick-size), stroke: stroke) }
     if labels { content((x, -tick-size - 0.08), text(size: 8pt, written(x)), anchor: "north") }

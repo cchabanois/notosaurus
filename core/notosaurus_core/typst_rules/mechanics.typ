@@ -1,5 +1,6 @@
 #set page(width: auto, height: auto, margin: 6pt)
 #import "@preview/cetz:0.5.2"
+#import "common.typ": *
 // A body and the vectors at it (forces, a velocity, an acceleration, a Frenet frame), each
 // given by its direction, never placed by eye, in its scene: on a circle (an orbit: the body
 // at `at` degrees, the centre's body named `centre`), on a horizontal plane, on a slope rising
@@ -257,7 +258,7 @@
         arc(s, start: w * 1deg, delta: d * 1deg, radius: 0.95, anchor: "origin", stroke: 0.6pt)
         let label = marks.at(name)
         content(off(s, (w + d / 2) * 1deg, 1.35),
-          txt(if label != none { label } else { str(calc.round(calc.abs(d), digits: 1)) + "°" }))
+          txt(if label != none { label } else { written-number(calc.abs(d), digits: 1) + "°" }))
       }
     }
     // the arrows, then their names: each beyond its tip, else beside its tip, else beside its

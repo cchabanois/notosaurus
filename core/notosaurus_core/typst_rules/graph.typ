@@ -10,7 +10,7 @@
 #show: lq.show_(lq.label.with(kind: "x"), it => place(left + horizon, dx: 100% + .8em, dy: -.15em, it))
 // Numbers on the axes written as the figure's language writes them: its decimal separator,
 // set by figures_typst.source from the AI's `#set text(lang: …)` (a point when none is said)
-#let decimal-separator = "."
+#import "common.typ": *
 #import "@preview/zero:0.6.1"
 #zero.set-num(decimal-separator: decimal-separator)
 // Ticks named by the AI (`xaxis: (ticks: ((1, $a$), (calc.pow(2, 1/3), $alpha$)))`) whose
@@ -74,11 +74,6 @@
 // at any size; its coordinates written when `label` is `auto` ("(1 ; 1)": the figure's
 // decimal separator, " ; " between them where the decimal separator is a comma), or the
 // label given, or nothing (`none`); `lines: true` the dotted lines down to the axes
-#let _number(v) = {
-  let r = calc.round(v, digits: 2)
-  let s = if calc.abs(r - calc.round(r)) < 1e-9 { str(int(calc.round(r))) } else { str(r) }
-  s.replace(".", decimal-separator).replace("-", "−")
-}
 #let _meet-points(f, g, from, to) = {
   let h(x) = f(x) - g(x)
   let n = 400
@@ -118,7 +113,7 @@
       parts.push(lq.line((0, y), (x, y), stroke: (dash: "dotted", paint: luma(90))))
     }
     parts.push(lq.place(x, y, circle(radius: 2.2pt, fill: black), align: center + horizon))
-    let text = if label == auto { [(#_number(x)#sep#_number(y))] } else { label }
+    let text = if label == auto { [(#written-number(x, digits: 2)#sep#written-number(y, digits: 2))] } else { label }
     if text != none {
       parts.push(lq.place(x, y, pad(left: 0.45em, right: 0.45em, bottom: 0.35em, text),
         align: bottom + if side == right { left } else { right }))
@@ -321,7 +316,7 @@
     let l = lines.at(i)
     if not l.inside { continue }
     let name = if a.name == auto {
-      if l.horizontal { $y = #_number(a.ay)$ } else { $x = #_number(a.ax)$ }
+      if l.horizontal { $y = #written-number(a.ay, digits: 2)$ } else { $x = #written-number(a.ax, digits: 2)$ }
     } else { a.name }
     if name == none { continue }
     let m = measure(name)

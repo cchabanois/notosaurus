@@ -1,6 +1,6 @@
 #set page(width: auto, height: auto, margin: 6pt)
 #import "@preview/cetz:0.5.2"
-#let decimal-separator = "."
+#import "common.typ": *
 // Light's rays, computed, never placed by eye: refraction and reflection at a surface
 // (Snell-Descartes: n1 sin i1 = n2 sin i2, the refracted ray at that angle; beyond the
 // critical angle, total reflection, no refracted ray), and the image of an object by a thin
@@ -8,11 +8,6 @@
 // B drawn through it). Each name placed in the first spot clear of every ray and line and of
 // the names already placed; "?" for a name hidden (a card asks it).
 
-// a number as the figure's language writes it (0,5), its minus sign a true one
-#let _num(x, digits: 1) = {
-  let s = str(calc.round(x, digits: digits))
-  s.replace(".", decimal-separator).replace("-", "−")
-}
 #let _off(p, a, d) = (p.at(0) + d * calc.cos(a), p.at(1) + d * calc.sin(a))
 #let _txt(body) = text(11pt, body)
 // whether a text's box (centre c, its half sizes) is clear of the segments and of the boxes
@@ -129,7 +124,7 @@
       if d == none or d == 0 or (key == "i2" and T == none) or (key == "r" and not (reflected or mirror)) { continue }
       let r = 0.75
       arc(I, start: n * 1deg, delta: d * 1deg, radius: r, anchor: "origin", stroke: 0.6pt)
-      let label = if key in hidden { [?] } else if values { $#names.at(key) = #_num(value) degree$ } else { names.at(key) }
+      let label = if key in hidden { [?] } else if values { $#names.at(key) = #written-number(value, digits: 1) degree$ } else { names.at(key) }
       let mid = n + d / 2
       // its name in the angle beyond its arc, farther out when the angle is narrow; else
       // beside it, past the ray or the normal
@@ -248,7 +243,7 @@
         let yy = y - row * 0.75
         line((x0, yy), (x1, yy), stroke: 0.6pt, mark: (start: "stealth", end: "stealth", fill: black, scale: 0.55))
         for x in (x0, x1) { line((x, yy + 0.15), (x, yy - 0.15), stroke: 0.5pt) }
-        let label = if key in hidden { [?] } else { [#_num(calc.abs(value)) #unit] }
+        let label = if key in hidden { [?] } else { [#written-number(calc.abs(value), digits: 1) #unit] }
         content(((x0 + x1) / 2, yy - 0.08), _txt(label), anchor: "north")
       }
       dim(A.at(0), 0, "OA", xa, 0)

@@ -1,7 +1,7 @@
 #set page(width: auto, height: auto, margin: 6pt)
 // Numbers written as the figure's language writes them: its decimal separator, set by
 // figures_typst.source from the AI's `#set text(lang: …)` (a point when none is said)
-#let decimal-separator = "."
+#import "common.typ": *
 // A table of values (a two-way table and its totals, a proportionality table and its
 // multipliers, a conversion table, a frequency table): each column as wide as its widest
 // cell (the values' columns alike) and each row as high as its highest, measured, never
@@ -75,14 +75,8 @@
   // a number as the figure's language writes it: whole, or with its decimal separator; with
   // `digits` decimals, its zeros kept (a measure's 3,0), else as few as it needs
   let num(x, digits: none) = {
-    if digits != none and digits > 0 {
-      let r = calc.round(float(x), digits: digits)
-      let whole = calc.trunc(calc.abs(r))
-      let tail = str(calc.round((calc.abs(r) - whole) * calc.pow(10, digits)))
-      return (if r < 0 { "-" } else { "" }) + str(int(whole)) + decimal-separator + "0" * (digits - tail.len()) + tail
-    }
-    let r = if type(x) == float { calc.round(x, digits: 6) } else { x }
-    if type(r) == float and calc.fract(r) == 0 { str(int(r)) } else { str(r).replace(".", decimal-separator) }
+    let kept = digits != none and digits > 0
+    written-number(x, digits: if kept { digits } else { 6 }, zeros: kept)
   }
   // the decimals a number is written with ("3,0": 1), none for a number given as a number
   let decimals(c) = if type(c) == str and c.match(numeric) != none {
