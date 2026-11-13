@@ -9,6 +9,7 @@ Each pull request's entries (the `## Changelog` of its description) are put unde
 
 ### Added
 
+- 🔦 Refraction, reflection and a lens's image drawn with their rays computed: the refracted angle by Snell-Descartes, the image and its three rays.
 - 🛹 Skate ramps, roller coasters and marble tracks drawn exactly: the track's shape computed, the body at its point, each label clear of the track.
 - 🧂 Crystals on a cubic lattice (an ionic crystal's alternating ions, a metal's simple, body-centred or face-centred cell) drawn regular in perspective, each ball in its place and in front of those behind it, with their legend and the cell's edge.
 - 📤 On the phone without a computer: a lesson's cards, several lessons' or a test's, shared as a file through Android's share menu (a message, a mail, a drive), to open with Anki or AnkiDroid.
