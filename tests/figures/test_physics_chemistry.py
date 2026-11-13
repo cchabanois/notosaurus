@@ -203,6 +203,24 @@ def test_the_chemistry_rule_says_how_to_draw_a_lewis_structures_pairs():
         assert figures_typst.compile_svg("chemistry", "#skeletize({ " + call + " })").startswith("<svg")
 
 
+FACED = "(lewis-line(angle: 150deg), lewis-line(angle: 210deg))"  # the H-bond from the left
+
+
+# dotted, or dashed: an interaction either way
+@pytest.mark.parametrize("arrives", ['single(stroke: (dash: "dotted"))', 'single(stroke: (dash: "dashed"))'])
+def test_a_lewis_structures_pairs_face_a_hydrogen_bond(arrives):
+    """A hydrogen bond (a dotted link) to the second water's O, its bonds up and down-right:
+    #592 counted the dots as a bond and turned both pairs away from the H (1 drawing in 3).
+    An interaction is no bond: the pairs face it, the H arriving between them."""
+    body = (
+        '#skeletize({ fragment("H"); single(angle: 1); fragment("O", lewis: pairs(2)); single(angle: -1); '
+        'fragment("H"); ARRIVES; fragment("O", lewis: LEWIS); branch({ single(angle: 2); fragment("H") }); '
+        'single(angle: -1); fragment("H") })'
+    ).replace("ARRIVES", arrives)
+    drawn = lambda lewis: figures_typst.compile_svg("chemistry", body.replace("LEWIS", lewis))  # noqa: E731
+    assert drawn("pairs(2)") == drawn(FACED)
+
+
 @pytest.mark.parametrize("down", [True, False])
 def test_a_lewis_structures_pairs_set_where_its_bonds_leave_room(down):
     """Water's O at the bottom, its bonds going up at 45° and 135°: the AI set its two pairs at

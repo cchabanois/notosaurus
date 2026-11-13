@@ -9,6 +9,9 @@
 // pairs in the widest gaps they leave, evenly (water's O at the bottom: down-left and
 // down-right). A mark written with an angle keeps it, unless it lies on a bond (then it is
 // placed as a pair). An atom in a ring is left as written (its bonds' angles are the ring's).
+// A link drawn dashed or dotted (a hydrogen bond, an interaction) is no bond its pairs avoid:
+// they face it, centred on it, 60° apart (the H of a hydrogen bond arriving between the O's two
+// pairs, as textbooks draw it), within the gap its bonds leave there.
 #let pairs(n, kind: lewis-line) = range(n).map(_ => kind())
 
 #let _deg(a) = if type(a) == angle { a.deg() } else { a }
@@ -46,13 +49,33 @@
   out
 }
 
-// The atom's marks placed: those without an angle, or on a bond, in the free directions
-#let _placed(fragment, bonds) = {
+// A link drawn dashed or dotted: an interaction, not a bond
+#let _dashed(link) = {
+  let s = link.at("stroke", default: none)
+  if type(s) == dictionary { s.at("dash", default: none) not in (none, "solid") } else if type(s) == stroke {
+    s.dash not in (none, auto, "solid")
+  } else { false }
+}
+
+// n directions centred on t, 60° apart, within the gap the bonds leave around t
+#let _facing(t, bonds, n) = {
+  let t = _turn(t)
+  let cw = bonds.map(b => _turn(t - b)).fold(360, calc.min)  // room on the clockwise side
+  let ccw = bonds.map(b => _turn(b - t)).fold(360, calc.min)
+  let room = calc.min(cw, ccw)
+  let step = if n < 2 { 0 } else { calc.min(60, 2 * (room - 30) / (n - 1)) }
+  range(n).map(j => _turn(t + (j - (n - 1) / 2) * step))
+}
+
+// The atom's marks placed: those without an angle, or on a bond, in the free directions;
+// facing an interaction when one arrives (`toward`)
+#let _placed(fragment, bonds, toward: ()) = {
   let marks = fragment.at("lewis", default: ())
   if marks.len() == 0 { return fragment }
   let fixed = marks.map(m => m.angle != none and bonds.all(b => _apart(_deg(m.angle), b) >= 30))
   let taken = bonds + marks.zip(fixed).filter(((m, f)) => f).map(((m, _)) => _deg(m.angle))
-  let free = _free(taken, fixed.filter(f => not f).len())
+  let loose = fixed.filter(f => not f).len()
+  let free = if toward.len() > 0 { _facing(toward.at(0), taken, loose) } else { _free(taken, loose) }
   let i = 0
   let out = ()
   for (m, f) in marks.zip(fixed) {
@@ -69,6 +92,7 @@
 #let _with-pairs(body, rel, default) = {
   if type(body) != array { return body }
   let angles = ()  // a bond's angle; a branch's first bond's; none otherwise
+  let dashed = ()  // whether that bond is an interaction (dashed, dotted)
   let out = ()
   for el in body {
     let kind = if type(el) == dictionary { el.at("type", default: none) } else { none }
@@ -76,14 +100,17 @@
       let a = _link-angle(el, rel, default)
       rel = a
       angles.push(a)
+      dashed.push(_dashed(el))
       out.push(el)
     } else if kind == "branch" {
       let ba = _link-angle(el.args, rel, default)
       let first = el.body.find(e => type(e) == dictionary and e.at("type", default: none) == "link")
       angles.push(if first == none { none } else { _link-angle(first, rel, ba) })
+      dashed.push(first != none and _dashed(first))
       out.push((..el, body: _with-pairs(el.body, rel, ba)))
     } else {
       angles.push(none)
+      dashed.push(false)
       out.push(el)
     }
   }
@@ -91,20 +118,22 @@
     let el = out.at(i)
     if type(el) != dictionary or el.at("type", default: none) != "fragment" { continue }
     if el.at("lewis", default: ()).len() == 0 { continue }
-    let bonds = ()
-    if i > 0 and out.at(i - 1).at("type", default: none) == "link" { bonds.push(angles.at(i - 1) + 180) }
+    let around = ()  // (angle, dashed) of each link at the atom
+    if i > 0 and out.at(i - 1).at("type", default: none) == "link" { around.push((angles.at(i - 1) + 180, dashed.at(i - 1))) }
     let j = i + 1
     while j < out.len() {
       let kind = out.at(j).at("type", default: none)
       if kind == "branch" {
-        if angles.at(j) != none { bonds.push(angles.at(j)) }
+        if angles.at(j) != none { around.push((angles.at(j), dashed.at(j))) }
       } else if kind == "link" {
-        bonds.push(angles.at(j))
+        around.push((angles.at(j), dashed.at(j)))
         break
       } else if kind == "fragment" or kind == "cycle" { break }
       j += 1
     }
-    out.at(i) = _placed(el, bonds)
+    let bonds = around.filter(((_, d)) => not d).map(((a, _)) => a)
+    let toward = around.filter(((_, d)) => d).map(((a, _)) => a)
+    out.at(i) = _placed(el, bonds, toward: toward)
   }
   out
 }
