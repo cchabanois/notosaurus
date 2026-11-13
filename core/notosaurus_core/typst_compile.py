@@ -29,7 +29,9 @@ def main(memory: int, path: str, root: str, packages: str, fonts: str) -> int:
             ignore_system_fonts=True,
         )
     except Exception as e:
-        sys.stderr.write(str(e))
+        # in UTF-8 as compile_svg reads it, whatever the system's own (cp1252 on Windows: "…",
+        # "δ" or an accent came out as "\ufffd" to the AI)
+        sys.stderr.buffer.write(str(e).encode("utf-8"))
         return 1
     sys.stdout.buffer.write(svg)
     return 0

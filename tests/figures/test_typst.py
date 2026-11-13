@@ -165,3 +165,13 @@ def test_a_figure_credits_the_typst_that_drew_it():
 
     engine = json.loads(typst.query(b"#metadata(str(sys.version)) <v>", "<v>", field="value"))[0]
     assert figures_typst.made_with("clock", "#clock(10, 25)")[0] == f"Typst {engine}"
+
+
+def test_typsts_message_read_whole_whatever_the_systems_encoding(monkeypatch):
+    """Typst's message is told to the AI to correct the figure. Its process wrote it in the
+    system's encoding (cp1252 on Windows): "…" or "δ" came out as "\\ufffd". Written in
+    UTF-8 as it is read, whatever the encoding."""
+    monkeypatch.setenv("PYTHONIOENCODING", "cp1252")  # Windows' console
+    with pytest.raises(figures_typst.Unusable) as refused:
+        figures_typst.compile_svg("geometry", '#assert(false, message: "pas O…N, ni δ, ni é")')
+    assert "pas O…N, ni δ, ni é" in str(refused.value)
