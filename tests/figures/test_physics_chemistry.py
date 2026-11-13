@@ -320,3 +320,51 @@ def test_an_accelerated_chronophotographys_first_positions_stand_apart():
 #assert(range(5).all(i => gaps.at(i + 1) > gaps.at(i)) and gaps.first() > 0.5)
 #chronophotography(motion: "accelerated")"""
     assert figures_typst.compile_svg("mechanics", check).startswith("<svg")
+
+
+def test_a_body_on_a_track_drawn_as_the_rule_says():
+    """A skater on a U ramp drawn as SVG by hand: a stick figure at a random tilt, once at B
+    instead of A, its texts placed by eye. The rule's own track compiles; a point that isn't
+    the track's refused, saying which are."""
+    rule = figures_typst.FAMILIES["mechanics"].rules
+    (call,) = re.findall(r"`(#track\([^`]*\))`", rule)
+    assert figures.clean(figures_typst.compile_svg("mechanics", call)).startswith("<svg")
+    with pytest.raises(figures_typst.Unusable, match="no point of the track"):
+        figures_typst.compile_svg("mechanics", '#track(points: ("A", "B"), at: "C")')
+
+
+def test_a_tracks_profile_and_body_computed():
+    """The profile through its key points, flat at each (a top, a hollow), the body on it at
+    its point: never placed by eye."""
+    check = """#let (knots, w) = track-places((3, 0, 2))
+#assert(knots.at(0).at(1) > knots.at(2).at(1) and knots.at(2).at(1) > knots.at(1).at(1))
+#for k in knots {
+  let (p, slope) = track-at(knots, w, k.at(0))
+  assert(calc.abs(p.at(1) - k.at(1)) < 1e-9 and calc.abs(slope) < 1e-9)
+}
+#context {
+  let l = track-layout(heights: (3, 0, 2), points: ("A", "B", "C"), at: "B")
+  let b = l.knots.at(1)
+  assert(calc.abs(l.centre.at(0) - b.at(0)) < 1e-9 and l.centre.at(1) > b.at(1))
+}
+#track(heights: (3, 0, 2), points: ("A", "B", "C"), at: "B")"""
+    assert figures_typst.compile_svg("mechanics", check).startswith("<svg")
+
+
+def test_a_tracks_texts_clear_of_the_track_and_of_one_another():
+    """Each point's name and note, the body's name, the vectors' names: none on the track, the
+    ground or another text (the skater's note written in the middle of the ramp before)."""
+    check = """#context {
+  let l = track-layout(heights: (3, 0, 3), points: ("A", "B", ""), at: "A", body: [skateur],
+    notes: (A: [énergie potentielle maximale, vitesse nulle], B: [énergie cinétique maximale]),
+    vectors: (("P", "down"), ("R", "normal")))
+  let inside(p, ((x0, y0), (x1, y1))) = p.at(0) > x0 and p.at(0) < x1 and p.at(1) > y0 and p.at(1) < y1
+  let meets(((a0, b0), (a1, b1)), ((x0, y0), (x1, y1))) = a0 < x1 and x0 < a1 and b0 < y1 and y0 < b1
+  assert(l.texts.len() == 7)  // 2 vectors, A and B, the body, 2 notes
+  for (i, (c, q, anchor, b)) in l.texts.enumerate() {
+    assert(not (l.fine + l.ground).any(p => inside(p, b)), message: "a text on the track: " + repr(c))
+    for (j, t) in l.texts.enumerate() { assert(i == j or not meets(b, t.at(3)), message: "two texts on one another") }
+  }
+}
+#track(points: ("A", "B"), at: "A")"""
+    assert figures_typst.compile_svg("mechanics", check).startswith("<svg")
