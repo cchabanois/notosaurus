@@ -79,6 +79,15 @@ def test_nested_zones_are_no_diagram():
     assert "zones nested or overlapping" in figures_typst.KINDS.split('"other"')[1]
 
 
+def test_objects_to_see_are_no_diagram_of_boxes():
+    """Steps whose description asks to see objects (a cell dividing and its chromosomes, a
+    population of organisms and its coloured ones) went to diagram: boxes of text, nothing
+    drawn (mitosis, resistant bacteria 0/3). Said to the AI that picks a figure's kind: drawn."""
+    diagram, other = figures_typst.KINDS.split('"diagram"')[1].split(";")[0], figures_typst.KINDS.split('"other"')[1]
+    assert "never objects the description asks to see" in diagram and "even in steps joined by arrows" in diagram
+    assert "steps where objects are seen" in other
+
+
 def test_a_model_of_balls_is_no_chemistry():
     """The chemistry family draws formulas (its package's): a molecular model of coloured
     balls is "other", said to the AI that picks a figure's kind."""
