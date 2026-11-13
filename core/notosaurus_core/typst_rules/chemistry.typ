@@ -1,6 +1,7 @@
 #set page(width: auto, height: auto, margin: 6pt)
 #import "@preview/alchemist:0.2.0": *
 #import "@preview/alchemist:0.2.0" as _alchemist
+#import "common.typ": *
 // A Lewis structure's non-bonding pairs: their directions computed from the atom's bonds,
 // never chosen by eye (an O at the bottom, its bonds going up: its pairs set on them, 2
 // times in 3). `pairs(2)` gives an atom its pairs, directionless; `skeletize` below finds
@@ -133,28 +134,28 @@
 #let bond-dipole(a, b, crossed: true) = _mark("bond-dipole", a: a, b: b, crossed: crossed)
 
 // A charge's label, as a string ("2δ-"), its formula, or its formula's content: its text
-#let _plain(c) = {
+#let _label-text(c) = {
   if type(c) == str { return c }
   if type(c) in (int, float) { return str(c) }
   if type(c) != content { return "" }
   if c.has("text") { return c.text }
   if c.func() == math.attach {
-    return _plain(c.base) + _plain(c.at("tr", default: none)) + _plain(c.at("t", default: none))
+    return _label-text(c.base) + _label-text(c.at("tr", default: none)) + _label-text(c.at("t", default: none))
   }
-  if c.has("body") { return _plain(c.body) }
-  if c.has("children") { return c.children.map(_plain).join() }
+  if c.has("body") { return _label-text(c.body) }
+  if c.has("children") { return c.children.map(_label-text).join() }
   if c.func() == symbol { return str(c) }
   ""
 }
 // its value: δ+ 1, 2δ- -2
 #let _charge-value(label) = {
-  let t = _plain(label).replace("delta", "δ").replace(" ", "").replace(",", ".")
+  let t = _label-text(label).replace("delta", "δ").replace(" ", "").replace(",", ".")
   // its sign, before or after it
   let signs = t.clusters().filter(c => c in ("+", "-", "−", "⁺", "⁻"))
   let found = t.replace(regex("[+\-−⁺⁻]"), "").match(regex("^([0-9]*\.?[0-9]*)(δ?)$"))
   assert(
     signs.len() == 1 and found != none,
-    message: "a charge is \"δ+\", \"δ-\", \"2δ-\"…, not " + repr(_plain(label)),
+    message: "a charge is \"δ+\", \"δ-\", \"2δ-\"…, not " + repr(_label-text(label)),
   )
   let (n, delta) = found.captures
   let plus = signs.at(0) in ("+", "⁺")
@@ -205,14 +206,6 @@
   (kept, marks, frags, id)
 }
 
-#let _add(a, b) = (a.at(0) + b.at(0), a.at(1) + b.at(1))
-#let _sub(a, b) = (a.at(0) - b.at(0), a.at(1) - b.at(1))
-#let _mul(a, k) = (a.at(0) * k, a.at(1) * k)
-#let _dot(a, b) = a.at(0) * b.at(0) + a.at(1) * b.at(1)
-#let _len(a) = calc.sqrt(_dot(a, a))
-#let _unit(a) = { let n = _len(a); if n < 1e-9 { (0, 0) } else { _mul(a, 1 / n) } }
-#let _dir(t) = (calc.cos(t), calc.sin(t))
-#let _angle(v) = calc.atan2(v.at(0), v.at(1))
 // rectangles (x0, y0, x1, y1)
 #let _centre(r) = ((r.at(0) + r.at(2)) / 2, (r.at(1) + r.at(3)) / 2)
 #let _inside(p, r, m) = (

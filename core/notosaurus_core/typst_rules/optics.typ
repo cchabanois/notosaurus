@@ -8,7 +8,6 @@
 // B drawn through it). Each name placed in the first spot clear of every ray and line and of
 // the names already placed; "?" for a name hidden (a card asks it).
 
-#let _off(p, a, d) = (p.at(0) + d * calc.cos(a), p.at(1) + d * calc.sin(a))
 #let _txt(body) = text(11pt, body)
 // whether a text's box (centre c, its half sizes) is clear of the segments and of the boxes
 // already placed (each (centre, half width, half height))

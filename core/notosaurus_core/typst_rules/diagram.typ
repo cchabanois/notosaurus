@@ -226,8 +226,7 @@
       let twins = pairs.enumerate().filter(((j, (c, d))) => (c == a and d == b) or (c == b and d == a))
       let bend = if twins.len() > 1 {
         let rank = twins.position(((j, _)) => j == k)
-        let lefts = twins.slice(0, rank).filter(((j, (c, d))) => c == a).len()
-        let (c0, d0) = twins.at(0).at(1)
+        let c0 = twins.at(0).at(1).at(0)
         // the same way as the first: alternately each side; the other way: its left is the other side
         let s = if c0 == a { 1 } else { -1 }
         0.45 * s * (if calc.even(rank) { 1 } else { -1 }) * (calc.floor(rank / 2) + 1)

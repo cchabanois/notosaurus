@@ -2,6 +2,7 @@
 figure's language writes them, and round graduation steps for any size of values."""
 
 import json
+import re
 
 import pytest
 import typst
@@ -83,3 +84,15 @@ def test_numbers_the_preamble_computes_follow_the_language(family, body):
     """An axis's 0,5 and a marked angle's 30,5° were written with a point in French."""
     french, english = (figures_typst.compile_svg(family, f'#set text(lang: "{lang}")\n{body}') for lang in ("fr", "en"))
     assert french != english
+
+
+def test_no_family_writes_again_what_common_shares():
+    """A helper copied into a family drifts from the shared one (four ways of writing a number,
+    three of them wrong): each family uses common.typ's, never a #let of the same name."""
+    common = (figures_typst.RULES / "common.typ").read_text(encoding="utf-8")
+    shared = set(re.findall(r"^#let ([\w-]+)", common, re.M))
+    assert {"written-number", "_add", "_off", "_gap", "_plain"} <= shared
+    for name in figures_typst.FAMILIES:
+        typ = (figures_typst.RULES / f"{name}.typ").read_text(encoding="utf-8")
+        again = {n for n in shared if re.search(rf"^\s*#?let {re.escape(n)}\b", typ, re.M)}
+        assert not again, (name, again)

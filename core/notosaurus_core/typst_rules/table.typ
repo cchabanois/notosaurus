@@ -20,15 +20,15 @@
 // A text cell as the AI writes it in quotes, shown as meant: its maths between `$` set as
 // maths (a word math doesn't know, mol, written as text in it, LaTeX's \text{mol} too), and in its text an index or
 // an exponent after a sign (H_2, x_(max), Cu^2+) and an arrow (->) drawn, never shown raw
-#let math-words = dictionary(sym).keys() + dictionary(math).keys()
-#let math-part(s) = eval(
+#let _math-words = dictionary(sym).keys() + dictionary(math).keys()
+#let _math-part(s) = eval(
   // LaTeX's text in a formula (\text{m}, its \t a tab once in a string) as Typst's: "m"
   s.replace(regex("(?:\\\\text|\\\\mathrm|\text)\{([^}]*)\}"), m => "\"" + m.captures.first() + "\"")
   .replace(regex("\"[^\"]*\"|\.?[A-Za-z]{2,}"), m => if m.text.starts-with("\"") or m.text.starts-with(".")
-    or m.text in math-words { m.text } else { "\"" + m.text + "\"" }),
+    or m.text in _math-words { m.text } else { "\"" + m.text + "\"" }),
   mode: "math",
 )
-#let text-part(s) = {
+#let _text-part(s) = {
   let s = s.replace("->", "→").replace("<-", "←")
   let out = ()
   let last = 0
@@ -42,12 +42,12 @@
   out.push(s.slice(last))
   out.join()
 }
-#let rich(s) = {
+#let _rich(s) = {
   let parts = s.split("$")
-  if parts.len() < 3 or calc.rem(parts.len(), 2) == 0 { return text-part(s) }
+  if parts.len() < 3 or calc.rem(parts.len(), 2) == 0 { return _text-part(s) }
   // no empty text around a cell's maths: set alone, as a formula is
-  parts.enumerate().filter(((k, p)) => p != "").map(((k, p)) => if calc.odd(k) { math.equation(math-part(p)) }
-  else { text-part(p) }).join()
+  parts.enumerate().filter(((k, p)) => p != "").map(((k, p)) => if calc.odd(k) { math.equation(_math-part(p)) }
+  else { _text-part(p) }).join()
 }
 #let value-table(
   rows: (),
@@ -135,7 +135,7 @@
     c.trim().first() + place(std.right + std.horizon, dx: 2pt, dy: -1pt, text(weight: "bold", decimal-separator))
   } else if type(c) in (int, float) { num(c) } else if type(c) == str and c.match(numeric) != none {
     num(value(c), digits: decimals(c)) // as written, the language's separator
-  } else if type(c) == str { rich(c) } else { c }
+  } else if type(c) == str { _rich(c) } else { c }
   let txt(body, strong: false) = text(11pt, weight: if strong { "bold" } else { "regular" }, body)
   let rows-n = rows.len()
   let check(pairs, count, what) = for p in pairs {
@@ -245,7 +245,7 @@
       }
     })
     if legend == none { drawn } else {
-      stack(spacing: 8pt, drawn, txt(if type(legend) == str { rich(legend) } else { legend }))
+      stack(spacing: 8pt, drawn, txt(if type(legend) == str { _rich(legend) } else { legend }))
     }
   }
 }
