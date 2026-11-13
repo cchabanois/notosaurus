@@ -493,3 +493,19 @@ def test_the_geometry_rules_shadows_compile():
     assert draw(f"ctz-draw-shadow({ball}, own: true)") != plain
     assert draw(f"ctz-draw-shadow({ball}, penumbra: true)") != plain
     assert draw(f"ctz-draw-shadow({ball}, labels: (cast: [ombre portée]))") != plain
+
+
+@pytest.mark.parametrize(
+    ("body", "said"),
+    [
+        ('#fraction-shape(kind: "rect", parts: 4, coloured: 1, rows: 0)', "rows is a rectangle's number of rows"),
+        ("#cetz.canvas({ ctz-draw-interval(none, none) })", "an interval has a bound"),
+    ],
+)
+def test_a_fraction_or_an_interval_refused_saying_why(body, said):
+    """A rectangle of 0 rows (its parts divided by zero), an interval with neither bound nor the
+    line's last value (the maximum of nothing): refused, saying what they take."""
+    with pytest.raises(figures_typst.Unusable, match=said):
+        figures_typst.compile_svg("geometry", body)
+    # the whole line, its ends given: drawn
+    figures_typst.compile_svg("geometry", "#cetz.canvas({ ctz-draw-interval(none, none, first: -5, last: 5) })")

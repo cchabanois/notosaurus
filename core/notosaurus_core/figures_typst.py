@@ -83,11 +83,16 @@ class Family:
 # the preamble (its packages, the page, our own functions), then from EXAMPLE on the example
 RULES = HERE / "typst_rules"
 EXAMPLE = "// ---- What the AI writes, from here (the rule's example: everything above is given)\n"
+# What every preamble shares (the decimal separator, numbers written as the language writes
+# them, round steps): typst_rules/common.typ, imported by each family's .typ and inlined in
+# its preamble, each figure compiled alone from its source
+SHARED = '#import "common.typ": *\n'
 
 
 def _family(name: str) -> Family:
     typst = (RULES / f"{name}.typ").read_text(encoding="utf-8")
     preamble, example = typst.split(EXAMPLE)
+    preamble = preamble.replace(SHARED, (RULES / "common.typ").read_text(encoding="utf-8"), 1)
     rule = (RULES / f"{name}.md").read_text(encoding="utf-8")
     return Family(preamble, rule.replace("{example}", example.removesuffix("\n")))
 
@@ -112,6 +117,7 @@ FAMILIES: dict[str, Family] = {
         "table",
         "scratch",
         "optics",
+        "field",
     )
 }
 
@@ -137,6 +143,7 @@ FigureKind = Literal[
     "table",
     "scratch",
     "optics",
+    "field",
     "other",
 ]
 
@@ -284,7 +291,7 @@ class Unusable(Exception):
     """Not compiled: what Typst said (for the AI to correct it), or why it was refused."""
 
 
-# The preambles' (graph, chart): the separator their own numbers are written with, set here
+# The preambles' (common.typ): the separator their own numbers are written with, set here
 SEPARATOR = '#let decimal-separator = "."'
 
 

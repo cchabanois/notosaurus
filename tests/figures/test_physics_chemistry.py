@@ -574,6 +574,24 @@ def test_a_tracks_texts_clear_of_the_track_and_of_one_another():
 PLAIN_WATER = 'fragment("H"); single(angle: 1); fragment("O", lewis: pairs(2)); single(angle: -1); fragment("H")'
 
 
+@pytest.mark.parametrize("angle", [0, 90, -10])
+def test_a_throw_at_no_angle_refused(angle):
+    """A throw at 0° (no flight: every position at the launch, its width 0 divided by) or at 90°
+    (straight up: the scale out of bounds): refused, saying a throw's angle."""
+    with pytest.raises(figures_typst.Unusable, match="angle is a throw's angle"):
+        figures_typst.compile_svg("mechanics", f'#chronophotography(motion: "thrown", angle: {angle})')
+
+
+def test_a_velocity_at_rest_drawn_as_none():
+    """A fall's velocity asked at its first position, at rest: every velocity 0, the arrows'
+    lengths divided by it. No arrow there, the others drawn."""
+    rest = figures_typst.compile_svg("mechanics", '#chronophotography(motion: "falling", n: 4, velocity: (0,))')
+    bare = figures_typst.compile_svg("mechanics", '#chronophotography(motion: "falling", n: 4)')
+    assert rest == bare
+    moving = figures_typst.compile_svg("mechanics", '#chronophotography(motion: "falling", n: 4, velocity: (0, 3))')
+    assert "1f5fbf" in moving.lower()
+
+
 @pytest.mark.parametrize(
     ("body", "said"),
     [
@@ -616,3 +634,20 @@ def test_a_molecule_wrong_in_its_atoms_refused_saying_why(body, said):
 )
 def test_a_right_molecule_drawn(body):
     assert figures_typst.compile_svg("chemistry", "#skeletize({ " + body + " })").startswith("<svg")
+
+
+@pytest.mark.parametrize(
+    ("body", "said"),
+    [
+        ('branch((0, 0), (0, 0), lamp("l"))', "two ends are two different points"),
+        ('branch((0, 0), (3, 0), lamp("l"), wire((0, 0), (1, 0)))', "given without points, each one of battery"),
+        ('branch((0, 0), (3, 0), lamp("l"), "R")', "given without points, each one of battery"),
+        ('branch((0, 0), (1, 0), lamp("l"), resistor("r"), resistor("r2"), battery("g"), current: $I$)', "too short"),
+    ],
+)
+def test_a_branch_refused_saying_why(body, said):
+    """A branch from a point to itself (divided by zero), a wire or a text among its components
+    (an error inside its layout), or too short for its components even drawn at their smallest
+    (drawn over one another): refused, saying what a branch takes."""
+    with pytest.raises(figures_typst.Unusable, match=said):
+        figures_typst.compile_svg("circuit", f"#circuit({{ {body} }})")

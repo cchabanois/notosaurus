@@ -21,6 +21,7 @@
     pure.at(c)
   } else { c })
   assert(colours.len() in (2, 3) and colours.all(c => type(c) == color), message: "two or three colours")
+  assert(labels.len() <= colours.len(), message: "labels are the colours' names, one per colour: as many as the colours at most")
   let channels(c) = c.rgb().components(alpha: false).map(v => v / 100%)
   let mixed-colour(indices) = {
     let parts = indices.map(i => channels(colours.at(i)))
@@ -74,6 +75,11 @@
 #let _nested-layout(levels) = {
   // a long text on two lines or more (side by side in their rings, the figure grew too wide)
   let fit(c) = if measure(c).width > 2.6cm { block(width: 2.6cm, align(center, c)) } else { c }
+  // a set's elements: one written without its trailing comma, ($3$): itself, not a list
+  // of one; a set given by its name alone: no elements of its own
+  let levels = levels.map(level => if type(level) != array { (level, ()) } else if level.len() == 1 { (level.at(0), ()) } else { level })
+  assert(levels.all(level => level.len() == 2), message: "each set is (its name, (its elements,)): ($NN$, ($3$, $7$))")
+  let levels = levels.map(((name, items)) => (name, if type(items) == array { items } else { (items,) }))
   let levels = levels.map(((name, items)) => (fit(name), items.map(fit)))
   let size(c) = { let m = measure(c); (m.width / 1cm, m.height / 1cm) }
   let gap = 0.25

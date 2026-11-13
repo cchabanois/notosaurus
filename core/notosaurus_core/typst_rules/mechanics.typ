@@ -1,5 +1,6 @@
 #set page(width: auto, height: auto, margin: 6pt)
 #import "@preview/cetz:0.5.2"
+#import "common.typ": *
 // A body and the vectors at it (forces, a velocity, an acceleration, a Frenet frame), each
 // given by its direction, never placed by eye, in its scene: on a circle (an orbit: the body
 // at `at` degrees, the centre's body named `centre`), on a horizontal plane, on a slope rising
@@ -257,7 +258,7 @@
         arc(s, start: w * 1deg, delta: d * 1deg, radius: 0.95, anchor: "origin", stroke: 0.6pt)
         let label = marks.at(name)
         content(off(s, (w + d / 2) * 1deg, 1.35),
-          txt(if label != none { label } else { str(calc.round(calc.abs(d), digits: 1)) + "°" }))
+          txt(if label != none { label } else { written-number(calc.abs(d), digits: 1) + "°" }))
       }
     }
     // the arrows, then their names: each beyond its tip, else beside its tip, else beside its
@@ -392,6 +393,8 @@
   let motions = ("thrown", "falling", "uniform", "accelerated", "circle")
   assert(motion in motions, message: "motion is one of " + motions.join(", "))
   assert(type(n) == int and n >= 2 and n <= 20, message: "n is the positions' count, 2 to 20")
+  assert(motion != "thrown" or (type(angle) in (int, float) and angle > 0 and angle < 90),
+    message: "angle is a throw's angle above the horizontal, in degrees, between 0 and 90 (both excluded): a body falling from rest is motion: \"falling\"")
   let numbers = range(first, first + n)
   for k in velocity + change {
     assert(k in numbers, message: "velocity and change are positions' numbers, from " + str(first) + " to "
@@ -458,7 +461,8 @@
     }
     // the velocities along the trajectory, as long as their speeds; a change of velocity
     // between the positions around it, 1 cm long
-    for i in velocity {
+    // a body at rest there (a fall's start): no arrow, its velocity zero
+    for i in velocity.filter(i => speed(times.at(i - first)) != (0, 0)) {
       let v = speed(times.at(i - first))
       // the fastest as long as most of the shortest step: clear of the next position
       let l = calc.min(1.4, 0.75 * calc.min(..gaps)) * calc.sqrt(v.at(0) * v.at(0) + v.at(1) * v.at(1)) / top

@@ -2,7 +2,7 @@
 #import "@preview/cetz:0.5.2"
 // Numbers written as the figure's language writes them: its decimal separator, set by
 // figures_typst.source from the AI's `#set text(lang: …)` (a point when none is said)
-#let decimal-separator = "."
+#import "common.typ": *
 // A statistics chart from counts: "bars" (a bar per value, as high as its count: a
 // diagramme en bâtons), "pie" (a circle, each sector count / total × 360°), "semi" (a half
 // circle, × 180°): the angles computed, never given; or "line", measures joined (a heart
@@ -28,6 +28,7 @@
   let vs = vs.sorted(key: v => v.at(0))
   let n = vs.len()
   let (xs, ys) = (vs.map(v => v.at(0)), vs.map(v => v.at(1)))
+  assert(range(n - 1).all(k => xs.at(k + 1) != xs.at(k)), message: "smooth: two measures with the same x, a curve has one value at each x: " + repr(vs))
   let d = range(n - 1).map(k => (ys.at(k + 1) - ys.at(k)) / (xs.at(k + 1) - xs.at(k)))
   let m = range(n).map(k => if k == 0 { d.first() } else if k == n - 1 { d.last() } else if d.at(k - 1) * d.at(k) <= 0 { 0 } else { (d.at(k - 1) + d.at(k)) / 2 })
   for k in range(n - 1) {
@@ -75,10 +76,7 @@
   assert(limits == auto or (type(limits) == array and limits.len() == 2 and limits.all(number) and limits.at(0) < limits.at(1)),
     message: "limits is the axis's (first, last) value")
   let txt(body) = text(10pt, font: "DejaVu Sans", body)
-  let num(x) = {
-    let r = calc.round(x, digits: 3)
-    if calc.fract(r) == 0 { str(int(r)) } else { str(r).replace(".", decimal-separator) }
-  }
+  let num(x) = written-number(x, digits: 3)
   let all = boxes.map(b => b.at(1)).flatten()
   let (lo, hi) = if limits == auto { (calc.min(..all), calc.max(..all)) } else { limits }
   let span = calc.max(hi - lo, 1e-9)
@@ -91,8 +89,7 @@
   // the step: the description's, else the finest round one giving at most 10 steps whose
   // numbers stand apart along the axis
   let s = if step != auto { step } else {
-    let found = (0.001, 0.002, 0.005, 0.01, 0.02, 0.05, 0.1, 0.2, 0.5, 1, 2, 5, 10, 20, 25, 50, 100, 200, 250, 500, 1000, 2000, 2500, 5000, 10000)
-      .filter(c => span / c <= 10 + 1e-9)
+    let found = round-steps(span / 10, 10 * span)
       .find(c => {
         let (a0, a1) = ends(c)
         let widest = calc.max(..ticks(c).map(t => measure(txt(num(t))).width / 1cm))
@@ -205,13 +202,10 @@
   let txt(body) = text(10pt, font: "DejaVu Sans", body)
   // a number as the figure's language writes it: whole, or with its decimal separator; to
   // the thousandth (a probability, 0,078), an angle to the tenth
-  let num(x, digits: 3) = {
-    let r = calc.round(x, digits: digits)
-    if calc.fract(r) == 0 { str(int(r)) } else { str(r).replace(".", decimal-separator) }
-  }
+  let num(x, digits: 3) = written-number(x, digits: digits)
   // A graduation's step: a round one giving at most `most` steps over `span`
-  let nice(span, most) = (0.1, 0.2, 0.5, 1, 2, 2.5, 5, 10, 20, 25, 50, 100, 200, 250, 500, 1000, 2000, 2500, 5000, 10000)
-    .find(s => span / s <= most)
+  // (never finer than 0,1: values that change little keep a graduation showing it so)
+  let nice(span, most) = calc.max(round-step(span, most), 0.1)
   cetz.canvas({
     import cetz.draw: *
     if kind == "line" {

@@ -169,6 +169,12 @@ def test_a_solids_lengths_beside_its_edges():
         '#sphere(5, centre-name: "O", section: 3, section-centre: "H", section-label: {}[$r$], '
         "radius-label: {}[5 cm], distance-label: {}[3 cm])",
         '#sphere(5, centre-name: "O", section: 4, section-centre: "H", section-label: {}[3 cm])',
+        # a section through the centre ([OA] on it: its length divided by its height, 0) or
+        # below it (its label was left of [OA], across it)
+        '#sphere(5, centre-name: "O", section: 0, radius-label: {}[5 cm])',
+        '#sphere(5, centre-name: "O", section: -3, section-centre: "H", radius-label: {}[5 cm])',
+        '#sphere(5, centre-name: "O", section: -3, section-label: {}[4 cm], radius-label: {}[5 cm])',
+        '#sphere(5, centre-name: "O", section: 0.5, radius-label: {}[5 cm])',
     ],
 )
 def test_a_spheres_lengths_clear_of_its_lines(body):
@@ -278,6 +284,16 @@ def test_a_crystals_legend_and_edge():
     assert _ball_fills(svg)[-2:] == ["#0074d9", "#ff4136"]  # the legend's balls, last
     (w0, h0), (w1, h1) = drawn_size("solid", bare), drawn_size("solid", named)
     assert w1 > w0 + 20 and h1 > h0 + 15
+
+
+def test_a_crystals_legend_left_out_with_false():
+    """`legend: false` (as the AI writes it) drew the legend all the same: only none left it
+    out. False now as none: no name written, no legend ball."""
+    species = "((name: [A], fill: blue), (name: [B], fill: red))"
+    for off in ("none", "false"):
+        body = f'#crystal(lattice: "body-centred", species: {species}, legend: {off})'
+        svg = figures_typst.compile_svg("solid", body)
+        assert not _glyphs(svg) and _ball_fills(svg) == ["#0074d9"] * 4 + ["#ff4136"] + ["#0074d9"] * 4
 
 
 def test_a_crystals_balls_cut_by_its_cube():

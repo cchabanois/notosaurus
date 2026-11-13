@@ -68,3 +68,21 @@ def test_a_mixed_colour_a_card_asks_is_not_shown():
     asked = figures.clean(figures_typst.compile_svg("sets", body.format(', ask: ("abc",)')))
     assert "#8c8c8c" in asked and "#8c8c8c" not in shown  # the centre grey, not white
     assert asked.count('fill="#ffffff"') <= shown.count('fill="#ffffff"')
+
+
+def test_nested_sets_single_element_without_its_comma_drawn():
+    """A set with one element written without its trailing comma, ($NN$, ($3$)): its element
+    itself, not a list of one ("equation has no method map"); a set given by its name alone:
+    no element of its own. Each drawn as it means."""
+    for alone, listed in (
+        ("#nested-sets(($NN$, ($3$)), ($ZZ$, ($-5$,)))", "#nested-sets(($NN$, ($3$,)), ($ZZ$, ($-5$,)))"),
+        ("#nested-sets(($NN$), ($ZZ$, ($-5$,)))", "#nested-sets(($NN$, ()), ($ZZ$, ($-5$,)))"),
+    ):
+        assert figures_typst.compile_svg("sets", alone) == figures_typst.compile_svg("sets", listed)
+
+
+def test_a_colour_mix_with_more_labels_than_colours_refused():
+    """Three names for two colours ran past the parts' list ("index out of bounds"): refused,
+    saying a label names a colour."""
+    with pytest.raises(figures_typst.Unusable, match="one per colour"):
+        figures_typst.compile_svg("sets", '#colour-mix(colours: ("red", "green"), labels: ([R], [G], [B]))')

@@ -9,6 +9,7 @@ Each pull request's entries (the `## Changelog` of its description) are put unde
 
 ### Added
 
+- Field lines of a magnet or of point charges are now computed, running from north to south and from + to −, with an arrow showing the field's direction on each line.
 - 🌗 Shadows and eclipses (a source, a lit body, its shadow cone, the shadow cast on a screen or on the Earth, the Moon in the Earth's shadow, a body's own shadow) drawn with rays tangent to the bodies, the shadow behind the body and every body named.
 - Chemistry figures: a molecule's partial charges, a bond angle, its dipole moment and a bond's polarisation, placed by computation on the molecule (each charge beside its atom, the angle inside, the dipole moment from the charges, beside the molecule).
 - 🔦 Refraction, reflection and a lens's image drawn with their rays computed: the refracted angle by Snell-Descartes, the image and its three rays.
@@ -59,6 +60,12 @@ Each pull request's entries (the `## Changelog` of its description) are put unde
 
 ### Fixed
 
+- 🪟 On Windows, a figure Typst refused is told to the AI with its accents and symbols intact, so that it corrects it.
+- Figures: a timeline, set diagram, chart, number line, chronophotography, sphere, crystal, circuit branch or lens given an input that used to crash it is now drawn as meant or refused with a message that lets the AI correct it, instead of failing with an obscure error.
+- Numbers on a figure's axes and on a mechanics figure's marked angles are written with the language's decimal comma, without rounding noise.
+- A line chart of large values (a population in millions) is drawn instead of failing.
+- Sequences written in lowercase letters (atg gca) are aligned letter by letter, and amino acids written in capitals (MET-PRO-GLU) one per codon.
+- A line tangent to a curve is found where it touches it, instead of being refused as not meeting it.
 - ⚗️ A Lewis structure's non-bonding pairs drawn where its bonds leave room, never on a bond, whichever way the molecule is turned.
 - Graphs: a period's or an amplitude's name (a double arrow) set clear of the curve, never written across the sinusoid.
 - 🏷️ A card's sub-deck field no longer cuts its placeholder on newer phones' browsers.

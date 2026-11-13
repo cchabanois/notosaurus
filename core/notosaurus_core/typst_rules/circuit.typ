@@ -136,6 +136,10 @@
 #let dcmotor = placeable(dcmotor, 1.16)
 #let acmotor = placeable(acmotor, 1.16)
 #let socket = placeable(socket, 0.54)
+// the components `branch` places, by their names
+#let _placeables = ("battery", "cell", "vsource", "acvsource", "isource", "lamp", "resistor", "rheostat",
+  "heater", "switch", "button", "ammeter", "voltmeter", "ohmmeter", "wattmeter", "diode", "led", "zener",
+  "photodiode", "capacitor", "inductor", "fuse", "dcmotor", "acmotor", "socket")
 // Where a branch `length` long puts its parts (placeable components, in their order), as
 // distances from its start: each component's span (`parts`), the current's arrow's (`arrow`,
 // none without a current) and the components' scale. They are spaced evenly (at least 0.4 of
@@ -156,6 +160,10 @@
   let scale = if total > 0 and total > length - needed { calc.max((length - needed) / total, 0.3) } else { 1 }
   let sizes = sizes.map(size => size * scale)
   let free = length - sizes.sum(default: 0)
+  // even drawn at their smallest, a little wire between two: else they overlap
+  let advised = 1.5 * (n + if current { 1 } else { 0 })
+  assert(free >= 0.1 * (n + 1), message: "branch: " + str(calc.round(length, digits: 2)) + " long, too short for its "
+    + str(n) + " components: make it about 1.5 long per component, 1.5 more with a current (" + str(advised) + " here)")
   let even = free / (n + 1)
   let gaps = if not current or even >= arrow-room { range(n + 1).map(_ => even) } else {
     let room = calc.min(arrow-room, free)
@@ -185,9 +193,13 @@
 // current's on the other
 #let branch(from, to, ..items, current: none) = {
   let parts = items.pos()
+  assert(parts.all(p => type(p) == dictionary and "placeable" in p), message: "branch: its components are given "
+    + "without points, each one of " + _placeables.join(", ") + " (lamp(\"l\", label: $L$)); a wire or a "
+    + "component with its points is drawn outside the branch")
   let (ax, ay) = (float(from.at(0)), float(from.at(1)))
   let (bx, by) = (float(to.at(0)), float(to.at(1)))
   let length = calc.sqrt(calc.pow(bx - ax, 2) + calc.pow(by - ay, 2))
+  assert(length > 0, message: "branch: its two ends are two different points, from where the current comes in to where it leaves")
   let at(s) = (ax + (bx - ax) * s / length, ay + (by - ay) * s / length)
   let layout = branch-layout(length, parts, current: current != none)
   // the wire's stretches: between the components, cut where the arrow is

@@ -24,6 +24,33 @@ def test_sequences_differences_are_computed_and_framed():
         seq('("1", "ATG GCA TTC"), ("2", "ATG GA TTC")')
 
 
+def test_sequences_letters_or_amino_acids_whatever_their_case():
+    """A sequence's letters and its amino acids told apart by their structure, never by their
+    case: DNA in lowercase is letters (its difference framed as in capitals), an amino-acid
+    chain in capitals is words (one per codon, as written in mixed case); every form the rule
+    gives still drawn as before."""
+    seq = lambda rows, extra="": figures_typst.compile_svg("sequence", f"#sequences({extra}rows: ({rows}))")  # noqa: E731
+    # one letter per column, aligned with the same letters written without spaces (as words,
+    # "atg gca ttc" was three to its one: refused as not aligned)
+    lower = '("1", "atg gca ttc"), ("2", "atggcgttc")'
+    assert seq(lower) != seq(lower, "framed: false, ")
+    codons = '("ARNm", "AUG CCU GAA"), ("Protéine", {})'
+    mixed = seq(codons.format('"Met-Pro-Glu"'))
+    for written in ('"MET-PRO-GLU"', '"Met Pro Glu"', '"MET PRO GLU"', '("MET", "PRO", "GLU")'):
+        assert seq(codons.format(written)) != seq(codons.format('"Met-Pro-Gln"'))  # compiles, one per codon
+    assert mixed == seq(codons.format('("Met", "Pro", "Glu")'))
+    caps = seq('("ARNm", "AUG CCU GAA"), ("Protéine", "MET-PRO-GLU")')
+    assert caps == seq('("ARNm", "AUG CCU GAA"), ("Protéine", ("MET", "PRO", "GLU"))')
+    # letters still: DNA with a gap, RNA, a protein in one letter each
+    assert seq('("1", "ATG GCA TTC"), ("2", "ATG -CA TTC")') != seq(
+        '("1", "ATG GCA TTC"), ("2", "ATG -CA TTC")', "framed: false, "
+    )
+    assert seq('("1", "AT-GCA"), ("2", "ATTGCA")', "group: 0, ").startswith("<svg")
+    assert seq('("1", "MKVLLA"), ("2", "MKVLPA")', "group: 0, ") != seq(
+        '("1", "MKVLLA"), ("2", "MKVLPA")', "group: 0, framed: false, "
+    )
+
+
 def test_a_sequences_asked_letter_is_not_shown():
     """A card asking which letter: written "?", whatever it was."""
     body = '#sequences(ask: (("2", 6),), rows: (("1", "ATG GCA TTC"), ("2", "ATG GC{} TTC")))'

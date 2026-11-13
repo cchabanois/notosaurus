@@ -10,7 +10,7 @@
 #show: lq.show_(lq.label.with(kind: "x"), it => place(left + horizon, dx: 100% + .8em, dy: -.15em, it))
 // Numbers on the axes written as the figure's language writes them: its decimal separator,
 // set by figures_typst.source from the AI's `#set text(lang: …)` (a point when none is said)
-#let decimal-separator = "."
+#import "common.typ": *
 #import "@preview/zero:0.6.1"
 #zero.set-num(decimal-separator: decimal-separator)
 // Ticks named by the AI (`xaxis: (ticks: ((1, $a$), (calc.pow(2, 1/3), $alpha$)))`) whose
@@ -70,40 +70,60 @@
   lq.place(x, y, box(fill: white, inset: 0.15em, radius: 2pt, name), align: center + horizon)
 }
 // Where two curves meet (two lines, a parabola and a line): computed, never by eye: each
-// change of sign of f − g between `from` and `to`, refined by bisection; a dot there, seen
+// change of sign of f − g between `from` and `to`, refined by bisection, and each place they
+// touch without crossing (a tangent), refined by golden-section search; a dot there, seen
 // at any size; its coordinates written when `label` is `auto` ("(1 ; 1)": the figure's
 // decimal separator, " ; " between them where the decimal separator is a comma), or the
 // label given, or nothing (`none`); `lines: true` the dotted lines down to the axes
-#let _number(v) = {
-  let r = calc.round(v, digits: 2)
-  let s = if calc.abs(r - calc.round(r)) < 1e-9 { str(int(calc.round(r))) } else { str(r) }
-  s.replace(".", decimal-separator).replace("-", "−")
-}
 #let _meet-points(f, g, from, to) = {
   let h(x) = f(x) - g(x)
   let n = 400
   let xs = range(n + 1).map(i => from + (to - from) * i / n)
+  // each value sampled once
+  let fs = xs.map(f)
+  let hs = xs.zip(fs).map(((x, y)) => y - g(x))
+  // a touch (a double root: h reaching 0 without changing sign) is told from a near miss by
+  // the curves' own scale, never by a fixed distance
+  let scale = calc.max(0, ..xs.zip(fs, hs).map(((x, y, d)) => calc.abs(y) + calc.abs(y - d)))
+  let tolerance = 1e-9 * scale
   let roots = ()
   for i in range(n) {
-    let (a, b) = (xs.at(i), xs.at(i + 1))
-    let (ha, hb) = (h(a), h(b))
-    if ha == 0 { roots.push(a); continue }
+    let (ha, hb) = (hs.at(i), hs.at(i + 1))
+    let before = if i > 0 { hs.at(i - 1) } else { 0 }
+    // |h| lowest at this sample, its neighbours on the same side
+    let lowest = before * ha > 0 and ha * hb > 0 and calc.abs(ha) < calc.abs(before) and calc.abs(ha) <= calc.abs(hb)
+    if ha == 0 { roots.push(xs.at(i)); continue }
     if ha * hb < 0 {
+      let (a, b) = (xs.at(i), xs.at(i + 1))
       for _ in range(60) {
         let m = (a + b) / 2
-        if h(a) * h(m) <= 0 { b = m } else { a = m }
+        if ha * h(m) <= 0 { b = m } else { a = m; ha = h(a) }
       }
       roots.push((a + b) / 2)
+    } else if lowest {
+      // its least value between the neighbours, by golden-section search: a meet when it
+      // reaches 0
+      let side = if ha > 0 { 1 } else { -1 }
+      let (a, b) = (xs.at(i - 1), xs.at(i + 1))
+      let r = (calc.sqrt(5) - 1) / 2
+      let (c, d) = (b - r * (b - a), a + r * (b - a))
+      let (hc, hd) = (side * h(c), side * h(d))
+      for _ in range(80) {
+        if hc < hd { b = d; d = c; hd = hc; c = b - r * (b - a); hc = side * h(c) }
+        else { a = c; c = d; hc = hd; d = a + r * (b - a); hd = side * h(d) }
+      }
+      let x = (a + b) / 2
+      if calc.abs(h(x)) <= tolerance { roots.push(x) }
     }
   }
-  if h(to) == 0 { roots.push(to) }
+  if hs.at(n) == 0 { roots.push(to) }
   roots.map(x => (x, f(x)))
 }
 #let _crossings(found) = "x = " + found.map(p => str(calc.round(p.at(0), digits: 2))).join(", ")
 #let meet(f, g, from, to, label: none, lines: false, side: right, some: false, n: none) = {
   // `n`: as many crossings there as the description names (as `meet-x`), else refused
+  let found = _meet-points(f, g, from, to)
   if n != none {
-    let found = _meet-points(f, g, from, to)
     if found.len() != n {
       panic("meet: the curves meet " + str(found.len()) + " times between " + repr(from) + " and " + repr(to)
         + (if found.len() > 0 { " (" + _crossings(found) + ")" } else { "" }) + ", not " + str(n)
@@ -112,13 +132,13 @@
   }
   let sep = if decimal-separator == "," { " ; " } else { ", " }
   let parts = ()
-  for (x, y) in _meet-points(f, g, from, to) {
+  for (x, y) in found {
     if lines {
       parts.push(lq.line((x, 0), (x, y), stroke: (dash: "dotted", paint: luma(90))))
       parts.push(lq.line((0, y), (x, y), stroke: (dash: "dotted", paint: luma(90))))
     }
     parts.push(lq.place(x, y, circle(radius: 2.2pt, fill: black), align: center + horizon))
-    let text = if label == auto { [(#_number(x)#sep#_number(y))] } else { label }
+    let text = if label == auto { [(#written-number(x, digits: 2)#sep#written-number(y, digits: 2))] } else { label }
     if text != none {
       parts.push(lq.place(x, y, pad(left: 0.45em, right: 0.45em, bottom: 0.35em, text),
         align: bottom + if side == right { left } else { right }))
@@ -129,7 +149,7 @@
   (
     plot: (self, transform) => { for p in parts { (p.plot)(p, transform) } },
     id: "meet", xlimits: () => none, ylimits: () => none, datetime: (:), label: none,
-    clip: true, z-index: 22, meets: (f: f, g: g, from: from, to: to, some: some),
+    clip: true, z-index: 22, meets: (f: f, g: g, from: from, to: to, some: some, found: found),
   )
 }
 // The x where two curves meet (f(c) = 0: `meet-x(f, x => 0, a, b)`; f(c) = k; two curves),
@@ -321,7 +341,7 @@
     let l = lines.at(i)
     if not l.inside { continue }
     let name = if a.name == auto {
-      if l.horizontal { $y = #_number(a.ay)$ } else { $x = #_number(a.ax)$ }
+      if l.horizontal { $y = #written-number(a.ay, digits: 2)$ } else { $x = #written-number(a.ax, digits: 2)$ }
     } else { a.name }
     if name == none { continue }
     let m = measure(name)
@@ -546,7 +566,7 @@
   // one meet or another (two meets, one crossing each, mark both)
   let checks = ()
   for m in pos.filter(p => type(p) == dictionary and p.at("id", default: none) == "meet" and "meets" in p) {
-    let (f, g, from, to, some) = m.meets
+    let (f, g, from, to, some, found) = m.meets
     if some or type(from) not in (int, float) or type(to) not in (int, float) { continue }
     let (from, to) = (calc.min(from, to), calc.max(from, to))
     let (sf, sg) = (span-of(f, from, to), span-of(g, from, to))
@@ -556,7 +576,7 @@
     let (lo, hi) = (calc.max(..spans.map(s => s.at(0))), calc.min(..spans.map(s => s.at(1))))
     if hi <= lo { continue }
     let all = _meet-points(f, g, lo, hi)
-    let marked = _meet-points(f, g, from, to)
+    let marked = found
     checks.push((all, marked, from, to))
   }
   let marked-all = checks.map(c => c.at(1)).flatten().chunks(2).map(p => p.at(0))
