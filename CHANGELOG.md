@@ -60,6 +60,7 @@ Each pull request's entries (the `## Changelog` of its description) are put unde
 
 ### Fixed
 
+- 🪟 On Windows, a figure Typst refused is told to the AI with its accents and symbols intact, so that it corrects it.
 - Figures: a timeline, set diagram, chart, number line, chronophotography, sphere, crystal, circuit branch or lens given an input that used to crash it is now drawn as meant or refused with a message that lets the AI correct it, instead of failing with an obscure error.
 - Numbers on a figure's axes and on a mechanics figure's marked angles are written with the language's decimal comma, without rounding noise.
 - A line chart of large values (a population in millions) is drawn instead of failing.
