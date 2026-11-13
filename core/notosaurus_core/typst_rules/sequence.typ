@@ -13,10 +13,15 @@
     rows.len() > 0 and rows.all(r => type(r) == array and r.len() == 2 and type(r.at(1)) in (str, array)),
     message: "rows are (name, sequence) pairs, a sequence a string or a list of amino acids",
   )
-  // a row's letters: one each, or its amino acids when written as words ("Met-Pro-Glu")
+  // a row's letters: one each, or its amino acids when written as words ("Met-Pro-Glu",
+  // "MET-PRO-GLU"), told apart by their structure, whatever their case: nucleotides only
+  // (A, C, G, T, U, N: "ATG GCA", "atg gca", "AT-GCA" with its gap) are letters; else
+  // several words of more than one letter each are amino acids; else letters ("MKV")
   let tokens(s) = if type(s) == array { s.map(t => if type(t) == str { t.trim() } else { t }) } else {
     let words = s.split(regex("[\s\-–]+")).filter(w => w != "")
-    if s.match(regex("[a-z]")) != none { words } else { s.clusters().filter(c => c.trim() != "") }
+    let nucleotides = s.match(regex("(?i)^[\s\-–ACGTUN]*$")) != none
+    let amino-acids = words.len() > 1 and words.all(w => w.clusters().len() > 1)
+    if not nucleotides and amino-acids { words } else { s.clusters().filter(c => c.trim() != "") }
   }
   let seqs = rows.map(r => tokens(r.at(1)))
   let n = calc.max(..seqs.map(s => s.len()))
@@ -40,8 +45,9 @@
   // complement, or its transcript, differ everywhere and are no variants)
   let kind(k) = {
     let letters = seqs.at(k).filter(t => t != "-")
-    let alphabet = if letters.all(t => t in ("A", "C", "G", "T")) { "dna" }
-      else if letters.all(t => t in ("A", "C", "G", "U")) { "rna" } else { "other" }
+    let caps = letters.map(t => if type(t) == str { upper(t) } else { t })
+    let alphabet = if caps.all(t => t in ("A", "C", "G", "T")) { "dna" }
+      else if caps.all(t => t in ("A", "C", "G", "U")) { "rna" } else { "other" }
     (spans.at(k), alphabet)
   }
   let kinds = range(rows.len()).map(kind)

@@ -304,6 +304,31 @@ def test_a_curve_through_its_points():
             figures_typst.compile_svg("graph", f"#let f = through({bad})\n#f(1)")
 
 
+def test_a_tangent_meets_its_curve():
+    """A line tangent to a curve touches it without crossing (f − g reaching 0 without changing
+    sign): found where it touches, by `meet-x` and `meet` (drawn, the whole curve checked),
+    whatever the curves' scale; curves passing close without touching still don't meet."""
+    check = """#{
+      for k in (1, 1000, 0.001) {
+        let c = meet-x(x => k * x * x, x => k * (2 * x - 1), -2, 2.3)
+        assert(calc.abs(c - 1) < 1e-6, message: repr((k, c)))
+      }
+      let top = meet-x(calc.sin, x => 1, 0, 3)
+      assert(calc.abs(top - calc.pi / 2) < 1e-6, message: repr(top))
+      let (a, b) = meet-x(x => calc.pow(x, 4) - 2 * x * x + 1, x => 0, -2, 2.3, n: 2)
+      assert(calc.abs(a + 1) < 1e-6 and calc.abs(b - 1) < 1e-6, message: repr((a, b)))
+      [checked]
+    }"""
+    assert figures_typst.compile_svg("graph", check).startswith("<svg")
+    drawn = """#let xs = lq.linspace(-2, 2.3)
+#lq.diagram(lq.plot(xs, xs.map(x => x * x), mark: none), lq.plot(xs, xs.map(x => 2 * x - 1), mark: none),
+  meet(x => x * x, x => 2 * x - 1, -2, 2.3, label: auto, n: 1))"""
+    assert figures_typst.compile_svg("graph", drawn).startswith("<svg")
+    for near in ("x => 2 * x - 1.01", "x => 2 * x - 1 - 1e-6"):
+        with pytest.raises(figures_typst.Unusable, match="don't meet"):
+            figures_typst.compile_svg("graph", f"#meet-x(x => x * x, {near}, -2, 2.3)")
+
+
 def test_a_curve_by_conditions_and_the_point_it_defines():
     """A curve given by conditions only (f(a) < 0 < f(b), and c where f(c) = 0): the AI's own
     formula reversed the signs 1 drawing in 6 and its c, written by eye, lay off the crossing.
