@@ -9,6 +9,7 @@ Each pull request's entries (the `## Changelog` of its description) are put unde
 
 ### Added
 
+- 🧂 Crystals on a cubic lattice (an ionic crystal's alternating ions, a metal's simple, body-centred or face-centred cell) drawn regular in perspective, each ball in its place and in front of those behind it, with their legend and the cell's edge.
 - 📤 On the phone without a computer: a lesson's cards, several lessons' or a test's, shared as a file through Android's share menu (a message, a mail, a drive), to open with Anki or AnkiDroid.
 - 📤 Share the cards of several lessons, or of a test, with another family in one file to open with Anki or AnkiDroid: from 📚 My lessons (lessons ticked), a test's sheet, or the open lesson. Without the child's name nor its review history.
 - Figures: logarithmic scales (distances in the Universe, sizes from the atom to the galaxy, sound frequencies) drawn with each object at its place and powers of ten as graduations; named zones on a scale (infrasons, audible sounds, ultrasons), each its colour.
