@@ -204,6 +204,7 @@ abstract class LocalServerTestBase {
             anki = anki,
             prefs = prefs,
             version = "0.1.0",
+            apkgDb = ::JdbcApkgDb, // the JVM's SQLite: Android's isn't here
             requestAnkiPermission = {
                 permissionAsked++
                 anki.permitted = grantPermission

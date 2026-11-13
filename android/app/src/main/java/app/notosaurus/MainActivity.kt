@@ -293,6 +293,9 @@ class MainActivity : ComponentActivity() {
     /** A file the page downloaded, in the phone's Downloads (Android 9: where the user chooses),
      * said in a toast. */
     private suspend fun saveDownload(name: String, mime: String, data: ByteArray) {
+        // Our own page's package of cards: handed to the app the user shares it with (a message, a
+        // mail, a drive), as a phone shares a file; the computer's page's: in Downloads, as before
+        if (mime == APKG && Uri.parse(web.url.orEmpty()).host == "127.0.0.1") return sharePackage(name, data)
         val lang = java.util.Locale.getDefault().language
         val saved = runCatching {
             withContext(Dispatchers.IO) { PageDownloads.intoDownloads(this@MainActivity, name, mime, data) }
@@ -303,6 +306,17 @@ class MainActivity : ComponentActivity() {
         Toast.makeText(this, text ?: saved ?: name, Toast.LENGTH_LONG).show()
     }
 
+    /** The package in Android's share sheet: written where our FileProvider hands it out (the last
+     * one only: a package is shared once), read by the app chosen. */
+    private suspend fun sharePackage(name: String, data: ByteArray) {
+        val file = withContext(Dispatchers.IO) {
+            java.io.File(cacheDir, "outgoing").apply { deleteRecursively(); mkdirs() }.resolve(name).apply { writeBytes(data) }
+        }
+        val uri = FileProvider.getUriForFile(this, "$packageName.photos", file)
+        val send = Intent(Intent.ACTION_SEND).setType(APKG).putExtra(Intent.EXTRA_STREAM, uri).addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+        startActivity(Intent.createChooser(send, null))
+    }
+
     /** "✎ Notosaurus" on a card: notosaurus://fix?… (the documentation page's button), or that
      * page's own https address when Android gives it to the app. */
     private fun isFixLink(uri: Uri): Boolean =
@@ -311,6 +325,7 @@ class MainActivity : ComponentActivity() {
 
     companion object {
         const val ANKIDROID = "com.ichi2.anki"
+        const val APKG = "application/apkg" // a package of cards (the page's ".apkg")
         const val APP_LINKS = "notosaurus-app" // links the pages make to the app itself
     }
 

@@ -39,4 +39,14 @@ class RegexOnDeviceTest {
         val card = Card(c.string("front"), c.string("back"))
         assertEquals("${c.string("front")} | ${c.string("back")}", c.string("out"), Speech.spoken(card, c["dictation"]!!.jsonPrimitive.boolean))
     }
+
+    /** A package's gap texts (Apkg.cardOrds): one card per gap number, read by Android's engine
+     * (its first pattern refused a lone "}": every package failed on the phone, not on the JVM). */
+    @Test
+    fun aPackagesGapsReadOnTheDevice() {
+        val types = NoteTypes.parse(InstrumentationRegistry.getInstrumentation().targetContext.assets.open("web/note-types.json").use { it.readBytes().decodeToString() })
+        val cloze = types["cloze"]
+        val values = cloze.values(cloze.fields, mapOf("Id" to "c1", "Text" to "La {{c1::Révolution}} en {{c3::1789}}."))
+        assertEquals(listOf(0, 2), Apkg.cardOrds(cloze, values))
+    }
 }

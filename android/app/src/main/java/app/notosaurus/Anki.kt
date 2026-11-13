@@ -311,65 +311,9 @@ class Anki(private val context: Context) : AnkiTarget {
             }
         }
         val own = listOfNotNull(media.lesson.takeIf { it.isNotEmpty() }?.let(::lessonTag)) // to find the lesson's notes again
-        // A dictation alone's card with no front (the AI wrote none: ANK-08) gets its blank, the word
-        // heard to write: else no note (AnkiDroid adds none whose first field is empty)
-        val cards = if (!options.dictationOnly) deck.cards else deck.cards.map {
-            if (it.front.isBlank() && it.back.isNotBlank()) it.copy(front = DICTATION_FRONT) else it
-        }
-        val notes = cards.withIndex().filter { it.value.front.isNotBlank() }.mapNotNull { (i, card) ->
-            val name = deckName(deck.deck, card.subdeck)
-            val tags = (card.tags.map { it.trim().replace(' ', '_') }.filter { it.isNotEmpty() } + "notosaurus" + own + media.extraTags[card.id].orEmpty()).toSet()
-            val common = mapOf("Info" to info(card), "Explanation" to html(card.explanation), "Mnemonic" to html(card.mnemonic))
-            // Which note it is, sent again: the card's own id; else its place in the lesson; else its text
-            val key = card.id.ifBlank { if (media.lesson.isNotEmpty()) "${media.lesson}:$i" else html(card.front) }
-            val sound by lazy { media.audio[Speech.spoken(card, options.dictation)]?.let { if (options.dictation) deciding(it, "audio", key) else file(it, "audio") }.orEmpty() }
-            fun note(variant: String, fields: Map<String, String>): Note {
-                val type = noteTypes[variant]
-                return Note(type, model(type) ?: error("AnkiDroid refused the note type ${type.name}"), name, common + fields, tags, key)
-            }
-            // Only for the cards showing them (lazy): no file into AnkiDroid that no note shows
-            val picture by lazy { media.pictures[card.picture]?.let { if (card.isChoice()) file(it, "image") else deciding(it, "image", key) }.orEmpty() }
-            // Any card's picture (not a card of its own): on its question, or with its answer
-            val pictures = mapOf(
-                "Picture" to (if (card.pictureOnBack) "" else picture), "BackPicture" to (if (card.pictureOnBack) picture else ""),
-            )
-            when {
-                card.isChoice() -> note( // not heard: the options are read
-                    "choice",
-                    mapOf(
-                        "Id" to key, "Question" to html(card.front), "Answer" to html(card.back),
-                        "Choices" to choicesHtml(card, reveal = false), "AnswerChoices" to choicesHtml(card, reveal = true),
-                        (if (card.pictureOnBack) "BackPicture" else "Picture") to picture,
-                    ),
-                )
-                GAP.containsMatchIn(card.front) -> note("cloze", mapOf("Id" to key, "Text" to html(card.front), "Extra" to html(card.back)))
-                card.mask != null -> {
-                    if (card.back.isBlank()) return@mapNotNull null
-                    val photo = media.photos[card.mask.page] ?: return@mapNotNull null
-                    val page = deck.cards.mapNotNull { it.mask }.filter { it.page == card.mask.page }
-                    // The diagram only (its frame, holding every label), light: shared by its cards
-                    val box = crop(media.frames[card.mask.page], page)
-                    val image = diagrams.getOrPut(card.mask.page) { diagramImage(photo, box) }
-                    note(
-                        "diagram" + if (options.typing) "+typing" else "",
-                        mapOf(
-                            "Id" to "${media.lesson}:${card.mask.page}:${card.mask.n}", "Front" to html(card.front), "Back" to html(card.back),
-                            "Audio" to sound, "Image" to file(image, "image"),
-                            "Masks" to masksHtml(page, card.mask.n, reveal = false, box), "AnswerMasks" to masksHtml(page, card.mask.n, reveal = true, box),
-                        ),
-                    )
-                }
-                card.back.isBlank() -> null
-                // Text, its picture if any on the question or with the answer: still the card it is
-                // (typed, reversed, heard: a dictation with its picture stays one)
-                else -> {
-                    val heard = options.dictation && sound.isNotEmpty() // nothing to hear without a voice
-                    val variant = if (heard && options.dictationOnly) listOf("text", "dictation-only")
-                    else listOf("text") + listOfNotNull("reverse".takeIf { options.reverse }, "typing".takeIf { options.typing && typed(card.back) }, "dictation".takeIf { heard })
-                    note(variant.joinToString("+"), mapOf("Id" to key, "Front" to html(card.front), "Back" to html(card.back), "Audio" to sound) + pictures)
-                }
-            }
-        }
+        val notes = buildNotes(noteTypes, deck, media, options, ::file, ::deciding) { page, photo, box ->
+            diagrams.getOrPut(page) { diagramImage(photo, box) }
+        }.map { Note(it.type, model(it.type) ?: error("AnkiDroid refused the note type ${it.type.name}"), it.deck, it.values, it.tags, it.card) }
         var count = 0
         val claimed = mutableSetOf<Long>() // older notes given to a card: never to another, whatever its group
         var updated = 0
@@ -465,31 +409,6 @@ class Anki(private val context: Context) : AnkiTarget {
         val values = ContentValues().apply { put(FlashCardsContract.Card.DECK_ID, did) }
         elsewhere.forEach { ord -> context.contentResolver.update(Uri.withAppendedPath(cards, ord.toString()), values, null, null) }
         return elsewhere.isNotEmpty()
-    }
-
-    /** The photo as AnkiDroid shows the diagram: cropped to `box` (the whole photo
-     * without one), at most CARD_SIDE, as the computer's (diagrams.page_image). Next to
-     * the lesson's pictures, named after its content. */
-    private fun diagramImage(photo: File, box: List<Double>?): File {
-        val bytes = photo.readBytes()
-        val key = MessageDigest.getInstance("SHA-1").digest(bytes + box.toString().toByteArray())
-            .joinToString("") { "%02x".format(it) }.take(10)
-        val image = File(photo.parentFile, "images/diagram-${photo.nameWithoutExtension}-$key.jpg")
-        if (image.isFile) return image
-        var bitmap = BitmapFactory.decodeByteArray(bytes, 0, bytes.size) ?: return photo
-        if (box != null) {
-            val (x0, y0, x1, y1) = box
-            val left = (x0 * bitmap.width).roundToInt()
-            val top = (y0 * bitmap.height).roundToInt()
-            val width = ((x1 * bitmap.width).roundToInt() - left).coerceIn(1, bitmap.width - left)
-            val height = ((y1 * bitmap.height).roundToInt() - top).coerceIn(1, bitmap.height - top)
-            bitmap = Bitmap.createBitmap(bitmap, left, top, width, height)
-        }
-        val scale = minOf(1.0, CARD_SIDE.toDouble() / maxOf(bitmap.width, bitmap.height))
-        if (scale < 1) bitmap = Bitmap.createScaledBitmap(bitmap, (bitmap.width * scale).roundToInt(), (bitmap.height * scale).roundToInt(), true)
-        image.parentFile!!.mkdirs()
-        image.outputStream().use { bitmap.compress(Bitmap.CompressFormat.JPEG, CARD_QUALITY, it) }
-        return image
     }
 
     /** How a note's fields show `file` already ("[sound:…]", "<img src=…>"): AnkiDroid names its
@@ -724,5 +643,110 @@ class Anki(private val context: Context) : AnkiTarget {
             }
             """<div class="${listOf("notosaurus-mask", kind).filter { it.isNotEmpty() }.joinToString(" ")}" style="$style">$text</div>"""
         }
+
+        /** The photo as AnkiDroid shows the diagram: cropped to `box` (the whole photo
+         * without one), at most CARD_SIDE, as the computer's (diagrams.page_image). Next to
+         * the lesson's pictures, named after its content. */
+        internal fun diagramImage(photo: File, box: List<Double>?): File {
+            val bytes = photo.readBytes()
+            val key = MessageDigest.getInstance("SHA-1").digest(bytes + box.toString().toByteArray())
+                .joinToString("") { "%02x".format(it) }.take(10)
+            val image = File(photo.parentFile, "images/diagram-${photo.nameWithoutExtension}-$key.jpg")
+            if (image.isFile) return image
+            var bitmap = BitmapFactory.decodeByteArray(bytes, 0, bytes.size) ?: return photo
+            if (box != null) {
+                val (x0, y0, x1, y1) = box
+                val left = (x0 * bitmap.width).roundToInt()
+                val top = (y0 * bitmap.height).roundToInt()
+                val width = ((x1 * bitmap.width).roundToInt() - left).coerceIn(1, bitmap.width - left)
+                val height = ((y1 * bitmap.height).roundToInt() - top).coerceIn(1, bitmap.height - top)
+                bitmap = Bitmap.createBitmap(bitmap, left, top, width, height)
+            }
+            val scale = minOf(1.0, CARD_SIDE.toDouble() / maxOf(bitmap.width, bitmap.height))
+            if (scale < 1) bitmap = Bitmap.createScaledBitmap(bitmap, (bitmap.width * scale).roundToInt(), (bitmap.height * scale).roundToInt(), true)
+            image.parentFile!!.mkdirs()
+            image.outputStream().use { bitmap.compress(Bitmap.CompressFormat.JPEG, CARD_QUALITY, it) }
+            return image
+        }
+
+        /** The notes the lesson's cards make, as the computer's (app/anki.py: notes): each card's note
+         * type from what it is and the options, its fields, tags, deck. `file`: how a field shows a file;
+         * `deciding`: the same for a file deciding the note's type or key (AnkiDroid may refuse it: "");
+         * `diagram`: a photo's diagram image (its number, the photo, its crop). */
+        internal fun buildNotes(
+            noteTypes: NoteTypes,
+            deck: Deck,
+            media: Media,
+            options: Options,
+            file: (File, String) -> String,
+            deciding: (File, String, String) -> String,
+            diagram: (Int, File, List<Double>?) -> File,
+        ): List<Built> {
+            val own = listOfNotNull(media.lesson.takeIf { it.isNotEmpty() }?.let(::lessonTag)) // to find the lesson's notes again
+            // A dictation alone's card with no front (the AI wrote none: ANK-08) gets its blank, the word
+            // heard to write: else no note (AnkiDroid adds none whose first field is empty)
+            val cards = if (!options.dictationOnly) deck.cards else deck.cards.map {
+                if (it.front.isBlank() && it.back.isNotBlank()) it.copy(front = DICTATION_FRONT) else it
+            }
+            val notes = cards.withIndex().filter { it.value.front.isNotBlank() }.mapNotNull { (i, card) ->
+                val name = deckName(deck.deck, card.subdeck)
+                val tags = (card.tags.map { it.trim().replace(' ', '_') }.filter { it.isNotEmpty() } + "notosaurus" + own + media.extraTags[card.id].orEmpty()).toSet()
+                val common = mapOf("Info" to info(card), "Explanation" to html(card.explanation), "Mnemonic" to html(card.mnemonic))
+                // Which note it is, sent again: the card's own id; else its place in the lesson; else its text
+                val key = card.id.ifBlank { if (media.lesson.isNotEmpty()) "${media.lesson}:$i" else html(card.front) }
+                val sound by lazy { media.audio[Speech.spoken(card, options.dictation)]?.let { if (options.dictation) deciding(it, "audio", key) else file(it, "audio") }.orEmpty() }
+                fun note(variant: String, fields: Map<String, String>) = Built(noteTypes[variant], name, common + fields, tags, key)
+                // Only for the cards showing them (lazy): no file into AnkiDroid that no note shows
+                val picture by lazy { media.pictures[card.picture]?.let { if (card.isChoice()) file(it, "image") else deciding(it, "image", key) }.orEmpty() }
+                // Any card's picture (not a card of its own): on its question, or with its answer
+                val pictures = mapOf(
+                    "Picture" to (if (card.pictureOnBack) "" else picture), "BackPicture" to (if (card.pictureOnBack) picture else ""),
+                )
+                when {
+                    card.isChoice() -> note( // not heard: the options are read
+                        "choice",
+                        mapOf(
+                            "Id" to key, "Question" to html(card.front), "Answer" to html(card.back),
+                            "Choices" to choicesHtml(card, reveal = false), "AnswerChoices" to choicesHtml(card, reveal = true),
+                            (if (card.pictureOnBack) "BackPicture" else "Picture") to picture,
+                        ),
+                    )
+                    GAP.containsMatchIn(card.front) -> note("cloze", mapOf("Id" to key, "Text" to html(card.front), "Extra" to html(card.back)))
+                    card.mask != null -> {
+                        if (card.back.isBlank()) return@mapNotNull null
+                        val photo = media.photos[card.mask.page] ?: return@mapNotNull null
+                        val page = deck.cards.mapNotNull { it.mask }.filter { it.page == card.mask.page }
+                        // The diagram only (its frame, holding every label), light: shared by its cards
+                        val box = crop(media.frames[card.mask.page], page)
+                        val image = diagram(card.mask.page, photo, box)
+                        note(
+                            "diagram" + if (options.typing) "+typing" else "",
+                            mapOf(
+                                "Id" to "${media.lesson}:${card.mask.page}:${card.mask.n}", "Front" to html(card.front), "Back" to html(card.back),
+                                "Audio" to sound, "Image" to file(image, "image"),
+                                "Masks" to masksHtml(page, card.mask.n, reveal = false, box), "AnswerMasks" to masksHtml(page, card.mask.n, reveal = true, box),
+                            ),
+                        )
+                    }
+                    card.back.isBlank() -> null
+                    // Text, its picture if any on the question or with the answer: still the card it is
+                    // (typed, reversed, heard: a dictation with its picture stays one)
+                    else -> {
+                        val heard = options.dictation && sound.isNotEmpty() // nothing to hear without a voice
+                        val variant = if (heard && options.dictationOnly) listOf("text", "dictation-only")
+                        else listOf("text") + listOfNotNull("reverse".takeIf { options.reverse }, "typing".takeIf { options.typing && typed(card.back) }, "dictation".takeIf { heard })
+                        note(variant.joinToString("+"), mapOf("Id" to key, "Front" to html(card.front), "Back" to html(card.back), "Audio" to sound) + pictures)
+                    }
+                }
+            }
+            return notes
+        }
     }
 }
+
+/** A note as a lesson's card makes it, wherever it goes (AnkiDroid, a package): its note type,
+ * deck, fields by name (its files as `file` and `deciding` write them), tags, its card's id. */
+internal class Built(val type: NoteType, val deck: String, val values: Map<String, String>, val tags: Set<String>, val card: String) {
+    val key: String get() = type.keyOf(values)
+}
+

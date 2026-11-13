@@ -31,7 +31,16 @@ def spec(nt: anki.NoteType) -> dict:
         "cards": [{"name": t["name"], "front": t["qfmt"], "back": t["afmt"]} for t in nt.templates],
         "css": nt.css,
         "signature": nt.signature,  # the app's must be the same: neither brings the other's "up to date"
+        # The note type as a package holds it (genanki's, the computer's .apkg): its id, which
+        # templates make a card from which fields ("req"); the app writes its own .apkg with it
+        "model": _package_model(nt),
     }
+
+
+def _package_model(nt: anki.NoteType) -> dict:
+    model = anki._model(nt).to_json(0, None)
+    model.pop("mod"), model.pop("did")  # the package's own: written when it is
+    return model
 
 
 def variants() -> dict[str, anki.NoteType]:

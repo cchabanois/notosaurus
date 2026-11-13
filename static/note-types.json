@@ -25,7 +25,135 @@
     }
    ],
    "css": ".card { font-family: system-ui, sans-serif; font-size: 26px; text-align: center; }\n.info { font-size: 18px; color: #777; margin-top: 12px; }\n.card img { max-width: 100%; height: auto; }\n.dictation { font-size: 40px; }\n.notosaurus-help {\n  max-width: 32em; margin: 10px auto 0; padding: 4px 10px; border-left: 3px solid #8bb8c4;\n  font-size: 18px; color: #555; text-align: left;\n}\n.nightMode .notosaurus-help { color: #bbb; }\n.notosaurus-fix { margin-top: 16px; font-size: 14px; }\n.notosaurus-fix a { color: #8bb8c4; text-decoration: none; }\n.notosaurus-context { font-size: 14px; color: #888; margin-bottom: 12px; }\n.notosaurus-picture img { max-width: min(100%, 320px); max-height: 50vh; border-radius: 12px; }\n",
-   "signature": "ff6ca578faff"
+   "signature": "ff6ca578faff",
+   "model": {
+    "css": ".card { font-family: system-ui, sans-serif; font-size: 26px; text-align: center; }\n.info { font-size: 18px; color: #777; margin-top: 12px; }\n.card img { max-width: 100%; height: auto; }\n.dictation { font-size: 40px; }\n.notosaurus-help {\n  max-width: 32em; margin: 10px auto 0; padding: 4px 10px; border-left: 3px solid #8bb8c4;\n  font-size: 18px; color: #555; text-align: left;\n}\n.nightMode .notosaurus-help { color: #bbb; }\n.notosaurus-fix { margin-top: 16px; font-size: 14px; }\n.notosaurus-fix a { color: #8bb8c4; text-decoration: none; }\n.notosaurus-context { font-size: 14px; color: #888; margin-bottom: 12px; }\n.notosaurus-picture img { max-width: min(100%, 320px); max-height: 50vh; border-radius: 12px; }\n\n/* Notosaurus note type, version ff6ca578faff: updated by Notosaurus */\n",
+    "flds": [
+     {
+      "name": "Front",
+      "ord": 0,
+      "font": "Liberation Sans",
+      "media": [],
+      "rtl": false,
+      "size": 20,
+      "sticky": false
+     },
+     {
+      "name": "Back",
+      "ord": 1,
+      "font": "Liberation Sans",
+      "media": [],
+      "rtl": false,
+      "size": 20,
+      "sticky": false
+     },
+     {
+      "name": "Info",
+      "ord": 2,
+      "font": "Liberation Sans",
+      "media": [],
+      "rtl": false,
+      "size": 20,
+      "sticky": false
+     },
+     {
+      "name": "Audio",
+      "ord": 3,
+      "font": "Liberation Sans",
+      "media": [],
+      "rtl": false,
+      "size": 20,
+      "sticky": false
+     },
+     {
+      "name": "Explanation",
+      "ord": 4,
+      "font": "Liberation Sans",
+      "media": [],
+      "rtl": false,
+      "size": 20,
+      "sticky": false
+     },
+     {
+      "name": "Mnemonic",
+      "ord": 5,
+      "font": "Liberation Sans",
+      "media": [],
+      "rtl": false,
+      "size": 20,
+      "sticky": false
+     },
+     {
+      "name": "Picture",
+      "ord": 6,
+      "font": "Liberation Sans",
+      "media": [],
+      "rtl": false,
+      "size": 20,
+      "sticky": false
+     },
+     {
+      "name": "BackPicture",
+      "ord": 7,
+      "font": "Liberation Sans",
+      "media": [],
+      "rtl": false,
+      "size": 20,
+      "sticky": false
+     },
+     {
+      "name": "Id",
+      "ord": 8,
+      "font": "Liberation Sans",
+      "media": [],
+      "rtl": false,
+      "size": 20,
+      "sticky": false
+     },
+     {
+      "name": "Source",
+      "ord": 9,
+      "font": "Liberation Sans",
+      "media": [],
+      "rtl": false,
+      "size": 20,
+      "sticky": false
+     }
+    ],
+    "id": "29004110",
+    "latexPost": "\\end{document}",
+    "latexPre": "\\documentclass[12pt]{article}\n\\special{papersize=3in,5in}\n\\usepackage[utf8]{inputenc}\n\\usepackage{amssymb,amsmath}\n\\pagestyle{empty}\n\\setlength{\\parindent}{0in}\n\\begin{document}\n",
+    "latexsvg": false,
+    "name": "Notosaurus front/back (audio) v2",
+    "req": [
+     [
+      0,
+      "any",
+      [
+       0,
+       6
+      ]
+     ]
+    ],
+    "sortf": 0,
+    "tags": [],
+    "tmpls": [
+     {
+      "name": "Front → Back",
+      "qfmt": "<div class=\"notosaurus-context\">{{Deck}}</div><script>(function(){var D=document.querySelectorAll(\".notosaurus-context:not([data-done])\");for(var i=0;i<D.length;i++){D[i].dataset.done=\"1\";D[i].textContent=D[i].textContent.split(\"::\").join(\" › \");}})();</script>{{#Picture}}<div class=\"notosaurus-picture\">{{Picture}}</div>{{/Picture}}{{Front}}",
+      "afmt": "{{FrontSide}}<hr id=\"answer\">{{Back}}{{Audio}}{{#BackPicture}}<div class=\"notosaurus-picture\">{{BackPicture}}</div>{{/BackPicture}}{{#Info}}<div class=\"info\">{{Info}}</div>{{/Info}}{{#Explanation}}<div class=\"notosaurus-help\">💬 {{Explanation}}</div>{{/Explanation}}{{#Mnemonic}}<div class=\"notosaurus-help\">🧠 {{Mnemonic}}</div>{{/Mnemonic}}<div class=\"notosaurus-fix\"><a class=\"nfix\" href=\"#\" data-key=\"{{#Id}}{{text:Id}}{{/Id}}{{^Id}}{{text:Front}}{{/Id}}\" data-tags=\"{{Tags}}\">✎ Notosaurus</a></div><script>(function(){var A=document.querySelectorAll(\"a.nfix:not([data-done])\");for(var i=0;i<A.length;i++){var a=A[i];a.dataset.done=\"1\";var m=/(?:^|\\s)notosaurus::(\\S+)/.exec(a.dataset.tags||\"\");var c=document.documentElement.className+\" \"+document.body.className,android=/\\bandroid\\b/.test(c)||/Android/.test(navigator.userAgent),desktop=typeof pycmd===\"function\"||/\\b(win|mac|linux)\\b/.test(c);if(!m||!(android||desktop)){a.parentNode.style.display=\"none\";continue;}var q=\"lesson=\"+encodeURIComponent(m[1])+\"&key=\"+encodeURIComponent(a.dataset.key||\"\");a.href=(android?\"https://cchabanois.github.io/notosaurus/fix/?\":\"http://localhost:8000/?\")+q;}})();</script>",
+      "ord": 0,
+      "bafmt": "",
+      "bqfmt": "",
+      "bfont": "",
+      "bsize": 0,
+      "did": null
+     }
+    ],
+    "type": 0,
+    "usn": -1,
+    "vers": []
+   }
   },
   "text+dictation": {
    "name": "Notosaurus front/back + dictation (audio) v2",
@@ -57,7 +185,154 @@
     }
    ],
    "css": ".card { font-family: system-ui, sans-serif; font-size: 26px; text-align: center; }\n.info { font-size: 18px; color: #777; margin-top: 12px; }\n.card img { max-width: 100%; height: auto; }\n.dictation { font-size: 40px; }\n.notosaurus-help {\n  max-width: 32em; margin: 10px auto 0; padding: 4px 10px; border-left: 3px solid #8bb8c4;\n  font-size: 18px; color: #555; text-align: left;\n}\n.nightMode .notosaurus-help { color: #bbb; }\n.notosaurus-fix { margin-top: 16px; font-size: 14px; }\n.notosaurus-fix a { color: #8bb8c4; text-decoration: none; }\n.notosaurus-context { font-size: 14px; color: #888; margin-bottom: 12px; }\n.notosaurus-picture img { max-width: min(100%, 320px); max-height: 50vh; border-radius: 12px; }\n",
-   "signature": "0226120afb97"
+   "signature": "0226120afb97",
+   "model": {
+    "css": ".card { font-family: system-ui, sans-serif; font-size: 26px; text-align: center; }\n.info { font-size: 18px; color: #777; margin-top: 12px; }\n.card img { max-width: 100%; height: auto; }\n.dictation { font-size: 40px; }\n.notosaurus-help {\n  max-width: 32em; margin: 10px auto 0; padding: 4px 10px; border-left: 3px solid #8bb8c4;\n  font-size: 18px; color: #555; text-align: left;\n}\n.nightMode .notosaurus-help { color: #bbb; }\n.notosaurus-fix { margin-top: 16px; font-size: 14px; }\n.notosaurus-fix a { color: #8bb8c4; text-decoration: none; }\n.notosaurus-context { font-size: 14px; color: #888; margin-bottom: 12px; }\n.notosaurus-picture img { max-width: min(100%, 320px); max-height: 50vh; border-radius: 12px; }\n\n/* Notosaurus note type, version 0226120afb97: updated by Notosaurus */\n",
+    "flds": [
+     {
+      "name": "Front",
+      "ord": 0,
+      "font": "Liberation Sans",
+      "media": [],
+      "rtl": false,
+      "size": 20,
+      "sticky": false
+     },
+     {
+      "name": "Back",
+      "ord": 1,
+      "font": "Liberation Sans",
+      "media": [],
+      "rtl": false,
+      "size": 20,
+      "sticky": false
+     },
+     {
+      "name": "Info",
+      "ord": 2,
+      "font": "Liberation Sans",
+      "media": [],
+      "rtl": false,
+      "size": 20,
+      "sticky": false
+     },
+     {
+      "name": "Audio",
+      "ord": 3,
+      "font": "Liberation Sans",
+      "media": [],
+      "rtl": false,
+      "size": 20,
+      "sticky": false
+     },
+     {
+      "name": "Explanation",
+      "ord": 4,
+      "font": "Liberation Sans",
+      "media": [],
+      "rtl": false,
+      "size": 20,
+      "sticky": false
+     },
+     {
+      "name": "Mnemonic",
+      "ord": 5,
+      "font": "Liberation Sans",
+      "media": [],
+      "rtl": false,
+      "size": 20,
+      "sticky": false
+     },
+     {
+      "name": "Picture",
+      "ord": 6,
+      "font": "Liberation Sans",
+      "media": [],
+      "rtl": false,
+      "size": 20,
+      "sticky": false
+     },
+     {
+      "name": "BackPicture",
+      "ord": 7,
+      "font": "Liberation Sans",
+      "media": [],
+      "rtl": false,
+      "size": 20,
+      "sticky": false
+     },
+     {
+      "name": "Id",
+      "ord": 8,
+      "font": "Liberation Sans",
+      "media": [],
+      "rtl": false,
+      "size": 20,
+      "sticky": false
+     },
+     {
+      "name": "Source",
+      "ord": 9,
+      "font": "Liberation Sans",
+      "media": [],
+      "rtl": false,
+      "size": 20,
+      "sticky": false
+     }
+    ],
+    "id": "1764887889",
+    "latexPost": "\\end{document}",
+    "latexPre": "\\documentclass[12pt]{article}\n\\special{papersize=3in,5in}\n\\usepackage[utf8]{inputenc}\n\\usepackage{amssymb,amsmath}\n\\pagestyle{empty}\n\\setlength{\\parindent}{0in}\n\\begin{document}\n",
+    "latexsvg": false,
+    "name": "Notosaurus front/back + dictation (audio) v2",
+    "req": [
+     [
+      0,
+      "any",
+      [
+       0,
+       6
+      ]
+     ],
+     [
+      1,
+      "any",
+      [
+       3,
+       6
+      ]
+     ]
+    ],
+    "sortf": 0,
+    "tags": [],
+    "tmpls": [
+     {
+      "name": "Front → Back",
+      "qfmt": "<div class=\"notosaurus-context\">{{Deck}}</div><script>(function(){var D=document.querySelectorAll(\".notosaurus-context:not([data-done])\");for(var i=0;i<D.length;i++){D[i].dataset.done=\"1\";D[i].textContent=D[i].textContent.split(\"::\").join(\" › \");}})();</script>{{#Picture}}<div class=\"notosaurus-picture\">{{Picture}}</div>{{/Picture}}{{Front}}",
+      "afmt": "{{FrontSide}}<hr id=\"answer\">{{Back}}{{Audio}}{{#BackPicture}}<div class=\"notosaurus-picture\">{{BackPicture}}</div>{{/BackPicture}}{{#Info}}<div class=\"info\">{{Info}}</div>{{/Info}}{{#Explanation}}<div class=\"notosaurus-help\">💬 {{Explanation}}</div>{{/Explanation}}{{#Mnemonic}}<div class=\"notosaurus-help\">🧠 {{Mnemonic}}</div>{{/Mnemonic}}<div class=\"notosaurus-fix\"><a class=\"nfix\" href=\"#\" data-key=\"{{#Id}}{{text:Id}}{{/Id}}{{^Id}}{{text:Front}}{{/Id}}\" data-tags=\"{{Tags}}\">✎ Notosaurus</a></div><script>(function(){var A=document.querySelectorAll(\"a.nfix:not([data-done])\");for(var i=0;i<A.length;i++){var a=A[i];a.dataset.done=\"1\";var m=/(?:^|\\s)notosaurus::(\\S+)/.exec(a.dataset.tags||\"\");var c=document.documentElement.className+\" \"+document.body.className,android=/\\bandroid\\b/.test(c)||/Android/.test(navigator.userAgent),desktop=typeof pycmd===\"function\"||/\\b(win|mac|linux)\\b/.test(c);if(!m||!(android||desktop)){a.parentNode.style.display=\"none\";continue;}var q=\"lesson=\"+encodeURIComponent(m[1])+\"&key=\"+encodeURIComponent(a.dataset.key||\"\");a.href=(android?\"https://cchabanois.github.io/notosaurus/fix/?\":\"http://localhost:8000/?\")+q;}})();</script>",
+      "ord": 0,
+      "bafmt": "",
+      "bqfmt": "",
+      "bfont": "",
+      "bsize": 0,
+      "did": null
+     },
+     {
+      "name": "Dictation",
+      "qfmt": "<div class=\"notosaurus-context\">{{Deck}}</div><script>(function(){var D=document.querySelectorAll(\".notosaurus-context:not([data-done])\");for(var i=0;i<D.length;i++){D[i].dataset.done=\"1\";D[i].textContent=D[i].textContent.split(\"::\").join(\" › \");}})();</script><div class=\"dictation\">🎧</div>{{Audio}}{{#Picture}}<div class=\"notosaurus-picture\">{{Picture}}</div>{{/Picture}}{{type:Back}}",
+      "afmt": "<div class=\"notosaurus-context\">{{Deck}}</div><script>(function(){var D=document.querySelectorAll(\".notosaurus-context:not([data-done])\");for(var i=0;i<D.length;i++){D[i].dataset.done=\"1\";D[i].textContent=D[i].textContent.split(\"::\").join(\" › \");}})();</script><div class=\"dictation\">🎧</div>{{Audio}}{{#Picture}}<div class=\"notosaurus-picture\">{{Picture}}</div>{{/Picture}}{{type:Back}}<hr id=\"answer\">{{Front}}{{#BackPicture}}<div class=\"notosaurus-picture\">{{BackPicture}}</div>{{/BackPicture}}{{#Info}}<div class=\"info\">{{Info}}</div>{{/Info}}{{#Explanation}}<div class=\"notosaurus-help\">💬 {{Explanation}}</div>{{/Explanation}}{{#Mnemonic}}<div class=\"notosaurus-help\">🧠 {{Mnemonic}}</div>{{/Mnemonic}}<div class=\"notosaurus-fix\"><a class=\"nfix\" href=\"#\" data-key=\"{{#Id}}{{text:Id}}{{/Id}}{{^Id}}{{text:Front}}{{/Id}}\" data-tags=\"{{Tags}}\">✎ Notosaurus</a></div><script>(function(){var A=document.querySelectorAll(\"a.nfix:not([data-done])\");for(var i=0;i<A.length;i++){var a=A[i];a.dataset.done=\"1\";var m=/(?:^|\\s)notosaurus::(\\S+)/.exec(a.dataset.tags||\"\");var c=document.documentElement.className+\" \"+document.body.className,android=/\\bandroid\\b/.test(c)||/Android/.test(navigator.userAgent),desktop=typeof pycmd===\"function\"||/\\b(win|mac|linux)\\b/.test(c);if(!m||!(android||desktop)){a.parentNode.style.display=\"none\";continue;}var q=\"lesson=\"+encodeURIComponent(m[1])+\"&key=\"+encodeURIComponent(a.dataset.key||\"\");a.href=(android?\"https://cchabanois.github.io/notosaurus/fix/?\":\"http://localhost:8000/?\")+q;}})();</script>",
+      "ord": 1,
+      "bafmt": "",
+      "bqfmt": "",
+      "bfont": "",
+      "bsize": 0,
+      "did": null
+     }
+    ],
+    "type": 0,
+    "usn": -1,
+    "vers": []
+   }
   },
   "text+typing": {
    "name": "Notosaurus front/back typed (audio) v2",
@@ -84,7 +359,135 @@
     }
    ],
    "css": ".card { font-family: system-ui, sans-serif; font-size: 26px; text-align: center; }\n.info { font-size: 18px; color: #777; margin-top: 12px; }\n.card img { max-width: 100%; height: auto; }\n.dictation { font-size: 40px; }\n.notosaurus-help {\n  max-width: 32em; margin: 10px auto 0; padding: 4px 10px; border-left: 3px solid #8bb8c4;\n  font-size: 18px; color: #555; text-align: left;\n}\n.nightMode .notosaurus-help { color: #bbb; }\n.notosaurus-fix { margin-top: 16px; font-size: 14px; }\n.notosaurus-fix a { color: #8bb8c4; text-decoration: none; }\n.notosaurus-context { font-size: 14px; color: #888; margin-bottom: 12px; }\n.notosaurus-picture img { max-width: min(100%, 320px); max-height: 50vh; border-radius: 12px; }\n",
-   "signature": "af795d93386d"
+   "signature": "af795d93386d",
+   "model": {
+    "css": ".card { font-family: system-ui, sans-serif; font-size: 26px; text-align: center; }\n.info { font-size: 18px; color: #777; margin-top: 12px; }\n.card img { max-width: 100%; height: auto; }\n.dictation { font-size: 40px; }\n.notosaurus-help {\n  max-width: 32em; margin: 10px auto 0; padding: 4px 10px; border-left: 3px solid #8bb8c4;\n  font-size: 18px; color: #555; text-align: left;\n}\n.nightMode .notosaurus-help { color: #bbb; }\n.notosaurus-fix { margin-top: 16px; font-size: 14px; }\n.notosaurus-fix a { color: #8bb8c4; text-decoration: none; }\n.notosaurus-context { font-size: 14px; color: #888; margin-bottom: 12px; }\n.notosaurus-picture img { max-width: min(100%, 320px); max-height: 50vh; border-radius: 12px; }\n\n/* Notosaurus note type, version af795d93386d: updated by Notosaurus */\n",
+    "flds": [
+     {
+      "name": "Front",
+      "ord": 0,
+      "font": "Liberation Sans",
+      "media": [],
+      "rtl": false,
+      "size": 20,
+      "sticky": false
+     },
+     {
+      "name": "Back",
+      "ord": 1,
+      "font": "Liberation Sans",
+      "media": [],
+      "rtl": false,
+      "size": 20,
+      "sticky": false
+     },
+     {
+      "name": "Info",
+      "ord": 2,
+      "font": "Liberation Sans",
+      "media": [],
+      "rtl": false,
+      "size": 20,
+      "sticky": false
+     },
+     {
+      "name": "Audio",
+      "ord": 3,
+      "font": "Liberation Sans",
+      "media": [],
+      "rtl": false,
+      "size": 20,
+      "sticky": false
+     },
+     {
+      "name": "Explanation",
+      "ord": 4,
+      "font": "Liberation Sans",
+      "media": [],
+      "rtl": false,
+      "size": 20,
+      "sticky": false
+     },
+     {
+      "name": "Mnemonic",
+      "ord": 5,
+      "font": "Liberation Sans",
+      "media": [],
+      "rtl": false,
+      "size": 20,
+      "sticky": false
+     },
+     {
+      "name": "Picture",
+      "ord": 6,
+      "font": "Liberation Sans",
+      "media": [],
+      "rtl": false,
+      "size": 20,
+      "sticky": false
+     },
+     {
+      "name": "BackPicture",
+      "ord": 7,
+      "font": "Liberation Sans",
+      "media": [],
+      "rtl": false,
+      "size": 20,
+      "sticky": false
+     },
+     {
+      "name": "Id",
+      "ord": 8,
+      "font": "Liberation Sans",
+      "media": [],
+      "rtl": false,
+      "size": 20,
+      "sticky": false
+     },
+     {
+      "name": "Source",
+      "ord": 9,
+      "font": "Liberation Sans",
+      "media": [],
+      "rtl": false,
+      "size": 20,
+      "sticky": false
+     }
+    ],
+    "id": "253960416",
+    "latexPost": "\\end{document}",
+    "latexPre": "\\documentclass[12pt]{article}\n\\special{papersize=3in,5in}\n\\usepackage[utf8]{inputenc}\n\\usepackage{amssymb,amsmath}\n\\pagestyle{empty}\n\\setlength{\\parindent}{0in}\n\\begin{document}\n",
+    "latexsvg": false,
+    "name": "Notosaurus front/back typed (audio) v2",
+    "req": [
+     [
+      0,
+      "any",
+      [
+       0,
+       6
+      ]
+     ]
+    ],
+    "sortf": 0,
+    "tags": [],
+    "tmpls": [
+     {
+      "name": "Front → Back",
+      "qfmt": "<div class=\"notosaurus-context\">{{Deck}}</div><script>(function(){var D=document.querySelectorAll(\".notosaurus-context:not([data-done])\");for(var i=0;i<D.length;i++){D[i].dataset.done=\"1\";D[i].textContent=D[i].textContent.split(\"::\").join(\" › \");}})();</script>{{#Picture}}<div class=\"notosaurus-picture\">{{Picture}}</div>{{/Picture}}{{Front}}{{type:Back}}",
+      "afmt": "<div class=\"notosaurus-context\">{{Deck}}</div><script>(function(){var D=document.querySelectorAll(\".notosaurus-context:not([data-done])\");for(var i=0;i<D.length;i++){D[i].dataset.done=\"1\";D[i].textContent=D[i].textContent.split(\"::\").join(\" › \");}})();</script>{{#Picture}}<div class=\"notosaurus-picture\">{{Picture}}</div>{{/Picture}}{{Front}}<hr id=\"answer\">{{type:Back}}{{Audio}}{{#BackPicture}}<div class=\"notosaurus-picture\">{{BackPicture}}</div>{{/BackPicture}}{{#Info}}<div class=\"info\">{{Info}}</div>{{/Info}}{{#Explanation}}<div class=\"notosaurus-help\">💬 {{Explanation}}</div>{{/Explanation}}{{#Mnemonic}}<div class=\"notosaurus-help\">🧠 {{Mnemonic}}</div>{{/Mnemonic}}<div class=\"notosaurus-fix\"><a class=\"nfix\" href=\"#\" data-key=\"{{#Id}}{{text:Id}}{{/Id}}{{^Id}}{{text:Front}}{{/Id}}\" data-tags=\"{{Tags}}\">✎ Notosaurus</a></div><script>(function(){var A=document.querySelectorAll(\"a.nfix:not([data-done])\");for(var i=0;i<A.length;i++){var a=A[i];a.dataset.done=\"1\";var m=/(?:^|\\s)notosaurus::(\\S+)/.exec(a.dataset.tags||\"\");var c=document.documentElement.className+\" \"+document.body.className,android=/\\bandroid\\b/.test(c)||/Android/.test(navigator.userAgent),desktop=typeof pycmd===\"function\"||/\\b(win|mac|linux)\\b/.test(c);if(!m||!(android||desktop)){a.parentNode.style.display=\"none\";continue;}var q=\"lesson=\"+encodeURIComponent(m[1])+\"&key=\"+encodeURIComponent(a.dataset.key||\"\");a.href=(android?\"https://cchabanois.github.io/notosaurus/fix/?\":\"http://localhost:8000/?\")+q;}})();</script>",
+      "ord": 0,
+      "bafmt": "",
+      "bqfmt": "",
+      "bfont": "",
+      "bsize": 0,
+      "did": null
+     }
+    ],
+    "type": 0,
+    "usn": -1,
+    "vers": []
+   }
   },
   "text+typing+dictation": {
    "name": "Notosaurus front/back typed + dictation (audio) v2",
@@ -116,7 +519,154 @@
     }
    ],
    "css": ".card { font-family: system-ui, sans-serif; font-size: 26px; text-align: center; }\n.info { font-size: 18px; color: #777; margin-top: 12px; }\n.card img { max-width: 100%; height: auto; }\n.dictation { font-size: 40px; }\n.notosaurus-help {\n  max-width: 32em; margin: 10px auto 0; padding: 4px 10px; border-left: 3px solid #8bb8c4;\n  font-size: 18px; color: #555; text-align: left;\n}\n.nightMode .notosaurus-help { color: #bbb; }\n.notosaurus-fix { margin-top: 16px; font-size: 14px; }\n.notosaurus-fix a { color: #8bb8c4; text-decoration: none; }\n.notosaurus-context { font-size: 14px; color: #888; margin-bottom: 12px; }\n.notosaurus-picture img { max-width: min(100%, 320px); max-height: 50vh; border-radius: 12px; }\n",
-   "signature": "6cd0ebed7138"
+   "signature": "6cd0ebed7138",
+   "model": {
+    "css": ".card { font-family: system-ui, sans-serif; font-size: 26px; text-align: center; }\n.info { font-size: 18px; color: #777; margin-top: 12px; }\n.card img { max-width: 100%; height: auto; }\n.dictation { font-size: 40px; }\n.notosaurus-help {\n  max-width: 32em; margin: 10px auto 0; padding: 4px 10px; border-left: 3px solid #8bb8c4;\n  font-size: 18px; color: #555; text-align: left;\n}\n.nightMode .notosaurus-help { color: #bbb; }\n.notosaurus-fix { margin-top: 16px; font-size: 14px; }\n.notosaurus-fix a { color: #8bb8c4; text-decoration: none; }\n.notosaurus-context { font-size: 14px; color: #888; margin-bottom: 12px; }\n.notosaurus-picture img { max-width: min(100%, 320px); max-height: 50vh; border-radius: 12px; }\n\n/* Notosaurus note type, version 6cd0ebed7138: updated by Notosaurus */\n",
+    "flds": [
+     {
+      "name": "Front",
+      "ord": 0,
+      "font": "Liberation Sans",
+      "media": [],
+      "rtl": false,
+      "size": 20,
+      "sticky": false
+     },
+     {
+      "name": "Back",
+      "ord": 1,
+      "font": "Liberation Sans",
+      "media": [],
+      "rtl": false,
+      "size": 20,
+      "sticky": false
+     },
+     {
+      "name": "Info",
+      "ord": 2,
+      "font": "Liberation Sans",
+      "media": [],
+      "rtl": false,
+      "size": 20,
+      "sticky": false
+     },
+     {
+      "name": "Audio",
+      "ord": 3,
+      "font": "Liberation Sans",
+      "media": [],
+      "rtl": false,
+      "size": 20,
+      "sticky": false
+     },
+     {
+      "name": "Explanation",
+      "ord": 4,
+      "font": "Liberation Sans",
+      "media": [],
+      "rtl": false,
+      "size": 20,
+      "sticky": false
+     },
+     {
+      "name": "Mnemonic",
+      "ord": 5,
+      "font": "Liberation Sans",
+      "media": [],
+      "rtl": false,
+      "size": 20,
+      "sticky": false
+     },
+     {
+      "name": "Picture",
+      "ord": 6,
+      "font": "Liberation Sans",
+      "media": [],
+      "rtl": false,
+      "size": 20,
+      "sticky": false
+     },
+     {
+      "name": "BackPicture",
+      "ord": 7,
+      "font": "Liberation Sans",
+      "media": [],
+      "rtl": false,
+      "size": 20,
+      "sticky": false
+     },
+     {
+      "name": "Id",
+      "ord": 8,
+      "font": "Liberation Sans",
+      "media": [],
+      "rtl": false,
+      "size": 20,
+      "sticky": false
+     },
+     {
+      "name": "Source",
+      "ord": 9,
+      "font": "Liberation Sans",
+      "media": [],
+      "rtl": false,
+      "size": 20,
+      "sticky": false
+     }
+    ],
+    "id": "2078723530",
+    "latexPost": "\\end{document}",
+    "latexPre": "\\documentclass[12pt]{article}\n\\special{papersize=3in,5in}\n\\usepackage[utf8]{inputenc}\n\\usepackage{amssymb,amsmath}\n\\pagestyle{empty}\n\\setlength{\\parindent}{0in}\n\\begin{document}\n",
+    "latexsvg": false,
+    "name": "Notosaurus front/back typed + dictation (audio) v2",
+    "req": [
+     [
+      0,
+      "any",
+      [
+       0,
+       6
+      ]
+     ],
+     [
+      1,
+      "any",
+      [
+       3,
+       6
+      ]
+     ]
+    ],
+    "sortf": 0,
+    "tags": [],
+    "tmpls": [
+     {
+      "name": "Front → Back",
+      "qfmt": "<div class=\"notosaurus-context\">{{Deck}}</div><script>(function(){var D=document.querySelectorAll(\".notosaurus-context:not([data-done])\");for(var i=0;i<D.length;i++){D[i].dataset.done=\"1\";D[i].textContent=D[i].textContent.split(\"::\").join(\" › \");}})();</script>{{#Picture}}<div class=\"notosaurus-picture\">{{Picture}}</div>{{/Picture}}{{Front}}{{type:Back}}",
+      "afmt": "<div class=\"notosaurus-context\">{{Deck}}</div><script>(function(){var D=document.querySelectorAll(\".notosaurus-context:not([data-done])\");for(var i=0;i<D.length;i++){D[i].dataset.done=\"1\";D[i].textContent=D[i].textContent.split(\"::\").join(\" › \");}})();</script>{{#Picture}}<div class=\"notosaurus-picture\">{{Picture}}</div>{{/Picture}}{{Front}}<hr id=\"answer\">{{type:Back}}{{Audio}}{{#BackPicture}}<div class=\"notosaurus-picture\">{{BackPicture}}</div>{{/BackPicture}}{{#Info}}<div class=\"info\">{{Info}}</div>{{/Info}}{{#Explanation}}<div class=\"notosaurus-help\">💬 {{Explanation}}</div>{{/Explanation}}{{#Mnemonic}}<div class=\"notosaurus-help\">🧠 {{Mnemonic}}</div>{{/Mnemonic}}<div class=\"notosaurus-fix\"><a class=\"nfix\" href=\"#\" data-key=\"{{#Id}}{{text:Id}}{{/Id}}{{^Id}}{{text:Front}}{{/Id}}\" data-tags=\"{{Tags}}\">✎ Notosaurus</a></div><script>(function(){var A=document.querySelectorAll(\"a.nfix:not([data-done])\");for(var i=0;i<A.length;i++){var a=A[i];a.dataset.done=\"1\";var m=/(?:^|\\s)notosaurus::(\\S+)/.exec(a.dataset.tags||\"\");var c=document.documentElement.className+\" \"+document.body.className,android=/\\bandroid\\b/.test(c)||/Android/.test(navigator.userAgent),desktop=typeof pycmd===\"function\"||/\\b(win|mac|linux)\\b/.test(c);if(!m||!(android||desktop)){a.parentNode.style.display=\"none\";continue;}var q=\"lesson=\"+encodeURIComponent(m[1])+\"&key=\"+encodeURIComponent(a.dataset.key||\"\");a.href=(android?\"https://cchabanois.github.io/notosaurus/fix/?\":\"http://localhost:8000/?\")+q;}})();</script>",
+      "ord": 0,
+      "bafmt": "",
+      "bqfmt": "",
+      "bfont": "",
+      "bsize": 0,
+      "did": null
+     },
+     {
+      "name": "Dictation",
+      "qfmt": "<div class=\"notosaurus-context\">{{Deck}}</div><script>(function(){var D=document.querySelectorAll(\".notosaurus-context:not([data-done])\");for(var i=0;i<D.length;i++){D[i].dataset.done=\"1\";D[i].textContent=D[i].textContent.split(\"::\").join(\" › \");}})();</script><div class=\"dictation\">🎧</div>{{Audio}}{{#Picture}}<div class=\"notosaurus-picture\">{{Picture}}</div>{{/Picture}}{{type:Back}}",
+      "afmt": "<div class=\"notosaurus-context\">{{Deck}}</div><script>(function(){var D=document.querySelectorAll(\".notosaurus-context:not([data-done])\");for(var i=0;i<D.length;i++){D[i].dataset.done=\"1\";D[i].textContent=D[i].textContent.split(\"::\").join(\" › \");}})();</script><div class=\"dictation\">🎧</div>{{Audio}}{{#Picture}}<div class=\"notosaurus-picture\">{{Picture}}</div>{{/Picture}}{{type:Back}}<hr id=\"answer\">{{Front}}{{#BackPicture}}<div class=\"notosaurus-picture\">{{BackPicture}}</div>{{/BackPicture}}{{#Info}}<div class=\"info\">{{Info}}</div>{{/Info}}{{#Explanation}}<div class=\"notosaurus-help\">💬 {{Explanation}}</div>{{/Explanation}}{{#Mnemonic}}<div class=\"notosaurus-help\">🧠 {{Mnemonic}}</div>{{/Mnemonic}}<div class=\"notosaurus-fix\"><a class=\"nfix\" href=\"#\" data-key=\"{{#Id}}{{text:Id}}{{/Id}}{{^Id}}{{text:Front}}{{/Id}}\" data-tags=\"{{Tags}}\">✎ Notosaurus</a></div><script>(function(){var A=document.querySelectorAll(\"a.nfix:not([data-done])\");for(var i=0;i<A.length;i++){var a=A[i];a.dataset.done=\"1\";var m=/(?:^|\\s)notosaurus::(\\S+)/.exec(a.dataset.tags||\"\");var c=document.documentElement.className+\" \"+document.body.className,android=/\\bandroid\\b/.test(c)||/Android/.test(navigator.userAgent),desktop=typeof pycmd===\"function\"||/\\b(win|mac|linux)\\b/.test(c);if(!m||!(android||desktop)){a.parentNode.style.display=\"none\";continue;}var q=\"lesson=\"+encodeURIComponent(m[1])+\"&key=\"+encodeURIComponent(a.dataset.key||\"\");a.href=(android?\"https://cchabanois.github.io/notosaurus/fix/?\":\"http://localhost:8000/?\")+q;}})();</script>",
+      "ord": 1,
+      "bafmt": "",
+      "bqfmt": "",
+      "bfont": "",
+      "bsize": 0,
+      "did": null
+     }
+    ],
+    "type": 0,
+    "usn": -1,
+    "vers": []
+   }
   },
   "text+reverse": {
    "name": "Notosaurus front/back + reverse (audio) v2",
@@ -148,7 +698,154 @@
     }
    ],
    "css": ".card { font-family: system-ui, sans-serif; font-size: 26px; text-align: center; }\n.info { font-size: 18px; color: #777; margin-top: 12px; }\n.card img { max-width: 100%; height: auto; }\n.dictation { font-size: 40px; }\n.notosaurus-help {\n  max-width: 32em; margin: 10px auto 0; padding: 4px 10px; border-left: 3px solid #8bb8c4;\n  font-size: 18px; color: #555; text-align: left;\n}\n.nightMode .notosaurus-help { color: #bbb; }\n.notosaurus-fix { margin-top: 16px; font-size: 14px; }\n.notosaurus-fix a { color: #8bb8c4; text-decoration: none; }\n.notosaurus-context { font-size: 14px; color: #888; margin-bottom: 12px; }\n.notosaurus-picture img { max-width: min(100%, 320px); max-height: 50vh; border-radius: 12px; }\n",
-   "signature": "13626e47fd31"
+   "signature": "13626e47fd31",
+   "model": {
+    "css": ".card { font-family: system-ui, sans-serif; font-size: 26px; text-align: center; }\n.info { font-size: 18px; color: #777; margin-top: 12px; }\n.card img { max-width: 100%; height: auto; }\n.dictation { font-size: 40px; }\n.notosaurus-help {\n  max-width: 32em; margin: 10px auto 0; padding: 4px 10px; border-left: 3px solid #8bb8c4;\n  font-size: 18px; color: #555; text-align: left;\n}\n.nightMode .notosaurus-help { color: #bbb; }\n.notosaurus-fix { margin-top: 16px; font-size: 14px; }\n.notosaurus-fix a { color: #8bb8c4; text-decoration: none; }\n.notosaurus-context { font-size: 14px; color: #888; margin-bottom: 12px; }\n.notosaurus-picture img { max-width: min(100%, 320px); max-height: 50vh; border-radius: 12px; }\n\n/* Notosaurus note type, version 13626e47fd31: updated by Notosaurus */\n",
+    "flds": [
+     {
+      "name": "Front",
+      "ord": 0,
+      "font": "Liberation Sans",
+      "media": [],
+      "rtl": false,
+      "size": 20,
+      "sticky": false
+     },
+     {
+      "name": "Back",
+      "ord": 1,
+      "font": "Liberation Sans",
+      "media": [],
+      "rtl": false,
+      "size": 20,
+      "sticky": false
+     },
+     {
+      "name": "Info",
+      "ord": 2,
+      "font": "Liberation Sans",
+      "media": [],
+      "rtl": false,
+      "size": 20,
+      "sticky": false
+     },
+     {
+      "name": "Audio",
+      "ord": 3,
+      "font": "Liberation Sans",
+      "media": [],
+      "rtl": false,
+      "size": 20,
+      "sticky": false
+     },
+     {
+      "name": "Explanation",
+      "ord": 4,
+      "font": "Liberation Sans",
+      "media": [],
+      "rtl": false,
+      "size": 20,
+      "sticky": false
+     },
+     {
+      "name": "Mnemonic",
+      "ord": 5,
+      "font": "Liberation Sans",
+      "media": [],
+      "rtl": false,
+      "size": 20,
+      "sticky": false
+     },
+     {
+      "name": "Picture",
+      "ord": 6,
+      "font": "Liberation Sans",
+      "media": [],
+      "rtl": false,
+      "size": 20,
+      "sticky": false
+     },
+     {
+      "name": "BackPicture",
+      "ord": 7,
+      "font": "Liberation Sans",
+      "media": [],
+      "rtl": false,
+      "size": 20,
+      "sticky": false
+     },
+     {
+      "name": "Id",
+      "ord": 8,
+      "font": "Liberation Sans",
+      "media": [],
+      "rtl": false,
+      "size": 20,
+      "sticky": false
+     },
+     {
+      "name": "Source",
+      "ord": 9,
+      "font": "Liberation Sans",
+      "media": [],
+      "rtl": false,
+      "size": 20,
+      "sticky": false
+     }
+    ],
+    "id": "1698657235",
+    "latexPost": "\\end{document}",
+    "latexPre": "\\documentclass[12pt]{article}\n\\special{papersize=3in,5in}\n\\usepackage[utf8]{inputenc}\n\\usepackage{amssymb,amsmath}\n\\pagestyle{empty}\n\\setlength{\\parindent}{0in}\n\\begin{document}\n",
+    "latexsvg": false,
+    "name": "Notosaurus front/back + reverse (audio) v2",
+    "req": [
+     [
+      0,
+      "any",
+      [
+       0,
+       6
+      ]
+     ],
+     [
+      1,
+      "any",
+      [
+       1,
+       3
+      ]
+     ]
+    ],
+    "sortf": 0,
+    "tags": [],
+    "tmpls": [
+     {
+      "name": "Front → Back",
+      "qfmt": "<div class=\"notosaurus-context\">{{Deck}}</div><script>(function(){var D=document.querySelectorAll(\".notosaurus-context:not([data-done])\");for(var i=0;i<D.length;i++){D[i].dataset.done=\"1\";D[i].textContent=D[i].textContent.split(\"::\").join(\" › \");}})();</script>{{#Picture}}<div class=\"notosaurus-picture\">{{Picture}}</div>{{/Picture}}{{Front}}",
+      "afmt": "{{FrontSide}}<hr id=\"answer\">{{Back}}{{Audio}}{{#BackPicture}}<div class=\"notosaurus-picture\">{{BackPicture}}</div>{{/BackPicture}}{{#Info}}<div class=\"info\">{{Info}}</div>{{/Info}}{{#Explanation}}<div class=\"notosaurus-help\">💬 {{Explanation}}</div>{{/Explanation}}{{#Mnemonic}}<div class=\"notosaurus-help\">🧠 {{Mnemonic}}</div>{{/Mnemonic}}<div class=\"notosaurus-fix\"><a class=\"nfix\" href=\"#\" data-key=\"{{#Id}}{{text:Id}}{{/Id}}{{^Id}}{{text:Front}}{{/Id}}\" data-tags=\"{{Tags}}\">✎ Notosaurus</a></div><script>(function(){var A=document.querySelectorAll(\"a.nfix:not([data-done])\");for(var i=0;i<A.length;i++){var a=A[i];a.dataset.done=\"1\";var m=/(?:^|\\s)notosaurus::(\\S+)/.exec(a.dataset.tags||\"\");var c=document.documentElement.className+\" \"+document.body.className,android=/\\bandroid\\b/.test(c)||/Android/.test(navigator.userAgent),desktop=typeof pycmd===\"function\"||/\\b(win|mac|linux)\\b/.test(c);if(!m||!(android||desktop)){a.parentNode.style.display=\"none\";continue;}var q=\"lesson=\"+encodeURIComponent(m[1])+\"&key=\"+encodeURIComponent(a.dataset.key||\"\");a.href=(android?\"https://cchabanois.github.io/notosaurus/fix/?\":\"http://localhost:8000/?\")+q;}})();</script>",
+      "ord": 0,
+      "bafmt": "",
+      "bqfmt": "",
+      "bfont": "",
+      "bsize": 0,
+      "did": null
+     },
+     {
+      "name": "Back → Front",
+      "qfmt": "<div class=\"notosaurus-context\">{{Deck}}</div><script>(function(){var D=document.querySelectorAll(\".notosaurus-context:not([data-done])\");for(var i=0;i<D.length;i++){D[i].dataset.done=\"1\";D[i].textContent=D[i].textContent.split(\"::\").join(\" › \");}})();</script>{{Back}}{{Audio}}",
+      "afmt": "{{FrontSide}}<hr id=\"answer\">{{#Picture}}<div class=\"notosaurus-picture\">{{Picture}}</div>{{/Picture}}{{Front}}{{#BackPicture}}<div class=\"notosaurus-picture\">{{BackPicture}}</div>{{/BackPicture}}{{#Info}}<div class=\"info\">{{Info}}</div>{{/Info}}{{#Explanation}}<div class=\"notosaurus-help\">💬 {{Explanation}}</div>{{/Explanation}}{{#Mnemonic}}<div class=\"notosaurus-help\">🧠 {{Mnemonic}}</div>{{/Mnemonic}}<div class=\"notosaurus-fix\"><a class=\"nfix\" href=\"#\" data-key=\"{{#Id}}{{text:Id}}{{/Id}}{{^Id}}{{text:Front}}{{/Id}}\" data-tags=\"{{Tags}}\">✎ Notosaurus</a></div><script>(function(){var A=document.querySelectorAll(\"a.nfix:not([data-done])\");for(var i=0;i<A.length;i++){var a=A[i];a.dataset.done=\"1\";var m=/(?:^|\\s)notosaurus::(\\S+)/.exec(a.dataset.tags||\"\");var c=document.documentElement.className+\" \"+document.body.className,android=/\\bandroid\\b/.test(c)||/Android/.test(navigator.userAgent),desktop=typeof pycmd===\"function\"||/\\b(win|mac|linux)\\b/.test(c);if(!m||!(android||desktop)){a.parentNode.style.display=\"none\";continue;}var q=\"lesson=\"+encodeURIComponent(m[1])+\"&key=\"+encodeURIComponent(a.dataset.key||\"\");a.href=(android?\"https://cchabanois.github.io/notosaurus/fix/?\":\"http://localhost:8000/?\")+q;}})();</script>",
+      "ord": 1,
+      "bafmt": "",
+      "bqfmt": "",
+      "bfont": "",
+      "bsize": 0,
+      "did": null
+     }
+    ],
+    "type": 0,
+    "usn": -1,
+    "vers": []
+   }
   },
   "text+reverse+dictation": {
    "name": "Notosaurus front/back + reverse + dictation (audio) v2",
@@ -185,7 +882,173 @@
     }
    ],
    "css": ".card { font-family: system-ui, sans-serif; font-size: 26px; text-align: center; }\n.info { font-size: 18px; color: #777; margin-top: 12px; }\n.card img { max-width: 100%; height: auto; }\n.dictation { font-size: 40px; }\n.notosaurus-help {\n  max-width: 32em; margin: 10px auto 0; padding: 4px 10px; border-left: 3px solid #8bb8c4;\n  font-size: 18px; color: #555; text-align: left;\n}\n.nightMode .notosaurus-help { color: #bbb; }\n.notosaurus-fix { margin-top: 16px; font-size: 14px; }\n.notosaurus-fix a { color: #8bb8c4; text-decoration: none; }\n.notosaurus-context { font-size: 14px; color: #888; margin-bottom: 12px; }\n.notosaurus-picture img { max-width: min(100%, 320px); max-height: 50vh; border-radius: 12px; }\n",
-   "signature": "fc41deec59f3"
+   "signature": "fc41deec59f3",
+   "model": {
+    "css": ".card { font-family: system-ui, sans-serif; font-size: 26px; text-align: center; }\n.info { font-size: 18px; color: #777; margin-top: 12px; }\n.card img { max-width: 100%; height: auto; }\n.dictation { font-size: 40px; }\n.notosaurus-help {\n  max-width: 32em; margin: 10px auto 0; padding: 4px 10px; border-left: 3px solid #8bb8c4;\n  font-size: 18px; color: #555; text-align: left;\n}\n.nightMode .notosaurus-help { color: #bbb; }\n.notosaurus-fix { margin-top: 16px; font-size: 14px; }\n.notosaurus-fix a { color: #8bb8c4; text-decoration: none; }\n.notosaurus-context { font-size: 14px; color: #888; margin-bottom: 12px; }\n.notosaurus-picture img { max-width: min(100%, 320px); max-height: 50vh; border-radius: 12px; }\n\n/* Notosaurus note type, version fc41deec59f3: updated by Notosaurus */\n",
+    "flds": [
+     {
+      "name": "Front",
+      "ord": 0,
+      "font": "Liberation Sans",
+      "media": [],
+      "rtl": false,
+      "size": 20,
+      "sticky": false
+     },
+     {
+      "name": "Back",
+      "ord": 1,
+      "font": "Liberation Sans",
+      "media": [],
+      "rtl": false,
+      "size": 20,
+      "sticky": false
+     },
+     {
+      "name": "Info",
+      "ord": 2,
+      "font": "Liberation Sans",
+      "media": [],
+      "rtl": false,
+      "size": 20,
+      "sticky": false
+     },
+     {
+      "name": "Audio",
+      "ord": 3,
+      "font": "Liberation Sans",
+      "media": [],
+      "rtl": false,
+      "size": 20,
+      "sticky": false
+     },
+     {
+      "name": "Explanation",
+      "ord": 4,
+      "font": "Liberation Sans",
+      "media": [],
+      "rtl": false,
+      "size": 20,
+      "sticky": false
+     },
+     {
+      "name": "Mnemonic",
+      "ord": 5,
+      "font": "Liberation Sans",
+      "media": [],
+      "rtl": false,
+      "size": 20,
+      "sticky": false
+     },
+     {
+      "name": "Picture",
+      "ord": 6,
+      "font": "Liberation Sans",
+      "media": [],
+      "rtl": false,
+      "size": 20,
+      "sticky": false
+     },
+     {
+      "name": "BackPicture",
+      "ord": 7,
+      "font": "Liberation Sans",
+      "media": [],
+      "rtl": false,
+      "size": 20,
+      "sticky": false
+     },
+     {
+      "name": "Id",
+      "ord": 8,
+      "font": "Liberation Sans",
+      "media": [],
+      "rtl": false,
+      "size": 20,
+      "sticky": false
+     },
+     {
+      "name": "Source",
+      "ord": 9,
+      "font": "Liberation Sans",
+      "media": [],
+      "rtl": false,
+      "size": 20,
+      "sticky": false
+     }
+    ],
+    "id": "590731227",
+    "latexPost": "\\end{document}",
+    "latexPre": "\\documentclass[12pt]{article}\n\\special{papersize=3in,5in}\n\\usepackage[utf8]{inputenc}\n\\usepackage{amssymb,amsmath}\n\\pagestyle{empty}\n\\setlength{\\parindent}{0in}\n\\begin{document}\n",
+    "latexsvg": false,
+    "name": "Notosaurus front/back + reverse + dictation (audio) v2",
+    "req": [
+     [
+      0,
+      "any",
+      [
+       0,
+       6
+      ]
+     ],
+     [
+      1,
+      "any",
+      [
+       1,
+       3
+      ]
+     ],
+     [
+      2,
+      "any",
+      [
+       3,
+       6
+      ]
+     ]
+    ],
+    "sortf": 0,
+    "tags": [],
+    "tmpls": [
+     {
+      "name": "Front → Back",
+      "qfmt": "<div class=\"notosaurus-context\">{{Deck}}</div><script>(function(){var D=document.querySelectorAll(\".notosaurus-context:not([data-done])\");for(var i=0;i<D.length;i++){D[i].dataset.done=\"1\";D[i].textContent=D[i].textContent.split(\"::\").join(\" › \");}})();</script>{{#Picture}}<div class=\"notosaurus-picture\">{{Picture}}</div>{{/Picture}}{{Front}}",
+      "afmt": "{{FrontSide}}<hr id=\"answer\">{{Back}}{{Audio}}{{#BackPicture}}<div class=\"notosaurus-picture\">{{BackPicture}}</div>{{/BackPicture}}{{#Info}}<div class=\"info\">{{Info}}</div>{{/Info}}{{#Explanation}}<div class=\"notosaurus-help\">💬 {{Explanation}}</div>{{/Explanation}}{{#Mnemonic}}<div class=\"notosaurus-help\">🧠 {{Mnemonic}}</div>{{/Mnemonic}}<div class=\"notosaurus-fix\"><a class=\"nfix\" href=\"#\" data-key=\"{{#Id}}{{text:Id}}{{/Id}}{{^Id}}{{text:Front}}{{/Id}}\" data-tags=\"{{Tags}}\">✎ Notosaurus</a></div><script>(function(){var A=document.querySelectorAll(\"a.nfix:not([data-done])\");for(var i=0;i<A.length;i++){var a=A[i];a.dataset.done=\"1\";var m=/(?:^|\\s)notosaurus::(\\S+)/.exec(a.dataset.tags||\"\");var c=document.documentElement.className+\" \"+document.body.className,android=/\\bandroid\\b/.test(c)||/Android/.test(navigator.userAgent),desktop=typeof pycmd===\"function\"||/\\b(win|mac|linux)\\b/.test(c);if(!m||!(android||desktop)){a.parentNode.style.display=\"none\";continue;}var q=\"lesson=\"+encodeURIComponent(m[1])+\"&key=\"+encodeURIComponent(a.dataset.key||\"\");a.href=(android?\"https://cchabanois.github.io/notosaurus/fix/?\":\"http://localhost:8000/?\")+q;}})();</script>",
+      "ord": 0,
+      "bafmt": "",
+      "bqfmt": "",
+      "bfont": "",
+      "bsize": 0,
+      "did": null
+     },
+     {
+      "name": "Back → Front",
+      "qfmt": "<div class=\"notosaurus-context\">{{Deck}}</div><script>(function(){var D=document.querySelectorAll(\".notosaurus-context:not([data-done])\");for(var i=0;i<D.length;i++){D[i].dataset.done=\"1\";D[i].textContent=D[i].textContent.split(\"::\").join(\" › \");}})();</script>{{Back}}{{Audio}}",
+      "afmt": "{{FrontSide}}<hr id=\"answer\">{{#Picture}}<div class=\"notosaurus-picture\">{{Picture}}</div>{{/Picture}}{{Front}}{{#BackPicture}}<div class=\"notosaurus-picture\">{{BackPicture}}</div>{{/BackPicture}}{{#Info}}<div class=\"info\">{{Info}}</div>{{/Info}}{{#Explanation}}<div class=\"notosaurus-help\">💬 {{Explanation}}</div>{{/Explanation}}{{#Mnemonic}}<div class=\"notosaurus-help\">🧠 {{Mnemonic}}</div>{{/Mnemonic}}<div class=\"notosaurus-fix\"><a class=\"nfix\" href=\"#\" data-key=\"{{#Id}}{{text:Id}}{{/Id}}{{^Id}}{{text:Front}}{{/Id}}\" data-tags=\"{{Tags}}\">✎ Notosaurus</a></div><script>(function(){var A=document.querySelectorAll(\"a.nfix:not([data-done])\");for(var i=0;i<A.length;i++){var a=A[i];a.dataset.done=\"1\";var m=/(?:^|\\s)notosaurus::(\\S+)/.exec(a.dataset.tags||\"\");var c=document.documentElement.className+\" \"+document.body.className,android=/\\bandroid\\b/.test(c)||/Android/.test(navigator.userAgent),desktop=typeof pycmd===\"function\"||/\\b(win|mac|linux)\\b/.test(c);if(!m||!(android||desktop)){a.parentNode.style.display=\"none\";continue;}var q=\"lesson=\"+encodeURIComponent(m[1])+\"&key=\"+encodeURIComponent(a.dataset.key||\"\");a.href=(android?\"https://cchabanois.github.io/notosaurus/fix/?\":\"http://localhost:8000/?\")+q;}})();</script>",
+      "ord": 1,
+      "bafmt": "",
+      "bqfmt": "",
+      "bfont": "",
+      "bsize": 0,
+      "did": null
+     },
+     {
+      "name": "Dictation",
+      "qfmt": "<div class=\"notosaurus-context\">{{Deck}}</div><script>(function(){var D=document.querySelectorAll(\".notosaurus-context:not([data-done])\");for(var i=0;i<D.length;i++){D[i].dataset.done=\"1\";D[i].textContent=D[i].textContent.split(\"::\").join(\" › \");}})();</script><div class=\"dictation\">🎧</div>{{Audio}}{{#Picture}}<div class=\"notosaurus-picture\">{{Picture}}</div>{{/Picture}}{{type:Back}}",
+      "afmt": "<div class=\"notosaurus-context\">{{Deck}}</div><script>(function(){var D=document.querySelectorAll(\".notosaurus-context:not([data-done])\");for(var i=0;i<D.length;i++){D[i].dataset.done=\"1\";D[i].textContent=D[i].textContent.split(\"::\").join(\" › \");}})();</script><div class=\"dictation\">🎧</div>{{Audio}}{{#Picture}}<div class=\"notosaurus-picture\">{{Picture}}</div>{{/Picture}}{{type:Back}}<hr id=\"answer\">{{Front}}{{#BackPicture}}<div class=\"notosaurus-picture\">{{BackPicture}}</div>{{/BackPicture}}{{#Info}}<div class=\"info\">{{Info}}</div>{{/Info}}{{#Explanation}}<div class=\"notosaurus-help\">💬 {{Explanation}}</div>{{/Explanation}}{{#Mnemonic}}<div class=\"notosaurus-help\">🧠 {{Mnemonic}}</div>{{/Mnemonic}}<div class=\"notosaurus-fix\"><a class=\"nfix\" href=\"#\" data-key=\"{{#Id}}{{text:Id}}{{/Id}}{{^Id}}{{text:Front}}{{/Id}}\" data-tags=\"{{Tags}}\">✎ Notosaurus</a></div><script>(function(){var A=document.querySelectorAll(\"a.nfix:not([data-done])\");for(var i=0;i<A.length;i++){var a=A[i];a.dataset.done=\"1\";var m=/(?:^|\\s)notosaurus::(\\S+)/.exec(a.dataset.tags||\"\");var c=document.documentElement.className+\" \"+document.body.className,android=/\\bandroid\\b/.test(c)||/Android/.test(navigator.userAgent),desktop=typeof pycmd===\"function\"||/\\b(win|mac|linux)\\b/.test(c);if(!m||!(android||desktop)){a.parentNode.style.display=\"none\";continue;}var q=\"lesson=\"+encodeURIComponent(m[1])+\"&key=\"+encodeURIComponent(a.dataset.key||\"\");a.href=(android?\"https://cchabanois.github.io/notosaurus/fix/?\":\"http://localhost:8000/?\")+q;}})();</script>",
+      "ord": 2,
+      "bafmt": "",
+      "bqfmt": "",
+      "bfont": "",
+      "bsize": 0,
+      "did": null
+     }
+    ],
+    "type": 0,
+    "usn": -1,
+    "vers": []
+   }
   },
   "text+reverse+typing": {
    "name": "Notosaurus front/back + reverse typed (audio) v2",
@@ -217,7 +1080,154 @@
     }
    ],
    "css": ".card { font-family: system-ui, sans-serif; font-size: 26px; text-align: center; }\n.info { font-size: 18px; color: #777; margin-top: 12px; }\n.card img { max-width: 100%; height: auto; }\n.dictation { font-size: 40px; }\n.notosaurus-help {\n  max-width: 32em; margin: 10px auto 0; padding: 4px 10px; border-left: 3px solid #8bb8c4;\n  font-size: 18px; color: #555; text-align: left;\n}\n.nightMode .notosaurus-help { color: #bbb; }\n.notosaurus-fix { margin-top: 16px; font-size: 14px; }\n.notosaurus-fix a { color: #8bb8c4; text-decoration: none; }\n.notosaurus-context { font-size: 14px; color: #888; margin-bottom: 12px; }\n.notosaurus-picture img { max-width: min(100%, 320px); max-height: 50vh; border-radius: 12px; }\n",
-   "signature": "44d86f02fecd"
+   "signature": "44d86f02fecd",
+   "model": {
+    "css": ".card { font-family: system-ui, sans-serif; font-size: 26px; text-align: center; }\n.info { font-size: 18px; color: #777; margin-top: 12px; }\n.card img { max-width: 100%; height: auto; }\n.dictation { font-size: 40px; }\n.notosaurus-help {\n  max-width: 32em; margin: 10px auto 0; padding: 4px 10px; border-left: 3px solid #8bb8c4;\n  font-size: 18px; color: #555; text-align: left;\n}\n.nightMode .notosaurus-help { color: #bbb; }\n.notosaurus-fix { margin-top: 16px; font-size: 14px; }\n.notosaurus-fix a { color: #8bb8c4; text-decoration: none; }\n.notosaurus-context { font-size: 14px; color: #888; margin-bottom: 12px; }\n.notosaurus-picture img { max-width: min(100%, 320px); max-height: 50vh; border-radius: 12px; }\n\n/* Notosaurus note type, version 44d86f02fecd: updated by Notosaurus */\n",
+    "flds": [
+     {
+      "name": "Front",
+      "ord": 0,
+      "font": "Liberation Sans",
+      "media": [],
+      "rtl": false,
+      "size": 20,
+      "sticky": false
+     },
+     {
+      "name": "Back",
+      "ord": 1,
+      "font": "Liberation Sans",
+      "media": [],
+      "rtl": false,
+      "size": 20,
+      "sticky": false
+     },
+     {
+      "name": "Info",
+      "ord": 2,
+      "font": "Liberation Sans",
+      "media": [],
+      "rtl": false,
+      "size": 20,
+      "sticky": false
+     },
+     {
+      "name": "Audio",
+      "ord": 3,
+      "font": "Liberation Sans",
+      "media": [],
+      "rtl": false,
+      "size": 20,
+      "sticky": false
+     },
+     {
+      "name": "Explanation",
+      "ord": 4,
+      "font": "Liberation Sans",
+      "media": [],
+      "rtl": false,
+      "size": 20,
+      "sticky": false
+     },
+     {
+      "name": "Mnemonic",
+      "ord": 5,
+      "font": "Liberation Sans",
+      "media": [],
+      "rtl": false,
+      "size": 20,
+      "sticky": false
+     },
+     {
+      "name": "Picture",
+      "ord": 6,
+      "font": "Liberation Sans",
+      "media": [],
+      "rtl": false,
+      "size": 20,
+      "sticky": false
+     },
+     {
+      "name": "BackPicture",
+      "ord": 7,
+      "font": "Liberation Sans",
+      "media": [],
+      "rtl": false,
+      "size": 20,
+      "sticky": false
+     },
+     {
+      "name": "Id",
+      "ord": 8,
+      "font": "Liberation Sans",
+      "media": [],
+      "rtl": false,
+      "size": 20,
+      "sticky": false
+     },
+     {
+      "name": "Source",
+      "ord": 9,
+      "font": "Liberation Sans",
+      "media": [],
+      "rtl": false,
+      "size": 20,
+      "sticky": false
+     }
+    ],
+    "id": "326104522",
+    "latexPost": "\\end{document}",
+    "latexPre": "\\documentclass[12pt]{article}\n\\special{papersize=3in,5in}\n\\usepackage[utf8]{inputenc}\n\\usepackage{amssymb,amsmath}\n\\pagestyle{empty}\n\\setlength{\\parindent}{0in}\n\\begin{document}\n",
+    "latexsvg": false,
+    "name": "Notosaurus front/back + reverse typed (audio) v2",
+    "req": [
+     [
+      0,
+      "any",
+      [
+       0,
+       6
+      ]
+     ],
+     [
+      1,
+      "any",
+      [
+       1,
+       3
+      ]
+     ]
+    ],
+    "sortf": 0,
+    "tags": [],
+    "tmpls": [
+     {
+      "name": "Front → Back",
+      "qfmt": "<div class=\"notosaurus-context\">{{Deck}}</div><script>(function(){var D=document.querySelectorAll(\".notosaurus-context:not([data-done])\");for(var i=0;i<D.length;i++){D[i].dataset.done=\"1\";D[i].textContent=D[i].textContent.split(\"::\").join(\" › \");}})();</script>{{#Picture}}<div class=\"notosaurus-picture\">{{Picture}}</div>{{/Picture}}{{Front}}{{type:Back}}",
+      "afmt": "<div class=\"notosaurus-context\">{{Deck}}</div><script>(function(){var D=document.querySelectorAll(\".notosaurus-context:not([data-done])\");for(var i=0;i<D.length;i++){D[i].dataset.done=\"1\";D[i].textContent=D[i].textContent.split(\"::\").join(\" › \");}})();</script>{{#Picture}}<div class=\"notosaurus-picture\">{{Picture}}</div>{{/Picture}}{{Front}}<hr id=\"answer\">{{type:Back}}{{Audio}}{{#BackPicture}}<div class=\"notosaurus-picture\">{{BackPicture}}</div>{{/BackPicture}}{{#Info}}<div class=\"info\">{{Info}}</div>{{/Info}}{{#Explanation}}<div class=\"notosaurus-help\">💬 {{Explanation}}</div>{{/Explanation}}{{#Mnemonic}}<div class=\"notosaurus-help\">🧠 {{Mnemonic}}</div>{{/Mnemonic}}<div class=\"notosaurus-fix\"><a class=\"nfix\" href=\"#\" data-key=\"{{#Id}}{{text:Id}}{{/Id}}{{^Id}}{{text:Front}}{{/Id}}\" data-tags=\"{{Tags}}\">✎ Notosaurus</a></div><script>(function(){var A=document.querySelectorAll(\"a.nfix:not([data-done])\");for(var i=0;i<A.length;i++){var a=A[i];a.dataset.done=\"1\";var m=/(?:^|\\s)notosaurus::(\\S+)/.exec(a.dataset.tags||\"\");var c=document.documentElement.className+\" \"+document.body.className,android=/\\bandroid\\b/.test(c)||/Android/.test(navigator.userAgent),desktop=typeof pycmd===\"function\"||/\\b(win|mac|linux)\\b/.test(c);if(!m||!(android||desktop)){a.parentNode.style.display=\"none\";continue;}var q=\"lesson=\"+encodeURIComponent(m[1])+\"&key=\"+encodeURIComponent(a.dataset.key||\"\");a.href=(android?\"https://cchabanois.github.io/notosaurus/fix/?\":\"http://localhost:8000/?\")+q;}})();</script>",
+      "ord": 0,
+      "bafmt": "",
+      "bqfmt": "",
+      "bfont": "",
+      "bsize": 0,
+      "did": null
+     },
+     {
+      "name": "Back → Front",
+      "qfmt": "<div class=\"notosaurus-context\">{{Deck}}</div><script>(function(){var D=document.querySelectorAll(\".notosaurus-context:not([data-done])\");for(var i=0;i<D.length;i++){D[i].dataset.done=\"1\";D[i].textContent=D[i].textContent.split(\"::\").join(\" › \");}})();</script>{{Back}}{{Audio}}{{type:Front}}",
+      "afmt": "<div class=\"notosaurus-context\">{{Deck}}</div><script>(function(){var D=document.querySelectorAll(\".notosaurus-context:not([data-done])\");for(var i=0;i<D.length;i++){D[i].dataset.done=\"1\";D[i].textContent=D[i].textContent.split(\"::\").join(\" › \");}})();</script>{{Back}}{{Audio}}<hr id=\"answer\">{{#Picture}}<div class=\"notosaurus-picture\">{{Picture}}</div>{{/Picture}}{{type:Front}}{{#BackPicture}}<div class=\"notosaurus-picture\">{{BackPicture}}</div>{{/BackPicture}}{{#Info}}<div class=\"info\">{{Info}}</div>{{/Info}}{{#Explanation}}<div class=\"notosaurus-help\">💬 {{Explanation}}</div>{{/Explanation}}{{#Mnemonic}}<div class=\"notosaurus-help\">🧠 {{Mnemonic}}</div>{{/Mnemonic}}<div class=\"notosaurus-fix\"><a class=\"nfix\" href=\"#\" data-key=\"{{#Id}}{{text:Id}}{{/Id}}{{^Id}}{{text:Front}}{{/Id}}\" data-tags=\"{{Tags}}\">✎ Notosaurus</a></div><script>(function(){var A=document.querySelectorAll(\"a.nfix:not([data-done])\");for(var i=0;i<A.length;i++){var a=A[i];a.dataset.done=\"1\";var m=/(?:^|\\s)notosaurus::(\\S+)/.exec(a.dataset.tags||\"\");var c=document.documentElement.className+\" \"+document.body.className,android=/\\bandroid\\b/.test(c)||/Android/.test(navigator.userAgent),desktop=typeof pycmd===\"function\"||/\\b(win|mac|linux)\\b/.test(c);if(!m||!(android||desktop)){a.parentNode.style.display=\"none\";continue;}var q=\"lesson=\"+encodeURIComponent(m[1])+\"&key=\"+encodeURIComponent(a.dataset.key||\"\");a.href=(android?\"https://cchabanois.github.io/notosaurus/fix/?\":\"http://localhost:8000/?\")+q;}})();</script>",
+      "ord": 1,
+      "bafmt": "",
+      "bqfmt": "",
+      "bfont": "",
+      "bsize": 0,
+      "did": null
+     }
+    ],
+    "type": 0,
+    "usn": -1,
+    "vers": []
+   }
   },
   "text+reverse+typing+dictation": {
    "name": "Notosaurus front/back + reverse typed + dictation (audio) v2",
@@ -254,7 +1264,173 @@
     }
    ],
    "css": ".card { font-family: system-ui, sans-serif; font-size: 26px; text-align: center; }\n.info { font-size: 18px; color: #777; margin-top: 12px; }\n.card img { max-width: 100%; height: auto; }\n.dictation { font-size: 40px; }\n.notosaurus-help {\n  max-width: 32em; margin: 10px auto 0; padding: 4px 10px; border-left: 3px solid #8bb8c4;\n  font-size: 18px; color: #555; text-align: left;\n}\n.nightMode .notosaurus-help { color: #bbb; }\n.notosaurus-fix { margin-top: 16px; font-size: 14px; }\n.notosaurus-fix a { color: #8bb8c4; text-decoration: none; }\n.notosaurus-context { font-size: 14px; color: #888; margin-bottom: 12px; }\n.notosaurus-picture img { max-width: min(100%, 320px); max-height: 50vh; border-radius: 12px; }\n",
-   "signature": "ddcb2ceb805e"
+   "signature": "ddcb2ceb805e",
+   "model": {
+    "css": ".card { font-family: system-ui, sans-serif; font-size: 26px; text-align: center; }\n.info { font-size: 18px; color: #777; margin-top: 12px; }\n.card img { max-width: 100%; height: auto; }\n.dictation { font-size: 40px; }\n.notosaurus-help {\n  max-width: 32em; margin: 10px auto 0; padding: 4px 10px; border-left: 3px solid #8bb8c4;\n  font-size: 18px; color: #555; text-align: left;\n}\n.nightMode .notosaurus-help { color: #bbb; }\n.notosaurus-fix { margin-top: 16px; font-size: 14px; }\n.notosaurus-fix a { color: #8bb8c4; text-decoration: none; }\n.notosaurus-context { font-size: 14px; color: #888; margin-bottom: 12px; }\n.notosaurus-picture img { max-width: min(100%, 320px); max-height: 50vh; border-radius: 12px; }\n\n/* Notosaurus note type, version ddcb2ceb805e: updated by Notosaurus */\n",
+    "flds": [
+     {
+      "name": "Front",
+      "ord": 0,
+      "font": "Liberation Sans",
+      "media": [],
+      "rtl": false,
+      "size": 20,
+      "sticky": false
+     },
+     {
+      "name": "Back",
+      "ord": 1,
+      "font": "Liberation Sans",
+      "media": [],
+      "rtl": false,
+      "size": 20,
+      "sticky": false
+     },
+     {
+      "name": "Info",
+      "ord": 2,
+      "font": "Liberation Sans",
+      "media": [],
+      "rtl": false,
+      "size": 20,
+      "sticky": false
+     },
+     {
+      "name": "Audio",
+      "ord": 3,
+      "font": "Liberation Sans",
+      "media": [],
+      "rtl": false,
+      "size": 20,
+      "sticky": false
+     },
+     {
+      "name": "Explanation",
+      "ord": 4,
+      "font": "Liberation Sans",
+      "media": [],
+      "rtl": false,
+      "size": 20,
+      "sticky": false
+     },
+     {
+      "name": "Mnemonic",
+      "ord": 5,
+      "font": "Liberation Sans",
+      "media": [],
+      "rtl": false,
+      "size": 20,
+      "sticky": false
+     },
+     {
+      "name": "Picture",
+      "ord": 6,
+      "font": "Liberation Sans",
+      "media": [],
+      "rtl": false,
+      "size": 20,
+      "sticky": false
+     },
+     {
+      "name": "BackPicture",
+      "ord": 7,
+      "font": "Liberation Sans",
+      "media": [],
+      "rtl": false,
+      "size": 20,
+      "sticky": false
+     },
+     {
+      "name": "Id",
+      "ord": 8,
+      "font": "Liberation Sans",
+      "media": [],
+      "rtl": false,
+      "size": 20,
+      "sticky": false
+     },
+     {
+      "name": "Source",
+      "ord": 9,
+      "font": "Liberation Sans",
+      "media": [],
+      "rtl": false,
+      "size": 20,
+      "sticky": false
+     }
+    ],
+    "id": "1068690821",
+    "latexPost": "\\end{document}",
+    "latexPre": "\\documentclass[12pt]{article}\n\\special{papersize=3in,5in}\n\\usepackage[utf8]{inputenc}\n\\usepackage{amssymb,amsmath}\n\\pagestyle{empty}\n\\setlength{\\parindent}{0in}\n\\begin{document}\n",
+    "latexsvg": false,
+    "name": "Notosaurus front/back + reverse typed + dictation (audio) v2",
+    "req": [
+     [
+      0,
+      "any",
+      [
+       0,
+       6
+      ]
+     ],
+     [
+      1,
+      "any",
+      [
+       1,
+       3
+      ]
+     ],
+     [
+      2,
+      "any",
+      [
+       3,
+       6
+      ]
+     ]
+    ],
+    "sortf": 0,
+    "tags": [],
+    "tmpls": [
+     {
+      "name": "Front → Back",
+      "qfmt": "<div class=\"notosaurus-context\">{{Deck}}</div><script>(function(){var D=document.querySelectorAll(\".notosaurus-context:not([data-done])\");for(var i=0;i<D.length;i++){D[i].dataset.done=\"1\";D[i].textContent=D[i].textContent.split(\"::\").join(\" › \");}})();</script>{{#Picture}}<div class=\"notosaurus-picture\">{{Picture}}</div>{{/Picture}}{{Front}}{{type:Back}}",
+      "afmt": "<div class=\"notosaurus-context\">{{Deck}}</div><script>(function(){var D=document.querySelectorAll(\".notosaurus-context:not([data-done])\");for(var i=0;i<D.length;i++){D[i].dataset.done=\"1\";D[i].textContent=D[i].textContent.split(\"::\").join(\" › \");}})();</script>{{#Picture}}<div class=\"notosaurus-picture\">{{Picture}}</div>{{/Picture}}{{Front}}<hr id=\"answer\">{{type:Back}}{{Audio}}{{#BackPicture}}<div class=\"notosaurus-picture\">{{BackPicture}}</div>{{/BackPicture}}{{#Info}}<div class=\"info\">{{Info}}</div>{{/Info}}{{#Explanation}}<div class=\"notosaurus-help\">💬 {{Explanation}}</div>{{/Explanation}}{{#Mnemonic}}<div class=\"notosaurus-help\">🧠 {{Mnemonic}}</div>{{/Mnemonic}}<div class=\"notosaurus-fix\"><a class=\"nfix\" href=\"#\" data-key=\"{{#Id}}{{text:Id}}{{/Id}}{{^Id}}{{text:Front}}{{/Id}}\" data-tags=\"{{Tags}}\">✎ Notosaurus</a></div><script>(function(){var A=document.querySelectorAll(\"a.nfix:not([data-done])\");for(var i=0;i<A.length;i++){var a=A[i];a.dataset.done=\"1\";var m=/(?:^|\\s)notosaurus::(\\S+)/.exec(a.dataset.tags||\"\");var c=document.documentElement.className+\" \"+document.body.className,android=/\\bandroid\\b/.test(c)||/Android/.test(navigator.userAgent),desktop=typeof pycmd===\"function\"||/\\b(win|mac|linux)\\b/.test(c);if(!m||!(android||desktop)){a.parentNode.style.display=\"none\";continue;}var q=\"lesson=\"+encodeURIComponent(m[1])+\"&key=\"+encodeURIComponent(a.dataset.key||\"\");a.href=(android?\"https://cchabanois.github.io/notosaurus/fix/?\":\"http://localhost:8000/?\")+q;}})();</script>",
+      "ord": 0,
+      "bafmt": "",
+      "bqfmt": "",
+      "bfont": "",
+      "bsize": 0,
+      "did": null
+     },
+     {
+      "name": "Back → Front",
+      "qfmt": "<div class=\"notosaurus-context\">{{Deck}}</div><script>(function(){var D=document.querySelectorAll(\".notosaurus-context:not([data-done])\");for(var i=0;i<D.length;i++){D[i].dataset.done=\"1\";D[i].textContent=D[i].textContent.split(\"::\").join(\" › \");}})();</script>{{Back}}{{Audio}}{{type:Front}}",
+      "afmt": "<div class=\"notosaurus-context\">{{Deck}}</div><script>(function(){var D=document.querySelectorAll(\".notosaurus-context:not([data-done])\");for(var i=0;i<D.length;i++){D[i].dataset.done=\"1\";D[i].textContent=D[i].textContent.split(\"::\").join(\" › \");}})();</script>{{Back}}{{Audio}}<hr id=\"answer\">{{#Picture}}<div class=\"notosaurus-picture\">{{Picture}}</div>{{/Picture}}{{type:Front}}{{#BackPicture}}<div class=\"notosaurus-picture\">{{BackPicture}}</div>{{/BackPicture}}{{#Info}}<div class=\"info\">{{Info}}</div>{{/Info}}{{#Explanation}}<div class=\"notosaurus-help\">💬 {{Explanation}}</div>{{/Explanation}}{{#Mnemonic}}<div class=\"notosaurus-help\">🧠 {{Mnemonic}}</div>{{/Mnemonic}}<div class=\"notosaurus-fix\"><a class=\"nfix\" href=\"#\" data-key=\"{{#Id}}{{text:Id}}{{/Id}}{{^Id}}{{text:Front}}{{/Id}}\" data-tags=\"{{Tags}}\">✎ Notosaurus</a></div><script>(function(){var A=document.querySelectorAll(\"a.nfix:not([data-done])\");for(var i=0;i<A.length;i++){var a=A[i];a.dataset.done=\"1\";var m=/(?:^|\\s)notosaurus::(\\S+)/.exec(a.dataset.tags||\"\");var c=document.documentElement.className+\" \"+document.body.className,android=/\\bandroid\\b/.test(c)||/Android/.test(navigator.userAgent),desktop=typeof pycmd===\"function\"||/\\b(win|mac|linux)\\b/.test(c);if(!m||!(android||desktop)){a.parentNode.style.display=\"none\";continue;}var q=\"lesson=\"+encodeURIComponent(m[1])+\"&key=\"+encodeURIComponent(a.dataset.key||\"\");a.href=(android?\"https://cchabanois.github.io/notosaurus/fix/?\":\"http://localhost:8000/?\")+q;}})();</script>",
+      "ord": 1,
+      "bafmt": "",
+      "bqfmt": "",
+      "bfont": "",
+      "bsize": 0,
+      "did": null
+     },
+     {
+      "name": "Dictation",
+      "qfmt": "<div class=\"notosaurus-context\">{{Deck}}</div><script>(function(){var D=document.querySelectorAll(\".notosaurus-context:not([data-done])\");for(var i=0;i<D.length;i++){D[i].dataset.done=\"1\";D[i].textContent=D[i].textContent.split(\"::\").join(\" › \");}})();</script><div class=\"dictation\">🎧</div>{{Audio}}{{#Picture}}<div class=\"notosaurus-picture\">{{Picture}}</div>{{/Picture}}{{type:Back}}",
+      "afmt": "<div class=\"notosaurus-context\">{{Deck}}</div><script>(function(){var D=document.querySelectorAll(\".notosaurus-context:not([data-done])\");for(var i=0;i<D.length;i++){D[i].dataset.done=\"1\";D[i].textContent=D[i].textContent.split(\"::\").join(\" › \");}})();</script><div class=\"dictation\">🎧</div>{{Audio}}{{#Picture}}<div class=\"notosaurus-picture\">{{Picture}}</div>{{/Picture}}{{type:Back}}<hr id=\"answer\">{{Front}}{{#BackPicture}}<div class=\"notosaurus-picture\">{{BackPicture}}</div>{{/BackPicture}}{{#Info}}<div class=\"info\">{{Info}}</div>{{/Info}}{{#Explanation}}<div class=\"notosaurus-help\">💬 {{Explanation}}</div>{{/Explanation}}{{#Mnemonic}}<div class=\"notosaurus-help\">🧠 {{Mnemonic}}</div>{{/Mnemonic}}<div class=\"notosaurus-fix\"><a class=\"nfix\" href=\"#\" data-key=\"{{#Id}}{{text:Id}}{{/Id}}{{^Id}}{{text:Front}}{{/Id}}\" data-tags=\"{{Tags}}\">✎ Notosaurus</a></div><script>(function(){var A=document.querySelectorAll(\"a.nfix:not([data-done])\");for(var i=0;i<A.length;i++){var a=A[i];a.dataset.done=\"1\";var m=/(?:^|\\s)notosaurus::(\\S+)/.exec(a.dataset.tags||\"\");var c=document.documentElement.className+\" \"+document.body.className,android=/\\bandroid\\b/.test(c)||/Android/.test(navigator.userAgent),desktop=typeof pycmd===\"function\"||/\\b(win|mac|linux)\\b/.test(c);if(!m||!(android||desktop)){a.parentNode.style.display=\"none\";continue;}var q=\"lesson=\"+encodeURIComponent(m[1])+\"&key=\"+encodeURIComponent(a.dataset.key||\"\");a.href=(android?\"https://cchabanois.github.io/notosaurus/fix/?\":\"http://localhost:8000/?\")+q;}})();</script>",
+      "ord": 2,
+      "bafmt": "",
+      "bqfmt": "",
+      "bfont": "",
+      "bsize": 0,
+      "did": null
+     }
+    ],
+    "type": 0,
+    "usn": -1,
+    "vers": []
+   }
   },
   "text+dictation-only": {
    "name": "Notosaurus dictation (audio) v2",
@@ -281,7 +1457,136 @@
     }
    ],
    "css": ".card { font-family: system-ui, sans-serif; font-size: 26px; text-align: center; }\n.info { font-size: 18px; color: #777; margin-top: 12px; }\n.card img { max-width: 100%; height: auto; }\n.dictation { font-size: 40px; }\n.notosaurus-help {\n  max-width: 32em; margin: 10px auto 0; padding: 4px 10px; border-left: 3px solid #8bb8c4;\n  font-size: 18px; color: #555; text-align: left;\n}\n.nightMode .notosaurus-help { color: #bbb; }\n.notosaurus-fix { margin-top: 16px; font-size: 14px; }\n.notosaurus-fix a { color: #8bb8c4; text-decoration: none; }\n.notosaurus-context { font-size: 14px; color: #888; margin-bottom: 12px; }\n.notosaurus-picture img { max-width: min(100%, 320px); max-height: 50vh; border-radius: 12px; }\n",
-   "signature": "9553b5505783"
+   "signature": "9553b5505783",
+   "model": {
+    "css": ".card { font-family: system-ui, sans-serif; font-size: 26px; text-align: center; }\n.info { font-size: 18px; color: #777; margin-top: 12px; }\n.card img { max-width: 100%; height: auto; }\n.dictation { font-size: 40px; }\n.notosaurus-help {\n  max-width: 32em; margin: 10px auto 0; padding: 4px 10px; border-left: 3px solid #8bb8c4;\n  font-size: 18px; color: #555; text-align: left;\n}\n.nightMode .notosaurus-help { color: #bbb; }\n.notosaurus-fix { margin-top: 16px; font-size: 14px; }\n.notosaurus-fix a { color: #8bb8c4; text-decoration: none; }\n.notosaurus-context { font-size: 14px; color: #888; margin-bottom: 12px; }\n.notosaurus-picture img { max-width: min(100%, 320px); max-height: 50vh; border-radius: 12px; }\n\n/* Notosaurus note type, version 9553b5505783: updated by Notosaurus */\n",
+    "flds": [
+     {
+      "name": "Front",
+      "ord": 0,
+      "font": "Liberation Sans",
+      "media": [],
+      "rtl": false,
+      "size": 20,
+      "sticky": false
+     },
+     {
+      "name": "Back",
+      "ord": 1,
+      "font": "Liberation Sans",
+      "media": [],
+      "rtl": false,
+      "size": 20,
+      "sticky": false
+     },
+     {
+      "name": "Info",
+      "ord": 2,
+      "font": "Liberation Sans",
+      "media": [],
+      "rtl": false,
+      "size": 20,
+      "sticky": false
+     },
+     {
+      "name": "Audio",
+      "ord": 3,
+      "font": "Liberation Sans",
+      "media": [],
+      "rtl": false,
+      "size": 20,
+      "sticky": false
+     },
+     {
+      "name": "Explanation",
+      "ord": 4,
+      "font": "Liberation Sans",
+      "media": [],
+      "rtl": false,
+      "size": 20,
+      "sticky": false
+     },
+     {
+      "name": "Mnemonic",
+      "ord": 5,
+      "font": "Liberation Sans",
+      "media": [],
+      "rtl": false,
+      "size": 20,
+      "sticky": false
+     },
+     {
+      "name": "Picture",
+      "ord": 6,
+      "font": "Liberation Sans",
+      "media": [],
+      "rtl": false,
+      "size": 20,
+      "sticky": false
+     },
+     {
+      "name": "BackPicture",
+      "ord": 7,
+      "font": "Liberation Sans",
+      "media": [],
+      "rtl": false,
+      "size": 20,
+      "sticky": false
+     },
+     {
+      "name": "Id",
+      "ord": 8,
+      "font": "Liberation Sans",
+      "media": [],
+      "rtl": false,
+      "size": 20,
+      "sticky": false
+     },
+     {
+      "name": "Source",
+      "ord": 9,
+      "font": "Liberation Sans",
+      "media": [],
+      "rtl": false,
+      "size": 20,
+      "sticky": false
+     }
+    ],
+    "id": "1962484421",
+    "latexPost": "\\end{document}",
+    "latexPre": "\\documentclass[12pt]{article}\n\\special{papersize=3in,5in}\n\\usepackage[utf8]{inputenc}\n\\usepackage{amssymb,amsmath}\n\\pagestyle{empty}\n\\setlength{\\parindent}{0in}\n\\begin{document}\n",
+    "latexsvg": false,
+    "name": "Notosaurus dictation (audio) v2",
+    "req": [
+     [
+      0,
+      "any",
+      [
+       0,
+       3,
+       6
+      ]
+     ]
+    ],
+    "sortf": 0,
+    "tags": [],
+    "tmpls": [
+     {
+      "name": "Dictation",
+      "qfmt": "<div class=\"notosaurus-context\">{{Deck}}</div><script>(function(){var D=document.querySelectorAll(\".notosaurus-context:not([data-done])\");for(var i=0;i<D.length;i++){D[i].dataset.done=\"1\";D[i].textContent=D[i].textContent.split(\"::\").join(\" › \");}})();</script><div class=\"dictation\">🎧</div>{{Audio}}{{#Picture}}<div class=\"notosaurus-picture\">{{Picture}}</div>{{/Picture}}<div>{{Front}}</div>{{type:Back}}",
+      "afmt": "<div class=\"notosaurus-context\">{{Deck}}</div><script>(function(){var D=document.querySelectorAll(\".notosaurus-context:not([data-done])\");for(var i=0;i<D.length;i++){D[i].dataset.done=\"1\";D[i].textContent=D[i].textContent.split(\"::\").join(\" › \");}})();</script><div class=\"dictation\">🎧</div>{{Audio}}{{#Picture}}<div class=\"notosaurus-picture\">{{Picture}}</div>{{/Picture}}<div>{{Front}}</div>{{type:Back}}<hr id=\"answer\">{{#BackPicture}}<div class=\"notosaurus-picture\">{{BackPicture}}</div>{{/BackPicture}}{{#Info}}<div class=\"info\">{{Info}}</div>{{/Info}}{{#Explanation}}<div class=\"notosaurus-help\">💬 {{Explanation}}</div>{{/Explanation}}{{#Mnemonic}}<div class=\"notosaurus-help\">🧠 {{Mnemonic}}</div>{{/Mnemonic}}<div class=\"notosaurus-fix\"><a class=\"nfix\" href=\"#\" data-key=\"{{#Id}}{{text:Id}}{{/Id}}{{^Id}}{{text:Front}}{{/Id}}\" data-tags=\"{{Tags}}\">✎ Notosaurus</a></div><script>(function(){var A=document.querySelectorAll(\"a.nfix:not([data-done])\");for(var i=0;i<A.length;i++){var a=A[i];a.dataset.done=\"1\";var m=/(?:^|\\s)notosaurus::(\\S+)/.exec(a.dataset.tags||\"\");var c=document.documentElement.className+\" \"+document.body.className,android=/\\bandroid\\b/.test(c)||/Android/.test(navigator.userAgent),desktop=typeof pycmd===\"function\"||/\\b(win|mac|linux)\\b/.test(c);if(!m||!(android||desktop)){a.parentNode.style.display=\"none\";continue;}var q=\"lesson=\"+encodeURIComponent(m[1])+\"&key=\"+encodeURIComponent(a.dataset.key||\"\");a.href=(android?\"https://cchabanois.github.io/notosaurus/fix/?\":\"http://localhost:8000/?\")+q;}})();</script>",
+      "ord": 0,
+      "bafmt": "",
+      "bqfmt": "",
+      "bfont": "",
+      "bsize": 0,
+      "did": null
+     }
+    ],
+    "type": 0,
+    "usn": -1,
+    "vers": []
+   }
   },
   "diagram": {
    "name": "Notosaurus labels (audio) v2",
@@ -308,7 +1613,136 @@
     }
    ],
    "css": ".card { font-family: system-ui, sans-serif; font-size: 26px; text-align: center; }\n.info { font-size: 18px; color: #777; margin-top: 12px; }\n.card img { max-width: 100%; height: auto; }\n.dictation { font-size: 40px; }\n.notosaurus-help {\n  max-width: 32em; margin: 10px auto 0; padding: 4px 10px; border-left: 3px solid #8bb8c4;\n  font-size: 18px; color: #555; text-align: left;\n}\n.nightMode .notosaurus-help { color: #bbb; }\n.notosaurus-fix { margin-top: 16px; font-size: 14px; }\n.notosaurus-fix a { color: #8bb8c4; text-decoration: none; }\n.notosaurus-context { font-size: 14px; color: #888; margin-bottom: 12px; }\n.notosaurus-diagram { position: relative; display: inline-block; max-width: 100%; line-height: 0; }\n.notosaurus-diagram img { display: block; }\n.notosaurus-mask {\n  position: absolute; box-sizing: border-box; display: flex; align-items: center; justify-content: center;\n  overflow: hidden; line-height: 1; font-size: 13px; font-weight: 700;\n  background: #ffe08a; border: 2px solid #c77700; border-radius: 3px; color: #3d2b00;\n}\n.notosaurus-mask.target { background: #ff7a59; border-color: #b3261e; color: #fff; }\n.notosaurus-mask.revealed { background: transparent; border: 3px solid #1b873f; }\n",
-   "signature": "3aebdfadc4e2"
+   "signature": "3aebdfadc4e2",
+   "model": {
+    "css": ".card { font-family: system-ui, sans-serif; font-size: 26px; text-align: center; }\n.info { font-size: 18px; color: #777; margin-top: 12px; }\n.card img { max-width: 100%; height: auto; }\n.dictation { font-size: 40px; }\n.notosaurus-help {\n  max-width: 32em; margin: 10px auto 0; padding: 4px 10px; border-left: 3px solid #8bb8c4;\n  font-size: 18px; color: #555; text-align: left;\n}\n.nightMode .notosaurus-help { color: #bbb; }\n.notosaurus-fix { margin-top: 16px; font-size: 14px; }\n.notosaurus-fix a { color: #8bb8c4; text-decoration: none; }\n.notosaurus-context { font-size: 14px; color: #888; margin-bottom: 12px; }\n.notosaurus-diagram { position: relative; display: inline-block; max-width: 100%; line-height: 0; }\n.notosaurus-diagram img { display: block; }\n.notosaurus-mask {\n  position: absolute; box-sizing: border-box; display: flex; align-items: center; justify-content: center;\n  overflow: hidden; line-height: 1; font-size: 13px; font-weight: 700;\n  background: #ffe08a; border: 2px solid #c77700; border-radius: 3px; color: #3d2b00;\n}\n.notosaurus-mask.target { background: #ff7a59; border-color: #b3261e; color: #fff; }\n.notosaurus-mask.revealed { background: transparent; border: 3px solid #1b873f; }\n\n/* Notosaurus note type, version 3aebdfadc4e2: updated by Notosaurus */\n",
+    "flds": [
+     {
+      "name": "Front",
+      "ord": 0,
+      "font": "Liberation Sans",
+      "media": [],
+      "rtl": false,
+      "size": 20,
+      "sticky": false
+     },
+     {
+      "name": "Back",
+      "ord": 1,
+      "font": "Liberation Sans",
+      "media": [],
+      "rtl": false,
+      "size": 20,
+      "sticky": false
+     },
+     {
+      "name": "Info",
+      "ord": 2,
+      "font": "Liberation Sans",
+      "media": [],
+      "rtl": false,
+      "size": 20,
+      "sticky": false
+     },
+     {
+      "name": "Audio",
+      "ord": 3,
+      "font": "Liberation Sans",
+      "media": [],
+      "rtl": false,
+      "size": 20,
+      "sticky": false
+     },
+     {
+      "name": "Image",
+      "ord": 4,
+      "font": "Liberation Sans",
+      "media": [],
+      "rtl": false,
+      "size": 20,
+      "sticky": false
+     },
+     {
+      "name": "Masks",
+      "ord": 5,
+      "font": "Liberation Sans",
+      "media": [],
+      "rtl": false,
+      "size": 20,
+      "sticky": false
+     },
+     {
+      "name": "AnswerMasks",
+      "ord": 6,
+      "font": "Liberation Sans",
+      "media": [],
+      "rtl": false,
+      "size": 20,
+      "sticky": false
+     },
+     {
+      "name": "Id",
+      "ord": 7,
+      "font": "Liberation Sans",
+      "media": [],
+      "rtl": false,
+      "size": 20,
+      "sticky": false
+     },
+     {
+      "name": "Explanation",
+      "ord": 8,
+      "font": "Liberation Sans",
+      "media": [],
+      "rtl": false,
+      "size": 20,
+      "sticky": false
+     },
+     {
+      "name": "Mnemonic",
+      "ord": 9,
+      "font": "Liberation Sans",
+      "media": [],
+      "rtl": false,
+      "size": 20,
+      "sticky": false
+     }
+    ],
+    "id": "852662676",
+    "latexPost": "\\end{document}",
+    "latexPre": "\\documentclass[12pt]{article}\n\\special{papersize=3in,5in}\n\\usepackage[utf8]{inputenc}\n\\usepackage{amssymb,amsmath}\n\\pagestyle{empty}\n\\setlength{\\parindent}{0in}\n\\begin{document}\n",
+    "latexsvg": false,
+    "name": "Notosaurus labels (audio) v2",
+    "req": [
+     [
+      0,
+      "any",
+      [
+       0,
+       4,
+       5
+      ]
+     ]
+    ],
+    "sortf": 0,
+    "tags": [],
+    "tmpls": [
+     {
+      "name": "Diagram",
+      "qfmt": "<div class=\"notosaurus-context\">{{Deck}}</div><script>(function(){var D=document.querySelectorAll(\".notosaurus-context:not([data-done])\");for(var i=0;i<D.length;i++){D[i].dataset.done=\"1\";D[i].textContent=D[i].textContent.split(\"::\").join(\" › \");}})();</script><div class=\"notosaurus-diagram\">{{Image}}{{Masks}}</div><div>{{Front}}</div>",
+      "afmt": "<div class=\"notosaurus-context\">{{Deck}}</div><script>(function(){var D=document.querySelectorAll(\".notosaurus-context:not([data-done])\");for(var i=0;i<D.length;i++){D[i].dataset.done=\"1\";D[i].textContent=D[i].textContent.split(\"::\").join(\" › \");}})();</script><div class=\"notosaurus-diagram\">{{Image}}{{AnswerMasks}}</div><div>{{Front}}</div><hr id=\"answer\">{{Back}}{{Audio}}{{#Info}}<div class=\"info\">{{Info}}</div>{{/Info}}{{#Explanation}}<div class=\"notosaurus-help\">💬 {{Explanation}}</div>{{/Explanation}}{{#Mnemonic}}<div class=\"notosaurus-help\">🧠 {{Mnemonic}}</div>{{/Mnemonic}}<div class=\"notosaurus-fix\"><a class=\"nfix\" href=\"#\" data-key=\"{{text:Id}}\" data-tags=\"{{Tags}}\">✎ Notosaurus</a></div><script>(function(){var A=document.querySelectorAll(\"a.nfix:not([data-done])\");for(var i=0;i<A.length;i++){var a=A[i];a.dataset.done=\"1\";var m=/(?:^|\\s)notosaurus::(\\S+)/.exec(a.dataset.tags||\"\");var c=document.documentElement.className+\" \"+document.body.className,android=/\\bandroid\\b/.test(c)||/Android/.test(navigator.userAgent),desktop=typeof pycmd===\"function\"||/\\b(win|mac|linux)\\b/.test(c);if(!m||!(android||desktop)){a.parentNode.style.display=\"none\";continue;}var q=\"lesson=\"+encodeURIComponent(m[1])+\"&key=\"+encodeURIComponent(a.dataset.key||\"\");a.href=(android?\"https://cchabanois.github.io/notosaurus/fix/?\":\"http://localhost:8000/?\")+q;}})();</script>",
+      "ord": 0,
+      "bafmt": "",
+      "bqfmt": "",
+      "bfont": "",
+      "bsize": 0,
+      "did": null
+     }
+    ],
+    "type": 0,
+    "usn": -1,
+    "vers": []
+   }
   },
   "diagram+typing": {
    "name": "Notosaurus labels typed (audio) v2",
@@ -335,7 +1769,136 @@
     }
    ],
    "css": ".card { font-family: system-ui, sans-serif; font-size: 26px; text-align: center; }\n.info { font-size: 18px; color: #777; margin-top: 12px; }\n.card img { max-width: 100%; height: auto; }\n.dictation { font-size: 40px; }\n.notosaurus-help {\n  max-width: 32em; margin: 10px auto 0; padding: 4px 10px; border-left: 3px solid #8bb8c4;\n  font-size: 18px; color: #555; text-align: left;\n}\n.nightMode .notosaurus-help { color: #bbb; }\n.notosaurus-fix { margin-top: 16px; font-size: 14px; }\n.notosaurus-fix a { color: #8bb8c4; text-decoration: none; }\n.notosaurus-context { font-size: 14px; color: #888; margin-bottom: 12px; }\n.notosaurus-diagram { position: relative; display: inline-block; max-width: 100%; line-height: 0; }\n.notosaurus-diagram img { display: block; }\n.notosaurus-mask {\n  position: absolute; box-sizing: border-box; display: flex; align-items: center; justify-content: center;\n  overflow: hidden; line-height: 1; font-size: 13px; font-weight: 700;\n  background: #ffe08a; border: 2px solid #c77700; border-radius: 3px; color: #3d2b00;\n}\n.notosaurus-mask.target { background: #ff7a59; border-color: #b3261e; color: #fff; }\n.notosaurus-mask.revealed { background: transparent; border: 3px solid #1b873f; }\n",
-   "signature": "22bb5be3f42b"
+   "signature": "22bb5be3f42b",
+   "model": {
+    "css": ".card { font-family: system-ui, sans-serif; font-size: 26px; text-align: center; }\n.info { font-size: 18px; color: #777; margin-top: 12px; }\n.card img { max-width: 100%; height: auto; }\n.dictation { font-size: 40px; }\n.notosaurus-help {\n  max-width: 32em; margin: 10px auto 0; padding: 4px 10px; border-left: 3px solid #8bb8c4;\n  font-size: 18px; color: #555; text-align: left;\n}\n.nightMode .notosaurus-help { color: #bbb; }\n.notosaurus-fix { margin-top: 16px; font-size: 14px; }\n.notosaurus-fix a { color: #8bb8c4; text-decoration: none; }\n.notosaurus-context { font-size: 14px; color: #888; margin-bottom: 12px; }\n.notosaurus-diagram { position: relative; display: inline-block; max-width: 100%; line-height: 0; }\n.notosaurus-diagram img { display: block; }\n.notosaurus-mask {\n  position: absolute; box-sizing: border-box; display: flex; align-items: center; justify-content: center;\n  overflow: hidden; line-height: 1; font-size: 13px; font-weight: 700;\n  background: #ffe08a; border: 2px solid #c77700; border-radius: 3px; color: #3d2b00;\n}\n.notosaurus-mask.target { background: #ff7a59; border-color: #b3261e; color: #fff; }\n.notosaurus-mask.revealed { background: transparent; border: 3px solid #1b873f; }\n\n/* Notosaurus note type, version 22bb5be3f42b: updated by Notosaurus */\n",
+    "flds": [
+     {
+      "name": "Front",
+      "ord": 0,
+      "font": "Liberation Sans",
+      "media": [],
+      "rtl": false,
+      "size": 20,
+      "sticky": false
+     },
+     {
+      "name": "Back",
+      "ord": 1,
+      "font": "Liberation Sans",
+      "media": [],
+      "rtl": false,
+      "size": 20,
+      "sticky": false
+     },
+     {
+      "name": "Info",
+      "ord": 2,
+      "font": "Liberation Sans",
+      "media": [],
+      "rtl": false,
+      "size": 20,
+      "sticky": false
+     },
+     {
+      "name": "Audio",
+      "ord": 3,
+      "font": "Liberation Sans",
+      "media": [],
+      "rtl": false,
+      "size": 20,
+      "sticky": false
+     },
+     {
+      "name": "Image",
+      "ord": 4,
+      "font": "Liberation Sans",
+      "media": [],
+      "rtl": false,
+      "size": 20,
+      "sticky": false
+     },
+     {
+      "name": "Masks",
+      "ord": 5,
+      "font": "Liberation Sans",
+      "media": [],
+      "rtl": false,
+      "size": 20,
+      "sticky": false
+     },
+     {
+      "name": "AnswerMasks",
+      "ord": 6,
+      "font": "Liberation Sans",
+      "media": [],
+      "rtl": false,
+      "size": 20,
+      "sticky": false
+     },
+     {
+      "name": "Id",
+      "ord": 7,
+      "font": "Liberation Sans",
+      "media": [],
+      "rtl": false,
+      "size": 20,
+      "sticky": false
+     },
+     {
+      "name": "Explanation",
+      "ord": 8,
+      "font": "Liberation Sans",
+      "media": [],
+      "rtl": false,
+      "size": 20,
+      "sticky": false
+     },
+     {
+      "name": "Mnemonic",
+      "ord": 9,
+      "font": "Liberation Sans",
+      "media": [],
+      "rtl": false,
+      "size": 20,
+      "sticky": false
+     }
+    ],
+    "id": "1261764900",
+    "latexPost": "\\end{document}",
+    "latexPre": "\\documentclass[12pt]{article}\n\\special{papersize=3in,5in}\n\\usepackage[utf8]{inputenc}\n\\usepackage{amssymb,amsmath}\n\\pagestyle{empty}\n\\setlength{\\parindent}{0in}\n\\begin{document}\n",
+    "latexsvg": false,
+    "name": "Notosaurus labels typed (audio) v2",
+    "req": [
+     [
+      0,
+      "any",
+      [
+       0,
+       4,
+       5
+      ]
+     ]
+    ],
+    "sortf": 0,
+    "tags": [],
+    "tmpls": [
+     {
+      "name": "Diagram",
+      "qfmt": "<div class=\"notosaurus-context\">{{Deck}}</div><script>(function(){var D=document.querySelectorAll(\".notosaurus-context:not([data-done])\");for(var i=0;i<D.length;i++){D[i].dataset.done=\"1\";D[i].textContent=D[i].textContent.split(\"::\").join(\" › \");}})();</script><div class=\"notosaurus-diagram\">{{Image}}{{Masks}}</div><div>{{Front}}</div>{{type:Back}}",
+      "afmt": "<div class=\"notosaurus-context\">{{Deck}}</div><script>(function(){var D=document.querySelectorAll(\".notosaurus-context:not([data-done])\");for(var i=0;i<D.length;i++){D[i].dataset.done=\"1\";D[i].textContent=D[i].textContent.split(\"::\").join(\" › \");}})();</script><div class=\"notosaurus-diagram\">{{Image}}{{AnswerMasks}}</div><div>{{Front}}</div><hr id=\"answer\">{{type:Back}}{{Audio}}{{#Info}}<div class=\"info\">{{Info}}</div>{{/Info}}{{#Explanation}}<div class=\"notosaurus-help\">💬 {{Explanation}}</div>{{/Explanation}}{{#Mnemonic}}<div class=\"notosaurus-help\">🧠 {{Mnemonic}}</div>{{/Mnemonic}}<div class=\"notosaurus-fix\"><a class=\"nfix\" href=\"#\" data-key=\"{{text:Id}}\" data-tags=\"{{Tags}}\">✎ Notosaurus</a></div><script>(function(){var A=document.querySelectorAll(\"a.nfix:not([data-done])\");for(var i=0;i<A.length;i++){var a=A[i];a.dataset.done=\"1\";var m=/(?:^|\\s)notosaurus::(\\S+)/.exec(a.dataset.tags||\"\");var c=document.documentElement.className+\" \"+document.body.className,android=/\\bandroid\\b/.test(c)||/Android/.test(navigator.userAgent),desktop=typeof pycmd===\"function\"||/\\b(win|mac|linux)\\b/.test(c);if(!m||!(android||desktop)){a.parentNode.style.display=\"none\";continue;}var q=\"lesson=\"+encodeURIComponent(m[1])+\"&key=\"+encodeURIComponent(a.dataset.key||\"\");a.href=(android?\"https://cchabanois.github.io/notosaurus/fix/?\":\"http://localhost:8000/?\")+q;}})();</script>",
+      "ord": 0,
+      "bafmt": "",
+      "bqfmt": "",
+      "bfont": "",
+      "bsize": 0,
+      "did": null
+     }
+    ],
+    "type": 0,
+    "usn": -1,
+    "vers": []
+   }
   },
   "cloze": {
    "name": "Notosaurus cloze v2",
@@ -358,7 +1921,103 @@
     }
    ],
    "css": ".card { font-family: system-ui, sans-serif; font-size: 26px; text-align: center; }\n.info { font-size: 18px; color: #777; margin-top: 12px; }\n.card img { max-width: 100%; height: auto; }\n.dictation { font-size: 40px; }\n.notosaurus-help {\n  max-width: 32em; margin: 10px auto 0; padding: 4px 10px; border-left: 3px solid #8bb8c4;\n  font-size: 18px; color: #555; text-align: left;\n}\n.nightMode .notosaurus-help { color: #bbb; }\n.notosaurus-fix { margin-top: 16px; font-size: 14px; }\n.notosaurus-fix a { color: #8bb8c4; text-decoration: none; }\n.notosaurus-context { font-size: 14px; color: #888; margin-bottom: 12px; }\n.cloze { font-weight: 700; color: #0b5cad; }\n.extra { margin-top: 12px; }\n",
-   "signature": "223bc94585c5"
+   "signature": "223bc94585c5",
+   "model": {
+    "css": ".card { font-family: system-ui, sans-serif; font-size: 26px; text-align: center; }\n.info { font-size: 18px; color: #777; margin-top: 12px; }\n.card img { max-width: 100%; height: auto; }\n.dictation { font-size: 40px; }\n.notosaurus-help {\n  max-width: 32em; margin: 10px auto 0; padding: 4px 10px; border-left: 3px solid #8bb8c4;\n  font-size: 18px; color: #555; text-align: left;\n}\n.nightMode .notosaurus-help { color: #bbb; }\n.notosaurus-fix { margin-top: 16px; font-size: 14px; }\n.notosaurus-fix a { color: #8bb8c4; text-decoration: none; }\n.notosaurus-context { font-size: 14px; color: #888; margin-bottom: 12px; }\n.cloze { font-weight: 700; color: #0b5cad; }\n.extra { margin-top: 12px; }\n\n/* Notosaurus note type, version 223bc94585c5: updated by Notosaurus */\n",
+    "flds": [
+     {
+      "name": "Text",
+      "ord": 0,
+      "font": "Liberation Sans",
+      "media": [],
+      "rtl": false,
+      "size": 20,
+      "sticky": false
+     },
+     {
+      "name": "Extra",
+      "ord": 1,
+      "font": "Liberation Sans",
+      "media": [],
+      "rtl": false,
+      "size": 20,
+      "sticky": false
+     },
+     {
+      "name": "Info",
+      "ord": 2,
+      "font": "Liberation Sans",
+      "media": [],
+      "rtl": false,
+      "size": 20,
+      "sticky": false
+     },
+     {
+      "name": "Id",
+      "ord": 3,
+      "font": "Liberation Sans",
+      "media": [],
+      "rtl": false,
+      "size": 20,
+      "sticky": false
+     },
+     {
+      "name": "Explanation",
+      "ord": 4,
+      "font": "Liberation Sans",
+      "media": [],
+      "rtl": false,
+      "size": 20,
+      "sticky": false
+     },
+     {
+      "name": "Mnemonic",
+      "ord": 5,
+      "font": "Liberation Sans",
+      "media": [],
+      "rtl": false,
+      "size": 20,
+      "sticky": false
+     }
+    ],
+    "id": "2006162898",
+    "latexPost": "\\end{document}",
+    "latexPre": "\\documentclass[12pt]{article}\n\\special{papersize=3in,5in}\n\\usepackage[utf8]{inputenc}\n\\usepackage{amssymb,amsmath}\n\\pagestyle{empty}\n\\setlength{\\parindent}{0in}\n\\begin{document}\n",
+    "latexsvg": false,
+    "name": "Notosaurus cloze v2",
+    "req": [
+     [
+      0,
+      "all",
+      [
+       0,
+       1,
+       2,
+       3,
+       4,
+       5
+      ]
+     ]
+    ],
+    "sortf": 0,
+    "tags": [],
+    "tmpls": [
+     {
+      "name": "Cloze",
+      "qfmt": "<div class=\"notosaurus-context\">{{Deck}}</div><script>(function(){var D=document.querySelectorAll(\".notosaurus-context:not([data-done])\");for(var i=0;i<D.length;i++){D[i].dataset.done=\"1\";D[i].textContent=D[i].textContent.split(\"::\").join(\" › \");}})();</script>{{cloze:Text}}",
+      "afmt": "<div class=\"notosaurus-context\">{{Deck}}</div><script>(function(){var D=document.querySelectorAll(\".notosaurus-context:not([data-done])\");for(var i=0;i<D.length;i++){D[i].dataset.done=\"1\";D[i].textContent=D[i].textContent.split(\"::\").join(\" › \");}})();</script>{{cloze:Text}}{{#Extra}}<div class=\"extra\">{{Extra}}</div>{{/Extra}}{{#Info}}<div class=\"info\">{{Info}}</div>{{/Info}}{{#Explanation}}<div class=\"notosaurus-help\">💬 {{Explanation}}</div>{{/Explanation}}{{#Mnemonic}}<div class=\"notosaurus-help\">🧠 {{Mnemonic}}</div>{{/Mnemonic}}<div class=\"notosaurus-fix\"><a class=\"nfix\" href=\"#\" data-key=\"{{text:Id}}\" data-tags=\"{{Tags}}\">✎ Notosaurus</a></div><script>(function(){var A=document.querySelectorAll(\"a.nfix:not([data-done])\");for(var i=0;i<A.length;i++){var a=A[i];a.dataset.done=\"1\";var m=/(?:^|\\s)notosaurus::(\\S+)/.exec(a.dataset.tags||\"\");var c=document.documentElement.className+\" \"+document.body.className,android=/\\bandroid\\b/.test(c)||/Android/.test(navigator.userAgent),desktop=typeof pycmd===\"function\"||/\\b(win|mac|linux)\\b/.test(c);if(!m||!(android||desktop)){a.parentNode.style.display=\"none\";continue;}var q=\"lesson=\"+encodeURIComponent(m[1])+\"&key=\"+encodeURIComponent(a.dataset.key||\"\");a.href=(android?\"https://cchabanois.github.io/notosaurus/fix/?\":\"http://localhost:8000/?\")+q;}})();</script>",
+      "ord": 0,
+      "bafmt": "",
+      "bqfmt": "",
+      "bfont": "",
+      "bsize": 0,
+      "did": null
+     }
+    ],
+    "type": 1,
+    "usn": -1,
+    "vers": []
+   }
   },
   "choice": {
    "name": "Notosaurus multiple choice v2",
@@ -386,7 +2045,145 @@
     }
    ],
    "css": ".card { font-family: system-ui, sans-serif; font-size: 26px; text-align: center; }\n.info { font-size: 18px; color: #777; margin-top: 12px; }\n.card img { max-width: 100%; height: auto; }\n.dictation { font-size: 40px; }\n.notosaurus-help {\n  max-width: 32em; margin: 10px auto 0; padding: 4px 10px; border-left: 3px solid #8bb8c4;\n  font-size: 18px; color: #555; text-align: left;\n}\n.nightMode .notosaurus-help { color: #bbb; }\n.notosaurus-fix { margin-top: 16px; font-size: 14px; }\n.notosaurus-fix a { color: #8bb8c4; text-decoration: none; }\n.notosaurus-context { font-size: 14px; color: #888; margin-bottom: 12px; }\n.notosaurus-picture img { max-width: min(100%, 320px); max-height: 50vh; border-radius: 12px; }\n.notosaurus-choices {\n  display: inline-block; margin: 12px auto 0; padding-left: 1.8em; text-align: left; list-style: upper-alpha;\n}\n.notosaurus-choices li { margin: 6px 0; }\n.notosaurus-choices li.right { color: #1b873f; font-weight: 700; }\n.notosaurus-choices li.right::after { content: \" ✔\"; }\n.notosaurus-choices li.wrong { opacity: .5; }\n",
-   "signature": "94db6ea0b3c3"
+   "signature": "94db6ea0b3c3",
+   "model": {
+    "css": ".card { font-family: system-ui, sans-serif; font-size: 26px; text-align: center; }\n.info { font-size: 18px; color: #777; margin-top: 12px; }\n.card img { max-width: 100%; height: auto; }\n.dictation { font-size: 40px; }\n.notosaurus-help {\n  max-width: 32em; margin: 10px auto 0; padding: 4px 10px; border-left: 3px solid #8bb8c4;\n  font-size: 18px; color: #555; text-align: left;\n}\n.nightMode .notosaurus-help { color: #bbb; }\n.notosaurus-fix { margin-top: 16px; font-size: 14px; }\n.notosaurus-fix a { color: #8bb8c4; text-decoration: none; }\n.notosaurus-context { font-size: 14px; color: #888; margin-bottom: 12px; }\n.notosaurus-picture img { max-width: min(100%, 320px); max-height: 50vh; border-radius: 12px; }\n.notosaurus-choices {\n  display: inline-block; margin: 12px auto 0; padding-left: 1.8em; text-align: left; list-style: upper-alpha;\n}\n.notosaurus-choices li { margin: 6px 0; }\n.notosaurus-choices li.right { color: #1b873f; font-weight: 700; }\n.notosaurus-choices li.right::after { content: \" ✔\"; }\n.notosaurus-choices li.wrong { opacity: .5; }\n\n/* Notosaurus note type, version 94db6ea0b3c3: updated by Notosaurus */\n",
+    "flds": [
+     {
+      "name": "Question",
+      "ord": 0,
+      "font": "Liberation Sans",
+      "media": [],
+      "rtl": false,
+      "size": 20,
+      "sticky": false
+     },
+     {
+      "name": "Answer",
+      "ord": 1,
+      "font": "Liberation Sans",
+      "media": [],
+      "rtl": false,
+      "size": 20,
+      "sticky": false
+     },
+     {
+      "name": "Choices",
+      "ord": 2,
+      "font": "Liberation Sans",
+      "media": [],
+      "rtl": false,
+      "size": 20,
+      "sticky": false
+     },
+     {
+      "name": "AnswerChoices",
+      "ord": 3,
+      "font": "Liberation Sans",
+      "media": [],
+      "rtl": false,
+      "size": 20,
+      "sticky": false
+     },
+     {
+      "name": "Picture",
+      "ord": 4,
+      "font": "Liberation Sans",
+      "media": [],
+      "rtl": false,
+      "size": 20,
+      "sticky": false
+     },
+     {
+      "name": "BackPicture",
+      "ord": 5,
+      "font": "Liberation Sans",
+      "media": [],
+      "rtl": false,
+      "size": 20,
+      "sticky": false
+     },
+     {
+      "name": "Info",
+      "ord": 6,
+      "font": "Liberation Sans",
+      "media": [],
+      "rtl": false,
+      "size": 20,
+      "sticky": false
+     },
+     {
+      "name": "Id",
+      "ord": 7,
+      "font": "Liberation Sans",
+      "media": [],
+      "rtl": false,
+      "size": 20,
+      "sticky": false
+     },
+     {
+      "name": "Explanation",
+      "ord": 8,
+      "font": "Liberation Sans",
+      "media": [],
+      "rtl": false,
+      "size": 20,
+      "sticky": false
+     },
+     {
+      "name": "Mnemonic",
+      "ord": 9,
+      "font": "Liberation Sans",
+      "media": [],
+      "rtl": false,
+      "size": 20,
+      "sticky": false
+     },
+     {
+      "name": "Source",
+      "ord": 10,
+      "font": "Liberation Sans",
+      "media": [],
+      "rtl": false,
+      "size": 20,
+      "sticky": false
+     }
+    ],
+    "id": "950427280",
+    "latexPost": "\\end{document}",
+    "latexPre": "\\documentclass[12pt]{article}\n\\special{papersize=3in,5in}\n\\usepackage[utf8]{inputenc}\n\\usepackage{amssymb,amsmath}\n\\pagestyle{empty}\n\\setlength{\\parindent}{0in}\n\\begin{document}\n",
+    "latexsvg": false,
+    "name": "Notosaurus multiple choice v2",
+    "req": [
+     [
+      0,
+      "any",
+      [
+       0,
+       2,
+       4
+      ]
+     ]
+    ],
+    "sortf": 0,
+    "tags": [],
+    "tmpls": [
+     {
+      "name": "Multiple choice",
+      "qfmt": "<div class=\"notosaurus-context\">{{Deck}}</div><script>(function(){var D=document.querySelectorAll(\".notosaurus-context:not([data-done])\");for(var i=0;i<D.length;i++){D[i].dataset.done=\"1\";D[i].textContent=D[i].textContent.split(\"::\").join(\" › \");}})();</script>{{#Picture}}<div class=\"notosaurus-picture\">{{Picture}}</div>{{/Picture}}<div>{{Question}}</div>{{Choices}}",
+      "afmt": "<div class=\"notosaurus-context\">{{Deck}}</div><script>(function(){var D=document.querySelectorAll(\".notosaurus-context:not([data-done])\");for(var i=0;i<D.length;i++){D[i].dataset.done=\"1\";D[i].textContent=D[i].textContent.split(\"::\").join(\" › \");}})();</script>{{#Picture}}<div class=\"notosaurus-picture\">{{Picture}}</div>{{/Picture}}<div>{{Question}}</div><hr id=\"answer\">{{AnswerChoices}}{{#BackPicture}}<div class=\"notosaurus-picture\">{{BackPicture}}</div>{{/BackPicture}}{{#Info}}<div class=\"info\">{{Info}}</div>{{/Info}}{{#Explanation}}<div class=\"notosaurus-help\">💬 {{Explanation}}</div>{{/Explanation}}{{#Mnemonic}}<div class=\"notosaurus-help\">🧠 {{Mnemonic}}</div>{{/Mnemonic}}<div class=\"notosaurus-fix\"><a class=\"nfix\" href=\"#\" data-key=\"{{text:Id}}\" data-tags=\"{{Tags}}\">✎ Notosaurus</a></div><script>(function(){var A=document.querySelectorAll(\"a.nfix:not([data-done])\");for(var i=0;i<A.length;i++){var a=A[i];a.dataset.done=\"1\";var m=/(?:^|\\s)notosaurus::(\\S+)/.exec(a.dataset.tags||\"\");var c=document.documentElement.className+\" \"+document.body.className,android=/\\bandroid\\b/.test(c)||/Android/.test(navigator.userAgent),desktop=typeof pycmd===\"function\"||/\\b(win|mac|linux)\\b/.test(c);if(!m||!(android||desktop)){a.parentNode.style.display=\"none\";continue;}var q=\"lesson=\"+encodeURIComponent(m[1])+\"&key=\"+encodeURIComponent(a.dataset.key||\"\");a.href=(android?\"https://cchabanois.github.io/notosaurus/fix/?\":\"http://localhost:8000/?\")+q;}})();</script>",
+      "ord": 0,
+      "bafmt": "",
+      "bqfmt": "",
+      "bfont": "",
+      "bsize": 0,
+      "did": null
+     }
+    ],
+    "type": 0,
+    "usn": -1,
+    "vers": []
+   }
   }
  },
  "families": {
