@@ -17,6 +17,7 @@
 // axis); spans, stretches of x ((from, to, label): shaded); second, another measure with
 // its own unit on a right axis ((values: ((x, y), …), axis: title)), in another colour;
 // kind "box": box plots, each (name, (min, q1, median, q3, max)), on one axis (_box-plots).
+// kind "pyramid": two series back to back by class, classes: their names (_pyramid).
 // numbered: false when the description gives no value for y (only how it varies): the
 // line's shape without numbers on its axis; smooth: a curve through the measures instead of
 // straight lines, never above nor below them between two (monotone: Fritsch–Carlson).
@@ -148,9 +149,99 @@
     }
   })
 }
+// The sectors' and the series' colours, light enough for a number written on them
+#let _palette = (
+  rgb("#9cc9e8"), rgb("#f6c76b"), rgb("#a5d18f"), rgb("#f2a7ad"), rgb("#c3b1e1"), rgb("#f3e08a"),
+  rgb("#8fd3c9"), rgb("#e8b48f"),
+)
+// A pyramid (a population pyramid, an age pyramid): two series of bars back to back, the
+// first at the left, the second at the right, one bar of each per class, at the same height;
+// the classes in a column between them, the first at the bottom (the youngest); one value
+// axis under each side, graduated alike from 0 at the centre outwards (each side's numbers
+// its absolute values), its step computed (a round one whose numbers fit apart); each
+// series' name above its side, in its bars' colour. numbered: false when the description
+// gives no value (a pyramid's shape only): no graduation, no number, the bars' lengths only
+// showing that shape. written: the classes whose two values are written ("all", or classes).
+#let _pyramid(classes, values, written: (), axis: none, step: auto, numbered: true) = context {
+  let number(x) = type(x) in (int, float)
+  assert(type(classes) == array and classes.len() > 0 and classes.all(c => type(c) in (str, content)),
+    message: "pyramid: classes is the list of the classes' names, the youngest first: (\"0-9 ans\", \"10-19 ans\", …)")
+  assert(
+    type(values) == array and values.len() == 2 and values.all(s => type(s) == array and s.len() == 2 and type(s.at(1)) == array),
+    message: "pyramid: values is two series, (name, (value, …)) each, the left one first: ((\"Hommes\", (…)), (\"Femmes\", (…)))",
+  )
+  assert(values.all(s => s.at(1).len() == classes.len()),
+    message: "pyramid: each series has one value per class, as many as classes (" + str(classes.len()) + ")")
+  assert(values.all(s => s.at(1).all(v => number(v) and v >= 0)),
+    message: "pyramid: a series' values are numbers, 0 or more (each side's length; the sides are drawn apart)")
+  let top = calc.max(..values.map(s => s.at(1)).flatten())
+  assert(top > 0, message: "pyramid: some value is more than 0")
+  assert(written == "all" or type(written) == array, message: "written is \"all\" or a list of classes")
+  assert(numbered or (written == () and step == auto),
+    message: "pyramid: numbered: false shows a shape only, never a number written nor a step")
+  let shown(c) = written == "all" or c in written
+  let txt(body) = text(10pt, font: "DejaVu Sans", body)
+  let num(x) = written-number(x, digits: 3)
+  let w = 3.4  // each side's length
+  // the step: the description's, else the finest round one whose numbers fit apart, at most 6
+  let ticks-end(s) = calc.ceil(top / s - 1e-9) * s
+  let s = if step != auto { step } else {
+    let found = round-steps(top / 6, 10 * top).find(c => c * w / ticks-end(c) >= measure(txt(num(ticks-end(c)))).width / 1cm + 0.25)
+    if found == none { round-step(top, 2) } else { found }
+  }
+  let end = if numbered { ticks-end(s) } else { top }
+  let unit = w / end
+  let gap = calc.max(..classes.map(c => measure(txt(c)).width / 1cm)) + 0.4  // the classes' column
+  let row = 0.55
+  let n = classes.len()
+  let height = n * row
+  let (left, right) = (-gap / 2, gap / 2)
+  let colours = (_palette.at(0), _palette.at(3))
+  cetz.canvas({
+    import cetz.draw: *
+    if numbered {
+      for k in range(int(calc.round(end / s)) + 1) {
+        let d = k * s * unit
+        for (x0, sign) in ((left, -1), (right, 1)) {
+          let x = x0 + sign * d
+          if k > 0 { line((x, 0), (x, height), stroke: 0.4pt + _grid) }
+          line((x, 0), (x, -0.08), stroke: 0.6pt)
+          content((x, -0.16), txt(num(k * s)), anchor: "north")
+        }
+      }
+    }
+    for (side, (x0, sign)) in ((left, -1), (right, 1)).enumerate() {
+      line((x0, 0), (x0 + sign * (w + 0.2), 0), stroke: 0.8pt)
+      line((x0, 0), (x0, height + 0.1), stroke: 0.8pt)
+      let (name, vs) = values.at(side)
+      for (i, v) in vs.enumerate() {
+        let y = (i + 0.5) * row
+        if v > 0 {
+          rect((x0, y - row * 0.42), (x0 + sign * v * unit, y + row * 0.42), fill: colours.at(side), stroke: 0.5pt + luma(90))
+        }
+        if numbered and shown(classes.at(i)) {
+          content((x0 + sign * (v * unit + 0.08), y), txt(num(v)), anchor: if sign < 0 { "east" } else { "west" })
+        }
+      }
+      // the series' name above its side, a patch of its colour before it
+      let label = box(width: 0.3cm, height: 0.3cm, baseline: 5%, fill: colours.at(side), stroke: 0.5pt + luma(90)) + h(0.15cm) + txt(name)
+      content((x0 + sign * w / 2, height + 0.3), label, anchor: "south")
+    }
+    for (i, c) in classes.enumerate() { content((0, (i + 0.5) * row), txt(c)) }
+    if axis != none { content((0, if numbered { -0.65 } else { -0.2 }), txt(axis), anchor: "north") }
+  })
+}
 #let chart(kind: "bars", values: (), written: (), degrees: false, axis: none, axes: (none, none), step: auto,
-  marks: (), spans: (), second: none, numbered: true, smooth: false, limits: auto, horizontal: false) = context {
-  assert(kind in ("bars", "pie", "semi", "line", "box"), message: "kind is \"bars\", \"pie\", \"semi\", \"line\" or \"box\"")
+  marks: (), spans: (), second: none, numbered: true, smooth: false, limits: auto, horizontal: false, classes: none) = context {
+  assert(kind in ("bars", "pie", "semi", "line", "box", "pyramid"), message: "kind is \"bars\", \"pie\", \"semi\", \"line\", \"box\" or \"pyramid\"")
+  assert(kind == "pyramid" or classes == none, message: "classes is for a pyramid only")
+  if kind == "pyramid" {
+    assert(marks == () and spans == () and second == none and not smooth and axes == (none, none) and not degrees
+      and limits == auto and not horizontal,
+      message: "a pyramid takes classes, values, axis, step, numbered and written only")
+    return _pyramid(if classes == none { () } else { classes }, values, written: written, axis: axis, step: step,
+      numbered: numbered)
+  }
   if kind == "box" {
     assert(marks == () and spans == () and second == none and not smooth and axes == (none, none) and not degrees,
       message: "box plots take values, axis, step, limits and written only")
@@ -195,10 +286,7 @@
   assert(total > 0, message: "the counts add up to more than 0")
   assert(written == "all" or type(written) == array, message: "written is \"all\" or a list of labels")
   let shown(label) = written == "all" or label in written
-  let palette = (
-    rgb("#9cc9e8"), rgb("#f6c76b"), rgb("#a5d18f"), rgb("#f2a7ad"), rgb("#c3b1e1"), rgb("#f3e08a"),
-    rgb("#8fd3c9"), rgb("#e8b48f"),
-  )
+  let palette = _palette
   let txt(body) = text(10pt, font: "DejaVu Sans", body)
   // a number as the figure's language writes it: whole, or with its decimal separator; to
   // the thousandth (a probability, 0,078), an angle to the tenth

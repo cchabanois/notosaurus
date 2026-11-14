@@ -263,3 +263,86 @@ def test_a_smooth_line_with_two_measures_at_one_x_refused():
     with pytest.raises(figures_typst.Unusable, match="two measures with the same x"):
         figures_typst.compile_svg("chart", f'#chart(kind: "line", values: {values}, smooth: true)')
     figures_typst.compile_svg("chart", f'#chart(kind: "line", values: {values})')
+
+
+PYRAMID = (
+    '#chart(kind: "pyramid", classes: ("0-9 ans", "10-19 ans", "20-29 ans", "60 ans et plus"),'
+    ' values: (("Hommes", ({})), ("Femmes", ({}))), axis: "% de la population"{})'
+)
+
+
+def _bars_by_row(body):
+    """Each side's bars, row by row: {y: (leftmost x, rightmost x)}, the rows where a bar
+    touches its side's axis (never the legend's patches)."""
+    from PIL import Image
+
+    svg = figures_typst.compile_svg("chart", f'#set text(lang: "fr")\n{body}')
+    image = Image.open(io.BytesIO(figures.to_png(figures.clean(svg)))).convert("RGB")
+    rows: dict[tuple[int, int, int], dict[int, tuple[int, int]]] = {(156, 201, 232): {}, (242, 167, 173): {}}
+    for y in range(image.height):
+        for x in range(image.width):
+            colour = image.getpixel((x, y))
+            if colour in rows:
+                low, high = rows[colour].get(y, (x, x))
+                rows[colour][y] = (min(low, x), max(high, x))
+    left, right = rows.values()
+    inner = (max(high for _, high in left.values()), min(low for low, _ in right.values()))
+    return (
+        {y: span for y, span in left.items() if span[1] >= inner[0] - 1},
+        {y: span for y, span in right.items() if span[0] <= inner[1] + 1},
+    )
+
+
+def test_a_pyramid_draws_two_series_back_to_back():
+    """A population pyramid (0 drawings of 6: bars on one side, men and women on rows of
+    their own): the two series mirrored about the classes' column, a class's two bars at the
+    same height, as long as their values on one graduation, the youngest class at the bottom."""
+    left, right = _bars_by_row(PYRAMID.format("17, 12, 8, 2.5", "17, 12, 8, 2.5", ""))
+    assert left.keys() == right.keys() and len(left) > 20
+    middle = (max(high for _, high in left.values()) + min(low for low, _ in right.values())) / 2
+    for y in left:
+        assert abs((right[y][1] - middle) - (middle - left[y][0])) <= 2, y
+    lengths = {y: right[y][1] - right[y][0] for y in right}
+    assert lengths[max(lengths)] > 5 * lengths[min(lengths)]  # 17 at the bottom, 2.5 at the top
+    # half the value on one side only: that side's bar half as long, the other unchanged
+    left, right = _bars_by_row(PYRAMID.format("17, 12, 8, 2.5", "8.5, 12, 8, 2.5", ""))
+    bottom = max(left)
+    assert abs(2 * (right[bottom][1] - right[bottom][0]) - (left[bottom][1] - left[bottom][0])) <= 6
+
+
+def test_a_pyramid_is_graduated_alike_on_both_sides():
+    """One graduation from 0 at the centre outwards on each side, the same numbers; the values
+    written only when asked; a pyramid without values (a shape only) shows no number."""
+
+    def numbers(body):
+        return len(_glyphs(figures_typst.compile_svg("chart", f'#set text(lang: "fr")\n{body}')))
+
+    texts = 4 + 2 + 1  # the classes, the series' names, the axis's title
+    graduated = numbers(PYRAMID.format("17, 12, 8, 2.5", "16.5, 11.5, 8, 2.5", "")) - texts
+    assert graduated % 2 == 0 and graduated >= 6  # 0, 5, 10, 15, 20 on each side
+    written = numbers(PYRAMID.format("17, 12, 8, 2.5", "16.5, 11.5, 8, 2.5", ', written: "all"'))
+    assert written == graduated + texts + 8
+    shape = PYRAMID.format("2, 4, 6, 10", "2, 4, 6, 10", ", numbered: false")
+    shape = shape.replace(', axis: "% de la population"', "")
+    assert numbers(shape) == 4 + 2
+
+
+def test_a_pyramid_refuses_what_it_cant_draw():
+    for body, said in (
+        (PYRAMID.format("17, 12, 8", "16.5, 11.5, 8, 2.5", ""), "one value per class"),
+        (PYRAMID.format("17, 12, 8, -2.5", "16.5, 11.5, 8, 2.5", ""), "0 or more"),
+        ('#chart(kind: "pyramid", classes: ("A",), values: (("Hommes", (1,)),))', "two series"),
+        (PYRAMID.format("1, 2, 3, 4", "1, 2, 3, 4", ', numbered: false, written: "all"'), "shape only"),
+        (PYRAMID.format("1, 2, 3, 4", "1, 2, 3, 4", ", horizontal: true"), "a pyramid takes"),
+        ('#chart(kind: "bars", classes: ("A",), values: (("A", 1),))', "pyramid only"),
+    ):
+        with pytest.raises(figures_typst.Unusable, match=said):
+            figures_typst.compile_svg("chart", body)
+
+
+def test_population_pyramids_are_charts():
+    """The kinds send a population pyramid (two series back to back, by class) to the chart,
+    never to the solids (a pyramid there is a solid's shape)."""
+    kinds = dict(re.findall(r'"(\w+)": (.*?)(?=; "\w+": |$)', figures_typst.KINDS))
+    assert "back to back" in kinds["chart"] and "population" in kinds["chart"]
+    assert "never a population pyramid" in kinds["solid"]
