@@ -68,13 +68,17 @@ def options(lesson: dict, builtins: list, forced: str = "") -> dict:
     if forced:
         prompt = next(p for p in builtins if p.id == f"notosaurus:{forced}")
         lesson = {"prompt": prompt.text}
+    elif not lesson.get("prompt", "").strip():
+        # saved without its prompt: Automatic, the one the phone offers first (a made-up "make
+        # cards" left the AI without its cases: a poem to learn by heart got 6 questions on it)
+        lesson = {**lesson, "prompt": next(p for p in builtins if p.id == "notosaurus:auto").text}
 
     def same(text: str) -> str:
         return " ".join(text.split())  # a phone's line ends (\r\n) as the computer's
 
     prompt = next((p for p in builtins if same(p.text) == same(lesson.get("prompt", ""))), None)
     return {
-        "prompt": lesson.get("prompt") or "Crée des cartes pour réviser la leçon.",
+        "prompt": lesson["prompt"],
         "builtin": prompt.id if prompt else "",
         "deck": prompt.deck if prompt else "",
         "voice": prompt.voice if prompt else ("auto" if lesson.get("voice") else ""),
@@ -189,7 +193,10 @@ def own_language_heard(asked: dict, made: dict) -> bool:
 
 
 def plain(text: str) -> str:
-    text = unicodedata.normalize("NFKD", re.sub(r"<[^>]+>|\{\{c\d+::|\}\}|::[^}]*", " ", text or ""))
+    """The cards' text to look words up in: no markup, no accents, lower case; a part singled
+    out in brackets read in its word (« t[i]ger » is « tiger »)."""
+    text = re.sub(r"\[([^\[\]]*)\]", r"\1", text or "")
+    text = unicodedata.normalize("NFKD", re.sub(r"<[^>]+>|\{\{c\d+::|\}\}|::[^}]*", " ", text))
     return " ".join("".join(c for c in text if not unicodedata.combining(c)).lower().split())
 
 
