@@ -255,8 +255,11 @@
       "reading": "Leyendo la lección…",
       "writing": "Creando las tarjetas…",
       "revising": "Corrigiendo las tarjetas…",
-      "duration": "Suele tardar entre 10 y 30 segundos.",
-      "durationQuick": "Suele tardar menos de 10 segundos.",
+      "aboutSeconds": "Unos {count} segundos.",
+      "aboutMinutes": {
+        "one": "Alrededor de un minuto.",
+        "other": "Unos {count} minutos."
+      },
       "cancelling": "Cancelando…",
       "figures": "Describiendo las figuras…",
       "writingCards": "Escribiendo las tarjetas: {count}…",

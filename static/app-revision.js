@@ -2,6 +2,22 @@
 // correction undone (a regeneration too).
 // Methods of the page's Alpine component (app.js), as `this`.
 
+// How long the AI usually takes, as measured (gemini-3.8-flash, 2026-11-11: one page 12-15 s
+// quick, 14-17 s careful, about 3 s or 2.5 s more a page, whatever the route; a correction
+// 45-72 s on the relay): what the waiting card says, not a promise ("slow" says when it is late)
+const REVISION_SECONDS = 60;
+
+function lessonSeconds(quick, pages) {
+  const n = Math.max(1, pages);  // the instructions alone: as a page
+  return quick ? 10 + 3 * n : 15 + 2.5 * n;
+}
+
+// "About 15 seconds", rounded to 5; a minute or more: in minutes
+function about(seconds) {
+  if (seconds < 60) return t("app.loading.aboutSeconds", { count: Math.max(5, Math.round(seconds / 5) * 5) });
+  return t("app.loading.aboutMinutes", { count: Math.round(seconds / 60) });
+}
+
 const revisionPart = {
   async revise() {
     const instruction = this.revision.text.trim();
@@ -122,11 +138,11 @@ const revisionPart = {
 
   // Under it: how long it usually takes; the AI slow to answer, or another model asked
   loadingNote() {
-    Alpine.store("i18n").version;  // (else "app.loading.duration" when made before the texts came)
+    Alpine.store("i18n").version;  // (else the key itself, when made before the texts came)
     if (this.aiStep === "fallback") return t("app.loading.fallback");
     if (this.aiStep === "slow" && !this.coming.length) return t("app.loading.slow");
     if (this.batch && !this.revision.busy) return t("app.loading.batch", this.batch);  // pages 11 to 20 of 30
-    return t(!this.revision.busy && this.loadingQuick ? "app.loading.durationQuick" : "app.loading.duration");
+    return about(this.revision.busy ? REVISION_SECONDS : lessonSeconds(this.loadingQuick, this.loadingPages));
   },
 
   // Keep the keys of unchanged cards and flag new or modified ones.

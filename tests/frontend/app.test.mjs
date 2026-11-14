@@ -1008,3 +1008,22 @@ test("sharing the cards: offered where the host makes .apkg, hidden while the re
   c.apkg = false;  // a host without .apkg (an older app's page)
   assert.equal(c.canShare(), false);
 });
+
+test("the waiting card's estimate: by mode and pages, as measured; a correction about a minute", async () => {
+  const page = await loadScripts("app.js", { languages: ["fr-FR"] });
+  const c = page.component();
+  const note = (quick, pages, revising = false) => {
+    Object.assign(c, { loadingQuick: quick, loadingPages: pages, batch: null, aiStep: "", coming: [] });
+    c.revision.busy = revising;
+    return c.loadingNote();
+  };
+  assert.equal(note(true, 1), "Environ 15 secondes.");
+  assert.equal(note(true, 0), "Environ 15 secondes.");  // the instructions alone: as a page
+  assert.equal(note(true, 5), "Environ 25 secondes.");
+  assert.equal(note(true, 10), "Environ 40 secondes.");
+  assert.equal(note(false, 1), "Environ 20 secondes.");
+  assert.equal(note(false, 10), "Environ 40 secondes.");
+  assert.equal(note(true, 1, true), "Environ une minute.");
+  c.aiStep = "slow";  // late: said instead
+  assert.equal(c.loadingNote(), "L'IA met plus de temps que d'habitude à répondre…");
+});
