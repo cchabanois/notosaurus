@@ -16,19 +16,36 @@
   plain.replace(regex("[-'’.]"), " ").replace(regex("\s+"), " ").trim()
 }
 
-#let country-code(name) = {
+#let country-code(name, all: atlas.countries) = {
   let key = fold(name)
-  for (code, country) in atlas.countries {
+  for (code, country) in all {
     if key in country.k { return code }
   }
   none
 }
-#let find-country(name) = {
-  let code = country-code(name)
+#let find-country(name, all: atlas.countries, year: none) = {
+  let code = country-code(name, all: all)
+  if code == none and year != none {
+    panic("no state called \"" + name + "\" in " + str(year) + " in the atlas: its name then (\"Autriche-Hongrie\", \"URSS\", \"Afrique-Occidentale française\")")
+  }
   if code == none {
     panic("no country called \"" + name + "\" in the atlas: its usual name, or its three-letter code (\"ESP\")")
   }
   code
+}
+
+// The borders of a year (tools/atlas.py, borders/<year>.json): those of the atlas's years
+// whose time it falls in (1914's from 1914 to 1918, 1960's from 1949 to 1991), today's from
+// 1992; another year refused, said (never a past map drawn with the wrong borders)
+#let today-from = 1992
+#let borders(year) = {
+  if year == none or year >= today-from { return atlas.countries }
+  let found = atlas.years.find(((_, from, to)) => year >= from and year <= to)
+  if found == none {
+    let spans = atlas.years.map(((_, from, to)) => str(from) + "–" + str(to)).join(", ")
+    panic("no borders of " + str(year) + " in the atlas: it has those of " + spans + " and today's (from " + str(today-from) + "); no year for another time")
+  }
+  json("borders/" + str(found.first()) + ".json").countries
 }
 
 // A place's name and the country it was said in, when one follows it after a comma (a name
@@ -110,8 +127,9 @@
 // colours differently, light enough for a name on them; the sky blue, nearest the sea's, last
 #let palette = ("#e69f00", "#0072b2", "#009e73", "#cc79a7", "#d55e00", "#f0e442", "#56b4e9", "#a6761d").map(rgb)
 
-// Groups as asked, checked: (name, countries: their codes, regions: their names)
-#let read-groups(groups) = {
+// Groups as asked, checked: (name, countries: their codes, regions: their names); a past
+// year's `empire`: a state and every land it ruled then (its colonies, protectorates)
+#let read-groups(groups, all: atlas.countries, year: none) = {
   if type(groups) == dictionary { groups = (groups,) }  // a single group without its comma
   if groups.len() > palette.len() {
     panic("at most " + str(palette.len()) + " groups on a map, one colour each: join some")
@@ -123,7 +141,7 @@
       panic("a group is (name: \"…\", countries: (…), regions: (…)): its name, for the legend, and what it holds")
     }
     for key in g.keys() {
-      if key not in ("name", "countries", "regions") {
+      if key not in ("name", "countries", "regions", "empire") {
         panic("a group holds a name, countries and regions, not \"" + key + "\"")
       }
     }
@@ -131,17 +149,29 @@
       let v = g.at(key, default: ())
       if type(v) == str { (v,) } else { v }
     }
-    let codes = listed("countries").map(find-country)
+    let codes = listed("countries").map(n => find-country(n, all: all, year: year))
+    let names = listed("countries")
+    let ruled = ()  // (an empire's lands: never circled, too many small ones on a world map)
+    if "empire" in g {
+      if year == none { panic("an empire is a past year's (year: 1914): today's countries rule no colonies in the atlas") }
+      let ruler = find-country(g.empire, all: all, year: year)
+      let lands = all.pairs().filter(((_, c)) => c.at("o", default: none) == ruler).map(((code, _)) => code)
+      for code in (ruler, ..lands).filter(c => c not in codes) {
+        codes.push(code)
+        names.push(all.at(code).n.first())
+        if code != ruler { ruled.push(code) }
+      }
+    }
     if codes.len() + listed("regions").len() == 0 {
       panic("the group \"" + g.name + "\" holds no country nor region")
     }
-    for (code, name) in codes.zip(listed("countries")) {
+    for (code, name) in codes.zip(names) {
       if code in seen {
         panic("\"" + name + "\" is in two groups (\"" + seen.at(code) + "\" and \"" + g.name + "\"): one group each")
       }
       seen.insert(code, g.name)
     }
-    out.push((name: g.name, countries: codes, regions: listed("regions")))
+    out.push((name: g.name, countries: codes, regions: listed("regions"), ruled: ruled))
   }
   out
 }
@@ -243,15 +273,20 @@
   let c = atlas.cities.at(i)
   (kind: "city", name: name, xy: (c.x, c.y), port: ways.cities.at(i), nodes: (), city: c, index: i, others: others)
 }
-#let country-place(code, name, ways) = {
+#let country-place(code, name, ways, all: none) = {
+  if all != none and code not in ways.countries {  // a past year's state: from its inmost point, by land
+    let c = all.at(code)
+    return (kind: "country", name: name, code: code, xy: c.at, port: none, nodes: (), rings: c.r, f: c.f)
+  }
   let place = ways.countries.at(code)
-  (kind: "country", name: name, code: code, xy: place.at, port: none, nodes: place.s, rings: atlas.countries.at(code).r)
+  let c = atlas.countries.at(code)
+  (kind: "country", name: name, code: code, xy: place.at, port: none, nodes: place.s, rings: c.r, f: c.f)
 }
 #let relief-place(i, name, ways, reliefs-all) = {
   let r = reliefs-all.at(i)
   (kind: "relief", name: name, xy: r.at.first(), port: none, nodes: ways.reliefs.at(i), rings: r.r)
 }
-#let find-place(name, shown, ways, waters-all, reliefs-all) = {
+#let find-place(name, shown, ways, waters-all, reliefs-all, all: none) = {
   let (bare, code) = qualified(name)
   let cities = city-indices(name, shown)
   if cities.len() > 0 { return city-place(cities.first(), bare, ways, cities.slice(1)) }
@@ -284,8 +319,8 @@
     // (an ocean's parts: its ways in all of them)
     return (kind: "water", name: name, xy: item.at.first(), port: none, nodes: parts.map(i => ways.waters.at(i)).join(), rings: item.r, spots: item.at)
   }
-  for (code, c) in atlas.countries {
-    if key in c.k { return country-place(code, name, ways) }
+  for (code, c) in (if all == none { atlas.countries } else { all }) {
+    if key in c.k { return country-place(code, name, ways, all: all) }
   }
   let found = reliefs-all.enumerate().filter(((_, r)) => key in r.k)
   if found.len() > 0 {
@@ -294,9 +329,9 @@
   none
 }
 
-#let place-or-said(name, shown, ways, waters-all, reliefs-all) = {
+#let place-or-said(name, shown, ways, waters-all, reliefs-all, all: none) = {
   if type(name) != str { panic("a place is its name, a string: \"" + repr(name) + "\" is not") }
-  let place = find-place(name, shown, ways, waters-all, reliefs-all)
+  let place = find-place(name, shown, ways, waters-all, reliefs-all, all: all)
   if place == none {
     panic("no place called \"" + name + "\" in the atlas (a city, a cape, a canal, a sea or strait, a country, a continent or a part of one): name another the route or flow passes, or leave it out")
   }
@@ -336,7 +371,7 @@
 }
 
 // Routes as asked, checked, their ways found: (name, by, stops: the places, way: its points)
-#let read-routes(routes, shown, ways, waters-all, reliefs-all) = {
+#let read-routes(routes, shown, ways, waters-all, reliefs-all, all: none) = {
   if type(routes) == dictionary { routes = (routes,) }
   routes.map(r => {
     if type(r) != dictionary or "name" not in r or "places" not in r {
@@ -351,7 +386,7 @@
     if names.len() < 2 {
       panic("the route \"" + r.name + "\" passes fewer than two places: its start and its end at least, in their order")
     }
-    let stops = names.map(n => place-or-said(n, shown, ways, waters-all, reliefs-all))
+    let stops = names.map(n => place-or-said(n, shown, ways, waters-all, reliefs-all, all: all))
     // A city whose name others share: the one nearest the places before and after it on the
     // route (Tripoli after Beirut, Lebanon's; after Tunis, Libya's)
     stops = stops.enumerate().map(((i, p)) => {
@@ -469,7 +504,7 @@
 
 // Flows as asked, checked: (from, to: each its places, its middle `xy`, the point the arrow
 // leaves or reaches `at`, its name when several places make it; kind, value, label)
-#let read-flows(flows, shown, ways, waters-all, reliefs-all) = {
+#let read-flows(flows, shown, ways, waters-all, reliefs-all, all: none) = {
   if type(flows) == dictionary { flows = (flows,) }
   flows.map(f => {
     if type(f) != dictionary or "from" not in f or "to" not in f {
@@ -495,8 +530,8 @@
       // Several places making a region: a name that is a country's too is the country (Kuwait,
       // Singapore), not its city
       let places = names.map(n => {
-        let code = if names.len() > 1 { country-code(n) } else { none }
-        if code != none { country-place(code, n, ways) } else { place-or-said(n, shown, ways, waters-all, reliefs-all) }
+        let code = if names.len() > 1 { country-code(n, all: if all == none { atlas.countries } else { all }) } else { none }
+        if code != none { country-place(code, n, ways, all: all) } else { place-or-said(n, shown, ways, waters-all, reliefs-all, all: all) }
       })
       // Several: their middle, each on the side of the first
       let points = unwrapped(places.map(p => p.xy))
@@ -521,9 +556,12 @@
 // a curved arrow each, its kind's colour, as wide as its value; routes and flows in the
 // legend, framed; each named when labels; width, height: the most the map takes
 #let map(countries: (), cities: (), regions: (), rivers: (), reliefs: (), waters: (), groups: (),
-  routes: (), flows: (), labels: true, width: 8cm, height: 7cm) = context {
-  let shown = countries.map(find-country)
-  let sets = read-groups(groups)
+  routes: (), flows: (), year: none, labels: true, width: 8cm, height: 7cm) = context {
+  // The states drawn: a past year's (its borders), else today's countries
+  let all = borders(year)
+  let past = year != none and year < today-from
+  let shown = countries.map(n => find-country(n, all: all, year: if past { year }))
+  let sets = read-groups(groups, all: all, year: if past { year })
   let grouped = sets.map(g => g.countries).join(default: ())
   // The countries the map is about: those shown and those grouped
   let about = shown + grouped.filter(code => code not in shown)
@@ -534,8 +572,10 @@
   if moving {
     let ways = json("ways.json")
     let (waters-all, reliefs-all) = (json("waters.json"), json("reliefs.json"))
-    if routes.len() > 0 { trips = read-routes(routes, about, ways, waters-all, reliefs-all) }
-    if flows.len() > 0 { arrows = read-flows(flows, about, ways, waters-all, reliefs-all) }
+    // (a past year's states the places they pass, by their names then)
+    let then = if past { all } else { none }
+    if routes.len() > 0 { trips = read-routes(routes, about, ways, waters-all, reliefs-all, all: then) }
+    if flows.len() > 0 { arrows = read-flows(flows, about, ways, waters-all, reliefs-all, all: then) }
     // The cities they pass, a red dot each (once)
     let passed = trips.map(t => t.stops).join(default: ()) + arrows.map(f => f.from.places + f.to.places).join(default: ())
     for p in passed.filter(p => p.kind == "city") {
@@ -548,11 +588,14 @@
     panic("at most " + str(palette.len()) + " routes and kinds of flows on a map, one colour each: join some")
   }
   let ink(i) = palette.at(i).darken(15%)
+  if past and (regions.len() > 0 or sets.any(g => g.regions.len() > 0)) {
+    panic("no regions on a map of a past year: the atlas's regions are today's; its states only")
+  }
   let areas = regions.map(name => (name: name, at: find-region(name, shown)))
   let group-areas = sets.enumerate().map(((i, g)) => g.regions.map(name => (name: name, at: find-region(name, about), group: i))).join(default: ())
   let region(a) = json("regions/" + a.at.code + ".json").at(a.at.level).at(a.at.index)
   let near = if about.len() == 0 { none } else {
-    let bs = about.map(code => atlas.countries.at(code).b)
+    let bs = about.map(code => all.at(code).b)
     (calc.min(..bs.map(b => b.at(0))), calc.min(..bs.map(b => b.at(1))),
      calc.max(..bs.map(b => b.at(2))), calc.max(..bs.map(b => b.at(3))))
   }
@@ -571,10 +614,10 @@
   let s = atlas.scale
   // The frame: the countries, regions, groups and cities asked; else the rivers, reliefs and waters
   // (an ocean only when nothing smaller is)
-  let boxes = shown.map(code => atlas.countries.at(code).f) + areas.map(a => region(a).b)
+  let boxes = shown.map(code => all.at(code).f) + areas.map(a => region(a).b)
   boxes += towns.map(t => (t.city.x, t.city.y, t.city.x, t.city.y))
   if sets.len() > 0 {
-    boxes += grouped.filter(code => code not in shown).map(code => atlas.countries.at(code).f)
+    boxes += grouped.filter(code => code not in shown).map(code => all.at(code).f)
     boxes += group-areas.map(a => region(a).b)
     // An area far larger than all the others together (Russia beside Europe's countries)
     // framed only on its part nearest them, as large as half of them: the others stay
@@ -605,7 +648,7 @@
     for (x, y) in (f.from.at, f.to.at) { boxes.push((x, y, x, y)) }
     // A region's places whole (a country's main part)
     for p in (f.from, f.to).filter(s => s.name != none).map(s => s.places).join(default: ()) {
-      boxes.push(if p.kind == "country" { atlas.countries.at(p.code).f } else { (..p.xy, ..p.xy) })
+      boxes.push(if p.kind == "country" { p.f } else { (..p.xy, ..p.xy) })
     }
   }
   if boxes.len() == 0 { boxes = lines.map(l => l.item.b) + lands.map(l => l.item.b) }
@@ -747,7 +790,7 @@
     if run.len() > 0 { out.push(run) }
     out.filter(r => r.len() >= 2)
   }
-  let others = atlas.countries.pairs().filter(((code, c)) => code not in about and near-frame(c.b))
+  let others = all.pairs().filter(((code, c)) => code not in about and near-frame(c.b))
   // Where a name goes: a region's, relief's or water's first place in the frame; a river's
   // middle point within it
   let place-of(item) = {
@@ -822,7 +865,7 @@
     for s in (f.from, f.to).filter(s => s.name != none) {
       if zones.any(z => z.name == s.name) { continue }
       let points = unwrapped(s.places.map(p => p.xy))
-      let weights = s.places.map(p => if p.kind == "country" { size(atlas.countries.at(p.code).f) } else { 0 } + 1)
+      let weights = s.places.map(p => if p.kind == "country" { size(p.f) } else { 0 } + 1)
       let total = weights.sum()
       let (x, y) = range(2).map(e => points.zip(weights).map(((q, w)) => q.at(e) * w).sum() / total)
       zones.push((name: s.name, places: s.places, colour: c.colour))
@@ -958,12 +1001,12 @@
       for points in c.r { ring(points, luma(228), 0.4pt + luma(160)) }
     }
     for code in shown {
-      for points in atlas.countries.at(code).r { ring(points, white, none) }
+      for points in all.at(code).r { ring(points, white, none) }
     }
     // Each group's countries in its colour, their borders seen
     for (i, g) in sets.enumerate() {
       for code in g.countries {
-        for points in atlas.countries.at(code).r { ring(points, tint(i), 0.4pt + luma(110)) }
+        for points in all.at(code).r { ring(points, tint(i), 0.4pt + luma(110)) }
       }
     }
     // The regions asked coloured, their level's others outlined (a région among the régions)
@@ -988,7 +1031,7 @@
       }
     }
     for code in shown {
-      for points in atlas.countries.at(code).r { ring(points, none, 0.7pt + black) }
+      for points in all.at(code).r { ring(points, none, 0.7pt + black) }
     }
     // A region asked too small to see at this scale (Hawaii beside the United States): a
     // circle around it
@@ -1005,7 +1048,7 @@
     // from its group's others: a circle around it in its group's colour; one beside them
     // shows by their colour (Luxembourg, Lebanon)
     // (a country's main part and those near it, its frame: not its far islands)
-    let grouped-parts = sets.enumerate().map(((i, g)) => g.countries.map(code => (atlas.countries.at(code).f, i))).join(default: ())
+    let grouped-parts = sets.enumerate().map(((i, g)) => g.countries.filter(c => c not in g.ruled).map(code => (all.at(code).f, i))).join(default: ())
     grouped-parts += group-areas.map(a => {
       let largest = region(a).r.first()
       ((calc.min(..largest.map(p => p.at(0))), calc.min(..largest.map(p => p.at(1))),
