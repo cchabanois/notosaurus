@@ -209,3 +209,79 @@ def test_the_places_of_history_kept_as_listed():
     kept = json.loads(atlas.HISTORY_FILE.read_text(encoding="utf-8"))
     assert [p["title"] for p in kept] == [title for title, _ in atlas.HISTORY]
     assert all(p["n"] and len(p["xy"]) == 2 for p in kept)
+
+
+def _fills(svg: str) -> list[str]:
+    """The colours a map fills its shapes with (its text's black left out: the legend's)."""
+    return [f for f in re.findall(r'fill="(#[0-9a-f]{6})"', svg) if f != "#000000"]
+
+
+def test_groups_coloured_one_colour_each_with_a_legend():
+    """Countries coloured by group (alliances, a union's members by year): each group its own
+    colour, a key under the map in it; the same countries alone in `countries` have neither."""
+    entente = '(name: "Entente", countries: ("France", "Royaume-Uni"))'
+    alliance = '(name: "Alliance", countries: ("Allemagne", "Italie"))'
+    grouped = figures_typst.compile_svg("map", f"#map(groups: ({entente}, {alliance}), labels: false)")
+    plain = figures_typst.compile_svg(
+        "map", '#map(countries: ("France", "Royaume-Uni", "Allemagne", "Italie"), labels: false)'
+    )
+    tints = set(_fills(grouped)) - set(_fills(plain))
+    assert len(tints) == 2  # one colour a group, nothing else new
+    # The legend: the groups' names written under the map (another name, another drawing)
+    renamed = figures_typst.compile_svg(
+        "map", f"#map(groups: ({entente.replace('Entente', 'Triple-Entente')}, {alliance}), labels: false)"
+    )
+    assert renamed != grouped
+    height = lambda svg: float(re.search(r'height="([\d.]+)pt"', svg).group(1))  # noqa: E731
+    assert height(grouped) > height(plain)
+
+
+def test_groups_all_framed():
+    """The frame holds every group (France's and Japan's): each drawn in its colour, not
+    only its key in the legend."""
+    svg = figures_typst.compile_svg(
+        "map", '#map(groups: ((name: "A", countries: ("France",)), (name: "B", countries: ("Japon",))))'
+    )
+    plain = set(_fills(figures_typst.compile_svg("map", '#map(countries: ("France", "Japon"))')))
+    tints = [f for f in _fills(svg) if f not in plain]
+    assert len(set(tints)) == 2 and all(tints.count(t) >= 2 for t in set(tints))  # a country and its key
+
+
+def test_a_country_far_larger_than_the_groups_framed_near_them():
+    """Russia beside France and Germany: the map framed on them and Russia's part nearest,
+    not to the Pacific (Paris and Berlin wide apart), Russia's own map whole."""
+    svg = figures_typst.compile_svg(
+        "map",
+        '#map(groups: ((name: "A", countries: ("France", "Allemagne")), (name: "B", countries: ("Russie",))), '
+        'cities: ("Paris", "Berlin"), labels: false)',
+    )
+    dots = [float(x) for x in re.findall(r'<path fill="#d62f2f"[^>]*transform="translate\(([\d.]+) ', svg)]
+    width = float(re.search(r'width="([\d.]+)pt"', svg).group(1))
+    assert len(dots) == 2 and abs(dots[0] - dots[1]) > width / 10
+
+
+def test_a_region_coloured_in_a_group():
+    """A group of regions (China's west), their country shown: drawn in the group's colour."""
+    svg = figures_typst.compile_svg(
+        "map", '#map(countries: ("Chine",), groups: ((name: "Ouest", regions: ("Tibet", "Xinjiang")),))'
+    )
+    plain = set(_fills(figures_typst.compile_svg("map", '#map(countries: ("Chine",))')))
+    assert len({f for f in _fills(svg) if f not in plain}) == 1
+
+
+@pytest.mark.parametrize(
+    ("groups", "said"),
+    [
+        ('((name: "A", countries: ("Atlantide",)),)', r"no country called .Atlantide."),
+        ('((name: "A", countries: ("France",)), (name: "B", countries: ("France",)))', r"is in two groups"),
+        ('((name: "A"),)', r"holds no country nor region"),
+        ('(("France",),)', r"a group is \(name"),
+        ('((name: "A", countries: ("France",), color: red),)', r"not .color."),
+        ("(" + '(name: "A", countries: ("France",)),' * 9 + ")", r"at most 8 groups"),
+    ],
+)
+def test_a_group_wrongly_written_said(groups, said):
+    """A group the map can't draw stops the figure, saying why, for the AI to write it again;
+    never guessed."""
+    with pytest.raises(figures_typst.Unusable, match=said):
+        figures_typst.compile_svg("map", f"#map(groups: {groups})")
