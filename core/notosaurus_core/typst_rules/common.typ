@@ -63,3 +63,8 @@
 
 // A text's characters, to measure or compare it: a name's letters, a space for what has none
 #let _plain(c) = if type(c) == str { c } else if c.has("text") { c.text } else if c.has("children") { c.children.map(_plain).join() } else if c.has("body") { _plain(c.body) } else { " " }
+
+// Colours that mean the same in every family: a cell, a base or a word the description
+// marks; a graduation's grid
+#let _highlight = rgb("#fde68a")
+#let _grid = luma(205)

@@ -183,7 +183,7 @@
       inset: 0pt,
       align: center + horizon,
       stroke: 0.7pt + black,
-      fill: (j, i) => if (i, j) in marks { rgb("#fde68a") } else if (head != none and i == 0) or (named and j == 0) {
+      fill: (j, i) => if (i, j) in marks { _highlight } else if (head != none and i == 0) or (named and j == 0) {
         luma(235)
       } else { none },
       ..range(all.len()).map(i => range(n).map(j => cell(i, j))).flatten(),

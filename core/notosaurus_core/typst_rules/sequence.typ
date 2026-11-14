@@ -1,4 +1,5 @@
 #set page(width: auto, height: auto, margin: 6pt)
+#import "common.typ": *
 // Sequences aligned to be compared (DNA, RNA, proteins: two alleles, a mutation, species):
 // each letter in its column, whatever its width, and the differences with the first row of
 // the same kind framed in each of them, computed, never placed by eye. rows: (name, sequence) pairs; a
@@ -85,7 +86,7 @@
       let marked = framed and differs(k, i)
       cells.push(grid.cell(
         x: first, y: y, colspan: last - first + 1,
-        fill: if marked { rgb("#fde68a") } else { none },
+        fill: if marked { _highlight } else { none },
         stroke: if marked { 1.2pt + black } else { none },
         letter(if asked { "?" } else if t == "-" { "–" } else { t }),
       ))
