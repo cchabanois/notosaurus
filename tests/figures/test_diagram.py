@@ -24,6 +24,38 @@ def _svg_width(svg: str) -> float:
     return float(re.search(r'width="([\d.]+)', svg).group(1))
 
 
+CM = 72 / 2.54  # pt
+
+
+@pytest.mark.parametrize(
+    "body",
+    [
+        # four boxes of two lines on a row (a chain of steps): 22 cm wide
+        '#diagram(spacing: 2em, node((0, 0), [Entrée du microbe\ndans l\'organisme]), edge("-|>"),'
+        ' node((1, 0), [Réaction innée\n(inflammation, phagocytose)]), edge("-|>"),'
+        ' node((2, 0), [Réaction adaptative\n(lymphocytes B et T)]), edge("-|>"),'
+        " node((3, 0), [Mémoire immunitaire]))",
+        # a bracket glued to its word: a place to break, the column narrowed too
+        '#diagram(node((0, 0), [Antigène présenté]), edge("-|>"), node((1, 0), [Lymphocytes T4(auxiliaires)]),'
+        ' edge("-|>"), node((2, 0), [Plasmocytes(anticorps)]), edge("-|>"),'
+        " node((3, 0), [Lymphocytes T cytotoxiques(destruction des cellules infectées)]))",
+    ],
+)
+def test_a_wide_diagram_fits_a_card(body):
+    """A row of boxes of long texts made a diagram 16 to 22 cm wide: shrunk to a phone's card,
+    its text unreadable. Its widest columns narrowed, their texts on more lines, toward 12 cm,
+    never narrower than a column's longest word (four columns of "(inflammation," and
+    "l'organisme": about 15 cm)."""
+    assert _svg_width(figures_typst.compile_svg("diagram", body)) < 16 * CM
+
+
+def test_a_narrow_diagram_as_it_was():
+    """A diagram that fits a card keeps its boxes as wide as their texts."""
+    body = '#diagram(node((0, 0), [Pile]), edge("-|>"), node((1, 0), [Lampe]), edge("-|>"), node((2, 0), [Moteur]))'
+    one = _svg_width(figures_typst.compile_svg("diagram", body))
+    assert one < 200
+
+
 def test_a_diagrams_arrow_labels_clear_of_its_boxes():
     """An arrow's label longer than the gap the AI gave its two boxes lay on them: the gap
     widened to the label (its width along a row, beside an arrow going down, and both for a
