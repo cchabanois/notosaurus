@@ -143,13 +143,14 @@
   })
 }
 // Groups inside groups as a tree (a classification: two groups side by side in a third, the
-// mammals and the birds in the tetrapods): each group a box, its name in a band at its top,
-// its own members (those of no smaller group) in a column at its right, the groups it holds
-// side by side under its name. Every size measured, every place computed: no name cut by a
-// box nor on another name, no member on an edge. Each group `(id: "t", name: [Tétrapodes],
+// mammals and the birds in the tetrapods): each group a box, its name centred at its top with a
+// thin rule under it, the groups it holds side by side under the rule (more rows past about
+// 11 cm, the boxes of a row as tall as the tallest), its own members (those of no smaller group)
+// under them, in centred rows. Every size measured, every place computed: no name cut by a box
+// nor on another name, no member on an edge. Each group `(id: "t", name: [Tétrapodes],
 // inside: "v", members: ([Lézard],))`, `inside` the id of the group holding it (none: the largest).
-// The layout (within a context: texts measured): each box (x, top, width, height), each
-// text (its place, its content, its rectangle)
+// The layout (within a context: texts measured): each box (its rect, the height of the rule
+// under its name: none when it holds nothing), each text (its place, its content, its rectangle)
 #let _groups-layout(gs) = {
   for g in gs {
     assert(type(g) == dictionary and "id" in g and "name" in g, message: "each group is (id: \"v\", name: [Vertébrés], inside: \"…\", members: (…))")
@@ -161,66 +162,94 @@
     assert(up != g.id, message: "a group is not in itself: " + g.id)
   }
   assert(ids.dedup().len() == ids.len(), message: "each group its own id")
-  let wrap(c) = if measure(c).width > 4.5cm { block(width: 4.5cm, c) } else { c }
+  // a text wider than `width` (cm) on two lines or more, centred
+  let fit(c, width) = if measure(c).width > width * 1cm { block(width: width * 1cm, align(center, c)) } else { c }
   let members(g) = { let m = g.at("members", default: ()); if type(m) == array { m } else { (m,) } }
   let byid = gs.map(g => (g.id, g)).to-dict()
   let kids(id) = gs.filter(g => g.at("inside", default: none) == id).map(g => g.id)
   let dim(c) = { let m = measure(c); (m.width / 1cm, m.height / 1cm) }
-  let (pad, gap) = (0.25, 0.3)
-  // each group's (width, height), from the smallest up (a loop, no recursion: deepest first)
+  let (pad, gap, spread, widest) = (0.3, 0.35, 0.45, 11.0)
+  // widths in rows no wider than `room`: each row its indices and its width
+  let rows(widths, room, space) = {
+    let out = ()
+    for (i, w) in widths.enumerate() {
+      if out.len() > 0 and out.last().width + space + w <= room {
+        out.last().members.push(i)
+        out.last().width += space + w
+      } else { out.push((members: (i,), width: w)) }
+    }
+    out
+  }
+  // a laid-out group moved by (dx, dy): in cm, y down from its top-left corner
+  let move(l, dx, dy) = (
+    boxes: l.boxes.map(b => b + (x0: b.x0 + dx, x1: b.x1 + dx, y0: b.y0 + dy, y1: b.y1 + dy, rule: if b.rule == none { none } else { b.rule + dy })),
+    texts: l.texts.map(t => t + (x: t.x + dx, y: t.y + dy)),
+    w: l.w, h: l.h,
+  )
+  // laid-out groups in rows, each row centred in `width`, from `y` down: (boxes, texts, y below)
+  let place(ls, width, y) = {
+    let (boxes, texts) = ((), ())
+    for row in rows(ls.map(l => l.w), widest, gap) {
+      let tall = calc.max(..row.members.map(i => ls.at(i).h))
+      let x = (width - row.width) / 2
+      for i in row.members {
+        let l = move(ls.at(i), x, y)
+        // a row's boxes as tall as the tallest: its own box only, its contents where they were
+        l.boxes.at(0).y1 = y + tall
+        boxes += l.boxes
+        texts += l.texts
+        x += l.w + gap
+      }
+      y += tall + gap
+    }
+    (boxes, texts, y)
+  }
+  // each group laid out from the inside out (a loop, no recursion: deepest first)
   let depth(id) = { let d = 0; let up = byid.at(id).at("inside", default: none); while up != none { d += 1; up = byid.at(up).at("inside", default: none) }; d }
   let order = ids.sorted(key: id => -depth(id))
-  let size = (:)
-  let names = (:)
+  let lay = (:)
   for id in order {
     let g = byid.at(id)
-    let ms = members(g).map(c => dim(wrap(c)))
-    let ks = kids(id).map(k => size.at(k))
-    let kw = if ks.len() > 0 { ks.map(k => k.at(0)).sum() + gap * (ks.len() - 1) } else { 0 }
-    let kh = if ks.len() > 0 { calc.max(..ks.map(k => k.at(1))) } else { 0 }
-    let mw = if ms.len() > 0 { calc.max(..ms.map(m => m.at(0))) } else { 0 }
-    let mh = if ms.len() > 0 { ms.map(m => m.at(1)).sum() + gap * (ms.len() - 1) } else { 0 }
-    let bw = kw + mw + if ks.len() > 0 and ms.len() > 0 { gap } else { 0 }
-    let bh = calc.max(kh, mh)
-    // its name on one line when the box is that wide anyway, else on two or more (4.5 cm at least)
-    let room = calc.max(4.5, bw) * 1cm
-    let name = if measure(g.name).width > room { block(width: room, g.name) } else { g.name }
+    let ks = kids(id).map(k => lay.at(k))
+    let block-w = calc.max(0, ..rows(ks.map(k => k.w), widest, gap).map(r => r.width))
+    // its name on one line when its sub-groups are that wide anyway, else on two or more
+    let name = fit(g.name, calc.max(4.5, block-w))
     let (nw, nh) = dim(name)
-    names.insert(id, name)
-    size.insert(id, (calc.max(nw, bw) + 2 * pad, pad + nh + (if bh > 0 { gap + bh } else { 0 }) + pad, nh))
-  }
-  // where each box goes: (x, top), from the largest down
-  let at = (:)
-  let roots = ids.filter(id => byid.at(id).at("inside", default: none) == none)
-  let x = 0
-  for r in roots { at.insert(r, (x, 0)); x += size.at(r).at(0) + gap }
-  for id in order.rev() {
-    let (x0, top) = at.at(id)
-    let cx = x0 + pad
-    for k in kids(id) {
-      at.insert(k, (cx, top - pad - size.at(id).at(2) - gap))
-      cx += size.at(k).at(0) + gap
+    let items = members(g).map(c => fit(c, 3.6))
+    let sizes = items.map(dim)
+    let item-rows = rows(sizes.map(s => s.at(0)), calc.max(block-w, nw, 4.0), spread)
+    let w = calc.max(nw, block-w, ..item-rows.map(r => r.width)) + 2 * pad
+    let texts = ((id: id, kind: "name", x: w / 2, y: pad + nh / 2, w: nw, h: nh, body: name),)
+    let full = ks.len() > 0 or items.len() > 0
+    let rule = if full { pad + nh + gap / 2 } else { none }
+    let y = pad + nh + if full { gap } else { 0 }
+    let (boxes, kid-texts, below) = place(ks, w, y)
+    texts += kid-texts
+    y = below
+    for row in item-rows {
+      let tall = calc.max(..row.members.map(i => sizes.at(i).at(1)))
+      let x = (w - row.width) / 2
+      for i in row.members {
+        let (iw, ih) = sizes.at(i)
+        texts.push((id: id, kind: "member", x: x + iw / 2, y: y + tall / 2, w: iw, h: ih, body: items.at(i)))
+        x += iw + spread
+      }
+      y += tall + gap
     }
+    if full { y -= gap }
+    let h = y + pad
+    let own = (id: id, inside: g.at("inside", default: none), x0: 0, y0: 0, x1: w, y1: h, rule: rule)
+    lay.insert(id, (boxes: (own,) + boxes, texts: texts, w: w, h: h))
   }
-  let texts = ()
-  for id in order.rev() {
-    let g = byid.at(id)
-    let (x0, top) = at.at(id)
-    let (w, h, nh) = size.at(id)
-    let (tw, th) = dim(names.at(id))
-    texts.push((id: id, kind: "name", at: (x0 + pad, top - pad), body: names.at(id), rect: (x0 + pad, top - pad - th, x0 + pad + tw, top - pad)))
-    let ks = kids(id)
-    let mx = if ks.len() > 0 { at.at(ks.last()).at(0) + size.at(ks.last()).at(0) + gap } else { x0 + pad }
-    let y = top - pad - nh - gap
-    for c in members(g) {
-      let c = wrap(c)
-      let (cw, ch) = dim(c)
-      texts.push((id: id, kind: "member", at: (mx, y), body: c, rect: (mx, y - ch, mx + cw, y)))
-      y -= ch + gap
-    }
-  }
-  let boxes = order.rev().map(id => { let (x0, top) = at.at(id); let (w, h, _) = size.at(id); (id: id, inside: byid.at(id).at("inside", default: none), rect: (x0, top - h, x0 + w, top)) })
-  (boxes: boxes, texts: texts)
+  // the largest groups (one, as a rule) in rows too
+  let roots = ids.filter(id => byid.at(id).at("inside", default: none) == none).map(id => lay.at(id))
+  let width = calc.max(..rows(roots.map(r => r.w), widest, gap).map(r => r.width))
+  let (boxes, texts, _) = place(roots, width, 0)
+  // in cetz's coordinates (y up): each box's rect (x0, y0, x1, y1), each text's top-left corner
+  (
+    boxes: boxes.map(b => (id: b.id, inside: b.inside, rect: (b.x0, -b.y1, b.x1, -b.y0), rule: if b.rule == none { none } else { -b.rule })),
+    texts: texts.map(t => (id: t.id, kind: t.kind, at: (t.x - t.w / 2, -t.y + t.h / 2), body: t.body, rect: (t.x - t.w / 2, -t.y - t.h / 2, t.x + t.w / 2, -t.y + t.h / 2))),
+  )
 }
 #let nested-groups(..groups) = context {
   let (boxes, texts) = _groups-layout(groups.pos())
@@ -229,6 +258,7 @@
     for b in boxes {
       let (x0, y0, x1, y1) = b.rect
       rect((x0, y0), (x1, y1), radius: 0.2, stroke: 0.8pt, fill: white)
+      if b.rule != none { line((x0, b.rule), (x1, b.rule), stroke: 0.4pt + luma(120)) }
     }
     for t in texts { content(t.at, t.body, anchor: "north-west") }
   })
