@@ -294,8 +294,9 @@ def _atlas_folder():
     return figures_typst.packages() / "preview" / "notosaurus-atlas" / version, version
 
 
-def _ways(*routes: str) -> list[list[tuple[float, float]]]:
-    """Each route's way (its points, in degrees) as the map function finds it."""
+def _query(function: str, items: tuple[str, ...], what: str) -> list:
+    """What the atlas's `function` (read-routes, read-flows) finds for `items`, `what` taken
+    from each (a Typst expression of `r`)."""
     import shutil
     import tempfile
     from pathlib import Path
@@ -304,20 +305,25 @@ def _ways(*routes: str) -> list[list[tuple[float, float]]]:
 
     folder, version = _atlas_folder()
     source = (
-        f'#import "@preview/notosaurus-atlas:{version}": read-routes\n'
-        "#let found = read-routes(("
-        + "".join(r + "," for r in routes)
+        f'#import "@preview/notosaurus-atlas:{version}": {function}\n'
+        f"#let found = {function}(("
+        + "".join(r + "," for r in items)
         + '), (), json("ways.json"), json("waters.json"), json("reliefs.json"))\n'
-        "#metadata(found.map(r => r.way)) <ways>\n"
+        f"#metadata(found.map(r => {what})) <found>\n"
     )
     with tempfile.TemporaryDirectory() as tmp:
         for name in ("ways.json", "waters.json", "reliefs.json"):  # the package's, beside the document
             shutil.copy(folder / name, tmp)
-        path = Path(tmp) / "ways.typ"
+        path = Path(tmp) / "found.typ"
         path.write_text(source, encoding="utf-8")
-        found = typst.query(path, "<ways>", field="value", root=tmp, package_path=str(folder.parent.parent.parent))
+        found = typst.query(path, "<found>", field="value", root=tmp, package_path=str(folder.parent.parent.parent))
     (value,) = json.loads(found)
-    return [[(x / 100, y / 100) for x, y in way] for way in value]
+    return value
+
+
+def _ways(*routes: str) -> list[list[tuple[float, float]]]:
+    """Each route's way (its points, in degrees) as the map function finds it."""
+    return [[(x / 100, y / 100) for x, y in way] for way in _query("read-routes", routes, "r.way")]
 
 
 def _land():
@@ -351,6 +357,9 @@ def _land():
         # Round Africa when no canal is named (Vasco da Gama's), through Suez when it is
         ('(name: "A", places: ("Lisbonne", "Calicut"))', lambda way: min(y for _, y in way) < -34),
         ('(name: "A", places: ("Lisbonne", "canal de Suez", "Calicut"))', lambda way: min(y for _, y in way) > 0),
+        # A port at a canal's mouth opens it, leaving or coming
+        ('(name: "A", places: ("Singapour", "Suez", "Rotterdam"))', lambda way: min(y for _, y in way) > 0),
+        ('(name: "A", places: ("Rotterdam", "Suez"))', lambda way: min(y for _, y in way) > 25),
         # Through the straits (Gibraltar, the Dardanelles and the Bosporus; the Danish ones)
         ('(name: "A", places: ("Marseille", "Odessa"))', lambda way: True),
         ('(name: "A", places: ("Rotterdam", "Saint-Pétersbourg"))', lambda way: True),
@@ -443,6 +452,7 @@ def test_routes_and_flows_framed():
         ('routes: (("Lisbonne", "Calicut"),)', r"a route is \(name"),
         ('flows: ((from: "Maroc"),)', r"a flow is \(from"),
         ('flows: ((from: "Maroc", to: "France", value: "beaucoup"),)', r"value is a number"),
+        ('flows: ((from: ("Maroc", "Algérie"), to: "France"),)', r"several places .*from-name"),
         ("routes: (" + '(name: "A", places: ("Lisbonne", "Calicut")),' * 9 + ")", r"at most 8 routes"),
     ],
 )
@@ -451,3 +461,129 @@ def test_a_route_or_flow_wrongly_written_said(asked, said):
     it again; never guessed."""
     with pytest.raises(figures_typst.Unusable, match=said):
         figures_typst.compile_svg("map", f"#map({asked})")
+
+
+def _point(name: str) -> tuple[float, float]:
+    """A city's point in the atlas, in degrees (the first of that name)."""
+    folder, _ = _atlas_folder()
+    for c in json.loads((folder / "atlas.json").read_text(encoding="utf-8"))["cities"]:
+        if name in c["n"]:
+            return c["x"] / 100, c["y"] / 100
+    raise KeyError(name)
+
+
+def test_a_city_whose_name_others_share_is_the_one_on_the_way():
+    """A route's city whose name other cities bear is the one nearest the places before and
+    after it, the most populated only when nothing says otherwise."""
+    (east,) = _ways('(name: "A", places: ("Beyrouth", "Tripoli"), by: "land")')
+    (west,) = _ways('(name: "A", places: ("Tunis", "Tripoli"), by: "land")')
+    assert east[-1][0] > 30 > west[-1][0]
+
+
+def test_a_place_said_with_its_country():
+    """A place followed by its country after a comma is taken in that country; one the atlas
+    lacks there is said, its country offered (never a namesake elsewhere, never guessed)."""
+    (way,) = _ways('(name: "A", places: ("Madrid", "Valencia, Venezuela"), by: "land")')
+    assert way[-1][0] < -60  # Venezuela's, not Spain's
+    # (one the atlas lacks there: said, the country offered, never El Salvador's capital)
+    with pytest.raises(figures_typst.Unusable, match=r"no place called .San Salvador. in Bahamas.*name the country"):
+        figures_typst.compile_svg("map", '#map(routes: ((name: "A", places: ("Lisbonne", "San Salvador, Bahamas")),))')
+    figures_typst.compile_svg("map", '#map(cities: ("Valencia, Venezuela",))')
+
+
+def test_an_ocean_is_all_its_parts():
+    """An ocean the atlas holds in parts (north and south) is all of them: a route across the
+    North Pacific stays in it, the ocean drawn whole."""
+    (way,) = _ways('(name: "A", places: ("Shanghai", "océan Pacifique", "Los Angeles"))')
+    assert min(y for _, y in way) > 15
+    one = figures_typst.compile_svg("map", '#map(waters: ("North Pacific Ocean",))')
+    whole = figures_typst.compile_svg("map", '#map(waters: ("océan Pacifique",))')
+    assert len(re.findall(r'fill="#b5d2ec"', whole)) > len(re.findall(r'fill="#b5d2ec"', one))
+
+
+def test_a_flow_from_a_region_named_tinted_and_from_its_nearest_place():
+    """A flow from several places (a region the atlas lacks) is named, its places tinted, its
+    arrow leaving from the place nearest where it goes."""
+    flow = '(from: ("Mexique", "Brésil", "Colombie"), from-name: "Amérique latine", to: "États-Unis")'
+    ((start, end),) = _query("read-flows", (flow,), "(r.from.at, r.to.at)")
+    folder, _ = _atlas_folder()
+    ways = json.loads((folder / "ways.json").read_text(encoding="utf-8"))
+    assert start == ways["countries"]["MEX"]["at"] and end == ways["countries"]["USA"]["at"]
+    # A region's name that is a city's too (Kuwait) is the country
+    gulf = '(from: "Inde", to: ("Arabie saoudite", "Koweït"), to-name: "Golfe")'
+    (kinds,) = _query("read-flows", (gulf,), "r.to.places.map(p => p.kind)")
+    assert kinds == ["country", "country"]
+    lone = figures_typst.compile_svg("map", '#map(flows: ((from: "Mexique", to: "États-Unis"),), labels: false)')
+    region = figures_typst.compile_svg("map", f"#map(flows: ({flow},), labels: false)")
+    assert len(_fills(region)) > len(_fills(lone))  # the region's places
+
+
+def _arrows(svg: str) -> list[tuple[float, float]]:
+    """The flows' arrows: each its width and its line's length (start to end)."""
+    found = re.findall(
+        r'stroke-width="([\d.]+)" stroke-linecap="butt"[^>]*d="M 0 0m [-\d.]+ [-\d.]+c [-\d. ]*? ([-\d.]+) ([-\d.]+)"',
+        svg,
+    )
+    return [(float(w), (float(dx) ** 2 + float(dy) ** 2) ** 0.5) for w, dx, dy in found]
+
+
+def test_flows_long_enough_to_see_and_their_widths_apart():
+    """On a world map an arrow between neighbours is still long enough to see, and the
+    arrows' widths tell their values apart: the least the thinnest, the largest the widest."""
+    svg = figures_typst.compile_svg(
+        "map",
+        "#map(flows: ("
+        '(from: "Allemagne", to: "Espagne", value: 2), (from: "Chine", to: "Thaïlande", value: 3),'
+        '(from: "États-Unis", to: "Mexique", value: 2.5)), labels: false)',
+    )
+    arrows = _arrows(svg)
+    assert len(arrows) == 3
+    assert min(length for _, length in arrows) > 12
+    widths = [w for w, _ in arrows]
+    assert max(widths) >= 3 * min(widths)
+
+
+def _labels(svg: str) -> list[tuple[float, float, float, float]]:
+    """The names' boxes on the map: x, y, width, height."""
+    found = re.findall(
+        r'<g transform="translate\(([-\d.]+) ([-\d.]+)\)"><path fill="#ffffffb2"[^>]*d="M 0 0v ([\d.]+)h ([\d.]+)v', svg
+    )
+    return [(float(x), float(y), float(w), float(h)) for x, y, h, w in found]
+
+
+def test_names_never_cut_by_the_frame():
+    """Every name stays whole within the map, the frame grown or the name moved in: a strait
+    at the frame's edge too."""
+    svg = figures_typst.compile_svg(
+        "map",
+        '#map(cities: ("Shanghai", "Rotterdam"), routes: ((name: "A", places: ("Shanghai", "Singapour",'
+        ' "détroit de Malacca", "canal de Suez", "détroit de Gibraltar", "Rotterdam")),'
+        ' (name: "B", places: ("Shanghai", "océan Pacifique", "Los Angeles"))))',
+    )
+    width, height = (
+        float(v) for v in re.search(r'fill="#e8f1f8"[^>]*d="M 0 0v ([\d.]+)h ([\d.]+)v', svg).groups()[::-1]
+    )
+    labels = _labels(svg)
+    assert len(labels) >= 7
+    for x, y, w, h in labels:
+        assert x >= 0 and y >= 0 and x + w <= width + 0.01 and y + h <= height + 0.01
+
+
+def test_a_sea_a_route_crosses_named_on_its_way():
+    """A sea or an ocean a route crosses is named on itself, where the route crosses it
+    (halfway from the place before to the place after), not where the route enters it."""
+    svg = figures_typst.compile_svg(
+        "map", '#map(routes: ((name: "A", places: ("Séville", "océan Atlantique", "Rio de Janeiro")),))'
+    )
+    (sea,) = [
+        (float(x), float(y))
+        for x, y in re.findall(
+            r'<g transform="translate\(([-\d.]+) ([-\d.]+)\)"><path fill="#ffffffb2"'
+            r'[^<]*<g[^>]*><use[^>]*fill="#1f5a8f"',
+            svg,
+        )
+    ]
+    dots = sorted(
+        float(y) for y in re.findall(r'<path fill="#d62f2f"[^>]*transform="translate\([\d.]+ ([\d.]+)\)', svg)
+    )
+    assert dots[0] + 15 < sea[1] < dots[-1] - 15  # well south of Seville, north of Rio

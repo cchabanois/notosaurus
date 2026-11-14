@@ -16,22 +16,43 @@
   plain.replace(regex("[-'’.]"), " ").replace(regex("\s+"), " ").trim()
 }
 
-#let find-country(name) = {
+#let country-code(name) = {
   let key = fold(name)
   for (code, country) in atlas.countries {
     if key in country.k { return code }
   }
-  panic("no country called \"" + name + "\" in the atlas: its usual name, or its three-letter code (\"ESP\")")
+  none
+}
+#let find-country(name) = {
+  let code = country-code(name)
+  if code == none {
+    panic("no country called \"" + name + "\" in the atlas: its usual name, or its three-letter code (\"ESP\")")
+  }
+  code
 }
 
-// A city: among those of the countries shown first, else a place of history lessons (h:
-// Cordoue, Spain's, not Argentina's), else the most populated of that name
-#let city-index(name, shown) = {
-  let key = fold(name)
-  let found = atlas.cities.enumerate().filter(((_, c)) => key in c.k)
-  if found.len() == 0 { return none }
+// A place's name and the country it was said in, when one follows it after a comma (a name
+// several places share: "San Salvador, Bahamas"); none else
+#let qualified(name) = {
+  let parts = name.split(",")
+  if parts.len() < 2 { return (name, none) }
+  let code = country-code(parts.last().trim())
+  if code == none { (name, none) } else { (parts.slice(0, -1).join(",").trim(), code) }
+}
+
+// The cities of a name, the likeliest first: in the country said after a comma; among those
+// of the countries shown first, else a place of history lessons (h: Cordoue, Spain's, not
+// Argentina's), else the most populated of that name
+#let city-indices(name, shown) = {
+  let (bare, code) = qualified(name)
+  let key = fold(bare)
+  let found = atlas.cities.enumerate().filter(((_, c)) => key in c.k and (code == none or c.c == code))
   let theirs = found.filter(((_, c)) => c.c in shown)
-  (if theirs.len() > 0 { theirs } else { found }).sorted(key: ((_, c)) => (-c.at("h", default: 0), -c.p)).first().at(0)
+  (if theirs.len() > 0 { theirs } else { found }).sorted(key: ((_, c)) => (-c.at("h", default: 0), -c.p)).map(((i, _)) => i)
+}
+#let city-index(name, shown) = {
+  let found = city-indices(name, shown)
+  if found.len() == 0 { none } else { found.first() }
 }
 #let find-city(name, shown) = {
   let i = city-index(name, shown)
@@ -46,12 +67,27 @@
 
 // A river, relief or water: of that name, those on the countries shown first (`near`, their
 // box), the largest of them
+// A water with the others of its name it touches (an ocean's north and south parts): one
+// water, all its parts drawn; `parts` their indices
+#let joined(items, found, top) = {
+  let parts = found.filter(i => i == top or touches(items.at(i).b, items.at(top).b))
+  if parts.len() == 1 { return (item: items.at(top), parts: parts) }
+  let bs = parts.map(i => items.at(i).b)
+  (item: items.at(top) + (
+    r: parts.map(i => items.at(i).r).join(), at: parts.map(i => items.at(i).at).join(),
+    b: (calc.min(..bs.map(b => b.at(0))), calc.min(..bs.map(b => b.at(1))),
+        calc.max(..bs.map(b => b.at(2))), calc.max(..bs.map(b => b.at(3)))),
+  ), parts: parts)
+}
 #let find-in(items, name, what, near) = {
   let key = fold(name)
   let found = items.filter(i => key in i.k)
   if found.len() == 0 { panic("no " + what + " called \"" + name + "\" in the atlas: leave it out") }
   let theirs = if near == none { () } else { found.filter(i => touches(i.b, near)) }
-  (if theirs.len() > 0 { theirs } else { found }).sorted(key: i => -size(i.b)).first()
+  let top = (if theirs.len() > 0 { theirs } else { found }).sorted(key: i => -size(i.b)).first()
+  if what != "water" { return top }
+  let all = range(items.len()).filter(i => key in items.at(i).k)
+  joined(items, all, all.find(i => items.at(i) == top)).item
 }
 
 // A region of a country shown: its first-level divisions (a state, a département) or their
@@ -199,14 +235,39 @@
 
 // A place a route or a flow passes, by any of its names: a city (those of the countries
 // shown first), a cape, a canal, a sea or strait, a country, a part of the world (a
-// continent, an island, a peninsula, a coast); none when the atlas has none
+// continent, an island, a peninsula, a coast); none when the atlas has none. With a country
+// after a comma, a city, cape or part of the world in it, else that country (the place the
+// atlas lacks there: said, its country offered instead, never guessed). A city's `others`:
+// the other cities of its name
+#let city-place(i, name, ways, others) = {
+  let c = atlas.cities.at(i)
+  (kind: "city", name: name, xy: (c.x, c.y), port: ways.cities.at(i), nodes: (), city: c, index: i, others: others)
+}
+#let country-place(code, name, ways) = {
+  let place = ways.countries.at(code)
+  (kind: "country", name: name, code: code, xy: place.at, port: none, nodes: place.s, rings: atlas.countries.at(code).r)
+}
+#let relief-place(i, name, ways, reliefs-all) = {
+  let r = reliefs-all.at(i)
+  (kind: "relief", name: name, xy: r.at.first(), port: none, nodes: ways.reliefs.at(i), rings: r.r)
+}
 #let find-place(name, shown, ways, waters-all, reliefs-all) = {
-  let i = city-index(name, shown)
-  if i != none {
-    let c = atlas.cities.at(i)
-    return (kind: "city", name: name, xy: (c.x, c.y), port: ways.cities.at(i), nodes: (), city: c)
+  let (bare, code) = qualified(name)
+  let cities = city-indices(name, shown)
+  if cities.len() > 0 { return city-place(cities.first(), bare, ways, cities.slice(1)) }
+  let key = fold(bare)
+  if code != none {
+    // In the country said: a cape or a part of the world on it
+    let b = atlas.countries.at(code).b
+    let within((x, y)) = x >= b.at(0) and x <= b.at(2) and y >= b.at(1) and y <= b.at(3)
+    for c in ways.capes {
+      if key in c.k and within((c.x, c.y)) { return (kind: "cape", name: bare, xy: (c.x, c.y), port: c.s, nodes: ()) }
+    }
+    let found = reliefs-all.enumerate().filter(((_, r)) => key in r.k and touches(r.b, b))
+    if found.len() > 0 { return relief-place(found.sorted(key: ((_, r)) => -size(r.b)).first().at(0), bare, ways, reliefs-all) }
+    let country = name.split(",").last().trim()
+    panic("no place called \"" + bare + "\" in " + country + " in the atlas: name the country (\"" + country + "\") or another place the route or flow passes, or leave it out")
   }
-  let key = fold(name)
   for c in ways.capes {
     if key in c.k { return (kind: "cape", name: name, xy: (c.x, c.y), port: c.s, nodes: ()) }
   }
@@ -216,21 +277,19 @@
       return (kind: "canal", name: name, xy: ((ax + bx) / 2, (ay + by) / 2), ends: c.ends, ends-xy: c.xy, port: none, nodes: ())
     }
   }
-  let found = waters-all.enumerate().filter(((_, w)) => key in w.k and not w.lake)
+  let found = range(waters-all.len()).filter(i => key in waters-all.at(i).k and not waters-all.at(i).lake)
   if found.len() > 0 {
-    let (i, w) = found.sorted(key: ((_, w)) => -size(w.b)).first()
-    return (kind: "water", name: name, xy: w.at.first(), port: none, nodes: ways.waters.at(i))
+    let top = found.sorted(key: i => -size(waters-all.at(i).b)).first()
+    let (item, parts) = joined(waters-all, found, top)
+    // (an ocean's parts: its ways in all of them)
+    return (kind: "water", name: name, xy: item.at.first(), port: none, nodes: parts.map(i => ways.waters.at(i)).join(), rings: item.r, spots: item.at)
   }
   for (code, c) in atlas.countries {
-    if key in c.k {
-      let place = ways.countries.at(code)
-      return (kind: "country", name: name, xy: place.at, port: none, nodes: place.s)
-    }
+    if key in c.k { return country-place(code, name, ways) }
   }
   let found = reliefs-all.enumerate().filter(((_, r)) => key in r.k)
   if found.len() > 0 {
-    let (i, r) = found.sorted(key: ((_, r)) => -size(r.b)).first()
-    return (kind: "relief", name: name, xy: r.at.first(), port: none, nodes: ways.reliefs.at(i))
+    return relief-place(found.sorted(key: ((_, r)) => -size(r.b)).first().at(0), name, ways, reliefs-all)
   }
   none
 }
@@ -293,6 +352,15 @@
       panic("the route \"" + r.name + "\" passes fewer than two places: its start and its end at least, in their order")
     }
     let stops = names.map(n => place-or-said(n, shown, ways, waters-all, reliefs-all))
+    // A city whose name others share: the one nearest the places before and after it on the
+    // route (Tripoli after Beirut, Lebanon's; after Tunis, Libya's)
+    stops = stops.enumerate().map(((i, p)) => {
+      if p.kind != "city" or p.others.len() == 0 { return p }
+      let near = stops.enumerate().filter(((j, _)) => j == i - 1 or j == i + 1).map(((_, q)) => q.xy)
+      let best = (p.index,) + p.others
+      let best = best.sorted(key: j => near.map(q => far((atlas.cities.at(j).x, atlas.cities.at(j).y), q)).sum()).first()
+      if best == p.index { p } else { city-place(best, p.name, ways, ()) }
+    })
     if by == "land" { return (name: r.name, by: by, stops: stops, way: unwrapped(stops.map(p => p.xy)), at: stops.map(p => p.xy)) }
     // By sea: each place's way in and out (a port and the nodes it sees, or the nodes off a
     // coast, in a sea), the shortest way from one to the next
@@ -310,11 +378,22 @@
       let at = (port.at(0), port.at(1))
       port.slice(2).map(u => (u, far(at, node-xy(u))))
     }
+    // A port at a canal's mouth (Suez, Colón): the canal open from it, its other mouth a way
+    // in and out too
+    let mouth(p) = if p.kind != "city" { none } else {
+      let found = ways.canals.find(c => c.xy.contains(p.xy))
+      if found == none { none } else {
+        let j = found.xy.position(e => e == p.xy)
+        (other: found.ends.at(1 - j), xy: (found.xy.at(j), found.xy.at(1 - j)))
+      }
+    }
     let way = ()
     let at = ()  // where the way meets each place
     let from = none  // the nodes the next leg leaves from, with their cost
+    let beyond = none  // the canal the last place opens: its other mouth, the leg's own nodes
     for (i, p) in stops.enumerate() {
       let ends = if p.kind == "canal" { p.ends } else if p.port != none { (p.port,) } else { none }
+      let m = mouth(p)
       if i > 0 {
         let targets = (:)
         if ends != none {
@@ -324,20 +403,35 @@
         } else {
           for u in p.nodes { targets.insert(str(u), 0) }
         }
-        let goal = if ends != none and ends.len() == 1 { (ends.first().at(0), ends.first().at(1)) } else { none }
+        if m != none {
+          for (u, c) in port-ways(m.other) {
+            if str(u) not in targets { targets.insert(str(u), c) }
+          }
+        }
+        let goal = if m == none and ends != none and ends.len() == 1 { (ends.first().at(0), ends.first().at(1)) } else { none }
         let nodes = sea-way(ways, from, targets, goal, icy)
         if nodes == none {
           panic("no way by sea from \"" + stops.at(i - 1).name + "\" to \"" + p.name + "\": they are on seas the sea doesn't join")
         }
+        // Left by the canal the place before opens: through it first
+        if beyond != none and beyond.other.slice(2).contains(nodes.first()) and not beyond.own.contains(nodes.first()) {
+          way += (beyond.xy.at(0), beyond.xy.at(1), (beyond.other.at(0), beyond.other.at(1)))
+        }
+        beyond = none
         way += nodes.map(node-xy)
         if ends == none {
           at.push(node-xy(nodes.last()))
           from = ((nodes.last(), 0),)
           continue
         }
-        // The end it came to (a canal's nearest), then through the canal to the other
-        let reached = ends.enumerate().find(((_, port)) => port.slice(2).contains(nodes.last())).at(0)
+        // Come to the canal's other mouth: through it to the place
+        if m != none and m.other.slice(2).contains(nodes.last()) and not ends.first().slice(2).contains(nodes.last()) {
+          way.push((m.other.at(0), m.other.at(1)))
+          way += (m.xy.at(1), m.xy.at(0))
+        }
         if p.kind == "canal" {
+          // The end it came to (the nearest), then through the canal to the other
+          let reached = ends.enumerate().find(((_, port)) => port.slice(2).contains(nodes.last())).at(0)
           let (into, out) = (ends.at(reached), ends.at(1 - reached))
           way.push((into.at(0), into.at(1)))
           way += (p.ends-xy.at(reached), p.ends-xy.at(1 - reached)).map(((x, y)) => (x, y))
@@ -356,6 +450,10 @@
         if i < stops.len() - 1 {
           way.push((port.at(0), port.at(1)))
           from = port-ways(port)
+          if m != none {
+            from += port-ways(m.other)
+            beyond = (other: m.other, own: port.slice(2), xy: m.xy)
+          }
         }
       } else {
         // a first place that is a coast or a sea: the leg leaves from the nearest of its nodes
@@ -369,7 +467,8 @@
   })
 }
 
-// Flows as asked, checked: (from, to: their points, kind, value, label)
+// Flows as asked, checked: (from, to: each its places, its middle `xy`, the point the arrow
+// leaves or reaches `at`, its name when several places make it; kind, value, label)
 #let read-flows(flows, shown, ways, waters-all, reliefs-all) = {
   if type(flows) == dictionary { flows = (flows,) }
   flows.map(f => {
@@ -377,25 +476,39 @@
       panic("a flow is (from: …, to: …, kind: \"…\", value: …, label: \"…\"): where it leaves and where it goes, a place or several, its kind for the legend, its size, what it carries")
     }
     for key in f.keys() {
-      if key not in ("from", "to", "kind", "value", "label") {
-        panic("a flow holds from, to, kind, value and label, not \"" + key + "\"")
+      if key not in ("from", "to", "from-name", "to-name", "kind", "value", "label") {
+        panic("a flow holds from, to, from-name, to-name, kind, value and label, not \"" + key + "\"")
       }
     }
     let value = f.at("value", default: none)
     if value != none and type(value) not in (int, float) {
       panic("a flow's value is a number (its size, the arrow's width), not \"" + repr(value) + "\"")
     }
-    let side(names) = {
+    let side(end) = {
+      let names = f.at(end)
       let names = if type(names) == str { (names,) } else { names }
       if names.len() == 0 { panic("a flow leaves from a place and goes to a place: none given") }
-      let places = names.map(n => place-or-said(n, shown, ways, waters-all, reliefs-all))
+      let name = f.at(end + "-name", default: none)
+      if names.len() > 1 and name == none {
+        panic("a flow's " + end + " is several places (" + names.map(repr).join(", ") + "): name the region they make, " + end + "-name: \"…\", written on the map")
+      }
+      // Several places making a region: a name that is a country's too is the country (Kuwait,
+      // Singapore), not its city
+      let places = names.map(n => {
+        let code = if names.len() > 1 { country-code(n) } else { none }
+        if code != none { country-place(code, n, ways) } else { place-or-said(n, shown, ways, waters-all, reliefs-all) }
+      })
       // Several: their middle, each on the side of the first
       let points = unwrapped(places.map(p => p.xy))
       let xy = (points.map(p => p.at(0)).sum() / points.len(), points.map(p => p.at(1)).sum() / points.len())
-      (places: places, xy: xy)
+      (places: places, xy: xy, name: if places.len() > 1 { name } else { none })
     }
-    (from: side(f.from), to: side(f.to), kind: f.at("kind", default: none), value: value,
-     label: f.at("label", default: none))
+    let (from, to) = (side("from"), side("to"))
+    // A region's arrow leaves from (reaches) its place nearest the other end: Mexico's for
+    // Latin America toward the United States, the arrow from the region's edge
+    let nearest(s, other) = s.places.map(p => p.xy).sorted(key: q => far(q, other)).first()
+    (from: from + (at: nearest(from, to.xy)), to: to + (at: nearest(to, from.xy)),
+     kind: f.at("kind", default: none), value: value, label: f.at("label", default: none))
   })
 }
 
@@ -489,7 +602,11 @@
     boxes.push((calc.min(..xs), calc.min(..ys), calc.max(..xs), calc.max(..ys)))
   }
   for f in arrows {
-    for (x, y) in (f.from.xy, f.to.xy) { boxes.push((x, y, x, y)) }
+    for (x, y) in (f.from.at, f.to.at) { boxes.push((x, y, x, y)) }
+    // A region's places whole (a country's main part)
+    for p in (f.from, f.to).filter(s => s.name != none).map(s => s.places).join(default: ()) {
+      boxes.push(if p.kind == "country" { atlas.countries.at(p.code).f } else { (..p.xy, ..p.xy) })
+    }
   }
   if boxes.len() == 0 { boxes = lines.map(l => l.item.b) + lands.map(l => l.item.b) }
   if boxes.len() == 0 {
@@ -528,6 +645,29 @@
   let (w, h) = (calc.max(w, h * 0.75), calc.max(h, w * 0.55))
   // Never more than the world once
   let (w, h) = if moving { (calc.min(w, 360 * s * k), calc.min(h, 180 * s)) } else { (w, h) }
+  // With routes and flows, the names of the places they pass whole within the frame: grown
+  // until each has room around its place (half its width each side, its height above and
+  // below), the scale found again each time
+  if moving {
+    let names = towns.map(t => (t.city.x, t.city.y, t.name))
+    names += trips.map(t => t.stops.zip(if t.by == "sea" { t.at } else { t.stops.map(p => p.xy) })
+      .filter(((p, at)) => p.kind != "city" and at != none).map(((p, at)) => (..at, p.name))).join(default: ())
+    names += arrows.map(f => (f.from, f.to).map(e => (..e.at, if e.name != none { e.name } else { e.places.first().name })))
+      .join(default: ()).filter(n => towns.all(t => t.name != n.at(2)))
+    let sizes = names.map(n => measure(text(8pt, n.at(2))))
+    for _ in range(2) {
+      let unit = calc.min(width / w, height / h)
+      let (l, r, b, t) = (cx - w / 2, cx + w / 2, cy - h / 2, cy + h / 2)
+      for ((x, y, _), m) in names.zip(sizes) {
+        let x = x * k
+        let x = x + calc.round((cx - x) / (360 * s * k)) * 360 * s * k  // the turn nearest the frame
+        let (dx, dy) = ((m.width / 2 + 3pt) / unit, (m.height + 6pt) / unit)
+        (l, r, b, t) = (calc.min(l, x - dx), calc.max(r, x + dx), calc.min(b, y - dy), calc.max(t, y + dy))
+      }
+      (cx, cy) = ((l + r) / 2, (b + t) / 2)
+      (w, h) = (calc.min(r - l, 360 * s * k), calc.min(t - b, 180 * s))
+    }
+  }
   let unit = calc.min(width / w, height / h)  // a length per atlas unit
   let (bw, bh) = (w * unit, h * unit)
   let px(x) = (x * k - (cx - w / 2)) * unit
@@ -635,48 +775,108 @@
   wanted += named(lands, l => place-of(l.item), n => text(8pt, style: "italic", fill: rgb("#6b4a1f"), n))
   wanted += named(seas, w => place-of(w.item), n => text(8pt, style: "italic", fill: rgb("#1f5a8f"), n))
   wanted += named(lines, l => river-place(l.item), n => text(7.5pt, style: "italic", fill: rgb("#1f5a8f"), n))
-  // Flows: a curved arrow each, from its start to its end (shortened by a dot), as wide as
-  // its value is large among theirs; drawn where its middle is seen
-  let largest = arrows.filter(f => f.value != none).map(f => f.value)
-  let largest = if largest.len() == 0 { none } else { calc.max(..largest) }
+  // Flows: a curved arrow each, from its start to its end (shortened by a dot), drawn where
+  // its middle is seen; as wide as its value ranks among theirs (the least the thinnest, the
+  // largest the widest: told apart at a glance); never shorter than its arrowhead's reach
+  let values = arrows.filter(f => f.value != none).map(f => f.value)
+  let (least, most) = if values.len() == 0 { (none, none) } else { (calc.min(..values), calc.max(..values)) }
+  let shortest = 22pt
   let curves = arrows.map(f => {
-    let (ax, ay) = f.from.xy
-    let (bx, by) = (ax + east(f.to.xy.at(0) - ax), f.to.xy.at(1))
+    let (ax, ay) = f.from.at
+    let (bx, by) = (ax + east(f.to.at.at(0) - ax), f.to.at.at(1))
     let d = seen-x((ax + bx) / 2) - (ax + bx) / 2
     let (a, b) = ((px(ax + d), py(ay)), (px(bx + d), py(by)))
     let (dx, dy) = (b.at(0) - a.at(0), b.at(1) - a.at(1))
     let length = calc.sqrt(calc.pow(dx / 1pt, 2) + calc.pow(dy / 1pt, 2)) * 1pt
     let (ux, uy) = if length > 0pt { (dx / length, dy / length) } else { (1, 0) }
+    // Too short to see (neighbours on a world map): lengthened both ways along it
+    if length < shortest {
+      let (mx, my) = (a.at(0) + dx / 2, a.at(1) + dy / 2)
+      (a, b) = ((mx - ux * shortest / 2, my - uy * shortest / 2), (mx + ux * shortest / 2, my + uy * shortest / 2))
+      (dx, dy, length) = (ux * shortest, uy * shortest, shortest)
+    }
     // Bent to its left by a sixth of its length
     let c = (a.at(0) + dx / 2 + uy * length / 6, a.at(1) + dy / 2 - ux * length / 6)
-    let width = if f.value == none or largest == none or largest <= 0 { 2pt } else { 1pt + 3pt * f.value / largest }
+    let width = if f.value == none or least == none { 2pt } else if most == least { 3pt } else {
+      1.5pt + 4pt * (f.value - least) / (most - least)
+    }
     let colour = ink(trips.len() + kinds.position(k => k == f.kind))
     // A city's end short of its dot
     let (ga, gb) = (if f.from.places.len() == 1 and f.from.places.first().kind == "city" { dot + 1.5pt } else { 1pt },
       if f.to.places.len() == 1 and f.to.places.first().kind == "city" { dot + 1pt } else { 1pt })
     (a: a, b: b, c: c, width: width, colour: colour, label: f.label, gaps: (ga, gb), length: length)
   })
+  // A long name (a region's, a flow's) on two lines: a world map is narrow for it
+  let wrapped(body) = {
+    let wide = measure(body).width
+    if wide <= 75pt { body } else { box(width: wide / 2 + 12pt, align(center, text(hyphenate: false, body))) }
+  }
   wanted += curves.filter(c => c.label != none).map(c => (
     at: ((c.a.at(0) + 2 * c.c.at(0) + c.b.at(0)) / 4, (c.a.at(1) + 2 * c.c.at(1) + c.b.at(1)) / 4),
-    dot: false, body: text(7.5pt, weight: "bold", fill: c.colour.darken(25%), c.label),
+    dot: false, body: wrapped(text(7.5pt, weight: "bold", fill: c.colour.darken(25%), c.label)),
   ))
+  // A region several places make: tinted in its flow's colour, named at its places' middle,
+  // each weighed by its size (a country's main part; another place a little)
+  let zones = ()
+  for (f, c) in arrows.zip(curves) {
+    for s in (f.from, f.to).filter(s => s.name != none) {
+      if zones.any(z => z.name == s.name) { continue }
+      let points = unwrapped(s.places.map(p => p.xy))
+      let weights = s.places.map(p => if p.kind == "country" { size(atlas.countries.at(p.code).f) } else { 0 } + 1)
+      let total = weights.sum()
+      let (x, y) = range(2).map(e => points.zip(weights).map(((q, w)) => q.at(e) * w).sum() / total)
+      zones.push((name: s.name, places: s.places, colour: c.colour))
+      wanted.push((at: (px(seen-x(x)), py(y)), dot: false, body: wrapped(text(7.5pt, weight: "bold", fill: c.colour.darken(35%), s.name))))
+    }
+  }
   // The places routes and flows pass, named when they aren't already (a city by its dot):
   // a cape, a canal, a sea or strait where the way goes, a country or a part of the world
   let said = cities + regions + waters + reliefs + towns.map(t => t.name)
-  let passed = trips.map(t => t.stops.zip(if t.by == "sea" { t.at } else { t.stops.map(p => p.xy) })).join(default: ())
-  passed += arrows.map(f => (f.from.places, f.to.places).filter(ps => ps.len() == 1).map(ps => (ps.first(), ps.first().xy))).join(default: ())
+  // (each with the point it is named nearest: a sea between two places, halfway from one to
+  // the other; else where the way meets it)
+  let passed = trips.map(t => {
+    let at = if t.by == "sea" { t.at } else { t.stops.map(p => p.xy) }
+    t.stops.zip(at).enumerate().map(((i, (p, a))) => {
+      let (before, after) = (at.at(i - 1, default: none), at.at(i + 1, default: none))
+      let toward = if i == 0 or before == none or after == none or a == none { a } else {
+        (before.at(0) + east(after.at(0) - before.at(0)) / 2, (before.at(1) + after.at(1)) / 2)
+      }
+      (p, a, toward)
+    })
+  }).join(default: ())
+  passed += arrows.map(f => (f.from.places, f.to.places).filter(ps => ps.len() == 1).map(ps => (ps.first(), ps.first().xy, ps.first().xy))).join(default: ())
   let water-style(n) = text(7.5pt, style: "italic", fill: rgb("#1f5a8f"), n)
   let ticks = ()  // a cape's small dot
-  for (p, at) in passed {
+  for (p, at, toward) in passed {
     if p.kind == "city" or p.name in said or at == none { continue }
     said.push(p.name)
-    let (x, y) = if p.kind in ("country", "relief") { p.xy } else { at }
+    // (a sea or an ocean named on itself: its own place nearest that point, in the frame; a
+    // strait's is the strait)
+    let (x, y) = if p.kind in ("country", "relief") { p.xy } else if p.kind == "water" {
+      let spots = p.spots.map(((sx, sy)) => (toward.at(0) + east(sx - toward.at(0)), sy))
+      let seen = spots.filter(((sx, sy)) => inside((seen-x(sx), sy)))
+      (if seen.len() > 0 { seen } else { (at,) }).sorted(key: q => far(q, toward)).first()
+    } else { at }
     let style = if p.kind in ("country", "relief") { n => text(7.5pt, fill: luma(40), n) } else { water-style }
     wanted.push((at: (px(seen-x(x)), py(y)), dot: p.kind == "cape", body: style(p.name)))
     if p.kind == "cape" { ticks.push((px(seen-x(x)), py(y))) }
   }
   let placed = ()
   let taken = ()
+  // The flows' arrows: boxes along them, no name on them
+  let strokes = ()
+  for c in curves {
+    let n = calc.max(2, calc.ceil(c.length / 4pt))
+    for j in range(n + 1) {
+      let t = j / n
+      let (x, y) = range(2).map(e => calc.pow(1 - t, 2) * c.a.at(e) + 2 * (1 - t) * t * c.c.at(e) + t * t * c.b.at(e))
+      let r = c.width / 2 + 1pt
+      strokes.push((x - r, y - r, 2 * r, 2 * r))
+    }
+  }
+  let overlap((ax, ay, aw, ah), (bx, by, bw2, bh2)) = (
+    calc.max(0pt, calc.min(ax + aw, bx + bw2) - calc.max(ax, bx)) / 1pt * calc.max(0pt, calc.min(ay + ah, by + bh2) - calc.max(ay, by)) / 1pt
+  )
   if labels {
     for (i, want) in wanted.enumerate() {
       let (x, y) = want.at
@@ -689,22 +889,59 @@
         ((x - lw / 2, y - lh / 2), (x - lw / 2, y - lh * 1.6), (x - lw / 2, y + lh * 0.6),
          (x + gap, y - lh / 2), (x - gap - lw, y - lh / 2))
       }
-      // With routes and flows, more names near each other: the corners around, then further
+      // With routes and flows, more names near each other: the corners around, then further,
+      // then further still in eight directions, a thin line then leading to the place
+      let near = tries.len()
       if moving {
         let (r, l) = (x + dot + gap, x - dot - gap - lw)
         let (above, below) = (y - dot - gap - lh, y + dot + gap)
         tries += ((r, above), (r, below), (l, above), (l, below), (x - lw / 2, above - lh), (x - lw / 2, below + lh),
           (r + lw / 2, y - lh / 2), (l - lw / 2, y - lh / 2))
+        near = tries.len()
+        for (ex, ey) in ((1, 0), (-1, 0), (0, -1), (0, 1), (1, -1), (-1, -1), (1, 1), (-1, 1)) {
+          tries.push((x + ex * (2.5 * lh + lw / 2) - lw / 2, y + ey * 2.5 * lh - lh / 2))
+        }
       }
-      let clear((ax, ay)) = (
-        ax >= 1pt and ay >= 1pt and ax + lw <= bw - 1pt and ay + lh <= bh - 1pt
-          and taken.all(((bx, by, bw2, bh2)) => ax + lw <= bx or bx + bw2 <= ax or ay + lh <= by or by + bh2 <= ay)
-          and marks.enumerate().all(((j, (mx, my))) => (want.dot and j == i) or mx + dot <= ax or ax + lw <= mx - dot or my + dot <= ay or ay + lh <= my - dot)
-      )
-      let at = tries.find(clear)
-      if at == none { at = tries.first() }
+      let inside-frame((ax, ay)) = ax >= 1pt and ay >= 1pt and ax + lw <= bw - 1pt and ay + lh <= bh - 1pt
+      let apart((ax, ay), (bx, by, bw2, bh2)) = ax + lw <= bx or bx + bw2 <= ax or ay + lh <= by or by + bh2 <= ay
+      // (with routes and flows, names a little apart: two side by side read as one)
+      let room = if moving { 2pt } else { 0pt }
+      let apart-name((ax, ay), (bx, by, bw2, bh2)) = apart((ax, ay), (bx - room, by - room / 2, bw2 + 2 * room, bh2 + room))
+      // A name further off: its line to its place over no other name
+      let lead((ax, ay)) = {
+        let to = (calc.max(ax, calc.min(x, ax + lw)), calc.max(ay, calc.min(y, ay + lh)))
+        let n = calc.max(2, calc.ceil(calc.abs(to.at(0) - x) / 2pt + calc.abs(to.at(1) - y) / 2pt))
+        range(n).map(j => (x + (to.at(0) - x) * j / n, y + (to.at(1) - y) * j / n)).all(((qx, qy)) =>
+          taken.all(((bx, by, bw2, bh2)) => qx < bx or qx > bx + bw2 or qy < by or qy > by + bh2))
+      }
+      let clear(j) = {
+        let (ax, ay) = tries.at(j)
+        (
+          inside-frame((ax, ay))
+            and taken.all(b => apart-name((ax, ay), b))
+            and marks.enumerate().all(((m, (mx, my))) => (want.dot and m == i) or mx + dot <= ax or ax + lw <= mx - dot or my + dot <= ay or ay + lh <= my - dot)
+            and strokes.all(b => apart((ax, ay), b))
+            and (j < near or lead((ax, ay)))
+        )
+      }
+      let k = range(tries.len()).find(clear)
+      // Never cut by the frame: moved in
+      let within((ax, ay)) = (calc.max(1pt, calc.min(ax, bw - 1pt - lw)), calc.max(1pt, calc.min(ay, bh - 1pt - lh)))
+      // None clear: with routes and flows, the place near it where it covers least, moved in
+      if k == none and moving {
+        // (a name or a dot covered far worse than an arrow, a few points further worse still)
+        let spots = marks.map(((mx, my)) => (mx - dot, my - dot, 2 * dot, 2 * dot))
+        let cost(j) = {
+          let (ax, ay) = within(tries.at(j))
+          let here = (ax, ay, lw, lh)
+          (20 * (taken + spots).map(o => overlap(here, o)).sum(default: 0) + strokes.map(o => overlap(here, o)).sum(default: 0)
+            + 8 * (calc.abs(ax + lw / 2 - x) / 1pt + calc.abs(ay + lh / 2 - y) / 1pt))
+        }
+        k = range(near).sorted(key: cost).first()
+      }
+      let at = within(tries.at(if k == none { 0 } else { k }))
       taken.push((at.at(0), at.at(1), lw, lh))
-      placed.push((at, want.body))
+      placed.push((at, want.body, if k != none and k >= near { (x, y) } else { none }, (lw, lh)))
     }
   }
   let tints = (
@@ -742,6 +979,12 @@
           }
           for points in r.r { ring(points, fill, 0.4pt + luma(150)) }
         }
+      }
+    }
+    // The regions flows leave from or go to, in their flow's colour
+    for z in zones {
+      for p in z.places.filter(p => "rings" in p) {
+        for points in p.rings { ring(points, z.colour.lighten(72%), 0.5pt + z.colour.lighten(20%)) }
       }
     }
     for code in shown {
@@ -860,7 +1103,13 @@
     for (x, y) in ticks {
       place(dx: x - 1.6pt, dy: y - 1.6pt, circle(radius: 1.6pt, fill: luma(50), stroke: 0.5pt + white))
     }
-    for ((ax, ay), body) in placed {
+    // A name placed further: a thin line from its place to it
+    for ((ax, ay), _, from, (lw, lh)) in placed.filter(p => p.at(2) != none) {
+      let (x, y) = from
+      let to = (calc.max(ax, calc.min(x, ax + lw)), calc.max(ay, calc.min(y, ay + lh)))
+      place(line(start: from, end: to, stroke: 0.5pt + luma(90)))
+    }
+    for ((ax, ay), body, ..) in placed {
       place(dx: ax, dy: ay, box(fill: white.transparentize(30%), inset: 0pt, body))
     }
   })
