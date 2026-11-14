@@ -136,3 +136,62 @@ def test_groups_the_rule_writes_compile_and_wrong_ones_refused():
     assert figures_typst.compile_svg("sets", call[1]).startswith("<svg")
     with pytest.raises(figures_typst.Unusable, match="another group's id"):
         figures_typst.compile_svg("sets", '#nested-groups((id: "a", name: [A], inside: "b"))')
+
+
+SIBLINGS = """(
+  (id: "v", name: [Vertébrés], members: ([Requin],)),
+  (id: "p", name: [Poissons osseux], inside: "v", members: ([Truite], [Carpe])),
+  (id: "a", name: [Amphibiens], inside: "v", members: ([Grenouille],)),
+  (id: "r", name: [Reptiles], inside: "v", members: ([Lézard], [Tortue])),
+  (id: "o", name: [Oiseaux], inside: "v", members: ([Pigeon],)),
+  (id: "m", name: [Mammifères], inside: "v", members: ([Chat], [Chauve-souris], [Dauphin])),
+)"""
+
+
+def test_groups_wrap_in_rows_members_under_names_centred():
+    """Every sibling on one row and the members in a column at the right drew figures 15 to 16 cm
+    wide and 4 to 5 high, shrunk on a card (320 px) to text too small to read. Laid out as
+    textbooks do: the siblings in rows no wider than about 11 cm (the boxes of a row as tall as
+    the tallest), a group's own members under its sub-groups, its name centred at its top above
+    a rule; every text inside its own box, clear of the others and of every smaller box."""
+    check = f"""#context {{
+  let l = _groups-layout({SIBLINGS})
+  let box(id) = l.boxes.find(b => b.id == id)
+  let within(r, s) = r.at(0) >= s.at(0) and r.at(1) >= s.at(1) and r.at(2) <= s.at(2) and r.at(3) <= s.at(3)
+  let meets(r, s) = r.at(0) < s.at(2) and s.at(0) < r.at(2) and r.at(1) < s.at(3) and s.at(1) < r.at(3)
+  let near(a, b) = calc.abs(a - b) < 0.001
+  let kids = l.boxes.filter(b => b.inside == "v")
+  // more than one row, none wider than 11 cm, the whole figure too
+  let tops = kids.map(b => b.rect.at(3)).dedup()
+  assert(tops.len() >= 2, message: "the siblings all on one row")
+  for t in tops {{
+    let row = kids.filter(b => near(b.rect.at(3), t))
+    assert(row.last().rect.at(2) - row.first().rect.at(0) <= 11.001, message: "a row wider than 11 cm")
+    assert(row.all(b => near(b.rect.at(1), row.first().rect.at(1))), message: "a row's boxes of different heights")
+  }}
+  let whole = box("v").rect
+  assert(whole.at(2) - whole.at(0) <= 12, message: "the figure too wide")
+  for t in l.texts {{
+    let b = box(t.id)
+    assert(within(t.rect, b.rect), message: "a text out of its box: " + t.id)
+    for u in l.texts {{ assert(t == u or not meets(t.rect, u.rect), message: "two texts on one another") }}
+    for k in l.boxes.filter(k => k.inside == t.id) {{
+      assert(not meets(t.rect, k.rect), message: "a text on a smaller box")
+    }}
+    if t.kind == "name" {{
+      // centred, above its rule
+      assert(near(t.rect.at(0) + t.rect.at(2), b.rect.at(0) + b.rect.at(2)), message: "a name not centred: " + t.id)
+      assert(b.rule != none and t.rect.at(1) > b.rule, message: "a name not above its rule: " + t.id)
+    }} else {{
+      // under its rule and under every sub-group
+      assert(t.rect.at(3) < b.rule, message: "a member above its group's rule")
+      for k in l.boxes.filter(k => k.inside == t.id) {{
+        assert(t.rect.at(3) <= k.rect.at(1), message: "a member beside a sub-group")
+      }}
+    }}
+  }}
+  for k in kids {{ assert(k.rect.at(3) < box("v").rule, message: "a sub-group above the rule") }}
+  [checked]
+}}"""
+    figures_typst.compile_svg("sets", check)
+    assert figures_typst.compile_svg("sets", f"#nested-groups(..{SIBLINGS})").startswith("<svg")
