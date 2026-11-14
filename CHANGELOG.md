@@ -9,6 +9,7 @@ Each pull request's entries (the `## Changelog` of its description) are put unde
 
 ### Added
 
+- 🗺️ Maps of history drawn with the borders of the time: the Congress of Vienna's Europe, the German Empire, 1914's alliances and colonial empires, the interwar years, the Anschluss, Germany's occupation zones, the Cold War's blocs.
 - Charts: population pyramids, two series of bars back to back by age class, graduated alike on both sides; a pyramid described only by its shape drawn as that shape, without numbers.
 - Maps draw routes (voyages, sea and trade routes, by sea around the land or over land) and flows (migrations, trade, tourists) as arrows between named places, with a legend: no longer drawn by hand. A flow between regions tints and names them; arrows are wide as their importance.
 - Maps colour countries or regions by group (alliances, empires, blocs, a union's members), with a legend: no longer drawn by hand.
