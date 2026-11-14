@@ -616,6 +616,9 @@ LABEL_GAP = 14  # between the drawing and a column, a column and the frame
 LABEL_ROOM = 4  # between two names in a column
 POINT_SLACK = 2  # a point this far past the frame (a stroke's edge) is still inside
 SNAP = 12  # a point on the white ground this near the drawing (beside a funnel's edge): brought onto it
+OPEN_SNAP = 0.15  # times the drawing's size: a point on the open ground this near a line (the AI's point
+# off a rotated arm, 14 to 47 units of 400 away) brought onto it; farther, a region (the air around
+# a funnel, 165 away) kept
 
 
 class LabelError(ValueError):
@@ -664,10 +667,22 @@ def _ink(image, x: float, y: float, w: float, h: float) -> tuple[float, float, f
     return x + box[0] * k, y + box[1] * k, x + box[2] * k, y + box[3] * k
 
 
-def _snapped(image, x: float, y: float, w: float, px: float, py: float) -> tuple[float, float]:
-    """The point, or the drawing's nearest pixel when it lies on the white ground SNAP or less
-    from it (the AI's point beside the part it names); a point in a white part farther from any
-    line (a region: the cytoplasm drawn white) kept."""
+def _outside(image):
+    """The white ground around the drawing, reached from its edge without crossing a line: a
+    function telling whether a pixel is on it (a white part closed by lines, a region, is not)."""
+    from PIL import ImageDraw, ImageOps
+
+    ground = ImageOps.expand(image.point(lambda v: 255 if v >= 248 else 0), border=1, fill=255)
+    ImageDraw.floodfill(ground, (0, 0), 128, thresh=0)
+    return lambda i, j: ground.getpixel((i + 1, j + 1)) == 128
+
+
+def _snapped(image, x: float, y: float, w: float, px: float, py: float, outside=None) -> tuple[float, float]:
+    """The point, or the drawing's nearest pixel when it lies on the white ground: SNAP or less
+    from it (the AI's point beside the part it names), or OPEN_SNAP of the drawing's size on the
+    open ground, nothing closing it in (« chaîne légère » off the antibody's rotated arm), unless
+    lines lie on both sides of it (a gap between two shapes: the synaptic cleft); a point
+    farther from any line (a region drawn white: the air, the cytoplasm) kept."""
     if image is None:
         return px, py
     k = image.width / w
@@ -679,14 +694,34 @@ def _snapped(image, x: float, y: float, w: float, px: float, py: float) -> tuple
 
     if ink(cx, cy):
         return px, py
-    r = math.ceil(SNAP * k)
+    inside = 0 <= cx < image.width and 0 <= cy < image.height
+    far = outside is not None and inside and outside(cx, cy)
+    r = math.ceil((OPEN_SNAP * max(w, image.height / k) if far else SNAP) * k)
+    if far:
+        # a gap between two shapes (the synaptic cleft, open at its ends): lines on both sides
+        # of it, up and down or left and right, a region kept, not a part's point gone astray
+
+        def hits(di: int, dj: int) -> bool:
+            return any(ink(cx + di * t, cy + dj * t) for t in range(1, r + 1))
+
+        if (hits(0, -1) and hits(0, 1)) or (hits(-1, 0) and hits(1, 0)):
+            r = math.ceil(SNAP * k)
+
+    def ring(d: int) -> list[tuple[int, int, int]]:
+        """The ink pixels d away from the point (on the square around it), with their distance²."""
+        around = [(i, cy - d) for i in range(cx - d, cx + d + 1)] + [(i, cy + d) for i in range(cx - d, cx + d + 1)]
+        around += [(cx - d, j) for j in range(cy - d + 1, cy + d)] + [(cx + d, j) for j in range(cy - d + 1, cy + d)]
+        return [((i - cx) ** 2 + (j - cy) ** 2, i, j) for i, j in around if ink(i, j)]
+
     best = None
-    for j in range(cy - r, cy + r + 1):
-        for i in range(cx - r, cx + r + 1):
-            d = (i - cx) ** 2 + (j - cy) ** 2
-            if d <= r * r and ink(i, j) and (best is None or d < best[0]):
-                best = (d, i, j)
-    if best is None:
+    for d in range(1, r + 1):
+        found = ring(d)
+        if found:
+            # a nearer pixel may lie on a farther square's side: looked for as far as this one's distance
+            reach = min(r, math.ceil(math.sqrt(min(found)[0])))
+            best = min(found + [p for e in range(d + 1, reach + 1) for p in ring(e)])
+            break
+    if best is None or best[0] > r * r:
         return px, py
     return x + best[1] / k, y + best[2] / k
 
@@ -747,9 +782,10 @@ def labelled(svg: str, labels: list[Label], clamp: bool = False) -> str:
     middle = (left + right) / 2
     line = LABEL_SIZE * LABEL_LINE
     # a name given at several points (a gene's place on both chromosomes): one name, a line to each
+    outside = _outside(image) if image is not None else None
     points: dict[str, list[tuple[float, float]]] = {}
     for label in labels:
-        points.setdefault(label.text.strip(), []).append(_snapped(image, x, y, w, label.x, label.y))
+        points.setdefault(label.text.strip(), []).append(_snapped(image, x, y, w, label.x, label.y, outside))
     names = []
     for text, at in points.items():
         rows = _lines(text)
