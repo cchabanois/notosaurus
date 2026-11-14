@@ -50,7 +50,7 @@
   background: currentColor;
   mask: url("../vendor/material/mic.svg") center / contain no-repeat;
 }
-.mic:hover:not(:disabled) { background: var(--primary-soft); }
+.mic:hover:not(:disabled):not(.listening) { background: var(--primary-soft); }  /* never over the listening one: a tapped button stays :hover on a phone */
 .mic.listening { background: var(--primary); color: var(--on-primary); animation: listening 1.4s ease-in-out infinite; }
 .mic.listening::before { mask-image: url("../vendor/material/mic-fill.svg"); }
 .mic.busy { cursor: progress; color: var(--primary); }

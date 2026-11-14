@@ -223,6 +223,33 @@ def test_dictation_heard_by_the_phone_as_it_comes(page):
     assert texts == [1]
 
 
+def test_the_listening_mic_shows_it_while_the_finger_is_still_on_it(page):
+    """Listening, the 🎤 is a disc of the main colour, its microphone white. A phone keeps a
+    tapped button :hover: its pale hover background came over the listening one, the white
+    microphone on it nearly invisible."""
+    live = {"dictation": True, "dictation_live": True}
+    page.route("**/api/config", lambda route: route.fulfill(json={**route.fetch().json(), **live}))
+    page.route("**/api/dictation/start", lambda route: route.fulfill(json={"listening": True, "live": True}))
+    page.route("**/api/dictation/heard", lambda route: route.fulfill(json={"text": ""}))
+    page.route("**/api/dictation/stop", lambda route: route.fulfill(json={"text": ""}))
+    page.goto("/")
+    page.get_by_role("button", name="Dicter").first.click()  # the pointer stays on it, as a finger does
+    listening = page.get_by_role("button", name="Arrêter et écrire le texte").first
+    sync_api.expect(listening).to_have_class(re.compile(r"\blistening\b"))
+    listening.hover()
+    colours = listening.evaluate(
+        """el => [getComputedStyle(el).backgroundColor,
+                  getComputedStyle(document.documentElement).getPropertyValue('--primary').trim()]"""
+    )
+    probe = page.evaluate(
+        "c => { const d = document.createElement('div'); d.style.color = c; document.body.append(d); "
+        "const v = getComputedStyle(d).color; d.remove(); return v }",
+        colours[1],
+    )
+    assert colours[0] == probe, colours
+    listening.click()
+
+
 def test_dictation_in_the_app(page):
     """The Android app's page (dictation): 🎤 in the instructions' corner; once to listen,
     again to stop, the text said then in the field. On the computer: no 🎤."""
