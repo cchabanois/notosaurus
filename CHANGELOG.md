@@ -9,6 +9,7 @@ Each pull request's entries (the `## Changelog` of its description) are put unde
 
 ### Added
 
+- Maps colour countries or regions by group (alliances, empires, blocs, a union's members), with a legend: no longer drawn by hand.
 - Field lines of a magnet or of point charges are now computed, running from north to south and from + to −, with an arrow showing the field's direction on each line.
 - 🌗 Shadows and eclipses (a source, a lit body, its shadow cone, the shadow cast on a screen or on the Earth, the Moon in the Earth's shadow, a body's own shadow) drawn with rays tangent to the bodies, the shadow behind the body and every body named.
 - Chemistry figures: a molecule's partial charges, a bond angle, its dipole moment and a bond's polarisation, placed by computation on the molecule (each charge beside its atom, the angle inside, the dipole moment from the charges, beside the molecule).
