@@ -9,6 +9,7 @@ Each pull request's entries (the `## Changelog` of its description) are put unde
 
 ### Added
 
+- Maps draw routes (voyages, sea and trade routes, by sea around the land or over land) and flows (migrations, trade, tourists) as arrows between named places, with a legend: no longer drawn by hand. A flow between regions tints and names them; arrows are wide as their importance.
 - Maps colour countries or regions by group (alliances, empires, blocs, a union's members), with a legend: no longer drawn by hand.
 - Field lines of a magnet or of point charges are now computed, running from north to south and from + to −, with an arrow showing the field's direction on each line.
 - 🌗 Shadows and eclipses (a source, a lit body, its shadow cone, the shadow cast on a screen or on the Earth, the Moon in the Earth's shadow, a body's own shadow) drawn with rays tangent to the bodies, the shadow behind the body and every body named.
@@ -62,6 +63,7 @@ Each pull request's entries (the `## Changelog` of its description) are put unde
 
 ### Fixed
 
+- Map names are no longer cut by the edge of the map.
 - 🏷️ A scheme's label whose point fell just beside its part (an antibody's light chain) is joined to the part itself, not to the void.
 - 🎤 While dictating, the microphone button shows clearly that it is listening.
 - 🎙️ Dictating on the phone (Android 13 and later): no more sound at each pause.
