@@ -61,6 +61,7 @@ Each pull request's entries (the `## Changelog` of its description) are put unde
 
 ### Fixed
 
+- 🎙️ Dictating on the phone (Android 13 and later): no more sound at each pause.
 - 🏷️ A labelled scheme drawn freely (a cell, a flower, an organ): its names set beside it, a line to each part, never across its outlines.
 - 🧬 Two DNA strands are drawn face to face, each base joined to its pair (and their hydrogen bonds when asked), the complementary strand computed.
 - 🗂️ A classification whose groups sit side by side in another (mammals and birds among the tetrapods) is drawn as boxes in boxes, its names never cut nor on one another.
