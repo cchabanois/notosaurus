@@ -1,8 +1,10 @@
 """The sequence and phylogeny families (our sequences and phylogeny functions)."""
 
+import re
+
 import pytest
 
-from notosaurus_core import figures_typst
+from notosaurus_core import figures, figures_typst
 
 
 def test_sequences_differences_are_computed_and_framed():
@@ -82,3 +84,47 @@ def test_a_phylogenetic_trees_hidden_names_are_not_shown():
         asked = figures_typst.compile_svg("phylogeny", body)
         assert asked != bare
         assert asked == figures_typst.compile_svg("phylogeny", body.replace(hidden, '"x"'))
+
+
+def _lines(body: str) -> int:
+    return len(re.findall(r"<path", figures.clean(figures_typst.compile_svg("sequence", body))))
+
+
+def test_two_strands_face_to_face_each_pair_joined():
+    """A DNA's two strands face to face, each pair joined: written as two rows of `sequences`,
+    its letters were aligned but no pair joined, no strand drawn (0 drawings in 3). `strands`
+    computes the bottom strand from the top one, joins each pair, draws each backbone."""
+    computed = figures_typst.compile_svg("sequence", '#strands(top: "A T G C C A")')
+    assert computed == figures_typst.compile_svg("sequence", '#strands(top: "ATGCCA", bottom: "TACGGT")')
+
+    def joined(top: str, bottom: str, extra: str = "") -> int:
+        """The lines drawn between the strands and under the bottom one, its bases given."""
+        gaps = "-" * len(top)
+        with_ = _lines(f'#strands(top: "{top}", bottom: "{bottom}"{extra})')
+        return with_ - _lines(f'#strands(top: "{top}", bottom: "{gaps}"{extra})')
+
+    # a link a pair and a backbone under the bottom strand; a base not there yet joined to nothing
+    assert joined("ATGCCA", "TACGGT") == 6 + 1
+    assert joined("ATGCCA", "TAC---") == 3 + 1
+    # the hydrogen bonds counted: two between A and T, three between G and C
+    assert joined("ATAT", "TATA", ", bonds: true") == 8 + 1
+    assert joined("GCGC", "CGCG", ", bonds: true") == 12 + 1
+    # against an RNA, A pairs with U
+    assert figures_typst.compile_svg("sequence", '#strands(top: "ATG", rna: true)') == figures_typst.compile_svg(
+        "sequence", '#strands(top: "ATG", bottom: "UAC", rna: true)'
+    )
+
+
+@pytest.mark.parametrize(
+    ("body", "said"),
+    [
+        ('#strands(top: "ATG", bottom: "TAA")', "position 3: G faces A"),
+        ('#strands(top: "ATGC", bottom: "TAC")', "as many bases"),
+        ('#strands(top: "ATX")', "not X"),
+        # a DNA strand being made written with U (a replication makes DNA)
+        ('#strands(top: "TACGGA", bottom: "AUG---")', "U is an RNA's base"),
+    ],
+)
+def test_two_strands_not_paired_refused_saying_where(body, said):
+    with pytest.raises(figures_typst.Unusable, match=said):
+        figures_typst.compile_svg("sequence", body)
