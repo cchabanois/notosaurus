@@ -39,7 +39,7 @@ from .calls import (  # noqa: F401 (llm's API)
     tell,
     telling,
 )
-from .cards import blank_dictations, plain_cards
+from .cards import blank_dictations, plain_cards, without_repeats
 from .cards import plain as plain_text
 from .config import AIConfig
 from .correction import _keep_ids, _keep_masks, _same_card, fix_card, revise_cards  # noqa: F401 (llm's API)
@@ -115,6 +115,7 @@ async def extract_cards(
     )
     result = Extraction.model_validate(ai._accepted(answer).model_dump())
     plain_cards(result.cards)  # a tag the AI wrote all the same would show as it is
+    result.cards = without_repeats(result.cards)  # an AI caught in a loop
     if result.dictation:  # a dictation alone: no front giving its answer away
         blank_dictations(result.cards)
     diagrams.normalize(result.cards, sizes, fmt)

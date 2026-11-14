@@ -605,3 +605,36 @@ def test_the_page_told_a_lessons_pages_and_those_of_one_call(client):
     """30 pages a lesson, 10 read in one call: the page sends more in several."""
     config = client.get("/api/config").json()
     assert (config["max_photos"], config["max_per_call"]) == (30, 10)
+
+
+def test_an_ai_caught_in_a_loop_gives_each_card_once(monkeypatch):
+    """Two lessons of 29 on the bench of real lessons: a diagram's label written 43 times over
+    (61 cards for 24), and 1,866 tags on a lesson's only card. Each card kept once (the same
+    front and back, whatever its case or final stop: never useful twice), its first tags only;
+    a front asked again with another answer kept."""
+    from notosaurus_core.config import AIConfig
+
+    looped = [{"front": "Qu'est-ce que (1) ?", "back": "Lille", "tags": [f"tag-{i}" for i in range(1866)]}]
+    looped += [{"front": "Que désigne le numéro (18) ?", "back": "le genou"}] * 43
+    looped += [
+        {"front": "Que désigne le numéro (18)", "back": "Le genou"},
+        {"front": "Que désigne le numéro (18) ?", "back": "la cuisse"},
+    ]
+
+    async def answer(s, images, text, schema, *args, **options):
+        return schema.model_validate({"deck": "Corps humain", "cards": looped})
+
+    monkeypatch.setattr(ai, "_ask_provider", answer)
+    cards = run(llm.extract_cards(AIConfig(llm="gemini"), [], "Les légendes")).deck.cards
+    assert [c.back for c in cards] == ["Lille", "le genou", "la cuisse"]
+    assert len(cards[0].tags) == 8
+
+
+def test_a_label_on_another_place_is_no_repeat():
+    """Two labels of a diagram named alike (both legs' knees): each its own card, its place."""
+    from notosaurus_core.cards import without_repeats
+    from notosaurus_core.models import Card
+
+    knee = {"front": "Que désigne le numéro ?", "back": "le genou"}
+    cards = [Card(**knee, mask=Mask(page=1, n=n, box=[n, 0, n + 1, 1])) for n in (18, 19, 18)]
+    assert [c.mask.n for c in without_repeats(cards) if c.mask] == [18, 19]

@@ -124,6 +124,26 @@ def plain_cards(cards: list[Card]) -> None:
                 setattr(card.doubt, name, plain(getattr(card.doubt, name)))
 
 
+# An AI caught in a loop: one card written over and over (a diagram's label 43 times), or
+# tags without end (1,866 on one card, the lesson's other cards never written)
+TAGS_MOST = 8
+
+
+def without_repeats(cards: list[Card]) -> list[Card]:
+    """The cards once each (the same front, back and label's place: never useful twice), and
+    each card's first TAGS_MOST tags."""
+    seen: set[tuple[str, str, str]] = set()
+    kept: list[Card] = []
+    for card in cards:
+        key = (text_key(card.front), text_key(card.back), card.mask.model_dump_json() if card.mask else "")
+        if key in seen:
+            continue
+        seen.add(key)
+        card.tags = card.tags[:TAGS_MOST]
+        kept.append(card)
+    return kept
+
+
 # A dictation's blank, where the word to write goes ("…", "...", "___"): its sound reads the
 # sentence with the word put back (tts.spoken)
 BLANK = re.compile(r"…|\.{3}|_{3,}")

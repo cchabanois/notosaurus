@@ -265,12 +265,12 @@ def check(
     }:
         heard = (asked["dictation"] or asked["dictation_only"]) and bool(voice)
         if asked["dictation_only"] and heard:
-            ok = model.startswith("Notosaurus dictée")
-        else:
-            ok = model.startswith("Notosaurus recto/verso")
-            ok &= ("à taper" in model) == body["typing"]
-            ok &= ("+ dictée" in model) == bool(heard)
-            ok &= ("+ inverse" in model) == body["reverse"]
+            ok = model.startswith("Notosaurus dictation")
+        else:  # the note types' names in English since 1.1 (app/note_types: text.py, common.variant)
+            ok = model.startswith("Notosaurus front/back")
+            ok &= (" typed" in model) == body["typing"]
+            ok &= ("+ dictation" in model) == bool(heard)
+            ok &= ("+ reverse" in model) == body["reverse"]
         results.append((ok, f"note type {model!r}"))
 
     # The voice heard on the right side: on the answer (front → back), on the question
