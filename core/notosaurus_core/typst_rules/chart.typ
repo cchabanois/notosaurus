@@ -109,7 +109,7 @@
     // tenth, a fifth or a half of the step, the finest that stays apart
     let top = n * pitch + 0.1
     for t in ticks(s) {
-      line((px(t), 0), (px(t), top), stroke: 0.4pt + luma(215))
+      line((px(t), 0), (px(t), top), stroke: 0.4pt + _grid)
       line((px(t), 0.1), (px(t), -0.1), stroke: 0.6pt)
       content((px(t), -0.18), txt(num(t)), anchor: "north")
     }
@@ -240,7 +240,7 @@
       let n = int(calc.round((x1 - x0) / sx))
       for k in range(n + 1) {
         let x = px(x0 + k * sx)
-        if k > 0 { line((x, 0), (x, h), stroke: 0.4pt + luma(210)) }
+        if k > 0 { line((x, 0), (x, h), stroke: 0.4pt + _grid) }
         line((x, 0), (x, -0.08), stroke: 0.6pt)
         content((x, -0.16), txt(num(x0 + k * sx)), anchor: "north")
       }
@@ -267,7 +267,7 @@
       let m = int(calc.round((y1 - y0) / sy))
       for k in range(m + 1) {
         let y = py(y0 + k * sy)
-        if k > 0 { line((0, y), (w, y), stroke: 0.4pt + luma(210)) }
+        if k > 0 { line((0, y), (w, y), stroke: 0.4pt + _grid) }
         if numbered {
           line((0, y), (-0.08, y), stroke: 0.6pt)
           content((-0.16, y), txt(num(y0 + k * sy)), anchor: "east")
@@ -380,7 +380,7 @@
         let h = row * values.len()
         for k in range(1, marks-n + 1) {
           let x = k * step * unit
-          line((x, 0), (x, h), stroke: 0.4pt + luma(205))
+          line((x, 0), (x, h), stroke: 0.4pt + _grid)
           line((x, 0), (x, -0.08), stroke: 0.6pt)
           content((x, -0.16), txt(num(k * step)), anchor: "north")
         }
@@ -406,7 +406,7 @@
       // the graduation: a tick and a light line at each step, so that a count is read, not guessed
       for k in range(1, marks-n + 1) {
         let y = k * step * unit
-        line((0, y), (w, y), stroke: 0.4pt + luma(205))
+        line((0, y), (w, y), stroke: 0.4pt + _grid)
         line((-0.08, y), (0, y), stroke: 0.6pt)
         content((-0.16, y), txt(num(k * step)), anchor: "east")
       }
