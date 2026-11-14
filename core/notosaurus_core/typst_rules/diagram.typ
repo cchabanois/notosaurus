@@ -1,16 +1,21 @@
 #set page(width: auto, height: auto, margin: 6pt)
 #import "@preview/fletcher:0.5.8" as fletcher: diagram, edge
 #import "@preview/cetz:0.5.2"
-// A node's text wider than a column goes on to the next line by itself: a newline typed in
-// it is only a space, and a long text on one line makes the whole diagram tiny
-#let node(..args) = {
-  let given = args.pos()
-  if given.len() < 2 { return fletcher.node(..args) }
-  let body = given.at(1)
-  let wrapped = context {
-    if measure(body).width > 4.5cm { block(width: 4.5cm, align(center, body)) } else { body }
-  }
-  fletcher.node(given.at(0), wrapped, ..given.slice(2), ..args.named())
+#import "common.typ": *
+// A node's text wider than its column may be goes on to the next line by itself (diagram
+// sets that width): a newline typed in it is only a space, and a long text on one line makes
+// the whole diagram tiny
+#let node = fletcher.node
+// A diagram fits a card: past 12 cm wide, shrunk to a phone's width, its text was too small
+// to read (four boxes of two lines on a row: 22 cm). Its nodes' texts on more lines, all
+// wrapped at the widest width that makes the whole fit, measured; never under a text's
+// longest word (2 cm at least), never over 4.5 cm whatever the room.
+#let _card-width = 12cm
+// a text's longest word, as wide as it is drawn
+#let _longest-word(body) = {
+  let words = _plain(body)
+  if type(words) != str { return 0pt }
+  calc.max(0pt, ..words.replace(regex("(\\w)\\("), m => m.captures.first() + " (").split(regex("\\s+")).map(w => measure(w).width))
 }
 // The gaps between columns and rows wide enough for every arrow's label: measured, never
 // the AI's guess (a long label on a short arrow lay on the boxes it joins). A label needs
@@ -70,7 +75,30 @@
   if slant-w > 0pt { need-x = calc.max(need-x, 2 * beside-x + slant-w + 2 * pad) }
   if slant-h > 0pt { need-y = calc.max(need-y, 2 * beside-y + slant-h + 2 * pad) }
   for i in slanting { items.at(i) = metadata((..at(i), label-angle: auto)) }
-  fletcher.diagram(..items, ..args.named(), spacing: (need-x, need-y))
+  // every node's text wrapped at `most`, on more lines, still a box (fletcher makes a
+  // squarish node a circle); a bracket glued to its word ("Plasmocytes(anticorps)") a place
+  // to break
+  let wrapped(most) = range(items.len()).map(i => {
+    let v = at(i)
+    if v == none or v.at("class", default: none) != "node" or v.label == none { return items.at(i) }
+    let width = calc.max(most, _longest-word(v.label))
+    if measure(v.label).width <= width { return items.at(i) }
+    let body = v.label
+    body = { show regex("\\w\\("): it => it.text.clusters().first() + sym.zws + "("; body }
+    let shape = if v.at("shape", default: auto) == auto { fletcher.shapes.rect } else { v.shape }
+    metadata((..v, label: block(width: width, align(center, body)), shape: shape))
+  })
+  let drawn(most) = fletcher.diagram(..wrapped(most), ..args.named(), spacing: (need-x, need-y))
+  let fits(most) = measure(drawn(most)).width <= _card-width
+  let most = if fits(4.5cm) { 4.5cm } else if not fits(2cm) { 2cm } else {
+    let (low, high) = (2cm, 4.5cm)
+    for _ in range(8) {
+      let mid = (low + high) / 2
+      if fits(mid) { low = mid } else { high = mid }
+    }
+    low
+  }
+  drawn(most)
 }
 // A tree (a probability tree): its places computed, never the AI's: each leaf on a row of
 // its own, each node halfway between its first and its last child, each level a column, the
