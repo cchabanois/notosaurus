@@ -47,6 +47,16 @@
   // labels beside a straight arrow (their width across a column gap, height across a row
   // gap) and on slanting ones (in the middle of both)
   let (beside-x, beside-y, slant-w, slant-h) = (0pt, 0pt, 0pt, 0pt)
+  // an edge from a node to itself, drawn as a loop over it, its words on the node's own: what
+  // a node does by itself is written in it
+  for i in range(items.len()) {
+    let e = at(i)
+    if e == none or e.at("class", default: none) != "edge" { continue }
+    let v = e.vertices.map(_cell)
+    if v.len() == 2 and v.first() != none and v.first() == v.last() {
+      panic("diagram: an edge from the node at " + repr(v.first()) + " to itself: what a node does by itself is written in its box, never an arrow (a graph's loop: network)")
+    }
+  }
   for i in range(items.len()) {
     let e = at(i)
     if e == none or e.at("class", default: none) != "edge" or e.at("label", default: none) == none { continue }
@@ -308,6 +318,452 @@
         content(at, box(fill: white, inset: 1.5pt, w))
       }
     }
+  })
+}
+// A scheme (boxes and who acts on whom: institutions, an organisation and its parts, a
+// hierarchy): its places computed, never the AI's, which crossed its arrows, laid their words
+// on one another and spread it so wide that its text fell to 4 px on a phone. Its boxes in
+// layers, each arrow going from one layer to a next (down, or up with `flow: "up"`), an arrow
+// that goes back up (one of two each way) drawn the same way between the same layers; a layer
+// of more boxes than the card holds goes on below; boxes of a layer ordered to cross the
+// fewest arrows (each box at its neighbours' middle, layer by layer), then each placed at its
+// neighbours' middle as near as they leave room; an arrow past a layer goes between its
+// boxes, never through one; arrows from or to one box leave it side by side, two between the
+// same boxes apart; each arrow's words in the gap it crosses, on it or beside it, clear of
+// every other word, arrow and box, the gap grown until they are. Its texts wrapped at the
+// widest width that makes its text the largest on a card (figures_typst.CARD_PX: 320 × 400
+// px); an arrow from a box to itself refused, told why.
+// boxes: (name: [its text], …); arrows: (from, to) or (from, to, [its words]) each, from and to
+// boxes' names, "<|-|>" (both ways), "-" (a line), "--" (dashed) or ".." (dotted) after them
+#let _sch-card = (320, 400) // figures_typst.CARD_PX
+#let _sch-is-style(v) = type(v) == str and v.len() > 0 and v.match(regex("^[-<>|. ]+$")) != none
+#let _sch-style(s) = (
+  dash: if s.contains("..") { "dotted" } else if s.contains("--") or s.contains("- -") { "dashed" } else { none },
+  start: s.trim().starts-with("<"),
+  end: s.trim().ends-with(">"),
+)
+// the non-decreasing values nearest `targets` (least squares): adjacent violators pooled
+#let _sch-pav(targets) = {
+  let blocks = ()
+  for t in targets {
+    blocks.push((t, 1))
+    while blocks.len() > 1 {
+      let (s2, c2) = blocks.at(-1)
+      let (s1, c1) = blocks.at(-2)
+      if s1 / c1 <= s2 / c2 { break }
+      let _ = blocks.pop()
+      blocks.at(-1) = (s1 + s2, c1 + c2)
+    }
+  }
+  let out = ()
+  for (s, c) in blocks { out += range(c).map(_ => s / c) }
+  out
+}
+// the segment p–q meets the rectangle (x0, y0, x1, y1)
+#let _sch-hits(p, q, r) = {
+  let (x0, y0, x1, y1) = r
+  let (dx, dy) = (q.at(0) - p.at(0), q.at(1) - p.at(1))
+  let (t0, t1) = (0.0, 1.0)
+  for (a, b) in ((-dx, p.at(0) - x0), (dx, x1 - p.at(0)), (-dy, p.at(1) - y0), (dy, y1 - p.at(1))) {
+    if a == 0 {
+      if b < 0 { return false }
+    } else {
+      let t = b / a
+      if a < 0 { t0 = calc.max(t0, t) } else { t1 = calc.min(t1, t) }
+    }
+  }
+  t0 <= t1
+}
+#let _sch-meet(a, b) = a.at(0) < b.at(2) and b.at(0) < a.at(2) and a.at(1) < b.at(3) and b.at(1) < a.at(3)
+#let _sch-grow(r, d) = (r.at(0) - d, r.at(1) - d, r.at(2) + d, r.at(3) + d)
+// each node's layer (a node a box's index, or an arrow's point in a layer it crosses: the
+// first its words' place) and each arrow's chain of nodes from its upper end to its lower;
+// `cap` boxes a layer at most. The boxes on even layers, the arrows' words on the odd ones
+// between them: each arrow crosses one at least.
+#let _sch-layers(n, dag, cap) = {
+  let rank = range(n).map(_ => 0)
+  for _ in range(n) {
+    for (a, b) in dag { if rank.at(b) < rank.at(a) + 1 { rank.at(b) = rank.at(a) + 1 } }
+  }
+  // a box only at the start of arrows: just above the nearest box they go to
+  for v in range(n) {
+    let succ = dag.filter(((a, b)) => a == v).map(((a, b)) => rank.at(b))
+    if succ.len() > 0 and dag.all(((a, b)) => b != v) { rank.at(v) = calc.min(..succ) - 1 }
+  }
+  let dense(rank) = {
+    let values = rank.dedup().sorted()
+    rank.map(r => values.position(x => x == r))
+  }
+  rank = dense(rank)
+  // a layer of more than `cap` boxes: the boxes no arrow leaves (then the last ones) a layer below
+  let full = true
+  while full {
+    full = false
+    for r in range(calc.max(..rank) + 1) {
+      let these = range(n).filter(v => rank.at(v) == r)
+      if these.len() > cap {
+        let leaving(v) = if dag.any(((a, b)) => a == v) { 0 } else { 1 }
+        let moved = these.sorted(key: v => leaving(v) * n + v).slice(cap)
+        for v in moved { rank.at(v) = r + 0.5 }
+        rank = dense(rank)
+        full = true
+        break
+      }
+    }
+  }
+  let layer-of = rank.map(r => 2 * r)
+  let chains = ()
+  for (a, b) in dag {
+    let chain = (a,)
+    for r in range(layer-of.at(a) + 1, layer-of.at(b)) {
+      chain.push(layer-of.len())
+      layer-of.push(r)
+    }
+    chains.push(chain + (b,))
+  }
+  (layer-of, chains)
+}
+// each layer's nodes, ordered to cross the fewest arrows (barycentres, layer by layer, down
+// and up, then neighbours swapped)
+#let _sch-order(layer-of, chains) = {
+  let count = layer-of.len()
+  let depth = calc.max(..layer-of) + 1
+  let up = range(count).map(_ => ())
+  let down = range(count).map(_ => ())
+  for chain in chains {
+    for i in range(chain.len() - 1) {
+      down.at(chain.at(i)).push(chain.at(i + 1))
+      up.at(chain.at(i + 1)).push(chain.at(i))
+    }
+  }
+  let layers = range(depth).map(r => range(count).filter(v => layer-of.at(v) == r))
+  let where(layers) = {
+    let at = range(count).map(_ => 0)
+    for l in layers { for (i, v) in l.enumerate() { at.at(v) = i } }
+    at
+  }
+  let crossings(layers) = {
+    let at = where(layers)
+    let total = 0
+    for r in range(depth - 1) {
+      let segs = ()
+      for v in layers.at(r) { for w in down.at(v) { segs.push((at.at(v), at.at(w))) } }
+      for i in range(segs.len()) {
+        for j in range(i + 1, segs.len()) {
+          let (a, b) = segs.at(i)
+          let (c, d) = segs.at(j)
+          if (a - c) * (b - d) < 0 { total += 1 }
+        }
+      }
+    }
+    total
+  }
+  let sweep(layers, r, by) = {
+    let at = where(layers)
+    let key(v) = {
+      let ns = by.at(v)
+      let b = if ns.len() == 0 { at.at(v) } else { ns.map(w => at.at(w)).sum() / ns.len() }
+      b + at.at(v) * 0.001
+    }
+    layers.at(r) = layers.at(r).sorted(key: key)
+    layers
+  }
+  // from the order given, and from its reverse: the order that crosses fewer
+  let (best, fewest) = (layers, crossings(layers))
+  for start in (layers, layers.map(l => l.rev())) {
+    let layers = start
+    for round in range(8) {
+      if fewest == 0 { break }
+      for r in range(1, depth) { layers = sweep(layers, r, up) }
+      for r in range(depth - 2, -1, step: -1) { layers = sweep(layers, r, down) }
+      let now = crossings(layers)
+      for r in range(depth) {
+        for i in range(layers.at(r).len() - 1) {
+          let swapped = layers
+          let l = swapped.at(r)
+          (l.at(i), l.at(i + 1)) = (l.at(i + 1), l.at(i))
+          swapped.at(r) = l
+          let c = crossings(swapped)
+          if c < now { (layers, now) = (swapped, c) }
+        }
+      }
+      if now < fewest { (best, fewest) = (layers, now) }
+    }
+  }
+  // then each node tried at every place in its layer, kept where it crosses fewest
+  let layers = best
+  let moved = fewest > 0
+  for pass in range(4) {
+    if not moved { break }
+    moved = false
+    for r in range(depth) {
+      for v in layers.at(r) {
+        let others = layers.at(r).filter(w => w != v)
+        for place in range(others.len() + 1) {
+          let tried = layers
+          tried.at(r) = others.slice(0, place) + (v,) + others.slice(place)
+          let c = crossings(tried)
+          if c < fewest { (layers, fewest, moved) = (tried, c, true) }
+        }
+      }
+    }
+  }
+  (layers, up, down)
+}
+// a scheme's layout (context: its texts measured): its size; each box (its rectangle, x0, y0,
+// x1, y1, and its framed text), each arrow's words (rectangle, content, none without words),
+// each arrow (its points from its start to its end, its style), in pt
+#let _sch-layout(boxes, arrows, flow) = {
+  if type(boxes) != dictionary or boxes.len() == 0 {
+    panic("scheme: boxes: (name: [its text], …), a box each, not " + repr(boxes))
+  }
+  if flow not in ("down", "up") { panic("scheme: flow: \"down\" or \"up\", not " + repr(flow)) }
+  let names = boxes.keys()
+  let n = names.len()
+  let index(k) = {
+    let i = names.position(x => x == _net-key(k))
+    if i == none { panic("scheme: an arrow names " + repr(k) + ", not one of the boxes " + repr(names)) }
+    i
+  }
+  let edges = ()
+  for a in arrows {
+    if type(a) != array or a.len() < 2 or a.len() > 4 {
+      panic("scheme: each arrow (from, to), (from, to, [its words]) or (from, to, [its words], \"--\"), not " + repr(a))
+    }
+    let (u, v) = (index(a.at(0)), index(a.at(1)))
+    if u == v {
+      panic("scheme: an arrow from " + repr(a.at(0)) + " to itself: what a box does by itself is written in its box (its words under its name), never an arrow")
+    }
+    let label = none
+    let style = "-|>"
+    // words of no letter (a dash, "[-]"): none
+    for x in a.slice(2) { if _sch-is-style(x) { style = x } else if x != none and _net-key(x).match(regex("\\w")) != none { label = x } }
+    edges.push((u: u, v: v, label: if type(label) == str { [#label] } else { label }, style: _sch-style(style)))
+  }
+  // the arrows' directions without a loop: an arrow that closes one with the arrows given
+  // before it (a government named by those it answers to) laid the other way, between the same
+  // layers, its head where it is
+  let back = edges.map(_ => false)
+  let kept = ()
+  for (k, e) in edges.enumerate() {
+    let (seen, todo, found) = ((e.v,), (e.v,), false)
+    while todo.len() > 0 and not found {
+      let at = todo.pop()
+      if at == e.u { found = true }
+      for (a, b) in kept { if a == at and b not in seen { seen.push(b); todo.push(b) } }
+    }
+    back.at(k) = found
+    kept.push(if found { (e.v, e.u) } else { (e.u, e.v) })
+  }
+  let dag = edges.enumerate().map(((k, e)) => if back.at(k) { (e.v, e.u) } else { (e.u, e.v) })
+  let size = text.size / 1pt
+  let bodies = names.map(k => {
+    let b = boxes.at(k)
+    if type(b) == str { [#b] } else { b }
+  })
+  let framed(body, most) = {
+    let width = calc.max(most, _longest-word(body))
+    let inner = if measure(body).width <= width { body } else {
+      block(width: width, align(center, { show regex("\\w\\("): it => it.text.clusters().first() + sym.zws + "("; body }))
+    }
+    box(stroke: 0.8pt, radius: 4pt, inset: (x: 5pt, y: 4pt), fill: white, align(center, inner))
+  }
+  // an arrow's words on it, in a white box, wrapped past 2.8 cm
+  let labels = edges.map(e => if e.label == none { none } else {
+    let inner = if measure(e.label).width <= 2.8cm { e.label } else {
+      block(width: calc.max(2.8cm, _longest-word(e.label)), align(center, e.label))
+    }
+    box(fill: white, inset: (x: 3pt, y: 2pt), inner)
+  })
+  let label-dims = labels.map(l => if l == none { (0, 0) } else {
+    let m = measure(l)
+    (m.width / 1pt, m.height / 1pt)
+  })
+  // a layout: its layers (at most `cap` boxes each), its boxes wrapped at `most`
+  let ordered = (4, 3, 2).map(cap => {
+    let (layer-of, chains) = _sch-layers(n, dag, cap)
+    (layer-of, chains) + _sch-order(layer-of, chains)
+  })
+  let laid(cap, most) = {
+    let (layer-of, chains, layers, up, down) = ordered.at(4 - cap)
+    let count = layer-of.len()
+    let worded = range(count).map(_ => none)
+    for (k, chain) in chains.enumerate() { if labels.at(k) != none { worded.at(chain.at(1)) = k } }
+    let framed-boxes = bodies.map(b => framed(b, most))
+    let dims = range(count).map(v => if v < n {
+      let m = measure(framed-boxes.at(v))
+      (m.width / 1pt, m.height / 1pt)
+    } else if worded.at(v) != none { label-dims.at(worded.at(v)) } else { (0, 0) })
+    let solid(v) = v < n or worded.at(v) != none
+    let gap(a, b) = if a < n and b < n { 1.6 * size } else if solid(a) and solid(b) { 0.8 * size } else if solid(a) or solid(b) { 0.6 * size } else { 0.5 * size }
+    // x: packed, then each node at its neighbours' middle as near as its layer leaves room
+    let x = range(count).map(_ => 0.0)
+    for l in layers {
+      let at = 0.0
+      for (i, v) in l.enumerate() {
+        if i > 0 { at += dims.at(l.at(i - 1)).at(0) / 2 + gap(l.at(i - 1), v) + dims.at(v).at(0) / 2 }
+        x.at(v) = at
+      }
+      for v in l { x.at(v) -= at / 2 }
+    }
+    for round in range(12) {
+      let order = if calc.even(round) { range(layers.len()) } else { range(layers.len()).rev() }
+      for r in order {
+        let l = layers.at(r)
+        if l.len() == 0 { continue }
+        let want = l.map(v => {
+          let ns = up.at(v) + down.at(v)
+          if ns.len() == 0 { x.at(v) } else { ns.map(w => x.at(w)).sum() / ns.len() }
+        })
+        let offset = (0.0,)
+        for i in range(1, l.len()) {
+          offset.push(offset.at(-1) + dims.at(l.at(i - 1)).at(0) / 2 + gap(l.at(i - 1), l.at(i)) + dims.at(l.at(i)).at(0) / 2)
+        }
+        let fitted = _sch-pav(range(l.len()).map(i => want.at(i) - offset.at(i)))
+        for (i, v) in l.enumerate() { x.at(v) = fitted.at(i) + offset.at(i) }
+      }
+    }
+    let left = calc.min(..range(count).map(v => x.at(v) - dims.at(v).at(0) / 2))
+    x = x.map(c => c - left)
+    let width = calc.max(..range(count).map(v => x.at(v) + dims.at(v).at(0) / 2))
+    let heights = layers.map(l => calc.max(0, ..l.map(v => dims.at(v).at(1))))
+    // between a layer of boxes and one of words: room for the arrows to slant
+    let height = heights.sum() + (layers.len() - 1) * 1.1 * size
+    (layers: layers, chains: chains, up: up, down: down, x: x, dims: dims, width: width, height: height, heights: heights, framed: framed-boxes, count: count, worded: worded)
+  }
+  // the layout whose text is the largest once fitted to a card (its boxes the widest, the
+  // fewest layers, when several are as large)
+  let shown(w, h) = size * calc.min(1, _sch-card.at(0) / w, _sch-card.at(1) / h)
+  let best = none
+  let best-px = -1
+  for cap in (4, 3, 2) {
+    for most in (4.5cm, 4cm, 3.5cm, 3cm, 2.5cm, 2cm) {
+      let l = laid(cap, most)
+      let px = shown(l.width, l.height)
+      if px > best-px + 0.05 { (best, best-px) = (l, px) }
+    }
+  }
+  let (layers, chains, x, dims, heights, worded) = (best.layers, best.chains, best.x, best.dims, best.heights, best.worded)
+  let count = best.count
+  let rank = range(count).map(v => layers.position(l => v in l))
+  let tops = (0,)
+  for r in range(1, layers.len()) { tops.push(tops.at(-1) + heights.at(r - 1) + 1.1 * size) }
+  let total-h = best.height
+  let total-w = best.width
+  let flip(y) = if flow == "up" { total-h - y } else { y }
+  let cy(v) = tops.at(rank.at(v)) + heights.at(rank.at(v)) / 2
+  // ports: the arrows leaving a box's bottom (entering its top) side by side, in the order of
+  // their other ends; a point in a layer of words: its middle
+  let port = (:)
+  for v in range(n) {
+    for side in ("down", "up") {
+      let segs = ()
+      for (k, chain) in chains.enumerate() {
+        let i = chain.position(c => c == v)
+        if i == none { continue }
+        let other = if side == "down" { chain.at(i + 1, default: none) } else if i > 0 { chain.at(i - 1) } else { none }
+        if other != none { segs.push((k, other)) }
+      }
+      let segs = segs.sorted(key: ((k, o)) => x.at(o) * 1000 + k)
+      let m = segs.len()
+      let w = dims.at(v).at(0)
+      let step = if m < 2 { 0 } else { calc.min(0.9 * size, (w - 8) / (m - 1)) }
+      for (i, (k, o)) in segs.enumerate() { port.insert(str(k) + "/" + str(v) + "/" + side, x.at(v) + (i - (m - 1) / 2) * step) }
+    }
+  }
+  let at(k, v, side) = if v < n { port.at(str(k) + "/" + str(v) + "/" + side) } else { x.at(v) }
+  // what an arrow may not go through: the boxes, the words (a little inside their edges)
+  let solids = range(count).filter(v => v < n or worded.at(v) != none).map(v => {
+    let (w, h) = dims.at(v)
+    (x.at(v) - w / 2 + 1, cy(v) - h / 2 + 1, x.at(v) + w / 2 - 1, cy(v) + h / 2 - 1)
+  })
+  // every arrow's points, from its upper end to its lower: straight past a layer of words
+  // where it has none and meets nothing there
+  let lines = ()
+  for (k, chain) in chains.enumerate() {
+    let pts = ()
+    for (i, v) in chain.enumerate() {
+      if v >= n and worded.at(v) == none and calc.odd(rank.at(v)) and pts.len() > 0 and i < chain.len() - 1 {
+        let w = chain.at(i + 1)
+        let next = (if w < n { at(k, w, "up") } else { x.at(w) }, tops.at(rank.at(w)))
+        if solids.all(r => not _sch-hits(pts.at(-1), next, r)) { continue }
+      }
+      // straight down across a layer (behind its words, beside its boxes), slanting only
+      // between layers, where nothing stands: never through a box
+      let r = rank.at(v)
+      let (band-top, band-bottom) = (tops.at(r), tops.at(r) + heights.at(r))
+      let add(pts, p) = if pts.len() > 0 and pts.at(-1) == p { pts } else { pts + (p,) }
+      if v >= n {
+        // through its words: straight on where it goes through them anyway, else bending at
+        // their middle
+        let line = x.at(v)
+        if worded.at(v) != none and pts.len() > 0 and i < chain.len() - 1 {
+          let w = chain.at(i + 1)
+          let next = (if w < n { at(k, w, "up") } else { x.at(w) }, tops.at(rank.at(w)))
+          let prev = pts.at(-1)
+          let t = (cy(v) - prev.at(1)) / calc.max(1, next.at(1) - prev.at(1))
+          let half = dims.at(v).at(0) / 2
+          let straight = prev.at(0) + t * (next.at(0) - prev.at(0))
+          if calc.abs(straight - x.at(v)) <= 0.6 * half { line = straight }
+        }
+        pts = add(pts, (line, band-top))
+        pts = add(pts, (line, band-bottom))
+      } else {
+        let (top, bottom) = (cy(v) - dims.at(v).at(1) / 2, cy(v) + dims.at(v).at(1) / 2)
+        if i > 0 {
+          pts = add(pts, (at(k, v, "up"), band-top))
+          pts = add(pts, (at(k, v, "up"), top))
+        }
+        if i < chain.len() - 1 {
+          pts = add(pts, (at(k, v, "down"), bottom))
+          pts = add(pts, (at(k, v, "down"), band-bottom))
+        }
+      }
+    }
+    lines.push(pts.map(((px, py)) => (px, flip(py))))
+  }
+  let rect(v) = {
+    let (w, h) = dims.at(v)
+    (x.at(v) - w / 2, flip(cy(v)) - h / 2, x.at(v) + w / 2, flip(cy(v)) + h / 2)
+  }
+  let words = edges.map(_ => none)
+  for v in range(n, count) { if worded.at(v) != none { words.at(worded.at(v)) = (rect(v), labels.at(worded.at(v))) } }
+  (
+    width: total-w,
+    height: total-h,
+    boxes: range(n).map(v => (rect(v), best.framed.at(v))),
+    words: words,
+    // from the arrow's own start to its end
+    arrows: edges.enumerate().map(((k, e)) => (if back.at(k) { lines.at(k).rev() } else { lines.at(k) }, e.style)),
+  )
+}
+#let scheme(boxes: (:), arrows: (), flow: "down") = context {
+  let laid = _sch-layout(boxes, arrows, flow)
+  let pt(p) = (p.at(0) * 1pt, p.at(1) * 1pt)
+  let head = 5.5
+  box(width: laid.width * 1pt, height: laid.height * 1pt, {
+    for (pts, style) in laid.arrows {
+      let drawn = pts
+      for (on, last) in ((style.end, true), (style.start, false)) {
+        if not on { continue }
+        let (a, b) = if last { (drawn.at(-2), drawn.at(-1)) } else { (drawn.at(1), drawn.at(0)) }
+        let (ux, uy) = (b.at(0) - a.at(0), b.at(1) - a.at(1))
+        let l = calc.sqrt(ux * ux + uy * uy)
+        if l == 0 { continue }
+        let (ux, uy) = (ux / l, uy / l)
+        let base = (b.at(0) - ux * head, b.at(1) - uy * head)
+        place(top + left, polygon(fill: black, stroke: none, pt(b),
+          pt((base.at(0) - uy * head * 0.4, base.at(1) + ux * head * 0.4)),
+          pt((base.at(0) + uy * head * 0.4, base.at(1) - ux * head * 0.4))))
+        let c = (b.at(0) - ux * head * 0.8, b.at(1) - uy * head * 0.8)
+        drawn = if last { drawn.slice(0, -1) + (c,) } else { (c,) + drawn.slice(1) }
+      }
+      place(top + left, curve(stroke: (thickness: 0.8pt, dash: style.dash), curve.move(pt(drawn.at(0))), ..drawn.slice(1).map(p => curve.line(pt(p)))))
+    }
+    for w in laid.words {
+      if w != none { place(top + left, dx: w.at(0).at(0) * 1pt, dy: w.at(0).at(1) * 1pt, w.at(1)) }
+    }
+    for (r, framed) in laid.boxes { place(top + left, dx: r.at(0) * 1pt, dy: r.at(1) * 1pt, framed) }
   })
 }
 // ---- What the AI writes, from here (the rule's example: everything above is given)
