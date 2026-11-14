@@ -151,6 +151,8 @@ async def _drawn(s: AIConfig, text: str, description: str, family: str, light: b
     if family in figures_typst.FAMILIES:
         rules = figures_typst.FAMILIES[family].rules + figures_typst.COMMON
         asked = text
+        small: figures_typst.TooSmall | None = None  # the most readable drawing too small, its body
+        small_body = ""
         for _ in range(2):
             try:
                 body = (await ai._ask_provider(s, [], asked, figures_typst.Figure, rules, light=light)).typst
@@ -162,11 +164,18 @@ async def _drawn(s: AIConfig, text: str, description: str, family: str, light: b
                 svg = figures.clean(await asyncio.to_thread(figures_typst.compile_svg, family, body))
                 return MadeFigure(svg, "typst", family, not light, body)
             except (figures_typst.Unusable, figures.FigureError) as e:
+                if isinstance(e, figures_typst.TooSmall) and (small is None or e.px > small.px):
+                    small, small_body = e, body
                 said = str(e) if isinstance(e, figures_typst.Unusable) else "its SVG was unusable"
                 asked = (
                     f"{text}\n\nYour previous answer didn't compile:\n{body}\n\n"
                     f"Typst said: {said}\n\nAnswer it again, corrected."
                 )
+        # drawn again still too small to read (or refused): the most readable drawing, rather
+        # than one drawn as SVG
+        if small is not None:
+            log.warning("Figure kept too small: %.1f px", small.px)
+            return MadeFigure(figures.clean(small.svg), "typst", family, not light, small_body)
         log.warning("Figure drawn as SVG: Typst refused it")
     demo = lambda: demo_ai.figure(description)  # noqa: E731
     drawing = await ai._ask_provider(s, [], text, figures.Drawing, figures.RULES, light=light, demo=demo)

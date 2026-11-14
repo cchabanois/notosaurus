@@ -578,3 +578,27 @@ def test_a_column_beyond_a_point_past_the_drawing():
     svg = figures.labelled(figures.clean(FUNNEL), [figures.Label(text="cytoplasme", x=330, y=110)])
     boxes, ((x1, _, x2, _),) = _placed(svg)
     assert boxes[0][0] > 330 and x1 > x2
+
+
+def test_a_diagram_too_small_to_read_drawn_again_the_more_readable_kept(monkeypatch):
+    """A diagram too small to read on a card (figures_typst.TooSmall): drawn again, told its
+    text's size; still too small, the more readable of the two kept, never one drawn as SVG
+    instead (its texts a guess, its arrows placed by eye)."""
+
+    def row(n: int) -> str:
+        step = 'node(({i}, 0), [Une étape numéro {i} du long processus]), edge("-|>", [vers la suivante])'
+        return "#diagram(" + ", ".join(step.format(i=i) for i in range(n)) + f", node(({n}, 0), [Fin]))"
+
+    svg, calls = typst_drawing(monkeypatch, [row(7), row(5)], kind="diagram")
+    assert [c["schema"] for c in calls] == ["Figure", "Figure"]
+    assert "px high" in calls[1]["text"] and "#scheme" in calls[1]["text"]
+    assert "<use" in svg  # Typst's
+    width = lambda svg: float(re.search(r'viewBox="[-\d.]+ [-\d.]+ ([\d.]+)', svg).group(1))  # noqa: E731
+    assert width(svg) == pytest.approx(width(_compiled_anyway(row(5))), rel=0.01)
+
+
+def _compiled_anyway(body: str) -> str:
+    try:
+        return figures_typst.compile_svg("diagram", body)
+    except figures_typst.TooSmall as e:
+        return e.svg

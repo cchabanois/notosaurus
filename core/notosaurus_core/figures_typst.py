@@ -291,6 +291,35 @@ class Unusable(Exception):
     """Not compiled: what Typst said (for the AI to correct it), or why it was refused."""
 
 
+class TooSmall(Unusable):
+    """Drawn, but its text too small to read once fitted to a card (readable_px): its SVG and
+    that text's height in px, kept when no drawing again does better."""
+
+    def __init__(self, message: str, svg: str, px: float):
+        super().__init__(message)
+        self.svg = svg
+        self.px = px
+
+
+# A card shows a figure at most 320 px wide and 400 high (a phone's: note-types.json, its
+# picture's max-width and max-height), never larger than its size (Typst's pt, a px each)
+CARD_PX = (320, 400)
+# A diagram's text under this, once fitted to a card, can't be read: institutions spread 26 cm
+# wide, their text 3 to 5 px. Physics' energy chains, read as they are, come to 6.6.
+MIN_TEXT_PX = 6.0
+_VIEWBOX = re.compile(r'viewBox="[-\d.]+ [-\d.]+ ([\d.]+) ([\d.]+)"')
+
+
+def readable_px(svg: str, body: str) -> float:
+    """The height in px of a figure's smallest text (typst_source.smallest_text) once fitted
+    to a card (CARD_PX)."""
+    size = _VIEWBOX.search(svg)
+    if not size:
+        return typst_source.smallest_text(body)
+    width, height = float(size[1]), float(size[2])
+    return typst_source.smallest_text(body) * min(1.0, CARD_PX[0] / width, CARD_PX[1] / height)
+
+
 # The preambles' (common.typ): the separator their own numbers are written with, set here
 SEPARATOR = '#let decimal-separator = "."'
 
@@ -423,6 +452,15 @@ def compile_svg(family: str, body: str) -> str:
     if family == "scratch":
         svg = _without_if_arrows(svg)
     svg = _fitted(svg)
+    if family == "diagram" and (px := readable_px(svg, body)) < MIN_TEXT_PX:
+        raise TooSmall(
+            f"Too small to read on a card: fitted to a phone ({CARD_PX[0]} px wide, {CARD_PX[1]} high), its "
+            f"smallest text is {px:.1f} px high, {MIN_TEXT_PX:g} at least. Draw it more compactly: fewer boxes "
+            "side by side, each box's text and each arrow's words shorter, no text made smaller; boxes "
+            "joined by arrows that are no chain, cycle or flowchart drawn by #scheme, which places them itself.",
+            svg,
+            px,
+        )
     # A map's outlines: thousands of points, each written to the billionth of a point by
     # Typst: kept to the tenth (nothing seen changes), the figure several times lighter
     return _rounded_paths(svg) if family == "map" else svg
