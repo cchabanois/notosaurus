@@ -38,8 +38,19 @@ PNG_WIDTH = 600  # pixels: what the check sees
 FONT = Path(__file__).parent / "fonts" / "DejaVuSans.ttf"  # its licence beside it
 
 
+class Label(BaseModel):
+    text: str = Field(description="The name, as written in the description.")
+    x: float = Field(description="The point it names, in the SVG's viewBox units: on or inside that part.")
+    y: float
+
+
 class Drawing(BaseModel):
     svg: str = Field(description="The SVG document, starting with <svg.")
+    labels: list[Label] = Field(
+        default_factory=list,
+        description="A labelled scheme's names (a cell's, an organ's parts…), each with the point it names; "
+        "set beside the drawing by the app. Empty for any other figure.",
+    )
 
 
 class Checked(BaseModel):
@@ -589,3 +600,225 @@ def save(folder: Path, card: Card, svg: str) -> str:
     name = f"picture-{card.id}-{hashlib.sha1(data).hexdigest()[:8]}.svg"
     (folder / name).write_bytes(data)
     return name
+
+
+# --- Labels set beside the drawing ---------------------------------------------------------
+# A labelled scheme (a cell, an organ, a flower) drawn by the AI: its names written by eye fell
+# on its outlines ("Noyau" across the cell's membrane, 2 drawings in 3). The AI draws the
+# shapes and tells each name's point; they are set here in two columns beside the drawing,
+# each in the order of its points from top to bottom, a line from each to its point, never
+# on a shape nor on one another.
+
+LABEL_SIZE = 16  # in the viewBox's units: the rule's largest, the drawing grown by its columns
+LABEL_LINE = 1.3  # a line's height, times the size
+LABEL_WIDTH = 130  # past this, a name goes on two lines (or more)
+LABEL_GAP = 14  # between the drawing and a column, a column and the frame
+LABEL_ROOM = 4  # between two names in a column
+POINT_SLACK = 2  # a point this far past the frame (a stroke's edge) is still inside
+SNAP = 12  # a point on the white ground this near the drawing (beside a funnel's edge): brought onto it
+
+
+class LabelError(ValueError):
+    """A label the drawing can't take (its point outside it): said to the AI, which draws it again."""
+
+
+def _measure(text: str) -> float:
+    """The text's width in the viewBox's units, at LABEL_SIZE, in the font the figures are drawn in."""
+    from PIL import ImageFont
+
+    font = ImageFont.truetype(str(FONT), 100)
+    return font.getlength(text) * LABEL_SIZE / 100
+
+
+def _lines(text: str) -> list[str]:
+    """The name cut into lines no wider than LABEL_WIDTH, at its spaces (a long word alone)."""
+    lines: list[str] = []
+    for word in text.split():
+        if lines and _measure(lines[-1] + " " + word) <= LABEL_WIDTH:
+            lines[-1] += " " + word
+        else:
+            lines.append(word)
+    return lines or [text]
+
+
+def _drawn_image(svg: str):
+    """The figure drawn in grey levels (to_png), None without resvg."""
+    png = to_png(svg)
+    if png is None:
+        return None
+    from PIL import Image
+
+    return Image.open(io.BytesIO(png)).convert("L")
+
+
+def _ink(image, x: float, y: float, w: float, h: float) -> tuple[float, float, float, float]:
+    """What the drawing covers (not its white ground), in its units; its frame without an image."""
+    if image is None:
+        return x, y, x + w, y + h
+    from PIL import ImageOps
+
+    box = ImageOps.invert(image).point([0] * 25 + [255] * 231).getbbox()
+    if box is None:
+        return x, y, x + w, y + h
+    k = w / image.width
+    return x + box[0] * k, y + box[1] * k, x + box[2] * k, y + box[3] * k
+
+
+def _snapped(image, x: float, y: float, w: float, px: float, py: float) -> tuple[float, float]:
+    """The point, or the drawing's nearest pixel when it lies on the white ground SNAP or less
+    from it (the AI's point beside the part it names); a point in a white part farther from any
+    line (a region: the cytoplasm drawn white) kept."""
+    if image is None:
+        return px, py
+    k = image.width / w
+    cx, cy = round((px - x) * k), round((py - y) * k)
+    pixels = image.load()
+
+    def ink(i: int, j: int) -> bool:
+        return 0 <= i < image.width and 0 <= j < image.height and pixels[i, j] < 248  # a light fill too
+
+    if ink(cx, cy):
+        return px, py
+    r = math.ceil(SNAP * k)
+    best = None
+    for j in range(cy - r, cy + r + 1):
+        for i in range(cx - r, cx + r + 1):
+            d = (i - cx) ** 2 + (j - cy) ** 2
+            if d <= r * r and ink(i, j) and (best is None or d < best[0]):
+                best = (d, i, j)
+    if best is None:
+        return px, py
+    return x + best[1] / k, y + best[2] / k
+
+
+def _cross(a: tuple[float, float], b: tuple[float, float], c: tuple[float, float], d: tuple[float, float]) -> bool:
+    """Whether the segments ab and cd cross (touching at an end not counted)."""
+
+    def side(p, q, r):
+        return (q[0] - p[0]) * (r[1] - p[1]) - (q[1] - p[1]) * (r[0] - p[0])
+
+    d1, d2, d3, d4 = side(c, d, a), side(c, d, b), side(a, b, c), side(a, b, d)
+    return d1 * d2 < 0 and d3 * d4 < 0
+
+
+def _column(names: list[dict], top: float, bottom: float) -> None:
+    """Each name's top in its column, in the column's order: as near its point's height as it
+    can, none on another (pushed down, then the column up as far as the drawing's top when it
+    passes its bottom)."""
+    y = -math.inf
+    for n in names:
+        n["top"] = max(n["py"] - n["h"] / 2, y)
+        y = n["top"] + n["h"] + LABEL_ROOM
+    if names:
+        over = min(y - LABEL_ROOM - bottom, names[0]["top"] - top)
+        if over > 0:
+            for n in names:
+                n["top"] -= over
+
+
+def _leader_start(n: dict, left: float, right: float) -> tuple[float, float]:
+    x = left - LABEL_GAP + 3 if n["side"] == "left" else right + LABEL_GAP - 3
+    return x, n["top"] + n["h"] / 2
+
+
+def labelled(svg: str, labels: list[Label], clamp: bool = False) -> str:
+    """The cleaned SVG with its labels set beside its drawing (see above). The same SVG
+    without labels; LabelError for a point outside the drawing's frame (brought to its edge
+    with `clamp`: the AI asked again and still giving it)."""
+    if not labels:
+        return svg
+    view = _VIEWBOX.search(svg)
+    if view is None:
+        return svg
+    x, y, w, h = map(float, view.groups())
+    if clamp:
+        labels = [
+            Label(text=label.text, x=min(max(label.x, x), x + w), y=min(max(label.y, y), y + h)) for label in labels
+        ]
+    for label in labels:
+        inside_x = x - POINT_SLACK <= label.x <= x + w + POINT_SLACK
+        if not (inside_x and y - POINT_SLACK <= label.y <= y + h + POINT_SLACK):
+            raise LabelError(
+                f"the label « {label.text} » names the point ({label.x:g}, {label.y:g}), outside the drawing "
+                f"(its viewBox: {x:g} {y:g} {w:g} {h:g}): give the point on the part it names"
+            )
+    image = _drawn_image(svg)
+    left, top, right, bottom = _ink(image, x, y, w, h)
+    middle = (left + right) / 2
+    line = LABEL_SIZE * LABEL_LINE
+    # a name given at several points (a gene's place on both chromosomes): one name, a line to each
+    points: dict[str, list[tuple[float, float]]] = {}
+    for label in labels:
+        points.setdefault(label.text.strip(), []).append(_snapped(image, x, y, w, label.x, label.y))
+    names = []
+    for text, at in points.items():
+        rows = _lines(text)
+        names.append(
+            {
+                "rows": rows,
+                "w": max(_measure(r) for r in rows),
+                "h": line * len(rows),
+                "points": at,
+                "px": sum(p[0] for p in at) / len(at),
+                "py": sum(p[1] for p in at) / len(at),
+                "side": "left" if sum(p[0] for p in at) / len(at) < middle else "right",
+            }
+        )
+    sides = {s: sorted((n for n in names if n["side"] == s), key=lambda n: n["py"]) for s in ("left", "right")}
+    # a column beyond every point of its side (a region's point past the drawing's ink: its line
+    # never drawn back across its name)
+    left = min([left] + [p[0] - 3 for n in sides["left"] for p in n["points"]])
+    right = max([right] + [p[0] + 3 for n in sides["right"] for p in n["points"]])
+    for column in sides.values():
+        _column(column, top, bottom)
+        # two leaders that cross (a far point just above a near one): their names' places swapped
+        for _ in range(len(column) ** 2):
+            crossing = next(
+                (
+                    (i, j)
+                    for i in range(len(column))
+                    for j in range(i + 1, len(column))
+                    if any(
+                        _cross(_leader_start(column[i], left, right), a, _leader_start(column[j], left, right), b)
+                        for a in column[i]["points"]
+                        for b in column[j]["points"]
+                    )
+                ),
+                None,
+            )
+            if crossing is None:
+                break
+            i, j = crossing
+            column[i], column[j] = column[j], column[i]
+            _column(column, top, bottom)
+    parts = []
+    for n in names:
+        edge, anchor = (left - LABEL_GAP, "end") if n["side"] == "left" else (right + LABEL_GAP, "start")
+        start, middle_y = _leader_start(n, left, right)
+        for px, py in n["points"]:
+            parts.append(
+                f'<line x1="{start:.1f}" y1="{middle_y:.1f}" x2="{px:.1f}" y2="{py:.1f}" '
+                'stroke="#333333" stroke-width="1"/>'
+                f'<circle cx="{px:.1f}" cy="{py:.1f}" r="2" fill="#333333"/>'
+            )
+        for k, row in enumerate(n["rows"]):
+            base = n["top"] + line * k + LABEL_SIZE
+            text = row.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;")
+            parts.append(
+                f'<text x="{edge:.1f}" y="{base:.1f}" font-family="sans-serif" font-size="{LABEL_SIZE}" '
+                f'text-anchor="{anchor}" fill="#000000">{text}</text>'
+            )
+    widest = {s: max((n["w"] for n in sides[s]), default=0.0) for s in sides}
+    tops = [n["top"] for n in names] + [y]
+    bottoms = [n["top"] + n["h"] for n in names] + [y + h]
+    nx = min(x, left - LABEL_GAP - widest["left"] - LABEL_GAP) if sides["left"] else x
+    nr = max(x + w, right + LABEL_GAP + widest["right"] + LABEL_GAP) if sides["right"] else x + w
+    ny, nb = min(tops) - MARGIN, max(bottoms) + MARGIN
+    ny, nb = min(ny, y), max(nb, y + h)
+    svg = _framed(svg, view.group(0), nx, ny, nr - nx, nb - ny)
+    opening = re.search(r"<svg[^>]*>", svg)
+    closing = svg.rfind("</svg>")
+    if opening is None or closing < 0:
+        return svg
+    ground = f'<rect x="{nx:.3f}" y="{ny:.3f}" width="{nr - nx:.3f}" height="{nb - ny:.3f}" fill="#ffffff"/>'
+    return svg[: opening.end()] + ground + svg[opening.end() : closing] + "".join(parts) + svg[closing:]

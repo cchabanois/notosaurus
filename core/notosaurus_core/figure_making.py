@@ -134,6 +134,14 @@ async def _figure_family(s: AIConfig, description: str, kind: str = "") -> str:
     return picked.family
 
 
+def _labelled(drawing, clamp: bool = False) -> str:
+    """The AI's drawing cleaned, its labelled scheme's names set beside it (figures.labelled),
+    grown to what it draws past its frame."""
+    from . import figures
+
+    return figures.fitted(figures.labelled(figures.clean(drawing.svg), drawing.labels, clamp))
+
+
 async def _drawn(s: AIConfig, text: str, description: str, family: str, light: bool) -> MadeFigure:
     """A figure drawn once, cleaned: in Typst with its family's package and rule (asked again
     once, told what Typst said, when it doesn't compile), else as SVG (family "other", Typst
@@ -162,7 +170,19 @@ async def _drawn(s: AIConfig, text: str, description: str, family: str, light: b
         log.warning("Figure drawn as SVG: Typst refused it")
     demo = lambda: demo_ai.figure(description)  # noqa: E731
     drawing = await ai._ask_provider(s, [], text, figures.Drawing, figures.RULES, light=light, demo=demo)
-    svg = figures.fitted(figures.clean(drawing.svg))
+    try:
+        svg = await asyncio.to_thread(_labelled, drawing)
+    except figures.LabelError as e:
+        # a label's point outside the drawing: drawn once again, told which; still so, brought to its edge
+        log.warning("Figure drawn again: %s", e)
+        asked = f"{text}\n\nIn your answer, {e}. Answer it again, corrected."
+        try:
+            again = await ai._ask_provider(s, [], asked, figures.Drawing, figures.RULES, light=light, demo=demo)
+            svg = await asyncio.to_thread(_labelled, again)
+        except (ExtractionError, figures.FigureError, figures.LabelError) as other:
+            if isinstance(other, AppError) and other.code not in _UNUSABLE:
+                raise
+            svg = await asyncio.to_thread(_labelled, drawing, True)
     # Its labels written on one another (the AI places its words without measuring them: two
     # tubes' labels « soudeCl⁻ »): drawn once again, told which; kept if fewer touch and none
     # left out (told to make room, the AI dropped the tubes' labels, 3 drawings in 3)
@@ -184,7 +204,7 @@ async def _drawn(s: AIConfig, text: str, description: str, family: str, light: b
         )
         try:
             again = await ai._ask_provider(s, [], asked, figures.Drawing, figures.RULES, light=light, demo=demo)
-            other = figures.fitted(figures.clean(again.svg))
+            other = await asyncio.to_thread(_labelled, again, True)
             kept = sorted(figures.label_words(svg)) == sorted(figures.label_words(other))
             if kept and len(await asyncio.to_thread(figures.touching_labels, other)) < len(touching):
                 svg = other
