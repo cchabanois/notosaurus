@@ -587,3 +587,121 @@ def test_a_sea_a_route_crosses_named_on_its_way():
         float(y) for y in re.findall(r'<path fill="#d62f2f"[^>]*transform="translate\([\d.]+ ([\d.]+)\)', svg)
     )
     assert dots[0] + 15 < sea[1] < dots[-1] - 15  # well south of Seville, north of Rio
+
+
+def _atlas_value(tmp_path, expression: str):
+    """What the atlas's map function computes, read back (a Typst value, as JSON)."""
+    import typst
+
+    version = re.search(r"notosaurus-atlas:([\d.]+)", (figures_typst.RULES / "map.typ").read_text()).group(1)
+    page = tmp_path / "query.typ"
+    page.write_text(
+        f'#import "@preview/notosaurus-atlas:{version}": *\n#metadata({expression}) <value>\n', encoding="utf-8"
+    )
+    found = typst.query(
+        str(page), "<value>", field="value", one=True, format="json", package_path=str(figures_typst.packages())
+    )
+    return json.loads(found)
+
+
+def test_a_past_years_states_with_their_borders_then():
+    """1914's alliances and the Cold War's blocs: the atlas had today's countries only, the
+    Austro-Hungarian Empire, the Soviet Union or East Germany drawn as Austria, Russia or
+    nothing. A map's `year` draws that time's states (historical-basemaps), named then in the
+    page's languages, by their short names too (« RDA », « Allemagne » in 1914)."""
+
+    def drawn(body):
+        return figures_typst.compile_svg("map", body)
+
+    for names in (("Autriche-Hongrie", "Austria-Hungary", "Österreich-Ungarn"), ("URSS", "Union soviétique", "USSR")):
+        year = 1914 if "Autriche" in names[0] else 1960
+        assert len({drawn(f'#map(year: {year}, countries: ("{n}",), labels: false)') for n in names}) == 1
+    # the German Empire's borders are not today's Germany's; 1914's lasts the war, 1960's the Cold War
+    today = drawn('#map(countries: ("Allemagne",), labels: false)')
+    then = {drawn(f'#map(year: {y}, countries: ("Allemagne",), labels: false)') for y in (1914, 1918)}
+    assert len(then) == 1 and today not in then
+    assert drawn('#map(year: 1985, countries: ("RDA", "RFA"), labels: false)')
+    assert drawn('#map(year: 2005, countries: ("Allemagne",), labels: false)') == today  # today's from 1992
+    with pytest.raises(figures_typst.Unusable, match="Autriche-Hongrie"):
+        drawn('#map(countries: ("Autriche-Hongrie",))')  # today's atlas: no such country
+
+
+@pytest.mark.parametrize(
+    ("year", "states"),
+    [
+        (1815, ("Prusse", "Empire d'Autriche", "royaume uni des Pays-Bas", "Empire russe")),
+        (1880, ("Empire allemand", "Autriche-Hongrie", "Italie")),
+        (1923, ("URSS", "république de Weimar", "Tchécoslovaquie", "Yougoslavie", "Pologne")),
+        (1938, ("Troisième Reich", "Tchécoslovaquie", "URSS")),
+        (1946, ("zone d'occupation soviétique en Allemagne", "zone d'occupation américaine en Allemagne", "Autriche")),
+    ],
+)
+def test_the_years_of_history_lessons(year, states):
+    """The Congress of Vienna's Europe, after Germany's unity, between the wars, before the
+    war, Germany's zones: each year's states by their names then. The source's mistakes
+    righted: in 1815 Belgium Austrian (as before 1797) and the Netherlands unnamed, the United
+    Kingdom of the Netherlands made of their land; in 1930 the Soviet Union named « White
+    Russia » and the Caucasus apart."""
+    names = ", ".join(f'"{s}"' for s in states)
+    assert figures_typst.compile_svg("map", f"#map(year: {year}, countries: ({names},))").startswith("<svg")
+
+
+def test_a_land_named_after_its_ruler_is_the_rulers_not_the_ruler(tmp_path):
+    """1815's source names a colony of Central America « United Kingdom » beside the « United
+    Kingdom of Great Britain and Ireland »: « Royaume-Uni » was that colony, the Congress of
+    Vienna's Europe framed from Mexico to the Pacific. A name only a shorthand of another
+    state that year (RULERS) is that state's land, not its name."""
+    expression = 'borders(1815).at(find-country("Royaume-Uni", all: borders(1815), year: 1815)).f'
+    x0, y0, x1, y1 = _atlas_value(tmp_path, expression)
+    assert -1100 < x0 < x1 < 200 and 4900 < y0 < y1 < 6000  # the British Isles (degrees × 100)
+
+
+def test_a_colonial_empire_is_its_ruler_and_every_land_it_ruled(tmp_path):
+    """A colonial empire's map (1914) as a group `empire: "France"`: the ruler and its colonies
+    and protectorates, the source's rulers completed (Morocco, Tunisia: France's; Kamerun:
+    Germany's), never a colony listed by hand."""
+    groups = '((name: "E", empire: "France"), (name: "A", empire: "Allemagne"))'
+    expression = (
+        f"read-groups({groups}, all: borders(1914), year: 1914).map(g => g.countries.map(c => borders(1914).at(c).n))"
+    )
+    french, german = ({name for names in group for name in names} for group in _atlas_value(tmp_path, expression))
+    assert {"France", "French West Africa", "French Algeria", "French protectorate in Morocco"} <= french
+    assert {"German Empire", "Kamerun", "Togoland", "German East Africa"} <= german and "Kamerun" not in french
+
+
+def test_a_past_years_states_are_places_of_flows():
+    """A flow between the Cold War's states (East Germany's refugees to West Germany): from
+    each state's inmost point, as a country of today; « RDA » was no place for a flow."""
+    flow = '#map(year: 1960, countries: ("RDA", "RFA"), flows: ((from: "RDA", to: "RFA", kind: "réfugiés"),))'
+    assert figures_typst.compile_svg("map", flow).startswith("<svg")
+
+
+@pytest.mark.parametrize(
+    ("body", "said"),
+    [
+        ('#map(year: 1860, countries: ("Prusse",))', "no borders of 1860"),
+        ('#map(year: 1941, countries: ("Allemagne",))', "no borders of 1941"),
+        ('#map(year: 1914, countries: ("France",), regions: ("Bretagne",))', "no regions on a map of a past year"),
+        ('#map(groups: ((name: "E", empire: "France"),))', "an empire is a past year's"),
+        ('#map(year: 1914, countries: ("Tchécoslovaquie",))', "no state called"),
+    ],
+)
+def test_a_past_year_the_atlas_lacks_said_never_drawn_wrong(body, said):
+    """Another time than the atlas's years (1860, during Italy's and Germany's unity; 1941)
+    refused, said, rather than drawn with the borders of another; a state that didn't exist
+    then refused too."""
+    with pytest.raises(figures_typst.Unusable, match=said):
+        figures_typst.compile_svg("map", body)
+
+
+def test_the_past_states_names_kept_as_listed():
+    """tools/atlas-borders.json (what Wikidata gave the past states, kept: the same atlas
+    whatever day it is made) has a name for every article PAST gives."""
+    import sys
+
+    sys.path.insert(0, str(figures_typst.HERE.parent.parent / "tools"))
+    import atlas
+
+    kept = json.loads(atlas.BORDERS_FILE.read_text(encoding="utf-8"))
+    articles = {said["article"] for by_year in atlas.PAST.values() for said in by_year.values() if "article" in said}
+    assert articles <= set(kept) and all(kept.values())
