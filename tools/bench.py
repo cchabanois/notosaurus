@@ -68,13 +68,23 @@ def options(lesson: dict, builtins: list, forced: str = "") -> dict:
     if forced:
         prompt = next(p for p in builtins if p.id == f"notosaurus:{forced}")
         lesson = {"prompt": prompt.text}
+    elif not lesson.get("prompt", "").strip():
+        # saved without its prompt: Automatic, the one the phone offers first (a made-up "make
+        # cards" left the AI without its cases: a poem to learn by heart got 6 questions on it)
+        lesson = {**lesson, "prompt": next(p for p in builtins if p.id == "notosaurus:auto").text}
 
     def same(text: str) -> str:
         return " ".join(text.split())  # a phone's line ends (\r\n) as the computer's
 
     prompt = next((p for p in builtins if same(p.text) == same(lesson.get("prompt", ""))), None)
+    # saved with an older version of one of Notosaurus's prompts (Automatic before a case was
+    # added: a timeline without its reverse card): today's, as the phone sends it now
+    first = same(lesson.get("prompt", "").split("\n", 1)[0])
+    older = None if prompt else next((p for p in builtins if first and same(p.text.split("\n", 1)[0]) == first), None)
+    if older:
+        prompt, lesson = older, {**lesson, "prompt": older.text}
     return {
-        "prompt": lesson.get("prompt") or "Crée des cartes pour réviser la leçon.",
+        "prompt": lesson["prompt"],
         "builtin": prompt.id if prompt else "",
         "deck": prompt.deck if prompt else "",
         "voice": prompt.voice if prompt else ("auto" if lesson.get("voice") else ""),
@@ -189,7 +199,10 @@ def own_language_heard(asked: dict, made: dict) -> bool:
 
 
 def plain(text: str) -> str:
-    text = unicodedata.normalize("NFKD", re.sub(r"<[^>]+>|\{\{c\d+::|\}\}|::[^}]*", " ", text or ""))
+    """The cards' text to look words up in: no markup, no accents, lower case; a part singled
+    out in brackets read in its word (« t[i]ger » is « tiger »)."""
+    text = re.sub(r"\[([^\[\]]*)\]", r"\1", text or "")
+    text = unicodedata.normalize("NFKD", re.sub(r"<[^>]+>|\{\{c\d+::|\}\}|::[^}]*", " ", text))
     return " ".join("".join(c for c in text if not unicodedata.combining(c)).lower().split())
 
 
@@ -265,12 +278,12 @@ def check(
     }:
         heard = (asked["dictation"] or asked["dictation_only"]) and bool(voice)
         if asked["dictation_only"] and heard:
-            ok = model.startswith("Notosaurus dictée")
-        else:
-            ok = model.startswith("Notosaurus recto/verso")
-            ok &= ("à taper" in model) == body["typing"]
-            ok &= ("+ dictée" in model) == bool(heard)
-            ok &= ("+ inverse" in model) == body["reverse"]
+            ok = model.startswith("Notosaurus dictation")
+        else:  # the note types' names in English since 1.1 (app/note_types: text.py, common.variant)
+            ok = model.startswith("Notosaurus front/back")
+            ok &= (" typed" in model) == body["typing"]
+            ok &= ("+ dictation" in model) == bool(heard)
+            ok &= ("+ reverse" in model) == body["reverse"]
         results.append((ok, f"note type {model!r}"))
 
     # The voice heard on the right side: on the answer (front → back), on the question
@@ -280,7 +293,7 @@ def check(
             continue
         for t in model["tmpls"]:
             on_question, on_answer = "{{Audio}}" in t["qfmt"], "{{Audio}}" in t["afmt"]
-            if t["name"] in ("Dictée", "Verso → Recto"):
+            if t["name"] in ("Dictation", "Back → Front", "Dictée", "Verso → Recto"):  # English since 1.1
                 ok = on_question
             else:
                 ok = on_answer and not on_question
