@@ -60,6 +60,7 @@ Each pull request's entries (the `## Changelog` of its description) are put unde
 
 ### Fixed
 
+- 🗂️ A classification whose groups sit side by side in another (mammals and birds among the tetrapods) is drawn as boxes in boxes, its names never cut nor on one another.
 - 🦠 A cell dividing, its chromosomes, a population of bacteria: drawn as such, no longer boxes of text.
 - ⚗️ In a hydrogen bond, the oxygen's (or nitrogen's) non-bonding pairs face the hydrogen; a molecule drawn with an atom too many bonds, or a hydrogen bond between two atoms without its H, is drawn again.
 - 🪟 On Windows, a figure Typst refused is told to the AI with its accents and symbols intact, so that it corrects it.
