@@ -7,6 +7,7 @@ tasks.py and correction.py: a test replaces it here once, for all of them."""
 
 import asyncio
 import logging
+import re
 from collections.abc import Callable
 from functools import cache
 from typing import Any
@@ -46,14 +47,21 @@ def for_claude(s: AIConfig) -> bool:
     )
 
 
+# A card's tags, asked for only when the instructions talk of them: a list nothing asked to
+# fill, the AI caught in a loop on it (1,866 and 2,420 tags on a card, the lesson's other
+# cards never written: 3 answers of about 350 on the bench of real lessons)
+TAGS_ASKED = re.compile(r"\btags?\b|étiquette|etikett|etiqueta|etichett", re.IGNORECASE)
+
+
 @cache
 def ai_schema(
-    base: type[BaseModel], fun_facts: bool = False, helps: bool = False, claude: bool = False
+    base: type[BaseModel], fun_facts: bool = False, helps: bool = False, claude: bool = False, tags: bool = True
 ) -> type[BaseModel]:
     """`base` (Extraction, Revision) as the AI fills it: another model, turned back into
     `base` with `base.model_validate(answer.model_dump())`. `claude`: within Claude's limit
-    (CLAUDE_REQUIRED)."""
+    (CLAUDE_REQUIRED). `tags`: the cards' tags in it (see TAGS_ASKED)."""
     left_out = set(SET_BY_NOTOSAURUS)
+    left_out |= set() if tags else {"tags"}
     left_out |= set() if fun_facts else {"fun_fact"}
     left_out |= set() if helps else {"explanation", "mnemonic"}
     # Field name → (annotation, FieldInfo), as create_model takes them

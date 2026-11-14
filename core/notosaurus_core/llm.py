@@ -103,7 +103,8 @@ async def extract_cards(
     images, sizes = ai._prepare(images)
     text = options.instructions + _user_text(prompt, options, len(images), sizes, fmt)
     fun_facts, helps = options.fun_facts, options.helps
-    schema = ai.ai_schema(Extraction, fun_facts, helps, ai.for_claude(s))
+    tags = bool(ai.TAGS_ASKED.search(prompt + " " + options.instructions))
+    schema = ai.ai_schema(Extraction, fun_facts, helps, ai.for_claude(s), tags=tags)
     answer = await ai._ask_provider(
         s,
         images,

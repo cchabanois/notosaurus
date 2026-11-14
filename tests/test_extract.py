@@ -625,7 +625,7 @@ def test_an_ai_caught_in_a_loop_gives_each_card_once(monkeypatch):
         return schema.model_validate({"deck": "Corps humain", "cards": looped})
 
     monkeypatch.setattr(ai, "_ask_provider", answer)
-    cards = run(llm.extract_cards(AIConfig(llm="gemini"), [], "Les légendes")).deck.cards
+    cards = run(llm.extract_cards(AIConfig(llm="gemini"), [], "Les légendes, avec des tags")).deck.cards
     assert [c.back for c in cards] == ["Lille", "le genou", "la cuisse"]
     assert len(cards[0].tags) == 8
 
@@ -638,3 +638,23 @@ def test_a_label_on_another_place_is_no_repeat():
     knee = {"front": "Que désigne le numéro ?", "back": "le genou"}
     cards = [Card(**knee, mask=Mask(page=1, n=n, box=[n, 0, n + 1, 1])) for n in (18, 19, 18)]
     assert [c.mask.n for c in without_repeats(cards) if c.mask] == [18, 19]
+
+
+def test_the_ai_asked_for_tags_only_when_the_instructions_want_some(monkeypatch):
+    """A card's tags were a list nothing asked to fill: the AI caught in a loop on it (1,866
+    and 2,420 tags on a card, the lesson's other cards never written). Left out of the
+    answer's schema, unless the instructions talk of tags (« ajoute un tag par chapitre »)."""
+    from notosaurus_core.config import AIConfig
+
+    asked = []
+
+    async def answer(s, images, text, schema, *args, **options):
+        card = schema.model_fields["cards"].annotation.__args__[0]
+        asked.append("tags" in card.model_fields)
+        return schema.model_validate({"deck": "Villes", "cards": [{"front": "Qu'est-ce que (1) ?", "back": "Lille"}]})
+
+    monkeypatch.setattr(ai, "_ask_provider", answer)
+    run(llm.extract_cards(AIConfig(llm="gemini"), [], "Une carte par ville"))
+    run(llm.extract_cards(AIConfig(llm="gemini"), [], "Une carte par ville, ajoute un tag par région"))
+    run(llm.extract_cards(AIConfig(llm="gemini"), [], "Une carte par ville, une étiquette par région"))
+    assert asked == [False, True, True]
