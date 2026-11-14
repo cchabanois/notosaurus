@@ -62,6 +62,7 @@ Each pull request's entries (the `## Changelog` of its description) are put unde
 
 ### Fixed
 
+- 🏷️ A scheme's label whose point fell just beside its part (an antibody's light chain) is joined to the part itself, not to the void.
 - 🎤 While dictating, the microphone button shows clearly that it is listening.
 - 🎙️ Dictating on the phone (Android 13 and later): no more sound at each pause.
 - 🏷️ A labelled scheme drawn freely (a cell, a flower, an organ): its names set beside it, a line to each part, never across its outlines.
