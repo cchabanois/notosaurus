@@ -8,7 +8,9 @@ the data or the function (VERSION raised with it), then commit what it wrote.
 Besides atlas.json (countries, cities, lakes: every map reads it), files a map reads only
 when it asks for them: rivers.json, reliefs.json (mountains, deserts, plains, peninsulas,
 islands), waters.json (oceans, seas, gulfs, straits, lakes: their short names too), regions/<country code>.json
-(its first-level divisions, and the groups Natural Earth gives them: France's régions).
+(its first-level divisions, and the groups Natural Earth gives them: France's régions), ways.json
+(the sea ways a map's routes go by, made from the countries' outlines: seaways; with the
+ports, the capes and the canals routes and flows pass).
 
   .venv/bin/python tools/atlas.py [folder] [--refresh-history]
 
@@ -36,6 +38,7 @@ from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 
 import shapely
+import shapely.affinity
 from shapely.geometry import shape
 from shapely.ops import polylabel
 
@@ -43,7 +46,7 @@ ROOT = Path(__file__).resolve().parent.parent
 CORE = ROOT / "core" / "notosaurus_core"
 LIB = CORE / "atlas" / "lib.typ"
 TARGET = CORE / "typst"
-NAME, VERSION = "notosaurus-atlas", "0.4.0"
+NAME, VERSION = "notosaurus-atlas", "0.5.0"
 SOURCE = "https://raw.githubusercontent.com/nvkelso/natural-earth-vector/v5.1.2/geojson/"
 COUNTRIES = "ne_50m_admin_0_countries.geojson"  # 1:50m: a country's shape, light enough
 PLACES = "ne_10m_populated_places.geojson"  # 1:10m: the cities, their names in many languages
@@ -714,6 +717,276 @@ def regions(admin1: dict) -> dict[str, dict]:
     return out
 
 
+# The sea ways (ways.json): what a map's routes go by. Nodes off the coasts and over the open
+# sea, each joined to the nearest it sees (no land between) in each direction; a sea route is
+# the shortest way through them, found when the map is drawn (lib.typ)
+SEA_ISLAND = 0.05  # square degrees: a smaller island is no obstacle (a route may cross Malta)
+SEA_OFF = 0.25  # degrees: a node this far off a coast's corner, in the middle of a channel narrower
+SEA_CORNERS = 0.1  # degrees: the coasts simplified this much, their corners kept as nodes
+SEA_GRID = 8  # degrees between the open sea's nodes
+SEA_CONES = 12  # directions a node is joined in: the nearest it sees in each
+SEA_SEEN = 10  # nodes tried in each direction, the nearest first
+SEA_PORT = 1  # degrees: a city this near a coast is a port, a country's or an island's nodes this near it
+# The canals a route may go through, only when it names them (Vasco da Gama never did): their
+# names, and their ends as the atlas's cities (by their English name, folded) and countries
+CANALS = [
+    (
+        ("canal de Suez", "Suez Canal", "Sueskanal", "Suezkanal", "canale di Suez"),
+        (("EGY", "port said"), ("EGY", "suez")),
+    ),
+    (
+        ("canal de Panama", "Panama Canal", "Panamakanal", "canale di Panama", "canal de Panamá"),
+        (("PAN", "colon"), ("PAN", "panama")),
+    ),
+]
+CAPES = "ne_10m_geography_regions_points.geojson"  # capes (Good Hope, Horn) as points, named in many languages
+
+
+def _east(dx):
+    """A longitude's difference, the short way round (the Pacific crossed, not the world)."""
+    return (dx + 180) % 360 - 180
+
+
+def seaways(world: dict, marine: list, relief: list, points: dict) -> dict:
+    """The sea ways: the nodes ("p"), each one's neighbours and how far ("a": node, distance,
+    …, in hundredths of a degree, a degree of longitude shortened by its latitude's cosine);
+    for each city a port ("cities": where it meets the sea, then its nodes, or null), for each
+    country its point (polylabel's) and the nodes off its coast, for each water ("waters",
+    waters.json's order) and each island, peninsula or coast ("reliefs") the nodes in or by
+    it, the capes, the canals (CANALS)."""
+    import numpy as np
+
+    polygons = [
+        shapely.make_valid(shapely.Polygon([(x / SCALE, y / SCALE) for x, y in ring]))
+        for c in world["countries"].values()
+        for ring in c["r"]
+    ]
+    land = shapely.union_all(polygons)
+    obstacles = [shapely.Polygon(g.exterior) for g in parts(land) if g.geom_type == "Polygon" and g.area >= SEA_ISLAND]
+    whole = shapely.union_all(obstacles)
+    # The land on a cylinder: a way across the 180th meridian sees what lies beyond
+    wrapped = shapely.union_all([shapely.affinity.translate(whole, dx) for dx in (-360, 0, 360)])
+    shapely.prepare(wrapped)
+    coasts = [
+        shapely.LineString(cs[i : i + 17])
+        for g in parts(wrapped)
+        for ring in (g.exterior, *g.interiors)
+        for cs in [list(ring.coords)]
+        for i in range(0, len(cs) - 1, 16)
+    ]
+    tree = shapely.STRtree(coasts)
+
+    def blocked(segments: list) -> "np.ndarray":
+        """Whether each segment ((x, y), (x, y)) crosses a coast."""
+        out = np.zeros(len(segments), bool)
+        if segments:
+            out[tree.query(shapely.linestrings(segments), predicate="intersects")[0]] = True
+        return out
+
+    def across(rays: list) -> "np.ndarray":
+        """How far each ray (x, y, its direction) goes over the sea, up to 2 SEA_OFF (inf)."""
+        eps = 0.005
+        lines = shapely.linestrings(
+            [[(x + nx * eps, y + ny * eps), (x + nx * 2 * SEA_OFF, y + ny * 2 * SEA_OFF)] for x, y, nx, ny in rays]
+        )
+        far = np.full(len(rays), np.inf)
+        ray_i, coast_i = tree.query(lines, predicate="intersects")
+        if len(ray_i):
+            hits = shapely.intersection(lines[ray_i], np.array(coasts, dtype=object)[coast_i])
+            np.minimum.at(far, ray_i, shapely.distance(shapely.points([rays[i][:2] for i in ray_i]), hits))
+        return far
+
+    def outward(g) -> list:
+        """A polygon's points, each with its direction away from it, and whether it is a corner."""
+        ring = list(g.exterior.coords)[:-1]
+        if not g.exterior.is_ccw:
+            ring = ring[::-1]
+        out = []
+        for i in range(len(ring)):
+            (x0, y0), (x1, y1), (x2, y2) = ring[i - 1], ring[i], ring[(i + 1) % len(ring)]
+            la, lb = math.hypot(x1 - x0, y1 - y0) or 1, math.hypot(x2 - x1, y2 - y1) or 1
+            nx, ny = (y1 - y0) / la + (y2 - y1) / lb, -(x1 - x0) / la - (x2 - x1) / lb
+            length = math.hypot(nx, ny)
+            if length > 1e-9:
+                out.append((x1, y1, nx / length, ny / length, (x1 - x0) * (y2 - y1) - (y1 - y0) * (x2 - x1) < 0))
+        return out
+
+    found = []
+    # The coasts' corners, a little off (less where the water is narrower)
+    corners = [
+        p[:4]
+        for g in obstacles
+        if g.simplify(SEA_CORNERS).geom_type == "Polygon"
+        for p in outward(g.simplify(SEA_CORNERS))
+        if p[4]
+    ]
+    for (x, y, nx, ny), h in zip(corners, across(corners), strict=True):
+        found.append((x + nx * min(SEA_OFF, h / 2), y + ny * min(SEA_OFF, h / 2), False))
+    # The channels narrower than 2 SEA_OFF (a strait, the Bosporus): a node in their middle
+    shores = [p[:4] for g in obstacles for p in outward(g)]
+    for (x, y, nx, ny), h in zip(shores, across(shores), strict=True):
+        if h < 2 * SEA_OFF:
+            found.append((x + nx * h / 2, y + ny * h / 2, True))
+    kept = ~shapely.contains(wrapped, shapely.points([(x, y) for x, y, _ in found]))
+    found = [f for f, k in zip(found, kept, strict=True) if k]
+    # The open sea, a degree from any coast at least
+    grid = []
+    for y in range(-76, 84, SEA_GRID):
+        step = SEA_GRID / max(math.cos(math.radians(y)), 0.25)
+        grid += [(-180 + i * step, y) for i in range(math.ceil(360 / step))]
+    open_sea = shapely.distance(wrapped, shapely.points(grid)) > 1
+    found += [(x, y, False) for (x, y), k in zip(grid, open_sea, strict=True) if k]
+    # One node a cell, smaller in the channels; where ways.json keeps it (to its hundredth of a
+    # degree: what is seen from there is seen from where it is drawn), off the land still
+    nodes, seen = [], set()
+    for x, y, narrow in found:
+        cell = 0.08 if narrow else 0.3
+        key = (narrow, round(_east(x) / cell), round(y / cell))
+        if key not in seen:
+            seen.add(key)
+            nodes.append((round(_east(x) * SCALE) / SCALE, round(y * SCALE) / SCALE))
+    nodes = [n for n, inland in zip(nodes, shapely.contains(wrapped, shapely.points(nodes)), strict=True) if not inland]
+
+    def area_of_rings(rings: list):
+        return shapely.union_all(
+            [shapely.make_valid(shapely.Polygon([(x / SCALE, y / SCALE) for x, y in r])) for r in rings if len(r) >= 3]
+        )
+
+    # Each sea, strait or gulf with a node in it (a strait narrower than the channels' cells,
+    # the Bosporus): its name's place
+    water_areas = [None if w["lake"] else area_of_rings(w["r"]) for w in marine]
+    for w, area in zip(marine, water_areas, strict=True):
+        if area is not None and w["at"] and not shapely.contains(area, shapely.points(nodes)).any():
+            x, y = w["at"][0][0] / SCALE, w["at"][0][1] / SCALE
+            if not wrapped.contains(shapely.Point(x, y)):
+                nodes.append((round(_east(x) * SCALE) / SCALE, y))
+
+    def toward(sources: list, limit: float = 60) -> list:
+        """For each point, the nodes it sees, the nearest in each direction: (node, distance)."""
+        nodes_xy = np.array(nodes)
+        segments, meta = [], []
+        for i, (x, y) in enumerate(sources):
+            dx = _east(nodes_xy[:, 0] - x)
+            ex, ey = dx * np.cos(np.radians((nodes_xy[:, 1] + y) / 2)), nodes_xy[:, 1] - y
+            d = np.hypot(ex, ey)
+            cone = ((np.arctan2(ey, ex) + math.pi) / (2 * math.pi) * SEA_CONES).astype(int) % SEA_CONES
+            counts = [0] * SEA_CONES
+            for j in np.argsort(d)[:500]:
+                if d[j] > limit:
+                    break
+                if d[j] > 1e-9 and counts[cone[j]] < SEA_SEEN:
+                    counts[cone[j]] += 1
+                    segments.append([(x, y), (x + dx[j], nodes_xy[j, 1])])
+                    meta.append((i, int(j), int(cone[j]), float(d[j])))
+        best: dict = {}
+        for (i, j, c, d), b in zip(meta, blocked(segments), strict=True):
+            if not b and ((i, c) not in best or d < best[(i, c)][1]):
+                best[(i, c)] = (j, d)
+        out: list = [[] for _ in sources]
+        for (i, _), (j, d) in sorted(best.items()):
+            out[i].append((j, d))
+        return out
+
+    edges = {}
+    for i, seen_from in enumerate(toward(nodes)):
+        for j, d in seen_from:
+            edges[(min(i, j), max(i, j))] = d
+    # The nodes joined to the others only (an island's bay seeing nothing left out)
+    linked = sorted({i for pair in edges for i in pair})
+    number = {old: new for new, old in enumerate(linked)}
+    nodes = [nodes[i] for i in linked]
+    adjacent: list = [[] for _ in nodes]
+    for (i, j), d in sorted(edges.items()):
+        adjacent[number[i]] += [number[j], round(d * SCALE)]
+        adjacent[number[j]] += [number[i], round(d * SCALE)]
+    nodes_xy = np.array(nodes)
+    node_points = shapely.points(nodes)
+
+    def port(xy: tuple[float, float]) -> list | None:
+        """Where a place by the sea meets it (off its coast), then the nodes seen from there."""
+        point = shapely.Point(xy)
+        if wrapped.contains(point):
+            coast = shapely.ops.nearest_points(wrapped.boundary, point)[0]
+            far = coast.distance(point)
+            if far > SEA_PORT:
+                return None
+            ux, uy = (coast.x - point.x) / (far or 1), (coast.y - point.y) / (far or 1)
+            xy = (coast.x + ux * 0.02, coast.y + uy * 0.02)
+        return [round(xy[0] * SCALE), round(xy[1] * SCALE)]
+
+    def ports(places: list) -> list:
+        at = [port(xy) for xy in places]
+        starts = [(x / SCALE, y / SCALE) for x, y in (a for a in at if a)]
+        seen_from = iter(toward(starts, limit=10))
+        out = []
+        for a in at:
+            if a is None:
+                out.append(None)
+                continue
+            seen = [j for j, _ in next(seen_from)]
+            if not seen:  # in a river's mouth narrower than the nodes see: the nearest nodes
+                x, y = a[0] / SCALE, a[1] / SCALE
+                d = np.hypot(_east(nodes_xy[:, 0] - x) * math.cos(math.radians(y)), nodes_xy[:, 1] - y)
+                seen = [int(j) for j in np.argsort(d)[:3] if d[j] <= SEA_PORT]
+            out.append([*a, *seen] if seen else None)
+        return out
+
+    def by(area) -> list[int]:
+        """The nodes within SEA_PORT of an area (a country, an island)."""
+        near = shapely.dwithin(area, node_points, SEA_PORT)
+        return [int(i) for i in np.flatnonzero(near)]
+
+    # Countries: where a route or a flow from them is drawn from (their largest part's
+    # inmost point), the nodes off their coast
+    countries = {}
+    for code, c in sorted(world["countries"].items()):
+        shapes = [shapely.make_valid(shapely.Polygon([(x / SCALE, y / SCALE) for x, y in r])) for r in c["r"]]
+        largest = max((g for s in shapes for g in parts(s) if g.geom_type == "Polygon"), key=lambda g: g.area)
+        inmost = polylabel(largest, tolerance=0.05)
+        countries[code] = {"at": [round(inmost.x * SCALE), round(inmost.y * SCALE)], "s": by(shapely.union_all(shapes))}
+    cities = ports([(c["x"] / SCALE, c["y"] / SCALE) for c in world["cities"]])
+
+    waters_nodes = []
+    for w, area in zip(marine, water_areas, strict=True):
+        inside = [] if area is None else [int(i) for i in np.flatnonzero(shapely.contains(area, node_points))]
+        # A strait narrower than the coasts drawn (Gibraltar's at this scale): the nearest node
+        # within SEA_PORT (none for a sea within the land, the Caspian: no way by sea goes there)
+        if area is not None and not inside and w["at"]:
+            x, y = w["at"][0][0] / SCALE, w["at"][0][1] / SCALE
+            d = np.hypot(_east(nodes_xy[:, 0] - x) * math.cos(math.radians(y)), nodes_xy[:, 1] - y)
+            inside = [int(np.argmin(d))] if d.min() <= SEA_PORT else []
+        waters_nodes.append(inside)
+    reliefs_nodes = [by(area_of_rings(r["r"])) if r["c"] == "land" else [] for r in relief]
+    capes = []
+    cape_features = [f for f in points["features"] if f["properties"]["featurecla"] == "cape"]
+    for f, at in zip(cape_features, ports([tuple(f["geometry"]["coordinates"]) for f in cape_features]), strict=True):
+        p = f["properties"]
+        if at:
+            all_names = names(p, p["name"], p.get("name_alt") or "")
+            x, y = f["geometry"]["coordinates"]
+            capes.append(named(all_names, {"x": round(x * SCALE), "y": round(y * SCALE), "s": at}))
+    by_name = {(c["c"], k): i for i, c in enumerate(world["cities"]) for k in c["k"]}
+    canals = []
+    for canal_names, ends in CANALS:
+        at = [world["cities"][by_name[end]] for end in ends]
+        canals.append(
+            named(
+                list(canal_names),
+                {"ends": [cities[by_name[end]] for end in ends], "xy": [[c["x"], c["y"]] for c in at]},
+            )
+        )
+    return {
+        "p": [[round(x * SCALE), round(y * SCALE)] for x, y in nodes],
+        "a": adjacent,
+        "cities": cities,
+        "countries": countries,
+        "waters": waters_nodes,
+        "reliefs": reliefs_nodes,
+        "capes": capes,
+        "canals": canals,
+    }
+
+
 TOML = f"""[package]
 name = "{NAME}"
 version = "{VERSION}"
@@ -724,8 +997,9 @@ description = "School maps: countries, cities, regions, rivers, reliefs, seas, f
 """
 NOTICE = """The map function (lib.typ) is Notosaurus's (AGPL-3.0-or-later). The data (the .json
 files) is made from Natural Earth (https://www.naturalearthdata.com/), public domain: 1:50m
-countries and lakes; 1:10m populated places, rivers, geographic regions, marine areas and
-first-level divisions; simplified by tools/atlas.py. The countries' usual names in each
+countries and lakes; 1:10m populated places, rivers, geographic regions and points (capes),
+marine areas and first-level divisions; simplified by tools/atlas.py, the sea ways (ways.json)
+computed from them. The countries' usual names in each
 language from Unicode CLDR 46 (https://cldr.unicode.org/), under the Unicode License v3: its
 copyright and permission notice in LICENSE-CLDR, beside this file. The places of history from
 Wikidata (https://www.wikidata.org/, CC0).
@@ -733,9 +1007,9 @@ Wikidata (https://www.wikidata.org/, CC0).
 
 
 def build(folder: Path | None = None, refresh_history: bool = False) -> None:
-    files = (COUNTRIES, PLACES, RIVERS, RIVERS_EUROPE, RELIEFS, WATERS, LAKES, REGIONS)
+    files = (COUNTRIES, PLACES, RIVERS, RIVERS_EUROPE, RELIEFS, WATERS, LAKES, REGIONS, CAPES)
     with ThreadPoolExecutor() as pool:  # all at once
-        countries, places, main_rivers, europe, relief, marine, lakes, admin1 = pool.map(
+        countries, places, main_rivers, europe, relief, marine, lakes, admin1, capes = pool.map(
             lambda name: download(name, folder), files
         )
     world = atlas(countries, places, usual_names(folder), history(folder, refresh_history)) | {
@@ -745,6 +1019,7 @@ def build(folder: Path | None = None, refresh_history: bool = False) -> None:
     def text(data) -> str:
         return json.dumps(data, ensure_ascii=False, separators=(",", ":"))
 
+    all_reliefs, all_waters = reliefs(relief), waters(marine, lakes)
     contents = {
         "typst.toml": TOML,
         "lib.typ": LIB.read_text(encoding="utf-8"),
@@ -752,8 +1027,9 @@ def build(folder: Path | None = None, refresh_history: bool = False) -> None:
         "LICENSE-CLDR": download_text("cldr-LICENSE", folder, CLDR_LICENCE),
         "atlas.json": text(world),
         "rivers.json": text(rivers(main_rivers, europe)),
-        "reliefs.json": text(reliefs(relief)),
-        "waters.json": text(waters(marine, lakes)),
+        "reliefs.json": text(all_reliefs),
+        "waters.json": text(all_waters),
+        "ways.json": text(seaways(world, all_waters, all_reliefs, capes)),
     } | {f"regions/{code}.json": text(data) for code, data in sorted(regions(admin1).items())}
     for old in TARGET.glob(f"{NAME}-*.tar.gz"):
         old.unlink()
