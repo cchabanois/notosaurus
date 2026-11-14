@@ -425,7 +425,7 @@ CELL_NAMES = [
     ("Membrane plasmique", 340, 110),
     ("Mitochondrie", 120, 190),
     ("Réticulum endoplasmique rugueux", 260, 100),
-    ("Paroi", 345, 215),
+    ("Paroi", 322, 215),  # on the cell's outline
     ("Noyau", 210, 222),
     ("Vacuole", 300, 230),
     ("Plaste", 250, 240),
@@ -544,6 +544,28 @@ def test_a_point_beside_its_part_brought_onto_it():
     svg = figures.labelled(figures.clean(FUNNEL), [figures.Label(text="entonnoir", x=200, y=110)])
     (_, _, x2, y2), *_ = _placed(svg)[1]
     assert abs(x2 - 192) < 4 and abs(y2 - 105) < 6, (x2, y2)  # on the funnel's right edge
+    kept = figures.labelled(figures.clean(FUNNEL), [figures.Label(text="air", x=300, y=250)])
+    assert _placed(kept)[1][0][2:] == (300.0, 250.0)
+
+
+# an antibody's arm drawn rotated: the AI gives its points as if it were not (45 units off it)
+ARM = """<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 300"><rect width="400" height="300" fill="white"/>
+<g transform="rotate(35, 200, 200)">
+<rect x="194" y="60" width="12" height="140" fill="#4A90E2" stroke="black"/></g></svg>"""
+
+
+def test_a_point_off_a_rotated_part_brought_onto_it():
+    """« chaîne légère » named a point 25 to 47 units beside the antibody's arm, on the open
+    ground (the arm drawn rotated, the point given as if it were not): 3 drawings in 3, its line
+    ended in the void. A point on the open ground this near a line brought onto it; one far from
+    any (the air around a funnel) kept."""
+    from notosaurus_core import figures
+
+    svg = figures.labelled(figures.clean(ARM), [figures.Label(text="chaîne légère", x=300, y=150)])
+    (_, _, x2, y2), *_ = _placed(svg)[1]
+    image = figures._drawn_image(figures.clean(ARM))
+    k = image.width / 400
+    assert image.getpixel((round(x2 * k), round(y2 * k))) < 248, (x2, y2)  # on the arm
     kept = figures.labelled(figures.clean(FUNNEL), [figures.Label(text="air", x=300, y=250)])
     assert _placed(kept)[1][0][2:] == (300.0, 250.0)
 
