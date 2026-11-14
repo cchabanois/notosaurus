@@ -86,3 +86,53 @@ def test_a_colour_mix_with_more_labels_than_colours_refused():
     saying a label names a colour."""
     with pytest.raises(figures_typst.Unusable, match="one per colour"):
         figures_typst.compile_svg("sets", '#colour-mix(colours: ("red", "green"), labels: ([R], [G], [B]))')
+
+
+CLASSIFICATION = """(
+  (id: "ev", name: [Êtres vivants], members: ([Escargot],)),
+  (id: "v", name: [Vertébrés (squelette interne)], inside: "ev", members: ([Truite],)),
+  (id: "t", name: [Tétrapodes (4 membres)], inside: "v", members: ([Lézard],)),
+  (id: "m", name: [Mammifères (poils)], inside: "t", members: ([Chat],)),
+  (id: "o", name: [Oiseaux (plumes)], inside: "t", members: ([Pigeon],)),
+)"""
+
+
+def test_groups_side_by_side_in_a_group_named_whole():
+    """A classification with two groups in a third (the mammals and the birds in the tetrapods):
+    nested-sets has no two side by side, so the AI drew the boxes by eye: names cut by a box,
+    on one another, the snail on the vertebrates' edge (3 drawings in 3). Laid out by
+    nested-groups: every text inside its own box, clear of every smaller box and of the other
+    texts; each box inside its group's."""
+    check = f"""#context {{
+  let l = _groups-layout({CLASSIFICATION})
+  let box(id) = l.boxes.find(b => b.id == id).rect
+  let within(r, s) = r.at(0) >= s.at(0) and r.at(1) >= s.at(1) and r.at(2) <= s.at(2) and r.at(3) <= s.at(3)
+  let meets(r, s) = r.at(0) < s.at(2) and s.at(0) < r.at(2) and r.at(1) < s.at(3) and s.at(1) < r.at(3)
+  for b in l.boxes {{
+    if b.inside != none {{ assert(within(b.rect, box(b.inside)), message: "a box out of its group") }}
+  }}
+  for (i, t) in l.texts.enumerate() {{
+    assert(within(t.rect, box(t.id)), message: "a text out of its box: " + t.id)
+    for b in l.boxes {{
+      if b.inside == t.id {{ assert(not meets(t.rect, b.rect), message: "a text on a smaller box: " + t.id) }}
+    }}
+    for (j, u) in l.texts.enumerate() {{
+      assert(i == j or not meets(t.rect, u.rect), message: "two texts on one another")
+    }}
+  }}
+  // the mammals and the birds side by side, in the tetrapods
+  assert(box("m").at(2) <= box("o").at(0) and box("m").at(3) == box("o").at(3))
+  [checked]
+}}"""
+    figures_typst.compile_svg("sets", check)
+    assert figures_typst.compile_svg("sets", f"#nested-groups(..{CLASSIFICATION})").startswith("<svg")
+
+
+def test_groups_the_rule_writes_compile_and_wrong_ones_refused():
+    """The rule's own call compiles; a group inside one that isn't there, refused saying so."""
+    rule = (figures_typst.RULES / "sets.md").read_text(encoding="utf-8")
+    call = re.search(r"`(#nested-groups\(.*?\)\))`", rule)
+    assert call
+    assert figures_typst.compile_svg("sets", call[1]).startswith("<svg")
+    with pytest.raises(figures_typst.Unusable, match="another group's id"):
+        figures_typst.compile_svg("sets", '#nested-groups((id: "a", name: [A], inside: "b"))')
