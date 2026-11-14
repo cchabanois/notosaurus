@@ -101,3 +101,75 @@ def test_a_timelines_line_refused_saying_why(body, said):
     refused, saying what a line takes."""
     with pytest.raises(figures_typst.Unusable, match=said):
         figures_typst.compile_svg("timeline", body)
+
+
+def colour_box(png: bytes, colour: tuple[int, int, int]) -> tuple[int, int, int, int] | None:
+    """The box (left, top, right, bottom) of a PNG's pixels of that colour, None when none."""
+    import io
+
+    from PIL import Image
+
+    image = Image.open(io.BytesIO(png)).convert("RGB")
+    near = lambda p: sum(abs(a - b) for a, b in zip(p, colour, strict=True)) < 12  # noqa: E731
+    points = [(x, y) for y in range(image.height) for x in range(image.width) if near(image.getpixel((x, y)))]
+    if not points:
+        return None
+    return min(x for x, _ in points), min(y for _, y in points), max(x for x, _ in points), max(y for _, y in points)
+
+
+FIRST, SECOND = (0x9C, 0xC9, 0xE8), (0xF6, 0xC7, 0x6B)  # the first two periods' colours
+
+
+def test_a_timelines_overlapping_periods_each_on_its_own_lane():
+    """Periods drew one grey bar on the line, a period within another (a battle in its war, a
+    council during wars) hidden under it: each period now in its own colour, under the line,
+    one that overlaps another on a lane of its own, one that follows another beside it on the
+    same lane; its name on its bar."""
+    line = "#timeline(start: 1540, end: 1600, step: 10, periods: ({}))"
+    overlapping = figures_typst.compile_svg(
+        "timeline", line.format('(1545, 1563, "Concile de Trente"), (1562, 1598, "Guerres de Religion")')
+    )
+    png = figures.to_png(figures.clean(overlapping))
+    one, two = colour_box(png, FIRST), colour_box(png, SECOND)
+    assert one and two and one[3] < two[1]  # the second lane under the first
+    following = figures_typst.compile_svg(
+        "timeline", line.format('(1545, 1562, "Concile de Trente"), (1562, 1598, "Guerres de Religion")')
+    )
+    png = figures.to_png(figures.clean(following))
+    one, two = colour_box(png, FIRST), colour_box(png, SECOND)
+    assert one and two and abs(one[1] - two[1]) <= 1 and one[2] <= two[0] + 1  # one lane, side by side
+
+
+def test_a_timelines_numbers_on_the_steps_multiples():
+    """The numbers written on the line fall on the step's round multiples (600, 800…), not
+    on the start's (476, 676…)."""
+    svg = figures_typst.compile_svg("timeline", "#timeline(start: 3, end: 30, step: 10)")
+    assert svg.count("<use") == len("102030")
+
+
+def test_a_timelines_event_keeps_its_year():
+    """An event whose text doesn't say its year (the AI dropped it): the function writes it
+    after the text; a text that has it unchanged."""
+    line = "#timeline(start: 1780, end: 1800, step: 20, events: ((1789, {}),))"
+    bare = figures_typst.compile_svg("timeline", line.format('"Bastille"'))
+    assert bare.count("<use") == len("17801800" + "Bastille(1789)")
+    dated = figures_typst.compile_svg("timeline", line.format('"Bastille 1789"'))
+    assert dated.count("<use") == len("17801800" + "Bastille1789")
+
+
+def test_a_timelines_line_holds_every_date():
+    """An event after the line's end (the AI's end a year too short): the line goes on to
+    it, as if its end had been that date, never a dot past the arrow."""
+    events = 'events: (((1945, 8), "Hiroshima"),)'
+    short = figures_typst.compile_svg("timeline", f"#timeline(start: 1939, end: 1945, step: 1, {events})")
+    held = figures_typst.compile_svg("timeline", f"#timeline(start: 1939, end: 1945 + 7 / 12, step: 1, {events})")
+    assert short == held
+
+
+def test_a_timelines_numbers_never_cut_in_their_groups():
+    """A number written with its thousands apart ("vers -18 000"): never cut at its space,
+    "000" alone on the next line; drawn as with a narrow no-break space."""
+    line = '#timeline(start: -20000, end: 0, step: 5000, events: ((-18000, "Peintures de Lascaux vers -18{}000"),))'
+    assert figures_typst.compile_svg("timeline", line.format(" ")) == figures_typst.compile_svg(
+        "timeline", line.format("\\u{202F}")
+    )
