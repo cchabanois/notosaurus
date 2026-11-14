@@ -65,6 +65,8 @@ Each pull request's entries (the `## Changelog` of its description) are put unde
 
 ### Fixed
 
+- Diagrams of institutions and organisations (who elects, appoints or controls whom) are laid out automatically: boxes in layers, as few crossing arrows as possible, arrow words never on one another or on a box, readable on a phone.
+- A diagram too small to read on a card is drawn again more compactly; an arrow from a box to itself is no longer drawn.
 - 📅 **Timelines**: periods drawn under the line, each in its own colour, a period within another (a battle in its war) on a lane of its own instead of hidden; each period's name on its bar with its years; the years on the line on round numbers (600, 800…); an event's year always written.
 - 🔁 A lesson whose AI got stuck repeating a card (or its tags) keeps each card once, with a few tags.
 - Map names are no longer cut by the edge of the map.
