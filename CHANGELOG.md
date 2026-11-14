@@ -63,6 +63,7 @@ Each pull request's entries (the `## Changelog` of its description) are put unde
 
 ### Fixed
 
+- 🔁 A lesson whose AI got stuck repeating a card (or its tags) keeps each card once, with a few tags.
 - Map names are no longer cut by the edge of the map.
 - 🏷️ A scheme's label whose point fell just beside its part (an antibody's light chain) is joined to the part itself, not to the void.
 - 🎤 While dictating, the microphone button shows clearly that it is listening.
