@@ -5,6 +5,7 @@ import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry
 import androidx.test.rule.GrantPermissionRule
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Assume.assumeTrue
 import org.junit.Rule
@@ -44,9 +45,18 @@ class DictationTest {
         val failed = mutableListOf<String>()
         val done = java.util.concurrent.CountDownLatch(1)
         listener.start("fr-FR", {}, { failed += it })
-        Thread.sleep(4000) // longer than a pause: started again meanwhile
+        Thread.sleep(8000) // longer than a pause: started again meanwhile, unless one segmented session
         listener.stop { done.countDown() }
         assertTrue("stopped", done.await(6, java.util.concurrent.TimeUnit.SECONDS))
         assertTrue("$failed", failed.isEmpty() || failed == listOf("dictation.recognizer"))
+        // From Android 13, the service takes the segmented session (EXTRA_SEGMENTED_SESSION and
+        // its length) without refusing it: one start. (An emulator hears nothing, so its service
+        // never reaches a pause: the restarts it saves aren't seen here, only that it's accepted)
+        val mode = "starts ${listener.starts}, refused ${PhoneListener.segmentsRefused}"
+        android.util.Log.i("DictationTest", mode)
+        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.TIRAMISU) {
+            assertFalse(mode, PhoneListener.segmentsRefused)
+            assertEquals(mode, 1, listener.starts)
+        }
     }
 }
