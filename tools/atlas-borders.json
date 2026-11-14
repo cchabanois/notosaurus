@@ -1,4 +1,36 @@
 {
+ "Aden Protectorate": [
+  "Protectorat d'Aden",
+  "Aden Protectorate",
+  "Protectorado de Adén",
+  "Protettorato di Aden",
+  "Protetorado de Áden"
+ ],
+ "Alawa": [
+  "Alawa"
+ ],
+ "Algiers": [
+  "Alger",
+  "Algiers",
+  "Algier",
+  "Argel",
+  "Algeri"
+ ],
+ "Alyawarre": [
+  "Alyawarre"
+ ],
+ "Amangu": [
+  "Amangu"
+ ],
+ "Amarak": [
+  "Amarak"
+ ],
+ "American occupation zone in Germany": [
+  "zone d'occupation américaine en Allemagne",
+  "American occupation zone in Germany",
+  "Amerikanische Besatzungszone",
+  "Zona de ocupación estadounidense"
+ ],
  "Anglo-Egyptian Sudan": [
   "Soudan anglo-égyptien",
   "Anglo-Egyptian Sudan",
@@ -7,6 +39,53 @@
   "Sudan Anglo-Egiziano",
   "Sudão Anglo-Egípcio"
  ],
+ "Anhalt": [
+  "Saxe-Anhalt",
+  "Saxony-Anhalt",
+  "Sachsen-Anhalt",
+  "Sajonia-Anhalt",
+  "Sassonia-Anhalt",
+  "Saxônia-Anhalt",
+  "Saxónia-Anhalt"
+ ],
+ "Anmatyerre": [
+  "Anmatyerr",
+  "Anmatyerre"
+ ],
+ "Annam": [
+  "Annam"
+ ],
+ "Antakarinja": [
+  "Antakarinja"
+ ],
+ "Arabia": [
+  "Arabie",
+  "Arabian Peninsula",
+  "Arabische Halbinsel",
+  "Arabia",
+  "penisola araba",
+  "Península Arábica",
+  "Arábia"
+ ],
+ "Arakan": [
+  "Arakan",
+  "Arracão"
+ ],
+ "Arrernte": [
+  "Arrernte"
+ ],
+ "Asante": [
+  "Asante"
+ ],
+ "Assam": [
+  "Assam"
+ ],
+ "Ato trading confederacy": [
+  "Ato trading confederacy"
+ ],
+ "Australian aboriginal hunter-gatherers": [
+  "Australian aboriginal hunter-gatherers"
+ ],
  "Austria-Hungary": [
   "Autriche-Hongrie",
   "Austria–Hungary",
@@ -14,6 +93,31 @@
   "Imperio austrohúngaro",
   "Austria-Ungheria",
   "Áustria-Hungria"
+ ],
+ "Austrian Empire": [
+  "empire d'Autriche",
+  "Austrian Empire",
+  "Kaisertum Österreich",
+  "Imperio austríaco",
+  "Impero austriaco",
+  "Império Austríaco"
+ ],
+ "Badimaya": [
+  "Badimaya"
+ ],
+ "Ballardong": [
+  "Ballardong"
+ ],
+ "Banjima": [
+  "Panyjima"
+ ],
+ "Bardi": [
+  "Bardi"
+ ],
+ "Barotse": [
+  "Lozis",
+  "Lozi people",
+  "Lozi"
  ],
  "Basutoland": [
   "Basutoland",
@@ -35,6 +139,31 @@
   "Belgisch-Kongo",
   "Congo Belga"
  ],
+ "Bibbulman": [
+  "Bibbulmun"
+ ],
+ "Bilinara": [
+  "Bilingara"
+ ],
+ "Bokhara Khanate": [
+  "Bokhara Khanate"
+ ],
+ "Borgu States": [
+  "Borgu States"
+ ],
+ "Bosnia-Herzegovina": [
+  "Bosnie-Herzégovine",
+  "Bosnia and Herzegovina",
+  "Bosnien und Herzegowina",
+  "Bosnia y Herzegovina",
+  "Bosnia ed Erzegovina",
+  "Bósnia e Herzegovina"
+ ],
+ "Bremen": [
+  "Brême",
+  "Bremen",
+  "Brema"
+ ],
  "British Ceylon": [
   "Ceylan britannique",
   "British Ceylon",
@@ -42,6 +171,14 @@
   "Ceilán británica",
   "Ceylon britannico",
   "Ceilão britânico"
+ ],
+ "British East India Company": [
+  "Compagnie anglaise des Indes orientales",
+  "East India Company",
+  "Britische Ostindien-Kompanie",
+  "Compañía Británica de las Indias Orientales",
+  "Compagnia britannica delle Indie orientali",
+  "Companhia Britânica das Índias Orientais"
  ],
  "British Guiana": [
   "Guyane britannique",
@@ -74,6 +211,11 @@
   "Malesia britannica",
   "Malásia britânica"
  ],
+ "British Military Administration (Libya)": [
+  "Administration militaire britannique",
+  "British Military Administration",
+  "Administración militar británica de Libia"
+ ],
  "British Protectorate": [
   "protectorat britannique",
   "British protectorate",
@@ -98,11 +240,58 @@
   "Somalia britannica",
   "Somalilândia Britânica"
  ],
+ "British occupation zone in Germany": [
+  "zone d'occupation britannique en Allemagne",
+  "British occupation zone in Germany",
+  "Britische Besatzungszone",
+  "Zona de ocupación británica",
+  "Zona di occupazione britannica"
+ ],
+ "Brunswick": [
+  "Brunswick"
+ ],
+ "Buganda": [
+  "Buganda"
+ ],
+ "Bukurnidja": [
+  "bugurnidja",
+  "Bugurnidja"
+ ],
+ "Bunyoro": [
+  "Bunyoro"
+ ],
  "Burma": [
   "Birmanie",
   "Myanmar",
   "Birmania",
   "Birmânia"
+ ],
+ "Calabar": [
+  "Calabar",
+  "Calabar (Nigéria)"
+ ],
+ "Cape Colony": [
+  "Colonie du Cap",
+  "Cape Colony",
+  "Kapkolonie",
+  "Colonia del Cabo",
+  "Colonia del Capo",
+  "Colônia do Cabo",
+  "Colónia do Cabo"
+ ],
+ "Ceylon": [
+  "Sri Lanka"
+ ],
+ "Chinese Warlords": [
+  "Chinese Warlords"
+ ],
+ "Chinese warlords": [
+  "Chinese warlords"
+ ],
+ "Cochin China": [
+  "Cochinchine",
+  "Cochinchina",
+  "Cocincina"
  ],
  "Colony and Protectorate of Nigeria": [
   "colonie et protectorat du Nigeria",
@@ -128,6 +317,11 @@
  "Colony of the Bahamas": [
   "British Bahamas"
  ],
+ "Cotonou": [
+  "Cotonou",
+  "Cotonú",
+  "Cotonu"
+ ],
  "Crown Colony of Malta": [
   "Colonie de Malte et dépendances",
   "Crown Colony of Malta",
@@ -142,6 +336,15 @@
   "historia de Trinidad y Tobago",
   "história de Trinidad e Tobago"
  ],
+ "Cuxhaven": [
+  "Cuxhaven"
+ ],
+ "Cyrenaica": [
+  "Cyrénaïque",
+  "Cyrenaica",
+  "Kyrenaika",
+  "Cirenaica"
+ ],
  "Czechoslovak Socialist Republic": [
   "République socialiste tchécoslovaque",
   "Czechoslovak Socialist Republic",
@@ -149,6 +352,40 @@
   "República Socialista de Checoslovaquia",
   "Repubblica Socialista Cecoslovacca",
   "República Socialista da Tchecoslováquia"
+ ],
+ "Czechoslovakia": [
+  "Tchécoslovaquie",
+  "Czechoslovakia",
+  "Tschechoslowakei",
+  "Checoslovaquia",
+  "Cecoslovacchia",
+  "Tchecoslováquia",
+  "Checoslováquia"
+ ],
+ "Dahomey": [
+  "royaume du Dahomey",
+  "Dahomey",
+  "Königreich Dahomey",
+  "Reino de Dahomey",
+  "Regno di Dahomey",
+  "Daomé"
+ ],
+ "Dangbon": [
+  "Dalabon"
+ ],
+ "Delagoa Bay": [
+  "baie de Maputo",
+  "Maputo Bay",
+  "Maputo-Bucht",
+  "Bahía de Maputo",
+  "Baia di Maputo",
+  "Baía de Maputo"
+ ],
+ "Dendi Kingdom": [
+  "Royaume de Dendi",
+  "Dendi Kingdom",
+  "Dendi",
+  "regno di Dendi"
  ],
  "Dominion of Australia": [
   "Australie",
@@ -168,6 +405,55 @@
   "Dominion della Nuova Zelanda",
   "Domínio da Nova Zelândia"
  ],
+ "Dominion of Newfoundland": [
+  "dominion de Terre-Neuve",
+  "Dominion of Newfoundland",
+  "Dominion Neufundland",
+  "Dominio de Terranova",
+  "Dominion di Terranova",
+  "Domínio de Terra Nova"
+ ],
+ "Doolboong/Miriwoong": [
+  "Doolboong/Miriwoong"
+ ],
+ "Duchy of Holstein": [
+  "duché de Holstein",
+  "Duchy of Holstein",
+  "Herzogtum Holstein",
+  "Ducado de Holstein",
+  "Ducato di Holstein",
+  "Ducado da Holsácia"
+ ],
+ "Duchy of Lucca": [
+  "duché de Lucques",
+  "Duchy of Lucca",
+  "Herzogtum Lucca",
+  "Ducado de Lucca",
+  "Ducato di Lucca"
+ ],
+ "Duchy of Modena and Reggio": [
+  "duché de Modène et Reggio",
+  "Duchy of Modena and Reggio",
+  "Herzogtum Modena",
+  "Ducado de Módena",
+  "Ducato di Modena e Reggio",
+  "Ducado de Módena e Reggio"
+ ],
+ "Duchy of Parma and Piacenza": [
+  "duché de Parme et Plaisance",
+  "Duchy of Parma and Piacenza",
+  "Herzogtum Parma",
+  "Ducado de Parma",
+  "Ducato di Parma e Piacenza",
+  "Ducado de Parma e Piacenza"
+ ],
+ "Duchy of Schleswig": [
+  "duché de Schleswig",
+  "Duchy of Schleswig",
+  "Herzogtum Schleswig",
+  "Ducado de Schleswig",
+  "Schleswig"
+ ],
  "Dutch East Indies": [
   "Indes orientales néerlandaises",
   "Dutch East Indies",
@@ -175,6 +461,17 @@
   "Indias Orientales Neerlandesas",
   "Indie Orientali Olandesi",
   "Índias Orientais Holandesas"
+ ],
+ "Dutch Guiana": [
+  "Dutch Guiana"
+ ],
+ "Dutch Guinea": [
+  "Côte-de-l'Or néerlandaise",
+  "Dutch Gold Coast",
+  "Niederländische Besitzungen an der Goldküste",
+  "Costa de Oro neerlandesa",
+  "Costa d'Oro olandese",
+  "Costa do Ouro"
  ],
  "East Africa Protectorate": [
   "Afrique orientale britannique",
@@ -191,6 +488,17 @@
   "Alemania Oriental",
   "Repubblica Democratica Tedesca",
   "Alemanha Oriental"
+ ],
+ "Electoral Hesse": [
+  "Électorat de Hesse",
+  "Electorate of Hesse",
+  "Kurfürstentum Hessen",
+  "Electorado de Hesse",
+  "Elettorato d'Assia",
+  "Eleitorado de Hesse"
+ ],
+ "Emirate of Bin Shal'an": [
+  "Emirate of Bin Shal'an"
  ],
  "Emirate of Nejd and Hasa": [
   "troisième État saoudien",
@@ -215,6 +523,12 @@
   "Impero d'Etiopia",
   "Império Etíope"
  ],
+ "Fante": [
+  "Fante"
+ ],
+ "Far Eastern SSR": [
+  "Far Eastern SSR"
+ ],
  "Federation of Rhodesia and Nyasaland": [
   "Fédération de Rhodésie et du Nyassaland",
   "Federation of Rhodesia and Nyasaland",
@@ -222,6 +536,33 @@
   "Federación de Rodesia y Nyasalandia",
   "Federazione della Rhodesia e del Nyasaland",
   "Federação da Rodésia e Niassalândia"
+ ],
+ "First Czechoslovak Republic": [
+  "Première République tchécoslovaque",
+  "First Czechoslovak Republic",
+  "Erste Tschechoslowakische Republik",
+  "Primera República de Checoslovaquia",
+  "Prima Repubblica cecoslovacca",
+  "República da Tchecoslováquia"
+ ],
+ "Fivizzano": [
+  "Fivizzano"
+ ],
+ "Free City of Danzig": [
+  "Ville libre de Dantzig",
+  "Free City of Danzig",
+  "Freie Stadt Danzig",
+  "Ciudad libre de Dánzig",
+  "Libera Città di Danzica",
+  "Cidade Livre de Danzig"
+ ],
+ "Free City of Kraków": [
+  "Ville libre de Cracovie",
+  "Free City of Kraków",
+  "Republik Krakau",
+  "República de Cracovia",
+  "Repubblica di Cracovia",
+  "Cidade Livre de Cracóvia"
  ],
  "French Algeria": [
   "Algérie française",
@@ -231,6 +572,14 @@
   "Algeria francese",
   "Argélia francesa"
  ],
+ "French Cameroons": [
+  "Cameroun français",
+  "French Cameroons",
+  "Französisch-Kamerun",
+  "Camerún francés",
+  "Camerun francese",
+  "Camarões francês"
+ ],
  "French Equatorial Africa": [
   "Afrique-Équatoriale française",
   "French Equatorial Africa",
@@ -238,6 +587,12 @@
   "África Ecuatorial Francesa",
   "Africa Equatoriale Francese",
   "África Equatorial Francesa"
+ ],
+ "French Fezzan": [
+  "Territoire du Fezzan",
+  "Fezzan-Ghadames",
+  "Territorio militar de Fezzan-Ghadames",
+  "Fezã Francês"
  ],
  "French Guiana": [
   "Guyane",
@@ -247,6 +602,14 @@
   "Guyana francese",
   "Guiana Francesa"
  ],
+ "French Indo-China": [
+  "Indochine française",
+  "French Indochina",
+  "Französisch-Indochina",
+  "Indochina francesa",
+  "Indocina francese",
+  "Indochina Francesa"
+ ],
  "French Indochina": [
   "Indochine française",
   "French Indochina",
@@ -254,6 +617,14 @@
   "Indochina francesa",
   "Indocina francese",
   "Indochina Francesa"
+ ],
+ "French Senegal": [
+  "histoire du Sénégal",
+  "history of Senegal",
+  "Geschichte des Senegal",
+  "historia de Senegal",
+  "storia del Senegal",
+  "história do Senegal"
  ],
  "French Somaliland": [
   "Côte française des Somalis",
@@ -271,6 +642,12 @@
   "Africa Occidentale Francese",
   "África Ocidental Francesa"
  ],
+ "French occupation zone in Germany": [
+  "zone d'occupation française en Allemagne",
+  "French occupation zone in Germany",
+  "Französische Besatzungszone",
+  "Zona de Ocupación Francesa"
+ ],
  "French protectorate in Morocco": [
   "protectorat français au Maroc",
   "French protectorate in Morocco",
@@ -287,6 +664,33 @@
   "Protettorato francese in Tunisia",
   "Protetorado Francês da Tunísia"
  ],
+ "Fulani Empire": [
+  "Empire de Sokoto",
+  "Sokoto Caliphate",
+  "Kalifat von Sokoto",
+  "Califato de Sokoto",
+  "Impero Fulani",
+  "Califado de Sokoto"
+ ],
+ "Futa Jalon": [
+  "Fouta-Djalon",
+  "Fouta Djallon",
+  "Futa Yallon",
+  "Fouta Djalon",
+  "Futa Jalom"
+ ],
+ "Futa Toro": [
+  "Fouta-Toro",
+  "Futa Tooro",
+  "Fouta Toro",
+  "Futa Toro"
+ ],
+ "Gagudju": [
+  "Gaagudju"
+ ],
+ "Gamberre": [
+  "Gamberre"
+ ],
  "Gambia Colony and Protectorate": [
   "Colonie et protectorat de Gambie",
   "Gambia Colony and Protectorate",
@@ -294,6 +698,12 @@
   "Colonia y Protectorado de Gambia",
   "Colonia e protettorato del Gambia",
   "Colónia e Protectorado de Gambia"
+ ],
+ "Gambia, The": [
+  "Gambie",
+  "The Gambia",
+  "Gambia",
+  "Gâmbia"
  ],
  "German East Africa": [
   "Afrique orientale allemande",
@@ -327,6 +737,20 @@
   "Africa Tedesca del Sud-Ovest",
   "Sudoeste Africano Alemão"
  ],
+ "Gilbert and Ellice Islands": [
+  "Îles Gilbert et Ellice",
+  "Gilbert and Ellice Islands",
+  "Gilbert- und Elliceinseln",
+  "Islas Gilbert y Ellice",
+  "Isole Gilbert ed Ellice",
+  "Ilhas Gilbert e Ellice"
+ ],
+ "Goa": [
+  "Goa"
+ ],
+ "Gold Coast": [
+  "Gold Coast"
+ ],
  "Gold Coast (British colony)": [
   "Côte-de-l’Or",
   "Gold Coast Colony",
@@ -335,10 +759,130 @@
   "Costa d'Oro",
   "Costa do Ouro"
  ],
+ "Gooniyandi": [
+  "Gooniyandi"
+ ],
+ "Goreng": [
+  "Goreng"
+ ],
+ "Grand Duchy of Baden": [
+  "grand-duché de Bade",
+  "Grand Duchy of Baden",
+  "Großherzogtum Baden",
+  "Gran Ducado de Baden",
+  "Granducato di Baden",
+  "Grão-ducado de Baden"
+ ],
+ "Grand Duchy of Hesse": [
+  "grand-duché de Hesse",
+  "Grand Duchy of Hesse",
+  "Großherzogtum Hessen",
+  "Hesse-Darmstadt",
+  "Granducato d'Assia",
+  "Grão-Ducado de Hesse"
+ ],
+ "Grand Duchy of Tuscany": [
+  "grand-duché de Toscane",
+  "Grand Duchy of Tuscany",
+  "Großherzogtum Toskana",
+  "Gran Ducado de Toscana",
+  "Granducato di Toscana",
+  "Grão-Ducado da Toscana"
+ ],
+ "Griqualand West": [
+  "Griqualand West",
+  "Griqualandia Occidental",
+  "Griqualand Occidentale"
+ ],
  "Guadeloupe": [
   "Guadeloupe",
   "Guadalupe",
   "Guadalupa"
+ ],
+ "Guanches": [
+  "Guanches",
+  "Guanchen",
+  "aborígenes canarios",
+  "Guanci",
+  "antigos canários"
+ ],
+ "Gunbalang": [
+  "Gunbalang"
+ ],
+ "Gungurugoni": [
+  "Gungorogone"
+ ],
+ "Gunibidji": [
+  "Gunibidji"
+ ],
+ "Gunwinggu": [
+  "Gunwinggu"
+ ],
+ "Gurindji": [
+  "Gurindji"
+ ],
+ "Hail": [
+  "grêle",
+  "hail",
+  "Hagel",
+  "granizo",
+  "grandine"
+ ],
+ "Hamburg": [
+  "Hambourg",
+  "Hamburg",
+  "Hamburgo",
+  "Amburgo"
+ ],
+ "Harer (Egypt)": [
+  "Harer (Egypt)"
+ ],
+ "Hejaz": [
+  "Hedjaz",
+  "Hejaz",
+  "Hedschas",
+  "Hiyaz",
+  "Hegiaz"
+ ],
+ "Hohenzollern": [
+  "maison de Hohenzollern",
+  "House of Hohenzollern",
+  "Hohenzollern",
+  "casa de Hohenzollern",
+  "Casa de Hohenzollern"
+ ],
+ "Ibadan": [
+  "Ibadan",
+  "Ibadán",
+  "Ibadã"
+ ],
+ "Imbangala": [
+  "Mbangala",
+  "Imbangala",
+  "Imbangalas"
+ ],
+ "Imerina": [
+  "Royaume merina",
+  "Merina Kingdom",
+  "Königreich Madagaskar",
+  "Reino de Imerina",
+  "Regno del Madagascar",
+  "Reino de Madagascar"
+ ],
+ "Imperial Japan": [
+  "empire du Japon",
+  "Empire of Japan",
+  "Japanisches Kaiserreich",
+  "Imperio del Japón",
+  "Impero giapponese",
+  "Império do Japão"
+ ],
+ "Italian East Africa": [
+  "Afrique orientale italienne",
+  "Italian East Africa",
+  "Italienisch-Ostafrika",
+  "África Oriental Italiana",
+  "Africa Orientale Italiana"
  ],
  "Italian Eritrea": [
   "Érythrée italienne",
@@ -347,6 +891,14 @@
   "Eritrea italiana",
   "Colonia eritrea",
   "Eritreia Italiana"
+ ],
+ "Italian Islands of the Aegean": [
+  "Dodécanèse italien",
+  "Italian Aegean Islands",
+  "Italienische Ägäis-Inseln",
+  "Islas italianas del mar Egeo",
+  "Isole Italiane dell'Egeo",
+  "Ilhas Italianas do Egeu"
  ],
  "Italian Libya": [
   "Libye italienne",
@@ -363,6 +915,80 @@
   "Somalia italiana",
   "Somália Italiana"
  ],
+ "Iwaidja": [
+  "Iwaidja people"
+ ],
+ "Jabirrjabirr": [
+  "Djaberadjabera"
+ ],
+ "Jaburrara": [
+  "Jaburara"
+ ],
+ "Jaminjung": [
+  "Jamindjung"
+ ],
+ "Jaru": [
+  "Jaru"
+ ],
+ "Jawoyn": [
+  "Jawoyn people"
+ ],
+ "Jingili": [
+  "Jingili"
+ ],
+ "Jiwarli": [
+  "Dyiwali"
+ ],
+ "Jukun": [
+  "Jukun"
+ ],
+ "Jurruru": [
+  "Jurruru"
+ ],
+ "Kaarta": [
+  "Royaume bambara du Kaarta",
+  "Kaarta",
+  "Reino de Caarta"
+ ],
+ "Kadjerong": [
+  "Gadjerong"
+ ],
+ "Kalaako/Malpa": [
+  "Kalaako/Malpa"
+ ],
+ "Kalaamaya": [
+  "kalaamaya",
+  "Kalaamaya"
+ ],
+ "Kanem-Bornu": [
+  "Royaume du Kanem-Bornou",
+  "Kanem-Bornu Empire",
+  "Kanem-Bornu",
+  "Imperio Kanem-Bornu",
+  "Impero di Kanem-Bornu",
+  "Império de Kanem-Bornu"
+ ],
+ "Kaniyang": [
+  "Kaneang"
+ ],
+ "Karajarri": [
+  "Karajarri"
+ ],
+ "Karangpurru": [
+  "Karrangpurru"
+ ],
+ "Kariyarra": [
+  "ngarluma",
+  "Ngarluma"
+ ],
+ "Kaytej": [
+  "Kaytej"
+ ],
+ "Kazembe": [
+  "Royaume du Kazembe",
+  "Kazembe",
+  "Reino de Cazembe"
+ ],
  "Kenya Colony": [
   "colonie et protectorat du Kenya",
   "Kenya Colony",
@@ -371,6 +997,49 @@
   "Kenya britannico",
   "Quênia britânico"
  ],
+ "Kija": [
+  "Kiya",
+  "Kija"
+ ],
+ "Kingdom of Bavaria": [
+  "royaume de Bavière",
+  "Kingdom of Bavaria",
+  "Königreich Bayern",
+  "Reino de Baviera",
+  "Regno di Baviera",
+  "Reino da Baviera"
+ ],
+ "Kingdom of Brazil": [
+  "Kingdom of Brazil",
+  "Königreich Brasilien",
+  "Reino del Brasil",
+  "Regno del Brasile",
+  "Reino do Brasil"
+ ],
+ "Kingdom of Hanover": [
+  "royaume de Hanovre",
+  "Kingdom of Hanover",
+  "Königreich Hannover",
+  "Reino de Hanóver",
+  "Regno di Hannover",
+  "Reino de Hanôver"
+ ],
+ "Kingdom of Hawaii": [
+  "royaume d'Hawaï",
+  "Kingdom of Hawaiʻi",
+  "Königreich Hawaiʻi",
+  "Reino de Hawái",
+  "Regno delle Hawaii",
+  "Reino do Havaí"
+ ],
+ "Kingdom of Iraq": [
+  "royaume d'Irak",
+  "Kingdom of Iraq",
+  "Königreich Irak",
+  "Reino de Irak",
+  "Regno dell'Iraq",
+  "Reino do Iraque"
+ ],
  "Kingdom of Italy": [
   "royaume d'Italie",
   "Kingdom of Italy",
@@ -378,6 +1047,75 @@
   "Reino de Italia",
   "Regno d'Italia",
   "Reino da Itália"
+ ],
+ "Kingdom of Prussia": [
+  "royaume de Prusse",
+  "Kingdom of Prussia",
+  "Königreich Preußen",
+  "Reino de Prusia",
+  "Regno di Prussia",
+  "Reino da Prússia"
+ ],
+ "Kingdom of Sardinia": [
+  "royaume de Sardaigne",
+  "Kingdom of Sardinia",
+  "Königreich Sardinien",
+  "Reino de Cerdeña",
+  "Regno di Sardegna",
+  "Reino da Sardenha"
+ ],
+ "Kingdom of Saxony": [
+  "royaume de Saxe",
+  "Kingdom of Saxony",
+  "Königreich Sachsen",
+  "Reino de Sajonia",
+  "Regno di Sassonia",
+  "Reino da Saxônia"
+ ],
+ "Kingdom of Württemberg": [
+  "royaume du Wurtemberg",
+  "Kingdom of Württemberg",
+  "Königreich Württemberg",
+  "Reino de Wurtemberg",
+  "Regno del Württemberg",
+  "Reino de Württemberg"
+ ],
+ "Kingdom of Yugoslavia": [
+  "royaume de Yougoslavie",
+  "Kingdom of Yugoslavia",
+  "Königreich Jugoslawien",
+  "Reino de Yugoslavia",
+  "Regno di Jugoslavia",
+  "Reino da Iugoslávia"
+ ],
+ "Kingdom of the Two Sicilies": [
+  "royaume des Deux-Siciles",
+  "Kingdom of the Two Sicilies",
+  "Königreich beider Sizilien",
+  "Reino de las Dos Sicilias",
+  "Regno delle Due Sicilie",
+  "Reino das Duas Sicílias"
+ ],
+ "Kokatha": [
+  "Kokatha Mula",
+  "Kokatha"
+ ],
+ "Konbudj": [
+  "Konbudj"
+ ],
+ "Kong Empire": [
+  "Empire Kong",
+  "Kong Empire",
+  "Kong-Reich",
+  "Imperio Kong",
+  "Impero di Kong",
+  "Império de Congue"
+ ],
+ "Korea": [
+  "Corée",
+  "Korea",
+  "Corea",
+  "Coreia"
  ],
  "Korea, Democratic People's Republic of": [
   "Corée du Nord",
@@ -395,9 +1133,267 @@
   "Corea del Sud",
   "Coreia do Sul"
  ],
+ "Kukatja": [
+  "Kukatja"
+ ],
+ "Kundjey’mi": [
+  "Kundjey’mi"
+ ],
+ "Kungarakany": [
+  "Kungarakan people"
+ ],
+ "Kuril Islands": [
+  "îles Kouriles",
+  "Kuril Islands",
+  "Kurilen",
+  "Islas Kuriles",
+  "Isole Curili",
+  "Ilhas Curilas"
+ ],
+ "Kurrama": [
+  "Peuple Puutu Kunti Kurrama",
+  "Kurrama people",
+  "Kurrama"
+ ],
+ "Kuwarra": [
+  "Koara"
+ ],
+ "Kuwema": [
+  "Kuwema language"
+ ],
+ "Kwini": [
+  "Kwini"
+ ],
+ "Lagos": [
+  "Lagos"
+ ],
+ "Larrakia": [
+  "Larrakia"
+ ],
+ "Limilngan": [
+  "Puneitja"
+ ],
+ "Lippe-Detmold": [
+  "principauté de Lippe",
+  "Principality of Lippe",
+  "Fürstentum Lippe",
+  "Principado de Lippe",
+  "Principato di Lippe"
+ ],
+ "Lozi": [
+  "Lozi"
+ ],
+ "Luba": [
+  "Luba"
+ ],
+ "Lunda": [
+  "Lunda"
+ ],
+ "Luritja": [
+  "Luritja"
+ ],
+ "Lübeck": [
+  "Lübeck",
+  "Lubecca"
+ ],
+ "Malak malak": [
+  "Malak malak"
+ ],
+ "Malaya": [
+  "Malaya"
+ ],
+ "Malkana": [
+  "Malkana"
+ ],
+ "Manchu Empire": [
+  "empire mandchou",
+  "Manchu Empire"
+ ],
+ "Manchuria": [
+  "Mandchourie",
+  "Manchuria",
+  "Mandschurei",
+  "Manciuria",
+  "Manchúria"
+ ],
+ "Mandate for Syria and the Lebanon": [
+  "mandat français en Syrie et au Liban",
+  "French Mandate for Syria and the Lebanon",
+  "Völkerbundmandat für Syrien und Libanon",
+  "Mandato francés de Siria",
+  "Mandato francese della Siria",
+  "Mandato Francês da Síria"
+ ],
+ "Mandatory Iraq": [
+  "mandat britannique de Mésopotamie",
+  "Mandatory Iraq",
+  "Britisches Mandat Mesopotamien",
+  "Mandato británico de Mesopotamia",
+  "Mandato britannico della Mesopotamia",
+  "Mandato Britânico da Mesopotâmia"
+ ],
+ "Mandatory Palestine": [
+  "Palestine mandataire",
+  "Mandatory Palestine",
+  "Völkerbundsmandat für Palästina",
+  "Mandato británico de Palestina",
+  "Palestina mandataria",
+  "Mandato Britânico da Palestina"
+ ],
+ "Mandjindja": [
+  "Mandjindja"
+ ],
+ "Mangala": [
+  "Angarakan",
+  "Mangala",
+  "Maṅgala"
+ ],
+ "Mangarayi": [
+  "Mangarayi"
+ ],
+ "Maori": [
+  "Maori",
+  "Māori"
+ ],
+ "Maranunggu": [
+  "Marranunggu"
+ ],
+ "Maratha Confederacy": [
+  "Empire marathe",
+  "Maratha Empire",
+  "Maratha",
+  "Imperio maratha",
+  "Impero Maratha",
+  "Império Maratha"
+ ],
+ "Mardu": [
+  "Mardu"
+ ],
+ "Marramaninjsji": [
+  "Marramaninjsji"
+ ],
+ "Marringarr": [
+  "Maringar"
+ ],
+ "Marrithiyel": [
+  "Marrithiyel"
+ ],
  "Martinique": [
   "Martinique",
   "Martinica"
+ ],
+ "Martuthunira": [
+  "martuthunira",
+  "Martuthunira",
+  "lingua martuthunira"
+ ],
+ "Massa": [
+  "Massa"
+ ],
+ "Maung": [
+  "Maung"
+ ],
+ "Maya": [
+  "Maya"
+ ],
+ "Mbailundu": [
+  "Bailundo"
+ ],
+ "Mbukarla": [
+  "umbugarla",
+  "Umbugarla"
+ ],
+ "Mecklenburg-Schwerin": [
+  "Mecklembourg-Schwerin",
+  "Mecklenburg-Schwerin",
+  "Mecklemburgo-Schwerin",
+  "Meclemburgo-Schwerin"
+ ],
+ "Mecklenburg-Strelitz": [
+  "Mecklembourg-Strelitz",
+  "Mecklenburg-Strelitz",
+  "Mecklemburgo-Strelitz",
+  "Meclemburgo-Strelitz"
+ ],
+ "Merina Kingdom": [
+  "Royaume merina",
+  "Merina Kingdom",
+  "Königreich Madagaskar",
+  "Reino de Imerina",
+  "Regno del Madagascar",
+  "Reino de Madagascar"
+ ],
+ "Minang": [
+  "Minang"
+ ],
+ "Mirambo Unyanyembe Ukimbu": [
+  "Mirambo Unyanyembe Ukimbu"
+ ],
+ "Mirning": [
+  "Mirning people",
+  "Mirning"
+ ],
+ "Miwa": [
+  "Miwa"
+ ],
+ "Mossi States": [
+  "Mossis",
+  "Mossi people",
+  "Mossi",
+  "Povo mossi"
+ ],
+ "Mudburra": [
+  "Mudburra"
+ ],
+ "Murrinh-patha": [
+  "Murrinh-patha"
+ ],
+ "Muscat and Oman": [
+  "Mascate et Oman",
+  "Muscat and Oman",
+  "Mascat und Oman",
+  "Sultanato de Mascate y Omán",
+  "Sultanato di Mascate e Oman",
+  "Mascate e Omã"
+ ],
+ "Mysore (Indian princely state)": [
+  "Mysore (Indian princely state)"
+ ],
+ "Māori": [
+  "Maori",
+  "Māori"
+ ],
+ "Nakako": [
+  "Nakako"
+ ],
+ "Nana": [
+  "Nana"
+ ],
+ "Nassau": [
+  "Nassau"
+ ],
+ "Natal": [
+  "Natal"
+ ],
+ "Nazi Germany": [
+  "Troisième Reich",
+  "Nazi Germany",
+  "NS-Staat",
+  "Alemania nazi",
+  "Germania nazista",
+  "Alemanha Nazista",
+  "Alemanha Nazi"
+ ],
+ "Ndebele": [
+  "Ndébélé",
+  "Ndebele"
+ ],
+ "Nejd": [
+  "Nejd",
+  "Najd",
+  "Nadschd",
+  "Nechd",
+  "Néjede"
  ],
  "Netherlands Antilles": [
   "Antilles néerlandaises",
@@ -407,11 +1403,171 @@
   "Antille Olandesi",
   "Antilhas Neerlandesas"
  ],
+ "Netherlands Indies": [
+  "Indes orientales néerlandaises",
+  "Dutch East Indies",
+  "Niederländisch-Indien",
+  "Indias Orientales Neerlandesas",
+  "Indie Orientali Olandesi",
+  "Índias Orientais Holandesas"
+ ],
+ "New Hebrides": [
+  "condominium des Nouvelles-Hébrides",
+  "New Hebrides",
+  "Kondominium Neue Hebriden",
+  "Nuevas Hébridas",
+  "Nuove Ebridi",
+  "Novas Hébridas"
+ ],
+ "New South Wales": [
+  "Nouvelle-Galles du Sud",
+  "New South Wales",
+  "Nueva Gales del Sur",
+  "Nuovo Galles del Sud",
+  "Nova Gales do Sul"
+ ],
+ "New South Wales (UK)": [
+  "New South Wales (UK)"
+ ],
+ "Ngaanyatjarra": [
+  "Ngaanyatjarra"
+ ],
+ "Ngalakan": [
+  "Ngalakgan"
+ ],
+ "Ngalawangka": [
+  "Ngalawangka"
+ ],
+ "Ngalea": [
+  "Ngalia"
+ ],
+ "Ngaliwuru": [
+  "Ngaliwurru people"
+ ],
+ "Ngalkbun": [
+  "dalabon",
+  "Naboo"
+ ],
+ "Ngan’gikurunggurr": [
+  "Ngan’gikurunggurr"
+ ],
+ "Ngan’giwumirri": [
+  "Ngan’giwumirri"
+ ],
+ "Ngarinman": [
+  "Ngarinman"
+ ],
+ "Ngarinyin": [
+  "Ngarinjin"
+ ],
+ "Ngarla": [
+  "Ngarla"
+ ],
+ "Ngarluma": [
+  "Ngarluma"
+ ],
+ "Ngarti": [
+  "Ngarti"
+ ],
+ "Ngatatjara": [
+  "Ngaatjatjarra people"
+ ],
+ "Ngatjumay": [
+  "Ngatjumay"
+ ],
+ "Ngombur": [
+  "Ngombur"
+ ],
+ "Ngumbarl": [
+  "ngumbarl",
+  "Ngumbarl"
+ ],
+ "Nguni": [
+  "Nguni"
+ ],
+ "Ngwato": [
+  "Bamangwatos",
+  "Mangwato",
+  "Bamangwato"
+ ],
+ "Nhanta": [
+  "Nhanta"
+ ],
+ "Nhuwala": [
+  "Nhuwala"
+ ],
+ "Nimanburu": [
+  "Nimanburu"
+ ],
+ "Nkore": [
+  "Ankolé",
+  "Ankole",
+  "Königreich Ankole"
+ ],
+ "Northern Rhodesia": [
+  "Rhodésie du Nord",
+  "Northern Rhodesia",
+  "Nordrhodesien",
+  "Rodesia del Norte",
+  "Rhodesia Settentrionale",
+  "Rodésia do Norte"
+ ],
+ "Northern Territory (UK)": [
+  "Northern Territory (UK)"
+ ],
+ "Nungali": [
+  "Nungali"
+ ],
+ "Nyaki-nyaki": [
+  "Nyaki-nyaki"
+ ],
+ "Nyamal": [
+  "Nyamal"
+ ],
+ "Nyanganyatjara": [
+  "Nyanganyatjara"
+ ],
+ "Nyangumarda": [
+  "Nyangumarta"
+ ],
  "Nyasaland": [
   "Nyassaland",
   "Nyasaland",
   "Nyasalandia",
   "Niassalândia"
+ ],
+ "Nyikina": [
+  "Nyigina"
+ ],
+ "Nyul Nyul": [
+  "Nyulnyul"
+ ],
+ "Occupation of Japan": [
+  "occupation du Japon",
+  "Occupation of Japan",
+  "Besatzungszeit in Japan",
+  "Ocupación de Japón",
+  "Occupazione del Giappone",
+  "Ocupação do Japão"
+ ],
+ "Oldenburg": [
+  "Oldenburg",
+  "Oldemburgo"
+ ],
+ "Oman (British Raj)": [
+  "Oman (British Raj)"
+ ],
+ "Opobo": [
+  "Opobo",
+  "Opobo Town"
+ ],
+ "Orange Free State": [
+  "État libre d'Orange",
+  "Orange Free State",
+  "Oranje-Freistaat",
+  "Estado Libre de Orange",
+  "Stato Libero dell'Orange",
+  "Estado Livre de Orange"
  ],
  "Ottoman Empire": [
   "Empire ottoman",
@@ -421,11 +1577,86 @@
   "Impero ottomano",
   "Império Otomano"
  ],
+ "Oudh": [
+  "État d'Oudh",
+  "Oudh State",
+  "Estado de Oudh",
+  "Stato di Oudh",
+  "Estado de Oude"
+ ],
+ "Ovimbundu": [
+  "Ovimbundu",
+  "Ovimbundu people",
+  "Ovimbundos"
+ ],
+ "Oyo": [
+  "Oyo",
+  "OYO"
+ ],
+ "Palatinate": [
+  "Palatinat",
+  "Palatinate",
+  "Palatinado",
+  "Palatinato"
+ ],
+ "Palyku": [
+  "Bailgu"
+ ],
+ "Pampas cultures": [
+  "Pampas cultures"
+ ],
+ "Papal States": [
+  "États pontificaux",
+  "Papal States",
+  "Kirchenstaat",
+  "Estados Pontificios",
+  "Stato Pontificio",
+  "Estados Papais"
+ ],
+ "Papuans": [
+  "Papuans"
+ ],
+ "Patagonian shellfish and marine mammal hunters": [
+  "Patagonian shellfish and marine mammal hunters"
+ ],
+ "Payungu": [
+  "Baiyungu"
+ ],
+ "Persia": [
+  "Iran",
+  "Irán",
+  "Irã",
+  "Irão"
+ ],
  "Philippine Islands": [
   "Philippines",
   "Philippinen",
   "Filipinas",
   "Filippine"
+ ],
+ "Pinikura": [
+  "Binigura"
+ ],
+ "Pinjarup": [
+  "Pindjarup"
+ ],
+ "Pintupi": [
+  "Pintupi"
+ ],
+ "Pitjantjatjara": [
+  "Pitjantjatjara",
+  "Pitjantjatjara people"
+ ],
+ "Polynesians": [
+  "Polynésiens",
+  "Polynesians",
+  "Polynesier",
+  "pueblos polinésicos",
+  "popoli della Polinesia",
+  "Polinésios"
+ ],
+ "Pontremoli": [
+  "Pontremoli"
  ],
  "Portuguese Angola": [
   "Afrique occidentale portugaise",
@@ -434,6 +1665,14 @@
   "África Occidental Portuguesa",
   "Africa Occidentale Portoghese",
   "Província Ultramarina de Angola"
+ ],
+ "Portuguese East Africa": [
+  "Mozambique portugais",
+  "Portuguese Mozambique",
+  "Portugiesisch-Ostafrika",
+  "África Oriental Portuguesa",
+  "Africa Orientale Portoghese",
+  "Província Ultramarina de Moçambique"
  ],
  "Portuguese Guinea": [
   "Guinée portugaise",
@@ -451,6 +1690,13 @@
   "Africa Orientale Portoghese",
   "Província Ultramarina de Moçambique"
  ],
+ "Punuba": [
+  "Bunuba people"
+ ],
+ "Purduna": [
+  "burduna",
+  "Burduna"
+ ],
  "Qajar Iran": [
   "Perse qadjare",
   "Qajar Iran",
@@ -460,6 +1706,14 @@
   "Império Cajar",
   "Irã Cajar"
  ],
+ "Queensland (UK)": [
+  "Queensland (UK)"
+ ],
+ "Rabih az-Zubayr": [
+  "Rabah",
+  "Rabih az-Zubayr",
+  "Rabih al-Zubayr"
+ ],
  "Rapa Nui": [
   "île de Pâques",
   "Easter Island",
@@ -468,12 +1722,22 @@
   "isola di Pasqua",
   "Ilha de Páscoa"
  ],
+ "Rattanakosin Kingdom": [
+  "royaume de Rattanakosin",
+  "Rattanakosin Kingdom",
+  "Königreich Rattanakosin",
+  "Reino de Rattanakosin",
+  "Regno di Rattanakosin"
+ ],
  "Rattanakosin Kingdom (1782–1932)": [
   "royaume de Rattanakosin",
   "Rattanakosin Kingdom",
   "Königreich Rattanakosin",
   "Reino de Rattanakosin",
   "Regno di Rattanakosin"
+ ],
+ "Rembarnga": [
+  "Rembarnga"
  ],
  "Republic of China (1912–1949)": [
   "république de Chine",
@@ -504,12 +1768,22 @@
   "Repubblica del Congo (Léopoldville)",
   "República do Congo (Léopoldville)"
  ],
+ "Rhodesia": [
+  "Rhodésie",
+  "Rhodesia",
+  "Rhodesien",
+  "Rodesia",
+  "Rodésia"
+ ],
  "Rhodesia (region)": [
   "Rhodésie",
   "Rhodesia",
   "Rhodesien",
   "Rodesia",
   "Rodésia"
+ ],
+ "Rio De Oro": [
+  "Rio De Oro"
  ],
  "Ruanda-Urundi": [
   "Ruanda-Urundi"
@@ -526,11 +1800,51 @@
   "Río de Oro",
   "Rio do Ouro"
  ],
+ "Saar Protectorate": [
+  "Sarre",
+  "Saar Protectorate",
+  "Saarprotektorat",
+  "Protectorado del Sarre",
+  "Protettorato della Saar",
+  "Protectorado de Sarre"
+ ],
+ "Saipan": [
+  "Saïpan",
+  "Saipan",
+  "Saipán",
+  "Saipã"
+ ],
+ "Schaumburg-Lippe": [
+  "principauté de Schaumbourg-Lippe",
+  "Schaumburg-Lippe"
+ ],
+ "Second Polish Republic": [
+  "Deuxième République de Pologne",
+  "Second Polish Republic",
+  "Zweite Polnische Republik",
+  "Segunda República polaca",
+  "Seconda Repubblica di Polonia",
+  "Segunda República Polonesa"
+ ],
  "Sheikhdom of Kuwait": [
   "Émirat de Koweït",
   "Sheikhdom of Kuwait",
   "Jecato de Kuwait",
   "Xerifado do Kuwait"
+ ],
+ "Shona": [
+  "Shona"
+ ],
+ "Shuar": [
+  "Shuars",
+  "Shuar",
+  "Shuaras"
+ ],
+ "Siam": [
+  "Thaïlande",
+  "Thailand",
+  "Tailandia",
+  "Tailândia"
  ],
  "Sierra Leone Colony and Protectorate": [
   "colonie et protectorat de la Sierra Leone",
@@ -539,6 +1853,9 @@
   "Colonia y Protectorado de Sierra Leona",
   "Colonia e protettorato della Sierra Leone",
   "Colônia e Protetorado de Serra Leoa"
+ ],
+ "Sikkim (Indian princely state)": [
+  "Sikkim (Indian princely state)"
  ],
  "Socialist Federal Republic of Yugoslavia": [
   "république fédérative socialiste de Yougoslavie",
@@ -549,6 +1866,20 @@
   "República Socialista Federativa da Iugoslávia",
   "República Socialista Federativa da Jugoslávia"
  ],
+ "Sokoto Caliphate": [
+  "Empire de Sokoto",
+  "Sokoto Caliphate",
+  "Kalifat von Sokoto",
+  "Califato de Sokoto",
+  "Impero Fulani",
+  "Califado de Sokoto"
+ ],
+ "Sotho": [
+  "Sotho"
+ ],
+ "South Australia (UK)": [
+  "South Australia (UK)"
+ ],
  "South West Africa": [
   "Sud-Ouest africain",
   "South-West Africa",
@@ -557,6 +1888,24 @@
   "Africa del Sud-Ovest",
   "Sudoeste Africano"
  ],
+ "Southern Cameroon": [
+  "Southern Cameroon"
+ ],
+ "Southern Rhodesia": [
+  "Rhodésie du Sud",
+  "Southern Rhodesia",
+  "Südrhodesien",
+  "Rodesia del Sur",
+  "Rhodesia Meridionale",
+  "Rodésia do Sul"
+ ],
+ "Soviet Civil Administration": [
+  "Administration soviétique de la Corée",
+  "Soviet Civil Administration",
+  "Administración civil soviética",
+  "Amministrazione civile sovietica",
+  "Administração Civil Soviética"
+ ],
  "Soviet Union": [
   "Union soviétique",
   "Soviet Union",
@@ -564,6 +1913,14 @@
   "Unión Soviética",
   "Unione Sovietica",
   "União Soviética"
+ ],
+ "Soviet occupation zone in Germany": [
+  "zone d'occupation soviétique en Allemagne",
+  "Soviet occupation zone of Germany",
+  "Sowjetische Besatzungszone",
+  "Zona de ocupación soviética",
+  "Zona di occupazione sovietica",
+  "Zona de ocupação soviética na Alemanha"
  ],
  "Spanish Guinea": [
   "Guinée espagnole",
@@ -590,6 +1947,13 @@
   "Marocco spagnolo",
   "Marrocos Espanhol"
  ],
+ "Sultanate of Damagaram": [
+  "Sultanat du Damagaram",
+  "Sultanate of Damagaram",
+  "Sultanat Zinder",
+  "Sultanato de Damagaram",
+  "Sultanato di Damagaram"
+ ],
  "Sultanate of Egypt": [
   "sultanat d'Égypte",
   "Sultanate of Egypt",
@@ -599,24 +1963,146 @@
   "Sultanato do Egito",
   "Sultanato do Egipto"
  ],
+ "Sultanate of Utetera": [
+  "Sultanat d'Utetera",
+  "Tippu Tip's state",
+  "Estado de Tippu Tip"
+ ],
+ "Sultanate of Zanzibar": [
+  "sultanat de Zanzibar",
+  "Sultanate of Zanzibar",
+  "Sultanat Sansibar",
+  "Sultanato de Zanzíbar",
+  "Sultanato di Zanzibar",
+  "Sultanato de Zanzibar"
+ ],
  "Surinam (Dutch colony)": [
   "Suriname",
   "Surinam",
   "Colonia de Surinam"
  ],
+ "Sweden–Norway": [
+  "Suède-Norvège",
+  "Union between Sweden and Norway",
+  "Union zwischen Schweden und Norwegen",
+  "Unión entre Suecia y Noruega",
+  "Svezia-Norvegia",
+  "Reinos Unidos da Suécia e Noruega",
+  "Reino da Suécia e Noruega"
+ ],
  "Tanganyika": [
   "Tanganyika",
   "Tanganica"
+ ],
+ "Tanzania, United Republic of": [
+  "Tanzanie",
+  "Tanzania",
+  "Tansania",
+  "Tanzânia"
+ ],
+ "Teke": [
+  "Teke"
+ ],
+ "Thalanyji": [
+  "Thalandji"
+ ],
+ "Tharrgari": [
+  "Tharrkari"
+ ],
+ "Thiin": [
+  "Tenma people"
+ ],
+ "Thuringia": [
+  "Thuringe",
+  "Thuringia",
+  "Thüringen",
+  "Turingia",
+  "Turíngia"
  ],
  "Tibet": [
   "Tibet",
   "Tíbet",
   "Tibete"
  ],
+ "Tjalkanti": [
+  "Tjalkanti"
+ ],
+ "Tjerratj": [
+  "Kuwema language"
+ ],
+ "Tjupany": [
+  "tjupany",
+  "Tjupany"
+ ],
  "Togoland": [
   "Togoland",
   "Togo",
   "Togolândia"
+ ],
+ "Tonkin": [
+  "Tonkin",
+  "Tonkín",
+  "Tonchino"
+ ],
+ "Transvaal": [
+  "Transvaal"
+ ],
+ "Travancore": [
+  "Travancore",
+  "Kingdom of Thiruvithamkoor"
+ ],
+ "Trinidad": [
+  "Trinité",
+  "Trinidad",
+  "Isla Trinidad",
+  "Trindade"
+ ],
+ "Tripolitania": [
+  "Tripolitaine",
+  "Tripolitania",
+  "Tripolitanien",
+  "Tripolitânia"
+ ],
+ "Trucial Oman": [
+  "États de la Trêve",
+  "Trucial States",
+  "Vertragsoman",
+  "Estados de la Tregua",
+  "Stati della Tregua",
+  "Estados da Trégua"
+ ],
+ "Tukular Caliphate": [
+  "Tukular Caliphate"
+ ],
+ "Tunis": [
+  "Tunis",
+  "Túnez",
+  "Tunisi",
+  "Túnis",
+  "Tunes"
+ ],
+ "Turan": [
+  "Touran",
+  "Turan",
+  "Turán",
+  "Tūrān",
+  "Turã"
+ ],
+ "Turkey": [
+  "Turquie",
+  "Turkey",
+  "Türkei",
+  "Turquía",
+  "Turchia",
+  "Turquia"
+ ],
+ "Tuʻi Tonga Empire": [
+  "Empire Tu’i Tonga",
+  "Tuʻi Tonga Empire",
+  "Tongaisches Imperium",
+  "Imperio tui tonga",
+  "Impero Tu'i Tonga",
+  "Império Tu'i Tonga"
  ],
  "Uganda Protectorate": [
   "Protectorat de l'Ouganda",
@@ -626,6 +2112,24 @@
   "Protettorato dell'Uganda",
   "Protetorado do Uganda"
  ],
+ "Umida": [
+  "Umiida"
+ ],
+ "Unggarangi": [
+  "Unggarranggu"
+ ],
+ "Unggumi": [
+  "Unggumi"
+ ],
+ "Union between Sweden and Norway": [
+  "Suède-Norvège",
+  "Union between Sweden and Norway",
+  "Union zwischen Schweden und Norwegen",
+  "Unión entre Suecia y Noruega",
+  "Svezia-Norvegia",
+  "Reinos Unidos da Suécia e Noruega",
+  "Reino da Suécia e Noruega"
+ ],
  "Union of South Africa": [
   "union d'Afrique du Sud",
   "Union of South Africa",
@@ -633,6 +2137,13 @@
   "Unión Sudafricana",
   "Unione Sudafricana",
   "União Sul-Africana"
+ ],
+ "United Kingdom": [
+  "Royaume-Uni",
+  "United Kingdom",
+  "Vereinigtes Königreich",
+  "Reino Unido",
+  "Regno Unito"
  ],
  "United Kingdom of Great Britain and Ireland": [
   "Royaume-Uni de Grande-Bretagne et d'Irlande",
@@ -642,12 +2153,145 @@
   "Regno Unito di Gran Bretagna e Irlanda",
   "Reino Unido da Grã-Bretanha e Irlanda"
  ],
+ "United Kingdom of the Netherlands": [
+  "royaume uni des Pays-Bas",
+  "United Kingdom of the Netherlands",
+  "Königreich der Vereinigten Niederlande",
+  "Reino Unido de los Países Bajos",
+  "Regno Unito dei Paesi Bassi",
+  "Reino Unido dos Países Baixos"
+ ],
+ "United Provinces of the Río de la Plata": [
+  "Provinces-Unies du Río de la Plata",
+  "United Provinces of the Río de la Plata",
+  "Vereinigte Provinzen des Río de la Plata",
+  "Provincias Unidas del Río de la Plata",
+  "Province Unite del Río de la Plata",
+  "Províncias Unidas do Rio da Prata"
+ ],
+ "United States Army Military Government in Korea": [
+  "gouvernement militaire de l'armée des États-Unis en Corée",
+  "United States Army Military Government in Korea",
+  "Gobierno militar del Ejército de los Estados Unidos en Corea",
+  "Governo militare degli Stati Uniti in Corea",
+  "Governo militar do Exército dos Estados Unidos na Coreia"
+ ],
+ "Viceroyalty of Brazil": [
+  "vice-royauté du Brésil",
+  "Viceroyalty of Brazil",
+  "Liste der Vizekönige von Brasilien",
+  "Virreinato del Brasil",
+  "Vice-reino do Brasil"
+ ],
+ "Viceroyalty of New Granada": [
+  "vice-royauté de Nouvelle-Grenade",
+  "Viceroyalty of New Granada",
+  "Vizekönigreich Neugranada",
+  "Virreinato de Nueva Granada",
+  "Vicereame della Nuova Granada",
+  "Vice-Reino de Nova Granada"
+ ],
+ "Viceroyalty of New Spain": [
+  "Nouvelle-Espagne",
+  "New Spain",
+  "Vizekönigreich Neuspanien",
+  "Virreinato de Nueva España",
+  "Vicereame della Nuova Spagna",
+  "Vice-Reino da Nova Espanha"
+ ],
+ "Viceroyalty of Peru": [
+  "vice-royauté du Pérou",
+  "Viceroyalty of Peru",
+  "Vizekönigreich Peru",
+  "Virreinato del Perú",
+  "Vicereame del Perù",
+  "Vice-Reino do Peru"
+ ],
+ "Victoria (UK)": [
+  "Victoria (UK)"
+ ],
+ "Wadai Empire": [
+  "Royaume du Ouaddaï",
+  "Ouaddai Empire",
+  "Reich Wadai",
+  "Imperio uadai",
+  "Impero Ouaddai",
+  "Império de Uadai"
+ ],
+ "Wagiman": [
+  "Wagoman"
+ ],
+ "Wajuk": [
+  "nyungar",
+  "Noongar",
+  "noongar"
+ ],
+ "Walbis Bay": [
+  "Walbis Bay"
+ ],
+ "Waldeck": [
+  "Waldeck"
+ ],
  "Wallis and Futuna Islands": [
   "Wallis-et-Futuna",
   "Wallis and Futuna",
   "Wallis und Futuna",
   "Wallis y Futuna",
   "Wallis e Futuna"
+ ],
+ "Walmatjarri": [
+  "Walmadjari"
+ ],
+ "Wangkathaa": [
+  "Wangkatha",
+  "Wangai"
+ ],
+ "Wardaman": [
+  "Wardaman"
+ ],
+ "Wardandi": [
+  "Wardandi"
+ ],
+ "Warlmanpa": [
+  "Warlmanpa"
+ ],
+ "Warlpiri": [
+  "Warlpiri"
+ ],
+ "Warray": [
+  "Awarai"
+ ],
+ "Warriyangga": [
+  "Wariangga"
+ ],
+ "Warumungu": [
+  "Warumungu people",
+  "Warrumungu",
+  "Warramunga"
+ ],
+ "Warwa": [
+  "Warrwa"
+ ],
+ "Wassoulou Empire": [
+  "Empire wassoulou",
+  "Samorian state",
+  "Wassoulou-Reich",
+  "Imperio de Wassoulou",
+  "Impero Wassulu",
+  "Império de Uassulu"
+ ],
+ "Watjarri": [
+  "Wajarri"
+ ],
+ "Wawula": [
+  "Wawula"
+ ],
+ "Weimar Republic": [
+  "république de Weimar",
+  "Weimar Republic",
+  "Weimarer Republik",
+  "República de Weimar",
+  "Repubblica di Weimar"
  ],
  "West Germany": [
   "Allemagne de l'Ouest",
@@ -656,5 +2300,106 @@
   "Alemania Occidental",
   "Germania Ovest",
   "Alemanha Ocidental"
+ ],
+ "Western Australia (UK)": [
+  "Western Australia (UK)"
+ ],
+ "Wetzlar": [
+  "Wetzlar"
+ ],
+ "Wiilman": [
+  "Wiilman"
+ ],
+ "Wirangu": [
+  "Wirangu"
+ ],
+ "Woolna": [
+  "Djerimanga"
+ ],
+ "Worla": [
+  "Wurla"
+ ],
+ "Worora": [
+  "Worora"
+ ],
+ "Wudjari": [
+  "Wudjari people"
+ ],
+ "Wunambul": [
+  "Wunambul"
+ ],
+ "Wuningangk": [
+  "Wuningangk"
+ ],
+ "Xhosa": [
+  "Xhosa"
+ ],
+ "Xinjiang": [
+  "Xinjiang",
+  "Sinkiang"
+ ],
+ "Yaka": [
+  "Yaka"
+ ],
+ "Yangman": [
+  "Yangman"
+ ],
+ "Yankuntjatjara": [
+  "Yankuntjatjara"
+ ],
+ "Yawuru": [
+  "Yawuru people"
+ ],
+ "Yeke": [
+  "Yeke"
+ ],
+ "Yiiji": [
+  "Yeidji"
+ ],
+ "Yindjibarndi": [
+  "Yindjibarndi people"
+ ],
+ "Yinggarda": [
+  "yinggarda",
+  "Yinggarda"
+ ],
+ "Yinhawangka": [
+  "Inawongga"
+ ],
+ "Yuat": [
+  "Yuat"
+ ],
+ "Yugoslavia": [
+  "Yougoslavie",
+  "Yugoslavia",
+  "Jugoslawien",
+  "Jugoslavia",
+  "Iugoslávia",
+  "Jugoslávia"
+ ],
+ "Yulparitja": [
+  "Nangatara"
+ ],
+ "Zaire": [
+  "Zaïre",
+  "Zaire"
+ ],
+ "Zanzibar": [
+  "Zanzibar",
+  "Zanzibar Islands",
+  "Sansibar",
+  "Zanzíbar"
+ ],
+ "Zulu": [
+  "Zulu",
+  "Zulú"
+ ],
+ "Zululand": [
+  "Zoulouland",
+  "Zululand",
+  "Zululandia"
+ ],
+ "central Asian khanates": [
+  "central Asian khanates"
  ]
 }

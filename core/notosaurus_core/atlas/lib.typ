@@ -26,7 +26,13 @@
 #let find-country(name, all: atlas.countries, year: none) = {
   let code = country-code(name, all: all)
   if code == none and year != none {
-    panic("no state called \"" + name + "\" in " + str(year) + " in the atlas: its name then (\"Autriche-Hongrie\", \"URSS\", \"Afrique-Occidentale française\")")
+    // (the year's states sharing a word with it: the name to write, said)
+    let words = fold(name).split(" ").filter(w => w.len() > 3)
+    let near = all.values().filter(c => c.n.len() > 0 and words.any(w => c.k.any(k => w in k.split(" ")))).map(c => c.n.first())
+    let hint = if near.len() > 0 { ": maybe " + near.slice(0, calc.min(5, near.len())).map(n => "\"" + n + "\"").join(", ") } else {
+      ": its name then (\"Autriche-Hongrie\", \"URSS\", \"Afrique-Occidentale française\")"
+    }
+    panic("no state called \"" + name + "\" in " + str(year) + " in the atlas" + hint)
   }
   if code == none {
     panic("no country called \"" + name + "\" in the atlas: its usual name, or its three-letter code (\"ESP\")")
@@ -615,13 +621,19 @@
   // The frame: the countries, regions, groups and cities asked; else the rivers, reliefs and waters
   // (an ocean only when nothing smaller is)
   let boxes = shown.map(code => all.at(code).f) + areas.map(a => region(a).b)
-  boxes += towns.map(t => (t.city.x, t.city.y, t.city.x, t.city.y))
+  let points = towns.map(t => (t.city.x, t.city.y, t.city.x, t.city.y))
+  // (with groups, the cities weighed with the areas, as ever; shown countries alone weighed
+  // against each other only: a country is never cut to its cities)
+  let weighed = sets.len() > 0 or shown.len() + areas.len() > 1
   if sets.len() > 0 {
+    boxes += points
     boxes += grouped.filter(code => code not in shown).map(code => all.at(code).f)
     boxes += group-areas.map(a => region(a).b)
-    // An area far larger than all the others together (Russia beside Europe's countries)
-    // framed only on its part nearest them, as large as half of them: the others stay
-    // large enough to see
+  }
+  // An area far larger than all the others together (Russia beside Europe's countries, in a
+  // group or shown: the Russian Empire beside the Congress of Vienna's Europe) framed only on
+  // its part nearest them, as large as half of them: the others stay large enough to see
+  if weighed {
     let union(bs) = (calc.min(..bs.map(b => b.at(0))), calc.min(..bs.map(b => b.at(1))),
       calc.max(..bs.map(b => b.at(2))), calc.max(..bs.map(b => b.at(3))))
     // On one axis: the part of (b0, b1) within d of (r0, r1), or its d nearest them
@@ -631,7 +643,11 @@
     if boxes.len() > 1 {
       boxes = boxes.enumerate().map(((i, b)) => {
         let rest = union(boxes.enumerate().filter(((j, _)) => j != i).map(((_, c)) => c))
-        if size(rest) > 0 and size(b) > 2 * size(rest) and size(union((rest, b))) > 4 * size(rest) {
+        // (shown countries alone: only one spanning a continent, Russia, Canada, China; never
+        // France beside Haiti, nor a country holding the others, the United States and its states)
+        let holds = b.at(0) <= rest.at(0) and b.at(1) <= rest.at(1) and b.at(2) >= rest.at(2) and b.at(3) >= rest.at(3)
+        let sprawling = sets.len() > 0 or (b.at(2) - b.at(0) > 40 * atlas.scale and not holds)
+        if sprawling and size(rest) > 0 and size(b) > 2 * size(rest) and size(union((rest, b))) > 4 * size(rest) {
           let (x0, x1) = nearest(b.at(0), b.at(2), rest.at(0), rest.at(2), (rest.at(2) - rest.at(0)) / 2)
           let (y0, y1) = nearest(b.at(1), b.at(3), rest.at(1), rest.at(3), (rest.at(3) - rest.at(1)) / 2)
           (x0, y0, x1, y1)
@@ -639,6 +655,7 @@
       })
     }
   }
+  if sets.len() == 0 { boxes += points }
   // Every route's way and every flow's ends framed
   for t in trips {
     let (xs, ys) = (t.way.map(p => p.at(0)), t.way.map(p => p.at(1)))

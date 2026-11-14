@@ -626,6 +626,36 @@ def test_a_past_years_states_with_their_borders_then():
         drawn('#map(countries: ("Autriche-Hongrie",))')  # today's atlas: no such country
 
 
+@pytest.mark.parametrize(
+    ("year", "states"),
+    [
+        (1815, ("Prusse", "Empire d'Autriche", "royaume uni des Pays-Bas", "Empire russe")),
+        (1880, ("Empire allemand", "Autriche-Hongrie", "Italie")),
+        (1923, ("URSS", "république de Weimar", "Tchécoslovaquie", "Yougoslavie", "Pologne")),
+        (1938, ("Troisième Reich", "Tchécoslovaquie", "URSS")),
+        (1946, ("zone d'occupation soviétique en Allemagne", "zone d'occupation américaine en Allemagne", "Autriche")),
+    ],
+)
+def test_the_years_of_history_lessons(year, states):
+    """The Congress of Vienna's Europe, after Germany's unity, between the wars, before the
+    war, Germany's zones: each year's states by their names then. The source's mistakes
+    righted: in 1815 Belgium Austrian (as before 1797) and the Netherlands unnamed, the United
+    Kingdom of the Netherlands made of their land; in 1930 the Soviet Union named « White
+    Russia » and the Caucasus apart."""
+    names = ", ".join(f'"{s}"' for s in states)
+    assert figures_typst.compile_svg("map", f"#map(year: {year}, countries: ({names},))").startswith("<svg")
+
+
+def test_a_land_named_after_its_ruler_is_the_rulers_not_the_ruler(tmp_path):
+    """1815's source names a colony of Central America « United Kingdom » beside the « United
+    Kingdom of Great Britain and Ireland »: « Royaume-Uni » was that colony, the Congress of
+    Vienna's Europe framed from Mexico to the Pacific. A name only a shorthand of another
+    state that year (RULERS) is that state's land, not its name."""
+    expression = 'borders(1815).at(find-country("Royaume-Uni", all: borders(1815), year: 1815)).f'
+    x0, y0, x1, y1 = _atlas_value(tmp_path, expression)
+    assert -1100 < x0 < x1 < 200 and 4900 < y0 < y1 < 6000  # the British Isles (degrees × 100)
+
+
 def test_a_colonial_empire_is_its_ruler_and_every_land_it_ruled(tmp_path):
     """A colonial empire's map (1914) as a group `empire: "France"`: the ruler and its colonies
     and protectorates, the source's rulers completed (Morocco, Tunisia: France's; Kamerun:
@@ -649,16 +679,17 @@ def test_a_past_years_states_are_places_of_flows():
 @pytest.mark.parametrize(
     ("body", "said"),
     [
-        ('#map(year: 1938, countries: ("Allemagne",))', "no borders of 1938 in the atlas"),
-        ('#map(year: 1815, countries: ("Prusse",))', "no borders of 1815"),
+        ('#map(year: 1860, countries: ("Prusse",))', "no borders of 1860"),
+        ('#map(year: 1941, countries: ("Allemagne",))', "no borders of 1941"),
         ('#map(year: 1914, countries: ("France",), regions: ("Bretagne",))', "no regions on a map of a past year"),
         ('#map(groups: ((name: "E", empire: "France"),))', "an empire is a past year's"),
         ('#map(year: 1914, countries: ("Tchécoslovaquie",))', "no state called"),
     ],
 )
 def test_a_past_year_the_atlas_lacks_said_never_drawn_wrong(body, said):
-    """Another time than the atlas's years (1815, 1938) refused, said, rather than drawn with
-    the borders of another; a state that didn't exist then refused too."""
+    """Another time than the atlas's years (1860, during Italy's and Germany's unity; 1941)
+    refused, said, rather than drawn with the borders of another; a state that didn't exist
+    then refused too."""
     with pytest.raises(figures_typst.Unusable, match=said):
         figures_typst.compile_svg("map", body)
 

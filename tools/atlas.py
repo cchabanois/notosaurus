@@ -34,7 +34,9 @@ import math
 import re
 import sys
 import tarfile
+import time
 import unicodedata
+import urllib.error
 import urllib.parse
 import urllib.request
 from collections import defaultdict
@@ -144,8 +146,16 @@ BORDERS_COMMIT = "4b5039e50d8d2464b065bd76ad6086cd4597108d"
 BORDERS_SOURCE = f"https://raw.githubusercontent.com/aourednik/historical-basemaps/{BORDERS_COMMIT}/"
 BORDERS_FILE = ROOT / "tools" / "atlas-borders.json"  # what Wikidata gave for the states' names, kept
 # Each year's borders and the years they stand for (1914's through the war; 1960's the Cold
-# War's, from East Germany to the Soviet Union's end)
-YEARS = {1914: (1914, 1918), 1960: (1949, 1991)}
+# War's, from East Germany to the Soviet Union's end); another year has none
+YEARS = {
+    1815: (1815, 1858),  # the Congress of Vienna's Europe, before Italy's and Germany's unity
+    1880: (1871, 1884),  # after them, before Africa's partition
+    1914: (1914, 1918),
+    1930: (1919, 1937),  # between the wars
+    1938: (1938, 1938),  # after the Anschluss, before Munich
+    1945: (1945, 1948),  # Germany's four zones
+    1960: (1949, 1991),
+}
 UK, FR, DE, IT, BE, PT, ES, NL, RU, US, JP = (
     "United Kingdom of Great Britain and Ireland",
     "France",
@@ -159,6 +169,28 @@ UK, FR, DE, IT, BE, PT, ES, NL, RU, US, JP = (
     "United States",
     "Empire of Japan",
 )
+# A ruler as the source writes it (its SUBJECTO, or in brackets after a land's name: "Algeria
+# (FR)", "Mesopotamia (GB)"), and the names of the same state in its years
+RULERS = (  # (each in order: the state's names first, the source's shorthands after)
+    ("United Kingdom of Great Britain and Ireland", "United Kingdom", "Great Britain", "GB", "UK", "UK Lybia"),
+    ("France", "FR", "Frech Lybia", "French Lybia"),
+    ("Kingdom of Italy", "Italy", "IT"),
+    ("Russian Empire", "USSR", "White Russia", "Russia", "Soviet"),
+    ("United States", "USA"),
+    ("Netherlands", "United Kingdom of Netherlands"),
+    ("German Empire", "Germany"),
+)
+# The short names states of several years go by
+GERMANY = "Allemagne|Germany|Deutschland|Alemania|Germania|Alemanha"
+RUSSIA = "Russie|Russia|Russland|Rusia|Rússia"
+ITALY = "Italie|Italy|Italien|Italia|Itália"
+AUSTRIA = "Autriche|Austria|Österreich|Áustria"
+POLAND = "Pologne|Poland|Polen|Polonia|Polônia|Polónia"
+SOVIET = "URSS|USSR|UdSSR|SSSR"
+CZECHOSLOVAKIA = "Tchécoslovaquie|Czechoslovakia|Tschechoslowakei|Checoslovaquia|Cecoslovacchia|Checoslováquia"
+YUGOSLAVIA = "Yougoslavie|Yugoslavia|Jugoslawien|Iugoslavia|Jugoslávia"
+BRITAIN = "Royaume-Uni|United Kingdom|Vereinigtes Königreich|Reino Unido|Regno Unito|Grande-Bretagne|Great Britain"
+TURKEY = "Turquie|Turkey|Türkei|Turquía|Turchia|Turquia"
 PAST: dict[int, dict[str, dict[str, str]]] = {
     1914: {
         "Austro-Hungarian Empire": {"article": "Austria-Hungary"},
@@ -264,6 +296,133 @@ PAST: dict[int, dict[str, dict[str, str]]] = {
         "Suriname": {"article": "Surinam (Dutch colony)", "owner": NL},
         "Philippines": {"article": "Philippine Islands", "owner": US},
         "Puerto Rico": {"owner": US},
+    },
+    1815: {
+        "United Kingdom of the Netherlands": {"article": "United Kingdom of the Netherlands", "land": "NLD|BEL"},
+        "Lombardy": {"part": "Austrian Empire"},
+        "Venetia": {"part": "Austrian Empire"},
+        "Austrian Empire": {"article": "Austrian Empire", "also": AUSTRIA},
+        "Prussia": {"article": "Kingdom of Prussia", "also": "Prusse|Prussia|Preußen|Prusia|Prússia"},
+        "Russian Empire": {"article": "Russian Empire", "also": RUSSIA},
+        "United Kingdom of Great Britain and Ireland": {
+            "article": "United Kingdom of Great Britain and Ireland",
+            "also": BRITAIN,
+        },
+        "Ottoman Empire": {"article": "Ottoman Empire", "also": "Empire turc"},
+        "Bavaria": {"article": "Kingdom of Bavaria"},
+        "Saxony": {"article": "Kingdom of Saxony"},
+        "Hanover": {"article": "Kingdom of Hanover"},
+        "Württemberg": {"article": "Kingdom of Württemberg"},
+        "Baden": {"article": "Grand Duchy of Baden"},
+        "Holstein": {"article": "Duchy of Holstein", "owner": "Denmark"},
+        "Schleswig": {"article": "Duchy of Schleswig", "owner": "Denmark"},
+        "Tuscany": {"article": "Grand Duchy of Tuscany"},
+        "Modena": {"article": "Duchy of Modena and Reggio"},
+        "Parma": {"article": "Duchy of Parma and Piacenza"},
+        "Lucca": {"article": "Duchy of Lucca"},
+        "Republic of Kraków": {"article": "Free City of Kraków"},
+        "Sweden–Norway": {"article": "Union between Sweden and Norway"},
+        "Kingdom of Sardinia": {"article": "Kingdom of Sardinia"},
+        "Kingdom of the Two Sicilies": {"article": "Kingdom of the Two Sicilies"},
+        "Papal States": {"article": "Papal States"},
+    },
+    1880: {
+        "Germany": {"article": "German Empire", "also": GERMANY},
+        "Austria Hungary": {"article": "Austria-Hungary"},
+        "Italy": {"article": "Kingdom of Italy", "also": ITALY},
+        "Russian Empire": {"article": "Russian Empire", "also": RUSSIA},
+        "United Kingdom of Great Britain and Ireland": {
+            "article": "United Kingdom of Great Britain and Ireland",
+            "also": BRITAIN,
+        },
+        "Ottoman Empire": {"article": "Ottoman Empire", "also": "Empire turc"},
+        "Algeria (FR)": {"article": "French Algeria"},
+        "Senegal (FR)": {"article": "French Senegal"},
+        "Angola (Portugal)": {"article": "Portuguese Angola"},
+        "Gold Coast (GB)": {"article": "Gold Coast (British colony)"},
+    },
+    1930: {
+        "White Russia": {"article": "Soviet Union", "also": SOVIET},  # (the source's name for the whole of it)
+        "Armenia": {"part": "White Russia"},
+        "Azerbaijan": {"part": "White Russia"},
+        "Georgia": {"part": "White Russia"},
+        "East Prussia": {"part": "Germany"},
+        "Republic of Turkey": {"part": "Turkey"},
+        "Turkey": {"article": "Turkey", "also": TURKEY},
+        "Germany": {"article": "Weimar Republic", "also": GERMANY},
+        "Italy": {"article": "Kingdom of Italy", "also": ITALY},
+        "Poland": {"article": "Second Polish Republic", "also": POLAND},
+        "Czechoslovakia": {"article": "First Czechoslovak Republic", "also": CZECHOSLOVAKIA},
+        "Yugoslavia": {"article": "Kingdom of Yugoslavia", "also": YUGOSLAVIA},
+        "Danzig": {"article": "Free City of Danzig"},
+        "Dodecanese Islands": {"article": "Italian Islands of the Aegean", "owner": "Italy"},
+        "Mesopotamia (GB)": {"article": "Mandatory Iraq"},
+        "Syria (France)": {"article": "Mandate for Syria and the Lebanon"},
+        "Mandatory Palestine (GB)": {"article": "Mandatory Palestine"},
+        "Libya (IT)": {"article": "Italian Libya"},
+        "Zaire (Belgium)": {"article": "Belgian Congo"},
+        "Rwanda (Belgium)": {"article": "Ruanda-Urundi"},
+        "Madagascar (France)": {"article": "Colony of Madagascar and Dependencies"},
+    },
+    1938: {
+        "Germany": {"article": "Nazi Germany", "also": GERMANY + "|Troisième Reich|Third Reich|Drittes Reich"},
+        "USSR": {"article": "Soviet Union", "also": SOVIET},
+        "Italy": {"article": "Kingdom of Italy", "also": ITALY},
+        "Poland": {"article": "Second Polish Republic", "also": POLAND},
+        "Czechoslovakia": {"article": "First Czechoslovak Republic", "also": CZECHOSLOVAKIA},
+        "Yugoslavia": {"article": "Kingdom of Yugoslavia", "also": YUGOSLAVIA},
+        "United Kingdom": {"article": "United Kingdom", "also": BRITAIN},
+        "Algeria (France)": {"article": "French Algeria"},
+        "Morocco (France)": {"article": "French protectorate in Morocco"},
+        "Syria (France)": {"article": "Mandate for Syria and the Lebanon"},
+        "Congo (France)": {"article": "French Equatorial Africa"},
+        "Madagascar (France)": {"article": "Colony of Madagascar and Dependencies"},
+        "Mesopotamia (GB)": {"article": "Kingdom of Iraq"},
+        "Mandatory Palestine (GB)": {"article": "Mandatory Palestine"},
+        "Eritrea (Italy)": {"article": "Italian Eritrea"},
+        "Ethiopia (Italy)": {"article": "Italian East Africa"},
+        "Rwanda (Belgium)": {"article": "Ruanda-Urundi"},
+        "Angola (Portugal)": {"article": "Portuguese Angola"},
+        "Mozambique (Portugal)": {"article": "Portuguese Mozambique"},
+        "Yemen (UK)": {"article": "Aden Protectorate"},
+        "Oman (British Raj)": {"owner": "United Kingdom"},
+    },
+    1945: {
+        "USSR": {"article": "Soviet Union", "also": SOVIET},
+        "Germany (Soviet)": {
+            "article": "Soviet occupation zone in Germany",
+            "also": "zone soviétique|zone d'occupation soviétique|Soviet zone|Soviet occupation zone"
+            "|sowjetische Besatzungszone|SBZ|zona soviética|zona sovietica",
+        },
+        "Germany (USA)": {
+            "article": "American occupation zone in Germany",
+            "also": "zone américaine|zone d'occupation américaine|American zone|US zone"
+            "|amerikanische Besatzungszone|zona americana|zona estadounidense",
+        },
+        "Germany (UK)": {
+            "article": "British occupation zone in Germany",
+            "also": "zone britannique|zone d'occupation britannique|British zone|britische Besatzungszone"
+            "|zona británica|zona britannica|zona britânica",
+        },
+        "Germany (France)": {
+            "article": "French occupation zone in Germany",
+            "also": "zone française|zone d'occupation française|French zone|französische Besatzungszone"
+            "|zona francesa|zona francese",
+        },
+        "Saar Protectorate": {"article": "Saar Protectorate"},
+        "United Kingdom": {"article": "United Kingdom", "also": BRITAIN},
+        "Korea (USSR)": {"article": "Soviet Civil Administration"},
+        "Korea (USA)": {"article": "United States Army Military Government in Korea"},
+        "Japan (USA)": {"article": "Occupation of Japan"},
+        "Fezzan (Frech Lybia)": {"article": "French Fezzan"},
+        "Cyraneica (UK Lybia)": {"article": "British Military Administration (Libya)"},
+        "Tripolitana (UK Lybia)": {"part": "Cyraneica (UK Lybia)"},
+        "Angola (Portugal)": {"article": "Portuguese Angola"},
+        "Mozambique (Portugal)": {"article": "Portuguese Mozambique"},
+        "Madagascar (France)": {"article": "Colony of Madagascar and Dependencies"},
+        "Guinea-Bissau (Portugal)": {"article": "Portuguese Guinea"},
+        "Jamaica (UK)": {"article": "Colony of Jamaica"},
+        "Martinique (France)": {"article": "Martinique"},
     },
     1960: {
         "USSR": {
@@ -435,8 +594,15 @@ def download(name: str, folder: Path | None = None, url: str | None = None) -> d
     if folder and (folder / name).is_file():
         return json.loads((folder / name).read_text(encoding="utf-8"))
     request = urllib.request.Request(url or SOURCE + name, headers={"User-Agent": "notosaurus-atlas (tools/atlas.py)"})
-    with urllib.request.urlopen(request, timeout=120) as response:
-        return json.loads(response.read())
+    for wait in (10, 30, 60, 0):  # Wikipedia's and Wikidata's APIs ask to wait when asked too often (429)
+        try:
+            with urllib.request.urlopen(request, timeout=120) as response:
+                return json.loads(response.read())
+        except urllib.error.HTTPError as e:
+            if e.code != 429 or not wait:
+                raise
+            time.sleep(wait)
+    raise AssertionError("unreachable")
 
 
 def download_text(name: str, folder: Path | None, url: str) -> str:
@@ -516,10 +682,10 @@ def wikidata_places(folder: Path | None = None) -> list[dict]:
 def border_titles(year: int, data: dict, today: dict[str, list[str]]) -> dict[str, str]:
     """A year's states whose names Wikidata gives: each by the article PAST gives it, else by
     its own name, unless it is a country of today (France: its names kept from the atlas's)."""
-    found = {}
+    found = {state: said["article"] for state, said in PAST[year].items() if "land" in said}
     for feature in data["features"]:
-        name = feature["properties"]["NAME"]
-        said = PAST[year].get(name or "", {})
+        name = (feature["properties"]["NAME"] or "").strip()
+        said = PAST[year].get(name, {})
         if name and "part" not in said and ("article" in said or fold(name) not in today):
             found[name] = said.get("article", name)
     return found
@@ -529,14 +695,14 @@ def past_names(folder: Path | None, refresh: bool, titles: dict[int, dict[str, s
     """Each article's names in the page's languages (Wikidata, CC0), as BORDERS_FILE keeps
     them; from Wikidata when `refresh` (then kept)."""
     wanted = sorted({t for by_year in titles.values() for t in by_year.values()})
-    if not refresh:
-        kept = json.loads(BORDERS_FILE.read_text(encoding="utf-8"))
-        if sorted(kept) != wanted:
-            raise SystemExit(f"PAST or YEARS changed since {BORDERS_FILE.name} was written: run with --refresh-history")
+    kept = {} if refresh or not BORDERS_FILE.is_file() else json.loads(BORDERS_FILE.read_text(encoding="utf-8"))
+    if sorted(kept) == wanted:
         return kept
-    found: dict[str, list[str]] = {}
-    for start in range(0, len(wanted), 45):
-        batch = wanted[start : start + 45]
+    # (PAST or YEARS changed: the articles added asked, those gone dropped)
+    asked = [t for t in wanted if t not in kept]
+    found: dict[str, list[str]] = {t: kept[t] for t in wanted if t in kept}
+    for start in range(0, len(asked), 45):
+        batch = asked[start : start + 45]
         # each article's Wikidata item, past its redirect (Wikipedia's API), then their names
         query = urllib.parse.urlencode(
             {
@@ -581,27 +747,77 @@ def past_names(folder: Path | None, refresh: bool, titles: dict[int, dict[str, s
     return found
 
 
-def past_states(year: int, data: dict, today: dict, titles: dict[str, str], said: dict[str, list[str]]) -> dict:
+def rings_of(polygon) -> list:
+    """A shapely polygon's rings as GeoJSON writes them: lists of [x, y]."""
+    return [[list(point) for point in ring] for ring in shapely.geometry.mapping(polygon)["coordinates"]]
+
+
+def shorthand_of(state: str, codes: dict[str, str]) -> str | None:
+    """The state of the year a name is only a shorthand of (RULERS: a name after the state's
+    own): the source's "United Kingdom" of 1815, a colony beside the "United Kingdom of Great
+    Britain and Ireland"."""
+    for group in RULERS:
+        if state in group:
+            return next((n for n in group[: group.index(state)] if n in codes), None)
+    return None
+
+
+def ruler(year: int, state: str, subject: str | None, codes: dict[str, str]) -> str | None:
+    """The code of the state a land belonged to: PAST's, else the source's (its SUBJECTO, or
+    in brackets after its name), found among the year's states by any name RULERS gives it."""
+    said = PAST[year].get(state, {}).get("owner") or (subject if subject != state else None)
+    if not said:
+        bracket = re.search(r"\(([^()]+)\)$", state)
+        said = bracket.group(1) if bracket else None
+    if not said:
+        said = shorthand_of(state, codes)
+    if not said:
+        return None
+    for names in [{said}] + [group for group in RULERS if said in group]:
+        found = [codes[n] for n in names if n in codes and n != state]
+        if found:
+            return found[0]
+    return None
+
+
+def past_states(
+    year: int, data: dict, today: dict, titles: dict[str, str], said: dict[str, list[str]], lands: dict
+) -> dict:
     """A year's states, as the atlas's countries (their names, keys, frames and rings; "o" the
-    state a colony belonged to): a state's parts joined (PAST's "part"), a state the source
-    names nowhere drawn without a name."""
+    state a colony belonged to): a state's parts joined (PAST's "part"); a state made of today's
+    countries' land (PAST's "land": the source wrong there) taken from the others; a state the
+    source names nowhere drawn without a name. `lands`: today's countries' shapes, by code."""
     by_state: dict[str, list] = defaultdict(list)
+    subjects: dict[str, str] = {}
     for i, feature in enumerate(data["features"]):
-        name = feature["properties"]["NAME"]
-        state = PAST[year].get(name or "", {}).get("part", name) or f"?{i}"
+        name = (feature["properties"]["NAME"] or "").strip()
+        state = PAST[year].get(name, {}).get("part", name) or f"?{i}"
         geometry = feature["geometry"]
         by_state[state] += geometry["coordinates"] if geometry["type"] == "MultiPolygon" else [geometry["coordinates"]]
-    subjects = {
-        f["properties"]["NAME"]: f["properties"]["SUBJECTO"] for f in data["features"] if f["properties"]["NAME"]
-    }
+        if name:
+            subjects[name] = feature["properties"]["SUBJECTO"]
+    for state, given in PAST[year].items():
+        if "land" not in given:
+            continue
+        region = shapely.union_all([lands[code] for code in given["land"].split("|")]).buffer(0.05)
+        world = shapely.union_all(
+            [shapely.make_valid(shape({"type": "Polygon", "coordinates": p})) for ps in by_state.values() for p in ps]
+        )
+        for other in list(by_state):
+            rest = shapely.make_valid(shape({"type": "MultiPolygon", "coordinates": by_state[other]})).difference(
+                region
+            )
+            by_state[other] = [rings_of(g) for g in parts(rest) if g.geom_type == "Polygon"]
+        made = world.intersection(region)
+        by_state[state] = [rings_of(g) for g in parts(made) if g.geom_type == "Polygon"]
     codes = {state: f"{year}-{i}" for i, state in enumerate(sorted(by_state))}
     states = {}
     for state, polygons in by_state.items():
-        rings = outline({"type": "MultiPolygon", "coordinates": polygons})
+        rings = outline({"type": "MultiPolygon", "coordinates": polygons}) if polygons else []
         if not rings:
             continue
-        if state.startswith("?"):
-            all_names: list[str] = []
+        if state.startswith("?") or (state not in titles and shorthand_of(state, codes)):
+            all_names: list[str] = []  # (a land named after its ruler: the ruler's name is the ruler's)
         elif state in titles:
             also = PAST[year].get(state, {}).get("also", "")
             all_names = list(dict.fromkeys([*said[titles[state]], state, *filter(None, also.split("|"))]))
@@ -609,20 +825,24 @@ def past_states(year: int, data: dict, today: dict, titles: dict[str, str], said
             all_names = today[fold(state)]
         # where a flow from it is drawn from: its largest part's inmost point (as today's countries')
         shapes = [shapely.make_valid(shapely.Polygon([(x / SCALE, y / SCALE) for x, y in r])) for r in rings]
-        largest = max((g for s in shapes for g in parts(s) if g.geom_type == "Polygon"), key=lambda g: g.area)
-        inmost = polylabel(largest, tolerance=0.05)
+        polygons_drawn = [g for s in shapes for g in parts(s) if g.geom_type == "Polygon"]
+        (x0, y0, x1, y1) = box(rings)
+        at = [(x0 + x1) // 2, (y0 + y1) // 2]  # (a sliver no polygon is left of: its frame's middle)
+        if polygons_drawn:
+            inmost = polylabel(max(polygons_drawn, key=lambda g: g.area), tolerance=0.05)
+            at = [round(inmost.x * SCALE), round(inmost.y * SCALE)]
         entry = {
             "n": all_names,
-            "at": [round(inmost.x * SCALE), round(inmost.y * SCALE)],
+            "at": at,
             # (Wikidata's "Austria–Hungary" found as "Austria-Hungary" too)
             "k": sorted({fold(n) for n in all_names} | {fold(n.replace("–", "-")) for n in all_names}),
             "b": box(rings),
             "f": box(main(rings)),
             "r": rings,
         }
-        owner = PAST[year].get(state, {}).get("owner") or subjects.get(state)
-        if owner and owner != state and owner in codes:
-            entry["o"] = codes[owner]
+        owner = ruler(year, state, subjects.get(state), codes)
+        if owner:
+            entry["o"] = owner
         states[codes[state]] = entry
     return {"year": year, "countries": states}
 
@@ -1341,7 +1561,8 @@ def build(folder: Path | None = None, refresh_history: bool = False) -> None:
             )
         )
     titles = {year: border_titles(year, data, today) for year, data in past.items()}
-    said = past_names(folder, refresh_history or not BORDERS_FILE.is_file(), titles)
+    lands = {f["properties"]["ADM0_A3"]: shapely.make_valid(shape(f["geometry"])) for f in countries["features"]}
+    said = past_names(folder, refresh_history, titles)
 
     def text(data) -> str:
         return json.dumps(data, ensure_ascii=False, separators=(",", ":"))
@@ -1360,7 +1581,8 @@ def build(folder: Path | None = None, refresh_history: bool = False) -> None:
         "ways.json": text(seaways(world, all_waters, all_reliefs, capes)),
     } | {f"regions/{code}.json": text(data) for code, data in sorted(regions(admin1).items())}
     contents |= {
-        f"borders/{year}.json": text(past_states(year, data, today, titles[year], said)) for year, data in past.items()
+        f"borders/{year}.json": text(past_states(year, data, today, titles[year], said, lands))
+        for year, data in past.items()
     }
     for old in TARGET.glob(f"{NAME}-*.tar.gz"):
         old.unlink()
