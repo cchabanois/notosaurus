@@ -77,6 +77,12 @@ def options(lesson: dict, builtins: list, forced: str = "") -> dict:
         return " ".join(text.split())  # a phone's line ends (\r\n) as the computer's
 
     prompt = next((p for p in builtins if same(p.text) == same(lesson.get("prompt", ""))), None)
+    # saved with an older version of one of Notosaurus's prompts (Automatic before a case was
+    # added: a timeline without its reverse card): today's, as the phone sends it now
+    first = same(lesson.get("prompt", "").split("\n", 1)[0])
+    older = None if prompt else next((p for p in builtins if first and same(p.text.split("\n", 1)[0]) == first), None)
+    if older:
+        prompt, lesson = older, {**lesson, "prompt": older.text}
     return {
         "prompt": lesson["prompt"],
         "builtin": prompt.id if prompt else "",
@@ -287,7 +293,7 @@ def check(
             continue
         for t in model["tmpls"]:
             on_question, on_answer = "{{Audio}}" in t["qfmt"], "{{Audio}}" in t["afmt"]
-            if t["name"] in ("Dictée", "Verso → Recto"):
+            if t["name"] in ("Dictation", "Back → Front", "Dictée", "Verso → Recto"):  # English since 1.1
                 ok = on_question
             else:
                 ok = on_answer and not on_question
