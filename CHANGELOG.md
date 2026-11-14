@@ -60,6 +60,7 @@ Each pull request's entries (the `## Changelog` of its description) are put unde
 
 ### Fixed
 
+- 🧬 Two DNA strands are drawn face to face, each base joined to its pair (and their hydrogen bonds when asked), the complementary strand computed.
 - 🗂️ A classification whose groups sit side by side in another (mammals and birds among the tetrapods) is drawn as boxes in boxes, its names never cut nor on one another.
 - 🦠 A cell dividing, its chromosomes, a population of bacteria: drawn as such, no longer boxes of text.
 - ⚗️ In a hydrogen bond, the oxygen's (or nitrogen's) non-bonding pairs face the hydrogen; a molecule drawn with an atom too many bonds, or a hydrogen bond between two atoms without its H, is drawn again.
