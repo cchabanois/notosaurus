@@ -9,6 +9,7 @@ Each pull request's entries (the `## Changelog` of its description) are put unde
 
 ### Added
 
+- Charts: population pyramids, two series of bars back to back by age class, graduated alike on both sides; a pyramid described only by its shape drawn as that shape, without numbers.
 - Maps draw routes (voyages, sea and trade routes, by sea around the land or over land) and flows (migrations, trade, tourists) as arrows between named places, with a legend: no longer drawn by hand. A flow between regions tints and names them; arrows are wide as their importance.
 - Maps colour countries or regions by group (alliances, empires, blocs, a union's members), with a legend: no longer drawn by hand.
 - Field lines of a magnet or of point charges are now computed, running from north to south and from + to −, with an arrow showing the field's direction on each line.
