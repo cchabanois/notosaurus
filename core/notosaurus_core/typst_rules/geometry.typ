@@ -419,21 +419,43 @@
     content(shift(mid, off + 0.1), label, anchor: anchor)
     return
   }
-  // where the figure would have it (its side away from `away`, at `pos`), then along the
-  // segment and on its other side, the first that no stroke, circle or point is in the way of
+  // at its middle (`pos`), on its side away from `away`, else on its other side: never slid
+  // along it (6 cm beside [AO] read as the radius, for the diameter [AB]). A segment cut by a
+  // point of the figure (O on [AB], H on [BC]): its length on a dimension line over its whole
+  // length, its two arrows at its ends, the text beyond it (beside it, it read as a part's).
   let (hw, hh) = _text-half(label)
-  let tries = ((1, pos), (1, 0.3), (1, 0.7), (-1, pos), (-1, 0.3), (-1, 0.7), (1, 0.2), (1, 0.8), (-1, 0.2), (-1, 0.8))
-  let placed = tries.map(((side, t)) => {
+  let skip = ((pa, pb), (pb, pa))
+  let mid = (pa.at(0) + pos * dx, pa.at(1) + pos * dy)
+  let placed(side, d) = {
     let (sx, sy) = (side * nx, side * ny)
-    // the box's centre: off the line by the text's depth across it
     let reach = hw * calc.abs(sx) + hh * calc.abs(sy)
-    let c = (pa.at(0) + t * dx + sx * (off + reach), pa.at(1) + t * dy + sy * (off + reach))
-    (c: c, hits: _box-hits(ctx, c, hw, hh, skip: ((pa, pb), (pb, pa))))
+    let c = (mid.at(0) + sx * (d + reach), mid.at(1) + sy * (d + reach))
+    (side: side, c: c, hits: _box-hits(ctx, c, hw, hh, skip: skip))
+  }
+  let cut = _get-points(ctx).values().any(q => {
+    let t = ((q.at(0) - pa.at(0)) * dx + (q.at(1) - pa.at(1)) * dy) / (len * len)
+    let across = calc.abs((q.at(0) - pa.at(0)) * nx + (q.at(1) - pa.at(1)) * ny)
+    t > 0.03 and t < 0.97 and across < 0.05
   })
-  let best = placed.find(p => p.hits == 0)
-  let c = if best == none { placed.first().c } else { best.c }
-  content(c, label)
-  _record("texts", (c: c, hw: hw, hh: hh, skip: ((pa, pb), (pb, pa))))
+  // not cut: at its middle on the side with the less in the way (the away one when even)
+  let free = if cut { none } else { (placed(1, off), placed(-1, off)).sorted(key: p => p.hits).first() }
+  if free != none {
+    content(free.c, label)
+    _record("texts", (c: free.c, hw: hw, hh: hh, skip: skip))
+    return
+  }
+  // the dimension line clear of the points' names along the segment, on the freer side
+  // (the away one when even)
+  let gap = 0.6
+  let best = (placed(1, gap + 0.1), placed(-1, gap + 0.1)).sorted(key: p => p.hits).first()
+  let (sx, sy) = (best.side * nx, best.side * ny)
+  let out(p, d) = (p.at(0) + sx * d, p.at(1) + sy * d)
+  line(out(pa, 0.12), out(pa, gap + 0.12), stroke: 0.4pt)
+  line(out(pb, 0.12), out(pb, gap + 0.12), stroke: 0.4pt)
+  line(out(pa, gap), out(pb, gap), stroke: 0.5pt, mark: (start: "straight", end: "straight", scale: 0.6))
+  content(best.c, label)
+  _record("segments", (out(pa, gap), out(pb, gap)))
+  _record("texts", (c: best.c, hw: hw, hh: hh, skip: (skip.at(0), skip.at(1), (out(pa, gap), out(pb, gap)), (out(pb, gap), out(pa, gap)))))
 })
 // A translation's image of `point` when the description gives no vector, placed by the
 // preamble, never by eye: the vector in the direction furthest from every side of `figure`

@@ -413,6 +413,29 @@ def test_a_text_the_preamble_places_stands_clear_of_the_drawing(figure):
     assert figures_typst.compile_svg("geometry", body).startswith("<svg")
 
 
+def test_a_length_stays_at_its_segments_middle():
+    """A diameter's length moved along it to clear the centre O read as the radius's (6 cm
+    beside [AO]): a length is written facing its segment's middle, a segment cut by a point
+    (O on [AB]) on a dimension line over its whole length."""
+    body = """#ctz-canvas({
+  ctz-init()
+  ctz-def-points(O: (0, 0), A: (-3, 0), B: (3, 0), P: (0, 3))
+  ctz-draw-circle-r("O", 3)
+  ctz-draw-segment("A", "B")
+  ctz-draw-points("O")
+  ctz-draw-length("A", "B", [6 cm], away: "P")
+  cetz.draw.get-ctx(ctx => {
+    let t = _drawn(ctx).texts.first()
+    assert(calc.abs(t.c.at(0)) < 1e-6, message: "slid along: " + repr(t.c))
+    // the dimension line over the whole diameter, from A's side to B's
+    let dims = _drawn(ctx).segments.filter(s => calc.abs(s.at(0).at(1)) > 0.3)
+    let whole(s) = calc.abs(s.at(0).at(0) + 3) < 1e-6 and calc.abs(s.at(1).at(0) - 3) < 1e-6
+    assert(dims.any(whole), message: "no dimension line")
+  })
+})"""
+    assert figures_typst.compile_svg("geometry", body).startswith("<svg")
+
+
 def test_the_rule_names_a_line_by_its_function():
     """The rule shows a line's name by ctz-draw-line-name, never by ctz-draw-text at
     coordinates: its call compiles."""
