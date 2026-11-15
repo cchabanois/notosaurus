@@ -35,9 +35,13 @@ interface Listener {
  * part's text kept; the refusal kept for the app's run. Nothing reaches the relay: the
  * recognition service hears it (on the phone, or Google's servers, as the phone's settings say).
  */
-class PhoneListener(private val context: Context) : Listener {
+class PhoneListener(
+    private val context: Context,
+    // The service, made for each dictation (a device test's fake: what it is sent, its answers)
+    private val make: (Context) -> Recognizer = { SystemRecognizer(SpeechRecognizer.createSpeechRecognizer(it)) },
+) : Listener {
     private val main = Handler(Looper.getMainLooper())
-    private var recognizer: SpeechRecognizer? = null
+    private var recognizer: Recognizer? = null
     private var finished = "" // the parts heard to their end
     private var listening = false
     private var restarts = 0 // in a row, nothing heard between: a service that can't listen gives up
@@ -58,7 +62,7 @@ class PhoneListener(private val context: Context) : Listener {
             segmented = segmentedSession(Build.VERSION.SDK_INT, segmentsRefused)
             heardAny = false
             starts = 0
-            val made = SpeechRecognizer.createSpeechRecognizer(context)
+            val made = make(context)
             recognizer = made
             made.setRecognitionListener(object : RecognitionListener {
                 override fun onPartialResults(results: Bundle) {
@@ -124,7 +128,7 @@ class PhoneListener(private val context: Context) : Listener {
         }
     }
 
-    private fun listen(made: SpeechRecognizer, language: String) {
+    private fun listen(made: Recognizer, language: String) {
         heardAny = false
         starts++
         val intent = Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH)
@@ -161,8 +165,8 @@ class PhoneListener(private val context: Context) : Listener {
         private const val SESSION_MS = 10 * 60 * 1000L // a segmented session's length, then started again
 
         // The service refused a segmented session once: restarts for the rest of the app's run
+        // (set back by the device tests only)
         internal var segmentsRefused = false
-            private set
 
         /** One segmented session (its sounds once) or restarts at each pause (their sounds each
          * time): segmented from Android 13 (API 33), unless the service refused it already. */
@@ -180,4 +184,20 @@ class PhoneListener(private val context: Context) : Listener {
         /** Two parts of what was said, one after the other. */
         fun joined(before: String, part: String) = listOf(before, part).filter { it.isNotBlank() }.joinToString(" ")
     }
+}
+
+/** What PhoneListener asks of the speech recognition service: SpeechRecognizer's own calls. */
+interface Recognizer {
+    fun setRecognitionListener(listener: RecognitionListener)
+    fun startListening(intent: Intent)
+    fun stopListening()
+    fun destroy()
+}
+
+/** The phone's own service. */
+class SystemRecognizer(private val service: SpeechRecognizer) : Recognizer {
+    override fun setRecognitionListener(listener: RecognitionListener) = service.setRecognitionListener(listener)
+    override fun startListening(intent: Intent) = service.startListening(intent)
+    override fun stopListening() = service.stopListening()
+    override fun destroy() = service.destroy()
 }

@@ -1027,3 +1027,26 @@ test("the waiting card's estimate: by mode and pages, as measured; a correction 
   c.aiStep = "slow";  // late: said instead
   assert.equal(c.loadingNote(), "L'IA met plus de temps que d'habitude à répondre…");
 });
+
+test("the waiting card's estimate goes by the pages sent: those of this call, at most perCall", async () => {
+  const asked = [];
+  const page = await loadScripts("app.js", {
+    languages: ["fr-FR"],
+    routes: (url) => {
+      if (url === "/api/extract") return new Promise((answered) => asked.push(answered));  // the AI still writing
+      return new Response({});
+    },
+  });
+  const c = page.component();
+  for (const [photos, pages, said] of [[5, 5, "Environ 25 secondes."], [15, 10, "Environ 40 secondes."]]) {
+    c.photos = Array.from({ length: photos }, () => ({ blob: new Blob(["jpeg"], { type: "image/jpeg" }), text: "" }));
+    c.quick = true;
+    c.extract();
+    await new Promise((done) => setTimeout(done, 50));
+    assert.equal(c.loadingPages, pages);
+    c.batch = null;  // (15 photos: "pages 1 to 10 of 15" said instead while it goes)
+    assert.equal(c.loadingNote(), said);
+    asked.pop()(new Response({ error: "cancelled" }, { status: 409 }));
+    await new Promise((done) => setTimeout(done, 50));
+  }
+});
