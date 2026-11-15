@@ -80,7 +80,7 @@ const dictationPart = {
 
   watchElsewhere() {
     const tapped = (e) => {
-      if (e.target.closest?.(".mic")) return;  // the microphone itself
+      if (e.target.closest?.(".mic, .stops-dictation")) return;  // the microphone itself, or a Cancel that drops it
       e.preventDefault();
       e.stopPropagation();
       this.stopDictation();
@@ -94,7 +94,8 @@ const dictationPart = {
     };
   },
 
-  async stopDictation() {
+  // `keep`: false when the field's own Cancel drops it: stopped, what was heard not written
+  async stopDictation({ keep = true } = {}) {
     const kind = this.mic.listening;
     if (!kind) return;
     stopElsewhere?.();
@@ -111,10 +112,10 @@ const dictationPart = {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ kind: kind.startsWith("card:") ? "correction" : kind }),
       });
-      text = ((await res.json()).text ?? "").trim();
-      if (!text) this.error = t("app.dictation.nothing");
+      text = keep ? ((await res.json()).text ?? "").trim() : "";
+      if (!text && keep) this.error = t("app.dictation.nothing");
     } catch (e) {
-      this.error = e.message;
+      if (keep) this.error = e.message;
     } finally {
       this.mic.busy = "";
       this.mic.before = null;

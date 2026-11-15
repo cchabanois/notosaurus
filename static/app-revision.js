@@ -92,6 +92,7 @@ const revisionPart = {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ card: plain(card), instruction, others: this.cards.filter((c) => c !== card).map((c) => c.front) }),
       })).json();
+      if (fix.cancelling) return;  // cancelled as it came: the card as it was
       const i = this.cards.indexOf(card);
       if (this.lessonId !== lessonId || i === -1) return;  // another lesson opened, or the card removed, meanwhile
       const fixed = { ...res.card, key: card.key, _state: "modified", _fixed: { summary: res.summary, before: plain(card) } };
@@ -99,22 +100,25 @@ const revisionPart = {
       await this.saveNow();  // its picture is drawn from the saved lesson
       if ((fixed.figure || fixed.picture_prompt) && !fixed.picture) this.drawPictures();
     } catch (e) {
-      if (!fix.cancelling) this.error = e.message;  // cancelled: the card as it was, the instruction kept
+      if (!fix.cancelling) this.error = e.message;  // cancelled: nothing to say
       fix.busy = false;
-      fix.cancelling = false;
     }
   },
 
-  // The card's "Cancel": closes its field; while the AI writes, stops it (the card as it was)
+  // The card's "Cancel" (or Escape): this correction dropped, whatever it is at. Its field
+  // closes, the card as it was; the AI writing it is stopped, the microphone listening for it
+  // too (what it heard dropped).
   cancelFix(card) {
     const fix = card._fix;
-    if (!fix?.busy) {
-      card._fix = null;
-      return;
+    if (!fix) return;
+    if (fix.busy && !fix.cancelling) {
+      fix.cancelling = true;
+      cancelJob(fix.job);
     }
-    if (fix.cancelling) return;
-    fix.cancelling = true;
-    cancelJob(fix.job);
+    const listening = this.mic.listening === `card:${card.key}`;
+    card._fix = null;
+    // Once its field is gone (stopping changes what the field shows)
+    if (listening) this.$nextTick(() => this.stopDictation({ keep: false }));
   },
 
   // Nothing written on it yet: the AI writes it ("✨ Write with the AI")

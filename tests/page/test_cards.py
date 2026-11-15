@@ -289,8 +289,9 @@ def test_cancel_while_the_lesson_is_corrected(page):
 
 
 def test_cancel_while_a_card_is_corrected(page):
-    """The card's "Cancel" while the AI corrects it: the server asked to stop it (its job),
-    the card as it was, its field open with the instruction, no error."""
+    """The card's "Cancel" while the AI corrects it: this correction dropped at once, its
+    field closed, the server asked to stop it (its job); an answer coming anyway changes
+    nothing: the card as it was, no error."""
     generate_free(page, FRONT_PROMPT)
     first = page.locator(".flash").first
     back = first.locator("textarea").nth(1)
@@ -311,17 +312,44 @@ def test_cancel_while_a_card_is_corrected(page):
     cancel = first.locator(".card-fix .btn.soft")
     sync_api.expect(cancel).to_be_enabled()  # while the AI writes too
     cancel.click()
-    sync_api.expect(cancel).to_have_text("Annulation…")
+    sync_api.expect(field).to_be_hidden()  # dropped at once
     (route,) = held
     job = re.search(r"[?&]job=(\w+)", route.request.url).group(1)
     assert cancelled == [f"{page.url.split('#')[0].rstrip('/')}/api/generations/{job}/cancel"]
-    route.fulfill(status=409, json={"detail": {"code": "extract.cancelled", "params": {}}})
-    sync_api.expect(cancel).to_have_text("Annuler")
-    sync_api.expect(field).to_be_enabled()
-    assert field.input_value() == "la mamá" and back.input_value() == before
+    card = {"front": "la mère", "back": "la mamá"}
+    route.fulfill(json={"card": card, "summary": "Corrigée."})  # done just before it was stopped
+    page.wait_for_timeout(300)
+    assert back.input_value() == before
+    sync_api.expect(first.locator(".card-fixed")).to_be_hidden()
     sync_api.expect(page.locator(".error")).to_be_hidden()
-    cancel.click()  # not busy: closes the field
+
+
+def test_cancel_while_a_card_correction_is_dictated(page):
+    """The card's "Cancel" while its correction is being dictated: not taken for a tap
+    elsewhere (which would only stop listening and write it): the microphone stopped, what
+    it heard dropped, the field closed, no error."""
+    page.route("**/api/config", lambda route: route.fulfill(json={**route.fetch().json(), "dictation": True}))
+    page.route("**/api/dictation/start", lambda route: route.fulfill(json={"listening": True, "live": True}))
+    page.route("**/api/dictation/heard", lambda route: route.fulfill(json={"text": "la réponse est"}))
+    stopped = []
+    page.route(
+        "**/api/dictation/stop", lambda route: (stopped.append(1), route.fulfill(json={"text": "la réponse est"}))
+    )
+    generate_free(page, FRONT_PROMPT)
+    first = page.locator(".flash").first
+    back = first.locator("textarea").nth(1)
+    before = back.input_value()
+    first.get_by_role("button", name="Plus d'actions").click()
+    first.get_by_role("button", name="✨ Corriger cette carte").click()
+    field = first.get_by_role("textbox", name="Qu'est-ce qui ne va pas ?")
+    first.locator(".card-fix button.mic").click()
+    sync_api.expect(field).to_have_value("la réponse est")  # heard as it comes
+    first.locator(".card-fix .btn.soft").click()
     sync_api.expect(field).to_be_hidden()
+    sync_api.expect(page.locator(".card-fix")).to_have_count(0)
+    page.wait_for_timeout(300)
+    assert stopped == [1] and back.input_value() == before
+    sync_api.expect(page.locator(".error")).to_be_hidden()
 
 
 def test_multiple_choice_wrong_answers_edited(page):
