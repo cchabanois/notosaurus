@@ -43,8 +43,9 @@
 // A house installation's parts, drawn as a French school book draws them. The socket (prise de
 // courant 2P+T, seen from the front: a circle, its two holes, its earth pin) between two
 // points like a lamp: the wire from its first point goes into one hole (anchor "phase"), the
-// one to its second point into the other ("neutre"); its earth pin's terminal is apart, on its
-// side ("terre"), so that the earth is never wired to either. Its name on that side too, by
+// one to its second point into the other ("neutral"); its earth pin's terminal is apart, on its
+// side ("earth"), so that the earth is never wired to either ("neutre" and "terre", the names
+// they once had, still found). Its name on that side too, by
 // the first point: clear of the earth wire, of the branch's wires and of its neighbours' names
 #let socket(name, a, b, label: none, ..args) = {
   let named = if label == none { none } else if type(label) == dictionary { label } else { (content: label, anchor: "name", distance: 0pt) }
@@ -58,6 +59,8 @@
     cetz.draw.circle((0, gap), radius: 0.05, fill: black)
     cetz.draw.line((0, gap), (0, r))
     cetz.draw.anchor("phase", (-gap - hole, 0))
+    cetz.draw.anchor("neutral", (gap + hole, 0))
+    cetz.draw.anchor("earth", (0, r))
     cetz.draw.anchor("neutre", (gap + hole, 0))
     cetz.draw.anchor("terre", (0, r))
     cetz.draw.anchor("name", (-0.75 * r, r + 0.18))
@@ -82,7 +85,7 @@
   cetz.draw.group(name: name, {
     // its name clear of the open blade, which rises above the contact's bounds
     breaker-pole("phase", a, b, label: if label == none { none } else { (content: label, distance: 12pt) })
-    breaker-pole("neutre", c, d)
+    breaker-pole("neutral", c, d)
     // the blades' middles, where the dashed link joins them
     let blade(p, q) = {
       let t = calc.atan2(q.at(0) - p.at(0), q.at(1) - p.at(1))
@@ -93,7 +96,7 @@
     cetz.draw.line(blade(a, b), blade(c, d), stroke: (thickness: 0.6pt, dash: "dashed"))
   })
 }
-// The earth conductor, green-and-yellow striped, along its points (from a socket's "terre"),
+// The earth conductor, green-and-yellow striped, along its points (from a socket's "earth"),
 // zap's earth symbol at its last point
 #let earth-wire(..points) = {
   let pts = points.pos()
@@ -223,8 +226,8 @@
 }
 // ---- What the AI writes, from here (the rule's example: everything above is given)
 #circuit({
-  battery("g", (0, 0), (0, 3), label: $G$)
-  switch("k", (0, 3), (3, 3), label: $K$)
-  lamp("l", (3, 3), (3, 0), label: $L$)
-  wire((3, 0), (0, 0))
+  branch((0, 3), (4.5, 3), switch("k", label: $K$, closed: true), lamp("l", label: $L$), current: $I$)
+  wire((4.5, 3), (4.5, 0))
+  battery("g", (4.5, 0), (0, 0), label: $G$)
+  wire((0, 0), (0, 3))
 })
