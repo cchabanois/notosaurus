@@ -907,6 +907,34 @@ test("photos past the lesson's pages: not added, said", async () => {
   assert.equal(c.error, "A lesson holds 10 pages: 2 photos were not added.");
 });
 
+test("a photo's crop frame: its corners dragged within the photo, never smaller than its least size", () => {
+  const moved = (corner, dx, dy) => plain(app.run(`cropMoved([0, 0, 1, 1], "${corner}", ${dx}, ${dy})`));
+  assert.deepEqual(moved("nw", 0.2, 0.1), [0.2, 0.1, 1, 1]);  // the opposite corner stays
+  assert.deepEqual(moved("se", -0.25, -0.5), [0, 0, 0.75, 0.5]);
+  assert.deepEqual(moved("ne", 0.5, -0.5), [0, 0, 1, 1]);  // never out of the photo
+  assert.deepEqual(moved("sw", 2, -2), [0.9, 0, 1, 0.1]);  // never smaller than CROP_MIN
+});
+
+test("a photo's crop in its pixels: none when it keeps the whole photo; seen again as the frame", () => {
+  assert.equal(app.run("cropPixels([0, 0, 1, 1], 600, 800)"), null);
+  assert.equal(app.run("cropPixels([0.0001, 0, 1, 0.9999], 600, 800)"), null);  // less than a pixel off: the whole photo
+  assert.deepEqual(plain(app.run("cropPixels([0.1, 0.25, 0.5, 1], 600, 800)")), [60, 200, 300, 800]);
+  assert.deepEqual(plain(app.run("cropBox([60, 200, 300, 800], 600, 800)")), [0.1, 0.25, 0.5, 1]);
+  assert.deepEqual(plain(app.run("cropBox(undefined, 600, 800)")), [0, 0, 1, 1]);
+});
+
+test("a photo turned a quarter turn clockwise turns its crop with it", () => {
+  // 600 × 800, the top left quarter kept: once turned (800 × 600), the top right quarter
+  assert.deepEqual(plain(app.run("turnedCrop([0, 0, 300, 400], 800)")), [400, 0, 800, 300]);
+  // a band at the bottom: on the left once turned
+  assert.deepEqual(plain(app.run("turnedCrop([0, 600, 600, 800], 800)")), [0, 0, 200, 600]);
+  // four turns: as it was
+  let crop = "[60, 200, 300, 800]";
+  const sizes = [800, 600, 800, 600];  // the photo's height before each turn
+  for (const h of sizes) crop = JSON.stringify(plain(app.run(`turnedCrop(${crop}, ${h})`)));
+  assert.equal(crop, "[60,200,300,800]");
+});
+
 test("a shared text in a lesson's pages: its words never cut, its paragraphs kept, as many pages as it needs", () => {
   const fits = "(s) => s.length <= 12";  // a line holds 12 characters
   const lines = plain(app.run(`textLines("La Bastille est prise.\\n\\nEn 1789.\\r\\nhttps://example.org/longue", ${fits})`));

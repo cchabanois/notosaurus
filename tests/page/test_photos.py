@@ -1,5 +1,5 @@
 """Step 1, the photos: taken, from the gallery or a PDF, beside the add buttons, seen in full,
-turned, a part hidden, the next pages added."""
+turned, a part hidden, cropped, the next pages added."""
 
 import base64
 import io
@@ -17,17 +17,21 @@ from page.support import (  # noqa: E402
     add_photo,
     add_text_pdf,
     close_viewer,
+    crop_box,
+    crop_corner,
     draft_kept,
     drop,
     editor_pixel,
     generate_free,
     generate_from_photos,
+    halves,
     lesson,
     lessons,
     open_hide,
     open_prompt,
     pdf,
     photo_not_sent,
+    photo_sent,
     png,
     started,
     stroke,
@@ -131,7 +135,7 @@ def test_a_photo_seen_in_full_turned_and_a_name_hidden(page):
     page.wait_for_function("() => document.querySelector('.viewer-frame img').naturalWidth === 800")
     sync_api.expect(viewer.locator(".viewer-frame")).not_to_have_class(re.compile(r"\bzoomed\b"))
     assert shown.evaluate("el => el.style.transform") == "translate(0px, 0px) scale(1)"
-    viewer.get_by_role("button", name="Cacher une partie de la page (un nom…)").click()
+    viewer.get_by_role("button", name="Recadrer ou cacher une partie de la page (un nom…)").click()
     sync_api.expect(page.get_by_role("dialog", name="Cacher ce que l'IA ne doit pas voir")).to_be_visible()
     page.keyboard.press("Escape")  # the editor closes, the viewer stays
     sync_api.expect(page.get_by_role("dialog", name="Cacher ce que l'IA ne doit pas voir")).to_be_hidden()
@@ -323,7 +327,7 @@ def test_a_name_hidden_before_the_photo_is_sent(page):
     assert sent.getpixel((width // 2, height // 2)) > 215  # white: un-blacked
     assert sent.getpixel((width // 2, height * 8 // 10)) > 215  # never touched
     page.locator(".strip .thumb img").first.click()
-    hide = page.locator(".viewer").get_by_role("button", name="Cacher une partie de la page (un nom…)")
+    hide = page.locator(".viewer").get_by_role("button", name="Recadrer ou cacher une partie de la page (un nom…)")
     sync_api.expect(hide).to_be_hidden()  # sent: nothing left to hide
 
 
@@ -447,6 +451,163 @@ def test_a_photo_turned_turns_what_it_hides(page):
     original = photo_not_sent(page)  # the turned original, all white
     assert original.size == (800, 600)
     assert original.getextrema()[0] > 215
+
+
+BLUE = (0, 0, 255)
+RED = (255, 0, 0)
+
+
+def near(pixel, color, tolerance=60) -> bool:
+    return all(abs(a - b) <= tolerance for a, b in zip(pixel, color, strict=True))
+
+
+def thumb_size(page) -> tuple[int, int]:
+    """The first thumbnail's picture, in pixels, once shown."""
+    page.wait_for_function("(i => i && i.complete && i.naturalWidth > 0)(document.querySelector('.strip .thumb img'))")
+    return tuple(page.evaluate("(i => [i.naturalWidth, i.naturalHeight])(document.querySelector('.strip .thumb img'))"))
+
+
+def test_a_photo_cropped_by_its_frames_corners(page):
+    """ "Recadrer": the frame on the whole photo at first, its corners dragged; only the part kept
+    is shown and sent (the thumbnail, the AI's photo, the lesson's)."""
+    page.goto("/")
+    add_photo(page, halves())  # 600 × 800, red | blue
+    editor = open_hide(page)
+    sync_api.expect(page.locator(".hide-stage .crop-frame")).to_be_hidden()  # blacking out: no frame
+    editor.get_by_role("button", name="Recadrer", exact=True).click()
+    sync_api.expect(page.locator(".hide-stage .crop-handle:visible")).to_have_count(4)
+    assert crop_box(page) == [0, 0, 1, 1]  # the whole photo at first
+    crop_corner(page, "nw", 0.5, 0.25)  # the blue half, its top quarter left out
+    assert crop_box(page) == pytest.approx([0.5, 0.25, 1, 1], abs=0.01)
+    stroke(page, 0.5)  # cropping: no stroke blacks anything out
+    editor.get_by_role("button", name="Terminé").click()
+    sync_api.expect(editor).to_be_hidden()
+    close_viewer(page)
+
+    width, height = thumb_size(page)
+    assert (width, height) == pytest.approx((300, 600), abs=6)
+    kept = photo_not_sent(page, mode="RGB")
+    assert kept.size == (width, height)
+    assert all(near(kept.getpixel(at), BLUE) for at in [(5, 5), (width // 2, height // 2), (width - 5, height - 5)])
+    sync_api.expect(page.locator(".thumb-masked:visible")).to_have_count(0)  # nothing blacked out
+
+    sent = []
+    page.on("request", lambda r: sent.append(r) if r.url.endswith("/api/extract") else None)
+    saved = generate_from_photos(page, "Une carte par mot")
+    assert sent  # what the AI was sent: the cropped photo, as the lesson keeps it
+    photo = photo_sent(page, saved["id"])
+    assert photo.size == (width, height)
+    assert near(photo.getpixel((width // 2, height // 2)), BLUE)
+
+
+def test_keep_it_all_gives_the_whole_photo_and_its_text_back(page, browser):
+    """A PDF page cropped goes without its text (it holds what is cropped out); "Tout garder"
+    then done: the original page, its text sent with it again."""
+    page.goto("/")
+    add_text_pdf(page, browser)
+    original = photo_not_sent(page)
+    editor = open_hide(page)
+    crop_corner(page, "se", -0.5, -0.5)
+    editor.get_by_role("button", name="Terminé").click()
+    sync_api.expect(editor).to_be_hidden()
+    assert photo_not_sent(page).size[0] < original.size[0] * 0.6
+    assert page.evaluate("Alpine.$data(document.querySelector('[x-data]')).photos[0].text") == ""
+
+    open_hide(page)
+    editor.get_by_role("button", name="Recadrer", exact=True).click()
+    assert crop_box(page) == pytest.approx([0, 0, 0.5, 0.5], abs=0.01)  # the frame where it was left
+    editor.get_by_role("button", name="Tout garder").click()
+    assert crop_box(page) == [0, 0, 1, 1]
+    editor.get_by_role("button", name="Terminé").click()
+    sync_api.expect(editor).to_be_hidden()
+    assert photo_not_sent(page).tobytes() == original.tobytes()
+    close_viewer(page)
+    saved = generate_from_photos(page, "Une carte par date")
+    assert saved["page_texts"] == ["La Révolution française\nEn 1789, le peuple de Paris prend la Bastille."]
+
+
+def test_a_photo_turned_turns_its_crop(page):
+    """↻ on a portrait photo cropped to its right (blue) half: the bottom half of the landscape
+    one, the frame turned with it."""
+    page.goto("/")
+    add_photo(page, halves())
+    editor = open_hide(page)
+    crop_corner(page, "nw", 0.5, 0)
+    editor.get_by_role("button", name="Terminé").click()
+    sync_api.expect(editor).to_be_hidden()
+    page.locator(".viewer").get_by_role("button", name="Tourner la photo d'un quart de tour").click()
+    page.wait_for_function("document.querySelector('.thumb img').naturalWidth === 800")  # turned: 800 × 300
+    turned = photo_not_sent(page, mode="RGB")
+    assert turned.size == pytest.approx((800, 300), abs=6)
+    assert near(turned.getpixel((400, 150)), BLUE)
+
+    open_hide(page)
+    editor.get_by_role("button", name="Recadrer", exact=True).click()
+    assert crop_box(page) == pytest.approx([0, 0.5, 1, 1], abs=0.01)  # the original's bottom half
+    editor.get_by_role("button", name="Tout garder").click()
+    editor.get_by_role("button", name="Terminé").click()
+    sync_api.expect(editor).to_be_hidden()
+    whole = photo_not_sent(page, mode="RGB")  # the turned original: red on top, blue below
+    assert whole.size == (800, 600)
+    assert near(whole.getpixel((400, 100)), RED) and near(whole.getpixel((400, 500)), BLUE)
+
+
+def test_a_photo_cropped_and_blacked_out(page):
+    """Both together: blacked out, then cropped; the editor reopened shows both, the photo sent
+    is the part kept with what is blacked out in it."""
+    page.goto("/")
+    add_photo(page, halves())
+    editor = open_hide(page)
+    stroke(page, 0.5)  # a band across the middle
+    crop_corner(page, "nw", 0.5, 0.25)  # the blue half's lower part
+    editor.get_by_role("button", name="Noircir", exact=True).click()
+    stroke(page, 0.9)  # blacked out once cropped too: the whole photo's mask
+    editor.get_by_role("button", name="Terminé").click()
+    sync_api.expect(editor).to_be_hidden()
+    sync_api.expect(page.locator(".thumb-masked:visible")).to_have_count(1)
+
+    kept = photo_not_sent(page, mode="RGB")
+    assert kept.size == pytest.approx((300, 600), abs=6)
+    w, h = kept.size
+    # the original's y = 400, 720, 600 → the part kept's 200, 520, 400
+    assert near(kept.getpixel((w // 2, h * 200 // 600)), (0, 0, 0))
+    assert near(kept.getpixel((w // 2, h * 520 // 600)), (0, 0, 0))
+    assert near(kept.getpixel((w // 2, h * 400 // 600)), BLUE)
+
+    open_hide(page)  # the whole photo again, what is blacked out on it, the frame where it was
+    assert editor_pixel(page, 0.2, 0.5) < 40  # the band, on the red half left out too
+    assert editor_pixel(page, 0.2, 0.75) > 40
+    assert crop_box(page) == pytest.approx([0.5, 0.25, 1, 1], abs=0.01)
+    editor.get_by_role("button", name="Annuler").click()
+    sync_api.expect(editor).to_be_hidden()
+    close_viewer(page)
+    saved = generate_from_photos(page, "Une carte par mot")
+    photo = photo_sent(page, saved["id"])
+    assert photo.size == (w, h)
+    assert near(photo.getpixel((w // 2, h * 200 // 600)), (0, 0, 0))
+    assert near(photo.getpixel((w // 2, h * 400 // 600)), BLUE)
+
+
+def test_a_cropped_photo_found_again_after_a_reload(page):
+    """The lesson in progress kept by the host (the draft): its photo found again cropped."""
+    page.goto("/")
+    started(page)
+    add_photo(page, halves())
+    editor = open_hide(page)
+    crop_corner(page, "nw", 0.5, 0.25)
+    editor.get_by_role("button", name="Terminé").click()
+    sync_api.expect(editor).to_be_hidden()
+    close_viewer(page)
+    page.wait_for_function(
+        "(d => d.photos.length && d.draftPhotosSent === d.photos.map((p) => p.url).join(' '))"
+        "(Alpine.$data(document.querySelector('[x-data]')))"
+    )
+    page.reload()
+    started(page)
+    sync_api.expect(page.locator(".strip .thumb img")).to_have_count(1)
+    assert thumb_size(page) == pytest.approx((300, 600), abs=6)
+    kept = photo_not_sent(page, mode="RGB")
+    assert near(kept.getpixel((150, 300)), BLUE)
 
 
 def test_a_photo_put_in_place_of_another_turns_itself(page):
