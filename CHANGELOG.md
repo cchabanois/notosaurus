@@ -67,6 +67,8 @@ Each pull request's entries (the `## Changelog` of its description) are put unde
 
 ### Fixed
 
+- 📊 A chart writes the values its lesson gives (a pie's percentages with "%"), and only hides the one the card asks for.
+- ✋ A card's « Annuler » drops its correction at once, whatever it is at (the AI writing it, or a dictation): the field closes and the card stays as it was.
 - ⏱️ The waiting card says how long a lesson really takes, by its number of pages (« Environ 15 secondes »), no longer « moins de 10 secondes ».
 - Diagrams of institutions and organisations (who elects, appoints or controls whom) are laid out automatically: boxes in layers, as few crossing arrows as possible, arrow words never on one another or on a box, readable on a phone.
 - A diagram too small to read on a card is drawn again more compactly; an arrow from a box to itself is no longer drawn.

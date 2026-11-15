@@ -566,7 +566,7 @@
             </div>
             <!-- ✨ This card corrected by the AI as asked (typed or dictated), the others untouched -->
             <template x-if="card._fix">
-              <form class="card-fix" @submit.prevent="fixCard(card)" @keydown.escape="card._fix.busy || (card._fix = null)">
+              <form class="card-fix" @submit.prevent="fixCard(card)" @keydown.escape="cancelFix(card)">
                 <div class="dictated" :class="{ 'with-mic': micOn() }">
                   <textarea :data-dictated="'card:' + card.key" x-model="card._fix.text" rows="2" :aria-label="$t(card._fix.blank ? 'app.fix.labelBlank' : 'app.fix.label')"
                             :placeholder="$t(card._fix.blank ? 'app.fix.placeholderBlank' : 'app.fix.placeholder')"
@@ -580,8 +580,7 @@
                 </div>
                 <p class="hint" x-show="dictationStep('card:' + card.key)" x-text="$t(dictationStep('card:' + card.key) || 'app.mic.busy')"></p>
                 <div class="card-fix-actions">
-                  <button type="button" class="btn soft" @click="cancelFix(card)" :disabled="card._fix.cancelling"
-                          x-text="card._fix.cancelling ? $t('app.loading.cancelling') : $t('common.cancel')"></button>
+                  <button type="button" class="btn soft stops-dictation" @click="cancelFix(card)" x-text="$t('common.cancel')"></button>
                   <button class="btn primary" :disabled="!card._fix.text.trim() || card._fix.busy || dictating('card:' + card.key)"
                           x-text="$t(card._fix.busy ? (card._fix.blank ? 'app.fix.busyBlank' : 'app.fix.busy') : (card._fix.blank ? 'app.fix.submitBlank' : 'app.fix.submit'))"></button>
                 </div>

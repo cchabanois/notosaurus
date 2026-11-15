@@ -13,7 +13,7 @@ from notosaurus_core import figures, figures_typst
 def test_a_charts_angles_and_heights_come_from_its_counts():
     """A chart's sectors are its counts' shares (1, 1 and 2, 2 the same half pie), computed,
     never given; large counts and a zero drawn too (the bars' graduation by 20s)."""
-    semi = '#chart(kind: "semi", values: (("A", {}), ("B", {})))'
+    semi = '#chart(kind: "semi", values: (("A", {}), ("B", {})), written: ())'  # the angles only
     halves = {figures_typst.compile_svg("chart", semi.format(n, n)) for n in (1, 2)}
     assert len(halves) == 1
     pie = figures_typst.compile_svg("chart", '#chart(kind: "pie", values: (("A", 1), ("B", 3)))')
@@ -37,16 +37,44 @@ def test_a_bar_charts_graduation_reads_its_values(values, lines):
     assert svg.count('stroke="#cdcdcd"') == lines
 
 
-def test_a_charts_counts_written_only_when_asked():
-    """None by default (a card asking a count, a frequency or an angle never shows it on its
-    chart); "all", or the labels given."""
+def test_a_charts_counts_written_by_default_or_as_asked():
+    """A bar chart's or a pie's values written by default (they are what it shows: the energy
+    mix's pie had its shares, none written, 3 drawings in 3); none (`written: ()`) for a
+    description giving no value, or the labels given."""
     for kind in ("bars", "pie", "semi"):
         body = f'#chart(kind: "{kind}", values: (("Chat", 12), ("Chien", 10), ("Lapin", 5)){{}})'
         bare = figures_typst.compile_svg("chart", body.format(""))
-        assert bare == figures_typst.compile_svg("chart", body.format(", written: ()")), kind
+        assert bare == figures_typst.compile_svg("chart", body.format(', written: "all"')), kind
+        none = figures_typst.compile_svg("chart", body.format(", written: ()"))
         some = figures_typst.compile_svg("chart", body.format(', written: ("Chien",)'))
-        every = figures_typst.compile_svg("chart", body.format(', written: "all"'))
-        assert len({bare, some, every}) == 3, kind
+        assert len({bare, some, none}) == 3, kind
+
+
+MIX = (
+    '#set text(lang: "fr")\n#chart(kind: "pie", values: (("Pétrole", 31), ("Charbon", 27), ("Gaz", 23), '
+    '("Énergies renouvelables", 14), ("Nucléaire", 5)){})'
+)
+
+
+def _glyph_uses(body: str) -> int:
+    return len(re.findall(r"<use ", figures_typst.compile_svg("chart", body)))
+
+
+def test_a_charts_values_written_with_their_unit():
+    """A pie of percentages: each share written with its unit, "31 %" (a narrow no-break space
+    in French, no glyph of its own): one "%" more for each of the five values."""
+    assert _glyph_uses(MIX.format(', unit: "%"')) == _glyph_uses(MIX.format("")) + 5
+
+
+def test_the_value_a_card_asks_for_written_as_a_question_mark():
+    """The card asks the oil's share: "?" instead of "31 %" (one glyph for three), the others
+    written; hidden never leaves the number on the chart."""
+    every = _glyph_uses(MIX.format(', unit: "%"'))
+    asked = MIX.format(', unit: "%", hidden: ("Pétrole",)')
+    assert _glyph_uses(asked) == every - 2
+    assert figures_typst.compile_svg("chart", asked) != figures_typst.compile_svg("chart", MIX.format(', unit: "%"'))
+    with pytest.raises(figures_typst.Unusable, match="hidden and unit are for bars, pies and lines"):
+        figures_typst.compile_svg("chart", '#chart(kind: "box", values: (4, 9, 12, 15, 19), unit: "%")')
 
 
 def test_a_line_starts_its_axes_where_its_measures_are():

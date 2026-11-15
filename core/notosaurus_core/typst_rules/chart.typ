@@ -9,7 +9,10 @@
 // rate over time). values: (label, count) pairs in the lesson's order, for "line" the
 // measures as (x, y), or several lines of the same measure, each named with its measures
 // ((name, ((x, y), …)), …: on the same axis, each its colour and dash, a legend); written: the values written on the chart ("all", or some labels; for
-// "line" some x), none by default: a card asking a count or a measure never shows it;
+// "line" some x): a bar chart's and a pie's all by default (the values the description
+// gives are what it shows), a line's none; hidden: the labels whose value a card asks for,
+// written "?" (their count, share or angle never shown); unit: written after each value
+// ("%": 31 %, with the figure's language's space);
 // degrees: a sector's angle written with its count; axis: the bars' axis title (the
 // lesson's: "Effectif"); axes: a line's (x title, y title), their units with them; step:
 // the bars' graduation (auto: every unit up to 12, then 2, 5, 10…), a line's (x, y).
@@ -231,10 +234,16 @@
     if axis != none { content((0, if numbered { -0.65 } else { -0.2 }), txt(axis), anchor: "north") }
   })
 }
-#let chart(kind: "bars", values: (), written: (), degrees: false, axis: none, axes: (none, none), step: auto,
+#let chart(kind: "bars", values: (), written: auto, hidden: (), unit: none, degrees: false, axis: none, axes: (none, none), step: auto,
   marks: (), spans: (), second: none, numbered: true, smooth: false, limits: auto, horizontal: false, classes: none) = context {
   assert(kind in ("bars", "pie", "semi", "line", "box", "pyramid"), message: "kind is \"bars\", \"pie\", \"semi\", \"line\", \"box\" or \"pyramid\"")
   assert(kind == "pyramid" or classes == none, message: "classes is for a pyramid only")
+  assert(type(hidden) == array, message: "hidden is a list of the labels whose value a card asks for")
+  assert(unit == none or type(unit) == str, message: "unit is a text written after each value (\"%\")")
+  assert((hidden == () and unit == none) or kind in ("bars", "pie", "semi", "line"),
+    message: "hidden and unit are for bars, pies and lines")
+  // what is written by default: a bar chart's and a pie's values (what it shows), else none
+  let written = if written != auto { written } else if kind in ("bars", "pie", "semi") { "all" } else { () }
   if kind == "pyramid" {
     assert(marks == () and spans == () and second == none and not smooth and axes == (none, none) and not degrees
       and limits == auto and not horizontal,
@@ -285,12 +294,19 @@
   let total = if kind == "line" { 1 } else { values.map(v => v.at(1)).sum() }
   assert(total > 0, message: "the counts add up to more than 0")
   assert(written == "all" or type(written) == array, message: "written is \"all\" or a list of labels")
-  let shown(label) = written == "all" or label in written
+  let shown(label) = written == "all" or label in written or label in hidden
   let palette = _palette
   let txt(body) = text(10pt, font: "DejaVu Sans", body)
   // a number as the figure's language writes it: whole, or with its decimal separator; to
   // the thousandth (a probability, 0,078), an angle to the tenth
   let num(x, digits: 3) = written-number(x, digits: digits)
+  // a value as written on the chart: its number and its unit (French: a narrow no-break
+  // space before any unit, 31 %; else none before "%", a no-break space before the others),
+  // "?" for a value the card asks for
+  let gap = if text.lang == "fr" { "\u{202F}" } else if unit == "%" { "" } else { "\u{00A0}" }
+  let value(label, x, digits: 3) = if label in hidden { "?" } else if unit == none { num(x, digits: digits) } else {
+    num(x, digits: digits) + gap + unit
+  }
   // A graduation's step: a round one giving at most `most` steps over `span`
   // (never finer than 0,1: values that change little keep a graduation showing it so)
   let nice(span, most) = calc.max(round-step(span, most), 0.1)
@@ -403,8 +419,8 @@
         line(..path, stroke: (paint: look.paint, thickness: 1.3pt, join: "round", dash: look.dash))
         for (i, (x, y)) in vs.enumerate() {
           point(points.at(i), look)
-          if written == "all" or x in written {
-            content((points.at(i).at(0), points.at(i).at(1) + 0.12), text(fill: if named { look.paint } else { black }, txt(num(y))), anchor: "south")
+          if written == "all" or x in written or x in hidden {
+            content((points.at(i).at(0), points.at(i).at(1) + 0.12), text(fill: if named { look.paint } else { black }, txt(value(x, y))), anchor: "south")
           }
         }
       }
@@ -480,7 +496,7 @@
           let y = h - row * (i + 0.5)
           if count > 0 { rect((0, y - 0.13), (count * unit, y + 0.13), fill: luma(55), stroke: none) }
           content((-0.16, y), name(label), anchor: "east")
-          if shown(label) { content((count * unit + 0.1, y), txt(num(count)), anchor: "west") }
+          if shown(label) { content((count * unit + 0.1, y), txt(value(label, count)), anchor: "west") }
         }
       } else {
       let h = 4.0
@@ -506,7 +522,7 @@
         let x = slot * (i + 0.5)
         if count > 0 { rect((x - 0.11, 0), (x + 0.11, count * unit), fill: luma(55), stroke: none) }
         content((x, -0.14), name(label), anchor: "north")
-        if shown(label) { content((x, count * unit + 0.08), txt(num(count)), anchor: "south") }
+        if shown(label) { content((x, count * unit + 0.08), txt(value(label, count)), anchor: "south") }
       }
       }
     } else {
@@ -535,8 +551,8 @@
           t.label
           if shown(t.label) {
             linebreak()
-            num(t.count)
-            if degrees { " (" + num(t.angle / 1deg, digits: 1) + "°)" }
+            value(t.label, t.count)
+            if degrees and t.label not in hidden { " (" + num(t.angle / 1deg, digits: 1) + "°)" }
           }
         }))
         let size = measure(body)
