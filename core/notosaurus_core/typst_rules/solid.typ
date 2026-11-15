@@ -86,7 +86,8 @@
   line(a, b, stroke: 0.5pt, mark: (start: ">", end: ">", fill: black, scale: 0.6))
   _label(((a.at(0) + b.at(0)) / 2 + side.at(0), (a.at(1) + b.at(1)) / 2 + side.at(1)), body)
 }
-#let _polyhedron(points, faces, names: (), edge-labels: (), extra: none, largest: none, section: none, section-names: (), sides: (:), lines: (), marks: ()) = {
+// `hidden: false`: a solid made of cubes, full: its hidden edges not drawn
+#let _polyhedron(points, faces, names: (), edge-labels: (), extra: none, largest: none, section: none, section-names: (), sides: (:), lines: (), marks: (), hidden: true) = {
   let cut = if section == none { none } else { _section(points, faces, names, sides, section) }
   let size = calc.max(..range(3).map(i => calc.max(..points.map(p => p.at(i))) - calc.min(..points.map(p => p.at(i)))))
   let scale = 4 / if largest == none { size } else { largest }
@@ -120,7 +121,7 @@
       let around = spots.values().sorted(key: q => calc.atan2(q.at(0) - m.at(0), q.at(1) - m.at(1)).deg())
       line(..around, close: true, fill: luma(225), stroke: none)
     }
-    for e in edges.values() {
+    for e in edges.values().filter(e => hidden or e.seen) {
       line(_proj(points.at(e.u)), _proj(points.at(e.v)),
         stroke: if e.seen { 1pt } else { (thickness: 0.7pt, dash: "dashed") })
     }
@@ -163,13 +164,25 @@
 
 // A cuboid (a cube: three equal lengths), standing on its base ABCD: A at the front left,
 // B front right, C back right, D back left, EFGH above them
-#let cuboid(length, width, height, names: (), length-label: none, width-label: none, height-label: none, largest: none, section: none, section-names: ()) = {
+// `cubes: true`: made of unit cubes, its lengths their counts, every cube's edges on its seen
+// faces (the front, the top, the right) drawn thin, to count them
+#let cuboid(length, width, height, names: (), length-label: none, width-label: none, height-label: none, largest: none, section: none, section-names: (), cubes: false) = {
   let (l, w, h) = (length, width, height)
+  if cubes {
+    assert((l, w, h).all(n => type(n) == int and n >= 1), message: "cubes: true, the lengths are counts of cubes: whole numbers")
+    assert(section == none, message: "a cuboid of cubes has no section")
+  }
+  let grid = if not cubes { () } else {
+    (range(1, l).map(i => ((i, 0, 0), (i, 0, h))) + range(1, h).map(k => ((0, 0, k), (l, 0, k))) +
+      range(1, l).map(i => ((i, 0, h), (i, w, h))) + range(1, w).map(j => ((0, j, h), (l, j, h))) +
+      range(1, w).map(j => ((l, j, 0), (l, j, h))) + range(1, h).map(k => ((l, 0, k), (l, w, k))))
+  }
+  let extra = if not cubes { none } else { at => { for (a, b) in grid { cetz.draw.line(at(a), at(b), stroke: 0.5pt) } } }
   let points = ((0, 0, 0), (l, 0, 0), (l, w, 0), (0, w, 0), (0, 0, h), (l, 0, h), (l, w, h), (0, w, h))
   let faces = ((0, 1, 2, 3), (4, 5, 6, 7), (0, 1, 5, 4), (3, 2, 6, 7), (0, 3, 7, 4), (1, 2, 6, 5))
   let labels = ((0, 1, length-label), (1, 2, width-label), (0, 4, height-label)).filter(e => e.at(2) != none)
   let sides = (base: 0, top: 1, front: 2, back: 3, left: 4, right: 5)
-  _polyhedron(points, faces, names: names, edge-labels: labels, largest: largest, section: section, section-names: section-names, sides: sides)
+  _polyhedron(points, faces, names: names, edge-labels: labels, extra: extra, largest: largest, section: section, section-names: section-names, sides: sides, lines: grid, hidden: not cubes)
 }
 
 // A right prism: its base a polygon of (x, y) points (y away from the viewer), standing

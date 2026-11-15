@@ -353,3 +353,18 @@ def test_a_short_height_length_beside_the_pyramids_height(pyramid):
     assert reds and not near & reds
     middle = sum(x for x, _ in reds) / len(reds)
     assert abs(middle - bare.width / 2) < bare.width / 4
+
+
+def test_a_cuboid_of_unit_cubes_shows_every_cube():
+    """A cuboid "of 4 × 3 × 2 unit cubes" was drawn empty, no cube in it (0 drawings in 3):
+    `cubes: true` draws every cube's edges on its seen faces (3 + 1 on the front, 3 + 2 on the
+    top, 2 + 1 on the right) and no hidden edge (it is full); lengths not whole refused."""
+    plain = figures.clean(figures_typst.compile_svg("solid", "#cuboid(4, 3, 2)"))
+    cubes = figures.clean(figures_typst.compile_svg("solid", "#cuboid(4, 3, 2, cubes: true)"))
+    assert "stroke-dasharray" not in cubes
+    assert cubes.count("<path") - (plain.count("<path") - 3) == 3 + 1 + 3 + 2 + 2 + 1
+    with pytest.raises(figures_typst.Unusable, match="counts of cubes"):
+        figures_typst.compile_svg("solid", "#cuboid(4, 2.5, 2, cubes: true)")
+    rule = figures_typst.FAMILIES["solid"].rules
+    (call,) = re.findall(r"`(cuboid\([^`]*cubes: true\))`", rule)
+    assert figures_typst.compile_svg("solid", "#" + call).startswith("<svg")
