@@ -417,6 +417,33 @@ def test_a_figures_axis_drawn_through_its_own_points():
     assert "axis of symmetry" in rule and "never ends at coordinates of your own" in rule
 
 
+@pytest.mark.parametrize(
+    ("shape", "rings", "tiles"),
+    [("hexagon", 1, 7), ("hexagon", 2, 19), ("square", 1, 9), ("triangle", 1, 21)],
+)
+def test_a_tiling_computed_edge_to_edge(shape, rings, tiles):
+    """A tiling of hexagons drawn by the AI as SVG had them overlapping (1 drawing in 3):
+    `tiling` places every tile edge to edge, as many as its rings hold; coloured "alternate",
+    its tiles take three colours (hexagons) or two, "centre" one tile coloured."""
+    svg = figures.clean(figures_typst.compile_svg("geometry", f'#tiling(shape: "{shape}", rings: {rings})'))
+    assert svg.count("<path") == tiles + 1  # and the page's background
+    alternate = figures.clean(
+        figures_typst.compile_svg("geometry", f'#tiling(shape: "{shape}", rings: {rings}, fill: "alternate")')
+    )
+    fills = set(re.findall(r'fill="(#[0-9a-f]{6})"', alternate)) - {"#ffffff"}
+    assert len(fills) == (3 if shape == "hexagon" else 2)
+    centre = figures.clean(
+        figures_typst.compile_svg("geometry", f'#tiling(shape: "{shape}", rings: {rings}, fill: "centre")')
+    )
+    assert len(set(re.findall(r'fill="(#[0-9a-f]{6})"', centre)) - {"#ffffff"}) == 1
+
+
+def test_the_rule_shows_a_tiling_that_compiles():
+    rule = figures_typst.FAMILIES["geometry"].rules
+    (call,) = re.findall(r"`(#tiling\([^`]*\))`", rule)
+    assert figures_typst.compile_svg("geometry", call).startswith("<svg")
+
+
 def test_a_rotations_arrowed_arc_drawn_from_its_points():
     """A rotation's direction shown by an arrowed arc the preamble draws from the point, the
     centre and the image (the AI guessed ctz-draw-arc's arguments, `mark:`, `radius:`,
