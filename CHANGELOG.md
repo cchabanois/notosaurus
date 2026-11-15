@@ -9,6 +9,7 @@ Each pull request's entries (the `## Changelog` of its description) are put unde
 
 ### Added
 
+- 🧭 Maps centred on a pole: the Arctic with its countries and its sea routes (the Northern Sea Route, the North-West Passage), and Antarctica, as seen from above the pole.
 - 🗺️ History maps for every year from 1815 to 1991, the Second World War's included: Europe under Germany in 1942, Japan's empire, Germany's occupation zones, Africa before and after its partition, Algeria French until 1962.
 - 🗺️ Maps of history drawn with the borders of the time: the Congress of Vienna's Europe, the German Empire, 1914's alliances and colonial empires, the interwar years, the Anschluss, Germany's occupation zones, the Cold War's blocs.
 - Charts: population pyramids, two series of bars back to back by age class, graduated alike on both sides; a pyramid described only by its shape drawn as that shape, without numbers.
@@ -68,6 +69,7 @@ Each pull request's entries (the `## Changelog` of its description) are put unde
 
 ### Fixed
 
+- 🗺️ A map naming several places the atlas lacks lists them all at once, so the AI can correct them in one go. « Groenland » given among Denmark's regions is drawn as the country it is in the atlas.
 - Maps: straits and canals ("canal de Suez", "détroit d'Ormuz", "pas de Calais", "détroit de Béring"…) are found among the waters in every language, and a strait or canal too small to see on a world map is marked by a ring with its name beside it.
 - 🏛️ Schemes: each arrow drawn straight from box to box (one soft curve round a box in its way), its words on it on a white ground, never over other words; arrows arriving at a box spread along its side; larger arrowheads, readable on a phone.
 - 📊 A chart writes the values its lesson gives (a pie's percentages with "%"), and only hides the one the card asks for.
