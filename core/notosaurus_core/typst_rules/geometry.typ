@@ -502,6 +502,38 @@
     (ctx: _set-points(ctx, points))
   },)
 }
+// The centre of a point symmetry when the description doesn't place it, placed by the
+// preamble, never by eye: beyond the figure (its vertices), `gap` from it, so that its image
+// stands `gap` clear of it on the other side, in the direction where the lines from the
+// vertices through it are furthest apart (no two vertices in line with it: their
+// construction lines and their marks never one over the other), the rightmost of the nearly
+// as good (a card is wide). Then each image by ctz-def-symmetry(name, point, centre).
+#let _symmetry-centre(pts, gap) = {
+  let n = pts.len()
+  let g = (pts.map(q => q.at(0)).sum() / n, pts.map(q => q.at(1)).sum() / n)
+  let angle(v) = calc.atan2(v.at(0), v.at(1)) / 1deg
+  let off(a, b) = { let d = calc.rem-euclid(a - b, 180); calc.min(d, 180 - d) }
+  let scored = range(24).map(i => i * 15).map(t => {
+    let u = (calc.cos(t * 1deg), calc.sin(t * 1deg))
+    let along = pts.map(q => (q.at(0) - g.at(0)) * u.at(0) + (q.at(1) - g.at(1)) * u.at(1))
+    let d = calc.max(..along) + gap / 2
+    let o = (g.at(0) + d * u.at(0), g.at(1) + d * u.at(1))
+    let dirs = pts.map(q => angle((q.at(0) - o.at(0), q.at(1) - o.at(1))))
+    let pairs = range(n).map(i => range(i + 1, n).map(j => off(dirs.at(i), dirs.at(j)))).flatten()
+    (o: o, score: calc.min(..pairs, 180), right: u.at(0))
+  })
+  let top = calc.max(..scored.map(c => c.score))
+  scored.filter(c => c.score >= top * 0.75).sorted(key: c => -c.right).first().o
+}
+#let ctz-def-symmetry-centre(name, figure, gap: 1.5) = {
+  assert(type(figure) == array and figure.len() >= 2, message: "the figure is its vertices' names: (\"A\", \"B\", \"C\")")
+  (ctx => {
+    let at(n) = { let q = _resolve-point(ctx, n); (q.at(0), q.at(1)) }
+    let points = _get-points(ctx)
+    points.insert(name, _symmetry-centre(figure.map(at), gap))
+    (ctx: _set-points(ctx, points))
+  },)
+}
 // A rotation's direction: an arc around its centre `o` from the direction of `a` to that of
 // its image `b`, the way the rotation turns (anticlockwise, `clockwise: true` the other
 // way), its arrow at the image's end; `label` (its angle, [90°]) written at its middle,
