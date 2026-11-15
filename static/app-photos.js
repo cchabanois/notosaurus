@@ -341,11 +341,13 @@ const photosPart = {
     const text = (shared.text ?? "").trim();
     const skipped = shared.skipped ?? [];
     const why = shared.error ?? "";  // a code: a web page's address alone (share.link_only)
+    // Taken: that share only (another may have come since, for the next call)
+    const taken = () => api(`/api/shared${shared.id ? `?id=${encodeURIComponent(shared.id)}` : ""}`, { method: "DELETE" }).catch(() => {});
     if (!files.length && !text && !skipped.length && !why) return;
     if (!files.length && !text) {  // nothing to add: the lesson as it is, said why
       if (why) this.error = t(`errors.${why}`);
       if (skipped.length) this.error = t("app.share.skipped", { names: skipped.join(", ") });
-      api("/api/shared", { method: "DELETE" }).catch(() => {});
+      taken();
       return;
     }
     if (this.lessonId) await this.newLesson();
@@ -363,7 +365,7 @@ const photosPart = {
     if (unreadable) this.error = t("app.photos.unreadable", { name: unreadable });
     if (why) this.error = t(`errors.${why}`);
     if (skipped.length) this.error = t("app.share.skipped", { names: skipped.join(", ") });
-    api("/api/shared", { method: "DELETE" }).catch(() => {});
+    taken();
   },
 
   // A PDF: its pages as photos. More pages than places left: the user picks them

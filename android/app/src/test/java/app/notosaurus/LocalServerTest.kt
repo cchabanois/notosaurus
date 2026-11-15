@@ -141,6 +141,16 @@ class LocalServerTest : LocalServerTestBase() {
         // Taken by the page: gone
         client.delete("/api/shared") { page() }
         assertEquals(0, client.get("/api/shared") { page() }.json().jsonObject["files"]!!.jsonArray.size)
+        // Another share coming between the page's reading and its DELETE: kept for the page to take
+        // next (cleared, it was lost: no page added, no error said)
+        local.shared.take(emptyList(), "Cours\nhttps://example.org/rev")
+        val read = client.get("/api/shared") { page() }.json().jsonObject.string("id")
+        local.shared.take(emptyList(), "La Bastille")
+        client.delete("/api/shared?id=$read") { page() }
+        val next = client.get("/api/shared") { page() }.json().jsonObject
+        assertEquals("La Bastille", next.string("text"))
+        client.delete("/api/shared?id=${next.string("id")}") { page() }
+        assertEquals("", client.get("/api/shared") { page() }.json().jsonObject.string("text"))
         // A new share replaces what the page hadn't taken
         local.shared.take(listOf(Shared.Item("a.jpg", "image/jpeg") { "a".byteInputStream() }), null)
         local.shared.take(listOf(Shared.Item("b.png", "image/png") { "b".byteInputStream() }), null)
