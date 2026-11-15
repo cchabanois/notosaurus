@@ -1,0 +1,854 @@
+[
+ {
+  "title": "Strait of Hormuz",
+  "n": [
+   "détroit d'Ormuz",
+   "Strait of Hormuz",
+   "Straße von Hormus",
+   "Estrecho de Ormuz",
+   "stretto di Hormuz",
+   "Estreito de Ormuz",
+   "détroit d'Hormuz"
+  ],
+  "xy": [
+   56.5,
+   26.6
+  ]
+ },
+ {
+  "title": "Bab al-Mandab Strait",
+  "n": [
+   "Bab-el-Mandeb",
+   "Bab al-Mandab",
+   "Bab el-Mandeb",
+   "détroit de Bab-el-Mandeb",
+   "Strait of Bab-el-Mandeb"
+  ],
+  "xy": [
+   43.333333333333,
+   12.583333333333
+  ]
+ },
+ {
+  "title": "Strait of Gibraltar",
+  "n": [
+   "détroit de Gibraltar",
+   "Strait of Gibraltar",
+   "Straße von Gibraltar",
+   "Estrecho de Gibraltar",
+   "stretto di Gibilterra",
+   "Estreito de Gibraltar"
+  ],
+  "xy": [
+   -5.516111111111111,
+   35.97388888888889
+  ]
+ },
+ {
+  "title": "Strait of Malacca",
+  "n": [
+   "détroit de Malacca",
+   "Strait of Malacca",
+   "Straße von Malakka",
+   "Estrecho de Malaca",
+   "stretto di Malacca",
+   "Estreito de Malaca"
+  ],
+  "xy": [
+   101.037,
+   2.833
+  ]
+ },
+ {
+  "title": "Strait of Dover",
+  "n": [
+   "pas de Calais",
+   "Strait of Dover",
+   "Straße von Dover",
+   "Paso de Calais",
+   "Stretto di Dover",
+   "Estreito de Dover",
+   "détroit du Pas-de-Calais",
+   "Pas-de-Calais"
+  ],
+  "xy": [
+   1.45,
+   51
+  ]
+ },
+ {
+  "title": "English Channel",
+  "n": [
+   "Manche",
+   "English Channel",
+   "Ärmelkanal",
+   "canal de la Mancha",
+   "la Manica",
+   "Canal da Mancha"
+  ],
+  "xy": [
+   -2,
+   50
+  ]
+ },
+ {
+  "title": "Bosporus",
+  "n": [
+   "Bosphore",
+   "Bosporus Strait",
+   "Bosporus",
+   "Bósforo",
+   "Bosforo",
+   "Bosphorus",
+   "détroit du Bosphore"
+  ],
+  "xy": [
+   29.08,
+   41.12
+  ]
+ },
+ {
+  "title": "Dardanelles",
+  "n": [
+   "détroit des Dardanelles",
+   "Dardanelles",
+   "Dardanellen",
+   "Dardanelos",
+   "Dardanelli"
+  ],
+  "xy": [
+   26.4,
+   40.2
+  ]
+ },
+ {
+  "title": "Kerch Strait",
+  "n": [
+   "détroit de Kertch",
+   "Strait of Kerch",
+   "Straße von Kertsch",
+   "Estrecho de Kerch",
+   "stretto di Kerč'",
+   "Estreito de Kerch"
+  ],
+  "xy": [
+   36.65,
+   45.35
+  ]
+ },
+ {
+  "title": "Strait of Messina",
+  "n": [
+   "détroit de Messine",
+   "Strait of Messina",
+   "Straße von Messina",
+   "Estrecho de Mesina",
+   "Stretto di Messina",
+   "Estreito de Messina"
+  ],
+  "xy": [
+   15.6325,
+   38.245833333333
+  ]
+ },
+ {
+  "title": "Strait of Bonifacio",
+  "n": [
+   "Bouches de Bonifacio",
+   "Strait of Bonifacio",
+   "Straße von Bonifacio",
+   "Estrecho de Bonifacio",
+   "Bocche di Bonifacio",
+   "Estreito de Bonifacio",
+   "détroit de Bonifacio"
+  ],
+  "xy": [
+   9.2127777777778,
+   41.311944444444
+  ]
+ },
+ {
+  "title": "Strait of Otranto",
+  "n": [
+   "canal d'Otrante",
+   "Strait of Otranto",
+   "Straße von Otranto",
+   "Canal de Otranto",
+   "canale d'Otranto",
+   "Estreito de Otranto"
+  ],
+  "xy": [
+   18.92556111111111,
+   40.21943888888889
+  ]
+ },
+ {
+  "title": "Strait of Sicily",
+  "n": [
+   "canal de Sicile",
+   "Strait of Sicily",
+   "Straße von Sizilien",
+   "canal de Sicilia",
+   "Stretto di Sicilia",
+   "Estreito da Sicília"
+  ],
+  "xy": [
+   11.2,
+   37.2
+  ]
+ },
+ {
+  "title": "Øresund",
+  "n": [
+   "Øresund",
+   "Öresund",
+   "Oresund"
+  ],
+  "xy": [
+   12.75,
+   55.75
+  ]
+ },
+ {
+  "title": "Great Belt",
+  "n": [
+   "Grand Belt",
+   "Great Belt",
+   "Großer Belt",
+   "Gran Belt",
+   "Grande Belt"
+  ],
+  "xy": [
+   11,
+   55.333
+  ]
+ },
+ {
+  "title": "Little Belt",
+  "n": [
+   "Petit Belt",
+   "Little Belt",
+   "Kleiner Belt",
+   "Pequeño Belt",
+   "Piccolo Belt",
+   "Pequeno Belt"
+  ],
+  "xy": [
+   9.8333333333333,
+   55.183333333333
+  ]
+ },
+ {
+  "title": "Fehmarn Belt",
+  "n": [
+   "Fehmarn Belt",
+   "Fehmarnbelt",
+   "Estreito de Fehmarn"
+  ],
+  "xy": [
+   11.31899,
+   54.5816
+  ]
+ },
+ {
+  "title": "Skagerrak",
+  "n": [
+   "Skagerrak"
+  ],
+  "xy": [
+   9.0730555555556,
+   57.847222222222
+  ]
+ },
+ {
+  "title": "Kattegat",
+  "n": [
+   "Cattégat",
+   "Kattegat",
+   "Categat"
+  ],
+  "xy": [
+   11.428055555556,
+   56.928333333333
+  ]
+ },
+ {
+  "title": "North Channel (Great Britain and Ireland)",
+  "n": [
+   "canal du Nord",
+   "North Channel",
+   "Nordkanal",
+   "Canal del Norte",
+   "Canale del Nord",
+   "Canal do Norte"
+  ],
+  "xy": [
+   -5.62194,
+   55.0575
+  ]
+ },
+ {
+  "title": "St George's Channel",
+  "n": [
+   "canal Saint-Georges",
+   "St George's Channel",
+   "St.-Georgs-Kanal",
+   "Canal de San Jorge",
+   "Canale di San Giorgio",
+   "Canal de São Jorge"
+  ],
+  "xy": [
+   -6,
+   52
+  ]
+ },
+ {
+  "title": "Bering Strait",
+  "n": [
+   "détroit de Béring",
+   "Bering Strait",
+   "Beringstraße",
+   "Estrecho de Bering",
+   "Stretto di Bering",
+   "Estreito de Bering"
+  ],
+  "xy": [
+   -168.97694444444446,
+   65.75
+  ]
+ },
+ {
+  "title": "Strait of Magellan",
+  "n": [
+   "détroit de Magellan",
+   "Strait of Magellan",
+   "Magellanstraße",
+   "Estrecho de Magallanes",
+   "stretto di Magellano",
+   "Estreito de Magalhães"
+  ],
+  "xy": [
+   -71,
+   -54
+  ]
+ },
+ {
+  "title": "Drake Passage",
+  "n": [
+   "passage de Drake",
+   "Drake Passage",
+   "Drakestraße",
+   "Mar de Hoces",
+   "Canale di Drake",
+   "Passagem de Drake"
+  ],
+  "xy": [
+   -62.909444444444,
+   -58.580277777778
+  ]
+ },
+ {
+  "title": "Beagle Channel",
+  "n": [
+   "canal Beagle",
+   "Beagle Channel",
+   "Beagle-Kanal",
+   "Canale di Beagle",
+   "Estreito de Beagle"
+  ],
+  "xy": [
+   -68.13638888888889,
+   -54.87555555555556
+  ]
+ },
+ {
+  "title": "Le Maire Strait",
+  "n": [
+   "détroit de Le Maire",
+   "Le Maire Strait",
+   "Le-Maire-Straße",
+   "Estrecho de Le Maire",
+   "Estreito de Le Maire"
+  ],
+  "xy": [
+   -64.91666667,
+   -54.83333333
+  ]
+ },
+ {
+  "title": "Straits of Florida",
+  "n": [
+   "détroit de Floride",
+   "Florida Strait",
+   "Floridastraße",
+   "Estrecho de Florida",
+   "Stretti della Florida",
+   "Estreito da Flórida"
+  ],
+  "xy": [
+   -80.925833333333,
+   23.934166666667
+  ]
+ },
+ {
+  "title": "Yucatán Channel",
+  "n": [
+   "canal du Yucatán",
+   "Yucatán Channel",
+   "Yucatánstraße",
+   "Canal de Yucatán",
+   "canale dello Yucatán",
+   "Canal do Iucatão"
+  ],
+  "xy": [
+   -85.75,
+   21.75
+  ]
+ },
+ {
+  "title": "Windward Passage",
+  "n": [
+   "passage du Vent",
+   "Windward Passage",
+   "Windward-Passage",
+   "Paso de los Vientos",
+   "canale Sopravento",
+   "Canal de Barlavento"
+  ],
+  "xy": [
+   -74,
+   20
+  ]
+ },
+ {
+  "title": "Mona Passage",
+  "n": [
+   "canal de la Mona",
+   "Mona Passage",
+   "Mona-Passage",
+   "Canal de la Mona",
+   "Canale della Mona",
+   "Canal de Mona"
+  ],
+  "xy": [
+   -67.74963,
+   18.498
+  ]
+ },
+ {
+  "title": "Cabot Strait",
+  "n": [
+   "détroit de Cabot",
+   "Cabot Strait",
+   "Cabotstraße",
+   "Estrecho de Cabot",
+   "Stretto di Caboto",
+   "Estreito de Cabot"
+  ],
+  "xy": [
+   -59.716666666667,
+   47.233333333333
+  ]
+ },
+ {
+  "title": "Strait of Juan de Fuca",
+  "n": [
+   "détroit de Juan de Fuca",
+   "Strait of Juan de Fuca",
+   "Juan-de-Fuca-Straße",
+   "estrecho de Juan de Fuca",
+   "Stretto di Juan de Fuca",
+   "Estreito de Juan de Fuca"
+  ],
+  "xy": [
+   -124.00265,
+   48.33291
+  ]
+ },
+ {
+  "title": "Strait of Georgia",
+  "n": [
+   "détroit de Géorgie",
+   "Strait of Georgia",
+   "Straße von Georgia",
+   "Estrecho de Georgia",
+   "Stretto di Georgia",
+   "Estreito de Geórgia"
+  ],
+  "xy": [
+   -122.94472222222,
+   48.831388888889
+  ]
+ },
+ {
+  "title": "Strait of Belle Isle",
+  "n": [
+   "détroit de Belle Isle",
+   "Strait of Belle Isle",
+   "Belle-Isle-Straße",
+   "Estrecho de Belle Isle",
+   "Stretto di Belle Isle",
+   "Estreito de Belle Isle"
+  ],
+  "xy": [
+   -56.5,
+   51.5
+  ]
+ },
+ {
+  "title": "Denmark Strait",
+  "n": [
+   "détroit de Danemark",
+   "Denmark Strait",
+   "Dänemarkstraße",
+   "Estrecho de Dinamarca",
+   "stretto di Danimarca",
+   "Estreito da Dinamarca"
+  ],
+  "xy": [
+   -24,
+   67
+  ]
+ },
+ {
+  "title": "Davis Strait",
+  "n": [
+   "détroit de Davis",
+   "Davis Strait",
+   "Davisstraße",
+   "Estrecho de Davis",
+   "stretto di Davis",
+   "Estreito de Davis"
+  ],
+  "xy": [
+   -58,
+   65
+  ]
+ },
+ {
+  "title": "Hudson Strait",
+  "n": [
+   "détroit d'Hudson",
+   "Hudson Strait",
+   "Hudsonstraße",
+   "Estrecho de Hudson",
+   "stretto di Hudson",
+   "Estreito de Hudson"
+  ],
+  "xy": [
+   -71.961944444444,
+   62.493333333333
+  ]
+ },
+ {
+  "title": "Straits of Tiran",
+  "n": [
+   "détroit de Tiran",
+   "Straits of Tiran",
+   "Straße von Tiran",
+   "estrechos de Tirán",
+   "Stretti di Tiran",
+   "Estreito de Tiran"
+  ],
+  "xy": [
+   34.465277777778,
+   28.003888888889
+  ]
+ },
+ {
+  "title": "Mozambique Channel",
+  "n": [
+   "canal du Mozambique",
+   "Mozambique Channel",
+   "Straße von Mosambik",
+   "Canal de Mozambique",
+   "canale del Mozambico",
+   "Canal de Moçambique"
+  ],
+  "xy": [
+   41,
+   -18
+  ]
+ },
+ {
+  "title": "Palk Strait",
+  "n": [
+   "détroit de Palk",
+   "Palk Strait",
+   "Palkstraße",
+   "Estrecho de Palk",
+   "Stretto di Palk",
+   "Estreito de Palk"
+  ],
+  "xy": [
+   79.5,
+   9.8333333333333
+  ]
+ },
+ {
+  "title": "Sunda Strait",
+  "n": [
+   "détroit de la Sonde",
+   "Sunda Strait",
+   "Sundastraße",
+   "estrecho de la Sonda",
+   "Stretto della Sonda",
+   "Estreito de Sunda"
+  ],
+  "xy": [
+   105.76972222222,
+   -5.9702777777778
+  ]
+ },
+ {
+  "title": "Lombok Strait",
+  "n": [
+   "détroit de Lombok",
+   "Lombok Strait",
+   "Lombokstraße",
+   "Estrecho de Lombok",
+   "Stretto di Lombok",
+   "Estreito de Lombok"
+  ],
+  "xy": [
+   115.83333333333,
+   -8.5
+  ]
+ },
+ {
+  "title": "Singapore Strait",
+  "n": [
+   "détroit de Singapour",
+   "Singapore Strait",
+   "Straße von Singapur",
+   "Estrecho de Singapur",
+   "Stretto di Singapore",
+   "Estreito de Singapura"
+  ],
+  "xy": [
+   103.92,
+   1.22
+  ]
+ },
+ {
+  "title": "Makassar Strait",
+  "n": [
+   "détroit de Macassar",
+   "Makassar Strait",
+   "Straße von Makassar",
+   "Estrecho de Macasar",
+   "Stretto di Makasar",
+   "Estreito de Macáçar"
+  ],
+  "xy": [
+   118.16666666667,
+   -0.83333333333333
+  ]
+ },
+ {
+  "title": "Torres Strait",
+  "n": [
+   "détroit de Torrès",
+   "Torres Strait",
+   "Torres-Straße",
+   "Estrecho de Torres",
+   "stretto di Torres",
+   "Estreito de Torres"
+  ],
+  "xy": [
+   142.5,
+   -9.8333333333333
+  ]
+ },
+ {
+  "title": "Taiwan Strait",
+  "n": [
+   "détroit de Taïwan",
+   "Taiwan Strait",
+   "Formosastraße",
+   "Estrecho de Taiwán",
+   "Stretto di Formosa",
+   "Estreito de Taiwan"
+  ],
+  "xy": [
+   119.92833333333,
+   24.811111111111
+  ]
+ },
+ {
+  "title": "Luzon Strait",
+  "n": [
+   "détroit de Luçon",
+   "Luzon Strait",
+   "Luzonstraße",
+   "Estrecho de Luzón",
+   "Stretto di Luzon",
+   "Estreito de Luzon"
+  ],
+  "xy": [
+   121,
+   20
+  ]
+ },
+ {
+  "title": "Korea Strait",
+  "n": [
+   "détroit de Corée",
+   "Korea Strait",
+   "Koreastraße",
+   "Estrecho de Corea",
+   "Stretto di Corea",
+   "Estreito da Coreia"
+  ],
+  "xy": [
+   129.79666666667,
+   34.599444444444
+  ]
+ },
+ {
+  "title": "Tsushima Strait",
+  "n": [
+   "détroit de Tsushima",
+   "Tsushima Strait",
+   "Estrecho de Tsushima",
+   "Stretto di Tsushima",
+   "Estreito de Tsushima"
+  ],
+  "xy": [
+   129.49,
+   34.0075
+  ]
+ },
+ {
+  "title": "Tsugaru Strait",
+  "n": [
+   "détroit de Tsugaru",
+   "Tsugaru Strait",
+   "Tsugaru-Straße",
+   "Estrecho de Tsugaru",
+   "Stretto di Tsugaru",
+   "Estreito de Tsugaru"
+  ],
+  "xy": [
+   140.33333,
+   41.33333
+  ]
+ },
+ {
+  "title": "La Pérouse Strait",
+  "n": [
+   "détroit de La Pérouse",
+   "La Pérouse Strait",
+   "La-Pérouse-Straße",
+   "Estrecho de La Pérouse",
+   "stretto di La Pérouse",
+   "Estreito de La Pérouse"
+  ],
+  "xy": [
+   142.02666666667,
+   45.722222222222
+  ]
+ },
+ {
+  "title": "Strait of Tartary",
+  "n": [
+   "détroit de Tartarie",
+   "Strait of Tartary",
+   "Tatarensund",
+   "Estrecho de Tartaria",
+   "stretto dei Tartari",
+   "Estreito da Tartária"
+  ],
+  "xy": [
+   141.61666666667,
+   52.183333333333
+  ]
+ },
+ {
+  "title": "Bass Strait",
+  "n": [
+   "détroit de Bass",
+   "Bass Strait",
+   "Bass-Straße",
+   "estrecho de Bass",
+   "stretto di Bass",
+   "Estreito de Bass"
+  ],
+  "xy": [
+   146,
+   -40
+  ]
+ },
+ {
+  "title": "Cook Strait",
+  "n": [
+   "détroit de Cook",
+   "Cook Strait",
+   "Cookstraße",
+   "Estrecho de Cook",
+   "stretto di Cook",
+   "Estreito de Cook"
+  ],
+  "xy": [
+   174.48305555556,
+   -41.229444444444
+  ]
+ },
+ {
+  "title": "Suez Canal",
+  "n": [
+   "canal de Suez",
+   "Suez Canal",
+   "Suezkanal",
+   "canale di Suez",
+   "Canal de Suez"
+  ],
+  "xy": [
+   32.344166666667,
+   30.705
+  ]
+ },
+ {
+  "title": "Panama Canal",
+  "n": [
+   "canal de Panama",
+   "Panama Canal",
+   "Panamakanal",
+   "Canal de Panamá",
+   "canale di Panama",
+   "Canal do Panamá"
+  ],
+  "xy": [
+   -79.75,
+   9.12
+  ]
+ },
+ {
+  "title": "Kiel Canal",
+  "n": [
+   "canal de Kiel",
+   "Kiel Canal",
+   "Nord-Ostsee-Kanal",
+   "Canal de Kiel",
+   "Canale di Kiel"
+  ],
+  "xy": [
+   9.1333333333333,
+   53.883333333333
+  ]
+ },
+ {
+  "title": "Corinth Canal",
+  "n": [
+   "canal de Corinthe",
+   "Corinth Canal",
+   "Kanal von Korinth",
+   "Canal de Corinto",
+   "Canale di Corinto"
+  ],
+  "xy": [
+   22.994623,
+   37.927031
+  ]
+ }
+]

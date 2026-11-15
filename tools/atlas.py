@@ -21,9 +21,10 @@ with --refresh-history). OHM's answers are kept in `folder`, when given (some 15
 
 The sources read from `folder` when it has them (by their names), else downloaded: Natural
 Earth's and CLDR's at a fixed version. The places of history (HISTORY) are read from
-tools/atlas-history.json, committed: the same atlas whatever day it is made; Wikidata is asked
-only with --refresh-history (HISTORY changed, or its data refreshed), which writes that file
-again.
+tools/atlas-history.json, the sea's passages (PASSAGES: straits, channels, canals) from
+tools/atlas-passages.json, committed: the same atlas whatever day it is made; Wikidata is asked
+only with --refresh-history (HISTORY or PASSAGES changed, or their data refreshed), which writes
+those files again.
 
 Needs shapely (requirements-dev.txt): regions simplified together, their borders shared.
 """
@@ -53,7 +54,7 @@ ROOT = Path(__file__).resolve().parent.parent
 CORE = ROOT / "core" / "notosaurus_core"
 LIB = CORE / "atlas" / "lib.typ"
 TARGET = CORE / "typst"
-NAME, VERSION = "notosaurus-atlas", "0.7.0"
+NAME, VERSION = "notosaurus-atlas", "0.9.0"
 SOURCE = "https://raw.githubusercontent.com/nvkelso/natural-earth-vector/v5.1.2/geojson/"
 COUNTRIES = "ne_50m_admin_0_countries.geojson"  # 1:50m: a country's shape, light enough
 PLACES = "ne_10m_populated_places.geojson"  # 1:10m: the cities, their names in many languages
@@ -103,6 +104,39 @@ HISTORY = [
     *[(t, ()) for t in ("Verdun", "Sarajevo", "Hiroshima", "Nagasaki", "Oradour-sur-Glane", "Vichy", "Yalta")],
     ("Điện Biên Phủ", ("Diên Biên Phu", "Dien Bien Phu", "Ðiện Biên Phủ", "Điện Biên Phủ")),
     *[(t, ()) for t in ("Nuremberg", "Potsdam", "Gettysburg, Pennsylvania")],
+]
+# The sea's passages (straits, channels, canals) a lesson names that Natural Earth lacks or
+# names in two languages only: from Wikidata (CC0), each by its English Wikipedia article, its
+# names in the page's languages and its point, plus names Wikidata lacks; one Natural Earth
+# has (a name in common, its point in or by its area) given these names too, else a water of
+# its own, at its point (waters.json: no area, drawn as a mark at any scale)
+PASSAGES_FILE = ROOT / "tools" / "atlas-passages.json"  # what Wikidata gave for PASSAGES, kept
+PASSAGES = [
+    # Straits and channels: the seas' ways and their narrows
+    ("Strait of Hormuz", ("détroit d'Hormuz",)),
+    ("Bab al-Mandab Strait", ("Bab-el-Mandeb", "détroit de Bab-el-Mandeb", "Strait of Bab-el-Mandeb")),
+    ("Strait of Gibraltar", ()),
+    ("Strait of Malacca", ()),
+    ("Strait of Dover", ("détroit du Pas-de-Calais", "Pas-de-Calais")),
+    ("English Channel", ()),
+    ("Bosporus", ("Bosphorus", "détroit du Bosphore")),
+    ("Dardanelles", ()),
+    ("Kerch Strait", ()),
+    ("Strait of Messina", ()),
+    ("Strait of Bonifacio", ("détroit de Bonifacio",)),
+    ("Strait of Otranto", ()),
+    ("Strait of Sicily", ()),
+    *[(t, ()) for t in ("Øresund", "Great Belt", "Little Belt", "Fehmarn Belt", "Skagerrak", "Kattegat")],
+    *[(t, ()) for t in ("North Channel (Great Britain and Ireland)", "St George's Channel")],
+    *[(t, ()) for t in ("Bering Strait", "Strait of Magellan", "Drake Passage", "Beagle Channel", "Le Maire Strait")],
+    *[(t, ()) for t in ("Straits of Florida", "Yucatán Channel", "Windward Passage", "Mona Passage", "Cabot Strait")],
+    *[(t, ()) for t in ("Strait of Juan de Fuca", "Strait of Georgia", "Strait of Belle Isle", "Denmark Strait")],
+    *[(t, ()) for t in ("Davis Strait", "Hudson Strait", "Straits of Tiran", "Mozambique Channel", "Palk Strait")],
+    *[(t, ()) for t in ("Sunda Strait", "Lombok Strait", "Singapore Strait", "Makassar Strait", "Torres Strait")],
+    *[(t, ()) for t in ("Taiwan Strait", "Luzon Strait", "Korea Strait", "Tsushima Strait", "Tsugaru Strait")],
+    *[(t, ()) for t in ("La Pérouse Strait", "Strait of Tartary", "Bass Strait", "Cook Strait")],
+    # Canals: the ways ships go through the land
+    *[(t, ()) for t in ("Suez Canal", "Panama Canal", "Kiel Canal", "Corinth Canal")],
 ]
 # Cities Natural Earth has under their name of today, by their country and that name (folded):
 # their former names, in the page's languages (Leningrad, Saïgon, Bombay, Pékin)
@@ -452,22 +486,34 @@ def usual_names(folder: Path | None = None) -> dict[str, list[str]]:
 
 def history(folder: Path | None = None, refresh: bool = False) -> list[dict]:
     """HISTORY's places, as HISTORY_FILE keeps them; from Wikidata when `refresh` (then kept)."""
-    titles = [t for t, _ in HISTORY]
+    return kept_places(HISTORY, HISTORY_FILE, "wikidata", folder, refresh)
+
+
+def passages(folder: Path | None = None, refresh: bool = False) -> list[dict]:
+    """PASSAGES' straits, channels and canals, as PASSAGES_FILE keeps them; from Wikidata when
+    `refresh` (then kept)."""
+    return kept_places(PASSAGES, PASSAGES_FILE, "wikidata-passages", folder, refresh)
+
+
+def kept_places(listed: list, file: Path, prefix: str, folder: Path | None, refresh: bool) -> list[dict]:
+    """A list's places (its articles' titles, their names Wikidata lacks), as `file` keeps
+    them; from Wikidata when `refresh` (then kept)."""
+    titles = [t for t, _ in listed]
     if not refresh:
-        kept = json.loads(HISTORY_FILE.read_text(encoding="utf-8"))
+        kept = json.loads(file.read_text(encoding="utf-8"))
         if [p["title"] for p in kept] != titles:
-            raise SystemExit(f"HISTORY changed since {HISTORY_FILE.name} was written: run with --refresh-history")
+            raise SystemExit(f"{file.name}'s list changed since it was written: run with --refresh-history")
         return [{"n": p["n"], "xy": tuple(p["xy"])} for p in kept]
-    places = wikidata_places(folder)
+    places = wikidata_places(listed, prefix, folder)
     kept = [{"title": t, "n": p["n"], "xy": list(p["xy"])} for t, p in zip(titles, places, strict=True)]
-    HISTORY_FILE.write_text(json.dumps(kept, ensure_ascii=False, indent=1) + "\n", encoding="utf-8")
+    file.write_text(json.dumps(kept, ensure_ascii=False, indent=1) + "\n", encoding="utf-8")
     return places
 
 
-def wikidata_places(folder: Path | None = None) -> list[dict]:
-    """HISTORY's places from Wikidata: (names, (longitude, latitude)) each, the names it
-    gives in the page's languages then HISTORY's own."""
-    titles = [t for t, _ in HISTORY]
+def wikidata_places(listed: list, prefix: str, folder: Path | None = None) -> list[dict]:
+    """A list's places from Wikidata: (names, (longitude, latitude)) each, the names it gives
+    in the page's languages then the list's own."""
+    titles = [t for t, _ in listed]
     entities: dict[str, dict] = {}
     for start in range(0, len(titles), 45):  # the API's most per call: 50
         batch = titles[start : start + 45]
@@ -483,12 +529,12 @@ def wikidata_places(folder: Path | None = None) -> list[dict]:
                 "format": "json",
             }
         )
-        data = download(f"wikidata-{start}.json", folder, f"{WIKIDATA}?{query}")
+        data = download(f"{prefix}-{start}.json", folder, f"{WIKIDATA}?{query}")
         for entity in data["entities"].values():
             if "missing" not in entity:
                 entities[entity["sitelinks"]["enwiki"]["title"]] = entity
     places = []
-    for title, more in HISTORY:
+    for title, more in listed:
         entity = entities.get(title)
         if entity is None:
             raise SystemExit(f"Wikidata has no place for the article {title!r}")
@@ -1194,7 +1240,12 @@ def water_keys(all_names: list[str]) -> set[str]:
     return keys
 
 
-def waters(marine: dict, lakes: dict) -> list:
+PASSAGE_NEAR = 10  # degrees: a passage's point this near a water of the same name's area is that water
+
+
+def waters(marine: dict, lakes: dict, passages: list | None = None) -> list:
+    """The seas, gulfs, straits and lakes (Natural Earth's), then the passages (PASSAGES) it
+    lacks: a point each ("r" empty), with the canals' names (CANALS) when it is one."""
     out = []
     for feature in marine["features"] + lakes["features"]:
         p = feature["properties"]
@@ -1205,6 +1256,30 @@ def waters(marine: dict, lakes: dict) -> list:
             water = named(names(p, own, p.get("namealt") or "", p.get("name_alt") or ""), drawn | {"lake": lake})
             water["k"] = sorted(set(water["k"]) | water_keys(water["n"]))
             out.append(water)
+    canals = {fold(n): canal_names for canal_names, _ in CANALS for n in canal_names}
+    for passage in passages or []:
+        more = [n for found in passage["n"] if fold(found) in canals for n in canals[fold(found)]]
+        all_names = list(dict.fromkeys([*passage["n"], *more]))
+        keys = {fold(n) for n in all_names}
+        x, y = passage["xy"]
+        near = PASSAGE_NEAR * SCALE
+        at = [round(x * SCALE), round(y * SCALE)]
+        same = [
+            w
+            for w in out
+            if not w["lake"]
+            and keys & set(w["k"])
+            and w["b"][0] - near <= at[0] <= w["b"][2] + near
+            and w["b"][1] - near <= at[1] <= w["b"][3] + near
+        ]
+        if same:
+            for w in same:
+                w["n"] = list(dict.fromkeys([*w["n"], *all_names]))
+                w["k"] = sorted(set(w["k"]) | keys | water_keys(all_names))
+            continue
+        water = named(all_names, {"b": [*at, *at], "r": [], "at": [at], "lake": False})
+        water["k"] = sorted(set(water["k"]) | water_keys(all_names))
+        out.append(water)
     return out
 
 
@@ -1260,6 +1335,7 @@ SEA_GRID = 8  # degrees between the open sea's nodes
 SEA_CONES = 12  # directions a node is joined in: the nearest it sees in each
 SEA_SEEN = 10  # nodes tried in each direction, the nearest first
 SEA_PORT = 1  # degrees: a city this near a coast is a port, a country's or an island's nodes this near it
+SEA_PASSAGE = 5  # degrees: a passage's point (a strait at sea, the Drake Passage) by its nearest node this near
 # The canals a route may go through, only when it names them (Vasco da Gama never did): their
 # names, and their ends as the atlas's cities (by their English name, folded) and countries
 CANALS = [
@@ -1387,7 +1463,8 @@ def seaways(world: dict, marine: list, relief: list, points: dict) -> dict:
 
     # Each sea, strait or gulf with a node in it (a strait narrower than the channels' cells,
     # the Bosporus): its name's place
-    water_areas = [None if w["lake"] else area_of_rings(w["r"]) for w in marine]
+    # (a passage's point, no area: its nearest node, below)
+    water_areas = [None if w["lake"] or not w["r"] else area_of_rings(w["r"]) for w in marine]
     for w, area in zip(marine, water_areas, strict=True):
         if area is not None and w["at"] and not shapely.contains(area, shapely.points(nodes)).any():
             x, y = w["at"][0][0] / SCALE, w["at"][0][1] / SCALE
@@ -1482,12 +1559,13 @@ def seaways(world: dict, marine: list, relief: list, points: dict) -> dict:
     waters_nodes = []
     for w, area in zip(marine, water_areas, strict=True):
         inside = [] if area is None else [int(i) for i in np.flatnonzero(shapely.contains(area, node_points))]
-        # A strait narrower than the coasts drawn (Gibraltar's at this scale): the nearest node
-        # within SEA_PORT (none for a sea within the land, the Caspian: no way by sea goes there)
-        if area is not None and not inside and w["at"]:
+        # A strait narrower than the coasts drawn (Gibraltar's at this scale), a passage's point:
+        # the nearest node within SEA_PORT (none for a sea within the land, the Caspian: no way
+        # by sea goes there)
+        if not w["lake"] and not inside and w["at"]:
             x, y = w["at"][0][0] / SCALE, w["at"][0][1] / SCALE
             d = np.hypot(_east(nodes_xy[:, 0] - x) * math.cos(math.radians(y)), nodes_xy[:, 1] - y)
-            inside = [int(np.argmin(d))] if d.min() <= SEA_PORT else []
+            inside = [int(np.argmin(d))] if d.min() <= (SEA_PORT if w["r"] else SEA_PASSAGE) else []
         waters_nodes.append(inside)
     reliefs_nodes = [by(area_of_rings(r["r"])) if r["c"] == "land" else [] for r in relief]
     capes = []
@@ -1534,8 +1612,9 @@ countries and lakes; 1:10m populated places, rivers, geographic regions and poin
 marine areas and first-level divisions; simplified by tools/atlas.py, the sea ways (ways.json)
 computed from them. The countries' usual names in each
 language from Unicode CLDR 46 (https://cldr.unicode.org/), under the Unicode License v3: its
-copyright and permission notice in LICENSE-CLDR, beside this file. The places of history from
-Wikidata (https://www.wikidata.org/, CC0). The borders of past years (borders/<year>.json) from
+copyright and permission notice in LICENSE-CLDR, beside this file. The places of history and
+the sea's straits, channels and canals Natural Earth lacks from Wikidata
+(https://www.wikidata.org/, CC0). The borders of past years (borders/<year>.json) from
 OpenHistoricalMap (https://www.openhistoricalmap.org/, its contributors, CC0); the land it leaves
 to no state (Africa's and Asia's states before their colonisation) from historical-basemaps by
 André Ourednik (https://github.com/aourednik/historical-basemaps), under the GNU General Public
@@ -1607,7 +1686,7 @@ def build(folder: Path | None = None, refresh_history: bool = False) -> None:
     def text(data) -> str:
         return json.dumps(data, ensure_ascii=False, separators=(",", ":"))
 
-    all_reliefs, all_waters = reliefs(relief), waters(marine, lakes)
+    all_reliefs, all_waters = reliefs(relief), waters(marine, lakes, passages(folder, refresh_history))
     contents = {
         "typst.toml": TOML,
         "lib.typ": LIB.read_text(encoding="utf-8"),
