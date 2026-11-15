@@ -365,6 +365,87 @@ def test_a_translations_image_placed_clear_of_its_figure():
     assert figures_typst.compile_svg("geometry", example).startswith("<svg")
 
 
+@pytest.mark.parametrize(
+    "figure",
+    [
+        # a triangle's height: its length beside it once fell on the side [AB]
+        """ctz-def-points(B: (0, 0), C: (6, 0), H: (2, 0), A: (2, 4))
+  ctz-draw-polygon("A", "B", "C")
+  ctz-draw-segment("A", "H")
+  ctz-draw-length("B", "C", [6 cm], away: "A")
+  ctz-draw-length("A", "H", [4 cm], away: "C")""",
+        # a diameter's length, written at its middle, fell on the centre O
+        """ctz-def-points(O: (0, 0), A: (-3, 0), B: (3, 0), P: (0, 3))
+  ctz-draw-circle-r("O", 3)
+  ctz-draw-segment("A", "B")
+  ctz-draw-points("O")
+  ctz-draw-length("A", "B", [6 cm], away: "P")""",
+        # a narrow angle's value, at ctz-euclide's fixed distance, lay over a side
+        """ctz-def-points(A: (0, 0), B: (5, 0), C: (3.06, 2.57))
+  ctz-draw-polygon("A", "B", "C")
+  ctz-draw-angle("A", "B", "C", radius: 0.8, label: [40°])
+  ctz-draw-length("A", "C", [4 cm], away: "B")""",
+        # a line's name, written by hand at coordinates, fell on a point of it
+        """ctz-def-points(D1: (-2, 0), D2: (3, 0), A: (1, 3))
+  ctz-draw-line-add("D1", "D2")
+  ctz-def-perp("P1", "P2", ("D1", "D2"), "A")
+  ctz-def-ll("H", ("D1", "D2"), ("P1", "P2"))
+  ctz-draw-line-add("H", "A")
+  ctz-draw-points("A", "H")
+  ctz-draw-line-name("D1", "D2", $(d)$)
+  ctz-draw-line-name("H", "A", $(d')$)""",
+    ],
+)
+def test_a_text_the_preamble_places_stands_clear_of_the_drawing(figure):
+    """A length, an angle's value and a line's name placed by the preamble where no stroke,
+    circle, point or other text is in their way (bench of the collège's figures: 4 cm on a
+    side, 6 cm on a centre, 40° on a side, (d') on its point A): every text placed is checked
+    against the whole drawing at the end."""
+    check = """cetz.draw.get-ctx(ctx => {
+    let texts = _drawn(ctx).texts
+    assert(texts.len() > 0, message: "nothing placed")
+    for t in texts {
+      let hits = _box-hits(ctx, t.c, t.hw, t.hh, skip: t.skip)
+      assert(hits == 0, message: "a text on the drawing: " + repr(t.c))
+    }
+  })"""
+    body = f"#ctz-canvas({{\n  ctz-init()\n  {figure}\n  {check}\n}})"
+    assert figures_typst.compile_svg("geometry", body).startswith("<svg")
+
+
+def test_a_length_stays_at_its_segments_middle():
+    """A diameter's length moved along it to clear the centre O read as the radius's (6 cm
+    beside [AO]): a length is written facing its segment's middle, a segment cut by a point
+    (O on [AB]) on a dimension line over its whole length."""
+    body = """#ctz-canvas({
+  ctz-init()
+  ctz-def-points(O: (0, 0), A: (-3, 0), B: (3, 0), P: (0, 3))
+  ctz-draw-circle-r("O", 3)
+  ctz-draw-segment("A", "B")
+  ctz-draw-points("O")
+  ctz-draw-length("A", "B", [6 cm], away: "P")
+  cetz.draw.get-ctx(ctx => {
+    let t = _drawn(ctx).texts.first()
+    assert(calc.abs(t.c.at(0)) < 1e-6, message: "slid along: " + repr(t.c))
+    // the dimension line over the whole diameter, from A's side to B's
+    let dims = _drawn(ctx).segments.filter(s => calc.abs(s.at(0).at(1)) > 0.3)
+    let whole(s) = calc.abs(s.at(0).at(0) + 3) < 1e-6 and calc.abs(s.at(1).at(0) - 3) < 1e-6
+    assert(dims.any(whole), message: "no dimension line")
+  })
+})"""
+    assert figures_typst.compile_svg("geometry", body).startswith("<svg")
+
+
+def test_the_rule_names_a_line_by_its_function():
+    """The rule shows a line's name by ctz-draw-line-name, never by ctz-draw-text at
+    coordinates: its call compiles."""
+    rule = figures_typst.FAMILIES["geometry"].rules
+    assert "ctz-draw-text(2.2, 2" not in rule
+    (call,) = set(re.findall(r"`(ctz-draw-line-name\([^`]*\))`", rule))
+    body = f'#ctz-canvas({{ ctz-init(); ctz-def-points(A: (0, 0), B: (3, 1)); ctz-draw-line-add("A", "B"); {call} }})'
+    assert figures_typst.compile_svg("geometry", body).startswith("<svg")
+
+
 def test_a_symmetry_centre_placed_clear_of_its_figure():
     """A symmetry about a point the description doesn't place: its centre computed from the
     figure, never placed by eye (by eye, the AI put a vertex in line with B and O 2 drawings
