@@ -913,3 +913,58 @@ def test_a_region_that_is_a_country_shown_as_one():
     atlas has it as a country of its own, and the map was refused (the Arctic drawn by hand)."""
     body = '#map(pole: "north", countries: ("Danemark", "États-Unis"), regions: ("Groenland", "Alaska"))'
     assert figures_typst.compile_svg("map", body).startswith("<svg")
+
+
+def _past_states(year: int) -> dict:
+    """A year's states as the atlas ships them (borders/<year>.json in its archive)."""
+    import tarfile
+
+    (archive,) = figures_typst.ARCHIVES.glob("notosaurus-atlas-*.tar.gz")
+    with tarfile.open(archive) as tar:
+        return json.loads(tar.extractfile(f"borders/{year}.json").read())["countries"]
+
+
+def _holding(states: dict, lon: float, lat: float) -> list[str]:
+    """The names (the first of each) of the states whose rings hold a point."""
+    x, y = lon * 100, lat * 100
+
+    def within(ring):
+        inside = False
+        for (ax, ay), (bx, by) in zip(ring, ring[1:] + ring[:1], strict=True):
+            if (ay > y) != (by > y) and x < ax + (y - ay) * (bx - ax) / (by - ay):
+                inside = not inside
+        return inside
+
+    return [s["n"][0] if s["n"] else "" for s in states.values() if any(within(r) for r in s["r"])]
+
+
+def test_a_federation_keeps_its_colonies_land():
+    """French West Africa in 1914 was no more than a piece of today's Niger: OpenHistoricalMap
+    draws its colonies over it (Upper Senegal and Niger, Mauritania), and each, lying in it,
+    was taken from it. A land lying in another of the same empire is a part of it, the
+    federation whole; a state lying in another's (Manchukuo in China) still taken from it."""
+    then = _past_states(1914)
+    for city, lon, lat in (
+        ("Dakar", -17.44, 14.69),
+        ("Conakry", -13.68, 9.51),
+        ("Bamako", -8.0, 12.65),
+        ("Niamey", 2.11, 13.51),
+    ):
+        assert "Afrique-Occidentale française" in _holding(then, lon, lat), city
+    harbin = _holding(_past_states(1942), 126.63, 45.75)
+    assert "Mandchoukouo" in harbin and not any("Chine" in n for n in harbin)
+
+
+def test_a_name_the_atlas_lacks_answered_at_once():
+    """The nearest names to one the atlas lacks were measured against every name of every
+    water, each folded again: 9 seconds a figure, past the compile's limit under load (the
+    tests on Windows cancelled). Measured on the keys folded already, those too long or too
+    short skipped: the answer at once, the names as the atlas writes them."""
+    import time
+
+    start = time.monotonic()
+    with pytest.raises(figures_typst.Unusable, match='it has "golfe de Gascogne"'):
+        figures_typst.compile_svg("map", '#map(waters: ("golfe de Gascogn",))')
+    with pytest.raises(figures_typst.Unusable, match='it has "Loire"'):
+        figures_typst.compile_svg("map", '#map(rivers: ("Loir",))')
+    assert time.monotonic() - start < 4
