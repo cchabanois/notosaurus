@@ -115,6 +115,24 @@ def test_two_strands_face_to_face_each_pair_joined():
     )
 
 
+def test_two_strands_asked_bases_are_not_shown():
+    """A card asking which base: written "?", whatever it was (its answer never on the
+    figure), on the strand named."""
+    drawn = lambda body: figures_typst.compile_svg("sequence", f"#strands({body})")  # noqa: E731
+    pair = 'top: "{}", ask: (("top", 2), ("bottom", 2))'
+    assert drawn(pair.format("ATG")) == drawn(pair.format("AAG"))  # T–A or A–T: the same "?"s
+    bottom = drawn('top: "ATG", ask: (("bottom", 2),)')
+    assert bottom != drawn('top: "ATG"') and bottom != drawn('top: "ATG", ask: (("top", 2),)')
+    named = 'top: "ATG", names: ("brin 1", "brin 2"), ask: (("{}", 2),)'
+    assert drawn(named.format("brin 2")) == drawn(named.format("bottom"))
+
+
+def test_two_strands_ends_written_when_asked():
+    """`ends: true`: the strands' 5' and 3' ends written beside them."""
+    drawn = lambda body: figures_typst.compile_svg("sequence", f"#strands({body})")  # noqa: E731
+    assert drawn('top: "ATG", ends: true') != drawn('top: "ATG"')
+
+
 @pytest.mark.parametrize(
     ("body", "said"),
     [

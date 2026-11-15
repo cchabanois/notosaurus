@@ -289,6 +289,89 @@ def test_a_body_on_a_slope_rests_on_it():
         )
 
 
+def _mechanics_image(body: str):
+    """A mechanics scene drawn in grey levels, and how many of its pixels make a centimetre."""
+    from PIL import Image
+
+    svg = figures.clean(figures_typst.compile_svg("mechanics", f"#mechanics({body})"))
+    image = Image.open(io.BytesIO(figures.to_png(svg))).convert("L")
+    width = float(re.search(r'viewBox="[-\d.]+ [-\d.]+ ([\d.]+)', svg).group(1))  # in pt
+    return image, image.width / width * 72 / 2.54
+
+
+@pytest.mark.parametrize("angle", [20, 30, 45])
+def test_a_body_drawn_on_a_slope_rests_on_its_line(angle):
+    """The drawing itself: the block's underside on the slope's line, never sunk into it nor
+    above it. The slope's line read right of the block, carried under it: the block's lowest
+    pixels in each column on it, within a stroke."""
+    image, _ = _mechanics_image(f'support: "slope", angle: {angle}')
+    px, (w, h) = image.load(), image.size
+    block = [(x, y) for x in range(w) for y in range(h) if abs(px[x, y] - 215) <= 2]  # its grey fill
+    right = max(x for x in range(w) if any(px[x, y] < 128 for y in range(h)))  # the slope's top
+    x1, x2 = (max(x for x, _ in block) + right) // 2, right - 8
+    y1, y2 = (next(y for y in range(h) if px[x, y] < 250) for x in (x1, x2))  # the slope's line there
+    lowest: dict[int, int] = {}
+    for x, y in block:
+        lowest[x] = max(lowest.get(x, 0), y)
+    gaps = [y1 + (y2 - y1) * (x - x1) / (x2 - x1) - y for x, y in lowest.items()]
+    assert -3 < min(gaps) < 4, min(gaps)  # its corner on the line, its underside along it
+
+
+def _uprights(body: str) -> list[tuple[float, float]]:
+    """A mechanics scene's upright strokes longer than 0.5 cm (its vertical arrows): each one's
+    place across and its length, in cm."""
+    image, per_cm = _mechanics_image(body)
+    px = image.load()
+    columns = []
+    for x in range(image.width):
+        best = run = 0
+        for y in range(image.height):
+            run = run + 1 if px[x, y] < 128 else 0
+            best = max(best, run)
+        if best > 0.5 * per_cm:
+            columns.append((x, best))
+    strokes: list[list[tuple[int, int]]] = []
+    for x, length in columns:
+        if strokes and x - strokes[-1][-1][0] <= 1:
+            strokes[-1].append((x, length))
+        else:
+            strokes.append([(x, length)])
+    return [(sum(x for x, _ in s) / len(s) / per_cm, max(n for _, n in s) / per_cm) for s in strokes]
+
+
+def test_vectors_going_the_same_way_are_drawn_apart():
+    """Two vectors up from one point: two arrows, about 0.28 cm apart (on one another, they
+    were one arrow)."""
+    (a, _), (b, _) = _uprights('vectors: (("F", "up"), ("G", "up"))')
+    assert 0.2 < b - a < 0.4, (a, b)
+    assert len(_uprights('vectors: (("F", "up"),)')) == 1
+
+
+def test_a_vectors_length_drawn_from_its_scale():
+    """`scale: (2, "N")`, 1 cm for 2 N: a vector of 4 N drawn 2 cm long, of 2 N 1 cm; without a
+    scale, its third value a factor of the 1.5 cm a vector is."""
+    for body, cm in (
+        ('scale: (2, "N"), vectors: (("F", "up", 4),)', 2),
+        ('scale: (2, "N"), vectors: (("F", "up", 2),)', 1),
+        ('vectors: (("F", "up", 2),)', 3),
+    ):
+        ((_, length),) = _uprights(body)
+        assert abs(length - cm) < 0.15, (body, length)
+
+
+def test_a_bodys_shape_drawn_as_given():
+    """A ball on the plane drawn as a ball (its lighter grey), not as the block a body on a
+    plane is otherwise; a block as a block."""
+
+    def greys(body: str) -> set[int]:
+        image, _ = _mechanics_image(f'support: "plane"{body}')
+        counts = image.histogram()
+        return {v for v in (215, 225) if counts[v] > 1000}  # a block's fill, a ball's
+
+    assert greys("") == greys(', shape: "block"') == {215}
+    assert greys(', shape: "ball"') == {225}
+
+
 def test_a_bodys_scene_is_drawn_from_its_values():
     """Two bodies acting on each other, a vector's index and Greek letter as the AI writes
     them, an angle's value: computed by the function, never written by the AI."""
