@@ -1014,7 +1014,8 @@
     </form>
   </aside>
 
-  <!-- Part of a photo hidden before it is sent: blacked out with a finger, un-blacked the same way -->
+  <!-- Part of a photo hidden before it is sent: blacked out with a finger, un-blacked the same way;
+       cropped to the part needed, the frame dragged by its corners -->
   <div class="hide-editor" x-cloak x-show="hiding.open" role="dialog" :aria-label="$t('app.hide.title')"
        @keydown.escape.window="hiding.open && ($event.preventDefault(), doneHide(false))">
     <p class="hide-hint">
@@ -1023,17 +1024,27 @@
       <span x-show="hiding.pdf" x-text="$t('app.hide.pdf')"></span>
     </p>
     <div class="hide-frame">
-      <canvas x-ref="hideCanvas" @pointerdown="hideStroke($event)" @pointermove="hideStroke($event)"
-              @pointerup="hideStroke($event)" @pointercancel="hideStroke($event)"></canvas>
+      <div class="hide-stage" :style="`--ratio: ${hiding.ratio}`">
+        <canvas x-ref="hideCanvas" :class="{ cropping: hiding.crop }" @pointerdown="hideStroke($event)" @pointermove="hideStroke($event)"
+                @pointerup="hideStroke($event)" @pointercancel="hideStroke($event)"></canvas>
+        <div class="crop-frame" x-show="hiding.crop || cropping()" :style="cropFrameStyle()">
+          <template x-for="corner in ['nw', 'ne', 'sw', 'se']" :key="corner">
+            <i class="crop-handle" :class="corner" x-show="hiding.crop" @pointerdown.stop="startHideCrop($event, corner)"></i>
+          </template>
+        </div>
+      </div>
     </div>
     <div class="hide-tools">
       <div class="hide-modes" role="group">
-        <button type="button" class="btn soft" :class="{ chosen: !hiding.erase }" :aria-pressed="String(!hiding.erase)"
-                @click="hiding.erase = false"><span aria-hidden="true">⬛</span> <span x-text="$t('app.hide.paint')"></span></button>
-        <button type="button" class="btn soft" :class="{ chosen: hiding.erase }" :aria-pressed="String(hiding.erase)"
-                @click="hiding.erase = true"><span aria-hidden="true">◻️</span> <span x-text="$t('app.hide.erase')"></span></button>
+        <button type="button" class="btn soft" :class="{ chosen: !hiding.crop && !hiding.erase }" :aria-pressed="String(!hiding.crop && !hiding.erase)"
+                @click="hiding.crop = false; hiding.erase = false"><span aria-hidden="true">⬛</span> <span x-text="$t('app.hide.paint')"></span></button>
+        <button type="button" class="btn soft" :class="{ chosen: !hiding.crop && hiding.erase }" :aria-pressed="String(!hiding.crop && hiding.erase)"
+                @click="hiding.crop = false; hiding.erase = true"><span aria-hidden="true">◻️</span> <span x-text="$t('app.hide.erase')"></span></button>
+        <button type="button" class="btn soft" :class="{ chosen: hiding.crop }" :aria-pressed="String(hiding.crop)"
+                @click="hiding.crop = true"><span aria-hidden="true">✂️</span> <span x-text="$t('app.hide.crop')"></span></button>
       </div>
-      <button type="button" class="btn soft" @click="clearHidden()" x-text="$t('app.hide.clear')"></button>
+      <button type="button" class="btn soft" x-show="!hiding.crop" @click="clearHidden()" x-text="$t('app.hide.clear')"></button>
+      <button type="button" class="btn soft" x-show="hiding.crop" @click="keepWhole()" x-text="$t('app.hide.keepAll')"></button>
       <button type="button" class="btn soft" @click="doneHide(false)" x-text="$t('common.cancel')"></button>
       <button type="button" class="btn primary" @click="doneHide(true)" x-text="$t('app.hide.done')"></button>
     </div>
@@ -1065,7 +1076,7 @@
       <button @click="removeShownPhoto()" :aria-label="$t('app.photos.remove')" :title="$t('app.photos.remove')">🗑️</button>
       <button @click="rotatePhoto(viewer.index)" :disabled="loading" :aria-label="$t('app.photos.rotate')"
               :title="$t('app.photos.rotate')">↻</button>
-      <button :class="{ used: photos[viewer.index]?.mask }" x-show="!photos[viewer.index]?.sent" @click="openHide(viewer.index)"
+      <button :class="{ used: photos[viewer.index]?.mask || photos[viewer.index]?.crop }" x-show="!photos[viewer.index]?.sent" @click="openHide(viewer.index)"
               :disabled="loading" :aria-label="$t('app.photos.hide')" :title="$t('app.photos.hide')">🖍️</button>
     </div>
     <template x-if="viewerList().length > 1">
