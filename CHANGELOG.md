@@ -50,6 +50,7 @@ Each pull request's entries (the `## Changelog` of its description) are put unde
 
 ### Changed
 
+- Maps: when a river, relief or sea is not in the atlas, the error names the closest ones it has, so the AI can correct the name instead of dropping it.
 - 🗺️ The past borders come from OpenHistoricalMap: finer, dated to the day, every colony with its ruler.
 - 🗂️ Classifications drawn as groups inside groups are narrower and easier to read on a card: groups side by side wrap onto several rows, each group's name is centred above a thin line, and its own members sit under its sub-groups.
 - « Toutes les pages »: no more ✕ on each page. « Sélectionner » (or a long press on a page) chooses pages, then « Retirer » removes them together; a tap still shows a page in full.
@@ -67,6 +68,7 @@ Each pull request's entries (the `## Changelog` of its description) are put unde
 
 ### Fixed
 
+- Maps: straits and canals ("canal de Suez", "détroit d'Ormuz", "pas de Calais", "détroit de Béring"…) are found among the waters in every language, and a strait or canal too small to see on a world map is marked by a ring with its name beside it.
 - 🏛️ Schemes: each arrow drawn straight from box to box (one soft curve round a box in its way), its words on it on a white ground, never over other words; arrows arriving at a box spread along its side; larger arrowheads, readable on a phone.
 - 📊 A chart writes the values its lesson gives (a pie's percentages with "%"), and only hides the one the card asks for.
 - ✋ A card's « Annuler » drops its correction at once, whatever it is at (the AI writing it, or a dictation): the field closes and the card stays as it was.
