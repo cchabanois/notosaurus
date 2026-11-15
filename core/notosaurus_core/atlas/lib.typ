@@ -133,19 +133,29 @@
 // the nearest first
 #let nearest-names(items, key) = {
   let own = own-words(key)
+  let (whole, part) = (calc.max(1, calc.div-euclid(key.len(), 6)), calc.max(1, calc.div-euclid(own.len(), 4)))
   let found = ()
   for item in items {
+    // (its keys, folded already: a name folded again only when it is kept; a key too long or
+    // too short to be near never measured)
     let best = none
-    for n in item.n {
-      let k = fold(n)
-      let d = distance(key, k, calc.max(1, calc.div-euclid(key.len(), 6)))
-      if d == none and own.len() >= 4 {
+    for k in item.k {
+      let d = if calc.abs(k.len() - key.len()) > whole { none } else { distance(key, k, whole) }
+      if d == none and own.len() >= 4 and k.len() + part >= own.len() {
         let o = own-words(k)
-        if o.len() > 0 { d = distance(own, o, calc.max(1, calc.div-euclid(own.len(), 4))) }
+        if o.len() > 0 and calc.abs(o.len() - own.len()) <= part { d = distance(own, o, part) }
       }
-      if d != none and (best == none or d < best.at(0)) { best = (d, n) }
+      if d != none and (best == none or d < best.at(0)) { best = (d, (k,)) } else if d != none and d == best.at(0) {
+        best.at(1).push(k)
+      }
     }
-    if best != none and found.all(((_, m)) => m != best.at(1)) { found.push(best) }
+    if best != none {
+      // the first of its names (the page's languages first) folded to one of the nearest
+      // keys; else its first
+      let name = item.n.find(n => fold(n) in best.at(1))
+      let name = if name == none { item.n.first() } else { name }
+      if found.all(((_, m)) => m != name) { found.push((best.at(0), name)) }
+    }
   }
   found.sorted(key: ((d, _)) => d).slice(0, calc.min(3, found.len())).map(((_, n)) => n)
 }

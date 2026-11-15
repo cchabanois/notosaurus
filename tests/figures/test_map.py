@@ -953,3 +953,18 @@ def test_a_federation_keeps_its_colonies_land():
         assert "Afrique-Occidentale française" in _holding(then, lon, lat), city
     harbin = _holding(_past_states(1942), 126.63, 45.75)
     assert "Mandchoukouo" in harbin and not any("Chine" in n for n in harbin)
+
+
+def test_a_name_the_atlas_lacks_answered_at_once():
+    """The nearest names to one the atlas lacks were measured against every name of every
+    water, each folded again: 9 seconds a figure, past the compile's limit under load (the
+    tests on Windows cancelled). Measured on the keys folded already, those too long or too
+    short skipped: the answer at once, the names as the atlas writes them."""
+    import time
+
+    start = time.monotonic()
+    with pytest.raises(figures_typst.Unusable, match='it has "golfe de Gascogne"'):
+        figures_typst.compile_svg("map", '#map(waters: ("golfe de Gascogn",))')
+    with pytest.raises(figures_typst.Unusable, match='it has "Loire"'):
+        figures_typst.compile_svg("map", '#map(rivers: ("Loir",))')
+    assert time.monotonic() - start < 4
