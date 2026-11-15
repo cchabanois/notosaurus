@@ -14,9 +14,10 @@ ports, the capes and the canals routes and flows pass).
 
   .venv/bin/python tools/atlas.py [folder] [--refresh-history]
 
-borders/<year>.json: the states of YEARS (1914, 1960) from historical-basemaps (GPL-3.0, its
-licence shipped), their names from Wikidata (kept in tools/atlas-borders.json, asked again with
---refresh-history), PAST telling what the source lacks (a colony's ruler, a state's parts).
+borders/<year>.json: the states of each of LAYERS' days from OpenHistoricalMap (CC0), as its
+database stood on OHM_DATE; the land it leaves to no state filled by historical-basemaps' (GPL-3.0,
+its licence shipped); their names from Wikidata (kept in tools/atlas-borders.json, asked again
+with --refresh-history). OHM's answers are kept in `folder`, when given (some 150 MB a layer).
 
 The sources read from `folder` when it has them (by their names), else downloaded: Natural
 Earth's and CLDR's at a fixed version. The places of history (HISTORY) are read from
@@ -46,13 +47,13 @@ from pathlib import Path
 import shapely
 import shapely.affinity
 from shapely.geometry import shape
-from shapely.ops import polylabel
+from shapely.ops import polygonize, polylabel
 
 ROOT = Path(__file__).resolve().parent.parent
 CORE = ROOT / "core" / "notosaurus_core"
 LIB = CORE / "atlas" / "lib.typ"
 TARGET = CORE / "typst"
-NAME, VERSION = "notosaurus-atlas", "0.6.0"
+NAME, VERSION = "notosaurus-atlas", "0.7.0"
 SOURCE = "https://raw.githubusercontent.com/nvkelso/natural-earth-vector/v5.1.2/geojson/"
 COUNTRIES = "ne_50m_admin_0_countries.geojson"  # 1:50m: a country's shape, light enough
 PLACES = "ne_10m_populated_places.geojson"  # 1:10m: the cities, their names in many languages
@@ -135,350 +136,171 @@ OLD_NAMES = {
     ("KAZ", "almaty"): ("Alma-Ata",),
     ("MOZ", "maputo"): ("Lourenço Marques",),
 }
-# The borders of past years (a map's `year`: 1914's alliances and colonial empires, the Cold
-# War's blocs): historical-basemaps (André Ourednik, GPL-3.0), at a fixed commit, its licence
-# shipped with them. Each state of a year by its name there; PAST says, for those it names,
-# the Wikipedia article its names come from (Wikidata, its own name else), the country it
-# belonged to (a colony, a protectorate: a map's `empire`), or the state it was part of (its
-# land joined to that state's: the source draws the Caucasus apart from the Russian Empire),
-# and the short names it goes by ("also": URSS, RDA, Allemagne)
+# The borders of past years (a map's `year`): OpenHistoricalMap's states (CC0) as they were on
+# each layer's day, as its database stood on OHM_DATE (the same atlas whatever day it is made).
+# The land it leaves to no state filled by historical-basemaps' states (André Ourednik,
+# GPL-3.0, at a fixed commit, its licence shipped): Africa's and Asia's states before their
+# colonisation, a state OHM lacks (Egypt in 1914, two of Germany's zones). Their names from
+# Wikidata (CC0), kept in BORDERS_FILE
+OHM = "https://overpass-api.openhistoricalmap.org/api/interpreter"
+OHM_DATE = "2026-11-01T00:00:00Z"
 BORDERS_COMMIT = "4b5039e50d8d2464b065bd76ad6086cd4597108d"
 BORDERS_SOURCE = f"https://raw.githubusercontent.com/aourednik/historical-basemaps/{BORDERS_COMMIT}/"
-BORDERS_FILE = ROOT / "tools" / "atlas-borders.json"  # what Wikidata gave for the states' names, kept
-# Each year's borders and the years they stand for (1914's through the war; 1960's the Cold
-# War's, from East Germany to the Soviet Union's end); another year has none
-YEARS = {
-    1815: (1815, 1858),  # the Congress of Vienna's Europe, before Italy's and Germany's unity
-    1880: (1871, 1884),  # after them, before Africa's partition
-    1914: (1914, 1918),
-    1930: (1919, 1937),  # between the wars
-    1938: (1938, 1938),  # after the Anschluss, before Munich
-    1945: (1945, 1948),  # Germany's four zones
-    1960: (1949, 1991),
+BORDERS_YEARS = (1815, 1880, 1900, 1914, 1920, 1930, 1938, 1945, 1960, 1994)  # its layers, the nearest one read
+BORDERS_FILE = ROOT / "tools" / "atlas-borders.json"  # what Wikidata gave for the states, kept
+# Each layer: the day its borders are taken on, and the years it stands for; another year has none
+LAYERS = {
+    1815: ("1815-07-01", 1815, 1858),  # the Congress of Vienna's Europe
+    1866: ("1866-01-01", 1859, 1870),  # Italy made, Germany not yet
+    1880: ("1880-07-01", 1871, 1884),  # after Germany's unity, before Africa's partition
+    1900: ("1900-07-01", 1885, 1913),  # Africa partitioned
+    1914: ("1914-07-01", 1914, 1918),
+    1925: ("1925-07-01", 1919, 1937),  # between the wars
+    1938: ("1938-07-01", 1938, 1938),  # after the Anschluss, before Munich
+    1942: ("1942-07-01", 1939, 1944),  # Europe under Germany, Asia under Japan
+    1946: ("1946-07-01", 1945, 1948),  # Germany's four zones
+    1960: ("1960-07-01", 1949, 1974),  # the Cold War, Africa's independence
+    1985: ("1985-07-01", 1975, 1991),
 }
-UK, FR, DE, IT, BE, PT, ES, NL, RU, US, JP = (
-    "United Kingdom of Great Britain and Ireland",
-    "France",
-    "German Empire",
-    "Kingdom of Italy",
-    "Belgium",
-    "Portugal",
-    "Spain",
-    "Netherlands",
-    "Russian Empire",
-    "United States",
-    "Empire of Japan",
+# The states that ruled others, each by the names a colony's sources give it (OHM's
+# colony_of, Wikidata's "part of" and "country", historical-basemaps' SUBJECTO or brackets:
+# "Algeria (FR)"), the first word of a colony's name ("British Raj") last of each
+EMPIRES = (
+    (
+        "United Kingdom of Great Britain and Ireland",
+        "United Kingdom",
+        "British Empire",
+        "Britain",
+        "Great Britain",
+        "GB",
+        "UK",
+        "UK Lybia",
+        "British",
+    ),
+    (
+        "France",
+        "French Republic",
+        "Kingdom of France",
+        "French State",
+        "French Empire",
+        "Second French Empire",
+        "French Third Republic",
+        "Bourbon Restoration in France",
+        "July Monarchy",
+        "Vichy France",
+        "French Fourth Republic",
+        "French colonial empire",
+        "French Union",
+        "Overseas France",
+        "FR",
+        "Frech Lybia",
+        "French",
+    ),
+    ("German Empire", "German Reich", "Germany", "Nazi Germany", "Weimar Republic", "German colonial empire", "German"),
+    ("Kingdom of Italy", "Italy", "Fascist Italy", "Italian Empire", "Italian colonial empire", "IT", "Italian"),
+    ("Portugal", "Kingdom of Portugal", "First Portuguese Republic", "Estado Novo", "Portuguese Empire", "Portuguese"),
+    ("Spain", "Kingdom of Spain", "Spanish Empire", "Spanish"),
+    ("Kingdom of the Netherlands", "Netherlands", "United Kingdom of the Netherlands", "Dutch Empire", "Dutch"),
+    ("Belgium", "Belgian Empire", "Belgian"),
+    ("Empire of Japan", "Japan", "Japanese"),
+    ("United States", "United States of America", "USA", "US", "American"),
+    ("Russian Empire", "Russia", "Russian"),
+    ("Soviet Union", "USSR", "Soviet"),
+    ("Denmark", "Kingdom of Denmark", "Danish"),
+    ("Ottoman Empire", "Ottoman"),
+    ("Union of South Africa", "South Africa"),
+    ("New Zealand", "Dominion of New Zealand"),
 )
-# A ruler as the source writes it (its SUBJECTO, or in brackets after a land's name: "Algeria
-# (FR)", "Mesopotamia (GB)"), and the names of the same state in its years
-RULERS = (  # (each in order: the state's names first, the source's shorthands after)
-    ("United Kingdom of Great Britain and Ireland", "United Kingdom", "Great Britain", "GB", "UK", "UK Lybia"),
-    ("France", "FR", "Frech Lybia", "French Lybia"),
-    ("Kingdom of Italy", "Italy", "IT"),
-    ("Russian Empire", "USSR", "White Russia", "Russia", "Soviet"),
-    ("United States", "USA"),
-    ("Netherlands", "United Kingdom of Netherlands"),
-    ("German Empire", "Germany"),
-)
-# The short names states of several years go by
+# What OHM calls a state of its own (its place or border_type): Wikidata's "country" never
+# makes it a colony (Brazil, the Portuguese Empire's once). (Not a federation: most were a
+# colony's, French West Africa's, Indochina's)
+SOVEREIGN = {"country", "nation", "kingdom", "empire", "republic", "grand_duchy", "principality"}
+# A land a state ruled named as a whole that is two countries today (Korea, Japan's), by the
+# English name of either
+WHOLE = dict.fromkeys(("North Korea", "South Korea"), "Corée|Korea|Corea|Coreia")
+# OHM's colonies that say nowhere whose they were (no colony_of, no Wikidata item)
+RULED = {
+    "Indochinese Union": "France",
+    "Indochinese Federation": "France",
+    "Philippine Executive Commission": "Japan",
+}
+# historical-basemaps' names that are not Wikipedia's articles (where their names come from)
+ARTICLES = {
+    "Germany (Soviet)": "Soviet occupation zone in Germany",
+    "Germany (USA)": "American occupation zone in Germany",
+    "Germany (UK)": "British occupation zone in Germany",
+    "Germany (France)": "French occupation zone in Germany",
+    "Arabia (Nejd)": "Emirate of Nejd and Hasa",
+    "Abyssinia": "Ethiopian Empire",
+    "Persia": "Qajar Iran",
+}
+# Wikidata's items OHM gives a past state that stand for another one before a year: the
+# names of the article given instead (China's republic before 1949 given Taiwan's)
+ITEMS = {"Q865": (1949, "Republic of China (1912–1949)")}
+# The short names a state goes by (a page's « URSS », « RDA », « Allemagne » in 1914), by its
+# English name (Wikidata's)
 GERMANY = "Allemagne|Germany|Deutschland|Alemania|Germania|Alemanha"
 RUSSIA = "Russie|Russia|Russland|Rusia|Rússia"
 ITALY = "Italie|Italy|Italien|Italia|Itália"
 AUSTRIA = "Autriche|Austria|Österreich|Áustria"
 POLAND = "Pologne|Poland|Polen|Polonia|Polônia|Polónia"
-SOVIET = "URSS|USSR|UdSSR|SSSR"
+SOVIET = "URSS|USSR|UdSSR|SSSR|Union soviétique|Soviet Union"
 CZECHOSLOVAKIA = "Tchécoslovaquie|Czechoslovakia|Tschechoslowakei|Checoslovaquia|Cecoslovacchia|Checoslováquia"
 YUGOSLAVIA = "Yougoslavie|Yugoslavia|Jugoslawien|Iugoslavia|Jugoslávia"
 BRITAIN = "Royaume-Uni|United Kingdom|Vereinigtes Königreich|Reino Unido|Regno Unito|Grande-Bretagne|Great Britain"
 TURKEY = "Turquie|Turkey|Türkei|Turquía|Turchia|Turquia"
-PAST: dict[int, dict[str, dict[str, str]]] = {
-    1914: {
-        "Austro-Hungarian Empire": {"article": "Austria-Hungary"},
-        "German Empire": {
-            "article": "German Empire",
-            "also": "Allemagne|Germany|Deutschland|Alemania|Germania|Alemanha",
-        },
-        "Kingdom of Italy": {
-            "article": "Kingdom of Italy",
-            "also": "Italie|Italy|Italien|Italia|Itália",
-        },
-        "Russian Empire": {
-            "article": "Russian Empire",
-            "also": "Russie|Russia|Russland|Rusia|Rússia",
-        },
-        "Ottoman Empire": {
-            "article": "Ottoman Empire",
-            "also": "Empire turc|Turquie",
-        },
-        "United Kingdom of Great Britain and Ireland": {
-            "article": "United Kingdom of Great Britain and Ireland",
-            "also": "Royaume-Uni|United Kingdom|Vereinigtes Königreich|Reino Unido|Regno Unito|Grande-Bretagne"
-            "|Great Britain",
-        },
-        "Empire of Japan": {
-            "article": "Empire of Japan",
-            "also": "Japon|Japan|Japón|Giappone|Japão",
-        },
-        "Manchu Empire": {
-            "article": "Republic of China (1912–1949)",
-            "also": "Chine|China|Cina",
-        },  # the Qing gone in 1912
-        "Xinjiang": {"part": "Manchu Empire"},
-        "Armenia": {"part": RU},
-        "Azerbaijan": {"part": RU},
-        "Georgia": {"part": RU},
-        "Sakhalin (RU)": {"part": RU},
-        "Grand Duchy of Finland": {"part": RU},
-        "Persia": {"article": "Qajar Iran"},
-        "Arabia (Nejd)": {"article": "Emirate of Nejd and Hasa"},
-        "Abyssinia": {"article": "Ethiopian Empire"},
-        "Rattanakosin Kingdom": {"article": "Rattanakosin Kingdom (1782–1932)"},
-        # France's
-        "Algeria": {"article": "French Algeria", "owner": FR},
-        "Tunisia": {"article": "French protectorate of Tunisia", "owner": FR},
-        "Morocco": {"article": "French protectorate in Morocco", "owner": FR},
-        "French West Africa": {"owner": FR},
-        "French Equatorial Africa": {"owner": FR},
-        "Madagascar (France)": {"article": "Colony of Madagascar and Dependencies", "owner": FR},
-        "Djibouti": {"article": "French Somaliland", "owner": FR},
-        "French Indochina": {"owner": FR},
-        "French Guiana": {"owner": FR},
-        "Guadeloupe": {"owner": FR},
-        "Martinique": {"owner": FR},
-        # the United Kingdom's
-        "British Raj": {"owner": UK},
-        "Hong Kong": {"article": "British Hong Kong", "owner": UK},
-        "Egypt": {"article": "Sultanate of Egypt", "owner": UK},
-        "Anglo-Egyptian Sudan": {"owner": UK},
-        "British East Africa": {"article": "East Africa Protectorate", "owner": UK},
-        "Uganda": {"article": "Uganda Protectorate", "owner": UK},
-        "British Somaliland": {"owner": UK},
-        "Nigeria": {"article": "Colony and Protectorate of Nigeria", "owner": UK},
-        "Gold Coast": {"article": "Gold Coast (British colony)", "owner": UK},
-        "Sierra Leone": {"article": "Sierra Leone Colony and Protectorate", "owner": UK},
-        "Gambia, The": {"article": "Gambia Colony and Protectorate", "owner": UK},
-        "Rhodesia": {"article": "Rhodesia (region)", "owner": UK},
-        "Malawi": {"article": "Nyasaland", "owner": UK},
-        "Botswana": {"article": "Bechuanaland Protectorate", "owner": UK},
-        "Lesotho": {"article": "Basutoland", "owner": UK},
-        "Swaziland": {"owner": UK},
-        "South Africa": {"article": "Union of South Africa", "owner": UK},
-        "Canada": {"article": "Dominion of Canada", "owner": UK},
-        "Australia": {"article": "Dominion of Australia", "owner": UK},
-        "New Zealand": {"article": "Dominion of New Zealand", "owner": UK},
-        "Ceylon": {"article": "British Ceylon", "owner": UK},
-        "Malaya": {"article": "British Malaya", "owner": UK},
-        "Guyana": {"article": "British Guiana", "owner": UK},
-        "Belize": {"article": "British Honduras", "owner": UK},
-        "Malta": {"article": "Crown Colony of Malta", "owner": UK},
-        "British Protectorate": {"owner": UK},
-        "Kuwait": {"article": "Sheikhdom of Kuwait", "owner": UK},
-        "Qatar": {"owner": UK},
-        # Germany's
-        "Kamerun": {"owner": DE},
-        "Togoland": {"owner": DE},
-        "German South-West Africa": {"owner": DE},
-        "German E. Africa (Tanganyika)": {"article": "German East Africa", "owner": DE},
-        "Papua New Guinea": {"article": "German New Guinea", "owner": DE},
-        # Italy's, Belgium's, Portugal's, Spain's, the Netherlands', the United States', Japan's
-        "Libya": {"article": "Italian Libya", "owner": IT},
-        "Eritrea": {"article": "Italian Eritrea", "owner": IT},
-        "Italian Somaliland": {"owner": IT},
-        "Belgian Congo": {"owner": BE},
-        "Angola": {"article": "Portuguese Angola", "owner": PT},
-        "Mozambique": {"article": "Portuguese Mozambique", "owner": PT},
-        "Portuguese Guinea": {"owner": PT},
-        "Spanish Morocco": {"article": "Spanish protectorate in Morocco", "owner": ES},
-        "Spanish Sahara": {"owner": ES},
-        "Rio De Oro": {"article": "Río de Oro", "owner": ES},
-        "Equatorial Guinea": {"article": "Spanish Guinea", "owner": ES},
-        "Netherlands Indies": {"article": "Dutch East Indies", "owner": NL},
-        "Suriname": {"article": "Surinam (Dutch colony)", "owner": NL},
-        "Philippines": {"article": "Philippine Islands", "owner": US},
-        "Puerto Rico": {"owner": US},
-    },
-    1815: {
-        "United Kingdom of the Netherlands": {"article": "United Kingdom of the Netherlands", "land": "NLD|BEL"},
-        "Lombardy": {"part": "Austrian Empire"},
-        "Venetia": {"part": "Austrian Empire"},
-        "Austrian Empire": {"article": "Austrian Empire", "also": AUSTRIA},
-        "Prussia": {"article": "Kingdom of Prussia", "also": "Prusse|Prussia|Preußen|Prusia|Prússia"},
-        "Russian Empire": {"article": "Russian Empire", "also": RUSSIA},
-        "United Kingdom of Great Britain and Ireland": {
-            "article": "United Kingdom of Great Britain and Ireland",
-            "also": BRITAIN,
-        },
-        "Ottoman Empire": {"article": "Ottoman Empire", "also": "Empire turc"},
-        "Bavaria": {"article": "Kingdom of Bavaria"},
-        "Saxony": {"article": "Kingdom of Saxony"},
-        "Hanover": {"article": "Kingdom of Hanover"},
-        "Württemberg": {"article": "Kingdom of Württemberg"},
-        "Baden": {"article": "Grand Duchy of Baden"},
-        "Holstein": {"article": "Duchy of Holstein", "owner": "Denmark"},
-        "Schleswig": {"article": "Duchy of Schleswig", "owner": "Denmark"},
-        "Tuscany": {"article": "Grand Duchy of Tuscany"},
-        "Modena": {"article": "Duchy of Modena and Reggio"},
-        "Parma": {"article": "Duchy of Parma and Piacenza"},
-        "Lucca": {"article": "Duchy of Lucca"},
-        "Republic of Kraków": {"article": "Free City of Kraków"},
-        "Sweden–Norway": {"article": "Union between Sweden and Norway"},
-        "Kingdom of Sardinia": {"article": "Kingdom of Sardinia"},
-        "Kingdom of the Two Sicilies": {"article": "Kingdom of the Two Sicilies"},
-        "Papal States": {"article": "Papal States"},
-    },
-    1880: {
-        "Germany": {"article": "German Empire", "also": GERMANY},
-        "Austria Hungary": {"article": "Austria-Hungary"},
-        "Italy": {"article": "Kingdom of Italy", "also": ITALY},
-        "Russian Empire": {"article": "Russian Empire", "also": RUSSIA},
-        "United Kingdom of Great Britain and Ireland": {
-            "article": "United Kingdom of Great Britain and Ireland",
-            "also": BRITAIN,
-        },
-        "Ottoman Empire": {"article": "Ottoman Empire", "also": "Empire turc"},
-        "Algeria (FR)": {"article": "French Algeria"},
-        "Senegal (FR)": {"article": "French Senegal"},
-        "Angola (Portugal)": {"article": "Portuguese Angola"},
-        "Gold Coast (GB)": {"article": "Gold Coast (British colony)"},
-    },
-    1930: {
-        "White Russia": {"article": "Soviet Union", "also": SOVIET},  # (the source's name for the whole of it)
-        "Armenia": {"part": "White Russia"},
-        "Azerbaijan": {"part": "White Russia"},
-        "Georgia": {"part": "White Russia"},
-        "East Prussia": {"part": "Germany"},
-        "Republic of Turkey": {"part": "Turkey"},
-        "Turkey": {"article": "Turkey", "also": TURKEY},
-        "Germany": {"article": "Weimar Republic", "also": GERMANY},
-        "Italy": {"article": "Kingdom of Italy", "also": ITALY},
-        "Poland": {"article": "Second Polish Republic", "also": POLAND},
-        "Czechoslovakia": {"article": "First Czechoslovak Republic", "also": CZECHOSLOVAKIA},
-        "Yugoslavia": {"article": "Kingdom of Yugoslavia", "also": YUGOSLAVIA},
-        "Danzig": {"article": "Free City of Danzig"},
-        "Dodecanese Islands": {"article": "Italian Islands of the Aegean", "owner": "Italy"},
-        "Mesopotamia (GB)": {"article": "Mandatory Iraq"},
-        "Syria (France)": {"article": "Mandate for Syria and the Lebanon"},
-        "Mandatory Palestine (GB)": {"article": "Mandatory Palestine"},
-        "Libya (IT)": {"article": "Italian Libya"},
-        "Zaire (Belgium)": {"article": "Belgian Congo"},
-        "Rwanda (Belgium)": {"article": "Ruanda-Urundi"},
-        "Madagascar (France)": {"article": "Colony of Madagascar and Dependencies"},
-    },
-    1938: {
-        "Germany": {"article": "Nazi Germany", "also": GERMANY + "|Troisième Reich|Third Reich|Drittes Reich"},
-        "USSR": {"article": "Soviet Union", "also": SOVIET},
-        "Italy": {"article": "Kingdom of Italy", "also": ITALY},
-        "Poland": {"article": "Second Polish Republic", "also": POLAND},
-        "Czechoslovakia": {"article": "First Czechoslovak Republic", "also": CZECHOSLOVAKIA},
-        "Yugoslavia": {"article": "Kingdom of Yugoslavia", "also": YUGOSLAVIA},
-        "United Kingdom": {"article": "United Kingdom", "also": BRITAIN},
-        "Algeria (France)": {"article": "French Algeria"},
-        "Morocco (France)": {"article": "French protectorate in Morocco"},
-        "Syria (France)": {"article": "Mandate for Syria and the Lebanon"},
-        "Congo (France)": {"article": "French Equatorial Africa"},
-        "Madagascar (France)": {"article": "Colony of Madagascar and Dependencies"},
-        "Mesopotamia (GB)": {"article": "Kingdom of Iraq"},
-        "Mandatory Palestine (GB)": {"article": "Mandatory Palestine"},
-        "Eritrea (Italy)": {"article": "Italian Eritrea"},
-        "Ethiopia (Italy)": {"article": "Italian East Africa"},
-        "Rwanda (Belgium)": {"article": "Ruanda-Urundi"},
-        "Angola (Portugal)": {"article": "Portuguese Angola"},
-        "Mozambique (Portugal)": {"article": "Portuguese Mozambique"},
-        "Yemen (UK)": {"article": "Aden Protectorate"},
-        "Oman (British Raj)": {"owner": "United Kingdom"},
-    },
-    1945: {
-        "USSR": {"article": "Soviet Union", "also": SOVIET},
-        "Germany (Soviet)": {
-            "article": "Soviet occupation zone in Germany",
-            "also": "zone soviétique|zone d'occupation soviétique|Soviet zone|Soviet occupation zone"
-            "|sowjetische Besatzungszone|SBZ|zona soviética|zona sovietica",
-        },
-        "Germany (USA)": {
-            "article": "American occupation zone in Germany",
-            "also": "zone américaine|zone d'occupation américaine|American zone|US zone"
-            "|amerikanische Besatzungszone|zona americana|zona estadounidense",
-        },
-        "Germany (UK)": {
-            "article": "British occupation zone in Germany",
-            "also": "zone britannique|zone d'occupation britannique|British zone|britische Besatzungszone"
-            "|zona británica|zona britannica|zona britânica",
-        },
-        "Germany (France)": {
-            "article": "French occupation zone in Germany",
-            "also": "zone française|zone d'occupation française|French zone|französische Besatzungszone"
-            "|zona francesa|zona francese",
-        },
-        "Saar Protectorate": {"article": "Saar Protectorate"},
-        "United Kingdom": {"article": "United Kingdom", "also": BRITAIN},
-        "Korea (USSR)": {"article": "Soviet Civil Administration"},
-        "Korea (USA)": {"article": "United States Army Military Government in Korea"},
-        "Japan (USA)": {"article": "Occupation of Japan"},
-        "Fezzan (Frech Lybia)": {"article": "French Fezzan"},
-        "Cyraneica (UK Lybia)": {"article": "British Military Administration (Libya)"},
-        "Tripolitana (UK Lybia)": {"part": "Cyraneica (UK Lybia)"},
-        "Angola (Portugal)": {"article": "Portuguese Angola"},
-        "Mozambique (Portugal)": {"article": "Portuguese Mozambique"},
-        "Madagascar (France)": {"article": "Colony of Madagascar and Dependencies"},
-        "Guinea-Bissau (Portugal)": {"article": "Portuguese Guinea"},
-        "Jamaica (UK)": {"article": "Colony of Jamaica"},
-        "Martinique (France)": {"article": "Martinique"},
-    },
-    1960: {
-        "USSR": {
-            "article": "Soviet Union",
-            "also": "URSS|USSR|UdSSR|SSSR",
-        },
-        "East Germany": {
-            "article": "East Germany",
-            "also": "RDA|GDR|DDR|Allemagne de l'Est|Ostdeutschland|Germania Est",
-        },
-        "West Germany": {
-            "article": "West Germany",
-            "also": "RFA|FRG|BRD|Westdeutschland|Germania Ovest",
-        },
-        "Czechoslovakia": {
-            "article": "Czechoslovak Socialist Republic",
-            "also": "Tchécoslovaquie|Czechoslovakia|Tschechoslowakei|Checoslovaquia|Cecoslovacchia|Checoslováquia",
-        },
-        "Yugoslavia": {
-            "article": "Socialist Federal Republic of Yugoslavia",
-            "also": "Yougoslavie|Yugoslavia|Jugoslawien|Iugoslavia|Jugoslávia",
-        },
-        # (still ruled by Europe's countries in 1960)
-        "Algeria": {"article": "French Algeria", "owner": "France"},
-        "Angola": {"article": "Portuguese Angola", "owner": "Portugal"},
-        "Mozambique": {"article": "Portuguese Mozambique", "owner": "Portugal"},
-        "Guinea-Bissau": {"article": "Portuguese Guinea", "owner": "Portugal"},
-        "Western Sahara": {"article": "Spanish Sahara", "owner": "Spain"},
-        "Hong Kong": {"article": "British Hong Kong", "owner": "United Kingdom"},
-        "Zaire": {"article": "Republic of the Congo (Léopoldville)"},
-        "Tanzania, United Republic of": {"article": "Tanganyika"},
-        "Benin": {"article": "Republic of Dahomey"},
-        "Burkina Faso": {"article": "Republic of Upper Volta"},
-        "Namibia": {"article": "South West Africa", "owner": "South Africa"},
-        "Zimbabwe": {"article": "Federation of Rhodesia and Nyasaland", "owner": "United Kingdom"},
-        "Zambia": {"part": "Zimbabwe"},
-        "Malawi": {"part": "Zimbabwe"},
-        "Kenya": {"article": "Kenya Colony", "owner": "United Kingdom"},
-        "Uganda": {"article": "Uganda Protectorate", "owner": "United Kingdom"},
-        "Sierra Leone": {"article": "Sierra Leone Colony and Protectorate", "owner": "United Kingdom"},
-        "Gambia, The": {"article": "Gambia Colony and Protectorate", "owner": "United Kingdom"},
-        "Botswana": {"article": "Bechuanaland Protectorate", "owner": "United Kingdom"},
-        "Lesotho": {"article": "Basutoland", "owner": "United Kingdom"},
-        "Swaziland": {"owner": "United Kingdom"},
-        "Guyana": {"article": "British Guiana", "owner": "United Kingdom"},
-        "Belize": {"article": "British Honduras", "owner": "United Kingdom"},
-        "Jamaica": {"article": "Colony of Jamaica", "owner": "United Kingdom"},
-        "Trinidad": {"article": "Crown Colony of Trinidad and Tobago", "owner": "United Kingdom"},
-        "Bahamas": {"article": "Colony of the Bahamas", "owner": "United Kingdom"},
-        "Brunei": {"owner": "United Kingdom"},
-        "Rwanda": {"article": "Ruanda-Urundi", "owner": "Belgium"},
-        "Burundi": {"part": "Rwanda"},
-        "Djibouti": {"article": "French Somaliland", "owner": "France"},
-        "Equatorial Guinea": {"article": "Spanish Guinea", "owner": "Spain"},
-        "Suriname": {"article": "Surinam (Dutch colony)", "owner": "Netherlands"},
-    },
+CHINA = "Chine|China|Cina"
+JAPAN = "Japon|Japan|Japón|Giappone|Japão"
+FRANCE = "France|Frankreich|Francia|França"
+INDOCHINA = "Indochine française|Indochine|French Indochina|Indochina|Französisch-Indochina|Indochina francesa"
+NETHERLANDS = "Pays-Bas|Netherlands|Niederlande|Países Bajos|Paesi Bassi|Países Baixos|Hollande|Holland"
+ALSO = {
+    "German Empire": GERMANY,
+    "Russian Empire": RUSSIA,
+    "Soviet Union": SOVIET,
+    "Kingdom of Italy": ITALY,
+    "Fascist Italy": ITALY,
+    "Kingdom of Serbs, Croats and Slovenes": YUGOSLAVIA,
+    "Indochinese Union": INDOCHINA,
+    "Indochinese Federation": INDOCHINA,
+    "United Kingdom of the Netherlands": NETHERLANDS,
+    "Kingdom of the Netherlands": NETHERLANDS,
+    "People's Republic of China": CHINA,
+    "Bourbon Restoration in France": FRANCE + "|Royaume de France",
+    "Second French Empire": FRANCE + "|Second Empire",
+    "French Third Republic": FRANCE,
+    "Vichy France": FRANCE + "|France de Vichy|régime de Vichy|État français",
+    "French Fourth Republic": FRANCE,
+    "German Reich": GERMANY + "|Reich|Troisième Reich|Third Reich|Drittes Reich|république de Weimar|Weimar Republic"
+    "|Weimarer Republik|República de Weimar|Repubblica di Weimar",  # (one item from 1919 to 1945)
+    "Japan": JAPAN,
+    "Polish People's Republic": POLAND,
+    "Austrian Empire": AUSTRIA,
+    "Kingdom of Prussia": "Prusse|Prussia|Preußen|Prusia|Prússia",
+    "United Kingdom of Great Britain and Ireland": BRITAIN,
+    "United Kingdom": BRITAIN,
+    "Ottoman Empire": "Empire turc|Turquie",
+    "Turkey": TURKEY,
+    "Empire of Japan": JAPAN,
+    "Qing dynasty": CHINA + "|Empire chinois",
+    "Republic of China (1912–1949)": CHINA,
+    "Second Polish Republic": POLAND,
+    "First Czechoslovak Republic": CZECHOSLOVAKIA,
+    "Czechoslovak Socialist Republic": CZECHOSLOVAKIA,
+    "Third Czechoslovak Republic": CZECHOSLOVAKIA,
+    "Kingdom of Yugoslavia": YUGOSLAVIA,
+    "Federal People's Republic of Yugoslavia": YUGOSLAVIA,
+    "Socialist Federal Republic of Yugoslavia": YUGOSLAVIA,
+    "East Germany": "RDA|GDR|DDR|Allemagne de l'Est|Ostdeutschland|Germania Est",
+    "West Germany": "RFA|FRG|BRD|Allemagne de l'Ouest|Westdeutschland|Germania Ovest",
+    "Soviet occupation zone in Germany": "zone soviétique|zone d'occupation soviétique|Soviet zone"
+    "|Soviet occupation zone|sowjetische Besatzungszone|SBZ|zona soviética|zona sovietica",
+    "American occupation zone in Germany": "zone américaine|zone d'occupation américaine|American zone|US zone"
+    "|amerikanische Besatzungszone|zona americana|zona estadounidense",
+    "British occupation zone in Germany": "zone britannique|zone d'occupation britannique|British zone"
+    "|britische Besatzungszone|zona británica|zona britannica|zona britânica",
+    "French occupation zone in Germany": "zone française|zone d'occupation française|French zone"
+    "|französische Besatzungszone|zona francesa|zona francese",
 }
 CITIES = 15  # per country, the most populated, its capital too
 NOTABLE = 3  # and the cities Natural Earth ranks this notable or more (Vladivostok), wherever they are
@@ -486,6 +308,7 @@ TOLERANCE = 0.03  # degrees: a point closer than this to the line it would cut a
 SMALLEST = 0.02  # square degrees: smaller islands left out, unless they are the country itself
 SCALE = 100  # coordinates kept as integers, in hundredths of a degree (about 1 km)
 NEAR = 3  # degrees: a country's rings this near its largest one are framed with it (Corsica, not the Canaries)
+FAR = 0.8  # degrees: a past state's land farther from its own, on another country, a land it ruled (Korea, Japan's)
 
 
 def _letters() -> dict[str, str]:
@@ -679,151 +502,330 @@ def wikidata_places(folder: Path | None = None) -> list[dict]:
     return places
 
 
-def border_titles(year: int, data: dict, today: dict[str, list[str]]) -> dict[str, str]:
-    """A year's states whose names Wikidata gives: each by the article PAST gives it, else by
-    its own name, unless it is a country of today (France: its names kept from the atlas's)."""
-    found = {state: said["article"] for state, said in PAST[year].items() if "land" in said}
-    for feature in data["features"]:
-        name = (feature["properties"]["NAME"] or "").strip()
-        said = PAST[year].get(name, {})
-        if name and "part" not in said and ("article" in said or fold(name) not in today):
-            found[name] = said.get("article", name)
+def overpass(name: str, folder: Path | None, query: str) -> dict:
+    """What OpenHistoricalMap's Overpass answers `query` (as its database stood on OHM_DATE),
+    from `folder` when it has it (by that name), else asked, then kept there: a layer's
+    states are some 150 MB."""
+    if folder and (folder / name).is_file():
+        return json.loads((folder / name).read_text(encoding="utf-8"))
+    query = f'[out:json][timeout:900][date:"{OHM_DATE}"];{query}'
+    request = urllib.request.Request(
+        OHM, data=urllib.parse.urlencode({"data": query}).encode(), headers={"User-Agent": "notosaurus-atlas"}
+    )
+    for wait in (30, 60, 120, 0):  # (busy: 429, or 504 when its queue is full)
+        try:
+            with urllib.request.urlopen(request, timeout=1200) as response:
+                raw = response.read()
+            break
+        except urllib.error.HTTPError as e:
+            if e.code not in (429, 504) or not wait:
+                raise
+            time.sleep(wait)
+    if folder:
+        (folder / name).write_bytes(raw)
+    return json.loads(raw)
+
+
+def on(tags: dict, day: str) -> bool:
+    """Whether an OHM state was on `day` (its dates as OHM writes them: "1914", "1914-09")."""
+    start, end = tags.get("start_date", ""), tags.get("end_date", "")
+    return bool(start) and start[:10] <= day and (not end or end[:10] > day)
+
+
+def bare(name: str) -> str:
+    """A name without the years OHM writes after it: « Japan (1953-1968) »."""
+    return re.sub(r"\s*\(\d{4}\s*[-–]\s*(\d{4})?\)$", "", name)
+
+
+def bare_hb(name: str) -> str:
+    """A name of historical-basemaps without its ruler in brackets: « Senegal (FR) »."""
+    return re.sub(r"\s*\([^()]*\)$", "", name)
+
+
+def english(tags: dict) -> str:
+    return bare(tags.get("name:en") or tags.get("name") or "")
+
+
+def ohm_shapes(data: dict) -> list[tuple[dict, object]]:
+    """Each OHM state's tags and shape: its outer ways' polygons, its inner ones taken away,
+    simplified to a tenth of what the atlas keeps."""
+    found = []
+    for relation in data["elements"]:
+        lines: dict[str, list] = {"outer": [], "inner": []}
+        for member in relation.get("members", []):
+            if member["type"] == "way" and len(member.get("geometry") or []) >= 2:
+                points = [(p["lon"], p["lat"]) for p in member["geometry"]]
+                lines["inner" if member.get("role") == "inner" else "outer"].append(shapely.LineString(points))
+        outer, inner = (shapely.union_all(list(polygonize(shapely.union_all(ls)))) for ls in lines.values())
+        made = shapely.make_valid(outer.difference(inner) if not inner.is_empty else outer)
+        made = shapely.make_valid(made.simplify(TOLERANCE / 10))
+        if not made.is_empty:
+            found.append((relation["tags"], made))
     return found
 
 
-def past_names(folder: Path | None, refresh: bool, titles: dict[int, dict[str, str]]) -> dict[str, list[str]]:
-    """Each article's names in the page's languages (Wikidata, CC0), as BORDERS_FILE keeps
-    them; from Wikidata when `refresh` (then kept)."""
-    wanted = sorted({t for by_year in titles.values() for t in by_year.values()})
+def wikidata_items(folder: Path | None, refresh: bool, ids: set[str], titles: set[str]) -> dict:
+    """The states' Wikidata items (by their Q-ids: their names in the page's languages,
+    English, and the English names of what Wikidata says they were part of and the country
+    they were in) and historical-basemaps' states' names (by their Wikipedia article), as
+    BORDERS_FILE keeps them; the missing ones asked (all of them when `refresh`), then kept."""
     kept = {} if refresh or not BORDERS_FILE.is_file() else json.loads(BORDERS_FILE.read_text(encoding="utf-8"))
-    if sorted(kept) == wanted:
-        return kept
-    # (PAST or YEARS changed: the articles added asked, those gone dropped)
-    asked = [t for t in wanted if t not in kept]
-    found: dict[str, list[str]] = {t: kept[t] for t in wanted if t in kept}
-    for start in range(0, len(asked), 45):
-        batch = asked[start : start + 45]
-        # each article's Wikidata item, past its redirect (Wikipedia's API), then their names
+    items, articles = kept.get("items", {}), kept.get("articles", {})
+    if set(items) == ids and set(articles) == titles:
+        return {"items": items, "articles": articles}
+    items, articles = {q: items[q] for q in ids & set(items)}, {t: articles[t] for t in titles & set(articles)}
+
+    def entities(asked: list[str], props: str, name: str) -> dict:
+        found = {}
+        for start in range(0, len(asked), 45):  # the API's most per call: 50
+            query = urllib.parse.urlencode(
+                {
+                    "action": "wbgetentities",
+                    "ids": "|".join(asked[start : start + 45]),
+                    "props": props,
+                    "languages": "fr|en|de|es|it|pt|pt-br",
+                    "format": "json",
+                }
+            )
+            found |= download(f"{name}-{start}.json", folder, f"{WIKIDATA}?{query}").get("entities", {})
+        return found
+
+    def labels(entity: dict) -> list[str]:
+        said = entity.get("labels", {})
+        return list(
+            dict.fromkeys(said[lang]["value"] for lang in ("fr", "en", "de", "es", "it", "pt-br", "pt") if lang in said)
+        )
+
+    def claimed(entity: dict, prop: str) -> list[str]:
+        values = [c["mainsnak"].get("datavalue", {}).get("value", {}) for c in entity.get("claims", {}).get(prop, [])]
+        return [v["id"] for v in values if isinstance(v, dict) and "id" in v]
+
+    asked = sorted(ids - set(items))
+    found = entities(asked, "labels|claims", "wikidata-states") if asked else {}
+    linked = sorted({q for e in found.values() for p in ("P361", "P17") for q in claimed(e, p)})
+    linked_names = entities(linked, "labels", "wikidata-linked") if linked else {}
+
+    def in_english(q: str) -> str:
+        return linked_names.get(q, {}).get("labels", {}).get("en", {}).get("value", "")
+
+    for q in asked:
+        entity = found.get(q, {})
+        items[q] = {
+            "n": labels(entity),
+            "en": entity.get("labels", {}).get("en", {}).get("value", ""),
+            "part": [n for n in map(in_english, claimed(entity, "P361")) if n],
+            "country": [n for n in map(in_english, claimed(entity, "P17")) if n and q not in claimed(entity, "P17")],
+        }
+    # historical-basemaps' states: each article's item, past its redirect (Wikipedia's API)
+    asked_titles = sorted(titles - set(articles))
+    for start in range(0, len(asked_titles), 45):
+        batch = asked_titles[start : start + 45]
         query = urllib.parse.urlencode(
-            {
-                "action": "query",
-                "prop": "pageprops",
-                "ppprop": "wikibase_item",
-                "redirects": 1,
-                "titles": "|".join(batch),
-                "format": "json",
-            }
+            {"action": "query", "prop": "pageprops", "ppprop": "wikibase_item", "redirects": 1}
+            | {"titles": "|".join(batch), "format": "json"}
         )
         pages = download(f"wikipedia-borders-{start}.json", folder, f"{WIKIPEDIA}?{query}")["query"]
         moved = {r["from"]: r["to"] for r in pages.get("normalized", []) + pages.get("redirects", [])}
-        items = {p["title"]: p["pageprops"]["wikibase_item"] for p in pages["pages"].values() if "pageprops" in p}
-        ids = sorted(set(items.values()))
-        query = urllib.parse.urlencode(
-            {
-                "action": "wbgetentities",
-                "ids": "|".join(ids),
-                "props": "labels",
-                "languages": "fr|en|de|es|it|pt|pt-br",
-                "format": "json",
-            }
-        )
-        entities = (
-            download(f"wikidata-borders-{start}.json", folder, f"{WIKIDATA}?{query}").get("entities", {}) if ids else {}
-        )
+        of = {p["title"]: p["pageprops"]["wikibase_item"] for p in pages["pages"].values() if "pageprops" in p}
+        named = entities(sorted(set(of.values())), "labels", f"wikidata-articles-{start}") if of else {}
         for title in batch:
             target = title
             while target in moved:
                 target = moved[target]
-            entity = entities.get(items.get(target, ""), {})
-            labels = [
-                entity["labels"][lang]["value"]
-                for lang in ("fr", "en", "de", "es", "it", "pt-br", "pt")
-                if lang in entity.get("labels", {})
-            ]
-            if not labels:
-                print(f"  no Wikidata names for the article {title!r}: its own name kept")
-            found[title] = list(dict.fromkeys(labels)) or [title]
-    BORDERS_FILE.write_text(json.dumps(found, ensure_ascii=False, indent=1, sort_keys=True) + "\n", encoding="utf-8")
-    return found
+            articles[title] = labels(named.get(of.get(target, ""), {})) or [title]
+    BORDERS_FILE.write_text(
+        json.dumps({"items": items, "articles": articles}, ensure_ascii=False, indent=1, sort_keys=True) + "\n",
+        encoding="utf-8",
+    )
+    return {"items": items, "articles": articles}
 
 
-def rings_of(polygon) -> list:
-    """A shapely polygon's rings as GeoJSON writes them: lists of [x, y]."""
-    return [[list(point) for point in ring] for ring in shapely.geometry.mapping(polygon)["coordinates"]]
+def empire_of(name: str) -> int | None:
+    """Which of EMPIRES a name says (a whole name, else a name's first word: « British »)."""
+    for i, said in enumerate(EMPIRES):
+        if name in said[:-1]:
+            return i
+    first = name.split(" ")[0]
+    return next((i for i, said in enumerate(EMPIRES) if first == said[-1]), None)
 
 
-def shorthand_of(state: str, codes: dict[str, str]) -> str | None:
-    """The state of the year a name is only a shorthand of (RULERS: a name after the state's
-    own): the source's "United Kingdom" of 1815, a colony beside the "United Kingdom of Great
-    Britain and Ireland"."""
-    for group in RULERS:
-        if state in group:
-            return next((n for n in group[: group.index(state)] if n in codes), None)
-    return None
+def name_state(state: dict, year: int, named: dict, today: dict) -> dict:
+    """A state's names (Wikidata's, OHM's, ALSO's, today's country's of the same name), the
+    empire it is (EMPIRES) and what says the empire it belonged to ("said")."""
+    tags = state.get("tags", {})
+    until, instead = ITEMS.get(tags.get("wikidata", ""), (0, ""))
+    item = named["items"].get(tags.get("wikidata", ""), {}) if year >= until else {}
+    name = state.get("name", "")
+    title = instead if year < until else ARTICLES.get(name, bare_hb(name))
+    own = str(item.get("en") or title or english(tags))
+    said = item.get("n", []) if item else named["articles"].get(title, [])
+    given = [bare(tags.get(f"name:{lang.lower()}", "")) for lang in LANGUAGES]
+    given += [english(tags), bare(tags.get("name", "")), name]
+    also = ALSO.get(own, "").split("|")
+    now = today.get(tags.get("wikidata", "-"), []) if year >= until else []  # (not Taiwan's for China's of 1942)
+    all_names = [*said, *given, *also, *today.get(fold(own), []), *now]
+    state["n"] = list(dict.fromkeys(n.strip() for n in all_names if n and n.strip()))
+    whole = [empire_of(n) for n in (own, english(tags)) if n and n in {m for e in EMPIRES for m in e[:-1]}]
+    state["is"] = whole[0] if whole else None
+    if tags:
+        # who it belonged to: OHM's colony_of (unless it says it was a country, no colony: Kenya
+        # in 1985), Wikidata's "part of", its name, Wikidata's "country" (never a state's of its
+        # own: Wikidata's are often today's)
+        sovereign = bool({tags.get("place"), tags.get("border_type")} & SOVEREIGN)
+        free = tags.get("place") == "country" and tags.get("border_type") in (None, *SOVEREIGN)
+        state["said"] = [RULED.get(english(tags), ""), "" if free else tags.get("colony_of", "")]
+        state["said"] += [] if sovereign else item.get("part", [])
+        state["said"] += [own, english(tags), *([] if sovereign else item.get("country", []))]
+    else:
+        bracket = re.search(r"\(([^()]+)\)$", state.get("name", ""))
+        subject = state.get("subject", "")
+        state["said"] = [subject if subject != state.get("name") else "", bracket.group(1) if bracket else ""]
+    return state
 
 
-def ruler(year: int, state: str, subject: str | None, codes: dict[str, str]) -> str | None:
-    """The code of the state a land belonged to: PAST's, else the source's (its SUBJECTO, or
-    in brackets after its name), found among the year's states by any name RULERS gives it."""
-    said = PAST[year].get(state, {}).get("owner") or (subject if subject != state else None)
-    if not said:
-        bracket = re.search(r"\(([^()]+)\)$", state)
-        said = bracket.group(1) if bracket else None
-    if not said:
-        said = shorthand_of(state, codes)
-    if not said:
-        return None
-    for names in [{said}] + [group for group in RULERS if said in group]:
-        found = [codes[n] for n in names if n in codes and n != state]
-        if found:
-            return found[0]
-    return None
-
-
-def past_states(
-    year: int, data: dict, today: dict, titles: dict[str, str], said: dict[str, list[str]], lands: dict
-) -> dict:
+def past_states(year: int, data: dict, extra: dict, named: dict, today: dict, nations: list) -> dict:
     """A year's states, as the atlas's countries (their names, keys, frames and rings; "o" the
-    state a colony belonged to): a state's parts joined (PAST's "part"); a state made of today's
-    countries' land (PAST's "land": the source wrong there) taken from the others; a state the
-    source names nowhere drawn without a name. `lands`: today's countries' shapes, by code."""
-    by_state: dict[str, list] = defaultdict(list)
-    subjects: dict[str, str] = {}
-    for i, feature in enumerate(data["features"]):
-        name = (feature["properties"]["NAME"] or "").strip()
-        state = PAST[year].get(name, {}).get("part", name) or f"?{i}"
-        geometry = feature["geometry"]
-        by_state[state] += geometry["coordinates"] if geometry["type"] == "MultiPolygon" else [geometry["coordinates"]]
-        if name:
-            subjects[name] = feature["properties"]["SUBJECTO"]
-    for state, given in PAST[year].items():
-        if "land" not in given:
+    state a colony belonged to): OHM's (`data`), one state each (its parts joined by their
+    Wikidata item), a smaller one taken from a larger one it lies in (Manchukuo from China,
+    a colony from the federation it was part of), cut to the land; a state's land far from its
+    own on another of today's countries (a tenth of it at least), a land it ruled named as that country (Algeria,
+    France's departments; Angola, Portugal's province); the land left to none, a state of
+    historical-basemaps (`extra`) lying in it at least by half (joined to OHM's state of the
+    same name: its part OHM lacks); the rest drawn, nameless. `nations`: today's countries'
+    names and land (Natural Earth's)."""
+    day = LAYERS[year][0]
+    by_key: dict[str, list] = defaultdict(list)
+    for tags, made in ohm_shapes(data):
+        if on(tags, day):
+            by_key[tags.get("wikidata") or english(tags)].append((tags, made))
+    land = shapely.union_all([nation for _, nation in nations])
+    nations_tree = shapely.STRtree([nation for _, nation in nations])
+    coast = land.buffer(0.1)  # (OHM's states reach into the sea, some: their waters)
+    states = []
+    for key, found in by_key.items():
+        tags = max(found, key=lambda f: f[1].area)[0]
+        made = shapely.make_valid(shapely.union_all([m for _, m in found]).intersection(coast))
+        if not made.is_empty:
+            states.append({"key": key, "tags": tags, "shape": made, "size": made.area})
+    # a state lying in a larger one taken from it
+    tree = shapely.STRtree([s["shape"] for s in states])
+    for state in states:
+        inside = [states[i]["shape"] for i in tree.query(state["shape"]) if states[i]["size"] < state["size"]]
+        if inside:
+            state["shape"] = shapely.make_valid(state["shape"].difference(shapely.union_all(inside)))
+    states = [s for s in states if s["shape"].area > max(SMALLEST, s["size"] / 50)]
+    for state in states:
+        name_state(state, year, named, today)
+    # a state's land far from its own (beyond FAR of its largest part) on another of today's countries
+    for i, state in enumerate(list(states)):
+        pieces = [g for g in parts(state["shape"]) if g.geom_type == "Polygon"]
+        if len(pieces) < 2 or not state["n"]:
             continue
-        region = shapely.union_all([lands[code] for code in given["land"].split("|")]).buffer(0.05)
-        world = shapely.union_all(
-            [shapely.make_valid(shape({"type": "Polygon", "coordinates": p})) for ps in by_state.values() for p in ps]
+        # its home: the country of today it is named as (France, not Algeria, larger), else
+        # the one under its largest part
+        keys = {fold(n) for n in state["n"]}
+        largest = max(pieces, key=lambda g: g.area)
+        home = next(
+            (n for n, (now, _) in enumerate(nations) if keys & {fold(m) for m in now}),
+            max(nations_tree.query(largest), key=lambda n: nations[n][1].intersection(largest).area, default=0),
         )
-        for other in list(by_state):
-            rest = shapely.make_valid(shape({"type": "MultiPolygon", "coordinates": by_state[other]})).difference(
-                region
-            )
-            by_state[other] = [rings_of(g) for g in parts(rest) if g.geom_type == "Polygon"]
-        made = world.intersection(region)
-        by_state[state] = [rings_of(g) for g in parts(made) if g.geom_type == "Polygon"]
-    codes = {state: f"{year}-{i}" for i, state in enumerate(sorted(by_state))}
-    states = {}
-    for state, polygons in by_state.items():
-        rings = outline({"type": "MultiPolygon", "coordinates": polygons}) if polygons else []
+        # (its largest part there: metropolitan France, not Algeria; Prussia's core, its Rhineland near)
+        mainland = [g for g in pieces if g.intersects(nations[home][1])]
+        if not mainland:
+            continue
+        core = max(mainland, key=lambda g: g.area)
+        far = [g for g in pieces if g.distance(core) > FAR]
+        if not far:
+            continue
+        # each far part on the country of today most of it lies on (Spanish Sahara's on Western
+        # Sahara, not on the cape of Morocco it reaches)
+        on_nation: dict[int, list] = defaultdict(list)
+        for g in far:
+            # (the smallest of those holding most of it: Natural Earth's Morocco holds Western Sahara)
+            holding = [n for n in nations_tree.query(g) if nations[n][1].intersection(g).area >= g.area / 2]
+            best = min(holding, key=lambda n: nations[n][1].area, default=home)
+            if best != home:
+                on_nation[best].append(g)
+        for n, found in on_nation.items():
+            names_now, nation = nations[n]
+            piece = shapely.make_valid(shapely.union_all(found))
+            if piece.area >= max(nation.area / 10, SMALLEST):  # (1880's Algeria: its coast)
+                # (named so unless another state goes by that name, or lies on that country and
+                # holds a tenth of it: Indonesia beside Dutch New Guinea, Morocco's French
+                # protectorate beside Spain's lands)
+                # (its usual names: Taiwan's « Republic of China » was China's in 1942)
+                taken = any(set(names_now[:2]) & set(other["n"]) for other in states if "tags" in other)
+                more = any(
+                    2 * (there := other["shape"].intersection(nation).area) >= other["shape"].area
+                    and there >= nation.area / 10
+                    for other in states
+                    if other is not state and other["n"]
+                )
+                whole = [w for n, w in WHOLE.items() if n in names_now]
+                land_names = [] if taken or more else [*whole[0].split("|"), *names_now] if whole else names_now
+                states.append({"key": f"{state['key']}-{n}", "n": land_names, "shape": piece, "of": i, "said": []})
+                state["shape"] = shapely.make_valid(state["shape"].difference(piece))
+    # the land left to none: historical-basemaps' states
+    known = {fold(n): i for i, s in enumerate(states) if "tags" in s for n in s["n"]}
+    left = land.difference(shapely.union_all([s["shape"] for s in states]))
+    filled = []
+    for i, feature in enumerate(extra["features"]):
+        name = (feature["properties"]["NAME"] or "").strip()
+        if not name:
+            continue
+        whole = shapely.make_valid(shape(feature["geometry"]))
+        within = shapely.make_valid(whole.intersection(left))
+        if within.area < max(whole.area / 2, SMALLEST):
+            continue
+        left = left.difference(within)
+        title = ARTICLES.get(name, bare_hb(name))
+        same = next((known[fold(n)] for n in [name, *named["articles"].get(title, [])] if fold(n) in known), None)
+        if same is not None:  # (OHM's France lacking a part of France)
+            states[same]["shape"] = shapely.make_valid(states[same]["shape"].union(within))
+            continue
+        # named as a country of today, that country's land within it too, taken from OHM's state
+        # it lies in (Egypt, the Ottoman Empire's vassal in OHM's 1880, its own state then)
+        country = next((n for n, (now, _) in enumerate(nations) if fold(bare_hb(name)) in {fold(m) for m in now}), None)
+        if country is not None:
+            more = shapely.make_valid(whole.intersection(nations[country][1]).difference(within))
+            if more.area >= SMALLEST:
+                for other in states:
+                    if other["shape"].intersects(more):
+                        other["shape"] = shapely.make_valid(other["shape"].difference(more))
+                within = shapely.make_valid(within.union(more))
+        state = {"key": f"hb-{i}", "name": name, "subject": feature["properties"].get("SUBJECTO") or ""}
+        states.append(name_state(state | {"shape": within}, year, named, today))
+        known |= {fold(n): len(states) - 1 for n in states[-1]["n"]}  # (its parts, two states of it)
+        filled.append(name)
+    print(f"  {year}: {len(filled)} states of historical-basemaps on the land OHM leaves: {', '.join(sorted(filled))}")
+    # a state that is most of a country of today, and that country most of it, named as it too
+    # (« Hongrie » the kingdom of Hungary of 1942, « Éthiopie » the Ethiopian Empire), unless
+    # another state goes by that name
+    for state in states:
+        for n in nations_tree.query(state["shape"]) if state["n"] else []:
+            names_now, nation = nations[n]
+            common = state["shape"].intersection(nation).area
+            mostly = common >= 0.7 * nation.area and nation.area >= 0.5 * state["shape"].area
+            if mostly and not any(set(names_now) & set(other["n"]) for other in states if other is not state):
+                state["n"] = list(dict.fromkeys([*state["n"], *names_now]))
+    states.append({"key": "~", "n": [], "shape": left, "said": []})  # (the land no state was given)
+    for state in states:
+        state.setdefault("is", None)
+    order = sorted(range(len(states)), key=lambda i: states[i]["key"])
+    codes = {i: f"{year}-{n}" for n, i in enumerate(order)}
+    rulers: dict[int, int] = {}
+    for i, state in enumerate(states):  # each empire's state: its largest
+        larger = state["is"] not in rulers or states[rulers[state["is"]]]["shape"].area < state["shape"].area
+        if state["is"] is not None and larger:
+            rulers[state["is"]] = i
+    countries = {}
+    for i in order:
+        state = states[i]
+        polygons = [g for g in parts(state["shape"]) if g.geom_type in ("Polygon", "MultiPolygon")]
+        flat = shapely.MultiPolygon([p for g in polygons for p in parts(g)])  # (no line left of a difference)
+        rings = outline(json.loads(shapely.to_geojson(flat))) if not flat.is_empty else []
         if not rings:
             continue
-        if state.startswith("?") or (state not in titles and shorthand_of(state, codes)):
-            all_names: list[str] = []  # (a land named after its ruler: the ruler's name is the ruler's)
-        elif state in titles:
-            also = PAST[year].get(state, {}).get("also", "")
-            all_names = list(dict.fromkeys([*said[titles[state]], state, *filter(None, also.split("|"))]))
-        else:
-            all_names = today[fold(state)]
-        # where a flow from it is drawn from: its largest part's inmost point (as today's countries')
         shapes = [shapely.make_valid(shapely.Polygon([(x / SCALE, y / SCALE) for x, y in r])) for r in rings]
         polygons_drawn = [g for s in shapes for g in parts(s) if g.geom_type == "Polygon"]
         (x0, y0, x1, y1) = box(rings)
@@ -832,19 +834,23 @@ def past_states(
             inmost = polylabel(max(polygons_drawn, key=lambda g: g.area), tolerance=0.05)
             at = [round(inmost.x * SCALE), round(inmost.y * SCALE)]
         entry = {
-            "n": all_names,
+            "n": state["n"],
             "at": at,
             # (Wikidata's "Austria–Hungary" found as "Austria-Hungary" too)
-            "k": sorted({fold(n) for n in all_names} | {fold(n.replace("–", "-")) for n in all_names}),
+            "k": sorted({fold(n) for n in state["n"]} | {fold(n.replace("–", "-")) for n in state["n"]}),
             "b": box(rings),
             "f": box(main(rings)),
             "r": rings,
         }
-        owner = ruler(year, state, subjects.get(state), codes)
-        if owner:
-            entry["o"] = owner
-        states[codes[state]] = entry
-    return {"year": year, "countries": states}
+        if "of" in state:
+            entry["o"] = codes[state["of"]]
+        for said in [] if "of" in state else state["said"]:
+            empire = empire_of(said) if said else None
+            if empire is not None and empire != state["is"] and empire in rulers and rulers[empire] != i:
+                entry["o"] = codes[rulers[empire]]
+                break
+        countries[codes[i]] = entry
+    return {"year": year, "countries": countries}
 
 
 def two_letters(properties: dict) -> str:
@@ -1530,9 +1536,11 @@ computed from them. The countries' usual names in each
 language from Unicode CLDR 46 (https://cldr.unicode.org/), under the Unicode License v3: its
 copyright and permission notice in LICENSE-CLDR, beside this file. The places of history from
 Wikidata (https://www.wikidata.org/, CC0). The borders of past years (borders/<year>.json) from
-historical-basemaps by André Ourednik (https://github.com/aourednik/historical-basemaps), under
-the GNU General Public License v3: its text in LICENSE-historical-basemaps, beside this file;
-their states' names from Wikidata (CC0).
+OpenHistoricalMap (https://www.openhistoricalmap.org/, its contributors, CC0); the land it leaves
+to no state (Africa's and Asia's states before their colonisation) from historical-basemaps by
+André Ourednik (https://github.com/aourednik/historical-basemaps), under the GNU General Public
+License v3: its text in LICENSE-historical-basemaps, beside this file; their states' names from
+Wikidata (CC0).
 """
 
 
@@ -1544,25 +1552,57 @@ def build(folder: Path | None = None, refresh_history: bool = False) -> None:
         )
     world = atlas(countries, places, usual_names(folder), history(folder, refresh_history)) | {
         "lakes": lake_rings(lakes),
-        "years": [[year, *span] for year, span in YEARS.items()],
+        "years": [[year, start, end] for year, (_, start, end) in LAYERS.items()],
     }
-    # The borders of past years: their states named as Wikidata names them, else as today's
-    # countries of the same name are
-    today = {key: country["n"] for country in world["countries"].values() for key in country["k"]}
-    with ThreadPoolExecutor() as pool:
-        past = dict(
+    # The borders of past years: OHM's states of each layer's day (two layers asked at once:
+    # Overpass serves two queries at a time), historical-basemaps' nearest layer for the land
+    # OHM leaves to none
+    ever = overpass("ohm-states.json", folder, 'rel["boundary"="administrative"]["admin_level"="2"];out tags;')
+    asked = {
+        year: ",".join(str(r["id"]) for r in ever["elements"] if on(r["tags"], day))
+        for year, (day, _, _) in LAYERS.items()
+    }
+    with ThreadPoolExecutor(max_workers=2) as pool:
+        ohm = dict(
             zip(
-                YEARS,
+                LAYERS,
+                pool.map(lambda y: overpass(f"ohm-{y}.json", folder, f"rel(id:{asked[y]});out geom;"), LAYERS),
+                strict=True,
+            )
+        )
+    nearest = {year: min(BORDERS_YEARS, key=lambda y: (abs(y - year), y)) for year in LAYERS}
+    with ThreadPoolExecutor() as pool:
+        extra = dict(
+            zip(
+                set(nearest.values()),
                 pool.map(
                     lambda y: download(f"world_{y}.geojson", folder, f"{BORDERS_SOURCE}geojson/world_{y}.geojson"),
-                    YEARS,
+                    set(nearest.values()),
                 ),
                 strict=True,
             )
         )
-    titles = {year: border_titles(year, data, today) for year, data in past.items()}
-    lands = {f["properties"]["ADM0_A3"]: shapely.make_valid(shape(f["geometry"])) for f in countries["features"]}
-    said = past_names(folder, refresh_history, titles)
+    drawn = {r["id"] for data in ohm.values() for r in data["elements"]}
+    ids = {r["tags"]["wikidata"] for r in ever["elements"] if r["id"] in drawn and "wikidata" in r["tags"]}
+    titles = {article for until, article in ITEMS.values()} | {
+        ARTICLES.get(n, bare_hb(n))
+        for data in extra.values()
+        for f in data["features"]
+        if (n := (f["properties"]["NAME"] or "").strip())
+    }
+    named = wikidata_items(folder, refresh_history, ids, titles)
+    # today's countries' names (a state of the past named as one of them: « France ») and land
+    today = {key: country["n"] for country in world["countries"].values() for key in country["k"]}
+    today |= {  # (and by its Wikidata item: OHM's Italy of 1960 is Q38, Natural Earth's Italy)
+        f["properties"]["WIKIDATAID"]: world["countries"][f["properties"]["ADM0_A3"]]["n"]
+        for f in countries["features"]
+        if f["properties"].get("WIKIDATAID") and f["properties"]["ADM0_A3"] in world["countries"]
+    }
+    nations = [
+        (world["countries"][code]["n"], shapely.make_valid(shape(f["geometry"])))
+        for f in countries["features"]
+        if (code := f["properties"]["ADM0_A3"]) != "ATA" and code in world["countries"]
+    ]
 
     def text(data) -> str:
         return json.dumps(data, ensure_ascii=False, separators=(",", ":"))
@@ -1581,8 +1621,8 @@ def build(folder: Path | None = None, refresh_history: bool = False) -> None:
         "ways.json": text(seaways(world, all_waters, all_reliefs, capes)),
     } | {f"regions/{code}.json": text(data) for code, data in sorted(regions(admin1).items())}
     contents |= {
-        f"borders/{year}.json": text(past_states(year, data, today, titles[year], said, lands))
-        for year, data in past.items()
+        f"borders/{year}.json": text(past_states(year, ohm[year], extra[nearest[year]], named, today, nations))
+        for year in LAYERS
     }
     for old in TARGET.glob(f"{NAME}-*.tar.gz"):
         old.unlink()
