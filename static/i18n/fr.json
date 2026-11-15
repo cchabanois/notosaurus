@@ -255,8 +255,11 @@
       "reading": "Lecture de la leçon…",
       "writing": "Création des cartes…",
       "revising": "Correction des cartes…",
-      "duration": "Ça prend en général 10 à 30 secondes.",
-      "durationQuick": "Ça prend en général moins de 10 secondes.",
+      "aboutSeconds": "Environ {count} secondes.",
+      "aboutMinutes": {
+        "one": "Environ une minute.",
+        "other": "Environ {count} minutes."
+      },
       "cancelling": "Annulation…",
       "figures": "Description des figures…",
       "writingCards": "Écriture des cartes : {count}…",

@@ -77,6 +77,7 @@ const lessonsPart = {
     const asked = batch ? batch.asked : complete ? "complete" : inPlace ? "regenerate" : "extract";
     const pages = complete ? this.newPages() : this.photos;
     const sent = pages.slice(0, this.perCall);
+    this.loadingPages = sent.length;  // what the waiting card's estimate goes by
     const rest = pages.slice(this.perCall);  // sent next, completing the lesson
     const first = complete ? this.photos.length - pages.length + 1 : 1;
     this.batch = batch || rest.length ? { from: first, to: first + sent.length - 1, total: this.photos.length } : null;

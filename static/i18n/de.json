@@ -255,8 +255,11 @@
       "reading": "Lektion wird gelesen …",
       "writing": "Karten werden erstellt …",
       "revising": "Karten werden korrigiert …",
-      "duration": "Das dauert meist 10 bis 30 Sekunden.",
-      "durationQuick": "Das dauert meist weniger als 10 Sekunden.",
+      "aboutSeconds": "Etwa {count} Sekunden.",
+      "aboutMinutes": {
+        "one": "Etwa eine Minute.",
+        "other": "Etwa {count} Minuten."
+      },
       "cancelling": "Wird abgebrochen…",
       "figures": "Figuren werden beschrieben…",
       "writingCards": "Karten werden geschrieben: {count}…",

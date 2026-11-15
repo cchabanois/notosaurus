@@ -255,8 +255,11 @@
       "reading": "Lendo a lição…",
       "writing": "Criando os cartões…",
       "revising": "Corrigindo os cartões…",
-      "duration": "Costuma levar de 10 a 30 segundos.",
-      "durationQuick": "Normalmente leva menos de 10 segundos.",
+      "aboutSeconds": "Cerca de {count} segundos.",
+      "aboutMinutes": {
+        "one": "Cerca de um minuto.",
+        "other": "Cerca de {count} minutos."
+      },
       "cancelling": "Cancelando…",
       "figures": "A descrever as figuras…",
       "writingCards": "A escrever os cartões: {count}…",
