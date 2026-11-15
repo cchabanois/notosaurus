@@ -167,7 +167,7 @@
 
 // A region of a country shown: its first-level divisions (a state, a département) or their
 // groups (a région); `level` which of the two it is
-#let find-region(name, shown) = {
+#let region-of(name, shown) = {
   let key = fold(name)
   for code in shown {
     let file = json("regions/" + code + ".json")
@@ -177,6 +177,11 @@
       }
     }
   }
+  none
+}
+#let find-region(name, shown) = {
+  let found = region-of(name, shown)
+  if found != none { return found }
   if shown.len() == 0 { panic("a region (\"" + name + "\") is shown with its country: put it in countries") }
   panic("no region called \"" + name + "\" in the atlas for " + shown.join(", ") + ": leave it out")
 }
@@ -396,6 +401,16 @@
   place
 }
 
+// Every place of routes or flows the atlas lacks, said at once (the AI's next try fixes them
+// all, not one a try)
+#let all-said(names, shown, ways, waters-all, reliefs-all, all: none) = {
+  let missing = names.filter(n => type(n) == str and not n.contains(",")).dedup()
+    .filter(n => find-place(n, shown, ways, waters-all, reliefs-all, all: all) == none)
+  if missing.len() > 1 {
+    panic("no places called " + missing.map(n => "\"" + n + "\"").join(", ") + " in the atlas (a city, a cape, a canal, a sea or strait, a country, a continent or a part of one): name others the routes or flows pass, or leave them out")
+  }
+}
+
 // Points drawn one after the other: each on the side of the 180th meridian nearest the one
 // before (a way across the Pacific in one piece)
 #let unwrapped(points) = {
@@ -431,6 +446,8 @@
 // Routes as asked, checked, their ways found: (name, by, stops: the places, way: its points)
 #let read-routes(routes, shown, ways, waters-all, reliefs-all, all: none) = {
   if type(routes) == dictionary { routes = (routes,) }
+  let names = routes.filter(r => type(r) == dictionary).map(r => r.at("places", default: ())).map(p => if type(p) == str { (p,) } else { p })
+  all-said(names.join(default: ()), shown, ways, waters-all, reliefs-all, all: all)
   routes.map(r => {
     if type(r) != dictionary or "name" not in r or "places" not in r {
       panic("a route is (name: \"…\", places: (…), by: \"sea\" or \"land\"): its name, for the legend, and the places it passes in their order")
@@ -564,6 +581,8 @@
 // leaves or reaches `at`, its name when several places make it; kind, value, label)
 #let read-flows(flows, shown, ways, waters-all, reliefs-all, all: none) = {
   if type(flows) == dictionary { flows = (flows,) }
+  let ends = flows.filter(f => type(f) == dictionary).map(f => (f.at("from", default: ()), f.at("to", default: ())))
+  all-said(ends.join(default: ()).map(e => if type(e) == str { (e,) } else { e }).join(default: ()), shown, ways, waters-all, reliefs-all, all: all)
   flows.map(f => {
     if type(f) != dictionary or "from" not in f or "to" not in f {
       panic("a flow is (from: …, to: …, kind: \"…\", value: …, label: \"…\"): where it leaves and where it goes, a place or several, its kind for the legend, its size, what it carries")
@@ -614,11 +633,19 @@
 // a curved arrow each, its kind's colour, as wide as its value; routes and flows in the
 // legend, framed; each named when labels; width, height: the most the map takes
 #let map(countries: (), cities: (), regions: (), rivers: (), reliefs: (), waters: (), groups: (),
-  routes: (), flows: (), year: none, labels: true, width: 8cm, height: 7cm) = context {
+  routes: (), flows: (), year: none, pole: none, labels: true, width: 8cm, height: 7cm) = context {
+  if pole not in (none, "north", "south") { panic("pole is \"north\" or \"south\" (a map centred on it), not " + repr(pole)) }
   // The states drawn: a past year's (its borders), else today's countries
   let all = borders(year)
   let past = year != none and year < today-from
   let shown = countries.map(n => find-country(n, all: all, year: if past { year }))
+  // A region that is no region of the countries shown but a country of the atlas, shown as
+  // one (Greenland among Denmark's regions: its own country in the atlas)
+  let as-country = if past { () } else {
+    regions.filter(n => type(n) == str and region-of(n, shown) == none and country-code(n) != none)
+  }
+  shown += as-country.map(n => country-code(n)).filter(c => c not in shown)
+  let regions = regions.filter(n => n not in as-country)
   let sets = read-groups(groups, all: all, year: if past { year })
   let grouped = sets.map(g => g.countries).join(default: ())
   // The countries the map is about: those shown and those grouped
@@ -760,7 +787,7 @@
   // With routes and flows, the names of the places they pass whole within the frame: grown
   // until each has room around its place (half its width each side, its height above and
   // below), the scale found again each time
-  if moving {
+  if moving and pole == none {
     let names = towns.map(t => (t.city.x, t.city.y, t.name))
     names += trips.map(t => t.stops.zip(if t.by == "sea" { t.at } else { t.stops.map(p => p.xy) })
       .filter(((p, at)) => p.kind != "city" and at != none).map(((p, at)) => (..at, p.name))).join(default: ())
@@ -780,6 +807,42 @@
       (w, h) = (calc.min(r - l, 360 * s * k), calc.min(t - b, 180 * s))
     }
   }
+  // Centred on a pole (the Arctic, Antarctica): azimuthal equidistant, a point as far from
+  // the middle as from the pole, in the direction of its longitude (Greenwich down for the
+  // north, up for the south); framed on what is shown, down to 50° of latitude at most
+  let sign = if pole == "south" { -1 } else { 1 }
+  let flat((x, y)) = {
+    let (r, a) = (90 * s - sign * y, x / s * 1deg)
+    (r * calc.sin(a), -sign * r * calc.cos(a))
+  }
+  // (a long side cut every degree first: a parallel, the 49th between the United States and
+  // Canada, drawn as the arc it is)
+  let curved(points, closed: true) = {
+    let out = ()
+    for (i, b) in points.enumerate() {
+      if i > 0 or closed {
+        let a = points.at(i - 1)
+        let n = calc.ceil(calc.max(calc.abs(b.at(0) - a.at(0)), calc.abs(b.at(1) - a.at(1))) / s)
+        for j in range(1, n) { out.push((a.at(0) + (b.at(0) - a.at(0)) * j / n, a.at(1) + (b.at(1) - a.at(1)) * j / n)) }
+      }
+      out.push(b)
+    }
+    out
+  }
+  let reach = if pole == none { 0 } else {
+    calc.min(calc.max(..boxes.map(b => 90 * s - sign * (if sign > 0 { b.at(1) } else { b.at(3) }))), 40 * s)
+  }
+  if pole != none {
+    // (each box's edges along its parallels, cut to that reach, as drawn)
+    let points = boxes.map(b => range(13).map(i => b.at(0) + (b.at(2) - b.at(0)) * i / 12).map(x => (b.at(1), b.at(3))
+      .map(y => (x, if sign > 0 { calc.max(y, 90 * s - reach) } else { calc.min(y, reach - 90 * s) })))).flatten().chunks(2)
+      .map(flat)
+    let (xs, ys) = (points.map(q => q.at(0)), points.map(q => q.at(1)))
+    (cx, cy) = ((calc.min(..xs) + calc.max(..xs)) / 2, (calc.min(..ys) + calc.max(..ys)) / 2)
+    (w, h) = ((calc.max(..xs) - calc.min(..xs)) * 1.1, (calc.max(..ys) - calc.min(..ys)) * 1.1)
+    (w, h) = (calc.max(w, h * 0.75, 8 * s), calc.max(h, w * 0.55, 8 * s))
+    k = 1
+  }
   let unit = calc.min(width / w, height / h)  // a length per atlas unit
   let (bw, bh) = (w * unit, h * unit)
   let px(x) = (x * k - (cx - w / 2)) * unit
@@ -787,7 +850,11 @@
   let left = (cx - w / 2) / k
   let right = (cx + w / 2) / k
   let frame = (left, cy - h / 2, right, cy + h / 2)
-  let inside((x, y)) = x >= left and x <= right and y >= cy - h / 2 and y <= cy + h / 2
+  // (a point of the atlas within the frame: as drawn, when centred on a pole)
+  let inside(q) = {
+    let (x, y) = if pole == none { q } else { flat(q) }
+    x >= left and x <= right and y >= cy - h / 2 and y <= cy + h / 2
+  }
   // A ring cut to the frame, a little beyond (Sutherland-Hodgman): what isn't seen isn't
   // drawn, the figure stays light
   let (fx0, fx1) = (left - (right - left) * 0.05, right + (right - left) * 0.05)
@@ -814,32 +881,17 @@
   }
   // Points as drawn, one less than a point from the last kept skipped: a small scale draws
   // no more than the eye sees
+  // (centred on a pole, every coast of the Arctic in the frame: a point and a half)
+  let step = if pole != none { 1.6 } else { 1 }
   let thinned(points) = {
     let kept = ()
     for q in points {
       let (x, y) = (px(q.at(0)), py(q.at(1)))
-      if kept.len() == 0 or calc.abs((x - kept.last().at(0)) / 1pt) + calc.abs((y - kept.last().at(1)) / 1pt) >= 1 {
+      if kept.len() == 0 or calc.abs((x - kept.last().at(0)) / 1pt) + calc.abs((y - kept.last().at(1)) / 1pt) >= step {
         kept.push((x, y))
       }
     }
     kept
-  }
-  // With routes or flows, the world drawn round: what lies a turn east or west drawn there
-  // too (Alaska beside Asia on a map of the Pacific)
-  let full = 360 * s
-  let spans = if moving { (0, full, -full) } else { (0,) }
-  let moved(points, d) = if d == 0 { points } else { points.map(((x, y)) => (x + d, y)) }
-  let ring(points, fill, stroke) = {
-    for d in spans {
-      let kept = thinned(clipped(moved(points, d)))
-      if kept.len() >= 3 { place(polygon(fill: fill, stroke: stroke, ..kept)) }
-    }
-  }
-  let near-frame(b) = spans.any(d => touches((b.at(0) + d, b.at(1), b.at(2) + d, b.at(3)), (fx0, fy0, fx1, fy1)))
-  // A point where it is seen (a turn east or west, with routes or flows)
-  let seen-x(x) = {
-    let found = spans.map(d => x + d).find(x => x >= fx0 and x <= fx1)
-    if found == none { x } else { found }
   }
   // A river's lines: the runs of points within the frame (a little beyond), one point past
   let runs(points) = {
@@ -859,15 +911,66 @@
     if run.len() > 0 { out.push(run) }
     out.filter(r => r.len() >= 2)
   }
+  // With routes or flows, the world drawn round: what lies a turn east or west drawn there
+  // too (Alaska beside Asia on a map of the Pacific)
+  let full = 360 * s
+  let spans = if moving and pole == none { (0, full, -full) } else { (0,) }
+  let moved(points, d) = if d == 0 { points } else { points.map(((x, y)) => (x + d, y)) }
+  let ring(points, fill, stroke) = if pole != none {
+    // (its seams: the sides along the 180th meridian or on the pole, where Natural Earth cuts
+    // a ring round the world; its outline drawn apart then, without them: a line from
+    // Antarctica's coast to the pole, along Chukotka's edge else)
+    let seam(a, b) = (calc.abs(a.at(0)) >= 179.99 * s and calc.abs(b.at(0)) >= 179.99 * s) or (
+      sign * a.at(1) >= 89.9 * s and sign * b.at(1) >= 89.9 * s)
+    let sides = (..points, points.first()).windows(2)
+    let seamed = stroke != none and sides.any(((a, b)) => seam(a, b))
+    let kept = thinned(clipped(curved(points).map(flat)))
+    if kept.len() >= 3 { place(polygon(fill: fill, stroke: if seamed { none } else { stroke }, ..kept)) }
+    if seamed and kept.len() >= 3 {
+      let pieces = ((points.first(),),)
+      for (a, b) in sides {
+        if seam(a, b) { pieces.push((b,)) } else { pieces.last().push(b) }
+      }
+      for piece in pieces.filter(p => p.len() >= 2) {
+        for run in runs(curved(piece, closed: false).map(flat)) {
+          let line = thinned(run)
+          if line.len() >= 2 { place(curve(stroke: stroke, curve.move(line.first()), ..line.slice(1).map(curve.line))) }
+        }
+      }
+    }
+  } else {
+    for d in spans {
+      let kept = thinned(clipped(moved(points, d)))
+      if kept.len() >= 3 { place(polygon(fill: fill, stroke: stroke, ..kept)) }
+    }
+  }
+  let near-frame(b) = if pole != none {
+    // (centred on a pole: what comes within the frame's corners of it)
+    90 * s - sign * (if sign > 0 { b.at(3) } else { b.at(1) }) <= calc.sqrt(calc.pow(calc.abs(cx) + w / 2, 2) + calc.pow(calc.abs(cy) + h / 2, 2))
+  } else { spans.any(d => touches((b.at(0) + d, b.at(1), b.at(2) + d, b.at(3)), (fx0, fy0, fx1, fy1))) }
+  // A point where it is seen (a turn east or west, with routes or flows)
+  let seen-x(x) = if pole != none { x } else {
+    let found = spans.map(d => x + d).find(x => x >= fx0 and x <= fx1)
+    if found == none { x } else { found }
+  }
+  // A point of the atlas on the page
+  let page((x, y)) = if pole != none { let (u, v) = flat((x, y)); (px(u), py(v)) } else { (px(seen-x(x)), py(y)) }
   let others = all.pairs().filter(((code, c)) => code not in about and near-frame(c.b))
   // Where a name goes: a region's, relief's or water's first place in the frame; a river's
   // middle point within it
   let place-of(item) = {
     let found = spans.map(d => moved(item.at, d)).join().filter(inside)
-    if found.len() == 0 { none } else { found.sorted(key: ((x, y)) => calc.abs(x - (left + right) / 2) / (right - left) + calc.abs(y - cy) / h).first() }
+    // (the one nearest the frame's middle)
+    let off(q) = {
+      let (x, y) = if pole != none { flat(q) } else { (q.at(0) * k, q.at(1)) }
+      calc.abs(x - cx) / w + calc.abs(y - cy) / h
+    }
+    if found.len() == 0 { none } else { found.sorted(key: off).first() }
   }
   let river-place(item) = {
-    let pts = spans.map(d => item.l.map(p => runs(moved(p, d)))).join().flatten().chunks(2).filter(inside)
+    let pts = if pole != none { item.l.join().filter(inside) } else {
+      spans.map(d => item.l.map(p => runs(moved(p, d)))).join().flatten().chunks(2).filter(inside)
+    }
     if pts.len() == 0 { none } else { pts.at(calc.div-euclid(pts.len(), 2)) }
   }
   // Labels: cities beside their dot (right, left, above, below); the others on their place
@@ -875,13 +978,13 @@
   // label or dot
   let dot = 2.4pt
   let gap = 2.5pt
-  let marks = towns.map(t => (px(seen-x(t.city.x)), py(t.city.y)))
+  let marks = towns.map(t => page((t.city.x, t.city.y)))
   let wanted = ()
   for (i, t) in towns.enumerate() {
     wanted.push((at: marks.at(i), dot: true, body: text(8pt, weight: if t.city.cap { "bold" } else { "regular" }, t.name)))
   }
   let named(items, find, style) = items.map(it => (it, find(it))).filter(((_, p)) => p != none).map(((it, p)) => (
-    at: (px(seen-x(p.at(0))), py(p.at(1))), dot: false, body: style(it.name),
+    at: page(p), dot: false, body: style(it.name),
   ))
   wanted += named(areas, a => place-of(region(a)), n => text(7.5pt, fill: luma(40), n))
   wanted += named(lands, l => place-of(l.item), n => text(8pt, style: "italic", fill: rgb("#6b4a1f"), n))
@@ -891,10 +994,10 @@
   let ring-size = 4pt
   let small-water(item) = item.r.len() == 0 or calc.max((item.b.at(2) - item.b.at(0)) * k * unit, (item.b.at(3) - item.b.at(1)) * unit) < 10pt
   let sea-places = seas.map(w => (w, place-of(w.item))).filter(((_, p)) => p != none)
-  let rings-at = sea-places.filter(((w, _)) => small-water(w.item)).map(((_, p)) => (px(seen-x(p.at(0))), py(p.at(1))))
+  let rings-at = sea-places.filter(((w, _)) => small-water(w.item)).map(((_, p)) => page(p))
   wanted += sea-places.map(((w, p)) => {
     let small = small-water(w.item)
-    (at: (px(seen-x(p.at(0))), py(p.at(1))), dot: small, mark: if small { ring-size } else { dot }, crowd: small,
+    (at: page(p), dot: small, mark: if small { ring-size } else { dot }, crowd: small,
       body: text(8pt, style: "italic", fill: rgb("#1f5a8f"), w.name))
   })
   wanted += named(lines, l => river-place(l.item), n => text(7.5pt, style: "italic", fill: rgb("#1f5a8f"), n))
@@ -908,7 +1011,7 @@
     let (ax, ay) = f.from.at
     let (bx, by) = (ax + east(f.to.at.at(0) - ax), f.to.at.at(1))
     let d = seen-x((ax + bx) / 2) - (ax + bx) / 2
-    let (a, b) = ((px(ax + d), py(ay)), (px(bx + d), py(by)))
+    let (a, b) = if pole != none { (page(f.from.at), page(f.to.at)) } else { ((px(ax + d), py(ay)), (px(bx + d), py(by))) }
     let (dx, dy) = (b.at(0) - a.at(0), b.at(1) - a.at(1))
     let length = calc.sqrt(calc.pow(dx / 1pt, 2) + calc.pow(dy / 1pt, 2)) * 1pt
     let (ux, uy) = if length > 0pt { (dx / length, dy / length) } else { (1, 0) }
@@ -949,7 +1052,7 @@
       let total = weights.sum()
       let (x, y) = range(2).map(e => points.zip(weights).map(((q, w)) => q.at(e) * w).sum() / total)
       zones.push((name: s.name, places: s.places, colour: c.colour))
-      wanted.push((at: (px(seen-x(x)), py(y)), dot: false, body: wrapped(text(7.5pt, weight: "bold", fill: c.colour.darken(35%), s.name))))
+      wanted.push((at: page((x, y)), dot: false, body: wrapped(text(7.5pt, weight: "bold", fill: c.colour.darken(35%), s.name))))
     }
   }
   // The places routes and flows pass, named when they aren't already (a city by its dot):
@@ -981,8 +1084,8 @@
       (if seen.len() > 0 { seen } else { (at,) }).sorted(key: q => far(q, toward)).first()
     } else { at }
     let style = if p.kind in ("country", "relief") { n => text(7.5pt, fill: luma(40), n) } else { water-style }
-    wanted.push((at: (px(seen-x(x)), py(y)), dot: p.kind == "cape", body: style(p.name)))
-    if p.kind == "cape" { ticks.push((px(seen-x(x)), py(y))) }
+    wanted.push((at: page((x, y)), dot: p.kind == "cape", body: style(p.name)))
+    if p.kind == "cape" { ticks.push(page((x, y))) }
   }
   let placed = ()
   let taken = ()
@@ -1119,6 +1222,12 @@
     for code in shown {
       for points in all.at(code).r { ring(points, none, 0.7pt + black) }
     }
+    // Centred on a pole: its polar circle, dashed
+    if pole != none {
+      let circle-points = thinned(range(181).map(i => (i * 2 * s - 180 * s, sign * 66.56 * s)).map(flat))
+      place(curve(stroke: (paint: rgb("#1f5a8f"), thickness: 0.6pt, dash: "dashed"),
+        curve.move(circle-points.first()), ..circle-points.slice(1).map(curve.line)))
+    }
     // A region asked too small to see at this scale (Hawaii beside the United States): a
     // circle around it
     for a in areas {
@@ -1126,7 +1235,7 @@
       let b = (calc.min(..largest.map(p => p.at(0))), calc.min(..largest.map(p => p.at(1))),
                calc.max(..largest.map(p => p.at(0))), calc.max(..largest.map(p => p.at(1))))
       if near-frame(b) and calc.max((b.at(2) - b.at(0)) * k * unit, (b.at(3) - b.at(1)) * unit) < 10pt {
-        let (x, y) = (px((b.at(0) + b.at(2)) / 2), py((b.at(1) + b.at(3)) / 2))
+        let (x, y) = page(((b.at(0) + b.at(2)) / 2, (b.at(1) + b.at(3)) / 2))
         place(dx: x - 9pt, dy: y - 9pt, circle(radius: 9pt, stroke: 1.2pt + rgb("#d9822b")))
       }
     }
@@ -1144,7 +1253,7 @@
       let grown = (b.at(0) - s, b.at(1) - s, b.at(2) + s, b.at(3) + s)  // a degree around
       let apart = grouped-parts.enumerate().all(((m, (c, j))) => m == n or j != i or not touches(grown, c))
       if apart and near-frame(b) and calc.max((b.at(2) - b.at(0)) * k * unit, (b.at(3) - b.at(1)) * unit) < 10pt {
-        let (x, y) = (px((b.at(0) + b.at(2)) / 2), py((b.at(1) + b.at(3)) / 2))
+        let (x, y) = page(((b.at(0) + b.at(2)) / 2, (b.at(1) + b.at(3)) / 2))
         place(dx: x - 7pt, dy: y - 7pt, circle(radius: 7pt, stroke: 1.4pt + palette.at(i).darken(20%)))
       }
     }
@@ -1160,7 +1269,10 @@
       for points in w.item.r { ring(points, rgb("#b5d2ec"), 0.3pt + luma(160)) }
     }
     for l in lines {
-      for run in spans.map(d => l.item.l.map(p => runs(moved(p, d)))).join().join(default: ()) {
+      let all-runs = if pole != none { l.item.l.map(p => runs(p.map(flat))).join(default: ()) } else {
+        spans.map(d => l.item.l.map(p => runs(moved(p, d)))).join().join(default: ())
+      }
+      for run in all-runs {
         let kept = thinned(run)
         if kept.len() >= 2 {
           place(curve(stroke: (paint: rgb("#3b7dc4"), thickness: 1.1pt, join: "round", cap: "round"),
@@ -1184,8 +1296,9 @@
     for (i, t) in trips.enumerate() {
       let colour = ink(i)
       let line = (paint: colour, thickness: 1.5pt, join: "round", cap: "round", dash: if t.by == "land" { "dashed" } else { none })
-      for d in range(-2, 3).map(j => j * full) {
-        let way = moved(t.way, d)
+      for d in if pole != none { (0,) } else { range(-2, 3).map(j => j * full) } {
+        // (centred on a pole, the way as drawn: the clip of the page cuts it)
+        let way = if pole != none { curved(t.way, closed: false).map(flat) } else { moved(t.way, d) }
         let (xs, ys) = (way.map(p => p.at(0)), way.map(p => p.at(1)))
         if not touches((calc.min(..xs), calc.min(..ys), calc.max(..xs), calc.max(..ys)), (fx0, fy0, fx1, fy1)) { continue }
         let kept = thinned(way)

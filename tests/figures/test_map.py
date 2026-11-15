@@ -1,6 +1,7 @@
 """The map family (our atlas): places found by any name, history's places, what the atlas
 lacks, a map's size."""
 
+import io
 import itertools
 import json
 import re
@@ -838,3 +839,77 @@ def test_the_passages_kept_as_listed():
     kept = json.loads(atlas.PASSAGES_FILE.read_text(encoding="utf-8"))
     assert [p["title"] for p in kept] == [title for title, _ in atlas.PASSAGES]
     assert all(p["n"] and len(p["xy"]) == 2 for p in kept)
+
+
+def test_a_map_centred_on_a_pole():
+    """The Arctic of a HGGSP lesson (its countries, its ocean, the sea routes along Russia and
+    through Canada's islands) and Antarctica: drawn as seen from above the pole, never as a
+    band across the top of a world map; within a figure's size, every Arctic coast in it."""
+    arctic = (
+        '#map(pole: "north", countries: ("Russie", "Canada", "États-Unis", "Norvège", "Groenland"), '
+        'waters: ("océan Arctique",), routes: ((name: "Route maritime du Nord", places: ("Mourmansk", '
+        '"mer de Kara", "mer de Laptev", "mer des Tchouktches"), by: "sea"), (name: "Passage du Nord-Ouest", '
+        'places: ("mer de Baffin", "passage du Nord-Ouest", "mer de Beaufort", "mer des Tchouktches"), by: "sea")))'
+    )
+    south = '#map(pole: "south", countries: ("Antarctique",), waters: ("océan Austral",))'
+    flat = '#map(countries: ("Russie", "Canada", "États-Unis", "Norvège", "Groenland"))'
+    drawn = [figures.clean(figures_typst.compile_svg("map", body)) for body in (arctic, south, flat)]
+    assert all(len(svg) < figures.MAX_SIZE for svg in drawn)
+    assert drawn[0] != drawn[2]
+    with pytest.raises(figures_typst.Unusable, match="pole"):
+        figures_typst.compile_svg("map", '#map(pole: "arctic", countries: ("Canada",))')
+
+
+def test_a_ring_round_the_pole_drawn_without_its_seam():
+    """Natural Earth cuts a ring that goes round the world along the 180th meridian and the
+    pole (Antarctica's): seen from above the pole, its outline drew a line from its coast to
+    the pole. The outline leaves its seams out, the land stays whole."""
+    from PIL import Image
+
+    svg = figures_typst.compile_svg("map", '#map(pole: "south", countries: ("Antarctique",), labels: false)')
+    image = Image.open(io.BytesIO(figures.to_png(figures.clean(svg)))).convert("L")
+    (w, h) = image.size
+    # (the pole at the middle; the 180th meridian down from it, short of the Ross Sea's coast)
+    assert all(image.getpixel((w // 2, h // 2 + dy)) > 200 for dy in range(3, h // 15))
+
+
+def test_every_place_the_atlas_lacks_said_at_once():
+    """A route through two places the atlas lacks was refused for the first only: the AI fixed
+    it, met the second and gave up (the Arctic's sea routes, drawn by hand). Every one said in
+    one message, the next try fixes them all."""
+    body = (
+        '#map(routes: ((name: "R", places: ("Mourmansk", "mer de Nulle-Part", "mer des Tchouktches"), by: "sea"),'
+        ' (name: "P", places: ("Halifax", "baie de Nulle-Part"), by: "sea")))'
+    )
+    with pytest.raises(figures_typst.Unusable, match='"mer de Nulle-Part", "baie de Nulle-Part"'):
+        figures_typst.compile_svg("map", body)
+
+
+@pytest.mark.parametrize("water", ["mer des Laptev", "baie de Baffin"])
+def test_the_arctic_waters_as_french_writes_them(water):
+    """« mer des Laptev » and « baie de Baffin », as French writes them too (Natural Earth:
+    « mer de Laptev », « mer de Baffin »)."""
+    assert figures_typst.compile_svg("map", f'#map(pole: "north", waters: ("{water}",))').startswith("<svg")
+
+
+def test_a_water_named_where_it_is_on_a_map_centred_on_a_pole():
+    """A water's name goes at its own place, as drawn: on a map centred on the pole, the Arctic
+    Ocean's was put where its longitude and latitude would be on a flat map, in a corner."""
+    from PIL import Image, ImageChops
+
+    def drawn(labels):
+        body = f'#map(pole: "north", waters: ("océan Arctique",), labels: {labels})'
+        svg = figures_typst.compile_svg("map", body)
+        return Image.open(io.BytesIO(figures.to_png(figures.clean(svg)))).convert("RGB")
+
+    # (where the name is: what it changes on the map)
+    (x0, y0, x1, y1) = ImageChops.difference(drawn("true"), drawn("false")).getbbox()
+    (w, h) = drawn("false").size
+    assert w / 4 < (x0 + x1) / 2 < 3 * w / 4 and h / 4 < (y0 + y1) / 2 < 3 * h / 4
+
+
+def test_a_region_that_is_a_country_shown_as_one():
+    """« Danemark par le Groenland »: the AI put Greenland among Denmark's regions, but the
+    atlas has it as a country of its own, and the map was refused (the Arctic drawn by hand)."""
+    body = '#map(pole: "north", countries: ("Danemark", "États-Unis"), regions: ("Groenland", "Alaska"))'
+    assert figures_typst.compile_svg("map", body).startswith("<svg")
