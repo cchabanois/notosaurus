@@ -365,6 +365,58 @@ def test_a_translations_image_placed_clear_of_its_figure():
     assert figures_typst.compile_svg("geometry", example).startswith("<svg")
 
 
+def test_a_symmetry_centre_placed_clear_of_its_figure():
+    """A symmetry about a point the description doesn't place: its centre computed from the
+    figure, never placed by eye (by eye, the AI put a vertex in line with B and O 2 drawings
+    in 3: [BB'] over [CC'], their marks in a heap at O). For triangles of every shape: the
+    image clear of the figure by the gap, no two vertices within 10° of a line through the
+    centre, the image on the right of the figure; the rule's call compiles."""
+    body = """#let triangles = (
+  ((0, 0), (3, 0.5), (1, 2.5)), ((0, 0), (4, 0), (0, 3)), ((0, 0), (3, 1), (2, 3)),
+  ((1, 0), (0, 2), (3, 3)), ((0, 0), (5, 0), (2.5, 0.5)), ((0, 0), (1, 4), (-1, 3)),
+)
+#for pts in triangles {
+  let o = _symmetry-centre(pts, 1.5)
+  let image = pts.map(q => (2 * o.at(0) - q.at(0), 2 * o.at(1) - q.at(1)))
+  // apart along the line from the figure's centre to O: the image a gap after the figure
+  let g = (pts.map(q => q.at(0)).sum() / 3, pts.map(q => q.at(1)).sum() / 3)
+  let (ux, uy) = (o.at(0) - g.at(0), o.at(1) - g.at(1))
+  let along(q) = q.at(0) * ux + q.at(1) * uy
+  let gap = (calc.min(..image.map(along)) - calc.max(..pts.map(along))) / calc.sqrt(ux * ux + uy * uy)
+  assert(gap >= 1.5 - 1e-9, message: "touches")
+  assert(ux > 0, message: "image on the left")
+  let angle(q) = calc.atan2(q.at(0) - o.at(0), q.at(1) - o.at(1)) / 1deg
+  for i in range(3) {
+    for j in range(i + 1, 3) {
+      let d = calc.rem-euclid(angle(pts.at(i)) - angle(pts.at(j)), 180)
+      assert(calc.min(d, 180 - d) >= 10, message: "two vertices in line with the centre")
+    }
+  }
+}
+#ctz-canvas({
+  ctz-init()
+  ctz-def-points(A: (0, 0), B: (3, 0.5), C: (1, 2.5))
+  ctz-def-symmetry-centre("O", ("A", "B", "C"))
+  ctz-def-symmetry("A'", "A", "O")
+  ctz-draw-segment("A", "A'")
+})"""
+    figures_typst.compile_svg("geometry", body)
+    rule = figures_typst.FAMILIES["geometry"].rules
+    (call,) = re.findall(r"`(ctz-def-symmetry-centre\([^`]*\))`", rule)
+    points = "ctz-def-points(A: (0, 0), B: (3, 0.5), C: (1, 2.5))"
+    image = 'ctz-def-symmetry("A\'", "A", "O"); ctz-draw-segment("A", "A\'")'
+    example = f"#ctz-canvas({{ ctz-init(); {points}; {call}; {image} }})"
+    assert figures_typst.compile_svg("geometry", example).startswith("<svg")
+
+
+def test_a_figures_axis_drawn_through_its_own_points():
+    """An axis of symmetry with ends at coordinates of the AI's own missed an equilateral
+    triangle's centre 1 drawing in 3: the rule has it through two points of the figure,
+    computed (a vertex and the opposite side's midpoint)."""
+    rule = figures_typst.FAMILIES["geometry"].rules
+    assert "axis of symmetry" in rule and "never ends at coordinates of your own" in rule
+
+
 def test_a_rotations_arrowed_arc_drawn_from_its_points():
     """A rotation's direction shown by an arrowed arc the preamble draws from the point, the
     centre and the image (the AI guessed ctz-draw-arc's arguments, `mark:`, `radius:`,
