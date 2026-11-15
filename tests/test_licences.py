@@ -62,18 +62,21 @@ def test_the_atlas_ships_cldrs_licence():
 
 
 def test_the_atlas_ships_the_past_borders_licence():
-    """The borders of past years (historical-basemaps) are under the GNU GPL v3: credited with
-    the figures' others, its text beside them in the archive the add-on and the app ship, the
-    NOTICE saying which data it covers."""
+    """The borders of past years: OpenHistoricalMap's (CC0), the land it leaves to no state
+    historical-basemaps' (GNU GPL v3). Both credited with the figures' others, the GPL's text
+    beside them in the archive the add-on and the app ship, the NOTICE saying which data each
+    covers."""
     import tarfile
 
     from notosaurus_core.figures_typst import CREDITS
 
+    assert any(c["name"] == "OpenHistoricalMap" and c["licence"] == "CC0-1.0" for c in CREDITS)
     assert any(c["name"] == "historical-basemaps" and c["licence"] == "GPL-3.0" for c in CREDITS)
     (archive,) = (STATIC.parent / "core" / "notosaurus_core" / "typst").glob("notosaurus-atlas-*.tar.gz")
     with tarfile.open(archive) as tar:
         licence = tar.extractfile("LICENSE-historical-basemaps").read().decode()
         notice = tar.extractfile("NOTICE").read().decode()
-        assert {"borders/1914.json", "borders/1960.json"} <= set(tar.getnames())
+        assert {"borders/1914.json", "borders/1942.json", "borders/1960.json"} <= set(tar.getnames())
     assert "GNU GENERAL PUBLIC LICENSE" in licence and "Version 3" in licence
     assert "LICENSE-historical-basemaps" in notice and "borders/" in notice
+    assert "OpenHistoricalMap" in notice and "CC0" in notice

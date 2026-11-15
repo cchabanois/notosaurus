@@ -109,7 +109,7 @@
  },
  {
   "name": "notosaurus-atlas",
-  "version": "0.6.0",
+  "version": "0.7.0",
   "licence": "AGPL-3.0-or-later",
   "url": "https://github.com/cchabanois/notosaurus/blob/main/tools/atlas.py"
  },
@@ -118,6 +118,12 @@
   "version": "5.1.2",
   "licence": "public-domain",
   "url": "https://www.naturalearthdata.com/about/terms-of-use/"
+ },
+ {
+  "name": "OpenHistoricalMap",
+  "version": "2026-11-01",
+  "licence": "CC0-1.0",
+  "url": "https://www.openhistoricalmap.org/copyright"
  },
  {
   "name": "historical-basemaps",
