@@ -54,7 +54,7 @@ ROOT = Path(__file__).resolve().parent.parent
 CORE = ROOT / "core" / "notosaurus_core"
 LIB = CORE / "atlas" / "lib.typ"
 TARGET = CORE / "typst"
-NAME, VERSION = "notosaurus-atlas", "0.9.0"
+NAME, VERSION = "notosaurus-atlas", "0.10.0"
 SOURCE = "https://raw.githubusercontent.com/nvkelso/natural-earth-vector/v5.1.2/geojson/"
 COUNTRIES = "ne_50m_admin_0_countries.geojson"  # 1:50m: a country's shape, light enough
 PLACES = "ne_10m_populated_places.geojson"  # 1:10m: the cities, their names in many languages
@@ -135,6 +135,7 @@ PASSAGES = [
     *[(t, ()) for t in ("Sunda Strait", "Lombok Strait", "Singapore Strait", "Makassar Strait", "Torres Strait")],
     *[(t, ()) for t in ("Taiwan Strait", "Luzon Strait", "Korea Strait", "Tsushima Strait", "Tsugaru Strait")],
     *[(t, ()) for t in ("La Pérouse Strait", "Strait of Tartary", "Bass Strait", "Cook Strait")],
+    ("Lancaster Sound", ("détroit de Lancaster",)),  # (the North-West Passage's way in)
     # Canals: the ways ships go through the land
     *[(t, ()) for t in ("Suez Canal", "Panama Canal", "Kiel Canal", "Corinth Canal")],
 ]
@@ -1217,6 +1218,8 @@ WATER_NAMES = {
     "Aegean Sea": ("Ägäis",),
     "Caribbean Sea": ("Caraïbes", "Karibik", "Caribe", "mar do Caribe", "Caraibi", "mar dei Caraibi"),
     "English Channel": ("Manica", "Mancha"),
+    "Laptev Sea": ("mer des Laptev",),  # (the French say both)
+    "Baffin Bay": ("baie de Baffin",),
 }
 _GENERIC = ("mer ", "ocean ", "oceano ", "mar ", "mare ", "la ")  # folded, before a sea's own name
 _LINKS = {"du", "de", "des", "d", "of", "del", "dei", "della", "do", "da", "das", "dos", "di", "degli"}
