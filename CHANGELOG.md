@@ -9,6 +9,7 @@ Each pull request's entries (the `## Changelog` of its description) are put unde
 
 ### Added
 
+- 🗺️ History maps for every year from 1815 to 1991, the Second World War's included: Europe under Germany in 1942, Japan's empire, Germany's occupation zones, Africa before and after its partition, Algeria French until 1962.
 - 🗺️ Maps of history drawn with the borders of the time: the Congress of Vienna's Europe, the German Empire, 1914's alliances and colonial empires, the interwar years, the Anschluss, Germany's occupation zones, the Cold War's blocs.
 - Charts: population pyramids, two series of bars back to back by age class, graduated alike on both sides; a pyramid described only by its shape drawn as that shape, without numbers.
 - Maps draw routes (voyages, sea and trade routes, by sea around the land or over land) and flows (migrations, trade, tourists) as arrows between named places, with a legend: no longer drawn by hand. A flow between regions tints and names them; arrows are wide as their importance.
@@ -49,6 +50,7 @@ Each pull request's entries (the `## Changelog` of its description) are put unde
 
 ### Changed
 
+- 🗺️ The past borders come from OpenHistoricalMap: finer, dated to the day, every colony with its ruler.
 - 🗂️ Classifications drawn as groups inside groups are narrower and easier to read on a card: groups side by side wrap onto several rows, each group's name is centred above a thin line, and its own members sit under its sub-groups.
 - « Toutes les pages »: no more ✕ on each page. « Sélectionner » (or a long press on a page) chooses pages, then « Retirer » removes them together; a tap still shows a page in full.
 - A lesson holds 30 pages (10 before): a PDF of a chapter or a long course at one click, its pages read 10 at a time, the page saying which ones it reads.
