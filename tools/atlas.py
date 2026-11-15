@@ -54,7 +54,7 @@ ROOT = Path(__file__).resolve().parent.parent
 CORE = ROOT / "core" / "notosaurus_core"
 LIB = CORE / "atlas" / "lib.typ"
 TARGET = CORE / "typst"
-NAME, VERSION = "notosaurus-atlas", "0.10.0"
+NAME, VERSION = "notosaurus-atlas", "0.11.0"
 SOURCE = "https://raw.githubusercontent.com/nvkelso/natural-earth-vector/v5.1.2/geojson/"
 COUNTRIES = "ne_50m_admin_0_countries.geojson"  # 1:50m: a country's shape, light enough
 PLACES = "ne_10m_populated_places.geojson"  # 1:10m: the cities, their names in many languages
@@ -730,6 +730,16 @@ def name_state(state: dict, year: int, named: dict, today: dict) -> dict:
     return state
 
 
+def ruled_by(state: dict, present: set) -> int | None:
+    """The empire (EMPIRES) a state belonged to, among those that are a state that year: the
+    first its sources say ("said"), never the one it is."""
+    for said in state.get("said", []):
+        empire = empire_of(said) if said else None
+        if empire is not None and empire != state["is"] and empire in present:
+            return empire
+    return None
+
+
 def past_states(year: int, data: dict, extra: dict, named: dict, today: dict, nations: list) -> dict:
     """A year's states, as the atlas's countries (their names, keys, frames and rings; "o" the
     state a colony belonged to): OHM's (`data`), one state each (its parts joined by their
@@ -754,15 +764,23 @@ def past_states(year: int, data: dict, extra: dict, named: dict, today: dict, na
         made = shapely.make_valid(shapely.union_all([m for _, m in found]).intersection(coast))
         if not made.is_empty:
             states.append({"key": key, "tags": tags, "shape": made, "size": made.area})
-    # a state lying in a larger one taken from it
-    tree = shapely.STRtree([s["shape"] for s in states])
     for state in states:
-        inside = [states[i]["shape"] for i in tree.query(state["shape"]) if states[i]["size"] < state["size"]]
+        name_state(state, year, named, today)
+    # a state lying in a larger one taken from it (Manchukuo from China), unless both are the
+    # same empire's lands: a colony in the federation it belonged to (Upper Senegal and Niger,
+    # Mauritania in French West Africa) leaves the federation whole
+    present = {s["is"] for s in states if s["is"] is not None}
+    empires = [ruled_by(s, present) for s in states]
+    tree = shapely.STRtree([s["shape"] for s in states])
+    for n, state in enumerate(states):
+        inside = [
+            states[i]["shape"]
+            for i in tree.query(state["shape"])
+            if states[i]["size"] < state["size"] and (empires[i] is None or empires[i] != empires[n])
+        ]
         if inside:
             state["shape"] = shapely.make_valid(state["shape"].difference(shapely.union_all(inside)))
     states = [s for s in states if s["shape"].area > max(SMALLEST, s["size"] / 50)]
-    for state in states:
-        name_state(state, year, named, today)
     # a state's land far from its own (beyond FAR of its largest part) on another of today's countries
     for i, state in enumerate(list(states)):
         pieces = [g for g in parts(state["shape"]) if g.geom_type == "Polygon"]
@@ -891,11 +909,9 @@ def past_states(year: int, data: dict, extra: dict, named: dict, today: dict, na
         }
         if "of" in state:
             entry["o"] = codes[state["of"]]
-        for said in [] if "of" in state else state["said"]:
-            empire = empire_of(said) if said else None
-            if empire is not None and empire != state["is"] and empire in rulers and rulers[empire] != i:
-                entry["o"] = codes[rulers[empire]]
-                break
+        empire = None if "of" in state else ruled_by(state, set(rulers))
+        if empire is not None and rulers[empire] != i:
+            entry["o"] = codes[rulers[empire]]
         countries[codes[i]] = entry
     return {"year": year, "countries": countries}
 
