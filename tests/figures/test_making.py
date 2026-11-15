@@ -570,6 +570,41 @@ def test_a_point_off_a_rotated_part_brought_onto_it():
     assert _placed(kept)[1][0][2:] == (300.0, 250.0)
 
 
+# two membranes face to face, open at both ends: the synaptic cleft between them
+CLEFT = (
+    '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 300"><rect width="400" height="300" fill="white"/>'
+    '<rect x="100" y="90" width="200" height="20" fill="#f4c27a" stroke="black"/>'
+    '<rect x="100" y="150" width="200" height="20" fill="#9ccbe8" stroke="black"/></svg>'
+)
+
+
+def test_a_point_between_two_shapes_kept_in_the_gap():
+    """« fente synaptique » named the gap between two membranes, open at its ends (reached
+    from the frame through white, as the open ground is): lines on both sides of it, it is a
+    region, kept there, never pulled onto a membrane as a point beside a part is."""
+    from notosaurus_core import figures
+
+    svg = figures.labelled(figures.clean(CLEFT), [figures.Label(text="fente synaptique", x=200, y=130)])
+    assert _placed(svg)[1][0][2:] == (200.0, 130.0)
+
+
+# a cell drawn white, its outline closing it in
+WHITE_CELL = (
+    '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 300"><rect width="400" height="300" fill="white"/>'
+    '<circle cx="200" cy="150" r="80" fill="white" stroke="black" stroke-width="2"/></svg>'
+)
+
+
+def test_a_point_in_a_region_closed_in_kept():
+    """« cytoplasme » named a point inside the cell, 40 units from its outline, the cell drawn
+    white: closed in by lines (the frame's white never reaches it), a region kept, never
+    pulled onto the outline as a point on the open ground this near a line is."""
+    from notosaurus_core import figures
+
+    svg = figures.labelled(figures.clean(WHITE_CELL), [figures.Label(text="cytoplasme", x=200, y=110)])
+    assert _placed(svg)[1][0][2:] == (200.0, 110.0)
+
+
 def test_a_column_beyond_a_point_past_the_drawing():
     """A region's point past the drawing's ink (the cytoplasm, white, right of the shapes): the
     column set beyond it, its line never drawn back across its name."""

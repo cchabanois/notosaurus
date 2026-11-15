@@ -358,6 +358,21 @@ def test_a_rotations_arrowed_arc_drawn_from_its_points():
     assert figures_typst.compile_svg("geometry", draw.format(call)).startswith("<svg")
 
 
+def test_a_rotations_arc_turns_the_way_it_is_given():
+    """A quarter turn anticlockwise from A (2, 0) about O: its arc a quarter of a circle, the
+    radius wide and high; `clockwise: true` the three quarters the other way, its diameter wide
+    and high (each way drawn the other's way: the same two drawings, swapped)."""
+    draw = (
+        '#ctz-canvas({{ ctz-init(); ctz-def-points(O: (0, 0), A: (2, 0)); ctz-def-rotation("A\'", "A", "O", 90); '
+        'ctz-draw-rotation-arc("A", "O", "A\'"{}) }})'
+    )
+    radius = 0.9 * 28.35  # the arc's default radius, in pt
+    quarter = drawn_size("geometry", draw.format(""))
+    three_quarters = drawn_size("geometry", draw.format(", clockwise: true"))
+    assert all(0.8 * radius < side < 1.3 * radius for side in quarter), quarter
+    assert all(1.8 * radius < side < 2.3 * radius for side in three_quarters), three_quarters
+
+
 @pytest.mark.parametrize("add", ["", ", add: (0.2, 0.2)", ", add: (0.5, 0.5)", ", add: 2"])
 def test_a_whole_line_goes_little_past_its_points(add):
     """A line past its two points by 15 % of the figure at most, whatever `add` asks: the
