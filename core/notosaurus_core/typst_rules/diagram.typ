@@ -327,10 +327,13 @@
 // that goes back up (one of two each way) drawn the same way between the same layers; a layer
 // of more boxes than the card holds goes on below; boxes of a layer ordered to cross the
 // fewest arrows (each box at its neighbours' middle, layer by layer), then each placed at its
-// neighbours' middle as near as they leave room; an arrow past a layer goes between its
-// boxes, never through one; arrows from or to one box leave it side by side, two between the
-// same boxes apart; each arrow's words in the gap it crosses, on it or beside it, clear of
-// every other word, arrow and box, the gap grown until they are. Its texts wrapped at the
+// neighbours' middle as near as they leave room. Each arrow straight from its box's border to
+// the other's (an elbowed line, its words on a layer of their own, zigzagged and was hard to
+// follow on a phone); a soft curve, one only, round a box in its way, through the room its
+// layer kept for it; arrows on one side of a box spread along it in the order of their other
+// ends, two between the same boxes one straight and one bowed. Each arrow's words on its line,
+// on a white ground, clear of every other word, arrow and box and of its own ends; the gap
+// between two layers grown, that one only, until they are. Its texts wrapped at the
 // widest width that makes its text the largest on a card (figures_typst.CARD_PX: 320 × 400
 // px); an arrow from a box to itself refused, told why.
 // boxes: (name: [its text], …); arrows: (from, to) or (from, to, [its words]) each, from and to
@@ -573,7 +576,7 @@
     let inner = if measure(e.label).width <= 2.8cm { e.label } else {
       block(width: calc.max(2.8cm, _longest-word(e.label)), align(center, e.label))
     }
-    box(fill: white, inset: (x: 3pt, y: 2pt), inner)
+    box(fill: white, radius: 3pt, inset: (x: 3pt, y: 2pt), inner)
   })
   let label-dims = labels.map(l => if l == none { (0, 0) } else {
     let m = measure(l)
@@ -588,14 +591,16 @@
     let (layer-of, chains, layers, up, down) = ordered.at(4 - cap)
     let count = layer-of.len()
     let worded = range(count).map(_ => none)
-    for (k, chain) in chains.enumerate() { if labels.at(k) != none { worded.at(chain.at(1)) = k } }
+    // an arrow's words kept room at its middle, where they go: in the gap of an arrow to the
+    // next layer, beside the boxes of the layer a longer one crosses
+    for (k, chain) in chains.enumerate() { if labels.at(k) != none { worded.at(chain.at(int(chain.len() / 2))) = k } }
     let framed-boxes = bodies.map(b => framed(b, most))
     let dims = range(count).map(v => if v < n {
       let m = measure(framed-boxes.at(v))
       (m.width / 1pt, m.height / 1pt)
     } else if worded.at(v) != none { label-dims.at(worded.at(v)) } else { (0, 0) })
     let solid(v) = v < n or worded.at(v) != none
-    let gap(a, b) = if a < n and b < n { 1.6 * size } else if solid(a) and solid(b) { 0.8 * size } else if solid(a) or solid(b) { 0.6 * size } else { 0.5 * size }
+    let gap(a, b) = if a < n and b < n { 1.6 * size } else if solid(a) and solid(b) { 0.8 * size } else if a < n or b < n { 1.2 * size } else if solid(a) or solid(b) { 0.6 * size } else { 0.5 * size }
     // x: packed, then each node at its neighbours' middle as near as its layer leaves room
     let x = range(count).map(_ => 0.0)
     for l in layers {
@@ -646,120 +651,248 @@
   let (layers, chains, x, dims, heights, worded) = (best.layers, best.chains, best.x, best.dims, best.heights, best.worded)
   let count = best.count
   let rank = range(count).map(v => layers.position(l => v in l))
-  let tops = (0,)
-  for r in range(1, layers.len()) { tops.push(tops.at(-1) + heights.at(r - 1) + 1.1 * size) }
-  let total-h = best.height
-  let total-w = best.width
-  let flip(y) = if flow == "up" { total-h - y } else { y }
-  let cy(v) = tops.at(rank.at(v)) + heights.at(rank.at(v)) / 2
-  // ports: the arrows leaving a box's bottom (entering its top) side by side, in the order of
-  // their other ends; a point in a layer of words: its middle
-  let port = (:)
-  for v in range(n) {
-    for side in ("down", "up") {
-      let segs = ()
-      for (k, chain) in chains.enumerate() {
-        let i = chain.position(c => c == v)
-        if i == none { continue }
-        let other = if side == "down" { chain.at(i + 1, default: none) } else if i > 0 { chain.at(i - 1) } else { none }
-        if other != none { segs.push((k, other)) }
-      }
-      let segs = segs.sorted(key: ((k, o)) => x.at(o) * 1000 + k)
-      let m = segs.len()
-      let w = dims.at(v).at(0)
-      let step = if m < 2 { 0 } else { calc.min(0.9 * size, (w - 8) / (m - 1)) }
-      for (i, (k, o)) in segs.enumerate() { port.insert(str(k) + "/" + str(v) + "/" + side, x.at(v) + (i - (m - 1) / 2) * step) }
-    }
+  let center(r) = ((r.at(0) + r.at(2)) / 2, (r.at(1) + r.at(3)) / 2)
+  let quad(p, c, q, t) = (
+    (1 - t) * (1 - t) * p.at(0) + 2 * (1 - t) * t * c.at(0) + t * t * q.at(0),
+    (1 - t) * (1 - t) * p.at(1) + 2 * (1 - t) * t * c.at(1) + t * t * q.at(1),
+  )
+  let along(path, t) = {
+    let (p, c, q) = path
+    if c == none { (p.at(0) + t * (q.at(0) - p.at(0)), p.at(1) + t * (q.at(1) - p.at(1))) } else { quad(p, c, q, t) }
   }
-  let at(k, v, side) = if v < n { port.at(str(k) + "/" + str(v) + "/" + side) } else { x.at(v) }
-  // what an arrow may not go through: the boxes, the words (a little inside their edges)
-  let solids = range(count).filter(v => v < n or worded.at(v) != none).map(v => {
-    let (w, h) = dims.at(v)
-    (x.at(v) - w / 2 + 1, cy(v) - h / 2 + 1, x.at(v) + w / 2 - 1, cy(v) + h / 2 - 1)
-  })
-  // every arrow's points, from its upper end to its lower: straight past a layer of words
-  // where it has none and meets nothing there
-  let lines = ()
-  for (k, chain) in chains.enumerate() {
-    let pts = ()
-    for (i, v) in chain.enumerate() {
-      if v >= n and worded.at(v) == none and calc.odd(rank.at(v)) and pts.len() > 0 and i < chain.len() - 1 {
-        let w = chain.at(i + 1)
-        let next = (if w < n { at(k, w, "up") } else { x.at(w) }, tops.at(rank.at(w)))
-        if solids.all(r => not _sch-hits(pts.at(-1), next, r)) { continue }
-      }
-      // straight down across a layer (behind its words, beside its boxes), slanting only
-      // between layers, where nothing stands: never through a box
-      let r = rank.at(v)
-      let (band-top, band-bottom) = (tops.at(r), tops.at(r) + heights.at(r))
-      let add(pts, p) = if pts.len() > 0 and pts.at(-1) == p { pts } else { pts + (p,) }
-      if v >= n {
-        // through its words: straight on where it goes through them anyway, else bending at
-        // their middle
-        let line = x.at(v)
-        if worded.at(v) != none and pts.len() > 0 and i < chain.len() - 1 {
-          let w = chain.at(i + 1)
-          let next = (if w < n { at(k, w, "up") } else { x.at(w) }, tops.at(rank.at(w)))
-          let prev = pts.at(-1)
-          let t = (cy(v) - prev.at(1)) / calc.max(1, next.at(1) - prev.at(1))
-          let half = dims.at(v).at(0) / 2
-          let straight = prev.at(0) + t * (next.at(0) - prev.at(0))
-          if calc.abs(straight - x.at(v)) <= 0.6 * half { line = straight }
+  let sample(path) = if path.at(1) == none { (path.at(0), path.at(2)) } else { range(17).map(i => along(path, i / 16)) }
+  // within the boxes' width (an arrow's own half a letter past it is still drawn whole)
+  let inside(pts) = pts.all(pt => pt.at(0) >= -size / 2 and pt.at(0) <= best.width + size / 2)
+  let clear-of(pts, rects) = range(pts.len() - 1).all(i => rects.all(r => not _sch-hits(pts.at(i), pts.at(i + 1), r)))
+  // the gap each arrow's words go in: its middle's
+  let gap-of = edges.map(e => int((rank.at(e.u) + rank.at(e.v)) / 2))
+  // the layout with `extra` more between each two layers: the boxes, each arrow straight from its
+  // box's side to the other's (a curve bowing round a box in its way, never an elbow), its
+  // words on it where nothing else is; whether every word found such a place
+  let place-all(extra, within, staggered) = {
+    let tops = (0,)
+    for r in range(1, layers.len()) { tops.push(tops.at(-1) + heights.at(r - 1) + 1.1 * size + extra.at(r - 1)) }
+    let total-h = best.height + extra.sum(default: 0)
+    let flip(y) = if flow == "up" { total-h - y } else { y }
+    let cy(v) = tops.at(rank.at(v)) + heights.at(rank.at(v)) / 2
+    let rects = range(n).map(v => {
+      let (w, h) = dims.at(v)
+      (x.at(v) - w / 2, flip(cy(v)) - h / 2, x.at(v) + w / 2, flip(cy(v)) + h / 2)
+    })
+    // each arrow leaves the side of its box that faces the other box, enters the other's
+    // facing side
+    let sides = edges.map(e => if center(rects.at(e.v)).at(1) > center(rects.at(e.u)).at(1) { ("bottom", "top") } else { ("top", "bottom") })
+    // the arrows on one side of a box spread along it, in the order of their other ends, so
+    // that they never cross there; two between the same boxes side by side
+    let port = (:)
+    for b in range(n) {
+      for side in ("top", "bottom") {
+        let segs = ()
+        for (k, e) in edges.enumerate() {
+          if e.u == b and sides.at(k).at(0) == side { segs.push((k, "s", center(rects.at(e.v)).at(0))) }
+          if e.v == b and sides.at(k).at(1) == side { segs.push((k, "t", center(rects.at(e.u)).at(0))) }
         }
-        pts = add(pts, (line, band-top))
-        pts = add(pts, (line, band-bottom))
-      } else {
-        let (top, bottom) = (cy(v) - dims.at(v).at(1) / 2, cy(v) + dims.at(v).at(1) / 2)
-        if i > 0 {
-          pts = add(pts, (at(k, v, "up"), band-top))
-          pts = add(pts, (at(k, v, "up"), top))
-        }
-        if i < chain.len() - 1 {
-          pts = add(pts, (at(k, v, "down"), bottom))
-          pts = add(pts, (at(k, v, "down"), band-bottom))
+        let segs = segs.sorted(key: s => s.at(2) * 1000 + s.at(0))
+        let m = segs.len()
+        let r = rects.at(b)
+        let w = r.at(2) - r.at(0)
+        let step = if m < 2 { 0 } else { calc.min(1.6 * size, (w - 10) / (m - 1)) }
+        let y = if side == "top" { r.at(1) } else { r.at(3) }
+        for (i, sg) in segs.enumerate() {
+          port.insert(str(sg.at(0)) + sg.at(1), ((r.at(0) + r.at(2)) / 2 + (i - (m - 1) / 2) * step, y))
         }
       }
     }
-    lines.push(pts.map(((px, py)) => (px, flip(py))))
+    // straight, or one curve bowing round the boxes in its way: its middle moved aside, the
+    // least that clears them
+    let paths = ()
+    for (k, e) in edges.enumerate() {
+      let (p, q) = (port.at(str(k) + "s"), port.at(str(k) + "t"))
+      // the other boxes, and its own two too (a curve must leave them outwards)
+      let others = range(n).map(b => if b == e.u or b == e.v { _sch-grow(rects.at(b), -1) } else { _sch-grow(rects.at(b), 3) })
+      let ctrl = none
+      // across a layer of boxes: through the room the ordering kept it there (its words' when it
+      // has some), when that clears the boxes
+      let chain = best.chains.at(k)
+      if chain.len() > 3 and (labels.at(k) != none or not clear-of((p, q), others)) {
+        let m = chain.at(int(chain.len() / 2))
+        let (mx, my) = (x.at(m), flip(cy(m)))
+        let c = (2 * mx - (p.at(0) + q.at(0)) / 2, 2 * my - (p.at(1) + q.at(1)) / 2)
+        let sm = sample((p, c, q))
+        if clear-of(sm, others) and inside(sm) { ctrl = c }
+      }
+      if ctrl == none and not clear-of((p, q), others) {
+        let mid = ((p.at(0) + q.at(0)) / 2, (p.at(1) + q.at(1)) / 2)
+        let (dx, dy) = (q.at(0) - p.at(0), q.at(1) - p.at(1))
+        let l = calc.max(1, calc.sqrt(dx * dx + dy * dy))
+        let nrm = (-dy / l, dx / l)
+        // the least bow that clears them, within the drawing's width if one does
+        let kept = none
+        for d in (15, 25, 40, 60, 85, 115, 150, 200) {
+          for sd in (1, -1) {
+            if kept != none { continue }
+            let c = (mid.at(0) + sd * 2 * d * nrm.at(0), mid.at(1) + sd * 2 * d * nrm.at(1))
+            let sm = sample((p, c, q))
+            if not clear-of(sm, others) { continue }
+            if ctrl == none { ctrl = c }
+            if inside(sm) { kept = c }
+          }
+        }
+        if kept != none { ctrl = kept }
+      }
+      paths.push((p, ctrl, q))
+    }
+    // two arrows between the same boxes (one each way, or two the same way): the first
+    // straight, the second bowed aside by the room its words and the first's take (less where
+    // that meets a box), to the side where it crosses the fewest other arrows
+    let cross(a, b) = {
+      let d(p, q, r) = (q.at(0) - p.at(0)) * (r.at(1) - p.at(1)) - (q.at(1) - p.at(1)) * (r.at(0) - p.at(0))
+      let count = 0
+      for i in range(a.len() - 1) {
+        for j in range(b.len() - 1) {
+          let (p, q, r, t) = (a.at(i), a.at(i + 1), b.at(j), b.at(j + 1))
+          if d(p, q, r) * d(p, q, t) < 0 and d(r, t, p) * d(r, t, q) < 0 { count += 1 }
+        }
+      }
+      count
+    }
+    for (k, e) in edges.enumerate() {
+      let first = edges.enumerate().find(((j, f)) => j < k and ((f.u == e.u and f.v == e.v) or (f.u == e.v and f.v == e.u)))
+      if first == none { continue }
+      let (j, f) = first
+      let (p, _, q) = paths.at(k)
+      // the other boxes, and its own two too (a curve must leave them outwards)
+      let others = range(n).map(b => if b == e.u or b == e.v { _sch-grow(rects.at(b), -1) } else { _sch-grow(rects.at(b), 3) })
+      let mid = ((p.at(0) + q.at(0)) / 2, (p.at(1) + q.at(1)) / 2)
+      let (dx, dy) = (q.at(0) - p.at(0), q.at(1) - p.at(1))
+      let l = calc.max(1, calc.sqrt(dx * dx + dy * dy))
+      let room = (label-dims.at(k).at(0) + label-dims.at(j).at(0)) / 2 + 8
+      let tried = ()
+      for d in (room, room * 0.8, room * 0.6, room * 0.45, room * 0.3) {
+        for sd in (1, -1) {
+          let c = (mid.at(0) - sd * 2 * d * dy / l, mid.at(1) + sd * 2 * d * dx / l)
+          let sm = sample((p, c, q))
+          if not clear-of(sm, others) { continue }
+          let crossings = range(paths.len()).filter(i => i != k).map(i => cross(sm, sample(paths.at(i)))).sum()
+          let out = if inside(sm) { 0 } else { 1 }
+          tried.push((out * 100000 + crossings * 1000 - d, c))
+        }
+      }
+      if tried.len() > 0 { paths.at(k) = (p, tried.sorted(key: t => t.at(0)).first().at(1), q) }
+    }
+    let samples = paths.map(sample)
+    // each arrow's words on it, near its middle, clear of the boxes, the other words and the
+    // other arrows
+    let words = edges.map(_ => none)
+    // staggered, the words of one gap, from left to right, one higher and the next lower on
+    // their arrows, where side by side they meet
+    let sharing = range(edges.len()).map(k => range(edges.len())
+      .filter(j => labels.at(j) != none and gap-of.at(j) == gap-of.at(k))
+      .sorted(key: j => along(paths.at(j), 0.5).at(0)))
+    let placed = ()
+    let failed = ()
+    for (k, e) in edges.enumerate() {
+      if labels.at(k) == none { continue }
+      let (lw, lh) = label-dims.at(k)
+      let at(t) = {
+        let m = along(paths.at(k), t)
+        (m.at(0) - lw / 2, m.at(1) - lh / 2, m.at(0) + lw / 2, m.at(1) + lh / 2)
+      }
+      let found = none
+      let crossing = none
+      let near = none
+      let first = if not staggered { 0.5 } else if calc.even(sharing.at(k).position(j => j == k)) { 0.36 } else { 0.64 }
+      let ts = (0, -0.06, 0.06, -0.12, 0.12, -0.18, 0.18, -0.24, 0.24, -0.3, 0.3).map(d => first + d).filter(t => t >= 0.15 and t <= 0.85)
+      for t in ts {
+        if found != none { continue }
+        let r = at(t)
+        if within and (r.at(0) < 0 or r.at(2) > best.width) { continue }
+        let g = _sch-grow(r, 2)
+        // a bit of its line seen on either side, its head too
+        let ends = _sch-grow(r, 1.2 * size)
+        let alone = rects.all(b => not _sch-meet(g, b)) and placed.all(o => not _sch-meet(g, o))
+        let apart = alone and (paths.at(k).first(), paths.at(k).last()).all(p => not _sch-meet(ends, (p.at(0), p.at(1), p.at(0), p.at(1))))
+        if alone and near == none { near = r }
+        if apart and crossing == none { crossing = r }
+        if apart and samples.enumerate().all(((j, sm)) => j == k or clear-of(sm, (r,))) { found = r }
+      }
+      if found == none {
+        failed.push(k)
+        // no room: over another arrow, its white ground hiding it there, or nearer an end,
+        // never over words or a box
+        found = if crossing != none { crossing } else if near != none { near } else { at(0.5) }
+      }
+      placed.push(found)
+      words.at(k) = (found, labels.at(k))
+    }
+    (rects: rects, paths: paths, samples: samples, words: words, ok: failed.len() == 0, failed: failed, height: total-h, extra: extra)
   }
-  let rect(v) = {
-    let (w, h) = dims.at(v)
-    (x.at(v) - w / 2, flip(cy(v)) - h / 2, x.at(v) + w / 2, flip(cy(v)) + h / 2)
+  let laid = none
+  // more room only between the layers whose arrows found none for their words; when room
+  // never comes, the layout where the fewest words lie over another arrow, the lowest
+  let extra = range(layers.len() - 1).map(_ => 0)
+  let tried = none
+  for _ in range(8) {
+    if tried != none and tried.ok { continue }
+    // its words within the boxes' width, or past it when they find no room there
+    for (within, staggered) in ((true, false), (false, false), (true, true), (false, true)) {
+      if tried != none and tried.ok and tried.extra == extra { continue }
+      let these = place-all(extra, within, staggered)
+      if tried == none or tried.extra != extra or these.failed.len() < tried.failed.len() { tried = these }
+    }
+    if laid == none or tried.failed.len() < laid.failed.len() { laid = tried }
+    // the gap at the middle of each such arrow, where its words go
+    for g in tried.failed.map(k => gap-of.at(k)).dedup() { extra.at(calc.min(g, extra.len() - 1)) += 0.8 * size }
   }
-  let words = edges.map(_ => none)
-  for v in range(n, count) { if worded.at(v) != none { words.at(worded.at(v)) = (rect(v), labels.at(worded.at(v))) } }
+  // everything within the drawing: a curve or a word past its edges moves it all
+  let pts = laid.rects.map(r => ((r.at(0), r.at(1)), (r.at(2), r.at(3)))).flatten().chunks(2)
+  for sm in laid.samples { pts += sm }
+  for w in laid.words { if w != none { pts += ((w.at(0).at(0), w.at(0).at(1)), (w.at(0).at(2), w.at(0).at(3))) } }
+  let (x0, y0) = (calc.min(0, ..pts.map(p => p.at(0))), calc.min(0, ..pts.map(p => p.at(1))))
+  let (x1, y1) = (calc.max(best.width, ..pts.map(p => p.at(0))), calc.max(laid.height, ..pts.map(p => p.at(1))))
+  let mv(p) = (p.at(0) - x0, p.at(1) - y0)
+  let mr(r) = (r.at(0) - x0, r.at(1) - y0, r.at(2) - x0, r.at(3) - y0)
   (
-    width: total-w,
-    height: total-h,
-    boxes: range(n).map(v => (rect(v), best.framed.at(v))),
-    words: words,
-    // from the arrow's own start to its end
-    arrows: edges.enumerate().map(((k, e)) => (if back.at(k) { lines.at(k).rev() } else { lines.at(k) }, e.style)),
+    width: x1 - x0,
+    height: y1 - y0,
+    boxes: range(n).map(v => (mr(laid.rects.at(v)), best.framed.at(v))),
+    words: laid.words.map(w => if w == none { none } else { (mr(w.at(0)), w.at(1)) }),
+    // from the arrow's own start to its end: its points (two when straight, along it when it
+    // bows), its style, its curve (start, control or none, end)
+    arrows: edges.enumerate().map(((k, e)) => (
+      laid.samples.at(k).map(mv),
+      e.style,
+      laid.paths.at(k).map(p => if p == none { none } else { mv(p) }),
+    )),
   )
 }
 #let scheme(boxes: (:), arrows: (), flow: "down") = context {
   let laid = _sch-layout(boxes, arrows, flow)
   let pt(p) = (p.at(0) * 1pt, p.at(1) * 1pt)
-  let head = 5.5
+  // a head readable at a card's size, its line ending under it
+  let head = 7.5
   box(width: laid.width * 1pt, height: laid.height * 1pt, {
-    for (pts, style) in laid.arrows {
-      let drawn = pts
-      for (on, last) in ((style.end, true), (style.start, false)) {
+    for (pts, style, path) in laid.arrows {
+      let (p, c, q) = path
+      let stroke = (thickness: 1.1pt, dash: style.dash)
+      if c == none {
+        place(top + left, curve(stroke: stroke, curve.move(pt(p)), curve.line(pt(q))))
+      } else {
+        place(top + left, curve(stroke: stroke, curve.move(pt(p)), curve.quad(pt(c), pt(q))))
+      }
+      for (on, tip, from) in ((style.end, q, if c == none { p } else { c }), (style.start, p, if c == none { q } else { c })) {
         if not on { continue }
-        let (a, b) = if last { (drawn.at(-2), drawn.at(-1)) } else { (drawn.at(1), drawn.at(0)) }
-        let (ux, uy) = (b.at(0) - a.at(0), b.at(1) - a.at(1))
+        let (ux, uy) = (tip.at(0) - from.at(0), tip.at(1) - from.at(1))
         let l = calc.sqrt(ux * ux + uy * uy)
         if l == 0 { continue }
         let (ux, uy) = (ux / l, uy / l)
-        let base = (b.at(0) - ux * head, b.at(1) - uy * head)
-        place(top + left, polygon(fill: black, stroke: none, pt(b),
-          pt((base.at(0) - uy * head * 0.4, base.at(1) + ux * head * 0.4)),
-          pt((base.at(0) + uy * head * 0.4, base.at(1) - ux * head * 0.4))))
-        let c = (b.at(0) - ux * head * 0.8, b.at(1) - uy * head * 0.8)
-        drawn = if last { drawn.slice(0, -1) + (c,) } else { (c,) + drawn.slice(1) }
+        let base = (tip.at(0) - ux * head, tip.at(1) - uy * head)
+        place(top + left, polygon(fill: black, stroke: none, pt(tip),
+          pt((base.at(0) - uy * head * 0.45, base.at(1) + ux * head * 0.45)),
+          pt((base.at(0) + uy * head * 0.45, base.at(1) - ux * head * 0.45))))
       }
-      place(top + left, curve(stroke: (thickness: 0.8pt, dash: style.dash), curve.move(pt(drawn.at(0))), ..drawn.slice(1).map(p => curve.line(pt(p)))))
     }
+    // its words on it, on a white ground the line goes under
     for w in laid.words {
       if w != none { place(top + left, dx: w.at(0).at(0) * 1pt, dy: w.at(0).at(1) * 1pt, w.at(1)) }
     }

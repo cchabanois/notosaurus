@@ -162,7 +162,7 @@ APART = """#context {
     for b in solids.slice(i + 1) { assert(not _sch-meet(a, b), message: "overlap " + repr((a, b))) }
   }
   let names = boxes.keys()
-  for (k, (pts, style)) in l.arrows.enumerate() {
+  for (k, (pts, style, _)) in l.arrows.enumerate() {
     let own = l.words.at(k)
     for i in range(pts.len() - 1) {
       for r in solids {
@@ -187,10 +187,69 @@ def test_a_scheme_lays_its_boxes_arrows_and_words_apart():
     figures_typst.compile_svg("diagram", SCHEME + APART)
 
 
+FIFTH = (
+    '#set text(lang: "fr")\n'
+    "#let boxes = (cit: [Citoyens], pr: [Président de la République], pm: [Premier ministre et gouvernement], "
+    "an: [Assemblée nationale], se: [Sénat])\n"
+    '#let arrows = (("cit", "pr", [élisent pour 5 ans]), ("cit", "an", [élisent]), ("pr", "pm", [nomme]), '
+    '("pr", "an", [peut dissoudre]), ("an", "pm", [contrôle]), ("se", "pm", [contrôle]), '
+    '("pm", "an", [responsable devant]))\n'
+)
+
+ON_THEIR_LINES = """#context {
+  let l = _sch-layout(boxes, arrows, "up")
+  let names = boxes.keys()
+  let rects = l.boxes.map(b => b.at(0))
+  let words = l.words.map(w => w.at(0))
+  let ends = ()
+  for (k, (pts, style, path)) in l.arrows.enumerate() {
+    // one line or one curve: its start, its control (none when straight), its end
+    let (p, c, q) = path
+    assert(pts.len() == if c == none { 2 } else { 17 }, message: "path " + str(k))
+    assert(pts.first() == p and pts.last() == q, message: "ends " + str(k))
+    let (u, v) = (names.position(n => n == arrows.at(k).at(0)), names.position(n => n == arrows.at(k).at(1)))
+    let hits(r) = range(pts.len() - 1).any(i => _sch-hits(pts.at(i), pts.at(i + 1), _sch-grow(r, -1)))
+    for (b, r) in rects.enumerate() {
+      if b != u and b != v { assert(not hits(r), message: "arrow " + str(k) + " through box " + str(b)) }
+    }
+    for (j, w) in words.enumerate() {
+      // its own words on it (their white ground hides it there), no other's
+      assert(hits(w) == (j == k), message: "arrow " + str(k) + " and words " + str(j))
+    }
+    for (p, b) in ((p, u), (q, v)) {
+      let side = if calc.abs(p.at(1) - rects.at(b).at(1)) < 0.01 { "top" } else { "bottom" }
+      ends.push((b, side, p.at(0)))
+    }
+  }
+  let solids = rects + words
+  for (i, a) in solids.enumerate() {
+    for b in solids.slice(i + 1) { assert(not _sch-meet(a, b), message: "overlap " + repr((a, b))) }
+  }
+  // the arrows on one side of a box: each at its own point
+  for (i, (b, side, x)) in ends.enumerate() {
+    for (b2, side2, x2) in ends.slice(i + 1) {
+      assert(b != b2 or side != side2 or calc.abs(x - x2) > 4, message: "same point " + repr((b, side)))
+    }
+  }
+  [ok]
+}"""
+
+
+def test_a_schemes_arrows_go_straight_their_words_on_them():
+    """The Fifth Republic's institutions: their arrows bent at a layer of words, zigzagging
+    behind them, two between the same boxes joined, hard to follow on a phone. Each arrow one
+    line, or one curve round a box in its way, from its box to its box, through no other box
+    or words; its words on it, on none other's and on no box; the arrows on one side of a box
+    each at its own point."""
+    figures_typst.compile_svg("diagram", FIFTH + ON_THEIR_LINES)
+    svg = figures_typst.compile_svg("diagram", FIFTH + '#scheme(boxes: boxes, arrows: arrows, flow: "up")')
+    assert figures_typst.readable_px(svg, FIFTH) >= 9
+
+
 UNCROSSED = """#context {
   let l = _sch-layout(boxes, arrows, "down")
   let segs = ()
-  for (k, (pts, s)) in l.arrows.enumerate() {
+  for (k, (pts, s, _)) in l.arrows.enumerate() {
     for i in range(pts.len() - 1) { segs.push((k, pts.at(i), pts.at(i + 1))) }
   }
   let d(a, b, c) = (b.at(0) - a.at(0)) * (c.at(1) - a.at(1)) - (b.at(1) - a.at(1)) * (c.at(0) - a.at(0))
