@@ -184,3 +184,16 @@ def test_typsts_message_read_whole_whatever_the_systems_encoding(monkeypatch):
     with pytest.raises(figures_typst.Unusable) as refused:
         figures_typst.compile_svg("geometry", '#assert(false, message: "pas O…N, ni δ, ni é")')
     assert "pas O…N, ni δ, ni é" in str(refused.value)
+
+
+def test_the_kinds_give_each_case_one_family():
+    """Read by the AI that picks a figure's family: a classification whose groups hold members
+    is sets' (nested-groups), diagram keeps the key of questions leading to groups; measures set
+    as points (a scatter) are a chart's like measures joined by a line (a scatter went to graph
+    1 time in 3); a map of the past's areas isn't told to use today's countries only (map.md: the
+    states of the time from 1815)."""
+    kinds = dict(re.findall(r'"(\w+)": (.*?)(?=; "\w+": |$)', figures_typst.KINDS))
+    assert "a classification key" in kinds["diagram"] and "a classification)" not in kinds["diagram"]
+    assert "classification's nested groups" in kinds["sets"]
+    assert "a scatter of measures" in kinds["chart"]
+    assert "those of the time" in kinds["map"]
