@@ -4,6 +4,7 @@ trigonometric circle, lengths, fractions, vectors, coordinate frames."""
 import json
 import re
 import tempfile
+from itertools import pairwise
 from pathlib import Path
 
 import pytest
@@ -127,7 +128,24 @@ def test_a_number_lines_numbers_too_close_lowered_and_zones_named():
         figures_typst.compile_svg("geometry", thousands.format(numbers))
         for numbers in ("", ", numbers: ((0, [0]), (10000, [10000]), (20000, [20000]))")
     )
-    assert grouped != plain  # 10 000, 20 000
+    assert grouped != plain
+
+    # 10 000, 20 000: five digits in two groups, 2 then 3, a narrow space between them
+    # (U+202F, as school writes them: narrower than a word's space), none in the plain ones
+    def digits(svg: str) -> list[list[float]]:
+        runs = re.findall(r'<g transform="matrix[^>]*>(.*?)</g>', svg)
+        return [[float(x) for x in re.findall(r'x="([\d.]+)"', run)] for run in runs]
+
+    def gaps(xs: list[float]) -> list[float]:
+        steps = [b - a for a, b in pairwise(xs)]
+        return [step - min(steps) for step in steps]
+
+    for xs in (xs for xs in digits(grouped) if len(xs) == 5):
+        extra = gaps(xs)
+        assert extra[0] < 0.1 and extra[2:] == pytest.approx([0, 0], abs=0.1)
+        assert 1 < extra[1] < 3
+    assert all(max(gaps(xs)) < 0.1 for xs in digits(plain) if len(xs) == 5)
+    assert sum(len(xs) == 5 for xs in digits(grouped)) == 2
     zones = (
         "#ctz-canvas({{ ctz-init(); ctz-draw-number-line(log: true, numbers: (20, 20000));"
         " ctz-draw-interval(20, 20000, log: true, closed: none{}) }})"
@@ -303,7 +321,7 @@ def test_a_translations_image_placed_clear_of_its_figure():
     computed from the figure, never chosen by eye (by eye, the AI took A' along [AB] half
     the time: the arrow on a side, the image on the figure). For triangles of every shape:
     the image clear of the figure by the gap, the vector 15° at least from every side and
-    out of the figure's angle at A, the rightmost of the nearly as good."""
+    out of the figure's angle at A and of its opposite (checked), the rightmost of the nearly as good."""
     body = """#let triangles = (
   ((0, 0), (3, 0.5), (1, 2.5)), ((0, 0), (4, 0), (0, 3)), ((0, 0), (3, 1), (2, 3)),
   ((1, 0), (0, 2), (3, 3)), ((0, 0), (5, 0), (2.5, 0.5)), ((0, 0), (1, 4), (-1, 3)),
@@ -321,6 +339,16 @@ def test_a_translations_image_placed_clear_of_its_figure():
     let t = calc.atan2(dx, dy) / 1deg
     let d = calc.rem-euclid(t - s, 180)
     assert(calc.min(d, 180 - d) >= 15, message: "along a side")
+  }
+  // the vector out of the figure's angle at A (BAC), and out of its opposite: the arrow
+  // into neither the figure nor its image
+  let t = calc.atan2(dx, dy) / 1deg
+  let towards(q) = calc.atan2(q.at(0) - pts.at(0).at(0), q.at(1) - pts.at(0).at(1)) / 1deg
+  let (a1, a2) = (towards(pts.at(1)), towards(pts.at(2)))
+  let span = calc.rem-euclid(a2 - a1, 360)
+  let (from, width) = if span > 180 { (a2, 360 - span) } else { (a1, span) }
+  for w in (t, t + 180) {
+    assert(calc.rem-euclid(w - from, 360) > width, message: "into the angle at A")
   }
 }
 #ctz-canvas({
@@ -509,3 +537,16 @@ def test_a_fraction_or_an_interval_refused_saying_why(body, said):
         figures_typst.compile_svg("geometry", body)
     # the whole line, its ends given: drawn
     figures_typst.compile_svg("geometry", "#cetz.canvas({ ctz-draw-interval(none, none, first: -5, last: 5) })")
+
+
+def test_the_whole_logarithmic_line_as_an_interval():
+    """`ctz-draw-interval(none, none, log: true)`, the whole of a logarithmic line (its ends
+    its own): it took the maximum of no bound and raised "expected at least one value". Now
+    drawn, over the line alone (the drawing no larger)."""
+    line = "#ctz-canvas({{ ctz-init(); ctz-draw-number-line(log: true, points: (A: 1, B: 1e5)){} }})"
+    bare = figures_typst.compile_svg("geometry", line.format(""))
+    whole = figures_typst.compile_svg("geometry", line.format("; ctz-draw-interval(none, none, log: true)"))
+    assert whole != bare
+    assert drawn_size("geometry", line.format("; ctz-draw-interval(none, none, log: true)")) == pytest.approx(
+        drawn_size("geometry", line.format("")), abs=1
+    )

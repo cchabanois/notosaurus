@@ -49,6 +49,26 @@ def test_a_wide_diagram_fits_a_card(body):
     assert _svg_width(figures_typst.compile_svg("diagram", body)) < 16 * CM
 
 
+def test_a_wide_diagrams_wrapped_nodes_stay_boxes():
+    """A wide diagram's nodes wrapped to fit a card: a text on more lines makes its node about
+    as tall as it is wide, and fletcher draws a squarish node as a circle, its text out of
+    it. Each wrapped node still a box: every node's outline a rectangle, none a curve."""
+    body = (
+        '#diagram(node-stroke: 1pt, node((0, 0), [Entrée du microbe dans l\'organisme humain]), edge("-|>"),'
+        ' node((1, 0), [Réaction innée inflammation et phagocytose]), edge("-|>"),'
+        ' node((2, 0), [Réaction adaptative des lymphocytes B et T]), edge("-|>"),'
+        " node((3, 0), [Mémoire immunitaire durable]))"
+    )
+    svg = figures_typst.compile_svg("diagram", body)
+    outlines = [re.search(r' d="([^"]*)"', path)[1] for path in re.findall(r'<path[^>]*stroke="#000000"[^>]*>', svg)]
+    boxes = [d for d in outlines if d.endswith("Z ") or d.endswith("Z")]
+    assert len(boxes) == 4
+    assert all(re.fullmatch(r"M 0 0v [\d.]+h [\d.]+v -[\d.]+h -[\d.]+Z ?", d) for d in boxes), boxes
+    # wrapped: the tallest box (a text on three lines) about as tall as it is wide
+    sizes = [tuple(float(n) for n in re.findall(r"[\d.]+", d)[2:4]) for d in boxes]
+    assert any(height > 0.8 * width for height, width in sizes)
+
+
 def test_a_narrow_diagram_as_it_was():
     """A diagram that fits a card keeps its boxes as wide as their texts."""
     body = '#diagram(node((0, 0), [Pile]), edge("-|>"), node((1, 0), [Lampe]), edge("-|>"), node((2, 0), [Moteur]))'
