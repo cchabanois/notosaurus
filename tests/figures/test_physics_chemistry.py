@@ -5,6 +5,7 @@ import io
 import json
 import math
 import re
+from itertools import pairwise
 
 import pytest
 
@@ -97,6 +98,37 @@ def test_an_earth_wire_is_green_and_yellow():
 
     assert colours('#circuit({ socket("p", (0, 2), (0, 0)); earth-wire("p.terre", (1, 1)) })') == {"green", "yellow"}
     assert not colours("#circuit({ wire((0, 1), (1, 1)) })")
+
+
+def _dark_pixels(body: str) -> tuple[set[tuple[int, int]], int, int]:
+    """A circuit's PNG: its black pixels, its width and height."""
+    from PIL import Image
+
+    image = Image.open(io.BytesIO(figures.to_png(figures.clean(figures_typst.compile_svg("circuit", body)))))
+    image = image.convert("RGB")
+    dark = {(x, y) for y in range(image.height) for x in range(image.width) if sum(image.getpixel((x, y))) < 150}
+    return dark, image.width, image.height
+
+
+def test_a_two_pole_breaker_opens_both_lines_together():
+    """The general circuit breaker cuts the phase and the neutral at once (drawn as dots on a
+    wire, by hand): a pole on each line, the phase's row and the neutral's drawn across, and
+    their blades joined by a dashed line, a column of dashes between the two rows."""
+    dark, width, height = _dark_pixels('#circuit({ breaker("d", (0, 3), (2, 3), (0, 0), (2, 0)) })')
+    for row in ({x for x, y in dark if y < height / 4}, {x for x, y in dark if y > 3 * height / 4}):
+        assert row and max(row) - min(row) > width * 3 / 4, "a pole across each line"
+    between = {(x, y) for x, y in dark if height / 4 < y < 3 * height / 4}
+    assert between, "the dashed link"
+    rows = sorted({y for _, y in between})
+    dashes = 1 + sum(1 for a, b in pairwise(rows) if b > a + 1)
+    assert dashes >= 3
+
+
+def test_an_earth_wires_end_is_earthed():
+    """The earth wire ends on zap's earth symbol (black, below its last point), the wire
+    itself green and yellow: without it, nothing black."""
+    dark, width, _ = _dark_pixels("#circuit({ earth-wire((0, 0), (2, 0)) })")
+    assert dark and min(x for x, _ in dark) > width / 2
 
 
 def test_a_branch_spaces_its_components_evenly():
@@ -244,6 +276,29 @@ def test_a_lewis_structures_pairs_set_where_its_bonds_leave_room(down):
     )
     assert drawn("pairs(2)") == drawn(free)
     assert drawn(on_bonds) == drawn(free)
+
+
+def test_a_lewis_structures_pair_set_by_its_branches_bonds():
+    """NH3, its N's three bonds two branches (down-right, down-left) and a bond on (left):
+    `pairs(1)` sets its pair in the widest gap they leave, halfway (67.5°: from 315° round to
+    180°), as written there by hand; not straight up, as if the branches weren't seen."""
+    nh3 = (
+        '#skeletize({ fragment("N", lewis: LEWIS); branch({ single(angle: -1); fragment("H") }); '
+        'branch({ single(angle: -3); fragment("H") }); single(angle: 4); fragment("H") })'
+    )
+    drawn = lambda lewis: figures_typst.compile_svg("chemistry", nh3.replace("LEWIS", lewis))  # noqa: E731
+    assert drawn("pairs(1)") == drawn("(lewis-line(angle: 67.5deg),)")
+
+
+def test_a_lewis_structures_ring_atoms_pairs_kept_as_written():
+    """An atom in a ring: its bonds' angles are the ring's, which the preamble doesn't reckon;
+    its pairs kept where they are written, as alchemist alone draws them."""
+    ring = (
+        '#SKELETIZE({ fragment("C"); cycle(5, { single(); '
+        'fragment("O", lewis: (lewis-line(angle: 0deg), lewis-line(angle: 180deg))); single(); single(); single() }) })'
+    )
+    drawn = lambda skeletize: figures_typst.compile_svg("chemistry", ring.replace("SKELETIZE", skeletize))  # noqa: E731
+    assert drawn("skeletize") == drawn("_alchemist.skeletize")
 
 
 def test_a_bodys_vectors_point_where_their_support_says():
@@ -448,6 +503,80 @@ def test_an_accelerated_chronophotographys_first_positions_stand_apart():
 #assert(range(5).all(i => gaps.at(i + 1) > gaps.at(i)) and gaps.first() > 0.5)
 #chronophotography(motion: "accelerated")"""
     assert figures_typst.compile_svg("mechanics", check).startswith("<svg")
+
+
+def _chrono_drawing(body: str) -> dict[str, list]:
+    """A chronophotography's SVG: its positions' centres (its black dots, in order), its
+    velocities' arrows (blue lines: start x, y, then dx, dy), where its texts are written
+    (x, the baseline's y), their groups' moves added."""
+    svg = figures_typst.compile_svg("mechanics", f"#chronophotography({body})")
+    number = r"(-?[\d.]+(?:e-?\d+)?)"
+    stack, drawn = [(0.0, 0.0)], {"dots": [], "arrows": [], "texts": []}
+    for tag in re.findall(r"<g(?:\s[^>]*)?>|</g>|<path[^>]*>", svg):
+        if tag == "</g>":
+            stack.pop()
+            continue
+        x, y = stack[-1]
+        if moved := re.search(rf'transform="translate\({number}(?:[ ,]{number})?\)"', tag):
+            x, y = x + float(moved[1]), y + float(moved[2] or 0)
+        elif text := re.search(rf'transform="matrix\(1 0 0 -1 {number} {number}\)"', tag):
+            x, y = x + float(text[1]), y + float(text[2])
+            drawn["texts"].append((x, y))
+        if tag.startswith("<g"):
+            stack.append((x, y))
+            continue
+        d = re.search(r' d="M 0 0(?:m ([-\d.]+) ([-\d.]+))?\s*([lhvc]) ?([-\d.]+)(?: ([-\d.]+))?', tag)
+        if d is None:
+            continue
+        a, b = float(d[1] or 0), float(d[2] or 0)
+        if 'fill="#000000"' in tag and d[3] == "c" and a > 2:  # a position (a circle's centre: smaller)
+            drawn["dots"].append((x + a, y + b + a))  # a circle's path starts at its right end: its radius a
+        elif 'fill="none" stroke="#1f5fbf"' in tag:
+            u = float(d[4]) if d[3] in "lh" else 0.0
+            v = float(d[5]) if d[3] == "l" else float(d[4]) if d[3] == "v" else 0.0
+            drawn["arrows"].append((x + a, y + b, u, v))
+    return drawn
+
+
+@pytest.mark.parametrize(
+    "body, velocity",
+    [
+        ('motion: "thrown", n: 7, velocity: (1, 2, 4, 5)', (1, 2, 4, 5)),
+        ('motion: "circle", n: 8, velocity: (1, 3, 6)', (1, 3, 6)),
+        ('motion: "accelerated", n: 6, velocity: (1, 3, 4)', (1, 3, 4)),
+    ],
+)
+def test_a_chronophotographys_velocities_along_its_trajectory(body, velocity):
+    """Each velocity drawn from its position along the trajectory: its arrow's direction
+    within 15° of the chord between the positions around it (the tangent's, near enough),
+    and shorter than the shortest step (clear of the next position)."""
+    drawn = _chrono_drawing(body)
+    dots, arrows = drawn["dots"], drawn["arrows"]
+    assert len(arrows) == len(velocity)
+    step = min(math.dist(dots[i], dots[(i + 1) % len(dots)]) for i in range(len(dots) - 1))
+    for i, (x, y, dx, dy) in zip(velocity, arrows, strict=True):
+        assert math.dist((x, y), dots[i]) < 1
+        before, after = dots[i - 1], dots[(i + 1) % len(dots)]
+        chord = math.atan2(after[1] - before[1], after[0] - before[0])
+        turn = abs((math.atan2(dy, dx) - chord + math.pi) % (2 * math.pi) - math.pi)
+        assert math.degrees(turn) < 15, (i, math.degrees(turn))
+        assert 0 < math.hypot(dx, dy) < step
+
+
+def test_a_chronophotographys_crowded_names_on_alternate_sides():
+    """Positions closer than their names are wide (a uniform motion's 12 positions): every
+    other name on the other side of the line, the names' baselines alternating below and
+    above it; apart (5 positions), all on one side."""
+
+    def drawn(n: int) -> tuple[float, list[float]]:
+        found = _chrono_drawing(f'motion: "uniform", n: {n}, numbered: true')
+        return found["dots"][0][1], [y for _, y in sorted(found["texts"])]
+
+    line, crowded = drawn(12)
+    assert len(crowded) == 12
+    assert all((a > line) != (b > line) for a, b in pairwise(crowded))
+    line, apart = drawn(5)
+    assert len(apart) == 5 and all(y > line for y in apart)
 
 
 # A molecule's polarity laid out on the molecule alchemist draws (chemistry.typ's _layout):

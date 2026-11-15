@@ -323,3 +323,33 @@ def test_a_crystal_drawn_as_the_rule_says():
     call = re.search(r"`(crystal\([^`]*\))`", rule)
     assert call
     assert _ball_fills(figures_typst.compile_svg("solid", "#" + call[1]))
+
+
+@pytest.mark.parametrize(
+    "pyramid", ["pyramid(side: 6, height: 3", "pyramid(side: 4, height: 4", "pyramid(side: 3, height: 6"]
+)
+def test_a_short_height_length_beside_the_pyramids_height(pyramid):
+    """Where it fits (a short length, "h"), the height's length beside [SO]: no double arrow
+    beside the pyramid (the drawing no wider), and clear of every edge, the hidden [SD] close
+    to [SO] too: the label drawn red, no line within 2 pixels of it, nearer [SO] (the
+    drawing's middle) than its sides."""
+    from PIL import Image
+
+    body = f'#{pyramid}, names: ("A", "B", "C", "D", "S"), foot: "O"{{}})'
+
+    def png(label: str) -> Image.Image:
+        svg = figures.clean(figures_typst.compile_svg("solid", body.format(f", height-label: {label}[h]")))
+        return Image.open(io.BytesIO(figures.to_png(svg))).convert("RGB")
+
+    assert drawn_size("solid", body.format(", height-label: [h]")) == pytest.approx(
+        drawn_size("solid", body.format(""))
+    )
+    bare, labelled = png("hide"), png("text(fill: rgb(255, 0, 0))")
+    assert bare.size == labelled.size
+    lines = {(x, y) for y in range(bare.height) for x in range(bare.width) if sum(bare.getpixel((x, y))) < 300}
+    near = {(x + dx, y + dy) for x, y in lines for dx in range(-2, 3) for dy in range(-2, 3)}
+    reddish = lambda p: p[0] > 200 and p[1] < 140  # noqa: E731
+    reds = {(x, y) for y in range(labelled.height) for x in range(labelled.width) if reddish(labelled.getpixel((x, y)))}
+    assert reds and not near & reds
+    middle = sum(x for x, _ in reds) / len(reds)
+    assert abs(middle - bare.width / 2) < bare.width / 4

@@ -173,3 +173,20 @@ def test_a_timelines_numbers_never_cut_in_their_groups():
     assert figures_typst.compile_svg("timeline", line.format(" ")) == figures_typst.compile_svg(
         "timeline", line.format("\\u{202F}")
     )
+
+
+def test_a_timelines_one_year_period_lasts_its_year():
+    """A period of one year, (1914, 1914): its bar from its start to its end drew nothing, a
+    sliver. It lasts that year: in its colour, as wide as (1914, 1915)'s."""
+    line = '#timeline(start: 1900, end: 1920, step: 5, periods: (({}, "Guerre"),))'
+
+    def bar(period: str) -> tuple[int, int, int, int]:
+        box = colour_box(
+            figures.to_png(figures.clean(figures_typst.compile_svg("timeline", line.format(period)))), FIRST
+        )
+        assert box is not None
+        return box
+
+    one, year = bar("1914, 1914"), bar("1914, 1915")
+    assert one[2] - one[0] > 10
+    assert one[2] - one[0] == pytest.approx(year[2] - year[0], abs=2)

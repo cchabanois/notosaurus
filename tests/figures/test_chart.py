@@ -215,6 +215,35 @@ def test_bars_lying_when_asked():
         figures_typst.compile_svg("chart", '#chart(kind: "pie", horizontal: true, values: (("A", 1), ("B", 2)))')
 
 
+def test_lying_bars_long_name_on_lines_of_its_own():
+    """Lying bars, a name longer than 3.2 cm (« Vide (pas de propagation du son) »): on lines
+    of its own at its bar's left, never widening the chart (not 1.3 times as wide as with a short
+    name), its row as tall as it (the chart taller), the next name below its last line."""
+
+    def chart(first: str) -> str:
+        values = f'(("{first}", 0), ("Eau", 1500), ("Acier", 5900))'
+        return f'#chart(kind: "bars", horizontal: true, values: {values})'
+
+    long_name = "Vide (pas de propagation du son)"
+    (long_width, long_height), (short_width, short_height) = (
+        drawn_size("chart", chart(long_name)),
+        drawn_size("chart", chart("Vide")),
+    )
+    assert long_width < 1.3 * short_width
+    assert long_height > short_height + 8
+    # the names' lines top to bottom: the texts left of the bars' origin (the graduation's 0,
+    # the lowest row's first number), not the graduation itself nor the values written at the
+    # bars' ends: the long name's three lines, then "Eau" and "Acier", each in a row of its own
+    texts = _glyphs(figures_typst.compile_svg("chart", chart(long_name)))
+    lowest = max(y for _, y in texts)
+    origin = min(x for x, y in texts if y > lowest - 1)
+    lines = sorted({round(y, 1) for x, y in texts if y < lowest - 1 and x < origin})
+    assert len(lines) == 5, lines
+    leading = lines[1] - lines[0]
+    assert lines[2] - lines[1] == pytest.approx(leading, abs=1)
+    assert lines[3] - lines[2] > 1.5 * leading and lines[4] - lines[3] > 1.5 * leading
+
+
 def test_a_chart_refuses_what_it_cant_draw():
     for body, said in (
         ('#chart(kind: "bars", values: (("A", 1),), marks: ((1, "x"),))', "a line's only"),
