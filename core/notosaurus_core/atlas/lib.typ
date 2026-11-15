@@ -102,10 +102,62 @@
         calc.max(..bs.map(b => b.at(2))), calc.max(..bs.map(b => b.at(3)))),
   ), parts: parts)
 }
+// How many letters one name differs from another by (Levenshtein's distance), at most `most`
+// (more: none)
+#let distance(a, b, most) = {
+  let (a, b) = (a.clusters(), b.clusters())
+  if calc.abs(a.len() - b.len()) > most { return none }
+  let row = range(b.len() + 1)
+  for (i, ca) in a.enumerate() {
+    let next = (i + 1,)
+    for (j, cb) in b.enumerate() {
+      next.push(calc.min(row.at(j + 1) + 1, next.at(j) + 1, row.at(j) + if ca == cb { 0 } else { 1 }))
+    }
+    if calc.min(..next) > most { return none }
+    row = next
+  }
+  if row.last() > most { none } else { row.last() }
+}
+// The words a name of a place shares with others of its kind ("détroit", "strait", "mer",
+// "golfe", "de"): what is left is its own ("ormuz" of "détroit d'Ormuz")
+#let common-words = ("detroit", "detroits", "strait", "straits", "channel", "passage", "pas", "canal", "canale",
+  "canals", "kanal", "strasse", "stretto", "estrecho", "estreito", "golfe", "gulf", "golfo", "baie", "bay", "bahia",
+  "bucht", "mer", "sea", "mar", "mare", "meer", "see", "ocean", "oceano", "lac", "lake", "lago", "fleuve", "river",
+  "riviere", "rio", "fluss", "fiume", "mont", "monts", "mount", "mountains", "montagne", "montagnes", "massif",
+  "monte", "montes", "monti", "gebirge", "desert", "deserto", "desierto", "wuste", "plaine", "plain", "ile", "iles",
+  "island", "islands", "isla", "isola", "insel", "ilha", "peninsule", "peninsula", "of", "the", "de", "du", "des",
+  "d", "la", "le", "les", "l", "di", "del", "della", "dei", "do", "da", "dos", "das", "von", "der", "die")
+#let own-words(key) = key.split(" ").filter(w => w not in common-words).join(" ", default: "")
+// The places the atlas has nearest a name it lacks, each by its name nearest it: a letter or
+// two apart, or its own words a letter or two from theirs ("Hormuz", "Ormuz"); at most three,
+// the nearest first
+#let nearest-names(items, key) = {
+  let own = own-words(key)
+  let found = ()
+  for item in items {
+    let best = none
+    for n in item.n {
+      let k = fold(n)
+      let d = distance(key, k, calc.max(1, calc.div-euclid(key.len(), 6)))
+      if d == none and own.len() >= 4 {
+        let o = own-words(k)
+        if o.len() > 0 { d = distance(own, o, calc.max(1, calc.div-euclid(own.len(), 4))) }
+      }
+      if d != none and (best == none or d < best.at(0)) { best = (d, n) }
+    }
+    if best != none and found.all(((_, m)) => m != best.at(1)) { found.push(best) }
+  }
+  found.sorted(key: ((d, _)) => d).slice(0, calc.min(3, found.len())).map(((_, n)) => n)
+}
 #let find-in(items, name, what, near) = {
   let key = fold(name)
   let found = items.filter(i => key in i.k)
-  if found.len() == 0 { panic("no " + what + " called \"" + name + "\" in the atlas: leave it out") }
+  if found.len() == 0 {
+    let close = nearest-names(items, key)
+    if close.len() == 0 { panic("no " + what + " called \"" + name + "\" in the atlas: leave it out") }
+    panic("no " + what + " called \"" + name + "\" in the atlas; it has " + close.map(n => "\"" + n + "\"").join(", ")
+      + ": one of them when it is that place written otherwise, else leave it out")
+  }
   let theirs = if near == none { () } else { found.filter(i => touches(i.b, near)) }
   let top = (if theirs.len() > 0 { theirs } else { found }).sorted(key: i => -size(i.b)).first()
   if what != "water" { return top }
@@ -556,7 +608,7 @@
 // countries: shown white and framed (names or codes); cities: a red dot each; regions: of
 // the countries shown, coloured, their country's others outlined; rivers: blue lines;
 // reliefs (mountains, deserts, plains, peninsulas, islands) and waters (oceans, seas, gulfs,
-// lakes): coloured; groups: countries or regions (of a country shown or grouped) coloured by
+// straits, canals, lakes): coloured, a ring when too small to see; groups: countries or regions (of a country shown or grouped) coloured by
 // group, one colour each, a legend under the map, all framed; routes: (name, places, by: "sea"
 // or "land"), each its way in its colour with arrows; flows: (from, to, kind, value, label),
 // a curved arrow each, its kind's colour, as wide as its value; routes and flows in the
@@ -833,7 +885,18 @@
   ))
   wanted += named(areas, a => place-of(region(a)), n => text(7.5pt, fill: luma(40), n))
   wanted += named(lands, l => place-of(l.item), n => text(8pt, style: "italic", fill: rgb("#6b4a1f"), n))
-  wanted += named(seas, w => place-of(w.item), n => text(8pt, style: "italic", fill: rgb("#1f5a8f"), n))
+  // A water too small to see at this scale (a strait, a canal, a lake on a world map: less
+  // than 10pt across), or a point (a passage the atlas has no area for): a ring at its place,
+  // its name beside it, further off if need be, a line leading to it
+  let ring-size = 4pt
+  let small-water(item) = item.r.len() == 0 or calc.max((item.b.at(2) - item.b.at(0)) * k * unit, (item.b.at(3) - item.b.at(1)) * unit) < 10pt
+  let sea-places = seas.map(w => (w, place-of(w.item))).filter(((_, p)) => p != none)
+  let rings-at = sea-places.filter(((w, _)) => small-water(w.item)).map(((_, p)) => (px(seen-x(p.at(0))), py(p.at(1))))
+  wanted += sea-places.map(((w, p)) => {
+    let small = small-water(w.item)
+    (at: (px(seen-x(p.at(0))), py(p.at(1))), dot: small, mark: if small { ring-size } else { dot }, crowd: small,
+      body: text(8pt, style: "italic", fill: rgb("#1f5a8f"), w.name))
+  })
   wanted += named(lines, l => river-place(l.item), n => text(7.5pt, style: "italic", fill: rgb("#1f5a8f"), n))
   // Flows: a curved arrow each, from its start to its end (shortened by a dot), drawn where
   // its middle is seen; as wide as its value ranks among theirs (the least the thinnest, the
@@ -942,9 +1005,12 @@
       let (x, y) = want.at
       let size = measure(want.body)
       let (lw, lh) = (size.width, size.height)
+      // (a dot's or a ring's size; a ring's name, with routes and flows, may go further)
+      let rad = want.at("mark", default: dot)
+      let crowd = moving or want.at("crowd", default: false)
       let tries = if want.dot {
-        ((x + dot + gap, y - lh / 2), (x - dot - gap - lw, y - lh / 2),
-         (x - lw / 2, y - dot - gap - lh), (x - lw / 2, y + dot + gap))
+        ((x + rad + gap, y - lh / 2), (x - rad - gap - lw, y - lh / 2),
+         (x - lw / 2, y - rad - gap - lh), (x - lw / 2, y + rad + gap))
       } else {
         ((x - lw / 2, y - lh / 2), (x - lw / 2, y - lh * 1.6), (x - lw / 2, y + lh * 0.6),
          (x + gap, y - lh / 2), (x - gap - lw, y - lh / 2))
@@ -952,9 +1018,9 @@
       // With routes and flows, more names near each other: the corners around, then further,
       // then further still in eight directions, a thin line then leading to the place
       let near = tries.len()
-      if moving {
-        let (r, l) = (x + dot + gap, x - dot - gap - lw)
-        let (above, below) = (y - dot - gap - lh, y + dot + gap)
+      if crowd {
+        let (r, l) = (x + rad + gap, x - rad - gap - lw)
+        let (above, below) = (y - rad - gap - lh, y + rad + gap)
         tries += ((r, above), (r, below), (l, above), (l, below), (x - lw / 2, above - lh), (x - lw / 2, below + lh),
           (r + lw / 2, y - lh / 2), (l - lw / 2, y - lh / 2))
         near = tries.len()
@@ -981,6 +1047,8 @@
             and taken.all(b => apart-name((ax, ay), b))
             and marks.enumerate().all(((m, (mx, my))) => (want.dot and m == i) or mx + dot <= ax or ax + lw <= mx - dot or my + dot <= ay or ay + lh <= my - dot)
             and strokes.all(b => apart((ax, ay), b))
+            and rings-at.all(((qx, qy)) => (qx == x and qy == y) or qx + ring-size <= ax or ax + lw <= qx - ring-size
+              or qy + ring-size <= ay or ay + lh <= qy - ring-size)
             and (j < near or lead((ax, ay)))
         )
       }
@@ -988,9 +1056,10 @@
       // Never cut by the frame: moved in
       let within((ax, ay)) = (calc.max(1pt, calc.min(ax, bw - 1pt - lw)), calc.max(1pt, calc.min(ay, bh - 1pt - lh)))
       // None clear: with routes and flows, the place near it where it covers least, moved in
-      if k == none and moving {
+      if k == none and crowd {
         // (a name or a dot covered far worse than an arrow, a few points further worse still)
         let spots = marks.map(((mx, my)) => (mx - dot, my - dot, 2 * dot, 2 * dot))
+        spots += rings-at.map(((mx, my)) => (mx - ring-size, my - ring-size, 2 * ring-size, 2 * ring-size))
         let cost(j) = {
           let (ax, ay) = within(tries.at(j))
           let here = (ax, ay, lw, lh)
@@ -1156,6 +1225,9 @@
       let end = (tip.at(0) - ux * size * 0.8, tip.at(1) - uy * size * 0.8)
       place(curve(stroke: (paint: c.colour, thickness: c.width, cap: "butt"), curve.move(start), curve.quad(c.c, end)))
       head(tip, ux, uy, size, c.colour)
+    }
+    for (x, y) in rings-at {
+      place(dx: x - ring-size, dy: y - ring-size, circle(radius: ring-size, fill: rgb("#b5d2ec"), stroke: 1.2pt + rgb("#1f5a8f")))
     }
     for (x, y) in marks {
       place(dx: x - dot, dy: y - dot, circle(radius: dot, fill: rgb("#d62f2f"), stroke: 0.6pt + white))

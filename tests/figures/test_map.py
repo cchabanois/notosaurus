@@ -363,6 +363,11 @@ def _land():
         # Through the straits (Gibraltar, the Dardanelles and the Bosporus; the Danish ones)
         ('(name: "A", places: ("Marseille", "Odessa"))', lambda way: True),
         ('(name: "A", places: ("Rotterdam", "Saint-Pétersbourg"))', lambda way: True),
+        # Through a passage the atlas has as a point (Hormuz: Wikidata's), by it
+        (
+            '(name: "A", places: ("Basra", "détroit d\'Ormuz", "Bombay"))',
+            lambda way: any(abs(x - 56.5) + abs(y - 26.6) < 1.5 for x, y in way),
+        ),
         # Across the Pacific, not round the world; never through the Arctic's ice
         (
             '(name: "A", places: ("Shanghai", "Los Angeles"))',
@@ -740,3 +745,96 @@ def test_the_past_states_names_kept_as_listed():
     english = {item["en"] for item in kept["items"].values()} | set(kept["articles"])
     assert set(atlas.ALSO) <= english | set(atlas.RULED)
     assert all(kept["articles"].get(article) for _, article in atlas.ITEMS.values())
+
+
+def test_a_canal_is_a_water_drawn_where_it_is():
+    """A canal the atlas knows (a sea route's, ways.json) is a water too, by any of its names:
+    "canal de Suez" in `waters` stopped the figure ("no water called"), the AI then leaving it out."""
+    folder, _ = _atlas_folder()
+    canals = json.loads((folder / "ways.json").read_text(encoding="utf-8"))["canals"]
+    for canal in canals:
+        maps = {figures_typst.compile_svg("map", f'#map(waters: ("{n}",), labels: false)') for n in canal["n"]}
+        assert len(maps) == 1, canal["n"]
+    assert figures_typst.compile_svg("map", '#map(waters: ("canal de Kiel", "canal de Corinthe"))').startswith("<svg")
+
+
+@pytest.mark.parametrize(
+    ("names"),
+    [
+        ("détroit d'Ormuz", "Strait of Hormuz", "Straße von Hormus", "Estrecho de Ormuz", "stretto di Hormuz"),
+        ("pas de Calais", "Strait of Dover", "Straße von Dover", "Paso de Calais", "Stretto di Dover"),
+        ("détroit de Béring", "Bering Strait", "Beringstraße", "Estrecho de Bering", "Estreito de Bering"),
+        ("Bouches de Bonifacio", "Strait of Bonifacio", "Bocche di Bonifacio", "Estreito de Bonifacio"),
+        ("détroit de Gibraltar", "Strait of Gibraltar", "stretto di Gibilterra", "Estrecho de Gibraltar"),
+    ],
+)
+def test_a_strait_by_its_name_in_every_language(names):
+    """The sea's passages Natural Earth lacks (Hormuz, Dover, Bering, Bonifacio) or names in
+    two languages only (Gibraltar): by their names in the page's languages (Wikidata's), one map."""
+    maps = {figures_typst.compile_svg("map", f'#map(waters: ("{n}",), labels: false)') for n in names}
+    assert len(maps) == 1
+
+
+def test_every_water_has_its_sea_ways():
+    """ways.json's waters are waters.json's, in its order: a passage added (a point) has the
+    nodes a sea route passing it goes by (test_a_sea_route_goes_by_sea: through Hormuz)."""
+    folder, _ = _atlas_folder()
+    waters = json.loads((folder / "waters.json").read_text(encoding="utf-8"))
+    ways = json.loads((folder / "ways.json").read_text(encoding="utf-8"))
+    assert len(ways["waters"]) == len(waters)
+
+
+def _rings(svg: str) -> int:
+    """How many small waters are ringed."""
+    return len(re.findall(r'stroke="#1f5a8f"', svg))
+
+
+def test_a_water_too_small_to_see_is_ringed_and_named_within():
+    """A strait or a canal on a world map (less than 10pt across, or a point): a ring at its
+    place, its name beside it within the frame; a sea seen whole has none."""
+    svg = figures_typst.compile_svg(
+        "map",
+        '#map(waters: ("détroit de Gibraltar", "canal de Suez", "détroit d\'Ormuz", "détroit de Malacca",'
+        ' "canal de Panama"))',
+    )
+    assert _rings(svg) == 5
+    width, height = (
+        float(v) for v in re.search(r'fill="#e8f1f8"[^>]*d="M 0 0v ([\d.]+)h ([\d.]+)v', svg).groups()[::-1]
+    )
+    labels = _labels(svg)
+    assert len(labels) == 5
+    for x, y, w, h in labels:
+        assert x >= 0 and y >= 0 and x + w <= width + 0.01 and y + h <= height + 0.01
+    for a, b in itertools.combinations(labels, 2):
+        assert a[0] + a[2] <= b[0] or b[0] + b[2] <= a[0] or a[1] + a[3] <= b[1] or b[1] + b[3] <= a[1]
+    assert _rings(figures_typst.compile_svg("map", '#map(countries: ("France",), waters: ("mer Méditerranée",))')) == 0
+
+
+@pytest.mark.parametrize(
+    ("written", "close"),
+    [
+        ("détroit de Gibraltare", "détroit de Gibraltar"),  # a letter too many
+        ("golfe de Gascogn", "golfe de Gascogne"),
+        ("détroit d'Hormouz", "Hormuz"),  # its own word a letter from the atlas's
+    ],
+)
+def test_a_water_the_atlas_lacks_said_with_the_nearest_it_has(written, close):
+    """A name the atlas lacks, written a letter or two from one it has: the figure stops
+    naming it, for the AI to write it so; one far from all: "leave it out" only."""
+    with pytest.raises(figures_typst.Unusable, match=rf"no water called .{re.escape(written)}.*it has .*{close}"):
+        figures_typst.compile_svg("map", f'#map(waters: ("{written}",))')
+    with pytest.raises(figures_typst.Unusable, match=r"no water called .Trifouille. in the atlas: leave it out"):
+        figures_typst.compile_svg("map", '#map(waters: ("Trifouille",))')
+
+
+def test_the_passages_kept_as_listed():
+    """tools/atlas-passages.json (what Wikidata gave, kept) holds tools/atlas.py's PASSAGES,
+    in its order, each with its names and its point."""
+    import sys
+
+    sys.path.insert(0, str(figures_typst.HERE.parent.parent / "tools"))
+    import atlas
+
+    kept = json.loads(atlas.PASSAGES_FILE.read_text(encoding="utf-8"))
+    assert [p["title"] for p in kept] == [title for title, _ in atlas.PASSAGES]
+    assert all(p["n"] and len(p["xy"]) == 2 for p in kept)
