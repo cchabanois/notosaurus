@@ -69,6 +69,7 @@ Each pull request's entries (the `## Changelog` of its description) are put unde
 
 ### Fixed
 
+- 🖍️ A name blacked out on a photo no longer shows again for an instant after **Terminé**: the photo is shown hidden at once.
 - 🗺️ A map naming several places the atlas lacks lists them all at once, so the AI can correct them in one go. « Groenland » given among Denmark's regions is drawn as the country it is in the atlas.
 - Maps: straits and canals ("canal de Suez", "détroit d'Ormuz", "pas de Calais", "détroit de Béring"…) are found among the waters in every language, and a strait or canal too small to see on a world map is marked by a ring with its name beside it.
 - 🏛️ Schemes: each arrow drawn straight from box to box (one soft curve round a box in its way), its words on it on a white ground, never over other words; arrows arriving at a box spread along its side; larger arrowheads, readable on a phone.
