@@ -203,11 +203,13 @@ def test_lying_bars_long_name_on_lines_of_its_own():
     )
     assert long_width < 1.3 * short_width
     assert long_height > short_height + 8
-    # the names' lines top to bottom (the graduation's numbers, the lowest texts, left out):
-    # the long name's three lines, then "Eau" and "Acier", each in a row of its own
+    # the names' lines top to bottom: the texts left of the bars' origin (the graduation's 0,
+    # the lowest row's first number), not the graduation itself nor the values written at the
+    # bars' ends: the long name's three lines, then "Eau" and "Acier", each in a row of its own
     texts = _glyphs(figures_typst.compile_svg("chart", chart(long_name)))
     lowest = max(y for _, y in texts)
-    lines = sorted({round(y, 1) for _, y in texts if y < lowest - 1})
+    origin = min(x for x, y in texts if y > lowest - 1)
+    lines = sorted({round(y, 1) for x, y in texts if y < lowest - 1 and x < origin})
     assert len(lines) == 5, lines
     leading = lines[1] - lines[0]
     assert lines[2] - lines[1] == pytest.approx(leading, abs=1)
