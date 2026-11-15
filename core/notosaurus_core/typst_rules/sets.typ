@@ -263,9 +263,19 @@
     for t in texts { content(t.at, t.body, anchor: "north-west") }
   })
 }
+// The names under the diagram (a part's that doesn't fit, a region's) share one row, each
+// measured and placed after the one before, never over it: the row's height and its right
+// edge so far kept in the canvas's context.
+#let _row-key = "notosaurus-below"
+#let _below(ctx, label, x, y) = {
+  let w = measure(label).width / ctx.length
+  let row = ctx.at(_row-key, default: none)
+  let (x, y) = if row == none { (x, y) } else { (calc.max(x, row.right + 0.3), row.y) }
+  (x: x, y: y, update: cetz.draw.set-ctx(c => { c.insert(_row-key, (y: y, right: x + w)); c }))
+}
 // A part's name (`"v.ab"`): in it when it fits, else under the diagram, joined to the part by
-// a thin line (a lens is narrower than "A ∩ B"). Its width estimated from its text (no
-// `measure` inside a canvas); `room`: the part's width, about a lens's.
+// a thin line (a lens is narrower than "A ∩ B"). Whether it fits estimated from its text;
+// `room`: the part's width, about a lens's.
 #let part-label(part, label, room: auto) = cetz.draw.get-ctx(ctx => {
   import cetz.draw: *
   let p = cetz.coordinate.resolve(ctx, part).at(1)
@@ -280,18 +290,24 @@
     content(p, label)
   } else {
     let bottom = cetz.coordinate.resolve(ctx, part.split(".").first() + ".south").at(1).at(1)
-    // slanting: straight down it ran over a set's name drawn under the centre (C)
-    let q = (p.at(0) + 0.9, bottom - 0.35)
+    // slanting: straight down it ran over a set's name drawn under the centre (C); after the
+    // names already under the diagram
+    let row = _below(ctx, pad(0.05cm, label), p.at(0) + 0.9, bottom - 0.35)
+    let q = (row.x, row.y)
     circle(p, radius: 0.035, fill: black, stroke: none)
     line(p, q, stroke: 0.5pt)
     content(q, label, anchor: "north-west", padding: 0.05)
+    row.update
   }
 })
 // A region made of several parts (a union, a complement): its name under the diagram,
-// centred, clear of the universe's name and of the parts' own.
+// centred, clear of the universe's name and of the parts' own (after those already there).
 #let region-label(diagram, label) = cetz.draw.get-ctx(ctx => {
   let s = cetz.coordinate.resolve(ctx, diagram + ".south").at(1)
-  cetz.draw.content((s.at(0), s.at(1) - 0.3), label, anchor: "north")
+  let w = measure(label).width / ctx.length
+  let row = _below(ctx, label, s.at(0) - w / 2, s.at(1) - 0.3)
+  cetz.draw.content((row.x, row.y), label, anchor: "north-west")
+  row.update
 })
 // ---- What the AI writes, from here (the rule's example: everything above is given)
 #cetz.canvas({

@@ -43,6 +43,46 @@ def test_a_venn_parts_name_wider_than_it_goes_outside():
     assert "part-label" in figures_typst.FAMILIES["sets"].rules
 
 
+def test_a_styled_parts_name_measured_by_its_text():
+    """A name in colour or in bold (styled content) was read as a single character: judged to
+    fit, it lay across the lens's circles. Its text measured, it goes under the diagram."""
+    venn = '#cetz.canvas({{ cetz-venn.venn2(name: "v"); part-label("v.ab", {}) }})'
+    height = lambda s: float(re.search(r'height="([\d.]+)', s).group(1))  # noqa: E731
+    bare = height(figures_typst.compile_svg("sets", '#cetz.canvas({ cetz-venn.venn2(name: "v") })'))
+    styled = figures_typst.compile_svg("sets", venn.format("text(fill: blue)[$A inter B$]"))
+    assert height(styled) > bare + 10
+
+
+def test_names_under_a_venn_diagram_never_overlap():
+    """Two parts' names too wide for their parts and a region's name: all three went to the
+    same height under the diagram, written over one another. Each in its own colour, the
+    boxes their pixels fill never meet."""
+    import io
+
+    from PIL import Image
+
+    body = (
+        '#cetz.canvas({ cetz-venn.venn2(name: "v");'
+        ' part-label("v.ab", text(fill: rgb("#ff0000"))[$A inter B$ commun]);'
+        ' part-label("v.a", text(fill: rgb("#0000ff"))[seulement dans A]);'
+        ' region-label("v", text(fill: rgb("#00ff00"))[$A union B$ réunion]) })'
+    )
+    image = Image.open(io.BytesIO(figures.to_png(figures.clean(figures_typst.compile_svg("sets", body)))))
+    rgb = image.convert("RGB")
+    boxes = []
+    for channel in range(3):  # red, blue, green: the pixels where that colour dominates
+        xs, ys = [], []
+        for i, pixel in enumerate(rgb.getdata()):
+            if pixel[channel] > 150 and all(pixel[c] < 100 for c in range(3) if c != channel):
+                xs.append(i % rgb.width)
+                ys.append(i // rgb.width)
+        assert xs, channel
+        boxes.append((min(xs), min(ys), max(xs), max(ys)))
+    for k, a in enumerate(boxes):
+        for b in boxes[k + 1 :]:
+            assert a[2] < b[0] or b[2] < a[0] or a[3] < b[1] or b[3] < a[1], (a, b)
+
+
 def test_colours_mixed_are_computed():
     """Additive synthesis adds the lights (red and green yellow, the three white, on black);
     subtractive multiplies the filters (cyan and magenta blue, the three black, on white):

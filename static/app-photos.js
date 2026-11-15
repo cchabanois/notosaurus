@@ -1,4 +1,4 @@
-// The photos of a lesson: added (a PDF's pages picked), turned, partly hidden, removed, seen in full.
+// The photos of a lesson: added (a PDF's pages picked), turned, partly hidden, cropped, removed, seen in full.
 // Methods of the page's Alpine component (app.js), as `this`.
 
 // The pages shown beside the add buttons: two rows of the strip's columns (one is the buttons'),
@@ -87,6 +87,44 @@ async function rotateBlob(blob, type = "image/jpeg") {
 // it can be changed until it is sent; only the blacked-out photo goes to the server.
 const HIDE_BRUSH = 0.035;  // the brush's width, of the photo's longer side
 let hideEdit = null;  // { bitmap, mask, canvas, last }: the editor's canvases (out of Alpine's proxies)
+
+// Cropping it too, in the same editor: only the part of the photo kept is sent. A crop: a box
+// in the original's pixels, [x0, y0, x1, y1]; in the editor, fractions of the photo (the frame
+// dragged by its corners). The mask stays the whole photo's: blacked out, then cropped.
+const WHOLE = [0, 0, 1, 1];
+const CROP_MIN = 0.1;  // the frame's least side, of the photo's
+// The editor closed (Alpine's `hiding`)
+const NOT_HIDING = { open: false, index: -1, erase: false, crop: false, box: WHOLE, ratio: 1, pdf: false };
+
+// The frame's corner ("nw", "ne", "sw", "se") moved by (dx, dy), fractions of the photo: never
+// out of it, never smaller than `min` (the opposite corner stays where it is)
+function cropMoved(box, corner, dx, dy, min = CROP_MIN) {
+  const clamp = (v, lo, hi) => Math.min(hi, Math.max(lo, v));
+  let [x0, y0, x1, y1] = box;
+  if (corner.includes("w")) x0 = clamp(x0 + dx, 0, x1 - min);
+  if (corner.includes("e")) x1 = clamp(x1 + dx, x0 + min, 1);
+  if (corner.includes("n")) y0 = clamp(y0 + dy, 0, y1 - min);
+  if (corner.includes("s")) y1 = clamp(y1 + dy, y0 + min, 1);
+  return [x0, y0, x1, y1].map((v) => Math.round(v * 10000) / 10000);
+}
+
+// The frame in a photo of `width` × `height` pixels; null when it keeps the whole photo
+function cropPixels(box, width, height) {
+  const [x0, y0, x1, y1] = [box[0] * width, box[1] * height, box[2] * width, box[3] * height].map(Math.round);
+  return x0 <= 0 && y0 <= 0 && x1 >= width && y1 >= height ? null : [x0, y0, x1, y1];
+}
+
+// A crop as the editor's frame, in a photo of `width` × `height` pixels (none: the whole photo)
+function cropBox(crop, width, height) {
+  return crop ? [crop[0] / width, crop[1] / height, crop[2] / width, crop[3] / height] : [...WHOLE];
+}
+
+// A crop once its photo, `height` pixels high, is turned a quarter turn clockwise (rotateBlob):
+// a point (x, y) goes to (height - y, x)
+function turnedCrop(crop, height) {
+  const [x0, y0, x1, y1] = crop;
+  return [height - y1, x0, height - y0, x1];
+}
 
 // The mask made sharp (a stroke's soft edges, an un-blacked one's faint outline: black or
 // nothing); whether anything is hidden.
@@ -400,9 +438,13 @@ const photosPart = {
       if (!this.lessonId || this.photosEdited || !this.photos[i].sent) {
         const photo = this.photos[i];
         const turned = { ...photo, blob: await rotateBlob(photo.blob) };  // its text kept
-        if (photo.original) {  // what it hides turns with it
+        if (photo.original) {  // what it hides, and the part it keeps, turn with it
+          const before = await createImageBitmap(photo.original);
+          const { height } = before;
+          before.close();
           turned.original = await rotateBlob(photo.original);
-          turned.mask = await rotateBlob(photo.mask, "image/png");
+          if (photo.mask) turned.mask = await rotateBlob(photo.mask, "image/png");
+          if (photo.crop) turned.crop = turnedCrop(photo.crop, height);
         }
         URL.revokeObjectURL(photo.url);
         this.photos.splice(i, 1, { ...turned, url: URL.createObjectURL(turned.blob) });
@@ -431,7 +473,10 @@ const photosPart = {
       mask.getContext("2d").drawImage(hidden, 0, 0);
       hidden.close();
     }
-    this.hiding = { open: true, index: i, erase: false, pdf: Boolean(photo.pdfText ?? photo.text) };
+    this.hiding = {
+      ...NOT_HIDING, open: true, index: i, pdf: Boolean(photo.pdfText ?? photo.text),
+      box: cropBox(photo.crop, bitmap.width, bitmap.height), ratio: bitmap.width / bitmap.height,
+    };
     await this.$nextTick();
     const canvas = this.$refs.hideCanvas;
     canvas.width = bitmap.width;
@@ -449,7 +494,7 @@ const photosPart = {
 
   // The finger (or the mouse) down, moved, up: a stroke on the mask
   hideStroke(event) {
-    if (!hideEdit) return;
+    if (!hideEdit || this.hiding.crop) return;  // cropping: the frame's corners only
     if (event.type === "pointerdown") {
       event.target.setPointerCapture(event.pointerId);
       hideEdit.last = null;
@@ -482,8 +527,44 @@ const photosPart = {
     this.drawHidden();
   },
 
-  // "Done": the photo as it will be sent (its original and mask kept, to change it again);
-  // nothing hidden: the original back. A PDF page's text holds what is hidden too: not sent then.
+  // "Keep it all": the frame on the whole photo again
+  keepWhole() {
+    this.hiding.box = [...WHOLE];
+  },
+
+  // A corner of the crop frame dragged ("nw", "ne", "sw", "se"), with a finger or a mouse,
+  // as the diagram's frame is
+  startHideCrop(event, corner) {
+    event.preventDefault();
+    const rect = event.currentTarget.closest(".hide-stage").getBoundingClientRect();
+    const start = { x: event.clientX, y: event.clientY, box: [...this.hiding.box] };
+    const move = (e) => {
+      this.hiding.box = cropMoved(start.box, corner, (e.clientX - start.x) / rect.width, (e.clientY - start.y) / rect.height);
+    };
+    const stop = () => {
+      window.removeEventListener("pointermove", move);
+      window.removeEventListener("pointerup", stop);
+      window.removeEventListener("pointercancel", stop);
+    };
+    window.addEventListener("pointermove", move);
+    window.addEventListener("pointerup", stop);
+    window.addEventListener("pointercancel", stop);
+  },
+
+  // An object, not a string: a string replaces the whole style, x-show's display with it
+  cropFrameStyle() {
+    const [x0, y0, x1, y1] = this.hiding.box.map((v) => v * 100);
+    return { left: `${x0}%`, top: `${y0}%`, width: `${x1 - x0}%`, height: `${y1 - y0}%` };
+  },
+
+  // Whether the frame keeps less than the whole photo
+  cropping() {
+    return this.hiding.box.some((v, n) => v !== WHOLE[n]);
+  },
+
+  // "Done": the photo as it will be sent, blacked out then cropped (its original, mask and
+  // crop kept, to change them again); nothing hidden nor cropped: the original back. A PDF
+  // page's text holds what is hidden or cropped out too: not sent then.
   async doneHide(keep) {
     const { bitmap, mask, canvas } = hideEdit;
     const i = this.hiding.index;
@@ -493,10 +574,20 @@ const photosPart = {
         const original = photo.original ?? photo.blob;
         const pdfText = photo.pdfText ?? photo.text;
         const used = hardenMask(mask);
+        const crop = cropPixels(this.hiding.box, canvas.width, canvas.height);
         this.drawHidden();
-        const changed = used
-          ? { blob: canvasBlob(canvas), original, mask: canvasBlob(mask, "image/png"), text: "", pdfText }
+        let kept = canvas;
+        if (crop) {
+          kept = document.createElement("canvas");
+          kept.width = crop[2] - crop[0];
+          kept.height = crop[3] - crop[1];
+          kept.getContext("2d").drawImage(canvas, crop[0], crop[1], kept.width, kept.height, 0, 0, kept.width, kept.height);
+        }
+        const changed = used || crop
+          ? { blob: canvasBlob(kept), original, text: "", pdfText }
           : { blob: original, text: pdfText };
+        if (used) changed.mask = canvasBlob(mask, "image/png");
+        if (crop) changed.crop = crop;
         const url = URL.createObjectURL(changed.blob);
         await decoded(url);
         URL.revokeObjectURL(photo.url);
@@ -511,7 +602,7 @@ const photosPart = {
     } finally {
       bitmap.close();
       hideEdit = null;
-      this.hiding = { open: false, index: -1, erase: false, pdf: false };
+      this.hiding = { ...NOT_HIDING, box: [...WHOLE] };
     }
   },
 

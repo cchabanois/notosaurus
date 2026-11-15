@@ -73,13 +73,31 @@ def test_a_sockets_three_terminals_are_apart():
     body = """#circuit({
   socket("p", (0, 2), (0, 0))
   cetz.draw.get-ctx(ctx => {
-    let (_, a, b, c) = cetz.coordinate.resolve(ctx, "p.phase", "p.neutre", "p.terre")
+    let (_, a, b, c) = cetz.coordinate.resolve(ctx, "p.phase", "p.neutral", "p.earth")
     for (u, v) in ((a, b), (a, c), (b, c)) { assert(cetz.vector.dist(u, v) > 0.3) }
     // the phase and the neutral where the branch's wires end, above and below
     assert(a.at(1) > c.at(1) and c.at(1) > b.at(1) and c.at(0) > a.at(0))
   })
 })"""
     assert figures_typst.compile_svg("circuit", body).startswith("<svg")
+
+
+def test_a_sockets_terminals_have_english_names_and_keep_their_old_ones():
+    """The socket's terminals were named in French ("neutre", "terre"): named "neutral" and
+    "earth" now, the old names (an AI or a rule cached before) still the same points."""
+    rules = figures_typst.FAMILIES["circuit"].rules
+    assert '"p.earth"' in rules and "terre" not in rules
+    body = """#circuit({
+  socket("p", (0, 2), (0, 0))
+  cetz.draw.get-ctx(ctx => {
+    let (_, n, e, old-n, old-e) = cetz.coordinate.resolve(ctx, "p.neutral", "p.earth", "p.neutre", "p.terre")
+    assert(n == old-n and e == old-e)
+  })
+})"""
+    assert figures_typst.compile_svg("circuit", body).startswith("<svg")
+    for terminal in ("earth", "terre"):
+        drawn = f'#circuit({{ socket("p", (0, 2), (0, 0)); earth-wire("p.{terminal}", (1, 1)) }})'
+        assert figures_typst.compile_svg("circuit", drawn).startswith("<svg")
 
 
 def test_an_earth_wire_is_green_and_yellow():
@@ -96,7 +114,7 @@ def test_an_earth_wire_is_green_and_yellow():
                 seen.add("yellow")
         return seen
 
-    assert colours('#circuit({ socket("p", (0, 2), (0, 0)); earth-wire("p.terre", (1, 1)) })') == {"green", "yellow"}
+    assert colours('#circuit({ socket("p", (0, 2), (0, 0)); earth-wire("p.earth", (1, 1)) })') == {"green", "yellow"}
     assert not colours("#circuit({ wire((0, 1), (1, 1)) })")
 
 
@@ -733,6 +751,61 @@ def test_the_chemistry_rules_polarity_compiles():
     bare = figures_typst.compile_svg("chemistry", f"#skeletize({{ {molecule} }})")
     marked = figures_typst.compile_svg("chemistry", f"#skeletize({{ {molecule}\n  {'\n  '.join(calls)} }})")
     assert marked.count("<use") > bare.count("<use") + 4  # the charges, the angle's value, p
+
+
+def test_a_throws_angle_is_the_descriptions():
+    """ "Launched at 45°": the rule never said a throw takes its angle, so the parabola was
+    always launched at 60°. The rule says it; the angle given draws another parabola."""
+    rule = figures_typst.FAMILIES["mechanics"].rules
+    (chrono,) = [line for line in rule.splitlines() if line.startswith("- a chronophotography")]
+    assert "`angle`" in chrono and "horizontal" in chrono
+    drawn = lambda body: figures_typst.compile_svg("mechanics", f"#chronophotography({body})")  # noqa: E731
+    assert drawn("angle: 45") != drawn("")
+
+
+def test_a_slopes_angle_takes_the_lessons_name():
+    """A lesson naming the slope's angle θ: α was always written. `theta` names it, the rule
+    says so; without it, α as before."""
+    assert "`theta` the angle's name when the description names it" in figures_typst.FAMILIES["mechanics"].rules
+    slope = '#mechanics(support: "slope", angle: 25, vectors: (("P", "down"),){})'
+    drawn = lambda more: figures_typst.compile_svg("mechanics", slope.format(more))  # noqa: E731
+    assert drawn("") == drawn(", theta: $alpha$")
+    assert drawn(", theta: $theta$") != drawn("")
+
+
+@pytest.mark.parametrize(("at", "name"), [(60, "Terre"), (200, "Soleil"), (310, "Jupiter")])
+def test_an_orbits_radius_starts_at_its_centre(at, name):
+    """The radius was drawn under the centre's body (the Earth's disc), so it seemed to start
+    at its surface: a checker refused the rule's own example 3 times in 3. Drawn over the
+    disc from its very centre, the body's name (in red here) beside it, never crossed."""
+    import math
+
+    from PIL import Image
+
+    body = (
+        f'#mechanics(support: "circle", centre: text(fill: rgb("#ff0000"))[{name}], at: {at},'
+        ' radius: $r$, body: [S], vectors: (("v", "along"), ("F", "centre")))'
+    )
+    png = figures.to_png(figures.clean(figures_typst.compile_svg("mechanics", body)))
+    image = Image.open(io.BytesIO(png)).convert("RGB")
+    width = image.width
+    pixels = list(image.getdata())
+    where = lambda keep: [(i % width, i // width) for i, p in enumerate(pixels) if keep(p)]  # noqa: E731
+    disc = where(lambda p: p == (225, 225, 225))
+    x0, x1 = min(x for x, _ in disc), max(x for x, _ in disc)
+    y0, y1 = min(y for _, y in disc), max(y for _, y in disc)
+    (cx, cy), radius = ((x0 + x1) / 2, (y0 + y1) / 2), (x1 - x0) / 2
+    a = math.radians(at + 135)  # the radius's way
+    for t in (0.0, 0.3, 0.6, 0.9):  # its line's pixels across the disc, from the centre
+        px, py = cx + t * radius * math.cos(a), cy - t * radius * math.sin(a)
+        around = range(-2, 3)
+        near = [image.getpixel((round(px) + dx, round(py) + dy)) for dx in around for dy in around]
+        assert any(sum(p) < 200 for p in near), (t, px, py)
+    red = where(lambda p: p[0] > 150 and p[1] < 100 and p[2] < 100)
+    rx0, rx1 = min(x for x, _ in red), max(x for x, _ in red)
+    ry0, ry1 = min(y for _, y in red), max(y for _, y in red)
+    crossed = [(x, y) for x, y in where(lambda p: sum(p) < 200) if rx0 <= x <= rx1 and ry0 <= y <= ry1]
+    assert not crossed
 
 
 def test_a_body_on_a_track_drawn_as_the_rule_says():

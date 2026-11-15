@@ -69,6 +69,13 @@ Each pull request's entries (the `## Changelog` of its description) are put unde
 
 ### Fixed
 
+- Geometry figures: lengths, angle values and line names no longer fall on a side, a point or a line; a segment cut by a point (a diameter through its centre) has its length on a dimension line over its whole length.
+- 📈 A line chart of small values (concentrations in thousandths) gets a graduation you can read values from, instead of a single band.
+- 🔵 Names written under a Venn diagram no longer overlap.
+- 🎯 A throw drawn as a chronophotography uses the launch angle the lesson gives.
+- ⛰️ A slope's angle uses the lesson's name for it (θ, β…) instead of always α.
+- 🌍 An orbit's radius starts at the centre of the central body, not at its surface.
+- Symmetry figures: the image of a triangle by a central symmetry no longer has its construction lines on top of one another, and the axes of an equilateral triangle go through its centre.
 - 🖍️ A name blacked out on a photo no longer shows again for an instant after **Terminé**: the photo is shown hidden at once.
 - 🗺️ A map naming several places the atlas lacks lists them all at once, so the AI can correct them in one go. « Groenland » given among Denmark's regions is drawn as the country it is in the atlas.
 - Maps: straits and canals ("canal de Suez", "détroit d'Ormuz", "pas de Calais", "détroit de Béring"…) are found among the waters in every language, and a strait or canal too small to see on a world map is marked by a ring with its name beside it.

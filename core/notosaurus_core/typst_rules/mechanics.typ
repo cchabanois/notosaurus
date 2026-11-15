@@ -4,8 +4,9 @@
 // A body and the vectors at it (forces, a velocity, an acceleration, a Frenet frame), each
 // given by its direction, never placed by eye, in its scene: on a circle (an orbit: the body
 // at `at` degrees, the centre's body named `centre`), on a horizontal plane, on a slope rising
-// at `angle` degrees, on a pendulum (hanging from `centre` by a string named `radius`, at
-// `angle` degrees from the vertical, `theta` the angle's name), in a liquid, or alone; with
+// at `angle` degrees (`theta` its name, α else), on a pendulum (hanging from `centre` by a
+// string named `radius`, at `angle` degrees from the vertical, `theta` the angle's name), in a
+// liquid, or alone; with
 // `other`, a second body facing it (two bodies acting on each other), `others` the vectors
 // at it, `distance` the distance between them. A direction is "up", "down", "left", "right",
 // "normal" (out of the support), "along" (the way the body moves: the circle's tangent, the
@@ -159,20 +160,30 @@
     }
     if support == "circle" {
       circle((0, 0), radius: r, stroke: (thickness: 0.8pt, dash: "dashed"))
+      // a centre named by one letter is a point (O), else a body (the Earth): its disc first,
+      // the radius over it
+      let body-centre = centre != none and not point-name(centre)
+      if body-centre { circle((0, 0), radius: 0.65, fill: luma(225), stroke: 0.8pt) }
       if radius != none {
-        // on the side away from the body, under the centre's body
+        // on the side away from the body, from the very centre (over the centre's body)
         let a = (at + 180 - 45) * 1deg
         line((0, 0), (r * calc.cos(a), r * calc.sin(a)), stroke: 0.6pt)
         content((r / 2 * calc.cos(a) + 0.25 * calc.cos(a + 90deg), r / 2 * calc.sin(a) + 0.25 * calc.sin(a + 90deg)),
           txt(radius))
       }
-      // a centre named by one letter is a point (O), else a body (the Earth)
-      if centre != none and not point-name(centre) {
-        circle((0, 0), radius: 0.65, fill: luma(225), stroke: 0.8pt)
+      // the centre a dot (a body's when its radius starts there)
+      if not body-centre or radius != none { circle((0, 0), radius: 0.06, fill: black) }
+      if body-centre and radius != none {
+        // its name beside its disc, in the widest gap between the body's way and the radius
+        // (112.5° from each), the side of it facing the centre on that way: never crossed
+        let d = at - 112.5
+        let facing = calc.rem-euclid(calc.round((d + 180) / 45), 8)
+        let anchor = ("east", "north-east", "north", "north-west", "west", "south-west", "south", "south-east").at(int(facing))
+        content(_off((0, 0), d * 1deg, 0.75), txt(centre), anchor: anchor)
+      } else if body-centre {
         content((0, 0), txt(centre))
-      } else {
-        circle((0, 0), radius: 0.06, fill: black)
-        if centre != none { content(_off((0, 0), (at + 180 + 90) * 1deg, 0.3), txt(centre)) }
+      } else if centre != none {
+        content(_off((0, 0), (at + 180 + 90) * 1deg, 0.3), txt(centre))
       }
     } else if support == "pendulum" {
       // the pivot under a hatched ceiling, the vertical dashed, the string, its angle
@@ -210,7 +221,7 @@
       line(foot, top, (top.at(0), foot.at(1)), close: true, stroke: 1pt, fill: luma(240))
       arc(foot, start: 0deg, stop: a, radius: 0.9, anchor: "origin", stroke: 0.6pt)
       content((foot.at(0) + 1.25 * calc.cos(a / 2), foot.at(1) + 1.25 * calc.sin(a / 2)),
-        txt(math.equation(math.alpha)))
+        txt(if theta == none { math.equation(math.alpha) } else { theta }))
     } else if support == "liquid" {
       // a container, the liquid up to near its brim, the body in it
       rect((-2, -1.5), (2, 0.4), fill: rgb("#dceefb"), stroke: none)
