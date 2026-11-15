@@ -141,8 +141,11 @@ Notosaurus. C'est la page [Confidentialité et sécurité](../privacy/) qui s'ap
   celle de Google, sur le téléphone ou sur ses serveurs, selon ses réglages), ou, sur un téléphone
   qui n'en a pas, écrite par l'IA du service.
 - **AnkiDroid**, pour y ajouter les cartes, demandé au premier envoi.
-- Les photos sont prises par l'appareil photo du téléphone ou choisies dans la galerie, au
-  moment où vous le faites. L'application n'a pas besoin d'accéder à toutes vos photos.
+- Les photos sont prises au moment où vous le faites, par le scanner de documents de Google
+  (services Google Play, sur le téléphone : l'application ne demande pas l'appareil photo et ne
+  reçoit que les pages que vous gardez ; Google peut collecter des statistiques d'usage anonymes
+  du scanner, jamais les photos), ou par l'appareil photo du téléphone, ou choisies dans la
+  galerie. L'application n'a pas besoin d'accéder à toutes vos photos.
 - **Notifications** : aucune autorisation demandée. Pendant qu'une leçon est créée ou envoyée, l'application peut continuer quelques minutes en arrière-plan ; là où les notifications sont autorisées, elle en affiche une pendant ce temps.
 - Le **QR code** de l'ordinateur est lu par le lecteur de codes des services Google Play, sur le téléphone : l'application ne reçoit que l'adresse lue, jamais l'image de la caméra.
 
