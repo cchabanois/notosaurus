@@ -903,5 +903,7 @@
 #diagram(node-stroke: 0.8pt, spacing: 2em,
   node((0, 0), [Évaporation]), edge("-|>"),
   node((1, 0), [Condensation]), edge("-|>"),
-  node((1, 1), [Précipitations]),
+  node((1, 1), [Précipitations]), edge("-|>"),
+  node((0, 1), [Ruissellement]),
+  edge((0, 1), (0, 0), "-|>"),
 )
