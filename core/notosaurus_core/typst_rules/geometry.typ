@@ -318,6 +318,67 @@
     if origin-label != none { content((-0.3, -0.3), origin-label) }
   }
 }
+// What the figure drew (its segments and its circles, as the canvas holds them), kept so that
+// a text the preamble places (a length, an angle's value, a line's name) lands clear of it:
+// each placement tried where the figure would have it, then elsewhere when a stroke, a circle
+// or a point is in its way.
+#let _drawn-key = "notosaurus-drawn"
+#let _drawn(ctx) = ctx.shared-state.at(_drawn-key, default: (segments: (), circles: (), texts: ()))
+#let _record(kind, item) = ((ctx => {
+  let drawn = _drawn(ctx)
+  drawn.at(kind).push(item)
+  ctx.shared-state.insert(_drawn-key, drawn)
+  (ctx: ctx)
+}),)
+#let _record-segments(names, closed: false) = ((ctx => {
+  let at(n) = { let q = _resolve-point(ctx, n); (q.at(0), q.at(1)) }
+  let pts = names.map(at)
+  let drawn = _drawn(ctx)
+  let pairs = range(pts.len() - 1).map(i => (pts.at(i), pts.at(i + 1)))
+  if closed and pts.len() > 2 { pairs.push((pts.last(), pts.first())) }
+  for pair in pairs { drawn.segments.push(pair) }
+  ctx.shared-state.insert(_drawn-key, drawn)
+  (ctx: ctx)
+}),)
+// How much a text's box (centre `c`, half-width `hw`, half-height `hh`) meets the drawing: each
+// stroke through it (2), each point in or near it (1): 0 when it stands clear. `skip`: the
+// strokes it belongs beside (a length's own segment, a line's own line).
+#let _box-hits(ctx, c, hw, hh, skip: ()) = {
+  let (x0, x1, y0, y1) = (c.at(0) - hw - 0.12, c.at(0) + hw + 0.12, c.at(1) - hh - 0.08, c.at(1) + hh + 0.08)
+  // a segment across the box (Liang–Barsky: the part of it within the box)
+  let crosses(p, q) = {
+    let (dx, dy) = (q.at(0) - p.at(0), q.at(1) - p.at(1))
+    let (t0, t1) = (0.0, 1.0)
+    let ok = true
+    for (pk, qk) in ((-dx, p.at(0) - x0), (dx, x1 - p.at(0)), (-dy, p.at(1) - y0), (dy, y1 - p.at(1))) {
+      if calc.abs(pk) < 1e-9 { if qk < 0 { ok = false } } else {
+        let r = qk / pk
+        if pk < 0 { t0 = calc.max(t0, r) } else { t1 = calc.min(t1, r) }
+      }
+    }
+    ok and t0 <= t1
+  }
+  let same(s, k) = k.any(t => calc.abs(t.at(0).at(0) - s.at(0).at(0)) + calc.abs(t.at(0).at(1) - s.at(0).at(1)) + calc.abs(t.at(1).at(0) - s.at(1).at(0)) + calc.abs(t.at(1).at(1) - s.at(1).at(1)) < 1e-6)
+  let drawn = _drawn(ctx)
+  let hits = 2 * drawn.segments.filter(s => not same(s, skip) and crosses(..s)).len()
+  // a circle through the box: its centre nearer than its radius to some of the box, farther to some
+  for (o, r) in drawn.circles {
+    let near = calc.sqrt(calc.pow(calc.max(x0 - o.at(0), 0, o.at(0) - x1), 2) + calc.pow(calc.max(y0 - o.at(1), 0, o.at(1) - y1), 2))
+    let far = calc.sqrt(calc.pow(calc.max(calc.abs(x0 - o.at(0)), calc.abs(x1 - o.at(0))), 2) + calc.pow(calc.max(calc.abs(y0 - o.at(1)), calc.abs(y1 - o.at(1))), 2))
+    if near <= r and r <= far { hits += 2 }
+  }
+  // a text already placed there (each as its centre and half-size)
+  for t in drawn.texts.filter(t => t.c != c) {
+    if calc.abs(c.at(0) - t.c.at(0)) < hw + t.hw + 0.1 and calc.abs(c.at(1) - t.c.at(1)) < hh + t.hh + 0.05 { hits += 2 }
+  }
+  // a point, and the name written next to it
+  for q in _get-points(ctx).values() {
+    if q.at(0) > x0 - 0.3 and q.at(0) < x1 + 0.3 and q.at(1) > y0 - 0.3 and q.at(1) < y1 + 0.3 { hits += 1 }
+  }
+  hits
+}
+// A text's half-size in the canvas's cm, guessed from its letters (no context inside a canvas)
+#let _text-half(label) = (0.11 * _name-chars(label) + 0.06, 0.24)
 // A length written on its segment, never on its line: beside its middle, on the side away
 // from the point `away` (the figure's other vertex), the text's near edge clear of the line
 // (anchored by the side it faces). `level: 2` (a segment holding another one already
@@ -353,8 +414,26 @@
     line(shift(pb, 0.08), shift(pb, off + 0.12), stroke: 0.4pt)
     line(qa, qb, stroke: 0.5pt, mark: (start: "straight", end: "straight", scale: 0.6))
   }
-  let mid = (pa.at(0) + pos * dx, pa.at(1) + pos * dy)
-  content(shift(mid, off + if level > 1 { 0.1 } else { 0 }), label, anchor: anchor)
+  if level > 1 {
+    let mid = (pa.at(0) + pos * dx, pa.at(1) + pos * dy)
+    content(shift(mid, off + 0.1), label, anchor: anchor)
+    return
+  }
+  // where the figure would have it (its side away from `away`, at `pos`), then along the
+  // segment and on its other side, the first that no stroke, circle or point is in the way of
+  let (hw, hh) = _text-half(label)
+  let tries = ((1, pos), (1, 0.3), (1, 0.7), (-1, pos), (-1, 0.3), (-1, 0.7), (1, 0.2), (1, 0.8), (-1, 0.2), (-1, 0.8))
+  let placed = tries.map(((side, t)) => {
+    let (sx, sy) = (side * nx, side * ny)
+    // the box's centre: off the line by the text's depth across it
+    let reach = hw * calc.abs(sx) + hh * calc.abs(sy)
+    let c = (pa.at(0) + t * dx + sx * (off + reach), pa.at(1) + t * dy + sy * (off + reach))
+    (c: c, hits: _box-hits(ctx, c, hw, hh, skip: ((pa, pb), (pb, pa))))
+  })
+  let best = placed.find(p => p.hits == 0)
+  let c = if best == none { placed.first().c } else { best.c }
+  content(c, label)
+  _record("texts", (c: c, hw: hw, hh: hh, skip: ((pa, pb), (pb, pa))))
 })
 // A translation's image of `point` when the description gives no vector, placed by the
 // preamble, never by eye: the vector in the direction furthest from every side of `figure`
@@ -446,7 +525,105 @@
   let most = calc.max(0.3, 0.15 * size)
   let (before, after) = if type(add) == array { add } else { (add, add) }
   let kept(k) = if d < 1e-9 { k } else { calc.min(k, most / d) }
-  _ctz-line-add(a, b, add: (kept(before), kept(after)), ..opts)
+  let (kb, ka) = (kept(before), kept(after))
+  _ctz-line-add(a, b, add: (kb, ka), ..opts)
+  let along(t) = (pa.at(0) + t * (pb.at(0) - pa.at(0)), pa.at(1) + t * (pb.at(1) - pa.at(1)))
+  _record("segments", (along(-kb), along(1 + ka)))
+})
+// The strokes drawn, kept for the texts placed after them (_box-hits)
+#let _ctz-segment-drawn = ctz-draw-segment
+#let ctz-draw-segment(a, b, ..opts) = { _ctz-segment-drawn(a, b, ..opts); _record-segments((a, b)) }
+#let _ctz-polygon-drawn = ctz-draw-polygon
+#let ctz-draw-polygon(..args) = {
+  _ctz-polygon-drawn(..args)
+  let names = args.pos()
+  if names.len() > 1 and names.all(n => type(n) == str) { _record-segments(names, closed: true) }
+}
+#let _ctz-circle-r-drawn = ctz-draw-circle-r
+#let ctz-draw-circle-r(center, radius, ..opts) = {
+  _ctz-circle-r-drawn(center, radius, ..opts)
+  if type(center) == str { ((ctx => {
+    let o = _resolve-point(ctx, center)
+    let drawn = _drawn(ctx)
+    drawn.circles.push(((o.at(0), o.at(1)), radius))
+    ctx.shared-state.insert(_drawn-key, drawn)
+    (ctx: ctx)
+  }),) }
+}
+#let _ctz-circle-through-drawn = ctz-draw-circle-through
+#let ctz-draw-circle-through(center, through, ..opts) = {
+  _ctz-circle-through-drawn(center, through, ..opts)
+  if type(center) == str and type(through) == str { ((ctx => {
+    let (o, p) = (_resolve-point(ctx, center), _resolve-point(ctx, through))
+    let drawn = _drawn(ctx)
+    drawn.circles.push(((o.at(0), o.at(1)), calc.sqrt(calc.pow(p.at(0) - o.at(0), 2) + calc.pow(p.at(1) - o.at(1), 2))))
+    ctx.shared-state.insert(_drawn-key, drawn)
+    (ctx: ctx)
+  }),) }
+}
+// An angle's value or name written inside it, on its bisector, as far from the vertex as it
+// takes for the text's box to clear both sides and the arc (ctz-euclide's own place, at a
+// fixed distance, laid "40°" over a side of a narrow angle).
+#let _ctz-angle-drawn = ctz-draw-angle
+#let ctz-draw-angle(vertex, a, b, label: none, ..opts) = {
+  let named = opts.named()
+  let own = label == none or named.at("angle-type", default: "interior") != "interior" or "label-radius" in named or "label-offset" in named or (vertex, a, b).any(n => type(n) != str)
+  if own { return _ctz-angle-drawn(vertex, a, b, label: label, ..opts) }
+  _ctz-angle-drawn(vertex, a, b, ..opts)
+  cetz.draw.get-ctx(ctx => {
+    let at(n) = cetz.coordinate.resolve(ctx, "ctz:" + n).at(1)
+    let (v, pa, pb) = (at(vertex), at(a), at(b))
+    let unit(p) = { let (x, y) = (p.at(0) - v.at(0), p.at(1) - v.at(1)); let l = calc.max(calc.sqrt(x * x + y * y), 1e-9); (x / l, y / l) }
+    let (u1, u2) = (unit(pa), unit(pb))
+    let (bx, by) = (u1.at(0) + u2.at(0), u1.at(1) + u2.at(1))
+    let bl = calc.sqrt(bx * bx + by * by)
+    // a straight angle: its bisector square to its sides, on the anticlockwise side from a
+    let (bx, by) = if bl < 1e-6 { (-u1.at(1), u1.at(0)) } else { (bx / bl, by / bl) }
+    let half = calc.acos(calc.clamp(u1.at(0) * bx + u1.at(1) * by, -1, 1))
+    let (hw, hh) = _text-half(label)
+    let across(u) = hw * calc.abs(u.at(1)) + hh * calc.abs(u.at(0)) + 0.18
+    let radius = named.at("radius", default: 0.6)
+    let d = calc.max(
+      if calc.sin(half) > 0.05 { across(u1) / calc.sin(half) } else { 0 },
+      if calc.sin(half) > 0.05 { across(u2) / calc.sin(half) } else { 0 },
+      radius + 0.1 + hw * calc.abs(bx) + hh * calc.abs(by),
+    )
+    let c = (v.at(0) + d * bx, v.at(1) + d * by)
+    cetz.draw.content(c, label)
+    _record("texts", (c: c, hw: hw, hh: hh, skip: ()))
+  })
+}
+// A line's name next to it, placed by the preamble: near one end of the line as drawn, on
+// the side and at the place where no stroke, circle or point is in its way (written by hand
+// at coordinates, it fell on the line itself or on a point of it).
+#let ctz-draw-line-name(a, b, name) = cetz.draw.get-ctx(ctx => {
+  let at(n) = cetz.coordinate.resolve(ctx, "ctz:" + n).at(1)
+  let (pa, pb) = (at(a), at(b))
+  let (dx, dy) = (pb.at(0) - pa.at(0), pb.at(1) - pa.at(1))
+  let l = calc.sqrt(dx * dx + dy * dy)
+  assert(l > 1e-6, message: "a line's name needs two distinct points of it")
+  let (ux, uy) = (dx / l, dy / l)
+  let (nx, ny) = (-uy, ux)
+  // the line as drawn: the stroke along it reaching farthest, else its two points
+  let t(p) = (p.at(0) - pa.at(0)) * ux + (p.at(1) - pa.at(1)) * uy
+  let off(p) = calc.abs((p.at(0) - pa.at(0)) * nx + (p.at(1) - pa.at(1)) * ny)
+  let own = _drawn(ctx).segments.filter(s => off(s.at(0)) < 1e-3 and off(s.at(1)) < 1e-3)
+  let ends = own.map(s => (t(s.at(0)), t(s.at(1)))).flatten()
+  let (lo, hi) = if ends.len() > 0 { (calc.min(..ends), calc.max(..ends)) } else { (0, l) }
+  let (hw, hh) = _text-half(name)
+  let reach(sx, sy) = hw * calc.abs(sx) + hh * calc.abs(sy) + 0.12
+  let tries = ()
+  for k in (0.12, 0.25, 0.4, 0.6) {
+    for (along, side) in ((hi - k * (hi - lo), 1), (hi - k * (hi - lo), -1), (lo + k * (hi - lo), 1), (lo + k * (hi - lo), -1)) {
+      let r = reach(side * nx, side * ny)
+      tries.push((pa.at(0) + along * ux + side * nx * r, pa.at(1) + along * uy + side * ny * r))
+    }
+  }
+  let scored = tries.map(c => (c: c, hits: _box-hits(ctx, c, hw, hh, skip: own)))
+  let best = scored.find(p => p.hits == 0)
+  let c = if best == none { scored.sorted(key: p => p.hits).first().c } else { best.c }
+  cetz.draw.content(c, name)
+  _record("texts", (c: c, hw: hw, hh: hh, skip: own))
 })
 // A shadow (a shadow cone, a cast shadow, an eclipse), everything computed from the circles
 // given, never placed by eye: the light `source` and the lit `body`, each a circle
