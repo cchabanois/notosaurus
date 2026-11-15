@@ -327,6 +327,37 @@ def test_a_name_hidden_before_the_photo_is_sent(page):
     sync_api.expect(hide).to_be_hidden()  # sent: nothing left to hide
 
 
+def test_done_the_viewer_shows_the_photo_hidden_at_once(page):
+    """ "Terminé": the viewer under the editor already shows the blacked-out photo when the
+    editor goes, never the photo as it was for an instant (the name seen again: a parent
+    thinks it wasn't hidden)."""
+    page.goto("/")
+    add_photo(page, png("white"))
+    editor = open_hide(page)
+    stroke(page, 0.1)  # the name
+    # What the viewer shows the moment the editor is hidden
+    page.evaluate("""() => {
+        const editor = document.querySelector('.hide-editor');
+        window.seenWhenClosed = null;
+        new MutationObserver(() => {
+            if (window.seenWhenClosed || getComputedStyle(editor).display !== 'none') return;
+            const img = document.querySelector('.viewer-frame img');
+            const canvas = document.createElement('canvas');
+            canvas.width = img.naturalWidth || 1;
+            canvas.height = img.naturalHeight || 1;
+            const ctx = canvas.getContext('2d');
+            ctx.drawImage(img, 0, 0);
+            const top = ctx.getImageData(canvas.width / 2, canvas.height / 10, 1, 1).data;
+            window.seenWhenClosed = { complete: img.complete && img.naturalWidth > 0, top: top[0], alpha: top[3] };
+        }).observe(editor, { attributes: true });
+    }""")
+    editor.get_by_role("button", name="Terminé").click()
+    sync_api.expect(editor).to_be_hidden()
+    seen = page.evaluate("window.seenWhenClosed")
+    assert seen["complete"], seen  # the new photo decoded, not loading
+    assert seen["alpha"] == 255 and seen["top"] < 40, seen  # black where the name was
+
+
 def test_a_pdf_page_with_a_hidden_part_goes_without_its_text(page, browser):
     """Its text holds the hidden name too: the page is sent as a picture only, and the editor says so."""
     page.goto("/")

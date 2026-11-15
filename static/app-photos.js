@@ -48,6 +48,14 @@ function canvasBlob(canvas, type = "image/jpeg") {
   return new Blob([bytes], { type });
 }
 
+// A picture's URL decoded, so that an <img> taking it shows it at once; one that can't be
+// decoded is not waited for.
+function decoded(url) {
+  const img = new Image();
+  img.src = url;
+  return img.decode().catch(() => {});
+}
+
 // Shrinks a phone photo (3–5 MB) to ~1600 px JPEG before upload.
 async function resize(file) {
   const bitmap = await createImageBitmap(file, { imageOrientation: "from-image" });
@@ -489,9 +497,16 @@ const photosPart = {
         const changed = used
           ? { blob: canvasBlob(canvas), original, mask: canvasBlob(mask, "image/png"), text: "", pdfText }
           : { blob: original, text: pdfText };
+        const url = URL.createObjectURL(changed.blob);
+        await decoded(url);
         URL.revokeObjectURL(photo.url);
-        this.photos.splice(i, 1, { ...changed, url: URL.createObjectURL(changed.blob) });
+        this.photos.splice(i, 1, { ...changed, url });
         this.photosEdited = Boolean(this.lessonId);
+        // The viewer under the editor on the new photo before the editor goes: never the
+        // photo as it was for an instant (the name seen again)
+        await this.$nextTick();
+        const shown = this.viewer.open && document.querySelector(".viewer-frame img");
+        if (shown) await shown.decode().catch(() => {});
       }
     } finally {
       bitmap.close();
