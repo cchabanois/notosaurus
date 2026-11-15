@@ -69,6 +69,7 @@ Each pull request's entries (the `## Changelog` of its description) are put unde
 
 ### Fixed
 
+- Geometry figures: lengths, angle values and line names no longer fall on a side, a point or a line; a segment cut by a point (a diameter through its centre) has its length on a dimension line over its whole length.
 - 📈 A line chart of small values (concentrations in thousandths) gets a graduation you can read values from, instead of a single band.
 - 🔵 Names written under a Venn diagram no longer overlap.
 - 🎯 A throw drawn as a chronophotography uses the launch angle the lesson gives.
