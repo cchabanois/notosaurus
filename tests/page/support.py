@@ -159,7 +159,7 @@ def open_hide(page):
     viewer = page.locator(".viewer")
     if not viewer.is_visible():
         page.locator(".strip .thumb img").first.click()
-    viewer.get_by_role("button", name="Cacher une partie de la page (un nom…)").click()
+    viewer.get_by_role("button", name="Recadrer ou cacher une partie de la page (un nom…)").click()
     editor = page.locator(".hide-editor")
     sync_api.expect(editor).to_be_visible()
     return editor
@@ -180,6 +180,41 @@ def stroke(page, y: float) -> None:
     page.mouse.up()
 
 
+def crop_corner(page, corner: str, dx: float, dy: float) -> None:
+    """The open editor in "Recadrer", its frame's `corner` ("nw", "ne", "sw", "se") dragged by
+    (`dx`, `dy`), fractions of the photo."""
+    editor = page.locator(".hide-editor")
+    editor.get_by_role("button", name="Recadrer", exact=True).click()
+    handle = page.locator(f".hide-stage .crop-handle.{corner}")
+    sync_api.expect(handle).to_be_visible()
+    stage = page.locator(".hide-stage").bounding_box()
+    handle = handle.bounding_box()
+    x, y = handle["x"] + handle["width"] / 2, handle["y"] + handle["height"] / 2
+    page.mouse.move(x, y)
+    page.mouse.down()
+    page.mouse.move(x + stage["width"] * dx, y + stage["height"] * dy, steps=6)
+    page.mouse.up()
+
+
+def crop_box(page) -> list[float]:
+    """The open editor's crop frame, fractions of the photo."""
+    return page.evaluate("Alpine.$data(document.querySelector('[x-data]')).hiding.box")
+
+
+def halves() -> bytes:
+    """A 600 × 800 photo, its left half red, its right half blue (PNG)."""
+    image = PILImage.new("RGB", (600, 800), "red")
+    image.paste((0, 0, 255), (300, 0, 600, 800))
+    out = io.BytesIO()
+    image.save(out, "PNG")
+    return out.getvalue()
+
+
+def photo_sent(page, lesson_id: str, n: int = 1):
+    """A saved lesson's photo, as the server keeps it (RGB)."""
+    return PILImage.open(io.BytesIO(page.request.get(f"/api/lessons/{lesson_id}/photos/{n}").body())).convert("RGB")
+
+
 def generate_from_photos(page, prompt: str) -> dict:
     """A lesson from the photos added and a free prompt: the saved lesson."""
     page.locator(".chip").first.click()  # the free prompt
@@ -190,8 +225,8 @@ def generate_from_photos(page, prompt: str) -> dict:
     return lesson(page, summary["id"])
 
 
-def photo_not_sent(page, i: int = 0):
-    """A photo not sent yet, as it would be sent (its blob in the page), in grey levels."""
+def photo_not_sent(page, i: int = 0, mode: str = "L"):
+    """A photo not sent yet, as it would be sent (its blob in the page), in grey levels (or `mode`)."""
     data = page.evaluate(
         """async (i) => {
             const blob = Alpine.$data(document.querySelector('[x-data]')).photos[i].blob;
@@ -202,7 +237,7 @@ def photo_not_sent(page, i: int = 0):
         }""",
         i,
     )
-    return PILImage.open(io.BytesIO(base64.b64decode(data))).convert("L")
+    return PILImage.open(io.BytesIO(base64.b64decode(data))).convert(mode)
 
 
 def editor_pixel(page, x: float, y: float) -> int:

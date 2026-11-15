@@ -58,7 +58,7 @@
       },
       "seeAll": "Ver as {count} páginas",
       "rotate": "Girar a foto um quarto de volta",
-      "hide": "Ocultar parte da página (um nome…)",
+      "hide": "Recortar ou ocultar parte da página (um nome…)",
       "hidden": "Parte desta página está oculta",
       "takePhoto": "Tirar uma foto",
       "nextPage": "Próxima página",
@@ -72,11 +72,13 @@
     },
     "hide": {
       "title": "Ocultar o que a IA não deve ver",
-      "hint": "Com o dedo, pinte de preto um nome, uma escola, tudo o que é pessoal. Só a foto tapada é salva e enviada.",
+      "hint": "Com o dedo, pinte de preto um nome, uma escola, tudo o que é pessoal; \"Recortar\" mantém só a parte útil, arrastando os cantos da moldura. Só a foto assim preparada é salva e enviada.",
       "pdf": "Em uma página de PDF, o texto dela não é enviado então: a IA lê a página como uma imagem.",
       "paint": "Tapar",
       "erase": "Destapar",
       "clear": "Destapar tudo",
+      "crop": "Recortar",
+      "keepAll": "Manter tudo",
       "done": "Concluído"
     },
     "pdf": {

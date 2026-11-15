@@ -58,7 +58,7 @@
       },
       "seeAll": "See all {count} pages",
       "rotate": "Turn the photo a quarter turn",
-      "hide": "Hide part of this page (a name…)",
+      "hide": "Crop or hide part of this page (a name…)",
       "hidden": "Part of this page is hidden",
       "takePhoto": "Take a photo",
       "nextPage": "Next page",
@@ -72,11 +72,13 @@
     },
     "hide": {
       "title": "Hide what the AI shouldn't see",
-      "hint": "With your finger, black out a name, a school, anything personal. Only the blacked-out photo is kept and sent.",
+      "hint": "With your finger, black out a name, a school, anything personal; \"Crop\" keeps only the useful part, by dragging the frame's corners. Only the photo as prepared here is kept and sent.",
       "pdf": "On a PDF page, its text isn't sent then: the AI reads the page as a picture.",
       "paint": "Black out",
       "erase": "Un-black",
       "clear": "Un-black all",
+      "crop": "Crop",
+      "keepAll": "Keep it all",
       "done": "Done"
     },
     "pdf": {

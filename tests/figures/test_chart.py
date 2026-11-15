@@ -172,6 +172,18 @@ def test_a_line_without_values_shows_no_numbers_on_its_y_axis():
     assert len(bare) < len(numbered)
 
 
+def test_a_lines_small_values_get_a_graduation_of_their_own_size():
+    """Concentrations of 0,002 to 0,010 mol/L: steps of their size (0,002), never one band of
+    0,1 where no value can be read; values that change little, 0,49 to 0,51, still graduated
+    by tenths (0,4 to 0,6), never zoomed in until small changes look large."""
+    small = '#chart(kind: "line", values: ((0, 0.002), (1, 0.006), (2, 0.010)){})'
+    graduated = figures_typst.compile_svg("chart", small.format(""))
+    assert graduated == figures_typst.compile_svg("chart", small.format(", step: (1, 0.002)"))
+    close = '#chart(kind: "line", values: ((0, 0.49), (1, 0.51)){})'
+    by_tenths = figures_typst.compile_svg("chart", close.format(", step: (1, 0.1)"))
+    assert figures_typst.compile_svg("chart", close.format("")) == by_tenths
+
+
 def test_a_bar_charts_long_names_never_overlap():
     """Each bar has its name's width at least: long names widen the chart, never overlap."""
 

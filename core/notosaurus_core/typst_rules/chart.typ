@@ -307,9 +307,6 @@
   let value(label, x, digits: 3) = if label in hidden { "?" } else if unit == none { num(x, digits: digits) } else {
     num(x, digits: digits) + gap + unit
   }
-  // A graduation's step: a round one giving at most `most` steps over `span`
-  // (never finer than 0,1: values that change little keep a graduation showing it so)
-  let nice(span, most) = calc.max(round-step(span, most), 0.1)
   cetz.canvas({
     import cetz.draw: *
     if kind == "line" {
@@ -324,6 +321,13 @@
       // (x, measures taken at a round interval: that interval, every 2 minutes, every 5 years)
       let graduation(vals, given, at-interval, also: ()) = {
         let (lo, hi) = (calc.min(..vals, ..also), calc.max(..vals, ..also))
+        // a step: a round one giving at most `most` steps over `span`, never finer than the
+        // values' size calls for (a fifth of the largest, 0,1 at most: values that change
+        // little keep a graduation showing it so, 0,49 to 0,51 by tenths, while small values,
+        // 0,002 to 0,010 mol/L, keep steps of their own size)
+        let size = calc.max(calc.abs(lo), calc.abs(hi))
+        let finest = calc.min(0.1, round-step(size, 5))
+        let nice(span, most) = calc.max(round-step(span, most), finest)
         let from0 = lo <= 0 or lo <= 3 * nice(hi - calc.min(0, lo), 10)
         let first = if from0 { calc.min(0, lo) } else { lo }
         let sorted = vals.dedup().sorted()
