@@ -67,6 +67,7 @@ Each pull request's entries (the `## Changelog` of its description) are put unde
 
 ### Fixed
 
+- 🏛️ Schemes: each arrow drawn straight from box to box (one soft curve round a box in its way), its words on it on a white ground, never over other words; arrows arriving at a box spread along its side; larger arrowheads, readable on a phone.
 - 📊 A chart writes the values its lesson gives (a pie's percentages with "%"), and only hides the one the card asks for.
 - ✋ A card's « Annuler » drops its correction at once, whatever it is at (the AI writing it, or a dictation): the field closes and the card stays as it was.
 - ⏱️ The waiting card says how long a lesson really takes, by its number of pages (« Environ 15 secondes »), no longer « moins de 10 secondes ».
