@@ -10,7 +10,9 @@ when it asks for them: rivers.json, reliefs.json (mountains, deserts, plains, pe
 islands), waters.json (oceans, seas, gulfs, straits, lakes: their short names too), regions/<country code>.json
 (its first-level divisions, and the groups Natural Earth gives them: France's régions), ways.json
 (the sea ways a map's routes go by, made from the countries' outlines: seaways; with the
-ports, the capes and the canals routes and flows pass).
+ports, the capes and the canals routes and flows pass), names.json (the rivers', reliefs' and
+waters' names folded, by their lengths: read only when a map asks for one the atlas lacks, for
+the names nearest it: name_index).
 
   .venv/bin/python tools/atlas.py [folder] [--refresh-history]
 
@@ -54,7 +56,7 @@ ROOT = Path(__file__).resolve().parent.parent
 CORE = ROOT / "core" / "notosaurus_core"
 LIB = CORE / "atlas" / "lib.typ"
 TARGET = CORE / "typst"
-NAME, VERSION = "notosaurus-atlas", "0.10.0"
+NAME, VERSION = "notosaurus-atlas", "0.12.0"
 SOURCE = "https://raw.githubusercontent.com/nvkelso/natural-earth-vector/v5.1.2/geojson/"
 COUNTRIES = "ne_50m_admin_0_countries.geojson"  # 1:50m: a country's shape, light enough
 PLACES = "ne_10m_populated_places.geojson"  # 1:10m: the cities, their names in many languages
@@ -369,6 +371,42 @@ def fold(text: str) -> str:
     plain (LETTERS), its hyphens, apostrophes and dots spaces, its spaces single."""
     plain = "".join(LETTERS.get(c, c) for c in text.lower())
     return re.sub(r"\s+", " ", re.sub(r"[-'’.]", " ", plain)).strip()
+
+
+# The words a name of a place shares with others of its kind ("détroit", "strait", "mer",
+# "golfe", "de"): what is left is its own ("ormuz" of "détroit d'Ormuz")
+COMMON_WORDS = (
+    *("detroit", "detroits", "strait", "straits", "channel", "passage", "pas", "canal", "canale", "canals"),
+    *("kanal", "strasse", "stretto", "estrecho", "estreito", "golfe", "gulf", "golfo", "baie", "bay", "bahia"),
+    *("bucht", "mer", "sea", "mar", "mare", "meer", "see", "ocean", "oceano", "lac", "lake", "lago", "fleuve"),
+    *("river", "riviere", "rio", "fluss", "fiume", "mont", "monts", "mount", "mountains", "montagne"),
+    *("montagnes", "massif", "monte", "montes", "monti", "gebirge", "desert", "deserto", "desierto", "wuste"),
+    *("plaine", "plain", "ile", "iles", "island", "islands", "isla", "isola", "insel", "ilha", "peninsule"),
+    *("peninsula", "of", "the", "de", "du", "des", "d", "la", "le", "les", "l", "di", "del", "della", "dei"),
+    *("do", "da", "dos", "das", "von", "der", "die"),
+)
+
+
+def own_words(key: str) -> str:
+    """A folded name without the words it shares with others of its kind (COMMON_WORDS)."""
+    return " ".join(w for w in key.split(" ") if w not in COMMON_WORDS)
+
+
+def name_index(items: list) -> dict:
+    """The names of a kind of place (rivers, reliefs, waters) as a name the atlas lacks is
+    compared with them (lib.typ's nearest-names): each folded, with its own words (own_words),
+    by their lengths, so that only those of a length near the name's are compared, none
+    folded then (Typst folds a name in some 3 ms: thousands of names took longer than a figure
+    may). Each: [folded, the name, its place's index, the name's index among its place's]."""
+    by_key: dict = defaultdict(list)
+    by_own: dict = defaultdict(list)
+    for i, item in enumerate(items):
+        for j, name in enumerate(item["n"]):
+            key = fold(name)
+            by_key[str(len(key))].append([key, name, i, j])
+            if own := own_words(key):
+                by_own[str(len(own))].append([own, name, i, j])
+    return {"key": dict(by_key), "own": dict(by_own)}
 
 
 def simplified(points: list, tolerance: float) -> list:
@@ -1689,7 +1727,12 @@ def build(folder: Path | None = None, refresh_history: bool = False) -> None:
     def text(data) -> str:
         return json.dumps(data, ensure_ascii=False, separators=(",", ":"))
 
-    all_reliefs, all_waters = reliefs(relief), waters(marine, lakes, passages(folder, refresh_history))
+    all_rivers, all_reliefs = rivers(main_rivers, europe), reliefs(relief)
+    all_waters = waters(marine, lakes, passages(folder, refresh_history))
+    names = {"common": COMMON_WORDS} | {
+        what: name_index(items)
+        for what, items in (("river", all_rivers), ("relief", all_reliefs), ("water", all_waters))
+    }
     contents = {
         "typst.toml": TOML,
         "lib.typ": LIB.read_text(encoding="utf-8"),
@@ -1697,9 +1740,10 @@ def build(folder: Path | None = None, refresh_history: bool = False) -> None:
         "LICENSE-CLDR": download_text("cldr-LICENSE", folder, CLDR_LICENCE),
         "LICENSE-historical-basemaps": download_text("historical-basemaps-LICENSE", folder, BORDERS_SOURCE + "LICENSE"),
         "atlas.json": text(world),
-        "rivers.json": text(rivers(main_rivers, europe)),
+        "rivers.json": text(all_rivers),
         "reliefs.json": text(all_reliefs),
         "waters.json": text(all_waters),
+        "names.json": text(names),
         "ways.json": text(seaways(world, all_waters, all_reliefs, capes)),
     } | {f"regions/{code}.json": text(data) for code, data in sorted(regions(admin1).items())}
     contents |= {

@@ -103,57 +103,71 @@
   ), parts: parts)
 }
 // How many letters one name differs from another by (Levenshtein's distance), at most `most`
-// (more: none)
+// (more: none): only the cells `most` or fewer from the diagonal computed, those beyond more
 #let distance(a, b, most) = {
   let (a, b) = (a.clusters(), b.clusters())
   if calc.abs(a.len() - b.len()) > most { return none }
-  let row = range(b.len() + 1)
+  let far = most + 1
+  let row = range(b.len() + 1).map(j => calc.min(j, far))
   for (i, ca) in a.enumerate() {
-    let next = (i + 1,)
-    for (j, cb) in b.enumerate() {
-      next.push(calc.min(row.at(j + 1) + 1, next.at(j) + 1, row.at(j) + if ca == cb { 0 } else { 1 }))
+    let next = (far,) * (b.len() + 1)
+    next.at(0) = calc.min(i + 1, far)
+    let least = next.at(0)
+    for j in range(calc.max(0, i - most), calc.min(b.len(), i + most + 1)) {
+      let d = calc.min(row.at(j + 1) + 1, next.at(j) + 1, row.at(j) + if ca == b.at(j) { 0 } else { 1 }, far)
+      next.at(j + 1) = d
+      least = calc.min(least, d)
     }
-    if calc.min(..next) > most { return none }
+    if least > most { return none }
     row = next
   }
   if row.last() > most { none } else { row.last() }
 }
-// The words a name of a place shares with others of its kind ("détroit", "strait", "mer",
-// "golfe", "de"): what is left is its own ("ormuz" of "détroit d'Ormuz")
-#let common-words = ("detroit", "detroits", "strait", "straits", "channel", "passage", "pas", "canal", "canale",
-  "canals", "kanal", "strasse", "stretto", "estrecho", "estreito", "golfe", "gulf", "golfo", "baie", "bay", "bahia",
-  "bucht", "mer", "sea", "mar", "mare", "meer", "see", "ocean", "oceano", "lac", "lake", "lago", "fleuve", "river",
-  "riviere", "rio", "fluss", "fiume", "mont", "monts", "mount", "mountains", "montagne", "montagnes", "massif",
-  "monte", "montes", "monti", "gebirge", "desert", "deserto", "desierto", "wuste", "plaine", "plain", "ile", "iles",
-  "island", "islands", "isla", "isola", "insel", "ilha", "peninsule", "peninsula", "of", "the", "de", "du", "des",
-  "d", "la", "le", "les", "l", "di", "del", "della", "dei", "do", "da", "dos", "das", "von", "der", "die")
-#let own-words(key) = key.split(" ").filter(w => w not in common-words).join(" ", default: "")
 // The places the atlas has nearest a name it lacks, each by its name nearest it: a letter or
-// two apart, or its own words a letter or two from theirs ("Hormuz", "Ormuz"); at most three,
-// the nearest first
-#let nearest-names(items, key) = {
-  let own = own-words(key)
-  let found = ()
-  for item in items {
-    let best = none
-    for n in item.n {
-      let k = fold(n)
-      let d = distance(key, k, calc.max(1, calc.div-euclid(key.len(), 6)))
-      if d == none and own.len() >= 4 {
-        let o = own-words(k)
-        if o.len() > 0 { d = distance(own, o, calc.max(1, calc.div-euclid(own.len(), 4))) }
+// two apart, or its own words a letter or two from theirs ("Hormuz", "Ormuz": the words a name
+// shares with others of its kind left out, "détroit", "mer", "de"); at most three, the
+// nearest first. Their names come folded from names.json (tools/atlas.py: `what`'s names by
+// their length, and by their own words' length), only those of a length near the name's
+// compared: folding every name here took longer than a figure may (a relief's: 15 s)
+#let nearest-names(what, key) = {
+  let index = json("names.json")
+  let own = key.split(" ").filter(w => w not in index.common).join(" ", default: "")
+  let names = index.at(what)
+  // (each: its distance, its place's index and its name's, its name). A name `most` letters
+  // or fewer from the word has one of the word's `most` + 1 parts as it is (each change
+  // touches one part): only those that have one are compared
+  let near(by, word, most) = {
+    let letters = word.clusters()
+    let size = letters.len()
+    let parts = range(most + 1).map(p => letters.slice(
+      calc.div-euclid(p * size, most + 1), calc.div-euclid((p + 1) * size, most + 1)).join(default: ""))
+    let found = ()
+    for length in range(calc.max(1, size - most), size + most + 1) {
+      for (k, n, i, j) in by.at(str(length), default: ()) {
+        if parts.any(p => k.contains(p)) {
+          let d = distance(word, k, most)
+          if d != none { found.push((d, i, j, n)) }
+        }
       }
-      if d != none and (best == none or d < best.at(0)) { best = (d, n) }
     }
-    if best != none and found.all(((_, m)) => m != best.at(1)) { found.push(best) }
+    found
   }
-  found.sorted(key: ((d, _)) => d).slice(0, calc.min(3, found.len())).map(((_, n)) => n)
+  let found = near(names.key, key, calc.max(1, calc.div-euclid(key.len(), 6)))
+  if own.len() >= 4 { found += near(names.own, own, calc.max(1, calc.div-euclid(own.len(), 4))) }
+  let (places, close) = ((), ())
+  for (_, i, _, n) in found.sorted(key: ((d, i, j, _)) => (d, i, j)) {
+    if i not in places and n not in close and close.len() < 3 {
+      places.push(i)
+      close.push(n)
+    }
+  }
+  close
 }
 #let find-in(items, name, what, near) = {
   let key = fold(name)
   let found = items.filter(i => key in i.k)
   if found.len() == 0 {
-    let close = nearest-names(items, key)
+    let close = nearest-names(what, key)
     if close.len() == 0 { panic("no " + what + " called \"" + name + "\" in the atlas: leave it out") }
     panic("no " + what + " called \"" + name + "\" in the atlas; it has " + close.map(n => "\"" + n + "\"").join(", ")
       + ": one of them when it is that place written otherwise, else leave it out")

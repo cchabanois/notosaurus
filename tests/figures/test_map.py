@@ -5,6 +5,7 @@ import io
 import itertools
 import json
 import re
+import time
 
 import pytest
 
@@ -826,6 +827,30 @@ def test_a_water_the_atlas_lacks_said_with_the_nearest_it_has(written, close):
         figures_typst.compile_svg("map", f'#map(waters: ("{written}",))')
     with pytest.raises(figures_typst.Unusable, match=r"no water called .Trifouille. in the atlas: leave it out"):
         figures_typst.compile_svg("map", '#map(waters: ("Trifouille",))')
+
+
+@pytest.mark.parametrize(
+    ("body", "said"),
+    [
+        (
+            '#map(countries: ("Chine",), reliefs: ("Grande Muraille",))',
+            r"no relief called .Grande Muraille. in the atlas: leave it out",
+        ),
+        ('#map(countries: ("France",), reliefs: ("Pyrénés",))', r"no relief called .Pyrénés..*it has .Pyrénées."),
+        ('#map(countries: ("France",), rivers: ("Seinee",))', r"no river called .Seinee..*it has .Seine."),
+        ('#map(waters: ("golfe de Gascogn",))', r"no water called .golfe de Gascogn..*it has .golfe de Gascogne."),
+    ],
+)
+def test_a_name_the_atlas_lacks_said_at_once(body, said):
+    """A relief, a river or a water the atlas lacks: said with the names nearest it, as fast
+    as a map is drawn. Looking for them through every name of their kind, each folded then,
+    took longer than a figure may (a relief's: 15 s): "too long to compile" said instead,
+    the map drawn by hand after two tries."""
+    figures_typst.packages()  # (unpacked once, before the clock)
+    start = time.monotonic()
+    with pytest.raises(figures_typst.Unusable, match=said):
+        figures_typst.compile_svg("map", body)
+    assert time.monotonic() - start < 2
 
 
 def test_the_passages_kept_as_listed():
