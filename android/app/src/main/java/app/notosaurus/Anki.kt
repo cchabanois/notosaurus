@@ -151,7 +151,10 @@ class Anki(private val context: Context) : AnkiTarget {
         val home = context.packageManager.getLaunchIntentForPackage(package_) ?: return Review.NO_DECK
         // Nothing due today (its counts known, all 0): its decks, where it shows when it's next
         val nothing = runCatching { dueToday(deckCounts(did)) == false }.getOrDefault(false)
-        val tried = if (nothing) listOf(home to Review.NOTHING_DUE) else listOf(reviewer to Review.REVIEWER, home to Review.REVIEWER)
+        // Its decks from the start (its screens cleared), not where it was left: back on a reviewer
+        // left open, that one would close at once too (seen on CI)
+        val decks = Intent(home).addFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK)
+        val tried = if (nothing) listOf(decks to Review.NOTHING_DUE) else listOf(reviewer to Review.REVIEWER, home to Review.REVIEWER)
         for ((intent, opened) in tried) {
             if (runCatching { context.startActivity(intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)) }.isSuccess) return opened
         }

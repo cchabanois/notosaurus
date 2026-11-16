@@ -597,22 +597,23 @@ class AnkiDroidTest {
     @Test
     fun nothingToReviewTodayOpensAnkiDroidsDecks() {
         // A deck whose counts are all 0 (here: no card in it; a lesson already reviewed today
-        // alike): its reviewer would close at once, back to the app, saying nothing
+        // alike): its reviewer would close at once, back to the app, saying nothing. AnkiDroid's
+        // decks shown instead, from the start: even when it was left on another screen (a
+        // reviewer left open by another test, as on CI), it would have come back there
         val anki = Anki(Device.context)
+
         val deck = "Notosaurus test $run::Rien à réviser"
         assertNotNull(AddContentApi(Device.context).addNewDeck(deck))
         assertEquals(Review.NOTHING_DUE, anki.review(deck))
         assertEquals(deck, AddContentApi(Device.context).selectedDeckName) // selected, its decks shown
-        val deadline = System.currentTimeMillis() + 10_000
-        var top = ""
-        while (System.currentTimeMillis() < deadline) {
-            top = Device.shell("dumpsys activity activities").lines().firstOrNull { "ResumedActivity" in it }.orEmpty()
-            if ("com.ichi2.anki" in top) break
-            Thread.sleep(300)
-        }
-        assertTrue(top, "com.ichi2.anki" in top && "Reviewer" !in top)
+        Thread.sleep(1500) // what stays on top, not a screen on its way
+        assertTrue(top(), "com.ichi2.anki/.DeckPicker" in top())
         Device.shell("input keyevent KEYCODE_HOME")
     }
+
+    /** The activity on top of the phone now. */
+    private fun top(): String = Device.shell("dumpsys activity activities").lines().firstOrNull { "ResumedActivity" in it }.orEmpty()
+
 
     @Test
     fun multipleChoices() {
