@@ -446,7 +446,7 @@ def test_the_rule_writes_an_angles_name_under_its_hat():
     """An angle's name was written (BAC) once in 3, not at all once: the rule shows it under
     its hat, the vertex in the middle, and the call compiles."""
     rule = figures_typst.FAMILIES["geometry"].rules
-    assert "$hat(B A C)$" in rule and "never (BAC)" in rule
+    assert "name: true" in rule and "never (BAC)" in rule
     body = (
         "#ctz-canvas({ ctz-init(); ctz-def-points(A: (0, 0), B: (4, 0), C: (3, 2.5)); "
         'ctz-draw-angle("A", "B", "C", radius: 0.8, label: $hat(B A C)$) })'
@@ -480,6 +480,20 @@ def test_the_rule_writes_an_angles_name_under_its_hat():
   ctz-draw-compass-arc("A", 3, toward: "B", span: 70)
   ctz-draw-compass-arc("B", 4, toward: "A", span: 70)
   ctz-draw-length("A", "B", [9 cm])""",
+        # a length written before the arcs that cross it: placed once they are drawn
+        """ctz-def-points(A: (0, 0), B: (9, 0))
+  ctz-draw-segment("A", "B")
+  ctz-draw-length("A", "B", [9 cm])
+  ctz-draw-compass-arc("A", 3, toward: "B", span: 70)
+  ctz-draw-compass-arc("B", 4, toward: "A", span: 70)""",
+        # words naming a circle's segments, the diameter askew and cut by its centre
+        """ctz-def-points(O: (0, 0), A: (3, 0), B: (-2.12, 2.12), C: (2.12, -2.12))
+  ctz-draw-circle-r("O", 3)
+  ctz-draw-segment("B", "C")
+  ctz-draw-segment("O", "A")
+  ctz-draw-points("O")
+  ctz-draw-length("O", "A", [rayon])
+  ctz-draw-length("B", "C", [diamètre])""",
         # a line's name, written by hand at coordinates, fell on a point of it
         """ctz-def-points(D1: (-2, 0), D2: (3, 0), A: (1, 3))
   ctz-draw-line-add("D1", "D2")
@@ -496,14 +510,15 @@ def test_a_text_the_preamble_places_stands_clear_of_the_drawing(figure):
     circle, point or other text is in their way (bench of the collège's figures: 4 cm on a
     side, 6 cm on a centre, 40° on a side, (d') on its point A): every text placed is checked
     against the whole drawing at the end."""
-    check = """cetz.draw.get-ctx(ctx => {
+    # checked once the texts are placed, at the canvas's end
+    check = """_later(() => cetz.draw.get-ctx(ctx => {
     let texts = _drawn(ctx).texts
     assert(texts.len() > 0, message: "nothing placed")
     for t in texts {
       let hits = _box-hits(ctx, t.c, t.hw, t.hh, skip: t.skip)
       assert(hits == 0, message: "a text on the drawing: " + repr(t.c))
     }
-  })"""
+  }), ())"""
     body = f"#ctz-canvas({{\n  ctz-init()\n  {figure}\n  {check}\n}})"
     assert figures_typst.compile_svg("geometry", body).startswith("<svg")
 
@@ -519,15 +534,58 @@ def test_a_length_stays_at_its_segments_middle():
   ctz-draw-segment("A", "B")
   ctz-draw-points("O")
   ctz-draw-length("A", "B", [6 cm], away: "P")
-  cetz.draw.get-ctx(ctx => {
+  _later(() => cetz.draw.get-ctx(ctx => {
     let t = _drawn(ctx).texts.first()
     assert(calc.abs(t.c.at(0)) < 1e-6, message: "slid along: " + repr(t.c))
     // the dimension line over the whole diameter, from A's side to B's
     let dims = _drawn(ctx).segments.filter(s => calc.abs(s.at(0).at(1)) > 0.3)
     let whole(s) = calc.abs(s.at(0).at(0) + 3) < 1e-6 and calc.abs(s.at(1).at(0) - 3) < 1e-6
     assert(dims.any(whole), message: "no dimension line")
-  })
+  }), ())
 })"""
+    assert figures_typst.compile_svg("geometry", body).startswith("<svg")
+
+
+def test_a_word_naming_a_segment_never_on_a_dimension_line():
+    """A word naming a diameter cut by its centre went on a dimension line, askew over the
+    circle and across the other words (2 drawings in 3): a word stays beside its segment, only
+    a measure goes on a dimension line."""
+    body = """#ctz-canvas({{
+  ctz-init()
+  ctz-def-points(O: (0, 0), B: (-2.12, 2.12), C: (2.12, -2.12))
+  ctz-draw-circle-r("O", 3)
+  ctz-draw-segment("B", "C")
+  ctz-draw-points("O")
+  ctz-draw-length("B", "C", {label})
+  _later(() => cetz.draw.get-ctx(ctx => {{
+    assert(_drawn(ctx).segments.len() == {segments}, message: repr(_drawn(ctx).segments.len()))
+  }}), ())
+}})"""
+    assert figures_typst.compile_svg("geometry", body.format(label="[diamètre]", segments=1)).startswith("<svg")
+    assert figures_typst.compile_svg("geometry", body.format(label="[6 cm]", segments=2)).startswith("<svg")
+
+
+def test_an_angles_name_written_by_its_function():
+    """An angle's name the AI wrote "(BAC)" 2 drawings in 3, the rule notwithstanding:
+    `name: true` writes BAC under its hat, the vertex in the middle; the rule's call compiles."""
+    draw = (
+        "#ctz-canvas({{ ctz-init(); ctz-def-points(A: (0, 0), B: (4, 0), C: (3, 2.5)); "
+        'ctz-draw-angle("A", "B", "C", radius: 0.8{}) }})'
+    )
+    named = figures_typst.compile_svg("geometry", draw.format(", name: true"))
+    assert named == figures_typst.compile_svg("geometry", draw.format(", label: $hat(B A C)$"))
+    assert named != figures_typst.compile_svg("geometry", draw.format(""))
+    # its width counted from its letters, the hat over them (counted as one, it lay on a side)
+    width = (
+        '#ctz-canvas({ ctz-init(); ctz-def-points(A: (0, 0), B: (4, 0)); ctz-draw-segment("A", "B"); '
+        "cetz.draw.get-ctx(ctx => { "
+        "assert(_name-chars($hat(B A C)$) == 3, message: repr(_name-chars($hat(B A C)$))) }) })"
+    )
+    assert figures_typst.compile_svg("geometry", width).startswith("<svg")
+    rule = figures_typst.FAMILIES["geometry"].rules
+    assert "never (BAC)" in rule
+    (call,) = re.findall(r"`(ctz-draw-angle\([^`]*name: true\))`", rule)
+    body = f"#ctz-canvas({{ ctz-init(); ctz-def-points(A: (0, 0), B: (4, 0), C: (3, 2.5)); {call} }})"
     assert figures_typst.compile_svg("geometry", body).startswith("<svg")
 
 
