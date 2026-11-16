@@ -73,6 +73,7 @@ Each pull request's entries (the `## Changelog` of its description) are put unde
 
 ### Fixed
 
+- Geometry figures: a length written before the lines crossing it no longer lies on them, an angle's name is always written with its hat, and a word naming a segment (diameter, radius) stays beside it.
 - The photo editor's modes no longer run off the edge of a narrow phone.
 - An angle's name is written with its hat (BAC with ^), never "(BAC)".
 - Two things shared to the app in a row (Android): the second is no longer lost when it comes while the page is taking the first.
