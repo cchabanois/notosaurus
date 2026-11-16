@@ -234,16 +234,90 @@
     if axis != none { content((0, if numbered { -0.65 } else { -0.2 }), txt(axis), anchor: "north") }
   })
 }
+// kind "histogram": classes side by side, each (from, to, count), sorted by their bounds; a
+// rectangle as wide as its class, as high as its count when the classes are equal, else its
+// area the count (its height the count per unit of width: the y axis then unnumbered, the
+// counts written on the rectangles); every bound written once under the axis. written,
+// hidden: classes by their lower bound ((160,)); axis: the y axis's title ("Effectif");
+// axes.at(0): the x axis's title, its unit with it ("Taille (cm)")
+#let _histogram(values, written: "all", hidden: (), axis: none, axes: (none, none), step: auto, unit: none) = context {
+  let number(x) = type(x) in (int, float)
+  assert(
+    values.len() > 0 and values.all(v => type(v) == array and v.len() == 3 and v.all(number) and v.at(0) < v.at(1) and v.at(2) >= 0),
+    message: "a histogram's values are its classes, (from, to, count) each: (150, 155, 6), from < to",
+  )
+  let classes = values.sorted(key: v => v.at(0))
+  assert(classes.slice(1).zip(classes).all(((b, a)) => b.at(0) >= a.at(1) - 1e-9),
+    message: "a histogram's classes never overlap: each ends where the next starts, or before")
+  assert(written == "all" or type(written) == array, message: "written is \"all\" or a list of classes' lower bounds")
+  let widths = classes.map(v => v.at(1) - v.at(0))
+  let equal = widths.all(w => calc.abs(w - widths.first()) <= 1e-9 * calc.max(1, widths.first()))
+  let heights = if equal { classes.map(v => v.at(2)) } else { classes.map(v => v.at(2) / (v.at(1) - v.at(0))) }
+  let top = calc.max(..heights)
+  assert(top > 0, message: "the counts add up to more than 0")
+  let txt(body) = text(10pt, font: "DejaVu Sans", body)
+  let s = if step != auto and equal { step } else { round-step(top, 6) }
+  let ymax = calc.ceil(top / s - 1e-9) * s
+  let (x0, x1) = (classes.first().at(0), classes.last().at(1))
+  let (w, h) = (8.0, 4.0)
+  let px(x) = (x - x0) / (x1 - x0) * w
+  let py(y) = y / ymax * h
+  let gap = if text.lang == "fr" { "\u{202F}" } else if unit == "%" { "" } else { "\u{00A0}" }
+  let value(from, c) = if from in hidden { "?" } else if unit == none { written-number(c, digits: 3) } else {
+    written-number(c, digits: 3) + gap + unit
+  }
+  cetz.canvas({
+    import cetz.draw: *
+    if equal {
+      for k in range(1, int(calc.round(ymax / s)) + 1) {
+        let y = py(k * s)
+        line((0, y), (w, y), stroke: 0.4pt + _grid)
+        line((-0.08, y), (0, y), stroke: 0.6pt)
+        content((-0.16, y), txt(written-number(k * s)), anchor: "east")
+      }
+      content((-0.16, 0), txt("0"), anchor: "east")
+    }
+    for (i, (a, b, c)) in classes.enumerate() {
+      if c > 0 { rect((px(a), 0), (px(b), py(heights.at(i))), fill: luma(185), stroke: 0.6pt + luma(40)) }
+      if written == "all" or a in written or a in hidden {
+        content(((px(a) + px(b)) / 2, py(heights.at(i)) + 0.08), txt(value(a, c)), anchor: "south")
+      }
+    }
+    // each bound once under the axis (a class's end, the next one's start)
+    for x in (classes.map(v => v.at(0)) + classes.map(v => v.at(1))).sorted().dedup() {
+      line((px(x), 0), (px(x), -0.08), stroke: 0.6pt)
+      content((px(x), -0.16), txt(written-number(x)), anchor: "north")
+    }
+    line((0, 0), (w + 0.35, 0), stroke: 0.8pt, mark: (end: ">", fill: black))
+    line((0, 0), (0, h + 0.45), stroke: 0.8pt, mark: (end: ">", fill: black))
+    if axis != none { content((0.12, h + 0.45), txt(axis), anchor: "west") }
+    if axes.at(0) != none { content((w + 0.35, -0.6), txt(axes.at(0)), anchor: "north-east") }
+  })
+}
 #let chart(kind: "bars", values: (), written: auto, hidden: (), unit: none, degrees: false, axis: none, axes: (none, none), step: auto,
-  marks: (), spans: (), second: none, numbered: true, smooth: false, limits: auto, horizontal: false, classes: none) = context {
-  assert(kind in ("bars", "pie", "semi", "line", "box", "pyramid"), message: "kind is \"bars\", \"pie\", \"semi\", \"line\", \"box\" or \"pyramid\"")
+  marks: (), spans: (), second: none, numbered: true, smooth: false, limits: auto, horizontal: false, classes: none, fit: none) = context {
+  assert(kind in ("bars", "pie", "semi", "line", "scatter", "box", "pyramid", "histogram"),
+    message: "kind is \"bars\", \"pie\", \"semi\", \"line\", \"scatter\", \"box\", \"pyramid\" or \"histogram\"")
+  assert(fit == none or kind == "scatter", message: "fit is a scatter plot's only")
   assert(kind == "pyramid" or classes == none, message: "classes is for a pyramid only")
   assert(type(hidden) == array, message: "hidden is a list of the labels whose value a card asks for")
   assert(unit == none or type(unit) == str, message: "unit is a text written after each value (\"%\")")
-  assert((hidden == () and unit == none) or kind in ("bars", "pie", "semi", "line"),
-    message: "hidden and unit are for bars, pies and lines")
+  assert((hidden == () and unit == none) or kind in ("bars", "pie", "semi", "line", "scatter", "histogram"),
+    message: "hidden and unit are for bars, pies and lines, histograms too")
   // what is written by default: a bar chart's and a pie's values (what it shows), else none
-  let written = if written != auto { written } else if kind in ("bars", "pie", "semi") { "all" } else { () }
+  let written = if written != auto { written } else if kind in ("bars", "pie", "semi", "histogram") { "all" } else { () }
+  if kind == "histogram" {
+    assert(marks == () and spans == () and second == none and not smooth and not degrees and limits == auto
+      and not horizontal and numbered,
+      message: "a histogram takes values, axis, axes, step, unit, written and hidden only")
+    return _histogram(values, written: written, hidden: hidden, axis: axis, axes: axes, step: step, unit: unit)
+  }
+  // a scatter plot: a line's measures as points, never joined; fit: (a, b), the line y = ax + b
+  // drawn across them and named
+  let plotted = kind in ("line", "scatter")
+  assert(kind != "scatter" or (not smooth and second == none), message: "a scatter plot's points are never joined: no smooth, no second")
+  assert(fit == none or (type(fit) == array and fit.len() == 2 and fit.all(n => type(n) in (int, float))),
+    message: "fit is (a, b): the line y = ax + b")
   if kind == "pyramid" {
     assert(marks == () and spans == () and second == none and not smooth and axes == (none, none) and not degrees
       and limits == auto and not horizontal,
@@ -263,9 +337,9 @@
     type(vs) == array and vs.len() > 1 and vs.all(v => type(v) == array and v.len() == 2 and number(v.at(0)) and number(v.at(1)))
   )
   // a line's values: one line's measures, or lines named, each with its measures
-  let named = kind == "line" and values.len() > 0 and values.all(v => type(v) == array and v.len() == 2 and type(v.at(1)) == array)
+  let named = plotted and values.len() > 0 and values.all(v => type(v) == array and v.len() == 2 and type(v.at(1)) == array)
   let lines = if named { values } else { ((none, values),) }
-  if kind == "line" {
+  if plotted {
     assert(
       lines.all(l => measures(l.at(1))),
       message: "a line's values are (x, y) measures, two at least, each a number; several lines: (name, ((x, y), …)) each",
@@ -291,7 +365,7 @@
       message: "values are (label, count) pairs, each count a number",
     )
   }
-  let total = if kind == "line" { 1 } else { values.map(v => v.at(1)).sum() }
+  let total = if plotted { 1 } else { values.map(v => v.at(1)).sum() }
   assert(total > 0, message: "the counts add up to more than 0")
   assert(written == "all" or type(written) == array, message: "written is \"all\" or a list of labels")
   let shown(label) = written == "all" or label in written or label in hidden
@@ -309,9 +383,12 @@
   }
   cetz.canvas({
     import cetz.draw: *
-    if kind == "line" {
+    if plotted {
       let xs = lines.map(l => l.at(1).map(v => v.at(0))).flatten()
       let ys = lines.map(l => l.at(1).map(v => v.at(1))).flatten()
+      // the fit's ends, where the measures start and end, in the frame too
+      let ends = if fit == none { () } else { (calc.min(..xs), calc.max(..xs)) }
+      ys += ends.map(x => fit.at(0) * x + fit.at(1))
       // what else stands on the x axis: the events, the stretches, the second measure
       let others = marks.map(m => m.at(0)) + spans.map(s => s.at(0)) + spans.map(s => s.at(1))
       if second != none { others += second.values.map(v => v.at(0)) }
@@ -362,11 +439,13 @@
         (paint: rgb("#c77700"), dash: "densely-dashed", point: "square"),
         (paint: luma(40), dash: "loosely-dotted", point: "triangle"),
       )
+      // (a scatter plot's points larger: they are all it shows)
+      let r = if kind == "scatter" { 0.09 } else { 0.06 }
       let point(p, look) = {
         let (x, y) = p
-        if look.point == "circle" { circle(p, radius: 0.06, fill: look.paint, stroke: none) }
-        else if look.point == "square" { rect((x - 0.06, y - 0.06), (x + 0.06, y + 0.06), fill: look.paint, stroke: none) }
-        else { line((x - 0.075, y - 0.06), (x + 0.075, y - 0.06), (x, y + 0.07), close: true, fill: look.paint, stroke: none) }
+        if look.point == "circle" { circle(p, radius: r, fill: look.paint, stroke: none) }
+        else if look.point == "square" { rect((x - r, y - r), (x + r, y + r), fill: look.paint, stroke: none) }
+        else { line((x - 1.25 * r, y - r), (x + 1.25 * r, y - r), (x, y + 1.17 * r), close: true, fill: look.paint, stroke: none) }
       }
       // the stretches first, under everything
       for (a, b, _) in spans {
@@ -420,13 +499,22 @@
         let look = looks.at(calc.rem(k, looks.len()))
         let points = vs.map(((x, y)) => (px(x), py(y)))
         let path = if smooth { monotone(vs).map(((x, y)) => (px(x), py(y))) } else { points }
-        line(..path, stroke: (paint: look.paint, thickness: 1.3pt, join: "round", dash: look.dash))
+        if kind == "line" { line(..path, stroke: (paint: look.paint, thickness: 1.3pt, join: "round", dash: look.dash)) }
         for (i, (x, y)) in vs.enumerate() {
           point(points.at(i), look)
           if written == "all" or x in written or x in hidden {
             content((points.at(i).at(0), points.at(i).at(1) + 0.12), text(fill: if named { look.paint } else { black }, txt(value(x, y))), anchor: "south")
           }
         }
+      }
+      // the fit: from the first measure's x to the last's, named at its end
+      if fit != none {
+        let (a, b) = fit
+        let (xa, xb) = ends
+        line((px(xa), py(a * xa + b)), (px(xb), py(a * xb + b)), stroke: (paint: rgb("#1f5fa8"), thickness: 1.1pt))
+        let sign = if b < 0 { " − " } else { " + " }
+        let name = "y = " + written-number(a, digits: 3) + "x" + if b == 0 { "" } else { sign + written-number(calc.abs(b), digits: 3) }
+        content((px(xb) + 0.1, py(a * xb + b)), text(fill: rgb("#1f5fa8"), txt(name)), anchor: "west")
       }
       // the lines' names: a legend at the right, each with its line's look
       if named {
