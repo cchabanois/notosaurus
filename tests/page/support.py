@@ -140,7 +140,7 @@ def text_pdf(browser) -> bytes:
 
 
 def add_photo(page, buffer: bytes) -> None:
-    page.locator('input[type=file][accept="image/*"][multiple]').set_input_files(
+    page.locator('input[type=file][accept="image/*"][multiple]:not([capture])').set_input_files(
         {"name": "page.png", "mimeType": "image/png", "buffer": buffer}
     )
     sync_api.expect(page.locator(".thumb img")).to_have_count(1)

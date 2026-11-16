@@ -138,8 +138,10 @@ con il computer, sulla Wi-Fi di casa: allora niente passa dal servizio Notosauru
   Google, sul telefono o sui suoi server, secondo le sue impostazioni) o, su un telefono che non
   ne ha, scritta dall'IA del servizio.
 - **AnkiDroid**, per aggiungervi le carte, chiesto al primo invio.
-- Le foto vengono scattate con la fotocamera del telefono o scelte nella galleria, quando lo fai
-  tu. L'app non ha bisogno di accedere a tutte le tue foto.
+- Le foto vengono scattate quando lo fai tu, con lo scanner di documenti di Google (servizi Google
+  Play, sul telefono: l'app non chiede la fotocamera e riceve solo le pagine che tieni; Google può
+  raccogliere statistiche d'uso anonime dello scanner, mai le foto), o con la fotocamera del
+  telefono, o scelte nella galleria. L'app non ha bisogno di accedere a tutte le tue foto.
 - **Notifiche**: nessuna autorizzazione richiesta. Mentre una lezione viene creata o inviata, l'app può continuare qualche minuto in background; dove le notifiche sono consentite, ne mostra una nel frattempo.
 - Il **codice QR** del computer viene letto dal lettore di codici dei servizi Google Play, sul telefono: l'app riceve solo l'indirizzo letto, mai l'immagine della fotocamera.
 

@@ -136,8 +136,10 @@ página [Privacidade e segurança](../privacy/).
   celular ou nos servidores dele, conforme as configurações) ou, num celular sem ele, escrita
   pela IA do serviço.
 - **AnkiDroid**, para adicionar os cartões a ele, pedido no primeiro envio.
-- As fotos são tiradas pela câmera do celular ou escolhidas na galeria, quando você faz isso. O
-  app não precisa de acesso a todas as suas fotos.
+- As fotos são tiradas quando você faz isso, pelo scanner de documentos do Google (serviços do
+  Google Play, no celular: o app não pede a câmera e recebe só as páginas que você mantém; o Google
+  pode coletar estatísticas de uso anônimas do scanner, nunca as fotos), ou pela câmera do celular,
+  ou escolhidas na galeria. O app não precisa de acesso a todas as suas fotos.
 - **Notificações**: nenhuma permissão pedida. Enquanto uma lição é criada ou enviada, o app pode continuar alguns minutos em segundo plano; onde as notificações são permitidas, mostra uma enquanto isso.
 - O **QR code** do computador é lido pelo leitor de códigos dos serviços do Google Play, no celular: o app recebe só o endereço lido, nunca a imagem da câmera.
 

@@ -16,11 +16,14 @@ import android.webkit.WebResourceError
 import android.webkit.WebResourceRequest
 import android.webkit.WebView
 import android.webkit.WebViewClient
+import android.util.Log
 import android.widget.Toast
 import android.widget.FrameLayout
 import androidx.activity.ComponentActivity
 import androidx.activity.OnBackPressedCallback
 import androidx.activity.enableEdgeToEdge
+import androidx.activity.result.ActivityResult
+import androidx.activity.result.IntentSenderRequest
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.core.content.ContextCompat
 import androidx.core.content.FileProvider
@@ -39,8 +42,10 @@ import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
+import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlinx.coroutines.withContext
 import java.io.File
+import kotlin.coroutines.resume
 
 /**
  * Notosaurus's page (the same as on the computer) in a WebView, its /api answered
@@ -66,6 +71,18 @@ class MainActivity : ComponentActivity() {
         }
         chosen?.onReceiveValue(uris)
         chosen = null
+    }
+
+    // The document scanner's screens (Scanner), its pages for the camera's input
+    private var scanAnswer: CompletableDeferred<ActivityResult>? = null
+    private val scanner = registerForActivityResult(ActivityResultContracts.StartIntentSenderForResult()) { result ->
+        scanAnswer?.complete(result)
+    }
+
+    private suspend fun launchScanner(request: IntentSenderRequest): ActivityResult = withContext(Dispatchers.Main) {
+        val answer = CompletableDeferred<ActivityResult>().also { scanAnswer = it }
+        scanner.launch(request)
+        answer.await()
     }
 
     // AnkiDroid's permission, asked when the cards are first added (or from the settings)
@@ -174,6 +191,8 @@ class MainActivity : ComponentActivity() {
             requestMicPermission = ::askMicPermission,
             activity = { this.takeUnless { it.isFinishing || it.isDestroyed } },
         )
+        // The document scanner's module fetched ahead, once (Scanner): never waited for
+        if (prefs[SCANNER_READY] == null) DocumentScanner.preinstall(applicationContext) { prefs[SCANNER_READY] = "1" }
         lifecycleScope.launch {
             val port = withContext(Dispatchers.IO) { server.start() }
             origin = "http://127.0.0.1:$port"
@@ -327,6 +346,60 @@ class MainActivity : ComponentActivity() {
         const val ANKIDROID = "com.ichi2.anki"
         const val APKG = "application/apkg" // a package of cards (the page's ".apkg")
         const val APP_LINKS = "notosaurus-app" // links the pages make to the app itself
+        const val SCANNER_READY = "scanner_module" // the document scanner's module installed (Scanner)
+        private const val TAG = "Notosaurus"
+    }
+
+    /** The page's camera (📷): its pages scanned (Scanner), as many as the lesson has room for
+     * when its input takes several; the camera itself when the scanner can't be used. */
+    private fun capture(multiple: Boolean) = lifecycleScope.launch {
+        // The pages before them: the page has read them long since (a notebook's pages, maybe
+        // a name on them: not kept on the phone outside the lessons)
+        withContext(Dispatchers.IO) { File(cacheDir, "photos").listFiles()?.forEach { it.delete() } }
+        val limit = Scanner.pageLimit(multiple, if (multiple) Scanner.free(pageAnswer(Scanner.FREE)) else null)
+        val pages = try {
+            Scanner.current.scan(this@MainActivity, limit, ::launchScanner)?.let { withContext(Dispatchers.IO) { keep(it) } }
+        } catch (e: CancellationException) {
+            throw e
+        } catch (e: Exception) {
+            Log.i(TAG, "document scanner unavailable, the camera instead", e)
+            return@launch chooser.launch(cameraIntent())
+        }
+        chosen?.onReceiveValue(pages?.takeIf { it.isNotEmpty() }?.toTypedArray())
+        chosen = null
+    }
+
+    /** What the page's script gives (as JSON), null when it can't. */
+    private suspend fun pageAnswer(script: String): String? = suspendCancellableCoroutine { done ->
+        runCatching { web.evaluateJavascript(script) { done.resume(it) } }.onFailure { done.resume(null) }
+    }
+
+    /** The scanner's pages copied where the camera's photos go (cache/photos, emptied at the next
+     * 📷), its own files deleted: no page of a notebook left behind. */
+    private fun keep(scanned: List<Uri>): List<Uri> {
+        val folder = File(cacheDir, "photos").apply { mkdirs() }
+        val time = System.currentTimeMillis()
+        return scanned.mapIndexed { i, uri ->
+            val file = File(folder, "page-$time-${i + 1}.jpg")
+            checkNotNull(contentResolver.openInputStream(uri)) { "page $i unreadable" }.use { input -> file.outputStream().use { input.copyTo(it) } }
+            ownFile(uri)?.delete()
+            FileProvider.getUriForFile(this, "$packageName.photos", file)
+        }
+    }
+
+    /** A file:// of the app's own (the scanner writes its pages in the app's cache), else null. */
+    private fun ownFile(uri: Uri): File? {
+        if (uri.scheme != "file") return null
+        val file = File(uri.path ?: return null).canonicalFile
+        val ours = listOf(cacheDir, filesDir).map { it.canonicalPath + File.separator }
+        return file.takeIf { f -> ours.any { f.path.startsWith(it) } }
+    }
+
+    /** The phone's camera app, one photo into cache/photos (FileProvider). */
+    private fun cameraIntent(): Intent {
+        val file = File(cacheDir, "photos/photo-${System.currentTimeMillis()}.jpg").apply { parentFile!!.mkdirs() }
+        photo = FileProvider.getUriForFile(this, "$packageName.photos", file)
+        return Intent(MediaStore.ACTION_IMAGE_CAPTURE).putExtra(MediaStore.EXTRA_OUTPUT, photo)
     }
 
     /** The page's links: ours and the computer's stay in the app; others (help, Play Store)
@@ -364,17 +437,11 @@ class MainActivity : ComponentActivity() {
             chosen?.onReceiveValue(null)
             chosen = callback
             photo = null
-            val intent = if (params.isCaptureEnabled) {
-                // The camera's photos before it: the page has read them long since (a notebook's
-                // photos, maybe a name on them: not kept on the phone outside the lessons)
-                File(cacheDir, "photos").listFiles()?.forEach { it.delete() }
-                val file = File(cacheDir, "photos/photo-${System.currentTimeMillis()}.jpg").apply { parentFile!!.mkdirs() }
-                photo = FileProvider.getUriForFile(this@MainActivity, "$packageName.photos", file)
-                Intent(MediaStore.ACTION_IMAGE_CAPTURE).putExtra(MediaStore.EXTRA_OUTPUT, photo)
-            } else {
-                params.createIntent().putExtra(Intent.EXTRA_ALLOW_MULTIPLE, params.mode == FileChooserParams.MODE_OPEN_MULTIPLE)
+            if (params.isCaptureEnabled) {
+                capture(params.mode == FileChooserParams.MODE_OPEN_MULTIPLE)
+                return true
             }
-            chooser.launch(intent)
+            chooser.launch(params.createIntent().putExtra(Intent.EXTRA_ALLOW_MULTIPLE, params.mode == FileChooserParams.MODE_OPEN_MULTIPLE))
             return true
         }
     }

@@ -365,6 +365,95 @@ def test_a_translations_image_placed_clear_of_its_figure():
     assert figures_typst.compile_svg("geometry", example).startswith("<svg")
 
 
+def test_a_lottery_wheel_drawn_from_its_counts():
+    """A lottery wheel (3 red, 2 blue, 3 green, a pointer) was drawn as a fraction's disc, its
+    parts all blue (2 drawings in 3): `wheel` cuts it into each colour's count of sectors, two
+    of a colour never side by side while another can sit between (around it too: the last
+    touches the first), its pointer drawn; the rule's call compiles."""
+    body = """#for counts in ((3, 2, 3), (4, 1), (1, 1, 1, 1), (5, 5), (2, 6)) {
+  let order = _wheel-order(counts)
+  for (i, n) in counts.enumerate() { assert(order.filter(c => c == i).len() == n, message: "count") }
+  let most = calc.max(..counts)
+  if 2 * most <= order.len() {
+    for k in range(order.len()) {
+      assert(order.at(k) != order.at(calc.rem(k + 1, order.len())), message: "side by side: " + repr(order))
+    }
+  }
+}
+#wheel(sectors: ((3, red), (2, blue), (3, green)))"""
+    assert figures_typst.compile_svg("geometry", body).startswith("<svg")
+    with pytest.raises(figures_typst.Unusable, match="sectors"):
+        figures_typst.compile_svg("geometry", "#wheel(sectors: ((0.5, red),))")
+    rule = figures_typst.FAMILIES["geometry"].rules
+    (call,) = re.findall(r"`(#wheel\([^`]*\))`", rule)
+    assert figures_typst.compile_svg("geometry", call).startswith("<svg")
+
+
+def test_a_triangle_built_from_its_sides():
+    """A triangle built with ruler and compass: its third vertex computed at the two lengths
+    from the others (AC = 4, BC = 5 on AB = 6), the side as asked; refused when no triangle
+    has those lengths (3, 4 and 9: the compass's arcs then never meet); the rule's calls,
+    the triangle and its arcs, compile."""
+    body = """#ctz-canvas({
+  ctz-init()
+  ctz-def-points(A: (0, 0), B: (6, 0))
+  ctz-def-triangle-sss("C", "A", "B", 4, 5)
+  ctz-def-triangle-sss("D", "A", "B", 4, 5, right: true)
+  cetz.draw.get-ctx(ctx => {
+    let at(n) = cetz.coordinate.resolve(ctx, "ctz:" + n).at(1)
+    let d(p, q) = calc.sqrt(calc.pow(p.at(0) - q.at(0), 2) + calc.pow(p.at(1) - q.at(1), 2))
+    assert(calc.abs(d(at("C"), at("A")) - 4) < 1e-6 and calc.abs(d(at("C"), at("B")) - 5) < 1e-6, message: "lengths")
+    assert(at("C").at(1) > 0 and at("D").at(1) < 0, message: "sides")
+  })
+  ctz-draw-compass-arc("A", 4, toward: "C")
+  ctz-draw-compass-arc("B", 5, toward: 120)
+})"""
+    assert figures_typst.compile_svg("geometry", body).startswith("<svg")
+    with pytest.raises(figures_typst.Unusable, match="no triangle"):
+        figures_typst.compile_svg(
+            "geometry",
+            "#ctz-canvas({ ctz-init(); ctz-def-points(A: (0, 0), B: (9, 0)); "
+            'ctz-def-triangle-sss("C", "A", "B", 3, 4) })',
+        )
+    rule = figures_typst.FAMILIES["geometry"].rules
+    calls = "; ".join(re.findall(r"`(ctz-def-triangle-sss\([^`]*\)|ctz-draw-compass-arc\([^`]*\))`", rule))
+    body = f"#ctz-canvas({{ ctz-init(); ctz-def-points(A: (0, 0), B: (6, 0)); {calls} }})"
+    assert figures_typst.compile_svg("geometry", body).startswith("<svg")
+
+
+def test_a_protractor_laid_on_its_angle():
+    """An angle measured with a protractor: drawn by the preamble from the angle's points (by
+    the AI, as SVG twice in 3, not at all once): its 181 ticks, its 19 numbers 0 to 180, as
+    wide as its radius on each side of O; its 0 turned with its side [OX); the rule's call compiles."""
+    draw = (
+        "#ctz-canvas({{ ctz-init(); ctz-def-points(O: (0, 0), X: {x}, Y: (2.57, 3.06)); "
+        'ctz-draw-segment("O", "X"); ctz-draw-protractor("O", "X"{opts}) }})'
+    )
+    flat = draw.format(x="(4, 0)", opts="")
+    width, _ = drawn_size("geometry", flat)
+    assert width == pytest.approx(7 * 28.35, rel=0.05)  # from its left end (−3) to X (4)
+    assert figures_typst.compile_svg("geometry", flat) != figures_typst.compile_svg(
+        "geometry", draw.format(x="(0, 4)", opts="")
+    )
+    assert figures_typst.compile_svg("geometry", draw.format(x="(4, 0)", opts=", clockwise: true")).startswith("<svg")
+    rule = figures_typst.FAMILIES["geometry"].rules
+    (call,) = re.findall(r"`(ctz-draw-protractor\([^`]*\))`", rule)
+    body = f"#ctz-canvas({{ ctz-init(); ctz-def-points(O: (0, 0), X: (4, 0)); {call} }})"
+    assert figures_typst.compile_svg("geometry", body).startswith("<svg")
+
+
+def test_the_rule_writes_an_angles_name_under_its_hat():
+    """An angle's name was written (BAC) once in 3, not at all once: the rule shows it under
+    its hat, the vertex in the middle, and the call compiles."""
+    rule = figures_typst.FAMILIES["geometry"].rules
+    assert "$hat(B A C)$" in rule and "never (BAC)" in rule
+    body = (
+        "#ctz-canvas({ ctz-init(); ctz-def-points(A: (0, 0), B: (4, 0), C: (3, 2.5)); "
+        'ctz-draw-angle("A", "B", "C", radius: 0.8, label: $hat(B A C)$) })'
+    )
+    assert figures_typst.compile_svg("geometry", body).startswith("<svg")
+
+
 @pytest.mark.parametrize(
     "figure",
     [
@@ -385,6 +474,12 @@ def test_a_translations_image_placed_clear_of_its_figure():
   ctz-draw-polygon("A", "B", "C")
   ctz-draw-angle("A", "B", "C", radius: 0.8, label: [40°])
   ctz-draw-length("A", "C", [4 cm], away: "B")""",
+        # a length across which two compass arcs pass (a triangle that can't be built)
+        """ctz-def-points(A: (0, 0), B: (9, 0))
+  ctz-draw-segment("A", "B")
+  ctz-draw-compass-arc("A", 3, toward: "B", span: 70)
+  ctz-draw-compass-arc("B", 4, toward: "A", span: 70)
+  ctz-draw-length("A", "B", [9 cm])""",
         # a line's name, written by hand at coordinates, fell on a point of it
         """ctz-def-points(D1: (-2, 0), D2: (3, 0), A: (1, 3))
   ctz-draw-line-add("D1", "D2")

@@ -145,8 +145,10 @@ die Seite [Datenschutz und Sicherheit](../privacy/).
   auf ihren Servern, je nach Einstellung), oder, auf einem Handy ohne sie, schreibt sie die KI des
   Dienstes.
 - **AnkiDroid**, um Karten hinzuzufügen, beim ersten Senden erbeten.
-- Fotos werden mit der Kamera des Handys gemacht oder in der Galerie ausgewählt, wenn du es tust.
-  Die App braucht keinen Zugriff auf alle deine Fotos.
+- Fotos werden gemacht, wenn du es tust: mit dem Dokumentenscanner von Google (Google-Play-Dienste,
+  auf dem Handy: Die App fragt nicht nach der Kamera und erhält nur die Seiten, die du übernimmst;
+  Google kann anonyme Nutzungsstatistiken des Scanners erheben, nie die Fotos), mit der Kamera des
+  Handys, oder in der Galerie ausgewählt. Die App braucht keinen Zugriff auf alle deine Fotos.
 - **Benachrichtigungen**: keine Berechtigung angefragt. Während eine Lektion erstellt oder gesendet wird, kann die App einige Minuten im Hintergrund weiterlaufen; wo Benachrichtigungen erlaubt sind, zeigt sie währenddessen eine an.
 - Der **QR-Code** des Computers wird vom Code-Scanner der Google-Play-Dienste auf dem Handy gelesen: Die App erhält nur die gelesene Adresse, nie das Bild der Kamera.
 

@@ -56,7 +56,7 @@ def test_a_prompt_of_several_lines_is_the_lessons_own(page):
     again said "✏️ Libre" instead of its prompt."""
     page.goto("/")
     started(page)
-    gallery = page.locator('input[type=file][accept="image/*"][multiple]')
+    gallery = page.locator('input[type=file][accept="image/*"][multiple]:not([capture])')
     gallery.set_input_files({"name": "p1.png", "mimeType": "image/png", "buffer": png("white")})
     page.get_by_role("radio", name="⭐ Automatique (d'après la leçon)").click()
     page.get_by_role("button", name="✨ Générer les cartes").click()
