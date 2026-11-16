@@ -72,7 +72,8 @@ jobs:
   tests:
     name: tests (${{ matrix.os }}, ${{ matrix.python }})
     runs-on: ${{ matrix.os }}
-    timeout-minutes: 10
+    # Windows takes 6 to 10 minutes (its install and the suite): 15, a hang still caught early
+    timeout-minutes: 15
     strategy:
       fail-fast: false
       matrix:
