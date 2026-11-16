@@ -210,14 +210,14 @@
       }
     },
     "fix": {
-      "button": "Correggi questa scheda",
+      "button": "Correggi questa carta",
       "label": "Cosa non va?",
       "placeholder": "«la risposta è 1789», «più breve»…",
       "submit": "Correggi",
       "busy": "Correzione…",
       "undo": "↩ Annulla",
       "write": "Scrivi con l'IA",
-      "labelBlank": "Cosa deve chiedere questa scheda?",
+      "labelBlank": "Cosa deve chiedere questa carta?",
       "placeholderBlank": "«il passato prossimo di andare», «la data della presa della Bastiglia»…",
       "submitBlank": "Scrivi",
       "busyBlank": "Scrittura…"
@@ -613,7 +613,7 @@
       "skipped": "Notosaurus accetta foto, PDF e testo: «{names}» non è stato aggiunto.",
       "cards": {
         "lessons": "📤 Condividi lezioni",
-        "pickHint": "Spunti le lezioni di cui vuole condividere le schede, una alla volta o una materia intera.",
+        "pickHint": "Spunti le lezioni di cui vuole condividere le carte, una alla volta o una materia intera.",
         "pickGroup": "Tutta la materia: {name}",
         "pickLesson": "Condividi questa lezione",
         "pickDone": {
@@ -621,15 +621,15 @@
           "other": "📤 Condividi ({count} lezioni)"
         },
         "lesson": "📤 Condividi",
-        "lessonLabel": "Condividi le schede",
-        "exam": "📤 Condividi le schede della verifica",
-        "title": "Condividi le schede",
+        "lessonLabel": "Condividi le carte",
+        "exam": "📤 Condividi le carte della verifica",
+        "title": "Condividi le carte",
         "intro": {
-          "one": "Le schede di {count} lezione, in un file da inviare a un'altra famiglia (per email, messaggi…).",
-          "other": "Le schede di {count} lezioni, in un file da inviare a un'altra famiglia (per email, messaggi…)."
+          "one": "Le carte di {count} lezione, in un file da inviare a un'altra famiglia (per email, messaggi…).",
+          "other": "Le carte di {count} lezioni, in un file da inviare a un'altra famiglia (per email, messaggi…)."
         },
-        "introLesson": "Le schede di questa lezione, in un file da inviare (per email, messaggi…).",
-        "photos": "Le foto e gli schemi delle lezioni partono con le schede: verifichi che si possano condividere.",
+        "introLesson": "Le carte di questa lezione, in un file da inviare (per email, messaggi…).",
+        "photos": "Le foto e gli schemi delle lezioni partono con le carte: verifichi che si possano condividere.",
         "private": "Non partono né il nome di suo figlio né la cronologia dei suoi ripassi.",
         "format": "È un file .apkg, da importare in Anki o AnkiDroid: basta aprirlo.",
         "name": "Nome del mazzo",
@@ -747,7 +747,7 @@
     },
     "transfer": {
       "title": "💾 Salvare o spostare le mie lezioni",
-      "hint": "Un solo file con tutte le lezioni (foto, schede, immagini, suoni), i bambini, le verifiche e le sue istruzioni: per conservarle, o aprirle su un altro computer o nell'app Android. Le schede già in Anki vi vengono ritrovate, mai doppie.",
+      "hint": "Un solo file con tutte le lezioni (foto, carte, immagini, suoni), i bambini, le verifiche e le sue istruzioni: per conservarle, o aprirle su un altro computer o nell'app Android. Le carte già in Anki vi vengono ritrovate, mai doppie.",
       "export": "⬇️ Esporta le mie lezioni",
       "import": "⬆️ Importa un file",
       "exporting": "Esportazione…",
@@ -968,7 +968,7 @@
       "saved": "Computer: {address}"
     },
     "transfer": {
-      "hint": "Un solo file con tutte le lezioni (foto, schede, immagini, suoni), i bambini, le verifiche e le sue istruzioni: per conservarle (Drive, la scheda SD…), o aprirle su un altro telefono o sul computer. Le schede già in AnkiDroid vi vengono ritrovate, mai doppie."
+      "hint": "Un solo file con tutte le lezioni (foto, carte, immagini, suoni), i bambini, le verifiche e le sue istruzioni: per conservarle (Drive, la scheda SD…), o aprirle su un altro telefono o sul computer. Le schede già in AnkiDroid vi vengono ritrovate, mai doppie."
     },
     "data": {
       "title": "🗂️ Lezioni su questo telefono",
@@ -1019,7 +1019,7 @@
     },
     "ai": {
       "title": "Quale IA legge le lezioni?",
-      "hint": "Legge le foto e prepara le schede. Potrai cambiarla più tardi nelle impostazioni.",
+      "hint": "Legge le foto e prepara le carte. Potrai cambiarla più tardi nelle impostazioni.",
       "recommended": "⭐ Consigliato: il miglior rapporto qualità/prezzo nei nostri test (≈ 1 centesimo di dollaro per lezione)",
       "geminiTitle": "Ottenere una chiave Gemini (2 minuti)",
       "gemini1": "Apri <a href=\"https://aistudio.google.com/apikey\" target=\"_blank\" rel=\"noopener\">aistudio.google.com/apikey</a> e accedi con un account Google.",
@@ -1042,9 +1042,9 @@
     },
     "done": {
       "title": "Notosaurus è pronto!",
-      "onPhone": "Sul telefono: fotografa una lezione e Notosaurus crea le schede.",
-      "here": "Fotografa una lezione e Notosaurus crea le schede. Il telefono può aspettare: il codice QR è nelle impostazioni.",
-      "more": "Immagini sulle schede, voci, istruzioni per ogni figlio: tutto il resto è nelle impostazioni.",
+      "onPhone": "Sul telefono: fotografa una lezione e Notosaurus crea le carte.",
+      "here": "Fotografa una lezione e Notosaurus crea le carte. Il telefono può aspettare: il codice QR è nelle impostazioni.",
+      "more": "Immagini sulle carte, voci, istruzioni per ogni figlio: tutto il resto è nelle impostazioni.",
       "settings": "Tutte le impostazioni",
       "open": "Apri Notosaurus"
     }
@@ -1214,7 +1214,7 @@
     "removed": "Ultima carta tolta (demo).",
     "added": "Una carta aggiunta (demo).",
     "addedFront": "(aggiunta della demo)",
-    "fixed": "Scheda corretta (demo)."
+    "fixed": "Carta corretta (demo)."
   },
   "addon": {
     "menuOpen": "Apri Notosaurus",

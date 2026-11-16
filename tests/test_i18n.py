@@ -120,3 +120,35 @@ def test_the_phone_qr_code_tells_of_the_android_app():
         for key in ("addon.phoneSteps", "setup.phone.androidApp"):
             text = i18n.get(lang, key)
             assert "Android" in text and where["title"] in text and where["computer"] in text, (lang, key)
+
+
+def _strings(d, prefix=""):
+    """Every text of a language file, by its key."""
+    out = {}
+    for k, v in d.items():
+        if isinstance(v, dict):
+            out |= _strings(v, f"{prefix}{k}.")
+        elif isinstance(v, str):
+            out[prefix + k] = v
+    return out
+
+
+def test_portuguese_is_brazils():
+    """The Portuguese is Brazil's (as the docs, pt-br): the share and transfer strings had come in
+    Portugal's ("Partilhar", "ficheiro", "A exportar…") among Brazil's ("Compartilhar", "arquivo")."""
+    portugal = re.compile(
+        r"\b(partilh\w*|ficheiros?|telemóve(l|is)|palavras?-passe|ecrãs?|noutr[oa]s?|"
+        r"utilizador(es)?|demasiado)\b|\b(está|estão|A) a \w+[aei]r\b",
+        re.IGNORECASE,
+    )
+    found = {k: v for k, v in _strings(i18n.messages("pt")).items() if portugal.search(v)}
+    assert not found
+
+
+def test_italian_cards_are_carte():
+    """Italian calls a lesson's cards "carte"; "scheda" is a child's record (the French "fiche")
+    or the SD card: the share strings had called the cards "schede"."""
+    french = _strings(i18n.messages("fr"))
+    for key, text in _strings(i18n.messages("it")).items():
+        if re.search(r"\bsched[ae]\b", text, re.IGNORECASE):
+            assert re.search(r"\bfiches?\b|\bcarte SD\b", french[key]), (key, text)
