@@ -90,6 +90,52 @@
       ..names.map(s => box(baseline: 20%, rect(width: 0.8em, height: 0.8em, fill: s.at(1), stroke: 0.5pt)) + h(0.3em) + s.at(2)))))
   }
 }
+// A tiling of the plane by one regular polygon (`"square"`, `"triangle"`, `"hexagon"`): its
+// tiles computed edge to edge, never placed by eye: `rings` of them around a central tile (1:
+// the tile and its neighbours all round); `fill`: none, `"centre"` the central tile coloured,
+// `"alternate"` coloured so that two tiles sharing a side never have the same colour (`colours`
+// the two or three used). Alone, a figure of its own (no canvas).
+#let tiling(shape: "hexagon", rings: 1, fill: none, colours: (luma(205), rgb("#9fc3e7"), rgb("#f2c879")), side: 1) = {
+  assert(shape in ("square", "triangle", "hexagon"), message: "shape is \"square\", \"triangle\" or \"hexagon\"")
+  assert(type(rings) == int and rings >= 0 and rings <= 4, message: "rings: the tiles around the central one, ring after ring, a whole number from 0 to 4")
+  assert(fill in (none, "centre", "alternate"), message: "fill is none, \"centre\" or \"alternate\"")
+  let a = side
+  // each tile: its corners, whether it is the central one, its colour class
+  let tiles = ()
+  if shape == "hexagon" {
+    for q in range(-rings, rings + 1) {
+      for rr in range(-rings, rings + 1) {
+        if calc.abs(q) + calc.abs(rr) + calc.abs(q + rr) <= 2 * rings {
+          let c = (a * 1.5 * q, a * calc.sqrt(3) * (rr + q / 2))
+          tiles.push((pts: range(6).map(k => (c.at(0) + a * calc.cos(k * 60deg), c.at(1) + a * calc.sin(k * 60deg))),
+            centre: q == 0 and rr == 0, class: calc.rem-euclid(q - rr, 3)))
+        }
+      }
+    }
+  } else if shape == "square" {
+    for i in range(-rings, rings + 1) { for j in range(-rings, rings + 1) {
+      let (x, y) = (i * a, j * a)
+      tiles.push((pts: ((x - a / 2, y - a / 2), (x + a / 2, y - a / 2), (x + a / 2, y + a / 2), (x - a / 2, y + a / 2)), centre: i == 0 and j == 0, class: calc.rem-euclid(i + j, 2)))
+    } }
+  } else {
+    let h = a * calc.sqrt(3) / 2
+    for j in range(-rings, rings + 1) { for i in range(-2 * rings - 1, 2 * rings + 2) {
+      let x = i * a / 2
+      let up = calc.rem-euclid(i + j, 2) == 0
+      let (y0, y1) = (j * h - h / 2, j * h + h / 2)
+      let pts = if up { ((x - a / 2, y0), (x + a / 2, y0), (x, y1)) } else { ((x - a / 2, y1), (x + a / 2, y1), (x, y0)) }
+      tiles.push((pts: pts, centre: i == 0 and j == 0, class: if up { 0 } else { 1 }))
+    } }
+  }
+  let mode = fill  // cetz.draw's own `fill` hides it inside the canvas
+  cetz.canvas({
+    import cetz.draw: *
+    for t in tiles {
+      let f = if mode == "alternate" { colours.at(calc.rem(t.class, colours.len())) } else if mode == "centre" and t.centre { colours.at(0) } else { white }
+      line(..t.pts, close: true, fill: f, stroke: 0.9pt)
+    }
+  })
+}
 // Numbers written as the figure's language writes them: its decimal separator, set by
 // figures_typst.source from the AI's `#set text(lang: …)` (a point when none is said)
 #import "common.typ": *

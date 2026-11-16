@@ -494,6 +494,90 @@
   },
 )
 
+// The Earth as a sphere (a globe): its axis through the poles, the equator and the prime
+// meridian (Greenwich), each point placed from its latitude and longitude (degrees, north and
+// east positive), its meridian and its parallel drawn, its latitude and its longitude marked
+// as angles at the centre O; seen from a little above, turned so that the prime meridian and
+// the points face the viewer, what is behind the ball dashed. All computed, never placed by eye.
+#let globe(points: (:), angles: true, parallels: true, centre-name: $O$, poles: ([N], [S]), equator-name: none, meridian-name: none, radius: 3) = {
+  for (n, p) in points {
+    assert(type(p) == array and p.len() == 2 and p.all(x => type(x) in (int, float)) and calc.abs(p.at(0)) <= 90 and calc.abs(p.at(1)) <= 180,
+      message: "points: " + n + ": (latitude, longitude) in degrees, north and east positive (south and west negative)")
+  }
+  let lons = points.values().map(p => p.at(1)) + (0,)
+  let l0 = (calc.min(..lons) + calc.max(..lons)) / 2
+  let e = 24deg
+  let r = radius
+  let p3(lat, lon, k: 1) = {
+    let (f, l) = (lat * 1deg, (lon - l0) * 1deg)
+    (k * calc.cos(f) * calc.sin(l), k * calc.cos(f) * calc.cos(l), k * calc.sin(f))
+  }
+  let scr(v) = (r * v.at(0), r * (v.at(2) * calc.cos(e) - v.at(1) * calc.sin(e)))
+  let seen(v) = v.at(1) * calc.cos(e) + v.at(2) * calc.sin(e) >= -1e-9
+  let away(q, by) = { let n = calc.max(calc.sqrt(q.at(0) * q.at(0) + q.at(1) * q.at(1)), 1e-9); (q.at(0) * (1 + by / n), q.at(1) * (1 + by / n)) }
+  let anchor-of(q) = {
+    let k = calc.rem(int(calc.round(calc.atan2(q.at(0), q.at(1)) / 45deg)) + 8, 8)
+    ("west", "south-west", "south", "south-east", "east", "north-east", "north", "north-west").at(k)
+  }
+  cetz.canvas({
+    import cetz.draw: *
+    // a line on the ball's surface, in runs: solid where it faces the viewer, dashed behind
+    let surface(pts, stroke: _solid) = {
+      let runs = ()
+      for (i, q) in pts.enumerate() {
+        let front = seen(q)
+        if runs.len() == 0 or runs.last().front != front { runs.push((front: front, pts: if i > 0 { (pts.at(i - 1), q) } else { (q,) })) } else { runs.last().pts.push(q) }
+      }
+      for run in runs.filter(u => u.pts.len() > 1) { line(..run.pts.map(scr), stroke: if run.front { stroke } else { _hidden }) }
+    }
+    circle((0, 0), radius: r, stroke: _solid)
+    surface(range(0, 361, step: 3).map(t => p3(0, t)))
+    surface(range(-90, 91, step: 3).map(t => p3(t, 0)))
+    // the axis through the poles, inside the ball dashed
+    line(scr((0, 0, -1.12)), scr((0, 0, 1.12)), stroke: (thickness: 0.5pt, dash: "dashed"))
+    if poles != none {
+      content(away(scr((0, 0, 1)), 0.3), poles.at(0))
+      content(away(scr((0, 0, -1)), 0.3), poles.at(1))
+    }
+    let o = (0, 0)
+    circle(o, radius: 0.045, fill: black, stroke: none)
+    if centre-name != none { content((-0.1, 0.1), centre-name, anchor: "south-east") }
+    for (name, (lat, lon)) in points {
+      if lon != 0 { surface(range(-90, 91, step: 3).map(t => p3(t, lon)), stroke: 0.6pt) }
+      if parallels and lat != 0 { surface(range(0, 361, step: 3).map(t => p3(lat, t)), stroke: 0.6pt) }
+      let m = scr(p3(lat, lon))
+      if angles {
+        line(o, scr(p3(0, 0)), stroke: 0.6pt)
+        line(o, scr(p3(0, lon)), stroke: 0.6pt)
+        line(o, m, stroke: 0.7pt)
+        // the longitude in the equator's plane, from the prime meridian; the latitude in the
+        // point's meridian, from the equator
+        if lon != 0 {
+          let arc = range(0, 31).map(i => scr(p3(0, lon * i / 30, k: 0.45)))
+          line(..arc, stroke: 0.7pt)
+          content(scr(p3(0, lon / 2, k: 0.66)), text(9pt, written-number(calc.abs(lon)) + "°"))
+        }
+        if lat != 0 {
+          let arc = range(0, 31).map(i => scr(p3(lat * i / 30, lon, k: 0.55)))
+          line(..arc, stroke: 0.7pt)
+          content(scr(p3(lat / 2, lon, k: 0.74)), text(9pt, written-number(calc.abs(lat)) + "°"))
+        }
+      }
+      circle(m, radius: 0.05, fill: black, stroke: none)
+      content(away(m, 0.15), eval(name, mode: "math"), anchor: anchor-of(m))
+    }
+    if equator-name != none { content((r + 0.15, 0), equator-name, anchor: "west") }
+    if meridian-name != none {
+      // beside the ball, a leader line to the prime meridian high up
+      let q = scr(p3(55, 0))
+      let side = if q.at(0) <= 0 { -1 } else { 1 }
+      let at = (side * (r + 0.2), r * 0.95)
+      line(q, (at.at(0) - side * 0.05, at.at(1)), stroke: 0.4pt)
+      content(at, meridian-name, anchor: if side < 0 { "east" } else { "west" })
+    }
+  })
+}
+
 // A half-sphere (a half-ball) on its flat face: its dome, its base's hidden half dashed
 #let hemisphere(radius, centre-name: none, radius-label: none, largest: none) = _round(
   2 * radius, largest, s => {
@@ -528,8 +612,9 @@
 })
 #let space(
   points: (:), segments: (), lines: (), planes: (), vectors: (), guides: (), faces: (),
-  origin: "O", units: ($arrow(i)$, $arrow(j)$, $arrow(k)$), axes: ($x$, $y$, $z$),
+  origin: "O", units: ($arrow(i)$, $arrow(j)$, $arrow(k)$), axes: ($x$, $y$, $z$), coordinates: (),
 ) = {
+  for name in coordinates { assert(name in points, message: "coordinates: " + repr(name) + " is not in points") }
   for (name, p) in points {
     if type(p) != array or p.len() != 3 or p.any(x => type(x) not in (int, float)) {
       panic("points: " + name + ": its three coordinates (x, y, z), numbers, not " + repr(p))
@@ -652,15 +737,45 @@
     }
     // each name in the one of 8 directions around its place farthest from every line drawn
     // and every name already set
-    named += all.pairs().map(((name, p)) => (to(p), eval(name, mode: "math"), name not in corners))
+    // a point whose coordinates are asked: they written after its name, as the language
+    // separates them (a semicolon where the decimal separator is a comma)
+    let sep = if decimal-separator == "," { " ; " } else { ", " }
+    let written(name, p) = if name in coordinates { eval(name, mode: "math") + "(" + p.map(x => written-number(x)).join(sep) + ")" } else { eval(name, mode: "math") }
+    named += all.pairs().map(((name, p)) => (to(p), written(name, p), name not in corners))
+    let longs = coordinates.map(name => written(name, all.at(name)))
+    let middle = _mean(all.values().map(to))
     let placed = ()
     for (c, body, dot) in named {
       if dot { circle(c, radius: 0.045, fill: black, stroke: none) }
       let around = range(8).map(k => (c.at(0) + 0.3 * calc.cos(k * 45deg), c.at(1) + 0.3 * calc.sin(k * 45deg)))
       let room(q) = calc.min(..drawn.map(((a, b)) => _gap(q, a, b)), ..placed.map(o => calc.sqrt(_dot(_sub(q, o), _sub(q, o))) / 2))
-      let best = around.sorted(key: q => -room(q)).first()
+      // a long name (with its coordinates): its whole width kept clear, sampled along it,
+      // farther from its point when nothing near is free (a thin line then leads to it)
+      let wide = body in longs
+      let half = if wide { 0.1 * _plain(body).clusters().len() } else { 0 }
+      let box-at(k, d) = {
+        let (dx, dy) = (calc.cos(k * 45deg), calc.sin(k * 45deg))
+        (c.at(0) + dx * (d + half * calc.abs(dx)), c.at(1) + dy * d)
+      }
+      // its box sampled every 0.1 cm, on its middle line and its top and bottom
+      let free(k, d) = {
+        let m = box-at(k, d)
+        let n = int(calc.ceil(2 * half / 0.1))
+        calc.min(..range(n + 1).map(i => (-0.18, 0, 0.18).map(v => room((m.at(0) - half + 2 * half * i / n, m.at(1) + v)))).flatten())
+      }
+      let tries = if wide { (0.3, 0.7, 1.1, 1.6, 2.2, 2.8).map(d => range(8).map(k => (k: k, d: d))).flatten() } else { range(8).map(k => (k: k, d: 0.3)) }
+      let scored = tries.map(t => (..t, room: if wide { free(t.k, t.d) } else { room(around.at(t.k)) }))
+      // the nearest place clear by a margin, outwards from the figure's middle (never inside
+      // the solid, far from its point)
+      let outward(t) = (c.at(0) - middle.at(0)) * calc.cos(t.k * 45deg) + (c.at(1) - middle.at(1)) * calc.sin(t.k * 45deg) > 0
+      let enough = scored.filter(t => t.room >= 0.12 and (t.d <= 0.3 or outward(t)))
+      let pick = if wide and enough.len() > 0 { enough.first() } else { scored.sorted(key: t => -t.room).first() }
+      let best = if wide { box-at(pick.k, pick.d) } else { around.at(pick.k) }
       placed.push(best)
-      content(best, text(11pt, body))
+      if not wide { content(best, text(11pt, body)) } else {
+        if pick.d > 0.3 { line(c, (c.at(0) + calc.cos(pick.k * 45deg) * (pick.d - 0.15), c.at(1) + calc.sin(pick.k * 45deg) * (pick.d - 0.15)), stroke: 0.4pt) }
+        content(best, text(11pt, body))
+      }
     }
   })
 }

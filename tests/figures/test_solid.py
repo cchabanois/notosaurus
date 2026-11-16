@@ -368,3 +368,39 @@ def test_a_cuboid_of_unit_cubes_shows_every_cube():
     rule = figures_typst.FAMILIES["solid"].rules
     (call,) = re.findall(r"`(cuboid\([^`]*cubes: true\))`", rule)
     assert figures_typst.compile_svg("solid", "#" + call).startswith("<svg")
+
+
+def test_the_earth_drawn_from_latitudes_and_longitudes():
+    """A point of the Earth by its latitude and longitude was drawn as SVG by the AI (3 in 3),
+    its names over the ball, its angles unreadable: `globe` places it from its two angles, its
+    meridian, parallel and both angles at the centre computed (two values written: 45° and
+    30°); a latitude beyond 90° refused; the rule's call compiles."""
+    with_angles = figures_typst.compile_svg("solid", "#globe(points: (M: (45, 30)), poles: none, centre-name: none)")
+    without = figures_typst.compile_svg(
+        "solid", "#globe(points: (M: (45, 30)), angles: false, poles: none, centre-name: none)"
+    )
+    assert len(_glyphs(with_angles)) - len(_glyphs(without)) == 2
+    assert with_angles != figures_typst.compile_svg(
+        "solid", "#globe(points: (M: (45, 60)), poles: none, centre-name: none)"
+    )
+    with pytest.raises(figures_typst.Unusable, match="latitude, longitude"):
+        figures_typst.compile_svg("solid", "#globe(points: (M: (120, 30)))")
+    rule = figures_typst.FAMILIES["solid"].rules
+    (call,) = re.findall(r"`(globe\([^`]*\))`", rule)
+    assert figures_typst.compile_svg("solid", "#" + call).startswith("<svg")
+
+
+def test_a_points_coordinates_written_in_a_frame_of_space():
+    """A cuboid in a frame of origin A, its point G "of coordinates (4 ; 3 ; 2)": the AI drew
+    the frame on the edges with no unit and no coordinates (0 drawings in 3), the rule saying
+    so for any frame on a vertex. `coordinates:` writes them after the point's name (more text);
+    a name not among the points refused; the rule keeps the axes when the frame has a unit
+    of its own."""
+    points = "A: (0, 0, 0), B: (4, 0, 0), D: (0, 3, 0), E: (0, 0, 2), G: (4, 3, 2)"
+    plain = figures_typst.compile_svg("solid", f'#space(origin: "A", points: ({points}))')
+    written = figures_typst.compile_svg("solid", f'#space(origin: "A", points: ({points}), coordinates: ("G",))')
+    assert len(_glyphs(written)) > len(_glyphs(plain))
+    with pytest.raises(figures_typst.Unusable, match="not in points"):
+        figures_typst.compile_svg("solid", f'#space(origin: "A", points: ({points}), coordinates: ("K",))')
+    rule = figures_typst.FAMILIES["solid"].rules
+    assert "a frame with a unit of its own" in rule and 'coordinates: ("G",)' in rule
