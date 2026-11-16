@@ -35,7 +35,7 @@ enviada de novo atualiza os cartões dela no Anki, com o histórico, em vez de d
 
 Quando o Notosaurus não consegue contatar o Anki, **⬇️ Exportar para o Anki (.apkg)** substitui
 **📥 Adicionar ao Anki**: ele baixa o baralho como arquivo, com o áudio e as imagens. Quando o
-Anki está acessível, **📤 Partilhar**, ao lado de **📥 Adicionar ao Anki**, faz o mesmo arquivo
+Anki está acessível, **📤 Compartilhar**, ao lado de **📥 Adicionar ao Anki**, faz o mesmo arquivo
 (para outra família: veja
 [Compartilhar cartões com outra família](../lessons/#compartilhar-cartões-com-outra-família)).
 Para abri-lo:
