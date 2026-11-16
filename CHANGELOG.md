@@ -54,6 +54,7 @@ Each pull request's entries (the `## Changelog` of its description) are put unde
 
 ### Changed
 
+- ✂️ Cropping a photo has its own button in the full-screen photo, next to 🖍️ for blacking out a name: each opens the editor ("Prepare the photo") ready for its job.
 - Maps: when a river, relief or sea is not in the atlas, the error names the closest ones it has, so the AI can correct the name instead of dropping it.
 - 🗺️ The past borders come from OpenHistoricalMap: finer, dated to the day, every colony with its ruler.
 - 🗂️ Classifications drawn as groups inside groups are narrower and easier to read on a card: groups side by side wrap onto several rows, each group's name is centred above a thin line, and its own members sit under its sub-groups.
@@ -72,6 +73,7 @@ Each pull request's entries (the `## Changelog` of its description) are put unde
 
 ### Fixed
 
+- The photo editor's modes no longer run off the edge of a narrow phone.
 - An angle's name is written with its hat (BAC with ^), never "(BAC)".
 - Two things shared to the app in a row (Android): the second is no longer lost when it comes while the page is taking the first.
 - Geometry figures: lengths, angle values and line names no longer fall on a side, a point or a line; a segment cut by a point (a diameter through its centre) has its length on a dimension line over its whole length.
