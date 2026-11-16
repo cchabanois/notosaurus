@@ -305,6 +305,7 @@
   assert((hidden == () and unit == none) or kind in ("bars", "pie", "semi", "line", "scatter", "histogram"),
     message: "hidden and unit are for bars, pies and lines, histograms too")
   // what is written by default: a bar chart's and a pie's values (what it shows), else none
+  let given-written = written
   let written = if written != auto { written } else if kind in ("bars", "pie", "semi", "histogram") { "all" } else { () }
   if kind == "histogram" {
     assert(marks == () and spans == () and second == none and not smooth and not degrees and limits == auto
@@ -359,7 +360,14 @@
       message: "second is (values: ((x, y), …), axis: title), two measures at least",
     )
   } else {
-    assert(marks == () and spans == () and second == none and not smooth, message: "marks, spans, second and smooth are a line's only")
+    assert(second == none and not smooth, message: "second and smooth are a line's only")
+    assert((marks == () and spans == ()) or (kind == "bars" and not horizontal), message: "marks and spans are a line's, or standing bars'")
+    // on bars: a mark at a bar (its name or its value: the expectation, the mean), a span from a
+    // bar to another (an interval of values), each found among the bars' names
+    let key(v) = if type(v) == str { v.trim() } else { str(v) }
+    let names = values.map(v => key(v.at(0)))
+    for m in marks { assert(type(m) == array and m.len() == 2 and key(m.at(0)) in names, message: "marks on bars: (a bar's name, label), " + repr(m.at(0)) + " not among " + names.join(", ")) }
+    for sp in spans { assert(type(sp) == array and sp.len() == 3 and key(sp.at(0)) in names and key(sp.at(1)) in names, message: "spans on bars: (first bar's name, last bar's name, label), among " + names.join(", ")) }
     assert(
       values.len() > 0 and values.all(v => type(v) == array and v.len() == 2 and number(v.at(1)) and v.at(1) >= 0),
       message: "values are (label, count) pairs, each count a number",
@@ -597,7 +605,15 @@
       // name longer than 2.4 cm on two lines or more, never widening the whole chart
       let wide = 2.4
       let name(label) = if measure(txt(label)).width / 1cm > wide { box(width: wide * 1cm, align(center, txt(label))) } else { txt(label) }
-      let slot = calc.max(1.5, ..values.map(v => measure(name(v.at(0))).width / 1cm + 0.3))
+      // many bars (a probability law of 21 values): each narrower, the chart about 10 cm wide
+      // (1.5 cm each, it was 31 cm, drawn tiny on a card)
+      let least = if values.len() <= 7 { 1.5 } else { calc.max(0.45, 10.5 / values.len()) }
+      let slot = calc.max(least, ..values.map(v => measure(name(v.at(0))).width / 1cm + 0.3))
+      // every count written by default, unless they don't fit over their bars (21 bars of a
+      // probability law: their values on one another, on the interval's name): none then
+      let crowded = written == "all" and given-written == auto and values.any(v => measure(txt(value(v.at(0), v.at(1)))).width / 1cm > slot - 0.1)
+      let shown-any = shown
+      let shown(label) = if crowded { label in hidden } else { shown-any(label) }
       let w = slot * values.len()
       // the graduation: a tick and a light line at each step, so that a count is read, not guessed
       for k in range(1, marks-n + 1) {
@@ -610,11 +626,25 @@
       line((0, 0), (w + 0.3, 0), stroke: 0.8pt)
       line((0, 0), (0, h + 0.45), stroke: 0.8pt, mark: (end: ">", fill: black))
       if axis != none { content((0.12, h + 0.45), txt(axis), anchor: "west") }
+      // spans behind the bars: from the first bar's left edge to the last's right, shaded, their
+      // label at their top; marks: a dashed line through the bar, its label over the chart
+      let key(v) = if type(v) == str { v.trim() } else { str(v) }
+      let names = values.map(v => key(v.at(0)))
+      let at(v) = slot * (names.position(n => n == key(v)) + 0.5)
+      for (i, (a, b, label)) in spans.enumerate() {
+        let (xa, xb) = (calc.min(at(a), at(b)) - slot / 2, calc.max(at(a), at(b)) + slot / 2)
+        rect((xa, 0), (xb, h + 0.15), fill: rgb(250, 215, 150, 110), stroke: none)
+        content(((xa + xb) / 2, h + 0.2), txt(label), anchor: "south")
+      }
       for (i, (label, count)) in values.enumerate() {
         let x = slot * (i + 0.5)
-        if count > 0 { rect((x - 0.11, 0), (x + 0.11, count * unit), fill: luma(55), stroke: none) }
+        if count > 0 { rect((x - calc.min(0.11, slot * 0.25), 0), (x + calc.min(0.11, slot * 0.25), count * unit), fill: luma(55), stroke: none) }
         content((x, -0.14), name(label), anchor: "north")
         if shown(label) { content((x, count * unit + 0.08), txt(value(label, count)), anchor: "south") }
+      }
+      for (v, label) in marks {
+        line((at(v), 0), (at(v), h + 0.15), stroke: (paint: rgb("#b3261e"), thickness: 0.8pt, dash: "dashed"))
+        content((at(v), if spans == () { h + 0.2 } else { h + 0.75 }), text(fill: rgb("#b3261e"), txt(label)), anchor: "south")
       }
       }
     } else {

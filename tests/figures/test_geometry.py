@@ -678,6 +678,25 @@ def test_the_rule_shows_a_tiling_that_compiles():
     assert figures_typst.compile_svg("geometry", call).startswith("<svg")
 
 
+def test_an_intervals_centre_and_its_distances():
+    """|x − 3| ≤ 2 on a number line: the interval [1 ; 5], its centre 3 and the distance 2 on
+    each side, drawn by the AI without the distances (1 drawing in 3) or as SVG: `centre: true`
+    marks the centre and writes the half-length, computed, over each half; refused without
+    two bounds; the rule's call compiles."""
+    draw = "#ctz-canvas({{ ctz-init(); ctz-draw-number-line(-2, 8); ctz-draw-interval(1, 5, first: -2, last: 8{}) }})"
+    _, plain = drawn_size("geometry", draw.format(""))
+    _, centred = drawn_size("geometry", draw.format(", centre: true"))
+    assert centred > plain + 0.4 * 28.35  # the arrows and their numbers over the line
+    with pytest.raises(figures_typst.Unusable, match="two bounds"):
+        figures_typst.compile_svg(
+            "geometry", draw.format(", centre: true").replace("ctz-draw-interval(1, 5", "ctz-draw-interval(1, none")
+        )
+    rule = figures_typst.FAMILIES["geometry"].rules
+    (call,) = re.findall(r"`(ctz-draw-interval\([^`]*centre: true\))`", rule)
+    body = f"#ctz-canvas({{ ctz-init(); ctz-draw-number-line(-2, 8); {call} }})"
+    assert figures_typst.compile_svg("geometry", body).startswith("<svg")
+
+
 def test_a_rotations_arrowed_arc_drawn_from_its_points():
     """A rotation's direction shown by an arrowed arc the preamble draws from the point, the
     centre and the image (the AI guessed ctz-draw-arc's arguments, `mark:`, `radius:`,
