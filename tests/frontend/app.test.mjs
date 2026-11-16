@@ -1079,3 +1079,18 @@ test("the waiting card's estimate goes by the pages sent: those of this call, at
     await new Promise((done) => setTimeout(done, 50));
   }
 });
+
+test("Review with nothing due today: said, AnkiDroid opened on its decks", async () => {
+  let answer = { opened: true, nothing_due: true };
+  const page = await loadScripts("app.js", {
+    languages: ["fr-FR"],
+    routes: (url) => new Response(url === "/api/anki/review" ? answer : {}),
+  });
+  const c = page.component();
+  c.deck = "Espagnol::Leçon 5";
+  await c.reviewLesson();
+  assert.equal(c.success, "Rien à réviser aujourd'hui dans ce paquet : AnkiDroid est ouvert sur vos paquets.");
+  answer = { opened: true };  // its reviewer opened: nothing to say
+  await c.reviewLesson();
+  assert.equal(c.success, "");
+});

@@ -8,6 +8,7 @@ import com.ichi2.anki.FlashCardsContract
 import com.ichi2.anki.api.AddContentApi
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
+import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertTrue
 import org.junit.Assume.assumeTrue
 import org.junit.Before
@@ -578,7 +579,7 @@ class AnkiDroidTest {
         val anki = Anki(Device.context)
         val deck = "Notosaurus test $run::Leçon"
         anki.send(Deck(deck, listOf(Card("le chat $run", "el gato"))))
-        assertTrue(anki.review(deck))
+        assertEquals(Review.REVIEWER, anki.review(deck))
         // The deck selected, AnkiDroid's reviewer on top
         assertEquals(deck, AddContentApi(Device.context).selectedDeckName)
         val deadline = System.currentTimeMillis() + 10_000
@@ -590,8 +591,29 @@ class AnkiDroidTest {
         }
         assertTrue(top, "com.ichi2.anki/.Reviewer" in top)
         Device.shell("input keyevent KEYCODE_HOME") // back from AnkiDroid
-        assertFalse(anki.review("No such deck $run"))
+        assertEquals(Review.NO_DECK, anki.review("No such deck $run"))
     }
+
+    @Test
+    fun nothingToReviewTodayOpensAnkiDroidsDecks() {
+        // A deck whose counts are all 0 (here: no card in it; a lesson already reviewed today
+        // alike): its reviewer would close at once, back to the app, saying nothing. AnkiDroid's
+        // decks shown instead, from the start: even when it was left on another screen (a
+        // reviewer left open by another test, as on CI), it would have come back there
+        val anki = Anki(Device.context)
+
+        val deck = "Notosaurus test $run::Rien à réviser"
+        assertNotNull(AddContentApi(Device.context).addNewDeck(deck))
+        assertEquals(Review.NOTHING_DUE, anki.review(deck))
+        assertEquals(deck, AddContentApi(Device.context).selectedDeckName) // selected, its decks shown
+        Thread.sleep(1500) // what stays on top, not a screen on its way
+        assertTrue(top(), "com.ichi2.anki/.DeckPicker" in top())
+        Device.shell("input keyevent KEYCODE_HOME")
+    }
+
+    /** The activity on top of the phone now. */
+    private fun top(): String = Device.shell("dumpsys activity activities").lines().firstOrNull { "ResumedActivity" in it }.orEmpty()
+
 
     @Test
     fun multipleChoices() {

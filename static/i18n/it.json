@@ -473,6 +473,7 @@
       "onComputer": "Sul computer, in Anki: Strumenti → Notosaurus → Configurazione guidata."
     },
     "reviewInAnki": "📚 Ripassa",
+    "reviewNothingDue": "Oggi non c'è niente da ripassare in questo mazzo: AnkiDroid è aperto sui tuoi mazzi.",
     "openAnkiDroid": "Apri AnkiDroid",
     "dictation": {
       "start": "Detta",

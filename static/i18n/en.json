@@ -473,6 +473,7 @@
       "onComputer": "On the computer, in Anki: Tools → Notosaurus → Getting started."
     },
     "reviewInAnki": "📚 Review",
+    "reviewNothingDue": "Nothing to review today in this deck: AnkiDroid is open on your decks.",
     "openAnkiDroid": "Open AnkiDroid",
     "dictation": {
       "start": "Dictate",
