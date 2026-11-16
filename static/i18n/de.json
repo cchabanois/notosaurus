@@ -58,7 +58,8 @@
       },
       "seeAll": "Alle {count} Seiten ansehen",
       "rotate": "Foto um eine Vierteldrehung drehen",
-      "hide": "Zuschneiden oder einen Teil der Seite verdecken (einen Namen…)",
+      "crop": "Seite zuschneiden",
+      "hide": "Einen Teil der Seite schwärzen (einen Namen…)",
       "hidden": "Ein Teil dieser Seite ist verdeckt",
       "takePhoto": "Foto aufnehmen",
       "nextPage": "Nächste Seite",
@@ -71,8 +72,8 @@
       }
     },
     "hide": {
-      "title": "Verdecken, was die KI nicht sehen soll",
-      "hint": "Schwärze mit dem Finger einen Namen, eine Schule, alles Persönliche; „Zuschneiden“ behält nur den nützlichen Teil, indem du die Ecken des Rahmens ziehst. Nur das so vorbereitete Foto wird gespeichert und gesendet.",
+      "title": "Foto vorbereiten",
+      "hint": "„Zuschneiden“ behält nur den nützlichen Teil der Seite: Zieh an den Ecken des Rahmens. Dann schwärze mit dem Finger einen Namen, eine Schule, alles Persönliche. Nur das so vorbereitete Foto wird gespeichert und gesendet.",
       "pdf": "Bei einer PDF-Seite wird ihr Text dann nicht gesendet: Die KI liest die Seite als Bild.",
       "paint": "Schwärzen",
       "erase": "Aufdecken",

@@ -463,8 +463,9 @@ const photosPart = {
     }
   },
 
-  // --- Hiding part of a photo, before it is sent -------------------------
-  async openHide(i) {
+  // --- Preparing a photo before it is sent: cropped, part of it hidden ---
+  // The editor opened by the viewer's ✂️ (`crop`: its frame's corners) or 🖍️ (blacking out).
+  async openHide(i, crop = false) {
     const photo = this.photos[i];
     const bitmap = await createImageBitmap(photo.original ?? photo.blob);
     const mask = document.createElement("canvas");
@@ -476,7 +477,7 @@ const photosPart = {
       hidden.close();
     }
     this.hiding = {
-      ...NOT_HIDING, open: true, index: i, pdf: Boolean(photo.pdfText ?? photo.text),
+      ...NOT_HIDING, open: true, index: i, crop, pdf: Boolean(photo.pdfText ?? photo.text),
       box: cropBox(photo.crop, bitmap.width, bitmap.height), ratio: bitmap.width / bitmap.height,
     };
     await this.$nextTick();

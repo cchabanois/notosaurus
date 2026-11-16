@@ -34,7 +34,7 @@ leçons, puis vous demande d'accepter sa [politique de confidentialité](../app-
   les serveurs de Google, qui peuvent être hors de l'Union européenne. Vos leçons restent sur votre téléphone.
 - L'IA a des garde-fous adaptés aux élèves, mais elle peut se tromper : vérifiez les cartes avant
   de les donner à votre enfant.
-- Une page de cahier montre souvent le nom de l'enfant : cachez-le avec le bouton **Cacher** (🖍️) avant l'envoi
+- Une page de cahier montre souvent le nom de l'enfant : cachez-le avec le bouton **Noircir** (🖍️) avant l'envoi
   (voir [Photos et PDF](../photos/)).
 
 ![L'accueil de l'application : un outil pour les parents, Gemini, l'essai gratuit, la politique de confidentialité à accepter](../../../assets/screenshots/fr/app-welcome.png)

@@ -58,7 +58,8 @@
       },
       "seeAll": "Vedi tutte le {count} pagine",
       "rotate": "Ruota la foto di un quarto di giro",
-      "hide": "Ritaglia o nascondi una parte della pagina (un nome…)",
+      "crop": "Ritaglia la pagina",
+      "hide": "Annerisci una parte della pagina (un nome…)",
       "hidden": "Parte di questa pagina è nascosta",
       "takePhoto": "Scatta una foto",
       "nextPage": "Pagina successiva",
@@ -71,8 +72,8 @@
       }
     },
     "hide": {
-      "title": "Nascondi ciò che l'IA non deve vedere",
-      "hint": "Con il dito, annerisci un nome, una scuola, tutto ciò che è personale; «Ritaglia» tiene solo la parte utile, trascinando gli angoli della cornice. Viene conservata e inviata solo la foto così preparata.",
+      "title": "Prepara la foto",
+      "hint": "«Ritaglia» tiene solo la parte utile della pagina: trascina gli angoli della cornice. Poi, con il dito, annerisci un nome, una scuola, tutto ciò che è personale. Viene conservata e inviata solo la foto così preparata.",
       "pdf": "In una pagina PDF, il suo testo allora non viene inviato: l'IA legge la pagina come un'immagine.",
       "paint": "Annerisci",
       "erase": "Scopri",

@@ -12,7 +12,9 @@ from PIL import Image as PILImage
 sync_api = pytest.importorskip("playwright.sync_api")
 
 from page.support import (  # noqa: E402
+    CROP_BUTTON,
     FRONT_PROMPT,
+    HIDE_BUTTON,
     PDF_NOTICE,
     add_photo,
     add_text_pdf,
@@ -137,10 +139,10 @@ def test_a_photo_seen_in_full_turned_and_a_name_hidden(page):
     page.wait_for_function("() => document.querySelector('.viewer-frame img').naturalWidth === 800")
     sync_api.expect(viewer.locator(".viewer-frame")).not_to_have_class(re.compile(r"\bzoomed\b"))
     assert shown.evaluate("el => el.style.transform") == "translate(0px, 0px) scale(1)"
-    viewer.get_by_role("button", name="Recadrer ou cacher une partie de la page (un nom…)").click()
-    sync_api.expect(page.get_by_role("dialog", name="Cacher ce que l'IA ne doit pas voir")).to_be_visible()
+    viewer.get_by_role("button", name=HIDE_BUTTON, exact=True).click()
+    sync_api.expect(page.get_by_role("dialog", name="Préparer la photo")).to_be_visible()
     page.keyboard.press("Escape")  # the editor closes, the viewer stays
-    sync_api.expect(page.get_by_role("dialog", name="Cacher ce que l'IA ne doit pas voir")).to_be_hidden()
+    sync_api.expect(page.get_by_role("dialog", name="Préparer la photo")).to_be_hidden()
     sync_api.expect(viewer).to_be_visible()
 
 
@@ -329,7 +331,7 @@ def test_a_name_hidden_before_the_photo_is_sent(page):
     assert sent.getpixel((width // 2, height // 2)) > 215  # white: un-blacked
     assert sent.getpixel((width // 2, height * 8 // 10)) > 215  # never touched
     page.locator(".strip .thumb img").first.click()
-    hide = page.locator(".viewer").get_by_role("button", name="Recadrer ou cacher une partie de la page (un nom…)")
+    hide = page.locator(".viewer").get_by_role("button", name=HIDE_BUTTON, exact=True)
     sync_api.expect(hide).to_be_hidden()  # sent: nothing left to hide
 
 
@@ -500,6 +502,89 @@ def test_a_photo_cropped_by_its_frames_corners(page):
     photo = photo_sent(page, saved["id"])
     assert photo.size == (width, height)
     assert near(photo.getpixel((width // 2, height // 2)), BLUE)
+
+
+def test_the_viewers_crop_and_black_out_buttons_open_the_editor_in_their_mode(page):
+    """Two buttons, one editor: ✂️ opens it cropping (the frame's corners), 🖍️ blacking out (no
+    frame); its modes in that order, ✂️ first; its title speaks of both."""
+    page.goto("/")
+    add_photo(page, halves())
+    editor = open_hide(page, crop=True)
+    sync_api.expect(page.get_by_role("dialog", name="Préparer la photo")).to_be_visible()
+    modes = editor.locator(".hide-modes button")
+    sync_api.expect(modes).to_have_text(["✂️ Recadrer", "⬛ Noircir", "◻️ Dénoircir"])
+    sync_api.expect(editor.get_by_role("button", name="Recadrer", exact=True)).to_have_attribute("aria-pressed", "true")
+    sync_api.expect(page.locator(".hide-stage .crop-handle:visible")).to_have_count(4)
+    sync_api.expect(editor.get_by_role("button", name="Tout garder")).to_be_visible()
+    editor.get_by_role("button", name="Annuler").click()
+    sync_api.expect(editor).to_be_hidden()
+
+    open_hide(page)  # 🖍️
+    paint, crop = (editor.get_by_role("button", name=name, exact=True) for name in ("Noircir", "Recadrer"))
+    sync_api.expect(paint).to_have_attribute("aria-pressed", "true")
+    sync_api.expect(crop).to_have_attribute("aria-pressed", "false")
+    sync_api.expect(page.locator(".hide-stage .crop-frame")).to_be_hidden()
+    sync_api.expect(editor.get_by_role("button", name="Tout dénoircir")).to_be_visible()
+
+
+@pytest.mark.parametrize("lang", ["en", "fr", "es", "de", "it", "pt"])
+def test_the_editors_buttons_fit_a_narrow_phone(page, browser, server, lang):
+    """Opened by ✂️ on a 360-pixel-wide phone: its three modes and its actions all on the
+    screen, in every language (none cut at an edge)."""
+    context = browser.new_context(locale="fr-FR", viewport={"width": 360, "height": 780}, base_url=server)
+    context.add_init_script(f"localStorage.setItem('notosaurus.lang', '{lang}')")
+    try:
+        other = context.new_page()
+        other.goto("/")
+        other.wait_for_function("document.documentElement.classList.contains('i18n-ready')")
+        add_photo(other, halves())
+        other.locator(".strip .thumb img").first.click()
+        other.locator(".viewer-actions button").nth(2).click()  # ✂️
+        sync_api.expect(other.locator(".hide-stage .crop-handle:visible")).to_have_count(4)
+        cut = other.evaluate("""() => [...document.querySelectorAll('.hide-tools button')]
+            .filter((b) => b.offsetParent)
+            .map((b) => [b.textContent.trim(), b.getBoundingClientRect()])
+            .filter(([, r]) => r.left < 0 || r.right > innerWidth)
+            .map(([text]) => text)""")
+        assert cut == []
+    finally:
+        context.close()
+
+
+def test_each_viewer_button_marked_by_what_it_did(page):
+    """✂️ highlighted once the photo is cropped, 🖍️ once something is blacked out on it."""
+    page.goto("/")
+    add_photo(page, halves())
+    viewer = page.locator(".viewer")
+    crop, hide = (viewer.get_by_role("button", name=name, exact=True) for name in (CROP_BUTTON, HIDE_BUTTON))
+    editor = open_hide(page, crop=True)
+    crop_corner(page, "nw", 0.5, 0)
+    editor.get_by_role("button", name="Terminé").click()
+    sync_api.expect(editor).to_be_hidden()
+    sync_api.expect(crop).to_have_class(re.compile(r"\bused\b"))
+    sync_api.expect(hide).not_to_have_class(re.compile(r"\bused\b"))
+
+    open_hide(page)
+    stroke(page, 0.5)
+    editor.get_by_role("button", name="Terminé").click()
+    sync_api.expect(editor).to_be_hidden()
+    sync_api.expect(hide).to_have_class(re.compile(r"\bused\b"))
+
+
+def test_crop_and_black_out_gone_once_the_photo_is_sent(page):
+    """Both buttons on a photo not sent yet; neither once it is (what was sent can't change)."""
+    page.goto("/")
+    add_photo(page, png("white"))
+    viewer = page.locator(".viewer")
+    page.locator(".strip .thumb img").first.click()
+    for name in (CROP_BUTTON, HIDE_BUTTON):
+        sync_api.expect(viewer.get_by_role("button", name=name, exact=True)).to_be_visible()
+    close_viewer(page)
+    generate_from_photos(page, "Une carte par mot")
+    page.locator(".strip .thumb img").first.click()
+    sync_api.expect(viewer.get_by_role("button", name="Tourner la photo d'un quart de tour")).to_be_visible()
+    for name in (CROP_BUTTON, HIDE_BUTTON):
+        sync_api.expect(viewer.get_by_role("button", name=name, exact=True)).to_be_hidden()
 
 
 def test_keep_it_all_gives_the_whole_photo_and_its_text_back(page, browser):

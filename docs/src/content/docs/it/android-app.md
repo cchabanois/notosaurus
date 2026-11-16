@@ -32,7 +32,7 @@ accettare la sua [informativa sulla privacy](../app-privacy/):
 - L'IA ha protezioni adatte agli alunni, ma può sbagliare: controlla le carte prima di darle a tuo
   figlio.
 - Una pagina di quaderno mostra spesso il nome del bambino: nascondilo con il pulsante
-  **Nascondi** (🖍️) prima dell'invio (vedi [Foto e PDF](../photos/)).
+  **Annerisci** (🖍️) prima dell'invio (vedi [Foto e PDF](../photos/)).
 
 ![Il benvenuto dell'app: uno strumento per genitori, Gemini, la prova gratuita, l'informativa sulla privacy da accettare](../../../assets/screenshots/en/app-welcome.png)
 

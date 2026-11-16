@@ -34,7 +34,7 @@ te pide que aceptes su [política de privacidad](../app-privacy/):
   servidores de Google, que pueden estar fuera de la Unión Europea. Tus lecciones se quedan en tu móvil.
 - La IA tiene protecciones adecuadas para alumnos, pero puede equivocarse: revisa las tarjetas
   antes de dárselas a tu hijo.
-- Una página de cuaderno suele mostrar el nombre del niño: ocúltalo con el botón **Ocultar** (🖍️)
+- Una página de cuaderno suele mostrar el nombre del niño: ocúltalo con el botón **Tapar** (🖍️)
   antes de enviarla (consulta [Fotos y PDF](../photos/)).
 
 ![La bienvenida de la aplicación: una herramienta para padres, Gemini, la prueba gratuita, la política de privacidad que aceptar](../../../assets/screenshots/en/app-welcome.png)

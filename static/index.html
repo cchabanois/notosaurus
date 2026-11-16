@@ -1014,8 +1014,8 @@
     </form>
   </aside>
 
-  <!-- Part of a photo hidden before it is sent: blacked out with a finger, un-blacked the same way;
-       cropped to the part needed, the frame dragged by its corners -->
+  <!-- A photo prepared before it is sent: cropped to the part needed, the frame dragged by its
+       corners; part of it blacked out with a finger, un-blacked the same way -->
   <div class="hide-editor" x-cloak x-show="hiding.open" role="dialog" :aria-label="$t('app.hide.title')"
        @keydown.escape.window="hiding.open && ($event.preventDefault(), doneHide(false))">
     <p class="hide-hint">
@@ -1036,12 +1036,12 @@
     </div>
     <div class="hide-tools">
       <div class="hide-modes" role="group">
+        <button type="button" class="btn soft" :class="{ chosen: hiding.crop }" :aria-pressed="String(hiding.crop)"
+                @click="hiding.crop = true"><span aria-hidden="true">✂️</span> <span x-text="$t('app.hide.crop')"></span></button>
         <button type="button" class="btn soft" :class="{ chosen: !hiding.crop && !hiding.erase }" :aria-pressed="String(!hiding.crop && !hiding.erase)"
                 @click="hiding.crop = false; hiding.erase = false"><span aria-hidden="true">⬛</span> <span x-text="$t('app.hide.paint')"></span></button>
         <button type="button" class="btn soft" :class="{ chosen: !hiding.crop && hiding.erase }" :aria-pressed="String(!hiding.crop && hiding.erase)"
                 @click="hiding.crop = false; hiding.erase = true"><span aria-hidden="true">◻️</span> <span x-text="$t('app.hide.erase')"></span></button>
-        <button type="button" class="btn soft" :class="{ chosen: hiding.crop }" :aria-pressed="String(hiding.crop)"
-                @click="hiding.crop = true"><span aria-hidden="true">✂️</span> <span x-text="$t('app.hide.crop')"></span></button>
       </div>
       <button type="button" class="btn soft" x-show="!hiding.crop" @click="clearHidden()" x-text="$t('app.hide.clear')"></button>
       <button type="button" class="btn soft" x-show="hiding.crop" @click="keepWhole()" x-text="$t('app.hide.keepAll')"></button>
@@ -1076,7 +1076,10 @@
       <button @click="removeShownPhoto()" :aria-label="$t('app.photos.remove')" :title="$t('app.photos.remove')">🗑️</button>
       <button @click="rotatePhoto(viewer.index)" :disabled="loading" :aria-label="$t('app.photos.rotate')"
               :title="$t('app.photos.rotate')">↻</button>
-      <button :class="{ used: photos[viewer.index]?.mask || photos[viewer.index]?.crop }" x-show="!photos[viewer.index]?.sent" @click="openHide(viewer.index)"
+      <!-- One editor, opened in the mode its button names: ✂️ cropping, 🖍️ blacking out -->
+      <button :class="{ used: photos[viewer.index]?.crop }" x-show="!photos[viewer.index]?.sent" @click="openHide(viewer.index, true)"
+              :disabled="loading" :aria-label="$t('app.photos.crop')" :title="$t('app.photos.crop')">✂️</button>
+      <button :class="{ used: photos[viewer.index]?.mask }" x-show="!photos[viewer.index]?.sent" @click="openHide(viewer.index)"
               :disabled="loading" :aria-label="$t('app.photos.hide')" :title="$t('app.photos.hide')">🖍️</button>
     </div>
     <template x-if="viewerList().length > 1">
