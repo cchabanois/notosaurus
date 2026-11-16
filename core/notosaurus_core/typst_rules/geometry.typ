@@ -44,6 +44,52 @@
 // fractions compared): each a dictionary of fraction-shape's arguments, all the same size.
 #let fraction-shapes(..shapes, gap: 1cm) = stack(dir: ltr, spacing: gap,
   ..shapes.pos().map(s => align(bottom, fraction-shape(..s))))
+// Which colour each sector of a wheel takes, around it from the top: `counts` each colour's
+// sectors; mixed, the colour with the most left, never the one just placed when another
+// remains, nor, for the last sector, the first one's (around the wheel, they touch)
+#let _wheel-order(counts, mixed: true) = {
+  let left = counts
+  let order = ()
+  let total = left.sum()
+  for k in range(total) {
+    let avoid = if order.len() == 0 { () } else if k == total - 1 { (order.last(), order.first()) } else { (order.last(),) }
+    let can = range(left.len()).filter(i => left.at(i) > 0)
+    let better = can.filter(i => i not in avoid)
+    let pick = if not mixed { can.first() } else { (if better.len() > 0 { better } else { can }).sorted(key: i => -left.at(i)).first() }
+    order.push(pick)
+    left.at(pick) -= 1
+  }
+  order
+}
+// A lottery wheel: `sectors` its colours, each (count, colour) or (count, colour, name), cut
+// into that many equal sectors, the colours spread around it so that two of a colour are
+// never side by side while another can sit between (`mixed: false`: each colour's together,
+// in order), its fixed pointer above it, the names in a legend under it. The counts drawn by
+// the preamble, never a sector coloured by hand. Alone, a figure of its own (no canvas).
+#let wheel(sectors: (), size: 3.5, mixed: true, pointer: true) = {
+  assert(type(sectors) == array and sectors.len() > 0 and sectors.all(s => type(s) == array and s.len() in (2, 3) and type(s.at(0)) == int and s.at(0) > 0),
+    message: "sectors: each (count, colour) or (count, colour, [name]), the count a whole number from 1")
+  let order = _wheel-order(sectors.map(s => s.at(0)), mixed: mixed)
+  let n = order.len()
+  let r = size / 2
+  let drawing = cetz.canvas({
+    import cetz.draw: *
+    for (k, i) in order.enumerate() {
+      let start = 90deg - k * 360deg / n
+      if n == 1 { circle((0, 0), radius: r, fill: sectors.at(i).at(1), stroke: 0.9pt) } else {
+        arc((0, 0), start: start, delta: -360deg / n, radius: r, mode: "PIE", anchor: "origin", fill: sectors.at(i).at(1), stroke: 0.9pt)
+      }
+    }
+    circle((0, 0), radius: 0.12, fill: white, stroke: 0.9pt)
+    // its pointer above it, at the top
+    if pointer { line((-0.18, r + 0.42), (0.18, r + 0.42), (0, r + 0.06), close: true, fill: luma(40), stroke: none) }
+  })
+  let names = sectors.filter(s => s.len() == 3)
+  if names.len() == 0 { drawing } else {
+    stack(dir: ttb, spacing: 0.6em, align(center, drawing), align(center, stack(dir: ltr, spacing: 1em,
+      ..names.map(s => box(baseline: 20%, rect(width: 0.8em, height: 0.8em, fill: s.at(1), stroke: 0.5pt)) + h(0.3em) + s.at(2)))))
+  }
+}
 // Numbers written as the figure's language writes them: its decimal separator, set by
 // figures_typst.source from the AI's `#set text(lang: …)` (a point when none is said)
 #import "common.typ": *
@@ -439,15 +485,25 @@
   })
   // not cut: at its middle on the side with the less in the way (the away one when even)
   let free = if cut { none } else { (placed(1, off), placed(-1, off)).sorted(key: p => p.hits).first() }
-  if free != none {
+  if free != none and free.hits < 2 {  // no stroke across it (a point or a text near: kept)
     content(free.c, label)
     _record("texts", (c: free.c, hw: hw, hh: hh, skip: skip))
     return
   }
   // the dimension line clear of the points' names along the segment, on the freer side
-  // (the away one when even)
-  let gap = 0.6
-  let best = (placed(1, gap + 0.1), placed(-1, gap + 0.1)).sorted(key: p => p.hits).first()
+  // (the away one when even), farther out when its text meets something there (compass
+  // arcs crossing the segment near its middle, the text wider than the gap between them);
+  // a segment not cut and with no room at all: its text where the less is in the way
+  let tries = (0.6, 1.0, 1.4, 1.8).map(g => (placed(1, g + 0.1), placed(-1, g + 0.1)).map(p => (..p, gap: g))).flatten()
+  let clear = tries.find(p => p.hits == 0)
+  if clear == none and not cut {
+    let c = free.c
+    content(c, label)
+    _record("texts", (c: c, hw: hw, hh: hh, skip: skip))
+    return
+  }
+  let best = if clear == none { tries.slice(0, 2).sorted(key: p => p.hits).first() } else { clear }
+  let gap = best.gap
   let (sx, sy) = (best.side * nx, best.side * ny)
   let out(p, d) = (p.at(0) + sx * d, p.at(1) + sy * d)
   line(out(pa, 0.12), out(pa, gap + 0.12), stroke: 0.4pt)
@@ -502,6 +558,63 @@
     (ctx: _set-points(ctx, points))
   },)
 }
+// A protractor laid on an angle: its centre on the vertex `o`, its 0 on the half-line [Ox)
+// towards `x`, graduated from it anticlockwise (`clockwise: true` the other way) every
+// degree, longer every 5 and 10, numbered every 10, its baseline through `o`: the angle's
+// other side then crosses its value. `r` its radius. Placed by the preamble from the angle's
+// points, never a protractor drawn by hand.
+#let ctz-draw-protractor(o, x, r: 3, clockwise: false) = cetz.draw.get-ctx(ctx => {
+  import cetz.draw: *
+  let at(n) = cetz.coordinate.resolve(ctx, "ctz:" + n).at(1)
+  let (po, px) = (at(o), at(x))
+  let base = calc.atan2(px.at(0) - po.at(0), px.at(1) - po.at(1))
+  let s = if clockwise { -1 } else { 1 }
+  let ink = rgb("#3b5b85")
+  let pt(d, rr) = (po.at(0) + rr * calc.cos(base + s * d * 1deg), po.at(1) + rr * calc.sin(base + s * d * 1deg))
+  arc(po, start: base, delta: s * 180deg, radius: r, mode: "PIE", anchor: "origin", fill: rgb("#dbe8f6a0"), stroke: 0.7pt + ink)
+  arc(po, start: base, delta: s * 180deg, radius: r * 0.45, anchor: "origin", stroke: 0.5pt + ink)
+  for d in range(181) {
+    let long = if calc.rem(d, 10) == 0 { 0.3 } else if calc.rem(d, 5) == 0 { 0.2 } else { 0.1 }
+    line(pt(d, r), pt(d, r - long), stroke: 0.3pt + ink)
+    if calc.rem(d, 10) == 0 { content(pt(d, r - 0.52), text(5.5pt, fill: ink, str(d))) }
+  }
+  line(pt(0, r * 0.45), po, stroke: 0.5pt + ink)
+  line(po, pt(180, r * 0.45), stroke: 0.5pt + ink)
+  line((po.at(0) - 0.08 * calc.cos(base + 90deg), po.at(1) - 0.08 * calc.sin(base + 90deg)), (po.at(0) + 0.15 * calc.cos(base + 90deg * s), po.at(1) + 0.15 * calc.sin(base + 90deg * s)), stroke: 0.6pt + ink)
+})
+// A triangle's third vertex from its sides' lengths (a triangle built with ruler and compass):
+// `name` at `ac` from `a` and `bc` from `b`, on the left of [AB] going from A to B (`right:
+// true` the other side), computed; refused when no triangle has those lengths.
+#let ctz-def-triangle-sss(name, a, b, ac, bc, right: false) = {
+  (ctx => {
+    let at(n) = { let q = _resolve-point(ctx, n); (q.at(0), q.at(1)) }
+    let (pa, pb) = (at(a), at(b))
+    let (dx, dy) = (pb.at(0) - pa.at(0), pb.at(1) - pa.at(1))
+    let c = calc.sqrt(dx * dx + dy * dy)
+    assert(ac + bc > c and ac + c > bc and bc + c > ac, message: "no triangle has sides " + repr(c) + ", " + repr(ac) + " and " + repr(bc) + ": each side shorter than the two others together")
+    let along = (ac * ac - bc * bc + c * c) / (2 * c)
+    let up = calc.sqrt(calc.max(ac * ac - along * along, 0)) * if right { -1 } else { 1 }
+    let (ux, uy) = (dx / c, dy / c)
+    let points = _get-points(ctx)
+    points.insert(name, (pa.at(0) + along * ux - up * uy, pa.at(1) + along * uy + up * ux))
+    (ctx: _set-points(ctx, points))
+  },)
+}
+// A compass's arc: the circle of centre `centre` and radius `r` drawn only around the
+// direction of `toward` (a point's name, or an angle in degrees), `span` degrees wide, thin,
+// grey and dashed: a construction's trace, never a whole circle nor an arc of your own.
+#let ctz-draw-compass-arc(centre, r, toward: none, span: 30) = cetz.draw.get-ctx(ctx => {
+  let at(n) = cetz.coordinate.resolve(ctx, "ctz:" + n).at(1)
+  let po = at(centre)
+  let dir = if type(toward) == str { let q = at(toward); calc.atan2(q.at(0) - po.at(0), q.at(1) - po.at(1)) } else if type(toward) in (int, float) { toward * 1deg } else { panic("toward: the point the arc goes through (its name), or an angle in degrees") }
+  cetz.draw.arc(po, start: dir - span / 2 * 1deg, delta: span * 1deg, radius: r, anchor: "origin", stroke: (paint: luma(110), thickness: 0.6pt, dash: "dashed"))
+  // kept, in short pieces, for the texts placed after it to stand clear of it
+  let at-angle(t) = (po.at(0) + r * calc.cos(t), po.at(1) + r * calc.sin(t))
+  for i in range(12) {
+    let (t1, t2) = (dir + (i / 12 - 0.5) * span * 1deg, dir + ((i + 1) / 12 - 0.5) * span * 1deg)
+    _record("segments", (at-angle(t1), at-angle(t2)))
+  }
+})
 // The centre of a point symmetry when the description doesn't place it, placed by the
 // preamble, never by eye: beyond the figure (its vertices), `gap` from it, so that its image
 // stands `gap` clear of it on the other side, in the direction where the lines from the
