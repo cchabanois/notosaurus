@@ -9,6 +9,7 @@ Each pull request's entries (the `## Changelog` of its description) are put unde
 
 ### Added
 
+- 📊 Histograms drawn by their classes (adjacent rectangles, unequal classes by their areas) and scatter plots with their fitted line.
 - Figures: the Earth with a point by its latitude and longitude, a point's coordinates written in a frame of space, tilings of the plane by squares, triangles or hexagons.
 - Geometry figures: a protractor laid on an angle, a triangle built with ruler and compass with its arcs, a lottery wheel with its colours and pointer, a cuboid made of unit cubes.
 - 📄 **The app scans the lesson's pages** (Android): 📷 opens Google's document scanner: several pages in one go, each found, straightened and cropped to its edges, shadows lightened, as many as the lesson has room for. No camera permission; on a phone without Google Play services, or until the scanner is downloaded, the phone's camera as before.
