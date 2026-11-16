@@ -214,11 +214,14 @@ const ankiPart = {
   async reviewLesson() {
     this.success = "";
     try {
-      await api("/api/anki/review", {
+      const opened = await (await api("/api/anki/review", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ deck: this.deck }),
-      });
+      })).json();
+      // Nothing to review today: AnkiDroid opened on its decks, not its reviewer (which closes
+      // at once, back here, saying nothing)
+      if (opened?.nothing_due) this.success = t("app.reviewNothingDue");
     } catch (e) {
       this.error = e.message;
     }

@@ -472,6 +472,7 @@
       "onComputer": "En el ordenador, en Anki: Herramientas → Notosaurus → Asistente de inicio."
     },
     "reviewInAnki": "📚 Repasar",
+    "reviewNothingDue": "Hoy no hay nada que repasar en este mazo: AnkiDroid está abierto en tus mazos.",
     "openAnkiDroid": "Abrir AnkiDroid",
     "dictation": {
       "start": "Dictar",

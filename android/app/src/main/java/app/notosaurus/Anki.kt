@@ -56,6 +56,17 @@ data class Media(
 data class Leftover(val id: Long, val text: String, val deck: String)
 
 /** Where the cards go (AnkiDroid; a fake in the tests). */
+/** Whether a deck has cards to review today, from AnkiDroid's counts ("[1, 0, 20]": learning,
+ * review, new, its limits applied); null when they can't be read (then the reviewer is tried). */
+internal fun dueToday(counts: String?): Boolean? {
+    val numbers = counts?.trim()?.removePrefix("[")?.removeSuffix("]")?.split(",")?.map { it.trim().toIntOrNull() ?: return null }
+    if (numbers.isNullOrEmpty()) return null
+    return numbers.any { it > 0 }
+}
+
+/** What "Review" opened in AnkiDroid. */
+enum class Review { REVIEWER, NOTHING_DUE, NO_DECK }
+
 interface AnkiTarget {
     fun installed(): Boolean
     fun permitted(): Boolean
@@ -75,8 +86,10 @@ interface AnkiTarget {
      * did), never another lesson's too: left from cards deleted or remade. */
     fun leftovers(lesson: String, keep: Set<Long>): List<Leftover> = emptyList()
 
-    /** AnkiDroid opened to review the deck (and its sub-decks); false when it has no such deck. */
-    fun review(deck: String): Boolean = false
+    /** AnkiDroid opened to review the deck (and its sub-decks): on its reviewer, or, nothing to
+     * review today, on its decks (its reviewer would close at once, back to the app, saying
+     * nothing); NO_DECK when it has no such deck. */
+    fun review(deck: String): Review = Review.NO_DECK
 
     /** Tags put on notes and taken off others ({tag: note ids}): a test's tag following its
      * lessons (Exams.retagging); false when AnkiDroid couldn't be asked. */
@@ -126,20 +139,35 @@ class Anki(private val context: Context) : AnkiTarget {
 
     /** The deck selected (the API's own way), then AnkiDroid's reviewer on it, as its deck
      * shortcuts open it; AnkiDroid's home on that deck if the reviewer won't open. */
-    override fun review(deck: String): Boolean {
-        val package_ = AddContentApi.getAnkiDroidPackageName(context) ?: return false
-        val did = firstUse { api.deckList?.entries?.firstOrNull { it.value == deck.ifBlank { "Notosaurus" } }?.key } ?: return false
+    override fun review(deck: String): Review {
+        val package_ = AddContentApi.getAnkiDroidPackageName(context) ?: return Review.NO_DECK
+        val did = firstUse { api.deckList?.entries?.firstOrNull { it.value == deck.ifBlank { "Notosaurus" } }?.key } ?: return Review.NO_DECK
         runCatching {
             context.contentResolver.update(
                 FlashCardsContract.Deck.CONTENT_SELECTED_URI, ContentValues().apply { put(FlashCardsContract.Deck.DECK_ID, did) }, null, null,
             )
         }
         val reviewer = Intent(Intent.ACTION_VIEW).setClassName(package_, "com.ichi2.anki.Reviewer").putExtra("deckId", did)
-        val home = context.packageManager.getLaunchIntentForPackage(package_) ?: return false
-        for (intent in listOf(reviewer, home)) {
-            if (runCatching { context.startActivity(intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)) }.isSuccess) return true
+        val home = context.packageManager.getLaunchIntentForPackage(package_) ?: return Review.NO_DECK
+        // Nothing due today (its counts known, all 0): its decks, where it shows when it's next
+        val nothing = runCatching { dueToday(deckCounts(did)) == false }.getOrDefault(false)
+        val tried = if (nothing) listOf(home to Review.NOTHING_DUE) else listOf(reviewer to Review.REVIEWER, home to Review.REVIEWER)
+        for ((intent, opened) in tried) {
+            if (runCatching { context.startActivity(intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)) }.isSuccess) return opened
         }
-        return false
+        return Review.NO_DECK
+    }
+
+    /** The deck's counts as AnkiDroid gives them ("[learning, review, new]", today's, its
+     * limits applied); null when it doesn't say. */
+    private fun deckCounts(did: Long): String? = firstUse {
+        context.contentResolver.query(
+            FlashCardsContract.Deck.CONTENT_ALL_URI, arrayOf(FlashCardsContract.Deck.DECK_ID, FlashCardsContract.Deck.DECK_COUNTS), null, null, null,
+        )?.use { cursor ->
+            var found: String? = null
+            while (found == null && cursor.moveToNext()) if (cursor.getLong(0) == did) found = cursor.getString(1)
+            found
+        }
     }
 
     override fun browse(search: String): Boolean {

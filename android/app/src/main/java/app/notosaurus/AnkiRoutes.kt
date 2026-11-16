@@ -113,9 +113,13 @@ internal fun Route.ankiRoutes(server: LocalServer) {
         // A lesson's deck reviewed in AnkiDroid ("Review" after sending it)
         api("POST", "/api/anki/review") {
             val deck = body().string("deck")
-            val opened = withContext(Dispatchers.IO) { runCatching { anki.review(deck) }.getOrDefault(false) }
-            if (!opened) throw BadRequest("anki.android_no_deck", buildJsonObject { put("deck", deck) })
-            buildJsonObject { put("opened", true) }
+            val opened = withContext(Dispatchers.IO) { runCatching { anki.review(deck) }.getOrDefault(Review.NO_DECK) }
+            if (opened == Review.NO_DECK) throw BadRequest("anki.android_no_deck", buildJsonObject { put("deck", deck) })
+            buildJsonObject {
+                put("opened", true)
+                // Nothing to review today: AnkiDroid opened on its decks (said by the page)
+                if (opened == Review.NOTHING_DUE) put("nothing_due", true)
+            }
         }
         // A test's cards in AnkiDroid's browser, where its menu makes their filtered deck
         api("POST", "/api/anki/browse") {

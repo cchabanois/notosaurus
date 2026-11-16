@@ -211,8 +211,31 @@ class AnkiRoutesTest : LocalServerTestBase() {
         val res = client.post("/api/anki/review") { page(); contentType(ContentType.Application.Json); setBody("""{"deck": "Espagnol::Leçon 5"}""") }
         assertEquals(HttpStatusCode.OK, res.status)
         assertEquals(listOf("Espagnol::Leçon 5"), anki.reviewed)
+        assertEquals(null, res.json().jsonObject["nothing_due"]) // its reviewer opened
         val missing = client.post("/api/anki/review") { page(); contentType(ContentType.Application.Json); setBody("""{"deck": "Nope"}""") }
         assertEquals("anki.android_no_deck", missing.json().jsonObject["detail"]!!.jsonObject.string("code"))
+    }
+
+    @Test
+    fun nothingToReviewTodaySaid() = app { client ->
+        // Its reviewer would close at once (back to the app, saying nothing): AnkiDroid on its
+        // decks instead, and the page told so
+        val lesson = client.extract()
+        client.send(lesson)
+        anki.due = false
+        val res = client.post("/api/anki/review") { page(); contentType(ContentType.Application.Json); setBody("""{"deck": "Espagnol::Leçon 5"}""") }
+        assertEquals(HttpStatusCode.OK, res.status)
+        assertTrue(res.json().jsonObject["nothing_due"]!!.jsonPrimitive.boolean)
+    }
+
+    @Test
+    fun cardsDueTodayFromAnkiDroidsCounts() {
+        assertEquals(true, dueToday("[0, 0, 20]")) // new cards
+        assertEquals(true, dueToday("[1,0,0]"))
+        assertEquals(false, dueToday("[0, 0, 0]")) // reviewed today, or the new cards' limit reached
+        assertEquals(null, dueToday(null)) // not said: the reviewer tried
+        assertEquals(null, dueToday("[a, 0]"))
+        assertEquals(null, dueToday("[]"))
     }
 
     @Test

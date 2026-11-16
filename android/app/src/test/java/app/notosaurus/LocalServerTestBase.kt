@@ -119,7 +119,12 @@ abstract class LocalServerTestBase {
         override fun lessonNotes(lesson: String) = if (broken) null else notes[lesson].orEmpty()
         override fun delete(notes: List<Long>) = notes.size.also { deleted += notes }
         val reviewed = mutableListOf<String>()
-        override fun review(deck: String) = (deck in deckNames() || sent.any { it.deck == deck }).also { if (it) reviewed += deck }
+        var due = true // the deck's cards to review today
+        override fun review(deck: String): Review {
+            if (deck !in deckNames() && sent.none { it.deck == deck }) return Review.NO_DECK
+            reviewed += deck
+            return if (due) Review.REVIEWER else Review.NOTHING_DUE
+        }
         val retagged = mutableListOf<Pair<Map<String, Set<Long>>, Map<String, Set<Long>>>>() // (added, removed)
         override fun retag(add: Map<String, Set<Long>>, remove: Map<String, Set<Long>>) = !broken.also { if (!broken) retagged += add to remove }
         var opened = 0

@@ -472,6 +472,7 @@
       "onComputer": "Am Computer, in Anki: Extras → Notosaurus → Einrichtungsassistent."
     },
     "reviewInAnki": "📚 Lernen",
+    "reviewNothingDue": "Heute gibt es in diesem Stapel nichts zu wiederholen: AnkiDroid ist bei deinen Stapeln geöffnet.",
     "openAnkiDroid": "AnkiDroid öffnen",
     "dictation": {
       "start": "Diktieren",
