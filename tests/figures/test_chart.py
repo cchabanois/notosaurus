@@ -2,6 +2,7 @@
 written, what is refused."""
 
 import io
+import itertools
 import re
 
 import pytest
@@ -415,3 +416,87 @@ def test_population_pyramids_are_charts():
     kinds = dict(re.findall(r'"(\w+)": (.*?)(?=; "\w+": |$)', figures_typst.KINDS))
     assert "back to back" in kinds["chart"] and "population" in kinds["chart"]
     assert "never a population pyramid" in kinds["solid"]
+
+
+def _histogram_bars(body):
+    """A histogram's rectangles, left to right: (left, right, height) in pixels, read on the row
+    just above its axis (their fill, luma 185), each one's height at its middle."""
+    from PIL import Image
+
+    svg = figures_typst.compile_svg("chart", f'#set text(lang: "fr")\n{body}')
+    image = Image.open(io.BytesIO(figures.to_png(figures.clean(svg)))).convert("L")
+    fill = [(x, y) for y in range(image.height) for x in range(image.width) if image.getpixel((x, y)) == 185]
+    bottom = max(y for _, y in fill) - 1
+    row = [x for x in range(image.width) if image.getpixel((x, bottom)) == 185]
+    bars, start = [], row[0]
+    for a, b in zip(row, [*row[1:], None], strict=True):
+        if b != a + 1:
+            bars.append((start, a))
+            start = b
+    return (
+        image,
+        bottom,
+        [
+            (left, right, sum(1 for y in range(bottom + 1) if image.getpixel(((left + right) // 2, y)) == 185))
+            for left, right in bars
+        ],
+    )
+
+
+def test_a_histogram_draws_its_classes_side_by_side():
+    """A histogram of tall pupils by classes, [150 ; 155[…: drawn as bars, thin sticks apart,
+    one per class (0/3). Its rectangles side by side, nothing between two but their border, as
+    wide as their class: equal classes as high as their counts."""
+    classes = "((150, 155, 6), (155, 160, 12), (160, 165, 17), (165, 170, 10), (170, 175, 5))"
+    _, _, bars = _histogram_bars(f'#chart(kind: "histogram", values: {classes})')
+    assert len(bars) == 5
+    assert all(b[0] - a[1] <= 3 for a, b in itertools.pairwise(bars))  # (only a border between)
+    widths = [right - left for left, right, _ in bars]
+    assert max(widths) - min(widths) <= 2
+    heights = [h for _, _, h in bars]
+    assert all(abs(h / heights[2] - c / 17) < 0.03 for h, c in zip(heights, (6, 12, 17, 10, 5), strict=True))
+
+
+def test_a_histograms_unequal_classes_drawn_by_their_areas():
+    """Unequal classes (0–10, 10–15 years): each rectangle's area its count, its height the
+    count per unit of width; the counts written on them, no graduation to misread."""
+    _, _, bars = _histogram_bars(
+        '#chart(kind: "histogram", values: ((0, 10, 20), (10, 15, 30), (15, 20, 25), (20, 40, 25)))'
+    )
+    widths = [right - left for left, right, _ in bars]
+    areas = [w * h for w, (_, _, h) in zip(widths, bars, strict=True)]
+    assert abs(widths[0] / widths[1] - 2) < 0.1
+    assert all(abs(a / areas[0] - c / 20) < 0.08 for a, c in zip(areas, (20, 30, 25, 25), strict=True))
+
+
+def test_a_scatter_plots_points_never_joined():
+    """A series of two variables (hours of revision, marks): drawn as a line, its points joined
+    as a curve's measures (0/3). A scatter plot's points apart, its fitted line drawn and named
+    when the description gives it; a line's measures still joined."""
+    values = "((1, 8), (2, 9), (3, 11), (4, 12))"
+    line = figures_typst.compile_svg("chart", f'#chart(kind: "line", values: {values})')
+    scatter = figures_typst.compile_svg("chart", f'#chart(kind: "scatter", values: {values})')
+    assert 'stroke="#b03a2e"' in line and 'stroke="#b03a2e"' not in scatter
+    assert scatter.count('fill="#b03a2e"') == 4
+    fitted = figures_typst.compile_svg("chart", f'#chart(kind: "scatter", values: {values}, fit: (1.4, 6.5))')
+    assert "1f5fa8" in fitted and "1f5fa8" not in scatter  # (the line and its name, in their blue)
+
+
+@pytest.mark.parametrize(
+    ("body", "said"),
+    [
+        ('#chart(kind: "histogram", values: ((0, 10, 5), (5, 15, 3)))', "never overlap"),
+        ('#chart(kind: "histogram", values: (("A", 5),))', "from, to, count"),
+        ('#chart(kind: "line", values: ((1, 2), (2, 3)), fit: (1, 0))', "fit is a scatter"),
+        ('#chart(kind: "scatter", values: ((1, 2), (2, 3)), smooth: true)', "never joined"),
+    ],
+)
+def test_histograms_and_scatter_plots_refuse_what_they_cant_draw(body, said):
+    with pytest.raises(figures_typst.Unusable, match=said):
+        figures_typst.compile_svg("chart", body)
+
+
+def test_histograms_and_scatter_plots_are_charts():
+    """The kinds send a histogram and a scatter plot to the chart."""
+    kinds = dict(re.findall(r'"(\w+)": (.*?)(?=; "\w+": |$)', figures_typst.KINDS))
+    assert "a histogram" in kinds["chart"] and "a scatter plot" in kinds["chart"]
