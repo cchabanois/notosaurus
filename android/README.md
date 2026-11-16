@@ -21,13 +21,14 @@ What the computer does, the app does too: every prompt and card type (diagrams,
 figures, pictures found or drawn, voices), correcting and explaining, completing or
 regenerating a lesson, photos turned by hand (↻), children, ⧉ Copy for…, tests to prepare,
 cards updated in AnkiDroid when a lesson is sent again. Its own: the subscription and the
-free trial (Google Play), 🎤 dictating an instruction or a correction, ⚑ reporting the AI's
+free trial (Google Play), 📷 scanning several pages in one go (Google's document scanner), 🎤 dictating an instruction or a correction, ⚑ reporting the AI's
 content, what the service tells for now (a notice, features off, an update). Left out:
 the `.apkg` download (the cards go to AnkiDroid) and Ko-fi (the subscription pays).
 
 | File | |
 |---|---|
 | `MainActivity.kt` | the WebView: the page's file inputs (camera, gallery, PDF), back button, AnkiDroid's permission |
+| `Scanner.kt` | the page's 📷: Google's document scanner (ML Kit, through Google Play services: no camera permission), several pages in one go, each found, flattened and cropped, as many as the lesson has room for; its module fetched in the background at the first launch; the phone's camera when it can't be used (no Google Play services, its module not there yet, a phone it doesn't run on). The device tests give a fake one |
 | `LocalServer.kt` | the page's `/api` routes, and its files (assets/web/) |
 | `assets/page/admin.html`, `settings.js` | the app's settings page (the page's ⚙️): licence and its credits, AnkiDroid, standing instructions, lessons on the phone, relay address (advanced); texts under `android` in the web page's i18n files |
 | `assets/page/unreachable.html` | "With my computer", the computer not answering: try again, scan again, use without computer |
@@ -136,7 +137,7 @@ the build type `minified`, signed with the debug key): what R8 removes or rename
 only shows when the code runs. The tests' APK is minified too (`proguard-test-rules.pro`), and
 shares its libraries with the app's: those, and the app's own code the tests reach into, are kept
 in that build only (`proguard-minified-rules.pro`), so what it checks is R8 on the other
-libraries (Ktor, Play Billing and Integrity, the QR code scanner). The release itself is all
+libraries (Ktor, Play Billing and Integrity, the QR code and document scanners). The release itself is all
 minified (its mapping goes in the bundle, for Google Play's crash traces): the app's own code
 minified is checked by hand, the build `minified` without that file of rules installed and used.
 

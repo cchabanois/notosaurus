@@ -5,11 +5,14 @@ import android.app.Instrumentation
 import android.content.Intent
 import android.graphics.Bitmap
 import android.graphics.Color
+import android.net.Uri
+import android.provider.MediaStore
 import androidx.core.content.FileProvider
 import androidx.test.core.app.ActivityScenario
 import androidx.test.espresso.intent.Intents
 import androidx.test.espresso.intent.Intents.intending
 import androidx.test.espresso.intent.matcher.IntentMatchers.hasAction
+import androidx.test.espresso.intent.matcher.IntentMatchers.hasExtraWithKey
 import androidx.test.espresso.intent.matcher.IntentMatchers.isInternal
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry
@@ -22,11 +25,13 @@ import mockwebserver3.MockWebServer
 import mockwebserver3.RecordedRequest
 import org.junit.After
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
+import org.hamcrest.Matchers.allOf
 import org.hamcrest.Matchers.not
 import java.io.File
 import java.util.concurrent.TimeUnit
@@ -332,6 +337,64 @@ class AppTest {
         assertTrue("the photo sent to the relay", "name=\"images\"" in sent)
     }
 
+    /** 📷: the document scanner's pages (a fake one in Google's place, writing them in the app's
+     * cache as it does) become the lesson's pages, as many as it gave; it is asked for the places
+     * the lesson has left; its own files don't stay behind. */
+    @Test
+    fun theScannersPagesBecomeTheLessonsPages() {
+        val page = "Alpine.\$data(document.querySelector('[x-data]'))"
+        val limits = mutableListOf<Int>()
+        val written = mutableListOf<File>()
+        Scanner.current = Scanner { _, limit, _ ->
+            limits += limit
+            List(2) { n -> scannedPage("scan-$run-$limit-$n.jpg").also { written += it } }.map { Uri.fromFile(it) }
+        }
+        try {
+            ActivityScenario.launch(MainActivity::class.java).use { app ->
+                Device.waitFor(app, "typeof api === 'function' && $page.draftKept && document.querySelectorAll('.chip').length > 3", "the page and its prompts")
+                tap(app, "app.photos.takePhoto")
+                Device.waitFor(app, "$page.photos.length === 2", "the two pages scanned")
+                assertEquals(listOf(LocalServer.MAX_PHOTOS), limits) // the whole lesson's places
+                // 28 pages in the lesson: 2 places left, asked of the scanner
+                Device.run(
+                    app,
+                    "const c = document.createElement('canvas'); c.width = 40; c.height = 30; c.getContext('2d').fillRect(0, 0, 40, 30); " +
+                        "const blob = await new Promise((r) => c.toBlob(r, 'image/jpeg')); " +
+                        "while ($page.photos.length < ${LocalServer.MAX_PHOTOS - 2}) $page.photos.push({ blob, url: URL.createObjectURL(blob), text: '' }); return true",
+                )
+                tap(app, "app.photos.nextPage")
+                Device.waitFor(app, "$page.photos.length === ${LocalServer.MAX_PHOTOS}", "the lesson's last two places filled")
+                assertEquals(listOf(LocalServer.MAX_PHOTOS, 2), limits)
+                assertTrue("the scanner's own files deleted", written.none { it.exists() })
+                Device.js(app, "$page.newLesson()") // nothing kept for the next test
+            }
+        } finally {
+            Scanner.current = DocumentScanner
+        }
+    }
+
+    /** The scanner unavailable (no Google Play services, a phone it doesn't run on, its module
+     * not there): 📷 opens the phone's camera, as before, its photo into the app's cache. */
+    @Test
+    fun theCameraWhenTheScannerCantBeUsed() {
+        Scanner.current = Scanner { _, _, _ -> error("unavailable") }
+        Intents.init()
+        try {
+            intending(hasAction(MediaStore.ACTION_IMAGE_CAPTURE)).respondWith(Instrumentation.ActivityResult(Activity.RESULT_CANCELED, null))
+            ActivityScenario.launch(MainActivity::class.java).use { app ->
+                Device.waitFor(app, "typeof api === 'function' && document.querySelectorAll('.chip').length > 3", "the page and its prompts")
+                tap(app, "app.photos.takePhoto")
+                val deadline = System.currentTimeMillis() + 10_000
+                while (System.currentTimeMillis() < deadline && Intents.getIntents().none { it.action == MediaStore.ACTION_IMAGE_CAPTURE }) Thread.sleep(200)
+                Intents.intended(allOf(hasAction(MediaStore.ACTION_IMAGE_CAPTURE), hasExtraWithKey(MediaStore.EXTRA_OUTPUT)))
+                assertFalse("no page added", Device.js(app, "Alpine.\$data(document.querySelector('[x-data]')).photos.length > 0").toBoolean())
+            }
+        } finally {
+            Intents.release()
+            Scanner.current = DocumentScanner
+        }
+    }
+
     /** Without a photo: "✏️ Free", a prompt typed, "Generate from the prompt alone", "Add to Anki". */
     @Test
     fun aLessonFromThePromptAloneThroughThePage() {
@@ -458,6 +521,14 @@ class AppTest {
         val picture = Bitmap.createBitmap(400, 300, Bitmap.Config.ARGB_8888).apply { eraseColor(Color.WHITE) }
         file.outputStream().use { picture.compress(Bitmap.CompressFormat.JPEG, 90, it) }
         return FileProvider.getUriForFile(Device.context, "${Device.context.packageName}.photos", file)
+    }
+
+    /** A page as the scanner writes it: a JPEG in the app's cache (a file:// address). */
+    private fun scannedPage(name: String): File {
+        val file = File(Device.context.cacheDir, "scanner/$name").apply { parentFile!!.mkdirs() }
+        val picture = Bitmap.createBitmap(300, 400, Bitmap.Config.ARGB_8888).apply { eraseColor(Color.WHITE) }
+        file.outputStream().use { picture.compress(Bitmap.CompressFormat.JPEG, 90, it) }
+        return file
     }
 
     /** Taps what shows `key`'s text in the page's language, as a finger would (a real touch:

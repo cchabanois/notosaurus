@@ -185,6 +185,7 @@ dependencies {
     implementation(libs.ktor.server.core)
     implementation(libs.ktor.server.cio)
     implementation(libs.code.scanner)
+    implementation(libs.document.scanner) // the camera's pages scanned (Scanner)
     implementation(libs.play.billing) // the subscription (Google Play Billing)
     implementation(libs.play.integrity) // the free trial: the app from Google Play on a real phone
     implementation(libs.kotlinx.coroutines.play.services)
@@ -220,7 +221,7 @@ licensee {
         because("Play Core's common part, which Play Integrity brings: Google's terms, as Play Integrity's")
     }
     allowUrl("https://developers.google.com/ml-kit/terms") {
-        because("ML Kit (the QR code scanner): not open source, its terms let an app ship it")
+        because("ML Kit (the QR code scanner, the document scanner): not open source, its terms let an app ship it")
     }
     bundleAndroidAsset.set(true)
     androidAssetReportPath.set("web/licences-android.json")

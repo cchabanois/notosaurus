@@ -40,18 +40,20 @@ from page.support import (  # noqa: E402
 
 
 def test_the_main_button_takes_the_first_photo(page):
-    """No photo yet: "📷 Photographiez la leçon" is not a dead button, it opens the camera."""
+    """No photo yet: "📷 Photographiez la leçon" is not a dead button, it opens the camera; which
+    may give several pages at once (the Android app's document scanner)."""
     page.goto("/")
     start = page.get_by_role("button", name="📷 Photographiez la leçon")
     sync_api.expect(start).to_be_enabled()
     with page.expect_file_chooser() as chooser:
         start.click()
     assert chooser.value.element.get_attribute("capture") == "environment"
+    assert chooser.value.is_multiple()
 
 
 def test_photos_and_pictures_seen_in_full(page):
     page.goto("/")
-    page.locator('input[type=file][accept="image/*"][multiple]').set_input_files(
+    page.locator('input[type=file][accept="image/*"][multiple]:not([capture])').set_input_files(
         [{"name": f"page-{n}.png", "mimeType": "image/png", "buffer": png(c)} for n, c in ((1, "red"), (2, "blue"))]
     )
     page.locator(".thumb img").first.click()
@@ -77,7 +79,7 @@ def test_a_picture_zoomed_with_two_fingers_then_moved(page):
     never off the screen; zoomed in, a swipe turns no page; pinched back, the whole picture."""
     page.set_viewport_size({"width": 360, "height": 780})
     page.goto("/")
-    page.locator('input[type=file][accept="image/*"][multiple]').set_input_files(
+    page.locator('input[type=file][accept="image/*"][multiple]:not([capture])').set_input_files(
         [{"name": f"page-{n}.png", "mimeType": "image/png", "buffer": png(c)} for n, c in ((1, "red"), (2, "blue"))]
     )
     page.locator(".thumb img").first.click()
@@ -121,7 +123,7 @@ def test_a_photo_seen_in_full_turned_and_a_name_hidden(page):
     """A lesson's photo seen in full: turned from there (the photo shown follows), a name
     hidden from there (its editor above the viewer): from there only, the thumbnail has ✕ alone."""
     page.goto("/")
-    page.locator('input[type=file][accept="image/*"][multiple]').set_input_files(
+    page.locator('input[type=file][accept="image/*"][multiple]:not([capture])').set_input_files(
         [{"name": "page-1.png", "mimeType": "image/png", "buffer": png("red")}]
     )
     page.locator(".thumb img").first.click()
@@ -238,7 +240,7 @@ def test_the_add_buttons_beside_the_pages_on_a_phone(page, width):
     page.goto("/")
     heights = []
     for n, color in enumerate(("red", "blue", "green", "orange"), start=1):
-        page.locator('input[type=file][accept="image/*"][multiple]').set_input_files(
+        page.locator('input[type=file][accept="image/*"][multiple]:not([capture])').set_input_files(
             {"name": f"page-{n}.png", "mimeType": "image/png", "buffer": plain_image(300, 400, color)}
         )
         sync_api.expect(page.locator(".thumb img")).to_have_count(n)
@@ -269,7 +271,7 @@ def test_the_one_page_beside_the_add_buttons_with_the_text_twice_as_large(page, 
     page.set_viewport_size({"width": width, "height": 860})
     page.goto("/")
     page.add_style_tag(content="html { font-size: 200%; }")
-    page.locator('input[type=file][accept="image/*"][multiple]').set_input_files(
+    page.locator('input[type=file][accept="image/*"][multiple]:not([capture])').set_input_files(
         {"name": "page-1.png", "mimeType": "image/png", "buffer": plain_image(300, 400, "red")}
     )
     sync_api.expect(page.locator(".thumb img")).to_have_count(1)
@@ -288,7 +290,7 @@ def test_the_add_buttons_off_once_the_lesson_has_its_thirty_pages(page):
     """Thirty pages, a lesson's most: the add buttons off, the camera's saying so; a page
     removed, on again."""
     page.goto("/")
-    page.locator('input[type=file][accept="image/*"][multiple]').set_input_files(
+    page.locator('input[type=file][accept="image/*"][multiple]:not([capture])').set_input_files(
         [{"name": f"page-{n}.png", "mimeType": "image/png", "buffer": plain_image(300, 400, "red")} for n in range(30)]
     )
     sync_api.expect(page.locator("figure.thumb img")).to_have_count(30)
@@ -615,7 +617,7 @@ def test_a_photo_put_in_place_of_another_turns_itself(page):
     turned, in the page. It turned the lesson's old photo at the server, by its number, and
     showed it in place of the new one (the page's photos no longer the server's)."""
     page.goto("/")
-    gallery = page.locator('input[type=file][accept="image/*"][multiple]')
+    gallery = page.locator('input[type=file][accept="image/*"][multiple]:not([capture])')
     gallery.set_input_files({"name": "p1.png", "mimeType": "image/png", "buffer": png("white")})
     page.locator(".chip").first.click()  # the free prompt
     page.locator("textarea[x-ref=promptText]").fill(FRONT_PROMPT)
@@ -651,7 +653,7 @@ def test_the_next_page_added_days_later(page):
     """A lesson reopened, a page added: "Add the new page's cards" reads it alone, its cards
     come after the lesson's (marked new), the ones made already stay."""
     page.goto("/")
-    gallery = page.locator('input[type=file][accept="image/*"][multiple]')
+    gallery = page.locator('input[type=file][accept="image/*"][multiple]:not([capture])')
     gallery.set_input_files({"name": "p1.png", "mimeType": "image/png", "buffer": png("white")})
     page.locator(".chip").first.click()  # the free prompt
     page.locator("textarea[x-ref=promptText]").fill(FRONT_PROMPT)
@@ -706,7 +708,7 @@ def test_more_pages_than_the_strip_holds(page, width):
     them all in a sheet, in order, each with its ✕; a tap there shows one in full."""
     page.set_viewport_size({"width": width, "height": 780})
     page.goto("/")
-    gallery = page.locator('input[type=file][accept="image/*"][multiple]')
+    gallery = page.locator('input[type=file][accept="image/*"][multiple]:not([capture])')
 
     def add(colors, start):
         files = [
@@ -789,7 +791,7 @@ def test_a_page_removed_from_the_viewer(page):
     one shown in its place (the one before when it was the last); the last page removed, the
     viewer closed."""
     page.goto("/")
-    page.locator('input[type=file][accept="image/*"][multiple]').set_input_files(
+    page.locator('input[type=file][accept="image/*"][multiple]:not([capture])').set_input_files(
         [{"name": f"page-{n}.png", "mimeType": "image/png", "buffer": png(c)} for n, c in enumerate(COLORS[:3])]
     )
     sync_api.expect(page.locator(".thumb img")).to_have_count(3)

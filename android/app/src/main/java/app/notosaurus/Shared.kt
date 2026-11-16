@@ -75,9 +75,10 @@ class Shared(private val dir: File) {
         File(dir, TEXT).writeText(texts.joinToString("\n\n").take(MAX_TEXT))
         File(dir, SKIPPED).writeText(JsonArray(skipped.map(::JsonPrimitive)).toString())
         File(dir, ERROR).apply { if (linkOnly) writeText(LINK_ONLY) else delete() }
+        File(dir, ID).writeText(java.util.UUID.randomUUID().toString())
     }
 
-    /** What the page may take: {files: [{n, name, type}], text, skipped: [names]}; empty when nothing waits. */
+    /** What the page may take: {files: [{n, name, type}], text, skipped: [names], id}; empty when nothing waits. */
     @Synchronized
     fun get(): JsonObject {
         val files = File(dir, FILES).takeIf { it.isFile }?.let { json.parseToJsonElement(it.readText()) } ?: JsonArray(emptyList())
@@ -87,6 +88,7 @@ class Shared(private val dir: File) {
             put("text", File(dir, TEXT).takeIf { it.isFile }?.readText().orEmpty())
             put("skipped", skipped)
             File(dir, ERROR).takeIf { it.isFile }?.let { put("error", it.readText()) } // a code, the page's texts say it
+            File(dir, ID).takeIf { it.isFile }?.let { put("id", it.readText()) } // which share: the page's DELETE names it
         }
     }
 
@@ -95,6 +97,14 @@ class Shared(private val dir: File) {
     @Synchronized
     fun clear() {
         dir.deleteRecursively()
+    }
+
+    /** Taken by the page: cleared if it is still the share it read ([id]; none, from an older page:
+     * whatever waits). Another shared meanwhile (between the page's reading and its DELETE) stays,
+     * for the page to take next: cleared, it was lost (no page, no error said). */
+    @Synchronized
+    fun taken(id: String?) {
+        if (id == null || File(dir, ID).takeIf { it.isFile }?.readText() == id) clear()
     }
 
     companion object {
@@ -106,6 +116,7 @@ class Shared(private val dir: File) {
         private const val TEXT = "text.txt"
         private const val SKIPPED = "skipped.json"
         private const val ERROR = "error.txt"
+        private const val ID = "id.txt"
         const val LINK_ONLY = "share.link_only"
         const val TITLE_MAX = 200 // a page's title, on its own line before or after its address
 
@@ -148,7 +159,7 @@ internal fun Route.sharedRoutes(server: LocalServer) {
             }
         }
         api("DELETE", "/api/shared") {
-            shared.clear()
+            shared.taken(call.request.queryParameters["id"])
             JsonObject(emptyMap())
         }
     }

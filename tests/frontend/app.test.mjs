@@ -948,7 +948,7 @@ test("a shared text in a lesson's pages: its words never cut, its paragraphs kep
 
 test("what was shared to the app: a lesson made kept and a new one started, a lesson in progress added to", async () => {
   const calls = [];
-  let shared = { files: [{ n: 1, name: "cahier.jpg", type: "image/jpeg" }, { n: 2, name: "Leçon.pdf", type: "application/pdf" }], text: "La Bastille.", skipped: ["archive.zip"] };
+  let shared = { files: [{ n: 1, name: "cahier.jpg", type: "image/jpeg" }, { n: 2, name: "Leçon.pdf", type: "application/pdf" }], text: "La Bastille.", skipped: ["archive.zip"], id: "s 1" };
   const page = await loadScripts("app.js", {
     routes: (url, options) => {
       calls.push(`${options?.method ?? "GET"} ${url}`);
@@ -968,7 +968,8 @@ test("what was shared to the app: a lesson made kept and a new one started, a le
   assert.equal(fresh, 1);
   assert.deepEqual(added, ["cahier.jpg image/jpeg", "Leçon.pdf application/pdf", "text: La Bastille."]);
   assert.equal(c.error, "Notosaurus takes photos, PDFs and text: “archive.zip” was not added.");
-  assert.deepEqual(calls.filter((call) => call.includes("shared")), ["GET /api/shared", "GET /api/shared/1", "GET /api/shared/2", "DELETE /api/shared"]);
+  // Taken: that share only, by its id (another shared meanwhile stays for the next call)
+  assert.deepEqual(calls.filter((call) => call.includes("shared")), ["GET /api/shared", "GET /api/shared/1", "GET /api/shared/2", "DELETE /api/shared?id=s%201"]);
 
   added.length = 0;
   c.error = "";

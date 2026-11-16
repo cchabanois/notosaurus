@@ -134,8 +134,10 @@ the computer, on the home Wi-Fi: nothing goes through the Notosaurus service the
   heard by the phone's speech recognition (Android's, usually Google's, on the phone or on its
   servers, as its settings say), or, on a phone without one, written by the service's AI.
 - **AnkiDroid**, to add the cards to it, asked at the first send.
-- Photos are taken by the phone's camera or picked in the gallery, when you do it. The app
-  doesn't need access to all your photos.
+- Photos are taken when you do it, with Google's document scanner (Google Play services, on the
+  phone: the app doesn't ask for the camera and gets only the pages you keep; Google may collect
+  anonymous usage statistics of the scanner, never the photos), or with the phone's camera, or
+  picked in the gallery. The app doesn't need access to all your photos.
 - **Notifications**: none asked. While a lesson is being made or sent, the app may run in the background a few minutes; where notifications are allowed, it shows one meanwhile.
 - The computer's **QR code** is read by Google Play services' code scanner, on the phone: the app gets only the address read, never the camera's image.
 

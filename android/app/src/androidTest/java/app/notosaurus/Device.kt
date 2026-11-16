@@ -101,7 +101,11 @@ object Device {
             if (runCatching { js(scenario, "Boolean($expression)") }.getOrNull() == "true") return
             Thread.sleep(300)
         }
-        error("Timed out waiting for: $what (page: ${js(scenario, "location.href")})")
+        // What the page shows then (its error, its pages): why, read from the run's report
+        val state = runCatching {
+            js(scenario, "(() => { try { const d = Alpine.\$data(document.querySelector('[x-data]')); return JSON.stringify({ error: d.error, photos: d.photos?.length, texts: d.photos?.map((p) => p.text ?? null) }); } catch (e) { return String(e); } })()")
+        }.getOrNull()
+        error("Timed out waiting for: $what (page: ${js(scenario, "location.href")}, state: $state)")
     }
 
     /** Runs async JavaScript in the page; returns what it puts in window.__result (as JSON). */

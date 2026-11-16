@@ -139,8 +139,10 @@ Notosaurus. Se aplica la página [Privacidad y seguridad](../privacy/).
   el reconocimiento de voz del móvil (el de Android, normalmente el de Google, en el móvil o en sus
   servidores, según sus ajustes) o, en un móvil sin él, la escribe la IA del servicio.
 - **AnkiDroid**, para añadirle las tarjetas, pedido en el primer envío.
-- Las fotos se hacen con la cámara del móvil o se eligen en la galería, cuando tú lo haces. La
-  aplicación no necesita acceso a todas tus fotos.
+- Las fotos se hacen cuando tú lo haces, con el escáner de documentos de Google (servicios de
+  Google Play, en el móvil: la aplicación no pide la cámara y solo recibe las páginas que guardas;
+  Google puede recoger estadísticas de uso anónimas del escáner, nunca las fotos), o con la cámara
+  del móvil, o se eligen en la galería. La aplicación no necesita acceso a todas tus fotos.
 - **Notificaciones**: no se pide ningún permiso. Mientras se crea o se envía una lección, la aplicación puede seguir unos minutos en segundo plano; donde las notificaciones están permitidas, muestra una mientras tanto.
 - El **código QR** del ordenador lo lee el lector de códigos de los servicios de Google Play, en el móvil: la aplicación solo recibe la dirección leída, nunca la imagen de la cámara.
 

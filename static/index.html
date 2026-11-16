@@ -163,7 +163,7 @@
           <label class="add-tile primary">
             <span class="add-icon">📷</span>
             <span x-text="photos.length >= maxPhotos ? $t('app.photos.max', { max: maxPhotos }) : photos.length ? $t('app.photos.nextPage') : $t('app.photos.takePhoto')"></span>
-            <input type="file" accept="image/*" capture="environment" hidden x-ref="camera" :disabled="photos.length >= maxPhotos" @change="addPhotos($event)">
+            <input type="file" accept="image/*" capture="environment" multiple hidden x-ref="camera" :disabled="photos.length >= maxPhotos" @change="addPhotos($event)">
           </label>
           <label class="add-tile" :class="{ dropping: dropTile === 'gallery' }" @dragover="dragOver($event, 'gallery')"
                  @dragleave="dropTile = ''" @drop="dropFiles($event)">
