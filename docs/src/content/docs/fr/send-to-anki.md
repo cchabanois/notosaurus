@@ -33,8 +33,12 @@ et renvoyée met à jour ses cartes dans Anki, historique gardé, au lieu de les
 
 ## Le fichier .apkg
 
-**⬇️ .apkg** télécharge le paquet sous forme de fichier, avec son audio et ses images, sans
-qu'Anki ait besoin d'être ouvert :
+Quand Notosaurus ne peut pas joindre Anki, **⬇️ Exporter vers Anki (.apkg)** remplace
+**📥 Ajouter à Anki** : il télécharge le paquet sous forme de fichier, avec son audio et ses
+images. Quand Anki est joignable, **📤 Partager**, à côté de **📥 Ajouter à Anki**, fait le
+même fichier (pour une autre famille : voir
+[Partager des cartes avec une autre famille](../lessons/#partager-des-cartes-avec-une-autre-famille)).
+Pour l'ouvrir :
 
 - **sur un ordinateur**, double-cliquez dessus : Anki l'importe ;
 - **sur Android**, ouvrez le fichier téléchargé et choisissez **AnkiDroid**. Si AnkiDroid n'est pas
