@@ -60,6 +60,7 @@
       "rotate": "Turn the photo a quarter turn",
       "crop": "Crop the page",
       "hide": "Black out part of this page (a name…)",
+      "cropped": "Page cropped",
       "hidden": "Part of this page is hidden",
       "takePhoto": "Take a photo",
       "nextPage": "Next page",

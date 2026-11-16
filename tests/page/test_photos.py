@@ -505,14 +505,14 @@ def test_a_photo_cropped_by_its_frames_corners(page):
 
 
 def test_the_viewers_crop_and_black_out_buttons_open_the_editor_in_their_mode(page):
-    """Two buttons, one editor: ✂️ opens it cropping (the frame's corners), 🖍️ blacking out (no
-    frame); its modes in that order, ✂️ first; its title speaks of both."""
+    """Two buttons, one editor: the crop one opens it cropping (the frame's corners), 🖍️ blacking
+    out (no frame); its modes in that order, cropping first; its title speaks of both."""
     page.goto("/")
     add_photo(page, halves())
     editor = open_hide(page, crop=True)
     sync_api.expect(page.get_by_role("dialog", name="Préparer la photo")).to_be_visible()
     modes = editor.locator(".hide-modes button")
-    sync_api.expect(modes).to_have_text(["✂️ Recadrer", "⬛ Noircir", "◻️ Dénoircir"])
+    sync_api.expect(modes).to_have_text(["Recadrer", "⬛ Noircir", "◻️ Dénoircir"])
     sync_api.expect(editor.get_by_role("button", name="Recadrer", exact=True)).to_have_attribute("aria-pressed", "true")
     sync_api.expect(page.locator(".hide-stage .crop-handle:visible")).to_have_count(4)
     sync_api.expect(editor.get_by_role("button", name="Tout garder")).to_be_visible()
@@ -529,7 +529,7 @@ def test_the_viewers_crop_and_black_out_buttons_open_the_editor_in_their_mode(pa
 
 @pytest.mark.parametrize("lang", ["en", "fr", "es", "de", "it", "pt"])
 def test_the_editors_buttons_fit_a_narrow_phone(page, browser, server, lang):
-    """Opened by ✂️ on a 360-pixel-wide phone: its three modes and its actions all on the
+    """Opened by the crop button on a 360-pixel-wide phone: its three modes and its actions all on the
     screen, in every language (none cut at an edge)."""
     context = browser.new_context(locale="fr-FR", viewport={"width": 360, "height": 780}, base_url=server)
     context.add_init_script(f"localStorage.setItem('notosaurus.lang', '{lang}')")
@@ -539,7 +539,7 @@ def test_the_editors_buttons_fit_a_narrow_phone(page, browser, server, lang):
         other.wait_for_function("document.documentElement.classList.contains('i18n-ready')")
         add_photo(other, halves())
         other.locator(".strip .thumb img").first.click()
-        other.locator(".viewer-actions button").nth(2).click()  # ✂️
+        other.locator(".viewer-actions button").nth(2).click()  # crop
         sync_api.expect(other.locator(".hide-stage .crop-handle:visible")).to_have_count(4)
         cut = other.evaluate("""() => [...document.querySelectorAll('.hide-tools button')]
             .filter((b) => b.offsetParent)
@@ -552,23 +552,45 @@ def test_the_editors_buttons_fit_a_narrow_phone(page, browser, server, lang):
 
 
 def test_each_viewer_button_marked_by_what_it_did(page):
-    """✂️ highlighted once the photo is cropped, 🖍️ once something is blacked out on it."""
+    """The crop button drawn with Material's crop icon (vendor/material, no emoji in it). Once
+    the photo is cropped, a dot in its corner (its background kept: a filled button reads as
+    pressed), told to screen readers; 🖍️'s dot once something is blacked out on it."""
     page.goto("/")
     add_photo(page, halves())
     viewer = page.locator(".viewer")
     crop, hide = (viewer.get_by_role("button", name=name, exact=True) for name in (CROP_BUTTON, HIDE_BUTTON))
+    dot = "e => getComputedStyle(e, '::after').content"
+    background = "e => getComputedStyle(e).backgroundColor"
+    page.locator(".strip .thumb img").first.click()
+    sync_api.expect(crop).to_have_text("")
+    assert "vendor/material/crop.svg" in crop.locator(".crop-icon").evaluate("e => getComputedStyle(e).maskImage")
+    assert page.request.get("/vendor/material/crop.svg").headers["content-type"].startswith("image/svg+xml")
+    before = crop.evaluate(background)
+    for button in (crop, hide):
+        assert button.evaluate(dot) == "none"
+        sync_api.expect(button).not_to_have_attribute("aria-describedby", re.compile("."))
+
     editor = open_hide(page, crop=True)
+    # Its mode in the editor: the same icon, its name kept
+    mode = editor.get_by_role("button", name="Recadrer", exact=True)
+    assert "vendor/material/crop.svg" in mode.locator(".crop-icon").evaluate("e => getComputedStyle(e).maskImage")
+    sync_api.expect(mode).not_to_contain_text("✂️")
     crop_corner(page, "nw", 0.5, 0)
     editor.get_by_role("button", name="Terminé").click()
     sync_api.expect(editor).to_be_hidden()
-    sync_api.expect(crop).to_have_class(re.compile(r"\bused\b"))
-    sync_api.expect(hide).not_to_have_class(re.compile(r"\bused\b"))
+    sync_api.expect(crop).to_have_accessible_description("Page recadrée")
+    assert crop.evaluate(dot) != "none"
+    assert crop.evaluate(background) == before
+    assert hide.evaluate(dot) == "none"
+    sync_api.expect(hide).not_to_have_attribute("aria-describedby", re.compile("."))
 
     open_hide(page)
     stroke(page, 0.5)
     editor.get_by_role("button", name="Terminé").click()
     sync_api.expect(editor).to_be_hidden()
-    sync_api.expect(hide).to_have_class(re.compile(r"\bused\b"))
+    sync_api.expect(hide).to_have_accessible_description("Une partie de cette page est cachée")
+    assert hide.evaluate(dot) != "none"
+    assert hide.evaluate(background) == before
 
 
 def test_crop_and_black_out_gone_once_the_photo_is_sent(page):

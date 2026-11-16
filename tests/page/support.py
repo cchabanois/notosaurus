@@ -159,7 +159,7 @@ HIDE_BUTTON = "Noircir une partie de la page (un nom…)"
 
 def open_hide(page, crop: bool = False):
     """The first photo's editor, open: from the viewer (a tap on the page; the viewer left
-    open under it, close_viewer then), by its 🖍️ (blacking out) or, `crop`, its ✂️."""
+    open under it, close_viewer then), by its 🖍️ (blacking out) or, `crop`, its crop button."""
     viewer = page.locator(".viewer")
     if not viewer.is_visible():
         page.locator(".strip .thumb img").first.click()
