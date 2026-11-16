@@ -2,6 +2,7 @@
 trigonometric circle, lengths, fractions, vectors, coordinate frames."""
 
 import json
+import math
 import re
 import tempfile
 from itertools import pairwise
@@ -676,6 +677,24 @@ def test_the_rule_shows_a_tiling_that_compiles():
     rule = figures_typst.FAMILIES["geometry"].rules
     (call,) = re.findall(r"`(#tiling\([^`]*\))`", rule)
     assert figures_typst.compile_svg("geometry", call).startswith("<svg")
+
+
+def test_the_real_line_wound_round_the_circle():
+    """The real line wound round the trigonometric circle, drawn by the AI: a circle with
+    nothing wound, or names on one another (0 drawings in 3). `ctz-draw-wrapping` draws it from
+    the values: each number's stretch on the tangent line and its arc, as long as it, in the
+    same colour; π/2 comes onto (0 ; r), π onto (−r ; 0). Its size follows: π r tall above
+    the axis. The rule's call compiles."""
+    draw = "#ctz-canvas({{ ctz-init(); ctz-draw-wrapping(numbers: {numbers}, r: 2) }})"
+    half = figures_typst.compile_svg("geometry", draw.format(numbers="((0, $0$, $I$), (calc.pi / 2, $pi/2$, $J$))"))
+    whole = figures_typst.compile_svg("geometry", draw.format(numbers="((0, $0$, $I$), (calc.pi, $pi$, none))"))
+    assert half != whole
+    _, h_half = drawn_size("geometry", draw.format(numbers="((calc.pi / 2, $pi/2$),)"))
+    _, h_whole = drawn_size("geometry", draw.format(numbers="((calc.pi, $pi$),)"))
+    assert h_whole - h_half == pytest.approx(2 * math.pi / 2 * 28.35, rel=0.1)  # π r − π r / 2, in pt
+    rule = figures_typst.FAMILIES["geometry"].rules
+    (call,) = re.findall(r"`(ctz-draw-wrapping\([^`]*\))`", rule)
+    assert figures_typst.compile_svg("geometry", f"#ctz-canvas({{ ctz-init(); {call} }})").startswith("<svg")
 
 
 def test_a_rotations_arrowed_arc_drawn_from_its_points():

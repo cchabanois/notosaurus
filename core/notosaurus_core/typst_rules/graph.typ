@@ -69,6 +69,33 @@
   let y = top.zip(bottom, heights).map(((t, u, h)) => (t + u) / 2 * h).sum() / total
   lq.place(x, y, box(fill: white, inset: 0.15em, radius: 2pt, name), align: center + horizon)
 }
+// Rectangles under or over a curve (the rectangle method, a Riemann sum): [a, b] cut into `n`
+// equal parts, each rectangle's height computed from f, never drawn by hand: `side: "left"` or
+// `"right"` (f at the part's left or right end), `"middle"`, `"lower"` or `"upper"` (f's least or
+// greatest value on the part: the rectangles under the curve, those over it). One surface,
+// its outline drawing every rectangle's sides; twice for both framings, the lower ones first.
+#let _rect-heights(f, a, b, n, side) = range(n).map(i => {
+  let w = (b - a) / n
+  let (x0, x1) = (a + i * w, a + (i + 1) * w)
+  if side == "left" { f(x0) } else if side == "right" { f(x1) } else if side == "middle" { f((x0 + x1) / 2) } else {
+    let ys = range(21).map(k => f(x0 + (x1 - x0) * k / 20))
+    if side == "lower" { calc.min(..ys) } else { calc.max(..ys) }
+  }
+})
+#let rectangles(f, a, b, n, side: "left", fill: rgb(200, 215, 240, 160), stroke: black + 0.7pt) = {
+  assert(type(n) == int and n >= 1, message: "n: the number of rectangles, a whole number from 1")
+  assert(side in ("left", "right", "middle", "lower", "upper"), message: "side: \"left\", \"right\", \"middle\", \"lower\" or \"upper\"")
+  let w = (b - a) / n
+  let heights = _rect-heights(f, a, b, n, side)
+  // a comb: up each part's left side, across its top, down its right side
+  let (xs, ys) = ((), ())
+  for i in range(n) {
+    let (x0, x1, h) = (a + i * w, a + (i + 1) * w, heights.at(i))
+    xs += (x0, x0, x1, x1)
+    ys += (0, h, h, 0)
+  }
+  lq.fill-between(xs, ys, y2: xs.map(_ => 0), fill: fill, stroke: stroke)
+}
 // Where two curves meet (two lines, a parabola and a line): computed, never by eye: each
 // change of sign of f − g between `from` and `to`, refined by bisection, and each place they
 // touch without crossing (a tangent), refined by golden-section search; a dot there, seen
