@@ -54,6 +54,7 @@ Each pull request's entries (the `## Changelog` of its description) are put unde
 
 ### Changed
 
+- 🖼️ The photo viewer's crop button shows the usual crop icon (two crossing right angles) instead of scissors, as does the editor's « Recadrer » mode; a page cropped or blacked out is now marked by a small dot on its button instead of a filled background, and told to screen readers.
 - ✂️ Cropping a photo has its own button in the full-screen photo, next to 🖍️ for blacking out a name: each opens the editor ("Prepare the photo") ready for its job.
 - Maps: when a river, relief or sea is not in the atlas, the error names the closest ones it has, so the AI can correct the name instead of dropping it.
 - 🗺️ The past borders come from OpenHistoricalMap: finer, dated to the day, every colony with its ruler.
