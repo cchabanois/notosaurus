@@ -9,6 +9,7 @@ Each pull request's entries (the `## Changelog` of its description) are put unde
 
 ### Added
 
+- 📄 **The app scans the lesson's pages** (Android): 📷 opens Google's document scanner: several pages in one go, each found, straightened and cropped to its edges, shadows lightened, as many as the lesson has room for. No camera permission; on a phone without Google Play services, or until the scanner is downloaded, the phone's camera as before.
 - 🧭 Maps centred on a pole: the Arctic with its countries and its sea routes (the Northern Sea Route, the North-West Passage), and Antarctica, as seen from above the pole.
 - 🗺️ History maps for every year from 1815 to 1991, the Second World War's included: Europe under Germany in 1942, Japan's empire, Germany's occupation zones, Africa before and after its partition, Algeria French until 1962.
 - 🗺️ Maps of history drawn with the borders of the time: the Congress of Vienna's Europe, the German Empire, 1914's alliances and colonial empires, the interwar years, the Anschluss, Germany's occupation zones, the Cold War's blocs.
@@ -69,6 +70,7 @@ Each pull request's entries (the `## Changelog` of its description) are put unde
 
 ### Fixed
 
+- Two things shared to the app in a row (Android): the second is no longer lost when it comes while the page is taking the first.
 - Geometry figures: lengths, angle values and line names no longer fall on a side, a point or a line; a segment cut by a point (a diameter through its centre) has its length on a dimension line over its whole length.
 - 📈 A line chart of small values (concentrations in thousandths) gets a graduation you can read values from, instead of a single band.
 - 🔵 Names written under a Venn diagram no longer overlap.
