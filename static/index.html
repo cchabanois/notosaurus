@@ -1037,7 +1037,7 @@
     <div class="hide-tools">
       <div class="hide-modes" role="group">
         <button type="button" class="btn soft" :class="{ chosen: hiding.crop }" :aria-pressed="String(hiding.crop)"
-                @click="hiding.crop = true"><span aria-hidden="true">✂️</span> <span x-text="$t('app.hide.crop')"></span></button>
+                @click="hiding.crop = true"><span class="crop-icon" aria-hidden="true"></span> <span x-text="$t('app.hide.crop')"></span></button>
         <button type="button" class="btn soft" :class="{ chosen: !hiding.crop && !hiding.erase }" :aria-pressed="String(!hiding.crop && !hiding.erase)"
                 @click="hiding.crop = false; hiding.erase = false"><span aria-hidden="true">⬛</span> <span x-text="$t('app.hide.paint')"></span></button>
         <button type="button" class="btn soft" :class="{ chosen: !hiding.crop && hiding.erase }" :aria-pressed="String(!hiding.crop && hiding.erase)"
@@ -1076,11 +1076,16 @@
       <button @click="removeShownPhoto()" :aria-label="$t('app.photos.remove')" :title="$t('app.photos.remove')">🗑️</button>
       <button @click="rotatePhoto(viewer.index)" :disabled="loading" :aria-label="$t('app.photos.rotate')"
               :title="$t('app.photos.rotate')">↻</button>
-      <!-- One editor, opened in the mode its button names: ✂️ cropping, 🖍️ blacking out -->
-      <button :class="{ used: photos[viewer.index]?.crop }" x-show="!photos[viewer.index]?.sent" @click="openHide(viewer.index, true)"
-              :disabled="loading" :aria-label="$t('app.photos.crop')" :title="$t('app.photos.crop')">✂️</button>
-      <button :class="{ used: photos[viewer.index]?.mask }" x-show="!photos[viewer.index]?.sent" @click="openHide(viewer.index)"
-              :disabled="loading" :aria-label="$t('app.photos.hide')" :title="$t('app.photos.hide')">🖍️</button>
+      <!-- One editor, opened in the mode its button names: Material's crop icon cropping, 🖍️ blacking
+           out; a dot on the button once its action was done on this page, told to screen readers too -->
+      <button :class="{ done: photos[viewer.index]?.crop }" x-show="!photos[viewer.index]?.sent"
+              @click="openHide(viewer.index, true)" :disabled="loading" :aria-label="$t('app.photos.crop')" :title="$t('app.photos.crop')"
+              :aria-describedby="photos[viewer.index]?.crop ? 'viewer-cropped' : null"><span class="crop-icon" aria-hidden="true"></span></button>
+      <button :class="{ done: photos[viewer.index]?.mask }" x-show="!photos[viewer.index]?.sent" @click="openHide(viewer.index)"
+              :disabled="loading" :aria-label="$t('app.photos.hide')" :title="$t('app.photos.hide')"
+              :aria-describedby="photos[viewer.index]?.mask ? 'viewer-hidden' : null">🖍️</button>
+      <span id="viewer-cropped" class="visually-hidden" x-text="$t('app.photos.cropped')"></span>
+      <span id="viewer-hidden" class="visually-hidden" x-text="$t('app.photos.hidden')"></span>
     </div>
     <template x-if="viewerList().length > 1">
       <div>

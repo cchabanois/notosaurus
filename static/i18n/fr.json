@@ -60,6 +60,7 @@
       "rotate": "Tourner la photo d'un quart de tour",
       "crop": "Recadrer la page",
       "hide": "Noircir une partie de la page (un nom…)",
+      "cropped": "Page recadrée",
       "hidden": "Une partie de cette page est cachée",
       "takePhoto": "Prendre une photo",
       "nextPage": "Page suivante",

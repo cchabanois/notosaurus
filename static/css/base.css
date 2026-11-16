@@ -13,6 +13,10 @@ body {
 
 [x-cloak] { display: none !important; }
 
+/* Read by screen readers, not shown */
+.visually-hidden { position: absolute; width: 1px; height: 1px; margin: -1px; padding: 0; overflow: hidden;
+  clip: rect(0 0 0 0); white-space: nowrap; border: 0; }
+
 /* Until the translations are loaded (i18n.js), don't show untranslated keys. */
 html:not(.i18n-ready) .app { visibility: hidden; }
 
