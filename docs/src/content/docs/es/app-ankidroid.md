@@ -4,7 +4,7 @@ description: "Cómo pone la aplicación las tarjetas en AnkiDroid: su permiso, a
 ---
 
 En este teléfono, las tarjetas van a **AnkiDroid**, la aplicación gratuita de Anki para Android:
-sin `.apkg`, sin ordenador, sin esperar a la sincronización.
+sin archivo que importar, sin ordenador, sin esperar a la sincronización.
 
 ## La primera vez
 

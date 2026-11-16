@@ -32,8 +32,12 @@ e inviata di nuovo aggiorna le sue carte in Anki, cronologia mantenuta, invece d
 
 ## Il file .apkg
 
-**⬇️ .apkg** scarica il mazzo come file, con il suo audio e le sue immagini, senza bisogno di avere
-Anki aperto:
+Quando Notosaurus non riesce a raggiungere Anki, **⬇️ Esporta per Anki (.apkg)** sostituisce
+**📥 Aggiungi ad Anki**: scarica il mazzo come file, con il suo audio e le sue immagini. Quando
+Anki è raggiungibile, **📤 Condividi**, accanto a **📥 Aggiungi ad Anki**, fa lo stesso file (per
+un'altra famiglia: vedi
+[Condividere le carte con un'altra famiglia](../lessons/#condividere-le-carte-con-unaltra-famiglia)).
+Per aprirlo:
 
 - **su un computer**, fai doppio clic: Anki lo importa;
 - **su Android**, apri il file scaricato e scegli **AnkiDroid**. Se AnkiDroid non viene proposto,

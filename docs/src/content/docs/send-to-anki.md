@@ -32,8 +32,11 @@ updates its cards in Anki, history kept, instead of duplicating them. See
 
 ## The .apkg file
 
-**⬇️ .apkg** downloads the deck as a file, with its audio and pictures, without needing Anki to
-be open:
+When Notosaurus can't reach Anki, **⬇️ Export to Anki (.apkg)** replaces **📥 Add to Anki**: it
+downloads the deck as a file, with its audio and pictures. When Anki is reachable, **📤 Share**,
+next to **📥 Add to Anki**, makes the same file (for another family: see
+[Sharing cards with another family](../lessons/#sharing-cards-with-another-family)).
+To open it:
 
 - **on a computer**, double-click it: Anki imports it;
 - **on Android**, open the downloaded file and choose **AnkiDroid**. If AnkiDroid isn't

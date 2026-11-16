@@ -33,7 +33,12 @@ enviada de novo atualiza os cartões dela no Anki, com o histórico, em vez de d
 
 ## O arquivo .apkg
 
-**⬇️ .apkg** baixa o baralho como arquivo, com o áudio e as imagens, sem precisar do Anki aberto:
+Quando o Notosaurus não consegue contatar o Anki, **⬇️ Exportar para o Anki (.apkg)** substitui
+**📥 Adicionar ao Anki**: ele baixa o baralho como arquivo, com o áudio e as imagens. Quando o
+Anki está acessível, **📤 Partilhar**, ao lado de **📥 Adicionar ao Anki**, faz o mesmo arquivo
+(para outra família: veja
+[Compartilhar cartões com outra família](../lessons/#compartilhar-cartões-com-outra-família)).
+Para abri-lo:
 
 - **em um computador**, clique duas vezes nele: o Anki o importa;
 - **no Android**, abra o arquivo baixado e escolha **AnkiDroid**. Se o AnkiDroid não aparecer,

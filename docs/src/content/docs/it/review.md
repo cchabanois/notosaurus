@@ -67,6 +67,9 @@ Tocca **Correggi**. L'IA rivede le foto e cambia solo ciò che hai chiesto: le c
 segnate come **modificata**, le nuove come **nuova**, e una frase riassume ciò che ha fatto.
 **↩ Annulla** riporta le carte com'erano.
 
+Cambi idea mentre l'IA corregge (la lezione o una sola carta)? **Annulla** la ferma subito: le
+carte restano come erano.
+
 ## Spiegare una carta
 
 **Spiega questa carta** (💬) chiede all'IA di spiegarla: cosa significa, e perché la sua risposta

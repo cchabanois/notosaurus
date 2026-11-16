@@ -69,6 +69,9 @@ Toca **Corregir**. La IA vuelve a ver las fotos y solo cambia lo que has pedido:
 cambiadas se marcan como **cambiada**, las nuevas como **nueva**, y una frase resume lo que ha
 hecho. **↩ Deshacer** deja las tarjetas como estaban.
 
+¿Cambias de opinión mientras la IA corrige (la lección o una sola tarjeta)? **Cancelar** la
+detiene de inmediato: las tarjetas se quedan como estaban.
+
 ## Explicar una tarjeta
 
 **Explicar esta tarjeta** (💬) pide a la IA que la explique: qué quiere decir y por qué su
