@@ -35,7 +35,7 @@ bittet dich dann, ihre [Datenschutzerklärung](../app-privacy/) zu akzeptieren:
 - Die KI hat für Schüler passende Schutzmechanismen, kann sich aber irren: Prüfe die Karten,
   bevor du sie deinem Kind gibst.
 - Eine Heftseite zeigt oft den Namen des Kindes: Verdecke ihn vor dem Senden mit der Schaltfläche
-  **Verdecken** (🖍️) (siehe [Fotos und PDFs](../photos/)).
+  **Schwärzen** (🖍️) (siehe [Fotos und PDFs](../photos/)).
 
 ![Der Willkommensbildschirm der App: ein Werkzeug für Eltern, Gemini, die kostenlose Testphase, die Datenschutzerklärung zum Akzeptieren](../../../assets/screenshots/en/app-welcome.png)
 

@@ -31,7 +31,7 @@ you to accept its [privacy policy](../app-privacy/):
   on Google's servers, which may be outside the European Union. Your lessons stay on your phone.
 - The AI has safeguards suited to pupils, but it can make mistakes: check the cards before
   giving them to your child.
-- A notebook page often shows the child's name: hide it with the **Hide** button (🖍️) before sending (see
+- A notebook page often shows the child's name: hide it with the **Black out** button (🖍️) before sending (see
   [Photos and PDFs](../photos/)).
 
 ![The app's welcome: a tool for parents, Gemini, the free trial, the privacy policy to accept](../../assets/screenshots/en/app-welcome.png)

@@ -153,13 +153,17 @@ def add_text_pdf(page, browser) -> None:
     sync_api.expect(page.locator(".thumb img")).to_have_count(1)
 
 
-def open_hide(page):
-    """The first photo's 🖍️ editor, open: from the viewer (a tap on the page; the viewer left
-    open under it, close_viewer then)."""
+CROP_BUTTON = "Recadrer la page"
+HIDE_BUTTON = "Noircir une partie de la page (un nom…)"
+
+
+def open_hide(page, crop: bool = False):
+    """The first photo's editor, open: from the viewer (a tap on the page; the viewer left
+    open under it, close_viewer then), by its 🖍️ (blacking out) or, `crop`, its ✂️."""
     viewer = page.locator(".viewer")
     if not viewer.is_visible():
         page.locator(".strip .thumb img").first.click()
-    viewer.get_by_role("button", name="Recadrer ou cacher une partie de la page (un nom…)").click()
+    viewer.get_by_role("button", name=CROP_BUTTON if crop else HIDE_BUTTON, exact=True).click()
     editor = page.locator(".hide-editor")
     sync_api.expect(editor).to_be_visible()
     return editor

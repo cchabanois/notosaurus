@@ -33,7 +33,7 @@ pede que você aceite a sua [política de privacidade](../app-privacy/):
   do Google, que podem ficar fora da União Europeia. Suas lições ficam no seu celular.
 - A IA tem proteções adequadas para alunos, mas pode errar: confira os cartões antes de dá-los ao
   seu filho.
-- Uma página de caderno muitas vezes mostra o nome da criança: oculte-o com o botão **Ocultar**
+- Uma página de caderno muitas vezes mostra o nome da criança: oculte-o com o botão **Tapar**
   (🖍️) antes de enviar (veja [Fotos e PDFs](../photos/)).
 
 ![As boas-vindas do app: uma ferramenta para pais, o Gemini, o teste grátis, a política de privacidade a aceitar](../../../assets/screenshots/en/app-welcome.png)
