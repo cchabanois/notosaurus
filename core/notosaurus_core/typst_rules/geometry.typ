@@ -157,7 +157,7 @@
 // instead, each on a tick of its own; `scale` a decade's length (by default the line about 12).
 // A name's width in letters, guessed (no context inside a canvas): a fraction its wider part,
 // an exponent smaller
-#let _name-chars(c) = if type(c) == str { c.clusters().len() } else if c.func() == math.frac { calc.max(_name-chars(c.num), _name-chars(c.denom)) } else if c.func() == math.attach { _name-chars(c.base) + 0.6 * ("t", "b").filter(k => c.has(k)).map(k => _name-chars(c.at(k))).sum(default: 0) } else if c.has("text") { c.text.clusters().len() } else if c.has("children") { c.children.map(_name-chars).sum(default: 0) } else if c.has("body") { _name-chars(c.body) } else { 1 }
+#let _name-chars(c) = if type(c) == str { c.clusters().len() } else if c.func() == [ ].func() { 0 } else if c.func() == math.accent { _name-chars(c.base) } else if c.func() == math.frac { calc.max(_name-chars(c.num), _name-chars(c.denom)) } else if c.func() == math.attach { _name-chars(c.base) + 0.6 * ("t", "b").filter(k => c.has(k)).map(k => _name-chars(c.at(k))).sum(default: 0) } else if c.has("text") { c.text.clusters().len() } else if c.has("children") { c.children.map(_name-chars).sum(default: 0) } else if c.has("body") { _name-chars(c.body) } else { 1 }
 // Each name's row above its line (0 the first), from the names' places and widths, left to
 // right: the lowest row where it clears the names already in it, its line down to its point
 // clear of the names below it and its own name clear of the lines going up past it (when a
@@ -471,13 +471,38 @@
 }
 // A text's half-size in the canvas's cm, guessed from its letters (no context inside a canvas)
 #let _text-half(label) = (0.11 * _name-chars(label) + 0.06, 0.24)
+// The texts the preamble places (a length, an angle's value or name, a line's name) placed
+// once the whole drawing is, at the canvas's end (ctz-canvas): clear of every stroke, drawn
+// before them or after (a length the AI wrote before the compass arcs crossing it). Outside
+// ctz-canvas (nothing to place them at the end), placed at once.
+#let _texts-key = "notosaurus-texts"
+#let _later(now, args, named: (:)) = cetz.draw.get-ctx(ctx => {
+  if ctx.shared-state.at(_texts-key, default: none) == none { now(..args, ..named) } else {
+    ((ctx => {
+      let waiting = ctx.shared-state.at(_texts-key)
+      waiting.push((now: now, args: args, named: named))
+      ctx.shared-state.insert(_texts-key, waiting)
+      (ctx: ctx)
+    }),)
+  }
+})
+#let _ctz-canvas-drawn = ctz-canvas
+#let ctz-canvas(..args) = {
+  let body = args.pos().at(0, default: none)
+  let body = if body == none { () } else if type(body) == array { body } else if type(body) == content and body.has("children") { body.children } else { (body,) }
+  let start = ((ctx => { ctx.shared-state.insert(_texts-key, ()); (ctx: ctx) }),)
+  let end = cetz.draw.get-ctx(ctx => {
+    for t in ctx.shared-state.at(_texts-key, default: ()) { (t.now)(..t.args, ..t.named) }
+  })
+  _ctz-canvas-drawn(..args.named(), start + body + end)
+}
 // A length written on its segment, never on its line: beside its middle, on the side away
 // from the point `away` (the figure's other vertex), the text's near edge clear of the line
 // (anchored by the side it faces). `level: 2` (a segment holding another one already
 // labelled, [AB] around [AM]): a dimension line beside the segment, its two arrows at its
 // ends, the length beside that line's middle.
 // A content's text, to size a label without measuring it (no context inside a canvas)
-#let ctz-draw-length(a, b, label, away: none, level: 1, pos: 0.5) = cetz.draw.get-ctx(ctx => {
+#let _length-now(a, b, label, away: none, level: 1, pos: 0.5) = cetz.draw.get-ctx(ctx => {
   import cetz.draw: *
   let at(n) = cetz.coordinate.resolve(ctx, "ctz:" + n).at(1)
   let (pa, pb) = (at(a), at(b))
@@ -529,8 +554,27 @@
     let across = calc.abs((q.at(0) - pa.at(0)) * nx + (q.at(1) - pa.at(1)) * ny)
     t > 0.03 and t < 0.97 and across < 0.05
   })
+  // a word naming the segment (rayon, diamètre), no measure: beside it whatever cuts it, never
+  // on a dimension line (drawn askew over a circle, it ran across the other words)
+  let word = not _plain(label).clusters().any(c => c in "0123456789")
+  let cut = cut and not word
   // not cut: at its middle on the side with the less in the way (the away one when even)
   let free = if cut { none } else { (placed(1, off), placed(-1, off)).sorted(key: p => p.hits).first() }
+  // a word with no room at the middle: farther out, then along the segment (a name slid along
+  // it still names it, as a measure would not)
+  if word and free.hits >= 2 {
+    let along(t, side, d) = {
+      let (sx, sy) = (side * nx, side * ny)
+      let reach = hw * calc.abs(sx) + hh * calc.abs(sy)
+      let c = (pa.at(0) + t * dx + sx * (d + reach), pa.at(1) + t * dy + sy * (d + reach))
+      (side: side, c: c, hits: _box-hits(ctx, c, hw, hh, skip: skip))
+    }
+    let far = (0.45, 0.75, 1.05).map(d => (placed(1, d), placed(-1, d))).flatten()
+    let slid = (0.3, 0.7, 0.2, 0.8, 0.15, 0.85).map(t => (off, 0.45, 0.75).map(d => (along(t, 1, d), along(t, -1, d)))).flatten()
+    free = (far + slid).find(p => p.hits == 0)
+    if free == none { free = (far + slid).find(p => p.hits < 2) }  // a point near it, no stroke across
+    if free == none { free = (far + slid).sorted(key: p => p.hits).first() }
+  }
   if free != none and free.hits < 2 {  // no stroke across it (a point or a text near: kept)
     content(free.c, label)
     _record("texts", (c: free.c, hw: hw, hh: hh, skip: skip))
@@ -559,6 +603,7 @@
   _record("segments", (out(pa, gap), out(pb, gap)))
   _record("texts", (c: best.c, hw: hw, hh: hh, skip: (skip.at(0), skip.at(1), (out(pa, gap), out(pb, gap)), (out(pb, gap), out(pa, gap)))))
 })
+#let ctz-draw-length(a, b, label, away: none, level: 1, pos: 0.5) = _later(_length-now, (a, b, label), named: (away: away, level: level, pos: pos))
 // A translation's image of `point` when the description gives no vector, placed by the
 // preamble, never by eye: the vector in the direction furthest from every side of `figure`
 // (its vertices, in order: the arrow runs along none), never into the figure nor into its
@@ -774,15 +819,7 @@
     (ctx: ctx)
   }),) }
 }
-// An angle's value or name written inside it, on its bisector, as far from the vertex as it
-// takes for the text's box to clear both sides and the arc (ctz-euclide's own place, at a
-// fixed distance, laid "40°" over a side of a narrow angle).
-#let _ctz-angle-drawn = ctz-draw-angle
-#let ctz-draw-angle(vertex, a, b, label: none, ..opts) = {
-  let named = opts.named()
-  let own = label == none or named.at("angle-type", default: "interior") != "interior" or "label-radius" in named or "label-offset" in named or (vertex, a, b).any(n => type(n) != str)
-  if own { return _ctz-angle-drawn(vertex, a, b, label: label, ..opts) }
-  _ctz-angle-drawn(vertex, a, b, ..opts)
+#let _label-in-angle-now(vertex, a, b, label, radius) = {
   cetz.draw.get-ctx(ctx => {
     let at(n) = cetz.coordinate.resolve(ctx, "ctz:" + n).at(1)
     let (v, pa, pb) = (at(vertex), at(a), at(b))
@@ -795,7 +832,6 @@
     let half = calc.acos(calc.clamp(u1.at(0) * bx + u1.at(1) * by, -1, 1))
     let (hw, hh) = _text-half(label)
     let across(u) = hw * calc.abs(u.at(1)) + hh * calc.abs(u.at(0)) + 0.18
-    let radius = named.at("radius", default: 0.6)
     let d = calc.max(
       if calc.sin(half) > 0.05 { across(u1) / calc.sin(half) } else { 0 },
       if calc.sin(half) > 0.05 { across(u2) / calc.sin(half) } else { 0 },
@@ -806,10 +842,24 @@
     _record("texts", (c: c, hw: hw, hh: hh, skip: ()))
   })
 }
+// An angle's value or name written inside it, on its bisector, as far from the vertex as it
+// takes for the text's box to clear both sides and the arc (ctz-euclide's own place, at a
+// fixed distance, laid "40°" over a side of a narrow angle).
+#let _ctz-angle-drawn = ctz-draw-angle
+// `name: true`: the angle's name written for it, its three letters under a hat, the vertex in
+// the middle (written by the AI, it came out "(BAC)" or the vertex alone)
+#let ctz-draw-angle(vertex, a, b, label: none, name: false, ..opts) = {
+  let named = opts.named()
+  let label = if name and (vertex, a, b).all(n => type(n) == str) { eval("hat(" + a + " " + vertex + " " + b + ")", mode: "math") } else { label }
+  let own = label == none or named.at("angle-type", default: "interior") != "interior" or "label-radius" in named or "label-offset" in named or (vertex, a, b).any(n => type(n) != str)
+  if own { return _ctz-angle-drawn(vertex, a, b, label: label, ..opts) }
+  _ctz-angle-drawn(vertex, a, b, ..opts)
+  _later(_label-in-angle-now, (vertex, a, b, label, named.at("radius", default: 0.6)))
+}
 // A line's name next to it, placed by the preamble: near one end of the line as drawn, on
 // the side and at the place where no stroke, circle or point is in its way (written by hand
 // at coordinates, it fell on the line itself or on a point of it).
-#let ctz-draw-line-name(a, b, name) = cetz.draw.get-ctx(ctx => {
+#let _line-name-now(a, b, name) = cetz.draw.get-ctx(ctx => {
   let at(n) = cetz.coordinate.resolve(ctx, "ctz:" + n).at(1)
   let (pa, pb) = (at(a), at(b))
   let (dx, dy) = (pb.at(0) - pa.at(0), pb.at(1) - pa.at(1))
@@ -838,6 +888,7 @@
   cetz.draw.content(c, name)
   _record("texts", (c: c, hw: hw, hh: hh, skip: own))
 })
+#let ctz-draw-line-name(a, b, name) = _later(_line-name-now, (a, b, name))
 // A shadow (a shadow cone, a cast shadow, an eclipse), everything computed from the circles
 // given, never placed by eye: the light `source` and the lit `body`, each a circle
 // `(centre: (x, y), r: …, name: […], fill: …)` (a point source `r: 0`; an opaque flat object
