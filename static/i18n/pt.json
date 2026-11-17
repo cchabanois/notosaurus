@@ -267,7 +267,7 @@
       "cancelling": "Cancelando…",
       "figures": "A descrever as figuras…",
       "writingCards": "A escrever os cartões: {count}…",
-      "slow": "A IA está a demorar mais do que o habitual a responder…",
+      "slow": "A IA está demorando mais do que o normal para responder…",
       "fallback": "A IA não responde: a tentar por outra via…",
       "batch": "Páginas {from} a {to} de {total}…"
     },
@@ -612,30 +612,30 @@
     "share": {
       "skipped": "O Notosaurus aceita fotos, PDFs e texto: “{names}” não foi adicionado.",
       "cards": {
-        "lessons": "📤 Partilhar lições",
-        "pickHint": "Marque as lições cujos cartões quer partilhar, uma a uma ou uma disciplina inteira.",
+        "lessons": "📤 Compartilhar lições",
+        "pickHint": "Marque as lições cujos cartões você quer compartilhar, uma a uma ou uma disciplina inteira.",
         "pickGroup": "Toda a disciplina: {name}",
-        "pickLesson": "Partilhar esta lição",
+        "pickLesson": "Compartilhar esta lição",
         "pickDone": {
-          "one": "📤 Partilhar ({count} lição)",
-          "other": "📤 Partilhar ({count} lições)"
+          "one": "📤 Compartilhar ({count} lição)",
+          "other": "📤 Compartilhar ({count} lições)"
         },
-        "lesson": "📤 Partilhar",
-        "lessonLabel": "Partilhar os cartões",
-        "exam": "📤 Partilhar os cartões do teste",
-        "title": "Partilhar os cartões",
+        "lesson": "📤 Compartilhar",
+        "lessonLabel": "Compartilhar os cartões",
+        "exam": "📤 Compartilhar os cartões da prova",
+        "title": "Compartilhar os cartões",
         "intro": {
-          "one": "Os cartões de {count} lição, num ficheiro para enviar a outra família (por email, mensagens…).",
-          "other": "Os cartões de {count} lições, num ficheiro para enviar a outra família (por email, mensagens…)."
+          "one": "Os cartões de {count} lição, em um arquivo para enviar a outra família (por email, mensagens…).",
+          "other": "Os cartões de {count} lições, em um arquivo para enviar a outra família (por email, mensagens…)."
         },
-        "introLesson": "Os cartões desta lição, num ficheiro para enviar (por email, mensagens…).",
-        "photos": "As fotos e os esquemas das lições vão com os cartões: verifique que podem ser partilhados.",
+        "introLesson": "Os cartões desta lição, em um arquivo para enviar (por email, mensagens…).",
+        "photos": "As fotos e os esquemas das lições vão com os cartões: verifique se podem ser compartilhados.",
         "private": "Não vão nem o nome do seu filho nem o seu histórico de revisões.",
-        "format": "É um ficheiro .apkg, para importar no Anki ou AnkiDroid: basta abri-lo.",
+        "format": "É um arquivo .apkg, para importar no Anki ou AnkiDroid: basta abri-lo.",
         "name": "Nome do baralho",
-        "make": "📤 Criar o ficheiro",
-        "making": "A preparar o ficheiro…",
-        "done": "✓ Ficheiro pronto: envie-o à outra família, que o abre com o Anki ou AnkiDroid."
+        "make": "📤 Criar o arquivo",
+        "making": "Preparando o arquivo…",
+        "done": "✓ Arquivo pronto: envie-o para a outra família, que o abre com o Anki ou AnkiDroid."
       }
     }
   },
@@ -746,15 +746,15 @@
       "syncOff": "“{profile}” não está conectado ao AnkiWeb: sem sincronização depois do envio. Para sincronizar, entre no Anki (botão Sincronizar)."
     },
     "transfer": {
-      "title": "💾 Guardar ou mudar as minhas lições",
-      "hint": "Um só ficheiro com todas as lições (fotos, cartões, imagens, sons), as crianças, os testes e as suas instruções: para as guardar, ou abri-las noutro computador ou na app Android. Os cartões que já estão no Anki são lá reencontrados, nunca em duplicado.",
-      "export": "⬇️ Exportar as minhas lições",
-      "import": "⬆️ Importar um ficheiro",
-      "exporting": "A exportar…",
-      "importing": "A importar…",
+      "title": "💾 Salvar ou transferir minhas lições",
+      "hint": "Um só arquivo com todas as lições (fotos, cartões, imagens, sons), as crianças, as provas e as suas instruções: para salvá-las, ou abri-las em outro computador ou no app Android. Os cartões que já estão no Anki são reencontrados lá, nunca em duplicado.",
+      "export": "⬇️ Exportar minhas lições",
+      "import": "⬆️ Importar um arquivo",
+      "exporting": "Exportando…",
+      "importing": "Importando…",
       "exported": "Lições exportadas para {name}.",
-      "imported": "Importação concluída: {added} lição(ões) adicionada(s), {replaced} substituída(s) por uma mais recente, {kept} já atualizada(s); {children} criança(s), {exams} teste(s), {prompts} instrução(ões) adicionado(s).",
-      "private": "O ficheiro contém as fotos das lições e os nomes das crianças: guarde-o para si. Não contém nenhuma chave nem palavra-passe."
+      "imported": "Importação concluída: {added} lição(ões) adicionada(s), {replaced} substituída(s) por uma mais recente, {kept} já atualizada(s); {children} criança(s), {exams} prova(s), {prompts} instrução(ões) adicionado(s).",
+      "private": "O arquivo contém as fotos das lições e os nomes das crianças: guarde-o só para você. Não contém nenhuma chave nem senha."
     },
     "lessons": {
       "title": "Lições",
@@ -902,7 +902,7 @@
       "check": "Verificar",
       "checking": "Verificando…",
       "checked": "✓ Chave verificada: em dia.",
-      "refused": "Chave de licença desconhecida ou expirada: não foi guardada.",
+      "refused": "Chave de licença desconhecida ou expirada: não foi salva.",
       "plan": "Plano: {plan}",
       "credits": "{credits} créditos restantes este mês",
       "creditsTrial": "{credits} créditos restantes para o teste",
@@ -968,7 +968,7 @@
       "saved": "Computador: {address}"
     },
     "transfer": {
-      "hint": "Um só ficheiro com todas as lições (fotos, cartões, imagens, sons), as crianças, os testes e as suas instruções: para as guardar (Drive, o cartão SD…), ou abri-las noutro telemóvel ou no computador. Os cartões que já estão no AnkiDroid são lá reencontrados, nunca em duplicado."
+      "hint": "Um só arquivo com todas as lições (fotos, cartões, imagens, sons), as crianças, as provas e as suas instruções: para salvá-las (Drive, o cartão SD…), ou abri-las em outro celular ou no computador. Os cartões que já estão no AnkiDroid são reencontrados lá, nunca em duplicado."
     },
     "data": {
       "title": "🗂️ Lições neste celular",
@@ -1065,8 +1065,8 @@
       "not_allowed": "O Notosaurus só responde ao endereço IP do computador ou a localhost: abra-o assim, ou defina {host} em NOTOSAURUS_PUBLIC_URL."
     },
     "draft": {
-      "too_large": "A lição em andamento é grande demais para ser guardada.",
-      "invalid": "Não foi possível guardar a lição em andamento."
+      "too_large": "A lição em andamento é grande demais para ser salva.",
+      "invalid": "Não foi possível salvar a lição em andamento."
     },
     "photo": {
       "not_found": "Foto não encontrada."
@@ -1196,9 +1196,9 @@
       "invalid": "A ficha de um filho não é válida: um nome (40 caracteres no máximo), uma turma e baralhos curtos."
     },
     "transfer": {
-      "not_an_export": "Este ficheiro não é uma exportação do Notosaurus.",
+      "not_an_export": "Este arquivo não é uma exportação do Notosaurus.",
       "too_new": "Esta exportação vem de uma versão mais recente do Notosaurus: atualize esta e importe-a de novo.",
-      "too_large": "Esta exportação é demasiado grande (mais de 4 GB descomprimida)."
+      "too_large": "Esta exportação é grande demais (mais de 4 GB descompactada)."
     },
     "exams": {
       "invalid": "Esta prova não é válida: um nome com 60 caracteres no máximo, uma data, 50 lições no máximo.",
