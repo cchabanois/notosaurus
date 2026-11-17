@@ -508,7 +508,40 @@
 // The AI's diagram, its ticks' names kept apart and its asymptotes and names given what
 // they need (figures_typst.source draws `lq.diagram(…)` so)
 #let apart(args) = {
+  // A curve sampled at many points (a function's plot), its marks left to lilaq: none. Drawn
+  // at each of its points (200 marks a curve, the tangent and three secants), its SVG grew
+  // past what a figure may be, refused twice, then drawn as SVG by hand, the parabola wrong.
+  // A mark the AI asks for (`mark: "o"`) kept; points to show are scatters.
+  let unmarked(p) = if (type(p) == dictionary and type(p.at("mark", default: none)) == dictionary
+    and p.mark.at("mark", default: none) == auto and type(p.at("x", default: none)) == array and p.x.len() > 30) {
+    p + (mark: p.mark + (mark: none))
+  } else { p }
+  let args = arguments(..args.pos().map(unmarked), ..args.named())
   let named = args.named()
+  // The points marked (scatters) always within the frame: limits of the AI's own leaving one
+  // out (the secants' M₁ at y = 6.25 in a frame up to 3.2: gone, its secant from nowhere, 3
+  // drawings in 10) widened to hold it, a little past it, the frame grown as much (its unit
+  // kept; shrunk whole below when too large). The curves may run out of it, as always.
+  let marked = args.pos().filter(p => type(p) == dictionary and "cinfo" in p and type(p.at("x", default: none)) == array and type(p.at("y", default: none)) == array)
+  let points = marked.map(p => p.x.zip(p.y)).join()
+  if points != none and points.len() > 0 {
+    for (lim, size, i) in (("xlim", "width", 0), ("ylim", "height", 1)) {
+      let l = named.at(lim, default: none)
+      if type(l) != array or l.len() != 2 or l.any(v => type(v) not in (int, float)) or l.at(0) >= l.at(1) { continue }
+      let values = points.map(q => q.at(i)).filter(v => type(v) in (int, float))
+      if values.len() == 0 { continue }
+      let margin = 0.06 * (l.at(1) - l.at(0))
+      let (low, high) = (calc.min(l.at(0), calc.min(..values) - margin), calc.max(l.at(1), calc.max(..values) + margin))
+      // a point within the limits: those kept as they are
+      let low = if calc.min(..values) >= l.at(0) { l.at(0) } else { low }
+      let high = if calc.max(..values) <= l.at(1) { l.at(1) } else { high }
+      if (low, high) != (l.at(0), l.at(1)) {
+        let side = named.at(size, default: none)
+        if type(side) == length { named.insert(size, side * (high - low) / (l.at(1) - l.at(0))) }
+        named.insert(lim, (low, high))
+      }
+    }
+  }
   // A frame never wider nor taller than `frame-most`: one larger (an orthonormal frame over a
   // tall range, x² up to 9 against x from −3 to 3: 7 by 13 cm) has both its sides shrunk by
   // the same factor (its unit smaller, the frame still orthonormal), its text kept: a card

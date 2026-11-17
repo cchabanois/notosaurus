@@ -80,13 +80,29 @@ def draw_local(case: dict) -> dict:
     from app import settings
 
     start = time.monotonic()
+    # each Typst refused on the way (two refusals: the figure drawn as SVG), kept to see why
+    refused: list[dict] = []
+    token = figure_making.refusals.set(refused)
     try:
         description, kind, front = case["description"], case.get("kind", ""), case.get("front", "")
         made = asyncio.run(figure_making.made_figure(settings.current(), description, kind=kind, front=front))
     except Exception as e:
-        return {"error": f"{type(e).__name__}: {str(e)[:200]}", "seconds": round(time.monotonic() - start, 1)}
+        return {
+            "error": f"{type(e).__name__}: {str(e)[:200]}",
+            "seconds": round(time.monotonic() - start, 1),
+            "refused": refused,
+        }
+    finally:
+        figure_making.refusals.reset(token)
     seconds = round(time.monotonic() - start, 1)
-    return {"svg": made.svg, "seconds": seconds, "engine": made.engine, "family": made.family, "typst": made.typst}
+    return {
+        "svg": made.svg,
+        "seconds": seconds,
+        "engine": made.engine,
+        "family": made.family,
+        "typst": made.typst,
+        "refused": refused,
+    }
 
 
 def recompiled(run: Path, drawing: dict) -> dict:
@@ -278,6 +294,15 @@ def main() -> int:
             verdict["typst_file"] = name
         verdict.pop("typst", None)
         verdict.pop("png", None)
+        # the Typst refused before it, each with what Typst said (first lines of its file)
+        kept = []
+        for k, r in enumerate(verdict.pop("refused", None) or [], 1):
+            name = f"{case['id']}-{n}.refused-{k}.typ"
+            said = "".join(f"// {line}\n" for line in r["said"].splitlines())
+            (out / name).write_text(f"// refused ({r['family']}), Typst said:\n{said}\n{r['typst']}")
+            kept.append({"file": name, "said": r["said"][:300]})
+        if kept:
+            verdict["refused"] = kept
         return case["id"], verdict
 
     with ThreadPoolExecutor(args.jobs) as pool:
@@ -298,6 +323,9 @@ def main() -> int:
         print(f"{mark} {case['id']}: {s['right']}/{s['judged']} right, {s['median_s']} s, {s['credits']} cr.")
         for problem in wrong:
             print(f"   ✗ {problem}")
+        for d in run["cases"][case["id"]]:
+            for r in d.get("refused", []):
+                print(f"   ↺ {r['file']}: {r['said'][:160]}")
     total = summary(everything)
     print(
         f"\n{total['right']}/{total['judged']} figures right, median {total['median_s']} s, {total['credits']} credits "

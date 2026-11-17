@@ -6,7 +6,7 @@ import re
 import pytest
 
 from figures.support import _glyphs, drawn_size
-from notosaurus_core import figures_typst
+from notosaurus_core import figures, figures_typst
 
 
 def test_a_coordinate_frame_as_the_graph_rule_writes_it():
@@ -540,3 +540,30 @@ def test_the_graph_rule_names_a_point_by_named():
     (call,) = re.findall(r"`(named\(lq\.scatter\(\(0,\)[^`]*\))`", rule)
     body = f"#lq.diagram(width: 5cm, height: 5cm, xlim: (-2, 2), ylim: (-2, 2), {call})"
     assert figures_typst.compile_svg("graph", body).startswith("<svg")
+
+
+def test_a_curves_samples_drawn_without_marks():
+    """A tangent and three secants plotted without `mark: none` drew a mark at each of their
+    200 samples: the SVG past what a figure may be (330 000 characters), refused twice, the
+    figure then drawn by hand as SVG, its parabola wrong (1 drawing in 10). A curve sampled
+    at many points, its marks left to lilaq, has none; a mark asked for is kept."""
+    plots = "".join(f"lq.plot(xs, xs.map(x => {k} * x)MARK), " for k in (1, 2, 3, 4))
+    body = f"#let xs = lq.linspace(0, 2, num: 200)\n#lq.diagram(width: 6cm, height: 6cm, {plots})"
+    plain = figures_typst.compile_svg("graph", body.replace("MARK", ""))
+    figures.clean(plain)  # not refused
+    assert len(plain) < figures.MAX_SIZE / 4
+    marked = figures_typst.compile_svg("graph", body.replace("MARK", ', mark: "o"'))
+    assert len(marked) > 3 * len(plain)
+
+
+def test_the_points_marked_always_within_the_frame():
+    """The secants' M₁ (2.5 ; 6.25) and M₂ (2 ; 4), limits of the AI's own up to y = 3.2: both
+    gone, their names over the frame or nowhere (3 drawings in 10). The frame's limits widen
+    to hold every point marked, its height growing as much (the unit kept); points within
+    them, nothing changed."""
+    frame = "#lq.diagram(width: 3cm, height: 3cm, xlim: (-0.5, 3.2), ylim: (-0.5, 3.2), {})"
+    inside = drawn_size("graph", frame.format("lq.scatter((1,), (1,))"))
+    outside = drawn_size("graph", frame.format("lq.scatter((1, 2.5), (1, 6.25))"))
+    assert inside[1] == pytest.approx(drawn_size("graph", frame.format("lq.plot((0, 1), (0, 1))"))[1], rel=0.02)
+    # 6.25 + 6 % past it: the height over 3.7 units grown to about 7.0, as many cm a unit
+    assert outside[1] / inside[1] == pytest.approx((6.25 + 0.06 * 3.7 + 0.5) / 3.7, rel=0.08)
