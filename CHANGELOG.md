@@ -9,6 +9,7 @@ Each pull request's entries (the `## Changelog` of its description) are put unde
 
 ### Added
 
+- Google's document scanner (📷) and the photo crop can each be turned off from the relay (`lesson.scan`, `lesson.crop`) without an app update: the 📷 then takes one photo with the phone's camera; the photo editor then blacks out only, a crop already made being kept.
 - Figures: a bar chart's mean or expectation marked and an interval of its values shaded; on a number line, an interval's centre and its distance to each bound.
 - Figures: rectangles under or over a curve (the rectangle method), the real line wound round the trigonometric circle.
 - 📊 Histograms drawn by their classes (adjacent rectangles, unequal classes by their areas) and scatter plots with their fitted line.
