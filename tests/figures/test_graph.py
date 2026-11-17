@@ -495,6 +495,25 @@ def test_a_dimensions_name_set_clear_of_the_curve(crest):
     assert bare.crop(box).getextrema()[0] > 200, (crest, box)  # nothing dark where the name is
 
 
+@pytest.mark.parametrize(
+    ("side", "heights"),
+    [("left", (0, 1, 4, 9)), ("right", (1, 4, 9, 16)), ("lower", (0, 1, 4, 9)), ("upper", (1, 4, 9, 16))],
+)
+def test_rectangles_under_a_curve_computed(side, heights):
+    """The rectangle method drawn by the AI: lines and no rectangle, or only the ones over the
+    curve, right only as SVG (1 drawing in 3): `rectangles` cuts [a, b] into n parts and takes
+    each height from the function, at the side asked (x² on [0 ; 4], 4 parts: f(0)… or f(1)…);
+    the figure as tall as its highest rectangle; the rule's call compiles."""
+    found = f'_rect-heights(x => x * x, 0, 4, 4, "{side}")'
+    check = f"#assert({found} == {heights!r}.map(float), message: repr({found}))"
+    body = f"""{check}
+#lq.diagram(width: 4cm, height: 4cm, xlim: (0, 4), ylim: (0, 16), rectangles(x => x * x, 0, 4, 4, side: "{side}"))"""
+    assert figures_typst.compile_svg("graph", body).startswith("<svg")
+    rule = figures_typst.FAMILIES["graph"].rules
+    (call,) = re.findall(r"`(rectangles\([^`]*\))`", rule)
+    assert figures_typst.compile_svg("graph", f"#lq.diagram(width: 4cm, height: 4cm, {call})").startswith("<svg")
+
+
 def test_an_axis_number_a_curve_runs_over_left_out():
     """The branch of 1/x for x < 0 ran down along the y axis, across its −1, −2, −3 (3
     drawings in 6): an axis's number a curve crosses is left out, the others kept where lilaq

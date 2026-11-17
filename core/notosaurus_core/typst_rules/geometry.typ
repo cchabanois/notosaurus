@@ -405,6 +405,59 @@
     content(at(a + off, r + 0.5), label)
   }
 }
+// The real line wrapped around the trigonometric circle: the circle of radius 1 (drawn `r`
+// long) in its frame, the number line tangent to it at I(1 ; 0), graduated upwards; each
+// number of `numbers` ((value, its name, the circle's point's name or none)) marked on the
+// line at its value, and where it comes on the circle once wound round (the point at that
+// angle, in radians); the arc it winds onto, as long as its stretch of the line, drawn in the
+// same colour, an arrow curving from the line to the circle. All computed from the values.
+#let ctz-draw-wrapping(numbers: (), r: 2, colours: (rgb("#0072d6"), rgb("#e07b00"), rgb("#2e9e44"), rgb("#c8323c"))) = {
+  assert(type(numbers) == array and numbers.len() > 0 and numbers.all(n => type(n) == array and n.len() in (2, 3) and type(n.at(0)) in (int, float)),
+    message: "numbers: each (value, its name) or (value, its name, the circle's point's name)")
+  cetz.draw.get-ctx(ctx => {
+    import cetz.draw: *
+    let values = numbers.map(n => n.at(0))
+    let (low, high) = (calc.min(0, ..values), calc.max(0, ..values))
+    // the frame: its axes through O, the circle, I and the tangent line
+    line((-r - 0.5, 0), (r + 0.7, 0), stroke: 0.8pt, mark: (end: "stealth", fill: black, scale: 0.6))
+    line((0, -r - 0.5), (0, calc.max(r, r * high) + 0.6), stroke: 0.8pt, mark: (end: "stealth", fill: black, scale: 0.6))
+    circle((0, 0), radius: r, stroke: 0.9pt)
+    content((-0.2, -0.2), $O$, anchor: "north-east")
+    line((r, r * low - 0.5), (r, r * high + 0.5), stroke: 1pt)
+    // the farthest first: a nearer number's stretch and arc drawn over it, both seen
+    let order = range(numbers.len()).sorted(key: k => -calc.abs(numbers.at(k).at(0)))
+    for k in order {
+      let n = numbers.at(k)
+      let (v, name) = (n.at(0), n.at(1))
+      let point = n.at(2, default: none)
+      let colour = colours.at(calc.rem(k, colours.len()))
+      let on-line = (r, r * v)
+      let on-circle = (r * calc.cos(v * 1rad), r * calc.sin(v * 1rad))
+      // the stretch of the line from 0 to v, and the arc it winds onto
+      if calc.abs(v) > 1e-9 {
+        line((r, 0), on-line, stroke: 2pt + colour)
+        arc((0, 0), start: 0deg, delta: v * 1rad, radius: r, anchor: "origin", stroke: 2pt + colour)
+        // the winding: an arrow curving from the line's point to the circle's
+        // bowed outwards, away from the circle's centre
+        let m = ((on-line.at(0) + on-circle.at(0)) / 2, (on-line.at(1) + on-circle.at(1)) / 2)
+        let d = calc.max(calc.sqrt(m.at(0) * m.at(0) + m.at(1) * m.at(1)), 1e-9)
+        let mid = (m.at(0) * (1 + 0.45 * r / d), m.at(1) * (1 + 0.45 * r / d))
+        bezier(on-line, on-circle, mid, stroke: (paint: colour, thickness: 0.6pt, dash: "dashed"), mark: (end: "stealth", fill: colour, scale: 0.6))
+      }
+      line((r - 0.08, r * v), (r + 0.08, r * v), stroke: 1pt)
+      circle(on-line, radius: 0.05, fill: black, stroke: none)
+      content((r + 0.18, r * v), name, anchor: "west")
+      circle(on-circle, radius: 0.05, fill: black, stroke: none)
+      if point != none {
+        // outside the circle, turned a little off its radius: off the axes at π/2, π…
+        let t = v * 1rad + 17deg
+        let out = ((r + 0.3) * calc.cos(t), (r + 0.3) * calc.sin(t))
+        let side = if calc.abs(v) < 1e-9 { (r - 0.2, -0.25) } else { out }
+        content(side, point)
+      }
+    }
+  })
+}
 // A coordinate frame's axes graduated and numbered at the step's multiples only (ctz-euclide
 // counts its steps from the axis's start: from −1.5, "−1.5, −0.5, 0.5", numbers between the
 // units, on the points and the circle), each number a little smaller, clear of its axis.

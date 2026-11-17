@@ -9,6 +9,7 @@ Each pull request's entries (the `## Changelog` of its description) are put unde
 
 ### Added
 
+- Figures: rectangles under or over a curve (the rectangle method), the real line wound round the trigonometric circle.
 - 📊 Histograms drawn by their classes (adjacent rectangles, unequal classes by their areas) and scatter plots with their fitted line.
 - Figures: the Earth with a point by its latitude and longitude, a point's coordinates written in a frame of space, tilings of the plane by squares, triangles or hexagons.
 - Geometry figures: a protractor laid on an angle, a triangle built with ruler and compass with its arcs, a lottery wheel with its colours and pointer, a cuboid made of unit cubes.

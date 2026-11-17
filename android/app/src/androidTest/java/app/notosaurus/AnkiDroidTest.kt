@@ -607,7 +607,10 @@ class AnkiDroidTest {
         assertEquals(Review.NOTHING_DUE, anki.review(deck))
         assertEquals(deck, AddContentApi(Device.context).selectedDeckName) // selected, its decks shown
         Thread.sleep(1500) // what stays on top, not a screen on its way
-        assertTrue(top(), "com.ichi2.anki/.DeckPicker" in top())
+        // (an AnkiDroid never opened, as on CI where it was just installed, shows its welcome
+        // before its decks: its own doing, the decks asked for all the same)
+        val top = top()
+        assertTrue(top, "com.ichi2.anki/.DeckPicker" in top || "com.ichi2.anki/.IntroductionActivity" in top)
         Device.shell("input keyevent KEYCODE_HOME")
     }
 
