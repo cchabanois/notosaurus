@@ -14,11 +14,11 @@ def test_a_coordinate_frame_as_the_graph_rule_writes_it():
     rule gives it: drawn, its grid with it (a line per unit: more lines than without it)."""
     lines = figures_typst.FAMILIES["graph"].rules.splitlines()
     rule = next(line for line in lines if line.startswith("- a coordinate frame"))
-    calls = re.findall(r"`((?:#show: lq\.set-grid|lq\.scatter|lq\.place)[^`]*)`", rule)
-    assert len(calls) == 4, calls  # the grid, a point, its name, the origin's
-    grid, point, name, origin = calls
+    calls = re.findall(r"`((?:#show: lq\.set-grid|named\(lq\.scatter|lq\.place)[^`]*)`", rule)
+    assert len(calls) == 3, calls  # the grid, a point named, the origin's name
+    grid, point, origin = calls
     axes = "xlim: (-4.5, 4.5), ylim: (-4.5, 4.5), xaxis: (tick-distance: 1, subticks: none), yaxis: (tick-distance: 1)"
-    frame = f"#lq.diagram(width: 6cm, height: 6cm, {axes}, {point}, {name}, {origin})"
+    frame = f"#lq.diagram(width: 6cm, height: 6cm, {axes}, {point}, {origin})"
     with_grid = figures_typst.compile_svg("graph", f"{grid}\n{frame}")
     without = figures_typst.compile_svg("graph", frame)
     assert with_grid.count("<path") > without.count("<path") + 10
@@ -493,3 +493,31 @@ def test_a_dimensions_name_set_clear_of_the_curve(crest):
     box = ImageChops.difference(named, bare).point(lambda v: 255 if v > 60 else 0).getbbox()
     assert box is not None
     assert bare.crop(box).getextrema()[0] > 200, (crest, box)  # nothing dark where the name is
+
+
+def test_an_axis_number_a_curve_runs_over_left_out():
+    """The branch of 1/x for x < 0 ran down along the y axis, across its −1, −2, −3 (3
+    drawings in 6): an axis's number a curve crosses is left out, the others kept where lilaq
+    writes them (in one column, never staggered)."""
+    body = """#let neg = lq.linspace(-3, -0.2, num: 100)
+#lq.diagram(width: 7cm, height: 7cm, xlim: (-3.5, 3.5), ylim: (-5.5, 5.5){extra},
+  lq.plot(neg, neg.map(x => 1 / x), mark: none))"""
+    with_curve = figures_typst.compile_svg("graph", body.format(extra=""))
+    numbers = lambda svg: len(_glyphs(svg))  # noqa: E731
+    without = figures_typst.compile_svg(
+        "graph",
+        body.format(extra="").replace(
+            "lq.plot(neg, neg.map(x => 1 / x), mark: none)", "lq.plot((3, 3.2), (5, 5), mark: none)"
+        ),
+    )
+    assert numbers(with_curve) < numbers(without)
+    # the numbers kept on the y axis: one column, as lilaq writes them
+    xs = sorted({round(x) for x, _ in _glyphs(with_curve) if x < 80})
+    assert len(xs) <= 3, xs
+
+
+def test_the_graph_rule_names_a_point_by_named():
+    rule = figures_typst.FAMILIES["graph"].rules
+    (call,) = re.findall(r"`(named\(lq\.scatter\(\(0,\)[^`]*\))`", rule)
+    body = f"#lq.diagram(width: 5cm, height: 5cm, xlim: (-2, 2), ylim: (-2, 2), {call})"
+    assert figures_typst.compile_svg("graph", body).startswith("<svg")

@@ -494,6 +494,26 @@ def test_the_rule_writes_an_angles_name_under_its_hat():
   ctz-draw-points("O")
   ctz-draw-length("O", "A", [rayon])
   ctz-draw-length("B", "C", [diamètre])""",
+        # a vector's name placed after a relation written as a point's name under the figure
+        """ctz-def-points(A: (0, 0), B: (3, 2), C: (5, 0), T: (2.5, -0.8))
+  ctz-draw-vector("A", "B", label: $arrow(A B)$, away: "C")
+  ctz-draw-vector("B", "C", label: $arrow(B C)$, away: "A")
+  ctz-draw-vector("A", "C", label: $arrow(A C)$, away: "B")
+  ctz-draw-labels(A: "below left", B: "above", C: "below right",
+    T: (pos: "center", label: [$arrow(A B) + arrow(B C) = arrow(A C)$]))""",
+        # a line's name in a frame, crossing the x axis: once on the axis and its numbers
+        """ctz-draw-grid(xmin: -1, xmax: 5, ymin: -1, ymax: 5, stroke: luma(220) + 0.4pt)
+  ctz-draw-axes(xmin: -1, xmax: 5.5, ymin: -1, ymax: 5.5)
+  ctz-def-points(P: (2.3, -0.6), Q: (-0.3, 4.6), A: (1, 2))
+  ctz-draw-line-add("P", "Q")
+  ctz-draw-line-name("P", "Q", $(d)$)""",
+        # a relation written under the figure, its vectors' names placed after it
+        """ctz-def-points(A: (0, 0), B: (3, 2), C: (5, 0))
+  ctz-draw-caption([$arrow(A B) + arrow(B C) = arrow(A C)$])
+  ctz-draw-vector("A", "B", label: $arrow(A B)$, away: "C")
+  ctz-draw-vector("B", "C", label: $arrow(B C)$, away: "A")
+  ctz-draw-vector("A", "C", label: $arrow(A C)$, away: "B")
+  ctz-draw-labels(A: "below left", B: "above", C: "below right")""",
         # a line's name, written by hand at coordinates, fell on a point of it
         """ctz-def-points(D1: (-2, 0), D2: (3, 0), A: (1, 3))
   ctz-draw-line-add("D1", "D2")
@@ -512,7 +532,8 @@ def test_a_text_the_preamble_places_stands_clear_of_the_drawing(figure):
     against the whole drawing at the end."""
     # checked once the texts are placed, at the canvas's end
     check = """_later(() => cetz.draw.get-ctx(ctx => {
-    let texts = _drawn(ctx).texts
+    // the texts the preamble placed (the AI's own, written where it put them: kept as they are)
+    let texts = _drawn(ctx).texts.filter(t => not t.at("fixed", default: false))
     assert(texts.len() > 0, message: "nothing placed")
     for t in texts {
       let hits = _box-hits(ctx, t.c, t.hw, t.hh, skip: t.skip)
@@ -586,6 +607,76 @@ def test_an_angles_name_written_by_its_function():
     assert "never (BAC)" in rule
     (call,) = re.findall(r"`(ctz-draw-angle\([^`]*name: true\))`", rule)
     body = f"#ctz-canvas({{ ctz-init(); ctz-def-points(A: (0, 0), B: (4, 0), C: (3, 2.5)); {call} }})"
+    assert figures_typst.compile_svg("geometry", body).startswith("<svg")
+
+
+def test_a_vectors_name_clear_of_a_relation_written_under_the_figure():
+    """Chasles' relation written as a point's name under the triangle, AB + BC = AC: the name of
+    the vector AC, placed below it (away from B), fell on it (2 drawings in 3). The points'
+    names are known to the texts placed after them: AC's name stands clear of the relation."""
+    body = """#ctz-canvas({
+  ctz-init()
+  ctz-def-points(A: (0, 0), B: (3, 2), C: (5, 0), T: (2.5, -0.8))
+  ctz-draw-vector("A", "B", label: $arrow(A B)$, away: "C")
+  ctz-draw-vector("B", "C", label: $arrow(B C)$, away: "A")
+  ctz-draw-vector("A", "C", label: $arrow(A C)$, away: "B")
+  ctz-draw-labels(A: "below left", B: "above", C: "below right",
+    T: (pos: "center", label: [$arrow(A B) + arrow(B C) = arrow(A C)$]))
+  _later(() => cetz.draw.get-ctx(ctx => {
+    let placed = _drawn(ctx).texts.filter(t => not t.at("fixed", default: false))
+    let ac = placed.last()
+    // the relation's box: centred on T, as wide as its letters
+    let (hw, hh) = (0.11 * 13 + 0.06, 0.24)
+    let apart = calc.abs(ac.c.at(0) - 2.5) > ac.hw + hw or calc.abs(ac.c.at(1) + 0.8) > ac.hh + hh
+    assert(apart, message: "AC's name on the relation: " + repr(ac.c))
+  }), ())
+})"""
+    assert figures_typst.compile_svg("geometry", body).startswith("<svg")
+
+
+def test_a_relation_written_under_the_whole_figure():
+    """Chasles' relation written by the AI as a point's name near C fell on C (1 drawing in 3):
+    `ctz-draw-caption` writes it under the whole figure, centred, once it is all drawn; the
+    rule's call compiles."""
+    body = """#ctz-canvas({
+  ctz-init()
+  ctz-def-points(A: (0, 0), B: (3, 2), C: (5, 0))
+  ctz-draw-polygon("A", "B", "C")
+  ctz-draw-caption([$arrow(A B) + arrow(B C) = arrow(A C)$])
+  _later(() => cetz.draw.get-ctx(ctx => {
+    let t = _drawn(ctx).texts.last()
+    assert(t.c.at(1) + t.hh < -0.2, message: "not under the figure: " + repr(t.c))
+    assert(calc.abs(t.c.at(0) - 2.5) < 1e-6, message: "not centred: " + repr(t.c))
+  }), ())
+})"""
+    assert figures_typst.compile_svg("geometry", body).startswith("<svg")
+    rule = figures_typst.FAMILIES["geometry"].rules
+    (call,) = re.findall(r"`(ctz-draw-caption\([^`]*\))`", rule)
+    example = f'#ctz-canvas({{ ctz-init(); ctz-def-points(A: (0, 0), B: (3, 2)); ctz-draw-segment("A", "B"); {call} }})'
+    assert figures_typst.compile_svg("geometry", example).startswith("<svg")
+
+
+def test_a_lines_name_off_the_axes_of_its_frame():
+    """A normal vector's line, crossing the x axis, its name (d) written on the axis among its
+    numbers (1 drawing in 3): the axes and their numbers are known to the names placed after
+    them, the name stays off the band the x axis and its numbers take."""
+    body = """#ctz-canvas({
+  ctz-init()
+  ctz-draw-grid(xmin: -1, xmax: 5, ymin: -1, ymax: 5, stroke: luma(220) + 0.4pt)
+  ctz-draw-axes(xmin: -1, xmax: 5.5, ymin: -1, ymax: 5.5)
+  ctz-def-points(A: (1, 2), P1: (0, 4), P2: (2.5, -1), B: (3, 3))
+  ctz-draw-line-add("P1", "P2")
+  ctz-draw-line-name("P1", "P2", $(d)$)
+  ctz-draw-vector("A", "B", label: $arrow(n)$)
+  ctz-draw-mark-right-angle("P1", "A", "B")
+  ctz-draw-points("A")
+  ctz-draw-labels(A: "below left")
+  _later(() => cetz.draw.get-ctx(ctx => {
+    let t = _drawn(ctx).texts.filter(t => not t.at("fixed", default: false)).first()
+    let (low, high) = (t.c.at(1) - t.hh, t.c.at(1) + t.hh)
+    assert(high < -0.45 or low > 0.05, message: "on the x axis: " + repr(t.c))
+  }), ())
+})"""
     assert figures_typst.compile_svg("geometry", body).startswith("<svg")
 
 

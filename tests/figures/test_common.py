@@ -94,5 +94,23 @@ def test_no_family_writes_again_what_common_shares():
     assert {"written-number", "_add", "_off", "_gap", "_plain"} <= shared
     for name in figures_typst.FAMILIES:
         typ = (figures_typst.RULES / f"{name}.typ").read_text(encoding="utf-8")
-        again = {n for n in shared if re.search(rf"^\s*#?let {re.escape(n)}\b", typ, re.M)}
+        again = {
+            n for n in shared if re.search(rf"^\s*#?let {re.escape(n)}(?![\w-])", typ, re.M)
+        }  # a Typst name goes on past "-"
         assert not again, (name, again)
+
+
+def test_a_vectors_name_with_its_arrow():
+    """`$vec(n)$` written for a vector's name came out "(n)", Typst's column of coordinates
+    (2 drawings in 3): a single name gets its arrow, several entries stay a column."""
+    one = figures_typst.compile_svg(
+        "graph", "#lq.diagram(width: 4cm, height: 4cm, lq.plot((0, 1), (0, 1)), lq.place(0.5, 0.5, $vec(n)$))"
+    )
+    arrow = figures_typst.compile_svg(
+        "graph", "#lq.diagram(width: 4cm, height: 4cm, lq.plot((0, 1), (0, 1)), lq.place(0.5, 0.5, $arrow(n)$))"
+    )
+    assert one == arrow
+    column = figures_typst.compile_svg(
+        "graph", "#lq.diagram(width: 4cm, height: 4cm, lq.plot((0, 1), (0, 1)), lq.place(0.5, 0.5, $vec(1, 2)$))"
+    )
+    assert column != arrow
