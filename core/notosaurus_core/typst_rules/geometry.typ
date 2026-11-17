@@ -311,8 +311,22 @@
     if b != none { bracket(xb, if closed.at(1) { -1 } else { 1 }) }
   }
 }
+// An interval's centre and its distance to each bound (|x − c| ≤ r: the interval [c − r ; c + r]):
+// the centre marked on the line, a double arrow above each half, the half-length written over
+// it (computed from the bounds, as the language writes numbers)
+#let _centre-distances(xa, xb, a, b, color) = {
+  let xc = (xa + xb) / 2
+  let half = written-number(calc.abs(b - a) / 2)
+  cetz.draw.circle((xc, 0), radius: 0.11, fill: color.darken(45%), stroke: white + 0.8pt)
+  for (s, e) in ((xa, xc), (xc, xb)) {
+    cetz.draw.line((s, 0.55), (e, 0.55), stroke: 0.6pt, mark: (start: "straight", end: "straight", scale: 0.6))
+    cetz.draw.content(((s + e) / 2, 0.62), text(size: 9pt, half), anchor: "south")
+  }
+  for x in (xa, xc, xb) { cetz.draw.line((x, 0.32), (x, 0.65), stroke: (paint: luma(120), thickness: 0.4pt, dash: "dashed")) }
+}
 #let _zone-colours = (rgb("#0072d6"), rgb("#e07b00"), rgb("#2e9e44"), rgb("#8a4fd0"), rgb("#c8323c"), rgb("#00949a"))
-#let ctz-draw-interval(a, b, closed: (true, true), first: 0, last: none, scale: 1, log: false, label: none, color: auto) = {
+#let ctz-draw-interval(a, b, closed: (true, true), first: 0, last: none, scale: 1, log: false, label: none, color: auto, centre: false) = {
+  assert(not centre or (a != none and b != none and not log), message: "centre: an interval with its two bounds, on a line that is not logarithmic")
   assert(closed == none or (type(closed) == array and closed.len() == 2), message: "closed is (true, false), each bound's, or none (no bracket)")
   let x(v) = (v - first) * scale
   assert(a != none or b != none or last != none or log, message: "an interval has a bound, a or b a value; both none (the whole line): give the line's first and last")
@@ -320,7 +334,10 @@
   let end = if last != none { last } else if a != none or b != none { calc.max(..(a, b).filter(v => v != none)) + 1 }
   if not log and label == none {
     let (xa, xb) = (if a == none { x(first) - 0.5 * scale } else { x(a) }, if b == none { x(end) + 0.5 * scale } else { x(b) })
-    return _interval(xa, xb, a, b, closed, if color == auto { _zone-colours.first() } else { color })
+    let color = if color == auto { _zone-colours.first() } else { color }
+    _interval(xa, xb, a, b, closed, color)
+    if centre { _centre-distances(xa, xb, a, b, color) }
+    return
   }
   cetz.draw.get-ctx(ctx => {
     let line = ctx.shared-state.at("number-line", default: none)
@@ -335,6 +352,7 @@
     let zones = if line == none { () } else { line.zones }
     let color = if color != auto { color } else if label == none { _zone-colours.first() } else { _zone-colours.at(calc.rem(zones.len(), _zone-colours.len())) }
     _interval(xa, xb, a, b, closed, color)
+    if centre { _centre-distances(xa, xb, a, b, color) }
     if label != none {
       let (cx, w) = ((xa + xb) / 2, 0.24 * _name-chars(label))
       // the first row where it clears the names of the zones drawn before it

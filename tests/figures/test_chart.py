@@ -259,7 +259,9 @@ def test_lying_bars_long_name_on_lines_of_its_own():
 
 def test_a_chart_refuses_what_it_cant_draw():
     for body, said in (
-        ('#chart(kind: "bars", values: (("A", 1),), marks: ((1, "x"),))', "a line's only"),
+        ('#chart(kind: "bars", values: (("A", 1),), marks: ((1, "x"),))', "not among A"),
+        ('#chart(kind: "pie", values: (("A", 1),), marks: (("A", "x"),))', "a line's, or standing bars'"),
+        ('#chart(kind: "bars", values: (("A", 1),), smooth: true)', "a line's only"),
         ('#chart(kind: "line", values: ((0, 1), (1, 2)), spans: ((3, 2, "x"),))', "from < to"),
         ('#chart(kind: "line", values: ((0, 1), (1, 2)), marks: (("a", "x"),))', "x a number"),
         ('#chart(kind: "line", values: ((0, 1), (1, 2)), second: (values: ((0, 1),)))', "two measures at least"),
@@ -500,3 +502,32 @@ def test_histograms_and_scatter_plots_are_charts():
     """The kinds send a histogram and a scatter plot to the chart."""
     kinds = dict(re.findall(r'"(\w+)": (.*?)(?=; "\w+": |$)', figures_typst.KINDS))
     assert "a histogram" in kinds["chart"] and "a scatter plot" in kinds["chart"]
+
+
+def test_a_probability_laws_bars_with_its_expectation_and_an_interval():
+    """Bienaymé-Tchebychev's figure: the law B(20 ; 0,5) as bars, its expectation marked and
+    the interval ]6 ; 14[ coloured. Drawn tiny (21 bars 1.5 cm wide each: 31 cm) and with
+    neither (2 drawings in 3): many bars are narrower, the chart about half as wide; `marks` and
+    `spans` mark a bar and shade the bars of an interval, found by their names; the rule's
+    call compiles."""
+    import math
+
+    values = ", ".join(f'("{k}", {math.comb(20, k) / 2**20:.6f})' for k in range(21))
+    plain = f'#chart(kind: "bars", values: ({values}), written: ())'
+    width, _ = drawn_size("chart", plain)
+    assert width < 20 * 28.35, width  # 31 cm before
+    marked = plain.replace("written: ()", "written: (), marks: ((10, $E(X) = 10$),), spans: ((7, 13, $]6 ; 14[$),)")
+    assert figures_typst.compile_svg("chart", marked) != figures_typst.compile_svg("chart", plain)
+    # their values, written by default, on one another over 21 narrow bars: none written then;
+    # over a few bars, written as before
+    crowded = f'#chart(kind: "bars", values: ({values}))'
+    assert figures_typst.compile_svg("chart", crowded) == figures_typst.compile_svg("chart", plain)
+    few = '#chart(kind: "bars", values: (("8", 2), ("10", 5), ("12", 7)){})'
+    written, none = (figures_typst.compile_svg("chart", few.format(w)) for w in ("", ", written: ()"))
+    assert written != none
+    rule = figures_typst.FAMILIES["chart"].rules
+    (marks,) = re.findall(r"`(marks: \(\(10, [^`]*\))`", rule)
+    (spans,) = re.findall(r"`(spans: \(\(7, 13[^`]*\))`", rule)
+    assert figures_typst.compile_svg(
+        "chart", plain.replace("written: ()", f"written: (), {marks}, {spans}")
+    ).startswith("<svg")
