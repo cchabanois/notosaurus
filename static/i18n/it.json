@@ -75,6 +75,7 @@
     "hide": {
       "title": "Prepara la foto",
       "hint": "«Ritaglia» tiene solo la parte utile della pagina: trascina gli angoli della cornice. Poi, con il dito, annerisci un nome, una scuola, tutto ciò che è personale. Viene conservata e inviata solo la foto così preparata.",
+      "hintNoCrop": "Con il dito, annerisci un nome, una scuola, tutto ciò che è personale. Viene conservata e inviata solo la foto così preparata.",
       "pdf": "In una pagina PDF, il suo testo allora non viene inviato: l'IA legge la pagina come un'immagine.",
       "paint": "Annerisci",
       "erase": "Scopri",

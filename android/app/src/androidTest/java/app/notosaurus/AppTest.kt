@@ -395,6 +395,49 @@ class AppTest {
         }
     }
 
+    /** The relay's switch of the document scanner (lesson.scan, relay_api.FEATURES), told as the
+     * page loads: on, 📷 asks the scanner; off, the phone's camera as before the scanner, one
+     * photo, the scanner never asked. */
+    @Test
+    fun theCameraWhenTheRelayTurnsTheScannerOff() {
+        val page = "Alpine.\$data(document.querySelector('[x-data]'))"
+        var disabled = "[]"
+        relay.dispatcher = object : Dispatcher() {
+            override fun dispatch(request: RecordedRequest) = when (request.url.encodedPath) {
+                "/v1/account" -> MockResponse.Builder()
+                    .body("""{"plan": "monthly", "credits_left": 99, "daily_left": 99, "disabled": $disabled}""").build()
+                else -> MockResponse.Builder().code(404).body("""{"code": "relay.invalid_request", "params": {}}""").build()
+            }
+        }
+        val scans = java.util.concurrent.atomic.AtomicInteger()
+        Scanner.current = Scanner { _, _, _ -> scans.incrementAndGet(); null } // the parent went back
+        Intents.init()
+        try {
+            intending(hasAction(MediaStore.ACTION_IMAGE_CAPTURE)).respondWith(Instrumentation.ActivityResult(Activity.RESULT_CANCELED, null))
+            ActivityScenario.launch(MainActivity::class.java).use { app ->
+                Device.waitFor(app, "typeof api === 'function' && document.querySelectorAll('.chip').length > 3", "the page and its prompts")
+                Device.waitFor(app, "$page.switches.disabled.length === 0", "the switches told")
+                tap(app, "app.photos.takePhoto")
+                val deadline = System.currentTimeMillis() + 10_000
+                while (System.currentTimeMillis() < deadline && scans.get() == 0) Thread.sleep(200)
+                assertEquals("on: the scanner asked", 1, scans.get())
+                assertTrue("on: no camera", Intents.getIntents().none { it.action == MediaStore.ACTION_IMAGE_CAPTURE })
+            }
+            disabled = """["lesson.scan"]"""
+            ActivityScenario.launch(MainActivity::class.java).use { app ->
+                Device.waitFor(app, "typeof api === 'function' && $page.switches.disabled.includes('lesson.scan')", "the scanner turned off")
+                tap(app, "app.photos.takePhoto")
+                val deadline = System.currentTimeMillis() + 10_000
+                while (System.currentTimeMillis() < deadline && Intents.getIntents().none { it.action == MediaStore.ACTION_IMAGE_CAPTURE }) Thread.sleep(200)
+                Intents.intended(allOf(hasAction(MediaStore.ACTION_IMAGE_CAPTURE), hasExtraWithKey(MediaStore.EXTRA_OUTPUT)))
+                assertEquals("off: the scanner never asked", 1, scans.get())
+            }
+        } finally {
+            Intents.release()
+            Scanner.current = DocumentScanner
+        }
+    }
+
     /** Without a photo: "✏️ Free", a prompt typed, "Generate from the prompt alone", "Add to Anki". */
     @Test
     fun aLessonFromThePromptAloneThroughThePage() {

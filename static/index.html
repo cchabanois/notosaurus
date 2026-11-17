@@ -1020,7 +1020,7 @@
        @keydown.escape.window="hiding.open && ($event.preventDefault(), doneHide(false))">
     <p class="hide-hint">
       <strong x-text="$t('app.hide.title')"></strong>
-      <span x-text="$t('app.hide.hint')"></span>
+      <span x-text="$t(off('lesson.crop') ? 'app.hide.hintNoCrop' : 'app.hide.hint')"></span>
       <span x-show="hiding.pdf" x-text="$t('app.hide.pdf')"></span>
     </p>
     <div class="hide-frame">
@@ -1036,7 +1036,7 @@
     </div>
     <div class="hide-tools">
       <div class="hide-modes" role="group">
-        <button type="button" class="btn soft" :class="{ chosen: hiding.crop }" :aria-pressed="String(hiding.crop)"
+        <button type="button" class="btn soft" x-show="!off('lesson.crop')" :class="{ chosen: hiding.crop }" :aria-pressed="String(hiding.crop)"
                 @click="hiding.crop = true"><span class="crop-icon" aria-hidden="true"></span> <span x-text="$t('app.hide.crop')"></span></button>
         <button type="button" class="btn soft" :class="{ chosen: !hiding.crop && !hiding.erase }" :aria-pressed="String(!hiding.crop && !hiding.erase)"
                 @click="hiding.crop = false; hiding.erase = false"><span aria-hidden="true">⬛</span> <span x-text="$t('app.hide.paint')"></span></button>
@@ -1077,8 +1077,9 @@
       <button @click="rotatePhoto(viewer.index)" :disabled="loading" :aria-label="$t('app.photos.rotate')"
               :title="$t('app.photos.rotate')">↻</button>
       <!-- One editor, opened in the mode its button names: Material's crop icon cropping, 🖍️ blacking
-           out; a dot on the button once its action was done on this page, told to screen readers too -->
-      <button :class="{ done: photos[viewer.index]?.crop }" x-show="!photos[viewer.index]?.sent"
+           out; a dot on the button once its action was done on this page, told to screen readers too.
+           Cropping turned off by the relay (lesson.crop): blacking out only -->
+      <button :class="{ done: photos[viewer.index]?.crop }" x-show="!photos[viewer.index]?.sent && !off('lesson.crop')"
               @click="openHide(viewer.index, true)" :disabled="loading" :aria-label="$t('app.photos.crop')" :title="$t('app.photos.crop')"
               :aria-describedby="photos[viewer.index]?.crop ? 'viewer-cropped' : null"><span class="crop-icon" aria-hidden="true"></span></button>
       <button :class="{ done: photos[viewer.index]?.mask }" x-show="!photos[viewer.index]?.sent" @click="openHide(viewer.index)"

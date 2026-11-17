@@ -75,6 +75,7 @@
     "hide": {
       "title": "Prepare the photo",
       "hint": "\"Crop\" keeps only the useful part of the page: drag the frame's corners. Then, with your finger, black out a name, a school, anything personal. Only the photo as prepared here is kept and sent.",
+      "hintNoCrop": "With your finger, black out a name, a school, anything personal. Only the photo as prepared here is kept and sent.",
       "pdf": "On a PDF page, its text isn't sent then: the AI reads the page as a picture.",
       "paint": "Black out",
       "erase": "Un-black",

@@ -75,6 +75,7 @@
     "hide": {
       "title": "Preparar la foto",
       "hint": "«Recortar» conserva solo la parte útil de la página: arrastra las esquinas del marco. Luego, con el dedo, tapa en negro un nombre, un colegio, todo lo personal. Solo se guarda y se envía la foto así preparada.",
+      "hintNoCrop": "Con el dedo, tapa en negro un nombre, un colegio, todo lo personal. Solo se guarda y se envía la foto así preparada.",
       "pdf": "En una página de PDF, su texto no se envía entonces: la IA lee la página como una imagen.",
       "paint": "Tapar",
       "erase": "Destapar",
