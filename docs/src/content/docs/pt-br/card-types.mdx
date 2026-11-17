@@ -60,14 +60,18 @@ escondem a legenda inteira na letra manuscrita.
 
 ## Fórmulas
 
-As fórmulas são escritas em **MathJax**, que o Anki exibe: `\( \frac{a+b}{2} \)`, `\( x^2 \)`. A
-revisão as mostra desenhadas abaixo do texto. Cálculos simples ficam como texto.
+As fórmulas são escritas em **MathJax**, que o Anki exibe: `\( \frac{a+b}{2} \)`, `\( x^2 \)`. As
+fórmulas e as equações químicas são escritas como em química: `\( \ce{2H2 + O2 -> 2H2O} \)`.
+Cálculos simples ficam como texto.
+
+A revisão desenha as fórmulas abaixo do texto exatamente como o Anki e o AnkiDroid vão exibi-las
+(o mesmo MathJax): o que o Anki não sabe exibir aparece em vermelho, aqui também.
 
 ## Figuras
 
-Para a geometria e as figuras simples com legendas (um triângulo retângulo com a hipotenusa, um
-círculo com o raio, um retângulo com as medidas), a IA **desenha uma figura exata** no cartão, em
-vez de um modelo de imagens que desenharia mal o texto e as medidas. A figura nunca mostra a
+Para uma figura com legendas, medidas ou valores (um triângulo retângulo com a hipotenusa, uma
+curva, um circuito, uma molécula, um mapa), a IA **desenha uma figura exata** no cartão, em vez
+de um modelo de imagens que desenharia mal o texto e as medidas. A figura nunca mostra a
 resposta. Em qualquer matéria, uma noção que uma figura deixa mais clara também ganha uma,
 sobretudo quando a página da lição mostra uma figura para ela (conjuntos com a interseção
 hachurada, uma reta numérica, um gráfico…): redesenhada limpa no cartão.
@@ -78,13 +82,45 @@ O botão **Imagem** (🖼️) de um cartão abre a figura dele: mude a descriç�
 passe-a para o verso quando ela faz parte da resposta. As instruções **Geometria (com figuras)**
 fazem esse tipo de cartão, assim como **Automático** e as instruções de fórmulas quando ajuda.
 
-As figuras são desenhadas com o [Typst](https://typst.app), cada tipo com um pacote feito para ele
-(geometria, gráficos de funções, conjuntos, diagramas, circuitos elétricos, química, linhas do
-tempo, mapas, relógios, sólidos em perspectiva, gráficos estatísticos): uma curva é calculada a partir da função, uma marca fica no seu segmento. Abaixo da
-figura, uma linha diz o que a desenhou ("📐 Desenhada por gemini-… com Typst + ctz-euclide", cada
-um com um link para a sua página). Ficou em dúvida sobre uma figura? **🔍 Verificar a figura** faz
-a IA olhar para ela; se encontrar algo errado, ela diz o quê, e você escolhe **Manter** ou
-**📐 Redesenhar** (depois, se preciso, **📐 Redesenhar com cuidado**).
+As figuras são desenhadas com o [Typst](https://typst.app), cada tipo com um pacote feito para
+ele:
+
+- **matemática**: geometria (e suas sombras, os eclipses), gráficos de funções e pontos em um
+  plano cartesiano, retas numéricas, frações em uma forma, conjuntos e diagramas de Venn, árvores
+  de probabilidade e grafos, sólidos em perspectiva, tabelas de valores, relógios;
+- **física e química**: circuitos elétricos, moléculas (fórmulas estruturais, estruturas de
+  Lewis, polaridade), cristais, refração e lentes, forças e cronofotografias, linhas de campo de
+  um ímã ou de cargas;
+- **biologia**: sequências de DNA e de proteínas comparadas, árvores filogenéticas;
+- **história e geografia**: linhas do tempo, mapas (veja mais abaixo);
+- **e também**: gráficos estatísticos (barras, pizza, curvas de medições, histogramas, nuvens de
+  pontos com a sua reta de ajuste, boxplots, pirâmides etárias), diagramas de caixas e flechas,
+  scripts do Scratch.
+
+O que pode ser calculado é calculado, nunca posicionado a olho: uma curva a partir da sua função,
+uma marca no seu segmento, os ponteiros de um relógio a partir da hora, um raio refratado a
+partir dos índices.
+Abaixo da figura, uma linha diz o que a desenhou ("📐 Desenhada por gemini-… com Typst +
+ctz-euclide", cada um com um link para a sua página). Ficou em dúvida sobre uma figura?
+**🔍 Verificar a figura** faz a IA olhar para ela; se encontrar algo errado, ela diz o quê, e você
+escolhe **Manter** ou **📐 Redesenhar** (depois, se preciso, **📐 Redesenhar com cuidado**).
+
+### Os mapas de geografia e história
+
+Os mapas vêm de um atlas feito para o Notosaurus: a IA só fornece os nomes, nunca um contorno nem
+uma posição. Eles mostram:
+
+- **países, cidades, regiões**, rios, relevos, mares, estreitos e canais, nomeados no idioma da
+  lição;
+- **países ou regiões coloridos por grupo**, com uma legenda: as alianças de 1914, as ampliações
+  da União Europeia, os blocos da Guerra Fria;
+- **trajetos e fluxos**: as viagens de Colombo ou de Magalhães, uma rota marítima por Suez e
+  Malaca, migrações em flechas, traçados pelo mar contornando as terras;
+- **as fronteiras de um ano passado**, de 1815 a 1991: a Europa do Congresso de Viena, a
+  Áustria-Hungria, a Europa de 1942, a URSS e as duas Alemanhas, um império colonial inteiro com
+  as suas colônias (fronteiras do [OpenHistoricalMap](https://www.openhistoricalmap.org/),
+  completadas pelo [historical-basemaps](https://github.com/aourednik/historical-basemaps));
+- **as regiões polares vistas de cima do polo**: o Ártico e suas rotas marítimas, a Antártica.
 
 ## Imagens
 

@@ -4,7 +4,7 @@ description: "Como o app põe os cartões no AnkiDroid: a permissão, atualizaç
 ---
 
 Neste celular, os cartões vão para o **AnkiDroid**, o app gratuito do Anki para Android: sem
-`.apkg`, sem computador, sem esperar sincronização.
+arquivo para importar, sem computador, sem esperar sincronização.
 
 ## Na primeira vez
 

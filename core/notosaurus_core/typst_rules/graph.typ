@@ -537,6 +537,52 @@
     axis.ticks = staggered(axis.ticks, limits.at(0), limits.at(1), span.to-absolute(), horizontal)
     named.insert(key, axis)
   }
+  // An axis's numbers a curve runs over (the branch of 1/x down along the y axis, across its
+  // −1, −2, −3): left out, the axis's other numbers kept, written as lilaq writes them; the
+  // frame's lengths and limits known (as the AI gives them), else nothing changed
+  let (xl, yl) = (named.at("xlim", default: none), named.at("ylim", default: none))
+  let (wide, tall) = (named.at("width", default: none), named.at("height", default: none))
+  let known = (xl, yl).all(l => type(l) == array and l.len() == 2 and l.all(v => type(v) in (int, float)) and l.at(0) < l.at(1)) and (wide, tall).all(v => type(v) == length)
+  if known {
+    let (w, h) = (wide.to-absolute(), tall.to-absolute())
+    let (sx, sy) = (w / (xl.at(1) - xl.at(0)), h / (yl.at(1) - yl.at(0)))
+    let at(x, y) = ((x - xl.at(0)) * sx, (y - yl.at(0)) * sy)  // from the bottom left
+    let drawn = ()
+    for p in args.pos().filter(p => type(p) == dictionary and type(p.at("x", default: none)) == array and type(p.at("y", default: none)) == array and p.x.len() > 1 and p.x.len() == p.y.len()) {
+      let q = p.x.zip(p.y).filter(((x, y)) => type(x) in (int, float) and type(y) in (int, float) and x == x and y == y and calc.abs(y) < 1e6).map(((x, y)) => at(x, y))
+      for i in range(calc.max(0, q.len() - 1)) {
+        let (a, b) = (q.at(i), q.at(i + 1))
+        let n = calc.min(200, calc.max(1, int(calc.max(calc.abs(b.at(0) - a.at(0)), calc.abs(b.at(1) - a.at(1))) / 2pt)))
+        for k in range(n) { drawn.push((a.at(0) + (b.at(0) - a.at(0)) * k / n, a.at(1) + (b.at(1) - a.at(1)) * k / n)) }
+      }
+    }
+    let inside((x0, y0, x1, y1)) = drawn.any(((x, y)) => x >= x0 and x <= x1 and y >= y0 and y <= y1)
+    let reach = 1.5pt + 0.4em.to-absolute()
+    for (key, horizontal) in (("yaxis", false), ("xaxis", true)) {
+      let axis = named.at(key, default: none)
+      if axis != none and type(axis) != dictionary { continue }
+      let other = if horizontal { yl } else { xl }
+      let where = _axis-at(axis, other.at(0), other.at(1))
+      if where == none or where < other.at(0) or where > other.at(1) { continue }
+      let numbers = if horizontal { _numbers(axis, xl.at(0), xl.at(1), w, true) } else { _numbers(axis, yl.at(0), yl.at(1), h, false) }
+      if numbers.len() == 0 { continue }
+      let kept = numbers.filter(((v, label)) => {
+        if calc.abs(v) < 1e-12 { return true }
+        let m = measure(label)
+        let b = if horizontal {
+          let (cx, cy) = at(v, where)
+          (cx - m.width / 2 - 1pt, cy - reach - m.height - 1pt, cx + m.width / 2 + 1pt, cy - reach + 1pt)
+        } else {
+          let (cx, cy) = at(where, v)
+          (cx - reach - m.width - 1pt, cy - m.height / 2 - 1pt, cx - reach + 1pt, cy + m.height / 2 + 1pt)
+        }
+        not inside(b)
+      })
+      if kept.len() < numbers.len() {
+        named.insert(key, (if axis == none { (:) } else { axis }) + (ticks: kept))
+      }
+    }
+  }
   // The asymptotes (`asymptote(y: 3)`) and the names of the curves and lines (`named(…)`)
   // given what they can't see from inside the frame: the axes as the AI set them (their
   // position, their ticks: where their numbers are), the other plots' points, the texts

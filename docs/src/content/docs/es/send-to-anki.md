@@ -33,8 +33,12 @@ duplicarlas. Consulta [Las tarjetas en Anki](../cards-in-anki/).
 
 ## El archivo .apkg
 
-**⬇️ .apkg** descarga el mazo como archivo, con su audio y sus imágenes, sin necesidad de tener
-Anki abierto:
+Cuando Notosaurus no puede contactar con Anki, **⬇️ Exportar a Anki (.apkg)** sustituye a
+**📥 Añadir a Anki**: descarga el mazo como archivo, con su audio y sus imágenes. Cuando Anki sí
+se puede contactar, **📤 Compartir**, junto a **📥 Añadir a Anki**, hace el mismo archivo (para
+otra familia: consulta
+[Compartir las tarjetas con otra familia](../lessons/#compartir-las-tarjetas-con-otra-familia)).
+Para abrirlo:
 
 - **en un ordenador**, haz doble clic en él: Anki lo importa;
 - **en Android**, abre el archivo descargado y elige **AnkiDroid**. Si no aparece AnkiDroid,

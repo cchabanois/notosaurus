@@ -63,13 +63,16 @@ die ganze Beschriftung verdecken.
 ## Formeln
 
 Formeln werden in **MathJax** geschrieben, das Anki anzeigt: `\( \frac{a+b}{2} \)`,
-`\( x^2 \)`. Die Durchsicht zeigt sie gezeichnet unter dem Text. Einfache Rechnungen bleiben
-reiner Text.
+`\( x^2 \)`. Formeln und chemische Gleichungen werden wie in der Chemie geschrieben:
+`\( \ce{2H2 + O2 -> 2H2O} \)`. Einfache Rechnungen bleiben reiner Text.
+
+Die Durchsicht zeichnet die Formeln unter dem Text, genau wie Anki und AnkiDroid sie anzeigen
+werden (dasselbe MathJax): Was Anki nicht anzeigen kann, erscheint auch hier rot.
 
 ## Figuren
 
-Für Geometrie und einfache beschriftete Figuren (ein rechtwinkliges Dreieck mit seiner
-Hypotenuse, ein Kreis mit seinem Radius, ein Rechteck mit seinen Maßen) **zeichnet die KI eine
+Für eine Figur mit Beschriftungen, Maßen oder Werten (ein rechtwinkliges Dreieck mit seiner
+Hypotenuse, eine Kurve, ein Stromkreis, ein Molekül, eine Landkarte) **zeichnet die KI eine
 exakte Figur** auf die Karte, statt eines Bildmodells, das Text und Maße schlecht zeichnen würde.
 Die Figur zeigt nie die Antwort. In jedem Fach bekommt auch ein Begriff, den eine Figur klarer
 macht, eine, besonders wenn die Seite der Lektion eine Figur dafür zeigt (Mengen mit schraffierter
@@ -83,12 +86,46 @@ sie neu zeichnen, oder leg sie auf die Rückseite, wenn sie zur Antwort gehört.
 Formel-Anweisungen, wenn es hilft.
 
 Die Figuren werden mit [Typst](https://typst.app) gezeichnet, jede Art mit einem eigens dafür
-gemachten Paket (Geometrie, Funktionsgraphen, Mengen, Diagramme, Stromkreise, Chemie,
-Zeitstrahlen, Landkarten, Uhren, Körper in Schrägbildern, Diagramme der Statistik): Eine Kurve wird aus ihrer Funktion berechnet, eine Markierung sitzt auf ihrer
-Strecke. Unter der Figur sagt eine Zeile, was sie gezeichnet hat („📐 Gezeichnet von gemini-… mit
-Typst + ctz-euclide“, jeweils mit Link zur Seite). Eine Figur, bei der du Zweifel hast:
+gemachten Paket:
+
+- **Mathematik**: Geometrie (und ihre Schatten, die Finsternisse), Funktionsgraphen und Punkte im
+  Koordinatensystem, Zahlenstrahlen, Brüche auf einer Form, Mengen und Venn-Diagramme,
+  Wahrscheinlichkeitsbäume und Graphen, Körper in Schrägbildern, Wertetabellen, Uhren;
+- **Physik/Chemie**: Stromkreise, Moleküle (Strukturformeln, Lewis-Formeln, Polarität), Kristalle,
+  Lichtbrechung und Linsen, Kräfte und Chronofotografien, Feldlinien eines Magneten oder von
+  Ladungen;
+- **Biologie**: verglichene DNA- und Proteinsequenzen, phylogenetische Bäume;
+- **Geschichte/Erdkunde**: Zeitstrahlen, Landkarten (siehe weiter unten);
+- **und außerdem**: Diagramme der Statistik (Balkendiagramme, Kreisdiagramme, Messkurven,
+  Histogramme, Streudiagramme mit ihrer Ausgleichsgerade, Boxplots, Alterspyramiden),
+  Kästchen-und-Pfeil-Diagramme, Scratch-Skripte.
+
+Was sich berechnen lässt, wird berechnet, nie nach Augenmaß platziert: eine Kurve aus ihrer
+Funktion, eine Markierung auf ihrer Strecke, die Zeiger einer Uhr aus der Uhrzeit, ein gebrochener
+Strahl aus den Brechungsindizes.
+Unter der Figur sagt eine Zeile, was sie gezeichnet hat („📐 Gezeichnet von gemini-… mit Typst +
+ctz-euclide“, jeweils mit Link zur Seite). Eine Figur, bei der du Zweifel hast:
 **🔍 Figur prüfen** lässt die KI sie ansehen; findet sie etwas Falsches, sagt sie was, und du
 wählst **Behalten** oder **📐 Neu zeichnen** (dann, falls nötig, **📐 Sorgfältig neu zeichnen**).
+
+### Landkarten in Geschichte und Erdkunde
+
+Die Landkarten stammen aus einem eigens für Notosaurus gemachten Atlas: Die KI gibt nur Namen an,
+nie einen Umriss oder eine Position. Sie zeigen:
+
+- **Länder, Städte, Regionen**, Flüsse, Gebirge, Meere, Meerengen und Kanäle, benannt in der
+  Sprache der Lektion;
+- **Länder oder Regionen, nach Gruppe gefärbt**, mit einer Legende: die Bündnisse von 1914, die
+  Erweiterungen der Europäischen Union, die Blöcke des Kalten Kriegs;
+- **Routen und Ströme**: die Reisen von Kolumbus oder Magellan, eine Seeroute über Suez und
+  Malakka, Migrationen als Pfeile, über das Meer um die Landmassen herum verlaufend;
+- **die Grenzen eines vergangenen Jahres**, von 1815 bis 1991: das Europa des Wiener Kongresses,
+  Österreich-Ungarn, das Europa von 1942, die UdSSR und die beiden deutschen Staaten, ein ganzes
+  Kolonialreich mit seinen Kolonien (Grenzen von
+  [OpenHistoricalMap](https://www.openhistoricalmap.org/), ergänzt durch
+  [historical-basemaps](https://github.com/aourednik/historical-basemaps));
+- **die Polarregionen, von oberhalb des Pols aus gesehen**: die Arktis mit ihren Seerouten, die
+  Antarktis.
 
 ## Bilder
 

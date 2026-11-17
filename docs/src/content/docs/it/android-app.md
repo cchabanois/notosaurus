@@ -81,8 +81,14 @@ Quasi tutto Notosaurus è uguale al computer. Ciò che solo l'app ha, o non ha:
   aiuta a migliorare Notosaurus (vedi [Segnalare un problema](../review/#segnalare-un-problema)).
 - **Le voci** sono quelle di Google, tramite il servizio Notosaurus; le
   [impostazioni delle voci](../voices/) sono le stesse.
-- **Niente `.apkg`** né Ko-fi: le carte vanno dritte in AnkiDroid, e l'abbonamento paga
-  Notosaurus.
+- **La condivisione con Notosaurus**: dalla galleria, dai file o da una messaggistica,
+  **Condividi → Notosaurus** trasforma foto, un PDF o un testo nelle pagine di una lezione (vedi
+  [Foto e PDF](../photos/#più-pagine)).
+- **Le carte vanno dritte in AnkiDroid**, senza file da importare. Per darle a un'altra
+  famiglia, **📤 Condividi** le mette in un file, inviato dal menu di condivisione di Android
+  (vedi
+  [Condividere le carte con un'altra famiglia](../lessons/#condividere-le-carte-con-unaltra-famiglia)).
+- **Niente Ko-fi**: l'abbonamento paga Notosaurus.
 - **Gli aggiornamenti** arrivano da Google Play. Quando c'è una nuova versione, l'app dice **È
   disponibile una nuova versione di Notosaurus.**, con un pulsante **Aggiorna**.
 

@@ -71,6 +71,9 @@ Touchez **Corriger**. L'IA revoit les photos et ne change que ce que vous avez d
 cartes changées sont marquées **modifiée**, les nouvelles **nouvelle**, et une phrase
 résume ce qu'elle a fait. **↩ Annuler** remet les cartes comme avant.
 
+Vous changez d'avis pendant que l'IA corrige (la leçon ou une seule carte) ? **Annuler** l'arrête
+tout de suite : les cartes restent comme elles étaient.
+
 ## Expliquer une carte
 
 **Expliquer cette carte** (💬) demande à l'IA de l'expliquer : ce qu'elle veut dire, et pourquoi sa réponse
