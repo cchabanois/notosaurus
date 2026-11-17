@@ -67,6 +67,9 @@ Toque em **Corrigir**. A IA revê as fotos e muda só o que você pediu: os cart
 marcados como **alterado**, os novos como **novo**, e uma frase resume o que ela fez.
 **↩ Desfazer** deixa os cartões como estavam.
 
+Mudou de ideia enquanto a IA corrige (a lição ou um só cartão)? **Cancelar** a interrompe na
+hora: os cartões continuam como estavam.
+
 ## Explicar um cartão
 
 **Explicar este cartão** (💬) pede à IA que o explique: o que ele quer dizer, e por que a resposta

@@ -61,16 +61,20 @@ nascondano tutto il nome sulla scrittura a mano.
 ## Formule
 
 Le formule sono scritte in **MathJax**, che Anki visualizza: `\( \frac{a+b}{2} \)`, `\( x^2 \)`.
-La revisione le mostra disegnate sotto il testo. I calcoli semplici restano testo.
+Le formule e le equazioni chimiche sono scritte come in chimica: `\( \ce{2H2 + O2 -> 2H2O} \)`. I
+calcoli semplici restano testo.
+
+La revisione disegna le formule sotto il testo esattamente come le mostreranno Anki e AnkiDroid
+(lo stesso MathJax): ciò che Anki non sa visualizzare appare in rosso, anche qui.
 
 ## Figure
 
-Per la geometria e le figure semplici con nomi (un triangolo rettangolo con la sua ipotenusa, un
-cerchio con il suo raggio, un rettangolo con le sue misure), l'IA **disegna una figura esatta**
-sulla carta, invece di un modello di immagini che disegnerebbe male testo e misure. La figura non
-mostra mai la risposta. In ogni materia, anche una nozione che una figura rende più chiara ne
-riceve una, soprattutto quando la pagina della lezione mostra una figura per essa (insiemi con
-l'intersezione tratteggiata, una retta numerica, un grafico…): ridisegnata pulita sulla carta.
+Per una figura con nomi, misure o valori (un triangolo rettangolo con la sua ipotenusa, una
+curva, un circuito, una molecola, una mappa), l'IA **disegna una figura esatta** sulla carta,
+invece di un modello di immagini che disegnerebbe male testo e misure. La figura non mostra mai
+la risposta. In ogni materia, anche una nozione che una figura rende più chiara ne riceve una,
+soprattutto quando la pagina della lezione mostra una figura per essa (insiemi con l'intersezione
+tratteggiata, una retta numerica, un grafico…): ridisegnata pulita sulla carta.
 
 ![Carte di geometria con le loro figure](../../../assets/screenshots/en/figures.png)
 
@@ -79,13 +83,44 @@ ridisegnala, o spostala sul retro quando fa parte della risposta. Le istruzioni 
 figure)** fanno questo tipo di carte, come **Automatico** e le istruzioni di formule quando
 aiuta.
 
-Le figure sono disegnate con [Typst](https://typst.app), ogni tipo con un pacchetto fatto apposta
-(geometria, grafici di funzioni, insiemi, diagrammi, circuiti elettrici, chimica, linee del
-tempo, carte geografiche, orologi, solidi in prospettiva, grafici statistici): una curva è calcolata dalla sua funzione, un segno sta sul suo segmento. Sotto la figura,
-una riga dice cosa l'ha disegnata ("📐 Disegnata da gemini-… con Typst + ctz-euclide", ciascuno con
-un link alla sua pagina). Una figura che ti lascia un dubbio: **🔍 Verifica la figura** la fa
-guardare all'IA; se trova qualcosa di sbagliato, dice cosa, e scegli **Tienila** o
-**📐 Ridisegnala** (poi, se serve, **📐 Ridisegnala con cura**).
+Le figure sono disegnate con [Typst](https://typst.app), ogni tipo con un pacchetto fatto apposta:
+
+- **matematica**: geometria (e le sue ombre, le eclissi), grafici di funzioni e punti in un
+  sistema di assi, rette graduate, frazioni su una forma, insiemi e diagrammi di Venn, alberi di
+  probabilità e grafi, solidi in prospettiva, tabelle di valori, orologi;
+- **fisica-chimica**: circuiti elettrici, molecole (formule di struttura, schemi di Lewis,
+  polarità), cristalli, rifrazione e lenti, forze e cronofotografie, linee di campo di un
+  magnete o di cariche;
+- **scienze naturali**: sequenze di DNA e proteine comparate, alberi filogenetici;
+- **storia-geografia**: linee del tempo, mappe (vedi sotto);
+- **e anche**: grafici statistici (barre, torte, curve di misure, istogrammi, nuvole di punti con
+  la loro retta di adattamento, box plot, piramidi delle età), schemi a caselle e frecce, script
+  Scratch.
+
+Ciò che si calcola è calcolato, mai piazzato a occhio: una curva a partire dalla sua funzione, un
+segno sul suo segmento, le lancette di un orologio a partire dall'ora, un raggio rifratto a
+partire dagli indici.
+Sotto la figura, una riga dice cosa l'ha disegnata ("📐 Disegnata da gemini-… con Typst +
+ctz-euclide", ciascuno con un link alla sua pagina). Una figura che ti lascia un dubbio:
+**🔍 Verifica la figura** la fa guardare all'IA; se trova qualcosa di sbagliato, dice cosa, e
+scegli **Tienila** o **📐 Ridisegnala** (poi, se serve, **📐 Ridisegnala con cura**).
+
+### Le mappe di geografia e di storia
+
+Le mappe vengono da un atlante fatto per Notosaurus: l'IA dà solo nomi, mai un contorno né una
+posizione. Mostrano:
+
+- **paesi, città, regioni**, fiumi, rilievi, mari, stretti e canali, nominati nella lingua della
+  lezione;
+- **paesi o regioni colorati per gruppo**, con una legenda: le alleanze del 1914, gli
+  allargamenti dell'Unione europea, i blocchi della guerra fredda;
+- **tragitti e flussi**: i viaggi di Colombo o di Magellano, una rotta marittima per Suez e
+  Malacca, migrazioni con frecce, tracciati per mare attorno alle terre;
+- **i confini di un anno passato**, dal 1815 al 1991: l'Europa del congresso di Vienna,
+  l'Austria-Ungheria, l'Europa del 1942, l'URSS e le due Germanie, un impero coloniale intero con
+  le sue colonie (confini di [OpenHistoricalMap](https://www.openhistoricalmap.org/), completati
+  da [historical-basemaps](https://github.com/aourednik/historical-basemaps));
+- **le regioni polari viste da sopra il polo**: l'Artico e le sue rotte marittime, l'Antartide.
 
 ## Immagini
 

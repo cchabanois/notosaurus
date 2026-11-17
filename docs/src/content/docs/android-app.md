@@ -79,8 +79,13 @@ Most of Notosaurus is the same as on the computer. What only the app has, or doe
   [Reporting a problem](../review/#reporting-a-problem)).
 - **The voices** are Google's, through the Notosaurus service; the
   [voice settings](../voices/) are the same.
-- **No `.apkg`** and no Ko-fi: the cards go straight into AnkiDroid, and the subscription pays
-  for Notosaurus.
+- **Share to Notosaurus**: from the gallery, Files or a messaging app, **Share → Notosaurus**
+  turns photos, a PDF or text into a lesson's pages (see
+  [Photos and PDFs](../photos/#several-pages)).
+- **The cards go straight into AnkiDroid**, with no file to import. To give them to another
+  family, **📤 Share** puts them in a file, sent through Android's share menu (see
+  [Sharing cards with another family](../lessons/#sharing-cards-with-another-family)).
+- **No Ko-fi**: the subscription pays for Notosaurus.
 - **Updates** come through Google Play. When a new version is available, the app says **A new
   version of Notosaurus is available**, with an **Update** button.
 

@@ -62,12 +62,16 @@ ocultan todo el rótulo en la letra manuscrita.
 ## Fórmulas
 
 Las fórmulas se escriben en **MathJax**, que Anki muestra: `\( \frac{a+b}{2} \)`, `\( x^2 \)`.
-La revisión las muestra dibujadas bajo el texto. Los cálculos sencillos se quedan en texto.
+Las fórmulas y las ecuaciones químicas se escriben como en química:
+`\( \ce{2H2 + O2 -> 2H2O} \)`. Los cálculos sencillos se quedan en texto.
+
+La revisión dibuja las fórmulas bajo el texto exactamente como las mostrarán Anki y AnkiDroid (el
+mismo MathJax): lo que Anki no sabe mostrar aparece en rojo, también aquí.
 
 ## Figuras
 
-Para la geometría y las figuras sencillas con rótulos (un triángulo rectángulo con su hipotenusa,
-un círculo con su radio, un rectángulo con sus medidas), la IA **dibuja una figura exacta** en la
+Para una figura con rótulos, medidas o valores (un triángulo rectángulo con su hipotenusa, una
+curva, un circuito, una molécula, un mapa), la IA **dibuja una figura exacta** en la
 tarjeta, en lugar de un modelo de imágenes que dibujaría mal el texto y las medidas. La figura
 nunca muestra la respuesta. En cualquier asignatura, una noción que una figura aclara también
 recibe una, sobre todo cuando la página de la lección muestra una figura para ella (conjuntos con
@@ -80,13 +84,45 @@ dibujarla, o pásala al reverso cuando forma parte de la respuesta. Las instrucc
 (con figuras)** hacen este tipo de tarjetas, igual que **Automático** y las instrucciones de
 fórmulas cuando ayuda.
 
-Las figuras se dibujan con [Typst](https://typst.app), cada tipo con un paquete hecho para él
-(geometría, gráficas de funciones, conjuntos, diagramas, circuitos eléctricos, química,
-cronologías, mapas, relojes, sólidos en perspectiva, gráficos estadísticos): una curva se calcula a partir de su función, una marca queda sobre su segmento. Bajo
-la figura, una línea dice qué la ha dibujado («📐 Dibujada por gemini-… con Typst + ctz-euclide»,
-cada uno con un enlace a su página). ¿Dudas de una figura? **🔍 Comprobar la figura** hace que la
-IA la mire; si encuentra algo mal, dice qué, y eliges **Conservarla** o **📐 Volver a dibujarla**
-(y luego, si hace falta, **📐 Volver a dibujarla con cuidado**).
+Las figuras se dibujan con [Typst](https://typst.app), cada tipo con un paquete hecho para él:
+
+- **matemáticas**: geometría (y sus sombras, los eclipses), curvas de funciones y puntos en un
+  sistema de coordenadas, rectas numéricas, fracciones sobre una forma, conjuntos y diagramas de
+  Venn, árboles de probabilidad y grafos, sólidos en perspectiva, tablas de valores, relojes;
+- **física y química**: circuitos eléctricos, moléculas (fórmulas desarrolladas, esquemas de
+  Lewis, polaridad), cristales, refracción y lentes, fuerzas y cronofotografías, líneas de campo
+  de un imán o de cargas;
+- **ciencias naturales**: secuencias de ADN y de proteínas comparadas, árboles filogenéticos;
+- **historia y geografía**: cronologías, mapas (ver más abajo);
+- **y también**: gráficos estadísticos (barras, gráficos circulares, curvas de medidas,
+  histogramas, nubes de puntos y su recta de ajuste, diagramas de caja, pirámides de edad),
+  esquemas de cajas y flechas, scripts de Scratch.
+
+Lo que se puede calcular se calcula, nunca se coloca a ojo: una curva a partir de su función, una
+marca sobre su segmento, las agujas de un reloj a partir de la hora, un rayo refractado a partir
+de los índices.
+Bajo la figura, una línea dice qué la ha dibujado («📐 Dibujada por gemini-… con Typst +
+ctz-euclide», cada uno con un enlace a su página). ¿Dudas de una figura? **🔍 Comprobar la
+figura** hace que la IA la mire; si encuentra algo mal, dice qué, y eliges **Conservarla** o
+**📐 Volver a dibujarla** (y luego, si hace falta, **📐 Volver a dibujarla con cuidado**).
+
+### Los mapas de geografía y de historia
+
+Los mapas vienen de un atlas hecho para Notosaurus: la IA solo da nombres, nunca un contorno ni
+una posición. Muestran:
+
+- **países, ciudades, regiones**, ríos, relieves, mares, estrechos y canales, nombrados en el
+  idioma de la lección;
+- **países o regiones coloreados por grupo**, con una leyenda: las alianzas de 1914, las
+  ampliaciones de la Unión Europea, los bloques de la guerra fría;
+- **trayectos y flujos**: los viajes de Colón o de Magallanes, una ruta marítima por Suez y
+  Malaca, migraciones con flechas, trazados por el mar alrededor de las tierras;
+- **las fronteras de un año pasado**, de 1815 a 1991: la Europa del congreso de Viena,
+  Austria-Hungría, la Europa de 1942, la URSS y las dos Alemanias, un imperio colonial entero con
+  sus colonias (fronteras de [OpenHistoricalMap](https://www.openhistoricalmap.org/),
+  completadas por [historical-basemaps](https://github.com/aourednik/historical-basemaps));
+- **las regiones polares vistas desde encima del polo**: el Ártico y sus rutas marítimas, la
+  Antártida.
 
 ## Imágenes
 

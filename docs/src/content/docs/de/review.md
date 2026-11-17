@@ -70,6 +70,9 @@ Tippe auf **Korrigieren**. Die KI sieht die Fotos noch einmal und ändert nur, w
 hast: Geänderte Karten werden als **geändert** markiert, neue als **neu**, und ein Satz fasst
 zusammen, was sie getan hat. **↩ Rückgängig** stellt die Karten wieder her, wie sie waren.
 
+Du änderst deine Meinung, während die KI korrigiert (die Lektion oder nur eine Karte)?
+**Abbrechen** stoppt sofort: Die Karten bleiben, wie sie waren.
+
 ## Eine Karte erklären
 
 **Diese Karte erklären** (💬) bittet die KI, sie zu erklären: was sie bedeutet und warum ihre

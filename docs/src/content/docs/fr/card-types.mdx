@@ -65,12 +65,16 @@ cachent toute la légende sur une écriture manuscrite.
 ## Formules
 
 Les formules sont écrites en **MathJax**, qu'Anki affiche : `\( \frac{a+b}{2} \)`, `\( x^2 \)`.
-La relecture les affiche dessinées sous le texte. Les calculs simples restent en texte.
+Les formules et les équations chimiques sont écrites comme en chimie :
+`\( \ce{2H2 + O2 -> 2H2O} \)`. Les calculs simples restent en texte.
+
+La relecture dessine les formules sous le texte exactement comme Anki et AnkiDroid les
+afficheront (le même MathJax) : ce qu'Anki ne sait pas afficher apparaît en rouge, ici aussi.
 
 ## Figures
 
-Pour la géométrie et les figures simples avec des légendes (un triangle rectangle et son
-hypoténuse, un cercle et son rayon, un rectangle et ses mesures), l'IA **dessine une figure
+Pour une figure avec des légendes, des mesures ou des valeurs (un triangle rectangle et son
+hypoténuse, une courbe, un circuit, une molécule, une carte), l'IA **dessine une figure
 exacte** sur la carte, au lieu d'un modèle d'images qui dessinerait mal le texte et les
 mesures. La figure ne montre jamais la réponse. Dans toute matière, une notion qu'une figure
 fait mieux comprendre en a une aussi, en particulier quand la page de la leçon en montre une
@@ -85,13 +89,46 @@ figures)** fait ce type de cartes, tout comme **Automatique** et les consignes d
 quand c'est utile.
 
 Les figures sont dessinées avec [Typst](https://typst.app), chaque type avec un paquet fait pour
-lui (géométrie, courbes de fonctions, ensembles, schémas, circuits électriques, chimie, frises
-chronologiques, cartes, horloges, solides en perspective, diagrammes statistiques) : une courbe est calculée à partir de sa fonction, un codage est sur son segment.
+lui :
+
+- **mathématiques** : géométrie (et ses ombres, les éclipses), courbes de fonctions et points
+  dans un repère, droites graduées, fractions sur une forme, ensembles et diagrammes de Venn,
+  arbres de probabilités et graphes, solides en perspective, tableaux de valeurs, horloges ;
+- **physique-chimie** : circuits électriques, molécules (formules développées, schémas de Lewis,
+  polarité), cristaux, réfraction et lentilles, forces et chronophotographies, lignes de champ
+  d'un aimant ou de charges ;
+- **SVT** : séquences d'ADN et de protéines comparées, arbres phylogénétiques ;
+- **histoire-géographie** : frises chronologiques, cartes (voir plus bas) ;
+- **et aussi** : diagrammes statistiques (barres, camemberts, courbes de mesures,
+  histogrammes, nuages de points et leur droite d'ajustement, boîtes à moustaches, pyramides des
+  âges), schémas à boîtes et flèches, scripts Scratch.
+
+Ce qui se calcule est calculé, jamais placé à l'œil : une courbe à partir de sa fonction, un
+codage sur son segment, les aiguilles d'une horloge à partir de l'heure, un rayon réfracté à
+partir des indices.
 Sous la figure, une ligne dit ce qui l'a dessinée (« 📐 Dessinée par gemini-… avec Typst +
 ctz-euclide », chacun avec un lien vers sa page). Une figure qui vous laisse un doute :
 **🔍 Vérifier la figure** demande à l'IA de la regarder ; si elle trouve une erreur, elle dit
 laquelle, et vous choisissez **Garder** ou **📐 Redessiner** (puis, si besoin, **📐 Redessiner avec
 soin**).
+
+### Les cartes de géographie et d'histoire
+
+Les cartes viennent d'un atlas fait pour Notosaurus : l'IA ne donne que des noms, jamais un
+contour ni une position. Elles montrent :
+
+- **des pays, des villes, des régions**, des fleuves, des reliefs, des mers, des détroits et des
+  canaux, nommés dans la langue de la leçon ;
+- **des pays ou des régions coloriés par groupe**, avec une légende : les alliances de 1914,
+  les élargissements de l'Union européenne, les blocs de la guerre froide ;
+- **des trajets et des flux** : les voyages de Colomb ou de Magellan, une route maritime par
+  Suez et Malacca, des migrations en flèches, tracés par la mer autour des terres ;
+- **les frontières d'une année passée**, de 1815 à 1991 : l'Europe du congrès de Vienne,
+  l'Autriche-Hongrie, l'Europe de 1942, l'URSS et les deux Allemagnes, un empire colonial entier
+  avec ses colonies (frontières d'[OpenHistoricalMap](https://www.openhistoricalmap.org/),
+  complétées par [historical-basemaps](https://github.com/aourednik/historical-basemaps)) ;
+- **les régions polaires vues d'au-dessus du pôle** : l'Arctique et ses routes maritimes,
+  l'Antarctique.
 
 ## Images
 
