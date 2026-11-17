@@ -77,6 +77,7 @@ Each pull request's entries (the `## Changelog` of its description) are put unde
 
 ### Fixed
 
+- 🌐 Brazilian Portuguese: sharing cards and saving or transferring lessons are no longer worded in European Portuguese. Italian: cards are called « carte » everywhere.
 - Bar charts with many bars (a probability law) no longer drawn tiny, their values no longer written on one another.
 - Figures: points' and lines' names no longer fall on the axes or their numbers, a curve running along an axis no longer crosses its numbers, a relation is written under the figure, and a vector's name keeps its arrow.
 - 📚 « Réviser » on a lesson with nothing to review today no longer comes straight back to Notosaurus: AnkiDroid opens on your decks, and Notosaurus says there is nothing to review today.
