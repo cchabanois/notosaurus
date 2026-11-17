@@ -504,7 +504,8 @@ class Voice(BaseModel):
 # What the app can be told to turn off (Account.disabled) while a fix of it waits for the
 # store, or a flaw is closed: the actions that change the user's data on the phone
 # (AnkiDroid, the lessons), which the relay doesn't see, what reads the user's files on the
-# phone (a PDF), and the relay's own (its routes refused: relay.feature_off; or done
+# phone (a PDF, the camera's document scanner), how a photo is prepared on the phone (its
+# crop), and the relay's own (its routes refused: relay.feature_off; or done
 # without, figures.typst, ai.careful). Each with what the app does without it, said where
 # they are set (the relay's config, its command line)
 FEATURES = {
@@ -515,6 +516,8 @@ FEATURES = {
     "lesson.complete": "no pages added to a lesson",
     "lesson.regenerate": "no lesson made again in its place",
     "lesson.pdf": "no PDF read: photos only",
+    "lesson.scan": "no document scanner: the 📷 takes one photo with the phone's camera app",
+    "lesson.crop": "no photo cropped before it is sent: blacking out only (a crop already made is kept)",
     "pictures.search": "no free pictures found: drawn by the image model",
     "pictures.draw": "no picture drawn by the image model: free pictures only",
     "pictures.lesson": "no picture cut out of the lesson's photos: found or drawn instead",

@@ -527,6 +527,51 @@ def test_the_viewers_crop_and_black_out_buttons_open_the_editor_in_their_mode(pa
     sync_api.expect(editor.get_by_role("button", name="Tout dénoircir")).to_be_visible()
 
 
+def test_cropping_turned_off_by_the_relay(page):
+    """lesson.crop turned off (relay_api.FEATURES): no crop button in the viewer, the editor
+    blacking out only (no "Recadrer" mode, its hint not naming it). A photo cropped before
+    stays cropped: its crop may have cut a name out of the page."""
+    viewer = page.locator(".viewer")
+    crop_button = viewer.get_by_role("button", name=CROP_BUTTON, exact=True)
+    page.goto("/")
+    add_photo(page, halves())
+    editor = open_hide(page, crop=True)  # on: the crop button, the "Recadrer" mode
+    sync_api.expect(editor.locator(".hide-modes button")).to_have_text(["Recadrer", "⬛ Noircir", "◻️ Dénoircir"])
+    crop_corner(page, "nw", 0.5, 0.25)
+    editor.get_by_role("button", name="Terminé").click()
+    sync_api.expect(editor).to_be_hidden()
+    close_viewer(page)
+    cropped = thumb_size(page)
+    assert cropped == pytest.approx((300, 600), abs=6)
+
+    page.evaluate("Alpine.$data(document.querySelector('[x-data]')).switches.disabled = ['lesson.crop']")
+    page.locator(".strip .thumb img").first.click()
+    sync_api.expect(viewer.get_by_role("button", name=HIDE_BUTTON, exact=True)).to_be_visible()
+    sync_api.expect(crop_button).to_be_hidden()
+    editor = open_hide(page)
+    sync_api.expect(editor.locator(".hide-modes button:visible")).to_have_text(["⬛ Noircir", "◻️ Dénoircir"])
+    sync_api.expect(editor.locator(".hide-hint")).not_to_contain_text("Recadrer")
+    sync_api.expect(page.locator(".hide-stage .crop-handle:visible")).to_have_count(0)
+    editor.get_by_role("button", name="Terminé").click()
+    sync_api.expect(editor).to_be_hidden()
+    close_viewer(page)
+    assert thumb_size(page) == cropped  # the crop made before kept
+
+    page.route(
+        "**/api/switches",
+        lambda route: route.fulfill(
+            json={"notice": None, "disabled": ["lesson.crop"], "update": False, "store": "", "trial": None}
+        ),
+    )
+    draft_kept(page)
+    page.goto("/")  # told by the relay as the page loads; the photo in progress kept, cropped
+    sync_api.expect(page.locator(".strip .thumb img")).to_have_count(1)
+    assert thumb_size(page) == cropped
+    page.locator(".strip .thumb img").first.click()
+    sync_api.expect(viewer.get_by_role("button", name=HIDE_BUTTON, exact=True)).to_be_visible()
+    sync_api.expect(crop_button).to_be_hidden()
+
+
 @pytest.mark.parametrize("lang", ["en", "fr", "es", "de", "it", "pt"])
 def test_the_editors_buttons_fit_a_narrow_phone(page, browser, server, lang):
     """Opened by the crop button on a 360-pixel-wide phone: its three modes and its actions all on the

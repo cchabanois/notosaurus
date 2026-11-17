@@ -191,8 +191,9 @@ class MainActivity : ComponentActivity() {
             requestMicPermission = ::askMicPermission,
             activity = { this.takeUnless { it.isFinishing || it.isDestroyed } },
         )
-        // The document scanner's module fetched ahead, once (Scanner): never waited for
-        if (prefs[SCANNER_READY] == null) DocumentScanner.preinstall(applicationContext) { prefs[SCANNER_READY] = "1" }
+        // The document scanner's module fetched ahead, once (Scanner): never waited for. Not
+        // while the relay has the scanner turned off (lesson.scan): the camera then
+        if (prefs[SCANNER_READY] == null && !server.switches.off("lesson.scan")) DocumentScanner.preinstall(applicationContext) { prefs[SCANNER_READY] = "1" }
         lifecycleScope.launch {
             val port = withContext(Dispatchers.IO) { server.start() }
             origin = "http://127.0.0.1:$port"
@@ -351,8 +352,11 @@ class MainActivity : ComponentActivity() {
     }
 
     /** The page's camera (📷): its pages scanned (Scanner), as many as the lesson has room for
-     * when its input takes several; the camera itself when the scanner can't be used. */
+     * when its input takes several; the camera itself when the scanner can't be used, or is
+     * turned off by the relay (lesson.scan: the switches last told, kept as each page loads;
+     * none told yet, the scanner). */
     private fun capture(multiple: Boolean) = lifecycleScope.launch {
+        if (server.switches.off("lesson.scan")) return@launch chooser.launch(cameraIntent())
         // The pages before them: the page has read them long since (a notebook's pages, maybe
         // a name on them: not kept on the phone outside the lessons)
         withContext(Dispatchers.IO) { File(cacheDir, "photos").listFiles()?.forEach { it.delete() } }

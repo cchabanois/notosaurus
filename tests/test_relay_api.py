@@ -5,6 +5,7 @@ import dataclasses
 import importlib.util
 import inspect
 import json
+import re
 from pathlib import Path
 
 import pytest
@@ -186,3 +187,16 @@ def test_each_feature_says_what_the_app_does_without_it():
     assert api.FEATURES
     for name, without in api.FEATURES.items():
         assert name and without.strip(), name
+
+
+def test_each_switch_the_apps_read_is_a_feature():
+    """The relay's config takes only FEATURES' names (an unknown one makes it invalid): every
+    switch the page (off("…")) and the Android app (switches.off/check("…")) read is one of
+    them, the photos' too (the document scanner, the crop)."""
+    read = set()
+    for path in [*(ROOT / "static").glob("*.js"), ROOT / "static" / "index.html"]:
+        read |= set(re.findall(r"""\boff\(\s*["']([a-z]+\.[a-z]+)["']""", path.read_text(encoding="utf-8")))
+    for path in (ROOT / "android" / "app" / "src" / "main").rglob("*.kt"):
+        read |= set(re.findall(r'switches\.(?:off|check)\("([a-z]+\.[a-z]+)"\)', path.read_text(encoding="utf-8")))
+    assert {"lesson.pdf", "lesson.scan", "lesson.crop"} <= read
+    assert read <= set(api.FEATURES), read - set(api.FEATURES)

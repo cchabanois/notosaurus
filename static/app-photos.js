@@ -465,6 +465,8 @@ const photosPart = {
 
   // --- Preparing a photo before it is sent: cropped, part of it hidden ---
   // The editor opened by the viewer's ✂️ (`crop`: its frame's corners) or 🖍️ (blacking out).
+  // Cropping turned off by the relay (lesson.crop): blacking out only. A crop made before is
+  // kept as it is (its frame shown, never moved): it may have cut a name out of the page.
   async openHide(i, crop = false) {
     const photo = this.photos[i];
     const bitmap = await createImageBitmap(photo.original ?? photo.blob);
@@ -477,7 +479,7 @@ const photosPart = {
       hidden.close();
     }
     this.hiding = {
-      ...NOT_HIDING, open: true, index: i, crop, pdf: Boolean(photo.pdfText ?? photo.text),
+      ...NOT_HIDING, open: true, index: i, crop: crop && !this.off("lesson.crop"), pdf: Boolean(photo.pdfText ?? photo.text),
       box: cropBox(photo.crop, bitmap.width, bitmap.height), ratio: bitmap.width / bitmap.height,
     };
     await this.$nextTick();
