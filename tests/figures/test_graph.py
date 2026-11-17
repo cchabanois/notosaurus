@@ -567,3 +567,22 @@ def test_the_points_marked_always_within_the_frame():
     assert inside[1] == pytest.approx(drawn_size("graph", frame.format("lq.plot((0, 1), (0, 1))"))[1], rel=0.02)
     # 6.25 + 6 % past it: the height over 3.7 units grown to about 7.0, as many cm a unit
     assert outside[1] / inside[1] == pytest.approx((6.25 + 0.06 * 3.7 + 0.5) / 3.7, rel=0.08)
+
+
+def test_a_points_name_has_room_all_round_it():
+    """The secants' M₂: the lines through it (its secant, the curve it is on) left its four
+    nearest spots, the diagonals 0.3em off, no room; its name went on a secant (2 or 3
+    drawings in 10). A point's name is tried all round it, the diagonals then the sides,
+    farther twice: 24 spots, 3 distances, each of the 8 directions."""
+    body = """#context {
+  let spots = _point-spots((100pt, 100pt), 20pt, 10pt, 3pt)
+  assert(spots.len() == 24, message: repr(spots.len()))
+  // the box's nearest edge from the point, along x and y
+  let gap((x, y)) = calc.max(x - 100pt, 100pt - x - 20pt, y - 100pt, 100pt - y - 10pt)
+  let gaps = spots.map(gap).dedup()
+  assert(gaps.len() == 3 and calc.min(..gaps) == 3pt, message: repr(gaps))
+  // right of it, level with it: a side's spot, not only the diagonals
+  assert(spots.any(((x, y)) => x > 100pt and calc.abs(y + 5pt - 100pt) < 0.01pt), message: "no side")
+}"""
+    figure = body + "\n#lq.diagram(width: 3cm, height: 3cm, lq.plot((0, 1), (0, 1)))"
+    assert figures_typst.compile_svg("graph", figure).startswith("<svg")
