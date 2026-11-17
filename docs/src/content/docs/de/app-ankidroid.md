@@ -3,8 +3,8 @@ title: "Die App und AnkiDroid"
 description: "Wie die App die Karten in AnkiDroid legt: ihre Berechtigung, Aktualisierungen ohne Duplikate, AnkiDroid öffnen, eine Karte aus AnkiDroid heraus korrigieren und der gefilterte Stapel eines Tests."
 ---
 
-Auf diesem Handy kommen die Karten in **AnkiDroid**, die kostenlose Anki-App für Android: kein
-`.apkg`, kein Computer, kein Warten auf die Synchronisierung.
+Auf diesem Handy kommen die Karten in **AnkiDroid**, die kostenlose Anki-App für Android: keine
+Datei zum Importieren, kein Computer, kein Warten auf die Synchronisierung.
 
 ## Beim ersten Mal
 

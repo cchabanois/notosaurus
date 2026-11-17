@@ -4,7 +4,7 @@ description: "Come l'app mette le carte in AnkiDroid: il suo permesso, aggiornam
 ---
 
 Su questo telefono, le carte vanno in **AnkiDroid**, l'app gratuita di Anki per Android: niente
-`.apkg`, niente computer, nessuna sincronizzazione da aspettare.
+file da importare, niente computer, nessuna sincronizzazione da aspettare.
 
 ## La prima volta
 

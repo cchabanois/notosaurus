@@ -65,6 +65,9 @@ Tap **Correct**. The AI sees the photos again and changes only what you asked: c
 are marked **changed**, new ones **new**, and a sentence sums up what it did. **↩ Undo** brings
 the cards back as they were.
 
+Change your mind while the AI is correcting (the lesson or a single card)? **Cancel** stops it
+right away: the cards stay as they were.
+
 ## Explaining a card
 
 **Explain this card** (💬) asks the AI to explain it: what it means, and why its answer is the answer, in

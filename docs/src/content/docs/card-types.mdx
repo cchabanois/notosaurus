@@ -61,14 +61,17 @@ whole label on handwriting.
 ## Formulas
 
 Formulas are written in **MathJax**, which Anki displays: `\( \frac{a+b}{2} \)`,
-`\( x^2 \)`. The review shows them drawn under the text. Simple calculations stay as plain
-text.
+`\( x^2 \)`. Chemical equations are written the same way, as chemistry does:
+`\( \ce{2H2 + O2 -> 2H2O} \)`. Simple calculations stay as plain text.
+
+The review draws the formulas under the text exactly as Anki and AnkiDroid will display them
+(the same MathJax): what Anki can't display shows up in red there too.
 
 ## Figures
 
-For geometry and simple labelled figures (a right triangle with its hypotenuse, a circle with
-its radius, a rectangle with its measures), the AI **draws an exact figure** on the card,
-instead of an image model that would draw text and measures badly. The figure never shows the
+For a figure with labels, measures or values (a right triangle with its hypotenuse, a curve, a
+circuit, a molecule, a map), the AI **draws an exact figure** on the card, instead of an image
+model that would draw text and measures badly. The figure never shows the
 answer. In any subject, a notion a figure makes clearer gets one too, in particular when the
 lesson's page shows a figure for it (sets with their intersection hatched, a number line, a
 graph…): redrawn clean on the card.
@@ -79,12 +82,43 @@ The **Picture** button (🖼️) of a card opens its figure: change its descript
 move it to the back when it belongs to the answer. The **Geometry (with figures)** instructions
 make such cards, and so do **Automatic** and the formula instructions when it helps.
 
-The figures are drawn with [Typst](https://typst.app), each kind with a package made for it
-(geometry, graphs of functions, sets, diagrams, electric circuits, chemistry, timelines, maps, clocks, solids in perspective, statistics charts): a
-curve is computed from its function, a mark sits on its segment. Under the figure, a line says
-what drew it (“📐 Drawn by gemini-… with Typst + ctz-euclide”, each linked to its page). A figure
-you doubt: **🔍 Check the figure** has the AI look at it; if it finds something wrong, it says
-what, and you choose **Keep it** or **📐 Redraw it** (then, if needed, **📐 Redraw it carefully**).
+The figures are drawn with [Typst](https://typst.app), each kind with a package made for it:
+
+- **maths**: geometry (and its shadows, eclipses), graphs of functions and points in a
+  coordinate frame, number lines, fractions shown on a shape, sets and Venn diagrams,
+  probability trees and graphs, solids in perspective, tables of values, clocks;
+- **physics and chemistry**: electric circuits, molecules (developed formulas, Lewis
+  structures, polarity), crystals, refraction and lenses, forces and chronophotographs, a
+  magnet's or charges' field lines;
+- **life sciences**: compared DNA and protein sequences, phylogenetic trees;
+- **history and geography**: timelines, maps (see below);
+- **and also**: statistics charts (bars, pie charts, curves of measures, histograms, scatter
+  plots and their fitted line, box plots, age pyramids), box-and-arrow diagrams, Scratch
+  scripts.
+
+What can be computed is computed, never placed by eye: a curve from its function, a mark on its
+segment, a clock's hands from the time, a refracted ray from the indices.
+Under the figure, a line says what drew it (“📐 Drawn by gemini-… with Typst + ctz-euclide”, each
+linked to its page). A figure you doubt: **🔍 Check the figure** has the AI look at it; if it
+finds something wrong, it says what, and you choose **Keep it** or **📐 Redraw it** (then, if
+needed, **📐 Redraw it carefully**).
+
+### Maps for geography and history
+
+The maps come from an atlas made for Notosaurus: the AI gives only names, never a boundary or a
+position. They show:
+
+- **countries, cities, regions**, rivers, reliefs, seas, straits and canals, named in the
+  lesson's language;
+- **countries or regions coloured by group**, with a legend: the alliances of 1914, the
+  European Union's enlargements, the Cold War's blocs;
+- **routes and flows**: Columbus's or Magellan's voyages, a sea route through Suez and Malacca,
+  migrations as arrows, traced over the sea around the land;
+- **the borders of a past year**, from 1815 to 1991: Europe at the Congress of Vienna,
+  Austria-Hungary, Europe in 1942, the USSR and the two Germanies, a whole colonial empire with
+  its colonies (borders from [OpenHistoricalMap](https://www.openhistoricalmap.org/), completed
+  with [historical-basemaps](https://github.com/aourednik/historical-basemaps));
+- **the polar regions seen from above the pole**: the Arctic and its sea routes, Antarctica.
 
 ## Pictures
 

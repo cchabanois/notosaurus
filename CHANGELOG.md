@@ -75,6 +75,7 @@ Each pull request's entries (the `## Changelog` of its description) are put unde
 
 ### Fixed
 
+- Figures: points' and lines' names no longer fall on the axes or their numbers, a curve running along an axis no longer crosses its numbers, a relation is written under the figure, and a vector's name keeps its arrow.
 - 📚 « Réviser » on a lesson with nothing to review today no longer comes straight back to Notosaurus: AnkiDroid opens on your decks, and Notosaurus says there is nothing to review today.
 - Geometry figures: a length written before the lines crossing it no longer lies on them, an angle's name is always written with its hat, and a word naming a segment (diameter, radius) stays beside it.
 - The photo editor's modes no longer run off the edge of a narrow phone.

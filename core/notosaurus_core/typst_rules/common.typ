@@ -68,3 +68,6 @@
 // marks; a graduation's grid
 #let _highlight = rgb("#fde68a")
 #let _grid = luma(205)
+// A vector's name `vec(n)`, a single name: its arrow over it, as school writes it (Typst's own
+// vec is a column of coordinates, "(n)" on the figure); several entries kept a column
+#let vec(..args) = if args.pos().len() == 1 and args.named().len() == 0 { math.arrow(args.pos().first()) } else { math.vec(..args) }

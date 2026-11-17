@@ -424,7 +424,7 @@
   let name(i) = if numbered { str(first + i) } else if names != none {
     math.equation(math.attach(math.upright(names), br: str(first + i)))
   } else { none }
-  let vec(letter, i, delta: false) = {
+  let vec-name(letter, i, delta: false) = {
     let base = if arrows { math.arrow(letter) } else { letter }
     math.equation(math.attach(if delta { $Delta$ + base } else { base }, br: str(i)))
   }
@@ -479,7 +479,7 @@
       let m = ((p.at(0) + t.at(0)) / 2, (p.at(1) + t.at(1)) / 2)
       let away = side(i - first) + if tight and calc.odd(i - first) { 180deg } else { 0deg }
       let across = if calc.cos(d + 90deg - away) > 0 { d - 90deg } else { d + 90deg }
-      content(_off(m, across, 0.32), text(fill: rgb("#1f5fbf"), txt(vec($v$, i))))
+      content(_off(m, across, 0.32), text(fill: rgb("#1f5fbf"), txt(vec-name($v$, i))))
     }
     for i in change {
       let (u, w) = (speed(times.at(i - first + 1)), speed(times.at(i - first - 1)))
@@ -487,7 +487,7 @@
       let p = pts.at(i - first)
       let t = _off(p, d, 1)
       line(p, t, stroke: 1.1pt + rgb("#b3261e"), mark: (end: "stealth", fill: rgb("#b3261e"), scale: 0.8))
-      content(_off(_off(t, d, 0.1), d + 90deg, 0.35), text(fill: rgb("#b3261e"), txt(vec($v$, i, delta: true))))
+      content(_off(_off(t, d, 0.1), d + 90deg, 0.35), text(fill: rgb("#b3261e"), txt(vec-name($v$, i, delta: true))))
     }
   })
 }

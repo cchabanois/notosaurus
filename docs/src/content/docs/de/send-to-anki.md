@@ -33,8 +33,12 @@ statt sie zu verdoppeln. Siehe [Die Karten in Anki](../cards-in-anki/).
 
 ## Die .apkg-Datei
 
-**⬇️ .apkg** lädt den Stapel als Datei herunter, mit seinem Audio und seinen Bildern, ohne dass
-Anki geöffnet sein muss:
+Kann Notosaurus Anki nicht erreichen, ersetzt **⬇️ Für Anki exportieren (.apkg)**
+**📥 Zu Anki hinzufügen**: Es lädt den Stapel als Datei herunter, mit seinem Audio und seinen
+Bildern. Ist Anki erreichbar, macht **📤 Teilen**, neben **📥 Zu Anki hinzufügen**, dieselbe
+Datei (für eine andere Familie: siehe
+[Karten mit einer anderen Familie teilen](../lessons/#karten-mit-einer-anderen-familie-teilen)).
+Um sie zu öffnen:
 
 - **auf einem Computer** doppelklicke darauf: Anki importiert sie;
 - **auf Android** öffne die heruntergeladene Datei und wähle **AnkiDroid**. Wird AnkiDroid nicht

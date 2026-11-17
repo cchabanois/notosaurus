@@ -3,7 +3,7 @@ title: "The app and AnkiDroid"
 description: "How the app puts the cards into AnkiDroid: its permission, updates without duplicates, opening AnkiDroid, correcting a card from AnkiDroid, and a test's filtered deck."
 ---
 
-On this phone, the cards go into **AnkiDroid**, Anki's free app for Android: no `.apkg`, no
+On this phone, the cards go into **AnkiDroid**, Anki's free app for Android: no file to import, no
 computer, no sync to wait for.
 
 ## The first time

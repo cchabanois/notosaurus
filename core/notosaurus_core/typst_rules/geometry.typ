@@ -462,6 +462,21 @@
     content((0, ymax + 0.3), y-label)
     if origin-label != none { content((-0.3, -0.3), origin-label) }
   }
+  // the axes and their numbers kept for the texts placed after them (a line's name once fell on
+  // the x axis): its two lines, each number's box (8pt digits)
+  ((ctx => {
+    let key = "notosaurus-drawn"
+    let drawn = ctx.shared-state.at(key, default: (segments: (), circles: (), texts: ()))
+    drawn.segments.push(((xmin, 0), (xmax, 0)))
+    drawn.segments.push(((0, ymin), (0, ymax)))
+    let half(v) = 0.075 * written(v).clusters().len() + 0.03
+    if labels {
+      for x in multiples(xmin, xmax, xstep) { drawn.texts.push((c: (x, -tick-size - 0.2), hw: half(x), hh: 0.12, skip: (), fixed: true)) }
+      for y in multiples(ymin, ymax, ystep) { drawn.texts.push((c: (-tick-size - 0.1 - half(y), y), hw: half(y), hh: 0.12, skip: (), fixed: true)) }
+    }
+    ctx.shared-state.insert(key, drawn)
+    (ctx: ctx)
+  }),)
 }
 // What the figure drew (its segments and its circles, as the canvas holds them), kept so that
 // a text the preamble places (a length, an angle's value, a line's name) lands clear of it:
@@ -895,6 +910,35 @@
     _record("texts", (c: c, hw: hw, hh: hh, skip: ()))
   })
 }
+// The points' names (ctz-draw-labels) and the texts the AI writes itself (ctz-draw-text):
+// kept, their boxes guessed, for the texts the preamble places to stand clear of them (a
+// vector's name once fell on the relation written under the figure)
+#let _ctz-labels-drawn = ctz-draw-labels
+#let ctz-draw-labels(..args) = {
+  _ctz-labels-drawn(..args)
+  ((ctx => {
+    let drawn = _drawn(ctx)
+    let points = _get-points(ctx)
+    for (name, how) in args.named() {
+      let q = points.at(name, default: none)
+      if q == none { continue }
+      let (pos, body) = if type(how) == dictionary { (how.at("pos", default: "above"), how.at("label", default: name)) } else { (how, name) }
+      let words = if type(pos) == str { pos.split(" ") } else { () }
+      let dx = if "left" in words { -1 } else if "right" in words { 1 } else { 0 }
+      let dy = if "below" in words { -1 } else if "above" in words { 1 } else { 0 }
+      let (hw, hh) = _text-half(body)
+      drawn.texts.push((c: (q.at(0) + dx * (0.2 + hw), q.at(1) + dy * (0.2 + hh)), hw: hw, hh: hh, skip: (), fixed: true))
+    }
+    ctx.shared-state.insert(_drawn-key, drawn)
+    (ctx: ctx)
+  }),)
+}
+#let _ctz-text-drawn = ctz-draw-text
+#let ctz-draw-text(x, y, body, ..opts) = {
+  _ctz-text-drawn(x, y, body, ..opts)
+  let (hw, hh) = _text-half(body)
+  _record("texts", (c: (x, y), hw: hw, hh: hh, skip: (), fixed: true))
+}
 // An angle's value or name written inside it, on its bisector, as far from the vertex as it
 // takes for the text's box to clear both sides and the arc (ctz-euclide's own place, at a
 // fixed distance, laid "40°" over a side of a narrow angle).
@@ -942,6 +986,21 @@
   _record("texts", (c: c, hw: hw, hh: hh, skip: own))
 })
 #let ctz-draw-line-name(a, b, name) = _later(_line-name-now, (a, b, name))
+// A relation, a formula or a sentence written with the figure (AB + BC = AC): under the whole
+// figure, centred on it, once it is all drawn (written as a point's name, it fell on a vertex)
+#let _caption-now(body) = cetz.draw.get-ctx(ctx => {
+  let drawn = _drawn(ctx)
+  let pts = _get-points(ctx).values().map(q => (q.at(0), q.at(1)))
+  pts += drawn.segments.map(s => (s.at(0), s.at(1))).join()
+  pts += drawn.texts.map(t => (t.c.at(0), t.c.at(1) - t.hh))
+  if pts.len() == 0 { return }
+  let xs = pts.map(q => q.at(0))
+  let (hw, hh) = _text-half(body)
+  let c = ((calc.min(..xs) + calc.max(..xs)) / 2, calc.min(..pts.map(q => q.at(1))) - 0.4 - hh)
+  cetz.draw.content(c, body)
+  _record("texts", (c: c, hw: hw, hh: hh, skip: ()))
+})
+#let ctz-draw-caption(body) = _later(_caption-now, (body,))
 // A shadow (a shadow cone, a cast shadow, an eclipse), everything computed from the circles
 // given, never placed by eye: the light `source` and the lit `body`, each a circle
 // `(centre: (x, y), r: …, name: […], fill: …)` (a point source `r: 0`; an opaque flat object
