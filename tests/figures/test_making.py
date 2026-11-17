@@ -11,7 +11,7 @@ from helpers import plain_image
 
 from app import lessons
 from figures.support import SQUARE, TRIANGLE
-from notosaurus_core import figures_typst, llm, pictures
+from notosaurus_core import figures, figures_typst, llm, pictures
 from notosaurus_core.config import AIConfig
 from notosaurus_core.errors import AppError
 
@@ -317,6 +317,37 @@ def test_typst_asked_again_with_its_error_then_used(monkeypatch):
     svg, calls = typst_drawing(monkeypatch, ['#import "other.typ"', "#ctz-canvas({"])
     assert ">A<" in svg and [c["schema"] for c in calls] == ["Kind", "Figure", "Figure", "Drawing"]
     assert "no import" in calls[2]["text"]
+
+
+def test_the_typst_refused_kept_for_who_asks(monkeypatch):
+    """A figure drawn as SVG (Typst refused twice) said nothing of why: the figure bench saw a
+    secant's curve drawn wrong as SVG, its Typst gone. Each refused Typst, with what Typst
+    said, kept for whoever sets `refusals` (the bench); nobody setting it, nothing kept."""
+    from notosaurus_core import figure_making
+
+    kept: list[dict] = []
+    token = figure_making.refusals.set(kept)
+    try:
+        typst_drawing(monkeypatch, ['#import "other.typ"', "#ctz-canvas({"])
+    finally:
+        figure_making.refusals.reset(token)
+    assert [k["typst"] for k in kept] == ['#import "other.typ"', "#ctz-canvas({"]
+    assert "no import" in kept[0]["said"] and kept[1]["said"] and kept[0]["family"] == "geometry"
+    typst_drawing(monkeypatch, ['#import "other.typ"', "#ctz-canvas({"])
+    assert figure_making.refusals.get() is None
+
+
+def test_a_drawing_too_large_said_so_to_the_ai():
+    """Typst's drawing refused for its size was told to the AI as "its SVG was unusable": it
+    wrote the same again, then the figure went to SVG. Its size and what makes one so large
+    are said."""
+    from notosaurus_core import figure_making
+
+    with pytest.raises(figures.FigureError) as e:
+        figures.clean("<svg>" + " " * figures.MAX_SIZE + "</svg>")
+    said = figure_making._unusable_svg(e.value)
+    assert str(figures.MAX_SIZE + 11) in said and "marks" in said
+    assert figure_making._unusable_svg(figures.FigureError("figure.invalid")) == "its SVG was unusable"
 
 
 def test_typst_drawing_nothing_asked_again_then_drawn_as_svg(monkeypatch):

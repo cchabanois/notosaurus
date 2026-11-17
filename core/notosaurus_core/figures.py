@@ -60,6 +60,7 @@ class Checked(BaseModel):
 
 class FigureError(AppError):
     status = 502
+    too_large = 0  # a drawing refused for its size: its characters
 
 
 # --- Cleaning: an allow-list of shapes, text and their presentation ----------------
@@ -388,7 +389,9 @@ def clean(svg: str) -> str:
     Sized from its viewBox, so an <img> shows it at its size and scales it down."""
     svg = svg.strip()
     if len(svg) > MAX_SIZE:
-        raise FigureError("figure.invalid")
+        error = FigureError("figure.invalid")
+        error.too_large = len(svg)  # said to the AI when it drew it in Typst (figure_making)
+        raise error
     if re.search(r"<!(DOCTYPE|ENTITY)", svg, re.IGNORECASE):
         raise FigureError("figure.invalid")  # no DTD: no entities to expand or fetch
     try:

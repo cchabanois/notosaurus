@@ -44,6 +44,11 @@ a wrong value, a label on the wrong thing, a crossing arrow, text too small to r
 what is wrong and how often (2 of 3). Then find the cause in the run's `<case>-<n>.typ`
 (what the AI wrote): the rule misread, a missing function, or the preamble.
 
+A drawing in SVG (`engine` svg in `run.json`) is a Typst refused twice: with `--local`, each
+Typst refused on the way is kept as `<case>-<n>.refused-<k>.typ`, what Typst said at its top
+(and `↺` in the summary). Read them: a drawing too large, a function misused, a rule misread;
+a figure that goes to SVG once in ten is drawn wrong by hand, not by chance.
+
 ## 4. The change
 
 - The rule fixed with a general criterion, never the failing case's words or values.

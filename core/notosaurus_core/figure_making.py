@@ -3,6 +3,7 @@ family's package (figures_typst.py), else as SVG (figures.py); looked at against
 description when the user asks ("🔍 Check")."""
 
 import asyncio
+import contextvars
 import logging
 from collections.abc import Callable
 from typing import Any, Literal, NamedTuple
@@ -14,6 +15,29 @@ from .errors import AppError, loggable
 from .providers import demo as demo_ai
 
 log = logging.getLogger("notosaurus")
+
+
+# Each drawing in Typst refused on the way to a figure, when someone keeps them (the figure
+# bench: why a figure ends drawn as SVG): its family, its Typst, what Typst said
+refusals: contextvars.ContextVar[list[dict] | None] = contextvars.ContextVar("refusals", default=None)
+
+
+def _unusable_svg(e: Exception) -> str:
+    """What the AI is told of a Typst figure whose SVG was refused: why, when it is known (too
+    large: told only "unusable", it wrote the same again, then the figure went to SVG)."""
+    too_large = getattr(e, "too_large", None)
+    if too_large:
+        return (
+            f"its drawing is too large ({too_large} characters, a figure is a few thousand): "
+            "too many marks or shapes drawn (a mark at each point of a curve's samples)"
+        )
+    return "its SVG was unusable"
+
+
+def _refused(family: str, body: str, said: str) -> None:
+    kept = refusals.get()
+    if kept is not None:
+        kept.append({"family": family, "typst": body, "said": said})
 
 
 # A light drawing that can't be used: drawn again with the model's thinking
@@ -159,6 +183,7 @@ async def _drawn(s: AIConfig, text: str, description: str, family: str, light: b
             except ExtractionError as e:
                 if e.code not in _UNUSABLE:
                     raise
+                _refused(family, "", f"the AI's answer was unusable: {e.code}")
                 break
             try:
                 svg = figures.clean(await asyncio.to_thread(figures_typst.compile_svg, family, body))
@@ -166,7 +191,8 @@ async def _drawn(s: AIConfig, text: str, description: str, family: str, light: b
             except (figures_typst.Unusable, figures.FigureError) as e:
                 if isinstance(e, figures_typst.TooSmall) and (small is None or e.px > small.px):
                     small, small_body = e, body
-                said = str(e) if isinstance(e, figures_typst.Unusable) else "its SVG was unusable"
+                said = str(e) if isinstance(e, figures_typst.Unusable) else _unusable_svg(e)
+                _refused(family, body, said)
                 asked = (
                     f"{text}\n\nYour previous answer didn't compile:\n{body}\n\n"
                     f"Typst said: {said}\n\nAnswer it again, corrected."
