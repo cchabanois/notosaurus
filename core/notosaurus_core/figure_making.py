@@ -211,11 +211,12 @@ async def _figure_family(s: AIConfig, description: str, kind: str = "") -> str:
 
 
 def _labelled(drawing, clamp: bool = False) -> str:
-    """The AI's drawing cleaned, its labelled scheme's names set beside it (figures.labelled),
-    grown to what it draws past its frame."""
+    """The AI's drawing cleaned, its arrows drawn with their words (figures.arrowed), its labelled
+    scheme's names set beside it (figures.labelled), grown to what it draws past its frame."""
     from . import figures
 
-    svg = figures.fitted(figures.labelled(figures.clean(drawing.svg), drawing.labels, clamp))
+    arrowed = figures.arrowed(figures.clean(drawing.svg), drawing.arrows)
+    svg = figures.fitted(figures.labelled(arrowed, drawing.labels, clamp))
     kept = answers.get()
     if kept is not None:
         kept.append({"drawing": drawing.model_dump(), "clamp": clamp, "svg": svg})
