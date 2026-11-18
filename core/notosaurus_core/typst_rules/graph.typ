@@ -314,6 +314,20 @@
   points
 }
 #let _box-points((bx, by, bw, bh)) = range(5).map(i => range(3).map(j => (bx + bw * i / 4, by + bh * j / 2))).flatten().chunks(2)
+// A point's name's spots (its box's top left), all round the point (ax, ay): above left, below
+// right, above right, below left, right, left, above, below, at `g`, then farther twice
+#let _point-spots((ax, ay), width, height, g) = {
+  let spots = ()
+  for d in (g, g + 0.4em.to-absolute(), g + 0.8em.to-absolute()) {
+    spots += (
+      (ax - d - width, ay - d - height), (ax + d, ay + d),
+      (ax + d, ay - d - height), (ax - d - width, ay + d),
+      (ax + d, ay - height / 2), (ax - d - width, ay - height / 2),
+      (ax - width / 2, ay - d - height), (ax - width / 2, ay + d),
+    )
+  }
+  spots
+}
 // Every name: the asymptotes' first (at an end of their line), then the curves' (along each),
 // each on the side farthest from what is drawn and from the names placed before it
 #let _render-names(self, transform) = layout(size => {
@@ -460,6 +474,10 @@
       }
     }
     let candidates = ()
+    // a point (a scatter of one, named): all round it, a little farther each time, the
+    // diagonals first; the lines through it (its secant, the curve it is on) leave its four
+    // nearest spots no room (M₂'s name on a secant, 2 or 3 drawings in 10)
+    if mine.len() == 1 { candidates += _point-spots(mine.first(), m.width, m.height, g) }
     // along it from its end, each point with the name above left, below right, above right
     // or below left of it
     for f in (0.92, 0.8, 0.68, 0.56, 0.44, 0.32, 0.2, 0.08) {
