@@ -26,7 +26,7 @@ What a coding agent most often gets wrong here. The rest is in
 ```sh
 .venv/bin/ruff check . && .venv/bin/ruff format --check .
 .venv/bin/pyright                      # CI's "types" job: a type error fails the pull request
-.venv/bin/pytest                       # tests/page/ too when static/ changes (CONTRIBUTING.md)
+.venv/bin/pytest -n auto               # on every core (about 2 minutes); tests/page/ included
 node --test tests/frontend/*.test.mjs  # when static/*.js changes
 ```
 
