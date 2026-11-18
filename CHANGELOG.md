@@ -81,6 +81,7 @@ Each pull request's entries (the `## Changelog` of its description) are put unde
 
 ### Fixed
 
+- 🏷️ A scheme's labels are set where their lines cross the drawing least: in a row over or under steps side by side, in one column, or on each side for a name whose parts lie on both sides (a flower's petals). They are no longer always in two columns with long lines across the drawing.
 - 🏹 In a figure drawn as SVG, the words on arrows (what enters or leaves, a step) are set by the app beside their arrow, where nothing else is drawn, instead of across the drawing.
 - 🏷️ The label of a region the drawing closes against its frame (a cell's nucleus, left of an envelope drawn from top to bottom) stays on that region instead of jumping to the nearest part.
 - ⚡ A circuit's voltages (uC, U across a resistor, a generator's E) drawn as their arrows beside the components.
