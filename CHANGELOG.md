@@ -9,6 +9,7 @@ Each pull request's entries (the `## Changelog` of its description) are put unde
 
 ### Added
 
+- Figures: climate charts (diagrammes ombrothermiques), the precipitation as bars and the temperature as a curve, their scales tied.
 - 🧩 A figure that shows two things of different kinds (a circuit and the curve of its voltage, a titration's set-up and its curve) is drawn in panels, each by its own family.
 - Google's document scanner (📷) and the photo crop can each be turned off from the relay (`lesson.scan`, `lesson.crop`) without an app update: the 📷 then takes one photo with the phone's camera; the photo editor then blacks out only, a crop already made being kept.
 - Figures: a bar chart's mean or expectation marked and an interval of its values shaded; on a number line, an interval's centre and its distance to each bound.
