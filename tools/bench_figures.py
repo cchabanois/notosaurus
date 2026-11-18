@@ -17,9 +17,11 @@ its "front" ("question → answer", the card it goes on the front of): --local o
 relay's /v1/figure takes a description alone.
 --local: drawn here, by the AI of the app's settings (<app>/data, its keys in <app>/.env;
 the checkout by default), with this checkout's rules: a rule judged before it is deployed.
-Every Typst drawing keeps its Typst beside its SVG (<case>-<n>.typ).
---recompile <run>: that run's Typst compiled again with this checkout's preambles, no AI
-drawing: a preamble's change (a font, a size, a function) judged on the same drawings.
+Every Typst drawing keeps its Typst beside its SVG (<case>-<n>.typ), every SVG drawing what
+the AI answered (<case>-<n>.drawing.json: its SVG, its labels and their points).
+--recompile <run>: that run's Typst compiled again with this checkout's preambles, its SVG
+drawings labelled again by this checkout, no AI drawing: a preamble's change (a font, a size,
+a function) or the labels' placing judged on the same drawings.
 
 The AI judge: Gemini on Vertex AI, the project in BENCH_JUDGE_PROJECT (application default
 credentials, `gcloud auth application-default login`); none: judged by code only. The test
@@ -83,6 +85,8 @@ def draw_local(case: dict) -> dict:
     # each Typst refused on the way (two refusals: the figure drawn as SVG), kept to see why
     refused: list[dict] = []
     token = figure_making.refusals.set(refused)
+    answered: list[dict] = []  # the AI's SVG drawings, the one kept saved with its labels
+    answers = figure_making.answers.set(answered)
     try:
         description, kind, front = case["description"], case.get("kind", ""), case.get("front", "")
         made = asyncio.run(figure_making.made_figure(settings.current(), description, kind=kind, front=front))
@@ -94,10 +98,12 @@ def draw_local(case: dict) -> dict:
         }
     finally:
         figure_making.refusals.reset(token)
+        figure_making.answers.reset(answers)
     seconds = round(time.monotonic() - start, 1)
     # a figure in panels: its panels' families and Typst, each said (its SVG kept as drawn)
     family = made.family + "".join(f" {p.family}" for p in made.panels)
     typst = "\n\n".join(f"// panel {n + 1}, {p.family} ({p.engine})\n{p.typst}" for n, p in enumerate(made.panels))
+    drawing = next((a for a in reversed(answered) if a["svg"] == made.svg), None)
     return {
         "svg": made.svg,
         "seconds": seconds,
@@ -105,13 +111,18 @@ def draw_local(case: dict) -> dict:
         "family": family,
         "typst": typst or made.typst,
         "refused": refused,
+        "drawing": {"drawing": drawing["drawing"], "clamp": drawing["clamp"]} if drawing else None,
     }
 
 
 def recompiled(run: Path, drawing: dict) -> dict:
     """A drawing of an earlier run: its Typst compiled again with this checkout's preambles;
-    drawn as SVG, as it was."""
+    drawn as SVG, the AI's drawing labelled again by this checkout (as it was without it)."""
     family = drawing.get("family", "")
+    if drawing.get("drawing_file"):
+        answer = json.loads((run / drawing["drawing_file"]).read_text())
+        svg = figure_making._labelled(figures.Drawing(**answer["drawing"]), answer["clamp"])
+        return {"svg": svg, "seconds": 0, "engine": "svg", "family": family, "drawing": answer}
     if drawing.get("typst_file") and not family.startswith("panels"):
         body = (run / drawing["typst_file"]).read_text()
         try:
@@ -296,6 +307,11 @@ def main() -> int:
             (out / name).write_text(verdict.pop("typst"))
             verdict["typst_file"] = name
         verdict.pop("typst", None)
+        if verdict.get("drawing"):
+            name = f"{case['id']}-{n}.drawing.json"
+            (out / name).write_text(json.dumps(verdict.pop("drawing"), ensure_ascii=False, indent=1))
+            verdict["drawing_file"] = name
+        verdict.pop("drawing", None)
         verdict.pop("png", None)
         # the Typst refused before it, each with what Typst said (first lines of its file)
         kept = []

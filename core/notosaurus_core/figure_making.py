@@ -20,6 +20,10 @@ log = logging.getLogger("notosaurus")
 # Each drawing in Typst refused on the way to a figure, when someone keeps them (the figure
 # bench: why a figure ends drawn as SVG): its family, its Typst, what Typst said
 refusals: contextvars.ContextVar[list[dict] | None] = contextvars.ContextVar("refusals", default=None)
+# Each drawing in SVG the AI answered, its labels with their points, and what the app made of
+# it, when someone keeps them (the figure bench: a change to how labels are placed judged again
+# on the same drawings, without the AI)
+answers: contextvars.ContextVar[list[dict] | None] = contextvars.ContextVar("answers", default=None)
 
 
 def _unusable_svg(e: Exception) -> str:
@@ -211,7 +215,11 @@ def _labelled(drawing, clamp: bool = False) -> str:
     grown to what it draws past its frame."""
     from . import figures
 
-    return figures.fitted(figures.labelled(figures.clean(drawing.svg), drawing.labels, clamp))
+    svg = figures.fitted(figures.labelled(figures.clean(drawing.svg), drawing.labels, clamp))
+    kept = answers.get()
+    if kept is not None:
+        kept.append({"drawing": drawing.model_dump(), "clamp": clamp, "svg": svg})
+    return svg
 
 
 async def _drawn(s: AIConfig, text: str, description: str, family: str, light: bool) -> MadeFigure:

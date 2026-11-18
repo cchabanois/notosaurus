@@ -532,6 +532,30 @@ def test_a_labels_point_outside_asked_again_then_brought_to_the_edge(monkeypatch
     assert "« Noyau » names the point (520, 140)" in calls[-1] and ">Noyau<" in svg
 
 
+def test_the_ais_svg_drawing_kept_for_who_asks(monkeypatch):
+    """A change to how labels are placed was judged on new drawings only, the AI drawing each
+    its own way: the AI's SVG drawing, its labels and their points, kept for whoever sets
+    `answers` (the bench, to label the same drawings again), with what the app made of it."""
+    from notosaurus_core import figure_making
+
+    async def answer(s, images, text, schema, system=None, light=False, **options):
+        if schema is figures_typst.Kind:
+            return schema(family="other")
+        return schema(svg=CELL, labels=[{"text": "Noyau", "x": 210, "y": 222}])
+
+    monkeypatch.setattr("notosaurus_core.ai._ask_provider", answer)
+    kept: list[dict] = []
+    token = figure_making.answers.set(kept)
+    try:
+        svg = asyncio.run(llm.draw_figure(AIConfig(llm="gemini"), "une cellule et son noyau"))
+    finally:
+        figure_making.answers.reset(token)
+    assert [k["drawing"]["labels"] for k in kept] == [[{"text": "Noyau", "x": 210, "y": 222}]]
+    assert kept[0]["drawing"]["svg"] == CELL and kept[0]["svg"] == svg and kept[0]["clamp"] is False
+    asyncio.run(llm.draw_figure(AIConfig(llm="gemini"), "une cellule et son noyau"))
+    assert figure_making.answers.get() is None
+
+
 def test_a_name_for_several_parts_set_once_a_line_to_each():
     """A gene's place on both chromosomes of a pair, one name: given at each point, set once
     with a line to each (a single point between them named nothing, 3 drawings in 3)."""
