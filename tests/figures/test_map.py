@@ -1226,3 +1226,39 @@ def test_an_empire_with_a_land_of_no_name():
     assert figures_typst.compile_svg("map", '#map(year: 1914, groups: ((name: "E", empire: "Espagne"),))').startswith(
         "<svg"
     )
+
+
+def test_every_country_shown_named_even_crowded():
+    """West Africa's small countries side by side: each named, on its land or beside it with a
+    line where no place is clear (Zimbabwe, Botswana once left out), never dropped."""
+    names = (
+        "Sénégal",
+        "Gambie",
+        "Guinée-Bissau",
+        "Guinée",
+        "Sierra Leone",
+        "Liberia",
+        "Côte d'Ivoire",
+        "Ghana",
+        "Togo",
+        "Bénin",
+        "Burkina Faso",
+        "Mali",
+    )
+    countries = ", ".join(f'"{n}"' for n in names)
+    svg = figures_typst.compile_svg("map", f'#map(countries: ({countries}), cities: ("Dakar", "Accra"))')
+    assert len(_labels(svg)) == len(names) + 2
+
+
+def test_a_circles_legend_writes_its_unit():
+    """The circles' legend: each of its two numbers with its unit ("37,4 millions"), not
+    numbers alone: a unit four letters longer, eight glyphs more."""
+    glyphs = lambda unit: len(  # noqa: E731
+        re.findall(
+            r"<use",
+            figures_typst.compile_svg(
+                "map", f'#map(cities: ("Paris",), values: ("Paris": 2), unit: "{unit}", labels: false)'
+            ),
+        )
+    )
+    assert glyphs("QQQQQ") - glyphs("Q") == 8

@@ -1413,7 +1413,7 @@
       // (on its land, else beside it with a line: too small for its name)
       wanted.push((at: page(at), dot: false, optional: true, country: code, within: if pole == none { (..tl, ..br) } else { none },
         land: if pole == none { c.r } else { none }, body: text(7pt, fill: luma(55), name)))
-      wanted.push((at: page(at), dot: false, optional: true, country: code, far: true, body: text(7pt, fill: luma(55), name)))
+      wanted.push((at: page(at), dot: false, country: code, far: true, body: text(7pt, fill: luma(55), name)))
     }
   }
   let placed = ()
@@ -1534,9 +1534,10 @@
       if want.at("country", default: none) != none { countries-named.push(want.country) }
       // Never cut by the frame: moved in
       let within((ax, ay)) = (calc.max(1pt, calc.min(ax, bw - 1pt - lw)), calc.max(1pt, calc.min(ay, bh - 1pt - lh)))
-      // None clear: the spot where it covers least (another name or a dot far worse than an
-      // arrow or a way), the nearer the better; one the frame doesn't cut first (a spot moved
-      // in lands on its neighbours: the West's cities stacked on the frame's edge)
+      // None clear (a country's name beside it too: every country shown named): the spot where
+      // it covers least (another name or a dot far worse than an arrow or a way), the nearer the
+      // better; one the frame doesn't cut first (a spot moved in lands on its neighbours: the
+      // West's cities stacked on the frame's edge)
       if k == none {
         // (a name or a dot covered far worse than an arrow, a few points further worse still)
         let spots = marks.map(((mx, my)) => (mx - dot, my - dot, 2 * dot, 2 * dot))
@@ -1798,13 +1799,13 @@
         if text.lang in ("fr", "de", "es", "it", "pt") { t.replace(".", ",") } else { t }
       }
       let small = round-below(most-valued / 4)
+      // (each number with its unit: "35,7 millions d'habitants")
       let sample(v) = {
         let r = bubble-r(v)
         box(grid(columns: 2, column-gutter: 3pt, align: horizon,
-          circle(radius: r, fill: rgb(214, 47, 47, 70), stroke: 0.8pt + rgb("#b52020")), text(8pt, written(v))))
+          circle(radius: r, fill: rgb(214, 47, 47, 70), stroke: 0.8pt + rgb("#b52020")), text(8pt, written(v) + " " + value-unit)))
       }
-      keys += (box(inset: (right: 5pt), grid(columns: 3, column-gutter: 6pt, align: horizon, sample(most-valued),
-        sample(small), if value-unit != none { text(8pt, value-unit) })),)
+      keys += (box(inset: (right: 5pt), grid(columns: 2, column-gutter: 8pt, align: horizon, sample(most-valued), sample(small))),)
     }
     stack(spacing: 5pt, drawn, block(width: bw, {
       set text(8pt)
