@@ -1,5 +1,6 @@
 -r requirements.txt
 pytest
+pytest-xdist  # the suite on every core: pytest -n auto
 ruff
 httpx
 hypothesis
