@@ -660,6 +660,38 @@ def test_a_point_in_a_region_closed_in_kept():
     assert _placed(svg)[1][0][2:] == (200.0, 110.0)
 
 
+# a cell cut by its nuclear envelope, drawn from the frame's top to its bottom, a pore in it
+# that the messenger RNA goes through: the nucleus left of it, the cytoplasm right of it
+ENVELOPE = (
+    '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 300"><rect width="400" height="300" fill="white"/>'
+    '<path d="M 160 0 L 160 125 M 160 155 L 160 300" stroke="#4a6fa5" stroke-width="6" fill="none"/>'
+    '<path d="M 60 60 Q 80 45 100 60 T 140 60" stroke="#2b5c8f" stroke-width="3" fill="none"/>'
+    '<path d="M 70 140 L 300 140" stroke="#c53030" stroke-width="3" fill="none"/>'
+    '<ellipse cx="290" cy="150" rx="20" ry="12" fill="#e9a94b" stroke="black"/>'
+    '<path d="M 260 100 Q 270 80 280 90 T 300 70" stroke="#2f9e44" stroke-width="4" fill="none"/></svg>'
+)
+
+
+def test_a_point_in_a_region_closed_against_the_frame_kept():
+    """« noyau » named a point in the nucleus, left of the DNA, the nuclear envelope drawn from
+    the frame's top to its bottom (a pore in it, the RNA through it): reached from the frame
+    through white, the nucleus was taken for the open ground and its point pulled onto the DNA
+    (2 drawings in 3), « cytoplasme » onto the protein. The frame's edge counts as a line, a
+    pore's gap as closed: both are regions, their points kept; a point beside the DNA still
+    brought onto it."""
+    from notosaurus_core import figures
+
+    names = [
+        figures.Label(text="noyau", x=40, y=30),  # outside the ink's extent, 30 units from the DNA
+        figures.Label(text="cytoplasme", x=340, y=40),  # 35 units from the protein
+        figures.Label(text="ADN", x=100, y=70),  # 10 units below the DNA
+    ]
+    lines = _placed(figures.labelled(figures.clean(ENVELOPE), names))[1]
+    ends = {(x2, y2) for _, _, x2, y2 in lines}
+    assert (40.0, 30.0) in ends and (340.0, 40.0) in ends, ends
+    assert (100.0, 70.0) not in ends  # on the DNA
+
+
 def test_a_column_beyond_a_point_past_the_drawing():
     """A region's point past the drawing's ink (the cytoplasm, white, right of the shapes): the
     column set beyond it, its line never drawn back across its name."""
