@@ -251,6 +251,9 @@ def test_only_lessons_folders_written(client, tmp_path):
         (zip_of({"lessons/a/lesson.json": b"{}"}), "transfer.not_an_export"),  # no manifest
         (zip_of({"manifest.json": json.dumps({"format": 99, "app": "notosaurus"}).encode()}), "transfer.too_new"),
     ],
+    # named: an id made of a zip's bytes holds its time, and differs from one worker to the next
+    # (pytest -n auto refuses a run whose workers collected different tests)
+    ids=["not-a-zip", "no-manifest", "too-new"],
 )
 def test_not_an_export(client, tmp_path, content, code):
     path = tmp_path / "bad.zip"
