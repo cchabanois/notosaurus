@@ -1018,3 +1018,109 @@ def test_small_regions_named_beside_their_circles_apart():
     labels = _labels(svg)
     assert len(labels) == 5
     assert _apart(labels)
+
+
+@pytest.mark.parametrize(
+    ("part", "country"),
+    [
+        ("Guadeloupe", "France"),  # an overseas department: one of France's regions only
+        ("Açores", "Portugal"),
+        ("îles Canaries", "Espagne"),  # a group of provinces, by CLDR's name
+        ("Hawaï", "États-Unis"),
+        ("Svalbard", "Norvège"),
+        ("Pays-Bas caribéens", "Pays-Bas"),  # Bonaire, Saba and Sint Eustatius: one ISO code
+        ("Galápagos", "Équateur"),
+    ],
+)
+def test_a_countrys_far_part_is_a_place_of_its_own(part, country):
+    """Any country's far part (an overseas department, an archipelago across the sea) found
+    by its name like a country, its map framed on it: "Guadeloupe" was refused as a country,
+    then as a relief, and the drawing fell back to SVG."""
+    alone = figures_typst.compile_svg("map", f'#map(countries: ("{part}",), labels: false)')
+    assert alone != figures_typst.compile_svg("map", f'#map(countries: ("{country}",), labels: false)')
+
+
+def _height(svg: str) -> float:
+    return float(re.search(r'height="([\d.]+)pt"', svg).group(1))
+
+
+def test_a_country_with_its_far_parts_draws_them_in_insets():
+    """A country with its far parts or lands (Denmark, Greenland and the Faroes; the United
+    States with Hawaii): the country's map, each far one in an inset under it, named; not a
+    world map where the country is a speck. `insets: false`: where they lie, one map."""
+    for asked in ('"Danemark", "Groenland", "îles Féroé"', '"États-Unis", "Hawaï", "Porto Rico"'):
+        insets = figures_typst.compile_svg("map", f"#map(countries: ({asked}), labels: false)")
+        one = figures_typst.compile_svg("map", f"#map(countries: ({asked}), labels: false, insets: false)")
+        assert _height(insets) > _height(one) * 1.2, asked
+    # (a land near its country, Jersey by the United Kingdom: no inset)
+    near = figures_typst.compile_svg("map", '#map(countries: ("Royaume-Uni", "Jersey"), labels: false)')
+    assert near == figures_typst.compile_svg(
+        "map", '#map(countries: ("Royaume-Uni", "Jersey"), labels: false, insets: false)'
+    )
+
+
+def test_a_part_of_the_world_is_its_countries():
+    """A part of the world a lesson names (East Asia, Latin America, the Maghreb) is its
+    countries: in a group, coloured; a flow's end, tinted and named ("Asie de l'Est" was
+    refused as a place)."""
+    group = lambda countries: figures_typst.compile_svg(  # noqa: E731
+        "map", f'#map(groups: ((name: "A", countries: {countries}),), labels: false)'
+    )
+    assert group('("Maghreb",)') == group('("Maroc", "Algérie", "Tunisie")')
+    assert group('("Asie de l\'Est",)') != group('("Chine",)')
+    (places,) = _query("read-flows", ('(from: "Asie de l\'Est", to: "Amérique latine")',), "r.to.places.len()")
+    assert places > 20
+
+
+@pytest.mark.parametrize(
+    ("body", "said"),
+    [
+        ('#map(countries: ("Basse-Saxe",))', r"Basse-Saxe.* is a region of Allemagne"),
+        ('#map(countries: ("France",), regions: ("Bavière",))', r"Bavière.* is a region of Allemagne"),
+        ('#map(countries: ("Prusse",))', r"Prusse.* is a state of the past.*1815"),
+        ('#map(year: 1942, countries: ("Pologne",))', r"no state called .Pologne. in 1942.*Reich allemand"),
+        ('#map(countries: ("France",), reliefs: ("Guadeloupe",))', r"Guadeloupe.* is a part of France .*in countries"),
+        ('#map(cities: ("Groenland",))', r"Groenland.* is a country: in countries"),
+    ],
+)
+def test_a_refusal_says_what_the_atlas_has_instead(body, said):
+    """A name the atlas has as something else: the refusal says what (a region and its
+    country, a state of a past year, the year's states on a country's land, a country's far
+    part), for the next try to be right, never "leave it out" when it can tell."""
+    with pytest.raises(figures_typst.Unusable, match=said):
+        figures_typst.compile_svg("map", body)
+
+
+def test_the_sites_of_history_are_places():
+    """The camps of the Shoah are places of history lessons, on a map of 1942 too (Auschwitz
+    was refused: no town of its country's largest)."""
+    svg = figures_typst.compile_svg(
+        "map", '#map(year: 1942, countries: ("Reich allemand",), cities: ("Auschwitz", "Treblinka", "Drancy"))'
+    )
+    assert svg.startswith("<svg")
+
+
+@pytest.mark.parametrize(
+    ("country", "names"),
+    [
+        ("Italie", ("Lombardie", "Lombardia", "Lombardy")),  # a group of provinces
+        ("Italie", ("Pouilles", "Puglia", "Apulia")),
+        ("Espagne", ("Andalousie", "Andalucía", "Andalusia")),
+        ("Allemagne", ("Bavière", "Bayern", "Bavaria")),
+    ],
+)
+def test_a_region_by_its_name_in_every_language(country, names):
+    """Any country's regions by their names in the page's languages and their own ("Lombardie",
+    "Puglia" were refused: Natural Earth names Italy's regions once, in Italian or English)."""
+    maps = {
+        figures_typst.compile_svg("map", f'#map(countries: ("{country}",), regions: ("{n}",), labels: false)')
+        for n in names
+    }
+    assert len(maps) == 1
+
+
+@pytest.mark.parametrize("land", ["Gibraltar", "Sint Maarten", "Monaco", "Vatican", "Tuvalu"])
+def test_a_land_too_small_for_the_countries_scale_is_a_country(land):
+    """Gibraltar, Sint Maarten, Monaco: lands Natural Earth's countries leave out, found as
+    countries ("Gibraltar" was refused, and the British territories' map fell back to SVG)."""
+    assert figures_typst.compile_svg("map", f'#map(countries: ("{land}",), labels: false)').startswith("<svg")
