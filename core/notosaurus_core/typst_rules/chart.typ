@@ -294,10 +294,79 @@
     if axes.at(0) != none { content((w + 0.35, -0.6), txt(axes.at(0)), anchor: "north-east") }
   })
 }
+// A climate chart (diagramme ombrothermique): each month's precipitation as a bar, its mean
+// temperature as a curve through its values, on two axes whose scales are tied, P = 2T (the
+// precipitation's 20 mm at the temperature's 10 °C: a month is dry where the bar stays under the
+// curve), computed: the temperature's step 2, 5 or 10 °C, the precipitation's twice it, both from
+// 0 on one line (below it, the temperature's only: a cold month). values: (month, precipitation,
+// temperature) each, in order; axes: (the precipitation's title, the temperature's)
+#let _climate(values, axes: (none, none)) = context {
+  let number(x) = type(x) in (int, float)
+  assert(
+    values.len() > 1 and values.all(v => type(v) == array and v.len() == 3 and number(v.at(1)) and number(v.at(2)) and v.at(1) >= 0),
+    message: "a climate chart's values are its months, (month, precipitation, temperature) each: (\"J\", 45, 5), the precipitation 0 or more",
+  )
+  assert(type(axes) == array and axes.len() == 2, message: "axes is (the precipitation's title, the temperature's)")
+  let txt(body) = text(10pt, font: "DejaVu Sans", body)
+  let (rain, temp) = (values.map(v => v.at(1)), values.map(v => v.at(2)))
+  // the temperature's range, the precipitation's halved standing in it (P = 2T)
+  let lo = calc.min(0, ..temp)
+  let hi = calc.max(..temp, ..rain.map(p => p / 2))
+  let s = (2, 5, 10, 20, 50).find(s => (hi - lo) / s <= 8)
+  if s == none { s = round-step(hi - lo, 8) }
+  let (t0, t1) = (calc.floor(lo / s) * s, calc.ceil(hi / s - 1e-9) * s)
+  if t1 <= t0 { t1 = t0 + s }
+  let n = values.len()
+  let (w, h) = (8.0, 5.0)
+  let slot = w / n
+  let px(i) = (i + 0.5) * slot
+  let py(t) = (t - t0) / (t1 - t0) * h
+  let (red, blue) = (rgb("#b03a2e"), rgb("#1f5fa8"))
+  cetz.canvas({
+    import cetz.draw: *
+    for k in range(int(calc.round((t1 - t0) / s)) + 1) {
+      let t = t0 + k * s
+      let y = py(t)
+      if k > 0 { line((0, y), (w, y), stroke: 0.4pt + _grid) }
+      // the precipitation's numbers at the left (never under 0), the temperature's at the right
+      if t >= 0 {
+        line((0, y), (-0.08, y), stroke: 0.6pt)
+        content((-0.16, y), text(fill: blue, txt(written-number(2 * t))), anchor: "east")
+      }
+      line((w, y), (w + 0.08, y), stroke: 0.6pt)
+      content((w + 0.16, y), text(fill: red, txt(written-number(t))), anchor: "west")
+    }
+    // the bars from the precipitation's 0, the temperature's 0 too
+    for (i, p) in rain.enumerate() {
+      if p > 0 { rect((px(i) - 0.36 * slot, py(0)), (px(i) + 0.36 * slot, py(p / 2)), fill: blue.lighten(45%), stroke: 0.5pt + blue) }
+    }
+    for (i, v) in values.enumerate() {
+      content((px(i), -0.16), txt(v.at(0)), anchor: "north")
+    }
+    line((0, py(0)), (w, py(0)), stroke: 0.8pt)
+    if t0 < 0 { line((0, 0), (w, 0), stroke: 0.6pt) }
+    line((0, 0), (0, h + 0.45), stroke: 0.8pt, mark: (end: ">", fill: black))
+    line((w, 0), (w, h + 0.45), stroke: 0.8pt, mark: (end: ">", fill: black))
+    let curve = monotone(values.enumerate().map(((i, v)) => (i, v.at(2)))).map(((i, t)) => (px(i), py(t)))
+    line(..curve, stroke: (paint: red, thickness: 1.4pt, join: "round"))
+    for (i, t) in temp.enumerate() { circle((px(i), py(t)), radius: 0.06, fill: red, stroke: none) }
+    let (pt, tt) = axes
+    if pt != none { content((-0.12, h + 0.45), text(fill: blue, txt(pt)), anchor: "south-west") }
+    if tt != none { content((w + 0.12, h + 0.45), text(fill: red, txt(tt)), anchor: "south-east") }
+  })
+}
 #let chart(kind: "bars", values: (), written: auto, hidden: (), unit: none, degrees: false, axis: none, axes: (none, none), step: auto,
   marks: (), spans: (), second: none, numbered: true, smooth: false, limits: auto, horizontal: false, classes: none, fit: none, reversed: false) = context {
-  assert(kind in ("bars", "pie", "semi", "line", "scatter", "box", "pyramid", "histogram"),
-    message: "kind is \"bars\", \"pie\", \"semi\", \"line\", \"scatter\", \"box\", \"pyramid\" or \"histogram\"")
+  assert(kind in ("bars", "pie", "semi", "line", "scatter", "box", "pyramid", "histogram", "climate"),
+    message: "kind is \"bars\", \"pie\", \"semi\", \"line\", \"scatter\", \"box\", \"pyramid\", \"histogram\" or \"climate\"")
+  // a month's precipitation and temperature together: the climate chart, its two scales tied
+  if kind == "climate" {
+    assert(written == auto and hidden == () and unit == none and axis == none and step == auto and marks == () and spans == ()
+      and second == none and not smooth and not degrees and limits == auto and not horizontal and numbered and fit == none
+      and not reversed and classes == none,
+      message: "a climate chart takes values, (month, precipitation, temperature) each, and axes only: its bars, its curve and their two scales are computed")
+    return _climate(values, axes: axes)
+  }
   assert(fit == none or kind == "scatter", message: "fit is a scatter plot's only")
   assert(not reversed or kind in ("line", "scatter"), message: "reversed is for lines and scatter plots: their x axis from its largest value to its smallest")
   assert(kind == "pyramid" or classes == none, message: "classes is for a pyramid only")
@@ -361,7 +430,7 @@
       message: "second is (values: ((x, y), …), axis: title), two measures at least",
     )
   } else {
-    assert(second == none and not smooth, message: "second and smooth are a line's only")
+    assert(second == none and not smooth, message: "second and smooth are a line's only: a month's precipitation as bars with its temperature as a curve is kind: \"climate\"")
     assert((marks == () and spans == ()) or (kind == "bars" and not horizontal), message: "marks and spans are a line's, or standing bars'")
     // on bars: a mark at a bar (its name or its value: the expectation, the mean), a span from a
     // bar to another (an interval of values), each found among the bars' names
