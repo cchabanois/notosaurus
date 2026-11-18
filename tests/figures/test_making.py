@@ -966,6 +966,75 @@ def test_a_drawing_without_arrows_unchanged():
     assert figures.Drawing(svg=CHLOROPLAST).arrows == []
 
 
+# a chloroplast fed from all four sides: its labels' columns far off, a row over it the shortest
+FED = [
+    {"text": "Eau", "x1": 10, "y1": 150, "x2": 118, "y2": 150},
+    {"text": "Glucose", "x1": 282, "y1": 150, "x2": 390, "y2": 150},
+    {"text": "Dioxygène", "x1": 200, "y1": 205, "x2": 200, "y2": 290},
+]
+_LEADER = re.compile(r'<line x1="([-\d.]+)" y1="([-\d.]+)" x2="([-\d.]+)" y2="([-\d.]+)" stroke="#333333"')
+
+
+@pytest.mark.parametrize(("start", "point"), [((230, 10), (210, 135)), ((150, 10), (190, 120))])
+def test_a_labels_line_clear_of_the_arrows_and_their_words(start, point):
+    """« Chloroplaste »'s line ran through « Lumière » and along the light's arrow (the labels
+    laid out as if the arrows' words weren't there): the arrows and their words, set first, are
+    kept clear of: no leader through a word, none along an arrow."""
+    from notosaurus_core import figure_making
+
+    light = {"text": "Lumière", "x1": start[0], "y1": start[1], "x2": 200, "y2": 95}
+    drawing = figures.Drawing(
+        svg=CHLOROPLAST, labels=[{"text": "chloroplaste", "x": point[0], "y": point[1]}], arrows=[light, *FED]
+    )
+    svg = figure_making._labelled(drawing)
+    _, marks = figures.arrows_set(figures.clean(CHLOROPLAST), drawing.arrows, [point])
+    leaders = [tuple(map(float, m.groups())) for m in _LEADER.finditer(svg)]
+    assert len(leaders) == 1 and ">chloroplaste<" in svg
+    for x1, y1, x2, y2 in leaders:
+        for word in marks.words:
+            assert not figures._through((x1, y1), (x2, y2), word), word
+        for line in marks.lines:
+            assert figures._along((x1, y1), (x2, y2), *line) <= figures.ALONG_LENGTH, line
+
+
+def test_an_arrows_word_clear_of_a_labels_point():
+    """A word set on the white ground a label names (« transcription » on the nucleus's
+    point): that label's line could only end on it; the point is kept clear."""
+    point = (237, 52)  # where « Lumière » goes beside its arrow, else
+    arrows = [figures.Arrow(text="Lumière", x1=200, y1=10, x2=200, y2=95)]
+    _, alone = figures.arrows_set(figures.clean(CHLOROPLAST), arrows)
+    assert figures._through(point, point, alone.words[0])  # it would lie on the point
+    _, marks = figures.arrows_set(figures.clean(CHLOROPLAST), arrows, [point])
+    x0, y0, x1, y1 = marks.words[0]
+    clear = figures.WORD_CLEAR
+    assert not (x0 - clear < point[0] < x1 + clear and y0 - clear < point[1] < y1 + clear)
+
+
+def test_a_labels_point_never_brought_onto_an_arrows_word():
+    """« noyau »'s point, on the white nucleus, was brought onto the nearest ink: the letters of
+    « transcription » beside it, its line ending in the word. The arrows' words are no part of
+    the drawing: never a point's place."""
+    arrows = [figures.Arrow(text="Lumière", x1=200, y1=10, x2=200, y2=95)]
+    _, alone = figures.arrows_set(figures.clean(CHLOROPLAST), arrows)
+    x0, y0, x1, y1 = alone.words[0]
+    point = (x1 + 9, (y0 + y1) / 2)  # on the open ground, the word its nearest ink
+    svg, marks = figures.arrows_set(figures.clean(CHLOROPLAST), arrows, [point])
+    labelled = figures.labelled(svg, [figures.Label(text="air", x=point[0], y=point[1])], False, marks)
+    found = re.search(r'<circle cx="([-\d.]+)" cy="([-\d.]+)" r="2"', labelled)
+    assert found is not None
+    end = (float(found.group(1)), float(found.group(2)))
+    for x0, y0, x1, y1 in marks.words:
+        assert not (x0 - 1 <= end[0] <= x1 + 1 and y0 - 1 <= end[1] <= y1 + 1), (end, marks.words)
+
+
+def test_labels_without_arrows_laid_out_as_before():
+    """No arrow: the labels set as before (#674), the frame's words and points untouched."""
+    svg = figures.clean(CHLOROPLAST)
+    labels = [figures.Label(text="chloroplaste", x=200, y=150), figures.Label(text="stroma", x=230, y=170)]
+    assert figures.arrows_set(svg, [], [(200, 150)]) == (svg, figures.Marks())
+    assert figures.labelled(svg, labels, False, figures.Marks()) == figures.labelled(svg, labels)
+
+
 def test_an_ais_arrows_drawn_on_its_figure(monkeypatch):
     """The AI's answer with arrows: drawn on the figure with their words, the labels set beside
     it as before."""
