@@ -968,3 +968,17 @@ def test_a_name_the_atlas_lacks_answered_at_once():
     with pytest.raises(figures_typst.Unusable, match='it has "Loire"'):
         figures_typst.compile_svg("map", '#map(rivers: ("Loir",))')
     assert time.monotonic() - start < 4
+
+
+def test_real_places_are_a_map_a_plan_is_not():
+    """The kinds sent a map of real places with a lesson's own sites or areas to "other" (sites
+    of an event, rural areas: "no map"), drawn as free SVG with invented coasts, and let a
+    town's sectors go to the map (a country with its capital, no sector). Real towns and areas
+    of real land are the map's; a town's inside, a plan, a front drawn across the land are
+    other's."""
+    kinds = dict(re.findall(r'"(\w+)": (.*?)(?=; "\w+": |$)', figures_typst.KINDS))
+    assert "sites of an event, are its cities" in kinds["map"]
+    assert "rural areas" in kinds["map"] and "regions or countries coloured by group" in kinds["map"]
+    assert "a town's inside" in kinds["map"] and "a front" in kinds["map"]
+    assert "a plan or a sketch of a town" in kinds["other"]
+    assert "never a box plot nor a crystal, nor real countries, regions or towns" in kinds["other"]
