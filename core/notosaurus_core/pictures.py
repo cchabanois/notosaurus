@@ -16,7 +16,7 @@ from collections.abc import Callable
 from pathlib import Path
 from typing import Any, NamedTuple
 
-from . import config, figures, figures_typst, files, images, llm, recommended, stock
+from . import config, figures, files, images, llm, recommended, stock
 from .cards import is_cloze
 from .config import AIConfig
 from .errors import AppError, loggable
@@ -362,7 +362,7 @@ async def card_picture(
             source="drawn",
             model=s.model_for_provider(),
             engine=made.engine,
-            made_with=figures_typst.made_with(made.family, made.typst) if made.engine == "typst" else [],
+            made_with=llm.figure_credits(made),
             careful=made.careful,
         )
         return CardPicture(card, figures.clean(made.svg).encode(), "svg")

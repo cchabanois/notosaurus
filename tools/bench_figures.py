@@ -95,12 +95,15 @@ def draw_local(case: dict) -> dict:
     finally:
         figure_making.refusals.reset(token)
     seconds = round(time.monotonic() - start, 1)
+    # a figure in panels: its panels' families and Typst, each said (its SVG kept as drawn)
+    family = made.family + "".join(f" {p.family}" for p in made.panels)
+    typst = "\n\n".join(f"// panel {n + 1}, {p.family} ({p.engine})\n{p.typst}" for n, p in enumerate(made.panels))
     return {
         "svg": made.svg,
         "seconds": seconds,
         "engine": made.engine,
-        "family": made.family,
-        "typst": made.typst,
+        "family": family,
+        "typst": typst or made.typst,
         "refused": refused,
     }
 
@@ -109,7 +112,7 @@ def recompiled(run: Path, drawing: dict) -> dict:
     """A drawing of an earlier run: its Typst compiled again with this checkout's preambles;
     drawn as SVG, as it was."""
     family = drawing.get("family", "")
-    if drawing.get("typst_file"):
+    if drawing.get("typst_file") and not family.startswith("panels"):
         body = (run / drawing["typst_file"]).read_text()
         try:
             svg = figures.clean(figures_typst.compile_svg(family, body))
