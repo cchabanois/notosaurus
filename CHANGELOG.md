@@ -79,6 +79,7 @@ Each pull request's entries (the `## Changelog` of its description) are put unde
 
 ### Fixed
 
+- 🏷️ The label of a region the drawing closes against its frame (a cell's nucleus, left of an envelope drawn from top to bottom) stays on that region instead of jumping to the nearest part.
 - ⚡ A circuit's voltages (uC, U across a resistor, a generator's E) drawn as their arrows beside the components.
 - 📈 A calibration curve's values readable on its axis; an infrared spectrum's wavenumbers from 4000 to 500; a fitted line's small slope no longer written 0.
 - Graphs: a point's name no longer written on the lines that go through it.
