@@ -531,3 +531,30 @@ def test_a_probability_laws_bars_with_its_expectation_and_an_interval():
     assert figures_typst.compile_svg(
         "chart", plain.replace("written: ()", f"written: (), {marks}, {spans}")
     ).startswith("<svg")
+
+
+def test_a_fits_small_slope_never_written_0():
+    """A calibration line's slope, 0,00038: its name read « y = 0x + 1 », the slope rounded to
+    three decimals. Each coefficient keeps three significant digits: 0,00038 one glyph more
+    than 0,0004, where both were « 0 »."""
+    fitted = '#chart(kind: "scatter", values: ((0, 1.0), (200, 1.076)), fit: ({}, 1))'
+    assert _glyph_uses(fitted.format(0.00038)) == _glyph_uses(fitted.format(0.0004)) + 1
+
+
+def test_a_line_reversed_reads_its_x_from_right_to_left():
+    """An infrared spectrum's wavenumbers run from 4000 at the left to 500 at the right: drawn
+    on an x axis growing to the right (0/3). reversed: true puts the largest x at the left."""
+    from PIL import Image
+
+    def highest_measure_x(extra):
+        svg = figures_typst.compile_svg("chart", f'#chart(kind: "line", values: ((500, 0), (4000, 10)){extra})')
+        image = Image.open(io.BytesIO(figures.to_png(figures.clean(svg)))).convert("RGB")
+        red = [
+            (x, y) for y in range(image.height) for x in range(image.width) if image.getpixel((x, y)) == (176, 58, 46)
+        ]
+        return min(red, key=lambda p: p[1])[0] / image.width
+
+    assert highest_measure_x("") > 0.6
+    assert highest_measure_x(", reversed: true") < 0.4
+    with pytest.raises(figures_typst.Unusable, match="reversed is for lines"):
+        figures_typst.compile_svg("chart", '#chart(kind: "bars", values: (("A", 1),), reversed: true)')
