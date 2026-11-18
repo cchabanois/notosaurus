@@ -936,3 +936,53 @@ def test_a_branch_refused_saying_why(body, said):
     (drawn over one another): refused, saying what a branch takes."""
     with pytest.raises(figures_typst.Unusable, match=said):
         figures_typst.compile_svg("circuit", f"#circuit({{ {body} }})")
+
+
+def _voltage_drawn(component: str):
+    """A component drawn from left to right with its name in red and its voltage in blue: where
+    the name, the voltage and the wire are (rows), and the arrow's head (left or right)."""
+    from PIL import Image
+
+    body = (
+        f'#circuit({{ {component}("x", (0, 0), (4, 0), label: text(fill: rgb("#ff0000"))[N], '
+        'voltage: text(fill: rgb("#0000ff"))[U]) })'
+    )
+    image = Image.open(io.BytesIO(figures.to_png(figures.clean(figures_typst.compile_svg("circuit", body))))).convert(
+        "RGB"
+    )
+    w, h = image.size
+    pixels = image.load()
+    assert pixels is not None
+
+    def rows(test):
+        return [y for y in range(h) for x in range(w) if test(pixels[x, y])]
+
+    red = rows(lambda p: p[0] > 200 and p[1] < 80 and p[2] < 80)
+    blue = rows(lambda p: p[2] > 200 and p[0] < 80 and p[1] < 80)
+    # the wire: the row with the most dark pixels; the arrow: the first long dark row met going
+    # from the voltage towards the wire, its head where it is thickest within a few rows
+    dark = [[x for x in range(w) if sum(pixels[x, y]) < 150] for y in range(h)]
+    wire = max(range(h), key=lambda y: len(dark[y]))
+    step = 1 if wire > blue[0] else -1
+    start = max(blue) if step == 1 else min(blue)
+    arrow = next(y for y in range(start, wire, step) if len(dark[y]) > w / 4)
+    band = range(arrow - 8, arrow + 9)
+    columns = set(dark[arrow])
+    thick = [x for x in columns if sum(1 for y in band if x in dark[y]) >= 5]
+    middle = (min(columns) + max(columns)) / 2
+    return sum(red) / len(red), sum(blue) / len(blue), wire, "left" if sum(thick) / len(thick) < middle else "right"
+
+
+def test_a_components_voltage_drawn_as_an_arrow_beside_it():
+    """A capacitor's voltage u_C: written by the AI (voltage: $u_C$), never drawn: zap ignores
+    what it doesn't know (6 circuits in 6). Its arrow beside the component, on the side away from
+    its name, pointing to its +: a receiver's first point (the current comes in there), a
+    generator's second."""
+    name, voltage, wire, head = _voltage_drawn("resistor")
+    assert (name - wire) * (voltage - wire) < 0  # on either side of the wire
+    assert head == "left"
+    assert _voltage_drawn("battery")[3] == "right"
+    # in a branch too, and never ignored: the figure drawn with its voltage differs
+    plain = '#circuit({ branch((0, 0), (4, 0), capacitor("c", label: $C$)) })'
+    with_voltage = '#circuit({ branch((0, 0), (4, 0), capacitor("c", label: $C$, voltage: $u_C$)) })'
+    assert figures_typst.compile_svg("circuit", plain) != figures_typst.compile_svg("circuit", with_voltage)
