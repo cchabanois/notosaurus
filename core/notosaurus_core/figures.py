@@ -44,12 +44,26 @@ class Label(BaseModel):
     y: float
 
 
+class Arrow(BaseModel):
+    text: str = Field(description="The word it carries, as written in the description.")
+    x1: float = Field(description="Where it starts, in the SVG's viewBox units.")
+    y1: float
+    x2: float = Field(description="Its tip, in the SVG's viewBox units.")
+    y2: float
+    color: str = Field(default="", description="Its colour when the description gives one (#rrggbb), else empty.")
+
+
 class Drawing(BaseModel):
     svg: str = Field(description="The SVG document, starting with <svg.")
     labels: list[Label] = Field(
         default_factory=list,
         description="A labelled scheme's names (a cell's, an organ's parts…), each with the point it names; "
         "set beside the drawing by the app. Empty for any other figure.",
+    )
+    arrows: list[Arrow] = Field(
+        default_factory=list,
+        description="The arrows that carry a word (what enters or leaves, a step, a transformation), each from "
+        "where it starts to its tip; drawn by the app, its word set beside it. Empty when there are none.",
     )
 
 
@@ -922,3 +936,127 @@ def labelled(svg: str, labels: list[Label], clamp: bool = False) -> str:
         return svg
     ground = f'<rect x="{nx:.3f}" y="{ny:.3f}" width="{nr - nx:.3f}" height="{nb - ny:.3f}" fill="#ffffff"/>'
     return svg[: opening.end()] + ground + svg[opening.end() : closing] + "".join(parts) + svg[closing:]
+
+
+# --- Arrows and their words --------------------------------------------------------------------
+# The words the AI wrote on its own arrows, placed by eye, fell on the drawing's outlines
+# (« Dioxyde de carbone » across the chloroplast's, 3 drawings in 3). The AI gives each such
+# arrow, from where it starts to its tip, with its word; the app draws it and sets the word beside
+# it, along its normal, at the first spot free of ink.
+
+ARROW_WIDTH = 2  # its line, in the viewBox's units
+ARROW_HEAD = 10  # its head's length; its width, 0.7 of that
+ARROW_GAP = 3  # between the arrow and its word
+ARROW_REACH = 60  # how far from its arrow a word is looked for, past that set where least ink lies
+ARROW_ALONG = (0.5, 0.35, 0.65, 0.2, 0.8, 0.0, 1.0)  # where along the arrow, from its start
+_COLOR = re.compile(r"^#[0-9a-fA-F]{6}$|^#[0-9a-fA-F]{3}$")
+
+
+def _escaped(text: str) -> str:
+    return text.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;")
+
+
+def _arrow_shape(a: Arrow) -> str:
+    """The arrow as SVG: its line stopped at its head, the head a triangle at its tip."""
+    colour = a.color if _COLOR.match(a.color.strip()) else "#000000"
+    dx, dy = a.x2 - a.x1, a.y2 - a.y1
+    length = math.hypot(dx, dy) or 1.0
+    ux, uy = dx / length, dy / length
+    head = min(ARROW_HEAD, length * 0.6)
+    bx, by = a.x2 - ux * head, a.y2 - uy * head
+    half = head * 0.35
+    left, right = (bx - uy * half, by + ux * half), (bx + uy * half, by - ux * half)
+    return (
+        f'<line x1="{a.x1:.1f}" y1="{a.y1:.1f}" x2="{bx:.1f}" y2="{by:.1f}" stroke="{colour}" '
+        f'stroke-width="{ARROW_WIDTH}"/>'
+        f'<polygon points="{a.x2:.1f},{a.y2:.1f} {left[0]:.1f},{left[1]:.1f} {right[0]:.1f},{right[1]:.1f}" '
+        f'fill="{colour}"/>'
+    )
+
+
+def _inserted(svg: str, parts: str) -> str:
+    closing = svg.rfind("</svg>")
+    return svg[:closing] + parts + svg[closing:] if closing >= 0 else svg
+
+
+def _word_box(image, x: float, y: float, k: float, box: tuple[float, float, float, float]) -> int:
+    """How much ink lies in the box (in the viewBox's units); past the frame, none (the frame
+    is grown to hold a word set there)."""
+    i0, j0 = max(0, round((box[0] - x) * k)), max(0, round((box[1] - y) * k))
+    i1, j1 = min(image.width, round((box[2] - x) * k)), min(image.height, round((box[3] - y) * k))
+    if i0 >= i1 or j0 >= j1:
+        return 0
+    crop = image.crop((i0, j0, i1, j1)).point(lambda v: 1 if v < 248 else 0)
+    return crop.histogram()[1]
+
+
+def arrowed(svg: str, arrows: list[Arrow]) -> str:
+    """The cleaned SVG with its arrows drawn and their words set beside them (see above), its
+    frame grown to a word set past it (no room within it beside its arrow); the same SVG
+    without arrows."""
+    arrows = [a for a in arrows if math.hypot(a.x2 - a.x1, a.y2 - a.y1) > 0]
+    if not arrows:
+        return svg
+    view = _VIEWBOX.search(svg)
+    if view is None:
+        return svg
+    x, y, w, h = map(float, view.groups())
+    arrows = [
+        a.model_copy(
+            update={
+                "x1": min(max(a.x1, x), x + w),
+                "y1": min(max(a.y1, y), y + h),
+                "x2": min(max(a.x2, x), x + w),
+                "y2": min(max(a.y2, y), y + h),
+            }
+        )
+        for a in arrows
+    ]
+    svg = _inserted(svg, "".join(_arrow_shape(a) for a in arrows))
+    image = _drawn_image(svg)
+    if image is None:
+        return svg
+    from PIL import ImageDraw
+
+    k = image.width / w
+    marks = ImageDraw.Draw(image)
+    line = LABEL_SIZE * LABEL_LINE
+    words = []
+    for a in arrows:
+        rows = _lines(a.text.strip()) if a.text.strip() else []
+        if not rows:
+            continue
+        bw, bh = max(_measure(r) for r in rows) + 2, line * len(rows)
+        length = math.hypot(a.x2 - a.x1, a.y2 - a.y1)
+        ux, uy = (a.x2 - a.x1) / length, (a.y2 - a.y1) / length
+        nx, ny = -uy, ux
+        if ny > 0 or (ny == 0 and nx < 0):
+            nx, ny = -nx, -ny  # its first side the one above it (right of an upright arrow)
+        reach = abs(nx) * bw / 2 + abs(ny) * bh / 2  # from the box's middle to its side facing the arrow
+        spots = (  # nearest first, from its middle along it, on either side
+            (a.x1 + (a.x2 - a.x1) * t + side * nx * (ARROW_GAP + d + reach),
+             a.y1 + (a.y2 - a.y1) * t + side * ny * (ARROW_GAP + d + reach))
+            for d in range(0, ARROW_REACH + 1, 2)
+            for t in ARROW_ALONG
+            for side in (1, -1)
+        )  # fmt: skip
+        best: tuple[int, tuple[float, float, float, float]] | None = None  # the first free, else the least ink
+        for cx, cy in spots:
+            box = (cx - bw / 2, cy - bh / 2, cx + bw / 2, cy + bh / 2)
+            ink = _word_box(image, x, y, k, box)
+            if best is None or ink < best[0]:
+                best = (ink, box)
+            if ink == 0:
+                break
+        if best is None:
+            continue
+        box = best[1]
+        marks.rectangle([(box[0] - x) * k, (box[1] - y) * k, (box[2] - x) * k, (box[3] - y) * k], fill=0)
+        middle = (box[0] + box[2]) / 2
+        for n, row in enumerate(rows):
+            base = box[1] + line * n + LABEL_SIZE
+            words.append(
+                f'<text x="{middle:.1f}" y="{base:.1f}" font-family="sans-serif" font-size="{LABEL_SIZE}" '
+                f'text-anchor="middle" fill="#000000">{_escaped(row)}</text>'
+            )
+    return fitted(_inserted(svg, "".join(words)))  # a word set past the frame: the frame grown to it

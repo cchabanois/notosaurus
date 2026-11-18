@@ -3,6 +3,7 @@ asked, shown, exported; a figure or a picture decided."""
 
 import asyncio
 import json
+import math
 import re
 
 import apkg
@@ -840,3 +841,74 @@ def test_any_familys_figure_too_small_drawn_again_the_more_readable_kept(monkeyp
     assert [c["schema"] for c in calls] == ["Figure", "Figure"]
     assert "px high, 7 at least" in calls[1]["text"] and "#scheme" not in calls[1]["text"]
     assert 'viewBox="0 0 612' in svg
+
+
+# a chloroplast, what enters it and what leaves it: arrows whose words the AI wrote by eye
+CHLOROPLAST = (
+    '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 300"><rect width="400" height="300" fill="white"/>'
+    '<ellipse cx="200" cy="150" rx="80" ry="55" fill="#d4edda" stroke="#28a745" stroke-width="2"/></svg>'
+)
+FLOWS = [
+    {"text": "Dioxyde de carbone", "x1": 60, "y1": 120, "x2": 128, "y2": 138},
+    {"text": "Eau", "x1": 60, "y1": 180, "x2": 128, "y2": 162},
+    {"text": "Glucose", "x1": 272, "y1": 138, "x2": 340, "y2": 120},
+    {"text": "Lumière", "x1": 150, "y1": 20, "x2": 170, "y2": 92, "color": "#e67e22"},
+]
+
+
+def test_an_arrows_word_set_beside_it_clear_of_the_drawing():
+    """« Dioxyde de carbone », written by the AI on its arrow, lay across the chloroplast's
+    outline (3 drawings in 3). The AI gives the arrow and its word; the app draws the arrow and
+    sets the word beside it where no ink lies: no word on the drawing, on an arrow or on
+    another word, each near its arrow."""
+    from xml.etree import ElementTree
+
+    from notosaurus_core import figures
+
+    arrows = [figures.Arrow(**a) for a in FLOWS]
+    svg = figures.arrowed(figures.clean(CHLOROPLAST), arrows)
+    root = ElementTree.fromstring(svg)
+    ns = "{http://www.w3.org/2000/svg}"
+    assert len(list(root.iter(f"{ns}polygon"))) == 4  # each arrow's head
+    assert 'stroke="#e67e22"' in svg  # the colour given
+    texts = list(root.iter(f"{ns}text"))
+    rows = [t.text for t in texts]
+    assert "Eau" in rows and "Glucose" in rows and "Lumière" in rows and "Dioxyde de" in rows
+    without_words = figures._drawn_image(re.sub(r"<text.*?</text>", "", svg))
+    k = without_words.width / 400
+    boxes = []
+    for t in texts:
+        x, y, w = float(t.get("x")), float(t.get("y")), figures._measure(t.text or "")
+        box = (x - w / 2, y - figures.LABEL_SIZE * 0.75, x + w / 2, y + 2)
+        crop = without_words.crop(tuple(round(v * k) for v in box))
+        assert crop.getextrema()[0] >= 248, (t.text, box)  # no ink under it
+        boxes.append(box)
+    for i, a in enumerate(boxes):
+        for b in boxes[i + 1 :]:
+            assert a[2] <= b[0] or b[2] <= a[0] or a[3] <= b[1] or b[3] <= a[1], (a, b)
+    for a in arrows:  # its word within reach of its arrow
+        t = next(t for t in texts if a.text.startswith(t.text or "-"))
+        mx, my = (a.x1 + a.x2) / 2, (a.y1 + a.y2) / 2
+        assert math.hypot(float(t.get("x")) - mx, float(t.get("y")) - my) < 90, a.text
+
+
+def test_a_drawing_without_arrows_unchanged():
+    from notosaurus_core import figures
+
+    svg = figures.clean(CHLOROPLAST)
+    assert figures.arrowed(svg, []) == svg
+    assert figures.Drawing(svg=CHLOROPLAST).arrows == []
+
+
+def test_an_ais_arrows_drawn_on_its_figure(monkeypatch):
+    """The AI's answer with arrows: drawn on the figure with their words, the labels set beside
+    it as before."""
+
+    async def answer(s, images, text, schema, system=None, light=False, **options):
+        if schema is figures_typst.Kind:
+            return schema(family="other")
+        return schema(svg=CHLOROPLAST, labels=[{"text": "chloroplaste", "x": 200, "y": 150}], arrows=FLOWS[:2])
+
+    monkeypatch.setattr("notosaurus_core.ai._ask_provider", answer)
+    svg = asyncio.run(llm.draw_figure(AIConfig(llm="gemini"), "le bilan de la photosynthèse"))
+    assert ">Eau<" in svg and ">chloroplaste<" in svg and svg.count("<polygon") == 2
