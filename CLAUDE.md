@@ -26,12 +26,15 @@ What a coding agent most often gets wrong here. The rest is in
 ```sh
 .venv/bin/ruff check . && .venv/bin/ruff format --check .
 .venv/bin/pyright                      # CI's "types" job: a type error fails the pull request
-.venv/bin/pytest                       # tests/page/ too when static/ changes (CONTRIBUTING.md)
+.venv/bin/pytest <tests>               # those of what the change touches (below)
 node --test tests/frontend/*.test.mjs  # when static/*.js changes
 ```
 
-`tests/page/` is skipped, without failing, when Playwright isn't installed: check
-that it ran.
+Locally, only the tests of what the change touches: its folder or files in `tests/` (a figure
+family: `tests/figures/`), `tests/test_relay_compat.py` when a model or the relay's API changes,
+`tests/page/` when `static/` changes (CONTRIBUTING.md). The whole suite (about 11 minutes) is
+CI's, on three systems. `tests/page/` is skipped, without failing, when Playwright isn't
+installed: check that it ran.
 
 Android (`android/`): its unit tests (`./gradlew testDebugUnitTest`), and its device tests on
 an emulator, never on a personal phone (they uninstall the app and its lessons). Use an
