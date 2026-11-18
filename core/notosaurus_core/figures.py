@@ -421,6 +421,40 @@ def clean(svg: str) -> str:
     return ElementTree.tostring(root, encoding="unicode")
 
 
+def _prefixed(svg: str, prefix: str) -> str:
+    """The SVG's ids, and what refers to them (href="#a", url(#a)), each given `prefix`: two
+    drawings in one SVG keep their own (Typst names its glyphs alike in every figure)."""
+    ids = set(re.findall(r'\bid="([^"]+)"', svg))
+    if not ids:
+        return svg
+    svg = re.sub(r'\bid="([^"]+)"', lambda m: f'id="{prefix}{m.group(1)}"', svg)
+    refers = re.compile(r"(?<=[\"(])#([^\"()\s]+)(?=[\")])")
+    return refers.sub(lambda m: f"#{prefix}{m.group(1)}" if m.group(1) in ids else m.group(0), svg)
+
+
+def side_by_side(svgs: list[str]) -> str:
+    """Panels drawn apart (a circuit and the curve of its voltage, each by its own family) as
+    one figure: side by side, each scaled to the tallest's height, a gap between them."""
+    panels = []
+    for n, svg in enumerate(svgs):
+        root = ElementTree.fromstring(_prefixed(clean(svg), f"p{n}-"))
+        x, y, width, height = (float(v) for v in re.split(r"[\s,]+", root.get("viewBox", VIEWBOX).strip()))
+        panels.append((root, x, y, width, height))
+    tallest = max(height for *_, height in panels)
+    gap = tallest * 0.08
+    figure = ElementTree.Element(f"{{{SVG_NS}}}svg")
+    left = 0.0
+    for root, x, y, width, height in panels:
+        scale = tallest / height
+        group = ElementTree.SubElement(
+            figure, f"{{{SVG_NS}}}g", transform=f"translate({left:g} 0) scale({scale:g}) translate({-x:g} {-y:g})"
+        )
+        group.extend(list(root))
+        left += width * scale + gap
+    figure.set("viewBox", f"0 0 {left - gap:g} {tallest:g}")
+    return clean(ElementTree.tostring(figure, encoding="unicode"))
+
+
 OVERFLOW = 150  # in the figure's units (Typst's pt): how far past its frame its drawing is looked for
 MARGIN = 6  # around what is drawn, as the Typst families' pages have it
 _VIEWBOX = re.compile(r'viewBox="(-?[\d.]+) (-?[\d.]+) ([\d.]+) ([\d.]+)"')

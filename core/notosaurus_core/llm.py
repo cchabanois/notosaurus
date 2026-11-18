@@ -45,6 +45,7 @@ from .config import AIConfig
 from .correction import _keep_ids, _keep_masks, _same_card, fix_card, revise_cards  # noqa: F401 (llm's API)
 from .errors import loggable
 from .figure_making import MadeFigure, _figure_family, check_figure, draw_figure, made_figure  # noqa: F401 (llm's API)
+from .figure_making import credits as figure_credits  # noqa: F401 (llm's API)
 from .models import (  # noqa: F401 (llm's API)
     Card,
     Deck,

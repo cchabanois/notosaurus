@@ -125,7 +125,8 @@ FAMILIES: dict[str, Family] = {
 # picks its family (FAMILY_RULES)
 KINDS = (HERE / "typst_rules" / "kinds.md").read_text(encoding="utf-8").removesuffix("\n")
 FAMILY_RULES = f"A figure for a pupil's flashcard is described below. Which kind of figure is it? {KINDS}."
-FigureKind = Literal[
+# a panel of a figure in panels: any kind but panels
+PanelKind = Literal[
     "geometry",
     "graph",
     "sets",
@@ -146,10 +147,31 @@ FigureKind = Literal[
     "field",
     "other",
 ]
+FigureKind = Literal[PanelKind, "panels"]
 
 
 class Kind(BaseModel):
     family: FigureKind
+
+
+class Panel(BaseModel):
+    """One of a figure's panels: its kind, and what it shows, said as a figure's description."""
+
+    family: PanelKind
+    description: str
+
+
+class Panels(BaseModel):
+    panels: list[Panel]
+
+
+PANELS_RULES = (
+    "A figure for a pupil's flashcard is described below: it shows several things of different kinds "
+    "side by side. Split it into its panels, from left to right, two or three: for each, its kind and "
+    "its own description, written as the figure's description is, with every name, value and unit it "
+    "gives for that panel, nothing added; what the panels share (a value, a name) written in each that "
+    f"shows it. The kinds: {KINDS}."
+)
 
 
 # What a body may not do: load anything (the packages are given), read a file

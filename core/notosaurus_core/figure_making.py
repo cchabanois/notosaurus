@@ -53,6 +53,17 @@ class MadeFigure(NamedTuple):
     family: str
     careful: bool
     typst: str = ""  # its Typst, what it was drawn with (figures_typst.made_with)
+    panels: tuple["MadeFigure", ...] = ()  # a figure in panels (family "panels"): each one drawn
+
+
+def credits(made: MadeFigure) -> list[str]:
+    """What drew a figure, credited where it shows: Typst and the packages its Typst uses
+    (figures_typst.made_with), its panels' together; none for a drawing in SVG."""
+    from . import figures_typst
+
+    if made.panels:
+        return list(dict.fromkeys(name for panel in made.panels for name in credits(panel)))
+    return figures_typst.made_with(made.family, made.typst) if made.engine == "typst" else []
 
 
 async def draw_figure(
@@ -101,6 +112,11 @@ async def made_figure(
             "even where the description writes it."
         )
     family = await _figure_family(s, description, kind)
+    if family == "panels":
+        parts = await _panels(s, description)
+        if parts:
+            return await _in_panels(s, parts, step, problem, careful, front)
+        family = "other"  # not split: drawn as one SVG
     if problem.strip():
         text += f"\n\nA first drawing had this problem: {problem.strip()} Draw it right."
         if careful:
@@ -115,6 +131,38 @@ async def made_figure(
         log.warning("Figure drawn again with thinking: %s", loggable(e))
     tell({"step": "redrawing", "problem": ""})
     return await _drawn(s, text, description, family, light=False)
+
+
+async def _panels(s: AIConfig, description: str) -> list:
+    """A figure in panels split into them (figures_typst.Panels), from left to right: [] when
+    the AI's answer can't be used, or gives fewer than two."""
+    from . import figures_typst
+
+    try:
+        split = await ai._ask_provider(
+            s, [], f"Figure: {description.strip()}", figures_typst.Panels, figures_typst.PANELS_RULES, light=True
+        )
+    except ExtractionError as e:
+        if e.code not in _UNUSABLE:
+            raise
+        return []
+    parts = [p for p in split.panels if p.description.strip()][:3]
+    return parts if len(parts) >= 2 else []
+
+
+async def _in_panels(
+    s: AIConfig, parts: list, step: Callable[[dict], Any] | None, problem: str, careful: bool, front: str
+) -> MadeFigure:
+    """Each panel drawn by its own kind, at once (what a check found told to each), then set
+    side by side (figures.side_by_side): Typst's when one of them is."""
+    from . import figures
+
+    made = await asyncio.gather(
+        *(made_figure(s, p.description, step, p.family, problem, careful, front) for p in parts)
+    )
+    svg = await asyncio.to_thread(figures.side_by_side, [m.svg for m in made])
+    engine = "typst" if any(m.engine == "typst" for m in made) else "svg"
+    return MadeFigure(svg, engine, "panels", any(m.careful for m in made), panels=tuple(made))
 
 
 async def check_figure(s: AIConfig, description: str, svg: str) -> str:

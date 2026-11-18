@@ -10,7 +10,7 @@ import pytest
 from helpers import plain_image
 
 from app import lessons
-from figures.support import SQUARE, TRIANGLE
+from figures.support import SQUARE, TRIANGLE, rule_example
 from notosaurus_core import figures, figures_typst, llm, pictures
 from notosaurus_core.config import AIConfig
 from notosaurus_core.errors import AppError
@@ -668,3 +668,77 @@ def _compiled_anyway(body: str) -> str:
         return figures_typst.compile_svg("diagram", body)
     except figures_typst.TooSmall as e:
         return e.svg
+
+
+CIRCUIT = rule_example("circuit")
+
+
+def panels_drawing(monkeypatch, split):
+    """A figure in panels drawn by a fake AI: its kind "panels", split as `split` says (a list
+    of (family, description), or an unusable answer), a circuit's Typst and a triangle's; the
+    figure made and the calls, in order."""
+    calls = []
+
+    async def answer(s, images, text, schema, system=None, light=False, **options):
+        calls.append((schema.__name__, text))
+        if schema is figures_typst.Kind:
+            return schema(family="panels")
+        if schema is figures_typst.Panels:
+            if split is None:
+                raise llm.ExtractionError("llm.invalid_answer")
+            return schema(panels=[figures_typst.Panel(family=f, description=d) for f, d in split])
+        if schema is figures_typst.Figure:
+            return schema(typst=CIRCUIT if "circuit" in text else TRIANGLE)
+        return schema(svg=SQUARE)
+
+    monkeypatch.setattr("notosaurus_core.ai._ask_provider", answer)
+    description = "un circuit RC et, à côté, un triangle"
+    made = asyncio.run(llm.made_figure(AIConfig(llm="gemini"), description))
+    return made, calls
+
+
+def test_a_figure_of_two_kinds_drawn_in_panels(monkeypatch):
+    """A capacitor's charge: its circuit and the curve of its voltage, two kinds in one figure,
+    drawn in one family (the curve placed by eye in the circuit's, or left out: 1/3). Split
+    into its panels, each drawn by its own kind, set side by side; credited to each one's
+    packages."""
+    split = [("circuit", "le circuit RC"), ("geometry", "un triangle ABC")]
+    made, calls = panels_drawing(monkeypatch, split)
+    assert [c[0] for c in calls[:2]] == ["Kind", "Panels"]
+    assert sorted(c[1].split(": ", 1)[1] for c in calls[2:]) == ["le circuit RC", "un triangle ABC"]
+    assert (made.family, made.engine) == ("panels", "typst")
+    assert [p.family for p in made.panels] == ["circuit", "geometry"]
+    width, height = (float(v) for v in re.search(r'viewBox="0 0 ([\d.]+) ([\d.]+)"', made.svg).groups())
+    assert width > 1.5 * height  # side by side
+    credited = llm.figure_credits(made)
+    assert any(c.startswith("zap ") for c in credited) and any(c.startswith("ctz-euclide ") for c in credited)
+
+
+def test_a_figure_not_split_drawn_as_one(monkeypatch):
+    """Its panels unusable, or one only: the figure drawn as one, in SVG."""
+    for split in (None, [("circuit", "le circuit RC")]):
+        made, calls = panels_drawing(monkeypatch, split)
+        assert (made.family, made.engine, made.panels) == ("other", "svg", ())
+        assert [c[0] for c in calls] == ["Kind", "Panels", "Drawing"]
+
+
+def test_panels_keep_their_own_ids():
+    """Two drawings set side by side: an id they share (Typst names its glyphs alike) kept apart,
+    each reference following its own; each panel as tall as the tallest."""
+    drawn = (
+        '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 {}">'
+        '<defs><path id="g" d="M0 0h{}"/></defs><use href="#g"/></svg>'
+    )
+    both = figures.side_by_side([drawn.format(50, 1), drawn.format(100, 2)])
+    assert sorted(re.findall(r'\bid="([^"]+)"', both)) == ["p0-g", "p1-g"]
+    assert sorted(re.findall(r'href="#([^"]+)"', both)) == ["p0-g", "p1-g"]
+    assert 'viewBox="0 0 308 100"' in both  # 100 × 2 (as tall as the other), a gap of 8, then 100
+
+
+def test_figures_in_panels_are_a_kind():
+    """The kinds say when a figure goes in panels (things of different kinds together), and a
+    panel is never in panels itself."""
+    kinds = dict(re.findall(r'"(\w+)": (.*?)(?=; "\w+": |$)', figures_typst.KINDS))
+    assert "panels" in kinds and "panels" in figures_typst.FigureKind.__args__
+    with pytest.raises(ValueError):
+        figures_typst.Panel(family="panels", description="x")  # type: ignore[arg-type]
