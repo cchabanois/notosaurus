@@ -287,9 +287,11 @@ def test_dictation_in_the_app(page):
     sync_api.expect(field).to_have_value(re.compile("Douze cartes sur el abuelo et la abuela.$"))
     assert stopped == [{"kind": "prompt"}]
     sync_api.expect(field).to_be_enabled()
-    # Added at the end of a long prompt: the field scrolled to it, in sight (not focused: no keyboard)
-    assert field.evaluate(
-        "(f) => f.scrollHeight > f.clientHeight && f.scrollTop + f.clientHeight >= f.scrollHeight - 2"
+    # Added at the end of a long prompt: the field scrolled to it, in sight (not focused: no keyboard);
+    # scrolled once the text is drawn ($nextTick), so waited for, not read at once
+    page.wait_for_function(
+        "(f) => f.scrollHeight > f.clientHeight && f.scrollTop + f.clientHeight >= f.scrollHeight - 2",
+        arg=field.element_handle(),
     )
     assert not field.evaluate("(f) => f === document.activeElement")
 
