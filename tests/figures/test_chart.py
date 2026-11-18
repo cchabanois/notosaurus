@@ -558,3 +558,26 @@ def test_a_line_reversed_reads_its_x_from_right_to_left():
     assert highest_measure_x(", reversed: true") < 0.4
     with pytest.raises(figures_typst.Unusable, match="reversed is for lines"):
         figures_typst.compile_svg("chart", '#chart(kind: "bars", values: (("A", 1),), reversed: true)')
+
+
+def test_a_climate_charts_precipitation_as_bars_its_scale_twice_the_temperatures():
+    """A diagramme ombrothermique: the AI gave the precipitation as bars with the temperature
+    as a `second` line, refused (a line's only), then drew both as lines (3 drawings in 3). Its
+    own kind draws a bar a month and the temperature's curve, the scales tied, P = 2T: 40 mm
+    as high as 20 °C, 10 mm as 5 °C, computed."""
+    svg = figures_typst.compile_svg(
+        "chart", '#chart(kind: "climate", values: (("J", 40, 20), ("F", 10, 5)), axes: ("P (mm)", "T (°C)"))'
+    )
+    tops = [float(y) for y in re.findall(r'fill="#84a7cf"[^>]*translate\([\d.]+ ([\d.]+)\)', svg)]
+    centres = [float(y) + 1.700787402 for y in re.findall(r'fill="#b03a2e"[^>]*translate\([\d.]+ ([\d.]+)\)', svg)]
+    assert len(tops) == 2 and len(centres) == 2
+    assert tops == pytest.approx(centres, abs=0.01)
+
+
+def test_a_bar_chart_refused_a_second_measure_points_to_the_climate_chart():
+    """Bars with a `second` are refused with what to do instead (kind: "climate"), the
+    AI's next try then right."""
+    with pytest.raises(figures_typst.Unusable, match="climate"):
+        figures_typst.compile_svg(
+            "chart", '#chart(kind: "bars", values: (("J", 50), ("F", 45)), second: (values: (("J", 5), ("F", 6))))'
+        )
