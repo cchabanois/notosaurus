@@ -324,7 +324,7 @@
       let lands = all.pairs().filter(((_, c)) => c.at("o", default: none) == ruler).map(((code, _)) => code)
       for code in (ruler, ..lands).filter(c => c not in codes) {
         codes.push(code)
-        names.push(all.at(code).n.first())
+        names.push(all.at(code).n.first(default: code))  // (a land of no name: its code)
         if code != ruler { ruled.push(code) }
       }
     }
@@ -736,6 +736,87 @@
   })
 }
 
+// A point within a ring (even-odd: a ray to its east crossing its sides an odd number of times)
+#let on-land(ring, (x, y)) = {
+  let inside = false
+  for (i, b) in ring.enumerate() {
+    let a = ring.at(i - 1)
+    if (a.at(1) > y) != (b.at(1) > y) and x < a.at(0) + (y - a.at(1)) * (b.at(0) - a.at(0)) / (b.at(1) - a.at(1)) {
+      inside = not inside
+    }
+  }
+  inside
+}
+
+// A round number for a legend: 1, 2 or 5 times a power of ten, the largest not above v
+#let round-below(v) = {
+  let p = calc.pow(10.0, calc.floor(calc.log(v)))
+  let n = (5, 2, 1).find(m => m * p <= v)
+  let r = (if n == none { 1 } else { n }) * p
+  if r >= 1 { int(calc.round(r)) } else { r }
+}
+
+// The outline of a few points spread on the page (a zone a few cities span: a megalopolis),
+// rounded `r` around them: their convex hull, each corner an arc (one point: a circle; two:
+// a band with round ends)
+#let rounded-hull(points, r) = {
+  let pts = points.dedup()
+  // (Andrew's monotone chain)
+  let cross(o, a, b) = ((a.at(0) - o.at(0)) / 1pt * (b.at(1) - o.at(1)) / 1pt - (a.at(1) - o.at(1)) / 1pt * (b.at(0) - o.at(0)) / 1pt)
+  let sorted = pts.sorted(key: q => (q.at(0) / 1pt, q.at(1) / 1pt))
+  let half(seq) = {
+    let out = ()
+    for q in seq {
+      while out.len() >= 2 and cross(out.at(-2), out.at(-1), q) <= 0 { let _ = out.pop() }
+      out.push(q)
+    }
+    out
+  }
+  let hull = if sorted.len() <= 1 { sorted } else {
+    let (lower, upper) = (half(sorted), half(sorted.rev()))
+    lower.slice(0, -1) + upper.slice(0, -1)
+  }
+  if hull.len() == 0 { return () }
+  let n = hull.len()
+  let (mx, my) = (hull.map(q => q.at(0)).sum() / n, hull.map(q => q.at(1)).sum() / n)
+  // An edge's normal, away from the middle
+  let normal(a, b) = {
+    let (dx, dy) = ((b.at(0) - a.at(0)) / 1pt, (b.at(1) - a.at(1)) / 1pt)
+    let l = calc.sqrt(dx * dx + dy * dy)
+    let (nx, ny) = if l == 0 { (1.0, 0.0) } else { (dy / l, -dx / l) }
+    let (ex, ey) = (((a.at(0) + b.at(0)) / 2 - mx) / 1pt, ((a.at(1) + b.at(1)) / 2 - my) / 1pt)
+    if nx * ex + ny * ey < 0 { (-nx, -ny) } else { (nx, ny) }
+  }
+  let arc(v, from, sweep) = {
+    let steps = calc.max(2, calc.ceil(calc.abs(sweep) / 15deg))
+    range(steps + 1).map(j => {
+      let a = from + sweep * j / steps
+      (v.at(0) + r * calc.cos(a), v.at(1) + r * calc.sin(a))
+    })
+  }
+  if n == 1 { return arc(hull.first(), 0deg, 360deg).slice(0, -1) }
+  if n == 2 {
+    // each end a half circle away from the other
+    let (a, b) = (hull.first(), hull.last())
+    let side(v, u) = {
+      let out = calc.atan2((v.at(0) - u.at(0)) / 1pt, (v.at(1) - u.at(1)) / 1pt)
+      arc(v, out - 90deg, 180deg)
+    }
+    return side(b, a) + side(a, b)
+  }
+  let out = ()
+  for i in range(n) {
+    let v = hull.at(i)
+    let a1 = calc.atan2(..normal(hull.at(i - 1), v))
+    let a2 = calc.atan2(..normal(v, hull.at(calc.rem(i + 1, n))))
+    // the short way from one to the other (a convex corner turns less than half a turn)
+    let d = a2 - a1
+    let d = d - calc.round(d / 360deg) * 360deg
+    out += arc(v, a1, d)
+  }
+  out
+}
+
 // countries: shown white and framed (names or codes); cities: a red dot each; regions: of
 // the countries shown, coloured, their country's others outlined; rivers: blue lines;
 // reliefs (mountains, deserts, plains, peninsulas, islands) and waters (oceans, seas, gulfs,
@@ -745,7 +826,10 @@
 // a curved arrow each, its kind's colour, as wide as its value; routes and flows in the
 // legend, framed; each named when labels; width, height: the most the map takes
 #let one-map(countries: (), cities: (), regions: (), rivers: (), reliefs: (), waters: (), groups: (),
-  routes: (), flows: (), year: none, pole: none, labels: true, width: 8cm, height: 7cm, least: 4) = context {
+  routes: (), flows: (), year: none, pole: none, labels: true, values: (:), unit: none, zones: (),
+  names: auto, frame: none, width: 8cm, height: 7cm, least: 4) = context {
+  // (the values' unit, its name kept: the map's own `unit` is the length of an atlas unit)
+  let value-unit = unit
   if pole not in (none, "north", "south") { panic("pole is \"north\" or \"south\" (a map centred on it), not " + repr(pole)) }
   // The states drawn: a past year's (its borders), else today's countries
   let all = borders(year)
@@ -764,8 +848,52 @@
   let regions = regions.filter(n => n not in as-country)
   let sets = read-groups(groups, all: all, year: if past { year })
   let grouped = sets.map(g => g.countries).join(default: ())
-  // The countries the map is about: those shown and those grouped
+  // Zones: an area that is no country nor region of the atlas (a country's emptiest part, a
+  // megalopolis, a basin), made of the countries or regions it covers, or spanning a few
+  // cities; outlined and tinted over the map, its name in the legend
+  let zones = if type(zones) == dictionary { (zones,) } else { zones }
+  let zone-sets = zones.map(z => {
+    if type(z) != dictionary or "name" not in z {
+      panic("a zone is (name: \"…\", regions: (…), countries: (…), places: (…)): its name, for the legend, and what it covers")
+    }
+    for key in z.keys() {
+      if key not in ("name", "countries", "regions", "places") {
+        panic("a zone holds a name, countries, regions and places, not \"" + key + "\"")
+      }
+    }
+    let listed(key) = { let v = z.at(key, default: ()); if type(v) == str { (v,) } else { v } }
+    if listed("countries").len() + listed("regions").len() + listed("places").len() == 0 {
+      panic("the zone \"" + z.name + "\" covers nothing: the regions or countries it covers, or the cities it spans")
+    }
+    (name: z.name, countries: listed("countries").map(n => find-country(n, all: all, year: if past { year })),
+      regions: listed("regions"), places: listed("places"))
+  })
+  if sets.len() + zone-sets.len() > palette.len() {
+    panic("at most " + str(palette.len()) + " groups and zones on a map, one colour each: join some")
+  }
+  if past and zone-sets.any(z => z.regions.len() > 0) {
+    panic("no regions on a map of a past year: the atlas's regions are today's; its states only")
+  }
+  // The countries the map is about: those shown, grouped or in a zone
   let about = shown + grouped.filter(code => code not in shown)
+  about += zone-sets.map(z => z.countries).join(default: ()).filter(code => code not in about).dedup()
+  // Values: a city's circle, its area as its value (proportional circles: the largest cities'
+  // population); the cities valued are shown. "population": each city's of the atlas, in
+  // millions (Natural Earth's, its urban area's), when the description gives none
+  let values = if values == "population" {
+    let found = cities.map(name => (name, find-city(name, shown + sets.map(g => g.countries).join(default: ()))))
+    found.map(((name, c)) => (name, calc.max(0.1, calc.round(c.p / 1000000, digits: 1)))).to-dict()
+  } else { values }
+  if values != (:) and value-unit == none {
+    panic("values need their unit, as the legend writes it (unit: \"millions d'habitants\")")
+  }
+  if type(values) != dictionary {
+    panic("values is a dictionary, a city's name and its value: (\"Tokyo\": 37.4, \"Delhi\": 32.9), or \"population\"")
+  }
+  for (name, v) in values {
+    if type(v) not in (int, float) or v <= 0 { panic("a value is a number above 0: \"" + name + "\": " + repr(v)) }
+  }
+  let cities = cities + values.keys().filter(n => n not in cities)
   let towns = cities.map(name => (name: name, city: find-city(name, about)))
   // Routes and flows: the places they pass, a sea route's way over the sea
   let moving = routes.len() + flows.len() > 0
@@ -794,6 +922,8 @@
   }
   let areas = regions.map(name => (name: name, at: find-region(name, shown)))
   let group-areas = sets.enumerate().map(((i, g)) => g.regions.map(name => (name: name, at: find-region(name, about), group: i))).join(default: ())
+  let zone-areas = zone-sets.map(z => z.regions.map(name => (name: name, at: find-region(name, about)))) 
+  let zone-towns = zone-sets.map(z => z.places.map(name => find-city(name, about)))
   let region(a) = json("regions/" + a.at.code + ".json").at(a.at.level).at(a.at.index)
   let near = if about.len() == 0 { none } else {
     let bs = about.map(code => all.at(code).b)
@@ -851,6 +981,11 @@
     }
   }
   if sets.len() == 0 { boxes += points }
+  // Zones framed whole
+  for (z, (zas, zts)) in zone-sets.zip(zone-areas.zip(zone-towns)) {
+    boxes += z.countries.map(code => all.at(code).f) + zas.map(a => region(a).b)
+    boxes += zts.map(c => (c.x, c.y, c.x, c.y))
+  }
   // Every route's way and every flow's ends framed
   for t in trips {
     let (xs, ys) = (t.way.map(p => p.at(0)), t.way.map(p => p.at(1)))
@@ -868,7 +1003,26 @@
     let small = seas.filter(w => calc.max(w.item.b.at(2) - w.item.b.at(0), w.item.b.at(3) - w.item.b.at(1)) <= 30 * s)
     boxes = (if small.len() > 0 { small } else { seas }).map(w => w.item.b)
   }
-  if boxes.len() == 0 { panic("a map shows at least one country, city, region, group, route, flow, river, relief or water") }
+  // A frame asked (a continent, a part of the world, a country, a region, a sea): it alone,
+  // whatever else is drawn (an empire's lands in Africa framed on Africa, the rest cut)
+  let framed = frame != none
+  if framed {
+    let asked = if type(frame) == str { (frame,) } else { frame }
+    let (reliefs-all, waters-all) = (json("reliefs.json"), json("waters.json"))
+    boxes = asked.map(name => {
+      let key = fold(name)
+      let code = country-code(name, all: all)
+      if code != none { return all.at(code).f }
+      let found = reliefs-all.filter(x => key in x.k) + waters-all.filter(x => key in x.k)
+      let r = if past or found.len() > 0 { none } else { region-of(name, about) }
+      if r != none { return region((at: r)).b }
+      if found.len() == 0 {
+        panic("no place called \"" + name + "\" to frame the map on (a continent or a part of one, a country, a region of a country shown, a sea): another, or leave the frame out")
+      }
+      found.sorted(key: x => -size(x.b)).first().b
+    })
+  }
+  if boxes.len() == 0 { panic("a map shows at least one country, city, region, group, zone, route, flow, river, relief or water") }
   // A river, relief or water asked has a place for its name in the frame: the nearest one
   // added when it has none (the Atlantic beside France)
   let around = (
@@ -878,7 +1032,7 @@
   let (mx, my) = ((around.at(0) + around.at(2)) / 2, (around.at(1) + around.at(3)) / 2)
   let within((x, y)) = x >= around.at(0) and x <= around.at(2) and y >= around.at(1) and y <= around.at(3)
   let candidates = seas.map(w => w.item.at) + lands.map(l => l.item.at) + lines.map(l => l.item.l.flatten().chunks(2))
-  for places in candidates {
+  for places in if framed { () } else { candidates } {
     if places.len() > 0 and not places.any(within) {
       let (x, y) = places.sorted(key: ((x, y)) => calc.abs(x - mx) + calc.abs(y - my)).first()
       boxes.push((x, y, x, y))
@@ -903,7 +1057,7 @@
   // With routes and flows, the names of the places they pass whole within the frame: grown
   // until each has room around its place (half its width each side, its height above and
   // below), the scale found again each time
-  if moving and pole == none {
+  if moving and pole == none and not framed {
     let names = towns.map(t => (t.city.x, t.city.y, t.name))
     names += trips.map(t => t.stops.zip(if t.by == "sea" { t.at } else { t.stops.map(p => p.xy) })
       .filter(((p, at)) => p.kind != "city" and at != none).map(((p, at)) => (..at, p.name))).join(default: ())
@@ -1096,9 +1250,18 @@
   let dot = 2.4pt
   let gap = 2.5pt
   let marks = towns.map(t => page((t.city.x, t.city.y)))
+  // Proportional circles: the largest value's 11pt its radius, each other's area as
+  // its value (its radius as the root of its share), never smaller than a dot
+  let most-valued = if values.len() == 0 { none } else { calc.max(..values.values()) }
+  let bubble-r(v) = calc.max(dot, 11pt * calc.sqrt(v / most-valued))
+  let bubbles = towns.enumerate().filter(((_, t)) => t.name in values).map(((i, t)) => (
+    index: i, at: marks.at(i), r: bubble-r(values.at(t.name)),
+  ))
   let wanted = ()
   for (i, t) in towns.enumerate() {
-    wanted.push((at: marks.at(i), dot: true, body: text(8pt, weight: if t.city.cap { "bold" } else { "regular" }, t.name)))
+    let mark = bubbles.find(b => b.index == i)
+    wanted.push((at: marks.at(i), dot: true, mark: if mark == none { dot } else { calc.max(dot, mark.r) },
+      body: text(8pt, weight: if t.city.cap { "bold" } else { "regular" }, t.name)))
   }
   let named(items, find, style) = items.map(it => (it, find(it))).filter(((_, p)) => p != none).map(((it, p)) => (
     at: page(p), dot: false, body: style(it.name),
@@ -1140,8 +1303,8 @@
   // Flows: a curved arrow each, from its start to its end (shortened by a dot), drawn where
   // its middle is seen; as wide as its value ranks among theirs (the least the thinnest, the
   // largest the widest: told apart at a glance); never shorter than its arrowhead's reach
-  let values = arrows.filter(f => f.value != none).map(f => f.value)
-  let (least, most) = if values.len() == 0 { (none, none) } else { (calc.min(..values), calc.max(..values)) }
+  let flowing = arrows.filter(f => f.value != none).map(f => f.value)
+  let (least, most) = if flowing.len() == 0 { (none, none) } else { (calc.min(..flowing), calc.max(..flowing)) }
   let shortest = 22pt
   let curves = arrows.map(f => {
     let (ax, ay) = f.from.at
@@ -1228,6 +1391,31 @@
       body: style(p.name)))
     if p.kind == "cape" { ticks.push(page((x, y))) }
   }
+  // The countries' names (a map of several countries: Southern Africa's; asked with
+  // `names: true`, the grouped ones too): on their land, else beside it with a line
+  let to-name = if names == false { () } else {
+    let listed = countries.zip(shown.slice(0, countries.len()))
+    if names == true {
+      listed += sets.map(g => g.countries.filter(c => c not in g.ruled and c not in shown)).join(default: ())
+        .map(c => (all.at(c).n.first(), c))
+      listed += zone-sets.map(z => z.countries).join(default: ()).filter(c => c not in shown).map(c => (all.at(c).n.first(), c))
+    }
+    if names == auto and countries.len() < 2 { () } else { listed.dedup(key: ((_, c)) => c) }
+  }
+  if to-name.len() > 0 {
+    let inmost = if past { none } else { json("ways.json").countries }
+    for (name, code) in to-name {
+      let c = all.at(code)
+      let at = if past { c.at } else if inmost != none and code in inmost { inmost.at(code).at } else {
+        ((c.f.at(0) + c.f.at(2)) / 2, (c.f.at(1) + c.f.at(3)) / 2)
+      }
+      let (tl, br) = (page((c.f.at(0), c.f.at(3))), page((c.f.at(2), c.f.at(1))))
+      // (on its land, else beside it with a line: too small for its name)
+      wanted.push((at: page(at), dot: false, optional: true, country: code, within: if pole == none { (..tl, ..br) } else { none },
+        land: if pole == none { c.r } else { none }, body: text(7pt, fill: luma(55), name)))
+      wanted.push((at: page(at), dot: false, optional: true, country: code, far: true, body: text(7pt, fill: luma(55), name)))
+    }
+  }
   let placed = ()
   let taken = ()
   // The flows' arrows: boxes along them, no name on them
@@ -1244,8 +1432,11 @@
   let overlap((ax, ay, aw, ah), (bx, by, bw2, bh2)) = (
     calc.max(0pt, calc.min(ax + aw, bx + bw2) - calc.max(ax, bx)) / 1pt * calc.max(0pt, calc.min(ay + ah, by + bh2) - calc.max(ay, by)) / 1pt
   )
+  let countries-named = ()
   if labels {
     for (i, want) in wanted.enumerate() {
+      // (a country named already, at a larger size or on its land)
+      if want.at("country", default: none) in countries-named { continue }
       let (x, y) = want.at
       let size = measure(want.body)
       let (lw, lh) = (size.width, size.height)
@@ -1255,14 +1446,30 @@
       let tries = if want.dot {
         ((x + rad + gap, y - lh / 2), (x - rad - gap - lw, y - lh / 2),
          (x - lw / 2, y - rad - gap - lh), (x - lw / 2, y + rad + gap))
+      } else if want.at("far", default: false) {
+        // (a country too small for its name: beside it, further each time, a line to it)
+        let out = ()
+        for d in (1.2, 2, 3) {
+          for (ex, ey) in ((1, 0), (-1, 0), (0, -1), (0, 1), (1, -1), (-1, -1), (1, 1), (-1, 1)) {
+            out.push((x + ex * (d * lh + lw / 2) - lw / 2, y + ey * d * lh * 1.5 - lh / 2))
+          }
+        }
+        out
+      } else if want.at("land", default: none) != none {
+        // (a country's name: on its inmost point, else moved about it, nearest first)
+        let around = ()
+        for dy in (0, -1, 1, -2, 2) {
+          for dx in (0, -0.5, 0.5, -1, 1) { around.push((dx, dy)) }
+        }
+        around.sorted(key: ((dx, dy)) => calc.abs(dx) * 2 + calc.abs(dy)).map(((dx, dy)) => (x - lw / 2 + dx * lw / 2, y - lh / 2 + dy * lh))
       } else {
         ((x - lw / 2, y - lh / 2), (x - lw / 2, y - lh * 1.6), (x - lw / 2, y + lh * 0.6),
          (x + gap, y - lh / 2), (x - gap - lw, y - lh / 2))
       }
       // With routes and flows, more names near each other: the corners around, then further,
       // then further still in eight directions, a thin line then leading to the place
-      let near = tries.len()
-      if crowd {
+      let near = if want.at("far", default: false) { 0 } else { tries.len() }
+      if crowd and not want.at("far", default: false) {
         let (r, l) = (x + rad + gap, x - rad - gap - lw)
         let (above, below) = (y - rad - gap - lh, y + rad + gap)
         tries += ((r, above), (r, below), (l, above), (l, below), (x - lw / 2, above - lh), (x - lw / 2, below + lh),
@@ -1306,12 +1513,25 @@
             and circles-at.all(((qx, qy)) => (qx == x and qy == y) or qx + circle-size <= ax or ax + lw <= qx - circle-size
               or qy + circle-size <= ay or ay + lh <= qy - circle-size)
             and (j < near or (lead((ax, ay)) and own((ax, ay))))
+            and (want.at("within", default: none) == none or {
+              let (x0, y0, x1, y1) = want.within
+              ax >= x0 and ay >= y0 and ax + lw <= x1 and ay + lh <= y1
+            })
+            // (a country's name on its land: its corners and its sides' middles within it)
+            and (want.at("land", default: none) == none or {
+              let back((qx, qy)) = (((qx / unit) + cx - w / 2) / k, cy + h / 2 - qy / unit)
+              let probes = ((ax, ay), (ax + lw / 2, ay), (ax + lw, ay), (ax, ay + lh), (ax + lw / 2, ay + lh), (ax + lw, ay + lh))
+              probes.map(back).all(q => want.land.any(r => on-land(r, q)))
+            })
         )
       }
       // A city or a ring whose place the frame leaves out: not named (its name, moved in, would
       // name another place)
       if want.dot and (x < 0pt or x > bw or y < 0pt or y > bh) { continue }
       let k = range(tries.len()).find(clear)
+      // A name that may be left out (a country's): only where it is clear
+      if k == none and want.at("optional", default: false) { continue }
+      if want.at("country", default: none) != none { countries-named.push(want.country) }
       // Never cut by the frame: moved in
       let within((ax, ay)) = (calc.max(1pt, calc.min(ax, bw - 1pt - lw)), calc.max(1pt, calc.min(ay, bh - 1pt - lh)))
       // None clear: the spot where it covers least (another name or a dot far worse than an
@@ -1346,6 +1566,11 @@
   )
   let water = rgb("#e8f1f8")
   let tint(i) = palette.at(i).lighten(35%)
+  // A zone's colours: those the groups leave, the blues and purple first (an orange zone
+  // would read as a relief's tint)
+  let zone-colours = (1, 3, 2, 4, 0, 5, 6, 7).filter(j => j >= sets.len())
+  let zone-ink(i) = palette.at(zone-colours.at(i)).darken(20%)
+  let zone-tint(i) = palette.at(zone-colours.at(i)).transparentize(60%)
   let drawn = box(width: bw, height: bh, clip: true, fill: water, {
     for w in seas {
       for points in w.item.r { ring(points, rgb("#b5d2ec"), none) }
@@ -1375,6 +1600,37 @@
           }
           for points in r.r { ring(points, fill, 0.4pt + luma(150)) }
         }
+      }
+    }
+    // Zones: tinted, their outline dashed (the borders between their parts left out: one
+    // area); one spanning cities rounded around them
+    for (i, (z, (zas, zts))) in zone-sets.zip(zone-areas.zip(zone-towns)).enumerate() {
+      let colour = zone-ink(i)
+      let line = (paint: colour, thickness: 1.3pt, dash: "dashed", join: "round")
+      let rings = z.countries.map(code => all.at(code).r).join(default: ()) + zas.map(a => region(a).r).join(default: ())
+      for points in rings { ring(points, zone-tint(i), none) }
+      // (an edge two of its parts share is inside it)
+      let key(a, b) = if (a.at(0), a.at(1)) < (b.at(0), b.at(1)) { repr((a, b)) } else { repr((b, a)) }
+      let count = (:)
+      for points in rings {
+        for (a, b) in (..points, points.first()).windows(2) { let k = key(a, b); count.insert(k, count.at(k, default: 0) + 1) }
+      }
+      for points in rings {
+        let run = ()
+        for (a, b) in (..points, points.first()).windows(2) {
+          if count.at(key(a, b)) == 1 {
+            if run.len() == 0 { run.push(page(a)) }
+            run.push(page(b))
+          } else if run.len() > 0 {
+            if run.len() >= 2 { place(curve(stroke: line, curve.move(run.first()), ..run.slice(1).map(curve.line))) }
+            run = ()
+          }
+        }
+        if run.len() >= 2 { place(curve(stroke: line, curve.move(run.first()), ..run.slice(1).map(curve.line))) }
+      }
+      if zts.len() > 0 {
+        let outline = rounded-hull(zts.map(c => page((c.x, c.y))), 9pt)
+        place(polygon(fill: zone-tint(i), stroke: line, ..outline))
       }
     }
     // The regions flows leave from or go to, in their flow's colour
@@ -1497,6 +1753,11 @@
       place(curve(stroke: (paint: c.colour, thickness: c.width, cap: "butt"), curve.move(start), curve.quad(c.c, end)))
       head(tip, ux, uy, size, c.colour)
     }
+    // Proportional circles, the largest under
+    for b in bubbles.sorted(key: b => -b.r / 1pt) {
+      let (x, y) = b.at
+      place(dx: x - b.r, dy: y - b.r, circle(radius: b.r, fill: rgb(214, 47, 47, 70), stroke: 0.8pt + rgb("#b52020")))
+    }
     for (x, y) in rings-at {
       place(dx: x - ring-size, dy: y - ring-size, circle(radius: ring-size, fill: rgb("#b5d2ec"), stroke: 1.2pt + rgb("#1f5a8f")))
     }
@@ -1517,7 +1778,7 @@
     }
   })
   let named-kinds = kinds.enumerate().filter(((_, k)) => k != none)
-  if sets.len() + trips.len() + named-kinds.len() == 0 { drawn } else {
+  if sets.len() + zone-sets.len() + trips.len() + named-kinds.len() + values.len() == 0 { drawn } else {
     // The legend under the map: each group's colour and its name, each route's line, each
     // kind of flow's arrow, in their order
     let key(sample, name) = box(inset: (right: 5pt), stack(dir: ltr, spacing: 3pt, sample, text(8pt, name)))
@@ -1528,6 +1789,23 @@
     let keys = sets.enumerate().map(((i, g)) => key(box(width: 10pt, height: 7pt, fill: tint(i), stroke: 0.5pt + luma(110)), g.name))
     keys += trips.enumerate().map(((i, t)) => key(arrow(ink(i), 1.5pt, if t.by == "land" { "dashed" } else { none }), t.name))
     keys += named-kinds.map(((i, k)) => key(arrow(ink(trips.len() + i), 2pt, none), k))
+    keys += zone-sets.enumerate().map(((i, z)) => key(box(width: 10pt, height: 7pt, fill: zone-tint(i),
+      stroke: (paint: zone-ink(i), thickness: 1pt, dash: "dashed")), z.name))
+    // The circles: the largest value's and a round one below it, each its number
+    if values.len() > 0 {
+      let written(v) = {
+        let t = if type(v) == float and v == calc.round(v) { str(int(v)) } else { str(v) }
+        if text.lang in ("fr", "de", "es", "it", "pt") { t.replace(".", ",") } else { t }
+      }
+      let small = round-below(most-valued / 4)
+      let sample(v) = {
+        let r = bubble-r(v)
+        box(grid(columns: 2, column-gutter: 3pt, align: horizon,
+          circle(radius: r, fill: rgb(214, 47, 47, 70), stroke: 0.8pt + rgb("#b52020")), text(8pt, written(v))))
+      }
+      keys += (box(inset: (right: 5pt), grid(columns: 3, column-gutter: 6pt, align: horizon, sample(most-valued),
+        sample(small), if value-unit != none { text(8pt, value-unit) })),)
+    }
     stack(spacing: 5pt, drawn, block(width: bw, {
       set text(8pt)
       set par(leading: 0.6em)
