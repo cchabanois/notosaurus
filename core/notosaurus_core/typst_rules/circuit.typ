@@ -104,41 +104,75 @@
   cetz.draw.line(..pts, stroke: (paint: rgb("#f5d000"), thickness: 2.2pt, dash: (4pt, 4pt), join: "round"))
   earth("", pts.last())
 }
+// The voltage across a component from a to b (its `voltage:`): an arrow alongside it, on the
+// side away from its name (zap writes that on the left of the way from a to b), clear of its
+// symbol (`across`: half the symbol's size across the wire), as long as the component
+// (`size`, 0.8 at least), its name beside it. It points to the component's + : a generator's
+// second point; a receiver's first, where the current comes in (the receiver convention: the
+// component written the way its current goes)
+#let voltage-arrow(a, b, label, generator, size, across) = {
+  let (ax, ay) = (float(a.at(0)), float(a.at(1)))
+  let (bx, by) = (float(b.at(0)), float(b.at(1)))
+  let (dx, dy) = (bx - ax, by - ay)
+  let d = calc.sqrt(dx * dx + dy * dy)
+  let (ux, uy) = (dx / d, dy / d)
+  let (nx, ny) = (uy, -ux)  // the right of the way from a to b
+  let off = across + 0.22
+  let half = calc.max(size, 0.8) / 2 + 0.1
+  let p(s) = (ax + ux * (d / 2 + s) + nx * off, ay + uy * (d / 2 + s) + ny * off)
+  let (tail, head) = if generator { (p(-half), p(half)) } else { (p(half), p(-half)) }
+  cetz.draw.line(tail, head, stroke: 0.7pt, mark: (end: ">", fill: black, scale: 0.8))
+  let anchor = if calc.abs(nx) > calc.abs(ny) { if nx > 0 { "west" } else { "east" } } else { if ny > 0 { "south" } else { "north" } }
+  let m = p(0)
+  cetz.draw.content((m.at(0) + 0.12 * nx, m.at(1) + 0.12 * ny), label, anchor: anchor)
+}
+// A component drawn as zap draws it, its voltage's arrow too when `voltage:` is given
+#let with-voltage(draw, generator, size, across) = (name, ..args) => {
+  let params = args.named()
+  let voltage = params.remove("voltage", default: none)
+  draw(name, ..args.pos(), ..params)
+  if voltage != none {
+    let (a, b) = args.pos()
+    let scale = params.at("scale", default: 1)
+    voltage-arrow(a, b, voltage, generator, size * scale, across * scale)
+  }
+}
 // A component given without its points, for `branch` to place: its drawing, its length along
-// the wire (zap's sizes), whether it is a generator; its name and named arguments as the AI
-// writes them. Given its points, the component drawn as zap draws it
-#let placeable(draw, length, generator: false) = (name, ..args) => {
+// the wire (zap's sizes), half its size across the wire, whether it is a generator; its name and
+// named arguments as the AI writes them. Given its points, the component drawn as zap draws it
+#let placeable(draw, length, across: 0.3, generator: false) = (name, ..args) => {
+  let draw = with-voltage(draw, generator, length, across)
   if args.pos().len() == 0 {
     (placeable: draw, length: length, generator: generator, name: name, args: args.named())
   } else {
     draw(name, ..args)
   }
 }
-#let battery = placeable(battery, 0.54, generator: true)
-#let cell = placeable(cell, 0.18, generator: true)
-#let vsource = placeable(vsource, 1.06, generator: true)
-#let acvsource = placeable(acvsource, 1.06, generator: true)
-#let isource = placeable(isource, 1.06, generator: true)
-#let lamp = placeable(lamp, 0.57)
-#let resistor = placeable(resistor, 1.41)
-#let rheostat = placeable(rheostat, 1.41)
-#let heater = placeable(heater, 1.41)
-#let switch = placeable(switch, 0.8)
-#let button = placeable(button, 0.8)
-#let ammeter = placeable(ammeter, 0.94)
-#let voltmeter = placeable(voltmeter, 0.94)
-#let ohmmeter = placeable(ohmmeter, 0.94)
-#let wattmeter = placeable(wattmeter, 0.94)
-#let diode = placeable(diode, 0.6)
-#let led = placeable(led, 0.6)
-#let zener = placeable(zener, 0.6)
-#let photodiode = placeable(photodiode, 0.6)
-#let capacitor = placeable(capacitor, 0.25)
-#let inductor = placeable(inductor, 1.65)
-#let fuse = placeable(fuse, 0.88)
-#let dcmotor = placeable(dcmotor, 1.16)
-#let acmotor = placeable(acmotor, 1.16)
-#let socket = placeable(socket, 0.54)
+#let battery = placeable(battery, 0.54, across: 0.5, generator: true)
+#let cell = placeable(cell, 0.18, across: 0.5, generator: true)
+#let vsource = placeable(vsource, 1.06, across: 0.53, generator: true)
+#let acvsource = placeable(acvsource, 1.06, across: 0.53, generator: true)
+#let isource = placeable(isource, 1.06, across: 0.53, generator: true)
+#let lamp = placeable(lamp, 0.57, across: 0.29)
+#let resistor = placeable(resistor, 1.41, across: 0.2)
+#let rheostat = placeable(rheostat, 1.41, across: 0.35)
+#let heater = placeable(heater, 1.41, across: 0.2)
+#let switch = placeable(switch, 0.8, across: 0.3)
+#let button = placeable(button, 0.8, across: 0.3)
+#let ammeter = placeable(ammeter, 0.94, across: 0.47)
+#let voltmeter = placeable(voltmeter, 0.94, across: 0.47)
+#let ohmmeter = placeable(ohmmeter, 0.94, across: 0.47)
+#let wattmeter = placeable(wattmeter, 0.94, across: 0.47)
+#let diode = placeable(diode, 0.6, across: 0.3)
+#let led = placeable(led, 0.6, across: 0.4)
+#let zener = placeable(zener, 0.6, across: 0.3)
+#let photodiode = placeable(photodiode, 0.6, across: 0.4)
+#let capacitor = placeable(capacitor, 0.25, across: 0.4)
+#let inductor = placeable(inductor, 1.65, across: 0.2)
+#let fuse = placeable(fuse, 0.88, across: 0.15)
+#let dcmotor = placeable(dcmotor, 1.16, across: 0.58)
+#let acmotor = placeable(acmotor, 1.16, across: 0.58)
+#let socket = placeable(socket, 0.54, across: 0.3)
 // the components `branch` places, by their names
 #let _placeables = ("battery", "cell", "vsource", "acvsource", "isource", "lamp", "resistor", "rheostat",
   "heater", "switch", "button", "ammeter", "voltmeter", "ohmmeter", "wattmeter", "diode", "led", "zener",
