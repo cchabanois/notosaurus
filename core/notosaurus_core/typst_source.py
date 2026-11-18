@@ -4,8 +4,7 @@ reads them (a bar across a line taken out, marks it can't read made the rule's a
 edge's label on its side) and its texts' new lines as breaks; a circuit's ends a hair apart made
 to meet; a variable named after a math symbol renamed where code reads it; a grid's fractional
 columns sized by their content; decimal commas as the figure's language writes them; lilaq's
-diagram and lines drawn by the preamble's own where it has them (LQ_DIAGRAM, LQ_LINE); the
-smallest text it asks for (smallest_text).
+diagram and lines drawn by the preamble's own where it has them (LQ_DIAGRAM, LQ_LINE).
 """
 
 import math
@@ -394,17 +393,3 @@ LQ_DIAGRAM = re.compile(r"(?<![\w.-])lq\.diagram(?=\s*\()")
 # A line drawn by the preamble's `line-kept` where it has one (graph: lilaq's `lq.line` keeps
 # its ends in a closure; kept in sight, the names set along the curves stay clear of it)
 LQ_LINE = re.compile(r"(?<![\w.-])lq\.line(?=\s*\()")
-
-
-# Typst's text size, the figures' (FONT sets no other); one the AI sets or makes smaller: a
-# size in pt ("#set text(size: 9pt)"), in em (a box's second line "#text(size: 0.8em)[…]")
-TEXT_PT = 11.0
-TEXT_SIZE = re.compile(r"(?<![\w-])size\s*:\s*(\d*\.?\d+)\s*(pt|em)\b")
-
-
-def smallest_text(body: str) -> float:
-    """The smallest text a figure's Typst draws, in pt: Typst's size, or the smallest one it
-    sets, made smaller by the smallest factor in em it writes."""
-    sizes = [(float(m[1]), m[2]) for m in TEXT_SIZE.finditer(body)]
-    base = min([TEXT_PT] + [v for v, unit in sizes if unit == "pt" and v > 0])
-    return base * min([1.0] + [v for v, unit in sizes if unit == "em" and v > 0])

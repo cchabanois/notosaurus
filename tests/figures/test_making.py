@@ -798,3 +798,45 @@ def test_figures_in_panels_are_a_kind():
     assert "panels" in kinds and "panels" in figures_typst.FigureKind.__args__
     with pytest.raises(ValueError):
         figures_typst.Panel(family="panels", description="x")  # type: ignore[arg-type]
+
+
+TINY = """<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 {w} 300"><rect width="{w}" height="300" fill="white"/>
+<rect x="20" y="100" width="200" height="80" fill="#ccddee" stroke="black"/>
+<text x="30" y="150" font-size="16">Rein</text><text x="260" y="150" font-size="16">Vessie</text></svg>"""
+
+
+def test_an_svg_figure_too_small_to_read_drawn_again_the_more_readable_kept(monkeypatch):
+    """The AI's SVG whose text, fitted to a phone's card, is too small to read (a viewBox 1,600
+    wide, its text 16: 3.2 px): drawn once again, told its size and the font-size to write; the
+    more readable of the two kept, none of its labels left out; readable: one call."""
+
+    def drawn(*svgs):
+        calls, answers = [], iter(svgs)
+
+        async def answer(s, images, text, schema, system=None, light=False, **options):
+            calls.append(text)
+            return schema(svg=next(answers))
+
+        monkeypatch.setattr("notosaurus_core.ai._ask_provider", answer)
+        monkeypatch.setattr(figures_typst, "available", lambda: False)
+        return asyncio.run(llm.draw_figure(AIConfig(llm="gemini"), "un rein et la vessie")), calls
+
+    svg, calls = drawn(TINY.format(w=1600), TINY.format(w=400))
+    assert len(calls) == 2 and "3.2 px high, 7 at least" in calls[1] and "viewBox is 1600 wide" in calls[1]
+    assert 'viewBox="0 0 400 300"' in svg
+    svg, calls = drawn(TINY.format(w=1600), TINY.format(w=2400))  # worse: the first kept
+    assert len(calls) == 2 and 'viewBox="0 0 1600 300"' in svg
+    svg, calls = drawn(TINY.format(w=1600), TINY.format(w=400).replace("Vessie", ""))  # a label dropped
+    assert len(calls) == 2 and 'viewBox="0 0 1600 300"' in svg
+    svg, calls = drawn(TINY.format(w=400))
+    assert len(calls) == 1
+
+
+def test_any_familys_figure_too_small_drawn_again_the_more_readable_kept(monkeypatch):
+    """Not a diagram only: a geometry figure too small to read on a card, drawn again, told
+    its text's size; still too small, the more readable of the two kept."""
+    wide = '#block(width: {}pt)[#text("Mi 12")]'
+    svg, calls = typst_drawing(monkeypatch, [wide.format(900), wide.format(600)], kind="geometry")
+    assert [c["schema"] for c in calls] == ["Figure", "Figure"]
+    assert "px high, 7 at least" in calls[1]["text"] and "#scheme" not in calls[1]["text"]
+    assert 'viewBox="0 0 612' in svg

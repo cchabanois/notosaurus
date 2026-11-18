@@ -6,7 +6,7 @@ import re
 import pytest
 
 from figures.support import _glyphs, drawn_size
-from notosaurus_core import figures_typst, typst_source
+from notosaurus_core import figures_typst
 
 
 def test_a_diagrams_long_text_goes_on_the_next_line():
@@ -263,7 +263,7 @@ def test_a_schemes_arrows_go_straight_their_words_on_them():
     each at its own point."""
     figures_typst.compile_svg("diagram", FIFTH + ON_THEIR_LINES)
     svg = figures_typst.compile_svg("diagram", FIFTH + '#scheme(boxes: boxes, arrows: arrows, flow: "up")')
-    assert figures_typst.readable_px(svg, FIFTH) >= 9
+    assert figures_typst.readable_px(svg) >= 9
 
 
 UNCROSSED = """#context {
@@ -300,7 +300,7 @@ def test_a_scheme_fits_a_card():
     width, height = drawn_size("diagram", body)
     assert width <= 320 and height <= 400
     svg = figures_typst.compile_svg("diagram", body)
-    assert figures_typst.readable_px(svg, body) >= 9
+    assert figures_typst.readable_px(svg) >= 9
 
 
 def test_a_schemes_wide_layer_goes_on_below():
@@ -342,17 +342,12 @@ def test_a_diagram_too_small_to_read_refused():
     with pytest.raises(figures_typst.TooSmall, match="px high") as refused:
         figures_typst.compile_svg("diagram", f"#diagram({row}, node((5, 0), [Fin]))")
     assert refused.value.px < figures_typst.MIN_TEXT_PX and "<svg" in refused.value.svg
+    assert "#scheme" in str(refused.value)  # drawn by fletcher's nodes: told of the scheme
     rows = (
         '#diagram(node((0, 0), [Une étape]), edge("-|>", [passe à]), node((1, 0), [La suivante]),'
         ' edge("-|>"), node((1, 1), [Fin]))'
     )
     figures_typst.compile_svg("diagram", rows)
-
-
-def test_smallest_text():
-    assert typst_source.smallest_text("#diagram(node((0, 0), [A]))") == 11
-    assert typst_source.smallest_text("node((0, 0), [A \\ #text(size: 0.75em)[b]])") == 11 * 0.75
-    assert typst_source.smallest_text("#set text(size: 9pt)\n#text(size: 0.8em)[b]") == pytest.approx(7.2)
 
 
 def test_a_schemes_arrows_closing_a_loop_go_back():
