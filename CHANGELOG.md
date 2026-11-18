@@ -79,6 +79,7 @@ Each pull request's entries (the `## Changelog` of its description) are put unde
 
 ### Fixed
 
+- ⚡ A circuit's voltages (uC, U across a resistor, a generator's E) drawn as their arrows beside the components.
 - 📈 A calibration curve's values readable on its axis; an infrared spectrum's wavenumbers from 4000 to 500; a fitted line's small slope no longer written 0.
 - Graphs: a point's name no longer written on the lines that go through it.
 - 🌐 Brazilian Portuguese: sharing cards and saving or transferring lessons are no longer worded in European Portuguese. Italian: cards are called « carte » everywhere.
