@@ -295,10 +295,11 @@
   })
 }
 #let chart(kind: "bars", values: (), written: auto, hidden: (), unit: none, degrees: false, axis: none, axes: (none, none), step: auto,
-  marks: (), spans: (), second: none, numbered: true, smooth: false, limits: auto, horizontal: false, classes: none, fit: none) = context {
+  marks: (), spans: (), second: none, numbered: true, smooth: false, limits: auto, horizontal: false, classes: none, fit: none, reversed: false) = context {
   assert(kind in ("bars", "pie", "semi", "line", "scatter", "box", "pyramid", "histogram"),
     message: "kind is \"bars\", \"pie\", \"semi\", \"line\", \"scatter\", \"box\", \"pyramid\" or \"histogram\"")
   assert(fit == none or kind == "scatter", message: "fit is a scatter plot's only")
+  assert(not reversed or kind in ("line", "scatter"), message: "reversed is for lines and scatter plots: their x axis from its largest value to its smallest")
   assert(kind == "pyramid" or classes == none, message: "classes is for a pyramid only")
   assert(type(hidden) == array, message: "hidden is a list of the labels whose value a card asks for")
   assert(unit == none or type(unit) == str, message: "unit is a text written after each value (\"%\")")
@@ -428,12 +429,13 @@
       let (x0, x1, sx) = graduation(xs, gx, true, also: others)
       let (y0, y1, sy) = graduation(ys, gy, false)
       let (w, h) = (8.0, 5.0)
-      let px(x) = (x - x0) / (x1 - x0) * w
+      // (reversed: the largest x at the left, as an infrared spectrum's wavenumbers)
+      let px(x) = if reversed { (x1 - x) / (x1 - x0) * w } else { (x - x0) / (x1 - x0) * w }
       let py(y) = (y - y0) / (y1 - y0) * h
       let n = int(calc.round((x1 - x0) / sx))
       for k in range(n + 1) {
         let x = px(x0 + k * sx)
-        if k > 0 { line((x, 0), (x, h), stroke: 0.4pt + _grid) }
+        if x > 1e-9 { line((x, 0), (x, h), stroke: 0.4pt + _grid) }
         line((x, 0), (x, -0.08), stroke: 0.6pt)
         content((x, -0.16), txt(num(x0 + k * sx)), anchor: "north")
       }
@@ -521,8 +523,12 @@
         let (xa, xb) = ends
         line((px(xa), py(a * xa + b)), (px(xb), py(a * xb + b)), stroke: (paint: rgb("#1f5fa8"), thickness: 1.1pt))
         let sign = if b < 0 { " − " } else { " + " }
-        let name = "y = " + written-number(a, digits: 3) + "x" + if b == 0 { "" } else { sign + written-number(calc.abs(b), digits: 3) }
-        content((px(xb) + 0.1, py(a * xb + b)), text(fill: rgb("#1f5fa8"), txt(name)), anchor: "west")
+        // a coefficient with three significant digits at least: 0,00038 never rounded to 0
+        let coefficient(c) = written-number(c, digits: if c == 0 { 3 } else { calc.max(3, 2 - int(calc.floor(calc.log(calc.abs(c))))) })
+        let name = "y = " + coefficient(a) + "x" + if b == 0 { "" } else { sign + coefficient(calc.abs(b)) }
+        // named at its right end
+        let end = if px(xb) >= px(xa) { xb } else { xa }
+        content((px(end) + 0.1, py(a * end + b)), text(fill: rgb("#1f5fa8"), txt(name)), anchor: "west")
       }
       // the lines' names: a legend at the right, each with its line's look
       if named {
