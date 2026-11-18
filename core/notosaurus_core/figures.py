@@ -656,15 +656,19 @@ def save(folder: Path, card: Card, svg: str) -> str:
 # --- Labels set beside the drawing ---------------------------------------------------------
 # A labelled scheme (a cell, an organ, a flower) drawn by the AI: its names written by eye fell
 # on its outlines ("Noyau" across the cell's membrane, 2 drawings in 3). The AI draws the
-# shapes and tells each name's point; they are set here in two columns beside the drawing,
-# each in the order of its points from top to bottom, a line from each to its point, never
-# on a shape nor on one another.
+# shapes and tells each name's point; they are set here beside the drawing, a line from each to
+# its point, never on a shape nor on one another. Columns beside it gave long lines across the
+# drawing when its parts stood side by side (steps in a row, 2 drawings in 3) or a name's parts
+# on both sides (a flower's petals): the layouts are tried (two columns, a name of both sides in
+# both; one column; a row under it, a row over it) and the one whose lines cross the fewest of
+# its lines kept, a line crossed weighing CROSSING of the frame's width in lines' length.
 
 LABEL_SIZE = 16  # in the viewBox's units: the rule's largest, the drawing grown by its columns
 LABEL_LINE = 1.3  # a line's height, times the size
 LABEL_WIDTH = 130  # past this, a name goes on two lines (or more)
 LABEL_GAP = 14  # between the drawing and a column, a column and the frame
 LABEL_ROOM = 4  # between two names in a column
+CROSSING = 0.25  # times the frame's width: what a line crossed by a leader weighs, in leaders' length
 POINT_SLACK = 2  # a point this far past the frame (a stroke's edge) is still inside
 SNAP = 12  # a point on the white ground this near the drawing (beside a funnel's edge): brought onto it
 OPEN_SNAP = 0.15  # times the drawing's size: a point on the open ground this near a line (the AI's point
@@ -834,6 +838,121 @@ def _leader_start(n: dict, left: float, right: float) -> tuple[float, float]:
     return x, n["top"] + n["h"] / 2
 
 
+def _uncrossed(names: list[dict], place, start) -> None:
+    """Names placed in their order (`place`), two whose leaders cross (a far point just above a
+    near one) swapped and placed again, until none cross. `start`: a name's leader's start."""
+    place(names)
+    for _ in range(len(names) ** 2):
+        crossing = next(
+            (
+                (i, j)
+                for i in range(len(names))
+                for j in range(i + 1, len(names))
+                if any(
+                    _cross(start(names[i]), a, start(names[j]), b)
+                    for a in names[i]["points"]
+                    for b in names[j]["points"]
+                )
+            ),
+            None,
+        )
+        if crossing is None:
+            break
+        i, j = crossing
+        names[i], names[j] = names[j], names[i]
+        place(names)
+
+
+def _in_columns(names: list[dict], sides: dict[str, str], left: float, right: float, top: float, bottom: float):
+    """The names set in columns beside the drawing, each on its side (`sides`, by its text), a
+    column in the order of its points from top to bottom; in the names' order (_set)."""
+    names = [{**n, "side": sides[n["text"]]} for n in names]
+    columns = {s: sorted((n for n in names if n["side"] == s), key=lambda n: n["py"]) for s in ("left", "right")}
+    # a column beyond every point of its side (a region's point past the drawing's ink: its line
+    # never drawn back across its name)
+    left = min([left] + [p[0] - 3 for n in columns["left"] for p in n["points"]])
+    right = max([right] + [p[0] + 3 for n in columns["right"] for p in n["points"]])
+    for column in columns.values():
+        _uncrossed(column, lambda c: _column(c, top, bottom), lambda n: _leader_start(n, left, right))
+    placed = []
+    for n in names:
+        edge, anchor = (left - LABEL_GAP, "end") if n["side"] == "left" else (right + LABEL_GAP, "start")
+        placed.append(_set(n, edge, anchor, edge - n["w"] if anchor == "end" else edge, _leader_start(n, left, right)))
+    return placed
+
+
+def _set(n: dict, x: float, anchor: str, x0: float, start: tuple[float, float]) -> dict:
+    """A name set: its text's x and anchor, its box (from x0), its leader's start."""
+    return {**n, "x": x, "anchor": anchor, "box": (x0, n["top"], x0 + n["w"], n["top"] + n["h"]), "start": start}
+
+
+def _row(names: list[dict], low: float, high: float, edge: float, below: bool):
+    """The names in a row under the drawing (`below`) or above it, at `edge`, each as near
+    over or under its points as it can, in their order from left to right, none on another,
+    the row kept between `low` and `high` as far as it fits."""
+
+    def place(row: list[dict]) -> None:
+        x = low
+        for n in row:
+            n["x0"] = max(n["px"] - n["w"] / 2, x)
+            x = n["x0"] + n["w"] + LABEL_GAP
+        if row:
+            over = min(x - LABEL_GAP - high, row[0]["x0"] - low)
+            if over > 0:
+                for n in row:
+                    n["x0"] -= over
+        for n in row:
+            n["top"] = edge + LABEL_GAP if below else edge - LABEL_GAP - n["h"]
+
+    def start(n: dict) -> tuple[float, float]:
+        return n["x0"] + n["w"] / 2, (n["top"] - 3 if below else n["top"] + n["h"] + 3)
+
+    row = sorted(({**n} for n in names), key=lambda n: n["px"])
+    _uncrossed(row, place, start)
+    placed = {n["text"]: n for n in row}
+    return [_set(r, r["x0"] + r["w"] / 2, "middle", r["x0"], start(r)) for r in (placed[n["text"]] for n in names)]
+
+
+def _crossings(image, x: float, y: float, w: float, placed: list[dict]) -> int:
+    """How many lines the leaders cross: the drawing's (a run of ink along a leader, the one
+    its point lies in not counted), one another's, and the other names."""
+    count = 0
+    if image is not None:
+        k = image.width / w
+        pixels = image.load()
+        for n in placed:
+            for px, py in n["points"]:
+                sx, sy = n["start"]
+                steps = max(1, round(math.hypot(px - sx, py - sy) * k))
+                runs, was = 0, False
+                for t in range(steps + 1):
+                    i, j = round((sx + (px - sx) * t / steps - x) * k), round((sy + (py - sy) * t / steps - y) * k)
+                    ink = 0 <= i < image.width and 0 <= j < image.height and pixels[i, j] < 248
+                    runs += ink and not was
+                    was = ink
+                count += runs - was
+    leaders = [(n["start"], p, n["text"]) for n in placed for p in n["points"]]
+    for i, (a, b, ta) in enumerate(leaders):
+        count += sum(_cross(a, b, c, d) for c, d, tb in leaders[i + 1 :] if tb != ta)
+        for other in placed:
+            if other["text"] != ta and _through(a, b, other["box"]):
+                count += 1
+    return count
+
+
+def _through(a: tuple[float, float], b: tuple[float, float], box: tuple[float, float, float, float]) -> bool:
+    """Whether the segment ab passes through the box."""
+    x0, y0, x1, y1 = box
+    corners = [(x0, y0), (x1, y0), (x1, y1), (x0, y1)]
+    if any(x0 < p[0] < x1 and y0 < p[1] < y1 for p in (a, b)):
+        return True
+    return any(_cross(a, b, corners[i], corners[(i + 1) % 4]) for i in range(4))
+
+
+def _length(placed: list[dict]) -> float:
+    return sum(math.hypot(px - n["start"][0], py - n["start"][1]) for n in placed for px, py in n["points"])
+
+
 def labelled(svg: str, labels: list[Label], clamp: bool = False) -> str:
     """The cleaned SVG with its labels set beside its drawing (see above). The same SVG
     without labels; LabelError for a point outside the drawing's frame (brought to its edge
@@ -864,51 +983,49 @@ def labelled(svg: str, labels: list[Label], clamp: bool = False) -> str:
     points: dict[str, list[tuple[float, float]]] = {}
     for label in labels:
         points.setdefault(label.text.strip(), []).append(_snapped(image, x, y, w, label.x, label.y, outside))
-    names = []
-    for text, at in points.items():
+
+    def name(text: str, at: list[tuple[float, float]], key: str) -> dict:
         rows = _lines(text)
-        names.append(
-            {
-                "rows": rows,
-                "w": max(_measure(r) for r in rows),
-                "h": line * len(rows),
-                "points": at,
-                "px": sum(p[0] for p in at) / len(at),
-                "py": sum(p[1] for p in at) / len(at),
-                "side": "left" if sum(p[0] for p in at) / len(at) < middle else "right",
-            }
-        )
-    sides = {s: sorted((n for n in names if n["side"] == s), key=lambda n: n["py"]) for s in ("left", "right")}
-    # a column beyond every point of its side (a region's point past the drawing's ink: its line
-    # never drawn back across its name)
-    left = min([left] + [p[0] - 3 for n in sides["left"] for p in n["points"]])
-    right = max([right] + [p[0] + 3 for n in sides["right"] for p in n["points"]])
-    for column in sides.values():
-        _column(column, top, bottom)
-        # two leaders that cross (a far point just above a near one): their names' places swapped
-        for _ in range(len(column) ** 2):
-            crossing = next(
-                (
-                    (i, j)
-                    for i in range(len(column))
-                    for j in range(i + 1, len(column))
-                    if any(
-                        _cross(_leader_start(column[i], left, right), a, _leader_start(column[j], left, right), b)
-                        for a in column[i]["points"]
-                        for b in column[j]["points"]
-                    )
-                ),
-                None,
-            )
-            if crossing is None:
-                break
-            i, j = crossing
-            column[i], column[j] = column[j], column[i]
-            _column(column, top, bottom)
-    parts = []
+        return {
+            "text": key,
+            "rows": rows,
+            "w": max(_measure(r) for r in rows),
+            "h": line * len(rows),
+            "points": at,
+            "px": sum(p[0] for p in at) / len(at),
+            "py": sum(p[1] for p in at) / len(at),
+        }
+
+    names = [name(text, at, text) for text, at in points.items()]
+    by_mean = {n["text"]: "left" if n["px"] < middle else "right" for n in names}
+    # the layouts tried: two columns (each name on its points' side; a name whose points lie on
+    # both sides, as a flower's petals, written in both), one column, a row under or over it
+    layouts = [_in_columns(names, by_mean, left, right, top, bottom)]
+    split, sides = [], {}
     for n in names:
-        edge, anchor = (left - LABEL_GAP, "end") if n["side"] == "left" else (right + LABEL_GAP, "start")
-        start, middle_y = _leader_start(n, left, right)
+        parts = {s: [p for p in n["points"] if (p[0] < middle) == (s == "left")] for s in ("left", "right")}
+        if all(parts.values()) and len(n["points"]) > 1:
+            for s in ("left", "right"):
+                split.append(name(n["text"], parts[s], f"{n['text']}\0{s}"))
+                sides[split[-1]["text"]] = s
+        else:
+            split.append(n)
+            sides[n["text"]] = by_mean[n["text"]]
+    if len(split) > len(names):
+        layouts.append(_in_columns(split, sides, left, right, top, bottom))
+    for s in ("left", "right"):
+        layouts.append(_in_columns(names, dict.fromkeys(by_mean, s), left, right, top, bottom))
+    # a row only within the frame's width: wider, it would make the whole figure smaller
+    under = max([bottom] + [p[1] + 3 for n in names for p in n["points"]])
+    over = min([top] + [p[1] - 3 for n in names for p in n["points"]])
+    for row in (_row(names, x, x + w, under, below=True), _row(names, x, x + w, over, below=False)):
+        if all(x - 0.5 <= n["box"][0] and n["box"][2] <= x + w + 0.5 for n in row):
+            layouts.append(row)
+    # the one whose leaders cross the fewest lines, then the shortest (the first on a tie)
+    placed = min(layouts, key=lambda p: _crossings(image, x, y, w, p) * CROSSING * w + _length(p))
+    parts = []
+    for n in placed:
+        start, middle_y = n["start"]
         for px, py in n["points"]:
             parts.append(
                 f'<line x1="{start:.1f}" y1="{middle_y:.1f}" x2="{px:.1f}" y2="{py:.1f}" '
@@ -919,15 +1036,13 @@ def labelled(svg: str, labels: list[Label], clamp: bool = False) -> str:
             base = n["top"] + line * k + LABEL_SIZE
             text = row.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;")
             parts.append(
-                f'<text x="{edge:.1f}" y="{base:.1f}" font-family="sans-serif" font-size="{LABEL_SIZE}" '
-                f'text-anchor="{anchor}" fill="#000000">{text}</text>'
+                f'<text x="{n["x"]:.1f}" y="{base:.1f}" font-family="sans-serif" font-size="{LABEL_SIZE}" '
+                f'text-anchor="{n["anchor"]}" fill="#000000">{text}</text>'
             )
-    widest = {s: max((n["w"] for n in sides[s]), default=0.0) for s in sides}
-    tops = [n["top"] for n in names] + [y]
-    bottoms = [n["top"] + n["h"] for n in names] + [y + h]
-    nx = min(x, left - LABEL_GAP - widest["left"] - LABEL_GAP) if sides["left"] else x
-    nr = max(x + w, right + LABEL_GAP + widest["right"] + LABEL_GAP) if sides["right"] else x + w
-    ny, nb = min(tops) - MARGIN, max(bottoms) + MARGIN
+    nx = min([x] + [n["box"][0] - LABEL_GAP for n in placed])
+    nr = max([x + w] + [n["box"][2] + LABEL_GAP for n in placed])
+    ny = min([n["top"] for n in placed] + [y]) - MARGIN
+    nb = max([n["top"] + n["h"] for n in placed] + [y + h]) + MARGIN
     ny, nb = min(ny, y), max(nb, y + h)
     svg = _framed(svg, view.group(0), nx, ny, nr - nx, nb - ny)
     opening = re.search(r"<svg[^>]*>", svg)

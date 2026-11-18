@@ -557,9 +557,10 @@ def test_the_ais_svg_drawing_kept_for_who_asks(monkeypatch):
     assert figure_making.answers.get() is None
 
 
-def test_a_name_for_several_parts_set_once_a_line_to_each():
-    """A gene's place on both chromosomes of a pair, one name: given at each point, set once
-    with a line to each (a single point between them named nothing, 3 drawings in 3)."""
+def test_a_name_for_several_parts_a_line_to_each():
+    """A gene's place on both chromosomes of a pair, one name: given at each point, a line to
+    each (a single point between them named nothing, 3 drawings in 3), written once on each
+    side at most, its lines crossing neither the other chromosome nor one another."""
     from notosaurus_core import figures
 
     pair = (
@@ -578,11 +579,76 @@ def test_a_name_for_several_parts_set_once_a_line_to_each():
         ],
     )
     _, lines = _placed(svg)
-    assert svg.count(">gène du groupe<") + svg.count(f">{gene}<") == 1
+    assert 1 <= svg.count(">gène du groupe<") + svg.count(f">{gene}<") <= 2
     assert len(lines) == 4 and {(x2, y2) for _, _, x2, y2 in lines} >= {(155.0, 95.0), (245.0, 95.0)}
     for i, (ax1, ay1, ax2, ay2) in enumerate(lines):
         for bx1, by1, bx2, by2 in lines[i + 1 :]:
             assert not figures._cross((ax1, ay1), (ax2, ay2), (bx1, by1), (bx2, by2))
+        other = (140, 40, 170, 260) if ax2 > 200 else (230, 40, 260, 260)  # the other chromosome
+        assert not figures._through((ax1, ay1), (ax2, ay2), other)
+
+
+# steps side by side, each a cell with its microbe, an arrow between them: each step's name
+STEPS = (
+    '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 300"><rect width="400" height="300" fill="white"/>'
+    + "".join(
+        f'<circle cx="{cx}" cy="150" r="32" fill="#e8f1f8" stroke="black" stroke-width="2"/>'
+        f'<circle cx="{cx + 10}" cy="{140 - 30 + 10 * n}" r="7" fill="#e06666" stroke="black"/>'
+        for n, cx in enumerate((50, 150, 250, 350))
+    )
+    + "".join(f'<path d="M {x} 150 h 26" stroke="black" stroke-width="2"/>' for x in (87, 187, 287))
+    + "</svg>"
+)
+STEP_NAMES = [("reconnaissance", 60, 110), ("adhésion", 160, 125), ("ingestion", 260, 135), ("digestion", 360, 150)]
+
+
+def test_steps_side_by_side_named_under_or_over_each():
+    """Four steps side by side, a name for each: set in columns beside the row, their leaders
+    ran across the other steps, and which name went to which step was lost (phagocytosis,
+    2 drawings in 3). The layouts are tried (two columns, one, a row under or over the drawing)
+    and the one whose leaders cross the fewest lines kept: here a row, each name over or under
+    its step, no leader across another step."""
+    from notosaurus_core import figures
+
+    names = [figures.Label(text=t, x=x, y=y) for t, x, y in STEP_NAMES]
+    svg = figures.labelled(figures.clean(STEPS), names)
+    boxes, lines = _placed(svg)
+    assert len(lines) == 4
+    for (x0, y0, x1, y1), (_, px, _) in zip(boxes, STEP_NAMES, strict=True):
+        assert y1 < 118 or y0 > 182, (x0, y0)  # over or under the steps, not beside them
+        assert x0 - 20 < px < x1 + 20, (x0, x1, px)  # over or under its own step
+    for i, (ax1, ay1, ax2, ay2) in enumerate(lines):
+        for bx1, by1, bx2, by2 in lines[i + 1 :]:
+            assert not figures._cross((ax1, ay1), (ax2, ay2), (bx1, by1), (bx2, by2))
+
+
+# a flower cut lengthwise: its two petals, one on each side of its pistil
+FLOWER = (
+    '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 300"><rect width="400" height="300" fill="white"/>'
+    '<ellipse cx="110" cy="130" rx="30" ry="80" fill="#f8c8c8" stroke="black" transform="rotate(-25 110 130)"/>'
+    '<ellipse cx="290" cy="130" rx="30" ry="80" fill="#f8c8c8" stroke="black" transform="rotate(25 290 130)"/>'
+    '<rect x="185" y="60" width="30" height="170" rx="12" fill="#cfe8c8" stroke="black"/>'
+    '<ellipse cx="200" cy="240" rx="70" ry="22" fill="#8bbf6a" stroke="black"/></svg>'
+)
+
+
+def test_a_name_on_both_sides_written_on_each():
+    """« pétales » named both petals, one on each side of the flower: set in one column, one of
+    its lines crossed the whole flower (2 drawings in 3). A name whose points lie on both sides
+    is written in both columns, a line to its side's petal from each."""
+    from notosaurus_core import figures
+
+    names = [
+        figures.Label(text="pétales", x=100, y=110),
+        figures.Label(text="pétales", x=300, y=110),
+        figures.Label(text="pistil", x=200, y=140),
+        figures.Label(text="sépales", x=200, y=245),
+    ]
+    svg = figures.labelled(figures.clean(FLOWER), names)
+    _, lines = _placed(svg)
+    assert svg.count(">pétales<") == 2
+    for x1, _, x2, _ in lines:  # no line across the pistil to the other side
+        assert not (min(x1, x2) < 185 and max(x1, x2) > 215) or 185 <= x2 <= 215, (x1, x2)
 
 
 FUNNEL = (
