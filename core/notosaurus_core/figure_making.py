@@ -214,6 +214,30 @@ def _labelled(drawing, clamp: bool = False) -> str:
     return figures.fitted(figures.labelled(figures.clean(drawing.svg), drawing.labels, clamp))
 
 
+async def _readable_svg(s: AIConfig, text: str, svg: str, light: bool, demo: Callable[[], Any]) -> str:
+    """The AI's SVG whose text can't be read on a card (a viewBox of 1000 and text of 12: 4 px)
+    drawn once again, told its size (text_size.svg_too_small); the more readable of the two kept."""
+    from . import figures, figures_typst, text_size
+
+    said = await asyncio.to_thread(text_size.svg_too_small, svg, figures_typst.MIN_TEXT_PX)
+    if not said:
+        return svg
+    log.warning("Figure drawn again: its text too small")
+    asked = f"{text}\n\n{said}"
+    try:
+        again = await ai._ask_provider(s, [], asked, figures.Drawing, figures.RULES, light=light, demo=demo)
+        other = await asyncio.to_thread(_labelled, again, True)
+    except (ExtractionError, figures.FigureError) as e:
+        if e.code not in _UNUSABLE:
+            raise
+        return svg
+    before, after = await asyncio.gather(
+        asyncio.to_thread(text_size.smallest_px, svg), asyncio.to_thread(text_size.smallest_px, other)
+    )
+    kept = len(figures.label_words(other)) >= len(figures.label_words(svg))
+    return other if kept and (after or 0) > (before or 0) else svg
+
+
 async def _drawn(s: AIConfig, text: str, description: str, family: str, light: bool) -> MadeFigure:
     """A figure drawn once, cleaned: in Typst with its family's package and rule (asked again
     once, told what Typst said, when it doesn't compile), else as SVG (family "other", Typst
@@ -266,6 +290,7 @@ async def _drawn(s: AIConfig, text: str, description: str, family: str, light: b
             if isinstance(other, AppError) and other.code not in _UNUSABLE:
                 raise
             svg = await asyncio.to_thread(_labelled, drawing, True)
+    svg = await _readable_svg(s, text, svg, light, demo)
     # Its labels written on one another (the AI places its words without measuring them: two
     # tubes' labels « soudeCl⁻ »): drawn once again, told which; kept if fewer touch and none
     # left out (told to make room, the AI dropped the tubes' labels, 3 drawings in 3)

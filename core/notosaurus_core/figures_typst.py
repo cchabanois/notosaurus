@@ -49,7 +49,7 @@ from xml.etree import ElementTree
 
 from pydantic import BaseModel, Field
 
-from . import files, typst_source
+from . import files, text_size, typst_source
 
 HERE = Path(__file__).parent
 ARCHIVES = HERE / "typst"  # <name>-<version>.tar.gz, as Typst Universe publishes them (tools/typst_packages.py)
@@ -323,23 +323,58 @@ class TooSmall(Unusable):
         self.px = px
 
 
-# A card shows a figure at most 320 px wide and 400 high (a phone's: note-types.json, its
-# picture's max-width and max-height), never larger than its size (Typst's pt, a px each)
-CARD_PX = (320, 400)
-# A diagram's text under this, once fitted to a card, can't be read: institutions spread 26 cm
-# wide, their text 3 to 5 px. Physics' energy chains, read as they are, come to 6.6.
-MIN_TEXT_PX = 6.0
-_VIEWBOX = re.compile(r'viewBox="[-\d.]+ [-\d.]+ ([\d.]+) ([\d.]+)"')
+CARD_PX = text_size.CARD_PX
+# A figure's text under this, once fitted to a card, is too small to read: measured in every
+# figure of the subjects' benches (3,000 drawings, 1,100 judged right by eye at 320 px), the
+# texts judged unreadable came to 3.3 to 6.9 px (institutions spread 26 cm wide, a cycle in
+# one long row); at 7, 18 of the right ones would be drawn again (2 %), at 7.5, 38, none
+# more of the unreadable ones caught.
+MIN_TEXT_PX = 7.0
+# A family whose text and its room are set by its preamble, the AI giving only what it says: a
+# timeline's names and years, a tree's species, a chart's bars, read at 6.3 to 7 px (judged
+# right, all: a frise of the Second World War, a law of 21 bars); drawn again, the AI could only
+# write less. Still refused far below (a box plot's axis spread 65 cm: 4 px).
+MIN_TEXT_PX_SET = {"timeline": 6.0, "phylogeny": 6.0, "chart": 6.0}
 
 
-def readable_px(svg: str, body: str) -> float:
-    """The height in px of a figure's smallest text (typst_source.smallest_text) once fitted
-    to a card (CARD_PX)."""
-    size = _VIEWBOX.search(svg)
-    if not size:
-        return typst_source.smallest_text(body)
-    width, height = float(size[1]), float(size[2])
-    return typst_source.smallest_text(body) * min(1.0, CARD_PX[0] / width, CARD_PX[1] / height)
+def readable_px(svg: str) -> float | None:
+    """The height in px of a figure's smallest text once fitted to a card (text_size); None:
+    no text."""
+    return text_size.smallest_px(svg)
+
+
+def too_small(family: str, body: str, svg: str) -> TooSmall | None:
+    """The refusal of a figure whose text can't be read on a card, telling the AI its size and
+    how to draw it so it can; None when it can be read."""
+    px = readable_px(figures_clean(svg) if family == "scratch" else svg)
+    least = MIN_TEXT_PX_SET.get(family, MIN_TEXT_PX)
+    if px is None or px >= least:
+        return None
+    width, height = text_size.size(svg)
+    said = (
+        f"Too small to read on a card: it is {width:.0f} wide and {height:.0f} high (Typst's pt); fitted to a "
+        f"phone ({CARD_PX[0]} px wide, {CARD_PX[1]} high), its smallest text is {px:.1f} px high, {least:g} at "
+        "least. Draw it more compactly, so that it fits a card at nearly its own size: "
+    )
+    if family == "diagram":
+        said += "fewer boxes side by side, each box's text and each arrow's words shorter, no text made smaller"
+        if re.search(r"(?<![\w.-])diagram\s*\(", body):  # fletcher's nodes, placed by the AI
+            said += "; boxes joined by arrows that are no chain, cycle or flowchart drawn by #scheme, which places them"
+            said += " itself"
+        said += "."
+    else:
+        said += "less wide or less high (a smaller scale, things closer together, shorter words), no text made smaller."
+    return TooSmall(said, svg, px)
+
+
+def figures_clean(svg: str) -> str:
+    """The SVG cleaned as a card shows it (figures.clean: blockst's blocks drawn in their place)."""
+    from . import figures
+
+    try:
+        return figures.clean(svg)
+    except figures.FigureError:  # refused by the cleaning, as it is on the way to the card
+        return svg
 
 
 # The preambles' (common.typ): the separator their own numbers are written with, set here
@@ -443,10 +478,9 @@ def _without_if_arrows(svg: str) -> str:
     return _SVG_IMAGE.sub(inner, svg)
 
 
-def compile_svg(family: str, body: str) -> str:
-    """The figure's SVG, its colours as drawn; Unusable when Typst refuses it (its message),
-    takes too long or draws nothing (an empty answer: a blank page on the card, never redrawn)."""
-    document = source(family, body)
+def compiled(document: str) -> str:
+    """A Typst document's SVG, compiled apart (COMPILER); Unusable when Typst refuses it (its
+    message) or takes too long."""
     with tempfile.TemporaryDirectory(prefix="notosaurus-figure-") as folder:
         path = Path(folder) / "figure.typ"
         path.write_text(document, encoding="utf-8")
@@ -461,7 +495,14 @@ def compile_svg(family: str, body: str) -> str:
     if done.returncode != 0 or not done.stdout:
         said = done.stderr.decode("utf-8", "replace").strip()
         raise Unusable(said[:800].replace(str(path), "figure.typ") or "It didn't compile.")
-    svg = done.stdout.decode("utf-8")
+    return done.stdout.decode("utf-8")
+
+
+def compile_svg(family: str, body: str) -> str:
+    """The figure's SVG, its colours as drawn; Unusable when Typst refuses it (its message),
+    takes too long or draws nothing (an empty answer: a blank page on the card, never redrawn);
+    TooSmall when its text can't be read on a card (too_small)."""
+    svg = compiled(source(family, body))
     if _blank(svg):
         raise Unusable("It draws nothing: the page is blank.")
     if family == "scratch" and (unknown := _unknown_blocks(svg)):
@@ -474,15 +515,8 @@ def compile_svg(family: str, body: str) -> str:
     if family == "scratch":
         svg = _without_if_arrows(svg)
     svg = _fitted(svg)
-    if family == "diagram" and (px := readable_px(svg, body)) < MIN_TEXT_PX:
-        raise TooSmall(
-            f"Too small to read on a card: fitted to a phone ({CARD_PX[0]} px wide, {CARD_PX[1]} high), its "
-            f"smallest text is {px:.1f} px high, {MIN_TEXT_PX:g} at least. Draw it more compactly: fewer boxes "
-            "side by side, each box's text and each arrow's words shorter, no text made smaller; boxes "
-            "joined by arrows that are no chain, cycle or flowchart drawn by #scheme, which places them itself.",
-            svg,
-            px,
-        )
+    if refused := too_small(family, body, svg):
+        raise refused
     # A map's outlines: thousands of points, each written to the billionth of a point by
     # Typst: kept to the tenth (nothing seen changes), the figure several times lighter
     return _rounded_paths(svg) if family == "map" else svg

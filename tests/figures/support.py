@@ -46,5 +46,9 @@ def _glyphs(svg: str) -> list[tuple[float, float]]:
 
 def drawn_size(family: str, body: str) -> tuple[float, float]:
     """A figure's drawing, its page's margins (6 pt each side) left out: width, height in pt."""
-    box = re.search(r'viewBox="0 0 ([\d.]+) ([\d.]+)"', figures_typst.compile_svg(family, body))
+    try:
+        svg = figures_typst.compile_svg(family, body)
+    except figures_typst.TooSmall as e:  # its size measured all the same
+        svg = e.svg
+    box = re.search(r'viewBox="0 0 ([\d.]+) ([\d.]+)"', svg)
     return float(box.group(1)) - 12, float(box.group(2)) - 12
