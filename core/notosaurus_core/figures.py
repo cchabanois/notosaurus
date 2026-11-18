@@ -704,20 +704,47 @@ def _ink(image, x: float, y: float, w: float, h: float) -> tuple[float, float, f
     return x + box[0] * k, y + box[1] * k, x + box[2] * k, y + box[3] * k
 
 
-def _outside(image):
-    """The white ground around the drawing, reached from its edge without crossing a line: a
-    function telling whether a pixel is on it (a white part closed by lines, a region, is not)."""
-    from PIL import ImageDraw, ImageOps
+def _outside(image, k: float):
+    """The open ground around the drawing: a function telling whether a pixel is on it. The
+    frame's edge counts as a line, and a gap narrower than 2 × SNAP between lines (a nuclear
+    pore, an outline's dashes) as closed: the white then falls into zones, and the open ground
+    is a zone reaching all four sides of the frame, the drawing standing in it. A zone the
+    drawing closes against the frame (the nucleus, left of an envelope drawn from the frame's
+    top to its bottom: 2 drawings in 3) is a region, as one its lines close all round is; so is
+    any zone when a line crosses the whole frame. `k`: the image's pixels per unit."""
+    from PIL import ImageDraw, ImageFilter
 
-    ground = ImageOps.expand(image.point(lambda v: 255 if v >= 248 else 0), border=1, fill=255)
-    ImageDraw.floodfill(ground, (0, 0), 128, thresh=0)
-    return lambda i, j: ground.getpixel((i + 1, j + 1)) == 128
+    # at one pixel per STEP units (a line kept: a cell with any ink in it is ink), the ink grown
+    # by SNAP, so that a gap of twice that closes
+    step = max(1, round(k * SNAP / 6))
+    ground = image.point(lambda v: 255 if v >= 248 else 0)
+    small = ground.reduce(step) if step > 1 else ground
+    small = small.point(lambda v: 255 if v == 255 else 0)
+    grow = math.ceil(SNAP * k / step)
+    zones = small.filter(ImageFilter.MinFilter(2 * grow + 1))
+    width, height = zones.size
+    pixels = zones.load()
+    sides = {
+        "top": [(i, 0) for i in range(width)],
+        "bottom": [(i, height - 1) for i in range(width)],
+        "left": [(0, j) for j in range(height)],
+        "right": [(width - 1, j) for j in range(height)],
+    }
+    zone = 0
+    for border in sides.values():
+        for i, j in border:
+            if pixels[i, j] == 255 and zone < 254:
+                zone += 1
+                ImageDraw.floodfill(zones, (i, j), zone, thresh=0)
+    reached = [{pixels[i, j] for i, j in border} for border in sides.values()]
+    open_zones = set.intersection(*reached) - {0, 255}
+    return lambda i, j: pixels[min(i // step, width - 1), min(j // step, height - 1)] in open_zones
 
 
 def _snapped(image, x: float, y: float, w: float, px: float, py: float, outside=None) -> tuple[float, float]:
     """The point, or the drawing's nearest pixel when it lies on the white ground: SNAP or less
     from it (the AI's point beside the part it names), or OPEN_SNAP of the drawing's size on the
-    open ground, nothing closing it in (« chaîne légère » off the antibody's rotated arm), unless
+    open ground (`outside`: « chaîne légère » off the antibody's rotated arm), unless
     lines lie on both sides of it (a gap between two shapes: the synaptic cleft); a point
     farther from any line (a region drawn white: the air, the cytoplasm) kept."""
     if image is None:
@@ -819,7 +846,7 @@ def labelled(svg: str, labels: list[Label], clamp: bool = False) -> str:
     middle = (left + right) / 2
     line = LABEL_SIZE * LABEL_LINE
     # a name given at several points (a gene's place on both chromosomes): one name, a line to each
-    outside = _outside(image) if image is not None else None
+    outside = _outside(image, image.width / w) if image is not None else None
     points: dict[str, list[tuple[float, float]]] = {}
     for label in labels:
         points.setdefault(label.text.strip(), []).append(_snapped(image, x, y, w, label.x, label.y, outside))

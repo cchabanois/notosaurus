@@ -532,6 +532,30 @@ def test_a_labels_point_outside_asked_again_then_brought_to_the_edge(monkeypatch
     assert "« Noyau » names the point (520, 140)" in calls[-1] and ">Noyau<" in svg
 
 
+def test_the_ais_svg_drawing_kept_for_who_asks(monkeypatch):
+    """A change to how labels are placed was judged on new drawings only, the AI drawing each
+    its own way: the AI's SVG drawing, its labels and their points, kept for whoever sets
+    `answers` (the bench, to label the same drawings again), with what the app made of it."""
+    from notosaurus_core import figure_making
+
+    async def answer(s, images, text, schema, system=None, light=False, **options):
+        if schema is figures_typst.Kind:
+            return schema(family="other")
+        return schema(svg=CELL, labels=[{"text": "Noyau", "x": 210, "y": 222}])
+
+    monkeypatch.setattr("notosaurus_core.ai._ask_provider", answer)
+    kept: list[dict] = []
+    token = figure_making.answers.set(kept)
+    try:
+        svg = asyncio.run(llm.draw_figure(AIConfig(llm="gemini"), "une cellule et son noyau"))
+    finally:
+        figure_making.answers.reset(token)
+    assert [k["drawing"]["labels"] for k in kept] == [[{"text": "Noyau", "x": 210, "y": 222}]]
+    assert kept[0]["drawing"]["svg"] == CELL and kept[0]["svg"] == svg and kept[0]["clamp"] is False
+    asyncio.run(llm.draw_figure(AIConfig(llm="gemini"), "une cellule et son noyau"))
+    assert figure_making.answers.get() is None
+
+
 def test_a_name_for_several_parts_set_once_a_line_to_each():
     """A gene's place on both chromosomes of a pair, one name: given at each point, set once
     with a line to each (a single point between them named nothing, 3 drawings in 3)."""
@@ -634,6 +658,38 @@ def test_a_point_in_a_region_closed_in_kept():
 
     svg = figures.labelled(figures.clean(WHITE_CELL), [figures.Label(text="cytoplasme", x=200, y=110)])
     assert _placed(svg)[1][0][2:] == (200.0, 110.0)
+
+
+# a cell cut by its nuclear envelope, drawn from the frame's top to its bottom, a pore in it
+# that the messenger RNA goes through: the nucleus left of it, the cytoplasm right of it
+ENVELOPE = (
+    '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 300"><rect width="400" height="300" fill="white"/>'
+    '<path d="M 160 0 L 160 125 M 160 155 L 160 300" stroke="#4a6fa5" stroke-width="6" fill="none"/>'
+    '<path d="M 60 60 Q 80 45 100 60 T 140 60" stroke="#2b5c8f" stroke-width="3" fill="none"/>'
+    '<path d="M 70 140 L 300 140" stroke="#c53030" stroke-width="3" fill="none"/>'
+    '<ellipse cx="290" cy="150" rx="20" ry="12" fill="#e9a94b" stroke="black"/>'
+    '<path d="M 260 100 Q 270 80 280 90 T 300 70" stroke="#2f9e44" stroke-width="4" fill="none"/></svg>'
+)
+
+
+def test_a_point_in_a_region_closed_against_the_frame_kept():
+    """« noyau » named a point in the nucleus, left of the DNA, the nuclear envelope drawn from
+    the frame's top to its bottom (a pore in it, the RNA through it): reached from the frame
+    through white, the nucleus was taken for the open ground and its point pulled onto the DNA
+    (2 drawings in 3), « cytoplasme » onto the protein. The frame's edge counts as a line, a
+    pore's gap as closed: both are regions, their points kept; a point beside the DNA still
+    brought onto it."""
+    from notosaurus_core import figures
+
+    names = [
+        figures.Label(text="noyau", x=40, y=30),  # outside the ink's extent, 30 units from the DNA
+        figures.Label(text="cytoplasme", x=340, y=40),  # 35 units from the protein
+        figures.Label(text="ADN", x=100, y=70),  # 10 units below the DNA
+    ]
+    lines = _placed(figures.labelled(figures.clean(ENVELOPE), names))[1]
+    ends = {(x2, y2) for _, _, x2, y2 in lines}
+    assert (40.0, 30.0) in ends and (340.0, 40.0) in ends, ends
+    assert (100.0, 70.0) not in ends  # on the DNA
 
 
 def test_a_column_beyond_a_point_past_the_drawing():
