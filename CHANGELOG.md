@@ -78,6 +78,7 @@ Each pull request's entries (the `## Changelog` of its description) are put unde
 
 ### Fixed
 
+- 📈 A calibration curve's values readable on its axis; an infrared spectrum's wavenumbers from 4000 to 500; a fitted line's small slope no longer written 0.
 - Graphs: a point's name no longer written on the lines that go through it.
 - 🌐 Brazilian Portuguese: sharing cards and saving or transferring lessons are no longer worded in European Portuguese. Italian: cards are called « carte » everywhere.
 - Bar charts with many bars (a probability law) no longer drawn tiny, their values no longer written on one another.
