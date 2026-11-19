@@ -393,7 +393,7 @@ def source(family: str, body: str) -> str:
         body = typst_source.joined_ends(body)
     if FORBIDDEN.search(body):
         raise Unusable("Only drawing commands: no import, include, file or plugin.")
-    body = typst_source.no_fractions(typst_source.unshadowed(body))
+    body = typst_source.latex_math(typst_source.no_fractions(typst_source.unshadowed(body)))
     separator = typst_source.decimal_separator(body)
     body = typst_source.decimal_commas(body, separator == ",")
     preamble = FAMILIES[family].preamble.replace(SEPARATOR, f'#let decimal-separator = "{separator}"')

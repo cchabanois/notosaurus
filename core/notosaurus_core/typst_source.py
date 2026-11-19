@@ -238,6 +238,37 @@ def decimal_commas(body: str, comma: bool) -> str:
     return MATH.sub(tight, body)
 
 
+def latex_math(body: str) -> str:
+    """LaTeX in a formula, as the AI writes it out of habit, made Typst: a subscript or a
+    superscript in braces (`$t_{1/2}$`: Typst writes the braces, "t{½}") in parentheses; a
+    quote escaped once too often in a formula outside any string (`$t\\" (s)"$`, its JSON's
+    escape kept: Typst wrote the code itself under the axis) unescaped; a text written LaTeX's
+    way (`$t\\text{ (jours)}$`: Typst read `\\t` and a variable `ext`, and refused the figure)
+    quoted, as Typst writes it. A formula inside a string (a table's cell) is left to its
+    family (its escaped quotes kept); quoted text in a formula is left as it is."""
+
+    def braces(part: str) -> str:
+        return re.sub(r"([_^])\{([^{}]*)\}", r"\1(\2)", part)
+
+    def texts(math: str, quote: str) -> str:
+        # `\text{s}`, or half Typst's way, `\text("s")` (in a string, a table's cell: its
+        # family's own, never here)
+        latex = r"\\(?:text|textrm|mathrm)(?:\{([^{}\"]*)\}|\(\s*\"([^\"]*)\"\s*\))"
+        return re.sub(latex, lambda t: f"{quote}{t.group(1) if t.group(1) is not None else t.group(2)}{quote}", math)
+
+    def fixed(math: re.Match) -> str:
+        m = math.group(0)
+        # inside a string when the line before it opens one: its quotes counted outside formulas
+        line = MATH.sub("", body[body.rfind("\n", 0, math.start()) + 1 : math.start()])
+        inside = len(re.findall(r'(?<!\\)"', line)) % 2 == 1
+        if not inside:
+            m = texts(m.replace('\\"', '"'), '"')
+        pieces = re.split(r'(\\?"[^"]*\\?")', m)
+        return "".join(p if i % 2 else braces(p) for i, p in enumerate(pieces))
+
+    return MATH.sub(fixed, body)
+
+
 # Math symbols an AI also names its variables after (`#let lambda = 1.5`): in a formula,
 # Typst reads a name as the variable in scope before the symbol, so `$lambda$` wrote "1.5"
 GREEK = [

@@ -622,6 +622,11 @@
   _alchemist.skeletize(..args.named(), kept)
 }
 #let draw-skeleton(..args) = _alchemist.draw-skeleton(..args.named(), _with-pairs(_checked(args.pos().at(0)), 0, 0))
+// Cram's bonds, named by where they go: toward whoever looks (a filled wedge) or behind the
+// page (a hashed one), each narrow at the atom it leaves (alchemist's "-right" ones are wide
+// there, their point at the next atom: the wrong way round)
+#let bond-front = cram-filled-left
+#let bond-back = cram-dashed-left
 // ---- What the AI writes, from here (the rule's example: everything above is given)
 #skeletize({
   fragment("CH_3")
