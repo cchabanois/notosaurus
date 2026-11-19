@@ -1467,3 +1467,17 @@ def test_names_keep_clear_of_icons():
     alone = name_at("")
     beside = name_at(f', icons: ((icon: "factory", at: ({lat}, {lon + 0.9})),)')
     assert alone and beside and alone != beside
+
+
+def test_icons_on_a_map_with_flows_compile():
+    """Icons on a heavy map (three flows across the world): it compiles within the memory a
+    figure is given (the threads an image starts reserved more than the limit, unused)."""
+    flows = ", ".join(
+        f'(from: "États-Unis", to: "{to}", kind: "F")' for to in ("Europe", "Asie de l'Est", "Amérique latine")
+    )
+    svg = figures_typst.compile_svg(
+        "map",
+        f'#map(countries: ("États-Unis",), icons: ((icon: "harbor", at: "New York", label: "P"),'
+        f' (icon: "harbor", at: "Houston", label: "P")), flows: ({flows},))',
+    )
+    assert svg.count("<image") >= 2

@@ -57,6 +57,10 @@ ARCHIVES = HERE / "typst"  # <name>-<version>.tar.gz, as Typst Universe publishe
 FONTS = HERE / "fonts"
 COMPILE_S = 15  # a figure compiles in well under a second; a loop never ends
 MEMORY = 1024 * 1024 * 1024  # bytes, where the system lets us say so
+# Two malloc arenas at most (glibc): each thread of Typst's (an image drawn: an icon) reserves an
+# arena of 64 MB of address space, counted by MEMORY's limit though unused; a heavy map with icons
+# went past it ("memory allocation of 144 bytes failed")
+COMPILE_ENV = {**os.environ, "MALLOC_ARENA_MAX": "2"}
 
 # Every family's text in the font the SVG figures are drawn in (fonts/, shipped): a figure
 # reads the same whichever way it was drawn, plainer for a child than Typst's own serif;
@@ -547,6 +551,7 @@ def compiled(document: str) -> str:
                 [sys.executable, "-P", str(COMPILER), str(MEMORY), str(path), folder, str(packages()), str(FONTS)],
                 capture_output=True,
                 timeout=COMPILE_S,
+                env=COMPILE_ENV,
             )
         except subprocess.TimeoutExpired as e:
             raise Unusable("It took too long to compile (a loop?): draw it more simply.") from e
