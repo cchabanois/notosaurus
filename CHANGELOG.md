@@ -9,6 +9,7 @@ Each pull request's entries (the `## Changelog` of its description) are put unde
 
 ### Added
 
+- ✏️ Correcting a card with a figure, the AI now sees the drawing: "the bar is at the wrong height", "the triangle should be outside the square" and the figure is drawn again, right.
 - ⚛️ The periodic table drawn with its elements' symbols and atomic numbers, families coloured with a legend, an element a card asks for written « ? ».
 - Maps: every country's overseas lands and far archipelagos, the small territories (Gibraltar, Monaco…), the world's regions (East Asia, Latin America, the Maghreb…), and the camps of the Shoah; a country's far lands drawn in insets.
 - 🔭 The afocal astronomical telescope drawn with its ray path computed: the beam converging in the focal plane, then leaving the eyepiece parallel at α'.
