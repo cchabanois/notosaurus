@@ -827,9 +827,24 @@
 // legend, framed; each named when labels; width, height: the most the map takes
 #let one-map(countries: (), cities: (), regions: (), rivers: (), reliefs: (), waters: (), groups: (),
   routes: (), flows: (), year: none, pole: none, labels: true, values: (:), unit: none, zones: (),
-  names: auto, frame: none, width: 8cm, height: 7cm, least: 4) = context {
+  names: auto, frame: none, points: (), lines: (), icons: (), icon: none, width: 8cm, height: 7cm, least: 4) = context {
   // (the values' unit, its name kept: the map's own `unit` is the length of an atlas unit)
   let value-unit = unit
+  // (what the map draws by coordinates, kept under their own names: `points` and `lines` are
+  // the map's own words further on)
+  let (asked-points, asked-lines, asked-icons, draw-icon) = (points, lines, icons, icon)
+  // A point by its latitude and longitude in degrees (north and east positive), as the atlas
+  // keeps its places
+  let geo(q, what) = {
+    if type(q) != array or q.len() != 2 or q.any(v => type(v) not in (int, float)) {
+      panic(what + ": a point is (latitude, longitude) in degrees, north and east positive, (40.4, 116.6), not " + repr(q))
+    }
+    let (la, lo) = q
+    if la < -90 or la > 90 or lo < -180 or lo > 180 {
+      panic(what + ": a latitude is between -90 and 90 and a longitude between -180 and 180, not " + repr(q))
+    }
+    (lo * atlas.scale, la * atlas.scale)
+  }
   if pole not in (none, "north", "south") { panic("pole is \"north\" or \"south\" (a map centred on it), not " + repr(pole)) }
   // The states drawn: a past year's (its borders), else today's countries
   let all = borders(year)
@@ -855,19 +870,24 @@
   let zones = if type(zones) == dictionary { (zones,) } else { zones }
   let zone-sets = zones.map(z => {
     if type(z) != dictionary or "name" not in z {
-      panic("a zone is (name: \"…\", regions: (…), countries: (…), places: (…)): its name, for the legend, and what it covers")
+      panic("a zone is (name: \"…\", regions: (…), countries: (…), places: (…), around: (…)): its name, for the legend, and what it covers")
     }
     for key in z.keys() {
-      if key not in ("name", "countries", "regions", "places") {
-        panic("a zone holds a name, countries, regions and places, not \"" + key + "\"")
+      if key not in ("name", "countries", "regions", "places", "around") {
+        panic("a zone holds a name, countries, regions, places and around, not \"" + key + "\"")
       }
     }
     let listed(key) = { let v = z.at(key, default: ()); if type(v) == str { (v,) } else { v } }
-    if listed("countries").len() + listed("regions").len() + listed("places").len() == 0 {
-      panic("the zone \"" + z.name + "\" covers nothing: the regions or countries it covers, or the cities it spans")
+    // (around: its outline, by points of latitude and longitude, when no region nor city makes it)
+    let around = z.at("around", default: ())
+    if type(around) != array or (around.len() > 0 and around.len() < 3) {
+      panic("the zone \"" + z.name + "\": around is its outline, three points (latitude, longitude) at least")
+    }
+    if listed("countries").len() + listed("regions").len() + listed("places").len() + around.len() == 0 {
+      panic("the zone \"" + z.name + "\" covers nothing: the regions or countries it covers, the cities it spans, or its outline (around)")
     }
     (name: z.name, countries: listed("countries").map(n => find-country(n, all: all, year: if past { year })),
-      regions: listed("regions"), places: listed("places"))
+      regions: listed("regions"), places: listed("places"), around: around.map(q => geo(q, "the zone \"" + z.name + "\"")))
   })
   if sets.len() + zone-sets.len() > palette.len() {
     panic("at most " + str(palette.len()) + " groups and zones on a map, one colour each: join some")
@@ -896,6 +916,71 @@
   }
   let cities = cities + values.keys().filter(n => n not in cities)
   let towns = cities.map(name => (name: name, city: find-city(name, about)))
+  // Points by their coordinates (a site, a camp, a town the atlas lacks), a dot each and its
+  // name, or an icon; icons at a place (a city of the atlas, a point) or by their coordinates.
+  // Each town's icon, if any: (word, label)
+  let town-icons = towns.map(_ => none)
+  let asked-points = if type(asked-points) == dictionary { (asked-points,) } else { asked-points }
+  for p in asked-points {
+    if type(p) != dictionary or "at" not in p {
+      panic("a point is (name: \"…\", at: (latitude, longitude)): a place the atlas lacks, by its coordinates")
+    }
+    for key in p.keys() {
+      if key not in ("name", "at", "icon", "label") { panic("a point holds a name, at, an icon and a label, not \"" + key + "\"") }
+    }
+    let name = p.at("name", default: none)
+    if name == none and p.at("icon", default: none) == none { panic("a point has a name, or an icon: what it shows") }
+    let (x, y) = geo(p.at, "the point " + repr(name))
+    towns.push((name: name, city: (x: x, y: y, cap: false)))
+    town-icons.push(if p.at("icon", default: none) == none { none } else { (word: p.icon, label: p.at("label", default: none)) })
+  }
+  let asked-icons = if type(asked-icons) == dictionary { (asked-icons,) } else { asked-icons }
+  if asked-icons.len() > 0 and draw-icon == none { panic("icons on a map need the icons' function (icon: icon)") }
+  for ic in asked-icons {
+    if type(ic) != dictionary or "icon" not in ic or "at" not in ic {
+      panic("an icon is (icon: \"harbor\", at: \"Rouen\", label: \"…\"): an English word, where (a place, or (latitude, longitude)), its legend")
+    }
+    for key in ic.keys() {
+      if key not in ("icon", "at", "label", "name") { panic("an icon holds icon, at, label and name, not \"" + key + "\"") }
+    }
+    let spec = (word: ic.icon, label: ic.at("label", default: none))
+    if type(ic.at) == str {
+      let i = towns.position(t => t.name == ic.at)
+      if i == none {
+        towns.push((name: ic.at, city: find-city(ic.at, about)))
+        town-icons.push(spec)
+      } else { town-icons.at(i) = spec }
+    } else {
+      let (x, y) = geo(ic.at, "the icon " + repr(ic.icon))
+      towns.push((name: ic.at("name", default: none), city: (x: x, y: y, cap: false)))
+      town-icons.push(spec)
+    }
+  }
+  // Lines by their points (a wall, a road, a railway, a front, a border of one's own): their
+  // style, their name in the legend
+  let line-styles = (
+    wall: (paint: rgb("#5b3a1e"), thickness: 2.2pt, cap: "round", join: "round"),
+    road: (paint: rgb("#c2410c"), thickness: 1.5pt, cap: "round", join: "round"),
+    rail: (paint: luma(25), thickness: 1.2pt, dash: (4pt, 1.5pt), join: "round"),
+    front: (paint: rgb("#b91c1c"), thickness: 1.8pt, dash: (5pt, 2pt), join: "round"),
+    border: (paint: luma(40), thickness: 1pt, dash: "dash-dotted", join: "round"),
+    line: (paint: rgb("#1d4ed8"), thickness: 1.4pt, join: "round"),
+  )
+  let asked-lines = if type(asked-lines) == dictionary { (asked-lines,) } else { asked-lines }
+  let traced = asked-lines.map(l => {
+    if type(l) != dictionary or "through" not in l {
+      panic("a line is (name: \"…\", through: ((latitude, longitude), …), style: \"wall\"): its name, its points in their order, its style")
+    }
+    for key in l.keys() {
+      if key not in ("name", "through", "style") { panic("a line holds a name, through and a style, not \"" + key + "\"") }
+    }
+    let style = l.at("style", default: "line")
+    if style not in line-styles {
+      panic("a line's style is " + line-styles.keys().map(repr).join(", ") + ", not " + repr(style))
+    }
+    if type(l.through) != array or l.through.len() < 2 { panic("a line goes through two points (latitude, longitude) at least") }
+    (name: l.at("name", default: none), style: style, at: l.through.map(q => geo(q, "the line " + repr(l.at("name", default: none)))))
+  })
   // Routes and flows: the places they pass, a sea route's way over the sea
   let moving = routes.len() + flows.len() > 0
   let (trips, arrows) = ((), ())
@@ -986,7 +1071,10 @@
   for (z, (zas, zts)) in zone-sets.zip(zone-areas.zip(zone-towns)) {
     boxes += z.countries.map(code => all.at(code).f) + zas.map(a => region(a).b)
     boxes += zts.map(c => (c.x, c.y, c.x, c.y))
+    boxes += z.around.map(((x, y)) => (x, y, x, y))
   }
+  // Every line framed whole
+  for l in traced { boxes += l.at.map(((x, y)) => (x, y, x, y)) }
   // Every route's way and every flow's ends framed
   for t in trips {
     let (xs, ys) = (t.way.map(p => p.at(0)), t.way.map(p => p.at(1)))
@@ -1023,7 +1111,7 @@
       found.sorted(key: x => -size(x.b)).first().b
     })
   }
-  if boxes.len() == 0 { panic("a map shows at least one country, city, region, group, zone, route, flow, river, relief or water") }
+  if boxes.len() == 0 { panic("a map shows at least one country, city, region, group, zone, route, flow, river, relief, water, point or line") }
   // A river, relief or water asked has a place for its name in the frame: the nearest one
   // added when it has none (the Atlantic beside France)
   let around = (
@@ -1059,7 +1147,7 @@
   // until each has room around its place (half its width each side, its height above and
   // below), the scale found again each time
   if moving and pole == none and not framed {
-    let names = towns.map(t => (t.city.x, t.city.y, t.name))
+    let names = towns.filter(t => t.name != none).map(t => (t.city.x, t.city.y, t.name))
     names += trips.map(t => t.stops.zip(if t.by == "sea" { t.at } else { t.stops.map(p => p.xy) })
       .filter(((p, at)) => p.kind != "city" and at != none).map(((p, at)) => (..at, p.name))).join(default: ())
     names += arrows.map(f => (f.from, f.to).map(e => (..e.at, if e.name != none { e.name } else { e.places.first().name })))
@@ -1255,13 +1343,22 @@
   // its value (its radius as the root of its share), never smaller than a dot
   let most-valued = if values.len() == 0 { none } else { calc.max(..values.values()) }
   let bubble-r(v) = calc.max(dot, 11pt * calc.sqrt(v / most-valued))
-  let bubbles = towns.enumerate().filter(((_, t)) => t.name in values).map(((i, t)) => (
+  let bubbles = towns.enumerate().filter(((_, t)) => t.name != none and t.name in values).map(((i, t)) => (
     index: i, at: marks.at(i), r: bubble-r(values.at(t.name)),
   ))
+  // Icons: drawn by the icons' function at their place instead of its dot (one it has no icon
+  // for: its dot, the word kept for the app to tell); names keep clear of them
+  let icon-size = 11pt
+  let glyphs = towns.enumerate().map(((i, t)) => {
+    let spec = town-icons.at(i, default: none)
+    if spec == none or draw-icon == none { none } else { draw-icon(spec.word, size: icon-size) }
+  })
+  let drawable = glyphs.map(g => g != none and measure(g).width > 0pt)
   let wanted = ()
   for (i, t) in towns.enumerate() {
+    if t.name == none { continue }
     let mark = bubbles.find(b => b.index == i)
-    wanted.push((at: marks.at(i), dot: true, mark: if mark == none { dot } else { calc.max(dot, mark.r) },
+    wanted.push((at: marks.at(i), dot: true, mark: if drawable.at(i) { icon-size / 2 + 0.5pt } else if mark == none { dot } else { calc.max(dot, mark.r) },
       body: text(8pt, weight: if t.city.cap { "bold" } else { "regular" }, t.name)))
   }
   let named(items, find, style) = items.map(it => (it, find(it))).filter(((_, p)) => p != none).map(((it, p)) => (
@@ -1422,8 +1519,22 @@
   }
   let placed = ()
   let taken = ()
-  // The flows' arrows: boxes along them, no name on them
+  // The flows' arrows: boxes along them, no name on them; the icons and the lines too
   let strokes = ()
+  for (i, q) in marks.enumerate().filter(((i, _)) => drawable.at(i)) {
+    strokes.push((q.at(0) - icon-size / 2, q.at(1) - icon-size / 2, icon-size, icon-size))
+  }
+  let traced-at = traced.map(l => curved(l.at, closed: false).map(page))
+  for (l, pts) in traced.zip(traced-at) {
+    let r = line-styles.at(l.style).thickness / 2 + 1pt
+    for (a, b) in pts.windows(2) {
+      let n = calc.max(1, calc.ceil((calc.abs(b.at(0) - a.at(0)) + calc.abs(b.at(1) - a.at(1))) / 4pt))
+      for j in range(n + 1) {
+        let (x, y) = (a.at(0) + (b.at(0) - a.at(0)) * j / n, a.at(1) + (b.at(1) - a.at(1)) * j / n)
+        strokes.push((x - r, y - r, 2 * r, 2 * r))
+      }
+    }
+  }
   for c in curves {
     let n = calc.max(2, calc.ceil(c.length / 4pt))
     for j in range(n + 1) {
@@ -1637,6 +1748,11 @@
         let outline = rounded-hull(zts.map(c => page((c.x, c.y))), 9pt)
         place(polygon(fill: zone-tint(i), stroke: line, ..outline))
       }
+      if z.around.len() >= 3 { place(polygon(fill: zone-tint(i), stroke: line, ..curved(z.around).map(page))) }
+    }
+    // Lines by their points, in their style
+    for (l, pts) in traced.zip(traced-at) {
+      if pts.len() >= 2 { place(curve(stroke: line-styles.at(l.style), curve.move(pts.first()), ..pts.slice(1).map(curve.line))) }
     }
     // The regions flows leave from or go to, in their flow's colour
     for z in zones {
@@ -1766,8 +1882,14 @@
     for (x, y) in rings-at {
       place(dx: x - ring-size, dy: y - ring-size, circle(radius: ring-size, fill: rgb("#b5d2ec"), stroke: 1.2pt + rgb("#1f5a8f")))
     }
-    for (x, y) in marks {
-      place(dx: x - dot, dy: y - dot, circle(radius: dot, fill: rgb("#d62f2f"), stroke: 0.6pt + white))
+    for (i, (x, y)) in marks.enumerate() {
+      if drawable.at(i) {
+        place(dx: x - icon-size / 2, dy: y - icon-size / 2, glyphs.at(i))
+      } else {
+        // (an icon not found: the app reads its word in it)
+        if glyphs.at(i) != none { place(dx: x, dy: y, glyphs.at(i)) }
+        place(dx: x - dot, dy: y - dot, circle(radius: dot, fill: rgb("#d62f2f"), stroke: 0.6pt + white))
+      }
     }
     for (x, y) in ticks {
       place(dx: x - 1.6pt, dy: y - 1.6pt, circle(radius: 1.6pt, fill: luma(50), stroke: 0.5pt + white))
@@ -1783,7 +1905,15 @@
     }
   })
   let named-kinds = kinds.enumerate().filter(((_, k)) => k != none)
-  if sets.len() + zone-sets.len() + trips.len() + named-kinds.len() + values.len() == 0 { drawn } else {
+  // The icons' legend: each label once, its icon
+  let icon-keys = ()
+  for (i, spec) in town-icons.enumerate() {
+    if spec != none and spec.label != none and drawable.at(i, default: false) and icon-keys.all(k => k.label != spec.label) {
+      icon-keys.push((label: spec.label, glyph: draw-icon(spec.word, size: 10pt)))
+    }
+  }
+  let named-lines = traced.filter(l => l.name != none)
+  if sets.len() + zone-sets.len() + trips.len() + named-kinds.len() + values.len() + icon-keys.len() + named-lines.len() == 0 { drawn } else {
     // The legend under the map: each group's colour and its name, each route's line, each
     // kind of flow's arrow, in their order
     let key(sample, name) = box(inset: (right: 5pt), stack(dir: ltr, spacing: 3pt, sample, text(8pt, name)))
@@ -1796,6 +1926,8 @@
     keys += named-kinds.map(((i, k)) => key(arrow(ink(trips.len() + i), 2pt, none), k))
     keys += zone-sets.enumerate().map(((i, z)) => key(box(width: 10pt, height: 7pt, fill: zone-tint(i),
       stroke: (paint: zone-ink(i), thickness: 1pt, dash: "dashed")), z.name))
+    keys += named-lines.map(l => key(box(width: 16pt, height: 7pt, place(dy: 3.5pt, line(length: 16pt, stroke: line-styles.at(l.style)))), l.name))
+    keys += icon-keys.map(k => key(box(height: 10pt, k.glyph), k.label))
     // The circles: the largest value's and a round one below it, each its number
     if values.len() > 0 {
       let written(v) = {
@@ -1825,15 +1957,15 @@
 // world). Else, and with routes, flows, groups, zones, values, a frame, a year or a pole, one map
 #let map(countries: (), cities: (), regions: (), rivers: (), reliefs: (), waters: (), groups: (),
   routes: (), flows: (), year: none, pole: none, labels: true, values: (:), unit: none, zones: (),
-  names: auto, frame: none, insets: auto, width: 8cm, height: 7cm) = {
+  names: auto, frame: none, points: (), lines: (), icons: (), icon: none, insets: auto, width: 8cm, height: 7cm) = {
   let countries = if type(countries) == str { (countries,) } else { countries }
   let regions = if type(regions) == str { (regions,) } else { regions }
   let cities = if type(cities) == str { (cities,) } else { cities }
   let one = one-map.with(rivers: rivers, reliefs: reliefs, waters: waters, groups: groups, routes: routes,
-    flows: flows, year: year, pole: pole, labels: labels, unit: unit, names: names)
+    flows: flows, year: year, pole: pole, labels: labels, unit: unit, names: names, icon: icon)
   let whole() = one(countries: countries, cities: cities, regions: regions, values: values, zones: zones, frame: frame,
-    width: width, height: height)
-  if (insets == false or year != none or pole != none or routes.len() + flows.len() + groups.len() + zones.len() > 0
+    points: points, lines: lines, icons: icons, width: width, height: height)
+  if (insets == false or year != none or pole != none or routes.len() + flows.len() + groups.len() + zones.len() + points.len() + lines.len() + icons.len() > 0
     or values != (:) or frame != none) { return whole() }
   let held = countries.map(n => country-code(n)).filter(c => c != none)
   // Far: a country's part ("t"), or a land it holds ("o") whose frame lies farther than 3° from
