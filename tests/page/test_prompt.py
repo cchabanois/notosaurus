@@ -250,6 +250,28 @@ def test_the_listening_mic_shows_it_while_the_finger_is_still_on_it(page):
     listening.click()
 
 
+def test_dictation_begun_before_the_prompts_came(page):
+    """The 🎤 tapped as the page starts, before the prompts have come: what is said kept as
+    written, in the free prompt as typed text is; the first prompt not chosen meanwhile, its
+    settings (deck, voice) then given to a text that isn't its own."""
+    page.route("**/api/config", lambda route: route.fulfill(json={**route.fetch().json(), "dictation": True}))
+    page.route("**/api/dictation/start", lambda route: route.fulfill(json={"listening": True}))
+    page.route("**/api/dictation/stop", lambda route: route.fulfill(json={"text": "Douze cartes sur el abuelo."}))
+    held = []
+    page.route("**/api/prompts", lambda route: route.continue_() if held else held.append(route))
+    page.goto("/")
+    page.get_by_role("button", name="Dicter").first.click()
+    sync_api.expect(page.get_by_text("J'écoute… appuyez sur le micro quand vous avez fini.").first).to_be_visible()
+    while not held:
+        page.wait_for_timeout(50)
+    held[0].continue_()
+    page.wait_for_function("Alpine.$data(document.querySelector('[x-data]')).prompts.length > 0")
+    page.get_by_role("button", name="Arrêter et écrire le texte").click()
+    field = page.get_by_role("textbox", name="Texte de la consigne")
+    sync_api.expect(field).to_have_value("Douze cartes sur el abuelo.")
+    sync_api.expect(page.get_by_role("radio", name="✏️ Libre")).to_have_attribute("aria-checked", "true")
+
+
 def test_dictation_in_the_app(page):
     """The Android app's page (dictation): 🎤 in the instructions' corner; once to listen,
     again to stop, the text said then in the field. On the computer: no 🎤."""
@@ -269,6 +291,8 @@ def test_dictation_in_the_app(page):
         ),
     )
     page.goto("/")
+    field = page.get_by_role("textbox", name="Texte de la consigne")
+    sync_api.expect(field).to_have_value(re.compile(r"^Regarde la leçon"))  # "Automatique": a long prompt
     # Material's microphone, as Android apps draw it (vendor/material): outlined, then filled
     # while it listens; no emoji in it (its name is its label)
     mic = page.locator("button.mic").first
@@ -283,8 +307,8 @@ def test_dictation_in_the_app(page):
     if shots := os.environ.get("NOTOSAURUS_SHOTS"):  # to look at it: a folder for the screenshot
         page.screenshot(path=f"{shots}/dictation.png")
     page.get_by_role("button", name="Arrêter et écrire le texte").click()
-    field = page.get_by_role("textbox", name="Texte de la consigne")
-    sync_api.expect(field).to_have_value(re.compile("Douze cartes sur el abuelo et la abuela.$"))
+    said = r"\nDouze cartes sur el abuelo et la abuela\.$"
+    sync_api.expect(field).to_have_value(re.compile(r"^Regarde la leçon(.|\n)*" + said))  # after the prompt
     assert stopped == [{"kind": "prompt"}]
     sync_api.expect(field).to_be_enabled()
     # Added at the end of a long prompt: the field scrolled to it, in sight (not focused: no keyboard);

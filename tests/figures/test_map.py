@@ -959,15 +959,29 @@ def test_a_name_the_atlas_lacks_answered_at_once():
     """The nearest names to one the atlas lacks were measured against every name of every
     water, each folded again: 9 seconds a figure, past the compile's limit under load (the
     tests on Windows cancelled). Measured on the keys folded already, those too long or too
-    short skipped: the answer at once, the names as the atlas writes them."""
+    short skipped: the answer at once, the names as the atlas writes them. Timed against the
+    same maps with names the atlas has, drawn just before on the machine as busy (every core
+    at work, the packages unpacked first: a fixed limit failed then): no slower than them."""
     import time
 
-    start = time.monotonic()
-    with pytest.raises(figures_typst.Unusable, match='it has "golfe de Gascogne"'):
-        figures_typst.compile_svg("map", '#map(waters: ("golfe de Gascogn",))')
-    with pytest.raises(figures_typst.Unusable, match='it has "Loire"'):
-        figures_typst.compile_svg("map", '#map(rivers: ("Loir",))')
-    assert time.monotonic() - start < 4
+    def timed(*maps: tuple[str, str | None]) -> float:
+        start = time.monotonic()
+        for body, refusal in maps:
+            if refusal is None:
+                figures_typst.compile_svg("map", body)
+            else:
+                with pytest.raises(figures_typst.Unusable, match=refusal):
+                    figures_typst.compile_svg("map", body)
+        return time.monotonic() - start
+
+    known = ('#map(waters: ("golfe de Gascogne",))', None), ('#map(rivers: ("Loire",))', None)
+    timed(known[0])  # the packages unpacked (a new atlas: its archive), not timed
+    drawn = timed(*known)
+    refused = timed(
+        ('#map(waters: ("golfe de Gascogn",))', 'it has "golfe de Gascogne"'),
+        ('#map(rivers: ("Loir",))', 'it has "Loire"'),
+    )
+    assert refused < 3 * drawn + 1, (refused, drawn)
 
 
 def test_real_places_are_a_map_a_plan_is_not():
