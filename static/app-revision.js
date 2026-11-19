@@ -3,13 +3,17 @@
 // Methods of the page's Alpine component (app.js), as `this`.
 
 // How long the AI usually takes, as measured (gemini-3.8-flash, 2026-11-11: one page 12-15 s
-// quick, 14-17 s careful, about 3 s or 2.5 s more a page, whatever the route; a correction
-// 45-72 s on the relay): what the waiting card says, not a promise ("slow" says when it is late)
-const REVISION_SECONDS = 60;
-
+// quick, 14-17 s careful, about 3 s or 2.5 s more a page, whatever the route): what the
+// waiting card says, not a promise ("slow" says when it is late)
 function lessonSeconds(quick, pages) {
   const n = Math.max(1, pages);  // the instructions alone: as a page
   return quick ? 10 + 3 * n : 15 + 2.5 * n;
+}
+
+// A lesson's correction: the AI writes every card again, so by its cards, and its pages
+// (2026-11-19: 4 to 16 cards, none to 2 pages, 8-24 s careful, about 30 % less quick)
+function revisionSeconds(quick, cards, pages) {
+  return (quick ? 0.7 : 1) * (6 + cards + 2 * pages);
 }
 
 // "About 15 seconds", rounded to 5; a minute or more: in minutes
@@ -19,11 +23,14 @@ function about(seconds) {
 }
 
 const revisionPart = {
-  async revise() {
+  // As the lesson is made: quick unless the user chose careful ("careful": once more carefully)
+  async revise({ careful = false } = {}) {
     const instruction = this.revision.text.trim();
     if (!instruction || this.revision.busy || !this.lessonId || this.readOnly()) return;
+    const quick = (this.quick && !careful) || this.off("ai.careful");
     this.error = "";
     this.revision.busy = true;
+    Object.assign(this, { loadingQuick: quick, loadingPages: this.photos.length, loadingCards: this.cards.length });
     const before = {
       deck: this.deck, cards: this.cards.map((c) => ({ ...c, _state: undefined })),
       reverse: this.reverse, typing: this.typing, dictation: this.dictation, dictationOnly: this.dictationOnly,
@@ -36,7 +43,7 @@ const revisionPart = {
       const res = await resultAsItComes(await api(`/api/lessons/${this.lessonId}/revise?job=${job}`, {
         method: "POST",
         headers: { "Content-Type": "application/json", Accept: "application/x-ndjson" },
-        body: JSON.stringify({ ...this.payload(), instruction }),
+        body: JSON.stringify({ ...this.payload(), instruction, quick }),
       }), (step) => { this.aiStep = step.step; });
       if (!res) {  // cancelled: the cards as they were, the instruction kept to change it
         this.revision.busy = false;
@@ -54,7 +61,7 @@ const revisionPart = {
       this.dictationOnly = res.lesson.dictation_only ?? false;
       this.lastSaved = this.snapshot();  // the server already saved the revision
       this.saveState = "saved";
-      this.revision = { text: "", busy: false, summary: res.summary, stats, undo: before };
+      this.revision = { text: "", busy: false, summary: res.summary, stats, undo: before, instruction, quick };
       this.loadLessons();
       this.drawPictures();  // a card added by the correction may ask for one
     } catch (e) {
@@ -76,10 +83,11 @@ const revisionPart = {
     this.$nextTick(() => document.querySelector(`[data-card="${card.key}"] .card-fix textarea`)?.focus());
   },
 
-  async fixCard(card) {
+  async fixCard(card, { careful = false } = {}) {
     const fix = card._fix;
     const instruction = fix?.text.trim();
     if (!instruction || fix.busy || !this.lessonId || this.readOnly()) return;
+    const quick = (this.quick && !careful) || this.off("ai.careful");
     this.error = "";
     fix.busy = true;
     fix.job = newJob();  // its "Cancel" stops it while the AI writes
@@ -90,12 +98,12 @@ const revisionPart = {
       const res = await (await api(`/api/lessons/${lessonId}/fix-card?job=${fix.job}`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ card: plain(card), instruction, others: this.cards.filter((c) => c !== card).map((c) => c.front) }),
+        body: JSON.stringify({ card: plain(card), instruction, quick, others: this.cards.filter((c) => c !== card).map((c) => c.front) }),
       })).json();
       if (fix.cancelling) return;  // cancelled as it came: the card as it was
       const i = this.cards.indexOf(card);
       if (this.lessonId !== lessonId || i === -1) return;  // another lesson opened, or the card removed, meanwhile
-      const fixed = { ...res.card, key: card.key, _state: "modified", _fixed: { summary: res.summary, before: plain(card) } };
+      const fixed = { ...res.card, key: card.key, _state: "modified", _fixed: { summary: res.summary, before: plain(card), instruction, quick } };
       this.cards.splice(i, 1, fixed);
       await this.saveNow();  // its picture is drawn from the saved lesson
       if (res.figure_problem) {
@@ -132,6 +140,16 @@ const revisionPart = {
     return !(card.front ?? "").trim() && !(card.back ?? "").trim();
   },
 
+  // "🎯 Again, carefully": the quick correction undone, asked again with the model's thinking
+  fixCarefully(card) {
+    const { instruction } = card._fixed;
+    const i = this.cards.indexOf(card);
+    this.undoFix(card);
+    const restored = this.cards[i];
+    restored._fix = { text: instruction, busy: false, blank: this.blankCard(restored) };
+    return this.fixCard(restored, { careful: true });
+  },
+
   undoFix(card) {
     const i = this.cards.indexOf(card);
     if (i !== -1 && card._fixed) this.cards.splice(i, 1, { ...card._fixed.before, key: card.key });  // autosave sends it
@@ -152,7 +170,9 @@ const revisionPart = {
     if (this.aiStep === "fallback") return t("app.loading.fallback");
     if (this.aiStep === "slow" && !this.coming.length) return t("app.loading.slow");
     if (this.batch && !this.revision.busy) return t("app.loading.batch", this.batch);  // pages 11 to 20 of 30
-    return about(this.revision.busy ? REVISION_SECONDS : lessonSeconds(this.loadingQuick, this.loadingPages));
+    return about(this.revision.busy
+      ? revisionSeconds(this.loadingQuick, this.loadingCards, this.loadingPages)
+      : lessonSeconds(this.loadingQuick, this.loadingPages));
   },
 
   // Keep the keys of unchanged cards and flag new or modified ones.
@@ -203,6 +223,14 @@ const revisionPart = {
     if (voice !== undefined) this.voice = voice;
     Object.assign(this, rest);  // after a regeneration: frames, prompt, options
     this.revision = { text: "", busy: false, summary: t("app.revise.undone"), stats: "", undo: null };
+  },
+
+  // "🎯 Again, carefully": the quick correction undone, asked again with the model's thinking
+  reviseCarefully() {
+    const { instruction } = this.revision;
+    this.undoRevision();
+    this.revision.text = instruction;
+    return this.revise({ careful: true });
   },
 
   clearRevision() {

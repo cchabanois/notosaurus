@@ -60,6 +60,7 @@ internal fun Route.generationRoutes(server: LocalServer) {
                 put("instruction", req["instruction"]!!)
                 put("language", languageName())
                 put("instructions", generation.instructions(children.get(lesson.string("child"))))
+                if (req["quick"]?.jsonPrimitive?.booleanOrNull == true) put("quick", true) // the page's "Quick": the AI thinking little
             }
             val revised = withContext(Telling { said -> step(buildJsonObject { put("step", said) }) }) {
                 generation.cancellable(call.request.queryParameters["job"]) { relay().revise(request, lessons.photos(lesson.string("id"))) }
@@ -103,6 +104,7 @@ internal fun Route.generationRoutes(server: LocalServer) {
                 put("language", languageName())
                 put("instructions", generation.instructions(children.get(lesson.string("child"))))
                 if (figure != null) put("figure_svg", figure.readText())
+                if (req["quick"]?.jsonPrimitive?.booleanOrNull == true) put("quick", true)
             }
             val fixed = generation.cancellable(call.request.queryParameters["job"]) {
                 relay().withPhotos("fix-card", request, lessons.photos(lesson.string("id")))

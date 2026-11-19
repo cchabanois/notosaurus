@@ -328,6 +328,9 @@
           <small x-text="revision.stats"></small>
         </div>
         <button class="btn soft" x-show="revision.undo" @click="undoRevision()" x-text="$t('app.revise.undo')"></button>
+        <!-- Made quick: once more with the model's thinking, when it isn't right -->
+        <button class="btn soft" x-show="revision.undo && revision.quick && !off('ai.careful')" @click="reviseCarefully()"
+                x-text="$t('app.revise.carefully')"></button>
         <button class="icon-btn muted" @click="clearRevision()" :aria-label="$t('common.close')">✕</button>
       </div>
 
@@ -589,6 +592,8 @@
             <div class="card-fixed" x-show="card._fixed && !card._fix">
               <span x-text="card._fixed?.summary"></span>
               <button type="button" class="link-btn" @click="undoFix(card)" x-text="$t('app.fix.undo')"></button>
+              <button type="button" class="link-btn" x-show="card._fixed?.quick && !off('ai.careful')" @click="fixCarefully(card)"
+                      x-text="$t('app.revise.carefully')"></button>
             </div>
             <!-- 💬 The card explained, on demand; then only the follow-ups the AI says would help -->
             <div class="explain" x-show="card._explain?.open">

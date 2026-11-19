@@ -241,7 +241,7 @@ class LessonRoutesTest : LocalServerTestBase() {
         relayAnswers("""{"deck": "Espagnol::Leçon 5", "cards": [${cards[0]}, {"front": "le frère", "back": "el hermano"}], "summary": "Une carte remplacée.", "reverse": "off", "typing": "on", "usage": {"credits": 2, "credits_left": 95}}""")
         val res = client.post("/api/lessons/$id/revise") {
             page("fr"); contentType(ContentType.Application.Json)
-            setBody("""{"deck": "Espagnol::Leçon 5", "cards": $cards, "voice": "", "reverse": true, "dictation": true, "instruction": "remplace le père par le frère"}""")
+            setBody("""{"deck": "Espagnol::Leçon 5", "cards": $cards, "voice": "", "reverse": true, "dictation": true, "instruction": "remplace le père par le frère", "quick": true}""")
         }.json().jsonObject
 
         val sent = relay.takeRequest()
@@ -250,6 +250,7 @@ class LessonRoutesTest : LocalServerTestBase() {
         assertEquals("French", request.string("language")) // the page's language, by its English name
         assertEquals("FR → ES", request.string("prompt")) // the lesson's
         assertEquals("remplace le père par le frère", request.string("instruction"))
+        assertEquals("true", request["quick"].toString()) // the page's "Quick": the AI thinking little
         assertTrue("photo 1" in sent.body!!.utf8()) // the lesson's photos go with it
 
         assertEquals("Une carte remplacée.", res.string("summary"))
@@ -296,6 +297,7 @@ class LessonRoutesTest : LocalServerTestBase() {
         assertEquals("/v1/fix-card", sent.url.encodedPath)
         val request = sent.multipartRequest()
         assertEquals("plutôt la mamá", request.string("instruction"))
+        assertFalse("quick" in request) // not asked (an older page): carefully, as before
         assertEquals("French", request.string("language"))
         assertEquals("Espagnol::Leçon 5", request.string("deck"))
         assertEquals(listOf("le père"), request["others"]!!.jsonArray.map { it.jsonPrimitive.content })

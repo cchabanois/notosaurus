@@ -132,7 +132,7 @@
       "regenerateNewHint": "(nouvelle leçon)",
       "regenerateExported": "Déjà envoyée à Anki : les cartes envoyées y restent, les nouvelles s'y ajouteront au prochain envoi.",
       "regenerated": "✨ Cartes régénérées.",
-      "speed": "Création des cartes",
+      "speed": "Mode de l'IA : création et corrections",
       "quick": "⚡ Rapide",
       "careful": "🎯 Soigné",
       "quickHint": "Quelques secondes. Idéal pour du vocabulaire ou une leçon simple.",
@@ -228,6 +228,7 @@
       "placeholder": "✨ Corriger avec l'IA : « supprime la carte sur le père », « tu as oublié les couleurs »…",
       "button": "Corriger",
       "undo": "↩ Annuler",
+      "carefully": "🎯 Refaire avec soin",
       "undone": "Correction annulée.",
       "added": {
         "one": "+{count} nouvelle",

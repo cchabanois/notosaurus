@@ -1038,11 +1038,11 @@ test("sharing the cards: offered where the host makes .apkg, hidden while the re
   assert.equal(c.canShare(), false);
 });
 
-test("the waiting card's estimate: by mode and pages, as measured; a correction about a minute", async () => {
+test("the waiting card's estimate: by mode and pages, as measured; a correction by its cards and pages", async () => {
   const page = await loadScripts("app.js", { languages: ["fr-FR"] });
   const c = page.component();
-  const note = (quick, pages, revising = false) => {
-    Object.assign(c, { loadingQuick: quick, loadingPages: pages, batch: null, aiStep: "", coming: [] });
+  const note = (quick, pages, revising = false, cards = 0) => {
+    Object.assign(c, { loadingQuick: quick, loadingPages: pages, loadingCards: cards, batch: null, aiStep: "", coming: [] });
     c.revision.busy = revising;
     return c.loadingNote();
   };
@@ -1052,7 +1052,10 @@ test("the waiting card's estimate: by mode and pages, as measured; a correction 
   assert.equal(note(true, 10), "Environ 40 secondes.");
   assert.equal(note(false, 1), "Environ 20 secondes.");
   assert.equal(note(false, 10), "Environ 40 secondes.");
-  assert.equal(note(true, 1, true), "Environ une minute.");
+  // a correction writes every card again: 16 cards of 2 pages, 22 s measured careful, 15 s quick
+  assert.equal(note(false, 2, true, 16), "Environ 25 secondes.");
+  assert.equal(note(true, 2, true, 16), "Environ 20 secondes.");
+  assert.equal(note(false, 3, true, 40), "Environ 50 secondes.");
   c.aiStep = "slow";  // late: said instead
   assert.equal(c.loadingNote(), "L'IA met plus de temps que d'habitude à répondre…");
 });
@@ -1123,4 +1126,43 @@ test("a card's correction about its figure as drawn: drawn again, told what is w
   c.cards[0]._fix = { text: "la réponse est un triangle rectangle", busy: false };
   await c.fixCard(c.cards[0]);
   assert.deepEqual(asked.filter(([url]) => url.includes("/picture")), []);
+});
+
+test("corrections as the lesson is made: quick or careful, then once more carefully", async () => {
+  const asked = [];
+  const card = { id: "c1", front: "la mère", back: "la madre" };
+  const page = await loadScripts("app.js", {
+    routes: (url, options) => {
+      const body = options?.body && typeof options.body === "string" ? JSON.parse(options.body) : null;
+      if (url.startsWith("/api/lessons/L1/fix-card")) {
+        asked.push(["fix", body.quick, body.instruction]);
+        return new Response({ card: { ...card, back: body.quick ? "la mama" : "la mamá" }, summary: "Corrigée" });
+      }
+      if (url.startsWith("/api/lessons/L1/revise")) {
+        asked.push(["revise", body.quick, body.instruction]);
+        return new Response({ lesson: { deck: "D", cards: [{ ...card, back: "la mamá" }], reverse: false }, summary: "Corrigée" });
+      }
+      return new Response({});
+    },
+  });
+  const c = page.component();
+  Object.assign(c, { lessonId: "L1", quick: true, saveNow: async () => {}, loadLessons: () => {}, drawPictures: () => {} });
+  c.cards = [{ ...card, key: 1, _fix: { text: "plutôt la mamá", busy: false } }];
+  await c.fixCard(c.cards[0]);
+  assert.deepEqual(c.cards[0]._fixed.quick, true);
+  await c.fixCarefully(c.cards[0]);  // undone, asked again with thinking
+  assert.equal(c.cards[0].back, "la mamá");
+  assert.equal(c.cards[0]._fixed.quick, false);  // careful already: not offered again
+  c.revision.text = "plutôt la mamá";
+  await c.revise();
+  assert.equal(c.revision.quick, true);
+  await c.reviseCarefully();
+  assert.equal(c.revision.quick, false);
+  c.quick = false;  // careful chosen: corrections careful too
+  c.revision.text = "x";
+  await c.revise();
+  assert.deepEqual(asked, [
+    ["fix", true, "plutôt la mamá"], ["fix", false, "plutôt la mamá"],
+    ["revise", true, "plutôt la mamá"], ["revise", false, "plutôt la mamá"], ["revise", false, "x"],
+  ]);
 });

@@ -148,3 +148,23 @@ def test_a_figure_changed_and_its_drawing_wrong_kept_until_drawn_again(monkeypat
     ((images, text),) = shown
     assert images == [] and "last image" not in text
     assert (fixed.card.picture, fixed.figure_problem) == ("", "")  # drawn again from its new description
+
+
+def test_corrections_quick_when_asked(monkeypatch):
+    """The page's "Quick": a lesson's correction and a card's asked with the model thinking
+    little (as right, about 30 % faster, measured); carefully when not asked (older pages)."""
+    from notosaurus_core.models import Deck
+
+    asked = []
+
+    async def answer(s, images, text, schema, *args, quick=False, **kwargs):
+        asked.append(quick)
+        return schema.model_validate({"cards": [{"front": "a", "back": "b"}], "summary": "ok", "deck": "D"})
+
+    monkeypatch.setattr("notosaurus_core.ai._ask_provider", answer)
+    card, deck = Card(front="a", back="c"), Deck(deck="D", cards=[Card(front="a", back="c")])
+    for quick in (True, False):
+        asyncio.run(llm.fix_card(S, [], "p", "D", card, "b", (), "French", quick=quick))
+        asyncio.run(llm.revise_cards(S, [], "p", deck, "b", "French", quick=quick))
+    asyncio.run(llm.fix_card(S, [], "p", "D", card, "b", (), "French"))
+    assert asked == [True, True, False, False, False]

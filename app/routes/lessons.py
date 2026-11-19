@@ -148,6 +148,7 @@ async def _revised(id: str, req: RevisionRequest, lang: str) -> dict:
             i18n.language_name(lang),
             settings.standing_instructions(s, children.for_ai(child)),
             demo=i18n.get(lang, "demo"),
+            quick=req.quick,
         )
     revision.deck = "::".join(part for part in (private, revision.deck) if part)
     updated = await asyncio.to_thread(
@@ -197,6 +198,7 @@ async def _fixed(id: str, req: FixCardRequest, lang: str) -> llm.FixedCard:
             settings.standing_instructions(s, children.for_ai(child)),
             demo=i18n.get(lang, "demo"),
             figure_svg=figure,
+            quick=req.quick,
         )
 
 
