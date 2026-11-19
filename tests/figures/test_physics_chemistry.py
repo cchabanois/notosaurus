@@ -986,3 +986,26 @@ def test_a_components_voltage_drawn_as_an_arrow_beside_it():
     plain = '#circuit({ branch((0, 0), (4, 0), capacitor("c", label: $C$)) })'
     with_voltage = '#circuit({ branch((0, 0), (4, 0), capacitor("c", label: $C$, voltage: $u_C$)) })'
     assert figures_typst.compile_svg("circuit", plain) != figures_typst.compile_svg("circuit", with_voltage)
+
+
+@pytest.mark.parametrize("bond", ["bond-front", "bond-back"])
+def test_a_cram_bond_is_narrow_at_the_atom_it_leaves(bond):
+    """Methane in Cram's representation: the AI named wedges alchemist lacks (`wedge`,
+    `cram-up`: refused twice, then SVG by eye, a hashed band of one width). The rule names
+    bond-front and bond-back, each narrow at the atom it leaves: a C to its right drawn with
+    either, its ink thinner by the C than by the H."""
+    from PIL import Image
+
+    svg = figures_typst.compile_svg("chemistry", f'#skeletize({{ fragment("C"); {bond}(angle: 0); fragment("H") }})')
+    image = Image.open(io.BytesIO(figures.to_png(figures.clean(svg)))).convert("L")
+    w, h = image.size
+    pixels = image.load()
+    assert pixels is not None
+    # the bond between the two letters: each column's ink, from a third to two thirds across
+    columns = [x for x in range(w // 3, 2 * w // 3)]
+    ink = [sum(1 for y in range(h) if pixels[x, y] < 128) for x in columns]
+    near_c = max(ink[: len(ink) // 4] or [0])
+    near_h = max(ink[-len(ink) // 4 :] or [0])
+    assert near_c < near_h, (near_c, near_h)
+    rule = (figures_typst.RULES / "chemistry.md").read_text(encoding="utf-8")
+    assert f"`{bond}()`" in rule

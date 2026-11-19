@@ -204,3 +204,25 @@ def test_the_common_rule_leaves_a_title_the_description_asks_for():
     left out, one the description asks for written."""
     assert "no title, no caption" not in figures_typst.COMMON
     assert "no title or caption of your own (one the description asks for" in figures_typst.COMMON
+
+
+def test_latex_in_a_formula_written_as_typst():
+    """A half-life written `$t_{1/2}$` showed « t{½} » (Typst writes LaTeX's braces); an axis's
+    title `$t\\" (s)"$` showed its code under the axis (a quote escaped once too often). Both made
+    Typst; a formula inside a string (a table's cell) keeps its escaped quotes, quoted text in a
+    formula its braces."""
+    from notosaurus_core.typst_source import latex_math
+
+    assert latex_math("(8, $t_{1/2}$), (16, $2 t_{1/2}$)") == "(8, $t_(1/2)$), (16, $2 t_(1/2)$)"
+    assert latex_math('$x^{2} + "a_{b}"$') == '$x^(2) + "a_{b}"$'
+    assert latex_math('xlabel: $t\\" (s)"$, ylabel: $E\\" (J)"$') == 'xlabel: $t" (s)"$, ylabel: $E" (J)"$'
+    cell = 'rows: (("$x = \\"a\\"$", "$y\\"b\\"$"),)'
+    assert latex_math(cell) == cell
+    # a text LaTeX's way (Typst read `\\t`, then a variable `ext`: refused): quoted
+    assert latex_math("xlabel: $t\\text{ (jours)}$") == 'xlabel: $t" (jours)"$'
+    assert latex_math('xlabel: $t\\" "(\\text("s"))$') == 'xlabel: $t" "("s")$'
+    assert latex_math("$x \\mathrm{m}$") == '$x "m"$'
+    # as Typst draws them: the same as written the Typst way
+    written = '#set text(lang: "fr")\n#table(columns: 1, [$t_{1/2}$], [$t\\" (s)"$], [$t\\text{ (j)}$])'
+    meant = '#set text(lang: "fr")\n#table(columns: 1, [$t_(1/2)$], [$t" (s)"$], [$t" (j)"$])'
+    assert figures_typst.compile_svg("table", written) == figures_typst.compile_svg("table", meant)
