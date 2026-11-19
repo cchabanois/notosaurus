@@ -52,7 +52,7 @@
 }
 .mic:hover:not(:disabled):not(.listening) { background: var(--primary-soft); }  /* never over the listening one: a tapped button stays :hover on a phone */
 .mic.listening { background: var(--primary); color: var(--on-primary); animation: listening 1.4s ease-in-out infinite; }
-.mic.listening::before { mask-image: url("../vendor/material/mic-fill.svg"); }
+.mic.listening::before { mask-image: url("../vendor/material/stop-fill.svg"); }  /* a tap stops it: ■, as Android apps */
 .mic.busy { cursor: progress; color: var(--primary); }
 .mic.busy::before {
   width: 1.15rem;
