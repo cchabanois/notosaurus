@@ -166,6 +166,8 @@
 .flash .card-fix textarea { width: 100%; min-height: 3.2rem; font-size: .92rem; }
 .flash .card-fix .hint { margin: 0; }
 .flash .card-fix-actions { display: flex; justify-content: flex-end; gap: .4rem; }
+.flash .card-fix-open { display: flex; justify-content: flex-end; margin-top: .4rem; }
+.flash .card-fix-open .btn { min-height: 2.2rem; padding: .3rem .8rem; font-size: .88rem; }
 .flash .card-fixed { flex: 1 0 100%; margin-top: .5rem; display: flex; flex-wrap: wrap; align-items: baseline; gap: .2rem .6rem; font-size: .9rem; color: var(--muted); }
 .flash.has-doubt { flex-wrap: wrap; }  /* the doubt above the card, full width */
 .card-doubt { flex: 1 0 100%; display: grid; gap: .3rem; margin: 0 0 .4rem; padding: .6rem .8rem; border-radius: var(--radius-sm);

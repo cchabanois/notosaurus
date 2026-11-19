@@ -453,7 +453,6 @@
                     <button class="icon-btn muted" @click="card._menu = !card._menu" :class="{ active: card._menu }"
                             :aria-expanded="Boolean(card._menu)" :aria-label="$t('app.review.more')" :title="$t('app.review.more')">⋯</button>
                     <div class="card-menu-items" x-show="card._menu">
-                      <button type="button" x-show="!readOnly() && lessonId" @click="openFix(card)">✨ <span x-text="$t(blankCard(card) ? 'app.fix.write' : 'app.fix.button')"></span></button>
                       <button type="button" x-show="canReport()" @click="card._menu = false; openReport(card)">⚑ <span x-text="$t('app.report.button')"></span></button>
                       <button type="button" class="danger" x-show="!readOnly()" @click="card._menu = false; removeCard(card)">✕ <span x-text="$t('app.review.removeCard')"></span></button>
                     </div>
@@ -562,6 +561,10 @@
                 <textarea class="grow mnemonic" rows="1" x-model="card.mnemonic" :readonly="readOnly()" :aria-label="$t('app.review.mnemonic')"
                           x-show="!renderedOnly(card, 'mnemonic')" @focus="card._editing = 'mnemonic'" @blur="card._editing = ''"
                           x-init="watchHeight($el)" x-effect="card.mnemonic; fitHeight($el)"></textarea>
+              </div>
+              <!-- ✨ Corrected by the AI, in words: shown on every card (it was behind ⋯, seldom found) -->
+              <div class="card-fix-open" x-show="!readOnly() && lessonId && !card._fix">
+                <button type="button" class="btn soft" @click="openFix(card)">✨ <span x-text="$t(blankCard(card) ? 'app.fix.write' : 'app.fix.button')"></span></button>
               </div>
             </div>
             <!-- ✨ This card corrected by the AI as asked (typed or dictated), the others untouched -->
