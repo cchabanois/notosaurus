@@ -9,6 +9,7 @@ Each pull request's entries (the `## Changelog` of its description) are put unde
 
 ### Added
 
+- Figures: icons of a lab's glassware (beaker, volumetric flask, burette, pipette) and of living things (animals, plants, fungi, organs), of a cell's parts (chromosome, bacterium, chloroplast, neuron…) and of history's weapons and ships.
 - Figures: pictograms on a timeline's events and in a scheme's boxes (a factory, a port, a battle, wheat, a microscope, a laptop…), from the free Maki, Temaki and Phosphor icons and a few of our own for history; a word with no icon simply draws none.
 - Figures: a planet's or the Sun's internal structure drawn as a cut quarter, its layers, depths and names placed by the app.
 - ✏️ Correcting a card with a figure, the AI now sees the drawing: "the bar is at the wrong height", "the triangle should be outside the square" and the figure is drawn again, right.
@@ -88,6 +89,8 @@ Each pull request's entries (the `## Changelog` of its description) are put unde
 
 ### Fixed
 
+- Figures: a school word no longer draws an unrelated icon (a cell, a lens, a cone, a switch): its own, or none.
+- Figures: icons drawn with their white halo, readable on a map's colours.
 - Maps: the United Kingdom's nations (Scotland, Wales…) as regions, the world's parts by their usual names (West Africa, the Antilles), the British dominions in the empire, and more places of history (Ephesus, Dunhuang).
 - Maps: small islands (La Réunion, Guadeloupe, Bermuda…) drawn with their real outline in a map's insets.
 - Diagrams: an arrow that goes to no box is no longer drawn into the void; the figure is drawn again.
