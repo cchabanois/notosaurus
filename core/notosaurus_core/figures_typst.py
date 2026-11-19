@@ -28,6 +28,7 @@ The SVG keeps its colours (a lesson's colour code: atoms, a legend) and is clean
 """
 
 import base64
+import contextvars
 import functools
 import hashlib
 import html
@@ -238,6 +239,11 @@ def _calls(code: str, name: str) -> bool:
     return re.search(rf"(?<![\w.-]){re.escape(name)}\s*\(", code) is not None
 
 
+ICONS = "notosaurus-icons"  # common.typ's icon(), imported by every family
+# A timeline's event with its icon: (date, "text", "word"), the word an icon's
+_TIMELINE_ICON = re.compile(r'\(\s*[^()]*?,\s*(?:"[^"]*"|\[[^\]]*\])\s*,\s*"[^"]+"\s*,?\s*\)')
+
+
 def used_packages(family: str, body: str) -> list[tuple[str, str]]:
     """The packages a figure's Typst really uses, among its family's ("ctz-euclide", "0.3.0"):
     a name it calls or a module it reaches ("lq.", "cetz."); our own functions of the preamble
@@ -267,6 +273,8 @@ def used_packages(family: str, body: str) -> list[tuple[str, str]]:
                     used.append((inner, inner_at))
         elif listed:
             reached = reached or any(_calls(code, n) for n in _items(listed))
+        if package == ICONS:  # in every preamble (common.typ): only a figure that draws an icon
+            reached = _calls(body, "icon") or (family == "timeline" and bool(_TIMELINE_ICON.search(body)))
         if reached and (package, at) not in used:
             used.append((package, at))
     return used
@@ -335,6 +343,56 @@ MIN_TEXT_PX = 7.0
 # right, all: a frise of the Second World War, a law of 21 bars); drawn again, the AI could only
 # write less. Still refused far below (a box plot's axis spread 65 cm: 4 px).
 MIN_TEXT_PX_SET = {"timeline": 6.0, "phylogeny": 6.0, "chart": 6.0}
+
+
+# An icon under this, once the figure is fitted to a card, is a speck (common.typ's icon(): 1.4
+# times its text, a 7 px text's at 10 px): grown round its middle, up to twice its size, so as
+# not to lie on what is beside it; smaller still, the figure refused
+MIN_ICON_PX = 9.0
+MAX_ICON_GROWTH = 2.0
+# The icons a figure asked for and didn't get (a word no icon has, an SVG of its own that can't
+# be drawn): nothing drawn in their place, their words kept here when the caller asks (the
+# bench: what to tag next)
+icons_missing: contextvars.ContextVar[list[str] | None] = contextvars.ContextVar("icons_missing", default=None)
+_ICON_IMAGE = re.compile(r'<image\b[^>]*href="data:image/svg\+xml;base64,([A-Za-z0-9+/=]+)"[^>]*/>')
+
+
+def _icons_missing(svg: str) -> str:
+    """The figure without the marks of its icons not drawn (common.typ's icon()), their words
+    kept in icons_missing."""
+    missing = icons_missing.get()
+
+    def drop(m: re.Match) -> str:
+        inner = base64.b64decode(m[1]).decode("utf-8", "replace")
+        found = re.search(r"<!--notosaurus-icon-missing:(.*?)-->", inner)
+        if not found:
+            return m[0]
+        if missing is not None:
+            missing.append(html.unescape(found[1]))
+        return ""
+
+    return _ICON_IMAGE.sub(drop, svg)
+
+
+def _icons_grown(svg: str, growth: float) -> str:
+    """The figure, its icons each grown `growth` times round its middle."""
+
+    def grow(m: re.Match) -> str:
+        if text_size.ICON_MARK not in base64.b64decode(m[1]).decode("utf-8", "replace"):
+            return m[0]
+        tag = m[0]
+        w = float(re.search(r'\swidth="([\d.]+)"', tag)[1])  # type: ignore[index]
+        h = float(re.search(r'\sheight="([\d.]+)"', tag)[1])  # type: ignore[index]
+        x = float((re.search(r'\sx="([-\d.]+)"', tag) or [0, 0])[1])
+        y = float((re.search(r'\sy="([-\d.]+)"', tag) or [0, 0])[1])
+        tag = re.sub(r'\s(x|y|width|height)="[^"]*"', "", tag)
+        place = (
+            f' x="{x - (growth - 1) * w / 2:.3f}" y="{y - (growth - 1) * h / 2:.3f}"'
+            f' width="{w * growth:.3f}" height="{h * growth:.3f}"'
+        )
+        return tag.replace("<image", "<image" + place, 1)
+
+    return _ICON_IMAGE.sub(grow, svg)
 
 
 def readable_px(svg: str) -> float | None:
@@ -517,6 +575,15 @@ def compile_svg(family: str, body: str) -> str:
     svg = _fitted(svg)
     if refused := too_small(family, body, svg):
         raise refused
+    svg = _icons_missing(svg)
+    if (icons := text_size.icons_px(svg)) and min(icons) < MIN_ICON_PX:
+        if MIN_ICON_PX / min(icons) > MAX_ICON_GROWTH:
+            raise Unusable(
+                f"An icon is too small to see on a card: fitted to a phone ({CARD_PX[0]} px wide), it is "
+                f"{min(icons):.1f} px high, {MIN_ICON_PX:g} at least. Give the icons a larger size (icon(…, size: "
+                "2em)) or draw the figure more compactly."
+            )
+        svg = _icons_grown(svg, MIN_ICON_PX / min(icons))
     # A map's outlines: thousands of points, each written to the billionth of a point by
     # Typst: kept to the tenth (nothing seen changes), the figure several times lighter
     return _rounded_paths(svg) if family == "map" else svg

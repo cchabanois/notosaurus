@@ -346,6 +346,32 @@ def smallest_px(svg: str) -> float | None:
     return min(sizes) * card_scale(svg)
 
 
+ICON_MARK = "<!--notosaurus-icon-->"  # an icon's SVG (the icons package's, an AI's cleaned), in a figure's
+_DATA_SVG = re.compile(r"data:image/svg\+xml;base64,([A-Za-z0-9+/=]+)")
+
+
+def icons_px(svg: str) -> list[float]:
+    """Each icon's height in px once the figure is fitted to a card (common.typ's icon(): an
+    image whose SVG carries ICON_MARK)."""
+    import base64
+
+    found: list[float] = []
+
+    def walk(e: ElementTree.Element, m: Matrix) -> None:
+        m = _times(m, _matrix(e.get("transform")))
+        if _local(e.tag) == "image":
+            href = next((v for k, v in e.attrib.items() if _local(k) == "href"), "")
+            data = _DATA_SVG.match(href)
+            if data and ICON_MARK in base64.b64decode(data[1]).decode("utf-8", "replace"):
+                found.append(float(e.get("height") or 0) * _scale(m))
+        for child in e:
+            walk(child, m)
+
+    walk(ElementTree.fromstring(svg), _IDENTITY)
+    k = card_scale(svg)
+    return [h * k for h in found]
+
+
 def svg_too_small(svg: str, least: float) -> str:
     """What the AI is told of its SVG whose text can't be read on a card ("" when it can): its
     size, its smallest text's, and the font-size that would be read at this size."""
