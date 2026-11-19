@@ -88,6 +88,7 @@ Each pull request's entries (the `## Changelog` of its description) are put unde
 
 ### Fixed
 
+- Maps: the United Kingdom's nations (Scotland, Wales…) as regions, the world's parts by their usual names (West Africa, the Antilles), the British dominions in the empire, and more places of history (Ephesus, Dunhuang).
 - Maps: small islands (La Réunion, Guadeloupe, Bermuda…) drawn with their real outline in a map's insets.
 - Diagrams: an arrow that goes to no box is no longer drawn into the void; the figure is drawn again.
 - 📊 A chart drawn in the colours its description, or a correction, asks for ("the bars in green"), no longer grey.
