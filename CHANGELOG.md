@@ -9,6 +9,7 @@ Each pull request's entries (the `## Changelog` of its description) are put unde
 
 ### Added
 
+- Figures: pictograms on a timeline's events and in a scheme's boxes (a factory, a port, a battle, wheat, a microscope, a laptop…), from the free Maki, Temaki and Phosphor icons and a few of our own for history; a word with no icon simply draws none.
 - Figures: a planet's or the Sun's internal structure drawn as a cut quarter, its layers, depths and names placed by the app.
 - ✏️ Correcting a card with a figure, the AI now sees the drawing: "the bar is at the wrong height", "the triangle should be outside the square" and the figure is drawn again, right.
 - ⚛️ The periodic table drawn with its elements' symbols and atomic numbers, families coloured with a legend, an element a card asks for written « ? ».
