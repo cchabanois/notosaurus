@@ -1282,3 +1282,14 @@ def test_circles_zones_and_a_frame_on_a_country_with_far_parts():
     ):
         svg = figures_typst.compile_svg("map", f'#map(countries: ("France", "Guadeloupe"), {extra})')
         assert svg.startswith("<svg"), extra
+
+
+@pytest.mark.parametrize("land", ["La Réunion", "Bermudes", "Sainte-Hélène", "îles Caïmans", "Guadeloupe"])
+def test_a_small_land_has_its_real_outline(land):
+    """An inset magnifies a small land: its outline from Natural Earth's 1:10m regions, by its
+    own size (La Réunion was a heptagon, Bermuda and Saint Helena triangles: the countries'
+    1:50m outline simplified at their scale)."""
+    folder, _ = _atlas_folder()
+    countries = json.loads((folder / "atlas.json").read_text())["countries"]
+    code = next(code for code, c in countries.items() if land.lower() in (n.lower() for n in c["n"]))
+    assert max(len(r) for r in countries[code]["r"]) >= 14, countries[code]["r"]

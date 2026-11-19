@@ -60,7 +60,7 @@ ROOT = Path(__file__).resolve().parent.parent
 CORE = ROOT / "core" / "notosaurus_core"
 LIB = CORE / "atlas" / "lib.typ"
 TARGET = CORE / "typst"
-NAME, VERSION = "notosaurus-atlas", "0.14.0"
+NAME, VERSION = "notosaurus-atlas", "0.15.0"
 SOURCE = "https://raw.githubusercontent.com/nvkelso/natural-earth-vector/v5.1.2/geojson/"
 COUNTRIES = "ne_50m_admin_0_countries.geojson"  # 1:50m: a country's shape, light enough
 PLACES = "ne_10m_populated_places.geojson"  # 1:10m: the cities, their names in many languages
@@ -1449,6 +1449,57 @@ GROUP_CODES = {"Canary Is.": "IC"}  # a group Natural Earth names only so: its C
 FAR_SHARE = 0.25  # a far part's land holds less than this of its country's
 
 
+SMALL_LAND = 3  # degrees: a land smaller than this across drawn from the 1:10m regions, by its own size
+FINE = 0.004  # degrees: the least a small land's outline is simplified by
+
+
+def fine_rings(geometry) -> list:
+    """A small land's rings as an inset magnifies it: Natural Earth's 1:10m outline, each part
+    simplified by its own size (a 400th of it, FINE at least), not the countries' scale (La
+    Réunion an island, not a heptagon; Saint Helena beside Ascension); the parts too small to
+    see beside the largest left out, but the largest."""
+    x0, y0, x1, y1 = geometry.bounds
+    least = (3 * max(FINE, max(x1 - x0, y1 - y0) / DETAIL)) ** 2
+    polygons = sorted((g for g in parts(geometry) if g.geom_type == "Polygon"), key=lambda g: -g.area)
+    kept = [g for g in polygons if g.area >= least] or polygons[:1]
+    simple = []
+    for g in kept:
+        a0, b0, a1, b1 = g.bounds
+        g = g.simplify(max(FINE, max(a1 - a0, b1 - b0) / DETAIL))
+        if g.geom_type == "Polygon" and not g.is_empty:
+            simple.append(list(g.exterior.coords)[:-1])
+    rings = []
+    for ring in one_side(simple):
+        points = ints(ring)
+        points = [p for i, p in enumerate(points) if i == 0 or p != points[i - 1]]
+        if len(points) >= 3 and area(points) > 0:
+            rings.append(points)
+    return rings
+
+
+def refine_small(countries: dict, admin1: dict) -> None:
+    """The islands smaller than SMALL_LAND across (Bermuda, Saint Helena, the Caymans,
+    Malta): their outlines from the 1:10m regions, by their own size; a land with a border
+    keeps its country's outline, its neighbours' (Luxembourg's border one line)."""
+    by_country: dict = defaultdict(list)
+    for f in admin1["features"]:
+        if f["geometry"]:
+            by_country[f["properties"]["adm0_a3"]].append(shapely.make_valid(shape(f["geometry"])))
+    lands = {code: shapely.union_all(found) for code, found in by_country.items()}
+    tree_codes = list(lands)
+    tree = shapely.STRtree([lands[c] for c in tree_codes])
+    for code, c in countries.items():
+        (x0, y0, x1, y1) = c["b"]
+        if code not in lands or max(x1 - x0, y1 - y0) >= SMALL_LAND * SCALE:
+            continue
+        near = tree.query(lands[code], predicate="dwithin", distance=0.05)
+        if any(tree_codes[i] != code for i in near):
+            continue
+        rings = fine_rings(lands[code])
+        if rings:
+            c |= {"r": rings, "b": box(rings), "f": box(main(rings))}
+
+
 def territories(admin1: dict, countries: dict, usual: dict, relief: dict) -> dict:
     """Each country's first-level divisions lying farther than NEAR from its main part
     (Guadeloupe, the Azores, Hawaii, Svalbard, the Galápagos), or their groups when all of a
@@ -1553,23 +1604,8 @@ def territories(admin1: dict, countries: dict, usual: dict, relief: dict) -> dic
             keys = {fold(n) for n in all_names} - taken
             if not keys:
                 continue
-            # The country's rings on it (the same lines), else its own (an island too small
-            # for the countries' scale)
-            grown = g.buffer(0.25)
-            rings = [
-                r
-                for r in countries[code]["r"]
-                if any(
-                    grown.contains(
-                        shapely.Point(sum(x for x, _ in r) / len(r) / SCALE + d, sum(y for _, y in r) / len(r) / SCALE)
-                    )
-                    for d in (0, -360, 360)
-                )
-            ]
-            if not rings:
-                rings = area_of(g).get("r", [])
-            # (rings with an area only: a line of a coast is no land)
-            rings = [r for r in rings if len(r) >= 3 and area(r) > 0]
+            # Its own outline, as an inset magnifies it (its country's is drawn at its scale)
+            rings = fine_rings(g)
             if not rings:
                 continue
             key = p.get("gu_a3") if single else None
@@ -1616,7 +1652,7 @@ def small_lands(admin1: dict, countries_geo: dict, countries: dict, usual: dict)
         all_names = list(dict.fromkeys([*cldr, *own]))
         keys = {fold(n) for n in all_names} - taken
         land = shapely.union_all([shapely.make_valid(shape(f["geometry"])) for f in features])
-        rings = [r for r in area_of(land).get("r", []) if len(r) >= 3 and area(r) > 0]
+        rings = fine_rings(land)
         if not rings:  # (smaller than the atlas's hundredth of a degree: the Vatican, a square of it)
             x, y = round(land.centroid.x * SCALE), round(land.centroid.y * SCALE)
             rings = [[[x, y], [x + 1, y], [x + 1, y + 1], [x, y + 1]]]
@@ -2097,6 +2133,7 @@ def build(folder: Path | None = None, refresh_history: bool = False) -> None:
         if (code := f["properties"]["ADM0_A3"]) != "ATA" and code in world["countries"]
     ]
     world["countries"] |= found_territories | small_lands(admin1, countries, world["countries"], usual)
+    refine_small(world["countries"], admin1)
 
     def text(data) -> str:
         return json.dumps(data, ensure_ascii=False, separators=(",", ":"))
