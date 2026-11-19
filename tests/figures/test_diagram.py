@@ -107,7 +107,10 @@ def test_the_diagram_rules_edges_compile():
     edges = re.findall(r"`(edge\([^`]*\))`", rules)
     assert len(edges) >= 2
     for edge in edges:
-        body = f"#diagram(node((0, 0), [A]), node((1, 0), [B]), node((0, 1), [C]), {edge})"
+        # between two nodes, a node at each cell it names (an edge to an empty cell is refused)
+        cells = {(0, 0), (1, 0), (0, 1)} | {(int(x), int(y)) for x, y in re.findall(r"\((\d+), (\d+)\)", edge)}
+        others = "".join(f"node(({x}, {y}), [{x}{y}]), " for x, y in sorted(cells - {(0, 0), (1, 0)}))
+        body = f"#diagram(node((0, 0), [A]), {edge}, node((1, 0), [B]), {others})"
         assert figures_typst.compile_svg("diagram", body).startswith("<svg"), edge
 
 
@@ -382,3 +385,31 @@ def test_a_schemes_words_of_no_letter_are_none():
   [ok]
 }"""
     figures_typst.compile_svg("diagram", body)
+
+
+def test_an_edge_to_no_node_refused():
+    """An edge whose end is on no node (a cell where no node stands, `edge("-|>")` after the
+    last node): an arrow into the void (a plant's life cycle, 2 drawings in 3: a second arrow
+    from « Dissémination des graines » to nothing). Refused, naming the edge and the cell; an
+    edge between two nodes (by their cells, their names, a relative step, its corners in empty
+    cells, a node's enclosed cell, two edges joined end to end at an empty cell) drawn."""
+    two = 'node((0, 0), [Fruit], name: <f>), edge("-|>"), node((1, 0), [Graine], name: <g>), '
+    for edge, said in (
+        ('edge((1, 0), (2, 1), "-|>", [dissémination])', "« dissémination » to the cell (2, 1)"),
+        ('edge((2, 0), (1, 0), "-|>")', "from the cell (2, 0)"),
+        ('edge((2, 1), "-|>")', "to the cell (2, 1)"),
+        ('edge("d", "-|>")', "to the cell (1, 1)"),
+        ('edge("-|>")', "to no node"),
+    ):
+        with pytest.raises(figures_typst.Unusable, match=re.escape(said)):
+            figures_typst.compile_svg("diagram", f"#diagram({two}{edge})")
+    with pytest.raises(figures_typst.Unusable, match="from no node"):
+        figures_typst.compile_svg("diagram", '#diagram(edge("-|>"), node((0, 0), [A]), edge("-|>"), node((1, 0), [B]))')
+    for edge in (
+        'edge(<g>, <f>, "-|>", bend: 30deg)',
+        'edge("l", "-|>")',
+        'edge((1, 0), (1, 1), (0, 1), (0, 0), "-|>")',
+        'node((0, 2), [Plante], enclose: ((0, 2), (1, 2))), edge((1, 0), (1, 2), "-|>")',
+        'node((0, 2), [Fin]), edge((0, 0), (-1, 1), "-"), edge((-1, 1), (0, 2), "-|>")',
+    ):
+        assert figures_typst.compile_svg("diagram", f"#diagram({two}{edge})").startswith("<svg"), edge
