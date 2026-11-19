@@ -1290,6 +1290,6 @@ def test_a_small_land_has_its_real_outline(land):
     own size (La Réunion was a heptagon, Bermuda and Saint Helena triangles: the countries'
     1:50m outline simplified at their scale)."""
     folder, _ = _atlas_folder()
-    countries = json.loads((folder / "atlas.json").read_text())["countries"]
+    countries = json.loads((folder / "atlas.json").read_text(encoding="utf-8"))["countries"]
     code = next(code for code, c in countries.items() if land.lower() in (n.lower() for n in c["n"]))
     assert max(len(r) for r in countries[code]["r"]) >= 14, countries[code]["r"]
