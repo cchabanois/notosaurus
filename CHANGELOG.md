@@ -9,6 +9,7 @@ Each pull request's entries (the `## Changelog` of its description) are put unde
 
 ### Added
 
+- Maps: every country's overseas lands and far archipelagos, the small territories (Gibraltar, Monaco…), the world's regions (East Asia, Latin America, the Maghreb…), and the camps of the Shoah; a country's far lands drawn in insets.
 - 🔭 The afocal astronomical telescope drawn with its ray path computed: the beam converging in the focal plane, then leaving the eyepiece parallel at α'.
 - Figures: climate charts (diagrammes ombrothermiques), the precipitation as bars and the temperature as a curve, their scales tied.
 - 🧩 A figure that shows two things of different kinds (a circuit and the curve of its voltage, a titration's set-up and its curve) is drawn in panels, each by its own family.
@@ -82,6 +83,7 @@ Each pull request's entries (the `## Changelog` of its description) are put unde
 
 ### Fixed
 
+- Maps: regions found by their names in every language (« Lombardie », « Puglia »); a name the atlas refuses says what to write instead.
 - Maps: names no longer written on each other where places are close (a route's straits, overseas islands, cities on a world map); a strait or a canal a route passes is marked; a name moved off its place has a line to it.
 - Labelled schemes: the labels' lines no longer cross the words of the arrows or run along the arrows, and a label's point no longer lands on an arrow's word.
 - Figures: maps of real places (a country's rural areas, an event's sites) drawn on the atlas instead of invented shapes; a town's plan (Berlin's sectors) no longer drawn as a country map.
