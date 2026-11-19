@@ -64,6 +64,7 @@ Each pull request's entries (the `## Changelog` of its description) are put unde
 
 ### Changed
 
+- On a phone, the bar at the bottom of the cards is lower and hides less of them: « Partager » and « Réviser » are icon buttons, the main button's text stays on one line.
 - Figures whose text would be too small to read on a phone are drawn again more compactly, in every kind of figure, not only diagrams.
 - 🖼️ The photo viewer's crop button shows the usual crop icon (two crossing right angles) instead of scissors, as does the editor's « Recadrer » mode; a page cropped or blacked out is now marked by a small dot on its button instead of a filled background, and told to screen readers.
 - ✂️ Cropping a photo has its own button in the full-screen photo, next to 🖍️ for blacking out a name: each opens the editor ("Prepare the photo") ready for its job.
