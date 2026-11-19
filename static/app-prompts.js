@@ -21,7 +21,8 @@ function addedWords(original, text) {
 const promptsPart = {
   // --- Prompts ---------------------------------------------------------
   // `initial`: the page's first load, which comes after the settings: a prompt chosen or
-  // text written meanwhile stays (it was replaced by the last prompt used)
+  // text written meanwhile stays (it was replaced by the last prompt used), dictated too
+  // (the 🎤 tapped: its text not there yet)
   async loadPrompts(selectId, initial = false) {
     try {
       this.prompts = await (await api("/api/prompts")).json();
@@ -29,7 +30,7 @@ const promptsPart = {
       this.error = t("app.prompt.unavailable", { message: e.message });
       return;
     }
-    if (initial && (this.promptChosen || this.form.text.trim())) return;
+    if (initial && (this.promptChosen || this.form.text.trim() || this.dictating("prompt"))) return;
     // Ids: the user's are numbers, Notosaurus's "notosaurus:…" (stored as text in the browser)
     const found = this.prompts.find((c) => String(c.id) === String(selectId)) ?? this.prompts[0];
     this.selectedId = found?.id ?? null;

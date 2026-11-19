@@ -44,8 +44,12 @@ def started(page) -> None:
 def draft_kept(page) -> None:
     """What the page changed, kept by the host (app-draft.js sends it a moment after the
     change, or as the page is left: a request the reload may cut short): before the page is
-    loaded again, else the lesson it had open isn't found again."""
-    page.wait_for_function("(d => d.draftSent === d.draftText())(Alpine.$data(document.querySelector('[x-data]')))")
+    loaded again, else the lesson it had open isn't found again. Its photos too: a photo
+    changed (cropped, turned) changes them only, not its text."""
+    page.wait_for_function(
+        "(d => d.draftSent === d.draftText() && d.draftPhotosSent === d.draftPhotos().map((p) => p.url).join(' '))"
+        "(Alpine.$data(document.querySelector('[x-data]')))"
+    )
 
 
 def generate_free(page, prompt: str) -> None:
