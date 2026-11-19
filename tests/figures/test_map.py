@@ -982,3 +982,39 @@ def test_real_places_are_a_map_a_plan_is_not():
     assert "a town's inside" in kinds["map"] and "a front" in kinds["map"]
     assert "a plan or a sketch of a town" in kinds["other"]
     assert "never a box plot nor a crystal, nor real countries, regions or towns" in kinds["other"]
+
+
+def _apart(labels: list[tuple[float, float, float, float]]) -> bool:
+    return all(
+        a[0] + a[2] <= b[0] or b[0] + b[2] <= a[0] or a[1] + a[3] <= b[1] or b[1] + b[3] <= a[1]
+        for a, b in itertools.combinations(labels, 2)
+    )
+
+
+def test_a_routes_passages_ringed_their_names_apart():
+    """The straits and the canal a route passes, too small to see on a world map: a ring at
+    each, as waters' are, and every name apart (« détroit de Gibraltar » was written against
+    « détroit de Malacca », east of the Mediterranean, with no mark for either)."""
+    svg = figures_typst.compile_svg(
+        "map",
+        '#map(cities: ("Shanghai", "Singapour", "Rotterdam", "Los Angeles"), routes: ((name: "A", places:'
+        ' ("Shanghai", "Singapour", "détroit de Malacca", "canal de Suez", "détroit de Gibraltar", "Rotterdam"),'
+        ' by: "sea"), (name: "B", places: ("Shanghai", "océan Pacifique", "Los Angeles"), by: "sea")))',
+    )
+    assert _rings(svg) >= 3
+    labels = _labels(svg)
+    assert len(labels) == 8
+    assert _apart(labels)
+
+
+def test_small_regions_named_beside_their_circles_apart():
+    """Regions too small to see, close together (Guadeloupe and Martinique on a map of France
+    and its overseas regions): each name beside its circle, none on another's (« Martinique »
+    was written on « Guadeloupe »)."""
+    svg = figures_typst.compile_svg(
+        "map",
+        '#map(countries: ("France",), regions: ("Guadeloupe", "Martinique", "Guyane", "La Réunion", "Mayotte"))',
+    )
+    labels = _labels(svg)
+    assert len(labels) == 5
+    assert _apart(labels)

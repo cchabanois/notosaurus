@@ -86,6 +86,13 @@
 }
 
 #let size(b) = (b.at(2) - b.at(0)) * (b.at(3) - b.at(1))
+// The box around rings of points (x0, y0, x1, y1); none for no point
+#let bounds(rings) = {
+  let pts = rings.join(default: ())
+  if pts.len() == 0 { return (0, 0, 0, 0) }
+  (calc.min(..pts.map(q => q.at(0))), calc.min(..pts.map(q => q.at(1))),
+   calc.max(..pts.map(q => q.at(0))), calc.max(..pts.map(q => q.at(1))))
+}
 #let touches(b, c) = b.at(2) >= c.at(0) and b.at(0) <= c.at(2) and b.at(3) >= c.at(1) and b.at(1) <= c.at(3)
 
 // A river, relief or water: of that name, those on the countries shown first (`near`, their
@@ -996,7 +1003,26 @@
   let named(items, find, style) = items.map(it => (it, find(it))).filter(((_, p)) => p != none).map(((it, p)) => (
     at: page(p), dot: false, body: style(it.name),
   ))
-  wanted += named(areas, a => place-of(region(a)), n => text(7.5pt, fill: luma(40), n))
+  // A region asked too small to see at this scale (Hawaii beside the United States, an
+  // island far from its country): a circle around it, its name beside the circle
+  let circled(a) = {
+    let largest = region(a).r.first()  // its largest part (an archipelago's main island)
+    let b = (calc.min(..largest.map(p => p.at(0))), calc.min(..largest.map(p => p.at(1))),
+             calc.max(..largest.map(p => p.at(0))), calc.max(..largest.map(p => p.at(1))))
+    if near-frame(b) and calc.max((b.at(2) - b.at(0)) * k * unit, (b.at(3) - b.at(1)) * unit) < 10pt {
+      page(((b.at(0) + b.at(2)) / 2, (b.at(1) + b.at(3)) / 2))
+    } else { none }
+  }
+  let circle-size = 9pt
+  let circles-at = areas.map(circled).filter(c => c != none)
+  for a in areas {
+    let c = circled(a)
+    if c != none {
+      wanted.push((at: c, dot: true, mark: circle-size, crowd: true, body: text(7.5pt, fill: luma(40), a.name)))
+    } else {
+      wanted += named((a,), a => place-of(region(a)), n => text(7.5pt, fill: luma(40), n))
+    }
+  }
   wanted += named(lands, l => place-of(l.item), n => text(8pt, style: "italic", fill: rgb("#6b4a1f"), n))
   // A water too small to see at this scale (a strait, a canal, a lake on a world map: less
   // than 10pt across), or a point (a passage the atlas has no area for): a ring at its place,
@@ -1094,7 +1120,12 @@
       (if seen.len() > 0 { seen } else { (at,) }).sorted(key: q => far(q, toward)).first()
     } else { at }
     let style = if p.kind in ("country", "relief") { n => text(7.5pt, fill: luma(40), n) } else { water-style }
-    wanted.push((at: page((x, y)), dot: p.kind == "cape", body: style(p.name)))
+    // (a strait or a canal too small to see: a ring at its place, as waters' are, its name
+    // beside it, not over the way)
+    let small = p.kind == "canal" or (p.kind == "water" and small-water((r: p.rings, b: bounds(p.rings))))
+    if small { rings-at.push(page((x, y))) }
+    wanted.push((at: page((x, y)), dot: p.kind == "cape" or small, mark: if small { ring-size } else { dot }, crowd: small,
+      body: style(p.name)))
     if p.kind == "cape" { ticks.push(page((x, y))) }
   }
   let placed = ()
@@ -1137,8 +1168,13 @@
         tries += ((r, above), (r, below), (l, above), (l, below), (x - lw / 2, above - lh), (x - lw / 2, below + lh),
           (r + lw / 2, y - lh / 2), (l - lw / 2, y - lh / 2))
         near = tries.len()
+      }
+      // Every map: none of those clear (names of places close together, a dot on the frame's
+      // edge), further off in eight directions, a little further each time, a thin line then
+      // leading to the place
+      for f in (1.6, 2.5, 3.6) {
         for (ex, ey) in ((1, 0), (-1, 0), (0, -1), (0, 1), (1, -1), (-1, -1), (1, 1), (-1, 1)) {
-          tries.push((x + ex * (2.5 * lh + lw / 2) - lw / 2, y + ey * 2.5 * lh - lh / 2))
+          tries.push((x + ex * (f * lh + lw / 2) - lw / 2, y + ey * f * lh - lh / 2))
         }
       }
       let inside-frame((ax, ay)) = ax >= 1pt and ay >= 1pt and ax + lw <= bw - 1pt and ay + lh <= bh - 1pt
@@ -1153,6 +1189,11 @@
         range(n).map(j => (x + (to.at(0) - x) * j / n, y + (to.at(1) - y) * j / n)).all(((qx, qy)) =>
           taken.all(((bx, by, bw2, bh2)) => qx < bx or qx > bx + bw2 or qy < by or qy > by + bh2))
       }
+      // A name further off read as its own place's: nearer it than any other dot, ring or circle
+      let reach((ax, ay), (qx, qy)) = calc.max(ax - qx, qx - ax - lw, 0pt) + calc.max(ay - qy, qy - ay - lh, 0pt)
+      let others-at = (marks.enumerate().filter(((m, q)) => not (want.dot and m == i)).map(((_, q)) => q)
+        + rings-at.filter(q => q != (x, y)) + circles-at.filter(q => q != (x, y)))
+      let own((ax, ay)) = others-at.all(q => reach((ax, ay), q) > reach((ax, ay), (x, y)))
       let clear(j) = {
         let (ax, ay) = tries.at(j)
         (
@@ -1162,28 +1203,41 @@
             and strokes.all(b => apart((ax, ay), b))
             and rings-at.all(((qx, qy)) => (qx == x and qy == y) or qx + ring-size <= ax or ax + lw <= qx - ring-size
               or qy + ring-size <= ay or ay + lh <= qy - ring-size)
-            and (j < near or lead((ax, ay)))
+            and circles-at.all(((qx, qy)) => (qx == x and qy == y) or qx + circle-size <= ax or ax + lw <= qx - circle-size
+              or qy + circle-size <= ay or ay + lh <= qy - circle-size)
+            and (j < near or (lead((ax, ay)) and own((ax, ay))))
         )
       }
+      // A city or a ring whose place the frame leaves out: not named (its name, moved in, would
+      // name another place)
+      if want.dot and (x < 0pt or x > bw or y < 0pt or y > bh) { continue }
       let k = range(tries.len()).find(clear)
       // Never cut by the frame: moved in
       let within((ax, ay)) = (calc.max(1pt, calc.min(ax, bw - 1pt - lw)), calc.max(1pt, calc.min(ay, bh - 1pt - lh)))
-      // None clear: with routes and flows, the place near it where it covers least, moved in
-      if k == none and crowd {
+      // None clear: the spot where it covers least (another name or a dot far worse than an
+      // arrow or a way), the nearer the better; one the frame doesn't cut first (a spot moved
+      // in lands on its neighbours: the West's cities stacked on the frame's edge)
+      if k == none {
         // (a name or a dot covered far worse than an arrow, a few points further worse still)
         let spots = marks.map(((mx, my)) => (mx - dot, my - dot, 2 * dot, 2 * dot))
         spots += rings-at.map(((mx, my)) => (mx - ring-size, my - ring-size, 2 * ring-size, 2 * ring-size))
+        spots += circles-at.filter(q => q != (x, y)).map(((mx, my)) => (mx - circle-size, my - circle-size, 2 * circle-size, 2 * circle-size))
         let cost(j) = {
           let (ax, ay) = within(tries.at(j))
           let here = (ax, ay, lw, lh)
           (20 * (taken + spots).map(o => overlap(here, o)).sum(default: 0) + strokes.map(o => overlap(here, o)).sum(default: 0)
-            + 8 * (calc.abs(ax + lw / 2 - x) / 1pt + calc.abs(ay + lh / 2 - y) / 1pt))
+            + 8 * (calc.abs(ax + lw / 2 - x) / 1pt + calc.abs(ay + lh / 2 - y) / 1pt)
+            + if own((ax, ay)) { 0 } else { 400 })
         }
-        k = range(near).sorted(key: cost).first()
+        let whole = range(tries.len()).filter(j => inside-frame(tries.at(j)))
+        k = (if whole.len() > 0 { whole } else { range(tries.len()) }).sorted(key: cost).first()
       }
       let at = within(tries.at(if k == none { 0 } else { k }))
       taken.push((at.at(0), at.at(1), lw, lh))
-      placed.push((at, want.body, if k != none and k >= near { (x, y) } else { none }, (lw, lh)))
+      // (a thin line to its place when it stands off it: beyond its near spots, or further
+      // than beside its dot)
+      let off = k != none and (k >= near or reach(at, (x, y)) > rad + 2 * gap + 1pt)
+      placed.push((at, want.body, if off { (x, y) } else { none }, (lw, lh)))
     }
   }
   let tints = (
@@ -1240,14 +1294,8 @@
     }
     // A region asked too small to see at this scale (Hawaii beside the United States): a
     // circle around it
-    for a in areas {
-      let largest = region(a).r.first()  // its largest part (an archipelago's main island)
-      let b = (calc.min(..largest.map(p => p.at(0))), calc.min(..largest.map(p => p.at(1))),
-               calc.max(..largest.map(p => p.at(0))), calc.max(..largest.map(p => p.at(1))))
-      if near-frame(b) and calc.max((b.at(2) - b.at(0)) * k * unit, (b.at(3) - b.at(1)) * unit) < 10pt {
-        let (x, y) = page(((b.at(0) + b.at(2)) / 2, (b.at(1) + b.at(3)) / 2))
-        place(dx: x - 9pt, dy: y - 9pt, circle(radius: 9pt, stroke: 1.2pt + rgb("#d9822b")))
-      }
+    for (x, y) in circles-at {
+      place(dx: x - circle-size, dy: y - circle-size, circle(radius: circle-size, stroke: 1.2pt + rgb("#d9822b")))
     }
     // A grouped country or region too small to see (Malta, Cyprus among Europe's) and apart
     // from its group's others: a circle around it in its group's colour; one beside them
