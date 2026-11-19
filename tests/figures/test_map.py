@@ -1124,3 +1124,161 @@ def test_a_land_too_small_for_the_countries_scale_is_a_country(land):
     """Gibraltar, Sint Maarten, Monaco: lands Natural Earth's countries leave out, found as
     countries ("Gibraltar" was refused, and the British territories' map fell back to SVG)."""
     assert figures_typst.compile_svg("map", f'#map(countries: ("{land}",), labels: false)').startswith("<svg")
+
+
+def _bubbles(svg: str) -> list[float]:
+    """The radii of the proportional circles, in their drawing's order (the map's, largest
+    first, then the legend's)."""
+    return [float(r) for r in re.findall(r'stroke="#b52020"[^>]*d="M 0 0m 0 ([\d.]+)c', svg)]
+
+
+def test_cities_sized_by_their_values():
+    """Proportional circles: a city's circle's area its value (four times the value, twice the
+    radius), the legend the largest's and a round one under it; "population", the atlas's
+    own (Tokyo's larger than Paris's)."""
+    svg = figures_typst.compile_svg(
+        "map", '#map(cities: ("Paris", "Lyon"), values: ("Paris": 36, "Lyon": 9), unit: "millions", labels: false)'
+    )
+    big, small, *legend = _bubbles(svg)
+    assert big == pytest.approx(2 * small, rel=0.02)
+    assert len(legend) == 2 and legend[0] == pytest.approx(big, rel=0.02)
+    plain = figures_typst.compile_svg("map", '#map(cities: ("Paris", "Lyon"), labels: false)')
+    height = lambda svg: float(re.search(r'height="([\d.]+)pt"', svg).group(1))  # noqa: E731
+    assert height(svg) > height(plain) and _bubbles(plain) == []
+    tokyo, paris, *_ = _bubbles(
+        figures_typst.compile_svg(
+            "map", '#map(cities: ("Tokyo", "Paris"), values: "population", unit: "millions", labels: false)'
+        )
+    )
+    assert tokyo > 1.5 * paris
+    with pytest.raises(figures_typst.Unusable, match=r"values need their unit"):
+        figures_typst.compile_svg("map", '#map(cities: ("Paris",), values: ("Paris": 2))')
+
+
+def _dashed_length(svg: str) -> float:
+    """How long the dashed lines are (a zone's outline), along their segments."""
+    total = 0.0
+    for d in re.findall(r'stroke-dasharray="[^"]*" d="([^"]+)"', svg):
+        for dx, dy in re.findall(r"l ([-\d.]+) ([-\d.]+)", d):
+            total += (float(dx) ** 2 + float(dy) ** 2) ** 0.5
+    return total
+
+
+def test_a_zone_is_one_area_outlined_with_its_name_in_the_legend():
+    """A zone of regions (two départements side by side): tinted, its outline dashed without
+    the border they share (one area: shorter than their two outlines); one spanning cities (a
+    megalopolis) rounded around them; each named in the legend."""
+    zone = lambda regions: figures_typst.compile_svg(  # noqa: E731
+        "map", f'#map(countries: ("France",), zones: ((name: "Z", regions: ({regions})),), labels: false)'
+    )
+    both, meuse, marne = zone('"Meuse", "Haute-Marne"'), zone('"Meuse",'), zone('"Haute-Marne",')
+    assert 0 < _dashed_length(both) < 0.95 * (_dashed_length(meuse) + _dashed_length(marne))
+    plain = figures_typst.compile_svg("map", '#map(countries: ("États-Unis",), labels: false)')
+    megalopolis = figures_typst.compile_svg(
+        "map",
+        '#map(countries: ("États-Unis",), zones: ((name: "Mégalopolis", places: ("Boston", "New York",'
+        ' "Washington")),), labels: false)',
+    )
+    height = lambda svg: float(re.search(r'height="([\d.]+)pt"', svg).group(1))  # noqa: E731
+    assert _dashed_length(megalopolis) > 0 and height(megalopolis) > height(plain)
+
+
+@pytest.mark.parametrize(
+    ("zones", "said"),
+    [
+        ('((regions: ("Meuse",)),)', r"a zone is \(name"),
+        ('((name: "Z"),)', r"covers nothing"),
+        ('((name: "Z", regions: ("Meuse",), colour: red),)', r"not .colour."),
+        ('((name: "Z", regions: ("Atlantis",)),)', r"no region called .Atlantis."),
+    ],
+)
+def test_a_zone_wrongly_written_said(zones, said):
+    with pytest.raises(figures_typst.Unusable, match=said):
+        figures_typst.compile_svg("map", f'#map(countries: ("France",), zones: {zones})')
+
+
+def test_countries_named_on_their_land_or_beside_it():
+    """A map of several countries (Southern Africa's) names each: on its land where its name
+    fits (Angola, Namibia), beside it with a line where it doesn't (Zimbabwe); `names: false`
+    none; a single country is not named."""
+    body = '#map(countries: ("Afrique du Sud", "Namibie", "Botswana", "Angola", "Zimbabwe", "Mozambique"){})'
+    named, bare = (figures_typst.compile_svg("map", body.format(extra)) for extra in ("", ", names: false"))
+    assert len(_labels(named)) == 6 and _labels(bare) == []
+    assert re.search(r'<path[^>]*stroke="#5a5a5a"', named)  # a line to a name beside its country
+    assert _labels(figures_typst.compile_svg("map", '#map(countries: ("France",))')) == []
+
+
+def test_a_frame_asked_wins_over_what_is_drawn():
+    """The colonial empires of 1914 framed on Africa: the map as tall as Africa, not as wide
+    as the world the British Empire spans."""
+    size = lambda svg: tuple(float(v) for v in re.search(r'width="([\d.]+)pt" height="([\d.]+)pt"', svg).groups())  # noqa: E731
+    groups = 'groups: ((name: "R", empire: "Royaume-Uni"), (name: "F", empire: "France")), labels: false'
+    world = size(figures_typst.compile_svg("map", f"#map(year: 1914, {groups})"))
+    africa = size(figures_typst.compile_svg("map", f'#map(year: 1914, frame: "Afrique", {groups})'))
+    assert world[0] > world[1] * 1.2 and africa[1] > africa[0]
+    with pytest.raises(figures_typst.Unusable, match=r"no place called .Atlantide. to frame"):
+        figures_typst.compile_svg("map", '#map(countries: ("France",), frame: "Atlantide")')
+
+
+def test_an_empire_with_a_land_of_no_name():
+    """Spain's empire in 1914: one of its lands has no name in the atlas ("array is empty",
+    the figure refused); its code then, the map drawn."""
+    assert figures_typst.compile_svg("map", '#map(year: 1914, groups: ((name: "E", empire: "Espagne"),))').startswith(
+        "<svg"
+    )
+
+
+def test_every_country_shown_named_even_crowded():
+    """West Africa's small countries side by side: each named, on its land or beside it with a
+    line where no place is clear (Zimbabwe, Botswana once left out), never dropped."""
+    names = (
+        "Sénégal",
+        "Gambie",
+        "Guinée-Bissau",
+        "Guinée",
+        "Sierra Leone",
+        "Liberia",
+        "Côte d'Ivoire",
+        "Ghana",
+        "Togo",
+        "Bénin",
+        "Burkina Faso",
+        "Mali",
+    )
+    countries = ", ".join(f'"{n}"' for n in names)
+    svg = figures_typst.compile_svg("map", f'#map(countries: ({countries}), cities: ("Dakar", "Accra"))')
+    assert len(_labels(svg)) == len(names) + 2
+
+
+def test_a_circles_legend_writes_its_unit():
+    """The circles' legend: each of its two numbers with its unit ("37,4 millions"), not
+    numbers alone: a unit four letters longer, eight glyphs more."""
+    glyphs = lambda unit: len(  # noqa: E731
+        re.findall(
+            r"<use",
+            figures_typst.compile_svg(
+                "map", f'#map(cities: ("Paris",), values: ("Paris": 2), unit: "{unit}", labels: false)'
+            ),
+        )
+    )
+    assert glyphs("QQQQQ") - glyphs("Q") == 8
+
+
+def test_a_part_of_the_world_shown_names_each_of_its_countries():
+    """A part of the world in countries (the Maghreb) with another country: each of its
+    countries named by its own name, as when listed one by one (the names were paired with
+    the countries in order, "Maghreb" written on Morocco and "France" on Algeria)."""
+    svg = lambda countries: figures_typst.compile_svg("map", f"#map(countries: ({countries}))")  # noqa: E731
+    assert svg('"Maghreb", "France"') == svg('"Maroc", "Algérie", "Tunisie", "France"')
+
+
+def test_circles_zones_and_a_frame_on_a_country_with_far_parts():
+    """A country with its far parts (France and Guadeloupe) and circles, a zone or a frame:
+    one map with them (the map with insets took none of them: "unexpected argument")."""
+    for extra in (
+        'cities: ("Paris",), values: ("Paris": 2), unit: "millions"',
+        'zones: ((name: "Z", regions: ("Bretagne",)),)',
+        'frame: "France"',
+    ):
+        svg = figures_typst.compile_svg("map", f'#map(countries: ("France", "Guadeloupe"), {extra})')
+        assert svg.startswith("<svg"), extra
