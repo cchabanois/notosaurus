@@ -210,7 +210,7 @@ def test_the_kinds_give_each_case_one_family():
     ],
 )
 def test_a_charts_colours_as_the_description_asks(body):
-    """"The bars in green": the chart refused a colour (fill: green, "unexpected argument"),
+    """ "The bars in green": the chart refused a colour (fill: green, "unexpected argument"),
     its bars drawn grey whatever the description asked. Its colours given, they are drawn."""
     svg = figures.clean(figures_typst.compile_svg("chart", body))
     assert "#2ecc40" in svg  # Typst's green
