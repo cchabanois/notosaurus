@@ -6,7 +6,7 @@ main {
   margin: 0 auto;
   padding: 1rem 1rem 2rem;
 }
-.app.has-bar main { padding-bottom: calc(6rem + env(safe-area-inset-bottom)); }
+.app.has-bar main { padding-bottom: calc(4.5rem + env(safe-area-inset-bottom)); }
 
 .appbar {
   position: sticky;

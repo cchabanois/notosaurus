@@ -474,6 +474,7 @@
       "onComputer": "Sul computer, in Anki: Strumenti → Notosaurus → Configurazione guidata."
     },
     "reviewInAnki": "📚 Ripassa",
+    "reviewInAnkiLabel": "Ripassa le carte in AnkiDroid",
     "reviewNothingDue": "Oggi non c'è niente da ripassare in questo mazzo: AnkiDroid è aperto sui tuoi mazzi.",
     "openAnkiDroid": "Apri AnkiDroid",
     "dictation": {
@@ -621,7 +622,6 @@
           "one": "📤 Condividi ({count} lezione)",
           "other": "📤 Condividi ({count} lezioni)"
         },
-        "lesson": "📤 Condividi",
         "lessonLabel": "Condividi le carte",
         "exam": "📤 Condividi le carte della verifica",
         "title": "Condividi le carte",

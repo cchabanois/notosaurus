@@ -474,6 +474,7 @@
       "onComputer": "On the computer, in Anki: Tools → Notosaurus → Getting started."
     },
     "reviewInAnki": "📚 Review",
+    "reviewInAnkiLabel": "Review the cards in AnkiDroid",
     "reviewNothingDue": "Nothing to review today in this deck: AnkiDroid is open on your decks.",
     "openAnkiDroid": "Open AnkiDroid",
     "dictation": {
@@ -621,7 +622,6 @@
           "one": "📤 Share ({count} lesson)",
           "other": "📤 Share ({count} lessons)"
         },
-        "lesson": "📤 Share",
         "lessonLabel": "Share the cards",
         "exam": "📤 Share the test's cards",
         "title": "Share the cards",

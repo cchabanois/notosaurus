@@ -474,6 +474,7 @@
       "onComputer": "No computador, no Anki: Ferramentas → Notosaurus → Assistente de configuração."
     },
     "reviewInAnki": "📚 Revisar",
+    "reviewInAnkiLabel": "Revisar os cartões no AnkiDroid",
     "reviewNothingDue": "Nada para revisar hoje neste baralho: o AnkiDroid está aberto nos seus baralhos.",
     "openAnkiDroid": "Abrir o AnkiDroid",
     "dictation": {
@@ -621,7 +622,6 @@
           "one": "📤 Compartilhar ({count} lição)",
           "other": "📤 Compartilhar ({count} lições)"
         },
-        "lesson": "📤 Compartilhar",
         "lessonLabel": "Compartilhar os cartões",
         "exam": "📤 Compartilhar os cartões da prova",
         "title": "Compartilhar os cartões",
