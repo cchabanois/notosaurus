@@ -86,7 +86,7 @@ def test_review_in_ankidroid_once_sent(page, anki):
         lambda route: (asked.append(route.request.post_data_json), route.fulfill(json={"opened": True})),
     )
     generate_free(page, FRONT_PROMPT)
-    review = page.locator(".bar-row").get_by_role("button", name="📚 Réviser")
+    review = page.locator(".bar-row").get_by_role("button", name="Réviser les cartes dans AnkiDroid")
     sync_api.expect(review).to_be_hidden()  # not sent yet
     page.get_by_role("button", name="📥 Ajouter à Anki").click()
     sync_api.expect(page.locator(".toast.ok").get_by_role("button", name="📚 Réviser")).to_be_visible()
@@ -231,3 +231,73 @@ def test_no_profile_badge_where_there_are_no_profiles(page):
     page.reload()
     page.wait_for_function("document.documentElement.classList.contains('i18n-ready')")
     sync_api.expect(page.locator(".brand-profile")).to_be_hidden()
+
+
+# The bottom bar's row as it is laid out: its height, each visible button's box, whether its
+# text is cut (an element clipping it narrower than the text) and how high its text runs
+BAR = """() => {
+  const row = [...document.querySelectorAll('.bottom-bar .bar-row')].find((r) => r.offsetParent);
+  const bar = row.closest('.bottom-bar').getBoundingClientRect();
+  const buttons = [...row.querySelectorAll('button')].filter((b) => b.offsetParent).map((b) => {
+    const box = b.getBoundingClientRect();
+    const cut = [b, ...b.querySelectorAll('*')].some((e) => e.scrollWidth > e.clientWidth + 1);
+    const walker = document.createTreeWalker(b, NodeFilter.SHOW_TEXT);
+    const rects = [];
+    while (walker.nextNode()) {
+      const range = document.createRange();
+      range.selectNodeContents(walker.currentNode);
+      rects.push(...[...range.getClientRects()].filter((r) => r.width));
+    }
+    const lines = rects.length ? Math.max(...rects.map((r) => r.bottom)) - Math.min(...rects.map((r) => r.top)) : 0;
+    return {
+      top: box.top, width: box.width, height: box.height, cut, wide: b.classList.contains('wide'),
+      textHeight: lines / parseFloat(getComputedStyle(b).fontSize),  // in ems: one line, under 2
+      name: b.getAttribute('aria-label') || '', text: b.textContent.trim(),
+    };
+  });
+  return { height: bar.height, fits: row.scrollWidth <= row.clientWidth, buttons };
+}"""
+
+
+@pytest.mark.parametrize("lang", ["fr", "en", "de", "es", "it", "pt"])
+def test_the_bottom_bar_is_one_low_row_on_a_narrow_phone(page, anki, lang):
+    """At 360 px, in every language and every state (to send, up to date, to update, to
+    review in AnkiDroid, to export as a file): the bar's buttons on one row, the main one's
+    text on one line and whole, the others an icon named for screen readers, the bar low
+    (it hides the cards under it), every button a finger's target (44 px)."""
+    page.set_viewport_size({"width": 360, "height": 740})
+    generate_free(page, FRONT_PROMPT)
+    page.evaluate(f"setLanguage('{lang}')")
+    page.wait_for_function(f"document.documentElement.lang === '{lang}'")
+    data = "Alpine.$data(document.querySelector('[x-data]'))"
+
+    def fits(state, count):
+        page.evaluate(f"(d => {{ d.success = null; d.error = null; }})({data})")  # a toast: no bar
+        shown = "[...document.querySelectorAll('.bottom-bar .bar-row button')].filter((b) => b.offsetParent)"
+        page.wait_for_function(f"{shown}.length === {count}")  # drawn again (Alpine, a moment after its data)
+        bar = page.evaluate(BAR)
+        buttons = bar["buttons"]
+        assert len(buttons) == count, (state, buttons)
+        assert bar["fits"], (state, "the row overflows")
+        assert bar["height"] <= 64, (state, bar["height"])  # 4rem: was 77 px, 90 wrapped
+        assert len({round(b["top"]) for b in buttons}) == 1, (state, buttons)
+        for b in buttons:
+            assert b["height"] >= 44 and b["width"] >= 44, (state, b)
+            assert not b["cut"] and b["textHeight"] < 2, (state, b)  # one line, whole
+            if not b["wide"]:  # an icon, named
+                assert len(b["text"]) <= 2 and len(b["name"]) > 3, (state, b)
+
+    fits("to send", 2)  # share, add
+    page.locator(".bar-row button.wide").first.click()
+    page.wait_for_function(f"(d => !d.sending && d.ankiUpToDate())({data})")
+    fits("up to date", 2)
+    page.locator(".flash").first.locator("textarea").first.fill("cambio")
+    page.wait_for_function(f"!{data}.ankiUpToDate()")
+    fits("to update", 2)
+    page.evaluate(f"(d => {{ d.reviewInAnki = true; d.apkg = false; }})({data})")  # the Android app's page
+    page.wait_for_function(f"(d => d.reviewInAnki && !d.canShare())({data})")
+    fits("to review", 2)  # review, update
+    page.route("**/api/anki/status", lambda route: route.fulfill(json={"available": False}))  # out of reach
+    page.evaluate(f"(d => {{ d.reviewInAnki = false; d.apkg = true; d.checkAnki(); }})({data})")
+    page.wait_for_function(f"!{data}.anki.available")  # the cards as a file
+    fits("to export", 1)

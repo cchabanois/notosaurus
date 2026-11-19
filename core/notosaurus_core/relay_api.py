@@ -190,6 +190,11 @@ class FixCardRequest(BaseModel):
     )
     language: str = Language
     instructions: str = Instructions
+    figure_svg: str = Field(
+        default="",
+        max_length=MAX_FIGURE_SVG,
+        description="The card's figure as drawn (its SVG), when it has one: seen by the AI correcting it.",
+    )
 
 
 class LessonDrawingsRequest(BaseModel):

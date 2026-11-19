@@ -1012,5 +1012,151 @@
     }
   })
 }
+// A body cut to show its concentric layers (the Earth's crust, mantle and core; the Sun's
+// zones): a quarter of it, each layer's band from its depths, the depth at each boundary on
+// the cut's straight edge, the names in a column, each with its straight line to its band;
+// a layer too thin to be seen at scale (the crust: 0.5 % of the Earth's radius) drawn at a
+// band's least thickness, the others shrunk in proportion. Computed, never by eye.
+#let _layer-fills = (rgb("#a47148"), rgb("#e9a15e"), rgb("#d9673b"), rgb("#f2c14e"), rgb("#f7e08b"), rgb("#c9d6a3"), rgb("#9fc5e8"), rgb("#d5a6bd"))
+#let layers(layers, zones: (), surface: none, unit: "km", depths: auto, radius: 3.2) = {
+  let shape = "layers: from the surface down, each (name: [croûte], depth: 30): its bottom's depth, the last one's the centre's; or (name: [noyau], radius: 350): its top's distance from the centre, as the lesson gives it"
+  assert(type(layers) == array and layers.len() >= 2 and layers.all(l => type(l) == dictionary and "name" in l), message: shape)
+  for l in layers {
+    for k in ("depth", "radius") { if k in l { assert(type(l.at(k)) in (int, float), message: shape) } }
+  }
+  // the body's radius: the centre's depth, or the outer layer's radius
+  let full = if "depth" in layers.last() { layers.last().depth } else if "radius" in layers.first() { layers.first().radius } else { panic(shape + ": the last layer's depth (the centre's) or the first one's radius (the surface's)") }
+  // each layer's bottom: its depth, or the next one's top (its radius) from the surface
+  let given = layers
+  layers = layers.enumerate().map(((i, l)) => {
+    let bottom = if "depth" in l { l.depth } else if i + 1 < given.len() and "radius" in given.at(i + 1) { full - given.at(i + 1).radius } else if i + 1 == given.len() { full } else { panic(shape + ": " + repr(l.name) + "'s bottom: its depth, or the next layer's radius") }
+    l + (depth: bottom)
+  })
+  for (i, l) in layers.enumerate() {
+    let above = if i > 0 { layers.at(i - 1).depth } else { 0 }
+    assert(l.depth > above and l.depth <= full, message: "layers: from the surface down, each deeper than the one above (nearer the centre)")
+  }
+  let r = radius
+  // each layer's thickness drawn: at scale, or a band's least when thinner (the rest shrunk)
+  let least = 0.06
+  let real = layers.enumerate().map(((i, l)) => (l.depth - if i == 0 { 0 } else { layers.at(i - 1).depth }) / full)
+  let thin = real.map(t => t < least)
+  let kept = real.zip(thin).filter(((t, s)) => not s).map(((t, s)) => t).sum(default: 0)
+  let room = 1 - least * thin.filter(s => s).len()
+  let drawn = real.zip(thin).map(((t, s)) => if s { least } else { t * room / kept })
+  // the radius at a depth: through its layer's band, in proportion within it
+  let at-depth(d) = {
+    let (top, out) = (0, 1.0)
+    for (i, l) in layers.enumerate() {
+      let below = l.depth
+      if d <= below + 1e-9 {
+        let k = if below > top { (d - top) / (below - top) } else { 0 }
+        return r * (out - drawn.at(i) * k)
+      }
+      out -= drawn.at(i)
+      top = below
+    }
+    0
+  }
+  let outer = layers.enumerate().map(((i, _)) => r * (1 - drawn.slice(0, i).sum(default: 0)))
+  let size = 10pt
+  let gap = 0.12
+  // values spread along a line: each at its wish, at least `step` from the next, in order
+  let spread(wishes, step, low: none, high: none) = {
+    let ys = wishes
+    for _ in range(40) {
+      let moved = false
+      for i in range(ys.len() - 1) {
+        let d = ys.at(i) - ys.at(i + 1) // the first above the next (y up)
+        if d < step - 1e-6 {
+          let push = (step - d) / 2
+          ys.at(i) += push
+          ys.at(i + 1) -= push
+          moved = true
+        }
+      }
+      if high != none and ys.len() > 0 and ys.at(0) > high { let k = ys.at(0) - high; ys = ys.map(y => y - k) }
+      if low != none and ys.len() > 0 and ys.last() < low { let k = low - ys.last(); ys = ys.map(y => y + k) }
+      if not moved { break }
+    }
+    ys
+  }
+  context {
+    let line-h = measure(text(size, [Ag])).height.cm() * 1.35
+    cetz.canvas({
+      import cetz.draw: *
+      // the bands, the outer first: each a quarter disc, the next drawn over it
+      for (i, l) in layers.enumerate() {
+        let fill = l.at("fill", default: _layer-fills.at(calc.rem(i, _layer-fills.len())))
+        let ro = outer.at(i)
+        line((0, 0), ..range(0, 31).map(k => (ro * calc.cos(90deg * k / 30), ro * calc.sin(90deg * k / 30))), close: true, fill: fill, stroke: 0.6pt)
+      }
+      circle((0, 0), radius: 0.05, fill: black, stroke: none)
+      // the depths, on the cut's upright edge, left of it: each at its boundary, spread
+      let shown = if depths == none or depths == false { () } else {
+        // as the lesson gives them: a depth at its layer's bottom (a radius: below, from the centre)
+        given.enumerate().filter(((i, l)) => "depth" in l).map(((i, l)) => (y: outer.at(i) - r * drawn.at(i), d: l.depth))
+      }
+      let wish = shown.map(x => x.y)
+      let ys = spread(wish, line-h, low: -line-h / 2, high: r + line-h / 2)
+      let widest = 0
+      for (x, y) in shown.zip(ys) {
+        line((0, x.y), (-0.12, x.y), stroke: 0.6pt)
+        let body = text(size, written-number(x.d) + if unit != none and unit != "" { " " + unit } else { "" })
+        widest = calc.max(widest, measure(body).width.cm())
+        if calc.abs(y - x.y) > 0.02 { line((-0.12, x.y), (-0.3, y), stroke: 0.4pt) }
+        content((-0.34, y), body, anchor: "east")
+      }
+      // the radii the lesson gives (a core of 350 km), below the quarter: each a line from the
+      // centre to its layer's top, the smallest nearest, its value under its middle
+      if depths != none and depths != false {
+        let radii = given.enumerate().filter(((i, l)) => "radius" in l).map(((i, l)) => (x: outer.at(i), d: l.radius)).sorted(key: v => v.x)
+        for (k, v) in radii.enumerate() {
+          let y = -0.22 - k * line-h * 2
+          line((0, y), (v.x, y), stroke: 0.6pt, mark: (end: ">", start: "|", size: 0.12, fill: black))
+          line((v.x, 0), (v.x, y - 0.06), stroke: (thickness: 0.4pt, dash: "dotted"))
+          content((v.x / 2, y - 0.05), text(size, written-number(v.d) + if unit != none and unit != "" { " " + unit } else { "" }), anchor: "north")
+        }
+      }
+      // the zones over several layers (the lithosphere, the asthenosphere): a bracket left of
+      // the depths, its name beside it
+      let zx = -0.34 - widest - 0.25
+      let zone-wish = ()
+      for z in zones {
+        assert(type(z) == dictionary and "from" in z and "to" in z and z.to > z.from, message: "zones: each (name: [lithosphère], from: 0, to: 100), its depths")
+        let (a, b) = (at-depth(z.from), at-depth(z.to))
+        line((zx + 0.1, a), (zx, a), (zx, b), (zx + 0.1, b), stroke: 0.7pt)
+        zone-wish.push((a + b) / 2)
+      }
+      let zys = spread(zone-wish, line-h)
+      for (z, (w, y)) in zones.zip(zone-wish.zip(zys)) {
+        if calc.abs(y - w) > 0.02 { line((zx, w), (zx - 0.15, y), stroke: 0.4pt) }
+        content((zx - 0.18, y), text(size, z.name), anchor: "east")
+      }
+      // the surface's own name (the Sun's photosphere), above the quarter's arc, a line to it
+      if surface != none {
+        let p = (r * calc.cos(60deg), r * calc.sin(60deg))
+        line(p, (r * 0.75, r + 0.35), (r + 0.37, r + 0.35), stroke: 0.45pt)
+        circle(p, radius: 0.035, fill: black, stroke: none)
+        content((r + 0.45, r + 0.35), text(size, surface), anchor: "west")
+      }
+      // the names, in a column right of the quarter, outer layers first: each line straight
+      // to a point inside its band
+      let mids = layers.enumerate().map(((i, _)) => outer.at(i) - r * drawn.at(i) / 2)
+      let nx = r + 0.45
+      let wishes = mids.enumerate().map(((i, m)) => calc.min(m * 0.55, r * 0.9))
+      let ns = spread(wishes, line-h, low: -r * 0.1)
+      for ((i, l), y) in layers.enumerate().zip(ns) {
+        let m = mids.at(i)
+        // where the name's height meets its band, else as high in it as it goes
+        let yy = calc.min(calc.max(y, 0.05 * m), 0.9 * m)
+        let p = (calc.sqrt(calc.max(m * m - yy * yy, 0)), yy)
+        line(p, (nx - 0.08, y), stroke: 0.45pt)
+        circle(p, radius: 0.035, fill: black, stroke: none)
+        content((nx, y), text(size, l.name), anchor: "west")
+      }
+    })
+  }
+}
 // ---- What the AI writes, from here (the rule's example: everything above is given)
 #cuboid(5, 3, 2, length-label: $L$, width-label: $l$, height-label: $h$)

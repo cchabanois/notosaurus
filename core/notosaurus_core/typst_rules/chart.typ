@@ -240,7 +240,7 @@
 // counts written on the rectangles); every bound written once under the axis. written,
 // hidden: classes by their lower bound ((160,)); axis: the y axis's title ("Effectif");
 // axes.at(0): the x axis's title, its unit with it ("Taille (cm)")
-#let _histogram(values, written: "all", hidden: (), axis: none, axes: (none, none), step: auto, unit: none) = context {
+#let _histogram(values, written: "all", hidden: (), axis: none, axes: (none, none), step: auto, unit: none, colours: ()) = context {
   let number(x) = type(x) in (int, float)
   assert(
     values.len() > 0 and values.all(v => type(v) == array and v.len() == 3 and v.all(number) and v.at(0) < v.at(1) and v.at(2) >= 0),
@@ -278,7 +278,7 @@
       content((-0.16, 0), txt("0"), anchor: "east")
     }
     for (i, (a, b, c)) in classes.enumerate() {
-      if c > 0 { rect((px(a), 0), (px(b), py(heights.at(i))), fill: luma(185), stroke: 0.6pt + luma(40)) }
+      if c > 0 { rect((px(a), 0), (px(b), py(heights.at(i))), fill: if colours == () { luma(185) } else { colours.at(calc.rem(i, colours.len())) }, stroke: 0.6pt + luma(40)) }
       if written == "all" or a in written or a in hidden {
         content(((px(a) + px(b)) / 2, py(heights.at(i)) + 0.08), txt(value(a, c)), anchor: "south")
       }
@@ -356,10 +356,17 @@
   })
 }
 #let chart(kind: "bars", values: (), written: auto, hidden: (), unit: none, degrees: false, axis: none, axes: (none, none), step: auto,
-  marks: (), spans: (), second: none, numbered: true, smooth: false, limits: auto, horizontal: false, classes: none, fit: none, reversed: false) = context {
+  marks: (), spans: (), second: none, numbered: true, smooth: false, limits: auto, horizontal: false, classes: none, fit: none, reversed: false, colours: ()) = context {
   assert(kind in ("bars", "pie", "semi", "line", "scatter", "box", "pyramid", "histogram", "climate"),
     message: "kind is \"bars\", \"pie\", \"semi\", \"line\", \"scatter\", \"box\", \"pyramid\", \"histogram\" or \"climate\"")
   // a month's precipitation and temperature together: the climate chart, its two scales tied
+  // colours: the colours the description asks for (the bars in green, each sector its own),
+  // one for all, or one per value in their order (per line, per class); else the chart's own
+  let colours = if type(colours) == color { (colours,) } else { colours }
+  assert(type(colours) == array and colours.all(c => type(c) == color),
+    message: "colours is a colour (green, rgb(\"#2e7d32\")) or a list of them, one per value")
+  assert(colours == () or kind in ("bars", "pie", "semi", "line", "scatter", "histogram"),
+    message: "colours is for bars, pies, lines, scatter plots and histograms")
   if kind == "climate" {
     assert(written == auto and hidden == () and unit == none and axis == none and step == auto and marks == () and spans == ()
       and second == none and not smooth and not degrees and limits == auto and not horizontal and numbered and fit == none
@@ -381,7 +388,7 @@
     assert(marks == () and spans == () and second == none and not smooth and not degrees and limits == auto
       and not horizontal and numbered,
       message: "a histogram takes values, axis, axes, step, unit, written and hidden only")
-    return _histogram(values, written: written, hidden: hidden, axis: axis, axes: axes, step: step, unit: unit)
+    return _histogram(values, written: written, hidden: hidden, axis: axis, axes: axes, step: step, unit: unit, colours: colours)
   }
   // a scatter plot: a line's measures as points, never joined; fit: (a, b), the line y = ax + b
   // drawn across them and named
@@ -447,7 +454,8 @@
   assert(total > 0, message: "the counts add up to more than 0")
   assert(written == "all" or type(written) == array, message: "written is \"all\" or a list of labels")
   let shown(label) = written == "all" or label in written or label in hidden
-  let palette = _palette
+  let palette = if colours == () { _palette } else { colours }
+  let bar(i) = if colours == () { luma(55) } else { colours.at(calc.rem(i, colours.len())) }
   let txt(body) = text(10pt, font: "DejaVu Sans", body)
   // a number as the figure's language writes it: whole, or with its decimal separator; to
   // the thousandth (a probability, 0,078), an angle to the tenth
@@ -517,7 +525,7 @@
         (paint: rgb("#7b3fa0"), dash: "dash-dotted", point: "circle"),
         (paint: rgb("#c77700"), dash: "densely-dashed", point: "square"),
         (paint: luma(40), dash: "loosely-dotted", point: "triangle"),
-      )
+      ).enumerate().map(((k, look)) => if colours == () { look } else { (..look, paint: colours.at(calc.rem(k, colours.len()))) })
       // (a scatter plot's points larger: they are all it shows)
       let r = if kind == "scatter" { 0.09 } else { 0.06 }
       let point(p, look) = {
@@ -669,7 +677,7 @@
         if axis != none { content((w + 0.45, -0.62), txt(axis), anchor: "north-east") }
         for (i, (label, count)) in values.enumerate() {
           let y = h - row * (i + 0.5)
-          if count > 0 { rect((0, y - 0.13), (count * unit, y + 0.13), fill: luma(55), stroke: none) }
+          if count > 0 { rect((0, y - 0.13), (count * unit, y + 0.13), fill: bar(i), stroke: none) }
           content((-0.16, y), name(label), anchor: "east")
           if shown(label) { content((count * unit + 0.1, y), txt(value(label, count)), anchor: "west") }
         }
@@ -713,7 +721,7 @@
       }
       for (i, (label, count)) in values.enumerate() {
         let x = slot * (i + 0.5)
-        if count > 0 { rect((x - calc.min(0.11, slot * 0.25), 0), (x + calc.min(0.11, slot * 0.25), count * unit), fill: luma(55), stroke: none) }
+        if count > 0 { rect((x - calc.min(0.11, slot * 0.25), 0), (x + calc.min(0.11, slot * 0.25), count * unit), fill: bar(i), stroke: none) }
         content((x, -0.14), name(label), anchor: "north")
         if shown(label) { content((x, count * unit + 0.08), txt(value(label, count)), anchor: "south") }
       }

@@ -59,3 +59,29 @@ def test_a_card_corrected_cancelled(client, monkeypatch):
     res = _cancelled_while(client, started, f"/api/lessons/{lesson['id']}/fix-card", json=body)
     assert (res.status_code, res.json()["detail"]["code"]) == (409, "extract.cancelled")
     assert stopped == [True]
+
+
+def test_a_card_corrected_seeing_its_figure(client, monkeypatch):
+    """A card with a figure corrected: its drawing (the SVG in the lesson's images) given to
+    the AI, a request about it understood; a card without one: none."""
+    from app import lessons
+    from app.routes import lessons as routes
+    from notosaurus_core import llm
+
+    lesson = extract_lesson(client)
+    name, folder = "picture-c1-0123abcd.svg", lessons.folder(lesson["id"])
+    assert folder is not None
+    (folder / "images").mkdir(exist_ok=True)
+    (folder / "images" / name).write_text("<svg>drawn</svg>", encoding="utf-8")
+    seen = []
+
+    async def fix(*args, figure_svg="", **kwargs):
+        seen.append(figure_svg)
+        return llm.FixedCard(card=args[4], summary="ok")
+
+    monkeypatch.setattr(routes.llm, "fix_card", fix)
+    card = {**lesson["cards"][0], "figure": "Triangle ABC", "picture": name}
+    for asked in (card, lesson["cards"][1]):
+        res = client.post(f"/api/lessons/{lesson['id']}/fix-card", json={"card": asked, "instruction": "E à droite"})
+        assert res.status_code == 200
+    assert seen == ["<svg>drawn</svg>", ""]

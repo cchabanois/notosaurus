@@ -9,6 +9,9 @@ Each pull request's entries (the `## Changelog` of its description) are put unde
 
 ### Added
 
+- Figures: a planet's or the Sun's internal structure drawn as a cut quarter, its layers, depths and names placed by the app.
+- ✏️ Correcting a card with a figure, the AI now sees the drawing: "the bar is at the wrong height", "the triangle should be outside the square" and the figure is drawn again, right.
+- ⚛️ The periodic table drawn with its elements' symbols and atomic numbers, families coloured with a legend, an element a card asks for written « ? ».
 - Maps: every country's overseas lands and far archipelagos, the small territories (Gibraltar, Monaco…), the world's regions (East Asia, Latin America, the Maghreb…), and the camps of the Shoah; a country's far lands drawn in insets.
 - 🔭 The afocal astronomical telescope drawn with its ray path computed: the beam converging in the focal plane, then leaving the eyepiece parallel at α'.
 - Figures: climate charts (diagrammes ombrothermiques), the precipitation as bars and the temperature as a curve, their scales tied.
@@ -62,6 +65,7 @@ Each pull request's entries (the `## Changelog` of its description) are put unde
 
 ### Changed
 
+- On a phone, the bar at the bottom of the cards is lower and hides less of them: « Partager » and « Réviser » are icon buttons, the main button's text stays on one line.
 - Figures whose text would be too small to read on a phone are drawn again more compactly, in every kind of figure, not only diagrams.
 - 🖼️ The photo viewer's crop button shows the usual crop icon (two crossing right angles) instead of scissors, as does the editor's « Recadrer » mode; a page cropped or blacked out is now marked by a small dot on its button instead of a filled background, and told to screen readers.
 - ✂️ Cropping a photo has its own button in the full-screen photo, next to 🖍️ for blacking out a name: each opens the editor ("Prepare the photo") ready for its job.
@@ -83,6 +87,11 @@ Each pull request's entries (the `## Changelog` of its description) are put unde
 
 ### Fixed
 
+- Maps: small islands (La Réunion, Guadeloupe, Bermuda…) drawn with their real outline in a map's insets.
+- Diagrams: an arrow that goes to no box is no longer drawn into the void; the figure is drawn again.
+- 📊 A chart drawn in the colours its description, or a correction, asks for ("the bars in green"), no longer grey.
+- A photo cropped just after it was added comes back cropped when the app opens again. Before, a slow save of the uncropped photo could land after the cropped one.
+- Dictation started as the app opens, before the prompts have loaded: the dictated text stays in the free prompt, as typed text does. Before, it replaced the text of the first prompt, which stayed selected with its deck and voice.
 - A formula written the LaTeX way on a figure (t_{1/2}, \text{…}) shown as meant, never refused nor written with its code.
 - Molecules in Cram's representation drawn with their wedges (in front, behind), narrow at their atom.
 - Maps: regions found by their names in every language (« Lombardie », « Puglia »); a name the atlas refuses says what to write instead.
