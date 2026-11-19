@@ -348,6 +348,39 @@ class LessonRoutesTest : LocalServerTestBase() {
     }
 
     @Test
+    fun aCardCorrectedSeeingItsFigureAsDrawn() = app { client ->
+        relayAnswers("""{"deck": {"deck": "Maths", "cards": [
+            {"front": "Ce triangle ?", "back": "rectangle", "figure": "a right triangle"}, {"front": "2 + 2 ?", "back": "4"}]}, "turns": [], "usage": {"credits": 1, "credits_left": 99}}""")
+        val lesson = client.submitFormWithBinaryData("/api/extract", formData { append("prompt", "p") }) { page() }.json().jsonObject
+        val id = lesson.string("id")
+        val fixes = mutableListOf<JsonObject>()
+        relay.dispatcher = object : mockwebserver3.Dispatcher() {
+            override fun dispatch(request: RecordedRequest): MockResponse {
+                val answer = if (request.url.encodedPath == "/v1/fix-card") {
+                    val asked = request.multipartRequest().also { fixes += it }
+                    """{"card": ${asked["card"]}, "summary": "ok", "figure_problem": "B is misplaced", "usage": {"credits": 2, "credits_left": 90}}"""
+                } else {
+                    val body = json.parseToJsonElement(request.body!!.utf8()).jsonObject
+                    val svg = Base64.getEncoder().encodeToString("<svg>drawn</svg>".toByteArray())
+                    """{"card": ${body["card"]}, "data": "$svg", "media_type": "image/svg+xml", "usage": {"credits": 3, "credits_left": 90}}"""
+                }
+                return MockResponse.Builder().addHeader("Content-Type", "application/json").body(answer).build()
+            }
+        }
+        val cards = client.post("/api/lessons/$id/pictures") { page(); contentType(ContentType.Application.Json); setBody("""{"draw": true}""") }
+            .json().jsonObject["lesson"]!!.jsonObject["cards"]!!.jsonArray
+        for (card in cards) {
+            val res = client.post("/api/lessons/$id/fix-card") {
+                page("fr"); contentType(ContentType.Application.Json)
+                setBody("""{"card": $card, "instruction": "B est mal placé", "others": []}""")
+            }.json().jsonObject
+            assertEquals("B is misplaced", res.string("figure_problem")) // the relay's, passed on to the page
+        }
+        // The figure as drawn sent with the card that has one; none with the other
+        assertEquals(listOf("<svg>drawn</svg>", ""), fixes.map { it.string("figure_svg") })
+    }
+
+    @Test
     fun aFigureCheckedWhenAskedThenDrawnAgainWithItsProblem() = app { client ->
         relayAnswers("""{"deck": {"deck": "Maths", "cards": [
             {"front": "Ce triangle ?", "back": "rectangle", "figure": "a right triangle"}]}, "turns": [], "usage": {"credits": 1, "credits_left": 99}}""")

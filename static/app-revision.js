@@ -98,7 +98,13 @@ const revisionPart = {
       const fixed = { ...res.card, key: card.key, _state: "modified", _fixed: { summary: res.summary, before: plain(card) } };
       this.cards.splice(i, 1, fixed);
       await this.saveNow();  // its picture is drawn from the saved lesson
-      if ((fixed.figure || fixed.picture_prompt) && !fixed.picture) this.drawPictures();
+      if (res.figure_problem) {
+        // The request was about its figure as drawn: drawn again, told what is wrong in it (as
+        // the check's problem), the one it replaces shown faded meanwhile
+        const drawn = this.cards[i];
+        drawn._check = { ok: false, problem: res.figure_problem };
+        await this.redrawFigure(drawn);
+      } else if ((fixed.figure || fixed.picture_prompt) && !fixed.picture) this.drawPictures();
     } catch (e) {
       if (!fix.cancelling) this.error = e.message;  // cancelled: nothing to say
       fix.busy = false;

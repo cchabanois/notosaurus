@@ -5,9 +5,9 @@ from fastapi.encoders import jsonable_encoder
 from fastapi.responses import FileResponse
 from pydantic import BaseModel
 
-from notosaurus_core import diagrams, llm
+from notosaurus_core import diagrams, llm, pictures
 from notosaurus_core.llm import Image, revise_cards
-from notosaurus_core.models import switched
+from notosaurus_core.models import Card, switched
 from notosaurus_core.relay_api import STREAM_TYPE
 
 from .. import access, ankiconnect, children, i18n, lesson_notes, lessons, settings, sounds, usage
@@ -182,6 +182,7 @@ async def _fixed(id: str, req: FixCardRequest, lang: str) -> llm.FixedCard:
     photos = [Image(lessons.photo(id, n), "image/jpeg") for n in range(1, lesson.photo_count + 1)]
     every = await asyncio.to_thread(children.list_all)
     child = children.chosen(every, lesson.child, lesson.owner)
+    figure = await asyncio.to_thread(_drawn_figure, id, req.card)
     async with usage.metered("fix", id, lesson.deck):  # an answer that couldn't be used is paid for too
         s = settings.current()
         return await llm.fix_card(
@@ -195,7 +196,20 @@ async def _fixed(id: str, req: FixCardRequest, lang: str) -> llm.FixedCard:
             i18n.language_name(lang),
             settings.standing_instructions(s, children.for_ai(child)),
             demo=i18n.get(lang, "demo"),
+            figure_svg=figure,
         )
+
+
+def _drawn_figure(id: str, card: Card) -> str:
+    """The card's figure as drawn (its SVG in the lesson's images), shown to the AI that
+    corrects it; "" when it has none."""
+    folder = lessons.folder(id)
+    if folder is None or not card.figure.strip() or not card.picture.endswith(".svg"):
+        return ""
+    path = folder / "images" / card.picture
+    if not pictures.NAME.match(card.picture) or not path.is_file():
+        return ""
+    return path.read_text(encoding="utf-8")
 
 
 @router.post("/api/lessons/{id}/explain")

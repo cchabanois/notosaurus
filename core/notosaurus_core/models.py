@@ -210,13 +210,24 @@ class CardFix(BaseModel):
 
     cards: list[Card] = Field(description="The corrected card: exactly one.")
     summary: str = Field(description="One short sentence describing what changed, in the requested language.")
+    figure_problem: str = Field(
+        default="",
+        description=(
+            "Only when the request is about how the card's figure is drawn (its picture shown last): "
+            "what is wrong in that drawing, for it to be drawn again right, in the requested language; "
+            "else empty."
+        ),
+    )
 
 
 class FixedCard(BaseModel):
-    """A card corrected on its own (llm.fix_card), with what changed."""
+    """A card corrected on its own (llm.fix_card), with what changed. `figure_problem`: the
+    request was about its figure as drawn: what is wrong in it, for it to be drawn again
+    (told to the drawing, as the check's problem); its picture kept meanwhile."""
 
     card: Card
     summary: str
+    figure_problem: str = ""
 
 
 def switched(current: bool, said: str) -> bool:
