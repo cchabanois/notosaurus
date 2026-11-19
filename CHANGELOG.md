@@ -84,6 +84,7 @@ Each pull request's entries (the `## Changelog` of its description) are put unde
 
 ### Fixed
 
+- Maps: small islands (La Réunion, Guadeloupe, Bermuda…) drawn with their real outline in a map's insets.
 - Diagrams: an arrow that goes to no box is no longer drawn into the void; the figure is drawn again.
 - 📊 A chart drawn in the colours its description, or a correction, asks for ("the bars in green"), no longer grey.
 - A photo cropped just after it was added comes back cropped when the app opens again. Before, a slow save of the uncropped photo could land after the cropped one.
