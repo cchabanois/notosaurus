@@ -19,7 +19,11 @@ def _value(tmp_path, expression: str, separator: str = "."):
         + f"\n#metadata({expression}) <value>\n",
         encoding="utf-8",
     )
-    return json.loads(typst.query(str(page), "<value>", field="value", one=True, format="json"))
+    return json.loads(
+        typst.query(
+            str(page), "<value>", field="value", one=True, format="json", package_path=str(figures_typst.packages())
+        )
+    )
 
 
 def test_every_family_gets_its_decimal_separator_from_common():

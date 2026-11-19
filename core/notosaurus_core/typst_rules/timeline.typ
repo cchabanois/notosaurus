@@ -1,7 +1,8 @@
 #set page(width: auto, height: auto, margin: 6pt)
 #import "@preview/cetz:0.5.2"
 #import "common.typ": *
-// A line of dates: events above it (a dot, a text on its line), periods under it, each a bar
+// A line of dates: events above it (a dot, a text on its line, an icon before it when given),
+// periods under it, each a bar
 // in its own colour from its start to its end, its name on it; the years on the line's round
 // multiples of `step` (1500, 1600, never 1453, 1553). A line of moments without dates (a
 // verb's tenses), 0 the present: `step: none` writes no year; `now` the present's text, under
@@ -46,6 +47,8 @@
   let items = events.map(e => {
     let y = year(e.at(0))
     let body = if dated and calc.fract(y) == 0 and not has-year(e.at(1), y) { [#kept(e.at(1)) (#written-year(y))] } else { kept(e.at(1)) }
+    // an event's icon, its third item (an English word: icon()), before its text
+    if e.len() > 2 { body = [#icon(e.at(2)) #body] }
     (x: at(e.at(0)), body: shown(body))
   }).sorted(key: i => -i.x)
   // From the right: each text starts at its date, above the line, over every text it reaches

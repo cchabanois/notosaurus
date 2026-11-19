@@ -114,6 +114,24 @@
   "url": "https://github.com/cchabanois/notosaurus/blob/main/tools/atlas.py"
  },
  {
+  "name": "notosaurus-icons",
+  "version": "0.1.0",
+  "licence": "AGPL-3.0-or-later",
+  "url": "https://github.com/cchabanois/notosaurus/blob/main/tools/icons.py"
+ },
+ {
+  "name": "Maki",
+  "version": "8.2.0",
+  "licence": "CC0-1.0",
+  "url": "https://github.com/mapbox/maki"
+ },
+ {
+  "name": "Temaki",
+  "version": "5.13.0",
+  "licence": "CC0-1.0",
+  "url": "https://github.com/rapideditor/temaki"
+ },
+ {
   "name": "Natural Earth",
   "version": "5.1.2",
   "licence": "public-domain",
