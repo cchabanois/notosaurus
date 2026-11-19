@@ -1262,3 +1262,23 @@ def test_a_circles_legend_writes_its_unit():
         )
     )
     assert glyphs("QQQQQ") - glyphs("Q") == 8
+
+
+def test_a_part_of_the_world_shown_names_each_of_its_countries():
+    """A part of the world in countries (the Maghreb) with another country: each of its
+    countries named by its own name, as when listed one by one (the names were paired with
+    the countries in order, "Maghreb" written on Morocco and "France" on Algeria)."""
+    svg = lambda countries: figures_typst.compile_svg("map", f"#map(countries: ({countries}))")  # noqa: E731
+    assert svg('"Maghreb", "France"') == svg('"Maroc", "Algérie", "Tunisie", "France"')
+
+
+def test_circles_zones_and_a_frame_on_a_country_with_far_parts():
+    """A country with its far parts (France and Guadeloupe) and circles, a zone or a frame:
+    one map with them (the map with insets took none of them: "unexpected argument")."""
+    for extra in (
+        'cities: ("Paris",), values: ("Paris": 2), unit: "millions"',
+        'zones: ((name: "Z", regions: ("Bretagne",)),)',
+        'frame: "France"',
+    ):
+        svg = figures_typst.compile_svg("map", f'#map(countries: ("France", "Guadeloupe"), {extra})')
+        assert svg.startswith("<svg"), extra

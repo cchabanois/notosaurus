@@ -835,10 +835,11 @@
   let all = borders(year)
   let past = year != none and year < today-from
   // (a part of the world: its countries, today's)
-  let shown = countries.map(n => {
+  let shown-by = countries.map(n => {
     let part = if not past and country-code(n) == none { area-codes(n) } else { none }
     if part == none { (find-country(n, all: all, year: if past { year }),) } else { part }
-  }).join(default: ()).dedup()
+  })
+  let shown = shown-by.join(default: ()).dedup()
   // A region that is no region of the countries shown but a country of the atlas, shown as
   // one (Greenland among Denmark's regions: its own country in the atlas)
   let as-country = if past { () } else {
@@ -1394,7 +1395,10 @@
   // The countries' names (a map of several countries: Southern Africa's; asked with
   // `names: true`, the grouped ones too): on their land, else beside it with a line
   let to-name = if names == false { () } else {
-    let listed = countries.zip(shown.slice(0, countries.len()))
+    // (a part of the world: each of its countries by its own name)
+    let listed = countries.zip(shown-by).map(((n, codes)) => if codes.len() == 1 { ((n, codes.first()),) } else {
+      codes.map(c => (all.at(c).n.first(), c))
+    }).join(default: ())
     if names == true {
       listed += sets.map(g => g.countries.filter(c => c not in g.ruled and c not in shown)).join(default: ())
         .map(c => (all.at(c).n.first(), c))
@@ -1818,16 +1822,19 @@
 // A country with its far parts or lands (its overseas departments, its archipelagos across
 // the sea, Greenland beside Denmark): the country's map, each far one in an inset under it,
 // named, at its own scale (an island seen, half a degree around it at least), its cities in it; `insets: false` draws them where they are (the
-// world). Else, and with routes, flows, groups, a year or a pole, one map
+// world). Else, and with routes, flows, groups, zones, values, a frame, a year or a pole, one map
 #let map(countries: (), cities: (), regions: (), rivers: (), reliefs: (), waters: (), groups: (),
-  routes: (), flows: (), year: none, pole: none, labels: true, insets: auto, width: 8cm, height: 7cm) = {
+  routes: (), flows: (), year: none, pole: none, labels: true, values: (:), unit: none, zones: (),
+  names: auto, frame: none, insets: auto, width: 8cm, height: 7cm) = {
   let countries = if type(countries) == str { (countries,) } else { countries }
   let regions = if type(regions) == str { (regions,) } else { regions }
   let cities = if type(cities) == str { (cities,) } else { cities }
   let one = one-map.with(rivers: rivers, reliefs: reliefs, waters: waters, groups: groups, routes: routes,
-    flows: flows, year: year, pole: pole, labels: labels)
-  let whole() = one(countries: countries, cities: cities, regions: regions, width: width, height: height)
-  if insets == false or year != none or pole != none or routes.len() + flows.len() + groups.len() > 0 { return whole() }
+    flows: flows, year: year, pole: pole, labels: labels, unit: unit, names: names)
+  let whole() = one(countries: countries, cities: cities, regions: regions, values: values, zones: zones, frame: frame,
+    width: width, height: height)
+  if (insets == false or year != none or pole != none or routes.len() + flows.len() + groups.len() + zones.len() > 0
+    or values != (:) or frame != none) { return whole() }
   let held = countries.map(n => country-code(n)).filter(c => c != none)
   // Far: a country's part ("t"), or a land it holds ("o") whose frame lies farther than 3° from
   // the country's (the Faroes, not Jersey), the country shown too; asked in countries, or in
