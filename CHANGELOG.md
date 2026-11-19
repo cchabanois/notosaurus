@@ -82,6 +82,7 @@ Each pull request's entries (the `## Changelog` of its description) are put unde
 
 ### Fixed
 
+- Maps: names no longer written on each other where places are close (a route's straits, overseas islands, cities on a world map); a strait or a canal a route passes is marked; a name moved off its place has a line to it.
 - Labelled schemes: the labels' lines no longer cross the words of the arrows or run along the arrows, and a label's point no longer lands on an arrow's word.
 - Figures: maps of real places (a country's rural areas, an event's sites) drawn on the atlas instead of invented shapes; a town's plan (Berlin's sectors) no longer drawn as a country map.
 - 🏷️ A scheme's labels are set where their lines cross the drawing least: in a row over or under steps side by side, in one column, or on each side for a name whose parts lie on both sides (a flower's petals). They are no longer always in two columns with long lines across the drawing.
