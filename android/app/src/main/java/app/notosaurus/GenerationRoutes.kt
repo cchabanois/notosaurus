@@ -84,12 +84,16 @@ internal fun Route.generationRoutes(server: LocalServer) {
                 put("summary", revised["summary"]!!)
             }
         }
-        // One card corrected as asked, seeing the lesson's photos (relay_api.FixCardRequest): the
-        // card answered, not saved here (the page puts it in place, and can undo it); "Cancel"
-        // (?job=) stops it: 409 extract.cancelled
+        // One card corrected as asked, seeing the lesson's photos (relay_api.FixCardRequest), and
+        // its figure as drawn when it has one (a request about the drawing understood: told back
+        // in figure_problem, for the page to draw it again): the card answered, not saved here
+        // (the page puts it in place, and can undo it); "Cancel" (?job=) stops it: 409 extract.cancelled
         api("POST", "/api/lessons/{id}/fix-card") {
             val lesson = lesson()
             val req = body()
+            val card = req["card"] as? JsonObject
+            val figure = card?.takeIf { it.string("figure").isNotBlank() }
+                ?.let { pictures.file(lesson.string("id"), it.string("picture")) }?.takeIf { it.extension == "svg" }
             val request = buildJsonObject {
                 put("prompt", lesson.string("prompt"))
                 put("deck", Children.splitDeck(lesson.string("deck"), children.list()).second) // no child's name to the AI
@@ -98,6 +102,7 @@ internal fun Route.generationRoutes(server: LocalServer) {
                 put("others", req["others"] ?: JsonArray(emptyList()))
                 put("language", languageName())
                 put("instructions", generation.instructions(children.get(lesson.string("child"))))
+                if (figure != null) put("figure_svg", figure.readText())
             }
             val fixed = generation.cancellable(call.request.queryParameters["job"]) {
                 relay().withPhotos("fix-card", request, lessons.photos(lesson.string("id")))

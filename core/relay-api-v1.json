@@ -3364,6 +3364,13 @@
             "maxLength": 10000,
             "title": "Instructions",
             "type": "string"
+          },
+          "figure_svg": {
+            "default": "",
+            "description": "The card's figure as drawn (its SVG), when it has one: seen by the AI correcting it.",
+            "maxLength": 1000000,
+            "title": "Figure Svg",
+            "type": "string"
           }
         },
         "required": [
@@ -3383,6 +3390,11 @@
           "summary": {
             "type": "string",
             "title": "Summary"
+          },
+          "figure_problem": {
+            "type": "string",
+            "title": "Figure Problem",
+            "default": ""
           },
           "usage": {
             "$ref": "#/components/schemas/Usage"
