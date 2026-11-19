@@ -83,6 +83,8 @@ Each pull request's entries (the `## Changelog` of its description) are put unde
 
 ### Fixed
 
+- A formula written the LaTeX way on a figure (t_{1/2}, \text{…}) shown as meant, never refused nor written with its code.
+- Molecules in Cram's representation drawn with their wedges (in front, behind), narrow at their atom.
 - Maps: regions found by their names in every language (« Lombardie », « Puglia »); a name the atlas refuses says what to write instead.
 - Maps: names no longer written on each other where places are close (a route's straits, overseas islands, cities on a world map); a strait or a canal a route passes is marked; a name moved off its place has a line to it.
 - Labelled schemes: the labels' lines no longer cross the words of the arrows or run along the arrows, and a label's point no longer lands on an arrow's word.
