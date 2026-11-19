@@ -132,7 +132,7 @@
       "regenerateNewHint": "(neue Lektion)",
       "regenerateExported": "Schon an Anki gesendet: Die gesendeten Karten bleiben dort, die neuen kommen beim nächsten Senden dazu.",
       "regenerated": "✨ Karten neu erzeugt.",
-      "speed": "Erstellung der Karten",
+      "speed": "KI-Modus: Erstellen und Korrigieren",
       "quick": "⚡ Schnell",
       "careful": "🎯 Sorgfältig",
       "quickHint": "Ein paar Sekunden. Ideal für Vokabeln oder eine einfache Lektion.",
@@ -228,6 +228,7 @@
       "placeholder": "✨ Mit KI korrigieren: „lösch die Karte zum Vater“, „du hast die Farben vergessen“ …",
       "button": "Korrigieren",
       "undo": "↩ Rückgängig",
+      "carefully": "🎯 Noch einmal, sorgfältig",
       "undone": "Korrektur rückgängig gemacht.",
       "added": {
         "one": "+{count} neu",

@@ -85,3 +85,30 @@ def test_a_card_corrected_seeing_its_figure(client, monkeypatch):
         res = client.post(f"/api/lessons/{lesson['id']}/fix-card", json={"card": asked, "instruction": "E à droite"})
         assert res.status_code == 200
     assert seen == ["<svg>drawn</svg>", ""]
+
+
+def test_corrections_asked_quick_by_the_page(client, monkeypatch):
+    """The page's "Quick" passed on to the AI, for a lesson's correction and a card's."""
+    from app.routes import lessons as routes
+    from notosaurus_core import llm
+    from notosaurus_core.models import Revision
+
+    lesson = extract_lesson(client)
+    asked = []
+
+    async def fix(*args, quick=False, **kwargs):
+        asked.append(("fix", quick))
+        return llm.FixedCard(card=args[4], summary="ok")
+
+    async def revise(*args, quick=False, **kwargs):
+        asked.append(("revise", quick))
+        return Revision(deck=args[3].deck, cards=args[3].cards, summary="ok")
+
+    monkeypatch.setattr(routes.llm, "fix_card", fix)
+    monkeypatch.setattr(routes, "revise_cards", revise)
+    for quick in (True, False):
+        fixed = {"card": lesson["cards"][0], "instruction": "x", "quick": quick}
+        assert client.post(f"/api/lessons/{lesson['id']}/fix-card", json=fixed).status_code == 200
+        revised = {"deck": lesson["deck"], "cards": lesson["cards"], "instruction": "x", "quick": quick}
+        assert client.post(f"/api/lessons/{lesson['id']}/revise", json=revised).status_code == 200
+    assert asked == [("fix", True), ("revise", True), ("fix", False), ("revise", False)]

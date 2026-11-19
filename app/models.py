@@ -115,6 +115,7 @@ class RevisionRequest(LessonIn):
     """Current (possibly unsaved) state of the lesson + the correction to apply."""
 
     instruction: str = Field(min_length=1, max_length=2000)
+    quick: bool = False  # the model thinking little (the page's "Quick")
 
 
 class FixCardRequest(BaseModel):
@@ -123,6 +124,7 @@ class FixCardRequest(BaseModel):
     card: Card
     instruction: str = Field(min_length=1, max_length=2000)
     others: list[str] = Field(default_factory=list, max_length=500)  # the other cards' fronts
+    quick: bool = False
 
 
 class ExportRequest(LessonIn):

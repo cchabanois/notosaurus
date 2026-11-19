@@ -190,6 +190,7 @@ document.addEventListener("alpine:init", () => {
     cancelling: false,
     loadingQuick: false,
     loadingPages: 0,      // the pages in the call being made: the waiting card's estimate
+    loadingCards: 0,      // the cards a correction writes again: its estimate
     lessons: [],         // saved lesson summaries
     children: [],        // the children's cards (app-children.js): first name, class, decks, instructions
     childId: "",         // the child the next lesson is for (kept on this device)

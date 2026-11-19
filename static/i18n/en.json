@@ -132,7 +132,7 @@
       "regenerateNewHint": "(new lesson)",
       "regenerateExported": "Already sent to Anki: the cards sent stay there, the new ones are added at the next send.",
       "regenerated": "✨ Cards generated again.",
-      "speed": "How the cards are made",
+      "speed": "AI mode: making and correcting",
       "quick": "⚡ Quick",
       "careful": "🎯 Careful",
       "quickHint": "A few seconds. Right for vocabulary or a simple lesson.",
@@ -228,6 +228,7 @@
       "placeholder": "✨ Correct with AI: “remove the card about father”, “you forgot the colours”…",
       "button": "Correct",
       "undo": "↩ Undo",
+      "carefully": "🎯 Again, carefully",
       "undone": "Correction undone.",
       "added": {
         "one": "+{count} new",

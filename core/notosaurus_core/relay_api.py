@@ -175,6 +175,7 @@ class ReviseRequest(BaseModel):
     instruction: str = Field(min_length=1, max_length=MAX_INSTRUCTION)
     language: str = Language
     instructions: str = Instructions
+    quick: bool = Field(default=False, description='The model thinking little (the page\'s "Quick"): faster.')
 
 
 class FixCardRequest(BaseModel):
@@ -195,6 +196,7 @@ class FixCardRequest(BaseModel):
         max_length=MAX_FIGURE_SVG,
         description="The card's figure as drawn (its SVG), when it has one: seen by the AI correcting it.",
     )
+    quick: bool = Field(default=False, description='The model thinking little (the page\'s "Quick"): faster.')
 
 
 class LessonDrawingsRequest(BaseModel):

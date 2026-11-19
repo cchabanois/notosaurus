@@ -3371,6 +3371,12 @@
             "maxLength": 1000000,
             "title": "Figure Svg",
             "type": "string"
+          },
+          "quick": {
+            "default": false,
+            "description": "The model thinking little (the page's \"Quick\"): faster.",
+            "title": "Quick",
+            "type": "boolean"
           }
         },
         "required": [
@@ -4174,6 +4180,12 @@
             "maxLength": 10000,
             "title": "Instructions",
             "type": "string"
+          },
+          "quick": {
+            "default": false,
+            "description": "The model thinking little (the page's \"Quick\"): faster.",
+            "title": "Quick",
+            "type": "boolean"
           }
         },
         "required": [

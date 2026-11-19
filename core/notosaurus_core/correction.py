@@ -23,12 +23,15 @@ async def revise_cards(
     language: str = "English",
     instructions: str = "",
     demo: dict[str, str] | None = None,
+    quick: bool = False,
 ) -> Revision:
     """Apply a natural-language correction ("remove…", "you forgot…") to the cards.
 
     `language`: English name of the page's language ("French"), for the one-line
     summary; `instructions`: see prompts.ExtractOptions; `demo`: the demo provider's texts in
-    that language ("removed", "added", "addedFront"; English by default)."""
+    that language ("removed", "added", "addedFront"; English by default). `quick`: the model
+    thinking little, as a lesson made quick (2026-11-19, 27 corrections with photos: as right,
+    about 30 % faster)."""
     # The existing masks stay out of the conversation (their boxes are in our own
     # format): the revised cards get back the mask of the card they were. New cards
     # about a diagram label come with a mask in the model's format.
@@ -50,6 +53,7 @@ async def revise_cards(
         images,
         text,
         ai.ai_schema(Revision, fun_facts=True, helps=True, claude=ai.for_claude(s)),
+        quick=quick,
         demo=lambda: demo_ai.revision(deck, instruction, texts),
     )
     revision = Revision.model_validate(ai._accepted(answer).model_dump())
@@ -71,6 +75,7 @@ async def fix_card(
     instructions: str = "",
     demo: dict[str, str] | None = None,
     figure_svg: str = "",
+    quick: bool = False,
 ) -> FixedCard:
     """One card corrected by a natural-language request ("the answer is 1789"), seeing the
     lesson's photos: the only card the AI writes, so no other changes. `others`: the other
@@ -78,7 +83,8 @@ async def fix_card(
     It stays the same card: its id (Anki updates its note) and its diagram label; its
     picture too, unless what to draw changed. `figure_svg`: its figure as drawn, shown after
     the photos: a request about the drawing ("E is on the wrong side") is seen, and said in
-    figure_problem for it to be drawn again (its picture kept until then)."""
+    figure_problem for it to be drawn again (its picture kept until then). `quick`: as
+    revise_cards'."""
     from . import figures
 
     images, _ = ai._prepare(images)
@@ -93,6 +99,7 @@ async def fix_card(
         images,
         text,
         ai.ai_schema(CardFix, fun_facts=True, helps=True, claude=ai.for_claude(s)),
+        quick=quick,
         demo=lambda: demo_ai.fixed_card(card, instruction, texts),
     )
     fix = CardFix.model_validate(ai._accepted(answer).model_dump())
