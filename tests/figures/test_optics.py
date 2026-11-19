@@ -35,7 +35,7 @@ def test_light_rays_are_a_family_of_their_own():
 
 def test_the_rules_calls_compile():
     rule = (figures_typst.RULES / "optics.md").read_text(encoding="utf-8")
-    calls = [c for c in re.findall(r"`(#(?:refraction|lens)\([^`]*\))`", rule) if "…" not in c]
+    calls = [c for c in re.findall(r"`(#(?:refraction|lens|telescope)\([^`]*\))`", rule) if "…" not in c]
     assert calls  # its example (a refraction) compiles in test_each_familys_rule_example_compiles
     for call in calls:
         assert figures.clean(figures_typst.compile_svg("optics", call)).startswith("<svg")
@@ -96,3 +96,22 @@ def test_a_lens_image_too_far_refused(object):
         figures_typst.compile_svg("optics", f"#lens(focal: 4, object: {object}, height: 1)")
     for near in ("(-40 / 9)", "(-40 / 11)"):
         figures_typst.compile_svg("optics", f"#lens(focal: 4, object: {near}, height: 1)")
+
+
+def test_a_telescopes_ray_path_is_computed(tmp_path):
+    """An afocal telescope: drawn by eye in SVG, its rays never leaving the eyepiece parallel,
+    the optics family refusing it (5 blank drawings). Its path computed: the beam at α meets
+    the focal plane at B1, −f1 tan α under the axis, and leaves at α', tan α' = (f1 / f2) tan α;
+    a real telescope's values drawn at a readable scale (f1 / f2 at most 5, α at least 5°)."""
+    path = _value(tmp_path, "afocal-path(5, 1, 8)")
+    t = math.tan(math.radians(8))
+    assert path["b"] == pytest.approx(-5 * t) and path["t2"] == pytest.approx(5 * t)
+    real = _value(tmp_path, "afocal-path(90, 10, 3)")
+    assert (real["f2"], real["angle"]) == (pytest.approx(18), pytest.approx(5))
+    assert real["t2"] == pytest.approx(5 * math.tan(math.radians(5)))
+    kind = figures_typst.KINDS.split('"optics":')[1].split(";")[0]
+    assert "telescope" in kind
+    asked = figures_typst.compile_svg("optics", '#telescope(focal1: 5, focal2: 1, angle: 8, hidden: ("alpha2",))')
+    assert asked != figures_typst.compile_svg("optics", "#telescope(focal1: 5, focal2: 1, angle: 8)")
+    with pytest.raises(figures_typst.Unusable, match="focal1 > focal2"):
+        figures_typst.compile_svg("optics", "#telescope(focal1: 1, focal2: 5)")

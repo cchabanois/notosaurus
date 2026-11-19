@@ -5,8 +5,9 @@
 // (Snell-Descartes: n1 sin i1 = n2 sin i2, the refracted ray at that angle; beyond the
 // critical angle, total reflection, no refracted ray), and the image of an object by a thin
 // converging lens (1/OA' − 1/OA = 1/f', γ = OA'/OA: the image computed, the three rays from
-// B drawn through it). Each name placed in the first spot clear of every ray and line and of
-// the names already placed; "?" for a name hidden (a card asks it).
+// B drawn through it), and an afocal telescope's ray path (telescope). Each name placed in
+// the first spot clear of every ray and line and of the names already placed; "?" for a name
+// hidden (a card asks it).
 
 #let _txt(body) = text(11pt, body)
 // whether a text's box (centre c, its half sizes) is clear of the segments and of the boxes
@@ -252,6 +253,99 @@
       }
       dim(A.at(0), 0, "OA", xa, 0)
       dim(0, A2.at(0), "OA'", xi, if real { 0 } else { 1 })
+    }
+  })
+}
+// An afocal telescope's ray path, as it is drawn (never to scale: a real telescope, f1 = 900
+// mm, f2 = 10 mm, α = 0,5°, would shrink its eyepiece and its rays to nothing): f1 / f2 at most
+// 5, α at least 5° and α' at most 60°. (f1, f2, α in degrees, tan α, B1's height under the axis
+// −f1 tan α, tan α' = (f1 / f2) tan α)
+#let afocal-path(focal1, focal2, angle) = {
+  let (f1, f2) = (float(focal1), calc.max(float(focal2), focal1 / 5))
+  let t = calc.min(calc.tan(calc.max(angle, 5) * 1deg), calc.tan(60deg) * f2 / f1)
+  (f1: f1, f2: f2, angle: calc.atan(t).deg(), t: t, b: -f1 * t, t2: f1 / f2 * t)
+}
+// An afocal astronomical telescope: the objective L1 (focal f1, at O1) and the eyepiece L2
+// (focal f2, at O2), F1' and F2 one point; a beam of parallel rays from a star, at `angle`
+// (degrees) from the axis, coming down from the left. Computed: the beam converges at B1 in
+// the focal plane (A1B1 = f1 tan α), then leaves L2 parallel to (B1 O2), at α' with
+// tan α' = (f1 / f2) tan α. Its three rays (one through O1); α at O1, α' at O2 on the line
+// from B1 through O2 (dashed). names: the points' and angles' names; hidden: those a card asks.
+#let telescope(focal1: 5, focal2: 1, angle: 10, names: (:), hidden: ()) = context {
+  let number(x) = type(x) in (int, float)
+  assert(number(focal1) and number(focal2) and focal1 > 0 and focal2 > 0,
+    message: "focal1 and focal2 are the objective's and the eyepiece's focal lengths, positive numbers")
+  assert(focal1 > focal2, message: "an astronomical telescope's objective has the longer focal length: focal1 > focal2")
+  assert(number(angle) and angle > 0 and angle < 30, message: "angle is the beam's α from the axis, in degrees, between 0 and 30")
+  let names = (L1: $L_1$, L2: $L_2$, O1: $O_1$, O2: $O_2$, F: $F'_1 = F_2$, A1: $A_1$, B1: $B_1$,
+    alpha: $alpha$, alpha2: $alpha'$) + names
+  let name(key) = if key in hidden { [?] } else { names.at(key) }
+  let (f1, f2, angle, t, b, t2) = afocal-path(focal1, focal2, angle)
+  let x2 = f1 + f2  // O2
+  // the beam: three rays, one through O1, the others d above and below it
+  let d = calc.max(0.15 * (f1 + f2), 0.6)
+  let heights = (d, 0, -d)
+  let before = 0.4 * x2  // how far the beam is drawn before L1
+  // where each ray meets L2: on its line from L1 through B1
+  let at2(y1) = y1 + (b - y1) * x2 / f1
+  let after = calc.min(0.4 * x2, 0.3 * x2 / t2)  // how far the rays are drawn past L2: rising 0.3 x2 at most
+  let k = 11 / (before + x2 + after)  // the figure about 11 cm wide
+  let P(x, y) = (x * k, y * k)
+  let top1 = (d + before * t) * k + 0.4
+  let top2 = calc.max(..heights.map(y => calc.abs(at2(y)))) * k + 0.4
+  cetz.canvas({
+    import cetz.draw: *
+    line(P(-before, 0), P(x2 + after, 0), stroke: 0.6pt)  // the optical axis
+    for (x, top) in ((0, top1), (x2, top2)) {
+      line((x * k, -top), (x * k, top), stroke: 1.2pt, mark: (start: "stealth", end: "stealth", fill: black, scale: 0.8))
+    }
+    line(P(f1, 0.08 / k), P(f1, -0.08 / k), stroke: 1pt)  // F1' = F2
+    // the intermediate image A1B1
+    line(P(f1, 0), P(f1, b), stroke: 1.4pt, mark: (end: "stealth", fill: black, scale: 0.8))
+    let segments = ((P(-before, 0), P(x2 + after, 0)), ((0, -top1), (0, top1)), ((x2 * k, -top2), (x2 * k, top2)), (P(f1, 0), P(f1, b)))
+    for y1 in heights {
+      let start = P(-before, y1 + before * t)
+      let p1 = P(0, y1)
+      let y2 = at2(y1)
+      let p2 = P(x2, y2)
+      let out = P(x2 + after, y2 + after * t2)
+      _ray(start, p1)
+      _ray(p1, p2)
+      _ray(p2, out)
+      segments += ((start, p1), (p1, p2), (p2, out))
+    }
+    // the line from B1 through O2, which the rays leaving L2 are parallel to
+    let O2 = P(x2, 0)
+    let guide = P(x2 + after * 0.8, after * 0.8 * t2)
+    line(P(f1, b), guide, stroke: (thickness: 0.6pt, dash: "dashed"))
+    segments.push((P(f1, b), guide))
+    // α at O1 (between the axis and the ray through O1), α' at O2 (between the axis and the line)
+    let r = 0.9
+    arc((0, 0), start: 180deg, delta: -angle * 1deg, radius: r, anchor: "origin", stroke: 0.6pt)
+    let alpha2 = calc.atan(t2).deg()
+    arc(O2, start: 0deg, delta: alpha2 * 1deg, radius: r, anchor: "origin", stroke: 0.6pt)
+    // each angle's name by its arc, in the first spot clear of the rays: its middle first,
+    // then beyond its side away from the rays (above the line for α', below the axis for α)
+    let placed = ()
+    for (key, p, dirs) in (
+      ("alpha", (0, 0), (180 - angle / 2, 180 - angle - 12, 180 - angle - 25, 180 + angle / 2 + 8)),
+      ("alpha2", O2, (alpha2 / 2, alpha2 + 12, alpha2 + 25, alpha2 + 40, -12)),
+    ) {
+      let box = _spot(p, name(key), dirs, segments, placed, d: r + 0.05)
+      content(box.at(0), _txt(name(key)))
+      placed.push(box)
+    }
+    for (key, p, dirs) in (
+      ("L1", (0, top1), (90,)),
+      ("L2", (x2 * k, top2), (90,)),
+      ("O1", (0, 0), (-30, -150, -60, -120, 30, 150, -90, 60, 120)),
+      ("O2", O2, (-30, -150, -60, -120, -90, 150, 120)),
+      ("F", P(f1, 0), (90, 60, 120, 45, 135)),
+      ("B1", P(f1, b), (-90, -45, -135, 0)),
+    ) {
+      let box = _spot(p, name(key), dirs, segments, placed)
+      content(box.at(0), _txt(name(key)))
+      placed.push(box)
     }
   })
 }
