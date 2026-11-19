@@ -304,7 +304,6 @@ def test_cancel_while_a_card_is_corrected(page):
 
     page.route("**/api/lessons/*/fix-card*", lambda route: held.append(route))
     page.route("**/api/generations/*/cancel", cancel_asked)
-    first.get_by_role("button", name="Plus d'actions").click()
     first.get_by_role("button", name="✨ Corriger cette carte").click()
     field = first.get_by_role("textbox", name="Qu'est-ce qui ne va pas ?")
     field.fill("la mamá")
@@ -339,7 +338,6 @@ def test_cancel_while_a_card_correction_is_dictated(page):
     first = page.locator(".flash").first
     back = first.locator("textarea").nth(1)
     before = back.input_value()
-    first.get_by_role("button", name="Plus d'actions").click()
     first.get_by_role("button", name="✨ Corriger cette carte").click()
     field = first.get_by_role("textbox", name="Qu'est-ce qui ne va pas ?")
     first.locator(".card-fix button.mic").click()
@@ -514,14 +512,12 @@ def test_one_card_corrected_by_the_ai(page):
     first, second = cards.nth(0), cards.nth(1)
     back = first.locator("textarea").nth(1)
     before, other = back.input_value(), second.locator("textarea").nth(1).input_value()
-    first.get_by_role("button", name="Plus d'actions").click()
     first.get_by_role("button", name="✨ Corriger cette carte").click()
     field = first.get_by_role("textbox", name="Qu'est-ce qui ne va pas ?")
     sync_api.expect(field).to_be_focused()
     page.keyboard.press("Escape")
     sync_api.expect(field).to_be_hidden()
 
-    first.get_by_role("button", name="Plus d'actions").click()
     first.get_by_role("button", name="✨ Corriger cette carte").click()
     field.fill("la mamá")
     field.press("Enter")
@@ -542,18 +538,16 @@ def test_one_card_corrected_by_the_ai(page):
 
 
 def test_a_card_just_added_written_by_the_ai(page):
-    """A card just added (empty): ⋯ → "✨ Write with the AI", asked what it should ask; the
+    """A card just added (empty): its "✨ Write with the AI", asked what it should ask; the
     demo AI writes its back from that. Filled, it is corrected again, no more written."""
     generate_free(page, FRONT_PROMPT)
     page.get_by_role("button", name="＋ Ajouter une carte").click()
     added = page.locator(".flash").last
-    added.get_by_role("button", name="Plus d'actions").click()
     added.get_by_role("button", name="✨ Écrire avec l'IA").click()
     field = added.get_by_role("textbox", name="Que doit demander cette carte ?")
     field.fill("le grand-père en espagnol")
     added.get_by_role("button", name="Écrire", exact=True).click()
     sync_api.expect(added.locator("textarea").nth(1)).to_have_value("le grand-père en espagnol")
-    added.get_by_role("button", name="Plus d'actions").click()
     sync_api.expect(added.get_by_role("button", name="✨ Corriger cette carte")).to_be_visible()
 
 
@@ -568,7 +562,6 @@ def test_a_card_correction_dictated(page):
     )
     generate_free(page, FRONT_PROMPT)
     first = page.locator(".flash").first
-    first.get_by_role("button", name="Plus d'actions").click()
     first.get_by_role("button", name="✨ Corriger cette carte").click()
     fix = first.locator(".card-fix")
     fix.get_by_role("button", name="Dicter").click()
@@ -584,7 +577,7 @@ def test_a_lesson_that_looks_wrong_corrected_or_kept(page):
     wrong = page.locator(".flash").nth(1)
     sync_api.expect(wrong.locator(".card-doubt")).to_contain_text("1915 est l'année du génocide arménien")
     sync_api.expect(page.locator(".flash").first.locator(".card-doubt")).to_be_hidden()
-    wrong.get_by_role("button", name="Corriger").click()
+    wrong.get_by_role("button", name="Corriger", exact=True).click()
     sync_api.expect(wrong.locator(".card-doubt")).to_be_hidden()
     sync_api.expect(wrong.locator("textarea.back")).to_have_value("1941 – 1945")
     sync_api.expect(page.locator(".save-pill")).to_have_class(SAVED)
@@ -597,3 +590,18 @@ def test_a_lesson_that_looks_wrong_corrected_or_kept(page):
     wrong.get_by_role("button", name="Garder la leçon").click()
     sync_api.expect(wrong.locator(".card-doubt")).to_be_hidden()
     sync_api.expect(wrong.locator("textarea.back")).to_have_value("1915")
+
+
+def test_correcting_a_card_shown_on_each(page):
+    """ "✨ Correct this card" on every card, in words, not behind ⋯ (seldom found there); hidden
+    while its field is open."""
+    generate_free(page, FRONT_PROMPT)
+    cards = page.locator(".flash")
+    for i in range(cards.count()):
+        sync_api.expect(cards.nth(i).get_by_role("button", name="✨ Corriger cette carte")).to_be_visible()
+    first = cards.first
+    first.get_by_role("button", name="Plus d'actions").click()
+    sync_api.expect(first.locator(".card-menu-items").get_by_text("Corriger cette carte")).to_have_count(0)
+    first.get_by_role("button", name="✨ Corriger cette carte").click()
+    sync_api.expect(first.get_by_role("textbox", name="Qu'est-ce qui ne va pas ?")).to_be_visible()
+    sync_api.expect(first.get_by_role("button", name="✨ Corriger cette carte")).to_be_hidden()
