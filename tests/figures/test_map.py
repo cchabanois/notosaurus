@@ -744,7 +744,7 @@ def test_the_past_states_names_kept_as_listed():
 
     kept = json.loads(atlas.BORDERS_FILE.read_text(encoding="utf-8"))
     english = {item["en"] for item in kept["items"].values()} | set(kept["articles"])
-    assert set(atlas.ALSO) <= english | set(atlas.RULED)
+    assert set(atlas.ALSO) <= english | set(atlas.RULED) | set(atlas.OHM_ONLY)
     assert all(kept["articles"].get(article) for _, article in atlas.ITEMS.values())
 
 
@@ -1307,3 +1307,61 @@ def test_a_small_land_has_its_real_outline(land):
     countries = json.loads((folder / "atlas.json").read_text(encoding="utf-8"))["countries"]
     code = next(code for code, c in countries.items() if land.lower() in (n.lower() for n in c["n"]))
     assert max(len(r) for r in countries[code]["r"]) >= 14, countries[code]["r"]
+
+
+def test_a_countrys_nations_are_its_regions():
+    """The United Kingdom's nations are its regions, by their names in any language (« Écosse »
+    was refused as a region, then "Scotland" as a country: the map fell back to a drawing);
+    asked as a country, the refusal says whose region it is."""
+    for name in ("Écosse", "Scotland", "pays de Galles", "Irlande du Nord", "Angleterre"):
+        svg = figures_typst.compile_svg("map", f'#map(countries: ("Royaume-Uni",), regions: ("{name}",))')
+        assert svg.startswith("<svg"), name
+    # and their capitals are cities (Belfast was refused as one: a district's name)
+    body = '#map(countries: ("Royaume-Uni",), cities: ("Édimbourg", "Cardiff", "Belfast"))'
+    assert figures_typst.compile_svg("map", body).startswith("<svg")
+    with pytest.raises(figures_typst.Unusable, match="is a region of"):
+        figures_typst.compile_svg("map", '#map(countries: ("Scotland",))')
+
+
+@pytest.mark.parametrize("part", ["Afrique de l'Ouest", "Antilles", "Afrique de l'Est"])
+def test_a_part_of_the_world_by_its_usual_name_is_a_flows_end(part):
+    """A part of the world by the name lessons give it (« Afrique de l'Ouest », not CLDR's
+    « Afrique occidentale »; « Antilles », the Caribbean) is a flow's end: the triangular trade
+    lost a drawing to both."""
+    body = f'#map(flows: ((from: "Europe de l\'Ouest", to: "{part}"),))'
+    assert figures_typst.compile_svg("map", body).startswith("<svg")
+
+
+def test_an_empire_holds_its_dominions():
+    """The British Empire of 1914 holds its dominions: Australia (a "country" in OpenHistoricalMap,
+    no colony_of) was grey on every map of the empires of 1914."""
+    folder, _ = _atlas_folder()
+    states = json.loads((folder / "borders" / "1914.json").read_text(encoding="utf-8"))["countries"]
+    britain = next(code for code, s in states.items() if "United Kingdom of Great Britain and Ireland" in s["n"])
+    for dominion in ("Australia", "Canada", "Dominion of New Zealand"):
+        code = next(code for code, s in states.items() if dominion in s["n"])
+        assert states[code].get("o") == britain, (dominion, states[code].get("o"))
+
+
+@pytest.mark.parametrize("place", ["Éphèse", "Dunhuang", "Bethléem"])
+def test_more_places_of_history_lessons(place):
+    """Places the syllabus names that the atlas lacked (Éphèse for Christianity's spread,
+    Dunhuang on the Silk Road): the map refused them, then fell back to a drawing."""
+    assert figures_typst.compile_svg("map", f'#map(cities: ("{place}",))').startswith("<svg")
+
+
+@pytest.mark.parametrize(
+    ("name", "year"),
+    [
+        ("Union sud-africaine", 1914),
+        ("Inde britannique", 1914),
+        ("Empire des Indes", 1925),
+        ("Nord-Vietnam", 1960),
+        ("Terre-Neuve", 1920),
+    ],
+)
+def test_a_past_state_by_the_name_lessons_give_it(name, year):
+    """A state of the past by the name a French lesson writes (« Inde britannique » for the
+    British Raj, « Nord-Vietnam »): refused, the map lost the state."""
+    body = f'#map(year: {year}, countries: ("{name}",))'
+    assert figures_typst.compile_svg("map", body).startswith("<svg")
