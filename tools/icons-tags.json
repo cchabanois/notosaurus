@@ -395,7 +395,7 @@
   "fire-hydrant-underground": [],
   "fireplace": [],
   "fish-cleaning": [],
-  "fish-ladder": ["fish", "fisheries"],
+  "fish-ladder": ["fisheries"],
   "fishing-pier": ["fishing", "fishing port", "fishery"],
   "food": [],
   "footwear-decontamination": [],
@@ -743,5 +743,6 @@
   "pyramid": ["pyramids", "egypt", "pharaoh", "ancient egypt", "tomb"],
   "temple": ["greek temple", "roman temple", "antiquity", "acropolis", "parthenon", "ancient city"],
   "treaty": ["agreement", "peace", "peace treaty", "pact", "charter", "declaration", "document", "scroll", "constitution", "law", "edict", "alliance", "armistice", "handshake", "signature", "signing", "negotiation", "conference", "congress"],
-  "wheat": ["cereal", "cereals", "crop", "crops", "grain field", "harvest", "agricultural production"]
+  "wheat": ["cereal", "cereals", "crop", "crops", "grain field", "harvest", "agricultural production"],
+  "network": ["router", "modem", "computer network"]
 }

@@ -115,7 +115,7 @@
  },
  {
   "name": "notosaurus-icons",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "licence": "AGPL-3.0-or-later",
   "url": "https://github.com/cchabanois/notosaurus/blob/main/tools/icons.py"
  },
@@ -130,6 +130,12 @@
   "version": "5.13.0",
   "licence": "CC0-1.0",
   "url": "https://github.com/rapideditor/temaki"
+ },
+ {
+  "name": "Phosphor",
+  "version": "2.1.1",
+  "licence": "MIT",
+  "url": "https://github.com/phosphor-icons/core"
  },
  {
   "name": "Natural Earth",

@@ -85,6 +85,8 @@ def draw_local(case: dict) -> dict:
     # each Typst refused on the way (two refusals: the figure drawn as SVG), kept to see why
     refused: list[dict] = []
     token = figure_making.refusals.set(refused)
+    missing: list[str] = []  # the icons asked for that no icon gives (drawn without them)
+    icons = figures_typst.icons_missing.set(missing)
     answered: list[dict] = []  # the AI's SVG drawings, the one kept saved with its labels
     answers = figure_making.answers.set(answered)
     try:
@@ -98,6 +100,7 @@ def draw_local(case: dict) -> dict:
         }
     finally:
         figure_making.refusals.reset(token)
+        figures_typst.icons_missing.reset(icons)
         figure_making.answers.reset(answers)
     seconds = round(time.monotonic() - start, 1)
     # a figure in panels: its panels' families and Typst, each said (its SVG kept as drawn)
@@ -111,6 +114,7 @@ def draw_local(case: dict) -> dict:
         "family": family,
         "typst": typst or made.typst,
         "refused": refused,
+        "icons_missing": sorted(set(missing)),
         "drawing": {"drawing": drawing["drawing"], "clamp": drawing["clamp"]} if drawing else None,
     }
 
@@ -322,6 +326,8 @@ def main() -> int:
             kept.append({"file": name, "said": r["said"][:300]})
         if kept:
             verdict["refused"] = kept
+        if not verdict.get("icons_missing"):
+            verdict.pop("icons_missing", None)
         return case["id"], verdict
 
     with ThreadPoolExecutor(args.jobs) as pool:
@@ -345,6 +351,8 @@ def main() -> int:
         for d in run["cases"][case["id"]]:
             for r in d.get("refused", []):
                 print(f"   ↺ {r['file']}: {r['said'][:160]}")
+            if d.get("icons_missing"):
+                print(f"   ∅ {d.get('file', '')}: no icon for " + ", ".join(f'"{w}"' for w in d["icons_missing"]))
     total = summary(everything)
     print(
         f"\n{total['right']}/{total['judged']} figures right, median {total['median_s']} s, {total['credits']} credits "

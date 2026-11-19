@@ -32,11 +32,35 @@ def test_an_icon_chosen_by_an_english_word_in_any_family():
     assert len(text_size.icons_px(figures_typst.compile_svg("timeline", timeline))) == 1
 
 
-def test_an_unknown_word_refused_with_the_icons_nearest():
-    """A word no icon has: refused, the icons whose words come near it named (its beginning
-    shared, one within the other), so the AI can choose one."""
-    with pytest.raises(Unusable, match=r'no icon for "factorie".*industry \(factory'):
-        figures_typst.compile_svg("diagram", _scheme('#icon("factorie") Usine'))
+def test_an_unknown_word_draws_the_figure_without_its_icon():
+    """A word no icon has: the figure drawn all the same (never refused: a refusal costs a
+    drawing), no icon in its place, never one guessed, the text beside it kept; the word
+    kept for the caller (the bench: what to tag next)."""
+    missing: list[str] = []
+    token = figures_typst.icons_missing.set(missing)
+    try:
+        svg = figures_typst.compile_svg("diagram", _scheme('#icon("zzyzx") Usine', '#icon("factory") Ferme'))
+    finally:
+        figures_typst.icons_missing.reset(token)
+    assert len(text_size.icons_px(svg)) == 1 and missing == ["zzyzx"]
+    assert "notosaurus-icon-missing" not in svg
+
+
+def test_a_safe_near_form_finds_its_icon():
+    """A plural, a singular, a hyphen, a phrase's last word, an icon family's first word: the
+    same icon, as the index has them (tools/icons.py); objects Phosphor's, places still the
+    map's (a port the harbour)."""
+    (archive,) = (ROOT / "core" / "notosaurus_core" / "typst").glob("notosaurus-icons-*.tar.gz")
+    with tarfile.open(archive) as tar:
+        words = json.loads(tar.extractfile("index.json").read())["words"]  # type: ignore[union-attr]
+    assert words["factories"] == words["factory"] == "industry"
+    assert words["port"] == words["ports"] == "harbor"
+    assert words["laptop"] == words["laptops"] == "laptop" and words["microscope"] == "microscope"
+    assert words["test tubes"] == "test-tube" and words["computer"] == words["computers"]
+    assert words["battery"].startswith("battery-")  # the family's first word
+    for word in ("Factories", "test-tube", "steel factory", "Microscopes"):
+        svg = figures_typst.compile_svg("diagram", _scheme(f'#icon("{word}") X'))
+        assert len(text_size.icons_px(svg)) == 1, word
 
 
 def test_the_word_is_never_written():
@@ -52,9 +76,9 @@ def test_the_word_is_never_written():
     assert len(text_size.runs(with_icons)) == len(text_size.runs(plain))
 
 
-def test_an_svg_of_ones_own_cleaned_or_refused():
+def test_an_svg_of_ones_own_cleaned_or_left_out():
     """icon(svg: …), for what no icon shows: drawn in one colour (its red the icon's black);
-    text, an image, a link or too many shapes refused."""
+    text, an image, a link or too many shapes: not drawn (nothing in its place), never refused."""
     red = '<svg viewBox=\\"0 0 10 10\\"><circle cx=\\"5\\" cy=\\"5\\" r=\\"4\\" fill=\\"red\\"/></svg>'
     svg = figures_typst.compile_svg("diagram", _scheme(f'#icon(svg: "{red}") X'))
     (icon,) = re.findall(r'href="data:image/svg\+xml;base64,([^"]+)"', svg)
@@ -63,14 +87,17 @@ def test_an_svg_of_ones_own_cleaned_or_refused():
     drawn = base64.b64decode(icon).decode()
     assert "red" not in drawn and 'fill="#000000"' in drawn
     for bad in ("<text>A</text>", '<image href=\\"x.png\\"/>', '<a href=\\"x\\"><rect/></a>', "<rect/>" * 41):
-        with pytest.raises(Unusable, match="icon\\(svg"):
-            figures_typst.compile_svg("diagram", _scheme(f'#icon(svg: "<svg viewBox=\\"0 0 10 10\\">{bad}</svg>") X'))
+        svg = figures_typst.compile_svg("diagram", _scheme(f'#icon(svg: "<svg viewBox=\\"0 0 10 10\\">{bad}</svg>") X'))
+        assert not text_size.icons_px(svg), bad
 
 
-def test_an_icon_too_small_to_see_on_a_card_refused():
-    """An icon drawn far smaller than its text (a speck on a phone): refused, its size said."""
+def test_an_icon_too_small_to_see_on_a_card_grown_or_refused():
+    """An icon a little too small on a phone: grown round its middle to be seen; one far
+    smaller than its text (a speck, more than twice too small): refused, its size said."""
+    svg = figures_typst.compile_svg("diagram", _scheme('#icon("factory", size: 0.7em) Usine'))
+    assert min(text_size.icons_px(svg)) >= figures_typst.MIN_ICON_PX - 0.01
     with pytest.raises(Unusable, match="icon is too small"):
-        figures_typst.compile_svg("diagram", _scheme('#icon("factory", size: 0.4em) Usine'))
+        figures_typst.compile_svg("diagram", _scheme('#icon("factory", size: 0.3em) Usine'))
 
 
 def test_a_figure_without_icons_never_reads_their_index(tmp_path):
@@ -104,10 +131,12 @@ def test_every_icon_tagged_square_and_its_words_indexed():
             if m.name.startswith("icons/")
         }
         index = json.loads(tar.extractfile("index.json").read())  # type: ignore[union-attr]
-        for name in ("industry", "harbor", "silo", "battle", "treaty", "wheat"):
+        assert "MIT License" in tar.extractfile("LICENSE-Phosphor").read().decode()  # type: ignore[union-attr]
+        for name in ("industry", "harbor", "silo", "battle", "treaty", "wheat", "laptop", "microscope"):
             svg = tar.extractfile(icons[name]).read().decode()  # type: ignore[union-attr]
             w, h = re.search(r'viewBox="[-\d.]+ [-\d.]+ ([\d.]+) ([\d.]+)"', svg).groups()  # type: ignore[union-attr]
             assert w == h and text_size.ICON_MARK in svg, name
-    assert set(icons) == set(tags)
+    assert set(tags) <= set(icons)  # Maki's, Temaki's and ours; Phosphor's tagged by Phosphor
+    assert any(n.startswith("ph-") for n in icons) and "laptop" in icons
     assert set(index["words"].values()) <= set(icons)
     assert index["words"]["factory"] == "industry" and index["words"]["port"] == "harbor"
