@@ -1270,5 +1270,207 @@
    -77.2322,
    39.8283
   ]
+ },
+ {
+  "title": "Auschwitz concentration camp",
+  "n": [
+   "Auschwitz",
+   "KZ Auschwitz",
+   "Campo de concentración de Auschwitz",
+   "campo di concentramento di Auschwitz",
+   "Auschwitz-Birkenau",
+   "Birkenau",
+   "Oświęcim"
+  ],
+  "xy": [
+   19.178333333333335,
+   50.035833333333336
+  ]
+ },
+ {
+  "title": "Treblinka extermination camp",
+  "n": [
+   "Camp d'extermination de Treblinka",
+   "Treblinka extermination camp",
+   "Vernichtungslager Treblinka",
+   "Campo de exterminio de Treblinka",
+   "Campo di sterminio di Treblinka",
+   "Treblinka"
+  ],
+  "xy": [
+   22.053055555555556,
+   52.63111111111111
+  ]
+ },
+ {
+  "title": "Sobibor extermination camp",
+  "n": [
+   "camp d'extermination de Sobibor",
+   "Sobibór Extermination Camp",
+   "Vernichtungslager Sobibor",
+   "Campo de exterminio de Sobibor",
+   "Campo di sterminio di Sobibór",
+   "Sobibor",
+   "Sobibór"
+  ],
+  "xy": [
+   23.594136,
+   51.446992
+  ]
+ },
+ {
+  "title": "Belzec extermination camp",
+  "n": [
+   "camp d'extermination de Belzec",
+   "Belzec extermination camp",
+   "Vernichtungslager Belzec",
+   "Campo de exterminio de Bełżec",
+   "campo di sterminio di Bełżec",
+   "Bełżec",
+   "Belzec"
+  ],
+  "xy": [
+   23.4575,
+   50.371667
+  ]
+ },
+ {
+  "title": "Chełmno extermination camp",
+  "n": [
+   "camp d'extermination de Chełmno",
+   "Chełmno extermination camp",
+   "Vernichtungslager Kulmhof",
+   "Chelmno",
+   "campo di sterminio di Chełmno",
+   "Campo de extermínio de Chełmno",
+   "Chełmno",
+   "Kulmhof"
+  ],
+  "xy": [
+   18.723055555555554,
+   52.15416666666667
+  ]
+ },
+ {
+  "title": "Majdanek concentration camp",
+  "n": [
+   "camp d'extermination de Majdanek",
+   "Lublin-Majdanek concentration camp",
+   "KZ Majdanek",
+   "Majdanek",
+   "campo di concentramento di Majdanek",
+   "Lublin-Majdanek"
+  ],
+  "xy": [
+   22.59861111111111,
+   51.22277777777778
+  ]
+ },
+ {
+  "title": "Drancy internment camp",
+  "n": [
+   "camp de Drancy",
+   "Drancy concentration camp",
+   "Sammellager Drancy",
+   "Campo de internamiento de Drancy",
+   "campo di internamento di Drancy",
+   "Campo de deportação de Drancy",
+   "Drancy"
+  ],
+  "xy": [
+   2.445278,
+   48.925833
+  ]
+ },
+ {
+  "title": "Dachau concentration camp",
+  "n": [
+   "camp de concentration de Dachau",
+   "Dachau concentration camp",
+   "KZ Dachau",
+   "Campo de concentración de Dachau",
+   "campo di concentramento di Dachau",
+   "Campo de concentração de Dachau",
+   "Dachau"
+  ],
+  "xy": [
+   11.4683,
+   48.2699
+  ]
+ },
+ {
+  "title": "Buchenwald concentration camp",
+  "n": [
+   "Buchenwald",
+   "Buchenwald concentration camp",
+   "KZ Buchenwald",
+   "Campo de concentración de Buchenwald",
+   "campo di concentramento di Buchenwald"
+  ],
+  "xy": [
+   11.248999,
+   51.021198
+  ]
+ },
+ {
+  "title": "Bergen-Belsen concentration camp",
+  "n": [
+   "Bergen-Belsen",
+   "Bergen-Belsen concentration camp",
+   "KZ Bergen-Belsen",
+   "campo di concentramento di Bergen-Belsen"
+  ],
+  "xy": [
+   9.907099,
+   52.758899
+  ]
+ },
+ {
+  "title": "Ravensbrück concentration camp",
+  "n": [
+   "Ravensbrück",
+   "Ravensbrück concentration camp",
+   "KZ Ravensbrück",
+   "Campo de concentración de Ravensbrück",
+   "campo di concentramento di Ravensbrück",
+   "Campo de concentração de Ravensbrück",
+   "Ravensbruck"
+  ],
+  "xy": [
+   13.168809,
+   53.189875
+  ]
+ },
+ {
+  "title": "Mauthausen concentration camp",
+  "n": [
+   "Mauthausen",
+   "Mauthausen concentration camp",
+   "KZ Mauthausen",
+   "Campo de concentración de Mauthausen-Gusen",
+   "campo di concentramento di Mauthausen",
+   "Mauthausen-Gusen"
+  ],
+  "xy": [
+   14.500430555555555,
+   48.25751944444445
+  ]
+ },
+ {
+  "title": "Natzweiler-Struthof concentration camp",
+  "n": [
+   "camp de concentration de Natzweiler-Struthof",
+   "Natzweiler-Struthof concentration camp",
+   "KZ Natzweiler-Struthof",
+   "Campo de concentración de Struthof-Natzweiler",
+   "campo di concentramento di Natzweiler",
+   "Natzweiler-Struthof",
+   "Struthof",
+   "camp du Struthof"
+  ],
+  "xy": [
+   7.2546,
+   48.455
+  ]
  }
 ]

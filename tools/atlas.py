@@ -14,6 +14,12 @@ ports, the capes and the canals routes and flows pass).
 
   .venv/bin/python tools/atlas.py [folder] [--refresh-history]
 
+The regions' names in the page's languages from Wikidata (CC0), by their ISO 3166-2 codes, kept
+in tools/atlas-regions.json (the codes it lacks asked; all of them again with --refresh-history).
+A country's far parts (its overseas departments, its archipelagos across the sea) are places of
+their own in atlas.json ("t", "o" their country); the world's parts (UN M49) groups of countries
+("areas"); names.json what a name the map refuses is otherwise (a region, a state of the past).
+
 borders/<year>.json: the states of each of LAYERS' days from OpenHistoricalMap (CC0), as its
 database stood on OHM_DATE; the land it leaves to no state filled by historical-basemaps' (GPL-3.0,
 its licence shipped); their names from Wikidata (kept in tools/atlas-borders.json, asked again
@@ -54,7 +60,7 @@ ROOT = Path(__file__).resolve().parent.parent
 CORE = ROOT / "core" / "notosaurus_core"
 LIB = CORE / "atlas" / "lib.typ"
 TARGET = CORE / "typst"
-NAME, VERSION = "notosaurus-atlas", "0.12.0"
+NAME, VERSION = "notosaurus-atlas", "0.13.0"
 SOURCE = "https://raw.githubusercontent.com/nvkelso/natural-earth-vector/v5.1.2/geojson/"
 COUNTRIES = "ne_50m_admin_0_countries.geojson"  # 1:50m: a country's shape, light enough
 PLACES = "ne_10m_populated_places.geojson"  # 1:10m: the cities, their names in many languages
@@ -104,6 +110,20 @@ HISTORY = [
     *[(t, ()) for t in ("Verdun", "Sarajevo", "Hiroshima", "Nagasaki", "Oradour-sur-Glane", "Vichy", "Yalta")],
     ("Điện Biên Phủ", ("Diên Biên Phu", "Dien Bien Phu", "Ðiện Biên Phủ", "Điện Biên Phủ")),
     *[(t, ()) for t in ("Nuremberg", "Potsdam", "Gettysburg, Pennsylvania")],
+    # Sites of history that are no towns: the camps of the Shoah, the deportation's
+    ("Auschwitz concentration camp", ("Auschwitz", "Auschwitz-Birkenau", "Birkenau", "Oświęcim")),
+    ("Treblinka extermination camp", ("Treblinka",)),
+    ("Sobibor extermination camp", ("Sobibor", "Sobibór")),
+    ("Belzec extermination camp", ("Belzec", "Bełżec")),
+    ("Chełmno extermination camp", ("Chelmno", "Chełmno", "Kulmhof")),
+    ("Majdanek concentration camp", ("Majdanek", "Lublin-Majdanek")),
+    ("Drancy internment camp", ("Drancy", "camp de Drancy")),
+    ("Dachau concentration camp", ("Dachau",)),
+    ("Buchenwald concentration camp", ("Buchenwald",)),
+    ("Bergen-Belsen concentration camp", ("Bergen-Belsen",)),
+    ("Ravensbrück concentration camp", ("Ravensbrück", "Ravensbruck")),
+    ("Mauthausen concentration camp", ("Mauthausen", "Mauthausen-Gusen")),
+    ("Natzweiler-Struthof concentration camp", ("Natzweiler-Struthof", "Struthof", "camp du Struthof")),
 ]
 # The sea's passages (straits, channels, canals) a lesson names that Natural Earth lacks or
 # names in two languages only: from Wikidata (CC0), each by its English Wikipedia article, its
@@ -474,13 +494,14 @@ def download_text(name: str, folder: Path | None, url: str) -> str:
 
 def usual_names(folder: Path | None = None) -> dict[str, list[str]]:
     """Each country's usual names in the page's languages, by its two-letter code (CLDR):
-    its short and variant ones too ("UK", "Birmanie")."""
+    its short and variant ones too ("UK", "Birmanie"); the world's parts' by their M49 code
+    ("030": Asie orientale)."""
     found: dict[str, list[str]] = defaultdict(list)
     for lang in CLDR_LANGUAGES:
         data = download(f"cldr-{lang}.json", folder, CLDR.format(lang))
         for key, name in data["main"][lang]["localeDisplayNames"]["territories"].items():
             code = key.split("-alt-")[0]
-            if len(code) == 2 and code.isalpha():
+            if (len(code) == 2 and code.isalpha()) or (len(code) == 3 and code.isdigit()):  # (M49's: "030")
                 found[code].append(name)
     return found
 
@@ -498,14 +519,18 @@ def passages(folder: Path | None = None, refresh: bool = False) -> list[dict]:
 
 def kept_places(listed: list, file: Path, prefix: str, folder: Path | None, refresh: bool) -> list[dict]:
     """A list's places (its articles' titles, their names Wikidata lacks), as `file` keeps
-    them; from Wikidata when `refresh` (then kept)."""
+    them; from Wikidata when `refresh` (then kept); the places added to the list since, asked
+    alone, the others kept as they were."""
     titles = [t for t, _ in listed]
     if not refresh:
-        kept = json.loads(file.read_text(encoding="utf-8"))
-        if [p["title"] for p in kept] != titles:
-            raise SystemExit(f"{file.name}'s list changed since it was written: run with --refresh-history")
-        return [{"n": p["n"], "xy": tuple(p["xy"])} for p in kept]
-    places = wikidata_places(listed, prefix, folder)
+        before = {p["title"]: p for p in json.loads(file.read_text(encoding="utf-8"))}
+        new = [(t, more) for t, more in listed if t not in before]
+        if not new and list(before) == titles:
+            return [{"n": before[t]["n"], "xy": tuple(before[t]["xy"])} for t in titles]
+        found = dict(zip([t for t, _ in new], wikidata_places(new, prefix + "-new", None) if new else [], strict=True))
+        places = [found[t] if t in found else {"n": before[t]["n"], "xy": tuple(before[t]["xy"])} for t in titles]
+    else:
+        places = wikidata_places(listed, prefix, folder)
     kept = [{"title": t, "n": p["n"], "xy": list(p["xy"])} for t, p in zip(titles, places, strict=True)]
     file.write_text(json.dumps(kept, ensure_ascii=False, indent=1) + "\n", encoding="utf-8")
     return places
@@ -939,6 +964,22 @@ def atlas(countries: dict, places: dict, usual: dict | None = None, past: list |
             "r": rings,
         }
         codes[code] = True
+    # A dependency's holder (Greenland's, Bermuda's, French Polynesia's): "o", its code
+    sovereigns = {
+        p["SOVEREIGNT"]: p["ADM0_A3"]
+        for f in countries["features"]
+        if (p := f["properties"])["ADMIN"] == p["SOVEREIGNT"]
+    }
+    for feature in countries["features"]:
+        p = feature["properties"]
+        holder = sovereigns.get(p["SOVEREIGNT"])
+        if (
+            p["ADM0_A3"] in out_countries
+            and holder in out_countries
+            and holder != p["ADM0_A3"]
+            and p["TYPE"] != "Indeterminate"
+        ):
+            out_countries[p["ADM0_A3"]]["o"] = holder
     # The usual names (CLDR) of a two-letter code only one country has (the Australian
     # territories have Australia's), and never a name another country already goes by
     holders: dict[str, list[str]] = defaultdict(list)
@@ -963,10 +1004,13 @@ def atlas(countries: dict, places: dict, usual: dict | None = None, past: list |
     for feature in places["features"]:
         p = feature["properties"]
         code = p["ADM0_A3"]
-        if code in codes:
+        # (a territory too small for the countries' scale, its towns its holder's: Gibraltar,
+        # Longyearbyen; chosen among its own, as a country's)
+        if code in codes or p.get("SOV_A3") in codes:
             by_country.setdefault(code, []).append(p | {"_xy": feature["geometry"]["coordinates"]})
     cities = []
-    for code, found in sorted(by_country.items()):
+    for own, found in sorted(by_country.items()):
+        code = own if own in codes else found[0]["SOV_A3"]
         found.sort(key=lambda p: -(p.get("POP_MAX") or 0))
         capitals = [p for p in found if p.get("ADM0CAP") == 1]
         notable = [p for p in found if (p.get("SCALERANK") or 99) <= NOTABLE]
@@ -1307,10 +1351,60 @@ def lake_rings(lakes: dict) -> list:
     return [area_of(shape(f["geometry"])) for f in lakes["features"] if f["geometry"]]
 
 
-def regions(admin1: dict) -> dict[str, dict]:
+REGIONS_FILE = ROOT / "tools" / "atlas-regions.json"  # what Wikidata gave for the regions' codes, kept
+WIKIDATA_SPARQL = "https://query.wikidata.org/sparql"
+
+
+def iso_code(text: str | None) -> str:
+    """An ISO 3166-2 code as Natural Earth writes it ("IT-25", "ES.AN"), as ISO does; "" else."""
+    text = (text or "").strip().replace(".", "-")
+    return text if re.fullmatch(r"[A-Z]{2}-[A-Z0-9]{1,3}", text) else ""
+
+
+def region_codes(admin1: dict) -> list[str]:
+    """The ISO codes of every region and group of regions Natural Earth has."""
+    found = set()
+    for f in admin1["features"]:
+        p = f["properties"]
+        found |= {iso_code(p.get("iso_3166_2")), iso_code(p.get("region_cod"))}
+    return sorted(found - {""})
+
+
+def region_names(admin1: dict, refresh: bool = False) -> dict[str, list[str]]:
+    """Each region's names in the page's languages from Wikidata (CC0), by its ISO code
+    ("IT-75": Pouilles, Apulia, Apulien, Apulia, Puglia, Apúlia), as REGIONS_FILE keeps them;
+    the codes it lacks asked (all with `refresh`), then kept."""
+    codes = region_codes(admin1)
+    kept = {} if refresh or not REGIONS_FILE.is_file() else json.loads(REGIONS_FILE.read_text(encoding="utf-8"))
+    asked = [c for c in codes if c not in kept]
+    for start in range(0, len(asked), 400):
+        batch = asked[start : start + 400]
+        query = (
+            "SELECT ?code ?l WHERE { VALUES ?code {"
+            + " ".join(f'"{c}"' for c in batch)
+            + '} ?i wdt:P300 ?code. ?i rdfs:label ?l. FILTER(LANG(?l) IN ("fr","en","de","es","it","pt")) }'
+        )
+        url = WIKIDATA_SPARQL + "?" + urllib.parse.urlencode({"query": query, "format": "json"})
+        found: dict = defaultdict(dict)
+        for b in download(f"wikidata-regions-{start}.json", None, url)["results"]["bindings"]:
+            found[b["code"]["value"]][b["l"]["xml:lang"]] = b["l"]["value"]
+        for code in batch:
+            kept[code] = [found[code][lang] for lang in ("fr", "en", "de", "es", "it", "pt") if lang in found[code]]
+    kept = {c: list(dict.fromkeys(kept[c])) for c in codes}
+    REGIONS_FILE.write_text(
+        json.dumps(kept, ensure_ascii=False, separators=(",", ":"))[1:-1].replace('],"', '],\n"').join("{}") + "\n",
+        encoding="utf-8",
+    )
+    return kept
+
+
+def regions(admin1: dict, wikidata: dict | None = None) -> dict[str, dict]:
     """Per country: its first-level divisions (France's départements, the United States'
     states), and the groups Natural Earth gives them (France's régions), simplified together
-    (shapely's coverage_simplify: a border shared stays one line)."""
+    (shapely's coverage_simplify: a border shared stays one line); each by its names in the
+    page's languages, Natural Earth's and Wikidata's (`wikidata`, by ISO code: "Pouilles",
+    "Puglia" for Natural Earth's "Apulia")."""
+    wikidata = wikidata or {}
     by_country: dict = defaultdict(list)
     for feature in admin1["features"]:
         if feature["geometry"]:
@@ -1326,11 +1420,15 @@ def regions(admin1: dict) -> dict[str, dict]:
             p = f["properties"]
             drawn = area_of(g, simplify=detail)
             if drawn:
-                units.append(named(names(p, p["name"], p.get("gn_name") or "", p.get("woe_name") or ""), drawn))
+                more = wikidata.get(iso_code(p.get("iso_3166_2")), [])
+                own = names(p, p["name"], p.get("gn_name") or "", p.get("woe_name") or "")
+                units.append(named(list(dict.fromkeys([*own, *more])), drawn))
         members: dict = defaultdict(list)
+        group_codes: dict = {}
         for f, g in zip(features, shapes, strict=True):
             if (f["properties"].get("region") or "").strip():
                 members[f["properties"]["region"].strip()].append(g)
+                group_codes.setdefault(f["properties"]["region"].strip(), iso_code(f["properties"].get("region_cod")))
         groups = []
         if len(members) > 1:
             group_names = list(members)
@@ -1338,10 +1436,304 @@ def regions(admin1: dict) -> dict[str, dict]:
             for n, g in zip(group_names, shapely.coverage_simplify(merged, detail), strict=True):
                 drawn = area_of(g, simplify=detail)
                 if drawn:
-                    groups.append(named([n], drawn))
+                    groups.append(named(list(dict.fromkeys([*wikidata.get(group_codes[n], []), n])), drawn))
         if units:
             out[code] = {"units": units, "groups": groups}
     return out
+
+
+# A country's far parts (its overseas departments, its archipelagos across the sea): places
+# of their own, found by their names like a country, drawn by their land, "o" their country
+ISLAND_KINDS = {"Island", "Island group"}  # Natural Earth's reliefs that name an archipelago
+GROUP_CODES = {"Canary Is.": "IC"}  # a group Natural Earth names only so: its CLDR code
+FAR_SHARE = 0.25  # a far part's land holds less than this of its country's
+
+
+def territories(admin1: dict, countries: dict, usual: dict, relief: dict) -> dict:
+    """Each country's first-level divisions lying farther than NEAR from its main part
+    (Guadeloupe, the Azores, Hawaii, Svalbard, the Galápagos), or their groups when all of a
+    group is (the Canaries, not their two provinces), or those of one ISO code (the Caribbean
+    Netherlands: Bonaire, Saba, Sint Eustatius): their names (Natural Earth's, CLDR's by
+    their code, an archipelago's that covers them), the country's rings on them (else their
+    own), "o" the country's code, "t" a part of it."""
+    islands = [
+        (names(p, p["NAME"], p.get("NAMEALT") or ""), shapely.make_valid(shape(f["geometry"])))
+        for f in relief["features"]
+        if (p := f["properties"]).get("FEATURECLA") in ISLAND_KINDS and f["geometry"]
+    ]
+    by_country: dict = defaultdict(list)
+    for f in admin1["features"]:
+        if f["geometry"] and f["properties"]["adm0_a3"] in countries:
+            by_country[f["properties"]["adm0_a3"]].append(f)
+    taken = {key for c in countries.values() for key in c["k"]}
+    out: dict = {}
+    for code, features in sorted(by_country.items()):
+        (x0, y0, x1, y1) = countries[code]["f"]
+
+        def far(g, x0=x0, y0=y0, x1=x1, y1=y1) -> bool:
+            (a0, b0, a1, b1) = (round(v * SCALE) for v in g.bounds)
+            gaps = [max(a0 - x1, x0 - a1, b0 - y1, y0 - b1)]
+            gaps += [max(a0 + d - x1, x0 - a1 - d, b0 - y1, y0 - b1) for d in (-360 * SCALE, 360 * SCALE)]
+            return min(gaps) > NEAR * SCALE
+
+        units = [(f["properties"], shapely.make_valid(shape(f["geometry"]))) for f in features]
+        # (a part, not a half of the country: the divisions near each other one land, those of
+        # a land as large as FAR_SHARE of the country never far: Peninsular Malaysia, Svalbard
+        # is)
+        # (their sizes on the ground: a degree of longitude shortened by its latitude's cosine)
+        sizes = [g.area * math.cos(math.radians(g.centroid.y)) for _, g in units]
+        whole = sum(sizes)
+        lands = list(range(len(units)))
+
+        def root(i: int, lands: list = lands) -> int:
+            while lands[i] != i:
+                i = lands[i]
+            return i
+
+        for i, (_, a) in enumerate(units):
+            for j in range(i):
+                if shapely.distance(a, units[j][1]) <= NEAR:
+                    lands[root(i)] = root(j)
+        land_area: dict = defaultdict(float)
+        for i in range(len(units)):
+            land_area[root(i)] += sizes[i]
+        large = {id(units[i][0]) for i in range(len(units)) if land_area[root(i)] >= FAR_SHARE * whole}
+
+        def apart(g, p=None, far=far, large: set = large) -> bool:
+            return far(g) and id(p) not in large
+
+        if not any(apart(g, p) for p, g in units):
+            continue
+        pieces = []  # (names, CLDR code or "", properties, geometry, a single division)
+        members: dict = defaultdict(list)
+        for p, g in units:
+            if (p.get("region") or "").strip():
+                members[p["region"].strip()].append((p, g))
+        grouped = set()
+        for name, found in members.items():
+            if len(found) > 1 and all(apart(g, p) for p, g in found):
+                pieces.append(
+                    ([name], GROUP_CODES.get(name, ""), found[0][0], shapely.union_all([g for _, g in found]), False)
+                )
+                grouped |= {id(p) for p, _ in found}
+        # (of one ISO code: "NL-BQ1", "NL-BQ2", "NL-BQ3" the Caribbean Netherlands, "BQ")
+        by_iso: dict = defaultdict(list)
+        for p, g in units:
+            iso = re.sub(r"\d+$", "", (p.get("iso_3166_2") or "").split("-")[-1])
+            if apart(g, p) and id(p) not in grouped and len(iso) == 2 and iso.isalpha():
+                by_iso[iso].append((p, g))
+        for iso, found in by_iso.items():
+            if len(found) > 1:
+                pieces.append(([], iso, found[0][0], shapely.union_all([g for _, g in found]), False))
+        for p, g in units:
+            if apart(g, p) and id(p) not in grouped:
+                iso = (p.get("iso_3166_2") or "").split("-")[-1]
+                pieces.append(
+                    (
+                        names(p, p["name"], p.get("gn_name") or "", p.get("woe_name") or ""),
+                        iso if len(iso) == 2 else "",
+                        p,
+                        g,
+                        True,
+                    )
+                )
+        for own, iso, p, g, single in pieces:
+            # CLDR's names of its code when they are its own (FR-GP: Guadeloupe) or it has none
+            # of its own (BQ, IC), an archipelago's covering most of it
+            cldr = usual.get(iso, []) if iso.isalpha() and len(iso) == 2 else []
+            folded = {fold(n) for n in own}
+            more = list(cldr) if not own or not single or folded & {fold(n) for n in cldr} else []
+            # (an archipelago that is it, most of each within the other: the Canaries, Hawaii)
+            same = [
+                island_names
+                for island_names, island in islands
+                if island.intersects(g) and island.intersection(g).area >= 0.5 * max(island.area, g.area)
+            ]
+            all_names = list(dict.fromkeys([*more, *own, *(n for found in same for n in found)]))
+            keys = {fold(n) for n in all_names} - taken
+            if not keys:
+                continue
+            # The country's rings on it (the same lines), else its own (an island too small
+            # for the countries' scale)
+            grown = g.buffer(0.25)
+            rings = [
+                r
+                for r in countries[code]["r"]
+                if any(
+                    grown.contains(
+                        shapely.Point(sum(x for x, _ in r) / len(r) / SCALE + d, sum(y for _, y in r) / len(r) / SCALE)
+                    )
+                    for d in (0, -360, 360)
+                )
+            ]
+            if not rings:
+                rings = area_of(g).get("r", [])
+            # (rings with an area only: a line of a coast is no land)
+            rings = [r for r in rings if len(r) >= 3 and area(r) > 0]
+            if not rings:
+                continue
+            key = p.get("gu_a3") if single else None
+            name = (
+                key
+                if key and key != code and key not in countries and key not in out
+                else f"{code}-{fold(all_names[0]).replace(' ', '-')}"
+            )
+            out[name] = {
+                "n": all_names,
+                "k": sorted(keys),
+                "b": box(rings),
+                "f": box(main(rings)),
+                "r": rings,
+                "o": code,
+                "t": 1,
+            }
+            taken |= keys
+    return out
+
+
+def small_lands(admin1: dict, countries_geo: dict, countries: dict, usual: dict) -> dict:
+    """The lands too small for the countries' scale that Natural Earth's regions have (Monaco,
+    the Vatican, Gibraltar, Sint Maarten, Tuvalu): countries of their own, by their names and
+    CLDR's, "o" the country holding a dependency."""
+    holders = {
+        p["SOV_A3"]: p["ADM0_A3"]
+        for f in countries_geo["features"]
+        if (p := f["properties"])["ADMIN"] == p["SOVEREIGNT"] and p["ADM0_A3"] in countries
+    }
+    by_code: dict = defaultdict(list)
+    for f in admin1["features"]:
+        if f["geometry"] and f["properties"]["adm0_a3"] not in countries:
+            by_code[f["properties"]["adm0_a3"]].append(f)
+    taken = {key for c in countries.values() for key in c["k"]}
+    # (CLDR's names of a code no country of the atlas has: Gibraltar's GI, not Australia's AU)
+    held = {two_letters(f["properties"]) for f in countries_geo["features"]}
+    out = {}
+    for code, features in sorted(by_code.items()):
+        p = features[0]["properties"]
+        two = p.get("iso_a2") or ""
+        own = names(p, p["admin"]) if len(features) > 1 else names(p, p["name"], p["admin"])
+        cldr = usual.get(two, []) if two.isalpha() and two not in held else []
+        all_names = list(dict.fromkeys([*cldr, *own]))
+        keys = {fold(n) for n in all_names} - taken
+        land = shapely.union_all([shapely.make_valid(shape(f["geometry"])) for f in features])
+        rings = [r for r in area_of(land).get("r", []) if len(r) >= 3 and area(r) > 0]
+        if not rings:  # (smaller than the atlas's hundredth of a degree: the Vatican, a square of it)
+            x, y = round(land.centroid.x * SCALE), round(land.centroid.y * SCALE)
+            rings = [[[x, y], [x + 1, y], [x + 1, y + 1], [x, y + 1]]]
+        if not keys or not rings:
+            continue
+        land = {"n": all_names, "k": sorted(keys | {code.lower()}), "b": box(rings), "f": box(main(rings)), "r": rings}
+        holder = holders.get(p.get("sov_a3"))
+        if holder and holder != code:
+            land["o"] = holder
+        out[code] = land
+        taken |= keys
+    return out
+
+
+# The world's parts a lesson names (East Asia, Latin America, Sub-Saharan Africa): groups of
+# countries a map colours or names, by the United Nations' geoscheme (M49) as Natural Earth
+# gives each country's, their names CLDR's (by their M49 code) and these; and two of usage
+AREAS = {  # M49 code: Natural Earth's subregions (or continents, "*" before) it holds, more names
+    "002": (("*Africa",), ()),
+    "015": (("Northern Africa",), ("Afrique septentrionale",)),
+    "202": (("Western Africa", "Eastern Africa", "Middle Africa", "Southern Africa"), ("Afrique noire",)),
+    "011": (("Western Africa",), ()),
+    "014": (("Eastern Africa",), ()),
+    "017": (("Middle Africa",), ()),
+    "018": (("Southern Africa",), ()),
+    "019": (("*Americas",), ()),
+    "021": (
+        ("Northern America",),
+        (
+            "Amérique du Nord",
+            "North America",
+            "Nordamerika",
+            "América del Norte",
+            "America del Nord",
+            "América do Norte",
+        ),
+    ),
+    "013": (("Central America",), ()),
+    "029": (("Caribbean",), ()),
+    "005": (("South America",), ()),
+    "419": (("Central America", "Caribbean", "South America"), ()),
+    "142": (("*Asia",), ()),
+    "030": (
+        ("Eastern Asia",),
+        ("Asie de l'Est", "East Asia", "Ostasien", "Asia del Este", "Asia dell'Est", "Ásia do Leste"),
+    ),
+    "035": (("South-Eastern Asia",), ()),
+    "034": (("Southern Asia",), ()),
+    "143": (("Central Asia",), ()),
+    "145": (("Western Asia",), ("Asie de l'Ouest",)),
+    "150": (("*Europe",), ()),
+    "154": (("Northern Europe",), ()),
+    "155": (("Western Europe",), ()),
+    "039": (("Southern Europe",), ()),
+    "151": (("Eastern Europe",), ()),
+    "009": (("*Oceania",), ()),
+    "053": (("Australia and New Zealand",), ()),
+}
+USAGE_AREAS = [  # the Middle East and the Maghreb as French lessons draw them
+    (
+        (
+            "Moyen-Orient",
+            "Middle East",
+            "Naher Osten",
+            "Mittlerer Osten",
+            "Oriente Medio",
+            "Medio Oriente",
+            "Médio Oriente",
+            "Oriente Médio",
+        ),
+        (
+            "EGY",
+            "ISR",
+            "PSX",
+            "LBN",
+            "SYR",
+            "JOR",
+            "IRQ",
+            "IRN",
+            "TUR",
+            "SAU",
+            "YEM",
+            "OMN",
+            "ARE",
+            "QAT",
+            "BHR",
+            "KWT",
+            "CYP",
+        ),
+    ),
+    (("Maghreb", "Magreb", "Magrebe"), ("MAR", "DZA", "TUN")),
+]
+
+
+def areas(countries_geo: dict, countries: dict, usual: dict) -> list[dict]:
+    """AREAS and USAGE_AREAS: their names (CLDR's, then theirs) and the countries they hold
+    ("c", the atlas's codes; a dependency with its region, never a far part of a country)."""
+    sub: dict = defaultdict(list)
+    for f in countries_geo["features"]:
+        p = f["properties"]
+        if p["ADM0_A3"] in countries:
+            sub[p["SUBREGION"]].append(p["ADM0_A3"])
+            sub["*" + p["REGION_UN"]].append(p["ADM0_A3"])
+    out = []
+    taken = {key for c in countries.values() for key in c["k"]}
+    for m49, (held, more) in AREAS.items():
+        all_names = list(dict.fromkeys([*usual.get(m49, []), *more]))
+        codes = sorted({code for h in held for code in sub[h]})
+        out.append(named(all_names, {"c": codes}))
+    for all_names, codes in USAGE_AREAS:
+        out.append(named(list(all_names), {"c": [c for c in codes if c in countries]}))
+    # (a name a country or another area has too: theirs)
+    seen = set(taken)
+    for a in out:
+        a["k"] = [k for k in a["k"] if k not in seen]
+        seen |= set(a["k"])
+    return [a for a in out if a["k"]]
 
 
 # The sea ways (ways.json): what a map's routes go by. Nodes off the coasts and over the open
@@ -1648,10 +2040,13 @@ def build(folder: Path | None = None, refresh_history: bool = False) -> None:
         countries, places, main_rivers, europe, relief, marine, lakes, admin1, capes = pool.map(
             lambda name: download(name, folder), files
         )
-    world = atlas(countries, places, usual_names(folder), history(folder, refresh_history)) | {
+    usual = usual_names(folder)
+    world = atlas(countries, places, usual, history(folder, refresh_history)) | {
         "lakes": lake_rings(lakes),
         "years": [[year, start, end] for year, (_, start, end) in LAYERS.items()],
     }
+    world["areas"] = areas(countries, world["countries"], usual)
+    found_territories = territories(admin1, world["countries"], usual, relief)
     # The borders of past years: OHM's states of each layer's day (two layers asked at once:
     # Overpass serves two queries at a time), historical-basemaps' nearest layer for the land
     # OHM leaves to none
@@ -1701,11 +2096,13 @@ def build(folder: Path | None = None, refresh_history: bool = False) -> None:
         for f in countries["features"]
         if (code := f["properties"]["ADM0_A3"]) != "ATA" and code in world["countries"]
     ]
+    world["countries"] |= found_territories | small_lands(admin1, countries, world["countries"], usual)
 
     def text(data) -> str:
         return json.dumps(data, ensure_ascii=False, separators=(",", ":"))
 
     all_reliefs, all_waters = reliefs(relief), waters(marine, lakes, passages(folder, refresh_history))
+    all_regions = regions(admin1, region_names(admin1, refresh_history))
     contents = {
         "typst.toml": TOML,
         "lib.typ": LIB.read_text(encoding="utf-8"),
@@ -1717,11 +2114,29 @@ def build(folder: Path | None = None, refresh_history: bool = False) -> None:
         "reliefs.json": text(all_reliefs),
         "waters.json": text(all_waters),
         "ways.json": text(seaways(world, all_waters, all_reliefs, capes)),
-    } | {f"regions/{code}.json": text(data) for code, data in sorted(regions(admin1).items())}
-    contents |= {
-        f"borders/{year}.json": text(past_states(year, ohm[year], extra[nearest[year]], named, today, nations))
-        for year in LAYERS
-    }
+    } | {f"regions/{code}.json": text(data) for code, data in sorted(all_regions.items())}
+    states = {year: past_states(year, ohm[year], extra[nearest[year]], named, today, nations) for year in LAYERS}
+    contents |= {f"borders/{year}.json": text(data) for year, data in states.items()}
+    # What a name the map refuses is, read only then (said in the refusal): the countries
+    # whose regions bear it, the years whose states do
+    region_keys: dict = defaultdict(set)
+    for code, data in all_regions.items():
+        if code not in world["countries"]:
+            continue
+        for r in data["units"] + data["groups"]:
+            for key in r["k"]:
+                region_keys[key].add(code)
+    state_names: dict = defaultdict(set)
+    for year, data in states.items():
+        for state in data["countries"].values():
+            for key in state["k"]:
+                state_names[key].add(year)
+    contents["names.json"] = text(
+        {
+            "regions": {k: sorted(v) for k, v in sorted(region_keys.items())},
+            "states": {k: sorted(v) for k, v in sorted(state_names.items())},
+        }
+    )
     for old in TARGET.glob(f"{NAME}-*.tar.gz"):
         old.unlink()
     archive = TARGET / f"{NAME}-{VERSION}.tar.gz"
