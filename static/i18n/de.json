@@ -474,6 +474,7 @@
       "onComputer": "Am Computer, in Anki: Extras → Notosaurus → Einrichtungsassistent."
     },
     "reviewInAnki": "📚 Lernen",
+    "reviewInAnkiLabel": "Die Karten in AnkiDroid lernen",
     "reviewNothingDue": "Heute gibt es in diesem Stapel nichts zu wiederholen: AnkiDroid ist bei deinen Stapeln geöffnet.",
     "openAnkiDroid": "AnkiDroid öffnen",
     "dictation": {
@@ -621,7 +622,6 @@
           "one": "📤 Teilen ({count} Lektion)",
           "other": "📤 Teilen ({count} Lektionen)"
         },
-        "lesson": "📤 Teilen",
         "lessonLabel": "Die Karten teilen",
         "exam": "📤 Die Karten der Klassenarbeit teilen",
         "title": "Die Karten teilen",

@@ -474,6 +474,7 @@
       "onComputer": "En el ordenador, en Anki: Herramientas → Notosaurus → Asistente de inicio."
     },
     "reviewInAnki": "📚 Repasar",
+    "reviewInAnkiLabel": "Repasar las tarjetas en AnkiDroid",
     "reviewNothingDue": "Hoy no hay nada que repasar en este mazo: AnkiDroid está abierto en tus mazos.",
     "openAnkiDroid": "Abrir AnkiDroid",
     "dictation": {
@@ -621,7 +622,6 @@
           "one": "📤 Compartir ({count} lección)",
           "other": "📤 Compartir ({count} lecciones)"
         },
-        "lesson": "📤 Compartir",
         "lessonLabel": "Compartir las tarjetas",
         "exam": "📤 Compartir las tarjetas del examen",
         "title": "Compartir las tarjetas",

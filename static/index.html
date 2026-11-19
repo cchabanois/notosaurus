@@ -737,12 +737,14 @@
             :disabled="nextAction() === 'photo' ? loading : !canGenerate()"
             x-text="$t({ generate: 'app.actions.generate', prompt: 'app.prompt.fromPrompt', photo: 'app.actions.startWithPhoto' }[nextAction()])"></button>
     <div class="bar-row" x-show="cards.length">
-      <!-- Anki reachable: send directly; the cards shared as a file, a secondary option (app-anki.js) -->
-      <button class="btn soft" x-show="anki.available && canShare()" @click="openShare({ lesson: true })" :disabled="exporting || sending"
-              :aria-label="$t('app.share.cards.lessonLabel')" x-text="$t('app.share.cards.lesson')"></button>
+      <!-- Anki reachable: send directly; the cards shared as a file, a secondary option (app-anki.js).
+           The secondary actions an icon only, named for screen readers and on hover: the bar
+           stays one row, low, on the narrowest phone -->
+      <button class="btn soft icon" x-show="anki.available && canShare()" @click="openShare({ lesson: true })" :disabled="exporting || sending"
+              :aria-label="$t('app.share.cards.lessonLabel')" :title="$t('app.share.cards.lessonLabel')"><span aria-hidden="true">📤</span></button>
       <!-- Sent already (the app): reviewed in AnkiDroid from here -->
-      <button class="btn soft" x-show="reviewInAnki && lessonExported" @click="reviewLesson()" :disabled="sending"
-              x-text="$t('app.reviewInAnki')"></button>
+      <button class="btn soft icon" x-show="reviewInAnki && lessonExported" @click="reviewLesson()" :disabled="sending"
+              :aria-label="$t('app.reviewInAnkiLabel')" :title="$t('app.reviewInAnkiLabel')"><span aria-hidden="true">📚</span></button>
       <button class="btn wide" :class="ankiUpToDate() && !sending ? 'soft' : 'primary'" x-show="anki.available && !off('anki.send')"
               @click="sendToAnki()" :disabled="sending || exporting">
         <!-- Sent before: sending again updates its cards in Anki (moves them if its deck changed); not

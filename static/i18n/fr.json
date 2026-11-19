@@ -474,6 +474,7 @@
       "onComputer": "Sur l'ordinateur, dans Anki : Outils → Notosaurus → Assistant de démarrage."
     },
     "reviewInAnki": "📚 Réviser",
+    "reviewInAnkiLabel": "Réviser les cartes dans AnkiDroid",
     "reviewNothingDue": "Rien à réviser aujourd'hui dans ce paquet : AnkiDroid est ouvert sur vos paquets.",
     "openAnkiDroid": "Ouvrir AnkiDroid",
     "dictation": {
@@ -621,7 +622,6 @@
           "one": "📤 Partager ({count} leçon)",
           "other": "📤 Partager ({count} leçons)"
         },
-        "lesson": "📤 Partager",
         "lessonLabel": "Partager les cartes",
         "exam": "📤 Partager les cartes du contrôle",
         "title": "Partager les cartes",
