@@ -70,14 +70,23 @@ async def fix_card(
     language: str = "English",
     instructions: str = "",
     demo: dict[str, str] | None = None,
+    figure_svg: str = "",
 ) -> FixedCard:
     """One card corrected by a natural-language request ("the answer is 1789"), seeing the
     lesson's photos: the only card the AI writes, so no other changes. `others`: the other
     cards' fronts (not to repeat one); `language`, `instructions`, `demo`: as revise_cards.
     It stays the same card: its id (Anki updates its note) and its diagram label; its
-    picture too, unless what to draw changed."""
+    picture too, unless what to draw changed. `figure_svg`: its figure as drawn, shown after
+    the photos: a request about the drawing ("E is on the wrong side") is seen, and said in
+    figure_problem for it to be drawn again (its picture kept until then)."""
+    from . import figures
+
     images, _ = ai._prepare(images)
-    text = instructions + _fix_text(prompt, deck, card, others, instruction, language, len(images))
+    photos = len(images)
+    drawn = figures.to_png(figures.clean(figure_svg)) if figure_svg.strip() and card.figure.strip() else None
+    if drawn is not None:
+        images.append(Image(drawn, "image/png"))
+    text = instructions + _fix_text(prompt, deck, card, others, instruction, language, photos, drawn is not None)
     texts = {**demo_ai.DEMO, **(demo or {})}
     answer = await ai._ask_provider(
         s,
@@ -93,7 +102,10 @@ async def fix_card(
     plain_cards([fixed])
     fixed.mask = card.mask
     _same_card(fixed, card)
-    return FixedCard(card=fixed, summary=plain_text(fix.summary))
+    problem = plain_text(fix.figure_problem).strip() if drawn is not None and fixed.figure.strip() else ""
+    if problem:
+        fixed.picture = card.picture  # drawn again, told the problem: shown until then
+    return FixedCard(card=fixed, summary=plain_text(fix.summary), figure_problem=problem)
 
 
 def _keep_ids(revised: list[Card], before: list[Card]) -> None:

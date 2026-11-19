@@ -92,3 +92,59 @@ def test_the_route_answers_the_card_without_saving_it(client):
 
     assert client.post(f"/api/lessons/{lesson['id']}/fix-card", json={**body, "instruction": ""}).status_code == 422
     assert client.post("/api/lessons/nope/fix-card", json=body).status_code == 404
+
+
+TRIANGLE_SVG = (
+    '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">'
+    '<path d="M10 90 L90 90 L50 10 Z" fill="none" stroke="#000"/></svg>'
+)
+
+
+def seeing(monkeypatch, answer: dict) -> list:
+    """The AI answers `answer`; the images it was shown, kept (each call's)."""
+    shown = []
+
+    async def ask(s, images, text, schema, *args, **kwargs):
+        shown.append((list(images), text))
+        return schema.model_validate({"summary": "Figure", **answer})
+
+    monkeypatch.setattr("notosaurus_core.ai._ask_provider", ask)
+    return shown
+
+
+def test_the_figure_as_drawn_shown_and_its_problem_said(monkeypatch):
+    """A request about a figure's drawing ("E is on the wrong side"): the AI is shown the
+    drawing, after the photos, and says what is wrong in it: its picture kept until it is
+    drawn again, told that problem."""
+    card = Card(id="c4", front="ABC?", back="a triangle", figure="Triangle ABC", picture="f.svg")
+    told = {
+        "cards": [{"front": "ABC?", "back": "a triangle", "figure": "Triangle ABC"}],
+        "figure_problem": "C is under AB",
+    }
+    shown = seeing(monkeypatch, told)
+    fixed = asyncio.run(
+        llm.fix_card(
+            S, [], "Geometry", "Maths", card, "C est au mauvais endroit", (), "French", figure_svg=TRIANGLE_SVG
+        )
+    )
+    ((images, text),) = shown
+    assert [i.media_type for i in images] == ["image/png"] and "The last image is this card's figure" in text
+    assert (fixed.figure_problem, fixed.card.picture, fixed.card.figure) == ("C is under AB", "f.svg", "Triangle ABC")
+
+
+def test_a_figure_changed_and_its_drawing_wrong_kept_until_drawn_again(monkeypatch):
+    """Its description changed too ("in red", and a label misplaced): the picture still kept,
+    drawn again from the new description told the problem; no figure shown, no problem said."""
+    card = Card(id="c5", front="ABC?", back="a triangle", figure="Triangle ABC", picture="f.svg")
+    told = {
+        "cards": [{"front": "ABC?", "back": "a triangle", "figure": "Triangle ABC in red"}],
+        "figure_problem": "A hidden",
+    }
+    seeing(monkeypatch, told)
+    fixed = asyncio.run(llm.fix_card(S, [], "", "Maths", card, "en rouge", (), "French", figure_svg=TRIANGLE_SVG))
+    assert (fixed.card.picture, fixed.figure_problem) == ("f.svg", "A hidden")
+    shown = seeing(monkeypatch, told)
+    fixed = asyncio.run(llm.fix_card(S, [], "", "Maths", card, "en rouge", (), "French"))  # its drawing not given
+    ((images, text),) = shown
+    assert images == [] and "last image" not in text
+    assert (fixed.card.picture, fixed.figure_problem) == ("", "")  # drawn again from its new description

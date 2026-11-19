@@ -627,6 +627,83 @@
 // there, their point at the next atom: the wrong way round)
 #let bond-front = cram-filled-left
 #let bond-back = cram-dashed-left
+// The periodic table: each element's symbol by its atomic number, never written by the AI
+#let _elements = ("H", "He", "Li", "Be", "B", "C", "N", "O", "F", "Ne", "Na", "Mg", "Al", "Si", "P", "S", "Cl", "Ar", "K", "Ca", "Sc", "Ti", "V", "Cr", "Mn", "Fe", "Co", "Ni", "Cu", "Zn", "Ga", "Ge", "As", "Se", "Br", "Kr", "Rb", "Sr", "Y", "Zr", "Nb", "Mo", "Tc", "Ru", "Rh", "Pd", "Ag", "Cd", "In", "Sn", "Sb", "Te", "I", "Xe", "Cs", "Ba", "La", "Ce", "Pr", "Nd", "Pm", "Sm", "Eu", "Gd", "Tb", "Dy", "Ho", "Er", "Tm", "Yb", "Lu", "Hf", "Ta", "W", "Re", "Os", "Ir", "Pt", "Au", "Hg", "Tl", "Pb", "Bi", "Po", "At", "Rn", "Fr", "Ra", "Ac", "Th", "Pa", "U", "Np", "Pu", "Am", "Cm", "Bk", "Cf", "Es", "Fm", "Md", "No", "Lr", "Rf", "Db", "Sg", "Bh", "Hs", "Mt", "Ds", "Rg", "Cn", "Nh", "Fl", "Mc", "Lv", "Ts", "Og")
+// An element's (period, group) by its atomic number Z; the lanthanides and actinides after La
+// and Ac (58 to 71, 90 to 103) none: their row is a book's footnote, La and Ac in group 3
+#let _place(z) = {
+  let starts = (1, 3, 11, 19, 37, 55, 87, 119)
+  let period = range(7).find(p => z < starts.at(p + 1)) + 1
+  let i = z - starts.at(period - 1)  // its rank in its period
+  if period == 1 { return (1, if z == 1 { 1 } else { 18 }) }
+  if period <= 3 { return (period, if i < 2 { i + 1 } else { i + 10 + 1 }) }
+  if period <= 5 { return (period, i + 1) }
+  // periods 6 and 7: 32 elements, 14 of them (from the 3rd) set apart
+  if i < 3 { (period, i + 1) } else if i < 17 { none } else { (period, i - 14 + 1) }
+}
+// The periodic table's first `periods` rows (1 to 7), each element's atomic number above its
+// symbol: as a school book shows them, its 8 main groups only (1, 2, 13 to 18) up to the 3rd
+// period, all 18 from the 4th (La and Ac in group 3, the other lanthanides and actinides left out). families:
+// the groups coloured, each (its elements, its name in the legend): its elements a column's
+// number (1: the column) or symbols (("Li", "Na")). hidden: the symbols a card asks, "?";
+// numbers: the groups' and periods' numbers around it; atomic: each atomic number above its
+// symbol (auto: in the 8 groups' table; the 18 groups' one, too wide for a card's phone to
+// read them, its symbols alone unless asked)
+#let periodic-table(periods: 3, families: (), hidden: (), numbers: true, atomic: auto) = context {
+  assert(type(periods) == int and periods >= 1 and periods <= 7, message: "periods is how many rows, from 1 to 7")
+  assert(type(families) == array and families.all(f => type(f) == array and f.len() == 2),
+    message: "families is ((its elements, its name), …): (1, [Alcalins]) a column, ((\"Li\", \"Na\"), [Alcalins]) symbols")
+  for f in families {
+    let members = if type(f.at(0)) == array { f.at(0) } else { (f.at(0),) }
+    assert(members.all(m => (type(m) == int and m >= 1 and m <= 18) or (type(m) == str and m in _elements)),
+      message: "a family's elements are a column's number (1 to 18) or symbols in the table: " + repr(f.at(0)))
+  }
+  assert(hidden.all(h => h in _elements), message: "hidden are symbols in the table")
+  let short = periods <= 3
+  let atomic = if atomic == auto { short } else { atomic }
+  // the 18 groups' table: smaller cells, larger texts, to stay readable fitted to a phone
+  let (side, small, big) = if short { (1.15cm, 8pt, 13pt) } else { (0.92cm, 12pt, 12pt) }
+  let tall = if atomic and not short { side * 1.35 } else { side }  // its number above its symbol
+  let groups = if short { (1, 2, 13, 14, 15, 16, 17, 18) } else { range(1, 19) }
+  let colours = (rgb("#f6b8b8"), rgb("#b8d4f6"), rgb("#c8eab8"), rgb("#f6dfa8"), rgb("#dcc8f0"), rgb("#b8ece6"))
+  let family(z) = {
+    let symbol = _elements.at(z - 1)
+    let (_, group) = _place(z)
+    families.position(f => {
+      let members = if type(f.at(0)) == array { f.at(0) } else { (f.at(0),) }
+      members.any(m => m == symbol or m == group)
+    })
+  }
+  let cells = (:)
+  for z in range(1, 119) {
+    let at = _place(z)
+    if at != none and at.at(0) <= periods { cells.insert(str(at.at(0)) + "-" + str(at.at(1)), z) }
+  }
+  let cell(z) = {
+    let symbol = _elements.at(z - 1)
+    let f = family(z)
+    let name = text(big, weight: "bold", if symbol in hidden { [?] } else { symbol })
+    box(width: side, height: tall, stroke: 0.6pt + luma(60), fill: if f == none { white } else { colours.at(calc.rem(f, colours.len())) },
+      inset: 1pt, align(center + horizon, if atomic { stack(spacing: 2pt, text(small, str(z)), name) } else { name }))
+  }
+  let rows = ()
+  if numbers { rows.push(([],) + groups.map(g => align(center + bottom, pad(bottom: 3pt, text(small, str(g)))))) }
+  for p in range(1, periods + 1) {
+    let row = if numbers { (align(right + horizon, pad(right: 3pt, text(small, str(p)))),) } else { () }
+    for g in groups {
+      let key = str(p) + "-" + str(g)
+      row.push(if key in cells { cell(cells.at(key)) } else { [] })
+    }
+    rows.push(row)
+  }
+  let table = grid(columns: (if numbers { (auto,) } else { () }) + groups.map(_ => side), rows: auto,
+    column-gutter: 0pt, row-gutter: 0pt, gutter: 0pt, align: center, ..rows.flatten())
+  if families.len() == 0 { table } else {
+    stack(spacing: 8pt, table, families.enumerate().map(((i, f)) => box(inset: (right: 10pt), stack(dir: ltr, spacing: 4pt,
+      box(width: 0.35cm, height: 0.35cm, fill: colours.at(calc.rem(i, colours.len())), stroke: 0.4pt + luma(60)),
+      align(horizon, text(calc.max(10pt, small), f.at(1)))))).join())
+  }
+}
 // ---- What the AI writes, from here (the rule's example: everything above is given)
 #skeletize({
   fragment("CH_3")

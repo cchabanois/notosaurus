@@ -1009,3 +1009,37 @@ def test_a_cram_bond_is_narrow_at_the_atom_it_leaves(bond):
     assert near_c < near_h, (near_c, near_h)
     rule = (figures_typst.RULES / "chemistry.md").read_text(encoding="utf-8")
     assert f"`{bond}()`" in rule
+
+
+def _chemistry_value(tmp_path, expression: str):
+    """What the chemistry preamble computes, read back (a Typst value, as JSON)."""
+    import typst
+
+    page = tmp_path / "query.typ"
+    page.write_text(
+        figures_typst.FAMILIES["chemistry"].preamble + f"\n#metadata({expression}) <value>\n", encoding="utf-8"
+    )
+    found = typst.query(
+        str(page), "<value>", field="value", one=True, format="json", package_path=str(figures_typst.packages())
+    )
+    return json.loads(found)
+
+
+def test_the_periodic_tables_elements_are_its_own(tmp_path):
+    """The periodic table drawn as a table of values: its cells written by the AI, « _3_Li » (1
+    in 3). The chemistry family draws it, each element's symbol and atomic number its own: H
+    and He at the ends of the 1st row, Na in group 1 and Ar in 18 of the 3rd, K, Fe in the
+    4th; La in group 3, the lanthanides after it out of the table."""
+    places = _chemistry_value(tmp_path, "(1, 2, 11, 18, 19, 26, 57, 58, 72, 118).map(z => _place(z))")
+    assert places == [[1, 1], [1, 18], [3, 1], [3, 18], [4, 1], [4, 8], [6, 3], None, [6, 4], [7, 18]]
+    assert _chemistry_value(tmp_path, "_elements.at(10)") == "Na"
+    kinds = dict(re.findall(r'"(\w+)": (.*?)(?=; "\w+": |$)', figures_typst.KINDS))
+    assert "periodic table" in kinds["chemistry"] and "nor the periodic table" in kinds["table"]
+    # a family's colour, a hidden element: drawn so; a symbol it lacks refused
+    plain = figures_typst.compile_svg("chemistry", "#periodic-table()")
+    assert plain != figures_typst.compile_svg("chemistry", "#periodic-table(families: ((18, [Gaz nobles]),))")
+    assert plain != figures_typst.compile_svg("chemistry", '#periodic-table(hidden: ("Na",))')
+    with pytest.raises(figures_typst.Unusable, match="symbols in the table"):
+        figures_typst.compile_svg("chemistry", '#periodic-table(hidden: ("Xx",))')
+    # the whole table on a card: readable fitted to a phone
+    assert figures_typst.compile_svg("chemistry", "#periodic-table(periods: 7, families: ((1, [Alcalins]),))")

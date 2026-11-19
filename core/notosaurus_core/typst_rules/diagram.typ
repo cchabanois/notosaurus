@@ -57,6 +57,63 @@
       panic("diagram: an edge from the node at " + repr(v.first()) + " to itself: what a node does by itself is written in its box, never an arrow (a graph's loop: network)")
     }
   }
+  // an edge whose end is on no node (a cell with no node, or `edge("-|>")` with no node after
+  // it): an arrow into the void, from or to nothing. Its ends found as fletcher finds them: an
+  // end not given the node before (after), a relative one from the vertex before it, a name
+  // its node's; a node's cells its own and those it encloses. An end that can't be known (a
+  // node placed otherwise) is never refused.
+  let cells = ()
+  let names = (:)
+  let known = true
+  for i in range(items.len()) {
+    let v = at(i)
+    if v == none or v.at("class", default: none) != "node" { continue }
+    let c = _cell(v.pos.at("raw", default: none))
+    if c == none { known = false; continue }
+    cells.push(c)
+    cells += v.at("enclose", default: ()).map(_cell).filter(x => x != none)
+    if v.at("name", default: none) != none { names.insert(repr(v.name), c) }
+  }
+  let same(a, b) = calc.abs(a.at(0) - b.at(0)) < 0.01 and calc.abs(a.at(1) - b.at(1)) < 0.01
+  let on-node(c) = cells.any(n => same(n, c))
+  // each edge's vertices, resolved: none for a missing node, "unknown" when it can't be known
+  let resolved = (:)
+  for i in range(items.len()) {
+    let e = at(i)
+    if not known or e == none or e.at("class", default: none) != "edge" { continue }
+    let v = e.vertices
+    if v.len() < 2 { continue }
+    let found = ()
+    let prev = none
+    for (k, x) in v.enumerate() {
+      let c = if x == auto { node-cell(i, if k == 0 { -1 } else { 1 }) }
+        else if type(x) == label { names.at(repr(x), default: "unknown") }
+        else if type(x) == dictionary and "rel" in x and prev != none and prev != "unknown" and _cell(x.rel) != none {
+          (prev.at(0) + x.rel.at(0), prev.at(1) + x.rel.at(1))
+        } else if _cell(x) != none { _cell(x) } else { "unknown" }
+      found.push(c)
+      prev = c
+    }
+    resolved.insert(str(i), found)
+  }
+  // an empty cell where another edge ends or turns is a junction (two edges joined end to end
+  // at a corner, an algorithm's branch meeting another), not the void
+  let joined(i, c) = resolved.pairs().any(((j, vs)) => j != str(i) and vs.any(x => type(x) == array and same(x, c)))
+  for (key, found) in resolved.pairs() {
+    let i = int(key)
+    let e = at(i)
+    let words = e.at("label", default: none)
+    let named = if words == none or type(_plain(words)) != str { "an edge" } else { "the edge « " + _plain(words) + " »" }
+    for (side, c) in (("from", found.first()), ("to", found.last())) {
+      if c == "unknown" { continue }
+      if c == none {
+        panic("diagram: " + named + " " + side + " no node (`edge(\"-|>\")` " + if side == "from" { "before the first node" } else { "after the last node" } + "): an arrow joins two nodes, never " + side + " nothing; join it to the node it goes " + side + ", or leave it out")
+      }
+      if not on-node(c) and not joined(i, c) {
+        panic("diagram: " + named + " " + side + " the cell " + repr(c) + ", where no node stands: an arrow joins two nodes' cells, never an empty cell (an arrow into the void); give it the cell of the node it goes " + side + ", or leave it out")
+      }
+    }
+  }
   for i in range(items.len()) {
     let e = at(i)
     if e == none or e.at("class", default: none) != "edge" or e.at("label", default: none) == none { continue }

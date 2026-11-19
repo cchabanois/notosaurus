@@ -192,10 +192,18 @@ are, in the same order. {add} In "summary", describe in one short sentence, in \
 
 
 def _fix_text(
-    prompt: str, deck: str, card: Card, others: Sequence[str], instruction: str, language: str, photos: int
+    prompt: str,
+    deck: str,
+    card: Card,
+    others: Sequence[str],
+    instruction: str,
+    language: str,
+    photos: int,
+    figure: bool = False,
 ) -> str:
     """One card corrected, or written when it is still empty (a card just added): the
-    others' fronts shown, not to repeat one of them."""
+    others' fronts shown, not to repeat one of them. `figure`: its figure as drawn is the
+    last image, after the photos."""
     source = "these photos with these instructions" if photos else "these instructions (no photo)"
     listed = "\n".join(f"- {front.strip()}" for front in others if front.strip()) or "(none)"
     if not (card.front.strip() or card.back.strip()):
@@ -215,6 +223,20 @@ Requested correction for this card: {instruction.strip()}
 
 Apply this request to this card only and return it, as the one card in "cards". Only change \
 what the request is about; keep the rest of the card as it is."""
+        if figure:
+            asked += f"""
+
+The last image is this card's figure as drawn now, from its "figure" description \
+(the {"image after the lesson's photos" if photos else "only image"}). The request may be about \
+the card's text or about this figure. The drawing may be wrong: "figure" says what it should \
+show, never rewritten after what the drawing shows, and left as it is by a request about the \
+card's text. When the request is about the figure: change "figure" when what it should show \
+changes (a colour, an element added or removed, a value); and when the \
+drawing itself is wrong as the request says (something misplaced, missing, unreadable, \
+drawn other than its description), say in "figure_problem" what is wrong in it, as seen \
+in the image, for it to be drawn again right: a request saying the drawing is wrong is never \
+answered with the card unchanged, even when "figure" already says what it should show. \
+Otherwise "figure_problem" stays empty."""
         done = "what you changed"
     return f"""\
 The lesson "{deck}" was made from {source}:

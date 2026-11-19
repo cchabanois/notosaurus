@@ -1094,3 +1094,33 @@ test("Review with nothing due today: said, AnkiDroid opened on its decks", async
   await c.reviewLesson();
   assert.equal(c.success, "");
 });
+
+test("a card's correction about its figure as drawn: drawn again, told what is wrong", async () => {
+  const asked = [];
+  const figure = { id: "c1", front: "ABC ?", back: "un triangle", figure: "Triangle ABC", picture: "picture-c1-0123abcd.svg" };
+  let problem = "E est sous [BC]";
+  const page = await loadScripts("app.js", {
+    routes: (url, options) => {
+      asked.push([url, options?.body ? JSON.parse(options.body) : null]);
+      if (url.startsWith("/api/lessons/L1/fix-card")) {
+        return new Response({ card: figure, summary: "Figure", figure_problem: problem });
+      }
+      if (url === "/api/lessons/L1/cards/c1/picture/draw") return new Response({ card: { ...figure, picture: "picture-c1-89abcdef.svg" } });
+      return new Response({});
+    },
+  });
+  const c = page.component();
+  c.lessonId = "L1";
+  c.saveNow = async () => {};
+  c.cards = [{ ...figure, key: 1, _fix: { text: "le E est mal placé", busy: false } }];
+  await c.fixCard(c.cards[0]);
+  const draws = asked.filter(([url]) => url.endsWith("/picture/draw"));
+  assert.deepEqual(draws.map(([, body]) => body), [{ problem: "E est sous [BC]", careful: false }]);
+  assert.equal(c.cards[0].picture, "picture-c1-89abcdef.svg");
+  // a correction about its text: its figure as it was
+  problem = "";
+  asked.length = 0;
+  c.cards[0]._fix = { text: "la réponse est un triangle rectangle", busy: false };
+  await c.fixCard(c.cards[0]);
+  assert.deepEqual(asked.filter(([url]) => url.includes("/picture")), []);
+});

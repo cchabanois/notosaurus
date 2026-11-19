@@ -197,3 +197,20 @@ def test_the_kinds_give_each_case_one_family():
     assert "classification's nested groups" in kinds["sets"]
     assert "a scatter of measures" in kinds["chart"]
     assert "those of the time" in kinds["map"]
+
+
+@pytest.mark.parametrize(
+    "body",
+    [
+        '#chart(kind: "bars", values: (("a", 3), ("b", 5)), colours: green)',
+        '#chart(kind: "bars", horizontal: true, values: (("a", 3), ("b", 5)), colours: (green, green))',
+        '#chart(kind: "pie", values: (("a", 3), ("b", 5)), colours: (green, green))',
+        '#chart(kind: "line", values: (("A", ((0, 1), (1, 2))), ("B", ((0, 2), (1, 1)))), colours: green)',
+        '#chart(kind: "histogram", values: ((0, 5, 3), (5, 10, 4)), colours: green)',
+    ],
+)
+def test_a_charts_colours_as_the_description_asks(body):
+    """ "The bars in green": the chart refused a colour (fill: green, "unexpected argument"),
+    its bars drawn grey whatever the description asked. Its colours given, they are drawn."""
+    svg = figures.clean(figures_typst.compile_svg("chart", body))
+    assert "#2ecc40" in svg  # Typst's green

@@ -6,6 +6,10 @@
 const DRAFT_WAIT_MS = 500;  // a pause in the typing: sent then (on the same machine: quick)
 const DRAFT_SESSION_KEY = "notosaurus.session";
 
+// The draft's saves, one after the other: each sends what the page has when its turn comes.
+// Two at once, the older one (a photo before it was cropped) could land last at the host.
+let draftSaves = Promise.resolve();
+
 // The page opened before in this session (back from the settings, reloaded), not anew (the
 // app launched again: its address changes, so does its storage; a new tab); marked for the next
 function sessionGoesOn() {
@@ -41,9 +45,14 @@ const draftPart = {
     return !this.lessonId && !this.photos.length && (this.selectedId === null ? !this.form.text.trim() : !this.isModified());
   },
 
-  async saveDraft() {
+  saveDraft() {
     clearTimeout(this.draftTimer);
     this.draftTimer = null;
+    draftSaves = draftSaves.then(() => this.sendDraft()).catch(() => {});
+    return draftSaves;
+  },
+
+  async sendDraft() {
     const text = this.draftText();
     const photos = this.draftPhotos();
     const sig = photos.map((p) => p.url).join(" ");

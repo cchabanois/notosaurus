@@ -764,6 +764,44 @@ def test_a_cropped_photo_found_again_after_a_reload(page):
     assert near(kept.getpixel((150, 300)), BLUE)
 
 
+def test_a_photo_cropped_while_the_host_still_keeps_it_found_again_cropped(page):
+    """The lesson in progress kept by the host one save after the other: the photo cropped
+    while the host is still keeping it as it came (a slow save), the cropped one kept; the
+    older save never lands after it (the name the crop cut out back after a restart)."""
+    held, kept = [], []  # the first save, held; those after it, once the host has them
+
+    def hold_the_first(route):
+        if route.request.method != "PUT":
+            route.continue_()
+        elif not held:
+            held.append(route)
+        else:  # sent cropped or not: the photo as it is when it is sent
+            cropped = page.evaluate("Boolean(Alpine.$data(document.querySelector('[x-data]')).photos[0].crop)")
+            route.fulfill(response=route.fetch())
+            kept.append(cropped)
+
+    page.goto("/")
+    started(page)
+    page.route("**/api/draft", hold_the_first)
+    add_photo(page, halves())
+    while not held:  # the photo as it came, being kept
+        page.wait_for_timeout(50)
+    editor = open_hide(page)
+    crop_corner(page, "nw", 0.5, 0.25)
+    editor.get_by_role("button", name="Terminé").click()
+    sync_api.expect(editor).to_be_hidden()
+    # Sent at once (a moment after the change), the cropped photo would be kept before the
+    # first save lands: given the time to
+    for _ in range(40):
+        if any(kept):
+            break
+        page.wait_for_timeout(50)
+    held[0].continue_()
+    draft_kept(page)
+    photo = PILImage.open(io.BytesIO(page.request.get("/api/draft/photos/1").body()))
+    assert photo.size == pytest.approx((300, 600), abs=6)
+
+
 def test_a_photo_put_in_place_of_another_turns_itself(page):
     """A saved lesson's photo removed, another chosen from the gallery, then turned: that one
     turned, in the page. It turned the lesson's old photo at the server, by its number, and
