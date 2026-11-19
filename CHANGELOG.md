@@ -67,6 +67,7 @@ Each pull request's entries (the `## Changelog` of its description) are put unde
 
 ### Changed
 
+- ⚡ Corrections (of a lesson or a card) follow the Quick / Careful choice: quick, about a third faster for a lesson, as right in our measures; « 🎯 Refaire avec soin » asks again carefully.
 - ✨ « Corriger cette carte » is now a button on every card, no longer hidden in its ⋯ menu.
 - On a phone, the bar at the bottom of the cards is lower and hides less of them: « Partager » and « Réviser » are icon buttons, the main button's text stays on one line.
 - Figures whose text would be too small to read on a phone are drawn again more compactly, in every kind of figure, not only diagrams.
@@ -90,6 +91,7 @@ Each pull request's entries (the `## Changelog` of its description) are put unde
 
 ### Fixed
 
+- ⏳ A correction's waiting time is said as measured (10 to 25 seconds usually), no longer "about a minute".
 - Figures: a school word no longer draws an unrelated icon (a cell, a lens, a cone, a switch): its own, or none.
 - Figures: icons drawn with their white halo, readable on a map's colours.
 - Maps: the United Kingdom's nations (Scotland, Wales…) as regions, the world's parts by their usual names (West Africa, the Antilles), the British dominions in the empire, and more places of history (Ephesus, Dunhuang).
