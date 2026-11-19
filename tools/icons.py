@@ -8,7 +8,8 @@ versions below (their npm archives, checked by their SHA-256); an icon of Temaki
 of Maki's (town_hall and town-hall) left out; and ours (tools/icons-own/, CC0 1.0 too) for
 what history and geography sketches need and neither has (a battle, a treaty, a pyramid, a
 temple, a crown, wheat) or a cell's biology (a cell, a chromosome, a bacterium, a chloroplast, an
-egg cell, a sperm cell, a neuron, a mitochondrion, a lymphocyte); a few of game-icons.net's (CC
+egg cell, a sperm cell, a neuron, a mitochondrion, a lymphocyte), a frog seen side on and a lab's
+glassware (a beaker, a volumetric flask, a burette, a pipette); a few of game-icons.net's (CC
 BY 3.0, by their authors, at a fixed commit of its repository: GAME_ICONS), for living things,
 organs, history's weapons and ships, a few objects; then Phosphor's (MIT), its `fill` weight,
 for the objects a scheme, a timeline or a science lesson shows (a laptop, a microscope, a flask, a book), a name of
@@ -53,13 +54,12 @@ ROOT = Path(__file__).resolve().parent.parent
 TOOLS = ROOT / "tools"
 LIB = ROOT / "core" / "notosaurus_core" / "icons" / "lib.typ"
 TARGET = ROOT / "core" / "notosaurus_core" / "typst"
-NAME, VERSION = "notosaurus-icons", "0.3.0"
+NAME, VERSION = "notosaurus-icons", "0.3.1"
 GAME_ICONS_COMMIT = "82d948812bfe3f269ef8f731dcdb07b08160edc4"  # game-icons.net's repository, 2026-04-23
 # The few of game-icons.net's (CC BY 3.0, each by its author) a school figure needs and the other
 # sets lack: living things (a frog, a fern, a snail), organs, history's weapons and ships, a few
 # objects; each one looked at 12 px high and kept only readable there. Name: its author/file
 GAME_ICONS = {
-    "frog": "lorc/frog",
     "lizard": "lorc/gecko",
     "turtle": "lorc/turtle",
     "snake": "lorc/snake",
@@ -420,8 +420,8 @@ def main() -> None:
                 "(https://creativecommons.org/licenses/by/3.0/, LICENSE-game-icons): "
                 + ", ".join(f"{n} ({GAME_ICONS_AUTHORS[p.split('/')[0]]})" for n, p in GAME_ICONS.items())
                 + "; their black square behind each left out, refitted and given a halo.\n"
-                "cell, chromosome, bacterium, chloroplast, egg-cell, sperm-cell, neuron, mitochondrion and lymphocyte\n"
-                "Notosaurus's own, CC0 1.0.\n"
+                "cell, chromosome, bacterium, chloroplast, egg-cell, sperm-cell, neuron, mitochondrion, lymphocyte,\n"
+                "frog, beaker, volumetric-flask, burette and pipette Notosaurus's own, CC0 1.0.\n"
             ).encode()
         ),
     }

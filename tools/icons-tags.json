@@ -812,5 +812,9 @@
   "magnifying-glass": ["magnifier", "hand lens"],
   "neuron": ["neurons", "nerve cell", "nerve"],
   "mitochondrion": ["mitochondria"],
-  "lymphocyte": ["lymphocytes", "white blood cell", "b lymphocyte", "t lymphocyte"]
+  "lymphocyte": ["lymphocytes", "white blood cell", "b lymphocyte", "t lymphocyte"],
+  "beaker": ["beakers", "griffin beaker"],
+  "volumetric-flask": ["volumetric flask", "graduated flask", "measuring flask"],
+  "burette": ["buret", "graduated burette"],
+  "pipette": ["pipet", "volumetric pipette", "bulb pipette", "graduated pipette"]
 }

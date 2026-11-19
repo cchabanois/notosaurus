@@ -155,7 +155,7 @@ def test_school_words_give_their_icon_or_none():
     camera, a cone isn't an ice cream, a switch isn't an app's toggle, a fuse isn't a bomb)."""
     words = _words()
     terms = json.loads((Path(__file__).parent / "icon_terms.json").read_text(encoding="utf-8"))
-    assert len(terms) == 452 and sum(1 for t in terms if t["icon"]) == 170
+    assert len(terms) == 452 and sum(1 for t in terms if t["icon"]) == 173
     found = {t["en"]: words.get(t["en"].replace("-", " ")) for t in terms}  # as the index keys a word
     wrong = [(t["en"], found[t["en"]], t["icon"]) for t in terms if found[t["en"]] != t["icon"]]
     assert not wrong
@@ -187,8 +187,8 @@ def test_what_no_school_figure_shows_left_out():
 
 
 def test_living_things_drawn_and_their_authors_credited():
-    """A frog, a fern, a chimpanzee (game-icons.net's, CC BY 3.0: each author named, as the
-    licence asks) and a cell's parts (ours): icons, each with its white halo."""
+    """A fern, a chimpanzee (game-icons.net's, CC BY 3.0: each author named, as the licence
+    asks), a cell's parts, a frog and a lab's glassware (ours): icons, each with its white halo."""
     words = _words()
     assert (words["frog"], words["fern"], words["chimpanzee"], words["bacteria"]) == (
         "frog",
@@ -196,6 +196,10 @@ def test_living_things_drawn_and_their_authors_credited():
         "gorilla",
         "bacterium",
     )
+    # a lab's glassware, each its own (ours): a beaker, a volumetric flask, a burette, a pipette;
+    # a conical flask the Erlenmeyer
+    glass = ("beaker", "volumetric flask", "burette", "pipette", "conical flask")
+    assert [words[w] for w in glass] == ["beaker", "volumetric-flask", "burette", "pipette", "flask"]
     (archive,) = (ROOT / "core" / "notosaurus_core" / "typst").glob("notosaurus-icons-*.tar.gz")
     with tarfile.open(archive) as tar:
         notice = tar.extractfile("NOTICE").read().decode()  # type: ignore[union-attr]
