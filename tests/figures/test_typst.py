@@ -67,6 +67,10 @@ def test_credited_with_what_its_typst_uses():
     assert figures_typst.made_with("graph", "#lq.diagram(lq.plot((0, 1), (0, 1)))")[1:] == ["lilaq 0.6.0"]
     timeline = "#timeline(start: 1914, end: 1918, events: ((1916, [Verdun]),))"  # our function: what it uses
     assert figures_typst.made_with("timeline", timeline)[1:] == ["cetz 0.5.2"]
+    # the icons, imported by every family: credited only to a figure that draws one
+    iconic = '#timeline(start: 1914, end: 1918, events: ((1916, "Verdun", "battle"),))'
+    assert figures_typst.made_with("timeline", iconic)[1:] == ["cetz 0.5.2", "notosaurus-icons 0.2.0"]
+    assert "notosaurus-icons 0.2.0" in figures_typst.made_with("diagram", '#scheme(boxes: (a: [#icon("farm") Ferme]))')
     assert figures_typst.made_with("clock", "#clock(10, 25)")[1:] == ["cetz 0.5.2"]
     assert figures_typst.made_with("solid", "#cuboid(3, 3, 3)")[1:] == ["cetz 0.5.2"]
     assert figures_typst.made_with("other", balls) == []
