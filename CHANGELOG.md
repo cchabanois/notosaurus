@@ -84,6 +84,7 @@ Each pull request's entries (the `## Changelog` of its description) are put unde
 
 ### Fixed
 
+- 📊 A chart drawn in the colours its description, or a correction, asks for ("the bars in green"), no longer grey.
 - A photo cropped just after it was added comes back cropped when the app opens again. Before, a slow save of the uncropped photo could land after the cropped one.
 - Dictation started as the app opens, before the prompts have loaded: the dictated text stays in the free prompt, as typed text does. Before, it replaced the text of the first prompt, which stayed selected with its deck and voice.
 - A formula written the LaTeX way on a figure (t_{1/2}, \text{…}) shown as meant, never refused nor written with its code.
