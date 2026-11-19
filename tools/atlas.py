@@ -12,7 +12,16 @@ islands), waters.json (oceans, seas, gulfs, straits, lakes: their short names to
 (the sea ways a map's routes go by, made from the countries' outlines: seaways; with the
 ports, the capes and the canals routes and flows pass).
 
-  .venv/bin/python tools/atlas.py [folder] [--refresh-history]
+  .venv/bin/python tools/atlas.py [folder] [--refresh-history] [--cache=<dir> | --no-cache]
+
+Each step's result is kept (tools/atlas_cache.py) in ~/.cache/notosaurus-atlas (--cache=<dir>
+another), by what it reads (the sources' bytes, the steps' results before it, the lists kept
+in tools/) and its code (its function's, every helper's of this file it reaches, the values of
+the constants they read): a build redoes only the steps whose code or data changed, and writes
+the archive a whole build would, byte for byte. A whole build takes some 12 minutes (a past
+year's states nearly a minute each); lib.typ alone changed, 5 seconds; a list of names, the
+steps reading it (RIVER_NAMES: 7 seconds). --no-cache: every step made, nothing kept. The
+folder can be deleted at any time; it grows with each version of a step (some 20 MB a build).
 
 The regions' names in the page's languages from Wikidata (CC0), by their ISO 3166-2 codes, kept
 in tools/atlas-regions.json (the codes it lacks asked; all of them again with --refresh-history).
@@ -36,9 +45,11 @@ Needs shapely (requirements-dev.txt): regions simplified together, their borders
 """
 
 import gzip
+import hashlib
 import io
 import json
 import math
+import os
 import re
 import sys
 import tarfile
@@ -48,11 +59,13 @@ import urllib.error
 import urllib.parse
 import urllib.request
 from collections import defaultdict
+from collections.abc import Callable
 from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 
 import shapely
 import shapely.affinity
+from atlas_cache import Cache, Node
 from shapely.geometry import shape
 from shapely.ops import polygonize, polylabel
 
@@ -469,13 +482,19 @@ def names(properties: dict, own: str, *more: str) -> list[str]:
 def download(name: str, folder: Path | None = None, url: str | None = None) -> dict:
     """A JSON file, from `folder` when it has it (by that name), else from its URL (Natural
     Earth's, by default)."""
+    return json.loads(fetch(name, folder, url))
+
+
+def fetch(name: str, folder: Path | None = None, url: str | None = None) -> bytes:
+    """A file's bytes, from `folder` when it has it (by that name), else from its URL (Natural
+    Earth's, by default)."""
     if folder and (folder / name).is_file():
-        return json.loads((folder / name).read_text(encoding="utf-8"))
+        return (folder / name).read_bytes()
     request = urllib.request.Request(url or SOURCE + name, headers={"User-Agent": "notosaurus-atlas (tools/atlas.py)"})
     for wait in (10, 30, 60, 0):  # Wikipedia's and Wikidata's APIs ask to wait when asked too often (429)
         try:
             with urllib.request.urlopen(request, timeout=120) as response:
-                return json.loads(response.read())
+                return response.read()
         except urllib.error.HTTPError as e:
             if e.code != 429 or not wait:
                 raise
@@ -574,12 +593,12 @@ def wikidata_places(listed: list, prefix: str, folder: Path | None = None) -> li
     return places
 
 
-def overpass(name: str, folder: Path | None, query: str) -> dict:
+def overpass(name: str, folder: Path | None, query: str) -> bytes:
     """What OpenHistoricalMap's Overpass answers `query` (as its database stood on OHM_DATE),
-    from `folder` when it has it (by that name), else asked, then kept there: a layer's
+    its bytes, from `folder` when it has it (by that name), else asked, then kept there: a layer's
     states are some 150 MB."""
     if folder and (folder / name).is_file():
-        return json.loads((folder / name).read_text(encoding="utf-8"))
+        return (folder / name).read_bytes()
     query = f'[out:json][timeout:900][date:"{OHM_DATE}"];{query}'
     request = urllib.request.Request(
         OHM, data=urllib.parse.urlencode({"data": query}).encode(), headers={"User-Agent": "notosaurus-atlas"}
@@ -595,7 +614,7 @@ def overpass(name: str, folder: Path | None, query: str) -> dict:
             time.sleep(wait)
     if folder:
         (folder / name).write_bytes(raw)
-    return json.loads(raw)
+    return raw
 
 
 def on(tags: dict, day: str) -> bool:
@@ -1370,11 +1389,10 @@ def region_codes(admin1: dict) -> list[str]:
     return sorted(found - {""})
 
 
-def region_names(admin1: dict, refresh: bool = False) -> dict[str, list[str]]:
+def region_names(codes: list[str], refresh: bool = False) -> dict[str, list[str]]:
     """Each region's names in the page's languages from Wikidata (CC0), by its ISO code
     ("IT-75": Pouilles, Apulia, Apulien, Apulia, Puglia, Apúlia), as REGIONS_FILE keeps them;
-    the codes it lacks asked (all with `refresh`), then kept."""
-    codes = region_codes(admin1)
+    the codes it lacks asked (all with `refresh`), then kept. `codes`: region_codes'."""
     kept = {} if refresh or not REGIONS_FILE.is_file() else json.loads(REGIONS_FILE.read_text(encoding="utf-8"))
     asked = [c for c in codes if c not in kept]
     for start in range(0, len(asked), 400):
@@ -2034,59 +2052,67 @@ Wikidata (CC0).
 """
 
 
-def build(folder: Path | None = None, refresh_history: bool = False) -> None:
-    files = (COUNTRIES, PLACES, RIVERS, RIVERS_EUROPE, RELIEFS, WATERS, LAKES, REGIONS, CAPES)
-    with ThreadPoolExecutor() as pool:  # all at once
-        countries, places, main_rivers, europe, relief, marine, lakes, admin1, capes = pool.map(
-            lambda name: download(name, folder), files
-        )
-    usual = usual_names(folder)
-    world = atlas(countries, places, usual, history(folder, refresh_history)) | {
+# The build's steps (atlas_cache: each kept, by what it reads and its code): what build() did
+# in one go, cut where a part of the atlas can change alone (a list of names, a threshold, a
+# year's states), each step given what it reads, its result what the next ones read
+
+
+def _world(countries: dict, places: dict, usual: dict, past: list, lakes: dict) -> dict:
+    """atlas.json's countries (Natural Earth's alone), cities, lakes and years."""
+    return atlas(countries, places, usual, past) | {
         "lakes": lake_rings(lakes),
         "years": [[year, start, end] for year, (_, start, end) in LAYERS.items()],
     }
-    world["areas"] = areas(countries, world["countries"], usual)
-    found_territories = territories(admin1, world["countries"], usual, relief)
-    # The borders of past years: OHM's states of each layer's day (two layers asked at once:
-    # Overpass serves two queries at a time), historical-basemaps' nearest layer for the land
-    # OHM leaves to none
-    ever = overpass("ohm-states.json", folder, 'rel["boundary"="administrative"]["admin_level"="2"];out tags;')
-    asked = {
+
+
+def _areas(countries: dict, world: dict, usual: dict) -> list[dict]:
+    return areas(countries, world["countries"], usual)
+
+
+def _territories(admin1: dict, world: dict, usual: dict, relief: dict) -> dict:
+    return territories(admin1, world["countries"], usual, relief)
+
+
+def _small_lands(admin1: dict, countries: dict, world: dict, usual: dict) -> dict:
+    return small_lands(admin1, countries, world["countries"], usual)
+
+
+def _whole_world(world: dict, areas_found: list, found_territories: dict, small: dict) -> dict:
+    """atlas.json: Natural Earth's countries, their far parts and small lands, the world's parts."""
+    world["areas"] = areas_found
+    world["countries"] |= found_territories | small
+    return world
+
+
+def _asked_states(ever: dict) -> dict[int, str]:
+    """The states OHM is asked for on each layer's day, by their ids."""
+    return {
         year: ",".join(str(r["id"]) for r in ever["elements"] if on(r["tags"], day))
         for year, (day, _, _) in LAYERS.items()
     }
-    with ThreadPoolExecutor(max_workers=2) as pool:
-        ohm = dict(
-            zip(
-                LAYERS,
-                pool.map(lambda y: overpass(f"ohm-{y}.json", folder, f"rel(id:{asked[y]});out geom;"), LAYERS),
-                strict=True,
-            )
-        )
-    nearest = {year: min(BORDERS_YEARS, key=lambda y: (abs(y - year), y)) for year in LAYERS}
-    with ThreadPoolExecutor() as pool:
-        extra = dict(
-            zip(
-                set(nearest.values()),
-                pool.map(
-                    lambda y: download(f"world_{y}.geojson", folder, f"{BORDERS_SOURCE}geojson/world_{y}.geojson"),
-                    set(nearest.values()),
-                ),
-                strict=True,
-            )
-        )
-    drawn = {r["id"] for data in ohm.values() for r in data["elements"]}
-    ids = {r["tags"]["wikidata"] for r in ever["elements"] if r["id"] in drawn and "wikidata" in r["tags"]}
-    titles = {article for until, article in ITEMS.values()} | {
+
+
+def _state_items(ever: dict, *layers: dict) -> set[str]:
+    """The Wikidata items of the states the layers draw."""
+    drawn = {r["id"] for data in layers for r in data["elements"]}
+    return {r["tags"]["wikidata"] for r in ever["elements"] if r["id"] in drawn and "wikidata" in r["tags"]}
+
+
+def _state_articles(*extras: dict) -> set[str]:
+    """The Wikipedia articles of historical-basemaps' states (and ITEMS')."""
+    return {article for until, article in ITEMS.values()} | {
         ARTICLES.get(n, bare_hb(n))
-        for data in extra.values()
+        for data in extras
         for f in data["features"]
         if (n := (f["properties"]["NAME"] or "").strip())
     }
-    named = wikidata_items(folder, refresh_history, ids, titles)
-    # today's countries' names (a state of the past named as one of them: « France ») and land
+
+
+def _nations(countries: dict, world: dict) -> tuple[dict, list]:
+    """Today's countries' names, by their keys and Wikidata items (a state of the past named as
+    one of them: « France »; OHM's Italy of 1960 is Q38, Natural Earth's Italy), and their land."""
     today = {key: country["n"] for country in world["countries"].values() for key in country["k"]}
-    today |= {  # (and by its Wikidata item: OHM's Italy of 1960 is Q38, Natural Earth's Italy)
+    today |= {
         f["properties"]["WIKIDATAID"]: world["countries"][f["properties"]["ADM0_A3"]]["n"]
         for f in countries["features"]
         if f["properties"].get("WIKIDATAID") and f["properties"]["ADM0_A3"] in world["countries"]
@@ -2096,29 +2122,17 @@ def build(folder: Path | None = None, refresh_history: bool = False) -> None:
         for f in countries["features"]
         if (code := f["properties"]["ADM0_A3"]) != "ATA" and code in world["countries"]
     ]
-    world["countries"] |= found_territories | small_lands(admin1, countries, world["countries"], usual)
+    return today, nations
 
-    def text(data) -> str:
-        return json.dumps(data, ensure_ascii=False, separators=(",", ":"))
 
-    all_reliefs, all_waters = reliefs(relief), waters(marine, lakes, passages(folder, refresh_history))
-    all_regions = regions(admin1, region_names(admin1, refresh_history))
-    contents = {
-        "typst.toml": TOML,
-        "lib.typ": LIB.read_text(encoding="utf-8"),
-        "NOTICE": NOTICE,
-        "LICENSE-CLDR": download_text("cldr-LICENSE", folder, CLDR_LICENCE),
-        "LICENSE-historical-basemaps": download_text("historical-basemaps-LICENSE", folder, BORDERS_SOURCE + "LICENSE"),
-        "atlas.json": text(world),
-        "rivers.json": text(rivers(main_rivers, europe)),
-        "reliefs.json": text(all_reliefs),
-        "waters.json": text(all_waters),
-        "ways.json": text(seaways(world, all_waters, all_reliefs, capes)),
-    } | {f"regions/{code}.json": text(data) for code, data in sorted(all_regions.items())}
-    states = {year: past_states(year, ohm[year], extra[nearest[year]], named, today, nations) for year in LAYERS}
-    contents |= {f"borders/{year}.json": text(data) for year, data in states.items()}
-    # What a name the map refuses is, read only then (said in the refusal): the countries
-    # whose regions bear it, the years whose states do
+def _past_states(data: dict, extra: dict, named: dict, nations: tuple[dict, list], year: int) -> dict:
+    today, lands = nations
+    return past_states(year, data, extra, named, today, lands)
+
+
+def _names(all_regions: dict, world: dict, *states: dict) -> dict:
+    """What a name the map refuses is, read only then (said in the refusal): the countries
+    whose regions bear it, the years whose states do."""
     region_keys: dict = defaultdict(set)
     for code, data in all_regions.items():
         if code not in world["countries"]:
@@ -2127,16 +2141,117 @@ def build(folder: Path | None = None, refresh_history: bool = False) -> None:
             for key in r["k"]:
                 region_keys[key].add(code)
     state_names: dict = defaultdict(set)
-    for year, data in states.items():
+    for data in states:
         for state in data["countries"].values():
             for key in state["k"]:
-                state_names[key].add(year)
-    contents["names.json"] = text(
-        {
-            "regions": {k: sorted(v) for k, v in sorted(region_keys.items())},
-            "states": {k: sorted(v) for k, v in sorted(state_names.items())},
-        }
+                state_names[key].add(data["year"])
+    return {
+        "regions": {k: sorted(v) for k, v in sorted(region_keys.items())},
+        "states": {k: sorted(v) for k, v in sorted(state_names.items())},
+    }
+
+
+def _text(data) -> str:
+    return json.dumps(data, ensure_ascii=False, separators=(",", ":"))
+
+
+def cache_folder() -> Path:
+    """Where the steps are kept by default: the user's cache, outside git."""
+    return Path(os.environ.get("XDG_CACHE_HOME") or Path.home() / ".cache") / "notosaurus-atlas"
+
+
+def build(folder: Path | None = None, refresh_history: bool = False, kept: Path | None = None) -> None:
+    """The atlas, its steps read from `kept` when their code and data are the same (none:
+    every step made)."""
+    import numpy
+
+    cache = Cache(
+        kept,
+        salt=f"python {sys.version} shapely {shapely.__version__} geos {shapely.geos_version_string} "
+        f"numpy {numpy.__version__}",
+        root=ROOT,
     )
+
+    def source(name: str, url: str | None = None, ask: Callable[[], bytes] | None = None) -> Node:
+        """A source, by what it holds: from `folder` when it has it (read again for each step
+        reading it), else downloaded (or asked: Overpass), once."""
+        path = folder / name if folder else None
+        if not (path and path.is_file()):
+            raw = ask() if ask else fetch(name, None, url)
+            if not (path and path.is_file()):
+                return cache.source(name, lambda: json.loads(raw), hashlib.sha256(raw).hexdigest())
+        assert path is not None
+        return cache.source(name, lambda: json.loads(path.read_bytes()), cache.file_key(path))
+
+    files = (COUNTRIES, PLACES, RIVERS, RIVERS_EUROPE, RELIEFS, WATERS, LAKES, REGIONS, CAPES)
+    with ThreadPoolExecutor() as pool:  # all at once
+        countries, places, main_rivers, europe, relief, marine, lakes, admin1, capes = pool.map(source, files)
+    usual = cache.value("usual", usual_names(folder))
+    world = cache.step(
+        _world, countries, places, usual, cache.value("history", history(folder, refresh_history)), lakes
+    )
+    found_territories = cache.step(_territories, admin1, world, usual, relief)
+    small = cache.step(_small_lands, admin1, countries, world, usual)
+    whole = cache.step(_whole_world, world, cache.step(_areas, countries, world, usual), found_territories, small)
+    # The borders of past years: OHM's states of each layer's day (two layers asked at once:
+    # Overpass serves two queries at a time), historical-basemaps' nearest layer for the land
+    # OHM leaves to none
+    ever_query = 'rel["boundary"="administrative"]["admin_level"="2"];out tags;'
+    ever = source("ohm-states.json", ask=lambda: overpass("ohm-states.json", folder, ever_query))
+    asked = cache.step(_asked_states, ever)
+
+    def layer(year: int) -> Node:
+        name = f"ohm-{year}.json"
+        return source(name, ask=lambda: overpass(name, folder, f"rel(id:{asked.get()[year]});out geom;"))
+
+    with ThreadPoolExecutor(max_workers=2) as pool:
+        ohm = dict(zip(LAYERS, pool.map(layer, LAYERS), strict=True))
+    nearest = {year: min(BORDERS_YEARS, key=lambda y: (abs(y - year), y)) for year in LAYERS}
+    basemaps = sorted(set(nearest.values()))
+    with ThreadPoolExecutor() as pool:
+        extra = dict(
+            zip(
+                basemaps,
+                pool.map(
+                    lambda y: source(f"world_{y}.geojson", f"{BORDERS_SOURCE}geojson/world_{y}.geojson"), basemaps
+                ),
+                strict=True,
+            )
+        )
+    ids = cache.step(_state_items, ever, *ohm.values())
+    titles = cache.step(_state_articles, *(extra[y] for y in basemaps))
+    named = cache.value("named", wikidata_items(folder, refresh_history, ids.get(), titles.get()))
+    nations = cache.step(_nations, countries, world)
+    all_reliefs = cache.step(reliefs, relief)
+    all_waters = cache.step(waters, marine, lakes, cache.value("passages", passages(folder, refresh_history)))
+    codes = cache.step(region_codes, admin1)
+    all_regions = cache.step(regions, admin1, cache.value("region names", region_names(codes.get(), refresh_history)))
+    states = {
+        year: cache.step(
+            _past_states, ohm[year], extra[nearest[year]], named, nations, year=year, name=f"states {year}"
+        )
+        for year in LAYERS
+    }
+    made = {
+        "atlas.json": whole,
+        "rivers.json": cache.step(rivers, main_rivers, europe),
+        "reliefs.json": all_reliefs,
+        "waters.json": all_waters,
+        "ways.json": cache.step(seaways, whole, all_waters, all_reliefs, capes),
+    }
+    contents = {
+        "typst.toml": TOML,
+        "lib.typ": LIB.read_text(encoding="utf-8"),
+        "NOTICE": NOTICE,
+        "LICENSE-CLDR": fetch("cldr-LICENSE", folder, CLDR_LICENCE).decode("utf-8"),
+        "LICENSE-historical-basemaps": fetch("historical-basemaps-LICENSE", folder, BORDERS_SOURCE + "LICENSE").decode(
+            "utf-8"
+        ),
+    }
+    contents |= {name: _text(step.get()) for name, step in made.items()}
+    contents |= {f"regions/{code}.json": _text(data) for code, data in sorted(all_regions.get().items())}
+    contents |= {f"borders/{year}.json": _text(step.get()) for year, step in states.items()}
+    contents["names.json"] = _text(cache.step(_names, all_regions, whole, *states.values()).get())
     for old in TARGET.glob(f"{NAME}-*.tar.gz"):
         old.unlink()
     archive = TARGET / f"{NAME}-{VERSION}.tar.gz"
@@ -2154,8 +2269,17 @@ def build(folder: Path | None = None, refresh_history: bool = False) -> None:
     sizes = ", ".join(f"{n} {len(c.encode()) // 1024} KB" for n, c in contents.items() if not n.startswith("regions/"))
     regions_size = sum(len(c.encode()) for n, c in contents.items() if n.startswith("regions/")) // 1024
     print(f"{archive.relative_to(ROOT)}: {archive.stat().st_size // 1024} KB ({sizes}, regions/ {regions_size} KB)")
+    print(f"Steps made: {', '.join(cache.made) or 'none'}; kept: {len(cache.kept)}")
 
 
 if __name__ == "__main__":
-    arguments = [a for a in sys.argv[1:] if a != "--refresh-history"]
-    build(Path(arguments[0]) if arguments else None, "--refresh-history" in sys.argv[1:])
+    flags = {"--refresh-history", "--no-cache"}
+    arguments = [a for a in sys.argv[1:] if a not in flags and not a.startswith("--cache=")]
+    chosen = [a.removeprefix("--cache=") for a in sys.argv[1:] if a.startswith("--cache=")]
+    started = time.monotonic()
+    build(
+        Path(arguments[0]) if arguments else None,
+        "--refresh-history" in sys.argv[1:],
+        None if "--no-cache" in sys.argv[1:] else Path(chosen[-1]) if chosen else cache_folder(),
+    )
+    print(f"{time.monotonic() - started:.0f} s")
