@@ -2,6 +2,7 @@
 proportions, lengths beside their lines."""
 
 import io
+import itertools
 import math
 import re
 
@@ -404,3 +405,54 @@ def test_a_points_coordinates_written_in_a_frame_of_space():
         figures_typst.compile_svg("solid", f'#space(origin: "A", points: ({points}), coordinates: ("K",))')
     rule = figures_typst.FAMILIES["solid"].rules
     assert "a frame with a unit of its own" in rule and 'coordinates: ("G",)' in rule
+
+
+EARTH = """#layers(((name: [croûte], depth: 30), (name: [manteau supérieur], depth: 670),
+  (name: [manteau inférieur], depth: 2900), (name: [noyau externe liquide], depth: 5100),
+  (name: [noyau interne solide], depth: 6370)),
+  zones: ((name: [lithosphère], from: 0, to: 100), (name: [asthénosphère], from: 100, to: 670)))"""
+
+
+def test_a_bodys_layers_their_depths_and_names_apart():
+    """The Earth's layers drawn as SVG by the AI: its depths piled up (« 0 km » on « 30 km »,
+    « 6 370 km » on « 5 100 km »), names on the wrong layer, the crust too thin to see (3
+    figures, 2 of them 0/3). `layers` draws a quarter of the body from each layer's bottom
+    depth: the depths at their boundaries on its straight edge, spread apart, the names in a
+    column right of it, apart too, the crust's band drawn thicker than its 0.5 %."""
+    svg = figures_typst.compile_svg("solid", EARTH)
+    glyphs = _glyphs(svg)
+    width = float(re.search(r'viewBox="0 0 ([\d.]+)', svg)[1])
+    # the depths left of the quarter, the names right of it: five each, none on another
+    depths = sorted(y for x, y in glyphs if width * 0.15 < x < width * 0.45)
+    names = sorted(y for x, y in glyphs if x > width * 0.6)
+    assert len(depths) == 5 and len(names) == 5, (depths, names)
+    for column in (depths, names):
+        assert all(b - a >= 8 for a, b in itertools.pairwise(column)), column
+
+
+def test_a_bodys_layers_from_the_surface_down():
+    """Layers given out of order, or a depth missing: refused, saying how to give them."""
+    with pytest.raises(figures_typst.Unusable, match="from the surface down"):
+        figures_typst.compile_svg("solid", "#layers(((name: [a], depth: 50), (name: [b], depth: 20)))")
+    with pytest.raises(figures_typst.Unusable, match="its bottom's depth"):
+        figures_typst.compile_svg("solid", "#layers(((name: [a],), (name: [b], depth: 20)))")
+
+
+def test_a_bodys_layers_given_by_their_radii():
+    """The Sun's zones given from its centre (« jusqu'à 500 000 km du centre »), the Moon's
+    core by its radius: each such layer by its radius, written as the lesson gives it, a line
+    from the centre to its top below the quarter (a dotted guide up to it), never a depth the
+    AI would have computed (196 000 km written for 500 000 km)."""
+    sun = figures_typst.compile_svg(
+        "solid",
+        "#layers(((name: [zone convective], radius: 696000), (name: [zone radiative], radius: 500000),"
+        " (name: [noyau], radius: 175000)), surface: [photosphère])",
+    )
+    assert figures_typst.compile_svg("solid", EARTH).count("stroke-dasharray") == 0
+    # a layer's bottom from the next one's radius: the Moon's mantle, between its crust's
+    # depth and its core's radius
+    moon = "#layers(((name: [croûte], depth: 50), (name: [manteau]), (name: [noyau], radius: 350, depth: 1737)))"
+    one = figures_typst.compile_svg("solid", moon).count("stroke-dasharray")
+    assert one > 0 and sun.count("stroke-dasharray") == 3 * one  # a guide for each radius
+    with pytest.raises(figures_typst.Unusable, match="deeper than the one above"):
+        figures_typst.compile_svg("solid", "#layers(((name: [a], radius: 10), (name: [b], radius: 20)))")
