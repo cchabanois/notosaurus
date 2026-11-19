@@ -1,5 +1,5 @@
 // The figures' icons: a pictogram named by an English word, drawn at the size of the text
-// around it (built by tools/icons.py: Maki's, Temaki's, ours, Phosphor's; their words in
+// around it (built by tools/icons.py: Maki's, Temaki's, ours, game-icons.net's, Phosphor's; their words in
 // index.json, their plurals and singulars with them).
 
 #let _ink = "#010203"
@@ -14,14 +14,9 @@
 #let _key(w) = lower(w).replace("_", " ").replace("-", " ").split(" ").filter(p => p != "").join(" ")
 
 // An icon's name for a word: the word as the index has it (its plurals and singulars there
-// too), else a phrase's last word (its noun: a steel factory, a cargo ship); none else: never
-// an icon guessed
-#let _found(words, k) = {
-  if k in words { return words.at(k) }
-  let parts = k.split(" ")
-  if parts.len() > 1 and parts.last() in words { return words.at(parts.last()) }
-  none
-}
+// too), none else: never an icon guessed (a phrase's last word isn't its thing: a sperm cell
+// isn't a cell, a lab stand isn't a lectern)
+#let _found(words, k) = if k in words { words.at(k) } else { none }
 
 // An SVG of the AI's own, for what no icon shows: simple shapes only (no text, image, link,
 // script or style), one colour, at most 40 shapes; none when it isn't (not drawn)

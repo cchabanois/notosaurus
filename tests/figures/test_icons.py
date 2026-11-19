@@ -47,9 +47,8 @@ def test_an_unknown_word_draws_the_figure_without_its_icon():
 
 
 def test_a_safe_near_form_finds_its_icon():
-    """A plural, a singular, a hyphen, a phrase's last word, an icon family's first word: the
-    same icon, as the index has them (tools/icons.py); objects Phosphor's, places still the
-    map's (a port the harbour)."""
+    """A plural, a singular, a hyphen, an icon family's first word: the same icon, as the index
+    has them (tools/icons.py); objects Phosphor's, places still the map's (a port the harbour)."""
     (archive,) = (ROOT / "core" / "notosaurus_core" / "typst").glob("notosaurus-icons-*.tar.gz")
     with tarfile.open(archive) as tar:
         words = json.loads(tar.extractfile("index.json").read())["words"]  # type: ignore[union-attr]
@@ -58,7 +57,7 @@ def test_a_safe_near_form_finds_its_icon():
     assert words["laptop"] == words["laptops"] == "laptop" and words["microscope"] == "microscope"
     assert words["test tubes"] == "test-tube" and words["computer"] == words["computers"]
     assert words["battery"].startswith("battery-")  # the family's first word
-    for word in ("Factories", "test-tube", "steel factory", "Microscopes"):
+    for word in ("Factories", "test-tube", "Microscopes"):
         svg = figures_typst.compile_svg("diagram", _scheme(f'#icon("{word}") X'))
         assert len(text_size.icons_px(svg)) == 1, word
 
@@ -136,7 +135,76 @@ def test_every_icon_tagged_square_and_its_words_indexed():
             svg = tar.extractfile(icons[name]).read().decode()  # type: ignore[union-attr]
             w, h = re.search(r'viewBox="[-\d.]+ [-\d.]+ ([\d.]+) ([\d.]+)"', svg).groups()  # type: ignore[union-attr]
             assert w == h and text_size.ICON_MARK in svg, name
-    assert set(tags) <= set(icons)  # Maki's, Temaki's and ours; Phosphor's tagged by Phosphor
+    assert {n for n, w in tags.items() if w} <= set(icons)  # those of our words all kept
     assert any(n.startswith("ph-") for n in icons) and "laptop" in icons
     assert set(index["words"].values()) <= set(icons)
     assert index["words"]["factory"] == "industry" and index["words"]["port"] == "harbor"
+
+
+def _words() -> dict[str, str]:
+    (archive,) = (ROOT / "core" / "notosaurus_core" / "typst").glob("notosaurus-icons-*.tar.gz")
+    with tarfile.open(archive) as tar:
+        return json.loads(tar.extractfile("index.json").read())["words"]  # type: ignore[union-attr]
+
+
+def test_school_words_give_their_icon_or_none():
+    """Each of the 452 things 645 figures' descriptions name (icon_terms.json: a survey of the
+    benches' descriptions, every subject) gives its icon, or none when a family draws it (a
+    resistor, a lens, the mantle), when it is a drawing's label (a petal, the retina) or a
+    proper name (the Senate): never another's (a cell isn't a cell tower, a lens isn't a
+    camera, a cone isn't an ice cream, a switch isn't an app's toggle, a fuse isn't a bomb)."""
+    words = _words()
+    terms = json.loads((Path(__file__).parent / "icon_terms.json").read_text(encoding="utf-8"))
+    assert len(terms) == 452 and sum(1 for t in terms if t["icon"]) == 173
+    found = {t["en"]: words.get(t["en"].replace("-", " ")) for t in terms}  # as the index keys a word
+    wrong = [(t["en"], found[t["en"]], t["icon"]) for t in terms if found[t["en"]] != t["icon"]]
+    assert not wrong
+
+
+def test_a_phrase_is_never_taken_for_its_last_word():
+    """A phrase no icon has draws none: its last word isn't its thing (a sperm cell isn't a
+    cell, a lab stand isn't a lectern); one the index has gives its own (sperm cell)."""
+    missing: list[str] = []
+    token = figures_typst.icons_missing.set(missing)
+    try:
+        svg = figures_typst.compile_svg("diagram", _scheme('#icon("lab stand") Support', '#icon("sperm cell") X'))
+    finally:
+        figures_typst.icons_missing.reset(token)
+    assert missing == ["lab stand"] and len(text_size.icons_px(svg)) == 1
+    assert _words()["sperm cell"] == "sperm-cell"
+
+
+def test_what_no_school_figure_shows_left_out():
+    """A screen's own icons (arrows, settings, an app's toggles, a download) and the street's
+    (a vending machine, a bench) aren't in the package; those our words name are."""
+    (archive,) = (ROOT / "core" / "notosaurus_core" / "typst").glob("notosaurus-icons-*.tar.gz")
+    with tarfile.open(archive) as tar:
+        names = {
+            m.name.removeprefix("icons/").removesuffix(".svg") for m in tar.getmembers() if m.name.startswith("icons/")
+        }
+    assert not names & {"arrow-left", "cell-tower", "download", "toggle-left", "vending-machine", "bench"}
+    assert {"sphere", "cylinder", "network", "database", "frog", "chromosome", "ballot-box"} <= names
+
+
+def test_living_things_drawn_and_their_authors_credited():
+    """A fern, a chimpanzee (game-icons.net's, CC BY 3.0: each author named, as the licence
+    asks), a cell's parts, a frog and a lab's glassware (ours): icons, each with its white halo."""
+    words = _words()
+    assert (words["frog"], words["fern"], words["chimpanzee"], words["bacteria"]) == (
+        "frog",
+        "fern",
+        "gorilla",
+        "bacterium",
+    )
+    # a lab's glassware, each its own (ours): a beaker, a volumetric flask, a burette, a pipette;
+    # a conical flask the Erlenmeyer
+    glass = ("beaker", "volumetric flask", "burette", "pipette", "conical flask")
+    assert [words[w] for w in glass] == ["beaker", "volumetric-flask", "burette", "pipette", "flask"]
+    (archive,) = (ROOT / "core" / "notosaurus_core" / "typst").glob("notosaurus-icons-*.tar.gz")
+    with tarfile.open(archive) as tar:
+        notice = tar.extractfile("NOTICE").read().decode()  # type: ignore[union-attr]
+        licence = tar.extractfile("LICENSE-game-icons").read().decode()  # type: ignore[union-attr]
+        frog = tar.extractfile("icons/frog.svg").read().decode()  # type: ignore[union-attr]
+    assert "Creative Commons 3.0 BY" in licence and "Icons made by" in notice
+    assert all(a in notice for a in ("Lorc", "Delapouite", "game-icons.net", "CC BY 3.0"))
+    assert 'fill="#fefefd"' in frog and "h512v512" not in frog  # its halo white, its black square gone

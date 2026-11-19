@@ -4,7 +4,7 @@
 
 // Icons: icon("factory"), a pictogram named by an English word (the notosaurus-icons package,
 // tools/icons.py), in every family
-#import "@preview/notosaurus-icons:0.2.0": icon
+#import "@preview/notosaurus-icons:0.3.1": icon
 
 // Numbers written as the figure's language writes them: its decimal separator, set by
 // figures_typst.source from the AI's `#set text(lang: …)` (a point when none is said)
