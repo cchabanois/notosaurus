@@ -16,6 +16,8 @@ ports, the capes and the canals routes and flows pass).
 
 The regions' names in the page's languages from Wikidata (CC0), by their ISO 3166-2 codes, kept
 in tools/atlas-regions.json (the codes it lacks asked; all of them again with --refresh-history).
+A country's nations (the United Kingdom's Scotland, Wales…) are groups of its regions too, their
+names from Wikidata kept in tools/atlas-nations.json the same way.
 A country's far parts (its overseas departments, its archipelagos across the sea) are places of
 their own in atlas.json ("t", "o" their country); the world's parts (UN M49) groups of countries
 ("areas"); names.json what a name the map refuses is otherwise (a region, a state of the past).
@@ -60,7 +62,7 @@ ROOT = Path(__file__).resolve().parent.parent
 CORE = ROOT / "core" / "notosaurus_core"
 LIB = CORE / "atlas" / "lib.typ"
 TARGET = CORE / "typst"
-NAME, VERSION = "notosaurus-atlas", "0.15.0"
+NAME, VERSION = "notosaurus-atlas", "0.16.0"
 SOURCE = "https://raw.githubusercontent.com/nvkelso/natural-earth-vector/v5.1.2/geojson/"
 COUNTRIES = "ne_50m_admin_0_countries.geojson"  # 1:50m: a country's shape, light enough
 PLACES = "ne_10m_populated_places.geojson"  # 1:10m: the cities, their names in many languages
@@ -94,6 +96,7 @@ HISTORY = [
     *[(t, ()) for t in ("Alesia (city)", "Lutetia", "Lugdunum", "Massalia", "Bibracte", "Gergovia", "Antioch")],
     ("Ancient Corinth", ("Corinthe", "Corinth", "Korinth", "Corinto")),
     *[(t, ()) for t in ("Constantinople", "Byzantium", "Ctesiphon", "Chang'an", "Luoyang", "Pataliputra")],
+    *[(t, ()) for t in ("Ephesus", "Dunhuang", "Nazareth", "Bethlehem", "Tarsus, Mersin", "Philippi")],
     # The Middle Ages
     *[(t, ()) for t in ("Aachen", "Ravenna", "Córdoba, Spain", "Toledo, Spain", "Granada", "Kairouan", "Fez, Morocco")],
     *[(t, ()) for t in ("Venice", "Genoa", "Pisa", "Florence", "Bruges", "Ghent", "Lübeck", "Veliky Novgorod")],
@@ -266,6 +269,16 @@ EMPIRES = (
     ("Union of South Africa", "South Africa"),
     ("New Zealand", "Dominion of New Zealand"),
 )
+# An empire's dominions that OHM gives as states of their own (Australia: a "country" of 1914,
+# no colony_of): the empire they belonged to (EMPIRES' names), by their Wikidata item, until
+# the year they left it (Australia and New Zealand's 1942 still in the British Empire)
+DOMINIONS = {
+    "Q408": ("British", 1948),  # Australia
+    "Q16": ("British", 1948),  # Canada
+    "Q2594990": ("British", 1948),  # New Zealand
+    "Q193619": ("British", 1948),  # the Union of South Africa
+    "Q38610": ("British", 1949),  # Newfoundland
+}
 # What OHM calls a state of its own (its place or border_type): Wikidata's "country" never
 # makes it a colony (Brazil, the Portuguese Empire's once). (Not a federation: most were a
 # colony's, French West Africa's, Indochina's)
@@ -279,6 +292,8 @@ RULED = {
     "Indochinese Federation": "France",
     "Philippine Executive Commission": "Japan",
 }
+# OHM's states Wikidata has no item for, by OHM's English name: ALSO gives them their short names
+OHM_ONLY = ("North Vietnam",)
 # historical-basemaps' names that are not Wikipedia's articles (where their names come from)
 ARTICLES = {
     "Germany (Soviet)": "Soviet occupation zone in Germany",
@@ -346,6 +361,15 @@ ALSO = {
     "Kingdom of Yugoslavia": YUGOSLAVIA,
     "Federal People's Republic of Yugoslavia": YUGOSLAVIA,
     "Socialist Federal Republic of Yugoslavia": YUGOSLAVIA,
+    "Dominion of Newfoundland": "Terre-Neuve|Newfoundland|Neufundland|Terranova|Terra Nova",
+    "British Raj": "Inde britannique|Empire des Indes|Raj britannique|British India|Britisch-Indien|India británica"
+    "|India britannica|Índia Britânica",
+    "Union of South Africa": "Union sud-africaine|Union de l'Afrique du Sud|Südafrikanische Union|Unión Sudafricana"
+    "|Unione Sudafricana|União Sul-Africana",
+    "North Vietnam": "Nord-Vietnam|Viêt Nam du Nord|Vietnam du Nord|Nordvietnam|Vietnam del Norte|Vietnam del Nord"
+    "|Vietnã do Norte|Vietname do Norte",
+    "South Vietnam": "Sud-Vietnam|Viêt Nam du Sud|Vietnam du Sud|Südvietnam|Vietnam del Sur|Vietnam del Sud"
+    "|Vietnã do Sul|Vietname do Sul",
     "East Germany": "RDA|GDR|DDR|Allemagne de l'Est|Ostdeutschland|Germania Est",
     "West Germany": "RFA|FRG|BRD|Allemagne de l'Ouest|Westdeutschland|Germania Ovest",
     "Soviet occupation zone in Germany": "zone soviétique|zone d'occupation soviétique|Soviet zone"
@@ -748,6 +772,9 @@ def name_state(state: dict, year: int, named: dict, today: dict) -> dict:
         state["said"] = [RULED.get(english(tags), ""), "" if free else tags.get("colony_of", "")]
         state["said"] += [] if sovereign else item.get("part", [])
         state["said"] += [own, english(tags), *([] if sovereign else item.get("country", []))]
+        empire, until = DOMINIONS.get(tags.get("wikidata", ""), ("", 0))
+        if year <= until:
+            state["said"].insert(0, empire)
     else:
         bracket = re.search(r"\(([^()]+)\)$", state.get("name", ""))
         subject = state.get("subject", "")
@@ -1012,7 +1039,8 @@ def atlas(countries: dict, places: dict, usual: dict | None = None, past: list |
     for own, found in sorted(by_country.items()):
         code = own if own in codes else found[0]["SOV_A3"]
         found.sort(key=lambda p: -(p.get("POP_MAX") or 0))
-        capitals = [p for p in found if p.get("ADM0CAP") == 1]
+        # its capital, and its nations' (Edinburgh, Cardiff, Belfast: Natural Earth's "region capital")
+        capitals = [p for p in found if p.get("ADM0CAP") == 1 or p.get("FEATURECLA") == "Admin-0 region capital"]
         notable = [p for p in found if (p.get("SCALERANK") or 99) <= NOTABLE]
         chosen = list({id(p): p for p in capitals + found[:CITIES] + notable}.values())
         for p in chosen:
@@ -1398,7 +1426,61 @@ def region_names(admin1: dict, refresh: bool = False) -> dict[str, list[str]]:
     return kept
 
 
-def regions(admin1: dict, wikidata: dict | None = None) -> dict[str, dict]:
+NATIONS_FILE = ROOT / "tools" / "atlas-nations.json"  # what Wikidata gave for the nations, kept
+NATION_NEAR = 3  # degrees: a country's part this near its largest one is a nation of it (not a far part)
+
+
+def country_nations(admin1: dict) -> dict[str, dict]:
+    """The parts Natural Earth names a country's regions by (its "geonunit": the United
+    Kingdom's England, Scotland, Wales and Northern Ireland, Belgium's Flanders and Wallonia;
+    never one named as the country), when it has two or more near one another (not its far
+    parts: France's Guadeloupe, Portugal's Azores): per country, each part's English name and
+    its land."""
+    by_country: dict = defaultdict(lambda: defaultdict(list))
+    for f in admin1["features"]:
+        p = f["properties"]
+        if f["geometry"] and p.get("geonunit") and p["geonunit"] != p.get("admin"):
+            by_country[p["adm0_a3"]][p["geonunit"]].append(shapely.make_valid(shape(f["geometry"])))
+    out = {}
+    for code, parts_ in by_country.items():
+        if len(parts_) < 2:
+            continue
+        lands = {name: shapely.union_all(found) for name, found in parts_.items()}
+        largest = max(lands.values(), key=lambda g: g.area)
+        near = {n: g for n, g in lands.items() if g.distance(largest) <= NATION_NEAR}
+        if len(near) >= 2:
+            out[code] = near
+    return out
+
+
+def nation_names(nations: dict, refresh: bool = False) -> dict[str, list[str]]:
+    """Each nation's names in the page's languages from Wikidata (CC0), by its English name and
+    its country's ISO 3166-2 prefix ("Scotland", "GB-": Écosse, Scotland, Schottland…), as
+    NATIONS_FILE keeps them; the nations it lacks asked (all with `refresh`), then kept."""
+    kept = {} if refresh or not NATIONS_FILE.is_file() else json.loads(NATIONS_FILE.read_text(encoding="utf-8"))
+    for code, parts_ in sorted(nations.items()):
+        for name in sorted(parts_):
+            key = f"{code}:{name}"
+            if key in kept:
+                continue
+            query = (
+                f'SELECT ?l WHERE {{ ?i rdfs:label "{name}"@en; wdt:P300 ?c. ?i rdfs:label ?l. '
+                'FILTER(LANG(?l) IN ("fr","en","de","es","it","pt")) }'
+            )
+            url = WIKIDATA_SPARQL + "?" + urllib.parse.urlencode({"query": query, "format": "json"})
+            found: dict = {}
+            for b in download(f"wikidata-nation-{code}-{fold(name)}.json", None, url)["results"]["bindings"]:
+                found.setdefault(b["l"]["xml:lang"], b["l"]["value"])
+            kept[key] = list(
+                dict.fromkeys([*(found[lang] for lang in ("fr", "en", "de", "es", "it", "pt") if lang in found), name])
+            )
+    NATIONS_FILE.write_text(
+        json.dumps(dict(sorted(kept.items())), ensure_ascii=False, indent=1) + "\n", encoding="utf-8"
+    )
+    return kept
+
+
+def regions(admin1: dict, wikidata: dict | None = None, nations: dict | None = None) -> dict[str, dict]:
     """Per country: its first-level divisions (France's départements, the United States'
     states), and the groups Natural Earth gives them (France's régions), simplified together
     (shapely's coverage_simplify: a border shared stays one line); each by its names in the
@@ -1437,6 +1519,15 @@ def regions(admin1: dict, wikidata: dict | None = None) -> dict[str, dict]:
                 drawn = area_of(g, simplify=detail)
                 if drawn:
                     groups.append(named(list(dict.fromkeys([*wikidata.get(group_codes[n], []), n])), drawn))
+        # the country's nations (Scotland, Flanders) as groups too, with their names
+        country_parts = (nations or {}).get(code, {})
+        if country_parts:
+            part_names = sorted(country_parts["lands"])
+            merged = [country_parts["lands"][n] for n in part_names]
+            for n, g in zip(part_names, shapely.coverage_simplify(merged, detail), strict=True):
+                drawn = area_of(g, simplify=detail)
+                if drawn:
+                    groups.append(named(country_parts["names"].get(n, [n]), drawn))
         if units:
             out[code] = {"units": units, "groups": groups}
     return out
@@ -1672,11 +1763,30 @@ def small_lands(admin1: dict, countries_geo: dict, countries: dict, usual: dict)
 # gives each country's, their names CLDR's (by their M49 code) and these; and two of usage
 AREAS = {  # M49 code: Natural Earth's subregions (or continents, "*" before) it holds, more names
     "002": (("*Africa",), ()),
-    "015": (("Northern Africa",), ("Afrique septentrionale",)),
+    "015": (
+        ("Northern Africa",),
+        ("Afrique septentrionale", "Afrique du Nord", "North Africa", "Nordafrika", "África del Norte", "Nordafrica"),
+    ),
     "202": (("Western Africa", "Eastern Africa", "Middle Africa", "Southern Africa"), ("Afrique noire",)),
-    "011": (("Western Africa",), ()),
-    "014": (("Eastern Africa",), ()),
-    "017": (("Middle Africa",), ()),
+    "011": (
+        ("Western Africa",),
+        (
+            "Afrique de l'Ouest",
+            "West Africa",
+            "Westafrika",
+            "África Occidental",
+            "Africa occidentale",
+            "África Ocidental",
+        ),
+    ),
+    "014": (
+        ("Eastern Africa",),
+        ("Afrique de l'Est", "East Africa", "Ostafrika", "África Oriental", "Africa orientale"),
+    ),
+    "017": (
+        ("Middle Africa",),
+        ("Afrique centrale", "Central Africa", "Zentralafrika", "África Central", "Africa centrale"),
+    ),
     "018": (("Southern Africa",), ()),
     "019": (("*Americas",), ()),
     "021": (
@@ -1691,7 +1801,7 @@ AREAS = {  # M49 code: Natural Earth's subregions (or continents, "*" before) it
         ),
     ),
     "013": (("Central America",), ()),
-    "029": (("Caribbean",), ()),
+    "029": (("Caribbean",), ("Antilles", "West Indies", "Westindien", "Antillas", "Antille", "Antilhas", "Caraïbes")),
     "005": (("South America",), ()),
     "419": (("Central America", "Caribbean", "South America"), ()),
     "142": (("*Asia",), ()),
@@ -1700,14 +1810,20 @@ AREAS = {  # M49 code: Natural Earth's subregions (or continents, "*" before) it
         ("Asie de l'Est", "East Asia", "Ostasien", "Asia del Este", "Asia dell'Est", "Ásia do Leste"),
     ),
     "035": (("South-Eastern Asia",), ()),
-    "034": (("Southern Asia",), ()),
+    "034": (
+        ("Southern Asia",),
+        ("Asie du Sud", "South Asia", "Südasien", "Asia del Sur", "Asia meridionale", "Sul da Ásia"),
+    ),
     "143": (("Central Asia",), ()),
     "145": (("Western Asia",), ("Asie de l'Ouest",)),
     "150": (("*Europe",), ()),
-    "154": (("Northern Europe",), ()),
+    "154": (
+        ("Northern Europe",),
+        ("Europe du Nord", "North Europe", "Nordeuropa", "Europa del Norte", "Europa del Nord"),
+    ),
     "155": (("Western Europe",), ()),
-    "039": (("Southern Europe",), ()),
-    "151": (("Eastern Europe",), ()),
+    "039": (("Southern Europe",), ("Europe du Sud", "South Europe", "Südeuropa", "Europa del Sur", "Europa del Sud")),
+    "151": (("Eastern Europe",), ("Europe de l'Est", "East Europe", "Osteuropa", "Europa del Este", "Europa dell'Est")),
     "009": (("*Oceania",), ()),
     "053": (("Australia and New Zealand",), ()),
 }
@@ -2139,7 +2255,13 @@ def build(folder: Path | None = None, refresh_history: bool = False) -> None:
         return json.dumps(data, ensure_ascii=False, separators=(",", ":"))
 
     all_reliefs, all_waters = reliefs(relief), waters(marine, lakes, passages(folder, refresh_history))
-    all_regions = regions(admin1, region_names(admin1, refresh_history))
+    lands = country_nations(admin1)
+    known = nation_names(lands, refresh_history)
+    own_nations = {
+        code: {"lands": parts_, "names": {n: known.get(f"{code}:{n}", [n]) for n in parts_}}
+        for code, parts_ in lands.items()
+    }
+    all_regions = regions(admin1, region_names(admin1, refresh_history), own_nations)
     contents = {
         "typst.toml": TOML,
         "lib.typ": LIB.read_text(encoding="utf-8"),

@@ -1,0 +1,64 @@
+{
+ "ATG:Antigua": [
+  "Antigua"
+ ],
+ "ATG:Barbuda": [
+  "Barbuda"
+ ],
+ "BEL:Brussels Capital Region": [
+  "Brussels Capital Region"
+ ],
+ "BEL:Flemish Region": [
+  "Région flamande",
+  "Flemish Region",
+  "Flämische Region",
+  "Región Flamenca",
+  "Regione Fiamminga"
+ ],
+ "BEL:Walloon Region": [
+  "Walloon Region"
+ ],
+ "GBR:England": [
+  "Angleterre",
+  "England",
+  "Inglaterra",
+  "Inghilterra"
+ ],
+ "GBR:Northern Ireland": [
+  "Irlande du Nord",
+  "Northern Ireland",
+  "Nordirland",
+  "Irlanda del Norte",
+  "Irlanda del Nord",
+  "Irlanda do Norte"
+ ],
+ "GBR:Scotland": [
+  "Écosse",
+  "Scotland",
+  "Schottland",
+  "Escocia",
+  "Scozia",
+  "Escócia"
+ ],
+ "GBR:Wales": [
+  "pays de Galles",
+  "Wales",
+  "Gales",
+  "Galles",
+  "País de Gales"
+ ],
+ "SRB:Serbia": [
+  "Serbia"
+ ],
+ "SRB:Vojvodina": [
+  "Voïvodine",
+  "Vojvodina",
+  "Voivodina"
+ ],
+ "TZA:Tanzania": [
+  "Tanzania"
+ ],
+ "TZA:Zanzibar": [
+  "Zanzibar"
+ ]
+}

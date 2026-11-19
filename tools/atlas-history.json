@@ -455,6 +455,81 @@
   ]
  },
  {
+  "title": "Ephesus",
+  "n": [
+   "Éphèse",
+   "Ephesus",
+   "Ephesos",
+   "Éfeso",
+   "Efeso"
+  ],
+  "xy": [
+   27.33939,
+   37.94058
+  ]
+ },
+ {
+  "title": "Dunhuang",
+  "n": [
+   "Dunhuang"
+  ],
+  "xy": [
+   94.66388888888889,
+   40.14111111111111
+  ]
+ },
+ {
+  "title": "Nazareth",
+  "n": [
+   "Nazareth",
+   "Nazaret",
+   "Nazaré"
+  ],
+  "xy": [
+   35.29785,
+   32.702102777778
+  ]
+ },
+ {
+  "title": "Bethlehem",
+  "n": [
+   "Bethléem",
+   "Bethlehem",
+   "Belén",
+   "Betlemme",
+   "Belém"
+  ],
+  "xy": [
+   35.206111111111,
+   31.704444444444
+  ]
+ },
+ {
+  "title": "Tarsus, Mersin",
+  "n": [
+   "Tarse",
+   "Tarsus",
+   "Tarso"
+  ],
+  "xy": [
+   34.9,
+   36.916666666667
+  ]
+ },
+ {
+  "title": "Philippi",
+  "n": [
+   "Philippes",
+   "Philippi",
+   "Filipos",
+   "Filippi"
+  ],
+  "xy": [
+   24.284576,
+   41.012072
+  ]
+ },
+ {
   "title": "Aachen",
   "n": [
    "Aix-la-Chapelle",
