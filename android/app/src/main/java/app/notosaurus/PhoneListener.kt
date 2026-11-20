@@ -55,6 +55,9 @@ class PhoneListener(
     private val make: (Context) -> Recognizer = { SystemRecognizer(SpeechRecognizer.createSpeechRecognizer(it)) },
     // The microphone as the app records it (a device test's: a recording played)
     private val sound: () -> Sound = { MicSound() },
+    // A dictation the page never stopped (closed, reloaded meanwhile) stops by itself then,
+    // the microphone with it (the page stops at 2 minutes)
+    private val longest: Long = MicRecorder.MAX_MS.toLong(),
 ) : Listener {
     private val main = Handler(Looper.getMainLooper())
     private var recognizer: Recognizer? = null
@@ -87,6 +90,7 @@ class PhoneListener(
             starts = 0
             val made = make(context)
             recognizer = made
+            main.postDelayed({ if (recognizer === made && listening) cut(made) }, longest)
             made.setRecognitionListener(object : RecognitionListener {
                 override fun onPartialResults(results: Bundle) {
                     best(results)?.let { restarts = 0; heardAny = true; heard(joined(finished, it)) }
@@ -153,13 +157,17 @@ class PhoneListener(
         main.post {
             val going = recognizer
             if (going == null) return@post done()
-            listening = false
             this.done = done
-            // Its last words come in onResults or onEndOfSegmentedSession, then end(): fed, once
-            // its sound ends
-            if (mode == Mode.FED) stopRecording() else going.stopListening()
-            main.postDelayed({ if (recognizer === going) end() }, LAST_WORDS_MS)
+            cut(going)
         }
+    }
+
+    // No more listening: its last words come in onResults or onEndOfSegmentedSession, then
+    // end() (fed, once its sound ends), or LAST_WORDS_MS at most
+    private fun cut(going: Recognizer) {
+        listening = false
+        if (mode == Mode.FED) stopRecording() else going.stopListening()
+        main.postDelayed({ if (recognizer === going) end() }, LAST_WORDS_MS)
     }
 
     private fun listen(made: Recognizer, language: String) {
@@ -181,15 +189,13 @@ class PhoneListener(
                 .putExtra(RecognizerIntent.EXTRA_AUDIO_SOURCE_ENCODING, AudioFormat.ENCODING_PCM_16BIT)
                 .putExtra(RecognizerIntent.EXTRA_AUDIO_SOURCE_SAMPLING_RATE, MicSound.RATE)
                 .putExtra(RecognizerIntent.EXTRA_SEGMENTED_SESSION, RecognizerIntent.EXTRA_AUDIO_SOURCE)
-        } else {
-            // The service opening the microphone: its pauses long, so that it starts again
-            // rarely (each restart misses what is said meanwhile)
-            for ((key, value) in pauseExtras()) intent.putExtra(key, value)
-            // Segmented for as long as a dictation lasts at most: the page's stop ends it before
-            if (mode == Mode.SEGMENTED && Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-                intent.putExtra(RecognizerIntent.EXTRA_SEGMENTED_SESSION, RecognizerIntent.EXTRA_SPEECH_INPUT_MINIMUM_LENGTH_MILLIS)
-                for ((key, value) in segmentedExtras()) intent.putExtra(key, value)
-            }
+        } else if (mode == Mode.SEGMENTED && Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            // Segmented for as long as a dictation lasts at most: the page's stop ends it before.
+            // No longer silences asked otherwise: Google's service then keeps listening through
+            // the pauses, its partial results starting again after each, and its results only
+            // the last part (empty at the stop: the dictation lost)
+            intent.putExtra(RecognizerIntent.EXTRA_SEGMENTED_SESSION, RecognizerIntent.EXTRA_SPEECH_INPUT_MINIMUM_LENGTH_MILLIS)
+            for ((key, value) in segmentedExtras()) intent.putExtra(key, value)
         }
         made.startListening(intent)
     }
@@ -248,7 +254,6 @@ class PhoneListener(
         private const val MAX_RESTARTS = 40 // a quiet pause restarts it every few seconds: 2 minutes and more
         private const val LAST_WORDS_MS = 3000L // stopped: its last words waited for this long at most
         private const val SESSION_MS = 10 * 60 * 1000 // a segmented session's length, then started again
-        private const val PAUSE_MS = 10_000 // a silence this long ends a part (the service opening the microphone)
 
         // The service refused the app's sound, or a segmented session, once: the next mode for
         // the rest of the app's run (set back by the device tests only)
@@ -269,13 +274,6 @@ class PhoneListener(
          * an Int: Google's service reads it with getIntExtra, a Long taken as 0 (its session
          * then ended at the first pause). */
         fun segmentedExtras(): Map<String, Int> = mapOf(RecognizerIntent.EXTRA_SPEECH_INPUT_MINIMUM_LENGTH_MILLIS to SESSION_MS)
-
-        /** How long a silence ends what is said, the service left to open the microphone: a
-         * parent's pause while thinking, not the end of the dictation. Ints, as above. */
-        fun pauseExtras(): Map<String, Int> = mapOf(
-            RecognizerIntent.EXTRA_SPEECH_INPUT_COMPLETE_SILENCE_LENGTH_MILLIS to PAUSE_MS,
-            RecognizerIntent.EXTRA_SPEECH_INPUT_POSSIBLY_COMPLETE_SILENCE_LENGTH_MILLIS to PAUSE_MS,
-        )
 
         /** An error of a segmented session before any word heard: the service can't segment
          * (it stopped as at a pause, or doesn't know the mode). The microphone refused stays a

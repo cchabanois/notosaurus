@@ -142,6 +142,24 @@ class PhoneListenerServiceTest {
     }
 
     @Test
+    fun fedADictationNeverStoppedStopsByItself() {
+        // The page closed or reloaded while listening: no stop comes, the microphone stops
+        // all the same once the longest dictation is over
+        PhoneListener.feedRefused = false
+        val forgotten = PhoneListener(instrumentation.targetContext, { service }, { sound }, longest = 500)
+        forgotten.start("fr-FR", { heard += it }, { failed += it })
+        instrumentation.waitForIdleSync()
+        val source = fed(service.sent[0])!!
+        Thread.sleep(1000)
+        instrumentation.waitForIdleSync()
+        assertTrue("the microphone stopped", sound.stopped)
+        assertEquals("the pipe closed: the session ends", -1, FileInputStream(source.fileDescriptor).read())
+        answer { onEndOfSegmentedSession() }
+        assertEquals("not started again", 1, service.sent.size)
+        assertTrue("$failed", failed.isEmpty())
+    }
+
+    @Test
     fun fedAnErrorBeforeAnyWordIsARefusalOfTheSound() {
         // A service that won't take the app's sound: it opens the microphone itself from then on
         begin(fed = true)
@@ -170,7 +188,7 @@ class PhoneListenerServiceTest {
         assertTrue("asked segmented", segmented(first))
         // Its length an Int: Google's service reads a Long as 0, its session then ended at the first pause
         assertEquals(10 * 60 * 1000, first.getIntExtra(RecognizerIntent.EXTRA_SPEECH_INPUT_MINIMUM_LENGTH_MILLIS, 0))
-        assertEquals("its pauses long", 10_000, first.getIntExtra(RecognizerIntent.EXTRA_SPEECH_INPUT_COMPLETE_SILENCE_LENGTH_MILLIS, 0))
+        assertFalse("no silence length asked: Google's service then loses the parts", first.hasExtra(RecognizerIntent.EXTRA_SPEECH_INPUT_COMPLETE_SILENCE_LENGTH_MILLIS))
         assertEquals("fr-FR", first.getStringExtra(RecognizerIntent.EXTRA_LANGUAGE))
         answer { onPartialResults(said("douze")) }
         answer { onSegmentResults(said("douze cartes")) }

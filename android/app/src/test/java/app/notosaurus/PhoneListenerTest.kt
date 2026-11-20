@@ -32,16 +32,6 @@ class PhoneListenerTest {
     }
 
     @Test
-    fun itsPausesAreLongInts() {
-        // Google's service, opening the microphone, ends a part at a pause: 10 s of silence
-        // (an Int, as above), so that it starts again rarely
-        val pauses = PhoneListener.pauseExtras()
-        assertEquals(setOf(android.speech.RecognizerIntent.EXTRA_SPEECH_INPUT_COMPLETE_SILENCE_LENGTH_MILLIS,
-            android.speech.RecognizerIntent.EXTRA_SPEECH_INPUT_POSSIBLY_COMPLETE_SILENCE_LENGTH_MILLIS), pauses.keys)
-        for (value in pauses.values) assertTrue("$value", (value as Any) is Int && value == 10_000)
-    }
-
-    @Test
     fun aSegmentedSessionsErrorBeforeAnyWordIsARefusal() {
         // Stopped as at a pause, or the mode unknown: restarts instead, dictation goes on
         for (error in listOf(SpeechRecognizer.ERROR_SPEECH_TIMEOUT, SpeechRecognizer.ERROR_NO_MATCH, SpeechRecognizer.ERROR_CLIENT,
