@@ -44,18 +44,18 @@ class DictationTest {
         val failed = mutableListOf<String>()
         val done = java.util.concurrent.CountDownLatch(1)
         listener.start("fr-FR", {}, { failed += it })
-        Thread.sleep(8000) // longer than a pause: started again meanwhile, unless one segmented session
+        Thread.sleep(8000) // longer than a pause: started again meanwhile, unless one session
         listener.stop { done.countDown() }
         assertTrue("stopped", done.await(6, java.util.concurrent.TimeUnit.SECONDS))
         assertTrue("$failed", failed.isEmpty() || failed == listOf("dictation.recognizer"))
-        // From Android 13, one segmented session (EXTRA_SEGMENTED_SESSION): kept, it is one start.
-        // An emulator hears nothing: its service may end the session on the silence before any
-        // word (seen on CI, not on every run), which PhoneListener takes as a refusal: restarts
-        // then, as on a phone whose service won't segment. Both stop as above; which one is
-        // logged, not required (it depends on the image's speech service, not on this code)
-        val mode = "starts ${listener.starts}, refused ${PhoneListener.segmentsRefused}"
+        // From Android 13, the app's sound in one session (EXTRA_AUDIO_SOURCE): kept through
+        // the silence, it is one start. A service that won't take it: one segmented session,
+        // which an emulator's may end on the silence before any word (seen on CI, not on every
+        // run), taken as a refusal: restarts then. Which one is logged; one start required only
+        // when fed (it depends on the image's speech service otherwise, not on this code)
+        val mode = "starts ${listener.starts}, feed refused ${PhoneListener.feedRefused}, segments refused ${PhoneListener.segmentsRefused}"
         android.util.Log.i("DictationTest", mode)
-        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.TIRAMISU && !PhoneListener.segmentsRefused) {
+        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.TIRAMISU && !PhoneListener.feedRefused) {
             assertEquals(mode, 1, listener.starts)
         }
     }
