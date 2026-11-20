@@ -1365,3 +1365,119 @@ def test_a_past_state_by_the_name_lessons_give_it(name, year):
     British Raj, « Nord-Vietnam »): refused, the map lost the state."""
     body = f'#map(year: {year}, countries: ("{name}",))'
     assert figures_typst.compile_svg("map", body).startswith("<svg")
+
+
+def _city_degrees(name: str) -> tuple[float, float]:
+    """A city of the atlas, (latitude, longitude) in degrees, as the atlas keeps it."""
+    folder, _ = _atlas_folder()
+    atlas = json.loads((folder / "atlas.json").read_text(encoding="utf-8"))
+    city = next(c for c in atlas["cities"] if name in c["n"])
+    return city["y"] / atlas["scale"], city["x"] / atlas["scale"]
+
+
+def test_a_point_by_its_coordinates_is_placed_as_the_atlas_places_its_cities():
+    """A place the atlas lacks, given by its latitude and longitude: drawn where a city of the
+    atlas at those coordinates is (the same map, Paris given by its coordinates or by its
+    name)."""
+    lat, lon = _city_degrees("Paris")
+    by_name = figures_typst.compile_svg("map", '#map(countries: ("France",), cities: ("Paris",), labels: false)')
+    by_point = figures_typst.compile_svg(
+        "map", f'#map(countries: ("France",), points: ((name: "P", at: ({lat}, {lon})),), labels: false)'
+    )
+    assert by_point == by_name
+
+
+def test_a_line_through_its_points_in_its_style_with_its_legend():
+    """A line the atlas has no way for (a wall, a road, a front): drawn through its points in
+    its style's colour, its name in the legend."""
+    wall = (
+        '#map(countries: ("Chine",), labels: false, lines: ((name: "QQQQQ", through: ((40.4, 116.6),'
+        ' (39.9, 111.0), (39.8, 98.2)), style: "wall"),))'
+    )
+    svg = figures_typst.compile_svg("map", wall)
+    plain = figures_typst.compile_svg("map", '#map(countries: ("Chine",), labels: false)')
+    assert "#5b3a1e" in svg and "#5b3a1e" not in plain
+    assert len(re.findall(r"<use", svg)) >= len(re.findall(r"<use", plain)) + 5  # its name in the legend
+
+
+def test_a_zone_by_its_outline():
+    """A zone no region nor city makes, given by its outline (three points or more): tinted,
+    its outline dashed, as the other zones."""
+    svg = figures_typst.compile_svg(
+        "map",
+        '#map(countries: ("France",), labels: false, zones: ((name: "Z", around: ((48.6, 1.3), (48.5, 2.2),'
+        " (48.0, 2.1), (47.9, 1.2))),))",
+    )
+    assert _dashed_length(svg) > 0
+
+
+@pytest.mark.parametrize(
+    ("asked", "said"),
+    [
+        ('points: ((name: "P", at: (95, 2)),)', r"a latitude is between -90 and 90"),
+        ('points: ((name: "P", at: "Paris"),)', r"a point is \(latitude, longitude\)"),
+        ('lines: ((name: "L", through: ((48, 2),), style: "wall"),)', r"two points"),
+        ('lines: ((name: "L", through: ((48, 2), (47, 3)), style: "zigzag"),)', r"a line's style is"),
+        ('zones: ((name: "Z", around: ((48, 2), (47, 3))),)', r"three points"),
+        ('cities: ("Atlantis",)', r"no city called .Atlantis."),
+    ],
+)
+def test_coordinates_wrongly_written_said(asked, said):
+    """What the map can't draw by coordinates stops the figure, saying why; a place the atlas
+    lacks asked by its name is still refused as before (its coordinates are only for it)."""
+    with pytest.raises(figures_typst.Unusable, match=said):
+        figures_typst.compile_svg("map", f'#map(countries: ("France",), {asked})')
+
+
+def test_an_icon_on_a_map_in_place_of_its_dot_with_its_legend():
+    """Icons on a map (a sketch map's symbols): each drawn at its place (a city of the atlas, or
+    by its coordinates) in place of the dot, the legend built from their labels, each once."""
+    plain = figures_typst.compile_svg("map", '#map(countries: ("France",), cities: ("Rouen",))')
+    svg = figures_typst.compile_svg(
+        "map",
+        '#map(countries: ("France",), icons: ((icon: "harbor", at: "Rouen", label: "Port"),'
+        ' (icon: "harbor", at: (49.49, 0.11), label: "Port"), (icon: "silo", at: (48.3, 1.6), label: "Silos")))',
+    )
+    # three icons on the map and two in the legend (Port once)
+    assert svg.count("<image") - plain.count("<image") == 5
+
+
+def test_an_unknown_icon_word_draws_the_dot_and_is_told():
+    """A word no icon has: the place's dot drawn, the figure kept, the word told to the app."""
+    token = figures_typst.icons_missing.set([])
+    try:
+        svg = figures_typst.compile_svg(
+            "map", '#map(countries: ("France",), icons: ((icon: "zzqqblorp", at: "Rouen", label: "X"),))'
+        )
+        assert figures_typst.icons_missing.get() == ["zzqqblorp"]
+    finally:
+        figures_typst.icons_missing.reset(token)
+    assert svg.startswith("<svg") and "<image" not in svg
+
+
+def test_names_keep_clear_of_icons():
+    """An icon where a city's name would go (right of its dot): the name moved off it."""
+    lat, lon = _city_degrees("Lyon")
+
+    def name_at(icons: str) -> list[str]:
+        svg = figures_typst.compile_svg("map", f'#map(countries: ("France",), cities: ("Lyon",){icons})')
+        # (a name: a translated group, its white box, its glyphs flipped in it)
+        return re.findall(r'<g transform="translate\(([^)]+)\)">(?:<path[^>]*/>)?<g transform="matrix\(1 0 0 -1', svg)
+
+    alone = name_at("")
+    beside = name_at(f', icons: ((icon: "factory", at: ({lat}, {lon + 0.9})),)')
+    assert alone and beside and alone != beside
+
+
+def test_icons_on_a_map_with_flows_compile():
+    """Icons on a heavy map (three flows across the world): it compiles within the memory a
+    figure is given (the threads an image starts reserved more than the limit, unused)."""
+    flows = ", ".join(
+        f'(from: "États-Unis", to: "{to}", kind: "F")' for to in ("Europe", "Asie de l'Est", "Amérique latine")
+    )
+    svg = figures_typst.compile_svg(
+        "map",
+        f'#map(countries: ("États-Unis",), icons: ((icon: "harbor", at: "New York", label: "P"),'
+        f' (icon: "harbor", at: "Houston", label: "P")), flows: ({flows},))',
+    )
+    assert svg.count("<image") >= 2
