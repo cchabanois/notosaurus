@@ -6,16 +6,39 @@ import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Test
 
-/** The phone's dictation: one segmented session from Android 13 (its sounds once), else
- * restarts at each pause (their sounds each time, as before), decided once per app's run. */
+/** The phone's dictation: from Android 13 the app's own sound in one session, else one
+ * segmented session (its sounds once), else restarts at each pause (their sounds each time, as
+ * before), a refusal kept for the app's run. */
 class PhoneListenerTest {
     @Test
-    fun segmentedFromAndroid13UnlessRefused() {
-        assertTrue(PhoneListener.segmentedSession(33, refused = false))
-        assertTrue(PhoneListener.segmentedSession(36, refused = false))
-        assertFalse(PhoneListener.segmentedSession(32, refused = false)) // Android 12L: restarts, beeps and all
-        assertFalse(PhoneListener.segmentedSession(28, refused = false))
-        assertFalse(PhoneListener.segmentedSession(36, refused = true)) // the service refused it once
+    fun theAppsSoundFromAndroid13ThenTheModesNotRefused() {
+        fun mode(sdk: Int, feed: Boolean = false, segments: Boolean = false) = PhoneListener.mode(sdk, feed, segments)
+        assertEquals(PhoneListener.Mode.FED, mode(33))
+        assertEquals(PhoneListener.Mode.FED, mode(37))
+        assertEquals(PhoneListener.Mode.FED, mode(36, segments = true)) // its own sessions refused: fed all the same
+        assertEquals(PhoneListener.Mode.SEGMENTED, mode(36, feed = true)) // the service won't take the app's sound
+        assertEquals(PhoneListener.Mode.RESTARTS, mode(36, feed = true, segments = true))
+        assertEquals(PhoneListener.Mode.RESTARTS, mode(32)) // Android 12L: restarts, beeps and all
+        assertEquals(PhoneListener.Mode.RESTARTS, mode(28))
+    }
+
+    @Test
+    fun aSegmentedSessionsLengthIsAnInt() {
+        // Google's service reads it with getIntExtra: a Long is taken as 0, the session then
+        // ended at the first pause (a restart, the words said meanwhile lost)
+        val length = PhoneListener.segmentedExtras()[android.speech.RecognizerIntent.EXTRA_SPEECH_INPUT_MINIMUM_LENGTH_MILLIS]
+        assertTrue("$length", (length as Any) is Int)
+        assertEquals(10 * 60 * 1000, length)
+    }
+
+    @Test
+    fun itsPausesAreLongInts() {
+        // Google's service, opening the microphone, ends a part at a pause: 10 s of silence
+        // (an Int, as above), so that it starts again rarely
+        val pauses = PhoneListener.pauseExtras()
+        assertEquals(setOf(android.speech.RecognizerIntent.EXTRA_SPEECH_INPUT_COMPLETE_SILENCE_LENGTH_MILLIS,
+            android.speech.RecognizerIntent.EXTRA_SPEECH_INPUT_POSSIBLY_COMPLETE_SILENCE_LENGTH_MILLIS), pauses.keys)
+        for (value in pauses.values) assertTrue("$value", (value as Any) is Int && value == 10_000)
     }
 
     @Test
