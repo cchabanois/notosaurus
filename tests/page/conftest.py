@@ -63,15 +63,19 @@ def browser():
 
 
 @pytest.fixture
-def page(browser, server, tmp_path, monkeypatch):
-    """A phone-sized page in French, on fresh data and the demo AI (no key, no cost)."""
+def page(request, browser, server, tmp_path, monkeypatch):
+    """A phone-sized page in French, on fresh data and the demo AI (no key, no cost). Its
+    pointer a mouse; `{"has_touch": True}` (parametrized indirectly): a finger, as on a phone."""
     monkeypatch.setenv("NOTOSAURUS_DATA", str(tmp_path / "data"))
     monkeypatch.setenv("NOTOSAURUS_LLM", "fake")
     monkeypatch.setenv("NOTOSAURUS_ANKICONNECT_URL", "http://127.0.0.1:1")  # Anki closed
     for key in ("GEMINI_API_KEY", "ANTHROPIC_API_KEY", "OPENAI_API_KEY", "OPENROUTER_API_KEY"):
         monkeypatch.delenv(key, raising=False)  # the same on every computer: no key (.env)
     monkeypatch.setattr(tts, "_synthesize", fake_synthesize)
-    context = browser.new_context(locale="fr-FR", viewport={"width": 390, "height": 844}, base_url=server)
+    touch = getattr(request, "param", {}).get("has_touch", False)
+    context = browser.new_context(
+        locale="fr-FR", viewport={"width": 390, "height": 844}, base_url=server, has_touch=touch
+    )
     page = context.new_page()
     errors = []
     page.on("pageerror", lambda e: errors.append(str(e)))
