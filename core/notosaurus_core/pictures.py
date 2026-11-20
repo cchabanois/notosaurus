@@ -344,6 +344,7 @@ async def card_picture(
     careful: bool = False,
     previous: Sequence[str] = (),
     previous_kind: str = "",
+    previous_engine: str = "",
 ) -> CardPicture:
     """A card's figure or picture: the one rule for the computer and the relay (the app).
 
@@ -357,13 +358,15 @@ async def card_picture(
     `step`: told each step as it begins (relay_api.PictureStep's fields). `problem`: what the
     check found in its figure (the user asked it again): drawn again, told it; with the
     model's thinking when `careful`. `previous`: what its figure was drawn from before
-    (CardPicture.kept, its sources' contents), in the family `previous_kind` (its card's
-    figure_kind then): drawn again from it. A figure's figure_kind becomes the family it was
-    drawn in (not asked again)."""
+    (CardPicture.kept, its sources' contents), in the language of `previous_engine` and the
+    family `previous_kind` (its card's picture_source.engine and figure_kind then): drawn
+    again from it when its engine is one a figure is drawn again from (Typst), else anew;
+    nothing assumed of it. A figure's figure_kind becomes the family it was drawn in (not
+    asked again)."""
     card = await decided(s, card, asked, language, step)
     if card.figure.strip():
         front = "" if card.picture_on_back else f"{card.front.strip()} → {card.back.strip()}"
-        first = next(iter(previous), "")
+        first = next(iter(previous), "") if previous_engine in REDRAWN_FROM else ""
         made = await llm.made_figure(
             s, card.figure, step, card.figure_kind, problem, careful, front, first, previous_kind
         )
@@ -436,6 +439,7 @@ async def figure_or_picture(
     careful: bool = False,
     previous: Sequence[str] = (),
     previous_kind: str = "",
+    previous_engine: str = "",
 ) -> str:
     """The card's figure or picture (card_picture), saved in the lesson, the card's picture
     fields updated in place (what it shows, where it comes from); returns its file name. What
@@ -454,6 +458,7 @@ async def figure_or_picture(
         careful=careful,
         previous=previous,
         previous_kind=previous_kind,
+        previous_engine=previous_engine,
     )
     for field in ("figure", "figure_kind", "picture_prompt", "picture_search", "picture_source", "picture_on_back"):
         setattr(card, field, getattr(made.card, field))
@@ -464,6 +469,10 @@ async def figure_or_picture(
         return name
     return save(folder, card, made.data)
 
+
+# The engines a figure is drawn again from, its sources given (figure_making.made_figure's
+# previous): Typst's
+REDRAWN_FROM = ("typst",)
 
 # A figure's source files: named after its picture ("picture-c1-ab12cd34.typ", "-2.typ" for a
 # second), so never on another card's; read back only by such a name (nothing else of the

@@ -2795,6 +2795,13 @@
             "title": "Previous Kind",
             "description": "The family it was drawn in: the card's figure_kind then.",
             "default": ""
+          },
+          "previous_engine": {
+            "type": "string",
+            "maxLength": 20,
+            "title": "Previous Engine",
+            "description": "The language `previous` is in: the card's picture_source.engine then (\"typst\"). One a figure isn't drawn again from, or none: drawn anew, nothing assumed.",
+            "default": ""
           }
         },
         "type": "object",

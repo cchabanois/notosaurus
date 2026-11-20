@@ -111,8 +111,8 @@ def test_drawn_again_from_its_sources_or_those_it_had(client, monkeypatch):
     told = []
     drawn = routes.pictures.figure_or_picture
 
-    async def draw(*args, previous=(), previous_kind="", **kwargs):
-        told.append((list(previous), previous_kind))
+    async def draw(*args, previous=(), previous_kind="", previous_engine="", **kwargs):
+        told.append((list(previous), previous_kind, previous_engine))
         return await drawn(*args, **kwargs)
 
     monkeypatch.setattr(routes.pictures, "figure_or_picture", draw)
@@ -122,7 +122,7 @@ def test_drawn_again_from_its_sources_or_those_it_had(client, monkeypatch):
     assert client.post(second, json={"previous_source": origin, "previous_kind": "geometry"}).status_code == 200
     unknown = {**origin, "sources": [{"file": "../lesson.json"}]}
     assert client.post(second, json={"previous_source": unknown, "previous_kind": "geometry"}).status_code == 200
-    assert told == [([TRIANGLE], "geometry"), ([TRIANGLE], "geometry"), ([], "geometry")]
+    assert told == [([TRIANGLE], "geometry", "typst"), ([TRIANGLE], "geometry", "typst"), ([], "geometry", "typst")]
 
     # Copied for another child: its sources with its picture, named after its new card
     client.put("/api/children", json=[{"id": "mathilde", "name": "Mathilde", "grade": "3e", "decks": "Mathilde::3e"}])
@@ -143,3 +143,14 @@ def test_what_comes_back_to_the_relay_bounded():
     for previous in ([big + "x"], ["x"] * 5):
         with pytest.raises(ValidationError):
             relay_api.CardPictureRequest(card=card, previous=previous)
+
+
+@pytest.mark.parametrize(("engine", "used"), [("typst", True), ("", False), ("mermaid", False)])
+def test_drawn_again_only_from_an_engine_it_knows(monkeypatch, engine, used):
+    """What an app sends back says its language (previous_engine, the card's
+    picture_source.engine): Typst's taken; none, or one a figure isn't drawn again from,
+    nothing assumed of it: drawn anew."""
+    sent = drawing(monkeypatch)
+    card = Card(id="c1", front="ABC ?", back="rectangle", figure="Le triangle ABC", figure_kind="geometry")
+    asyncio.run(pictures.card_picture(S, card, previous=[TRIANGLE], previous_kind="geometry", previous_engine=engine))
+    assert ("Start from it" in sent[-1]) == used

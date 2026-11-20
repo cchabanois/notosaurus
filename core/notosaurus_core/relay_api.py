@@ -424,6 +424,12 @@ class CardPictureRequest(BaseModel):
     previous_kind: str = Field(
         default="", max_length=40, description="The family it was drawn in: the card's figure_kind then."
     )
+    previous_engine: str = Field(
+        default="",
+        max_length=20,
+        description='The language `previous` is in: the card\'s picture_source.engine then ("typst"). One a figure '
+        "isn't drawn again from, or none: drawn anew, nothing assumed.",
+    )
 
 
 class CardPictureResponse(BaseModel):
