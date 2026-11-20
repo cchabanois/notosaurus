@@ -4,7 +4,10 @@ description when the user asks ("🔍 Check")."""
 
 import asyncio
 import contextvars
+import hashlib
+import hmac
 import logging
+import os
 from collections.abc import Callable
 from typing import Any, Literal, NamedTuple
 
@@ -60,6 +63,73 @@ class MadeFigure(NamedTuple):
     panels: tuple["MadeFigure", ...] = ()  # a figure in panels (family "panels"): each one drawn
 
 
+# A figure's Typst kept beside its picture (never sent to Anki), its family on its first line:
+# drawn again after a correction, the AI starts from it (a colour changed, the rest as it was)
+KEPT_HEAD = "// notosaurus figure: "
+
+
+# On the relay, what is kept goes to the app and comes back: sealed with the relay's own key
+# (NOTOSAURUS_FIGURE_SEAL), only what it sealed taken back; else anything sent would go into
+# the AI's request and be compiled. No key (the computer): its own files, as they are.
+SEAL_KEY = "NOTOSAURUS_FIGURE_SEAL"
+SEAL_HEAD = "// seal: "
+
+
+def _seal(text: str) -> str:
+    key = os.environ.get(SEAL_KEY, "")
+    return hmac.new(key.encode(), text.encode(), hashlib.sha256).hexdigest() if key else ""
+
+
+def kept_source(made: MadeFigure) -> str:
+    """What is kept of a figure to draw it again from: its family and its Typst, sealed on
+    the relay; "" for one drawn as SVG or in panels (drawn again from its description)."""
+    if made.engine != "typst" or made.panels or not made.typst.strip():
+        return ""
+    kept = f"{KEPT_HEAD}{made.family}\n{made.typst.strip()}\n"
+    seal = _seal(kept)
+    return f"{kept}{SEAL_HEAD}{seal}\n" if seal else kept
+
+
+def _unsealed(previous: str) -> str:
+    """What was kept, as the relay sealed it ("" when its seal isn't right); as it is without
+    a key."""
+    if not os.environ.get(SEAL_KEY, ""):
+        return previous
+    kept, _, seal = previous.rstrip("\n").rpartition(f"\n{SEAL_HEAD}")
+    kept += "\n"
+    return kept if seal and hmac.compare_digest(seal, _seal(kept)) else ""
+
+
+def _kept(previous: str) -> tuple[str, str]:
+    """A kept figure's family and Typst ("", "" when it isn't one, or not sealed right)."""
+    head, _, body = _unsealed(previous).partition("\n")
+    body = body.split(f"\n{SEAL_HEAD}")[0]
+    if not head.startswith(KEPT_HEAD) or not body.strip():
+        return "", ""
+    return head.removeprefix(KEPT_HEAD).strip(), body.strip()
+
+
+def _from_previous(family: str, body: str) -> str:
+    """Told to the AI drawing a figure again: its Typst as drawn before, to change rather than
+    rewrite; said when today's functions no longer compile it (a function renamed since)."""
+    from . import figures_typst
+
+    text = (
+        f"\n\nThis figure was drawn before with this Typst:\n{body}\n\n"
+        "Start from it: change what the description and anything below ask for, and keep the rest "
+        "as it is (its points, values, labels, sizes, colours and layout); write it anew only when "
+        "the description asks for another figure."
+    )
+    try:
+        figures_typst.compile_svg(family, body)
+    except figures_typst.Unusable as e:
+        text += (
+            f" It no longer compiles with today's functions (Typst said: {e}): the rules above hold; "
+            "keep its values and layout."
+        )
+    return text
+
+
 def credits(made: MadeFigure) -> list[str]:
     """What drew a figure, credited where it shows: Typst and the packages its Typst uses
     (figures_typst.made_with), its panels' together; none for a drawing in SVG."""
@@ -90,6 +160,7 @@ async def made_figure(
     problem: str = "",
     careful: bool = False,
     front: str = "",
+    previous: str = "",
 ) -> MadeFigure:
     """A figure, its SVG cleaned (figures.clean) and how it was made, drawn by the cards' AI: in Typst
     (figures_typst.py: a curve computed from its function, marks from their points, angles
@@ -102,7 +173,10 @@ async def made_figure(
     begins (relay_api.PictureStep). `kind`: its family, when the AI that described it said it
     (Card.figure_kind): not asked again. `front`: the card it goes on the front of, "question →
     answer": told, nothing written on it gives the answer away (its description, written once
-    for cards that share it, may write it). Refused when figures are turned off (s.figures)."""
+    for cards that share it, may write it). `previous`: what was kept of it when drawn before
+    (kept_source), drawn again after a correction: the AI starts from its Typst, changing
+    what is asked and keeping the rest (another family by now: drawn anew). Refused when
+    figures are turned off (s.figures)."""
     from . import figures
 
     if not s.figures:
@@ -121,6 +195,9 @@ async def made_figure(
         if parts:
             return await _in_panels(s, parts, step, problem, careful, front)
         family = "other"  # not split: drawn as one SVG
+    kept_family, kept = _kept(previous)
+    if kept and kept_family == family:
+        text += await asyncio.to_thread(_from_previous, family, kept)
     if problem.strip():
         text += f"\n\nA first drawing had this problem: {problem.strip()} Draw it right."
         if careful:

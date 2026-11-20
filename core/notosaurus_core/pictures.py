@@ -327,6 +327,7 @@ class CardPicture(NamedTuple):
     card: Card  # its picture's fields as decided: figure or picture_prompt / picture_search, picture_source
     data: bytes  # the figure's SVG (cleaned), or the picture's JPEG, card size
     extension: str  # "svg" or "jpg"
+    kept: str = ""  # a figure's Typst, kept beside it to draw it again from (llm.kept_source)
 
 
 async def card_picture(
@@ -341,6 +342,7 @@ async def card_picture(
     step: Step | None = None,
     problem: str = "",
     careful: bool = False,
+    previous: str = "",
 ) -> CardPicture:
     """A card's figure or picture: the one rule for the computer and the relay (the app).
 
@@ -353,11 +355,12 @@ async def card_picture(
     cache unless `fresh` (then drawn again). `language`: the cards', its English name.
     `step`: told each step as it begins (relay_api.PictureStep's fields). `problem`: what the
     check found in its figure (the user asked it again): drawn again, told it; with the
-    model's thinking when `careful`."""
+    model's thinking when `careful`. `previous`: what was kept of its figure as drawn before
+    (CardPicture.kept): drawn again from it."""
     card = await decided(s, card, asked, language, step)
     if card.figure.strip():
         front = "" if card.picture_on_back else f"{card.front.strip()} → {card.back.strip()}"
-        made = await llm.made_figure(s, card.figure, step, card.figure_kind, problem, careful, front)
+        made = await llm.made_figure(s, card.figure, step, card.figure_kind, problem, careful, front, previous)
         card.picture_source = PictureSource(
             source="drawn",
             model=s.model_for_provider(),
@@ -365,7 +368,7 @@ async def card_picture(
             made_with=llm.figure_credits(made),
             careful=made.careful,
         )
-        return CardPicture(card, figures.clean(made.svg).encode(), "svg")
+        return CardPicture(card, figures.clean(made.svg).encode(), "svg", llm.kept_source(made))
     context = f"{card.front.strip()} → {card.back.strip()}"
     search = card.picture_search if find else ""
     try:
@@ -422,17 +425,40 @@ async def figure_or_picture(
     step: Step | None = None,
     problem: str = "",
     careful: bool = False,
+    previous: str = "",
 ) -> str:
     """The card's figure or picture (card_picture), saved in the lesson, the card's picture
-    fields updated in place (what it shows, where it comes from); returns its file name."""
+    fields updated in place (what it shows, where it comes from); returns its file name. A
+    figure's Typst kept beside it (kept_path), to draw it again from (`previous`, read with
+    kept_figure)."""
     made = await card_picture(
-        s, card, asked, language, fresh, find, draw=draw, step=step, problem=problem, careful=careful
+        s, card, asked, language, fresh, find, draw=draw, step=step, problem=problem, careful=careful, previous=previous
     )
     for field in ("figure", "figure_kind", "picture_prompt", "picture_search", "picture_source", "picture_on_back"):
         setattr(card, field, getattr(made.card, field))
     if made.extension == "svg":
-        return figures.save(folder, card, made.data.decode())
+        name = figures.save(folder, card, made.data.decode())
+        if made.kept:
+            kept_path(folder, name).write_text(made.kept, encoding="utf-8")
+        else:  # drawn as SVG this time: nothing of another drawing kept for it
+            kept_path(folder, name).unlink(missing_ok=True)
+        return name
     return save(folder, card, made.data)
+
+
+def kept_path(folder: Path, picture: str) -> Path:
+    """Where a figure's Typst is kept, beside its picture in the lesson's images: a file the
+    cards never name, so never sent to Anki."""
+    return folder / f"{Path(picture).stem}.typ"
+
+
+def kept_figure(folder: Path, picture: str) -> str:
+    """What was kept of a figure drawn before (CardPicture.kept): "" when none (drawn as SVG,
+    before it was kept, or not one of ours)."""
+    if not NAME.match(picture) or not picture.endswith(".svg"):
+        return ""
+    path = kept_path(folder, picture)
+    return path.read_text(encoding="utf-8") if path.is_file() else ""
 
 
 # --- The lesson's own drawings: a card's thing drawn on its pages, cut out ---------

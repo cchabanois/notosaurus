@@ -120,8 +120,20 @@ async def draw_picture(id: str, card_id: str, req: RedrawRequest | None = None, 
             async with usage.metered("picture", id, draft.deck):
                 folder = lessons.existing_folder(id) / "images"
                 s = settings.current()
+                # A figure drawn again from its Typst as drawn before: a correction keeps the rest
+                previous = (
+                    pictures.kept_figure(folder, (req.previous if req else "") or card.picture) if card.figure else ""
+                )
                 card.picture = await pictures.figure_or_picture(
-                    s, folder, card, fresh=True, find=False, step=step, problem=problem, careful=careful
+                    s,
+                    folder,
+                    card,
+                    fresh=True,
+                    find=False,
+                    step=step,
+                    problem=problem,
+                    careful=careful,
+                    previous=previous,
                 )
 
         return await _edit_card(id, card_id, draw)

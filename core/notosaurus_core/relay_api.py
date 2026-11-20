@@ -414,6 +414,12 @@ class CardPictureRequest(BaseModel):
     careful: bool = Field(
         default=False, description="With a problem: drawn with the model's thinking (slower), not quickly."
     )
+    previous: str = Field(
+        default="",
+        max_length=MAX_FIGURE_SVG,
+        description="What was kept of the card's figure as drawn before (CardPictureResponse.kept): drawn again "
+        "from it, what is asked changed and the rest kept. Empty: drawn anew.",
+    )
 
 
 class CardPictureResponse(BaseModel):
@@ -422,6 +428,11 @@ class CardPictureResponse(BaseModel):
     )
     data: str = Field(description="The figure's SVG or the picture's JPEG, base64.")
     media_type: Literal["image/svg+xml", "image/jpeg"]
+    kept: str = Field(
+        default="",
+        description="A figure drawn in Typst: its family and Typst, to keep beside it (never in Anki) and send "
+        "back as `previous` to draw it again from. Empty otherwise.",
+    )
     usage: Usage
 
 

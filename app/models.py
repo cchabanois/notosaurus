@@ -211,6 +211,9 @@ class RedrawRequest(BaseModel):
 
     problem: str = Field(default="", max_length=1000)
     careful: bool = False  # with a problem: with the model's thinking (asked again after a quick one)
+    # The picture it had before a correction cleared it (its Typst kept beside it): drawn
+    # again from it; else its own, when it has one
+    previous: str = Field(default="", max_length=100)
 
 
 class PictureRequest(BaseModel):

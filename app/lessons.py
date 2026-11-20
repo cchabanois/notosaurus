@@ -210,6 +210,9 @@ def copy(id: str, deck: str, child: str, owner: str) -> Lesson:
                     picture = re.sub(r"^picture-[a-z0-9]+-", f"picture-{new_id}-", picture)  # named after its card
                     (tmp / "images").mkdir(exist_ok=True)
                     shutil.copy2(source / "images" / card.picture, tmp / "images" / picture)
+                    kept = pictures.kept_path(source / "images", card.picture)  # a figure's Typst, with it
+                    if kept.is_file():
+                        shutil.copy2(kept, pictures.kept_path(tmp / "images", picture))
                 else:
                     picture = ""
                 cards.append(card.model_copy(update={"id": new_id, "picture": picture}))

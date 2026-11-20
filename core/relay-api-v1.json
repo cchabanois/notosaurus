@@ -2778,6 +2778,13 @@
             "title": "Careful",
             "description": "With a problem: drawn with the model's thinking (slower), not quickly.",
             "default": false
+          },
+          "previous": {
+            "type": "string",
+            "maxLength": 1000000,
+            "title": "Previous",
+            "description": "What was kept of the card's figure as drawn before (CardPictureResponse.kept): drawn again from it, what is asked changed and the rest kept. Empty: drawn anew.",
+            "default": ""
           }
         },
         "type": "object",
@@ -2805,6 +2812,12 @@
               "image/jpeg"
             ],
             "title": "Media Type"
+          },
+          "kept": {
+            "type": "string",
+            "title": "Kept",
+            "description": "A figure drawn in Typst: its family and Typst, to keep beside it (never in Anki) and send back as `previous` to draw it again from. Empty otherwise.",
+            "default": ""
           },
           "usage": {
             "$ref": "#/components/schemas/Usage"
