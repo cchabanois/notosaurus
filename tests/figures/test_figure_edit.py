@@ -68,23 +68,33 @@ def test_drawn_again_from_its_typst(monkeypatch):
             S, "Le triangle ABC en rouge", kind="geometry", previous=TRIANGLE, previous_kind="geometry"
         )
     )
-    assert TRIANGLE.strip() in sent[-1] and "Start from it" in sent[-1] and "no longer compiles" not in sent[-1]
+    assert TRIANGLE.strip() in sent[-1] and "Start from it" in sent[-1]
     asyncio.run(
         figure_making.made_figure(S, "Le triangle ABC", kind="geometry", previous=TRIANGLE, previous_kind="chart")
     )
     assert TRIANGLE.strip() not in sent[-1]
 
 
-def test_drawn_again_from_typst_whose_functions_are_gone(monkeypatch):
-    """Its Typst calls a function the family has no more (renamed since): still told, with
-    what Typst says, the rules of today holding; drawn as they say."""
+def test_what_comes_back_never_compiled_itself(monkeypatch):
+    """What a figure was drawn from comes back from the app: only text for the AI, as its
+    description is, never compiled itself; what the AI writes from it is, as always. Calling a
+    function the family has no more (renamed since): the rules of today hold, drawn as they say."""
     sent = drawing(monkeypatch)
+    compiled = []
+    compile_svg = figures_typst.compile_svg
+
+    def watched(family, body):
+        compiled.append(body)
+        return compile_svg(family, body)
+
+    monkeypatch.setattr(figures_typst, "compile_svg", watched)
     gone = "#old-triangle((0, 0), (4, 0), (0, 3))"
     made = asyncio.run(
         figure_making.made_figure(S, "Le triangle ABC", kind="geometry", previous=gone, previous_kind="geometry")
     )
-    assert gone in sent[-1] and "no longer compiles" in sent[-1] and "old-triangle" in sent[-1].split("Typst said:")[1]
-    assert made.engine == "typst" and made.typst == TRIANGLE  # drawn with today's
+    assert gone in sent[-1] and "the rules hold" in sent[-1]
+    assert compiled == [TRIANGLE]  # the AI's only
+    assert made.engine == "typst" and made.typst == TRIANGLE
 
 
 def test_kept_source_only_for_typst():
@@ -135,8 +145,8 @@ def test_drawn_again_from_its_sources_or_those_it_had(client, monkeypatch):
 
 
 def test_what_comes_back_to_the_relay_bounded():
-    """What an app sends back to draw a figure again from: taken as it comes (compiled with
-    the guards the AI's Typst has), its size and count bounded."""
+    """What an app sends back to draw a figure again from: text for the AI, its size and count
+    bounded."""
     card = Card(front="a", back="b", figure="un triangle")
     big = "x" * relay_api.MAX_KEPT_FIGURE
     assert relay_api.CardPictureRequest(card=card, previous=[big]).previous == [big]

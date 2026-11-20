@@ -69,25 +69,18 @@ def kept_source(made: MadeFigure) -> str:
     return made.typst.strip() + "\n"
 
 
-def _from_previous(family: str, body: str) -> str:
+def _from_previous(body: str) -> str:
     """Told to the AI drawing a figure again: its Typst as drawn before, to change rather than
-    rewrite; said when today's functions no longer compile it (a function renamed since)."""
-    from . import figures_typst
-
-    text = (
+    rewrite. Never compiled itself: on the relay it comes from the app, so it is only text for
+    the AI, as a description is; what the AI writes is compiled, as always (a function renamed
+    since: Typst's message given back to the AI, as for any figure)."""
+    return (
         f"\n\nThis figure was drawn before with this Typst:\n{body}\n\n"
         "Start from it: change what the description and anything below ask for, and keep the rest "
         "as it is (its points, values, labels, sizes, colours and layout); write it anew only when "
-        "the description asks for another figure."
+        "the description asks for another figure. It may call functions the rules above no longer "
+        "have: the rules hold."
     )
-    try:
-        figures_typst.compile_svg(family, body)
-    except figures_typst.Unusable as e:
-        text += (
-            f" It no longer compiles with today's functions (Typst said: {e}): the rules above hold; "
-            "keep its values and layout."
-        )
-    return text
 
 
 def credits(made: MadeFigure) -> list[str]:
@@ -157,7 +150,7 @@ async def made_figure(
             return await _in_panels(s, parts, step, problem, careful, front)
         family = "other"  # not split: drawn as one SVG
     if previous.strip() and previous_kind == family:
-        text += await asyncio.to_thread(_from_previous, family, previous.strip())
+        text += _from_previous(previous.strip())
     if problem.strip():
         text += f"\n\nA first drawing had this problem: {problem.strip()} Draw it right."
         if careful:

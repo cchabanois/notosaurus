@@ -2836,7 +2836,7 @@
             },
             "type": "array",
             "title": "Sources",
-            "description": "What a figure was drawn from, in the language of its engine (picture_source.engine: Typst), in order: kept beside it, named in the card's picture_source.sources, never sent to Anki, and sent back as `previous` to draw it again from. Taken back as it comes: compiled with the same guards as the AI's."
+            "description": "What a figure was drawn from, in the language of its engine (picture_source.engine: Typst), in order: kept beside it, named in the card's picture_source.sources, never sent to Anki, and sent back as `previous` to draw it again from. Taken back as text for the AI only, never compiled itself."
           },
           "usage": {
             "$ref": "#/components/schemas/Usage"

@@ -443,7 +443,7 @@ class CardPictureResponse(BaseModel):
         default_factory=list,
         description="What a figure was drawn from, in the language of its engine (picture_source.engine: Typst), "
         "in order: kept beside it, named in the card's picture_source.sources, never sent to Anki, and sent back "
-        "as `previous` to draw it again from. Taken back as it comes: compiled with the same guards as the AI's.",
+        "as `previous` to draw it again from. Taken back as text for the AI only, never compiled itself.",
     )
     usage: Usage
 
@@ -555,7 +555,7 @@ FEATURES = {
     "figures.typst": "figures drawn as SVG by the AI, not with Typst",
     "figures.check": 'no "🔍 Check" of a figure',
     "figures.previous": "figures drawn again anew: what a figure was drawn from, sent back by the app, never read "
-    "nor compiled (a flaw in Typst: figures.typst stops every Typst)",
+    "(a flaw in Typst: figures.typst stops every Typst)",
     "speech.transcribe": "no dictation: typed only",
     "speech.speak": "nothing read aloud, no sounds made ahead",
     "reports.send": "no content reported",
