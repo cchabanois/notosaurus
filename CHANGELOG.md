@@ -68,6 +68,7 @@ Each pull request's entries (the `## Changelog` of its description) are put unde
 
 ### Changed
 
+- 🔒 Figures are compiled without access to the server's secrets.
 - 📐 A figure drawn again after a correction starts from the one it replaces: what you ask changes, the rest stays as it was.
 - Maps of the world or a continent drawn about twice as fast, their coastlines simplified to their scale.
 - 🎙️ While dictating, the microphone button shows a stop (■): tap it to stop and write the text.
