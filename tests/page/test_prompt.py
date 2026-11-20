@@ -261,7 +261,7 @@ def test_dictation_begun_before_the_prompts_came(page):
     page.route("**/api/prompts", lambda route: route.continue_() if held else held.append(route))
     page.goto("/")
     page.get_by_role("button", name="Dicter").first.click()
-    sync_api.expect(page.get_by_text("J'écoute… appuyez sur le micro quand vous avez fini.").first).to_be_visible()
+    sync_api.expect(page.get_by_text("J'écoute… appuyez sur ■ quand vous avez fini.").first).to_be_visible()
     while not held:
         page.wait_for_timeout(50)
     held[0].continue_()
@@ -293,16 +293,17 @@ def test_dictation_in_the_app(page):
     page.goto("/")
     field = page.get_by_role("textbox", name="Texte de la consigne")
     sync_api.expect(field).to_have_value(re.compile(r"^Regarde la leçon"))  # "Automatique": a long prompt
-    # Material's microphone, as Android apps draw it (vendor/material): outlined, then filled
-    # while it listens; no emoji in it (its name is its label)
+    # Material's microphone, as Android apps draw it (vendor/material): outlined, then a stop
+    # (■) while it listens, what a tap then does; no emoji in it (its name is its label)
     mic = page.locator("button.mic").first
     icon = "e => getComputedStyle(e, '::before').maskImage"
     sync_api.expect(mic).to_have_text("")
     assert "vendor/material/mic.svg" in mic.evaluate(icon)
     assert page.request.get("/vendor/material/mic.svg").headers["content-type"].startswith("image/svg+xml")
     page.get_by_role("button", name="Dicter").first.click()
-    sync_api.expect(page.get_by_text("J'écoute… appuyez sur le micro quand vous avez fini.").first).to_be_visible()
-    assert "vendor/material/mic-fill.svg" in mic.evaluate(icon)
+    sync_api.expect(page.get_by_text("J'écoute… appuyez sur ■ quand vous avez fini.").first).to_be_visible()
+    assert "vendor/material/stop-fill.svg" in mic.evaluate(icon)
+    assert page.request.get("/vendor/material/stop-fill.svg").ok
     sync_api.expect(page.get_by_role("textbox", name="Texte de la consigne")).to_be_disabled()  # waits for its text
     if shots := os.environ.get("NOTOSAURUS_SHOTS"):  # to look at it: a folder for the screenshot
         page.screenshot(path=f"{shots}/dictation.png")
@@ -346,7 +347,7 @@ def test_dictation_stopped_by_a_tap_elsewhere(page):
     generate_free(page, FRONT_PROMPT)
     revise = page.locator(".revise")
     field = revise.locator("textarea")
-    listening = page.get_by_text("J'écoute… appuyez sur le micro quand vous avez fini.").first
+    listening = page.get_by_text("J'écoute… appuyez sur ■ quand vous avez fini.").first
 
     revise.get_by_role("button", name="Dicter").click()
     sync_api.expect(listening).to_be_visible()
