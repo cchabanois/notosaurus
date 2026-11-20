@@ -9,6 +9,7 @@ Each pull request's entries (the `## Changelog` of its description) are put unde
 
 ### Added
 
+- Maps: places, lines (a wall, a road, a railway, a front) and areas the atlas lacks, given by their coordinates, and symbols on places (ports, industries, silos, dams) with their legend.
 - Figures: icons of a lab's glassware (beaker, volumetric flask, burette, pipette) and of living things (animals, plants, fungi, organs), of a cell's parts (chromosome, bacterium, chloroplast, neuron…) and of history's weapons and ships.
 - Figures: pictograms on a timeline's events and in a scheme's boxes (a factory, a port, a battle, wheat, a microscope, a laptop…), from the free Maki, Temaki and Phosphor icons and a few of our own for history; a word with no icon simply draws none.
 - Figures: a planet's or the Sun's internal structure drawn as a cut quarter, its layers, depths and names placed by the app.
@@ -91,6 +92,7 @@ Each pull request's entries (the `## Changelog` of its description) are put unde
 
 ### Fixed
 
+- Figures: a heavy map with symbols no longer fails for want of memory.
 - ⏳ A correction's waiting time is said as measured (10 to 25 seconds usually), no longer "about a minute".
 - Figures: a school word no longer draws an unrelated icon (a cell, a lens, a cone, a switch): its own, or none.
 - Figures: icons drawn with their white halo, readable on a map's colours.
