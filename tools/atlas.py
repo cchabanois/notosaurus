@@ -75,7 +75,7 @@ ROOT = Path(__file__).resolve().parent.parent
 CORE = ROOT / "core" / "notosaurus_core"
 LIB = CORE / "atlas" / "lib.typ"
 TARGET = CORE / "typst"
-NAME, VERSION = "notosaurus-atlas", "0.17.0"
+NAME, VERSION = "notosaurus-atlas", "0.18.0"
 SOURCE = "https://raw.githubusercontent.com/nvkelso/natural-earth-vector/v5.1.2/geojson/"
 COUNTRIES = "ne_50m_admin_0_countries.geojson"  # 1:50m: a country's shape, light enough
 PLACES = "ne_10m_populated_places.geojson"  # 1:10m: the cities, their names in many languages
@@ -1198,6 +1198,8 @@ RIVER_NAMES = [
     (("Meuse", "Maas"), ("Meuse", "Maas", "Mosa")),
     (("Moselle", "Mosel"), ("Moselle", "Mosel", "Mosela", "Mosella")),
 ]
+COARSE_TOLERANCE = 0.4  # degrees: a wide frame's outlines simplified by this (a world map's pixel is about 1°)
+COARSE_SPECK = 0.25  # square degrees: smaller islands left out of a wide frame's outline (not a country's largest)
 DETAIL = 400  # a place's extent over this: the least its drawing keeps (a map draws it about 230 points wide)
 TILE = 4  # degrees: a large area's name has a place in each tile this wide
 RIVER_GAP = 1  # degrees: a river's parts this near each other one river (two Colorados apart)
@@ -2229,6 +2231,43 @@ def _small_lands(admin1: dict, countries: dict, world: dict, usual: dict) -> dic
     return small_lands(admin1, countries, world["countries"], usual)
 
 
+def coarsen(countries: dict) -> dict[str, list]:
+    """Each country's outline at a wide frame's scale (a continent or the world, where the
+    map's lib draws it; in a file of their own, coarse.json or borders/<year>-coarse.json,
+    read only by such a map), as cartography generalises by scale (Natural Earth's 1:110m beside its
+    1:50m, a web map's tiles by zoom): the countries simplified together, a border two share
+    simplified once (shapely's coverage simplification: neighbours stay joined), the islands
+    too small to see at that scale left out but a country's largest. A far part ("t") keeps
+    its own outline only: it overlaps its holder's, and an inset magnifies it."""
+    codes = [code for code, c in countries.items() if "t" not in c and c.get("r")]
+    shapes = []
+    for code in codes:
+        made = shapely.make_valid(
+            shapely.MultiPolygon([shapely.Polygon(r) for r in countries[code]["r"] if len(r) >= 3])
+        )
+        shapes.append(
+            shapely.union_all([g for g in shapely.get_parts(made) if g.geom_type in ("Polygon", "MultiPolygon")])
+        )
+    simple = shapely.coverage_simplify(shapes, COARSE_TOLERANCE * SCALE)
+    speck = COARSE_SPECK * SCALE * SCALE
+    coarse = {}
+    for code, g in zip(codes, simple, strict=True):
+        parts = sorted(
+            (p for p in shapely.get_parts(g) if p.geom_type == "Polygon" and not p.is_empty), key=lambda p: -p.area
+        )
+        rings = []
+        for i, part in enumerate(parts):
+            if i > 0 and part.area < speck:
+                continue
+            ring = [[round(x), round(y)] for x, y in part.exterior.coords[:-1]]
+            ring = [q for j, q in enumerate(ring) if j == 0 or q != ring[j - 1]]
+            if len(ring) >= 3 and area(ring) != 0:
+                rings.append(ring)
+        if rings and sum(len(r) for r in rings) < sum(len(r) for r in countries[code]["r"]):
+            coarse[code] = rings
+    return coarse
+
+
 def _whole_world(world: dict, areas_found: list, found_territories: dict, small: dict, admin1: dict) -> dict:
     """atlas.json: Natural Earth's countries, their far parts and small lands (outlined from the
     1:10m regions, refine_small), the world's parts."""
@@ -2423,6 +2462,11 @@ def build(folder: Path | None = None, refresh_history: bool = False, kept: Path 
     contents |= {name: _text(step.get()) for name, step in made.items()}
     contents |= {f"regions/{code}.json": _text(data) for code, data in sorted(all_regions.get().items())}
     contents |= {f"borders/{year}.json": _text(step.get()) for year, step in states.items()}
+    # Each country's outline for a wide frame (a world map drawn as fast as a country's)
+    contents["coarse.json"] = _text(coarsen(whole.get()["countries"]))
+    contents |= {
+        f"borders/{year}-coarse.json": _text(coarsen(step.get()["countries"])) for year, step in states.items()
+    }
     contents["names.json"] = _text(cache.step(_names, all_regions, whole, *states.values()).get())
     for old in TARGET.glob(f"{NAME}-*.tar.gz"):
         old.unlink()

@@ -1481,3 +1481,76 @@ def test_icons_on_a_map_with_flows_compile():
         f' (icon: "harbor", at: "Houston", label: "P")), flows: ({flows},))',
     )
     assert svg.count("<image") >= 2
+
+
+def _atlas_tools():
+    import sys
+
+    sys.path.insert(0, str(figures_typst.HERE.parent.parent / "tools"))
+    import atlas
+
+    return atlas
+
+
+def test_coarse_outlines_keep_neighbours_joined_and_leave_specks_out():
+    """A wide frame's outlines (tools/atlas.py, coarsen): fewer points; a border two countries
+    share simplified once (the same points in both); a speck of an island left out, never a
+    country's largest part."""
+    atlas = _atlas_tools()
+    scale = atlas.SCALE
+    # two countries side by side, their border a zigzag of 1/100° steps; one with a speck
+    zig = [[0, y * 10 + (y % 2) * 3] for y in range(101)]
+    west = [[-2000, 0], *zig, [-2000, 1000]]
+    east = [*zig, [2000, 1000], [2000, 0]]
+    speck = [[3000, 3000], [3010, 3000], [3010, 3010]]
+    tiny = [[5000, 5000], [5004, 5000], [5004, 5004]]
+    countries = {"W": {"r": [west]}, "E": {"r": [east, speck]}, "T": {"r": [tiny]}}
+    coarse = atlas.coarsen(countries)
+    assert sum(map(len, coarse["W"])) < len(west)
+    assert len(coarse["E"]) == 1, "the speck left out"
+    shared_w = {tuple(p) for p in coarse["W"][0] if 0 < p[1] < 1000 and abs(p[0]) < 10}
+    shared_e = {tuple(p) for p in coarse["E"][0] if 0 < p[1] < 1000 and abs(p[0]) < 10}
+    assert shared_w == shared_e, "the border the same in both"
+    assert "T" not in coarse or coarse["T"], "a country's only part never dropped"
+    assert scale == 100
+
+
+def test_wide_maps_read_coarse_outlines_today_and_in_the_past():
+    """The atlas ships each country's coarse outline in files of their own (read only by a
+    wide map): today's and each past year's, fewer points than the fine ones."""
+    folder, _ = _atlas_folder()
+    fine = json.loads((folder / "atlas.json").read_text(encoding="utf-8"))["countries"]
+    coarse = json.loads((folder / "coarse.json").read_text(encoding="utf-8"))
+    assert len(coarse) > 150
+    count = lambda rings: sum(len(r) for r in rings)  # noqa: E731
+    assert sum(count(r) for r in coarse.values()) * 3 < sum(count(fine[c]["r"]) for c in coarse)
+    for year in json.loads((folder / "atlas.json").read_text(encoding="utf-8"))["years"]:
+        assert (folder / "borders" / f"{year[0]}-coarse.json").is_file(), year
+
+
+def test_a_copy_round_the_world_left_out_when_it_misses_the_frame():
+    """On a map crossed by routes each ring may be drawn moved by ±360°: only the copies that
+    meet the frame are worked out (a world map's rings once, not three times)."""
+    import tempfile
+    from pathlib import Path
+
+    import typst
+
+    folder, version = _atlas_folder()
+    full = 36000
+    source = (
+        f'#import "@preview/notosaurus-atlas:{version}": copies\n'
+        "#metadata((\n"
+        f"  copies((-1000, 0, 1000, 500), (0, {full}, -{full}), (-18900, -9000, 18900, 9000)),\n"
+        f"  copies((17000, 0, 18000, 500), (0, {full}, -{full}), (-18900, -9000, 18900, 9000)),\n"
+        f"  copies((17000, 0, 18000, 500), (0, {full}, -{full}), (10000, -9000, 20000, 9000)),\n"
+        ")) <found>\n"
+    )
+    with tempfile.TemporaryDirectory() as tmp:
+        path = Path(tmp) / "found.typ"
+        path.write_text(source, encoding="utf-8")
+        found = typst.query(path, "<found>", field="value", root=tmp, package_path=str(folder.parent.parent.parent))
+    (middle, east_edge, east_frame) = json.loads(found)[0]
+    assert middle == [0], middle
+    assert sorted(east_edge) == [-full, 0], east_edge  # its copy moved west meets the frame's west edge
+    assert east_frame == [0], east_frame
