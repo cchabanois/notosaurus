@@ -1166,3 +1166,46 @@ test("corrections as the lesson is made: quick or careful, then once more carefu
     ["revise", true, "plutôt la mamá"], ["revise", false, "plutôt la mamá"], ["revise", false, "x"],
   ]);
 });
+
+test("a figure drawn again after a correction: the old one shown until the new one comes", async () => {
+  const card = { id: "c1", front: "ABC ?", back: "un carré", figure: "Un carré ABCD", picture: "picture-c1-0123abcd.svg" };
+  let drawn;
+  const page = await loadScripts("app.js", {
+    routes: (url) => {
+      if (url.startsWith("/api/lessons/L1/fix-card")) {
+        return new Response({ card: { ...card, figure: "Un carré ABCD en rouge", picture: "" }, summary: "Figure en rouge" });
+      }
+      if (url === "/api/lessons/L1/pictures") return new Promise((answer) => { drawn = answer; });  // being drawn
+      return new Response({});
+    },
+  });
+  const c = page.component();
+  Object.assign(c, { lessonId: "L1", saveNow: async () => {} });
+  c.cards = [{ ...card, key: 1, _fix: { text: "le carré en rouge", busy: false } }];
+  await c.fixCard(c.cards[0]);
+  await new Promise((done) => setTimeout(done, 20));
+  assert.equal(c.firstFigureUrl(c.cards[0]), "/api/lessons/L1/pictures/picture-c1-0123abcd.svg");  // shown faded meanwhile
+  drawn(new Response({ lesson: { cards: [{ ...card, figure: "Un carré ABCD en rouge", picture: "picture-c1-89abcdef.svg" }] } }));
+  await new Promise((done) => setTimeout(done, 20));
+  assert.equal(c.cards[0].picture, "picture-c1-89abcdef.svg");
+  assert.equal(c.firstFigureUrl(c.cards[0]), "");  // replaced
+});
+
+test("a lesson's correction changing a figure: its old one shown until drawn again", async () => {
+  const card = { id: "c1", front: "ABC ?", back: "un carré", figure: "Un carré ABCD", picture: "picture-c1-0123abcd.svg" };
+  const page = await loadScripts("app.js", {
+    routes: (url) => {
+      if (url.startsWith("/api/lessons/L1/revise")) {
+        return new Response({ lesson: { deck: "D", cards: [{ ...card, figure: "Un carré ABCD en rouge", picture: "" }], reverse: false }, summary: "ok" });
+      }
+      if (url === "/api/lessons/L1/pictures") return new Promise(() => {});  // being drawn
+      return new Response({});
+    },
+  });
+  const c = page.component();
+  Object.assign(c, { lessonId: "L1", loadLessons: () => {} });
+  c.cards = [{ ...card, key: 1 }];
+  c.revision.text = "le carré en rouge";
+  await c.revise();
+  assert.equal(c.firstFigureUrl(c.cards[0]), "/api/lessons/L1/pictures/picture-c1-0123abcd.svg");
+});

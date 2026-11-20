@@ -241,7 +241,7 @@ const picturesPart = {
       const drawn = new Map(res.lesson.cards.map((c) => [c.id, c]));
       this.cards.forEach((c) => {
         const made = drawn.get(c.id);
-        if (!c.picture && made?.picture) Object.assign(c, { picture: made.picture, picture_source: made.picture_source ?? null });
+        if (!c.picture && made?.picture) Object.assign(c, { picture: made.picture, picture_source: made.picture_source ?? null, _replacing: "" });
       });
       this.toDraw = res.to_draw ?? [];
       if (res.failures) {
@@ -251,7 +251,10 @@ const picturesPart = {
       this.error = e.message;
     } finally {
       this.drawingLessons.splice(this.drawingLessons.indexOf(lessonId), 1);
-      if (this.lessonId === lessonId) this.cards.forEach((c) => Object.assign(c, { _step: "", _problem: "", _first: "" }));
+      if (this.lessonId === lessonId) {
+        // (the one replaced shown until then; one drawn again on its own, by redrawFigure, its own)
+        this.cards.forEach((c) => Object.assign(c, { _step: "", _problem: "", _first: "", ...(c._drawing ? {} : { _replacing: "" }) }));
+      }
     }
   },
 
