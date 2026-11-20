@@ -125,6 +125,7 @@ async def draw_picture(id: str, card_id: str, req: RedrawRequest | None = None, 
                 origin = req.previous_source if req and before else card.picture_source
                 kind = req.previous_kind if req and before else card.figure_kind
                 previous = pictures.kept_sources(folder, origin) if card.figure else []
+                engine = origin.engine if origin else ""
                 card.picture = await pictures.figure_or_picture(
                     s,
                     folder,
@@ -136,6 +137,7 @@ async def draw_picture(id: str, card_id: str, req: RedrawRequest | None = None, 
                     careful=careful,
                     previous=previous,
                     previous_kind=kind,
+                    previous_engine=engine,
                 )
 
         return await _edit_card(id, card_id, draw)

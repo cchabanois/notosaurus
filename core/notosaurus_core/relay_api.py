@@ -424,6 +424,13 @@ class CardPictureRequest(BaseModel):
     previous_kind: str = Field(
         default="", max_length=40, description="The family it was drawn in: the card's figure_kind then."
     )
+    previous_engine: str = Field(
+        default="",
+        max_length=20,
+        description='The language `previous` is in: the card\'s picture_source.engine then ("typst"). One a figure '
+        "isn't drawn again from, or none: drawn anew, nothing assumed. The relay's figures.previous off: "
+        "`previous` never read.",
+    )
 
 
 class CardPictureResponse(BaseModel):
@@ -436,7 +443,7 @@ class CardPictureResponse(BaseModel):
         default_factory=list,
         description="What a figure was drawn from, in the language of its engine (picture_source.engine: Typst), "
         "in order: kept beside it, named in the card's picture_source.sources, never sent to Anki, and sent back "
-        "as `previous` to draw it again from. Taken back as it comes: compiled with the same guards as the AI's.",
+        "as `previous` to draw it again from. Taken back as text for the AI only, never compiled itself.",
     )
     usage: Usage
 
@@ -547,6 +554,8 @@ FEATURES = {
     "figures.draw": "no figure drawn: a card that wants one keeps its description, without a picture",
     "figures.typst": "figures drawn as SVG by the AI, not with Typst",
     "figures.check": 'no "🔍 Check" of a figure',
+    "figures.previous": "figures drawn again anew: what a figure was drawn from, sent back by the app, never read "
+    "(a flaw in Typst: figures.typst stops every Typst)",
     "speech.transcribe": "no dictation: typed only",
     "speech.speak": "nothing read aloud, no sounds made ahead",
     "reports.send": "no content reported",

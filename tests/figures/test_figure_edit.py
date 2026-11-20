@@ -68,23 +68,33 @@ def test_drawn_again_from_its_typst(monkeypatch):
             S, "Le triangle ABC en rouge", kind="geometry", previous=TRIANGLE, previous_kind="geometry"
         )
     )
-    assert TRIANGLE.strip() in sent[-1] and "Start from it" in sent[-1] and "no longer compiles" not in sent[-1]
+    assert TRIANGLE.strip() in sent[-1] and "Start from it" in sent[-1]
     asyncio.run(
         figure_making.made_figure(S, "Le triangle ABC", kind="geometry", previous=TRIANGLE, previous_kind="chart")
     )
     assert TRIANGLE.strip() not in sent[-1]
 
 
-def test_drawn_again_from_typst_whose_functions_are_gone(monkeypatch):
-    """Its Typst calls a function the family has no more (renamed since): still told, with
-    what Typst says, the rules of today holding; drawn as they say."""
+def test_what_comes_back_never_compiled_itself(monkeypatch):
+    """What a figure was drawn from comes back from the app: only text for the AI, as its
+    description is, never compiled itself; what the AI writes from it is, as always. Calling a
+    function the family has no more (renamed since): the rules of today hold, drawn as they say."""
     sent = drawing(monkeypatch)
+    compiled = []
+    compile_svg = figures_typst.compile_svg
+
+    def watched(family, body):
+        compiled.append(body)
+        return compile_svg(family, body)
+
+    monkeypatch.setattr(figures_typst, "compile_svg", watched)
     gone = "#old-triangle((0, 0), (4, 0), (0, 3))"
     made = asyncio.run(
         figure_making.made_figure(S, "Le triangle ABC", kind="geometry", previous=gone, previous_kind="geometry")
     )
-    assert gone in sent[-1] and "no longer compiles" in sent[-1] and "old-triangle" in sent[-1].split("Typst said:")[1]
-    assert made.engine == "typst" and made.typst == TRIANGLE  # drawn with today's
+    assert gone in sent[-1] and "the rules hold" in sent[-1]
+    assert compiled == [TRIANGLE]  # the AI's only
+    assert made.engine == "typst" and made.typst == TRIANGLE
 
 
 def test_kept_source_only_for_typst():
@@ -111,8 +121,8 @@ def test_drawn_again_from_its_sources_or_those_it_had(client, monkeypatch):
     told = []
     drawn = routes.pictures.figure_or_picture
 
-    async def draw(*args, previous=(), previous_kind="", **kwargs):
-        told.append((list(previous), previous_kind))
+    async def draw(*args, previous=(), previous_kind="", previous_engine="", **kwargs):
+        told.append((list(previous), previous_kind, previous_engine))
         return await drawn(*args, **kwargs)
 
     monkeypatch.setattr(routes.pictures, "figure_or_picture", draw)
@@ -122,7 +132,7 @@ def test_drawn_again_from_its_sources_or_those_it_had(client, monkeypatch):
     assert client.post(second, json={"previous_source": origin, "previous_kind": "geometry"}).status_code == 200
     unknown = {**origin, "sources": [{"file": "../lesson.json"}]}
     assert client.post(second, json={"previous_source": unknown, "previous_kind": "geometry"}).status_code == 200
-    assert told == [([TRIANGLE], "geometry"), ([TRIANGLE], "geometry"), ([], "geometry")]
+    assert told == [([TRIANGLE], "geometry", "typst"), ([TRIANGLE], "geometry", "typst"), ([], "geometry", "typst")]
 
     # Copied for another child: its sources with its picture, named after its new card
     client.put("/api/children", json=[{"id": "mathilde", "name": "Mathilde", "grade": "3e", "decks": "Mathilde::3e"}])
@@ -135,11 +145,22 @@ def test_drawn_again_from_its_sources_or_those_it_had(client, monkeypatch):
 
 
 def test_what_comes_back_to_the_relay_bounded():
-    """What an app sends back to draw a figure again from: taken as it comes (compiled with
-    the guards the AI's Typst has), its size and count bounded."""
+    """What an app sends back to draw a figure again from: text for the AI, its size and count
+    bounded."""
     card = Card(front="a", back="b", figure="un triangle")
     big = "x" * relay_api.MAX_KEPT_FIGURE
     assert relay_api.CardPictureRequest(card=card, previous=[big]).previous == [big]
     for previous in ([big + "x"], ["x"] * 5):
         with pytest.raises(ValidationError):
             relay_api.CardPictureRequest(card=card, previous=previous)
+
+
+@pytest.mark.parametrize(("engine", "used"), [("typst", True), ("", False), ("mermaid", False)])
+def test_drawn_again_only_from_an_engine_it_knows(monkeypatch, engine, used):
+    """What an app sends back says its language (previous_engine, the card's
+    picture_source.engine): Typst's taken; none, or one a figure isn't drawn again from,
+    nothing assumed of it: drawn anew."""
+    sent = drawing(monkeypatch)
+    card = Card(id="c1", front="ABC ?", back="rectangle", figure="Le triangle ABC", figure_kind="geometry")
+    asyncio.run(pictures.card_picture(S, card, previous=[TRIANGLE], previous_kind="geometry", previous_engine=engine))
+    assert ("Start from it" in sent[-1]) == used
