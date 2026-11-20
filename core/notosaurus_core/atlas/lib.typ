@@ -36,6 +36,13 @@
   }
   json("borders/" + str(found.first()) + ".json").countries
 }
+// The countries' coarse outlines (tools/atlas.py's coarsen), for a wide frame: today's, or
+// those of the layer a year draws; read only by a map that draws them
+#let coarse-outlines(year) = {
+  if year == none or year >= today-from { return json("coarse.json") }
+  let found = atlas.years.find(((_, from, to)) => year >= from and year <= to)
+  json("borders/" + str(found.first()) + "-coarse.json")
+}
 
 // A part of the world (East Asia, Latin America, the Maghreb: tools/atlas.py's AREAS): its
 // countries' codes; none when the name is no part's
@@ -117,7 +124,12 @@
   (calc.min(..pts.map(q => q.at(0))), calc.min(..pts.map(q => q.at(1))),
    calc.max(..pts.map(q => q.at(0))), calc.max(..pts.map(q => q.at(1))))
 }
+// The frame's width (in degrees) from which a country is drawn with its coarse outline
+#let COARSE = 120
 #let touches(b, c) = b.at(2) >= c.at(0) and b.at(0) <= c.at(2) and b.at(3) >= c.at(1) and b.at(1) <= c.at(3)
+// The moves round the world (0, +360°, −360° on a map crossed by routes) whose copy of a
+// box `b` meets the frame: the others left out before any of its points is worked out
+#let copies(b, spans, frame) = spans.filter(d => b == none or touches((b.at(0) + d, b.at(1), b.at(2) + d, b.at(3)), frame))
 
 // A river, relief or water: of that name, those on the countries shown first (`near`, their
 // box), the largest of them
@@ -1275,7 +1287,7 @@
   let full = 360 * s
   let spans = if moving and pole == none { (0, full, -full) } else { (0,) }
   let moved(points, d) = if d == 0 { points } else { points.map(((x, y)) => (x + d, y)) }
-  let ring(points, fill, stroke) = if pole != none {
+  let ring(points, fill, stroke, b: none) = if pole != none {
     // (its seams: the sides along the 180th meridian or on the pole, where Natural Earth cuts
     // a ring round the world; its outline drawn apart then, without them: a line from
     // Antarctica's coast to the pole, along Chukotka's edge else)
@@ -1298,11 +1310,19 @@
       }
     }
   } else {
-    for d in spans {
+    // (a copy moved round the world drawn only where it meets the frame: on a world map
+    // crossed by routes, each ring is worked out once, not three times)
+    for d in copies(b, spans, (fx0, fy0, fx1, fy1)) {
       let kept = thinned(clipped(moved(points, d)))
       if kept.len() >= 3 { place(polygon(fill: fill, stroke: stroke, ..kept)) }
     }
   }
+  // A country's outline at the frame's scale: on a wide frame (a continent or more), its
+  // coarse one ("q": simplified for a world map, its specks left out), the same borders as
+  // its neighbours'; its full one else (a country, a region, an inset)
+  let coarse = pole != none or fx1 - fx0 >= COARSE * s
+  let coarse-of = if coarse { coarse-outlines(year) } else { (:) }
+  let outline(code) = coarse-of.at(code, default: all.at(code).r)
   let near-frame(b) = if pole != none {
     // (centred on a pole: what comes within the frame's corners of it)
     90 * s - sign * (if sign > 0 { b.at(3) } else { b.at(1) }) <= calc.sqrt(calc.pow(calc.abs(cx) + w / 2, 2) + calc.pow(calc.abs(cy) + h / 2, 2))
@@ -1692,15 +1712,15 @@
       for points in w.item.r { ring(points, rgb("#b5d2ec"), none) }
     }
     for (code, c) in others {
-      for points in c.r { ring(points, luma(228), 0.4pt + luma(160)) }
+      for points in outline(code) { ring(points, luma(228), 0.4pt + luma(160), b: c.b) }
     }
     for code in shown {
-      for points in all.at(code).r { ring(points, white, none) }
+      for points in outline(code) { ring(points, white, none, b: all.at(code).b) }
     }
     // Each group's countries in its colour, their borders seen
     for (i, g) in sets.enumerate() {
       for code in g.countries {
-        for points in all.at(code).r { ring(points, tint(i), 0.4pt + luma(110)) }
+        for points in outline(code) { ring(points, tint(i), 0.4pt + luma(110), b: all.at(code).b) }
       }
     }
     // The regions asked coloured, their level's others outlined (a région among the régions)
@@ -1714,7 +1734,7 @@
             let found = in-group.find(a => a.at.index == i)
             if found == none { none } else { tint(found.group) }
           }
-          for points in r.r { ring(points, fill, 0.4pt + luma(150)) }
+          for points in r.r { ring(points, fill, 0.4pt + luma(150), b: r.b) }
         }
       }
     }
@@ -1761,7 +1781,7 @@
       }
     }
     for code in shown {
-      for points in all.at(code).r { ring(points, none, 0.7pt + black) }
+      for points in outline(code) { ring(points, none, 0.7pt + black, b: all.at(code).b) }
     }
     // Centred on a pole: its polar circle, dashed
     if pole != none {
