@@ -218,3 +218,25 @@ def test_a_charts_colours_as_the_description_asks(body):
     its bars drawn grey whatever the description asked. Its colours given, they are drawn."""
     svg = figures.clean(figures_typst.compile_svg("chart", body))
     assert "#2ecc40" in svg  # Typst's green
+
+
+def test_the_compiler_never_given_the_servers_secrets(monkeypatch):
+    """Typst runs on code the AI wrote: its process gets what Python and the system need to
+    start it, never the server's own environment (an AI service's key, the relay's secrets),
+    which a flaw in Typst found one day could read. It still compiles."""
+    import subprocess
+
+    monkeypatch.setenv("NOTOSAURUS_TEST_SECRET", "s3cret")
+    monkeypatch.setenv("GEMINI_API_KEY", "key")
+    given = []
+    run = subprocess.run
+
+    def watched(*args, **kwargs):
+        given.append(kwargs["env"])
+        return run(*args, **kwargs)
+
+    monkeypatch.setattr(subprocess, "run", watched)
+    assert figures_typst.compile_svg("geometry", TRIANGLE).startswith("<svg")
+    (env,) = given
+    assert "NOTOSAURUS_TEST_SECRET" not in env and "GEMINI_API_KEY" not in env
+    assert env["MALLOC_ARENA_MAX"] == "2" and set(env) <= {*figures_typst.COMPILE_ENV_KEPT, "MALLOC_ARENA_MAX"}

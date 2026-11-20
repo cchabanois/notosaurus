@@ -57,10 +57,20 @@ ARCHIVES = HERE / "typst"  # <name>-<version>.tar.gz, as Typst Universe publishe
 FONTS = HERE / "fonts"
 COMPILE_S = 15  # a figure compiles in well under a second; a loop never ends
 MEMORY = 1024 * 1024 * 1024  # bytes, where the system lets us say so
-# Two malloc arenas at most (glibc): each thread of Typst's (an image drawn: an icon) reserves an
-# arena of 64 MB of address space, counted by MEMORY's limit though unused; a heavy map with icons
-# went past it ("memory allocation of 144 bytes failed")
-COMPILE_ENV = {**os.environ, "MALLOC_ARENA_MAX": "2"}
+# The compiler's environment: what Python and the system need to start it, nothing else. The
+# server's own (an AI service's key, the relay's secrets) never reaches the process that runs
+# Typst on code the AI wrote (a flaw in Typst found one day could read it)
+COMPILE_ENV_KEPT = ("PATH", "SYSTEMROOT", "WINDIR", "TEMP", "TMP", "TMPDIR", "LANG", "LC_ALL", "LC_CTYPE")
+
+
+def compile_env() -> dict[str, str]:
+    """The compiling process's environment (COMPILE_ENV_KEPT). Two malloc arenas at most
+    (glibc): each thread of Typst's (an image drawn: an icon) reserves an arena of 64 MB of
+    address space, counted by MEMORY's limit though unused; a heavy map with icons went past
+    it ("memory allocation of 144 bytes failed")."""
+    kept = {name: value for name, value in os.environ.items() if name.upper() in COMPILE_ENV_KEPT}
+    return {**kept, "MALLOC_ARENA_MAX": "2"}
+
 
 # Every family's text in the font the SVG figures are drawn in (fonts/, shipped): a figure
 # reads the same whichever way it was drawn, plainer for a child than Typst's own serif;
@@ -551,7 +561,7 @@ def compiled(document: str) -> str:
                 [sys.executable, "-P", str(COMPILER), str(MEMORY), str(path), folder, str(packages()), str(FONTS)],
                 capture_output=True,
                 timeout=COMPILE_S,
-                env=COMPILE_ENV,
+                env=compile_env(),
             )
         except subprocess.TimeoutExpired as e:
             raise Unusable("It took too long to compile (a loop?): draw it more simply.") from e
