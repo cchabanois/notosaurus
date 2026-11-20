@@ -200,3 +200,10 @@ def test_each_switch_the_apps_read_is_a_feature():
         read |= set(re.findall(r'switches\.(?:off|check)\("([a-z]+\.[a-z]+)"\)', path.read_text(encoding="utf-8")))
     assert {"lesson.pdf", "lesson.scan", "lesson.crop"} <= read
     assert read <= set(api.FEATURES), read - set(api.FEATURES)
+
+
+def test_a_switch_stops_reading_what_figures_were_drawn_from():
+    """What an app sends back to draw a figure again from is compiled as it comes: the relay
+    can stop reading it (figures.previous) without stopping Typst's figures (figures.typst)."""
+    assert {"figures.previous", "figures.typst"} <= set(api.FEATURES)
+    assert "never read" in api.FEATURES["figures.previous"]

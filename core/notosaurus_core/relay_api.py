@@ -428,7 +428,8 @@ class CardPictureRequest(BaseModel):
         default="",
         max_length=20,
         description='The language `previous` is in: the card\'s picture_source.engine then ("typst"). One a figure '
-        "isn't drawn again from, or none: drawn anew, nothing assumed.",
+        "isn't drawn again from, or none: drawn anew, nothing assumed. The relay's figures.previous off: "
+        "`previous` never read.",
     )
 
 
@@ -553,6 +554,8 @@ FEATURES = {
     "figures.draw": "no figure drawn: a card that wants one keeps its description, without a picture",
     "figures.typst": "figures drawn as SVG by the AI, not with Typst",
     "figures.check": 'no "🔍 Check" of a figure',
+    "figures.previous": "figures drawn again anew: what a figure was drawn from, sent back by the app, never read "
+    "nor compiled (a flaw in Typst: figures.typst stops every Typst)",
     "speech.transcribe": "no dictation: typed only",
     "speech.speak": "nothing read aloud, no sounds made ahead",
     "reports.send": "no content reported",

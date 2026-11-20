@@ -2800,7 +2800,7 @@
             "type": "string",
             "maxLength": 20,
             "title": "Previous Engine",
-            "description": "The language `previous` is in: the card's picture_source.engine then (\"typst\"). One a figure isn't drawn again from, or none: drawn anew, nothing assumed.",
+            "description": "The language `previous` is in: the card's picture_source.engine then (\"typst\"). One a figure isn't drawn again from, or none: drawn anew, nothing assumed. The relay's figures.previous off: `previous` never read.",
             "default": ""
           }
         },
