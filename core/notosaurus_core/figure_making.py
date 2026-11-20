@@ -4,7 +4,6 @@ description when the user asks ("🔍 Check")."""
 
 import asyncio
 import contextvars
-import json
 import logging
 from collections.abc import Callable
 from typing import Any, Literal, NamedTuple
@@ -61,27 +60,13 @@ class MadeFigure(NamedTuple):
     panels: tuple["MadeFigure", ...] = ()  # a figure in panels (family "panels"): each one drawn
 
 
-# What a figure was drawn from, kept beside its picture (never sent to Anki): drawn again
-# after a correction, the AI starts from it (a colour changed, the rest as it was). A JSON
-# object naming its engine ("typst": its family and its Typst), so that another kind of
-# source can be kept the same way; the apps keep and send it back without reading it.
 def kept_source(made: MadeFigure) -> str:
-    """What is kept of a figure to draw it again from: {"engine", "family", "source"} as JSON;
-    "" for one drawn as SVG or in panels (drawn again from its description)."""
+    """What a figure was drawn from, to keep beside it (pictures.SourceFile) and draw it again
+    from: its Typst, its family being the card's figure_kind; "" for one drawn as SVG or in
+    panels (drawn again from its description)."""
     if made.engine != "typst" or made.panels or not made.typst.strip():
         return ""
-    return json.dumps({"engine": "typst", "family": made.family, "source": made.typst.strip()}, ensure_ascii=False)
-
-
-def _kept(previous: str) -> tuple[str, str, str]:
-    """A kept figure's engine, family and source ("", "", "" when it isn't one)."""
-    try:
-        kept = json.loads(previous) if previous.strip() else {}
-    except ValueError:
-        return "", "", ""
-    if not isinstance(kept, dict) or not all(isinstance(kept.get(k), str) for k in ("engine", "family", "source")):
-        return "", "", ""
-    return kept["engine"], kept["family"], kept["source"].strip()
+    return made.typst.strip() + "\n"
 
 
 def _from_previous(family: str, body: str) -> str:
@@ -136,6 +121,7 @@ async def made_figure(
     careful: bool = False,
     front: str = "",
     previous: str = "",
+    previous_kind: str = "",
 ) -> MadeFigure:
     """A figure, its SVG cleaned (figures.clean) and how it was made, drawn by the cards' AI: in Typst
     (figures_typst.py: a curve computed from its function, marks from their points, angles
@@ -148,10 +134,10 @@ async def made_figure(
     begins (relay_api.PictureStep). `kind`: its family, when the AI that described it said it
     (Card.figure_kind): not asked again. `front`: the card it goes on the front of, "question →
     answer": told, nothing written on it gives the answer away (its description, written once
-    for cards that share it, may write it). `previous`: what was kept of it when drawn before
-    (kept_source), drawn again after a correction: the AI starts from its Typst, changing
-    what is asked and keeping the rest (another family by now: drawn anew). Refused when
-    figures are turned off (s.figures)."""
+    for cards that share it, may write it). `previous`: its Typst when drawn before
+    (kept_source), in the family `previous_kind`, drawn again after a correction: the AI
+    starts from it, changing what is asked and keeping the rest (another family by now:
+    drawn anew). Refused when figures are turned off (s.figures)."""
     from . import figures
 
     if not s.figures:
@@ -170,9 +156,8 @@ async def made_figure(
         if parts:
             return await _in_panels(s, parts, step, problem, careful, front)
         family = "other"  # not split: drawn as one SVG
-    kept_engine, kept_family, kept = _kept(previous)
-    if kept and kept_engine == "typst" and kept_family == family:
-        text += await asyncio.to_thread(_from_previous, family, kept)
+    if previous.strip() and previous_kind == family:
+        text += await asyncio.to_thread(_from_previous, family, previous.strip())
     if problem.strip():
         text += f"\n\nA first drawing had this problem: {problem.strip()} Draw it right."
         if careful:

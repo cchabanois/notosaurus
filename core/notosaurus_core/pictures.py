@@ -12,7 +12,7 @@ import hashlib
 import io
 import logging
 import re
-from collections.abc import Callable
+from collections.abc import Callable, Sequence
 from pathlib import Path
 from typing import Any, NamedTuple
 
@@ -20,7 +20,7 @@ from . import config, figures, files, images, llm, recommended, stock
 from .cards import is_cloze
 from .config import AIConfig
 from .errors import AppError, loggable
-from .models import Card, PictureSource
+from .models import Card, PictureSource, SourceFile
 from .providers import gemini
 
 log = logging.getLogger("notosaurus")
@@ -327,7 +327,7 @@ class CardPicture(NamedTuple):
     card: Card  # its picture's fields as decided: figure or picture_prompt / picture_search, picture_source
     data: bytes  # the figure's SVG (cleaned), or the picture's JPEG, card size
     extension: str  # "svg" or "jpg"
-    kept: str = ""  # what a figure was drawn from, kept beside it to draw it again from (llm.kept_source)
+    kept: tuple[str, ...] = ()  # what a figure was drawn from (its Typst), to keep beside it (SourceFile)
 
 
 async def card_picture(
@@ -342,7 +342,8 @@ async def card_picture(
     step: Step | None = None,
     problem: str = "",
     careful: bool = False,
-    previous: str = "",
+    previous: Sequence[str] = (),
+    previous_kind: str = "",
 ) -> CardPicture:
     """A card's figure or picture: the one rule for the computer and the relay (the app).
 
@@ -355,12 +356,19 @@ async def card_picture(
     cache unless `fresh` (then drawn again). `language`: the cards', its English name.
     `step`: told each step as it begins (relay_api.PictureStep's fields). `problem`: what the
     check found in its figure (the user asked it again): drawn again, told it; with the
-    model's thinking when `careful`. `previous`: what was kept of its figure as drawn before
-    (CardPicture.kept): drawn again from it."""
+    model's thinking when `careful`. `previous`: what its figure was drawn from before
+    (CardPicture.kept, its sources' contents), in the family `previous_kind` (its card's
+    figure_kind then): drawn again from it. A figure's figure_kind becomes the family it was
+    drawn in (not asked again)."""
     card = await decided(s, card, asked, language, step)
     if card.figure.strip():
         front = "" if card.picture_on_back else f"{card.front.strip()} → {card.back.strip()}"
-        made = await llm.made_figure(s, card.figure, step, card.figure_kind, problem, careful, front, previous)
+        first = next(iter(previous), "")
+        made = await llm.made_figure(
+            s, card.figure, step, card.figure_kind, problem, careful, front, first, previous_kind
+        )
+        if made.engine == "typst" and not made.panels:
+            card = card.model_copy(update={"figure_kind": made.family})  # drawn again in it, not asked
         card.picture_source = PictureSource(
             source="drawn",
             model=s.model_for_provider(),
@@ -368,7 +376,8 @@ async def card_picture(
             made_with=llm.figure_credits(made),
             careful=made.careful,
         )
-        return CardPicture(card, figures.clean(made.svg).encode(), "svg", llm.kept_source(made))
+        kept = llm.kept_source(made)
+        return CardPicture(card, figures.clean(made.svg).encode(), "svg", (kept,) if kept else ())
     context = f"{card.front.strip()} → {card.back.strip()}"
     search = card.picture_search if find else ""
     try:
@@ -425,40 +434,62 @@ async def figure_or_picture(
     step: Step | None = None,
     problem: str = "",
     careful: bool = False,
-    previous: str = "",
+    previous: Sequence[str] = (),
+    previous_kind: str = "",
 ) -> str:
     """The card's figure or picture (card_picture), saved in the lesson, the card's picture
-    fields updated in place (what it shows, where it comes from); returns its file name. A
-    figure's source kept beside it (kept_path), to draw it again from (`previous`, read with
-    kept_figure)."""
+    fields updated in place (what it shows, where it comes from); returns its file name. What
+    a figure was drawn from kept beside it, named in its picture_source.sources, to draw it
+    again from (`previous`, read with kept_sources)."""
     made = await card_picture(
-        s, card, asked, language, fresh, find, draw=draw, step=step, problem=problem, careful=careful, previous=previous
+        s,
+        card,
+        asked,
+        language,
+        fresh,
+        find,
+        draw=draw,
+        step=step,
+        problem=problem,
+        careful=careful,
+        previous=previous,
+        previous_kind=previous_kind,
     )
     for field in ("figure", "figure_kind", "picture_prompt", "picture_search", "picture_source", "picture_on_back"):
         setattr(card, field, getattr(made.card, field))
     if made.extension == "svg":
         name = figures.save(folder, card, made.data.decode())
-        if made.kept:
-            kept_path(folder, name).write_text(made.kept, encoding="utf-8")
-        else:  # drawn as SVG this time: nothing of another drawing kept for it
-            kept_path(folder, name).unlink(missing_ok=True)
+        if card.picture_source is not None:
+            card.picture_source.sources = keep_sources(folder, name, made.kept)
         return name
     return save(folder, card, made.data)
 
 
-def kept_path(folder: Path, picture: str) -> Path:
-    """Where what a figure was drawn from is kept (llm.kept_source), beside its picture in
-    the lesson's images: a file the cards never name, so never sent to Anki."""
-    return folder / f"{Path(picture).stem}.source.json"
+# A figure's source files: named after its picture ("picture-c1-ab12cd34.typ", "-2.typ" for a
+# second), so never on another card's; read back only by such a name (nothing else of the
+# lesson's folder, nor outside it)
+SOURCE_NAME = re.compile(r"^picture-[a-z0-9]+-[a-f0-9]{8}(-\d+)?\.typ$")
 
 
-def kept_figure(folder: Path, picture: str) -> str:
-    """What was kept of a figure drawn before (CardPicture.kept): "" when none (drawn as SVG,
-    before it was kept, or not one of ours)."""
-    if not NAME.match(picture) or not picture.endswith(".svg"):
-        return ""
-    path = kept_path(folder, picture)
-    return path.read_text(encoding="utf-8") if path.is_file() else ""
+def keep_sources(folder: Path, picture: str, contents: Sequence[str]) -> list[SourceFile]:
+    """What a figure was drawn from written beside its picture: the files, in order."""
+    stem = Path(picture).stem
+    files = []
+    for n, content in enumerate(contents, 1):
+        name = f"{stem}.typ" if n == 1 else f"{stem}-{n}.typ"
+        (folder / name).write_text(content, encoding="utf-8")
+        files.append(SourceFile(file=name))
+    return files
+
+
+def kept_sources(folder: Path, origin: PictureSource | None) -> list[str]:
+    """What a figure was drawn from, as its picture_source names it: [] when it names none
+    (drawn as SVG, before sources were kept), or one is missing or not one of ours."""
+    files = origin.sources if origin else []
+    paths = [folder / f.file for f in files if SOURCE_NAME.match(f.file)]
+    if len(paths) != len(files) or not all(p.is_file() for p in paths):
+        return []
+    return [p.read_text(encoding="utf-8") for p in paths]
 
 
 # --- The lesson's own drawings: a card's thing drawn on its pages, cut out ---------

@@ -52,7 +52,7 @@ API only grows (new routes, optional request fields, answer fields more), checke
 the API each released app speaks (core/relay-api-releases/, tools/relay_compat.py).
 """
 
-from typing import Literal
+from typing import Annotated, Literal
 
 from pydantic import BaseModel, Field
 
@@ -415,11 +415,14 @@ class CardPictureRequest(BaseModel):
     careful: bool = Field(
         default=False, description="With a problem: drawn with the model's thinking (slower), not quickly."
     )
-    previous: str = Field(
-        default="",
-        max_length=MAX_KEPT_FIGURE,
-        description="What was kept of the card's figure as drawn before (CardPictureResponse.kept): drawn again "
-        "from it, what is asked changed and the rest kept. Empty: drawn anew.",
+    previous: list[Annotated[str, Field(max_length=MAX_KEPT_FIGURE)]] = Field(
+        default_factory=list,
+        max_length=4,
+        description="What the card's figure was drawn from before (CardPictureResponse.sources, as kept), in the "
+        "family `previous_kind`: drawn again from it, what is asked changed and the rest kept. Empty: drawn anew.",
+    )
+    previous_kind: str = Field(
+        default="", max_length=40, description="The family it was drawn in: the card's figure_kind then."
     )
 
 
@@ -429,11 +432,11 @@ class CardPictureResponse(BaseModel):
     )
     data: str = Field(description="The figure's SVG or the picture's JPEG, base64.")
     media_type: Literal["image/svg+xml", "image/jpeg"]
-    kept: str = Field(
-        default="",
-        description='What the figure was drawn from (a JSON object: {"engine": "typst", "family", "source"}), to '
-        "keep beside it, unread (never in Anki), and send back as `previous` to draw it again from. Empty: "
-        "nothing to keep. Taken back as it comes: compiled with the same guards as the AI's Typst.",
+    sources: list[str] = Field(
+        default_factory=list,
+        description="What a figure was drawn from, in the language of its engine (picture_source.engine: Typst), "
+        "in order: kept beside it, named in the card's picture_source.sources, never sent to Anki, and sent back "
+        "as `previous` to draw it again from. Taken back as it comes: compiled with the same guards as the AI's.",
     )
     usage: Usage
 

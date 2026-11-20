@@ -210,12 +210,14 @@ def copy(id: str, deck: str, child: str, owner: str) -> Lesson:
                     picture = re.sub(r"^picture-[a-z0-9]+-", f"picture-{new_id}-", picture)  # named after its card
                     (tmp / "images").mkdir(exist_ok=True)
                     shutil.copy2(source / "images" / card.picture, tmp / "images" / picture)
-                    kept = pictures.kept_path(source / "images", card.picture)  # a figure's Typst, with it
-                    if kept.is_file():
-                        shutil.copy2(kept, pictures.kept_path(tmp / "images", picture))
+                    origin = card.picture_source
+                    if origin is not None and origin.sources:  # a figure's sources, named after it too
+                        kept = pictures.kept_sources(source / "images", origin)
+                        sources = pictures.keep_sources(tmp / "images", picture, kept)
+                        origin = origin.model_copy(update={"sources": sources})
                 else:
-                    picture = ""
-                cards.append(card.model_copy(update={"id": new_id, "picture": picture}))
+                    picture, origin = "", card.picture_source
+                cards.append(card.model_copy(update={"id": new_id, "picture": picture, "picture_source": origin}))
             now = storage.now()
             changes = {"id": path.name, "deck": deck, "child": child, "owner": owner, "shared": False, "cards": cards}
             reset = {"ai_calls": [], "anki_notes": {}, "created_at": now, "updated_at": now, "exported_at": None}
