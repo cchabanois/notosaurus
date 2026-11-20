@@ -327,7 +327,7 @@ class CardPicture(NamedTuple):
     card: Card  # its picture's fields as decided: figure or picture_prompt / picture_search, picture_source
     data: bytes  # the figure's SVG (cleaned), or the picture's JPEG, card size
     extension: str  # "svg" or "jpg"
-    kept: str = ""  # a figure's Typst, kept beside it to draw it again from (llm.kept_source)
+    kept: str = ""  # what a figure was drawn from, kept beside it to draw it again from (llm.kept_source)
 
 
 async def card_picture(
@@ -429,7 +429,7 @@ async def figure_or_picture(
 ) -> str:
     """The card's figure or picture (card_picture), saved in the lesson, the card's picture
     fields updated in place (what it shows, where it comes from); returns its file name. A
-    figure's Typst kept beside it (kept_path), to draw it again from (`previous`, read with
+    figure's source kept beside it (kept_path), to draw it again from (`previous`, read with
     kept_figure)."""
     made = await card_picture(
         s, card, asked, language, fresh, find, draw=draw, step=step, problem=problem, careful=careful, previous=previous
@@ -447,9 +447,9 @@ async def figure_or_picture(
 
 
 def kept_path(folder: Path, picture: str) -> Path:
-    """Where a figure's Typst is kept, beside its picture in the lesson's images: a file the
-    cards never name, so never sent to Anki."""
-    return folder / f"{Path(picture).stem}.typ"
+    """Where what a figure was drawn from is kept (llm.kept_source), beside its picture in
+    the lesson's images: a file the cards never name, so never sent to Anki."""
+    return folder / f"{Path(picture).stem}.source.json"
 
 
 def kept_figure(folder: Path, picture: str) -> str:

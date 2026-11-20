@@ -431,9 +431,9 @@ class CardPictureResponse(BaseModel):
     media_type: Literal["image/svg+xml", "image/jpeg"]
     kept: str = Field(
         default="",
-        description="A figure drawn in Typst: its family and Typst, to keep beside it (never in Anki) and send "
-        "back as `previous` to draw it again from. Empty otherwise. Taken back as it comes: compiled with the "
-        "same guards as the AI's Typst.",
+        description='What the figure was drawn from (a JSON object: {"engine": "typst", "family", "source"}), to '
+        "keep beside it, unread (never in Anki), and send back as `previous` to draw it again from. Empty: "
+        "nothing to keep. Taken back as it comes: compiled with the same guards as the AI's Typst.",
     )
     usage: Usage
 
