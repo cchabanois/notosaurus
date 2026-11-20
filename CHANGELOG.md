@@ -93,6 +93,7 @@ Each pull request's entries (the `## Changelog` of its description) are put unde
 
 ### Fixed
 
+- 🖼️ A figure corrected stays shown (faded) while the new one is drawn, no longer an empty frame.
 - Figures: a heavy map with symbols no longer fails for want of memory.
 - ⏳ A correction's waiting time is said as measured (10 to 25 seconds usually), no longer "about a minute".
 - Figures: a school word no longer draws an unrelated icon (a cell, a lens, a cone, a switch): its own, or none.
