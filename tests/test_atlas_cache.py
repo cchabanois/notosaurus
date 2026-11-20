@@ -2,6 +2,7 @@
 read back otherwise; small synthetic steps, no atlas built."""
 
 import importlib.util
+import os
 import subprocess
 import sys
 import textwrap
@@ -150,11 +151,16 @@ def test_every_step_reads_its_own_copy(tmp_path):
 
 
 def test_a_source_keys_by_its_bytes(tmp_path):
+    """A source changed (its date with it): keyed again by its bytes. Its date set apart as a
+    download's would be: written twice in the same instant, the same size, a coarse clock
+    (Windows) gave it the same date, and its hash was taken as known."""
     cache = atlas_cache.Cache(tmp_path / "cache")
     file = tmp_path / "source.json"
     file.write_text("[1]")
+    os.utime(file, ns=(1_000_000_000, 1_000_000_000))
     before = cache.source("source", lambda: None, cache.file_key(file)).key
     file.write_text("[2]")
+    os.utime(file, ns=(2_000_000_000, 2_000_000_000))
     assert cache.source("source", lambda: None, cache.file_key(file)).key != before
 
 
