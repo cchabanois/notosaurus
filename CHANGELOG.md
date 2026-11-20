@@ -68,6 +68,7 @@ Each pull request's entries (the `## Changelog` of its description) are put unde
 
 ### Changed
 
+- Maps of the world or a continent drawn about twice as fast, their coastlines simplified to their scale.
 - 🎙️ While dictating, the microphone button shows a stop (■): tap it to stop and write the text.
 - ⚡ Corrections (of a lesson or a card) follow the Quick / Careful choice: quick, about a third faster for a lesson, as right in our measures; « 🎯 Refaire avec soin » asks again carefully.
 - ✨ « Corriger cette carte » is now a button on every card, no longer hidden in its ⋯ menu.
