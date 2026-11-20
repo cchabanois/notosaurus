@@ -73,8 +73,13 @@ def test_a_figure_redrawn_shows_its_steps_and_first_try(page, monkeypatch):
     sync_api.expect(redrawn).to_contain_text("environ 40 s")
     sync_api.expect(redrawn.locator("img.first")).to_be_visible()
     sync_api.expect(page.locator(".flash").nth(1).locator(".drawing:visible")).to_contain_text("En attente")
+    # The first try shown at the size a figure is shown at, not shrunk into the 160 px waiting square
+    waiting = redrawn.bounding_box()
     go_on.set()
-    sync_api.expect(page.locator(".card-picture.figure img:not(.first)").first).to_be_visible()
+    drawn = page.locator(".card-picture.figure img:not(.first)").first
+    sync_api.expect(drawn).to_be_visible()
+    assert waiting and waiting["width"] == pytest.approx(drawn.bounding_box()["width"], abs=1)
+    assert waiting["height"] == pytest.approx(waiting["width"] * 300 / 400, abs=2)  # its own proportions
     sync_api.expect(page.locator(".drawing.redrawing")).to_have_count(0)
 
 
