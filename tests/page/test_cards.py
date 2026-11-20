@@ -537,6 +537,21 @@ def test_one_card_corrected_by_the_ai(page):
     page.wait_for_function(f"() => {saved}")  # the card as it was, saved again
 
 
+@pytest.mark.parametrize("page", [{"has_touch": True}], indirect=True, ids=["touch"])
+def test_a_card_corrected_on_a_touch_screen_opens_no_keyboard(page):
+    """On a touch screen, "✨ Correct this card" opens its field unfocused: no keyboard over
+    the card, the 🎙️ beside it often simpler. Touched, the field is typed in. (With a mouse
+    it is focused: test_one_card_corrected_by_the_ai.)"""
+    generate_free(page, FRONT_PROMPT)
+    first = page.locator(".flash").first
+    first.get_by_role("button", name="✨ Corriger cette carte").tap()
+    field = first.get_by_role("textbox", name="Qu'est-ce qui ne va pas ?")
+    sync_api.expect(field).to_be_visible()
+    sync_api.expect(field).not_to_be_focused()
+    field.tap()
+    sync_api.expect(field).to_be_focused()
+
+
 def test_a_card_just_added_written_by_the_ai(page):
     """A card just added (empty): its "✨ Write with the AI", asked what it should ask; the
     demo AI writes its back from that. Filled, it is corrected again, no more written."""

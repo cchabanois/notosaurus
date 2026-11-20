@@ -83,9 +83,12 @@ const revisionPart = {
   // --- One card corrected by the AI ("✨ Correct this card") ----------------
   // card._fix: its field ({ text, busy, blank }); card._fixed: what changed ({ summary,
   // before }), until undone or corrected again. A card still empty (just added) is written.
+  // Its field focused only with a mouse: on a touch screen, focus opens the keyboard over the
+  // card, when the 🎙️ beside it is often simpler; touching the field opens it.
   openFix(card) {
     card._menu = false;
     card._fix = { text: "", busy: false, blank: this.blankCard(card) };
+    if (!matchMedia("(pointer: fine)").matches) return;
     this.$nextTick(() => document.querySelector(`[data-card="${card.key}"] .card-fix textarea`)?.focus());
   },
 
