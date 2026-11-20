@@ -4,10 +4,7 @@ description when the user asks ("🔍 Check")."""
 
 import asyncio
 import contextvars
-import hashlib
-import hmac
 import logging
-import os
 from collections.abc import Callable
 from typing import Any, Literal, NamedTuple
 
@@ -68,42 +65,17 @@ class MadeFigure(NamedTuple):
 KEPT_HEAD = "// notosaurus figure: "
 
 
-# On the relay, what is kept goes to the app and comes back: sealed with the relay's own key
-# (NOTOSAURUS_FIGURE_SEAL), only what it sealed taken back; else anything sent would go into
-# the AI's request and be compiled. No key (the computer): its own files, as they are.
-SEAL_KEY = "NOTOSAURUS_FIGURE_SEAL"
-SEAL_HEAD = "// seal: "
-
-
-def _seal(text: str) -> str:
-    key = os.environ.get(SEAL_KEY, "")
-    return hmac.new(key.encode(), text.encode(), hashlib.sha256).hexdigest() if key else ""
-
-
 def kept_source(made: MadeFigure) -> str:
-    """What is kept of a figure to draw it again from: its family and its Typst, sealed on
-    the relay; "" for one drawn as SVG or in panels (drawn again from its description)."""
+    """What is kept of a figure to draw it again from: its family and its Typst; "" for one
+    drawn as SVG or in panels (drawn again from its description)."""
     if made.engine != "typst" or made.panels or not made.typst.strip():
         return ""
-    kept = f"{KEPT_HEAD}{made.family}\n{made.typst.strip()}\n"
-    seal = _seal(kept)
-    return f"{kept}{SEAL_HEAD}{seal}\n" if seal else kept
-
-
-def _unsealed(previous: str) -> str:
-    """What was kept, as the relay sealed it ("" when its seal isn't right); as it is without
-    a key."""
-    if not os.environ.get(SEAL_KEY, ""):
-        return previous
-    kept, _, seal = previous.rstrip("\n").rpartition(f"\n{SEAL_HEAD}")
-    kept += "\n"
-    return kept if seal and hmac.compare_digest(seal, _seal(kept)) else ""
+    return f"{KEPT_HEAD}{made.family}\n{made.typst.strip()}\n"
 
 
 def _kept(previous: str) -> tuple[str, str]:
-    """A kept figure's family and Typst ("", "" when it isn't one, or not sealed right)."""
-    head, _, body = _unsealed(previous).partition("\n")
-    body = body.split(f"\n{SEAL_HEAD}")[0]
+    """A kept figure's family and Typst ("", "" when it isn't one)."""
+    head, _, body = previous.partition("\n")
     if not head.startswith(KEPT_HEAD) or not body.strip():
         return "", ""
     return head.removeprefix(KEPT_HEAD).strip(), body.strip()

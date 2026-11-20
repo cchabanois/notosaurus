@@ -80,6 +80,7 @@ MAX_INSTRUCTION = 2000  # a correction
 MAX_SUBJECT = 1000  # a picture's subject, a figure's description
 MAX_DRAWN_CARDS = 200  # a lesson's cards wanting a picture
 MAX_FIGURE_SVG = 1_000_000  # a figure checked: Typst's, its letters as shapes, weighs tens of KB
+MAX_KEPT_FIGURE = 50_000  # a figure's Typst, sent back to draw it again from: 430 bytes usually, 48 KB the most seen
 MAX_SPEECH = 500  # a back read aloud (the app reads the first 200 characters)
 MAX_AUDIO_BYTES = 3 * 1024 * 1024  # a dictation: the app stops at 2 minutes (≈ 500 KB of AAC)
 MAX_REPORT = 6000  # a reported card, with its helps, or an explanation
@@ -416,7 +417,7 @@ class CardPictureRequest(BaseModel):
     )
     previous: str = Field(
         default="",
-        max_length=MAX_FIGURE_SVG,
+        max_length=MAX_KEPT_FIGURE,
         description="What was kept of the card's figure as drawn before (CardPictureResponse.kept): drawn again "
         "from it, what is asked changed and the rest kept. Empty: drawn anew.",
     )
@@ -431,7 +432,8 @@ class CardPictureResponse(BaseModel):
     kept: str = Field(
         default="",
         description="A figure drawn in Typst: its family and Typst, to keep beside it (never in Anki) and send "
-        "back as `previous` to draw it again from. Empty otherwise.",
+        "back as `previous` to draw it again from. Empty otherwise. Taken back as it comes: compiled with the "
+        "same guards as the AI's Typst.",
     )
     usage: Usage
 

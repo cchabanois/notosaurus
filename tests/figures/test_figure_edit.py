@@ -107,23 +107,15 @@ def test_drawn_again_from_the_picture_it_had(client, monkeypatch):
     assert pictures.kept_figure(lessons.existing_folder(copy["id"]) / "images", picture) == kept
 
 
-def test_what_is_kept_sealed_on_the_relay(monkeypatch):
-    """On the relay, what is kept goes to the app and comes back: sealed with its key, only
-    what it sealed taken back (anything else would go into the AI's request and be compiled);
-    changed or made up by the app: drawn anew. Without a key (the computer): as it is."""
-    sent = drawing(monkeypatch)
-    monkeypatch.setenv(figure_making.SEAL_KEY, "relay-key")
-    made = llm.MadeFigure("<svg/>", "typst", "geometry", False, TRIANGLE)
-    kept = figure_making.kept_source(made)
-    assert kept.startswith("// notosaurus figure: geometry\n") and "\n// seal: " in kept
-    for previous, used in (
-        (kept, True),
-        (kept.replace("ctz-canvas", "ctz-canvas "), False),  # changed
-        (f"// notosaurus figure: geometry\n{TRIANGLE}", False),  # not sealed
-    ):
-        asyncio.run(figure_making.made_figure(S, "Le triangle ABC", kind="geometry", previous=previous))
-        assert ("Start from it" in sent[-1]) == used
-    assert "// seal" not in sent[-2]
-    monkeypatch.delenv(figure_making.SEAL_KEY)
-    asyncio.run(figure_making.made_figure(S, "Le triangle ABC", kind="geometry", previous=kept))
-    assert "Start from it" in sent[-1] and "// seal" not in sent[-1]  # (its seal not told)
+def test_what_comes_back_to_the_relay_bounded():
+    """The Typst an app sends back to draw a figure again from: taken as it comes (compiled
+    with the guards the AI's Typst has), its size bounded."""
+    import pytest
+    from pydantic import ValidationError
+
+    from notosaurus_core import relay_api
+
+    card = Card(front="a", back="b", figure="un triangle")
+    assert relay_api.CardPictureRequest(card=card, previous="x" * relay_api.MAX_KEPT_FIGURE).previous
+    with pytest.raises(ValidationError):
+        relay_api.CardPictureRequest(card=card, previous="x" * (relay_api.MAX_KEPT_FIGURE + 1))
