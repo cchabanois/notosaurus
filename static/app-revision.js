@@ -50,6 +50,12 @@ const revisionPart = {
         return;
       }
       const { cards, stats } = this.compareCards(before.cards, res.lesson.cards);
+      // A card whose picture is drawn again (what it shows changed): its old one shown faded meanwhile
+      const was = new Map(before.cards.map((c) => [c.key, c]));
+      cards.forEach((c) => {
+        const old = was.get(c.key);
+        if (old?.picture && !c.picture && (c.figure || c.picture_prompt)) c._replacing = this.pictureUrl(old);
+      });
       clearTimeout(this.saveTimer);
       this.saveTimer = null;
       this.deck = res.lesson.deck;
@@ -104,6 +110,7 @@ const revisionPart = {
       const i = this.cards.indexOf(card);
       if (this.lessonId !== lessonId || i === -1) return;  // another lesson opened, or the card removed, meanwhile
       const fixed = { ...res.card, key: card.key, _state: "modified", _fixed: { summary: res.summary, before: plain(card), instruction, quick } };
+      if (card.picture && !fixed.picture) fixed._replacing = this.pictureUrl(card);  // shown faded until drawn again
       this.cards.splice(i, 1, fixed);
       await this.saveNow();  // its picture is drawn from the saved lesson
       if (res.figure_problem) {
