@@ -60,6 +60,36 @@ class MadeFigure(NamedTuple):
     panels: tuple["MadeFigure", ...] = ()  # a figure in panels (family "panels"): each one drawn
 
 
+def kept_source(made: MadeFigure) -> str:
+    """What a figure was drawn from, to keep beside it (pictures.SourceFile) and draw it again
+    from: its Typst, its family being the card's figure_kind; "" for one drawn as SVG or in
+    panels (drawn again from its description)."""
+    if made.engine != "typst" or made.panels or not made.typst.strip():
+        return ""
+    return made.typst.strip() + "\n"
+
+
+def _from_previous(family: str, body: str) -> str:
+    """Told to the AI drawing a figure again: its Typst as drawn before, to change rather than
+    rewrite; said when today's functions no longer compile it (a function renamed since)."""
+    from . import figures_typst
+
+    text = (
+        f"\n\nThis figure was drawn before with this Typst:\n{body}\n\n"
+        "Start from it: change what the description and anything below ask for, and keep the rest "
+        "as it is (its points, values, labels, sizes, colours and layout); write it anew only when "
+        "the description asks for another figure."
+    )
+    try:
+        figures_typst.compile_svg(family, body)
+    except figures_typst.Unusable as e:
+        text += (
+            f" It no longer compiles with today's functions (Typst said: {e}): the rules above hold; "
+            "keep its values and layout."
+        )
+    return text
+
+
 def credits(made: MadeFigure) -> list[str]:
     """What drew a figure, credited where it shows: Typst and the packages its Typst uses
     (figures_typst.made_with), its panels' together; none for a drawing in SVG."""
@@ -90,6 +120,8 @@ async def made_figure(
     problem: str = "",
     careful: bool = False,
     front: str = "",
+    previous: str = "",
+    previous_kind: str = "",
 ) -> MadeFigure:
     """A figure, its SVG cleaned (figures.clean) and how it was made, drawn by the cards' AI: in Typst
     (figures_typst.py: a curve computed from its function, marks from their points, angles
@@ -102,7 +134,10 @@ async def made_figure(
     begins (relay_api.PictureStep). `kind`: its family, when the AI that described it said it
     (Card.figure_kind): not asked again. `front`: the card it goes on the front of, "question →
     answer": told, nothing written on it gives the answer away (its description, written once
-    for cards that share it, may write it). Refused when figures are turned off (s.figures)."""
+    for cards that share it, may write it). `previous`: its Typst when drawn before
+    (kept_source), in the family `previous_kind`, drawn again after a correction: the AI
+    starts from it, changing what is asked and keeping the rest (another family by now:
+    drawn anew). Refused when figures are turned off (s.figures)."""
     from . import figures
 
     if not s.figures:
@@ -121,6 +156,8 @@ async def made_figure(
         if parts:
             return await _in_panels(s, parts, step, problem, careful, front)
         family = "other"  # not split: drawn as one SVG
+    if previous.strip() and previous_kind == family:
+        text += await asyncio.to_thread(_from_previous, family, previous.strip())
     if problem.strip():
         text += f"\n\nA first drawing had this problem: {problem.strip()} Draw it right."
         if careful:

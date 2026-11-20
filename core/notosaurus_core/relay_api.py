@@ -52,7 +52,7 @@ API only grows (new routes, optional request fields, answer fields more), checke
 the API each released app speaks (core/relay-api-releases/, tools/relay_compat.py).
 """
 
-from typing import Literal
+from typing import Annotated, Literal
 
 from pydantic import BaseModel, Field
 
@@ -80,6 +80,7 @@ MAX_INSTRUCTION = 2000  # a correction
 MAX_SUBJECT = 1000  # a picture's subject, a figure's description
 MAX_DRAWN_CARDS = 200  # a lesson's cards wanting a picture
 MAX_FIGURE_SVG = 1_000_000  # a figure checked: Typst's, its letters as shapes, weighs tens of KB
+MAX_KEPT_FIGURE = 50_000  # a figure's Typst, sent back to draw it again from: 430 bytes usually, 48 KB the most seen
 MAX_SPEECH = 500  # a back read aloud (the app reads the first 200 characters)
 MAX_AUDIO_BYTES = 3 * 1024 * 1024  # a dictation: the app stops at 2 minutes (≈ 500 KB of AAC)
 MAX_REPORT = 6000  # a reported card, with its helps, or an explanation
@@ -414,6 +415,15 @@ class CardPictureRequest(BaseModel):
     careful: bool = Field(
         default=False, description="With a problem: drawn with the model's thinking (slower), not quickly."
     )
+    previous: list[Annotated[str, Field(max_length=MAX_KEPT_FIGURE)]] = Field(
+        default_factory=list,
+        max_length=4,
+        description="What the card's figure was drawn from before (CardPictureResponse.sources, as kept), in the "
+        "family `previous_kind`: drawn again from it, what is asked changed and the rest kept. Empty: drawn anew.",
+    )
+    previous_kind: str = Field(
+        default="", max_length=40, description="The family it was drawn in: the card's figure_kind then."
+    )
 
 
 class CardPictureResponse(BaseModel):
@@ -422,6 +432,12 @@ class CardPictureResponse(BaseModel):
     )
     data: str = Field(description="The figure's SVG or the picture's JPEG, base64.")
     media_type: Literal["image/svg+xml", "image/jpeg"]
+    sources: list[str] = Field(
+        default_factory=list,
+        description="What a figure was drawn from, in the language of its engine (picture_source.engine: Typst), "
+        "in order: kept beside it, named in the card's picture_source.sources, never sent to Anki, and sent back "
+        "as `previous` to draw it again from. Taken back as it comes: compiled with the same guards as the AI's.",
+    )
     usage: Usage
 
 

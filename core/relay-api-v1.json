@@ -2778,6 +2778,23 @@
             "title": "Careful",
             "description": "With a problem: drawn with the model's thinking (slower), not quickly.",
             "default": false
+          },
+          "previous": {
+            "items": {
+              "type": "string",
+              "maxLength": 50000
+            },
+            "type": "array",
+            "maxItems": 4,
+            "title": "Previous",
+            "description": "What the card's figure was drawn from before (CardPictureResponse.sources, as kept), in the family `previous_kind`: drawn again from it, what is asked changed and the rest kept. Empty: drawn anew."
+          },
+          "previous_kind": {
+            "type": "string",
+            "maxLength": 40,
+            "title": "Previous Kind",
+            "description": "The family it was drawn in: the card's figure_kind then.",
+            "default": ""
           }
         },
         "type": "object",
@@ -2805,6 +2822,14 @@
               "image/jpeg"
             ],
             "title": "Media Type"
+          },
+          "sources": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Sources",
+            "description": "What a figure was drawn from, in the language of its engine (picture_source.engine: Typst), in order: kept beside it, named in the card's picture_source.sources, never sent to Anki, and sent back as `previous` to draw it again from. Taken back as it comes: compiled with the same guards as the AI's."
           },
           "usage": {
             "$ref": "#/components/schemas/Usage"
@@ -3841,6 +3866,14 @@
             "type": "boolean",
             "title": "Careful",
             "default": false
+          },
+          "sources": {
+            "items": {
+              "$ref": "#/components/schemas/SourceFile"
+            },
+            "type": "array",
+            "title": "Sources",
+            "default": []
           }
         },
         "type": "object",
@@ -4260,6 +4293,20 @@
           "usage"
         ],
         "title": "ReviseResponse"
+      },
+      "SourceFile": {
+        "properties": {
+          "file": {
+            "type": "string",
+            "title": "File"
+          }
+        },
+        "type": "object",
+        "required": [
+          "file"
+        ],
+        "title": "SourceFile",
+        "description": "A file a figure was drawn from (its Typst), kept beside its picture in the lesson and\nnamed by its card, never sent to Anki: drawn again from it after a correction."
       },
       "SpeakRequest": {
         "properties": {

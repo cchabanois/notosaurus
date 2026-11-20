@@ -120,8 +120,22 @@ async def draw_picture(id: str, card_id: str, req: RedrawRequest | None = None, 
             async with usage.metered("picture", id, draft.deck):
                 folder = lessons.existing_folder(id) / "images"
                 s = settings.current()
+                # A figure drawn again from what it was drawn from: a correction keeps the rest
+                before = req is not None and req.previous_source is not None
+                origin = req.previous_source if req and before else card.picture_source
+                kind = req.previous_kind if req and before else card.figure_kind
+                previous = pictures.kept_sources(folder, origin) if card.figure else []
                 card.picture = await pictures.figure_or_picture(
-                    s, folder, card, fresh=True, find=False, step=step, problem=problem, careful=careful
+                    s,
+                    folder,
+                    card,
+                    fresh=True,
+                    find=False,
+                    step=step,
+                    problem=problem,
+                    careful=careful,
+                    previous=previous,
+                    previous_kind=kind,
                 )
 
         return await _edit_card(id, card_id, draw)

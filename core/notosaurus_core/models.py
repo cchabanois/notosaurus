@@ -19,6 +19,13 @@ class Mask(BaseModel):
     box: list[float] = Field(description="Bounding box of the label's text, in the format of the instructions.")
 
 
+class SourceFile(BaseModel):
+    """A file a figure was drawn from (its Typst), kept beside its picture in the lesson and
+    named by its card, never sent to Anki: drawn again from it after a correction."""
+
+    file: str  # beside the picture: "picture-c1-ab12cd34.typ"
+
+
 class PictureSource(BaseModel):
     """Where a card's picture comes from, kept with the card (and, on the computer, in its
     Anki note's hidden Source field): to check a free picture's page later, or find the
@@ -34,6 +41,9 @@ class PictureSource(BaseModel):
     engine: Literal["", "typst", "svg"] = ""
     made_with: list[str] = []
     careful: bool = False
+    # A figure's: what it was drawn from, in the language of its engine and with its family
+    # (Card.figure_kind), in the order they are used
+    sources: list[SourceFile] = []
 
 
 class Doubt(BaseModel):

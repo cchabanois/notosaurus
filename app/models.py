@@ -16,6 +16,7 @@ from notosaurus_core.models import (  # noqa: F401
     FollowUp,
     Frame,
     Mask,
+    PictureSource,
     Revision,
 )
 
@@ -211,6 +212,10 @@ class RedrawRequest(BaseModel):
 
     problem: str = Field(default="", max_length=1000)
     careful: bool = False  # with a problem: with the model's thinking (asked again after a quick one)
+    # The card as it was before a correction cleared its picture: where that figure came from
+    # (its sources) and its family, drawn again from them; else its own, when it has them
+    previous_source: PictureSource | None = None
+    previous_kind: str = Field(default="", max_length=40)
 
 
 class PictureRequest(BaseModel):

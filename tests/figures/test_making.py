@@ -250,9 +250,9 @@ def test_a_figure_checked_when_asked(client, monkeypatch):
     asked = []
     real = llm.made_figure
 
-    async def draw(s, description, step=None, kind="", problem="", careful=False, front=""):
+    async def draw(s, description, step=None, kind="", problem="", careful=False, front="", *previous):
         asked.append((problem, careful))
-        return await real(s, description, step, kind, problem, careful, front)
+        return await real(s, description, step, kind, problem, careful, front, *previous)
 
     monkeypatch.setattr(llm, "made_figure", draw)
     told = {False: [{"step": "drawing"}], True: [{"step": "redrawing", "problem": "The angle is at B."}]}
