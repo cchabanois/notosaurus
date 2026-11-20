@@ -97,6 +97,7 @@ Each pull request's entries (the `## Changelog` of its description) are put unde
 
 ### Fixed
 
+- 🎙️ Dictation on the phone (Android 13 and later) no longer loses what you say after a pause, and no longer beeps at each pause.
 - 🖼️ A figure being drawn again keeps its size meanwhile: its old one no longer shrinks into a small square.
 - 🖼️ A figure corrected stays shown (faded) while the new one is drawn, no longer an empty frame.
 - Figures: a heavy map with symbols no longer fails for want of memory.
