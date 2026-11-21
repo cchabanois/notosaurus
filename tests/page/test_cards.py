@@ -881,15 +881,19 @@ def test_cards_added_from_the_card_open_and_the_lessons_end(page):
 
 
 def test_the_correction_field_at_the_bottom_out_of_the_way_while_typing(page):
-    """The card open: its « ✨ Corriger avec l'IA » field at the bottom of the screen, a short
-    card's too (always in the same place); hidden while one of its texts is typed (the keyboard
-    up), back once it is left."""
+    """The card open: its « ✨ Corriger avec l'IA » field at the very bottom of the screen (nothing
+    seen below it), a short card's too (always in the same place), « Corriger » at its right as a
+    message is sent; hidden while one of its texts is typed (the keyboard up), back once left."""
     page.set_viewport_size({"width": 360, "height": 780})
     generate_free(page, FRONT_PROMPT)
     card = open_card(page.locator(".flash").first)
     fix = card.locator(".card-fix")
     box = fix.bounding_box()
-    assert box and box["y"] + box["height"] == pytest.approx(780, abs=12)  # at the bottom
+    assert box and box["y"] + box["height"] == pytest.approx(780, abs=1)  # at the very bottom
+    text = card.get_by_role("textbox", name="Qu'est-ce qui ne va pas ?").bounding_box()
+    send = card.get_by_role("button", name="Corriger", exact=True).bounding_box()
+    assert text and send and send["x"] >= text["x"] + text["width"]  # at its right…
+    assert send["y"] < text["y"] + text["height"] and send["y"] + send["height"] > text["y"]  # …on its line
     field(card, "back")
     sync_api.expect(fix).to_be_hidden()
     card.locator(".card-sheet-head span").click()  # the text left
