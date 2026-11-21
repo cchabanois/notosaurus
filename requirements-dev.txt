@@ -1,6 +1,7 @@
 -r requirements.txt
 pytest
 pytest-xdist  # the suite on every core: pytest -n auto
+pytest-timeout  # a test that hangs fails with its stack (pyproject.toml: timeout), the others go on
 ruff
 httpx
 hypothesis

@@ -9,6 +9,9 @@ requires-python = ">=3.13"
 [tool.pytest.ini_options]
 pythonpath = [".", "core"]
 testpaths = ["tests"]
+# A test that hangs fails after this (its stack printed), not the CI job at its own timeout
+# with no name: the slowest take about 10 s
+timeout = 120
 
 [tool.ruff]
 line-length = 120
