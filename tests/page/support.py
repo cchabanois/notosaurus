@@ -36,6 +36,17 @@ def lesson(page, id: str) -> dict:
     return page.request.get(f"/api/lessons/{id}").json()
 
 
+def eventually(page, check, what: str, timeout: float = 5000) -> None:
+    """`check()` (Python: the server asked, a file read) true within `timeout` ms, asked again
+    every 100 ms. Not page.wait_for_function with a fetch: it takes the promise itself for
+    true at once, never what it resolves to."""
+    for _ in range(int(timeout / 100)):
+        if check():
+            return
+        page.wait_for_timeout(100)
+    assert check(), what
+
+
 def started(page) -> None:
     """The page started: the lesson left in progress found again (app-draft.js), if any."""
     page.wait_for_function("window.Alpine && Alpine.$data(document.querySelector('[x-data]')).draftKept")
