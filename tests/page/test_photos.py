@@ -1093,3 +1093,27 @@ def test_a_diagram_in_the_list_shows_only_its_frame(page):
     sync_api.expect(card.locator(".diagram-hint")).to_be_visible()
     whole = card.locator(".diagram img").bounding_box()
     assert whole and whole["width"] / whole["height"] == pytest.approx(600 / 800, rel=0.02)
+
+
+@pytest.mark.parametrize("page", [{"has_touch": True}], indirect=True, ids=["touch"])
+def test_a_diagrams_card_swiped_from_its_photo_not_from_its_mask(page):
+    """A diagram's card open: a finger swiped on its photo turns to the next card, as anywhere
+    on it; one on its mask (dragged there, to cover the label) doesn't."""
+    from page.test_cards import _swipe
+
+    page.goto("/")
+    add_photo(page, halves())
+    generate_from_photos(page, "Une carte par mot")
+    page.evaluate("""() => {
+        const app = Alpine.$data(document.querySelector('[x-data]'));
+        app.cards[0].mask = { page: 1, box: [0.2, 0.25, 0.4, 0.35], n: 1 };
+    }""")
+    cards = page.locator(".flash")
+    first, second = cards.nth(0), cards.nth(1)
+    first.locator(".flash-body").tap(position={"x": 4, "y": 4})
+    sync_api.expect(first).to_have_class(re.compile(r"\bediting\b"))
+    _swipe(first.locator(".diagram .mask.target"), -150)  # the mask: dragged, not the card
+    page.wait_for_timeout(300)
+    sync_api.expect(first).to_have_class(re.compile(r"\bediting\b"))
+    _swipe(first.locator(".diagram img"), -150)  # the photo: the next card
+    sync_api.expect(second).to_have_class(re.compile(r"\bediting\b"))

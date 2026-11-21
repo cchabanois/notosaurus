@@ -731,8 +731,9 @@ def _let_go(page) -> None:
 def test_a_card_open_swiped_to_the_next(page):
     """The card open full screen follows a finger swiped sideways, the next one beside it (to
     the left: no background seen between them); let go far enough: the next card, this one done
-    with; to the right, the previous one. Not far enough, they come back. A stroke up or down
-    (a scroll), or one in a field (selecting its text), moves nothing."""
+    with; to the right, the previous one. Not far enough, they come back. From a field too (its
+    correction's): a quick stroke selects nothing there. A stroke up or down (a scroll) moves
+    nothing."""
     generate_free(page, FRONT_PROMPT)
     cards = page.locator(".flash")
     first, second = cards.nth(0), cards.nth(1)
@@ -743,7 +744,10 @@ def test_a_card_open_swiped_to_the_next(page):
     _swipe(front, -30, -120, let_go=False)  # a scroll
     assert first.evaluate(moved) == ""
     _let_go(page)
-    _swipe(first.get_by_role("textbox", name="Qu'est-ce qui ne va pas ?"), -150)  # in a field
+    _swipe(first.get_by_role("textbox", name="Qu'est-ce qui ne va pas ?"), -150)  # from a field
+    sync_api.expect(second).to_have_class(re.compile(r"\bediting\b"))
+    _swipe(second.get_by_role("textbox", name="Qu'est-ce qui ne va pas ?"), 150)
+    sync_api.expect(first).to_have_class(re.compile(r"\bediting\b"))
     _swipe(front, -40, let_go=False)  # followed, the next one beside it…
     assert first.evaluate(moved) == "translateX(-40px)"
     sync_api.expect(second).to_have_class(re.compile(r"\bpeek\b"))
