@@ -18,6 +18,7 @@ from page.support import (  # noqa: E402
     generate_free,
     lesson,
     lessons,
+    open_card,
     open_prompt,
 )
 
@@ -107,15 +108,15 @@ def test_a_card_shown_as_anki_shows_it_until_edited(page):
     sync_api.expect(shown.locator("mjx-container")).to_be_visible()
     sync_api.expect(page.locator(".save-pill")).to_have_class(SAVED)
 
-    shown.click()  # the formula touched: edited there
+    shown.click()  # touched in the list: the card open, as Anki shows it (no keyboard)
     sync_api.expect(card).to_have_class(re.compile(r"\bediting\b"))
+    sync_api.expect(back).to_be_hidden()
+    shown.click()  # the formula touched there: edited
     sync_api.expect(back).to_be_focused()
     sync_api.expect(back).to_have_value(r"\(x^2\)")
     page.keyboard.press("Escape")
     sync_api.expect(page.locator(".flash.editing")).to_have_count(0)
-    other.locator(".front-row .math-preview.shown").click()  # the list back: another card edited
-    sync_api.expect(other).to_have_class(re.compile(r"\bediting\b"))
-    sync_api.expect(other.locator("textarea.front")).to_be_focused()
+    field(other, "front")  # the list back: another card edited
     assert page.evaluate("window.notosaurusBack()")  # Android's back: done with it
     sync_api.expect(page.locator(".flash.editing")).to_have_count(0)
 
@@ -133,7 +134,7 @@ def test_a_card_shown_as_anki_shows_it_until_edited(page):
 
     # ✨ asks the AI: the card edited (its correction undoable meanwhile), its texts still drawn;
     # one touched shows its LaTeX, the others drawn
-    card.get_by_role("button", name="✨ Corriger cette carte").click()
+    open_card(card)
     sync_api.expect(card).to_have_class(re.compile(r"\bediting\b"))
     sync_api.expect(shown.locator("mjx-container")).to_be_visible()
     sync_api.expect(back).to_be_hidden()
@@ -172,7 +173,7 @@ def test_formulas_drawn_in_the_helps_and_the_doubt(page):
             doubt: { reason: String.raw`La limite est \(+\infty\)`, front: "f", back: String.raw`\(-\infty\)` },
         })"""
     )
-    card = page.locator(".flash").first
+    card = open_card(page.locator(".flash").first)  # the helps in the card open
     help_shown = card.locator(".card-help .math-preview.shown:visible")
     sync_api.expect(help_shown.locator("mjx-container")).to_have_count(2)
     sync_api.expect(card.locator("textarea.explanation")).to_be_hidden()
@@ -191,7 +192,7 @@ def test_formulas_drawn_in_the_info_and_the_fun_fact(page):
             fun_fact: String.raw`Il vaut \(\pi\) environ`,
         })"""
     )
-    card = page.locator(".flash").first
+    card = open_card(page.locator(".flash").first)  # the info in the card open
     info = card.locator(".meta .math-preview.shown:visible")
     sync_api.expect(info.locator("mjx-container")).to_have_count(1)
     sync_api.expect(card.locator("textarea.info")).to_be_hidden()
@@ -256,9 +257,11 @@ def test_fun_facts_as_the_settings_say(page):
     page.goto("/")
     sync_api.expect(page.locator(".switch.fun-facts")).to_have_count(0)
     generate_free(page, FRONT_PROMPT)
-    fact = field(page.locator(".flash", has=page.locator(".fun-fact:visible")).first, "fun_fact")
+    fact = field(page.locator(".flash", has=page.locator(".fun-fact:not([style*='display: none'])")).first, "fun_fact")
     assert fact.input_value().startswith("Le savais-tu")
-    sync_api.expect(page.locator(".flash .fun-fact:visible")).to_have_count(1)  # the others have none
+    assert (
+        page.evaluate("Alpine.$data(document.querySelector('[x-data]')).cards.filter((c) => c.fun_fact).length") == 1
+    )  # the others have none
     # A long one is seen whole, on several lines
     one_line = fact.bounding_box()["height"]
     fact.fill("Le savais-tu ? " + "Ce mot vient du latin et se retrouve dans beaucoup de langues. " * 3)
@@ -342,7 +345,7 @@ def test_cancel_while_a_card_is_corrected(page):
 
     page.route("**/api/lessons/*/fix-card*", lambda route: held.append(route))
     page.route("**/api/generations/*/cancel", cancel_asked)
-    first.get_by_role("button", name="✨ Corriger cette carte").click()
+    open_card(first)
     field = first.get_by_role("textbox", name="Qu'est-ce qui ne va pas ?")
     field.fill("la mamá")
     field.press("Enter")
@@ -377,7 +380,7 @@ def test_cancel_while_a_card_correction_is_dictated(page):
     first = page.locator(".flash").first
     back = first.locator("textarea").nth(1)
     before = back.input_value()
-    first.get_by_role("button", name="✨ Corriger cette carte").click()
+    open_card(first)
     field = first.get_by_role("textbox", name="Qu'est-ce qui ne va pas ?")
     first.locator(".card-fix button.mic").click()
     sync_api.expect(field).to_have_value("la réponse est")  # heard as it comes
@@ -405,7 +408,7 @@ def test_multiple_choice_wrong_answers_edited(page):
 
 def test_a_card_explained_then_its_follow_ups(page):
     generate_free(page, "QCM sur la Révolution")
-    card = page.locator(".flash").first
+    card = open_card(page.locator(".flash").first)
     card.get_by_role("button", name="Expliquer cette carte").click()
     bubble = card.locator(".explain")
     sync_api.expect(bubble).to_contain_text("(démo, explain) En quelle année")
@@ -443,7 +446,7 @@ def test_a_card_and_its_explanation_reported_in_the_app(page):
 
     page.route("**/api/lessons/*/report", report)
     generate_free(page, "QCM sur la Révolution")
-    card = page.locator(".flash").first
+    card = open_card(page.locator(".flash").first)
     card.get_by_role("button", name="Plus d'actions").click()
     card.get_by_role("button", name="Signaler").click()
     sheet = page.get_by_role("dialog", name="Signaler un contenu")
@@ -483,7 +486,7 @@ def test_a_card_reported_with_its_picture_and_dropped(page):
         lambda route: (sent.append(route.request.post_data_json), route.fulfill(json={"received": True})),
     )
     generate_free(page, "Le triangle rectangle (géométrie)")
-    card = page.locator(".flash").first
+    card = open_card(page.locator(".flash").first)
     sync_api.expect(card.locator(".card-picture img:not(.first):visible")).to_be_visible()
     card.get_by_role("button", name="Plus d'actions").click()
     card.get_by_role("button", name="Signaler").click()
@@ -522,7 +525,7 @@ def test_helps_as_tall_as_their_text_never_dragged(page):
     page.set_viewport_size({"width": 360, "height": 780})
     generate_free(page, FRONT_PROMPT)
     for name in ("explanation", "mnemonic"):
-        with_it = page.locator(".card-help:visible", has=page.locator(f"textarea.{name}"))  # the card that has it
+        with_it = page.locator(".card-help:not([style*='display: none'])", has=page.locator(f"textarea.{name}"))
         box = field(page.locator(".flash", has=with_it).first, name)
         assert box.evaluate("el => getComputedStyle(el).resize") == "none", name
         one_line = box.bounding_box()["height"]
@@ -544,25 +547,29 @@ def test_helps_as_the_settings_say(page):
     sync_api.expect(page.locator(".switch.helps")).to_have_count(0)
     generate_free(page, FRONT_PROMPT)
     sync_api.expect(page.locator(".card-help textarea").first).to_have_value("(démo) Pourquoi c'est la réponse.")
-    sync_api.expect(page.locator(".card-help:visible")).to_have_count(2)  # an explanation, a mnemonic: the others none
+    helps = page.evaluate(
+        "Alpine.$data(document.querySelector('[x-data]')).cards"
+        ".map((c) => [c.explanation, c.mnemonic].filter(Boolean).length)"
+    )
+    assert sum(helps) == 2  # an explanation, a mnemonic: the others none
 
 
 def test_one_card_corrected_by_the_ai(page):
-    """⋯ → "✨ Correct this card": a field under the card (focused); the demo AI makes its
-    back what was asked; the card marked changed, saved, "↩ Undo" puts it back. The others
-    untouched. Escape closes the field."""
+    """The card open, its "✨ Correct with AI" field at the bottom; the demo AI makes its back
+    what was asked; the card marked changed, saved, "↩ Undo" puts it back. The others
+    untouched. Escape closes the card."""
     generate_free(page, FRONT_PROMPT)
     cards = page.locator(".flash")
     first, second = cards.nth(0), cards.nth(1)
     back = first.locator("textarea").nth(1)
     before, other = back.input_value(), second.locator("textarea").nth(1).input_value()
-    first.get_by_role("button", name="✨ Corriger cette carte").click()
+    open_card(first)
     field = first.get_by_role("textbox", name="Qu'est-ce qui ne va pas ?")
-    sync_api.expect(field).to_be_focused()
+    field.focus()
     page.keyboard.press("Escape")
     sync_api.expect(field).to_be_hidden()
 
-    first.get_by_role("button", name="✨ Corriger cette carte").click()
+    open_card(first)
     field.fill("la mamá")
     field.press("Enter")
     sync_api.expect(back).to_have_value("la mamá")
@@ -614,7 +621,7 @@ def test_what_the_ai_says_it_did_shows_its_formulas(page):
     first = page.locator(".flash").first
 
     _said_with_a_formula(page, "**/api/lessons/*/fix-card*", "summary")
-    first.get_by_role("button", name="✨ Corriger cette carte").click()
+    open_card(first)
     field = first.get_by_role("textbox", name="Qu'est-ce qui ne va pas ?")
     field.fill("la mamá")
     field.press("Enter")
@@ -648,7 +655,7 @@ def test_a_card_corrected_then_undone_shows_its_figure_again(page):
         route.fulfill(json={**answer, "figure_problem": "Le côté opposé n'est pas marqué"})
 
     page.route("**/api/lessons/*/fix-card*", figure_wrong)
-    card.get_by_role("button", name="✨ Corriger cette carte").click()
+    open_card(card)
     field = card.get_by_role("textbox", name="Qu'est-ce qui ne va pas ?")
     field.fill("marque le côté opposé")
     field.press("Enter")
@@ -675,12 +682,12 @@ def test_a_card_corrected_then_undone_shows_its_figure_again(page):
 
 @pytest.mark.parametrize("page", [{"has_touch": True}], indirect=True, ids=["touch"])
 def test_a_card_corrected_on_a_touch_screen_opens_no_keyboard(page):
-    """On a touch screen, "✨ Correct this card" opens its field unfocused: no keyboard over
-    the card, the 🎙️ beside it often simpler. Touched, the field is typed in. (With a mouse
-    it is focused: test_one_card_corrected_by_the_ai.)"""
+    """On a touch screen, a card touched in the list opens with its correction's field
+    unfocused: no keyboard over the card, the 🎙️ beside it often simpler. Touched, the field is
+    typed in."""
     generate_free(page, FRONT_PROMPT)
     first = page.locator(".flash").first
-    first.get_by_role("button", name="✨ Corriger cette carte").tap()
+    first.locator(".flash-body").tap(position={"x": 4, "y": 4})
     field = first.get_by_role("textbox", name="Qu'est-ce qui ne va pas ?")
     sync_api.expect(field).to_be_visible()
     sync_api.expect(field).not_to_be_focused()
@@ -719,7 +726,7 @@ def test_a_card_open_swiped_to_the_next(page):
     generate_free(page, FRONT_PROMPT)
     cards = page.locator(".flash")
     first, second = cards.nth(0), cards.nth(1)
-    first.get_by_role("button", name="✨ Corriger cette carte").tap()
+    first.locator(".flash-body").tap(position={"x": 4, "y": 4})  # opened from the list
     sync_api.expect(first).to_have_class(re.compile(r"\bediting\b"))
     front = first.locator(".front-row")
     moved = "el => el.style.transform"
@@ -775,7 +782,7 @@ def test_a_card_correction_dictated(page):
     )
     generate_free(page, FRONT_PROMPT)
     first = page.locator(".flash").first
-    first.get_by_role("button", name="✨ Corriger cette carte").click()
+    open_card(first)
     fix = first.locator(".card-fix")
     fix.get_by_role("button", name="Dicter").click()
     fix.get_by_role("button", name="Arrêter et écrire le texte").click()
@@ -805,16 +812,52 @@ def test_a_lesson_that_looks_wrong_corrected_or_kept(page):
     sync_api.expect(wrong.locator("textarea.back")).to_have_value("1915")
 
 
-def test_correcting_a_card_shown_on_each(page):
-    """ "✨ Correct this card" on every card, in words, not behind ⋯ (seldom found there); hidden
-    while its field is open."""
+def test_the_list_compact_a_card_touched_opens(page):
+    """The list compact: a card's front and back, none of its buttons nor its helps; touched
+    anywhere, it opens full screen with them (nothing focused: no keyboard), its « ✨ Corriger
+    avec l'IA » field at the bottom. « ▶ Relire carte par carte » opens the first."""
+    generate_free(page, FRONT_PROMPT)
+    first = page.locator(".flash").first
+    sync_api.expect(first.get_by_role("button", name="Plus d'actions")).to_be_hidden()
+    sync_api.expect(first.locator(".card-help:visible")).to_have_count(0)
+    sync_api.expect(first.get_by_role("textbox", name="Qu'est-ce qui ne va pas ?")).to_have_count(0)
+    first.locator(".math-preview.back.shown").click()  # its back: the card open, not its back edited
+    sync_api.expect(first).to_have_class(re.compile(r"\bediting\b"))
+    sync_api.expect(first.locator("textarea.back")).to_be_hidden()
+    sync_api.expect(first.get_by_role("button", name="Plus d'actions")).to_be_visible()
+    sync_api.expect(first.locator(".card-help:visible").first).to_be_visible()
+    sync_api.expect(first.get_by_role("textbox", name="Qu'est-ce qui ne va pas ?")).to_be_visible()
+    page.keyboard.press("Escape")
+    sync_api.expect(page.locator(".flash.editing")).to_have_count(0)
+    page.get_by_role("button", name="▶ Relire carte par carte").click()
+    sync_api.expect(first).to_have_class(re.compile(r"\bediting\b"))
+
+
+def test_cards_added_from_the_card_open_and_the_lessons_end(page):
+    """＋ in the card open: an empty card just after it, open, its front ready to type; left
+    empty, it goes. › after the last card: the lesson's end, how many cards were looked over,
+    a card to add there (kept once written)."""
     generate_free(page, FRONT_PROMPT)
     cards = page.locator(".flash")
-    for i in range(cards.count()):
-        sync_api.expect(cards.nth(i).get_by_role("button", name="✨ Corriger cette carte")).to_be_visible()
-    first = cards.first
-    first.get_by_role("button", name="Plus d'actions").click()
-    sync_api.expect(first.locator(".card-menu-items").get_by_text("Corriger cette carte")).to_have_count(0)
-    first.get_by_role("button", name="✨ Corriger cette carte").click()
-    sync_api.expect(first.get_by_role("textbox", name="Qu'est-ce qui ne va pas ?")).to_be_visible()
-    sync_api.expect(first.get_by_role("button", name="✨ Corriger cette carte")).to_be_hidden()
+    n = cards.count()
+    open_card(cards.first).get_by_role("button", name="Ajouter une carte après celle-ci").click()
+    sync_api.expect(cards).to_have_count(n + 1)
+    added = cards.nth(1)
+    sync_api.expect(added).to_have_class(re.compile(r"\bediting\b"))
+    sync_api.expect(added.locator(".card-sheet-head")).to_contain_text("Carte 2 / ")
+    sync_api.expect(added.locator("textarea.front")).to_be_focused()
+    page.keyboard.press("Escape")  # left empty: gone
+    sync_api.expect(cards).to_have_count(n)
+
+    open_card(cards.last).get_by_role("button", name="Carte suivante").click()
+    end = page.locator(".lesson-end")
+    sync_api.expect(end).to_contain_text(f"✓ {n} cartes relues")
+    sync_api.expect(page.locator(".flash.editing")).to_have_count(1)  # the end, alone
+    end.get_by_role("button", name="＋ Ajouter une carte").click()
+    sync_api.expect(end).to_have_count(0)
+    added = cards.nth(n)
+    sync_api.expect(added).to_have_class(re.compile(r"\bediting\b"))
+    added.locator("textarea.front").fill("el tío")
+    page.keyboard.press("Escape")
+    sync_api.expect(cards).to_have_count(n + 1)  # written: kept, last
+    sync_api.expect(cards.last).to_contain_text("el tío")

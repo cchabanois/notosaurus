@@ -2,6 +2,9 @@
 // correction: app-revision.js; the diagram labels: app-diagram.js; the pictures: app-pictures.js.
 // Methods of the page's Alpine component (app.js), as `this`.
 
+// The screen after the last card, edited as a card is (its key): the lesson looked over
+const LESSON_END = "end";
+
 const cardsPart = {
   // How the lesson's cards are asked, in a line: "↔ both ways · ⌨️ typed answer"; "" none
   askedHow() {
@@ -47,13 +50,40 @@ const cardsPart = {
     return this.isEditing(card) || this.peek === card.key;
   },
 
-  // The card beside the edited one, while a finger drags it (none: null): its correction's field
-  // there as it will be; the one it was before, not edited, without it again
-  setPeek(card) {
+  // The card beside the edited one (its key; the lesson's end, LESSON_END), while a finger drags
+  // it (none: null): its correction's field there as it will be; the one it was before, not
+  // edited, without it again
+  setPeek(key) {
     const old = this.cards.find((c) => c.key === this.peek);
-    if (old && old !== card && !this.isEditing(old)) old._fix = null;
-    this.peek = card?.key ?? "";
+    if (old && old.key !== key && !this.isEditing(old)) old._fix = null;
+    this.peek = key ?? "";
+    const card = this.cards.find((c) => c.key === key);
     if (card && this.lessonId) card._fix ??= this.newFix(card);
+  },
+
+  // The cards looked over one by one, then the lesson's end: their keys
+  reviewKeys() {
+    return [...this.cards.map((c) => c.key), LESSON_END];
+  },
+
+  // A card of the list touched: open full screen, as Anki shows it (nothing focused: no keyboard
+  // over it on a phone); a touch on one of its texts there edits it
+  openCard(card) {
+    this.editCard(card);
+    this.$nextTick(() => document.querySelector(`[data-card="${card.key}"]`)?.scrollTo({ top: 0 }));
+  },
+
+  // ＋ in the card open (or at the lesson's end): an empty card just after it, in its sub-deck,
+  // open, its front ready to type
+  addCardAfter(card) {
+    const after = card ?? this.cards.at(-1);
+    const at = this.cards.indexOf(after);
+    const added = withKey({ id: newId(), front: "", back: "", subdeck: after?.subdeck ?? "" });
+    this.doneEditing();  // first: the one it leaves, empty, goes (the new one then in its place)
+    const now = this.cards.indexOf(after);
+    this.cards.splice(now === -1 ? at : now + 1, 0, added);
+    this.editCard(added, "", { all: true });
+    this.$nextTick(() => document.querySelector(`[data-card="${added.key}"] textarea.front`)?.focus());
   },
 
   // `field`: the text touched, shown as typed (its LaTeX), the cursor in it ("front", "back",
@@ -92,28 +122,28 @@ const cardsPart = {
     const touch = this.cardTouch;
     if (!touch) return;
     const dx = t.clientX - touch.x, dy = t.clientY - touch.y;
-    const i = this.cards.findIndex((c) => c.key === this.editing);
-    const step = dx < 0 ? 1 : -1, next = this.cards[i + step];
-    const beside = () => this.peek && document.querySelector(`[data-card="${this.peek}"]`);
+    const keys = this.reviewKeys();
+    const step = dx < 0 ? 1 : -1, next = keys[keys.indexOf(this.editing) + step];  // a key may be 0
+    const beside = () => this.peek !== "" && document.querySelector(`[data-card="${this.peek}"]`);
     const place = (card, transform, transition = "none") => {
       if (card) Object.assign(card.style, { transform, transition });
     };
     if (event.type === "touchmove") {
       if (!touch.way && Math.hypot(dx, dy) > 10) touch.way = Math.abs(dx) > Math.abs(dy) ? "side" : "scroll";
       if (touch.way !== "side") return;
-      if (this.peek !== (next?.key ?? "")) {  // the one beside it: on the side the finger goes
+      if (this.peek !== (next ?? "")) {  // the one beside it: on the side the finger goes
         place(beside(), "");
         this.setPeek(next);
       }
-      place(el, `translateX(${next ? dx : dx / 4}px)`);
+      place(el, `translateX(${next !== undefined ? dx : dx / 4}px)`);
       place(beside(), `translateX(calc(${dx}px + ${step * 100}%))`);
       return;
     }
     this.cardTouch = null;
     const sideways = touch.way ? touch.way === "side" : Math.abs(dx) > 2 * Math.abs(dy);
     const far = Math.abs(dx) > Math.min(80, el.offsetWidth / 4);
-    if (event.type === "touchend" && !event.touches.length && sideways && far && next) {
-      if (this.peek !== next.key) this.setPeek(next);  // let go without a move seen: there all the same
+    if (event.type === "touchend" && !event.touches.length && sideways && far && next !== undefined) {
+      if (this.peek !== next) this.setPeek(next);  // let go without a move seen: there all the same
       this.$nextTick(() => {
         place(el, `translateX(${-step * 100}%)`, "transform .15s ease-out");
         place(beside(), "translateX(0)", "transform .15s ease-out");
@@ -143,6 +173,7 @@ const cardsPart = {
     if (card) {
       this.cancelFix(card);
       Object.assign(card, { _fixed: null, _allFields: false, _editing: "" });
+      if (this.blankCard(card) && !card.mask && !card.picture) this.removeCard(card);  // added, left empty
       // The list where the card is (‹ › may have gone far from where it was opened)
       this.$nextTick(() => document.querySelector(`[data-card="${card.key}"]`)?.scrollIntoView({ block: "nearest" }));
     }
@@ -150,13 +181,19 @@ const cardsPart = {
     this.prunePictures();
   },
 
-  // ‹ ›: the previous or the next card edited, this one done with
+  // ‹ ›: the previous or the next card edited, this one done with; after the last, the lesson's end
   moveEditing(step, { slide = true } = {}) {
-    const next = this.cards[this.cards.findIndex((c) => c.key === this.editing) + step];
-    if (!next) return;
-    this.editCard(next);
+    const keys = this.reviewKeys();
+    const key = keys[keys.indexOf(this.editing) + step];
+    if (key === undefined) return;  // (a card's key may be 0)
+    if (key === LESSON_END) {
+      this.doneEditing();
+      this.editing = LESSON_END;
+    } else {
+      this.editCard(this.cards.find((c) => c.key === key));
+    }
     if (slide) this.slide = step;
-    this.$nextTick(() => document.querySelector(`[data-card="${next.key}"]`)?.scrollTo({ top: 0 }));
+    this.$nextTick(() => document.querySelector(`[data-card="${key}"]`)?.scrollTo({ top: 0 }));
   },
 
   // The pictures no saved card uses removed (POST …/pictures/prune), once nothing can bring
