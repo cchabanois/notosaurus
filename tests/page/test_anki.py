@@ -14,6 +14,7 @@ from page.support import (  # noqa: E402
     generate_free,
     lesson,
     lessons,
+    open_card,
     reopen,
 )
 
@@ -106,7 +107,7 @@ def test_cards_left_over_in_anki_deleted_when_asked(page, anki):
     sync_api.expect(page.get_by_role("button", name="✓ À jour dans Anki")).to_be_visible()
     update = page.get_by_role("button", name="🔄 Mettre à jour dans Anki")
     notes = len(anki.notes)
-    first = page.locator(".flash").first
+    first = open_card(page.locator(".flash").first)
     gone = first.locator("textarea").first.input_value()
     first.get_by_role("button", name="Plus d'actions").click()
     first.get_by_role("button", name="Supprimer la carte").click()

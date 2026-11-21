@@ -197,7 +197,14 @@
       "done": "Done",
       "cardOf": "Card {n} / {count}",
       "previousCard": "Previous card",
-      "nextCard": "Next card"
+      "nextCard": "Next card",
+      "addAfter": "Add a card after this one",
+      "readAll": "▶ Go through card by card",
+      "endTitle": "End of the lesson",
+      "endDone": {
+        "one": "✓ {count} card looked over",
+        "other": "✓ {count} cards looked over"
+      }
     },
     "explain": {
       "button": "Explain this card",

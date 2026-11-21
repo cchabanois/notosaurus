@@ -197,7 +197,14 @@
       "done": "Listo",
       "cardOf": "Tarjeta {n} / {count}",
       "previousCard": "Tarjeta anterior",
-      "nextCard": "Tarjeta siguiente"
+      "nextCard": "Tarjeta siguiente",
+      "addAfter": "Añadir una tarjeta después de esta",
+      "readAll": "▶ Revisar tarjeta por tarjeta",
+      "endTitle": "Fin de la lección",
+      "endDone": {
+        "one": "✓ {count} tarjeta revisada",
+        "other": "✓ {count} tarjetas revisadas"
+      }
     },
     "explain": {
       "button": "Explicar esta tarjeta",

@@ -29,6 +29,7 @@ from page.support import (  # noqa: E402
     halves,
     lesson,
     lessons,
+    open_card,
     open_hide,
     open_prompt,
     pdf,
@@ -71,7 +72,7 @@ def test_photos_and_pictures_seen_in_full(page):
 
     # A card's figure too, alone: no arrows
     generate_free(page, "Le triangle rectangle (géométrie)")
-    page.locator(".card-picture img").first.click()
+    open_card(page.locator(".flash").first).locator(".card-picture img").first.click()  # in the card open
     sync_api.expect(viewer).to_be_visible()
     sync_api.expect(viewer.locator(".viewer-nav")).to_have_count(0)
 

@@ -18,10 +18,12 @@ Consulta [Señalar un problema](#señalar-un-problema).
 ## El mazo y las tarjetas
 
 - **Mazo**: el nombre del mazo de Anki. `::` crea submazos: `Inglés::Unit 3 - At school`.
-- Cada tarjeta tiene un **anverso** (la pregunta) y un **reverso** (la respuesta). Las tarjetas se
-  muestran como en Anki, con las fórmulas y las figuras dibujadas. Toca un texto para editar
-  la tarjeta: se abre a pantalla completa (una ventana en el ordenador), con el cursor donde tocaste
-  y el campo **✨ Corregir con la IA** abajo. **‹ ›** pasan a la tarjeta anterior o siguiente;
+- Cada tarjeta tiene un **anverso** (la pregunta) y un **reverso** (la respuesta). La lista es
+  compacta (anverso, reverso, una imagen pequeña): toca una tarjeta para abrirla a pantalla completa
+  (una ventana en el ordenador), como en Anki, con las fórmulas y las figuras dibujadas y el campo
+  **✨ Corregir con la IA** abajo. **▶ Revisar tarjeta por tarjeta** abre la primera. Desliza el
+  dedo, o **‹ ›**, para pasar a la anterior o la siguiente; tras la última, el fin de la lección.
+  Toca un texto para editarlo; **＋** añade una tarjeta después (si se deja vacía, desaparece).
   **✕**, Escape o el botón atrás del móvil la cierran, guardada. La imagen de la tarjeta (🖼️) se
   cambia mientras se edita.
 - **+ info** añade una nota mostrada bajo la respuesta: el género, el plural, un ejemplo…

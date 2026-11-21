@@ -116,12 +116,16 @@
 .card-sheet-head { display: none; }
 .flash:is(.editing, .peek) { position: fixed; inset: 0; z-index: 25; flex-wrap: wrap; align-content: flex-start; overflow-y: auto;
   overscroll-behavior: contain; padding-top: 0; border: 0; border-radius: 0; box-shadow: none; }
-.flash:is(.editing, .peek) .card-sheet-head { position: sticky; top: 0; z-index: 3; flex: 1 0 100%; display: flex; align-items: center;
+.flash:is(.editing, .peek) .card-sheet-head { position: sticky; top: 0; z-index: 3; flex: none; display: flex; align-items: center;
   gap: .25rem; margin-bottom: .4rem; padding: .35rem 0; background: inherit;
   border-bottom: 1px solid var(--border); color: var(--muted); font-size: .85rem; font-weight: 700; }
 .flash:is(.editing, .peek) .card-sheet-head .icon-btn { width: 2.5rem; height: 2.5rem; font-size: 1.1rem; }
 .flash:is(.editing, .peek) .card-sheet-head .nav { margin-left: auto; }  /* ‹ › ✕ together, on the right */
-.flash:is(.editing, .peek) .card-fix { order: 9; position: sticky; bottom: 0; z-index: 3; margin-bottom: .2rem;
+/* One column, its correction's field pushed to the bottom however short the card (always in the
+   same place), held there as a long one scrolls */
+.cards .flash:is(.editing, .peek) { flex-direction: column; flex-wrap: nowrap; }  /* over .has-picture… (wrap) */
+.cards .flash:is(.editing, .peek) > * { flex: 0 0 auto; }
+.flash:is(.editing, .peek) .card-fix { flex: none; order: 9; position: sticky; bottom: 0; z-index: 3; margin: auto 0 .2rem;
   box-shadow: 0 -6px 14px rgb(0 0 0 / .08); }
 body:has(.flash.editing) { overflow: hidden; }  /* the list behind it stays where it was */
 /* Come from ‹ › or a swipe: slides in from that side. Sideways, the finger moves it (touchCard):
@@ -138,6 +142,26 @@ body:has(.flash.editing) { overflow: hidden; }  /* the list behind it stays wher
     border-radius: var(--radius); }
   .flash.editing { box-shadow: 0 0 0 100vmax rgb(10 12 20 / .4); }
 }
+/* The list, compact: a card's front and back (two lines each), its picture small beside them,
+   the rest in the card open (touched anywhere, it opens: app-cards.js openCard) */
+.review-all { display: block; margin: 0 0 .6rem auto; }
+.cards.compact .flash:not(.editing, .peek) { cursor: pointer; gap: .6rem; align-items: flex-start; }
+.cards.compact .flash:not(.editing, .peek) :is(.flash-actions, .choices, .meta, .fun-fact, .card-help, .card-fix-open,
+  .explain, .figure-check-btn, .figure-check) { display: none; }
+.cards.compact .flash:not(.editing, .peek) .flash-body { flex: 1 1 0; }
+.cards.compact .flash:not(.editing, .peek) .math-preview.shown { display: -webkit-box; -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical; overflow: hidden; }
+.cards.compact .flash:not(.editing, .peek) .card-picture { flex: 0 0 auto; margin: 0; }
+.cards.compact .flash:not(.editing, .peek) .card-picture img { width: 120px; height: auto; max-height: 120px; }
+.cards.compact .flash:not(.editing, .peek) .card-picture .drawing { width: 120px; height: 90px; min-height: 0; padding: .2rem; }
+.cards.compact .flash:not(.editing, .peek) .card-picture .drawing .steps > :not(.progress) { display: none; }
+.cards.compact .flash:not(.editing, .peek) .card-picture .drawing .progress { width: 80%; }
+.cards.compact .flash:not(.editing, .peek) .diagram { flex: 0 0 120px; max-width: 120px; pointer-events: none; }
+.cards.compact .flash:not(.editing, .peek) .card-doubt { flex: 1 0 100%; }
+/* After the last card: the lesson looked over, a card to add or it sent */
+.lesson-end-body { flex: 1 0 100%; display: flex; flex-direction: column; align-items: center; justify-content: center;
+  gap: .8rem; min-height: 60vh; text-align: center; }
+.lesson-end-done { margin: 0; font-size: 1.2rem; font-weight: 800; }
 /* A card not edited: its texts as Anki shows them, no box around them (a touch edits them) */
 .flash:not(.editing, .peek) .math-preview.shown { background: transparent; padding: .1rem 0; }
 .flash .choice .math-preview { flex: 1; min-width: 0; margin: 0; }

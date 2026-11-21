@@ -197,7 +197,14 @@
       "done": "Terminé",
       "cardOf": "Carte {n} / {count}",
       "previousCard": "Carte précédente",
-      "nextCard": "Carte suivante"
+      "nextCard": "Carte suivante",
+      "addAfter": "Ajouter une carte après celle-ci",
+      "readAll": "▶ Relire carte par carte",
+      "endTitle": "Fin de la leçon",
+      "endDone": {
+        "one": "✓ {count} carte relue",
+        "other": "✓ {count} cartes relues"
+      }
     },
     "explain": {
       "button": "Expliquer cette carte",
