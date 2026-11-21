@@ -201,6 +201,8 @@ document.addEventListener("alpine:init", () => {
     reportable: false,
     lessonId: null,       // open lesson (null = new lesson, not generated yet)
     editing: "",          // the key of the one card edited, "" none (app-cards.js)
+    slide: 0,             // the card edited came from ‹ (-1) or › (1), or a swipe: it slides in from that side
+    cardTouch: null,      // where a finger went down on the card edited: { x, y } (a swipe to the next one)
     saveState: "",       // "", "pending", "saving", "saved", "error"
     lastSaved: "",
     saveTimer: null,

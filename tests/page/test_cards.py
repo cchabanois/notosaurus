@@ -688,6 +688,45 @@ def test_a_card_corrected_on_a_touch_screen_opens_no_keyboard(page):
     sync_api.expect(field).to_be_focused()
 
 
+def _swipe(page, target, dx: float, dy: float = 0) -> None:
+    """One finger drawn across `target` from its middle, by (dx, dy)."""
+    target.evaluate(
+        """(el, [dx, dy]) => {
+          const r = el.getBoundingClientRect(), x = r.x + r.width / 2, y = r.y + r.height / 2;
+          const at = (x, y) => new Touch({ identifier: 1, target: el, clientX: x, clientY: y });
+          const send = (type, touch, down) => el.dispatchEvent(new TouchEvent(type,
+            { bubbles: true, cancelable: true, touches: down ? [touch] : [], changedTouches: [touch] }));
+          send("touchstart", at(x, y), true);
+          send("touchend", at(x + dx, y + dy), false);
+        }""",
+        [dx, dy],
+    )
+
+
+@pytest.mark.parametrize("page", [{"has_touch": True}], indirect=True, ids=["touch"])
+def test_a_card_open_swiped_to_the_next(page):
+    """The card open full screen, a finger swiped to the left: the next card, this one done with;
+    to the right, the previous one. A stroke up or down (a scroll), or one in a field (selecting
+    its text), turns nothing."""
+    generate_free(page, FRONT_PROMPT)
+    cards = page.locator(".flash")
+    first, second = cards.nth(0), cards.nth(1)
+    first.get_by_role("button", name="✨ Corriger cette carte").tap()
+    sync_api.expect(first).to_have_class(re.compile(r"\bediting\b"))
+    front = first.locator(".front-row")
+    _swipe(page, front, -30, -120)  # a scroll
+    _swipe(page, first.get_by_role("textbox", name="Qu'est-ce qui ne va pas ?"), -150)  # in a field
+    sync_api.expect(first).to_have_class(re.compile(r"\bediting\b"))
+    _swipe(page, front, -150)
+    sync_api.expect(second).to_have_class(re.compile(r"\bediting\b"))
+    sync_api.expect(second).to_have_class(re.compile(r"\bslide-next\b"))  # come from the right
+    sync_api.expect(first).not_to_have_class(re.compile(r"\bediting\b"))
+    _swipe(page, second.locator(".front-row"), 150)
+    sync_api.expect(first).to_have_class(re.compile(r"\bediting\b"))
+    _swipe(page, front, 150)  # the first: none before it
+    sync_api.expect(first).to_have_class(re.compile(r"\bediting\b"))
+
+
 def test_a_card_just_added_written_by_the_ai(page):
     """A card just added (empty): its field asks what it should ask, the demo AI writes its
     back from that. Filled, it is corrected again, no more written."""

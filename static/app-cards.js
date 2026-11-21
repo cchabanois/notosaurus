@@ -47,6 +47,7 @@ const cardsPart = {
   // placeholder. `all`: every field shown (a card just added, empty).
   editCard(card, field = "", { all = false } = {}) {
     if (this.readOnly()) return;
+    this.slide = 0;
     if (this.editing !== card.key) {
       this.doneEditing();
       this.editing = card.key;
@@ -59,6 +60,23 @@ const cardsPart = {
     const selector = name === "choice" ? `.choice:nth-of-type(${Number(n) + 1}) textarea`
       : name === "subdeck" ? "input.subdeck" : `textarea.${name}`;
     this.$nextTick(() => document.querySelector(`[data-card="${card.key}"] ${selector}`)?.focus());
+  },
+
+  // A finger swiped across the card edited: the next one (to the left) or the previous one. Only
+  // a stroke clearly sideways (a scroll up or down never turns it), not one in a field (where it
+  // selects text) or on a diagram (its frame is dragged)
+  touchCard(event) {
+    const t = event.changedTouches[0];
+    if (event.type === "touchstart") {
+      const inField = event.target.closest?.("textarea, input, .diagram");
+      this.cardTouch = event.touches.length === 1 && !inField ? { x: t.clientX, y: t.clientY } : null;
+      return;
+    }
+    const start = this.cardTouch;
+    this.cardTouch = null;
+    if (!start || event.touches.length) return;
+    const dx = t.clientX - start.x, dy = t.clientY - start.y;
+    if (Math.abs(dx) > 60 && Math.abs(dx) > 2 * Math.abs(dy)) this.moveEditing(dx < 0 ? 1 : -1);
   },
 
   // The edited card left: its correction (and the lesson's) no longer undoable, so the
@@ -81,6 +99,7 @@ const cardsPart = {
     const next = this.cards[this.cards.findIndex((c) => c.key === this.editing) + step];
     if (!next) return;
     this.editCard(next);
+    this.slide = step;
     this.$nextTick(() => document.querySelector(`[data-card="${next.key}"]`)?.scrollTo({ top: 0 }));
   },
 
