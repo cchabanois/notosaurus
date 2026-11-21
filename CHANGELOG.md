@@ -98,6 +98,8 @@ Each pull request's entries (the `## Changelog` of its description) are put unde
 
 ### Fixed
 
+- A button of the page could stay shown when it no longer applied (📤 with Anki out of reach): what the page shows now always follows its last state.
+- A card's text touched on a busy phone could open its field without the cursor in it (no keyboard): the field is focused once shown.
 - 🖼️ Undoing a card's correction that redrew its figure no longer leaves a broken picture.
 - 🧮 What the AI says it changed on a card, and its explanations, show their formulas drawn, not their code.
 - 🖼️ A figure being drawn again keeps its size on the phone too.

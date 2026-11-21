@@ -74,7 +74,8 @@ const cardsPart = {
     const [name, n] = field.split(":");
     const selector = name === "choice" ? `.choice:nth-of-type(${Number(n) + 1}) textarea`
       : name === "subdeck" ? "input.subdeck" : `textarea.${name}`;
-    this.$nextTick(() => document.querySelector(`[data-card="${card.key}"] ${selector}`)?.focus());
+    // Focused once shown: x-show shows it at the next frame (a hidden field takes no focus)
+    this.$nextTick(() => requestAnimationFrame(() => document.querySelector(`[data-card="${card.key}"] ${selector}`)?.focus()));
   },
 
   // A finger swiped across the card edited: the card follows it, sideways, the next one (to the

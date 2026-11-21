@@ -57,6 +57,19 @@ def test_one_empty_card_at_a_time(page):
     sync_api.expect(cards.last.locator("textarea.front")).to_be_focused()
 
 
+def test_a_touched_text_is_focused_however_late_its_field_shows(page):
+    """A text touched: its field shown (Alpine, at the next frame), then focused. The frames
+    late (a busy phone): the field focused all the same, not before it is shown."""
+    generate_free(page, FRONT_PROMPT)
+    card = page.locator(".flash").first
+    page.evaluate(
+        """() => { const frame = window.requestAnimationFrame.bind(window);
+          window.requestAnimationFrame = (f) => setTimeout(() => frame(f), 150); }"""
+    )
+    for name in ("back", "info"):
+        field(card, name)
+
+
 def test_long_back_and_info_seen_whole(page):
     """A long answer or note grows its field, as the front: nothing cut on a phone."""
     page.set_viewport_size({"width": 360, "height": 780})
