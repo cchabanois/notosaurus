@@ -231,13 +231,36 @@ def test_own_photo_then_no_picture(client, drawn, tmp_path):
     res = client.post(url, files={"photo": ("p.jpg", plain_image(1600, 1200, "blue"), "image/jpeg")}).json()
     assert res["card"]["picture"] != dog["picture"]
     folder = tmp_path / "data" / "lessons" / lesson["id"] / "images"
-    assert not (folder / dog["picture"]).exists()  # the replaced picture is removed
     assert Image.open(folder / res["card"]["picture"]).size == (pictures.SIDE, 384)
     assert client.post(url, files={"photo": ("p.txt", b"x", "text/plain")}).status_code == 400
 
     res = client.delete(url).json()
     assert (res["card"]["picture"], res["card"]["picture_prompt"]) == ("", "")  # a text card now
-    assert not any(folder.glob(f"picture-{dog['id']}-*"))
+    assert any(folder.glob(f"picture-{dog['id']}-*"))  # kept until pruned: the page may undo meanwhile
+
+
+def test_a_replaced_picture_kept_until_pruned(client, drawn, tmp_path):
+    """A card's picture replaced (drawn again, the user's own): the old one stays, so that the
+    page can undo the card's correction while it is edited and show it again (it was removed
+    at once: the undone card showed a broken picture, its description instead, 2026-11-20).
+    Pruned once the page asks: only the pictures no saved card uses."""
+    lesson = lesson_with_pictures(client)
+    cards = client.post(f"/api/lessons/{lesson['id']}/pictures", json={"draw": True}).json()["lesson"]["cards"]
+    dog = cards[1]
+    folder = tmp_path / "data" / "lessons" / lesson["id"] / "images"
+    url = f"/api/lessons/{lesson['id']}/cards/{dog['id']}/picture"
+    new = client.post(url, files={"photo": ("p.jpg", plain_image(1600, 1200, "blue"), "image/jpeg")}).json()["card"]
+    assert (folder / dog["picture"]).exists()  # the replaced one kept
+    assert client.get(f"/api/lessons/{lesson['id']}/pictures/{dog['picture']}").status_code == 200
+
+    # Undone on the page: the card has its old picture again, saved
+    saved = client.get(f"/api/lessons/{lesson['id']}").json()
+    undone = [dog if c["id"] == dog["id"] else c for c in saved["cards"]]
+    assert client.put(f"/api/lessons/{lesson['id']}", json={"deck": saved["deck"], "cards": undone}).status_code == 200
+    assert client.post(f"/api/lessons/{lesson['id']}/pictures/prune").json() == {"removed": 1}
+    assert (folder / dog["picture"]).exists()  # used again: kept
+    assert not (folder / new["picture"]).exists()  # the one the undone correction made: gone
+    assert all((folder / c["picture"]).exists() for c in cards if c["picture"])
 
 
 def test_uploads_too_heavy_refused(client, drawn):
@@ -395,3 +418,19 @@ def test_a_picture_showing_the_answer_goes_on_the_back(monkeypatch):
         card = Card(front="Quels pays forment la Triple-Alliance ?", back="Allemagne, Autriche-Hongrie, Italie")
         decided = run(pictures.decided(AIConfig(llm="gemini"), card))
         assert decided.picture_on_back is on_back and decided.figure == "Carte de l'Europe"
+
+
+def test_pruned_figures_go_with_their_sources(tmp_path):
+    """The figures (SVG) no card uses are pruned as the pictures are (only JPEGs were: the
+    figures drawn again piled up), with the Typst sources they were drawn from; the ones a
+    card uses, and their sources, kept. Files not ours stay."""
+    used, old = "picture-c1-aaaaaaaa.svg", "picture-c1-bbbbbbbb.svg"
+    names = [used, "picture-c1-aaaaaaaa.typ", "picture-c1-aaaaaaaa-2.typ", old, "picture-c1-bbbbbbbb.typ",
+             "picture-c2-cccccccc.jpg", "picture-c2-dddddddd.jpg", "notes.txt"]  # fmt: skip
+    for name in names:
+        (tmp_path / name).write_text("x")
+    cards = [Card(front="a", back="b", picture=used), Card(front="c", back="d", picture="picture-c2-cccccccc.jpg")]
+    assert pictures.prune(tmp_path, cards) == 2
+    assert sorted(p.name for p in tmp_path.iterdir()) == sorted(
+        [used, "picture-c1-aaaaaaaa.typ", "picture-c1-aaaaaaaa-2.typ", "picture-c2-cccccccc.jpg", "notes.txt"]
+    )

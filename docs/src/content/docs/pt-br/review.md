@@ -18,8 +18,11 @@ relato é lido, e é o melhor jeito de fazer o Notosaurus ser corrigido. Veja
 ## O baralho e os cartões
 
 - **Baralho**: o nome do baralho do Anki. `::` cria subbaralhos: `Inglês::Unit 3 - At school`.
-- Cada cartão tem uma **frente** (a pergunta) e um **verso** (a resposta). Toque em um texto para
-  alterá-lo.
+- Cada cartão tem uma **frente** (a pergunta) e um **verso** (a resposta). Os cartões aparecem
+  como no Anki, com fórmulas e figuras desenhadas. Toque em um texto (ou ✏️) para editar o cartão:
+  seus campos se abrem, com o cursor onde você tocou. Só um cartão é editado por vez: **✓
+  Concluído**, Esc ou outro cartão tocado o fecha, salvo. A imagem do cartão (🖼️) é trocada
+  enquanto ele é editado.
 - **+ info** acrescenta uma nota mostrada abaixo da resposta: gênero, plural, um exemplo…
 - **subbaralho** coloca o cartão em um subbaralho da lição ("Vocabulário", "Verbos").
 - **Ouvir o verso** (🔊) toca o verso com a voz da lição.
@@ -65,7 +68,9 @@ Em vez de alterar os cartões um por um, peça com suas palavras, no campo acima
 
 Toque em **Corrigir**. A IA revê as fotos e muda só o que você pediu: os cartões alterados são
 marcados como **alterado**, os novos como **novo**, e uma frase resume o que ela fez.
-**↩ Desfazer** deixa os cartões como estavam.
+**↩ Desfazer** deixa os cartões como estavam,
+enquanto você não começar a editar um cartão. Um cartão corrigido sozinho (**✨ Corrigir este cartão**)
+se desfaz do mesmo jeito enquanto continuar aberto; depois de **✓ Concluído**, a correção fica.
 
 Mudou de ideia enquanto a IA corrige (a lição ou um só cartão)? **Cancelar** a interrompe na
 hora: os cartões continuam como estavam.

@@ -126,6 +126,12 @@ internal fun Route.pictureRoutes(server: LocalServer) {
             val found = relay().foundPicture(req.string("source"), req.string("id"))
             pictures.own(lesson, i, found.jpeg, found.source)
         }
+        // The pictures no card uses any more removed (drawn again, replaced, removed: kept until
+        // then, so that the page can undo a card's correction while it is edited): asked by the
+        // page once no card is edited, and when the lesson opens ({"removed": n})
+        api("POST", "/api/lessons/{id}/pictures/prune") {
+            buildJsonObject { put("removed", pictures.prune(lesson())) }
+        }
         // No picture on the card any more: a text card
         api("DELETE", "/api/lessons/{id}/cards/{card}/picture") {
             val lesson = lesson()

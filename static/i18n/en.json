@@ -193,7 +193,8 @@
         "correct": "Correct",
         "keep": "Keep the lesson"
       },
-      "editFormula": "Click to edit"
+      "editFormula": "Click to edit",
+      "done": "✓ Done"
     },
     "explain": {
       "button": "Explain this card",

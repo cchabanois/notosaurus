@@ -130,6 +130,9 @@ const ankiPart = {
 
   async sendToAnki() {
     this.error = this.success = "";
+    // Sent as shown: the edited card done with (its correction no longer undoable: the
+    // pictures the cards sent don't have are removed by the send)
+    this.doneEditing();
     this.sending = true;
     try {
       await this.picturesDone();

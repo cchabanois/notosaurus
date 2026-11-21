@@ -464,7 +464,8 @@ class LessonRoutesTest : LocalServerTestBase() {
         assertTrue(svg.headers["Content-Security-Policy"]!!.startsWith("default-src 'none'"))
 
         // "✨ Image" with another subject: decided (a picture: its words, nothing drawn), then drawn
-        // when the user says yes: fresh, the old file gone
+        // when the user says yes: fresh, the old file kept (the page may undo while the card is
+        // edited) until the lesson is sent
         val made = client.post("/api/lessons/$id/cards/$apple/picture/make") {
             page(); contentType(ContentType.Application.Json); setBody("""{"subject": "a red apple"}""")
         }.json().jsonObject
@@ -473,7 +474,7 @@ class LessonRoutesTest : LocalServerTestBase() {
         val again = client.post("/api/lessons/$id/cards/$apple/picture/draw") { page() }.json().jsonObject["card"]!!.jsonObject
         assertEquals("a red apple", again.string("picture_prompt"))
         assertTrue(client.get("/api/lessons/$id/pictures/${again.string("picture")}") { page() }.bodyAsText().contains("\"fresh\":true"))
-        assertEquals(HttpStatusCode.NotFound, client.get("/api/lessons/$id/pictures/$picture") { page() }.status)
+        assertEquals(HttpStatusCode.OK, client.get("/api/lessons/$id/pictures/$picture") { page() }.status)
 
         // Sent to AnkiDroid with their pictures
         val sending = client.get("/api/lessons/$id") { page() }.json().jsonObject
@@ -483,6 +484,7 @@ class LessonRoutesTest : LocalServerTestBase() {
         }
         assertEquals(setOf(again.string("picture"), figure), anki.pictures.keys)
         assertTrue(anki.sent.single().cards[1].pictureOnBack)
+        assertEquals(HttpStatusCode.NotFound, client.get("/api/lessons/$id/pictures/$picture") { page() }.status) // no card sent has it
 
         // The user's own photo, then no picture at all
         val own = client.submitFormWithBinaryData("/api/lessons/$id/cards/$apple/picture", formData {
@@ -494,7 +496,12 @@ class LessonRoutesTest : LocalServerTestBase() {
         assertEquals("my photo", client.get("/api/lessons/$id/pictures/${own.string("picture")}") { page() }.bodyAsText())
         val none = client.delete("/api/lessons/$id/cards/$apple/picture") { page() }.json().jsonObject["card"]!!.jsonObject
         assertEquals(listOf("", "", ""), listOf("picture", "picture_prompt", "figure").map { none.string(it) })
+        assertEquals(HttpStatusCode.OK, client.get("/api/lessons/$id/pictures/${own.string("picture")}") { page() }.status)
+        // The page done with the card (or the lesson opened): the pictures no card uses removed
+        val pruned = client.post("/api/lessons/$id/pictures/prune") { page() }.json().jsonObject
+        assertEquals(2, pruned["removed"]!!.jsonPrimitive.int) // the own photo, the picture drawn before it
         assertEquals(HttpStatusCode.NotFound, client.get("/api/lessons/$id/pictures/${own.string("picture")}") { page() }.status)
+        assertEquals(HttpStatusCode.OK, client.get("/api/lessons/$id/pictures/$figure") { page() }.status) // still used
     }
 
     @Test

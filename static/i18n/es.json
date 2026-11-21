@@ -193,7 +193,8 @@
         "correct": "Corregir",
         "keep": "Mantener la lección"
       },
-      "editFormula": "Haz clic para editar"
+      "editFormula": "Haz clic para editar",
+      "done": "✓ Listo"
     },
     "explain": {
       "button": "Explicar esta tarjeta",

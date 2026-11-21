@@ -18,8 +18,11 @@ segnalazione viene letta, ed è il modo migliore per far correggere Notosaurus. 
 ## Il mazzo e le carte
 
 - **Mazzo**: il nome del mazzo di Anki. `::` crea sotto-mazzi: `Inglese::Unit 3 - At school`.
-- Ogni carta ha un **fronte** (la domanda) e un **retro** (la risposta). Tocca un testo per
-  modificarlo.
+- Ogni carta ha un **fronte** (la domanda) e un **retro** (la risposta). Le carte appaiono come in
+  Anki, con formule e figure disegnate. Tocca un testo (o ✏️) per modificare la carta: si aprono i
+  suoi campi, con il cursore dove hai toccato. Si modifica una carta alla volta: **✓ Fatto**, Esc o
+  un'altra carta toccata la chiude, salvata. L'immagine della carta (🖼️) si cambia mentre è in
+  modifica.
 - **+ info** aggiunge una nota mostrata sotto la risposta: genere, plurale, un esempio…
 - **sotto-mazzo** mette la carta in un sotto-mazzo della lezione ("Vocabolario", "Verbi").
 - **Ascolta il retro** (🔊) lo riproduce con la voce della lezione.
@@ -65,7 +68,9 @@ Invece di modificare le carte una per una, chiedi con parole tue, nel campo sopr
 
 Tocca **Correggi**. L'IA rivede le foto e cambia solo ciò che hai chiesto: le carte cambiate sono
 segnate come **modificata**, le nuove come **nuova**, e una frase riassume ciò che ha fatto.
-**↩ Annulla** riporta le carte com'erano.
+**↩ Annulla** riporta le carte com'erano,
+finché non inizi a modificare una carta. Una carta corretta da sola (**✨ Correggi questa carta**) si
+annulla allo stesso modo finché resta aperta; dopo **✓ Fatto**, la correzione resta.
 
 Cambi idea mentre l'IA corregge (la lezione o una sola carta)? **Annulla** la ferma subito: le
 carte restano come erano.

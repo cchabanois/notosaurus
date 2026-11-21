@@ -14,6 +14,7 @@ from page.support import (  # noqa: E402
     CLOZE_PROMPT,
     FRONT_PROMPT,
     SAVED,
+    field,
     generate_free,
     lesson,
     lessons,
@@ -28,7 +29,7 @@ def test_generate_then_edit_saves_by_itself(page):
     assert lesson(page, summary["id"])["prompt"] == FRONT_PROMPT  # kept with the lesson…
     assert not [p for p in page.request.get("/api/prompts").json() if not p["builtin"]]  # …not saved as a prompt
 
-    page.locator(".flash textarea.back").first.fill("la mamá")
+    field(page.locator(".flash").first, "back").fill("la mamá")
     sync_api.expect(page.locator(".save-pill")).to_have_class(SAVED)
     assert lesson(page, summary["id"])["cards"][0]["back"] == "la mamá"
 
@@ -60,12 +61,12 @@ def test_long_back_and_info_seen_whole(page):
     generate_free(page, FRONT_PROMPT)
     card = page.locator(".flash").first
     long = "une réponse longue, avec une précision qui ne tient pas sur une seule ligne d'un téléphone"
-    for field in ("textarea.back", "textarea.info"):
-        box = card.locator(field)
+    for name in ("back", "info"):  # the info empty: touched by its placeholder
+        box = field(card, name)
         one_line = box.bounding_box()["height"]
         box.fill(long)
-        assert box.bounding_box()["height"] > 1.5 * one_line, field  # several lines
-        assert box.evaluate("el => el.scrollHeight <= el.clientHeight + 1"), field  # all of it shown
+        assert box.bounding_box()["height"] > 1.5 * one_line, name  # several lines
+        assert box.evaluate("el => el.scrollHeight <= el.clientHeight + 1"), name  # all of it shown
         box.press("Enter")  # one line of text in Anki: Enter adds no line break
         assert box.input_value() == long
 
@@ -80,25 +81,48 @@ def test_no_voice_said_when_no_card_is_read(page):
     sync_api.expect(voice).to_be_hidden()
 
 
-def test_a_formula_shown_once_its_text_while_edited(page):
-    """A formula: only as the card shows it; a click shows its text to edit, the preview under
-    it as it's typed; out of it, the formula alone again."""
+def test_a_card_shown_as_anki_shows_it_until_edited(page):
+    """Not edited, a card is as Anki shows it: its formulas drawn, no fields. A touch on one of
+    its texts edits it, the cursor there, the preview under it as it's typed; one card edited
+    at a time (another touched: the first done with); done (✓ or Escape), as Anki shows it
+    again, saved."""
     generate_free(page, FRONT_PROMPT)
-    card = page.locator(".flash").first
+    cards = page.locator(".flash")
+    card, other = cards.nth(0), cards.nth(1)
     back = card.locator("textarea.back")
-    back.fill(r"\(x^2\)")
-    card.locator("textarea.front").click()  # out of the back
+    sync_api.expect(back).to_be_hidden()
+    sync_api.expect(card.locator("textarea")).to_have_count(card.locator("textarea").count())
+    assert not [t for t in card.locator("textarea").all() if t.is_visible()]  # no field
+    field(card, "back").fill(r"\(x^2\)")
+    sync_api.expect(card.locator("textarea.front")).to_be_hidden()  # only the one touched
+    sync_api.expect(card.locator(".math-preview.back:not(.shown) mjx-container")).to_be_visible()  # under it
+    card.get_by_role("button", name="✓ Terminé").click()
     shown = card.locator(".math-preview.back.shown")
-    sync_api.expect(shown).to_be_visible()
     sync_api.expect(back).to_be_hidden()
     sync_api.expect(shown.locator("mjx-container")).to_be_visible()
-    shown.click()
+    sync_api.expect(page.locator(".save-pill")).to_have_class(SAVED)
+
+    shown.click()  # the formula touched: edited there
+    sync_api.expect(card).to_have_class(re.compile(r"\bediting\b"))
     sync_api.expect(back).to_be_focused()
     sync_api.expect(back).to_have_value(r"\(x^2\)")
-    sync_api.expect(card.locator(".math-preview.back:not(.shown)")).to_be_visible()  # the preview, under it
-    card.locator("textarea.front").click()
+    other.locator(".front-row .math-preview.shown").click()  # another card: the first done with
+    sync_api.expect(other).to_have_class(re.compile(r"\bediting\b"))
+    sync_api.expect(other.locator("textarea.front")).to_be_focused()
+    sync_api.expect(card).not_to_have_class(re.compile(r"\bediting\b"))
     sync_api.expect(back).to_be_hidden()
-    sync_api.expect(page.locator(".save-pill")).to_have_class(SAVED)
+    page.keyboard.press("Escape")
+    sync_api.expect(page.locator(".flash.editing")).to_have_count(0)
+
+    # ✨ asks the AI: the card edited (its correction undoable meanwhile), its texts still drawn;
+    # one touched shows its LaTeX, the others drawn
+    card.get_by_role("button", name="✨ Corriger cette carte").click()
+    sync_api.expect(card).to_have_class(re.compile(r"\bediting\b"))
+    sync_api.expect(shown.locator("mjx-container")).to_be_visible()
+    sync_api.expect(back).to_be_hidden()
+    shown.click()
+    sync_api.expect(back).to_be_focused()
+    sync_api.expect(card.locator("textarea.front")).to_be_hidden()
 
 
 # Whether a drawn formula holds a command MathJax doesn't know: written in red, as in Anki
@@ -110,19 +134,16 @@ def test_a_formula_previewed_as_anki_shows_it(page):
     arc), drawn; what it doesn't know (\\R, Anki has only \\mathbb{R}), in red as there."""
     generate_free(page, FRONT_PROMPT)
     card = page.locator(".flash").first
-    back = card.locator("textarea.back")
-    shown = card.locator(".math-preview.back.shown")
+    back = field(card, "back")
+    preview = card.locator(".math-preview.back:not(.shown)")  # under the field, as it's typed
     for formula, unknown in [
         (r"\(\ce{2H2 + O2 -> 2H2O}\)", False),
         (r"\(R = 220\,\ohm\) et l'arc \(\overparen{AB}\)", False),
         (r"\(x \in \R\)", True),
     ]:
-        if back.is_hidden():
-            shown.click()
         back.fill(formula)
-        card.locator("textarea.front").click()  # out of the back
-        sync_api.expect(shown.locator("mjx-container").first).to_be_visible()
-        assert shown.evaluate(UNKNOWN_IN_RED) is unknown, formula
+        sync_api.expect(preview.locator("mjx-container").first).to_be_visible()
+        assert preview.evaluate(UNKNOWN_IN_RED) is unknown, formula
 
 
 def test_formulas_drawn_in_the_helps_and_the_doubt(page):
@@ -218,8 +239,7 @@ def test_fun_facts_as_the_settings_say(page):
     page.goto("/")
     sync_api.expect(page.locator(".switch.fun-facts")).to_have_count(0)
     generate_free(page, FRONT_PROMPT)
-    fact = page.locator(".flash .fun-fact textarea").first
-    sync_api.expect(fact).to_be_visible()
+    fact = field(page.locator(".flash", has=page.locator(".fun-fact:visible")).first, "fun_fact")
     assert fact.input_value().startswith("Le savais-tu")
     sync_api.expect(page.locator(".flash .fun-fact:visible")).to_have_count(1)  # the others have none
     # A long one is seen whole, on several lines
@@ -354,6 +374,7 @@ def test_cancel_while_a_card_correction_is_dictated(page):
 def test_multiple_choice_wrong_answers_edited(page):
     generate_free(page, "QCM sur la Révolution")
     first = page.locator(".flash").first
+    field(first, "back")  # edited: its wrong answers can be added and removed
     sync_api.expect(first.locator(".choice textarea")).to_have_count(3)
     assert first.locator("textarea.back").get_attribute("placeholder") == "Bonne réponse"
     first.get_by_role("button", name="+ mauvaise réponse").click()
@@ -482,17 +503,18 @@ def test_helps_as_tall_as_their_text_never_dragged(page):
     a <br> in Anki), with no handle to drag: a scroll on a phone caught it, the field grew."""
     page.set_viewport_size({"width": 360, "height": 780})
     generate_free(page, FRONT_PROMPT)
-    for field in ("textarea.explanation", "textarea.mnemonic"):
-        box = page.locator(f".card-help:visible {field}").first
-        assert box.evaluate("el => getComputedStyle(el).resize") == "none", field
+    for name in ("explanation", "mnemonic"):
+        with_it = page.locator(".card-help:visible", has=page.locator(f"textarea.{name}"))  # the card that has it
+        box = field(page.locator(".flash", has=with_it).first, name)
+        assert box.evaluate("el => getComputedStyle(el).resize") == "none", name
         one_line = box.bounding_box()["height"]
         box.fill("Une première ligne")
         box.press("End")
         box.press("Enter")
         box.type("puis une seconde, assez longue pour ne pas tenir sur une ligne d'un téléphone")
-        assert "\n" in box.input_value(), field  # its line break kept
-        assert box.bounding_box()["height"] > 2.5 * one_line, field  # several lines
-        assert box.evaluate("el => el.scrollHeight <= el.clientHeight + 1"), field  # all of it shown
+        assert "\n" in box.input_value(), name  # its line break kept
+        assert box.bounding_box()["height"] > 2.5 * one_line, name  # several lines
+        assert box.evaluate("el => el.scrollHeight <= el.clientHeight + 1"), name  # all of it shown
 
 
 def test_helps_as_the_settings_say(page):
@@ -585,6 +607,48 @@ def test_what_the_ai_says_it_did_shows_its_formulas(page):
     page.locator(".revise textarea").fill("plus court")
     page.locator(".revise .btn.primary").click()
     _drawn(page.locator(".revision-result"))
+
+
+def test_a_card_corrected_then_undone_shows_its_figure_again(page):
+    """A card's correction that draws its figure again, undone while the card is edited: its
+    figure as it was, shown (it was removed as soon as the new one was drawn: the undone card
+    showed a broken picture, its description instead, 2026-11-20). Done with the card, the
+    one the undone correction drew is removed, the card's kept."""
+    generate_free(page, "Le triangle rectangle (géométrie)")
+    card = page.locator(".flash").first
+    img = card.locator(".card-picture img:not(.first):visible")
+    sync_api.expect(img).to_be_visible()
+    before = img.get_attribute("src")
+
+    def figure_wrong(route):  # the AI says what is wrong in the figure: drawn again, with another label
+        answer = route.fetch().json()
+        answer["card"]["figure"] = "Un triangle rectangle, son côté « côté opposé » marqué"
+        route.fulfill(json={**answer, "figure_problem": "Le côté opposé n'est pas marqué"})
+
+    page.route("**/api/lessons/*/fix-card*", figure_wrong)
+    card.get_by_role("button", name="✨ Corriger cette carte").click()
+    field = card.get_by_role("textbox", name="Qu'est-ce qui ne va pas ?")
+    field.fill("marque le côté opposé")
+    field.press("Enter")
+    sync_api.expect(img).not_to_have_attribute("src", before)  # drawn again
+    drawn = img.get_attribute("src")
+    sync_api.expect(page.locator(".save-pill")).to_have_class(SAVED)
+
+    card.get_by_role("button", name="↩ Annuler").click()
+    sync_api.expect(img).to_have_attribute("src", before)
+    assert page.request.get(before).ok  # still there (the browser's cache would show it anyway: a reload wouldn't)
+    page.wait_for_function("img => img.complete && img.naturalWidth > 0", arg=img.element_handle())  # not broken
+    sync_api.expect(page.locator(".save-pill")).to_have_class(SAVED)
+
+    assert page.request.get(drawn).ok  # kept until the card is done with
+    card.get_by_role("button", name="✓ Terminé").click()
+    for _ in range(50):  # the undone one's: gone (pruned once the card is saved)
+        if page.request.get(drawn).status == 404:
+            break
+        page.wait_for_timeout(100)
+    else:
+        raise AssertionError(f"{drawn} kept")
+    assert page.request.get(before).ok  # the card's: kept
 
 
 @pytest.mark.parametrize("page", [{"has_touch": True}], indirect=True, ids=["touch"])

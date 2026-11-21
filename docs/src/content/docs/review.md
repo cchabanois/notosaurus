@@ -17,8 +17,10 @@ and it's the best way to get Notosaurus fixed. See [Reporting a problem](#report
 ## The deck and the cards
 
 - **Deck**: the name of the Anki deck. `::` makes sub-decks: `Spanish::Unit 3 - At school`.
-- Each card has a **front** (the question) and a **back** (the answer). Tap a text to change
-  it.
+- Each card has a **front** (the question) and a **back** (the answer). The cards show as in
+  Anki, formulas and figures drawn. Tap a text (or ✏️) to edit the card: its fields open, the
+  cursor where you tapped. One card is edited at a time: **✓ Done**, Escape or another card tapped
+  closes it, saved. The card's picture (🖼️) is changed while it is edited.
 - **+ info** adds a note shown under the answer: gender, plural, an example…
 - **sub-deck** puts the card in a sub-deck of the lesson (“Vocabulary”, “Verbs”).
 - **Listen to the back** (🔊) plays it with the lesson's voice.
@@ -63,7 +65,9 @@ Instead of changing the cards one by one, ask in plain words, in the field above
 
 Tap **Correct**. The AI sees the photos again and changes only what you asked: changed cards
 are marked **changed**, new ones **new**, and a sentence sums up what it did. **↩ Undo** brings
-the cards back as they were.
+the cards back as they were, as long as you haven't started editing a card. A card corrected on its own
+(**✨ Correct this card**) is undone the same way while it stays open; once **✓ Done**, the
+correction is kept.
 
 Change your mind while the AI is correcting (the lesson or a single card)? **Cancel** stops it
 right away: the cards stay as they were.

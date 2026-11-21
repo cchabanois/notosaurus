@@ -271,6 +271,7 @@ const lessonsPart = {
     this.sentKey = sent >= Date.parse(lesson.updated_at ?? "") ? this.ankiKey() : null;
     this.saveState = "saved";
     this.revision = { text: "", busy: false, summary: "", stats: "", undo: null };
+    this.editing = "";
     this.$nextTick(() => this.$refs.review?.scrollIntoView({ behavior: "smooth" }));
   },
 
@@ -282,6 +283,7 @@ const lessonsPart = {
       await this.loadPhotos(lesson);
       this.show(lesson);
       this.usePromptOf(lesson);
+      this.prunePictures();  // left by an edit the app closed before it was done
     } catch (e) {
       this.error = t("app.lessons.openFailed", { message: e.message });
     }
