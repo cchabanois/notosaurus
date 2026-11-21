@@ -194,7 +194,10 @@
         "keep": "Keep the lesson"
       },
       "editFormula": "Click to edit",
-      "done": "✓ Done"
+      "done": "Done",
+      "cardOf": "Card {n} / {count}",
+      "previousCard": "Previous card",
+      "nextCard": "Next card"
     },
     "explain": {
       "button": "Explain this card",
@@ -214,7 +217,7 @@
     "fix": {
       "button": "Correct this card",
       "label": "What's wrong?",
-      "placeholder": "\"the answer is 1789\", \"shorter\"…",
+      "placeholder": "✨ Correct with AI: \"the answer is 1789\", \"shorter\"…",
       "submit": "Correct",
       "busy": "Correcting…",
       "undo": "↩ Undo",

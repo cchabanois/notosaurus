@@ -194,7 +194,10 @@
         "keep": "Manter a lição"
       },
       "editFormula": "Clique para editar",
-      "done": "✓ Concluído"
+      "done": "Concluído",
+      "cardOf": "Cartão {n} / {count}",
+      "previousCard": "Cartão anterior",
+      "nextCard": "Próximo cartão"
     },
     "explain": {
       "button": "Explicar este cartão",
@@ -214,7 +217,7 @@
     "fix": {
       "button": "Corrigir este cartão",
       "label": "O que está errado?",
-      "placeholder": "«a resposta é 1789», «mais curto»…",
+      "placeholder": "✨ Corrigir com a IA: «a resposta é 1789», «mais curto»…",
       "submit": "Corrigir",
       "busy": "Corrigindo…",
       "undo": "↩ Desfazer",

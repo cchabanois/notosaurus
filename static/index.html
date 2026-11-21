@@ -360,8 +360,24 @@
       <div class="cards">
         <template x-for="card in cards" :key="card.key">
           <article class="flash" :data-card="card.key"
-                   @keydown.escape="if (isEditing(card) && !$event.target.closest('.card-fix, .card-menu, .picture-panel')) doneEditing()"
-                   :class="{ editing: isEditing(card), changed: card._state, linked: card._linked, 'has-explain': card._explain?.open, 'has-fix': card._fix || card._fixed, 'has-diagram': card.mask, 'has-doubt': card.doubt, 'has-picture': card.picture || card.picture_prompt || card.figure || card._panel }">
+                   @touchstart.passive="isEditing(card) && touchCard($event)" @touchmove.passive="isEditing(card) && touchCard($event)"
+                   @touchend.passive="isEditing(card) && touchCard($event)" @touchcancel.passive="isEditing(card) && touchCard($event)"
+                   :class="{ editing: isEditing(card), peek: peek === card.key, 'slide-next': isEditing(card) && slide === 1, 'slide-prev': isEditing(card) && slide === -1, changed: card._state, linked: card._linked, 'has-explain': card._explain?.open, 'has-fix': card._fix || card._fixed, 'has-diagram': card.mask, 'has-doubt': card.doubt, 'has-picture': card.picture || card.picture_prompt || card.figure || card._panel }">
+            <!-- Edited: the card full screen (a dialog on a wide screen), its ✕ done with it (saved).
+                 Escape or Android's back too, unless what is open over it (closed first), or what it
+                 closes on its own (its correction's field, its menu, its picture's panel), is the one
+                 the key is for: seen at capture, before any of them closes -->
+            <header class="card-sheet-head" x-show="isEditing(card) || peek === card.key"
+                    @keydown.escape.window.capture="isEditing(card) && !viewer.open && !report.open && !asking.open && !hiding.open
+                      && !$event.target.closest?.('.card-fix, .card-menu, .picture-panel') && doneEditing()">
+              <span x-text="$t('app.review.cardOf', { n: cards.indexOf(card) + 1, count: cards.length })"></span>
+              <!-- The previous or the next one, this one done with: the lesson looked over card by card -->
+              <button type="button" class="icon-btn stops-dictation nav" @click="moveEditing(-1)" :disabled="cards.indexOf(card) === 0"
+                      :aria-label="$t('app.review.previousCard')" :title="$t('app.review.previousCard')">‹</button>
+              <button type="button" class="icon-btn stops-dictation" @click="moveEditing(1)" :disabled="cards.indexOf(card) === cards.length - 1"
+                      :aria-label="$t('app.review.nextCard')" :title="$t('app.review.nextCard')">›</button>
+              <button type="button" class="icon-btn stops-dictation" @click="doneEditing()" :aria-label="$t('app.review.done')" :title="$t('app.review.done')">✕</button>
+            </header>
             <!-- Choosing the cards of a test (app-exams.js): one tick per card -->
             <label class="pick" x-cloak x-show="examPick">
               <input type="checkbox" :checked="examPick?.selected.has(card.id)" @change="togglePick(card)"
@@ -445,7 +461,7 @@
                 <!-- A formula or gaps: shown as the card shows them; their text only while edited
                      (a click on them), the preview then under it as it's typed -->
                 <div class="math-preview shown" x-show="renderedOnly(card, 'front')" x-html="previewHtml(card.front)"
-                     :data-placeholder="isEditing(card) ? $t('app.review.front') : ''"
+                     :data-placeholder="shownEdited(card) ? $t('app.review.front') : ''"
                      @click="editCard(card, 'front')" :title="readOnly() ? '' : $t('app.review.editFormula')"></div>
                 <textarea class="front" rows="1" x-model="card.front" :readonly="readOnly()" :placeholder="$t('app.review.front')" :aria-label="$t('app.review.front')"
                           x-show="!renderedOnly(card, 'front')" @focus="card._editing = 'front'" @blur="card._editing = ''"
@@ -457,7 +473,7 @@
                           @click="explain(card)" :class="{ active: card._explain?.open }" :aria-label="$t('app.explain.button')"
                           :title="$t('app.explain.button')">💬</button>
                   <button class="icon-btn" x-show="hasAudio() && !hasMath(card.back) && !isCloze(card.front) && !card.choices.length" @click="play(spokenText(card), card.voice || voice)" :aria-label="$t('app.review.listen')">🔊</button>
-                  <button class="icon-btn" x-show="isEditing(card) && !card.mask && !isCloze(card.front) && lessonId" @click="togglePicturePanel(card)"
+                  <button class="icon-btn" x-show="shownEdited(card) && !card.mask && !isCloze(card.front) && lessonId" @click="togglePicturePanel(card)"
                           :class="{ active: card._panel }" :aria-label="$t('app.pictures.panel')">🖼️</button>
                   <div class="card-menu" x-show="canReport() || !readOnly()" @click.outside="card._menu = false" @keydown.escape="card._menu = false">
                     <button class="icon-btn muted" @click="card._menu = !card._menu" :class="{ active: card._menu }"
@@ -473,7 +489,7 @@
               <!-- The back, the info, the wrong options and the "did you know" grow with their text,
                    as the front: a long answer is seen whole -->
               <div class="math-preview back shown" x-show="renderedOnly(card, 'back')" x-html="previewHtml(card.back)"
-                   :data-placeholder="isEditing(card) ? $t('app.review.back') : ''"
+                   :data-placeholder="shownEdited(card) ? $t('app.review.back') : ''"
                    @click="editCard(card, 'back')" :title="readOnly() ? '' : $t('app.review.editFormula')"></div>
               <textarea class="back" rows="1" x-model="card.back" :readonly="readOnly()" @keydown.enter.prevent
                         :placeholder="isCloze(card.front) ? $t('app.review.extra') : card.choices.length ? $t('app.review.rightChoice') : $t('app.review.back')"
@@ -487,17 +503,17 @@
                   <div class="choice">
                     <span class="wrong" aria-hidden="true">✗</span>
                     <div class="math-preview shown" x-show="renderedOnly(card, 'choice:' + n)" x-html="previewHtml(choice)"
-                         :data-placeholder="isEditing(card) ? $t('app.review.wrongChoice') : ''"
+                         :data-placeholder="shownEdited(card) ? $t('app.review.wrongChoice') : ''"
                          @click="editCard(card, 'choice:' + n)" :title="readOnly() ? '' : $t('app.review.editFormula')"></div>
                     <textarea class="grow" rows="1" x-model="card.choices[n]" :readonly="readOnly()" @keydown.enter.prevent x-show="!renderedOnly(card, 'choice:' + n)"
                               @focus="card._editing = 'choice:' + n" @blur="card._editing = ''"
                               :placeholder="$t('app.review.wrongChoice')" :aria-label="$t('app.review.wrongChoice')"
                               x-init="watchHeight($el)" x-effect="card.choices[n]; fitHeight($el)"></textarea>
-                    <button class="icon-btn muted" x-show="isEditing(card) && card.choices.length > 1" @click="card.choices.splice(n, 1)"
+                    <button class="icon-btn muted" x-show="shownEdited(card) && card.choices.length > 1" @click="card.choices.splice(n, 1)"
                             :aria-label="$t('app.review.removeChoice')">✕</button>
                   </div>
                 </template>
-                <button class="link-btn" x-show="isEditing(card)" @click="card.choices.push(''); editCard(card, 'choice:' + (card.choices.length - 1))"
+                <button class="link-btn" x-show="shownEdited(card)" @click="card.choices.push(''); editCard(card, 'choice:' + (card.choices.length - 1))"
                         x-text="$t('app.review.addChoice')"></button>
               </div>
               <!-- The picture belongs to the answer ("What is a tangent?"): shown under it, as in Anki -->
@@ -543,13 +559,13 @@
               <div class="meta">
                 <!-- Its formulas drawn, as the helps' (its text a click away) -->
                 <div class="math-preview shown info" x-show="renderedOnly(card, 'info')" x-html="previewHtml(card.info)"
-                     :data-placeholder="isEditing(card) ? $t('app.review.info') : ''"
+                     :data-placeholder="shownEdited(card) ? $t('app.review.info') : ''"
                      @click="editCard(card, 'info')" :title="readOnly() ? '' : $t('app.review.editFormula')"></div>
                 <textarea class="info" rows="1" x-model="card.info" :readonly="readOnly()" @keydown.enter.prevent
                           :placeholder="$t('app.review.info')" :aria-label="$t('app.review.infoLabel')"
                           x-show="!renderedOnly(card, 'info')" @focus="card._editing = 'info'" @blur="card._editing = ''"
                           x-init="watchHeight($el)" x-effect="card.info; fitHeight($el)"></textarea>
-                <span class="subdeck-tag" x-show="renderedOnly(card, 'subdeck') && (card.subdeck || isEditing(card))"
+                <span class="subdeck-tag" x-show="renderedOnly(card, 'subdeck') && (card.subdeck || shownEdited(card))"
                       x-text="'🗂 ' + (card.subdeck || $t('app.review.subdeck'))"
                       :title="$t('app.review.subdeckLabel') + ' : ' + card.subdeck"
                       @click="editCard(card, 'subdeck')"></span>
@@ -587,16 +603,16 @@
                           x-init="watchHeight($el)" x-effect="card.mnemonic; fitHeight($el)"></textarea>
               </div>
               <!-- ✨ Corrected by the AI, in words: shown on every card (it was behind ⋯, seldom found) -->
-              <!-- ✨ corrected by the AI (edited meanwhile: undoable until done); ✓ done with it (saved,
-                   the next card can be edited) -->
+              <!-- ✨ corrected by the AI (edited meanwhile: undoable until done with, its ✕) -->
               <div class="card-fix-open" x-show="!readOnly() && !card._fix">
                 <button type="button" class="btn soft" x-show="lessonId" @click="openFix(card)">✨ <span x-text="$t(blankCard(card) ? 'app.fix.write' : 'app.fix.button')"></span></button>
-                <button type="button" class="btn primary" x-show="isEditing(card)" @click="doneEditing()" x-text="$t('app.review.done')"></button>
               </div>
             </div>
-            <!-- ✨ This card corrected by the AI as asked (typed or dictated), the others untouched -->
+            <!-- ✨ This card corrected by the AI as asked (typed or dictated), the others untouched:
+                 always there while it is edited, at the bottom; Escape stops a correction under way,
+                 else closes the card -->
             <template x-if="card._fix">
-              <form class="card-fix" @submit.prevent="fixCard(card)" @keydown.escape="cancelFix(card)">
+              <form class="card-fix" @submit.prevent="fixCard(card)" @keydown.escape="card._fix.busy ? cancelFix(card) : doneEditing()">
                 <div class="dictated" :class="{ 'with-mic': micOn() }">
                   <textarea :data-dictated="'card:' + card.key" x-model="card._fix.text" rows="2" :aria-label="$t(card._fix.blank ? 'app.fix.labelBlank' : 'app.fix.label')"
                             :placeholder="$t(card._fix.blank ? 'app.fix.placeholderBlank' : 'app.fix.placeholder')"
@@ -610,18 +626,19 @@
                 </div>
                 <p class="hint" x-show="dictationStep('card:' + card.key)" x-text="$t(dictationStep('card:' + card.key) || 'app.mic.busy')"></p>
                 <div class="card-fix-actions">
-                  <button type="button" class="btn soft stops-dictation" @click="cancelFix(card)" x-text="$t('common.cancel')"></button>
+                  <!-- What the last correction did, undoable until the card is done with -->
+                  <div class="card-fixed" x-show="card._fixed && !card._fix.busy">
+                    <span x-html="previewHtml(card._fixed?.summary)"></span>
+                    <button type="button" class="link-btn" @click="undoFix(card)" x-text="$t('app.fix.undo')"></button>
+                    <button type="button" class="link-btn" x-show="card._fixed?.quick && !off('ai.careful')" @click="fixCarefully(card)"
+                            x-text="$t('app.revise.carefully')"></button>
+                  </div>
+                  <button type="button" class="btn soft stops-dictation" x-show="card._fix.busy" @click="cancelFix(card)" x-text="$t('common.cancel')"></button>
                   <button class="btn primary" :disabled="!card._fix.text.trim() || card._fix.busy || dictating('card:' + card.key)"
                           x-text="$t(card._fix.busy ? (card._fix.blank ? 'app.fix.busyBlank' : 'app.fix.busy') : (card._fix.blank ? 'app.fix.submitBlank' : 'app.fix.submit'))"></button>
                 </div>
               </form>
             </template>
-            <div class="card-fixed" x-show="card._fixed && !card._fix">
-              <span x-html="previewHtml(card._fixed?.summary)"></span>
-              <button type="button" class="link-btn" @click="undoFix(card)" x-text="$t('app.fix.undo')"></button>
-              <button type="button" class="link-btn" x-show="card._fixed?.quick && !off('ai.careful')" @click="fixCarefully(card)"
-                      x-text="$t('app.revise.carefully')"></button>
-            </div>
             <!-- 💬 The card explained, on demand; then only the follow-ups the AI says would help -->
             <div class="explain" x-show="card._explain?.open">
               <template x-for="(block, b) in card._explain?.blocks ?? []" :key="b">
