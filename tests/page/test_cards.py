@@ -114,6 +114,16 @@ def test_a_card_shown_as_anki_shows_it_until_edited(page):
     page.keyboard.press("Escape")
     sync_api.expect(page.locator(".flash.editing")).to_have_count(0)
 
+    # ✨ asks the AI: the card edited (its correction undoable meanwhile), its texts still drawn;
+    # one touched shows its LaTeX, the others drawn
+    card.get_by_role("button", name="✨ Corriger cette carte").click()
+    sync_api.expect(card).to_have_class(re.compile(r"\bediting\b"))
+    sync_api.expect(shown.locator("mjx-container")).to_be_visible()
+    sync_api.expect(back).to_be_hidden()
+    shown.click()
+    sync_api.expect(back).to_be_focused()
+    sync_api.expect(card.locator("textarea.front")).to_be_hidden()
+
 
 # Whether a drawn formula holds a command MathJax doesn't know: written in red, as in Anki
 UNKNOWN_IN_RED = "e => [...e.querySelectorAll('*')].some((n) => getComputedStyle(n).color === 'rgb(255, 0, 0)')"

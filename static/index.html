@@ -457,7 +457,7 @@
                   <button class="icon-btn" x-show="hasAudio() && !hasMath(card.back) && !isCloze(card.front) && !card.choices.length" @click="play(spokenText(card), card.voice || voice)" :aria-label="$t('app.review.listen')">🔊</button>
                   <button class="icon-btn" x-show="isEditing(card) && !card.mask && !isCloze(card.front) && lessonId" @click="togglePicturePanel(card)"
                           :class="{ active: card._panel }" :aria-label="$t('app.pictures.panel')">🖼️</button>
-                  <button class="icon-btn edit-btn" x-show="!readOnly() && !isEditing(card)" @click="editCard(card, 'front')"
+                  <button class="icon-btn edit-btn" x-show="!readOnly() && !(isEditing(card) && card._allFields)" @click="editCard(card, 'front', { all: true })"
                           :aria-label="$t('app.review.edit')" :title="$t('app.review.edit')">✏️</button>
                   <div class="card-menu" x-show="canReport() || !readOnly()" @click.outside="card._menu = false" @keydown.escape="card._menu = false">
                     <button class="icon-btn muted" @click="card._menu = !card._menu" :class="{ active: card._menu }"
@@ -469,7 +469,7 @@
                   </div>
                 </div>
               </div>
-              <div class="math-preview" x-show="isEditing(card) && (hasMath(card.front) || isCloze(card.front))" x-html="previewHtml(card.front)"></div>
+              <div class="math-preview" x-show="!renderedOnly(card, 'front') && (hasMath(card.front) || isCloze(card.front))" x-html="previewHtml(card.front)"></div>
               <!-- The back, the info, the wrong options and the "did you know" grow with their text,
                    as the front: a long answer is seen whole -->
               <div class="math-preview back shown" x-show="renderedOnly(card, 'back')" x-html="previewHtml(card.back)"
@@ -479,15 +479,16 @@
                         :aria-label="card.choices.length ? $t('app.review.rightChoice') : $t('app.review.back')"
                         x-show="!renderedOnly(card, 'back')" @focus="card._editing = 'back'" @blur="card._editing = ''"
                         x-init="watchHeight($el)" x-effect="card.back; card._editing; fitHeight($el)"></textarea>
-              <div class="math-preview back" x-show="isEditing(card) && hasMath(card.back)" x-html="previewHtml(card.back)"></div>
+              <div class="math-preview back" x-show="!renderedOnly(card, 'back') && hasMath(card.back)" x-html="previewHtml(card.back)"></div>
               <!-- Multiple choice, true/false: the back is the right answer, these the wrong ones -->
               <div class="choices" x-show="card.choices.length">
                 <template x-for="(choice, n) in card.choices" :key="n">
                   <div class="choice">
                     <span class="wrong" aria-hidden="true">✗</span>
-                    <div class="math-preview shown" x-show="renderedOnly(card)" x-html="previewHtml(choice)"
+                    <div class="math-preview shown" x-show="renderedOnly(card, 'choice:' + n)" x-html="previewHtml(choice)"
                          @click="editCard(card, 'choice:' + n)" :title="readOnly() ? '' : $t('app.review.editFormula')"></div>
-                    <textarea class="grow" rows="1" x-model="card.choices[n]" :readonly="readOnly()" @keydown.enter.prevent x-show="isEditing(card)"
+                    <textarea class="grow" rows="1" x-model="card.choices[n]" :readonly="readOnly()" @keydown.enter.prevent x-show="!renderedOnly(card, 'choice:' + n)"
+                              @focus="card._editing = 'choice:' + n" @blur="card._editing = ''"
                               :placeholder="$t('app.review.wrongChoice')" :aria-label="$t('app.review.wrongChoice')"
                               x-init="watchHeight($el)" x-effect="card.choices[n]; fitHeight($el)"></textarea>
                     <button class="icon-btn muted" x-show="isEditing(card) && card.choices.length > 1" @click="card.choices.splice(n, 1)"
@@ -544,9 +545,9 @@
                           :placeholder="$t('app.review.info')" :aria-label="$t('app.review.infoLabel')"
                           x-show="!renderedOnly(card, 'info')" @focus="card._editing = 'info'" @blur="card._editing = ''"
                           x-init="watchHeight($el)" x-effect="card.info; fitHeight($el)"></textarea>
-                <span class="subdeck-tag" x-show="renderedOnly(card) && card.subdeck" x-text="card.subdeck"
+                <span class="subdeck-tag" x-show="renderedOnly(card, 'subdeck') && card.subdeck" x-text="card.subdeck"
                       @click="editCard(card, 'subdeck')"></span>
-                <input class="subdeck" x-show="isEditing(card)" x-model="card.subdeck" :readonly="readOnly()" :placeholder="$t('app.review.subdeck')"
+                <input class="subdeck" x-show="!renderedOnly(card, 'subdeck')" @focus="card._editing = 'subdeck'" @blur="card._editing = ''" x-model="card.subdeck" :readonly="readOnly()" :placeholder="$t('app.review.subdeck')"
                        :aria-label="$t('app.review.subdeckLabel')"
                        list="subdecks" :size="Math.max(card.subdeck.length, $t('app.review.subdeck').length) + 2">
               </div>

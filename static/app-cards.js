@@ -40,15 +40,18 @@ const cardsPart = {
     return !this.readOnly() && this.editing === card.key;
   },
 
-  // `field`: where the cursor goes ("front", "back", "info", "fun_fact", "explanation",
-  // "mnemonic", "subdeck", "choice:<n>"); none: the card edited, nothing focused
-  editCard(card, field = "") {
+  // `field`: the text touched, shown as typed (its LaTeX), the cursor in it ("front", "back",
+  // "info", "fun_fact", "explanation", "mnemonic", "subdeck", "choice:<n>"); none: the card
+  // edited, its texts still drawn (✨: what is asked of the AI). `all`: every field shown (✏️).
+  editCard(card, field = "", { all = false } = {}) {
     if (this.readOnly()) return;
     if (this.editing !== card.key) {
       this.doneEditing();
       this.editing = card.key;
     }
+    if (all) card._allFields = true;
     if (!field) return;
+    card._editing = field;
     const [name, n] = field.split(":");
     const selector = name === "choice" ? `.choice:nth-of-type(${Number(n) + 1}) textarea`
       : name === "subdeck" ? "input.subdeck" : `textarea.${name}`;
@@ -62,7 +65,7 @@ const cardsPart = {
     this.editing = "";
     if (card) {
       this.cancelFix(card);
-      card._fixed = null;
+      Object.assign(card, { _fixed: null, _allFields: false, _editing: "" });
     }
     this.revision = { ...this.revision, undo: null };
     this.prunePictures();
@@ -100,7 +103,7 @@ const cardsPart = {
       card = withKey({ id: newId(), front: "", back: "", subdeck: last?.subdeck ?? "" });
       this.cards.push(card);
     }
-    this.editCard(card);
+    this.editCard(card, "", { all: true });  // empty: its fields to write in
     const key = card.key;
     this.$nextTick(() => {
       const front = document.querySelector(`[data-card="${key}"] textarea.front`);
@@ -110,10 +113,10 @@ const cardsPart = {
   },
 
   // --- Formulas --------------------------------------------------------
-  // A card not edited: its texts only as the card shows them, formulas drawn and gaps marked
-  // (their text: a touch away, editCard)
-  renderedOnly(card) {
-    return !this.isEditing(card);
+  // A text as the card shows it, formulas drawn and gaps marked, unless the card is edited and
+  // this text touched (or all of them asked, ✏️): then as typed, its LaTeX (editCard)
+  renderedOnly(card, field) {
+    return !(this.isEditing(card) && (card._allFields || card._editing === field));
   },
 
   hasMath(text) {
