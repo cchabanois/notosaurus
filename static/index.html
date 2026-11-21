@@ -324,7 +324,7 @@
          x-text="$t(dictationStep('correction') || 'app.mic.busy')"></p>
       <div class="revision-result" x-cloak x-show="revision.summary" x-transition.opacity>
         <div>
-          <strong x-text="revision.summary"></strong>
+          <strong x-html="previewHtml(revision.summary)"></strong>
           <small x-text="revision.stats"></small>
         </div>
         <button class="btn soft" x-show="revision.undo" @click="undoRevision()" x-text="$t('app.revise.undo')"></button>
@@ -599,7 +599,7 @@
               </form>
             </template>
             <div class="card-fixed" x-show="card._fixed && !card._fix">
-              <span x-text="card._fixed?.summary"></span>
+              <span x-html="previewHtml(card._fixed?.summary)"></span>
               <button type="button" class="link-btn" @click="undoFix(card)" x-text="$t('app.fix.undo')"></button>
               <button type="button" class="link-btn" x-show="card._fixed?.quick && !off('ai.careful')" @click="fixCarefully(card)"
                       x-text="$t('app.revise.carefully')"></button>
@@ -609,7 +609,7 @@
               <template x-for="(block, b) in card._explain?.blocks ?? []" :key="b">
                 <p class="explain-block">
                   <strong x-show="block.kind !== 'explain'" x-text="$t('app.explain.kinds.' + block.kind)"></strong>
-                  <span x-text="block.text"></span>
+                  <span x-html="previewHtml(block.text)"></span>
                 </p>
               </template>
               <p class="hint" x-show="card._explain?.loading" x-text="$t('app.explain.thinking')"></p>

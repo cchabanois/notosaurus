@@ -1,6 +1,7 @@
 """Step 3, the cards: made, edited and saved, formulas, made again, corrected and explained by
 the AI, reported."""
 
+import json
 import os
 import re
 import threading
@@ -535,6 +536,55 @@ def test_one_card_corrected_by_the_ai(page):
     sync_api.expect(first.locator(".card-fixed")).to_be_hidden()
     saved = f"fetch('/api/lessons/{summary['id']}').then(r => r.json()).then(l => l.cards[0].back === {before!r})"
     page.wait_for_function(f"() => {saved}")  # the card as it was, saved again
+
+
+def _said_with_a_formula(page, url, field):
+    """The AI's answer at `url` as it came, its `field` (what it says it did) written with a
+    formula, as it writes them: \\( … \\)."""
+
+    said = r"Ajout de l'intégrale \(\int_{1}^{4} f(x)\,\mathrm{d}x\) sur la figure."
+
+    def answer(route):
+        response = route.fetch()
+        kind = response.headers.get("content-type", "")
+        if "ndjson" not in kind:
+            route.fulfill(json={**response.json(), field: said})
+            return
+        items = [json.loads(line) for line in response.text().splitlines() if line.strip()]
+        for item in items:
+            if "result" in item:
+                item["result"][field] = said
+        route.fulfill(body="".join(json.dumps(item) + "\n" for item in items), content_type=kind)
+
+    page.route(url, answer)
+
+
+def _drawn(where):
+    sync_api.expect(where.locator("mjx-container")).to_be_visible()
+    sync_api.expect(where).not_to_contain_text("\\int")  # not its text
+
+
+def test_what_the_ai_says_it_did_shows_its_formulas(page):
+    """What a correction says it did, and an explanation, show their formulas drawn as the
+    cards do, not their LaTeX (seen 2026-11-20: "l'intégrale \\(\\int_{1}^{4} …\\)")."""
+    generate_free(page, FRONT_PROMPT)
+    first = page.locator(".flash").first
+
+    _said_with_a_formula(page, "**/api/lessons/*/fix-card*", "summary")
+    first.get_by_role("button", name="✨ Corriger cette carte").click()
+    field = first.get_by_role("textbox", name="Qu'est-ce qui ne va pas ?")
+    field.fill("la mamá")
+    field.press("Enter")
+    _drawn(first.locator(".card-fixed"))
+
+    _said_with_a_formula(page, "**/api/lessons/*/explain", "text")
+    first.get_by_role("button", name="Expliquer cette carte").click()
+    _drawn(first.locator(".explain-block").first)
+
+    _said_with_a_formula(page, "**/api/lessons/*/revise*", "summary")
+    page.locator(".revise textarea").fill("plus court")
+    page.locator(".revise .btn.primary").click()
+    _drawn(page.locator(".revision-result"))
 
 
 @pytest.mark.parametrize("page", [{"has_touch": True}], indirect=True, ids=["touch"])
