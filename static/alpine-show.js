@@ -6,7 +6,7 @@
 // value; Alpine's timing kept (a menu opened by a click isn't closed by its @click.outside).
 // Read before vendor/alpinejs starts.
 document.addEventListener("alpine:init", () => {
-  const toggle = Element.prototype._x_toggleAndCascadeWithTransitions;
+  const toggle = globalThis.Element?.prototype._x_toggleAndCascadeWithTransitions;
   if (typeof toggle !== "function") return;
   Element.prototype._x_toggleAndCascadeWithTransitions = function (el, value, show, hide) {
     el._x_lastShown = value;
