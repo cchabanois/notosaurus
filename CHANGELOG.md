@@ -9,6 +9,7 @@ Each pull request's entries (the `## Changelog` of its description) are put unde
 
 ### Added
 
+- ＋ in a card open adds one just after it; after the last card, the lesson's end, to add a card or send the lesson to Anki.
 - Maps: places, lines (a wall, a road, a railway, a front) and areas the atlas lacks, given by their coordinates, and symbols on places (ports, industries, silos, dams) with their legend.
 - Figures: icons of a lab's glassware (beaker, volumetric flask, burette, pipette) and of living things (animals, plants, fungi, organs), of a cell's parts (chromosome, bacterium, chloroplast, neuron…) and of history's weapons and ships.
 - Figures: pictograms on a timeline's events and in a scheme's boxes (a factory, a port, a battle, wheat, a microscope, a laptop…), from the free Maki, Temaki and Phosphor icons and a few of our own for history; a word with no icon simply draws none.
@@ -68,6 +69,7 @@ Each pull request's entries (the `## Changelog` of its description) are put unde
 
 ### Changed
 
+- 📋 The cards' list is compact (front, back, a small picture): a card touched opens full screen; « ▶ Relire carte par carte » goes through them from the first.
 - 📝 A card is edited full screen (a window on a computer): ✕ closes it, ‹ › or a swipe go to the previous or next card, and « ✨ Corriger avec l'IA » is always at the bottom.
 - ✏️ Cards show as they will in Anki, formulas and figures drawn. Touch a text to edit it (its LaTeX shown there only), one card at a time; ✓ Done closes it.
 - ✨ "Correct this card" on a phone no longer opens the keyboard: dictate with 🎙️, or touch the field to type.
