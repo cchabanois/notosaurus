@@ -518,6 +518,7 @@
       "add": "+ Kind hinzufügen",
       "save": "Speichern",
       "allLessons": "Die Lektionen aller Kinder",
+      "allShort": "👥 Alle",
       "lessonsOf": "Die Lektionen von {name}",
       "gradeBands": "4|10",
       "examples": {
@@ -565,6 +566,10 @@
       "noLessons": "Noch keine Lektionen in diesem Test.",
       "new": "+ Neuer Test",
       "newShort": "＋ Neuer Test",
+      "folded": {
+        "one": "📝 1 Test vorzubereiten",
+        "other": "📝 {count} Tests vorzubereiten"
+      },
       "addLessons": "＋ Lektionen hinzufügen",
       "addChosen": {
         "one": "{count} Lektion hinzufügen",

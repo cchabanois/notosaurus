@@ -518,6 +518,7 @@
       "add": "+ Add a child",
       "save": "Save",
       "allLessons": "Every child's lessons",
+      "allShort": "👥 All",
       "lessonsOf": "{name}'s lessons",
       "gradeBands": "6|9",
       "examples": {
@@ -565,6 +566,10 @@
       "noLessons": "No lessons in this test yet.",
       "new": "+ New test",
       "newShort": "＋ New test",
+      "folded": {
+        "one": "📝 1 test to prepare",
+        "other": "📝 {count} tests to prepare"
+      },
       "addLessons": "＋ Add lessons",
       "addChosen": {
         "one": "Add {count} lesson",

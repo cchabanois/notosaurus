@@ -518,6 +518,7 @@
       "add": "+ Añadir un hijo",
       "save": "Guardar",
       "allLessons": "Las lecciones de todos los hijos",
+      "allShort": "👥 Todos",
       "lessonsOf": "Las lecciones de {name}",
       "gradeBands": "6|10",
       "examples": {
@@ -565,6 +566,10 @@
       "noLessons": "Todavía no hay lecciones en este examen.",
       "new": "+ Nuevo examen",
       "newShort": "＋ Nuevo examen",
+      "folded": {
+        "one": "📝 1 examen por preparar",
+        "other": "📝 {count} exámenes por preparar"
+      },
       "addLessons": "＋ Añadir lecciones",
       "addChosen": {
         "one": "Añadir {count} lección",

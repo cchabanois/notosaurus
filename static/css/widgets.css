@@ -150,19 +150,6 @@
 }
 
 /* ---- Anki profiles ------------------------------------------------------- */
-.profile-filter {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  justify-content: space-between;
-  gap: .5rem;
-  margin-top: .5rem;
-  padding: .5rem .7rem;
-  border-radius: var(--radius-sm);
-  background: var(--surface-2);
-  font-size: .9rem;
-}
-.profile-filter .switch { font-size: .85rem; }
 .lesson-list .empty { padding: 1rem .5rem; color: var(--muted); }
 .lesson-owner { display: flex; flex-wrap: wrap; align-items: center; gap: .4rem 1rem; margin: -.3rem 0 .7rem; }
 .owner-name { font-size: .88rem; color: var(--muted); }
