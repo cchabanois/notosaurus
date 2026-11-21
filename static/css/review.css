@@ -148,10 +148,11 @@ body:has(.flash.editing) { overflow: hidden; }  /* the list behind it stays wher
 .cards.compact .flash:not(.editing, .peek) .math-preview.shown { display: -webkit-box; -webkit-line-clamp: 2;
   -webkit-box-orient: vertical; overflow: hidden; }
 .cards.compact .flash:not(.editing, .peek) .card-picture { flex: 0 0 auto; margin: 0; }
-.cards.compact .flash:not(.editing, .peek) .card-picture :is(img, .drawing) { width: 56px; height: 56px; min-height: 0; padding: .2rem; }
+.cards.compact .flash:not(.editing, .peek) .card-picture img { width: 120px; height: auto; max-height: 120px; }
+.cards.compact .flash:not(.editing, .peek) .card-picture .drawing { width: 120px; height: 90px; min-height: 0; padding: .2rem; }
 .cards.compact .flash:not(.editing, .peek) .card-picture .drawing .steps > :not(.progress) { display: none; }
 .cards.compact .flash:not(.editing, .peek) .card-picture .drawing .progress { width: 80%; }
-.cards.compact .flash:not(.editing, .peek) .diagram { flex: 0 0 72px; max-width: 72px; pointer-events: none; }
+.cards.compact .flash:not(.editing, .peek) .diagram { flex: 0 0 120px; max-width: 120px; pointer-events: none; }
 .cards.compact .flash:not(.editing, .peek) .card-doubt { flex: 1 0 100%; }
 /* After the last card: the lesson looked over, a card to add or it sent */
 .lesson-end-body { flex: 1 0 100%; display: flex; flex-direction: column; align-items: center; justify-content: center;
