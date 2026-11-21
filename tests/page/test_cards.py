@@ -14,6 +14,7 @@ from page.support import (  # noqa: E402
     CLOZE_PROMPT,
     FRONT_PROMPT,
     SAVED,
+    eventually,
     field,
     generate_free,
     lesson,
@@ -569,8 +570,9 @@ def test_one_card_corrected_by_the_ai(page):
     first.get_by_role("button", name="↩ Annuler").click()
     sync_api.expect(back).to_have_value(before)
     sync_api.expect(first.locator(".card-fixed")).to_be_hidden()
-    saved = f"fetch('/api/lessons/{summary['id']}').then(r => r.json()).then(l => l.cards[0].back === {before!r})"
-    page.wait_for_function(f"() => {saved}")  # the card as it was, saved again
+    eventually(
+        page, lambda: lesson(page, summary["id"])["cards"][0]["back"] == before, "the card as it was, saved again"
+    )
 
 
 def _said_with_a_formula(page, url, field):
@@ -655,12 +657,7 @@ def test_a_card_corrected_then_undone_shows_its_figure_again(page):
 
     assert page.request.get(drawn).ok  # kept until the card is done with
     card.get_by_role("button", name="✓ Terminé").click()
-    for _ in range(50):  # the undone one's: gone (pruned once the card is saved)
-        if page.request.get(drawn).status == 404:
-            break
-        page.wait_for_timeout(100)
-    else:
-        raise AssertionError(f"{drawn} kept")
+    eventually(page, lambda: page.request.get(drawn).status == 404, f"{drawn} kept")  # the undone one's: gone
     assert page.request.get(before).ok  # the card's: kept
 
 
