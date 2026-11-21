@@ -112,6 +112,8 @@
 /* A card not edited: its texts as Anki shows them, no box around them (a touch edits them) */
 .flash:not(.editing) .math-preview.shown { background: transparent; padding: .1rem 0; }
 .flash .choice .math-preview { flex: 1; min-width: 0; margin: 0; }
+/* An empty text of the edited card: its placeholder, touched to write it */
+.flash .math-preview.shown:empty::before { content: attr(data-placeholder); color: var(--muted); font-weight: 400; }
 .flash-body { flex: 1; min-width: 0; }
 .front-row { display: flex; align-items: flex-start; gap: .2rem; }
 .front-row .front { flex: 1; min-width: 0; }

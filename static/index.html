@@ -444,6 +444,7 @@
                 <!-- A formula or gaps: shown as the card shows them; their text only while edited
                      (a click on them), the preview then under it as it's typed -->
                 <div class="math-preview shown" x-show="renderedOnly(card, 'front')" x-html="previewHtml(card.front)"
+                     :data-placeholder="isEditing(card) ? $t('app.review.front') : ''"
                      @click="editCard(card, 'front')" :title="readOnly() ? '' : $t('app.review.editFormula')"></div>
                 <textarea class="front" rows="1" x-model="card.front" :readonly="readOnly()" :placeholder="$t('app.review.front')" :aria-label="$t('app.review.front')"
                           x-show="!renderedOnly(card, 'front')" @focus="card._editing = 'front'" @blur="card._editing = ''"
@@ -457,8 +458,6 @@
                   <button class="icon-btn" x-show="hasAudio() && !hasMath(card.back) && !isCloze(card.front) && !card.choices.length" @click="play(spokenText(card), card.voice || voice)" :aria-label="$t('app.review.listen')">🔊</button>
                   <button class="icon-btn" x-show="isEditing(card) && !card.mask && !isCloze(card.front) && lessonId" @click="togglePicturePanel(card)"
                           :class="{ active: card._panel }" :aria-label="$t('app.pictures.panel')">🖼️</button>
-                  <button class="icon-btn edit-btn" x-show="!readOnly() && !(isEditing(card) && card._allFields)" @click="editCard(card, 'front', { all: true })"
-                          :aria-label="$t('app.review.edit')" :title="$t('app.review.edit')">✏️</button>
                   <div class="card-menu" x-show="canReport() || !readOnly()" @click.outside="card._menu = false" @keydown.escape="card._menu = false">
                     <button class="icon-btn muted" @click="card._menu = !card._menu" :class="{ active: card._menu }"
                             :aria-expanded="Boolean(card._menu)" :aria-label="$t('app.review.more')" :title="$t('app.review.more')">⋯</button>
@@ -473,6 +472,7 @@
               <!-- The back, the info, the wrong options and the "did you know" grow with their text,
                    as the front: a long answer is seen whole -->
               <div class="math-preview back shown" x-show="renderedOnly(card, 'back')" x-html="previewHtml(card.back)"
+                   :data-placeholder="isEditing(card) ? $t('app.review.back') : ''"
                    @click="editCard(card, 'back')" :title="readOnly() ? '' : $t('app.review.editFormula')"></div>
               <textarea class="back" rows="1" x-model="card.back" :readonly="readOnly()" @keydown.enter.prevent
                         :placeholder="isCloze(card.front) ? $t('app.review.extra') : card.choices.length ? $t('app.review.rightChoice') : $t('app.review.back')"
@@ -486,6 +486,7 @@
                   <div class="choice">
                     <span class="wrong" aria-hidden="true">✗</span>
                     <div class="math-preview shown" x-show="renderedOnly(card, 'choice:' + n)" x-html="previewHtml(choice)"
+                         :data-placeholder="isEditing(card) ? $t('app.review.wrongChoice') : ''"
                          @click="editCard(card, 'choice:' + n)" :title="readOnly() ? '' : $t('app.review.editFormula')"></div>
                     <textarea class="grow" rows="1" x-model="card.choices[n]" :readonly="readOnly()" @keydown.enter.prevent x-show="!renderedOnly(card, 'choice:' + n)"
                               @focus="card._editing = 'choice:' + n" @blur="card._editing = ''"
@@ -495,7 +496,8 @@
                             :aria-label="$t('app.review.removeChoice')">✕</button>
                   </div>
                 </template>
-                <button class="link-btn" x-show="isEditing(card)" @click="card.choices.push('')" x-text="$t('app.review.addChoice')"></button>
+                <button class="link-btn" x-show="isEditing(card)" @click="card.choices.push(''); editCard(card, 'choice:' + (card.choices.length - 1))"
+                        x-text="$t('app.review.addChoice')"></button>
               </div>
               <!-- The picture belongs to the answer ("What is a tangent?"): shown under it, as in Anki -->
               <div class="card-picture on-back" :class="{ figure: card.figure }" x-show="card.picture_on_back && (card.picture || card._drawing || ((card.picture_prompt || card.figure) && drawingHere()))">
@@ -540,12 +542,14 @@
               <div class="meta">
                 <!-- Its formulas drawn, as the helps' (its text a click away) -->
                 <div class="math-preview shown info" x-show="renderedOnly(card, 'info')" x-html="previewHtml(card.info)"
+                     :data-placeholder="isEditing(card) ? $t('app.review.info') : ''"
                      @click="editCard(card, 'info')" :title="readOnly() ? '' : $t('app.review.editFormula')"></div>
                 <textarea class="info" rows="1" x-model="card.info" :readonly="readOnly()" @keydown.enter.prevent
                           :placeholder="$t('app.review.info')" :aria-label="$t('app.review.infoLabel')"
                           x-show="!renderedOnly(card, 'info')" @focus="card._editing = 'info'" @blur="card._editing = ''"
                           x-init="watchHeight($el)" x-effect="card.info; fitHeight($el)"></textarea>
-                <span class="subdeck-tag" x-show="renderedOnly(card, 'subdeck') && card.subdeck" x-text="'🗂 ' + card.subdeck"
+                <span class="subdeck-tag" x-show="renderedOnly(card, 'subdeck') && (card.subdeck || isEditing(card))"
+                      x-text="'🗂 ' + (card.subdeck || $t('app.review.subdeck'))"
                       :title="$t('app.review.subdeckLabel') + ' : ' + card.subdeck"
                       @click="editCard(card, 'subdeck')"></span>
                 <input class="subdeck" x-show="!renderedOnly(card, 'subdeck')" @focus="card._editing = 'subdeck'" @blur="card._editing = ''" x-model="card.subdeck" :readonly="readOnly()" :placeholder="$t('app.review.subdeck')"

@@ -10,7 +10,7 @@ sync_api = pytest.importorskip("playwright.sync_api")
 from page.support import (  # noqa: E402
     FRONT_PROMPT,
     SAVED,
-    edit,
+    field,
     generate_free,
     lesson,
     lessons,
@@ -132,7 +132,7 @@ def test_up_to_date_in_anki_until_it_changes(page, anki):
     sync_api.expect(up_to_date).to_be_visible()
     assert len(anki.notes) == notes
 
-    edit(page.locator(".flash").first).locator("textarea").first.fill("la abuela")
+    field(page.locator(".flash").first, "front").fill("la abuela")
     update = page.get_by_role("button", name="🔄 Mettre à jour dans Anki")
     sync_api.expect(update).to_be_visible()
     sync_api.expect(update).to_have_class(re.compile(r"\bprimary\b"))
@@ -292,7 +292,7 @@ def test_the_bottom_bar_is_one_low_row_on_a_narrow_phone(page, anki, lang):
     page.locator(".bar-row button.wide").first.click()
     page.wait_for_function(f"(d => !d.sending && d.ankiUpToDate())({data})")
     fits("up to date", 2)
-    edit(page.locator(".flash").first).locator("textarea").first.fill("cambio")
+    field(page.locator(".flash").first, "front").fill("cambio")
     page.wait_for_function(f"!{data}.ankiUpToDate()")
     fits("to update", 2)
     page.evaluate(f"(d => {{ d.reviewInAnki = true; d.apkg = false; }})({data})")  # the Android app's page

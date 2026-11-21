@@ -14,7 +14,7 @@ from page.support import (  # noqa: E402
     CLOZE_PROMPT,
     FRONT_PROMPT,
     SAVED,
-    edit,
+    field,
     generate_free,
     lesson,
     lessons,
@@ -29,7 +29,7 @@ def test_generate_then_edit_saves_by_itself(page):
     assert lesson(page, summary["id"])["prompt"] == FRONT_PROMPT  # kept with the lesson…
     assert not [p for p in page.request.get("/api/prompts").json() if not p["builtin"]]  # …not saved as a prompt
 
-    edit(page.locator(".flash").first).locator("textarea.back").fill("la mamá")
+    field(page.locator(".flash").first, "back").fill("la mamá")
     sync_api.expect(page.locator(".save-pill")).to_have_class(SAVED)
     assert lesson(page, summary["id"])["cards"][0]["back"] == "la mamá"
 
@@ -59,14 +59,14 @@ def test_long_back_and_info_seen_whole(page):
     """A long answer or note grows its field, as the front: nothing cut on a phone."""
     page.set_viewport_size({"width": 360, "height": 780})
     generate_free(page, FRONT_PROMPT)
-    card = edit(page.locator(".flash").first)
+    card = page.locator(".flash").first
     long = "une réponse longue, avec une précision qui ne tient pas sur une seule ligne d'un téléphone"
-    for field in ("textarea.back", "textarea.info"):
-        box = card.locator(field)
+    for name in ("back", "info"):  # the info empty: touched by its placeholder
+        box = field(card, name)
         one_line = box.bounding_box()["height"]
         box.fill(long)
-        assert box.bounding_box()["height"] > 1.5 * one_line, field  # several lines
-        assert box.evaluate("el => el.scrollHeight <= el.clientHeight + 1"), field  # all of it shown
+        assert box.bounding_box()["height"] > 1.5 * one_line, name  # several lines
+        assert box.evaluate("el => el.scrollHeight <= el.clientHeight + 1"), name  # all of it shown
         box.press("Enter")  # one line of text in Anki: Enter adds no line break
         assert box.input_value() == long
 
@@ -93,8 +93,8 @@ def test_a_card_shown_as_anki_shows_it_until_edited(page):
     sync_api.expect(back).to_be_hidden()
     sync_api.expect(card.locator("textarea")).to_have_count(card.locator("textarea").count())
     assert not [t for t in card.locator("textarea").all() if t.is_visible()]  # no field
-    edit(card)
-    back.fill(r"\(x^2\)")
+    field(card, "back").fill(r"\(x^2\)")
+    sync_api.expect(card.locator("textarea.front")).to_be_hidden()  # only the one touched
     sync_api.expect(card.locator(".math-preview.back:not(.shown) mjx-container")).to_be_visible()  # under it
     card.get_by_role("button", name="✓ Terminé").click()
     shown = card.locator(".math-preview.back.shown")
@@ -133,8 +133,8 @@ def test_a_formula_previewed_as_anki_shows_it(page):
     """The preview draws as Anki's MathJax does: what Anki draws (chemistry, its units, an
     arc), drawn; what it doesn't know (\\R, Anki has only \\mathbb{R}), in red as there."""
     generate_free(page, FRONT_PROMPT)
-    card = edit(page.locator(".flash").first)
-    back = card.locator("textarea.back")
+    card = page.locator(".flash").first
+    back = field(card, "back")
     preview = card.locator(".math-preview.back:not(.shown)")  # under the field, as it's typed
     for formula, unknown in [
         (r"\(\ce{2H2 + O2 -> 2H2O}\)", False),
@@ -239,9 +239,7 @@ def test_fun_facts_as_the_settings_say(page):
     page.goto("/")
     sync_api.expect(page.locator(".switch.fun-facts")).to_have_count(0)
     generate_free(page, FRONT_PROMPT)
-    edit(page.locator(".flash", has=page.locator(".fun-fact:visible")).first)
-    fact = page.locator(".flash .fun-fact textarea").first
-    sync_api.expect(fact).to_be_visible()
+    fact = field(page.locator(".flash", has=page.locator(".fun-fact:visible")).first, "fun_fact")
     assert fact.input_value().startswith("Le savais-tu")
     sync_api.expect(page.locator(".flash .fun-fact:visible")).to_have_count(1)  # the others have none
     # A long one is seen whole, on several lines
@@ -375,7 +373,8 @@ def test_cancel_while_a_card_correction_is_dictated(page):
 
 def test_multiple_choice_wrong_answers_edited(page):
     generate_free(page, "QCM sur la Révolution")
-    first = edit(page.locator(".flash").first)
+    first = page.locator(".flash").first
+    field(first, "back")  # edited: its wrong answers can be added and removed
     sync_api.expect(first.locator(".choice textarea")).to_have_count(3)
     assert first.locator("textarea.back").get_attribute("placeholder") == "Bonne réponse"
     first.get_by_role("button", name="+ mauvaise réponse").click()
@@ -504,19 +503,18 @@ def test_helps_as_tall_as_their_text_never_dragged(page):
     a <br> in Anki), with no handle to drag: a scroll on a phone caught it, the field grew."""
     page.set_viewport_size({"width": 360, "height": 780})
     generate_free(page, FRONT_PROMPT)
-    for field in ("textarea.explanation", "textarea.mnemonic"):
-        with_it = page.locator(".card-help:visible", has=page.locator(field))  # the card that has it
-        box = edit(page.locator(".flash", has=with_it).first).locator(f".card-help {field}")
-        sync_api.expect(box).to_be_visible()
-        assert box.evaluate("el => getComputedStyle(el).resize") == "none", field
+    for name in ("explanation", "mnemonic"):
+        with_it = page.locator(".card-help:visible", has=page.locator(f"textarea.{name}"))  # the card that has it
+        box = field(page.locator(".flash", has=with_it).first, name)
+        assert box.evaluate("el => getComputedStyle(el).resize") == "none", name
         one_line = box.bounding_box()["height"]
         box.fill("Une première ligne")
         box.press("End")
         box.press("Enter")
         box.type("puis une seconde, assez longue pour ne pas tenir sur une ligne d'un téléphone")
-        assert "\n" in box.input_value(), field  # its line break kept
-        assert box.bounding_box()["height"] > 2.5 * one_line, field  # several lines
-        assert box.evaluate("el => el.scrollHeight <= el.clientHeight + 1"), field  # all of it shown
+        assert "\n" in box.input_value(), name  # its line break kept
+        assert box.bounding_box()["height"] > 2.5 * one_line, name  # several lines
+        assert box.evaluate("el => el.scrollHeight <= el.clientHeight + 1"), name  # all of it shown
 
 
 def test_helps_as_the_settings_say(page):

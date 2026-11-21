@@ -42,7 +42,8 @@ const cardsPart = {
 
   // `field`: the text touched, shown as typed (its LaTeX), the cursor in it ("front", "back",
   // "info", "fun_fact", "explanation", "mnemonic", "subdeck", "choice:<n>"); none: the card
-  // edited, its texts still drawn (✨: what is asked of the AI). `all`: every field shown (✏️).
+  // edited, its texts still drawn (✨: what is asked of the AI), its empty ones offered by their
+  // placeholder. `all`: every field shown (a card just added, empty).
   editCard(card, field = "", { all = false } = {}) {
     if (this.readOnly()) return;
     if (this.editing !== card.key) {

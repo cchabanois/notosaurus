@@ -68,9 +68,35 @@ def generate_free(page, prompt: str) -> None:
     page.locator(".flash").first.wait_for()
 
 
+# Where a card's text, as Anki shows it, is touched to edit it
+TOUCHED = {
+    "front": ".front-row .math-preview.shown",
+    "back": ".math-preview.back.shown",
+    "info": ".meta .math-preview.shown",
+    "fun_fact": ".fun-fact .math-preview.shown",
+}
+
+
+def field(card, name: str):
+    """One of a card's texts touched ("front", "back", "info", "fun_fact", "explanation",
+    "mnemonic", "choice:<n>"): the card edited, this text as typed, focused. Its field."""
+    if name.startswith("choice:"):
+        n = int(name.split(":")[1])
+        card.locator(".choice").nth(n).locator(".math-preview.shown").click()
+        box = card.locator(".choice textarea").nth(n)
+    elif name in ("explanation", "mnemonic"):
+        card.locator(".card-help", has=card.page.locator(f"textarea.{name}")).locator(".math-preview.shown").click()
+        box = card.locator(f"textarea.{name}")
+    else:
+        card.locator(TOUCHED[name]).click()
+        box = card.locator(f"textarea.{name}")
+    sync_api.expect(box).to_be_focused()
+    return box
+
+
 def edit(card):
-    """A card edited (✏️): its fields shown; the others as Anki shows them. The card."""
-    card.locator(".edit-btn").click()
+    """A card edited (its front touched); the others as Anki shows them. The card."""
+    field(card, "front")
     sync_api.expect(card).to_have_class(re.compile(r"\bediting\b"))
     return card
 
