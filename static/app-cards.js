@@ -62,21 +62,46 @@ const cardsPart = {
     this.$nextTick(() => document.querySelector(`[data-card="${card.key}"] ${selector}`)?.focus());
   },
 
-  // A finger swiped across the card edited: the next one (to the left) or the previous one. Only
-  // a stroke clearly sideways (a scroll up or down never turns it), not one in a field (where it
-  // selects text) or on a diagram (its frame is dragged)
+  // A finger swiped across the card edited: the card follows it, sideways; let go far enough, it
+  // leaves on that side and the next one (to the left) or the previous one comes in from the
+  // other, else it comes back. Only a stroke sideways (a scroll up or down moves nothing), not
+  // one in a field (where it selects text) or on a diagram (its frame is dragged); past the
+  // first or the last card, it hardly moves.
   touchCard(event) {
-    const t = event.changedTouches[0];
+    const el = event.currentTarget, t = event.changedTouches[0];
     if (event.type === "touchstart") {
       const inField = event.target.closest?.("textarea, input, .diagram");
-      this.cardTouch = event.touches.length === 1 && !inField ? { x: t.clientX, y: t.clientY } : null;
+      this.cardTouch = event.touches.length === 1 && !inField ? { x: t.clientX, y: t.clientY, way: "" } : null;
       return;
     }
-    const start = this.cardTouch;
+    const touch = this.cardTouch;
+    if (!touch) return;
+    const dx = t.clientX - touch.x, dy = t.clientY - touch.y;
+    const i = this.cards.findIndex((c) => c.key === this.editing);
+    const step = dx < 0 ? 1 : -1, next = this.cards[i + step];
+    if (event.type === "touchmove") {
+      if (!touch.way && Math.hypot(dx, dy) > 10) touch.way = Math.abs(dx) > Math.abs(dy) ? "side" : "scroll";
+      if (touch.way !== "side") return;
+      el.style.transition = "none";
+      el.style.transform = `translateX(${next ? dx : dx / 4}px)`;
+      return;
+    }
     this.cardTouch = null;
-    if (!start || event.touches.length) return;
-    const dx = t.clientX - start.x, dy = t.clientY - start.y;
-    if (Math.abs(dx) > 60 && Math.abs(dx) > 2 * Math.abs(dy)) this.moveEditing(dx < 0 ? 1 : -1);
+    const sideways = touch.way ? touch.way === "side" : Math.abs(dx) > 2 * Math.abs(dy);
+    const far = Math.abs(dx) > Math.min(80, el.offsetWidth / 4);
+    if (event.type === "touchend" && !event.touches.length && sideways && far && next) {
+      el.style.transition = "transform .15s ease-in";
+      el.style.transform = `translateX(${-step * 110}%)`;
+      setTimeout(() => {
+        el.style.transition = el.style.transform = "";
+        this.moveEditing(step);
+      }, 150);
+      return;
+    }
+    if (!el.style.transform) return;
+    el.style.transition = "transform .2s ease-out";  // back where it was
+    el.style.transform = "";
+    setTimeout(() => (el.style.transition = ""), 200);
   },
 
   // The edited card left: its correction (and the lesson's) no longer undoable, so the

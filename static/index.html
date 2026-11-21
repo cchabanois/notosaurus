@@ -359,7 +359,8 @@
       <div class="cards">
         <template x-for="card in cards" :key="card.key">
           <article class="flash" :data-card="card.key"
-                   @touchstart.passive="isEditing(card) && touchCard($event)" @touchend.passive="isEditing(card) && touchCard($event)"
+                   @touchstart.passive="isEditing(card) && touchCard($event)" @touchmove.passive="isEditing(card) && touchCard($event)"
+                   @touchend.passive="isEditing(card) && touchCard($event)" @touchcancel.passive="isEditing(card) && touchCard($event)"
                    :class="{ editing: isEditing(card), 'slide-next': isEditing(card) && slide === 1, 'slide-prev': isEditing(card) && slide === -1, changed: card._state, linked: card._linked, 'has-explain': card._explain?.open, 'has-fix': card._fix || card._fixed, 'has-diagram': card.mask, 'has-doubt': card.doubt, 'has-picture': card.picture || card.picture_prompt || card.figure || card._panel }">
             <!-- Edited: the card full screen (a dialog on a wide screen), its ✕ done with it (saved).
                  Escape or Android's back too, unless what is open over it (closed first), or what it

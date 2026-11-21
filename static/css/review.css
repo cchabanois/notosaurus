@@ -123,11 +123,13 @@
 .flash.editing .card-fix { order: 9; position: sticky; bottom: 0; z-index: 3; margin-bottom: .2rem;
   box-shadow: 0 -6px 14px rgb(0 0 0 / .08); }
 body:has(.flash.editing) { overflow: hidden; }  /* the list behind it stays where it was */
-/* Come from ‹ › or a swipe: slides in from that side */
+/* Come from ‹ › or a swipe: slides in from that side. Sideways, the finger moves it (touchCard):
+   up and down, the page's own scroll */
+.flash.editing { touch-action: pan-y pinch-zoom; }
 .flash.editing.slide-next { animation: card-from-right .2s ease-out; }
 .flash.editing.slide-prev { animation: card-from-left .2s ease-out; }
-@keyframes card-from-right { from { opacity: .4; transform: translateX(30%); } }
-@keyframes card-from-left { from { opacity: .4; transform: translateX(-30%); } }
+@keyframes card-from-right { from { transform: translateX(100%); } }
+@keyframes card-from-left { from { transform: translateX(-100%); } }
 @media (prefers-reduced-motion: reduce) { .flash.editing.slide-next, .flash.editing.slide-prev { animation: none; } }
 @media (min-width: 720px) {
   .flash.editing { inset: 4vh 0 auto; width: min(640px, calc(100% - 2rem)); max-height: 92vh; margin: 0 auto;

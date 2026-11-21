@@ -688,42 +688,58 @@ def test_a_card_corrected_on_a_touch_screen_opens_no_keyboard(page):
     sync_api.expect(field).to_be_focused()
 
 
-def _swipe(page, target, dx: float, dy: float = 0) -> None:
-    """One finger drawn across `target` from its middle, by (dx, dy)."""
+def _swipe(target, dx: float, dy: float = 0, *, let_go: bool = True) -> None:
+    """One finger drawn across `target` from its middle, by (dx, dy), in a few moves; let go
+    (or still down: `let_go` False, then _let_go)."""
     target.evaluate(
-        """(el, [dx, dy]) => {
+        """(el, [dx, dy, letGo]) => {
           const r = el.getBoundingClientRect(), x = r.x + r.width / 2, y = r.y + r.height / 2;
-          const at = (x, y) => new Touch({ identifier: 1, target: el, clientX: x, clientY: y });
+          const at = (f) => new Touch({ identifier: 1, target: el, clientX: x + f * dx, clientY: y + f * dy });
           const send = (type, touch, down) => el.dispatchEvent(new TouchEvent(type,
             { bubbles: true, cancelable: true, touches: down ? [touch] : [], changedTouches: [touch] }));
-          send("touchstart", at(x, y), true);
-          send("touchend", at(x + dx, y + dy), false);
+          send("touchstart", at(0), true);
+          for (const f of [0.25, 0.5, 1]) send("touchmove", at(f), true);
+          window._swipeEnd = () => send("touchend", at(1), false);
+          if (letGo) window._swipeEnd();
         }""",
-        [dx, dy],
+        [dx, dy, let_go],
     )
+
+
+def _let_go(page) -> None:
+    page.evaluate("window._swipeEnd()")
 
 
 @pytest.mark.parametrize("page", [{"has_touch": True}], indirect=True, ids=["touch"])
 def test_a_card_open_swiped_to_the_next(page):
-    """The card open full screen, a finger swiped to the left: the next card, this one done with;
-    to the right, the previous one. A stroke up or down (a scroll), or one in a field (selecting
-    its text), turns nothing."""
+    """The card open full screen follows a finger swiped sideways; let go far enough to the
+    left: the next card, this one done with; to the right, the previous one. Not far enough, it
+    comes back. A stroke up or down (a scroll), or one in a field (selecting its text), moves
+    nothing."""
     generate_free(page, FRONT_PROMPT)
     cards = page.locator(".flash")
     first, second = cards.nth(0), cards.nth(1)
     first.get_by_role("button", name="✨ Corriger cette carte").tap()
     sync_api.expect(first).to_have_class(re.compile(r"\bediting\b"))
     front = first.locator(".front-row")
-    _swipe(page, front, -30, -120)  # a scroll
-    _swipe(page, first.get_by_role("textbox", name="Qu'est-ce qui ne va pas ?"), -150)  # in a field
+    moved = "el => el.style.transform"
+    _swipe(front, -30, -120, let_go=False)  # a scroll
+    assert first.evaluate(moved) == ""
+    _let_go(page)
+    _swipe(first.get_by_role("textbox", name="Qu'est-ce qui ne va pas ?"), -150)  # in a field
+    _swipe(front, -40, let_go=False)  # followed…
+    assert first.evaluate(moved) == "translateX(-40px)"
+    _let_go(page)  # …not far enough: back
+    sync_api.expect(first).to_have_attribute("style", re.compile(r"^(?!.*translateX)"))
     sync_api.expect(first).to_have_class(re.compile(r"\bediting\b"))
-    _swipe(page, front, -150)
+    _swipe(front, -150)
     sync_api.expect(second).to_have_class(re.compile(r"\bediting\b"))
-    sync_api.expect(second).to_have_class(re.compile(r"\bslide-next\b"))  # come from the right
+    sync_api.expect(second).to_have_class(re.compile(r"\bslide-next\b"))  # come in from the right
     sync_api.expect(first).not_to_have_class(re.compile(r"\bediting\b"))
-    _swipe(page, second.locator(".front-row"), 150)
+    _swipe(second.locator(".front-row"), 150)
     sync_api.expect(first).to_have_class(re.compile(r"\bediting\b"))
-    _swipe(page, front, 150)  # the first: none before it
+    _swipe(front, 150)  # the first: none before it
+    page.wait_for_timeout(300)
     sync_api.expect(first).to_have_class(re.compile(r"\bediting\b"))
 
 
