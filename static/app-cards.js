@@ -111,13 +111,14 @@ const cardsPart = {
   // A finger swiped across the card edited: the card follows it, sideways, the next one (to the
   // left) or the previous one beside it, moved with it; let go far enough, they go on and the
   // other one is edited, else they come back. Only a stroke sideways (a scroll up or down moves
-  // nothing), not one in a field (where it selects text) or on a diagram (its frame is dragged);
-  // past the first or the last card, it hardly moves.
+  // nothing), from anywhere on the card, a field or a diagram's photo too (a quick stroke selects
+  // no text: that takes a long press), but what a finger drags there (a diagram's mask, its
+  // handles, its frame's corners); past the first or the last card, it hardly moves.
   touchCard(event) {
     const el = event.currentTarget, t = event.changedTouches[0];
     if (event.type === "touchstart") {
-      const inField = event.target.closest?.("textarea, input, .diagram");
-      this.cardTouch = event.touches.length === 1 && !inField ? { x: t.clientX, y: t.clientY, way: "" } : null;
+      const dragged = event.target.closest?.(".diagram :is(.mask.editable, .handle, .crop-handle)");
+      this.cardTouch = event.touches.length === 1 && !dragged ? { x: t.clientX, y: t.clientY, way: "" } : null;
       return;
     }
     const touch = this.cardTouch;
