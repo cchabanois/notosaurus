@@ -167,12 +167,21 @@ body:has(.flash.editing) { overflow: hidden; }  /* the list behind it stays wher
 .cards.compact .flash:not(.editing, .peek) .card-picture .drawing { width: 120px; height: 90px; min-height: 0; padding: .2rem; }
 .cards.compact .flash:not(.editing, .peek) .card-picture .drawing .steps > :not(.progress) { display: none; }
 .cards.compact .flash:not(.editing, .peek) .card-picture .drawing .progress { width: 80%; }
-/* A diagram: only what Anki shows of the photo (its frame), its masks on it, nothing to drag */
-.cards.compact .flash:not(.editing, .peek) .diagram-clip { position: relative; overflow: hidden; width: 100%; max-width: 260px;
-  margin: 0 auto; aspect-ratio: var(--crop-ratio); border-radius: var(--radius-sm); }
-.cards.compact .flash:not(.editing, .peek) .diagram { position: absolute; width: calc(100% / var(--cw)); margin: 0;
+/* A diagram: only what Anki shows of the photo (its frame), its masks on it, nothing to drag, in
+   the list and in the card open; touched there, open full screen (.open), the whole photo, its
+   handles and how to move them */
+.diagram-clip:not(.open) { position: relative; overflow: hidden; width: 100%; max-width: 400px; margin: 0 auto .4rem;
+  aspect-ratio: var(--crop-ratio); border-radius: var(--radius-sm); }
+.cards.compact .flash:not(.editing, .peek) .diagram-clip { max-width: 260px; margin-bottom: 0; }
+.flash.editing .diagram-clip:not(.open) { cursor: pointer; }
+.diagram-clip:not(.open) .diagram { position: absolute; width: calc(100% / var(--cw)); margin: 0;
   left: calc(-100% * var(--cx) / var(--cw)); top: calc(-100% * var(--cy) / var(--ch)); border-radius: 0; pointer-events: none; }
-.cards.compact .flash:not(.editing, .peek) .diagram :is(.crop-frame, .handle) { display: none; }
+.diagram-clip:not(.open) .diagram :is(.crop-frame, .handle) { display: none; }
+.diagram-clip.open { position: fixed; inset: 0; z-index: 35; display: flex; flex-direction: column; gap: .5rem; padding: .6rem .8rem;
+  overflow-y: auto; overscroll-behavior: contain; background: var(--surface); }
+.diagram-clip.open .diagram { flex: none; margin: 0; }
+.diagram-clip.open .hint { margin: 0; }
+.diagram-head { display: flex; align-items: center; justify-content: space-between; gap: .5rem; font-weight: 800; }
 .cards.compact .flash:not(.editing, .peek) .card-doubt { flex: 1 0 100%; }
 /* After the last card: the lesson looked over, a card to add or it sent */
 .lesson-end-body { flex: 1 0 100%; display: flex; flex-direction: column; align-items: center; justify-content: center;

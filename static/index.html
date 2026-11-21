@@ -374,7 +374,7 @@
                  closes on its own (its correction's field, its menu, its picture's panel), is the one
                  the key is for: seen at capture, before any of them closes -->
             <header class="card-sheet-head" x-show="isEditing(card) || peek === card.key"
-                    @keydown.escape.window.capture="isEditing(card) && !viewer.open && !report.open && !asking.open && !hiding.open
+                    @keydown.escape.window.capture="isEditing(card) && diagramOpen === '' && !viewer.open && !report.open && !asking.open && !hiding.open
                       && !$event.target.closest?.('.card-fix, .card-menu, .picture-panel') && doneEditing()">
               <span x-text="$t('app.review.cardOf', { n: cards.indexOf(card) + 1, count: cards.length })"></span>
               <!-- The previous or the next one, this one done with: the lesson looked over card by card -->
@@ -409,11 +409,19 @@
               <input type="checkbox" :checked="examPick?.selected.has(card.id)" @change="togglePick(card)"
                      :aria-label="$t('app.exams.pick.card')">
             </label>
-            <!-- Diagram label: the photo with every label hidden, this card's mask highlighted and movable -->
-            <!-- In the list, only what Anki shows of the photo (its frame), nothing to drag: the
-                 diagram behind a window that size (diagramClip); in the card open, all of it -->
+            <!-- Diagram label: the photo with every label hidden, this card's mask highlighted and movable.
+                 Shown as Anki will, only its frame (the diagram behind a window that size:
+                 diagramClip), nothing to drag; touched in the card open, the whole photo full screen
+                 with its frame's and masks' handles and how to move them, until « Terminé » -->
             <template x-if="card.mask && photoFor(card)">
-              <div class="diagram-clip" :style="diagramClip(card)">
+              <div class="diagram-clip" :class="{ open: diagramOpen === card.key }" :style="diagramClip(card)"
+                   @click="isEditing(card) && diagramOpen !== card.key && (diagramOpen = card.key)">
+                <div class="diagram-head" x-show="diagramOpen === card.key"
+                     @keydown.escape.window.capture="diagramOpen === card.key && !asking.open && (diagramOpen = '')">
+                  <span x-text="$t('app.review.diagramTitle')"></span>
+                  <button type="button" class="btn primary" @click.stop="diagramOpen = ''" x-text="$t('app.review.done')"></button>
+                </div>
+                <p class="hint" x-show="diagramOpen === card.key" x-text="$t('app.review.diagramHint')"></p>
               <div class="diagram">
                 <img :src="photoFor(card)" alt="" draggable="false"
                      x-init="$el.complete && (card._ratio = $el.naturalWidth / $el.naturalHeight)"
@@ -435,7 +443,6 @@
               </div>
               </div>
             </template>
-            <p class="hint diagram-hint" x-show="card.mask && shownEdited(card) && !readOnly()" x-text="$t('app.review.diagramHint')"></p>
             <!-- The lesson looks wrong on this card (a pupil's notes, a copy mistake): the card says
                  what the lesson says; the parent corrects it, or keeps it. Never sent to Anki -->
             <div class="card-doubt" role="note" x-show="card.doubt">

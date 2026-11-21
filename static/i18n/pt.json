@@ -182,6 +182,7 @@
       "owner": "🧒 Lição de <strong>{owner}</strong>",
       "choice": "🤖 {choice}",
       "clozeHint": "Lacunas (omissão de palavras no Anki): {{c1::…}} esconde o que está entre as chaves. Cada número gera um cartão no Anki; o mesmo número esconde várias lacunas juntas.",
+      "diagramTitle": "Esquema",
       "diagramHint": "Esquema: arraste uma máscara vermelha para movê-la e o canto redondo dela para mudar o tamanho, de modo que esconda toda a legenda. O quadro tracejado é o que o Anki mostra da foto: arraste os cantos azuis dele para recortá-la.",
       "diagramWarning": "Com este modelo de IA (Claude), as máscaras às vezes ficam pequenas demais sobre letra manuscrita: confira se escondem toda a legenda.",
       "cropFrame": "O que o Anki mostra da foto",
