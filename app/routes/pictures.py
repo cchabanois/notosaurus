@@ -59,14 +59,14 @@ async def _encoded(answer) -> dict:
 
 async def _edit_card(id: str, card_id: str, change) -> dict:
     """Change one of the lesson's cards (`change` gets the lesson's working copy and the
-    card in it), the pictures no card has any more pruned: the card and the lesson."""
+    card in it): the card and the lesson. The picture it no longer has stays until
+    prune_pictures: the page can undo the card's correction while the card is edited."""
 
     async def edit(draft: Lesson) -> Card:
         card = next((c for c in draft.cards if c.id == card_id), None)
         if card is None:
             raise AppError("card.not_found", 404)
         await change(draft, card)
-        pictures.prune(lessons.existing_folder(id) / "images", draft.cards)
         return card
 
     lesson, card = await lessons.edit(id, edit)
@@ -234,6 +234,16 @@ async def found_picture(id: str, card_id: str, req: FoundPicture) -> dict:
         card.picture = pictures.save(lessons.existing_folder(id) / "images", card, jpeg)
 
     return await _edit_card(id, card_id, use)
+
+
+@router.post("/api/lessons/{id}/pictures/prune")
+async def prune_pictures(id: str) -> dict:
+    """The pictures no card of the saved lesson uses any more removed (drawn again, replaced,
+    removed: kept until then, so that the page can undo a card's correction while it is
+    edited). Asked by the page once no card is edited, and when the lesson opens."""
+    lesson = await access.editable(id)
+    folder = lessons.folder(id)
+    return {"removed": pictures.prune(folder / "images", lesson.cards) if folder else 0}
 
 
 @router.delete("/api/lessons/{id}/cards/{card_id}/picture")

@@ -200,6 +200,7 @@ document.addEventListener("alpine:init", () => {
     report: { open: false, card: null, kind: "card", reason: "", comment: "", sending: false, sent: false, error: "" },
     reportable: false,
     lessonId: null,       // open lesson (null = new lesson, not generated yet)
+    editing: "",          // the key of the one card edited, "" none (app-cards.js)
     saveState: "",       // "", "pending", "saving", "saved", "error"
     lastSaved: "",
     saveTimer: null,

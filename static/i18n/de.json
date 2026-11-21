@@ -193,7 +193,9 @@
         "correct": "Korrigieren",
         "keep": "Lektion beibehalten"
       },
-      "editFormula": "Zum Bearbeiten klicken"
+      "editFormula": "Zum Bearbeiten klicken",
+      "edit": "Bearbeiten",
+      "done": "✓ Fertig"
     },
     "explain": {
       "button": "Diese Karte erklären",

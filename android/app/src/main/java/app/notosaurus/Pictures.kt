@@ -214,13 +214,20 @@ class Pictures(
         put("lesson", saved(lesson.string("id"), cards))
     }
 
-    /** The lesson with these cards, its pictures no card uses any more removed. */
-    private fun saved(lessonId: String, cards: List<JsonObject>): JsonObject {
-        val lesson = lessons.update(lessonId, buildJsonObject { put("cards", JsonArray(cards)) }) ?: notFound()
-        val used = cards.map { it.string("picture") }.toSet()
-        lessons.images(lessonId)?.listFiles { f -> NAME.matches(f.name) && f.name !in used }?.forEach { it.delete() }
-        return lesson
+    /** The lesson with these cards. The pictures no card uses any more stay until prune(): a
+     * card's picture drawn again can still be undone on the page while the card is edited. */
+    private fun saved(lessonId: String, cards: List<JsonObject>): JsonObject =
+        lessons.update(lessonId, buildJsonObject { put("cards", JsonArray(cards)) }) ?: notFound()
+
+    /** The lesson's pictures none of `used` is removed (the page: no card edited any more, or
+     * the lesson just opened; a send: the cards sent). How many. */
+    fun prune(lessonId: String, used: Set<String>): Int {
+        val gone = lessons.images(lessonId)?.listFiles { f -> NAME.matches(f.name) && f.name !in used }.orEmpty()
+        return gone.count { it.delete() }
     }
+
+    /** The saved lesson's pictures no card uses removed. */
+    fun prune(lesson: JsonObject): Int = prune(lesson.string("id"), lesson.cards().map { it.string("picture") }.toSet())
 
     // Not on a sentence with gaps: AnkiDroid shows no picture on it (not paid for, then)
     private fun JsonObject.missingPicture() =

@@ -27,6 +27,7 @@ const revisionPart = {
   async revise({ careful = false } = {}) {
     const instruction = this.revision.text.trim();
     if (!instruction || this.revision.busy || !this.lessonId || this.readOnly()) return;
+    this.doneEditing();  // one correction undoable at a time: the lesson's now
     const quick = (this.quick && !careful) || this.off("ai.careful");
     this.error = "";
     this.revision.busy = true;
@@ -86,6 +87,7 @@ const revisionPart = {
   // Its field focused only with a mouse: on a touch screen, focus opens the keyboard over the
   // card, when the 🎙️ beside it is often simpler; touching the field opens it.
   openFix(card) {
+    this.editCard(card);  // its correction undoable while the card is edited
     card._menu = false;
     card._fix = { text: "", busy: false, blank: this.blankCard(card) };
     if (!matchMedia("(pointer: fine)").matches) return;

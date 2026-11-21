@@ -18,8 +18,11 @@ ihr. Jede Meldung wird gelesen, und so wird Notosaurus am besten verbessert. Sie
 ## Der Stapel und die Karten
 
 - **Stapel**: der Name des Anki-Stapels. `::` erzeugt Unterstapel: `Spanisch::Unidad 3 - En la escuela`.
-- Jede Karte hat eine **Vorderseite** (die Frage) und eine **Rückseite** (die Antwort). Tippe auf
-  einen Text, um ihn zu ändern.
+- Jede Karte hat eine **Vorderseite** (die Frage) und eine **Rückseite** (die Antwort). Die Karten
+  erscheinen wie in Anki, Formeln und Abbildungen gezeichnet. Tippe auf einen Text (oder ✏️), um die
+  Karte zu bearbeiten: Ihre Felder öffnen sich, der Cursor dort, wo du getippt hast. Es wird immer nur
+  eine Karte bearbeitet: **✓ Fertig**, Escape oder eine andere angetippte Karte schließt sie,
+  gespeichert. Das Bild der Karte (🖼️) änderst du, während sie bearbeitet wird.
 - **+ Info** fügt eine Notiz unter der Antwort hinzu: Geschlecht, Plural, ein Beispiel…
 - **Unterstapel** legt die Karte in einen Unterstapel der Lektion („Vokabeln“, „Verben“).
 - **Rückseite anhören** (🔊) spielt sie mit der Stimme der Lektion ab.
@@ -68,7 +71,9 @@ Statt die Karten einzeln zu ändern, bitte in eigenen Worten, im Feld über den 
 
 Tippe auf **Korrigieren**. Die KI sieht die Fotos noch einmal und ändert nur, worum du gebeten
 hast: Geänderte Karten werden als **geändert** markiert, neue als **neu**, und ein Satz fasst
-zusammen, was sie getan hat. **↩ Rückgängig** stellt die Karten wieder her, wie sie waren.
+zusammen, was sie getan hat. **↩ Rückgängig** stellt die Karten wieder her, wie sie waren,
+solange du noch keine Karte bearbeitest. Eine einzeln korrigierte Karte (**✨ Diese Karte korrigieren**)
+lässt sich ebenso rückgängig machen, solange sie offen bleibt; nach **✓ Fertig** bleibt die Korrektur.
 
 Du änderst deine Meinung, während die KI korrigiert (die Lektion oder nur eine Karte)?
 **Abbrechen** stoppt sofort: Die Karten bleiben, wie sie waren.

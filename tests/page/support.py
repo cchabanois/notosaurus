@@ -68,6 +68,13 @@ def generate_free(page, prompt: str) -> None:
     page.locator(".flash").first.wait_for()
 
 
+def edit(card):
+    """A card edited (✏️): its fields shown; the others as Anki shows them. The card."""
+    card.locator(".edit-btn").click()
+    sync_api.expect(card).to_have_class(re.compile(r"\bediting\b"))
+    return card
+
+
 def open_prompt(page) -> None:
     """Step 2 opened, as a parent does once the lesson has cards (folded then)."""
     folded = page.locator(".prompt-folded")

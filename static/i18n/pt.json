@@ -193,7 +193,9 @@
         "correct": "Corrigir",
         "keep": "Manter a lição"
       },
-      "editFormula": "Clique para editar"
+      "editFormula": "Clique para editar",
+      "edit": "Editar",
+      "done": "✓ Concluído"
     },
     "explain": {
       "button": "Explicar este cartão",

@@ -18,8 +18,11 @@ Consulta [Señalar un problema](#señalar-un-problema).
 ## El mazo y las tarjetas
 
 - **Mazo**: el nombre del mazo de Anki. `::` crea submazos: `Inglés::Unit 3 - At school`.
-- Cada tarjeta tiene un **anverso** (la pregunta) y un **reverso** (la respuesta). Toca un texto
-  para cambiarlo.
+- Cada tarjeta tiene un **anverso** (la pregunta) y un **reverso** (la respuesta). Las tarjetas se
+  muestran como en Anki, con las fórmulas y las figuras dibujadas. Toca un texto (o ✏️) para editar
+  la tarjeta: se abren sus campos, con el cursor donde tocaste. Solo se edita una tarjeta a la vez:
+  **✓ Listo**, Escape u otra tarjeta tocada la cierra, guardada. La imagen de la tarjeta (🖼️) se
+  cambia mientras se edita.
 - **+ info** añade una nota mostrada bajo la respuesta: el género, el plural, un ejemplo…
 - **submazo** pone la tarjeta en un submazo de la lección («Vocabulario», «Verbos»).
 - **Escuchar el reverso** (🔊) lo reproduce con la voz de la lección.
@@ -67,7 +70,9 @@ tarjetas:
 
 Toca **Corregir**. La IA vuelve a ver las fotos y solo cambia lo que has pedido: las tarjetas
 cambiadas se marcan como **cambiada**, las nuevas como **nueva**, y una frase resume lo que ha
-hecho. **↩ Deshacer** deja las tarjetas como estaban.
+hecho. **↩ Deshacer** deja las tarjetas como estaban,
+mientras no empieces a editar una tarjeta. Una tarjeta corregida sola (**✨ Corregir esta tarjeta**) se
+deshace igual mientras siga abierta; tras **✓ Listo**, la corrección se queda.
 
 ¿Cambias de opinión mientras la IA corrige (la lección o una sola tarjeta)? **Cancelar** la
 detiene de inmediato: las tarjetas se quedan como estaban.

@@ -641,10 +641,17 @@ async def _from_the_lesson(
             step({"card": card.id, "step": "ready", **card.model_dump(mode="json", include=READY)})
 
 
-def prune(folder: Path, cards: list[Card]) -> None:
-    """Remove the pictures no card uses any more."""
+def prune(folder: Path, cards: list[Card]) -> int:
+    """Remove the pictures no card uses any more (pictures and figures), with the sources a
+    figure was drawn from (keep_sources: named after it): how many pictures."""
     keep = {c.picture for c in cards if c.picture}
+    stems = {Path(name).stem for name in keep}
+    removed = 0
     if folder.is_dir():
-        for path in folder.glob("picture-*.jpg"):
-            if path.name not in keep:
+        for path in folder.iterdir():
+            if NAME.match(path.name) and path.name not in keep:
                 path.unlink(missing_ok=True)
+                removed += 1
+            elif SOURCE_NAME.match(path.name) and re.sub(r"(-\d+)?\.typ$", "", path.name) not in stems:
+                path.unlink(missing_ok=True)
+    return removed

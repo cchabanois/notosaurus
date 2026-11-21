@@ -14,6 +14,7 @@ sync_api = pytest.importorskip("playwright.sync_api")
 
 from page.support import (  # noqa: E402
     FRONT_PROMPT,
+    edit,
     generate_free,
     lesson,
     lessons,
@@ -210,7 +211,7 @@ def test_a_figures_credits_link_its_projects(page, monkeypatch):
         "href", "https://typst.app/universe/package/lilaq"
     )
     page.keyboard.press("Escape")
-    card.get_by_role("button", name="Image").first.click()
+    edit(card).get_by_role("button", name="Image").first.click()
     sync_api.expect(card.locator(".picture-source:visible")).to_contain_text("Typst + lilaq")
 
 
@@ -258,7 +259,7 @@ def test_find_a_free_picture(page):
 
     page.route("**/picture/found", found)
     generate_free(page, FRONT_PROMPT)
-    first = page.locator(".flash").first
+    first = edit(page.locator(".flash").first)
     first.get_by_role("button", name="Image", exact=True).click()
     first.get_by_role("button", name="✨ Image").click()
     picks = first.locator(".found-pick")

@@ -193,7 +193,9 @@
         "correct": "Correggi",
         "keep": "Mantieni la lezione"
       },
-      "editFormula": "Clic per modificare"
+      "editFormula": "Clic per modificare",
+      "edit": "Modifica",
+      "done": "✓ Fatto"
     },
     "explain": {
       "button": "Spiega questa carta",

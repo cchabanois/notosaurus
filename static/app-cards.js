@@ -27,7 +27,59 @@ const cardsPart = {
   },
 
   removeCard(card) {
+    if (this.editing === card.key) this.editing = "";
     this.cards = this.cards.filter((c) => c !== card);
+  },
+
+  // --- One card edited at a time ---------------------------------------
+  // The others shown as Anki will show them (formulas drawn, no fields). A touch on one of its
+  // texts, ✏️ or ✨ edits a card; done with it (✓, Escape, another card edited, the lesson
+  // corrected or sent): saved, its correction no longer undoable, and the pictures no card
+  // uses then removed: a correction's old picture is kept only while it can be undone.
+  isEditing(card) {
+    return !this.readOnly() && this.editing === card.key;
+  },
+
+  // `field`: where the cursor goes ("front", "back", "info", "fun_fact", "explanation",
+  // "mnemonic", "subdeck", "choice:<n>"); none: the card edited, nothing focused
+  editCard(card, field = "") {
+    if (this.readOnly()) return;
+    if (this.editing !== card.key) {
+      this.doneEditing();
+      this.editing = card.key;
+    }
+    if (!field) return;
+    const [name, n] = field.split(":");
+    const selector = name === "choice" ? `.choice:nth-of-type(${Number(n) + 1}) textarea`
+      : name === "subdeck" ? "input.subdeck" : `textarea.${name}`;
+    this.$nextTick(() => document.querySelector(`[data-card="${card.key}"] ${selector}`)?.focus());
+  },
+
+  // The edited card left: its correction (and the lesson's) no longer undoable, so the
+  // pictures they replaced can go
+  doneEditing() {
+    const card = this.cards.find((c) => c.key === this.editing);
+    this.editing = "";
+    if (card) {
+      this.cancelFix(card);
+      card._fixed = null;
+    }
+    this.revision = { ...this.revision, undo: null };
+    this.prunePictures();
+  },
+
+  // The pictures no saved card uses removed (POST …/pictures/prune), once nothing can bring
+  // them back: no card edited, no correction to undo, the lesson saved as shown. Not while
+  // the server draws (a picture it writes is in no card yet): the next time, or the next open.
+  async prunePictures() {
+    if (!this.lessonId || this.readOnly() || this.editing || this.revision.undo) return;
+    if (this.drawingHere() || this.pictureJobs) return;
+    const id = this.lessonId;
+    if (this.saveTimer || this.snapshot() !== this.lastSaved) await this.saveNow();
+    if (this.lessonId !== id || this.editing || this.snapshot() !== this.lastSaved || this.saveState !== "saved") return;
+    try {
+      await api(`/api/lessons/${id}/pictures/prune`, { method: "POST" });
+    } catch {}  // the next time
   },
 
   // The AI's correction of a lesson that looked wrong, taken: the card corrected, the doubt gone
@@ -48,6 +100,7 @@ const cardsPart = {
       card = withKey({ id: newId(), front: "", back: "", subdeck: last?.subdeck ?? "" });
       this.cards.push(card);
     }
+    this.editCard(card);
     const key = card.key;
     this.$nextTick(() => {
       const front = document.querySelector(`[data-card="${key}"] textarea.front`);
@@ -57,17 +110,10 @@ const cardsPart = {
   },
 
   // --- Formulas --------------------------------------------------------
-  // A formula or gaps not being edited: only as the card shows them (their text: a click away)
-  renderedOnly(card, field) {
-    const special = this.hasMath(card[field]) || (field === "front" && this.isCloze(card.front));
-    return special && card._editing !== field;
-  },
-
-  // A click on a formula: its text to edit, the cursor in it
-  editField(card, field, el) {
-    if (this.readOnly()) return;
-    card._editing = field;
-    this.$nextTick(() => el.closest(".flash")?.querySelector(`textarea.${field}`)?.focus());
+  // A card not edited: its texts only as the card shows them, formulas drawn and gaps marked
+  // (their text: a touch away, editCard)
+  renderedOnly(card) {
+    return !this.isEditing(card);
   },
 
   hasMath(text) {

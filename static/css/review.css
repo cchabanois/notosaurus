@@ -107,7 +107,11 @@
   background: var(--surface);
   transition: border-color .15s;
 }
-.flash:focus-within { border-color: var(--primary); }
+.flash:focus-within, .flash.editing { border-color: var(--primary); }
+.flash.editing { box-shadow: 0 0 0 3px var(--primary-soft); }
+/* A card not edited: its texts as Anki shows them, no box around them (a touch edits them) */
+.flash:not(.editing) .math-preview.shown { background: transparent; padding: .1rem 0; }
+.flash .choice .math-preview { flex: 1; min-width: 0; margin: 0; }
 .flash-body { flex: 1; min-width: 0; }
 .front-row { display: flex; align-items: flex-start; gap: .2rem; }
 .front-row .front { flex: 1; min-width: 0; }
@@ -166,7 +170,7 @@
 .flash .card-fix textarea { width: 100%; min-height: 3.2rem; font-size: .92rem; }
 .flash .card-fix .hint { margin: 0; }
 .flash .card-fix-actions { display: flex; justify-content: flex-end; gap: .4rem; }
-.flash .card-fix-open { display: flex; justify-content: flex-end; margin-top: .4rem; }
+.flash .card-fix-open { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: .4rem; margin-top: .4rem; }
 .flash .card-fix-open .btn { min-height: 2.2rem; padding: .3rem .8rem; font-size: .88rem; }
 .flash .card-fixed { flex: 1 0 100%; margin-top: .5rem; display: flex; flex-wrap: wrap; align-items: baseline; gap: .2rem .6rem; font-size: .9rem; color: var(--muted); }
 .flash.has-doubt { flex-wrap: wrap; }  /* the doubt above the card, full width */
@@ -197,7 +201,7 @@
   flex: 1; min-width: 0; min-height: 0; padding: .2rem .35rem; resize: none; overflow: hidden;
   color: var(--muted); font: inherit; line-height: 1.35; field-sizing: content;
 }
-.flash .subdeck {
+.flash .subdeck, .flash .subdeck-tag {
   width: auto;
   flex: 0 1 auto;
   max-width: 45%;
