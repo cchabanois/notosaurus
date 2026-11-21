@@ -145,18 +145,29 @@ body:has(.flash.editing) { overflow: hidden; }  /* the list behind it stays wher
 /* The list, compact: a card's front and back (two lines each), its picture small beside them,
    the rest in the card open (touched anywhere, it opens: app-cards.js openCard) */
 .review-all { display: block; margin: 0 0 .6rem auto; }
-.cards.compact .flash:not(.editing, .peek) { cursor: pointer; gap: .6rem; align-items: flex-start; }
-.cards.compact .flash:not(.editing, .peek) :is(.flash-actions, .choices, .meta, .fun-fact, .card-help, .card-fix-open,
+.cards.compact .flash:not(.editing, .peek) { position: relative; cursor: pointer; flex-wrap: wrap; gap: .3rem .6rem;
+  align-items: flex-start; }
+/* Of its actions, only 🔊 (heard there, the card not opened), at its top right, over the texts' margin */
+.cards.compact .flash:not(.editing, .peek) .flash-actions { position: absolute; top: .3rem; right: .4rem; margin: 0; }
+.cards.compact .flash:not(.editing, .peek) .flash-actions > :not(.listen) { display: none; }
+.cards.compact .flash:not(.editing, .peek) .flash-body { padding-right: 2.2rem; }
+.cards.compact .flash:not(.editing, .peek) :is(.choices, .meta, .fun-fact, .card-help, .card-fix-open,
   .explain, .figure-check-btn, .figure-check) { display: none; }
 .cards.compact .flash:not(.editing, .peek) .flash-body { flex: 1 1 0; }
 .cards.compact .flash:not(.editing, .peek) .math-preview.shown { display: -webkit-box; -webkit-line-clamp: 2;
   -webkit-box-orient: vertical; overflow: hidden; }
-.cards.compact .flash:not(.editing, .peek) .card-picture { flex: 0 0 auto; margin: 0; }
+/* Its picture where Anki shows it, smaller: above the front, or after the back */
+.cards.compact .flash:not(.editing, .peek) .card-picture { flex: 1 0 100%; justify-content: center; margin: 0; }
 .cards.compact .flash:not(.editing, .peek) .card-picture img { width: 120px; height: auto; max-height: 120px; }
 .cards.compact .flash:not(.editing, .peek) .card-picture .drawing { width: 120px; height: 90px; min-height: 0; padding: .2rem; }
 .cards.compact .flash:not(.editing, .peek) .card-picture .drawing .steps > :not(.progress) { display: none; }
 .cards.compact .flash:not(.editing, .peek) .card-picture .drawing .progress { width: 80%; }
-.cards.compact .flash:not(.editing, .peek) .diagram { flex: 0 0 120px; max-width: 120px; pointer-events: none; }
+/* A diagram: only what Anki shows of the photo (its frame), its masks on it, nothing to drag */
+.cards.compact .flash:not(.editing, .peek) .diagram-clip { position: relative; overflow: hidden; width: 100%; max-width: 260px;
+  margin: 0 auto; aspect-ratio: var(--crop-ratio); border-radius: var(--radius-sm); }
+.cards.compact .flash:not(.editing, .peek) .diagram { position: absolute; width: calc(100% / var(--cw)); margin: 0;
+  left: calc(-100% * var(--cx) / var(--cw)); top: calc(-100% * var(--cy) / var(--ch)); border-radius: 0; pointer-events: none; }
+.cards.compact .flash:not(.editing, .peek) .diagram :is(.crop-frame, .handle) { display: none; }
 .cards.compact .flash:not(.editing, .peek) .card-doubt { flex: 1 0 100%; }
 /* After the last card: the lesson looked over, a card to add or it sent */
 .lesson-end-body { flex: 1 0 100%; display: flex; flex-direction: column; align-items: center; justify-content: center;
@@ -170,7 +181,8 @@ body:has(.flash.editing) { overflow: hidden; }  /* the list behind it stays wher
 .flash-body { flex: 1; min-width: 0; }
 .front-row { display: flex; align-items: flex-start; gap: .2rem; }
 .front-row .front { flex: 1; min-width: 0; }
-.flash-actions { display: flex; align-items: center; margin: -.3rem -.2rem 0 0; }
+.flash-actions { display: flex; align-items: center; justify-content: flex-end; flex: 1 0 100%; order: -1; margin: -.3rem -.2rem .1rem 0; }
+.cards .flash:is(.editing, .peek) > .flash-actions { align-self: flex-end; order: 0; margin: 0 -.2rem .2rem 0; }
 .flash-actions .icon-btn { width: 2.1rem; height: 2.1rem; font-size: .95rem; }
 .card-menu { position: relative; }
 .card-menu > .icon-btn { font-size: 1.25rem; font-weight: 800; letter-spacing: -.05em; }

@@ -1064,3 +1064,32 @@ def test_a_web_pages_address_alone_shared_adds_nothing_and_says_what_to_share(pa
     started(page)
     sync_api.expect(page.get_by_text("Ce partage ne contient que l'adresse d'une page web.")).to_be_visible()
     assert page.evaluate("Alpine.$data(document.querySelector('[x-data]')).photos.length") == 0
+
+
+def test_a_diagram_in_the_list_shows_only_its_frame(page):
+    """A diagram's card in the compact list: only what Anki shows of the photo (its frame), its
+    mask on it, nothing to drag; open, the whole photo, its frame's and mask's handles, and how
+    to move them."""
+    page.goto("/")
+    add_photo(page, halves())
+    generate_from_photos(page, "Une carte par mot")
+    page.evaluate("""() => {
+        const app = Alpine.$data(document.querySelector('[x-data]'));
+        app.frames = [{ page: 1, box: [0.1, 0.2, 0.5, 0.4] }];
+        app.cards[0].mask = { page: 1, box: [0.2, 0.25, 0.3, 0.3], n: 1 };
+    }""")
+    card = page.locator(".flash").first
+    clip = card.locator(".diagram-clip")
+    sync_api.expect(card.locator(".diagram .mask.target")).to_be_attached()
+    page.wait_for_function("document.querySelector('.diagram img').complete")
+    # The frame (the mask inside it, with its margin): 0.1..0.5 × 0.2..0.4 of a 600 × 800 photo
+    box = clip.bounding_box()
+    assert box and box["width"] / box["height"] == pytest.approx((0.4 * 600) / (0.2 * 800), rel=0.03)
+    sync_api.expect(card.locator(".crop-handle:visible, .handle:visible, .crop-frame:visible")).to_have_count(0)
+    sync_api.expect(page.get_by_text("faites glisser un masque", exact=False).filter(visible=True)).to_have_count(0)
+
+    open_card(card)
+    sync_api.expect(card.locator(".crop-handle:visible")).to_have_count(4)
+    sync_api.expect(card.locator(".diagram-hint")).to_be_visible()
+    whole = card.locator(".diagram img").bounding_box()
+    assert whole and whole["width"] / whole["height"] == pytest.approx(600 / 800, rel=0.02)
