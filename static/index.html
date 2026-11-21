@@ -351,7 +351,6 @@
       </div>
 
       <div class="diagram-hints" x-show="hasMasks()">
-        <p class="hint" x-show="!readOnly()" x-text="$t('app.review.diagramHint')"></p>
         <p class="hint warn" x-show="diagramWarning" x-text="$t('app.review.diagramWarning')"></p>
       </div>
 
@@ -365,7 +364,7 @@
       <div class="cards" :class="{ compact: !readOnly() }">
         <template x-for="card in cards" :key="card.key">
           <article class="flash" :data-card="card.key"
-                   @click.capture="if (!shownEdited(card) && !readOnly() && !$event.target.closest('.card-doubt .btn, .pick')) {
+                   @click.capture="if (!shownEdited(card) && !readOnly() && !$event.target.closest('.card-doubt .btn, .pick, .listen')) {
                      $event.stopPropagation(); $event.preventDefault(); examPick ? togglePick(card) : openCard(card) }"
                    @touchstart.passive="isEditing(card) && touchCard($event)" @touchmove.passive="isEditing(card) && touchCard($event)"
                    @touchend.passive="isEditing(card) && touchCard($event)" @touchcancel.passive="isEditing(card) && touchCard($event)"
@@ -387,15 +386,38 @@
                       :aria-label="$t('app.review.addAfter')" :title="$t('app.review.addAfter')">＋</button>
               <button type="button" class="icon-btn stops-dictation" @click="doneEditing()" :aria-label="$t('app.review.done')" :title="$t('app.review.done')">✕</button>
             </header>
+            <!-- What can be done with the card (explained, heard, its picture, ⋯): at its top right,
+                 its texts below the whole width -->
+            <div class="flash-actions">
+              <button class="icon-btn" x-show="lessonId && card.front.trim() && (card.back.trim() || isCloze(card.front))"
+                      @click="explain(card)" :class="{ active: card._explain?.open }" :aria-label="$t('app.explain.button')"
+                      :title="$t('app.explain.button')">💬</button>
+              <button class="icon-btn listen" x-show="hasAudio() && !hasMath(card.back) && !isCloze(card.front) && !card.choices.length" @click="play(spokenText(card), card.voice || voice)" :aria-label="$t('app.review.listen')">🔊</button>
+              <button class="icon-btn" x-show="shownEdited(card) && !card.mask && !isCloze(card.front) && lessonId" @click="togglePicturePanel(card)"
+                      :class="{ active: card._panel }" :aria-label="$t('app.pictures.panel')">🖼️</button>
+              <div class="card-menu" x-show="canReport() || !readOnly()" @click.outside="card._menu = false" @keydown.escape="card._menu = false">
+                <button class="icon-btn muted" @click="card._menu = !card._menu" :class="{ active: card._menu }"
+                        :aria-expanded="Boolean(card._menu)" :aria-label="$t('app.review.more')" :title="$t('app.review.more')">⋯</button>
+                <div class="card-menu-items" x-show="card._menu">
+                  <button type="button" x-show="canReport()" @click="card._menu = false; openReport(card)">⚑ <span x-text="$t('app.report.button')"></span></button>
+                  <button type="button" class="danger" x-show="!readOnly()" @click="card._menu = false; removeCard(card)">✕ <span x-text="$t('app.review.removeCard')"></span></button>
+                </div>
+              </div>
+            </div>
             <!-- Choosing the cards of a test (app-exams.js): one tick per card -->
             <label class="pick" x-cloak x-show="examPick">
               <input type="checkbox" :checked="examPick?.selected.has(card.id)" @change="togglePick(card)"
                      :aria-label="$t('app.exams.pick.card')">
             </label>
             <!-- Diagram label: the photo with every label hidden, this card's mask highlighted and movable -->
+            <!-- In the list, only what Anki shows of the photo (its frame), nothing to drag: the
+                 diagram behind a window that size (diagramClip); in the card open, all of it -->
             <template x-if="card.mask && photoFor(card)">
+              <div class="diagram-clip" :style="diagramClip(card)">
               <div class="diagram">
-                <img :src="photoFor(card)" alt="" draggable="false">
+                <img :src="photoFor(card)" alt="" draggable="false"
+                     x-init="$el.complete && (card._ratio = $el.naturalWidth / $el.naturalHeight)"
+                     @load="card._ratio = $el.naturalWidth / $el.naturalHeight">
                 <div class="crop-frame" :style="maskStyle(cropFor(card))" :title="$t('app.review.cropFrame')">
                   <template x-for="corner in ['nw', 'ne', 'sw', 'se']" :key="corner">
                     <i class="crop-handle" :class="corner" x-show="!readOnly()"
@@ -411,7 +433,9 @@
                   </div>
                 </template>
               </div>
+              </div>
             </template>
+            <p class="hint diagram-hint" x-show="card.mask && shownEdited(card) && !readOnly()" x-text="$t('app.review.diagramHint')"></p>
             <!-- The lesson looks wrong on this card (a pupil's notes, a copy mistake): the card says
                  what the lesson says; the parent corrects it, or keeps it. Never sent to Anki -->
             <div class="card-doubt" role="note" x-show="card.doubt">
@@ -477,22 +501,6 @@
                           x-init="watchHeight($el)" x-effect="card.front; card._editing; fitHeight($el)"></textarea>
                 <!-- On the front's line, not a column beside the card (it made every card as tall as
                      its buttons); the rare ones (report, delete) behind ⋯ -->
-                <div class="flash-actions">
-                  <button class="icon-btn" x-show="lessonId && card.front.trim() && (card.back.trim() || isCloze(card.front))"
-                          @click="explain(card)" :class="{ active: card._explain?.open }" :aria-label="$t('app.explain.button')"
-                          :title="$t('app.explain.button')">💬</button>
-                  <button class="icon-btn" x-show="hasAudio() && !hasMath(card.back) && !isCloze(card.front) && !card.choices.length" @click="play(spokenText(card), card.voice || voice)" :aria-label="$t('app.review.listen')">🔊</button>
-                  <button class="icon-btn" x-show="shownEdited(card) && !card.mask && !isCloze(card.front) && lessonId" @click="togglePicturePanel(card)"
-                          :class="{ active: card._panel }" :aria-label="$t('app.pictures.panel')">🖼️</button>
-                  <div class="card-menu" x-show="canReport() || !readOnly()" @click.outside="card._menu = false" @keydown.escape="card._menu = false">
-                    <button class="icon-btn muted" @click="card._menu = !card._menu" :class="{ active: card._menu }"
-                            :aria-expanded="Boolean(card._menu)" :aria-label="$t('app.review.more')" :title="$t('app.review.more')">⋯</button>
-                    <div class="card-menu-items" x-show="card._menu">
-                      <button type="button" x-show="canReport()" @click="card._menu = false; openReport(card)">⚑ <span x-text="$t('app.report.button')"></span></button>
-                      <button type="button" class="danger" x-show="!readOnly()" @click="card._menu = false; removeCard(card)">✕ <span x-text="$t('app.review.removeCard')"></span></button>
-                    </div>
-                  </div>
-                </div>
               </div>
               <div class="math-preview" x-show="!renderedOnly(card, 'front') && (hasMath(card.front) || isCloze(card.front))" x-html="previewHtml(card.front)"></div>
               <!-- The back, the info, the wrong options and the "did you know" grow with their text,

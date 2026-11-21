@@ -31,7 +31,8 @@
 .prompt-folded-text { margin: .25rem 0 0; font-size: .9rem; color: var(--muted); white-space: pre-line;
   display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; line-clamp: 2; overflow: hidden; }
 .flash.has-diagram { flex-wrap: wrap; }
-.diagram { position: relative; flex: 1 0 100%; margin-bottom: .6rem; border-radius: var(--radius-sm); overflow: hidden; user-select: none; }
+.diagram-clip { flex: 1 0 100%; }  /* the diagram's place in the card */
+.diagram { position: relative; margin-bottom: .6rem; border-radius: var(--radius-sm); overflow: hidden; user-select: none; }
 .diagram img { display: block; width: 100%; height: auto; pointer-events: none; }
 .diagram .mask {
   position: absolute; display: flex; align-items: center; justify-content: center; overflow: hidden;
@@ -185,6 +186,9 @@
 
 /* A figure (SVG drawn by the AI): white like a textbook figure, in light and dark mode */
 .card-picture.figure img { background: #fff; width: min(100%, 400px); height: auto; }
+/* The card open: a picture as wide as a figure (the 160 px square was the list's), its own
+   proportions, never more than half the screen's height */
+.flash:is(.editing, .peek) .card-picture:not(.figure) img { width: min(100%, 400px); height: auto; max-height: 50vh; }
 .card-picture.on-back { margin-top: .5rem; }
 
 /* The logo: drawn on white, so shown on a white card (readable in dark mode too) */

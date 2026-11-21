@@ -278,3 +278,19 @@ def test_find_a_free_picture(page):
         first.screenshot(path=f"{shots}/found.png")
     picks.nth(1).click()
     sync_api.expect(picks).to_have_count(0)  # chosen: the grid goes
+
+
+def test_a_picture_shown_large_in_the_card_open(page):
+    """A card's picture (a photo, not a figure), in the card open: as wide as the card allows
+    (up to 400 px), in its own proportions, not the list's 160 px square."""
+    photo = plain_image(800, 500, "teal", "JPEG")
+    page.route("**/picture-x.jpg", lambda route: route.fulfill(body=photo, content_type="image/jpeg"))
+    page.set_viewport_size({"width": 360, "height": 780})
+    generate_free(page, FRONT_PROMPT)
+    page.evaluate("Alpine.$data(document.querySelector('[x-data]')).cards[0].picture = 'picture-x.jpg'")
+    card = open_card(page.locator(".flash").first)
+    img = card.locator(".card-picture:not(.figure) img:visible")
+    sync_api.expect(img).to_be_visible()
+    page.wait_for_function("img => img.complete && img.naturalWidth > 0", arg=img.element_handle())
+    box = img.bounding_box()
+    assert box and box["width"] > 250 and box["width"] / box["height"] == pytest.approx(800 / 500, rel=0.03)

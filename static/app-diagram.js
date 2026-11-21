@@ -34,6 +34,14 @@ const diagramPart = {
     };
   },
 
+  // What the compact list shows of the card's photo (its frame, as Anki): CSS variables placing
+  // the whole diagram behind a window of that part's size (`_ratio`: the photo's, once loaded)
+  diagramClip(card) {
+    const [x0, y0, x1, y1] = this.cropFor(card).box;
+    const w = x1 - x0 || 1, h = y1 - y0 || 1;
+    return `--cx: ${x0}; --cy: ${y0}; --cw: ${w}; --ch: ${h}; --crop-ratio: ${(w * (card._ratio || 1)) / h}`;
+  },
+
   // Drag a corner of the frame ("nw", "ne", "sw", "se"). It starts from what is shown,
   // and can't go inside the masks: the crop stretches back to hold them.
   startCrop(event, card, corner) {

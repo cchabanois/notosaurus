@@ -833,12 +833,19 @@ def test_the_list_compact_a_card_touched_opens(page):
     generate_free(page, FRONT_PROMPT)
     first = page.locator(".flash").first
     sync_api.expect(first.get_by_role("button", name="Plus d'actions")).to_be_hidden()
+    sync_api.expect(first.locator(".flash-actions button:visible")).to_have_count(1)  # 🔊 alone…
+    first.locator(".flash-actions .listen").click()  # …heard there, the card not opened
+    sync_api.expect(first).not_to_have_class(re.compile(r"\bediting\b"))
     sync_api.expect(first.locator(".card-help:visible")).to_have_count(0)
     sync_api.expect(first.get_by_role("textbox", name="Qu'est-ce qui ne va pas ?")).to_have_count(0)
     first.locator(".math-preview.back.shown").click()  # its back: the card open, not its back edited
     sync_api.expect(first).to_have_class(re.compile(r"\bediting\b"))
     sync_api.expect(first.locator("textarea.back")).to_be_hidden()
-    sync_api.expect(first.get_by_role("button", name="Plus d'actions")).to_be_visible()
+    more = first.get_by_role("button", name="Plus d'actions")
+    sync_api.expect(more).to_be_visible()
+    # Its actions at its top right, its front below them the whole width
+    m, front, card = more.bounding_box(), first.locator(".front-row").bounding_box(), first.bounding_box()
+    assert m and front and card and m["y"] + m["height"] <= front["y"] and m["x"] + m["width"] > card["width"] - 30
     sync_api.expect(first.locator(".card-help:visible").first).to_be_visible()
     sync_api.expect(first.get_by_role("textbox", name="Qu'est-ce qui ne va pas ?")).to_be_visible()
     page.keyboard.press("Escape")
@@ -891,3 +898,20 @@ def test_the_correction_field_at_the_bottom_out_of_the_way_while_typing(page):
     sync_api.expect(fix).to_be_hidden()
     card.locator(".card-sheet-head span").click()  # the text left
     sync_api.expect(fix).to_be_visible()
+
+
+def test_the_list_shows_a_picture_where_anki_does(page):
+    """In the compact list, a card's picture where Anki shows it: above its front (not beside
+    its texts), or after its back."""
+    page.set_viewport_size({"width": 360, "height": 780})
+    generate_free(page, "Le triangle rectangle (géométrie)")
+    sync_api.expect(page.locator(".flash .drawing:visible")).to_have_count(0)  # every one drawn
+    page.wait_for_function("[...document.querySelectorAll('.flash .card-picture img')].every((i) => i.complete)")
+    first = page.locator(".flash").first
+    pic = first.locator(".card-picture img:visible").bounding_box()
+    front = first.locator(".front-row").bounding_box()
+    assert pic and front and pic["y"] + pic["height"] / 2 < front["y"]  # above it (not beside)
+    tangent = page.locator(".flash", has_text="tangente")
+    pic = tangent.locator(".card-picture.on-back img:visible").bounding_box()
+    back = tangent.locator(".math-preview.back.shown").bounding_box()
+    assert back and pic and pic["y"] + pic["height"] / 2 > back["y"] + back["height"]  # after it

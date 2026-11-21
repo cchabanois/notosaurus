@@ -69,6 +69,7 @@ Each pull request's entries (the `## Changelog` of its description) are put unde
 
 ### Changed
 
+- 🖼️ A card open has its actions at its top right; in the list, only 🔊 is shown, a picture is above the question or after the answer, as in Anki, and a diagram shows only what Anki will show of the photo.
 - 📋 The cards' list is compact (front, back, a small picture): a card touched opens full screen; « ▶ Relire carte par carte » goes through them from the first.
 - 📝 A card is edited full screen (a window on a computer): ✕ closes it, ‹ › or a swipe go to the previous or next card, and « ✨ Corriger avec l'IA » is always at the bottom.
 - ✏️ Cards show as they will in Anki, formulas and figures drawn. Touch a text to edit it (its LaTeX shown there only), one card at a time; ✓ Done closes it.
@@ -101,6 +102,7 @@ Each pull request's entries (the `## Changelog` of its description) are put unde
 
 ### Fixed
 
+- 🖼️ A card's photo is shown large in the card open, no longer a small square.
 - A button of the page could stay shown when it no longer applied (📤 with Anki out of reach): what the page shows now always follows its last state.
 - A card's text touched on a busy phone could open its field without the cursor in it (no keyboard): the field is focused once shown.
 - 🖼️ Undoing a card's correction that redrew its figure no longer leaves a broken picture.
