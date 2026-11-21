@@ -121,7 +121,7 @@
   border-bottom: 1px solid var(--border); color: var(--muted); font-size: .85rem; font-weight: 700; }
 .flash:is(.editing, .peek) .card-sheet-head .icon-btn { width: 2.5rem; height: 2.5rem; font-size: 1.1rem; }
 .flash:is(.editing, .peek) .card-sheet-head .nav { margin-left: auto; }  /* ‹ › ✕ together, on the right */
-.flash.editing .card-fix { order: 9; position: sticky; bottom: 0; z-index: 3; margin-bottom: .2rem;
+.flash:is(.editing, .peek) .card-fix { order: 9; position: sticky; bottom: 0; z-index: 3; margin-bottom: .2rem;
   box-shadow: 0 -6px 14px rgb(0 0 0 / .08); }
 body:has(.flash.editing) { overflow: hidden; }  /* the list behind it stays where it was */
 /* Come from ‹ › or a swipe: slides in from that side. Sideways, the finger moves it (touchCard):
@@ -139,7 +139,7 @@ body:has(.flash.editing) { overflow: hidden; }  /* the list behind it stays wher
   .flash.editing { box-shadow: 0 0 0 100vmax rgb(10 12 20 / .4); }
 }
 /* A card not edited: its texts as Anki shows them, no box around them (a touch edits them) */
-.flash:not(.editing) .math-preview.shown { background: transparent; padding: .1rem 0; }
+.flash:not(.editing, .peek) .math-preview.shown { background: transparent; padding: .1rem 0; }
 .flash .choice .math-preview { flex: 1; min-width: 0; margin: 0; }
 /* An empty text of the edited card: its placeholder, touched to write it */
 .flash .math-preview.shown:empty::before { content: attr(data-placeholder); color: var(--muted); font-weight: 400; }

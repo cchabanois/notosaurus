@@ -41,6 +41,21 @@ const cardsPart = {
     return !this.readOnly() && this.editing === card.key;
   },
 
+  // Shown as when edited: the card edited, or the one beside it while a finger drags it (its
+  // placeholders, its correction's field), so that it looks the same once it is
+  shownEdited(card) {
+    return this.isEditing(card) || this.peek === card.key;
+  },
+
+  // The card beside the edited one, while a finger drags it (none: null): its correction's field
+  // there as it will be; the one it was before, not edited, without it again
+  setPeek(card) {
+    const old = this.cards.find((c) => c.key === this.peek);
+    if (old && old !== card && !this.isEditing(old)) old._fix = null;
+    this.peek = card?.key ?? "";
+    if (card && this.lessonId) card._fix ??= this.newFix(card);
+  },
+
   // `field`: the text touched, shown as typed (its LaTeX), the cursor in it ("front", "back",
   // "info", "fun_fact", "explanation", "mnemonic", "subdeck", "choice:<n>"); none: the card
   // edited, its texts still drawn (✨: what is asked of the AI), its empty ones offered by their
@@ -88,7 +103,7 @@ const cardsPart = {
       if (touch.way !== "side") return;
       if (this.peek !== (next?.key ?? "")) {  // the one beside it: on the side the finger goes
         place(beside(), "");
-        this.peek = next?.key ?? "";
+        this.setPeek(next);
       }
       place(el, `translateX(${next ? dx : dx / 4}px)`);
       place(beside(), `translateX(calc(${dx}px + ${step * 100}%))`);
@@ -98,7 +113,7 @@ const cardsPart = {
     const sideways = touch.way ? touch.way === "side" : Math.abs(dx) > 2 * Math.abs(dy);
     const far = Math.abs(dx) > Math.min(80, el.offsetWidth / 4);
     if (event.type === "touchend" && !event.touches.length && sideways && far && next) {
-      if (this.peek !== next.key) this.peek = next.key;  // let go without a move seen: there all the same
+      if (this.peek !== next.key) this.setPeek(next);  // let go without a move seen: there all the same
       this.$nextTick(() => {
         place(el, `translateX(${-step * 100}%)`, "transform .15s ease-out");
         place(beside(), "translateX(0)", "transform .15s ease-out");
@@ -106,8 +121,8 @@ const cardsPart = {
       setTimeout(() => {
         place(el, "", "");
         place(beside(), "", "");
-        this.peek = "";
         this.moveEditing(step, { slide: false });  // already in its place
+        this.setPeek(null);
       }, 170);
       return;
     }
@@ -116,7 +131,7 @@ const cardsPart = {
     setTimeout(() => {
       place(el, "", "");
       place(beside(), "", "");
-      this.peek = "";
+      this.setPeek(null);
     }, 200);
   },
 

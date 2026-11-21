@@ -730,11 +730,15 @@ def test_a_card_open_swiped_to_the_next(page):
     _swipe(front, -40, let_go=False)  # followed, the next one beside it…
     assert first.evaluate(moved) == "translateX(-40px)"
     sync_api.expect(second).to_have_class(re.compile(r"\bpeek\b"))
+    # …shown as it will be once edited: its correction's field, its empty texts offered
+    sync_api.expect(second.get_by_role("textbox", name="Qu'est-ce qui ne va pas ?")).to_be_visible()
+    sync_api.expect(second.locator(".card-sheet-head")).to_contain_text("Carte 2 / ")
     a, b = first.bounding_box(), second.bounding_box()
     assert a and b and b["x"] == pytest.approx(a["x"] + a["width"], abs=1) and b["y"] == a["y"]
     _let_go(page)  # …not far enough: back
     sync_api.expect(first).to_have_attribute("style", re.compile(r"^(?!.*translateX)"))
     sync_api.expect(second).not_to_have_class(re.compile(r"\bpeek\b"))
+    sync_api.expect(second.locator(".card-fix")).to_have_count(0)  # not edited: without it again
     sync_api.expect(first).to_have_class(re.compile(r"\bediting\b"))
     _swipe(front, -150)
     sync_api.expect(second).to_have_class(re.compile(r"\bediting\b"))
