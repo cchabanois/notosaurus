@@ -162,8 +162,12 @@ body:has(.flash.editing) { overflow: hidden; }  /* the list behind it stays wher
 .cards.compact .flash:not(.editing, .peek) .card-picture .drawing { width: 120px; height: 90px; min-height: 0; padding: .2rem; }
 .cards.compact .flash:not(.editing, .peek) .card-picture .drawing .steps > :not(.progress) { display: none; }
 .cards.compact .flash:not(.editing, .peek) .card-picture .drawing .progress { width: 80%; }
-.cards.compact .flash:not(.editing, .peek) .diagram { flex: 0 0 160px; max-width: 160px; margin: 0 calc(50% - 80px);
-  pointer-events: none; }
+/* A diagram: only what Anki shows of the photo (its frame), its masks on it, nothing to drag */
+.cards.compact .flash:not(.editing, .peek) .diagram-clip { position: relative; overflow: hidden; width: 100%; max-width: 260px;
+  margin: 0 auto; aspect-ratio: var(--crop-ratio); border-radius: var(--radius-sm); }
+.cards.compact .flash:not(.editing, .peek) .diagram { position: absolute; width: calc(100% / var(--cw)); margin: 0;
+  left: calc(-100% * var(--cx) / var(--cw)); top: calc(-100% * var(--cy) / var(--ch)); border-radius: 0; pointer-events: none; }
+.cards.compact .flash:not(.editing, .peek) .diagram :is(.crop-frame, .handle) { display: none; }
 .cards.compact .flash:not(.editing, .peek) .card-doubt { flex: 1 0 100%; }
 /* After the last card: the lesson looked over, a card to add or it sent */
 .lesson-end-body { flex: 1 0 100%; display: flex; flex-direction: column; align-items: center; justify-content: center;

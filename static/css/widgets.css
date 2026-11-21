@@ -31,7 +31,8 @@
 .prompt-folded-text { margin: .25rem 0 0; font-size: .9rem; color: var(--muted); white-space: pre-line;
   display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; line-clamp: 2; overflow: hidden; }
 .flash.has-diagram { flex-wrap: wrap; }
-.diagram { position: relative; flex: 1 0 100%; margin-bottom: .6rem; border-radius: var(--radius-sm); overflow: hidden; user-select: none; }
+.diagram-clip { flex: 1 0 100%; }  /* the diagram's place in the card */
+.diagram { position: relative; margin-bottom: .6rem; border-radius: var(--radius-sm); overflow: hidden; user-select: none; }
 .diagram img { display: block; width: 100%; height: auto; pointer-events: none; }
 .diagram .mask {
   position: absolute; display: flex; align-items: center; justify-content: center; overflow: hidden;
