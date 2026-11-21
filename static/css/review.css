@@ -125,8 +125,13 @@
    same place), held there as a long one scrolls */
 .cards .flash:is(.editing, .peek) { flex-direction: column; flex-wrap: nowrap; }  /* over .has-picture… (wrap) */
 .cards .flash:is(.editing, .peek) > * { flex: 0 0 auto; }
-.flash:is(.editing, .peek) .card-fix { flex: none; order: 9; position: sticky; bottom: 0; z-index: 3; margin: auto 0 .2rem;
-  box-shadow: 0 -6px 14px rgb(0 0 0 / .08); }
+/* Light: no box of its own, the sheet's background a little see-through and blurred (what
+   scrolls under it guessed, never read), down to the screen's bottom (the card's bottom padding
+   its own: nothing seen below it), a line above it */
+.flash:is(.editing, .peek) { padding-bottom: 0; }
+.flash:is(.editing, .peek) .card-fix { flex: none; order: 9; position: sticky; bottom: 0; z-index: 3; margin: auto -.6rem 0 -.85rem;
+  padding: .5rem .6rem .6rem .85rem; border-radius: 0; border-top: 1px solid var(--border);
+  background: color-mix(in srgb, var(--surface) 70%, transparent); -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px); }
 body:has(.flash.editing) { overflow: hidden; }  /* the list behind it stays where it was */
 /* Come from ‹ › or a swipe: slides in from that side. Sideways, the finger moves it (touchCard):
    up and down, the page's own scroll */
@@ -236,10 +241,12 @@ body:has(.flash.editing) { overflow: hidden; }  /* the list behind it stays wher
 .flash .card-fix { flex: 1 0 100%; margin-top: .6rem; padding: .6rem .7rem; border-radius: var(--radius-sm); background: var(--surface-2); display: grid; gap: .4rem; }
 .flash .card-fix textarea { width: 100%; min-height: 3.2rem; font-size: .92rem; }
 .flash .card-fix .hint { margin: 0; }
-.flash .card-fix-actions { display: flex; flex-wrap: wrap; justify-content: flex-end; align-items: center; gap: .4rem; }
+.flash .card-fix-row { display: flex; align-items: flex-end; gap: .4rem; }
+.flash .card-fix-row .dictated { flex: 1; min-width: 0; }
+.flash .card-fix-row .btn { flex: none; min-height: 2.6rem; }
 .flash .card-fix-open { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: .4rem; margin-top: .4rem; }
 .flash .card-fix-open .btn { min-height: 2.2rem; padding: .3rem .8rem; font-size: .88rem; }
-.flash .card-fixed { flex: 1 1 12rem; margin-right: auto; display: flex; flex-wrap: wrap; align-items: baseline; gap: .2rem .6rem; font-size: .9rem; color: var(--muted); }
+.flash .card-fixed { display: flex; flex-wrap: wrap; align-items: baseline; gap: .2rem .6rem; font-size: .9rem; color: var(--muted); }
 .flash.has-doubt { flex-wrap: wrap; }  /* the doubt above the card, full width */
 .card-doubt { flex: 1 0 100%; display: grid; gap: .3rem; margin: 0 0 .4rem; padding: .6rem .8rem; border-radius: var(--radius-sm);
   background: var(--danger-soft); border-left: 3px solid var(--danger); }

@@ -633,29 +633,32 @@
                    empty (the AI to write it) or a correction under way -->
               <form class="card-fix" @submit.prevent="fixCard(card)" @keydown.escape="card._fix.busy ? cancelFix(card) : doneEditing()"
                     x-show="card._fix.busy || card._fix.blank || !card._editing">
-                <div class="dictated" :class="{ 'with-mic': micOn() }">
-                  <textarea :data-dictated="'card:' + card.key" x-model="card._fix.text" rows="2" :aria-label="$t(card._fix.blank ? 'app.fix.labelBlank' : 'app.fix.label')"
-                            :placeholder="$t(card._fix.blank ? 'app.fix.placeholderBlank' : 'app.fix.placeholder')"
-                            :disabled="card._fix.busy || dictating('card:' + card.key)"
-                            @keydown.enter="if (!$event.shiftKey) { $event.preventDefault(); fixCard(card) }"></textarea>
-                  <button type="button" class="mic" x-show="micOn()" x-cloak
-                          :class="{ listening: mic.listening === 'card:' + card.key, busy: mic.busy === 'card:' + card.key }"
-                          :disabled="mic.busy !== '' || (mic.listening !== '' && mic.listening !== 'card:' + card.key)"
-                          @click="dictate('card:' + card.key)" :aria-label="$t(micKey('card:' + card.key))" :title="$t(micKey('card:' + card.key))"
-                          ></button>
-                </div>
-                <p class="hint" x-show="dictationStep('card:' + card.key)" x-text="$t(dictationStep('card:' + card.key) || 'app.mic.busy')"></p>
-                <div class="card-fix-actions">
-                  <!-- What the last correction did, undoable until the card is done with -->
-                  <div class="card-fixed" x-show="card._fixed && !card._fix.busy">
-                    <span x-html="previewHtml(card._fixed?.summary)"></span>
-                    <button type="button" class="link-btn" @click="undoFix(card)" x-text="$t('app.fix.undo')"></button>
-                    <button type="button" class="link-btn" x-show="card._fixed?.quick && !off('ai.careful')" @click="fixCarefully(card)"
-                            x-text="$t('app.revise.carefully')"></button>
+                <!-- One line, as a message is sent: the field (its 🎤 in it), « Corriger » at its right;
+                     while the AI corrects, « Annuler » in its place -->
+                <div class="card-fix-row">
+                  <div class="dictated" :class="{ 'with-mic': micOn() }">
+                    <textarea :data-dictated="'card:' + card.key" x-model="card._fix.text" rows="2" :aria-label="$t(card._fix.blank ? 'app.fix.labelBlank' : 'app.fix.label')"
+                              :placeholder="$t(card._fix.blank ? 'app.fix.placeholderBlank' : 'app.fix.placeholder')"
+                              :disabled="card._fix.busy || dictating('card:' + card.key)"
+                              @keydown.enter="if (!$event.shiftKey) { $event.preventDefault(); fixCard(card) }"></textarea>
+                    <button type="button" class="mic" x-show="micOn()" x-cloak
+                            :class="{ listening: mic.listening === 'card:' + card.key, busy: mic.busy === 'card:' + card.key }"
+                            :disabled="mic.busy !== '' || (mic.listening !== '' && mic.listening !== 'card:' + card.key)"
+                            @click="dictate('card:' + card.key)" :aria-label="$t(micKey('card:' + card.key))" :title="$t(micKey('card:' + card.key))"
+                            ></button>
                   </div>
                   <button type="button" class="btn soft stops-dictation" x-show="card._fix.busy" @click="cancelFix(card)" x-text="$t('common.cancel')"></button>
-                  <button class="btn primary" :disabled="!card._fix.text.trim() || card._fix.busy || dictating('card:' + card.key)"
-                          x-text="$t(card._fix.busy ? (card._fix.blank ? 'app.fix.busyBlank' : 'app.fix.busy') : (card._fix.blank ? 'app.fix.submitBlank' : 'app.fix.submit'))"></button>
+                  <button class="btn primary" x-show="!card._fix.busy" :disabled="!card._fix.text.trim() || dictating('card:' + card.key)"
+                          x-text="$t(card._fix.blank ? 'app.fix.submitBlank' : 'app.fix.submit')"></button>
+                </div>
+                <p class="hint" x-show="card._fix.busy" x-text="$t(card._fix.blank ? 'app.fix.busyBlank' : 'app.fix.busy')"></p>
+                <p class="hint" x-show="dictationStep('card:' + card.key)" x-text="$t(dictationStep('card:' + card.key) || 'app.mic.busy')"></p>
+                <!-- What the last correction did, undoable until the card is done with -->
+                <div class="card-fixed" x-show="card._fixed && !card._fix.busy">
+                  <span x-html="previewHtml(card._fixed?.summary)"></span>
+                  <button type="button" class="link-btn" @click="undoFix(card)" x-text="$t('app.fix.undo')"></button>
+                  <button type="button" class="link-btn" x-show="card._fixed?.quick && !off('ai.careful')" @click="fixCarefully(card)"
+                          x-text="$t('app.revise.carefully')"></button>
                 </div>
               </form>
             </template>
