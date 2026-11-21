@@ -206,7 +206,7 @@ jobs:
       - run: pip install -r requirements-page.txt
       # The runner's own Chrome, not Playwright's download: its system packages (--with-deps,
       # apt) once took the job's 10 minutes. Checked first: without it the tests are skipped.
-      - run: test -x /usr/bin/google-chrome && pytest -q -n auto tests/page
+      - run: test -x /usr/bin/google-chrome && pytest -v -n auto tests/page
         env:
           NOTOSAURUS_TEST_CHROMIUM: /usr/bin/google-chrome
 
