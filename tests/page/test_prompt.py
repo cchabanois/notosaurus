@@ -335,8 +335,8 @@ def test_dictation_in_the_app(page):
 
 def test_dictation_stopped_by_a_tap_elsewhere(page):
     """Listening: a tap anywhere else stops it as ⏹ does, the text written, and does only
-    that (the card's ⋯ tapped then doesn't open); scrolling doesn't stop it; the app gone to
-    the background does."""
+    that (a card tapped then doesn't open); scrolling doesn't stop it; the app gone to the
+    background does."""
     stopped = []
     page.route("**/api/config", lambda route: route.fulfill(json={**route.fetch().json(), "dictation": True}))
     page.route("**/api/dictation/start", lambda route: route.fulfill(json={"listening": True}))
@@ -362,9 +362,9 @@ def test_dictation_stopped_by_a_tap_elsewhere(page):
     revise.get_by_role("button", name="Dicter").click()
     sync_api.expect(listening).to_be_visible()
     first = page.locator(".flash").first
-    first.get_by_role("button", name="Plus d'actions").click()  # only stops it
+    first.locator(".flash-body").click(position={"x": 4, "y": 4})  # only stops it
     sync_api.expect(listening).to_be_hidden()
-    sync_api.expect(first.locator(".card-menu-items")).to_be_hidden()
+    sync_api.expect(page.locator(".flash.editing")).to_have_count(0)
     assert len(stopped) == 2
 
     revise.get_by_role("button", name="Dicter").click()

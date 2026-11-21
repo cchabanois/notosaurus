@@ -17,11 +17,13 @@ and it's the best way to get Notosaurus fixed. See [Reporting a problem](#report
 ## The deck and the cards
 
 - **Deck**: the name of the Anki deck. `::` makes sub-decks: `Spanish::Unit 3 - At school`.
-- Each card has a **front** (the question) and a **back** (the answer). The cards show as in
-  Anki, formulas and figures drawn. Tap a text to edit the card: it opens full screen (a window on a
-  computer), the cursor where you tapped, the field **✨ Correct with AI** at the bottom. **‹ ›**
-  go to the previous or next card; **✕**, Escape or the phone's back button close it, saved. The
-  card's picture (🖼️) is changed while it is edited.
+- Each card has a **front** (the question) and a **back** (the answer). The list is compact (front,
+  back, a small picture): tap a card to open it full screen (a window on a computer), as Anki
+  shows it, formulas and figures drawn, with the field **✨ Correct with AI** at the bottom.
+  **▶ Go through card by card** opens the first. Swipe, or **‹ ›**, to go to the previous or next
+  card; after the last, the lesson's end. Tap a text to edit it; **＋** adds a card after this one
+  (left empty, it goes). **✕**, Escape or the phone's back button close it, saved. The card's
+  picture (🖼️) is changed while it is open.
 - **+ info** adds a note shown under the answer: gender, plural, an example…
 - **sub-deck** puts the card in a sub-deck of the lesson (“Vocabulary”, “Verbs”).
 - **Listen to the back** (🔊) plays it with the lesson's voice.

@@ -18,11 +18,13 @@ segnalazione viene letta, ed è il modo migliore per far correggere Notosaurus. 
 ## Il mazzo e le carte
 
 - **Mazzo**: il nome del mazzo di Anki. `::` crea sotto-mazzi: `Inglese::Unit 3 - At school`.
-- Ogni carta ha un **fronte** (la domanda) e un **retro** (la risposta). Le carte appaiono come in
-  Anki, con formule e figure disegnate. Tocca un testo per modificare la carta: si apre a schermo
-  intero (una finestra sul computer), con il cursore dove hai toccato e il campo **✨ Correggi con
-  l'IA** in basso. **‹ ›** passano alla carta precedente o successiva; **✕**, Esc o il tasto indietro
-  del telefono la chiudono, salvata. L'immagine della carta (🖼️) si cambia mentre è in
+- Ogni carta ha un **fronte** (la domanda) e un **retro** (la risposta). L'elenco è compatto (fronte,
+  retro, una piccola immagine): tocca una carta per aprirla a schermo intero (una finestra sul
+  computer), come in Anki, con formule e figure disegnate e il campo **✨ Correggi con l'IA** in
+  basso. **▶ Rivedi carta per carta** apre la prima. Scorri con il dito, o **‹ ›**, per passare alla
+  precedente o alla successiva; dopo l'ultima, la fine della lezione. Tocca un testo per
+  modificarlo; **＋** aggiunge una carta dopo questa (lasciata vuota, sparisce). **✕**, Esc o il
+  tasto indietro del telefono la chiudono, salvata. L'immagine della carta (🖼️) si cambia mentre è in
   modifica.
 - **+ info** aggiunge una nota mostrata sotto la risposta: genere, plurale, un esempio…
 - **sotto-mazzo** mette la carta in un sotto-mazzo della lezione ("Vocabolario", "Verbi").

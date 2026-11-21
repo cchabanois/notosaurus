@@ -357,9 +357,16 @@
 
       <p class="hint" x-show="!readOnly() && cards.some((c) => isCloze(c.front))" x-text="$t('app.review.clozeHint')"></p>
 
-      <div class="cards">
+      <!-- The cards one by one, full screen, from the first (swiped or ‹ › from one to the next) -->
+      <button type="button" class="btn soft review-all" x-show="!readOnly() && cards.length" @click="openCard(cards[0])"
+              x-text="$t('app.review.readAll')"></button>
+      <!-- Compact: a card's front and back, its picture small; touched, it opens full screen with all
+           the rest (a lesson read only: every card whole, as it can't be opened) -->
+      <div class="cards" :class="{ compact: !readOnly() }">
         <template x-for="card in cards" :key="card.key">
           <article class="flash" :data-card="card.key"
+                   @click.capture="if (!shownEdited(card) && !readOnly() && !$event.target.closest('.card-doubt .btn, .pick')) {
+                     $event.stopPropagation(); $event.preventDefault(); examPick ? togglePick(card) : openCard(card) }"
                    @touchstart.passive="isEditing(card) && touchCard($event)" @touchmove.passive="isEditing(card) && touchCard($event)"
                    @touchend.passive="isEditing(card) && touchCard($event)" @touchcancel.passive="isEditing(card) && touchCard($event)"
                    :class="{ editing: isEditing(card), peek: peek === card.key, 'slide-next': isEditing(card) && slide === 1, 'slide-prev': isEditing(card) && slide === -1, changed: card._state, linked: card._linked, 'has-explain': card._explain?.open, 'has-fix': card._fix || card._fixed, 'has-diagram': card.mask, 'has-doubt': card.doubt, 'has-picture': card.picture || card.picture_prompt || card.figure || card._panel }">
@@ -374,8 +381,10 @@
               <!-- The previous or the next one, this one done with: the lesson looked over card by card -->
               <button type="button" class="icon-btn stops-dictation nav" @click="moveEditing(-1)" :disabled="cards.indexOf(card) === 0"
                       :aria-label="$t('app.review.previousCard')" :title="$t('app.review.previousCard')">‹</button>
-              <button type="button" class="icon-btn stops-dictation" @click="moveEditing(1)" :disabled="cards.indexOf(card) === cards.length - 1"
+              <button type="button" class="icon-btn stops-dictation" @click="moveEditing(1)"
                       :aria-label="$t('app.review.nextCard')" :title="$t('app.review.nextCard')">›</button>
+              <button type="button" class="icon-btn stops-dictation" @click="addCardAfter(card)"
+                      :aria-label="$t('app.review.addAfter')" :title="$t('app.review.addAfter')">＋</button>
               <button type="button" class="icon-btn stops-dictation" @click="doneEditing()" :aria-label="$t('app.review.done')" :title="$t('app.review.done')">✕</button>
             </header>
             <!-- Choosing the cards of a test (app-exams.js): one tick per card -->
@@ -725,6 +734,27 @@
               <small class="muted" x-text="card.figure ? $t('app.pictures.figureCost') : $t('app.pictures.cost')"></small>
             </div>
           </article>
+        </template>
+        <!-- After the last card, swiped or › to: the lesson looked over; a card to add, or it sent -->
+        <template x-if="editing === 'end' || peek === 'end'">
+        <article class="flash lesson-end" data-card="end"
+                 :class="{ editing: editing === 'end', peek: peek === 'end', 'slide-next': editing === 'end' && slide === 1 }"
+                 @touchstart.passive="editing === 'end' && touchCard($event)" @touchmove.passive="editing === 'end' && touchCard($event)"
+                 @touchend.passive="editing === 'end' && touchCard($event)" @touchcancel.passive="editing === 'end' && touchCard($event)">
+          <header class="card-sheet-head" @keydown.escape.window.capture="editing === 'end' && !asking.open && doneEditing()">
+            <span x-text="$t('app.review.endTitle')"></span>
+            <button type="button" class="icon-btn nav" @click="moveEditing(-1)"
+                    :aria-label="$t('app.review.previousCard')" :title="$t('app.review.previousCard')">‹</button>
+            <button type="button" class="icon-btn" @click="doneEditing()" :aria-label="$t('app.review.done')" :title="$t('app.review.done')">✕</button>
+          </header>
+          <div class="lesson-end-body">
+            <p class="lesson-end-done" x-text="$t('app.review.endDone', { count: cards.length })"></p>
+            <button type="button" class="btn soft" @click="addCardAfter(null)" x-text="$t('app.review.addCard')"></button>
+            <button type="button" class="btn primary" x-show="anki.available ? !off('anki.send') : true" :disabled="sending || exporting"
+                    @click="doneEditing(); anki.available ? sendToAnki() : exportApkg()"
+                    x-text="$t(!anki.available ? 'app.actions.exportApkg' : !lessonExported ? 'app.actions.addToAnki' : ankiUpToDate() ? 'app.actions.upToDateInAnki' : 'app.actions.updateInAnki')"></button>
+          </div>
+        </article>
         </template>
       </div>
       <datalist id="subdecks">

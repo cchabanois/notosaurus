@@ -19,12 +19,14 @@ signalement est lu, et c'est le meilleur moyen de faire corriger Notosaurus. Voi
 
 - **Paquet** : le nom du paquet Anki. `::` crée des sous-paquets :
   `Espagnol::Unité 3 - À l'école`.
-- Chaque carte a un **recto** (la question) et un **verso** (la réponse). Les cartes
-  s'affichent comme dans Anki, formules et figures dessinées. Touchez un texte pour
-  modifier la carte : elle s'ouvre en plein écran (une fenêtre sur l'ordinateur), le curseur là où
-  vous avez touché, le champ **✨ Corriger avec l'IA** en bas. **‹ ›** passent à la carte
-  précédente ou suivante ; **✕**, Échap ou le bouton retour du téléphone la referment, enregistrée.
-  L'image de la carte (🖼️) se change pendant qu'elle est modifiée.
+- Chaque carte a un **recto** (la question) et un **verso** (la réponse). La liste est
+  compacte (recto, verso, une petite image) : touchez une carte pour l'ouvrir en plein écran (une
+  fenêtre sur l'ordinateur), comme dans Anki, formules et figures dessinées, avec le champ
+  **✨ Corriger avec l'IA** en bas. **▶ Relire carte par carte** ouvre la première. Glissez du doigt,
+  ou **‹ ›**, pour passer à la carte précédente ou suivante ; après la dernière, la fin de la leçon.
+  Touchez un texte pour le modifier ; **＋** ajoute une carte après celle-ci (laissée vide, elle
+  disparaît). **✕**, Échap ou le bouton retour du téléphone la referment, enregistrée. L'image de
+  la carte (🖼️) se change pendant qu'elle est ouverte.
 - **+ info** ajoute une note affichée sous la réponse : genre, pluriel, un exemple…
 - **sous-paquet** range la carte dans un sous-paquet de la leçon (« Vocabulaire »,
   « Verbes »).

@@ -197,7 +197,14 @@
       "done": "Fatto",
       "cardOf": "Carta {n} / {count}",
       "previousCard": "Carta precedente",
-      "nextCard": "Carta successiva"
+      "nextCard": "Carta successiva",
+      "addAfter": "Aggiungi una carta dopo questa",
+      "readAll": "▶ Rivedi carta per carta",
+      "endTitle": "Fine della lezione",
+      "endDone": {
+        "one": "✓ {count} carta rivista",
+        "other": "✓ {count} carte riviste"
+      }
     },
     "explain": {
       "button": "Spiega questa carta",

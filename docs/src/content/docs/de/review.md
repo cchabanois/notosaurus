@@ -18,11 +18,13 @@ ihr. Jede Meldung wird gelesen, und so wird Notosaurus am besten verbessert. Sie
 ## Der Stapel und die Karten
 
 - **Stapel**: der Name des Anki-Stapels. `::` erzeugt Unterstapel: `Spanisch::Unidad 3 - En la escuela`.
-- Jede Karte hat eine **Vorderseite** (die Frage) und eine **Rückseite** (die Antwort). Die Karten
-  erscheinen wie in Anki, Formeln und Abbildungen gezeichnet. Tippe auf einen Text, um die
-  Karte zu bearbeiten: Sie öffnet sich im Vollbild (am Computer als Fenster), der Cursor dort, wo du
-  getippt hast, unten das Feld **✨ Mit KI korrigieren**. **‹ ›** wechseln zur vorherigen oder
-  nächsten Karte; **✕**, Escape oder die Zurück-Taste des Handys schließen sie, gespeichert. Das Bild der Karte (🖼️) änderst du, während sie bearbeitet wird.
+- Jede Karte hat eine **Vorderseite** (die Frage) und eine **Rückseite** (die Antwort). Die Liste ist
+  kompakt (Vorderseite, Rückseite, ein kleines Bild): Tippe auf eine Karte, um sie im Vollbild zu
+  öffnen (am Computer als Fenster), wie in Anki, Formeln und Abbildungen gezeichnet, unten das Feld
+  **✨ Mit KI korrigieren**. **▶ Karte für Karte durchgehen** öffnet die erste. Wische, oder **‹ ›**,
+  zur vorherigen oder nächsten Karte; nach der letzten das Ende der Lektion. Tippe auf einen Text,
+  um ihn zu bearbeiten; **＋** fügt danach eine Karte hinzu (leer gelassen, verschwindet sie).
+  **✕**, Escape oder die Zurück-Taste des Handys schließen sie, gespeichert. Das Bild der Karte (🖼️) änderst du, während sie bearbeitet wird.
 - **+ Info** fügt eine Notiz unter der Antwort hinzu: Geschlecht, Plural, ein Beispiel…
 - **Unterstapel** legt die Karte in einen Unterstapel der Lektion („Vokabeln“, „Verben“).
 - **Rückseite anhören** (🔊) spielt sie mit der Stimme der Lektion ab.
