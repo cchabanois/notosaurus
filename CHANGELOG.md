@@ -68,6 +68,7 @@ Each pull request's entries (the `## Changelog` of its description) are put unde
 
 ### Changed
 
+- ✏️ Cards show as they will in Anki, formulas and figures drawn. Touch a text to edit it (its LaTeX shown there only), one card at a time; ✓ Done closes it.
 - ✨ "Correct this card" on a phone no longer opens the keyboard: dictate with 🎙️, or touch the field to type.
 - 🔒 Figures are compiled without access to the server's secrets.
 - 📐 A figure drawn again after a correction starts from the one it replaces: what you ask changes, the rest stays as it was.
@@ -97,6 +98,7 @@ Each pull request's entries (the `## Changelog` of its description) are put unde
 
 ### Fixed
 
+- 🖼️ Undoing a card's correction that redrew its figure no longer leaves a broken picture.
 - 🧮 What the AI says it changed on a card, and its explanations, show their formulas drawn, not their code.
 - 🖼️ A figure being drawn again keeps its size on the phone too.
 - 🎙️ Dictation on the phone (Android 13 and later) no longer loses what you say after a pause, and no longer beeps at each pause.
