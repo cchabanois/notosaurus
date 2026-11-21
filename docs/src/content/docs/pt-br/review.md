@@ -18,11 +18,13 @@ relato é lido, e é o melhor jeito de fazer o Notosaurus ser corrigido. Veja
 ## O baralho e os cartões
 
 - **Baralho**: o nome do baralho do Anki. `::` cria subbaralhos: `Inglês::Unit 3 - At school`.
-- Cada cartão tem uma **frente** (a pergunta) e um **verso** (a resposta). Os cartões aparecem
-  como no Anki, com fórmulas e figuras desenhadas. Toque em um texto para editar o cartão: ele
-  abre em tela cheia (uma janela no computador), com o cursor onde você tocou e o campo **✨ Corrigir
-  com a IA** embaixo. **‹ ›** passam ao cartão anterior ou seguinte; **✕**, Esc ou o botão voltar do
-  celular o fecham, salvo. A imagem do cartão (🖼️) é trocada
+- Cada cartão tem uma **frente** (a pergunta) e um **verso** (a resposta). A lista é compacta
+  (frente, verso, uma imagem pequena): toque em um cartão para abri-lo em tela cheia (uma janela no
+  computador), como no Anki, com fórmulas e figuras desenhadas e o campo **✨ Corrigir com a IA**
+  embaixo. **▶ Revisar cartão por cartão** abre o primeiro. Deslize o dedo, ou **‹ ›**, para passar
+  ao anterior ou ao seguinte; depois do último, o fim da lição. Toque em um texto para editá-lo;
+  **＋** acrescenta um cartão depois deste (deixado vazio, ele some). **✕**, Esc ou o botão voltar
+  do celular o fecham, salvo. A imagem do cartão (🖼️) é trocada
   enquanto ele é editado.
 - **+ info** acrescenta uma nota mostrada abaixo da resposta: gênero, plural, um exemplo…
 - **subbaralho** coloca o cartão em um subbaralho da lição ("Vocabulário", "Verbos").

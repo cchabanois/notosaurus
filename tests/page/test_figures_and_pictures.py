@@ -19,6 +19,7 @@ from page.support import (  # noqa: E402
     generate_free,
     lesson,
     lessons,
+    open_card,
 )
 
 
@@ -69,6 +70,7 @@ def test_a_figure_redrawn_shows_its_steps_and_first_try(page, monkeypatch):
 
     monkeypatch.setattr(routes.pictures, "draw_all", draw_all)
     generate_free(page, "Le triangle rectangle (géométrie)")
+    open_card(page.locator(".flash").first)  # its steps in the card open (the list: a thumbnail)
     redrawn = page.locator(".card-picture.figure .drawing.redrawing").first
     sync_api.expect(redrawn).to_contain_text("Première version imparfaite : nouveau tracé, plus soigné")
     sync_api.expect(redrawn).to_contain_text("L'angle est du mauvais côté.")
@@ -104,7 +106,7 @@ def test_a_figure_corrected_keeps_its_size_while_drawn_again(page):
     held = []
     page.route("**/fix-card*", fix)
     page.route("**/api/lessons/*/pictures", lambda route: held.append(route))
-    card.get_by_role("button", name="✨ Corriger cette carte").click()
+    open_card(card)
     sync_api.expect(card).to_have_class(re.compile(r"\bediting\b"))  # full screen
     before = shown.bounding_box()
     field = card.get_by_role("textbox", name="Qu'est-ce qui ne va pas ?")
@@ -159,7 +161,7 @@ def test_a_figure_checked_on_demand_then_redrawn(page, monkeypatch):
 
     monkeypatch.setattr(llm, "check_figure", check)
     generate_free(page, "Le triangle rectangle (géométrie)")
-    card = page.locator(".flash").first
+    card = open_card(page.locator(".flash").first)
     sync_api.expect(card.locator(".card-picture.figure img:not(.first):visible")).to_be_visible()
     card.get_by_role("button", name="🔍 Vérifier la figure").first.click()  # on the figure itself
     found = card.locator(".figure-check:visible")
@@ -205,7 +207,7 @@ def test_a_figures_credits_link_its_projects(page, monkeypatch):
 
     monkeypatch.setattr(routes.pictures, "draw_all", draw_all)
     generate_free(page, "Le triangle rectangle (géométrie)")
-    card = page.locator(".flash").first
+    card = open_card(page.locator(".flash").first)
     card.locator(".card-picture.figure img:not(.first):visible").click()
     credit = page.locator(".viewer-credit")
     sync_api.expect(credit).to_contain_text("📐 Dessinée par gemini-x avec Typst + lilaq")

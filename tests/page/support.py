@@ -77,9 +77,19 @@ TOUCHED = {
 }
 
 
+def open_card(card):
+    """A card of the (compact) list touched: open full screen, as Anki shows it. The card."""
+    if not re.search(r"\bediting\b", card.get_attribute("class") or ""):
+        card.locator(".flash-body").click(position={"x": 4, "y": 4})
+    sync_api.expect(card).to_have_class(re.compile(r"\bediting\b"))
+    return card
+
+
 def field(card, name: str):
     """One of a card's texts touched ("front", "back", "info", "fun_fact", "explanation",
-    "mnemonic", "choice:<n>"): the card edited, this text as typed, focused. Its field."""
+    "mnemonic", "choice:<n>"), the card open first (a touch in the list): the card edited, this
+    text as typed, focused. Its field."""
+    open_card(card)
     if name.startswith("choice:"):
         n = int(name.split(":")[1])
         card.locator(".choice").nth(n).locator(".math-preview.shown").click()
