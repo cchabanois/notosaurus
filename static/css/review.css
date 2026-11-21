@@ -109,6 +109,24 @@
 }
 .flash:focus-within, .flash.editing { border-color: var(--primary); }
 .flash.editing { box-shadow: 0 0 0 3px var(--primary-soft); }
+/* The card edited: full screen, over the list (under a sheet, the viewer or a toast it opens),
+   its head (✕) at the top and its correction's field at the bottom as it scrolls; on a wide
+   screen, a dialog over the list darkened */
+.card-sheet-head { display: none; }
+.flash.editing { position: fixed; inset: 0; z-index: 25; flex-wrap: wrap; align-content: flex-start; overflow-y: auto;
+  overscroll-behavior: contain; padding-top: 0; border: 0; border-radius: 0; box-shadow: none; }
+.flash.editing .card-sheet-head { position: sticky; top: 0; z-index: 3; flex: 1 0 100%; display: flex; align-items: center;
+  gap: .25rem; margin-bottom: .4rem; padding: .35rem 0; background: inherit;
+  border-bottom: 1px solid var(--border); color: var(--muted); font-size: .85rem; font-weight: 700; }
+.flash.editing .card-sheet-head .icon-btn { width: 2.5rem; height: 2.5rem; font-size: 1.1rem; }
+.flash.editing .card-sheet-head .nav { margin-left: auto; }  /* ‹ › ✕ together, on the right */
+.flash.editing .card-fix { order: 9; position: sticky; bottom: 0; z-index: 3; margin-bottom: .2rem;
+  box-shadow: 0 -6px 14px rgb(0 0 0 / .08); }
+body:has(.flash.editing) { overflow: hidden; }  /* the list behind it stays where it was */
+@media (min-width: 720px) {
+  .flash.editing { inset: 4vh 0 auto; width: min(640px, calc(100% - 2rem)); max-height: 92vh; margin: 0 auto;
+    border-radius: var(--radius); box-shadow: 0 0 0 100vmax rgb(10 12 20 / .4); }
+}
 /* A card not edited: its texts as Anki shows them, no box around them (a touch edits them) */
 .flash:not(.editing) .math-preview.shown { background: transparent; padding: .1rem 0; }
 .flash .choice .math-preview { flex: 1; min-width: 0; margin: 0; }
@@ -171,10 +189,10 @@
 .flash .card-fix { flex: 1 0 100%; margin-top: .6rem; padding: .6rem .7rem; border-radius: var(--radius-sm); background: var(--surface-2); display: grid; gap: .4rem; }
 .flash .card-fix textarea { width: 100%; min-height: 3.2rem; font-size: .92rem; }
 .flash .card-fix .hint { margin: 0; }
-.flash .card-fix-actions { display: flex; justify-content: flex-end; gap: .4rem; }
+.flash .card-fix-actions { display: flex; flex-wrap: wrap; justify-content: flex-end; align-items: center; gap: .4rem; }
 .flash .card-fix-open { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: .4rem; margin-top: .4rem; }
 .flash .card-fix-open .btn { min-height: 2.2rem; padding: .3rem .8rem; font-size: .88rem; }
-.flash .card-fixed { flex: 1 0 100%; margin-top: .5rem; display: flex; flex-wrap: wrap; align-items: baseline; gap: .2rem .6rem; font-size: .9rem; color: var(--muted); }
+.flash .card-fixed { flex: 1 1 12rem; margin-right: auto; display: flex; flex-wrap: wrap; align-items: baseline; gap: .2rem .6rem; font-size: .9rem; color: var(--muted); }
 .flash.has-doubt { flex-wrap: wrap; }  /* the doubt above the card, full width */
 .card-doubt { flex: 1 0 100%; display: grid; gap: .3rem; margin: 0 0 .4rem; padding: .6rem .8rem; border-radius: var(--radius-sm);
   background: var(--danger-soft); border-left: 3px solid var(--danger); }

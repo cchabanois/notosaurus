@@ -33,9 +33,10 @@ const cardsPart = {
 
   // --- One card edited at a time ---------------------------------------
   // The others shown as Anki will show them (formulas drawn, no fields). A touch on one of its
-  // texts, ✏️ or ✨ edits a card; done with it (✓, Escape, another card edited, the lesson
-  // corrected or sent): saved, its correction no longer undoable, and the pictures no card
-  // uses then removed: a correction's old picture is kept only while it can be undone.
+  // texts or ✨ edits a card, full screen, its correction's field at the bottom; done with it
+  // (✕, Escape, Android's back, ‹ › to another, the lesson corrected or sent): saved, its
+  // correction no longer undoable, and the pictures no card uses then removed: a correction's
+  // old picture is kept only while it can be undone.
   isEditing(card) {
     return !this.readOnly() && this.editing === card.key;
   },
@@ -49,6 +50,7 @@ const cardsPart = {
     if (this.editing !== card.key) {
       this.doneEditing();
       this.editing = card.key;
+      card._fix ??= this.lessonId ? this.newFix(card) : null;
     }
     if (all) card._allFields = true;
     if (!field) return;
@@ -67,9 +69,19 @@ const cardsPart = {
     if (card) {
       this.cancelFix(card);
       Object.assign(card, { _fixed: null, _allFields: false, _editing: "" });
+      // The list where the card is (‹ › may have gone far from where it was opened)
+      this.$nextTick(() => document.querySelector(`[data-card="${card.key}"]`)?.scrollIntoView({ block: "nearest" }));
     }
     this.revision = { ...this.revision, undo: null };
     this.prunePictures();
+  },
+
+  // ‹ ›: the previous or the next card edited, this one done with
+  moveEditing(step) {
+    const next = this.cards[this.cards.findIndex((c) => c.key === this.editing) + step];
+    if (!next) return;
+    this.editCard(next);
+    this.$nextTick(() => document.querySelector(`[data-card="${next.key}"]`)?.scrollTo({ top: 0 }));
   },
 
   // The pictures no saved card uses removed (POST …/pictures/prune), once nothing can bring
