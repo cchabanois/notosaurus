@@ -545,7 +545,8 @@
                           :placeholder="$t('app.review.info')" :aria-label="$t('app.review.infoLabel')"
                           x-show="!renderedOnly(card, 'info')" @focus="card._editing = 'info'" @blur="card._editing = ''"
                           x-init="watchHeight($el)" x-effect="card.info; fitHeight($el)"></textarea>
-                <span class="subdeck-tag" x-show="renderedOnly(card, 'subdeck') && card.subdeck" x-text="card.subdeck"
+                <span class="subdeck-tag" x-show="renderedOnly(card, 'subdeck') && card.subdeck" x-text="'🗂 ' + card.subdeck"
+                      :title="$t('app.review.subdeckLabel') + ' : ' + card.subdeck"
                       @click="editCard(card, 'subdeck')"></span>
                 <input class="subdeck" x-show="!renderedOnly(card, 'subdeck')" @focus="card._editing = 'subdeck'" @blur="card._editing = ''" x-model="card.subdeck" :readonly="readOnly()" :placeholder="$t('app.review.subdeck')"
                        :aria-label="$t('app.review.subdeckLabel')"
