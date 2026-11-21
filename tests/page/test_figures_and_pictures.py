@@ -83,6 +83,40 @@ def test_a_figure_redrawn_shows_its_steps_and_first_try(page, monkeypatch):
     sync_api.expect(page.locator(".drawing.redrawing")).to_have_count(0)
 
 
+def test_a_figure_corrected_keeps_its_size_while_drawn_again(page):
+    """A correction changing what a card's figure shows: while it is drawn again, the old one
+    stays at the size it was shown at, a figure narrower than the card stretched to its width as
+    before (not at its own size), the drawing's few words over it."""
+    narrow = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 150" width="200" height="150"></svg>'
+    page.route("**/pictures/picture-*.svg", lambda route: route.fulfill(body=narrow, content_type="image/svg+xml"))
+    generate_free(page, "Le triangle rectangle (géométrie)")
+    card = page.locator(".flash").first
+    shown = card.locator(".card-picture.figure img:not(.first):visible")
+    sync_api.expect(shown).to_be_visible()
+    before = shown.bounding_box()
+
+    def fix(route):  # what the figure shows changed: drawn again
+        changed = {**route.request.post_data_json["card"], "picture": None}
+        changed["figure"] += " Le carré en rouge."
+        route.fulfill(json={"card": changed, "summary": "Figure changée."})
+
+    held = []
+    page.route("**/fix-card*", fix)
+    page.route("**/api/lessons/*/pictures", lambda route: held.append(route))
+    card.get_by_role("button", name="✨ Corriger cette carte").click()
+    field = card.get_by_role("textbox", name="Qu'est-ce qui ne va pas ?")
+    field.fill("Le carré en rouge")
+    field.press("Enter")
+    old = card.locator(".drawing.redrawing:visible img.first")
+    sync_api.expect(old).to_be_visible()
+    waiting = old.bounding_box()
+    assert before and waiting
+    assert (waiting["width"], waiting["height"]) == pytest.approx((before["width"], before["height"]), abs=1)
+    for route in held:
+        route.continue_()
+    sync_api.expect(shown).to_be_visible()
+
+
 def test_a_picture_shown_as_soon_as_ready(page, monkeypatch):
     """A card's figure shows the moment it is drawn, while another card's is still coming."""
     import asyncio

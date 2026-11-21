@@ -73,8 +73,9 @@
 .card-picture .drawing .progress::after { content: ""; position: absolute; inset: 0 auto 0 0; border-radius: 2px; background: var(--primary);
   animation: estimated calc(2 * var(--expected, 15s)) linear forwards; }
 /* A figure drawn again: its waiting frame the size the old one was shown at (no jump while it's
-   drawn), the old one in it at that size and its steps over it */
-.card-picture.figure .drawing.redrawing { display: grid; width: min(100%, 400px); height: auto; min-height: 160px; padding: 0; }
+   drawn), the old one in it at that size and its steps over it: its one column the frame's width,
+   whatever the old one's own size or the steps' (the frame's centring would shrink it to them) */
+.card-picture.figure .drawing.redrawing { display: grid; grid-template-columns: 100%; width: min(100%, 400px); height: auto; min-height: 160px; padding: 0; }
 .card-picture.figure .drawing.redrawing > * { grid-area: 1 / 1; }
 .card-picture.figure .drawing.redrawing .first { position: static; height: auto; align-self: center; }
 .card-picture.figure .drawing.redrawing .steps { display: flex; flex-direction: column; align-items: center; justify-content: center;
