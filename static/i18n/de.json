@@ -194,7 +194,10 @@
         "keep": "Lektion beibehalten"
       },
       "editFormula": "Zum Bearbeiten klicken",
-      "done": "✓ Fertig"
+      "done": "Fertig",
+      "cardOf": "Karte {n} / {count}",
+      "previousCard": "Vorherige Karte",
+      "nextCard": "Nächste Karte"
     },
     "explain": {
       "button": "Diese Karte erklären",
@@ -214,7 +217,7 @@
     "fix": {
       "button": "Diese Karte korrigieren",
       "label": "Was stimmt nicht?",
-      "placeholder": "„die Antwort ist 1789“, „kürzer“…",
+      "placeholder": "✨ Mit KI korrigieren: „die Antwort ist 1789“, „kürzer“…",
       "submit": "Korrigieren",
       "busy": "Wird korrigiert…",
       "undo": "↩ Rückgängig",

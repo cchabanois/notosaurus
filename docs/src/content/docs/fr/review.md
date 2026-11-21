@@ -20,9 +20,10 @@ signalement est lu, et c'est le meilleur moyen de faire corriger Notosaurus. Voi
 - **Paquet** : le nom du paquet Anki. `::` crée des sous-paquets :
   `Espagnol::Unité 3 - À l'école`.
 - Chaque carte a un **recto** (la question) et un **verso** (la réponse). Les cartes
-  s'affichent comme dans Anki, formules et figures dessinées. Touchez un texte (ou ✏️) pour
-  modifier la carte : ses champs s'ouvrent, le curseur là où vous avez touché. Une seule carte se
-  modifie à la fois : **✓ Terminé**, Échap ou une autre carte touchée la referme, enregistrée.
+  s'affichent comme dans Anki, formules et figures dessinées. Touchez un texte pour
+  modifier la carte : elle s'ouvre en plein écran (une fenêtre sur l'ordinateur), le curseur là où
+  vous avez touché, le champ **✨ Corriger avec l'IA** en bas. **‹ ›** passent à la carte
+  précédente ou suivante ; **✕**, Échap ou le bouton retour du téléphone la referment, enregistrée.
   L'image de la carte (🖼️) se change pendant qu'elle est modifiée.
 - **+ info** ajoute une note affichée sous la réponse : genre, pluriel, un exemple…
 - **sous-paquet** range la carte dans un sous-paquet de la leçon (« Vocabulaire »,
@@ -74,7 +75,7 @@ Touchez **Corriger**. L'IA revoit les photos et ne change que ce que vous avez d
 cartes changées sont marquées **modifiée**, les nouvelles **nouvelle**, et une phrase
 résume ce qu'elle a fait. **↩ Annuler** remet les cartes comme avant,
 tant que vous n'avez pas commencé à modifier une carte. Une carte corrigée seule (**✨ Corriger cette
-carte**) s'annule de même tant qu'elle reste ouverte ; une fois **✓ Terminé**, la correction est gardée.
+carte**) s'annule de même tant qu'elle reste ouverte ; une fois refermée, la correction est gardée.
 
 Vous changez d'avis pendant que l'IA corrige (la leçon ou une seule carte) ? **Annuler** l'arrête
 tout de suite : les cartes restent comme elles étaient.

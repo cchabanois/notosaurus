@@ -87,9 +87,8 @@ const revisionPart = {
   // Its field focused only with a mouse: on a touch screen, focus opens the keyboard over the
   // card, when the 🎙️ beside it is often simpler; touching the field opens it.
   openFix(card) {
-    this.editCard(card);  // its correction undoable while the card is edited
+    this.editCard(card);  // its correction undoable while the card is edited; its field there
     card._menu = false;
-    card._fix = { text: "", busy: false, blank: this.blankCard(card) };
     if (!matchMedia("(pointer: fine)").matches) return;
     this.$nextTick(() => document.querySelector(`[data-card="${card.key}"] .card-fix textarea`)?.focus());
   },
@@ -115,6 +114,7 @@ const revisionPart = {
       const i = this.cards.indexOf(card);
       if (this.lessonId !== lessonId || i === -1) return;  // another lesson opened, or the card removed, meanwhile
       const fixed = { ...res.card, key: card.key, _state: "modified", _fixed: { summary: res.summary, before: plain(card), instruction, quick } };
+      fixed._fix = this.newFix(fixed);  // the field ready for the next one
       if (card.picture && !fixed.picture) fixed._replacing = this.pictureUrl(card);  // shown faded until drawn again
       this.cards.splice(i, 1, fixed);
       await this.saveNow();  // its picture is drawn from the saved lesson
@@ -131,9 +131,14 @@ const revisionPart = {
     }
   },
 
-  // The card's "Cancel" (or Escape): this correction dropped, whatever it is at. Its field
-  // closes, the card as it was; the AI writing it is stopped, the microphone listening for it
-  // too (what it heard dropped).
+  // A card's correction field, empty: what is asked of the AI ("blank": a card still empty, written)
+  newFix(card) {
+    return { text: "", busy: false, blank: this.blankCard(card) };
+  },
+
+  // The card's "Cancel" (or Escape) while the AI corrects it: this correction dropped, the card
+  // as it was, its field empty again (gone once the card is done with); the AI writing it is
+  // stopped, the microphone listening for it too (what it heard dropped).
   cancelFix(card) {
     const fix = card._fix;
     if (!fix) return;
@@ -142,7 +147,7 @@ const revisionPart = {
       cancelJob(fix.job);
     }
     const listening = this.mic.listening === `card:${card.key}`;
-    card._fix = null;
+    card._fix = this.isEditing(card) ? this.newFix(card) : null;
     // Once its field is gone (stopping changes what the field shows)
     if (listening) this.$nextTick(() => this.stopDictation({ keep: false }));
   },
@@ -164,7 +169,10 @@ const revisionPart = {
 
   undoFix(card) {
     const i = this.cards.indexOf(card);
-    if (i !== -1 && card._fixed) this.cards.splice(i, 1, { ...card._fixed.before, key: card.key });  // autosave sends it
+    if (i === -1 || !card._fixed) return;
+    const restored = { ...card._fixed.before, key: card.key };  // autosave sends it
+    restored._fix = this.newFix(restored);
+    this.cards.splice(i, 1, restored);
   },
 
   // The waiting card's title: what is being done, now (the cards counted as they come)

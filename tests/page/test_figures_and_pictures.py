@@ -4,6 +4,7 @@ credits, a free one found."""
 import base64
 import io
 import os
+import re
 import threading
 
 import pytest
@@ -86,15 +87,14 @@ def test_a_figure_redrawn_shows_its_steps_and_first_try(page, monkeypatch):
 
 def test_a_figure_corrected_keeps_its_size_while_drawn_again(page):
     """A correction changing what a card's figure shows: while it is drawn again, the old one
-    stays at the size it was shown at, a figure narrower than the card stretched to its width as
-    before (not at its own size), the drawing's few words over it."""
+    stays at the size it was shown at (the card full screen), a figure narrower than the card
+    stretched to its width as before (not at its own size), the drawing's few words over it."""
     narrow = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 150" width="200" height="150"></svg>'
     page.route("**/pictures/picture-*.svg", lambda route: route.fulfill(body=narrow, content_type="image/svg+xml"))
     generate_free(page, "Le triangle rectangle (géométrie)")
     card = page.locator(".flash").first
     shown = card.locator(".card-picture.figure img:not(.first):visible")
     sync_api.expect(shown).to_be_visible()
-    before = shown.bounding_box()
 
     def fix(route):  # what the figure shows changed: drawn again
         changed = {**route.request.post_data_json["card"], "picture": None}
@@ -105,6 +105,8 @@ def test_a_figure_corrected_keeps_its_size_while_drawn_again(page):
     page.route("**/fix-card*", fix)
     page.route("**/api/lessons/*/pictures", lambda route: held.append(route))
     card.get_by_role("button", name="✨ Corriger cette carte").click()
+    sync_api.expect(card).to_have_class(re.compile(r"\bediting\b"))  # full screen
+    before = shown.bounding_box()
     field = card.get_by_role("textbox", name="Qu'est-ce qui ne va pas ?")
     field.fill("Le carré en rouge")
     field.press("Enter")

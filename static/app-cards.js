@@ -33,11 +33,27 @@ const cardsPart = {
 
   // --- One card edited at a time ---------------------------------------
   // The others shown as Anki will show them (formulas drawn, no fields). A touch on one of its
-  // texts, ✏️ or ✨ edits a card; done with it (✓, Escape, another card edited, the lesson
-  // corrected or sent): saved, its correction no longer undoable, and the pictures no card
-  // uses then removed: a correction's old picture is kept only while it can be undone.
+  // texts or ✨ edits a card, full screen, its correction's field at the bottom; done with it
+  // (✕, Escape, Android's back, ‹ › to another, the lesson corrected or sent): saved, its
+  // correction no longer undoable, and the pictures no card uses then removed: a correction's
+  // old picture is kept only while it can be undone.
   isEditing(card) {
     return !this.readOnly() && this.editing === card.key;
+  },
+
+  // Shown as when edited: the card edited, or the one beside it while a finger drags it (its
+  // placeholders, its correction's field), so that it looks the same once it is
+  shownEdited(card) {
+    return this.isEditing(card) || this.peek === card.key;
+  },
+
+  // The card beside the edited one, while a finger drags it (none: null): its correction's field
+  // there as it will be; the one it was before, not edited, without it again
+  setPeek(card) {
+    const old = this.cards.find((c) => c.key === this.peek);
+    if (old && old !== card && !this.isEditing(old)) old._fix = null;
+    this.peek = card?.key ?? "";
+    if (card && this.lessonId) card._fix ??= this.newFix(card);
   },
 
   // `field`: the text touched, shown as typed (its LaTeX), the cursor in it ("front", "back",
@@ -46,9 +62,11 @@ const cardsPart = {
   // placeholder. `all`: every field shown (a card just added, empty).
   editCard(card, field = "", { all = false } = {}) {
     if (this.readOnly()) return;
+    this.slide = 0;
     if (this.editing !== card.key) {
       this.doneEditing();
       this.editing = card.key;
+      card._fix ??= this.lessonId ? this.newFix(card) : null;
     }
     if (all) card._allFields = true;
     if (!field) return;
@@ -60,6 +78,64 @@ const cardsPart = {
     this.$nextTick(() => requestAnimationFrame(() => document.querySelector(`[data-card="${card.key}"] ${selector}`)?.focus()));
   },
 
+  // A finger swiped across the card edited: the card follows it, sideways, the next one (to the
+  // left) or the previous one beside it, moved with it; let go far enough, they go on and the
+  // other one is edited, else they come back. Only a stroke sideways (a scroll up or down moves
+  // nothing), not one in a field (where it selects text) or on a diagram (its frame is dragged);
+  // past the first or the last card, it hardly moves.
+  touchCard(event) {
+    const el = event.currentTarget, t = event.changedTouches[0];
+    if (event.type === "touchstart") {
+      const inField = event.target.closest?.("textarea, input, .diagram");
+      this.cardTouch = event.touches.length === 1 && !inField ? { x: t.clientX, y: t.clientY, way: "" } : null;
+      return;
+    }
+    const touch = this.cardTouch;
+    if (!touch) return;
+    const dx = t.clientX - touch.x, dy = t.clientY - touch.y;
+    const i = this.cards.findIndex((c) => c.key === this.editing);
+    const step = dx < 0 ? 1 : -1, next = this.cards[i + step];
+    const beside = () => this.peek && document.querySelector(`[data-card="${this.peek}"]`);
+    const place = (card, transform, transition = "none") => {
+      if (card) Object.assign(card.style, { transform, transition });
+    };
+    if (event.type === "touchmove") {
+      if (!touch.way && Math.hypot(dx, dy) > 10) touch.way = Math.abs(dx) > Math.abs(dy) ? "side" : "scroll";
+      if (touch.way !== "side") return;
+      if (this.peek !== (next?.key ?? "")) {  // the one beside it: on the side the finger goes
+        place(beside(), "");
+        this.setPeek(next);
+      }
+      place(el, `translateX(${next ? dx : dx / 4}px)`);
+      place(beside(), `translateX(calc(${dx}px + ${step * 100}%))`);
+      return;
+    }
+    this.cardTouch = null;
+    const sideways = touch.way ? touch.way === "side" : Math.abs(dx) > 2 * Math.abs(dy);
+    const far = Math.abs(dx) > Math.min(80, el.offsetWidth / 4);
+    if (event.type === "touchend" && !event.touches.length && sideways && far && next) {
+      if (this.peek !== next.key) this.setPeek(next);  // let go without a move seen: there all the same
+      this.$nextTick(() => {
+        place(el, `translateX(${-step * 100}%)`, "transform .15s ease-out");
+        place(beside(), "translateX(0)", "transform .15s ease-out");
+      });
+      setTimeout(() => {
+        place(el, "", "");
+        place(beside(), "", "");
+        this.moveEditing(step, { slide: false });  // already in its place
+        this.setPeek(null);
+      }, 170);
+      return;
+    }
+    place(el, "", "transform .2s ease-out");  // back where they were
+    place(beside(), `translateX(${step * 100}%)`, "transform .2s ease-out");
+    setTimeout(() => {
+      place(el, "", "");
+      place(beside(), "", "");
+      this.setPeek(null);
+    }, 200);
+  },
+
   // The edited card left: its correction (and the lesson's) no longer undoable, so the
   // pictures they replaced can go
   doneEditing() {
@@ -68,9 +144,20 @@ const cardsPart = {
     if (card) {
       this.cancelFix(card);
       Object.assign(card, { _fixed: null, _allFields: false, _editing: "" });
+      // The list where the card is (‹ › may have gone far from where it was opened)
+      this.$nextTick(() => document.querySelector(`[data-card="${card.key}"]`)?.scrollIntoView({ block: "nearest" }));
     }
     this.revision = { ...this.revision, undo: null };
     this.prunePictures();
+  },
+
+  // ‹ ›: the previous or the next card edited, this one done with
+  moveEditing(step, { slide = true } = {}) {
+    const next = this.cards[this.cards.findIndex((c) => c.key === this.editing) + step];
+    if (!next) return;
+    this.editCard(next);
+    if (slide) this.slide = step;
+    this.$nextTick(() => document.querySelector(`[data-card="${next.key}"]`)?.scrollTo({ top: 0 }));
   },
 
   // The pictures no saved card uses removed (POST …/pictures/prune), once nothing can bring

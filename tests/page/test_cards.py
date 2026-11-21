@@ -36,8 +36,8 @@ def test_generate_then_edit_saves_by_itself(page):
 
 
 def test_one_empty_card_at_a_time(page):
-    """ "＋ Add a card": a new card, its front ready to type; again while it is still empty:
-    no second one, back to it; once it says something, another one."""
+    """ "＋ Add a card": a new card, full screen, its front ready to type; again while it is
+    still empty (closed): no second one, back to it; once it says something, another one."""
     generate_free(page, FRONT_PROMPT)
     cards = page.locator(".flash")
     n = cards.count()
@@ -46,11 +46,13 @@ def test_one_empty_card_at_a_time(page):
     sync_api.expect(cards).to_have_count(n + 1)
     front = cards.last.locator("textarea.front")
     sync_api.expect(front).to_be_focused()
-    page.locator(".field.deck input").click()  # elsewhere
+    page.keyboard.press("Escape")  # closed, still empty
+    sync_api.expect(page.locator(".flash.editing")).to_have_count(0)
     add.click()
     sync_api.expect(cards).to_have_count(n + 1)  # still the empty one
     sync_api.expect(front).to_be_focused()
     front.fill("el tío")
+    page.keyboard.press("Escape")
     add.click()
     sync_api.expect(cards).to_have_count(n + 2)
     sync_api.expect(cards.last.locator("textarea.front")).to_be_focused()
@@ -97,9 +99,9 @@ def test_no_voice_said_when_no_card_is_read(page):
 
 def test_a_card_shown_as_anki_shows_it_until_edited(page):
     """Not edited, a card is as Anki shows it: its formulas drawn, no fields. A touch on one of
-    its texts edits it, the cursor there, the preview under it as it's typed; one card edited
-    at a time (another touched: the first done with); done (✓ or Escape), as Anki shows it
-    again, saved."""
+    its texts edits it, full screen ("Carte 1 sur …"), the cursor there, the preview under it
+    as it's typed; done (its ✕, Escape or Android's back), as Anki shows it again in the list,
+    saved."""
     generate_free(page, FRONT_PROMPT)
     cards = page.locator(".flash")
     card, other = cards.nth(0), cards.nth(1)
@@ -108,9 +110,12 @@ def test_a_card_shown_as_anki_shows_it_until_edited(page):
     sync_api.expect(card.locator("textarea")).to_have_count(card.locator("textarea").count())
     assert not [t for t in card.locator("textarea").all() if t.is_visible()]  # no field
     field(card, "back").fill(r"\(x^2\)")
+    sync_api.expect(card.locator(".card-sheet-head")).to_contain_text("Carte 1 / ")
+    box, view = card.bounding_box(), page.viewport_size
+    assert box and view and (box["x"], box["y"], box["width"], box["height"]) == (0, 0, view["width"], view["height"])
     sync_api.expect(card.locator("textarea.front")).to_be_hidden()  # only the one touched
     sync_api.expect(card.locator(".math-preview.back:not(.shown) mjx-container")).to_be_visible()  # under it
-    card.get_by_role("button", name="✓ Terminé").click()
+    card.get_by_role("button", name="Terminé").click()  # its ✕
     shown = card.locator(".math-preview.back.shown")
     sync_api.expect(back).to_be_hidden()
     sync_api.expect(shown.locator("mjx-container")).to_be_visible()
@@ -120,11 +125,23 @@ def test_a_card_shown_as_anki_shows_it_until_edited(page):
     sync_api.expect(card).to_have_class(re.compile(r"\bediting\b"))
     sync_api.expect(back).to_be_focused()
     sync_api.expect(back).to_have_value(r"\(x^2\)")
-    other.locator(".front-row .math-preview.shown").click()  # another card: the first done with
+    page.keyboard.press("Escape")
+    sync_api.expect(page.locator(".flash.editing")).to_have_count(0)
+    other.locator(".front-row .math-preview.shown").click()  # the list back: another card edited
     sync_api.expect(other).to_have_class(re.compile(r"\bediting\b"))
     sync_api.expect(other.locator("textarea.front")).to_be_focused()
+    assert page.evaluate("window.notosaurusBack()")  # Android's back: done with it
+    sync_api.expect(page.locator(".flash.editing")).to_have_count(0)
+
+    # ‹ ›: the previous or the next card, this one done with
+    field(card, "back")
+    sync_api.expect(card.get_by_role("button", name="Carte précédente")).to_be_disabled()  # the first
+    card.get_by_role("button", name="Carte suivante").click()
+    sync_api.expect(other).to_have_class(re.compile(r"\bediting\b"))
+    sync_api.expect(other.locator(".card-sheet-head")).to_contain_text("Carte 2 / ")
     sync_api.expect(card).not_to_have_class(re.compile(r"\bediting\b"))
-    sync_api.expect(back).to_be_hidden()
+    other.get_by_role("button", name="Carte précédente").click()
+    sync_api.expect(card).to_have_class(re.compile(r"\bediting\b"))
     page.keyboard.press("Escape")
     sync_api.expect(page.locator(".flash.editing")).to_have_count(0)
 
@@ -346,7 +363,8 @@ def test_cancel_while_a_card_is_corrected(page):
     cancel = first.locator(".card-fix .btn.soft")
     sync_api.expect(cancel).to_be_enabled()  # while the AI writes too
     cancel.click()
-    sync_api.expect(field).to_be_hidden()  # dropped at once
+    sync_api.expect(field).to_have_value("")  # dropped at once, the field empty again
+    sync_api.expect(cancel).to_be_hidden()
     (route,) = held
     job = re.search(r"[?&]job=(\w+)", route.request.url).group(1)
     assert cancelled == [f"{page.url.split('#')[0].rstrip('/')}/api/generations/{job}/cancel"]
@@ -359,9 +377,9 @@ def test_cancel_while_a_card_is_corrected(page):
 
 
 def test_cancel_while_a_card_correction_is_dictated(page):
-    """The card's "Cancel" while its correction is being dictated: not taken for a tap
-    elsewhere (which would only stop listening and write it): the microphone stopped, what
-    it heard dropped, the field closed, no error."""
+    """The card's ✕ while its correction is being dictated: not taken for a tap elsewhere
+    (which would only stop listening and write it): the microphone stopped, what it heard
+    dropped, the card closed, no error."""
     page.route("**/api/config", lambda route: route.fulfill(json={**route.fetch().json(), "dictation": True}))
     page.route("**/api/dictation/start", lambda route: route.fulfill(json={"listening": True, "live": True}))
     page.route("**/api/dictation/heard", lambda route: route.fulfill(json={"text": "la réponse est"}))
@@ -377,7 +395,7 @@ def test_cancel_while_a_card_correction_is_dictated(page):
     field = first.get_by_role("textbox", name="Qu'est-ce qui ne va pas ?")
     first.locator(".card-fix button.mic").click()
     sync_api.expect(field).to_have_value("la réponse est")  # heard as it comes
-    first.locator(".card-fix .btn.soft").click()
+    first.get_by_role("button", name="Terminé").click()
     sync_api.expect(field).to_be_hidden()
     sync_api.expect(page.locator(".card-fix")).to_have_count(0)
     page.wait_for_timeout(300)
@@ -525,10 +543,13 @@ def test_helps_as_tall_as_their_text_never_dragged(page):
         box.fill("Une première ligne")
         box.press("End")
         box.press("Enter")
-        box.type("puis une seconde, assez longue pour ne pas tenir sur une ligne d'un téléphone")
+        box.type(
+            "puis une seconde, assez longue pour ne pas tenir sur une ligne d'un téléphone, même la carte en grand"
+        )
         assert "\n" in box.input_value(), name  # its line break kept
         assert box.bounding_box()["height"] > 2.5 * one_line, name  # several lines
         assert box.evaluate("el => el.scrollHeight <= el.clientHeight + 1"), name  # all of it shown
+        page.keyboard.press("Escape")  # the list back, for the next one
 
 
 def test_helps_as_the_settings_say(page):
@@ -559,7 +580,7 @@ def test_one_card_corrected_by_the_ai(page):
     field.fill("la mamá")
     field.press("Enter")
     sync_api.expect(back).to_have_value("la mamá")
-    sync_api.expect(field).to_be_hidden()
+    sync_api.expect(field).to_have_value("")  # still there, for another one
     sync_api.expect(first.locator(".card-fixed")).to_contain_text("Carte corrigée (démo).")
     sync_api.expect(first.locator(".flash-badge")).to_be_visible()  # marked changed
     assert second.locator("textarea").nth(1).input_value() == other
@@ -617,6 +638,7 @@ def test_what_the_ai_says_it_did_shows_its_formulas(page):
     _said_with_a_formula(page, "**/api/lessons/*/explain", "text")
     first.get_by_role("button", name="Expliquer cette carte").click()
     _drawn(first.locator(".explain-block").first)
+    first.get_by_role("button", name="Terminé").click()  # the list back
 
     _said_with_a_formula(page, "**/api/lessons/*/revise*", "summary")
     page.locator(".revise textarea").fill("plus court")
@@ -656,7 +678,7 @@ def test_a_card_corrected_then_undone_shows_its_figure_again(page):
     sync_api.expect(page.locator(".save-pill")).to_have_class(SAVED)
 
     assert page.request.get(drawn).ok  # kept until the card is done with
-    card.get_by_role("button", name="✓ Terminé").click()
+    card.get_by_role("button", name="Terminé").click()  # its ✕
     eventually(page, lambda: page.request.get(drawn).status == 404, f"{drawn} kept")  # the undone one's: gone
     assert page.request.get(before).ok  # the card's: kept
 
@@ -676,18 +698,80 @@ def test_a_card_corrected_on_a_touch_screen_opens_no_keyboard(page):
     sync_api.expect(field).to_be_focused()
 
 
+def _swipe(target, dx: float, dy: float = 0, *, let_go: bool = True) -> None:
+    """One finger drawn across `target` from its middle, by (dx, dy), in a few moves; let go
+    (or still down: `let_go` False, then _let_go)."""
+    target.evaluate(
+        """(el, [dx, dy, letGo]) => {
+          const r = el.getBoundingClientRect(), x = r.x + r.width / 2, y = r.y + r.height / 2;
+          const at = (f) => new Touch({ identifier: 1, target: el, clientX: x + f * dx, clientY: y + f * dy });
+          const send = (type, touch, down) => el.dispatchEvent(new TouchEvent(type,
+            { bubbles: true, cancelable: true, touches: down ? [touch] : [], changedTouches: [touch] }));
+          send("touchstart", at(0), true);
+          for (const f of [0.25, 0.5, 1]) send("touchmove", at(f), true);
+          window._swipeEnd = () => send("touchend", at(1), false);
+          if (letGo) window._swipeEnd();
+        }""",
+        [dx, dy, let_go],
+    )
+
+
+def _let_go(page) -> None:
+    page.evaluate("window._swipeEnd()")
+
+
+@pytest.mark.parametrize("page", [{"has_touch": True}], indirect=True, ids=["touch"])
+def test_a_card_open_swiped_to_the_next(page):
+    """The card open full screen follows a finger swiped sideways, the next one beside it (to
+    the left: no background seen between them); let go far enough: the next card, this one done
+    with; to the right, the previous one. Not far enough, they come back. A stroke up or down
+    (a scroll), or one in a field (selecting its text), moves nothing."""
+    generate_free(page, FRONT_PROMPT)
+    cards = page.locator(".flash")
+    first, second = cards.nth(0), cards.nth(1)
+    first.get_by_role("button", name="✨ Corriger cette carte").tap()
+    sync_api.expect(first).to_have_class(re.compile(r"\bediting\b"))
+    front = first.locator(".front-row")
+    moved = "el => el.style.transform"
+    _swipe(front, -30, -120, let_go=False)  # a scroll
+    assert first.evaluate(moved) == ""
+    _let_go(page)
+    _swipe(first.get_by_role("textbox", name="Qu'est-ce qui ne va pas ?"), -150)  # in a field
+    _swipe(front, -40, let_go=False)  # followed, the next one beside it…
+    assert first.evaluate(moved) == "translateX(-40px)"
+    sync_api.expect(second).to_have_class(re.compile(r"\bpeek\b"))
+    # …shown as it will be once edited: its correction's field, its empty texts offered
+    sync_api.expect(second.get_by_role("textbox", name="Qu'est-ce qui ne va pas ?")).to_be_visible()
+    sync_api.expect(second.locator(".card-sheet-head")).to_contain_text("Carte 2 / ")
+    a, b = first.bounding_box(), second.bounding_box()
+    assert a and b and b["x"] == pytest.approx(a["x"] + a["width"], abs=1) and b["y"] == a["y"]
+    _let_go(page)  # …not far enough: back
+    sync_api.expect(first).to_have_attribute("style", re.compile(r"^(?!.*translateX)"))
+    sync_api.expect(second).not_to_have_class(re.compile(r"\bpeek\b"))
+    sync_api.expect(second.locator(".card-fix")).to_have_count(0)  # not edited: without it again
+    sync_api.expect(first).to_have_class(re.compile(r"\bediting\b"))
+    _swipe(front, -150)
+    sync_api.expect(second).to_have_class(re.compile(r"\bediting\b"))
+    sync_api.expect(second).not_to_have_class(re.compile(r"\bpeek\b"))
+    sync_api.expect(first).not_to_have_class(re.compile(r"\bediting\b"))
+    _swipe(second.locator(".front-row"), 150)
+    sync_api.expect(first).to_have_class(re.compile(r"\bediting\b"))
+    _swipe(front, 150)  # the first: none before it
+    page.wait_for_timeout(300)
+    sync_api.expect(first).to_have_class(re.compile(r"\bediting\b"))
+
+
 def test_a_card_just_added_written_by_the_ai(page):
-    """A card just added (empty): its "✨ Write with the AI", asked what it should ask; the
-    demo AI writes its back from that. Filled, it is corrected again, no more written."""
+    """A card just added (empty): its field asks what it should ask, the demo AI writes its
+    back from that. Filled, it is corrected again, no more written."""
     generate_free(page, FRONT_PROMPT)
     page.get_by_role("button", name="＋ Ajouter une carte").click()
     added = page.locator(".flash").last
-    added.get_by_role("button", name="✨ Écrire avec l'IA").click()
     field = added.get_by_role("textbox", name="Que doit demander cette carte ?")
     field.fill("le grand-père en espagnol")
     added.get_by_role("button", name="Écrire", exact=True).click()
     sync_api.expect(added.locator("textarea").nth(1)).to_have_value("le grand-père en espagnol")
-    sync_api.expect(added.get_by_role("button", name="✨ Corriger cette carte")).to_be_visible()
+    sync_api.expect(added.get_by_role("textbox", name="Qu'est-ce qui ne va pas ?")).to_be_visible()
 
 
 def test_a_card_correction_dictated(page):
