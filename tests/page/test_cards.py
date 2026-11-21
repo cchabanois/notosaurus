@@ -603,11 +603,11 @@ def test_one_card_corrected_by_the_ai(page):
     )
 
 
-def _said_with_a_formula(page, url, field):
-    """The AI's answer at `url` as it came, its `field` (what it says it did) written with a
-    formula, as it writes them: \\( … \\)."""
-
-    said = r"Ajout de l'intégrale \(\int_{1}^{4} f(x)\,\mathrm{d}x\) sur la figure."
+def _said_with_a_formula(
+    page, url, field, said=r"Ajout de l'intégrale \(\int_{1}^{4} f(x)\,\mathrm{d}x\) sur la figure."
+):
+    """The AI's answer at `url` as it came, its `field` (what it says it did) written `said`:
+    by default with a formula, as it writes them: \\( … \\)."""
 
     def answer(route):
         response = route.fetch()
@@ -919,3 +919,37 @@ def test_the_list_shows_a_picture_where_anki_does(page):
     pic = tangent.locator(".card-picture.on-back img:visible").bounding_box()
     back = tangent.locator(".math-preview.back.shown").bounding_box()
     assert back and pic and pic["y"] + pic["height"] / 2 > back["y"] + back["height"]  # after it
+
+
+def test_what_a_lesson_correction_did_reads_beside_or_above_its_buttons(page):
+    """What a quick correction of the lesson did, on a phone, beside ↩ Undo and 🎯 Again
+    carefully: read in lines of several words, under no button (seen 2026-11-21: a word a line,
+    the buttons over it)."""
+    page.set_viewport_size({"width": 412, "height": 915})
+    generate_free(page, FRONT_PROMPT)
+
+    said = (
+        "Ajout de 8 cartes de questions-réponses sur les notions clés de la leçon (caryotype, "
+        "chromosomes homologues, gènes et allèles)"
+    )
+    _said_with_a_formula(page, "**/api/lessons/*/revise*", "summary", said)
+    page.locator(".revise textarea").fill("plus court")
+    page.locator(".revise .btn.primary").click()
+    result = page.locator(".revision-result")
+    sync_api.expect(result.get_by_role("button", name="🎯 Refaire avec soin")).to_be_visible()
+    layout = result.evaluate(
+        """(r) => {
+          const text = r.querySelector('strong');
+          const box = (e) => e.getBoundingClientRect();
+          const t = box(text);
+          const over = [...r.querySelectorAll('button')].filter((b) => b.offsetParent).some((b) => {
+            const o = box(b);
+            return o.left < t.right && o.right > t.left && o.top < t.bottom && o.bottom > t.top;
+          });
+          const lines = t.height / parseFloat(getComputedStyle(text).lineHeight);
+          return { over, lines, cut: text.scrollWidth > text.clientWidth + 1, width: t.width };
+        }"""
+    )
+    assert not layout["over"], layout  # no button over the text
+    assert not layout["cut"], layout
+    assert layout["lines"] <= 4, layout  # several words a line: the long sentence in 4 lines at most
