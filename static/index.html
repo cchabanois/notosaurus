@@ -620,7 +620,10 @@
                  always there while it is edited, at the bottom; Escape stops a correction under way,
                  else closes the card -->
             <template x-if="card._fix">
-              <form class="card-fix" @submit.prevent="fixCard(card)" @keydown.escape="card._fix.busy ? cancelFix(card) : doneEditing()">
+              <!-- Out of the way while one of its texts is typed (the keyboard up), but for a card still
+                   empty (the AI to write it) or a correction under way -->
+              <form class="card-fix" @submit.prevent="fixCard(card)" @keydown.escape="card._fix.busy ? cancelFix(card) : doneEditing()"
+                    x-show="card._fix.busy || card._fix.blank || !card._editing">
                 <div class="dictated" :class="{ 'with-mic': micOn() }">
                   <textarea :data-dictated="'card:' + card.key" x-model="card._fix.text" rows="2" :aria-label="$t(card._fix.blank ? 'app.fix.labelBlank' : 'app.fix.label')"
                             :placeholder="$t(card._fix.blank ? 'app.fix.placeholderBlank' : 'app.fix.placeholder')"

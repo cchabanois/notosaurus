@@ -861,3 +861,19 @@ def test_cards_added_from_the_card_open_and_the_lessons_end(page):
     page.keyboard.press("Escape")
     sync_api.expect(cards).to_have_count(n + 1)  # written: kept, last
     sync_api.expect(cards.last).to_contain_text("el tío")
+
+
+def test_the_correction_field_at_the_bottom_out_of_the_way_while_typing(page):
+    """The card open: its « ✨ Corriger avec l'IA » field at the bottom of the screen, a short
+    card's too (always in the same place); hidden while one of its texts is typed (the keyboard
+    up), back once it is left."""
+    page.set_viewport_size({"width": 360, "height": 780})
+    generate_free(page, FRONT_PROMPT)
+    card = open_card(page.locator(".flash").first)
+    fix = card.locator(".card-fix")
+    box = fix.bounding_box()
+    assert box and box["y"] + box["height"] == pytest.approx(780, abs=12)  # at the bottom
+    field(card, "back")
+    sync_api.expect(fix).to_be_hidden()
+    card.locator(".card-sheet-head span").click()  # the text left
+    sync_api.expect(fix).to_be_visible()
