@@ -246,3 +246,38 @@ def test_subscribe_offered_whatever_call_said_the_licence_lapsed(page):
     sync_api.expect(toast.get_by_role("link", name="S'abonner")).to_be_visible()
     page.evaluate("document.querySelector('[x-data]')._x_dataStack[0].error = 'Autre erreur.'")
     sync_api.expect(toast.get_by_role("link", name="S'abonner")).to_be_hidden()  # another error: none
+
+
+def test_x_show_follows_its_last_value(page):
+    """An `x-show` turned on and off within a frame ends as its last value says (an Alpine
+    3.14.9 race left it shown while false: the bottom bar's 📤 with Anki out of reach)."""
+    page.goto("/")
+    page.wait_for_function("document.documentElement.classList.contains('i18n-ready')")
+    shown = page.evaluate(
+        """async () => {
+          const frame = () => new Promise((r) => requestAnimationFrame(r));
+          const tick = async () => { await Promise.resolve(); await Promise.resolve(); };
+          const ends = [];
+          for (const last of [false, true]) {
+            const box = document.createElement("div");
+            box.setAttribute("x-data", "{ on: true }");
+            box.innerHTML = '<span x-show="on">x</span>';
+            document.body.append(box);
+            Alpine.initTree(box);
+            const data = Alpine.$data(box);
+            await frame();
+            await frame();
+            data.on = false;
+            await tick();
+            data.on = true;
+            await tick();
+            data.on = false;
+            if (last) { await tick(); data.on = true; }
+            for (let i = 0; i < 5; i++) await frame();
+            ends.push([data.on, Boolean(box.querySelector("span").offsetParent)]);
+            box.remove();
+          }
+          return ends;
+        }"""
+    )
+    assert shown == [[False, False], [True, True]], shown

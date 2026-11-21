@@ -15,6 +15,7 @@ build time, by the Android app (`android/`). The pages load nothing from elsewhe
 | `licences.html`, `licences.js` | the libraries' licences: the page's own, the figures' (`/api/credits`: core's `figure_credits.json`, given by the relay on the phone, so that a package added is credited without a new app), and the Android app's in the app |
 | `i18n.js`, `i18n/<lang>.json` | the translations: one file per language, English as fallback; the same files give the server's prompts and the add-on's menu |
 | `ask-confirm.js`, `voice-choice.js` | a yes/no in the page's own sheet; the voice chosen per language variety |
+| `alpine-show.js` | `x-show` as its last value says (an Alpine 3.14.9 race), loaded before Alpine by every page |
 | `style.css` | the pages' style (light and dark) |
 | `vendor/` | Alpine.js, MathJax and pdf.js, shipped with the pages (see its README) |
 | `note-types.json` | the Anki note types, written by `tools/note_types.py`, for the Android app |
