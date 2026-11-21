@@ -712,10 +712,10 @@ def _let_go(page) -> None:
 
 @pytest.mark.parametrize("page", [{"has_touch": True}], indirect=True, ids=["touch"])
 def test_a_card_open_swiped_to_the_next(page):
-    """The card open full screen follows a finger swiped sideways; let go far enough to the
-    left: the next card, this one done with; to the right, the previous one. Not far enough, it
-    comes back. A stroke up or down (a scroll), or one in a field (selecting its text), moves
-    nothing."""
+    """The card open full screen follows a finger swiped sideways, the next one beside it (to
+    the left: no background seen between them); let go far enough: the next card, this one done
+    with; to the right, the previous one. Not far enough, they come back. A stroke up or down
+    (a scroll), or one in a field (selecting its text), moves nothing."""
     generate_free(page, FRONT_PROMPT)
     cards = page.locator(".flash")
     first, second = cards.nth(0), cards.nth(1)
@@ -727,14 +727,18 @@ def test_a_card_open_swiped_to_the_next(page):
     assert first.evaluate(moved) == ""
     _let_go(page)
     _swipe(first.get_by_role("textbox", name="Qu'est-ce qui ne va pas ?"), -150)  # in a field
-    _swipe(front, -40, let_go=False)  # followed…
+    _swipe(front, -40, let_go=False)  # followed, the next one beside it…
     assert first.evaluate(moved) == "translateX(-40px)"
+    sync_api.expect(second).to_have_class(re.compile(r"\bpeek\b"))
+    a, b = first.bounding_box(), second.bounding_box()
+    assert a and b and b["x"] == pytest.approx(a["x"] + a["width"], abs=1) and b["y"] == a["y"]
     _let_go(page)  # …not far enough: back
     sync_api.expect(first).to_have_attribute("style", re.compile(r"^(?!.*translateX)"))
+    sync_api.expect(second).not_to_have_class(re.compile(r"\bpeek\b"))
     sync_api.expect(first).to_have_class(re.compile(r"\bediting\b"))
     _swipe(front, -150)
     sync_api.expect(second).to_have_class(re.compile(r"\bediting\b"))
-    sync_api.expect(second).to_have_class(re.compile(r"\bslide-next\b"))  # come in from the right
+    sync_api.expect(second).not_to_have_class(re.compile(r"\bpeek\b"))
     sync_api.expect(first).not_to_have_class(re.compile(r"\bediting\b"))
     _swipe(second.locator(".front-row"), 150)
     sync_api.expect(first).to_have_class(re.compile(r"\bediting\b"))

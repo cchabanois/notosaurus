@@ -62,11 +62,11 @@ const cardsPart = {
     this.$nextTick(() => document.querySelector(`[data-card="${card.key}"] ${selector}`)?.focus());
   },
 
-  // A finger swiped across the card edited: the card follows it, sideways; let go far enough, it
-  // leaves on that side and the next one (to the left) or the previous one comes in from the
-  // other, else it comes back. Only a stroke sideways (a scroll up or down moves nothing), not
-  // one in a field (where it selects text) or on a diagram (its frame is dragged); past the
-  // first or the last card, it hardly moves.
+  // A finger swiped across the card edited: the card follows it, sideways, the next one (to the
+  // left) or the previous one beside it, moved with it; let go far enough, they go on and the
+  // other one is edited, else they come back. Only a stroke sideways (a scroll up or down moves
+  // nothing), not one in a field (where it selects text) or on a diagram (its frame is dragged);
+  // past the first or the last card, it hardly moves.
   touchCard(event) {
     const el = event.currentTarget, t = event.changedTouches[0];
     if (event.type === "touchstart") {
@@ -79,29 +79,45 @@ const cardsPart = {
     const dx = t.clientX - touch.x, dy = t.clientY - touch.y;
     const i = this.cards.findIndex((c) => c.key === this.editing);
     const step = dx < 0 ? 1 : -1, next = this.cards[i + step];
+    const beside = () => this.peek && document.querySelector(`[data-card="${this.peek}"]`);
+    const place = (card, transform, transition = "none") => {
+      if (card) Object.assign(card.style, { transform, transition });
+    };
     if (event.type === "touchmove") {
       if (!touch.way && Math.hypot(dx, dy) > 10) touch.way = Math.abs(dx) > Math.abs(dy) ? "side" : "scroll";
       if (touch.way !== "side") return;
-      el.style.transition = "none";
-      el.style.transform = `translateX(${next ? dx : dx / 4}px)`;
+      if (this.peek !== (next?.key ?? "")) {  // the one beside it: on the side the finger goes
+        place(beside(), "");
+        this.peek = next?.key ?? "";
+      }
+      place(el, `translateX(${next ? dx : dx / 4}px)`);
+      place(beside(), `translateX(calc(${dx}px + ${step * 100}%))`);
       return;
     }
     this.cardTouch = null;
     const sideways = touch.way ? touch.way === "side" : Math.abs(dx) > 2 * Math.abs(dy);
     const far = Math.abs(dx) > Math.min(80, el.offsetWidth / 4);
     if (event.type === "touchend" && !event.touches.length && sideways && far && next) {
-      el.style.transition = "transform .15s ease-in";
-      el.style.transform = `translateX(${-step * 110}%)`;
+      if (this.peek !== next.key) this.peek = next.key;  // let go without a move seen: there all the same
+      this.$nextTick(() => {
+        place(el, `translateX(${-step * 100}%)`, "transform .15s ease-out");
+        place(beside(), "translateX(0)", "transform .15s ease-out");
+      });
       setTimeout(() => {
-        el.style.transition = el.style.transform = "";
-        this.moveEditing(step);
-      }, 150);
+        place(el, "", "");
+        place(beside(), "", "");
+        this.peek = "";
+        this.moveEditing(step, { slide: false });  // already in its place
+      }, 170);
       return;
     }
-    if (!el.style.transform) return;
-    el.style.transition = "transform .2s ease-out";  // back where it was
-    el.style.transform = "";
-    setTimeout(() => (el.style.transition = ""), 200);
+    place(el, "", "transform .2s ease-out");  // back where they were
+    place(beside(), `translateX(${step * 100}%)`, "transform .2s ease-out");
+    setTimeout(() => {
+      place(el, "", "");
+      place(beside(), "", "");
+      this.peek = "";
+    }, 200);
   },
 
   // The edited card left: its correction (and the lesson's) no longer undoable, so the
@@ -120,11 +136,11 @@ const cardsPart = {
   },
 
   // ‹ ›: the previous or the next card edited, this one done with
-  moveEditing(step) {
+  moveEditing(step, { slide = true } = {}) {
     const next = this.cards[this.cards.findIndex((c) => c.key === this.editing) + step];
     if (!next) return;
     this.editCard(next);
-    this.slide = step;
+    if (slide) this.slide = step;
     this.$nextTick(() => document.querySelector(`[data-card="${next.key}"]`)?.scrollTo({ top: 0 }));
   },
 
