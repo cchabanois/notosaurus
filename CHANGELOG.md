@@ -68,6 +68,7 @@ Each pull request's entries (the `## Changelog` of its description) are put unde
 
 ### Changed
 
+- 📝 A card is edited full screen (a window on a computer): ✕ closes it, ‹ › or a swipe go to the previous or next card, and « ✨ Corriger avec l'IA » is always at the bottom.
 - ✏️ Cards show as they will in Anki, formulas and figures drawn. Touch a text to edit it (its LaTeX shown there only), one card at a time; ✓ Done closes it.
 - ✨ "Correct this card" on a phone no longer opens the keyboard: dictate with 🎙️, or touch the field to type.
 - 🔒 Figures are compiled without access to the server's secrets.
