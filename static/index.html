@@ -594,9 +594,11 @@
                           :placeholder="$t('app.review.info')" :aria-label="$t('app.review.infoLabel')"
                           x-show="!renderedOnly(card, 'info')" @focus="card._editing = 'info'" @blur="card._editing = ''"
                           x-init="watchHeight($el)" x-effect="card.info; fitHeight($el)"></textarea>
+                <!-- Its sub-deck: "🗂 its name"; none, "+ sub-deck" as "+ info" (not a name: a field to fill) -->
                 <span class="subdeck-tag" x-show="renderedOnly(card, 'subdeck') && (card.subdeck || shownEdited(card))"
-                      x-text="'🗂 ' + (card.subdeck || $t('app.review.subdeck'))"
-                      :title="$t('app.review.subdeckLabel') + ' : ' + card.subdeck"
+                      :class="{ empty: !card.subdeck }"
+                      x-text="card.subdeck ? '🗂 ' + card.subdeck : $t('app.review.subdeckAdd')"
+                      :title="card.subdeck ? $t('app.review.subdeckLabel') + ' : ' + card.subdeck : ''"
                       @click="editCard(card, 'subdeck')"></span>
                 <input class="subdeck" x-show="!renderedOnly(card, 'subdeck')" @focus="card._editing = 'subdeck'" @blur="card._editing = ''" x-model="card.subdeck" :readonly="readOnly()" :placeholder="$t('app.review.subdeck')"
                        :aria-label="$t('app.review.subdeckLabel')"

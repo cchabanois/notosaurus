@@ -161,6 +161,7 @@
       "addChoice": "+ respuesta incorrecta",
       "removeChoice": "Quitar esta respuesta",
       "subdeck": "submazo",
+      "subdeckAdd": "+ submazo",
       "subdeckLabel": "Submazo",
       "listen": "Escuchar el reverso",
       "removeCard": "Eliminar la tarjeta",

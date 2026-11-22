@@ -592,6 +592,29 @@ def test_helps_as_the_settings_say(page):
     assert sum(helps) == 2  # an explanation, a mnemonic: the others none
 
 
+def test_a_cards_sub_deck_under_its_info_or_offered(page):
+    """A card's info written: its whole line, the sub-deck under it (beside it, the info was
+    squeezed into a narrow column, seen 2026-11-22). No sub-deck: "+ sous-paquet", as
+    "+ info", not a pill that reads as a sub-deck named so."""
+    page.set_viewport_size({"width": 390, "height": 844})
+    generate_free(page, FRONT_PROMPT)
+    page.evaluate(
+        """() => Object.assign(Alpine.$data(document.querySelector('[x-data]')).cards[0], {
+            info: 'Une précision assez longue pour tenir sur plusieurs lignes d\\'un téléphone, sans être écrasée.',
+            subdeck: 'Fonctions de référence de Seconde et Première' })"""
+    )
+    card = open_card(page.locator(".flash").first)
+    info, tag = card.locator(".meta .math-preview.info"), card.locator(".subdeck-tag")
+    sync_api.expect(tag).to_have_text("🗂 Fonctions de référence de Seconde et Première")
+    meta = card.locator(".meta").bounding_box()
+    assert info.bounding_box()["width"] > 0.9 * meta["width"]  # its whole line
+    assert tag.bounding_box()["y"] >= info.bounding_box()["y"] + info.bounding_box()["height"] - 1  # under it
+
+    page.evaluate("() => { Alpine.$data(document.querySelector('[x-data]')).cards[0].subdeck = ''; }")
+    sync_api.expect(tag).to_have_text("+ sous-paquet")
+    sync_api.expect(tag).to_have_class(re.compile(r"\bempty\b"))
+
+
 def test_one_card_corrected_by_the_ai(page):
     """The card open, its "✨ Correct with AI" field at the bottom; the demo AI makes its back
     what was asked; the card marked changed, saved, "↩ Undo" puts it back. The others
