@@ -158,10 +158,12 @@ BOOKLET = {
 
 
 def booklet_pdf(b, lang: str, path: Path) -> None:
+    """A revision booklet of more pages than a lesson has room for (30): the page picker opens
+    only then. Its topics over and over, numbered on."""
     title, topics = BOOKLET[lang]
     pages = "".join(
         f"<section><h1>{title}</h1><h2>{n}. {topic}</h2>" + "<p></p>" * 12 + "</section>"
-        for n, topic in enumerate(topics, start=1)
+        for n, topic in enumerate(itertools.islice(itertools.cycle(topics), 36), start=1)
     )
     page = b.new_page()
     page.set_content(
@@ -504,6 +506,11 @@ def shoot(lang: str) -> None:
             scroll_to(page, "section.review", 10)
             page.evaluate("window.scrollBy(0, 230)")
             shot(name)
+            if key == "geometry":  # a card open: its deck, Recto and Verso, its figure checked on demand
+                page.evaluate(f"{APP}.openCard({APP}.cards.find((c) => c.figure && c.picture) ?? {APP}.cards[0])")
+                time.sleep(0.8)
+                shot("card-open")
+                page.evaluate(f"{APP}.doneEditing()")
             if key == "pictures":  # a card's picture page (its picture touched in the card open)
                 page.evaluate(f"{APP}.openCard({APP}.cards[0]); {APP}.openPicture({APP}.cards[0])")
                 time.sleep(0.5)
