@@ -242,6 +242,7 @@
       "button": "Corriger",
       "undo": "↩ Annuler",
       "carefully": "🎯 Refaire avec soin",
+      "keep": "✓ Garder",
       "undone": "Correction annulée.",
       "added": {
         "one": "+{count} nouvelle",

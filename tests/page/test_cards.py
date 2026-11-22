@@ -1002,3 +1002,32 @@ def test_what_a_lesson_correction_did_reads_beside_or_above_its_buttons(page):
     # Several words a line (not one): counted in words, as the lines' number depends on the fonts
     # (5 lines on CI's Chrome where 4 here, the same width)
     assert len(said.split()) / layout["lines"] >= 3, layout
+
+
+def test_a_correction_kept(page):
+    """« ✓ Garder » beside « ↩ Annuler » and « 🎯 Refaire avec soin »: a card's correction kept, its
+    line gone, no longer undoable, the card still open for another; the lesson's the same, its
+    line gone."""
+    generate_free(page, FRONT_PROMPT)
+    first = open_card(page.locator(".flash").first)
+    back = first.locator("textarea.back")
+    field = first.get_by_role("textbox", name="Qu'est-ce qui ne va pas ?")
+    field.fill("la mamá")
+    field.press("Enter")
+    fixed = first.locator(".card-fixed")
+    sync_api.expect(fixed).to_contain_text("Carte corrigée (démo).")
+    fixed.get_by_role("button", name="✓ Garder").click()
+    sync_api.expect(fixed).to_be_hidden()
+    sync_api.expect(first.get_by_role("button", name="↩ Annuler")).to_have_count(0)
+    sync_api.expect(first).to_have_class(re.compile(r"\bediting\b"))  # still open, for another
+    sync_api.expect(field).to_be_visible()
+    sync_api.expect(back).to_have_value("la mamá")
+    page.keyboard.press("Escape")
+
+    page.locator(".revise textarea").fill("plus court")
+    page.locator(".revise .btn.primary").click()
+    result = page.locator(".revision-result")
+    sync_api.expect(result.get_by_role("button", name="↩ Annuler")).to_be_visible()
+    sync_api.expect(result.get_by_role("button", name="Fermer")).to_be_hidden()  # ✓ Garder in its place
+    result.get_by_role("button", name="✓ Garder").click()
+    sync_api.expect(result).to_be_hidden()

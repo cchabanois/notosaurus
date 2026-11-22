@@ -242,6 +242,7 @@
       "button": "Corregir",
       "undo": "↩ Deshacer",
       "carefully": "🎯 Rehacer con cuidado",
+      "keep": "✓ Conservar",
       "undone": "Corrección deshecha.",
       "added": {
         "one": "+{count} nueva",
