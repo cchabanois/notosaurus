@@ -16,6 +16,7 @@ from page.support import (  # noqa: E402
     FRONT_PROMPT,
     HIDE_BUTTON,
     PDF_NOTICE,
+    add_pdf_pages,
     add_photo,
     add_text_pdf,
     close_viewer,
@@ -151,8 +152,19 @@ def test_a_photo_seen_in_full_turned_and_a_name_hidden(page):
 def test_pdf_pages_become_photos(page):
     page.goto("/")
     pdf_input = page.locator("input[type=file][accept*=pdf]")
-    pdf_input.set_input_files({"name": "cours.pdf", "mimeType": "application/pdf", "buffer": pdf(3)})
-    sync_api.expect(page.locator(".thumb img")).to_have_count(3)  # every page, no question
+    pdf_input.set_input_files({"name": "une-page.pdf", "mimeType": "application/pdf", "buffer": pdf(1)})
+    sync_api.expect(page.locator(".thumb img")).to_have_count(1)  # one page: no question
+    page.locator(".thumb").get_by_role("button", name=re.compile("Retirer")).first.click()
+    sync_api.expect(page.locator(".thumb img")).to_have_count(0)
+
+    # Several pages: seen before they are added, all ticked when they fit; one untouched
+    pdf_input.set_input_files({"name": "cours.pdf", "mimeType": "application/pdf", "buffer": pdf(4)})
+    sheet = page.locator(".sheet", has=page.locator(".pdf-pages"))
+    sync_api.expect(sheet).to_contain_text("« cours.pdf » a 4 pages : touchez celles à ne pas ajouter")
+    sync_api.expect(sheet.get_by_role("button", name="Page 4", exact=True)).to_have_attribute("aria-pressed", "true")
+    sheet.get_by_role("button", name="Page 4", exact=True).click()
+    sheet.get_by_role("button", name="Ajouter 3 pages").click()
+    sync_api.expect(page.locator(".thumb img")).to_have_count(3)
     assert page.evaluate("img => img.naturalHeight", page.locator(".thumb img").first.element_handle()) == 1600
 
     # More pages than places left (30 − 3): the user picks them
@@ -193,6 +205,7 @@ def test_more_pages_than_one_call_reads_are_sent_in_several(page):
     page.locator("input[type=file][accept*=pdf]").set_input_files(
         {"name": "cours.pdf", "mimeType": "application/pdf", "buffer": pdf(12)}
     )
+    add_pdf_pages(page, 12)
     sync_api.expect(page.locator("figure.thumb img")).to_have_count(12)
     made = generate_from_photos(page, "FR → ES")
     page.wait_for_function("() => !document.querySelector('[x-data]')._x_dataStack[0].loading")  # every call made
@@ -874,6 +887,7 @@ def test_photos_and_pdfs_dropped_on_their_tiles(page):
     drop(page, gallery, [("page-1.png", "image/png", png("red")), ("page-2.png", "image/png", png("blue"))])
     sync_api.expect(page.locator(".thumb img")).to_have_count(2)
     drop(page, page.locator(".add-tile", has_text="PDF"), [("cours.pdf", "application/pdf", pdf(2))])
+    add_pdf_pages(page, 2)
     sync_api.expect(page.locator(".thumb img")).to_have_count(4)  # its two pages
 
     # Let go anywhere else: nothing added, and the page stays (not opened by the browser)
@@ -1030,6 +1044,7 @@ def test_what_was_shared_to_the_app_becomes_the_lessons_pages(page):
     page.route("**/api/shared**", host)
     page.goto("/?shared=1")
     started(page)
+    add_pdf_pages(page, 2)  # the PDF's pages seen, as any PDF's
     sync_api.expect(page.locator(".thumb img")).to_have_count(4)  # the photo, the PDF's 2 pages, the text
     texts = page.evaluate("Alpine.$data(document.querySelector('[x-data]')).photos.map((p) => p.text ?? '')")
     assert texts[0] == "" and texts[3] == text
