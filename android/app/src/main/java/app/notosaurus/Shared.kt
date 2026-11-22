@@ -92,7 +92,14 @@ class Shared(private val dir: File) {
         }
     }
 
-    fun file(n: Int): File? = File(dir, "file-$n").takeIf { n >= 1 && it.isFile }
+    /** The share's file `n`, read whole (a new share rewrites file-N under the same names: not
+     * read meanwhile); null when there is none, or when [id] is not the share that waits (another
+     * came since the page read it: its files are not this one's). No id (an older page): whatever waits. */
+    @Synchronized
+    fun file(n: Int, id: String? = null): ByteArray? {
+        if (id != null && File(dir, ID).takeIf { it.isFile }?.readText() != id) return null
+        return File(dir, "file-$n").takeIf { n >= 1 && it.isFile }?.readBytes()
+    }
 
     @Synchronized
     fun clear() {
@@ -151,11 +158,12 @@ internal fun Route.sharedRoutes(server: LocalServer) {
         api("GET", "/api/shared") { shared.get() }
         get("/api/shared/{n}") {
             if (!allowed()) return@get
-            val file = param("n").toIntOrNull()?.let(shared::file)
-            if (file == null) call.respondText("", status = HttpStatusCode.NotFound)
+            // ?id=: the share the page read (GET /api/shared), its files only
+            val bytes = param("n").toIntOrNull()?.let { shared.file(it, call.request.queryParameters["id"]) }
+            if (bytes == null) call.respondText("", status = HttpStatusCode.NotFound)
             else {
                 call.response.header(HttpHeaders.CacheControl, "no-store")
-                call.respondBytes(file.readBytes(), ContentType.Application.OctetStream)
+                call.respondBytes(bytes, ContentType.Application.OctetStream)
             }
         }
         api("DELETE", "/api/shared") {

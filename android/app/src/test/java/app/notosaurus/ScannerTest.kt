@@ -9,10 +9,34 @@ import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
+import org.junit.Rule
 import org.junit.Test
+import org.junit.rules.TemporaryFolder
 
 /** How many pages one scan may give: the lesson's places left, one for a single photo. */
 class ScannerTest {
+    @get:Rule val folder = TemporaryFolder()
+
+    @Test
+    fun aNewCaptureKeepsThePagesThePageMayStillRead() {
+        // cache/photos: a 📷's pages handed over, read by the page one by one; the next 📷 tapped
+        // meanwhile empties the folder but for them, its own pages handed over remove them
+        val photos = PhotoFolder(folder.newFolder("photos"))
+        fun page(name: String) = java.io.File(photos.dir, name).apply { writeText(name) }
+        val old = page("page-1-1.jpg") // an earlier 📷's, from before (another run of the app)
+        val first = listOf(page("page-2-1.jpg"), page("page-2-2.jpg"))
+        photos.handed(first)
+        assertFalse(old.exists())
+        photos.clear() // the next 📷
+        assertTrue(first.all { it.exists() })
+        val cancelled = page("photo-3.jpg") // the camera's, cancelled: never handed over
+        photos.clear()
+        assertFalse(cancelled.exists())
+        val next = listOf(page("photo-4.jpg"))
+        photos.handed(next)
+        assertEquals(listOf("photo-4.jpg"), photos.dir.list()!!.toList())
+    }
+
     @Test
     fun theLessonsPlacesLeft() {
         assertEquals(7, Scanner.pageLimit(multiple = true, free = 7))

@@ -456,6 +456,24 @@ test("dictation heard by the phone: its text in the field as it comes, then the 
   assert.equal(c.form.text, "Vocabulaire\nDouze cartes sur el abuelo");  // stopped: no longer asked
 });
 
+test("dictation heard by the phone, its recognition failing partway: what it heard kept in the field, the error said", async () => {
+  const page = await loadScripts("app.js", {
+    routes: (url) => new Response(
+      url === "/api/dictation/start" ? { listening: true, live: true }
+        : url === "/api/dictation/heard" ? { text: "Douze cartes", error: "dictation.recognizer" }
+          : url === "/api/dictation/stop" ? { text: "Douze cartes", error: "dictation.recognizer" } : {},
+    ),
+  });
+  const c = page.component();
+  c.form.text = "Vocabulaire";
+  await c.dictate("prompt");
+  await new Promise((done) => setTimeout(done, 450));  // the error heard: stopped by the page
+  assert.equal(c.mic.listening, "");
+  assert.equal(c.mic.busy, "");
+  assert.equal(c.form.text, "Vocabulaire\nDouze cartes");  // not put back as before the dictation
+  assert.match(c.error, /speech recognition isn't answering/);
+});
+
 test("dictation: refused microphone, the field doesn't listen", async () => {
   const page = await loadScripts("app.js", {
     routes: () => new Response({ detail: { code: "dictation.refused", params: {} } }, { status: 400 }),
@@ -985,8 +1003,9 @@ test("what was shared to the app: a lesson made kept and a new one started, a le
   assert.equal(fresh, 1);
   assert.deepEqual(added, ["cahier.jpg image/jpeg", "Leçon.pdf application/pdf", "text: La Bastille."]);
   assert.equal(c.error, "Notosaurus takes photos, PDFs and text: “archive.zip” was not added.");
-  // Taken: that share only, by its id (another shared meanwhile stays for the next call)
-  assert.deepEqual(calls.filter((call) => call.includes("shared")), ["GET /api/shared", "GET /api/shared/1", "GET /api/shared/2", "DELETE /api/shared?id=s%201"]);
+  // Its files and its taking: that share only, by its id (another shared meanwhile has its own
+  // files under the same numbers, and stays for the next call)
+  assert.deepEqual(calls.filter((call) => call.includes("shared")), ["GET /api/shared", "GET /api/shared/1?id=s%201", "GET /api/shared/2?id=s%201", "DELETE /api/shared?id=s%201"]);
 
   added.length = 0;
   c.error = "";

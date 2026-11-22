@@ -59,6 +59,8 @@ class MainActivity : ComponentActivity() {
     private var origin: String? = null // LocalServer's, once started
     private var chosen: ValueCallback<Array<Uri>>? = null
     private var photo: Uri? = null
+    private var photoFile: File? = null // the camera's photo, `photo`'s file
+    private val photos by lazy { PhotoFolder(File(cacheDir, "photos")) }
 
     // The page's <input type="file">: the camera ("capture"), or photos and PDFs
     private val chooser = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
@@ -69,6 +71,7 @@ class MainActivity : ComponentActivity() {
             data?.data != null -> arrayOf(data.data!!)
             else -> photo?.let { arrayOf(it) } // the camera wrote to our file
         }
+        if (uris != null && photo != null && uris.singleOrNull() == photo) photoFile?.let { lifecycleScope.launch(Dispatchers.IO) { photos.handed(listOf(it)) } }
         chosen?.onReceiveValue(uris)
         chosen = null
     }
@@ -356,13 +359,15 @@ class MainActivity : ComponentActivity() {
      * turned off by the relay (lesson.scan: the switches last told, kept as each page loads;
      * none told yet, the scanner). */
     private fun capture(multiple: Boolean) = lifecycleScope.launch {
+        // The pages before them (a notebook's pages, maybe a name on them: not kept on the phone
+        // outside the lessons), the camera's as the scanner's; the last handed over kept (PhotoFolder)
+        withContext(Dispatchers.IO) { photos.clear() }
         if (server.switches.off("lesson.scan")) return@launch chooser.launch(cameraIntent())
-        // The pages before them: the page has read them long since (a notebook's pages, maybe
-        // a name on them: not kept on the phone outside the lessons)
-        withContext(Dispatchers.IO) { File(cacheDir, "photos").listFiles()?.forEach { it.delete() } }
         val limit = Scanner.pageLimit(multiple, if (multiple) Scanner.free(pageAnswer(Scanner.FREE)) else null)
         val pages = try {
-            Scanner.current.scan(this@MainActivity, limit, ::launchScanner)?.let { withContext(Dispatchers.IO) { keep(it) } }
+            Scanner.current.scan(this@MainActivity, limit, ::launchScanner)?.let { scanned ->
+                withContext(Dispatchers.IO) { keep(scanned).also(photos::handed) }.map { FileProvider.getUriForFile(this@MainActivity, "$packageName.photos", it) }
+            }
         } catch (e: CancellationException) {
             throw e
         } catch (e: Exception) {
@@ -380,14 +385,14 @@ class MainActivity : ComponentActivity() {
 
     /** The scanner's pages copied where the camera's photos go (cache/photos, emptied at the next
      * 📷), its own files deleted: no page of a notebook left behind. */
-    private fun keep(scanned: List<Uri>): List<Uri> {
-        val folder = File(cacheDir, "photos").apply { mkdirs() }
+    private fun keep(scanned: List<Uri>): List<File> {
+        val folder = photos.dir.apply { mkdirs() }
         val time = System.currentTimeMillis()
         return scanned.mapIndexed { i, uri ->
             val file = File(folder, "page-$time-${i + 1}.jpg")
             checkNotNull(contentResolver.openInputStream(uri)) { "page $i unreadable" }.use { input -> file.outputStream().use { input.copyTo(it) } }
             ownFile(uri)?.delete()
-            FileProvider.getUriForFile(this, "$packageName.photos", file)
+            file
         }
     }
 
@@ -401,7 +406,8 @@ class MainActivity : ComponentActivity() {
 
     /** The phone's camera app, one photo into cache/photos (FileProvider). */
     private fun cameraIntent(): Intent {
-        val file = File(cacheDir, "photos/photo-${System.currentTimeMillis()}.jpg").apply { parentFile!!.mkdirs() }
+        val file = File(photos.dir.apply { mkdirs() }, "photo-${System.currentTimeMillis()}.jpg")
+        photoFile = file
         photo = FileProvider.getUriForFile(this, "$packageName.photos", file)
         return Intent(MediaStore.ACTION_IMAGE_CAPTURE).putExtra(MediaStore.EXTRA_OUTPUT, photo)
     }
@@ -441,6 +447,7 @@ class MainActivity : ComponentActivity() {
             chosen?.onReceiveValue(null)
             chosen = callback
             photo = null
+            photoFile = null
             if (params.isCaptureEnabled) {
                 capture(params.mode == FileChooserParams.MODE_OPEN_MULTIPLE)
                 return true
@@ -448,5 +455,28 @@ class MainActivity : ComponentActivity() {
             chooser.launch(params.createIntent().putExtra(Intent.EXTRA_ALLOW_MULTIPLE, params.mode == FileChooserParams.MODE_OPEN_MULTIPLE))
             return true
         }
+    }
+}
+
+/**
+ * cache/photos: the pages handed to the page's 📷 (the scanner's, the camera's), read by the page
+ * one by one after. A new 📷 empties it but for the last pages handed over, which the page may
+ * still be reading (the computer's page, an older one, keeps its 📷 on meanwhile); the new
+ * pages handed over, those last ones go: never more than one 📷's pages kept.
+ */
+internal class PhotoFolder(val dir: File) {
+    private var last: Set<String> = emptySet()
+
+    /** A new 📷: all but the last pages handed over deleted. */
+    @Synchronized
+    fun clear() {
+        dir.listFiles()?.filter { it.name !in last }?.forEach { it.delete() }
+    }
+
+    /** `pages` handed to the page: every other file deleted. */
+    @Synchronized
+    fun handed(pages: List<File>) {
+        last = pages.map { it.name }.toSet()
+        clear()
     }
 }

@@ -84,15 +84,25 @@ class DictationRoutesTest : LocalServerTestBase() {
 
     @Test
     fun thePhonesRecognitionFailing() = app { client ->
-        // Gone wrong while listening (not installed for this language, no network): said at stop
+        // Gone wrong while listening (not installed for this language, no network): said at stop,
+        // what was heard before it kept (not lost with the error)
         ears.on = true
         client.post("/api/dictation/start") { page("fr") }
-        ears.say("douze")
+        ears.say("douze cartes")
         ears.fail("dictation.recognizer")
         assertEquals("dictation.recognizer", client.get("/api/dictation/heard") { page() }.json().jsonObject.string("error"))
         val stopped = client.post("/api/dictation/stop") { page("fr"); contentType(ContentType.Application.Json); setBody("""{"kind": "prompt"}""") }
-        assertEquals(HttpStatusCode.BadRequest, stopped.status)
-        assertEquals("dictation.recognizer", stopped.json().jsonObject["detail"]!!.jsonObject.string("code"))
+        assertEquals(HttpStatusCode.OK, stopped.status)
+        val answer = stopped.json().jsonObject
+        assertEquals("douze cartes", answer.string("text"))
+        assertEquals("dictation.recognizer", answer.string("error"))
+        // Nothing heard before it: no text, the error all the same
+        client.post("/api/dictation/start") { page("fr") }
+        ears.fail("dictation.recognizer")
+        val empty = client.post("/api/dictation/stop") { page("fr"); contentType(ContentType.Application.Json); setBody("""{"kind": "prompt"}""") }.json().jsonObject
+        assertEquals("", empty.string("text"))
+        assertEquals("dictation.recognizer", empty.string("error"))
+        assertEquals(0, relay.requestCount)
     }
 
     @Test

@@ -158,6 +158,22 @@ class LocalServerTest : LocalServerTestBase() {
     }
 
     @Test
+    fun aSharesFilesServedOnlyAsTheShareThePageRead() = app { client ->
+        // The page reads the share, then its files one by one: another share coming meanwhile
+        // rewrites file-N, not served under the first one's names and types
+        local.shared.take(listOf(Shared.Item("cahier.jpg", "image/jpeg") { "photo".byteInputStream() }), null)
+        val read = client.get("/api/shared") { page() }.json().jsonObject.string("id")
+        assertArrayEquals("photo".toByteArray(), client.get("/api/shared/1?id=$read") { page() }.bodyAsBytes())
+        local.shared.take(listOf(Shared.Item("Leçon.pdf", Shared.PDF) { "%PDF".byteInputStream() }), null)
+        assertEquals(HttpStatusCode.NotFound, client.get("/api/shared/1?id=$read") { page() }.status)
+        assertEquals(null, local.shared.file(1, read))
+        // The new one's, by its own id; an older page (no id): whatever waits, as before
+        val next = client.get("/api/shared") { page() }.json().jsonObject.string("id")
+        assertArrayEquals("%PDF".toByteArray(), client.get("/api/shared/1?id=$next") { page() }.bodyAsBytes())
+        assertArrayEquals("%PDF".toByteArray(), client.get("/api/shared/1") { page() }.bodyAsBytes())
+    }
+
+    @Test
     fun aWebPagesAddressAloneIsNoLessonText() = app { client ->
         // What a browser shares of a page: its address, maybe its title on a line of its own
         for (link in listOf("https://example.org/cours/revolution", "  http://example.org/a?b=1  \n", "La Révolution française - Cours\nhttps://example.org/rev", "https://example.org/rev\nLa Révolution")) {
