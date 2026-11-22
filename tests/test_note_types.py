@@ -67,6 +67,48 @@ FIELDS = {
     ("diagram", 2): ["Front", "Back", "Info", "Image", "Masks", "AnswerMasks", "Id", "Explanation", "Mnemonic"],
     ("cloze", 1): ["Text", "Extra", "Info", "Id", "Explanation", "Mnemonic"],
     ("cloze", 2): ["Text", "Extra", "Info", "Id", "Explanation", "Mnemonic"],  # 2: named in English
+    # 3: a sound on either side (FrontAudio, Audio, with either voice), a picture on a cloze
+    ("text", 3): [
+        "Front",
+        "Back",
+        "Info",
+        "Audio",
+        "FrontAudio",
+        "Explanation",
+        "Mnemonic",
+        "Picture",
+        "BackPicture",
+        "Id",
+        "Source",
+    ],
+    ("choice", 3): [
+        "Question",
+        "Answer",
+        "Choices",
+        "AnswerChoices",
+        "Picture",
+        "BackPicture",
+        "Info",
+        "Audio",
+        "FrontAudio",
+        "Id",
+        "Explanation",
+        "Mnemonic",
+        "Source",
+    ],
+    ("cloze", 3): [
+        "Text",
+        "Extra",
+        "Info",
+        "Audio",
+        "FrontAudio",
+        "Id",
+        "Explanation",
+        "Mnemonic",
+        "Picture",
+        "BackPicture",
+        "Source",
+    ],
 }
 
 
@@ -75,11 +117,23 @@ def test_fields_changed_only_with_a_new_version():
     keep it lacking them, its cards without their pictures and its new notes taken for
     leftovers. Bump its family's version in common.VERSIONS, and give its fields here."""
     variants = tool().variants()
-    variants["text+tts"] = tool().anki.note_type("es_ES", reverse=True, typing=True)  # an Anki voice: no Audio
+    variants["text+tts"] = tool().anki.note_type("es_ES", reverse=True, typing=True)  # an Anki voice
+    variants["cloze+tts"] = tool().anki.cloze_note_type("es_ES")
+    variants["choice+tts"] = tool().anki.choice_note_type("es_ES")
     for key, nt in variants.items():
         version = common.VERSIONS[nt.family]
-        assert [f for f in nt.fields if f != "Audio"] == FIELDS[(nt.family, version)], key
+        # Before 3, "Audio" with an edge-tts voice only (an Anki voice's {{tts}} read the back)
+        fields = [f for f in nt.fields if f != "Audio" or version >= 3]
+        assert fields == FIELDS[(nt.family, version)], key
         assert nt.name.endswith(f" v{version}") == (version > 1), key
+
+
+def test_a_voices_note_type_its_own_id():
+    """A cloze's and a multiple choice's note types, as a text's, by voice (an mp3 in a field,
+    or Anki's {{tts}}): two templates, two ids (one would be taken for the other)."""
+    anki = tool().anki
+    for make in (anki.cloze_note_type, anki.choice_note_type, lambda v: anki.note_type(v, False)):
+        assert common.model_id(make("es-ES-ElviraNeural")) != common.model_id(make("es_ES"))
 
 
 def test_a_new_version_a_new_id():

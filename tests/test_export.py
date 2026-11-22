@@ -34,7 +34,8 @@ def test_export_apkg(client, tmp_path):
     assert any("&lt;b&gt;" in note[2] for note in package.notes)  # text is HTML-escaped
     (model,) = package.models.values()
     assert [t["name"] for t in model["tmpls"]] == ["Front → Back", "Back → Front"]
-    assert "{{tts es_ES:Back}}" in model["tmpls"][0]["afmt"]
+    # An Anki voice: the back's text in its sound field, read by {{tts}} (only when the field says something)
+    assert "{{#Audio}}{{tts es_ES:Audio}}{{/Audio}}" in model["tmpls"][0]["afmt"]
     deck_names = {d["name"] for d in package.decks.values()}
     assert {"Espagnol::Leçon 5::Vocabulaire", "Espagnol::Leçon 5::Phrases"} <= deck_names
 
@@ -83,6 +84,7 @@ def test_export_audio_edge_tts(client, tmp_path):
         "Back",
         "Info",
         "Audio",
+        "FrontAudio",
         "Explanation",
         "Mnemonic",
         "Picture",
@@ -228,12 +230,25 @@ def test_cloze_cards_one_anki_card_per_gap(client, tmp_path):
     assert synthesized == ["la madre"]  # a text with gaps isn't read aloud, even with a back
 
     (cloze,) = [m for m in package.models.values() if m["type"] == 1]  # Anki's cloze note type
-    assert cloze["name"] == "Notosaurus cloze v2"
-    assert [f["name"] for f in cloze["flds"]] == ["Text", "Extra", "Info", "Id", "Explanation", "Mnemonic"]
+    assert cloze["name"] == "Notosaurus cloze (audio) v3"
+    assert [f["name"] for f in cloze["flds"]] == [
+        "Text",
+        "Extra",
+        "Info",
+        "Audio",
+        "FrontAudio",
+        "Id",
+        "Explanation",
+        "Mnemonic",
+        "Picture",
+        "BackPicture",
+        "Source",
+    ]
     assert "{{cloze:Text}}" in cloze["tmpls"][0]["qfmt"]
     texts = {note[2].split("\x1f")[0]: note[2].split("\x1f") for note in package.notes}
     bastille = texts[CLOZE["cards"][0]["front"]]
-    assert bastille[1:] == ["", "", "rev1", "", ""]  # no back needed; the card's id tells the note; no helps
+    # no back needed; no sound (as before); the card's id tells the note; no helps, no picture
+    assert bastille[1:] == ["", "", "", "", "rev1", "", "", "", "", ""]
     assert package.cards == 2 + 1 + 1  # one Anki card per gap number
 
 
@@ -325,7 +340,7 @@ def test_dictation_only(client, tmp_path):
     }
     package = apkg.export(client, export, tmp_path)
     (model,) = package.models.values()
-    assert model["name"] == "Notosaurus dictation (audio) v2"
+    assert model["name"] == "Notosaurus dictation (audio) v3"
     (card,) = model["tmpls"]
     assert (
         card["qfmt"]
@@ -370,26 +385,26 @@ def test_typed_answer_and_dictation(client, tmp_path):
     }
     package = apkg.export(client, export, tmp_path)
     by_name = {m["name"]: m for m in package.models.values()}
-    typed = by_name["Notosaurus front/back typed + dictation (audio) v2"]
+    typed = by_name["Notosaurus front/back typed + dictation (audio) v3"]
     recto, dictation = typed["tmpls"]
     assert recto["qfmt"].endswith("{{type:Back}}") and "{{type:Back}}" in recto["afmt"]
     assert "{{FrontSide}}" not in recto["afmt"]  # the box shown once
     assert dictation["qfmt"] == CONTEXT + f'<div class="dictation">🎧</div>{{{{Audio}}}}{PICTURE}{{{{type:Back}}}}'
-    assert "Notosaurus front/back (audio) v2" in by_name  # the formula's note type, as before
+    assert "Notosaurus front/back (audio) v3" in by_name  # the formula's note type, as before
     assert package.cards == 2 + 1
 
     # Without a voice, nothing to hear: no dictation card
     package = apkg.export(client, {**export, "voice": "", "cards": export["cards"][:1]}, tmp_path)
-    assert [m["name"] for m in package.models.values()] == ["Notosaurus front/back typed (audio) v2"]
+    assert [m["name"] for m in package.models.values()] == ["Notosaurus front/back typed (audio) v3"]
 
 
 def test_plain_note_types_ids_from_their_options_and_version(client):
     """An id per note type, the same everywhere: from its options, and its version past the
     first (1.0.0's ids were the first's: test_note_types.test_a_new_version_a_new_id)."""
     assert anki._model(anki.note_type("es_ES", False)).model_id == anki._stable_id(
-        "model", "TTS Anki es_ES", "False", "v2"
+        "model", "TTS Anki es_ES", "False", "v3"
     )
-    assert anki._model(anki.note_type("", True)).model_id == anki._stable_id("model", "audio", "True", "v2")
+    assert anki._model(anki.note_type("", True)).model_id == anki._stable_id("model", "audio", "True", "v3")
     typed = anki._model(anki.note_type("", False, typing=True)).model_id
     assert typed != anki._model(anki.note_type("", False)).model_id
 
@@ -446,7 +461,7 @@ def test_multiple_choice_and_true_false(client, tmp_path):
     package = apkg.export(client, body, tmp_path)
     assert synthesized == []  # the options are read, not heard
     (model,) = package.models.values()  # neither typed nor with a sound: the same note type
-    assert model["name"] == "Notosaurus multiple choice v2"
+    assert model["name"] == "Notosaurus multiple choice (audio) v3"
     fields = [f["name"] for f in model["flds"]]
     first = dict(zip(fields, package.fields(package.notes[0]), strict=True))
     assert first["Answer"] == "1789"
@@ -550,7 +565,7 @@ def test_a_picture_on_a_dictation_keeps_it_a_dictation():
         cards=[Card(id="c1", front="Il habite une …", back="maison", picture="maison.jpg")],
     )
     (note,) = anki.notes(req, audio={}, pictures={0: Path("maison.jpg")})
-    assert note.nt.name == "Notosaurus dictation (audio) v2"
+    assert note.nt.name == "Notosaurus dictation (audio) v3"
     (template,) = note.nt.templates
     assert (
         template["qfmt"].index("{{Audio}}")
@@ -606,7 +621,7 @@ def test_a_dictation_card_without_front_still_sent():
     )
     sound = Path("chaton.mp3")
     (note,) = anki.notes(req, audio={tts.spoken(req.cards[0], True): sound})
-    assert note.nt.name == "Notosaurus dictation (audio) v2"
+    assert note.nt.name == "Notosaurus dictation (audio) v3"
     assert note.fields["Front"] == "…" and note.fields["Audio"] == "[sound:chaton.mp3]"
     assert req.cards[0].front == ""  # the lesson's card as it is
 
@@ -617,3 +632,57 @@ def test_cards_not_sent_are_counted(client, anki):
     cards = [{"front": "la mère", "back": "la madre"}, {"front": "le père", "back": ""}]
     res = client.post("/api/anki/send", json={"deck": "Espagnol", "cards": cards}).json()
     assert (res["added"], res["skipped"]) == (1, 1)
+
+
+def test_a_sound_on_either_side_and_a_text_with_gaps_heard(client, tmp_path):
+    """A sound a side (Card.sound), each reading its side: a plain card's front, a sentence
+    with gaps' front with its blank and its back whole, a multiple choice's question; each in
+    its field ("FrontAudio", "Audio") with an edge-tts voice; none where the card says none."""
+    synthesized.clear()
+    body = {
+        "deck": "Anglais",
+        "voice": "es-ES-ElviraNeural",
+        "cards": [
+            {"front": "the cat", "back": "le chat", "sound": "front"},
+            {"front": "I {{c1::helped}} my mum.", "back": "", "sound": "both"},
+            {"front": "Which year?", "back": "1789", "choices": ["1790"], "sound": "front"},
+            {"front": "le chien", "back": "the dog", "sound": "none"},
+        ],
+    }
+    package = apkg.export(client, body, tmp_path)
+    assert sorted(synthesized) == sorted(["the cat", "I … my mum.", "I helped my mum.", "Which year?"])
+    by_model = {}
+    for note in package.notes:
+        by_model.setdefault(package.models[note[1]]["name"], []).append(package.fields_by_name(note))
+    sound = lambda text: f"[sound:{tts.filename(text, 'es-ES-ElviraNeural')}]"  # noqa: E731
+    cat, dog = by_model["Notosaurus front/back (audio) v3"]
+    assert (cat["FrontAudio"], cat["Audio"]) == (sound("the cat"), "")
+    assert (dog["FrontAudio"], dog["Audio"]) == ("", "")
+    (gaps,) = by_model["Notosaurus cloze (audio) v3"]
+    assert (gaps["FrontAudio"], gaps["Audio"]) == (sound("I … my mum."), sound("I helped my mum."))
+    (year,) = by_model["Notosaurus multiple choice (audio) v3"]
+    assert (year["FrontAudio"], year["Audio"]) == (sound("Which year?"), "")
+
+
+def test_a_sound_read_by_anki_its_text_in_its_field():
+    """An Anki voice (a locale): each side's field holds its text, {{tts}} reading it when it
+    says something; no mp3."""
+    req = anki.ExportRequest(
+        deck="D", voice="en_US", cards=[Card(front="I {{c1::helped}} my mum.", back="", sound="both")]
+    )
+    (note,) = anki.notes(req)
+    assert (note.fields["FrontAudio"], note.fields["Audio"]) == ("I … my mum.", "I helped my mum.")
+    assert note.media == []
+    assert "{{#FrontAudio}}{{tts en_US:FrontAudio}}{{/FrontAudio}}" in note.nt.templates[0]["qfmt"]
+
+
+def test_a_text_with_gaps_gets_its_picture(tmp_path):
+    """A sentence with gaps' picture, as any card's: on its question, or with its answer."""
+    picture = tmp_path / "picture-a-12345678.jpg"
+    picture.write_bytes(b"jpg")
+    for on_back in (False, True):
+        card = Card(front="Thanksgiving is in {{c1::November}}.", back="", picture_on_back=on_back)
+        (note,) = anki.notes(anki.ExportRequest(deck="D", voice="", cards=[card]), pictures={0: picture})
+        shown = f'<img src="{picture.name}">'
+        assert (note.fields["Picture"], note.fields["BackPicture"]) == (("", shown) if on_back else (shown, ""))
+        assert note.media == [picture]

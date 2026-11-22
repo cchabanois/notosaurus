@@ -28,11 +28,59 @@ const ankiPart = {
     return this.isVoice(this.voice) && !this.off("speech.speak");
   },
 
-  // Some card the voice reads (as tts.spoken_backs: not a text with gaps, a back with a
-  // formula, a multiple choice): else no voice is said to come with the cards
+  // Some card the voice reads, a side of it (as tts.spoken_sides): else no voice is said to come
+  // with the cards
   anyRead() {
-    return this.cards.some((c) => (c.front ?? "").trim() && (c.back ?? "").trim() && !this.hasMath(c.back)
-      && !this.isCloze(c.front) && !c.choices?.length && this.spokenText(c));
+    return this.cards.some((c) => this.spokenSides(c).some(Boolean));
+  },
+
+  // Which of a card's sides are read aloud (its sound; tts.sound_sides): [front, back]. "": as
+  // before its choice, its back, not a text with gaps' nor a multiple choice's. Never a side
+  // with a formula.
+  soundSides(card) {
+    const plain = !this.isCloze(card.front ?? "") && !card.choices?.some((c) => c.trim());
+    const [front, back] = { back: [false, true], front: [true, false], both: [true, true], none: [false, false] }[card.sound]
+      ?? [false, plain];
+    return [front && !this.hasMath(card.front), back && !this.hasMath(card.back)];
+  },
+
+  // What each side says read aloud (tts.spoken_sides), "" for a side not read: its front as it
+  // shows (a text with gaps with each gap a blank, its hint said), its back (a text with
+  // gaps' the whole text). With the lesson's dictation, a plain card's back always.
+  spokenSides(card) {
+    let [front, back] = this.soundSides(card);
+    const cloze = this.isCloze(card.front ?? "");
+    if (this.dictation && !cloze && !card.choices?.some((c) => c.trim())) back = !this.hasMath(card.back);
+    const text = (card.front ?? "").trim();
+    const gap = /\{\{c\d+::(.*?)(?:::(.*?))?\}\}/gs;
+    let said = "";
+    if (front && text) {
+      const shown = text.replace(gap, (_, answer, hint) => (hint ? `… (${hint})` : "…"));
+      said = speakable(cloze ? shown : shown.replace(/\s*\([^)]*\)/g, ""));
+      if (!LETTER.test(said)) said = "";
+    }
+    if (!back || !text) return [said, ""];
+    if (cloze) {
+      const whole = speakable(text.replace(gap, (_, answer) => answer));
+      return [said, LETTER.test(whole) ? whole : ""];
+    }
+    return [said, (card.back ?? "").trim() ? this.spokenText(card) : ""];
+  },
+
+  // A side's sound turned on or off (the card's sound), heard when turned on
+  toggleSound(card, side) {
+    const [front, back] = this.soundSides(card);
+    const on = side === "front" ? [!front, back] : [front, !back];
+    card.sound = on[0] && on[1] ? "both" : on[0] ? "front" : on[1] ? "back" : "none";
+    const said = this.spokenSides(card)[side === "front" ? 0 : 1];
+    if (said) this.play(said, card.voice || this.voice);
+  },
+
+  // A side that could be read (it says something, no formula): its sound can be turned on. A
+  // text with gaps' back reads the whole text
+  canSound(card, side) {
+    const text = (side === "front" || this.isCloze(card.front ?? "") ? card.front : card.back) ?? "";
+    return Boolean(text.trim()) && !this.hasMath(text);
   },
 
   // What a card's sound says (as tts.spoken): its back; a dictation's sentence with a blank:

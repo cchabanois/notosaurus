@@ -1116,3 +1116,40 @@ def test_a_card_open_says_its_front_and_its_back(page):
     labels = tangent.locator(".side-label:visible")
     sync_api.expect(tangent.locator(".card-picture.on-back img:visible")).to_be_visible()
     assert y(labels.nth(1)) < y(tangent.locator(".back-row")) < y(tangent.locator(".card-picture.on-back img:visible"))
+
+
+def test_each_side_read_aloud_as_the_card_says(page):
+    """A card's sound a side: its back read as before; ⋯ turns its front's on (heard at once, its
+    🔊 beside it) and its back's off (its 🔊 gone), kept with the card (its sound). A sentence with
+    gaps can be read too: its front with its blank, its back whole; and it can get a picture."""
+    generate_free(page, FRONT_PROMPT)
+    # What the voice is asked, not its sound (none made here): the page's player a quiet one
+    page.evaluate(
+        """() => { window.Audio = class { constructor(src) { window._said = [...(window._said || []), src]; }
+            play() { return Promise.resolve(); } addEventListener() {} pause() {} }; }"""
+    )
+    card = open_card(page.locator(".flash").first)
+    sync_api.expect(card.get_by_role("button", name="Écouter le verso")).to_be_visible()
+    sync_api.expect(card.get_by_role("button", name="Écouter le recto")).to_be_hidden()
+
+    card.get_by_role("button", name="Plus d'actions").click()
+    card.get_by_role("button", name="🔊 Lire le recto à voix haute").click()
+    sync_api.expect(card.get_by_role("button", name="Écouter le recto")).to_be_visible()
+    said = page.evaluate("window._said || []")
+    assert any("text=la+m%C3%A8re" in u for u in said), said  # heard at once
+    card.get_by_role("button", name="Plus d'actions").click()
+    card.get_by_role("button", name="🔇 Ne plus lire le verso").click()
+    sync_api.expect(card.get_by_role("button", name="Écouter le verso")).to_be_hidden()
+    sync_api.expect(page.locator(".save-pill")).to_have_class(SAVED)
+    (summary,) = lessons(page)
+    assert lesson(page, summary["id"])["cards"][0]["sound"] == "front"
+
+    # A sentence with gaps: read, its front with its blank; a picture offered
+    page.evaluate(
+        """() => Object.assign(Alpine.$data(document.querySelector('[x-data]')).cards[0],
+            { front: 'I {{c1::helped}} my mum.', back: '', sound: 'both' })"""
+    )
+    sides = card.evaluate("e => Alpine.$data(e).spokenSides(Alpine.$data(e).cards[0])")
+    assert sides == ["I … my mum.", "I helped my mum."]
+    card.get_by_role("button", name="Plus d'actions").click()
+    sync_api.expect(card.get_by_role("button", name="🖼️ Ajouter une image")).to_be_visible()

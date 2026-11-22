@@ -84,6 +84,25 @@ BACK_PICTURE = '{{#BackPicture}}<div class="notosaurus-picture">{{BackPicture}}<
 PICTURE_CSS = (Path(__file__).parent / "css" / "picture.css").read_text(encoding="utf-8")
 
 
+# A card's sounds, one a side, each in a field empty when that side isn't read (Card.sound):
+# "FrontAudio" on its question, "Audio" with its answer
+SOUND_FIELDS = ("Audio", "FrontAudio")
+
+
+def sounds(anki_tts: bool, voice: str) -> tuple[str, str]:
+    """(the front's sound, the back's) in a template: an edge-tts voice, its mp3 the field holds
+    ("[sound:…]"); an Anki locale, the field's text read by the device ({{tts}}), only when
+    the field says something."""
+    if not anki_tts:
+        return "{{FrontAudio}}", "{{Audio}}"
+    return tuple(f"{{{{#{f}}}}}{{{{tts {voice}:{f}}}}}{{{{/{f}}}}}" for f in ("FrontAudio", "Audio"))  # type: ignore[return-value]
+
+
+def sound_kind(anki_tts: bool, voice: str) -> str:
+    """Its note type's name's end: how its sounds are made ("audio", "TTS Anki es_ES")."""
+    return f"TTS Anki {voice}" if anki_tts else "audio"
+
+
 def stable_id(*parts: str) -> int:
     """Deterministic id that fits in the 31 bits Anki expects."""
     digest = hashlib.sha256("|".join(parts).encode()).digest()
@@ -161,7 +180,8 @@ FORMER_TEMPLATES = {
 # type on every device; the computer moves its notes there (its family's: _change_type), their
 # history kept. Without a suffix: version 1, 1.0.0's. tests/test_note_types.py keeps each
 # version's fields: changing them without a new version fails it.
-VERSIONS = {"text": 2, "choice": 2, "diagram": 2, "cloze": 2}  # 2: named in English, and text's, choice's fields
+VERSIONS = {"text": 3, "choice": 3, "diagram": 2, "cloze": 3}  # 2: named in English, and text's, choice's fields;
+# 3: a sound on either side (FrontAudio, Audio) on text, choice and cloze, a picture on a cloze too
 
 
 def versioned(name: str) -> str:

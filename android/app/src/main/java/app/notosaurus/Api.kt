@@ -42,6 +42,8 @@ data class Card(
     val figure: String = "",
     val picture: String = "", // its picture's file, in the lesson's images/
     @SerialName("picture_on_back") val pictureOnBack: Boolean = false,
+    // Where it is read aloud: "back", "front", "both", "none"; "" as before its choice (Speech.soundSides)
+    val sound: String = "",
     val id: String = "", // the lesson's id for it
     @SerialName("fun_fact") val funFact: String = "", // "did you know", with the info
     val explanation: String = "", // the helps on the back

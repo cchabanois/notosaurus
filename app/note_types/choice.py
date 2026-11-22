@@ -3,6 +3,8 @@
 import random
 from pathlib import Path
 
+from notosaurus_core import tts
+
 from .common import (
     BACK_INFO,
     BACK_PICTURE,
@@ -10,12 +12,15 @@ from .common import (
     HELP_FIELDS,
     PICTURE,
     PICTURE_CSS,
+    SOUND_FIELDS,
     SOURCE_FIELD,
     NoteType,
     field_html,
     fix_link,
     helps,
     info,
+    sound_kind,
+    sounds,
     stable_id,
     versioned,
     with_context,
@@ -46,19 +51,23 @@ def _choices_html(card, reveal: bool) -> str:
     return f'<ol class="notosaurus-choices">{"".join(items)}</ol>'
 
 
-def choice_note_type() -> NoteType:
+def choice_note_type(voice: str = "") -> NoteType:
     """A multiple-choice or true/false card: the question and its options, then the
     options again with the right one marked. In plain HTML, no script: the same on every
     Anki. The options' order is fixed per card ("Choices", "AnswerChoices"). Its picture
     or figure, if any, goes on the question ("Picture") or with the answer
-    ("BackPicture"). "Id" (the card's own id) tells which note an update is for."""
+    ("BackPicture"); its sounds in `voice` (common.sounds), its question's ("FrontAudio")
+    and its right answer's ("Audio"), each when the card says (Card.sound). "Id" (the card's
+    own id) tells which note an update is for."""
+    anki_tts = tts.is_anki_locale(voice)
+    front_sound, sound = sounds(anki_tts, voice)
     info = BACK_INFO + fix_link("Id")
     question = f"{PICTURE}<div>{{{{Question}}}}</div>"
     templates = (
         {
             "name": "Multiple choice",
-            "qfmt": f"{question}{{{{Choices}}}}",
-            "afmt": f'{question}<hr id="answer">{{{{AnswerChoices}}}}{BACK_PICTURE}{info}',
+            "qfmt": f"{question}{front_sound}{{{{Choices}}}}",
+            "afmt": f'{question}<hr id="answer">{{{{AnswerChoices}}}}{sound}{BACK_PICTURE}{info}',
         },
     )
     fields = (
@@ -69,14 +78,15 @@ def choice_note_type() -> NoteType:
         "Picture",
         "BackPicture",
         "Info",
+        *SOUND_FIELDS,
         "Id",
         *HELP_FIELDS,
         SOURCE_FIELD,
     )
     css = CSS + PICTURE_CSS + CHOICE_CSS
-    return NoteType(
-        versioned("Notosaurus multiple choice"), "choice", fields, with_context(templates), css=css, key="Id"
-    )
+    name = versioned(f"Notosaurus multiple choice ({sound_kind(anki_tts, voice)})")
+    kind = f"choice {sound_kind(anki_tts, voice)}"  # its id's: a voice's note type never another's
+    return NoteType(name, kind, fields, with_context(templates), css=css, key="Id")
 
 
 def choice_fields(card, card_id: str, picture_file: Path | None) -> dict[str, str]:
@@ -92,6 +102,7 @@ def choice_fields(card, card_id: str, picture_file: Path | None) -> dict[str, st
         SOURCE_FIELD: source(card) if picture_file else "",
         "BackPicture": picture if card.picture_on_back else "",
         "Info": info(card),
+        **dict.fromkeys(SOUND_FIELDS, ""),  # the export's to fill (anki.notes)
         "Id": card_id,
         **helps(card),
     }

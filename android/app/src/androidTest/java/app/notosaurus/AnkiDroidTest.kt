@@ -299,6 +299,37 @@ class AnkiDroidTest {
         assertTrue(now, now.startsWith("gata-$run") && now in media())
     }
 
+    /** A text with gaps heard on both sides (its sound) and with its picture, as any card (note
+     * types v3): its question's sound (the blank), its answer's (the whole text), its picture, each
+     * in its field of its cloze note type, the files in AnkiDroid's media. */
+    @Test
+    fun aTextWithGapsHeardOnBothSidesWithItsPicture() {
+        val anki = Anki(Device.context)
+        val lesson = "gaps-$run"
+        fun mp3(name: String) = File(Device.context.filesDir, "audio/$name-$run.mp3").apply {
+            parentFile!!.mkdirs()
+            writeBytes(ByteArray(64) { (it + name.length).toByte() })
+        }
+        val picture = File(Device.context.filesDir, "lessons/$lesson/images/picture-g-$run.jpg").apply {
+            parentFile!!.mkdirs()
+            outputStream().use { Bitmap.createBitmap(20, 20, Bitmap.Config.ARGB_8888).compress(Bitmap.CompressFormat.JPEG, 80, it) }
+        }
+        val card = Card("I {{c1::helped}} my mum $run.", "", id = "g-$run", picture = picture.name, sound = "both")
+        val (front, back) = Speech.spokenSides(card, false)
+        assertEquals("I … my mum $run." to "I helped my mum $run.", front to back)
+        val audio = mapOf(front to mp3("blank"), back to mp3("whole"))
+        val sent = anki.send(Deck("Notosaurus test $run", listOf(card)), Media(audio = audio, pictures = mapOf(picture.name to picture), lesson = lesson))
+        assertEquals(1, sent.added)
+        val api = AddContentApi(Device.context)
+        val note = api.getNote(sent.notes.getValue("g-$run"))!!
+        val model = noteModel(note.id)
+        assertEquals(types["cloze"].name, api.modelList!![model])
+        assertTrue(field(model, note.fields, "FrontAudio").startsWith("[sound:blank-$run"))
+        assertTrue(field(model, note.fields, "Audio").startsWith("[sound:whole-$run"))
+        assertTrue(field(model, note.fields, "Picture").startsWith("<img"))
+        assertTrue(media().any { it.startsWith("blank-$run") } && media().any { it.startsWith("whole-$run") })
+    }
+
     /** Release test (build 425): AnkiDroid holds the note types of an older Notosaurus (the
      * computer's 1.0.0, synced; a test build), the same names, without a picture's fields
      * (Picture, BackPicture, Id, Source). A lesson with a picture sent from the phone alone: its

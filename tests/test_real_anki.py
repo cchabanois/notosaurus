@@ -141,6 +141,7 @@ def test_bridge_on_a_real_collection(bridged, col):
         "Back",
         "Info",
         "Audio",
+        "FrontAudio",
         "Explanation",
         "Mnemonic",
         "Picture",
@@ -300,7 +301,7 @@ def test_cloze_lesson_on_a_real_collection(bridged, col, tmp_path):
     body = {"deck": lesson["deck"], "cards": lesson["cards"], "lesson_id": lesson["id"]}
     assert client.post("/api/anki/send", json=body).json()["added"] == 3
 
-    (note_type,) = [m for m in col.models.all_names_and_ids() if m.name == "Notosaurus cloze v2"]
+    (note_type,) = [m for m in col.models.all_names_and_ids() if m.name == "Notosaurus cloze (audio) v3"]
     assert col.models.get(note_type.id)["type"] == 1  # a real cloze note type
     note_ids = sorted(col.find_notes(f'"note:{note_type.name}"'))
     # Anki makes one card per gap number: c1 and c2, c1 and c2, c1 (twice)
@@ -336,7 +337,7 @@ def test_typed_answer_and_dictation_on_a_real_collection(bridged, col):
     assert res["added"] == len(cards)
 
     (note_type,) = [m for m in col.models.all_names_and_ids() if m.name.startswith("Notosaurus")]
-    assert note_type.name == "Notosaurus front/back typed + dictation (audio) v2"
+    assert note_type.name == "Notosaurus front/back typed + dictation (audio) v3"
     mother = col.find_notes('"Front:la mère"')
     recto, dictation = col.get_note(mother[0]).cards()  # a dictation card on top of the usual one
     assert "[[type:Back]]" in recto.question() and "[[type:Back]]" in recto.answer()  # Anki's box, then its check
@@ -405,7 +406,7 @@ def test_options_changed_after_a_send_keep_the_review_history(bridged, col):
     assert (res["added"], res["converted"]) == (0, 6)
     assert sorted(col.find_notes("")) == notes_before
     name, by_template = cards()
-    assert name == "Notosaurus front/back + reverse + dictation (audio) v2"
+    assert name == "Notosaurus front/back + reverse + dictation (audio) v3"
     assert set(by_template) == {"Front → Back", "Back → Front", "Dictation"}
     recto = by_template["Front → Back"]
     assert (recto.id, recto.ivl, recto.reps) == (card.id, 12, 5)
@@ -415,7 +416,7 @@ def test_options_changed_after_a_send_keep_the_review_history(bridged, col):
     res = client.post("/api/anki/send", json={**body, "dictation": True}).json()
     assert res["converted"] == 6
     name, by_template = cards()
-    assert name == "Notosaurus front/back + dictation (audio) v2"
+    assert name == "Notosaurus front/back + dictation (audio) v3"
     assert set(by_template) == {"Front → Back", "Dictation"}  # matched by name, not by position
     assert (by_template["Front → Back"].id, by_template["Front → Back"].ivl) == (card.id, 12)
     assert by_template["Dictation"].id == dictation_id
@@ -446,7 +447,7 @@ def test_notes_of_an_older_note_type_version_moved_with_their_history(bridged, c
     assert (res["added"], res["converted"]) == (0, 6)
     assert sorted(col.find_notes("")) == notes_before
     note = col.get_note(mother)
-    assert note.note_type()["name"] == name == "Notosaurus front/back (audio) v2"
+    assert note.note_type()["name"] == name == "Notosaurus front/back (audio) v3"
     (moved,) = note.cards()
     assert (moved.id, moved.ivl, moved.reps, moved.template()["name"]) == (card.id, 12, 5, "Front → Back")
 
@@ -527,7 +528,7 @@ def test_multiple_choice_lesson_on_a_real_collection(bridged, col, tmp_path):
     body = {"deck": lesson["deck"], "cards": lesson["cards"], "lesson_id": lesson["id"]}
     assert client.post("/api/anki/send", json=body).json()["added"] == 4
 
-    note_ids = sorted(col.find_notes('"note:Notosaurus multiple choice v2"'))
+    note_ids = sorted(col.find_notes('"note:Notosaurus multiple choice (audio) v3"'))
     card = col.get_note(note_ids[0]).cards()[0]
     assert "<li>1789</li>" in card.question() and 'class="right"' not in card.question()  # none marked
     assert '<li class="right">1789</li>' in card.answer()
@@ -582,6 +583,7 @@ def test_note_types_brought_up_to_date_on_a_real_collection(bridged, col, tmp_pa
         "Front",
         "Back",
         "Audio",
+        "FrontAudio",
         "Explanation",
         "Mnemonic",
         "Info",

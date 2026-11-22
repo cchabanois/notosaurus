@@ -15,6 +15,16 @@ test("speakable: what a voice reads of a text, as tts.py", async () => {
   for (const c of cases.speakable) assert.equal(page.run(`speakable(${JSON.stringify(c.in)})`), c.out, c.in);
 });
 
+test("what each side says read aloud, as tts.spoken_sides", async () => {
+  const page = await loadScripts("app.js");
+  const component = page.component();
+  for (const c of cases.spoken_sides) {
+    component.dictation = c.dictation;
+    const card = { front: c.front, back: c.back, choices: c.choices, sound: c.sound };
+    assert.deepEqual([...component.spokenSides(card)], c.out, `${c.front} | ${c.sound}`);  // (the page's own Array)
+  }
+});
+
 test("a card's sound: what it says, as tts.spoken", async () => {
   const page = await loadScripts("app.js");
   const component = page.component();

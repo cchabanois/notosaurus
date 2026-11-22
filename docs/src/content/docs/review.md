@@ -26,7 +26,9 @@ and it's the best way to get Notosaurus fixed. See [Reporting a problem](#report
   picture to change it (a card without one: ⋯ → **🖼️ Add a picture**).
 - **+ info** adds a note shown under the answer: gender, plural, an example…
 - **sub-deck** puts the card in a sub-deck of the lesson (“Vocabulary”, “Verbs”).
-- **Listen to the back** (🔊) plays it with the lesson's voice.
+- **🔊**, beside the front or the back, plays it with the lesson's voice. A card says which sides are
+  read: a vocabulary card's answer, a text with gaps on both sides (its front with its blank). The
+  card's ⋯: **Read the front aloud**, **Stop reading the back**…
 - **More actions** (⋯), at the card's top right, deletes it; **＋ Add a card**, at the bottom, adds one.
 
 **📝 Instructions used for this lesson**, above the cards, reminds what the AI was asked.

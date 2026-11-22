@@ -1,5 +1,5 @@
 {
- "_": "Cases the three implementations must agree on (Python app/exams.py, notosaurus_core/tts.py, notosaurus_core/cards.py; Kotlin Exams.kt, Speech.kt, Lessons.kt; JavaScript static/app-anki.js): their tests read this file. Python's answers are the reference; sound_file, kept_ids, same_text, info_field: Python and Kotlin only (the page names no file, makes no lesson).",
+ "_": "Cases the three implementations must agree on (Python app/exams.py, notosaurus_core/tts.py, notosaurus_core/cards.py; Kotlin Exams.kt, Speech.kt, Lessons.kt; JavaScript static/app-anki.js): their tests read this file. Python's answers are the reference; sound_file, kept_ids, same_text, info_field: Python and Kotlin only (the page names no file, makes no lesson). spoken_sides: what each side says read aloud (tts.spoken_sides), [front, back].",
  "tag_text": [
   {
    "in": "Interro SVT de lundi",
@@ -722,6 +722,144 @@
    "info": " a < b & \"c\"\nd ",
    "fun_fact": " x > y ",
    "out": "a &lt; b &amp; &quot;c&quot;<br>d<div style=\"margin-top:8px;font-style:italic\">💡 x &gt; y</div>"
+  }
+ ],
+ "spoken_sides": [
+  {
+   "front": "le chat",
+   "back": "the cat",
+   "choices": [],
+   "sound": "",
+   "dictation": false,
+   "out": [
+    "",
+    "the cat"
+   ]
+  },
+  {
+   "front": "the cat (animal)",
+   "back": "le chat",
+   "choices": [],
+   "sound": "front",
+   "dictation": false,
+   "out": [
+    "the cat",
+    ""
+   ]
+  },
+  {
+   "front": "le chat",
+   "back": "the cat",
+   "choices": [],
+   "sound": "both",
+   "dictation": false,
+   "out": [
+    "le chat",
+    "the cat"
+   ]
+  },
+  {
+   "front": "le chat",
+   "back": "the cat",
+   "choices": [],
+   "sound": "none",
+   "dictation": false,
+   "out": [
+    "",
+    ""
+   ]
+  },
+  {
+   "front": "le chat",
+   "back": "the cat",
+   "choices": [],
+   "sound": "none",
+   "dictation": true,
+   "out": [
+    "",
+    "the cat"
+   ]
+  },
+  {
+   "front": "I {{c1::helped}} my mum yesterday.",
+   "back": "",
+   "choices": [],
+   "sound": "",
+   "dictation": false,
+   "out": [
+    "",
+    ""
+   ]
+  },
+  {
+   "front": "I {{c1::helped}} my mum yesterday.",
+   "back": "",
+   "choices": [],
+   "sound": "both",
+   "dictation": false,
+   "out": [
+    "I … my mum yesterday.",
+    "I helped my mum yesterday."
+   ]
+  },
+  {
+   "front": "I {{c1::helped::help}} my {{c2::mum}}.",
+   "back": "",
+   "choices": [],
+   "sound": "front",
+   "dictation": false,
+   "out": [
+    "I … (help) my ….",
+    ""
+   ]
+  },
+  {
+   "front": "En quelle année ?",
+   "back": "1789",
+   "choices": [
+    "1790"
+   ],
+   "sound": "",
+   "dictation": false,
+   "out": [
+    "",
+    ""
+   ]
+  },
+  {
+   "front": "In which year?",
+   "back": "1789",
+   "choices": [
+    "1790"
+   ],
+   "sound": "both",
+   "dictation": false,
+   "out": [
+    "In which year?",
+    "1789"
+   ]
+  },
+  {
+   "front": "Le chat boit du …",
+   "back": "lait",
+   "choices": [],
+   "sound": "",
+   "dictation": true,
+   "out": [
+    "",
+    "Le chat boit du lait.\nlait"
+   ]
+  },
+  {
+   "front": "\\(x^2\\) ?",
+   "back": "le carré",
+   "choices": [],
+   "sound": "both",
+   "dictation": false,
+   "out": [
+    "",
+    "le carré"
+   ]
   }
  ]
 }
