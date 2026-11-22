@@ -161,6 +161,7 @@
       "addChoice": "+ wrong answer",
       "removeChoice": "Remove this answer",
       "subdeck": "sub-deck",
+      "subdeckAdd": "+ sub-deck",
       "subdeckLabel": "Sub-deck",
       "listen": "Listen to the back",
       "removeCard": "Delete card",
