@@ -114,6 +114,7 @@ Each pull request's entries (the `## Changelog` of its description) are put unde
 
 ### Fixed
 
+- A lesson of more than 10 pages: its cards get the lesson's own drawings again (before, none did past 10 pages).
 - The 📷 opens the camera when Google Play services are too slow to start the document scanner (offline, its module still downloading), instead of doing nothing.
 - 🐛 Swiping to the next card, its deck at its top shows during the swipe, not once it has arrived.
 - 🖼️ Asking a correction for another picture no longer brings back the same drawing cut out of the lesson's photos.
