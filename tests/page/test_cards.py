@@ -37,26 +37,50 @@ def test_generate_then_edit_saves_by_itself(page):
 
 
 def test_one_empty_card_at_a_time(page):
-    """ "＋ Add a card": a new card, full screen, its front ready to type; again while it is
-    still empty (closed): no second one, back to it; once it says something, another one."""
+    """ "＋ Add a card": a new card, full screen, « Que doit demander cette carte ? » (the AI
+    writes it) ready to type, with a mouse; again while it is still empty (closed): no second
+    one, back to it; once it says something, another one."""
     generate_free(page, FRONT_PROMPT)
     cards = page.locator(".flash")
     n = cards.count()
     add = page.get_by_role("button", name="＋ Ajouter une carte")
     add.click()
     sync_api.expect(cards).to_have_count(n + 1)
-    front = cards.last.locator("textarea.front")
-    sync_api.expect(front).to_be_focused()
+    asked = cards.last.get_by_role("textbox", name="Que doit demander cette carte ?")
+    sync_api.expect(asked).to_be_focused()
     page.keyboard.press("Escape")  # closed, still empty
     sync_api.expect(page.locator(".flash.editing")).to_have_count(0)
     add.click()
     sync_api.expect(cards).to_have_count(n + 1)  # still the empty one
-    sync_api.expect(front).to_be_focused()
-    front.fill("el tío")
+    sync_api.expect(asked).to_be_focused()
+    cards.last.locator("textarea.front").fill("el tío")
     page.keyboard.press("Escape")
     add.click()
     sync_api.expect(cards).to_have_count(n + 2)
-    sync_api.expect(cards.last.locator("textarea.front")).to_be_focused()
+    sync_api.expect(cards.last.get_by_role("textbox", name="Que doit demander cette carte ?")).to_be_focused()
+
+
+@pytest.mark.parametrize("page", [{"has_touch": True}], indirect=True, ids=["touch"])
+def test_a_card_added_on_a_touch_screen_opens_no_keyboard(page):
+    """On a touch screen, a card added (＋, at the end or in the card open) opens with nothing
+    focused: no keyboard over it, « Que doit demander cette carte ? » and its 🎙️ often simpler.
+    Touched, a field is typed in."""
+    generate_free(page, FRONT_PROMPT)
+    cards = page.locator(".flash")
+    page.get_by_role("button", name="＋ Ajouter une carte").tap()
+    added = cards.last
+    sync_api.expect(added).to_have_class(re.compile(r"\bediting\b"))
+    asked = added.get_by_role("textbox", name="Que doit demander cette carte ?")
+    sync_api.expect(asked).to_be_visible()
+    page.wait_for_timeout(300)  # its focus would come a frame later
+    assert page.evaluate("document.activeElement.matches('textarea, input')") is False
+    asked.tap()
+    sync_api.expect(asked).to_be_focused()
+
+    added.get_by_role("button", name="Ajouter une carte après celle-ci").tap()
+    sync_api.expect(page.locator(".flash.editing")).to_have_count(1)
+    page.wait_for_timeout(300)
+    assert page.evaluate("document.activeElement.matches('textarea, input')") is False
 
 
 def test_a_touched_text_is_focused_however_late_its_field_shows(page):
@@ -855,7 +879,7 @@ def test_the_list_compact_a_card_touched_opens(page):
 
 
 def test_cards_added_from_the_card_open_and_the_lessons_end(page):
-    """＋ in the card open: an empty card just after it, open, its front ready to type; left
+    """＋ in the card open: an empty card just after it, open, ready to write; left
     empty, it goes. › after the last card: the lesson's end, how many cards were looked over,
     a card to add there (kept once written)."""
     generate_free(page, FRONT_PROMPT)
@@ -866,7 +890,7 @@ def test_cards_added_from_the_card_open_and_the_lessons_end(page):
     added = cards.nth(1)
     sync_api.expect(added).to_have_class(re.compile(r"\bediting\b"))
     sync_api.expect(added.locator(".card-sheet-head")).to_contain_text("Carte 2 / ")
-    sync_api.expect(added.locator("textarea.front")).to_be_focused()
+    sync_api.expect(added.get_by_role("textbox", name="Que doit demander cette carte ?")).to_be_focused()
     page.keyboard.press("Escape")  # left empty: gone
     sync_api.expect(cards).to_have_count(n)
 
