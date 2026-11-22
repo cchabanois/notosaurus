@@ -143,7 +143,7 @@ async def made_figure(
             "Write nothing on the figure that gives this answer away (a name, a count, a measure), "
             "even where the description writes it."
         )
-    family = await _figure_family(s, description, kind)
+    family = await _figure_family(s, description, kind, problem)
     if family == "panels":
         parts = await _panels(s, description)
         if parts:
@@ -219,24 +219,37 @@ async def check_figure(s: AIConfig, description: str, svg: str) -> str:
     return "" if checked.ok else (checked.problem.strip() or "It doesn't match its description.")
 
 
-async def _figure_family(s: AIConfig, description: str, kind: str = "") -> str:
+async def _figure_family(s: AIConfig, description: str, kind: str = "", problem: str = "") -> str:
     """Which family of figures_typst draws it: `kind` when given (the AI that described it
     said it), else a light call; "other" (drawn as SVG): none of them, Typst not installed or
-    not used (s.typst), the demo, or not told."""
+    not used (s.typst), the demo, or not told. Drawn again told what is wrong (`problem`: a
+    check's, a correction's): asked again, told the family it was drawn in, kept unless what
+    is wrong is the kind of drawing itself, or another one is asked; one drawn as SVG ("other":
+    no family drew it then, or one was asked) given a family that draws it now, families being
+    added (a map before the atlas). Never on every drawing: a family picked again could differ
+    for nothing, and a correction's figure is drawn again from its own, in its family."""
     from . import figures_typst
 
     if s.llm == "fake" or not s.typst or not figures_typst.available():
         return "other"
-    if kind in figures_typst.FAMILIES or kind == "other":
+    known = kind in figures_typst.FAMILIES or kind == "other"
+    if known and not problem.strip():
         return kind
-    try:
-        picked = await ai._ask_provider(
-            s, [], f"Figure: {description.strip()}", figures_typst.Kind, figures_typst.FAMILY_RULES, light=True
+    text = f"Figure: {description.strip()}"
+    if known:
+        text += (
+            f"\n\nIt was drawn as {kind}, and is drawn again because: {problem.strip()}\n"
+            f"Give {kind} again, unless what is wrong is the kind of drawing itself, or it asks for another "
+            "kind: another family, or a drawing made freely, in SVG, not in a family's style (other: what "
+            "it gives when it asks for SVG or a free drawing). Drawn as other, give the family that draws "
+            "it, if one does now; other only when none does, or when it is asked."
         )
+    try:
+        picked = await ai._ask_provider(s, [], text, figures_typst.Kind, figures_typst.FAMILY_RULES, light=True)
     except ExtractionError as e:
         if e.code not in _UNUSABLE:
             raise
-        return "other"
+        return kind if known else "other"  # asked again for nothing usable: as it was
     return picked.family
 
 

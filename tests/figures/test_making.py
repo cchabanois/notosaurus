@@ -295,6 +295,8 @@ def test_a_figures_source_says_what_drew_it(monkeypatch):
     written = iter([TRIANGLE, TRIANGLE])
 
     async def answer(s, images, text, schema, system=None, light=False, **options):
+        if schema is figures_typst.Kind:  # drawn again for a problem: its family asked again, kept
+            return schema(family="geometry")
         return schema(typst=next(written)) if schema is figures_typst.Figure else schema(svg=SQUARE)
 
     monkeypatch.setattr("notosaurus_core.ai._ask_provider", answer)
@@ -1047,3 +1049,32 @@ def test_an_ais_arrows_drawn_on_its_figure(monkeypatch):
     monkeypatch.setattr("notosaurus_core.ai._ask_provider", answer)
     svg = asyncio.run(llm.draw_figure(AIConfig(llm="gemini"), "le bilan de la photosynthèse"))
     assert ">Eau<" in svg and ">chloroplaste<" in svg and svg.count("<polygon") == 2
+
+
+def test_a_figure_drawn_again_for_a_problem_asked_its_family_again(monkeypatch):
+    """Drawn again told what is wrong (a check's, a correction's): its family asked again, told
+    the one it was drawn in and why, kept unless the kind of drawing is what is wrong; one drawn
+    as SVG ("other": no family drew it then, as a map before the atlas) given one that draws it
+    now. Drawn as usual (no problem): its family not asked. Nothing usable: as it was."""
+    monkeypatch.setattr(figures_typst, "available", lambda: True)
+    asked = []
+
+    async def answer(s, images, text, schema, rules, light=False, **_):
+        asked.append(text)
+        return figures_typst.Kind(family="map")
+
+    monkeypatch.setattr("notosaurus_core.ai._ask_provider", answer)
+    s = AIConfig(llm="gemini")
+    family = lambda kind, problem="": asyncio.run(llm._figure_family(s, "L'Europe en 1914", kind, problem))  # noqa: E731
+
+    assert family("other") == "other" and asked == []  # as usual: not asked
+    assert family("other", "Les pays sont des formes grossières.") == "map"
+    assert "It was drawn as other" in asked[-1] and "des formes grossières" in asked[-1]
+    assert family("geometry", "Ce devrait être une vraie carte.") == "map"
+    assert "It was drawn as geometry" in asked[-1]
+
+    async def unusable(*args, **kwargs):
+        raise llm.ExtractionError("llm.invalid_answer")
+
+    monkeypatch.setattr("notosaurus_core.ai._ask_provider", unusable)
+    assert family("geometry", "L'Italie est mal placée.") == "geometry"
