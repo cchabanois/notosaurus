@@ -73,6 +73,7 @@ Each pull request's entries (the `## Changelog` of its description) are put unde
 
 ### Changed
 
+- 📄 A PDF of several pages shows its pages before adding them, all ticked when they fit: tap the ones you don't want.
 - 🔊 A sentence with gaps is read whole on its question, as a dictation: you hear the missing words and write them.
 - 🗂 New Anki note types (v3) for text, multiple choice and gaps; the computer moves your notes there, their review history kept.
 - 🔊 A card's sound sits beside its answer, which it reads.
