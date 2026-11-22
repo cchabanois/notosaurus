@@ -114,6 +114,9 @@ Each pull request's entries (the `## Changelog` of its description) are put unde
 
 ### Fixed
 
+- 🖼️ After exporting, sharing or sending a lesson, ↩ Undo no longer brings back a card with a broken picture.
+- 🖼️ Undoing the first card's correction no longer loses its old picture.
+- 🖼️ Opening a lesson again (a reload, another tab) while its pictures are being drawn no longer deletes a picture just drawn.
 - On a phone, a diagram's card in the list shows its question and answer under the photo, no longer squeezed beside it.
 - A card corrected with the AI keeps its picture's source: a free picture's licence and page stay in its Anki note, and a figure redrawn after a correction is redrawn from its own drawing.
 - A figure of a circuit, a clock, magnetic field lines, a phylogenetic tree or a Scratch script can show a pictogram, as every other figure can: it no longer fails to draw.
