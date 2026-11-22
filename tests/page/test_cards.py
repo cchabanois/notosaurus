@@ -874,10 +874,14 @@ def test_a_lesson_that_looks_wrong_corrected_or_kept(page):
 
 
 def _beside_the_back(card, listen) -> None:
-    """🔊 on its card's back's line, at its right: what the sound reads (its back), seen."""
-    back = card.locator(".math-preview.back.shown").bounding_box()
-    box = listen.bounding_box()
-    assert back and box and box["x"] >= back["x"] + back["width"] - 1
+    """🔊 on its card's back's line, at its right: what the sound reads (its back), seen. Both
+    measured in one frame: the page may still be scrolling (to the cards just made)."""
+    back, box = listen.evaluate(
+        """(b) => [b.closest('.flash').querySelector('.math-preview.back.shown'), b]
+          .map((e) => e.getBoundingClientRect())
+          .map((r) => ({ x: r.x, y: r.y, width: r.width, height: r.height }))"""
+    )
+    assert box["x"] >= back["x"] + back["width"] - 1
     assert box["y"] < back["y"] + back["height"] and box["y"] + box["height"] > back["y"]
 
 
