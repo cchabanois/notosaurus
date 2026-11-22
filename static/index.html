@@ -377,7 +377,7 @@
                  the key is for: seen at capture, before any of them closes -->
             <header class="card-sheet-head" x-show="isEditing(card) || peek === card.key"
                     @keydown.escape.window.capture="isEditing(card) && diagramOpen === '' && pictureOpen === '' && !viewer.open && !report.open && !asking.open && !hiding.open
-                      && !$event.target.closest?.('.card-fix, .card-menu, .subdeck-picker') && doneEditing()">
+                      && !card._subdecks && !$event.target.closest?.('.card-fix, .card-menu') && doneEditing()">
               <span x-text="$t('app.review.cardOf', { n: cards.indexOf(card) + 1, count: cards.length })"></span>
               <!-- The previous or the next one, this one done with: the lesson looked over card by card -->
               <button type="button" class="icon-btn stops-dictation nav" @click="moveEditing(-1)" :disabled="cards.indexOf(card) === 0"
@@ -635,7 +635,7 @@
               <!-- Its sub-deck chosen: none, one of the lesson's (its cards counted), or a new one -->
               <template x-if="card._subdecks">
                 <div class="subdeck-picker" role="radiogroup" tabindex="-1" :aria-label="$t('app.review.subdeckPick.title')"
-                     @click.outside="card._subdecks = null" @keydown.escape.stop="card._subdecks = null">
+                     @click.outside="card._subdecks = null" @keydown.escape.window="card._subdecks = null">
                   <p class="subdeck-picker-title" x-text="$t('app.review.subdeckPick.title')"></p>
                   <label class="subdeck-option">
                     <input type="radio" :name="'subdeck-' + card.key" :checked="!card.subdeck" @change="pickSubdeck(card, '')">

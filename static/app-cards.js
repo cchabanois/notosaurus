@@ -262,7 +262,8 @@ const cardsPart = {
     if (this.readOnly()) return;
     if (this.editing !== card.key) this.editCard(card);
     card._subdecks = { fresh: "" };
-    // Focused (not its field: no keyboard over it on a phone), so that Escape closes it alone
+    // Focused (not its field: no keyboard over it on a phone); Escape closes it alone wherever
+    // the focus is (the card's own Escape leaves it to the list while it is open)
     this.$nextTick(() => document.querySelector(`[data-card="${card.key}"] .subdeck-picker`)?.focus({ preventScroll: true }));
   },
 

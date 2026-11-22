@@ -1205,6 +1205,12 @@ def test_a_cards_sub_deck_chosen_in_a_list(page):
     page.keyboard.press("Escape")  # closes the list alone: the card stays open
     sync_api.expect(picker).to_be_hidden()
     sync_api.expect(card).to_have_class(re.compile(r"\bediting\b"))
+    card.locator(".subdeck-tag").click()
+    sync_api.expect(picker).to_be_visible()
+    page.evaluate("document.activeElement.blur()")  # the focus elsewhere (not yet on the list…)
+    page.keyboard.press("Escape")  # …the list closed all the same, the card still open
+    sync_api.expect(picker).to_be_hidden()
+    sync_api.expect(card).to_have_class(re.compile(r"\bediting\b"))
 
 
 def test_the_open_card_shows_its_deck(page):
