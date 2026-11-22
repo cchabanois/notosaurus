@@ -71,9 +71,10 @@ In the settings, **📍 Where does Notosaurus work?** chooses **📱 On this pho
 
 Most of Notosaurus is the same as on the computer. What only the app has, or doesn't have:
 
-- **🎤 Dictate**: say an instruction or a correction instead of typing it. Your words show as you
-  speak, written by the phone's own speech recognition; **✨ Tidy up** cleans instructions after. The app
-  asks for the microphone the first time.
+- **🎤 Dictate**: say an instruction, a correction or what a new card should ask instead of
+  typing it. Your words show as you speak, written by the phone's own speech recognition. Tap ■ to
+  stop, or straight away **Correct**, **Write** or **✨ Generate cards**: what you said is written, then
+  sent. **✨ Tidy up** cleans instructions after. The app asks for the microphone the first time.
 - **⚑ Report**, on a card, tells Notosaurus what went wrong: a word misread, a wrong answer, a
   figure off, an unsuitable picture. Every report is read and helps fix Notosaurus (see
   [Reporting a problem](../review/#reporting-a-problem)).
