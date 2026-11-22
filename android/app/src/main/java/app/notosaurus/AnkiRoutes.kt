@@ -77,8 +77,8 @@ internal fun Route.ankiRoutes(server: LocalServer) {
                 }
                 if (lessonId.isNotEmpty()) lessons.setAnkiNotes(lessonId, sent.notes)
                 speech.prune(lessonId, sounds.values.toSet()) // the sounds no card says any more (AnkiDroid has its own copy)
-                // The pictures no card sent has (drawn again, replaced: kept until now), as the computer's
-                if (lessonId.isNotEmpty()) server.pictures.prune(lessonId, deck.cards.map { it.picture }.filter { it.isNotEmpty() }.toSet())
+                // No picture pruned: one no card sent has may be one a correction replaced, that ↩ Undo
+                // brings back; the page asks for the prune once nothing can (PictureRoutes), as on the computer
                 // Its notes no card updated (cards deleted, or remade): the page offers to delete them
                 val leftovers = if (lessonId.isEmpty() || switches.off("anki.delete")) emptyList() else withContext(Dispatchers.IO) { anki.leftovers(lessonId, sent.notes.values.toSet() + sent.fresh) }
                 buildJsonObject {

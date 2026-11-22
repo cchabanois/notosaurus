@@ -495,7 +495,7 @@ class LessonRoutesTest : LocalServerTestBase() {
 
         // "✨ Image" with another subject: decided (a picture: its words, nothing drawn), then drawn
         // when the user says yes: fresh, the old file kept (the page may undo while the card is
-        // edited) until the lesson is sent
+        // edited) until the page asks for the prune
         val made = client.post("/api/lessons/$id/cards/$apple/picture/make") {
             page(); contentType(ContentType.Application.Json); setBody("""{"subject": "a red apple"}""")
         }.json().jsonObject
@@ -514,7 +514,9 @@ class LessonRoutesTest : LocalServerTestBase() {
         }
         assertEquals(setOf(again.string("picture"), figure), anki.pictures.keys)
         assertTrue(anki.sent.single().cards[1].pictureOnBack)
-        assertEquals(HttpStatusCode.NotFound, client.get("/api/lessons/$id/pictures/$picture") { page() }.status) // no card sent has it
+        // No card sent has the old one: kept all the same, ↩ Undo may still bring it back (the
+        // test sheet's send leaves a card edited, a lesson's correction undoable)
+        assertEquals(HttpStatusCode.OK, client.get("/api/lessons/$id/pictures/$picture") { page() }.status)
 
         // The user's own photo, then no picture at all
         val own = client.submitFormWithBinaryData("/api/lessons/$id/cards/$apple/picture", formData {
@@ -529,7 +531,8 @@ class LessonRoutesTest : LocalServerTestBase() {
         assertEquals(HttpStatusCode.OK, client.get("/api/lessons/$id/pictures/${own.string("picture")}") { page() }.status)
         // The page done with the card (or the lesson opened): the pictures no card uses removed
         val pruned = client.post("/api/lessons/$id/pictures/prune") { page() }.json().jsonObject
-        assertEquals(2, pruned["removed"]!!.jsonPrimitive.int) // the own photo, the picture drawn before it
+        assertEquals(3, pruned["removed"]!!.jsonPrimitive.int) // the own photo, the two pictures drawn before it
+        assertEquals(HttpStatusCode.NotFound, client.get("/api/lessons/$id/pictures/$picture") { page() }.status)
         assertEquals(HttpStatusCode.NotFound, client.get("/api/lessons/$id/pictures/${own.string("picture")}") { page() }.status)
         assertEquals(HttpStatusCode.OK, client.get("/api/lessons/$id/pictures/$figure") { page() }.status) // still used
     }

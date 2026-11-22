@@ -280,6 +280,16 @@ def _save(id: str, content: dict, exported: bool = False, share: bool | None = N
     return lesson
 
 
+# The lessons an edit is changing (their id → how many edits): a picture it writes is in
+# images/ before it is in the saved lesson (routes/pictures.prune_pictures waits)
+_editing: dict[str, int] = {}
+
+
+def being_edited(id: str) -> bool:
+    """An edit is changing the lesson (lessons.edit): a picture may be drawn, not saved yet."""
+    return _editing.get(id, 0) > 0
+
+
 async def edit[T](id: str, change: Callable[[Lesson], T | Awaitable[T]]) -> tuple[Lesson, T]:
     """Change the lesson in place (a route's cards, pictures, frames…): `change` gets a
     working copy (cards and frames its own, deep copies) and may take its time (an AI
@@ -296,11 +306,18 @@ async def edit[T](id: str, change: Callable[[Lesson], T | Awaitable[T]]) -> tupl
     if before is None:
         raise AppError("lesson.not_found", 404)
     draft = before.model_copy(deep=True)
-    outcome = change(draft)
-    # cast: an awaitable `change` gives its T once awaited (pyright can't tell)
-    result = cast("T", await outcome) if isinstance(outcome, Awaitable) else outcome
-    changed = {f for f in CONTENT if getattr(draft, f) != getattr(before, f)}
-    saved = await asyncio.to_thread(_save, id, draft.model_dump(include=changed))
+    _editing[id] = _editing.get(id, 0) + 1
+    try:
+        outcome = change(draft)
+        # cast: an awaitable `change` gives its T once awaited (pyright can't tell)
+        result = cast("T", await outcome) if isinstance(outcome, Awaitable) else outcome
+        changed = {f for f in CONTENT if getattr(draft, f) != getattr(before, f)}
+        saved = await asyncio.to_thread(_save, id, draft.model_dump(include=changed))
+    finally:
+        if _editing[id] > 1:
+            _editing[id] -= 1
+        else:
+            del _editing[id]
     if saved is None:  # deleted meanwhile
         raise AppError("lesson.not_found", 404)
     return saved, result
@@ -330,7 +347,8 @@ def regenerated(id: str, g: Generated, calls: Sequence[AiCall] = ()) -> Lesson |
         # A card made again keeps its id, so its note in Anki and its history (cards.kept_ids)
         for card, kept in zip(g.content.cards, kept_ids(g.content.cards, old.cards), strict=True):
             card.id = card.id or kept
-        # images/ is kept: "Undo" brings back the old cards with their pictures (pruned at export)
+        # images/ is kept: "Undo" brings back the old cards with their pictures (pruned once it no
+        # longer can: the page asks, routes/pictures.prune_pictures)
         lesson = Lesson(
             **{
                 **old.model_dump(),

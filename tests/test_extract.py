@@ -230,8 +230,11 @@ def test_regenerate_replaces_the_lesson(client, tmp_path):
     undone = client.put(url, json=old).json()
     assert (undone["prompt"], undone["deck"], undone["cards"]) == (lesson["prompt"], lesson["deck"], lesson["cards"])
 
-    # Pictures no card uses any more go at the next export
+    # Pictures no card uses any more: not at an export (an undo may still need them), when the
+    # page asks for the prune (nothing undoable any more)
     client.post("/api/export", json={**old, "lesson_id": lesson["id"]})
+    assert (folder / "images" / "picture-old-12345678.jpg").exists()
+    assert client.post(f"{url}/pictures/prune").json() == {"removed": 1}
     assert not (folder / "images" / "picture-old-12345678.jpg").exists()
 
 

@@ -45,11 +45,12 @@ async def card_audio(
 
 
 def card_pictures(req: ExportRequest, lesson: Lesson | None) -> dict[int, Path]:
-    """The picture of each picture card (index in req.cards → file), from the saved lesson."""
+    """The picture of each picture card (index in req.cards → file), from the saved lesson.
+    Nothing pruned here: a picture no card sent has may be one a correction replaced, that
+    "Undo" brings back; the page asks for the prune once nothing can (prune_pictures)."""
     folder = lessons.folder(lesson.id) if lesson else None
     if folder is None:
         return {}
-    pictures.prune(folder / "images", req.cards)  # pictures of cards gone (removed, regenerated)
     found = {i: folder / "images" / card.picture for i, card in enumerate(req.cards) if card.picture}
     return {i: path for i, path in found.items() if pictures.NAME.match(path.name) and path.is_file()}
 
