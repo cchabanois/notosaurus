@@ -533,16 +533,21 @@ def _if_words() -> frozenset[str]:
 def _without_if_arrows(svg: str) -> str:
     """blockst draws a loop's arrow at the foot of an "if" block too, as if it looped: the
     arrow kept for loops only (repeat, forever), an "if"'s dropped (its first word its
-    language's, _if_words)."""
+    language's, _if_words). Another image (an icon) left as it is: written again, it would lose
+    its comments, an icon's mark (text_size.ICON_MARK) among them."""
 
     def inner(m: re.Match) -> str:
         drawn = ElementTree.fromstring(base64.b64decode(m.group(1)).decode("utf-8"))
+        dropped = False
         for block in drawn.iter():
             arrows = [c for c in block if c.tag.endswith("use") and c.get("href") == "#sb-loopArrow"]
             first = next((c.text or "" for c in block if c.tag.endswith("text") and (c.text or "").strip()), "")
             if arrows and first.strip() in _if_words():
                 for arrow in arrows:
                     block.remove(arrow)
+                dropped = True
+        if not dropped:
+            return m.group(0)
         ElementTree.register_namespace("", "http://www.w3.org/2000/svg")
         out = ElementTree.tostring(drawn, encoding="unicode")
         return f'href="data:image/svg+xml;base64,{base64.b64encode(out.encode()).decode()}"'

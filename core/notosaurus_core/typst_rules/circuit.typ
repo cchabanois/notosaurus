@@ -1,5 +1,6 @@
 #set page(width: auto, height: auto, margin: 6pt)
 #import "@preview/zap:0.6.0": *
+#import "common.typ": *
 #let switch(name, ..args) = {
   let params = args.named()
   let closed = params.remove("closed", default: false)

@@ -1,5 +1,6 @@
 #set page(width: auto, height: auto, margin: 6pt)
 #import "@preview/cetz:0.5.2"
+#import "common.typ": *
 // A clock's face at hour:minute: its hands placed by the time, never by eye (the hour hand
 // between its two hours as the minutes go by). numbers: the 12 hours written; minutes: the
 // minutes written around it every 5 (5, 10… 55, to read "twenty past"); the hands' colours
