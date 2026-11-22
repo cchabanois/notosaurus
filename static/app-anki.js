@@ -111,13 +111,23 @@ const ankiPart = {
     // Only a load failure means the sound is really missing. play() may also
     // reject when playback start is interrupted (e.g. AbortError) while the
     // sound still plays, so its rejection alone is not an error for the user.
-    audio.addEventListener("error", () => {
-      this.error = t("app.audio.failed");
-    });
+    audio.addEventListener("error", () => this.soundFailed(audio.src));
     audio.play().catch((e) => {
       if (e.name === "NotAllowedError") this.error = t("app.audio.blocked");
       else console.warn("audio.play()", e);
     });
+  },
+
+  // A sound that didn't load: the audio element says nothing of why, so it is asked again and
+  // the server's answer says it (a licence lapsed: its message and "Subscribe", as the AI's);
+  // nothing better said (it loads now, or no code), the sound's own failure
+  async soundFailed(url) {
+    try {
+      await api(url);
+      this.error = t("app.audio.failed");
+    } catch (e) {
+      this.error = e.detail?.code ? e.message : t("app.audio.failed");
+    }
   },
 
   // --- Direct send (AnkiConnect) -------------------------------------

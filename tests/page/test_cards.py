@@ -1153,3 +1153,18 @@ def test_each_side_read_aloud_as_the_card_says(page):
     assert sides == ["I helped my mum.", "I helped my mum."]
     card.get_by_role("button", name="Plus d'actions").click()
     sync_api.expect(card.get_by_role("button", name="🖼️ Ajouter une image")).to_be_visible()
+
+
+def test_a_sound_that_cant_be_heard_says_why(page):
+    """The Android app, 🔊 on a card whose sound the relay refuses (the subscription ended): its
+    reason said, with « S'abonner », not « unknown voice or speech unavailable »."""
+    switches = {"notice": None, "disabled": [], "update": False, "store": "https://play.google.com/x", "trial": None}
+    page.route("**/api/switches", lambda route: route.fulfill(json=switches))
+    generate_free(page, FRONT_PROMPT)
+    ended = {"detail": {"code": "relay.subscription_ended", "params": {}}}
+    page.route("**/api/tts?*", lambda route: route.fulfill(status=502, json=ended))
+    card = open_card(page.locator(".flash").first)
+    card.get_by_role("button", name="Écouter le verso").click()
+    alert = page.get_by_role("alert")
+    sync_api.expect(alert).to_contain_text("Votre abonnement est terminé")
+    sync_api.expect(alert.get_by_role("link", name="S'abonner")).to_be_visible()
