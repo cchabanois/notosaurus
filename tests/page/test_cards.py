@@ -1170,6 +1170,43 @@ def test_a_sound_that_cant_be_heard_says_why(page):
     sync_api.expect(alert.get_by_role("link", name="S'abonner")).to_be_visible()
 
 
+def test_a_cards_sub_deck_chosen_in_a_list(page):
+    """The sub-deck touched: a list the page draws (a field's suggestions showed little or
+    nothing in Android's WebView, its ▼ promising a list, 2026-11-22): none, the lesson's
+    sub-decks with their cards counted, or a new one; chosen, saved."""
+    generate_free(page, FRONT_PROMPT)
+    page.evaluate(
+        """() => Alpine.$data(document.querySelector('[x-data]')).cards.forEach((c, i) => {
+            c.subdeck = i === 0 ? '' : i < 4 ? 'Variables' : 'Invariables'; })"""
+    )
+    card = open_card(page.locator(".flash").first)
+    card.locator(".subdeck-tag").click()
+    picker = card.get_by_role("radiogroup", name="Sous-paquet de cette carte")
+    sync_api.expect(picker.locator(".subdeck-option")).to_have_text(
+        [re.compile(r"Aucun"), re.compile(r"Variables\s*3 cartes"), re.compile(r"Invariables\s*2 cartes")]
+    )
+    sync_api.expect(picker.get_by_role("radio", name=re.compile("Aucun"))).to_be_checked()
+    picker.get_by_role("radio", name=re.compile("^Variables")).click()  # chosen: the list closes
+    sync_api.expect(picker).to_be_hidden()
+    sync_api.expect(card.locator(".subdeck-tag")).to_have_text("🗂 Variables")
+
+    card.locator(".subdeck-tag").click()  # a new one
+    picker.get_by_role("textbox", name="Nouveau sous-paquet…").fill("Grammaire")
+    picker.get_by_role("textbox", name="Nouveau sous-paquet…").press("Enter")
+    sync_api.expect(card.locator(".subdeck-tag")).to_have_text("🗂 Grammaire")
+    sync_api.expect(page.locator(".save-pill")).to_have_class(SAVED)
+    (summary,) = lessons(page)
+    eventually(page, lambda: lesson(page, summary["id"])["cards"][0]["subdeck"] == "Grammaire", "saved")
+
+    card.locator(".subdeck-tag").click()  # none again
+    picker.get_by_role("radio", name=re.compile("Aucun")).click()
+    sync_api.expect(card.locator(".subdeck-tag")).to_have_text("+ sous-paquet")
+    card.locator(".subdeck-tag").click()
+    page.keyboard.press("Escape")  # closes the list alone: the card stays open
+    sync_api.expect(picker).to_be_hidden()
+    sync_api.expect(card).to_have_class(re.compile(r"\bediting\b"))
+
+
 def test_the_open_card_shows_its_deck(page):
     """The open card says, small at its top, the deck it goes to in Anki: the lesson's, then its
     part (« Jules › 5e › Espagnol › Familia »), as Anki shows it; not in the list."""
@@ -1180,5 +1217,6 @@ def test_the_open_card_shows_its_deck(page):
     sync_api.expect(deck).to_be_hidden()
     card = open_card(flash)
     card.locator(".subdeck-tag").click()
-    card.locator("input.subdeck").fill("Familia")
+    card.get_by_role("textbox", name="Nouveau sous-paquet…").fill("Familia")
+    card.get_by_role("button", name="Créer").click()
     sync_api.expect(card.locator(".card-deck")).to_have_text("Jules › 5e › Espagnol › Familia")

@@ -300,18 +300,6 @@ body:has(.flash.editing) { overflow: hidden; }  /* the list behind it stays wher
   flex: 1; min-width: 0; min-height: 0; padding: .2rem .35rem; resize: none; overflow: hidden;
   color: var(--muted); font: inherit; line-height: 1.35; field-sizing: content;
 }
-.flash .subdeck {
-  width: auto;
-  flex: 0 1 auto;
-  max-width: 45%;
-  margin-left: 0;
-  padding: .1rem .55rem;
-  border-radius: 999px;
-  background: var(--surface-2);
-  font-size: .75rem;
-  font-weight: 700;
-  color: var(--muted);
-}
 
 /* Not edited: the sub-deck on one line, its name cut ("🗂 Fonctions de référence de Sec…"), whole in
    its title and once touched */
@@ -321,6 +309,16 @@ body:has(.flash.editing) { overflow: hidden; }  /* the list behind it stays wher
   font-size: .75rem; font-weight: 700; color: var(--muted);
   white-space: nowrap; overflow: hidden; text-overflow: ellipsis; cursor: text;
 }
+/* A card's sub-deck chosen in a list the page draws (app-cards.js, openSubdecks) */
+.flash .subdeck-picker {
+  margin-top: .4rem; padding: .5rem .6rem; border-radius: var(--radius-sm); background: var(--surface-2);
+  display: grid; gap: .1rem;
+}
+.flash .subdeck-picker-title { margin: 0 0 .2rem; font-size: .8rem; font-weight: 700; color: var(--muted); }
+.flash .subdeck-option { display: flex; align-items: center; gap: .5rem; min-height: 44px; cursor: pointer; }
+.flash .subdeck-option small { margin-left: auto; color: var(--muted); }
+.flash .subdeck-new { display: flex; gap: .4rem; margin-top: .2rem; }
+.flash .subdeck-new input { flex: 1; min-width: 0; }
 /* No sub-deck: "+ sub-deck", as "+ info", not a pill that reads as a sub-deck's name */
 .flash .subdeck-tag.empty { padding-left: 0; padding-right: 0; background: transparent; font-size: .85rem; font-weight: 400; }
 

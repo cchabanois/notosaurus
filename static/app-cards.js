@@ -102,7 +102,7 @@ const cardsPart = {
   },
 
   // `field`: the text touched, shown as typed (its LaTeX), the cursor in it ("front", "back",
-  // "info", "fun_fact", "explanation", "mnemonic", "subdeck", "choice:<n>"); none: the card
+  // "info", "fun_fact", "explanation", "mnemonic", "choice:<n>"); none: the card
   // edited, its texts still drawn (✨: what is asked of the AI), its empty ones offered by their
   // placeholder. `all`: every field shown (a card just added, empty).
   editCard(card, field = "", { all = false } = {}) {
@@ -117,8 +117,7 @@ const cardsPart = {
     if (!field) return;
     card._editing = field;
     const [name, n] = field.split(":");
-    const selector = name === "choice" ? `.choice:nth-of-type(${Number(n) + 1}) textarea`
-      : name === "subdeck" ? "input.subdeck" : `textarea.${name}`;
+    const selector = name === "choice" ? `.choice:nth-of-type(${Number(n) + 1}) textarea` : `textarea.${name}`;
     // Focused once shown: x-show shows it at the next frame (a hidden field takes no focus)
     this.$nextTick(() => requestAnimationFrame(() => document.querySelector(`[data-card="${card.key}"] ${selector}`)?.focus()));
   },
@@ -247,6 +246,29 @@ const cardsPart = {
 
   subdecks() {
     return [...new Set(this.cards.map((c) => c.subdeck).filter(Boolean))];
+  },
+
+  // --- A card's sub-deck, chosen ---------------------------------------
+  // Touched, a list the page draws: none, the lesson's sub-decks (how many cards each), or a
+  // new one typed. Not a field's suggestions (<datalist>): Android's WebView shows them barely or
+  // not at all, its ▼ promising a list it doesn't give.
+  subdeckCounts() {
+    const counts = new Map();
+    for (const c of this.cards) if (c.subdeck) counts.set(c.subdeck, (counts.get(c.subdeck) ?? 0) + 1);
+    return [...counts];
+  },
+
+  openSubdecks(card) {
+    if (this.readOnly()) return;
+    if (this.editing !== card.key) this.editCard(card);
+    card._subdecks = { fresh: "" };
+    // Focused (not its field: no keyboard over it on a phone), so that Escape closes it alone
+    this.$nextTick(() => document.querySelector(`[data-card="${card.key}"] .subdeck-picker`)?.focus({ preventScroll: true }));
+  },
+
+  pickSubdeck(card, name) {
+    card.subdeck = name.trim();
+    card._subdecks = null;
   },
 
   // A card still empty is the one to fill: no second one added while it waits; either way

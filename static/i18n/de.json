@@ -162,6 +162,12 @@
       "removeChoice": "Diese Antwort entfernen",
       "subdeck": "Unterstapel",
       "subdeckAdd": "+ Unterstapel",
+      "subdeckPick": {
+        "title": "Unterstapel dieser Karte",
+        "none": "Keiner: im Stapel der Lektion",
+        "new": "Neuer Unterstapel…",
+        "add": "Anlegen"
+      },
       "subdeckLabel": "Unterstapel",
       "listen": "Rückseite anhören",
       "listenFront": "Vorderseite anhören",

@@ -162,6 +162,12 @@
       "removeChoice": "Retirer cette réponse",
       "subdeck": "sous-paquet",
       "subdeckAdd": "+ sous-paquet",
+      "subdeckPick": {
+        "title": "Sous-paquet de cette carte",
+        "none": "Aucun : dans le paquet de la leçon",
+        "new": "Nouveau sous-paquet…",
+        "add": "Créer"
+      },
       "subdeckLabel": "Sous-paquet",
       "listen": "Écouter le verso",
       "listenFront": "Écouter le recto",

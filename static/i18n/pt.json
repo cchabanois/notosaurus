@@ -162,6 +162,12 @@
       "removeChoice": "Remover esta resposta",
       "subdeck": "subbaralho",
       "subdeckAdd": "+ subbaralho",
+      "subdeckPick": {
+        "title": "Subbaralho deste cartão",
+        "none": "Nenhum: no baralho da lição",
+        "new": "Novo subbaralho…",
+        "add": "Criar"
+      },
       "subdeckLabel": "Subbaralho",
       "listen": "Ouvir o verso",
       "listenFront": "Ouvir a frente",
