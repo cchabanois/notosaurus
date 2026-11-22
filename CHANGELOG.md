@@ -109,6 +109,7 @@ Each pull request's entries (the `## Changelog` of its description) are put unde
 
 ### Fixed
 
+- On a slow computer, a card just added no longer takes the cursor away from the field you had already clicked in.
 - 🐛 « Vérifier la figure » no longer shows on a card whose figure was replaced by a photo (it said « Cette carte n'existe plus »).
 - 🐛 A lesson's correction counts the cards whose figure, wrong answers or helps it changed, no longer « aucun changement ».
 - 🐛 The lesson's correction: « ✓ Garder » shows its text (it was an empty white button).
