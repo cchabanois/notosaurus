@@ -90,12 +90,14 @@ const cardsPart = {
   // keyboard over the card, when « Que doit demander cette carte ? » (the AI writes it), often
   // dictated by its 🎙️, is what is mostly used; touching a field opens it. With a mouse, that
   // field focused; its front when there is none (a lesson not saved yet: no AI on it). Once
-  // shown: x-show shows the fields at the next frame
+  // shown: x-show shows the fields at the next frame. A field of the card clicked meanwhile (a
+  // busy machine, a quick hand) keeps the focus: what is typed there stays there
   focusAdded(key) {
     if (!matchMedia("(pointer: fine)").matches) return;
     this.$nextTick(() => requestAnimationFrame(() => {
       const card = document.querySelector(`[data-card="${key}"]`);
-      (card?.querySelector(".card-fix textarea") ?? card?.querySelector("textarea.front"))?.focus({ preventScroll: true });
+      if (!card || card.contains(document.activeElement)) return;
+      (card.querySelector(".card-fix textarea") ?? card.querySelector("textarea.front"))?.focus({ preventScroll: true });
     }));
   },
 

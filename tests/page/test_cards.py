@@ -901,6 +901,29 @@ def test_the_list_compact_a_card_touched_opens(page):
     sync_api.expect(first).to_have_class(re.compile(r"\bediting\b"))
 
 
+def test_a_card_added_keeps_a_field_already_typed_in(page):
+    """A card added, with a mouse: « Que doit demander cette carte ? » focused a frame later,
+    unless a field of the card was clicked meanwhile (a busy machine, a quick hand): what is
+    typed there stays there, the card kept."""
+    generate_free(page, FRONT_PROMPT)
+    cards = page.locator(".flash")
+    n = cards.count()
+    page.evaluate(
+        """() => { const frame = window.requestAnimationFrame.bind(window);
+          window.requestAnimationFrame = (f) => setTimeout(() => frame(f), 400); }"""
+    )
+    page.get_by_role("button", name="＋ Ajouter une carte").click()
+    added = cards.nth(n)
+    front = added.locator("textarea.front")
+    front.fill("el tío")  # before the late frame
+    page.wait_for_timeout(1200)  # the frame come
+    sync_api.expect(front).to_be_focused()
+    sync_api.expect(added.get_by_role("textbox", name="Que doit demander cette carte ?")).to_have_value("")
+    page.keyboard.press("Escape")
+    sync_api.expect(cards).to_have_count(n + 1)  # written: kept
+    sync_api.expect(cards.last).to_contain_text("el tío")
+
+
 def test_cards_added_from_the_card_open_and_the_lessons_end(page):
     """＋ in the card open: an empty card just after it, open, ready to write; left
     empty, it goes. › after the last card: the lesson's end, how many cards were looked over,
