@@ -260,8 +260,12 @@ async def found_picture(id: str, card_id: str, req: FoundPicture) -> dict:
 async def prune_pictures(id: str) -> dict:
     """The pictures no card of the saved lesson uses any more removed (drawn again, replaced,
     removed: kept until then, so that the page can undo a card's correction while it is
-    edited). Asked by the page once no card is edited, and when the lesson opens."""
+    edited). Asked by the page once no card is edited, and when the lesson opens. None while
+    the lesson is being changed (lessons.edit: a picture just drawn is in no saved card yet,
+    another tab or a reload asking meanwhile): the next time."""
     lesson = await access.editable(id)
+    if lessons.being_edited(id):
+        return {"removed": 0}
     folder = lessons.folder(id)
     return {"removed": pictures.prune(folder / "images", lesson.cards) if folder else 0}
 

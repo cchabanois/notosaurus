@@ -281,6 +281,60 @@ def test_a_replaced_picture_kept_until_pruned(client, drawn, tmp_path):
     assert all((folder / c["picture"]).exists() for c in cards if c["picture"])
 
 
+def test_a_replaced_picture_kept_through_exports_and_sends(client, drawn, anki, tmp_path):
+    """Exporting, sharing or sending the lesson prunes no picture: one no card sent has may be
+    one a correction replaced, that "Undo" brings back while the card is edited or the
+    lesson's correction undoable (an export or a share left them so, and the old picture
+    was gone: the undone card showed a broken one). Only the page's prune removes it."""
+    lesson = lesson_with_pictures(client)
+    cards = client.post(f"/api/lessons/{lesson['id']}/pictures", json={"draw": True}).json()["lesson"]["cards"]
+    dog = cards[1]
+    folder = tmp_path / "data" / "lessons" / lesson["id"] / "images"
+    url = f"/api/lessons/{lesson['id']}/cards/{dog['id']}/picture"
+    new = client.post(url, files={"photo": ("p.jpg", plain_image(1600, 1200, "blue"), "image/jpeg")}).json()["card"]
+    saved = client.get(f"/api/lessons/{lesson['id']}").json()
+    sent = {"deck": "D", "cards": saved["cards"], "lesson_id": lesson["id"], "voice": ""}
+
+    exported = apkg.export(client, sent, tmp_path)
+    assert new["picture"] in exported.media and dog["picture"] not in exported.media
+    assert (folder / dog["picture"]).exists()  # the export: kept
+    assert client.post("/api/export/shared", json={"lessons": [lesson["id"]]}).status_code == 200
+    assert (folder / dog["picture"]).exists()  # the share: kept
+    assert client.post("/api/anki/send", json=sent).status_code == 200
+    assert (folder / dog["picture"]).exists()  # the send: kept
+
+    assert client.post(f"/api/lessons/{lesson['id']}/pictures/prune").json() == {"removed": 1}
+    assert not (folder / dog["picture"]).exists()  # the page's prune: gone
+    assert all((folder / c["picture"]).exists() for c in saved["cards"] if c["picture"])
+
+
+def test_no_prune_while_the_lesson_is_changed(client, drawn, tmp_path):
+    """A picture drawn is in images/ before it is in the saved lesson: a prune asked meanwhile
+    (a reload, another tab opening the lesson while the server draws) leaves it."""
+    from app import lessons
+    from app.routes import pictures as routes
+
+    lesson = lesson_with_pictures(client)
+    folder = tmp_path / "data" / "lessons" / lesson["id"] / "images"
+    told = {}
+
+    async def scenario():
+        async def draw(draft):
+            card = draft.cards[0]
+            card.picture = pictures.save(folder, card, png())
+            told["during"] = await routes.prune_pictures(lesson["id"])
+            return card.picture
+
+        return (await lessons.edit(lesson["id"], draw))[1]
+
+    picture = run(scenario())
+    assert told["during"] == {"removed": 0}
+    assert (folder / picture).exists()
+    assert client.get(f"/api/lessons/{lesson['id']}").json()["cards"][0]["picture"] == picture  # saved
+    assert client.post(f"/api/lessons/{lesson['id']}/pictures/prune").json() == {"removed": 0}  # used: kept
+    assert not lessons.being_edited(lesson["id"])
+
+
 def test_uploads_too_heavy_refused(client, drawn):
     """The page sends prepared photos (a few hundred KB): a far heavier one is refused
     before being read whole into memory, as the relay refuses it."""

@@ -1226,3 +1226,22 @@ test("a lesson's correction changing a figure: its old one shown until drawn aga
   await c.revise();
   assert.equal(c.firstFigureUrl(c.cards[0]), "/api/lessons/L1/pictures/picture-c1-0123abcd.svg");
 });
+
+test("pictures pruned only once no card is edited: the first card (key 0) edited is one", async () => {
+  const sent = [];
+  const page = await loadScripts("app.js", {
+    routes: (url, options) => {
+      sent.push([url, options?.method]);
+      return new Response({ removed: 0 });
+    },
+  });
+  const c = page.component();
+  c.show({ id: "L1", deck: "D", cards: [{ front: "a", back: "b" }, { front: "c", back: "d" }] });
+  assert.equal(c.cards[0].key, 0);  // keys start at 0
+  c.editing = c.cards[0].key;
+  await c.prunePictures();
+  assert.deepEqual(sent, []);  // its correction may still be undone: its old picture kept
+  c.editing = "";
+  await c.prunePictures();
+  assert.deepEqual(sent, [["/api/lessons/L1/pictures/prune", "POST"]]);
+});

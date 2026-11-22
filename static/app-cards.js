@@ -221,11 +221,11 @@ const cardsPart = {
   // them back: no card edited, no correction to undo, the lesson saved as shown. Not while
   // the server draws (a picture it writes is in no card yet): the next time, or the next open.
   async prunePictures() {
-    if (!this.lessonId || this.readOnly() || this.editing || this.revision.undo) return;
+    if (!this.lessonId || this.readOnly() || this.editing !== "" || this.revision.undo) return;
     if (this.drawingHere() || this.pictureJobs) return;
     const id = this.lessonId;
     if (this.saveTimer || this.snapshot() !== this.lastSaved) await this.saveNow();
-    if (this.lessonId !== id || this.editing || this.snapshot() !== this.lastSaved || this.saveState !== "saved") return;
+    if (this.lessonId !== id || this.editing !== "" || this.snapshot() !== this.lastSaved || this.saveState !== "saved") return;
     try {
       await api(`/api/lessons/${id}/pictures/prune`, { method: "POST" });
     } catch {}  // the next time
