@@ -873,6 +873,18 @@ def test_a_lesson_that_looks_wrong_corrected_or_kept(page):
     sync_api.expect(wrong.locator("textarea.back")).to_have_value("1915")
 
 
+def _beside_the_back(card, listen) -> None:
+    """🔊 on its card's back's line, at its right: what the sound reads (its back), seen. Both
+    measured in one frame: the page may still be scrolling (to the cards just made)."""
+    back, box = listen.evaluate(
+        """(b) => [b.closest('.flash').querySelector('.math-preview.back.shown'), b]
+          .map((e) => e.getBoundingClientRect())
+          .map((r) => ({ x: r.x, y: r.y, width: r.width, height: r.height }))"""
+    )
+    assert box["x"] >= back["x"] + back["width"] - 1
+    assert box["y"] < back["y"] + back["height"] and box["y"] + box["height"] > back["y"]
+
+
 def test_the_list_compact_a_card_touched_opens(page):
     """The list compact: a card's front and back, none of its buttons nor its helps; touched
     anywhere, it opens full screen with them (nothing focused: no keyboard), its « ✨ Corriger
@@ -880,14 +892,17 @@ def test_the_list_compact_a_card_touched_opens(page):
     generate_free(page, FRONT_PROMPT)
     first = page.locator(".flash").first
     sync_api.expect(first.get_by_role("button", name="Plus d'actions")).to_be_hidden()
-    sync_api.expect(first.locator(".flash-actions button:visible")).to_have_count(1)  # 🔊 alone…
-    first.locator(".flash-actions .listen").click()  # …heard there, the card not opened
+    sync_api.expect(first.locator(".flash-actions button:visible")).to_have_count(0)
+    listen = first.get_by_role("button", name="Écouter le verso")  # 🔊 alone, beside its back…
+    _beside_the_back(first, listen)
+    listen.click()  # …heard there, the card not opened
     sync_api.expect(first).not_to_have_class(re.compile(r"\bediting\b"))
     sync_api.expect(first.locator(".card-help:visible")).to_have_count(0)
     sync_api.expect(first.get_by_role("textbox", name="Qu'est-ce qui ne va pas ?")).to_have_count(0)
     first.locator(".math-preview.back.shown").click()  # its back: the card open, not its back edited
     sync_api.expect(first).to_have_class(re.compile(r"\bediting\b"))
     sync_api.expect(first.locator("textarea.back")).to_be_hidden()
+    _beside_the_back(first, listen)  # open too: what it reads is the back
     more = first.get_by_role("button", name="Plus d'actions")
     sync_api.expect(more).to_be_visible()
     # Its actions at its top right, its front below them the whole width

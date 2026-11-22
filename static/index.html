@@ -394,7 +394,6 @@
               <button class="icon-btn" x-show="lessonId && card.front.trim() && (card.back.trim() || isCloze(card.front))"
                       @click="explain(card)" :class="{ active: card._explain?.open }" :aria-label="$t('app.explain.button')"
                       :title="$t('app.explain.button')">💬</button>
-              <button class="icon-btn listen" x-show="hasAudio() && !hasMath(card.back) && !isCloze(card.front) && !card.choices.length" @click="play(spokenText(card), card.voice || voice)" :aria-label="$t('app.review.listen')">🔊</button>
               <div class="card-menu" x-show="canReport() || !readOnly()" @click.outside="card._menu = false" @keydown.escape="card._menu = false">
                 <button class="icon-btn muted" @click="card._menu = !card._menu" :class="{ active: card._menu }"
                         :aria-expanded="Boolean(card._menu)" :aria-label="$t('app.review.more')" :title="$t('app.review.more')">⋯</button>
@@ -517,15 +516,22 @@
               <div class="math-preview" x-show="!renderedOnly(card, 'front') && (hasMath(card.front) || isCloze(card.front))" x-html="previewHtml(card.front)"></div>
               <!-- The back, the info, the wrong options and the "did you know" grow with their text,
                    as the front: a long answer is seen whole -->
-              <div class="math-preview back shown" x-show="renderedOnly(card, 'back')" x-html="previewHtml(card.back)"
-                   :data-placeholder="shownEdited(card) ? $t('app.review.back') : ''"
-                   @click="editCard(card, 'back')" :title="readOnly() ? '' : $t('app.review.editFormula')"></div>
-              <textarea class="back" rows="1" x-model="card.back" :readonly="readOnly()" @keydown.enter.prevent
-                        :placeholder="isCloze(card.front) ? $t('app.review.extra') : card.choices.length ? $t('app.review.rightChoice') : $t('app.review.back')"
-                        :aria-label="card.choices.length ? $t('app.review.rightChoice') : $t('app.review.back')"
-                        x-show="!renderedOnly(card, 'back')" @focus="card._editing = 'back'" @blur="card._editing = ''"
-                        x-init="watchHeight($el)" x-effect="card.back; card._editing; fitHeight($el)"></textarea>
-              <div class="math-preview back" x-show="!renderedOnly(card, 'back') && hasMath(card.back)" x-html="previewHtml(card.back)"></div>
+              <!-- The back, its 🔊 beside it: what the sound reads (in Anki, with the answer) -->
+              <div class="back-row">
+                <div class="back-texts">
+                  <div class="math-preview back shown" x-show="renderedOnly(card, 'back')" x-html="previewHtml(card.back)"
+                       :data-placeholder="shownEdited(card) ? $t('app.review.back') : ''"
+                       @click="editCard(card, 'back')" :title="readOnly() ? '' : $t('app.review.editFormula')"></div>
+                  <textarea class="back" rows="1" x-model="card.back" :readonly="readOnly()" @keydown.enter.prevent
+                            :placeholder="isCloze(card.front) ? $t('app.review.extra') : card.choices.length ? $t('app.review.rightChoice') : $t('app.review.back')"
+                            :aria-label="card.choices.length ? $t('app.review.rightChoice') : $t('app.review.back')"
+                            x-show="!renderedOnly(card, 'back')" @focus="card._editing = 'back'" @blur="card._editing = ''"
+                            x-init="watchHeight($el)" x-effect="card.back; card._editing; fitHeight($el)"></textarea>
+                  <div class="math-preview back" x-show="!renderedOnly(card, 'back') && hasMath(card.back)" x-html="previewHtml(card.back)"></div>
+                </div>
+                <button class="icon-btn listen" x-show="hasAudio() && !hasMath(card.back) && !isCloze(card.front) && !card.choices.length" @click="play(spokenText(card), card.voice || voice)"
+                        :aria-label="$t('app.review.listen')" :title="$t('app.review.listen')">🔊</button>
+              </div>
               <!-- Multiple choice, true/false: the back is the right answer, these the wrong ones -->
               <div class="choices" x-show="card.choices.length">
                 <template x-for="(choice, n) in card.choices" :key="n">
