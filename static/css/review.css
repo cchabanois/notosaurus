@@ -70,8 +70,11 @@
 .revise textarea { min-height: 3.2rem; font-size: .92rem; }
 .revise .btn { flex: 0 0 auto; min-height: 2.8rem; }
 
+/* The text a readable width (14rem at least), the buttons beside it, else under it: never the
+   text squeezed to a word a line under them (a phone, ↩ Undo and 🎯 Again carefully) */
 .revision-result {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
   gap: .5rem;
   margin-bottom: .75rem;
@@ -79,7 +82,7 @@
   border-radius: var(--radius-sm);
   background: var(--primary-soft);
 }
-.revision-result > div { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+.revision-result > div { flex: 1 1 14rem; min-width: 0; display: flex; flex-direction: column; }
 .revision-result strong { font-size: .9rem; }
 .revision-result small { color: var(--muted); font-weight: 700; }
 .revision-result .btn { min-height: 2.3rem; padding: .3rem .8rem; font-size: .85rem; background: var(--surface); }
