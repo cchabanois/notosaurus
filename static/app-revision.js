@@ -25,6 +25,7 @@ function about(seconds) {
 const revisionPart = {
   // As the lesson is made: quick unless the user chose careful ("careful": once more carefully)
   async revise({ careful = false } = {}) {
+    if (!(await this.endDictation("correction"))) return;
     const instruction = this.revision.text.trim();
     if (!instruction || this.revision.busy || !this.lessonId || this.readOnly()) return;
     this.doneEditing();  // one correction undoable at a time: the lesson's now
@@ -94,6 +95,7 @@ const revisionPart = {
   },
 
   async fixCard(card, { careful = false } = {}) {
+    if (!(await this.endDictation(`card:${card.key}`))) return;
     const fix = card._fix;
     const instruction = fix?.text.trim();
     if (!instruction || fix.busy || !this.lessonId || this.readOnly()) return;

@@ -13,6 +13,7 @@ from page.support import (  # noqa: E402
     draft_kept,
     generate_free,
     lessons,
+    open_card,
     open_prompt,
     png,
     started,
@@ -375,6 +376,46 @@ def test_dictation_stopped_by_a_tap_elsewhere(page):
     }""")
     sync_api.expect(listening).to_be_hidden()
     assert len(stopped) == 3
+
+
+def test_dictation_ended_by_its_fields_send(page):
+    """Listening: the field's own send (« Corriger ») tapped stops it, the text written, then
+    sends it, in one tap (not ■ first); nothing heard: nothing sent. A card's own « Corriger »
+    the same (and « Écrire », « Générer »: the same method)."""
+    said = iter(["ajoute le frère", "", "plus court"])
+    stopped, revised, fixed = [], [], []
+    page.route("**/api/config", lambda route: route.fulfill(json={**route.fetch().json(), "dictation": True}))
+    page.route("**/api/dictation/start", lambda route: route.fulfill(json={"listening": True}))
+    page.route(
+        "**/api/dictation/stop",
+        lambda route: (stopped.append(route.request.post_data_json), route.fulfill(json={"text": next(said)})),
+    )
+    page.on("request", lambda r: revised.append(r.post_data_json) if "/revise" in r.url else None)
+    page.on("request", lambda r: fixed.append(r.post_data_json) if "/fix-card" in r.url else None)
+    generate_free(page, FRONT_PROMPT)
+    revise = page.locator(".revise")
+    send = revise.get_by_role("button", name="Corriger")
+
+    revise.get_by_role("button", name="Dicter").click()
+    sync_api.expect(send).to_be_enabled()  # listening: the field still empty, its send there
+    send.click()
+    sync_api.expect(page.locator(".revision-result")).to_be_visible()
+    assert stopped == [{"kind": "correction"}]
+    assert [r["instruction"] for r in revised] == ["ajoute le frère"]
+
+    revise.get_by_role("button", name="Dicter").click()
+    sync_api.expect(send).to_be_enabled()
+    send.click()  # nothing heard
+    sync_api.expect(page.get_by_text("J'écoute", exact=False).filter(visible=True)).to_have_count(0)
+    assert len(stopped) == 2
+    page.wait_for_timeout(300)
+    assert len(revised) == 1  # nothing sent
+
+    card = open_card(page.locator(".flash").first)  # a card's own correction: the same
+    card.get_by_role("button", name="Dicter").click()
+    card.get_by_role("button", name="Corriger", exact=True).click()
+    sync_api.expect(card.locator(".card-fixed")).to_be_visible()
+    assert [f["instruction"] for f in fixed] == ["plus court"]
 
 
 def test_tidy_up_the_instructions(page):

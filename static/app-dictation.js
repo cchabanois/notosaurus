@@ -9,9 +9,10 @@ const DICTATION_MAX = 120_000;  // ms: the recording stops by itself after 2 min
 const HEARD_EVERY = 300;  // ms: what the phone heard, asked this often while it listens
 
 // While listening, a tap anywhere else stops it as the microphone does (the text written), and does only
-// that: "Correct" tapped then doesn't send a request whose text isn't there yet. A "click",
-// not a touch: none comes after a finger scrolling the page. The app gone to the background
-// (a call, the home screen) stops it too.
+// that (a card tapped then doesn't open). But the field's own send (« Corriger », « Écrire »,
+// « Générer »: `.ends-dictation`): stopped, then sent once its text is written (endDictation).
+// A "click", not a touch: none comes after a finger scrolling the page. The app gone to the
+// background (a call, the home screen) stops it too.
 let stopElsewhere = null;
 
 // Said after what was already there, on a line of its own
@@ -80,7 +81,8 @@ const dictationPart = {
 
   watchElsewhere() {
     const tapped = (e) => {
-      if (e.target.closest?.(".mic, .stops-dictation")) return;  // the microphone itself, or a Cancel that drops it
+      // The microphone itself, a button that drops it (Cancel, the card left), or the field's send
+      if (e.target.closest?.(".mic, .stops-dictation, .ends-dictation")) return;
       e.preventDefault();
       e.stopPropagation();
       this.stopDictation();
@@ -123,6 +125,19 @@ const dictationPart = {
     // Shown as heard while listening: now as said in full (nothing, or an error: as it was)
     setDictated(this, kind, text ? joinDictated(before, text) : before);
     if (text) this.$nextTick(() => showDictated(kind));
+  },
+
+  // The field's send tapped while it listens: stopped, its text written, then sent. False when
+  // nothing is left to send (nothing heard)
+  async endDictation(kind) {
+    if (this.mic.listening !== kind) return true;
+    await this.stopDictation();
+    return dictatedText(this, kind).trim() !== "";
+  },
+
+  // While listening (or written down) the field's send still works: it ends the dictation first
+  canSendDictated(kind, text) {
+    return this.mic.busy !== kind && (text.trim() !== "" || this.mic.listening === kind);
   },
 
   // The field waits for its text (listening, then written down): not typed into meanwhile

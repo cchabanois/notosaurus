@@ -60,6 +60,7 @@ const lessonsPart = {
   // again, or complete it), the next ones complete it, a call each; `batch`: the call this
   // one goes on from (what the user asked, the cards before it, its undo).
   async extract({ careful = false, complete = false, batch = null } = {}) {
+    if (!(await this.endDictation("prompt"))) return;
     const quick = (this.quick && !careful) || this.off("ai.careful");
     this.error = "";
     this.loading = true;
