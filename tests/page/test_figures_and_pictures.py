@@ -203,7 +203,7 @@ def test_a_figure_checked_on_demand_then_redrawn(page, monkeypatch):
 
 
 def test_a_figures_credits_link_its_projects(page, monkeypatch):
-    """What drew a figure, each project linked: in its picture panel and under it full screen."""
+    """What drew a figure, each project linked: on its picture's page and under it full screen."""
     from app.routes import pictures as routes
 
     real = routes.pictures.draw_all
@@ -225,14 +225,44 @@ def test_a_figures_credits_link_its_projects(page, monkeypatch):
     generate_free(page, "Le triangle rectangle (géométrie)")
     card = open_card(page.locator(".flash").first)
     card.locator(".card-picture.figure img:not(.first):visible").click()
+    picture = page.get_by_role("dialog", name="Image")
+    sync_api.expect(picture.locator(".picture-source:visible")).to_contain_text("Typst + lilaq")
+    picture.locator(".picture-shown").click()  # shown large
     credit = page.locator(".viewer-credit")
     sync_api.expect(credit).to_contain_text("📐 Dessinée par gemini-x avec Typst + lilaq")
     sync_api.expect(credit.get_by_role("link", name="lilaq")).to_have_attribute(
         "href", "https://typst.app/universe/package/lilaq"
     )
     page.keyboard.press("Escape")
-    edit(card).get_by_role("button", name="Image").first.click()
-    sync_api.expect(card.locator(".picture-source:visible")).to_contain_text("Typst + lilaq")
+    sync_api.expect(credit).to_be_hidden()
+    sync_api.expect(picture).to_be_visible()  # the viewer closed first, the page under it kept
+
+
+def test_a_cards_picture_touched_opens_its_page(page):
+    """The picture touched in the card edited: its page full screen, everything that changes it
+    there (no 🖼️ on the card any more); « Terminé » or Escape back to the card, still edited."""
+    generate_free(page, "Le triangle rectangle (géométrie)")
+    card = open_card(page.locator(".flash").first)
+    sync_api.expect(card.locator(".flash-actions").get_by_role("button", name="Image", exact=True)).to_have_count(0)
+    figure = card.locator(".card-picture.figure img:not(.first):visible")
+    figure.click()
+    picture = page.get_by_role("dialog", name="Image")
+    sync_api.expect(picture).to_be_visible()
+    sync_api.expect(page.locator(".viewer")).to_be_hidden()  # not only shown large
+    sync_api.expect(picture.locator(".picture-shown")).to_be_visible()
+    for name in ("✨ Changer l'image", "📷 Ma photo", "✕ Pas d'image"):
+        sync_api.expect(picture.get_by_text(name, exact=True)).to_be_visible()
+    sync_api.expect(picture.get_by_text("Au verso (avec la réponse)")).to_be_visible()
+    sync_api.expect(picture.get_by_label("La figure à dessiner (étiquettes comprises)")).not_to_have_value("")
+    picture.get_by_role("button", name="Terminé").click()
+    sync_api.expect(picture).to_be_hidden()
+    sync_api.expect(card).to_have_class(re.compile(r"\bediting\b"))
+
+    figure.click()
+    sync_api.expect(picture).to_be_visible()
+    page.keyboard.press("Escape")
+    sync_api.expect(picture).to_be_hidden()
+    sync_api.expect(card).to_have_class(re.compile(r"\bediting\b"))  # the card not closed with it
 
 
 def test_a_picture_on_the_back_shows_no_drawing_frame(page):
@@ -253,8 +283,9 @@ def test_a_picture_on_the_back_shows_no_drawing_frame(page):
 
 
 def test_find_a_free_picture(page):
-    """🖼️ → “✨ Image”: the AI decides a picture, the free pictures that fit are offered (its
-    choice first, ⭐), one tapped becomes the card's."""
+    """A card without a picture, ⋯ → “🖼️ Add a picture” → “✨ Image”: the AI decides a
+    picture, the free pictures that fit are offered (its choice first, ⭐), one tapped becomes
+    the card's."""
     previews = []
     for colour in ("#c0392b", "#2e86de", "#27ae60", "#f39c12", "#8e44ad", "#16a085"):
         previews.append("data:image/jpeg;base64," + base64.b64encode(plain_image(120, 90, colour)).decode())
@@ -280,7 +311,9 @@ def test_find_a_free_picture(page):
     page.route("**/picture/found", found)
     generate_free(page, FRONT_PROMPT)
     first = edit(page.locator(".flash").first)
-    first.get_by_role("button", name="Image", exact=True).click()
+    first.get_by_role("button", name="Plus d'actions").click()
+    first.get_by_role("button", name="🖼️ Ajouter une image").click()
+    sync_api.expect(page.get_by_role("dialog", name="Image")).to_be_visible()
     first.get_by_role("button", name="✨ Image").click()
     picks = first.locator(".found-pick")
     sync_api.expect(picks).to_have_count(6)

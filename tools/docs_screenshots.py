@@ -504,11 +504,11 @@ def shoot(lang: str) -> None:
             scroll_to(page, "section.review", 10)
             page.evaluate("window.scrollBy(0, 230)")
             shot(name)
-            if key == "pictures":  # a card's 🖼️ panel
-                page.evaluate(f"{APP}.togglePicturePanel({APP}.cards[0])")
+            if key == "pictures":  # a card's picture page (its picture touched in the card open)
+                page.evaluate(f"{APP}.openCard({APP}.cards[0]); {APP}.openPicture({APP}.cards[0])")
                 time.sleep(0.5)
-                scroll_to(page, ".picture-panel", 560)
                 shot("picture-panel")
+                page.evaluate(f"{APP}.pictureOpen = ''; {APP}.doneEditing()")
 
         page.evaluate(f"id => {APP}.openLesson(id)", lesson_id(page, vocab_deck))
         page.wait_for_load_state("networkidle")

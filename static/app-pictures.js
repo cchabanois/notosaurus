@@ -9,9 +9,14 @@ const picturesPart = {
 
   // A card's picture panel: what it should show (its own description; empty when it has
   // none: the AI then decides from the card), draw, find, the user's own photo, or none.
-  togglePicturePanel(card) {
-    card._panel = !card._panel;
-    if (card._panel) card._subject = card.figure || card.picture_prompt || "";
+  // The card's picture touched: in the card edited, its page full screen (what it shows, where it
+  // comes from, changed, a photo of one's own, none), as a diagram's is, until « Terminé »;
+  // elsewhere (a lesson read only), only shown large. A card without one: ⋯ → its page.
+  openPicture(card) {
+    if (!this.isEditing(card) || !this.lessonId) return this.openViewer([this.pictureUrl(card)], 0, card);
+    card._menu = false;
+    card._subject = card.figure || card.picture_prompt || "";
+    this.pictureOpen = card.key;
   },
 
   async pictureAction(card, request) {

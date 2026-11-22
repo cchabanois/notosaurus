@@ -419,6 +419,7 @@
         "other": "{count} pictures couldn't be drawn: those cards have none."
       },
       "panel": "Picture",
+      "add": "Add a picture",
       "subject": "What the picture should show",
       "subjectPlaceholder": "Leave it empty: the AI decides from the card. E.g. two overlapping sets",
       "photo": "📷 My photo",

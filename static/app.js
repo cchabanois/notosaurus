@@ -204,6 +204,7 @@ document.addEventListener("alpine:init", () => {
     slide: 0,             // the card edited came from ‹ (-1) or › (1), or a swipe: it slides in from that side
     cardTouch: null,      // where a finger went down on the card edited: { x, y } (a swipe to the next one)
     diagramOpen: "",      // the key of the card whose diagram is edited full screen, "" none
+    pictureOpen: "",      // the key of the card whose picture is changed full screen, "" none (app-pictures.js)
     peek: "",             // the key of the card beside the edited one while a finger drags it, "" none
     saveState: "",       // "", "pending", "saving", "saved", "error"
     lastSaved: "",
