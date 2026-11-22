@@ -3,8 +3,10 @@ the audio read aloud, cloze gaps, typed answers, multiple choice — the real
 package, unzipped, its SQLite collection read (tests/apkg.py)."""
 
 import asyncio
+import threading
 
 import apkg
+import pytest
 from conftest import CLOZE, extract_lesson, synthesized
 
 from app import anki
@@ -686,3 +688,59 @@ def test_a_text_with_gaps_gets_its_picture(tmp_path):
         shown = f'<img src="{picture.name}">'
         assert (note.fields["Picture"], note.fields["BackPicture"]) == (("", shown) if on_back else (shown, ""))
         assert note.media == [picture]
+
+
+@pytest.mark.parametrize("route", ["/api/export", "/api/export/shared", "/api/anki/send"])
+def test_a_package_built_off_the_servers_loop(client, tmp_path, monkeypatch, route):
+    """A package being built (up to 50 lessons, their photos cropped), or notes gathered for
+    Anki, leave the server answering: another request answered meanwhile, not once done."""
+    from app.routes import anki as anki_routes
+    from app.routes import generation
+
+    entered, release, answered = threading.Event(), threading.Event(), []
+
+    def build(*args, **kwargs):
+        entered.set()
+        answered.append(release.wait(10))  # False: the other request waited for it
+        path = tmp_path / f"built-{len(answered)}.apkg"
+        path.write_bytes(b"apkg")
+        return [] if route == "/api/anki/send" else str(path)
+
+    if route == "/api/anki/send":
+        monkeypatch.setattr(anki_routes, "notes", build)
+    else:
+        monkeypatch.setattr(generation, "build_shared_apkg" if "shared" in route else "build_apkg", build)
+    body = {"lessons": [extract_lesson(client)["id"]]} if "shared" in route else EXPORT
+    done = []
+    other = threading.Thread(target=lambda: done.append(client.post(route, json=body)))
+    other.start()
+    try:
+        assert entered.wait(10)
+        assert client.get("/api/children").status_code == 200
+    finally:
+        release.set()
+        other.join(10)
+    assert answered == [True] and done
+    if route != "/api/anki/send":  # sent: to no Anki here
+        assert done[0].status_code == 200 and done[0].content == b"apkg"
+
+
+@pytest.mark.parametrize("route", ["/api/export", "/api/export/shared", "/api/anki/send"])
+def test_a_lessons_images_gathered_one_export_at_a_time(client, monkeypatch, route):
+    """Gathering a lesson's diagram images removes the ones it no longer uses: done in a
+    thread, it holds media.exporting, so that two exports at once never remove an image the
+    other's package or notes are being made from."""
+    from app import media
+
+    held = []
+    gather = media.diagram_images
+
+    def diagram_images(req, lesson):
+        held.append(media.exporting.locked())
+        return gather(req, lesson)
+
+    monkeypatch.setattr(media, "diagram_images", diagram_images)
+    lesson = extract_lesson(client)
+    body = {"lessons": [lesson["id"]]} if "shared" in route else {**EXPORT, "lesson_id": lesson["id"]}
+    client.post(route, json=body)
+    assert held and all(held)

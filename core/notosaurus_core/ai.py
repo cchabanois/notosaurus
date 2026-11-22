@@ -17,7 +17,7 @@ from pydantic import BaseModel, ConfigDict, Field, create_model
 from . import config, diagrams
 from .calls import ExtractionError, Image, OnCard, tell
 from .config import AIConfig
-from .models import Card
+from .models import SET_BY_NOTOSAURUS, Card
 from .prompts import SYSTEM_PROMPT
 from .providers import anthropic, gemini, openai_like
 from .providers import demo as demo_ai
@@ -29,8 +29,7 @@ SLOW_THINKING_S = 45  # the same when the model thinks (a careful lesson): longe
 # What the AI sees of a card: what it fills, and only that. Anthropic refuses a response
 # schema with too many optional fields ("Schema is too complex"): the fields Notosaurus
 # sets itself are left out, and the ones only some requests ask for (fun facts, helps)
-# are there only then.
-SET_BY_NOTOSAURUS = {"picture", "picture_source", "id", "voice"}
+# are there only then (SET_BY_NOTOSAURUS: models').
 
 
 # Claude's structured outputs refuse a schema past 20 optional fields ("Schema is too

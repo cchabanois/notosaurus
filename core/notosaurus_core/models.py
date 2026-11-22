@@ -55,6 +55,11 @@ class Doubt(BaseModel):
     back: str = Field(description="The card's back, corrected.")
 
 
+# A card's fields Notosaurus sets itself, never the AI: not in what it is asked to fill, nor
+# in the cards it is shown (a picture's file and where it comes from, its sources, licence…)
+SET_BY_NOTOSAURUS = {"picture", "picture_source", "id", "voice"}
+
+
 class Card(BaseModel):
     front: str = Field(
         description="Front: what is shown first (e.g. the word in the pupil's language), "

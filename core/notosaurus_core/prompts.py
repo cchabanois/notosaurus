@@ -7,7 +7,7 @@ from dataclasses import dataclass
 from pathlib import Path
 
 from . import diagrams
-from .models import Card, Deck
+from .models import SET_BY_NOTOSAURUS, Card, Deck
 
 # The fixed rules, in rules/<name>.md: a paragraph or a bullet per line, read as they are
 # (what each call adds to them, the lesson, the cards, a language: the _…_text functions)
@@ -161,7 +161,8 @@ def _revision_text(
     labels: dict[int, list[int]] | None = None,
 ) -> str:
     """`labels`: numbers of the diagram labels already hidden, per photo."""
-    current = json.dumps(deck.model_dump(), ensure_ascii=False, indent=1)
+    shown = deck.model_dump(exclude={"cards": {"__all__": SET_BY_NOTOSAURUS}})
+    current = json.dumps(shown, ensure_ascii=False, indent=1)
     source = "these photos with these instructions" if photos else "these instructions (no photo)"
     add = "To add cards, use the photos." if photos else "To add cards, follow the instructions."
     if photos and fmt:
@@ -214,7 +215,7 @@ Write this card, as the one card in "cards", from the request and the lesson (th
 the instructions): what the request asks for, not one of the other cards above."""
         done = "what the card asks"
     else:
-        current = json.dumps(card.model_dump(exclude={"id", "picture", "mask", "voice"}), ensure_ascii=False, indent=1)
+        current = json.dumps(card.model_dump(exclude=SET_BY_NOTOSAURUS | {"mask"}), ensure_ascii=False, indent=1)
         asked = f"""\
 The card to correct (JSON):
 {current}

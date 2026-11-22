@@ -59,7 +59,12 @@ async def _send(req: ExportRequest, background: BackgroundTasks, step: Step | No
     profile = await ankiconnect.active_profile() or ""
     known = lesson.anki_notes.get(profile, {}) if lesson else {}
     tags = await asyncio.to_thread(exams.card_tags, lesson.id, [c.id for c in req.cards]) if lesson else {}
-    sent = notes(req, audio, media.diagram_images(req, lesson), media.card_pictures(req, lesson), tags)
+
+    def gathered():  # in a thread: the diagrams' photos cropped (PIL)
+        with media.exporting:
+            return notes(req, audio, media.diagram_images(req, lesson), media.card_pictures(req, lesson), tags)
+
+    sent = await asyncio.to_thread(gathered)
     result = await ankiconnect.send(sent, known)
     # Cards with nothing to ask or to answer: no note, said to the page (not "nothing to change")
     answer = {**result.__dict__, "audio_failures": failures, "skipped": len(req.cards) - len(sent)}
