@@ -723,8 +723,12 @@
               </p>
               <label class="field">
                 <span x-text="card.figure ? $t('app.pictures.figure') : $t('app.pictures.subject')"></span>
-                <input x-model="card._subject" :placeholder="card.figure ? $t('app.pictures.figurePlaceholder') : $t('app.pictures.subjectPlaceholder')"
-                       @keydown.enter.prevent="makePicture(card)">
+                <!-- As tall as its text (a figure's description is often a few sentences), up to a
+                     scroll; Enter makes the picture, Shift+Enter a new line -->
+                <textarea class="subject" x-model="card._subject" rows="2"
+                          :placeholder="card.figure ? $t('app.pictures.figurePlaceholder') : $t('app.pictures.subjectPlaceholder')"
+                          @keydown.enter="if (!$event.shiftKey) { $event.preventDefault(); makePicture(card) }"
+                          x-init="watchHeight($el)" x-effect="card._subject; pictureOpen; fitHeight($el)"></textarea>
               </label>
               <label class="switch">
                 <input type="checkbox" x-model="card.picture_on_back">
