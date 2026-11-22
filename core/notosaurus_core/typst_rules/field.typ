@@ -1,5 +1,6 @@
 #set page(width: auto, height: auto, margin: 6pt)
 #import "@preview/cetz:0.5.2"
+#import "common.typ": *
 // Field lines, computed, never drawn by eye: a magnet's (its poles' charges spread over its
 // end faces) or point charges' (q at their places), the field the sum of theirs, each line
 // followed step by step along it from a north pole or a positive charge to a south pole or a

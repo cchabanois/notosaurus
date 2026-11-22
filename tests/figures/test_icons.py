@@ -32,6 +32,14 @@ def test_an_icon_chosen_by_an_english_word_in_any_family():
     assert len(text_size.icons_px(figures_typst.compile_svg("timeline", timeline))) == 1
 
 
+@pytest.mark.parametrize("family", sorted(figures_typst.FAMILIES))
+def test_every_family_draws_an_icon(family):
+    """common.md tells the AI it may use icon() in any family: each preamble has common.typ's
+    functions, a pictogram never an unknown variable (a figure refused, another paid call)."""
+    svg = figures_typst.compile_svg(family, '#icon("factory")')
+    assert len(text_size.icons_px(svg)) == 1
+
+
 def test_an_unknown_word_draws_the_figure_without_its_icon():
     """A word no icon has: the figure drawn all the same (never refused: a refusal costs a
     drawing), no icon in its place, never one guessed, the text beside it kept; the word

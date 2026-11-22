@@ -5,6 +5,7 @@
 // (figures_typst: the AI told which, to write it again)
 #import "@preview/blockst:0.4.1": set-blockst
 #import "@preview/blockst:0.4.1": scratch as _scratch
+#import "common.typ": *
 #set-blockst(font: "DejaVu Sans")
 // A block of the script's own used with "call" in every language: blockst reads its French
 // word only in French ("appeler"), and would write "call" on the block

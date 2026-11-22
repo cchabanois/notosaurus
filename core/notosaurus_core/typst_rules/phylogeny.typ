@@ -1,5 +1,6 @@
 #set page(width: auto, height: auto, margin: 6pt)
 #import "@preview/cetz:0.5.2"
+#import "common.typ": *
 // A phylogenetic tree from what each species has (the lesson's table of species and
 // characters): each character's group is the species having it, the groups nested; the tree
 // is built from them, never drawn by eye. Each innovation marked on its group's branch; a
