@@ -20,6 +20,7 @@ from page.support import (  # noqa: E402
     lesson,
     lessons,
     open_card,
+    png,
 )
 
 
@@ -250,7 +251,7 @@ def test_a_cards_picture_touched_opens_its_page(page):
     sync_api.expect(picture).to_be_visible()
     sync_api.expect(page.locator(".viewer")).to_be_hidden()  # not only shown large
     sync_api.expect(picture.locator(".picture-shown")).to_be_visible()
-    for name in ("✨ Changer l'image", "📷 Ma photo", "✕ Pas d'image"):
+    for name in ("📐 Redessiner la figure", "📷 Prendre une photo", "🖼️ Galerie", "✕ Pas d'image"):
         sync_api.expect(picture.get_by_text(name, exact=True)).to_be_visible()
     sync_api.expect(picture.get_by_text("Au verso (avec la réponse)")).to_be_visible()
     sync_api.expect(picture.get_by_label("La figure à dessiner (étiquettes comprises)")).not_to_have_value("")
@@ -263,6 +264,23 @@ def test_a_cards_picture_touched_opens_its_page(page):
     page.keyboard.press("Escape")
     sync_api.expect(picture).to_be_hidden()
     sync_api.expect(card).to_have_class(re.compile(r"\bediting\b"))  # the card not closed with it
+
+
+def test_a_cards_picture_taken_with_the_camera(page):
+    """On the picture's page, "📷 Take a photo" takes one (capture: on the phone the document
+    scanner, as the lesson's pages), "🖼️ Gallery" chooses one; either is the card's picture."""
+    generate_free(page, "Le triangle rectangle (géométrie)")
+    card = open_card(page.locator(".flash").first)
+    card.locator(".card-picture.figure img:not(.first):visible").click()
+    picture = page.get_by_role("dialog", name="Image")
+    camera = picture.locator("label", has_text="📷 Prendre une photo").locator("input[type=file]")
+    gallery = picture.locator("label", has_text="🖼️ Galerie").locator("input[type=file]")
+    sync_api.expect(camera).to_have_attribute("capture", "environment")
+    assert gallery.get_attribute("capture") is None  # the phone's photos, not the camera
+    camera.set_input_files([{"name": "photo.png", "mimeType": "image/png", "buffer": png("teal")}])
+    sync_api.expect(picture.locator(".picture-source:visible")).to_contain_text("Votre photo")
+    (summary,) = lessons(page)
+    assert lesson(page, summary["id"])["cards"][0]["picture_source"]["source"] == "photo"
 
 
 def test_what_a_picture_shows_seen_whole(page):
@@ -300,7 +318,7 @@ def test_a_picture_on_the_back_shows_no_drawing_frame(page):
 
 
 def test_find_a_free_picture(page):
-    """A card without a picture, ⋯ → “🖼️ Add a picture” → “✨ Image”: the AI decides a
+    """A card without a picture, ⋯ → “🖼️ Add a picture” → “🔍 Find a picture”: the AI decides a
     picture, the free pictures that fit are offered (its choice first, ⭐), one tapped becomes
     the card's."""
     previews = []
@@ -331,7 +349,9 @@ def test_find_a_free_picture(page):
     first.get_by_role("button", name="Plus d'actions").click()
     first.get_by_role("button", name="🖼️ Ajouter une image").click()
     sync_api.expect(page.get_by_role("dialog", name="Image")).to_be_visible()
-    first.get_by_role("button", name="✨ Image").click()
+    find = page.get_by_role("dialog", name="Image").locator(".picture-actions button.btn").first
+    sync_api.expect(find).to_have_text("🔍 Trouver une image")
+    find.click()
     picks = first.locator(".found-pick")
     sync_api.expect(picks).to_have_count(6)
     sync_api.expect(picks.first.locator(".found-best")).to_be_visible()  # the AI's choice
@@ -344,6 +364,7 @@ def test_find_a_free_picture(page):
         first.screenshot(path=f"{shots}/found.png")
     picks.nth(1).click()
     sync_api.expect(picks).to_have_count(0)  # chosen: the grid goes
+    sync_api.expect(find).to_have_text("🔍 Chercher une autre image")  # it has one now: another looked for
 
 
 def test_a_picture_shown_large_in_the_card_open(page):
