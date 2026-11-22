@@ -72,6 +72,7 @@ Each pull request's entries (the `## Changelog` of its description) are put unde
 
 ### Changed
 
+- 🔊 A sentence with gaps is read whole on its question, as a dictation: you hear the missing words and write them.
 - 🗂 New Anki note types (v3) for text, multiple choice and gaps; the computer moves your notes there, their review history kept.
 - 🔊 A card's sound sits beside its answer, which it reads.
 - While dictating, « Corriger », « Écrire » or « Générer » can be tapped directly: the dictation stops and what was said is sent, no need to tap ■ first.
