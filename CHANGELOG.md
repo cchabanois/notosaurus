@@ -114,6 +114,8 @@ Each pull request's entries (the `## Changelog` of its description) are put unde
 
 ### Fixed
 
+- 🖼️ Asking a correction for another picture no longer brings back the same drawing cut out of the lesson's photos.
+- 🎨 "No free picture fits: have the AI draw it?" shows again after the pictures are looked for.
 - 🐛 A card's sound that can't be heard says why: an ended subscription offers « Subscribe », instead of « unknown voice or speech unavailable ».
 - On a slow computer, a card just added no longer takes the cursor away from the field you had already clicked in.
 - 🐛 « Vérifier la figure » no longer shows on a card whose figure was replaced by a photo (it said « Cette carte n'existe plus »).
