@@ -22,14 +22,23 @@ jobs:
   # Which AnkiDroids: on a pull request the one pinned (a new AnkiDroid never fails a pull
   # request that has nothing to do with it); on Mondays and on demand, its latest release
   # and older ones still on phones too (their API's surprises: what an older one refuses)
+  # And which passes: the app's tests (debug, then a fresh install's), and the same tests on the
+  # release's code as R8 makes it (minified: its build alone takes minutes). R8 shrinks the app's
+  # code and its libraries, which the page (static/) isn't: on a pull request, minified only
+  # when the app changes. Each pass its own job, side by side.
   versions:
     runs-on: ubuntu-latest
     timeout-minutes: 5
     outputs:
       ankidroid: ${{ steps.pick.outputs.ankidroid }}
+      passes: ${{ steps.pick.outputs.passes }}
     steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
       - id: pick
         env:
+          BASE: ${{ github.base_ref }}
           EVENT: ${{ github.event_name }}
           GH_TOKEN: ${{ github.token }}
           PINNED: "2.25.0"
@@ -41,15 +50,21 @@ jobs:
             latest=$(gh api repos/ankidroid/Anki-Android/releases/latest --jq '.tag_name | ltrimstr("v")')
             echo "ankidroid=$(jq -cn --arg latest "$latest" --arg pinned "$PINNED" --argjson older "$OLDER" '[$latest, $pinned] + $older | unique')" >> "$GITHUB_OUTPUT"
           fi
+          if [ "$EVENT" != pull_request ] || git diff --name-only "origin/$BASE...HEAD" | grep -qE '^android/|^\.github/workflows/android-device\.yml$'; then
+            echo 'passes=["debug", "minified"]' >> "$GITHUB_OUTPUT"
+          else
+            echo 'passes=["debug"]' >> "$GITHUB_OUTPUT"
+          fi
           cat "$GITHUB_OUTPUT"
 
   emulator:
     needs: versions
-    name: emulator (AnkiDroid ${{ matrix.ankidroid }})
+    name: emulator${{ matrix.pass == 'minified' && ' minified' || '' }} (AnkiDroid ${{ matrix.ankidroid }})
     strategy:
       fail-fast: false # each version's result, not the first failure only
       matrix:
         ankidroid: ${{ fromJSON(needs.versions.outputs.ankidroid) }}
+        pass: ${{ fromJSON(needs.versions.outputs.passes) }}
     runs-on: ubuntu-latest
     timeout-minutes: 40
     steps:
@@ -99,17 +114,17 @@ jobs:
           emulator-options: -no-snapshot-save -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -camera-back none
           disable-animations: true
           working-directory: android
-          # Then the FreshInstall tests (PermissionTest) on their own, the app installed again (Gradle
-          # removes it after a run): never granted AnkiDroid's permission, as revoking it would kill
-          # the tests' process. Last, the same tests on the release's code as R8 makes it
-          # (-Pnotosaurus.minified): what R8 removes or renames by mistake only shows when it runs
+          # debug: the tests, then the FreshInstall ones (PermissionTest) on their own, the app
+          # installed again (Gradle removes it after a run): never granted AnkiDroid's permission,
+          # as revoking it would kill the tests' process. minified: the same tests on the release's
+          # code as R8 makes it (-Pnotosaurus.minified): what R8 removes or renames by mistake only
+          # shows when it runs. (The action runs each line on its own: no if over several lines.)
           script: |
             adb install ../ankidroid.apk
-            ./gradlew connectedDebugAndroidTest
-            ./gradlew connectedDebugAndroidTest -Pnotosaurus.freshInstall
-            ./gradlew connectedMinifiedAndroidTest -Pnotosaurus.minified
+            ${{ matrix.pass == 'minified' && './gradlew connectedMinifiedAndroidTest -Pnotosaurus.minified' || './gradlew connectedDebugAndroidTest' }}
+            ${{ matrix.pass == 'minified' && 'true' || './gradlew connectedDebugAndroidTest -Pnotosaurus.freshInstall' }}
       - if: failure()
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
-          name: device-test-reports-ankidroid-${{ matrix.ankidroid }}
+          name: device-test-reports-ankidroid-${{ matrix.ankidroid }}-${{ matrix.pass }}
           path: android/app/build/reports/androidTests/

@@ -145,9 +145,10 @@ minified is checked by hand, the build `minified` without that file of rules ins
 and settings on that device are gone. Use an emulator, not your own phone.
 
 On GitHub: on every pull request changing `android/` or `static/` (an emulator, AnkiDroid
-2.25.0, a few minutes); on Mondays and on demand (Actions → "Android on a device" → Run
-workflow), with AnkiDroid's latest release, 2.25.0, 2.24.1 and 2.23.3, side by side.
-Without AnkiDroid the tests are skipped.
+2.25.0, a few minutes), the minified run beside it, on an emulator of its own, only when
+`android/` changes (R8 shrinks the app's code and libraries, not the page); on Mondays and on
+demand (Actions → "Android on a device" → Run workflow), both, with AnkiDroid's latest release,
+2.25.0, 2.24.1 and 2.23.3, side by side. Without AnkiDroid the tests are skipped.
 
 ### The lessons in a file, from adb
 
