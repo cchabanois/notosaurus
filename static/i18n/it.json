@@ -424,7 +424,6 @@
       "add": "Aggiungi un'immagine",
       "subject": "Cosa deve mostrare l'immagine",
       "subjectPlaceholder": "Lascia vuoto: l'IA decide in base alla carta. Es.: due insiemi che si intersecano",
-      "photo": "📷 La mia foto",
       "remove": "✕ Nessuna immagine",
       "cost": "Uno schema o un'immagine libera costa pochissimo; un disegno dell'IA è sempre chiesto prima (costa di più); la tua foto è gratis.",
       "figure": "La figura da disegnare (nomi compresi)",

@@ -424,7 +424,6 @@
       "add": "Ajouter une image",
       "subject": "Ce que l'image doit montrer",
       "subjectPlaceholder": "Laissez vide : l'IA choisit d'après la carte. Ex. : deux ensembles qui se chevauchent",
-      "photo": "📷 Ma photo",
       "remove": "✕ Pas d'image",
       "cost": "Un schéma ou une image libre coûte très peu ; un dessin par l'IA est toujours demandé avant (il coûte plus) ; votre photo est gratuite.",
       "figure": "La figure à dessiner (étiquettes comprises)",

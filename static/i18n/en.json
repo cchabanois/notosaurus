@@ -424,7 +424,6 @@
       "add": "Add a picture",
       "subject": "What the picture should show",
       "subjectPlaceholder": "Leave it empty: the AI decides from the card. E.g. two overlapping sets",
-      "photo": "📷 My photo",
       "remove": "✕ No picture",
       "cost": "A figure or a free picture costs very little; a drawing by the AI is always asked for first (it costs more); your photo is free.",
       "figure": "The figure to draw (labels included)",

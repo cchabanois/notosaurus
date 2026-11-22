@@ -744,8 +744,13 @@
                 <button type="button" class="btn soft" x-show="!(off('pictures.search') && off('pictures.draw'))"
                         @click="makePicture(card)" :disabled="Boolean(card._drawing || card._searching)"
                         x-text="card._searching ? $t('app.pictures.searching') : card.picture ? $t('app.pictures.change') : $t('app.pictures.make')"></button>
+                <!-- A photo of one's own, as the lesson's pages: taken now (the camera) or chosen -->
                 <label class="btn soft" :class="{ disabled: card._drawing }">
-                  <span x-text="$t('app.pictures.photo')"></span>
+                  📷 <span x-text="$t('app.photos.takePhoto')"></span>
+                  <input type="file" accept="image/*" capture="environment" hidden :disabled="Boolean(card._drawing)" @change="uploadPicture(card, $event)">
+                </label>
+                <label class="btn soft" :class="{ disabled: card._drawing }">
+                  🖼️ <span x-text="$t('app.photos.gallery')"></span>
                   <input type="file" accept="image/*" hidden :disabled="Boolean(card._drawing)" @change="uploadPicture(card, $event)">
                 </label>
                 <button type="button" class="btn danger-soft" x-show="card.picture" @click="removePicture(card)"

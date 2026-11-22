@@ -424,7 +424,6 @@
       "add": "Adicionar uma imagem",
       "subject": "O que a imagem deve mostrar",
       "subjectPlaceholder": "Deixe vazio: a IA decide pelo cartão. Ex.: dois conjuntos que se cruzam",
-      "photo": "📷 Minha foto",
       "remove": "✕ Sem imagem",
       "cost": "Um esquema ou uma imagem livre custa muito pouco; um desenho da IA é sempre perguntado antes (custa mais); sua foto é grátis.",
       "figure": "A figura a desenhar (legendas incluídas)",
