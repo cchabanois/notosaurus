@@ -419,6 +419,7 @@
         "other": "Não foi possível desenhar {count} imagens: esses cartões ficam sem."
       },
       "panel": "Imagem",
+      "add": "Adicionar uma imagem",
       "subject": "O que a imagem deve mostrar",
       "subjectPlaceholder": "Deixe vazio: a IA decide pelo cartão. Ex.: dois conjuntos que se cruzam",
       "photo": "📷 Minha foto",

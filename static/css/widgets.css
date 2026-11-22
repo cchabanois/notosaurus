@@ -90,8 +90,15 @@
 .math-preview mjx-container[display="true"] { margin: .2rem 0 !important; }
 .front-row .math-preview.shown { flex: 1; min-width: 0; margin: 0; font-weight: 700; }
 .math-preview.shown { cursor: text; }
-.picture-panel { flex: 1 0 100%; margin-top: .5rem; padding-top: .6rem; border-top: 1px dashed var(--border); }
-.picture-panel .field { margin-bottom: .5rem; }
+/* A card's picture, its page full screen over the card (as a diagram's is): the picture, then what
+   changes it, until « Terminé » */
+.picture-panel { position: fixed; inset: 0; z-index: 35; display: flex; flex-direction: column; gap: .5rem;
+  padding: .6rem .8rem; overflow-y: auto; overscroll-behavior: contain; background: var(--surface); }
+.picture-panel > * { flex: none; margin: 0; }
+.picture-head { display: flex; align-items: center; justify-content: space-between; gap: .5rem; font-weight: 800; }
+.picture-shown { display: block; max-width: min(100%, 400px); max-height: 45vh; object-fit: contain; align-self: center;
+  border-radius: var(--radius-sm); background: #fff; cursor: zoom-in; }
+.picture-panel .field { margin-bottom: .2rem; }
 .picture-actions { display: flex; flex-wrap: wrap; gap: .4rem; margin-bottom: .3rem; }
 .picture-actions .btn { padding: .45rem .8rem; font-size: .9rem; }
 /* A figure's check, under it at its right ("🔍 Check the figure"): right, or what is wrong and the choice */
@@ -185,6 +192,7 @@
 
 /* Viewer: a photo in full screen; a tap on it shows it at its real size, to pan */
 .thumb img, .card-picture img { cursor: zoom-in; }
+.flash.editing .card-picture img { cursor: pointer; }  /* touched: its page, not only shown large */
 .hide-editor { position: fixed; inset: 0; z-index: 61; display: flex; flex-direction: column; gap: .5rem; background: rgb(8 12 18); color: #fff;
   padding: calc(.6rem + env(safe-area-inset-top)) .6rem calc(.6rem + env(safe-area-inset-bottom)); }
 .hide-hint { margin: 0; font-size: .9rem; line-height: 1.35; }

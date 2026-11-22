@@ -368,14 +368,14 @@
                      $event.stopPropagation(); $event.preventDefault(); examPick ? togglePick(card) : openCard(card) }"
                    @touchstart.passive="isEditing(card) && touchCard($event)" @touchmove.passive="isEditing(card) && touchCard($event)"
                    @touchend.passive="isEditing(card) && touchCard($event)" @touchcancel.passive="isEditing(card) && touchCard($event)"
-                   :class="{ editing: isEditing(card), peek: peek === card.key, 'slide-next': isEditing(card) && slide === 1, 'slide-prev': isEditing(card) && slide === -1, changed: card._state, linked: card._linked, 'has-explain': card._explain?.open, 'has-fix': card._fix || card._fixed, 'has-diagram': card.mask, 'has-doubt': card.doubt, 'has-picture': card.picture || card.picture_prompt || card.figure || card._panel }">
+                   :class="{ editing: isEditing(card), peek: peek === card.key, 'slide-next': isEditing(card) && slide === 1, 'slide-prev': isEditing(card) && slide === -1, changed: card._state, linked: card._linked, 'has-explain': card._explain?.open, 'has-fix': card._fix || card._fixed, 'has-diagram': card.mask, 'has-doubt': card.doubt, 'has-picture': card.picture || card.picture_prompt || card.figure || pictureOpen === card.key }">
             <!-- Edited: the card full screen (a dialog on a wide screen), its ✕ done with it (saved).
                  Escape or Android's back too, unless what is open over it (closed first), or what it
-                 closes on its own (its correction's field, its menu, its picture's panel), is the one
+                 closes on its own (its correction's field, its menu, its picture's page), is the one
                  the key is for: seen at capture, before any of them closes -->
             <header class="card-sheet-head" x-show="isEditing(card) || peek === card.key"
-                    @keydown.escape.window.capture="isEditing(card) && diagramOpen === '' && !viewer.open && !report.open && !asking.open && !hiding.open
-                      && !$event.target.closest?.('.card-fix, .card-menu, .picture-panel') && doneEditing()">
+                    @keydown.escape.window.capture="isEditing(card) && diagramOpen === '' && pictureOpen === '' && !viewer.open && !report.open && !asking.open && !hiding.open
+                      && !$event.target.closest?.('.card-fix, .card-menu') && doneEditing()">
               <span x-text="$t('app.review.cardOf', { n: cards.indexOf(card) + 1, count: cards.length })"></span>
               <!-- The previous or the next one, this one done with: the lesson looked over card by card -->
               <button type="button" class="icon-btn stops-dictation nav" @click="moveEditing(-1)" :disabled="cards.indexOf(card) === 0"
@@ -393,12 +393,13 @@
                       @click="explain(card)" :class="{ active: card._explain?.open }" :aria-label="$t('app.explain.button')"
                       :title="$t('app.explain.button')">💬</button>
               <button class="icon-btn listen" x-show="hasAudio() && !hasMath(card.back) && !isCloze(card.front) && !card.choices.length" @click="play(spokenText(card), card.voice || voice)" :aria-label="$t('app.review.listen')">🔊</button>
-              <button class="icon-btn" x-show="shownEdited(card) && !card.mask && !isCloze(card.front) && lessonId" @click="togglePicturePanel(card)"
-                      :class="{ active: card._panel }" :aria-label="$t('app.pictures.panel')">🖼️</button>
               <div class="card-menu" x-show="canReport() || !readOnly()" @click.outside="card._menu = false" @keydown.escape="card._menu = false">
                 <button class="icon-btn muted" @click="card._menu = !card._menu" :class="{ active: card._menu }"
                         :aria-expanded="Boolean(card._menu)" :aria-label="$t('app.review.more')" :title="$t('app.review.more')">⋯</button>
                 <div class="card-menu-items" x-show="card._menu">
+                  <!-- A card without a picture: its picture's page (one with a picture: touched) -->
+                  <button type="button" x-show="!readOnly() && lessonId && !card.picture && !card.mask && !isCloze(card.front)"
+                          @click="openPicture(card)">🖼️ <span x-text="$t('app.pictures.add')"></span></button>
                   <button type="button" x-show="canReport()" @click="card._menu = false; openReport(card)">⚑ <span x-text="$t('app.report.button')"></span></button>
                   <button type="button" class="danger" x-show="!readOnly()" @click="card._menu = false; removeCard(card)">✕ <span x-text="$t('app.review.removeCard')"></span></button>
                 </div>
@@ -457,7 +458,7 @@
             <!-- Picture card: the picture shows with the front text (or with the answer, below) -->
             <div class="card-picture" :class="{ figure: card.figure }" x-show="!card.picture_on_back && (card.picture || card._drawing || ((card.picture_prompt || card.figure) && drawingHere()))">
               <img x-show="card.picture && !card._drawing" :src="card.picture && pictureUrl(card)" :alt="card.figure || card.picture_prompt"
-                   @click="openViewer([pictureUrl(card)], 0, card)">
+                   @click="openPicture(card)">
               <!-- A figure checked only when asked, under it: the AI looks at it against its description.
                    Said in words (a lone 🔍 reads as a zoom, and a finger never shows a tooltip) -->
               <div class="figure-check-row" x-show="card.figure && card.picture && !card._drawing && !readOnly() && !off('figures.check')">
@@ -545,7 +546,7 @@
               <!-- The picture belongs to the answer ("What is a tangent?"): shown under it, as in Anki -->
               <div class="card-picture on-back" :class="{ figure: card.figure }" x-show="card.picture_on_back && (card.picture || card._drawing || ((card.picture_prompt || card.figure) && drawingHere()))">
                 <img x-show="card.picture && !card._drawing" :src="card.picture && pictureUrl(card)" :alt="card.figure || card.picture_prompt"
-                   @click="openViewer([pictureUrl(card)], 0, card)">
+                   @click="openPicture(card)">
                 <!-- A figure checked only when asked, under it: the AI looks at it against its description.
                      Said in words (a lone 🔍 reads as a zoom, and a finger never shows a tooltip) -->
                 <div class="figure-check-row" x-show="card.figure && card.picture && !card._drawing && !readOnly() && !off('figures.check')">
@@ -693,9 +694,20 @@
                 <button class="icon-btn muted" @click="card._explain.open = false" :aria-label="$t('common.close')">✕</button>
               </div>
             </div>
-            <!-- The card's picture: what to draw, redraw, own photo, none. (:disabled always
-                 a boolean: Alpine leaves a button disabled when its value is undefined) -->
-            <div class="picture-panel" x-show="card._panel">
+            <!-- The card's picture, its page full screen (its picture touched in the card edited, or
+                 ⋯ without one), as a diagram's: what to draw, redraw, own photo, none, until « Terminé »
+                 or Escape. (:disabled always a boolean: Alpine leaves a button disabled when its value
+                 is undefined) -->
+            <div class="picture-panel" x-show="pictureOpen === card.key" role="dialog" :aria-label="$t('app.pictures.panel')"
+                 @keydown.escape.window.capture="pictureOpen === card.key && !viewer.open && (pictureOpen = '')">
+              <div class="picture-head">
+                <span x-text="$t('app.pictures.panel')"></span>
+                <button type="button" class="btn primary" @click.stop="pictureOpen = ''" x-text="$t('app.review.done')"></button>
+              </div>
+              <!-- The picture itself, touched: shown large (zoomed in by a finger) -->
+              <img class="picture-shown" x-show="card.picture && !card._drawing" :src="card.picture && pictureUrl(card)"
+                   :alt="card.figure || card.picture_prompt" @click="openViewer([pictureUrl(card)], 0, card)">
+              <p class="hint" x-show="card._drawing" x-text="$t('app.pictures.drawing')"></p>
               <!-- Where the picture comes from (a free one: its page, to check it) -->
               <p class="picture-source" x-show="card.picture && figureCredits(card).length">
                 <span x-text="figureCreditText(card)"></span>

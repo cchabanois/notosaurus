@@ -419,6 +419,7 @@
         "other": "No se han podido dibujar {count} imágenes: esas tarjetas no tienen."
       },
       "panel": "Imagen",
+      "add": "Añadir una imagen",
       "subject": "Lo que debe mostrar la imagen",
       "subjectPlaceholder": "Déjalo vacío: la IA decide según la tarjeta. Ej.: dos conjuntos que se cruzan",
       "photo": "📷 Mi foto",

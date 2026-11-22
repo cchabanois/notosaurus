@@ -25,8 +25,8 @@ signalement est lu, et c'est le meilleur moyen de faire corriger Notosaurus. Voi
   **✨ Corriger avec l'IA** en bas. **▶ Relire carte par carte** ouvre la première. Glissez du doigt,
   ou **‹ ›**, pour passer à la carte précédente ou suivante ; après la dernière, la fin de la leçon.
   Touchez un texte pour le modifier ; **＋** ajoute une carte après celle-ci (laissée vide, elle
-  disparaît). **✕**, Échap ou le bouton retour du téléphone la referment, enregistrée. L'image de
-  la carte (🖼️) se change pendant qu'elle est ouverte.
+  disparaît). **✕**, Échap ou le bouton retour du téléphone la referment, enregistrée. Touchez son
+  image pour la changer (une carte sans image : ⋯ → **🖼️ Ajouter une image**).
 - **+ info** ajoute une note affichée sous la réponse : genre, pluriel, un exemple…
 - **sous-paquet** range la carte dans un sous-paquet de la leçon (« Vocabulaire »,
   « Verbes »).

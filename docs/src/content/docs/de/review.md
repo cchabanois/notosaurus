@@ -24,7 +24,8 @@ ihr. Jede Meldung wird gelesen, und so wird Notosaurus am besten verbessert. Sie
   **✨ Mit KI korrigieren**. **▶ Karte für Karte durchgehen** öffnet die erste. Wische, oder **‹ ›**,
   zur vorherigen oder nächsten Karte; nach der letzten das Ende der Lektion. Tippe auf einen Text,
   um ihn zu bearbeiten; **＋** fügt danach eine Karte hinzu (leer gelassen, verschwindet sie).
-  **✕**, Escape oder die Zurück-Taste des Handys schließen sie, gespeichert. Das Bild der Karte (🖼️) änderst du, während sie bearbeitet wird.
+  **✕**, Escape oder die Zurück-Taste des Handys schließen sie, gespeichert. Tippe auf ihr
+  Bild, um es zu ändern (eine Karte ohne Bild: ⋯ → **🖼️ Bild hinzufügen**).
 - **+ Info** fügt eine Notiz unter der Antwort hinzu: Geschlecht, Plural, ein Beispiel…
 - **Unterstapel** legt die Karte in einen Unterstapel der Lektion („Vokabeln“, „Verben“).
 - **Rückseite anhören** (🔊) spielt sie mit der Stimme der Lektion ab.

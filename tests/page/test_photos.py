@@ -70,9 +70,10 @@ def test_photos_and_pictures_seen_in_full(page):
     page.keyboard.press("Escape")
     sync_api.expect(viewer).to_be_hidden()
 
-    # A card's figure too, alone: no arrows
+    # A card's figure too, alone: no arrows. In the card open, its page first, the picture on it
     generate_free(page, "Le triangle rectangle (géométrie)")
-    open_card(page.locator(".flash").first).locator(".card-picture img").first.click()  # in the card open
+    open_card(page.locator(".flash").first).locator(".card-picture img").first.click()
+    page.get_by_role("dialog", name="Image").locator(".picture-shown").click()
     sync_api.expect(viewer).to_be_visible()
     sync_api.expect(viewer.locator(".viewer-nav")).to_have_count(0)
 

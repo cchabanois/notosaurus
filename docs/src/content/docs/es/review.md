@@ -24,8 +24,8 @@ Consulta [Señalar un problema](#señalar-un-problema).
   **✨ Corregir con la IA** abajo. **▶ Revisar tarjeta por tarjeta** abre la primera. Desliza el
   dedo, o **‹ ›**, para pasar a la anterior o la siguiente; tras la última, el fin de la lección.
   Toca un texto para editarlo; **＋** añade una tarjeta después (si se deja vacía, desaparece).
-  **✕**, Escape o el botón atrás del móvil la cierran, guardada. La imagen de la tarjeta (🖼️) se
-  cambia mientras se edita.
+  **✕**, Escape o el botón atrás del móvil la cierran, guardada. Toca su imagen
+  para cambiarla (una tarjeta sin imagen: ⋯ → **🖼️ Añadir una imagen**).
 - **+ info** añade una nota mostrada bajo la respuesta: el género, el plural, un ejemplo…
 - **submazo** pone la tarjeta en un submazo de la lección («Vocabulario», «Verbos»).
 - **Escuchar el reverso** (🔊) lo reproduce con la voz de la lección.

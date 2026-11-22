@@ -24,8 +24,8 @@ segnalazione viene letta, ed è il modo migliore per far correggere Notosaurus. 
   basso. **▶ Rivedi carta per carta** apre la prima. Scorri con il dito, o **‹ ›**, per passare alla
   precedente o alla successiva; dopo l'ultima, la fine della lezione. Tocca un testo per
   modificarlo; **＋** aggiunge una carta dopo questa (lasciata vuota, sparisce). **✕**, Esc o il
-  tasto indietro del telefono la chiudono, salvata. L'immagine della carta (🖼️) si cambia mentre è in
-  modifica.
+  tasto indietro del telefono la chiudono, salvata. Tocca la sua
+  immagine per cambiarla (una carta senza immagine: ⋯ → **🖼️ Aggiungi un'immagine**).
 - **+ info** aggiunge una nota mostrata sotto la risposta: genere, plurale, un esempio…
 - **sotto-mazzo** mette la carta in un sotto-mazzo della lezione ("Vocabolario", "Verbi").
 - **Ascolta il retro** (🔊) lo riproduce con la voce della lezione.

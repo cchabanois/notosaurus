@@ -419,6 +419,7 @@
         "other": "{count} images n'ont pas pu être dessinées : ces cartes n'en ont pas."
       },
       "panel": "Image",
+      "add": "Ajouter une image",
       "subject": "Ce que l'image doit montrer",
       "subjectPlaceholder": "Laissez vide : l'IA choisit d'après la carte. Ex. : deux ensembles qui se chevauchent",
       "photo": "📷 Ma photo",
