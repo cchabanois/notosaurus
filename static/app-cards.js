@@ -236,6 +236,15 @@ const cardsPart = {
     Object.assign(card, { front: card.doubt.front, back: card.doubt.back, doubt: null });
   },
 
+  // The card's deck in Anki, its levels (app/anki.py: _deck_name): the lesson's, then its part,
+  // one named as the deck's last level not again; shown at the open card's top, as Anki's
+  deckPath(card) {
+    const base = this.deck.trim(), part = (card.subdeck || "").trim();
+    const last = base.split("::").pop().trim().toLowerCase();
+    const name = !part || last === part.toLowerCase() ? base : `${base}::${part}`;
+    return name.split("::").map((level) => level.trim()).filter(Boolean);
+  },
+
   subdecks() {
     return [...new Set(this.cards.map((c) => c.subdeck).filter(Boolean))];
   },

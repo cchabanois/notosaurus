@@ -8,6 +8,7 @@ from pathlib import Path
 
 import pytest
 
+from app.anki import _deck_name
 from app.exams import common_deck, tag_text
 from notosaurus_core.cards import kept_ids, same_text, text_key
 from notosaurus_core.models import Card
@@ -24,6 +25,11 @@ def test_a_tests_tag(case):
 @pytest.mark.parametrize("case", CASES["common_deck"], ids=lambda c: "|".join(c["in"]))
 def test_the_deck_holding_a_tests_lessons(case):
     assert common_deck(case["in"]) == case["out"]
+
+
+@pytest.mark.parametrize("case", CASES["deck_name"], ids=lambda c: f"{c['deck']}|{c['subdeck']}")
+def test_a_cards_deck(case):
+    assert _deck_name(case["deck"], case["subdeck"]) == case["out"]
 
 
 @pytest.mark.parametrize("case", CASES["speakable"], ids=lambda c: c["in"])

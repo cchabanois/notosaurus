@@ -861,5 +861,32 @@
     "le carré"
    ]
   }
+ ],
+ "deck_name": [
+  {
+   "deck": "Jules::5e::Anglais::Le prétérit à la forme affirmative",
+   "subdeck": "Exercices",
+   "out": "Jules::5e::Anglais::Le prétérit à la forme affirmative::Exercices"
+  },
+  {
+   "deck": "Anglais::5ème::School subjects",
+   "subdeck": "School subjects",
+   "out": "Anglais::5ème::School subjects"
+  },
+  {
+   "deck": "Anglais::5ème::School subjects",
+   "subdeck": " school SUBJECTS ",
+   "out": "Anglais::5ème::School subjects"
+  },
+  {
+   "deck": "Histoire",
+   "subdeck": "",
+   "out": "Histoire"
+  },
+  {
+   "deck": " Histoire::La Révolution ",
+   "subdeck": " Dates ",
+   "out": "Histoire::La Révolution::Dates"
+  }
  ]
 }
