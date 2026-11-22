@@ -70,6 +70,7 @@ Each pull request's entries (the `## Changelog` of its description) are put unde
 
 ### Changed
 
+- While dictating, « Corriger », « Écrire » or « Générer » can be tapped directly: the dictation stops and what was said is sent, no need to tap ■ first.
 - The figure's check says what it does: « 🔍 Vérifier la figure » under the figure, not a lone 🔍 that read as a zoom.
 - 📚 « Mes leçons » leaves the lessons the room: the sheet rises to the top, the tests to prepare fold in one line, the search and sharing share one line.
 - 🏷️ A diagram's card shows only what Anki will show of the photo; touched, it opens full screen to move its masks and frame.
