@@ -1,7 +1,10 @@
 """The cards in Anki: sent once their figures are, reviewed, up to date, left over, AnkiDroid
 installed, decks and profiles."""
 
+import json
+import os
 import re
+from pathlib import Path
 
 import pytest
 
@@ -303,3 +306,26 @@ def test_the_bottom_bar_is_one_low_row_on_a_narrow_phone(page, anki, lang):
     page.evaluate(f"(d => {{ d.reviewInAnki = false; d.apkg = true; d.checkAnki(); }})({data})")
     page.wait_for_function(f"!{data}.anki.available")  # the cards as a file
     fits("to export", 1)
+
+
+def test_a_lesson_from_the_computer_is_the_phones_own(page):
+    """The Android app (no Anki profiles): a lesson the computer's export brought (its owner,
+    an Anki profile there) is edited and deleted as any other, not read only for a profile
+    the phone hasn't (seen 2026-11-22: lessons moved from the computer, all read only, none
+    deletable). Its owner kept: moved back, it is that profile's again."""
+    generate_free(page, FRONT_PROMPT)
+    (made,) = lessons(page)
+    path = Path(os.environ["NOTOSAURUS_DATA"]) / "lessons" / made["id"] / "lesson.json"
+    content = json.loads(path.read_text(encoding="utf-8"))
+    path.write_text(json.dumps({**content, "owner": "Léa"}, ensure_ascii=False), encoding="utf-8")
+    page.route("**/api/anki/status", lambda route: route.fulfill(json={"available": True, "profile": None}))
+    page.route("**/api/config", lambda route: route.fulfill(json={**route.fetch().json(), "profiles": False}))
+    reopen(page)
+    data = "Alpine.$data(document.querySelector('[x-data]'))"
+    page.wait_for_function(f"{data}.lessonOwner === 'Léa'")
+    assert page.evaluate(f"{data}.readOnly()") is False
+    sync_api.expect(page.locator(".cards.compact")).to_be_visible()  # its cards opened, edited
+    page.get_by_role("button", name="Leçons").click()
+    sheet = page.get_by_role("dialog", name="Mes leçons")
+    sync_api.expect(sheet.get_by_role("button", name="Supprimer la leçon")).to_be_visible()
+    assert lesson(page, made["id"])["owner"] == "Léa"
