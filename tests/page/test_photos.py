@@ -1067,6 +1067,29 @@ def test_a_web_pages_address_alone_shared_adds_nothing_and_says_what_to_share(pa
     assert page.evaluate("Alpine.$data(document.querySelector('[x-data]')).photos.length") == 0
 
 
+def test_a_diagram_in_the_list_leaves_its_texts_the_cards_width(page):
+    """A diagram's card in the compact list, on a phone: the photo above, its question and answer
+    under it the card's whole width (seen 2026-11-22: beside the photo, squeezed to a few pixels,
+    « Qu' c… »)."""
+    page.set_viewport_size({"width": 390, "height": 844})
+    page.goto("/")
+    add_photo(page, halves())
+    generate_from_photos(page, "Une carte par mot")
+    page.evaluate("""() => {
+        const app = Alpine.$data(document.querySelector('[x-data]'));
+        app.cards[0].mask = { page: 1, box: [0.2, 0.25, 0.3, 0.3], n: 1 };
+    }""")
+    card = page.locator(".flash").first
+    sync_api.expect(card.locator(".diagram .mask.target")).to_be_attached()
+    page.wait_for_function("document.querySelector('.diagram img').complete")
+    whole, clip, body = card.evaluate(  # in one frame: the page may still be scrolling to the cards
+        """(c) => [c, c.querySelector('.diagram-clip'), c.querySelector('.flash-body')]
+          .map((e) => e.getBoundingClientRect()).map((r) => ({ y: r.y, width: r.width, height: r.height }))"""
+    )
+    assert body["width"] >= 0.8 * whole["width"], (body, whole)  # the card's width, not a sliver
+    assert clip["y"] + clip["height"] <= body["y"] + 1, (clip, body)  # the photo above its texts
+
+
 def test_a_diagram_in_the_list_shows_only_its_frame(page):
     """A diagram's card: only what Anki shows of the photo (its frame), its mask on it, nothing to
     drag, in the list and in the card open; touched there, the whole photo full screen, its
