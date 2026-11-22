@@ -128,17 +128,28 @@ class Pictures(
         return answer(lesson, cards, i)
     }
 
-    /** "🔍 Check": card `i`'s figure looked at by the relay's AI against its description
-     * (/v1/check-figure), nothing changed. {"ok", "problem"}. */
+    /** "🔍 Check": card `i`'s picture looked at by the relay's AI, nothing changed: its figure
+     * as drawn against its description (/v1/check-figure); any other picture (a photo found,
+     * drawn by the image model, the user's) against the card (/v1/check-picture).
+     * {"ok", "problem"}. */
     suspend fun check(lesson: JsonObject, i: Int): JsonObject {
         val card = lesson.cards()[i]
         val figure = card.string("figure")
-        val svg = file(lesson.string("id"), card.string("picture"))?.takeIf { figure.isNotBlank() && it.extension == "svg" }
-            ?: throw BadRequest("card.not_found")
-        val checked = relay().post("check-figure", buildJsonObject {
-            put("description", figure)
-            put("svg", svg.readText())
-        })
+        val picture = file(lesson.string("id"), card.string("picture")) ?: throw BadRequest("card.not_found")
+        val checked = if (figure.isNotBlank() && picture.extension == "svg") {
+            relay().post("check-figure", buildJsonObject {
+                put("description", figure)
+                put("svg", picture.readText())
+            })
+        } else {
+            if (picture.extension != "jpg") throw BadRequest("card.not_found")
+            relay().post("check-picture", buildJsonObject {
+                put("card", "${card.string("front")} → ${card.string("back")}")
+                put("meant", card.string("picture_prompt").ifBlank { figure })
+                put("image", Base64.getEncoder().encodeToString(picture.readBytes()))
+                put("media_type", "image/jpeg")
+            })
+        }
         return buildJsonObject {
             put("ok", checked["ok"]!!)
             put("problem", checked["problem"]!!)

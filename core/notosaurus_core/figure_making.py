@@ -219,6 +219,28 @@ async def check_figure(s: AIConfig, description: str, svg: str) -> str:
     return "" if checked.ok else (checked.problem.strip() or "It doesn't match its description.")
 
 
+async def check_picture(s: AIConfig, card: str, meant: str, data: bytes, media_type: str) -> str:
+    """What is wrong in a card's picture (a photo found, drawn by the image model, the user's),
+    seen against the card (`card`: "question → answer"; `meant`: what it was to show, when said):
+    the user asked it (the "🔍 Check" button); "" when it illustrates the card."""
+    from . import figures
+    from .prompts import PICTURE_CHECK_RULES
+
+    text = f"The card: {card.strip()}"
+    if meant.strip():
+        text += f"\nThe picture was meant to show: {meant.strip()}"
+    checked = await ai._ask_provider(
+        s,
+        [Image(data, media_type)],
+        text,
+        figures.Checked,
+        PICTURE_CHECK_RULES,
+        light=True,
+        demo=lambda: figures.Checked(ok=True, problem=""),
+    )
+    return "" if checked.ok else (checked.problem.strip() or "It doesn't illustrate the card.")
+
+
 async def _figure_family(s: AIConfig, description: str, kind: str = "", problem: str = "") -> str:
     """Which family of figures_typst draws it: `kind` when given (the AI that described it
     said it), else a light call; "other" (drawn as SVG): none of them, Typst not installed or

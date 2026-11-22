@@ -1078,3 +1078,30 @@ def test_a_figure_drawn_again_for_a_problem_asked_its_family_again(monkeypatch):
 
     monkeypatch.setattr("notosaurus_core.ai._ask_provider", unusable)
     assert family("geometry", "L'Italie est mal placée.") == "geometry"
+
+
+def test_a_picture_checked_against_its_card(monkeypatch):
+    """A card's picture (a photo found, drawn by the image model, the user's) looked at against
+    the card: the picture given, the card's question and answer and what it was to show told;
+    its problem said when it doesn't illustrate the card, "" when it does."""
+    told = {}
+
+    async def answer(s, images, text, schema, system=None, light=False, **options):
+        told.update(images=images, text=text, system=system, light=light)
+        return schema(ok=False, problem="Un baby-foot, pas le schisme de 1054.")
+
+    monkeypatch.setattr("notosaurus_core.ai._ask_provider", answer)
+    problem = asyncio.run(
+        llm.check_picture(
+            AIConfig(llm="gemini"),
+            "La séparation de 1054 ? → Le schisme",
+            "Église → deux Églises",
+            b"jpg",
+            "image/jpeg",
+        )
+    )
+    assert problem == "Un baby-foot, pas le schisme de 1054."
+    assert [(i.data, i.media_type) for i in told["images"]] == [(b"jpg", "image/jpeg")] and told["light"]
+    assert "The card: La séparation de 1054 ? → Le schisme" in told["text"]
+    assert "meant to show: Église → deux Églises" in told["text"]
+    assert "illustrates the card" in told["system"]

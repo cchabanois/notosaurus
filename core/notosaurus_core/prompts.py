@@ -279,6 +279,7 @@ SORT_RULES = _rule("sort")
 # A figure drawn as SVG by the AI (figures.py), and checked by it seen as a picture (🔍 Check)
 SVG_FIGURE_RULES = _rule("svg_figure").removesuffix("\n")
 FIGURE_CHECK_RULES = _rule("figure_check").removesuffix("\n")
+PICTURE_CHECK_RULES = _rule("picture_check").removesuffix("\n")
 
 
 def _pick_text(search: str, context: str, count: int) -> str:

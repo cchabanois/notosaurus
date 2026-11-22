@@ -306,6 +306,13 @@ const picturesPart = {
     return card.figure ? 10 : 15;
   },
 
+  // The card's picture is its figure as drawn (an SVG): checked against its description, drawn
+  // again when wrong. Any other (a photo found, drawn by the image model, the user's, even in a
+  // figure's place): checked against its card, another one picked when wrong
+  drawnFigure(card) {
+    return Boolean(card.figure && card.picture?.endsWith(".svg"));
+  },
+
   // The figure found wrong, shown faded while it's drawn again (never kept): the one being
   // replaced (redrawFigure), or a first one the server sent
   firstFigureUrl(card) {

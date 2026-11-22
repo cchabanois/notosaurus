@@ -360,3 +360,37 @@ def test_a_picture_shown_large_in_the_card_open(page):
     page.wait_for_function("img => img.complete && img.naturalWidth > 0", arg=img.element_handle())
     box = img.bounding_box()
     assert box and box["width"] > 250 and box["width"] / box["height"] == pytest.approx(800 / 500, rel=0.03)
+
+
+def test_a_photo_checked_against_its_card_then_changed(page, monkeypatch):
+    """A card's photo (here in a figure's place): « 🔍 Vérifier l'image », looked at against
+    the card; what is wrong said, « 🖼️ Changer l'image » opens its picture's panel (another
+    free one, drawn, one's own). A figure keeps « Vérifier la figure » and « Redessiner »."""
+    from notosaurus_core import llm
+
+    async def check(s, card, meant, data, media_type):
+        return "Un baby-foot, sans rapport avec la carte."
+
+    monkeypatch.setattr(llm, "check_picture", check)
+    generate_free(page, "Le triangle rectangle (géométrie)")
+    card = open_card(page.locator(".flash").first)
+    sync_api.expect(card.get_by_role("button", name="🔍 Vérifier la figure")).to_be_visible()
+    (summary,) = lessons(page)
+    folder = page.evaluate("Alpine.$data(document.querySelector('[x-data]')).lessonId")
+    jpeg = plain_image(400, 300, "teal", "JPEG")
+    upload = page.request.post(
+        f"/api/lessons/{folder}/cards/{lesson(page, summary['id'])['cards'][0]['id']}/picture",
+        multipart={"photo": {"name": "photo.jpg", "mimeType": "image/jpeg", "buffer": jpeg}},
+    )
+    assert upload.ok
+    page.evaluate(
+        "(c) => Object.assign(Alpine.$data(document.querySelector('[x-data]')).cards[0], c)", upload.json()["card"]
+    )
+    check_button = card.get_by_role("button", name="🔍 Vérifier l'image")
+    sync_api.expect(check_button).to_be_visible()
+    check_button.click()
+    found = card.locator(".figure-check:visible")
+    sync_api.expect(found).to_contain_text("Un baby-foot, sans rapport avec la carte.")
+    sync_api.expect(found.get_by_role("button", name="📐 Redessiner")).to_be_hidden()
+    found.get_by_role("button", name="🖼️ Changer l'image").click()
+    sync_api.expect(card.locator(".picture-panel")).to_be_visible()

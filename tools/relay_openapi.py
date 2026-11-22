@@ -189,6 +189,10 @@ def build() -> dict:
     def check_figure(request: api.CheckFigureRequest, x_notosaurus_version: str = client):
         """A figure looked at against its description, what is wrong said (llm.check_figure)."""
 
+    @app.post(f"{api.PREFIX}/check-picture", response_model=api.CheckFigureResponse, responses=errors(*COMMON, OFF))
+    def check_picture(request: api.CheckPictureRequest, x_notosaurus_version: str = client):
+        """A card's picture looked at against the card, what is wrong said (llm.check_picture)."""
+
     @app.post(
         f"{api.PREFIX}/transcribe",
         response_model=api.TranscribeResponse,

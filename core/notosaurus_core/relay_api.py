@@ -245,6 +245,21 @@ class CheckFigureRequest(BaseModel):
     svg: str = Field(min_length=1, max_length=MAX_FIGURE_SVG, description="The figure, as drawn.")
 
 
+class CheckPictureRequest(BaseModel):
+    """POST /v1/check-picture: a card's picture (a photo found, drawn by the image model, the
+    user's) looked at against the card (the user asked it: the "🔍 Check" button), as
+    llm.check_picture. JSON. Answer: CheckFigureResponse."""
+
+    card: str = Field(min_length=1, max_length=MAX_SUBJECT, description='The card: "question → answer".')
+    meant: str = Field(default="", max_length=MAX_SUBJECT, description="What the picture was to show, when said.")
+    image: str = Field(
+        min_length=1,
+        max_length=MAX_IMAGE_BYTES * 4 // 3 + 4,
+        description="The picture, base64 (as the card has it: a few hundred KB at most).",
+    )
+    media_type: Literal["image/jpeg", "image/png", "image/webp", "image/gif"] = Field(description="The picture's type.")
+
+
 class CheckFigureResponse(BaseModel):
     ok: bool = Field(description="It looks right.")
     problem: str = Field(description="What is wrong, in the cards' language; empty when it looks right.")

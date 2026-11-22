@@ -149,22 +149,35 @@ async def draw_picture(id: str, card_id: str, req: RedrawRequest | None = None, 
 
 @router.post("/api/lessons/{id}/cards/{card_id}/picture/check")
 async def check_picture(id: str, card_id: str) -> dict:
-    """The card's figure looked at against its description (the "🔍 Check" button): {"ok",
-    "problem"}, what is wrong in the cards' language. Nothing changed: the user then decides
-    whether it is drawn again (draw, with the problem)."""
+    """The card's picture looked at by the AI (the "🔍 Check" button): its figure as drawn
+    against its description; any other picture (a photo found, drawn by the image model, the
+    user's) against the card. {"ok", "problem"}, what is wrong in the cards' language. Nothing
+    changed: the user then decides (a figure drawn again, with the problem; another picture)."""
     await access.editable(id)
     lesson, folder = lessons.get(id), lessons.folder(id)
     if lesson is None or folder is None:
         raise AppError("lesson.not_found", 404)
     card = next((c for c in lesson.cards if c.id == card_id), None)
-    if card is None or not card.figure.strip() or not card.picture.endswith(".svg"):
+    if card is None or not card.picture:
         raise AppError("card.not_found", 404)
     path = folder / "images" / card.picture
     if not pictures.NAME.match(card.picture) or not path.is_file():
         raise AppError("photo.not_found", 404)
+    s = settings.current()
     async with usage.metered("picture", id, lesson.deck):
-        problem = await llm.check_figure(settings.current(), card.figure, path.read_text(encoding="utf-8"))
+        if card.figure.strip() and card.picture.endswith(".svg"):
+            problem = await llm.check_figure(s, card.figure, path.read_text(encoding="utf-8"))
+        else:
+            media = PICTURE_TYPES.get(path.suffix.lower())
+            if media is None:
+                raise AppError("photo.not_found", 404)
+            meant = card.picture_prompt or card.figure
+            problem = await llm.check_picture(s, f"{card.front} → {card.back}", meant, path.read_bytes(), media)
     return {"ok": not problem, "problem": problem}
+
+
+# A card's picture's type, by its file's extension (pictures.NAME: a figure's SVG, else a JPEG)
+PICTURE_TYPES = {".jpg": "image/jpeg"}
 
 
 @router.post("/api/lessons/{id}/cards/{card_id}/picture", status_code=201)

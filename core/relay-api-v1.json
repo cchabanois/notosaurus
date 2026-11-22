@@ -1043,6 +1043,118 @@
         }
       }
     },
+    "/v1/check-picture": {
+      "post": {
+        "summary": "Check Picture",
+        "description": "A card's picture looked at against the card, what is wrong said (llm.check_picture).",
+        "operationId": "check_picture_v1_check_picture_post",
+        "parameters": [
+          {
+            "name": "X-Notosaurus-Version",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "The client's version (\"1.1.0\").",
+              "title": "X-Notosaurus-Version"
+            },
+            "description": "The client's version (\"1.1.0\")."
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CheckPictureRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CheckFigureResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Codes: `relay.invalid_key`",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "402": {
+            "description": "Codes: `relay.no_credits`, `relay.subscription_ended`, `relay.payment_pending`, `relay.trial_ended`",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Codes: `relay.feature_off`",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Codes: `relay.invalid_request`",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "426": {
+            "description": "Codes: `relay.client_outdated`",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Codes: `relay.daily_limit`, `relay.busy`",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Codes: `relay.unavailable`",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/v1/transcribe": {
       "post": {
         "summary": "Transcribe",
@@ -2899,6 +3011,50 @@
           "usage"
         ],
         "title": "CheckFigureResponse"
+      },
+      "CheckPictureRequest": {
+        "properties": {
+          "card": {
+            "type": "string",
+            "maxLength": 1000,
+            "minLength": 1,
+            "title": "Card",
+            "description": "The card: \"question → answer\"."
+          },
+          "meant": {
+            "type": "string",
+            "maxLength": 1000,
+            "title": "Meant",
+            "description": "What the picture was to show, when said.",
+            "default": ""
+          },
+          "image": {
+            "type": "string",
+            "maxLength": 5592409,
+            "minLength": 1,
+            "title": "Image",
+            "description": "The picture, base64 (as the card has it: a few hundred KB at most)."
+          },
+          "media_type": {
+            "type": "string",
+            "enum": [
+              "image/jpeg",
+              "image/png",
+              "image/webp",
+              "image/gif"
+            ],
+            "title": "Media Type",
+            "description": "The picture's type."
+          }
+        },
+        "type": "object",
+        "required": [
+          "card",
+          "image",
+          "media_type"
+        ],
+        "title": "CheckPictureRequest",
+        "description": "POST /v1/check-picture: a card's picture (a photo found, drawn by the image model, the\nuser's) looked at against the card (the user asked it: the \"🔍 Check\" button), as\nllm.check_picture. JSON. Answer: CheckFigureResponse."
       },
       "Credit": {
         "properties": {
