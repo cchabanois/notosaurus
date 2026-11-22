@@ -85,7 +85,8 @@
 .revision-result > div { flex: 1 1 14rem; min-width: 0; display: flex; flex-direction: column; }
 .revision-result strong { font-size: .9rem; }
 .revision-result small { color: var(--muted); font-weight: 700; }
-.revision-result .btn { min-height: 2.3rem; padding: .3rem .8rem; font-size: .85rem; background: var(--surface); }
+.revision-result .btn { min-height: 2.3rem; padding: .3rem .8rem; font-size: .85rem; }
+.revision-result .btn:not(.primary) { background: var(--surface); }  /* on the tinted line; ✓ Garder its own colour */
 
 .flash.changed { border-color: color-mix(in srgb, var(--primary) 60%, transparent); background: color-mix(in srgb, var(--primary-soft) 45%, var(--surface)); }
 .flash-badge {
