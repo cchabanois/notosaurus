@@ -7,6 +7,7 @@ import re
 import threading
 
 import pytest
+from helpers import plain_image
 
 sync_api = pytest.importorskip("playwright.sync_api")
 
@@ -1059,3 +1060,36 @@ def test_a_correction_kept(page):
     assert keep.evaluate(CONTRAST) >= 4.5  # readable (was white on white)
     keep.click()
     sync_api.expect(result).to_be_hidden()
+
+
+def test_a_card_open_says_its_front_and_its_back(page):
+    """The card open names its sides as Anki asks them: « Recto », its picture and its question;
+    a line, « Verso », its answer (its 🔊 beside it), its picture when on the back. The list:
+    the line alone between them."""
+    photo = plain_image(400, 300, "teal", "JPEG")
+    page.route("**/picture-x.jpg", lambda route: route.fulfill(body=photo, content_type="image/jpeg"))
+    page.set_viewport_size({"width": 360, "height": 780})
+    generate_free(page, FRONT_PROMPT)
+    page.evaluate("Alpine.$data(document.querySelector('[x-data]')).cards[0].picture = 'picture-x.jpg'")
+    card = page.locator(".flash").first
+    sync_api.expect(card.locator(".side-label:visible")).to_have_count(0)  # the list: no names…
+    line = card.locator(".back-row").evaluate("e => getComputedStyle(e).borderTopStyle")
+    assert line == "dashed"  # …the line alone
+
+    open_card(card)
+    labels = card.locator(".side-label:visible")
+    sync_api.expect(labels).to_have_text(["Recto", "Verso"])
+    y = lambda loc: loc.bounding_box()["y"]  # noqa: E731
+    recto, verso = y(labels.nth(0)), y(labels.nth(1))
+    picture, front, back = (
+        card.locator(".card-picture img:visible"),
+        card.locator(".front-row"),
+        card.locator(".back-row"),
+    )
+    assert recto < y(picture) < y(front) < verso < y(back)  # the question's picture on the front
+
+    generate_free(page, "Le triangle rectangle (géométrie)")
+    tangent = open_card(page.locator(".flash", has_text="tangente"))  # its figure with the answer
+    labels = tangent.locator(".side-label:visible")
+    sync_api.expect(tangent.locator(".card-picture.on-back img:visible")).to_be_visible()
+    assert y(labels.nth(1)) < y(tangent.locator(".back-row")) < y(tangent.locator(".card-picture.on-back img:visible"))

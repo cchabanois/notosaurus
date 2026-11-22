@@ -411,6 +411,9 @@
               <input type="checkbox" :checked="examPick?.selected.has(card.id)" @change="togglePick(card)"
                      :aria-label="$t('app.exams.pick.card')">
             </label>
+            <!-- Its two sides named, as Anki asks them: the question (and its picture), then, under a
+                 line, the answer (its sound, its picture) -->
+            <p class="side-label" x-show="shownEdited(card)" x-text="$t('app.review.front')"></p>
             <!-- Diagram label: the photo with every label hidden, this card's mask highlighted and movable.
                  Shown as Anki will, only its frame (the diagram behind a window that size:
                  diagramClip), nothing to drag; touched in the card open, the whole photo full screen
@@ -516,6 +519,7 @@
               <div class="math-preview" x-show="!renderedOnly(card, 'front') && (hasMath(card.front) || isCloze(card.front))" x-html="previewHtml(card.front)"></div>
               <!-- The back, the info, the wrong options and the "did you know" grow with their text,
                    as the front: a long answer is seen whole -->
+              <p class="side-label verso" x-show="shownEdited(card)" x-text="$t('app.review.back')"></p>
               <!-- The back, its 🔊 beside it: what the sound reads (in Anki, with the answer) -->
               <div class="back-row">
                 <div class="back-texts">
