@@ -78,9 +78,11 @@ ou **💻 Sur mon ordinateur**, avec le greffon Anki : voir
 L'essentiel de Notosaurus est le même que sur l'ordinateur. Ce que seule l'application a, ou n'a
 pas :
 
-- **🎤 Dicter** : dites une consigne ou une correction au lieu de la taper. Vos mots s'affichent
-  pendant que vous parlez, écrits par la reconnaissance vocale du téléphone ; **✨ Mettre au propre**
-  nettoie ensuite une consigne. L'application demande le micro la première fois.
+- **🎤 Dicter** : dites une consigne, une correction ou ce que doit demander une nouvelle carte
+  au lieu de le taper. Vos mots s'affichent pendant que vous parlez, écrits par la reconnaissance
+  vocale du téléphone. Touchez ■ pour arrêter, ou directement **Corriger**, **Écrire** ou
+  **Générer** : ce que vous avez dit est écrit puis envoyé. **✨ Mettre au propre** nettoie ensuite
+  une consigne. L'application demande le micro la première fois.
 - **⚑ Signaler**, sur une carte, dit à Notosaurus ce qui ne va pas : un mot mal lu, une réponse
   fausse, une figure de travers, une image inadaptée. Chaque signalement est lu et aide à corriger
   Notosaurus (voir [Signaler un problème](../review/#signaler-un-problème)).

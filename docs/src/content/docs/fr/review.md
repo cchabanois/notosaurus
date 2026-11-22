@@ -19,22 +19,56 @@ signalement est lu, et c'est le meilleur moyen de faire corriger Notosaurus. Voi
 
 - **Paquet** : le nom du paquet Anki. `::` crée des sous-paquets :
   `Espagnol::Unité 3 - À l'école`.
-- Chaque carte a un **recto** (la question) et un **verso** (la réponse). La liste est
-  compacte (recto, verso, une petite image) : touchez une carte pour l'ouvrir en plein écran (une
-  fenêtre sur l'ordinateur), comme dans Anki, formules et figures dessinées, avec le champ
-  **✨ Corriger avec l'IA** en bas. **▶ Relire carte par carte** ouvre la première. Glissez du doigt,
-  ou **‹ ›**, pour passer à la carte précédente ou suivante ; après la dernière, la fin de la leçon.
-  Touchez un texte pour le modifier ; **＋** ajoute une carte après celle-ci (laissée vide, elle
-  disparaît). **✕**, Échap ou le bouton retour du téléphone la referment, enregistrée. Touchez son
-  image pour la changer (une carte sans image : ⋯ → **🖼️ Ajouter une image**).
+- Chaque carte a un **recto** (la question) et un **verso** (la réponse).
+
+### La liste
+
+La liste est compacte, comme un aperçu : le recto, le verso sous un trait pointillé, une petite
+image au-dessus de la question ou après la réponse, comme dans Anki, et seulement **🔊** pour
+entendre la carte. **Touchez une carte pour l'ouvrir** ; **▶ Relire carte par carte** ouvre la
+première.
+
+### Une carte ouverte
+
+La carte s'ouvre en plein écran (une fenêtre sur l'ordinateur), formules et figures dessinées,
+telle qu'Anki la montrera :
+
+- en haut, petit, **son paquet** dans Anki (« Jules › 5e › Anglais › … › Exercices ») et ses
+  boutons : **💬 Expliquer cette carte** et **Plus d'actions** (⋯) ;
+- **RECTO** : la question, avec son image quand elle va au recto ; un trait, puis **VERSO** :
+  la réponse et son **🔊**, l'image quand elle va au verso, puis l'info et les aides ;
+- tout en bas, le champ **✨ Corriger avec l'IA**, avec **Corriger** à côté (voir
+  [Corriger avec l'IA](#corriger-avec-lia)).
+
+Touchez un texte pour le modifier. **Glissez du doigt** n'importe où sur la carte, ou touchez
+**‹ ›**, pour passer à la carte précédente ou suivante. Après la dernière vient la **fin de la
+leçon** : combien de cartes ont été relues (« ✓ 12 cartes relues »), **＋ Ajouter une carte**, et
+le bouton pour envoyer la leçon à Anki. **✕**, Échap ou le bouton retour du téléphone referment
+la carte, enregistrée.
+
+Touchez l'image d'une carte pour la changer : sa page s'ouvre en plein écran (voir
+[Images](../card-types/#images)). Une carte sans image : ⋯ → **🖼️ Ajouter une image**.
+
 - **+ info** ajoute une note affichée sous la réponse : genre, pluriel, un exemple…
-- **sous-paquet** range la carte dans un sous-paquet de la leçon (« Vocabulaire »,
-  « Verbes »).
-- **🔊**, à côté du recto ou du verso, le fait entendre avec la voix de la leçon. Chaque carte dit
+- **+ sous-paquet** range la carte dans un sous-paquet de la leçon (« Vocabulaire »,
+  « Verbes ») ; une carte rangée affiche le nom de son sous-paquet.
+- **🔊**, à côté de la réponse, la fait entendre avec la voix de la leçon. Chaque carte dit
   quelles faces sont lues : la réponse d'une carte de vocabulaire, un texte à trous des deux côtés, en entier (au recto
   comme une dictée : on écrit dans les trous les mots entendus). Le menu ⋯ de la carte : **Lire le recto à voix haute**, **Ne plus lire
   le verso**…
-- **Plus d'actions** (⋯), en haut à droite de la carte, la supprime ; **＋ Ajouter une carte**, en bas, en ajoute une.
+- **Plus d'actions** (⋯) supprime aussi la carte.
+
+### Ajouter une carte
+
+**＋** en haut d'une carte ouverte en ajoute une juste après ; **＋ Ajouter une carte**, sous la
+liste ou à la fin de la leçon, en ajoute une à la fin. La nouvelle carte s'ouvre, vide ; laissée
+vide, elle disparaît en la refermant.
+
+Le plus simple est souvent de la faire **écrire par l'IA** : dans **Que doit demander cette
+carte ?**, en bas, dites ce qu'elle doit demander (« le passé composé d'aller », « la date de la
+prise de la Bastille »), puis touchez **Écrire**. Sur le téléphone, rien ne s'ouvre au clavier :
+touchez **🎤** pour le dicter, ou le champ pour le taper. Vous pouvez aussi remplir le recto et
+le verso vous-même.
 
 **📝 Consigne utilisée pour cette leçon**, au-dessus des cartes, rappelle ce qui a été
 demandé à l'IA.
@@ -77,10 +111,22 @@ au-dessus des cartes :
 ![Demander une correction à l'IA](../../../assets/screenshots/fr/correction.png)
 
 Touchez **Corriger**. L'IA revoit les photos et ne change que ce que vous avez demandé : les
-cartes changées sont marquées **modifiée**, les nouvelles **nouvelle**, et une phrase
-résume ce qu'elle a fait. **↩ Annuler** remet les cartes comme avant,
-tant que vous n'avez pas commencé à modifier une carte. Une carte corrigée seule (**✨ Corriger cette
-carte**) s'annule de même tant qu'elle reste ouverte ; une fois refermée, la correction est gardée.
+cartes changées sont marquées **modifiée**, les nouvelles **nouvelle**, et une phrase résume ce
+qu'elle a fait, avec le compte des cartes ajoutées, modifiées et supprimées. Dessous :
+
+- **↩ Annuler** remet les cartes comme avant ;
+- **🎯 Refaire avec soin**, après une correction rapide, la refait avec la réflexion du modèle ;
+- **✓ Garder** la garde : elle ne peut plus être annulée.
+
+La correction reste annulable jusqu'à ce que vous la gardiez ou commenciez à modifier une carte.
+
+**Une seule carte** se corrige depuis la carte ouverte, dans le champ **✨ Corriger avec l'IA**
+en bas (« la réponse c'est 1789 », « plus court »), puis **Corriger**. Les mêmes **↩ Annuler**,
+**🎯 Refaire avec soin** et **✓ Garder** s'affichent ; refermer la carte, ou passer à la
+suivante, garde aussi la correction.
+
+Dans l'application, **🎤** à côté du champ permet de dicter la correction. Pas besoin d'arrêter
+la dictée d'abord : touchez directement **Corriger**, ce que vous avez dit est écrit puis envoyé.
 
 Vous changez d'avis pendant que l'IA corrige (la leçon ou une seule carte) ? **Annuler** l'arrête
 tout de suite : les cartes restent comme elles étaient.
