@@ -74,7 +74,7 @@ const cardsPart = {
   },
 
   // ＋ in the card open (or at the lesson's end): an empty card just after it, in its sub-deck,
-  // open, its front ready to type
+  // open, ready to write (focusAdded)
   addCardAfter(card) {
     const after = card ?? this.cards.at(-1);
     const at = this.cards.indexOf(after);
@@ -83,7 +83,20 @@ const cardsPart = {
     const now = this.cards.indexOf(after);
     this.cards.splice(now === -1 ? at : now + 1, 0, added);
     this.editCard(added, "", { all: true });
-    this.$nextTick(() => document.querySelector(`[data-card="${added.key}"] textarea.front`)?.focus());
+    this.focusAdded(added.key);
+  },
+
+  // A card just added, ready to write. On a touch screen nothing focused: focus opens the
+  // keyboard over the card, when « Que doit demander cette carte ? » (the AI writes it), often
+  // dictated by its 🎙️, is what is mostly used; touching a field opens it. With a mouse, that
+  // field focused; its front when there is none (a lesson not saved yet: no AI on it). Once
+  // shown: x-show shows the fields at the next frame
+  focusAdded(key) {
+    if (!matchMedia("(pointer: fine)").matches) return;
+    this.$nextTick(() => requestAnimationFrame(() => {
+      const card = document.querySelector(`[data-card="${key}"]`);
+      (card?.querySelector(".card-fix textarea") ?? card?.querySelector("textarea.front"))?.focus({ preventScroll: true });
+    }));
   },
 
   // `field`: the text touched, shown as typed (its LaTeX), the cursor in it ("front", "back",
@@ -224,7 +237,7 @@ const cardsPart = {
   },
 
   // A card still empty is the one to fill: no second one added while it waits; either way
-  // its front is where the typing goes
+  // it is opened ready to write (focusAdded)
   addCard() {
     const last = this.cards.at(-1);
     let card = this.cards.find((c) => !(c.front ?? "").trim() && !(c.back ?? "").trim());
@@ -234,11 +247,8 @@ const cardsPart = {
     }
     this.editCard(card, "", { all: true });  // empty: its fields to write in
     const key = card.key;
-    this.$nextTick(() => {
-      const front = document.querySelector(`[data-card="${key}"] textarea.front`);
-      front?.scrollIntoView({ block: "center", behavior: "smooth" });
-      front?.focus({ preventScroll: true });
-    });
+    this.$nextTick(() => document.querySelector(`[data-card="${key}"] textarea.front`)?.scrollIntoView({ block: "center", behavior: "smooth" }));
+    this.focusAdded(key);
   },
 
   // --- Formulas --------------------------------------------------------
