@@ -182,6 +182,7 @@
       "owner": "🧒 Lección de <strong>{owner}</strong>",
       "choice": "🤖 {choice}",
       "clozeHint": "Texto con huecos (respuesta anidada en Anki): {{c1::…}} oculta lo que hay entre las llaves. Cada número da una tarjeta en Anki; el mismo número oculta varios huecos a la vez.",
+      "diagramTitle": "Esquema",
       "diagramHint": "Esquema: arrastra una máscara roja para moverla y su esquina redonda para cambiar su tamaño, de modo que oculte todo el rótulo. El marco discontinuo es lo que Anki muestra de la foto: arrastra sus esquinas azules para recortarla.",
       "diagramWarning": "Con este modelo de IA (Claude), las máscaras a veces son demasiado pequeñas sobre la letra manuscrita: comprueba que ocultan todo el rótulo.",
       "cropFrame": "Lo que Anki muestra de la foto",

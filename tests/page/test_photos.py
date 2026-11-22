@@ -1067,9 +1067,9 @@ def test_a_web_pages_address_alone_shared_adds_nothing_and_says_what_to_share(pa
 
 
 def test_a_diagram_in_the_list_shows_only_its_frame(page):
-    """A diagram's card in the compact list: only what Anki shows of the photo (its frame), its
-    mask on it, nothing to drag; open, the whole photo, its frame's and mask's handles, and how
-    to move them."""
+    """A diagram's card: only what Anki shows of the photo (its frame), its mask on it, nothing to
+    drag, in the list and in the card open; touched there, the whole photo full screen, its
+    frame's and mask's handles, how to move them, until « Terminé » (or Escape: the card stays)."""
     page.goto("/")
     add_photo(page, halves())
     generate_from_photos(page, "Une carte par mot")
@@ -1088,17 +1088,31 @@ def test_a_diagram_in_the_list_shows_only_its_frame(page):
     sync_api.expect(card.locator(".crop-handle:visible, .handle:visible, .crop-frame:visible")).to_have_count(0)
     sync_api.expect(page.get_by_text("faites glisser un masque", exact=False).filter(visible=True)).to_have_count(0)
 
-    open_card(card)
+    open_card(card)  # the card open: its frame still, larger, nothing to drag
+    sync_api.expect(card.locator(".crop-handle:visible")).to_have_count(0)
+    box = clip.bounding_box()
+    assert box and box["width"] > 260 and box["width"] / box["height"] == pytest.approx(1.5, rel=0.03)
+
+    clip.click()  # touched: the whole photo full screen, its handles, how to move them
+    sync_api.expect(clip).to_have_class(re.compile(r"\bopen\b"))
     sync_api.expect(card.locator(".crop-handle:visible")).to_have_count(4)
-    sync_api.expect(card.locator(".diagram-hint")).to_be_visible()
+    sync_api.expect(clip.get_by_text("faites glisser un masque", exact=False)).to_be_visible()
     whole = card.locator(".diagram img").bounding_box()
     assert whole and whole["width"] / whole["height"] == pytest.approx(600 / 800, rel=0.02)
+    page.keyboard.press("Escape")  # closes it alone: the card stays open
+    sync_api.expect(clip).not_to_have_class(re.compile(r"\bopen\b"))
+    sync_api.expect(card).to_have_class(re.compile(r"\bediting\b"))
+    clip.click()
+    clip.get_by_role("button", name="Terminé").click()
+    sync_api.expect(clip).not_to_have_class(re.compile(r"\bopen\b"))
+    sync_api.expect(card).to_have_class(re.compile(r"\bediting\b"))
 
 
 @pytest.mark.parametrize("page", [{"has_touch": True}], indirect=True, ids=["touch"])
 def test_a_diagrams_card_swiped_from_its_photo_not_from_its_mask(page):
-    """A diagram's card open: a finger swiped on its photo turns to the next card, as anywhere
-    on it; one on its mask (dragged there, to cover the label) doesn't."""
+    """A diagram's card open: a finger swiped on its photo's frame turns to the next card, as
+    anywhere on it; edited full screen (#721), one on its mask (dragged there, to cover the
+    label) doesn't."""
     from page.test_cards import _swipe
 
     page.goto("/")
@@ -1112,8 +1126,13 @@ def test_a_diagrams_card_swiped_from_its_photo_not_from_its_mask(page):
     first, second = cards.nth(0), cards.nth(1)
     first.locator(".flash-body").tap(position={"x": 4, "y": 4})
     sync_api.expect(first).to_have_class(re.compile(r"\bediting\b"))
-    _swipe(first.locator(".diagram .mask.target"), -150)  # the mask: dragged, not the card
+    clip = first.locator(".diagram-clip")
+    clip.click()  # full screen: its mask dragged, not the card
+    sync_api.expect(clip).to_have_class(re.compile(r"\bopen\b"))
+    _swipe(first.locator(".diagram .mask.target"), -150)
     page.wait_for_timeout(300)
     sync_api.expect(first).to_have_class(re.compile(r"\bediting\b"))
-    _swipe(first.locator(".diagram img"), -150)  # the photo: the next card
+    page.keyboard.press("Escape")  # the full screen closed: the card stays open
+    sync_api.expect(clip).not_to_have_class(re.compile(r"\bopen\b"))
+    _swipe(first.locator(".diagram img"), -150)  # its frame: the next card
     sync_api.expect(second).to_have_class(re.compile(r"\bediting\b"))

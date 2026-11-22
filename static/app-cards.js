@@ -117,7 +117,8 @@ const cardsPart = {
   touchCard(event) {
     const el = event.currentTarget, t = event.changedTouches[0];
     if (event.type === "touchstart") {
-      const dragged = event.target.closest?.(".diagram :is(.mask.editable, .handle, .crop-handle)");
+      // Not what a finger drags (a mask, a handle), nor the diagram edited full screen (#721)
+      const dragged = event.target.closest?.(".diagram :is(.mask.editable, .handle, .crop-handle), .diagram-clip.open");
       this.cardTouch = event.touches.length === 1 && !dragged ? { x: t.clientX, y: t.clientY, way: "" } : null;
       return;
     }
@@ -172,6 +173,7 @@ const cardsPart = {
   doneEditing() {
     const card = this.cards.find((c) => c.key === this.editing);
     this.editing = "";
+    this.diagramOpen = "";
     if (card) {
       this.cancelFix(card);
       Object.assign(card, { _fixed: null, _allFields: false, _editing: "" });

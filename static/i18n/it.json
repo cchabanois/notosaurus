@@ -182,6 +182,7 @@
       "owner": "🧒 Lezione di <strong>{owner}</strong>",
       "choice": "🤖 {choice}",
       "clozeHint": "Testo da completare (cloze in Anki): {{c1::…}} nasconde ciò che sta tra le graffe. Ogni numero dà una carta in Anki; lo stesso numero nasconde più spazi insieme.",
+      "diagramTitle": "Schema",
       "diagramHint": "Schema: trascina una maschera rossa per spostarla e il suo angolo tondo per ridimensionarla, in modo che nasconda tutto il nome. La cornice tratteggiata è ciò che Anki mostra della foto: trascina i suoi angoli blu per ritagliarla.",
       "diagramWarning": "Con questo modello di IA (Claude), sulla scrittura a mano le maschere a volte sono troppo piccole: controlla che nascondano tutto il nome.",
       "cropFrame": "Ciò che Anki mostra della foto",

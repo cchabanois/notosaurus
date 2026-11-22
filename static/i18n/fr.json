@@ -182,6 +182,7 @@
       "owner": "🧒 Leçon de <strong>{owner}</strong>",
       "choice": "🤖 {choice}",
       "clozeHint": "Texte à trous : {{c1::…}} cache ce qui est entre les accolades. Chaque numéro donne une carte dans Anki ; le même numéro cache plusieurs trous ensemble.",
+      "diagramTitle": "Schéma",
       "diagramHint": "Schéma : faites glisser un masque rouge pour le déplacer, et son coin rond pour l'agrandir, afin qu'il cache tout le nom. Le cadre en pointillés est ce qu'Anki montrera de la photo : faites glisser ses coins bleus pour le recadrer.",
       "diagramWarning": "Avec ce modèle d'IA (Claude), les masques sont parfois trop petits sur l'écriture manuscrite : vérifiez qu'ils cachent bien tout le nom.",
       "cropFrame": "Ce qu'Anki montre de la photo",

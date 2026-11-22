@@ -182,6 +182,7 @@
       "owner": "🧒 Lektion von <strong>{owner}</strong>",
       "choice": "🤖 {choice}",
       "clozeHint": "Lückentext: {{c1::…}} verdeckt, was zwischen den Klammern steht. Jede Nummer ergibt eine Karte in Anki; dieselbe Nummer verdeckt mehrere Lücken gleichzeitig.",
+      "diagramTitle": "Diagramm",
       "diagramHint": "Abbildung: Zieh eine rote Maske, um sie zu verschieben, und ihre runde Ecke, um ihre Größe zu ändern, sodass sie die ganze Beschriftung verdeckt. Der gestrichelte Rahmen ist das, was Anki vom Foto zeigt: Zieh an seinen blauen Ecken, um es zuzuschneiden.",
       "diagramWarning": "Mit diesem KI-Modell (Claude) sind die Masken auf Handschrift manchmal zu klein: Prüfe, ob sie die ganze Beschriftung verdecken.",
       "cropFrame": "Was Anki vom Foto zeigt",
