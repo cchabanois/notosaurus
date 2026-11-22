@@ -102,8 +102,11 @@
   letter-spacing: .03em;
 }
 
+/* Wrapping: its actions' row (flex 1 0 100%) on a line of its own, above its texts; the compact
+   list's and the card open's own rules lay it out otherwise (a lesson read only: every card whole) */
 .flash {
   display: flex;
+  flex-wrap: wrap;
   gap: .25rem;
   padding: .55rem .6rem .55rem .85rem;
   border: 1.5px solid var(--border);

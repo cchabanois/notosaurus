@@ -1268,3 +1268,19 @@ def test_waiting_for_the_ai_shown_on_its_button(page, monkeypatch):
     explain_go.set()
     sync_api.expect(explain).not_to_have_class(waiting)
     sync_api.expect(first.locator(".explain-block").first).to_be_visible()
+
+
+def test_a_read_only_lessons_cards_show_their_texts(page):
+    """A lesson read only (another Anki profile's): every card whole, as it can't be opened, its
+    texts the card's width (seen 2026-11-22: its actions' row took the whole width, the texts a
+    sliver beside it, nothing seen)."""
+    generate_free(page, FRONT_PROMPT)
+    data = "Alpine.$data(document.querySelector('[x-data]'))"
+    page.evaluate(f"{data}.lessonOwner = 'Léa'")  # Anki closed: another profile's lesson
+    page.wait_for_function(f"{data}.readOnly()")
+    card = page.locator(".flash").first
+    sync_api.expect(card.locator(".math-preview.back.shown")).to_be_visible()
+    whole, body = card.evaluate(
+        """(c) => [c, c.querySelector('.flash-body')].map((e) => e.getBoundingClientRect().width)"""
+    )
+    assert body >= 0.8 * whole, (body, whole)
