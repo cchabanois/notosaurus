@@ -160,7 +160,7 @@ body:has(.flash.editing) { overflow: hidden; }  /* the list behind it stays wher
 .cards.compact .flash:not(.editing, .peek) .flash-actions > :not(.listen) { display: none; }
 .cards.compact .flash:not(.editing, .peek) .flash-body { padding-right: 2.2rem; }
 .cards.compact .flash:not(.editing, .peek) :is(.choices, .meta, .fun-fact, .card-help, .card-fix-open,
-  .explain, .figure-check-btn, .figure-check) { display: none; }
+  .explain, .figure-check-row, .figure-check) { display: none; }
 .cards.compact .flash:not(.editing, .peek) .flash-body { flex: 1 1 0; }
 .cards.compact .flash:not(.editing, .peek) .math-preview.shown { display: -webkit-box; -webkit-line-clamp: 2;
   -webkit-box-orient: vertical; overflow: hidden; }

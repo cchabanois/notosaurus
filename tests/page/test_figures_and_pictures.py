@@ -151,6 +151,22 @@ def test_a_picture_shown_as_soon_as_ready(page, monkeypatch):
     sync_api.expect(second.locator(".card-picture.figure img:not(.first):visible")).to_be_visible()
 
 
+def test_a_figures_check_says_what_it_does_under_the_figure(page):
+    """The card open on a phone: "🔍 Vérifier la figure" written on its button (a lone 🔍 read as
+    a zoom, its name only in a tooltip a finger never shows), under the figure, at its right."""
+    page.set_viewport_size({"width": 412, "height": 915})
+    generate_free(page, "Le triangle rectangle (géométrie)")
+    card = open_card(page.locator(".flash").first)
+    figure = card.locator(".card-picture.figure img:not(.first):visible")
+    sync_api.expect(figure).to_be_visible()
+    button = card.locator(".figure-check-btn:visible")
+    sync_api.expect(button).to_have_text("🔍 Vérifier la figure")
+    shown, under = button.bounding_box(), figure.bounding_box()
+    assert shown and under
+    assert shown["y"] >= under["y"] + under["height"], (shown, under)  # under it, not beside
+    assert shown["x"] + shown["width"] == pytest.approx(under["x"] + under["width"], abs=2), (shown, under)
+
+
 def test_a_figure_checked_on_demand_then_redrawn(page, monkeypatch):
     """ "🔍 Vérifier la figure" in its panel: what the AI sees wrong, then drawn again with
     care when asked; "Garder" keeps it."""
