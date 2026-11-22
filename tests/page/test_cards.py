@@ -952,4 +952,6 @@ def test_what_a_lesson_correction_did_reads_beside_or_above_its_buttons(page):
     )
     assert not layout["over"], layout  # no button over the text
     assert not layout["cut"], layout
-    assert layout["lines"] <= 4, layout  # several words a line: the long sentence in 4 lines at most
+    # Several words a line (not one): counted in words, as the lines' number depends on the fonts
+    # (5 lines on CI's Chrome where 4 here, the same width)
+    assert len(said.split()) / layout["lines"] >= 3, layout
