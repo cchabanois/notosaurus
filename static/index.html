@@ -463,7 +463,7 @@
                    @click="openPicture(card)">
               <!-- A figure checked only when asked, under it: the AI looks at it against its description.
                    Said in words (a lone 🔍 reads as a zoom, and a finger never shows a tooltip) -->
-              <div class="figure-check-row" x-show="card.figure && card.picture && !card._drawing && !readOnly() && !off('figures.check')">
+              <div class="figure-check-row" x-show="drawnFigure(card) && !card._drawing && !readOnly() && !off('figures.check')">
                 <button type="button" class="btn soft figure-check-btn" @click="checkFigure(card)" :disabled="Boolean(card._checking)"
                         :class="{ checking: card._checking }" x-text="$t('app.pictures.check')"></button>
               </div>
@@ -551,7 +551,7 @@
                    @click="openPicture(card)">
                 <!-- A figure checked only when asked, under it: the AI looks at it against its description.
                      Said in words (a lone 🔍 reads as a zoom, and a finger never shows a tooltip) -->
-                <div class="figure-check-row" x-show="card.figure && card.picture && !card._drawing && !readOnly() && !off('figures.check')">
+                <div class="figure-check-row" x-show="drawnFigure(card) && !card._drawing && !readOnly() && !off('figures.check')">
                   <button type="button" class="btn soft figure-check-btn" @click="checkFigure(card)" :disabled="Boolean(card._checking)"
                           :class="{ checking: card._checking }" x-text="$t('app.pictures.check')"></button>
                 </div>
