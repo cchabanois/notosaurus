@@ -73,6 +73,7 @@ Each pull request's entries (the `## Changelog` of its description) are put unde
 
 ### Changed
 
+- 🗂 A card's sub-deck is chosen in a list: none, one of the lesson's (with its number of cards), or a new one.
 - ⏳ A button that waits for the AI pulses until the answer comes: 🔊 while its voice is made, 💬 while the explanation is thought (shown where it will come), the search for a picture, « Mettre au propre ».
 - 📄 A PDF of several pages shows its pages before adding them, all ticked when they fit: tap the ones you don't want.
 - 🔊 A sentence with gaps is read whole on its question, as a dictation: you hear the missing words and write them.
