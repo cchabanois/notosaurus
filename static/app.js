@@ -256,6 +256,7 @@ document.addEventListener("alpine:init", () => {
     lessonChild: "",             // the child the open lesson is for
     copySheet: { open: false, busy: false, error: "" },  // the open lesson copied for another child
     exams: [],  // the tests to prepare (app-exams.js): lessons under one tag in Anki
+    examsOpen: false,     // the tests to prepare unfolded in the lessons' sheet (folded: the lessons have the room)
     examSheet: { open: false, view: "list", exam: null, draft: { name: "", date: "" }, busy: false, error: "", copied: false, reviewed: "", sendingLeft: 0, alone: false, adding: { query: "", chosen: [] } },
     examPick: null,  // choosing the open lesson's cards for a test: { id, name, selected: Set }
     lessonPick: null,  // 📚 Mes leçons: the lessons ticked to share their cards (app-anki.js); null: not ticking

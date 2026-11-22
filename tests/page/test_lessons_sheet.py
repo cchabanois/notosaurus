@@ -302,3 +302,28 @@ def test_lessons_shared_ticked_from_my_lessons_no_test_needed(page, tmp_path):
         sheet.get_by_role("button", name="📤 Créer le fichier").click()
     assert download.value.suggested_filename == "Histoire.apkg"
     sync_api.expect(sheet).to_be_hidden()
+
+
+def test_my_lessons_leave_the_lessons_the_room(page):
+    """📚 Mes leçons on a phone: as tall as the screen, the tests to prepare folded in one line,
+    the search and 📤 on one line: the lessons have the room."""
+    page.set_viewport_size({"width": 360, "height": 780})
+    for _ in range(9):
+        generate_free(page, FRONT_PROMPT)
+    page.get_by_role("button", name="Leçons").click()
+    sheet = page.get_by_role("dialog", name="Mes leçons")
+    page.wait_for_function("el => el.getBoundingClientRect().top < 30", arg=sheet.element_handle())  # up to the top
+    fold = sheet.get_by_role("button", name="Contrôles à préparer")
+    sync_api.expect(fold).to_have_attribute("aria-expanded", "false")
+    sync_api.expect(sheet.get_by_role("button", name="＋ Nouveau contrôle")).to_be_hidden()
+    search = sheet.get_by_role("searchbox", name="🔍 Chercher une leçon…").bounding_box()
+    share = sheet.get_by_role("button", name="📤 Partager des leçons").bounding_box()
+    assert (
+        search and share and abs(search["y"] + search["height"] / 2 - share["y"] - share["height"] / 2) < 4
+    )  # one line
+    in_view = sheet.locator(".lesson-list button.lesson").evaluate_all(
+        "els => els.filter((e) => e.getBoundingClientRect().bottom <= innerHeight).length"
+    )
+    assert in_view >= 7
+    fold.click()
+    sync_api.expect(sheet.get_by_role("button", name="＋ Nouveau contrôle")).to_be_visible()

@@ -519,6 +519,7 @@
       "add": "+ Ajouter un enfant",
       "save": "Enregistrer",
       "allLessons": "Les leçons de tous les enfants",
+      "allShort": "👥 Tous",
       "lessonsOf": "Les leçons de {name}",
       "gradeBands": "5|9",
       "examples": {
@@ -566,6 +567,10 @@
       "noLessons": "Aucune leçon dans ce contrôle pour l'instant.",
       "new": "+ Nouveau contrôle",
       "newShort": "＋ Nouveau contrôle",
+      "folded": {
+        "one": "📝 1 contrôle à préparer",
+        "other": "📝 {count} contrôles à préparer"
+      },
       "addLessons": "＋ Ajouter des leçons",
       "addChosen": {
         "one": "Ajouter {count} leçon",

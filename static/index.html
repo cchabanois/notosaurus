@@ -876,20 +876,24 @@
 
   <!-- Lessons sheet -->
   <div class="sheet-backdrop" x-cloak x-show="lessonsOpen" x-transition.opacity @click="lessonsOpen = false"></div>
-  <aside class="sheet" x-cloak x-show="lessonsOpen" x-bind="sheet" role="dialog"
+  <aside class="sheet lessons-sheet" x-cloak x-show="lessonsOpen" x-bind="sheet" role="dialog"
          @keydown.escape.window="lessonsOpen = false" :aria-label="$t('app.lessons.title')">
     <div class="sheet-handle"></div>
     <div class="sheet-head">
       <h2><span x-text="$t('app.lessons.title')"></span> <a class="help-link" :href="$docs('lessons')" target="_blank" rel="noopener" :aria-label="$t('common.helpOn', { topic: $t('app.lessons.title') })" :title="$t('common.helpOn', { topic: $t('app.lessons.title') })">?</a></h2>
       <button class="icon-btn" @click="lessonsOpen = false" :aria-label="$t('common.close')">✕</button>
     </div>
-    <!-- The tests to prepare: lessons under one tag in Anki, revised together (app-exams.js) -->
+    <!-- The tests to prepare: lessons under one tag in Anki, revised together (app-exams.js).
+         Folded in one line (the lessons below them have the room), unfolded when touched -->
     <section class="exam-list">
-      <h3 class="exam-head">
-        <span x-text="$t('app.exams.title')"></span>
+      <button type="button" class="exam-fold" @click="examsOpen = !examsOpen" :aria-expanded="String(examsOpen)">
+        <span class="fold" aria-hidden="true" x-text="examsOpen ? '▾' : '▸'"></span>
+        <span x-text="exams.length ? $t('app.exams.folded', { count: exams.length }) : $t('app.exams.title')"></span>
+      </button>
+      <div class="exam-new" x-show="examsOpen">
         <button type="button" class="chip-btn" @click="lessonsOpen = false; openExams(null, true)" x-text="$t('app.exams.newShort')"></button>
-      </h3>
-      <ul class="child-rows">
+      </div>
+      <ul class="child-rows" x-show="examsOpen">
         <template x-for="e in exams" :key="e.id">
           <li>
             <button type="button" class="child-row" @click="lessonsOpen = false; openExams(e)">
@@ -901,19 +905,20 @@
         </template>
       </ul>
     </section>
-    <!-- What filters the lessons, right above them (the tests to prepare aren't filtered) -->
-    <label class="switch profile-filter" x-show="children.length > 1">
-      <input type="checkbox" x-model="allChildren">
-      <span class="track"><span class="knob"></span></span>
-      <span x-text="allChildren ? $t('app.children.allLessons') : $t('app.children.lessonsOf', { name: childLabel(currentChild()) })"></span>
-    </label>
-    <input type="search" class="lesson-search" x-show="manyLessons()" x-model="lessonQuery"
-           :placeholder="$t('app.lessons.search')" :aria-label="$t('app.lessons.search')">
-    <!-- The cards of lessons shared with another family: ticked here, one by one or a subject (app-anki.js) -->
-    <div class="lesson-share" x-show="canShare() && visibleLessons().length">
-      <button type="button" class="chip-btn" x-show="!lessonPick" @click="startLessonPick()" x-text="$t('app.share.cards.lessons')"></button>
-      <p class="hint" x-show="lessonPick" x-text="$t('app.share.cards.pickHint')"></p>
+    <!-- What filters the lessons, right above them, in one line (the tests to prepare aren't
+         filtered): the search, whose lessons (a child's or every child's), and 📤 to share some -->
+    <div class="lesson-tools">
+      <input type="search" class="lesson-search" x-show="manyLessons()" x-model="lessonQuery"
+             :placeholder="$t('app.lessons.search')" :aria-label="$t('app.lessons.search')">
+      <button type="button" class="chip-btn profile-chip" x-show="children.length > 1" @click="allChildren = !allChildren"
+              :aria-pressed="String(!allChildren)"
+              :title="allChildren ? $t('app.children.allLessons') : $t('app.children.lessonsOf', { name: childLabel(currentChild()) })"
+              x-text="allChildren ? $t('app.children.allShort') : '👤 ' + childLabel(currentChild())"></button>
+      <!-- The cards of lessons shared with another family: ticked here, one by one or a subject (app-anki.js) -->
+      <button type="button" class="icon-btn" x-show="canShare() && visibleLessons().length && !lessonPick" @click="startLessonPick()"
+              :aria-label="$t('app.share.cards.lessons')" :title="$t('app.share.cards.lessons')">📤</button>
     </div>
+    <p class="hint lesson-share" x-show="lessonPick" x-text="$t('app.share.cards.pickHint')"></p>
     <!-- By subject (the deck's first level), the most recent first; see lessonSections() -->
     <div class="lesson-list">
       <p class="empty" x-show="!visibleLessons().length" x-text="$t('app.lessons.none')"></p>
