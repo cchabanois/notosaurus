@@ -89,6 +89,7 @@
       "reading": "Wird gelesen …",
       "title": "Seiten hinzufügen",
       "hint": "„{name}“ hat {count} Seiten: Wähle höchstens {free} (eine Lektion fasst {max} Seiten; jede gesendete Seite kostet wie ein Foto).",
+      "hintAll": "„{name}“ hat {count} Seiten: Tippe auf die, die nicht hinzugefügt werden sollen (jede gesendete Seite kostet wie ein Foto).",
       "add": {
         "one": "{count} Seite hinzufügen",
         "other": "{count} Seiten hinzufügen"

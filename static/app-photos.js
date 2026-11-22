@@ -368,8 +368,8 @@ const photosPart = {
     taken();
   },
 
-  // A PDF: its pages as photos. More pages than places left: the user picks them
-  // (never cut silently).
+  // A PDF: its pages as photos. Of several pages, seen and picked before they are added: all
+  // ticked when they fit, none when there are more than places left (never cut silently).
   async addPdf(file) {
     const free = this.maxPhotos - this.photos.length;
     if (free <= 0) {
@@ -381,7 +381,7 @@ const photosPart = {
       openPdf = await loadPdf(file);
       const count = openPdf.numPages;
       let chosen = Array.from({ length: count }, (_, i) => i + 1);
-      if (count > free) chosen = await this.pickPdfPages(file.name, count, free);
+      if (count > 1) chosen = await this.pickPdfPages(file.name, count, free);
       for (const n of chosen) {
         const blob = await renderPdfPage(openPdf, n);
         const text = await pdfPageText(openPdf, n).catch(() => "");
@@ -398,9 +398,11 @@ const photosPart = {
     }
   },
 
-  // The page picker: every page's thumbnail, drawn one after the other; at most `free`.
+  // The page picker: every page's thumbnail, drawn one after the other; at most `free`, all
+  // ticked when they fit.
   pickPdfPages(name, count, free) {
-    this.pdf = { open: true, name, free, pages: Array.from({ length: count }, (_, i) => ({ n: i + 1, url: "", chosen: false })) };
+    const all = count <= free;
+    this.pdf = { open: true, name, free, pages: Array.from({ length: count }, (_, i) => ({ n: i + 1, url: "", chosen: all })) };
     (async () => {
       for (const page of this.pdf.pages) {
         if (!this.pdf.open || !openPdf) return;

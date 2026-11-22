@@ -197,6 +197,13 @@ def text_pdf(browser) -> bytes:
         context.close()
 
 
+def add_pdf_pages(page, count: int) -> None:
+    """A PDF of several pages chosen: its pages seen in the picker, all ticked, added."""
+    sheet = page.locator(".sheet", has=page.locator(".pdf-pages"))
+    sheet.get_by_role("button", name=f"Ajouter {count} pages").click()
+    sync_api.expect(sheet).to_be_hidden()
+
+
 def add_photo(page, buffer: bytes) -> None:
     page.locator('input[type=file][accept="image/*"][multiple]:not([capture])').set_input_files(
         {"name": "page.png", "mimeType": "image/png", "buffer": buffer}

@@ -89,6 +89,7 @@
       "reading": "Lettura…",
       "title": "Pagine da aggiungere",
       "hint": "“{name}” ha {count} pagine: scegline al massimo {free} (una lezione contiene {max} pagine; ogni pagina inviata costa come una foto).",
+      "hintAll": "“{name}” ha {count} pagine: tocca quelle da non aggiungere (ogni pagina inviata costa come una foto).",
       "add": {
         "one": "Aggiungi {count} pagina",
         "other": "Aggiungi {count} pagine"

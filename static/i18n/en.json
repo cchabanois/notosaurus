@@ -89,6 +89,7 @@
       "reading": "Reading…",
       "title": "Pages to add",
       "hint": "“{name}” has {count} pages: choose up to {free} (a lesson holds {max} pages; each page sent costs like a photo).",
+      "hintAll": "“{name}” has {count} pages: tap the ones not to add (each page sent costs like a photo).",
       "add": {
         "one": "Add {count} page",
         "other": "Add {count} pages"
