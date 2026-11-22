@@ -74,6 +74,18 @@ def test_picture_names_checked(client, drawn):
         assert client.get(f"/api/lessons/{lesson['id']}/pictures/{name}").status_code == 404
 
 
+def test_an_export_takes_only_its_lessons_pictures(client, drawn, tmp_path):
+    """A card's picture is a name the page sends: one leading to another lesson's folder
+    ("../") exports nothing from there."""
+    other = lesson_with_pictures(client)
+    theirs = client.post(f"/api/lessons/{other['id']}/pictures", json={"draw": True}).json()["lesson"]["cards"]
+    lesson = lesson_with_pictures(client)
+    ours = client.post(f"/api/lessons/{lesson['id']}/pictures", json={"draw": True}).json()["lesson"]["cards"]
+    card = {**ours[0], "picture": f"../../{other['id']}/images/{theirs[0]['picture']}"}
+    exported = apkg.export(client, {"deck": "D", "cards": [card, ours[1]], "lesson_id": lesson["id"]}, tmp_path)
+    assert exported.media == [ours[1]["picture"]]  # its own picture only
+
+
 def test_picture_cards_in_anki(client, drawn, tmp_path):
     lesson = lesson_with_pictures(client)
     cards = client.post(f"/api/lessons/{lesson['id']}/pictures", json={"draw": True}).json()["lesson"]["cards"]

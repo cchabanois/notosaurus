@@ -115,8 +115,7 @@ internal suspend fun LocalServer.packaged(deck: Deck, req: JsonObject, lessonId:
     soundsAhead.settle(lessonId)
     val voice = req.string("voice").takeUnless { switches.off("speech.speak") }.orEmpty()
     val (sounds, failures) = speech.sounds(deck, voice, dictation, req.string("rate"), lessonId) { _, _ -> }
-    val folder = lessons.images(lessonId)
-    val pictures = deck.cards.mapNotNull { c -> folder?.resolve(c.picture)?.takeIf { c.picture.isNotEmpty() && it.isFile }?.let { c.picture to it } }.toMap()
+    val pictures = deck.cards.mapNotNull { c -> this@packaged.pictures.file(lessonId, c.picture)?.let { c.picture to it } }.toMap() // ours only: no "../"
     val photos = deck.cards.mapNotNull { it.mask?.page }.distinct().mapNotNull { n -> lessons.photo(lessonId, n)?.let { n to it } }.toMap()
     val frames = (req["frames"]?.takeIf { it is JsonArray } ?: lessons.get(lessonId)?.get("frames"))
         ?.jsonArray?.associate { it.jsonObject["page"]!!.jsonPrimitive.content.toInt() to it.jsonObject["box"]!!.jsonArray.map { v -> v.jsonPrimitive.content.toDouble() } }

@@ -21,8 +21,12 @@ log = logging.getLogger("notosaurus")
 HOST_HEADER = re.compile(r"^[A-Za-z0-9.\-]+(:\d{1,5})?$|^\[[0-9A-Fa-f:.]+\](:\d{1,5})?$")
 
 
+def public_url() -> str | None:
+    return os.environ.get("NOTOSAURUS_PUBLIC_URL", "").strip() or None
+
+
 def public_host() -> str | None:
-    url = os.environ.get("NOTOSAURUS_PUBLIC_URL", "").strip()
+    url = public_url()
     return urlsplit(url).hostname if url else None
 
 

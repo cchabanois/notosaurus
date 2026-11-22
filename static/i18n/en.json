@@ -1102,6 +1102,9 @@
     "host": {
       "not_allowed": "Notosaurus answers only to the computer's IP address or localhost: open it that way, or set NOTOSAURUS_PUBLIC_URL to {host}."
     },
+    "origin": {
+      "not_allowed": "Only Notosaurus's own page can make this request: another website sent it, so it was refused."
+    },
     "draft": {
       "too_large": "The lesson in progress is too large to be kept.",
       "invalid": "The lesson in progress couldn't be kept."

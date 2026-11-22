@@ -100,4 +100,24 @@ class ExportRoutesTest : LocalServerTestBase() {
         assertEquals(4, apkg.query("SELECT count(*) FROM cards") { it.getInt(1) }.single()) // reversed: two each
         assertEquals(setOf("Default", "Histoire::Révolution"), apkg.deckNames)
     }
+
+    @Test
+    fun onlyTheLessonsOwnPicturesExported() = app { client ->
+        // A card's picture is a name the page sends: one leading elsewhere ("../", a full path) exports nothing from there
+        val lesson = client.lesson("Histoire")
+        val other = client.lesson("Géographie")
+        val ours = folder.root.resolve("lessons/${lesson.string("id")}/images").apply { mkdirs() }.resolve("picture-q1-12345678.jpg")
+        ours.writeBytes(byteArrayOf(1))
+        val theirs = folder.root.resolve("lessons/${other.string("id")}/images").apply { mkdirs() }.resolve("picture-q2-12345678.jpg")
+        theirs.writeBytes(byteArrayOf(2))
+        val cards = listOf("picture-q1-12345678.jpg", "../../${other.string("id")}/images/picture-q2-12345678.jpg", theirs.absolutePath)
+            .mapIndexed { i, picture -> """{"front": "Q$i", "back": "R$i", "picture": "$picture"}""" }
+        val answer = client.post("/api/export") {
+            page(); contentType(ContentType.Application.Json)
+            setBody("""{"deck": "Histoire", "cards": $cards, "voice": "", "lesson_id": "${lesson.string("id")}"}""")
+        }
+        assertEquals(HttpStatusCode.OK, answer.status)
+        val apkg = OpenedApkg(answer.bodyAsBytes(), folder.newFolder())
+        assertEquals(listOf("picture-q1-12345678.jpg"), apkg.media.values.toList())
+    }
 }

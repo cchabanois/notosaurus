@@ -773,7 +773,7 @@
               </p>
               <p class="picture-source" x-show="card.picture && pictureSourceText(card) && !figureCredits(card).length">
                 <span x-text="pictureSourceText(card)"></span>
-                <a x-show="card.picture_source?.page" :href="card.picture_source?.page" target="_blank" rel="noopener"
+                <a x-show="pictureSourcePage(card)" :href="pictureSourcePage(card)" target="_blank" rel="noopener"
                    x-text="$t('app.pictures.sourcePage')"></a>
               </p>
               <label class="field">

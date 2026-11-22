@@ -51,8 +51,9 @@ def card_pictures(req: ExportRequest, lesson: Lesson | None) -> dict[int, Path]:
     folder = lessons.folder(lesson.id) if lesson else None
     if folder is None:
         return {}
-    found = {i: folder / "images" / card.picture for i, card in enumerate(req.cards) if card.picture}
-    return {i: path for i, path in found.items() if pictures.NAME.match(path.name) and path.is_file()}
+    # The whole name checked, not the path's last part: the cards come from the page ("../")
+    found = {i: folder / "images" / c.picture for i, c in enumerate(req.cards) if pictures.NAME.fullmatch(c.picture)}
+    return {i: path for i, path in found.items() if path.is_file()}
 
 
 def diagram_images(req: ExportRequest, lesson: Lesson | None) -> dict[int, tuple[Path, list[float] | None]]:

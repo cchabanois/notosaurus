@@ -182,6 +182,23 @@ class AnkiRoutesTest : LocalServerTestBase() {
     }
 
     @Test
+    fun onlyTheLessonsOwnPicturesSent() = app { client ->
+        // A card's picture is a name the page sends: one leading elsewhere ("../", a full path) sends nothing from there
+        val id = client.extract().string("id")
+        val other = client.extract(prompt = "Autre").string("id")
+        folder.root.resolve("lessons/$id/images").apply { mkdirs() }.resolve("picture-q1-12345678.jpg").writeBytes(byteArrayOf(1))
+        val theirs = folder.root.resolve("lessons/$other/images").apply { mkdirs() }.resolve("picture-q2-12345678.jpg")
+        theirs.writeBytes(byteArrayOf(2))
+        val cards = listOf("picture-q1-12345678.jpg", "../../$other/images/picture-q2-12345678.jpg", theirs.absolutePath)
+            .mapIndexed { i, picture -> """{"front": "Q$i", "back": "R$i", "picture": "$picture"}""" }
+        client.post("/api/anki/send") {
+            page(); contentType(ContentType.Application.Json)
+            setBody("""{"deck": "SVT", "cards": $cards, "voice": "", "lesson_id": "$id"}""")
+        }
+        assertEquals(setOf("picture-q1-12345678.jpg"), anki.pictures.keys)
+    }
+
+    @Test
     fun notesNoCardHasAnyMoreOfferedThenDeleted() = app { client ->
         val lesson = client.extract()
         val id = lesson.string("id")

@@ -79,6 +79,8 @@ def page(request, browser, server, tmp_path, monkeypatch):
     page = context.new_page()
     errors = []
     page.on("pageerror", lambda e: errors.append(str(e)))
+    # Whatever the page's Content-Security-Policy refused (app/origins.py): the page needs it
+    page.on("console", lambda m: m.type == "error" and "Content Security Policy" in m.text and errors.append(m.text))
     yield page
     # The lesson in progress kept now (app-draft.js keeps it a moment after a change): else
     # kept in the next test's data, which then finds it again

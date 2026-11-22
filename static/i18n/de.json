@@ -1102,6 +1102,9 @@
     "host": {
       "not_allowed": "Notosaurus antwortet nur auf die IP-Adresse des Computers oder localhost: so öffnen, oder {host} in NOTOSAURUS_PUBLIC_URL eintragen."
     },
+    "origin": {
+      "not_allowed": "Nur die Seite von Notosaurus darf diese Anfrage stellen: Eine andere Website hat sie gesendet, sie wurde abgelehnt."
+    },
     "draft": {
       "too_large": "Die laufende Lektion ist zu groß, um gespeichert zu werden.",
       "invalid": "Die laufende Lektion konnte nicht gespeichert werden."

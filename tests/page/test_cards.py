@@ -203,6 +203,21 @@ def test_a_formula_previewed_as_anki_shows_it(page):
         assert preview.evaluate(UNKNOWN_IN_RED) is unknown, formula
 
 
+def test_a_formula_adds_no_link_nor_style_to_the_page(page):
+    """A card's formula (from the AI, an imported lesson) draws no link of its choosing,
+    no style of its own: MathJax's html extension (\\href, \\style, \\class, \\cssId) is out."""
+    generate_free(page, FRONT_PROMPT)
+    card = page.locator(".flash").first
+    field(card, "back").fill(
+        r"\(\href{javascript:alert(1)}{x} + \style{position:fixed;inset:0}{y} + \class{flash}{z} + \cssId{taken}{w}\)"
+    )
+    sync_api.expect(card.locator(".math-preview.back:not(.shown) mjx-container").first).to_be_visible()
+    assert page.locator('a[href^="javascript:"]').count() == 0
+    assert page.locator("mjx-container .flash, #taken").count() == 0
+    fixed = "() => [...document.querySelectorAll('mjx-container *')].some((n) => n.style.position === 'fixed')"
+    assert page.evaluate(fixed) is False
+
+
 def test_formulas_drawn_in_the_helps_and_the_doubt(page):
     """A help's formulas drawn as the back's (its text a click away), the doubt's too."""
     generate_free(page, FRONT_PROMPT)

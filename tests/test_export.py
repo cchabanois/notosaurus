@@ -549,6 +549,38 @@ def test_where_a_picture_comes_from_kept_hidden(tmp_path):
         assert all("Source" not in t["qfmt"] + t["afmt"] for t in note.nt.templates)  # never shown
 
 
+def test_a_source_page_is_an_https_link_or_none(tmp_path):
+    """A picture's page is a link in the page and in the Anki note: an imported or shared
+    lesson holding another kind of address (javascript:…) still loads, without it."""
+    from app.models import ExportRequest, Lesson
+    from notosaurus_core.models import PictureSource
+
+    for page in ("javascript:alert(1)", " JavaScript:alert(1)", "data:text/html,x", "http://example.org/a", "/x"):
+        assert PictureSource(source="commons", page=page).page == "", page
+    page = "https://commons.wikimedia.org/wiki/File:A.jpg"
+    assert PictureSource(source="commons", page=page).page == page
+    assert PictureSource(source="commons", page="HTTPS://example.org").page == "HTTPS://example.org"
+
+    lesson = Lesson.model_validate(
+        {
+            "id": "L1",
+            "deck": "Histoire",
+            "prompt": "",
+            "photo_count": 0,
+            "created_at": "2026-01-01T00:00:00",
+            "updated_at": "2026-01-01T00:00:00",
+            "cards": [{"front": "f", "back": "b", "picture_source": {"source": "commons", "page": "javascript:x"}}],
+        }
+    )
+    assert lesson.cards[0].picture_source == PictureSource(source="commons")
+
+    name = "picture-c1-0123abcd.jpg"
+    (tmp_path / name).write_bytes(b"jpeg")
+    card = Card(front="f", back="b", picture=name, picture_source={"source": "commons", "page": "javascript:x"})
+    (note,) = anki.notes(ExportRequest(deck="D", cards=[card], voice=""), pictures={0: tmp_path / name})
+    assert "href" not in note.fields["Source"]
+
+
 def test_a_picture_on_a_dictation_keeps_it_a_dictation():
     """TYP-07: a dictation's card with a picture was sent as a picture card (not heard on its
     question, the sound with the answer). A picture is any card's: still the dictation, heard

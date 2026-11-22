@@ -1102,6 +1102,9 @@
     "host": {
       "not_allowed": "O Notosaurus só responde ao endereço IP do computador ou a localhost: abra-o assim, ou defina {host} em NOTOSAURUS_PUBLIC_URL."
     },
+    "origin": {
+      "not_allowed": "Só a página do Notosaurus pode fazer este pedido: foi enviado por outro site, por isso foi recusado."
+    },
     "draft": {
       "too_large": "A lição em andamento é grande demais para ser salva.",
       "invalid": "Não foi possível salvar a lição em andamento."
