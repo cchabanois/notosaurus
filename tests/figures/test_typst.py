@@ -9,6 +9,16 @@ from figures.support import TRIANGLE, rule_example
 from notosaurus_core import figures, figures_typst
 
 
+def bench_figures():
+    """tools/bench_figures.py, a script: imported from its folder."""
+    import sys
+
+    sys.path.insert(0, str(figures_typst.HERE.parent.parent / "tools"))
+    import bench_figures
+
+    return bench_figures
+
+
 def test_a_figure_drawn_in_typst_compiled_offline():
     """Typst with the packages and the font shipped (nothing downloaded): an SVG, black and
     grey, its letters kept by the cleaning (their shapes, used where they go)."""
@@ -102,8 +112,12 @@ def test_a_model_of_balls_is_no_chemistry():
 def test_each_familys_rule_example_compiles(family):
     """Each family's Typst (typst_rules/<family>.typ: its preamble, then the example the AI
     is shown) compiles as it is, with the packages shipped: a rule out of step with its
-    package (a version changed) shows here."""
-    assert figures.clean(figures_typst.compile_svg(family, rule_example(family))).startswith("<svg")
+    package (a version changed) shows here. Read on a card (compile_svg refuses a text too
+    small: TooSmall), and none of its labels hidden (tools/bench_figures.py, which judges
+    the AI's drawings by them). Compiled once, here: it is slow."""
+    svg = figures.clean(figures_typst.compile_svg(family, rule_example(family)))
+    assert svg.startswith("<svg")
+    assert bench_figures().hidden_labels(svg, figures.to_png(svg)) == 0
 
 
 def test_a_drawing_past_its_page_kept_whole():

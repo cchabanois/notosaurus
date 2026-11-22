@@ -9,6 +9,7 @@ to use the system's). The pages' Alpine.js and MathJax are shipped (static/vendo
 This folder: one file per screen; conftest.py the fixtures (a server, a browser, a
 phone-sized page on fresh data), support.py what the tests share."""
 
+import contextlib
 import os
 import socket
 import threading
@@ -23,7 +24,7 @@ except ModuleNotFoundError:  # each test file skips itself (importorskip)
 import uvicorn
 from conftest import fake_synthesize
 
-from app import storage
+from app import sounds, storage
 from app.main import app
 from notosaurus_core import tts
 
@@ -72,6 +73,9 @@ def page(request, browser, server, tmp_path, monkeypatch):
     for key in ("GEMINI_API_KEY", "ANTHROPIC_API_KEY", "OPENAI_API_KEY", "OPENROUTER_API_KEY"):
         monkeypatch.delenv(key, raising=False)  # the same on every computer: no key (.env)
     monkeypatch.setattr(tts, "_synthesize", fake_synthesize)
+    # No sound made ahead by the server (sounds.py): a job waiting its 5 s would fire in a
+    # later test, then on the real edge-tts and that test's data; stopped at the end
+    monkeypatch.setattr(sounds, "DELAY", 3600)
     touch = getattr(request, "param", {}).get("has_touch", False)
     context = browser.new_context(
         locale="fr-FR", viewport={"width": 390, "height": 844}, base_url=server, has_touch=touch
@@ -93,7 +97,16 @@ def page(request, browser, server, tmp_path, monkeypatch):
     # next test's new_context: "Response has been disposed"
     page.unroute_all(behavior="ignoreErrors")
     context.close()
+    stop_sounds_ahead()
     assert not errors, errors
+
+
+def stop_sounds_ahead() -> None:
+    """The server's jobs making sounds ahead cancelled, from this thread (theirs is the
+    server's): none left for the next test, which may count them."""
+    for task in list(sounds._jobs.values()):
+        with contextlib.suppress(RuntimeError):  # a server stopped since: its loop closed, so is its job
+            task.get_loop().call_soon_threadsafe(task.cancel)
 
 
 @pytest.fixture
