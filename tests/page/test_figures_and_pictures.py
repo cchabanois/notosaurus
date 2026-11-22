@@ -381,3 +381,20 @@ def test_a_picture_shown_large_in_the_card_open(page):
     page.wait_for_function("img => img.complete && img.naturalWidth > 0", arg=img.element_handle())
     box = img.bounding_box()
     assert box and box["width"] > 250 and box["width"] / box["height"] == pytest.approx(800 / 500, rel=0.03)
+
+
+def test_a_photo_in_a_figures_place_offers_no_check(page):
+    """A card whose figure the user replaced by a photo (its description kept): no « 🔍 Vérifier
+    la figure », which looks at a drawn figure only (it said « Cette carte n'existe plus »)."""
+    photo = plain_image(400, 300, "teal", "JPEG")
+    page.route("**/picture-x.jpg", lambda route: route.fulfill(body=photo, content_type="image/jpeg"))
+    generate_free(page, "Le triangle rectangle (géométrie)")
+    card = open_card(page.locator(".flash").first)
+    check = card.get_by_role("button", name="🔍 Vérifier la figure")
+    sync_api.expect(check).to_be_visible()  # its figure, drawn: checked
+    page.evaluate(
+        """() => Object.assign(Alpine.$data(document.querySelector('[x-data]')).cards[0],
+            { picture: 'picture-x.jpg', picture_source: { source: 'photo' } })"""
+    )
+    sync_api.expect(card.locator(".card-picture img:visible")).to_have_attribute("src", re.compile(r"picture-x\.jpg"))
+    sync_api.expect(check).to_be_hidden()

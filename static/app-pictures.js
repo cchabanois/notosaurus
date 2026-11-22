@@ -306,6 +306,12 @@ const picturesPart = {
     return card.figure ? 10 : 15;
   },
 
+  // The card's picture is its figure as drawn (an SVG): what a check looks at. A photo put in its
+  // place (the user's, one found) isn't, its description kept all the same: no check offered
+  drawnFigure(card) {
+    return Boolean(card.figure && card.picture?.endsWith(".svg"));
+  },
+
   // The figure found wrong, shown faded while it's drawn again (never kept): the one being
   // replaced (redrawFigure), or a first one the server sent
   firstFigureUrl(card) {
