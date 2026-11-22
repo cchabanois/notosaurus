@@ -23,6 +23,11 @@ class SharedCasesTest {
     }
 
     @Test
+    fun aCardsDeck() = cases("deck_name").forEach { c ->
+        assertEquals(c.toString(), c.string("out"), Anki.deckName(c.string("deck"), c.string("subdeck")))
+    }
+
+    @Test
     fun theDeckHoldingATestsLessons() = cases("common_deck").forEach { c ->
         val decks = (c["in"] as JsonArray).map { it.jsonPrimitive.content }
         assertEquals(decks.toString(), c.string("out"), Exams.commonDeck(decks))

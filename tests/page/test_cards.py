@@ -1168,3 +1168,17 @@ def test_a_sound_that_cant_be_heard_says_why(page):
     alert = page.get_by_role("alert")
     sync_api.expect(alert).to_contain_text("Votre abonnement est terminé")
     sync_api.expect(alert.get_by_role("link", name="S'abonner")).to_be_visible()
+
+
+def test_the_open_card_shows_its_deck(page):
+    """The open card says, small at its top, the deck it goes to in Anki: the lesson's, then its
+    part (« Jules › 5e › Espagnol › Familia »), as Anki shows it; not in the list."""
+    generate_free(page, FRONT_PROMPT)
+    page.locator("label.field.deck input").fill("Jules::5e::Espagnol")
+    flash = page.locator(".flash").first
+    deck = flash.locator(".card-deck")
+    sync_api.expect(deck).to_be_hidden()
+    card = open_card(flash)
+    card.locator(".subdeck-tag").click()
+    card.locator("input.subdeck").fill("Familia")
+    sync_api.expect(card.locator(".card-deck")).to_have_text("Jules › 5e › Espagnol › Familia")

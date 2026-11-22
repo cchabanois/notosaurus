@@ -15,6 +15,15 @@ test("speakable: what a voice reads of a text, as tts.py", async () => {
   for (const c of cases.speakable) assert.equal(page.run(`speakable(${JSON.stringify(c.in)})`), c.out, c.in);
 });
 
+test("a card's deck, its levels, as app/anki.py's _deck_name", async () => {
+  const page = await loadScripts("app.js");
+  const component = page.component();
+  for (const c of cases.deck_name) {
+    component.deck = c.deck;
+    assert.equal(component.deckPath({ subdeck: c.subdeck }).join("::"), c.out, `${c.deck} | ${c.subdeck}`);
+  }
+});
+
 test("what each side says read aloud, as tts.spoken_sides", async () => {
   const page = await loadScripts("app.js");
   const component = page.component();
