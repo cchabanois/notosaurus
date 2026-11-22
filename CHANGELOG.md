@@ -9,6 +9,7 @@ Each pull request's entries (the `## Changelog` of its description) are put unde
 
 ### Added
 
+- 🗂 An open card shows its Anki deck at its top, small, as Anki does: « Jules › 5e › Anglais › … › Exercices ».
 - 🔊 Every card can be read aloud on its question, its answer, or both: a sentence with gaps with its blank, then whole; the card's ⋯ turns each side on or off.
 - 🖼️ A sentence with gaps can have a picture, on its question or its answer.
 - ✓ « Garder » keeps an AI correction, beside « Annuler » and « Refaire avec soin », for a card and for the whole lesson.
