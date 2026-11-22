@@ -260,6 +260,50 @@ class GenerationRoutesTest : LocalServerTestBase() {
     }
 
     @Test
+    fun aPictureACorrectionReplacedNotCutOutOfTheLessonAgain() = app { client ->
+        relayAnswers("""{"deck": {"deck": "Anglais", "cards": [
+            {"front": "le chat", "back": "the cat", "picture_prompt": "a cat"},
+            {"front": "le chien", "back": "the dog", "picture_prompt": "a dog"},
+            {"front": "Ce triangle ?", "back": "rectangle", "figure": "a right triangle"}]}, "turns": [0], "usage": {"credits": 1, "credits_left": 99}}""")
+        val lesson = client.submitFormWithBinaryData("/api/extract", formData {
+            append("images", "the page".toByteArray(), Headers.build {
+                append(HttpHeaders.ContentType, "image/jpeg")
+                append(HttpHeaders.ContentDisposition, "filename=\"page-1.jpg\"")
+            })
+            append("prompt", "p")
+        }) { page() }.json().jsonObject
+        val id = lesson.string("id")
+        // The cat's picture replaced by a correction: the lesson's drawing would only come back
+        val cat = lesson["cards"]!!.jsonArray.first().jsonObject.string("id")
+        // Written from the fake relay's threads: the other cards' pictures are asked at once (Pictures.AT_ONCE)
+        val asked: MutableList<String> = java.util.Collections.synchronizedList(mutableListOf())
+        relay.dispatcher = object : mockwebserver3.Dispatcher() {
+            override fun dispatch(request: RecordedRequest): MockResponse = when (request.url.encodedPath) {
+                "/v1/lesson-drawings" -> {
+                    val body = request.body!!.utf8()
+                    asked += "lesson-drawings " + request.multipartRequest()["cards"]!!.jsonArray.size + " " + body.contains("the page")
+                    val cat = Base64.getEncoder().encodeToString("the cat, cut out".toByteArray())
+                    MockResponse.Builder().body("""{"drawings": [{"card": 0, "data": "$cat"}], "usage": {"credits": 1, "credits_left": 98}}""").build()
+                }
+                "/v1/card-picture" -> {
+                    asked += "card-picture " + json.parseToJsonElement(request.body!!.utf8()).jsonObject["card"]!!.jsonObject.string("front")
+                    cardPicture(request)
+                }
+                else -> MockResponse.Builder().code(404).build()
+            }
+        }
+        val drawn = client.post("/api/lessons/$id/pictures") {
+            page(); contentType(ContentType.Application.Json); setBody("""{"draw": true, "not_from_lesson": ["$cat"]}""")
+        }.json().jsonObject
+        // The lesson looked at for the dog only; the cat's picture looked for as any other
+        assertEquals("lesson-drawings 1 true", asked.first())
+        assertEquals(setOf("card-picture le chat", "card-picture Ce triangle ?"), asked.drop(1).toSet())
+        val drawnCat = drawn["lesson"]!!.jsonObject["cards"]!!.jsonArray.first().jsonObject
+        assertTrue(drawnCat.string("picture").isNotBlank())
+        assertTrue((drawnCat["picture_source"] as? JsonObject)?.string("source") != "lesson")
+    }
+
+    @Test
     fun theDiagramFramesKeptAndSent() = app { client ->
         relayAnswers("""{"deck": {"deck": "SVT", "cards": [{"front": "(1) ?", "back": "la bouche", "mask": {"page": 1, "n": 1, "box": [0.1, 0.1, 0.2, 0.15]}}]},
             "turns": [0], "frames": [{"page": 1, "box": [0.05, 0.05, 0.6, 0.7]}], "usage": {"credits": 1, "credits_left": 99}}""")

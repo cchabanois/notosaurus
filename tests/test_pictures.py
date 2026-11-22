@@ -110,6 +110,24 @@ def test_only_the_owner_draws(client, drawn, monkeypatch):
     assert client.post(f"/api/lessons/{lesson['id']}/pictures").status_code == 403
 
 
+def test_the_cards_a_correction_replaced_passed_on(client, monkeypatch):
+    """The page's not_from_lesson (the cards whose picture a correction replaced) reaches
+    draw_all: their pictures not cut out of the lesson's photos again."""
+    from app.routes import pictures as routes
+
+    told = {}
+
+    async def draw_all(s, folder, cards, draw=False, step=None, photos=None, not_from_lesson=()):
+        told["not_from_lesson"] = list(not_from_lesson)
+        return pictures.Drawn(0, None, [])
+
+    monkeypatch.setattr(routes.pictures, "draw_all", draw_all)
+    lesson = lesson_with_pictures(client)
+    first = lesson["cards"][0]["id"]
+    client.post(f"/api/lessons/{lesson['id']}/pictures", json={"not_from_lesson": [first]})
+    assert told["not_from_lesson"] == [first]
+
+
 def test_correction_keeps_ids_and_pictures():
     before = [
         Card(front="Q", back="an apple", picture_prompt="an apple", picture="picture-a-12345678.jpg", id="a"),

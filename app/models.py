@@ -189,6 +189,9 @@ class SettingsUpdate(BaseModel):
 
 class DrawPictures(BaseModel):
     draw: bool = False  # the pictures no free one fits drawn by the image model: the user said yes
+    # The cards (ids) whose picture a correction replaced: not cut out of the lesson's photos
+    # again (the drawing the user wanted replaced), looked for as any other
+    not_from_lesson: list[str] = Field(default=[], max_length=500)
 
 
 class PictureSearch(BaseModel):

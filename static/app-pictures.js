@@ -239,7 +239,8 @@ const picturesPart = {
       const res = await this.pictureSteps(lessonId, await api(`/api/lessons/${lessonId}/pictures`, {
         method: "POST",
         headers: { "Content-Type": "application/json", Accept: "application/x-ndjson" },
-        body: JSON.stringify({ draw }),
+        // A card whose picture a correction replaced: not the lesson's drawing again
+        body: JSON.stringify({ draw, not_from_lesson: this.cards.filter((c) => c._notFromLesson && !c.picture).map((c) => c.id) }),
       }));
       if (this.lessonId !== lessonId) return;  // another lesson opened meanwhile
       // With where each comes from: the next save would drop it otherwise

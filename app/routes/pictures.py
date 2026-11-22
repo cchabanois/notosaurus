@@ -27,6 +27,7 @@ async def draw_pictures(id: str, req: DrawPictures | None = None, accept: str | 
     "first"}: what the page shows on it meanwhile), then the answer (common.stepped)."""
     await access.editable(id)
     allowed = bool(req and req.draw)
+    not_from_lesson = req.not_from_lesson if req else []
 
     async def drawn(step: Step | None = None) -> dict:
         async def draw(draft: Lesson) -> pictures.Drawn:
@@ -35,7 +36,13 @@ async def draw_pictures(id: str, req: DrawPictures | None = None, accept: str | 
                 # The lesson's own drawings first: its photos (pictures.lesson_drawings)
                 photos = [llm.Image(photo.read_bytes(), "image/jpeg") for photo in lessons.photos(id)]
                 return await pictures.draw_all(
-                    settings.current(), folder, draft.cards, draw=allowed, step=step, photos=photos
+                    settings.current(),
+                    folder,
+                    draft.cards,
+                    draw=allowed,
+                    step=step,
+                    photos=photos,
+                    not_from_lesson=not_from_lesson,
                 )
 
         lesson, made = await lessons.edit(id, draw)

@@ -338,7 +338,7 @@
       </div>
 
       <!-- The pictures no free one fits, after a generation: drawn only if the user says yes (it costs) -->
-      <div class="notice-bar ask" x-cloak x-show="toDraw.length && !drawing && !readOnly()" role="status">
+      <div class="notice-bar ask" x-cloak x-show="toDraw.length && !drawingHere() && !readOnly()" role="status">
         <span><span x-text="$t('app.pictures.toDraw', { count: toDraw.length })"></span>
           <small x-show="drawingCost(toDraw.length)" x-text="drawingCost(toDraw.length)"></small></span>
         <button type="button" class="btn primary" @click="drawPictures(true)" x-text="$t('app.pictures.drawYes')"></button>
