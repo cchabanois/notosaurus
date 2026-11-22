@@ -40,6 +40,8 @@ telle qu'Anki la montrera :
 - tout en bas, le champ **✨ Corriger avec l'IA**, avec **Corriger** à côté (voir
   [Corriger avec l'IA](#corriger-avec-lia)).
 
+![Une carte ouverte : son paquet en haut, le recto avec sa figure, le verso, et le champ de correction en bas](../../../assets/screenshots/fr/card-open.png)
+
 Touchez un texte pour le modifier. **Glissez du doigt** n'importe où sur la carte, ou touchez
 **‹ ›**, pour passer à la carte précédente ou suivante. Après la dernière vient la **fin de la
 leçon** : combien de cartes ont été relues (« ✓ 12 cartes relues »), **＋ Ajouter une carte**, et
