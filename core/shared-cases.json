@@ -798,7 +798,7 @@
    "sound": "both",
    "dictation": false,
    "out": [
-    "I … my mum yesterday.",
+    "I helped my mum yesterday.",
     "I helped my mum yesterday."
    ]
   },
@@ -809,7 +809,7 @@
    "sound": "front",
    "dictation": false,
    "out": [
-    "I … (help) my ….",
+    "I helped my mum.",
     ""
    ]
   },

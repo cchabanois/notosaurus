@@ -29,8 +29,8 @@ Consulta [Señalar un problema](#señalar-un-problema).
 - **+ info** añade una nota mostrada bajo la respuesta: el género, el plural, un ejemplo…
 - **submazo** pone la tarjeta en un submazo de la lección («Vocabulario», «Verbos»).
 - **🔊**, junto al anverso o al reverso, lo reproduce con la voz de la lección. Cada tarjeta dice qué
-  caras se leen: la respuesta de una tarjeta de vocabulario, un texto con huecos por las dos caras
-  (el anverso con su hueco). El menú ⋯ de la tarjeta: **Leer el anverso en voz alta**, **Dejar de
+  caras se leen: la respuesta de una tarjeta de vocabulario, un texto con huecos por las dos caras, entero (el anverso
+  como un dictado: se escriben en los huecos las palabras oídas). El menú ⋯ de la tarjeta: **Leer el anverso en voz alta**, **Dejar de
   leer el reverso**…
 - **Más acciones** (⋯), arriba a la derecha de la tarjeta, la elimina; **＋ Añadir una tarjeta**,
   abajo, añade una.

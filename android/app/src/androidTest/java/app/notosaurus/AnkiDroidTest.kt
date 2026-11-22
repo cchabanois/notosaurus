@@ -300,7 +300,7 @@ class AnkiDroidTest {
     }
 
     /** A text with gaps heard on both sides (its sound) and with its picture, as any card (note
-     * types v3): its question's sound (the blank), its answer's (the whole text), its picture, each
+     * types v3): its question's sound and its answer's (the whole text: a dictation, then its answer), its picture, each
      * in its field of its cloze note type, the files in AnkiDroid's media. */
     @Test
     fun aTextWithGapsHeardOnBothSidesWithItsPicture() {
@@ -316,18 +316,18 @@ class AnkiDroidTest {
         }
         val card = Card("I {{c1::helped}} my mum $run.", "", id = "g-$run", picture = picture.name, sound = "both")
         val (front, back) = Speech.spokenSides(card, false)
-        assertEquals("I … my mum $run." to "I helped my mum $run.", front to back)
-        val audio = mapOf(front to mp3("blank"), back to mp3("whole"))
+        assertEquals("I helped my mum $run." to "I helped my mum $run.", front to back)
+        val audio = mapOf(back to mp3("whole"))
         val sent = anki.send(Deck("Notosaurus test $run", listOf(card)), Media(audio = audio, pictures = mapOf(picture.name to picture), lesson = lesson))
         assertEquals(1, sent.added)
         val api = AddContentApi(Device.context)
         val note = api.getNote(sent.notes.getValue("g-$run"))!!
         val model = noteModel(note.id)
         assertEquals(types["cloze"].name, api.modelList!![model])
-        assertTrue(field(model, note.fields, "FrontAudio").startsWith("[sound:blank-$run"))
+        assertTrue(field(model, note.fields, "FrontAudio").startsWith("[sound:whole-$run"))
         assertTrue(field(model, note.fields, "Audio").startsWith("[sound:whole-$run"))
         assertTrue(field(model, note.fields, "Picture").startsWith("<img"))
-        assertTrue(media().any { it.startsWith("blank-$run") } && media().any { it.startsWith("whole-$run") })
+        assertTrue(media().any { it.startsWith("whole-$run") })
     }
 
     /** Release test (build 425): AnkiDroid holds the note types of an older Notosaurus (the

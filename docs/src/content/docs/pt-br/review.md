@@ -29,8 +29,8 @@ relato é lido, e é o melhor jeito de fazer o Notosaurus ser corrigido. Veja
 - **+ info** acrescenta uma nota mostrada abaixo da resposta: gênero, plural, um exemplo…
 - **subbaralho** coloca o cartão em um subbaralho da lição ("Vocabulário", "Verbos").
 - **🔊**, ao lado da frente ou do verso, toca-o com a voz da lição. Cada cartão diz quais faces são
-  lidas: a resposta de um cartão de vocabulário, um texto com lacunas dos dois lados (a frente com a
-  sua lacuna). O menu ⋯ do cartão: **Ler a frente em voz alta**, **Parar de ler o verso**…
+  lidas: a resposta de um cartão de vocabulário, um texto com lacunas dos dois lados, inteiro (a
+  frente como um ditado: escrevem-se nas lacunas as palavras ouvidas). O menu ⋯ do cartão: **Ler a frente em voz alta**, **Parar de ler o verso**…
 - **Mais ações** (⋯), no canto superior direito do cartão, o exclui; **＋ Adicionar um cartão**,
   embaixo, adiciona um.
 

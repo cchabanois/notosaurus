@@ -29,8 +29,8 @@ segnalazione viene letta, ed è il modo migliore per far correggere Notosaurus. 
 - **+ info** aggiunge una nota mostrata sotto la risposta: genere, plurale, un esempio…
 - **sotto-mazzo** mette la carta in un sotto-mazzo della lezione ("Vocabolario", "Verbi").
 - **🔊**, accanto al fronte o al retro, lo riproduce con la voce della lezione. Ogni carta dice quali
-  facce sono lette: la risposta di una carta di vocabolario, un testo con lacune su entrambe le
-  facce (il fronte con la sua lacuna). Il menu ⋯ della carta: **Leggi il fronte ad alta voce**,
+  facce sono lette: la risposta di una carta di vocabolario, un testo con lacune su entrambe le facce, intero (il
+  fronte come un dettato: si scrivono nelle lacune le parole ascoltate). Il menu ⋯ della carta: **Leggi il fronte ad alta voce**,
   **Non leggere più il retro**…
 - **Altre azioni** (⋯), in alto a destra della carta, la elimina; **＋ Aggiungi una carta**, in
   fondo, ne aggiunge una.

@@ -1121,7 +1121,7 @@ def test_a_card_open_says_its_front_and_its_back(page):
 def test_each_side_read_aloud_as_the_card_says(page):
     """A card's sound a side: its back read as before; ⋯ turns its front's on (heard at once, its
     🔊 beside it) and its back's off (its 🔊 gone), kept with the card (its sound). A sentence with
-    gaps can be read too: its front with its blank, its back whole; and it can get a picture."""
+    gaps can be read too, whole on both sides (its front a dictation); and it can get a picture."""
     generate_free(page, FRONT_PROMPT)
     # What the voice is asked, not its sound (none made here): the page's player a quiet one
     page.evaluate(
@@ -1144,12 +1144,12 @@ def test_each_side_read_aloud_as_the_card_says(page):
     (summary,) = lessons(page)
     assert lesson(page, summary["id"])["cards"][0]["sound"] == "front"
 
-    # A sentence with gaps: read, its front with its blank; a picture offered
+    # A sentence with gaps: read whole, its front as a dictation; a picture offered
     page.evaluate(
         """() => Object.assign(Alpine.$data(document.querySelector('[x-data]')).cards[0],
             { front: 'I {{c1::helped}} my mum.', back: '', sound: 'both' })"""
     )
     sides = card.evaluate("e => Alpine.$data(e).spokenSides(Alpine.$data(e).cards[0])")
-    assert sides == ["I … my mum.", "I helped my mum."]
+    assert sides == ["I helped my mum.", "I helped my mum."]
     card.get_by_role("button", name="Plus d'actions").click()
     sync_api.expect(card.get_by_role("button", name="🖼️ Ajouter une image")).to_be_visible()
