@@ -22,7 +22,7 @@ const cardsPart = {
   },
 
   canGenerate() {
-    return this.form.text.trim() !== "" && !this.loading && !this.dictating("prompt") && !this.tidy.busy;
+    return this.canSendDictated("prompt", this.form.text) && !this.loading && !this.tidy.busy;
   },
 
   bottomBar() {

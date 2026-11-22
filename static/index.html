@@ -252,11 +252,11 @@
       </div>
 
       <!-- The lesson's next pages, added days later: only they are read, its cards stay -->
-      <button class="btn primary wide" x-show="canComplete()" @click="extract({ complete: true })" :disabled="!canGenerate()">
+      <button class="btn primary wide ends-dictation" x-show="canComplete()" @click="extract({ complete: true })" :disabled="!canGenerate()">
         <span x-text="$t('app.prompt.complete', { count: newPages().length })"></span>
         <small x-text="$t('app.prompt.completeHint')"></small>
       </button>
-      <button class="btn soft wide" x-show="cards.length && !(regeneratesInPlace() && off('lesson.regenerate'))" @click="extract()" :disabled="!canGenerate()">
+      <button class="btn soft wide ends-dictation" x-show="cards.length && !(regeneratesInPlace() && off('lesson.regenerate'))" @click="extract()" :disabled="!canGenerate()">
         <span x-text="$t('app.prompt.regenerate')"></span>
         <small x-text="regeneratesInPlace() ? $t('app.prompt.regenerateHint') : $t('app.prompt.regenerateNewHint')"></small>
       </button>
@@ -318,7 +318,7 @@
                 @click="dictate('correction')" :aria-label="$t(micKey('correction'))" :title="$t(micKey('correction'))"
                 ></button>
         </div>
-        <button class="btn primary" :disabled="!revision.text.trim() || revision.busy || dictating('correction')"
+        <button class="btn primary ends-dictation" :disabled="revision.busy || !canSendDictated('correction', revision.text)"
                 x-text="$t('app.revise.button')"></button>
       </form>
       <p class="hint listening-hint" x-cloak x-show="dictationStep('correction')"
@@ -348,7 +348,7 @@
       <!-- Just made quick: once more, carefully (a rich lesson: a figure, maths) -->
       <div class="careful-again" x-show="madeQuick && regeneratesInPlace() && !off('lesson.regenerate') && !off('ai.careful')">
         <small class="hint" x-text="$t('app.review.madeQuick')"></small>
-        <button class="btn soft" @click="extract({ careful: true })" :disabled="!canGenerate()"
+        <button class="btn soft ends-dictation" @click="extract({ careful: true })" :disabled="!canGenerate()"
                 x-text="$t('app.review.carefulAgain')"></button>
       </div>
 
@@ -664,7 +664,7 @@
                             ></button>
                   </div>
                   <button type="button" class="btn soft stops-dictation" x-show="card._fix.busy" @click="cancelFix(card)" x-text="$t('common.cancel')"></button>
-                  <button class="btn primary" x-show="!card._fix.busy" :disabled="!card._fix.text.trim() || dictating('card:' + card.key)"
+                  <button class="btn primary ends-dictation" x-show="!card._fix.busy" :disabled="!canSendDictated('card:' + card.key, card._fix.text)"
                           x-text="$t(card._fix.blank ? 'app.fix.submitBlank' : 'app.fix.submit')"></button>
                 </div>
                 <p class="hint" x-show="card._fix.busy" x-text="$t(card._fix.blank ? 'app.fix.busyBlank' : 'app.fix.busy')"></p>
@@ -859,7 +859,7 @@
   <div class="bottom-bar" x-show="bottomBar() && !examPick">
     <!-- Always what comes next (nextAction): the cards from the photos; from the prompt alone
          when it says what to learn; else the lesson's photo first (the camera, as the 📷 tile) -->
-    <button class="btn primary wide" x-show="!cards.length" @click="nextAction() === 'photo' ? $refs.camera.click() : extract()"
+    <button class="btn primary wide ends-dictation" x-show="!cards.length" @click="nextAction() === 'photo' ? $refs.camera.click() : extract()"
             :disabled="nextAction() === 'photo' ? loading : !canGenerate()"
             x-text="$t({ generate: 'app.actions.generate', prompt: 'app.prompt.fromPrompt', photo: 'app.actions.startWithPhoto' }[nextAction()])"></button>
     <div class="bar-row" x-show="cards.length">

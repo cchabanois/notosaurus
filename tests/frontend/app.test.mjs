@@ -393,7 +393,7 @@ test("dictation: listen, then the text said comes after what was written", async
   await c.dictate("prompt");
   assert.equal(c.mic.listening, "prompt");
   assert.equal(c.dictating("prompt"), true);  // the field waits for its text
-  assert.equal(c.canGenerate(), false);
+  assert.equal(c.canGenerate(), true);  // « Générer » still there: it ends the dictation first
   assert.equal(c.dictationStep("prompt"), "app.dictation.listening");
   assert.equal(c.dictating("correction"), false);
   assert.equal(c.micKey("prompt"), "app.dictation.stop");
