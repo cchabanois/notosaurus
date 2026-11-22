@@ -475,8 +475,8 @@ REDRAWN_FROM = ("typst",)
 
 # A figure's source files: named after its picture ("picture-c1-ab12cd34.typ", "-2.typ" for a
 # second), so never on another card's; read back only by such a name (nothing else of the
-# lesson's folder, nor outside it)
-SOURCE_NAME = re.compile(r"^picture-[a-z0-9]+-[a-f0-9]{8}(-\d+)?\.typ$")
+# lesson's folder, nor outside it). Its group "picture": the picture's stem
+SOURCE_NAME = re.compile(r"^(?P<picture>picture-[a-z0-9]+-[a-f0-9]{8})(-\d+)?\.typ$")
 
 
 def keep_sources(folder: Path, picture: str, contents: Sequence[str]) -> list[SourceFile]:
@@ -652,6 +652,6 @@ def prune(folder: Path, cards: list[Card]) -> int:
             if NAME.match(path.name) and path.name not in keep:
                 path.unlink(missing_ok=True)
                 removed += 1
-            elif SOURCE_NAME.match(path.name) and re.sub(r"(-\d+)?\.typ$", "", path.name) not in stems:
+            elif (source := SOURCE_NAME.match(path.name)) and source["picture"] not in stems:
                 path.unlink(missing_ok=True)
     return removed

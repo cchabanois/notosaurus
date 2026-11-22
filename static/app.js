@@ -270,6 +270,7 @@ document.addEventListener("alpine:init", () => {
     soundLoading: "",            // the text whose sound is on its way (made by the voice), its 🔊 pulsing
     aiStep: "",                  // what the AI is at while making or correcting: slow, fallback, figures
     drawingLessons: [],          // the lessons whose cards' pictures are being drawn (another may be open)
+    drawLater: {},               // asked while their drawing ran: lesson id → its `draw`, done once it ends
     pictureJobs: 0,              // a card's picture being redrawn, uploaded or removed
     toDraw: [],                  // the cards whose picture no free one fits: drawn if the user says yes
     drawingUsd: null,            // about what a picture drawn by the image model costs: the computer's (US $)

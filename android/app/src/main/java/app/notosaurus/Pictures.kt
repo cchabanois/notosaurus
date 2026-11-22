@@ -38,7 +38,10 @@ class Pictures(
      * `notFromLesson` (their ids: a correction replaced their picture, the lesson's drawing
      * would only come back). Figures turned off (figures.draw): their cards left without, not
      * counted as failures. */
-    suspend fun drawMissing(lesson: JsonObject, draw: Boolean = false, step: Step = {}, notFromLesson: Set<String> = emptySet()): JsonObject {
+    suspend fun drawMissing(lesson: JsonObject, draw: Boolean = false, step: Step = {}, notFromLesson: Set<String> = emptySet()): JsonObject =
+        drawing(lesson.string("id")) { drawnMissing(lesson, draw, step, notFromLesson) }
+
+    private suspend fun drawnMissing(lesson: JsonObject, draw: Boolean, step: Step, notFromLesson: Set<String>): JsonObject {
         val id = lesson.string("id")
         val cards = lesson.cards()
         fromTheLesson(id, cards, step, notFromLesson)
@@ -67,7 +70,7 @@ class Pictures(
             }.awaitAll()
         }
         return buildJsonObject {
-            put("lesson", saved(id, cards))
+            put("lesson", saved(lesson, cards))
             put("failures", failures.size)
             put("error", failures.firstOrNull() ?: JsonNull)
             put("to_draw", JsonArray(toDraw.map(::JsonPrimitive)))
@@ -115,11 +118,11 @@ class Pictures(
      * (cheap), or a picture, its description and search words set, nothing drawn: the page
      * then looks for free ones and asks before the image model draws one. {"card", "lesson",
      * "search" (a picture's)}. */
-    suspend fun make(lesson: JsonObject, i: Int, subject: String?, language: String = "English", step: Step = {}): JsonObject {
+    suspend fun make(lesson: JsonObject, i: Int, subject: String?, language: String = "English", step: Step = {}): JsonObject = drawing(lesson.string("id")) {
         val cards = lesson.cards()
         try {
             cards[i] = drawn(lesson.string("id"), cards[i], fresh = true, asked = subject, language = language, draw = false, find = false, onStep = step)
-            return answer(lesson, cards, i)
+            answer(lesson, cards, i)
         } catch (e: RelayException) {
             if (e.code != NEEDS_DRAWING) throw e
             val description = e.params.string("description")
@@ -128,17 +131,17 @@ class Pictures(
                 "figure" to JsonPrimitive(""), "figure_kind" to JsonPrimitive(""), "picture_prompt" to JsonPrimitive(description),
                 "picture_search" to JsonPrimitive(search),
             )
-            return JsonObject(answer(lesson, cards, i) + ("search" to JsonPrimitive(search.ifEmpty { description })))
+            JsonObject(answer(lesson, cards, i) + ("search" to JsonPrimitive(search.ifEmpty { description })))
         }
     }
 
     /** Card `i`'s picture drawn by the image model, now: the user said yes (no free one fit). A
      * figure: drawn again, told what its check found (`problem`) when there is one, with the
      * model's thinking when `careful`. {"card", "lesson"}. */
-    suspend fun draw(lesson: JsonObject, i: Int, problem: String = "", careful: Boolean = false, step: Step = {}): JsonObject {
+    suspend fun draw(lesson: JsonObject, i: Int, problem: String = "", careful: Boolean = false, step: Step = {}): JsonObject = drawing(lesson.string("id")) {
         val cards = lesson.cards()
         cards[i] = drawn(lesson.string("id"), cards[i], fresh = true, draw = true, find = false, problem = problem, careful = careful, onStep = step)
-        return answer(lesson, cards, i)
+        answer(lesson, cards, i)
     }
 
     /** "🔍 Check": card `i`'s picture looked at by the relay's AI, nothing changed: its figure
@@ -170,12 +173,12 @@ class Pictures(
     }
 
     /** The user's own photo as card `i`'s picture, made card size (512 px, as the computer's). */
-    fun own(lesson: JsonObject, i: Int, photo: ByteArray, source: JsonObject? = PHOTO): JsonObject {
+    fun own(lesson: JsonObject, i: Int, photo: ByteArray, source: JsonObject? = PHOTO): JsonObject = drawing(lesson.string("id")) {
         val cards = lesson.cards()
         val data = if (source == PHOTO) cardSize(photo) else photo // a found one is card size already
         val name = save(lesson.string("id"), cards[i].string("id"), data, "jpg")
         cards[i] = cards[i].with("picture" to JsonPrimitive(name), "picture_source" to (source ?: JsonNull))
-        return answer(lesson, cards, i)
+        answer(lesson, cards, i)
     }
 
     /** No picture on card `i` any more: a text card. */
@@ -235,20 +238,51 @@ class Pictures(
 
     private fun answer(lesson: JsonObject, cards: List<JsonObject>, i: Int) = buildJsonObject {
         put("card", cards[i])
-        put("lesson", saved(lesson.string("id"), cards))
+        put("lesson", saved(lesson, cards))
     }
 
-    /** The lesson with these cards. The pictures no card uses any more stay until prune(): a
-     * card's picture drawn again can still be undone on the page while the card is edited. */
-    private fun saved(lessonId: String, cards: List<JsonObject>): JsonObject =
-        lessons.update(lessonId, buildJsonObject { put("cards", JsonArray(cards)) }) ?: notFound()
+    /** The lesson with these cards: what they changed of `lesson`'s (their picture's fields)
+     * written onto the lesson as saved now (mergedCards: the cards a /complete added while
+     * they were drawn, a card the page changed, stay). The pictures no card uses any more stay
+     * until prune(): a card's picture drawn again can still be undone on the page while the
+     * card is edited. */
+    private fun saved(lesson: JsonObject, cards: List<JsonObject>): JsonObject {
+        val id = lesson.string("id")
+        return synchronized(lessons) {
+            val now = lessons.get(id)?.cards() ?: notFound()
+            lessons.update(id, buildJsonObject { put("cards", JsonArray(mergedCards(lesson.cards(), cards, now))) })
+        } ?: notFound()
+    }
+
+    /** The lessons whose pictures are being written (id → how many at once): a picture is in
+     * images/ before it is in the saved lesson. prune() waits for none (its check and their
+     * start under one lock: none begins while it removes). */
+    private val writing = mutableMapOf<String, Int>()
+
+    private inline fun <T> drawing(lessonId: String, block: () -> T): T {
+        synchronized(writing) { writing[lessonId] = (writing[lessonId] ?: 0) + 1 }
+        try {
+            return block()
+        } finally {
+            synchronized(writing) {
+                val left = (writing[lessonId] ?: 1) - 1
+                if (left > 0) writing[lessonId] = left else writing.remove(lessonId)
+            }
+        }
+    }
 
     /** The saved lesson's pictures no card uses removed (asked by the page: no card edited any
-     * more and no correction to undo, or the lesson just opened; never by a send). How many. */
+     * more and no correction to undo, or the lesson just opened; never by a send). How many.
+     * None while its pictures are being drawn (a picture just drawn is in no saved card yet,
+     * another tab or a reload asking meanwhile): the next time. The lesson read again then. */
     fun prune(lesson: JsonObject): Int {
-        val used = lesson.cards().map { it.string("picture") }.toSet()
-        val gone = lessons.images(lesson.string("id"))?.listFiles { f -> NAME.matches(f.name) && f.name !in used }.orEmpty()
-        return gone.count { it.delete() }
+        val id = lesson.string("id")
+        synchronized(writing) {
+            if ((writing[id] ?: 0) > 0) return 0
+            val used = (lessons.get(id) ?: return 0).cards().map { it.string("picture") }.toSet()
+            val gone = lessons.images(id)?.listFiles { f -> NAME.matches(f.name) && f.name !in used }.orEmpty()
+            return gone.count { it.delete() }
+        }
     }
 
     // Not on a sentence with gaps: AnkiDroid shows no picture on it (not paid for, then)
@@ -257,6 +291,23 @@ class Pictures(
             !CLOZE.containsMatchIn(string("front"))
 
     companion object {
+        /** The cards an edit made of `before` (`after`), merged into the lesson's as saved now
+         * (`now`), card by card (by id): of each card the edit changed, only the fields it
+         * changed; a card added since kept, one it removed gone, one it added at the end. As
+         * app/lessons.py's merged_cards. Without ids to go by (or twice the same): `after`. */
+        internal fun mergedCards(before: List<JsonObject>, after: List<JsonObject>, now: List<JsonObject>): List<JsonObject> {
+            fun ids(cards: List<JsonObject>) = cards.map { it.string("id") }
+            if (listOf(before, after, now).any { cards -> ids(cards).let { it.any(String::isEmpty) || it.toSet().size != it.size } }) return after
+            val was = before.associateBy { it.string("id") }
+            val made = after.associateBy { it.string("id") }
+            return now.mapNotNull { card ->
+                val old = was[card.string("id")] ?: return@mapNotNull card // added since
+                val new = made[card.string("id")] ?: return@mapNotNull null // removed by the edit
+                val changed = (old.keys + new.keys).filter { old[it] != new[it] }
+                JsonObject(card.filterKeys { it !in changed || it in new } + changed.mapNotNull { k -> new[k]?.let { k to it } })
+            } + after.filter { it.string("id") !in was }
+        }
+
         private const val AT_ONCE = 4
         private const val NEEDS_DRAWING = "picture.needs_drawing" // no free picture fits: the user is asked
         private val PHOTO = buildJsonObject { put("source", "photo") }

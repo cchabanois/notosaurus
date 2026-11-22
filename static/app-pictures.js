@@ -229,10 +229,16 @@ const picturesPart = {
 
   // The pictures the cards ask for: figures drawn, free pictures found; those none fits are
   // drawn by the image model only when the user says yes (`draw`: the banner's "Draw them")
+  // One drawing at a time for a lesson (two drew the same cards, each paid): asked while one
+  // runs, done again once it ends (a card a correction added meanwhile)
   async drawPictures(draw = false) {
     if (this.readOnly() || !this.cards.some((c) => (c.picture_prompt || c.figure) && !c.picture)) return;
     if (this.saveTimer) await this.saveNow();
     const lessonId = this.lessonId;
+    if (this.drawingLessons.includes(lessonId)) {
+      this.drawLater[lessonId] = Boolean(this.drawLater[lessonId] || draw);
+      return;
+    }
     this.drawingLessons.push(lessonId);
     this.toDraw = [];
     try {
@@ -257,9 +263,12 @@ const picturesPart = {
       this.error = e.message;
     } finally {
       this.drawingLessons.splice(this.drawingLessons.indexOf(lessonId), 1);
+      const later = this.drawLater[lessonId];
+      delete this.drawLater[lessonId];
       if (this.lessonId === lessonId) {
         // (the one replaced shown until then; one drawn again on its own, by redrawFigure, its own)
         this.cards.forEach((c) => Object.assign(c, { _step: "", _problem: "", _first: "", ...(c._drawing ? {} : { _replacing: "" }) }));
+        if (later !== undefined) this.drawPictures(later);
       }
     }
   },

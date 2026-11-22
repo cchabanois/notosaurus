@@ -53,6 +53,26 @@ def test_a_figure_being_drawn_says_how_long(page):
     sync_api.expect(page.locator(".card-picture.figure img").first).to_be_visible()
 
 
+def test_one_drawing_at_a_time_for_a_lesson(page):
+    """Pictures asked again while the lesson's are being drawn (a correction adding a card):
+    not a second drawing of the same cards (each paid), done once the first ends, if any is
+    still missing."""
+    held, asked = [], []
+    page.route("**/api/lessons/*/pictures", lambda route: held.append(route))
+    page.on("request", lambda r: asked.append(r.url) if r.url.endswith("/pictures") else None)
+    generate_free(page, "Le triangle rectangle (géométrie)")
+    sync_api.expect(page.locator(".card-picture.figure .drawing").first).to_be_visible()
+    page.evaluate("() => { Alpine.$data(document.querySelector('[x-data]')).drawPictures(); }")
+    page.wait_for_timeout(300)
+    meanwhile = len(asked)
+    for route in held:
+        route.continue_()
+    assert meanwhile == 1
+    sync_api.expect(page.locator(".card-picture.figure img").first).to_be_visible()
+    page.wait_for_function("() => !Alpine.$data(document.querySelector('[x-data]')).drawingLessons.length")
+    assert len(asked) == 1  # every figure drawn by the first: nothing left to draw
+
+
 def test_a_figure_redrawn_shows_its_steps_and_first_try(page, monkeypatch):
     """Each card says what its picture is being made by; a figure found wrong shows its first
     try, faded, with what was wrong, while it's drawn again."""

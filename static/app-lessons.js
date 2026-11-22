@@ -61,6 +61,7 @@ const lessonsPart = {
   // one goes on from (what the user asked, the cards before it, its undo).
   async extract({ careful = false, complete = false, batch = null } = {}) {
     if (!(await this.endDictation("prompt"))) return;
+    let shown = false;  // the lesson made: its pictures drawn at the end (the first call's)
     const quick = (this.quick && !careful) || this.off("ai.careful");
     this.error = "";
     this.loading = true;
@@ -125,9 +126,11 @@ const lessonsPart = {
       if (this.switches.store) this.loadSwitches();  // the Android app: the free trial maybe just started
       // No card: without a photo, the prompt said nothing to learn (no words, no topic)
       if (!this.cards.length) this.error = t(this.photos.length ? "app.review.noCards" : "app.review.noCardsWithoutPhoto");
-      this.drawPictures();  // the cards show now, their pictures when drawn
+      shown = true;
       // the next pages: the lesson completed with them (its loading kept on); unless the relay
-      // turned completing off: they stay, new pages to add later
+      // turned completing off: they stay, new pages to add later. Its pictures drawn after the
+      // last call, not after each (a drawing begun with the first pages' cards wrote them back
+      // without the next ones', and each drew the first ones again)
       if (rest.length && !this.off("lesson.complete")) {
         this.error = "";
         await this.extract({ careful, complete: true, batch: { asked, made, before } });
@@ -140,6 +143,9 @@ const lessonsPart = {
       this.cancelling = false;
       this.aiStep = "";
       this.batch = null;
+      // the cards show now, their pictures when drawn: once the lesson is made, all its calls
+      // (one cancelled or failed: what the others made)
+      if (shown && !batch) this.drawPictures();
     }
   },
 

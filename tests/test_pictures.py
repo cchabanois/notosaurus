@@ -68,6 +68,55 @@ def test_pictures_drawn_and_kept(client, drawn):
     assert drawn == ["an umbrella"]
 
 
+def test_pictures_drawn_drop_no_card_added_meanwhile(client, drawn, monkeypatch):
+    """A lesson read in several calls: its next pages' cards (/complete) added while its first
+    cards' pictures are drawn, a card the page changed meanwhile. The pictures saved onto the
+    lesson as it is then, only their fields: the cards added, the page's change, all kept
+    (the drawing wrote back the cards it began with: the next pages' were gone)."""
+    from app import lessons
+    from app.models import Generated, LessonIn
+
+    lesson = lesson_with_pictures(client)
+    id = lesson["id"]
+    draw = pictures.draw
+    added = Card(front="le chat", back="the cat")
+
+    async def meanwhile(s, subject):
+        if subject == "an apple":
+            lessons.completed(id, Generated(content=LessonIn(deck=lesson["deck"], cards=[added]), photos=[]))
+            saved = lessons.get(id)
+            assert saved
+            saved.cards[1].back = "a dog (changed)"  # the page's change, saved
+            lessons.update(id, LessonIn(deck=saved.deck, cards=saved.cards))
+        return await draw(s, subject)
+
+    monkeypatch.setattr(pictures, "draw", meanwhile)
+    cards = client.post(f"/api/lessons/{id}/pictures", json={"draw": True}).json()["lesson"]["cards"]
+    assert [c["front"] for c in cards] == [c["front"] for c in lesson["cards"]] + ["le chat"]
+    assert [bool(c["picture"]) for c in cards] == [True, True, False, False, False]
+    assert cards[1]["back"] == "a dog (changed)"
+    assert client.get(f"/api/lessons/{id}").json()["cards"] == cards  # as saved
+
+
+def test_merged_cards():
+    """An edit's cards merged into the lesson's as saved now: what it changed of each card
+    (field by field), the cards added since kept, the ones it removed or added."""
+    from app.lessons import merged_cards
+
+    a, b, c = (Card(id=i, front=i, back=i) for i in "abc")
+    drawn = [a.model_copy(update={"picture": "pa.jpg"}), Card(id="d", front="d", back="d"), c]  # b removed, d added
+    e = Card(id="e", front="e", back="e")  # added since
+    now = [a.model_copy(update={"back": "A"}), b, c.model_copy(update={"front": "C"}), e]
+    merged = merged_cards([a, b, c], drawn, now)
+    assert [(m.id, m.front, m.back, m.picture) for m in merged] == [
+        ("a", "a", "A", "pa.jpg"),
+        ("c", "C", "c", ""),
+        ("e", "e", "e", ""),
+        ("d", "d", "d", ""),
+    ]
+    assert merged_cards([Card(front="x", back="y")], [a], [b]) == [a]  # no ids to go by: the edit's
+
+
 def test_picture_names_checked(client, drawn):
     lesson = lesson_with_pictures(client)
     for name in ("../lesson.json", "page-1.jpg", "picture-x-12345678.jpg"):
@@ -335,6 +384,34 @@ def test_no_prune_while_the_lesson_is_changed(client, drawn, tmp_path):
     assert not lessons.being_edited(lesson["id"])
 
 
+def test_no_prune_of_an_edit_ended_while_the_lesson_was_read(client, drawn, tmp_path, monkeypatch):
+    """The prune reads who may change the lesson (access.editable: Anki asked, seconds maybe)
+    before it checks no edit is under way: an edit ending meanwhile saved a picture that the
+    lesson read before it never had. Pruned against the lesson as saved: kept."""
+    from app import access, lessons
+
+    lesson = lesson_with_pictures(client)
+    folder = tmp_path / "data" / "lessons" / lesson["id"] / "images"
+    editable = access.editable
+    told = {}
+
+    async def slow(id):
+        found = await editable(id)
+
+        async def draw(draft):
+            card = draft.cards[0]
+            card.picture = pictures.save(folder, card, png())
+            return card.picture
+
+        told["picture"] = (await lessons.edit(id, draw))[1]  # ends while Anki is asked
+        return found
+
+    monkeypatch.setattr(access, "editable", slow)
+    assert client.post(f"/api/lessons/{lesson['id']}/pictures/prune").json() == {"removed": 0}
+    assert (folder / told["picture"]).exists()
+    assert client.get(f"/api/lessons/{lesson['id']}").json()["cards"][0]["picture"] == told["picture"]
+
+
 def test_uploads_too_heavy_refused(client, drawn):
     """The page sends prepared photos (a few hundred KB): a far heavier one is refused
     before being read whole into memory, as the relay refuses it."""
@@ -506,3 +583,15 @@ def test_pruned_figures_go_with_their_sources(tmp_path):
     assert sorted(p.name for p in tmp_path.iterdir()) == sorted(
         [used, "picture-c1-aaaaaaaa.typ", "picture-c1-aaaaaaaa-2.typ", "picture-c2-cccccccc.jpg", "notes.txt"]
     )
+
+
+def test_a_figure_whose_hash_is_digits_keeps_its_sources(tmp_path):
+    """A figure's name ends in its hash (8 hexadecimal digits, sometimes all decimal ones:
+    "12345678"): its sources kept as any other's (the hash was taken for a "-2" source's
+    number, the source of a figure used removed); a gone figure's still removed."""
+    used = "picture-c1-12345678.svg"
+    names = [used, "picture-c1-12345678.typ", "picture-c1-12345678-2.typ", "picture-c1-87654321.typ"]
+    for name in names:
+        (tmp_path / name).write_text("x")
+    assert pictures.prune(tmp_path, [Card(front="a", back="b", picture=used)]) == 0
+    assert sorted(p.name for p in tmp_path.iterdir()) == sorted(names[:3])
