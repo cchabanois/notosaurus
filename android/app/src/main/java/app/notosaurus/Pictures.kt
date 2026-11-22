@@ -77,7 +77,10 @@ class Pictures(
     /** The pictures (not the figures: drawn exact) the lesson's own drawings give, cut out of
      * its photos by the relay (/v1/lesson-drawings, the core's pictures.lesson_drawings), in
      * `cards` at once and told ready; none, or the relay failing: the cards as they were (their
-     * pictures then looked for, as without). {"card", "step": "lesson"} while looked at. */
+     * pictures then looked for, as without). {"card", "step": "lesson"} while looked at. The
+     * photos sent LocalServer.MAX_PER_CALL at a time (the relay's cap: a lesson holds more),
+     * one call after another, each asked only for the cards still without a drawing; a call
+     * the relay refuses: its pages skipped, the others still looked at. */
     private suspend fun fromTheLesson(lessonId: String, cards: MutableList<JsonObject>, step: Step, notFromLesson: Set<String>) {
         val wanted = cards.indices.filter { i ->
             cards[i].missingPicture() && cards[i].string("picture_prompt").isNotBlank() && cards[i].string("figure").isBlank() &&
@@ -86,17 +89,24 @@ class Pictures(
         val photos = lessons.photos(lessonId)
         if (wanted.isEmpty() || photos.isEmpty()) return
         wanted.forEach { i -> step(buildJsonObject { put("card", cards[i].string("id")); put("step", "lesson") }) }
-        val found = try {
-            relay().withPhotos("lesson-drawings", buildJsonObject { put("cards", JsonArray(wanted.map { cards[it] })) }, photos)
-        } catch (e: RelayException) {
-            return // looked for one by one, as without
-        }
-        for (drawing in found["drawings"]?.jsonArray.orEmpty().map { it.jsonObject }) {
-            val i = wanted.getOrNull(drawing["card"]?.jsonPrimitive?.intOrNull ?: -1) ?: continue
-            val name = save(lessonId, cards[i].string("id"), Base64.getDecoder().decode(drawing.string("data")), "jpg")
-            cards[i] = cards[i].with("picture" to JsonPrimitive(name), "picture_source" to LESSON)
-            val ready = READY.mapNotNull { field -> cards[i][field]?.let { field to it } }
-            step(JsonObject(mapOf("card" to JsonPrimitive(cards[i].string("id")), "step" to JsonPrimitive("ready")) + ready))
+        val left = wanted.toMutableList()
+        for (pages in photos.chunked(LocalServer.MAX_PER_CALL)) {
+            if (left.isEmpty()) return
+            val asked = left.toList() // the drawings' "card": an index into these
+            val found = try {
+                relay().withPhotos("lesson-drawings", buildJsonObject { put("cards", JsonArray(asked.map { cards[it] })) }, pages)
+            } catch (e: RelayException) {
+                continue // these pages' cards looked for one by one, as without
+            }
+            for (drawing in found["drawings"]?.jsonArray.orEmpty().map { it.jsonObject }) {
+                val i = asked.getOrNull(drawing["card"]?.jsonPrimitive?.intOrNull ?: -1) ?: continue
+                if (i !in left) continue // found twice in one answer: its first drawing
+                left.remove(i)
+                val name = save(lessonId, cards[i].string("id"), Base64.getDecoder().decode(drawing.string("data")), "jpg")
+                cards[i] = cards[i].with("picture" to JsonPrimitive(name), "picture_source" to LESSON)
+                val ready = READY.mapNotNull { field -> cards[i][field]?.let { field to it } }
+                step(JsonObject(mapOf("card" to JsonPrimitive(cards[i].string("id")), "step" to JsonPrimitive("ready")) + ready))
+            }
         }
     }
 

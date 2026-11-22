@@ -260,6 +260,69 @@ class GenerationRoutesTest : LocalServerTestBase() {
     }
 
     @Test
+    fun theLessonsOwnDrawingsLookedForTenPagesAtATime() = app { client ->
+        // A lesson of 12 pages: 10 read at once, then its 2 next ones
+        fun pages(numbers: IntRange) = formData {
+            for (n in numbers) {
+                append("images", "page #$n;".toByteArray(), Headers.build {
+                    append(HttpHeaders.ContentType, "image/jpeg")
+                    append(HttpHeaders.ContentDisposition, "filename=\"page-$n.jpg\"")
+                })
+            }
+            append("prompt", "p")
+        }
+        relayAnswers("""{"deck": {"deck": "Anglais", "cards": [
+            {"front": "le chat", "back": "the cat", "picture_prompt": "a cat"},
+            {"front": "le chien", "back": "the dog", "picture_prompt": "a dog"},
+            {"front": "l'oiseau", "back": "the bird", "picture_prompt": "a bird"}]}, "turns": [0], "usage": {"credits": 1, "credits_left": 99}}""")
+        val id = client.submitFormWithBinaryData("/api/extract", pages(1..10)) { page() }.json().jsonObject.string("id")
+        relayAnswers("""{"deck": {"deck": "Anglais", "cards": [{"front": "le ciel", "back": "the sky"}]}, "turns": [0],
+            "usage": {"credits": 1, "credits_left": 98}}""")
+        assertEquals(12, client.submitFormWithBinaryData("/api/lessons/$id/complete", pages(11..12)) { page() }
+            .json().jsonObject["photo_count"]!!.jsonPrimitive.int)
+        // Written from the fake relay's threads: the other cards' pictures are asked at once (Pictures.AT_ONCE)
+        val asked: MutableList<String> = java.util.Collections.synchronizedList(mutableListOf())
+        relay.dispatcher = object : mockwebserver3.Dispatcher() {
+            override fun dispatch(request: RecordedRequest): MockResponse = when (request.url.encodedPath) {
+                "/v1/lesson-drawings" -> {
+                    val body = request.body!!.utf8()
+                    val sent = (1..12).filter { body.contains("page #$it;") }
+                    val fronts = request.multipartRequest()["cards"]!!.jsonArray.map { it.jsonObject.string("front") }
+                    asked += "lesson-drawings ${sent.first()}-${sent.last()} (${sent.size}) $fronts"
+                    // The relay's cap (relay_api.MAX_IMAGES): more refused
+                    if (sent.size > 10) MockResponse.Builder().code(413).body("""{"code": "relay.too_large"}""").build()
+                    else {
+                        // The cat on the first pages, the bird on the last: each an index into the cards sent
+                        val found = if (1 in sent) "le chat" to "the cat, cut out" else "l'oiseau" to "the bird, cut out"
+                        val data = Base64.getEncoder().encodeToString(found.second.toByteArray())
+                        MockResponse.Builder().body("""{"drawings": [{"card": ${fronts.indexOf(found.first)}, "data": "$data"}],
+                            "usage": {"credits": 1, "credits_left": 97}}""").build()
+                    }
+                }
+                "/v1/card-picture" -> {
+                    asked += "card-picture " + json.parseToJsonElement(request.body!!.utf8()).jsonObject["card"]!!.jsonObject.string("front")
+                    cardPicture(request)
+                }
+                else -> MockResponse.Builder().code(404).build()
+            }
+        }
+        val drawn = client.post("/api/lessons/$id/pictures") {
+            page(); contentType(ContentType.Application.Json); setBody("""{"draw": true}""")
+        }.json().jsonObject
+        // Two calls of at most 10 pages, one after the other: the cat found in the first not asked again
+        assertEquals(
+            listOf("lesson-drawings 1-10 (10) [le chat, le chien, l'oiseau]", "lesson-drawings 11-12 (2) [le chien, l'oiseau]"),
+            asked.take(2),
+        )
+        assertEquals(listOf("card-picture le chien"), asked.drop(2))
+        val cards = drawn["lesson"]!!.jsonObject["cards"]!!.jsonArray.map { it.jsonObject }
+        for ((card, cutOut) in listOf(cards[0] to "the cat, cut out", cards[2] to "the bird, cut out")) {
+            assertEquals("lesson", card["picture_source"]!!.jsonObject.string("source"))
+            assertEquals(cutOut, client.get("/api/lessons/$id/pictures/${card.string("picture")}") { page() }.bodyAsText())
+        }
+    }
+
+    @Test
     fun aPictureACorrectionReplacedNotCutOutOfTheLessonAgain() = app { client ->
         relayAnswers("""{"deck": {"deck": "Anglais", "cards": [
             {"front": "le chat", "back": "the cat", "picture_prompt": "a cat"},
