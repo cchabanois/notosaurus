@@ -1,7 +1,14 @@
 package app.notosaurus
 
+import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.CoroutineStart
+import kotlinx.coroutines.awaitCancellation
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.runBlocking
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNull
+import org.junit.Assert.assertTrue
 import org.junit.Test
 
 /** How many pages one scan may give: the lesson's places left, one for a single photo. */
@@ -33,5 +40,35 @@ class ScannerTest {
         assertNull(Scanner.free(null))
         assertNull(Scanner.free("\"twelve\""))
         assertNull(Scanner.free(""))
+    }
+
+    /** As MainActivity.capture takes the scanner's answer: a cancellation rethrown, any other
+     * failure the camera. */
+    private suspend fun captured(scan: suspend () -> String): String = try {
+        scan()
+    } catch (e: CancellationException) {
+        throw e
+    } catch (e: Exception) {
+        "camera"
+    }
+
+    @Test
+    fun googlePlayServicesTooSlowGivesTheCamera() = runBlocking {
+        // Its screens never ready (Play services fetching the module, offline): the camera,
+        // not the 📷 left unanswered
+        assertEquals("camera", captured { Scanner.within(50) { awaitCancellation() } })
+        assertEquals("pages", captured { Scanner.within(5_000) { "pages" } })
+    }
+
+    @Test
+    fun aRealCancellationStillEnds() = runBlocking {
+        // The activity gone: the scan ends with it, no camera opened
+        var answer: String? = null
+        val job = launch(start = CoroutineStart.UNDISPATCHED) { answer = captured { Scanner.within(60_000) { awaitCancellation() } } }
+        job.cancel()
+        job.join()
+        assertTrue(job.isCancelled)
+        assertNull(answer)
+        assertFalse(job.isActive)
     }
 }
