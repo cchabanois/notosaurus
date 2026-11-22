@@ -94,8 +94,10 @@
 .picture-panel .field { margin-bottom: .5rem; }
 .picture-actions { display: flex; flex-wrap: wrap; gap: .4rem; margin-bottom: .3rem; }
 .picture-actions .btn { padding: .45rem .8rem; font-size: .9rem; }
-/* A figure's check, on it (the "🔍" button beside it): right, or what is wrong and the choice */
-.card-picture .figure-check-btn { align-self: flex-end; margin-left: .2rem; }
+/* A figure's check, under it at its right ("🔍 Check the figure"): right, or what is wrong and the choice */
+.card-picture .figure-check-row { flex: 1 0 100%; display: flex; justify-content: flex-end; margin-top: .4rem; }
+.card-picture.figure .figure-check-row { max-width: 400px; }  /* the figure's width: its right edge */
+.card-picture .figure-check-btn { min-height: 2.3rem; padding: .3rem .8rem; font-size: .85rem; }
 .card-picture .figure-check-btn.checking { animation: pulse 1.4s ease-in-out infinite; }
 .figure-check { flex: 1 0 100%; margin: .4rem 0 0; font-size: .9rem; text-align: center; }
 .figure-check p { margin: 0 0 .35rem; }
