@@ -34,12 +34,14 @@ class Pictures(
      * still a card: counted, not fatal. `step`: each card's steps as they begin, {"card": its
      * id, "step"…} (what the page shows on it meanwhile, as the computer's), then {"card", "step":
      * "ready", its picture's fields (READY)} as soon as it has it. The lesson's own drawings
-     * first (fromTheLesson), for the cards whose thing its photos show. Figures turned off
-     * (figures.draw): their cards left without, not counted as failures. */
-    suspend fun drawMissing(lesson: JsonObject, draw: Boolean = false, step: Step = {}): JsonObject {
+     * first (fromTheLesson), for the cards whose thing its photos show, but those in
+     * `notFromLesson` (their ids: a correction replaced their picture, the lesson's drawing
+     * would only come back). Figures turned off (figures.draw): their cards left without, not
+     * counted as failures. */
+    suspend fun drawMissing(lesson: JsonObject, draw: Boolean = false, step: Step = {}, notFromLesson: Set<String> = emptySet()): JsonObject {
         val id = lesson.string("id")
         val cards = lesson.cards()
-        fromTheLesson(id, cards, step)
+        fromTheLesson(id, cards, step, notFromLesson)
         val failures = mutableListOf<JsonObject>()
         val toDraw = mutableListOf<String>()
         val few = Semaphore(AT_ONCE)
@@ -76,9 +78,10 @@ class Pictures(
      * its photos by the relay (/v1/lesson-drawings, the core's pictures.lesson_drawings), in
      * `cards` at once and told ready; none, or the relay failing: the cards as they were (their
      * pictures then looked for, as without). {"card", "step": "lesson"} while looked at. */
-    private suspend fun fromTheLesson(lessonId: String, cards: MutableList<JsonObject>, step: Step) {
+    private suspend fun fromTheLesson(lessonId: String, cards: MutableList<JsonObject>, step: Step, notFromLesson: Set<String>) {
         val wanted = cards.indices.filter { i ->
-            cards[i].missingPicture() && cards[i].string("picture_prompt").isNotBlank() && cards[i].string("figure").isBlank()
+            cards[i].missingPicture() && cards[i].string("picture_prompt").isNotBlank() && cards[i].string("figure").isBlank() &&
+                cards[i].string("id") !in notFromLesson
         }
         val photos = lessons.photos(lessonId)
         if (wanted.isEmpty() || photos.isEmpty()) return

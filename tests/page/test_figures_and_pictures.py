@@ -63,11 +63,11 @@ def test_a_figure_redrawn_shows_its_steps_and_first_try(page, monkeypatch):
     real, go_on = routes.pictures.draw_all, threading.Event()
     first = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 300" width="400" height="300"></svg>'
 
-    async def draw_all(s, folder, cards, draw=False, step=None, photos=None):
+    async def draw_all(s, folder, cards, draw=False, step=None, photos=None, not_from_lesson=()):
         step({"card": cards[0].id, "step": "drawing"})
         step({"card": cards[0].id, "step": "redrawing", "problem": "L'angle est du mauvais côté.", "first": first})
         await asyncio.to_thread(go_on.wait, 30)
-        return await real(s, folder, cards, draw, step, photos)
+        return await real(s, folder, cards, draw, step, photos, not_from_lesson)
 
     monkeypatch.setattr(routes.pictures, "draw_all", draw_all)
     generate_free(page, "Le triangle rectangle (géométrie)")
@@ -123,6 +123,43 @@ def test_a_figure_corrected_keeps_its_size_while_drawn_again(page):
     sync_api.expect(shown).to_be_visible()
 
 
+def test_a_picture_a_correction_replaced_not_taken_from_the_lesson_again(page):
+    """A correction that replaces a card's picture ("another photo"): its next one is not cut
+    out of the lesson's photos again (the same drawing would come back), the page says so to
+    the drawing (not_from_lesson); the other cards' as before."""
+    page.route("**/picture-x.jpg", lambda route: route.fulfill(body=png("teal"), content_type="image/png"))
+    generate_free(page, FRONT_PROMPT)
+    page.evaluate(
+        "() => { const c = Alpine.$data(document.querySelector('[x-data]')).cards[0];"
+        " Object.assign(c, { picture: 'picture-x.jpg', picture_prompt: 'a mother',"
+        " picture_source: { source: 'lesson' } }); }"
+    )
+
+    def fix(route):  # what the picture shows changed: its picture gone, to be found again
+        changed = {**route.request.post_data_json["card"], "picture": ""}
+        changed["picture_prompt"] = "a smiling mother hugging her child"
+        route.fulfill(json={"card": changed, "summary": "Image changée."})
+
+    asked = []
+    page.route("**/fix-card*", fix)
+    page.on("request", lambda r: asked.append(r.post_data_json) if r.url.endswith("/pictures") else None)
+    card = open_card(page.locator(".flash").first)
+    field = card.get_by_role("textbox", name="Qu'est-ce qui ne va pas ?")
+    field.fill("une autre photo")
+    field.press("Enter")
+    sync_api.expect(card.locator(".card-fixed")).to_contain_text("Image changée.")
+    for _ in range(50):  # its picture then looked for
+        if asked:
+            break
+        page.wait_for_timeout(100)
+    (summary,) = lessons(page)
+    first_id = lesson(page, summary["id"])["cards"][0]["id"]
+    assert asked and asked[0]["not_from_lesson"] == [first_id]
+    # No free picture fits (the demo finds none): asked before the AI draws one
+    ask = page.locator(".notice-bar.ask").filter(has_text=re.compile(r"dessiner par l'IA \?"))
+    page.wait_for_function("el => getComputedStyle(el).display !== 'none'", arg=ask.element_handle())
+
+
 def test_a_picture_shown_as_soon_as_ready(page, monkeypatch):
     """A card's figure shows the moment it is drawn, while another card's is still coming."""
     import asyncio
@@ -131,7 +168,7 @@ def test_a_picture_shown_as_soon_as_ready(page, monkeypatch):
 
     real, go_on = routes.pictures.draw_all, threading.Event()
 
-    async def draw_all(s, folder, cards, draw=False, step=None, photos=None):
+    async def draw_all(s, folder, cards, draw=False, step=None, photos=None, not_from_lesson=()):
         folder.mkdir(parents=True, exist_ok=True)
         name = f"picture-{cards[0].id}-0123abcd.svg"
         (folder / name).write_text(
@@ -140,7 +177,7 @@ def test_a_picture_shown_as_soon_as_ready(page, monkeypatch):
         step({"card": cards[1].id, "step": "drawing"})
         step({"card": cards[0].id, "step": "ready", "picture": name, "figure": cards[0].figure})
         await asyncio.to_thread(go_on.wait, 30)
-        return await real(s, folder, cards, draw, step, photos)
+        return await real(s, folder, cards, draw, step, photos, not_from_lesson)
 
     monkeypatch.setattr(routes.pictures, "draw_all", draw_all)
     generate_free(page, "Le triangle rectangle (géométrie)")
@@ -213,11 +250,11 @@ def test_a_figures_credits_link_its_projects(page, monkeypatch):
         source="drawn", model="gemini-x", engine="typst", made_with=["Typst 0.15.0", "lilaq 0.6.0"]
     )
 
-    async def draw_all(s, folder, cards, draw=False, step=None, photos=None):
+    async def draw_all(s, folder, cards, draw=False, step=None, photos=None, not_from_lesson=()):
         def told(said):  # each card's picture as Typst drew it
             step({**said, "picture_source": typst.model_dump()} if said["step"] == "ready" else said)
 
-        drawn = await real(s, folder, cards, draw, told, photos)
+        drawn = await real(s, folder, cards, draw, told, photos, not_from_lesson)
         for card in cards:
             card.picture_source = typst
         return drawn

@@ -577,6 +577,7 @@ async def draw_all(
     draw: bool = False,
     step: Step | None = None,
     photos: list[llm.Image] | None = None,
+    not_from_lesson: Sequence[str] = (),
 ) -> Drawn:
     """The missing pictures (cards with a picture_prompt or a figure, and no picture), a few
     at a time: figures drawn, free pictures found; a picture none fits drawn by the image
@@ -585,11 +586,13 @@ async def draw_all(
     {"card": its id, …relay_api.PictureStep's fields}, then {"card", "step": "ready", its
     picture's fields (READY)} as soon as it has it. `photos`: the lesson's, its own drawings
     taken first for the cards whose thing they show (lesson_drawings: one call, no search,
-    the pupil's own pictures; {"card", "step": "lesson"} while they are looked at)."""
+    the pupil's own pictures; {"card", "step": "lesson"} while they are looked at), but for
+    the cards in `not_from_lesson` (their ids): a correction replaced their picture, the
+    lesson's drawing would only come back; theirs looked for as any other."""
     # A sentence with gaps' too: its note type shows it (cloze v3), on its question or its answer
     todo = [c for c in cards if (c.picture_prompt.strip() or c.figure.strip()) and not c.picture]
     if photos:
-        await _from_the_lesson(s, folder, todo, photos, step)
+        await _from_the_lesson(s, folder, [c for c in todo if c.id not in not_from_lesson], photos, step)
         todo = [c for c in todo if not c.picture]
     sem = asyncio.Semaphore(CONCURRENCY)
     failures: list[dict] = []

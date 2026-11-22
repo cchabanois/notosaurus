@@ -19,8 +19,10 @@ import kotlinx.serialization.json.JsonArray
 import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.JsonNull
 import kotlinx.serialization.json.JsonObject
+import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.booleanOrNull
 import kotlinx.serialization.json.buildJsonObject
+import kotlinx.serialization.json.contentOrNull
 import kotlinx.serialization.json.jsonPrimitive
 import kotlinx.serialization.json.put
 
@@ -34,7 +36,9 @@ internal fun Route.pictureRoutes(server: LocalServer) {
         stepping("/api/lessons/{id}/pictures") { req, step ->
             val draw = req["draw"]?.jsonPrimitive?.booleanOrNull == true
             if (draw) switches.check("pictures.draw")
-            pictures.drawMissing(lesson(), draw, step)
+            // The cards whose picture a correction replaced: not the lesson's drawing again
+            val notFromLesson = (req["not_from_lesson"] as? JsonArray).orEmpty().mapNotNull { (it as? JsonPrimitive)?.contentOrNull }.toSet()
+            pictures.drawMissing(lesson(), draw, step, notFromLesson)
         }
         // "✨ Image", its first step: a figure drawn, or a picture decided (the page then looks
         // for free ones, and asks before one is drawn)

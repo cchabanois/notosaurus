@@ -472,6 +472,30 @@ def test_a_lesson_drawing_cut_out_and_taken_first(monkeypatch, tmp_path):
     assert drawing.getpixel((2, 2)) > 240 and drawing.getpixel((108, 108)) < 20  # white paper, black drawing
 
 
+def test_a_picture_a_correction_replaced_not_cut_out_of_the_lesson_again(monkeypatch, tmp_path):
+    """A card whose picture a correction replaced (not_from_lesson): the lesson's drawing
+    would only come back, so it is looked for as any other; the others still from the lesson."""
+    looked_at = []
+
+    async def lesson_drawings(s, photos, cards):
+        looked_at.extend(c.id for c in cards)
+        return {}
+
+    async def figure_or_picture(s, folder, card, **options):
+        return f"{card.id}.jpg"
+
+    monkeypatch.setattr(pictures, "lesson_drawings", lesson_drawings)
+    monkeypatch.setattr(pictures, "figure_or_picture", figure_or_picture)
+    cards = [
+        Card(front="une dinde", back="a turkey", picture_prompt="a colourful wild turkey", id="t"),
+        Card(front="le chien", back="the dog", picture_prompt="a dog", id="d"),
+    ]
+    photo = llm.Image(_page_with_a_drawing(), "image/jpeg")
+    run(pictures.draw_all(AIConfig(), tmp_path / "images", cards, photos=[photo], not_from_lesson=["t"]))
+    assert looked_at == ["d"]
+    assert cards[0].picture == "t.jpg"  # looked for as any other
+
+
 def test_no_lesson_drawing_when_the_call_fails(monkeypatch, tmp_path):
     async def answer(s, images, text, schema, system=None, light=False, **options):
         raise llm.ExtractionError("llm.overloaded", provider="Gemini")

@@ -60,7 +60,8 @@ const revisionPart = {
       const was = new Map(before.cards.map((c) => [c.key, c]));
       cards.forEach((c) => {
         const old = was.get(c.key);
-        if (old?.picture && !c.picture && (c.figure || c.picture_prompt)) c._replacing = this.pictureUrl(old);
+        // Its picture replaced: shown faded until then, and not the lesson's drawing again
+        if (old?.picture && !c.picture && (c.figure || c.picture_prompt)) Object.assign(c, { _replacing: this.pictureUrl(old), _notFromLesson: true });
       });
       clearTimeout(this.saveTimer);
       this.saveTimer = null;
@@ -121,7 +122,8 @@ const revisionPart = {
       if (this.lessonId !== lessonId || i === -1) return;  // another lesson opened, or the card removed, meanwhile
       const fixed = { ...res.card, key: card.key, _state: "modified", _fixed: { summary: res.summary, before: plain(card), instruction, quick } };
       fixed._fix = this.newFix(fixed);  // the field ready for the next one
-      if (card.picture && !fixed.picture) fixed._replacing = this.pictureUrl(card);  // shown faded until drawn again
+      // Its picture replaced: shown faded until drawn again, and not the lesson's drawing again
+      if (card.picture && !fixed.picture) Object.assign(fixed, { _replacing: this.pictureUrl(card), _notFromLesson: true });
       this.cards.splice(i, 1, fixed);
       await this.saveNow();  // its picture is drawn from the saved lesson
       if (res.figure_problem) {
