@@ -802,6 +802,7 @@ def test_a_card_open_swiped_to_the_next(page):
     # …shown as it will be once edited: its correction's field, its empty texts offered
     sync_api.expect(second.get_by_role("textbox", name="Qu'est-ce qui ne va pas ?")).to_be_visible()
     sync_api.expect(second.locator(".card-sheet-head")).to_contain_text("Carte 2 / ")
+    sync_api.expect(second.locator(".card-deck")).to_be_visible()  # its deck too, not once arrived
     a, b = first.bounding_box(), second.bounding_box()
     assert a and b and b["x"] == pytest.approx(a["x"] + a["width"], abs=1) and b["y"] == a["y"]
     _let_go(page)  # …not far enough: back
