@@ -109,6 +109,7 @@ Each pull request's entries (the `## Changelog` of its description) are put unde
 
 ### Fixed
 
+- 🐛 « Vérifier la figure » no longer shows on a card whose figure was replaced by a photo (it said « Cette carte n'existe plus »).
 - 🐛 A lesson's correction counts the cards whose figure, wrong answers or helps it changed, no longer « aucun changement ».
 - 🐛 The lesson's correction: « ✓ Garder » shows its text (it was an empty white button).
 - 🖼️ On a picture's page, what it shows is seen whole, over several lines, no longer cut to one.

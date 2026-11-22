@@ -411,6 +411,9 @@
               <input type="checkbox" :checked="examPick?.selected.has(card.id)" @change="togglePick(card)"
                      :aria-label="$t('app.exams.pick.card')">
             </label>
+            <!-- Its two sides named, as Anki asks them: the question (and its picture), then, under a
+                 line, the answer (its sound, its picture) -->
+            <p class="side-label" x-show="shownEdited(card)" x-text="$t('app.review.front')"></p>
             <!-- Diagram label: the photo with every label hidden, this card's mask highlighted and movable.
                  Shown as Anki will, only its frame (the diagram behind a window that size:
                  diagramClip), nothing to drag; touched in the card open, the whole photo full screen
@@ -520,6 +523,7 @@
               <div class="math-preview" x-show="!renderedOnly(card, 'front') && (hasMath(card.front) || isCloze(card.front))" x-html="previewHtml(card.front)"></div>
               <!-- The back, the info, the wrong options and the "did you know" grow with their text,
                    as the front: a long answer is seen whole -->
+              <p class="side-label verso" x-show="shownEdited(card)" x-text="$t('app.review.back')"></p>
               <!-- The back, its 🔊 beside it: what the sound reads (in Anki, with the answer) -->
               <div class="back-row">
                 <div class="back-texts">
@@ -754,12 +758,20 @@
                 <span x-text="$t('app.pictures.onBack')"></span>
               </label>
               <div class="picture-actions">
-                <!-- One button, the cheapest first (makePicture): a figure, a free picture, else asked -->
+                <!-- One button, from the description above, the cheapest first (makePicture): a figure
+                     drawn (again), else free pictures looked for (not the one it has), else asked;
+                     named for what it will do -->
                 <button type="button" class="btn soft" x-show="!(off('pictures.search') && off('pictures.draw'))"
                         @click="makePicture(card)" :disabled="Boolean(card._drawing || card._searching)"
-                        x-text="card._searching ? $t('app.pictures.searching') : card.picture ? $t('app.pictures.change') : $t('app.pictures.make')"></button>
+                        x-text="$t(card._searching ? 'app.pictures.searching' : card.figure ? (card.picture ? 'app.pictures.figureRedraw' : 'app.pictures.figureDraw') : card.picture ? 'app.pictures.change' : 'app.pictures.make')"></button>
+                <!-- A photo of one's own, as the lesson's pages: taken now (on the phone, the document
+                     scanner: a drawing of the book cropped and straightened) or chosen -->
                 <label class="btn soft" :class="{ disabled: card._drawing }">
-                  <span x-text="$t('app.pictures.photo')"></span>
+                  📷 <span x-text="$t('app.photos.takePhoto')"></span>
+                  <input type="file" accept="image/*" capture="environment" hidden :disabled="Boolean(card._drawing)" @change="uploadPicture(card, $event)">
+                </label>
+                <label class="btn soft" :class="{ disabled: card._drawing }">
+                  🖼️ <span x-text="$t('app.photos.gallery')"></span>
                   <input type="file" accept="image/*" hidden :disabled="Boolean(card._drawing)" @change="uploadPicture(card, $event)">
                 </label>
                 <button type="button" class="btn danger-soft" x-show="card.picture" @click="removePicture(card)"
