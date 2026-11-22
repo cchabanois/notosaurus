@@ -132,6 +132,23 @@ test("the AI correction's stats and per-card flags", () => {
   const same = review.compareCards([{ key: 7, front: "a", back: "b" }], [{ front: "a", back: "b" }]);
   assert.deepEqual(plain(same.cards), [{ key: 7, front: "a", back: "b" }]);  // key kept, no flag
   assert.equal(same.stats, "no change");
+
+  // Not only its texts: its figure written, its wrong answers, its helps (seen: figures added to
+  // cards, "no change" said); nothing and an empty list the same
+  const deeper = review.compareCards(
+    [
+      { key: 1, front: "exp", back: "ℝ", figure: "", choices: [] },
+      { key: 2, front: "QCM", back: "1789", choices: ["1790"] },
+      { key: 3, front: "astuce", back: "x", mnemonic: "" },
+    ],
+    [
+      { front: "exp", back: "ℝ", figure: "La courbe de exp", choices: [] },
+      { front: "QCM", back: "1789", choices: ["1790", "1792"] },
+      { front: "astuce", back: "x" },
+    ],
+  );
+  assert.deepEqual(deeper.cards.map((c) => c._state), ["modified", "modified", undefined]);
+  assert.equal(deeper.stats, "2 changed");
 });
 
 test("the payload sent to the server: a card's UI-only fields left out", () => {

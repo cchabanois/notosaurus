@@ -875,10 +875,14 @@ def test_a_lesson_that_looks_wrong_corrected_or_kept(page):
 
 
 def _beside_the_back(card, listen) -> None:
-    """🔊 on its card's back's line, at its right: what the sound reads (its back), seen."""
-    back = card.locator(".math-preview.back.shown").bounding_box()
-    box = listen.bounding_box()
-    assert back and box and box["x"] >= back["x"] + back["width"] - 1
+    """🔊 on its card's back's line, at its right: what the sound reads (its back), seen. Both
+    measured in one frame: the page may still be scrolling (to the cards just made)."""
+    back, box = listen.evaluate(
+        """(b) => [b.closest('.flash').querySelector('.math-preview.back.shown'), b]
+          .map((e) => e.getBoundingClientRect())
+          .map((r) => ({ x: r.x, y: r.y, width: r.width, height: r.height }))"""
+    )
+    assert box["x"] >= back["x"] + back["width"] - 1
     assert box["y"] < back["y"] + back["height"] and box["y"] + box["height"] > back["y"]
 
 
@@ -1016,6 +1020,17 @@ def test_what_a_lesson_correction_did_reads_beside_or_above_its_buttons(page):
     assert len(said.split()) / layout["lines"] >= 3, layout
 
 
+# An element's text against its background: WCAG's contrast ratio
+CONTRAST = """(e) => {
+  const s = getComputedStyle(e);
+  const linear = (v) => (v <= .03928 ? v / 12.92 : ((v + .055) / 1.055) ** 2.4);
+  const lum = (c) => { const [r, g, b] = c.match(/[\\d.]+/g).slice(0, 3).map((v) => linear(Number(v) / 255));
+    return .2126 * r + .7152 * g + .0722 * b; };
+  const [a, z] = [lum(s.color), lum(s.backgroundColor)].sort((x, y) => y - x);
+  return (a + .05) / (z + .05);
+}"""
+
+
 def test_a_correction_kept(page):
     """« ✓ Garder » beside « ↩ Annuler » and « 🎯 Refaire avec soin »: a card's correction kept, its
     line gone, no longer undoable, the card still open for another; the lesson's the same, its
@@ -1041,7 +1056,9 @@ def test_a_correction_kept(page):
     result = page.locator(".revision-result")
     sync_api.expect(result.get_by_role("button", name="↩ Annuler")).to_be_visible()
     sync_api.expect(result.get_by_role("button", name="Fermer")).to_be_hidden()  # ✓ Garder in its place
-    result.get_by_role("button", name="✓ Garder").click()
+    keep = result.get_by_role("button", name="✓ Garder")
+    assert keep.evaluate(CONTRAST) >= 4.5  # readable (was white on white)
+    keep.click()
     sync_api.expect(result).to_be_hidden()
 
 

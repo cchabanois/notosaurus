@@ -22,6 +22,10 @@ function about(seconds) {
   return t("app.loading.aboutMinutes", { count: Math.round(seconds / 60) });
 }
 
+// What a card holds, the user sees or Anki gets: a correction that changes any of it changed the card
+const CARD_CONTENT = ["front", "back", "info", "subdeck", "choices", "fun_fact", "explanation", "mnemonic",
+  "figure", "picture_prompt", "picture_on_back", "mask"];
+
 const revisionPart = {
   // As the lesson is made: quick unless the user chose careful ("careful": once more carefully)
   async revise({ careful = false } = {}) {
@@ -199,7 +203,10 @@ const revisionPart = {
 
   // Keep the keys of unchanged cards and flag new or modified ones.
   compareCards(oldCards, newCards) {
-    const same = (a, b) => ["front", "back", "info", "subdeck"].every((f) => (a[f] ?? "") === (b[f] ?? ""));
+    // Changed: anything of the card the user sees or gets in Anki (its figure written, its wrong
+    // answers, its helps…), not only its texts; nothing, an empty list or no: the same
+    const shown = (v) => (v == null || v === "" || v === false || (Array.isArray(v) && !v.length) ? "" : JSON.stringify(v));
+    const same = (a, b) => CARD_CONTENT.every((f) => shown(a[f]) === shown(b[f]));
     const unused = [...oldCards];
     let added = 0, modified = 0;
     const cards = newCards.map((card) => {

@@ -70,6 +70,7 @@ Each pull request's entries (the `## Changelog` of its description) are put unde
 
 ### Changed
 
+- 🔊 A card's sound sits beside its answer, which it reads.
 - While dictating, « Corriger », « Écrire » or « Générer » can be tapped directly: the dictation stops and what was said is sent, no need to tap ■ first.
 - The figure's check says what it does: « 🔍 Vérifier la figure » under the figure, not a lone 🔍 that read as a zoom.
 - 📚 « Mes leçons » leaves the lessons the room: the sheet rises to the top, the tests to prepare fold in one line, the search and sharing share one line.
@@ -108,6 +109,8 @@ Each pull request's entries (the `## Changelog` of its description) are put unde
 
 ### Fixed
 
+- 🐛 A lesson's correction counts the cards whose figure, wrong answers or helps it changed, no longer « aucun changement ».
+- 🐛 The lesson's correction: « ✓ Garder » shows its text (it was an empty white button).
 - 🖼️ On a picture's page, what it shows is seen whole, over several lines, no longer cut to one.
 - 🗂 A card's note (+ info) is no longer squeezed by its sub-deck, and a card without a sub-deck says "+ sub-deck" instead of looking like one.
 - 👆 A card open turns to the next with a swipe from anywhere on it, its correction's field or a diagram's photo too.
