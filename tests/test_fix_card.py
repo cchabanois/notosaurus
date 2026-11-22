@@ -7,7 +7,7 @@ import pytest
 
 from notosaurus_core import llm
 from notosaurus_core.config import AIConfig
-from notosaurus_core.models import Card, Mask
+from notosaurus_core.models import Card, Deck, Mask, PictureSource, SourceFile
 
 S = AIConfig(llm="gemini", gemini_api_key="k")
 
@@ -47,6 +47,33 @@ def test_it_stays_the_same_card(monkeypatch):
     fixed = fix(card, "the spelling of heart").card
     assert (fixed.id, fixed.mask, fixed.picture, fixed.picture_prompt) == ("c2", mask, "p.jpg", "a heart")
     assert fixed.voice == card.voice
+
+
+COMMONS = PictureSource(
+    source="commons", licence="CC BY-SA 4.0", title="Heart", page="https://commons.wikimedia.org/wiki/File:Heart.jpg"
+)
+
+
+def test_a_picture_kept_with_where_it_comes_from(monkeypatch):
+    """Its text corrected, its picture kept: where it comes from too (a free picture's
+    licence and page, its Anki note's Source), never written by the AI."""
+    answering(monkeypatch, {"front": "What is this organ?", "back": "the heart", "picture_prompt": "a heart"})
+    card = Card(id="c2", front="What is this organ?", back="the hart", picture="p.jpg", picture_prompt="a heart")
+    card.picture_source = COMMONS
+    assert fix(card, "the spelling of heart").card.picture_source == COMMONS
+    answering(monkeypatch, {"front": "What is this organ?", "back": "the heart", "picture_prompt": "a lung"})
+    fixed = fix(card, "it is a lung").card
+    assert (fixed.picture, fixed.picture_source) == ("", None)  # what to draw changed: found again
+
+
+def test_a_lesson_corrected_keeps_where_its_pictures_come_from(monkeypatch):
+    """The lesson's correction: a card kept keeps its picture's source."""
+    seeing(monkeypatch, {"deck": "Biology", "cards": [{"front": "What is this organ?", "back": "the heart"}]})
+    card = Card(id="c2", front="What is this organ?", back="the hart", picture="p.jpg", picture_prompt="a heart")
+    card.picture_source = COMMONS
+    deck = Deck(deck="Biology", cards=[card])
+    revised = asyncio.run(llm.revise_cards(S, [], "Biology", deck, "the spelling of heart", "French"))
+    assert [(c.id, c.picture, c.picture_source) for c in revised.cards] == [("c2", "p.jpg", COMMONS)]
 
 
 def test_a_figure_corrected_is_drawn_again(monkeypatch):
@@ -130,6 +157,23 @@ def test_the_figure_as_drawn_shown_and_its_problem_said(monkeypatch):
     ((images, text),) = shown
     assert [i.media_type for i in images] == ["image/png"] and "The last image is this card's figure" in text
     assert (fixed.figure_problem, fixed.card.picture, fixed.card.figure) == ("C is under AB", "f.svg", "Triangle ABC")
+
+
+def test_a_figure_to_draw_again_keeps_its_typst(monkeypatch):
+    """Its drawing wrong, its description changed too: kept until drawn again, with where it
+    comes from (its Typst sources, drawn again from them, #702)."""
+    origin = PictureSource(
+        source="drawn", engine="typst", made_with=["Typst 0.15.0"], sources=[SourceFile(file="f.typ")]
+    )
+    card = Card(id="c4", front="ABC?", back="a triangle", figure="Triangle ABC", picture="f.svg")
+    card.picture_source = origin
+    told = {
+        "cards": [{"front": "ABC?", "back": "a triangle", "figure": "Triangle ABC in red"}],
+        "figure_problem": "C is under AB",
+    }
+    seeing(monkeypatch, told)
+    fixed = asyncio.run(llm.fix_card(S, [], "", "Maths", card, "en rouge", (), "French", figure_svg=TRIANGLE_SVG))
+    assert (fixed.figure_problem, fixed.card.picture, fixed.card.picture_source) == ("C is under AB", "f.svg", origin)
 
 
 def test_a_figure_changed_and_its_drawing_wrong_kept_until_drawn_again(monkeypatch):
