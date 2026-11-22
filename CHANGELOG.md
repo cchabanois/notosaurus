@@ -9,6 +9,7 @@ Each pull request's entries (the `## Changelog` of its description) are put unde
 
 ### Added
 
+- ✓ « Garder » keeps an AI correction, beside « Annuler » and « Refaire avec soin », for a card and for the whole lesson.
 - ＋ in a card open adds one just after it; after the last card, the lesson's end, to add a card or send the lesson to Anki.
 - Maps: places, lines (a wall, a road, a railway, a front) and areas the atlas lacks, given by their coordinates, and symbols on places (ports, industries, silos, dams) with their legend.
 - Figures: icons of a lab's glassware (beaker, volumetric flask, burette, pipette) and of living things (animals, plants, fungi, organs), of a cell's parts (chromosome, bacterium, chloroplast, neuron…) and of history's weapons and ships.
