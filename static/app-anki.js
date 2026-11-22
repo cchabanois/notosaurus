@@ -45,8 +45,8 @@ const ankiPart = {
   },
 
   // What each side says read aloud (tts.spoken_sides), "" for a side not read: its front as it
-  // shows (a text with gaps with each gap a blank, its hint said), its back (a text with
-  // gaps' the whole text). With the lesson's dictation, a plain card's back always.
+  // shows (a text with gaps whole, as a dictation), its back (a text with gaps' the whole
+  // text). With the lesson's dictation, a plain card's back always.
   spokenSides(card) {
     let [front, back] = this.soundSides(card);
     const cloze = this.isCloze(card.front ?? "");
@@ -54,9 +54,8 @@ const ankiPart = {
     const text = (card.front ?? "").trim();
     const gap = /\{\{c\d+::(.*?)(?:::(.*?))?\}\}/gs;
     let said = "";
-    if (front && text) {
-      const shown = text.replace(gap, (_, answer, hint) => (hint ? `… (${hint})` : "…"));
-      said = speakable(cloze ? shown : shown.replace(/\s*\([^)]*\)/g, ""));
+    if (front && text) {  // a text with gaps whole, as a dictation (the words heard, written in its gaps)
+      said = speakable(cloze ? text.replace(gap, (_, answer) => answer) : text.replace(/\s*\([^)]*\)/g, ""));
       if (!LETTER.test(said)) said = "";
     }
     if (!back || !text) return [said, ""];

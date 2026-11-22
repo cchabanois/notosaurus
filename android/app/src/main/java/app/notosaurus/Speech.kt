@@ -248,11 +248,11 @@ class Speech(
             return (front && !MATH.containsMatchIn(card.front)) to (back && !MATH.containsMatchIn(card.back))
         }
 
-        /** What a card's front says (tts.spoken_front): its question as it shows, a text with gaps
-         * with each gap a blank ("…", its hint said). */
+        /** What a card's front says (tts.spoken_front): its question as it shows; a text with gaps
+         * whole, as a dictation (the words heard, written in the gaps). */
         fun spokenFront(card: Card): String {
-            val shown = GAP.replace(card.front.trim()) { m -> if (m.groupValues[2].isNotEmpty()) "… (${m.groupValues[2]})" else "…" }
-            val front = speakable(if (GAP.containsMatchIn(card.front)) shown else shown.replace(BRACKETS, ""))
+            if (GAP.containsMatchIn(card.front)) return spokenClozeBack(card) // whole, as a dictation
+            val front = speakable(card.front.trim().replace(BRACKETS, ""))
             return if (LETTER.containsMatchIn(front)) front else ""
         }
 

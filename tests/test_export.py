@@ -636,7 +636,7 @@ def test_cards_not_sent_are_counted(client, anki):
 
 def test_a_sound_on_either_side_and_a_text_with_gaps_heard(client, tmp_path):
     """A sound a side (Card.sound), each reading its side: a plain card's front, a sentence
-    with gaps' front with its blank and its back whole, a multiple choice's question; each in
+    with gaps whole on both sides (its front a dictation), a multiple choice's question; each in
     its field ("FrontAudio", "Audio") with an edge-tts voice; none where the card says none."""
     synthesized.clear()
     body = {
@@ -650,7 +650,7 @@ def test_a_sound_on_either_side_and_a_text_with_gaps_heard(client, tmp_path):
         ],
     }
     package = apkg.export(client, body, tmp_path)
-    assert sorted(synthesized) == sorted(["the cat", "I … my mum.", "I helped my mum.", "Which year?"])
+    assert sorted(synthesized) == sorted(["the cat", "I helped my mum.", "Which year?"])  # the gaps' once
     by_model = {}
     for note in package.notes:
         by_model.setdefault(package.models[note[1]]["name"], []).append(package.fields_by_name(note))
@@ -659,7 +659,7 @@ def test_a_sound_on_either_side_and_a_text_with_gaps_heard(client, tmp_path):
     assert (cat["FrontAudio"], cat["Audio"]) == (sound("the cat"), "")
     assert (dog["FrontAudio"], dog["Audio"]) == ("", "")
     (gaps,) = by_model["Notosaurus cloze (audio) v3"]
-    assert (gaps["FrontAudio"], gaps["Audio"]) == (sound("I … my mum."), sound("I helped my mum."))
+    assert (gaps["FrontAudio"], gaps["Audio"]) == (sound("I helped my mum."), sound("I helped my mum."))
     (year,) = by_model["Notosaurus multiple choice (audio) v3"]
     assert (year["FrontAudio"], year["Audio"]) == (sound("Which year?"), "")
 
@@ -671,7 +671,7 @@ def test_a_sound_read_by_anki_its_text_in_its_field():
         deck="D", voice="en_US", cards=[Card(front="I {{c1::helped}} my mum.", back="", sound="both")]
     )
     (note,) = anki.notes(req)
-    assert (note.fields["FrontAudio"], note.fields["Audio"]) == ("I … my mum.", "I helped my mum.")
+    assert (note.fields["FrontAudio"], note.fields["Audio"]) == ("I helped my mum.", "I helped my mum.")
     assert note.media == []
     assert "{{#FrontAudio}}{{tts en_US:FrontAudio}}{{/FrontAudio}}" in note.nt.templates[0]["qfmt"]
 

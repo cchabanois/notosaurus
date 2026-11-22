@@ -108,10 +108,13 @@ def sound_sides(card: Card) -> tuple[bool, bool]:
 
 
 def spoken_front(card: Card) -> str:
-    """What a card's front says, read aloud: its question as it shows, a text with gaps with
-    each gap a blank ("…", its hint said); as a voice can read it (speakable)."""
-    front = GAP.sub(lambda m: f"… ({m.group(2)})" if m.group(2) else "…", card.front.strip())
-    front = speakable(BRACKETS.sub("", front) if not GAP.search(card.front) else front)
+    """What a card's front says, read aloud: its question as it shows, as a voice can read it
+    (speakable). A text with gaps: the whole text, as a dictation (the words heard, written in
+    the gaps): its blanks read as silences sounded like words left out, and the same sound for
+    each of its cards (a gap each, the others shown)."""
+    if GAP.search(card.front):
+        return spoken_cloze_back(card)
+    front = speakable(BRACKETS.sub("", card.front.strip()))
     return front if LETTER.search(front) else ""
 
 

@@ -117,8 +117,9 @@ class Card(BaseModel):
         description='Where the card is read aloud, in the voice of the language being learned: "back" (its '
         'answer), "front" (its question as it shows), "both", or "none". A side is read only when it is written '
         "in that language, and the front only when hearing it gives nothing of the answer away. A text with gaps "
-        "is read on both sides when it is in that language: its front with its blanks (nothing given away), its "
-        "back as the whole text (whatever the back field holds). Empty: as usual (the back, a plain card's).",
+        "is read on both sides when it is in that language, whole: on its front as a dictation (the words heard, "
+        "written in its gaps), on its back as its answer (whatever the back field holds). Empty: as usual (the "
+        "back, a plain card's).",
     )
     doubt: Doubt | None = Field(
         default=None,
