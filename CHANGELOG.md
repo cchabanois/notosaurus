@@ -69,6 +69,7 @@ Each pull request's entries (the `## Changelog` of its description) are put unde
 
 ### Changed
 
+- 📚 « Mes leçons » leaves the lessons the room: the sheet rises to the top, the tests to prepare fold in one line, the search and sharing share one line.
 - 🏷️ A diagram's card shows only what Anki will show of the photo; touched, it opens full screen to move its masks and frame.
 - ✨ In a card open, « Corriger » sits beside its field, on a light bar at the bottom of the screen.
 - 🖼️ A card open has its actions at its top right; in the list, only 🔊 is shown, a picture is above the question or after the answer, as in Anki, and a diagram shows only what Anki will show of the photo.
