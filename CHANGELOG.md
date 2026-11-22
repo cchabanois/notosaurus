@@ -9,6 +9,8 @@ Each pull request's entries (the `## Changelog` of its description) are put unde
 
 ### Added
 
+- 🔊 Every card can be read aloud on its question, its answer, or both: a sentence with gaps with its blank, then whole; the card's ⋯ turns each side on or off.
+- 🖼️ A sentence with gaps can have a picture, on its question or its answer.
 - ✓ « Garder » keeps an AI correction, beside « Annuler » and « Refaire avec soin », for a card and for the whole lesson.
 - ＋ in a card open adds one just after it; after the last card, the lesson's end, to add a card or send the lesson to Anki.
 - Maps: places, lines (a wall, a road, a railway, a front) and areas the atlas lacks, given by their coordinates, and symbols on places (ports, industries, silos, dams) with their legend.
@@ -70,6 +72,7 @@ Each pull request's entries (the `## Changelog` of its description) are put unde
 
 ### Changed
 
+- 🗂 New Anki note types (v3) for text, multiple choice and gaps; the computer moves your notes there, their review history kept.
 - 🔊 A card's sound sits beside its answer, which it reads.
 - While dictating, « Corriger », « Écrire » or « Générer » can be tapped directly: the dictation stops and what was said is sent, no need to tap ■ first.
 - The figure's check says what it does: « 🔍 Vérifier la figure » under the figure, not a lone 🔍 that read as a zoom.
