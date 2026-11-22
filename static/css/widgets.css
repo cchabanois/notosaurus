@@ -99,6 +99,8 @@
 .picture-shown { display: block; max-width: min(100%, 400px); max-height: 45vh; object-fit: contain; align-self: center;
   border-radius: var(--radius-sm); background: #fff; cursor: zoom-in; }
 .picture-panel .field { margin-bottom: .2rem; }
+/* What the picture shows: a box as tall as its text (field-sizing; else fitHeight), then a scroll */
+.picture-panel textarea.subject { resize: none; field-sizing: content; max-height: 12rem; overflow-y: auto; }
 .picture-actions { display: flex; flex-wrap: wrap; gap: .4rem; margin-bottom: .3rem; }
 .picture-actions .btn { padding: .45rem .8rem; font-size: .9rem; }
 /* A figure's check, under it at its right ("🔍 Check the figure"): right, or what is wrong and the choice */

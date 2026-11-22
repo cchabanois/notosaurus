@@ -265,6 +265,23 @@ def test_a_cards_picture_touched_opens_its_page(page):
     sync_api.expect(card).to_have_class(re.compile(r"\bediting\b"))  # the card not closed with it
 
 
+def test_what_a_picture_shows_seen_whole(page):
+    """On the picture's page, what it shows (a figure's description, a few sentences) is seen
+    whole: a box as tall as its text, over several lines, not one line cut. Shift+Enter a new
+    line in it."""
+    generate_free(page, "Le triangle rectangle (géométrie)")
+    card = open_card(page.locator(".flash").first)
+    card.locator(".card-picture.figure img:not(.first):visible").click()
+    subject = page.get_by_role("dialog", name="Image").get_by_label("La figure à dessiner (étiquettes comprises)")
+    subject.fill("Un triangle rectangle ABC, rectangle en C. " * 4)
+    seen = """el => el.scrollHeight <= el.clientHeight + 1
+        && el.clientHeight > 2 * parseFloat(getComputedStyle(el).lineHeight)"""
+    page.wait_for_function(seen, arg=subject.element_handle())
+    subject.press("End")
+    subject.press("Shift+Enter")
+    assert subject.input_value().endswith("\n")
+
+
 def test_a_picture_on_the_back_shows_no_drawing_frame(page):
     """A card whose picture goes on the back shows its picture alone: no "Dessin…" frame
     under it, even once a step was told again (the bar's duration, set as the whole style,
