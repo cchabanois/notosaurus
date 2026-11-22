@@ -391,7 +391,7 @@
             <!-- What can be done with the card (explained, heard, its picture, ⋯): at its top right,
                  its texts below the whole width -->
             <div class="flash-actions">
-              <span class="card-deck" x-show="isEditing(card) && deckPath(card).length" x-text="deckPath(card).join(' › ')"
+              <span class="card-deck" x-show="(isEditing(card) || peek === card.key) && deckPath(card).length" x-text="deckPath(card).join(' › ')"
                     :title="deckPath(card).join('::')"></span>
               <button class="icon-btn" x-show="lessonId && card.front.trim() && (card.back.trim() || isCloze(card.front))"
                       @click="explain(card)" :class="{ active: card._explain?.open }" :aria-label="$t('app.explain.button')"
