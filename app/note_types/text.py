@@ -10,9 +10,12 @@ from .common import (
     HELP_FIELDS,
     PICTURE,
     PICTURE_CSS,
+    SOUND_FIELDS,
     SOURCE_FIELD,
     NoteType,
     fix_link,
+    sound_kind,
+    sounds,
     typed,
     variant,
     versioned,
@@ -23,20 +26,21 @@ from .common import (
 def note_type(
     voice: str, reverse: bool, typing: bool = False, dictation: bool = False, dictation_only: bool = False
 ) -> NoteType:
-    # Two ways to read the back aloud:
-    # - Anki locale ("es_ES"): {{tts}} tag, spoken by the device's speech engine;
-    # - edge-tts voice: embedded mp3, in an "Audio" field ([sound:…]).
+    # A sound a side, the question's ("FrontAudio") and the answer's ("Audio"), either empty when
+    # that side isn't read (Card.sound), in two ways (common.sounds):
+    # - Anki locale ("es_ES"): the field's text, {{tts}}, spoken by the device's speech engine;
+    # - edge-tts voice: embedded mp3, in the field ([sound:…]).
     # Each combination gets its own note type (stable id, distinct name), so we
     # never overwrite a note type the user already has.
     # A picture or figure, if the card has one, whatever else it is: on the question
     # (PICTURE) or with the answer (BACK_PICTURE), the sound where the card says it.
     anki_tts = tts.is_anki_locale(voice)
-    sound = f"{{{{tts {voice}:Back}}}}" if anki_tts else "{{Audio}}"
+    front_sound, sound = sounds(anki_tts, voice)
     info = BACK_INFO + fix_link("Id", fallback="Front")
     templates = [
         {
             "name": "Front → Back",
-            "qfmt": f"{PICTURE}{{{{Front}}}}",
+            "qfmt": f"{PICTURE}{{{{Front}}}}{front_sound}",
             "afmt": f'{{{{FrontSide}}}}<hr id="answer">{{{{Back}}}}{sound}{BACK_PICTURE}{info}',
         }
     ]
@@ -45,7 +49,7 @@ def note_type(
             {
                 "name": "Back → Front",
                 "qfmt": f"{{{{Back}}}}{sound}",
-                "afmt": f'{{{{FrontSide}}}}<hr id="answer">{PICTURE}{{{{Front}}}}{BACK_PICTURE}{info}',
+                "afmt": f'{{{{FrontSide}}}}<hr id="answer">{PICTURE}{{{{Front}}}}{front_sound}{BACK_PICTURE}{info}',
             }
         )
     if typing:
@@ -65,12 +69,8 @@ def note_type(
             heard = f'<div class="dictation">🎧</div>{sound}{PICTURE}<div>{{{{Front}}}}</div>{{{{type:Back}}}}'
             dictated = {"name": "Dictation", "qfmt": heard, "afmt": f'{heard}<hr id="answer">{BACK_PICTURE}{info}'}
         templates = [dictated] if dictation_only else [*templates, dictated]
-    fields = ["Front", "Back", "Info"]
-    if anki_tts:
-        kind = f"TTS Anki {voice}"
-    else:
-        fields.append("Audio")
-        kind = "audio"
+    fields = ["Front", "Back", "Info", *SOUND_FIELDS]  # a sound a side, either voice (common.sounds)
+    kind = sound_kind(anki_tts, voice)
     # The picture's fields after the others: where a note type made before them gets them
     # (ankiconnect._bring_up_to_date adds a field at the end), the same order everywhere
     fields += [*HELP_FIELDS, "Picture", "BackPicture", "Id", SOURCE_FIELD]

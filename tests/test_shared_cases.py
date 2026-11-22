@@ -11,7 +11,7 @@ import pytest
 from app.exams import common_deck, tag_text
 from notosaurus_core.cards import kept_ids, same_text, text_key
 from notosaurus_core.models import Card
-from notosaurus_core.tts import filename, speakable, spoken
+from notosaurus_core.tts import filename, speakable, spoken, spoken_sides
 
 CASES = json.loads((Path(__file__).parent.parent / "core" / "shared-cases.json").read_text(encoding="utf-8"))
 
@@ -34,6 +34,12 @@ def test_what_a_voice_reads(case):
 @pytest.mark.parametrize("case", CASES["spoken"], ids=lambda c: c["back"])
 def test_a_cards_sound(case):
     assert spoken(Card(front=case["front"], back=case["back"]), case["dictation"]) == case["out"]
+
+
+@pytest.mark.parametrize("case", CASES["spoken_sides"], ids=lambda c: f"{c['front']}|{c['sound']}")
+def test_what_each_side_says(case):
+    card = Card(front=case["front"], back=case["back"], choices=case["choices"], sound=case["sound"])
+    assert list(spoken_sides(card, case["dictation"])) == case["out"]
 
 
 @pytest.mark.parametrize("case", CASES["sound_file"], ids=lambda c: c["text"])

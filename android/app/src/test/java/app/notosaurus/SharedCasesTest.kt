@@ -61,4 +61,13 @@ class SharedCasesTest {
         val card = Card(c.string("front"), c.string("back"))
         assertEquals("${c.string("front")} | ${c.string("back")}", c.string("out"), Speech.spoken(card, c["dictation"]!!.jsonPrimitive.boolean))
     }
+
+    @Test
+    fun whatEachSideSays() = cases("spoken_sides").forEach { c ->
+        val choices = c["choices"]!!.jsonArray.map { it.jsonPrimitive.content }
+        val card = Card(c.string("front"), c.string("back"), choices = choices, sound = c.string("sound"))
+        val out = c["out"]!!.jsonArray.map { it.jsonPrimitive.content }
+        val said = Speech.spokenSides(card, c["dictation"]!!.jsonPrimitive.boolean)
+        assertEquals("${c.string("front")} | ${c.string("sound")}", out, listOf(said.first, said.second))
+    }
 }

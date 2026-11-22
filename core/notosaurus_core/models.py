@@ -112,6 +112,14 @@ class Card(BaseModel):
         description="True when the picture or figure belongs to the answer (see the rules); false when it is "
         "needed to answer.",
     )
+    sound: Literal["", "back", "front", "both", "none"] = Field(
+        default="",
+        description='Where the card is read aloud, in the voice of the language being learned: "back" (its '
+        'answer), "front" (its question as it shows), "both", or "none". A side is read only when it is written '
+        "in that language, and the front only when hearing it gives nothing of the answer away. A text with gaps "
+        "is read on both sides when it is in that language: its front with its blanks (nothing given away), its "
+        "back as the whole text (whatever the back field holds). Empty: as usual (the back, a plain card's).",
+    )
     doubt: Doubt | None = Field(
         default=None,
         description="Only when the lesson itself is clearly wrong on this card (see the rules); otherwise null.",

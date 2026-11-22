@@ -17,7 +17,6 @@ from pathlib import Path
 from typing import Any, NamedTuple
 
 from . import config, figures, files, images, llm, recommended, stock
-from .cards import is_cloze
 from .config import AIConfig
 from .errors import AppError, loggable
 from .models import Card, PictureSource, SourceFile
@@ -587,10 +586,8 @@ async def draw_all(
     picture's fields (READY)} as soon as it has it. `photos`: the lesson's, its own drawings
     taken first for the cards whose thing they show (lesson_drawings: one call, no search,
     the pupil's own pictures; {"card", "step": "lesson"} while they are looked at)."""
-    # Not on a sentence with gaps: Anki shows no picture on it (not paid for, then)
-    todo = [
-        c for c in cards if (c.picture_prompt.strip() or c.figure.strip()) and not c.picture and not is_cloze(c.front)
-    ]
+    # A sentence with gaps' too: its note type shows it (cloze v3), on its question or its answer
+    todo = [c for c in cards if (c.picture_prompt.strip() or c.figure.strip()) and not c.picture]
     if photos:
         await _from_the_lesson(s, folder, todo, photos, step)
         todo = [c for c in todo if not c.picture]

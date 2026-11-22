@@ -399,8 +399,16 @@
                         :aria-expanded="Boolean(card._menu)" :aria-label="$t('app.review.more')" :title="$t('app.review.more')">⋯</button>
                 <div class="card-menu-items" x-show="card._menu">
                   <!-- A card without a picture: its picture's page (one with a picture: touched) -->
-                  <button type="button" x-show="!readOnly() && lessonId && !card.picture && !card.mask && !isCloze(card.front)"
+                  <button type="button" x-show="!readOnly() && lessonId && !card.picture && !card.mask"
                           @click="openPicture(card)">🖼️ <span x-text="$t('app.pictures.add')"></span></button>
+                  <!-- Each side read aloud or not (the card's sound: tts.sound_sides); a plain card's back
+                       always with the lesson's dictation (its dictation card is heard) -->
+                  <button type="button" x-show="!readOnly() && hasAudio() && canSound(card, 'front')"
+                          @click="card._menu = false; toggleSound(card, 'front')"
+                          x-text="$t(spokenSides(card)[0] ? 'app.review.soundFrontOff' : 'app.review.soundFrontOn')"></button>
+                  <button type="button" x-show="!readOnly() && hasAudio() && canSound(card, 'back') && !(dictation && !isCloze(card.front) && !card.choices.length)"
+                          @click="card._menu = false; toggleSound(card, 'back')"
+                          x-text="$t(spokenSides(card)[1] ? 'app.review.soundBackOff' : 'app.review.soundBackOn')"></button>
                   <button type="button" x-show="canReport()" @click="card._menu = false; openReport(card)">⚑ <span x-text="$t('app.report.button')"></span></button>
                   <button type="button" class="danger" x-show="!readOnly()" @click="card._menu = false; removeCard(card)">✕ <span x-text="$t('app.review.removeCard')"></span></button>
                 </div>
@@ -517,8 +525,9 @@
                 <textarea class="front" rows="1" x-model="card.front" :readonly="readOnly()" :placeholder="$t('app.review.front')" :aria-label="$t('app.review.front')"
                           x-show="!renderedOnly(card, 'front')" @focus="card._editing = 'front'" @blur="card._editing = ''"
                           x-init="watchHeight($el)" x-effect="card.front; card._editing; fitHeight($el)"></textarea>
-                <!-- On the front's line, not a column beside the card (it made every card as tall as
-                     its buttons); the rare ones (report, delete) behind ⋯ -->
+                <!-- Its front read aloud, when the card says (its sound, turned on or off behind ⋯) -->
+                <button class="icon-btn listen" x-show="hasAudio() && spokenSides(card)[0]" @click="play(spokenSides(card)[0], card.voice || voice)"
+                        :aria-label="$t('app.review.listenFront')" :title="$t('app.review.listenFront')">🔊</button>
               </div>
               <div class="math-preview" x-show="!renderedOnly(card, 'front') && (hasMath(card.front) || isCloze(card.front))" x-html="previewHtml(card.front)"></div>
               <!-- The back, the info, the wrong options and the "did you know" grow with their text,
@@ -537,7 +546,7 @@
                             x-init="watchHeight($el)" x-effect="card.back; card._editing; fitHeight($el)"></textarea>
                   <div class="math-preview back" x-show="!renderedOnly(card, 'back') && hasMath(card.back)" x-html="previewHtml(card.back)"></div>
                 </div>
-                <button class="icon-btn listen" x-show="hasAudio() && !hasMath(card.back) && !isCloze(card.front) && !card.choices.length" @click="play(spokenText(card), card.voice || voice)"
+                <button class="icon-btn listen" x-show="hasAudio() && spokenSides(card)[1]" @click="play(spokenSides(card)[1], card.voice || voice)"
                         :aria-label="$t('app.review.listen')" :title="$t('app.review.listen')">🔊</button>
               </div>
               <!-- Multiple choice, true/false: the back is the right answer, these the wrong ones -->

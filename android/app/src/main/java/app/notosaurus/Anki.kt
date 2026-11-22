@@ -726,6 +726,13 @@ class Anki(private val context: Context) : AnkiTarget {
                 // Which note it is, sent again: the card's own id; else its place in the lesson; else its text
                 val key = card.id.ifBlank { if (media.lesson.isNotEmpty()) "${media.lesson}:$i" else html(card.front) }
                 val sound by lazy { media.audio[Speech.spoken(card, options.dictation)]?.let { if (options.dictation) deciding(it, "audio", key) else file(it, "audio") }.orEmpty() }
+                // A sound a side, as the card says (Speech.spokenSides): its question's, its answer's
+                val sides by lazy { Speech.spokenSides(card, options.dictation) }
+                val sounds by lazy {
+                    val front = media.audio[sides.first]?.let { file(it, "audio") }.orEmpty()
+                    val back = media.audio[sides.second]?.let { if (options.dictation) deciding(it, "audio", key) else file(it, "audio") }.orEmpty()
+                    mapOf("FrontAudio" to front, "Audio" to back)
+                }
                 fun note(variant: String, fields: Map<String, String>) = Built(noteTypes[variant], name, common + fields, tags, key)
                 // Only for the cards showing them (lazy): no file into AnkiDroid that no note shows
                 val picture by lazy { media.pictures[card.picture]?.let { if (card.isChoice()) file(it, "image") else deciding(it, "image", key) }.orEmpty() }
@@ -734,15 +741,17 @@ class Anki(private val context: Context) : AnkiTarget {
                     "Picture" to (if (card.pictureOnBack) "" else picture), "BackPicture" to (if (card.pictureOnBack) picture else ""),
                 )
                 when {
-                    card.isChoice() -> note( // not heard: the options are read
+                    card.isChoice() -> note( // its options read, its question and answer heard when the card says
                         "choice",
                         mapOf(
                             "Id" to key, "Question" to html(card.front), "Answer" to html(card.back),
                             "Choices" to choicesHtml(card, reveal = false), "AnswerChoices" to choicesHtml(card, reveal = true),
                             (if (card.pictureOnBack) "BackPicture" else "Picture") to picture,
-                        ),
+                        ) + sounds,
                     )
-                    GAP.containsMatchIn(card.front) -> note("cloze", mapOf("Id" to key, "Text" to html(card.front), "Extra" to html(card.back)))
+                    // A text with gaps: its picture and its sounds as any card's
+                    GAP.containsMatchIn(card.front) ->
+                        note("cloze", mapOf("Id" to key, "Text" to html(card.front), "Extra" to html(card.back)) + pictures + sounds)
                     card.mask != null -> {
                         if (card.back.isBlank()) return@mapNotNull null
                         val photo = media.photos[card.mask.page] ?: return@mapNotNull null
@@ -763,10 +772,10 @@ class Anki(private val context: Context) : AnkiTarget {
                     // Text, its picture if any on the question or with the answer: still the card it is
                     // (typed, reversed, heard: a dictation with its picture stays one)
                     else -> {
-                        val heard = options.dictation && sound.isNotEmpty() // nothing to hear without a voice
+                        val heard = options.dictation && sounds.getValue("Audio").isNotEmpty() // nothing to hear without a voice
                         val variant = if (heard && options.dictationOnly) listOf("text", "dictation-only")
                         else listOf("text") + listOfNotNull("reverse".takeIf { options.reverse }, "typing".takeIf { options.typing && typed(card.back) }, "dictation".takeIf { heard })
-                        note(variant.joinToString("+"), mapOf("Id" to key, "Front" to html(card.front), "Back" to html(card.back), "Audio" to sound) + pictures)
+                        note(variant.joinToString("+"), mapOf("Id" to key, "Front" to html(card.front), "Back" to html(card.back)) + sounds + pictures)
                     }
                 }
             }

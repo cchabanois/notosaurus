@@ -93,6 +93,34 @@ def spoken(card: Card, dictation: bool = False) -> str:
     return f"{said}{'' if said[-1] in '.!?' else '.'}\n{back}"
 
 
+# A text with gaps' gap ("{{c1::1789::a year}}"): its answer, or its blank with its hint
+GAP = re.compile(r"\{\{c\d+::(.*?)(?:::(.*?))?\}\}", re.S)
+
+
+def sound_sides(card: Card) -> tuple[bool, bool]:
+    """Which of the card's sides are read aloud (Card.sound): (front, back). Empty: as before
+    the choice, its back, not a text with gaps' nor a multiple choice's (their back was only an
+    extra, their options read). Never a side with a formula (the voice would read its code)."""
+    front, back = {"back": (False, True), "front": (True, False), "both": (True, True), "none": (False, False)}.get(
+        card.sound, (False, not is_cloze(card.front) and not is_choice(card))
+    )
+    return front and not has_math(card.front), back and not has_math(card.back)
+
+
+def spoken_front(card: Card) -> str:
+    """What a card's front says, read aloud: its question as it shows, a text with gaps with
+    each gap a blank ("…", its hint said); as a voice can read it (speakable)."""
+    front = GAP.sub(lambda m: f"… ({m.group(2)})" if m.group(2) else "…", card.front.strip())
+    front = speakable(BRACKETS.sub("", front) if not GAP.search(card.front) else front)
+    return front if LETTER.search(front) else ""
+
+
+def spoken_cloze_back(card: Card) -> str:
+    """What a text with gaps says on its answer: the whole text, each gap its answer."""
+    said = speakable(GAP.sub(lambda m: m.group(1), card.front.strip()))
+    return said if LETTER.search(said) else ""
+
+
 def lines(text: str) -> list[str]:
     """What is read on its own, then joined: each line of a text. A natural voice given a
     lone word then a sentence in one text makes up words (Chirp 3 HD: "vers. Les bras
@@ -100,20 +128,32 @@ def lines(text: str) -> list[str]:
     return [line.strip()[:MAX_LINE] for line in text.splitlines() if line.strip()]
 
 
+def spoken_sides(card: Card, dictation: bool = False) -> tuple[str, str]:
+    """What each of the card's sides says read aloud (sound_sides), "" for a side not read:
+    its front as it shows (spoken_front); its back, a text with gaps' the whole text
+    (spoken_cloze_back), another card's its answer (spoken). With the lesson's dictation, a
+    plain card's back always: its dictation card is heard (a transcription with no example to
+    read: nothing)."""
+    front, back = sound_sides(card)
+    plain = not is_cloze(card.front) and not is_choice(card)
+    if dictation and plain:
+        back = not has_math(card.back)
+    said_front = spoken_front(card) if front and card.front.strip() else ""
+    if not back or not card.front.strip():
+        return said_front, ""
+    if is_cloze(card.front):
+        return said_front, spoken_cloze_back(card)
+    return said_front, spoken(card, dictation) if card.back.strip() else ""
+
+
 def spoken_backs(cards: list[Card], dictation: bool = False) -> list[str]:
-    """What the cards' sounds say (spoken). None for: a back with a formula (the voice
-    would read the MathJax code), a text with gaps (its back is only an extra), a multiple
-    choice (the options are read), a transcription with no example to read."""
+    """What the cards' sounds say, each side's (spoken_sides): none for a side not read, a
+    formula (the voice would read the MathJax code), a transcription with no example."""
     return [text for _, text in _speaking(cards, dictation)]
 
 
 def _speaking(cards: list[Card], dictation: bool) -> list[tuple[Card, str]]:
-    said = [
-        (c, spoken(c, dictation))
-        for c in cards
-        if c.front.strip() and c.back.strip() and not has_math(c.back) and not is_cloze(c.front) and not is_choice(c)
-    ]
-    return [(c, s) for c, s in said if s]
+    return [(c, text) for c in cards for text in spoken_sides(c, dictation) if text]
 
 
 def spoken_voices(

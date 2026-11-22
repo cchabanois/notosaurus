@@ -49,6 +49,7 @@ def test_direct_send_to_anki(anki, client):
         "Back",
         "Info",
         "Audio",
+        "FrontAudio",
         "Explanation",
         "Mnemonic",
         "Picture",
@@ -144,14 +145,19 @@ def test_addon_mode(client, monkeypatch):
 def test_cloze_sent_to_anki(anki, client):
     res = client.post("/api/anki/send", json=CLOZE).json()
     assert (res["added"], res["updated"]) == (3, 0)
-    cloze_model = anki.models["Notosaurus cloze v2"]
+    cloze_model = anki.models["Notosaurus cloze (audio) v3"]
     assert cloze_model["isCloze"] is True and cloze_model["inOrderFields"] == [
         "Text",
         "Extra",
         "Info",
+        "Audio",
+        "FrontAudio",
         "Id",
         "Explanation",
         "Mnemonic",
+        "Picture",
+        "BackPicture",
+        "Source",
     ]
     assert anki.models[next(m for m in anki.models if m.startswith("Notosaurus front/back"))]["isCloze"] is False
     assert anki.notes[2]["fields"]["Extra"] == "place de la Révolution"
@@ -244,7 +250,7 @@ def test_options_changed_after_a_send_keep_the_notes(anki, client):
     assert (res["added"], res["updated"], res["converted"]) == (0, 6, 6)
     assert sorted(anki.notes) == ids
     converted = {n["modelName"] for n in anki.notes.values()}
-    assert converted == {"Notosaurus front/back + reverse typed (TTS Anki es_ES) v2"}
+    assert converted == {"Notosaurus front/back + reverse typed (TTS Anki es_ES) v3"}
     assert all(f"notosaurus::{lesson['id']}" in n["tags"] for n in anki.notes.values())
 
     # Sent again unchanged: plain updates
@@ -271,7 +277,7 @@ def test_notes_of_an_older_note_type_version_moved_to_the_new_one(anki, client):
     res = client.post("/api/anki/send", json=body).json()
     assert (res["added"], res["converted"]) == (0, 6)
     assert sorted(anki.notes) == ids
-    assert {n["modelName"] for n in anki.notes.values()} == {"Notosaurus front/back (TTS Anki es_ES) v2"}
+    assert {n["modelName"] for n in anki.notes.values()} == {"Notosaurus front/back (TTS Anki es_ES) v3"}
     assert [t["Name"] for t in anki.models[older]["cardTemplates"]] == ["Front → Back"]  # renamed first
 
 

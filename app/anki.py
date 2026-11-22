@@ -99,7 +99,20 @@ class _Export:
         self.math_nt = note_type(req.voice, req.reverse)
         # An answer too long to type (typed): heard and asked as the others, not typed
         self.untyped_nt = note_type(req.voice, req.reverse, False, req.dictation, req.dictation_only)
-        self.cloze_nt, self.choice_nt = cloze_note_type(), choice_note_type()
+        self.cloze_nt, self.choice_nt = cloze_note_type(req.voice), choice_note_type(req.voice)
+        self.anki_tts = tts.is_anki_locale(req.voice)  # its sounds' fields their texts ({{tts}}), not mp3s
+        self.dictation = req.dictation or req.dictation_only
+
+    def sounds(self, card) -> tuple[dict[str, str], list[Path]]:
+        """The card's sound fields (SOUND_FIELDS: "FrontAudio", "Audio"), each side's text read
+        (tts.spoken_sides), "" for a side not read: with an Anki locale the text itself
+        ({{tts}} reads it), else its mp3, when made; and those mp3s."""
+        values, media = {}, []
+        for field, text in zip(("FrontAudio", "Audio"), tts.spoken_sides(card, self.dictation), strict=True):
+            mp3 = None if self.anki_tts else self.audio.get(text) if text else None
+            values[field] = field_html(text) if self.anki_tts and text else f"[sound:{mp3.name}]" if mp3 else ""
+            media += [mp3] if mp3 else []
+        return values, media
 
     def note(self, card, nt: NoteType, fields: dict[str, str], media: list[Path]) -> Note:
         return Note(
@@ -136,11 +149,17 @@ def notes(
         if req.dictation_only and card.back.strip() and not card.front.strip():
             card = card.model_copy(update={"front": DICTATION_FRONT})
         if is_cloze(card.front.strip()):
-            note = export.note(card, export.cloze_nt, cloze_fields(card, export.card_id(i, card)), [])
+            fields, media = cloze_fields(card, export.card_id(i, card)), []
+            if picture := export.pictures.get(i):  # on its question or with its answer, as any card's
+                fields |= picture_fields(card, picture, export.card_id(i, card))
+                media.append(picture)
+            sounds, heard = export.sounds(card)
+            note = export.note(card, export.cloze_nt, fields | sounds, media + heard)
         elif is_choice(card):
             picture = export.pictures.get(i)
             fields = choice_fields(card, export.card_id(i, card), picture)
-            note = export.note(card, export.choice_nt, fields, [picture] if picture else [])
+            sounds, heard = export.sounds(card)
+            note = export.note(card, export.choice_nt, fields | sounds, ([picture] if picture else []) + heard)
         else:
             note = _two_sided_note(export, i, card)
         if note:
@@ -173,7 +192,10 @@ def _two_sided_note(export: _Export, i: int, card) -> Note | None:
     if "Id" in nt.fields and i not in images:  # what "✎ Notosaurus" finds the card by; its key with a picture
         values |= {"Id": export.card_id(i, card), "Picture": "", "BackPicture": "", SOURCE_FIELD: ""}
     media = []
-    if "Audio" in nt.fields:
+    if "FrontAudio" in nt.fields:  # a sound a side, as the card says (Card.sound)
+        sounds, media = export.sounds(card)
+        values |= sounds
+    elif "Audio" in nt.fields:  # a diagram's label: its answer's
         mp3 = export.audio.get(tts.spoken(card, req.dictation or req.dictation_only))
         values["Audio"] = f"[sound:{mp3.name}]" if mp3 else ""
         media += [mp3] if mp3 else []

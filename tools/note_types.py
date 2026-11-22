@@ -54,8 +54,8 @@ def variants() -> dict[str, anki.NoteType]:
     found["text+dictation-only"] = anki.note_type(VOICE, False, dictation=True, dictation_only=True)
     for typing in (False, True):
         found["diagram" + ("+typing" if typing else "")] = anki.diagram_note_type(VOICE, typing)
-    found["cloze"] = anki.cloze_note_type()
-    found["choice"] = anki.choice_note_type()
+    found["cloze"] = anki.cloze_note_type(VOICE)
+    found["choice"] = anki.choice_note_type(VOICE)
     return found
 
 

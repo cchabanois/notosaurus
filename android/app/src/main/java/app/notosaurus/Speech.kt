@@ -105,7 +105,7 @@ class Speech(
             val r = rateOf(lesson.string("rate"))
             fun on(option: String) = (lesson[option] as? JsonPrimitive)?.content == "true"
             val cards = runCatching { json.decodeFromJsonElement(ListSerializer(Card.serializer()), lesson["cards"]!!) }.getOrDefault(emptyList())
-            for (text in cards.map { spoken(it, on("dictation") || on("dictation_only")) }.filter { it.isNotEmpty() }.distinct()) {
+            for (text in cards.flatMap { spokenSides(it, on("dictation") || on("dictation_only")).toList() }.filter { it.isNotEmpty() }.distinct()) {
                 val old = File(folder, legacyName(text, voice, r)).takeIf { it.isFile } ?: continue
                 dir.mkdirs()
                 old.copyTo(File(dir, fileName(text, voice, r)), overwrite = true)
@@ -128,8 +128,9 @@ class Speech(
         if (!reads(voice)) return emptyMap<String, File>() to 0
         val voice = relayVoice(voice)
         // Each back in its card's voice (its own, else the lesson's: cardVoice)
-        val voices = deck.cards.map { it to spoken(it, dictation) }.filter { it.second.isNotEmpty() }
-            .associate { (card, back) -> back to cardVoice(card, voice, back, rate, lesson) }
+        // Each side read (spokenSides): its front's and its back's, each in its card's voice
+        val voices = deck.cards.flatMap { card -> spokenSides(card, dictation).toList().map { card to it } }.filter { it.second.isNotEmpty() }
+            .associate { (card, said) -> said to cardVoice(card, voice, said, rate, lesson) }
         val backs = voices.keys.toList()
         if (backs.isNotEmpty()) onSound(0, backs.size)
         // PARALLEL at a time, as the computer's (tts.MAX_PARALLEL): one by one, a lesson's took minutes
@@ -226,6 +227,51 @@ class Speech(
             val said = BLANK.replaceFirst(sentence, Regex.escapeReplacement(back))
             if (said == back) return back // the blank alone ("…"): the word, once
             return "$said${if (said.last() in ".!?") "" else "."}\n$back"
+        }
+
+        private val GAP = Regex("""\{\{c\d+::(.*?)(?:::(.*?))?\}\}""", RegexOption.DOT_MATCHES_ALL) // a text with gaps' gap
+        private val MATH = Regex("""\\\(|\\\[""") // a formula (MathJax): never read, its code would be
+
+        /** Which of the card's sides are read aloud (its sound; the core's tts.sound_sides): (front, back).
+         * "": as before its choice, its back, not a text with gaps' nor a multiple choice's. Never a
+         * side with a formula. */
+        fun soundSides(card: Card): Pair<Boolean, Boolean> {
+            val cloze = GAP.containsMatchIn(card.front)
+            val choice = card.choices.any { it.isNotBlank() }
+            val (front, back) = when (card.sound) {
+                "back" -> false to true
+                "front" -> true to false
+                "both" -> true to true
+                "none" -> false to false
+                else -> false to (!cloze && !choice)
+            }
+            return (front && !MATH.containsMatchIn(card.front)) to (back && !MATH.containsMatchIn(card.back))
+        }
+
+        /** What a card's front says (tts.spoken_front): its question as it shows, a text with gaps
+         * with each gap a blank ("…", its hint said). */
+        fun spokenFront(card: Card): String {
+            val shown = GAP.replace(card.front.trim()) { m -> if (m.groupValues[2].isNotEmpty()) "… (${m.groupValues[2]})" else "…" }
+            val front = speakable(if (GAP.containsMatchIn(card.front)) shown else shown.replace(BRACKETS, ""))
+            return if (LETTER.containsMatchIn(front)) front else ""
+        }
+
+        /** What a text with gaps says on its answer (tts.spoken_cloze_back): the whole text. */
+        fun spokenClozeBack(card: Card): String {
+            val said = speakable(GAP.replace(card.front.trim()) { it.groupValues[1] })
+            return if (LETTER.containsMatchIn(said)) said else ""
+        }
+
+        /** What each side says read aloud (tts.spoken_sides), "" for a side not read. With the
+         * lesson's dictation, a plain card's back always: its dictation card is heard. */
+        fun spokenSides(card: Card, dictation: Boolean): Pair<String, String> {
+            var (front, back) = soundSides(card)
+            val cloze = GAP.containsMatchIn(card.front)
+            if (dictation && !cloze && card.choices.none { it.isNotBlank() }) back = !MATH.containsMatchIn(card.back)
+            val saidFront = if (front && card.front.isNotBlank()) spokenFront(card) else ""
+            if (!back || card.front.isBlank()) return saidFront to ""
+            if (cloze) return saidFront to spokenClozeBack(card)
+            return saidFront to (if (card.back.isNotBlank()) spoken(card, dictation) else "")
         }
 
         // The voice chosen for a lesson whose voice is "auto" (Chirp 3 HD: the same name in
