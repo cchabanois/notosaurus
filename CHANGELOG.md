@@ -108,6 +108,7 @@ Each pull request's entries (the `## Changelog` of its description) are put unde
 
 ### Fixed
 
+- 🐛 The lesson's correction: « ✓ Garder » shows its text (it was an empty white button).
 - 🖼️ On a picture's page, what it shows is seen whole, over several lines, no longer cut to one.
 - 🗂 A card's note (+ info) is no longer squeezed by its sub-deck, and a card without a sub-deck says "+ sub-deck" instead of looking like one.
 - 👆 A card open turns to the next with a swipe from anywhere on it, its correction's field or a diagram's photo too.
