@@ -11,7 +11,7 @@ import com.google.mlkit.vision.documentscanner.GmsDocumentScannerOptions
 import com.google.mlkit.vision.documentscanner.GmsDocumentScanning
 import com.google.mlkit.vision.documentscanner.GmsDocumentScanningResult
 import kotlinx.coroutines.tasks.await
-import kotlinx.coroutines.withTimeout
+import kotlinx.coroutines.withTimeoutOrNull
 
 /**
  * The page's camera (📷): a lesson's pages scanned, several at once, each found on the
@@ -44,6 +44,13 @@ fun interface Scanner {
         /** Asked of the page: the lesson's places left (its maxPhotos less its photos). */
         const val FREE = "(() => { try { const d = Alpine.\$data(document.querySelector('[x-data]')); " +
             "return typeof d.maxPhotos === 'number' && Array.isArray(d.photos) ? d.maxPhotos - d.photos.length : null; } catch (e) { return null; } })()"
+
+        /** What [wait] gives within [ms]; not by then, an ordinary error (the camera instead).
+         * Not withTimeout: its TimeoutCancellationException is a CancellationException, which
+         * MainActivity.capture rethrows as the activity's own end: no camera, the page's 📷
+         * never answered. A real cancellation still goes through. */
+        suspend fun <T : Any> within(ms: Long, wait: suspend () -> T): T =
+            withTimeoutOrNull(ms) { wait() } ?: error("scanner: not ready within $ms ms")
     }
 }
 
@@ -68,12 +75,12 @@ object DocumentScanner : Scanner {
         // Its module not on the phone yet (fetched in the background, or offline): the camera
         // now. Started without it, Google Play services' own screen says only "Something went
         // wrong", and its "Cancel" leaves the parent without a photo
-        val installed = withTimeout(START_MS) { ModuleInstall.getClient(activity).areModulesAvailable(client).await() }
+        val installed = Scanner.within(START_MS) { ModuleInstall.getClient(activity).areModulesAvailable(client).await() }
         if (!installed.areModulesAvailable()) {
             preinstall(activity.applicationContext) {}
             error("scanner: its module isn't installed")
         }
-        val start = withTimeout(START_MS) { client.getStartScanIntent(activity).await() }
+        val start = Scanner.within(START_MS) { client.getStartScanIntent(activity).await() }
         val answer = launch(IntentSenderRequest.Builder(start).build())
         if (answer.resultCode == Activity.RESULT_CANCELED) return null
         check(answer.resultCode == Activity.RESULT_OK) { "scanner: ${answer.resultCode}" }
