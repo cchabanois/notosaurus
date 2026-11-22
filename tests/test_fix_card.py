@@ -194,6 +194,38 @@ def test_a_figure_changed_and_its_drawing_wrong_kept_until_drawn_again(monkeypat
     assert (fixed.card.picture, fixed.figure_problem) == ("", "")  # drawn again from its new description
 
 
+def test_a_figure_that_cant_be_drawn_left_out_of_the_correction(monkeypatch):
+    """Its drawing not an SVG the cleaning keeps (a DTD, not XML): the card corrected all the
+    same, the AI shown no figure, never the correction failed for its drawing."""
+    card = Card(id="c6", front="ABC?", back="a triangle", figure="Triangle ABC", picture="f.svg")
+    for unusable in ('<!DOCTYPE svg [<!ENTITY a "b">]><svg/>', "not a figure"):
+        shown = seeing(monkeypatch, {"cards": [{"front": "ABC?", "back": "a right triangle"}]})
+        fixed = asyncio.run(llm.fix_card(S, [], "", "Maths", card, "rectangle", (), "French", figure_svg=unusable))
+        ((images, text),) = shown
+        assert images == [] and "last image" not in text
+        assert fixed.card.back == "a right triangle"
+
+
+def test_the_figure_drawn_off_the_event_loop(monkeypatch):
+    """Drawing a figure takes a while (a large one, seconds): done in a thread of its own, the
+    server's other requests answered meanwhile."""
+    import threading
+
+    from notosaurus_core import figures
+
+    threads = []
+
+    def to_png(svg):
+        threads.append(threading.current_thread())
+        return b"png"
+
+    monkeypatch.setattr(figures, "to_png", to_png)
+    seeing(monkeypatch, {"cards": [{"front": "ABC?", "back": "a triangle", "figure": "Triangle ABC"}]})
+    card = Card(id="c7", front="ABC?", back="a triangle", figure="Triangle ABC", picture="f.svg")
+    asyncio.run(llm.fix_card(S, [], "", "Maths", card, "en rouge", (), "French", figure_svg=TRIANGLE_SVG))
+    assert threads and threads[0] is not threading.main_thread()
+
+
 def test_corrections_quick_when_asked(monkeypatch):
     """The page's "Quick": a lesson's correction and a card's asked with the model thinking
     little (as right, about 30 % faster, measured); carefully when not asked (older pages)."""

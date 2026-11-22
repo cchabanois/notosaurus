@@ -250,3 +250,18 @@ def test_an_svg_image_held_as_data_drawn_in_its_place():
     assert '<g transform="translate(6 6)"><svg' in svg and 'viewBox="0 0 50 20"' in svg and 'width="50"' in svg
     assert 'fill="#ffbf00"' in svg and ">quand</text>" in svg and 'textLength="30"' in svg and "fill:#ffffff" in svg
     assert "<image" not in svg and "script" not in svg and "evil" not in svg
+
+
+def test_a_figure_however_tall_drawn_within_a_bounded_size():
+    """A figure far taller than wide (a viewBox of 1 × 300) drawn within PNG_MAX_HEIGHT, its
+    proportions kept: drawn PNG_WIDTH wide, it was 180,000 pixels high (867 MB). One of the
+    usual shape keeps its size."""
+    tall = figures.clean(
+        '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1 300"><rect width="1" height="9"/></svg>'
+    )
+    picture = Image.open(io.BytesIO(figures.to_png(tall)))
+    assert picture.size == (figures.PNG_MAX_HEIGHT // 300, figures.PNG_MAX_HEIGHT)
+    usual = figures.clean(
+        '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 600"><rect width="9" height="9"/></svg>'
+    )
+    assert Image.open(io.BytesIO(figures.to_png(usual))).size == (figures.PNG_WIDTH, 900)

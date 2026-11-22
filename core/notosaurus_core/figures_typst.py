@@ -189,10 +189,47 @@ PANELS_RULES = (
 )
 
 
-# What a body may not do: load anything (the packages are given), read a file
-FORBIDDEN = re.compile(
-    r"(^|[^\w-])(import|include|read|eval|json|csv|yaml|toml|xml|cbor|image|plugin)\s*[\"(]|#\s*(import|include)"
+# What a body may not do: load anything (the packages are given), read a file. Refused as
+# names wherever they are, not only as calls: a name held in a variable (`#let r = read`), a
+# package's name in a string imported from it (`#let p = "@preview/…"`, `import p`), Typst's
+# own library reached by `std` (`std.read`), are calls too. `image`, a word a label or a
+# comment says ("l'image A'B'"), is given another value instead (SHADOWED): the body's
+# `image`, however it is reached, draws nothing and says so.
+FORBIDDEN_WORDS = ("import", "include", "eval", "std", "read", "json", "csv", "yaml", "toml", "xml", "cbor", "plugin")
+# (a data format's text written or read from a string, `json.encode(…)`, reads no file)
+FORBIDDEN = re.compile(rf"(?<![\w-])({'|'.join(FORBIDDEN_WORDS)})(?![\w-])(?!\.(?:en|de)code(?![\w-]))")
+# after the preamble: its own functions keep Typst's (icon(): a function keeps the names it was
+# defined with)
+SHADOWED = '#let image(..args) = panic("No image: only drawing commands.")\n'
+# The modules a preamble imports whole ("#import "@preview/cetz:0.5.2"", "… as lq"): a body
+# may import from them (`import cetz.draw: *`), never anything else; the module it imports
+# from never given another value (`cetz = (draw: "@preview/…")`): its name always followed by
+# a field
+MODULES = sorted(
+    {
+        alias or source.removeprefix("@preview/").partition(":")[0]
+        for family in FAMILIES.values()
+        for source, alias, listed in re.findall(
+            r'^#import\s+"(@preview/[^"]+)"\s*(?:as\s+([\w-]+))?\s*(?::\s*([^\n]*))?$', family.preamble, re.M
+        )
+        if alias or not listed
+    }
 )
+_MODULE_IMPORT = re.compile(
+    rf"(?<![\w-])import\s+({'|'.join(map(re.escape, MODULES))})(?:\.[A-Za-z_][\w-]*)*(?=[ \t]*(?::|as\b|[;\n}}]|$))"
+)
+
+
+def forbidden(body: str) -> str:
+    """What a body may not write (FORBIDDEN), the first found; "" when it has none. Its
+    imports from a preamble's module (MODULES) aside, the module's name always a module's."""
+    rest = _MODULE_IMPORT.sub("", body)
+    if found := FORBIDDEN.search(rest):
+        return found.group(1)
+    for module in sorted({m.group(1) for m in _MODULE_IMPORT.finditer(body)}):
+        if re.search(rf"(?<![\w.-]){re.escape(module)}(?![\w-])(?!\.)", rest):
+            return module
+    return ""
 
 
 # A package's import ("#import "@preview/lilaq:0.6.0" as lq", "…: diagram, node, edge"), and
@@ -463,8 +500,11 @@ def source(family: str, body: str) -> str:
         body = typst_source.broken_lines(edged)
     if family == "circuit":
         body = typst_source.joined_ends(body)
-    if FORBIDDEN.search(body):
-        raise Unusable("Only drawing commands: no import, include, file or plugin.")
+    if word := forbidden(body):
+        raise Unusable(
+            "Only drawing commands: no import (but from a module given: import cetz.draw: *), include, "
+            f'file or plugin. "{word}" is refused, even held in a variable or in a text: write it otherwise.'
+        )
     body = typst_source.latex_math(typst_source.no_fractions(typst_source.unshadowed(body)))
     separator = typst_source.decimal_separator(body)
     body = typst_source.decimal_commas(body, separator == ",")
@@ -473,7 +513,7 @@ def source(family: str, body: str) -> str:
         body = typst_source.LQ_DIAGRAM.sub("diagram-apart", body)
     if "#let line-kept(" in preamble:
         body = typst_source.LQ_LINE.sub("line-kept", body)
-    return FONT + preamble + body.strip() + "\n"
+    return FONT + preamble + SHADOWED + body.strip() + "\n"
 
 
 COMPILER = HERE / "typst_compile.py"  # run apart: a figure that loops never stops the server

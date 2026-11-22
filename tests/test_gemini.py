@@ -270,6 +270,27 @@ def test_check_figure_with_gemini(monkeypatch):
         asyncio.run(llm.check_figure(LIGHT, "a square", "not a figure"))
 
 
+def test_check_figure_drawn_off_the_event_loop(monkeypatch):
+    """The figure drawn as a PNG in a thread of its own: a large one takes a while, and the
+    server's other requests are answered meanwhile."""
+    import threading
+
+    from notosaurus_core import figures
+
+    threads = []
+
+    def to_png(svg):
+        threads.append(threading.current_thread())
+        return b"\x89PNG"
+
+    monkeypatch.setattr(figures, "to_png", to_png)
+    monkeypatch.setattr(gemini, "_gemini_client", lambda s: Recording('{"ok": true, "problem": ""}'))
+    monkeypatch.setattr(gemini, "_NO_MINIMAL_THINKING", set())
+    svg = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 300"><rect width="400" height="300"/></svg>'
+    assert asyncio.run(llm.check_figure(LIGHT, "a square", svg)) == ""
+    assert threads and threads[0] is not threading.main_thread()
+
+
 def test_plan_picture_with_gemini(monkeypatch):
     from notosaurus_core.models import PicturePlan
     from notosaurus_core.prompts import PLAN_RULES

@@ -204,7 +204,8 @@ async def check_figure(s: AIConfig, description: str, svg: str) -> str:
     it: the "🔍 Check" button); "" when it looks right. figure.invalid: it can't be seen."""
     from . import figures
 
-    png = figures.to_png(figures.clean(svg))
+    # off the event loop: a large figure takes a while to draw, and other requests wait meanwhile
+    png = await asyncio.to_thread(lambda: figures.to_png(figures.clean(svg)))
     if png is None:
         raise figures.FigureError("figure.invalid")
     checked = await ai._ask_provider(
