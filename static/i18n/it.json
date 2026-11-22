@@ -163,6 +163,12 @@
       "removeChoice": "Togli questa risposta",
       "subdeck": "sotto-mazzo",
       "subdeckAdd": "+ sotto-mazzo",
+      "subdeckPick": {
+        "title": "Sotto-mazzo di questa carta",
+        "none": "Nessuno: nel mazzo della lezione",
+        "new": "Nuovo sotto-mazzo…",
+        "add": "Crea"
+      },
       "subdeckLabel": "Sotto-mazzo",
       "listen": "Ascolta il retro",
       "listenFront": "Ascolta il fronte",

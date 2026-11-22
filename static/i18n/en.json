@@ -163,6 +163,12 @@
       "removeChoice": "Remove this answer",
       "subdeck": "sub-deck",
       "subdeckAdd": "+ sub-deck",
+      "subdeckPick": {
+        "title": "This card's sub-deck",
+        "none": "None: in the lesson's deck",
+        "new": "New sub-deck…",
+        "add": "Create"
+      },
       "subdeckLabel": "Sub-deck",
       "listen": "Listen to the back",
       "listenFront": "Listen to the front",

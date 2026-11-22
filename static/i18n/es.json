@@ -163,6 +163,12 @@
       "removeChoice": "Quitar esta respuesta",
       "subdeck": "submazo",
       "subdeckAdd": "+ submazo",
+      "subdeckPick": {
+        "title": "Submazo de esta tarjeta",
+        "none": "Ninguno: en el mazo de la lección",
+        "new": "Nuevo submazo…",
+        "add": "Crear"
+      },
       "subdeckLabel": "Submazo",
       "listen": "Escuchar el reverso",
       "listenFront": "Escuchar el anverso",

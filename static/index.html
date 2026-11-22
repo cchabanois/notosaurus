@@ -377,7 +377,7 @@
                  the key is for: seen at capture, before any of them closes -->
             <header class="card-sheet-head" x-show="isEditing(card) || peek === card.key"
                     @keydown.escape.window.capture="isEditing(card) && diagramOpen === '' && pictureOpen === '' && !viewer.open && !report.open && !asking.open && !hiding.open
-                      && !$event.target.closest?.('.card-fix, .card-menu') && doneEditing()">
+                      && !card._subdecks && !$event.target.closest?.('.card-fix, .card-menu') && doneEditing()">
               <span x-text="$t('app.review.cardOf', { n: cards.indexOf(card) + 1, count: cards.length })"></span>
               <!-- The previous or the next one, this one done with: the lesson looked over card by card -->
               <button type="button" class="icon-btn stops-dictation nav" @click="moveEditing(-1)" :disabled="cards.indexOf(card) === 0"
@@ -632,11 +632,31 @@
                       :class="{ empty: !card.subdeck }"
                       x-text="card.subdeck ? '🗂 ' + card.subdeck : $t('app.review.subdeckAdd')"
                       :title="card.subdeck ? $t('app.review.subdeckLabel') + ' : ' + card.subdeck : ''"
-                      @click="editCard(card, 'subdeck')"></span>
-                <input class="subdeck" x-show="!renderedOnly(card, 'subdeck')" @focus="card._editing = 'subdeck'" @blur="card._editing = ''" x-model="card.subdeck" :readonly="readOnly()" :placeholder="$t('app.review.subdeck')"
-                       :aria-label="$t('app.review.subdeckLabel')"
-                       list="subdecks" :size="Math.max(card.subdeck.length, $t('app.review.subdeck').length) + 2">
+                      @click.stop="openSubdecks(card)"></span>
               </div>
+              <!-- Its sub-deck chosen: none, one of the lesson's (its cards counted), or a new one -->
+              <template x-if="card._subdecks">
+                <div class="subdeck-picker" role="radiogroup" tabindex="-1" :aria-label="$t('app.review.subdeckPick.title')"
+                     @click.outside="card._subdecks = null" @keydown.escape.window="card._subdecks = null">
+                  <p class="subdeck-picker-title" x-text="$t('app.review.subdeckPick.title')"></p>
+                  <label class="subdeck-option">
+                    <input type="radio" :name="'subdeck-' + card.key" :checked="!card.subdeck" @change="pickSubdeck(card, '')">
+                    <span x-text="$t('app.review.subdeckPick.none')"></span>
+                  </label>
+                  <template x-for="[name, count] in subdeckCounts()" :key="name">
+                    <label class="subdeck-option">
+                      <input type="radio" :name="'subdeck-' + card.key" :checked="card.subdeck === name" @change="pickSubdeck(card, name)">
+                      <span x-text="name"></span>
+                      <small x-text="$t('common.count.cards', { count })"></small>
+                    </label>
+                  </template>
+                  <form class="subdeck-new" @submit.prevent="card._subdecks.fresh.trim() && pickSubdeck(card, card._subdecks.fresh)">
+                    <input x-model="card._subdecks.fresh" :placeholder="$t('app.review.subdeckPick.new')"
+                           :aria-label="$t('app.review.subdeckPick.new')" autocomplete="off">
+                    <button class="btn soft" :disabled="!card._subdecks.fresh.trim()" x-text="$t('app.review.subdeckPick.add')"></button>
+                  </form>
+                </div>
+              </template>
               <!-- Shown under the info on the back, in Anki; cleared, it's gone -->
               <div class="fun-fact" x-show="card.fun_fact">
                 <span aria-hidden="true">💡</span>
@@ -843,9 +863,6 @@
         </article>
         </template>
       </div>
-      <datalist id="subdecks">
-        <template x-for="s in subdecks()" :key="s"><option :value="s"></option></template>
-      </datalist>
 
       <button class="btn dashed wide" x-show="!readOnly()" @click="addCard()" x-text="$t('app.review.addCard')"></button>
 
