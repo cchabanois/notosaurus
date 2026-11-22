@@ -253,8 +253,11 @@ const revisionPart = {
     return this.revise({ careful: true });
   },
 
+  // ✓ Keep (or ✕, nothing to keep): the correction no longer undoable, so the pictures it
+  // replaced can go
   clearRevision() {
     this.cards.forEach((c) => { c._state = undefined; });
     this.revision = { ...this.revision, summary: "", stats: "", undo: null };
+    this.prunePictures();
   },
 };

@@ -242,6 +242,7 @@
       "button": "Correct",
       "undo": "↩ Undo",
       "carefully": "🎯 Again, carefully",
+      "keep": "✓ Keep",
       "undone": "Correction undone.",
       "added": {
         "one": "+{count} new",

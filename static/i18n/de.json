@@ -242,6 +242,7 @@
       "button": "Korrigieren",
       "undo": "↩ Rückgängig",
       "carefully": "🎯 Noch einmal, sorgfältig",
+      "keep": "✓ Behalten",
       "undone": "Korrektur rückgängig gemacht.",
       "added": {
         "one": "+{count} neu",
