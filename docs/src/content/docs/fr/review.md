@@ -30,7 +30,10 @@ signalement est lu, et c'est le meilleur moyen de faire corriger Notosaurus. Voi
 - **+ info** ajoute une note affichée sous la réponse : genre, pluriel, un exemple…
 - **sous-paquet** range la carte dans un sous-paquet de la leçon (« Vocabulaire »,
   « Verbes »).
-- **Écouter le verso** (🔊) le fait entendre avec la voix de la leçon.
+- **🔊**, à côté du recto ou du verso, le fait entendre avec la voix de la leçon. Chaque carte dit
+  quelles faces sont lues : la réponse d'une carte de vocabulaire, un texte à trous des deux côtés
+  (au recto avec son trou). Le menu ⋯ de la carte : **Lire le recto à voix haute**, **Ne plus lire
+  le verso**…
 - **Plus d'actions** (⋯), en haut à droite de la carte, la supprime ; **＋ Ajouter une carte**, en bas, en ajoute une.
 
 **📝 Consigne utilisée pour cette leçon**, au-dessus des cartes, rappelle ce qui a été

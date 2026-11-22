@@ -28,7 +28,10 @@ ihr. Jede Meldung wird gelesen, und so wird Notosaurus am besten verbessert. Sie
   Bild, um es zu ändern (eine Karte ohne Bild: ⋯ → **🖼️ Bild hinzufügen**).
 - **+ Info** fügt eine Notiz unter der Antwort hinzu: Geschlecht, Plural, ein Beispiel…
 - **Unterstapel** legt die Karte in einen Unterstapel der Lektion („Vokabeln“, „Verben“).
-- **Rückseite anhören** (🔊) spielt sie mit der Stimme der Lektion ab.
+- **🔊** neben der Vorder- oder Rückseite spielt sie mit der Stimme der Lektion ab. Jede Karte sagt,
+  welche Seiten vorgelesen werden: die Antwort einer Vokabelkarte, ein Lückentext auf beiden Seiten
+  (vorne mit seiner Lücke). Das Menü ⋯ der Karte: **Vorderseite vorlesen**, **Rückseite nicht mehr
+  vorlesen**…
 - **Weitere Aktionen** (⋯), oben rechts auf der Karte, löscht sie; **＋ Karte hinzufügen**, unten,
   fügt eine hinzu.
 
