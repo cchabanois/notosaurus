@@ -38,7 +38,7 @@ def test_typst_cut_when_too_long_and_nothing_loaded(monkeypatch):
     def slow(*args, **kwargs):
         raise subprocess.TimeoutExpired("typst", figures_typst.COMPILE_S)
 
-    for bad in ('read("/etc/passwd")', 'plugin("p.wasm")', '#include "x.typ"', 'eval("read(1)")'):
+    for bad in ('#read("/etc/passwd")', '#plugin("p.wasm")', '#include "x.typ"', '#eval("read(1)")'):
         with pytest.raises(figures_typst.Unusable):
             figures_typst.source("geometry", bad)
     monkeypatch.setattr(subprocess, "run", slow)
@@ -59,6 +59,12 @@ ALIASED = ('#let f = {w}\n#f("x")', '#let f = {w}.with("x")\n#f()', '#{{ let f =
         '#let p = "@preview/no-such-package:1.0.0"\n#{ import p }',  # a package's name held in a variable
         '#let p = "@preview/no-such-package:1.0.0"\n#import p: *',
         '#let p = "x.typ"\n#include p',
+        '#read("x")',  # code in a text
+        'A text, then #read("x") in it',
+        '#{ read("x") }',
+        '#strong[a text #read("x")]',
+        '$ read("x") $',  # a formula's names are code
+        '#if true {\n  1\n}\nelse { read("x") }',
         '#let r = std.read\n#r("x")',  # Typst's own library
         '#std.image("x.png")',
         # a module's name given a string, then imported from
@@ -82,6 +88,26 @@ def test_no_image_drawn_however_written(form):
     with pytest.raises(figures_typst.Unusable, match="No image: only drawing commands"):
         figures_typst.compiled(figures_typst.source("geometry", form.format(w="image")))
     assert figures_typst.compile_svg("diagram", '#scheme(boxes: (a: [#icon("farm") Ferme]))')
+
+
+# Each forbidden word where it is no code: a comment, a text, a label, a string
+SAID = """// {w} in a comment
+/* {w} in a block of comment */
+{w} in the text
+#cetz.canvas({{ import cetz.draw: *
+  // {w}, said in the code's comment
+  content((0, 0), [{w} in a label, "quoted"])
+  content((0, 2), "{w} \\" in a string")
+}})"""
+
+
+def test_a_labels_or_a_comments_words_never_refused():
+    """A word a label or a comment says ("import / export", "the json format", "read the
+    graph") is never refused: only a name Typst reads as code is; what the body says compiled."""
+    for word in figures_typst.FORBIDDEN_WORDS:
+        assert not figures_typst.forbidden(SAID.format(w=word)), word
+    said = "\n".join(SAID.format(w=word) for word in figures_typst.FORBIDDEN_WORDS)
+    assert figures_typst.compiled(figures_typst.source("chemistry", said))
 
 
 def test_what_the_families_examples_write_accepted():

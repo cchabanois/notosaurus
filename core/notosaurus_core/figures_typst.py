@@ -190,11 +190,14 @@ PANELS_RULES = (
 
 
 # What a body may not do: load anything (the packages are given), read a file. Refused as
-# names wherever they are, not only as calls: a name held in a variable (`#let r = read`), a
-# package's name in a string imported from it (`#let p = "@preview/…"`, `import p`), Typst's
-# own library reached by `std` (`std.read`), are calls too. `image`, a word a label or a
-# comment says ("l'image A'B'"), is given another value instead (SHADOWED): the body's
-# `image`, however it is reached, draws nothing and says so.
+# names wherever Typst reads them as code (code_view), not only as calls: a name held in a
+# variable (`#let r = read`), a package's name in a string imported from it (`#let p =
+# "@preview/…"`, `import p`), Typst's own library reached by `std` (`std.read`), are calls
+# too. A label's or a comment's words never refused ("import / export", "the json format"):
+# a string or a text is used as code only through one of these names, written as code.
+# `image`, a name a body's code may hold as a label's word (`content(…, "image")` aside), is
+# given another value instead (SHADOWED): the body's `image`, however it is reached, draws
+# nothing and says so.
 FORBIDDEN_WORDS = ("import", "include", "eval", "std", "read", "json", "csv", "yaml", "toml", "xml", "cbor", "plugin")
 # (a data format's text written or read from a string, `json.encode(…)`, reads no file)
 FORBIDDEN = re.compile(rf"(?<![\w-])({'|'.join(FORBIDDEN_WORDS)})(?![\w-])(?!\.(?:en|de)code(?![\w-]))")
@@ -220,13 +223,159 @@ _MODULE_IMPORT = re.compile(
 )
 
 
+# Statements an embedded `#` starts in a text, that run to the line's end (`#let r = read`)
+_STATEMENTS = frozenset(
+    ("let", "set", "show", "import", "include", "if", "for", "while", "context", "return", "break", "continue")
+)
+
+
+def _closing(text: str, start: int, end: str) -> int:
+    """Where `end` closes what opens at start (a string's quote, a raw's backticks): just
+    past it; -1 when it never does."""
+    i = start
+    while i < len(text):
+        if text[i] == "\\" and end == '"':
+            i += 2
+        elif text.startswith(end, i):
+            return i + len(end)
+        else:
+            i += 1
+    return -1
+
+
+def _comment_end(text: str, i: int) -> int:
+    """Just past the comment starting at i (`//` to the line's end, `/* … */` nested); -1
+    when a block comment never closes."""
+    if text.startswith("//", i):
+        end = text.find("\n", i)
+        return len(text) if end < 0 else end
+    depth = 0
+    while i < len(text):
+        if text.startswith("/*", i):
+            depth, i = depth + 1, i + 2
+        elif text.startswith("*/", i):
+            depth, i = depth - 1, i + 2
+            if not depth:
+                return i
+        else:
+            i += 1
+    return -1
+
+
+def code_view(body: str) -> str | None:
+    """The body as Typst reads its code: what is code kept where it stands, the rest (a text,
+    a string, a comment, a raw text) blanked, its lines kept. The body is a text (markup): `#`
+    starts code there, one expression (`#f(x)[y].z`) or a statement to the line's end (`#let
+    …`), `{…}` and `(…)` are code, `[…]` a text again, `$…$` a formula (its names code too).
+    Where it can't be told (a string, a comment, a bracket never closed), None: every word then
+    checked. What is unsure is taken as code: a text's `[` nests nothing (its first `]` closes
+    it), a `//` after `:` is a link, not a comment."""
+    out = [c if c == "\n" else " " for c in body]
+    stack: list[list] = [["markup", None, True]]  # kind, its closing character, started
+    i, n = 0, len(body)
+    while i < n:
+        kind, closer, started = stack[-1]
+        c = body[i]
+        if c == "`" and kind != "math":  # a raw text: `x`, ```x```; two alone an empty one
+            run = len(body[i:]) - len(body[i:].lstrip("`"))
+            end = i + run if run == 2 else _closing(body, i + run, "`" * run)
+            if end < 0:
+                return None
+            if kind == "embed":
+                stack[-1][2] = True
+            i = end
+            continue
+        if kind in ("markup", "math"):
+            if c == "\\":
+                i += 2
+            elif body.startswith(("//", "/*"), i) and not (kind == "markup" and body[i - 1 : i] == ":"):
+                i = _comment_end(body, i)
+                if i < 0:
+                    return None
+            elif c == "#":
+                i += 1
+                if i < n and (body[i].isalpha() or body[i] == "_"):
+                    word = re.match(r"[^\W\d][\w-]*", body[i:])
+                    statement = word is not None and word.group(0) in _STATEMENTS
+                    stack.append(["line" if statement else "embed", None, False])
+                elif i < n and body[i] in '{(["':
+                    stack.append(["embed", None, False])
+            elif kind == "math" and c == '"':
+                i = _closing(body, i + 1, '"')
+                if i < 0:
+                    return None
+            elif kind == "math" and (c.isalnum() or c == "_"):
+                start = i
+                while i < n and (body[i].isalnum() or body[i] == "_"):
+                    i += 1
+                out[start:i] = body[start:i]
+            elif c == "$" and kind == "markup":
+                stack.append(["math", "$", True])
+                i += 1
+            elif c == closer:  # a text's `]`, a formula's `$`
+                stack.pop()
+                i += 1
+            else:
+                i += 1
+            continue
+        # code: a block's, an embedded expression's (embed), a statement's (line)
+        if kind == "embed" and started and not (c.isalnum() or c in "_-.([{"):
+            stack.pop()  # the expression ends: a text again
+            continue
+        if kind == "line" and c in "\n;":
+            rest = body[i + 1 :].lstrip()
+            if c == "\n" and re.match(r"else(?![\w-])", rest):  # `}` then `else` on the next line
+                i += 1
+                continue
+            stack.pop()
+            continue
+        if kind == "line" and (c == "]" or (c == "$" and stack[-2][0] == "math")):
+            stack.pop()  # the statement ends with the text or the formula it is in
+            continue
+        if kind == "embed":
+            stack[-1][2] = True
+        if c == '"':
+            i = _closing(body, i + 1, '"')
+            if i < 0:
+                return None
+        elif body.startswith(("//", "/*"), i):
+            i = _comment_end(body, i)
+            if i < 0:
+                return None
+        elif c in "({":
+            out[i] = c
+            stack.append(["code", ")" if c == "(" else "}", True])
+            i += 1
+        elif c == "[":
+            stack.append(["markup", "]", True])
+            i += 1
+        elif c == "$":
+            stack.append(["math", "$", True])
+            i += 1
+        elif c in ")}]":
+            if kind != "code" or c != closer:
+                return None  # closes what isn't open
+            out[i] = c
+            stack.pop()
+            i += 1
+        else:
+            out[i] = c
+            i += 1
+    if any(kind in ("code", "math") or (kind == "markup" and closer) for kind, closer, _ in stack):
+        return None  # never closed
+    return "".join(out)
+
+
 def forbidden(body: str) -> str:
-    """What a body may not write (FORBIDDEN), the first found; "" when it has none. Its
-    imports from a preamble's module (MODULES) aside, the module's name always a module's."""
-    rest = _MODULE_IMPORT.sub("", body)
+    """What a body may not write as code (FORBIDDEN), the first found; "" when it has none.
+    Its imports from a preamble's module (MODULES) aside, the module's name always a module's.
+    A body whose code can't be told (code_view) has every word checked."""
+    code = code_view(body)
+    code = body if code is None else code
+    rest = _MODULE_IMPORT.sub("", code)
     if found := FORBIDDEN.search(rest):
         return found.group(1)
-    for module in sorted({m.group(1) for m in _MODULE_IMPORT.finditer(body)}):
+    for module in sorted({m.group(1) for m in _MODULE_IMPORT.finditer(code)}):
         if re.search(rf"(?<![\w.-]){re.escape(module)}(?![\w-])(?!\.)", rest):
             return module
     return ""
