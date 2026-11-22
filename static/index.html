@@ -223,7 +223,7 @@
         </div>
         <p class="hint" x-cloak x-show="dictationStep('prompt')" x-text="$t(dictationStep('prompt') || 'app.mic.busy')"></p>
         <div class="prompt-actions tidy" x-show="canTidy() || canUntidy()">
-          <button type="button" class="link-btn strong" :disabled="tidy.busy" @click="tidyPrompt()"
+          <button type="button" class="link-btn strong" :disabled="tidy.busy" :class="{ waiting: tidy.busy }" @click="tidyPrompt()"
                   x-text="tidy.busy ? $t('app.prompt.tidyBusy') : $t('app.prompt.tidy')"></button>
           <button type="button" class="link-btn" x-cloak x-show="canUntidy()" @click="untidyPrompt()"
                   x-text="$t('app.prompt.tidyUndo')"></button>
@@ -394,7 +394,7 @@
               <span class="card-deck" x-show="(isEditing(card) || peek === card.key) && deckPath(card).length" x-text="deckPath(card).join(' › ')"
                     :title="deckPath(card).join('::')"></span>
               <button class="icon-btn" x-show="lessonId && card.front.trim() && (card.back.trim() || isCloze(card.front))"
-                      @click="explain(card)" :class="{ active: card._explain?.open }" :aria-label="$t('app.explain.button')"
+                      @click="explain(card)" :class="{ active: card._explain?.open, waiting: card._explain?.loading }" :aria-label="$t('app.explain.button')"
                       :title="$t('app.explain.button')">💬</button>
               <div class="card-menu" x-show="canReport() || !readOnly()" @click.outside="card._menu = false" @keydown.escape="card._menu = false">
                 <button class="icon-btn muted" @click="card._menu = !card._menu" :class="{ active: card._menu }"
@@ -478,7 +478,7 @@
                    Said in words (a lone 🔍 reads as a zoom, and a finger never shows a tooltip) -->
               <div class="figure-check-row" x-show="card.picture && !card._drawing && !readOnly() && !off('figures.check')">
                 <button type="button" class="btn soft figure-check-btn" @click="checkFigure(card)" :disabled="Boolean(card._checking)"
-                        :class="{ checking: card._checking }" x-text="$t(drawnFigure(card) ? 'app.pictures.check' : 'app.pictures.checkPicture')"></button>
+                        :class="{ waiting: card._checking }" x-text="$t(drawnFigure(card) ? 'app.pictures.check' : 'app.pictures.checkPicture')"></button>
               </div>
               <!-- What the check found: right, or what is wrong and the choice to draw it again -->
               <div class="figure-check" x-show="card._check || card._checking" role="status">
@@ -529,6 +529,7 @@
                           x-init="watchHeight($el)" x-effect="card.front; card._editing; fitHeight($el)"></textarea>
                 <!-- Its front read aloud, when the card says (its sound, turned on or off behind ⋯) -->
                 <button class="icon-btn listen" x-show="hasAudio() && spokenSides(card)[0]" @click="play(spokenSides(card)[0], card.voice || voice)"
+                        :class="{ waiting: soundLoading !== '' && soundLoading === spokenSides(card)[0] }"
                         :aria-label="$t('app.review.listenFront')" :title="$t('app.review.listenFront')">🔊</button>
               </div>
               <div class="math-preview" x-show="!renderedOnly(card, 'front') && (hasMath(card.front) || isCloze(card.front))" x-html="previewHtml(card.front)"></div>
@@ -549,6 +550,7 @@
                   <div class="math-preview back" x-show="!renderedOnly(card, 'back') && hasMath(card.back)" x-html="previewHtml(card.back)"></div>
                 </div>
                 <button class="icon-btn listen" x-show="hasAudio() && spokenSides(card)[1]" @click="play(spokenSides(card)[1], card.voice || voice)"
+                        :class="{ waiting: soundLoading !== '' && soundLoading === spokenSides(card)[1] }"
                         :aria-label="$t('app.review.listen')" :title="$t('app.review.listen')">🔊</button>
               </div>
               <!-- Multiple choice, true/false: the back is the right answer, these the wrong ones -->
@@ -579,7 +581,7 @@
                      Said in words (a lone 🔍 reads as a zoom, and a finger never shows a tooltip) -->
                 <div class="figure-check-row" x-show="card.picture && !card._drawing && !readOnly() && !off('figures.check')">
                   <button type="button" class="btn soft figure-check-btn" @click="checkFigure(card)" :disabled="Boolean(card._checking)"
-                          :class="{ checking: card._checking }" x-text="$t(drawnFigure(card) ? 'app.pictures.check' : 'app.pictures.checkPicture')"></button>
+                          :class="{ waiting: card._checking }" x-text="$t(drawnFigure(card) ? 'app.pictures.check' : 'app.pictures.checkPicture')"></button>
                 </div>
                 <!-- What the check found: right, or what is wrong and the choice to draw it again -->
                 <div class="figure-check" x-show="card._check || card._checking" role="status">
@@ -773,7 +775,7 @@
                      drawn (again), else free pictures looked for (not the one it has), else asked;
                      named for what it will do -->
                 <button type="button" class="btn soft" x-show="!(off('pictures.search') && off('pictures.draw'))"
-                        @click="makePicture(card)" :disabled="Boolean(card._drawing || card._searching)"
+                        @click="makePicture(card)" :disabled="Boolean(card._drawing || card._searching)" :class="{ waiting: card._searching }"
                         x-text="$t(card._searching ? 'app.pictures.searching' : card.figure ? (card.picture ? 'app.pictures.figureRedraw' : 'app.pictures.figureDraw') : card.picture ? 'app.pictures.change' : 'app.pictures.make')"></button>
                 <!-- A photo of one's own, as the lesson's pages: taken now (on the phone, the document
                      scanner: a drawing of the book cropped and straightened) or chosen -->

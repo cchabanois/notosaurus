@@ -1183,3 +1183,44 @@ def test_the_open_card_shows_its_deck(page):
     card.locator(".subdeck-tag").click()
     card.locator("input.subdeck").fill("Familia")
     sync_api.expect(card.locator(".card-deck")).to_have_text("Jules › 5e › Espagnol › Familia")
+
+
+def test_waiting_for_the_ai_shown_on_its_button(page, monkeypatch):
+    """🔊 and 💬 pulse while their answer is on its way (the voice made first, the AI
+    thinking), then stop; « 💬 Réflexion… » brought into view, under the card's texts."""
+    import asyncio
+
+    from notosaurus_core import llm, tts
+
+    generate_free(page, FRONT_PROMPT)
+    voice_go, explain_go = threading.Event(), threading.Event()
+    made, explained = tts._synthesize, llm.explain_card
+
+    async def held_voice(*args):
+        await asyncio.to_thread(voice_go.wait, 30)
+        await made(*args)
+
+    async def held_explanation(*args, **kwargs):
+        await asyncio.to_thread(explain_go.wait, 30)
+        return await explained(*args, **kwargs)
+
+    monkeypatch.setattr(tts, "_synthesize", held_voice)
+    monkeypatch.setattr(llm, "explain_card", held_explanation)
+    waiting = re.compile(r"\bwaiting\b")
+    first = page.locator(".flash").first
+
+    listen = first.get_by_role("button", name="Écouter le verso")
+    listen.click()
+    sync_api.expect(listen).to_have_class(waiting)
+    voice_go.set()
+    sync_api.expect(listen).not_to_have_class(waiting)  # heard (here: the fake sound refused, said)
+    page.get_by_role("alert").get_by_role("button", name="Fermer").click()
+
+    open_card(first)
+    explain = first.get_by_role("button", name="Expliquer cette carte")
+    explain.click()
+    sync_api.expect(explain).to_have_class(waiting)
+    sync_api.expect(first.get_by_text("💬 Réflexion…")).to_be_in_viewport()
+    explain_go.set()
+    sync_api.expect(explain).not_to_have_class(waiting)
+    sync_api.expect(first.locator(".explain-block").first).to_be_visible()

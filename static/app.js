@@ -267,6 +267,7 @@ document.addEventListener("alpine:init", () => {
     frames: [],                  // diagram frames of the open lesson: what Anki shows of each photo
     sending: false,
     sendStep: "",                // what the send is doing (its sounds, its cards), on its button
+    soundLoading: "",            // the text whose sound is on its way (made by the voice), its 🔊 pulsing
     aiStep: "",                  // what the AI is at while making or correcting: slow, fallback, figures
     drawingLessons: [],          // the lessons whose cards' pictures are being drawn (another may be open)
     pictureJobs: 0,              // a card's picture being redrawn, uploaded or removed

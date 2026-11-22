@@ -84,6 +84,9 @@
 /* Steady up to the time expected, then slowly: never full before it's there */
 @keyframes estimated { 0% { width: 0; } 50% { width: 85%; } 100% { width: 95%; } }
 @keyframes pulse { 50% { opacity: .55; } }
+/* A button waiting for the AI (or the voice it makes): it pulses until the answer comes, the
+   same everywhere (🔊, 💬, a picture checked or looked for, the instructions tidied up) */
+.waiting { animation: pulse 1.4s ease-in-out infinite; }
 .flash.has-picture { flex-wrap: wrap; }
 .math-preview { margin: .1rem 0 .4rem; padding: .35rem .6rem; border-radius: var(--radius-sm); background: var(--surface-2); font-size: 1.05rem; overflow-x: auto; }
 .math-preview.back { color: var(--accent, inherit); }
@@ -107,7 +110,6 @@
 .card-picture .figure-check-row { flex: 1 0 100%; display: flex; justify-content: flex-end; margin-top: .4rem; }
 .card-picture.figure .figure-check-row { max-width: 400px; }  /* the figure's width: its right edge */
 .card-picture .figure-check-btn { min-height: 2.3rem; padding: .3rem .8rem; font-size: .85rem; }
-.card-picture .figure-check-btn.checking { animation: pulse 1.4s ease-in-out infinite; }
 .figure-check { flex: 1 0 100%; margin: .4rem 0 0; font-size: .9rem; text-align: center; }
 .figure-check p { margin: 0 0 .35rem; }
 .figure-check .picture-actions { justify-content: center; }
