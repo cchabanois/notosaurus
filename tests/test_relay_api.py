@@ -107,6 +107,7 @@ def test_openapi_description():
         "rephrase",
         "figure",
         "check-figure",
+        "check-picture",
         "lesson-drawings",
         "picture",
         "speak",

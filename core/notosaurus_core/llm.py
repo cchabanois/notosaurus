@@ -48,6 +48,7 @@ from .figure_making import (  # noqa: F401 (llm's API)
     MadeFigure,
     _figure_family,
     check_figure,
+    check_picture,
     draw_figure,
     kept_source,
     made_figure,

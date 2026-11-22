@@ -311,7 +311,7 @@ class Relay(
 
         // The AI's routes: the first one called without a key starts the free trial (not reading
         // aloud, the voices, the free pictures, a report: they come after a lesson, or need none)
-        val AI_ROUTES = setOf("extract", "revise", "fix-card", "explain", "rephrase", "figure", "check-figure", "picture", "card-picture", "plan-picture", "transcribe")
+        val AI_ROUTES = setOf("extract", "revise", "fix-card", "explain", "rephrase", "figure", "check-figure", "check-picture", "picture", "card-picture", "plan-picture", "transcribe")
 
         // The app kept running around them (Busy, Working): a lesson waits for their work, left
         // in the background too. The AI's, and what comes with a lesson: its own drawings (just

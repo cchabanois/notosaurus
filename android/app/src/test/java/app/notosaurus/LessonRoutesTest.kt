@@ -383,6 +383,36 @@ class LessonRoutesTest : LocalServerTestBase() {
     }
 
     @Test
+    fun aPhotoCheckedAgainstItsCard() = app { client ->
+        // A card whose picture is a photo (the user's, here; one found the same): checked against
+        // the card (/v1/check-picture), its figure's description said as what it was to show
+        relayAnswers("""{"deck": {"deck": "Histoire", "cards": [
+            {"front": "La séparation de 1054 ?", "back": "Le schisme", "figure": "Église → catholique et orthodoxe"}]}, "turns": [], "usage": {"credits": 1, "credits_left": 99}}""")
+        val lesson = client.submitFormWithBinaryData("/api/extract", formData { append("prompt", "p") }) { page() }.json().jsonObject
+        val (id, card) = lesson.string("id") to lesson["cards"]!!.jsonArray.single().jsonObject.string("id")
+        client.submitFormWithBinaryData("/api/lessons/$id/cards/$card/picture", formData {
+            append("photo", "a table football".toByteArray(), Headers.build {
+                append(HttpHeaders.ContentType, "image/jpeg")
+                append(HttpHeaders.ContentDisposition, "filename=\"photo.jpg\"")
+            })
+        }) { page() }
+        val asked = mutableListOf<Pair<String, JsonObject>>()
+        relay.dispatcher = object : mockwebserver3.Dispatcher() {
+            override fun dispatch(request: RecordedRequest): MockResponse {
+                asked += request.url.encodedPath to json.parseToJsonElement(request.body!!.utf8()).jsonObject
+                return MockResponse.Builder().addHeader("Content-Type", "application/json")
+                    .body("""{"ok": false, "problem": "Un baby-foot, pas le schisme.", "usage": {"credits": 1, "credits_left": 90}}""").build()
+            }
+        }
+        val checked = client.post("/api/lessons/$id/cards/$card/picture/check") { page() }.json().jsonObject
+        assertEquals(false to "Un baby-foot, pas le schisme.", checked["ok"]!!.jsonPrimitive.boolean to checked.string("problem"))
+        val (path, sent) = asked.single()
+        assertEquals("/v1/check-picture" to "La séparation de 1054 ? → Le schisme", path to sent.string("card"))
+        assertEquals("Église → catholique et orthodoxe" to "image/jpeg", sent.string("meant") to sent.string("media_type"))
+        assertEquals("a table football", String(Base64.getDecoder().decode(sent.string("image"))))
+    }
+
+    @Test
     fun aFigureCheckedWhenAskedThenDrawnAgainWithItsProblem() = app { client ->
         relayAnswers("""{"deck": {"deck": "Maths", "cards": [
             {"front": "Ce triangle ?", "back": "rectangle", "figure": "a right triangle"}]}, "turns": [], "usage": {"credits": 1, "credits_left": 99}}""")

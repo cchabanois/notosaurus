@@ -463,22 +463,26 @@
             <div class="card-picture" :class="{ figure: card.figure }" x-show="!card.picture_on_back && (card.picture || card._drawing || ((card.picture_prompt || card.figure) && drawingHere()))">
               <img x-show="card.picture && !card._drawing" :src="card.picture && pictureUrl(card)" :alt="card.figure || card.picture_prompt"
                    @click="openPicture(card)">
-              <!-- A figure checked only when asked, under it: the AI looks at it against its description.
+              <!-- A picture checked only when asked, under it: the AI looks at a figure against its
+                   description, any other picture against its card.
                    Said in words (a lone 🔍 reads as a zoom, and a finger never shows a tooltip) -->
-              <div class="figure-check-row" x-show="drawnFigure(card) && !card._drawing && !readOnly() && !off('figures.check')">
+              <div class="figure-check-row" x-show="card.picture && !card._drawing && !readOnly() && !off('figures.check')">
                 <button type="button" class="btn soft figure-check-btn" @click="checkFigure(card)" :disabled="Boolean(card._checking)"
-                        :class="{ checking: card._checking }" x-text="$t('app.pictures.check')"></button>
+                        :class="{ checking: card._checking }" x-text="$t(drawnFigure(card) ? 'app.pictures.check' : 'app.pictures.checkPicture')"></button>
               </div>
               <!-- What the check found: right, or what is wrong and the choice to draw it again -->
               <div class="figure-check" x-show="card._check || card._checking" role="status">
                 <p x-show="card._checking" x-text="$t('app.pictures.checking')"></p>
-                <p x-show="card._check?.ok" x-text="$t('app.pictures.checkOk')"></p>
+                <p x-show="card._check?.ok" x-text="$t(drawnFigure(card) ? 'app.pictures.checkOk' : 'app.pictures.checkOkPicture')"></p>
                 <template x-if="card._check && !card._check.ok">
                   <div>
                     <p><strong x-text="$t('app.pictures.checkProblem')"></strong> <span x-text="card._check.problem"></span></p>
                     <div class="picture-actions">
-                      <button type="button" class="btn primary" @click="redrawFigure(card)"
+                      <button type="button" class="btn primary" x-show="drawnFigure(card)" @click="redrawFigure(card)"
                 x-text="card._triedQuick ? $t('app.pictures.redrawCareful') : $t('app.pictures.redraw')"></button>
+                      <!-- Another picture: the panel's (another free one, drawn, one's own, none) -->
+                      <button type="button" class="btn primary" x-show="!drawnFigure(card)" @click="card._check = null; openPicture(card)"
+                              x-text="$t('app.pictures.changePicture')"></button>
                       <button type="button" class="btn soft" @click="card._check = null" x-text="$t('app.pictures.keep')"></button>
                     </div>
                   </div>
@@ -559,22 +563,26 @@
               <div class="card-picture on-back" :class="{ figure: card.figure }" x-show="card.picture_on_back && (card.picture || card._drawing || ((card.picture_prompt || card.figure) && drawingHere()))">
                 <img x-show="card.picture && !card._drawing" :src="card.picture && pictureUrl(card)" :alt="card.figure || card.picture_prompt"
                    @click="openPicture(card)">
-                <!-- A figure checked only when asked, under it: the AI looks at it against its description.
+                <!-- A picture checked only when asked, under it: the AI looks at a figure against its
+                   description, any other picture against its card.
                      Said in words (a lone 🔍 reads as a zoom, and a finger never shows a tooltip) -->
-                <div class="figure-check-row" x-show="drawnFigure(card) && !card._drawing && !readOnly() && !off('figures.check')">
+                <div class="figure-check-row" x-show="card.picture && !card._drawing && !readOnly() && !off('figures.check')">
                   <button type="button" class="btn soft figure-check-btn" @click="checkFigure(card)" :disabled="Boolean(card._checking)"
-                          :class="{ checking: card._checking }" x-text="$t('app.pictures.check')"></button>
+                          :class="{ checking: card._checking }" x-text="$t(drawnFigure(card) ? 'app.pictures.check' : 'app.pictures.checkPicture')"></button>
                 </div>
                 <!-- What the check found: right, or what is wrong and the choice to draw it again -->
                 <div class="figure-check" x-show="card._check || card._checking" role="status">
                   <p x-show="card._checking" x-text="$t('app.pictures.checking')"></p>
-                  <p x-show="card._check?.ok" x-text="$t('app.pictures.checkOk')"></p>
+                  <p x-show="card._check?.ok" x-text="$t(drawnFigure(card) ? 'app.pictures.checkOk' : 'app.pictures.checkOkPicture')"></p>
                   <template x-if="card._check && !card._check.ok">
                     <div>
                       <p><strong x-text="$t('app.pictures.checkProblem')"></strong> <span x-text="card._check.problem"></span></p>
                       <div class="picture-actions">
-                        <button type="button" class="btn primary" @click="redrawFigure(card)"
+                        <button type="button" class="btn primary" x-show="drawnFigure(card)" @click="redrawFigure(card)"
                 x-text="card._triedQuick ? $t('app.pictures.redrawCareful') : $t('app.pictures.redraw')"></button>
+                      <!-- Another picture: the panel's (another free one, drawn, one's own, none) -->
+                      <button type="button" class="btn primary" x-show="!drawnFigure(card)" @click="card._check = null; openPicture(card)"
+                              x-text="$t('app.pictures.changePicture')"></button>
                         <button type="button" class="btn soft" @click="card._check = null" x-text="$t('app.pictures.keep')"></button>
                       </div>
                     </div>
