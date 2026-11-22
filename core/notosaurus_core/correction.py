@@ -111,7 +111,8 @@ async def fix_card(
     _same_card(fixed, card)
     problem = plain_text(fix.figure_problem).strip() if drawn is not None and fixed.figure.strip() else ""
     if problem:
-        fixed.picture = card.picture  # drawn again, told the problem: shown until then
+        # Drawn again, told the problem: shown until then
+        fixed.picture, fixed.picture_source = card.picture, card.picture_source
     return FixedCard(card=fixed, summary=plain_text(fix.summary), figure_problem=problem)
 
 
@@ -123,16 +124,20 @@ def _keep_ids(revised: list[Card], before: list[Card]) -> None:
         if match:
             _same_card(card, match)
         else:
-            card.id, card.picture = "", ""  # a new card: its id comes when saved
+            card.id, card.picture, card.picture_source = "", "", None  # a new card: its id comes when saved
 
 
 def _same_card(card: Card, before: Card) -> None:
-    """`card` is `before` changed: its id and voice, and its picture unless what to draw changed."""
+    """`card` is `before` changed: its id and voice, and its picture (with where it comes
+    from) unless what to draw changed."""
     card.id, card.voice = before.id, before.voice
     unchanged = (card.picture_prompt, card.figure) == (before.picture_prompt, before.figure)
     if unchanged or not (card.picture_prompt or card.figure):
         card.picture, card.picture_prompt, card.figure = before.picture, before.picture_prompt, before.figure
+        card.picture_source = before.picture_source
         card.picture_on_back = card.picture_on_back if unchanged else before.picture_on_back
+    else:
+        card.picture, card.picture_source = "", None  # drawn again
 
 
 def _keep_masks(
