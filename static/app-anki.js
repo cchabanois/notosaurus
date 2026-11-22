@@ -108,11 +108,17 @@ const ankiPart = {
     // One voice at a time: listening again, or to another card, stops the one playing
     sounding?.pause();
     sounding = audio;
+    // Its 🔊 pulses until it is heard (the voice may make it first: a second or two), or fails
+    this.soundLoading = text;
+    const heard = () => { if (sounding === audio) this.soundLoading = ""; };
+    audio.addEventListener("playing", heard);
+    audio.addEventListener("error", heard);
     // Only a load failure means the sound is really missing. play() may also
     // reject when playback start is interrupted (e.g. AbortError) while the
     // sound still plays, so its rejection alone is not an error for the user.
     audio.addEventListener("error", () => this.soundFailed(audio.src));
     audio.play().catch((e) => {
+      heard();  // not playing (or already: interrupted, it plays on), nothing left to wait for
       if (e.name === "NotAllowedError") this.error = t("app.audio.blocked");
       else console.warn("audio.play()", e);
     });
@@ -332,6 +338,8 @@ const ankiPart = {
       return;
     }
     Object.assign(ex, { open: true, loading: kind, error: "" });
+    // Where it will come, under the card's texts: shown now, « 💬 Réflexion… » there meanwhile
+    this.$nextTick(() => document.querySelector(`[data-card="${card.key}"] .explain`)?.scrollIntoView({ block: "nearest", behavior: "smooth" }));
     const shown = Object.fromEntries(Object.entries(card).filter(([k]) => k !== "key" && !k.startsWith("_")));
     try {
       const r = await (await api(`/api/lessons/${this.lessonId}/explain`, {
