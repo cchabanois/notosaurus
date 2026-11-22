@@ -298,19 +298,23 @@ class LocalServerTest : LocalServerTestBase() {
 
     @Test
     fun anOlderVersionsSoundsMovedIntoTheirLessons() {
+        // A folder of its own: the server of @Before moves its own data's sounds in the
+        // background (LocalServer's init), and would move or delete these meanwhile
+        val root = folder.newFolder("older")
         // As an older version kept them: in audio/, named after (voice, speed, text)
         val id = "espagnol-lecon-5-abc123"
-        folder.root.resolve("lessons/$id").mkdirs()
-        folder.root.resolve("lessons/$id/lesson.json").writeText(
+        root.resolve("lessons/$id").mkdirs()
+        root.resolve("audio").mkdirs()
+        root.resolve("lessons/$id/lesson.json").writeText(
             """{"id": "$id", "deck": "Espagnol", "voice": "es-ES-Chirp3-HD-Aoede", "rate": "", "cards": [{"front": "la mère", "back": "la madre"}]}""",
         )
         val sha = java.security.MessageDigest.getInstance("SHA-1").digest("es-ES-Chirp3-HD-Aoede|${Relay.SPEECH_RATE}|la madre".toByteArray())
-        val legacy = folder.root.resolve("audio/" + sha.joinToString("") { "%02x".format(it) }.take(16) + ".mp3")
+        val legacy = root.resolve("audio/" + sha.joinToString("") { "%02x".format(it) }.take(16) + ".mp3")
         legacy.writeText("older la madre")
         val prefs = MemoryPreferences()
-        val speech = Speech(folder.root.resolve("audio"), prefs, { error("no relay") }) { folder.root.resolve("lessons/$it/audio") }
-        speech.moveIntoLessons(Lessons(folder.root.resolve("lessons")).list())
-        val moved = audioOf(id).resolve(Speech.fileName("la madre", "es-ES-Chirp3-HD-Aoede", "-10%"))
+        val speech = Speech(root.resolve("audio"), prefs, { error("no relay") }) { root.resolve("lessons/$it/audio") }
+        speech.moveIntoLessons(Lessons(root.resolve("lessons")).list())
+        val moved = root.resolve("lessons/$id/audio").resolve(Speech.fileName("la madre", "es-ES-Chirp3-HD-Aoede", "-10%"))
         assertEquals("older la madre", moved.readText())
         assertFalse(legacy.exists()) // audio/ keeps only previews now
         legacy.writeText("again")
