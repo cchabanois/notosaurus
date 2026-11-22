@@ -69,6 +69,7 @@ Each pull request's entries (the `## Changelog` of its description) are put unde
 
 ### Changed
 
+- 🏷️ A diagram's card shows only what Anki will show of the photo; touched, it opens full screen to move its masks and frame.
 - ✨ In a card open, « Corriger » sits beside its field, on a light bar at the bottom of the screen.
 - 🖼️ A card open has its actions at its top right; in the list, only 🔊 is shown, a picture is above the question or after the answer, as in Anki, and a diagram shows only what Anki will show of the photo.
 - 📋 The cards' list is compact (front, back, a small picture): a card touched opens full screen; « ▶ Relire carte par carte » goes through them from the first.
