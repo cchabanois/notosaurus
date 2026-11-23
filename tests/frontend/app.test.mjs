@@ -384,12 +384,6 @@ test("one voice at a time: listening again stops the sound playing", () => {
   assert.deepEqual(plain(sounds), [true, true, false]);  // only the last one plays
 });
 
-test("subdecks of the lesson's cards", () => {
-  const page = app.component();
-  page.cards = [{ subdeck: "Vocabulaire" }, { subdeck: "Phrases" }, { subdeck: "Vocabulaire" }, {}];
-  assert.deepEqual(plain(page.subdecks()), ["Vocabulaire", "Phrases"]);
-});
-
 test("dates in the language's variety, short form", () => {
   assert.match(app.run("formatDate('2026-10-03T21:48:00Z')"), /^Oct 3, 09:48[ \u202f]?PM$/);
 });

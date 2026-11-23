@@ -30,7 +30,7 @@
 
 
 .field { display: block; margin-bottom: .85rem; }
-.field > span, .field-label { display: block; margin-bottom: .3rem; font-weight: 700; font-size: .88rem; }
+.field > span { display: block; margin-bottom: .3rem; font-weight: 700; font-size: .88rem; }
 .field > small { display: block; margin-top: .3rem; color: var(--muted); }
 .with-action { display: flex; gap: .4rem; align-items: center; }
 .with-action .icon-btn { flex: 0 0 auto; background: var(--primary-soft); color: var(--primary); }

@@ -332,7 +332,6 @@ class Relay(
         private val JSON = "application/json".toMediaType()
         private val JPEG = "image/jpeg".toMediaType()
         private val AAC = "audio/aac".toMediaType()
-        private const val MAX_CONTEXT = 8000 // relay_api.MAX_PROMPT
 
         // An extraction takes up to a minute or two: the AI reads every page. Silent at most
         // 3 minutes (a model stalled, then the next one: core's gemini.FIRST_PART_S twice)

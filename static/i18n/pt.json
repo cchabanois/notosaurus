@@ -527,8 +527,6 @@
       "who": "Para quem?",
       "hint": "A série e as suas instruções vão para a IA; o nome, nunca.",
       "name": "Nome",
-      "choose": "Escolher",
-      "chosen": "✓ Escolhido",
       "remove": "Remover",
       "confirmRemove": "Remover {name}? As lições são mantidas.",
       "grade": "Série",
@@ -1174,7 +1172,6 @@
     },
     "picture": {
       "no_model": "Nenhum modelo de imagem: defina um nas configurações (ou uma chave do Gemini ou do OpenRouter).",
-      "unknown_model": "Modelo de imagem desconhecido: {model}.",
       "missing_key": "Sem chave do {service} para o modelo de imagem.",
       "failed": "Não foi possível desenhar a imagem: {detail}",
       "empty": "O modelo de imagem não gerou nenhuma imagem.",

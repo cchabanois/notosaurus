@@ -527,8 +527,6 @@
       "who": "¿Para quién?",
       "hint": "Su curso y tus instrucciones se dan a la IA; su nombre, nunca.",
       "name": "Nombre",
-      "choose": "Elegir",
-      "chosen": "✓ Elegido",
       "remove": "Quitar",
       "confirmRemove": "¿Quitar a {name}? Sus lecciones se conservan.",
       "grade": "Curso",
@@ -1174,7 +1172,6 @@
     },
     "picture": {
       "no_model": "No hay modelo de imagen: elige uno en los ajustes (o una clave de Gemini u OpenRouter).",
-      "unknown_model": "Modelo de imagen desconocido: {model}.",
       "missing_key": "No hay clave de {service} para el modelo de imagen.",
       "failed": "No se ha podido dibujar la imagen: {detail}",
       "empty": "El modelo de imagen no ha dado ninguna imagen.",

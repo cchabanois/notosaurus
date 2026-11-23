@@ -363,12 +363,12 @@ class LocalServerTest : LocalServerTestBase() {
 
     @Test
     fun computerAddresses() {
-        assertEquals("http://192.168.1.10:8000/?k=abc", LocalServer.computerUrl("192.168.1.10:8000/?k=abc").toString())
-        assertEquals("http://192.168.1.10:8000/", LocalServer.computerUrl(" http://192.168.1.10:8000 ").toString())
-        assertEquals("https://pc.tailnet.ts.net/", LocalServer.computerUrl("https://pc.tailnet.ts.net").toString())
-        assertEquals(null, LocalServer.computerUrl("ftp://pc/"))
-        assertEquals(null, LocalServer.computerUrl("bonjour !"))
-        assertEquals("http://192.168.1.10:8000", LocalServer.origin(LocalServer.computerUrl("192.168.1.10:8000/?k=abc")!!))
+        assertEquals("http://192.168.1.10:8000/?k=abc", Computer.url("192.168.1.10:8000/?k=abc").toString())
+        assertEquals("http://192.168.1.10:8000/", Computer.url(" http://192.168.1.10:8000 ").toString())
+        assertEquals("https://pc.tailnet.ts.net/", Computer.url("https://pc.tailnet.ts.net").toString())
+        assertEquals(null, Computer.url("ftp://pc/"))
+        assertEquals(null, Computer.url("bonjour !"))
+        assertEquals("http://192.168.1.10:8000", Computer.origin(Computer.url("192.168.1.10:8000/?k=abc")!!))
     }
 
     @Test

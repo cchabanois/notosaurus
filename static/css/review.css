@@ -286,8 +286,6 @@ body:has(.flash.editing) { overflow: hidden; }  /* the list behind it stays wher
 .card-doubt p { margin: 0; }
 .flash .fun-fact { display: flex; gap: .3rem; align-items: baseline; font-size: .85rem; }
 .flash .fun-fact textarea { flex: 1; min-width: 0; font-style: italic; color: var(--muted); }
-.switch.fun-facts { margin: .5rem 0 .25rem; }
-.switch.helps { margin: .25rem 0; }
 .speed { display: flex; flex-wrap: wrap; align-items: center; gap: .4rem; margin: .5rem 0 .25rem; }
 .speed .hint { flex-basis: 100%; margin: 0; }
 .loading-card .coming { margin: .5rem 0 0; padding: 0; list-style: none; text-align: left; max-width: 18rem; }
