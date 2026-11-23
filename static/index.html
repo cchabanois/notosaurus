@@ -34,6 +34,7 @@
   <script defer src="app-report.js"></script>
   <script defer src="ask-confirm.js"></script>
   <script defer src="app.js"></script>
+  <script defer src="alpine-include.js"></script>
   <script defer src="alpine-show.js"></script>
   <script defer src="vendor/alpinejs/cdn.min.js"></script>
 </head>
@@ -475,51 +476,8 @@
               </div>
             </div>
             <!-- Picture card: the picture shows with the front text (or with the answer, below) -->
-            <div class="card-picture" :class="{ figure: card.figure }" x-show="!card.picture_on_back && (card.picture || card._drawing || ((card.picture_prompt || card.figure) && drawingHere()))">
-              <img x-show="card.picture && !card._drawing" :src="card.picture && pictureUrl(card)" :alt="card.figure || card.picture_prompt"
-                   @click="openPicture(card)">
-              <!-- A picture checked only when asked, under it: the AI looks at a figure against its
-                   description, any other picture against its card.
-                   Said in words (a lone 🔍 reads as a zoom, and a finger never shows a tooltip) -->
-              <div class="figure-check-row" x-show="card.picture && !card._drawing && !readOnly() && !off('figures.check')">
-                <button type="button" class="btn soft figure-check-btn" @click="checkFigure(card)" :disabled="Boolean(card._checking)"
-                        :class="{ waiting: card._checking }" x-text="$t(drawnFigure(card) ? 'app.pictures.check' : 'app.pictures.checkPicture')"></button>
-              </div>
-              <!-- What the check found: right, or what is wrong and the choice to draw it again -->
-              <div class="figure-check" x-show="card._check || card._checking" role="status">
-                <p x-show="card._checking" x-text="$t('app.pictures.checking')"></p>
-                <p x-show="card._check?.ok" x-text="$t(drawnFigure(card) ? 'app.pictures.checkOk' : 'app.pictures.checkOkPicture')"></p>
-                <template x-if="card._check && !card._check.ok">
-                  <div>
-                    <p><strong x-text="$t('app.pictures.checkProblem')"></strong> <span x-text="card._check.problem"></span></p>
-                    <div class="picture-actions">
-                      <button type="button" class="btn primary" x-show="drawnFigure(card)" @click="redrawFigure(card)"
-                x-text="card._triedQuick ? $t('app.pictures.redrawCareful') : $t('app.pictures.redraw')"></button>
-                      <!-- Another picture: the panel's (another free one, drawn, one's own, none) -->
-                      <button type="button" class="btn primary" x-show="!drawnFigure(card)" @click="card._check = null; openPicture(card)"
-                              x-text="$t('app.pictures.changePicture')"></button>
-                      <button type="button" class="btn soft" @click="card._check = null" x-text="$t('app.pictures.keep')"></button>
-                    </div>
-                  </div>
-                </template>
-              </div>
-              <!-- How long it takes, roughly (a figure: the model thinks; a picture: found or drawn):
-                   the bar fills over that time, slower near the end; restarts each time it shows -->
-              <span class="drawing" :class="{ redrawing: firstFigureUrl(card) }" x-show="!card.picture || card._drawing"
-                    :style="{ '--expected': `${pictureExpected(card)}s` }">
-                <!-- Drawn again because it was wrong: the first one, faded, with what was wrong -->
-                <template x-if="firstFigureUrl(card)"><img class="first" :src="firstFigureUrl(card)" alt=""></template>
-                <!-- Its steps: over the first one, at the middle -->
-                <span class="steps">
-                  <span x-text="pictureStepText(card)"></span>
-                  <small class="problem" x-show="card._problem" x-text="card._problem"></small>
-                  <small x-text="$t('app.pictures.about', { seconds: pictureExpected(card) })"></small>
-                  <!-- The bar starts again when the figure is drawn again (its own, longer time) -->
-                  <i class="progress" aria-hidden="true"
-                     x-effect="card._step === 'redrawing'; $el.style.animation = 'none'; $el.offsetWidth; $el.style.animation = ''"></i>
-                </span>
-              </span>
-            </div>
+            <div class="card-picture" :class="{ figure: card.figure }" x-show="pictureShown(card, false)"
+                 data-include="card-picture-block"></div>
             <div class="flash-body">
               <span class="flash-badge" x-show="card._state"
                     x-text="card._state === 'new' ? $t('app.review.badgeNew') : $t('app.review.badgeModified')"></span>
@@ -578,51 +536,8 @@
                         x-text="$t('app.review.addChoice')"></button>
               </div>
               <!-- The picture belongs to the answer ("What is a tangent?"): shown under it, as in Anki -->
-              <div class="card-picture on-back" :class="{ figure: card.figure }" x-show="card.picture_on_back && (card.picture || card._drawing || ((card.picture_prompt || card.figure) && drawingHere()))">
-                <img x-show="card.picture && !card._drawing" :src="card.picture && pictureUrl(card)" :alt="card.figure || card.picture_prompt"
-                   @click="openPicture(card)">
-                <!-- A picture checked only when asked, under it: the AI looks at a figure against its
-                   description, any other picture against its card.
-                     Said in words (a lone 🔍 reads as a zoom, and a finger never shows a tooltip) -->
-                <div class="figure-check-row" x-show="card.picture && !card._drawing && !readOnly() && !off('figures.check')">
-                  <button type="button" class="btn soft figure-check-btn" @click="checkFigure(card)" :disabled="Boolean(card._checking)"
-                          :class="{ waiting: card._checking }" x-text="$t(drawnFigure(card) ? 'app.pictures.check' : 'app.pictures.checkPicture')"></button>
-                </div>
-                <!-- What the check found: right, or what is wrong and the choice to draw it again -->
-                <div class="figure-check" x-show="card._check || card._checking" role="status">
-                  <p x-show="card._checking" x-text="$t('app.pictures.checking')"></p>
-                  <p x-show="card._check?.ok" x-text="$t(drawnFigure(card) ? 'app.pictures.checkOk' : 'app.pictures.checkOkPicture')"></p>
-                  <template x-if="card._check && !card._check.ok">
-                    <div>
-                      <p><strong x-text="$t('app.pictures.checkProblem')"></strong> <span x-text="card._check.problem"></span></p>
-                      <div class="picture-actions">
-                        <button type="button" class="btn primary" x-show="drawnFigure(card)" @click="redrawFigure(card)"
-                x-text="card._triedQuick ? $t('app.pictures.redrawCareful') : $t('app.pictures.redraw')"></button>
-                      <!-- Another picture: the panel's (another free one, drawn, one's own, none) -->
-                      <button type="button" class="btn primary" x-show="!drawnFigure(card)" @click="card._check = null; openPicture(card)"
-                              x-text="$t('app.pictures.changePicture')"></button>
-                        <button type="button" class="btn soft" @click="card._check = null" x-text="$t('app.pictures.keep')"></button>
-                      </div>
-                    </div>
-                  </template>
-                </div>
-                <!-- How long it takes, roughly (a figure: the model thinks; a picture: found or drawn):
-                   the bar fills over that time, slower near the end; restarts each time it shows -->
-              <span class="drawing" :class="{ redrawing: firstFigureUrl(card) }" x-show="!card.picture || card._drawing"
-                    :style="{ '--expected': `${pictureExpected(card)}s` }">
-                <!-- Drawn again because it was wrong: the first one, faded, with what was wrong -->
-                <template x-if="firstFigureUrl(card)"><img class="first" :src="firstFigureUrl(card)" alt=""></template>
-                <!-- Its steps: over the first one, at the middle -->
-                <span class="steps">
-                  <span x-text="pictureStepText(card)"></span>
-                  <small class="problem" x-show="card._problem" x-text="card._problem"></small>
-                  <small x-text="$t('app.pictures.about', { seconds: pictureExpected(card) })"></small>
-                  <!-- The bar starts again when the figure is drawn again (its own, longer time) -->
-                  <i class="progress" aria-hidden="true"
-                     x-effect="card._step === 'redrawing'; $el.style.animation = 'none'; $el.offsetWidth; $el.style.animation = ''"></i>
-                </span>
-              </span>
-              </div>
+              <div class="card-picture on-back" :class="{ figure: card.figure }" x-show="pictureShown(card, true)"
+                   data-include="card-picture-block"></div>
               <div class="meta">
                 <!-- Its formulas drawn, as the helps' (its text a click away) -->
                 <div class="math-preview shown info" x-show="renderedOnly(card, 'info')" x-html="previewHtml(card.info)"
@@ -771,11 +686,7 @@
                    :alt="card.figure || card.picture_prompt" @click="openViewer([pictureUrl(card)], 0, card)">
               <p class="hint" x-show="card._drawing" x-text="$t('app.pictures.drawing')"></p>
               <!-- Where the picture comes from (a free one: its page, to check it) -->
-              <p class="picture-source" x-show="card.picture && figureCredits(card).length">
-                <span x-text="figureCreditText(card)"></span>
-                <template x-for="(project, n) in figureCredits(card)" :key="project.name"><span><span x-text="n ? ' + ' : ''"></span><a :href="project.url" target="_blank" rel="noopener" :title="project.version" x-text="project.name"></a></span></template>
-                <span x-text="card?.picture_source?.careful ? ' · ' + $t('app.pictures.carefully') : ''"></span>
-              </p>
+              <p class="picture-source" x-show="card.picture && figureCredits(card).length" data-include="figure-credits-block"></p>
               <p class="picture-source" x-show="card.picture && pictureSourceText(card) && !figureCredits(card).length">
                 <span x-text="pictureSourceText(card)"></span>
                 <a x-show="pictureSourcePage(card)" :href="pictureSourcePage(card)" target="_blank" rel="noopener"
@@ -1258,11 +1169,9 @@
            @pointercancel="viewerUp($event)" @click="viewerTap($event)" @load="unzoomViewer()">
     </div>
     <!-- A figure's credits: what drew it, each project linked -->
-    <p class="viewer-credit" x-show="figureCredits(viewer.card).length" @click.stop>
-      <span x-text="figureCreditText(viewer.card)"></span>
-      <template x-for="(project, n) in figureCredits(viewer.card)" :key="project.name"><span><span x-text="n ? ' + ' : ''"></span><a :href="project.url" target="_blank" rel="noopener" :title="project.version" x-text="project.name"></a></span></template>
-      <span x-text="viewer.card?.picture_source?.careful ? ' · ' + $t('app.pictures.carefully') : ''"></span>
-    </p>
+    <!-- (`card` there: the one shown) -->
+    <p class="viewer-credit" x-show="figureCredits(viewer.card).length" @click.stop x-data="{ get card() { return viewer.card } }"
+       data-include="figure-credits-block"></p>
     <button class="viewer-close" @click="viewer.open = false" :aria-label="$t('common.close')">✕</button>
     <!-- A lesson's photo: removed (as on its thumbnail), turned, a name hidden before it is sent:
          from here only (a tap on the page) -->
@@ -1698,5 +1607,60 @@
   </aside>
 
 </div>
+
+<!-- Blocks shown in several places, each a copy (alpine-include.js: data-include="<id>"),
+     in the scope of where it is (`card`) -->
+<!-- A card's picture, on its front or with its answer (the element including it says which) -->
+<template id="card-picture-block">
+  <img x-show="card.picture && !card._drawing" :src="card.picture && pictureUrl(card)" :alt="card.figure || card.picture_prompt"
+       @click="openPicture(card)">
+  <!-- A picture checked only when asked, under it: the AI looks at a figure against its
+       description, any other picture against its card.
+       Said in words (a lone 🔍 reads as a zoom, and a finger never shows a tooltip) -->
+  <div class="figure-check-row" x-show="card.picture && !card._drawing && !readOnly() && !off('figures.check')">
+    <button type="button" class="btn soft figure-check-btn" @click="checkFigure(card)" :disabled="Boolean(card._checking)"
+            :class="{ waiting: card._checking }" x-text="$t(drawnFigure(card) ? 'app.pictures.check' : 'app.pictures.checkPicture')"></button>
+  </div>
+  <!-- What the check found: right, or what is wrong and the choice to draw it again -->
+  <div class="figure-check" x-show="card._check || card._checking" role="status">
+    <p x-show="card._checking" x-text="$t('app.pictures.checking')"></p>
+    <p x-show="card._check?.ok" x-text="$t(drawnFigure(card) ? 'app.pictures.checkOk' : 'app.pictures.checkOkPicture')"></p>
+    <template x-if="card._check && !card._check.ok">
+      <div>
+        <p><strong x-text="$t('app.pictures.checkProblem')"></strong> <span x-text="card._check.problem"></span></p>
+        <div class="picture-actions">
+          <button type="button" class="btn primary" x-show="drawnFigure(card)" @click="redrawFigure(card)"
+                  x-text="card._triedQuick ? $t('app.pictures.redrawCareful') : $t('app.pictures.redraw')"></button>
+          <!-- Another picture: the panel's (another free one, drawn, one's own, none) -->
+          <button type="button" class="btn primary" x-show="!drawnFigure(card)" @click="card._check = null; openPicture(card)"
+                  x-text="$t('app.pictures.changePicture')"></button>
+          <button type="button" class="btn soft" @click="card._check = null" x-text="$t('app.pictures.keep')"></button>
+        </div>
+      </div>
+    </template>
+  </div>
+  <!-- How long it takes, roughly (a figure: the model thinks; a picture: found or drawn):
+       the bar fills over that time, slower near the end; restarts each time it shows -->
+  <span class="drawing" :class="{ redrawing: firstFigureUrl(card) }" x-show="!card.picture || card._drawing"
+        :style="{ '--expected': `${pictureExpected(card)}s` }">
+    <!-- Drawn again because it was wrong: the first one, faded, with what was wrong -->
+    <template x-if="firstFigureUrl(card)"><img class="first" :src="firstFigureUrl(card)" alt=""></template>
+    <!-- Its steps: over the first one, at the middle -->
+    <span class="steps">
+      <span x-text="pictureStepText(card)"></span>
+      <small class="problem" x-show="card._problem" x-text="card._problem"></small>
+      <small x-text="$t('app.pictures.about', { seconds: pictureExpected(card) })"></small>
+      <!-- The bar starts again when the figure is drawn again (its own, longer time) -->
+      <i class="progress" aria-hidden="true"
+         x-effect="card._step === 'redrawing'; $el.style.animation = 'none'; $el.offsetWidth; $el.style.animation = ''"></i>
+    </span>
+  </span>
+</template>
+<!-- A figure's credits: what drew it, each project linked (on the picture's page, full screen) -->
+<template id="figure-credits-block">
+  <span x-text="figureCreditText(card)"></span>
+  <template x-for="(project, n) in figureCredits(card)" :key="project.name"><span><span x-text="n ? ' + ' : ''"></span><a :href="project.url" target="_blank" rel="noopener" :title="project.version" x-text="project.name"></a></span></template>
+  <span x-text="card?.picture_source?.careful ? ' · ' + $t('app.pictures.carefully') : ''"></span>
+</template>
 </body>
 </html>

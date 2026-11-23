@@ -255,6 +255,13 @@ const picturesPart = {
     return this.drawingLessons.includes(this.lessonId);
   },
 
+  // A card's picture shown on this side (`onBack`: with its answer), as it says: there, or
+  // being made (asked for, and this lesson's being drawn)
+  pictureShown(card, onBack) {
+    return Boolean(card.picture_on_back) === onBack
+      && Boolean(card.picture || card._drawing || ((card.picture_prompt || card.figure) && this.drawingHere()));
+  },
+
   // The pictures the cards ask for: figures drawn, free pictures found; those none fits are
   // drawn by the image model only when the user says yes (`draw`: the banner's "Draw them")
   // One drawing at a time for a lesson (two drew the same cards, each paid): asked while one

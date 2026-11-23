@@ -800,6 +800,22 @@ test("the pictures being drawn belong to their lesson: another one opened meanwh
   assert.deepEqual(plain(c.drawingLessons), []);
 });
 
+test("a card's picture shown on one side only: its own, or while this lesson's are drawn", async () => {
+  const c = (await loadScripts("app.js")).component();
+  c.lessonId = "A";
+  const sides = (card) => [c.pictureShown(card, false), c.pictureShown(card, true)];
+  assert.deepEqual(sides({ picture: "p.svg" }), [true, false]);
+  assert.deepEqual(sides({ picture: "p.svg", picture_on_back: true }), [false, true]);
+  assert.deepEqual(sides({ picture: "", _drawing: true, picture_on_back: true }), [false, true]);
+  const asked = { picture: "", figure: "un triangle" };
+  assert.deepEqual(sides(asked), [false, false]);  // nothing being drawn: no empty frame
+  c.drawingLessons = ["B"];
+  assert.deepEqual(sides(asked), [false, false]);  // another lesson's
+  c.drawingLessons = ["A"];
+  assert.deepEqual(sides(asked), [true, false]);
+  assert.deepEqual(sides({ picture: "" }), [false, false]);  // none asked for
+});
+
 test("children: the one chosen kept on this device, the lessons filtered, its decks' levels not shown again", async () => {
   const sent = [];
   const kids = [
