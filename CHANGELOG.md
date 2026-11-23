@@ -9,6 +9,7 @@ Each pull request's entries (the `## Changelog` of its description) are put unde
 
 ### Added
 
+- 📄 **The page a card comes from**: the open card shows "📄 p. 3"; a touch shows the lesson's page in full (‹ › to the others), in a lesson read only too.
 - 🗂 An open card shows its Anki deck at its top, small, as Anki does: « Jules › 5e › Anglais › … › Exercices ».
 - 🔊 Every card can be read aloud on its question, its answer, or both: a sentence with gaps with its blank, then whole; the card's ⋯ turns each side on or off.
 - 🖼️ A sentence with gaps can have a picture, on its question or its answer.
@@ -73,6 +74,7 @@ Each pull request's entries (the `## Changelog` of its description) are put unde
 
 ### Changed
 
+- ✨ **Correct this card** sends the AI only the lesson's page the card comes from, not every page: much cheaper on long lessons (cards made from now on; older cards as before).
 - Corrections cost a little less: the AI is no longer sent where each card's picture comes from.
 - 🗂 A card's sub-deck is chosen in a list: none, one of the lesson's (with its number of cards), or a new one.
 - ⏳ A button that waits for the AI pulses until the answer comes: 🔊 while its voice is made, 💬 while the explanation is thought (shown where it will come), the search for a picture, « Mettre au propre ».
@@ -118,6 +120,7 @@ Each pull request's entries (the `## Changelog` of its description) are put unde
 
 ### Fixed
 
+- On the phone, correcting a card of a lesson of more than 10 pages no longer fails ("too large"): its own page is sent, or, for a card made before, no page.
 - 📐 A figure drawn again keeps its layout everywhere: after a correction, or with its description changed on its picture's page, only what is asked changes (computer and Android).
 - 🐛 A PDF or photos added right as the page opens: counted against the lesson's 30 pages, not 10.
 - 📐 On the phone, a figure drawn again keeps its layout: only what is asked changes
