@@ -1,5 +1,5 @@
 {
- "_": "Cases the three implementations must agree on (Python app/exams.py, notosaurus_core/tts.py, notosaurus_core/cards.py; Kotlin Exams.kt, Speech.kt, Lessons.kt; JavaScript static/app-anki.js): their tests read this file. Python's answers are the reference; sound_file, kept_ids, same_text, info_field, fix_photos, revise_photos: Python and Kotlin only (the page names no file, makes no lesson). spoken_sides: what each side says read aloud (tts.spoken_sides), [front, back]. fix_photos: the lesson's photos sent to correct one card (correction.fix_photos), by its page and the lesson's number of photos: their numbers, and what they are. revise_photos: the lesson's photos sent to correct the whole lesson (correction.revise_photos), by its number of photos: their numbers, and what they are (none: a lesson that has photos, none sent). figure_source_files, figure_sources_pruned: a figure's sources (its Typst) kept beside its picture (pictures.keep_sources, Pictures.keepSources) and removed with it (pictures.prune, Pictures.pruned); Python and Kotlin only.",
+ "_": "Cases the three implementations must agree on (Python app/exams.py, notosaurus_core/tts.py, notosaurus_core/cards.py; Kotlin Exams.kt, Speech.kt, Lessons.kt; JavaScript static/app-anki.js): their tests read this file. Python's answers are the reference; sound_file, kept_ids, same_text, info_field, fix_photos, revise_photos: Python and Kotlin only (the page names no file, makes no lesson). spoken_sides: what each side says read aloud (tts.spoken_sides), [front, back]. fix_photos: the lesson's photos sent to correct one card (correction.fix_photos), by its page and the lesson's number of photos: their numbers, and what they are. revise_photos: the lesson's photos sent to correct the whole lesson (correction.revise_photos), by its number of photos: their numbers, and what they are (none: a lesson that has photos, none sent). drawing_calls: the calls looking for the lesson's own drawings of cards (pictures.drawing_calls, Pictures.drawingCalls), by each card's page (0 unknown) and the lesson's number of photos: each call's pages sent (from 1) and the cards it asks (their indexes; a later call asks only those still without a drawing); Python and Kotlin only. figure_source_files, figure_sources_pruned: a figure's sources (its Typst) kept beside its picture (pictures.keep_sources, Pictures.keepSources) and removed with it (pictures.prune, Pictures.pruned); Python and Kotlin only.",
  "tag_text": [
   {
    "in": "Interro SVT de lundi",
@@ -902,6 +902,22 @@
   {"name": "no photo", "page": 0, "photos": 0, "out": [], "sent": "all"},
   {"name": "a page, no photo", "page": 1, "photos": 0, "out": [], "sent": "all"}
   ],
+ "drawing_calls": [
+  {"name": "its page and its neighbours", "pages": [4], "photos": 25, "out": [{"pages": [3, 4, 5], "cards": [0]}]},
+  {"name": "its first page: none before", "pages": [1], "photos": 5, "out": [{"pages": [1, 2], "cards": [0]}]},
+  {"name": "its last page: none after", "pages": [5], "photos": 5, "out": [{"pages": [4, 5], "cards": [0]}]},
+  {"name": "a lesson of one page", "pages": [1], "photos": 1, "out": [{"pages": [1], "cards": [0]}]},
+  {"name": "neighbourhoods overlapping: merged", "pages": [3, 4, 3], "photos": 10, "out": [{"pages": [2, 3, 4, 5], "cards": [0, 1, 2]}]},
+  {"name": "far apart: one call while they fit", "pages": [4, 20], "photos": 25, "out": [{"pages": [3, 4, 5, 19, 20, 21], "cards": [0, 1]}]},
+  {"name": "taken by their page", "pages": [20, 4], "photos": 25, "out": [{"pages": [3, 4, 5, 19, 20, 21], "cards": [0, 1]}]},
+  {"name": "more than a call takes: split", "pages": [2, 5, 8, 11, 14], "photos": 30, "out": [{"pages": [1, 2, 3, 4, 5, 6, 7, 8, 9], "cards": [0, 1, 2]}, {"pages": [10, 11, 12, 13, 14, 15], "cards": [3, 4]}]},
+  {"name": "unknown: ten pages at a time", "pages": [0, 0], "photos": 25, "out": [{"pages": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10], "cards": [0, 1]}, {"pages": [11, 12, 13, 14, 15, 16, 17, 18, 19, 20], "cards": [0, 1]}, {"pages": [21, 22, 23, 24, 25], "cards": [0, 1]}]},
+  {"name": "unknown, a short lesson", "pages": [0], "photos": 3, "out": [{"pages": [1, 2, 3], "cards": [0]}]},
+  {"name": "past the lesson's photos: as unknown", "pages": [7], "photos": 4, "out": [{"pages": [1, 2, 3, 4], "cards": [0]}]},
+  {"name": "mixed: the known first, then the unknown", "pages": [0, 12, -1], "photos": 12, "out": [{"pages": [11, 12], "cards": [1]}, {"pages": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10], "cards": [0, 2]}, {"pages": [11, 12], "cards": [0, 2]}]},
+  {"name": "no photo", "pages": [3, 0], "photos": 0, "out": []},
+  {"name": "no card", "pages": [], "photos": 5, "out": []}
+ ],
  "revise_photos": [
   {"name": "a lesson of 3 pages: all", "photos": 3, "out": [1, 2, 3], "sent": "all"},
   {"name": "as many as a call takes: all", "photos": 10, "out": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10], "sent": "all"},

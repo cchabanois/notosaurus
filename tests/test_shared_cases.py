@@ -13,6 +13,7 @@ from app.exams import common_deck, tag_text
 from notosaurus_core.cards import kept_ids, same_text, text_key
 from notosaurus_core.correction import fix_photos, revise_photos
 from notosaurus_core.models import Card
+from notosaurus_core.pictures import drawing_calls
 from notosaurus_core.tts import filename, speakable, spoken, spoken_sides
 
 CASES = json.loads((Path(__file__).parent.parent / "core" / "shared-cases.json").read_text(encoding="utf-8"))
@@ -60,6 +61,14 @@ def test_the_photos_sent_to_correct_a_card(case):
     """The page a card comes from alone, when known; else the lesson's photos when a call takes
     them all; else none: the phone's GenerationRoutes (Generation.fixPhotos) the same."""
     assert fix_photos(case["page"], case["photos"]) == (case["out"], case["sent"])
+
+
+@pytest.mark.parametrize("case", CASES["drawing_calls"], ids=lambda c: c["name"])
+def test_the_calls_looking_for_the_lessons_drawings(case):
+    """Each card's drawing looked for on its page and its neighbours, an unknown page's on
+    every page ten at a time: the phone's Pictures.drawingCalls the same."""
+    calls = [{"pages": call.pages, "cards": call.cards} for call in drawing_calls(case["pages"], case["photos"])]
+    assert calls == case["out"]
 
 
 @pytest.mark.parametrize("case", CASES["revise_photos"], ids=lambda c: c["name"])

@@ -55,6 +55,13 @@ class SharedCasesTest {
     }
 
     @Test
+    fun theCallsLookingForTheLessonsDrawings() = cases("drawing_calls").forEach { c ->
+        fun ints(numbers: JsonArray) = numbers.map { it.jsonPrimitive.int }
+        val out = c["out"]!!.jsonArray.map { it.jsonObject }.map { ints(it["pages"]!!.jsonArray) to ints(it["cards"]!!.jsonArray) }
+        assertEquals(c.string("name"), out, Pictures.drawingCalls(ints(c["pages"]!!.jsonArray), c["photos"]!!.jsonPrimitive.int))
+    }
+
+    @Test
     fun thePhotosSentToCorrectALesson() = cases("revise_photos").forEach { c ->
         val out = c["out"]!!.jsonArray.map { it.jsonPrimitive.int } to c.string("sent")
         assertEquals(c.string("name"), out, Generation.revisePhotos(c["photos"]!!.jsonPrimitive.int))

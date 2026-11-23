@@ -100,8 +100,9 @@ class Pictures(
     /** The pictures (not the figures: drawn exact) the lesson's own drawings give, cut out of
      * its photos by the relay (/v1/lesson-drawings, the core's pictures.lesson_drawings), in
      * `cards` at once and told ready; none, or the relay failing: the cards as they were (their
-     * pictures then looked for, as without). {"card", "step": "lesson"} while looked at. The
-     * photos sent LocalServer.MAX_PER_CALL at a time (the relay's cap: a lesson holds more),
+     * pictures then looked for, as without). {"card", "step": "lesson"} while looked at. Each
+     * card's drawing looked for on its page and its neighbours, a page unknown on every page,
+     * LocalServer.MAX_PER_CALL at a time (drawingCalls: the relay's cap, a lesson holds more),
      * one call after another, each asked only for the cards still without a drawing; a call
      * the relay refuses: its pages skipped, the others still looked at. */
     private suspend fun fromTheLesson(lessonId: String, cards: MutableList<JsonObject>, step: Step, notFromLesson: Set<String>) {
@@ -113,11 +114,13 @@ class Pictures(
         if (wanted.isEmpty() || photos.isEmpty()) return
         wanted.forEach { i -> step(buildJsonObject { put("card", cards[i].string("id")); put("step", "lesson") }) }
         val left = wanted.toMutableList()
-        for (pages in photos.chunked(LocalServer.MAX_PER_CALL)) {
-            if (left.isEmpty()) return
-            val asked = left.toList() // the drawings' "card": an index into these
+        val pages = wanted.map { (cards[it]["page"] as? JsonPrimitive)?.intOrNull ?: 0 }
+        for ((numbers, among) in drawingCalls(pages, photos.size)) {
+            val asked = among.map { wanted[it] }.filter { it in left } // the drawings' "card": an index into these
+            if (asked.isEmpty()) continue
             val found = try {
-                relay().withPhotos("lesson-drawings", buildJsonObject { put("cards", JsonArray(asked.map { cards[it] })) }, pages)
+                val sent = numbers.map { photos[it - 1] } // the relay cuts each drawing out of its own
+                relay().withPhotos("lesson-drawings", buildJsonObject { put("cards", JsonArray(asked.map { cards[it] })) }, sent)
             } catch (e: RelayException) {
                 continue // these pages' cards looked for one by one, as without
             }
@@ -342,6 +345,33 @@ class Pictures(
             !CLOZE.containsMatchIn(string("front"))
 
     companion object {
+        /** The calls looking for the lesson's own drawings of cards whose pages are `pages` (each
+         * card's, from 1; 0 unknown) among the lesson's `photos`: each call's pages sent (from 1)
+         * and the cards it asks (their indexes; a later call asks only those still without a
+         * drawing). A card's drawing looked for on its own page and its neighbours (the page
+         * before, the page after, within the lesson): the cards taken by their page, each call
+         * sends the pages around as many as fit in `perCall` photos. The cards whose page is
+         * unknown (0, or not one of the lesson's): every page, `perCall` at a time. As the
+         * computer (pictures.drawing_calls, core/shared-cases.json). */
+        internal fun drawingCalls(pages: List<Int>, photos: Int, perCall: Int = LocalServer.MAX_PER_CALL): List<Pair<List<Int>, List<Int>>> {
+            val calls = mutableListOf<Pair<List<Int>, List<Int>>>()
+            val sent = sortedSetOf<Int>()
+            val asked = mutableListOf<Int>()
+            for (i in pages.indices.filter { pages[it] in 1..photos }.sortedWith(compareBy({ pages[it] }, { it }))) {
+                val near = (maxOf(1, pages[i] - 1)..minOf(photos, pages[i] + 1)).toSet()
+                if (asked.isNotEmpty() && (sent + near).size > perCall) {
+                    calls += sent.toList() to asked.sorted()
+                    sent.clear(); asked.clear()
+                }
+                sent += near
+                asked += i
+            }
+            if (asked.isNotEmpty()) calls += sent.toList() to asked.sorted()
+            val unknown = pages.indices.filter { pages[it] !in 1..photos }
+            if (unknown.isNotEmpty()) (1..photos).chunked(perCall).forEach { calls += it to unknown }
+            return calls
+        }
+
         /** The cards an edit made of `before` (`after`), merged into the lesson's as saved now
          * (`now`), card by card (by id): of each card the edit changed, only the fields it
          * changed; a card added since kept, one it removed gone, one it added at the end. As

@@ -448,6 +448,54 @@ class GenerationRoutesTest : LocalServerTestBase() {
     }
 
     @Test
+    fun aCardsLessonDrawingLookedForOnItsPageAndItsNeighbours() = app { client ->
+        // A lesson of 12 pages: the cat's page 2, the bird's 11 (its second call's 1st), the dog's unknown
+        relayAnswers("""{"deck": {"deck": "Anglais", "cards": [
+            {"front": "le chat", "back": "the cat", "picture_prompt": "a cat", "page": 2},
+            {"front": "le chien", "back": "the dog", "picture_prompt": "a dog"}]}, "turns": [0], "usage": {"credits": 1, "credits_left": 99}}""")
+        val id = client.submitFormWithBinaryData("/api/extract", pageForm(1..10)) { page() }.json().jsonObject.string("id")
+        relayAnswers("""{"deck": {"deck": "Anglais", "cards": [{"front": "l'oiseau", "back": "the bird", "picture_prompt": "a bird", "page": 1}]},
+            "turns": [0], "usage": {"credits": 1, "credits_left": 98}}""")
+        client.submitFormWithBinaryData("/api/lessons/$id/complete", pageForm(11..12)) { page() }
+        val where = mapOf("le chat" to 2, "l'oiseau" to 11, "le chien" to 12) // the page each drawing is on
+        val asked: MutableList<String> = java.util.Collections.synchronizedList(mutableListOf())
+        relay.dispatcher = object : mockwebserver3.Dispatcher() {
+            override fun dispatch(request: RecordedRequest): MockResponse = when (request.url.encodedPath) {
+                "/v1/lesson-drawings" -> {
+                    val body = request.body!!.utf8()
+                    val sent = (1..12).filter { body.contains("page #$it;") }
+                    val fronts = request.multipartRequest()["cards"]!!.jsonArray.map { it.jsonObject.string("front") }
+                    asked += "lesson-drawings $sent $fronts"
+                    val found = fronts.indices.filter { where[fronts[it]] in sent }.joinToString(", ") { i ->
+                        val data = Base64.getEncoder().encodeToString("${fronts[i]}, cut out".toByteArray())
+                        """{"card": $i, "data": "$data"}"""
+                    }
+                    MockResponse.Builder().body("""{"drawings": [$found], "usage": {"credits": 1, "credits_left": 97}}""").build()
+                }
+                else -> MockResponse.Builder().code(404).build()
+            }
+        }
+        val drawn = client.post("/api/lessons/$id/pictures") {
+            page(); contentType(ContentType.Application.Json); setBody("""{"draw": true}""")
+        }.json().jsonObject
+        // The known pages' neighbourhoods in one call; the unknown one's on every page, ten at a time
+        assertEquals(
+            listOf(
+                "lesson-drawings [1, 2, 3, 10, 11, 12] [le chat, l'oiseau]",
+                "lesson-drawings [1, 2, 3, 4, 5, 6, 7, 8, 9, 10] [le chien]",
+                "lesson-drawings [11, 12] [le chien]",
+            ),
+            asked,
+        )
+        val cards = drawn["lesson"]!!.jsonObject["cards"]!!.jsonArray.map { it.jsonObject }
+        assertEquals(listOf("le chat", "le chien", "l'oiseau"), cards.map { it.string("front") })
+        for (card in cards) {
+            assertEquals("lesson", card["picture_source"]!!.jsonObject.string("source"))
+            assertEquals("${card.string("front")}, cut out", client.get("/api/lessons/$id/pictures/${card.string("picture")}") { page() }.bodyAsText())
+        }
+    }
+
+    @Test
     fun aPictureACorrectionReplacedNotCutOutOfTheLessonAgain() = app { client ->
         relayAnswers("""{"deck": {"deck": "Anglais", "cards": [
             {"front": "le chat", "back": "the cat", "picture_prompt": "a cat"},
