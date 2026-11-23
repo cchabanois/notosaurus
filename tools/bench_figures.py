@@ -49,7 +49,7 @@ sys.path[:0] = [str(ROOT), str(ROOT / "core"), str(ROOT / "tools")]
 
 from bench import CLIENT, relay  # noqa: E402
 
-from notosaurus_core import ai, figure_making, figures, figures_typst  # noqa: E402
+from notosaurus_core import ai, figure_labels, figure_making, figure_svg, figures, figures_typst  # noqa: E402
 from notosaurus_core.calls import Image  # noqa: E402
 from notosaurus_core.config import AIConfig  # noqa: E402
 
@@ -88,7 +88,7 @@ def draw_local(case: dict) -> dict:
     missing: list[str] = []  # the icons asked for that no icon gives (drawn without them)
     icons = figures_typst.icons_missing.set(missing)
     answered: list[dict] = []  # the AI's SVG drawings, the one kept saved with its labels
-    answers = figure_making.answers.set(answered)
+    answers = figure_svg.answers.set(answered)
     try:
         description, kind, front = case["description"], case.get("kind", ""), case.get("front", "")
         made = asyncio.run(figure_making.made_figure(settings.current(), description, kind=kind, front=front))
@@ -101,7 +101,7 @@ def draw_local(case: dict) -> dict:
     finally:
         figure_making.refusals.reset(token)
         figures_typst.icons_missing.reset(icons)
-        figure_making.answers.reset(answers)
+        figure_svg.answers.reset(answers)
     seconds = round(time.monotonic() - start, 1)
     # a figure in panels: its panels' families and Typst, each said (its SVG kept as drawn)
     family = made.family + "".join(f" {p.family}" for p in made.panels)
@@ -125,7 +125,7 @@ def recompiled(run: Path, drawing: dict) -> dict:
     family = drawing.get("family", "")
     if drawing.get("drawing_file"):
         answer = json.loads((run / drawing["drawing_file"]).read_text())
-        svg = figure_making._labelled(figures.Drawing(**answer["drawing"]), answer["clamp"])
+        svg = figure_svg._labelled(figure_labels.Drawing(**answer["drawing"]), answer["clamp"])
         return {"svg": svg, "seconds": 0, "engine": "svg", "family": family, "drawing": answer}
     if drawing.get("typst_file") and not family.startswith("panels"):
         body = (run / drawing["typst_file"]).read_text()
@@ -195,7 +195,11 @@ def by_code(svg: str) -> tuple[bool, str, bytes | None]:
 async def by_ai(judge: AIConfig, description: str, png: bytes) -> tuple[bool, str]:
     """The AI looking at it, with its thinking: the light check's rules, stricter."""
     checked = await ai._ask_provider(
-        judge, [Image(png, "image/png")], f"Description: {description}", figures.Checked, figures.CHECK_RULES
+        judge,
+        [Image(png, "image/png")],
+        f"Description: {description}",
+        figure_making.Checked,
+        figure_making.CHECK_RULES,
     )
     return checked.ok, checked.problem.strip()
 

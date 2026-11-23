@@ -7,7 +7,7 @@ import pytest
 from helpers import plain_image
 from PIL import Image
 
-from notosaurus_core import diagrams, llm, prompts
+from notosaurus_core import correction, diagrams, llm, prompts
 from notosaurus_core.models import Card, Frame, Mask
 
 
@@ -104,7 +104,7 @@ def test_revision_keeps_the_masks():
         Card(front="le chat", back="el gato"),
         Card(front="new", back="x"),
     ]
-    llm._keep_masks(revised, before)
+    correction._keep_masks(revised, before)
     assert [c.mask for c in revised] == [mask, None, None]
 
 
@@ -285,7 +285,7 @@ def test_correction_adds_a_masked_label():
         Card(front="What is (2)?", back="title", mask=Mask(page=1, n=1, box=[100, 50, 300, 100])),  # added, n taken
         Card(front="le chat", back="el gato"),
     ]
-    llm._keep_masks(revised, before, [(1000, 500)], "pixels")
+    correction._keep_masks(revised, before, [(1000, 500)], "pixels")
     assert revised[0].mask == kept  # an existing mask never moves
     added = revised[1].mask
     assert (added.page, added.n) == (1, 2)  # the next free number

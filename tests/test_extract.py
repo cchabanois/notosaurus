@@ -8,7 +8,7 @@ from helpers import run
 
 from app import settings
 from app.models import Generated, LessonIn
-from notosaurus_core import ai, llm, prompts
+from notosaurus_core import ai, correction, llm, prompts
 from notosaurus_core.models import Mask
 from notosaurus_core.prompts import ExtractOptions
 
@@ -33,7 +33,7 @@ def test_the_demo_ai_is_a_provider_like_the_others():
 
     from notosaurus_core.calls import recording
     from notosaurus_core.config import AIConfig
-    from notosaurus_core.figures import Drawing
+    from notosaurus_core.figure_labels import Drawing
 
     demo, told = AIConfig(llm="fake"), []
 
@@ -584,15 +584,14 @@ def test_a_revised_card_keeps_its_id_whatever_a_capital():
     """The AI's correction writes the cards again: a capital, a final full stop, a typographic
     apostrophe changed, still the same card (cards.same_text), its id, so its note in Anki;
     an accent changed, another card."""
-    from notosaurus_core import llm
     from notosaurus_core.models import Card
 
     revised = [Card(front="La mère.", back="La madre"), Card(front="Comment t’appelles-tu ?", back="¿Cómo?")]
     before = [Card(id="a", front="la mère", back="la madre"), Card(id="b", front="Comment t'appelles-tu", back="x")]
-    llm._keep_ids(revised, before)
+    correction._keep_ids(revised, before)
     assert [c.id for c in revised] == ["a", "b"]
     other = [Card(front="à", back="préposition")]
-    llm._keep_ids(other, [Card(id="c", front="a", back="avoir")])
+    correction._keep_ids(other, [Card(id="c", front="a", back="avoir")])
     assert other[0].id == ""
 
 
@@ -600,7 +599,6 @@ def test_a_true_false_card_rewritten_takes_no_others_note():
     """A revised card matched by its back alone only where that back tells one card: true or
     false cards all answer "Vrai" or "Faux" (and "vrai." is the same text now), a card of
     choices is never matched so; a question reworded, its back the lesson's only one, still is."""
-    from notosaurus_core import llm
     from notosaurus_core.models import Card
 
     before = [
@@ -612,11 +610,11 @@ def test_a_true_false_card_rewritten_takes_no_others_note():
         Card(front="Napoléon est sacré empereur en 1804.", back="vrai.", choices=["Faux"]),  # a new one
         Card(front="Par qui la Bastille est-elle prise ?", back="Le peuple de Paris"),  # reworded
     ]
-    llm._keep_ids(revised, before)
+    correction._keep_ids(revised, before)
     assert [c.id for c in revised] == ["", "c"]
     twice = [Card(id="d", front="Q1", back="oui"), Card(id="e", front="Q2", back="oui")]
     other = [Card(front="Q3", back="oui")]
-    llm._keep_ids(other, twice)
+    correction._keep_ids(other, twice)
     assert other[0].id == ""  # "oui" answers two cards: which one?
 
 
@@ -635,7 +633,7 @@ def test_a_diagram_label_reworded_keeps_its_place():
         Card(front="que désigne le numéro (1) ?", back="Ville-centre."),
         Card(front="Quel nom porte la zone (2) ?", back="Banlieue"),
     ]
-    llm._keep_masks(revised, before)
+    correction._keep_masks(revised, before)
     assert [(c.id, c.mask) for c in revised] == [("a", mask1), ("b", mask2)]
 
 

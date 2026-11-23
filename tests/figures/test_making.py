@@ -12,7 +12,7 @@ from helpers import plain_image
 
 from app import lessons
 from figures.support import SQUARE, TRIANGLE, rule_example
-from notosaurus_core import figures, figures_typst, llm, pictures
+from notosaurus_core import figure_labels, figure_making, figure_svg, figures, figures_typst, llm, pictures
 from notosaurus_core.config import AIConfig
 from notosaurus_core.errors import AppError
 
@@ -191,7 +191,7 @@ def test_an_unusable_light_figure_drawn_again_with_thinking(monkeypatch):
 def test_typst_turned_off_figures_drawn_as_svg(monkeypatch):
     """The relay's figures.typst switch (AIConfig.typst): no Typst, even with its kind said."""
     monkeypatch.setattr(figures_typst, "available", lambda: True)
-    family = lambda s: asyncio.run(llm._figure_family(s, "un triangle ABC", "geometry"))  # noqa: E731
+    family = lambda s: asyncio.run(figure_making._figure_family(s, "un triangle ABC", "geometry"))  # noqa: E731
     assert family(AIConfig(llm="gemini")) == "geometry"
     assert family(AIConfig(llm="gemini", typst=False)) == "other"
 
@@ -501,17 +501,15 @@ def _placed(svg):
     """The labels set (their texts' boxes) and their leaders, read back from the SVG."""
     from xml.etree import ElementTree
 
-    from notosaurus_core import figures
-
     root = ElementTree.fromstring(svg)
     ns = "{http://www.w3.org/2000/svg}"
     texts = [t for t in root.iter(f"{ns}text")]
     lines = [tuple(float(line.get(k)) for k in ("x1", "y1", "x2", "y2")) for line in root.iter(f"{ns}line")]
     boxes = []
     for t in texts:
-        x, y, w = float(t.get("x")), float(t.get("y")), figures._measure(t.text)
+        x, y, w = float(t.get("x")), float(t.get("y")), figure_labels._measure(t.text)
         x0 = x - w if t.get("text-anchor") == "end" else x
-        boxes.append((x0, y - figures.LABEL_SIZE, x0 + w, y + 3))
+        boxes.append((x0, y - figure_labels.LABEL_SIZE, x0 + w, y + 3))
     return boxes, lines
 
 
@@ -521,8 +519,8 @@ def test_a_schemes_labels_set_in_columns_beside_it():
     drawing, none on another, their leaders never crossing, each ending at its point."""
     from notosaurus_core import figures
 
-    names = [figures.Label(text=t, x=x, y=y) for t, x, y in CELL_NAMES]
-    svg = figures.labelled(figures.clean(CELL), names)
+    names = [figure_labels.Label(text=t, x=x, y=y) for t, x, y in CELL_NAMES]
+    svg = figure_labels.labelled(figures.clean(CELL), names)
     boxes, lines = _placed(svg)
     assert len(lines) == len(names)
     for x0, _, x1, _ in boxes:  # beside the cell (its ink from x = 50 to 350)
@@ -532,7 +530,7 @@ def test_a_schemes_labels_set_in_columns_beside_it():
             assert a[2] <= b[0] or b[2] <= a[0] or a[3] <= b[1] or b[3] <= a[1], (a, b)
     for i, (ax1, ay1, ax2, ay2) in enumerate(lines):
         for bx1, by1, bx2, by2 in lines[i + 1 :]:
-            assert not figures._cross((ax1, ay1), (ax2, ay2), (bx1, by1), (bx2, by2))
+            assert not figure_labels._cross((ax1, ay1), (ax2, ay2), (bx1, by1), (bx2, by2))
     assert sorted((x2, y2) for _, _, x2, y2 in lines) == sorted((float(x), float(y)) for _, x, y in CELL_NAMES)
     assert ">Réticulum<" in svg or ">Réticulum endoplasmique<" in svg  # a long name on two lines
     assert "rugueux</text>" in svg and "Réticulum endoplasmique rugueux" not in svg
@@ -543,10 +541,10 @@ def test_a_drawing_without_labels_unchanged_a_label_outside_it_refused():
     from notosaurus_core import figures
 
     svg = figures.clean(CELL)
-    assert figures.labelled(svg, []) == svg
-    with pytest.raises(figures.LabelError, match="« Noyau » names the point"):
-        figures.labelled(svg, [figures.Label(text="Noyau", x=520, y=140)])
-    clamped = figures.labelled(svg, [figures.Label(text="Noyau", x=520, y=140)], clamp=True)
+    assert figure_labels.labelled(svg, []) == svg
+    with pytest.raises(figure_labels.LabelError, match="« Noyau » names the point"):
+        figure_labels.labelled(svg, [figure_labels.Label(text="Noyau", x=520, y=140)])
+    clamped = figure_labels.labelled(svg, [figure_labels.Label(text="Noyau", x=520, y=140)], clamp=True)
     assert _placed(clamped)[1][0][2:] == (400.0, 140.0)
 
 
@@ -570,7 +568,6 @@ def test_the_ais_svg_drawing_kept_for_who_asks(monkeypatch):
     """A change to how labels are placed was judged on new drawings only, the AI drawing each
     its own way: the AI's SVG drawing, its labels and their points, kept for whoever sets
     `answers` (the bench, to label the same drawings again), with what the app made of it."""
-    from notosaurus_core import figure_making
 
     async def answer(s, images, text, schema, system=None, light=False, **options):
         if schema is figures_typst.Kind:
@@ -579,15 +576,15 @@ def test_the_ais_svg_drawing_kept_for_who_asks(monkeypatch):
 
     monkeypatch.setattr("notosaurus_core.ai._ask_provider", answer)
     kept: list[dict] = []
-    token = figure_making.answers.set(kept)
+    token = figure_svg.answers.set(kept)
     try:
         svg = asyncio.run(llm.draw_figure(AIConfig(llm="gemini"), "une cellule et son noyau"))
     finally:
-        figure_making.answers.reset(token)
+        figure_svg.answers.reset(token)
     assert [k["drawing"]["labels"] for k in kept] == [[{"text": "Noyau", "x": 210, "y": 222}]]
     assert kept[0]["drawing"]["svg"] == CELL and kept[0]["svg"] == svg and kept[0]["clamp"] is False
     asyncio.run(llm.draw_figure(AIConfig(llm="gemini"), "une cellule et son noyau"))
-    assert figure_making.answers.get() is None
+    assert figure_svg.answers.get() is None
 
 
 def test_a_name_for_several_parts_a_line_to_each():
@@ -602,13 +599,13 @@ def test_a_name_for_several_parts_a_line_to_each():
         '<rect x="230" y="40" width="30" height="220" rx="12" fill="#dde" stroke="black"/></svg>'
     )
     gene = "gène du groupe sanguin"
-    svg = figures.labelled(
+    svg = figure_labels.labelled(
         figures.clean(pair),
         [
-            figures.Label(text="allèle A", x=155, y=90),
-            figures.Label(text=gene, x=155, y=95),
-            figures.Label(text=gene, x=245, y=95),
-            figures.Label(text="allèle O", x=245, y=90),
+            figure_labels.Label(text="allèle A", x=155, y=90),
+            figure_labels.Label(text=gene, x=155, y=95),
+            figure_labels.Label(text=gene, x=245, y=95),
+            figure_labels.Label(text="allèle O", x=245, y=90),
         ],
     )
     _, lines = _placed(svg)
@@ -616,9 +613,9 @@ def test_a_name_for_several_parts_a_line_to_each():
     assert len(lines) == 4 and {(x2, y2) for _, _, x2, y2 in lines} >= {(155.0, 95.0), (245.0, 95.0)}
     for i, (ax1, ay1, ax2, ay2) in enumerate(lines):
         for bx1, by1, bx2, by2 in lines[i + 1 :]:
-            assert not figures._cross((ax1, ay1), (ax2, ay2), (bx1, by1), (bx2, by2))
+            assert not figure_labels._cross((ax1, ay1), (ax2, ay2), (bx1, by1), (bx2, by2))
         other = (140, 40, 170, 260) if ax2 > 200 else (230, 40, 260, 260)  # the other chromosome
-        assert not figures._through((ax1, ay1), (ax2, ay2), other)
+        assert not figure_labels._through((ax1, ay1), (ax2, ay2), other)
 
 
 # steps side by side, each a cell with its microbe, an arrow between them: each step's name
@@ -643,8 +640,8 @@ def test_steps_side_by_side_named_under_or_over_each():
     its step, no leader across another step."""
     from notosaurus_core import figures
 
-    names = [figures.Label(text=t, x=x, y=y) for t, x, y in STEP_NAMES]
-    svg = figures.labelled(figures.clean(STEPS), names)
+    names = [figure_labels.Label(text=t, x=x, y=y) for t, x, y in STEP_NAMES]
+    svg = figure_labels.labelled(figures.clean(STEPS), names)
     boxes, lines = _placed(svg)
     assert len(lines) == 4
     for (x0, y0, x1, y1), (_, px, _) in zip(boxes, STEP_NAMES, strict=True):
@@ -652,7 +649,7 @@ def test_steps_side_by_side_named_under_or_over_each():
         assert x0 - 20 < px < x1 + 20, (x0, x1, px)  # over or under its own step
     for i, (ax1, ay1, ax2, ay2) in enumerate(lines):
         for bx1, by1, bx2, by2 in lines[i + 1 :]:
-            assert not figures._cross((ax1, ay1), (ax2, ay2), (bx1, by1), (bx2, by2))
+            assert not figure_labels._cross((ax1, ay1), (ax2, ay2), (bx1, by1), (bx2, by2))
 
 
 # a flower cut lengthwise: its two petals, one on each side of its pistil
@@ -672,12 +669,12 @@ def test_a_name_on_both_sides_written_on_each():
     from notosaurus_core import figures
 
     names = [
-        figures.Label(text="pétales", x=100, y=110),
-        figures.Label(text="pétales", x=300, y=110),
-        figures.Label(text="pistil", x=200, y=140),
-        figures.Label(text="sépales", x=200, y=245),
+        figure_labels.Label(text="pétales", x=100, y=110),
+        figure_labels.Label(text="pétales", x=300, y=110),
+        figure_labels.Label(text="pistil", x=200, y=140),
+        figure_labels.Label(text="sépales", x=200, y=245),
     ]
-    svg = figures.labelled(figures.clean(FLOWER), names)
+    svg = figure_labels.labelled(figures.clean(FLOWER), names)
     _, lines = _placed(svg)
     assert svg.count(">pétales<") == 2
     for x1, _, x2, _ in lines:  # no line across the pistil to the other side
@@ -696,10 +693,10 @@ def test_a_point_beside_its_part_brought_onto_it():
     from any line (a region drawn white) kept."""
     from notosaurus_core import figures
 
-    svg = figures.labelled(figures.clean(FUNNEL), [figures.Label(text="entonnoir", x=200, y=110)])
+    svg = figure_labels.labelled(figures.clean(FUNNEL), [figure_labels.Label(text="entonnoir", x=200, y=110)])
     (_, _, x2, y2), *_ = _placed(svg)[1]
     assert abs(x2 - 192) < 4 and abs(y2 - 105) < 6, (x2, y2)  # on the funnel's right edge
-    kept = figures.labelled(figures.clean(FUNNEL), [figures.Label(text="air", x=300, y=250)])
+    kept = figure_labels.labelled(figures.clean(FUNNEL), [figure_labels.Label(text="air", x=300, y=250)])
     assert _placed(kept)[1][0][2:] == (300.0, 250.0)
 
 
@@ -716,12 +713,12 @@ def test_a_point_off_a_rotated_part_brought_onto_it():
     any (the air around a funnel) kept."""
     from notosaurus_core import figures
 
-    svg = figures.labelled(figures.clean(ARM), [figures.Label(text="chaîne légère", x=300, y=150)])
+    svg = figure_labels.labelled(figures.clean(ARM), [figure_labels.Label(text="chaîne légère", x=300, y=150)])
     (_, _, x2, y2), *_ = _placed(svg)[1]
-    image = figures._drawn_image(figures.clean(ARM))
+    image = figure_labels._drawn_image(figures.clean(ARM))
     k = image.width / 400
     assert image.getpixel((round(x2 * k), round(y2 * k))) < 248, (x2, y2)  # on the arm
-    kept = figures.labelled(figures.clean(FUNNEL), [figures.Label(text="air", x=300, y=250)])
+    kept = figure_labels.labelled(figures.clean(FUNNEL), [figure_labels.Label(text="air", x=300, y=250)])
     assert _placed(kept)[1][0][2:] == (300.0, 250.0)
 
 
@@ -739,7 +736,7 @@ def test_a_point_between_two_shapes_kept_in_the_gap():
     region, kept there, never pulled onto a membrane as a point beside a part is."""
     from notosaurus_core import figures
 
-    svg = figures.labelled(figures.clean(CLEFT), [figures.Label(text="fente synaptique", x=200, y=130)])
+    svg = figure_labels.labelled(figures.clean(CLEFT), [figure_labels.Label(text="fente synaptique", x=200, y=130)])
     assert _placed(svg)[1][0][2:] == (200.0, 130.0)
 
 
@@ -756,7 +753,7 @@ def test_a_point_in_a_region_closed_in_kept():
     pulled onto the outline as a point on the open ground this near a line is."""
     from notosaurus_core import figures
 
-    svg = figures.labelled(figures.clean(WHITE_CELL), [figures.Label(text="cytoplasme", x=200, y=110)])
+    svg = figure_labels.labelled(figures.clean(WHITE_CELL), [figure_labels.Label(text="cytoplasme", x=200, y=110)])
     assert _placed(svg)[1][0][2:] == (200.0, 110.0)
 
 
@@ -782,11 +779,11 @@ def test_a_point_in_a_region_closed_against_the_frame_kept():
     from notosaurus_core import figures
 
     names = [
-        figures.Label(text="noyau", x=40, y=30),  # outside the ink's extent, 30 units from the DNA
-        figures.Label(text="cytoplasme", x=340, y=40),  # 35 units from the protein
-        figures.Label(text="ADN", x=100, y=70),  # 10 units below the DNA
+        figure_labels.Label(text="noyau", x=40, y=30),  # outside the ink's extent, 30 units from the DNA
+        figure_labels.Label(text="cytoplasme", x=340, y=40),  # 35 units from the protein
+        figure_labels.Label(text="ADN", x=100, y=70),  # 10 units below the DNA
     ]
-    lines = _placed(figures.labelled(figures.clean(ENVELOPE), names))[1]
+    lines = _placed(figure_labels.labelled(figures.clean(ENVELOPE), names))[1]
     ends = {(x2, y2) for _, _, x2, y2 in lines}
     assert (40.0, 30.0) in ends and (340.0, 40.0) in ends, ends
     assert (100.0, 70.0) not in ends  # on the DNA
@@ -797,7 +794,7 @@ def test_a_column_beyond_a_point_past_the_drawing():
     column set beyond it, its line never drawn back across its name."""
     from notosaurus_core import figures
 
-    svg = figures.labelled(figures.clean(FUNNEL), [figures.Label(text="cytoplasme", x=330, y=110)])
+    svg = figure_labels.labelled(figures.clean(FUNNEL), [figure_labels.Label(text="cytoplasme", x=330, y=110)])
     boxes, ((x1, _, x2, _),) = _placed(svg)
     assert boxes[0][0] > 330 and x1 > x2
 
@@ -983,8 +980,8 @@ def test_an_arrows_word_set_beside_it_clear_of_the_drawing():
 
     from notosaurus_core import figures
 
-    arrows = [figures.Arrow(**a) for a in FLOWS]
-    svg = figures.arrowed(figures.clean(CHLOROPLAST), arrows)
+    arrows = [figure_labels.Arrow(**a) for a in FLOWS]
+    svg = figure_labels.arrowed(figures.clean(CHLOROPLAST), arrows)
     root = ElementTree.fromstring(svg)
     ns = "{http://www.w3.org/2000/svg}"
     assert len(list(root.iter(f"{ns}polygon"))) == 4  # each arrow's head
@@ -992,12 +989,12 @@ def test_an_arrows_word_set_beside_it_clear_of_the_drawing():
     texts = list(root.iter(f"{ns}text"))
     rows = [t.text for t in texts]
     assert "Eau" in rows and "Glucose" in rows and "Lumière" in rows and "Dioxyde de" in rows
-    without_words = figures._drawn_image(re.sub(r"<text.*?</text>", "", svg))
+    without_words = figure_labels._drawn_image(re.sub(r"<text.*?</text>", "", svg))
     k = without_words.width / 400
     boxes = []
     for t in texts:
-        x, y, w = float(t.get("x")), float(t.get("y")), figures._measure(t.text or "")
-        box = (x - w / 2, y - figures.LABEL_SIZE * 0.75, x + w / 2, y + 2)
+        x, y, w = float(t.get("x")), float(t.get("y")), figure_labels._measure(t.text or "")
+        box = (x - w / 2, y - figure_labels.LABEL_SIZE * 0.75, x + w / 2, y + 2)
         crop = without_words.crop(tuple(round(v * k) for v in box))
         assert crop.getextrema()[0] >= 248, (t.text, box)  # no ink under it
         boxes.append(box)
@@ -1014,8 +1011,8 @@ def test_a_drawing_without_arrows_unchanged():
     from notosaurus_core import figures
 
     svg = figures.clean(CHLOROPLAST)
-    assert figures.arrowed(svg, []) == svg
-    assert figures.Drawing(svg=CHLOROPLAST).arrows == []
+    assert figure_labels.arrowed(svg, []) == svg
+    assert figure_labels.Drawing(svg=CHLOROPLAST).arrows == []
 
 
 # a chloroplast fed from all four sides: its labels' columns far off, a row over it the shortest
@@ -1032,33 +1029,31 @@ def test_a_labels_line_clear_of_the_arrows_and_their_words(start, point):
     """« Chloroplaste »'s line ran through « Lumière » and along the light's arrow (the labels
     laid out as if the arrows' words weren't there): the arrows and their words, set first, are
     kept clear of: no leader through a word, none along an arrow."""
-    from notosaurus_core import figure_making
-
     light = {"text": "Lumière", "x1": start[0], "y1": start[1], "x2": 200, "y2": 95}
-    drawing = figures.Drawing(
+    drawing = figure_labels.Drawing(
         svg=CHLOROPLAST, labels=[{"text": "chloroplaste", "x": point[0], "y": point[1]}], arrows=[light, *FED]
     )
-    svg = figure_making._labelled(drawing)
-    _, marks = figures.arrows_set(figures.clean(CHLOROPLAST), drawing.arrows, [point])
+    svg = figure_svg._labelled(drawing)
+    _, marks = figure_labels.arrows_set(figures.clean(CHLOROPLAST), drawing.arrows, [point])
     leaders = [tuple(map(float, m.groups())) for m in _LEADER.finditer(svg)]
     assert len(leaders) == 1 and ">chloroplaste<" in svg
     for x1, y1, x2, y2 in leaders:
         for word in marks.words:
-            assert not figures._through((x1, y1), (x2, y2), word), word
+            assert not figure_labels._through((x1, y1), (x2, y2), word), word
         for line in marks.lines:
-            assert figures._along((x1, y1), (x2, y2), *line) <= figures.ALONG_LENGTH, line
+            assert figure_labels._along((x1, y1), (x2, y2), *line) <= figure_labels.ALONG_LENGTH, line
 
 
 def test_an_arrows_word_clear_of_a_labels_point():
     """A word set on the white ground a label names (« transcription » on the nucleus's
     point): that label's line could only end on it; the point is kept clear."""
     point = (237, 52)  # where « Lumière » goes beside its arrow, else
-    arrows = [figures.Arrow(text="Lumière", x1=200, y1=10, x2=200, y2=95)]
-    _, alone = figures.arrows_set(figures.clean(CHLOROPLAST), arrows)
-    assert figures._through(point, point, alone.words[0])  # it would lie on the point
-    _, marks = figures.arrows_set(figures.clean(CHLOROPLAST), arrows, [point])
+    arrows = [figure_labels.Arrow(text="Lumière", x1=200, y1=10, x2=200, y2=95)]
+    _, alone = figure_labels.arrows_set(figures.clean(CHLOROPLAST), arrows)
+    assert figure_labels._through(point, point, alone.words[0])  # it would lie on the point
+    _, marks = figure_labels.arrows_set(figures.clean(CHLOROPLAST), arrows, [point])
     x0, y0, x1, y1 = marks.words[0]
-    clear = figures.WORD_CLEAR
+    clear = figure_labels.WORD_CLEAR
     assert not (x0 - clear < point[0] < x1 + clear and y0 - clear < point[1] < y1 + clear)
 
 
@@ -1066,12 +1061,12 @@ def test_a_labels_point_never_brought_onto_an_arrows_word():
     """« noyau »'s point, on the white nucleus, was brought onto the nearest ink: the letters of
     « transcription » beside it, its line ending in the word. The arrows' words are no part of
     the drawing: never a point's place."""
-    arrows = [figures.Arrow(text="Lumière", x1=200, y1=10, x2=200, y2=95)]
-    _, alone = figures.arrows_set(figures.clean(CHLOROPLAST), arrows)
+    arrows = [figure_labels.Arrow(text="Lumière", x1=200, y1=10, x2=200, y2=95)]
+    _, alone = figure_labels.arrows_set(figures.clean(CHLOROPLAST), arrows)
     x0, y0, x1, y1 = alone.words[0]
     point = (x1 + 9, (y0 + y1) / 2)  # on the open ground, the word its nearest ink
-    svg, marks = figures.arrows_set(figures.clean(CHLOROPLAST), arrows, [point])
-    labelled = figures.labelled(svg, [figures.Label(text="air", x=point[0], y=point[1])], False, marks)
+    svg, marks = figure_labels.arrows_set(figures.clean(CHLOROPLAST), arrows, [point])
+    labelled = figure_labels.labelled(svg, [figure_labels.Label(text="air", x=point[0], y=point[1])], False, marks)
     found = re.search(r'<circle cx="([-\d.]+)" cy="([-\d.]+)" r="2"', labelled)
     assert found is not None
     end = (float(found.group(1)), float(found.group(2)))
@@ -1082,9 +1077,9 @@ def test_a_labels_point_never_brought_onto_an_arrows_word():
 def test_labels_without_arrows_laid_out_as_before():
     """No arrow: the labels set as before (#674), the frame's words and points untouched."""
     svg = figures.clean(CHLOROPLAST)
-    labels = [figures.Label(text="chloroplaste", x=200, y=150), figures.Label(text="stroma", x=230, y=170)]
-    assert figures.arrows_set(svg, [], [(200, 150)]) == (svg, figures.Marks())
-    assert figures.labelled(svg, labels, False, figures.Marks()) == figures.labelled(svg, labels)
+    labels = [figure_labels.Label(text="chloroplaste", x=200, y=150), figure_labels.Label(text="stroma", x=230, y=170)]
+    assert figure_labels.arrows_set(svg, [], [(200, 150)]) == (svg, figure_labels.Marks())
+    assert figure_labels.labelled(svg, labels, False, figure_labels.Marks()) == figure_labels.labelled(svg, labels)
 
 
 def test_an_ais_arrows_drawn_on_its_figure(monkeypatch):
@@ -1115,7 +1110,7 @@ def test_a_figure_drawn_again_for_a_problem_asked_its_family_again(monkeypatch):
 
     monkeypatch.setattr("notosaurus_core.ai._ask_provider", answer)
     s = AIConfig(llm="gemini")
-    family = lambda kind, problem="": asyncio.run(llm._figure_family(s, "L'Europe en 1914", kind, problem))  # noqa: E731
+    family = lambda kind, problem="": asyncio.run(figure_making._figure_family(s, "L'Europe en 1914", kind, problem))  # noqa: E731
 
     assert family("other") == "other" and asked == []  # as usual: not asked
     assert family("other", "Les pays sont des formes grossières.") == "map"

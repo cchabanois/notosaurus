@@ -12,7 +12,7 @@ from helpers import plain_image, run
 from notosaurus_core import ai, llm
 from notosaurus_core.calls import ExtractionError, Image, recording
 from notosaurus_core.config import AIConfig
-from notosaurus_core.figures import Drawing
+from notosaurus_core.figure_labels import Drawing
 from notosaurus_core.prompts import SYSTEM_PROMPT
 from notosaurus_core.providers import anthropic
 

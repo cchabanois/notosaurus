@@ -17,7 +17,7 @@ What can be computed is, never placed by eye. Each family's rule and Typst: typs
 
 The family is the one the AI gave with the figure's description (models.Card.figure_kind),
 else a light call picks it from the description (FAMILY_RULES; none of them: the figure is
-drawn as SVG, figures.py); the AI then writes the figure's Typst with that family's
+drawn as SVG, figure_svg.py); the AI then writes the figure's Typst with that family's
 rule (Family.rules), after its preamble (Family.preamble: its packages, the page), its slips
 mended first (source(): typst_source.py makes it what the AI meant). It is compiled in a
 process of its own, cut after COMPILE_S seconds, with the packages and the fonts shipped here
@@ -50,7 +50,7 @@ from xml.etree import ElementTree
 
 from pydantic import BaseModel, Field
 
-from . import files, text_size, typst_source
+from . import figures, files, text_size, typst_source
 
 HERE = Path(__file__).parent
 ARCHIVES = HERE / "typst"  # <name>-<version>.tar.gz, as Typst Universe publishes them (tools/typst_packages.py)
@@ -627,8 +627,6 @@ def too_small(family: str, body: str, svg: str) -> TooSmall | None:
 
 def figures_clean(svg: str) -> str:
     """The SVG cleaned as a card shows it (figures.clean: blockst's blocks drawn in their place)."""
-    from . import figures
-
     try:
         return figures.clean(svg)
     except figures.FigureError:  # refused by the cleaning, as it is on the way to the card
@@ -838,8 +836,6 @@ def _blank(svg: str) -> bool:
 def _fitted(svg: str) -> str:
     """The page grown to what Typst draws past it (an axis's name lilaq writes past the
     diagram's end: "temps (mi"): figures.fitted."""
-    from . import figures
-
     return figures.fitted(svg)
 
 

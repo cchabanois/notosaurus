@@ -24,7 +24,6 @@ from . import ai, diagrams
 from .ai import (  # noqa: F401 (llm's API)
     CLAUDE_REQUIRED,
     SET_BY_NOTOSAURUS,
-    _CheckAnswer,
     ai_schema,
     check,
     for_claude,
@@ -43,9 +42,6 @@ from .cards import blank_dictations, pages_within, plain_cards, without_repeats
 from .cards import plain as plain_text
 from .config import AIConfig
 from .correction import (  # noqa: F401 (llm's API)
-    _keep_ids,
-    _keep_masks,
-    _same_card,
     fix_card,
     fix_photos,
     revise_cards,
@@ -54,7 +50,6 @@ from .correction import (  # noqa: F401 (llm's API)
 from .errors import loggable
 from .figure_making import (  # noqa: F401 (llm's API)
     MadeFigure,
-    _figure_family,
     check_figure,
     check_picture,
     draw_figure,

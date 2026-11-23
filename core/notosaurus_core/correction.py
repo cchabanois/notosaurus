@@ -5,7 +5,7 @@ so its note in Anki, its picture and its place on a diagram."""
 import asyncio
 from collections.abc import Sequence
 
-from . import ai, diagrams
+from . import ai, diagrams, figures
 from .calls import MAX_IMAGES, ExtractionError, Image
 from .cards import matching, pages_within, plain_cards
 from .cards import plain as plain_text
@@ -156,8 +156,6 @@ async def fix_card(
 def _drawn(figure_svg: str) -> bytes | None:
     """The figure as drawn, as a picture for the AI to see; None when it can't be drawn (not an
     SVG the cleaning keeps): the card corrected without it, as without resvg."""
-    from . import figures
-
     try:
         return figures.to_png(figures.clean(figure_svg))
     except figures.FigureError:

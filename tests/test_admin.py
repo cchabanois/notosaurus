@@ -17,6 +17,7 @@ from app.main import app
 from app.models import SettingsUpdate
 from app.routes import admin as admin_routes
 from app.routes.devices import DEVICE_COOKIE
+from notosaurus_core import ai
 from notosaurus_core.providers import openai_like
 
 
@@ -493,7 +494,7 @@ def test_test_image_and_json(admin, monkeypatch):
         return admin.post("/api/admin/test", headers=ADMIN)
 
     async def answer(color):
-        return llm._CheckAnswer(color=color)
+        return ai._CheckAnswer(color=color)
 
     monkeypatch.setattr("notosaurus_core.ai._ask_provider", lambda s, images, text, schema, **_: answer("Red"))
     assert (test().json()["vision"], test().json()["json"]) == (True, True)

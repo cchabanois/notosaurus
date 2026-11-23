@@ -9,7 +9,7 @@ from helpers import bomb_png, plain_image, run
 from PIL import Image
 
 from app.settings import Settings
-from notosaurus_core import diagrams, llm, pictures, tts
+from notosaurus_core import correction, diagrams, llm, pictures, tts
 from notosaurus_core.config import AIConfig
 from notosaurus_core.errors import AppError
 from notosaurus_core.models import Card, PicturePlan
@@ -199,7 +199,7 @@ def test_correction_keeps_ids_and_pictures():
         Card(front="Q", back="the apple", picture_prompt="an apple"),  # answer fixed: same card
         Card(front="Q", back="a cat", picture_prompt="a cat"),  # added
     ]
-    llm._keep_ids(revised, before)
+    correction._keep_ids(revised, before)
     assert [(c.id, c.picture) for c in revised] == [
         ("b", "picture-b-12345678.jpg"),
         ("a", "picture-a-12345678.jpg"),

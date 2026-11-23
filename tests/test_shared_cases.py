@@ -10,6 +10,7 @@ import pytest
 
 from app.anki import _deck_name
 from app.exams import common_deck, tag_text
+from notosaurus_core import correction
 from notosaurus_core.cards import kept_ids, same_text, text_key
 from notosaurus_core.correction import fix_photos, revise_photos
 from notosaurus_core.models import Card
@@ -102,10 +103,8 @@ def test_a_card_corrected_by_the_ai_is_the_card_made_again(case):
     """The AI's correction finds a card again as a lesson made again does (cards.matching):
     one rule, so a fix to it holds for both. (A correction may move a card to another part
     of the deck; its cards come with no id.)"""
-    from notosaurus_core import llm
-
     revised, before = [Card(**c) for c in case["made"]], [Card(**c) for c in case["before"]]
-    llm._keep_ids(revised, before)
+    correction._keep_ids(revised, before)
     assert [c.id for c in revised] == case["out"]
 
 
