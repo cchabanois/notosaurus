@@ -45,13 +45,18 @@ const revisionPart = {
     const job = newJob();  // "Cancel" in the waiting card stops it
     this.generating = job;
     this.cancelling = false;
+    const lessonId = this.lessonId;
     try {
-      const res = await resultAsItComes(await api(`/api/lessons/${this.lessonId}/revise?job=${job}`, {
+      const res = await resultAsItComes(await api(`/api/lessons/${lessonId}/revise?job=${job}`, {
         method: "POST",
         headers: { "Content-Type": "application/json", Accept: "application/x-ndjson" },
         body: JSON.stringify({ ...this.payload(), instruction, quick }),
       }), (step) => { this.aiStep = step.step; });
       if (!res) {  // cancelled: the cards as they were, the instruction kept to change it
+        this.revision.busy = false;
+        return;
+      }
+      if (this.lessonId !== lessonId) {  // another lesson opened (or a new one) meanwhile: saved in its own
         this.revision.busy = false;
         return;
       }

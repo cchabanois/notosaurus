@@ -280,7 +280,8 @@ const lessonsPart = {
     this.sentKey = sent >= Date.parse(lesson.updated_at ?? "") ? this.ankiKey() : null;
     this.saveState = "saved";
     this.revision = { text: "", busy: false, summary: "", stats: "", undo: null };
-    this.editing = "";
+    this.leaveCards();
+    this.toDraw = [];  // the lesson before's: its "Draw them" would pay for this one's pictures
     this.$nextTick(() => this.$refs.review?.scrollIntoView({ behavior: "smooth" }));
   },
 
@@ -343,6 +344,7 @@ const lessonsPart = {
   async newLesson() {
     if (this.saveTimer) await this.saveNow();
     const left = this.lessonId && this.cards.length ? this.deck : "";
+    this.leaveCards();  // nothing of the lesson left full screen over the new one
     this.clearPhotos();
     this.lessonId = null;
     this.lessonOwner = "";

@@ -169,7 +169,7 @@
         "new": "New sub-deck…",
         "add": "Create"
       },
-      "subdeckLabel": "Sub-deck",
+      "subdeckLabel": "Sub-deck: {name}",
       "listen": "Listen to the back",
       "listenFront": "Listen to the front",
       "soundFrontOn": "🔊 Read the front aloud",
@@ -652,6 +652,7 @@
     },
     "share": {
       "skipped": "Notosaurus takes photos, PDFs and text: “{names}” was not added.",
+      "waiting": "Share received: it will be added once the current task is done or the card is closed.",
       "cards": {
         "lessons": "📤 Share lessons",
         "pickHint": "Tick the lessons whose cards you want to share, one by one or a whole subject.",

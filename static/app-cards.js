@@ -183,6 +183,12 @@ const cardsPart = {
     }, 200);
   },
 
+  // Another lesson shown (or a new one): nothing of the one before left full screen (a card
+  // edited, its diagram or picture, the lesson's end), nor half dragged
+  leaveCards() {
+    Object.assign(this, { editing: "", diagramOpen: "", pictureOpen: "", peek: "", slide: 0, cardTouch: null });
+  },
+
   // The edited card left: its correction (and the lesson's) no longer undoable, so the
   // pictures they replaced can go
   doneEditing() {

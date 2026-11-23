@@ -221,7 +221,7 @@
                   @click="dictate('prompt')" :aria-label="$t(micKey('prompt'))" :title="$t(micKey('prompt'))"
                   ></button>
         </div>
-        <p class="hint" x-cloak x-show="dictationStep('prompt')" x-text="$t(dictationStep('prompt') || 'app.mic.busy')"></p>
+        <p class="hint" x-cloak x-show="dictationStep('prompt')" x-text="$t(dictationStep('prompt') || 'app.dictation.busy')"></p>
         <div class="prompt-actions tidy" x-show="canTidy() || canUntidy()">
           <button type="button" class="link-btn strong" :disabled="tidy.busy" :class="{ waiting: tidy.busy }" @click="tidyPrompt()"
                   x-text="tidy.busy ? $t('app.prompt.tidyBusy') : $t('app.prompt.tidy')"></button>
@@ -322,7 +322,7 @@
                 x-text="$t('app.revise.button')"></button>
       </form>
       <p class="hint listening-hint" x-cloak x-show="dictationStep('correction')"
-         x-text="$t(dictationStep('correction') || 'app.mic.busy')"></p>
+         x-text="$t(dictationStep('correction') || 'app.dictation.busy')"></p>
       <div class="revision-result" x-cloak x-show="revision.summary" x-transition.opacity>
         <div>
           <strong x-html="previewHtml(revision.summary)"></strong>
@@ -636,7 +636,7 @@
                 <span class="subdeck-tag" x-show="renderedOnly(card, 'subdeck') && (card.subdeck || shownEdited(card))"
                       :class="{ empty: !card.subdeck }"
                       x-text="card.subdeck ? '🗂 ' + card.subdeck : $t('app.review.subdeckAdd')"
-                      :title="card.subdeck ? $t('app.review.subdeckLabel') + ' : ' + card.subdeck : ''"
+                      :title="card.subdeck ? $t('app.review.subdeckLabel', { name: card.subdeck }) : ''"
                       @click.stop="openSubdecks(card)"></span>
               </div>
               <!-- Its sub-deck chosen: none, one of the lesson's (its cards counted), or a new one -->
@@ -724,7 +724,7 @@
                           x-text="$t(card._fix.blank ? 'app.fix.submitBlank' : 'app.fix.submit')"></button>
                 </div>
                 <p class="hint" x-show="card._fix.busy" x-text="$t(card._fix.blank ? 'app.fix.busyBlank' : 'app.fix.busy')"></p>
-                <p class="hint" x-show="dictationStep('card:' + card.key)" x-text="$t(dictationStep('card:' + card.key) || 'app.mic.busy')"></p>
+                <p class="hint" x-show="dictationStep('card:' + card.key)" x-text="$t(dictationStep('card:' + card.key) || 'app.dictation.busy')"></p>
                 <!-- What the last correction did, undoable until the card is done with -->
                 <div class="card-fixed" x-show="card._fixed && !card._fix.busy">
                   <span x-html="previewHtml(card._fixed?.summary)"></span>

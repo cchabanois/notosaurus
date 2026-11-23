@@ -549,3 +549,20 @@ def test_a_photo_checked_against_its_card_then_changed(page, monkeypatch):
     sync_api.expect(found.get_by_role("button", name="📐 Redessiner")).to_be_hidden()
     found.get_by_role("button", name="🖼️ Changer l'image").click()
     sync_api.expect(card.locator(".picture-panel")).to_be_visible()
+
+
+def test_the_pictures_to_draw_are_the_open_lessons_only(page):
+    """The bar offering to draw a lesson's pictures with the AI (none free fits them): gone
+    when another lesson is opened, its "Draw" never paying for that one's."""
+    generate_free(page, FRONT_PROMPT)  # no picture asked
+    (other,) = lessons(page)
+    page.route(
+        "**/api/lessons/*/pictures",
+        lambda route: route.fulfill(json={"lesson": {"cards": []}, "failures": 0, "error": None, "to_draw": ["c1"]}),
+    )
+    generate_free(page, "Le triangle rectangle (géométrie)")  # figures: none drawn, offered
+    bar = page.locator(".notice-bar.ask")
+    sync_api.expect(bar).to_be_visible()
+    page.evaluate("id => Alpine.$data(document.querySelector('[x-data]')).openLesson(id)", other["id"])
+    page.wait_for_function("id => Alpine.$data(document.querySelector('[x-data]')).lessonId === id", arg=other["id"])
+    sync_api.expect(bar).to_be_hidden()

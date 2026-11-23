@@ -220,9 +220,10 @@ def test_more_pages_than_one_call_reads_are_sent_in_several(page):
 
 
 def test_a_lesson_read_in_several_calls_has_its_pictures_drawn_once_after_the_last(page):
-    """A PDF of 12 pages read in two calls, its cards asking for figures: their pictures asked
-    once, after the second call (drawn after each, the first drawing wrote back the cards it
-    began with, the next pages' gone, and the second drew the first pages' again)."""
+    """12 pages read in two calls, its cards asking for figures: their pictures asked once,
+    after the second call (drawn after each, the first drawing wrote back the cards it began
+    with, the next pages' gone, and the second drew the first pages' again). Photos, not a
+    PDF: what is tested is the calls, not pdf.js drawing 12 pages (slow on a busy machine)."""
     calls = []
     page.on(
         "request",
@@ -237,10 +238,12 @@ def test_a_lesson_read_in_several_calls_has_its_pictures_drawn_once_after_the_la
         lambda route: route.fulfill(json={"lesson": {"cards": []}, "failures": 0, "error": None, "to_draw": []}),
     )
     page.goto("/")
-    page.locator("input[type=file][accept*=pdf]").set_input_files(
-        {"name": "cours.pdf", "mimeType": "application/pdf", "buffer": pdf(12)}
+    page.locator('input[type=file][accept="image/*"][multiple]:not([capture])').set_input_files(
+        [
+            {"name": f"page{n}.png", "mimeType": "image/png", "buffer": plain_image(60, 80, (20 * n, 90, 160), "PNG")}
+            for n in range(12)
+        ]
     )
-    add_pdf_pages(page, 12)
     sync_api.expect(page.locator("figure.thumb img")).to_have_count(12)
     made = generate_from_photos(page, "Le triangle rectangle (géométrie)")  # figures to draw
     page.wait_for_function("() => !document.querySelector('[x-data]')._x_dataStack[0].loading")  # every call made
@@ -1112,6 +1115,102 @@ def test_what_was_shared_to_the_app_becomes_the_lessons_pages(page):
     assert page.evaluate("window.notosaurusShared()") is True
     page.wait_for_function("Alpine.$data(document.querySelector('[x-data]')).photos.length === 5")
     sync_api.expect(page.get_by_text("« archive.zip » n'a pas été ajouté")).to_be_visible()
+
+
+def _share_host(page, colors: list[str]):
+    """The app's LocalServer (Shared.kt) keeping a share of one photo of each of `colors`,
+    once given (`share()`), until the page takes it: what the page asked of it, in order."""
+    asked, waiting = [], []
+
+    def host(route):
+        request = route.request
+        if request.method == "DELETE":
+            asked.append("delete")
+            waiting.clear()
+            route.fulfill(json={})
+        elif request.url.endswith("/api/shared"):
+            asked.append("get")
+            route.fulfill(json=waiting[0] if waiting else {"files": [], "text": "", "skipped": []})
+        else:
+            route.fulfill(body=png(colors[int(request.url.split("/")[-1].split("?")[0]) - 1]), content_type="image/png")
+
+    page.route("**/api/shared**", host)
+
+    def share():
+        waiting.append(
+            {
+                "id": "s1",
+                "files": [{"n": n + 1, "name": f"p{n}.png", "type": "image/png"} for n in range(len(colors))],
+                "text": "",
+                "skipped": [],
+            }
+        )
+        assert page.evaluate("window.notosaurusShared()") is True  # the app told, as MainActivity does
+
+    return asked, share
+
+
+def _page_color(page, i: int = 0) -> list[int]:
+    """The `i`th page's colour, as the page holds it."""
+    return page.evaluate(
+        """async (i) => {
+            const blob = Alpine.$data(document.querySelector('[x-data]')).photos[i].blob;
+            const bitmap = await createImageBitmap(blob);
+            const ctx = new OffscreenCanvas(1, 1).getContext("2d");
+            ctx.drawImage(bitmap, 0, 0, 1, 1);
+            return [...ctx.getImageData(0, 0, 1, 1).data.slice(0, 3)];
+        }""",
+        i,
+    )
+
+
+def test_a_share_while_a_lesson_is_made_is_taken_once_it_is(page):
+    """Shared to the app while the first lesson is being made: left with the app (said) until
+    the lesson is made, then taken as a new lesson's page (taken at once, it was added to the
+    pages being read and dropped when the lesson came back, the app's copy gone already)."""
+    asked, share = _share_host(page, ["teal"])
+    held = []
+    page.route("**/api/extract", lambda route: held.append(route))
+    page.goto("/")
+    started(page)
+    add_photo(page, png("white"))
+    page.locator(".chip").first.click()  # the free prompt
+    page.locator("textarea[x-ref=promptText]").fill(FRONT_PROMPT)
+    page.get_by_role("button", name="✨ Générer les cartes").click()
+    eventually(page, lambda: held, "the lesson asked")
+    share()
+    sync_api.expect(page.get_by_text("Partage reçu")).to_be_visible()
+    page.wait_for_timeout(300)
+    assert asked == []  # left with the app meanwhile
+    held[0].continue_()
+    page.wait_for_function(
+        "(d => !d.loading && !d.lessonId && d.photos.length === 1)(Alpine.$data(document.querySelector('[x-data]')))"
+    )
+    assert asked == ["get", "delete"]
+    assert all(
+        abs(a - b) < 8 for a, b in zip(_page_color(page), (0, 128, 128), strict=True)
+    )  # the shared page, in a new lesson
+    (made,) = lessons(page)
+    assert lesson(page, made["id"])["photo_count"] == 1  # the lesson made, with its own page
+
+
+def test_a_share_while_a_card_is_open_waits_for_it_to_be_closed(page):
+    """Shared to the app while a card is open full screen: the card left as it is (the user
+    may be writing in it), the share taken once it is closed, as a new lesson."""
+    asked, share = _share_host(page, ["teal"])
+    generate_free(page, FRONT_PROMPT)
+    card = open_card(page.locator(".flash").first)
+    share()
+    sync_api.expect(page.get_by_text("Partage reçu")).to_be_visible()
+    page.wait_for_timeout(300)
+    assert asked == []
+    sync_api.expect(card).to_have_class(re.compile(r"\bediting\b"))
+    page.keyboard.press("Escape")
+    page.wait_for_function(
+        "(d => !d.lessonId && d.photos.length === 1)(Alpine.$data(document.querySelector('[x-data]')))"
+    )
+    assert asked == ["get", "delete"]
+    assert page.evaluate("Alpine.$data(document.querySelector('[x-data]')).editing") == ""
 
 
 def test_a_host_without_sharing_leaves_the_page_as_it_is(page):

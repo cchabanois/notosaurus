@@ -169,7 +169,7 @@
         "new": "Nuovo sotto-mazzo…",
         "add": "Crea"
       },
-      "subdeckLabel": "Sotto-mazzo",
+      "subdeckLabel": "Sotto-mazzo: {name}",
       "listen": "Ascolta il retro",
       "listenFront": "Ascolta il fronte",
       "soundFrontOn": "🔊 Leggi il fronte ad alta voce",
@@ -652,6 +652,7 @@
     },
     "share": {
       "skipped": "Notosaurus accetta foto, PDF e testo: «{names}» non è stato aggiunto.",
+      "waiting": "Condivisione ricevuta: verrà aggiunta appena finisce l'operazione in corso o si chiude la carta.",
       "cards": {
         "lessons": "📤 Condividi lezioni",
         "pickHint": "Spunti le lezioni di cui vuole condividere le carte, una alla volta o una materia intera.",
