@@ -121,6 +121,7 @@ Each pull request's entries (the `## Changelog` of its description) are put unde
 
 ### Fixed
 
+- Sending to Anki or drawing pictures, cancelled meanwhile: no error said any more, the cards as they were.
 - "🔍 Check the picture" works on long cards; it no longer fails for cards longer than about 1000 characters.
 - Asking the AI to change a figure into a photo no longer leaves the card half-changed when no photo is chosen: the card keeps its figure until a picture actually replaces it. A card already left that way can be checked again.
 - Gemini unreachable: said as such ("Can't reach the Gemini API"), and the relay tries its other routes and fallback models instead of stopping on a generic error.
