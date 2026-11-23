@@ -25,6 +25,8 @@ from page.support import (  # noqa: E402
     draft_kept,
     drop,
     editor_pixel,
+    eventually,
+    field,
     generate_free,
     generate_from_photos,
     halves,
@@ -1228,3 +1230,65 @@ def test_a_diagrams_card_swiped_from_its_photo_not_from_its_mask(page):
     sync_api.expect(clip).not_to_have_class(re.compile(r"\bopen\b"))
     _swipe(first.locator(".diagram img"), -150)  # its frame: the next card
     sync_api.expect(second).to_have_class(re.compile(r"\bediting\b"))
+
+
+def three_pages(page) -> dict:
+    """A lesson made from 3 pages by the demo AI: its cards on pages 1, 2, 3, 1… (Card.page)."""
+    page.goto("/")
+    page.locator('input[type=file][accept="image/*"][multiple]:not([capture])').set_input_files(
+        [{"name": f"page-{n}.png", "mimeType": "image/png", "buffer": png(c)} for n, c in enumerate(COLORS[:3])]
+    )
+    sync_api.expect(page.locator(".thumb img")).to_have_count(3)
+    made = generate_from_photos(page, "FR → ES")
+    assert [c["page"] for c in made["cards"]][:3] == [1, 2, 3]
+    return made
+
+
+def test_a_card_shows_the_lesson_page_it_comes_from(page):
+    """The open card's "📄 p. 3": the lesson's pages in full at that one (‹ › to the others);
+    Escape closes them, the card still open. None for a card whose page isn't known, or isn't
+    one of the lesson's."""
+    three_pages(page)
+    card = open_card(page.locator(".flash").nth(2))
+    chip = card.get_by_role("button", name="Voir la page 3 du cours")
+    sync_api.expect(chip).to_have_text("📄 p. 3")
+    sync_api.expect(page.locator(".flash").nth(1).locator(".card-page")).to_be_hidden()  # the list's: none
+    chip.click()
+    viewer = page.locator(".viewer")
+    sync_api.expect(viewer.locator(".viewer-count")).to_have_text("3 / 3")
+    src = viewer.locator(".viewer-frame img").get_attribute("src")
+    assert src == page.locator(".thumb img").nth(2).get_attribute("src")
+    viewer.get_by_role("button", name="Photo précédente").click()
+    sync_api.expect(viewer.locator(".viewer-count")).to_have_text("2 / 3")
+    page.keyboard.press("Escape")
+    sync_api.expect(viewer).to_be_hidden()
+    sync_api.expect(card).to_have_class(re.compile(r"\bediting\b"))  # the card still open
+
+    data = "Alpine.$data(document.querySelector('[x-data]'))"
+    for unknown in (0, 4):  # older than pages; past the lesson's
+        page.evaluate(f"{data}.cards[2].page = {unknown}")
+        sync_api.expect(card.locator(".card-page")).to_be_hidden()
+
+
+def test_a_read_only_lessons_cards_show_their_page(page):
+    """A lesson read only (another profile's), whose cards open none: each card's page there, seen
+    in full all the same (nothing of the lesson changed)."""
+    three_pages(page)
+    data = "Alpine.$data(document.querySelector('[x-data]'))"
+    page.evaluate(f"{data}.lessonOwner = 'Léa'")  # Anki closed: another profile's lesson
+    page.wait_for_function(f"{data}.readOnly()")
+    chip = page.locator(".flash").nth(1).get_by_role("button", name="Voir la page 2 du cours")
+    sync_api.expect(chip).to_be_visible()
+    chip.click()
+    viewer = page.locator(".viewer")
+    sync_api.expect(viewer.locator(".viewer-count")).to_have_text("2 / 3")
+    sync_api.expect(viewer.get_by_role("button", name="Retirer cette page")).to_be_hidden()  # viewing only
+
+
+def test_a_card_keeps_its_page_through_an_edit(page):
+    """A card's page (written by the AI) saved with it when it is edited: the page keeps the card's
+    fields it doesn't show."""
+    made = three_pages(page)
+    field(page.locator(".flash").nth(2), "back").fill("los tres")
+    eventually(page, lambda: lesson(page, made["id"])["cards"][2]["back"] == "los tres", "the edit saved")
+    assert [c["page"] for c in lesson(page, made["id"])["cards"]] == [c["page"] for c in made["cards"]]

@@ -11,6 +11,7 @@ import pytest
 from app.anki import _deck_name
 from app.exams import common_deck, tag_text
 from notosaurus_core.cards import kept_ids, same_text, text_key
+from notosaurus_core.correction import fix_photos
 from notosaurus_core.models import Card
 from notosaurus_core.tts import filename, speakable, spoken, spoken_sides
 
@@ -52,6 +53,13 @@ def test_what_each_side_says(case):
 def test_a_sounds_file(case):
     """The same name on the phone (Speech.fileName): a lesson's sounds go from one to the other."""
     assert filename(case["text"], case["voice"], case["rate"]) == case["out"]
+
+
+@pytest.mark.parametrize("case", CASES["fix_photos"], ids=lambda c: c["name"])
+def test_the_photos_sent_to_correct_a_card(case):
+    """The page a card comes from alone, when known; else the lesson's photos when a call takes
+    them all; else none: the phone's GenerationRoutes (Generation.fixPhotos) the same."""
+    assert fix_photos(case["page"], case["photos"]) == (case["out"], case["sent"])
 
 
 @pytest.mark.parametrize("case", CASES["kept_ids"], ids=lambda c: c["name"])

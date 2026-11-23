@@ -213,6 +213,8 @@
       "previousCard": "Carta precedente",
       "nextCard": "Carta successiva",
       "addAfter": "Aggiungi una carta dopo questa",
+      "lessonPage": "📄 p. {n}",
+      "lessonPageSee": "Vedi la pagina {n} della lezione",
       "readAll": "▶ Rivedi carta per carta",
       "endTitle": "Fine della lezione",
       "endDone": {

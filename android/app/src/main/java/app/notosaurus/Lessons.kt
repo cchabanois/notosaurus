@@ -135,7 +135,12 @@ class Lessons(private val root: File) {
             val page = mask["page"]?.jsonPrimitive?.intOrNull ?: return item
             return JsonObject(item + (key to JsonObject(mask + ("page" to JsonPrimitive(page + before)))))
         }
-        val cards = content["cards"]?.jsonArray.orEmpty().map { shifted(it.jsonObject, "mask") }
+        // Their page too (0: unknown, stays so)
+        fun paged(card: JsonObject): JsonObject {
+            val page = card["page"]?.jsonPrimitive?.intOrNull ?: 0
+            return if (page > 0) card.with("page" to JsonPrimitive(page + before)) else card
+        }
+        val cards = content["cards"]?.jsonArray.orEmpty().map { paged(shifted(it.jsonObject, "mask")) }
         val frames = (content["frames"] as? JsonArray).orEmpty().map { f ->
             val page = f.jsonObject["page"]?.jsonPrimitive?.intOrNull ?: 0
             JsonObject(f.jsonObject + ("page" to JsonPrimitive(page + before)))

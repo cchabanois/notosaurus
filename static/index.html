@@ -393,6 +393,11 @@
             <div class="flash-actions">
               <span class="card-deck" x-show="(isEditing(card) || peek === card.key) && deckPath(card).length" x-text="deckPath(card).join(' › ')"
                     :title="deckPath(card).join('::')"></span>
+              <!-- The lesson's page it comes from, in full: on the open card (every card of a lesson
+                   read only, which opens none) -->
+              <button type="button" class="icon-btn card-page" x-show="(isEditing(card) || readOnly()) && cardPageIndex(card) !== -1"
+                      @click="showCardPage(card)" :aria-label="$t('app.review.lessonPageSee', { n: card.page })"
+                      :title="$t('app.review.lessonPageSee', { n: card.page })" x-text="$t('app.review.lessonPage', { n: card.page })"></button>
               <button class="icon-btn" x-show="lessonId && card.front.trim() && (card.back.trim() || isCloze(card.front))"
                       @click="explain(card)" :class="{ active: card._explain?.open, waiting: card._explain?.loading }" :aria-label="$t('app.explain.button')"
                       :title="$t('app.explain.button')">💬</button>

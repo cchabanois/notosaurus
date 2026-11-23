@@ -333,7 +333,8 @@ const lessonsPart = {
     const photos = [];
     for (let n = 1; n <= lesson.photo_count; n++) {
       const blob = await (await api(`/api/lessons/${lesson.id}/photos/${n}`)).blob();
-      photos.push({ blob, url: URL.createObjectURL(blob), text: lesson.page_texts?.[n - 1] ?? "", sent: true });
+      // `n`: its number in the lesson, a card's page (removed from the strip, the others keep theirs)
+      photos.push({ blob, url: URL.createObjectURL(blob), text: lesson.page_texts?.[n - 1] ?? "", sent: true, n });
     }
     this.clearPhotos();
     this.photos = photos;

@@ -30,7 +30,8 @@ takes but the AI configuration (the relay's own), and keeps nothing.
 - /v1/revise asked with "Accept: application/x-ndjson" says what the AI is at (slow, the
   fallback model), then the answer or the error (ReviseLine).
 - /v1/fix-card: one card corrected by the user's request ("the answer is 1789"), seeing
-  the lesson's photos: the AI writes that card alone (llm.fix_card).
+  the lesson's photos (the page it comes from alone, when known: llm.fix_photos): the AI
+  writes that card alone (llm.fix_card).
 - /v1/card-picture asked with "Accept: application/x-ndjson" says each step as it begins
   (deciding, drawing, checking, redrawing with the first figure, searching), then the
   answer or the error (CardPictureLine).
@@ -56,8 +57,9 @@ from typing import Annotated, Literal
 
 from pydantic import BaseModel, Field
 
+from .calls import MAX_IMAGES
 from .llm import Extracted, ExtractOptions
-from .models import Card, Deck, Dictated, Explanation, FixedCard, FollowUp, PicturePlan, Revision
+from .models import Card, Deck, Dictated, Explanation, FixedCard, FollowUp, PhotosSent, PicturePlan, Revision
 from .stock import Found, Source
 
 PREFIX = "/v1"
@@ -68,7 +70,6 @@ CREDITS_LEFT_HEADER = "X-Notosaurus-Credits-Left"
 PICTURE_SOURCE_HEADER = "X-Notosaurus-Picture-Source"
 STREAM_TYPE = "application/x-ndjson"
 
-MAX_IMAGES = 10
 MAX_IMAGE_BYTES = 4 * 1024 * 1024  # a prepared photo weighs a few hundred KB
 MAX_PROMPT = 8000  # Notosaurus's own prompts are under 1,000 characters
 MAX_INSTRUCTIONS = 10_000  # standing instructions, for everyone and for the pupil
@@ -198,6 +199,11 @@ class FixCardRequest(BaseModel):
         description="The card's figure as drawn (its SVG), when it has one: seen by the AI correcting it.",
     )
     quick: bool = Field(default=False, description='The model thinking little (the page\'s "Quick"): faster.')
+    photos_sent: PhotosSent = Field(
+        default="all",
+        description='What the "images" are of the lesson\'s photos (llm.fix_photos): "all"; "card", the '
+        'page the card comes from (its "page") alone; "none", a lesson that has photos, none sent.',
+    )
 
 
 class LessonDrawingsRequest(BaseModel):

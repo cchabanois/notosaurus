@@ -3,6 +3,7 @@ package app.notosaurus
 import kotlinx.serialization.json.JsonArray
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.boolean
+import kotlinx.serialization.json.int
 import kotlinx.serialization.json.jsonArray
 import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
@@ -42,6 +43,12 @@ class SharedCasesTest {
     fun aCardMadeAgainKeepsItsId() = cases("kept_ids").forEach { c ->
         val ids = Lessons.keptIds(c["made"], c["before"]).map { it.jsonObject["id"]?.jsonPrimitive?.content.orEmpty() }
         assertEquals(c["name"]!!.jsonPrimitive.content, c["out"]!!.jsonArray.map { it.jsonPrimitive.content }, ids)
+    }
+
+    @Test
+    fun thePhotosSentToCorrectACard() = cases("fix_photos").forEach { c ->
+        val out = c["out"]!!.jsonArray.map { it.jsonPrimitive.int } to c.string("sent")
+        assertEquals(c.string("name"), out, Generation.fixPhotos(c["page"]!!.jsonPrimitive.int, c["photos"]!!.jsonPrimitive.int))
     }
 
     @Test

@@ -1,5 +1,5 @@
 {
- "_": "Cases the three implementations must agree on (Python app/exams.py, notosaurus_core/tts.py, notosaurus_core/cards.py; Kotlin Exams.kt, Speech.kt, Lessons.kt; JavaScript static/app-anki.js): their tests read this file. Python's answers are the reference; sound_file, kept_ids, same_text, info_field: Python and Kotlin only (the page names no file, makes no lesson). spoken_sides: what each side says read aloud (tts.spoken_sides), [front, back].",
+ "_": "Cases the three implementations must agree on (Python app/exams.py, notosaurus_core/tts.py, notosaurus_core/cards.py; Kotlin Exams.kt, Speech.kt, Lessons.kt; JavaScript static/app-anki.js): their tests read this file. Python's answers are the reference; sound_file, kept_ids, same_text, info_field, fix_photos: Python and Kotlin only (the page names no file, makes no lesson). spoken_sides: what each side says read aloud (tts.spoken_sides), [front, back]. fix_photos: the lesson's photos sent to correct one card (correction.fix_photos), by its page and the lesson's number of photos: their numbers, and what they are.",
  "tag_text": [
   {
    "in": "Interro SVT de lundi",
@@ -888,5 +888,18 @@
    "subdeck": " Dates ",
    "out": "Histoire::La Révolution::Dates"
   }
+ ],
+ "fix_photos": [
+  {"name": "its page known", "page": 3, "photos": 12, "out": [3], "sent": "card"},
+  {"name": "its page known, a short lesson", "page": 1, "photos": 2, "out": [1], "sent": "card"},
+  {"name": "its last page", "page": 30, "photos": 30, "out": [30], "sent": "card"},
+  {"name": "unknown, a call takes them all", "page": 0, "photos": 10, "out": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10], "sent": "all"},
+  {"name": "unknown, a lesson of 3 pages", "page": 0, "photos": 3, "out": [1, 2, 3], "sent": "all"},
+  {"name": "unknown, more than a call takes", "page": 0, "photos": 12, "out": [], "sent": "none"},
+  {"name": "past the lesson's photos: as unknown", "page": 5, "photos": 4, "out": [1, 2, 3, 4], "sent": "all"},
+  {"name": "past the lesson's photos, a long lesson", "page": 15, "photos": 11, "out": [], "sent": "none"},
+  {"name": "negative: as unknown", "page": -1, "photos": 2, "out": [1, 2], "sent": "all"},
+  {"name": "no photo", "page": 0, "photos": 0, "out": [], "sent": "all"},
+  {"name": "a page, no photo", "page": 1, "photos": 0, "out": [], "sent": "all"}
  ]
 }
