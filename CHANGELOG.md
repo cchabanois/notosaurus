@@ -118,6 +118,7 @@ Each pull request's entries (the `## Changelog` of its description) are put unde
 
 ### Fixed
 
+- In the app, lessons moved from the computer can be edited and deleted: they were read only, for an Anki profile the phone doesn't have.
 - 🎤 On Android, the phone's speech recognition stopping on an error no longer wipes what it had already written: the text stays in the field, the error is said.
 - 📷 On Android, tapping 📷 again while the pages just scanned were still being added no longer makes them "unreadable"; the camera's photos are no longer kept on the phone when the document scanner is turned off.
 - 📤 On Android, a second share arriving while the first one was being added no longer mixes their files.
