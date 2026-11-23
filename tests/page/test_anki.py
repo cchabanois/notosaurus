@@ -325,7 +325,7 @@ def test_a_lesson_from_the_computer_is_the_phones_own(page):
     page.wait_for_function(f"{data}.lessonOwner === 'Léa'")
     assert page.evaluate(f"{data}.readOnly()") is False
     sync_api.expect(page.locator(".cards.compact")).to_be_visible()  # its cards opened, edited
-    page.get_by_role("button", name="Leçons").click()
+    page.get_by_role("button", name="Leçons", exact=True).click()
     sheet = page.get_by_role("dialog", name="Mes leçons")
     sync_api.expect(sheet.get_by_role("button", name="Supprimer la leçon")).to_be_visible()
     assert lesson(page, made["id"])["owner"] == "Léa"
